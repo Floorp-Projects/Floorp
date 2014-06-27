@@ -13,23 +13,17 @@
 namespace safe_browsing {
 
 void protobuf_ShutdownFile_csd_2eproto() {
-  delete ClientPhishingRequest::default_instance_;
-  delete ClientPhishingRequest_Feature::default_instance_;
-  delete ClientPhishingResponse::default_instance_;
-  delete ClientMalwareRequest::default_instance_;
-  delete ClientMalwareRequest_Feature::default_instance_;
-  delete ClientMalwareResponse::default_instance_;
   delete ClientDownloadRequest::default_instance_;
   delete ClientDownloadRequest_Digests::default_instance_;
   delete ClientDownloadRequest_Resource::default_instance_;
   delete ClientDownloadRequest_CertificateChain::default_instance_;
   delete ClientDownloadRequest_CertificateChain_Element::default_instance_;
   delete ClientDownloadRequest_SignatureInfo::default_instance_;
+  delete ClientDownloadRequest_PEImageHeaders::default_instance_;
+  delete ClientDownloadRequest_PEImageHeaders_DebugData::default_instance_;
+  delete ClientDownloadRequest_ImageHeaders::default_instance_;
   delete ClientDownloadResponse::default_instance_;
   delete ClientDownloadResponse_MoreInfo::default_instance_;
-  delete ClientDownloadReport::default_instance_;
-  delete ClientDownloadReport_UserInformation::default_instance_;
-  delete ClientUploadResponse::default_instance_;
 }
 
 void protobuf_AddDesc_csd_2eproto() {
@@ -38,40 +32,28 @@ void protobuf_AddDesc_csd_2eproto() {
   already_here = true;
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-  ClientPhishingRequest::default_instance_ = new ClientPhishingRequest();
-  ClientPhishingRequest_Feature::default_instance_ = new ClientPhishingRequest_Feature();
-  ClientPhishingResponse::default_instance_ = new ClientPhishingResponse();
-  ClientMalwareRequest::default_instance_ = new ClientMalwareRequest();
-  ClientMalwareRequest_Feature::default_instance_ = new ClientMalwareRequest_Feature();
-  ClientMalwareResponse::default_instance_ = new ClientMalwareResponse();
   ClientDownloadRequest::default_instance_ = new ClientDownloadRequest();
   ClientDownloadRequest_Digests::default_instance_ = new ClientDownloadRequest_Digests();
   ClientDownloadRequest_Resource::default_instance_ = new ClientDownloadRequest_Resource();
   ClientDownloadRequest_CertificateChain::default_instance_ = new ClientDownloadRequest_CertificateChain();
   ClientDownloadRequest_CertificateChain_Element::default_instance_ = new ClientDownloadRequest_CertificateChain_Element();
   ClientDownloadRequest_SignatureInfo::default_instance_ = new ClientDownloadRequest_SignatureInfo();
+  ClientDownloadRequest_PEImageHeaders::default_instance_ = new ClientDownloadRequest_PEImageHeaders();
+  ClientDownloadRequest_PEImageHeaders_DebugData::default_instance_ = new ClientDownloadRequest_PEImageHeaders_DebugData();
+  ClientDownloadRequest_ImageHeaders::default_instance_ = new ClientDownloadRequest_ImageHeaders();
   ClientDownloadResponse::default_instance_ = new ClientDownloadResponse();
   ClientDownloadResponse_MoreInfo::default_instance_ = new ClientDownloadResponse_MoreInfo();
-  ClientDownloadReport::default_instance_ = new ClientDownloadReport();
-  ClientDownloadReport_UserInformation::default_instance_ = new ClientDownloadReport_UserInformation();
-  ClientUploadResponse::default_instance_ = new ClientUploadResponse();
-  ClientPhishingRequest::default_instance_->InitAsDefaultInstance();
-  ClientPhishingRequest_Feature::default_instance_->InitAsDefaultInstance();
-  ClientPhishingResponse::default_instance_->InitAsDefaultInstance();
-  ClientMalwareRequest::default_instance_->InitAsDefaultInstance();
-  ClientMalwareRequest_Feature::default_instance_->InitAsDefaultInstance();
-  ClientMalwareResponse::default_instance_->InitAsDefaultInstance();
   ClientDownloadRequest::default_instance_->InitAsDefaultInstance();
   ClientDownloadRequest_Digests::default_instance_->InitAsDefaultInstance();
   ClientDownloadRequest_Resource::default_instance_->InitAsDefaultInstance();
   ClientDownloadRequest_CertificateChain::default_instance_->InitAsDefaultInstance();
   ClientDownloadRequest_CertificateChain_Element::default_instance_->InitAsDefaultInstance();
   ClientDownloadRequest_SignatureInfo::default_instance_->InitAsDefaultInstance();
+  ClientDownloadRequest_PEImageHeaders::default_instance_->InitAsDefaultInstance();
+  ClientDownloadRequest_PEImageHeaders_DebugData::default_instance_->InitAsDefaultInstance();
+  ClientDownloadRequest_ImageHeaders::default_instance_->InitAsDefaultInstance();
   ClientDownloadResponse::default_instance_->InitAsDefaultInstance();
   ClientDownloadResponse_MoreInfo::default_instance_->InitAsDefaultInstance();
-  ClientDownloadReport::default_instance_->InitAsDefaultInstance();
-  ClientDownloadReport_UserInformation::default_instance_->InitAsDefaultInstance();
-  ClientUploadResponse::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_csd_2eproto);
 }
 
@@ -81,1483 +63,6 @@ struct StaticDescriptorInitializer_csd_2eproto {
     protobuf_AddDesc_csd_2eproto();
   }
 } static_descriptor_initializer_csd_2eproto_;
-
-
-// ===================================================================
-
-#ifndef _MSC_VER
-const int ClientPhishingRequest_Feature::kNameFieldNumber;
-const int ClientPhishingRequest_Feature::kValueFieldNumber;
-#endif  // !_MSC_VER
-
-ClientPhishingRequest_Feature::ClientPhishingRequest_Feature()
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-}
-
-void ClientPhishingRequest_Feature::InitAsDefaultInstance() {
-}
-
-ClientPhishingRequest_Feature::ClientPhishingRequest_Feature(const ClientPhishingRequest_Feature& from)
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-  MergeFrom(from);
-}
-
-void ClientPhishingRequest_Feature::SharedCtor() {
-  _cached_size_ = 0;
-  name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  value_ = 0;
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-ClientPhishingRequest_Feature::~ClientPhishingRequest_Feature() {
-  SharedDtor();
-}
-
-void ClientPhishingRequest_Feature::SharedDtor() {
-  if (name_ != &::google::protobuf::internal::kEmptyString) {
-    delete name_;
-  }
-  if (this != default_instance_) {
-  }
-}
-
-void ClientPhishingRequest_Feature::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ClientPhishingRequest_Feature& ClientPhishingRequest_Feature::default_instance() {
-  if (default_instance_ == NULL) protobuf_AddDesc_csd_2eproto();  return *default_instance_;
-}
-
-ClientPhishingRequest_Feature* ClientPhishingRequest_Feature::default_instance_ = NULL;
-
-ClientPhishingRequest_Feature* ClientPhishingRequest_Feature::New() const {
-  return new ClientPhishingRequest_Feature;
-}
-
-void ClientPhishingRequest_Feature::Clear() {
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (has_name()) {
-      if (name_ != &::google::protobuf::internal::kEmptyString) {
-        name_->clear();
-      }
-    }
-    value_ = 0;
-  }
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-bool ClientPhishingRequest_Feature::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
-  ::google::protobuf::uint32 tag;
-  while ((tag = input->ReadTag()) != 0) {
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required string name = 1;
-      case 1: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_name()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(17)) goto parse_value;
-        break;
-      }
-      
-      // required double value = 2;
-      case 2: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED64) {
-         parse_value:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
-                 input, &value_)));
-          set_has_value();
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectAtEnd()) return true;
-        break;
-      }
-      
-      default: {
-      handle_uninterpreted:
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-          return true;
-        }
-        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
-        break;
-      }
-    }
-  }
-  return true;
-#undef DO_
-}
-
-void ClientPhishingRequest_Feature::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // required string name = 1;
-  if (has_name()) {
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      1, this->name(), output);
-  }
-  
-  // required double value = 2;
-  if (has_value()) {
-    ::google::protobuf::internal::WireFormatLite::WriteDouble(2, this->value(), output);
-  }
-  
-}
-
-int ClientPhishingRequest_Feature::ByteSize() const {
-  int total_size = 0;
-  
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required string name = 1;
-    if (has_name()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->name());
-    }
-    
-    // required double value = 2;
-    if (has_value()) {
-      total_size += 1 + 8;
-    }
-    
-  }
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = total_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void ClientPhishingRequest_Feature::CheckTypeAndMergeFrom(
-    const ::google::protobuf::MessageLite& from) {
-  MergeFrom(*::google::protobuf::down_cast<const ClientPhishingRequest_Feature*>(&from));
-}
-
-void ClientPhishingRequest_Feature::MergeFrom(const ClientPhishingRequest_Feature& from) {
-  GOOGLE_CHECK_NE(&from, this);
-  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_name()) {
-      set_name(from.name());
-    }
-    if (from.has_value()) {
-      set_value(from.value());
-    }
-  }
-}
-
-void ClientPhishingRequest_Feature::CopyFrom(const ClientPhishingRequest_Feature& from) {
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool ClientPhishingRequest_Feature::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000003) != 0x00000003) return false;
-  
-  return true;
-}
-
-void ClientPhishingRequest_Feature::Swap(ClientPhishingRequest_Feature* other) {
-  if (other != this) {
-    std::swap(name_, other->name_);
-    std::swap(value_, other->value_);
-    std::swap(_has_bits_[0], other->_has_bits_[0]);
-    std::swap(_cached_size_, other->_cached_size_);
-  }
-}
-
-::std::string ClientPhishingRequest_Feature::GetTypeName() const {
-  return "safe_browsing.ClientPhishingRequest.Feature";
-}
-
-
-// -------------------------------------------------------------------
-
-#ifndef _MSC_VER
-const int ClientPhishingRequest::kUrlFieldNumber;
-const int ClientPhishingRequest::kOBSOLETEHashPrefixFieldNumber;
-const int ClientPhishingRequest::kClientScoreFieldNumber;
-const int ClientPhishingRequest::kIsPhishingFieldNumber;
-const int ClientPhishingRequest::kFeatureMapFieldNumber;
-const int ClientPhishingRequest::kModelVersionFieldNumber;
-const int ClientPhishingRequest::kNonModelFeatureMapFieldNumber;
-const int ClientPhishingRequest::kOBSOLETEReferrerUrlFieldNumber;
-#endif  // !_MSC_VER
-
-ClientPhishingRequest::ClientPhishingRequest()
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-}
-
-void ClientPhishingRequest::InitAsDefaultInstance() {
-}
-
-ClientPhishingRequest::ClientPhishingRequest(const ClientPhishingRequest& from)
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-  MergeFrom(from);
-}
-
-void ClientPhishingRequest::SharedCtor() {
-  _cached_size_ = 0;
-  url_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  obsolete_hash_prefix_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  client_score_ = 0;
-  is_phishing_ = false;
-  model_version_ = 0;
-  obsolete_referrer_url_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-ClientPhishingRequest::~ClientPhishingRequest() {
-  SharedDtor();
-}
-
-void ClientPhishingRequest::SharedDtor() {
-  if (url_ != &::google::protobuf::internal::kEmptyString) {
-    delete url_;
-  }
-  if (obsolete_hash_prefix_ != &::google::protobuf::internal::kEmptyString) {
-    delete obsolete_hash_prefix_;
-  }
-  if (obsolete_referrer_url_ != &::google::protobuf::internal::kEmptyString) {
-    delete obsolete_referrer_url_;
-  }
-  if (this != default_instance_) {
-  }
-}
-
-void ClientPhishingRequest::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ClientPhishingRequest& ClientPhishingRequest::default_instance() {
-  if (default_instance_ == NULL) protobuf_AddDesc_csd_2eproto();  return *default_instance_;
-}
-
-ClientPhishingRequest* ClientPhishingRequest::default_instance_ = NULL;
-
-ClientPhishingRequest* ClientPhishingRequest::New() const {
-  return new ClientPhishingRequest;
-}
-
-void ClientPhishingRequest::Clear() {
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (has_url()) {
-      if (url_ != &::google::protobuf::internal::kEmptyString) {
-        url_->clear();
-      }
-    }
-    if (has_obsolete_hash_prefix()) {
-      if (obsolete_hash_prefix_ != &::google::protobuf::internal::kEmptyString) {
-        obsolete_hash_prefix_->clear();
-      }
-    }
-    client_score_ = 0;
-    is_phishing_ = false;
-    model_version_ = 0;
-    if (has_obsolete_referrer_url()) {
-      if (obsolete_referrer_url_ != &::google::protobuf::internal::kEmptyString) {
-        obsolete_referrer_url_->clear();
-      }
-    }
-  }
-  feature_map_.Clear();
-  non_model_feature_map_.Clear();
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-bool ClientPhishingRequest::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
-  ::google::protobuf::uint32 tag;
-  while ((tag = input->ReadTag()) != 0) {
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // optional string url = 1;
-      case 1: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_url()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(21)) goto parse_client_score;
-        break;
-      }
-      
-      // required float client_score = 2;
-      case 2: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED32) {
-         parse_client_score:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
-                 input, &client_score_)));
-          set_has_client_score();
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(32)) goto parse_is_phishing;
-        break;
-      }
-      
-      // optional bool is_phishing = 4;
-      case 4: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_is_phishing:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &is_phishing_)));
-          set_has_is_phishing();
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(42)) goto parse_feature_map;
-        break;
-      }
-      
-      // repeated .safe_browsing.ClientPhishingRequest.Feature feature_map = 5;
-      case 5: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_feature_map:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-                input, add_feature_map()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(42)) goto parse_feature_map;
-        if (input->ExpectTag(48)) goto parse_model_version;
-        break;
-      }
-      
-      // optional int32 model_version = 6;
-      case 6: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_model_version:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &model_version_)));
-          set_has_model_version();
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(66)) goto parse_non_model_feature_map;
-        break;
-      }
-      
-      // repeated .safe_browsing.ClientPhishingRequest.Feature non_model_feature_map = 8;
-      case 8: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_non_model_feature_map:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-                input, add_non_model_feature_map()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(66)) goto parse_non_model_feature_map;
-        if (input->ExpectTag(74)) goto parse_OBSOLETE_referrer_url;
-        break;
-      }
-      
-      // optional string OBSOLETE_referrer_url = 9;
-      case 9: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_OBSOLETE_referrer_url:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_obsolete_referrer_url()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(82)) goto parse_OBSOLETE_hash_prefix;
-        break;
-      }
-      
-      // optional bytes OBSOLETE_hash_prefix = 10;
-      case 10: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_OBSOLETE_hash_prefix:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-                input, this->mutable_obsolete_hash_prefix()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectAtEnd()) return true;
-        break;
-      }
-      
-      default: {
-      handle_uninterpreted:
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-          return true;
-        }
-        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
-        break;
-      }
-    }
-  }
-  return true;
-#undef DO_
-}
-
-void ClientPhishingRequest::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // optional string url = 1;
-  if (has_url()) {
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      1, this->url(), output);
-  }
-  
-  // required float client_score = 2;
-  if (has_client_score()) {
-    ::google::protobuf::internal::WireFormatLite::WriteFloat(2, this->client_score(), output);
-  }
-  
-  // optional bool is_phishing = 4;
-  if (has_is_phishing()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(4, this->is_phishing(), output);
-  }
-  
-  // repeated .safe_browsing.ClientPhishingRequest.Feature feature_map = 5;
-  for (int i = 0; i < this->feature_map_size(); i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      5, this->feature_map(i), output);
-  }
-  
-  // optional int32 model_version = 6;
-  if (has_model_version()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(6, this->model_version(), output);
-  }
-  
-  // repeated .safe_browsing.ClientPhishingRequest.Feature non_model_feature_map = 8;
-  for (int i = 0; i < this->non_model_feature_map_size(); i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      8, this->non_model_feature_map(i), output);
-  }
-  
-  // optional string OBSOLETE_referrer_url = 9;
-  if (has_obsolete_referrer_url()) {
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      9, this->obsolete_referrer_url(), output);
-  }
-  
-  // optional bytes OBSOLETE_hash_prefix = 10;
-  if (has_obsolete_hash_prefix()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(
-      10, this->obsolete_hash_prefix(), output);
-  }
-  
-}
-
-int ClientPhishingRequest::ByteSize() const {
-  int total_size = 0;
-  
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // optional string url = 1;
-    if (has_url()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->url());
-    }
-    
-    // optional bytes OBSOLETE_hash_prefix = 10;
-    if (has_obsolete_hash_prefix()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::BytesSize(
-          this->obsolete_hash_prefix());
-    }
-    
-    // required float client_score = 2;
-    if (has_client_score()) {
-      total_size += 1 + 4;
-    }
-    
-    // optional bool is_phishing = 4;
-    if (has_is_phishing()) {
-      total_size += 1 + 1;
-    }
-    
-    // optional int32 model_version = 6;
-    if (has_model_version()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->model_version());
-    }
-    
-    // optional string OBSOLETE_referrer_url = 9;
-    if (has_obsolete_referrer_url()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->obsolete_referrer_url());
-    }
-    
-  }
-  // repeated .safe_browsing.ClientPhishingRequest.Feature feature_map = 5;
-  total_size += 1 * this->feature_map_size();
-  for (int i = 0; i < this->feature_map_size(); i++) {
-    total_size +=
-      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-        this->feature_map(i));
-  }
-  
-  // repeated .safe_browsing.ClientPhishingRequest.Feature non_model_feature_map = 8;
-  total_size += 1 * this->non_model_feature_map_size();
-  for (int i = 0; i < this->non_model_feature_map_size(); i++) {
-    total_size +=
-      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-        this->non_model_feature_map(i));
-  }
-  
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = total_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void ClientPhishingRequest::CheckTypeAndMergeFrom(
-    const ::google::protobuf::MessageLite& from) {
-  MergeFrom(*::google::protobuf::down_cast<const ClientPhishingRequest*>(&from));
-}
-
-void ClientPhishingRequest::MergeFrom(const ClientPhishingRequest& from) {
-  GOOGLE_CHECK_NE(&from, this);
-  feature_map_.MergeFrom(from.feature_map_);
-  non_model_feature_map_.MergeFrom(from.non_model_feature_map_);
-  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_url()) {
-      set_url(from.url());
-    }
-    if (from.has_obsolete_hash_prefix()) {
-      set_obsolete_hash_prefix(from.obsolete_hash_prefix());
-    }
-    if (from.has_client_score()) {
-      set_client_score(from.client_score());
-    }
-    if (from.has_is_phishing()) {
-      set_is_phishing(from.is_phishing());
-    }
-    if (from.has_model_version()) {
-      set_model_version(from.model_version());
-    }
-    if (from.has_obsolete_referrer_url()) {
-      set_obsolete_referrer_url(from.obsolete_referrer_url());
-    }
-  }
-}
-
-void ClientPhishingRequest::CopyFrom(const ClientPhishingRequest& from) {
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool ClientPhishingRequest::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000004) != 0x00000004) return false;
-  
-  for (int i = 0; i < feature_map_size(); i++) {
-    if (!this->feature_map(i).IsInitialized()) return false;
-  }
-  for (int i = 0; i < non_model_feature_map_size(); i++) {
-    if (!this->non_model_feature_map(i).IsInitialized()) return false;
-  }
-  return true;
-}
-
-void ClientPhishingRequest::Swap(ClientPhishingRequest* other) {
-  if (other != this) {
-    std::swap(url_, other->url_);
-    std::swap(obsolete_hash_prefix_, other->obsolete_hash_prefix_);
-    std::swap(client_score_, other->client_score_);
-    std::swap(is_phishing_, other->is_phishing_);
-    feature_map_.Swap(&other->feature_map_);
-    std::swap(model_version_, other->model_version_);
-    non_model_feature_map_.Swap(&other->non_model_feature_map_);
-    std::swap(obsolete_referrer_url_, other->obsolete_referrer_url_);
-    std::swap(_has_bits_[0], other->_has_bits_[0]);
-    std::swap(_cached_size_, other->_cached_size_);
-  }
-}
-
-::std::string ClientPhishingRequest::GetTypeName() const {
-  return "safe_browsing.ClientPhishingRequest";
-}
-
-
-// ===================================================================
-
-#ifndef _MSC_VER
-const int ClientPhishingResponse::kPhishyFieldNumber;
-const int ClientPhishingResponse::kOBSOLETEWhitelistExpressionFieldNumber;
-#endif  // !_MSC_VER
-
-ClientPhishingResponse::ClientPhishingResponse()
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-}
-
-void ClientPhishingResponse::InitAsDefaultInstance() {
-}
-
-ClientPhishingResponse::ClientPhishingResponse(const ClientPhishingResponse& from)
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-  MergeFrom(from);
-}
-
-void ClientPhishingResponse::SharedCtor() {
-  _cached_size_ = 0;
-  phishy_ = false;
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-ClientPhishingResponse::~ClientPhishingResponse() {
-  SharedDtor();
-}
-
-void ClientPhishingResponse::SharedDtor() {
-  if (this != default_instance_) {
-  }
-}
-
-void ClientPhishingResponse::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ClientPhishingResponse& ClientPhishingResponse::default_instance() {
-  if (default_instance_ == NULL) protobuf_AddDesc_csd_2eproto();  return *default_instance_;
-}
-
-ClientPhishingResponse* ClientPhishingResponse::default_instance_ = NULL;
-
-ClientPhishingResponse* ClientPhishingResponse::New() const {
-  return new ClientPhishingResponse;
-}
-
-void ClientPhishingResponse::Clear() {
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    phishy_ = false;
-  }
-  obsolete_whitelist_expression_.Clear();
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-bool ClientPhishingResponse::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
-  ::google::protobuf::uint32 tag;
-  while ((tag = input->ReadTag()) != 0) {
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required bool phishy = 1;
-      case 1: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &phishy_)));
-          set_has_phishy();
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(18)) goto parse_OBSOLETE_whitelist_expression;
-        break;
-      }
-      
-      // repeated string OBSOLETE_whitelist_expression = 2;
-      case 2: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_OBSOLETE_whitelist_expression:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->add_obsolete_whitelist_expression()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(18)) goto parse_OBSOLETE_whitelist_expression;
-        if (input->ExpectAtEnd()) return true;
-        break;
-      }
-      
-      default: {
-      handle_uninterpreted:
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-          return true;
-        }
-        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
-        break;
-      }
-    }
-  }
-  return true;
-#undef DO_
-}
-
-void ClientPhishingResponse::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // required bool phishy = 1;
-  if (has_phishy()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->phishy(), output);
-  }
-  
-  // repeated string OBSOLETE_whitelist_expression = 2;
-  for (int i = 0; i < this->obsolete_whitelist_expression_size(); i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      2, this->obsolete_whitelist_expression(i), output);
-  }
-  
-}
-
-int ClientPhishingResponse::ByteSize() const {
-  int total_size = 0;
-  
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required bool phishy = 1;
-    if (has_phishy()) {
-      total_size += 1 + 1;
-    }
-    
-  }
-  // repeated string OBSOLETE_whitelist_expression = 2;
-  total_size += 1 * this->obsolete_whitelist_expression_size();
-  for (int i = 0; i < this->obsolete_whitelist_expression_size(); i++) {
-    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
-      this->obsolete_whitelist_expression(i));
-  }
-  
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = total_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void ClientPhishingResponse::CheckTypeAndMergeFrom(
-    const ::google::protobuf::MessageLite& from) {
-  MergeFrom(*::google::protobuf::down_cast<const ClientPhishingResponse*>(&from));
-}
-
-void ClientPhishingResponse::MergeFrom(const ClientPhishingResponse& from) {
-  GOOGLE_CHECK_NE(&from, this);
-  obsolete_whitelist_expression_.MergeFrom(from.obsolete_whitelist_expression_);
-  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_phishy()) {
-      set_phishy(from.phishy());
-    }
-  }
-}
-
-void ClientPhishingResponse::CopyFrom(const ClientPhishingResponse& from) {
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool ClientPhishingResponse::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
-  
-  return true;
-}
-
-void ClientPhishingResponse::Swap(ClientPhishingResponse* other) {
-  if (other != this) {
-    std::swap(phishy_, other->phishy_);
-    obsolete_whitelist_expression_.Swap(&other->obsolete_whitelist_expression_);
-    std::swap(_has_bits_[0], other->_has_bits_[0]);
-    std::swap(_cached_size_, other->_cached_size_);
-  }
-}
-
-::std::string ClientPhishingResponse::GetTypeName() const {
-  return "safe_browsing.ClientPhishingResponse";
-}
-
-
-// ===================================================================
-
-#ifndef _MSC_VER
-const int ClientMalwareRequest_Feature::kNameFieldNumber;
-const int ClientMalwareRequest_Feature::kValueFieldNumber;
-const int ClientMalwareRequest_Feature::kMetainfoFieldNumber;
-#endif  // !_MSC_VER
-
-ClientMalwareRequest_Feature::ClientMalwareRequest_Feature()
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-}
-
-void ClientMalwareRequest_Feature::InitAsDefaultInstance() {
-}
-
-ClientMalwareRequest_Feature::ClientMalwareRequest_Feature(const ClientMalwareRequest_Feature& from)
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-  MergeFrom(from);
-}
-
-void ClientMalwareRequest_Feature::SharedCtor() {
-  _cached_size_ = 0;
-  name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  value_ = 0;
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-ClientMalwareRequest_Feature::~ClientMalwareRequest_Feature() {
-  SharedDtor();
-}
-
-void ClientMalwareRequest_Feature::SharedDtor() {
-  if (name_ != &::google::protobuf::internal::kEmptyString) {
-    delete name_;
-  }
-  if (this != default_instance_) {
-  }
-}
-
-void ClientMalwareRequest_Feature::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ClientMalwareRequest_Feature& ClientMalwareRequest_Feature::default_instance() {
-  if (default_instance_ == NULL) protobuf_AddDesc_csd_2eproto();  return *default_instance_;
-}
-
-ClientMalwareRequest_Feature* ClientMalwareRequest_Feature::default_instance_ = NULL;
-
-ClientMalwareRequest_Feature* ClientMalwareRequest_Feature::New() const {
-  return new ClientMalwareRequest_Feature;
-}
-
-void ClientMalwareRequest_Feature::Clear() {
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (has_name()) {
-      if (name_ != &::google::protobuf::internal::kEmptyString) {
-        name_->clear();
-      }
-    }
-    value_ = 0;
-  }
-  metainfo_.Clear();
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-bool ClientMalwareRequest_Feature::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
-  ::google::protobuf::uint32 tag;
-  while ((tag = input->ReadTag()) != 0) {
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required string name = 1;
-      case 1: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_name()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(17)) goto parse_value;
-        break;
-      }
-      
-      // required double value = 2;
-      case 2: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED64) {
-         parse_value:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
-                 input, &value_)));
-          set_has_value();
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(26)) goto parse_metainfo;
-        break;
-      }
-      
-      // repeated string metainfo = 3;
-      case 3: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_metainfo:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->add_metainfo()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(26)) goto parse_metainfo;
-        if (input->ExpectAtEnd()) return true;
-        break;
-      }
-      
-      default: {
-      handle_uninterpreted:
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-          return true;
-        }
-        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
-        break;
-      }
-    }
-  }
-  return true;
-#undef DO_
-}
-
-void ClientMalwareRequest_Feature::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // required string name = 1;
-  if (has_name()) {
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      1, this->name(), output);
-  }
-  
-  // required double value = 2;
-  if (has_value()) {
-    ::google::protobuf::internal::WireFormatLite::WriteDouble(2, this->value(), output);
-  }
-  
-  // repeated string metainfo = 3;
-  for (int i = 0; i < this->metainfo_size(); i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      3, this->metainfo(i), output);
-  }
-  
-}
-
-int ClientMalwareRequest_Feature::ByteSize() const {
-  int total_size = 0;
-  
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required string name = 1;
-    if (has_name()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->name());
-    }
-    
-    // required double value = 2;
-    if (has_value()) {
-      total_size += 1 + 8;
-    }
-    
-  }
-  // repeated string metainfo = 3;
-  total_size += 1 * this->metainfo_size();
-  for (int i = 0; i < this->metainfo_size(); i++) {
-    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
-      this->metainfo(i));
-  }
-  
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = total_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void ClientMalwareRequest_Feature::CheckTypeAndMergeFrom(
-    const ::google::protobuf::MessageLite& from) {
-  MergeFrom(*::google::protobuf::down_cast<const ClientMalwareRequest_Feature*>(&from));
-}
-
-void ClientMalwareRequest_Feature::MergeFrom(const ClientMalwareRequest_Feature& from) {
-  GOOGLE_CHECK_NE(&from, this);
-  metainfo_.MergeFrom(from.metainfo_);
-  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_name()) {
-      set_name(from.name());
-    }
-    if (from.has_value()) {
-      set_value(from.value());
-    }
-  }
-}
-
-void ClientMalwareRequest_Feature::CopyFrom(const ClientMalwareRequest_Feature& from) {
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool ClientMalwareRequest_Feature::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000003) != 0x00000003) return false;
-  
-  return true;
-}
-
-void ClientMalwareRequest_Feature::Swap(ClientMalwareRequest_Feature* other) {
-  if (other != this) {
-    std::swap(name_, other->name_);
-    std::swap(value_, other->value_);
-    metainfo_.Swap(&other->metainfo_);
-    std::swap(_has_bits_[0], other->_has_bits_[0]);
-    std::swap(_cached_size_, other->_cached_size_);
-  }
-}
-
-::std::string ClientMalwareRequest_Feature::GetTypeName() const {
-  return "safe_browsing.ClientMalwareRequest.Feature";
-}
-
-
-// -------------------------------------------------------------------
-
-#ifndef _MSC_VER
-const int ClientMalwareRequest::kUrlFieldNumber;
-const int ClientMalwareRequest::kFeatureMapFieldNumber;
-const int ClientMalwareRequest::kReferrerUrlFieldNumber;
-#endif  // !_MSC_VER
-
-ClientMalwareRequest::ClientMalwareRequest()
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-}
-
-void ClientMalwareRequest::InitAsDefaultInstance() {
-}
-
-ClientMalwareRequest::ClientMalwareRequest(const ClientMalwareRequest& from)
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-  MergeFrom(from);
-}
-
-void ClientMalwareRequest::SharedCtor() {
-  _cached_size_ = 0;
-  url_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  referrer_url_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-ClientMalwareRequest::~ClientMalwareRequest() {
-  SharedDtor();
-}
-
-void ClientMalwareRequest::SharedDtor() {
-  if (url_ != &::google::protobuf::internal::kEmptyString) {
-    delete url_;
-  }
-  if (referrer_url_ != &::google::protobuf::internal::kEmptyString) {
-    delete referrer_url_;
-  }
-  if (this != default_instance_) {
-  }
-}
-
-void ClientMalwareRequest::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ClientMalwareRequest& ClientMalwareRequest::default_instance() {
-  if (default_instance_ == NULL) protobuf_AddDesc_csd_2eproto();  return *default_instance_;
-}
-
-ClientMalwareRequest* ClientMalwareRequest::default_instance_ = NULL;
-
-ClientMalwareRequest* ClientMalwareRequest::New() const {
-  return new ClientMalwareRequest;
-}
-
-void ClientMalwareRequest::Clear() {
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (has_url()) {
-      if (url_ != &::google::protobuf::internal::kEmptyString) {
-        url_->clear();
-      }
-    }
-    if (has_referrer_url()) {
-      if (referrer_url_ != &::google::protobuf::internal::kEmptyString) {
-        referrer_url_->clear();
-      }
-    }
-  }
-  feature_map_.Clear();
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-bool ClientMalwareRequest::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
-  ::google::protobuf::uint32 tag;
-  while ((tag = input->ReadTag()) != 0) {
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required string url = 1;
-      case 1: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_url()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(18)) goto parse_feature_map;
-        break;
-      }
-      
-      // repeated .safe_browsing.ClientMalwareRequest.Feature feature_map = 2;
-      case 2: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_feature_map:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-                input, add_feature_map()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(18)) goto parse_feature_map;
-        if (input->ExpectTag(34)) goto parse_referrer_url;
-        break;
-      }
-      
-      // optional string referrer_url = 4;
-      case 4: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_referrer_url:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_referrer_url()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectAtEnd()) return true;
-        break;
-      }
-      
-      default: {
-      handle_uninterpreted:
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-          return true;
-        }
-        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
-        break;
-      }
-    }
-  }
-  return true;
-#undef DO_
-}
-
-void ClientMalwareRequest::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // required string url = 1;
-  if (has_url()) {
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      1, this->url(), output);
-  }
-  
-  // repeated .safe_browsing.ClientMalwareRequest.Feature feature_map = 2;
-  for (int i = 0; i < this->feature_map_size(); i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      2, this->feature_map(i), output);
-  }
-  
-  // optional string referrer_url = 4;
-  if (has_referrer_url()) {
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      4, this->referrer_url(), output);
-  }
-  
-}
-
-int ClientMalwareRequest::ByteSize() const {
-  int total_size = 0;
-  
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required string url = 1;
-    if (has_url()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->url());
-    }
-    
-    // optional string referrer_url = 4;
-    if (has_referrer_url()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->referrer_url());
-    }
-    
-  }
-  // repeated .safe_browsing.ClientMalwareRequest.Feature feature_map = 2;
-  total_size += 1 * this->feature_map_size();
-  for (int i = 0; i < this->feature_map_size(); i++) {
-    total_size +=
-      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-        this->feature_map(i));
-  }
-  
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = total_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void ClientMalwareRequest::CheckTypeAndMergeFrom(
-    const ::google::protobuf::MessageLite& from) {
-  MergeFrom(*::google::protobuf::down_cast<const ClientMalwareRequest*>(&from));
-}
-
-void ClientMalwareRequest::MergeFrom(const ClientMalwareRequest& from) {
-  GOOGLE_CHECK_NE(&from, this);
-  feature_map_.MergeFrom(from.feature_map_);
-  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_url()) {
-      set_url(from.url());
-    }
-    if (from.has_referrer_url()) {
-      set_referrer_url(from.referrer_url());
-    }
-  }
-}
-
-void ClientMalwareRequest::CopyFrom(const ClientMalwareRequest& from) {
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool ClientMalwareRequest::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
-  
-  for (int i = 0; i < feature_map_size(); i++) {
-    if (!this->feature_map(i).IsInitialized()) return false;
-  }
-  return true;
-}
-
-void ClientMalwareRequest::Swap(ClientMalwareRequest* other) {
-  if (other != this) {
-    std::swap(url_, other->url_);
-    feature_map_.Swap(&other->feature_map_);
-    std::swap(referrer_url_, other->referrer_url_);
-    std::swap(_has_bits_[0], other->_has_bits_[0]);
-    std::swap(_cached_size_, other->_cached_size_);
-  }
-}
-
-::std::string ClientMalwareRequest::GetTypeName() const {
-  return "safe_browsing.ClientMalwareRequest";
-}
-
-
-// ===================================================================
-
-#ifndef _MSC_VER
-const int ClientMalwareResponse::kBlacklistFieldNumber;
-const int ClientMalwareResponse::kBadIpFieldNumber;
-#endif  // !_MSC_VER
-
-ClientMalwareResponse::ClientMalwareResponse()
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-}
-
-void ClientMalwareResponse::InitAsDefaultInstance() {
-}
-
-ClientMalwareResponse::ClientMalwareResponse(const ClientMalwareResponse& from)
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-  MergeFrom(from);
-}
-
-void ClientMalwareResponse::SharedCtor() {
-  _cached_size_ = 0;
-  blacklist_ = false;
-  bad_ip_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-ClientMalwareResponse::~ClientMalwareResponse() {
-  SharedDtor();
-}
-
-void ClientMalwareResponse::SharedDtor() {
-  if (bad_ip_ != &::google::protobuf::internal::kEmptyString) {
-    delete bad_ip_;
-  }
-  if (this != default_instance_) {
-  }
-}
-
-void ClientMalwareResponse::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ClientMalwareResponse& ClientMalwareResponse::default_instance() {
-  if (default_instance_ == NULL) protobuf_AddDesc_csd_2eproto();  return *default_instance_;
-}
-
-ClientMalwareResponse* ClientMalwareResponse::default_instance_ = NULL;
-
-ClientMalwareResponse* ClientMalwareResponse::New() const {
-  return new ClientMalwareResponse;
-}
-
-void ClientMalwareResponse::Clear() {
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    blacklist_ = false;
-    if (has_bad_ip()) {
-      if (bad_ip_ != &::google::protobuf::internal::kEmptyString) {
-        bad_ip_->clear();
-      }
-    }
-  }
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-bool ClientMalwareResponse::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
-  ::google::protobuf::uint32 tag;
-  while ((tag = input->ReadTag()) != 0) {
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required bool blacklist = 1;
-      case 1: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &blacklist_)));
-          set_has_blacklist();
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(18)) goto parse_bad_ip;
-        break;
-      }
-      
-      // optional string bad_ip = 2;
-      case 2: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_bad_ip:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_bad_ip()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectAtEnd()) return true;
-        break;
-      }
-      
-      default: {
-      handle_uninterpreted:
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-          return true;
-        }
-        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
-        break;
-      }
-    }
-  }
-  return true;
-#undef DO_
-}
-
-void ClientMalwareResponse::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // required bool blacklist = 1;
-  if (has_blacklist()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->blacklist(), output);
-  }
-  
-  // optional string bad_ip = 2;
-  if (has_bad_ip()) {
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      2, this->bad_ip(), output);
-  }
-  
-}
-
-int ClientMalwareResponse::ByteSize() const {
-  int total_size = 0;
-  
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required bool blacklist = 1;
-    if (has_blacklist()) {
-      total_size += 1 + 1;
-    }
-    
-    // optional string bad_ip = 2;
-    if (has_bad_ip()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->bad_ip());
-    }
-    
-  }
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = total_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void ClientMalwareResponse::CheckTypeAndMergeFrom(
-    const ::google::protobuf::MessageLite& from) {
-  MergeFrom(*::google::protobuf::down_cast<const ClientMalwareResponse*>(&from));
-}
-
-void ClientMalwareResponse::MergeFrom(const ClientMalwareResponse& from) {
-  GOOGLE_CHECK_NE(&from, this);
-  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_blacklist()) {
-      set_blacklist(from.blacklist());
-    }
-    if (from.has_bad_ip()) {
-      set_bad_ip(from.bad_ip());
-    }
-  }
-}
-
-void ClientMalwareResponse::CopyFrom(const ClientMalwareResponse& from) {
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool ClientMalwareResponse::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
-  
-  return true;
-}
-
-void ClientMalwareResponse::Swap(ClientMalwareResponse* other) {
-  if (other != this) {
-    std::swap(blacklist_, other->blacklist_);
-    std::swap(bad_ip_, other->bad_ip_);
-    std::swap(_has_bits_[0], other->_has_bits_[0]);
-    std::swap(_cached_size_, other->_cached_size_);
-  }
-}
-
-::std::string ClientMalwareResponse::GetTypeName() const {
-  return "safe_browsing.ClientMalwareResponse";
-}
 
 
 // ===================================================================
@@ -2641,6 +1146,765 @@ void ClientDownloadRequest_SignatureInfo::Swap(ClientDownloadRequest_SignatureIn
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
+const int ClientDownloadRequest_PEImageHeaders_DebugData::kDirectoryEntryFieldNumber;
+const int ClientDownloadRequest_PEImageHeaders_DebugData::kRawDataFieldNumber;
+#endif  // !_MSC_VER
+
+ClientDownloadRequest_PEImageHeaders_DebugData::ClientDownloadRequest_PEImageHeaders_DebugData()
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+}
+
+void ClientDownloadRequest_PEImageHeaders_DebugData::InitAsDefaultInstance() {
+}
+
+ClientDownloadRequest_PEImageHeaders_DebugData::ClientDownloadRequest_PEImageHeaders_DebugData(const ClientDownloadRequest_PEImageHeaders_DebugData& from)
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void ClientDownloadRequest_PEImageHeaders_DebugData::SharedCtor() {
+  _cached_size_ = 0;
+  directory_entry_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  raw_data_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+ClientDownloadRequest_PEImageHeaders_DebugData::~ClientDownloadRequest_PEImageHeaders_DebugData() {
+  SharedDtor();
+}
+
+void ClientDownloadRequest_PEImageHeaders_DebugData::SharedDtor() {
+  if (directory_entry_ != &::google::protobuf::internal::kEmptyString) {
+    delete directory_entry_;
+  }
+  if (raw_data_ != &::google::protobuf::internal::kEmptyString) {
+    delete raw_data_;
+  }
+  if (this != default_instance_) {
+  }
+}
+
+void ClientDownloadRequest_PEImageHeaders_DebugData::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ClientDownloadRequest_PEImageHeaders_DebugData& ClientDownloadRequest_PEImageHeaders_DebugData::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_csd_2eproto();  return *default_instance_;
+}
+
+ClientDownloadRequest_PEImageHeaders_DebugData* ClientDownloadRequest_PEImageHeaders_DebugData::default_instance_ = NULL;
+
+ClientDownloadRequest_PEImageHeaders_DebugData* ClientDownloadRequest_PEImageHeaders_DebugData::New() const {
+  return new ClientDownloadRequest_PEImageHeaders_DebugData;
+}
+
+void ClientDownloadRequest_PEImageHeaders_DebugData::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (has_directory_entry()) {
+      if (directory_entry_ != &::google::protobuf::internal::kEmptyString) {
+        directory_entry_->clear();
+      }
+    }
+    if (has_raw_data()) {
+      if (raw_data_ != &::google::protobuf::internal::kEmptyString) {
+        raw_data_->clear();
+      }
+    }
+  }
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+bool ClientDownloadRequest_PEImageHeaders_DebugData::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional bytes directory_entry = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_directory_entry()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(18)) goto parse_raw_data;
+        break;
+      }
+      
+      // optional bytes raw_data = 2;
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_raw_data:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_raw_data()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+      
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void ClientDownloadRequest_PEImageHeaders_DebugData::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // optional bytes directory_entry = 1;
+  if (has_directory_entry()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      1, this->directory_entry(), output);
+  }
+  
+  // optional bytes raw_data = 2;
+  if (has_raw_data()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      2, this->raw_data(), output);
+  }
+  
+}
+
+int ClientDownloadRequest_PEImageHeaders_DebugData::ByteSize() const {
+  int total_size = 0;
+  
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional bytes directory_entry = 1;
+    if (has_directory_entry()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->directory_entry());
+    }
+    
+    // optional bytes raw_data = 2;
+    if (has_raw_data()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->raw_data());
+    }
+    
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void ClientDownloadRequest_PEImageHeaders_DebugData::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const ClientDownloadRequest_PEImageHeaders_DebugData*>(&from));
+}
+
+void ClientDownloadRequest_PEImageHeaders_DebugData::MergeFrom(const ClientDownloadRequest_PEImageHeaders_DebugData& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_directory_entry()) {
+      set_directory_entry(from.directory_entry());
+    }
+    if (from.has_raw_data()) {
+      set_raw_data(from.raw_data());
+    }
+  }
+}
+
+void ClientDownloadRequest_PEImageHeaders_DebugData::CopyFrom(const ClientDownloadRequest_PEImageHeaders_DebugData& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ClientDownloadRequest_PEImageHeaders_DebugData::IsInitialized() const {
+  
+  return true;
+}
+
+void ClientDownloadRequest_PEImageHeaders_DebugData::Swap(ClientDownloadRequest_PEImageHeaders_DebugData* other) {
+  if (other != this) {
+    std::swap(directory_entry_, other->directory_entry_);
+    std::swap(raw_data_, other->raw_data_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::std::string ClientDownloadRequest_PEImageHeaders_DebugData::GetTypeName() const {
+  return "safe_browsing.ClientDownloadRequest.PEImageHeaders.DebugData";
+}
+
+
+// -------------------------------------------------------------------
+
+#ifndef _MSC_VER
+const int ClientDownloadRequest_PEImageHeaders::kDosHeaderFieldNumber;
+const int ClientDownloadRequest_PEImageHeaders::kFileHeaderFieldNumber;
+const int ClientDownloadRequest_PEImageHeaders::kOptionalHeaders32FieldNumber;
+const int ClientDownloadRequest_PEImageHeaders::kOptionalHeaders64FieldNumber;
+const int ClientDownloadRequest_PEImageHeaders::kSectionHeaderFieldNumber;
+const int ClientDownloadRequest_PEImageHeaders::kExportSectionDataFieldNumber;
+const int ClientDownloadRequest_PEImageHeaders::kDebugDataFieldNumber;
+#endif  // !_MSC_VER
+
+ClientDownloadRequest_PEImageHeaders::ClientDownloadRequest_PEImageHeaders()
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+}
+
+void ClientDownloadRequest_PEImageHeaders::InitAsDefaultInstance() {
+}
+
+ClientDownloadRequest_PEImageHeaders::ClientDownloadRequest_PEImageHeaders(const ClientDownloadRequest_PEImageHeaders& from)
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void ClientDownloadRequest_PEImageHeaders::SharedCtor() {
+  _cached_size_ = 0;
+  dos_header_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  file_header_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  optional_headers32_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  optional_headers64_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  export_section_data_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+ClientDownloadRequest_PEImageHeaders::~ClientDownloadRequest_PEImageHeaders() {
+  SharedDtor();
+}
+
+void ClientDownloadRequest_PEImageHeaders::SharedDtor() {
+  if (dos_header_ != &::google::protobuf::internal::kEmptyString) {
+    delete dos_header_;
+  }
+  if (file_header_ != &::google::protobuf::internal::kEmptyString) {
+    delete file_header_;
+  }
+  if (optional_headers32_ != &::google::protobuf::internal::kEmptyString) {
+    delete optional_headers32_;
+  }
+  if (optional_headers64_ != &::google::protobuf::internal::kEmptyString) {
+    delete optional_headers64_;
+  }
+  if (export_section_data_ != &::google::protobuf::internal::kEmptyString) {
+    delete export_section_data_;
+  }
+  if (this != default_instance_) {
+  }
+}
+
+void ClientDownloadRequest_PEImageHeaders::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ClientDownloadRequest_PEImageHeaders& ClientDownloadRequest_PEImageHeaders::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_csd_2eproto();  return *default_instance_;
+}
+
+ClientDownloadRequest_PEImageHeaders* ClientDownloadRequest_PEImageHeaders::default_instance_ = NULL;
+
+ClientDownloadRequest_PEImageHeaders* ClientDownloadRequest_PEImageHeaders::New() const {
+  return new ClientDownloadRequest_PEImageHeaders;
+}
+
+void ClientDownloadRequest_PEImageHeaders::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (has_dos_header()) {
+      if (dos_header_ != &::google::protobuf::internal::kEmptyString) {
+        dos_header_->clear();
+      }
+    }
+    if (has_file_header()) {
+      if (file_header_ != &::google::protobuf::internal::kEmptyString) {
+        file_header_->clear();
+      }
+    }
+    if (has_optional_headers32()) {
+      if (optional_headers32_ != &::google::protobuf::internal::kEmptyString) {
+        optional_headers32_->clear();
+      }
+    }
+    if (has_optional_headers64()) {
+      if (optional_headers64_ != &::google::protobuf::internal::kEmptyString) {
+        optional_headers64_->clear();
+      }
+    }
+    if (has_export_section_data()) {
+      if (export_section_data_ != &::google::protobuf::internal::kEmptyString) {
+        export_section_data_->clear();
+      }
+    }
+  }
+  section_header_.Clear();
+  debug_data_.Clear();
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+bool ClientDownloadRequest_PEImageHeaders::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional bytes dos_header = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_dos_header()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(18)) goto parse_file_header;
+        break;
+      }
+      
+      // optional bytes file_header = 2;
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_file_header:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_file_header()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(26)) goto parse_optional_headers32;
+        break;
+      }
+      
+      // optional bytes optional_headers32 = 3;
+      case 3: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_optional_headers32:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_optional_headers32()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(34)) goto parse_optional_headers64;
+        break;
+      }
+      
+      // optional bytes optional_headers64 = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_optional_headers64:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_optional_headers64()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(42)) goto parse_section_header;
+        break;
+      }
+      
+      // repeated bytes section_header = 5;
+      case 5: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_section_header:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->add_section_header()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(42)) goto parse_section_header;
+        if (input->ExpectTag(50)) goto parse_export_section_data;
+        break;
+      }
+      
+      // optional bytes export_section_data = 6;
+      case 6: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_export_section_data:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_export_section_data()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(58)) goto parse_debug_data;
+        break;
+      }
+      
+      // repeated .safe_browsing.ClientDownloadRequest.PEImageHeaders.DebugData debug_data = 7;
+      case 7: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_debug_data:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_debug_data()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(58)) goto parse_debug_data;
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+      
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void ClientDownloadRequest_PEImageHeaders::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // optional bytes dos_header = 1;
+  if (has_dos_header()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      1, this->dos_header(), output);
+  }
+  
+  // optional bytes file_header = 2;
+  if (has_file_header()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      2, this->file_header(), output);
+  }
+  
+  // optional bytes optional_headers32 = 3;
+  if (has_optional_headers32()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      3, this->optional_headers32(), output);
+  }
+  
+  // optional bytes optional_headers64 = 4;
+  if (has_optional_headers64()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      4, this->optional_headers64(), output);
+  }
+  
+  // repeated bytes section_header = 5;
+  for (int i = 0; i < this->section_header_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      5, this->section_header(i), output);
+  }
+  
+  // optional bytes export_section_data = 6;
+  if (has_export_section_data()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      6, this->export_section_data(), output);
+  }
+  
+  // repeated .safe_browsing.ClientDownloadRequest.PEImageHeaders.DebugData debug_data = 7;
+  for (int i = 0; i < this->debug_data_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      7, this->debug_data(i), output);
+  }
+  
+}
+
+int ClientDownloadRequest_PEImageHeaders::ByteSize() const {
+  int total_size = 0;
+  
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional bytes dos_header = 1;
+    if (has_dos_header()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->dos_header());
+    }
+    
+    // optional bytes file_header = 2;
+    if (has_file_header()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->file_header());
+    }
+    
+    // optional bytes optional_headers32 = 3;
+    if (has_optional_headers32()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->optional_headers32());
+    }
+    
+    // optional bytes optional_headers64 = 4;
+    if (has_optional_headers64()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->optional_headers64());
+    }
+    
+    // optional bytes export_section_data = 6;
+    if (has_export_section_data()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->export_section_data());
+    }
+    
+  }
+  // repeated bytes section_header = 5;
+  total_size += 1 * this->section_header_size();
+  for (int i = 0; i < this->section_header_size(); i++) {
+    total_size += ::google::protobuf::internal::WireFormatLite::BytesSize(
+      this->section_header(i));
+  }
+  
+  // repeated .safe_browsing.ClientDownloadRequest.PEImageHeaders.DebugData debug_data = 7;
+  total_size += 1 * this->debug_data_size();
+  for (int i = 0; i < this->debug_data_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->debug_data(i));
+  }
+  
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void ClientDownloadRequest_PEImageHeaders::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const ClientDownloadRequest_PEImageHeaders*>(&from));
+}
+
+void ClientDownloadRequest_PEImageHeaders::MergeFrom(const ClientDownloadRequest_PEImageHeaders& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  section_header_.MergeFrom(from.section_header_);
+  debug_data_.MergeFrom(from.debug_data_);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_dos_header()) {
+      set_dos_header(from.dos_header());
+    }
+    if (from.has_file_header()) {
+      set_file_header(from.file_header());
+    }
+    if (from.has_optional_headers32()) {
+      set_optional_headers32(from.optional_headers32());
+    }
+    if (from.has_optional_headers64()) {
+      set_optional_headers64(from.optional_headers64());
+    }
+    if (from.has_export_section_data()) {
+      set_export_section_data(from.export_section_data());
+    }
+  }
+}
+
+void ClientDownloadRequest_PEImageHeaders::CopyFrom(const ClientDownloadRequest_PEImageHeaders& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ClientDownloadRequest_PEImageHeaders::IsInitialized() const {
+  
+  return true;
+}
+
+void ClientDownloadRequest_PEImageHeaders::Swap(ClientDownloadRequest_PEImageHeaders* other) {
+  if (other != this) {
+    std::swap(dos_header_, other->dos_header_);
+    std::swap(file_header_, other->file_header_);
+    std::swap(optional_headers32_, other->optional_headers32_);
+    std::swap(optional_headers64_, other->optional_headers64_);
+    section_header_.Swap(&other->section_header_);
+    std::swap(export_section_data_, other->export_section_data_);
+    debug_data_.Swap(&other->debug_data_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::std::string ClientDownloadRequest_PEImageHeaders::GetTypeName() const {
+  return "safe_browsing.ClientDownloadRequest.PEImageHeaders";
+}
+
+
+// -------------------------------------------------------------------
+
+#ifndef _MSC_VER
+const int ClientDownloadRequest_ImageHeaders::kPeHeadersFieldNumber;
+#endif  // !_MSC_VER
+
+ClientDownloadRequest_ImageHeaders::ClientDownloadRequest_ImageHeaders()
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+}
+
+void ClientDownloadRequest_ImageHeaders::InitAsDefaultInstance() {
+  pe_headers_ = const_cast< ::safe_browsing::ClientDownloadRequest_PEImageHeaders*>(&::safe_browsing::ClientDownloadRequest_PEImageHeaders::default_instance());
+}
+
+ClientDownloadRequest_ImageHeaders::ClientDownloadRequest_ImageHeaders(const ClientDownloadRequest_ImageHeaders& from)
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void ClientDownloadRequest_ImageHeaders::SharedCtor() {
+  _cached_size_ = 0;
+  pe_headers_ = NULL;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+ClientDownloadRequest_ImageHeaders::~ClientDownloadRequest_ImageHeaders() {
+  SharedDtor();
+}
+
+void ClientDownloadRequest_ImageHeaders::SharedDtor() {
+  if (this != default_instance_) {
+    delete pe_headers_;
+  }
+}
+
+void ClientDownloadRequest_ImageHeaders::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ClientDownloadRequest_ImageHeaders& ClientDownloadRequest_ImageHeaders::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_csd_2eproto();  return *default_instance_;
+}
+
+ClientDownloadRequest_ImageHeaders* ClientDownloadRequest_ImageHeaders::default_instance_ = NULL;
+
+ClientDownloadRequest_ImageHeaders* ClientDownloadRequest_ImageHeaders::New() const {
+  return new ClientDownloadRequest_ImageHeaders;
+}
+
+void ClientDownloadRequest_ImageHeaders::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (has_pe_headers()) {
+      if (pe_headers_ != NULL) pe_headers_->::safe_browsing::ClientDownloadRequest_PEImageHeaders::Clear();
+    }
+  }
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+bool ClientDownloadRequest_ImageHeaders::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional .safe_browsing.ClientDownloadRequest.PEImageHeaders pe_headers = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_pe_headers()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+      
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void ClientDownloadRequest_ImageHeaders::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // optional .safe_browsing.ClientDownloadRequest.PEImageHeaders pe_headers = 1;
+  if (has_pe_headers()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      1, this->pe_headers(), output);
+  }
+  
+}
+
+int ClientDownloadRequest_ImageHeaders::ByteSize() const {
+  int total_size = 0;
+  
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional .safe_browsing.ClientDownloadRequest.PEImageHeaders pe_headers = 1;
+    if (has_pe_headers()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->pe_headers());
+    }
+    
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void ClientDownloadRequest_ImageHeaders::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const ClientDownloadRequest_ImageHeaders*>(&from));
+}
+
+void ClientDownloadRequest_ImageHeaders::MergeFrom(const ClientDownloadRequest_ImageHeaders& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_pe_headers()) {
+      mutable_pe_headers()->::safe_browsing::ClientDownloadRequest_PEImageHeaders::MergeFrom(from.pe_headers());
+    }
+  }
+}
+
+void ClientDownloadRequest_ImageHeaders::CopyFrom(const ClientDownloadRequest_ImageHeaders& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ClientDownloadRequest_ImageHeaders::IsInitialized() const {
+  
+  return true;
+}
+
+void ClientDownloadRequest_ImageHeaders::Swap(ClientDownloadRequest_ImageHeaders* other) {
+  if (other != this) {
+    std::swap(pe_headers_, other->pe_headers_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::std::string ClientDownloadRequest_ImageHeaders::GetTypeName() const {
+  return "safe_browsing.ClientDownloadRequest.ImageHeaders";
+}
+
+
+// -------------------------------------------------------------------
+
+#ifndef _MSC_VER
 const int ClientDownloadRequest::kUrlFieldNumber;
 const int ClientDownloadRequest::kDigestsFieldNumber;
 const int ClientDownloadRequest::kLengthFieldNumber;
@@ -2650,6 +1914,7 @@ const int ClientDownloadRequest::kUserInitiatedFieldNumber;
 const int ClientDownloadRequest::kFileBasenameFieldNumber;
 const int ClientDownloadRequest::kDownloadTypeFieldNumber;
 const int ClientDownloadRequest::kLocaleFieldNumber;
+const int ClientDownloadRequest::kImageHeadersFieldNumber;
 #endif  // !_MSC_VER
 
 ClientDownloadRequest::ClientDownloadRequest()
@@ -2660,6 +1925,7 @@ ClientDownloadRequest::ClientDownloadRequest()
 void ClientDownloadRequest::InitAsDefaultInstance() {
   digests_ = const_cast< ::safe_browsing::ClientDownloadRequest_Digests*>(&::safe_browsing::ClientDownloadRequest_Digests::default_instance());
   signature_ = const_cast< ::safe_browsing::ClientDownloadRequest_SignatureInfo*>(&::safe_browsing::ClientDownloadRequest_SignatureInfo::default_instance());
+  image_headers_ = const_cast< ::safe_browsing::ClientDownloadRequest_ImageHeaders*>(&::safe_browsing::ClientDownloadRequest_ImageHeaders::default_instance());
 }
 
 ClientDownloadRequest::ClientDownloadRequest(const ClientDownloadRequest& from)
@@ -2678,6 +1944,7 @@ void ClientDownloadRequest::SharedCtor() {
   file_basename_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   download_type_ = 0;
   locale_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  image_headers_ = NULL;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -2698,6 +1965,7 @@ void ClientDownloadRequest::SharedDtor() {
   if (this != default_instance_) {
     delete digests_;
     delete signature_;
+    delete image_headers_;
   }
 }
 
@@ -2743,6 +2011,9 @@ void ClientDownloadRequest::Clear() {
       if (locale_ != &::google::protobuf::internal::kEmptyString) {
         locale_->clear();
       }
+    }
+    if (has_image_headers()) {
+      if (image_headers_ != NULL) image_headers_->::safe_browsing::ClientDownloadRequest_ImageHeaders::Clear();
     }
   }
   resources_.Clear();
@@ -2886,6 +2157,20 @@ bool ClientDownloadRequest::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(146)) goto parse_image_headers;
+        break;
+      }
+      
+      // optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 18;
+      case 18: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_image_headers:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_image_headers()));
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -2959,6 +2244,12 @@ void ClientDownloadRequest::SerializeWithCachedSizes(
       11, this->locale(), output);
   }
   
+  // optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 18;
+  if (has_image_headers()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      18, this->image_headers(), output);
+  }
+  
 }
 
 int ClientDownloadRequest::ByteSize() const {
@@ -3020,6 +2311,13 @@ int ClientDownloadRequest::ByteSize() const {
           this->locale());
     }
     
+    // optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 18;
+    if (has_image_headers()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->image_headers());
+    }
+    
   }
   // repeated .safe_browsing.ClientDownloadRequest.Resource resources = 4;
   total_size += 1 * this->resources_size();
@@ -3070,6 +2368,9 @@ void ClientDownloadRequest::MergeFrom(const ClientDownloadRequest& from) {
     if (from.has_locale()) {
       set_locale(from.locale());
     }
+    if (from.has_image_headers()) {
+      mutable_image_headers()->::safe_browsing::ClientDownloadRequest_ImageHeaders::MergeFrom(from.image_headers());
+    }
   }
 }
 
@@ -3099,6 +2400,7 @@ void ClientDownloadRequest::Swap(ClientDownloadRequest* other) {
     std::swap(file_basename_, other->file_basename_);
     std::swap(download_type_, other->download_type_);
     std::swap(locale_, other->locale_);
+    std::swap(image_headers_, other->image_headers_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     std::swap(_cached_size_, other->_cached_size_);
   }
@@ -3575,730 +2877,6 @@ void ClientDownloadResponse::Swap(ClientDownloadResponse* other) {
 
 ::std::string ClientDownloadResponse::GetTypeName() const {
   return "safe_browsing.ClientDownloadResponse";
-}
-
-
-// ===================================================================
-
-bool ClientDownloadReport_Reason_IsValid(int value) {
-  switch(value) {
-    case 0:
-    case 1:
-    case 2:
-      return true;
-    default:
-      return false;
-  }
-}
-
-#ifndef _MSC_VER
-const ClientDownloadReport_Reason ClientDownloadReport::SHARE;
-const ClientDownloadReport_Reason ClientDownloadReport::FALSE_POSITIVE;
-const ClientDownloadReport_Reason ClientDownloadReport::APPEAL;
-const ClientDownloadReport_Reason ClientDownloadReport::Reason_MIN;
-const ClientDownloadReport_Reason ClientDownloadReport::Reason_MAX;
-const int ClientDownloadReport::Reason_ARRAYSIZE;
-#endif  // _MSC_VER
-#ifndef _MSC_VER
-const int ClientDownloadReport_UserInformation::kEmailFieldNumber;
-#endif  // !_MSC_VER
-
-ClientDownloadReport_UserInformation::ClientDownloadReport_UserInformation()
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-}
-
-void ClientDownloadReport_UserInformation::InitAsDefaultInstance() {
-}
-
-ClientDownloadReport_UserInformation::ClientDownloadReport_UserInformation(const ClientDownloadReport_UserInformation& from)
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-  MergeFrom(from);
-}
-
-void ClientDownloadReport_UserInformation::SharedCtor() {
-  _cached_size_ = 0;
-  email_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-ClientDownloadReport_UserInformation::~ClientDownloadReport_UserInformation() {
-  SharedDtor();
-}
-
-void ClientDownloadReport_UserInformation::SharedDtor() {
-  if (email_ != &::google::protobuf::internal::kEmptyString) {
-    delete email_;
-  }
-  if (this != default_instance_) {
-  }
-}
-
-void ClientDownloadReport_UserInformation::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ClientDownloadReport_UserInformation& ClientDownloadReport_UserInformation::default_instance() {
-  if (default_instance_ == NULL) protobuf_AddDesc_csd_2eproto();  return *default_instance_;
-}
-
-ClientDownloadReport_UserInformation* ClientDownloadReport_UserInformation::default_instance_ = NULL;
-
-ClientDownloadReport_UserInformation* ClientDownloadReport_UserInformation::New() const {
-  return new ClientDownloadReport_UserInformation;
-}
-
-void ClientDownloadReport_UserInformation::Clear() {
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (has_email()) {
-      if (email_ != &::google::protobuf::internal::kEmptyString) {
-        email_->clear();
-      }
-    }
-  }
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-bool ClientDownloadReport_UserInformation::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
-  ::google::protobuf::uint32 tag;
-  while ((tag = input->ReadTag()) != 0) {
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // optional string email = 1;
-      case 1: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_email()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectAtEnd()) return true;
-        break;
-      }
-      
-      default: {
-      handle_uninterpreted:
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-          return true;
-        }
-        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
-        break;
-      }
-    }
-  }
-  return true;
-#undef DO_
-}
-
-void ClientDownloadReport_UserInformation::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // optional string email = 1;
-  if (has_email()) {
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      1, this->email(), output);
-  }
-  
-}
-
-int ClientDownloadReport_UserInformation::ByteSize() const {
-  int total_size = 0;
-  
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // optional string email = 1;
-    if (has_email()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->email());
-    }
-    
-  }
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = total_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void ClientDownloadReport_UserInformation::CheckTypeAndMergeFrom(
-    const ::google::protobuf::MessageLite& from) {
-  MergeFrom(*::google::protobuf::down_cast<const ClientDownloadReport_UserInformation*>(&from));
-}
-
-void ClientDownloadReport_UserInformation::MergeFrom(const ClientDownloadReport_UserInformation& from) {
-  GOOGLE_CHECK_NE(&from, this);
-  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_email()) {
-      set_email(from.email());
-    }
-  }
-}
-
-void ClientDownloadReport_UserInformation::CopyFrom(const ClientDownloadReport_UserInformation& from) {
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool ClientDownloadReport_UserInformation::IsInitialized() const {
-  
-  return true;
-}
-
-void ClientDownloadReport_UserInformation::Swap(ClientDownloadReport_UserInformation* other) {
-  if (other != this) {
-    std::swap(email_, other->email_);
-    std::swap(_has_bits_[0], other->_has_bits_[0]);
-    std::swap(_cached_size_, other->_cached_size_);
-  }
-}
-
-::std::string ClientDownloadReport_UserInformation::GetTypeName() const {
-  return "safe_browsing.ClientDownloadReport.UserInformation";
-}
-
-
-// -------------------------------------------------------------------
-
-#ifndef _MSC_VER
-const int ClientDownloadReport::kReasonFieldNumber;
-const int ClientDownloadReport::kDownloadRequestFieldNumber;
-const int ClientDownloadReport::kUserInformationFieldNumber;
-const int ClientDownloadReport::kCommentFieldNumber;
-const int ClientDownloadReport::kDownloadResponseFieldNumber;
-#endif  // !_MSC_VER
-
-ClientDownloadReport::ClientDownloadReport()
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-}
-
-void ClientDownloadReport::InitAsDefaultInstance() {
-  download_request_ = const_cast< ::safe_browsing::ClientDownloadRequest*>(&::safe_browsing::ClientDownloadRequest::default_instance());
-  user_information_ = const_cast< ::safe_browsing::ClientDownloadReport_UserInformation*>(&::safe_browsing::ClientDownloadReport_UserInformation::default_instance());
-  download_response_ = const_cast< ::safe_browsing::ClientDownloadResponse*>(&::safe_browsing::ClientDownloadResponse::default_instance());
-}
-
-ClientDownloadReport::ClientDownloadReport(const ClientDownloadReport& from)
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-  MergeFrom(from);
-}
-
-void ClientDownloadReport::SharedCtor() {
-  _cached_size_ = 0;
-  reason_ = 0;
-  download_request_ = NULL;
-  user_information_ = NULL;
-  comment_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  download_response_ = NULL;
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-ClientDownloadReport::~ClientDownloadReport() {
-  SharedDtor();
-}
-
-void ClientDownloadReport::SharedDtor() {
-  if (comment_ != &::google::protobuf::internal::kEmptyString) {
-    delete comment_;
-  }
-  if (this != default_instance_) {
-    delete download_request_;
-    delete user_information_;
-    delete download_response_;
-  }
-}
-
-void ClientDownloadReport::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ClientDownloadReport& ClientDownloadReport::default_instance() {
-  if (default_instance_ == NULL) protobuf_AddDesc_csd_2eproto();  return *default_instance_;
-}
-
-ClientDownloadReport* ClientDownloadReport::default_instance_ = NULL;
-
-ClientDownloadReport* ClientDownloadReport::New() const {
-  return new ClientDownloadReport;
-}
-
-void ClientDownloadReport::Clear() {
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    reason_ = 0;
-    if (has_download_request()) {
-      if (download_request_ != NULL) download_request_->::safe_browsing::ClientDownloadRequest::Clear();
-    }
-    if (has_user_information()) {
-      if (user_information_ != NULL) user_information_->::safe_browsing::ClientDownloadReport_UserInformation::Clear();
-    }
-    if (has_comment()) {
-      if (comment_ != &::google::protobuf::internal::kEmptyString) {
-        comment_->clear();
-      }
-    }
-    if (has_download_response()) {
-      if (download_response_ != NULL) download_response_->::safe_browsing::ClientDownloadResponse::Clear();
-    }
-  }
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-bool ClientDownloadReport::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
-  ::google::protobuf::uint32 tag;
-  while ((tag = input->ReadTag()) != 0) {
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // optional .safe_browsing.ClientDownloadReport.Reason reason = 1;
-      case 1: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          if (::safe_browsing::ClientDownloadReport_Reason_IsValid(value)) {
-            set_reason(static_cast< ::safe_browsing::ClientDownloadReport_Reason >(value));
-          }
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(18)) goto parse_download_request;
-        break;
-      }
-      
-      // optional .safe_browsing.ClientDownloadRequest download_request = 2;
-      case 2: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_download_request:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_download_request()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(26)) goto parse_user_information;
-        break;
-      }
-      
-      // optional .safe_browsing.ClientDownloadReport.UserInformation user_information = 3;
-      case 3: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_user_information:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_user_information()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(34)) goto parse_comment;
-        break;
-      }
-      
-      // optional bytes comment = 4;
-      case 4: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_comment:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-                input, this->mutable_comment()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(42)) goto parse_download_response;
-        break;
-      }
-      
-      // optional .safe_browsing.ClientDownloadResponse download_response = 5;
-      case 5: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_download_response:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_download_response()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectAtEnd()) return true;
-        break;
-      }
-      
-      default: {
-      handle_uninterpreted:
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-          return true;
-        }
-        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
-        break;
-      }
-    }
-  }
-  return true;
-#undef DO_
-}
-
-void ClientDownloadReport::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // optional .safe_browsing.ClientDownloadReport.Reason reason = 1;
-  if (has_reason()) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      1, this->reason(), output);
-  }
-  
-  // optional .safe_browsing.ClientDownloadRequest download_request = 2;
-  if (has_download_request()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      2, this->download_request(), output);
-  }
-  
-  // optional .safe_browsing.ClientDownloadReport.UserInformation user_information = 3;
-  if (has_user_information()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      3, this->user_information(), output);
-  }
-  
-  // optional bytes comment = 4;
-  if (has_comment()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(
-      4, this->comment(), output);
-  }
-  
-  // optional .safe_browsing.ClientDownloadResponse download_response = 5;
-  if (has_download_response()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      5, this->download_response(), output);
-  }
-  
-}
-
-int ClientDownloadReport::ByteSize() const {
-  int total_size = 0;
-  
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // optional .safe_browsing.ClientDownloadReport.Reason reason = 1;
-    if (has_reason()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::EnumSize(this->reason());
-    }
-    
-    // optional .safe_browsing.ClientDownloadRequest download_request = 2;
-    if (has_download_request()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          this->download_request());
-    }
-    
-    // optional .safe_browsing.ClientDownloadReport.UserInformation user_information = 3;
-    if (has_user_information()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          this->user_information());
-    }
-    
-    // optional bytes comment = 4;
-    if (has_comment()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::BytesSize(
-          this->comment());
-    }
-    
-    // optional .safe_browsing.ClientDownloadResponse download_response = 5;
-    if (has_download_response()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          this->download_response());
-    }
-    
-  }
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = total_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void ClientDownloadReport::CheckTypeAndMergeFrom(
-    const ::google::protobuf::MessageLite& from) {
-  MergeFrom(*::google::protobuf::down_cast<const ClientDownloadReport*>(&from));
-}
-
-void ClientDownloadReport::MergeFrom(const ClientDownloadReport& from) {
-  GOOGLE_CHECK_NE(&from, this);
-  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_reason()) {
-      set_reason(from.reason());
-    }
-    if (from.has_download_request()) {
-      mutable_download_request()->::safe_browsing::ClientDownloadRequest::MergeFrom(from.download_request());
-    }
-    if (from.has_user_information()) {
-      mutable_user_information()->::safe_browsing::ClientDownloadReport_UserInformation::MergeFrom(from.user_information());
-    }
-    if (from.has_comment()) {
-      set_comment(from.comment());
-    }
-    if (from.has_download_response()) {
-      mutable_download_response()->::safe_browsing::ClientDownloadResponse::MergeFrom(from.download_response());
-    }
-  }
-}
-
-void ClientDownloadReport::CopyFrom(const ClientDownloadReport& from) {
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool ClientDownloadReport::IsInitialized() const {
-  
-  if (has_download_request()) {
-    if (!this->download_request().IsInitialized()) return false;
-  }
-  if (has_download_response()) {
-    if (!this->download_response().IsInitialized()) return false;
-  }
-  return true;
-}
-
-void ClientDownloadReport::Swap(ClientDownloadReport* other) {
-  if (other != this) {
-    std::swap(reason_, other->reason_);
-    std::swap(download_request_, other->download_request_);
-    std::swap(user_information_, other->user_information_);
-    std::swap(comment_, other->comment_);
-    std::swap(download_response_, other->download_response_);
-    std::swap(_has_bits_[0], other->_has_bits_[0]);
-    std::swap(_cached_size_, other->_cached_size_);
-  }
-}
-
-::std::string ClientDownloadReport::GetTypeName() const {
-  return "safe_browsing.ClientDownloadReport";
-}
-
-
-// ===================================================================
-
-bool ClientUploadResponse_UploadStatus_IsValid(int value) {
-  switch(value) {
-    case 0:
-    case 1:
-      return true;
-    default:
-      return false;
-  }
-}
-
-#ifndef _MSC_VER
-const ClientUploadResponse_UploadStatus ClientUploadResponse::SUCCESS;
-const ClientUploadResponse_UploadStatus ClientUploadResponse::UPLOAD_FAILURE;
-const ClientUploadResponse_UploadStatus ClientUploadResponse::UploadStatus_MIN;
-const ClientUploadResponse_UploadStatus ClientUploadResponse::UploadStatus_MAX;
-const int ClientUploadResponse::UploadStatus_ARRAYSIZE;
-#endif  // _MSC_VER
-#ifndef _MSC_VER
-const int ClientUploadResponse::kStatusFieldNumber;
-const int ClientUploadResponse::kPermalinkFieldNumber;
-#endif  // !_MSC_VER
-
-ClientUploadResponse::ClientUploadResponse()
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-}
-
-void ClientUploadResponse::InitAsDefaultInstance() {
-}
-
-ClientUploadResponse::ClientUploadResponse(const ClientUploadResponse& from)
-  : ::google::protobuf::MessageLite() {
-  SharedCtor();
-  MergeFrom(from);
-}
-
-void ClientUploadResponse::SharedCtor() {
-  _cached_size_ = 0;
-  status_ = 0;
-  permalink_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-ClientUploadResponse::~ClientUploadResponse() {
-  SharedDtor();
-}
-
-void ClientUploadResponse::SharedDtor() {
-  if (permalink_ != &::google::protobuf::internal::kEmptyString) {
-    delete permalink_;
-  }
-  if (this != default_instance_) {
-  }
-}
-
-void ClientUploadResponse::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ClientUploadResponse& ClientUploadResponse::default_instance() {
-  if (default_instance_ == NULL) protobuf_AddDesc_csd_2eproto();  return *default_instance_;
-}
-
-ClientUploadResponse* ClientUploadResponse::default_instance_ = NULL;
-
-ClientUploadResponse* ClientUploadResponse::New() const {
-  return new ClientUploadResponse;
-}
-
-void ClientUploadResponse::Clear() {
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    status_ = 0;
-    if (has_permalink()) {
-      if (permalink_ != &::google::protobuf::internal::kEmptyString) {
-        permalink_->clear();
-      }
-    }
-  }
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-bool ClientUploadResponse::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
-  ::google::protobuf::uint32 tag;
-  while ((tag = input->ReadTag()) != 0) {
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // optional .safe_browsing.ClientUploadResponse.UploadStatus status = 1;
-      case 1: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          if (::safe_browsing::ClientUploadResponse_UploadStatus_IsValid(value)) {
-            set_status(static_cast< ::safe_browsing::ClientUploadResponse_UploadStatus >(value));
-          }
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(18)) goto parse_permalink;
-        break;
-      }
-      
-      // optional string permalink = 2;
-      case 2: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_permalink:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_permalink()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectAtEnd()) return true;
-        break;
-      }
-      
-      default: {
-      handle_uninterpreted:
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-          return true;
-        }
-        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
-        break;
-      }
-    }
-  }
-  return true;
-#undef DO_
-}
-
-void ClientUploadResponse::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // optional .safe_browsing.ClientUploadResponse.UploadStatus status = 1;
-  if (has_status()) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      1, this->status(), output);
-  }
-  
-  // optional string permalink = 2;
-  if (has_permalink()) {
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      2, this->permalink(), output);
-  }
-  
-}
-
-int ClientUploadResponse::ByteSize() const {
-  int total_size = 0;
-  
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // optional .safe_browsing.ClientUploadResponse.UploadStatus status = 1;
-    if (has_status()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::EnumSize(this->status());
-    }
-    
-    // optional string permalink = 2;
-    if (has_permalink()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->permalink());
-    }
-    
-  }
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = total_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void ClientUploadResponse::CheckTypeAndMergeFrom(
-    const ::google::protobuf::MessageLite& from) {
-  MergeFrom(*::google::protobuf::down_cast<const ClientUploadResponse*>(&from));
-}
-
-void ClientUploadResponse::MergeFrom(const ClientUploadResponse& from) {
-  GOOGLE_CHECK_NE(&from, this);
-  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_status()) {
-      set_status(from.status());
-    }
-    if (from.has_permalink()) {
-      set_permalink(from.permalink());
-    }
-  }
-}
-
-void ClientUploadResponse::CopyFrom(const ClientUploadResponse& from) {
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool ClientUploadResponse::IsInitialized() const {
-  
-  return true;
-}
-
-void ClientUploadResponse::Swap(ClientUploadResponse* other) {
-  if (other != this) {
-    std::swap(status_, other->status_);
-    std::swap(permalink_, other->permalink_);
-    std::swap(_has_bits_[0], other->_has_bits_[0]);
-    std::swap(_cached_size_, other->_cached_size_);
-  }
-}
-
-::std::string ClientUploadResponse::GetTypeName() const {
-  return "safe_browsing.ClientUploadResponse";
 }
 
 
