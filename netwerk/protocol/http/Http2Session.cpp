@@ -98,6 +98,8 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport)
   , mOutputQueueSent(0)
   , mLastReadEpoch(PR_IntervalNow())
   , mPingSentEpoch(0)
+  , mWaitingForSettingsAck(false)
+  , mGoAwayOnPush(false)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -808,6 +810,8 @@ Http2Session::SendHello()
     CopyAsNetwork16(packet + 8 + (6 * numberOfEntries), SETTINGS_TYPE_MAX_CONCURRENT);
     // The value portion of the setting pair is already initialized to 0
     numberOfEntries++;
+
+    mWaitingForSettingsAck = true;
   }
 
   // Advertise the Push RWIN for the session, and on each new pull stream
@@ -1359,8 +1363,11 @@ Http2Session::RecvSettings(Http2Session *self)
 
   self->ResetDownstreamState();
 
-  if (!(self->mInputFrameFlags & kFlag_ACK))
+  if (!(self->mInputFrameFlags & kFlag_ACK)) {
     self->GenerateSettingsAck();
+  } else if (self->mWaitingForSettingsAck) {
+    self->mGoAwayOnPush = true;
+  }
 
   return NS_OK;
 }
@@ -1444,8 +1451,12 @@ Http2Session::RecvPushPromise(Http2Session *self)
           "mode refused.\n", self));
     self->GenerateRstStream(REFUSED_STREAM_ERROR, promisedID);
   } else if (!gHttpHandler->AllowPush()) {
-    // MAX_CONCURRENT_STREAMS of 0 in settings disabled push
+    // ENABLE_PUSH and MAX_CONCURRENT_STREAMS of 0 in settings disabled push
     LOG3(("Http2Session::RecvPushPromise Push Recevied when Disabled\n"));
+    if (self->mGoAwayOnPush) {
+      LOG3(("Http2Session::RecvPushPromise sending GOAWAY"));
+      RETURN_SESSION_ERROR(self, PROTOCOL_ERROR);
+    }
     self->GenerateRstStream(REFUSED_STREAM_ERROR, promisedID);
   } else if (!(self->mInputFrameFlags & kFlag_END_PUSH_PROMISE)) {
     LOG3(("Http2Session::RecvPushPromise no support for multi frame push\n"));
