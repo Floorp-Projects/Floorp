@@ -58,6 +58,11 @@ BackCert::Init(const SECItem& certDER)
   } else if (nssCert->version.len == 1 &&
              nssCert->version.data[0] == static_cast<uint8_t>(der::Version::v2)) {
     version = der::Version::v2;
+  } else if (nssCert->version.len == 1 &&
+             nssCert->version.data[0] == static_cast<uint8_t>(der::Version::v2)) {
+    // XXX(bug 1031093): We shouldn't accept an explicit encoding of v1, but we
+    // do here for compatibility reasons.
+    version = der::Version::v1;
   } else if (nssCert->version.len == 0) {
     version = der::Version::v1;
   } else {
