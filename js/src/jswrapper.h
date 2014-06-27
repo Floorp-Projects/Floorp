@@ -73,7 +73,7 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
 
     static JSObject *Renew(JSContext *cx, JSObject *existing, JSObject *obj, const Wrapper *handler);
 
-    static Wrapper *wrapperHandler(JSObject *wrapper);
+    static const Wrapper *wrapperHandler(JSObject *wrapper);
 
     static JSObject *wrappedObject(JSObject *wrapper);
 

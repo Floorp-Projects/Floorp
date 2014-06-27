@@ -374,11 +374,11 @@ const uint32_t PROXY_HANDLER_SLOT   = 1;
 const uint32_t PROXY_EXTRA_SLOT     = 2;
 const uint32_t PROXY_MINIMUM_SLOTS  = 4;
 
-inline BaseProxyHandler *
+inline const BaseProxyHandler *
 GetProxyHandler(JSObject *obj)
 {
     JS_ASSERT(IsProxy(obj));
-    return (BaseProxyHandler *) GetReservedSlot(obj, PROXY_HANDLER_SLOT).toPrivate();
+    return (const BaseProxyHandler *) GetReservedSlot(obj, PROXY_HANDLER_SLOT).toPrivate();
 }
 
 inline const Value &
@@ -471,7 +471,7 @@ class JS_FRIEND_API(AutoEnterPolicy)
 {
   public:
     typedef BaseProxyHandler::Action Action;
-    AutoEnterPolicy(JSContext *cx, BaseProxyHandler *handler,
+    AutoEnterPolicy(JSContext *cx, const BaseProxyHandler *handler,
                     HandleObject wrapper, HandleId id, Action act, bool mayThrow)
 #ifdef JS_DEBUG
         : context(nullptr)
