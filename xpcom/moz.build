@@ -38,9 +38,6 @@ TEST_TOOL_DIRS += [
 #    'reflect/xptcall/tests,
 #]
 
-if CONFIG['DEHYDRA_PATH']:
-    DIRS += ['analysis']
-
 CONFIGURE_DEFINE_FILES += [
     'xpcom-config.h',
     'xpcom-private.h',
