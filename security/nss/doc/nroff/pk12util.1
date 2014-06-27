@@ -2,12 +2,12 @@
 .\"     Title: PK12UTIL
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 12 November 2013
+.\"      Date:  5 June 2014
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "PK12UTIL" "1" "12 November 2013" "nss-tools" "NSS Security Tools"
+.TH "PK12UTIL" "1" "5 June 2014" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -31,7 +31,7 @@
 pk12util \- Export and import keys and certificate to or from a PKCS #12 file and the NSS database
 .SH "SYNOPSIS"
 .HP \w'\fBpk12util\fR\ 'u
-\fBpk12util\fR [\-i\ p12File\ [\-h\ tokenname]\ [\-v]\ [common\-options]] [\-l\ p12File\ [\-h\ tokenname]\ [\-r]\ [common\-options]] [\-o\ p12File\ \-n\ certname\ [\-c\ keyCipher]\ [\-C\ certCipher]\ [\-m|\-\-key_len\ keyLen]\ [\-n|\-\-cert_key_len\ certKeyLen]\ [common\-options]] [common\-options\ are:\ [\-d\ [sql:]directory]\ [\-P\ dbprefix]\ [\-k\ slotPasswordFile|\-K\ slotPassword]\ [\-w\ p12filePasswordFile|\-W\ p12filePassword]]
+\fBpk12util\fR [\-i\ p12File|\-l\ p12File|\-o\ p12File] [\-d\ [sql:]directory] [\-h\ tokenname] [\-P\ dbprefix] [\-r] [\-v] [\-k\ slotPasswordFile|\-K\ slotPassword] [\-w\ p12filePasswordFile|\-W\ p12filePassword]
 .SH "STATUS"
 .PP
 This documentation is still work in progress\&. Please contribute to the initial review in
@@ -61,9 +61,14 @@ Export keys and certificates from the security database to a PKCS#12 file\&.
 .PP
 \fBArguments\fR
 .PP
-\-n certname
+\-c keyCipher
 .RS 4
-Specify the nickname of the cert and private key to export\&.
+Specify the key encryption algorithm\&.
+.RE
+.PP
+\-C certCipher
+.RS 4
+Specify the key cert (overall package) encryption algorithm\&.
 .RE
 .PP
 \-d [sql:]directory
@@ -80,19 +85,9 @@ pkcs11\&.txt)\&. If the prefix
 is not used, then the tool assumes that the given databases are in the old format\&.
 .RE
 .PP
-\-P prefix
-.RS 4
-Specify the prefix used on the certificate and key databases\&. This option is provided as a special case\&. Changing the names of the certificate and key databases is not recommended\&.
-.RE
-.PP
 \-h tokenname
 .RS 4
 Specify the name of the token to import into or export from\&.
-.RE
-.PP
-\-v
-.RS 4
-Enable debug logging when importing\&.
 .RE
 .PP
 \-k slotPasswordFile
@@ -105,26 +100,6 @@ Specify the text file containing the slot\*(Aqs password\&.
 Specify the slot\*(Aqs password\&.
 .RE
 .PP
-\-w p12filePasswordFile
-.RS 4
-Specify the text file containing the pkcs #12 file password\&.
-.RE
-.PP
-\-W p12filePassword
-.RS 4
-Specify the pkcs #12 file password\&.
-.RE
-.PP
-\-c keyCipher
-.RS 4
-Specify the key encryption algorithm\&.
-.RE
-.PP
-\-C certCipher
-.RS 4
-Specify the key cert (overall package) encryption algorithm\&.
-.RE
-.PP
 \-m | \-\-key\-len keyLength
 .RS 4
 Specify the desired length of the symmetric key to be used to encrypt the private key\&.
@@ -135,9 +110,34 @@ Specify the desired length of the symmetric key to be used to encrypt the privat
 Specify the desired length of the symmetric key to be used to encrypt the certificates and other meta\-data\&.
 .RE
 .PP
+\-n certname
+.RS 4
+Specify the nickname of the cert and private key to export\&.
+.RE
+.PP
+\-P prefix
+.RS 4
+Specify the prefix used on the certificate and key databases\&. This option is provided as a special case\&. Changing the names of the certificate and key databases is not recommended\&.
+.RE
+.PP
 \-r
 .RS 4
 Dumps all of the data in raw (binary) form\&. This must be saved as a DER file\&. The default is to return information in a pretty\-print ASCII format, which displays the information about the certificates and public keys in the p12 file\&.
+.RE
+.PP
+\-v
+.RS 4
+Enable debug logging when importing\&.
+.RE
+.PP
+\-w p12filePasswordFile
+.RS 4
+Specify the text file containing the pkcs #12 file password\&.
+.RE
+.PP
+\-W p12filePassword
+.RS 4
+Specify the pkcs #12 file password\&.
 .RE
 .SH "RETURN CODES"
 .sp
@@ -437,18 +437,12 @@ for importing a certificate or key is the PKCS#12 input file (\fB\-i\fR) and som
 for a directory or
 \fB\-h\fR
 for a token)\&.
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
+.PP
 pk12util \-i p12File [\-h tokenname] [\-v] [\-d [sql:]directory] [\-P dbprefix] [\-k slotPasswordFile|\-K slotPassword] [\-w p12filePasswordFile|\-W p12filePassword]
-.fi
-.if n \{\
-.RE
-.\}
 .PP
 For example:
+.PP
+
 .sp
 .if n \{\
 .RS 4
@@ -474,16 +468,8 @@ pk12util: PKCS12 IMPORT SUCCESSFUL
 Using the
 \fBpk12util\fR
 command to export certificates and keys requires both the name of the certificate to extract from the database (\fB\-n\fR) and the PKCS#12\-formatted output file to write to\&. There are optional parameters that can be used to encrypt the file to protect the certificate material\&.
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
+.PP
 pk12util \-o p12File \-n certname [\-c keyCipher] [\-C certCipher] [\-m|\-\-key_len keyLen] [\-n|\-\-cert_key_len certKeyLen] [\-d [sql:]directory] [\-P dbprefix] [\-k slotPasswordFile|\-K slotPassword] [\-w p12filePasswordFile|\-W p12filePassword]
-.fi
-.if n \{\
-.RE
-.\}
 .PP
 For example:
 .sp
@@ -506,16 +492,8 @@ The information in a
 file are not human\-readable\&. The certificates and keys in the file can be printed (listed) in a human\-readable pretty\-print format that shows information for every certificate and any public keys in the
 \&.p12
 file\&.
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
+.PP
 pk12util \-l p12File [\-h tokenname] [\-r] [\-d [sql:]directory] [\-P dbprefix] [\-k slotPasswordFile|\-K slotPassword] [\-w p12filePasswordFile|\-W p12filePassword]
-.fi
-.if n \{\
-.RE
-.\}
 .PP
 For example, this prints the default ASCII output:
 .sp
@@ -542,7 +520,7 @@ Certificate:
         Issuer: "E=personal\-freemail@thawte\&.com,CN=Thawte Personal Freemail C
             A,OU=Certification Services Division,O=Thawte Consulting,L=Cape T
             own,ST=Western Cape,C=ZA"
-\&.\&.\&.\&.
+    
 .fi
 .if n \{\
 .RE
@@ -561,7 +539,7 @@ file000N\&.der, incrementing the number for every certificate:
 .RS 4
 .\}
 .nf
-# pk12util \-l test\&.p12 \-r
+pk12util \-l test\&.p12 \-r
 Enter password for PKCS12 file: 
 Key(shrouded):
     Friendly Name: Thawte Freemail Member\*(Aqs Thawte Consulting (Pty) Ltd\&. ID
@@ -574,6 +552,7 @@ Key(shrouded):
 Certificate    Friendly Name: Thawte Personal Freemail Issuing CA \- Thawte Consulting
 
 Certificate    Friendly Name: Thawte Freemail Member\*(Aqs Thawte Consulting (Pty) Ltd\&. ID
+    
 .fi
 .if n \{\
 .RE
@@ -592,7 +571,17 @@ Several types of ciphers are supported\&.
 .PP
 Symmetric CBC ciphers for PKCS#5 V2
 .RS 4
-DES_CBC
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+DES\-CBC
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -696,7 +685,17 @@ CAMELLIA\-256\-CBC
 .PP
 PKCS#12 PBE ciphers
 .RS 4
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 PKCS #12 PBE with Sha1 and 128 Bit RC4
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -811,7 +810,17 @@ PKCS12 V2 PBE with SHA1 and 40 Bit RC2 CBC
 .PP
 PKCS#5 PBE ciphers
 .RS 4
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 PKCS #5 Password Based Encryption with MD2 and DES CBC
+.RE
 .sp
 .RS 4
 .ie n \{\

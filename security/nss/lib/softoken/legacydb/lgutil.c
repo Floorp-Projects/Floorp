@@ -18,7 +18,7 @@ const CK_ATTRIBUTE *
 lg_FindAttribute(CK_ATTRIBUTE_TYPE type, const CK_ATTRIBUTE *templ,
 		 CK_ULONG count )
 {
-    int i;
+    unsigned int i;
 
     for (i=0; i < count; i++) {
 	if (templ[i].type == type) {

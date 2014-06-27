@@ -625,7 +625,8 @@ DISABLE:               0x40000000</programlisting>
 	<para><command>Executable</command> specifies that the file is to be executed during the course of the installation. Typically, this string is used for a setup program provided by a module vendor, such as a self-extracting setup executable. More than one file can be specified as executable, in which case the files are run in the order in which they are specified in the script file.</para>
 	<para><command>FilePermissions</command> sets permissions on any referenced files in a string of octal digits, according to the standard Unix format. This string is a bitwise OR.</para>
 
-<programlisting>user read:                0400
+<programlisting>
+user read:                0400
 user write:               0200
 user execute:             0100
 group read:               0040
@@ -633,7 +634,8 @@ group write:              0020
 group execute:            0010
 other read:               0004
 other write:              0002
-other execute:       0001</programlisting>
+other execute:            0001
+</programlisting>
 
 <para>Some platforms may not understand these permissions. They are applied only insofar as they make sense for the current platform. If this attribute is omitted, a default of 777 is assumed.</para>
   </refsection>
@@ -693,7 +695,7 @@ Using the SQLite databases must be manually specified by using the <command>sql:
 <para>To set the shared database type as the default type for the tools, set the <envar>NSS_DEFAULT_DB_TYPE</envar> environment variable to <envar>sql</envar>:</para>
 <programlisting>export NSS_DEFAULT_DB_TYPE="sql"</programlisting>
 
-<para>This line can be set added to the <filename>~/.bashrc</filename> file to make the change permanent.</para>
+<para>This line can be added to the <filename>~/.bashrc</filename> file to make the change permanent for the user.</para>
 
 <para>Most applications do not use the shared database by default, but they can be configured to use them. For example, this how-to article covers how to configure Firefox and Thunderbird to use the new shared NSS databases:</para>
 <itemizedlist>

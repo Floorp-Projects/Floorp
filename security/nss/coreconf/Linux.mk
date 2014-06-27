@@ -130,7 +130,7 @@ ifeq ($(USE_PTHREADS),1)
 OS_PTHREAD = -lpthread 
 endif
 
-OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) $(ARCHFLAG) -Wall -Werror-implicit-function-declaration -Wno-switch -pipe -DLINUX -Dlinux -DHAVE_STRERROR
+OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) $(ARCHFLAG) -Wall -Werror-implicit-function-declaration -Wno-switch -pipe -ffunction-sections -fdata-sections -DLINUX -Dlinux -DHAVE_STRERROR
 OS_LIBS			= $(OS_PTHREAD) -ldl -lc
 
 ifdef USE_PTHREADS
@@ -140,7 +140,7 @@ endif
 ARCH			= linux
 
 DSO_CFLAGS		= -fPIC
-DSO_LDOPTS		= -shared $(ARCHFLAG)
+DSO_LDOPTS		= -shared $(ARCHFLAG) -Wl,--gc-sections
 # The linker on Red Hat Linux 7.2 and RHEL 2.1 (GNU ld version 2.11.90.0.8)
 # incorrectly reports undefined references in the libraries we link with, so
 # we don't use -z defs there.
