@@ -9,6 +9,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "gfxAndroidPlatform.h"
 #include "mozilla/Omnijar.h"
+#include "nsAutoPtr.h"
 #include "nsIInputStream.h"
 #include "nsNetUtil.h"
 #define gfxToolkitPlatform gfxAndroidPlatform
@@ -1084,7 +1085,8 @@ gfxFT2FontList::AppendFacesFromOmnijarEntry(nsZipArchive* aArchive,
     uint32_t bufSize = item->RealSize();
     // We use fallible allocation here; if there's not enough RAM, we'll simply
     // ignore the bundled fonts and fall back to the device's installed fonts.
-    nsAutoPtr<uint8_t> buf(static_cast<uint8_t*>(moz_malloc(bufSize)));
+    static const fallible_t fallible = fallible_t();
+    nsAutoArrayPtr<uint8_t> buf(new (fallible) uint8_t[bufSize]);
     if (!buf) {
         return;
     }
