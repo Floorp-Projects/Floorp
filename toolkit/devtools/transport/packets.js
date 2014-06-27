@@ -28,6 +28,7 @@ const { Cc, Ci, Cu } = require("chrome");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { dumpn, dumpv } = DevToolsUtils;
 const StreamUtils = require("devtools/toolkit/transport/stream-utils");
+const EventEmitter = require("devtools/toolkit/event-emitter");
 
 DevToolsUtils.defineLazyGetter(this, "unicodeConverter", () => {
   const unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
@@ -274,8 +275,9 @@ BulkPacket.prototype.read = function(stream) {
     length: this.length,
     copyTo: (output) => {
       dumpv("CT length: " + this.length);
-      deferred.resolve(StreamUtils.copyStream(stream, output, this.length));
-      return deferred.promise;
+      let copying = StreamUtils.copyStream(stream, output, this.length);
+      deferred.resolve(copying);
+      return copying;
     },
     stream: stream,
     done: deferred
@@ -323,8 +325,9 @@ BulkPacket.prototype.write = function(stream) {
   this._readyForWriting.resolve({
     copyFrom: (input) => {
       dumpv("CF length: " + this.length);
-      deferred.resolve(StreamUtils.copyStream(input, stream, this.length));
-      return deferred.promise;
+      let copying = StreamUtils.copyStream(input, stream, this.length);
+      deferred.resolve(copying);
+      return copying;
     },
     stream: stream,
     done: deferred
