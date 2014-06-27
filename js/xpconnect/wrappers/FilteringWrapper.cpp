@@ -191,12 +191,12 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, HandleObject wrapper,
 #define NNXOW FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>
 #define NNXOWC FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>
 #define GO FilteringWrapper<CrossCompartmentSecurityWrapper, GentlyOpaque>
-template<> XOW XOW::singleton(0);
-template<> DXOW DXOW::singleton(0);
-template<> NNXOW NNXOW::singleton(0);
-template<> NNXOWC NNXOWC::singleton(0);
+template<> const XOW XOW::singleton(0);
+template<> const DXOW DXOW::singleton(0);
+template<> const NNXOW NNXOW::singleton(0);
+template<> const NNXOWC NNXOWC::singleton(0);
 
-template<> GO GO::singleton(0);
+template<> const GO GO::singleton(0);
 
 template class XOW;
 template class DXOW;

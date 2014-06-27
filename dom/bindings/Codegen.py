@@ -10189,11 +10189,11 @@ class CGDOMJSProxyHandler_slice(ClassMethod):
 
 class CGDOMJSProxyHandler_getInstance(ClassMethod):
     def __init__(self):
-        ClassMethod.__init__(self, "getInstance", "DOMProxyHandler*", [], static=True)
+        ClassMethod.__init__(self, "getInstance", "const DOMProxyHandler*", [], static=True)
 
     def getBody(self):
         return dedent("""
-            static DOMProxyHandler instance;
+            static const DOMProxyHandler instance;
             return &instance;
             """)
 
@@ -10214,6 +10214,15 @@ class CGDOMJSProxyHandler(CGClass):
                    CGDOMJSProxyHandler_finalize(descriptor),
                    CGDOMJSProxyHandler_getInstance(),
                    CGDOMJSProxyHandler_delete(descriptor)]
+        constructors = [
+            ClassConstructor(
+                [],
+                bodyInHeader=True,
+                visibility="public",
+                explicit=True)
+        ]
+
+
         if descriptor.supportsIndexedProperties():
             methods.append(CGDOMJSProxyHandler_slice(descriptor))
         if (descriptor.operations['IndexedSetter'] is not None or
@@ -10223,6 +10232,7 @@ class CGDOMJSProxyHandler(CGClass):
 
         CGClass.__init__(self, 'DOMProxyHandler',
                          bases=[ClassBase('mozilla::dom::DOMProxyHandler')],
+                         constructors=constructors,
                          methods=methods)
 
 
