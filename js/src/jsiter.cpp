@@ -237,7 +237,7 @@ struct SortComparatorIds
                 *lessOrEqualp = uint32_t(ca) <= uint32_t(cb);
                 return true;
             }
-            JS_ASSERT(ca == JS::SymbolCode::InSymbolRegistry || ca == JS::SymbolCode::UniqueSymbol);
+            JS_ASSERT(ca == JS::SymbolCode::InSymbolRegistry || ca == JS::SymbolCode::Unique);
             astr = JSID_TO_SYMBOL(a)->description();
             bstr = JSID_TO_SYMBOL(b)->description();
             if (!astr || !bstr) {
