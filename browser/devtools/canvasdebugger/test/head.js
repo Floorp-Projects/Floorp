@@ -26,6 +26,7 @@ let Toolbox = devtools.Toolbox;
 
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/canvasdebugger/test/";
 const SIMPLE_CANVAS_URL = EXAMPLE_URL + "doc_simple-canvas.html";
+const SIMPLE_BITMASKS_URL = EXAMPLE_URL + "doc_simple-canvas-bitmasks.html";
 const SIMPLE_CANVAS_TRANSPARENT_URL = EXAMPLE_URL + "doc_simple-canvas-transparent.html";
 const SIMPLE_CANVAS_DEEP_STACK_URL = EXAMPLE_URL + "doc_simple-canvas-deep-stack.html";
 
