@@ -630,6 +630,22 @@ BrowserGlue.prototype = {
                           nb.PRIORITY_INFO_LOW, buttons);
   },
 
+  _firstWindowTelemetry: function(aWindow) {
+#ifdef XP_WIN
+    let SCALING_PROBE_NAME = "DISPLAY_SCALING_MSWIN";
+#elifdef XP_MACOSX
+    let SCALING_PROBE_NAME = "DISPLAY_SCALING_OSX";
+#elifdef XP_LINUX
+    let SCALING_PROBE_NAME = "DISPLAY_SCALING_LINUX";
+#else
+    let SCALING_PROBE_NAME = "";
+#endif
+    if (SCALING_PROBE_NAME) {
+      let scaling = aWindow.devicePixelRatio * 100;
+      Services.telemetry.getHistogramById(SCALING_PROBE_NAME).add(scaling);
+    }
+  },
+
   // the first browser window has finished initializing
   _onFirstWindowLoaded: function BG__onFirstWindowLoaded(aWindow) {
 #ifdef XP_WIN
@@ -658,6 +674,8 @@ BrowserGlue.prototype = {
     }
 
     this._checkForOldBuildUpdates();
+
+    this._firstWindowTelemetry(aWindow);
   },
 
   /**
