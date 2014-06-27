@@ -517,10 +517,12 @@ gfxPlatform::InitLayersIPC()
         XRE_GetProcessType() == GeckoProcessType_Default)
     {
         mozilla::layers::CompositorParent::StartUp();
+#ifndef MOZ_WIDGET_GONK
         if (gfxPrefs::AsyncVideoEnabled()) {
             mozilla::layers::ImageBridgeChild::StartUp();
         }
-#ifdef MOZ_WIDGET_GONK
+#else
+        mozilla::layers::ImageBridgeChild::StartUp();
         SharedBufferManagerChild::StartUp();
 #endif
     }

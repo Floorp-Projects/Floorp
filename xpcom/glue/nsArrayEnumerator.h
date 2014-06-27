@@ -17,15 +17,15 @@ class nsCOMArray_base;
 // Create an enumerator for an existing nsIArray implementation
 // The enumerator holds an owning reference to the array.
 NS_COM_GLUE nsresult
-NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
-                      nsIArray* array);
+NS_NewArrayEnumerator(nsISimpleEnumerator** aResult,
+                      nsIArray* aArray);
 
 // create an enumerator for an existing nsCOMArray<T> implementation
 // The enumerator will hold an owning reference to each ELEMENT in
 // the array. This means that the nsCOMArray<T> can safely go away
 // without its objects going away.
 NS_COM_GLUE nsresult
-NS_NewArrayEnumerator(nsISimpleEnumerator* *aResult,
+NS_NewArrayEnumerator(nsISimpleEnumerator** aResult,
                       const nsCOMArray_base& aArray);
 
 #endif

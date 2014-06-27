@@ -144,6 +144,8 @@
         <toolbarbutton class="panel-item-help" label="&runtimePanel_nousbdevice;" id="runtime-panel-nousbdevice" command="cmd_showTroubleShooting"/>
         <toolbarbutton class="panel-item-help" label="&runtimePanel_noadbhelper;" id="runtime-panel-noadbhelper" command="cmd_showAddons"/>
         <vbox id="runtime-panel-usbruntime"></vbox>
+        <label class="panel-header" id="runtime-header-wifi-devices">&runtimePanel_WiFiDevices;</label>
+        <vbox id="runtime-panel-wifi-devices"></vbox>
         <label class="panel-header">&runtimePanel_simulators;</label>
         <toolbarbutton class="panel-item-help" label="&runtimePanel_nosimulator;" id="runtime-panel-nosimulator" command="cmd_showAddons"/>
         <vbox id="runtime-panel-simulators"></vbox>

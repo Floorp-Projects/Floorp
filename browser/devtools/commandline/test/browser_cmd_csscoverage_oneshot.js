@@ -33,13 +33,11 @@ let test = asyncTest(function*() {
  * Just check current page
  */
 function* navigate(usage, options) {
-  let running = yield usage._testOnly_isRunning();
-  ok(!running, "csscoverage not is running");
+  ok(!usage.isRunning(), "csscoverage is not running");
 
   yield usage.oneshot();
 
-  running = yield usage._testOnly_isRunning();
-  ok(!running, "csscoverage not is running");
+  ok(!usage.isRunning(), "csscoverage is still not running");
 }
 
 /**
