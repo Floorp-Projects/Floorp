@@ -6,6 +6,7 @@
 #include "SmsMessage.h"
 #include "MmsMessage.h"
 #include "SmsSegmentInfo.h"
+#include "DeletedMessageInfo.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/ContentChild.h"
@@ -129,6 +130,21 @@ bool
 SmsChild::RecvNotifyReadErrorMessage(const MobileMessageData& aData)
 {
   NotifyObserversWithMobileMessage(kSmsReadErrorObserverTopic, aData);
+  return true;
+}
+
+bool
+SmsChild::RecvNotifyDeletedMessageInfo(const DeletedMessageInfoData& aDeletedInfo)
+{
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (!obs) {
+    NS_ERROR("Failed to get nsIObserverService!");
+    return false;
+  }
+
+  nsCOMPtr<nsISupports> info = new DeletedMessageInfo(aDeletedInfo);
+  obs->NotifyObservers(info, kSmsDeletedObserverTopic, nullptr);
+
   return true;
 }
 

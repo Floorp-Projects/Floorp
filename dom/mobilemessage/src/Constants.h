@@ -21,6 +21,7 @@ extern const char* kSmsDeliveryErrorObserverTopic;
 extern const char* kSilentSmsReceivedObserverTopic;
 extern const char* kSmsReadSuccessObserverTopic;
 extern const char* kSmsReadErrorObserverTopic;
+extern const char* kSmsDeletedObserverTopic;
 
 #define DELIVERY_RECEIVED       NS_LITERAL_STRING("received")
 #define DELIVERY_SENDING        NS_LITERAL_STRING("sending")

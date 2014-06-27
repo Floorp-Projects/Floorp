@@ -64,6 +64,9 @@ protected:
   virtual bool
   RecvNotifyReadErrorMessage(const MobileMessageData& aMessage) MOZ_OVERRIDE;
 
+  virtual bool
+  RecvNotifyDeletedMessageInfo(const DeletedMessageInfoData& aDeletedInfo) MOZ_OVERRIDE;
+
   virtual PSmsRequestChild*
   AllocPSmsRequestChild(const IPCSmsRequest& aRequest) MOZ_OVERRIDE;
 
