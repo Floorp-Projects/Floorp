@@ -33,9 +33,11 @@
 #include "nsIDocument.h"
 #include "nsIDOMGlobalPropertyInitializer.h"
 #include "nsIIOService.h"
+#include "nsIMutableArray.h"
 #include "nsIObserverService.h"
 #include "nsIPermissionManager.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIUUIDGenerator.h"
 #include "nsPIDOMWindow.h"
 #include "nsIURI.h"
@@ -371,6 +373,24 @@ GetDataStoreInfosEnumerator(const uint32_t& aAppId,
   accessStore->Init(aInfo->mName, aInfo->mOriginURL,
                     aInfo->mManifestURL, readOnly,
                     aInfo->mEnabled);
+
+  return PL_DHASH_NEXT;
+}
+
+PLDHashOperator
+GetAppManifestURLsEnumerator(const uint32_t& aAppId,
+                             DataStoreInfo* aInfo,
+                             void* aUserData)
+{
+  AssertIsInMainProcess();
+  MOZ_ASSERT(NS_IsMainThread());
+
+  auto* manifestURLs = static_cast<nsIMutableArray*>(aUserData);
+  nsCOMPtr<nsISupportsString> manifestURL(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+  if (manifestURL) {
+    manifestURL->SetData(aInfo->mManifestURL);
+    manifestURLs->AppendElement(manifestURL, false);
+  }
 
   return PL_DHASH_NEXT;
 }
@@ -1054,6 +1074,31 @@ DataStoreService::GetDataStoreInfos(const nsAString& aName,
 
   GetDataStoreInfosData data(mAccessStores, aName, aOwner, aAppId, aStores);
   apps->EnumerateRead(GetDataStoreInfosEnumerator, &data);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DataStoreService::GetAppManifestURLsForDataStore(const nsAString& aName,
+                                                 nsIArray** aManifestURLs)
+{
+  ASSERT_PARENT_PROCESS()
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIMutableArray> manifestURLs = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  if (!manifestURLs) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  HashApp* apps = nullptr;
+  if (mStores.Get(aName, &apps)) {
+    apps->EnumerateRead(GetAppManifestURLsEnumerator, manifestURLs.get());
+  }
+  if (mAccessStores.Get(aName, &apps)) {
+    apps->EnumerateRead(GetAppManifestURLsEnumerator, manifestURLs.get());
+  }
+
+  *aManifestURLs = manifestURLs;
+  NS_ADDREF(*aManifestURLs);
   return NS_OK;
 }
 
