@@ -73,9 +73,6 @@ public:
    */
   int32_t
   LookupTargetIndex(nsIAtom* aTargetVariable, nsXMLBinding** aBinding);
-
-private:
-  ~nsXMLBindingSet() {};
 };
 
 /**
