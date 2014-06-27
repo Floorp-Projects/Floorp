@@ -7,6 +7,7 @@
 const { Cc, Ci, Cu } = require("chrome");
 
 const Services = require("Services");
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 const events = require("sdk/event/core");
 const protocol = require("devtools/server/protocol");
@@ -91,6 +92,9 @@ let UsageReportActor = protocol.ActorClass({
 
     this._onTabLoad = this._onTabLoad.bind(this);
     this._onChange = this._onChange.bind(this);
+
+    this._notifyOn = Ci.nsIWebProgress.NOTIFY_STATUS |
+                     Ci.nsIWebProgress.NOTIFY_STATE_ALL
   },
 
   destroy: function() {
@@ -115,9 +119,29 @@ let UsageReportActor = protocol.ActorClass({
     this._running = true;
     this._tooManyUnused = false;
 
-    this._tabActor.browser.addEventListener("load", this._onTabLoad, true);
+    this._progressListener = {
+      QueryInterface: XPCOMUtils.generateQI([ Ci.nsIWebProgressListener,
+                                              Ci.nsISupportsWeakReference ]),
 
-    this._observeMutations(this._tabActor.window.document);
+      onStateChange: (progress, request, flags, status) => {
+        let isStop = flags & Ci.nsIWebProgressListener.STATE_STOP;
+        let isWindow = flags & Ci.nsIWebProgressListener.STATE_IS_WINDOW;
+
+        if (isStop && isWindow) {
+          this._onTabLoad(progress.DOMWindow.document);
+        }
+      },
+
+      onLocationChange: () => {},
+      onProgressChange: () => {},
+      onSecurityChange: () => {},
+      onStatusChange: () => {},
+      destroy: () => {}
+    };
+
+    this._progress = this._tabActor.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                            .getInterface(Ci.nsIWebProgress);
+    this._progress.addProgressListener(this._progressListener, this._notifyOn);
 
     this._populateKnownRules(this._tabActor.window.document);
     this._updateUsage(this._tabActor.window.document, false);
@@ -133,7 +157,9 @@ let UsageReportActor = protocol.ActorClass({
       throw new Error(l10n.lookup("csscoverageNotRunningError"));
     }
 
-    this._tabActor.browser.removeEventListener("load", this._onTabLoad, true);
+    this._progress.removeProgressListener(this._progressListener, this._notifyOn);
+    this._progress = undefined;
+
     this._running = false;
     events.emit(this, "state-change", { isRunning: false });
   }),
@@ -162,10 +188,9 @@ let UsageReportActor = protocol.ActorClass({
   }),
 
   /**
-   * Called from the tab "load" event
+   * Called by the ProgressListener to simulate a "load" event
    */
-  _onTabLoad: function(ev) {
-    let document = ev.target;
+  _onTabLoad: function(document) {
     this._populateKnownRules(document);
     this._updateUsage(document, true);
 
