@@ -11,6 +11,7 @@ loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/Variabl
 loader.lazyImporter(this, "escapeHTML", "resource:///modules/devtools/VariablesView.jsm");
 loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
 loader.lazyImporter(this, "Task","resource://gre/modules/Task.jsm");
+loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
 const Heritage = require("sdk/core/heritage");
 const URI = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
@@ -2178,22 +2179,34 @@ Widgets.ObjectRenderers.add({
 
     this._text(" [ ");
 
-    let shown = 0;
-    for (let item of items) {
-      if (shown > 0) {
-        this._text(", ");
-      }
+    let isFirst = true;
+    let emptySlots = 0;
+    // A helper that renders a comma between items if isFirst == false.
+    let renderSeparator = () => !isFirst && this._text(", ");
 
-      if (item !== null) {
+    for (let item of items) {
+      if (item === null) {
+        emptySlots++;
+      }
+      else {
+        renderSeparator();
+        isFirst = false;
+
+        if (emptySlots) {
+          this._renderEmptySlots(emptySlots);
+          emptySlots = 0;
+        }
         let elem = this.message._renderValueGrip(item, { concise: true });
         this.element.appendChild(elem);
-      } else if (shown == (items.length - 1)) {
-        this._text(", ");
       }
-
-      shown++;
     }
 
+    if (emptySlots) {
+      renderSeparator();
+      this._renderEmptySlots(emptySlots, false);
+    }
+
+    let shown = items.length;
     if (shown < preview.length) {
       this._text(", ");
 
@@ -2204,6 +2217,16 @@ Widgets.ObjectRenderers.add({
 
     this._text(" ]");
   },
+
+  _renderEmptySlots: function(aNumSlots, aAppendComma=true) {
+    let slotLabel = l10n.getStr("emptySlotLabel");
+    let slotText = PluralForm.get(aNumSlots, slotLabel);
+    this._text("<" + slotText.replace("#1", aNumSlots) + ">");
+    if (aAppendComma) {
+      this._text(", ");
+    }
+  },
+
 }); // Widgets.ObjectRenderers.byKind.ArrayLike
 
 /**
