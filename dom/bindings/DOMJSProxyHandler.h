@@ -131,11 +131,11 @@ public:
                                        JS::Handle<JSObject*> obj);
 };
 
-inline const DOMProxyHandler*
+inline DOMProxyHandler*
 GetDOMProxyHandler(JSObject* obj)
 {
   MOZ_ASSERT(IsDOMProxy(obj));
-  return static_cast<const DOMProxyHandler*>(js::GetProxyHandler(obj));
+  return static_cast<DOMProxyHandler*>(js::GetProxyHandler(obj));
 }
 
 extern jsid s_length_id;
