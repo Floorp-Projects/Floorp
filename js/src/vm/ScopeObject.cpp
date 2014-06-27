@@ -1314,7 +1314,7 @@ class DebugScopeProxy : public BaseProxyHandler
 
   public:
     static int family;
-    static DebugScopeProxy singleton;
+    static const DebugScopeProxy singleton;
 
     DebugScopeProxy() : BaseProxyHandler(&family) {}
 
@@ -1583,7 +1583,7 @@ class DebugScopeProxy : public BaseProxyHandler
 } /* anonymous namespace */
 
 int DebugScopeProxy::family = 0;
-DebugScopeProxy DebugScopeProxy::singleton;
+const DebugScopeProxy DebugScopeProxy::singleton;
 
 /* static */ DebugScopeObject *
 DebugScopeObject::create(JSContext *cx, ScopeObject &scope, HandleObject enclosing)

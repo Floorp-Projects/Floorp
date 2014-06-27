@@ -54,10 +54,10 @@ public:
     return "WindowProperties";
   }
 
-  static WindowNamedPropertiesHandler*
+  static const WindowNamedPropertiesHandler*
   getInstance()
   {
-    static WindowNamedPropertiesHandler instance;
+    static const WindowNamedPropertiesHandler instance;
     return &instance;
   }
 
