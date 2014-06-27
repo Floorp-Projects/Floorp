@@ -7,11 +7,13 @@
 #include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
+#include "nsICancelableRunnable.h"
 
 #include "base/basictypes.h"
 #include "base/logging.h"
 #include "base/scoped_nsautorelease_pool.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDebug.h"
@@ -40,12 +42,14 @@ static mozilla::DebugOnly<MessagePump::Delegate*> gFirstDelegate;
 namespace mozilla {
 namespace ipc {
 
-class DoWorkRunnable MOZ_FINAL : public nsIRunnable,
+class DoWorkRunnable MOZ_FINAL : public nsICancelableRunnable,
                                  public nsITimerCallback
 {
 public:
   DoWorkRunnable(MessagePump* aPump)
   : mPump(aPump)
+  , mCanceled(false)
+  , mCallingRunWhileCanceled(false)
   {
     MOZ_ASSERT(aPump);
   }
@@ -53,12 +57,15 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSICANCELABLERUNNABLE
 
 private:
   ~DoWorkRunnable()
   { }
 
   MessagePump* mPump;
+  bool mCanceled;
+  bool mCallingRunWhileCanceled;
 };
 
 } /* namespace ipc */
@@ -211,11 +218,17 @@ MessagePump::DoDelayedWork(base::MessagePump::Delegate* aDelegate)
   }
 }
 
-NS_IMPL_ISUPPORTS(DoWorkRunnable, nsIRunnable, nsITimerCallback)
+NS_IMPL_ISUPPORTS(DoWorkRunnable, nsIRunnable, nsITimerCallback,
+                                  nsICancelableRunnable)
 
 NS_IMETHODIMP
 DoWorkRunnable::Run()
 {
+  MOZ_ASSERT(!mCanceled || mCallingRunWhileCanceled);
+  if (mCanceled && !mCallingRunWhileCanceled) {
+    return NS_OK;
+  }
+
   MessageLoop* loop = MessageLoop::current();
   MOZ_ASSERT(loop);
 
@@ -239,6 +252,23 @@ DoWorkRunnable::Notify(nsITimer* aTimer)
 
   mPump->DoDelayedWork(loop);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DoWorkRunnable::Cancel()
+{
+  MOZ_ASSERT(!mCanceled);
+  MOZ_ASSERT(!mCallingRunWhileCanceled);
+
+  // Workers require cancelable runnables, but we can't really cancel cleanly
+  // here.  If we don't process all of these then we will leave something
+  // unprocessed in the chromium queue.  Therefore, eagerly complete our work
+  // instead by immediately calling Run().
+  mCanceled = true;
+  mozilla::AutoRestore<bool> guard(mCallingRunWhileCanceled);
+  mCallingRunWhileCanceled = true;
+  Run();
   return NS_OK;
 }
 
