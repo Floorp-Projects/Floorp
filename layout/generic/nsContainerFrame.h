@@ -613,6 +613,12 @@ protected:
 
   // ==========================================================================
 
+  // Helper used by Progress and Meter frames. Returns true if the bar should
+  // be rendered vertically, based on writing-mode and -moz-orient properties.
+  bool ResolvedOrientationIsVertical();
+
+  // ==========================================================================
+
   nsFrameList mFrames;
 };
 
