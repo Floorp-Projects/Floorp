@@ -1,2 +1,15 @@
+conformance/extensions/oes-vertex-array-object.html
+conformance/glsl/functions/glsl-function-abs.html
+conformance/glsl/functions/glsl-function-faceforward.html
+conformance/glsl/functions/glsl-function-sign.html
+conformance/glsl/functions/glsl-function-sin.html
+conformance/glsl/functions/glsl-function-step-float.html
+conformance/glsl/functions/glsl-function-step-gentype.html
+conformance/glsl/functions/glsl-function-smoothstep-float.html
+conformance/limits/gl-max-texture-dimensions.html
+conformance/limits/gl-min-textures.html
+conformance/misc/error-reporting.html
+conformance/misc/object-deletion-behaviour.html
+conformance/misc/type-conversion-test.html
 conformance/textures/tex-image-and-sub-image-2d-with-video.html
 conformance/textures/texture-npot-video.html
