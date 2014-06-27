@@ -51,6 +51,7 @@ class nsIDOMDocumentType;
 class nsIDOMElement;
 class nsIDOMNodeFilter;
 class nsIDOMNodeList;
+class nsIDOMXPathExpression;
 class nsIDOMXPathNSResolver;
 class nsIHTMLCollection;
 class nsILayoutHistoryState;
@@ -121,7 +122,6 @@ class TouchList;
 class TreeWalker;
 class UndoManager;
 class XPathEvaluator;
-class XPathExpression;
 class XPathResult;
 template<typename> class OwningNonNull;
 template<typename> class Sequence;
@@ -2269,7 +2269,7 @@ public:
                                           const nsAString& aAttrValue);
   Element* GetBindingParent(nsINode& aNode);
   void LoadBindingDocument(const nsAString& aURI, mozilla::ErrorResult& rv);
-  mozilla::dom::XPathExpression*
+  already_AddRefed<nsIDOMXPathExpression>
     CreateExpression(const nsAString& aExpression,
                      nsIDOMXPathNSResolver* aResolver,
                      mozilla::ErrorResult& rv);

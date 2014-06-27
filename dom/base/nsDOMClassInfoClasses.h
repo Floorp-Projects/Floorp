@@ -46,6 +46,7 @@ DOMCI_CLASS(CSSSupportsRule)
 DOMCI_CLASS(XSLTProcessor)
 
 // DOM Level 3 XPath objects
+DOMCI_CLASS(XPathExpression)
 DOMCI_CLASS(XPathNSResolver)
 
 // WhatWG WebApps Objects
