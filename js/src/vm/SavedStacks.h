@@ -108,17 +108,22 @@ class SavedStacks {
     void     sweep(JSRuntime *rt);
     uint32_t count();
     void     clear();
+
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
+
   private:
     SavedFrame::Set          frames;
     JSObject                 *savedFrameProto;
-    bool       insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFrame frame);
+
+    bool       insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandleSavedFrame frame);
     SavedFrame *getOrCreateSavedFrame(JSContext *cx, const SavedFrame::Lookup &lookup);
     // |SavedFrame.prototype| is created lazily and held weakly. It should only
     // be accessed through this method.
     JSObject   *getOrCreateSavedFramePrototype(JSContext *cx);
     SavedFrame *createFrameFromLookup(JSContext *cx, const SavedFrame::Lookup &lookup);
+
     // Cache for memoizing PCToLineNumber lookups.
+
     struct PCKey {
         PCKey(JSScript *script, jsbytecode *pc) : script(script), pc(pc) { }
 
