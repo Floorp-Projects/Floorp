@@ -524,12 +524,6 @@ JSCompartment::wrap(JSContext *cx, MutableHandle<PropDesc> desc)
             return false;
         desc.setSetter(set);
     }
-    if (desc.descriptorValue().isObject()) {
-        RootedObject descObj(cx, &desc.descriptorValue().toObject());
-        if (!comp->wrap(cx, &descObj))
-            return false;
-        desc.setDescriptorObject(descObj);
-    }
     return true;
 }
 
