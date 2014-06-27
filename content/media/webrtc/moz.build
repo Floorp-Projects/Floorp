@@ -17,8 +17,7 @@ if CONFIG['MOZ_WEBRTC']:
                 'LoadManager.h',
                 'LoadManagerFactory.h',
                 'LoadMonitor.h',
-                'MediaEngineTabVideoSource.h',
-                'MediaEngineWebRTC.h',   ]
+                'MediaEngineWebRTC.h']
     UNIFIED_SOURCES += [
         'LoadManager.cpp',
         'LoadManagerFactory.cpp',

@@ -28,7 +28,6 @@
 #include "MediaStreamGraph.h"
 
 #include "MediaEngineWrapper.h"
-#include "MediaEngineTabVideoSource.h"
 
 // WebRTC library includes follow
 
@@ -404,7 +403,6 @@ private:
   // Maps UUID to MediaEngineSource (one set for audio, one for video).
   nsRefPtrHashtable<nsStringHashKey, MediaEngineWebRTCVideoSource > mVideoSources;
   nsRefPtrHashtable<nsStringHashKey, MediaEngineWebRTCAudioSource > mAudioSources;
-  nsRefPtr<MediaEngineTabVideoSource> mTabVideoSource;
 };
 
 }
