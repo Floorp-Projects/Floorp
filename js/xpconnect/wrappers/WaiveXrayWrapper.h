@@ -38,7 +38,7 @@ class WaiveXrayWrapper : public js::CrossCompartmentWrapper {
     virtual bool getPrototypeOf(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                 JS::MutableHandle<JSObject*> protop) MOZ_OVERRIDE;
 
-    static const WaiveXrayWrapper singleton;
+    static WaiveXrayWrapper singleton;
 };
 
 }

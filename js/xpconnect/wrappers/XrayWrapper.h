@@ -111,7 +111,7 @@ class XrayWrapper : public Base {
     virtual bool setPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
                                 JS::HandleObject proto, bool *bp) MOZ_OVERRIDE;
 
-    static const XrayWrapper singleton;
+    static XrayWrapper singleton;
 
   private:
     template <bool HasPrototype>
@@ -175,7 +175,7 @@ public:
                          JS::MutableHandle<JS::Value> vp) MOZ_OVERRIDE;
 };
 
-extern const SandboxProxyHandler sandboxProxyHandler;
+extern SandboxProxyHandler sandboxProxyHandler;
 
 // A proxy handler that lets us wrap callables and invoke them with
 // the correct this object, while forwarding all other operations down
@@ -190,7 +190,7 @@ public:
                       const JS::CallArgs &args) MOZ_OVERRIDE;
 };
 
-extern const SandboxCallableProxyHandler sandboxCallableProxyHandler;
+extern SandboxCallableProxyHandler sandboxCallableProxyHandler;
 
 class AutoSetWrapperNotShadowing;
 class XPCWrappedNativeXrayTraits;

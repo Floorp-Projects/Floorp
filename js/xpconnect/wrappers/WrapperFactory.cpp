@@ -32,13 +32,13 @@ namespace xpc {
 // transparent wrapper in the origin (non-chrome) compartment. When
 // an object with that special wrapper applied crosses into chrome,
 // we know to not apply an X-ray wrapper.
-const Wrapper XrayWaiver(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
+Wrapper XrayWaiver(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
 
 // When objects for which we waived the X-ray wrapper cross into
 // chrome, we wrap them into a special cross-compartment wrapper
 // that transitively extends the waiver to all properties we get
 // off it.
-const WaiveXrayWrapper WaiveXrayWrapper::singleton(0);
+WaiveXrayWrapper WaiveXrayWrapper::singleton(0);
 
 bool
 WrapperFactory::IsCOW(JSObject *obj)
@@ -325,7 +325,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
 
 #ifdef DEBUG
 static void
-DEBUG_CheckUnwrapSafety(HandleObject obj, const js::Wrapper *handler,
+DEBUG_CheckUnwrapSafety(HandleObject obj, js::Wrapper *handler,
                         JSCompartment *origin, JSCompartment *target)
 {
     if (AccessCheck::isChrome(target) || xpc::IsUniversalXPConnectEnabled(target)) {
@@ -344,7 +344,7 @@ DEBUG_CheckUnwrapSafety(HandleObject obj, const js::Wrapper *handler,
 #define DEBUG_CheckUnwrapSafety(obj, handler, origin, target) {}
 #endif
 
-static const Wrapper *
+static Wrapper *
 SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
               bool waiveXrays, bool originIsXBLScope)
 {
@@ -420,7 +420,7 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
     XrayType xrayType = GetXrayType(obj);
     bool waiveXrayFlag = flags & WAIVE_XRAY_WRAPPER_FLAG;
 
-    const Wrapper *wrapper;
+    Wrapper *wrapper;
     CompartmentPrivate *targetdata = EnsureCompartmentPrivate(target);
 
     //

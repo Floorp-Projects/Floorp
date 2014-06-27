@@ -23,7 +23,7 @@ class ProxyObject : public JSObject
     static const uint32_t EXTRA_SLOT   = PROXY_EXTRA_SLOT;
 
   public:
-    static ProxyObject *New(JSContext *cx, const BaseProxyHandler *handler, HandleValue priv,
+    static ProxyObject *New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv,
                             TaggedProto proto_, JSObject *parent_,
                             const ProxyOptions &options);
 
@@ -45,10 +45,10 @@ class ProxyObject : public JSObject
         return static_cast<BaseProxyHandler*>(GetReservedSlot(this, HANDLER_SLOT).toPrivate());
     }
 
-    void initHandler(const BaseProxyHandler *handler);
+    void initHandler(BaseProxyHandler *handler);
 
-    void setHandler(const BaseProxyHandler *handler) {
-        SetReservedSlot(this, HANDLER_SLOT, PrivateValue(const_cast<BaseProxyHandler*>(handler)));
+    void setHandler(BaseProxyHandler *handler) {
+        SetReservedSlot(this, HANDLER_SLOT, PrivateValue(handler));
     }
 
     static size_t offsetOfHandler() {
@@ -93,11 +93,11 @@ class ProxyObject : public JSObject
   public:
     static unsigned grayLinkSlot(JSObject *obj);
 
-    void renew(JSContext *cx, const BaseProxyHandler *handler, Value priv);
+    void renew(JSContext *cx, BaseProxyHandler *handler, Value priv);
 
     static void trace(JSTracer *trc, JSObject *obj);
 
-    void nuke(const BaseProxyHandler *handler);
+    void nuke(BaseProxyHandler *handler);
 
     static const Class callableClass_;
     static const Class uncallableClass_;
