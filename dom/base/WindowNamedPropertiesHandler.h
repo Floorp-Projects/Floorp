@@ -15,9 +15,9 @@ namespace dom {
 class WindowNamedPropertiesHandler : public BaseDOMProxyHandler
 {
 public:
-  WindowNamedPropertiesHandler()
-    : BaseDOMProxyHandler(nullptr, /* hasPrototype = */ true)
+  WindowNamedPropertiesHandler() : BaseDOMProxyHandler(nullptr)
   {
+    setHasPrototype(true);
   }
   virtual bool
   preventExtensions(JSContext* aCx, JS::Handle<JSObject*> aProxy) MOZ_OVERRIDE

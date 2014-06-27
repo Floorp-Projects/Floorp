@@ -127,10 +127,10 @@ js::IsCrossCompartmentWrapper(JSObject *obj)
            !!(Wrapper::wrapperHandler(obj)->flags() & Wrapper::CROSS_COMPARTMENT);
 }
 
-Wrapper::Wrapper(unsigned flags, bool hasPrototype, bool hasSecurityPolicy)
-  : DirectProxyHandler(&sWrapperFamily, hasPrototype, hasSecurityPolicy),
-    mFlags(flags)
+Wrapper::Wrapper(unsigned flags, bool hasPrototype) : DirectProxyHandler(&sWrapperFamily)
+                                                    , mFlags(flags)
 {
+    setHasPrototype(hasPrototype);
 }
 
 Wrapper::~Wrapper()
@@ -170,9 +170,8 @@ ErrorCopier::~ErrorCopier()
 
 /* Cross compartment wrappers. */
 
-CrossCompartmentWrapper::CrossCompartmentWrapper(unsigned flags, bool hasPrototype,
-                                                 bool hasSecurityPolicy)
-  : Wrapper(CROSS_COMPARTMENT | flags, hasPrototype, hasSecurityPolicy)
+CrossCompartmentWrapper::CrossCompartmentWrapper(unsigned flags, bool hasPrototype)
+  : Wrapper(CROSS_COMPARTMENT | flags, hasPrototype)
 {
 }
 
@@ -608,9 +607,10 @@ CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
 /* Security wrappers. */
 
 template <class Base>
-SecurityWrapper<Base>::SecurityWrapper(unsigned flags, bool hasPrototype)
-  : Base(flags, hasPrototype, /* hasSecurityPolicy = */ true)
+SecurityWrapper<Base>::SecurityWrapper(unsigned flags)
+  : Base(flags)
 {
+    BaseProxyHandler::setHasSecurityPolicy(true);
 }
 
 template <class Base>
