@@ -9,6 +9,7 @@
 #include "nsAutoPtr.h"
 #include "nsIAtom.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/XPathExpression.h"
 
 class nsINode;
 class nsXULTemplateResultXML;
@@ -28,11 +29,11 @@ class XPathResult;
  */
 struct nsXMLBinding {
   nsCOMPtr<nsIAtom> mVar;
-  nsCOMPtr<nsIDOMXPathExpression> mExpr;
+  nsAutoPtr<mozilla::dom::XPathExpression> mExpr;
 
   nsAutoPtr<nsXMLBinding> mNext;
 
-  nsXMLBinding(nsIAtom* aVar, nsIDOMXPathExpression* aExpr)
+  nsXMLBinding(nsIAtom* aVar, nsAutoPtr<mozilla::dom::XPathExpression>&& aExpr)
     : mVar(aVar), mExpr(aExpr), mNext(nullptr)
   {
     MOZ_COUNT_CTOR(nsXMLBinding);
@@ -62,7 +63,7 @@ public:
    * Add a binding to the set
    */
   void
-  AddBinding(nsIAtom* aVar, nsIDOMXPathExpression* aExpr);
+  AddBinding(nsIAtom* aVar, nsAutoPtr<mozilla::dom::XPathExpression>&& aExpr);
 
   /**
    * The nsXMLBindingValues class stores an array of values, one for each

@@ -16,9 +16,9 @@ nsXMLBindingSet::~nsXMLBindingSet()
 {}
 
 void
-nsXMLBindingSet::AddBinding(nsIAtom* aVar, nsIDOMXPathExpression* aExpr)
+nsXMLBindingSet::AddBinding(nsIAtom* aVar, nsAutoPtr<XPathExpression>&& aExpr)
 {
-  nsAutoPtr<nsXMLBinding> newbinding(new nsXMLBinding(aVar, aExpr));
+  nsAutoPtr<nsXMLBinding> newbinding(new nsXMLBinding(aVar, Move(aExpr)));
 
   if (mFirst) {
     nsXMLBinding* binding = mFirst;
@@ -74,18 +74,16 @@ nsXMLBindingValues::GetAssignmentFor(nsXULTemplateResultXML* aResult,
     return value;
   }
 
-  nsCOMPtr<nsIDOMNode> contextNode = do_QueryInterface(aResult->Node());
+  nsINode* contextNode = aResult->Node();
   if (!contextNode) {
     return nullptr;
   }
 
   mValues.EnsureLengthAtLeast(aIndex + 1);
 
-  nsCOMPtr<nsISupports> resultsupports;
-  aBinding->mExpr->Evaluate(contextNode, aType,
-                            nullptr, getter_AddRefs(resultsupports));
-
-  mValues.ReplaceElementAt(aIndex, XPathResult::FromSupports(resultsupports));
+  ErrorResult ignored;
+  mValues[aIndex] = aBinding->mExpr->Evaluate(*contextNode, aType, nullptr,
+                                              ignored);
 
   return mValues[aIndex];
 }
