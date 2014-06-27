@@ -62,15 +62,15 @@ The options and arguments for the cmsutil command are defined as follows:
     </para>
     <variablelist>
       <varlistentry>
-        <term>-D </term>
-        <listitem><para>Decode a message.</para></listitem>
-      </varlistentry>
-
-      <varlistentry>
         <term>-C</term>
         <listitem><para>Encrypt a message.</para></listitem>
       </varlistentry>
     
+      <varlistentry>
+        <term>-D </term>
+        <listitem><para>Decode a message.</para></listitem>
+      </varlistentry>
+
       <varlistentry>
         <term>-E </term>
         <listitem><para>Envelope a message.</para></listitem>
@@ -267,21 +267,9 @@ cmsutil -S [-i infile] [-o outfile] [-d dbdir] [-p password] -N nickname[-TGP] [
 
   </refsection>
 
-  <refsection>
+  <refsection id="seealso">
     <title>See also</title>
     <para>certutil(1)</para>
-  </refsection>
-
-
-  <refsection id="seealso">
-    <title>See Also</title>
-    <para></para>
-	<para>
-	</para>
-	<para>
-	</para>
-	<para>
-	</para>
   </refsection>
 
 <!-- don't change -->
