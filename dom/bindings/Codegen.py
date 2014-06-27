@@ -9487,7 +9487,7 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc')]
         ClassMethod.__init__(self, "getOwnPropertyDescriptor", "bool", args,
-                             virtual=True, override=True, const=True)
+                             virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -9598,7 +9598,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc'),
                 Argument('bool*', 'defined')]
-        ClassMethod.__init__(self, "defineProperty", "bool", args, virtual=True, override=True, const=True)
+        ClassMethod.__init__(self, "defineProperty", "bool", args, virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -9679,7 +9679,7 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('bool*', 'bp')]
         ClassMethod.__init__(self, "delete_", "bool", args,
-                             virtual=True, override=True, const=True)
+                             virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -9778,7 +9778,7 @@ class CGDOMJSProxyHandler_ownPropNames(ClassMethod):
                 Argument('unsigned', 'flags'),
                 Argument('JS::AutoIdVector&', 'props')]
         ClassMethod.__init__(self, "ownPropNames", "bool", args,
-                             virtual=True, override=True, const=True)
+                             virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -9854,7 +9854,7 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('bool*', 'bp')]
         ClassMethod.__init__(self, "hasOwn", "bool", args,
-                             virtual=True, override=True, const=True)
+                             virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -9936,7 +9936,7 @@ class CGDOMJSProxyHandler_get(ClassMethod):
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JS::MutableHandle<JS::Value>', 'vp')]
         ClassMethod.__init__(self, "get", "bool", args,
-                             virtual=True, override=True, const=True)
+                             virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -10038,7 +10038,7 @@ class CGDOMJSProxyHandler_setCustom(ClassMethod):
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JS::MutableHandle<JS::Value>', 'vp'),
                 Argument('bool*', 'done')]
-        ClassMethod.__init__(self, "setCustom", "bool", args, virtual=True, override=True, const=True)
+        ClassMethod.__init__(self, "setCustom", "bool", args, virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -10101,7 +10101,7 @@ class CGDOMJSProxyHandler_className(ClassMethod):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'proxy')]
         ClassMethod.__init__(self, "className", "const char*", args,
-                             virtual=True, override=True, const=True)
+                             virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -10112,7 +10112,7 @@ class CGDOMJSProxyHandler_finalizeInBackground(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JS::Value', 'priv')]
         ClassMethod.__init__(self, "finalizeInBackground", "bool", args,
-                             virtual=True, override=True, const=True)
+                             virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -10123,7 +10123,7 @@ class CGDOMJSProxyHandler_finalize(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JSFreeOp*', 'fop'), Argument('JSObject*', 'proxy')]
         ClassMethod.__init__(self, "finalize", "void", args,
-                             virtual=True, override=True, const=True)
+                             virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):
@@ -10140,7 +10140,7 @@ class CGDOMJSProxyHandler_slice(ClassMethod):
                 Argument('uint32_t', 'begin'),
                 Argument('uint32_t', 'end'),
                 Argument('JS::Handle<JSObject*>', 'array')]
-        ClassMethod.__init__(self, "slice", "bool", args, virtual=True, override=True, const=True)
+        ClassMethod.__init__(self, "slice", "bool", args, virtual=True, override=True)
         self.descriptor = descriptor
 
     def getBody(self):

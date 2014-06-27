@@ -522,7 +522,7 @@ xpc::IsSandboxPrototypeProxy(JSObject *obj)
 
 bool
 xpc::SandboxCallableProxyHandler::call(JSContext *cx, JS::Handle<JSObject*> proxy,
-                                       const JS::CallArgs &args) const
+                                       const JS::CallArgs &args)
 {
     // We forward the call to our underlying callable.
 
@@ -638,7 +638,7 @@ bool
 xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx,
                                                 JS::Handle<JSObject*> proxy,
                                                 JS::Handle<jsid> id,
-                                                JS::MutableHandle<JSPropertyDescriptor> desc) const
+                                                JS::MutableHandle<JSPropertyDescriptor> desc)
 {
     JS::RootedObject obj(cx, wrappedObject(proxy));
 
@@ -685,7 +685,6 @@ xpc::SandboxProxyHandler::getOwnPropertyDescriptor(JSContext *cx,
                                                    JS::Handle<JSObject*> proxy,
                                                    JS::Handle<jsid> id,
                                                    JS::MutableHandle<JSPropertyDescriptor> desc)
-                                                   const
 {
     if (!getPropertyDescriptor(cx, proxy, id, desc))
         return false;
@@ -703,13 +702,13 @@ xpc::SandboxProxyHandler::getOwnPropertyDescriptor(JSContext *cx,
 
 bool
 xpc::SandboxProxyHandler::has(JSContext *cx, JS::Handle<JSObject*> proxy,
-                              JS::Handle<jsid> id, bool *bp) const
+                              JS::Handle<jsid> id, bool *bp)
 {
     return BaseProxyHandler::has(cx, proxy, id, bp);
 }
 bool
 xpc::SandboxProxyHandler::hasOwn(JSContext *cx, JS::Handle<JSObject*> proxy,
-                                 JS::Handle<jsid> id, bool *bp) const
+                                 JS::Handle<jsid> id, bool *bp)
 {
     return BaseProxyHandler::hasOwn(cx, proxy, id, bp);
 }
@@ -718,7 +717,7 @@ bool
 xpc::SandboxProxyHandler::get(JSContext *cx, JS::Handle<JSObject*> proxy,
                               JS::Handle<JSObject*> receiver,
                               JS::Handle<jsid> id,
-                              JS::MutableHandle<Value> vp) const
+                              JS::MutableHandle<Value> vp)
 {
     return BaseProxyHandler::get(cx, proxy, receiver, id, vp);
 }
@@ -728,21 +727,21 @@ xpc::SandboxProxyHandler::set(JSContext *cx, JS::Handle<JSObject*> proxy,
                               JS::Handle<JSObject*> receiver,
                               JS::Handle<jsid> id,
                               bool strict,
-                              JS::MutableHandle<Value> vp) const
+                              JS::MutableHandle<Value> vp)
 {
     return BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
 }
 
 bool
 xpc::SandboxProxyHandler::keys(JSContext *cx, JS::Handle<JSObject*> proxy,
-                               AutoIdVector &props) const
+                               AutoIdVector &props)
 {
     return BaseProxyHandler::keys(cx, proxy, props);
 }
 
 bool
 xpc::SandboxProxyHandler::iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
-                                  unsigned flags, JS::MutableHandle<Value> vp) const
+                                  unsigned flags, JS::MutableHandle<Value> vp)
 {
     return BaseProxyHandler::iterate(cx, proxy, flags, vp);
 }
