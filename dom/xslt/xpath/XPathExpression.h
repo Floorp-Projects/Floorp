@@ -63,8 +63,6 @@ public:
                             XPathResult* aInResult, ErrorResult& aRv);
 
 private:
-    ~nsXPathExpression() {}
-
     nsAutoPtr<Expr> mExpression;
     nsRefPtr<txResultRecycler> mRecycler;
     nsWeakPtr mDocument;
