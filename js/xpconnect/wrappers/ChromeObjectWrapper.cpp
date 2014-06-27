@@ -21,7 +21,7 @@ namespace xpc {
 // chromeArray.forEach(..) to Just Work without explicitly listing them in
 // __exposedProps__. Since proxies don't automatically inherit behavior from
 // their prototype, we have to instrument the traps to do this manually.
-ChromeObjectWrapper ChromeObjectWrapper::singleton;
+const ChromeObjectWrapper ChromeObjectWrapper::singleton;
 
 using js::assertEnteredPolicy;
 
@@ -32,7 +32,8 @@ AllowedByBase(JSContext *cx, HandleObject wrapper, HandleId id,
     MOZ_ASSERT(js::Wrapper::wrapperHandler(wrapper) ==
                &ChromeObjectWrapper::singleton);
     bool bp;
-    ChromeObjectWrapper *handler = &ChromeObjectWrapper::singleton;
+    ChromeObjectWrapper *handler =
+        const_cast<ChromeObjectWrapper*>(&ChromeObjectWrapper::singleton);
     return handler->ChromeObjectWrapperBase::enter(cx, wrapper, id, act, &bp);
 }
 
@@ -56,7 +57,8 @@ PropIsFromStandardPrototype(JSContext *cx, HandleObject wrapper,
     MOZ_ASSERT(js::Wrapper::wrapperHandler(wrapper) ==
                &ChromeObjectWrapper::singleton);
     Rooted<JSPropertyDescriptor> desc(cx);
-    ChromeObjectWrapper *handler = &ChromeObjectWrapper::singleton;
+    ChromeObjectWrapper *handler =
+        const_cast<ChromeObjectWrapper*>(&ChromeObjectWrapper::singleton);
     if (!handler->ChromeObjectWrapperBase::getPropertyDescriptor(cx, wrapper, id,
                                                                  &desc) ||
         !desc.object())
