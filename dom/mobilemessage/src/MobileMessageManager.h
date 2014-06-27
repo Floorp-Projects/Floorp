@@ -44,6 +44,8 @@ private:
                                          const nsAString& aEventName,
                                          nsISupports* aMsg);
 
+  nsresult DispatchTrustedDeletedEventToSelf(nsISupports* aDeletedInfo);
+
   /**
    * Helper to get message ID from SMS/MMS Message object
    */
