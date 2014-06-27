@@ -402,8 +402,10 @@ ArchiveZipFileImpl::CreateSlice(uint64_t aStart,
                                 const nsAString& aContentType)
 {
   nsCOMPtr<nsIDOMBlob> t =
-    new DOMFileCC(new ArchiveZipFileImpl(mFilename, mContentType,
-                                         aStart, mLength, mCentral,
-                                         mArchiveReader));
+    new DOMFile(new ArchiveZipFileImpl(mFilename, mContentType,
+                                       aStart, mLength, mCentral,
+                                       mArchiveReader));
   return t.forget();
 }
+
+NS_IMPL_ISUPPORTS_INHERITED0(ArchiveZipFileImpl, DOMFileImpl)

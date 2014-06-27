@@ -10,22 +10,22 @@
 #include "mozilla/EnumeratedArray.h"
 #include "nsCycleCollectionTraversalCallback.h"
 
-template <typename IndexType,
-          MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(IndexType) SizeAsEnumValue,
-          typename ValueType>
+template<typename IndexType,
+         MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(IndexType) SizeAsEnumValue,
+         typename ValueType>
 inline void
 ImplCycleCollectionUnlink(mozilla::EnumeratedArray<IndexType,
                                                    SizeAsEnumValue,
                                                    ValueType>& aField)
 {
-  for (size_t i = 0; i < size_t(SizeAsEnumValue); i++) {
+  for (size_t i = 0; i < size_t(SizeAsEnumValue); ++i) {
     aField[IndexType(i)] = nullptr;
   }
 }
 
-template <typename IndexType,
-          MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(IndexType) SizeAsEnumValue,
-          typename ValueType>
+template<typename IndexType,
+         MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(IndexType) SizeAsEnumValue,
+         typename ValueType>
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             mozilla::EnumeratedArray<IndexType,

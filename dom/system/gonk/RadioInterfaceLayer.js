@@ -3293,6 +3293,10 @@ RadioInterface.prototype = {
     // Update lastKnownHomeNetwork.
     if (message.mcc && message.mnc) {
       this._lastKnownHomeNetwork = message.mcc + "-" + message.mnc;
+      // Append spn information if available.
+      if (message.spn) {
+        this._lastKnownHomeNetwork += "-" + message.spn;
+      }
     }
 
     // If spn becomes available, we should check roaming again.

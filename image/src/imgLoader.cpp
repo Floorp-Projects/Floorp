@@ -1076,7 +1076,7 @@ imgLoader::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aD
 {
   // We listen for pref change notifications...
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-    if (!strcmp(NS_ConvertUTF16toUTF8(aData).get(), "image.http.accept")) {
+    if (!NS_strcmp(aData, MOZ_UTF16("image.http.accept"))) {
       ReadAcceptHeaderPref();
     }
 

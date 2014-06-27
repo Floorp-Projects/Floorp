@@ -58,7 +58,7 @@ function startTest(test, token) {
     is(evt.data.type, expectedMimeType,
        'Blob data received should have type = ' + expectedMimeType);
     is(mediaRecorder.mimeType, expectedMimeType,
-       'Mime type in ondataavailable = ' + expectedMimeType);
+       'Mime type in ondataavailable = ' + mediaRecorder.mimeType);
 
     // We'll stop recording upon the 1st blob being received
     if (dataAvailableCount === 1) {

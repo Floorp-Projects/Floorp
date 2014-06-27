@@ -17,16 +17,14 @@
  * @param DataType the simple datatype being wrapped
  * @see nsInterfaceHashtable, nsClassHashtable
  */
-template<class KeyClass,class DataType>
-class nsDataHashtable :
-  public nsBaseHashtable<KeyClass,DataType,DataType>
+template<class KeyClass, class DataType>
+class nsDataHashtable
+  : public nsBaseHashtable<KeyClass, DataType, DataType>
 {
 public:
-  nsDataHashtable()
-  {
-  }
+  nsDataHashtable() {}
   explicit nsDataHashtable(uint32_t aInitSize)
-    : nsBaseHashtable<KeyClass,DataType,DataType>(aInitSize)
+    : nsBaseHashtable<KeyClass, DataType, DataType>(aInitSize)
   {
   }
 };

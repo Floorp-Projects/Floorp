@@ -16,7 +16,8 @@
  * A "unique identifier". This is modeled after OSF DCE UUIDs.
  */
 
-struct nsID {
+struct nsID
+{
   /**
    * @name Identifier values
    */
@@ -38,35 +39,36 @@ struct nsID {
    * @return <b>true</b> if they are the same, <b>false</b> if not.
    */
 
-  inline bool Equals(const nsID& other) const {
+  inline bool Equals(const nsID& aOther) const
+  {
     // Unfortunately memcmp isn't faster than this.
     return
-      ((((uint32_t*) &m0)[0] == ((uint32_t*) &other.m0)[0]) &&
-       (((uint32_t*) &m0)[1] == ((uint32_t*) &other.m0)[1]) &&
-       (((uint32_t*) &m0)[2] == ((uint32_t*) &other.m0)[2]) &&
-       (((uint32_t*) &m0)[3] == ((uint32_t*) &other.m0)[3]));
+      (((uint32_t*)&m0)[0] == ((uint32_t*)&aOther.m0)[0]) &&
+      (((uint32_t*)&m0)[1] == ((uint32_t*)&aOther.m0)[1]) &&
+      (((uint32_t*)&m0)[2] == ((uint32_t*)&aOther.m0)[2]) &&
+      (((uint32_t*)&m0)[3] == ((uint32_t*)&aOther.m0)[3]);
   }
 
   /**
    * nsID Parsing method. Turns a {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
    * string into an nsID
    */
-  NS_COM_GLUE bool Parse(const char *aIDStr);
+  NS_COM_GLUE bool Parse(const char* aIDStr);
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
   /**
-   * nsID string encoder. Returns an allocated string in 
+   * nsID string encoder. Returns an allocated string in
    * {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format. Caller should free string.
    * YOU SHOULD ONLY USE THIS IF YOU CANNOT USE ToProvidedString() BELOW.
    */
   NS_COM_GLUE char* ToString() const;
 
   /**
-   * nsID string encoder. Builds a string in 
+   * nsID string encoder. Builds a string in
    * {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format, into a char[NSID_LENGTH]
    * buffer provided by the caller (for instance, on the stack).
    */
-  NS_COM_GLUE void ToProvidedString(char (&dest)[NSID_LENGTH]) const;
+  NS_COM_GLUE void ToProvidedString(char (&aDest)[NSID_LENGTH]) const;
 
 #endif // XPCOM_GLUE_AVOID_NSPR
 
@@ -105,7 +107,7 @@ typedef nsID nsIID;
  * Define an IID
  * obsolete - do not use this macro
  */
- 
+
 #define NS_DEFINE_IID(_name, _iidspec) \
   const nsIID _name = _iidspec
 
@@ -121,11 +123,11 @@ typedef nsID nsIID;
   struct COMTypeInfo;
 
 #define NS_DEFINE_STATIC_IID_ACCESSOR(the_interface, the_iid)           \
-  template <typename T>                                                 \
+  template<typename T>                                                  \
   struct the_interface::COMTypeInfo<the_interface, T> {                 \
     static const nsIID kIID NS_HIDDEN;                                  \
   };                                                                    \
-  template <typename T>                                                 \
+  template<typename T>                                                  \
   const nsIID the_interface::COMTypeInfo<the_interface, T>::kIID NS_HIDDEN = the_iid;
 
 /**

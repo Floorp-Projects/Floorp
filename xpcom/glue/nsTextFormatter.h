@@ -39,38 +39,40 @@
 #error "nsTextFormatter is not available in the standalone glue due to NSPR dependencies."
 #endif
 
-class NS_COM_GLUE nsTextFormatter {
+class NS_COM_GLUE nsTextFormatter
+{
+public:
 
-  public:
+  /*
+   * sprintf into a fixed size buffer. Guarantees that the buffer is null
+   * terminated. Returns the length of the written output, NOT including the
+   * null terminator, or (uint32_t)-1 if an error occurs.
+   */
+  static uint32_t snprintf(char16_t* aOut, uint32_t aOutLen,
+                           const char16_t* aFmt, ...);
 
-    /*
-     * sprintf into a fixed size buffer. Guarantees that the buffer is null
-     * terminated. Returns the length of the written output, NOT including the
-     * null terminator, or (uint32_t)-1 if an error occurs.
-     */
-    static uint32_t snprintf(char16_t *out, uint32_t outlen, const char16_t *fmt, ...);
+  /*
+   * sprintf into a nsMemory::Alloc'd buffer. Return a pointer to
+   * buffer on success, nullptr on failure.
+   */
+  static char16_t* smprintf(const char16_t* aFmt, ...);
 
-    /*
-     * sprintf into a nsMemory::Alloc'd buffer. Return a pointer to 
-     * buffer on success, nullptr on failure. 
-     */
-    static char16_t* smprintf(const char16_t *fmt, ...);
+  static uint32_t ssprintf(nsAString& aOut, const char16_t* aFmt, ...);
 
-    static uint32_t ssprintf(nsAString& out, const char16_t* fmt, ...);
+  /*
+   * va_list forms of the above.
+   */
+  static uint32_t vsnprintf(char16_t* aOut, uint32_t aOutLen, const char16_t* aFmt,
+                            va_list aAp);
+  static char16_t* vsmprintf(const char16_t* aFmt, va_list aAp);
+  static uint32_t vssprintf(nsAString& aOut, const char16_t* aFmt, va_list aAp);
 
-    /*
-     * va_list forms of the above.
-     */
-    static uint32_t vsnprintf(char16_t *out, uint32_t outlen, const char16_t *fmt, va_list ap);
-    static char16_t* vsmprintf(const char16_t *fmt, va_list ap);
-    static uint32_t vssprintf(nsAString& out, const char16_t *fmt, va_list ap);
-
-    /*
-     * Free the memory allocated, for the caller, by smprintf.
-     * -- Deprecated --
-     * Callers can substitute calling smprintf_free with nsMemory::Free
-     */
-    static void smprintf_free(char16_t *mem);
+  /*
+   * Free the memory allocated, for the caller, by smprintf.
+   * -- Deprecated --
+   * Callers can substitute calling smprintf_free with nsMemory::Free
+   */
+  static void smprintf_free(char16_t* aMem);
 
 };
 
