@@ -20,28 +20,29 @@
 namespace mozilla {
 
 inline void
-NoteIntentionalCrash(const char* processType)
+NoteIntentionalCrash(const char* aProcessType)
 {
   char* f = getenv("XPCOM_MEM_BLOAT_LOG");
-
-  if (!f) 
+  if (!f) {
     return;
+  }
 
   fprintf(stderr, "XPCOM_MEM_BLOAT_LOG: %s\n", f);
 
   std::string bloatLog(f);
-  
+
   bool hasExt = false;
   if (bloatLog.size() >= 4 &&
-      0 == bloatLog.compare(bloatLog.size() - 4, 4, ".log", 4)) {
+      bloatLog.compare(bloatLog.size() - 4, 4, ".log", 4) == 0) {
     hasExt = true;
     bloatLog.erase(bloatLog.size() - 4, 4);
   }
 
   std::ostringstream bloatName;
-  bloatName << bloatLog << "_" << processType << "_pid" << getpid();
-  if (hasExt)
+  bloatName << bloatLog << "_" << aProcessType << "_pid" << getpid();
+  if (hasExt) {
     bloatName << ".log";
+  }
 
   fprintf(stderr, "Writing to log: %s\n", bloatName.str().c_str());
 

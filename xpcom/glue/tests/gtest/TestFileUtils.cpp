@@ -79,7 +79,8 @@ TEST(ReadSysFile, Main) {
   /* If we have a file which contains "abcd" and we read it with ReadSysFile(),
   providing a buffer of size 10 bytes, we would expect 5 bytes to be written
   to that buffer: "abcd\0". */
-  struct {
+  struct
+  {
     /* input (file contents), e.g. "abcd" */
     const char* input;
     /* pretended output buffer size, e.g. 10; the actual buffer is larger
@@ -188,7 +189,8 @@ TEST(ReadSysFile, Main) {
 
 TEST(ReadSysFile, Int) {
   static const char* fn = "TestReadSysFileInt";
-  struct {
+  struct
+  {
     /* input (file contents), e.g. "5" */
     const char* input;
     /* expected return value, if false, then the output is not checked */
@@ -237,7 +239,8 @@ TEST(ReadSysFile, Int) {
 
 TEST(ReadSysFile, Bool) {
   static const char* fn = "TestReadSysFileBool";
-  struct {
+  struct
+  {
     /* input (file contents), e.g. "1" */
     const char* input;
     /* expected return value */

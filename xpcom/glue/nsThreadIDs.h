@@ -8,7 +8,8 @@
 namespace mozilla {
 namespace threads {
 
-enum ID {
+enum ID
+{
   Generic = 0,
   Main = 1,
 };

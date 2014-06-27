@@ -40,14 +40,14 @@
 class nsCycleCollectionISupports
 {
 public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(NS_CYCLECOLLECTIONISUPPORTS_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_CYCLECOLLECTIONISUPPORTS_IID)
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionISupports,
                               NS_CYCLECOLLECTIONISUPPORTS_IID)
 
 namespace JS {
-template <class T> class Heap;
+template<class T> class Heap;
 } /* namespace JS */
 
 /*
@@ -57,13 +57,20 @@ template <class T> class Heap;
  */
 struct TraceCallbacks
 {
-    virtual void Trace(JS::Heap<JS::Value>* p, const char* name, void* closure) const = 0;
-    virtual void Trace(JS::Heap<jsid>* p, const char* name, void* closure) const = 0;
-    virtual void Trace(JS::Heap<JSObject*>* p, const char* name, void* closure) const = 0;
-    virtual void Trace(JS::TenuredHeap<JSObject*>* p, const char* name, void* closure) const = 0;
-    virtual void Trace(JS::Heap<JSString*>* p, const char* name, void* closure) const = 0;
-    virtual void Trace(JS::Heap<JSScript*>* p, const char* name, void* closure) const = 0;
-    virtual void Trace(JS::Heap<JSFunction*>* p, const char* name, void* closure) const = 0;
+  virtual void Trace(JS::Heap<JS::Value>* aPtr, const char* aName,
+                     void* aClosure) const = 0;
+  virtual void Trace(JS::Heap<jsid>* aPtr, const char* aName,
+                     void* aClosure) const = 0;
+  virtual void Trace(JS::Heap<JSObject*>* aPtr, const char* aName,
+                     void* aClosure) const = 0;
+  virtual void Trace(JS::TenuredHeap<JSObject*>* aPtr, const char* aName,
+                     void* aClosure) const = 0;
+  virtual void Trace(JS::Heap<JSString*>* aPtr, const char* aName,
+                     void* aClosure) const = 0;
+  virtual void Trace(JS::Heap<JSScript*>* aPtr, const char* aName,
+                     void* aClosure) const = 0;
+  virtual void Trace(JS::Heap<JSFunction*>* aPtr, const char* aName,
+                     void* aClosure) const = 0;
 };
 
 /*
@@ -72,20 +79,27 @@ struct TraceCallbacks
  */
 struct TraceCallbackFunc : public TraceCallbacks
 {
-    typedef void (* Func)(void* p, const char* name, void* closure);
+  typedef void (*Func)(void* aPtr, const char* aName, void* aClosure);
 
-    explicit TraceCallbackFunc(Func cb) : mCallback(cb) {}
+  explicit TraceCallbackFunc(Func aCb) : mCallback(aCb) {}
 
-    virtual void Trace(JS::Heap<JS::Value>* p, const char* name, void* closure) const MOZ_OVERRIDE;
-    virtual void Trace(JS::Heap<jsid>* p, const char* name, void* closure) const MOZ_OVERRIDE;
-    virtual void Trace(JS::Heap<JSObject*>* p, const char* name, void* closure) const MOZ_OVERRIDE;
-    virtual void Trace(JS::TenuredHeap<JSObject*>* p, const char* name, void* closure) const MOZ_OVERRIDE;
-    virtual void Trace(JS::Heap<JSString*>* p, const char* name, void* closure) const MOZ_OVERRIDE;
-    virtual void Trace(JS::Heap<JSScript*>* p, const char* name, void* closure) const MOZ_OVERRIDE;
-    virtual void Trace(JS::Heap<JSFunction*>* p, const char* name, void* closure) const MOZ_OVERRIDE;
+  virtual void Trace(JS::Heap<JS::Value>* aPtr, const char* aName,
+                     void* aClosure) const MOZ_OVERRIDE;
+  virtual void Trace(JS::Heap<jsid>* aPtr, const char* aName,
+                     void* aClosure) const MOZ_OVERRIDE;
+  virtual void Trace(JS::Heap<JSObject*>* aPtr, const char* aName,
+                     void* aClosure) const MOZ_OVERRIDE;
+  virtual void Trace(JS::TenuredHeap<JSObject*>* aPtr, const char* aName,
+                     void* aClosure) const MOZ_OVERRIDE;
+  virtual void Trace(JS::Heap<JSString*>* aPtr, const char* aName,
+                     void* aClosure) const MOZ_OVERRIDE;
+  virtual void Trace(JS::Heap<JSScript*>* aPtr, const char* aName,
+                     void* aClosure) const MOZ_OVERRIDE;
+  virtual void Trace(JS::Heap<JSFunction*>* aPtr, const char* aName,
+                     void* aClosure) const MOZ_OVERRIDE;
 
-  private:
-    Func mCallback;
+private:
+  Func mCallback;
 };
 
 /**
@@ -94,91 +108,106 @@ struct TraceCallbackFunc : public TraceCallbacks
 class NS_NO_VTABLE nsCycleCollectionParticipant
 {
 public:
-    MOZ_CONSTEXPR nsCycleCollectionParticipant() : mMightSkip(false) {}
-    MOZ_CONSTEXPR nsCycleCollectionParticipant(bool aSkip) : mMightSkip(aSkip) {}
+  MOZ_CONSTEXPR nsCycleCollectionParticipant() : mMightSkip(false) {}
+  MOZ_CONSTEXPR nsCycleCollectionParticipant(bool aSkip) : mMightSkip(aSkip) {}
 
-    NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb) = 0;
+  NS_IMETHOD Traverse(void* aPtr, nsCycleCollectionTraversalCallback& aCb) = 0;
 
-    NS_IMETHOD_(void) Root(void *p) = 0;
-    NS_IMETHOD_(void) Unlink(void *p) = 0;
-    NS_IMETHOD_(void) Unroot(void *p) = 0;
+  NS_IMETHOD_(void) Root(void* aPtr) = 0;
+  NS_IMETHOD_(void) Unlink(void* aPtr) = 0;
+  NS_IMETHOD_(void) Unroot(void* aPtr) = 0;
 
-    NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure) {};
+  NS_IMETHOD_(void) Trace(void* aPtr, const TraceCallbacks& aCb,
+                          void* aClosure) {}
 
-    // If CanSkip returns true, p is removed from the purple buffer during
-    // a call to nsCycleCollector_forgetSkippable().
-    // Note, calling CanSkip may remove objects from the purple buffer!
-    // If aRemovingAllowed is true, p can be removed from the purple buffer.
-    bool CanSkip(void *p, bool aRemovingAllowed)
-    {
-        return mMightSkip ? CanSkipReal(p, aRemovingAllowed) : false;
-    }
+  // If CanSkip returns true, p is removed from the purple buffer during
+  // a call to nsCycleCollector_forgetSkippable().
+  // Note, calling CanSkip may remove objects from the purple buffer!
+  // If aRemovingAllowed is true, p can be removed from the purple buffer.
+  bool CanSkip(void* aPtr, bool aRemovingAllowed)
+  {
+    return mMightSkip ? CanSkipReal(aPtr, aRemovingAllowed) : false;
+  }
 
-    // If CanSkipInCC returns true, p is skipped when selecting roots for the
-    // cycle collector graph.
-    // Note, calling CanSkipInCC may remove other objects from the purple buffer!
-    bool CanSkipInCC(void *p)
-    {
-        return mMightSkip ? CanSkipInCCReal(p) : false;
-    }
+  // If CanSkipInCC returns true, p is skipped when selecting roots for the
+  // cycle collector graph.
+  // Note, calling CanSkipInCC may remove other objects from the purple buffer!
+  bool CanSkipInCC(void* aPtr)
+  {
+    return mMightSkip ? CanSkipInCCReal(aPtr) : false;
+  }
 
-    // If CanSkipThis returns true, p is not added to the graph.
-    // This method is called during cycle collection, so don't
-    // change the state of any objects!
-    bool CanSkipThis(void *p)
-    {
-        return mMightSkip ? CanSkipThisReal(p) : false;
-    }
+  // If CanSkipThis returns true, p is not added to the graph.
+  // This method is called during cycle collection, so don't
+  // change the state of any objects!
+  bool CanSkipThis(void* aPtr)
+  {
+    return mMightSkip ? CanSkipThisReal(aPtr) : false;
+  }
 
-    NS_IMETHOD_(void) DeleteCycleCollectable(void *n) = 0;
+  NS_IMETHOD_(void) DeleteCycleCollectable(void* aPtr) = 0;
 
 protected:
-    NS_IMETHOD_(bool) CanSkipReal(void *p, bool aRemovingAllowed)
-    {
-        NS_ASSERTION(false, "Forgot to implement CanSkipReal?");
-        return false;
-    }
-    NS_IMETHOD_(bool) CanSkipInCCReal(void *p)
-    {
-        NS_ASSERTION(false, "Forgot to implement CanSkipInCCReal?");
-        return false;
-    }
-    NS_IMETHOD_(bool) CanSkipThisReal(void *p)
-    {
-        NS_ASSERTION(false, "Forgot to implement CanSkipThisReal?");
-        return false;
-    }
+  NS_IMETHOD_(bool) CanSkipReal(void* aPtr, bool aRemovingAllowed)
+  {
+    NS_ASSERTION(false, "Forgot to implement CanSkipReal?");
+    return false;
+  }
+  NS_IMETHOD_(bool) CanSkipInCCReal(void* aPtr)
+  {
+    NS_ASSERTION(false, "Forgot to implement CanSkipInCCReal?");
+    return false;
+  }
+  NS_IMETHOD_(bool) CanSkipThisReal(void* aPtr)
+  {
+    NS_ASSERTION(false, "Forgot to implement CanSkipThisReal?");
+    return false;
+  }
 
 private:
-    const bool mMightSkip;
+  const bool mMightSkip;
 };
 
 class NS_NO_VTABLE nsScriptObjectTracer : public nsCycleCollectionParticipant
 {
 public:
-    MOZ_CONSTEXPR nsScriptObjectTracer() : nsCycleCollectionParticipant(false) {}
-    MOZ_CONSTEXPR nsScriptObjectTracer(bool aSkip) : nsCycleCollectionParticipant(aSkip) {}
+  MOZ_CONSTEXPR nsScriptObjectTracer()
+    : nsCycleCollectionParticipant(false)
+  {
+  }
+  MOZ_CONSTEXPR nsScriptObjectTracer(bool aSkip)
+    : nsCycleCollectionParticipant(aSkip)
+  {
+  }
 
-    NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure) = 0;
+  NS_IMETHOD_(void) Trace(void* aPtr, const TraceCallbacks& aCb,
+                          void* aClosure) = 0;
 
-    static void NS_COM_GLUE NoteJSChild(void *aScriptThing, const char *name,
-                                        void *aClosure);
+  static void NS_COM_GLUE NoteJSChild(void* aScriptThing, const char* aName,
+                                      void* aClosure);
 };
 
 class NS_NO_VTABLE nsXPCOMCycleCollectionParticipant : public nsScriptObjectTracer
 {
 public:
-    MOZ_CONSTEXPR nsXPCOMCycleCollectionParticipant() : nsScriptObjectTracer(false) {}
-    MOZ_CONSTEXPR nsXPCOMCycleCollectionParticipant(bool aSkip) : nsScriptObjectTracer(aSkip) {}
+  MOZ_CONSTEXPR nsXPCOMCycleCollectionParticipant()
+    : nsScriptObjectTracer(false)
+  {
+  }
+  MOZ_CONSTEXPR nsXPCOMCycleCollectionParticipant(bool aSkip)
+    : nsScriptObjectTracer(aSkip)
+  {
+  }
 
-    NS_DECLARE_STATIC_IID_ACCESSOR(NS_XPCOMCYCLECOLLECTIONPARTICIPANT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_XPCOMCYCLECOLLECTIONPARTICIPANT_IID)
 
-    NS_IMETHOD_(void) Root(void *p);
-    NS_IMETHOD_(void) Unroot(void *p);
+  NS_IMETHOD_(void) Root(void* aPtr);
+  NS_IMETHOD_(void) Unroot(void* aPtr);
 
-    NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure);
+  NS_IMETHOD_(void) Trace(void* aPtr, const TraceCallbacks& aCb,
+                          void* aClosure);
 
-    static bool CheckForRightISupports(nsISupports *s);
+  static bool CheckForRightISupports(nsISupports* aSupports);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
@@ -248,41 +277,39 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
 
 // The default implementation of this class template is empty, because it
 // should never be used: see the partial specializations below.
-template <typename T,
-          bool IsXPCOM = mozilla::IsBaseOf<nsISupports, T>::value>
+template<typename T,
+         bool IsXPCOM = mozilla::IsBaseOf<nsISupports, T>::value>
 struct DowncastCCParticipantImpl
 {
 };
 
 // Specialization for XPCOM CC participants
-template <typename T>
+template<typename T>
 struct DowncastCCParticipantImpl<T, true>
 {
-  static T* Run(void *p)
+  static T* Run(void* aPtr)
   {
-    nsISupports *s = static_cast<nsISupports*>(p);
+    nsISupports* s = static_cast<nsISupports*>(aPtr);
     MOZ_ASSERT(NS_CYCLE_COLLECTION_CLASSNAME(T)::CheckForRightISupports(s),
                "not the nsISupports pointer we expect");
-    T *rval =  NS_CYCLE_COLLECTION_CLASSNAME(T)::Downcast(s);
+    T* rval =  NS_CYCLE_COLLECTION_CLASSNAME(T)::Downcast(s);
     NS_CHECK_FOR_RIGHT_PARTICIPANT(rval);
     return rval;
   }
 };
 
 // Specialization for native CC participants
-template <typename T>
+template<typename T>
 struct DowncastCCParticipantImpl<T, false>
 {
-  static T* Run(void *p)
-  {
-    return static_cast<T*>(p);
-  }
+  static T* Run(void* aPtr) { return static_cast<T*>(aPtr); }
 };
 
-template <typename T>
-T* DowncastCCParticipant(void *p)
+template<typename T>
+T*
+DowncastCCParticipant(void* aPtr)
 {
-  return DowncastCCParticipantImpl<T>::Run(p);
+  return DowncastCCParticipantImpl<T>::Run(aPtr);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -482,7 +509,7 @@ public:                                                                        \
   {                                                                            \
     return NS_ISUPPORTS_CAST(_base*, p);                                       \
   }                                                                            \
-  template <typename T>                                                        \
+  template<typename T>                                                         \
   friend nsISupports*                                                          \
   ToSupports(T* p, NS_CYCLE_COLLECTION_INNERCLASS* dummy);
 

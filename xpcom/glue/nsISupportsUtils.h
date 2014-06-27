@@ -35,16 +35,15 @@ extern "C++" {
 // an |extern "C"|
 
 
-// Making this a |inline| |template| allows |expr| to be evaluated only once,
+// Making this a |inline| |template| allows |aExpr| to be evaluated only once,
 // yet still denies you the ability to |AddRef()| an |nsCOMPtr|.
-template <class T>
-inline
-void
-ns_if_addref( T expr )
+template<class T>
+inline void
+ns_if_addref(T aExpr)
 {
-    if (expr) {
-        expr->AddRef();
-    }
+  if (aExpr) {
+    aExpr->AddRef();
+  }
 }
 
 } /* extern "C++" */
@@ -124,22 +123,21 @@ ns_if_addref( T expr )
   static_cast<nsISupports*>(static_cast<__unambiguousBase>(__expr))
 
 // a type-safe shortcut for calling the |QueryInterface()| member function
-template <class T, class DestinationType>
-inline
-nsresult
-CallQueryInterface( T* aSource, DestinationType** aDestination )
+template<class T, class DestinationType>
+inline nsresult
+CallQueryInterface(T* aSource, DestinationType** aDestination)
 {
-    // We permit nsISupports-to-nsISupports here so that one can still obtain
-    // the canonical nsISupports pointer with CallQueryInterface.
-    static_assert(!mozilla::IsSame<T, DestinationType>::value ||
-                  mozilla::IsSame<DestinationType, nsISupports>::value,
-                  "don't use CallQueryInterface for compile-time-determinable casts");
+  // We permit nsISupports-to-nsISupports here so that one can still obtain
+  // the canonical nsISupports pointer with CallQueryInterface.
+  static_assert(!mozilla::IsSame<T, DestinationType>::value ||
+                mozilla::IsSame<DestinationType, nsISupports>::value,
+                "don't use CallQueryInterface for compile-time-determinable casts");
 
-    NS_PRECONDITION(aSource, "null parameter");
-    NS_PRECONDITION(aDestination, "null parameter");
+  NS_PRECONDITION(aSource, "null parameter");
+  NS_PRECONDITION(aDestination, "null parameter");
 
-    return aSource->QueryInterface(NS_GET_TEMPLATE_IID(DestinationType),
-                                   reinterpret_cast<void**>(aDestination));
+  return aSource->QueryInterface(NS_GET_TEMPLATE_IID(DestinationType),
+                                 reinterpret_cast<void**>(aDestination));
 }
 
 #endif /* __nsISupportsUtils_h */

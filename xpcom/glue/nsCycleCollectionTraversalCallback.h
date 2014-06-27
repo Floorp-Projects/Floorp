@@ -17,34 +17,35 @@ public:
   // refcount, otherwise cycle collection will fail, and probably crash.
   // If the callback cares about objname, it should put
   // WANT_DEBUG_INFO in mFlags.
-  NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refcount,
-                                           const char* objname) = 0;
+  NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt aRefcount,
+                                           const char* aObjName) = 0;
   // Note, aCompartmentAddress is 0 if it is unknown.
-  NS_IMETHOD_(void) DescribeGCedNode(bool ismarked,
-                                     const char* objname,
+  NS_IMETHOD_(void) DescribeGCedNode(bool aIsMarked,
+                                     const char* aObjName,
                                      uint64_t aCompartmentAddress = 0) = 0;
 
-  NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child) = 0;
-  NS_IMETHOD_(void) NoteJSChild(void *child) = 0;
-  NS_IMETHOD_(void) NoteNativeChild(void *child,
-                                    nsCycleCollectionParticipant *helper) = 0;
+  NS_IMETHOD_(void) NoteXPCOMChild(nsISupports* aChild) = 0;
+  NS_IMETHOD_(void) NoteJSChild(void* aChild) = 0;
+  NS_IMETHOD_(void) NoteNativeChild(void* aChild,
+                                    nsCycleCollectionParticipant* aHelper) = 0;
 
   // Give a name to the edge associated with the next call to
   // NoteXPCOMChild, NoteJSChild, or NoteNativeChild.
   // Callbacks who care about this should set WANT_DEBUG_INFO in the
   // flags.
-  NS_IMETHOD_(void) NoteNextEdgeName(const char* name) = 0;
+  NS_IMETHOD_(void) NoteNextEdgeName(const char* aName) = 0;
 
-  enum {
+  enum
+  {
     // Values for flags:
 
     // Caller should call NoteNextEdgeName and pass useful objName
     // to DescribeRefCountedNode and DescribeGCedNode.
-    WANT_DEBUG_INFO = (1<<0),
+    WANT_DEBUG_INFO = (1 << 0),
 
     // Caller should not skip objects that we know will be
     // uncollectable.
-    WANT_ALL_TRACES = (1<<1)
+    WANT_ALL_TRACES = (1 << 1)
   };
   uint32_t Flags() const { return mFlags; }
   bool WantDebugInfo() const { return (mFlags & WANT_DEBUG_INFO) != 0; }

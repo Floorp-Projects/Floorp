@@ -23,7 +23,7 @@
 using namespace JS;
 using namespace mozilla;
 
-template <class ArrayT>
+template<class ArrayT>
 static void
 TraceArray(JSTracer* trc, void* data)
 {
@@ -39,7 +39,7 @@ TraceArray(JSTracer* trc, void* data)
 const size_t ElementCount = 100;
 const size_t InitialElements = ElementCount / 10;
 
-template <class ArrayT>
+template<class ArrayT>
 static void
 RunTest(JSRuntime* rt, JSContext* cx, ArrayT* array)
 {
