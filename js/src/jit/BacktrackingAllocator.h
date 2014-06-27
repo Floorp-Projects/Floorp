@@ -264,6 +264,7 @@ class BacktrackingAllocator
     bool splitAt(LiveInterval *interval, const SplitPositions &splitPositions);
     bool trySplitAcrossHotcode(LiveInterval *interval, bool *success);
     bool trySplitAfterLastRegisterUse(LiveInterval *interval, LiveInterval *conflict, bool *success);
+    bool trySplitBeforeFirstRegisterUse(LiveInterval *interval, LiveInterval *conflict, bool *success);
     bool splitAtAllRegisterUses(LiveInterval *interval);
     bool splitAcrossCalls(LiveInterval *interval);
 };
