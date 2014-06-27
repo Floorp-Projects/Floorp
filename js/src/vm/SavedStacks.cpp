@@ -483,7 +483,8 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
     // do not have a |JSScript| for this frame (asm.js frames), we take a slow
     // path that doesn't employ memoization, and update |location|'s slots
     // directly.
-    LocationValue location;+    if (iter.hasScript()) {
+    LocationValue location;
+    if (iter.hasScript()) {
         JSScript *script = iter.script();
         jsbytecode *pc = iter.pc();
         if (!getLocation(cx, script, pc, &location))
