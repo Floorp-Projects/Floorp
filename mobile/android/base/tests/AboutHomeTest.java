@@ -7,6 +7,7 @@ package org.mozilla.gecko.tests;
 import java.util.ArrayList;
 
 import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.home.HomePager;
 
 import android.support.v4.view.ViewPager;
 import android.text.TextUtils;
@@ -110,7 +111,7 @@ abstract class AboutHomeTest extends PixelTest {
         openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
         mSolo.hideSoftKeyboard();
         getInstrumentation().waitForIdleSync();
-        ListView bookmarksTabList = findListViewWithTag("bookmarks");
+        ListView bookmarksTabList = findListViewWithTag(HomePager.LIST_TAG_BOOKMARKS);
         waitForNonEmptyListToLoad(bookmarksTabList);
         ListAdapter adapter = bookmarksTabList.getAdapter();
         if (adapter != null) {

@@ -703,7 +703,9 @@ var ProjectEditor = Class({
    */
   set menuEnabled(val) {
     this._menuEnabled = val;
-    this._updateMenuItems();
+    if (this._loaded) {
+      this._updateMenuItems();
+    }
   },
 
   get menuEnabled() {
