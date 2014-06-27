@@ -116,13 +116,9 @@ class JS_FRIEND_API(BaseProxyHandler)
      */
     bool mHasSecurityPolicy;
 
-  protected:
-    // Subclasses may set this in their constructor.
-    void setHasPrototype(bool aHasPrototype) { mHasPrototype = aHasPrototype; }
-    void setHasSecurityPolicy(bool aHasPolicy) { mHasSecurityPolicy = aHasPolicy; }
-
   public:
-    explicit BaseProxyHandler(const void *family);
+    explicit BaseProxyHandler(const void *family, bool hasPrototype = false,
+                              bool hasSecurityPolicy = false);
     virtual ~BaseProxyHandler();
 
     bool hasPrototype() {
@@ -241,7 +237,8 @@ class JS_FRIEND_API(BaseProxyHandler)
 class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
 {
   public:
-    explicit DirectProxyHandler(const void *family);
+    explicit DirectProxyHandler(const void *family, bool hasPrototype = false,
+                                bool hasSecurityPolicy = false);
 
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
