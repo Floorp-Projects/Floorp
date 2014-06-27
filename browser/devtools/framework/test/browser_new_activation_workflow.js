@@ -53,10 +53,8 @@ function testToggle() {
     target = TargetFactory.forTab(gBrowser.selectedTab);
     gDevTools.showToolbox(target, "styleeditor").then(function(aToolbox) {
       toolbox = aToolbox;
-      aToolbox.once("styleeditor-selected", () => {
-        is(toolbox.currentToolId, "styleeditor", "The style editor is selected");
-        finishUp();
-      });
+      is(toolbox.currentToolId, "styleeditor", "The style editor is selected");
+      finishUp();
     });
   });
 

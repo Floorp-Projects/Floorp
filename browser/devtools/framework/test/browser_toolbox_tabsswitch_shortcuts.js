@@ -24,7 +24,9 @@ function test() {
 }
 
 function testShortcuts(aToolbox, aIndex) {
-  if (aIndex == toolIDs.length) {
+  if (aIndex === undefined) {
+    aIndex = 1;
+  } else if (aIndex == toolIDs.length) {
     aIndex = 0;
     if (secondTime) {
       secondTime = false;
@@ -55,20 +57,14 @@ function testShortcuts(aToolbox, aIndex) {
 
   toolbox.once("select", onSelect);
 
-  if (aIndex != null) {
-    // This if block is to allow the call of onSelect without shortcut press for
-    // the first time. That happens because on opening of toolbox, one tool gets
-    // selected atleast.
-
-    let key = (reverse ? prevKey: nextKey);
-    let modifiers = {
-      accelKey: true
-    };
-    idIndex = aIndex;
-    info("Testing shortcut to switch to tool " + aIndex + ":" + toolIDs[aIndex] +
-         " using key " + key);
-    EventUtils.synthesizeKey(key, modifiers, toolbox.doc.defaultView);
-  }
+  let key = (reverse ? prevKey: nextKey);
+  let modifiers = {
+    accelKey: true
+  };
+  idIndex = aIndex;
+  info("Testing shortcut to switch to tool " + aIndex + ":" + toolIDs[aIndex] +
+       " using key " + key);
+  EventUtils.synthesizeKey(key, modifiers, toolbox.doc.defaultView);
 }
 
 function onSelect(event, id) {
