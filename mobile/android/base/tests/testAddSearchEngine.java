@@ -6,6 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.home.HomePager;
 
 import android.widget.ImageView;
 import android.widget.ListAdapter;
@@ -132,7 +133,7 @@ public class testAddSearchEngine extends AboutHomeTest {
         boolean correctNumSearchEnginesDisplayed = waitForTest(new BooleanTest() {
             @Override
             public boolean test() {
-                ListView list = findListViewWithTag("browser_search");
+                ListView list = findListViewWithTag(HomePager.LIST_TAG_BROWSER_SEARCH);
                 if (list == null) {
                     return false;
                 }
