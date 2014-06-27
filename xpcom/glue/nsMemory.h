@@ -24,7 +24,7 @@ class nsIMemory;
  * Static helper routines to manage memory. These routines allow easy access
  * to xpcom's built-in (global) nsIMemory implementation, without needing
  * to go through the service manager to get it. However this requires clients
- * to link with the xpcom DLL. 
+ * to link with the xpcom DLL.
  *
  * This class is not threadsafe and is intented for use only on the main
  * thread.
@@ -32,23 +32,29 @@ class nsIMemory;
 class nsMemory
 {
 public:
-    static NS_HIDDEN_(void*) Alloc(size_t size)
-        { return NS_Alloc(size); }
+  static NS_HIDDEN_(void*) Alloc(size_t aSize)
+  {
+    return NS_Alloc(aSize);
+  }
 
-    static NS_HIDDEN_(void*) Realloc(void* ptr, size_t size)
-        { return NS_Realloc(ptr, size); }
+  static NS_HIDDEN_(void*) Realloc(void* aPtr, size_t aSize)
+  {
+    return NS_Realloc(aPtr, aSize);
+  }
 
-    static NS_HIDDEN_(void) Free(void* ptr)
-        { NS_Free(ptr); }
+  static NS_HIDDEN_(void) Free(void* aPtr)
+  {
+    NS_Free(aPtr);
+  }
 
-    static NS_COM_GLUE nsresult   HeapMinimize(bool aImmediate);
-    static NS_COM_GLUE void*      Clone(const void* ptr, size_t size);
-    static NS_COM_GLUE nsIMemory* GetGlobalMemoryService();       // AddRefs
+  static NS_COM_GLUE nsresult   HeapMinimize(bool aImmediate);
+  static NS_COM_GLUE void*      Clone(const void* aPtr, size_t aSize);
+  static NS_COM_GLUE nsIMemory* GetGlobalMemoryService();       // AddRefs
 };
 
-/** 
+/**
  * Macro to free all elements of an XPCOM array of a given size using
- * freeFunc, then frees the array itself using nsMemory::Free().  
+ * freeFunc, then frees the array itself using nsMemory::Free().
  *
  * Note that this macro (and its wrappers) can be used to deallocate a
  * partially- or completely-built array while unwinding an error
@@ -61,19 +67,19 @@ public:
  * Thanks to <alecf@netscape.com> for suggesting this form, which
  * allows the macro to be used with NS_RELEASE / NS_RELEASE_IF in
  * addition to nsMemory::Free.
- * 
- * @param size      Number of elements in the array.  If not a constant, this 
- *                  should be a int32_t.  Note that this means this macro 
+ *
+ * @param size      Number of elements in the array.  If not a constant, this
+ *                  should be a int32_t.  Note that this means this macro
  *                  will not work if size >= 2^31.
  * @param array     The array to be freed.
- * @param freeFunc  The function or macro to be used to free it. 
+ * @param freeFunc  The function or macro to be used to free it.
  *                  For arrays of nsISupports (or any class derived
  *                  from it), NS_IF_RELEASE (or NS_RELEASE) should be
  *                  passed as freeFunc.  For most (all?) other pointer
  *                  types (including XPCOM strings and wstrings),
  *                  nsMemory::Free should be used, since the
  *                  shared-allocator (nsMemory) is what will have been
- *                  used to allocate the memory.  
+ *                  used to allocate the memory.
  */
 #define NS_FREE_XPCOM_POINTER_ARRAY(size, array, freeFunc)                    \
     PR_BEGIN_MACRO                                                            \
@@ -85,13 +91,13 @@ public:
 
 // convenience macros for commonly used calls.  mmmmm.  syntactic sugar.
 
-/** 
+/**
  * Macro to free arrays of non-refcounted objects allocated by the
  * shared allocator (nsMemory) such as strings and wstrings.  A
  * convenience wrapper around NS_FREE_XPCOM_POINTER_ARRAY.
  *
- * @param size      Number of elements in the array.  If not a constant, this 
- *                  should be a int32_t.  Note that this means this macro 
+ * @param size      Number of elements in the array.  If not a constant, this
+ *                  should be a int32_t.  Note that this means this macro
  *                  will not work if size >= 2^31.
  * @param array     The array to be freed.
  */
@@ -108,8 +114,8 @@ public:
  * NS_FREE_XPCOM_POINTER_ARRAY directly and using NS_RELEASE as your
  * free function.
  *
- * @param size      Number of elements in the array.  If not a constant, this 
- *                  should be a int32_t.  Note that this means this macro 
+ * @param size      Number of elements in the array.  If not a constant, this
+ *                  should be a int32_t.  Note that this means this macro
  *                  will not work if size >= 2^31.
  * @param array     The array to be freed.
  */
@@ -121,12 +127,12 @@ public:
  * requirements of a type.
  */
 namespace mozilla {
-  template <class T>
-  struct AlignmentTestStruct
-  {
-    char c;
-    T t;
-  };
+template<class T>
+struct AlignmentTestStruct
+{
+  char c;
+  T t;
+};
 }
 
 #define NS_ALIGNMENT_OF(t_) \
@@ -135,10 +141,11 @@ namespace mozilla {
 /**
  * An enumeration type used to represent a method of assignment.
  */
-enum nsAssignmentType {
-    NS_ASSIGNMENT_COPY,   // copy by value
-    NS_ASSIGNMENT_DEPEND, // copy by reference
-    NS_ASSIGNMENT_ADOPT   // copy by reference (take ownership of resource)
+enum nsAssignmentType
+{
+  NS_ASSIGNMENT_COPY,   // copy by value
+  NS_ASSIGNMENT_DEPEND, // copy by reference
+  NS_ASSIGNMENT_ADOPT   // copy by reference (take ownership of resource)
 };
 
 #endif // nsMemory_h__

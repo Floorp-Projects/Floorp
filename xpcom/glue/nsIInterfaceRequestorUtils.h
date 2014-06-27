@@ -11,41 +11,38 @@
 
 // a type-safe shortcut for calling the |GetInterface()| member function
 // T must inherit from nsIInterfaceRequestor, but the cast may be ambiguous.
-template <class T, class DestinationType>
-inline
-nsresult
-CallGetInterface( T* aSource, DestinationType** aDestination )
-  {
-    NS_PRECONDITION(aSource, "null parameter");
-    NS_PRECONDITION(aDestination, "null parameter");
+template<class T, class DestinationType>
+inline nsresult
+CallGetInterface(T* aSource, DestinationType** aDestination)
+{
+  NS_PRECONDITION(aSource, "null parameter");
+  NS_PRECONDITION(aDestination, "null parameter");
 
-    return aSource->GetInterface(NS_GET_TEMPLATE_IID(DestinationType),
-                                 reinterpret_cast<void**>(aDestination));
-  }
+  return aSource->GetInterface(NS_GET_TEMPLATE_IID(DestinationType),
+                               reinterpret_cast<void**>(aDestination));
+}
 
 class NS_COM_GLUE nsGetInterface : public nsCOMPtr_helper
+{
+public:
+  nsGetInterface(nsISupports* aSource, nsresult* aError)
+    : mSource(aSource)
+    , mErrorPtr(aError)
   {
-    public:
-      nsGetInterface( nsISupports* aSource, nsresult* error )
-          : mSource(aSource),
-            mErrorPtr(error)
-        {
-          // nothing else to do here
-        }
-
-      virtual nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
-
-    private:
-      nsISupports*          mSource;
-      nsresult*             mErrorPtr;
-  };
-
-inline
-const nsGetInterface
-do_GetInterface( nsISupports* aSource, nsresult* error = 0 )
-  {
-    return nsGetInterface(aSource, error);
   }
+
+  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const;
+
+private:
+  nsISupports* mSource;
+  nsresult* mErrorPtr;
+};
+
+inline const nsGetInterface
+do_GetInterface(nsISupports* aSource, nsresult* aError = 0)
+{
+  return nsGetInterface(aSource, aError);
+}
 
 #endif // __nsInterfaceRequestorUtils_h
 

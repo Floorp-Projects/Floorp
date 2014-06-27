@@ -52,6 +52,7 @@ const kMessages =["Webapps:Connect",
 this.InterAppCommService = {
   init: function() {
     Services.obs.addObserver(this, "xpcom-shutdown", false);
+    Services.obs.addObserver(this, "webapps-clear-data", false);
 
     kMessages.forEach(function(aMsg) {
       ppmm.addMessageListener(aMsg, this);
@@ -932,10 +933,79 @@ this.InterAppCommService = {
     switch (aTopic) {
       case "xpcom-shutdown":
         Services.obs.removeObserver(this, "xpcom-shutdown");
+        Services.obs.removeObserver(this, "webapps-clear-data");
         kMessages.forEach(function(aMsg) {
           ppmm.removeMessageListener(aMsg, this);
         }, this);
         ppmm = null;
+        break;
+      case "webapps-clear-data":
+        let params =
+          aSubject.QueryInterface(Ci.mozIApplicationClearPrivateDataParams);
+        if (!params) {
+          if (DEBUG) {
+            debug("Error updating registered/allowed connections for an " +
+                  "uninstalled app.");
+          }
+          return;
+        }
+
+        // Only update registered/allowed connections for apps.
+        if (params.browserOnly) {
+          if (DEBUG) {
+            debug("Only update registered/allowed connections for apps.");
+          }
+          return;
+        }
+
+        let manifestURL = appsService.getManifestURLByLocalId(params.appId);
+        if (!manifestURL) {
+          if (DEBUG) {
+            debug("Error updating registered/allowed connections for an " +
+                  "uninstalled app.");
+          }
+          return;
+        }
+
+        // Update registered connections.
+        for (let keyword in this._registeredConnections) {
+          let subAppManifestURLs = this._registeredConnections[keyword];
+          if (subAppManifestURLs[manifestURL]) {
+            delete subAppManifestURLs[manifestURL];
+            if (DEBUG) {
+              debug("Remove " + manifestURL + " from registered connections " +
+                    "due to app uninstallation.");
+            }
+          }
+        }
+
+        // Update allowed connections.
+        for (let keyword in this._allowedConnections) {
+          let allowedPubAppManifestURLs = this._allowedConnections[keyword];
+          if (allowedPubAppManifestURLs[manifestURL]) {
+            delete allowedPubAppManifestURLs[manifestURL];
+            if (DEBUG) {
+              debug("Remove " + manifestURL + " (as a pub app) from allowed " +
+                    "connections due to app uninstallation.");
+            }
+          }
+
+          for (let pubAppManifestURL in allowedPubAppManifestURLs) {
+            let subAppManifestURLs = allowedPubAppManifestURLs[pubAppManifestURL];
+            for (let i = subAppManifestURLs.length - 1; i >= 0; i--) {
+              if (subAppManifestURLs[i] === manifestURL) {
+                subAppManifestURLs.splice(i, 1);
+                if (DEBUG) {
+                  debug("Remove " + manifestURL + " (as a sub app to pub " +
+                        pubAppManifestURL + ") from allowed connections " +
+                        "due to app uninstallation.");
+                }
+              }
+            }
+          }
+        }
+        debug("Finish updating registered/allowed connections for an " +
+              "uninstalled app.");
         break;
     }
   }
