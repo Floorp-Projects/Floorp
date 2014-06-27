@@ -1679,6 +1679,24 @@ nsContainerFrame::PullNextInFlowChild(ContinuationTraversingState& aState)
   return frame;
 }
 
+bool
+nsContainerFrame::ResolvedOrientationIsVertical()
+{
+  uint8_t orient = StyleDisplay()->mOrient;
+  switch (orient) {
+    case NS_STYLE_ORIENT_HORIZONTAL:
+      return false;
+    case NS_STYLE_ORIENT_VERTICAL:
+      return true;
+    case NS_STYLE_ORIENT_INLINE:
+      return GetWritingMode().IsVertical();
+    case NS_STYLE_ORIENT_BLOCK:
+      return !GetWritingMode().IsVertical();
+  }
+  NS_NOTREACHED("unexpected -moz-orient value");
+  return false;
+}
+
 nsOverflowContinuationTracker::nsOverflowContinuationTracker(nsContainerFrame* aFrame,
                                                              bool              aWalkOOFFrames,
                                                              bool              aSkipOverflowContainerChildren)
