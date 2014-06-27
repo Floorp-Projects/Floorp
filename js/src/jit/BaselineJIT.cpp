@@ -173,7 +173,7 @@ jit::EnterBaselineAtBranch(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc)
     // Skip debug breakpoint/trap handler, the interpreter already handled it
     // for the current op.
     if (cx->compartment()->debugMode())
-        data.jitcode += MacroAssembler::ToggledCallSize();
+        data.jitcode += MacroAssembler::ToggledCallSize(data.jitcode);
 
     data.osrFrame = fp;
     data.osrNumStackValues = fp->script()->nfixed() + cx->interpreterRegs().stackDepth();

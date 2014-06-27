@@ -1232,6 +1232,8 @@ class Assembler : public AssemblerShared
     uint32_t actualIndex(uint32_t) const;
     static uint8_t *PatchableJumpAddress(JitCode *code, uint32_t index);
     BufferOffset actualOffset(BufferOffset) const;
+    static uint32_t NopFill;
+    static uint32_t GetNopFill();
   protected:
 
     // structure for fixing up pc-relative loads/jumps when a the machine code
@@ -1258,7 +1260,6 @@ class Assembler : public AssemblerShared
     CompactBufferWriter relocations_;
     CompactBufferWriter preBarriers_;
 
-    //typedef JSC::AssemblerBufferWithConstantPool<1024, 4, 4, js::jit::Assembler> ARMBuffer;
     ARMBuffer m_buffer;
 
     // There is now a semi-unified interface for instruction generation.
@@ -1276,8 +1277,9 @@ class Assembler : public AssemblerShared
     Pool *doublePool;
 
   public:
+    // For the nopFill use a branch to the next instruction: 0xeaffffff.
     Assembler()
-      : m_buffer(4, 4, 0, &pools_[0], 8),
+      : m_buffer(4, 4, 0, &pools_[0], 8, 0xeaffffff, GetNopFill()),
         int32Pool(m_buffer.getPool(1)),
         doublePool(m_buffer.getPool(0)),
         isFinished(false),
@@ -1386,6 +1388,10 @@ class Assembler : public AssemblerShared
     // it is interpreted as a pointer to the location that we want the
     // instruction to be written.
     BufferOffset writeInst(uint32_t x, uint32_t *dest = nullptr);
+
+    // As above, but also mark the instruction as a branch.
+    BufferOffset writeBranchInst(uint32_t x);
+
     // A static variant for the cases where we don't want to have an assembler
     // object at all. Normally, you would use the dummy (nullptr) object.
     static void writeInstStatic(uint32_t x, uint32_t *dest);
@@ -1802,6 +1808,9 @@ class Assembler : public AssemblerShared
     static void ToggleToJmp(CodeLocationLabel inst_);
     static void ToggleToCmp(CodeLocationLabel inst_);
 
+    static uint8_t *BailoutTableStart(uint8_t *code);
+
+    static size_t ToggledCallSize(uint8_t *code);
     static void ToggleCall(CodeLocationLabel inst_, bool enabled);
 
     static void updateBoundsCheck(uint32_t logHeapSize, Instruction *inst);
@@ -1860,6 +1869,9 @@ class Instruction
     // This does neat things like ignoreconstant pools and their guards.
     Instruction *next();
 
+    // Skipping pools with artificial guards.
+    Instruction *skipPool();
+
     // Sometimes, an api wants a uint32_t (or a pointer to it) rather than
     // an instruction.  raw() just coerces this into a pointer to a uint32_t
     const uint32_t *raw() const { return &data; }
@@ -1905,9 +1917,9 @@ JS_STATIC_ASSERT(sizeof(InstDTR) == sizeof(InstLDR));
 
 class InstNOP : public Instruction
 {
+  public:
     static const uint32_t NopInst = 0x0320f000;
 
-  public:
     InstNOP()
       : Instruction(NopInst, Assembler::Always)
     { }

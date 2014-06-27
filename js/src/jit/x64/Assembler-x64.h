@@ -700,11 +700,11 @@ class Assembler : public AssemblerX86Shared
         CodeOffsetLabel offset(size());
         JmpSrc src = enabled ? masm.call() : masm.cmp_eax();
         addPendingJump(src, ImmPtr(target->raw()), Relocation::JITCODE);
-        JS_ASSERT(size() - offset.offset() == ToggledCallSize());
+        JS_ASSERT(size() - offset.offset() == ToggledCallSize(nullptr));
         return offset;
     }
 
-    static size_t ToggledCallSize() {
+    static size_t ToggledCallSize(uint8_t *code) {
         // Size of a call instruction.
         return 5;
     }
