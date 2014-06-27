@@ -1986,8 +1986,9 @@ DOMXrayTraits::createHolder(JSContext *cx, JSObject *wrapper)
 
 template <typename Base, typename Traits>
 XrayWrapper<Base, Traits>::XrayWrapper(unsigned flags)
-  : Base(flags | WrapperFactory::IS_XRAY_WRAPPER_FLAG, /* hasPrototype = */ Traits::HasPrototype)
+  : Base(flags | WrapperFactory::IS_XRAY_WRAPPER_FLAG)
 {
+    Base::setHasPrototype(Traits::HasPrototype);
 }
 
 template <typename Base, typename Traits>
