@@ -18,7 +18,7 @@ class jsid(object):
     TYPE_STRING                 = 0x0
     TYPE_INT                    = 0x1
     TYPE_VOID                   = 0x2
-    TYPE_OBJECT                 = 0x4
+    TYPE_SYMBOL                 = 0x4
     TYPE_MASK                   = 0x7
 
     def __init__(self, value, cache):
@@ -47,9 +47,11 @@ class jsid(object):
             body = bits >> 1
         elif tag == jsid.TYPE_VOID:
             return "JSID_VOID"
-        elif tag == jsid.TYPE_OBJECT:
+        elif tag == jsid.TYPE_SYMBOL:
+            if bits == jsid.TYPE_SYMBOL:
+                return "JSID_EMPTY"
             body = ((bits & ~jsid.TYPE_MASK)
-                    .cast(self.cache.JSObject_ptr_t))
+                    .cast(self.cache.JSSymbol_ptr_t))
         else:
             body = "<unrecognized>"
         return '$jsid(%s)' % (body,)
