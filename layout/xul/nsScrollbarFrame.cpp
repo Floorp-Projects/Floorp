@@ -167,9 +167,7 @@ nsScrollbarFrame::GetMargin(nsMargin& aMargin)
     if (theme) {
       nsIntSize size;
       bool isOverridable;
-      nsRefPtr<nsRenderingContext> rc =
-        presContext->PresShell()->CreateReferenceRenderingContext();
-      theme->GetMinimumWidgetSize(rc, this, NS_THEME_SCROLLBAR, &size,
+      theme->GetMinimumWidgetSize(presContext, this, NS_THEME_SCROLLBAR, &size,
                                   &isOverridable);
       if (IsHorizontal()) {
         aMargin.top = -presContext->DevPixelsToAppUnits(size.height);
