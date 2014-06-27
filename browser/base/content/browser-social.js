@@ -1182,7 +1182,6 @@ SocialStatus = {
     let button = widget.forWindow(window).node;
     if (button) {
       // we only grab the first notification, ignore all others
-      let place = CustomizableUI.getPlaceForItem(button);
       let provider = Social._getProviderFromOrigin(origin);
       let icons = provider.ambientNotificationIcons;
       let iconNames = Object.keys(icons);
@@ -1192,7 +1191,7 @@ SocialStatus = {
       // ambient notification and profile changes.
       let iconURL = provider.icon32URL || provider.iconURL;
       let tooltiptext;
-      if (!notif || place == "palette") {
+      if (!notif || !widget.areaType) {
         button.style.listStyleImage = "url(" + iconURL + ")";
         button.setAttribute("badge", "");
         button.setAttribute("aria-label", "");
@@ -1249,8 +1248,12 @@ SocialMarks = {
   update: function() {
     // signal each button to update itself
     let currentButtons = document.querySelectorAll('toolbarbutton[type="socialmark"]');
-    for (let elt of currentButtons)
-      elt.update();
+    for (let elt of currentButtons) {
+      // make sure we can call update since the xbl is not completely bound if
+      // the button is in overflow, until the button becomes visible.
+      if (elt.update)
+        elt.update();
+    }
   },
 
   updatePanelButtons: function() {
@@ -1263,7 +1266,9 @@ SocialMarks = {
       if (!widget)
         continue;
       let node = widget.forWindow(window).node;
-      if (node)
+      // xbl binding is not complete on startup when buttons are not in toolbar,
+      // verify update is available
+      if (node && node.update)
         node.update();
     }
   },
