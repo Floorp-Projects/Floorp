@@ -1370,6 +1370,11 @@ DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd)
     return ssl_ImportFD(model, fd, ssl_variant_datagram);
 }
 
+/* SSL_SetNextProtoCallback is used to select an application protocol
+ * for ALPN and NPN.  For ALPN, this runs on the server; for NPN it
+ * runs on the client. */
+/* Note: The ALPN version doesn't allow for the use of a default, setting a
+ * status of SSL_NEXT_PROTO_NO_OVERLAP is treated as a failure. */
 SECStatus
 SSL_SetNextProtoCallback(PRFileDesc *fd, SSLNextProtoCallback callback,
                          void *arg)
@@ -1390,7 +1395,7 @@ SSL_SetNextProtoCallback(PRFileDesc *fd, SSLNextProtoCallback callback,
     return SECSuccess;
 }
 
-/* ssl_NextProtoNegoCallback is set as an NPN callback for the case when
+/* ssl_NextProtoNegoCallback is set as an ALPN/NPN callback when
  * SSL_SetNextProtoNego is used.
  */
 static SECStatus
@@ -1409,12 +1414,6 @@ ssl_NextProtoNegoCallback(void *arg, PRFileDesc *fd,
         return SECFailure;
     }
 
-    if (protos_len == 0) {
-        /* The server supports the extension, but doesn't have any protocols
-         * configured. In this case we request our favoured protocol. */
-        goto pick_first;
-    }
-
     /* For each protocol in server preference, see if we support it. */
     for (i = 0; i < protos_len; ) {
         for (j = 0; j < ss->opt.nextProtoNego.len; ) {
@@ -1431,7 +1430,10 @@ ssl_NextProtoNegoCallback(void *arg, PRFileDesc *fd,
         i += 1 + (unsigned int)protos[i];
     }
 
-pick_first:
+    /* The other side supports the extension, and either doesn't have any
+     * protocols configured, or none of its options match ours. In this case we
+     * request our favoured protocol. */
+    /* This will be treated as a failure for ALPN. */
     ss->ssl3.nextProtoState = SSL_NEXT_PROTO_NO_OVERLAP;
     result = ss->opt.nextProtoNego.data;
 

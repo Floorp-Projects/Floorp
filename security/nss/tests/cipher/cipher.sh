@@ -129,6 +129,12 @@ if [ ! -x ${DIST}/${OBJDIR}/bin/bltest${PROG_SUFFIX} ]; then
     return 0
 fi
 cipher_init
-cipher_main
-cipher_gcm
+# Skip cipher_main if this an NSS without softoken build.
+if [ "${NSS_BUILD_WITHOUT_SOFTOKEN}" != "1" ]; then
+    cipher_main
+fi
+# Skip cipher_gcm if this is a softoken only build.
+if [ "${NSS_BUILD_SOFTOKEN_ONLY}" != "1" ]; then
+    cipher_gcm
+fi
 cipher_cleanup

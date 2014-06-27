@@ -2,12 +2,12 @@
 .\"     Title: signtool
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 12 November 2013
+.\"      Date:  5 June 2014
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "SIGNTOOL" "1" "12 November 2013" "nss-tools" "NSS Security Tools"
+.TH "SIGNTOOL" "1" "5 June 2014" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -31,7 +31,7 @@
 signtool \- Digitally sign objects and files\&.
 .SH "SYNOPSIS"
 .HP \w'\fBsigntool\fR\ 'u
-\fBsigntool\fR [\-k\ keyName] [[\-h]] [[\-H]] [[\-l]] [[\-L]] [[\-M]] [[\-v]] [[\-w]] [[\-G\ nickname]] [[\-\-keysize\ |\ \-s\ size]] [[\-b\ basename]] [[\-c\ Compression\ Level]] [[\-d\ cert\-dir]] [[\-i\ installer\ script]] [[\-m\ metafile]] [[\-x\ name]] [[\-f\ filename]] [[\-t|\-\-token\ tokenname]] [[\-e\ extension]] [[\-o]] [[\-z]] [[\-X]] [[\-\-outfile]] [[\-\-verbose\ value]] [[\-\-norecurse]] [[\-\-leavearc]] [[\-j\ directory]] [[\-Z\ jarfile]] [[\-O]] [[\-p\ password]] [directory\-tree] [archive]
+\fBsigntool\fR [[\-b\ basename]] [[\-c\ Compression\ Level]] [[\-d\ cert\-dir]] [[\-e\ extension]] [[\-f\ filename]] [[\-i\ installer\ script]] [[\-h]] [[\-H]] [[\-v]] [[\-w]] [[\-G\ nickname]] [[\-J]] [[\-j\ directory]] [\-k\ keyName] [[\-\-keysize\ |\ \-s\ size]] [[\-l]] [[\-L]] [[\-M]] [[\-m\ metafile]] [[\-\-norecurse]] [[\-O]] [[\-o]] [[\-\-outfile]] [[\-p\ password]] [[\-t|\-\-token\ tokenname]] [[\-z]] [[\-X]] [[\-x\ name]] [[\-\-verbose\ value]] [[\-\-leavearc]] [[\-Z\ jarfile]] [directory\-tree] [archive]
 .SH "STATUS"
 .PP
 This documentation is still work in progress\&. Please contribute to the initial review in
@@ -91,9 +91,19 @@ Tells signtool to sign only files with the given extension; for example, use \-e
 Specifies a text file containing Netscape Signing Tool options and arguments in keyword=value format\&. All options and arguments can be expressed through this file\&. For more information about the syntax used with this file, see "Tips and Techniques"\&.
 .RE
 .PP
+\-G nickname
+.RS 4
+Generates a new private\-public key pair and corresponding object\-signing certificate with the given nickname\&. The newly generated keys and certificate are installed into the key and certificate databases in the directory specified by the \-d option\&. With the NT version of Netscape Signing Tool, you must use the \-d option with the \-G option\&. With the Unix version of Netscape Signing Tool, omitting the \-d option causes the tool to install the keys and certificate in the Communicator key and certificate databases\&. If you are installing the keys and certificate in the Communicator databases, you must exit Communicator before using this option; otherwise, you risk corrupting the databases\&. In all cases, the certificate is also output to a file named x509\&.cacert, which has the MIME\-type application/x\-x509\-ca\-cert\&. Unlike certificates normally used to sign finished code to be distributed over a network, a test certificate created with \-G is not signed by a recognized certificate authority\&. Instead, it is self\-signed\&. In addition, a single test signing certificate functions as both an object\-signing certificate and a CA\&. When you are using it to sign objects, it behaves like an object\-signing certificate\&. When it is imported into browser software such as Communicator, it behaves like an object\-signing CA and cannot be used to sign objects\&. The \-G option is available in Netscape Signing Tool 1\&.0 and later versions only\&. By default, it produces only RSA certificates with 1024\-byte keys in the internal token\&. However, you can use the \-s option specify the required key size and the \-t option to specify the token\&.
+.RE
+.PP
 \-i scriptname
 .RS 4
 Specifies the name of an installer script for SmartUpdate\&. This script installs files from the JAR archive in the local system after SmartUpdate has validated the digital signature\&. For more details, see the description of \-m that follows\&. The \-i option provides a straightforward way to provide this information if you don\*(Aqt need to specify any metadata other than an installer script\&.
+.RE
+.PP
+\-J
+.RS 4
+Signs a directory of HTML files containing JavaScript and creates as many archive files as are specified in the HTML tags\&. Even if signtool creates more than one archive file, you need to supply the key database password only once\&. The \-J option is available only in Netscape Signing Tool 1\&.0 and later versions\&. The \-J option cannot be used at the same time as the \-Z option\&. If the \-c# option is not used with the \-J option, the default compression value is 6\&. Note that versions 1\&.1 and later of Netscape Signing Tool correctly recognizes the CODEBASE attribute, allows paths to be expressed for the CLASS and SRC attributes instead of filenames only, processes LINK tags and parses HTML correctly, and offers clearer error messages\&.
 .RE
 .PP
 \-j directory
@@ -106,19 +116,9 @@ Specifies a special JavaScript directory\&. This option causes the specified dir
 Specifies the nickname (key) of the certificate you want to sign with and signs the files in the specified directory\&. The directory to sign is always specified as the last command\-line argument\&. Thus, it is possible to write signtool \-k MyCert \-d \&. signdir You may have trouble if the nickname contains a single quotation mark\&. To avoid problems, escape the quotation mark using the escape conventions for your platform\&. It\*(Aqs also possible to use the \-k option without signing any files or specifying a directory\&. For example, you can use it with the \-l option to get detailed information about a particular signing certificate\&.
 .RE
 .PP
-\-G nickname
-.RS 4
-Generates a new private\-public key pair and corresponding object\-signing certificate with the given nickname\&. The newly generated keys and certificate are installed into the key and certificate databases in the directory specified by the \-d option\&. With the NT version of Netscape Signing Tool, you must use the \-d option with the \-G option\&. With the Unix version of Netscape Signing Tool, omitting the \-d option causes the tool to install the keys and certificate in the Communicator key and certificate databases\&. If you are installing the keys and certificate in the Communicator databases, you must exit Communicator before using this option; otherwise, you risk corrupting the databases\&. In all cases, the certificate is also output to a file named x509\&.cacert, which has the MIME\-type application/x\-x509\-ca\-cert\&. Unlike certificates normally used to sign finished code to be distributed over a network, a test certificate created with \-G is not signed by a recognized certificate authority\&. Instead, it is self\-signed\&. In addition, a single test signing certificate functions as both an object\-signing certificate and a CA\&. When you are using it to sign objects, it behaves like an object\-signing certificate\&. When it is imported into browser software such as Communicator, it behaves like an object\-signing CA and cannot be used to sign objects\&. The \-G option is available in Netscape Signing Tool 1\&.0 and later versions only\&. By default, it produces only RSA certificates with 1024\-byte keys in the internal token\&. However, you can use the \-s option specify the required key size and the \-t option to specify the token\&. For more information about the use of the \-G option, see "Generating Test Object\-Signing Certificates""Generating Test Object\-Signing Certificates" on page 1241\&.
-.RE
-.PP
 \-l
 .RS 4
 Lists signing certificates, including issuing CAs\&. If any of your certificates are expired or invalid, the list will so specify\&. This option can be used with the \-k option to list detailed information about a particular signing certificate\&. The \-l option is available in Netscape Signing Tool 1\&.0 and later versions only\&.
-.RE
-.PP
-\-J
-.RS 4
-Signs a directory of HTML files containing JavaScript and creates as many archive files as are specified in the HTML tags\&. Even if signtool creates more than one archive file, you need to supply the key database password only once\&. The \-J option is available only in Netscape Signing Tool 1\&.0 and later versions\&. The \-J option cannot be used at the same time as the \-Z option\&. If the \-c# option is not used with the \-J option, the default compression value is 6\&. Note that versions 1\&.1 and later of Netscape Signing Tool correctly recognizes the CODEBASE attribute, allows paths to be expressed for the CLASS and SRC attributes instead of filenames only, processes LINK tags and parses HTML correctly, and offers clearer error messages\&.
 .RE
 .PP
 \-L
