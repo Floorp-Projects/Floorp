@@ -47,6 +47,7 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'Constants.cpp',
+    'DeletedMessageInfo.cpp',
     'DOMMobileMessageError.cpp',
     'ipc/SmsChild.cpp',
     'ipc/SmsIPCService.cpp',
