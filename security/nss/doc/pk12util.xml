@@ -27,16 +27,14 @@
   <refsynopsisdiv>
     <cmdsynopsis>
       <command>pk12util</command>
-      <arg>-i p12File [-h tokenname] [-v] [common-options] </arg>
-      <arg>
-        -l p12File [-h tokenname] [-r] [common-options] </arg>
-      <arg>
-        -o p12File -n certname [-c keyCipher] [-C certCipher] [-m|--key_len keyLen] [-n|--cert_key_len certKeyLen] [common-options] </arg>
-       <arg>
-
-common-options are:
-[-d [sql:]directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword] 
-      </arg>
+      <arg>-i p12File|-l p12File|-o p12File</arg>
+      <arg>-d [sql:]directory</arg>
+      <arg>-h tokenname</arg>
+      <arg>-P dbprefix</arg>
+      <arg>-r</arg>
+      <arg>-v</arg>
+      <arg>-k slotPasswordFile|-K slotPassword</arg>
+      <arg>-w p12filePasswordFile|-W p12filePassword</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -73,10 +71,14 @@ common-options are:
 
     <para><command>Arguments</command></para>
     <variablelist>
-    
       <varlistentry>
-        <term>-n certname</term>
-        <listitem><para>Specify the nickname of the cert and private key to export.</para></listitem>
+        <term>-c keyCipher</term>
+        <listitem><para>Specify the key encryption algorithm.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-C certCipher</term>
+        <listitem><para>Specify the key cert (overall package) encryption algorithm.</para></listitem>
       </varlistentry>
 
       <varlistentry>
@@ -86,19 +88,8 @@ common-options are:
       </varlistentry>
 
       <varlistentry>
-        <term>-P prefix</term>
-        <listitem><para>Specify the prefix used on the certificate and key databases. This option is provided as a special case. 
-          Changing the names of the certificate and key databases is not recommended.</para></listitem>
-      </varlistentry>
-
-      <varlistentry>
         <term>-h tokenname</term>
         <listitem><para>Specify the name of the token to import into or export from.</para></listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>-v </term>
-        <listitem><para>Enable debug logging when importing.</para></listitem>
       </varlistentry>
 
       <varlistentry>
@@ -112,26 +103,6 @@ common-options are:
       </varlistentry>
 
       <varlistentry>
-        <term>-w p12filePasswordFile</term>
-        <listitem><para>Specify the text file containing the pkcs #12 file password.</para></listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>-W p12filePassword</term>
-        <listitem><para>Specify the pkcs #12 file password.</para></listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>-c keyCipher</term>
-        <listitem><para>Specify the key encryption algorithm.</para></listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>-C certCipher</term>
-        <listitem><para>Specify the key cert (overall package) encryption algorithm.</para></listitem>
-      </varlistentry>
-
-      <varlistentry>
         <term>-m | --key-len  keyLength</term>
         <listitem><para>Specify the desired length of the symmetric key to be used to encrypt the private key.</para></listitem>
       </varlistentry>
@@ -142,9 +113,36 @@ common-options are:
       </varlistentry>
 
       <varlistentry>
+        <term>-n certname</term>
+        <listitem><para>Specify the nickname of the cert and private key to export.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-P prefix</term>
+        <listitem><para>Specify the prefix used on the certificate and key databases. This option is provided as a special case. 
+          Changing the names of the certificate and key databases is not recommended.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term>-r</term>
         <listitem><para>Dumps all of the data in raw (binary) form. This must be saved as a DER file. The default is to return information in a pretty-print ASCII format, which displays the information about the certificates and public keys in the p12 file.</para></listitem>
       </varlistentry>
+
+      <varlistentry>
+        <term>-v </term>
+        <listitem><para>Enable debug logging when importing.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-w p12filePasswordFile</term>
+        <listitem><para>Specify the text file containing the pkcs #12 file password.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-W p12filePassword</term>
+        <listitem><para>Specify the pkcs #12 file password.</para></listitem>
+      </varlistentry>
+
     </variablelist>
   </refsection>
 
@@ -237,9 +235,12 @@ common-options are:
     <para><command>Importing Keys and Certificates</command></para>
     <para>The most basic usage of <command>pk12util</command> for importing a certificate or key is the PKCS#12 input file (<option>-i</option>) and some way to specify the security database being accessed (either <option>-d</option> for a directory or <option>-h</option> for a token).
     </para>
-<programlisting>pk12util -i p12File [-h tokenname] [-v] [-d [sql:]directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]</programlisting>
+    <para>
+    pk12util -i p12File [-h tokenname] [-v] [-d [sql:]directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]
+    </para>
     <para>For example:</para>
-<programlisting># pk12util -i /tmp/cert-files/users.p12 -d sql:/home/my/sharednssdb
+    <para> </para>
+    <programlisting># pk12util -i /tmp/cert-files/users.p12 -d sql:/home/my/sharednssdb
 
 Enter a password which will be used to encrypt your keys.
 The password should be at least 8 characters long,
@@ -253,18 +254,18 @@ pk12util: PKCS12 IMPORT SUCCESSFUL</programlisting>
     <para><command>Exporting Keys and Certificates</command></para>
     <para>Using the <command>pk12util</command> command to export certificates and keys requires both the name of the certificate to extract from the database (<option>-n</option>) and the PKCS#12-formatted output file to write to. There are optional parameters that can be used to encrypt the file to protect the certificate material.
     </para>
-<programlisting>pk12util -o p12File -n certname [-c keyCipher] [-C certCipher] [-m|--key_len keyLen] [-n|--cert_key_len certKeyLen] [-d [sql:]directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]</programlisting>
+    <para>pk12util -o p12File -n certname [-c keyCipher] [-C certCipher] [-m|--key_len keyLen] [-n|--cert_key_len certKeyLen] [-d [sql:]directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]</para>
     <para>For example:</para>
-<programlisting># pk12util -o certs.p12 -n Server-Cert -d sql:/home/my/sharednssdb
+    <programlisting># pk12util -o certs.p12 -n Server-Cert -d sql:/home/my/sharednssdb
 Enter password for PKCS12 file: 
 Re-enter password: </programlisting>
 
     <para><command>Listing Keys and Certificates</command></para>
     <para>The information in a <filename>.p12</filename> file are not human-readable. The certificates and keys in the file can be printed (listed) in a human-readable pretty-print format that shows information for every certificate and any public keys in the <filename>.p12</filename> file.
     </para>
-<programlisting>pk12util -l p12File [-h tokenname] [-r] [-d [sql:]directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]</programlisting>
+    <para>pk12util -l p12File [-h tokenname] [-r] [-d [sql:]directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]</para>
     <para>For example, this prints the default ASCII output:</para>
-<programlisting># pk12util -l certs.p12
+    <programlisting># pk12util -l certs.p12
 
 Enter password for PKCS12 file: 
 Key(shrouded):
@@ -283,9 +284,9 @@ Certificate:
         Issuer: "E=personal-freemail@thawte.com,CN=Thawte Personal Freemail C
             A,OU=Certification Services Division,O=Thawte Consulting,L=Cape T
             own,ST=Western Cape,C=ZA"
-....</programlisting>
+    </programlisting>
     <para>Alternatively, the <option>-r</option> prints the certificates and then exports them into separate DER binary files. This allows the certificates to be fed to another application that supports <filename>.p12</filename> files. Each certificate is written to a sequentially-number file, beginning with <filename>file0001.der</filename> and continuing through <filename>file000N.der</filename>, incrementing the number for every certificate:</para>
-<programlisting># pk12util -l test.p12 -r
+    <programlisting>pk12util -l test.p12 -r
 Enter password for PKCS12 file: 
 Key(shrouded):
     Friendly Name: Thawte Freemail Member's Thawte Consulting (Pty) Ltd. ID
@@ -297,7 +298,8 @@ Key(shrouded):
             Iteration Count: 1 (0x1)
 Certificate    Friendly Name: Thawte Personal Freemail Issuing CA - Thawte Consulting
 
-Certificate    Friendly Name: Thawte Freemail Member's Thawte Consulting (Pty) Ltd. ID</programlisting>
+Certificate    Friendly Name: Thawte Freemail Member's Thawte Consulting (Pty) Ltd. ID
+    </programlisting>
   </refsection>
 
   <refsection id="encryption">
@@ -309,86 +311,48 @@ Certificate    Friendly Name: Thawte Freemail Member's Thawte Consulting (Pty) L
     
       <varlistentry>
         <term>Symmetric CBC ciphers for PKCS#5 V2</term>
-        <listitem><para>DES_CBC</para>
-	<itemizedlist>
-	<listitem>
-        <para>RC2-CBC</para>
-	</listitem>
-	<listitem>
-        <para>RC5-CBCPad</para>
-	</listitem>
-	<listitem>
-        <para>DES-EDE3-CBC (the default for key encryption)</para>
-	</listitem>
-	<listitem>
-        <para>AES-128-CBC</para>
-	</listitem>
-	<listitem>
-        <para>AES-192-CBC</para>
-	</listitem>
-	<listitem>
-        <para>AES-256-CBC</para>
-	</listitem>
-	<listitem>
-        <para>CAMELLIA-128-CBC</para>
-	</listitem>
-	<listitem>
-        <para>CAMELLIA-192-CBC</para>
-	</listitem>
-	<listitem>
-        <para>CAMELLIA-256-CBC</para></listitem>
-	</itemizedlist>
-	</listitem>
+        <listitem>
+	     <itemizedlist>
+	       <listitem><para>DES-CBC</para></listitem>
+	       <listitem><para>RC2-CBC</para></listitem>
+	       <listitem><para>RC5-CBCPad</para></listitem>
+	       <listitem><para>DES-EDE3-CBC (the default for key encryption)</para></listitem>
+	       <listitem><para>AES-128-CBC</para></listitem>
+	       <listitem><para>AES-192-CBC</para></listitem>
+	       <listitem><para>AES-256-CBC</para></listitem>
+	       <listitem><para>CAMELLIA-128-CBC</para></listitem>
+	       <listitem><para>CAMELLIA-192-CBC</para></listitem>
+	       <listitem><para>CAMELLIA-256-CBC</para></listitem>
+	     </itemizedlist>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
         <term>PKCS#12 PBE ciphers</term>
-        <listitem><para>PKCS #12 PBE with Sha1 and 128 Bit RC4</para>
-	<itemizedlist>
-	<listitem>
-        <para>PKCS #12 PBE with Sha1 and 40 Bit RC4</para>
-	</listitem>
-	<listitem>
-        <para>PKCS #12 PBE with Sha1 and Triple DES CBC</para>
-	</listitem>
-	<listitem>
-        <para>PKCS #12 PBE with Sha1 and 128 Bit RC2 CBC</para>
-	</listitem>
-	<listitem>
-        <para>PKCS #12 PBE with Sha1 and 40 Bit RC2 CBC</para>
-	</listitem>
-	<listitem>
-        <para>PKCS12 V2 PBE with SHA1 and 128 Bit RC4</para>
-	</listitem>
-	<listitem>
-        <para>PKCS12 V2 PBE with SHA1 and 40 Bit RC4 (the default for non-FIPS mode)</para>
-	</listitem>
-	<listitem>
-        <para>PKCS12 V2 PBE with SHA1 and 3KEY Triple DES-cbc</para>
-	</listitem>
-	<listitem>
-        <para>PKCS12 V2 PBE with SHA1 and 2KEY Triple DES-cbc</para>
-	</listitem>
-	<listitem>
-        <para>PKCS12 V2 PBE with SHA1 and 128 Bit RC2 CBC</para>
-	</listitem>
-	<listitem>
-        <para>PKCS12 V2 PBE with SHA1 and 40 Bit RC2 CBC</para></listitem>
-	</itemizedlist>
-	</listitem>
+        <listitem>
+	     <itemizedlist>
+	       <listitem><para>PKCS #12 PBE with Sha1 and 128 Bit RC4</para></listitem>
+	       <listitem><para>PKCS #12 PBE with Sha1 and 40 Bit RC4</para></listitem>
+	       <listitem><para>PKCS #12 PBE with Sha1 and Triple DES CBC</para></listitem>
+	       <listitem><para>PKCS #12 PBE with Sha1 and 128 Bit RC2 CBC</para></listitem>
+	       <listitem><para>PKCS #12 PBE with Sha1 and 40 Bit RC2 CBC</para></listitem>
+	       <listitem><para>PKCS12 V2 PBE with SHA1 and 128 Bit RC4</para></listitem>
+	       <listitem><para>PKCS12 V2 PBE with SHA1 and 40 Bit RC4 (the default for non-FIPS mode)</para></listitem>
+	       <listitem><para>PKCS12 V2 PBE with SHA1 and 3KEY Triple DES-cbc</para></listitem>
+	       <listitem><para>PKCS12 V2 PBE with SHA1 and 2KEY Triple DES-cbc</para></listitem>
+	       <listitem><para>PKCS12 V2 PBE with SHA1 and 128 Bit RC2 CBC</para></listitem>
+	       <listitem><para>PKCS12 V2 PBE with SHA1 and 40 Bit RC2 CBC</para></listitem>
+	     </itemizedlist>
+        </listitem>
       </varlistentry>
-
-      <varlistentry>
-        <term>PKCS#5 PBE ciphers</term>
-        <listitem><para>PKCS #5 Password Based Encryption with MD2 and DES CBC</para>
-	<itemizedlist>
-	<listitem>
-        <para>PKCS #5 Password Based Encryption with MD5 and DES CBC</para>
-	</listitem>
-	<listitem>
-        <para>PKCS #5 Password Based Encryption with SHA1 and DES CBC</para></listitem>
-	</itemizedlist>
-	</listitem>
+        <varlistentry><term>PKCS#5 PBE ciphers</term>
+        <listitem>
+	     <itemizedlist>
+	       <listitem><para>PKCS #5 Password Based Encryption with MD2 and DES CBC</para></listitem>
+	       <listitem><para>PKCS #5 Password Based Encryption with MD5 and DES CBC</para></listitem>
+	       <listitem><para>PKCS #5 Password Based Encryption with SHA1 and DES CBC</para></listitem>
+	     </itemizedlist>
+        </listitem>
       </varlistentry>
     </variablelist>
     <para>With PKCS#12, the crypto provider may be the soft token module or an external hardware module. If the cryptographic module does not support the requested algorithm, then the next best fit will be selected (usually the default). If no suitable replacement for the desired algorithm can be found, the tool returns the error <emphasis>no security module can perform the requested operation</emphasis>.</para>

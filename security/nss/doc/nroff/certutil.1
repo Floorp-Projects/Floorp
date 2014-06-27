@@ -2,12 +2,12 @@
 .\"     Title: CERTUTIL
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 31 March 2014
+.\"      Date:  5 June 2014
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "CERTUTIL" "1" "31 March 2014" "nss-tools" "NSS Security Tools"
+.TH "CERTUTIL" "1" "5 June 2014" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -229,7 +229,8 @@ NSS recognizes the following prefixes:
 .sp -1
 .IP \(bu 2.3
 .\}
-\fBsql: requests the newer database\fR
+\fBsql:\fR
+requests the newer database
 .RE
 .sp
 .RS 4
@@ -240,10 +241,13 @@ NSS recognizes the following prefixes:
 .sp -1
 .IP \(bu 2.3
 .\}
-\fBdbm: requests the legacy database\fR
+\fBdbm:\fR
+requests the legacy database
 .RE
 .sp
-If no prefix is specified the default type is retrieved from NSS_DEFAULT_DB_TYPE\&. If NSS_DEFAULT_DB_TYPE is not set then dbm: is the default\&.
+If no prefix is specified the default type is retrieved from NSS_DEFAULT_DB_TYPE\&. If NSS_DEFAULT_DB_TYPE is not set then
+\fBdbm:\fR
+is the default\&.
 .RE
 .PP
 \-e
@@ -543,7 +547,7 @@ Set a site security officer password on a token\&.
 .PP
 \-1 | \-\-keyUsage keyword,keyword
 .RS 4
-Set a Netscape Certificate Type Extension in the certificate\&. There are several available keywords:
+Set an X\&.509 V3 Certificate Type Extension in the certificate\&. There are several available keywords:
 .sp
 .RS 4
 .ie n \{\
@@ -553,7 +557,7 @@ Set a Netscape Certificate Type Extension in the certificate\&. There are severa
 .sp -1
 .IP \(bu 2.3
 .\}
-digital signature
+digitalSignature
 .RE
 .sp
 .RS 4
@@ -661,7 +665,7 @@ X\&.509 certificate extensions are described in RFC 5280\&.
 .PP
 \-5 | \-\-nsCertType keyword,keyword
 .RS 4
-Add a Netscape certificate type extension to a certificate that is being created or added to the database\&. There are several available keywords:
+Add an X\&.509 V3 certificate type extension to a certificate that is being created or added to the database\&. There are several available keywords:
 .sp
 .RS 4
 .ie n \{\

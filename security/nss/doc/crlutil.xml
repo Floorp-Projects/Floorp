@@ -76,29 +76,10 @@ The options and arguments for the crlutil command are defined as follows:
 
   <variablelist>
     <varlistentry>
-      <term>-G </term>
-        <listitem>
-          <para>
-Create new Certificate Revocation List(CRL).
-          </para>
-        </listitem>
-      </varlistentry>
-
-    <varlistentry>
       <term>-D </term>
         <listitem>
           <para>
 Delete Certificate Revocation List from cert database.
-          </para>
-        </listitem>
-      </varlistentry>
-
-
-    <varlistentry>
-      <term>-I </term>
-        <listitem>
-          <para>
-Import a CRL to the cert database
           </para>
         </listitem>
       </varlistentry>
@@ -112,21 +93,29 @@ Erase all CRLs of specified type from the cert database
         </listitem>
       </varlistentry>
 
+    <varlistentry>
+      <term>-G </term>
+        <listitem>
+          <para>
+Create new Certificate Revocation List (CRL).
+          </para>
+        </listitem>
+      </varlistentry>
+
+    <varlistentry>
+      <term>-I </term>
+        <listitem>
+          <para>
+Import a CRL to the cert database
+          </para>
+        </listitem>
+      </varlistentry>
 
     <varlistentry>
       <term>-L </term>
         <listitem>
           <para>
 List existing CRL located in cert database file.
-          </para>
-        </listitem>
-      </varlistentry>
-
-    <varlistentry>
-      <term>-S </term>
-        <listitem>
-          <para>
-Show contents of a CRL file which isn't stored in the database.
           </para>
         </listitem>
       </varlistentry>
@@ -141,43 +130,34 @@ Modify existing CRL which can be located in cert db or in arbitrary file. If loc
       </varlistentry>
 
     <varlistentry>
-      <term>-G </term>
+      <term>-S </term>
         <listitem>
           <para>
-
+Show contents of a CRL file which isn't stored in the database.
           </para>
         </listitem>
       </varlistentry>
   </variablelist>
 
   <para><command>Arguments</command></para>
-  <para>Option arguments modify an action and are lowercase.</para>
+  <para>Option arguments modify an action.</para>
 
   <variablelist>
-
-      <varlistentry>
-        <term>-B </term>
-        <listitem>
-          <para>
-Bypass CA signature checks.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>-P dbprefix </term>
-        <listitem>
-          <para>
-Specify the prefix used on the NSS security database files (for example, my_cert8.db and my_key3.db). This option is provided as a special case. Changing the names of the certificate and key databases is not recommended.
-          </para>
-        </listitem>
-      </varlistentry>
 
       <varlistentry>
         <term>-a </term>
         <listitem>
           <para>
 Use ASCII format or allow the use of ASCII format for input and output. This formatting follows RFC #1113.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-B </term>
+        <listitem>
+          <para>
+Bypass CA signature checks.
           </para>
         </listitem>
       </varlistentry>
@@ -204,19 +184,19 @@ The NSS database files must reside in the same directory.
       </varlistentry>
 
       <varlistentry>
-        <term>-i crl-file </term>
+        <term>-f password-file </term>
         <listitem>
           <para>
-Specify the file which contains the CRL to import or show.
+Specify a file that will automatically supply the password to include in a certificate or to access a certificate database. This is a plain-text file containing one password. Be sure to prevent unauthorized access to this file.
           </para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
-        <term>-f password-file </term>
+        <term>-i crl-file </term>
         <listitem>
           <para>
-Specify a file that will automatically supply the password to include in a certificate or to access a certificate database. This is a plain-text file containing one password. Be sure to prevent unauthorized access to this file.
+Specify the file which contains the CRL to import or show.
           </para>
         </listitem>
       </varlistentry>
@@ -244,6 +224,15 @@ Specify the nickname of a certificate or key to list, create, add to a database,
         <listitem>
           <para>
 Specify the output file name for new CRL. Bracket the output-file string with quotation marks if it contains spaces. If this argument is not used the output destination defaults to standard output.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-P dbprefix </term>
+        <listitem>
+          <para>
+Specify the prefix used on the NSS security database files (for example, my_cert8.db and my_key3.db). This option is provided as a special case. Changing the names of the certificate and key databases is not recommended.
           </para>
         </listitem>
       </varlistentry>
@@ -355,7 +344,7 @@ Implemented Extensions
     * Add The Authority Key Identifier extension:
      </para>
      <para>
-      The authority key identifier extension provides a means of identifying the public key corresponding to the private key used to sign a CRL.
+The authority key identifier extension provides a means of identifying the public key corresponding to the private key used to sign a CRL.
      </para>
      <para>
           authKeyId critical [key-id | dn cert-serial]
@@ -504,21 +493,9 @@ crlutil -G|-M -c crl-gen-file -n nickname [-i crl] [-u url] [-d keydir] [-P dbpr
     </programlisting>
   </refsection>
 
-  <refsection>
-    <title>See also</title>
-    <para>certutil(1)</para>
-  </refsection>
-
-
   <refsection id="seealso">
     <title>See Also</title>
-    <para></para>
-	<para>
-	</para>
-	<para>
-	</para>
-	<para>
-	</para>
+    <para>certutil(1)</para>
   </refsection>
 
 <!-- don't change -->

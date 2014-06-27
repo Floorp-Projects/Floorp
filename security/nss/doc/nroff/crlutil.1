@@ -2,12 +2,12 @@
 .\"     Title: CRLUTIL
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 19 July 2013
+.\"      Date:  5 June 2014
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "CRLUTIL" "1" "19 July 2013" "nss-tools" "NSS Security Tools"
+.TH "CRLUTIL" "1" "5 June 2014" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -57,19 +57,9 @@ where options and arguments are combinations of the options and arguments listed
 .PP
 Options specify an action\&. Option arguments modify an action\&. The options and arguments for the crlutil command are defined as follows:
 .PP
-\-G
-.RS 4
-Create new Certificate Revocation List(CRL)\&.
-.RE
-.PP
 \-D
 .RS 4
 Delete Certificate Revocation List from cert database\&.
-.RE
-.PP
-\-I
-.RS 4
-Import a CRL to the cert database
 .RE
 .PP
 \-E
@@ -77,14 +67,19 @@ Import a CRL to the cert database
 Erase all CRLs of specified type from the cert database
 .RE
 .PP
+\-G
+.RS 4
+Create new Certificate Revocation List (CRL)\&.
+.RE
+.PP
+\-I
+.RS 4
+Import a CRL to the cert database
+.RE
+.PP
 \-L
 .RS 4
 List existing CRL located in cert database file\&.
-.RE
-.PP
-\-S
-.RS 4
-Show contents of a CRL file which isn\*(Aqt stored in the database\&.
 .RE
 .PP
 \-M
@@ -92,27 +87,23 @@ Show contents of a CRL file which isn\*(Aqt stored in the database\&.
 Modify existing CRL which can be located in cert db or in arbitrary file\&. If located in file it should be encoded in ASN\&.1 encode format\&.
 .RE
 .PP
-\-G
+\-S
 .RS 4
+Show contents of a CRL file which isn\*(Aqt stored in the database\&.
 .RE
 .PP
 \fBArguments\fR
 .PP
-Option arguments modify an action and are lowercase\&.
-.PP
-\-B
-.RS 4
-Bypass CA signature checks\&.
-.RE
-.PP
-\-P dbprefix
-.RS 4
-Specify the prefix used on the NSS security database files (for example, my_cert8\&.db and my_key3\&.db)\&. This option is provided as a special case\&. Changing the names of the certificate and key databases is not recommended\&.
-.RE
+Option arguments modify an action\&.
 .PP
 \-a
 .RS 4
 Use ASCII format or allow the use of ASCII format for input and output\&. This formatting follows RFC #1113\&.
+.RE
+.PP
+\-B
+.RS 4
+Bypass CA signature checks\&.
 .RE
 .PP
 \-c crl\-gen\-file
@@ -127,14 +118,14 @@ Specify the database directory containing the certificate and key database files
 The NSS database files must reside in the same directory\&.
 .RE
 .PP
-\-i crl\-file
-.RS 4
-Specify the file which contains the CRL to import or show\&.
-.RE
-.PP
 \-f password\-file
 .RS 4
 Specify a file that will automatically supply the password to include in a certificate or to access a certificate database\&. This is a plain\-text file containing one password\&. Be sure to prevent unauthorized access to this file\&.
+.RE
+.PP
+\-i crl\-file
+.RS 4
+Specify the file which contains the CRL to import or show\&.
 .RE
 .PP
 \-l algorithm\-name
@@ -150,6 +141,11 @@ Specify the nickname of a certificate or key to list, create, add to a database,
 \-o output\-file
 .RS 4
 Specify the output file name for new CRL\&. Bracket the output\-file string with quotation marks if it contains spaces\&. If this argument is not used the output destination defaults to standard output\&.
+.RE
+.PP
+\-P dbprefix
+.RS 4
+Specify the prefix used on the NSS security database files (for example, my_cert8\&.db and my_key3\&.db)\&. This option is provided as a special case\&. Changing the names of the certificate and key databases is not recommended\&.
 .RE
 .PP
 \-t crl\-type
@@ -369,11 +365,6 @@ crlutil \-G|\-M \-c crl\-gen\-file \-n nickname [\-i crl] [\-u url] [\-d keydir]
 .SH "SEE ALSO"
 .PP
 certutil(1)
-.SH "SEE ALSO"
-.PP
-.PP
-.PP
-.PP
 .SH "ADDITIONAL RESOURCES"
 .PP
 For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at
