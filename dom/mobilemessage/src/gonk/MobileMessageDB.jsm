@@ -2092,11 +2092,14 @@ MobileMessageDB.prototype = {
         return;
       }
 
+      let deletedInfo = { messageIds: [], threadIds: [] };
+
       txn.oncomplete = function oncomplete(event) {
         if (aMessageRecord.id > self.lastMessageId) {
           self.lastMessageId = aMessageRecord.id;
         }
         notifyResult(Cr.NS_OK, aMessageRecord);
+        self.notifyDeletedInfo(deletedInfo);
       };
       txn.onabort = function onabort(event) {
         // TODO bug 832140 check event.target.errorCode
@@ -2108,13 +2111,14 @@ MobileMessageDB.prototype = {
       let threadStore = stores[2];
       self.replaceShortMessageOnSave(txn, messageStore, participantStore,
                                      threadStore, aMessageRecord,
-                                     aThreadParticipants);
+                                     aThreadParticipants, deletedInfo);
     }, [MESSAGE_STORE_NAME, PARTICIPANT_STORE_NAME, THREAD_STORE_NAME]);
   },
 
   replaceShortMessageOnSave: function(aTransaction, aMessageStore,
                                       aParticipantStore, aThreadStore,
-                                      aMessageRecord, aThreadParticipants) {
+                                      aMessageRecord, aThreadParticipants,
+                                      aDeletedInfo) {
     let isReplaceTypePid = (aMessageRecord.pid) &&
                            ((aMessageRecord.pid >= RIL.PDU_PID_REPLACE_SHORT_MESSAGE_TYPE_1 &&
                              aMessageRecord.pid <= RIL.PDU_PID_REPLACE_SHORT_MESSAGE_TYPE_7) ||
@@ -2124,7 +2128,8 @@ MobileMessageDB.prototype = {
         aMessageRecord.delivery != DELIVERY_RECEIVED ||
         !isReplaceTypePid) {
       this.realSaveRecord(aTransaction, aMessageStore, aParticipantStore,
-                          aThreadStore, aMessageRecord, aThreadParticipants);
+                          aThreadStore, aMessageRecord, aThreadParticipants,
+                          aDeletedInfo);
       return;
     }
 
@@ -2146,7 +2151,8 @@ MobileMessageDB.prototype = {
                                              function(participantRecord) {
       if (!participantRecord) {
         self.realSaveRecord(aTransaction, aMessageStore, aParticipantStore,
-                            aThreadStore, aMessageRecord, aThreadParticipants);
+                            aThreadStore, aMessageRecord, aThreadParticipants,
+                            aDeletedInfo);
         return;
       }
 
@@ -2157,7 +2163,8 @@ MobileMessageDB.prototype = {
         let cursor = event.target.result;
         if (!cursor) {
           self.realSaveRecord(aTransaction, aMessageStore, aParticipantStore,
-                              aThreadStore, aMessageRecord, aThreadParticipants);
+                              aThreadStore, aMessageRecord, aThreadParticipants,
+                              aDeletedInfo);
           return;
         }
 
@@ -2174,13 +2181,15 @@ MobileMessageDB.prototype = {
         // Match! Now replace that found message record with current one.
         aMessageRecord.id = foundMessageRecord.id;
         self.realSaveRecord(aTransaction, aMessageStore, aParticipantStore,
-                            aThreadStore, aMessageRecord, aThreadParticipants);
+                            aThreadStore, aMessageRecord, aThreadParticipants,
+                            aDeletedInfo);
       };
     });
   },
 
   realSaveRecord: function(aTransaction, aMessageStore, aParticipantStore,
-                           aThreadStore, aMessageRecord, aThreadParticipants) {
+                           aThreadStore, aMessageRecord, aThreadParticipants,
+                           aDeletedInfo) {
     let self = this;
     this.findThreadRecordByTypedAddresses(aThreadStore, aParticipantStore,
                                           aThreadParticipants, true,
@@ -2226,7 +2235,8 @@ MobileMessageDB.prototype = {
                                              aThreadStore,
                                              oldMessageRecord.threadId,
                                              aMessageRecord.id,
-                                             oldMessageRecord.read);
+                                             oldMessageRecord.read,
+                                             aDeletedInfo);
           }
         };
       };
@@ -2476,7 +2486,8 @@ MobileMessageDB.prototype = {
   },
 
   updateThreadByMessageChange: function(messageStore, threadStore, threadId,
-                                        messageId, messageRead) {
+                                        messageId, messageRead, deletedInfo) {
+    let self = this;
     threadStore.get(threadId).onsuccess = function(event) {
       // This must exist.
       let threadRecord = event.target.result;
@@ -2498,6 +2509,9 @@ MobileMessageDB.prototype = {
               debug("Deleting mru entry for thread id " + threadId);
             }
             threadStore.delete(threadId);
+            if (deletedInfo) {
+              deletedInfo.threadIds.push(threadId);
+            }
             return;
           }
 
@@ -2527,6 +2541,20 @@ MobileMessageDB.prototype = {
         threadStore.put(threadRecord);
       }
     };
+  },
+
+  notifyDeletedInfo: function(info) {
+    if (!info) {
+      return;
+    }
+
+    let deletedInfo =
+      gMobileMessageService
+      .createDeletedMessageInfo(info.messageIds,
+                                info.messageIds.length,
+                                info.threadIds,
+                                info.threadIds.length);
+    Services.obs.notifyObservers(deletedInfo, "sms-deleted", null);
   },
 
   /**
@@ -2990,6 +3018,9 @@ MobileMessageDB.prototype = {
           self.translateCrErrorToMessageCallbackError(error));
         return;
       }
+
+      let deletedInfo = { messageIds: [], threadIds: [] };
+
       txn.onerror = function onerror(event) {
         if (DEBUG) debug("Caught error on transaction", event.target.errorCode);
         //TODO look at event.target.errorCode, pick appropriate error constant
@@ -3002,6 +3033,7 @@ MobileMessageDB.prototype = {
       txn.oncomplete = function oncomplete(event) {
         if (DEBUG) debug("Transaction " + txn + " completed.");
         aRequest.notifyMessageDeleted(deleted, length);
+        self.notifyDeletedInfo(deletedInfo);
       };
 
       for (let i = 0; i < length; i++) {
@@ -3016,6 +3048,10 @@ MobileMessageDB.prototype = {
             // First actually delete the message.
             messageStore.delete(messageId).onsuccess = function(event) {
               if (DEBUG) debug("Message id " + messageId + " deleted");
+              if (deletedInfo) {
+                deletedInfo.messageIds.push(messageId);
+              }
+
               deleted[messageIndex] = true;
 
               // Then update unread count and most recent message.
@@ -3023,11 +3059,8 @@ MobileMessageDB.prototype = {
                                                threadStore,
                                                messageRecord.threadId,
                                                messageId,
-                                               messageRecord.read);
-
-              Services.obs.notifyObservers(null,
-                                           "mobile-message-deleted",
-                                           JSON.stringify({ id: messageId }));
+                                               messageRecord.read,
+                                               deletedInfo);
             };
           } else if (DEBUG) {
             debug("Message id " + messageId + " does not exist");
