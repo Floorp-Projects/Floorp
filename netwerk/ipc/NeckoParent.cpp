@@ -100,27 +100,18 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
   *aAppId = NECKO_UNKNOWN_APP_ID;
   *aInBrowserElement = false;
 
-  if (!UsingNeckoIPCSecurity()) {
-    // We are running xpcshell tests
-    if (aSerialized.IsNotNull()) {
-      *aAppId = aSerialized.mAppId;
-      *aInBrowserElement = aSerialized.mIsInBrowserElement;
-    } else {
-      *aAppId = NECKO_NO_APP_ID;
+  if (UsingNeckoIPCSecurity()) {
+    if (!aSerialized.IsNotNull()) {
+      return "SerializedLoadContext from child is null";
     }
-    return nullptr;
   }
 
-  if (!aSerialized.IsNotNull()) {
-    return "SerializedLoadContext from child is null";
-  }
-
-  const InfallibleTArray<PBrowserParent*>& browsers =
-    aContent->ManagedPBrowserParent();
-
+  const InfallibleTArray<PBrowserParent*>& browsers = aContent->ManagedPBrowserParent();
   for (uint32_t i = 0; i < browsers.Length(); i++) {
     nsRefPtr<TabParent> tabParent = static_cast<TabParent*>(browsers[i]);
     uint32_t appId = tabParent->OwnOrContainingAppId();
+    bool inBrowserElement = aSerialized.IsNotNull() ? aSerialized.mIsInBrowserElement
+                                                    : tabParent->IsBrowserElement();
 
     if (appId == NECKO_UNKNOWN_APP_ID) {
       continue;
@@ -130,7 +121,7 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
       if (tabParent->HasOwnApp()) {
         continue;
       }
-      if (tabParent->IsBrowserElement()) {
+      if (UsingNeckoIPCSecurity() && tabParent->IsBrowserElement()) {
         // <iframe mozbrowser> which doesn't have an <iframe mozapp> above it.
         // This is not supported now, and we'll need to do a code audit to make
         // sure we can handle it (i.e don't short-circuit using separate
@@ -138,30 +129,24 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
         continue;
       }
     }
-    // Note: this enforces that SerializedLoadContext.{appID|inBrowserElement}
-    // match one of the apps in the child process, but there's currently no way
-    // to verify the request is not from a different app in that process.
-    if (appId == aSerialized.mAppId) {
-      bool inBrowser = aSerialized.mIsInBrowserElement;
-
-      // If any TabParent with a matching appId is not a browser element
-      // then we have a match (regardless of the browser flag passed by the
-      // child).  If any TabParent with a matching appId is a browser element
-      // *and* the child claims that it is a browser element then we also have a
-      // match.
-      if (!tabParent->IsBrowserElement() || inBrowser) {
-        // success...
-        *aAppId = appId;
-        // go with what the child says about inBrowser
-        *aInBrowserElement = inBrowser;
-        return nullptr;
-      }
-      // keep iterating: we may still have a browser that matches
-    }
+    *aAppId = appId;
+    *aInBrowserElement = inBrowserElement;
+    return nullptr;
   }
 
   if (browsers.Length() != 0) {
     return "App does not have permission";
+  }
+
+  if (!UsingNeckoIPCSecurity()) {
+    // We are running xpcshell tests
+    if (aSerialized.IsNotNull()) {
+      *aAppId = aSerialized.mAppId;
+      *aInBrowserElement = aSerialized.mIsInBrowserElement;
+    } else {
+      *aAppId = NECKO_NO_APP_ID;
+    }
+    return nullptr;
   }
 
   return "ContentParent does not have any PBrowsers";
@@ -175,8 +160,7 @@ NeckoParent::CreateChannelLoadContext(const PBrowserOrId& aBrowser,
 {
   uint32_t appId = NECKO_UNKNOWN_APP_ID;
   bool inBrowser = false;
-  const char* error = GetValidatedAppInfo(aSerialized, aContent, &appId,
-                                          &inBrowser);
+  const char* error = GetValidatedAppInfo(aSerialized, aContent, &appId, &inBrowser);
   if (error) {
     return error;
   }
@@ -545,31 +529,36 @@ NeckoParent::AllocPRemoteOpenFileParent(const SerializedLoadContext& aSerialized
 
   // security checks
   if (UsingNeckoIPCSecurity()) {
-    uint32_t appId = NECKO_UNKNOWN_APP_ID;
-    bool inBrowser = false;
-    const char* error = GetValidatedAppInfo(aSerialized, Manager(), &appId,
-                                            &inBrowser);
-    if (error) {
-      printf_stderr("NeckoParent::AllocPRemoteOpenFileParent: "
-                    "FATAL error: %s: KILLING CHILD PROCESS\n",
-                    error);
-      return nullptr;
-    }
-
     nsCOMPtr<nsIAppsService> appsService =
       do_GetService(APPS_SERVICE_CONTRACTID);
     if (!appsService) {
       return nullptr;
     }
+    bool haveValidBrowser = false;
     bool hasManage = false;
     nsCOMPtr<mozIApplication> mozApp;
-
-    nsresult rv = appsService->GetAppByLocalId(appId, getter_AddRefs(mozApp));
-    if (NS_FAILED(rv) || !mozApp) {
-      return nullptr;
+    for (uint32_t i = 0; i < Manager()->ManagedPBrowserParent().Length(); i++) {
+      nsRefPtr<TabParent> tabParent =
+        static_cast<TabParent*>(Manager()->ManagedPBrowserParent()[i]);
+      uint32_t appId = tabParent->OwnOrContainingAppId();
+      // Note: this enforces that SerializedLoadContext.appID is one of the apps
+      // in the child process, but there's currently no way to verify the
+      // request is not from a different app in that process.
+      if (appId == aSerialized.mAppId) {
+        nsresult rv = appsService->GetAppByLocalId(appId, getter_AddRefs(mozApp));
+        if (NS_FAILED(rv) || !mozApp) {
+          break;
+        }
+        rv = mozApp->HasPermission("webapps-manage", &hasManage);
+        if (NS_FAILED(rv)) {
+          break;
+        }
+        haveValidBrowser = true;
+        break;
+      }
     }
-    rv = mozApp->HasPermission("webapps-manage", &hasManage);
-    if (NS_FAILED(rv)) {
+
+    if (!haveValidBrowser) {
       return nullptr;
     }
 
