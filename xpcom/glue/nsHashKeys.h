@@ -76,9 +76,9 @@ public:
   typedef const nsAString& KeyType;
   typedef const nsAString* KeyTypePointer;
 
-  nsStringHashKey(KeyTypePointer aStr) : mStr(*aStr) { }
-  nsStringHashKey(const nsStringHashKey& toCopy) : mStr(toCopy.mStr) { }
-  ~nsStringHashKey() { }
+  nsStringHashKey(KeyTypePointer aStr) : mStr(*aStr) {}
+  nsStringHashKey(const nsStringHashKey& aToCopy) : mStr(aToCopy.mStr) {}
+  ~nsStringHashKey() {}
 
   KeyType GetKey() const { return mStr; }
   bool KeyEquals(const KeyTypePointer aKey) const
@@ -113,9 +113,16 @@ public:
   typedef const nsAString& KeyType;
   typedef const nsAString* KeyTypePointer;
 
-  nsStringCaseInsensitiveHashKey(KeyTypePointer aStr) : mStr(*aStr) { } //take it easy just deal HashKey
-  nsStringCaseInsensitiveHashKey(const nsStringCaseInsensitiveHashKey& toCopy) : mStr(toCopy.mStr) { }
-  ~nsStringCaseInsensitiveHashKey() { }
+  nsStringCaseInsensitiveHashKey(KeyTypePointer aStr)
+    : mStr(*aStr)
+  {
+    // take it easy just deal HashKey
+  }
+  nsStringCaseInsensitiveHashKey(const nsStringCaseInsensitiveHashKey& aToCopy)
+    : mStr(aToCopy.mStr)
+  {
+  }
+  ~nsStringCaseInsensitiveHashKey() {}
 
   KeyType GetKey() const { return mStr; }
   bool KeyEquals(const KeyTypePointer aKey) const
@@ -126,9 +133,9 @@ public:
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(const KeyTypePointer aKey)
   {
-      nsAutoString tmKey(*aKey);
-      ToLowerCase(tmKey);
-      return mozilla::HashString(tmKey);
+    nsAutoString tmKey(*aKey);
+    ToLowerCase(tmKey);
+    return mozilla::HashString(tmKey);
   }
   enum { ALLOW_MEMMOVE = true };
 
@@ -148,13 +155,12 @@ class nsCStringHashKey : public PLDHashEntryHdr
 public:
   typedef const nsACString& KeyType;
   typedef const nsACString* KeyTypePointer;
-  
-  nsCStringHashKey(const nsACString* aStr) : mStr(*aStr) { }
-  nsCStringHashKey(const nsCStringHashKey& toCopy) : mStr(toCopy.mStr) { }
-  ~nsCStringHashKey() { }
+
+  nsCStringHashKey(const nsACString* aStr) : mStr(*aStr) {}
+  nsCStringHashKey(const nsCStringHashKey& aToCopy) : mStr(aToCopy.mStr) {}
+  ~nsCStringHashKey() {}
 
   KeyType GetKey() const { return mStr; }
-
   bool KeyEquals(KeyTypePointer aKey) const { return mStr.Equals(*aKey); }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
@@ -178,10 +184,10 @@ class nsUint32HashKey : public PLDHashEntryHdr
 public:
   typedef const uint32_t& KeyType;
   typedef const uint32_t* KeyTypePointer;
-  
-  nsUint32HashKey(KeyTypePointer aKey) : mValue(*aKey) { }
-  nsUint32HashKey(const nsUint32HashKey& toCopy) : mValue(toCopy.mValue) { }
-  ~nsUint32HashKey() { }
+
+  nsUint32HashKey(KeyTypePointer aKey) : mValue(*aKey) {}
+  nsUint32HashKey(const nsUint32HashKey& aToCopy) : mValue(aToCopy.mValue) {}
+  ~nsUint32HashKey() {}
 
   KeyType GetKey() const { return mValue; }
   bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
@@ -204,16 +210,19 @@ class nsUint64HashKey : public PLDHashEntryHdr
 public:
   typedef const uint64_t& KeyType;
   typedef const uint64_t* KeyTypePointer;
-  
-  nsUint64HashKey(KeyTypePointer aKey) : mValue(*aKey) { }
-  nsUint64HashKey(const nsUint64HashKey& toCopy) : mValue(toCopy.mValue) { }
-  ~nsUint64HashKey() { }
+
+  nsUint64HashKey(KeyTypePointer aKey) : mValue(*aKey) {}
+  nsUint64HashKey(const nsUint64HashKey& aToCopy) : mValue(aToCopy.mValue) {}
+  ~nsUint64HashKey() {}
 
   KeyType GetKey() const { return mValue; }
   bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) { return PLDHashNumber(*aKey); }
+  static PLDHashNumber HashKey(KeyTypePointer aKey)
+  {
+    return PLDHashNumber(*aKey);
+  }
   enum { ALLOW_MEMMOVE = true };
 
 private:
@@ -231,15 +240,18 @@ public:
   typedef const float& KeyType;
   typedef const float* KeyTypePointer;
 
-  nsFloatHashKey(KeyTypePointer aKey) : mValue(*aKey) { }
-  nsFloatHashKey(const nsFloatHashKey& toCopy) : mValue(toCopy.mValue) { }
-  ~nsFloatHashKey() { }
+  nsFloatHashKey(KeyTypePointer aKey) : mValue(*aKey) {}
+  nsFloatHashKey(const nsFloatHashKey& aToCopy) : mValue(aToCopy.mValue) {}
+  ~nsFloatHashKey() {}
 
   KeyType GetKey() const { return mValue; }
   bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) { return *reinterpret_cast<const uint32_t*>(aKey); }
+  static PLDHashNumber HashKey(KeyTypePointer aKey)
+  {
+    return *reinterpret_cast<const uint32_t*>(aKey);
+  }
   enum { ALLOW_MEMMOVE = true };
 
 private:
@@ -257,20 +269,23 @@ public:
   typedef nsISupports* KeyType;
   typedef const nsISupports* KeyTypePointer;
 
-  nsISupportsHashKey(const nsISupports* key) :
-    mSupports(const_cast<nsISupports*>(key)) { }
-  nsISupportsHashKey(const nsISupportsHashKey& toCopy) :
-    mSupports(toCopy.mSupports) { }
-  ~nsISupportsHashKey() { }
+  nsISupportsHashKey(const nsISupports* aKey)
+    : mSupports(const_cast<nsISupports*>(aKey))
+  {
+  }
+  nsISupportsHashKey(const nsISupportsHashKey& aToCopy)
+    : mSupports(aToCopy.mSupports)
+  {
+  }
+  ~nsISupportsHashKey() {}
 
   KeyType GetKey() const { return mSupports; }
-  
   bool KeyEquals(KeyTypePointer aKey) const { return aKey == mSupports; }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey)
   {
-    return NS_PTR_TO_INT32(aKey) >>2;
+    return NS_PTR_TO_INT32(aKey) >> 2;
   }
   enum { ALLOW_MEMMOVE = true };
 
@@ -290,20 +305,17 @@ public:
   typedef T* KeyType;
   typedef const T* KeyTypePointer;
 
-  nsRefPtrHashKey(const T* key) :
-    mKey(const_cast<T*>(key)) { }
-  nsRefPtrHashKey(const nsRefPtrHashKey& toCopy) :
-    mKey(toCopy.mKey) { }
-  ~nsRefPtrHashKey() { }
+  nsRefPtrHashKey(const T* aKey) : mKey(const_cast<T*>(aKey)) {}
+  nsRefPtrHashKey(const nsRefPtrHashKey& aToCopy) : mKey(aToCopy.mKey) {}
+  ~nsRefPtrHashKey() {}
 
   KeyType GetKey() const { return mKey; }
-  
   bool KeyEquals(KeyTypePointer aKey) const { return aKey == mKey; }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey)
   {
-    return NS_PTR_TO_INT32(aKey) >>2;
+    return NS_PTR_TO_INT32(aKey) >> 2;
   }
   enum { ALLOW_MEMMOVE = true };
 
@@ -311,7 +323,7 @@ private:
   nsRefPtr<T> mKey;
 };
 
-template <class T>
+template<class T>
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             nsRefPtrHashKey<T>& aField,
@@ -329,27 +341,26 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 template<class T>
 class nsPtrHashKey : public PLDHashEntryHdr
 {
- public:
-  typedef T *KeyType;
-  typedef const T *KeyTypePointer;
+public:
+  typedef T* KeyType;
+  typedef const T* KeyTypePointer;
 
-  nsPtrHashKey(const T *key) : mKey(const_cast<T*>(key)) {}
-  nsPtrHashKey(const nsPtrHashKey<T> &toCopy) : mKey(toCopy.mKey) {}
+  nsPtrHashKey(const T* aKey) : mKey(const_cast<T*>(aKey)) {}
+  nsPtrHashKey(const nsPtrHashKey<T>& aToCopy) : mKey(aToCopy.mKey) {}
   ~nsPtrHashKey() {}
 
   KeyType GetKey() const { return mKey; }
+  bool KeyEquals(KeyTypePointer aKey) const { return aKey == mKey; }
 
-  bool KeyEquals(KeyTypePointer key) const { return key == mKey; }
-
-  static KeyTypePointer KeyToPointer(KeyType key) { return key; }
-  static PLDHashNumber HashKey(KeyTypePointer key)
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey)
   {
-    return NS_PTR_TO_INT32(key) >> 2;
+    return NS_PTR_TO_INT32(aKey) >> 2;
   }
   enum { ALLOW_MEMMOVE = true };
 
- protected:
-  T *mKey;
+protected:
+  T* mKey;
 };
 
 /**
@@ -363,14 +374,16 @@ class nsPtrHashKey : public PLDHashEntryHdr
 template<class T>
 class nsClearingPtrHashKey : public nsPtrHashKey<T>
 {
- public:
-  nsClearingPtrHashKey(const T *key) : nsPtrHashKey<T>(key) {}
-  nsClearingPtrHashKey(const nsClearingPtrHashKey<T> &toCopy) :
-    nsPtrHashKey<T>(toCopy) {}
+public:
+  nsClearingPtrHashKey(const T* aKey) : nsPtrHashKey<T>(aKey) {}
+  nsClearingPtrHashKey(const nsClearingPtrHashKey<T>& aToCopy)
+    : nsPtrHashKey<T>(aToCopy)
+  {
+  }
   ~nsClearingPtrHashKey() { nsPtrHashKey<T>::mKey = nullptr; }
 };
 
-typedef nsPtrHashKey<const void> nsVoidPtrHashKey; 
+typedef nsPtrHashKey<const void> nsVoidPtrHashKey;
 typedef nsClearingPtrHashKey<const void> nsClearingVoidPtrHashKey;
 
 /**
@@ -381,26 +394,25 @@ typedef nsClearingPtrHashKey<const void> nsClearingVoidPtrHashKey;
 template<class T>
 class nsFuncPtrHashKey : public PLDHashEntryHdr
 {
- public:
-  typedef T &KeyType;
-  typedef const T *KeyTypePointer;
+public:
+  typedef T& KeyType;
+  typedef const T* KeyTypePointer;
 
-  nsFuncPtrHashKey(const T *key) : mKey(*const_cast<T*>(key)) {}
-  nsFuncPtrHashKey(const nsFuncPtrHashKey<T> &toCopy) : mKey(toCopy.mKey) {}
+  nsFuncPtrHashKey(const T* aKey) : mKey(*const_cast<T*>(aKey)) {}
+  nsFuncPtrHashKey(const nsFuncPtrHashKey<T>& aToCopy) : mKey(aToCopy.mKey) {}
   ~nsFuncPtrHashKey() {}
 
   KeyType GetKey() const { return const_cast<T&>(mKey); }
+  bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mKey; }
 
-  bool KeyEquals(KeyTypePointer key) const { return *key == mKey; }
-
-  static KeyTypePointer KeyToPointer(KeyType key) { return &key; }
-  static PLDHashNumber HashKey(KeyTypePointer key)
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey)
   {
-    return NS_PTR_TO_INT32(*key) >> 2;
+    return NS_PTR_TO_INT32(*aKey) >> 2;
   }
   enum { ALLOW_MEMMOVE = true };
 
- protected:
+protected:
   T mKey;
 };
 
@@ -414,13 +426,12 @@ class nsIDHashKey : public PLDHashEntryHdr
 public:
   typedef const nsID& KeyType;
   typedef const nsID* KeyTypePointer;
-  
-  nsIDHashKey(const nsID* inID) : mID(*inID) { }
-  nsIDHashKey(const nsIDHashKey& toCopy) : mID(toCopy.mID) { }
-  ~nsIDHashKey() { }
+
+  nsIDHashKey(const nsID* aInID) : mID(*aInID) {}
+  nsIDHashKey(const nsIDHashKey& aToCopy) : mID(aToCopy.mID) {}
+  ~nsIDHashKey() {}
 
   KeyType GetKey() const { return mID; }
-
   bool KeyEquals(KeyTypePointer aKey) const { return aKey->Equals(mID); }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
@@ -452,18 +463,18 @@ public:
   typedef const char* KeyType;
   typedef const char* KeyTypePointer;
 
-  nsDepCharHashKey(const char* aKey) { mKey = aKey; }
-  nsDepCharHashKey(const nsDepCharHashKey& toCopy) { mKey = toCopy.mKey; }
-  ~nsDepCharHashKey() { }
+  nsDepCharHashKey(const char* aKey) : mKey(aKey) {}
+  nsDepCharHashKey(const nsDepCharHashKey& aToCopy) : mKey(aToCopy.mKey) {}
+  ~nsDepCharHashKey() {}
 
   const char* GetKey() const { return mKey; }
-  bool KeyEquals(const char* aKey) const
-  {
-    return !strcmp(mKey, aKey);
-  }
+  bool KeyEquals(const char* aKey) const { return !strcmp(mKey, aKey); }
 
   static const char* KeyToPointer(const char* aKey) { return aKey; }
-  static PLDHashNumber HashKey(const char* aKey) { return mozilla::HashString(aKey); }
+  static PLDHashNumber HashKey(const char* aKey)
+  {
+    return mozilla::HashString(aKey);
+  }
   enum { ALLOW_MEMMOVE = true };
 
 private:
@@ -481,25 +492,33 @@ public:
   typedef const char* KeyType;
   typedef const char* KeyTypePointer;
 
-  nsCharPtrHashKey(const char* aKey) : mKey(strdup(aKey)) { }
-  nsCharPtrHashKey(const nsCharPtrHashKey& toCopy) : mKey(strdup(toCopy.mKey)) { }
-
-  nsCharPtrHashKey(nsCharPtrHashKey&& other)
-    : mKey(other.mKey)
+  nsCharPtrHashKey(const char* aKey) : mKey(strdup(aKey)) {}
+  nsCharPtrHashKey(const nsCharPtrHashKey& aToCopy)
+    : mKey(strdup(aToCopy.mKey))
   {
-    other.mKey = nullptr;
   }
 
-  ~nsCharPtrHashKey() { if (mKey) free(const_cast<char *>(mKey)); }
+  nsCharPtrHashKey(nsCharPtrHashKey&& aOther)
+    : mKey(aOther.mKey)
+  {
+    aOther.mKey = nullptr;
+  }
+
+  ~nsCharPtrHashKey()
+  {
+    if (mKey) {
+      free(const_cast<char*>(mKey));
+    }
+  }
 
   const char* GetKey() const { return mKey; }
-  bool KeyEquals(KeyTypePointer aKey) const
-  {
-    return !strcmp(mKey, aKey);
-  }
+  bool KeyEquals(KeyTypePointer aKey) const { return !strcmp(mKey, aKey); }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) { return mozilla::HashString(aKey); }
+  static PLDHashNumber HashKey(KeyTypePointer aKey)
+  {
+    return mozilla::HashString(aKey);
+  }
 
   enum { ALLOW_MEMMOVE = true };
 
@@ -518,25 +537,33 @@ public:
   typedef const char16_t* KeyType;
   typedef const char16_t* KeyTypePointer;
 
-  nsUnicharPtrHashKey(const char16_t* aKey) : mKey(NS_strdup(aKey)) { }
-  nsUnicharPtrHashKey(const nsUnicharPtrHashKey& toCopy) : mKey(NS_strdup(toCopy.mKey)) { }
-
-  nsUnicharPtrHashKey(nsUnicharPtrHashKey&& other)
-    : mKey(other.mKey)
+  nsUnicharPtrHashKey(const char16_t* aKey) : mKey(NS_strdup(aKey)) {}
+  nsUnicharPtrHashKey(const nsUnicharPtrHashKey& aToCopy)
+    : mKey(NS_strdup(aToCopy.mKey))
   {
-    other.mKey = nullptr;
   }
 
-  ~nsUnicharPtrHashKey() { if (mKey) NS_Free(const_cast<char16_t *>(mKey)); }
+  nsUnicharPtrHashKey(nsUnicharPtrHashKey&& aOther)
+    : mKey(aOther.mKey)
+  {
+    aOther.mKey = nullptr;
+  }
+
+  ~nsUnicharPtrHashKey()
+  {
+    if (mKey) {
+      NS_Free(const_cast<char16_t*>(mKey));
+    }
+  }
 
   const char16_t* GetKey() const { return mKey; }
-  bool KeyEquals(KeyTypePointer aKey) const
-  {
-    return !NS_strcmp(mKey, aKey);
-  }
+  bool KeyEquals(KeyTypePointer aKey) const { return !NS_strcmp(mKey, aKey); }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) { return mozilla::HashString(aKey); }
+  static PLDHashNumber HashKey(KeyTypePointer aKey)
+  {
+    return mozilla::HashString(aKey);
+  }
 
   enum { ALLOW_MEMMOVE = true };
 
@@ -550,55 +577,58 @@ private:
 class nsHashableHashKey : public PLDHashEntryHdr
 {
 public:
-    typedef nsIHashable* KeyType;
-    typedef const nsIHashable* KeyTypePointer;
+  typedef nsIHashable* KeyType;
+  typedef const nsIHashable* KeyTypePointer;
 
-    nsHashableHashKey(const nsIHashable* aKey) :
-        mKey(const_cast<nsIHashable*>(aKey)) { }
-    nsHashableHashKey(const nsHashableHashKey& toCopy) :
-        mKey(toCopy.mKey) { }
-    ~nsHashableHashKey() { }
+  nsHashableHashKey(const nsIHashable* aKey)
+    : mKey(const_cast<nsIHashable*>(aKey))
+  {
+  }
+  nsHashableHashKey(const nsHashableHashKey& aToCopy) : mKey(aToCopy.mKey) {}
+  ~nsHashableHashKey() {}
 
-    nsIHashable* GetKey() const { return mKey; }
+  nsIHashable* GetKey() const { return mKey; }
 
-    bool KeyEquals(const nsIHashable* aKey) const {
-        bool eq;
-        if (NS_SUCCEEDED(mKey->Equals(const_cast<nsIHashable*>(aKey), &eq))) {
-            return eq;
-        }
-        return false;
+  bool KeyEquals(const nsIHashable* aKey) const
+  {
+    bool eq;
+    if (NS_SUCCEEDED(mKey->Equals(const_cast<nsIHashable*>(aKey), &eq))) {
+      return eq;
     }
+    return false;
+  }
 
-    static const nsIHashable* KeyToPointer(nsIHashable* aKey) { return aKey; }
-    static PLDHashNumber HashKey(const nsIHashable* aKey) {
-        uint32_t code = 8888; // magic number if GetHashCode fails :-(
+  static const nsIHashable* KeyToPointer(nsIHashable* aKey) { return aKey; }
+  static PLDHashNumber HashKey(const nsIHashable* aKey)
+  {
+    uint32_t code = 8888; // magic number if GetHashCode fails :-(
 #ifdef DEBUG
-        nsresult rv =
+    nsresult rv =
 #endif
-        const_cast<nsIHashable*>(aKey)->GetHashCode(&code);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "GetHashCode should not throw!");
-        return code;
-    }
-    
-    enum { ALLOW_MEMMOVE = true };
+      const_cast<nsIHashable*>(aKey)->GetHashCode(&code);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "GetHashCode should not throw!");
+    return code;
+  }
+
+  enum { ALLOW_MEMMOVE = true };
 
 private:
-    nsCOMPtr<nsIHashable> mKey;
+  nsCOMPtr<nsIHashable> mKey;
 };
 
 /**
  * Hashtable key class to use with objects for which Hash() and operator==()
  * are defined.
  */
-template <typename T>
+template<typename T>
 class nsGenericHashKey : public PLDHashEntryHdr
 {
 public:
   typedef const T& KeyType;
   typedef const T* KeyTypePointer;
 
-  nsGenericHashKey(KeyTypePointer aKey) : mKey(*aKey) { }
-  nsGenericHashKey(const nsGenericHashKey<T>& aOther) : mKey(aOther.mKey) { }
+  nsGenericHashKey(KeyTypePointer aKey) : mKey(*aKey) {}
+  nsGenericHashKey(const nsGenericHashKey<T>& aOther) : mKey(aOther.mKey) {}
 
   KeyType GetKey() const { return mKey; }
   bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mKey; }

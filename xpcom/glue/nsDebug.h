@@ -33,13 +33,13 @@
  */
 #ifdef __cplusplus
 #ifdef DEBUG
-inline bool NS_warn_if_impl(bool condition, const char* expr, const char* file,
-                            int32_t line)
+inline bool NS_warn_if_impl(bool aCondition, const char* aExpr,
+                            const char* aFile, int32_t aLine)
 {
-  if (MOZ_UNLIKELY(condition)) {
-    NS_DebugBreak(NS_DEBUG_WARNING, nullptr, expr, file, line);
+  if (MOZ_UNLIKELY(aCondition)) {
+    NS_DebugBreak(NS_DEBUG_WARNING, nullptr, aExpr, aFile, aLine);
   }
-  return condition;
+  return aCondition;
 }
 #define NS_WARN_IF(condition) \
   NS_warn_if_impl(condition, #condition, __FILE__, __LINE__)
@@ -383,7 +383,7 @@ inline bool NS_warn_if_impl(bool condition, const char* expr, const char* file,
 #endif
 
 #ifdef MOZILLA_INTERNAL_API
-void NS_ABORT_OOM(size_t size);
+void NS_ABORT_OOM(size_t aSize);
 #else
 inline void NS_ABORT_OOM(size_t)
 {
@@ -391,7 +391,7 @@ inline void NS_ABORT_OOM(size_t)
 }
 #endif
 
-typedef void (*StderrCallback)(const char *fmt, va_list args);
+typedef void (*StderrCallback)(const char* aFmt, va_list aArgs);
 /* When compiling the XPCOM Glue on Windows, we pretend that it's going to
  * be linked with a static CRT (-MT) even when it's not. This means that we
  * cannot link to data exports from the CRT, only function exports. So,
@@ -401,20 +401,16 @@ typedef void (*StderrCallback)(const char *fmt, va_list args);
 extern "C" {
 #endif
 
-NS_COM_GLUE void
-printf_stderr(const char *fmt, ...);
+NS_COM_GLUE void printf_stderr(const char* aFmt, ...);
 
-NS_COM_GLUE void
-vprintf_stderr(const char *fmt, va_list args);
+NS_COM_GLUE void vprintf_stderr(const char* aFmt, va_list aArgs);
 
 // fprintf with special handling for stderr to print to the console
-NS_COM_GLUE void
-fprintf_stderr(FILE* aFile, const char *fmt, ...);
+NS_COM_GLUE void fprintf_stderr(FILE* aFile, const char* aFmt, ...);
 
 // used by the profiler to log stderr in the profiler for more
 // advanced performance debugging and display/layers visualization.
-NS_COM_GLUE void
-set_stderr_callback(StderrCallback aCallback);
+NS_COM_GLUE void set_stderr_callback(StderrCallback aCallback);
 
 #ifdef __cplusplus
 }

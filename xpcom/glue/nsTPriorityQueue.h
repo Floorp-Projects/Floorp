@@ -15,7 +15,7 @@
  * a binary heap. The default comparator causes this to act like a min-heap.
  * Only the LessThan method of the comparator is used.
  */
-template<class T, class Compare = nsDefaultComparator<T, T> >
+template<class T, class Compare = nsDefaultComparator<T, T>>
 class nsTPriorityQueue
 {
 public:
@@ -25,37 +25,32 @@ public:
    * Default constructor also creates a comparator object using the default
    * constructor for type Compare.
    */
-  nsTPriorityQueue() : mCompare(Compare()) { }
+  nsTPriorityQueue() : mCompare(Compare()) {}
 
   /**
    * Constructor to allow a specific instance of a comparator object to be
    * used.
    */
-  nsTPriorityQueue(const Compare& aComp) : mCompare(aComp) { }
+  nsTPriorityQueue(const Compare& aComp) : mCompare(aComp) {}
 
   /**
    * Copy constructor
    */
   nsTPriorityQueue(const nsTPriorityQueue& aOther)
-    : mElements(aOther.mElements),
-      mCompare(aOther.mCompare)
-  { }
+    : mElements(aOther.mElements)
+    , mCompare(aOther.mCompare)
+  {
+  }
 
   /**
    * @return True if the queue is empty or false otherwise.
    */
-  bool IsEmpty() const
-  {
-    return mElements.IsEmpty();
-  }
+  bool IsEmpty() const { return mElements.IsEmpty(); }
 
   /**
    * @return The number of elements in the queue.
    */
-  size_type Length() const
-  {
-    return mElements.Length();
-  }
+  size_type Length() const { return mElements.Length(); }
 
   /**
    * @return The topmost element in the queue without changing the queue. This
@@ -78,8 +73,9 @@ public:
   bool Push(const T& aElement)
   {
     T* elem = mElements.AppendElement(aElement);
-    if (!elem)
-      return false; // Out of memory
+    if (!elem) {
+      return false;  // Out of memory
+    }
 
     // Sift up
     size_type i = mElements.Length() - 1;
@@ -112,9 +108,9 @@ public:
 
     // Sift down
     size_type i = 0;
-    while (2*i + 1 < mElements.Length()) {
+    while (2 * i + 1 < mElements.Length()) {
       size_type swap = i;
-      size_type l_child = 2*i + 1;
+      size_type l_child = 2 * i + 1;
       if (mCompare.LessThan(mElements[l_child], mElements[i])) {
         swap = l_child;
       }
@@ -136,10 +132,7 @@ public:
   /**
    * Removes all elements from the queue.
    */
-  void Clear()
-  {
-    mElements.Clear();
-  }
+  void Clear() { mElements.Clear(); }
 
   /**
    * Provides readonly access to the queue elements as an array. Generally this
@@ -148,10 +141,7 @@ public:
    * @return A pointer to the first element of the array.  If the array is
    * empty, then this pointer must not be dereferenced.
    */
-  const T* Elements() const
-  {
-    return mElements.Elements();
-  }
+  const T* Elements() const { return mElements.Elements(); }
 
 protected:
   /**

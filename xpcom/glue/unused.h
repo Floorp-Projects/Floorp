@@ -16,12 +16,17 @@ namespace mozilla {
 // Suppress GCC warnings about unused return values with
 //   unused << SomeFuncDeclaredWarnUnusedReturnValue();
 //
-struct NS_COM_GLUE unused_t { };
+struct NS_COM_GLUE unused_t
+{
+};
 
 extern const unused_t NS_COM_GLUE unused;
 
 template<typename T>
-inline void operator<<(const unused_t& /*unused*/, const T& /*unused*/) { }
+inline void
+operator<<(const unused_t& /*unused*/, const T& /*unused*/)
+{
+}
 
 }
 

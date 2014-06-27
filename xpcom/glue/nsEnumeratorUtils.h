@@ -11,16 +11,13 @@
 class nsISupports;
 class nsISimpleEnumerator;
 
-NS_COM_GLUE nsresult
-NS_NewEmptyEnumerator(nsISimpleEnumerator* *aResult);
+NS_COM_GLUE nsresult NS_NewEmptyEnumerator(nsISimpleEnumerator** aResult);
 
-NS_COM_GLUE nsresult
-NS_NewSingletonEnumerator(nsISimpleEnumerator* *result,
-                          nsISupports* singleton);
+NS_COM_GLUE nsresult NS_NewSingletonEnumerator(nsISimpleEnumerator** aResult,
+                                               nsISupports* aSingleton);
 
-NS_COM_GLUE nsresult
-NS_NewUnionEnumerator(nsISimpleEnumerator* *result,
-                      nsISimpleEnumerator* firstEnumerator,
-                      nsISimpleEnumerator* secondEnumerator);
+NS_COM_GLUE nsresult NS_NewUnionEnumerator(nsISimpleEnumerator** aResult,
+                                           nsISimpleEnumerator* aFirstEnumerator,
+                                           nsISimpleEnumerator* aSecondEnumerator);
 
 #endif /* nsEnumeratorUtils_h__ */

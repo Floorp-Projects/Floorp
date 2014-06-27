@@ -44,22 +44,25 @@
  * char_pointer is advanced one step.
  */
 
- #define PARSE_HYPHEN(char_pointer)   if(*(char_pointer++) != '-') return false
+#define PARSE_HYPHEN(char_pointer) if (*(char_pointer++) != '-') return false
 
 /*
  * Turns a {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} string into
  * an nsID. It can also handle the old format without the { and }.
  */
 
-bool nsID::Parse(const char *aIDStr)
+bool
+nsID::Parse(const char* aIDStr)
 {
   /* Optimized for speed */
-  if(!aIDStr) {
+  if (!aIDStr) {
     return false;
   }
 
   bool expectFormat1 = (aIDStr[0] == '{');
-  if(expectFormat1) aIDStr++;
+  if (expectFormat1) {
+    ++aIDStr;
+  }
 
   PARSE_CHARS_TO_NUM(aIDStr, m0, 8);
   PARSE_HYPHEN(aIDStr);
@@ -68,10 +71,11 @@ bool nsID::Parse(const char *aIDStr)
   PARSE_CHARS_TO_NUM(aIDStr, m2, 4);
   PARSE_HYPHEN(aIDStr);
   int i;
-  for(i=0; i<2; i++)
+  for (i = 0; i < 2; ++i) {
     PARSE_CHARS_TO_NUM(aIDStr, m3[i], 2);
+  }
   PARSE_HYPHEN(aIDStr);
-  while(i < 8) {
+  while (i < 8) {
     PARSE_CHARS_TO_NUM(aIDStr, m3[i], 2);
     i++;
   }
@@ -90,27 +94,29 @@ static const char gIDFormat[] =
  * the caller.
  */
 
-char *nsID::ToString() const
+char*
+nsID::ToString() const
 {
-  char *res = (char*)NS_Alloc(NSID_LENGTH);
+  char* res = (char*)NS_Alloc(NSID_LENGTH);
 
-  if (res != nullptr) {
+  if (res) {
     PR_snprintf(res, NSID_LENGTH, gIDFormat,
-                m0, (uint32_t) m1, (uint32_t) m2,
-                (uint32_t) m3[0], (uint32_t) m3[1], (uint32_t) m3[2],
-                (uint32_t) m3[3], (uint32_t) m3[4], (uint32_t) m3[5],
-                (uint32_t) m3[6], (uint32_t) m3[7]);
+                m0, (uint32_t)m1, (uint32_t)m2,
+                (uint32_t)m3[0], (uint32_t)m3[1], (uint32_t)m3[2],
+                (uint32_t)m3[3], (uint32_t)m3[4], (uint32_t)m3[5],
+                (uint32_t)m3[6], (uint32_t)m3[7]);
   }
   return res;
 }
 
-void nsID::ToProvidedString(char (&dest)[NSID_LENGTH]) const 
+void
+nsID::ToProvidedString(char (&aDest)[NSID_LENGTH]) const
 {
-  PR_snprintf(dest, NSID_LENGTH, gIDFormat,
-              m0, (uint32_t) m1, (uint32_t) m2,
-              (uint32_t) m3[0], (uint32_t) m3[1], (uint32_t) m3[2],
-              (uint32_t) m3[3], (uint32_t) m3[4], (uint32_t) m3[5],
-              (uint32_t) m3[6], (uint32_t) m3[7]);
+  PR_snprintf(aDest, NSID_LENGTH, gIDFormat,
+              m0, (uint32_t)m1, (uint32_t)m2,
+              (uint32_t)m3[0], (uint32_t)m3[1], (uint32_t)m3[2],
+              (uint32_t)m3[3], (uint32_t)m3[4], (uint32_t)m3[5],
+              (uint32_t)m3[6], (uint32_t)m3[7]);
 }
 
 #endif // XPCOM_GLUE_AVOID_NSPR
