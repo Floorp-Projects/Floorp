@@ -184,8 +184,11 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         }
       }
       List<String> focusModeList = parameters.getSupportedFocusModes();
-      if (focusModeList.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
-        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+      // Not supposed to fail, but observed on Android 4.0 emulator nevertheless
+      if (focusModeList != null) {
+        if (focusModeList.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
+            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+        }
       }
       parameters.setPreviewSize(width, height);
       if (android.os.Build.VERSION.SDK_INT>8) {
