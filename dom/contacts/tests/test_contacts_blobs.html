@@ -40,14 +40,9 @@ function getRandomView(size)
  return view;
 }
 
-function getBlob(type, view)
-{
-  return SpecialPowers.unwrap(utils.getBlob([view], {type: type}));
-}
-
 function getRandomBlob(size)
 {
-  return getBlob("binary/random", getRandomView(size));
+  return new Blob([getRandomView(size)], { type: "binary/random" });
 }
 
 function compareBuffers(buffer1, buffer2)

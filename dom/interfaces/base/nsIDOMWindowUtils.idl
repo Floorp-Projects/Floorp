@@ -1439,24 +1439,6 @@ interface nsIDOMWindowUtils : nsISupports {
   boolean checkAndClearPaintedState(in nsIDOMElement aElement);
 
   /**
-   * Internal file constructor intended for testing of File objects.
-   * Example of constructor usage:
-   *   getFile("myfile.txt", [b1, "foo"], { type: "text/plain" })
-   */
-  [optional_argc, implicit_jscontext]
-  nsIDOMFile getFile(in DOMString aName, [optional] in jsval aBlobParts,
-                     [optional] in jsval aParameters);
-
-  /**
-   * Internal blob constructor intended for testing of Blob objects.
-   * Example of constructor usage:
-   *   getBlob([b1, "foo"], { type: "text/plain" })
-   */
-  [optional_argc, implicit_jscontext]
-  nsIDOMBlob getBlob([optional] in jsval aBlobParts,
-                     [optional] in jsval aParameters);
-
-  /**
    * Get internal id of the stored blob, file or file handle.
    */
   [implicit_jscontext] long long getFileId(in jsval aFile);
