@@ -19,7 +19,7 @@
 
     var testBuffer = getRandomBuffer(100000);
 
-    var testBlob = getBlob("binary/random", testBuffer);
+    var testBlob = new Blob([testBuffer], {type: "binary/random"});
 
     for each (let fileStorage in fileStorages) {
       let request = getMutableFile(fileStorage.key, "test.txt");

@@ -194,14 +194,9 @@ function compareBuffers(buffer1, buffer2)
   return true;
 }
 
-function getBlob(type, buffer)
-{
-  return SpecialPowers.unwrap(utils.getBlob([buffer], {type: type}));
-}
-
 function getRandomBlob(size)
 {
-  return getBlob("binary/random", getRandomBuffer(size));
+  return new Blob([getRandomBuffer(size)], { type: "binary/random" });
 }
 
 function getFileId(blob)
