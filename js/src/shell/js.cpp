@@ -6098,6 +6098,10 @@ SetRuntimeOptions(JSRuntime *rt, const OptionParser &op)
 #if defined(JS_CODEGEN_ARM)
     if (const char *str = op.getStringOption("arm-hwcap"))
         jit::ParseARMHwCapFlags(str);
+
+    int32_t fill = op.getIntOption("arm-asm-nop-fill");
+    if (fill >= 0)
+        jit::Assembler::NopFill = fill;
 #endif
 
 #if defined(JS_ARM_SIMULATOR)
@@ -6322,6 +6326,8 @@ main(int argc, char **argv, char **envp)
 #if defined(JS_CODEGEN_ARM)
         || !op.addStringOption('\0', "arm-hwcap", "[features]",
                                "Specify ARM code generation features, or 'help' to list all features.")
+        || !op.addIntOption('\0', "arm-asm-nop-fill", "SIZE",
+                            "Insert the given number of NOP instructions at all possible pool locations.", 0)
 #endif
 #if defined(JS_ARM_SIMULATOR)
         || !op.addBoolOption('\0', "arm-sim-icache-checks", "Enable icache flush checks in the ARM "
