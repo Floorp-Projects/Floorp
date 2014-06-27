@@ -3,29 +3,59 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-  content/browser/loop/conversation.html             (content/conversation.html)
-  content/browser/loop/panel.html                    (content/panel.html)
-  content/browser/loop/shared/css/common.css         (content/shared/css/common.css)
-  content/browser/loop/shared/css/panel.css          (content/shared/css/panel.css)
-  content/browser/loop/shared/css/conversation.css   (content/shared/css/conversation.css)
-  content/browser/loop/shared/img/icon_32.png        (content/shared/img/icon_32.png)
-  content/browser/loop/shared/img/icon_64.png        (content/shared/img/icon_64.png)
-  content/browser/loop/shared/img/loading-icon.gif   (content/shared/img/loading-icon.gif)
-  content/browser/loop/shared/js/models.js           (content/shared/js/models.js)
-  content/browser/loop/shared/js/router.js           (content/shared/js/router.js)
-  content/browser/loop/shared/js/views.js            (content/shared/js/views.js)
-  content/browser/loop/shared/libs/react-0.10.0.js   (content/shared/libs/react-0.10.0.js)
-  content/browser/loop/shared/libs/lodash-2.4.1.js   (content/shared/libs/lodash-2.4.1.js)
-  content/browser/loop/shared/libs/jquery-2.1.0.js   (content/shared/libs/jquery-2.1.0.js)
-  content/browser/loop/shared/libs/backbone-1.1.2.js (content/shared/libs/backbone-1.1.2.js)
-  content/browser/loop/shared/sounds/Firefox-Long.ogg   (content/shared/sounds/Firefox-Long.ogg)
-  content/browser/loop/libs/l10n.js                  (content/libs/l10n.js)
-  content/browser/loop/js/client.js                  (content/js/client.js)
-  content/browser/loop/js/conversation.js            (content/js/conversation.js)
-  content/browser/loop/js/desktopRouter.js           (content/js/desktopRouter.js)
-  content/browser/loop/js/panel.js                   (content/js/panel.js)
+  # Desktop html files
+  content/browser/loop/conversation.html            (content/conversation.html)
+  content/browser/loop/panel.html                   (content/panel.html)
+
+  # Desktop libs (see bottom of this file for TokBox sdk assets)
+  content/browser/loop/libs/l10n.js                 (content/libs/l10n.js)
+
+  # Desktop script
+  content/browser/loop/js/client.js                 (content/js/client.js)
+  content/browser/loop/js/desktopRouter.js          (content/js/desktopRouter.js)
+  content/browser/loop/js/conversation.js           (content/js/conversation.js)
+  content/browser/loop/js/panel.js                  (content/js/panel.js)
+
+  # Shared styles
+  content/browser/loop/shared/css/common.css        (content/shared/css/common.css)
+  content/browser/loop/shared/css/panel.css         (content/shared/css/panel.css)
+  content/browser/loop/shared/css/conversation.css  (content/shared/css/conversation.css)
+
+  # Shared images
+  content/browser/loop/shared/img/icon_32.png                   (content/shared/img/icon_32.png)
+  content/browser/loop/shared/img/icon_64.png                   (content/shared/img/icon_64.png)
+  content/browser/loop/shared/img/loading-icon.gif              (content/shared/img/loading-icon.gif)
+  content/browser/loop/shared/img/audio-highlight-14x14.png     (content/shared/img/audio-highlight-14x14.png)
+  content/browser/loop/shared/img/audio-highlight-14x14@2x.png  (content/shared/img/audio-highlight-14x14@2x.png)
+  content/browser/loop/shared/img/audio-inverse-14x14.png       (content/shared/img/audio-inverse-14x14.png)
+  content/browser/loop/shared/img/audio-inverse-14x14@2x.png    (content/shared/img/audio-inverse-14x14@2x.png)
+  content/browser/loop/shared/img/facemute-14x14.png            (content/shared/img/facemute-14x14.png)
+  content/browser/loop/shared/img/facemute-14x14@2x.png         (content/shared/img/facemute-14x14@2x.png)
+  content/browser/loop/shared/img/hangup-inverse-14x14.png      (content/shared/img/hangup-inverse-14x14.png)
+  content/browser/loop/shared/img/hangup-inverse-14x14@2x.png   (content/shared/img/hangup-inverse-14x14@2x.png)
+  content/browser/loop/shared/img/mute-inverse-14x14.png        (content/shared/img/mute-inverse-14x14.png)
+  content/browser/loop/shared/img/mute-inverse-14x14@2x.png     (content/shared/img/mute-inverse-14x14@2x.png)
+  content/browser/loop/shared/img/video-highlight-14x14.png     (content/shared/img/video-highlight-14x14.png)
+  content/browser/loop/shared/img/video-highlight-14x14@2x.png  (content/shared/img/video-highlight-14x14@2x.png)
+  content/browser/loop/shared/img/video-inverse-14x14.png       (content/shared/img/video-inverse-14x14.png)
+  content/browser/loop/shared/img/video-inverse-14x14@2x.png    (content/shared/img/video-inverse-14x14@2x.png)
+
+  # Shared scripts
+  content/browser/loop/shared/js/models.js  (content/shared/js/models.js)
+  content/browser/loop/shared/js/router.js  (content/shared/js/router.js)
+  content/browser/loop/shared/js/views.js   (content/shared/js/views.js)
+
+  # Shared libs
+  content/browser/loop/shared/libs/react-0.10.0.js    (content/shared/libs/react-0.10.0.js)
+  content/browser/loop/shared/libs/lodash-2.4.1.js    (content/shared/libs/lodash-2.4.1.js)
+  content/browser/loop/shared/libs/jquery-2.1.0.js    (content/shared/libs/jquery-2.1.0.js)
+  content/browser/loop/shared/libs/backbone-1.1.2.js  (content/shared/libs/backbone-1.1.2.js)
+
+  # Shared sounds
+  content/browser/loop/shared/sounds/Firefox-Long.ogg (content/shared/sounds/Firefox-Long.ogg)
+
   # Partner SDK assets
-  content/browser/loop/libs/sdk.js                                             (content/libs/sdk.js)
+  content/browser/loop/libs/sdk.js                                                    (content/libs/sdk.js)
   content/browser/loop/otcdn/webrtc/v2.2.5/css/ot.min.css                             (content/libs/otcdn/webrtc/v2.2.5/css/ot.min.css)
   content/browser/loop/otcdn/webrtc/v2.2.5/js/dynamic_config.min.js                   (content/libs/otcdn/webrtc/v2.2.5/js/dynamic_config.min.js)
   content/browser/loop/otcdn/webrtc/v2.2.5/images/rtc/access-denied-chrome.png        (content/libs/otcdn/webrtc/v2.2.5/images/rtc/access-denied-chrome.png)
