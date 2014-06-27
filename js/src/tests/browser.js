@@ -164,21 +164,6 @@ function gc()
   }
 }
 
-function jsdgc()
-{
-  try
-  {
-    var jsdIDebuggerService = SpecialPowers.Ci.jsdIDebuggerService;
-    var service = SpecialPowers.Cc['@mozilla.org/js/jsd/debugger-service;1'].
-      getService(jsdIDebuggerService);
-    service.GC();
-  }
-  catch(ex)
-  {
-    print('jsdgc: ' + ex);
-  }
-}
-
 function quit()
 {
 }
