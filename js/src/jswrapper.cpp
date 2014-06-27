@@ -39,7 +39,7 @@ Wrapper::defaultValue(JSContext *cx, HandleObject proxy, JSType hint, MutableHan
 }
 
 JSObject *
-Wrapper::New(JSContext *cx, JSObject *obj, JSObject *parent, Wrapper *handler,
+Wrapper::New(JSContext *cx, JSObject *obj, JSObject *parent, const Wrapper *handler,
              const WrapperOptions *options)
 {
     JS_ASSERT(parent);
@@ -57,7 +57,7 @@ Wrapper::New(JSContext *cx, JSObject *obj, JSObject *parent, Wrapper *handler,
 }
 
 JSObject *
-Wrapper::Renew(JSContext *cx, JSObject *existing, JSObject *obj, Wrapper *handler)
+Wrapper::Renew(JSContext *cx, JSObject *existing, JSObject *obj, const Wrapper *handler)
 {
     JS_ASSERT(!obj->isCallable());
     existing->as<ProxyObject>().renew(cx, handler, ObjectValue(*obj));
@@ -137,8 +137,8 @@ Wrapper::~Wrapper()
 {
 }
 
-Wrapper Wrapper::singleton((unsigned)0);
-Wrapper Wrapper::singletonWithPrototype((unsigned)0, true);
+const Wrapper Wrapper::singleton((unsigned)0);
+const Wrapper Wrapper::singletonWithPrototype((unsigned)0, true);
 JSObject *Wrapper::defaultProto = TaggedProto::LazyProto;
 
 /* Compartments. */
@@ -603,7 +603,7 @@ CrossCompartmentWrapper::setPrototypeOf(JSContext *cx, HandleObject wrapper,
            NOTHING);
 }
 
-CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
+const CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
 
 /* Security wrappers. */
 
@@ -859,7 +859,7 @@ DeadObjectProxy::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandle
     return true;
 }
 
-DeadObjectProxy DeadObjectProxy::singleton;
+const DeadObjectProxy DeadObjectProxy::singleton;
 const char DeadObjectProxy::sDeadObjectFamily = 0;
 
 bool
