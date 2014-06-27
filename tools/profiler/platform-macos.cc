@@ -56,9 +56,10 @@ struct SamplerRegistry {
 
 Sampler *SamplerRegistry::sampler = NULL;
 
-// 0 is never a valid thread id on MacOSX since a ptread_t is
-// a pointer.
+#ifdef DEBUG
+// 0 is never a valid thread id on MacOSX since a pthread_t is a pointer.
 static const pthread_t kNoThread = (pthread_t) 0;
+#endif
 
 void OS::Startup() {
 }
