@@ -1296,8 +1296,11 @@ void UpdateJitActivationsForMinorGC(PerThreadData *ptd, JSTracer *trc)
 template
 void UpdateJitActivationsForMinorGC<Nursery>(PerThreadData *ptd, JSTracer *trc);
 
+#ifdef JSGC_FJGENERATIONAL
 template
 void UpdateJitActivationsForMinorGC<gc::ForkJoinNursery>(PerThreadData *ptd, JSTracer *trc);
+#endif
+
 #endif
 
 void
