@@ -140,9 +140,7 @@ OnSharedPreferenceChangeListener
                 Log.v(LOGTAG, "Setting action bar title to " + newTitle);
 
                 final ActionBar actionBar = getActionBar();
-                if (actionBar != null) {
-                    actionBar.setTitle(newTitle);
-                }
+                actionBar.setTitle(newTitle);
             }
         }
     }
@@ -362,9 +360,7 @@ OnSharedPreferenceChangeListener
 
         if (Build.VERSION.SDK_INT >= 14) {
             final ActionBar actionBar = getActionBar();
-            if (actionBar != null) {
-                actionBar.setHomeButtonEnabled(true);
-            }
+            actionBar.setHomeButtonEnabled(true);
         }
 
         // N.B., if we ever need to redisplay the locale selection UI without
