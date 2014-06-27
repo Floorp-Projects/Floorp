@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=864595
+-->
+<head>
+  <title>Test for Bug 864595</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=864595">Mozilla Bug 864595</a>
+<div id='editable' style='display:inline-block;'>abcd  </div>
+<script type="application/javascript">
+/** Test for Bug 864595 **/
+var range = document.createRange();
+var elt = document.getElementById('editable');
+var eltRect = elt.getBoundingClientRect();
+
+var txtNode = elt.childNodes[0];
+range.setStart(txtNode, 0);
+range.setEnd(txtNode, 5);
+var rect = range.getBoundingClientRect();
+ok(rect.left >= eltRect.left && rect.right <= eltRect.right, "rect.left >= eltRect.left && rect.right <= eltRect.right");
+
+/* Put caret in the space */
+var caretPosX = rect.right + 10;
+var caretPosY = (rect.top + rect.bottom ) / 2;
+var caretRect = document.caretPositionFromPoint(caretPosX, caretPosY).getClientRect();
+ok(caretRect.right >= rect.right, "caretRect.right >= rect.right");
+
+</script>
+</body>
+</html>
