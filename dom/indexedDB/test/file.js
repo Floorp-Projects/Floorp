@@ -49,12 +49,12 @@ function compareBuffers(buffer1, buffer2)
 
 function getBlob(type, view)
 {
-  return new Blob([view], {type: type});
+  return SpecialPowers.unwrap(utils.getBlob([view], {type: type}));
 }
 
 function getFile(name, type, view)
 {
-  return new File([view], name, {type: type});
+  return SpecialPowers.unwrap(utils.getFile(name, [view], {type: type}));
 }
 
 function getRandomBlob(size)
