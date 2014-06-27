@@ -84,10 +84,10 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual const char* className(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
     virtual void finalize(JSFreeOp *fop, JSObject *proxy) MOZ_OVERRIDE;
 
-    static const CPOWProxyHandler singleton;
+    static CPOWProxyHandler singleton;
 };
 
-const CPOWProxyHandler CPOWProxyHandler::singleton;
+CPOWProxyHandler CPOWProxyHandler::singleton;
 
 #define FORWARD(call, args)                                             \
     WrapperOwner *owner = OwnerOf(proxy);                               \

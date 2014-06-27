@@ -121,15 +121,15 @@ class JS_FRIEND_API(BaseProxyHandler)
                               bool hasSecurityPolicy = false);
     virtual ~BaseProxyHandler();
 
-    bool hasPrototype() const {
+    bool hasPrototype() {
         return mHasPrototype;
     }
 
-    bool hasSecurityPolicy() const {
+    bool hasSecurityPolicy() {
         return mHasSecurityPolicy;
     }
 
-    inline const void *family() const {
+    inline const void *family() {
         return mFamily;
     }
     static size_t offsetOfFamily() {
@@ -459,7 +459,7 @@ class MOZ_STACK_CLASS ProxyOptions {
 };
 
 JS_FRIEND_API(JSObject *)
-NewProxyObject(JSContext *cx, const BaseProxyHandler *handler, HandleValue priv,
+NewProxyObject(JSContext *cx, BaseProxyHandler *handler, HandleValue priv,
                JSObject *proto, JSObject *parent, const ProxyOptions &options = ProxyOptions());
 
 JSObject *

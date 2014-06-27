@@ -51,7 +51,7 @@ class ChromeObjectWrapper : public ChromeObjectWrapperBase
     // never be anything more to enumerate up the prototype chain. So we can
     // atually skip these.
 
-    static const ChromeObjectWrapper singleton;
+    static ChromeObjectWrapper singleton;
 };
 
 } /* namespace xpc */
