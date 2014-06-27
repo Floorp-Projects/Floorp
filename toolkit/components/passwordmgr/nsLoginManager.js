@@ -8,7 +8,6 @@ const Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/Timer.jsm");
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
@@ -409,34 +408,32 @@ LoginManager.prototype = {
         return this._storage.setLoginSavingEnabled(hostname, enabled);
     },
 
+
     /*
-     * autoCompleteSearchAsync
+     * autoCompleteSearch
      *
      * Yuck. This is called directly by satchel:
      * nsFormFillController::StartSearch()
-     * [toolkit/components/satchel/nsFormFillController.cpp]
+     * [toolkit/components/satchel/src/nsFormFillController.cpp]
      *
      * We really ought to have a simple way for code to register an
      * auto-complete provider, and not have satchel calling pwmgr directly.
      */
-    autoCompleteSearchAsync : function (aSearchString, aPreviousResult,
-                                        aElement, aCallback) {
+    autoCompleteSearch : function (aSearchString, aPreviousResult, aElement) {
         // aPreviousResult & aResult are nsIAutoCompleteResult,
         // aElement is nsIDOMHTMLInputElement
 
-        if (!this._remember) {
-            setTimeout(function() {
-                aCallback.onSearchCompletion(new UserAutoCompleteResult(aSearchString, []));
-            }, 0);
-            return;
-        }
+        if (!this._remember)
+            return null;
 
         log("AutoCompleteSearch invoked. Search is:", aSearchString);
+
+        var result = null;
 
         if (aPreviousResult &&
                 aSearchString.substr(0, aPreviousResult.searchString.length) == aPreviousResult.searchString) {
             log("Using previous autocomplete result");
-            let result = aPreviousResult;
+            result = aPreviousResult;
             result.wrappedJSObject.searchString = aSearchString;
 
             // We have a list of results for a shorter search string, so just
@@ -455,45 +452,45 @@ LoginManager.prototype = {
                     result.removeValueAt(i, false);
                 }
             }
-
-            setTimeout(function() { aCallback.onSearchCompletion(result); }, 0);
         } else {
             log("Creating new autocomplete search result.");
 
-            setTimeout(function() {
-                var doc = aElement.ownerDocument;
-                var origin = this._getPasswordOrigin(doc.documentURI);
-                var actionOrigin = this._getActionOrigin(aElement.form);
+            var doc = aElement.ownerDocument;
+            var origin = this._getPasswordOrigin(doc.documentURI);
+            var actionOrigin = this._getActionOrigin(aElement.form);
 
-                // This shouldn't trigger a master password prompt, because we
-                // don't attach to the input until after we successfully obtain
-                // logins for the form.
-                var logins = this.findLogins({}, origin, actionOrigin, null);
-                var matchingLogins = [];
+            // This shouldn't trigger a master password prompt, because we
+            // don't attach to the input until after we successfully obtain
+            // logins for the form.
+            var logins = this.findLogins({}, origin, actionOrigin, null);
+            var matchingLogins = [];
 
-                // Filter out logins that don't match the search prefix. Also
-                // filter logins without a username, since that's confusing to see
-                // in the dropdown and we can't autocomplete them anyway.
-                for (let i = 0; i < logins.length; i++) {
-                    var username = logins[i].username.toLowerCase();
-                    log(username);
-                    if (username &&
-                        aSearchString.length <= username.length &&
-                        aSearchString.toLowerCase() ==
-                            username.substr(0, aSearchString.length))
-                    {
-                        matchingLogins.push(logins[i]);
-                    }
+            // Filter out logins that don't match the search prefix. Also
+            // filter logins without a username, since that's confusing to see
+            // in the dropdown and we can't autocomplete them anyway.
+            for (i = 0; i < logins.length; i++) {
+                var username = logins[i].username.toLowerCase();
+                if (username &&
+                    aSearchString.length <= username.length &&
+                    aSearchString.toLowerCase() ==
+                        username.substr(0, aSearchString.length))
+                {
+                    matchingLogins.push(logins[i]);
                 }
-                log(matchingLogins.length, "autocomplete logins avail.");
-                aCallback.onSearchCompletion(new UserAutoCompleteResult(aSearchString,
-                                                                        matchingLogins));
-            }.bind(this), 0);
+            }
+            log(matchingLogins.length, "autocomplete logins avail.");
+            result = new UserAutoCompleteResult(aSearchString, matchingLogins);
         }
+
+        return result;
     },
 
 
+
+
     /* ------- Internal methods / callbacks for document integration ------- */
+
+
 
 
     /*
