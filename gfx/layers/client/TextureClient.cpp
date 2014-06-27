@@ -203,6 +203,7 @@ TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
   MOZ_ASSERT(mActor);
   mActor->mForwarder = aForwarder;
   mActor->mTextureClient = this;
+  mAllocator = aForwarder;
   mShared = true;
   return mActor->IPCOpen();
 }
