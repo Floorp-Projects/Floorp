@@ -39,8 +39,7 @@ RematerializedFrame::RematerializedFrame(ThreadSafeContext *cx, uint8_t *top,
 {
     CopyValueToRematerializedFrame op(slots_);
     iter.readFrameArgsAndLocals(cx, op, op, &scopeChain_, &returnValue_,
-                                &argsObj_, &thisValue_, ReadFrame_Actuals,
-                                MagicValue(JS_OPTIMIZED_OUT));
+                                &argsObj_, &thisValue_, ReadFrame_Actuals);
 }
 
 /* static */ RematerializedFrame *
