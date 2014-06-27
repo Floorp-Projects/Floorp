@@ -6,571 +6,724 @@
 
 #include "jit/ValueNumbering.h"
 
+#include "jit/AliasAnalysis.h"
+#include "jit/IonAnalysis.h"
 #include "jit/IonSpewer.h"
 #include "jit/MIRGenerator.h"
-#include "jit/MIRGraph.h"
 
 using namespace js;
 using namespace js::jit;
 
-ValueNumberer::ValueNumberer(MIRGenerator *mir, MIRGraph &graph, bool optimistic)
-  : mir(mir),
-    graph_(graph),
-    values(graph.alloc()),
-    pessimisticPass_(!optimistic),
-    count_(0)
-{ }
+/**
+ * Some notes on the main algorithm here:
+ *  - The SSA identifier id() is the value number. We do replaceAllUsesWith as
+ *    we go, so there's always at most one visible value with a given number.
+ *
+ *  - Consequently, the GVN algorithm is effectively pessimistic. This means it
+ *    is not as powerful as an optimistic GVN would be, but it is simpler and
+ *    faster.
+ *
+ *  - We iterate in RPO, so that when visiting a block, we've already optimized
+ *    and hashed all values in dominating blocks. With occasional exceptions,
+ *    this allows us to do everything in a single pass.
+ *
+ *  - When we do use multiple passes, we just re-run the algorithm on the whole
+ *    graph instead of doing sparse propagation. This is a tradeoff to keep the
+ *    algorithm simpler and lighter on inputs that don't have a lot of
+ *    interesting unreachable blocks or degenerate loop induction variables, at
+ *    the expense of being slower on inputs that do. The loop for this
+ *    always terminates, because it only iterates when code is or will be
+ *    removed, so eventually it must stop iterating.
+ *
+ *  - Values are not immediately removed from the hash set when they go out of
+ *    scope. Instead, we check for dominance after a lookup. If the dominance
+ *    check fails, the value is removed.
+ */
 
-TempAllocator &
-ValueNumberer::alloc() const
+HashNumber
+ValueNumberer::VisibleValues::ValueHasher::hash(Lookup ins)
 {
-    return graph_.alloc();
+    return ins->valueHash();
 }
 
-uint32_t
-ValueNumberer::lookupValue(MDefinition *ins)
-{
-    ValueMap::AddPtr p = values.lookupForAdd(ins);
-    if (p) {
-        // make sure this is in the correct group
-        setClass(ins, p->key());
-        return p->value();
-    }
-
-    if (!values.add(p, ins, ins->id()))
-        return 0;
-    breakClass(ins);
-
-    return ins->id();
-}
-
-MDefinition *
-ValueNumberer::simplify(MDefinition *def, bool useValueNumbers)
-{
-    if (def->isEffectful())
-        return def;
-
-    MDefinition *ins = def->foldsTo(alloc(), useValueNumbers);
-    if (ins == def)
-        return def;
-
-    // Ensure this instruction has a value number.
-    if (!ins->valueNumberData())
-        ins->setValueNumberData(new(alloc()) ValueNumberData);
-
-    if (!ins->block()) {
-        // In this case, we made a new def by constant folding, for
-        // example, we replaced add(#3,#4) with a new const(#7) node.
-
-        // We will only fold a phi into one of its operands.
-        JS_ASSERT(!def->isPhi());
-
-        def->block()->insertAfter(def->toInstruction(), ins->toInstruction());
-        ins->setValueNumber(lookupValue(ins));
-    }
-
-    JS_ASSERT(ins->id() != 0);
-
-    def->replaceAllUsesWith(ins);
-
-    IonSpew(IonSpew_GVN, "Folding %d to be %d", def->id(), ins->id());
-    return ins;
-}
-
-MControlInstruction *
-ValueNumberer::simplifyControlInstruction(MControlInstruction *def)
-{
-    if (def->isEffectful())
-        return def;
-
-    MDefinition *repl = def->foldsTo(alloc(), false);
-    if (repl == def)
-        return def;
-
-    // Ensure this instruction has a value number.
-    if (!repl->valueNumberData())
-        repl->setValueNumberData(new(alloc()) ValueNumberData);
-
-    MBasicBlock *block = def->block();
-
-    // MControlInstructions should not have consumers.
-    JS_ASSERT(repl->isControlInstruction());
-    JS_ASSERT(!def->hasUses());
-
-    if (def->isInWorklist())
-        repl->setInWorklist();
-
-    block->discardLastIns();
-    block->end(repl->toControlInstruction());
-    return repl->toControlInstruction();
-}
-
-void
-ValueNumberer::markDefinition(MDefinition *def)
-{
-    if (isMarked(def))
-        return;
-
-    IonSpew(IonSpew_GVN, "marked %d", def->id());
-    def->setInWorklist();
-    count_++;
-}
-
-void
-ValueNumberer::unmarkDefinition(MDefinition *def)
-{
-    if (pessimisticPass_)
-        return;
-
-    JS_ASSERT(count_ > 0);
-    IonSpew(IonSpew_GVN, "unmarked %d", def->id());
-    def->setNotInWorklist();
-    count_--;
-}
-
-void
-ValueNumberer::markBlock(MBasicBlock *block)
-{
-    for (MDefinitionIterator iter(block); iter; iter++)
-        markDefinition(*iter);
-    markDefinition(block->lastIns());
-}
-
-void
-ValueNumberer::markConsumers(MDefinition *def)
-{
-    if (pessimisticPass_)
-        return;
-
-    JS_ASSERT(!def->isInWorklist());
-    JS_ASSERT(!def->isControlInstruction());
-    for (MUseDefIterator use(def); use; use++)
-        markDefinition(use.def());
-}
-
+// Test whether two MDefinitions are congruent.
 bool
-ValueNumberer::computeValueNumbers()
+ValueNumberer::VisibleValues::ValueHasher::match(Key k, Lookup l)
 {
-    // At the end of this function, we will have the value numbering stored in
-    // each instruction.
-    //
-    // We also need an "optimistic" value number, for temporary use, which is
-    // stored in a hashtable.
-    //
-    // For the instruction x := y op z, we map (op, VN[y], VN[z]) to a value
-    // number, say v. If it is not in the map, we use the instruction id.
-    //
-    // If the instruction in question's value number is not already
-    // v, we break the congruence and set it to v. We repeat until saturation.
-    // This will take at worst O(d) time, where d is the loop connectedness
-    // of the SSA def/use graph.
-    //
-    // The algorithm is the simple RPO-based algorithm from
-    // "SCC-Based Value Numbering" by Cooper and Simpson.
-    //
-    // If we are performing a pessimistic pass, then we assume that every
-    // definition is in its own congruence class, since we know nothing about
-    // values that enter Phi nodes through back edges. We then make one pass
-    // through the graph, ignoring back edges. This yields less congruences on
-    // any graph with back-edges, but is much faster to perform.
-
-    IonSpew(IonSpew_GVN, "Numbering instructions");
-
-    if (!values.init())
+    // If one of the instructions depends on a store, and the other instruction
+    // does not depend on the same store, the instructions are not congruent.
+    if (k->dependency() != l->dependency())
         return false;
-    // Stick a VN object onto every mdefinition
-    for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
-        if (mir->shouldCancel("Value Numbering (preparation loop"))
-            return false;
-        for (MDefinitionIterator iter(*block); iter; iter++)
-            iter->setValueNumberData(new(alloc()) ValueNumberData);
-        MControlInstruction *jump = block->lastIns();
-        jump->setValueNumberData(new(alloc()) ValueNumberData);
-    }
 
-    // Assign unique value numbers if pessimistic.
-    // It might be productive to do this in the MDefinition constructor or
-    // possibly in a previous pass, if it seems reasonable.
-    if (pessimisticPass_) {
-        for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
-            for (MDefinitionIterator iter(*block); iter; iter++)
-                iter->setValueNumber(iter->id());
-        }
-    } else {
-        // For each root block, add all of its instructions to the worklist.
-        markBlock(*(graph_.begin()));
-        if (graph_.osrBlock())
-            markBlock(graph_.osrBlock());
-    }
+    return k->congruentTo(l); // Ask the values themselves what they think.
+}
 
-    while (count_ > 0) {
-#ifdef DEBUG
-        if (!pessimisticPass_) {
-            size_t debugCount = 0;
-            IonSpew(IonSpew_GVN, "The following instructions require processing:");
-            for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
-                for (MDefinitionIterator iter(*block); iter; iter++) {
-                    if (iter->isInWorklist()) {
-                        IonSpew(IonSpew_GVN, "\t%d", iter->id());
-                        debugCount++;
-                    }
-                }
-                if (block->lastIns()->isInWorklist()) {
-                    IonSpew(IonSpew_GVN, "\t%d", block->lastIns()->id());
-                    debugCount++;
-                }
+void
+ValueNumberer::VisibleValues::ValueHasher::rekey(Key &k, Key newKey)
+{
+    k = newKey;
+}
+
+ValueNumberer::VisibleValues::VisibleValues(TempAllocator &alloc)
+  : set_(alloc)
+{}
+
+// Initialize the set in preparation for holding num elements.
+bool
+ValueNumberer::VisibleValues::init()
+{
+    return set_.init();
+}
+
+// Look up the first entry for the given def.
+ValueNumberer::VisibleValues::Ptr
+ValueNumberer::VisibleValues::findLeader(const MDefinition *def) const
+{
+    return set_.lookup(def);
+}
+
+// Look up the first entry for the given def.
+ValueNumberer::VisibleValues::AddPtr
+ValueNumberer::VisibleValues::findLeaderForAdd(MDefinition *def)
+{
+    return set_.lookupForAdd(def);
+}
+
+// Insert a value into the set.
+bool
+ValueNumberer::VisibleValues::insert(AddPtr p, MDefinition *def)
+{
+    return set_.add(p, def);
+}
+
+// Insert a value onto the set overwriting any existing entry.
+void
+ValueNumberer::VisibleValues::overwrite(AddPtr p, MDefinition *def)
+{
+    set_.rekeyInPlace(p, def);
+}
+
+// The given def will be deleted, so remove it from any sets.
+void
+ValueNumberer::VisibleValues::forget(const MDefinition *def)
+{
+    Ptr p = set_.lookup(def);
+    if (p && *p == def)
+        set_.remove(p);
+}
+
+// Clear all state.
+void
+ValueNumberer::VisibleValues::clear()
+{
+    set_.clear();
+}
+
+// Test whether the value would be needed if it had no uses.
+static bool
+DeadIfUnused(const MDefinition *def)
+{
+    return !def->isEffectful() && !def->isGuard() && !def->isControlInstruction() &&
+           (!def->isInstruction() || !def->toInstruction()->resumePoint());
+}
+
+// Test whether the given definition is no longer needed.
+static bool
+IsDead(const MDefinition *def)
+{
+    return !def->hasUses() && DeadIfUnused(def);
+}
+
+// Test whether the given definition will no longer be needed after its user
+// is deleted. TODO: This misses cases where the definition is used multiple
+// times by the same user (bug 1031396).
+static bool
+WillBecomeDead(const MDefinition *def)
+{
+    return def->hasOneUse() && DeadIfUnused(def);
+}
+
+// Call MDefinition::replaceAllUsesWith, and add some GVN-specific asserts.
+static void
+ReplaceAllUsesWith(MDefinition *from, MDefinition *to)
+{
+    MOZ_ASSERT(from != to, "GVN shouldn't try to replace a value with itself");
+    MOZ_ASSERT(from->type() == to->type(), "Def replacement has different type");
+
+    from->replaceAllUsesWith(to);
+}
+
+// Test whether succ is a successor of newControl.
+static bool
+HasSuccessor(const MControlInstruction *newControl, const MBasicBlock *succ)
+{
+    for (size_t i = 0, e = newControl->numSuccessors(); i != e; ++i) {
+        if (newControl->getSuccessor(i) == succ)
+            return true;
+    }
+    return false;
+}
+
+// Given a block which has had predecessors removed but is still reachable,
+// test whether the block's new dominator will be closer than its old one
+// and whether it will expose potential optimization opportunities.
+static MBasicBlock *
+ComputeNewDominator(MBasicBlock *block, MBasicBlock *old)
+{
+    MBasicBlock *now = block->getPredecessor(0);
+    for (size_t i = 1, e = block->numPredecessors(); i != e; ++i) {
+        MBasicBlock *pred = block->getPredecessor(i);
+        // Note that dominators haven't been recomputed yet, so we have to check
+        // whether now dominates pred, not block.
+        while (!now->dominates(pred)) {
+            MBasicBlock *next = now->immediateDominator();
+            if (next == old)
+                return old;
+            if (next == now) {
+                MOZ_ASSERT(block == old, "Non-self-dominating block became self-dominating");
+                return block;
             }
-            if (!debugCount)
-                IonSpew(IonSpew_GVN, "\tNone");
-            JS_ASSERT(debugCount == count_);
+            now = next;
         }
-#endif
-        for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
-            if (mir->shouldCancel("Value Numbering (main loop)"))
+    }
+    MOZ_ASSERT(old != block || old != now, "Missed self-dominating block staying self-dominating");
+    return now;
+}
+
+// Given a block which has had predecessors removed but is still reachable,
+// test whether the block's new dominator will be closer than its old one
+// and whether it will expose potential optimization opportunities.
+static bool
+IsDominatorRefined(MBasicBlock *block)
+{
+    MBasicBlock *old = block->immediateDominator();
+    MBasicBlock *now = ComputeNewDominator(block, old);
+
+    // We've computed block's new dominator. Test whether there are any
+    // newly-dominating definitions which look interesting.
+    MOZ_ASSERT(old->dominates(now), "Refined dominator not dominated by old dominator");
+    for (MBasicBlock *i = now; i != old; i = i->immediateDominator()) {
+        if (!i->phisEmpty() || *i->begin() != i->lastIns())
+            return true;
+    }
+
+    return false;
+}
+
+// Delete the given instruction and anything in its use-def subtree which is no
+// longer needed.
+bool
+ValueNumberer::deleteDefsRecursively(MDefinition *def)
+{
+    def->setInWorklist();
+    return deadDefs_.append(def) && processDeadDefs();
+}
+
+// Assuming phi is dead, push each dead operand of phi not dominated by the phi
+// to the delete worklist.
+bool
+ValueNumberer::pushDeadPhiOperands(MPhi *phi, const MBasicBlock *phiBlock)
+{
+    for (size_t o = 0, e = phi->numOperands(); o != e; ++o) {
+        MDefinition *op = phi->getOperand(o);
+        if (WillBecomeDead(op) && !op->isInWorklist() &&
+            !phiBlock->dominates(phiBlock->getPredecessor(o)))
+        {
+            op->setInWorklist();
+            if (!deadDefs_.append(op))
                 return false;
-            for (MDefinitionIterator iter(*block); iter; ) {
+        } else {
+           op->setUseRemovedUnchecked();
+        }
+    }
+    return true;
+}
 
-                if (!isMarked(*iter)) {
-                    iter++;
-                    continue;
+// Assuming ins is dead, push each dead operand of ins to the delete worklist.
+bool
+ValueNumberer::pushDeadInsOperands(MInstruction *ins)
+{
+    for (size_t o = 0, e = ins->numOperands(); o != e; ++o) {
+        MDefinition *op = ins->getOperand(o);
+        if (WillBecomeDead(op) && !op->isInWorklist()) {
+            op->setInWorklist();
+            if (!deadDefs_.append(op))
+                return false;
+        } else {
+           op->setUseRemovedUnchecked();
+        }
+    }
+    return true;
+}
+
+// Recursively delete all the defs on the deadDefs_ worklist.
+bool
+ValueNumberer::processDeadDefs()
+{
+    while (!deadDefs_.empty()) {
+        MDefinition *def = deadDefs_.popCopy();
+        IonSpew(IonSpew_GVN, "    Deleting %s%u", def->opName(), def->id());
+        MOZ_ASSERT(def->isInWorklist(), "Deleting value not on the worklist");
+        MOZ_ASSERT(IsDead(def), "Deleting non-dead definition");
+
+        values_.forget(def);
+
+        if (def->isPhi()) {
+            MPhi *phi = def->toPhi();
+            MBasicBlock *phiBlock = phi->block();
+            if (!pushDeadPhiOperands(phi, phiBlock))
+                 return false;
+            MPhiIterator at(phiBlock->phisBegin(phi));
+            phiBlock->discardPhiAt(at);
+        } else {
+            MInstruction *ins = def->toInstruction();
+            if (!pushDeadInsOperands(ins))
+                 return false;
+            ins->block()->discard(ins);
+        }
+    }
+    return true;
+}
+
+// Delete an edge from the CFG. Return true if the block becomes unreachable.
+bool
+ValueNumberer::removePredecessor(MBasicBlock *block, MBasicBlock *pred)
+{
+    bool isUnreachableLoop = false;
+    if (block->isLoopHeader()) {
+        if (block->loopPredecessor() == pred) {
+            // Deleting the entry into the loop makes the loop unreachable.
+            isUnreachableLoop = true;
+            IonSpew(IonSpew_GVN, "    Loop with header block%u is no longer reachable", block->id());
+#ifdef DEBUG
+        } else if (block->hasUniqueBackedge() && block->backedge() == pred) {
+            IonSpew(IonSpew_GVN, "    Loop with header block%u is no longer a loop", block->id());
+#endif
+        }
+    }
+
+    // TODO: Removing a predecessor removes operands from phis, and these
+    // operands may become dead. We should detect this and delete them.
+    // In practice though, when this happens, we often end up re-running GVN
+    // for other reasons anyway.
+    block->removePredecessor(pred);
+    return block->numPredecessors() == 0 || isUnreachableLoop;
+}
+
+// Delete the given block and any block in its dominator subtree.
+bool
+ValueNumberer::removeBlocksRecursively(MBasicBlock *start, const MBasicBlock *dominatorRoot)
+{
+    MOZ_ASSERT(start != graph_.entryBlock(), "Removing normal entry block");
+    MOZ_ASSERT(start != graph_.osrBlock(), "Removing OSR entry block");
+
+    // Remove this block from its dominator parent's subtree. This is the only
+    // immediately-dominated-block information we need to manually update,
+    // because everything dominated by this block is about to be swept away.
+    MBasicBlock *parent = start->immediateDominator();
+    if (parent != start)
+        parent->removeImmediatelyDominatedBlock(start);
+
+    if (!unreachableBlocks_.append(start))
+        return false;
+    do {
+        MBasicBlock *block = unreachableBlocks_.popCopy();
+        if (block->isDead())
+            continue;
+
+        // If a block is removed while it is on the worklist, skip it.
+        for (size_t i = 0, e = block->numSuccessors(); i != e; ++i) {
+            MBasicBlock *succ = block->getSuccessor(i);
+            if (!succ->isDead()) {
+                if (removePredecessor(succ, block)) {
+                    if (!unreachableBlocks_.append(succ))
+                        return false;
+                } else if (!rerun_) {
+                    if (!remainingBlocks_.append(succ))
+                        return false;
                 }
-
-                JS_ASSERT_IF(!pessimisticPass_, count_ > 0);
-                unmarkDefinition(*iter);
-
-                MDefinition *ins = simplify(*iter, false);
-
-                if (ins != *iter) {
-                    iter = block->discardDefAt(iter);
-                    continue;
-                }
-
-                // Don't bother storing this instruction in the HashMap if
-                // (a) eliminateRedundancies will never eliminate it (because
-                // it's non-movable or effectful) and (b) no other instruction's
-                // value number depends on it.
-                if (!ins->hasDefUses() && (!ins->isMovable() || ins->isEffectful())) {
-                    iter++;
-                    continue;
-                }
-
-                uint32_t value = lookupValue(ins);
-
-                if (!value)
-                    return false; // Hashtable insertion failed
-
-                if (ins->valueNumber() != value) {
-                    IonSpew(IonSpew_GVN,
-                            "Broke congruence for instruction %d (%p) with VN %d (now using %d)",
-                            ins->id(), (void *) ins, ins->valueNumber(), value);
-                    ins->setValueNumber(value);
-                    markConsumers(ins);
-                }
-
-                iter++;
             }
-            // Process control flow instruction:
-            MControlInstruction *jump = block->lastIns();
-            jump = simplifyControlInstruction(jump);
-
-            // If we are pessimistic, then this will never get set.
-            if (!jump->isInWorklist())
-                continue;
-            unmarkDefinition(jump);
-            if (jump->valueNumber() == 0) {
-                jump->setValueNumber(jump->id());
-                for (size_t i = 0; i < jump->numSuccessors(); i++)
-                    markBlock(jump->getSuccessor(i));
-            }
-
         }
 
-        // If we are doing a pessimistic pass, we only go once through the
-        // instruction list.
-        if (pessimisticPass_)
+#ifdef DEBUG
+        IonSpew(IonSpew_GVN, "    Deleting block%u%s%s%s", block->id(),
+                block->isLoopHeader() ? " (loop header)" : "",
+                block->isSplitEdge() ? " (split edge)" : "",
+                block->immediateDominator() == block ? " (dominator root)" : "");
+        for (MDefinitionIterator iter(block); iter; iter++) {
+            MDefinition *def = *iter;
+            IonSpew(IonSpew_GVN, "      Deleting %s%u", def->opName(), def->id());
+        }
+        MControlInstruction *control = block->lastIns();
+        IonSpew(IonSpew_GVN, "      Deleting %s%u", control->opName(), control->id());
+#endif
+
+        // Keep track of how many blocks within dominatorRoot's tree have been deleted.
+        if (dominatorRoot->dominates(block))
+            ++numBlocksDeleted_;
+
+        // TODO: Removing a block deletes the phis, instructions, and resume
+        // points in the block, and their operands may become dead. We should
+        // detect this and delete them. In practice though, when this happens,
+        // we often end up re-running GVN for other reasons anyway (bug 1031412).
+        graph_.removeBlockIncludingPhis(block);
+        blocksRemoved_ = true;
+    } while (!unreachableBlocks_.empty());
+
+    return true;
+}
+
+// Return a simplified form of the given definition, if we can.
+MDefinition *
+ValueNumberer::simplified(MDefinition *def) const
+{
+    return def->foldsTo(graph_.alloc());
+}
+
+// If an equivalent and dominating value already exists in the set, return it.
+// Otherwise insert the given definition into the set and return it.
+MDefinition *
+ValueNumberer::leader(MDefinition *def)
+{
+    // If the value isn't suitable for eliminating, don't bother hashing it. The
+    // convention is that congruentTo returns false for node kinds that wish to
+    // opt out of redundance elimination.
+    // TODO: It'd be nice to clean up that convention (bug 1031406).
+    if (!def->isEffectful() && def->congruentTo(def)) {
+        // Look for a match.
+        VisibleValues::AddPtr p = values_.findLeaderForAdd(def);
+        if (p) {
+            MDefinition *rep = *p;
+            if (rep->block()->dominates(def->block())) {
+                // We found a dominating congruent value.
+                MOZ_ASSERT(!rep->isInWorklist(), "Dead value in set");
+                return rep;
+            }
+
+            // The congruent value doesn't dominate. It never will again in this
+            // dominator tree, so overwrite it.
+            values_.overwrite(p, def);
+        } else {
+            // No match. Add a new entry.
+            if (!values_.insert(p, def))
+                return nullptr;
+        }
+    }
+
+    return def;
+}
+
+// Test whether the given phi is dominated by a congruent phi.
+bool
+ValueNumberer::hasLeader(const MPhi *phi, const MBasicBlock *phiBlock) const
+{
+    if (VisibleValues::Ptr p = values_.findLeader(phi)) {
+        const MDefinition *rep = *p;
+        return rep != phi && rep->block()->dominates(phiBlock);
+    }
+    return false;
+}
+
+// Test whether there are any phis in the backedge's loop header which are
+// newly optimizable, as a result of optimizations done inside the loop. This
+// is not a sparse approach, but restarting is rare enough in practice.
+// Termination is ensured by deleting the phi triggering the iteration.
+bool
+ValueNumberer::loopHasOptimizablePhi(MBasicBlock *backedge) const
+{
+    // Rescan the phis for any that can be simplified, since they may be reading
+    // values from backedges.
+    MBasicBlock *header = backedge->loopHeaderOfBackedge();
+    for (MPhiIterator iter(header->phisBegin()), end(header->phisEnd()); iter != end; ++iter) {
+        MPhi *phi = *iter;
+        MOZ_ASSERT(phi->hasUses(), "Missed an unused phi");
+
+        if (phi->operandIfRedundant() || hasLeader(phi, header))
+            return true; // Phi can be simplified.
+    }
+    return false;
+}
+
+// Visit the given definition.
+bool
+ValueNumberer::visitDefinition(MDefinition *def)
+{
+    // Look for a simplified form of this def.
+    MDefinition *sim = simplified(def);
+    if (sim != def) {
+        if (sim == nullptr)
+            return false;
+
+        // If sim doesn't belong to a block, insert it next to def.
+        if (sim->block() == nullptr)
+            def->block()->insertAfter(def->toInstruction(), sim->toInstruction());
+
+        IonSpew(IonSpew_GVN, "    Folded %s%u to %s%u",
+                def->opName(), def->id(), sim->opName(), sim->id());
+        ReplaceAllUsesWith(def, sim);
+        if (IsDead(def) && !deleteDefsRecursively(def))
+            return false;
+        def = sim;
+    }
+
+    // Look for a dominating def which makes this def redundant.
+    MDefinition *rep = leader(def);
+    if (rep != def) {
+        if (rep == nullptr)
+            return false;
+        if (rep->updateForReplacement(def)) {
+            IonSpew(IonSpew_GVN,
+                    "    Replacing %s%u with %s%u",
+                    def->opName(), def->id(), rep->opName(), rep->id());
+            ReplaceAllUsesWith(def, rep);
+
+            // This is effectively what the old GVN did. It allows isGuard()
+            // instructions to be deleted if they are redundant, and the
+            // replacement is not even guaranteed to have isGuard() set.
+            // TODO: Clean this up (bug 1031410).
+            def->setNotGuardUnchecked();
+
+            if (IsDead(def) && !deleteDefsRecursively(def))
+                return false;
+            def = rep;
+        }
+    }
+
+    // If this instruction has a dependency() into an unreachable block, we'll
+    // need to update AliasAnalysis.
+    if (updateAliasAnalysis_ && !dependenciesBroken_) {
+        const MDefinition *dep = def->dependency();
+        if (dep != nullptr && dep->block()->isDead()) {
+            IonSpew(IonSpew_GVN, "    AliasAnalysis invalidated; will recompute!");
+            dependenciesBroken_ = true;
+        }
+    }
+
+    return true;
+}
+
+// Visit the control instruction at the end of the given block.
+bool
+ValueNumberer::visitControlInstruction(MBasicBlock *block, const MBasicBlock *dominatorRoot)
+{
+    // Look for a simplified form of the control instruction.
+    MControlInstruction *control = block->lastIns();
+    MDefinition *rep = simplified(control);
+    if (rep == control)
+        return true;
+
+    if (rep == nullptr)
+        return false;
+
+    MControlInstruction *newControl = rep->toControlInstruction();
+    MOZ_ASSERT(!newControl->block(),
+               "Control instruction replacement shouldn't already be in a block");
+    IonSpew(IonSpew_GVN, "    Folded control instruction %s%u to %s%u",
+            control->opName(), control->id(), newControl->opName(), graph_.getNumInstructionIds());
+
+    // If the simplification removes any CFG edges, update the CFG and remove
+    // any blocks that become dead.
+    size_t oldNumSuccs = control->numSuccessors();
+    size_t newNumSuccs = newControl->numSuccessors();
+    if (newNumSuccs != oldNumSuccs) {
+        MOZ_ASSERT(newNumSuccs < oldNumSuccs, "New control instruction has too many successors");
+        for (size_t i = 0; i != oldNumSuccs; ++i) {
+            MBasicBlock *succ = control->getSuccessor(i);
+            if (!HasSuccessor(newControl, succ)) {
+                if (removePredecessor(succ, block)) {
+                    if (!removeBlocksRecursively(succ, dominatorRoot))
+                        return false;
+                } else if (!rerun_) {
+                    if (!remainingBlocks_.append(succ))
+                        return false;
+                }
+            }
+        }
+    }
+
+    if (!pushDeadInsOperands(control))
+        return false;
+    block->discardLastIns();
+    block->end(newControl);
+    return processDeadDefs();
+}
+
+// Visit all the phis and instructions in the given block.
+bool
+ValueNumberer::visitBlock(MBasicBlock *block, const MBasicBlock *dominatorRoot)
+{
+    MOZ_ASSERT(!block->unreachable(), "Blocks marked unreachable during GVN");
+    MOZ_ASSERT(!block->isDead(), "Block to visit is already dead");
+
+    // Visit the definitions in the block top-down.
+    for (MDefinitionIterator iter(block); iter; ) {
+        MDefinition *def = *iter++;
+
+        // If the definition is dead, delete it.
+        if (IsDead(def)) {
+            if (!deleteDefsRecursively(def))
+                return false;
+            continue;
+        }
+
+        if (!visitDefinition(def))
+            return false;
+    }
+
+    return visitControlInstruction(block, dominatorRoot);
+}
+
+// Visit all the blocks dominated by dominatorRoot.
+bool
+ValueNumberer::visitDominatorTree(MBasicBlock *dominatorRoot, size_t *totalNumVisited)
+{
+    IonSpew(IonSpew_GVN, "  Visiting dominator tree (with %llu blocks) rooted at block%u%s",
+            uint64_t(dominatorRoot->numDominated()), dominatorRoot->id(),
+            dominatorRoot == graph_.entryBlock() ? " (normal entry block)" :
+            dominatorRoot == graph_.osrBlock() ? " (OSR entry block)" :
+            " (normal entry and OSR entry merge point)");
+    MOZ_ASSERT(numBlocksDeleted_ == 0, "numBlocksDeleted_ wasn't reset");
+    MOZ_ASSERT(dominatorRoot->immediateDominator() == dominatorRoot,
+            "root is not a dominator tree root");
+
+    // Visit all blocks dominated by dominatorRoot, in RPO. This has the nice property
+    // that we'll always visit a block before any block it dominates, so we can
+    // make a single pass through the list and see every full redundance.
+    size_t numVisited = 0;
+    for (ReversePostorderIterator iter(graph_.rpoBegin(dominatorRoot)); ; ++iter) {
+        MOZ_ASSERT(iter != graph_.rpoEnd(), "Inconsistent dominator information");
+        MBasicBlock *block = *iter;
+        // We're only visiting blocks in dominatorRoot's tree right now.
+        if (!dominatorRoot->dominates(block))
+            continue;
+        // Visit the block!
+        if (!visitBlock(block, dominatorRoot))
+            return false;
+        // If this was the end of a loop, check for optimization in the header.
+        if (!rerun_ && block->isLoopBackedge() && loopHasOptimizablePhi(block)) {
+            IonSpew(IonSpew_GVN, "    Loop phi in block%u can now be optimized; will re-run GVN!",
+                    block->id());
+            rerun_ = true;
+            remainingBlocks_.clear();
+        }
+        ++numVisited;
+        MOZ_ASSERT(numVisited <= dominatorRoot->numDominated() - numBlocksDeleted_,
+                   "Visited blocks too many times");
+        if (numVisited >= dominatorRoot->numDominated() - numBlocksDeleted_)
             break;
     }
-#ifdef DEBUG
-    for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
-        for (MDefinitionIterator iter(*block); iter; iter++) {
-            JS_ASSERT(!iter->isInWorklist());
-            JS_ASSERT_IF(iter->valueNumber() == 0,
-                         !iter->hasDefUses() && (!iter->isMovable() || iter->isEffectful()));
-        }
-    }
-#endif
+
+    *totalNumVisited += numVisited;
+    values_.clear();
+    numBlocksDeleted_ = 0;
     return true;
 }
 
-MDefinition *
-ValueNumberer::findDominatingDef(InstructionMap &defs, MDefinition *ins, size_t index)
+// Visit all the blocks in the graph.
+bool
+ValueNumberer::visitGraph()
 {
-    JS_ASSERT(ins->valueNumber() != 0);
-    InstructionMap::Ptr p = defs.lookup(ins->valueNumber());
-    MDefinition *dom;
-    if (!p || index >= p->value().validEnd) {
-        DominatingValue value;
-        value.def = ins;
-        // Since we are traversing the dominator tree in pre-order, when we
-        // are looking at the |index|-th block, the next numDominated() blocks
-        // we traverse are precisely the set of blocks that are dominated.
-        //
-        // So, this value is visible in all blocks if:
-        // index < index + ins->block->numDominated()
-        // and becomes invalid after that.
-        value.validEnd = index + ins->block()->numDominated();
-
-        if(!defs.put(ins->valueNumber(), value))
-            return nullptr;
-
-        dom = ins;
-    } else {
-        dom = p->value().def;
+    // Due to OSR blocks, the set of blocks dominated by a blocks may not be
+    // contiguous in the RPO. Do a separate traversal for each dominator tree
+    // root. There's always the main entry, and sometimes there's an OSR entry,
+    // and then there are the roots formed where the OSR paths merge with the
+    // main entry paths.
+    size_t totalNumVisited = 0;
+    for (ReversePostorderIterator iter(graph_.rpoBegin()); ; ++iter) {
+         MBasicBlock *block = *iter;
+         if (block->immediateDominator() == block) {
+             if (!visitDominatorTree(block, &totalNumVisited))
+                 return false;
+             MOZ_ASSERT(totalNumVisited <= graph_.numBlocks(), "Visited blocks too many times");
+             if (totalNumVisited >= graph_.numBlocks())
+                 break;
+         }
+         MOZ_ASSERT(iter != graph_.rpoEnd(), "Inconsistent dominator information");
     }
-
-    return dom;
+    return true;
 }
 
+ValueNumberer::ValueNumberer(MIRGenerator *mir, MIRGraph &graph)
+  : mir_(mir), graph_(graph),
+    values_(graph.alloc()),
+    deadDefs_(graph.alloc()),
+    unreachableBlocks_(graph.alloc()),
+    remainingBlocks_(graph.alloc()),
+    numBlocksDeleted_(0),
+    rerun_(false),
+    blocksRemoved_(false),
+    updateAliasAnalysis_(false),
+    dependenciesBroken_(false)
+{}
+
 bool
-ValueNumberer::eliminateRedundancies()
+ValueNumberer::run(UpdateAliasAnalysisFlag updateAliasAnalysis)
 {
-    // A definition is 'redundant' iff it is dominated by another definition
-    // with the same value number.
-    //
-    // So, we traverse the dominator tree in pre-order, maintaining a hashmap
-    // from value numbers to instructions.
-    //
-    // For each definition d with value number v, we look up v in the hashmap.
-    //
-    // If there is a definition d' in the hashmap, and the current traversal
-    // index is within that instruction's dominated range, then we eliminate d,
-    // replacing all uses of d with uses of d'.
-    //
-    // If there is no valid definition in the hashtable (the current definition
-    // is not in dominated scope), then we insert the current instruction,
-    // since it is the most dominant instruction with the given value number.
+    updateAliasAnalysis_ = updateAliasAnalysis == UpdateAliasAnalysis;
 
-    InstructionMap defs(alloc());
-
-    if (!defs.init())
+    // Initialize the value set. It's tempting to pass in a size here of some
+    // function of graph_.getNumInstructionIds(), however if we start out with
+    // a large capacity, it will be far larger than the actual element count
+    // for most of the pass, so when we remove elements, it would often think
+    // it needs to compact itself. Empirically, just letting the HashTable grow
+    // as needed on its own seems to work pretty well.
+    if (!values_.init())
         return false;
 
-    IonSpew(IonSpew_GVN, "Eliminating redundant instructions");
+    IonSpew(IonSpew_GVN, "Running GVN on graph (with %llu blocks)",
+            uint64_t(graph_.numBlocks()));
 
-    // Stack for pre-order CFG traversal.
-    Vector<MBasicBlock *, 1, IonAllocPolicy> worklist(alloc());
+    // Top level non-sparse iteration loop. If an iteration performs a
+    // significant change, such as deleting a block which changes the dominator
+    // tree and may enable more optimization, this loop takes another iteration.
+    int runs = 0;
+    for (;;) {
+        if (!visitGraph())
+            return false;
 
-    // The index of the current block in the CFG traversal.
-    size_t index = 0;
+        // Test whether any block which was not removed but which had at least
+        // one predecessor removed will have a new dominator parent.
+        while (!remainingBlocks_.empty()) {
+            MBasicBlock *block = remainingBlocks_.popCopy();
+            if (!block->isDead() && IsDominatorRefined(block)) {
+                IonSpew(IonSpew_GVN, "  Dominator for block%u can now be refined; will re-run GVN!",
+                        block->id());
+                rerun_ = true;
+                remainingBlocks_.clear();
+                break;
+            }
+        }
 
-    // Add all self-dominating blocks to the worklist.
-    // This includes all roots. Order does not matter.
-    for (MBasicBlockIterator i(graph_.begin()); i != graph_.end(); i++) {
-        MBasicBlock *block = *i;
-        if (block->immediateDominator() == block) {
-            if (!worklist.append(block))
+        if (blocksRemoved_) {
+            if (!AccountForCFGChanges(mir_, graph_, dependenciesBroken_))
                 return false;
-        }
-    }
 
-    // Starting from each self-dominating block, traverse the CFG in pre-order.
-    while (!worklist.empty()) {
-        if (mir->shouldCancel("Value Numbering (eliminate loop)"))
-            return false;
-        MBasicBlock *block = worklist.popCopy();
-
-        IonSpew(IonSpew_GVN, "Looking at block %d", block->id());
-
-        // Add all immediate dominators to the front of the worklist.
-        if (!worklist.append(block->immediatelyDominatedBlocksBegin(),
-                             block->immediatelyDominatedBlocksEnd())) {
-            return false;
+            blocksRemoved_ = false;
+            dependenciesBroken_ = false;
         }
 
-        // For each instruction, attempt to look up a dominating definition.
-        for (MDefinitionIterator iter(block); iter; ) {
-            MDefinition *ins = simplify(*iter, true);
-
-            // Instruction was replaced, and all uses have already been fixed.
-            if (ins != *iter) {
-                iter = block->discardDefAt(iter);
-                continue;
-            }
-
-            // Instruction has side-effects and cannot be folded.
-            if (!ins->isMovable() || ins->isEffectful()) {
-                iter++;
-                continue;
-            }
-
-            MDefinition *dom = findDominatingDef(defs, ins, index);
-            if (!dom)
-                return false; // Insertion failed.
-
-            if (dom == ins || !dom->updateForReplacement(ins)) {
-                iter++;
-                continue;
-            }
-
-            IonSpew(IonSpew_GVN, "instruction %d is dominated by instruction %d (from block %d)",
-                    ins->id(), dom->id(), dom->block()->id());
-
-            ins->replaceAllUsesWith(dom);
-
-            JS_ASSERT(!ins->hasUses());
-            JS_ASSERT(ins->block() == block);
-            JS_ASSERT(!ins->isEffectful());
-            JS_ASSERT(ins->isMovable());
-
-            iter = ins->block()->discardDefAt(iter);
-        }
-        index++;
-    }
-
-    JS_ASSERT(index == graph_.numBlocks());
-    return true;
-}
-
-// Exported method, called by the compiler.
-bool
-ValueNumberer::analyze()
-{
-    return computeValueNumbers() && eliminateRedundancies();
-}
-
-// Called by the compiler if we need to re-run GVN.
-bool
-ValueNumberer::clear()
-{
-    IonSpew(IonSpew_GVN, "Clearing value numbers");
-
-    // Clear the VN of every MDefinition
-    for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
-        if (mir->shouldCancel("Value Numbering (clearing)"))
+        if (mir_->shouldCancel("GVN (outer loop)"))
             return false;
-        for (MDefinitionIterator iter(*block); iter; iter++)
-            iter->clearValueNumberData();
-        block->lastIns()->clearValueNumberData();
+
+        // If no further opportunities have been discovered, we're done.
+        if (!rerun_)
+            break;
+
+        IonSpew(IonSpew_GVN, "Re-running GVN on graph (run %d, now with %llu blocks)",
+                runs, uint64_t(graph_.numBlocks()));
+        rerun_ = false;
+
+        // Enforce an arbitrary iteration limit. This is rarely reached, and
+        // isn't even strictly necessary, as the algorithm is guaranteed to
+        // terminate on its own in a finite amount of time (since every time we
+        // re-run we delete the construct which triggered the re-run), but it
+        // does help avoid slow compile times on pathlogical code.
+        ++runs;
+        if (runs == 6) {
+            IonSpew(IonSpew_GVN, "Re-run cutoff reached. Terminating GVN!");
+            break;
+        }
     }
 
     return true;
-}
-
-uint32_t
-MDefinition::valueNumber() const
-{
-    JS_ASSERT(block_);
-    if (valueNumber_ == nullptr)
-        return 0;
-    return valueNumber_->valueNumber();
-}
-void
-MDefinition::setValueNumber(uint32_t vn)
-{
-    valueNumber_->setValueNumber(vn);
-}
-// Set the class of this to the given representative value.
-void
-ValueNumberer::setClass(MDefinition *def, MDefinition *rep)
-{
-    def->valueNumberData()->setClass(def, rep);
-}
-
-MDefinition *
-ValueNumberer::findSplit(MDefinition *def)
-{
-    for (MDefinition *vncheck = def->valueNumberData()->classNext;
-         vncheck != nullptr;
-         vncheck = vncheck->valueNumberData()->classNext) {
-        if (!def->congruentTo(vncheck)) {
-            IonSpew(IonSpew_GVN, "Proceeding with split because %d is not congruent to %d",
-                    def->id(), vncheck->id());
-            return vncheck;
-        }
-    }
-    return nullptr;
-}
-
-void
-ValueNumberer::breakClass(MDefinition *def)
-{
-    if (def->valueNumber() == def->id()) {
-        IonSpew(IonSpew_GVN, "Breaking congruence with itself: %d", def->id());
-        ValueNumberData *defdata = def->valueNumberData();
-        JS_ASSERT(defdata->classPrev == nullptr);
-        // If the def was the only member of the class, then there is nothing to do.
-        if (defdata->classNext == nullptr)
-            return;
-        // If upon closer inspection, we are still equivalent to this class
-        // then there isn't anything for us to do.
-        MDefinition *newRep = findSplit(def);
-        if (!newRep)
-            return;
-        markConsumers(def);
-        ValueNumberData *newdata = newRep->valueNumberData();
-
-        // Right now, |defdata| is at the front of the list, and |newdata| is
-        // somewhere in the middle.
-        //
-        // We want to move |defdata| and everything up to but excluding
-        // |newdata| to a new list, with |defdata| still as the canonical
-        // element.
-        //
-        // We then want to take |newdata| and everything after, and
-        // mark them for processing (since |newdata| is now a new canonical
-        // element).
-        //
-        MDefinition *lastOld = newdata->classPrev;
-
-        JS_ASSERT(lastOld); // newRep is NOT the first element of the list.
-        JS_ASSERT(lastOld->valueNumberData()->classNext == newRep);
-
-        //lastOld is now the last element of the old list (congruent to
-        //|def|)
-        lastOld->valueNumberData()->classNext = nullptr;
-
-#ifdef DEBUG
-        for (MDefinition *tmp = def; tmp != nullptr; tmp = tmp->valueNumberData()->classNext) {
-            JS_ASSERT(tmp->valueNumber() == def->valueNumber());
-            JS_ASSERT(tmp->congruentTo(def));
-            JS_ASSERT(tmp != newRep);
-        }
-#endif
-        //|newRep| is now the first element of a new list, therefore it is the
-        //new canonical element. Mark the remaining elements in the list
-        //(including |newRep|)
-        newdata->classPrev = nullptr;
-        IonSpew(IonSpew_GVN, "Choosing a new representative: %d", newRep->id());
-
-        // make the VN of every member in the class the VN of the new representative number.
-        for (MDefinition *tmp = newRep; tmp != nullptr; tmp = tmp->valueNumberData()->classNext) {
-            // if this instruction is already scheduled to be processed, don't do anything.
-            if (tmp->isInWorklist()) {
-                IonSpew(IonSpew_GVN, "Defer  to a new congruence class: %d", tmp->id());
-                continue;
-            }
-            IonSpew(IonSpew_GVN, "Moving to a new congruence class: %d", tmp->id());
-            tmp->setValueNumber(newRep->id());
-            markConsumers(tmp);
-            markDefinition(tmp);
-        }
-
-        // Insert the new representative => number mapping into the table
-        // Logically, there should not be anything in the table currently, but
-        // old values are never removed, so there's a good chance something will
-        // already be there.
-        values.put(newRep, newRep->id());
-    } else {
-        // The element that is breaking from the list isn't the representative element
-        // just strip it from the list
-        ValueNumberData *defdata = def->valueNumberData();
-        if (defdata->classPrev)
-            defdata->classPrev->valueNumberData()->classNext = defdata->classNext;
-        if (defdata->classNext)
-            defdata->classNext->valueNumberData()->classPrev = defdata->classPrev;
-
-        // Make sure there is no nastinees accidentally linking elements into the old list later.
-        defdata->classPrev = nullptr;
-        defdata->classNext = nullptr;
-    }
 }
