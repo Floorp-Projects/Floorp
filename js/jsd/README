@@ -1,6 +1,0 @@
-js/jsd contains code for debugging support for the C-based JavaScript engine 
-in js/src.  jsd_xpc.cpp provides an XPCOM binding for the library.
-
-js/jsd/jsdb is a console debugger using only native code (see README in that 
-directory.)  This debugger is no longer being actively developed, though it
-should work.
