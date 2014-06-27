@@ -43,6 +43,7 @@ public:
     mFormat = aA->GetFormat();
   }
      
+  virtual DrawTargetType GetType() const MOZ_OVERRIDE { return mA->GetType(); }
   virtual BackendType GetBackendType() const { return mA->GetBackendType(); }
   virtual TemporaryRef<SourceSurface> Snapshot() { return new SourceSurfaceDual(mA, mB); }
   virtual IntSize GetSize() { return mA->GetSize(); }

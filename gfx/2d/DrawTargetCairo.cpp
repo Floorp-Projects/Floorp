@@ -372,6 +372,56 @@ DrawTargetCairo::~DrawTargetCairo()
   MOZ_ASSERT(!mLockedBits);
 }
 
+DrawTargetType
+DrawTargetCairo::GetType() const
+{
+  if (mContext) {
+    cairo_surface_type_t type = cairo_surface_get_type(mSurface);
+    if (type == CAIRO_SURFACE_TYPE_TEE) {
+      type = cairo_surface_get_type(cairo_tee_surface_index(mSurface, 0));
+      MOZ_ASSERT(type != CAIRO_SURFACE_TYPE_TEE, "C'mon!");
+      MOZ_ASSERT(type == cairo_surface_get_type(cairo_tee_surface_index(mSurface, 1)),
+                 "What should we do here?");
+    }
+    switch (type) {
+    case CAIRO_SURFACE_TYPE_PDF:
+    case CAIRO_SURFACE_TYPE_PS:
+    case CAIRO_SURFACE_TYPE_SVG:
+    case CAIRO_SURFACE_TYPE_WIN32_PRINTING:
+    case CAIRO_SURFACE_TYPE_XML:
+      return DrawTargetType::VECTOR;
+
+    case CAIRO_SURFACE_TYPE_VG:
+    case CAIRO_SURFACE_TYPE_GL:
+    case CAIRO_SURFACE_TYPE_GLITZ:
+    case CAIRO_SURFACE_TYPE_QUARTZ:
+    case CAIRO_SURFACE_TYPE_DIRECTFB:
+      return DrawTargetType::HARDWARE_RASTER;
+
+    case CAIRO_SURFACE_TYPE_SKIA:
+    case CAIRO_SURFACE_TYPE_QT:
+      MOZ_ASSERT(false, "Can't determine actual DrawTargetType for DrawTargetCairo - assuming SOFTWARE_RASTER");
+      // fallthrough
+    case CAIRO_SURFACE_TYPE_IMAGE:
+    case CAIRO_SURFACE_TYPE_XLIB:
+    case CAIRO_SURFACE_TYPE_XCB:
+    case CAIRO_SURFACE_TYPE_WIN32:
+    case CAIRO_SURFACE_TYPE_BEOS:
+    case CAIRO_SURFACE_TYPE_OS2:
+    case CAIRO_SURFACE_TYPE_QUARTZ_IMAGE:
+    case CAIRO_SURFACE_TYPE_SCRIPT:
+    case CAIRO_SURFACE_TYPE_RECORDING:
+    case CAIRO_SURFACE_TYPE_DRM:
+    case CAIRO_SURFACE_TYPE_SUBSURFACE:
+    case CAIRO_SURFACE_TYPE_D2D:
+    case CAIRO_SURFACE_TYPE_TEE: // included to silence warning about unhandled enum value
+      return DrawTargetType::SOFTWARE_RASTER;
+    }
+  }
+  MOZ_ASSERT(false, "Could not determine DrawTargetType for DrawTargetCairo");
+  return DrawTargetType::SOFTWARE_RASTER;
+}
+
 IntSize
 DrawTargetCairo::GetSize()
 {

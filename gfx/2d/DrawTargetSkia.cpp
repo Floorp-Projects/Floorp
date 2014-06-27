@@ -339,6 +339,17 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
   mCanvas->drawBitmapRectToRect(bitmap.mBitmap, &sourceRect, destRect, &paint.mPaint);
 }
 
+DrawTargetType
+DrawTargetSkia::GetType() const
+{
+#ifdef USE_SKIA_GPU
+  if (mGrContext) {
+    return DrawTargetType::HARDWARE_RASTER;
+  }
+#endif
+  return DrawTargetType::SOFTWARE_RASTER;
+}
+
 void
 DrawTargetSkia::DrawFilter(FilterNode *aNode,
                            const Rect &aSourceRect,

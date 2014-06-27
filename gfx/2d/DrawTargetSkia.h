@@ -31,6 +31,7 @@ public:
   DrawTargetSkia();
   virtual ~DrawTargetSkia();
 
+  virtual DrawTargetType GetType() const MOZ_OVERRIDE;
   virtual BackendType GetBackendType() const { return BackendType::SKIA; }
   virtual TemporaryRef<SourceSurface> Snapshot();
   virtual IntSize GetSize() { return mSize; }
