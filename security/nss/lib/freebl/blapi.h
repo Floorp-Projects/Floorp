@@ -62,7 +62,7 @@ extern SECStatus RSA_PrivateKeyOpDoubleChecked(RSAPrivateKey *  key,
 /*
 ** Perform a check of private key parameters for consistency.
 */
-extern SECStatus RSA_PrivateKeyCheck(RSAPrivateKey *key);
+extern SECStatus RSA_PrivateKeyCheck(const RSAPrivateKey *key);
 
 /*
 ** Given only minimal private key parameters, fill in the rest of the

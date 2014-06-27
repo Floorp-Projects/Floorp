@@ -41,6 +41,9 @@ else
 	_CC_BUILD   := $(word 4,$(_CC_VERSION_WORDS))
 	_MSC_VER     = $(_CC_VMAJOR)$(_CC_VMINOR)
 	_MSC_VER_6   = 1200
+	# VC10 (2010) is 16.00.30319.01, VC10SP1 is 16.00.40219.01.
+	_MSC_VER_GE_10SP1 := $(shell expr $(_MSC_VER) \> 1600 \| \
+		$(_MSC_VER) = 1600 \& $(_CC_RELEASE) \>= 40219)
 	# VC12 (2013).
 	_MSC_VER_GE_12 := $(shell expr $(_MSC_VER) \>= 1800)
 	ifeq ($(_CC_VMAJOR),14)

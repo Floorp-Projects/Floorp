@@ -27,36 +27,37 @@
   <refsynopsisdiv>
     <cmdsynopsis>
       <command>signtool</command>
-      <arg>-k keyName</arg>
-      <arg>[-h]</arg>
-      <arg>[-H]</arg>
-      <arg>[-l]</arg>
-      <arg>[-L]</arg>
-      <arg>[-M]</arg>
-      <arg>[-v]</arg>
-      <arg>[-w]</arg>
-      <arg>[-G nickname]</arg>
-      <arg>[--keysize | -s size]</arg>
       <arg>[-b basename]</arg>
       <arg>[-c Compression Level] </arg>
       <arg>[-d cert-dir] </arg>
-      <arg>[-i installer script] </arg>
-      <arg>[-m metafile] </arg>
-      <arg>[-x name] </arg>
-      <arg>[-f filename] </arg>
-      <arg>[-t|--token tokenname] </arg>
       <arg>[-e extension] </arg>
+      <arg>[-f filename] </arg>
+      <arg>[-i installer script] </arg>
+      <arg>[-h]</arg>
+      <arg>[-H]</arg>
+      <arg>[-v]</arg>
+      <arg>[-w]</arg>
+      <arg>[-G nickname]</arg>
+      <arg>[-J]</arg>
+      <arg>[-j directory] </arg>
+      <arg>-k keyName</arg>
+      <arg>[--keysize | -s size]</arg>
+      <arg>[-l]</arg>
+      <arg>[-L]</arg>
+      <arg>[-M]</arg>
+      <arg>[-m metafile] </arg>
+      <arg>[--norecurse] </arg>
+      <arg>[-O] </arg>
       <arg>[-o] </arg>
+      <arg>[--outfile] </arg>
+      <arg>[-p password] </arg>
+      <arg>[-t|--token tokenname] </arg>
       <arg>[-z] </arg>
       <arg>[-X] </arg>
-      <arg>[--outfile] </arg>
+      <arg>[-x name] </arg>
       <arg>[--verbose value] </arg>
-      <arg>[--norecurse] </arg>
       <arg>[--leavearc] </arg>
-      <arg>[-j directory] </arg>
       <arg>[-Z jarfile] </arg>
-      <arg>[-O] </arg>
-      <arg>[-p password] </arg>
       <arg>directory-tree</arg>
       <arg>archive</arg>
 <!-- this isn't the ideal formatting, since docbook can handle reqiored/optional formatting automatically, but let's make it explicit -->
@@ -97,7 +98,7 @@
       </varlistentry>
       <varlistentry>
         <term>-c#</term>
-			<listitem><para>
+	<listitem><para>
 	Specifies the compression level for the -J or -Z option. The symbol # represents a number from 0 to 9, where 0 means no compression and 9 means maximum compression. The higher the level of compression, the smaller the output but the longer the operation takes.
 
 If the -c# option is not used with either the -J or the -Z option, the default compression value used by both the -J and -Z options is 6.
@@ -124,10 +125,36 @@ The Unix version of signtool assumes ~/.netscape unless told otherwise. The NT v
 </para></listitem>
       </varlistentry>
       <varlistentry>
+        <term>-G nickname</term>
+        <listitem><para>
+	Generates a new private-public key pair and corresponding object-signing certificate with the given nickname.
+
+The newly generated keys and certificate are installed into the key and certificate databases in the directory specified by the -d option. With the NT version of Netscape Signing Tool, you must use the -d option with the -G option. With the Unix version of Netscape Signing Tool, omitting the -d option causes the tool to install the keys and certificate in the Communicator key and certificate databases. If you are installing the keys and certificate in the Communicator databases, you must exit Communicator before using this option; otherwise, you risk corrupting the databases. In all cases, the certificate is also output to a file named x509.cacert, which has the MIME-type application/x-x509-ca-cert.
+
+Unlike certificates normally used to sign finished code to be distributed over a network, a test certificate created with -G is not signed by a recognized certificate authority. Instead, it is self-signed. In addition, a single test signing certificate functions as both an object-signing certificate and a CA. When you are using it to sign objects, it behaves like an object-signing certificate. When it is imported into browser software such as Communicator, it behaves like an object-signing CA and cannot be used to sign objects.
+
+The -G option is available in Netscape Signing Tool 1.0 and later versions only. By default, it produces only RSA certificates with 1024-byte keys in the internal token. However, you can use the -s option specify the required key size and the -t option to specify the token.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
         <term>-i scriptname</term>
-			<listitem><para>
-	Specifies the name of an installer script for SmartUpdate. This script installs files from the JAR archive in the local system after SmartUpdate has validated the digital signature. For more details, see the description of -m that follows. The -i option provides a straightforward way to provide this information if you don't need to specify any metadata other than an installer script.
-</para></listitem>
+        <listitem><para>
+Specifies the name of an installer script for SmartUpdate. This script installs files from the JAR archive in the local system after SmartUpdate has validated the digital signature. For more details, see the description of -m that follows. The -i option provides a straightforward way to provide this information if you don't need to specify any metadata other than an installer script.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>-J</term>
+        <listitem>
+          <para>
+Signs a directory of HTML files containing JavaScript and creates as many archive files as are specified in the HTML tags. Even if signtool creates more than one archive file, you need to supply the key database password only once.
+
+The -J option is available only in Netscape Signing Tool 1.0 and later versions. The -J option cannot be used at the same time as the -Z option.
+
+If the -c# option is not used with the -J option, the default compression value is 6.
+
+Note that versions 1.1 and later of Netscape Signing Tool correctly recognizes the CODEBASE attribute, allows paths to be expressed for the CLASS and SRC attributes instead of filenames only, processes LINK tags and parses HTML correctly, and offers clearer error messages.
+          </para>
+        </listitem>
       </varlistentry>
       <varlistentry>
         <term>-j directory</term>
@@ -148,35 +175,11 @@ It's also possible to use the -k option without signing any files or specifying 
 </para></listitem>
       </varlistentry>
       <varlistentry>
-        <term>-G nickname</term>
-			<listitem><para>
-	Generates a new private-public key pair and corresponding object-signing certificate with the given nickname.
-
-The newly generated keys and certificate are installed into the key and certificate databases in the directory specified by the -d option. With the NT version of Netscape Signing Tool, you must use the -d option with the -G option. With the Unix version of Netscape Signing Tool, omitting the -d option causes the tool to install the keys and certificate in the Communicator key and certificate databases. If you are installing the keys and certificate in the Communicator databases, you must exit Communicator before using this option; otherwise, you risk corrupting the databases. In all cases, the certificate is also output to a file named x509.cacert, which has the MIME-type application/x-x509-ca-cert.
-
-Unlike certificates normally used to sign finished code to be distributed over a network, a test certificate created with -G is not signed by a recognized certificate authority. Instead, it is self-signed. In addition, a single test signing certificate functions as both an object-signing certificate and a CA. When you are using it to sign objects, it behaves like an object-signing certificate. When it is imported into browser software such as Communicator, it behaves like an object-signing CA and cannot be used to sign objects.
-
-The -G option is available in Netscape Signing Tool 1.0 and later versions only. By default, it produces only RSA certificates with 1024-byte keys in the internal token. However, you can use the -s option specify the required key size and the -t option to specify the token. For more information about the use of the -G option, see "Generating Test Object-Signing Certificates""Generating Test Object-Signing Certificates" on page 1241.
-</para></listitem>
-      </varlistentry>
-      <varlistentry>
         <term>-l</term>
 			<listitem><para>
 	Lists signing certificates, including issuing CAs. If any of your certificates are expired or invalid, the list will so specify. This option can be used with the -k option to list detailed information about a particular signing certificate.
 
 The -l option is available in Netscape Signing Tool 1.0 and later versions only.
-</para></listitem>
-      </varlistentry>
-      <varlistentry>
-        <term>-J</term>
-			<listitem><para>
-	Signs a directory of HTML files containing JavaScript and creates as many archive files as are specified in the HTML tags. Even if signtool creates more than one archive file, you need to supply the key database password only once.
-
-The -J option is available only in Netscape Signing Tool 1.0 and later versions. The -J option cannot be used at the same time as the -Z option.
-
-If the -c# option is not used with the -J option, the default compression value is 6.
-
-Note that versions 1.1 and later of Netscape Signing Tool correctly recognizes the CODEBASE attribute, allows paths to be expressed for the CLASS and SRC attributes instead of filenames only, processes LINK tags and parses HTML correctly, and offers clearer error messages.
 </para></listitem>
       </varlistentry>
       <varlistentry>

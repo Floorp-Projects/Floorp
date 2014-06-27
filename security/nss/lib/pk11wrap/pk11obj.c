@@ -914,17 +914,11 @@ PK11_Encrypt(PK11SymKey *symKey,
     return SECSuccess;
 }
 
-/*
- * Now SSL 2.0 uses raw RSA stuff. These next to functions *must* use
- * RSA keys, or they'll fail. We do the checks up front. If anyone comes
- * up with a meaning for rawdecrypt for any other public key operation,
- * then we need to move this check into some of PK11_PubDecrypt callers,
- * (namely SSL 2.0).
- */
 static SECStatus
-pk11_PrivDecryptRaw(SECKEYPrivateKey *key, unsigned char *data, 
-	unsigned *outLen, unsigned int maxLen, unsigned char *enc,
-				    unsigned encLen, CK_MECHANISM_PTR mech)
+pk11_PrivDecryptRaw(SECKEYPrivateKey *key,
+                    unsigned char *data,  unsigned *outLen, unsigned int maxLen,
+                    const unsigned char *enc, unsigned encLen,
+                    CK_MECHANISM_PTR mech)
 {
     PK11SlotInfo *slot = key->pkcs11Slot;
     CK_ULONG out = maxLen;
@@ -960,11 +954,12 @@ pk11_PrivDecryptRaw(SECKEYPrivateKey *key, unsigned char *data,
      * do C_Login with CKU_CONTEXT_SPECIFIC 
      * between C_DecryptInit and C_Decrypt
      * ... But see note above about servers */
-     if (SECKEY_HAS_ATTRIBUTE_SET_LOCK(key, CKA_ALWAYS_AUTHENTICATE, haslock)) {
+    if (SECKEY_HAS_ATTRIBUTE_SET_LOCK(key, CKA_ALWAYS_AUTHENTICATE, haslock)) {
 	PK11_DoPassword(slot, session, PR_FALSE, key->wincx, haslock, PR_TRUE);
     }
 
-    crv = PK11_GETTAB(slot)->C_Decrypt(session,enc, encLen, data, &out);
+    crv = PK11_GETTAB(slot)->C_Decrypt(session, (unsigned char *)enc, encLen,
+				       data, &out);
     if (haslock) PK11_ExitSlotMonitor(slot);
     pk11_CloseSession(slot,session,owner);
     *outLen = out;
@@ -976,40 +971,36 @@ pk11_PrivDecryptRaw(SECKEYPrivateKey *key, unsigned char *data,
 }
 
 SECStatus
-PK11_PubDecryptRaw(SECKEYPrivateKey *key, unsigned char *data, 
-	unsigned *outLen, unsigned int maxLen, unsigned char *enc,
-				    unsigned encLen)
+PK11_PubDecryptRaw(SECKEYPrivateKey *key,
+                   unsigned char *data, unsigned *outLen, unsigned int maxLen,
+                   const unsigned char *enc, unsigned encLen)
 {
     CK_MECHANISM mech = {CKM_RSA_X_509, NULL, 0 };
     return pk11_PrivDecryptRaw(key, data, outLen, maxLen, enc, encLen, &mech);
 }
 
 SECStatus
-PK11_PrivDecryptPKCS1(SECKEYPrivateKey *key, unsigned char *data, 
-	unsigned *outLen, unsigned int maxLen, unsigned char *enc,
-				    unsigned encLen)
+PK11_PrivDecryptPKCS1(SECKEYPrivateKey *key,
+                      unsigned char *data, unsigned *outLen, unsigned int maxLen,
+                      const unsigned char *enc, unsigned encLen)
 {
     CK_MECHANISM mech = {CKM_RSA_PKCS, NULL, 0 };
     return pk11_PrivDecryptRaw(key, data, outLen, maxLen, enc, encLen, &mech);
 }
 
 static SECStatus
-pk11_PubEncryptRaw(SECKEYPublicKey *key, unsigned char *enc,
-		    unsigned char *data, unsigned dataLen, 
-		    CK_MECHANISM_PTR mech, void *wincx)
+pk11_PubEncryptRaw(SECKEYPublicKey *key,
+                   unsigned char *out, unsigned int *outLen,
+                   unsigned int maxLen,
+                   const unsigned char *data, unsigned dataLen,
+                   CK_MECHANISM_PTR mech, void *wincx)
 {
     PK11SlotInfo *slot;
     CK_OBJECT_HANDLE id;
-    CK_ULONG out;
+    CK_ULONG len = maxLen;
     PRBool owner = PR_TRUE;
     CK_SESSION_HANDLE session;
     CK_RV crv;
-
-    if (!key || key->keyType != rsaKey) {
-	PORT_SetError( SEC_ERROR_BAD_KEY );
-	return SECFailure;
-    }
-    out = SECKEY_PublicKeyStrength(key);
 
     slot = PK11_GetBestSlotWithAttributes(mech->mechanism,CKF_ENCRYPT,0,wincx);
     if (slot == NULL) {
@@ -1035,10 +1026,12 @@ pk11_PubEncryptRaw(SECKEYPublicKey *key, unsigned char *enc,
 	PORT_SetError( PK11_MapError(crv) );
 	return SECFailure;
     }
-    crv = PK11_GETTAB(slot)->C_Encrypt(session,data,dataLen,enc,&out);
+    crv = PK11_GETTAB(slot)->C_Encrypt(session,(unsigned char *)data,dataLen,
+				       out,&len);
     if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
     pk11_CloseSession(slot,session,owner);
     PK11_FreeSlot(slot);
+    *outLen = len;
     if (crv != CKR_OK) {
 	PORT_SetError( PK11_MapError(crv) );
 	return SECFailure;
@@ -1047,19 +1040,69 @@ pk11_PubEncryptRaw(SECKEYPublicKey *key, unsigned char *enc,
 }
 
 SECStatus
-PK11_PubEncryptRaw(SECKEYPublicKey *key, unsigned char *enc,
-		unsigned char *data, unsigned dataLen, void *wincx)
+PK11_PubEncryptRaw(SECKEYPublicKey *key,
+                   unsigned char *enc,
+                   const unsigned char *data, unsigned dataLen,
+                   void *wincx)
 {
     CK_MECHANISM mech = {CKM_RSA_X_509, NULL, 0 };
-    return pk11_PubEncryptRaw(key, enc, data, dataLen, &mech, wincx);
+    unsigned int outLen;
+    if (!key || key->keyType != rsaKey) {
+	PORT_SetError(SEC_ERROR_BAD_KEY);
+	return SECFailure;
+    }
+    outLen = SECKEY_PublicKeyStrength(key);
+    return pk11_PubEncryptRaw(key, enc, &outLen, outLen, data, dataLen, &mech,
+                              wincx);
 }
 
 SECStatus
-PK11_PubEncryptPKCS1(SECKEYPublicKey *key, unsigned char *enc,
-		unsigned char *data, unsigned dataLen, void *wincx)
+PK11_PubEncryptPKCS1(SECKEYPublicKey *key,
+                     unsigned char *enc,
+                     const unsigned char *data, unsigned dataLen,
+                     void *wincx)
 {
     CK_MECHANISM mech = {CKM_RSA_PKCS, NULL, 0 };
-    return pk11_PubEncryptRaw(key, enc, data, dataLen, &mech, wincx);
+    unsigned int outLen;
+    if (!key || key->keyType != rsaKey) {
+	PORT_SetError(SEC_ERROR_BAD_KEY);
+	return SECFailure;
+    }
+    outLen = SECKEY_PublicKeyStrength(key);
+    return pk11_PubEncryptRaw(key, enc, &outLen, outLen, data, dataLen, &mech,
+                              wincx);
+}
+
+SECStatus
+PK11_PrivDecrypt(SECKEYPrivateKey *key,
+                 CK_MECHANISM_TYPE mechanism, SECItem *param,
+                 unsigned char *out, unsigned int *outLen,
+                 unsigned int maxLen,
+                 const unsigned char *enc, unsigned encLen)
+{
+    CK_MECHANISM mech = { mechanism, NULL, 0 };
+    if (param) {
+        mech.pParameter = param->data;
+        mech.ulParameterLen = param->len;
+    }
+    return pk11_PrivDecryptRaw(key, out, outLen, maxLen, enc, encLen, &mech);
+}
+
+SECStatus
+PK11_PubEncrypt(SECKEYPublicKey *key,
+                CK_MECHANISM_TYPE mechanism, SECItem *param,
+                unsigned char *out, unsigned int *outLen,
+                unsigned int maxLen,
+                const unsigned char *data, unsigned dataLen,
+                void *wincx)
+{
+    CK_MECHANISM mech = { mechanism, NULL, 0 };
+    if (param) {
+        mech.pParameter = param->data;
+        mech.ulParameterLen = param->len;
+    }
+    return pk11_PubEncryptRaw(key, out, outLen, maxLen, data, dataLen, &mech,
+                              wincx);
 }
 
 SECKEYPrivateKey *
