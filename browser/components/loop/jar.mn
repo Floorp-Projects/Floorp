@@ -21,6 +21,7 @@ browser.jar:
   content/browser/loop/shared/libs/sjcl-dev20140604.js        (content/shared/libs/sjcl-dev20140604.js)
   content/browser/loop/shared/libs/token.js          (content/shared/libs/token.js)
   content/browser/loop/shared/libs/hawk-browser-2.2.1.js      (content/shared/libs/hawk-browser-2.2.1.js)
+  content/browser/loop/shared/sounds/Firefox-Long.ogg   (content/shared/sounds/Firefox-Long.ogg)
   content/browser/loop/libs/l10n.js                  (content/libs/l10n.js)
   content/browser/loop/js/desktopRouter.js           (content/js/desktopRouter.js)
   content/browser/loop/js/conversation.js            (content/js/conversation.js)

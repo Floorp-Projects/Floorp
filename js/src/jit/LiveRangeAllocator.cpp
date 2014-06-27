@@ -390,6 +390,12 @@ LiveInterval::nextUseAfter(CodePosition after)
     return nullptr;
 }
 
+UsePosition *
+LiveInterval::popUse()
+{
+    return uses_.popFront();
+}
+
 /*
  * This function locates the first "real" use of this interval that follows
  * the given code position. Non-"real" uses are currently just snapshots,

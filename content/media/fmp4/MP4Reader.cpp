@@ -457,13 +457,13 @@ MP4Reader::Flush(TrackType aTrack)
   // Set a flag so that we ignore all output while we call
   // MediaDataDecoder::Flush().
   {
-    data.mIsFlushing = true;
     MonitorAutoLock mon(data.mMonitor);
+    data.mIsFlushing = true;
   }
   data.mDecoder->Flush();
   {
-    data.mIsFlushing = false;
     MonitorAutoLock mon(data.mMonitor);
+    data.mIsFlushing = false;
   }
 }
 

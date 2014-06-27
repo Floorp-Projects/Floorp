@@ -10,6 +10,7 @@
 #include "mozilla/dom/IDBDatabaseBinding.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
 #include "mozilla/dom/indexedDB/IDBDatabase.h"
+#include "mozilla/dom/indexedDB/IDBEvents.h"
 #include "mozilla/dom/indexedDB/IDBFactory.h"
 #include "mozilla/dom/indexedDB/IDBIndex.h"
 #include "mozilla/dom/indexedDB/IDBObjectStore.h"
@@ -25,13 +26,59 @@ using namespace mozilla::dom::indexedDB;
 namespace mozilla {
 namespace dom {
 
+class VersionChangeListener MOZ_FINAL : public nsIDOMEventListener
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  VersionChangeListener(IDBDatabase* aDatabase)
+    : mDatabase(aDatabase)
+  {}
+
+  // nsIDOMEventListener
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent)
+  {
+    nsString type;
+    nsresult rv = aEvent->GetType(type);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!type.EqualsASCII("versionchange")) {
+      MOZ_ASSUME_UNREACHABLE("This should not happen");
+      return NS_ERROR_FAILURE;
+    }
+
+    rv = mDatabase->RemoveEventListener(NS_LITERAL_STRING("versionchange"),
+                                        this, false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+#ifdef DEBUG
+    nsCOMPtr<IDBVersionChangeEvent> event = do_QueryInterface(aEvent);
+    MOZ_ASSERT(event);
+
+    Nullable<uint64_t> version = event->GetNewVersion();
+    MOZ_ASSERT(version.IsNull());
+#endif
+
+    return mDatabase->Close();
+  }
+
+private:
+  IDBDatabase* mDatabase;
+};
+
+NS_IMPL_ISUPPORTS(VersionChangeListener, nsIDOMEventListener)
+
 NS_IMPL_ISUPPORTS(DataStoreDB, nsIDOMEventListener)
 
 DataStoreDB::DataStoreDB(const nsAString& aManifestURL, const nsAString& aName)
   : mState(Inactive)
 {
   mDatabaseName.Assign(aName);
-  mDatabaseName.AppendASCII("|");
+  mDatabaseName.Append('|');
   mDatabaseName.Append(aManifestURL);
 }
 
@@ -201,6 +248,14 @@ DataStoreDB::DatabaseOpened()
   nsresult rv = UNWRAP_OBJECT(IDBDatabase, &result.toObject(), mDatabase);
   if (NS_FAILED(rv)) {
     NS_WARNING("Didn't get the object we expected!");
+    return rv;
+  }
+
+  nsRefPtr<VersionChangeListener> listener =
+    new VersionChangeListener(mDatabase);
+  rv = mDatabase->EventTarget::AddEventListener(
+    NS_LITERAL_STRING("versionchange"), listener, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
