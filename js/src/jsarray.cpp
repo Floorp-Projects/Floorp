@@ -770,7 +770,7 @@ js::WouldDefinePastNonwritableLength(ThreadSafeContext *cx,
     // Error in strict mode code or warn with strict option.
     unsigned flags = strict ? JSREPORT_ERROR : (JSREPORT_STRICT | JSREPORT_WARNING);
     if (cx->isForkJoinContext())
-        return cx->asForkJoinContext()->reportError(ParallelBailoutUnsupportedVM, flags);
+        return cx->asForkJoinContext()->reportError(flags);
 
     if (!cx->isJSContext())
         return true;

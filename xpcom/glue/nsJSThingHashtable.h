@@ -10,7 +10,7 @@
 #include "nsBaseHashtable.h"
 
 namespace JS {
-template <class T>
+template<class T>
 class Heap;
 } /* namespace JS */
 
@@ -26,8 +26,8 @@ class Heap;
 template<class T>
 class nsHashKeyDisallowMemmove : public T
 {
- public:
-  nsHashKeyDisallowMemmove(const T& key) : T(key) {}
+public:
+  nsHashKeyDisallowMemmove(const T& aKey) : T(aKey) {}
   enum { ALLOW_MEMMOVE = false };
 };
 
@@ -50,9 +50,11 @@ class nsHashKeyDisallowMemmove : public T
  * @param DataType the datatype being wrapped, must be a JS GC thing.
  * @see nsInterfaceHashtable, nsClassHashtable
  */
-template<class KeyClass,class DataType>
-class nsJSThingHashtable :
-  public nsBaseHashtable<nsHashKeyDisallowMemmove<KeyClass>, JS::Heap<DataType>, DataType>
-{ };
+template<class KeyClass, class DataType>
+class nsJSThingHashtable
+  : public nsBaseHashtable<nsHashKeyDisallowMemmove<KeyClass>,
+                           JS::Heap<DataType>, DataType>
+{
+};
 
 #endif // nsJSThingHashtable_h__

@@ -28,7 +28,6 @@
 using mozilla::layers::Layer;
 
 namespace mozilla {
-namespace css {
 
 /* static */ bool
 IsGeometricProperty(nsCSSProperty aProperty)
@@ -46,10 +45,12 @@ IsGeometricProperty(nsCSSProperty aProperty)
   }
 }
 
+namespace css {
+
 CommonAnimationManager::CommonAnimationManager(nsPresContext *aPresContext)
   : mPresContext(aPresContext)
 {
-  PR_INIT_CLIST(&mElementData);
+  PR_INIT_CLIST(&mElementCollections);
 }
 
 CommonAnimationManager::~CommonAnimationManager()
@@ -61,41 +62,42 @@ void
 CommonAnimationManager::Disconnect()
 {
   // Content nodes might outlive the transition or animation manager.
-  RemoveAllElementData();
+  RemoveAllElementCollections();
 
   mPresContext = nullptr;
 }
 
 void
-CommonAnimationManager::RemoveAllElementData()
+CommonAnimationManager::RemoveAllElementCollections()
 {
-  while (!PR_CLIST_IS_EMPTY(&mElementData)) {
-    CommonElementAnimationData *head =
-      static_cast<CommonElementAnimationData*>(PR_LIST_HEAD(&mElementData));
+  while (!PR_CLIST_IS_EMPTY(&mElementCollections)) {
+    ElementAnimationCollection* head =
+      static_cast<ElementAnimationCollection*>(
+        PR_LIST_HEAD(&mElementCollections));
     head->Destroy();
   }
 }
 
-CommonElementAnimationData*
+ElementAnimationCollection*
 CommonAnimationManager::GetAnimationsForCompositor(nsIContent* aContent,
                                                    nsIAtom* aElementProperty,
                                                    nsCSSProperty aProperty)
 {
   if (!aContent->MayHaveAnimations())
     return nullptr;
-  CommonElementAnimationData* animations =
-    static_cast<CommonElementAnimationData*>(
+  ElementAnimationCollection* collection =
+    static_cast<ElementAnimationCollection*>(
       aContent->GetProperty(aElementProperty));
-  if (!animations ||
-      !animations->HasAnimationOfProperty(aProperty) ||
-      !animations->CanPerformOnCompositorThread(
-        CommonElementAnimationData::CanAnimate_AllowPartial)) {
+  if (!collection ||
+      !collection->HasAnimationOfProperty(aProperty) ||
+      !collection->CanPerformOnCompositorThread(
+        ElementAnimationCollection::CanAnimate_AllowPartial)) {
     return nullptr;
   }
 
   // This animation can be done on the compositor.
   // Mark the frame as active, in case we are able to throttle this animation.
-  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(animations->mElement);
+  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(collection->mElement);
   if (frame) {
     if (aProperty == eCSSProperty_opacity) {
       ActiveLayerTracker::NotifyAnimated(frame, eCSSProperty_opacity);
@@ -104,7 +106,7 @@ CommonAnimationManager::GetAnimationsForCompositor(nsIContent* aContent,
     }
   }
 
-  return animations;
+  return collection;
 }
 
 /*
@@ -148,7 +150,7 @@ CommonAnimationManager::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
-  // - mElementData
+  // - mElementCollections
   //
   // The following members are not measured
   // - mPresContext, because it's non-owning
@@ -255,31 +257,31 @@ CommonAnimationManager::UpdateThrottledStyle(dom::Element* aElement,
     curRule.mLevel = ruleNode->GetLevel();
 
     if (curRule.mLevel == nsStyleSet::eAnimationSheet) {
-      CommonElementAnimationData* ea =
+      ElementAnimationCollection* collection =
         mPresContext->AnimationManager()->GetElementAnimations(
           aElement,
           oldStyle->GetPseudoType(),
           false);
-      NS_ASSERTION(ea,
+      NS_ASSERTION(collection,
         "Rule has level eAnimationSheet without animation on manager");
 
       mPresContext->AnimationManager()->UpdateStyleAndEvents(
-        ea, mPresContext->RefreshDriver()->MostRecentRefresh(),
+        collection, mPresContext->RefreshDriver()->MostRecentRefresh(),
         EnsureStyleRule_IsNotThrottled);
-      curRule.mRule = ea->mStyleRule;
+      curRule.mRule = collection->mStyleRule;
     } else if (curRule.mLevel == nsStyleSet::eTransitionSheet) {
-      CommonElementAnimationData* et =
+      ElementAnimationCollection* collection =
         mPresContext->TransitionManager()->GetElementTransitions(
           aElement,
           oldStyle->GetPseudoType(),
           false);
-      NS_ASSERTION(et,
+      NS_ASSERTION(collection,
         "Rule has level eTransitionSheet without transition on manager");
 
-      et->EnsureStyleRuleFor(
+      collection->EnsureStyleRuleFor(
         mPresContext->RefreshDriver()->MostRecentRefresh(),
         EnsureStyleRule_IsNotThrottled);
-      curRule.mRule = et->mStyleRule;
+      curRule.mRule = collection->mStyleRule;
     } else {
       curRule.mRule = ruleNode->GetRule();
     }
@@ -580,12 +582,11 @@ ElementAnimation::ActiveDuration(const AnimationTiming& aTiming)
   return aTiming.mIterationDuration.MultDouble(aTiming.mIterationCount);
 }
 
-namespace css {
-
 bool
-CommonElementAnimationData::CanAnimatePropertyOnCompositor(const dom::Element *aElement,
-                                                           nsCSSProperty aProperty,
-                                                           CanAnimateFlags aFlags)
+ElementAnimationCollection::CanAnimatePropertyOnCompositor(
+  const dom::Element *aElement,
+  nsCSSProperty aProperty,
+  CanAnimateFlags aFlags)
 {
   bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
   if (!gfxPlatform::OffMainThreadCompositingEnabled()) {
@@ -648,14 +649,15 @@ CommonElementAnimationData::CanAnimatePropertyOnCompositor(const dom::Element *a
 }
 
 /* static */ bool
-CommonElementAnimationData::IsCompositorAnimationDisabledForFrame(nsIFrame* aFrame)
+ElementAnimationCollection::IsCompositorAnimationDisabledForFrame(
+  nsIFrame* aFrame)
 {
   void* prop = aFrame->Properties().Get(nsIFrame::RefusedAsyncAnimation());
   return bool(reinterpret_cast<intptr_t>(prop));
 }
 
 bool
-CommonElementAnimationData::CanPerformOnCompositorThread(
+ElementAnimationCollection::CanPerformOnCompositorThread(
   CanAnimateFlags aFlags) const
 {
   nsIFrame* frame = nsLayoutUtils::GetStyleFrame(mElement);
@@ -721,7 +723,7 @@ CommonElementAnimationData::CanPerformOnCompositorThread(
 }
 
 bool
-CommonElementAnimationData::HasAnimationOfProperty(
+ElementAnimationCollection::HasAnimationOfProperty(
   nsCSSProperty aProperty) const
 {
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
@@ -735,7 +737,7 @@ CommonElementAnimationData::HasAnimationOfProperty(
 }
 
 /* static */ void
-CommonElementAnimationData::LogAsyncAnimationFailure(nsCString& aMessage,
+ElementAnimationCollection::LogAsyncAnimationFailure(nsCString& aMessage,
                                                      const nsIContent* aContent)
 {
   if (aContent) {
@@ -755,20 +757,20 @@ CommonElementAnimationData::LogAsyncAnimationFailure(nsCString& aMessage,
 }
 
 /*static*/ void
-CommonElementAnimationData::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
+ElementAnimationCollection::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
                                          void *aPropertyValue, void *aData)
 {
-  CommonElementAnimationData* data =
-    static_cast<CommonElementAnimationData*>(aPropertyValue);
+  ElementAnimationCollection* collection =
+    static_cast<ElementAnimationCollection*>(aPropertyValue);
 #ifdef DEBUG
-  NS_ABORT_IF_FALSE(!data->mCalledPropertyDtor, "can't call dtor twice");
-  data->mCalledPropertyDtor = true;
+  NS_ABORT_IF_FALSE(!collection->mCalledPropertyDtor, "can't call dtor twice");
+  collection->mCalledPropertyDtor = true;
 #endif
-  delete data;
+  delete collection;
 }
 
 void
-CommonElementAnimationData::EnsureStyleRuleFor(TimeStamp aRefreshTime,
+ElementAnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
                                                EnsureStyleRuleFlags aFlags)
 {
   if (!mNeedsRefreshes) {
@@ -932,7 +934,7 @@ CommonElementAnimationData::EnsureStyleRuleFor(TimeStamp aRefreshTime,
 
 
 bool
-CommonElementAnimationData::CanThrottleTransformChanges(TimeStamp aTime)
+ElementAnimationCollection::CanThrottleTransformChanges(TimeStamp aTime)
 {
   if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
     return false;
@@ -970,7 +972,7 @@ CommonElementAnimationData::CanThrottleTransformChanges(TimeStamp aTime)
 }
 
 bool
-CommonElementAnimationData::CanThrottleAnimation(TimeStamp aTime)
+ElementAnimationCollection::CanThrottleAnimation(TimeStamp aTime)
 {
   nsIFrame* frame = nsLayoutUtils::GetStyleFrame(mElement);
   if (!frame) {
@@ -1000,15 +1002,16 @@ CommonElementAnimationData::CanThrottleAnimation(TimeStamp aTime)
   return CanThrottleTransformChanges(aTime);
 }
 
-void 
-CommonElementAnimationData::UpdateAnimationGeneration(nsPresContext* aPresContext)
+void
+ElementAnimationCollection::UpdateAnimationGeneration(
+  nsPresContext* aPresContext)
 {
   mAnimationGeneration =
     aPresContext->RestyleManager()->GetAnimationGeneration();
 }
 
 bool
-CommonElementAnimationData::HasCurrentAnimationsAt(TimeStamp aTime)
+ElementAnimationCollection::HasCurrentAnimationsAt(TimeStamp aTime)
 {
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
     if (mAnimations[animIdx]->IsCurrentAt(aTime)) {
@@ -1019,5 +1022,4 @@ CommonElementAnimationData::HasCurrentAnimationsAt(TimeStamp aTime)
   return false;
 }
 
-}
 }
