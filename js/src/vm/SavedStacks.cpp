@@ -70,14 +70,13 @@ class SavedFrame::AutoLookupRooter : public JS::CustomAutoRooter
 /* static */ HashNumber
 SavedFrame::HashPolicy::hash(const Lookup &lookup)
 {
-    JSAtom *source = lookup.source;
     JS::AutoCheckCannotGC nogc;
-    uint32_t hash = source->hasLatin1Chars()
-                    ? HashString(source->latin1Chars(nogc), source->length())
-                    : HashString(source->twoByteChars(nogc), source->length());
-    return AddToHash(hash,
-                     lookup.line,
+    // Assume that we can take line mod 2^32 without losing anything of
+    // interest.  If that assumption changes, we'll just need to start with 0
+    // and add another overload of AddToHash with more arguments.
+    return AddToHash(lookup.line,
                      lookup.column,
+                     lookup.source,
                      lookup.functionDisplayName,
                      SavedFramePtrHasher::hash(lookup.parent),
                      JSPrincipalsPtrHasher::hash(lookup.principals));
@@ -99,22 +98,12 @@ SavedFrame::HashPolicy::match(SavedFrame *existing, const Lookup &lookup)
         return false;
 
     JSAtom *source = existing->getSource();
-    if (source->length() != lookup.source->length())
-        return false;
     if (source != lookup.source)
         return false;
 
     JSAtom *functionDisplayName = existing->getFunctionDisplayName();
-    if (functionDisplayName) {
-        if (!lookup.functionDisplayName)
-            return false;
-        if (functionDisplayName->length() != lookup.functionDisplayName->length())
-            return false;
-        if (0 != CompareAtoms(functionDisplayName, lookup.functionDisplayName))
-            return false;
-    } else if (lookup.functionDisplayName) {
+    if (functionDisplayName != lookup.functionDisplayName)
         return false;
-    }
 
     return true;
 }
@@ -488,23 +477,26 @@ SavedStacks::insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandleSav
     // in js/src/jit-test/tests/saved-stacks/bug-1006876-too-much-recursion.js).
     JS_CHECK_RECURSION_DONT_REPORT(cx, return false);
 
-    ScriptFrameIter thisFrame(iter);
+    RootedScript script(cx, iter.script());
+    jsbytecode *pc = iter.pc();
+    RootedFunction callee(cx, iter.maybeCallee());
+    // script and callee should keep compartment alive.
+    JSCompartment *compartment = iter.compartment();
     RootedSavedFrame parentFrame(cx);
     if (!insertFrames(cx, ++iter, &parentFrame))
         return false;
 
     LocationValue location;
-    if (!getLocation(cx, thisFrame.script(), thisFrame.pc(), &location))
+    if (!getLocation(cx, script, pc, &location))
         return false;
 
-    JSFunction *callee = thisFrame.maybeCallee();
     SavedFrame::AutoLookupRooter lookup(cx,
                                         location.source,
                                         location.line,
                                         location.column,
                                         callee ? callee->displayAtom() : nullptr,
                                         parentFrame,
-                                        thisFrame.compartment()->principals);
+                                        compartment->principals);
 
     frame.set(getOrCreateSavedFrame(cx, lookup));
     return frame.get() != nullptr;
