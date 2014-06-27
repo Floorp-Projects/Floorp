@@ -477,7 +477,9 @@ BacktrackingAllocator::tryAllocateNonFixed(LiveInterval *interval, bool *success
     }
 
     // Spill intervals which have no hint or register requirement.
-    if (interval->requirement()->kind() == Requirement::NONE) {
+    if (interval->requirement()->kind() == Requirement::NONE &&
+        interval->hint()->kind() != Requirement::REGISTER)
+    {
         spill(interval);
         *success = true;
         return true;
@@ -492,6 +494,14 @@ BacktrackingAllocator::tryAllocateNonFixed(LiveInterval *interval, bool *success
             if (*success)
                 return true;
         }
+    }
+
+    // Spill intervals which have no register requirement if they didn't get
+    // allocated.
+    if (interval->requirement()->kind() == Requirement::NONE) {
+        spill(interval);
+        *success = true;
+        return true;
     }
 
     // We failed to allocate this interval.
@@ -688,6 +698,9 @@ BacktrackingAllocator::setIntervalRequirement(LiveInterval *interval)
         } else if (policy == LUse::REGISTER) {
             if (!interval->addRequirement(Requirement(Requirement::REGISTER)))
                 return false;
+        } else if (policy == LUse::ANY) {
+            // ANY differs from KEEPALIVE by actively preferring a register.
+            interval->addHint(Requirement(Requirement::REGISTER));
         }
     }
 

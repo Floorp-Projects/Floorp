@@ -360,6 +360,11 @@ class LiveInterval
     bool addRequirement(const Requirement &newRequirement) {
         return requirement_.mergeRequirement(newRequirement);
     }
+    void addHint(const Requirement &newHint) {
+        // Unlike addRequirement, here in addHint we ignore merge failures,
+        // because these are just hints.
+        hint_.mergeRequirement(newHint);
+    }
     const Requirement *hint() const {
         return &hint_;
     }
