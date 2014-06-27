@@ -31,23 +31,17 @@ void  protobuf_AddDesc_csd_2eproto();
 void protobuf_AssignDesc_csd_2eproto();
 void protobuf_ShutdownFile_csd_2eproto();
 
-class ClientPhishingRequest;
-class ClientPhishingRequest_Feature;
-class ClientPhishingResponse;
-class ClientMalwareRequest;
-class ClientMalwareRequest_Feature;
-class ClientMalwareResponse;
 class ClientDownloadRequest;
 class ClientDownloadRequest_Digests;
 class ClientDownloadRequest_Resource;
 class ClientDownloadRequest_CertificateChain;
 class ClientDownloadRequest_CertificateChain_Element;
 class ClientDownloadRequest_SignatureInfo;
+class ClientDownloadRequest_PEImageHeaders;
+class ClientDownloadRequest_PEImageHeaders_DebugData;
+class ClientDownloadRequest_ImageHeaders;
 class ClientDownloadResponse;
 class ClientDownloadResponse_MoreInfo;
-class ClientDownloadReport;
-class ClientDownloadReport_UserInformation;
-class ClientUploadResponse;
 
 enum ClientDownloadRequest_ResourceType {
   ClientDownloadRequest_ResourceType_DOWNLOAD_URL = 0,
@@ -83,639 +77,7 @@ const ClientDownloadResponse_Verdict ClientDownloadResponse_Verdict_Verdict_MIN 
 const ClientDownloadResponse_Verdict ClientDownloadResponse_Verdict_Verdict_MAX = ClientDownloadResponse_Verdict_DANGEROUS_HOST;
 const int ClientDownloadResponse_Verdict_Verdict_ARRAYSIZE = ClientDownloadResponse_Verdict_Verdict_MAX + 1;
 
-enum ClientDownloadReport_Reason {
-  ClientDownloadReport_Reason_SHARE = 0,
-  ClientDownloadReport_Reason_FALSE_POSITIVE = 1,
-  ClientDownloadReport_Reason_APPEAL = 2
-};
-bool ClientDownloadReport_Reason_IsValid(int value);
-const ClientDownloadReport_Reason ClientDownloadReport_Reason_Reason_MIN = ClientDownloadReport_Reason_SHARE;
-const ClientDownloadReport_Reason ClientDownloadReport_Reason_Reason_MAX = ClientDownloadReport_Reason_APPEAL;
-const int ClientDownloadReport_Reason_Reason_ARRAYSIZE = ClientDownloadReport_Reason_Reason_MAX + 1;
-
-enum ClientUploadResponse_UploadStatus {
-  ClientUploadResponse_UploadStatus_SUCCESS = 0,
-  ClientUploadResponse_UploadStatus_UPLOAD_FAILURE = 1
-};
-bool ClientUploadResponse_UploadStatus_IsValid(int value);
-const ClientUploadResponse_UploadStatus ClientUploadResponse_UploadStatus_UploadStatus_MIN = ClientUploadResponse_UploadStatus_SUCCESS;
-const ClientUploadResponse_UploadStatus ClientUploadResponse_UploadStatus_UploadStatus_MAX = ClientUploadResponse_UploadStatus_UPLOAD_FAILURE;
-const int ClientUploadResponse_UploadStatus_UploadStatus_ARRAYSIZE = ClientUploadResponse_UploadStatus_UploadStatus_MAX + 1;
-
 // ===================================================================
-
-class ClientPhishingRequest_Feature : public ::google::protobuf::MessageLite {
- public:
-  ClientPhishingRequest_Feature();
-  virtual ~ClientPhishingRequest_Feature();
-  
-  ClientPhishingRequest_Feature(const ClientPhishingRequest_Feature& from);
-  
-  inline ClientPhishingRequest_Feature& operator=(const ClientPhishingRequest_Feature& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  
-  static const ClientPhishingRequest_Feature& default_instance();
-  
-  void Swap(ClientPhishingRequest_Feature* other);
-  
-  // implements Message ----------------------------------------------
-  
-  ClientPhishingRequest_Feature* New() const;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
-  void CopyFrom(const ClientPhishingRequest_Feature& from);
-  void MergeFrom(const ClientPhishingRequest_Feature& from);
-  void Clear();
-  bool IsInitialized() const;
-  
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-  
-  ::std::string GetTypeName() const;
-  
-  // nested types ----------------------------------------------------
-  
-  // accessors -------------------------------------------------------
-  
-  // required string name = 1;
-  inline bool has_name() const;
-  inline void clear_name();
-  static const int kNameFieldNumber = 1;
-  inline const ::std::string& name() const;
-  inline void set_name(const ::std::string& value);
-  inline void set_name(const char* value);
-  inline void set_name(const char* value, size_t size);
-  inline ::std::string* mutable_name();
-  inline ::std::string* release_name();
-  
-  // required double value = 2;
-  inline bool has_value() const;
-  inline void clear_value();
-  static const int kValueFieldNumber = 2;
-  inline double value() const;
-  inline void set_value(double value);
-  
-  // @@protoc_insertion_point(class_scope:safe_browsing.ClientPhishingRequest.Feature)
- private:
-  inline void set_has_name();
-  inline void clear_has_name();
-  inline void set_has_value();
-  inline void clear_has_value();
-  
-  ::std::string* name_;
-  double value_;
-  
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
-  
-  friend void  protobuf_AddDesc_csd_2eproto();
-  friend void protobuf_AssignDesc_csd_2eproto();
-  friend void protobuf_ShutdownFile_csd_2eproto();
-  
-  void InitAsDefaultInstance();
-  static ClientPhishingRequest_Feature* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class ClientPhishingRequest : public ::google::protobuf::MessageLite {
- public:
-  ClientPhishingRequest();
-  virtual ~ClientPhishingRequest();
-  
-  ClientPhishingRequest(const ClientPhishingRequest& from);
-  
-  inline ClientPhishingRequest& operator=(const ClientPhishingRequest& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  
-  static const ClientPhishingRequest& default_instance();
-  
-  void Swap(ClientPhishingRequest* other);
-  
-  // implements Message ----------------------------------------------
-  
-  ClientPhishingRequest* New() const;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
-  void CopyFrom(const ClientPhishingRequest& from);
-  void MergeFrom(const ClientPhishingRequest& from);
-  void Clear();
-  bool IsInitialized() const;
-  
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-  
-  ::std::string GetTypeName() const;
-  
-  // nested types ----------------------------------------------------
-  
-  typedef ClientPhishingRequest_Feature Feature;
-  
-  // accessors -------------------------------------------------------
-  
-  // optional string url = 1;
-  inline bool has_url() const;
-  inline void clear_url();
-  static const int kUrlFieldNumber = 1;
-  inline const ::std::string& url() const;
-  inline void set_url(const ::std::string& value);
-  inline void set_url(const char* value);
-  inline void set_url(const char* value, size_t size);
-  inline ::std::string* mutable_url();
-  inline ::std::string* release_url();
-  
-  // optional bytes OBSOLETE_hash_prefix = 10;
-  inline bool has_obsolete_hash_prefix() const;
-  inline void clear_obsolete_hash_prefix();
-  static const int kOBSOLETEHashPrefixFieldNumber = 10;
-  inline const ::std::string& obsolete_hash_prefix() const;
-  inline void set_obsolete_hash_prefix(const ::std::string& value);
-  inline void set_obsolete_hash_prefix(const char* value);
-  inline void set_obsolete_hash_prefix(const void* value, size_t size);
-  inline ::std::string* mutable_obsolete_hash_prefix();
-  inline ::std::string* release_obsolete_hash_prefix();
-  
-  // required float client_score = 2;
-  inline bool has_client_score() const;
-  inline void clear_client_score();
-  static const int kClientScoreFieldNumber = 2;
-  inline float client_score() const;
-  inline void set_client_score(float value);
-  
-  // optional bool is_phishing = 4;
-  inline bool has_is_phishing() const;
-  inline void clear_is_phishing();
-  static const int kIsPhishingFieldNumber = 4;
-  inline bool is_phishing() const;
-  inline void set_is_phishing(bool value);
-  
-  // repeated .safe_browsing.ClientPhishingRequest.Feature feature_map = 5;
-  inline int feature_map_size() const;
-  inline void clear_feature_map();
-  static const int kFeatureMapFieldNumber = 5;
-  inline const ::safe_browsing::ClientPhishingRequest_Feature& feature_map(int index) const;
-  inline ::safe_browsing::ClientPhishingRequest_Feature* mutable_feature_map(int index);
-  inline ::safe_browsing::ClientPhishingRequest_Feature* add_feature_map();
-  inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientPhishingRequest_Feature >&
-      feature_map() const;
-  inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientPhishingRequest_Feature >*
-      mutable_feature_map();
-  
-  // optional int32 model_version = 6;
-  inline bool has_model_version() const;
-  inline void clear_model_version();
-  static const int kModelVersionFieldNumber = 6;
-  inline ::google::protobuf::int32 model_version() const;
-  inline void set_model_version(::google::protobuf::int32 value);
-  
-  // repeated .safe_browsing.ClientPhishingRequest.Feature non_model_feature_map = 8;
-  inline int non_model_feature_map_size() const;
-  inline void clear_non_model_feature_map();
-  static const int kNonModelFeatureMapFieldNumber = 8;
-  inline const ::safe_browsing::ClientPhishingRequest_Feature& non_model_feature_map(int index) const;
-  inline ::safe_browsing::ClientPhishingRequest_Feature* mutable_non_model_feature_map(int index);
-  inline ::safe_browsing::ClientPhishingRequest_Feature* add_non_model_feature_map();
-  inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientPhishingRequest_Feature >&
-      non_model_feature_map() const;
-  inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientPhishingRequest_Feature >*
-      mutable_non_model_feature_map();
-  
-  // optional string OBSOLETE_referrer_url = 9;
-  inline bool has_obsolete_referrer_url() const;
-  inline void clear_obsolete_referrer_url();
-  static const int kOBSOLETEReferrerUrlFieldNumber = 9;
-  inline const ::std::string& obsolete_referrer_url() const;
-  inline void set_obsolete_referrer_url(const ::std::string& value);
-  inline void set_obsolete_referrer_url(const char* value);
-  inline void set_obsolete_referrer_url(const char* value, size_t size);
-  inline ::std::string* mutable_obsolete_referrer_url();
-  inline ::std::string* release_obsolete_referrer_url();
-  
-  // @@protoc_insertion_point(class_scope:safe_browsing.ClientPhishingRequest)
- private:
-  inline void set_has_url();
-  inline void clear_has_url();
-  inline void set_has_obsolete_hash_prefix();
-  inline void clear_has_obsolete_hash_prefix();
-  inline void set_has_client_score();
-  inline void clear_has_client_score();
-  inline void set_has_is_phishing();
-  inline void clear_has_is_phishing();
-  inline void set_has_model_version();
-  inline void clear_has_model_version();
-  inline void set_has_obsolete_referrer_url();
-  inline void clear_has_obsolete_referrer_url();
-  
-  ::std::string* url_;
-  ::std::string* obsolete_hash_prefix_;
-  float client_score_;
-  bool is_phishing_;
-  ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientPhishingRequest_Feature > feature_map_;
-  ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientPhishingRequest_Feature > non_model_feature_map_;
-  ::std::string* obsolete_referrer_url_;
-  ::google::protobuf::int32 model_version_;
-  
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
-  
-  friend void  protobuf_AddDesc_csd_2eproto();
-  friend void protobuf_AssignDesc_csd_2eproto();
-  friend void protobuf_ShutdownFile_csd_2eproto();
-  
-  void InitAsDefaultInstance();
-  static ClientPhishingRequest* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class ClientPhishingResponse : public ::google::protobuf::MessageLite {
- public:
-  ClientPhishingResponse();
-  virtual ~ClientPhishingResponse();
-  
-  ClientPhishingResponse(const ClientPhishingResponse& from);
-  
-  inline ClientPhishingResponse& operator=(const ClientPhishingResponse& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  
-  static const ClientPhishingResponse& default_instance();
-  
-  void Swap(ClientPhishingResponse* other);
-  
-  // implements Message ----------------------------------------------
-  
-  ClientPhishingResponse* New() const;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
-  void CopyFrom(const ClientPhishingResponse& from);
-  void MergeFrom(const ClientPhishingResponse& from);
-  void Clear();
-  bool IsInitialized() const;
-  
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-  
-  ::std::string GetTypeName() const;
-  
-  // nested types ----------------------------------------------------
-  
-  // accessors -------------------------------------------------------
-  
-  // required bool phishy = 1;
-  inline bool has_phishy() const;
-  inline void clear_phishy();
-  static const int kPhishyFieldNumber = 1;
-  inline bool phishy() const;
-  inline void set_phishy(bool value);
-  
-  // repeated string OBSOLETE_whitelist_expression = 2;
-  inline int obsolete_whitelist_expression_size() const;
-  inline void clear_obsolete_whitelist_expression();
-  static const int kOBSOLETEWhitelistExpressionFieldNumber = 2;
-  inline const ::std::string& obsolete_whitelist_expression(int index) const;
-  inline ::std::string* mutable_obsolete_whitelist_expression(int index);
-  inline void set_obsolete_whitelist_expression(int index, const ::std::string& value);
-  inline void set_obsolete_whitelist_expression(int index, const char* value);
-  inline void set_obsolete_whitelist_expression(int index, const char* value, size_t size);
-  inline ::std::string* add_obsolete_whitelist_expression();
-  inline void add_obsolete_whitelist_expression(const ::std::string& value);
-  inline void add_obsolete_whitelist_expression(const char* value);
-  inline void add_obsolete_whitelist_expression(const char* value, size_t size);
-  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& obsolete_whitelist_expression() const;
-  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_obsolete_whitelist_expression();
-  
-  // @@protoc_insertion_point(class_scope:safe_browsing.ClientPhishingResponse)
- private:
-  inline void set_has_phishy();
-  inline void clear_has_phishy();
-  
-  ::google::protobuf::RepeatedPtrField< ::std::string> obsolete_whitelist_expression_;
-  bool phishy_;
-  
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
-  
-  friend void  protobuf_AddDesc_csd_2eproto();
-  friend void protobuf_AssignDesc_csd_2eproto();
-  friend void protobuf_ShutdownFile_csd_2eproto();
-  
-  void InitAsDefaultInstance();
-  static ClientPhishingResponse* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class ClientMalwareRequest_Feature : public ::google::protobuf::MessageLite {
- public:
-  ClientMalwareRequest_Feature();
-  virtual ~ClientMalwareRequest_Feature();
-  
-  ClientMalwareRequest_Feature(const ClientMalwareRequest_Feature& from);
-  
-  inline ClientMalwareRequest_Feature& operator=(const ClientMalwareRequest_Feature& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  
-  static const ClientMalwareRequest_Feature& default_instance();
-  
-  void Swap(ClientMalwareRequest_Feature* other);
-  
-  // implements Message ----------------------------------------------
-  
-  ClientMalwareRequest_Feature* New() const;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
-  void CopyFrom(const ClientMalwareRequest_Feature& from);
-  void MergeFrom(const ClientMalwareRequest_Feature& from);
-  void Clear();
-  bool IsInitialized() const;
-  
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-  
-  ::std::string GetTypeName() const;
-  
-  // nested types ----------------------------------------------------
-  
-  // accessors -------------------------------------------------------
-  
-  // required string name = 1;
-  inline bool has_name() const;
-  inline void clear_name();
-  static const int kNameFieldNumber = 1;
-  inline const ::std::string& name() const;
-  inline void set_name(const ::std::string& value);
-  inline void set_name(const char* value);
-  inline void set_name(const char* value, size_t size);
-  inline ::std::string* mutable_name();
-  inline ::std::string* release_name();
-  
-  // required double value = 2;
-  inline bool has_value() const;
-  inline void clear_value();
-  static const int kValueFieldNumber = 2;
-  inline double value() const;
-  inline void set_value(double value);
-  
-  // repeated string metainfo = 3;
-  inline int metainfo_size() const;
-  inline void clear_metainfo();
-  static const int kMetainfoFieldNumber = 3;
-  inline const ::std::string& metainfo(int index) const;
-  inline ::std::string* mutable_metainfo(int index);
-  inline void set_metainfo(int index, const ::std::string& value);
-  inline void set_metainfo(int index, const char* value);
-  inline void set_metainfo(int index, const char* value, size_t size);
-  inline ::std::string* add_metainfo();
-  inline void add_metainfo(const ::std::string& value);
-  inline void add_metainfo(const char* value);
-  inline void add_metainfo(const char* value, size_t size);
-  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& metainfo() const;
-  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_metainfo();
-  
-  // @@protoc_insertion_point(class_scope:safe_browsing.ClientMalwareRequest.Feature)
- private:
-  inline void set_has_name();
-  inline void clear_has_name();
-  inline void set_has_value();
-  inline void clear_has_value();
-  
-  ::std::string* name_;
-  double value_;
-  ::google::protobuf::RepeatedPtrField< ::std::string> metainfo_;
-  
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
-  
-  friend void  protobuf_AddDesc_csd_2eproto();
-  friend void protobuf_AssignDesc_csd_2eproto();
-  friend void protobuf_ShutdownFile_csd_2eproto();
-  
-  void InitAsDefaultInstance();
-  static ClientMalwareRequest_Feature* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class ClientMalwareRequest : public ::google::protobuf::MessageLite {
- public:
-  ClientMalwareRequest();
-  virtual ~ClientMalwareRequest();
-  
-  ClientMalwareRequest(const ClientMalwareRequest& from);
-  
-  inline ClientMalwareRequest& operator=(const ClientMalwareRequest& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  
-  static const ClientMalwareRequest& default_instance();
-  
-  void Swap(ClientMalwareRequest* other);
-  
-  // implements Message ----------------------------------------------
-  
-  ClientMalwareRequest* New() const;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
-  void CopyFrom(const ClientMalwareRequest& from);
-  void MergeFrom(const ClientMalwareRequest& from);
-  void Clear();
-  bool IsInitialized() const;
-  
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-  
-  ::std::string GetTypeName() const;
-  
-  // nested types ----------------------------------------------------
-  
-  typedef ClientMalwareRequest_Feature Feature;
-  
-  // accessors -------------------------------------------------------
-  
-  // required string url = 1;
-  inline bool has_url() const;
-  inline void clear_url();
-  static const int kUrlFieldNumber = 1;
-  inline const ::std::string& url() const;
-  inline void set_url(const ::std::string& value);
-  inline void set_url(const char* value);
-  inline void set_url(const char* value, size_t size);
-  inline ::std::string* mutable_url();
-  inline ::std::string* release_url();
-  
-  // repeated .safe_browsing.ClientMalwareRequest.Feature feature_map = 2;
-  inline int feature_map_size() const;
-  inline void clear_feature_map();
-  static const int kFeatureMapFieldNumber = 2;
-  inline const ::safe_browsing::ClientMalwareRequest_Feature& feature_map(int index) const;
-  inline ::safe_browsing::ClientMalwareRequest_Feature* mutable_feature_map(int index);
-  inline ::safe_browsing::ClientMalwareRequest_Feature* add_feature_map();
-  inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientMalwareRequest_Feature >&
-      feature_map() const;
-  inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientMalwareRequest_Feature >*
-      mutable_feature_map();
-  
-  // optional string referrer_url = 4;
-  inline bool has_referrer_url() const;
-  inline void clear_referrer_url();
-  static const int kReferrerUrlFieldNumber = 4;
-  inline const ::std::string& referrer_url() const;
-  inline void set_referrer_url(const ::std::string& value);
-  inline void set_referrer_url(const char* value);
-  inline void set_referrer_url(const char* value, size_t size);
-  inline ::std::string* mutable_referrer_url();
-  inline ::std::string* release_referrer_url();
-  
-  // @@protoc_insertion_point(class_scope:safe_browsing.ClientMalwareRequest)
- private:
-  inline void set_has_url();
-  inline void clear_has_url();
-  inline void set_has_referrer_url();
-  inline void clear_has_referrer_url();
-  
-  ::std::string* url_;
-  ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientMalwareRequest_Feature > feature_map_;
-  ::std::string* referrer_url_;
-  
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
-  
-  friend void  protobuf_AddDesc_csd_2eproto();
-  friend void protobuf_AssignDesc_csd_2eproto();
-  friend void protobuf_ShutdownFile_csd_2eproto();
-  
-  void InitAsDefaultInstance();
-  static ClientMalwareRequest* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class ClientMalwareResponse : public ::google::protobuf::MessageLite {
- public:
-  ClientMalwareResponse();
-  virtual ~ClientMalwareResponse();
-  
-  ClientMalwareResponse(const ClientMalwareResponse& from);
-  
-  inline ClientMalwareResponse& operator=(const ClientMalwareResponse& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  
-  static const ClientMalwareResponse& default_instance();
-  
-  void Swap(ClientMalwareResponse* other);
-  
-  // implements Message ----------------------------------------------
-  
-  ClientMalwareResponse* New() const;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
-  void CopyFrom(const ClientMalwareResponse& from);
-  void MergeFrom(const ClientMalwareResponse& from);
-  void Clear();
-  bool IsInitialized() const;
-  
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-  
-  ::std::string GetTypeName() const;
-  
-  // nested types ----------------------------------------------------
-  
-  // accessors -------------------------------------------------------
-  
-  // required bool blacklist = 1;
-  inline bool has_blacklist() const;
-  inline void clear_blacklist();
-  static const int kBlacklistFieldNumber = 1;
-  inline bool blacklist() const;
-  inline void set_blacklist(bool value);
-  
-  // optional string bad_ip = 2;
-  inline bool has_bad_ip() const;
-  inline void clear_bad_ip();
-  static const int kBadIpFieldNumber = 2;
-  inline const ::std::string& bad_ip() const;
-  inline void set_bad_ip(const ::std::string& value);
-  inline void set_bad_ip(const char* value);
-  inline void set_bad_ip(const char* value, size_t size);
-  inline ::std::string* mutable_bad_ip();
-  inline ::std::string* release_bad_ip();
-  
-  // @@protoc_insertion_point(class_scope:safe_browsing.ClientMalwareResponse)
- private:
-  inline void set_has_blacklist();
-  inline void clear_has_blacklist();
-  inline void set_has_bad_ip();
-  inline void clear_has_bad_ip();
-  
-  ::std::string* bad_ip_;
-  bool blacklist_;
-  
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
-  
-  friend void  protobuf_AddDesc_csd_2eproto();
-  friend void protobuf_AssignDesc_csd_2eproto();
-  friend void protobuf_ShutdownFile_csd_2eproto();
-  
-  void InitAsDefaultInstance();
-  static ClientMalwareResponse* default_instance_;
-};
-// -------------------------------------------------------------------
 
 class ClientDownloadRequest_Digests : public ::google::protobuf::MessageLite {
  public:
@@ -1158,6 +520,324 @@ class ClientDownloadRequest_SignatureInfo : public ::google::protobuf::MessageLi
 };
 // -------------------------------------------------------------------
 
+class ClientDownloadRequest_PEImageHeaders_DebugData : public ::google::protobuf::MessageLite {
+ public:
+  ClientDownloadRequest_PEImageHeaders_DebugData();
+  virtual ~ClientDownloadRequest_PEImageHeaders_DebugData();
+  
+  ClientDownloadRequest_PEImageHeaders_DebugData(const ClientDownloadRequest_PEImageHeaders_DebugData& from);
+  
+  inline ClientDownloadRequest_PEImageHeaders_DebugData& operator=(const ClientDownloadRequest_PEImageHeaders_DebugData& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  
+  static const ClientDownloadRequest_PEImageHeaders_DebugData& default_instance();
+  
+  void Swap(ClientDownloadRequest_PEImageHeaders_DebugData* other);
+  
+  // implements Message ----------------------------------------------
+  
+  ClientDownloadRequest_PEImageHeaders_DebugData* New() const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const ClientDownloadRequest_PEImageHeaders_DebugData& from);
+  void MergeFrom(const ClientDownloadRequest_PEImageHeaders_DebugData& from);
+  void Clear();
+  bool IsInitialized() const;
+  
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  
+  ::std::string GetTypeName() const;
+  
+  // nested types ----------------------------------------------------
+  
+  // accessors -------------------------------------------------------
+  
+  // optional bytes directory_entry = 1;
+  inline bool has_directory_entry() const;
+  inline void clear_directory_entry();
+  static const int kDirectoryEntryFieldNumber = 1;
+  inline const ::std::string& directory_entry() const;
+  inline void set_directory_entry(const ::std::string& value);
+  inline void set_directory_entry(const char* value);
+  inline void set_directory_entry(const void* value, size_t size);
+  inline ::std::string* mutable_directory_entry();
+  inline ::std::string* release_directory_entry();
+  
+  // optional bytes raw_data = 2;
+  inline bool has_raw_data() const;
+  inline void clear_raw_data();
+  static const int kRawDataFieldNumber = 2;
+  inline const ::std::string& raw_data() const;
+  inline void set_raw_data(const ::std::string& value);
+  inline void set_raw_data(const char* value);
+  inline void set_raw_data(const void* value, size_t size);
+  inline ::std::string* mutable_raw_data();
+  inline ::std::string* release_raw_data();
+  
+  // @@protoc_insertion_point(class_scope:safe_browsing.ClientDownloadRequest.PEImageHeaders.DebugData)
+ private:
+  inline void set_has_directory_entry();
+  inline void clear_has_directory_entry();
+  inline void set_has_raw_data();
+  inline void clear_has_raw_data();
+  
+  ::std::string* directory_entry_;
+  ::std::string* raw_data_;
+  
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+  
+  friend void  protobuf_AddDesc_csd_2eproto();
+  friend void protobuf_AssignDesc_csd_2eproto();
+  friend void protobuf_ShutdownFile_csd_2eproto();
+  
+  void InitAsDefaultInstance();
+  static ClientDownloadRequest_PEImageHeaders_DebugData* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class ClientDownloadRequest_PEImageHeaders : public ::google::protobuf::MessageLite {
+ public:
+  ClientDownloadRequest_PEImageHeaders();
+  virtual ~ClientDownloadRequest_PEImageHeaders();
+  
+  ClientDownloadRequest_PEImageHeaders(const ClientDownloadRequest_PEImageHeaders& from);
+  
+  inline ClientDownloadRequest_PEImageHeaders& operator=(const ClientDownloadRequest_PEImageHeaders& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  
+  static const ClientDownloadRequest_PEImageHeaders& default_instance();
+  
+  void Swap(ClientDownloadRequest_PEImageHeaders* other);
+  
+  // implements Message ----------------------------------------------
+  
+  ClientDownloadRequest_PEImageHeaders* New() const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const ClientDownloadRequest_PEImageHeaders& from);
+  void MergeFrom(const ClientDownloadRequest_PEImageHeaders& from);
+  void Clear();
+  bool IsInitialized() const;
+  
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  
+  ::std::string GetTypeName() const;
+  
+  // nested types ----------------------------------------------------
+  
+  typedef ClientDownloadRequest_PEImageHeaders_DebugData DebugData;
+  
+  // accessors -------------------------------------------------------
+  
+  // optional bytes dos_header = 1;
+  inline bool has_dos_header() const;
+  inline void clear_dos_header();
+  static const int kDosHeaderFieldNumber = 1;
+  inline const ::std::string& dos_header() const;
+  inline void set_dos_header(const ::std::string& value);
+  inline void set_dos_header(const char* value);
+  inline void set_dos_header(const void* value, size_t size);
+  inline ::std::string* mutable_dos_header();
+  inline ::std::string* release_dos_header();
+  
+  // optional bytes file_header = 2;
+  inline bool has_file_header() const;
+  inline void clear_file_header();
+  static const int kFileHeaderFieldNumber = 2;
+  inline const ::std::string& file_header() const;
+  inline void set_file_header(const ::std::string& value);
+  inline void set_file_header(const char* value);
+  inline void set_file_header(const void* value, size_t size);
+  inline ::std::string* mutable_file_header();
+  inline ::std::string* release_file_header();
+  
+  // optional bytes optional_headers32 = 3;
+  inline bool has_optional_headers32() const;
+  inline void clear_optional_headers32();
+  static const int kOptionalHeaders32FieldNumber = 3;
+  inline const ::std::string& optional_headers32() const;
+  inline void set_optional_headers32(const ::std::string& value);
+  inline void set_optional_headers32(const char* value);
+  inline void set_optional_headers32(const void* value, size_t size);
+  inline ::std::string* mutable_optional_headers32();
+  inline ::std::string* release_optional_headers32();
+  
+  // optional bytes optional_headers64 = 4;
+  inline bool has_optional_headers64() const;
+  inline void clear_optional_headers64();
+  static const int kOptionalHeaders64FieldNumber = 4;
+  inline const ::std::string& optional_headers64() const;
+  inline void set_optional_headers64(const ::std::string& value);
+  inline void set_optional_headers64(const char* value);
+  inline void set_optional_headers64(const void* value, size_t size);
+  inline ::std::string* mutable_optional_headers64();
+  inline ::std::string* release_optional_headers64();
+  
+  // repeated bytes section_header = 5;
+  inline int section_header_size() const;
+  inline void clear_section_header();
+  static const int kSectionHeaderFieldNumber = 5;
+  inline const ::std::string& section_header(int index) const;
+  inline ::std::string* mutable_section_header(int index);
+  inline void set_section_header(int index, const ::std::string& value);
+  inline void set_section_header(int index, const char* value);
+  inline void set_section_header(int index, const void* value, size_t size);
+  inline ::std::string* add_section_header();
+  inline void add_section_header(const ::std::string& value);
+  inline void add_section_header(const char* value);
+  inline void add_section_header(const void* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& section_header() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_section_header();
+  
+  // optional bytes export_section_data = 6;
+  inline bool has_export_section_data() const;
+  inline void clear_export_section_data();
+  static const int kExportSectionDataFieldNumber = 6;
+  inline const ::std::string& export_section_data() const;
+  inline void set_export_section_data(const ::std::string& value);
+  inline void set_export_section_data(const char* value);
+  inline void set_export_section_data(const void* value, size_t size);
+  inline ::std::string* mutable_export_section_data();
+  inline ::std::string* release_export_section_data();
+  
+  // repeated .safe_browsing.ClientDownloadRequest.PEImageHeaders.DebugData debug_data = 7;
+  inline int debug_data_size() const;
+  inline void clear_debug_data();
+  static const int kDebugDataFieldNumber = 7;
+  inline const ::safe_browsing::ClientDownloadRequest_PEImageHeaders_DebugData& debug_data(int index) const;
+  inline ::safe_browsing::ClientDownloadRequest_PEImageHeaders_DebugData* mutable_debug_data(int index);
+  inline ::safe_browsing::ClientDownloadRequest_PEImageHeaders_DebugData* add_debug_data();
+  inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_PEImageHeaders_DebugData >&
+      debug_data() const;
+  inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_PEImageHeaders_DebugData >*
+      mutable_debug_data();
+  
+  // @@protoc_insertion_point(class_scope:safe_browsing.ClientDownloadRequest.PEImageHeaders)
+ private:
+  inline void set_has_dos_header();
+  inline void clear_has_dos_header();
+  inline void set_has_file_header();
+  inline void clear_has_file_header();
+  inline void set_has_optional_headers32();
+  inline void clear_has_optional_headers32();
+  inline void set_has_optional_headers64();
+  inline void clear_has_optional_headers64();
+  inline void set_has_export_section_data();
+  inline void clear_has_export_section_data();
+  
+  ::std::string* dos_header_;
+  ::std::string* file_header_;
+  ::std::string* optional_headers32_;
+  ::std::string* optional_headers64_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> section_header_;
+  ::std::string* export_section_data_;
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_PEImageHeaders_DebugData > debug_data_;
+  
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+  
+  friend void  protobuf_AddDesc_csd_2eproto();
+  friend void protobuf_AssignDesc_csd_2eproto();
+  friend void protobuf_ShutdownFile_csd_2eproto();
+  
+  void InitAsDefaultInstance();
+  static ClientDownloadRequest_PEImageHeaders* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class ClientDownloadRequest_ImageHeaders : public ::google::protobuf::MessageLite {
+ public:
+  ClientDownloadRequest_ImageHeaders();
+  virtual ~ClientDownloadRequest_ImageHeaders();
+  
+  ClientDownloadRequest_ImageHeaders(const ClientDownloadRequest_ImageHeaders& from);
+  
+  inline ClientDownloadRequest_ImageHeaders& operator=(const ClientDownloadRequest_ImageHeaders& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  
+  static const ClientDownloadRequest_ImageHeaders& default_instance();
+  
+  void Swap(ClientDownloadRequest_ImageHeaders* other);
+  
+  // implements Message ----------------------------------------------
+  
+  ClientDownloadRequest_ImageHeaders* New() const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const ClientDownloadRequest_ImageHeaders& from);
+  void MergeFrom(const ClientDownloadRequest_ImageHeaders& from);
+  void Clear();
+  bool IsInitialized() const;
+  
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  
+  ::std::string GetTypeName() const;
+  
+  // nested types ----------------------------------------------------
+  
+  // accessors -------------------------------------------------------
+  
+  // optional .safe_browsing.ClientDownloadRequest.PEImageHeaders pe_headers = 1;
+  inline bool has_pe_headers() const;
+  inline void clear_pe_headers();
+  static const int kPeHeadersFieldNumber = 1;
+  inline const ::safe_browsing::ClientDownloadRequest_PEImageHeaders& pe_headers() const;
+  inline ::safe_browsing::ClientDownloadRequest_PEImageHeaders* mutable_pe_headers();
+  inline ::safe_browsing::ClientDownloadRequest_PEImageHeaders* release_pe_headers();
+  
+  // @@protoc_insertion_point(class_scope:safe_browsing.ClientDownloadRequest.ImageHeaders)
+ private:
+  inline void set_has_pe_headers();
+  inline void clear_has_pe_headers();
+  
+  ::safe_browsing::ClientDownloadRequest_PEImageHeaders* pe_headers_;
+  
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+  
+  friend void  protobuf_AddDesc_csd_2eproto();
+  friend void protobuf_AssignDesc_csd_2eproto();
+  friend void protobuf_ShutdownFile_csd_2eproto();
+  
+  void InitAsDefaultInstance();
+  static ClientDownloadRequest_ImageHeaders* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class ClientDownloadRequest : public ::google::protobuf::MessageLite {
  public:
   ClientDownloadRequest();
@@ -1203,6 +883,8 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite {
   typedef ClientDownloadRequest_Resource Resource;
   typedef ClientDownloadRequest_CertificateChain CertificateChain;
   typedef ClientDownloadRequest_SignatureInfo SignatureInfo;
+  typedef ClientDownloadRequest_PEImageHeaders PEImageHeaders;
+  typedef ClientDownloadRequest_ImageHeaders ImageHeaders;
   
   typedef ClientDownloadRequest_ResourceType ResourceType;
   static const ResourceType DOWNLOAD_URL = ClientDownloadRequest_ResourceType_DOWNLOAD_URL;
@@ -1318,6 +1000,14 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite {
   inline ::std::string* mutable_locale();
   inline ::std::string* release_locale();
   
+  // optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 18;
+  inline bool has_image_headers() const;
+  inline void clear_image_headers();
+  static const int kImageHeadersFieldNumber = 18;
+  inline const ::safe_browsing::ClientDownloadRequest_ImageHeaders& image_headers() const;
+  inline ::safe_browsing::ClientDownloadRequest_ImageHeaders* mutable_image_headers();
+  inline ::safe_browsing::ClientDownloadRequest_ImageHeaders* release_image_headers();
+  
   // @@protoc_insertion_point(class_scope:safe_browsing.ClientDownloadRequest)
  private:
   inline void set_has_url();
@@ -1336,6 +1026,8 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite {
   inline void clear_has_download_type();
   inline void set_has_locale();
   inline void clear_has_locale();
+  inline void set_has_image_headers();
+  inline void clear_has_image_headers();
   
   ::std::string* url_;
   ::safe_browsing::ClientDownloadRequest_Digests* digests_;
@@ -1346,9 +1038,10 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite {
   bool user_initiated_;
   int download_type_;
   ::std::string* locale_;
+  ::safe_browsing::ClientDownloadRequest_ImageHeaders* image_headers_;
   
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(10 + 31) / 32];
   
   friend void  protobuf_AddDesc_csd_2eproto();
   friend void protobuf_AssignDesc_csd_2eproto();
@@ -1556,1116 +1249,10 @@ class ClientDownloadResponse : public ::google::protobuf::MessageLite {
   void InitAsDefaultInstance();
   static ClientDownloadResponse* default_instance_;
 };
-// -------------------------------------------------------------------
-
-class ClientDownloadReport_UserInformation : public ::google::protobuf::MessageLite {
- public:
-  ClientDownloadReport_UserInformation();
-  virtual ~ClientDownloadReport_UserInformation();
-  
-  ClientDownloadReport_UserInformation(const ClientDownloadReport_UserInformation& from);
-  
-  inline ClientDownloadReport_UserInformation& operator=(const ClientDownloadReport_UserInformation& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  
-  static const ClientDownloadReport_UserInformation& default_instance();
-  
-  void Swap(ClientDownloadReport_UserInformation* other);
-  
-  // implements Message ----------------------------------------------
-  
-  ClientDownloadReport_UserInformation* New() const;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
-  void CopyFrom(const ClientDownloadReport_UserInformation& from);
-  void MergeFrom(const ClientDownloadReport_UserInformation& from);
-  void Clear();
-  bool IsInitialized() const;
-  
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-  
-  ::std::string GetTypeName() const;
-  
-  // nested types ----------------------------------------------------
-  
-  // accessors -------------------------------------------------------
-  
-  // optional string email = 1;
-  inline bool has_email() const;
-  inline void clear_email();
-  static const int kEmailFieldNumber = 1;
-  inline const ::std::string& email() const;
-  inline void set_email(const ::std::string& value);
-  inline void set_email(const char* value);
-  inline void set_email(const char* value, size_t size);
-  inline ::std::string* mutable_email();
-  inline ::std::string* release_email();
-  
-  // @@protoc_insertion_point(class_scope:safe_browsing.ClientDownloadReport.UserInformation)
- private:
-  inline void set_has_email();
-  inline void clear_has_email();
-  
-  ::std::string* email_;
-  
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
-  
-  friend void  protobuf_AddDesc_csd_2eproto();
-  friend void protobuf_AssignDesc_csd_2eproto();
-  friend void protobuf_ShutdownFile_csd_2eproto();
-  
-  void InitAsDefaultInstance();
-  static ClientDownloadReport_UserInformation* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class ClientDownloadReport : public ::google::protobuf::MessageLite {
- public:
-  ClientDownloadReport();
-  virtual ~ClientDownloadReport();
-  
-  ClientDownloadReport(const ClientDownloadReport& from);
-  
-  inline ClientDownloadReport& operator=(const ClientDownloadReport& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  
-  static const ClientDownloadReport& default_instance();
-  
-  void Swap(ClientDownloadReport* other);
-  
-  // implements Message ----------------------------------------------
-  
-  ClientDownloadReport* New() const;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
-  void CopyFrom(const ClientDownloadReport& from);
-  void MergeFrom(const ClientDownloadReport& from);
-  void Clear();
-  bool IsInitialized() const;
-  
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-  
-  ::std::string GetTypeName() const;
-  
-  // nested types ----------------------------------------------------
-  
-  typedef ClientDownloadReport_UserInformation UserInformation;
-  
-  typedef ClientDownloadReport_Reason Reason;
-  static const Reason SHARE = ClientDownloadReport_Reason_SHARE;
-  static const Reason FALSE_POSITIVE = ClientDownloadReport_Reason_FALSE_POSITIVE;
-  static const Reason APPEAL = ClientDownloadReport_Reason_APPEAL;
-  static inline bool Reason_IsValid(int value) {
-    return ClientDownloadReport_Reason_IsValid(value);
-  }
-  static const Reason Reason_MIN =
-    ClientDownloadReport_Reason_Reason_MIN;
-  static const Reason Reason_MAX =
-    ClientDownloadReport_Reason_Reason_MAX;
-  static const int Reason_ARRAYSIZE =
-    ClientDownloadReport_Reason_Reason_ARRAYSIZE;
-  
-  // accessors -------------------------------------------------------
-  
-  // optional .safe_browsing.ClientDownloadReport.Reason reason = 1;
-  inline bool has_reason() const;
-  inline void clear_reason();
-  static const int kReasonFieldNumber = 1;
-  inline ::safe_browsing::ClientDownloadReport_Reason reason() const;
-  inline void set_reason(::safe_browsing::ClientDownloadReport_Reason value);
-  
-  // optional .safe_browsing.ClientDownloadRequest download_request = 2;
-  inline bool has_download_request() const;
-  inline void clear_download_request();
-  static const int kDownloadRequestFieldNumber = 2;
-  inline const ::safe_browsing::ClientDownloadRequest& download_request() const;
-  inline ::safe_browsing::ClientDownloadRequest* mutable_download_request();
-  inline ::safe_browsing::ClientDownloadRequest* release_download_request();
-  
-  // optional .safe_browsing.ClientDownloadReport.UserInformation user_information = 3;
-  inline bool has_user_information() const;
-  inline void clear_user_information();
-  static const int kUserInformationFieldNumber = 3;
-  inline const ::safe_browsing::ClientDownloadReport_UserInformation& user_information() const;
-  inline ::safe_browsing::ClientDownloadReport_UserInformation* mutable_user_information();
-  inline ::safe_browsing::ClientDownloadReport_UserInformation* release_user_information();
-  
-  // optional bytes comment = 4;
-  inline bool has_comment() const;
-  inline void clear_comment();
-  static const int kCommentFieldNumber = 4;
-  inline const ::std::string& comment() const;
-  inline void set_comment(const ::std::string& value);
-  inline void set_comment(const char* value);
-  inline void set_comment(const void* value, size_t size);
-  inline ::std::string* mutable_comment();
-  inline ::std::string* release_comment();
-  
-  // optional .safe_browsing.ClientDownloadResponse download_response = 5;
-  inline bool has_download_response() const;
-  inline void clear_download_response();
-  static const int kDownloadResponseFieldNumber = 5;
-  inline const ::safe_browsing::ClientDownloadResponse& download_response() const;
-  inline ::safe_browsing::ClientDownloadResponse* mutable_download_response();
-  inline ::safe_browsing::ClientDownloadResponse* release_download_response();
-  
-  // @@protoc_insertion_point(class_scope:safe_browsing.ClientDownloadReport)
- private:
-  inline void set_has_reason();
-  inline void clear_has_reason();
-  inline void set_has_download_request();
-  inline void clear_has_download_request();
-  inline void set_has_user_information();
-  inline void clear_has_user_information();
-  inline void set_has_comment();
-  inline void clear_has_comment();
-  inline void set_has_download_response();
-  inline void clear_has_download_response();
-  
-  ::safe_browsing::ClientDownloadRequest* download_request_;
-  ::safe_browsing::ClientDownloadReport_UserInformation* user_information_;
-  ::std::string* comment_;
-  ::safe_browsing::ClientDownloadResponse* download_response_;
-  int reason_;
-  
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
-  
-  friend void  protobuf_AddDesc_csd_2eproto();
-  friend void protobuf_AssignDesc_csd_2eproto();
-  friend void protobuf_ShutdownFile_csd_2eproto();
-  
-  void InitAsDefaultInstance();
-  static ClientDownloadReport* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class ClientUploadResponse : public ::google::protobuf::MessageLite {
- public:
-  ClientUploadResponse();
-  virtual ~ClientUploadResponse();
-  
-  ClientUploadResponse(const ClientUploadResponse& from);
-  
-  inline ClientUploadResponse& operator=(const ClientUploadResponse& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  
-  static const ClientUploadResponse& default_instance();
-  
-  void Swap(ClientUploadResponse* other);
-  
-  // implements Message ----------------------------------------------
-  
-  ClientUploadResponse* New() const;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
-  void CopyFrom(const ClientUploadResponse& from);
-  void MergeFrom(const ClientUploadResponse& from);
-  void Clear();
-  bool IsInitialized() const;
-  
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-  
-  ::std::string GetTypeName() const;
-  
-  // nested types ----------------------------------------------------
-  
-  typedef ClientUploadResponse_UploadStatus UploadStatus;
-  static const UploadStatus SUCCESS = ClientUploadResponse_UploadStatus_SUCCESS;
-  static const UploadStatus UPLOAD_FAILURE = ClientUploadResponse_UploadStatus_UPLOAD_FAILURE;
-  static inline bool UploadStatus_IsValid(int value) {
-    return ClientUploadResponse_UploadStatus_IsValid(value);
-  }
-  static const UploadStatus UploadStatus_MIN =
-    ClientUploadResponse_UploadStatus_UploadStatus_MIN;
-  static const UploadStatus UploadStatus_MAX =
-    ClientUploadResponse_UploadStatus_UploadStatus_MAX;
-  static const int UploadStatus_ARRAYSIZE =
-    ClientUploadResponse_UploadStatus_UploadStatus_ARRAYSIZE;
-  
-  // accessors -------------------------------------------------------
-  
-  // optional .safe_browsing.ClientUploadResponse.UploadStatus status = 1;
-  inline bool has_status() const;
-  inline void clear_status();
-  static const int kStatusFieldNumber = 1;
-  inline ::safe_browsing::ClientUploadResponse_UploadStatus status() const;
-  inline void set_status(::safe_browsing::ClientUploadResponse_UploadStatus value);
-  
-  // optional string permalink = 2;
-  inline bool has_permalink() const;
-  inline void clear_permalink();
-  static const int kPermalinkFieldNumber = 2;
-  inline const ::std::string& permalink() const;
-  inline void set_permalink(const ::std::string& value);
-  inline void set_permalink(const char* value);
-  inline void set_permalink(const char* value, size_t size);
-  inline ::std::string* mutable_permalink();
-  inline ::std::string* release_permalink();
-  
-  // @@protoc_insertion_point(class_scope:safe_browsing.ClientUploadResponse)
- private:
-  inline void set_has_status();
-  inline void clear_has_status();
-  inline void set_has_permalink();
-  inline void clear_has_permalink();
-  
-  ::std::string* permalink_;
-  int status_;
-  
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
-  
-  friend void  protobuf_AddDesc_csd_2eproto();
-  friend void protobuf_AssignDesc_csd_2eproto();
-  friend void protobuf_ShutdownFile_csd_2eproto();
-  
-  void InitAsDefaultInstance();
-  static ClientUploadResponse* default_instance_;
-};
 // ===================================================================
 
 
 // ===================================================================
-
-// ClientPhishingRequest_Feature
-
-// required string name = 1;
-inline bool ClientPhishingRequest_Feature::has_name() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void ClientPhishingRequest_Feature::set_has_name() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void ClientPhishingRequest_Feature::clear_has_name() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void ClientPhishingRequest_Feature::clear_name() {
-  if (name_ != &::google::protobuf::internal::kEmptyString) {
-    name_->clear();
-  }
-  clear_has_name();
-}
-inline const ::std::string& ClientPhishingRequest_Feature::name() const {
-  return *name_;
-}
-inline void ClientPhishingRequest_Feature::set_name(const ::std::string& value) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(value);
-}
-inline void ClientPhishingRequest_Feature::set_name(const char* value) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(value);
-}
-inline void ClientPhishingRequest_Feature::set_name(const char* value, size_t size) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* ClientPhishingRequest_Feature::mutable_name() {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  return name_;
-}
-inline ::std::string* ClientPhishingRequest_Feature::release_name() {
-  clear_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = name_;
-    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-
-// required double value = 2;
-inline bool ClientPhishingRequest_Feature::has_value() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void ClientPhishingRequest_Feature::set_has_value() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void ClientPhishingRequest_Feature::clear_has_value() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void ClientPhishingRequest_Feature::clear_value() {
-  value_ = 0;
-  clear_has_value();
-}
-inline double ClientPhishingRequest_Feature::value() const {
-  return value_;
-}
-inline void ClientPhishingRequest_Feature::set_value(double value) {
-  set_has_value();
-  value_ = value;
-}
-
-// -------------------------------------------------------------------
-
-// ClientPhishingRequest
-
-// optional string url = 1;
-inline bool ClientPhishingRequest::has_url() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void ClientPhishingRequest::set_has_url() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void ClientPhishingRequest::clear_has_url() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void ClientPhishingRequest::clear_url() {
-  if (url_ != &::google::protobuf::internal::kEmptyString) {
-    url_->clear();
-  }
-  clear_has_url();
-}
-inline const ::std::string& ClientPhishingRequest::url() const {
-  return *url_;
-}
-inline void ClientPhishingRequest::set_url(const ::std::string& value) {
-  set_has_url();
-  if (url_ == &::google::protobuf::internal::kEmptyString) {
-    url_ = new ::std::string;
-  }
-  url_->assign(value);
-}
-inline void ClientPhishingRequest::set_url(const char* value) {
-  set_has_url();
-  if (url_ == &::google::protobuf::internal::kEmptyString) {
-    url_ = new ::std::string;
-  }
-  url_->assign(value);
-}
-inline void ClientPhishingRequest::set_url(const char* value, size_t size) {
-  set_has_url();
-  if (url_ == &::google::protobuf::internal::kEmptyString) {
-    url_ = new ::std::string;
-  }
-  url_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* ClientPhishingRequest::mutable_url() {
-  set_has_url();
-  if (url_ == &::google::protobuf::internal::kEmptyString) {
-    url_ = new ::std::string;
-  }
-  return url_;
-}
-inline ::std::string* ClientPhishingRequest::release_url() {
-  clear_has_url();
-  if (url_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = url_;
-    url_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-
-// optional bytes OBSOLETE_hash_prefix = 10;
-inline bool ClientPhishingRequest::has_obsolete_hash_prefix() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void ClientPhishingRequest::set_has_obsolete_hash_prefix() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void ClientPhishingRequest::clear_has_obsolete_hash_prefix() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void ClientPhishingRequest::clear_obsolete_hash_prefix() {
-  if (obsolete_hash_prefix_ != &::google::protobuf::internal::kEmptyString) {
-    obsolete_hash_prefix_->clear();
-  }
-  clear_has_obsolete_hash_prefix();
-}
-inline const ::std::string& ClientPhishingRequest::obsolete_hash_prefix() const {
-  return *obsolete_hash_prefix_;
-}
-inline void ClientPhishingRequest::set_obsolete_hash_prefix(const ::std::string& value) {
-  set_has_obsolete_hash_prefix();
-  if (obsolete_hash_prefix_ == &::google::protobuf::internal::kEmptyString) {
-    obsolete_hash_prefix_ = new ::std::string;
-  }
-  obsolete_hash_prefix_->assign(value);
-}
-inline void ClientPhishingRequest::set_obsolete_hash_prefix(const char* value) {
-  set_has_obsolete_hash_prefix();
-  if (obsolete_hash_prefix_ == &::google::protobuf::internal::kEmptyString) {
-    obsolete_hash_prefix_ = new ::std::string;
-  }
-  obsolete_hash_prefix_->assign(value);
-}
-inline void ClientPhishingRequest::set_obsolete_hash_prefix(const void* value, size_t size) {
-  set_has_obsolete_hash_prefix();
-  if (obsolete_hash_prefix_ == &::google::protobuf::internal::kEmptyString) {
-    obsolete_hash_prefix_ = new ::std::string;
-  }
-  obsolete_hash_prefix_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* ClientPhishingRequest::mutable_obsolete_hash_prefix() {
-  set_has_obsolete_hash_prefix();
-  if (obsolete_hash_prefix_ == &::google::protobuf::internal::kEmptyString) {
-    obsolete_hash_prefix_ = new ::std::string;
-  }
-  return obsolete_hash_prefix_;
-}
-inline ::std::string* ClientPhishingRequest::release_obsolete_hash_prefix() {
-  clear_has_obsolete_hash_prefix();
-  if (obsolete_hash_prefix_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = obsolete_hash_prefix_;
-    obsolete_hash_prefix_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-
-// required float client_score = 2;
-inline bool ClientPhishingRequest::has_client_score() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void ClientPhishingRequest::set_has_client_score() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void ClientPhishingRequest::clear_has_client_score() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void ClientPhishingRequest::clear_client_score() {
-  client_score_ = 0;
-  clear_has_client_score();
-}
-inline float ClientPhishingRequest::client_score() const {
-  return client_score_;
-}
-inline void ClientPhishingRequest::set_client_score(float value) {
-  set_has_client_score();
-  client_score_ = value;
-}
-
-// optional bool is_phishing = 4;
-inline bool ClientPhishingRequest::has_is_phishing() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void ClientPhishingRequest::set_has_is_phishing() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void ClientPhishingRequest::clear_has_is_phishing() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void ClientPhishingRequest::clear_is_phishing() {
-  is_phishing_ = false;
-  clear_has_is_phishing();
-}
-inline bool ClientPhishingRequest::is_phishing() const {
-  return is_phishing_;
-}
-inline void ClientPhishingRequest::set_is_phishing(bool value) {
-  set_has_is_phishing();
-  is_phishing_ = value;
-}
-
-// repeated .safe_browsing.ClientPhishingRequest.Feature feature_map = 5;
-inline int ClientPhishingRequest::feature_map_size() const {
-  return feature_map_.size();
-}
-inline void ClientPhishingRequest::clear_feature_map() {
-  feature_map_.Clear();
-}
-inline const ::safe_browsing::ClientPhishingRequest_Feature& ClientPhishingRequest::feature_map(int index) const {
-  return feature_map_.Get(index);
-}
-inline ::safe_browsing::ClientPhishingRequest_Feature* ClientPhishingRequest::mutable_feature_map(int index) {
-  return feature_map_.Mutable(index);
-}
-inline ::safe_browsing::ClientPhishingRequest_Feature* ClientPhishingRequest::add_feature_map() {
-  return feature_map_.Add();
-}
-inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientPhishingRequest_Feature >&
-ClientPhishingRequest::feature_map() const {
-  return feature_map_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientPhishingRequest_Feature >*
-ClientPhishingRequest::mutable_feature_map() {
-  return &feature_map_;
-}
-
-// optional int32 model_version = 6;
-inline bool ClientPhishingRequest::has_model_version() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void ClientPhishingRequest::set_has_model_version() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void ClientPhishingRequest::clear_has_model_version() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void ClientPhishingRequest::clear_model_version() {
-  model_version_ = 0;
-  clear_has_model_version();
-}
-inline ::google::protobuf::int32 ClientPhishingRequest::model_version() const {
-  return model_version_;
-}
-inline void ClientPhishingRequest::set_model_version(::google::protobuf::int32 value) {
-  set_has_model_version();
-  model_version_ = value;
-}
-
-// repeated .safe_browsing.ClientPhishingRequest.Feature non_model_feature_map = 8;
-inline int ClientPhishingRequest::non_model_feature_map_size() const {
-  return non_model_feature_map_.size();
-}
-inline void ClientPhishingRequest::clear_non_model_feature_map() {
-  non_model_feature_map_.Clear();
-}
-inline const ::safe_browsing::ClientPhishingRequest_Feature& ClientPhishingRequest::non_model_feature_map(int index) const {
-  return non_model_feature_map_.Get(index);
-}
-inline ::safe_browsing::ClientPhishingRequest_Feature* ClientPhishingRequest::mutable_non_model_feature_map(int index) {
-  return non_model_feature_map_.Mutable(index);
-}
-inline ::safe_browsing::ClientPhishingRequest_Feature* ClientPhishingRequest::add_non_model_feature_map() {
-  return non_model_feature_map_.Add();
-}
-inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientPhishingRequest_Feature >&
-ClientPhishingRequest::non_model_feature_map() const {
-  return non_model_feature_map_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientPhishingRequest_Feature >*
-ClientPhishingRequest::mutable_non_model_feature_map() {
-  return &non_model_feature_map_;
-}
-
-// optional string OBSOLETE_referrer_url = 9;
-inline bool ClientPhishingRequest::has_obsolete_referrer_url() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
-}
-inline void ClientPhishingRequest::set_has_obsolete_referrer_url() {
-  _has_bits_[0] |= 0x00000080u;
-}
-inline void ClientPhishingRequest::clear_has_obsolete_referrer_url() {
-  _has_bits_[0] &= ~0x00000080u;
-}
-inline void ClientPhishingRequest::clear_obsolete_referrer_url() {
-  if (obsolete_referrer_url_ != &::google::protobuf::internal::kEmptyString) {
-    obsolete_referrer_url_->clear();
-  }
-  clear_has_obsolete_referrer_url();
-}
-inline const ::std::string& ClientPhishingRequest::obsolete_referrer_url() const {
-  return *obsolete_referrer_url_;
-}
-inline void ClientPhishingRequest::set_obsolete_referrer_url(const ::std::string& value) {
-  set_has_obsolete_referrer_url();
-  if (obsolete_referrer_url_ == &::google::protobuf::internal::kEmptyString) {
-    obsolete_referrer_url_ = new ::std::string;
-  }
-  obsolete_referrer_url_->assign(value);
-}
-inline void ClientPhishingRequest::set_obsolete_referrer_url(const char* value) {
-  set_has_obsolete_referrer_url();
-  if (obsolete_referrer_url_ == &::google::protobuf::internal::kEmptyString) {
-    obsolete_referrer_url_ = new ::std::string;
-  }
-  obsolete_referrer_url_->assign(value);
-}
-inline void ClientPhishingRequest::set_obsolete_referrer_url(const char* value, size_t size) {
-  set_has_obsolete_referrer_url();
-  if (obsolete_referrer_url_ == &::google::protobuf::internal::kEmptyString) {
-    obsolete_referrer_url_ = new ::std::string;
-  }
-  obsolete_referrer_url_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* ClientPhishingRequest::mutable_obsolete_referrer_url() {
-  set_has_obsolete_referrer_url();
-  if (obsolete_referrer_url_ == &::google::protobuf::internal::kEmptyString) {
-    obsolete_referrer_url_ = new ::std::string;
-  }
-  return obsolete_referrer_url_;
-}
-inline ::std::string* ClientPhishingRequest::release_obsolete_referrer_url() {
-  clear_has_obsolete_referrer_url();
-  if (obsolete_referrer_url_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = obsolete_referrer_url_;
-    obsolete_referrer_url_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-
-// -------------------------------------------------------------------
-
-// ClientPhishingResponse
-
-// required bool phishy = 1;
-inline bool ClientPhishingResponse::has_phishy() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void ClientPhishingResponse::set_has_phishy() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void ClientPhishingResponse::clear_has_phishy() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void ClientPhishingResponse::clear_phishy() {
-  phishy_ = false;
-  clear_has_phishy();
-}
-inline bool ClientPhishingResponse::phishy() const {
-  return phishy_;
-}
-inline void ClientPhishingResponse::set_phishy(bool value) {
-  set_has_phishy();
-  phishy_ = value;
-}
-
-// repeated string OBSOLETE_whitelist_expression = 2;
-inline int ClientPhishingResponse::obsolete_whitelist_expression_size() const {
-  return obsolete_whitelist_expression_.size();
-}
-inline void ClientPhishingResponse::clear_obsolete_whitelist_expression() {
-  obsolete_whitelist_expression_.Clear();
-}
-inline const ::std::string& ClientPhishingResponse::obsolete_whitelist_expression(int index) const {
-  return obsolete_whitelist_expression_.Get(index);
-}
-inline ::std::string* ClientPhishingResponse::mutable_obsolete_whitelist_expression(int index) {
-  return obsolete_whitelist_expression_.Mutable(index);
-}
-inline void ClientPhishingResponse::set_obsolete_whitelist_expression(int index, const ::std::string& value) {
-  obsolete_whitelist_expression_.Mutable(index)->assign(value);
-}
-inline void ClientPhishingResponse::set_obsolete_whitelist_expression(int index, const char* value) {
-  obsolete_whitelist_expression_.Mutable(index)->assign(value);
-}
-inline void ClientPhishingResponse::set_obsolete_whitelist_expression(int index, const char* value, size_t size) {
-  obsolete_whitelist_expression_.Mutable(index)->assign(
-    reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* ClientPhishingResponse::add_obsolete_whitelist_expression() {
-  return obsolete_whitelist_expression_.Add();
-}
-inline void ClientPhishingResponse::add_obsolete_whitelist_expression(const ::std::string& value) {
-  obsolete_whitelist_expression_.Add()->assign(value);
-}
-inline void ClientPhishingResponse::add_obsolete_whitelist_expression(const char* value) {
-  obsolete_whitelist_expression_.Add()->assign(value);
-}
-inline void ClientPhishingResponse::add_obsolete_whitelist_expression(const char* value, size_t size) {
-  obsolete_whitelist_expression_.Add()->assign(reinterpret_cast<const char*>(value), size);
-}
-inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-ClientPhishingResponse::obsolete_whitelist_expression() const {
-  return obsolete_whitelist_expression_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::std::string>*
-ClientPhishingResponse::mutable_obsolete_whitelist_expression() {
-  return &obsolete_whitelist_expression_;
-}
-
-// -------------------------------------------------------------------
-
-// ClientMalwareRequest_Feature
-
-// required string name = 1;
-inline bool ClientMalwareRequest_Feature::has_name() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void ClientMalwareRequest_Feature::set_has_name() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void ClientMalwareRequest_Feature::clear_has_name() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void ClientMalwareRequest_Feature::clear_name() {
-  if (name_ != &::google::protobuf::internal::kEmptyString) {
-    name_->clear();
-  }
-  clear_has_name();
-}
-inline const ::std::string& ClientMalwareRequest_Feature::name() const {
-  return *name_;
-}
-inline void ClientMalwareRequest_Feature::set_name(const ::std::string& value) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(value);
-}
-inline void ClientMalwareRequest_Feature::set_name(const char* value) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(value);
-}
-inline void ClientMalwareRequest_Feature::set_name(const char* value, size_t size) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* ClientMalwareRequest_Feature::mutable_name() {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  return name_;
-}
-inline ::std::string* ClientMalwareRequest_Feature::release_name() {
-  clear_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = name_;
-    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-
-// required double value = 2;
-inline bool ClientMalwareRequest_Feature::has_value() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void ClientMalwareRequest_Feature::set_has_value() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void ClientMalwareRequest_Feature::clear_has_value() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void ClientMalwareRequest_Feature::clear_value() {
-  value_ = 0;
-  clear_has_value();
-}
-inline double ClientMalwareRequest_Feature::value() const {
-  return value_;
-}
-inline void ClientMalwareRequest_Feature::set_value(double value) {
-  set_has_value();
-  value_ = value;
-}
-
-// repeated string metainfo = 3;
-inline int ClientMalwareRequest_Feature::metainfo_size() const {
-  return metainfo_.size();
-}
-inline void ClientMalwareRequest_Feature::clear_metainfo() {
-  metainfo_.Clear();
-}
-inline const ::std::string& ClientMalwareRequest_Feature::metainfo(int index) const {
-  return metainfo_.Get(index);
-}
-inline ::std::string* ClientMalwareRequest_Feature::mutable_metainfo(int index) {
-  return metainfo_.Mutable(index);
-}
-inline void ClientMalwareRequest_Feature::set_metainfo(int index, const ::std::string& value) {
-  metainfo_.Mutable(index)->assign(value);
-}
-inline void ClientMalwareRequest_Feature::set_metainfo(int index, const char* value) {
-  metainfo_.Mutable(index)->assign(value);
-}
-inline void ClientMalwareRequest_Feature::set_metainfo(int index, const char* value, size_t size) {
-  metainfo_.Mutable(index)->assign(
-    reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* ClientMalwareRequest_Feature::add_metainfo() {
-  return metainfo_.Add();
-}
-inline void ClientMalwareRequest_Feature::add_metainfo(const ::std::string& value) {
-  metainfo_.Add()->assign(value);
-}
-inline void ClientMalwareRequest_Feature::add_metainfo(const char* value) {
-  metainfo_.Add()->assign(value);
-}
-inline void ClientMalwareRequest_Feature::add_metainfo(const char* value, size_t size) {
-  metainfo_.Add()->assign(reinterpret_cast<const char*>(value), size);
-}
-inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-ClientMalwareRequest_Feature::metainfo() const {
-  return metainfo_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::std::string>*
-ClientMalwareRequest_Feature::mutable_metainfo() {
-  return &metainfo_;
-}
-
-// -------------------------------------------------------------------
-
-// ClientMalwareRequest
-
-// required string url = 1;
-inline bool ClientMalwareRequest::has_url() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void ClientMalwareRequest::set_has_url() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void ClientMalwareRequest::clear_has_url() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void ClientMalwareRequest::clear_url() {
-  if (url_ != &::google::protobuf::internal::kEmptyString) {
-    url_->clear();
-  }
-  clear_has_url();
-}
-inline const ::std::string& ClientMalwareRequest::url() const {
-  return *url_;
-}
-inline void ClientMalwareRequest::set_url(const ::std::string& value) {
-  set_has_url();
-  if (url_ == &::google::protobuf::internal::kEmptyString) {
-    url_ = new ::std::string;
-  }
-  url_->assign(value);
-}
-inline void ClientMalwareRequest::set_url(const char* value) {
-  set_has_url();
-  if (url_ == &::google::protobuf::internal::kEmptyString) {
-    url_ = new ::std::string;
-  }
-  url_->assign(value);
-}
-inline void ClientMalwareRequest::set_url(const char* value, size_t size) {
-  set_has_url();
-  if (url_ == &::google::protobuf::internal::kEmptyString) {
-    url_ = new ::std::string;
-  }
-  url_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* ClientMalwareRequest::mutable_url() {
-  set_has_url();
-  if (url_ == &::google::protobuf::internal::kEmptyString) {
-    url_ = new ::std::string;
-  }
-  return url_;
-}
-inline ::std::string* ClientMalwareRequest::release_url() {
-  clear_has_url();
-  if (url_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = url_;
-    url_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-
-// repeated .safe_browsing.ClientMalwareRequest.Feature feature_map = 2;
-inline int ClientMalwareRequest::feature_map_size() const {
-  return feature_map_.size();
-}
-inline void ClientMalwareRequest::clear_feature_map() {
-  feature_map_.Clear();
-}
-inline const ::safe_browsing::ClientMalwareRequest_Feature& ClientMalwareRequest::feature_map(int index) const {
-  return feature_map_.Get(index);
-}
-inline ::safe_browsing::ClientMalwareRequest_Feature* ClientMalwareRequest::mutable_feature_map(int index) {
-  return feature_map_.Mutable(index);
-}
-inline ::safe_browsing::ClientMalwareRequest_Feature* ClientMalwareRequest::add_feature_map() {
-  return feature_map_.Add();
-}
-inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientMalwareRequest_Feature >&
-ClientMalwareRequest::feature_map() const {
-  return feature_map_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientMalwareRequest_Feature >*
-ClientMalwareRequest::mutable_feature_map() {
-  return &feature_map_;
-}
-
-// optional string referrer_url = 4;
-inline bool ClientMalwareRequest::has_referrer_url() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void ClientMalwareRequest::set_has_referrer_url() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void ClientMalwareRequest::clear_has_referrer_url() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void ClientMalwareRequest::clear_referrer_url() {
-  if (referrer_url_ != &::google::protobuf::internal::kEmptyString) {
-    referrer_url_->clear();
-  }
-  clear_has_referrer_url();
-}
-inline const ::std::string& ClientMalwareRequest::referrer_url() const {
-  return *referrer_url_;
-}
-inline void ClientMalwareRequest::set_referrer_url(const ::std::string& value) {
-  set_has_referrer_url();
-  if (referrer_url_ == &::google::protobuf::internal::kEmptyString) {
-    referrer_url_ = new ::std::string;
-  }
-  referrer_url_->assign(value);
-}
-inline void ClientMalwareRequest::set_referrer_url(const char* value) {
-  set_has_referrer_url();
-  if (referrer_url_ == &::google::protobuf::internal::kEmptyString) {
-    referrer_url_ = new ::std::string;
-  }
-  referrer_url_->assign(value);
-}
-inline void ClientMalwareRequest::set_referrer_url(const char* value, size_t size) {
-  set_has_referrer_url();
-  if (referrer_url_ == &::google::protobuf::internal::kEmptyString) {
-    referrer_url_ = new ::std::string;
-  }
-  referrer_url_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* ClientMalwareRequest::mutable_referrer_url() {
-  set_has_referrer_url();
-  if (referrer_url_ == &::google::protobuf::internal::kEmptyString) {
-    referrer_url_ = new ::std::string;
-  }
-  return referrer_url_;
-}
-inline ::std::string* ClientMalwareRequest::release_referrer_url() {
-  clear_has_referrer_url();
-  if (referrer_url_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = referrer_url_;
-    referrer_url_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-
-// -------------------------------------------------------------------
-
-// ClientMalwareResponse
-
-// required bool blacklist = 1;
-inline bool ClientMalwareResponse::has_blacklist() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void ClientMalwareResponse::set_has_blacklist() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void ClientMalwareResponse::clear_has_blacklist() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void ClientMalwareResponse::clear_blacklist() {
-  blacklist_ = false;
-  clear_has_blacklist();
-}
-inline bool ClientMalwareResponse::blacklist() const {
-  return blacklist_;
-}
-inline void ClientMalwareResponse::set_blacklist(bool value) {
-  set_has_blacklist();
-  blacklist_ = value;
-}
-
-// optional string bad_ip = 2;
-inline bool ClientMalwareResponse::has_bad_ip() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void ClientMalwareResponse::set_has_bad_ip() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void ClientMalwareResponse::clear_has_bad_ip() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void ClientMalwareResponse::clear_bad_ip() {
-  if (bad_ip_ != &::google::protobuf::internal::kEmptyString) {
-    bad_ip_->clear();
-  }
-  clear_has_bad_ip();
-}
-inline const ::std::string& ClientMalwareResponse::bad_ip() const {
-  return *bad_ip_;
-}
-inline void ClientMalwareResponse::set_bad_ip(const ::std::string& value) {
-  set_has_bad_ip();
-  if (bad_ip_ == &::google::protobuf::internal::kEmptyString) {
-    bad_ip_ = new ::std::string;
-  }
-  bad_ip_->assign(value);
-}
-inline void ClientMalwareResponse::set_bad_ip(const char* value) {
-  set_has_bad_ip();
-  if (bad_ip_ == &::google::protobuf::internal::kEmptyString) {
-    bad_ip_ = new ::std::string;
-  }
-  bad_ip_->assign(value);
-}
-inline void ClientMalwareResponse::set_bad_ip(const char* value, size_t size) {
-  set_has_bad_ip();
-  if (bad_ip_ == &::google::protobuf::internal::kEmptyString) {
-    bad_ip_ = new ::std::string;
-  }
-  bad_ip_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* ClientMalwareResponse::mutable_bad_ip() {
-  set_has_bad_ip();
-  if (bad_ip_ == &::google::protobuf::internal::kEmptyString) {
-    bad_ip_ = new ::std::string;
-  }
-  return bad_ip_;
-}
-inline ::std::string* ClientMalwareResponse::release_bad_ip() {
-  clear_has_bad_ip();
-  if (bad_ip_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = bad_ip_;
-    bad_ip_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-
-// -------------------------------------------------------------------
 
 // ClientDownloadRequest_Digests
 
@@ -3188,6 +1775,522 @@ inline void ClientDownloadRequest_SignatureInfo::set_trusted(bool value) {
 
 // -------------------------------------------------------------------
 
+// ClientDownloadRequest_PEImageHeaders_DebugData
+
+// optional bytes directory_entry = 1;
+inline bool ClientDownloadRequest_PEImageHeaders_DebugData::has_directory_entry() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ClientDownloadRequest_PEImageHeaders_DebugData::set_has_directory_entry() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ClientDownloadRequest_PEImageHeaders_DebugData::clear_has_directory_entry() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ClientDownloadRequest_PEImageHeaders_DebugData::clear_directory_entry() {
+  if (directory_entry_ != &::google::protobuf::internal::kEmptyString) {
+    directory_entry_->clear();
+  }
+  clear_has_directory_entry();
+}
+inline const ::std::string& ClientDownloadRequest_PEImageHeaders_DebugData::directory_entry() const {
+  return *directory_entry_;
+}
+inline void ClientDownloadRequest_PEImageHeaders_DebugData::set_directory_entry(const ::std::string& value) {
+  set_has_directory_entry();
+  if (directory_entry_ == &::google::protobuf::internal::kEmptyString) {
+    directory_entry_ = new ::std::string;
+  }
+  directory_entry_->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders_DebugData::set_directory_entry(const char* value) {
+  set_has_directory_entry();
+  if (directory_entry_ == &::google::protobuf::internal::kEmptyString) {
+    directory_entry_ = new ::std::string;
+  }
+  directory_entry_->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders_DebugData::set_directory_entry(const void* value, size_t size) {
+  set_has_directory_entry();
+  if (directory_entry_ == &::google::protobuf::internal::kEmptyString) {
+    directory_entry_ = new ::std::string;
+  }
+  directory_entry_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders_DebugData::mutable_directory_entry() {
+  set_has_directory_entry();
+  if (directory_entry_ == &::google::protobuf::internal::kEmptyString) {
+    directory_entry_ = new ::std::string;
+  }
+  return directory_entry_;
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders_DebugData::release_directory_entry() {
+  clear_has_directory_entry();
+  if (directory_entry_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = directory_entry_;
+    directory_entry_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+
+// optional bytes raw_data = 2;
+inline bool ClientDownloadRequest_PEImageHeaders_DebugData::has_raw_data() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ClientDownloadRequest_PEImageHeaders_DebugData::set_has_raw_data() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ClientDownloadRequest_PEImageHeaders_DebugData::clear_has_raw_data() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ClientDownloadRequest_PEImageHeaders_DebugData::clear_raw_data() {
+  if (raw_data_ != &::google::protobuf::internal::kEmptyString) {
+    raw_data_->clear();
+  }
+  clear_has_raw_data();
+}
+inline const ::std::string& ClientDownloadRequest_PEImageHeaders_DebugData::raw_data() const {
+  return *raw_data_;
+}
+inline void ClientDownloadRequest_PEImageHeaders_DebugData::set_raw_data(const ::std::string& value) {
+  set_has_raw_data();
+  if (raw_data_ == &::google::protobuf::internal::kEmptyString) {
+    raw_data_ = new ::std::string;
+  }
+  raw_data_->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders_DebugData::set_raw_data(const char* value) {
+  set_has_raw_data();
+  if (raw_data_ == &::google::protobuf::internal::kEmptyString) {
+    raw_data_ = new ::std::string;
+  }
+  raw_data_->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders_DebugData::set_raw_data(const void* value, size_t size) {
+  set_has_raw_data();
+  if (raw_data_ == &::google::protobuf::internal::kEmptyString) {
+    raw_data_ = new ::std::string;
+  }
+  raw_data_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders_DebugData::mutable_raw_data() {
+  set_has_raw_data();
+  if (raw_data_ == &::google::protobuf::internal::kEmptyString) {
+    raw_data_ = new ::std::string;
+  }
+  return raw_data_;
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders_DebugData::release_raw_data() {
+  clear_has_raw_data();
+  if (raw_data_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = raw_data_;
+    raw_data_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+
+// -------------------------------------------------------------------
+
+// ClientDownloadRequest_PEImageHeaders
+
+// optional bytes dos_header = 1;
+inline bool ClientDownloadRequest_PEImageHeaders::has_dos_header() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_has_dos_header() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ClientDownloadRequest_PEImageHeaders::clear_has_dos_header() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ClientDownloadRequest_PEImageHeaders::clear_dos_header() {
+  if (dos_header_ != &::google::protobuf::internal::kEmptyString) {
+    dos_header_->clear();
+  }
+  clear_has_dos_header();
+}
+inline const ::std::string& ClientDownloadRequest_PEImageHeaders::dos_header() const {
+  return *dos_header_;
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_dos_header(const ::std::string& value) {
+  set_has_dos_header();
+  if (dos_header_ == &::google::protobuf::internal::kEmptyString) {
+    dos_header_ = new ::std::string;
+  }
+  dos_header_->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_dos_header(const char* value) {
+  set_has_dos_header();
+  if (dos_header_ == &::google::protobuf::internal::kEmptyString) {
+    dos_header_ = new ::std::string;
+  }
+  dos_header_->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_dos_header(const void* value, size_t size) {
+  set_has_dos_header();
+  if (dos_header_ == &::google::protobuf::internal::kEmptyString) {
+    dos_header_ = new ::std::string;
+  }
+  dos_header_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders::mutable_dos_header() {
+  set_has_dos_header();
+  if (dos_header_ == &::google::protobuf::internal::kEmptyString) {
+    dos_header_ = new ::std::string;
+  }
+  return dos_header_;
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders::release_dos_header() {
+  clear_has_dos_header();
+  if (dos_header_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = dos_header_;
+    dos_header_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+
+// optional bytes file_header = 2;
+inline bool ClientDownloadRequest_PEImageHeaders::has_file_header() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_has_file_header() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ClientDownloadRequest_PEImageHeaders::clear_has_file_header() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ClientDownloadRequest_PEImageHeaders::clear_file_header() {
+  if (file_header_ != &::google::protobuf::internal::kEmptyString) {
+    file_header_->clear();
+  }
+  clear_has_file_header();
+}
+inline const ::std::string& ClientDownloadRequest_PEImageHeaders::file_header() const {
+  return *file_header_;
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_file_header(const ::std::string& value) {
+  set_has_file_header();
+  if (file_header_ == &::google::protobuf::internal::kEmptyString) {
+    file_header_ = new ::std::string;
+  }
+  file_header_->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_file_header(const char* value) {
+  set_has_file_header();
+  if (file_header_ == &::google::protobuf::internal::kEmptyString) {
+    file_header_ = new ::std::string;
+  }
+  file_header_->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_file_header(const void* value, size_t size) {
+  set_has_file_header();
+  if (file_header_ == &::google::protobuf::internal::kEmptyString) {
+    file_header_ = new ::std::string;
+  }
+  file_header_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders::mutable_file_header() {
+  set_has_file_header();
+  if (file_header_ == &::google::protobuf::internal::kEmptyString) {
+    file_header_ = new ::std::string;
+  }
+  return file_header_;
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders::release_file_header() {
+  clear_has_file_header();
+  if (file_header_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = file_header_;
+    file_header_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+
+// optional bytes optional_headers32 = 3;
+inline bool ClientDownloadRequest_PEImageHeaders::has_optional_headers32() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_has_optional_headers32() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void ClientDownloadRequest_PEImageHeaders::clear_has_optional_headers32() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void ClientDownloadRequest_PEImageHeaders::clear_optional_headers32() {
+  if (optional_headers32_ != &::google::protobuf::internal::kEmptyString) {
+    optional_headers32_->clear();
+  }
+  clear_has_optional_headers32();
+}
+inline const ::std::string& ClientDownloadRequest_PEImageHeaders::optional_headers32() const {
+  return *optional_headers32_;
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_optional_headers32(const ::std::string& value) {
+  set_has_optional_headers32();
+  if (optional_headers32_ == &::google::protobuf::internal::kEmptyString) {
+    optional_headers32_ = new ::std::string;
+  }
+  optional_headers32_->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_optional_headers32(const char* value) {
+  set_has_optional_headers32();
+  if (optional_headers32_ == &::google::protobuf::internal::kEmptyString) {
+    optional_headers32_ = new ::std::string;
+  }
+  optional_headers32_->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_optional_headers32(const void* value, size_t size) {
+  set_has_optional_headers32();
+  if (optional_headers32_ == &::google::protobuf::internal::kEmptyString) {
+    optional_headers32_ = new ::std::string;
+  }
+  optional_headers32_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders::mutable_optional_headers32() {
+  set_has_optional_headers32();
+  if (optional_headers32_ == &::google::protobuf::internal::kEmptyString) {
+    optional_headers32_ = new ::std::string;
+  }
+  return optional_headers32_;
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders::release_optional_headers32() {
+  clear_has_optional_headers32();
+  if (optional_headers32_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = optional_headers32_;
+    optional_headers32_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+
+// optional bytes optional_headers64 = 4;
+inline bool ClientDownloadRequest_PEImageHeaders::has_optional_headers64() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_has_optional_headers64() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void ClientDownloadRequest_PEImageHeaders::clear_has_optional_headers64() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void ClientDownloadRequest_PEImageHeaders::clear_optional_headers64() {
+  if (optional_headers64_ != &::google::protobuf::internal::kEmptyString) {
+    optional_headers64_->clear();
+  }
+  clear_has_optional_headers64();
+}
+inline const ::std::string& ClientDownloadRequest_PEImageHeaders::optional_headers64() const {
+  return *optional_headers64_;
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_optional_headers64(const ::std::string& value) {
+  set_has_optional_headers64();
+  if (optional_headers64_ == &::google::protobuf::internal::kEmptyString) {
+    optional_headers64_ = new ::std::string;
+  }
+  optional_headers64_->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_optional_headers64(const char* value) {
+  set_has_optional_headers64();
+  if (optional_headers64_ == &::google::protobuf::internal::kEmptyString) {
+    optional_headers64_ = new ::std::string;
+  }
+  optional_headers64_->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_optional_headers64(const void* value, size_t size) {
+  set_has_optional_headers64();
+  if (optional_headers64_ == &::google::protobuf::internal::kEmptyString) {
+    optional_headers64_ = new ::std::string;
+  }
+  optional_headers64_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders::mutable_optional_headers64() {
+  set_has_optional_headers64();
+  if (optional_headers64_ == &::google::protobuf::internal::kEmptyString) {
+    optional_headers64_ = new ::std::string;
+  }
+  return optional_headers64_;
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders::release_optional_headers64() {
+  clear_has_optional_headers64();
+  if (optional_headers64_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = optional_headers64_;
+    optional_headers64_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+
+// repeated bytes section_header = 5;
+inline int ClientDownloadRequest_PEImageHeaders::section_header_size() const {
+  return section_header_.size();
+}
+inline void ClientDownloadRequest_PEImageHeaders::clear_section_header() {
+  section_header_.Clear();
+}
+inline const ::std::string& ClientDownloadRequest_PEImageHeaders::section_header(int index) const {
+  return section_header_.Get(index);
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders::mutable_section_header(int index) {
+  return section_header_.Mutable(index);
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_section_header(int index, const ::std::string& value) {
+  section_header_.Mutable(index)->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_section_header(int index, const char* value) {
+  section_header_.Mutable(index)->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_section_header(int index, const void* value, size_t size) {
+  section_header_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders::add_section_header() {
+  return section_header_.Add();
+}
+inline void ClientDownloadRequest_PEImageHeaders::add_section_header(const ::std::string& value) {
+  section_header_.Add()->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders::add_section_header(const char* value) {
+  section_header_.Add()->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders::add_section_header(const void* value, size_t size) {
+  section_header_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+ClientDownloadRequest_PEImageHeaders::section_header() const {
+  return section_header_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+ClientDownloadRequest_PEImageHeaders::mutable_section_header() {
+  return &section_header_;
+}
+
+// optional bytes export_section_data = 6;
+inline bool ClientDownloadRequest_PEImageHeaders::has_export_section_data() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_has_export_section_data() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void ClientDownloadRequest_PEImageHeaders::clear_has_export_section_data() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void ClientDownloadRequest_PEImageHeaders::clear_export_section_data() {
+  if (export_section_data_ != &::google::protobuf::internal::kEmptyString) {
+    export_section_data_->clear();
+  }
+  clear_has_export_section_data();
+}
+inline const ::std::string& ClientDownloadRequest_PEImageHeaders::export_section_data() const {
+  return *export_section_data_;
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_export_section_data(const ::std::string& value) {
+  set_has_export_section_data();
+  if (export_section_data_ == &::google::protobuf::internal::kEmptyString) {
+    export_section_data_ = new ::std::string;
+  }
+  export_section_data_->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_export_section_data(const char* value) {
+  set_has_export_section_data();
+  if (export_section_data_ == &::google::protobuf::internal::kEmptyString) {
+    export_section_data_ = new ::std::string;
+  }
+  export_section_data_->assign(value);
+}
+inline void ClientDownloadRequest_PEImageHeaders::set_export_section_data(const void* value, size_t size) {
+  set_has_export_section_data();
+  if (export_section_data_ == &::google::protobuf::internal::kEmptyString) {
+    export_section_data_ = new ::std::string;
+  }
+  export_section_data_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders::mutable_export_section_data() {
+  set_has_export_section_data();
+  if (export_section_data_ == &::google::protobuf::internal::kEmptyString) {
+    export_section_data_ = new ::std::string;
+  }
+  return export_section_data_;
+}
+inline ::std::string* ClientDownloadRequest_PEImageHeaders::release_export_section_data() {
+  clear_has_export_section_data();
+  if (export_section_data_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = export_section_data_;
+    export_section_data_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+
+// repeated .safe_browsing.ClientDownloadRequest.PEImageHeaders.DebugData debug_data = 7;
+inline int ClientDownloadRequest_PEImageHeaders::debug_data_size() const {
+  return debug_data_.size();
+}
+inline void ClientDownloadRequest_PEImageHeaders::clear_debug_data() {
+  debug_data_.Clear();
+}
+inline const ::safe_browsing::ClientDownloadRequest_PEImageHeaders_DebugData& ClientDownloadRequest_PEImageHeaders::debug_data(int index) const {
+  return debug_data_.Get(index);
+}
+inline ::safe_browsing::ClientDownloadRequest_PEImageHeaders_DebugData* ClientDownloadRequest_PEImageHeaders::mutable_debug_data(int index) {
+  return debug_data_.Mutable(index);
+}
+inline ::safe_browsing::ClientDownloadRequest_PEImageHeaders_DebugData* ClientDownloadRequest_PEImageHeaders::add_debug_data() {
+  return debug_data_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_PEImageHeaders_DebugData >&
+ClientDownloadRequest_PEImageHeaders::debug_data() const {
+  return debug_data_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_PEImageHeaders_DebugData >*
+ClientDownloadRequest_PEImageHeaders::mutable_debug_data() {
+  return &debug_data_;
+}
+
+// -------------------------------------------------------------------
+
+// ClientDownloadRequest_ImageHeaders
+
+// optional .safe_browsing.ClientDownloadRequest.PEImageHeaders pe_headers = 1;
+inline bool ClientDownloadRequest_ImageHeaders::has_pe_headers() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ClientDownloadRequest_ImageHeaders::set_has_pe_headers() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ClientDownloadRequest_ImageHeaders::clear_has_pe_headers() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ClientDownloadRequest_ImageHeaders::clear_pe_headers() {
+  if (pe_headers_ != NULL) pe_headers_->::safe_browsing::ClientDownloadRequest_PEImageHeaders::Clear();
+  clear_has_pe_headers();
+}
+inline const ::safe_browsing::ClientDownloadRequest_PEImageHeaders& ClientDownloadRequest_ImageHeaders::pe_headers() const {
+  return pe_headers_ != NULL ? *pe_headers_ : *default_instance_->pe_headers_;
+}
+inline ::safe_browsing::ClientDownloadRequest_PEImageHeaders* ClientDownloadRequest_ImageHeaders::mutable_pe_headers() {
+  set_has_pe_headers();
+  if (pe_headers_ == NULL) pe_headers_ = new ::safe_browsing::ClientDownloadRequest_PEImageHeaders;
+  return pe_headers_;
+}
+inline ::safe_browsing::ClientDownloadRequest_PEImageHeaders* ClientDownloadRequest_ImageHeaders::release_pe_headers() {
+  clear_has_pe_headers();
+  ::safe_browsing::ClientDownloadRequest_PEImageHeaders* temp = pe_headers_;
+  pe_headers_ = NULL;
+  return temp;
+}
+
+// -------------------------------------------------------------------
+
 // ClientDownloadRequest
 
 // required string url = 1;
@@ -3514,6 +2617,35 @@ inline ::std::string* ClientDownloadRequest::release_locale() {
   }
 }
 
+// optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 18;
+inline bool ClientDownloadRequest::has_image_headers() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void ClientDownloadRequest::set_has_image_headers() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void ClientDownloadRequest::clear_has_image_headers() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+inline void ClientDownloadRequest::clear_image_headers() {
+  if (image_headers_ != NULL) image_headers_->::safe_browsing::ClientDownloadRequest_ImageHeaders::Clear();
+  clear_has_image_headers();
+}
+inline const ::safe_browsing::ClientDownloadRequest_ImageHeaders& ClientDownloadRequest::image_headers() const {
+  return image_headers_ != NULL ? *image_headers_ : *default_instance_->image_headers_;
+}
+inline ::safe_browsing::ClientDownloadRequest_ImageHeaders* ClientDownloadRequest::mutable_image_headers() {
+  set_has_image_headers();
+  if (image_headers_ == NULL) image_headers_ = new ::safe_browsing::ClientDownloadRequest_ImageHeaders;
+  return image_headers_;
+}
+inline ::safe_browsing::ClientDownloadRequest_ImageHeaders* ClientDownloadRequest::release_image_headers() {
+  clear_has_image_headers();
+  ::safe_browsing::ClientDownloadRequest_ImageHeaders* temp = image_headers_;
+  image_headers_ = NULL;
+  return temp;
+}
+
 // -------------------------------------------------------------------
 
 // ClientDownloadResponse_MoreInfo
@@ -3744,325 +2876,6 @@ inline ::std::string* ClientDownloadResponse::release_token() {
   } else {
     ::std::string* temp = token_;
     token_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-
-// -------------------------------------------------------------------
-
-// ClientDownloadReport_UserInformation
-
-// optional string email = 1;
-inline bool ClientDownloadReport_UserInformation::has_email() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void ClientDownloadReport_UserInformation::set_has_email() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void ClientDownloadReport_UserInformation::clear_has_email() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void ClientDownloadReport_UserInformation::clear_email() {
-  if (email_ != &::google::protobuf::internal::kEmptyString) {
-    email_->clear();
-  }
-  clear_has_email();
-}
-inline const ::std::string& ClientDownloadReport_UserInformation::email() const {
-  return *email_;
-}
-inline void ClientDownloadReport_UserInformation::set_email(const ::std::string& value) {
-  set_has_email();
-  if (email_ == &::google::protobuf::internal::kEmptyString) {
-    email_ = new ::std::string;
-  }
-  email_->assign(value);
-}
-inline void ClientDownloadReport_UserInformation::set_email(const char* value) {
-  set_has_email();
-  if (email_ == &::google::protobuf::internal::kEmptyString) {
-    email_ = new ::std::string;
-  }
-  email_->assign(value);
-}
-inline void ClientDownloadReport_UserInformation::set_email(const char* value, size_t size) {
-  set_has_email();
-  if (email_ == &::google::protobuf::internal::kEmptyString) {
-    email_ = new ::std::string;
-  }
-  email_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* ClientDownloadReport_UserInformation::mutable_email() {
-  set_has_email();
-  if (email_ == &::google::protobuf::internal::kEmptyString) {
-    email_ = new ::std::string;
-  }
-  return email_;
-}
-inline ::std::string* ClientDownloadReport_UserInformation::release_email() {
-  clear_has_email();
-  if (email_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = email_;
-    email_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-
-// -------------------------------------------------------------------
-
-// ClientDownloadReport
-
-// optional .safe_browsing.ClientDownloadReport.Reason reason = 1;
-inline bool ClientDownloadReport::has_reason() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void ClientDownloadReport::set_has_reason() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void ClientDownloadReport::clear_has_reason() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void ClientDownloadReport::clear_reason() {
-  reason_ = 0;
-  clear_has_reason();
-}
-inline ::safe_browsing::ClientDownloadReport_Reason ClientDownloadReport::reason() const {
-  return static_cast< ::safe_browsing::ClientDownloadReport_Reason >(reason_);
-}
-inline void ClientDownloadReport::set_reason(::safe_browsing::ClientDownloadReport_Reason value) {
-  GOOGLE_DCHECK(::safe_browsing::ClientDownloadReport_Reason_IsValid(value));
-  set_has_reason();
-  reason_ = value;
-}
-
-// optional .safe_browsing.ClientDownloadRequest download_request = 2;
-inline bool ClientDownloadReport::has_download_request() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void ClientDownloadReport::set_has_download_request() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void ClientDownloadReport::clear_has_download_request() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void ClientDownloadReport::clear_download_request() {
-  if (download_request_ != NULL) download_request_->::safe_browsing::ClientDownloadRequest::Clear();
-  clear_has_download_request();
-}
-inline const ::safe_browsing::ClientDownloadRequest& ClientDownloadReport::download_request() const {
-  return download_request_ != NULL ? *download_request_ : *default_instance_->download_request_;
-}
-inline ::safe_browsing::ClientDownloadRequest* ClientDownloadReport::mutable_download_request() {
-  set_has_download_request();
-  if (download_request_ == NULL) download_request_ = new ::safe_browsing::ClientDownloadRequest;
-  return download_request_;
-}
-inline ::safe_browsing::ClientDownloadRequest* ClientDownloadReport::release_download_request() {
-  clear_has_download_request();
-  ::safe_browsing::ClientDownloadRequest* temp = download_request_;
-  download_request_ = NULL;
-  return temp;
-}
-
-// optional .safe_browsing.ClientDownloadReport.UserInformation user_information = 3;
-inline bool ClientDownloadReport::has_user_information() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void ClientDownloadReport::set_has_user_information() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void ClientDownloadReport::clear_has_user_information() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void ClientDownloadReport::clear_user_information() {
-  if (user_information_ != NULL) user_information_->::safe_browsing::ClientDownloadReport_UserInformation::Clear();
-  clear_has_user_information();
-}
-inline const ::safe_browsing::ClientDownloadReport_UserInformation& ClientDownloadReport::user_information() const {
-  return user_information_ != NULL ? *user_information_ : *default_instance_->user_information_;
-}
-inline ::safe_browsing::ClientDownloadReport_UserInformation* ClientDownloadReport::mutable_user_information() {
-  set_has_user_information();
-  if (user_information_ == NULL) user_information_ = new ::safe_browsing::ClientDownloadReport_UserInformation;
-  return user_information_;
-}
-inline ::safe_browsing::ClientDownloadReport_UserInformation* ClientDownloadReport::release_user_information() {
-  clear_has_user_information();
-  ::safe_browsing::ClientDownloadReport_UserInformation* temp = user_information_;
-  user_information_ = NULL;
-  return temp;
-}
-
-// optional bytes comment = 4;
-inline bool ClientDownloadReport::has_comment() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void ClientDownloadReport::set_has_comment() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void ClientDownloadReport::clear_has_comment() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void ClientDownloadReport::clear_comment() {
-  if (comment_ != &::google::protobuf::internal::kEmptyString) {
-    comment_->clear();
-  }
-  clear_has_comment();
-}
-inline const ::std::string& ClientDownloadReport::comment() const {
-  return *comment_;
-}
-inline void ClientDownloadReport::set_comment(const ::std::string& value) {
-  set_has_comment();
-  if (comment_ == &::google::protobuf::internal::kEmptyString) {
-    comment_ = new ::std::string;
-  }
-  comment_->assign(value);
-}
-inline void ClientDownloadReport::set_comment(const char* value) {
-  set_has_comment();
-  if (comment_ == &::google::protobuf::internal::kEmptyString) {
-    comment_ = new ::std::string;
-  }
-  comment_->assign(value);
-}
-inline void ClientDownloadReport::set_comment(const void* value, size_t size) {
-  set_has_comment();
-  if (comment_ == &::google::protobuf::internal::kEmptyString) {
-    comment_ = new ::std::string;
-  }
-  comment_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* ClientDownloadReport::mutable_comment() {
-  set_has_comment();
-  if (comment_ == &::google::protobuf::internal::kEmptyString) {
-    comment_ = new ::std::string;
-  }
-  return comment_;
-}
-inline ::std::string* ClientDownloadReport::release_comment() {
-  clear_has_comment();
-  if (comment_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = comment_;
-    comment_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-
-// optional .safe_browsing.ClientDownloadResponse download_response = 5;
-inline bool ClientDownloadReport::has_download_response() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void ClientDownloadReport::set_has_download_response() {
-  _has_bits_[0] |= 0x00000010u;
-}
-inline void ClientDownloadReport::clear_has_download_response() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-inline void ClientDownloadReport::clear_download_response() {
-  if (download_response_ != NULL) download_response_->::safe_browsing::ClientDownloadResponse::Clear();
-  clear_has_download_response();
-}
-inline const ::safe_browsing::ClientDownloadResponse& ClientDownloadReport::download_response() const {
-  return download_response_ != NULL ? *download_response_ : *default_instance_->download_response_;
-}
-inline ::safe_browsing::ClientDownloadResponse* ClientDownloadReport::mutable_download_response() {
-  set_has_download_response();
-  if (download_response_ == NULL) download_response_ = new ::safe_browsing::ClientDownloadResponse;
-  return download_response_;
-}
-inline ::safe_browsing::ClientDownloadResponse* ClientDownloadReport::release_download_response() {
-  clear_has_download_response();
-  ::safe_browsing::ClientDownloadResponse* temp = download_response_;
-  download_response_ = NULL;
-  return temp;
-}
-
-// -------------------------------------------------------------------
-
-// ClientUploadResponse
-
-// optional .safe_browsing.ClientUploadResponse.UploadStatus status = 1;
-inline bool ClientUploadResponse::has_status() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void ClientUploadResponse::set_has_status() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void ClientUploadResponse::clear_has_status() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void ClientUploadResponse::clear_status() {
-  status_ = 0;
-  clear_has_status();
-}
-inline ::safe_browsing::ClientUploadResponse_UploadStatus ClientUploadResponse::status() const {
-  return static_cast< ::safe_browsing::ClientUploadResponse_UploadStatus >(status_);
-}
-inline void ClientUploadResponse::set_status(::safe_browsing::ClientUploadResponse_UploadStatus value) {
-  GOOGLE_DCHECK(::safe_browsing::ClientUploadResponse_UploadStatus_IsValid(value));
-  set_has_status();
-  status_ = value;
-}
-
-// optional string permalink = 2;
-inline bool ClientUploadResponse::has_permalink() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void ClientUploadResponse::set_has_permalink() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void ClientUploadResponse::clear_has_permalink() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void ClientUploadResponse::clear_permalink() {
-  if (permalink_ != &::google::protobuf::internal::kEmptyString) {
-    permalink_->clear();
-  }
-  clear_has_permalink();
-}
-inline const ::std::string& ClientUploadResponse::permalink() const {
-  return *permalink_;
-}
-inline void ClientUploadResponse::set_permalink(const ::std::string& value) {
-  set_has_permalink();
-  if (permalink_ == &::google::protobuf::internal::kEmptyString) {
-    permalink_ = new ::std::string;
-  }
-  permalink_->assign(value);
-}
-inline void ClientUploadResponse::set_permalink(const char* value) {
-  set_has_permalink();
-  if (permalink_ == &::google::protobuf::internal::kEmptyString) {
-    permalink_ = new ::std::string;
-  }
-  permalink_->assign(value);
-}
-inline void ClientUploadResponse::set_permalink(const char* value, size_t size) {
-  set_has_permalink();
-  if (permalink_ == &::google::protobuf::internal::kEmptyString) {
-    permalink_ = new ::std::string;
-  }
-  permalink_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* ClientUploadResponse::mutable_permalink() {
-  set_has_permalink();
-  if (permalink_ == &::google::protobuf::internal::kEmptyString) {
-    permalink_ = new ::std::string;
-  }
-  return permalink_;
-}
-inline ::std::string* ClientUploadResponse::release_permalink() {
-  clear_has_permalink();
-  if (permalink_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = permalink_;
-    permalink_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
     return temp;
   }
 }
