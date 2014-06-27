@@ -157,6 +157,7 @@ function Editor(config) {
     autoCloseBrackets: "()[]{}''\"\"",
     autoCloseEnabled:  useAutoClose,
     theme:             "mozilla",
+    themeSwitching:    true,
     autocomplete:      false
   };
 
@@ -257,6 +258,9 @@ Editor.prototype = {
 
       env.removeEventListener("load", onLoad, true);
       let win = env.contentWindow.wrappedJSObject;
+
+      if (!this.config.themeSwitching)
+        win.document.documentElement.setAttribute("force-theme", "light");
 
       CM_SCRIPTS.forEach((url) =>
         Services.scriptloader.loadSubScript(url, win, "utf8"));

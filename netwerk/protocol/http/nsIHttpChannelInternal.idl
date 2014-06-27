@@ -199,4 +199,11 @@ interface nsIHttpChannelInternal : nsISupports
      * write to nsIRedirectHistory.redirects.
      */
     void addRedirect(in nsIPrincipal aPrincipal);
+
+  /**
+   * ForcePending(true) overrides the normal behavior for the 
+   * channel's IsPending(), forcing 'true' to be returned. A call to
+   * ForcePending(false) reverts IsPending() back to normal behavior.
+   */
+    void ForcePending(in boolean aForcePending);
 };
