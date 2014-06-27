@@ -406,7 +406,7 @@ static void StoreLongTermICEStatisticsImpl_m(
         Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL,
                    uint32_t(s.mFramerateStdDev.Value() * 10));
       }
-      if (s.mDroppedFrames.WasPassed()) {
+      if (s.mDroppedFrames.WasPassed() && !query->iceStartTime.IsNull()) {
         double mins = (TimeStamp::Now() - query->iceStartTime).ToSeconds() / 60;
         if (mins > 0) {
           Accumulate(WEBRTC_VIDEO_ENCODER_DROPPED_FRAMES_PER_CALL_FPM,
@@ -440,7 +440,7 @@ static void StoreLongTermICEStatisticsImpl_m(
         Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL,
                    uint32_t(s.mFramerateStdDev.Value() * 10));
       }
-      if (s.mDiscardedPackets.WasPassed()) {
+      if (s.mDiscardedPackets.WasPassed() && !query->iceStartTime.IsNull()) {
         double mins = (TimeStamp::Now() - query->iceStartTime).ToSeconds() / 60;
         if (mins > 0) {
           Accumulate(WEBRTC_VIDEO_DECODER_DISCARDED_PACKETS_PER_CALL_PPM,
@@ -469,10 +469,12 @@ static void GetStatsForLongTermStorage_s(
   // this call. (These calls must be made on STS)
   unsigned char rate_limit_bit_pattern = 0;
   if (!mozilla::nr_socket_short_term_violation_time().IsNull() &&
+      !query->iceStartTime.IsNull() &&
       mozilla::nr_socket_short_term_violation_time() >= query->iceStartTime) {
     rate_limit_bit_pattern |= 1;
   }
   if (!mozilla::nr_socket_long_term_violation_time().IsNull() &&
+      !query->iceStartTime.IsNull() &&
       mozilla::nr_socket_long_term_violation_time() >= query->iceStartTime) {
     rate_limit_bit_pattern |= 2;
   }
