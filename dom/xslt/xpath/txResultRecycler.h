@@ -21,6 +21,7 @@ class txResultRecycler
 public:
     txResultRecycler();
     ~txResultRecycler();
+    nsresult init();
 
     void AddRef()
     {
@@ -71,9 +72,9 @@ private:
     txStack mStringResults;
     txStack mNodeSetResults;
     txStack mNumberResults;
-    nsRefPtr<StringResult> mEmptyStringResult;
-    nsRefPtr<BooleanResult> mTrueResult;
-    nsRefPtr<BooleanResult> mFalseResult;
+    StringResult* mEmptyStringResult;
+    BooleanResult* mTrueResult;
+    BooleanResult* mFalseResult;
 };
 
 #endif //txResultRecycler_h__

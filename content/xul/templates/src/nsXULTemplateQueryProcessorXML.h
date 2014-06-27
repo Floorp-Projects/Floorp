@@ -15,12 +15,12 @@
 #include "nsRefPtrHashtable.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
+#include "nsIDOMXPathExpression.h"
 #include "nsIDOMXPathEvaluator.h"
 #include "nsXMLBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIXMLHttpRequest.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/XPathEvaluator.h"
 #include "mozilla/dom/XPathResult.h"
 
 class nsXULTemplateQueryProcessorXML;
@@ -43,26 +43,26 @@ class nsXMLQuery MOZ_FINAL : public nsISupports
     nsIAtom* GetMemberVariable() { return mMemberVariable; }
 
     // return a weak reference to the expression used to generate results
-    mozilla::dom::XPathExpression* GetResultsExpression()
-      { return mResultsExpr; }
+    nsIDOMXPathExpression* GetResultsExpression() { return mResultsExpr; }
 
     // return a weak reference to the additional required bindings
     nsXMLBindingSet* GetBindingSet() { return mRequiredBindings; }
 
     // add a required binding for the query
-    void
-    AddBinding(nsIAtom* aVar, nsAutoPtr<mozilla::dom::XPathExpression>&& aExpr)
+    nsresult
+    AddBinding(nsIAtom* aVar, nsIDOMXPathExpression* aExpr)
     {
         if (!mRequiredBindings) {
             mRequiredBindings = new nsXMLBindingSet();
+            NS_ENSURE_TRUE(mRequiredBindings, NS_ERROR_OUT_OF_MEMORY);
         }
 
-        mRequiredBindings->AddBinding(aVar, mozilla::Move(aExpr));
+        return mRequiredBindings->AddBinding(aVar, aExpr);
     }
 
     nsXMLQuery(nsXULTemplateQueryProcessorXML* aProcessor,
-               nsIAtom* aMemberVariable,
-               nsAutoPtr<mozilla::dom::XPathExpression>&& aResultsExpr)
+                        nsIAtom* aMemberVariable,
+                        nsIDOMXPathExpression* aResultsExpr)
         : mProcessor(aProcessor),
           mMemberVariable(aMemberVariable),
           mResultsExpr(aResultsExpr)
@@ -75,7 +75,7 @@ class nsXMLQuery MOZ_FINAL : public nsISupports
 
     nsCOMPtr<nsIAtom> mMemberVariable;
 
-    nsAutoPtr<mozilla::dom::XPathExpression> mResultsExpr;
+    nsCOMPtr<nsIDOMXPathExpression> mResultsExpr;
 
     nsRefPtr<nsXMLBindingSet> mRequiredBindings;
 };
@@ -109,7 +109,7 @@ public:
     NS_DECL_NSISIMPLEENUMERATOR
 
     nsXULTemplateResultSetXML(nsXMLQuery* aQuery,
-                              already_AddRefed<mozilla::dom::XPathResult> aResults,
+                              mozilla::dom::XPathResult* aResults,
                               nsXMLBindingSet* aBindingSet)
         : mQuery(aQuery),
           mBindingSet(aBindingSet),
@@ -143,10 +143,10 @@ public:
 
     // create an XPath expression from aExpr, using aNode for
     // resolving namespaces
-    mozilla::dom::XPathExpression*
+    nsresult
     CreateExpression(const nsAString& aExpr,
-                     nsINode* aNode,
-                     mozilla::ErrorResult& aRv);
+                     nsIDOMNode* aNode,
+                     nsIDOMXPathExpression** aCompiledExpr);
 
 private:
 
@@ -156,9 +156,9 @@ private:
 
     nsRefPtrHashtable<nsISupportsHashKey, nsXMLBindingSet> mRuleToBindingsMap;
 
-    nsCOMPtr<mozilla::dom::Element> mRoot;
+    nsCOMPtr<nsIDOMElement> mRoot;
 
-    nsRefPtr<mozilla::dom::XPathEvaluator> mEvaluator;
+    nsCOMPtr<nsIDOMXPathEvaluator> mEvaluator;
 
     nsCOMPtr<nsIXULTemplateBuilder> mTemplateBuilder;
 

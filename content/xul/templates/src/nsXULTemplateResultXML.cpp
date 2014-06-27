@@ -18,15 +18,17 @@ static uint32_t sTemplateId = 0;
 NS_IMPL_ISUPPORTS(nsXULTemplateResultXML, nsIXULTemplateResult)
 
 nsXULTemplateResultXML::nsXULTemplateResultXML(nsXMLQuery* aQuery,
-                                               nsIContent* aNode,
+                                               nsIDOMNode* aNode,
                                                nsXMLBindingSet* aBindings)
     : mQuery(aQuery), mNode(aNode)
 {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mNode);
+
     // If the node has an id, create the uri from it. Otherwise, there isn't
     // anything to identify the node with so just use a somewhat random number.
-    nsCOMPtr<nsIAtom> id = mNode->GetID();
+    nsCOMPtr<nsIAtom> id = content->GetID();
     if (id) {
-      nsCOMPtr<nsIURI> uri = mNode->GetBaseURI();
+      nsCOMPtr<nsIURI> uri = content->GetBaseURI();
       nsAutoCString spec;
       uri->GetSpec(spec);
 
@@ -50,7 +52,10 @@ NS_IMETHODIMP
 nsXULTemplateResultXML::GetIsContainer(bool* aIsContainer)
 {
     // a node is considered a container if it has children
-    *aIsContainer = mNode && mNode->HasChildNodes();
+    if (mNode)
+        mNode->HasChildNodes(aIsContainer);
+    else
+        *aIsContainer = false;
     return NS_OK;
 }
 
@@ -143,7 +148,7 @@ nsXULTemplateResultXML::GetBindingObjectFor(nsIAtom* aVar, nsISupports** aValue)
     NS_ENSURE_ARG_POINTER(aVar);
 
     nsXMLBinding* binding;
-    nsCOMPtr<nsISupports> node;
+    nsCOMPtr<nsIDOMNode> node;
 
     if (mQuery && aVar == mQuery->GetMemberVariable()) {
         node = mNode;
@@ -151,17 +156,20 @@ nsXULTemplateResultXML::GetBindingObjectFor(nsIAtom* aVar, nsISupports** aValue)
     else {
         int32_t idx = mRequiredValues.LookupTargetIndex(aVar, &binding);
         if (idx > 0) {
-            node = mRequiredValues.GetNodeAssignmentFor(this, binding, idx);
+            mRequiredValues.GetNodeAssignmentFor(this, binding, idx,
+                                                 getter_AddRefs(node));
         }
         else {
             idx = mOptionalValues.LookupTargetIndex(aVar, &binding);
             if (idx > 0) {
-                node = mOptionalValues.GetNodeAssignmentFor(this, binding, idx);
+                mOptionalValues.GetNodeAssignmentFor(this, binding, idx,
+                                                     getter_AddRefs(node));
             }
         }
     }
 
-    node.forget(aValue);
+    *aValue = node;
+    NS_IF_ADDREF(*aValue);
     return NS_OK;
 }
 
@@ -186,4 +194,11 @@ NS_IMETHODIMP
 nsXULTemplateResultXML::HasBeenRemoved()
 {
     return NS_OK;
+}
+
+void
+nsXULTemplateResultXML::GetNode(nsIDOMNode** aNode)
+{
+    *aNode = mNode;
+    NS_IF_ADDREF(*aNode);
 }

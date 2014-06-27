@@ -8,10 +8,9 @@
 
 #include "nsAutoPtr.h"
 #include "nsIAtom.h"
+#include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/XPathExpression.h"
 
-class nsINode;
 class nsXULTemplateResultXML;
 class nsXMLBindingValues;
 namespace mozilla {
@@ -29,11 +28,11 @@ class XPathResult;
  */
 struct nsXMLBinding {
   nsCOMPtr<nsIAtom> mVar;
-  nsAutoPtr<mozilla::dom::XPathExpression> mExpr;
+  nsCOMPtr<nsIDOMXPathExpression> mExpr;
 
   nsAutoPtr<nsXMLBinding> mNext;
 
-  nsXMLBinding(nsIAtom* aVar, nsAutoPtr<mozilla::dom::XPathExpression>&& aExpr)
+  nsXMLBinding(nsIAtom* aVar, nsIDOMXPathExpression* aExpr)
     : mVar(aVar), mExpr(aExpr), mNext(nullptr)
   {
     MOZ_COUNT_CTOR(nsXMLBinding);
@@ -54,16 +53,26 @@ class nsXMLBindingSet MOZ_FINAL
   ~nsXMLBindingSet();
 
 public:
+
+  // results hold a reference to a binding set in their
+  // nsXMLBindingValues fields
+  nsCycleCollectingAutoRefCnt mRefCnt;
+
   // pointer to the first binding in a linked list
   nsAutoPtr<nsXMLBinding> mFirst;
 
-  NS_INLINE_DECL_REFCOUNTING(nsXMLBindingSet);
+public:
+
+  NS_METHOD_(MozExternalRefCountType) AddRef();
+  NS_METHOD_(MozExternalRefCountType) Release();
+  NS_DECL_OWNINGTHREAD
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXMLBindingSet)
 
   /**
    * Add a binding to the set
    */
-  void
-  AddBinding(nsIAtom* aVar, nsAutoPtr<mozilla::dom::XPathExpression>&& aExpr);
+  nsresult
+  AddBinding(nsIAtom* aVar, nsIDOMXPathExpression* aExpr);
 
   /**
    * The nsXMLBindingValues class stores an array of values, one for each
@@ -122,10 +131,11 @@ public:
                    int32_t idx,
                    uint16_t type);
 
-  nsINode*
+  void
   GetNodeAssignmentFor(nsXULTemplateResultXML* aResult,
                        nsXMLBinding* aBinding,
-                       int32_t idx);
+                       int32_t idx,
+                       nsIDOMNode** aValue);
 
   void
   GetStringAssignmentFor(nsXULTemplateResultXML* aResult,

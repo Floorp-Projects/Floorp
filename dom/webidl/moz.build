@@ -481,7 +481,6 @@ WEBIDL_FILES = [
     'XMLSerializer.webidl',
     'XMLStylesheetProcessingInstruction.webidl',
     'XPathEvaluator.webidl',
-    'XPathExpression.webidl',
     'XPathResult.webidl',
     'XULCommandEvent.webidl',
     'XULDocument.webidl',
