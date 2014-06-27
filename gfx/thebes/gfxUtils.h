@@ -16,6 +16,8 @@
 class gfxASurface;
 class gfxDrawable;
 class nsIntRegion;
+class nsIPresShell;
+
 struct nsIntRect;
 
 namespace mozilla {
@@ -27,6 +29,7 @@ struct PlanarYCbCrData;
 class gfxUtils {
 public:
     typedef mozilla::gfx::DataSourceSurface DataSourceSurface;
+    typedef mozilla::gfx::DrawTarget DrawTarget;
     typedef mozilla::gfx::IntPoint IntPoint;
     typedef mozilla::gfx::Matrix Matrix;
     typedef mozilla::gfx::SourceSurface SourceSurface;
@@ -228,45 +231,78 @@ public:
     static const mozilla::gfx::Color& GetColorForFrameNumber(uint64_t aFrameNumber);
     static const uint32_t sNumFrameColors;
 
+
+    enum BinaryOrData {
+        eBinaryEncode,
+        eDataURIEncode
+    };
+
+    /**
+     * Encodes the given surface to PNG/JPEG/BMP/etc. using imgIEncoder.
+     *
+     * @param aMimeType The MIME-type of the image type that the surface is to
+     *   be encoded to. Used to create an appropriate imgIEncoder instance to
+     *   do the encoding.
+     *
+     * @param aOutputOptions Passed directly to imgIEncoder::InitFromData as
+     *   the value of the |outputOptions| parameter. Callers are responsible
+     *   for making sure that this is a sane value for the passed MIME-type
+     *   (i.e. for the type of encoder that will be created).
+     *
+     * @aBinaryOrData Flag used to determine if the surface is simply encoded
+     *   to the requested binary image format, or if the binary image is
+     *   further converted to base-64 and written out as a 'data:' URI.
+     *
+     * @aFile If specified, the encoded data is written out to aFile, otherwise
+     *   it is copied to the clipboard.
+     *
+     * TODO: Copying to the clipboard as a binary file is not currently
+     * supported.
+     */
+    static nsresult
+    EncodeSourceSurface(SourceSurface* aSurface,
+                        const nsACString& aMimeType,
+                        const nsAString& aOutputOptions,
+                        BinaryOrData aBinaryOrData,
+                        FILE* aFile);
+
+    /**
+     * Write as a PNG file to the path aFile.
+     */
+    static void WriteAsPNG(SourceSurface* aSurface, const nsAString& aFile);
+    static void WriteAsPNG(SourceSurface* aSurface, const char* aFile);
+    static void WriteAsPNG(DrawTarget* aDT, const nsAString& aFile);
+    static void WriteAsPNG(DrawTarget* aDT, const char* aFile);
+    static void WriteAsPNG(nsIPresShell* aShell, const char* aFile);
+
+    /**
+     * Dump as a PNG encoded Data URL to a FILE stream (using stdout by
+     * default).
+     *
+     * Rather than giving aFile a default argument we have separate functions
+     * to make them easier to use from a debugger.
+     */
+    static void DumpAsDataURI(SourceSurface* aSourceSurface, FILE* aFile);
+    static inline void DumpAsDataURI(SourceSurface* aSourceSurface) {
+        DumpAsDataURI(aSourceSurface, stdout);
+    }
+    static void DumpAsDataURI(DrawTarget* aDT, FILE* aFile);
+    static inline void DumpAsDataURI(DrawTarget* aDT) {
+        DumpAsDataURI(aDT, stdout);
+    }
+
+    /**
+     * Copy to the clipboard as a PNG encoded Data URL.
+     */
+    static void CopyAsDataURI(SourceSurface* aSourceSurface);
+    static void CopyAsDataURI(DrawTarget* aDT);
+
 #ifdef MOZ_DUMP_PAINTING
-    /**
-     * Writes a binary PNG file.
-     */
-    static void WriteAsPNG(mozilla::gfx::DrawTarget* aDT, const char* aFile);
-
-    /**
-     * Write as a PNG encoded Data URL to stdout.
-     */
-    static void DumpAsDataURL(mozilla::gfx::DrawTarget* aDT);
-
-    /**
-     * Copy a PNG encoded Data URL to the clipboard.
-     */
-    static void CopyAsDataURL(mozilla::gfx::DrawTarget* aDT);
-
     static bool DumpPaintList();
 
     static bool sDumpPainting;
     static bool sDumpPaintingToFile;
     static FILE* sDumpPaintFile;
-
-    /**
-     * Writes a binary PNG file.
-     * Expensive. Creates a DataSourceSurface, then a DrawTarget, then passes to DrawTarget overloads
-     */
-    static void WriteAsPNG(mozilla::gfx::SourceSurface* aSourceSurface, const char* aFile);
-
-    /**
-     * Write as a PNG encoded Data URL to stdout.
-     * Expensive. Creates a DataSourceSurface, then a DrawTarget, then passes to DrawTarget overloads
-     */
-    static void DumpAsDataURL(mozilla::gfx::SourceSurface* aSourceSurface);
-
-    /**
-     * Copy a PNG encoded Data URL to the clipboard.
-     * Expensive. Creates a DataSourceSurface, then a DrawTarget, then passes to DrawTarget overloads
-     */
-    static void CopyAsDataURL(mozilla::gfx::SourceSurface* aSourceSurface);
 #endif
 };
 
