@@ -511,7 +511,7 @@ NS_IMPL_RELEASE(nsXPCComponents_utils_Sandbox)
 #define XPC_MAP_FLAGS               0
 #include "xpc_map_end.h" /* This #undef's the above. */
 
-const xpc::SandboxProxyHandler xpc::sandboxProxyHandler;
+xpc::SandboxProxyHandler xpc::sandboxProxyHandler;
 
 bool
 xpc::IsSandboxPrototypeProxy(JSObject *obj)
@@ -575,7 +575,7 @@ xpc::SandboxCallableProxyHandler::call(JSContext *cx, JS::Handle<JSObject*> prox
     return JS::Call(cx, thisVal, func, args, args.rval());
 }
 
-const xpc::SandboxCallableProxyHandler xpc::sandboxCallableProxyHandler;
+xpc::SandboxCallableProxyHandler xpc::sandboxCallableProxyHandler;
 
 /*
  * Wrap a callable such that if we're called with oldThisObj as the
