@@ -41,9 +41,7 @@ members = [
     'nsIDOMStorage.clear',
 
     # dom/interfaces/xpath
-    'nsIDOMXPathExpression.evaluate',
     'nsIDOMXPathNSResolver.lookupNamespaceURI',
-    'nsIDOMNSXPathExpression.evaluateWithContext',
 
     # layout/xul/base/public
     'nsIBoxObject.x',
