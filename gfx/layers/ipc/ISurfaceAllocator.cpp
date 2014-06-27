@@ -178,7 +178,10 @@ ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)
 // XXX - We should actually figure out the minimum shmem allocation size on
 // a certain platform and use that.
 const uint32_t sShmemPageSize = 4096;
+
+#ifdef DEBUG
 const uint32_t sSupportedBlockSize = 4;
+#endif
 
 enum AllocationStatus
 {
@@ -324,5 +327,5 @@ ISurfaceAllocator::DeallocGrallocBuffer(MaybeMagicGrallocBufferHandle* aHandle)
   SharedBufferManagerChild::GetSingleton()->DeallocGrallocBuffer(*aHandle);
 }
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla
