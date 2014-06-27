@@ -20,25 +20,29 @@
   { 0x94, 0x96, 0xdf, 0x5d, 0x6f, 0xcd, 0xd7, 0x8f } }
 #define NS_DOMMULTIPARTFILE_CONTRACTID "@mozilla.org/dom/multipart-file;1"
 
-class DOMMultipartFileImpl MOZ_FINAL : public mozilla::dom::DOMFileImplBase
+using namespace mozilla::dom;
+
+class DOMMultipartFileImpl MOZ_FINAL : public DOMFileImplBase
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+
   // Create as a file
-  DOMMultipartFileImpl(const nsTArray<nsCOMPtr<nsIDOMBlob>>& aBlobs,
+  DOMMultipartFileImpl(const nsTArray<nsRefPtr<DOMFileImpl>>& aBlobImpls,
                        const nsAString& aName,
                        const nsAString& aContentType)
-    : mozilla::dom::DOMFileImplBase(aName, aContentType, UINT64_MAX),
-      mBlobs(aBlobs),
+    : DOMFileImplBase(aName, aContentType, UINT64_MAX),
+      mBlobImpls(aBlobImpls),
       mIsFromNsiFile(false)
   {
     SetLengthAndModifiedDate();
   }
 
   // Create as a blob
-  DOMMultipartFileImpl(const nsTArray<nsCOMPtr<nsIDOMBlob>>& aBlobs,
+  DOMMultipartFileImpl(const nsTArray<nsRefPtr<DOMFileImpl>>& aBlobImpls,
                        const nsAString& aContentType)
-    : mozilla::dom::DOMFileImplBase(aContentType, UINT64_MAX),
-      mBlobs(aBlobs),
+    : DOMFileImplBase(aContentType, UINT64_MAX),
+      mBlobImpls(aBlobImpls),
       mIsFromNsiFile(false)
   {
     SetLengthAndModifiedDate();
@@ -46,14 +50,14 @@ public:
 
   // Create as a file to be later initialized
   explicit DOMMultipartFileImpl(const nsAString& aName)
-    : mozilla::dom::DOMFileImplBase(aName, EmptyString(), UINT64_MAX),
+    : DOMFileImplBase(aName, EmptyString(), UINT64_MAX),
       mIsFromNsiFile(false)
   {
   }
 
   // Create as a blob to be later initialized
   DOMMultipartFileImpl()
-    : mozilla::dom::DOMFileImplBase(EmptyString(), UINT64_MAX),
+    : DOMFileImplBase(EmptyString(), UINT64_MAX),
       mIsFromNsiFile(false)
   {
   }
@@ -96,9 +100,9 @@ public:
     return NewFile(EmptyString(), aNewObject);
   }
 
-  virtual const nsTArray<nsCOMPtr<nsIDOMBlob>>* GetSubBlobs() const MOZ_OVERRIDE
+  virtual const nsTArray<nsRefPtr<DOMFileImpl>>* GetSubBlobImpls() const MOZ_OVERRIDE
   {
-    return &mBlobs;
+    return &mBlobImpls;
   }
 
   virtual nsresult GetMozFullPathInternal(nsAString& aFullPath) MOZ_OVERRIDE;
@@ -109,7 +113,7 @@ protected:
 
   void SetLengthAndModifiedDate();
 
-  nsTArray<nsCOMPtr<nsIDOMBlob> > mBlobs;
+  nsTArray<nsRefPtr<DOMFileImpl>> mBlobImpls;
   bool mIsFromNsiFile;
 };
 
@@ -126,17 +130,17 @@ public:
 
   nsresult AppendVoidPtr(const void* aData, uint32_t aLength);
   nsresult AppendString(JSString* aString, bool nativeEOL, JSContext* aCx);
-  nsresult AppendBlob(nsIDOMBlob* aBlob);
+  nsresult AppendBlobImpl(DOMFileImpl* aBlobImpl);
   nsresult AppendArrayBuffer(JSObject* aBuffer);
-  nsresult AppendBlobs(const nsTArray<nsCOMPtr<nsIDOMBlob> >& aBlob);
+  nsresult AppendBlobImpls(const nsTArray<nsRefPtr<DOMFileImpl>>& aBlobImpls);
 
-  nsTArray<nsCOMPtr<nsIDOMBlob> >& GetBlobs() { Flush(); return mBlobs; }
+  nsTArray<nsRefPtr<DOMFileImpl>>& GetBlobImpls() { Flush(); return mBlobImpls; }
 
   already_AddRefed<nsIDOMBlob>
   GetBlobInternal(const nsACString& aContentType)
   {
-    nsCOMPtr<nsIDOMBlob> blob = new mozilla::dom::DOMFile(
-      new DOMMultipartFileImpl(GetBlobs(), NS_ConvertASCIItoUTF16(aContentType)));
+    nsCOMPtr<nsIDOMBlob> blob = new DOMFile(
+      new DOMMultipartFileImpl(GetBlobImpls(), NS_ConvertASCIItoUTF16(aContentType)));
     return blob.forget();
   }
 
@@ -174,16 +178,16 @@ protected:
       // If we have some data, create a blob for it
       // and put it on the stack
 
-      nsCOMPtr<nsIDOMBlob> blob =
-        mozilla::dom::DOMFile::CreateMemoryFile(mData, mDataLen, EmptyString());
-      mBlobs.AppendElement(blob);
+      nsRefPtr<DOMFileImpl> blobImpl =
+        new DOMFileImplMemory(mData, mDataLen, EmptyString());
+      mBlobImpls.AppendElement(blobImpl);
       mData = nullptr; // The nsDOMMemoryFile takes ownership of the buffer
       mDataLen = 0;
       mDataBufferLen = 0;
     }
   }
 
-  nsTArray<nsCOMPtr<nsIDOMBlob> > mBlobs;
+  nsTArray<nsRefPtr<DOMFileImpl>> mBlobImpls;
   void* mData;
   uint64_t mDataLen;
   uint64_t mDataBufferLen;

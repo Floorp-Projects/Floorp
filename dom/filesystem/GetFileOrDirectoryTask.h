@@ -13,6 +13,8 @@
 namespace mozilla {
 namespace dom {
 
+class DOMFileImpl;
+
 class GetFileOrDirectoryTask MOZ_FINAL
   : public FileSystemTaskBase
 {
@@ -54,7 +56,10 @@ private:
   nsString mTargetRealPath;
   // Whether we get a directory.
   bool mIsDirectory;
-  nsCOMPtr<nsIDOMFile> mTargetFile;
+
+  // This cannot be a DOMFile bacause this object is created on a different
+  // thread and DOMFile is not thread-safe. Let's use the DOMFileImpl instead.
+  nsRefPtr<DOMFileImpl> mTargetFileImpl;
 };
 
 } // namespace dom
