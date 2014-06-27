@@ -13,6 +13,7 @@
 <textbox id="autocomplete"
          type="autocomplete"
          completedefaultindex="true"
+         forcecomplete="true"
          onsearchcomplete="searchComplete();"
          autocompletesearch="simple"/>
 
@@ -139,6 +140,12 @@ const tests = [
   },
   { desc: "RETURN key",
     key: "VK_RETURN",
+    removeSelection: false,
+    result: "Result",
+    start: 6, end: 6
+  },
+  { desc: "TAB key should confirm suggestion when forcecomplete is set",
+    key: "VK_TAB",
     removeSelection: false,
     result: "Result",
     start: 6, end: 6
