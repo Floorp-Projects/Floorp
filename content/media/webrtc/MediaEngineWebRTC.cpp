@@ -30,7 +30,6 @@ GetUserMediaLog()
 #include "MediaEngineWebRTC.h"
 #include "ImageContainer.h"
 #include "nsIComponentRegistrar.h"
-#include "MediaEngineTabVideoSource.h"
 #include "nsITabSource.h"
 #include "MediaTrackConstraints.h"
 
@@ -210,8 +209,12 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
     }
   }
 
-  if (mHasTabVideoSource)
-    aVSources->AppendElement(new MediaEngineTabVideoSource());
+  if (mHasTabVideoSource) {
+    if (!mTabVideoSource) {
+      mTabVideoSource = new MediaEngineTabVideoSource();
+    }
+    aVSources->AppendElement(mTabVideoSource);
+  }
 
   return;
 #endif
