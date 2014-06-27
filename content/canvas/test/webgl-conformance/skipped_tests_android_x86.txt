@@ -13,5 +13,12 @@ conformance/misc/object-deletion-behaviour.html
 conformance/misc/type-conversion-test.html
 conformance/reading/read-pixels-test.html
 conformance/renderbuffers/framebuffer-object-attachment.html
+conformance/textures/gl-teximage.html
+conformance/textures/origin-clean-conformance.html
+conformance/textures/tex-image-and-sub-image-2d-with-image.html
 conformance/textures/tex-image-and-sub-image-2d-with-video.html
+conformance/textures/tex-image-and-sub-image-2d-with-array-buffer-view.html
+conformance/textures/texture-mips.html
 conformance/textures/texture-npot-video.html
+conformance/textures/texture-size.html
+conformance/textures/texture-size-cube-maps.html
