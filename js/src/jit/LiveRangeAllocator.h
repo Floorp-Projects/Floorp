@@ -132,7 +132,15 @@ struct UsePosition : public TempObject,
     UsePosition(LUse *use, CodePosition pos) :
         use(use),
         pos(pos)
-    { }
+    {
+        // Verify that the usedAtStart() flag is consistent with the
+        // subposition. For now ignore fixed registers, because they
+        // are handled specially around calls.
+        JS_ASSERT_IF(!use->isFixedRegister(),
+                     pos.subpos() == (use->usedAtStart()
+                                      ? CodePosition::INPUT
+                                      : CodePosition::OUTPUT));
+    }
 };
 
 typedef InlineForwardListIterator<UsePosition> UsePositionIterator;
