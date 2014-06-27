@@ -427,10 +427,7 @@ MacroAssemblerARM::ma_movPatchable(Imm32 imm_, Register dest, Assembler::Conditi
     if (i) {
         // Make sure the current instruction is not an artificial guard
         // inserted by the assembler buffer.
-        // The InstructionIterator already does this and handles edge cases,
-        // so, just asking an iterator for its current instruction should be
-        // enough to make sure we don't accidentally inspect an artificial guard.
-        i = InstructionIterator(i).cur();
+        i = i->skipPool();
     }
     switch(rs) {
       case L_MOVWT:
@@ -451,8 +448,8 @@ MacroAssemblerARM::ma_movPatchable(Imm32 imm_, Register dest, Assembler::Conditi
 }
 
 void
-MacroAssemblerARM::ma_movPatchable(ImmPtr imm, Register dest,
-                                   Assembler::Condition c, RelocStyle rs, Instruction *i)
+MacroAssemblerARM::ma_movPatchable(ImmPtr imm, Register dest, Assembler::Condition c,
+                                   RelocStyle rs, Instruction *i)
 {
     return ma_movPatchable(Imm32(int32_t(imm.value)), dest, c, rs, i);
 }
@@ -4364,15 +4361,13 @@ CodeOffsetLabel
 MacroAssemblerARMCompat::toggledCall(JitCode *target, bool enabled)
 {
     BufferOffset bo = nextOffset();
-    CodeOffsetLabel offset(bo.getOffset());
     addPendingJump(bo, ImmPtr(target->raw()), Relocation::JITCODE);
     ma_movPatchable(ImmPtr(target->raw()), ScratchRegister, Always, HasMOVWT() ? L_MOVWT : L_LDR);
     if (enabled)
         ma_blx(ScratchRegister);
     else
         ma_nop();
-    JS_ASSERT(nextOffset().getOffset() - offset.offset() == ToggledCallSize());
-    return offset;
+    return CodeOffsetLabel(bo.getOffset());
 }
 
 void
