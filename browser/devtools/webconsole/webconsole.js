@@ -4292,8 +4292,8 @@ JSTerm.prototype = {
 
     if (this._autocompleteQuery && input.startsWith(this._autocompleteQuery)) {
       let filterBy = input;
-      // Find the last non-alphanumeric if exists.
-      let lastNonAlpha = input.match(/[^a-zA-Z0-9][a-zA-Z0-9]*$/);
+      // Find the last non-alphanumeric other than _ or $ if it exists.
+      let lastNonAlpha = input.match(/[^a-zA-Z0-9_$][a-zA-Z0-9_$]*$/);
       // If input contains non-alphanumerics, use the part after the last one
       // to filter the cache
       if (lastNonAlpha) {
