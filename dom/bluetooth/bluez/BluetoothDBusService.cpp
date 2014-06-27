@@ -1788,6 +1788,40 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
           }
         }
       }
+
+      if (FindProperty(properties, "Class") < 0) {
+        // Check whether the properties array contains CoD. If it doesn't,
+        // fallback to restore CoD value. This usually happens due to NFC
+        // directly triggers pairing that makes bluez not update CoD value.
+        uint32_t cod = 0;
+        int uuidIndex = FindProperty(properties, "UUIDs");
+        if (uuidIndex >= 0) {
+          BluetoothNamedValue& deviceProperty = properties[uuidIndex];
+          const InfallibleTArray<nsString>& uuids =
+            deviceProperty.value().get_ArrayOfnsString();
+
+          for (uint32_t i = 0; i < uuids.Length(); ++i) {
+            BluetoothServiceClass serviceClass =
+              BluetoothUuidHelper::GetBluetoothServiceClass(uuids[i]);
+            if (serviceClass == BluetoothServiceClass::HANDSFREE ||
+                serviceClass == BluetoothServiceClass::HEADSET) {
+              BT_LOGD("Restore CoD value, set Audio bit");
+              SET_AUDIO_BIT(cod);
+            } else if (serviceClass == BluetoothServiceClass::A2DP_SINK) {
+              BT_LOGD("Restore CoD value, set A2DP_SINK bit");
+              SET_RENDERING_BIT(cod);
+            }
+          }
+
+          // Add both CoD and Icon information anyway, 'audio-card' refers to
+          // 'Audio' device.
+          properties.AppendElement(
+            BluetoothNamedValue(NS_LITERAL_STRING("Class"), cod));
+          properties.AppendElement(
+            BluetoothNamedValue(NS_LITERAL_STRING("Icon"),
+              NS_LITERAL_STRING("audio-card")));
+        }
+      }
     }
   } else if (dbus_message_is_signal(aMsg, DBUS_ADAPTER_IFACE,
                                     "DeviceDisappeared")) {
