@@ -41,8 +41,8 @@ class ProxyObject : public JSObject
         return const_cast<ProxyObject*>(this)->private_().toObjectOrNull();
     }
 
-    const BaseProxyHandler *handler() {
-        return static_cast<const BaseProxyHandler*>(GetReservedSlot(this, HANDLER_SLOT).toPrivate());
+    BaseProxyHandler *handler() {
+        return static_cast<BaseProxyHandler*>(GetReservedSlot(this, HANDLER_SLOT).toPrivate());
     }
 
     void initHandler(const BaseProxyHandler *handler);
