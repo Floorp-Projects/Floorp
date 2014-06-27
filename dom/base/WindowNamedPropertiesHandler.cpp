@@ -87,6 +87,7 @@ WindowNamedPropertiesHandler::getOwnPropertyDescriptor(JSContext* aCx,
                                                        JS::Handle<JSObject*> aProxy,
                                                        JS::Handle<jsid> aId,
                                                        JS::MutableHandle<JSPropertyDescriptor> aDesc)
+                                                       const
 {
   // Note: The infallibleInit call below depends on this check.
   if (!JSID_IS_STRING(aId)) {
@@ -160,7 +161,7 @@ bool
 WindowNamedPropertiesHandler::defineProperty(JSContext* aCx,
                                              JS::Handle<JSObject*> aProxy,
                                              JS::Handle<jsid> aId,
-                                             JS::MutableHandle<JSPropertyDescriptor> aDesc)
+                                             JS::MutableHandle<JSPropertyDescriptor> aDesc) const
 {
   ErrorResult rv;
   rv.ThrowTypeError(MSG_DEFINEPROPERTY_ON_GSP);
@@ -172,7 +173,7 @@ bool
 WindowNamedPropertiesHandler::ownPropNames(JSContext* aCx,
                                            JS::Handle<JSObject*> aProxy,
                                            unsigned flags,
-                                           JS::AutoIdVector& aProps)
+                                           JS::AutoIdVector& aProps) const
 {
   // Grab the DOM window.
   nsGlobalWindow* win = GetWindowFromGlobal(JS_GetGlobalForObject(aCx, aProxy));
@@ -210,7 +211,7 @@ WindowNamedPropertiesHandler::ownPropNames(JSContext* aCx,
 bool
 WindowNamedPropertiesHandler::delete_(JSContext* aCx,
                                       JS::Handle<JSObject*> aProxy,
-                                      JS::Handle<jsid> aId, bool* aBp)
+                                      JS::Handle<jsid> aId, bool* aBp) const
 {
   *aBp = false;
   return true;
