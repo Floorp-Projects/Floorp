@@ -227,13 +227,16 @@ TEST_F(pkix_cert_extensions, WrongOIDCriticalExtension)
 // is detected and that verification succeeds.
 TEST_F(pkix_cert_extensions, CriticalAIAExtension)
 {
+  // XXX: According to RFC 5280 an AIA that consists of an empty sequence is
+  // not legal, but  we accept it and that is not what we're testing here.
   static const uint8_t criticalAIAExtensionBytes[] = {
-    0x30, 0x0f, // SEQUENCE (length = 15)
+    0x30, 0x11, // SEQUENCE (length = 17)
       0x06, 0x08, // OID (length = 8)
         // 1.3.6.1.5.5.7.1.1
         0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x01, 0x01,
       0x01, 0x01, 0xff, // BOOLEAN (length = 1) TRUE
-      0x04, 0x00 // OCTET STRING (length = 0)
+      0x04, 0x02, // OCTET STRING (length = 2)
+        0x30, 0x00, // SEQUENCE (length = 0)
   };
   static const SECItem criticalAIAExtension = {
     siBuffer,
@@ -293,11 +296,12 @@ TEST_F(pkix_cert_extensions, UnknownCriticalCEExtension)
 TEST_F(pkix_cert_extensions, KnownCriticalCEExtension)
 {
   static const uint8_t criticalCEExtensionBytes[] = {
-    0x30, 0x0a, // SEQUENCE (length = 10)
+    0x30, 0x0d, // SEQUENCE (length = 13)
       0x06, 0x03, // OID (length = 3)
         0x55, 0x1d, 0x36, // 2.5.29.54 (id-ce-inhibitAnyPolicy)
       0x01, 0x01, 0xff, // BOOLEAN (length = 1) TRUE
-      0x04, 0x00 // OCTET STRING (length = 0)
+      0x04, 0x03, // OCTET STRING (length = 3)
+        0x02, 0x01, 0x00, // INTEGER (length = 1, value = 0)
   };
   static const SECItem criticalCEExtension = {
     siBuffer,

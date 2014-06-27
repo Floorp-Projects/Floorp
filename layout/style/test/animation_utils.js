@@ -392,7 +392,7 @@ const ExpectComparisonTo = {
     }
   };
 
-  function matricesRoughlyEqual(a, b, tolerance) {
+  window.matricesRoughlyEqual = function(a, b, tolerance) {
     tolerance = tolerance || 0.00011;
     for (var i = 0; i < 4; i++) {
       for (var j = 0; j < 4; j++) {
@@ -402,7 +402,7 @@ const ExpectComparisonTo = {
       }
     }
     return true;
-  }
+  };
 
   // Converts something representing an transform into a 3d matrix in
   // column-major order.

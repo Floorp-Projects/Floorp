@@ -17,6 +17,7 @@
 
 #include "nsIViewSourceChannel.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 
@@ -200,10 +201,23 @@ nsUnknownDecoder::OnStopRequest(nsIRequest* request, nsISupports *aCtxt,
   if (mContentType.IsEmpty()) {
     DetermineContentType(request);
 
+    // Make sure channel listeners see channel as pending while we call 
+    // OnStartRequest/OnDataAvailable, even though the underlying channel 
+    // has already hit OnStopRequest.
+    nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(request);
+    if (httpChannel) {
+      httpChannel->ForcePending(true);
+    }
+
     rv = FireListenerNotifications(request, aCtxt);
 
     if (NS_FAILED(rv)) {
       aStatus = rv;
+    }
+
+    // now we need to set pending state to false before calling OnStopRequest
+    if (httpChannel) {
+      httpChannel->ForcePending(false);
     }
   }
 

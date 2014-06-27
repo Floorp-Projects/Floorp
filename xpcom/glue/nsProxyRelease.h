@@ -22,14 +22,14 @@
  *
  * @see NS_ProxyRelease(nsIEventTarget*, nsISupports*, bool)
  */
-template <class T>
+template<class T>
 inline NS_HIDDEN_(nsresult)
-NS_ProxyRelease
-    (nsIEventTarget *target, nsCOMPtr<T> &doomed, bool alwaysProxy=false)
+NS_ProxyRelease(nsIEventTarget* aTarget, nsCOMPtr<T>& aDoomed,
+                bool aAlwaysProxy = false)
 {
-   T* raw = nullptr;
-   doomed.swap(raw);
-   return NS_ProxyRelease(target, raw, alwaysProxy);
+  T* raw = nullptr;
+  aDoomed.swap(raw);
+  return NS_ProxyRelease(aTarget, raw, aAlwaysProxy);
 }
 
 /**
@@ -37,32 +37,32 @@ NS_ProxyRelease
  *
  * @see NS_ProxyRelease(nsIEventTarget*, nsISupports*, bool)
  */
-template <class T>
+template<class T>
 inline NS_HIDDEN_(nsresult)
-NS_ProxyRelease
-    (nsIEventTarget *target, nsRefPtr<T> &doomed, bool alwaysProxy=false)
+NS_ProxyRelease(nsIEventTarget* aTarget, nsRefPtr<T>& aDoomed,
+                bool aAlwaysProxy = false)
 {
-   T* raw = nullptr;
-   doomed.swap(raw);
-   return NS_ProxyRelease(target, raw, alwaysProxy);
+  T* raw = nullptr;
+  aDoomed.swap(raw);
+  return NS_ProxyRelease(aTarget, raw, aAlwaysProxy);
 }
 
 /**
  * Ensures that the delete of a nsISupports object occurs on the target thread.
  *
- * @param target
+ * @param aTarget
  *        the target thread where the doomed object should be released.
- * @param doomed
+ * @param aDoomed
  *        the doomed object; the object to be released on the target thread.
- * @param alwaysProxy
+ * @param aAlwaysProxy
  *        normally, if NS_ProxyRelease is called on the target thread, then the
  *        doomed object will released directly.  however, if this parameter is
  *        true, then an event will always be posted to the target thread for
  *        asynchronous release.
  */
 NS_COM_GLUE nsresult
-NS_ProxyRelease
-    (nsIEventTarget *target, nsISupports *doomed, bool alwaysProxy=false);
+NS_ProxyRelease(nsIEventTarget* aTarget, nsISupports* aDoomed,
+                bool aAlwaysProxy = false);
 
 /**
  * Class to safely handle main-thread-only pointers off the main thread.
@@ -111,16 +111,20 @@ public:
   // off-main-thread. But some consumers need to use the same pointer for
   // multiple classes, some of which are main-thread-only and some of which
   // aren't. So we allow them to explicitly disable this strict checking.
-  nsMainThreadPtrHolder(T* ptr, bool strict = true) : mRawPtr(nullptr), mStrict(strict) {
+  nsMainThreadPtrHolder(T* aPtr, bool aStrict = true)
+    : mRawPtr(nullptr)
+    , mStrict(aStrict)
+  {
     // We can only AddRef our pointer on the main thread, which means that the
     // holder must be constructed on the main thread.
     MOZ_ASSERT(!mStrict || NS_IsMainThread());
-    NS_IF_ADDREF(mRawPtr = ptr);
+    NS_IF_ADDREF(mRawPtr = aPtr);
   }
 
 private:
   // We can be released on any thread.
-  ~nsMainThreadPtrHolder() {
+  ~nsMainThreadPtrHolder()
+  {
     if (NS_IsMainThread()) {
       NS_IF_RELEASE(mRawPtr);
     } else if (mRawPtr) {
@@ -135,7 +139,8 @@ private:
   }
 
 public:
-  T* get() {
+  T* get()
+  {
     // Nobody should be touching the raw pointer off-main-thread.
     if (mStrict && MOZ_UNLIKELY(!NS_IsMainThread())) {
       NS_ERROR("Can't dereference nsMainThreadPtrHolder off main thread");
@@ -144,7 +149,10 @@ public:
     return mRawPtr;
   }
 
-  bool operator==(const nsMainThreadPtrHolder<T>& aOther) const { return mRawPtr == aOther.mRawPtr; }
+  bool operator==(const nsMainThreadPtrHolder<T>& aOther) const
+  {
+    return mRawPtr == aOther.mRawPtr;
+  }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsMainThreadPtrHolder<T>)
 
@@ -157,20 +165,24 @@ private:
 
   // Copy constructor and operator= not implemented. Once constructed, the
   // holder is immutable.
-  T& operator=(nsMainThreadPtrHolder& other);
-  nsMainThreadPtrHolder(const nsMainThreadPtrHolder& other);
+  T& operator=(nsMainThreadPtrHolder& aOther);
+  nsMainThreadPtrHolder(const nsMainThreadPtrHolder& aOther);
 };
 
 template<class T>
 class nsMainThreadPtrHandle
 {
-  nsRefPtr<nsMainThreadPtrHolder<T> > mPtr;
+  nsRefPtr<nsMainThreadPtrHolder<T>> mPtr;
 
-  public:
+public:
   nsMainThreadPtrHandle() : mPtr(nullptr) {}
-  nsMainThreadPtrHandle(nsMainThreadPtrHolder<T> *aHolder) : mPtr(aHolder) {}
-  nsMainThreadPtrHandle(const nsMainThreadPtrHandle& aOther) : mPtr(aOther.mPtr) {}
-  nsMainThreadPtrHandle& operator=(const nsMainThreadPtrHandle& aOther) {
+  nsMainThreadPtrHandle(nsMainThreadPtrHolder<T>* aHolder) : mPtr(aHolder) {}
+  nsMainThreadPtrHandle(const nsMainThreadPtrHandle& aOther)
+    : mPtr(aOther.mPtr)
+  {
+  }
+  nsMainThreadPtrHandle& operator=(const nsMainThreadPtrHandle& aOther)
+  {
     mPtr = aOther.mPtr;
     return *this;
   }
@@ -197,9 +209,11 @@ class nsMainThreadPtrHandle
   T* operator->() { return get(); }
 
   // These are safe to call on other threads with appropriate external locking.
-  bool operator==(const nsMainThreadPtrHandle<T>& aOther) const {
-    if (!mPtr || !aOther.mPtr)
+  bool operator==(const nsMainThreadPtrHandle<T>& aOther) const
+  {
+    if (!mPtr || !aOther.mPtr) {
       return mPtr == aOther.mPtr;
+    }
     return *mPtr == *aOther.mPtr;
   }
   bool operator!() { return !mPtr; }

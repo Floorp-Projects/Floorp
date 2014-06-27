@@ -7,25 +7,26 @@
 #include "nsIInterfaceRequestorUtils.h"
 
 nsresult
-nsGetInterface::operator()( const nsIID& aIID, void** aInstancePtr ) const
+nsGetInterface::operator()(const nsIID& aIID, void** aInstancePtr) const
 {
   nsresult status;
 
-  if ( mSource )
-  {
-    nsCOMPtr<nsIInterfaceRequestor> factoryPtr = do_QueryInterface(mSource, &status);
-
-    if ( factoryPtr )
+  if (mSource) {
+    nsCOMPtr<nsIInterfaceRequestor> factoryPtr = do_QueryInterface(mSource);
+    if (factoryPtr) {
       status = factoryPtr->GetInterface(aIID, aInstancePtr);
-    else
+    } else {
       status = NS_ERROR_NO_INTERFACE;
-  }
-  else
+    }
+  } else {
     status = NS_ERROR_NULL_POINTER;
+  }
 
-  if ( NS_FAILED(status) )
+  if (NS_FAILED(status)) {
     *aInstancePtr = 0;
-  if ( mErrorPtr )
+  }
+  if (mErrorPtr) {
     *mErrorPtr = status;
+  }
   return status;
 }
