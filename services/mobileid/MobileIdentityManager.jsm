@@ -88,8 +88,7 @@ let MobileIdentityManager = {
     let promiseId = msg.promiseId;
     this.messageManagers[promiseId] = aMessage.target;
 
-    this.getMobileIdAssertion(aMessage.principal, promiseId,
-                              msg.msisdn, msg.prompt);
+    this.getMobileIdAssertion(aMessage.principal, promiseId, msg.options);
   },
 
   observe: function(subject, topic, data) {
@@ -320,14 +319,8 @@ let MobileIdentityManager = {
   },
 
   /*********************************************************
-   * Permissions helpers
+   * Permissions helper
    ********************************************************/
-
-  hasPermission: function(aPrincipal) {
-    let permission = permissionManager.testPermissionFromPrincipal(aPrincipal,
-                                                                   MOBILEID_PERM);
-    return permission == Ci.nsIPermissionManager.ALLOW_ACTION;
-  },
 
   addPermission: function(aPrincipal) {
     permissionManager.addFromPrincipal(aPrincipal, MOBILEID_PERM,
@@ -707,7 +700,7 @@ let MobileIdentityManager = {
     return deferred.promise;
   },
 
-  getMobileIdAssertion: function(aPrincipal, aPromiseId) {
+  getMobileIdAssertion: function(aPrincipal, aPromiseId, aOptions) {
     log.debug("getMobileIdAssertion ${}", aPrincipal);
 
     let uri = Services.io.newURI(aPrincipal.origin, null, null);
@@ -722,10 +715,16 @@ let MobileIdentityManager = {
     .then(
       (creds) => {
         log.debug("creds ${creds} - ${origin}", { creds: creds,
-                                                  origin: aPrincipal.origin});
+                                                  origin: aPrincipal.origin });
         if (!creds || !creds.sessionToken) {
           log.debug("No credentials");
           return;
+        }
+
+        // Even if we already have credentials for this origin, the consumer of
+        // the API might want to force the identity selection dialog.
+        if (aOptions.forceSelection) {
+          return this.promptAndVerify(principal, manifestURL, creds);
         }
 
         // It is possible that the ICC associated with the stored
@@ -745,6 +744,7 @@ let MobileIdentityManager = {
           // what to do.
           return this.promptAndVerify(principal, manifestURL, creds);
         }
+
         return creds;
       }
     )
@@ -757,8 +757,14 @@ let MobileIdentityManager = {
         // If we've just prompted the user in the previous step, the permission
         // is already granted and stored so we just progress the credentials.
         if (creds) {
-          if (this.hasPermission(principal)) {
+          let permission = permissionManager.testPermissionFromPrincipal(
+            principal,
+            MOBILEID_PERM
+          );
+          if (permission == Ci.nsIPermissionManager.ALLOW_ACTION) {
             return creds;
+          } else if (permission == Ci.nsIPermissionManager.DENY_ACTION) {
+            return Promise.reject(ERROR_PERMISSION_DENIED);
           }
           return this.promptAndVerify(principal, manifestURL, creds);
         }
