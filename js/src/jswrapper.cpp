@@ -64,11 +64,11 @@ Wrapper::Renew(JSContext *cx, JSObject *existing, JSObject *obj, const Wrapper *
     return existing;
 }
 
-const Wrapper *
+Wrapper *
 Wrapper::wrapperHandler(JSObject *wrapper)
 {
     JS_ASSERT(wrapper->is<WrapperObject>());
-    return static_cast<const Wrapper*>(wrapper->as<ProxyObject>().handler());
+    return static_cast<Wrapper*>(wrapper->as<ProxyObject>().handler());
 }
 
 JSObject *
@@ -116,7 +116,7 @@ js::UnwrapOneChecked(JSObject *obj, bool stopAtOuter)
         return obj;
     }
 
-    const Wrapper *handler = Wrapper::wrapperHandler(obj);
+    Wrapper *handler = Wrapper::wrapperHandler(obj);
     return handler->hasSecurityPolicy() ? nullptr : Wrapper::wrappedObject(obj);
 }
 
