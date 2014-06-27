@@ -16,6 +16,9 @@ const FRAME_COMPLETE = 0x04;
 const LOAD_COMPLETE = 0x08;
 const DECODE_COMPLETE = 0x10;
 
+// Safebrowsing requires that the profile dir is set.
+do_get_profile();
+
 // An implementation of imgIScriptedNotificationObserver with the ability to
 // call specified functions on onStartRequest and onStopRequest.
 function ImageListener(start_callback, stop_callback)
