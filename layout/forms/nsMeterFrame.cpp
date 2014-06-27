@@ -248,8 +248,7 @@ nsMeterFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 
   nscoord minWidth = fontMet->Font().size; // 1em
 
-  if (StyleDisplay()->mOrient == NS_STYLE_ORIENT_AUTO ||
-      StyleDisplay()->mOrient == NS_STYLE_ORIENT_HORIZONTAL) {
+  if (StyleDisplay()->mOrient == NS_STYLE_ORIENT_HORIZONTAL) {
     // The orientation is horizontal
     minWidth *= 5; // 5em
   }

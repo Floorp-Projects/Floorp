@@ -3021,8 +3021,8 @@ var gCSSProperties = {
     domProp: "MozOrient",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: [ "horizontal", "vertical" ],
+    initial_values: [ "inline" ],
+    other_values: [ "horizontal", "vertical", "block" ],
     invalid_values: [ "none" ]
   },
   "orphans": {
