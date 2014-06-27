@@ -1764,7 +1764,10 @@ addAsyncAnimTest(function *() {
   //           "dynamic rule change test, keyframe style set");
   todo_is(csTransform, "matrix(1, 0, 0, 1, -50, 0)",
           "dynamic rule change test, keyframe style set");
-  is(SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "transform"), csTransform,
+  var brokenOMTATransform = convertTo3dMatrix(
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "transform"));
+  var brokenComputedTransform = convertTo3dMatrix(csTransform);
+  ok(matricesRoughlyEqual(brokenOMTATransform, brokenComputedTransform),
      "dynamic rule change test, keyframe style set" +
      " - OMTA style is equally as broken as computed style");
   dyn2.name = "dyn2";
