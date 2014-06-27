@@ -13,6 +13,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
 #include "mozilla/dom/MobileMessageManagerBinding.h"
+#include "mozilla/dom/MozMessageDeletedEvent.h"
 #include "mozilla/dom/MozMmsMessageBinding.h"
 #include "nsIDOMMozSmsEvent.h"
 #include "nsIDOMMozMmsEvent.h"
@@ -30,6 +31,7 @@
 #include "MobileMessageCallback.h"
 #include "MobileMessageCursorCallback.h"
 #include "DOMCursor.h"
+#include "DeletedMessageInfo.h"
 
 #define RECEIVED_EVENT_NAME         NS_LITERAL_STRING("received")
 #define RETRIEVING_EVENT_NAME       NS_LITERAL_STRING("retrieving")
@@ -40,6 +42,7 @@
 #define DELIVERY_ERROR_EVENT_NAME   NS_LITERAL_STRING("deliveryerror")
 #define READ_SUCCESS_EVENT_NAME     NS_LITERAL_STRING("readsuccess")
 #define READ_ERROR_EVENT_NAME       NS_LITERAL_STRING("readerror")
+#define DELETED_EVENT_NAME          NS_LITERAL_STRING("deleted")
 
 using namespace mozilla::dom::mobilemessage;
 
@@ -66,6 +69,7 @@ NS_IMPL_EVENT_HANDLER(MobileMessageManager, deliverysuccess)
 NS_IMPL_EVENT_HANDLER(MobileMessageManager, deliveryerror)
 NS_IMPL_EVENT_HANDLER(MobileMessageManager, readsuccess)
 NS_IMPL_EVENT_HANDLER(MobileMessageManager, readerror)
+NS_IMPL_EVENT_HANDLER(MobileMessageManager, deleted)
 
 void
 MobileMessageManager::Init(nsPIDOMWindow *aWindow)
@@ -87,6 +91,7 @@ MobileMessageManager::Init(nsPIDOMWindow *aWindow)
   obs->AddObserver(this, kSmsDeliveryErrorObserverTopic, false);
   obs->AddObserver(this, kSmsReadSuccessObserverTopic, false);
   obs->AddObserver(this, kSmsReadErrorObserverTopic, false);
+  obs->AddObserver(this, kSmsDeletedObserverTopic, false);
 }
 
 void
@@ -107,6 +112,7 @@ MobileMessageManager::Shutdown()
   obs->RemoveObserver(this, kSmsDeliveryErrorObserverTopic);
   obs->RemoveObserver(this, kSmsReadSuccessObserverTopic);
   obs->RemoveObserver(this, kSmsReadErrorObserverTopic);
+  obs->RemoveObserver(this, kSmsDeletedObserverTopic);
 }
 
 NS_IMETHODIMP
@@ -508,6 +514,27 @@ MobileMessageManager::DispatchTrustedSmsEventToSelf(const char* aTopic,
   return NS_OK;
 }
 
+nsresult
+MobileMessageManager::DispatchTrustedDeletedEventToSelf(nsISupports* aDeletedInfo)
+{
+  nsCOMPtr<nsIDeletedMessageInfo> deletedInfo = do_QueryInterface(aDeletedInfo);
+  if (deletedInfo) {
+    MozMessageDeletedEventInit init;
+    init.mBubbles = false;
+    init.mCancelable = false;
+    deletedInfo->GetDeletedMessageIds(getter_AddRefs(init.mDeletedMessageIds));
+    deletedInfo->GetDeletedThreadIds(getter_AddRefs(init.mDeletedThreadIds));
+
+    nsRefPtr<MozMessageDeletedEvent> event =
+      MozMessageDeletedEvent::Constructor(this, DELETED_EVENT_NAME, init);
+    return DispatchTrustedEvent(event);
+  }
+
+  NS_ERROR("Got a 'deleted' topic without a valid message!");
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 MobileMessageManager::Observe(nsISupports* aSubject, const char* aTopic,
                               const char16_t* aData)
@@ -546,6 +573,10 @@ MobileMessageManager::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!strcmp(aTopic, kSmsReadErrorObserverTopic)) {
     return DispatchTrustedSmsEventToSelf(aTopic, READ_ERROR_EVENT_NAME, aSubject);
+  }
+
+  if (!strcmp(aTopic, kSmsDeletedObserverTopic)) {
+    return DispatchTrustedDeletedEventToSelf(aSubject);
   }
 
   return NS_OK;
