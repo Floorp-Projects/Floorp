@@ -464,6 +464,8 @@
                   cancel = this.mController.handleKeyNavigation(aEvent.shiftKey ?
                                                                 KeyEvent.DOM_VK_UP :
                                                                 KeyEvent.DOM_VK_DOWN);
+                else if (this.forceComplete && this.mController.matchCount >= 1)
+                  this.mController.handleTab();
                 break;
               case KeyEvent.DOM_VK_UP:
               case KeyEvent.DOM_VK_DOWN:
