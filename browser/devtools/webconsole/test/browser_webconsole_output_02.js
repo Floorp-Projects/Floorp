@@ -86,7 +86,7 @@ let inputTests = [
   // 8 - array with holes and a cyclic reference
   {
     input: "window.array4",
-    output: 'Array [ , , , , , "test", Array[7] ]',
+    output: 'Array [ <5 empty slots>, "test", Array[7] ]',
     printOutput: '",,,,,test,"',
     inspectable: true,
     variablesViewLabel: "Array[7]",
