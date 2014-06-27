@@ -117,6 +117,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
   ["FeedHandler", ["Feeds:Subscribe"], "chrome://browser/content/FeedHandler.js"],
   ["Feedback", ["Feedback:Show"], "chrome://browser/content/Feedback.js"],
   ["SelectionHandler", ["TextSelection:Get"], "chrome://browser/content/SelectionHandler.js"],
+  ["Notifications", ["Notification:Event"], "chrome://browser/content/Notifications.jsm"],
 ].forEach(function (aScript) {
   let [name, notifications, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {
