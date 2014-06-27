@@ -40,7 +40,6 @@ var subtests = [
                    "subtst_privbrowsing_4.html", // 9
                    "subtst_privbrowsing_3.html" // 10
                ];
-var observer;
 
 var testNum = 0;
 function loadNextTest() {
@@ -96,16 +95,10 @@ function loadNextTest() {
       ok(false, "Unexpected call to loadNextTest for test #" + testNum);
   }
 
-  if (testNum === 7) {
-    observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
-      SimpleTest.executeSoon(() => { iframe.contentWindow.postMessage("go", "*"); });
-    });
-    SpecialPowers.addObserver(observer, "passwordmgr-found-logins", false);
-  }
-
   ok(true, "Starting test #" + testNum);
   iframe.src = prefix + subtests[testNum-1];
 }
+
 
 function checkTest() {
   var popup;
@@ -255,7 +248,6 @@ function handleLoad(aEvent) {
       aWin.close();
     });
 
-    SpecialPowers.removeObserver(observer, "passwordmgr-found-logins");
     SimpleTest.finish();
   }
 }

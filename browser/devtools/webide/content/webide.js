@@ -233,7 +233,15 @@ let UI = {
   /********** RUNTIME **********/
 
   updateRuntimeList: function() {
+    let wifiHeaderNode = document.querySelector("#runtime-header-wifi-devices");
+    if (AppManager.isWiFiScanningEnabled) {
+      wifiHeaderNode.removeAttribute("hidden");
+    } else {
+      wifiHeaderNode.setAttribute("hidden", "true");
+    }
+
     let USBListNode = document.querySelector("#runtime-panel-usbruntime");
+    let WiFiListNode = document.querySelector("#runtime-panel-wifi-devices");
     let simulatorListNode = document.querySelector("#runtime-panel-simulators");
     let customListNode = document.querySelector("#runtime-panel-custom");
 
@@ -261,6 +269,7 @@ let UI = {
 
     for (let [type, parent] of [
       ["usb", USBListNode],
+      ["wifi", WiFiListNode],
       ["simulator", simulatorListNode],
       ["custom", customListNode],
     ]) {
@@ -775,6 +784,8 @@ let Cmds = {
   },
 
   showRuntimePanel: function() {
+    AppManager.scanForWiFiRuntimes();
+
     let panel = document.querySelector("#runtime-panel");
     let anchor = document.querySelector("#runtime-panel-button > .panel-button-anchor");
 

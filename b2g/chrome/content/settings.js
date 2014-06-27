@@ -472,13 +472,6 @@ SettingsListener.observe('debugger.remote-mode', false, function(value) {
 #endif
 });
 
-// If debug access to certified apps is allowed, we need to preserve system
-// sources so that they are visible in the debugger.
-let forbidCertified =
-  Services.prefs.getBoolPref('devtools.debugger.forbid-certified-apps');
-Services.prefs.setBoolPref('javascript.options.discardSystemSource',
-                           forbidCertified);
-
 // =================== Device Storage ====================
 SettingsListener.observe('device.storage.writable.name', 'sdcard', function(value) {
   if (Services.prefs.getPrefType('device.storage.writable.name') != Ci.nsIPrefBranch.PREF_STRING) {

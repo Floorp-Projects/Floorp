@@ -17,6 +17,7 @@ PARALLEL_DIRS += [
     'qrcode',
     'transport',
     'tern',
+    'discovery'
 ]
 
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']

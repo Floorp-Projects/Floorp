@@ -66,7 +66,6 @@ try {
 
 /** Test for Login Manager: multiple login autocomplete. **/
 
-var tester;
 
 var uname = $_(1, "uname");
 var pword = $_(1, "pword");
@@ -93,6 +92,8 @@ function sendFakeAutocompleteEvent(element) {
     element.dispatchEvent(acEvent);
 }
 
+var gLastTest = 6;
+
 function addPopupListener(eventName, func, capture) {
   autocompletePopup.addEventListener(eventName, func, capture);
 }
@@ -109,81 +110,83 @@ function removePopupListener(eventName, func, capture) {
  * setTimeout() calls. The case statements are executed in order, one per
  * timeout.
  */
-function* runTest() {
-  function runNextTest() {
-    addPopupListener("popupshown", function() {
-      removePopupListener("popupshown", arguments.callee, false);
+function runTest(testNum) {
+  ok(true, "Starting test #" + testNum);
 
-      window.setTimeout(tester.next.bind(tester), 0);
-    }, false);
+  addPopupListener("popupshown", function() {
+    removePopupListener("popupshown", arguments.callee, false);
+
+    if (testNum != gLastTest) {
+      window.setTimeout(runTest, 0, testNum + 1);
+    }
+  }, false);
+
+  switch(testNum) {
+    case 1:
+        // Make sure initial form is empty.
+        checkACForm("", "");
+        // Trigger autocomplete popup
+        restoreForm();
+        doKey("down");
+        break;
+
+    case 2:
+        // Check first entry
+        doKey("down");
+        checkACForm("", ""); // value shouldn't update
+        doKey("return"); // not "enter"!
+        checkACForm("name", "pass");
+
+        // Trigger autocomplete popup
+        restoreForm();
+        doKey("down");
+        break;
+
+    case 3:
+        // Check second entry
+        doKey("down");
+        doKey("down");
+        doKey("return"); // not "enter"!
+        checkACForm("Name", "Pass");
+
+        // Trigger autocomplete popup
+        restoreForm();
+        doKey("down");
+        break;
+
+    case 4:
+        // Check third entry
+        doKey("down");
+        doKey("down");
+        doKey("down");
+        doKey("return");
+        checkACForm("USER", "PASS");
+
+        // Trigger autocomplete popup
+        restoreForm();
+        uname.value = "user";
+        doKey("down");
+        break;
+
+    case 5:
+        // Check that we don't clobber user-entered text when tabbing away
+        doKey("tab");
+        checkACForm("user", "PASS");
+
+        // Trigger autocomplete popup
+        restoreForm();
+        doKey("down");
+        break;
+
+    case 6:
+        SimpleTest.finish();
+        return;
+
+    default:
+        ok(false, "Unexpected invocation of test #" + testNum);
+        SimpleTest.finish();
+        return;
   }
-
-  function waitForCompletion() {
-    var observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
-      SpecialPowers.removeObserver(observer, "passwordmgr-found-logins");
-      tester.next();
-    });
-    SpecialPowers.addObserver(observer, "passwordmgr-found-logins", false);
-  }
-
-  /* test 1 */
-  // Make sure initial form is empty.
-  checkACForm("", "");
-  // Trigger autocomplete popup
-  restoreForm();
-  doKey("down");
-  yield runNextTest();
-
-  /* test 2 */
-  // Check first entry
-  doKey("down");
-  checkACForm("", ""); // value shouldn't update
-  doKey("return"); // not "enter"!
-  yield waitForCompletion();
-  checkACForm("name", "pass");
-
-  // Trigger autocomplete popup
-  restoreForm();
-  doKey("down");
-  yield runNextTest();
-
-  /* test 3 */
-  // Check second entry
-  doKey("down");
-  doKey("down");
-  doKey("return"); // not "enter"!
-  yield waitForCompletion();
-  checkACForm("Name", "Pass");
-
-  // Trigger autocomplete popup
-  restoreForm();
-  doKey("down");
-  yield runNextTest();
-
-  /* test 4 */
-  // Check third entry
-  doKey("down");
-  doKey("down");
-  doKey("down");
-  doKey("return");
-  yield waitForCompletion();
-  checkACForm("USER", "PASS");
-
-  // Trigger autocomplete popup
-  restoreForm();
-  uname.value = "user";
-  doKey("down");
-  yield runNextTest();
-
-  /* test 5 */
-  // Check that we don't clobber user-entered text when tabbing away
-  doKey("tab");
-  yield waitForCompletion();
-  checkACForm("user", "PASS");
-
-  // Trigger autocomplete popup
-  restoreForm();
-  SimpleTest.finish();
 }
 
 
@@ -203,11 +206,10 @@ function startTest() {
     // shouldn't assume ID is consistent across products
     autocompletePopup = chromeWin.document.getElementById("PopupAutoComplete");
     ok(autocompletePopup, "Got autocomplete popup");
-    tester = runTest();
-    tester.next();
+    runTest(1);
 }
 
-window.addEventListener("runTests", startTest);
+window.onload = startTest;
 </script>
 </pre>
 </body>
