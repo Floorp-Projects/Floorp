@@ -8,6 +8,7 @@
 #include <utility>                      // for pair
 #include "ContentHost.h"                // for ContentHostDoubleBuffered, etc
 #include "Effects.h"                    // for EffectMask, Effect, etc
+#include "gfxUtils.h"
 #include "ImageHost.h"                  // for ImageHostBuffered, etc
 #include "TiledContentHost.h"           // for TiledContentHost
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
@@ -227,12 +228,8 @@ CompositableHost::DumpTextureHost(std::stringstream& aStream, TextureHost* aText
                                                                  dSurf->GetSize(),
                                                                  dSurf->Stride(),
                                                                  dSurf->GetFormat());
-  nsRefPtr<gfxASurface> surf = platform->GetThebesSurfaceForDrawTarget(dt);
-  if (!surf) {
-    return;
-  }
   // TODO stream surface
-  surf->DumpAsDataURL(stderr);
+  gfxUtils::DumpAsDataURI(dt, stderr);
 }
 #endif
 

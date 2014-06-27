@@ -696,12 +696,6 @@ gfxASurface::WriteAsPNG(const char* aFile)
 }
 
 void
-gfxASurface::DumpAsDataURL(FILE* aOutput)
-{
-  WriteAsPNG_internal(aOutput, false);
-}
-
-void
 gfxASurface::CopyAsDataURL()
 {
   WriteAsPNG_internal(nullptr, false);
