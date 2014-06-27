@@ -7,7 +7,6 @@
 #define nsXULTemplateResultXML_h__
 
 #include "nsCOMPtr.h"
-#include "nsIContent.h"
 #include "nsIURI.h"
 #include "nsIRDFResource.h"
 #include "nsXULTemplateQueryProcessorXML.h"
@@ -25,13 +24,10 @@ public:
     NS_DECL_NSIXULTEMPLATERESULT
 
     nsXULTemplateResultXML(nsXMLQuery* aQuery,
-                           nsIContent* aNode,
+                           nsIDOMNode* aNode,
                            nsXMLBindingSet* aBindings);
 
-    nsIContent* Node()
-    {
-        return mNode;
-    }
+    void GetNode(nsIDOMNode** aNode);
 
 protected:
 
@@ -47,7 +43,7 @@ protected:
     nsCOMPtr<nsXMLQuery> mQuery;
 
     // context node in datasource
-    nsCOMPtr<nsIContent> mNode;
+    nsCOMPtr<nsIDOMNode> mNode;
 
     // assignments in query
     nsXMLBindingValues mRequiredValues;
