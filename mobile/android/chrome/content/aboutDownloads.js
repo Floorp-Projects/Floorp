@@ -418,11 +418,11 @@ let Downloads = {
     let stmt = this._initStatement(aParams.isPrivate);
 
     stmt.reset();
-    stmt.bindInt32Parameter(0, Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED);
-    stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
-    stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
-    stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_QUEUED);
-    stmt.bindInt32Parameter(4, Ci.nsIDownloadManager.DOWNLOAD_SCANNING);
+    stmt.bindByIndex(0, Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED);
+    stmt.bindByIndex(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
+    stmt.bindByIndex(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
+    stmt.bindByIndex(3, Ci.nsIDownloadManager.DOWNLOAD_QUEUED);
+    stmt.bindByIndex(4, Ci.nsIDownloadManager.DOWNLOAD_SCANNING);
 
     let entries = [];
     while (entry = this._getEntry(stmt)) {
