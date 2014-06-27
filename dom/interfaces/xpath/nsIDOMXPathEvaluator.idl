@@ -10,16 +10,11 @@
 #include "domstubs.idl"
 
 interface nsIDOMXPathNSResolver;
-interface nsIDOMXPathExpression;
 interface XPathException;
 
-[uuid(75506f8a-b504-11d5-a7f2-ca108ab8b6fc)]
+[uuid(89a0fe71-c1d9-46bd-b76b-47f51fd935ff)]
 interface nsIDOMXPathEvaluator : nsISupports
 {
-  nsIDOMXPathExpression    createExpression(in DOMString expression, 
-                                            in nsIDOMXPathNSResolver resolver)
-                                      raises(XPathException,
-                                             DOMException);
   nsIDOMXPathNSResolver    createNSResolver(in nsIDOMNode nodeResolver);
   nsISupports              evaluate(in DOMString expression, 
                                     in nsIDOMNode contextNode, 
