@@ -6,7 +6,7 @@
 #include "URL.h"
 
 #include "nsGlobalWindow.h"
-#include "nsIDOMFile.h"
+#include "nsDOMFile.h"
 #include "DOMMediaStream.h"
 #include "mozilla/dom/MediaSource.h"
 #include "mozilla/dom/URLBinding.h"
@@ -116,7 +116,10 @@ URL::CreateObjectURL(const GlobalObject& aGlobal,
                      nsString& aResult,
                      ErrorResult& aError)
 {
-  CreateObjectURLInternal(aGlobal, aBlob,
+  DOMFile* blob = static_cast<DOMFile*>(aBlob);
+  MOZ_ASSERT(blob);
+
+  CreateObjectURLInternal(aGlobal, blob->Impl(),
                           NS_LITERAL_CSTRING(BLOBURI_SCHEME), aOptions, aResult,
                           aError);
 }

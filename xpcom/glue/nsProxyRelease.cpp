@@ -10,57 +10,55 @@
 class nsProxyReleaseEvent : public nsRunnable
 {
 public:
-    nsProxyReleaseEvent(nsISupports *doomed)
-        : mDoomed(doomed) {
-    }
+  nsProxyReleaseEvent(nsISupports* aDoomed) : mDoomed(aDoomed) {}
 
-    NS_IMETHOD Run()
-    {
-        mDoomed->Release();
-        return NS_OK;
-    }
+  NS_IMETHOD Run()
+  {
+    mDoomed->Release();
+    return NS_OK;
+  }
 
 private:
-    nsISupports *mDoomed;
+  nsISupports* mDoomed;
 };
 
 nsresult
-NS_ProxyRelease(nsIEventTarget *target, nsISupports *doomed,
-                bool alwaysProxy)
+NS_ProxyRelease(nsIEventTarget* aTarget, nsISupports* aDoomed,
+                bool aAlwaysProxy)
 {
-    nsresult rv;
+  nsresult rv;
 
-    if (!doomed) {
-        // nothing to do
-        return NS_OK;
-    }
+  if (!aDoomed) {
+    // nothing to do
+    return NS_OK;
+  }
 
-    if (!target) {
-        NS_RELEASE(doomed);
-        return NS_OK;
-    }
+  if (!aTarget) {
+    NS_RELEASE(aDoomed);
+    return NS_OK;
+  }
 
-    if (!alwaysProxy) {
-        bool onCurrentThread = false;
-        rv = target->IsOnCurrentThread(&onCurrentThread);
-        if (NS_SUCCEEDED(rv) && onCurrentThread) {
-            NS_RELEASE(doomed);
-            return NS_OK;
-        }
+  if (!aAlwaysProxy) {
+    bool onCurrentThread = false;
+    rv = aTarget->IsOnCurrentThread(&onCurrentThread);
+    if (NS_SUCCEEDED(rv) && onCurrentThread) {
+      NS_RELEASE(aDoomed);
+      return NS_OK;
     }
+  }
 
-    nsRefPtr<nsIRunnable> ev = new nsProxyReleaseEvent(doomed);
-    if (!ev) {
-        // we do not release doomed here since it may cause a delete on the
-        // wrong thread.  better to leak than crash. 
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+  nsRefPtr<nsIRunnable> ev = new nsProxyReleaseEvent(aDoomed);
+  if (!ev) {
+    // we do not release aDoomed here since it may cause a delete on the
+    // wrong thread.  better to leak than crash.
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-    rv = target->Dispatch(ev, NS_DISPATCH_NORMAL);
-    if (NS_FAILED(rv)) {
-        NS_WARNING("failed to post proxy release event");
-        // again, it is better to leak the doomed object than risk crashing as
-        // a result of deleting it on the wrong thread.
-    }
-    return rv;
+  rv = aTarget->Dispatch(ev, NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("failed to post proxy release event");
+    // again, it is better to leak the aDoomed object than risk crashing as
+    // a result of deleting it on the wrong thread.
+  }
+  return rv;
 }

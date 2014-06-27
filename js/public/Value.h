@@ -306,6 +306,7 @@ typedef union jsval_layout
             uint32_t       u32;
             uint32_t       boo;     // Don't use |bool| -- it must be four bytes.
             JSString       *str;
+            JS::Symbol     *sym;
             JSObject       *obj;
             js::gc::Cell   *cell;
             void           *ptr;

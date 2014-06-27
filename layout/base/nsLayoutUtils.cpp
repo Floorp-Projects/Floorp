@@ -98,7 +98,6 @@
 #endif
 
 using namespace mozilla;
-using namespace mozilla::css;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
@@ -257,20 +256,20 @@ TextAlignTrueEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
     isTextAlignTrueEnabled ? eCSSKeyword_true : eCSSKeyword_UNKNOWN;
 }
 
-static CommonElementAnimationData*
+static ElementAnimationCollection*
 GetAnimationsOrTransitionsForCompositor(nsIContent* aContent,
                                         nsIAtom* aAnimationProperty,
                                         nsCSSProperty aProperty)
 {
-  CommonElementAnimationData* animations =
-    static_cast<CommonElementAnimationData*>(
+  ElementAnimationCollection* collection =
+    static_cast<ElementAnimationCollection*>(
       aContent->GetProperty(aAnimationProperty));
-  if (animations) {
-    bool propertyMatches = animations->HasAnimationOfProperty(aProperty);
+  if (collection) {
+    bool propertyMatches = collection->HasAnimationOfProperty(aProperty);
     if (propertyMatches &&
-        animations->CanPerformOnCompositorThread(
-          CommonElementAnimationData::CanAnimate_AllowPartial)) {
-      return animations;
+        collection->CanPerformOnCompositorThread(
+          ElementAnimationCollection::CanAnimate_AllowPartial)) {
+      return collection;
     }
   }
 
@@ -289,18 +288,18 @@ nsLayoutUtils::HasAnimationsForCompositor(nsIContent* aContent,
            aContent, nsGkAtoms::transitionsProperty, aProperty);
 }
 
-static CommonElementAnimationData*
+static ElementAnimationCollection*
 GetAnimationsOrTransitions(nsIContent* aContent,
                            nsIAtom* aAnimationProperty,
                            nsCSSProperty aProperty)
 {
-  CommonElementAnimationData* animations =
-    static_cast<CommonElementAnimationData*>(aContent->GetProperty(
+  ElementAnimationCollection* collection =
+    static_cast<ElementAnimationCollection*>(aContent->GetProperty(
         aAnimationProperty));
-  if (animations) {
-    bool propertyMatches = animations->HasAnimationOfProperty(aProperty);
+  if (collection) {
+    bool propertyMatches = collection->HasAnimationOfProperty(aProperty);
     if (propertyMatches) {
-      return animations;
+      return collection;
     }
   }
   return nullptr;
@@ -328,10 +327,10 @@ nsLayoutUtils::HasCurrentAnimations(nsIContent* aContent,
 
   TimeStamp now = aPresContext->RefreshDriver()->MostRecentRefresh();
 
-  CommonElementAnimationData* animations =
-    static_cast<CommonElementAnimationData*>(
+  ElementAnimationCollection* collection =
+    static_cast<ElementAnimationCollection*>(
       aContent->GetProperty(aAnimationProperty));
-  return (animations && animations->HasCurrentAnimationsAt(now));
+  return (collection && collection->HasCurrentAnimationsAt(now));
 }
 
 static gfxSize
@@ -392,14 +391,14 @@ GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
                                       gfxSize& aMaxScale,
                                       gfxSize& aMinScale)
 {
-  CommonElementAnimationData* animations =
+  ElementAnimationCollection* collection =
     GetAnimationsOrTransitionsForCompositor(aContent, aAnimationProperty,
                                             eCSSProperty_transform);
-  if (!animations)
+  if (!collection)
     return;
 
-  for (uint32_t animIdx = animations->mAnimations.Length(); animIdx-- != 0; ) {
-    mozilla::ElementAnimation* anim = animations->mAnimations[animIdx];
+  for (uint32_t animIdx = collection->mAnimations.Length(); animIdx-- != 0; ) {
+    mozilla::ElementAnimation* anim = collection->mAnimations[animIdx];
     if (anim->IsFinishedTransition()) {
       continue;
     }

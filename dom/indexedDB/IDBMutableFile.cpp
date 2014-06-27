@@ -139,7 +139,7 @@ already_AddRefed<nsIDOMFile>
 IDBMutableFile::CreateFileObject(mozilla::dom::FileHandle* aFileHandle,
                                 uint32_t aFileSize)
 {
-  nsCOMPtr<nsIDOMFile> file = new DOMFileCC(
+  nsCOMPtr<nsIDOMFile> file = new DOMFile(
     new FileImpl(mName, mType, aFileSize, mFile, aFileHandle, mFileInfo));
 
   return file.forget();
