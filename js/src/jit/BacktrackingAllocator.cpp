@@ -929,6 +929,14 @@ BacktrackingAllocator::spill(LiveInterval *interval)
 
     BacktrackingVirtualRegister *reg = &vregs[interval->vreg()];
 
+    if (LiveInterval *spillInterval = interval->spillInterval()) {
+        IonSpew(IonSpew_RegAlloc, "    Spilling to existing spill interval");
+        while (!interval->usesEmpty())
+            spillInterval->addUse(interval->popUse());
+        reg->removeInterval(interval);
+        return;
+    }
+
     bool useCanonical = !reg->hasCanonicalSpillExclude()
         || interval->start() < reg->canonicalSpillExclude();
 
