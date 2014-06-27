@@ -35,8 +35,7 @@ let test = asyncTest(function*() {
 function* navigate(usage, options) {
   yield usage.start();
 
-  let running = yield usage._testOnly_isRunning();
-  ok(running, "csscoverage is running");
+  ok(usage.isRunning(), "csscoverage is running");
 
   yield helpers.navigate(PAGE_1, options);
 
@@ -49,8 +48,7 @@ function* navigate(usage, options) {
 
   yield usage.stop();
 
-  running = yield usage._testOnly_isRunning();
-  ok(!running, "csscoverage not is running");
+  ok(!usage.isRunning(), "csscoverage not is running");
 }
 
 /**
