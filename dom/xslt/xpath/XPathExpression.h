@@ -6,38 +6,61 @@
 #ifndef mozilla_dom_XPathExpression_h
 #define mozilla_dom_XPathExpression_h
 
-#include "nsIDOMXPathExpression.h"
-#include "nsIDOMNSXPathExpression.h"
-#include "txResultRecycler.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIWeakReferenceUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/NonRefcountedDOMObject.h"
+#include "mozilla/dom/XPathExpressionBinding.h"
 
 class Expr;
+class nsIDocument;
+class nsINode;
+class txResultRecycler;
 class txXPathNode;
 
 namespace mozilla {
 namespace dom {
 
+class XPathResult;
+
 /**
  * A class for evaluating an XPath expression string
  */
-class XPathExpression MOZ_FINAL : public nsIDOMXPathExpression,
-                                  public nsIDOMNSXPathExpression
+class XPathExpression MOZ_FINAL : public NonRefcountedDOMObject
 {
 public:
     XPathExpression(nsAutoPtr<Expr>&& aExpression, txResultRecycler* aRecycler,
-                    nsIDOMDocument *aDocument);
+                    nsIDocument *aDocument);
+    ~XPathExpression();
 
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
+    JSObject* WrapObject(JSContext* aCx, bool* aTookOwnership)
+    {
+        return XPathExpressionBinding::Wrap(aCx, this, aTookOwnership);
+    }
 
-    // nsIDOMXPathExpression interface
-    NS_DECL_NSIDOMXPATHEXPRESSION
-
-    // nsIDOMNSXPathExpression interface
-    NS_DECL_NSIDOMNSXPATHEXPRESSION
+    already_AddRefed<XPathResult>
+        Evaluate(JSContext* aCx, nsINode& aContextNode, uint16_t aType,
+                 JS::Handle<JSObject*> aInResult, ErrorResult& aRv)
+    {
+        return EvaluateWithContext(aCx, aContextNode, 1, 1, aType, aInResult,
+                                   aRv);
+    }
+    already_AddRefed<XPathResult>
+        EvaluateWithContext(JSContext* aCx, nsINode& aContextNode,
+                            uint32_t aContextPosition, uint32_t aContextSize,
+                            uint16_t aType, JS::Handle<JSObject*> aInResult,
+                            ErrorResult& aRv);
+    already_AddRefed<XPathResult>
+        Evaluate(nsINode& aContextNode, uint16_t aType, XPathResult* aInResult,
+                 ErrorResult& aRv)
+    {
+        return EvaluateWithContext(aContextNode, 1, 1, aType, aInResult, aRv);
+    }
+    already_AddRefed<XPathResult>
+        EvaluateWithContext(nsINode& aContextNode, uint32_t aContextPosition,
+                            uint32_t aContextSize, uint16_t aType,
+                            XPathResult* aInResult, ErrorResult& aRv);
 
 private:
     ~nsXPathExpression() {}
