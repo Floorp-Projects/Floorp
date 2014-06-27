@@ -14,11 +14,11 @@
 #include "XPathResult.h"
 #include "txURIUtils.h"
 #include "txXPathTreeWalker.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/XPathResultBinding.h"
 
 using mozilla::Move;
 
-DOMCI_DATA(XPathExpression, mozilla::dom::XPathExpression)
- 
 namespace mozilla {
 namespace dom {
 
@@ -51,19 +51,9 @@ private:
     nsRefPtr<txResultRecycler> mRecycler;
 };
 
-NS_IMPL_ADDREF(XPathExpression)
-NS_IMPL_RELEASE(XPathExpression)
-
-NS_INTERFACE_MAP_BEGIN(XPathExpression)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMXPathExpression)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSXPathExpression)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXPathExpression)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XPathExpression)
-NS_INTERFACE_MAP_END
-
 XPathExpression::XPathExpression(nsAutoPtr<Expr>&& aExpression,
                                  txResultRecycler* aRecycler,
-                                 nsIDOMDocument *aDocument)
+                                 nsIDocument *aDocument)
     : mExpression(Move(aExpression)),
       mRecycler(aRecycler),
       mDocument(do_GetWeakReference(aDocument)),
@@ -71,56 +61,74 @@ XPathExpression::XPathExpression(nsAutoPtr<Expr>&& aExpression,
 {
 }
 
-NS_IMETHODIMP
-XPathExpression::Evaluate(nsIDOMNode *aContextNode,
-                          uint16_t aType,
-                          nsISupports *aInResult,
-                          nsISupports **aResult)
+XPathExpression::~XPathExpression()
 {
-    return EvaluateWithContext(aContextNode, 1, 1, aType, aInResult, aResult);
 }
 
-NS_IMETHODIMP
-XPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
+already_AddRefed<XPathResult>
+XPathExpression::EvaluateWithContext(JSContext* aCx,
+                                     nsINode& aContextNode,
                                      uint32_t aContextPosition,
                                      uint32_t aContextSize,
                                      uint16_t aType,
-                                     nsISupports *aInResult,
-                                     nsISupports **aResult)
+                                     JS::Handle<JSObject*> aInResult,
+                                     ErrorResult& aRv)
 {
-    nsCOMPtr<nsINode> context = do_QueryInterface(aContextNode);
-    NS_ENSURE_ARG(context);
-
-    if (aContextPosition > aContextSize)
-        return NS_ERROR_FAILURE;
-
-    if (!nsContentUtils::CanCallerAccess(aContextNode))
-        return NS_ERROR_DOM_SECURITY_ERR;
-
-    if (mCheckDocument) {
-        nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocument);
-        if (!doc || doc != aContextNode) {
-            nsCOMPtr<nsIDOMDocument> contextDocument;
-            aContextNode->GetOwnerDocument(getter_AddRefs(contextDocument));
-
-            if (doc != contextDocument) {
-                return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
-            }
+    XPathResult* inResult = nullptr;
+    if (aInResult) {
+        nsresult rv = UNWRAP_OBJECT(XPathResult, aInResult, inResult);
+        if (NS_FAILED(rv) && rv != NS_ERROR_XPC_BAD_CONVERT_JS) {
+            aRv.Throw(rv);
+            return nullptr;
         }
     }
 
-    uint16_t nodeType = context->NodeType();
+    return EvaluateWithContext(aContextNode, aContextPosition, aContextSize,
+                               aType, inResult, aRv);
+}
+
+already_AddRefed<XPathResult>
+XPathExpression::EvaluateWithContext(nsINode& aContextNode,
+                                     uint32_t aContextPosition,
+                                     uint32_t aContextSize,
+                                     uint16_t aType,
+                                     XPathResult* aInResult,
+                                     ErrorResult& aRv)
+{
+    if (aContextPosition > aContextSize) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return nullptr;
+    }
+
+    if (!nsContentUtils::CanCallerAccess(&aContextNode)) {
+        aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        return nullptr;
+    }
+
+    if (mCheckDocument) {
+        nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+        if (doc != aContextNode.OwnerDoc()) {
+            aRv.Throw(NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
+            return nullptr;
+        }
+    }
+
+    uint16_t nodeType = aContextNode.NodeType();
 
     if (nodeType == nsIDOMNode::TEXT_NODE ||
         nodeType == nsIDOMNode::CDATA_SECTION_NODE) {
-        nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(aContextNode);
-        NS_ENSURE_TRUE(textNode, NS_ERROR_FAILURE);
+        nsCOMPtr<nsIDOMCharacterData> textNode =
+            do_QueryInterface(&aContextNode);
+        if (!textNode) {
+            aRv.Throw(NS_ERROR_FAILURE);
+            return nullptr;
+        }
 
-        if (textNode) {
-            uint32_t textLength;
-            textNode->GetLength(&textLength);
-            if (textLength == 0)
-                return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+        uint32_t textLength;
+        textNode->GetLength(&textLength);
+        if (textLength == 0) {
+            aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+            return nullptr;
         }
 
         // XXX Need to get logical XPath text node for CDATASection
@@ -131,22 +139,18 @@ XPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
              nodeType != nsIDOMNode::ATTRIBUTE_NODE &&
              nodeType != nsIDOMNode::COMMENT_NODE &&
              nodeType != nsIDOMNode::PROCESSING_INSTRUCTION_NODE) {
-        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+        aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+        return nullptr;
     }
 
-    NS_ENSURE_ARG(aResult);
-    *aResult = nullptr;
-
-    nsAutoPtr<txXPathNode> contextNode(txXPathNativeNode::createXPathNode(aContextNode));
-    if (!contextNode) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
+    nsAutoPtr<txXPathNode> contextNode(txXPathNativeNode::createXPathNode(&aContextNode));
     EvalContextImpl eContext(*contextNode, aContextPosition, aContextSize,
                              mRecycler);
     nsRefPtr<txAExprResult> exprResult;
-    nsresult rv = mExpression->evaluate(&eContext, getter_AddRefs(exprResult));
-    NS_ENSURE_SUCCESS(rv, rv);
+    aRv = mExpression->evaluate(&eContext, getter_AddRefs(exprResult));
+    if (aRv.Failed()) {
+        return nullptr;
+    }
 
     uint16_t resultType = aType;
     if (aType == XPathResult::ANY_TYPE) {
@@ -165,21 +169,19 @@ XPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
                 resultType = XPathResult::UNORDERED_NODE_ITERATOR_TYPE;
                 break;
             case txAExprResult::RESULT_TREE_FRAGMENT:
-                NS_ERROR("Can't return a tree fragment!");
-                return NS_ERROR_FAILURE;
+                aRv.Throw(NS_ERROR_FAILURE);
+                return nullptr;
         }
     }
 
-    // We need a result object and it must be our implementation.
-    nsCOMPtr<nsIXPathResult> xpathResult = do_QueryInterface(aInResult);
+    nsRefPtr<XPathResult> xpathResult = aInResult;
     if (!xpathResult) {
-        // Either no aInResult or not one of ours.
-        xpathResult = new XPathResult(context);
+        xpathResult = new XPathResult(&aContextNode);
     }
-    rv = xpathResult->SetExprResult(exprResult, resultType, context);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    return CallQueryInterface(xpathResult, aResult);
+    aRv = xpathResult->SetExprResult(exprResult, resultType, &aContextNode);
+
+    return xpathResult.forget();
 }
 
 /*

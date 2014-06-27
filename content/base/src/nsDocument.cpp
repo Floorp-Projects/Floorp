@@ -102,7 +102,6 @@
 #include "nsBidiUtils.h"
 
 #include "nsIDOMUserDataHandler.h"
-#include "nsIDOMXPathExpression.h"
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIParserService.h"
 #include "nsContentCreatorFunctions.h"
@@ -12041,7 +12040,7 @@ nsIDocument::Constructor(const GlobalObject& aGlobal,
   return doc.forget();
 }
 
-already_AddRefed<nsIDOMXPathExpression>
+XPathExpression*
 nsIDocument::CreateExpression(const nsAString& aExpression,
                               nsIDOMXPathNSResolver* aResolver,
                               ErrorResult& rv)
@@ -12064,14 +12063,6 @@ nsIDocument::Evaluate(JSContext* aCx, const nsAString& aExpression,
 {
   return XPathEvaluator()->Evaluate(aCx, aExpression, aContextNode, aResolver,
                                     aType, aResult, rv);
-}
-
-NS_IMETHODIMP
-nsDocument::CreateExpression(const nsAString& aExpression,
-                             nsIDOMXPathNSResolver* aResolver,
-                             nsIDOMXPathExpression** aResult)
-{
-  return XPathEvaluator()->CreateExpression(aExpression, aResolver, aResult);
 }
 
 NS_IMETHODIMP
