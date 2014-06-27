@@ -7,6 +7,7 @@
 
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/MessagePortBinding.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsIDOMEvent.h"
 
 #include "SharedWorker.h"
@@ -17,6 +18,7 @@ using mozilla::dom::EventHandlerNonNull;
 using mozilla::dom::MessagePortBase;
 using mozilla::dom::Optional;
 using mozilla::dom::Sequence;
+using mozilla::dom::AutoNoJSAPI;
 using namespace mozilla;
 
 USING_WORKERS_NAMESPACE
@@ -40,6 +42,28 @@ public:
     MOZ_ASSERT(aEvents.Length());
 
     mEvents.SwapElements(aEvents);
+  }
+
+  bool PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  {
+    if (mBehavior == WorkerThreadModifyBusyCount) {
+      return aWorkerPrivate->ModifyBusyCount(aCx, true);
+    }
+
+    return true;
+  }
+
+  void PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+                    bool aDispatchResult)
+  {
+    if (!aDispatchResult) {
+      if (mBehavior == WorkerThreadModifyBusyCount) {
+        aWorkerPrivate->ModifyBusyCount(aCx, false);
+      }
+      if (aCx) {
+        JS_ReportPendingException(aCx);
+      }
+    }
   }
 
   bool
@@ -280,6 +304,8 @@ DelayedEventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   MOZ_ASSERT(mMessagePort);
   mMessagePort->AssertCorrectThread();
   MOZ_ASSERT(mEvents.Length());
+
+  AutoNoJSAPI nojsapi;
 
   bool ignored;
   for (uint32_t i = 0; i < mEvents.Length(); i++) {
