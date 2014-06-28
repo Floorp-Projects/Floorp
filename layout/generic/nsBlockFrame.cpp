@@ -1038,7 +1038,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
       aReflowState.ComputedBSize() != NS_AUTOHEIGHT &&
       ShouldApplyOverflowClipping(this, aReflowState.mStyleDisplay)) {
     LogicalMargin blockDirExtras = aReflowState.ComputedLogicalBorderPadding();
-    if (GetLogicalSkipSides() & (LOGICAL_SIDE_B_START)) {
+    if (GetLogicalSkipSides().BStart()) {
       blockDirExtras.BStart(wm) = 0;
     } else {
       // Bottom margin never causes us to create continuations, so we

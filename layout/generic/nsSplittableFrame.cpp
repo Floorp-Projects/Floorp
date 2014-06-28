@@ -235,19 +235,19 @@ nsSplittableFrame::GetEffectiveComputedBSize(const nsHTMLReflowState& aReflowSta
   return std::max(0, bSize);
 }
 
-int
+nsIFrame::LogicalSides
 nsSplittableFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   if (IS_TRUE_OVERFLOW_CONTAINER(this)) {
-    return LOGICAL_SIDES_B_BOTH;
+    return LogicalSides(LOGICAL_SIDES_B_BOTH);
   }
 
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                      NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
-    return 0;
+    return LogicalSides();
   }
 
-  int skip = 0;
+  LogicalSides skip;
   if (GetPrevInFlow()) {
     skip |= LOGICAL_SIDE_B_START;
   }

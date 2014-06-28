@@ -127,7 +127,7 @@ protected:
 
   nsInlineFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
 
-  virtual int GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const MOZ_OVERRIDE;
+  virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const MOZ_OVERRIDE;
 
   void ReflowFrames(nsPresContext* aPresContext,
                     const nsHTMLReflowState& aReflowState,
