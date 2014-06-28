@@ -14,6 +14,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=355063
 
   function startTest() {
     info("startTest");
+    // Password Manager's own listener should always have been added first, so
+    // the test's listener should be called after the pwmgr's listener fills in
+    // a login.
+    //
+    SpecialPowers.addChromeEventListener("DOMFormHasPassword", function eventFired() {
+      SpecialPowers.removeChromeEventListener("DOMFormHasPassword", eventFired);
+      var passField = $("p1");
+      passField.addEventListener("input", checkForm);
+    });
     addForm();
   }
 
@@ -30,18 +39,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=355063
     is(userField.value, "testuser", "checking filled username");
     is(passField.value, "testpass", "checking filled password");
 
-    SpecialPowers.removeChromeEventListener("DOMFormHasPassword", checkForm);
     SimpleTest.finish();
   }
 
   commonInit();
 
-  // Password Manager's own listener should always have been added first, so
-  // the test's listener should be called after the pwmgr's listener fills in
-  // a login.
-  //
-  SpecialPowers.addChromeEventListener("DOMFormHasPassword", checkForm);
-  window.addEventListener("load", startTest);
+  window.addEventListener("runTests", startTest);
   SimpleTest.waitForExplicitFinish();
 </script>
 </head>
