@@ -323,5 +323,11 @@ ImageWrapper::GetImageSpaceInvalidationRect(const nsIntRect& aRect)
   return mInnerImage->GetImageSpaceInvalidationRect(aRect);
 }
 
+already_AddRefed<imgIContainer>
+ImageWrapper::Unwrap()
+{
+  return mInnerImage->Unwrap();
+}
+
 } // namespace image
 } // namespace mozilla
