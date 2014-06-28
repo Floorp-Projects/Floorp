@@ -18,6 +18,7 @@
 #ifndef mozilla_pkix__pkixtypes_h
 #define mozilla_pkix__pkixtypes_h
 
+#include "pkix/enumclass.h"
 #include "pkix/ScopedPtr.h"
 #include "plarena.h"
 #include "cert.h"
