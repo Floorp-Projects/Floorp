@@ -264,17 +264,25 @@ struct GradientStop
 #define GFX2D_API
 #endif
 
-// Side constants for use in various places
 namespace mozilla {
-  namespace css {
-    enum Side {eSideTop, eSideRight, eSideBottom, eSideLeft};
-  }
-}
+// Side constants for use in various places.
+enum Side { eSideTop, eSideRight, eSideBottom, eSideLeft };
 
-// XXX - These don't really belong here. But for now this is where they go.
-#define NS_SIDE_TOP     mozilla::css::eSideTop
-#define NS_SIDE_RIGHT   mozilla::css::eSideRight
-#define NS_SIDE_BOTTOM  mozilla::css::eSideBottom
-#define NS_SIDE_LEFT    mozilla::css::eSideLeft
+enum SideBits {
+  eSideBitsNone   = 0,
+  eSideBitsTop    = 1 << eSideTop,
+  eSideBitsRight  = 1 << eSideRight,
+  eSideBitsBottom = 1 << eSideBottom,
+  eSideBitsLeft   = 1 << eSideLeft,
+  eSideBitsTopBottom = eSideBitsTop  | eSideBitsBottom,
+  eSideBitsLeftRight = eSideBitsLeft | eSideBitsRight,
+  eSideBitsAll = eSideBitsTopBottom | eSideBitsLeftRight
+};
+} // namespace mozilla
+
+#define NS_SIDE_TOP    mozilla::eSideTop
+#define NS_SIDE_RIGHT  mozilla::eSideRight
+#define NS_SIDE_BOTTOM mozilla::eSideBottom
+#define NS_SIDE_LEFT   mozilla::eSideLeft
 
 #endif /* MOZILLA_GFX_TYPES_H_ */
