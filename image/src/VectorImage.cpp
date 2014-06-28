@@ -1214,5 +1214,12 @@ VectorImage::InvalidateObserversOnNextRefreshDriverTick()
   }
 }
 
+already_AddRefed<imgIContainer>
+VectorImage::Unwrap()
+{
+  nsCOMPtr<imgIContainer> self(this);
+  return self.forget();
+}
+
 } // namespace image
 } // namespace mozilla

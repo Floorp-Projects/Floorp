@@ -54,6 +54,7 @@ native Orientation(mozilla::image::Orientation);
 [ref] native TimeStamp(mozilla::TimeStamp);
 [ptr] native SVGImageContext(mozilla::SVGImageContext);
 native TempRefSourceSurface(mozilla::TemporaryRef<mozilla::gfx::SourceSurface>);
+native TempRefImgIContainer(already_AddRefed<imgIContainer>);
 
 
 /**
@@ -63,7 +64,7 @@ native TempRefSourceSurface(mozilla::TemporaryRef<mozilla::gfx::SourceSurface>);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(48590bac-a5b3-45b1-bd4e-57ab938eab9e)]
+[scriptable, builtinclass, uuid(c9bd1257-45fb-4ea6-a669-6da212479191)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -359,4 +360,9 @@ interface imgIContainer : nsISupports
    * or orientation.
    */
   [notxpcom] nsIntRectByVal getImageSpaceInvalidationRect([const] in nsIntRect aRect);
+
+  /*
+   * Removes any ImageWrappers and returns the unwrapped base image.
+   */
+  [notxpcom, nostdcall] TempRefImgIContainer unwrap();
 };
