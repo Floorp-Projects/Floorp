@@ -123,7 +123,7 @@ nsGroupBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 void
 nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     nsPoint aPt, const nsRect& aDirtyRect) {
-  int skipSides = 0;
+  Sides skipSides;
   const nsStyleBorder* borderStyleData = StyleBorder();
   const nsMargin& border = borderStyleData->GetComputedBorder();
   nscoord yoff = 0;
