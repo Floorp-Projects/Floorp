@@ -3166,6 +3166,13 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
   return RequestDecodeIfNeeded(rv, aIntent, done, wasSize);
 }
 
+already_AddRefed<imgIContainer>
+RasterImage::Unwrap()
+{
+  nsCOMPtr<imgIContainer> self(this);
+  return self.forget();
+}
+
 NS_IMPL_ISUPPORTS(RasterImage::DecodePool,
                   nsIObserver)
 
