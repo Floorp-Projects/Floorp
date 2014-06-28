@@ -42,7 +42,7 @@ const EXPECTED_REFLOWS = [
 
   // SessionStore.getWindowDimensions()
   "ssi_getWindowDimension@resource:///modules/sessionstore/SessionStore.jsm|" +
-    "@resource:///modules/sessionstore/SessionStore.jsm|" +
+    "ssi_updateWindowFeatures/<@resource:///modules/sessionstore/SessionStore.jsm|" +
     "ssi_updateWindowFeatures@resource:///modules/sessionstore/SessionStore.jsm|" +
     "ssi_collectWindowData@resource:///modules/sessionstore/SessionStore.jsm|",
 
