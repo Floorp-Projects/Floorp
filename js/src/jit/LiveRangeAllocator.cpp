@@ -819,7 +819,9 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                             to = use->usedAtStart() ? inputOf(*ins) : outputOf(*ins);
                         }
                     } else {
-                        to = (use->usedAtStart() || ins->isCall())
+                        // Fixed uses on calls are specially overridden to
+                        // happen at the input position.
+                        to = (use->usedAtStart() || (ins->isCall() && use->isFixedRegister()))
                            ? inputOf(*ins) : outputOf(*ins);
                         if (use->isFixedRegister()) {
                             LAllocation reg(AnyRegister::FromCode(use->registerCode()));

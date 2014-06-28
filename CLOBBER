@@ -22,4 +22,6 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Clobber to make sure any residual damage from bug 975011 is gone.
+Bug 800200: Removing the old JavaScript debugging API, js/jsd. I'm advised
+that our build system doesn't cope well with deletions, and that a spoonful
+of clobber helps the medicine go down (in a most delightful way).

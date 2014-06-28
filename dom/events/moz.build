@@ -144,6 +144,3 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     LOCAL_INCLUDES += [
         '/dom/wifi',
     ]
-
-if CONFIG['MOZ_JSDEBUGGER']:
-    DEFINES['MOZ_JSDEBUGGER'] = True

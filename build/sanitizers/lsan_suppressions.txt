@@ -31,11 +31,6 @@ leak:GI___strdup
 ### Many leaks only affect some test suites.  The suite annotations are not checked.
 ###
 
-# Bug 800200 - JSD1 is leaking, but it is about to be removed, so ignore it. m4
-leak:jsd_CreateLock
-leak:jsdScript::GetExecutableLines
-leak:jsdService::ActivateDebugger
-
 # Bug 979928 - WebRTC is leaky. m2, m3
 leak:/media/mtransport/
 leak:/media/webrtc/signaling/

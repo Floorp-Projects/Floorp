@@ -229,9 +229,10 @@ nsSVGFilterInstance::ComputeFilterPrimitiveSubregion(nsSVGFE* aFilterElement,
   if (fE->SubregionIsUnionOfRegions()) {
     for (uint32_t i = 0; i < aInputIndices.Length(); ++i) {
       int32_t inputIndex = aInputIndices[i];
-      IntRect inputSubregion = inputIndex >= 0 ?
-        aPrimitiveDescrs[inputIndex].PrimitiveSubregion() :
-        ToIntRect(mFilterSpaceBounds);
+      bool isStandardInput = inputIndex < 0 || inputIndex == mSourceGraphicIndex;
+      IntRect inputSubregion = isStandardInput ?
+        ToIntRect(mFilterSpaceBounds) :
+        aPrimitiveDescrs[inputIndex].PrimitiveSubregion();
 
       defaultFilterSubregion = defaultFilterSubregion.Union(inputSubregion);
     }
@@ -256,8 +257,10 @@ nsSVGFilterInstance::ComputeFilterPrimitiveSubregion(nsSVGFE* aFilterElement,
   // Following the spec, any pixel partially in the region is included
   // in the region.
   region.RoundOut();
+  IntRect regionInt = RoundedToInt(region);
 
-  return RoundedToInt(region);
+  // Clip the primitive subregion to this filter's filter region.
+  return regionInt.Intersect(ToIntRect(mFilterSpaceBounds));
 }
 
 void

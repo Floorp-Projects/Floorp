@@ -417,7 +417,8 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
     // The overflow state is not needed between activations
     mInputOverflow = nullptr;
 
-    mResponseTimeoutEnabled = mTransaction->ResponseTimeout() > 0 &&
+    mResponseTimeoutEnabled = gHttpHandler->ResponseTimeoutEnabled() &&
+                              mTransaction->ResponseTimeout() > 0 &&
                               mTransaction->ResponseTimeoutEnabled();
 
     rv = StartShortLivedTCPKeepalives();
@@ -1110,6 +1111,9 @@ nsHttpConnection::ReadTimeoutTick(PRIntervalTime now)
     uint32_t nextTickAfter = UINT32_MAX;
     // Timeout if the response is taking too long to arrive.
     if (mResponseTimeoutEnabled) {
+        NS_WARN_IF_FALSE(gHttpHandler->ResponseTimeoutEnabled(),
+                         "Timing out a response, but response timeout is disabled!");
+
         PRIntervalTime initialResponseDelta = now - mLastWriteTime;
 
         if (initialResponseDelta > mTransaction->ResponseTimeout()) {

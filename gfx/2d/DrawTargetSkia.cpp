@@ -277,12 +277,12 @@ struct AutoPaintSetup {
       mPaint.setXfermodeMode(SkXfermode::kSrcOver_Mode);
       SkPaint temp;
       temp.setXfermodeMode(GfxOpToSkiaOp(aOptions.mCompositionOp));
-      temp.setAlpha(U8CPU(aOptions.mAlpha*255+0.5));
+      temp.setAlpha(ColorFloatToByte(aOptions.mAlpha));
       //TODO: Get a rect here
       mCanvas->saveLayer(nullptr, &temp);
       mNeedsRestore = true;
     } else {
-      mPaint.setAlpha(U8CPU(aOptions.mAlpha*255.0+0.5));
+      mPaint.setAlpha(ColorFloatToByte(aOptions.mAlpha));
       mAlpha = aOptions.mAlpha;
     }
     mPaint.setFilterLevel(SkPaint::kLow_FilterLevel);
@@ -337,6 +337,17 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
   }
 
   mCanvas->drawBitmapRectToRect(bitmap.mBitmap, &sourceRect, destRect, &paint.mPaint);
+}
+
+DrawTargetType
+DrawTargetSkia::GetType() const
+{
+#ifdef USE_SKIA_GPU
+  if (mGrContext) {
+    return DrawTargetType::HARDWARE_RASTER;
+  }
+#endif
+  return DrawTargetType::SOFTWARE_RASTER;
 }
 
 void

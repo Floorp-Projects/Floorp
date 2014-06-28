@@ -55,6 +55,17 @@ public:
   uint64_t mAsyncID;
 };
 
+void
+RemoveTextureFromCompositableTracker::ReleaseTextureClient()
+{
+  if (mTextureClient) {
+    TextureClientReleaseTask* task = new TextureClientReleaseTask(mTextureClient);
+    RefPtr<ISurfaceAllocator> allocator = mTextureClient->GetAllocator();
+    mTextureClient = nullptr;
+    allocator->GetMessageLoop()->PostTask(FROM_HERE, task);
+  }
+}
+
 /* static */ void
 CompositableClient::TransactionCompleteted(PCompositableChild* aActor, uint64_t aTransactionId)
 {
