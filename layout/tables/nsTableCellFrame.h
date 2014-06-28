@@ -222,7 +222,7 @@ public:
   virtual void InvalidateFrameForRemoval() MOZ_OVERRIDE { InvalidateFrameSubtree(); }
 
 protected:
-  virtual int GetLogicalSkipSides(const nsHTMLReflowState* aReflowState= nullptr) const MOZ_OVERRIDE;
+  virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState= nullptr) const MOZ_OVERRIDE;
 
   /**
    * GetBorderOverflow says how far the cell's own borders extend
@@ -301,7 +301,7 @@ public:
   virtual nsMargin GetUsedBorder() const MOZ_OVERRIDE;
   virtual bool GetBorderRadii(const nsSize& aFrameSize,
                               const nsSize& aBorderArea,
-                              int aSkipSides,
+                              Sides aSkipSides,
                               nscoord aRadii[8]) const MOZ_OVERRIDE;
 
   // Get the *inner half of the border only*, in twips.

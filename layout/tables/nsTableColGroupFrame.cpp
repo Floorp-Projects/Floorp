@@ -328,15 +328,15 @@ nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
   }
 }
 
-int
+nsIFrame::LogicalSides
 nsTableColGroupFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                      NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
-    return 0;
+    return LogicalSides();
   }
 
-  int skip = 0;
+  LogicalSides skip;
   if (nullptr != GetPrevInFlow()) {
     skip |= LOGICAL_SIDE_B_START;
   }

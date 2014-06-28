@@ -279,6 +279,8 @@ struct nsBackgroundLayerState {
 };
 
 struct nsCSSRendering {
+  typedef nsIFrame::Sides Sides;
+
   /**
    * Initialize any static variables used by nsCSSRendering.
    */
@@ -308,8 +310,8 @@ struct nsCSSRendering {
 
   /**
    * Render the border for an element using css rendering rules
-   * for borders. aSkipSides is a bitmask of the sides to skip
-   * when rendering. If 0 then no sides are skipped.
+   * for borders. aSkipSides says which sides to skip
+   * when rendering, the default is to skip none.
    */
   static void PaintBorder(nsPresContext* aPresContext,
                           nsRenderingContext& aRenderingContext,
@@ -317,11 +319,12 @@ struct nsCSSRendering {
                           const nsRect& aDirtyRect,
                           const nsRect& aBorderArea,
                           nsStyleContext* aStyleContext,
-                          int aSkipSides = 0);
+                          Sides aSkipSides = Sides());
 
   /**
    * Like PaintBorder, but taking an nsStyleBorder argument instead of
-   * getting it from aStyleContext.
+   * getting it from aStyleContext. aSkipSides says which sides to skip
+   * when rendering, the default is to skip none.
    */
   static void PaintBorderWithStyleBorder(nsPresContext* aPresContext,
                                          nsRenderingContext& aRenderingContext,
@@ -330,13 +333,12 @@ struct nsCSSRendering {
                                          const nsRect& aBorderArea,
                                          const nsStyleBorder& aBorderStyle,
                                          nsStyleContext* aStyleContext,
-                                         int aSkipSides = 0);
+                                         Sides aSkipSides = Sides());
 
 
   /**
    * Render the outline for an element using css rendering rules
-   * for borders. aSkipSides is a bitmask of the sides to skip
-   * when rendering. If 0 then no sides are skipped.
+   * for borders.
    */
   static void PaintOutline(nsPresContext* aPresContext,
                           nsRenderingContext& aRenderingContext,
