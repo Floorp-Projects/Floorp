@@ -21,7 +21,6 @@
 #include "mozilla/LinkedList.h"
 
 using namespace mozilla;
-using namespace mozilla::css;
 using namespace mozilla::layout;
 
 // Convenience typedefs for helper classes that we forward-declare in .h file
@@ -74,8 +73,8 @@ enum AxisEdgeType {
 };
 
 // This array maps each axis orientation to a pair of corresponding
-// [start, end] physical mozilla::css::Side values.
-static const Side
+// [start, end] physical mozilla::Side values.
+static const mozilla::Side
 kAxisOrientationToSidesMap[eNumAxisOrientationTypes][eNumAxisEdges] = {
   { eSideLeft,   eSideRight  },  // eAxis_LR
   { eSideRight,  eSideLeft   },  // eAxis_RL
@@ -155,7 +154,7 @@ PhysicalPosFromLogicalPos(nscoord aLogicalPosn,
 }
 
 static nscoord
-MarginComponentForSide(const nsMargin& aMargin, Side aSide)
+MarginComponentForSide(const nsMargin& aMargin, mozilla::Side aSide)
 {
   switch (aSide) {
     case eSideLeft:
@@ -174,7 +173,7 @@ MarginComponentForSide(const nsMargin& aMargin, Side aSide)
 }
 
 static nscoord&
-MarginComponentForSide(nsMargin& aMargin, Side aSide)
+MarginComponentForSide(nsMargin& aMargin, mozilla::Side aSide)
 {
   switch (aSide) {
     case eSideLeft:
@@ -415,15 +414,15 @@ public:
   // ===================
   const nsMargin& GetMargin() const { return mMargin; }
 
-  // Returns the margin component for a given mozilla::css::Side
-  nscoord GetMarginComponentForSide(Side aSide) const
+  // Returns the margin component for a given mozilla::Side
+  nscoord GetMarginComponentForSide(mozilla::Side aSide) const
   { return MarginComponentForSide(mMargin, aSide); }
 
   // Returns the total space occupied by this item's margins in the given axis
   nscoord GetMarginSizeInAxis(AxisOrientationType aAxis) const
   {
-    Side startSide = kAxisOrientationToSidesMap[aAxis][eAxisEdge_Start];
-    Side endSide = kAxisOrientationToSidesMap[aAxis][eAxisEdge_End];
+    mozilla::Side startSide = kAxisOrientationToSidesMap[aAxis][eAxisEdge_Start];
+    mozilla::Side endSide = kAxisOrientationToSidesMap[aAxis][eAxisEdge_End];
     return GetMarginComponentForSide(startSide) +
       GetMarginComponentForSide(endSide);
   }
@@ -432,16 +431,16 @@ public:
   // ==========================
   const nsMargin& GetBorderPadding() const { return mBorderPadding; }
 
-  // Returns the border+padding component for a given mozilla::css::Side
-  nscoord GetBorderPaddingComponentForSide(Side aSide) const
+  // Returns the border+padding component for a given mozilla::Side
+  nscoord GetBorderPaddingComponentForSide(mozilla::Side aSide) const
   { return MarginComponentForSide(mBorderPadding, aSide); }
 
   // Returns the total space occupied by this item's borders and padding in
   // the given axis
   nscoord GetBorderPaddingSizeInAxis(AxisOrientationType aAxis) const
   {
-    Side startSide = kAxisOrientationToSidesMap[aAxis][eAxisEdge_Start];
-    Side endSide = kAxisOrientationToSidesMap[aAxis][eAxisEdge_End];
+    mozilla::Side startSide = kAxisOrientationToSidesMap[aAxis][eAxisEdge_Start];
+    mozilla::Side endSide = kAxisOrientationToSidesMap[aAxis][eAxisEdge_End];
     return GetBorderPaddingComponentForSide(startSide) +
       GetBorderPaddingComponentForSide(endSide);
   }
@@ -551,7 +550,7 @@ public:
   }
 
   // Setter for margin components (for resolving "auto" margins)
-  void SetMarginComponentForSide(Side aSide, nscoord aLength)
+  void SetMarginComponentForSide(mozilla::Side aSide, nscoord aLength)
   {
     MOZ_ASSERT(mIsFrozen, "main size should be resolved before this");
     MarginComponentForSide(mMargin, aSide) = aLength;
@@ -1273,7 +1272,7 @@ FlexItem::GetBaselineOffsetFromOuterCrossEdge(AxisOrientationType aCrossAxis,
              "Only expecting to be doing baseline computations when the "
              "cross axis is vertical");
 
-  Side sideToMeasureFrom = kAxisOrientationToSidesMap[aCrossAxis][aEdge];
+  mozilla::Side sideToMeasureFrom = kAxisOrientationToSidesMap[aCrossAxis][aEdge];
 
   nscoord marginTopToBaseline = mAscent + mMargin.top;
 
@@ -1299,7 +1298,7 @@ FlexItem::GetNumAutoMarginsInAxis(AxisOrientationType aAxis) const
   uint32_t numAutoMargins = 0;
   const nsStyleSides& styleMargin = mFrame->StyleMargin()->mMargin;
   for (uint32_t i = 0; i < eNumAxisEdges; i++) {
-    Side side = kAxisOrientationToSidesMap[aAxis][i];
+    mozilla::Side side = kAxisOrientationToSidesMap[aAxis][i];
     if (styleMargin.GetUnit(side) == eStyleUnit_Auto) {
       numAutoMargins++;
     }
@@ -1327,7 +1326,7 @@ public:
   // axis we're tracking.
   void EnterMargin(const nsMargin& aMargin)
   {
-    Side side = kAxisOrientationToSidesMap[mAxis][eAxisEdge_Start];
+    mozilla::Side side = kAxisOrientationToSidesMap[mAxis][eAxisEdge_Start];
     mPosition += MarginComponentForSide(aMargin, side);
   }
 
@@ -1335,7 +1334,7 @@ public:
   // we're tracking.
   void ExitMargin(const nsMargin& aMargin)
   {
-    Side side = kAxisOrientationToSidesMap[mAxis][eAxisEdge_End];
+    mozilla::Side side = kAxisOrientationToSidesMap[mAxis][eAxisEdge_End];
     mPosition += MarginComponentForSide(aMargin, side);
   }
 
@@ -2093,7 +2092,7 @@ MainAxisPositionTracker::ResolveAutoMarginsInMainAxis(FlexItem& aItem)
   if (mNumAutoMarginsInMainAxis) {
     const nsStyleSides& styleMargin = aItem.Frame()->StyleMargin()->mMargin;
     for (uint32_t i = 0; i < eNumAxisEdges; i++) {
-      Side side = kAxisOrientationToSidesMap[mAxis][i];
+      mozilla::Side side = kAxisOrientationToSidesMap[mAxis][i];
       if (styleMargin.GetUnit(side) == eStyleUnit_Auto) {
         // NOTE: This integer math will skew the distribution of remainder
         // app-units towards the end, which is fine.
@@ -2429,7 +2428,7 @@ SingleLineCrossAxisPositionTracker::
   // Give each auto margin a share of the space.
   const nsStyleSides& styleMargin = aItem.Frame()->StyleMargin()->mMargin;
   for (uint32_t i = 0; i < eNumAxisEdges; i++) {
-    Side side = kAxisOrientationToSidesMap[mAxis][i];
+    mozilla::Side side = kAxisOrientationToSidesMap[mAxis][i];
     if (styleMargin.GetUnit(side) == eStyleUnit_Auto) {
       MOZ_ASSERT(aItem.GetMarginComponentForSide(side) == 0,
                  "Expecting auto margins to have value '0' before we "
@@ -3113,7 +3112,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   // though.)
   nscoord availableHeightForContent = aReflowState.AvailableHeight();
   if (availableHeightForContent != NS_UNCONSTRAINEDSIZE &&
-      !(GetSkipSides() & (1 << NS_SIDE_TOP))) {
+      !GetSkipSides().Top()) {
     availableHeightForContent -= aReflowState.ComputedPhysicalBorderPadding().top;
     // (Don't let that push availableHeightForContent below zero, though):
     availableHeightForContent = std::max(availableHeightForContent, 0);
