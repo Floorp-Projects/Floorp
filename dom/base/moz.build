@@ -182,7 +182,7 @@ LOCAL_INCLUDES += [
     '/js/xpconnect/wrappers',
 ]
 
-for var in ('MOZ_JSDEBUGGER', 'MOZ_B2G_RIL', 'MOZ_B2G_FM'):
+for var in ('MOZ_B2G_RIL', 'MOZ_B2G_FM'):
     if CONFIG[var]:
         DEFINES[var] = True
 

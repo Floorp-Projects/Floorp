@@ -76,9 +76,6 @@ GENERATED_FILES = [
 
 DEFINES['JS_THREADSAFE'] = True
 
-if CONFIG['MOZ_JSDEBUGGER']:
-    DEFINES['MOZ_JSDEBUGGER'] = True
-
 LOCAL_INCLUDES += [
     '../loader',
     '../wrappers',

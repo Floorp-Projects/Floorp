@@ -56,6 +56,12 @@ bool
 RenumberBlocks(MIRGraph &graph);
 
 bool
+AccountForCFGChanges(MIRGenerator *mir, MIRGraph &graph, bool updateAliasAnalysis);
+
+bool
+RemoveUnmarkedBlocks(MIRGenerator *mir, MIRGraph &graph, uint32_t numMarkedBlocks);
+
+bool
 BuildDominatorTree(MIRGraph &graph);
 
 bool

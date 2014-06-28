@@ -235,11 +235,20 @@ GfxOpToSkiaOp(CompositionOp op)
   }
 }
 
-static inline SkColor ColorToSkColor(const Color &color, Float aAlpha)
+/* There's quite a bit of inconsistency about
+ * whether float colors should be rounded with .5f.
+ * We choose to do it to match cairo which also
+ * happens to match the Direct3D specs */
+static inline U8CPU ColorFloatToByte(Float color)
 {
   //XXX: do a better job converting to int
-  return SkColorSetARGB(U8CPU(color.a*aAlpha*255.0), U8CPU(color.r*255.0),
-                        U8CPU(color.g*255.0), U8CPU(color.b*255.0));
+  return U8CPU(color*255.f + .5f);
+};
+
+static inline SkColor ColorToSkColor(const Color &color, Float aAlpha)
+{
+  return SkColorSetARGB(ColorFloatToByte(color.a*aAlpha), ColorFloatToByte(color.r),
+                        ColorFloatToByte(color.g), ColorFloatToByte(color.b));
 }
 
 static inline SkRect
