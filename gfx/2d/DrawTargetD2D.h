@@ -47,6 +47,7 @@ public:
   DrawTargetD2D();
   virtual ~DrawTargetD2D();
 
+  virtual DrawTargetType GetType() const MOZ_OVERRIDE { return DrawTargetType::HARDWARE_RASTER; }
   virtual BackendType GetBackendType() const { return BackendType::DIRECT2D; }
   virtual TemporaryRef<SourceSurface> Snapshot();
   virtual IntSize GetSize() { return mSize; }
