@@ -33,6 +33,7 @@ PARALLEL_DIRS += [
     'passwordmgr',
     'perf',
     'places',
+    'promiseworker',
     'prompts',
     'protobuf',
     'reflect',
