@@ -23,6 +23,7 @@
 #include "plarena.h"
 #include "cert.h"
 #include "keyhi.h"
+#include "stdint.h"
 
 namespace mozilla { namespace pkix {
 
@@ -41,7 +42,18 @@ typedef ScopedPtr<CERTCertList, CERT_DestroyCertList> ScopedCERTCertList;
 typedef ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey>
         ScopedSECKEYPublicKey;
 
-typedef unsigned int KeyUsages;
+MOZILLA_PKIX_ENUM_CLASS KeyUsage : uint8_t {
+  digitalSignature = 0,
+  nonRepudiation   = 1,
+  keyEncipherment  = 2,
+  dataEncipherment = 3,
+  keyAgreement     = 4,
+  keyCertSign      = 5,
+  // cRLSign       = 6,
+  // encipherOnly  = 7,
+  // decipherOnly  = 8,
+  noParticularKeyUsageRequired = 0xff,
+};
 
 enum EndEntityOrCA { MustBeEndEntity, MustBeCA };
 
