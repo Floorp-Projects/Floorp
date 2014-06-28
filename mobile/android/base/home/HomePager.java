@@ -64,12 +64,12 @@ public class HomePager extends ViewPager {
 
     // This is mostly used by UI tests to easily fetch
     // specific list views at runtime.
-    static final String LIST_TAG_HISTORY = "history";
-    static final String LIST_TAG_BOOKMARKS = "bookmarks";
-    static final String LIST_TAG_READING_LIST = "reading_list";
-    static final String LIST_TAG_TOP_SITES = "top_sites";
-    static final String LIST_TAG_RECENT_TABS = "recent_tabs";
-    static final String LIST_TAG_BROWSER_SEARCH = "browser_search";
+    public static final String LIST_TAG_HISTORY = "history";
+    public static final String LIST_TAG_BOOKMARKS = "bookmarks";
+    public static final String LIST_TAG_READING_LIST = "reading_list";
+    public static final String LIST_TAG_TOP_SITES = "top_sites";
+    public static final String LIST_TAG_RECENT_TABS = "recent_tabs";
+    public static final String LIST_TAG_BROWSER_SEARCH = "browser_search";
 
     public interface OnUrlOpenListener {
         public enum Flags {

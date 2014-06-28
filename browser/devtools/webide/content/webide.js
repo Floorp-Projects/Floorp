@@ -27,9 +27,8 @@ const Strings = Services.strings.createBundle("chrome://webide/content/webide.pr
 const HTML = "http://www.w3.org/1999/xhtml";
 const HELP_URL = "https://developer.mozilla.org/Firefox_OS/Using_the_App_Manager#Troubleshooting";
 
-// download some JSON early.
+// download template index early
 GetTemplatesJSON(true);
-GetAddonsJSON(true);
 
 // See bug 989619
 console.log = console.log.bind(console);

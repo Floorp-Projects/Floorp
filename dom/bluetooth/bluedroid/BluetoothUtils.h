@@ -18,9 +18,6 @@ class BluetoothNamedValue;
 class BluetoothValue;
 class BluetoothReplyRunnable;
 
-const bt_interface_t*
-GetBluetoothInterface();
-
 void
 StringToBdAddressType(const nsAString& aBdAddress,
                       bt_bdaddr_t *aRetBdAddressType);

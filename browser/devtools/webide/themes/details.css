@@ -5,8 +5,7 @@
 body {
   margin: 0;
   background-color: white;
-  font-family: Lucida Grande, Helvetica, Helvetica Neue, sans-serif;
-  font-size: 12px;
+  font: message-box;
 }
 
 .hidden {
@@ -30,6 +29,7 @@ h1, h3, p {
   border-style: solid;
   margin: 0;
   padding: 0 12px;
+  font-family: inherit;
   font-weight: bold;
   height: 24px;
 }
