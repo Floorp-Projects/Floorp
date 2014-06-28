@@ -83,6 +83,51 @@ void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
   }
 }
 
+/* This is basically the ArcToBezier with the parameters for drawing a circle
+ * inlined which vastly simplifies it and avoids a bunch of transcedental function
+ * calls which should make it faster. */
+template <typename T>
+void EllipseToBezier(T* aSink, const Point &aOrigin, const Size &aRadius)
+{
+  Point startPoint(aOrigin.x + aRadius.width,
+                   aOrigin.y);
+
+  aSink->LineTo(startPoint);
+
+  // Calculate kappa constant for partial curve. The sign of angle in the
+  // tangent will actually ensure this is negative for a counter clockwise
+  // sweep, so changing signs later isn't needed.
+  Float kappaFactor = (4.0f / 3.0f) * tan((M_PI/2.0f) / 4.0f);
+  Float kappaX = kappaFactor * aRadius.width;
+  Float kappaY = kappaFactor * aRadius.height;
+  Float cosStartAngle = 1;
+  Float sinStartAngle = 0;
+  for (int i = 0; i < 4; i++) {
+    // We guarantee here the current point is the start point of the next
+    // curve segment.
+    Point currentStartPoint(aOrigin.x + cosStartAngle * aRadius.width,
+                            aOrigin.y + sinStartAngle * aRadius.height);
+    Point currentEndPoint(aOrigin.x + -sinStartAngle * aRadius.width,
+                          aOrigin.y + cosStartAngle * aRadius.height);
+
+    Point tangentStart(-sinStartAngle, cosStartAngle);
+    Point cp1 = currentStartPoint;
+    cp1 += Point(tangentStart.x * kappaX, tangentStart.y * kappaY);
+
+    Point revTangentEnd(cosStartAngle, sinStartAngle);
+    Point cp2 = currentEndPoint;
+    cp2 += Point(revTangentEnd.x * kappaX, revTangentEnd.y * kappaY);
+
+    aSink->BezierTo(cp1, cp2, currentEndPoint);
+
+    // cos(x+pi/2) == -sin(x)
+    // sin(x+pi/2) == cos(x)
+    Float tmp = cosStartAngle;
+    cosStartAngle = -sinStartAngle;
+    sinStartAngle = tmp;
+  }
+}
+
 /**
  * Appends a path represending a rounded rectangle to the path being built by
  * aPathBuilder.

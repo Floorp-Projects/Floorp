@@ -36,8 +36,8 @@ function theTest() {
       }
       var cancelAudioCheck = audioIsSilence(withConstraint, stream, checkDone);
       var cancelVideoCheck = videoIsBlack(withConstraint, stream, checkDone);
-      setTimeout(cancelAudioCheck, 20000);
-      setTimeout(cancelVideoCheck, 20000);
+      setTimeout(cancelAudioCheck, 3*60*1000);
+      setTimeout(cancelVideoCheck, 3*60*1000);
     }, function(e) {
       ok(false, 'gUM error: ' + e);
     });
