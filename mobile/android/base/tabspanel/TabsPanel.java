@@ -31,6 +31,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewStub;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -117,6 +118,7 @@ public class TabsPanel extends LinearLayout
             public void onResume() {
                 if (mPanel == mPanelRemote) {
                     // Refresh the remote panel.
+                    initializeRemotePanelView();
                     mPanelRemote.show();
                 }
             }
@@ -140,9 +142,6 @@ public class TabsPanel extends LinearLayout
 
         mPanelPrivate = (PanelView) findViewById(R.id.private_tabs_panel);
         mPanelPrivate.setTabsPanel(this);
-
-        mPanelRemote = (PanelView) findViewById(R.id.remote_tabs);
-        mPanelRemote.setTabsPanel(this);
 
         mFooter = (RelativeLayout) findViewById(R.id.tabs_panel_footer);
 
@@ -407,6 +406,7 @@ public class TabsPanel extends LinearLayout
                 mPanel = mPanelPrivate;
                 break;
             case REMOTE_TABS:
+                initializeRemotePanelView();
                 mPanel = mPanelRemote;
                 break;
 
@@ -554,5 +554,12 @@ public class TabsPanel extends LinearLayout
 
     public void setIconDrawable(Panel panel, int resource) {
         mTabWidget.setIconDrawable(panel.ordinal(), resource);
+    }
+
+    private void initializeRemotePanelView() {
+        if (mPanelRemote == null) {
+            mPanelRemote = (PanelView) ((ViewStub) findViewById(R.id.remote_tabs_panel_stub)).inflate();
+            mPanelRemote.setTabsPanel(TabsPanel.this);
+        }
     }
 }
