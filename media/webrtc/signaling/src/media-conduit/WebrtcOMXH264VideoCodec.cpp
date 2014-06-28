@@ -283,7 +283,11 @@ public:
     if (mNativeWindow.get()) {
       // listen to buffers queued by MediaCodec::RenderOutputBufferAndRelease().
       mNativeWindow->setNewFrameCallback(this);
-      surface = new Surface(mNativeWindow->getBufferQueue());
+      // XXX remove buffer changes after a better solution lands - bug 1009420
+      sp<GonkBufferQueue> bq = mNativeWindow->getBufferQueue();
+      // More spare buffers to avoid OMX decoder waiting for native window
+      bq->setMaxAcquiredBufferCount(WEBRTC_OMX_H264_MIN_DECODE_BUFFERS);
+      surface = new Surface(bq);
     }
     status_t result = mCodec->configure(config, surface, nullptr, 0);
     if (result == OK) {
