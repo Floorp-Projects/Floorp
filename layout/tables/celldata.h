@@ -201,11 +201,11 @@ public:
                   nscoord       aSize,
                   bool          aStart);
 
-  BCPixelSize GetCorner(mozilla::css::Side&       aCornerOwner,
+  BCPixelSize GetCorner(mozilla::Side&       aCornerOwner,
                         bool&  aBevel) const;
 
   void SetCorner(BCPixelSize aSubSize,
-                 mozilla::css::Side aOwner,
+                 mozilla::Side aOwner,
                  bool    aBevel);
 
   bool IsLeftStart() const;
@@ -229,7 +229,7 @@ protected:
   unsigned mTopOwner:      4; // owner of top border
   unsigned mLeftStart:     1; // set if this is the start of a vertical border segment
   unsigned mTopStart:      1; // set if this is the start of a horizontal border segment
-  unsigned mCornerSide:    2; // mozilla::css::Side of the owner of the upper left corner relative to the corner
+  unsigned mCornerSide:    2; // mozilla::Side of the owner of the upper left corner relative to the corner
   unsigned mCornerBevel:   1; // is the corner beveled (only two segments, perpendicular, not dashed or dotted).
 };
 
@@ -449,16 +449,16 @@ inline void BCData::SetTopEdge(BCBorderOwner  aOwner,
   mTopStart = aStart;
 }
 
-inline BCPixelSize BCData::GetCorner(mozilla::css::Side& aOwnerSide,
+inline BCPixelSize BCData::GetCorner(mozilla::Side& aOwnerSide,
                                      bool&       aBevel) const
 {
-  aOwnerSide = mozilla::css::Side(mCornerSide);
+  aOwnerSide = mozilla::Side(mCornerSide);
   aBevel     = (bool)mCornerBevel;
   return mCornerSubSize;
 }
 
 inline void BCData::SetCorner(BCPixelSize aSubSize,
-                              mozilla::css::Side aOwnerSide,
+                              mozilla::Side aOwnerSide,
                               bool    aBevel)
 {
   mCornerSubSize = aSubSize;

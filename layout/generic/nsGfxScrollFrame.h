@@ -39,6 +39,7 @@ namespace mozilla {
 
 class ScrollFrameHelper : public nsIReflowCallback {
 public:
+  typedef nsIFrame::Sides Sides;
   typedef mozilla::CSSIntPoint CSSIntPoint;
   typedef mozilla::layout::ScrollbarActivity ScrollbarActivity;
 
@@ -72,7 +73,7 @@ public:
                            bool                    aPositioned);
 
   bool GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
-                      int aSkipSides, nscoord aRadii[8]) const;
+                      Sides aSkipSides, nscoord aRadii[8]) const;
 
   // nsIReflowCallback
   virtual bool ReflowFinished() MOZ_OVERRIDE;
@@ -480,7 +481,7 @@ public:
   nscoord GetIntrinsicVScrollbarWidth(nsRenderingContext *aRenderingContext);
 
   virtual bool GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
-                              int aSkipSides, nscoord aRadii[8]) const MOZ_OVERRIDE {
+                              Sides aSkipSides, nscoord aRadii[8]) const MOZ_OVERRIDE {
     return mHelper.GetBorderRadii(aFrameSize, aBorderArea, aSkipSides, aRadii);
   }
 
@@ -829,7 +830,7 @@ public:
   virtual nsresult GetPadding(nsMargin& aPadding) MOZ_OVERRIDE;
 
   virtual bool GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
-                              int aSkipSides, nscoord aRadii[8]) const MOZ_OVERRIDE {
+                              Sides aSkipSides, nscoord aRadii[8]) const MOZ_OVERRIDE {
     return mHelper.GetBorderRadii(aFrameSize, aBorderArea, aSkipSides, aRadii);
   }
 

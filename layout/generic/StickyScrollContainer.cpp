@@ -15,8 +15,6 @@
 #include "nsLayoutUtils.h"
 #include "RestyleTracker.h"
 
-using namespace mozilla::css;
-
 namespace mozilla {
 
 void DestroyStickyScrollContainer(void* aPropertyValue)

@@ -204,7 +204,7 @@ public:
                      uint32_t   aXPos,
                      bool       aIsLowerRight = false);
 
-  void SetBCBorderEdge(mozilla::css::Side aEdge,
+  void SetBCBorderEdge(mozilla::Side aEdge,
                        nsCellMap&    aCellMap,
                        uint32_t      aCellMapStart,
                        uint32_t      aYPos,
@@ -219,7 +219,7 @@ public:
                          uint32_t    aCellMapStart,
                          uint32_t    aYPos,
                          uint32_t    aXPos,
-                         mozilla::css::Side aOwner,
+                         mozilla::Side aOwner,
                          nscoord     aSubSize,
                          bool        aBevel,
                          bool        aIsBottomRight = false);
