@@ -852,6 +852,10 @@ BluetoothAdapter::DispatchAttributeEvent(const nsTArray<nsString>& aTypes)
   NS_ENSURE_TRUE_VOID(aTypes.Length());
 
   AutoJSAPI jsapi;
+  if (!jsapi.Init(GetOwner())) {
+    BT_WARNING("Failed to initialise AutoJSAPI!");
+    return;
+  }
   JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> value(cx);
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
