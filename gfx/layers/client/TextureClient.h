@@ -364,7 +364,13 @@ protected:
     mFlags |= aFlags;
   }
 
+  ISurfaceAllocator* GetAllocator()
+  {
+    return mAllocator;
+  }
+
   RefPtr<TextureChild> mActor;
+  RefPtr<ISurfaceAllocator> mAllocator;
   TextureFlags mFlags;
   bool mShared;
   bool mValid;
@@ -372,8 +378,28 @@ protected:
   FenceHandle mAcquireFenceHandle;
 
   friend class TextureChild;
+  friend class RemoveTextureFromCompositableTracker;
   friend void TestTextureClientSurface(TextureClient*, gfxImageSurface*);
   friend void TestTextureClientYCbCr(TextureClient*, PlanarYCbCrData&);
+};
+
+/**
+ * Task that releases TextureClient pointer on a specified thread.
+ */
+class TextureClientReleaseTask : public Task
+{
+public:
+    TextureClientReleaseTask(TextureClient* aClient)
+        : mTextureClient(aClient) {
+    }
+
+    virtual void Run() MOZ_OVERRIDE
+    {
+        mTextureClient = nullptr;
+    }
+
+private:
+    mozilla::RefPtr<TextureClient> mTextureClient;
 };
 
 /**
