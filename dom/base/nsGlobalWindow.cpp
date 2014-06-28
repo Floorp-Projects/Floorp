@@ -68,6 +68,7 @@
 #include "mozilla/MouseEvents.h"
 #include "AudioChannelService.h"
 #include "MessageEvent.h"
+#include "nsAboutProtocolUtils.h"
 
 // Interfaces Needed
 #include "nsIFrame.h"
@@ -10511,6 +10512,39 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
   return rv.ErrorCode();
 }
 
+static nsAutoCString
+GetIndexedDBOriginPostfixForAboutURI(nsIURI *aURI)
+{
+  nsAutoCString result;
+
+  nsCOMPtr<nsIAboutModule> module;
+  nsresult rv = NS_GetAboutModule(aURI, getter_AddRefs(module));
+  NS_ENSURE_SUCCESS(rv, result);
+
+  uint32_t flags;
+  rv = module->GetURIFlags(aURI, &flags);
+  if (NS_FAILED(rv) || !(flags & nsIAboutModule::ENABLE_INDEXED_DB)) {
+    return result;
+  }
+
+  nsAutoString postfix;
+  rv = module->GetIndexedDBOriginPostfix(aURI, postfix);
+  if (NS_FAILED(rv) || DOMStringIsNull(postfix)) {
+    return result;
+  }
+
+  nsCOMPtr<nsIURI> origin = NS_GetInnermostURI(aURI);
+  NS_ENSURE_TRUE(origin, result);
+
+  nsAutoCString scheme;
+  rv = origin->GetScheme(scheme);
+  NS_ENSURE_SUCCESS(rv, result);
+
+  result = scheme + NS_LITERAL_CSTRING(":") + NS_ConvertUTF16toUTF8(postfix);
+  ToLowerCase(result);
+  return result;
+}
+
 indexedDB::IDBFactory*
 nsGlobalWindow::GetIndexedDB(ErrorResult& aError)
 {
@@ -10522,6 +10556,8 @@ nsGlobalWindow::GetIndexedDB(ErrorResult& aError)
       return nullptr;
     }
 
+    nsCString origin;
+
     if (!IsChromeWindow()) {
       // Whitelist about:home, since it doesn't have a base domain it would not
       // pass the thirdPartyUtil check, though it should be able to use
@@ -10531,11 +10567,15 @@ nsGlobalWindow::GetIndexedDB(ErrorResult& aError)
       if (principal) {
         nsCOMPtr<nsIURI> uri;
         principal->GetURI(getter_AddRefs(uri));
-        bool isAbout = false;
-        if (uri && NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)) && isAbout) {
-          nsAutoCString path;
-          skipThirdPartyCheck = NS_SUCCEEDED(uri->GetPath(path)) &&
-                                path.EqualsLiteral("home");
+
+        if (uri) {
+          bool isAbout = false;
+          nsresult rv = uri->SchemeIs("about", &isAbout);
+
+          if (NS_SUCCEEDED(rv) && isAbout) {
+            origin = GetIndexedDBOriginPostfixForAboutURI(uri);
+            skipThirdPartyCheck = !origin.IsEmpty();
+          }
         }
       }
 
@@ -10559,7 +10599,7 @@ nsGlobalWindow::GetIndexedDB(ErrorResult& aError)
     }
 
     // This may be null if being created from a file.
-    aError = indexedDB::IDBFactory::Create(this, nullptr,
+    aError = indexedDB::IDBFactory::Create(this, origin, origin, nullptr,
                                            getter_AddRefs(mIndexedDB));
   }
 
