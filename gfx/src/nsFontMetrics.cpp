@@ -162,13 +162,15 @@ nsFontMetrics::XHeight()
 nscoord
 nsFontMetrics::SuperscriptOffset()
 {
-    return ROUND_TO_TWIPS(GetMetrics().superscriptOffset);
+    return ROUND_TO_TWIPS(GetMetrics().emHeight *
+                          NS_FONT_SUPERSCRIPT_OFFSET_RATIO);
 }
 
 nscoord
 nsFontMetrics::SubscriptOffset()
 {
-    return ROUND_TO_TWIPS(GetMetrics().subscriptOffset);
+    return ROUND_TO_TWIPS(GetMetrics().emHeight *
+                          NS_FONT_SUBSCRIPT_OFFSET_RATIO);
 }
 
 void
