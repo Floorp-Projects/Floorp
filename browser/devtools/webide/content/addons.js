@@ -5,7 +5,7 @@
 const Cu = Components.utils;
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
-const {GetAvailableAddons} = require("devtools/webide/addons");
+const {GetAvailableAddons, ForgetAddonsList} = require("devtools/webide/addons");
 const Strings = Services.strings.createBundle("chrome://webide/content/webide.properties");
 
 window.addEventListener("load", function onLoad() {
@@ -18,6 +18,11 @@ window.addEventListener("load", function onLoad() {
     console.error(e);
     window.alert(Strings.formatStringFromName("error_cantFetchAddonsJSON", [e], 1));
   });
+}, true);
+
+window.addEventListener("unload", function onUnload() {
+  window.removeEventListener("unload", onUnload);
+  ForgetAddonsList();
 }, true);
 
 function CloseUI() {
