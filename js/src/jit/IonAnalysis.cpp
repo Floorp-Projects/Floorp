@@ -6,6 +6,7 @@
 
 #include "jit/IonAnalysis.h"
 
+#include "jit/AliasAnalysis.h"
 #include "jit/BaselineInspector.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
@@ -1091,6 +1092,59 @@ jit::RenumberBlocks(MIRGraph &graph)
     return true;
 }
 
+// A utility for code which deletes blocks. Renumber the remaining blocks,
+// recompute dominators, and optionally recompute AliasAnalysis dependencies.
+bool
+jit::AccountForCFGChanges(MIRGenerator *mir, MIRGraph &graph, bool updateAliasAnalysis)
+{
+    // Renumber the blocks and clear out the old dominator info.
+    size_t id = 0;
+    for (ReversePostorderIterator i(graph.rpoBegin()), e(graph.rpoEnd()); i != e; ++i) {
+        i->clearDominatorInfo();
+        i->setId(id++);
+    }
+
+    // Recompute dominator info.
+    if (!BuildDominatorTree(graph))
+        return false;
+
+    // If needed, update alias analysis dependencies.
+    if (updateAliasAnalysis) {
+        if (!AliasAnalysis(mir, graph).analyze())
+             return false;
+    }
+
+    AssertExtendedGraphCoherency(graph);
+    return true;
+}
+
+// Remove all blocks not marked with isMarked(). Unmark all remaining blocks.
+// Alias analysis dependencies may be invalid after calling this function.
+bool
+jit::RemoveUnmarkedBlocks(MIRGenerator *mir, MIRGraph &graph, uint32_t numMarkedBlocks)
+{
+    // If all blocks are marked, the CFG is unmodified. Just clear the marks.
+    if (numMarkedBlocks == graph.numBlocks()) {
+        graph.unmarkBlocks();
+        return true;
+    }
+
+    for (ReversePostorderIterator iter(graph.rpoBegin()); iter != graph.rpoEnd();) {
+        MBasicBlock *block = *iter++;
+
+        if (block->isMarked()) {
+            block->unmark();
+            continue;
+        }
+
+        for (size_t i = 0, e = block->numSuccessors(); i != e; ++i)
+            block->getSuccessor(i)->removePredecessor(block);
+        graph.removeBlockIncludingPhis(block);
+    }
+
+    return AccountForCFGChanges(mir, graph, /*updateAliasAnalysis=*/false);
+}
+
 // A Simple, Fast Dominance Algorithm by Cooper et al.
 // Modified to support empty intersections for OSR, and in RPO.
 static MBasicBlock *
@@ -1559,7 +1613,13 @@ BoundsCheckHashIgnoreOffset(MBoundsCheck *check)
 static MBoundsCheck *
 FindDominatingBoundsCheck(BoundsCheckMap &checks, MBoundsCheck *check, size_t index)
 {
-    // See the comment in ValueNumberer::findDominatingDef.
+    // Since we are traversing the dominator tree in pre-order, when we
+    // are looking at the |index|-th block, the next numDominated() blocks
+    // we traverse are precisely the set of blocks that are dominated.
+    //
+    // So, this value is visible in all blocks if:
+    // index <= index + ins->block->numDominated()
+    // and becomes invalid after that.
     HashNumber hash = BoundsCheckHashIgnoreOffset(check);
     BoundsCheckMap::Ptr p = checks.lookup(hash);
     if (!p || index >= p->value().validEnd) {

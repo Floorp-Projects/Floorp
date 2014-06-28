@@ -52,7 +52,7 @@ public:
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                                    uint8_t aWidgetType, nsRect* aOverflowRect);
 
-  NS_IMETHOD GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
+  NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   uint8_t aWidgetType,
                                   nsIntSize* aResult, bool* aIsOverridable);
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 

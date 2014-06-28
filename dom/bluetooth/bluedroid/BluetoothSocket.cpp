@@ -7,12 +7,11 @@
 #include "BluetoothSocket.h"
 
 #include <fcntl.h>
-#include <hardware/bluetooth.h>
-#include <hardware/bt_sock.h>
 #include <sys/socket.h>
 
 #include "base/message_loop.h"
 #include "BluetoothSocketObserver.h"
+#include "BluetoothInterface.h"
 #include "BluetoothUtils.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/RefPtr.h"
@@ -30,7 +29,7 @@ static const uint8_t UUID_OBEX_OBJECT_PUSH[] = {
   0x00, 0x00, 0x11, 0x05, 0x00, 0x00, 0x10, 0x00,
   0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB
 };
-static const btsock_interface_t* sBluetoothSocketInterface = nullptr;
+static BluetoothSocketInterface* sBluetoothSocketInterface;
 
 // helper functions
 static bool
@@ -40,11 +39,10 @@ EnsureBluetoothSocketHalLoad()
     return true;
   }
 
-  const bt_interface_t* btInf = GetBluetoothInterface();
+  BluetoothInterface* btInf = BluetoothInterface::GetInstance();
   NS_ENSURE_TRUE(btInf, false);
 
-  sBluetoothSocketInterface =
-    (btsock_interface_t *) btInf->get_profile_interface(BT_PROFILE_SOCKETS_ID);
+  sBluetoothSocketInterface = btInf->GetBluetoothSocketInterface();
   NS_ENSURE_TRUE(sBluetoothSocketInterface, false);
 
   return true;
@@ -446,11 +444,11 @@ DroidSocketImpl::Connect()
   // TODO: uuid as argument
   int fd = -1;
   bt_status_t status =
-    sBluetoothSocketInterface->connect(&remoteBdAddress,
+    sBluetoothSocketInterface->Connect(&remoteBdAddress,
                                        BTSOCK_RFCOMM,
                                        UUID_OBEX_OBJECT_PUSH,
                                        mChannel,
-                                       &fd,
+                                       fd,
                                        (BTSOCK_FLAG_ENCRYPT * mEncrypt) |
                                        (BTSOCK_FLAG_AUTH * mAuth));
   NS_ENSURE_TRUE_VOID(status == BT_STATUS_SUCCESS);
@@ -479,11 +477,11 @@ DroidSocketImpl::Listen()
 
   int fd = -1;
   bt_status_t status =
-    sBluetoothSocketInterface->listen(BTSOCK_RFCOMM,
+    sBluetoothSocketInterface->Listen(BTSOCK_RFCOMM,
                                       "OBEX Object Push",
                                       UUID_OBEX_OBJECT_PUSH,
                                       mChannel,
-                                      &fd,
+                                      fd,
                                       (BTSOCK_FLAG_ENCRYPT * mEncrypt) |
                                       (BTSOCK_FLAG_AUTH * mAuth));
   NS_ENSURE_TRUE_VOID(status == BT_STATUS_SUCCESS);
