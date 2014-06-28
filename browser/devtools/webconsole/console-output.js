@@ -1953,8 +1953,10 @@ Widgets.JSObject.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
    */
   _anchor: function(text, options = {})
   {
-    if (!options.onClick && !options.href) {
-      options.onClick = this._onClick;
+    if (!options.onClick) {
+      // If the anchor has an URL, open it in a new tab. If not, show the
+      // current object actor.
+      options.onClick = options.href ? this._onClickAnchor : this._onClick;
     }
 
     let anchor = this.el("a", {
@@ -1963,7 +1965,7 @@ Widgets.JSObject.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
       href: options.href || "#",
     }, text);
 
-    this.message._addLinkCallback(anchor, !options.href ? options.onClick : null);
+    this.message._addLinkCallback(anchor, options.onClick);
 
     if (options.appendTo) {
       options.appendTo.appendChild(anchor);

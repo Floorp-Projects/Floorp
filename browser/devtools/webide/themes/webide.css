@@ -34,7 +34,10 @@ window:not(.busy) #action-busy {
 /* Panel buttons */
 
 .panel-button {
+  -moz-appearance: none;
   -moz-box-align: center;
+  border-width: 0;
+  background: none;
 }
 
 .panel-button-anchor {
@@ -123,6 +126,7 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 3px 12px;
   margin: 0;
   -moz-appearance: none;
+  border-width: 0;
 }
 
 .panel-item-help {
