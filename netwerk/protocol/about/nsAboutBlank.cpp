@@ -5,6 +5,7 @@
 
 #include "nsAboutBlank.h"
 #include "nsStringStream.h"
+#include "nsDOMString.h"
 #include "nsNetUtil.h"
 
 NS_IMPL_ISUPPORTS(nsAboutBlank, nsIAboutModule)
@@ -34,6 +35,13 @@ nsAboutBlank::GetURIFlags(nsIURI *aURI, uint32_t *result)
     *result = nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
               nsIAboutModule::HIDE_FROM_ABOUTABOUT;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAboutBlank::GetIndexedDBOriginPostfix(nsIURI *aURI, nsAString &result)
+{
+    SetDOMStringToNull(result);
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
