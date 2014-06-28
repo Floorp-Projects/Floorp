@@ -12,6 +12,8 @@
 #include "nsContainerFrame.h"
 #include "nsIFrameInlines.h"
 
+using namespace mozilla;
+
 NS_IMPL_FRAMEARENA_HELPERS(nsSplittableFrame)
 
 void
@@ -239,7 +241,7 @@ nsIFrame::LogicalSides
 nsSplittableFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   if (IS_TRUE_OVERFLOW_CONTAINER(this)) {
-    return LogicalSides(LOGICAL_SIDES_B_BOTH);
+    return LogicalSides(eLogicalSideBitsBBoth);
   }
 
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
@@ -249,7 +251,7 @@ nsSplittableFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) co
 
   LogicalSides skip;
   if (GetPrevInFlow()) {
-    skip |= LOGICAL_SIDE_B_START;
+    skip |= eLogicalSideBitsBStart;
   }
 
   if (aReflowState) {
@@ -264,13 +266,13 @@ nsSplittableFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) co
           effectiveCH > aReflowState->AvailableBSize()) {
         // Our content height is going to exceed our available height, so we're
         // going to need a next-in-flow.
-        skip |= LOGICAL_SIDE_B_END;
+        skip |= eLogicalSideBitsBEnd;
       }
     }
   } else {
     nsIFrame* nif = GetNextInFlow();
     if (nif && !IS_TRUE_OVERFLOW_CONTAINER(nif)) {
-      skip |= LOGICAL_SIDE_B_END;
+      skip |= eLogicalSideBitsBEnd;
     }
   }
 
