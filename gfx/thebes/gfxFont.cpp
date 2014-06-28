@@ -4597,8 +4597,6 @@ gfxFont::InitMetricsFromSfntTables(Metrics& aMetrics)
         // this should always be present in any valid OS/2 of any version
         if (len >= offsetof(OS2Table, sTypoLineGap) + sizeof(int16_t)) {
             SET_SIGNED(aveCharWidth, os2->xAvgCharWidth);
-            SET_SIGNED(subscriptOffset, os2->ySubscriptYOffset);
-            SET_SIGNED(superscriptOffset, os2->ySuperscriptYOffset);
             SET_SIGNED(strikeoutSize, os2->yStrikeoutSize);
             SET_SIGNED(strikeoutOffset, os2->yStrikeoutPosition);
 
@@ -4660,13 +4658,6 @@ void gfxFont::CalculateDerivedMetrics(Metrics& aMetrics)
         aMetrics.maxAdvance = aMetrics.aveCharWidth;
     }
 
-    if (!aMetrics.subscriptOffset) {
-        aMetrics.subscriptOffset = aMetrics.xHeight;
-    }
-    if (!aMetrics.superscriptOffset) {
-        aMetrics.superscriptOffset = aMetrics.xHeight;
-    }
-
     if (!aMetrics.strikeoutOffset) {
         aMetrics.strikeoutOffset = aMetrics.xHeight * 0.5;
     }
@@ -4683,19 +4674,6 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont)
     if (mStyle.size == 0.0) {
         memset(aMetrics, 0, sizeof(gfxFont::Metrics));
         return;
-    }
-
-    // MS (P)Gothic and MS (P)Mincho are not having suitable values in their super script offset.
-    // If the values are not suitable, we should use x-height instead of them.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=353632
-    if (aMetrics->superscriptOffset <= 0 ||
-        aMetrics->superscriptOffset >= aMetrics->maxAscent) {
-        aMetrics->superscriptOffset = aMetrics->xHeight;
-    }
-    // And also checking the case of sub script offset. The old gfx for win has checked this too.
-    if (aMetrics->subscriptOffset <= 0 ||
-        aMetrics->subscriptOffset >= aMetrics->maxAscent) {
-        aMetrics->subscriptOffset = aMetrics->xHeight;
     }
 
     aMetrics->underlineSize = std::max(1.0, aMetrics->underlineSize);
