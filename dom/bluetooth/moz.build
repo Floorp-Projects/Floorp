@@ -44,6 +44,7 @@ if CONFIG['MOZ_B2G_BT']:
         elif CONFIG['MOZ_B2G_BT_BLUEDROID']:
             SOURCES += [
                 'bluedroid/BluetoothA2dpManager.cpp',
+                'bluedroid/BluetoothInterface.cpp',
                 'bluedroid/BluetoothOppManager.cpp',
                 'bluedroid/BluetoothServiceBluedroid.cpp',
                 'bluedroid/BluetoothSocket.cpp',
