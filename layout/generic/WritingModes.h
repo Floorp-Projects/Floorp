@@ -52,14 +52,6 @@ enum LogicalSideBits {
   eLogicalSideBitsAll = eLogicalSideBitsBBoth | eLogicalSideBitsIBoth
 };
 
-#define LOGICAL_SIDE_B_START mozilla::eLogicalSideBitsBStart
-#define LOGICAL_SIDE_I_START mozilla::eLogicalSideBitsIStart
-#define LOGICAL_SIDE_B_END   mozilla::eLogicalSideBitsBEnd
-#define LOGICAL_SIDE_I_END   mozilla::eLogicalSideBitsIEnd
-#define LOGICAL_SIDES_I_BOTH mozilla::eLogicalSideBitsIBoth
-#define LOGICAL_SIDES_B_BOTH mozilla::eLogicalSideBitsBBoth
-#define LOGICAL_SIDES_ALL    mozilla::eLogicalSideBitsAll
-
 /**
  * LogicalSides represents a set of logical sides.
  */
