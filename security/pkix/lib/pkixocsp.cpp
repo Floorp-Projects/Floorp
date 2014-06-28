@@ -131,7 +131,8 @@ CheckOCSPResponseSignerCert(TrustDomain& trustDomain,
   // TODO(bug 926261): If we're validating for a policy then the policy OID we
   // are validating for should be passed to CheckIssuerIndependentProperties.
   rv = CheckIssuerIndependentProperties(trustDomain, cert, time,
-                                        MustBeEndEntity, 0,
+                                        MustBeEndEntity,
+                                        KeyUsage::noParticularKeyUsageRequired,
                                         SEC_OID_OCSP_RESPONDER,
                                         SEC_OID_X509_ANY_POLICY, 0);
   if (rv != Success) {
