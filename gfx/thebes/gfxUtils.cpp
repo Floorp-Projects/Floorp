@@ -10,9 +10,19 @@
 #include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "gfxDrawable.h"
+#include "imgIEncoder.h"
+#include "mozilla/Base64.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Vector.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIClipboardHelper.h"
+#include "nsIFile.h"
+#include "nsIPresShell.h"
+#include "nsPresContext.h"
 #include "nsRegion.h"
+#include "nsServiceManagerUtils.h"
 #include "yuv_convert.h"
 #include "ycbcr_to_rgb565.h"
 #include "GeckoProfiler.h"
@@ -1105,83 +1115,258 @@ gfxUtils::GetColorForFrameNumber(uint64_t aFrameNumber)
     return colors[aFrameNumber % sNumFrameColors];
 }
 
-#ifdef MOZ_DUMP_PAINTING
+/* static */ nsresult
+gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
+                              const nsACString& aMimeType,
+                              const nsAString& aOutputOptions,
+                              BinaryOrData aBinaryOrData,
+                              FILE* aFile)
+{
+  MOZ_ASSERT(aBinaryOrData == eDataURIEncode || aFile,
+             "Copying binary encoding to clipboard not currently supported");
+
+  const IntSize size = aSurface->GetSize();
+  if (size.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  const Size floatSize(size.width, size.height);
+
+  RefPtr<DataSourceSurface> dataSurface;
+  if (aSurface->GetFormat() != SurfaceFormat::B8G8R8A8) {
+    // FIXME bug 995807 (B8G8R8X8), bug 831898 (R5G6B5)
+    dataSurface =
+      CopySurfaceToDataSourceSurfaceWithFormat(aSurface,
+                                               SurfaceFormat::B8G8R8A8);
+  } else {
+    dataSurface = aSurface->GetDataSurface();
+  }
+  if (!dataSurface) {
+    return NS_ERROR_FAILURE;
+  }
+
+  DataSourceSurface::MappedSurface map;
+  if (!dataSurface->Map(DataSourceSurface::MapType::READ, &map)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString encoderCID(
+    NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type=") + aMimeType);
+  nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(encoderCID.get());
+  if (!encoder) {
+#ifdef DEBUG
+    int32_t w = std::min(size.width, 8);
+    int32_t h = std::min(size.height, 8);
+    printf("Could not create encoder. Top-left %dx%d pixels contain:\n", w, h);
+    for (int32_t y = 0; y < h; ++y) {
+      for (int32_t x = 0; x < w; ++x) {
+        printf("%x ", reinterpret_cast<uint32_t*>(map.mData)[y*map.mStride+x]);
+      }
+    }
+#endif
+    dataSurface->Unmap();
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = encoder->InitFromData(map.mData,
+                                      BufferSizeFromStrideAndHeight(map.mStride, size.height),
+                                      size.width,
+                                      size.height,
+                                      map.mStride,
+                                      imgIEncoder::INPUT_FORMAT_HOSTARGB,
+                                      aOutputOptions);
+  dataSurface->Unmap();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIInputStream> imgStream;
+  CallQueryInterface(encoder.get(), getter_AddRefs(imgStream));
+  if (!imgStream) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint64_t bufSize64;
+  rv = imgStream->Available(&bufSize64);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ENSURE_TRUE(bufSize64 < UINT32_MAX - 16, NS_ERROR_FAILURE);
+
+  uint32_t bufSize = (uint32_t)bufSize64;
+
+  // ...leave a little extra room so we can call read again and make sure we
+  // got everything. 16 bytes for better padding (maybe)
+  bufSize += 16;
+  uint32_t imgSize = 0;
+  Vector<char> imgData;
+  if (!imgData.initCapacity(bufSize)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  uint32_t numReadThisTime = 0;
+  while ((rv = imgStream->Read(imgData.begin() + imgSize,
+                               bufSize - imgSize,
+                               &numReadThisTime)) == NS_OK && numReadThisTime > 0)
+  {
+    imgSize += numReadThisTime;
+    if (imgSize == bufSize) {
+      // need a bigger buffer, just double
+      bufSize *= 2;
+      if (!imgData.resizeUninitialized(bufSize)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+
+  if (aBinaryOrData == eBinaryEncode) {
+    if (aFile) {
+      fwrite(imgData.begin(), 1, imgSize, aFile);
+    }
+    return NS_OK;
+  }
+
+  // base 64, result will be null-terminated
+  nsCString encodedImg;
+  rv = Base64Encode(Substring(imgData.begin(), imgSize), encodedImg);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString string("data:");
+  string.Append(aMimeType);
+  string.Append(";base64,");
+  string.Append(encodedImg);
+
+  if (aFile) {
+#ifdef ANDROID
+    if (aFile == stdout || aFile == stderr) {
+      // ADB logcat cuts off long strings so we will break it down
+      const char* cStr = string.BeginReading();
+      size_t len = strlen(cStr);
+      while (true) {
+        printf_stderr("IMG: %.140s\n", cStr);
+        if (len <= 140)
+          break;
+        len -= 140;
+        cStr += 140;
+      }
+    }
+#endif
+    fprintf(aFile, "%s", string.BeginReading());
+  } else {
+    nsCOMPtr<nsIClipboardHelper> clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
+    if (clipboard) {
+      clipboard->CopyString(NS_ConvertASCIItoUTF16(string), nullptr);
+    }
+  }
+  return NS_OK;
+}
+
+/* static */ void
+gfxUtils::WriteAsPNG(SourceSurface* aSurface, const nsAString& aFile)
+{
+  WriteAsPNG(aSurface, NS_ConvertUTF16toUTF8(aFile).get());
+}
+
+/* static */ void
+gfxUtils::WriteAsPNG(SourceSurface* aSurface, const char* aFile)
+{
+  FILE* file = fopen(aFile, "wb");
+
+  if (!file) {
+    // Maybe the directory doesn't exist; try creating it, then fopen again.
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIFile> comFile = do_CreateInstance("@mozilla.org/file/local;1");
+    if (comFile) {
+      NS_ConvertUTF8toUTF16 utf16path((nsDependentCString(aFile)));
+      rv = comFile->InitWithPath(utf16path);
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIFile> dirPath;
+        comFile->GetParent(getter_AddRefs(dirPath));
+        if (dirPath) {
+          rv = dirPath->Create(nsIFile::DIRECTORY_TYPE, 0777);
+          if (NS_SUCCEEDED(rv) || rv == NS_ERROR_FILE_ALREADY_EXISTS) {
+            file = fopen(aFile, "wb");
+          }
+        }
+      }
+    }
+    if (!file) {
+      NS_WARNING("Failed to open file to create PNG!\n");
+      return;
+    }
+  }
+
+  EncodeSourceSurface(aSurface, NS_LITERAL_CSTRING("image/png"),
+                      EmptyString(), eBinaryEncode, file);
+  fclose(file);
+}
+
+/* static */ void
+gfxUtils::WriteAsPNG(DrawTarget* aDT, const nsAString& aFile)
+{
+  WriteAsPNG(aDT, NS_ConvertUTF16toUTF8(aFile).get());
+}
+
 /* static */ void
 gfxUtils::WriteAsPNG(DrawTarget* aDT, const char* aFile)
 {
-  aDT->Flush();
-  nsRefPtr<gfxASurface> surf = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(aDT);
-  if (surf) {
-    surf->WriteAsPNG(aFile);
+  RefPtr<SourceSurface> surface = aDT->Snapshot();
+  if (surface) {
+    WriteAsPNG(surface, aFile);
   } else {
-    NS_WARNING("Failed to get Thebes surface!");
+    NS_WARNING("Failed to get surface!");
   }
 }
 
 /* static */ void
-gfxUtils::DumpAsDataURL(DrawTarget* aDT)
+gfxUtils::WriteAsPNG(nsIPresShell* aShell, const char* aFile)
 {
-  aDT->Flush();
-  nsRefPtr<gfxASurface> surf = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(aDT);
-  if (surf) {
-    surf->DumpAsDataURL();
+  int32_t width = 1000, height = 1000;
+  nsRect r(0, 0, aShell->GetPresContext()->DevPixelsToAppUnits(width),
+           aShell->GetPresContext()->DevPixelsToAppUnits(height));
+
+  RefPtr<mozilla::gfx::DrawTarget> dt = gfxPlatform::GetPlatform()->
+    CreateOffscreenContentDrawTarget(IntSize(width, height),
+                                     SurfaceFormat::B8G8R8A8);
+  NS_ENSURE_TRUE(dt, /*void*/);
+
+  nsRefPtr<gfxContext> context = new gfxContext(dt);
+  aShell->RenderDocument(r, 0, NS_RGB(255, 255, 0), context);
+  WriteAsPNG(dt.get(), aFile);
+}
+
+/* static */ void
+gfxUtils::DumpAsDataURI(SourceSurface* aSurface, FILE* aFile)
+{
+  EncodeSourceSurface(aSurface, NS_LITERAL_CSTRING("image/png"),
+                      EmptyString(), eDataURIEncode, aFile);
+}
+
+/* static */ void
+gfxUtils::DumpAsDataURI(DrawTarget* aDT, FILE* aFile)
+{
+  RefPtr<SourceSurface> surface = aDT->Snapshot();
+  if (surface) {
+    DumpAsDataURI(surface, aFile);
   } else {
-    NS_WARNING("Failed to get Thebes surface!");
+    NS_WARNING("Failed to get surface!");
   }
 }
 
 /* static */ void
-gfxUtils::CopyAsDataURL(DrawTarget* aDT)
+gfxUtils::CopyAsDataURI(SourceSurface* aSurface)
 {
-  aDT->Flush();
-  nsRefPtr<gfxASurface> surf = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(aDT);
-  if (surf) {
-    surf->CopyAsDataURL();
+  EncodeSourceSurface(aSurface, NS_LITERAL_CSTRING("image/png"),
+                      EmptyString(), eDataURIEncode, nullptr);
+}
+
+/* static */ void
+gfxUtils::CopyAsDataURI(DrawTarget* aDT)
+{
+  RefPtr<SourceSurface> surface = aDT->Snapshot();
+  if (surface) {
+    CopyAsDataURI(surface);
   } else {
-    NS_WARNING("Failed to get Thebes surface!");
+    NS_WARNING("Failed to get surface!");
   }
 }
 
-/* static */ void
-gfxUtils::WriteAsPNG(gfx::SourceSurface* aSourceSurface, const char* aFile)
-{
-  RefPtr<gfx::DataSourceSurface> dataSurface = aSourceSurface->GetDataSurface();
-  RefPtr<gfx::DrawTarget> dt
-            = gfxPlatform::GetPlatform()
-                ->CreateDrawTargetForData(dataSurface->GetData(),
-                                          dataSurface->GetSize(),
-                                          dataSurface->Stride(),
-                                          aSourceSurface->GetFormat());
-  gfxUtils::WriteAsPNG(dt.get(), aFile);
-}
-
-/* static */ void
-gfxUtils::DumpAsDataURL(gfx::SourceSurface* aSourceSurface)
-{
-  RefPtr<gfx::DataSourceSurface> dataSurface = aSourceSurface->GetDataSurface();
-  RefPtr<gfx::DrawTarget> dt
-            = gfxPlatform::GetPlatform()
-                ->CreateDrawTargetForData(dataSurface->GetData(),
-                                          dataSurface->GetSize(),
-                                          dataSurface->Stride(),
-                                          aSourceSurface->GetFormat());
-  gfxUtils::DumpAsDataURL(dt.get());
-}
-
-/* static */ void
-gfxUtils::CopyAsDataURL(gfx::SourceSurface* aSourceSurface)
-{
-  RefPtr<gfx::DataSourceSurface> dataSurface = aSourceSurface->GetDataSurface();
-  RefPtr<gfx::DrawTarget> dt
-            = gfxPlatform::GetPlatform()
-                ->CreateDrawTargetForData(dataSurface->GetData(),
-                                          dataSurface->GetSize(),
-                                          dataSurface->Stride(),
-                                          aSourceSurface->GetFormat());
-
-  gfxUtils::CopyAsDataURL(dt.get());
-}
-
+#ifdef MOZ_DUMP_PAINTING
 static bool sDumpPaintList = getenv("MOZ_DUMP_PAINT_LIST") != 0;
 
 /* static */ bool

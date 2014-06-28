@@ -207,11 +207,6 @@ xpc_TryUnmarkWrappedGrayObject(nsISupports* aWrappedJS);
 extern void
 xpc_UnmarkSkippableJSHolders();
 
-// No JS can be on the stack when this is called. Probably only useful from
-// xpcshell.
-void
-xpc_ActivateDebugMode();
-
 // readable string conversions, static methods and members only
 class XPCStringConvert
 {

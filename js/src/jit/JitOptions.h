@@ -28,11 +28,6 @@ enum IonRegisterAllocator {
     RegisterAllocator_Stupid
 };
 
-enum IonGvnKind {
-    GVN_Optimistic,
-    GVN_Pessimistic
-};
-
 struct JitOptions
 {
     bool checkGraphConsistency;
@@ -51,8 +46,6 @@ struct JitOptions
     bool eagerCompilation;
     bool forceDefaultIonUsesBeforeCompile;
     uint32_t forcedDefaultIonUsesBeforeCompile;
-    bool forceGvnKind;
-    IonGvnKind forcedGvnKind;
     bool forceRegisterAllocator;
     IonRegisterAllocator forcedRegisterAllocator;
     bool limitScriptSize;

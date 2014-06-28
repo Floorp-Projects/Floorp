@@ -2933,7 +2933,7 @@ static const int32_t kRegularScrollbarThumbMinSize = 26;
 static const int32_t kSmallScrollbarThumbMinSize = 26;
 
 NS_IMETHODIMP
-nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
+nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                          nsIFrame* aFrame,
                                          uint8_t aWidgetType,
                                          nsIntSize* aResult,
@@ -3223,7 +3223,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
     }
   }
 
-  if (IsHiDPIContext(aFrame->PresContext())) {
+  if (IsHiDPIContext(aPresContext)) {
     *aResult = *aResult * 2;
   }
 
