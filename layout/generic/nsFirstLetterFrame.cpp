@@ -387,7 +387,7 @@ nsFirstLetterFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) c
     // properties that could trigger a call to GetSkipSides.  Then again,
     // it's not really an error to call GetSkipSides on any frame, so
     // that's why we handle it properly.
-    return LogicalSides(LOGICAL_SIDES_ALL);
+    return LogicalSides(eLogicalSideBitsAll);
   }
   return LogicalSides();  // first continuation displays all sides
 }
