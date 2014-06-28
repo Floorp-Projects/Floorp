@@ -136,6 +136,13 @@ nsAboutRedirector::GetURIFlags(nsIURI *aURI, uint32_t *result)
     return NS_ERROR_ILLEGAL_VALUE;
 }
 
+NS_IMETHODIMP
+nsAboutRedirector::GetIndexedDBOriginPostfix(nsIURI *aURI, nsAString &result)
+{
+    SetDOMStringToNull(result);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult
 nsAboutRedirector::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
