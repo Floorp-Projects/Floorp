@@ -35,19 +35,18 @@ def preprocess_file(pp, deffile):
 #   directives are hidden behind ";", ";+", and ";-"
 #
 # We don't care about rule 1, as that mainly serves to eliminate LIBRARY
-# and EXPORTS lines.  We don't want to enforce rule 3, as we know how to
-# eliminate comments. ';+' also tends to hide Unix linker-script specific
-# things, which we don't want to deal with here.  Rule 5 is also unnecessary;
-# later comment-aware processing will deal with that.
+# and EXPORTS lines.  Our symbol extraction routines handle DATA, so we
+# don't need to bother with rule 2.  We don't want to enforce rule 3, as
+# we know how to eliminate comments. ';+' also tends to hide Unix
+# linker-script specific things, which we don't want to deal with here.
+# Rule 5 is also unnecessary; later comment-aware processing will deal
+# with that.
 #
-# We do need to handle rule 2, since our symbol extraction doesn't want to
-# see DATA keywords.  We also need to handle rule 4, since ';;' often hides
-# things marked with DATA.
+# We need to handle rule 4, since ';;' often hides things marked with DATA.
 def nss_preprocess_file(deffile):
     with open(deffile, 'r') as input:
         for line in input:
-            # Rule 2, and then rule 4.
-            yield line.replace(' DATA ', '').replace(';;', '')
+            yield line.replace(';;', '')
 
 COMMENT = re.compile(';.*')
 
@@ -67,11 +66,15 @@ def extract_symbols(lines):
         else:
             fields = line.split()
 
-        # We don't support aliases or keywords (ordinals, PRIVATE, etc.) for
+        # We don't support aliases, and we only support the DATA keyword on
         # symbols. But since aliases can also be specified as 'SYM=ALIAS'
         # with no whitespace, we need extra checks on the original symbol.
-        if len(fields) != 1 or '=' in fields[0]:
-            raise 'aliases and keywords are not supported'
+        if '=' in fields[0]:
+            raise BaseException, 'aliases are not supported (%s)' % line
+        if len(fields) == 1:
+            pass
+        elif len(fields) != 2 or fields[1] != 'DATA':
+            raise BaseException, 'aliases and keywords other than DATA are not supported (%s)' % line
 
         symbols.add(fields[0])
 

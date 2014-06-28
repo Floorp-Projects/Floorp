@@ -119,6 +119,15 @@ MIRGraph::removeBlock(MBasicBlock *block)
 }
 
 void
+MIRGraph::removeBlockIncludingPhis(MBasicBlock *block)
+{
+    // removeBlock doesn't clear phis because of IonBuilder constraints. Here,
+    // we want to totally clear everything.
+    removeBlock(block);
+    block->discardAllPhis();
+}
+
+void
 MIRGraph::unmarkBlocks()
 {
     for (MBasicBlockIterator i(blocks_.begin()); i != blocks_.end(); i++)
@@ -928,6 +937,20 @@ bool
 MBasicBlock::addImmediatelyDominatedBlock(MBasicBlock *child)
 {
     return immediatelyDominated_.append(child);
+}
+
+void
+MBasicBlock::removeImmediatelyDominatedBlock(MBasicBlock *child)
+{
+    for (size_t i = 0; ; ++i) {
+        MOZ_ASSERT(i < immediatelyDominated_.length(),
+                   "Dominated block to remove not present");
+        if (immediatelyDominated_[i] == child) {
+            immediatelyDominated_[i] = immediatelyDominated_.back();
+            immediatelyDominated_.popBack();
+            return;
+        }
+    }
 }
 
 void

@@ -274,7 +274,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[noscript, uuid(47fbe8ff-0507-4647-9ea7-e0e1fc76c995)]
+[noscript, uuid(523da588-95a4-469f-ba1b-c637c3ad4142)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -572,16 +572,6 @@ interface nsIXPConnect : nsISupports
      */
     nsIXPConnectJSObjectHolder holdObject(in JSContextPtr aJSContext,
                                           in JSObjectPtr aObject);
-
-    /**
-     * When we place the browser in JS debug mode, there can't be any
-     * JS on the stack. This is because we currently activate debugMode 
-     * on all scripts in the JSRuntime when the debugger is activated.
-     * This method will turn debug mode on or off when the context 
-     * stack reaches zero length.
-     */
-    [noscript] void setDebugModeWhenPossible(in boolean mode,
-                                             in boolean allowSyncDisable);
 
     [noscript] void writeScript(in nsIObjectOutputStream aStream,
                                 in JSContextPtr aJSContext,

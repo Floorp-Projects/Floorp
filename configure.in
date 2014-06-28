@@ -3849,7 +3849,6 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
 MOZ_WEBAPP_RUNTIME=
-MOZ_JSDEBUGGER=1
 MOZ_AUTH_EXTENSION=1
 MOZ_RAW=
 MOZ_VORBIS=
@@ -4943,15 +4942,6 @@ dnl ========================================================
 if test -n "$MOZ_ANDROID_BEAM"; then
     AC_DEFINE(MOZ_ANDROID_BEAM)
 fi
-
-dnl ========================================================
-dnl = JS Debugger XPCOM component (js/jsd)
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(jsd,
-[  --disable-jsd           Disable JavaScript debug library],
-    MOZ_JSDEBUGGER=,
-    MOZ_JSDEBUGGER=1)
-
 
 dnl ========================================================
 dnl = Enable IPDL's "expensive" unit tests
@@ -6181,11 +6171,6 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c gio` -ne 0; then
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|gio||'`
 fi
 AC_SUBST(MOZ_GIO_COMPONENT)
-
-if test -z "$MOZ_JSDEBUGGER" -a `echo "$MOZ_EXTENSIONS" | grep -c venkman` -ne 0; then
-    AC_MSG_WARN([Cannot build venkman without JavaScript debug library. Removing venkman from MOZ_EXTENSIONS.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|venkman||'`
-fi
 
 dnl Remove dupes
 MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
@@ -8195,7 +8180,7 @@ if test "$MOZ_XUL"; then
   AC_DEFINE(MOZ_XUL)
 else
   dnl remove extensions that require XUL
-  MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's/inspector//' -e 's/venkman//' -e 's/irc//' -e 's/tasks//'`
+  MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's/inspector//' -e 's/irc//' -e 's/tasks//'`
 fi
 
 AC_SUBST(MOZ_XUL)
@@ -8429,7 +8414,6 @@ AC_SUBST(MOZ_DEBUG_DISABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
 AC_SUBST(MOZ_EXTENSIONS)
-AC_SUBST(MOZ_JSDEBUGGER)
 AC_SUBST(MOZ_ENABLE_PROFILER_SPS)
 AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)

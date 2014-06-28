@@ -39,7 +39,7 @@ public:
                                                uint8_t aWidgetType,
                                                nsRect* aOverflowRect);
 
-  NS_IMETHOD GetMinimumWidgetSize(nsRenderingContext* aContext,
+  NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext,
                                   nsIFrame* aFrame, uint8_t aWidgetType,
                                   nsIntSize* aResult, bool* aIsOverridable);
 
