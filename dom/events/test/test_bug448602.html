@@ -22,12 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448602
 var els, root, l2, l3;
 
 function runTests() {
-/*
-  Disabled due to lack of present support for JSD in JM
-  var jsdIDebuggerService = SpecialPowers.Ci.jsdIDebuggerService;
-  var jsd = SpecialPowers.Components.classes['@mozilla.org/js/jsd/debugger-service;1']
-                      .getService(jsdIDebuggerService);
-*/
   els = SpecialPowers.Cc["@mozilla.org/eventlistenerservice;1"]
                      .getService(SpecialPowers.Ci.nsIEventListenerService);
 
@@ -47,18 +41,6 @@ function runTests() {
   is(infos[0].allowsUntrusted, true, "Should allow untrusted events (1)");
   is(SpecialPowers.unwrap(infos[0].listenerObject), root.onclick,
      "Should have the right listener object (1)");
-
-/*
-  var jsdOn = jsd.isOn;
-  if (!jsdOn) {
-    is(infos[0].getDebugObject(), null,
-       "If JSD isn't running, getDebugObject() should return null.")
-    jsd.on();
-    ok(jsd.isOn, "JSD should be running.");
-  }
-  var jsdvalue = infos[0].getDebugObject().QueryInterface(SpecialPowers.Ci.jsdIValue);
-  is(jsdvalue.jsType, 3, "Event listener should be a function! (1)");
-*/
 
   root.removeAttribute("onclick");
   root.setAttribute("onclick", "...invalid script...");
@@ -84,12 +66,6 @@ function runTests() {
   is(infos[0].allowsUntrusted, true, "Should allow untrusted events (2)");
   is(SpecialPowers.unwrap(infos[0].listenerObject), l,
      "Should have the right listener object (2)");
-/*
-  jsdvalue = infos[0].getDebugObject().QueryInterface(SpecialPowers.Ci.jsdIValue);
-  is(jsdvalue.jsType, 3, "Event listener should be a function!(2)");
-  is(jsdvalue.getWrappedValue(), l, "Wrong JS value! (1)");
-*/
-
   is(infos[1].toSource(), "(function (e) { alert(e); })",
      "Unexpected serialization (3)");
   is(infos[1].type, "foo", "Wrong type (3)");
@@ -98,11 +74,6 @@ function runTests() {
   is(SpecialPowers.unwrap(infos[1].listenerObject), l,
      "Should have the right listener object (3)");
 
-/*
-  jsdvalue2 = infos[1].getDebugObject().QueryInterface(SpecialPowers.Ci.jsdIValue);
-  is(jsdvalue2.jsType, 3, "Event listener should be a function! (3)");
-  is(jsdvalue2.getWrappedValue(), l, "Wrong JS value! (2)");
-*/
   root.removeEventListener("foo", l, true);
   root.removeEventListener("foo", l, false);
   infos = els.getListenerInfoFor(root, {});
@@ -142,12 +113,6 @@ function runTests() {
 
   ok(hasDocumentInChain, "Should have document in event target chain!");
   ok(hasWindowInChain, "Should have window in event target chain!");
-/*
-  if (!jsdOn) {
-    jsd.off();
-    ok(!jsd.isOn, "JSD shouldn't be running anymore.");
-  }
-*/	
 
   try {
     els.getListenerInfoFor(null, {});

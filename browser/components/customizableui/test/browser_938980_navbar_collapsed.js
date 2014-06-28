@@ -24,14 +24,14 @@ add_task(function() {
   ok(CustomizableUI.inDefaultState, "Everything should be in its default state");
 
   is(bookmarksToolbar.collapsed, true, "Test should start with bookmarks toolbar collapsed");
-  is(bookmarksToolbar.getBoundingClientRect().height, 0, "bookmarksToolbar should have height=0");
-  isnot(tabsToolbar.getBoundingClientRect().height, 0, "TabsToolbar should have non-zero height");
+  ok(bookmarksToolbar.collapsed, "bookmarksToolbar should be collapsed");
+  ok(!tabsToolbar.collapsed, "TabsToolbar should not be collapsed");
   is(navbar.collapsed, false, "The nav-bar should be shown by default");
 
   setToolbarVisibility(bookmarksToolbar, true);
   setToolbarVisibility(navbar, false);
-  isnot(bookmarksToolbar.getBoundingClientRect().height, 0, "bookmarksToolbar should be visible now");
-  ok(navbar.getBoundingClientRect().height <= 1, "navbar should have height=0 or 1 (due to border)");
+  ok(!bookmarksToolbar.collapsed, "bookmarksToolbar should be visible now");
+  ok(navbar.collapsed, "navbar should be collapsed");
   is(CustomizableUI.inDefaultState, false, "Should no longer be in default state");
 
   yield startCustomizing();
@@ -40,8 +40,8 @@ add_task(function() {
   yield endCustomizing();
 
   is(bookmarksToolbar.collapsed, true, "Customization reset should restore collapsed-state to the bookmarks toolbar");
-  isnot(tabsToolbar.getBoundingClientRect().height, 0, "TabsToolbar should have non-zero height");
-  is(bookmarksToolbar.getBoundingClientRect().height, 0, "The bookmarksToolbar should have height=0 after reset");
+  ok(!tabsToolbar.collapsed, "TabsToolbar should not be collapsed");
+  ok(bookmarksToolbar.collapsed, "The bookmarksToolbar should be collapsed after reset");
   ok(CustomizableUI.inDefaultState, "Everything should be back to default state");
 });
 
@@ -74,25 +74,25 @@ add_task(function() {
 // Customization reset should restore collapsed-state to default-collapsed toolbars.
 add_task(function() {
   ok(CustomizableUI.inDefaultState, "Everything should be in its default state");
-  is(bookmarksToolbar.getBoundingClientRect().height, 0, "bookmarksToolbar should have height=0");
-  isnot(tabsToolbar.getBoundingClientRect().height, 0, "TabsToolbar should have non-zero height");
+  ok(bookmarksToolbar.collapsed, "bookmarksToolbar should be collapsed");
+  ok(!tabsToolbar.collapsed, "TabsToolbar should not be collapsed");
 
   setToolbarVisibility(bookmarksToolbar, true);
-  isnot(bookmarksToolbar.getBoundingClientRect().height, 0, "bookmarksToolbar should be visible now");
+  ok(!bookmarksToolbar.collapsed, "bookmarksToolbar should be visible now");
   is(CustomizableUI.inDefaultState, false, "Should no longer be in default state");
 
   yield startCustomizing();
 
-  isnot(bookmarksToolbar.getBoundingClientRect().height, 0, "The bookmarksToolbar should be visible before reset");
-  isnot(navbar.getBoundingClientRect().height, 0, "The navbar should be visible before reset");
-  isnot(tabsToolbar.getBoundingClientRect().height, 0, "TabsToolbar should have non-zero height");
+  ok(!bookmarksToolbar.collapsed, "The bookmarksToolbar should be visible before reset");
+  ok(!navbar.collapsed, "The navbar should be visible before reset");
+  ok(!tabsToolbar.collapsed, "TabsToolbar should not be collapsed");
 
   gCustomizeMode.reset();
   yield waitForCondition(function() !gCustomizeMode.resetting);
 
-  is(bookmarksToolbar.getBoundingClientRect().height, 0, "The bookmarksToolbar should have height=0 after reset");
-  isnot(tabsToolbar.getBoundingClientRect().height, 0, "TabsToolbar should have non-zero height");
-  isnot(navbar.getBoundingClientRect().height, 0, "The navbar should still be visible after reset");
+  ok(bookmarksToolbar.collapsed, "The bookmarksToolbar should be collapsed after reset");
+  ok(!tabsToolbar.collapsed, "TabsToolbar should not be collapsed");
+  ok(!navbar.collapsed, "The navbar should still be visible after reset");
   ok(CustomizableUI.inDefaultState, "Everything should be back to default state");
   yield endCustomizing();
 });

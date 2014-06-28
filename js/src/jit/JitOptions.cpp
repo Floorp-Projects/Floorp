@@ -66,11 +66,6 @@ JitOptions::JitOptions()
     forceDefaultIonUsesBeforeCompile = false;
     forcedDefaultIonUsesBeforeCompile = 1000;
 
-    // Force the GVN kind to be optimistic or pessimistic instead of letting
-    // the optimization pass decide.
-    forceGvnKind = false;
-    forcedGvnKind = GVN_Optimistic;
-
     // Force the used register allocator instead of letting the
     // optimization pass decide.
     forceRegisterAllocator = false;

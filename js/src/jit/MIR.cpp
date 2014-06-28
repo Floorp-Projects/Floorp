@@ -69,15 +69,6 @@ MDefinition::PrintOpcodeName(FILE *fp, MDefinition::Opcode op)
         fprintf(fp, "%c", tolower(name[i]));
 }
 
-static inline bool
-EqualValues(bool useGVN, MDefinition *left, MDefinition *right)
-{
-    if (useGVN)
-        return left->valueNumber() == right->valueNumber();
-
-    return left == right;
-}
-
 static MConstant *
 EvaluateConstantOperands(TempAllocator &alloc, MBinaryInstruction *ins, bool *ptypeChange = nullptr)
 {
@@ -148,9 +139,6 @@ MDefinition::printName(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
     fprintf(fp, "%u", id());
-
-    if (valueNumber() != 0)
-        fprintf(fp, "-vn%u", valueNumber());
 }
 
 HashNumber
@@ -158,7 +146,7 @@ MDefinition::valueHash() const
 {
     HashNumber out = op();
     for (size_t i = 0, e = numOperands(); i < e; i++) {
-        uint32_t valueNumber = getOperand(i)->valueNumber();
+        uint32_t valueNumber = getOperand(i)->id();
         out = valueNumber + (out << 6) + (out << 16) - out;
     }
     return out;
@@ -180,7 +168,7 @@ MDefinition::congruentIfOperandsEqual(const MDefinition *ins) const
         return false;
 
     for (size_t i = 0, e = numOperands(); i < e; i++) {
-        if (getOperand(i)->valueNumber() != ins->getOperand(i)->valueNumber())
+        if (getOperand(i) != ins->getOperand(i))
             return false;
     }
 
@@ -188,7 +176,7 @@ MDefinition::congruentIfOperandsEqual(const MDefinition *ins) const
 }
 
 MDefinition *
-MDefinition::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MDefinition::foldsTo(TempAllocator &alloc)
 {
     // In the default case, there are no constants to fold.
     return this;
@@ -246,7 +234,7 @@ MTest::cacheOperandMightEmulateUndefined()
 }
 
 MDefinition *
-MTest::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MTest::foldsTo(TempAllocator &alloc)
 {
     MDefinition *op = getOperand(0);
 
@@ -808,7 +796,7 @@ MApplyArgs::New(TempAllocator &alloc, JSFunction *target, MDefinition *fun, MDef
 }
 
 MDefinition*
-MStringLength::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MStringLength::foldsTo(TempAllocator &alloc)
 {
     if ((type() == MIRType_Int32) && (string()->isConstant())) {
         Value value = string()->toConstant()->value();
@@ -949,20 +937,29 @@ MPhi::removeAllOperands()
 }
 
 MDefinition *
-MPhi::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MPhi::operandIfRedundant()
 {
-    JS_ASSERT(!inputs_.empty());
+    JS_ASSERT(inputs_.length() != 0);
 
+    // If this phi is redundant (e.g., phi(a,a) or b=phi(a,this)),
+    // returns the operand that it will always be equal to (a, in
+    // those two cases).
     MDefinition *first = getOperand(0);
-
-    for (size_t i = 1; i < inputs_.length(); i++) {
-        // Phis need dominator information to fold based on value numbers. For
-        // simplicity, we only compare SSA names right now (bug 714727).
-        if (!EqualValues(false, getOperand(i), first))
-            return this;
+    for (size_t i = 1, e = numOperands(); i < e; i++) {
+        MDefinition *op = getOperand(i);
+        if (op != first && op != this)
+            return nullptr;
     }
-
     return first;
+}
+
+MDefinition *
+MPhi::foldsTo(TempAllocator &alloc)
+{
+    if (MDefinition *def = operandIfRedundant())
+        return def;
+
+    return this;
 }
 
 bool
@@ -1224,7 +1221,7 @@ IsConstant(MDefinition *def, double v)
 }
 
 MDefinition *
-MBinaryBitwiseInstruction::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MBinaryBitwiseInstruction::foldsTo(TempAllocator &alloc)
 {
     if (specialization_ != MIRType_Int32)
         return this;
@@ -1259,7 +1256,7 @@ MBinaryBitwiseInstruction::foldUnnecessaryBitop()
     if (IsConstant(rhs, -1))
         return foldIfNegOne(1);
 
-    if (EqualValues(false, lhs, rhs))
+    if (lhs == rhs)
         return foldIfEqual();
 
     return this;
@@ -1416,7 +1413,7 @@ NeedNegativeZeroCheck(MDefinition *def)
 }
 
 MDefinition *
-MBinaryArithInstruction::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MBinaryArithInstruction::foldsTo(TempAllocator &alloc)
 {
     if (specialization_ == MIRType_None)
         return this;
@@ -1483,7 +1480,7 @@ MAbs::trySpecializeFloat32(TempAllocator &alloc)
 }
 
 MDefinition *
-MDiv::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MDiv::foldsTo(TempAllocator &alloc)
 {
     if (specialization_ == MIRType_None)
         return this;
@@ -1540,7 +1537,7 @@ MDiv::fallible() const
 }
 
 MDefinition *
-MMod::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MMod::foldsTo(TempAllocator &alloc)
 {
     if (specialization_ == MIRType_None)
         return this;
@@ -1612,16 +1609,16 @@ MSub::fallible() const
 }
 
 MDefinition *
-MMul::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MMul::foldsTo(TempAllocator &alloc)
 {
-    MDefinition *out = MBinaryArithInstruction::foldsTo(alloc, useValueNumbers);
+    MDefinition *out = MBinaryArithInstruction::foldsTo(alloc);
     if (out != this)
         return out;
 
     if (specialization() != MIRType_Int32)
         return this;
 
-    if (EqualValues(useValueNumbers, lhs(), rhs()))
+    if (lhs() == rhs())
         setCanBeNegativeZero(false);
 
     return this;
@@ -2086,7 +2083,7 @@ MBitNot::NewAsmJS(TempAllocator &alloc, MDefinition *input)
 }
 
 MDefinition *
-MBitNot::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MBitNot::foldsTo(TempAllocator &alloc)
 {
     if (specialization_ != MIRType_Int32)
         return this;
@@ -2107,7 +2104,7 @@ MBitNot::foldsTo(TempAllocator &alloc, bool useValueNumbers)
 }
 
 MDefinition *
-MTypeOf::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MTypeOf::foldsTo(TempAllocator &alloc)
 {
     // Note: we can't use input->type() here, type analysis has
     // boxed the input.
@@ -2335,7 +2332,7 @@ MResumePoint::isObservableOperand(size_t index) const
 }
 
 MDefinition *
-MToInt32::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MToInt32::foldsTo(TempAllocator &alloc)
 {
     MDefinition *input = getOperand(0);
     if (input->type() == MIRType_Int32)
@@ -2351,7 +2348,7 @@ MToInt32::analyzeEdgeCasesBackward()
 }
 
 MDefinition *
-MTruncateToInt32::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MTruncateToInt32::foldsTo(TempAllocator &alloc)
 {
     MDefinition *input = getOperand(0);
     if (input->type() == MIRType_Int32)
@@ -2367,7 +2364,7 @@ MTruncateToInt32::foldsTo(TempAllocator &alloc, bool useValueNumbers)
 }
 
 MDefinition *
-MToDouble::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MToDouble::foldsTo(TempAllocator &alloc)
 {
     MDefinition *in = input();
     if (in->type() == MIRType_Double)
@@ -2385,7 +2382,7 @@ MToDouble::foldsTo(TempAllocator &alloc, bool useValueNumbers)
 }
 
 MDefinition *
-MToFloat32::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MToFloat32::foldsTo(TempAllocator &alloc)
 {
     if (input()->type() == MIRType_Float32)
         return input();
@@ -2407,7 +2404,7 @@ MToFloat32::foldsTo(TempAllocator &alloc, bool useValueNumbers)
 }
 
 MDefinition *
-MToString::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MToString::foldsTo(TempAllocator &alloc)
 {
     MDefinition *in = input();
     if (in->type() == MIRType_String)
@@ -2416,7 +2413,7 @@ MToString::foldsTo(TempAllocator &alloc, bool useValueNumbers)
 }
 
 MDefinition *
-MClampToUint8::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MClampToUint8::foldsTo(TempAllocator &alloc)
 {
     if (input()->isConstant()) {
         const Value &v = input()->toConstant()->value();
@@ -2637,7 +2634,7 @@ MCompare::evaluateConstantOperands(bool *result)
 }
 
 MDefinition *
-MCompare::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MCompare::foldsTo(TempAllocator &alloc)
 {
     bool result;
 
@@ -2709,7 +2706,7 @@ MNot::cacheOperandMightEmulateUndefined()
 }
 
 MDefinition *
-MNot::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MNot::foldsTo(TempAllocator &alloc)
 {
     // Fold if the input is constant
     if (operand()->isConstant()) {
@@ -3007,7 +3004,7 @@ MGetPropertyCache::updateForReplacement(MDefinition *ins) {
 }
 
 MDefinition *
-MAsmJSUnsignedToDouble::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MAsmJSUnsignedToDouble::foldsTo(TempAllocator &alloc)
 {
     if (input()->isConstant()) {
         const Value &v = input()->toConstant()->value();
@@ -3019,7 +3016,7 @@ MAsmJSUnsignedToDouble::foldsTo(TempAllocator &alloc, bool useValueNumbers)
 }
 
 MDefinition *
-MAsmJSUnsignedToFloat32::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MAsmJSUnsignedToFloat32::foldsTo(TempAllocator &alloc)
 {
     if (input()->isConstant()) {
         const Value &v = input()->toConstant()->value();
