@@ -24,6 +24,9 @@ namespace mozilla {
 class WebrtcOMXDecoder;
 class OMXOutputDrain;
 
+// XXX see if we can reduce this
+#define WEBRTC_OMX_H264_MIN_DECODE_BUFFERS 10
+
 class WebrtcOMXH264VideoEncoder : public WebrtcVideoEncoder
 {
 public:
