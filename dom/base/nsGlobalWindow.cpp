@@ -7547,6 +7547,8 @@ already_AddRefed<nsIDOMWindow>
 nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
                      const nsAString& aOptions, ErrorResult& aError)
 {
+  FORWARD_TO_OUTER_OR_THROW(Open, (aUrl, aName, aOptions, aError), aError,
+                            nullptr);
   nsCOMPtr<nsIDOMWindow> window;
   aError = OpenJS(aUrl, aName, aOptions, getter_AddRefs(window));
   return window.forget();
@@ -7556,6 +7558,8 @@ NS_IMETHODIMP
 nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
                      const nsAString& aOptions, nsIDOMWindow **_retval)
 {
+  FORWARD_TO_OUTER(Open, (aUrl, aName, aOptions, _retval),
+                   NS_ERROR_NOT_INITIALIZED);
   return OpenInternal(aUrl, aName, aOptions,
                       false,          // aDialog
                       false,          // aContentModal
@@ -7572,6 +7576,8 @@ NS_IMETHODIMP
 nsGlobalWindow::OpenJS(const nsAString& aUrl, const nsAString& aName,
                        const nsAString& aOptions, nsIDOMWindow **_retval)
 {
+  FORWARD_TO_OUTER(OpenJS, (aUrl, aName, aOptions, _retval),
+                   NS_ERROR_NOT_INITIALIZED);
   return OpenInternal(aUrl, aName, aOptions,
                       false,          // aDialog
                       false,          // aContentModal
@@ -7591,6 +7597,8 @@ nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
                            const nsAString& aOptions,
                            nsISupports* aExtraArgument, nsIDOMWindow** _retval)
 {
+  FORWARD_TO_OUTER(OpenDialog, (aUrl, aName, aOptions, aExtraArgument, _retval),
+                   NS_ERROR_NOT_INITIALIZED);
   return OpenInternal(aUrl, aName, aOptions,
                       true,                    // aDialog
                       false,                   // aContentModal
@@ -7630,6 +7638,10 @@ nsGlobalWindow::OpenDialog(JSContext* aCx, const nsAString& aUrl,
                            const Sequence<JS::Value>& aExtraArgument,
                            ErrorResult& aError)
 {
+  FORWARD_TO_OUTER_OR_THROW(OpenDialog,
+                            (aCx, aUrl, aName, aOptions, aExtraArgument, aError),
+                            aError, nullptr);
+
   nsCOMPtr<nsIJSArgArray> argvArray;
   aError = NS_CreateJSArgv(aCx, aExtraArgument.Length(),
                            const_cast<JS::Value*>(aExtraArgument.Elements()),
@@ -7656,6 +7668,9 @@ NS_IMETHODIMP
 nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
                            const nsAString& aOptions, nsIDOMWindow** _retval)
 {
+  FORWARD_TO_OUTER(OpenDialog, (aUrl, aName, aOptions, _retval),
+                   NS_ERROR_NOT_INITIALIZED);
+
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
@@ -11559,11 +11574,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                              JSContext *aJSCallerContext,
                              nsIDOMWindow **aReturn)
 {
-  FORWARD_TO_OUTER(OpenInternal, (aUrl, aName, aOptions, aDialog,
-                                  aContentModal, aCalledNoScript, aDoJSFixups,
-                                  aNavigate, argv, aExtraArgument,
-                                  aCalleePrincipal, aJSCallerContext, aReturn),
-                   NS_ERROR_NOT_INITIALIZED);
+  MOZ_ASSERT(IsOuterWindow());
 
 #ifdef DEBUG
   uint32_t argc = 0;
