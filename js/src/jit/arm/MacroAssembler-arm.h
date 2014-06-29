@@ -397,6 +397,9 @@ class MacroAssemblerARM : public Assembler
 
     void ma_call(ImmPtr dest);
 
+    // calls reg, storing the return address into sp[0]
+    void ma_callAndStoreRet(const Register reg, uint32_t stackArgBytes);
+
     // Float registers can only be loaded/stored in continuous runs
     // when using vstm/vldm.
     // This function breaks set into continuous runs and loads/stores
@@ -563,13 +566,38 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_movPatchable(ImmPtr(c->raw()), ScratchRegister, Always, rs);
         ma_callIonHalfPush(ScratchRegister);
     }
+
+    void appendCallSite(const CallSiteDesc &desc) {
+        // Add an extra sizeof(void*) to include the return address that was
+        // pushed by the call instruction (see CallSite::stackDepth).
+        enoughMemory_ &= append(CallSite(desc, currentOffset(), framePushed_ + AsmJSFrameSize));
+    }
+
     void call(const CallSiteDesc &desc, const Register reg) {
         call(reg);
-        enoughMemory_ &= append(desc, currentOffset(), framePushed_);
+        appendCallSite(desc);
     }
     void call(const CallSiteDesc &desc, Label *label) {
         call(label);
-        enoughMemory_ &= append(desc, currentOffset(), framePushed_);
+        appendCallSite(desc);
+    }
+    void call(const CallSiteDesc &desc, AsmJSImmPtr imm) {
+        call(imm);
+        appendCallSite(desc);
+    }
+    void callExit(AsmJSImmPtr imm, uint32_t stackArgBytes) {
+        movePtr(imm, CallReg);
+        ma_callAndStoreRet(CallReg, stackArgBytes);
+        appendCallSite(CallSiteDesc::Exit());
+    }
+    void callIonFromAsmJS(const Register reg) {
+        ma_callIonNoPush(reg);
+        appendCallSite(CallSiteDesc::Exit());
+
+        // The Ion ABI has the callee pop the return address off the stack.
+        // The asm.js caller assumes that the call leaves sp unchanged, so bump
+        // the stack.
+        subPtr(Imm32(sizeof(void*)), sp);
     }
 
     void branch(JitCode *c) {
@@ -1259,7 +1287,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // Makes an Ion call using the only two methods that it is sane for
     // indep code to make a call
     void callIon(Register callee);
-    void callIonFromAsmJS(Register callee);
 
     void reserveStack(uint32_t amount);
     void freeStack(uint32_t amount);

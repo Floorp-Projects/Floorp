@@ -1383,7 +1383,7 @@ nsTableFrame::PaintTableBorderBackground(nsRenderingContext& aRenderingContext,
 
   if (StyleVisibility()->IsVisible()) {
     if (!IsBorderCollapse()) {
-      int skipSides = GetSkipSides();
+      Sides skipSides = GetSkipSides();
       nsRect rect(aPt, mRect.Size());
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                   aDirtyRect, rect, mStyleContext, skipSides);
@@ -1397,22 +1397,22 @@ nsTableFrame::PaintTableBorderBackground(nsRenderingContext& aRenderingContext,
   }
 }
 
-int
+nsIFrame::LogicalSides
 nsTableFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                      NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
-    return 0;
+    return LogicalSides();
   }
 
-  int skip = 0;
+  LogicalSides skip;
   // frame attribute was accounted for in nsHTMLTableElement::MapTableBorderInto
   // account for pagination
   if (nullptr != GetPrevInFlow()) {
-    skip |= LOGICAL_SIDE_B_START;
+    skip |= eLogicalSideBitsBStart;
   }
   if (nullptr != GetNextInFlow()) {
-    skip |= LOGICAL_SIDE_B_END;
+    skip |= eLogicalSideBitsBEnd;
   }
   return skip;
 }

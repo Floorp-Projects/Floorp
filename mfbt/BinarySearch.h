@@ -41,10 +41,7 @@ BinarySearch(const Container& aContainer, size_t aBegin, size_t aEnd,
   size_t high = aEnd;
   while (low != high) {
     size_t middle = low + (high - low) / 2;
-
-    // Allow any intermediate type so long as it provides a suitable ordering
-    // relation.
-    const auto& middleValue = aContainer[middle];
+    const T& middleValue = aContainer[middle];
 
     MOZ_ASSERT(aContainer[low] <= aContainer[middle]);
     MOZ_ASSERT(aContainer[middle] <= aContainer[high - 1]);

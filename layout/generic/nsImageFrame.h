@@ -118,7 +118,7 @@ public:
             uint32_t aFlags = 0) const MOZ_OVERRIDE;
 #endif
 
-  virtual int GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const MOZ_OVERRIDE;
+  virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const MOZ_OVERRIDE;
 
   nsresult GetIntrinsicImageSize(nsSize& aSize);
 
