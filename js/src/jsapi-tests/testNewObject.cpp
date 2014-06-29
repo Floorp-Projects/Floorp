@@ -69,7 +69,7 @@ BEGIN_TEST(testNewObject_1)
     CHECK(JS_IsArrayObject(cx, obj));
     uint32_t len;
     CHECK(JS_GetArrayLength(cx, obj, &len));
-    CHECK_EQUAL(len, 0);
+    CHECK_EQUAL(len, 0u);
 
     // With one argument.
     argv[0].setInt32(4);
@@ -78,7 +78,7 @@ BEGIN_TEST(testNewObject_1)
     rt = OBJECT_TO_JSVAL(obj);
     CHECK(JS_IsArrayObject(cx, obj));
     CHECK(JS_GetArrayLength(cx, obj, &len));
-    CHECK_EQUAL(len, 4);
+    CHECK_EQUAL(len, 4u);
 
     // With N arguments.
     for (size_t i = 0; i < N; i++)
