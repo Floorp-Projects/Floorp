@@ -663,6 +663,8 @@ public:
    * |dialogArguments| back from nsWindowWatcher to nsGlobalWindow. For the
    * latter, the array is an array of length 0 whose only element is a
    * DialogArgumentsHolder representing the JS value passed to showModalDialog.
+   *
+   * Outer windows only.
    */
   virtual nsresult SetArguments(nsIArray *aArguments) = 0;
 
