@@ -48,19 +48,18 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   SetFlag(BRS_ISFIRSTINFLOW, aFrame->GetPrevInFlow() == nullptr);
   SetFlag(BRS_ISOVERFLOWCONTAINER, IS_TRUE_OVERFLOW_CONTAINER(aFrame));
 
-  nsIFrame::LogicalSides logicalSkipSides =
-    aFrame->GetLogicalSkipSides(&aReflowState);
+  int logicalSkipSides = aFrame->GetLogicalSkipSides(&aReflowState);
   mBorderPadding.ApplySkipSides(logicalSkipSides);
 
   // Note that mContainerWidth is the physical width!
   mContainerWidth = aReflowState.ComputedWidth() + mBorderPadding.LeftRight(wm);
 
-  if ((aBStartMarginRoot && !logicalSkipSides.BStart()) ||
+  if ((aBStartMarginRoot && !(logicalSkipSides & LOGICAL_SIDE_B_START)) ||
       0 != mBorderPadding.BStart(wm)) {
     SetFlag(BRS_ISBSTARTMARGINROOT, true);
     SetFlag(BRS_APPLYBSTARTMARGIN, true);
   }
-  if ((aBEndMarginRoot && !logicalSkipSides.BEnd()) ||
+  if ((aBEndMarginRoot && !(logicalSkipSides & LOGICAL_SIDE_B_END)) ||
       0 != mBorderPadding.BEnd(wm)) {
     SetFlag(BRS_ISBENDMARGINROOT, true);
   }
