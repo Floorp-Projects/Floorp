@@ -487,6 +487,8 @@ public:
    * Moves the top-level window into fullscreen mode if aIsFullScreen is true,
    * otherwise exits fullscreen. If aRequireTrust is true, this method only
    * changes window state in a context trusted for write.
+   *
+   * Outer windows only.
    */
   virtual nsresult SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust) = 0;
 
