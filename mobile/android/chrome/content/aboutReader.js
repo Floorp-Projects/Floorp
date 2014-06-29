@@ -471,7 +471,7 @@ AboutReader.prototype = {
     }
   },
 
-  _toggleToolbarVisibility: function Reader_toggleToolbarVisibility(visible) {
+  _toggleToolbarVisibility: function Reader_toggleToolbarVisibility() {
     this._setToolbarVisibility(!this._getToolbarVisibility());
   },
 
