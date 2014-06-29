@@ -117,8 +117,6 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
     nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
                         nsHtml5Parser* aOwner,
                         eParserMode aMode);
-                        
-    virtual ~nsHtml5StreamParser();
 
     // Methods that nsHtml5StreamListener calls
     nsresult CheckListenerChain();
@@ -209,6 +207,7 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
     void SetViewSourceTitle(nsIURI* aURL);
 
   private:
+    virtual ~nsHtml5StreamParser();
 
 #ifdef DEBUG
     bool IsParserThread() {

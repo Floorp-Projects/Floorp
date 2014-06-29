@@ -12,39 +12,13 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(nsXMLBindingSet)
-NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE(nsXMLBindingSet)
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLBindingSet)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXMLBindingSet)
-  nsXMLBinding* binding = tmp->mFirst;
-  while (binding) {
-    binding->mExpr = nullptr;
-    binding = binding->mNext;
-  }
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXMLBindingSet)
-  nsXMLBinding* binding = tmp->mFirst;
-  while (binding) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "nsXMLBinding::mExpr"); 
-    cb.NoteXPCOMChild(binding->mExpr);
-    binding = binding->mNext;
-  }
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsXMLBindingSet, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsXMLBindingSet, Release)
-
 nsXMLBindingSet::~nsXMLBindingSet()
 {}
 
-nsresult
-nsXMLBindingSet::AddBinding(nsIAtom* aVar, nsIDOMXPathExpression* aExpr)
+void
+nsXMLBindingSet::AddBinding(nsIAtom* aVar, nsAutoPtr<XPathExpression>&& aExpr)
 {
-  nsAutoPtr<nsXMLBinding> newbinding(new nsXMLBinding(aVar, aExpr));
-  NS_ENSURE_TRUE(newbinding, NS_ERROR_OUT_OF_MEMORY);
+  nsAutoPtr<nsXMLBinding> newbinding(new nsXMLBinding(aVar, Move(aExpr)));
 
   if (mFirst) {
     nsXMLBinding* binding = mFirst;
@@ -53,12 +27,12 @@ nsXMLBindingSet::AddBinding(nsIAtom* aVar, nsIDOMXPathExpression* aExpr)
       // if the target variable is already used in a binding, ignore it
       // since it won't be useful for anything
       if (binding->mVar == aVar)
-        return NS_OK;
+        return;
 
       // add the binding at the end of the list
       if (!binding->mNext) {
         binding->mNext = newbinding;
-        break;
+        return;
       }
 
       binding = binding->mNext;
@@ -67,8 +41,6 @@ nsXMLBindingSet::AddBinding(nsIAtom* aVar, nsIDOMXPathExpression* aExpr)
   else {
     mFirst = newbinding;
   }
-
-  return NS_OK;
 }
 
 int32_t
@@ -102,39 +74,30 @@ nsXMLBindingValues::GetAssignmentFor(nsXULTemplateResultXML* aResult,
     return value;
   }
 
-  nsCOMPtr<nsIDOMNode> contextNode;
-  aResult->GetNode(getter_AddRefs(contextNode));
+  nsINode* contextNode = aResult->Node();
   if (!contextNode) {
     return nullptr;
   }
 
   mValues.EnsureLengthAtLeast(aIndex + 1);
 
-  nsCOMPtr<nsISupports> resultsupports;
-  aBinding->mExpr->Evaluate(contextNode, aType,
-                            nullptr, getter_AddRefs(resultsupports));
-
-  mValues.ReplaceElementAt(aIndex, XPathResult::FromSupports(resultsupports));
+  ErrorResult ignored;
+  mValues[aIndex] = aBinding->mExpr->Evaluate(*contextNode, aType, nullptr,
+                                              ignored);
 
   return mValues[aIndex];
 }
 
-void
+nsINode*
 nsXMLBindingValues::GetNodeAssignmentFor(nsXULTemplateResultXML* aResult,
                                          nsXMLBinding* aBinding,
-                                         int32_t aIndex,
-                                         nsIDOMNode** aNode)
+                                         int32_t aIndex)
 {
   XPathResult* result = GetAssignmentFor(aResult, aBinding, aIndex,
                                          XPathResult::FIRST_ORDERED_NODE_TYPE);
 
-  nsINode* node;
   ErrorResult rv;
-  if (result && (node = result->GetSingleNodeValue(rv))) {
-    CallQueryInterface(node, aNode);
-  } else {
-    *aNode = nullptr;
-  }
+  return result ? result->GetSingleNodeValue(rv) : nullptr;
 }
 
 void

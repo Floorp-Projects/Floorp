@@ -112,9 +112,12 @@ let PanelFrame = {
    *                             set up.
    */
   showPopup: function(aWindow, aPanelUI, aToolbarButton, aType, aOrigin, aSrc, aSize, aCallback) {
-    // if we're a slice in the hamburger, use that panel instead
+    // if we're overflowed, our anchor needs to be the overflow button
     let widgetGroup = CustomizableUI.getWidget(aToolbarButton.getAttribute("id"));
     let widget = widgetGroup.forWindow(aWindow);
+    let anchorBtn = widget.anchor;
+
+    // if we're a slice in the hamburger, use that panel instead
     let panel, showingEvent, hidingEvent;
     let inMenuPanel = widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL;
     if (inMenuPanel) {
@@ -156,7 +159,8 @@ let PanelFrame = {
     }
     panel.addEventListener(hidingEvent, function onpopuphiding() {
       panel.removeEventListener(hidingEvent, onpopuphiding);
-      aToolbarButton.removeAttribute("open");
+      if (!inMenuPanel)
+        anchorBtn.removeAttribute("open");
       if (dynamicResizer)
         dynamicResizer.stop();
       notificationFrame.docShell.isActive = false;
@@ -178,7 +182,7 @@ let PanelFrame = {
         dispatchPanelEvent(aType + "FrameShow");
       };
       if (!inMenuPanel)
-        aToolbarButton.setAttribute("open", "true");
+        anchorBtn.setAttribute("open", "true");
       if (notificationFrame.contentDocument &&
           notificationFrame.contentDocument.readyState == "complete" && wasAlive) {
         initFrameShow();
@@ -195,7 +199,9 @@ let PanelFrame = {
       aPanelUI.showSubView("PanelUI-" + aType + "api", widget.node,
                            CustomizableUI.AREA_PANEL);
     } else {
-      let anchor = aWindow.document.getAnonymousElementByAttribute(aToolbarButton, "class", "toolbarbutton-badge-container");
+      // in overflow, the anchor is a normal toolbarbutton, in toolbar it is a badge button
+      let anchor = aWindow.document.getAnonymousElementByAttribute(anchorBtn, "class", "toolbarbutton-badge-container") ||
+                   aWindow.document.getAnonymousElementByAttribute(anchorBtn, "class", "toolbarbutton-icon");
       // Bug 849216 - open the popup asynchronously so we avoid the auto-rollup
       // handling from preventing it being opened in some cases.
       Services.tm.mainThread.dispatch(function() {

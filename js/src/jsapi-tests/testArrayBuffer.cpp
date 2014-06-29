@@ -56,7 +56,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         CHECK(data != nullptr);
 
         // Check that the original ArrayBuffer is neutered
-        CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), 0);
+        CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), 0u);
         CHECK(JS_GetProperty(cx, obj, "byteLength", &v));
         CHECK_SAME(v, INT_TO_JSVAL(0));
         CHECK(JS_GetProperty(cx, view, "byteLength", &v));
@@ -65,7 +65,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         CHECK_SAME(v, INT_TO_JSVAL(0));
         CHECK(JS_GetProperty(cx, view, "length", &v));
         CHECK_SAME(v, INT_TO_JSVAL(0));
-        CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), 0);
+        CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), 0u);
         v = JSVAL_VOID;
         JS_GetElement(cx, obj, 0, &v);
         CHECK_SAME(v, JSVAL_VOID);

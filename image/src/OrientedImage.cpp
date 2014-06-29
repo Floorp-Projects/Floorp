@@ -250,5 +250,32 @@ OrientedImage::Draw(gfxContext* aContext,
                             aWhichFrame, aFlags);
 }
 
+NS_IMETHODIMP_(nsIntRect)
+OrientedImage::GetImageSpaceInvalidationRect(const nsIntRect& aRect)
+{
+  nsIntRect rect(InnerImage()->GetImageSpaceInvalidationRect(aRect));
+
+  if (mOrientation.IsIdentity()) {
+    return rect;
+  }
+
+  int32_t width, height;
+  nsresult rv = InnerImage()->GetWidth(&width);
+  rv = NS_FAILED(rv) ? rv : InnerImage()->GetHeight(&height);
+  if (NS_FAILED(rv)) {
+    // Fall back to identity if the width and height aren't available.
+    return rect;
+  }
+
+  // Transform the invalidation rect into the correct orientation.
+  gfxMatrix matrix(OrientationMatrix(nsIntSize(width, height)).Invert());
+  gfxRect invalidRect(matrix.TransformBounds(gfxRect(rect.x, rect.y,
+                                                     rect.width, rect.height)));
+  invalidRect.RoundOut();
+
+  return nsIntRect(invalidRect.x, invalidRect.y,
+                   invalidRect.width, invalidRect.height);
+}
+
 } // namespace image
 } // namespace mozilla
