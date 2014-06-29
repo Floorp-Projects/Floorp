@@ -1481,8 +1481,12 @@ nsGlobalWindow::CleanUp()
     inner->CleanUp();
   }
 
-  DisableGamepadUpdates();
-  mHasGamepad = false;
+  if (IsInnerWindow()) {
+    DisableGamepadUpdates();
+    mHasGamepad = false;
+  } else {
+    MOZ_ASSERT(!mHasGamepad);
+  }
 
   if (mCleanMessageManager) {
     NS_ABORT_IF_FALSE(mIsChrome, "only chrome should have msg manager cleaned");
@@ -9771,7 +9775,8 @@ void nsGlobalWindow::UpdateTouchState()
 void
 nsGlobalWindow::EnableGamepadUpdates()
 {
-  FORWARD_TO_INNER_VOID(EnableGamepadUpdates, ());
+  MOZ_ASSERT(IsInnerWindow());
+
   if (mHasGamepad) {
 #ifdef MOZ_GAMEPAD
     nsRefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
@@ -9785,7 +9790,8 @@ nsGlobalWindow::EnableGamepadUpdates()
 void
 nsGlobalWindow::DisableGamepadUpdates()
 {
-  FORWARD_TO_INNER_VOID(DisableGamepadUpdates, ());
+  MOZ_ASSERT(IsInnerWindow());
+
   if (mHasGamepad) {
 #ifdef MOZ_GAMEPAD
     nsRefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
@@ -13048,7 +13054,7 @@ nsGlobalWindow::DisableDeviceSensor(uint32_t aType)
 void
 nsGlobalWindow::SetHasGamepadEventListener(bool aHasGamepad/* = true*/)
 {
-  FORWARD_TO_INNER_VOID(SetHasGamepadEventListener, (aHasGamepad));
+  MOZ_ASSERT(IsInnerWindow());
   mHasGamepad = aHasGamepad;
   if (aHasGamepad) {
     EnableGamepadUpdates();
@@ -13127,14 +13133,14 @@ nsGlobalWindow::AddSizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
 void
 nsGlobalWindow::AddGamepad(uint32_t aIndex, Gamepad* aGamepad)
 {
-  FORWARD_TO_INNER_VOID(AddGamepad, (aIndex, aGamepad));
+  MOZ_ASSERT(IsInnerWindow());
   mGamepads.Put(aIndex, aGamepad);
 }
 
 void
 nsGlobalWindow::RemoveGamepad(uint32_t aIndex)
 {
-  FORWARD_TO_INNER_VOID(RemoveGamepad, (aIndex));
+  MOZ_ASSERT(IsInnerWindow());
   mGamepads.Remove(aIndex);
 }
 
@@ -13153,7 +13159,7 @@ nsGlobalWindow::EnumGamepadsForGet(const uint32_t& aKey, Gamepad* aData,
 void
 nsGlobalWindow::GetGamepads(nsTArray<nsRefPtr<Gamepad> >& aGamepads)
 {
-  FORWARD_TO_INNER_VOID(GetGamepads, (aGamepads));
+  MOZ_ASSERT(IsInnerWindow());
   aGamepads.Clear();
   // mGamepads.Count() may not be sufficient, but it's not harmful.
   aGamepads.SetCapacity(mGamepads.Count());
@@ -13163,7 +13169,7 @@ nsGlobalWindow::GetGamepads(nsTArray<nsRefPtr<Gamepad> >& aGamepads)
 already_AddRefed<Gamepad>
 nsGlobalWindow::GetGamepad(uint32_t aIndex)
 {
-  FORWARD_TO_INNER(GetGamepad, (aIndex), nullptr);
+  MOZ_ASSERT(IsInnerWindow());
   nsRefPtr<Gamepad> gamepad;
   if (mGamepads.Get(aIndex, getter_AddRefs(gamepad))) {
     return gamepad.forget();
@@ -13175,14 +13181,14 @@ nsGlobalWindow::GetGamepad(uint32_t aIndex)
 void
 nsGlobalWindow::SetHasSeenGamepadInput(bool aHasSeen)
 {
-  FORWARD_TO_INNER_VOID(SetHasSeenGamepadInput, (aHasSeen));
+  MOZ_ASSERT(IsInnerWindow());
   mHasSeenGamepadInput = aHasSeen;
 }
 
 bool
 nsGlobalWindow::HasSeenGamepadInput()
 {
-  FORWARD_TO_INNER(HasSeenGamepadInput, (), false);
+  MOZ_ASSERT(IsInnerWindow());
   return mHasSeenGamepadInput;
 }
 
@@ -13199,7 +13205,7 @@ nsGlobalWindow::EnumGamepadsForSync(const uint32_t& aKey, Gamepad* aData,
 void
 nsGlobalWindow::SyncGamepadState()
 {
-  FORWARD_TO_INNER_VOID(SyncGamepadState, ());
+  MOZ_ASSERT(IsInnerWindow());
   if (mHasSeenGamepadInput) {
     mGamepads.EnumerateRead(EnumGamepadsForSync, nullptr);
   }

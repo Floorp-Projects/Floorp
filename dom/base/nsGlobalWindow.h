@@ -499,6 +499,7 @@ public:
   virtual nsresult SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust);
   bool FullScreen() const;
 
+  // Inner windows only.
   virtual void SetHasGamepadEventListener(bool aHasGamepad = true);
 
   // nsIInterfaceRequestor
@@ -739,6 +740,7 @@ public:
   SlowScriptResponse ShowSlowScriptDialog();
 
 #ifdef MOZ_GAMEPAD
+  // Inner windows only.
   void AddGamepad(uint32_t aIndex, mozilla::dom::Gamepad* aGamepad);
   void RemoveGamepad(uint32_t aIndex);
   void GetGamepads(nsTArray<nsRefPtr<mozilla::dom::Gamepad> >& aGamepads);
@@ -754,6 +756,7 @@ public:
                                             void* aUserArg);
 #endif
 
+  // Inner windows only.
   // Enable/disable updates for gamepad input.
   void EnableGamepadUpdates();
   void DisableGamepadUpdates();
@@ -1486,6 +1489,7 @@ protected:
   // This member is only used by inner windows.
   bool                   mInnerObjectsFreed : 1;
 
+  // Inner windows only.
   // Indicates whether this window wants gamepad input events
   bool                   mHasGamepad : 1;
 #ifdef MOZ_GAMEPAD
