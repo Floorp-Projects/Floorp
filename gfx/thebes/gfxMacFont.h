@@ -51,16 +51,13 @@ public:
     virtual FontType GetType() const { return FONT_TYPE_MAC; }
 
 protected:
-    virtual void CreatePlatformShaper();
-
     // override to prefer CoreText shaping with fonts that depend on AAT
-    virtual bool ShapeText(gfxContext      *aContext,
+    virtual bool ShapeText(gfxContext     *aContext,
                            const char16_t *aText,
-                           uint32_t         aOffset,
-                           uint32_t         aLength,
-                           int32_t          aScript,
-                           gfxShapedText   *aShapedText,
-                           bool             aPreferPlatformShaping = false);
+                           uint32_t        aOffset,
+                           uint32_t        aLength,
+                           int32_t         aScript,
+                           gfxShapedText  *aShapedText);
 
     void InitMetrics();
     void InitMetricsFromPlatform();
@@ -75,6 +72,8 @@ protected:
     CGFontRef             mCGFont;
 
     cairo_font_face_t    *mFontFace;
+
+    nsAutoPtr<gfxFontShaper> mCoreTextShaper;
 
     Metrics               mMetrics;
     uint32_t              mSpaceGlyph;

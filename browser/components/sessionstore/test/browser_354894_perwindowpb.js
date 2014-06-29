@@ -226,7 +226,7 @@ function test() {
       // Open a new window
       // The previously closed window should be restored
       whenNewWindowLoaded({}, function (newWin) {
-        is(newWin.gBrowser.browsers.length, TEST_URLS.length + 1,
+        is(newWin.gBrowser.browsers.length, TEST_URLS.length + 2,
            "Restored window in-session with otherpopup windows around");
 
         // Cleanup
@@ -259,7 +259,7 @@ function test() {
 
         // Exit private browsing mode again
         whenNewWindowLoaded({}, function (newWin) {
-          is(newWin.gBrowser.browsers.length, TEST_URLS.length + 1,
+          is(newWin.gBrowser.browsers.length, TEST_URLS.length + 2,
              "Restored after leaving private browsing again");
 
           newWin.close();
@@ -296,7 +296,7 @@ function test() {
 
           // open a new window the previously closed window should be restored to
           whenNewWindowLoaded({}, function (newWin) {
-            is(newWin.gBrowser.browsers.length, TEST_URLS.length + 1,
+            is(newWin.gBrowser.browsers.length, TEST_URLS.length + 2,
                "Restored window and associated tabs in session");
 
             // Cleanup

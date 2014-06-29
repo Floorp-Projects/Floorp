@@ -1525,6 +1525,16 @@ MacroAssemblerMIPSCompat::callIon(Register callee)
         ma_callIon(callee);
     }
 }
+void
+MacroAssemblerMIPSCompat::callIonFromAsmJS(Register callee)
+{
+    ma_callIonNoPush(reg);
+
+    // The Ion ABI has the callee pop the return address off the stack.
+    // The asm.js caller assumes that the call leaves sp unchanged, so bump
+    // the stack.
+    subPtr(Imm32(sizeof(void*)), StackPointer);
+}
 
 void
 MacroAssemblerMIPSCompat::reserveStack(uint32_t amount)
@@ -2958,21 +2968,6 @@ MacroAssemblerMIPS::ma_callIonHalfPush(const Register r)
     as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
     as_jalr(r);
     as_sw(ra, StackPointer, 0);
-}
-
-void
-MacroAssemblerMIPS::ma_callAndStoreRet(const Register r, uint32_t stackArgBytes)
-{
-    // Note: this function stores the return address to sp[16]. The caller
-    // must anticipate this by reserving additional space on the stack.
-    // The ABI does not provide space for a return address so this function
-    // stores 'ra' before any ABI arguments.
-    // This function may only be called if there are 4 or less arguments.
-    JS_ASSERT(stackArgBytes == 4 * sizeof(uintptr_t));
-
-    // This is a MIPS hack to push return address during jalr delay slot.
-    as_jalr(r);
-    as_sw(ra, StackPointer, 4 * sizeof(uintptr_t));
 }
 
 void
