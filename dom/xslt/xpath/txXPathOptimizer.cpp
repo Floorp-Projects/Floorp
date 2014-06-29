@@ -80,11 +80,6 @@ txXPathOptimizer::optimize(Expr* aInExpr, Expr** aOutExpr)
     if (exprType != Expr::LITERAL_EXPR &&
         !aInExpr->isSensitiveTo(Expr::ANY_CONTEXT)) {
         nsRefPtr<txResultRecycler> recycler = new txResultRecycler;
-        NS_ENSURE_TRUE(recycler, NS_ERROR_OUT_OF_MEMORY);
-
-        rv = recycler->init();
-        NS_ENSURE_SUCCESS(rv, rv);
-
         txEarlyEvalContext context(recycler);
         nsRefPtr<txAExprResult> exprRes;
 

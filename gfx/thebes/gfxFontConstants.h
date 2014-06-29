@@ -196,4 +196,8 @@ enum {
 #define NS_FONT_VARIANT_POSITION_SUPER              1
 #define NS_FONT_VARIANT_POSITION_SUB                2
 
+// based on fixed offset values used within WebKit
+#define NS_FONT_SUBSCRIPT_OFFSET_RATIO     (0.20)
+#define NS_FONT_SUPERSCRIPT_OFFSET_RATIO   (0.34)
+
 #endif

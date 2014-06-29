@@ -330,7 +330,7 @@ nsCSPParser::subHost()
       /* consume */
       ++charCounter;
     }
-    if (accept(DOT) && !accept(isCharacterToken)) {
+    if (accept(DOT) && !hostChar()) {
       return false;
     }
     if (charCounter > kSubHostPathCharacterCutoff) {
@@ -366,8 +366,8 @@ nsCSPParser::host()
     }
   }
 
-  // Expecting at least one Character
-  if (!accept(isCharacterToken)) {
+  // Expecting at least one host-char
+  if (!hostChar()) {
     const char16_t* params[] = { mCurToken.get() };
     logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidHost",
                              params, ArrayLength(params));
@@ -684,6 +684,7 @@ nsCSPParser::sourceList(nsTArray<nsCSPBaseSrc*>& outSrcs)
     // mCurToken is only set here and remains the current token
     // to be processed, which avoid passing arguments between functions.
     mCurToken = mCurDir[i];
+    resetCurValue();
 
     CSPPARSERLOG(("nsCSPParser::sourceList, mCurToken: %s, mCurValue: %s",
                  NS_ConvertUTF16toUTF8(mCurToken).get(),

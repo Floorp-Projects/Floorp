@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 CPP_UNIT_TESTS += [
+    'TestArrayUtils.cpp',
     'TestAtomics.cpp',
     'TestBinarySearch.cpp',
     'TestBloomFilter.cpp',
@@ -19,6 +20,7 @@ CPP_UNIT_TESTS += [
     'TestIntegerPrintfMacros.cpp',
     'TestMacroArgs.cpp',
     'TestMacroForEach.cpp',
+    'TestPair.cpp',
     'TestRollingMean.cpp',
     'TestSHA1.cpp',
     'TestTypedEnum.cpp',

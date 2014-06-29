@@ -1790,6 +1790,17 @@ MacroAssemblerARMCompat::callIon(Register callee)
 }
 
 void
+MacroAssemblerARMCompat::callIonFromAsmJS(Register callee)
+{
+    ma_callIonNoPush(callee);
+
+    // The Ion ABI has the callee pop the return address off the stack.
+    // The asm.js caller assumes that the call leaves sp unchanged, so bump
+    // the stack.
+    subPtr(Imm32(sizeof(void*)), sp);
+}
+
+void
 MacroAssemblerARMCompat::reserveStack(uint32_t amount)
 {
     if (amount)
@@ -3622,19 +3633,6 @@ MacroAssemblerARM::ma_call(ImmPtr dest)
 
     ma_movPatchable(dest, CallReg, Always, rs);
     as_blx(CallReg);
-}
-
-void
-MacroAssemblerARM::ma_callAndStoreRet(const Register r, uint32_t stackArgBytes)
-{
-    // Note: this function stores the return address to sp[0]. The caller must
-    // anticipate this by pushing additional space on the stack. The ABI does
-    // not provide space for a return address so this function may only be
-    // called if no argument are passed.
-    JS_ASSERT(stackArgBytes == 0);
-    AutoForbidPools afp(this);
-    as_dtr(IsStore, 32, Offset, pc, DTRAddr(sp, DtrOffImm(0)));
-    as_blx(r);
 }
 
 void

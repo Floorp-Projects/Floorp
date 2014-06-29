@@ -54,8 +54,6 @@ using namespace js::frontend;
 
 using mozilla::ArrayLength;
 using mozilla::PodCopy;
-using mozilla::Range;
-using mozilla::RangedPtr;
 
 static bool
 fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValue vp)
@@ -765,7 +763,7 @@ js::FindBody(JSContext *cx, HandleFunction fun, HandleLinearString src, size_t *
     if (!stableChars.initTwoByte(cx, src))
         return false;
 
-    const Range<const jschar> srcChars = stableChars.twoByteRange();
+    const mozilla::Range<const jschar> srcChars = stableChars.twoByteRange();
     TokenStream ts(cx, options, srcChars.start().get(), srcChars.length(), nullptr);
     int nest = 0;
     bool onward = true;
@@ -801,7 +799,7 @@ js::FindBody(JSContext *cx, HandleFunction fun, HandleLinearString src, size_t *
     *bodyStart = ts.currentToken().pos.begin;
     if (braced)
         *bodyStart += 1;
-    RangedPtr<const jschar> end = srcChars.end();
+    mozilla::RangedPtr<const jschar> end = srcChars.end();
     if (end[-1] == '}') {
         end--;
     } else {
@@ -1741,7 +1739,7 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
     if (!stableChars.initTwoByte(cx, str))
         return false;
 
-    Range<const jschar> chars = stableChars.twoByteRange();
+    mozilla::Range<const jschar> chars = stableChars.twoByteRange();
     SourceBufferHolder::Ownership ownership = stableChars.maybeGiveOwnershipToCaller()
                                               ? SourceBufferHolder::GiveOwnership
                                               : SourceBufferHolder::NoOwnership;
