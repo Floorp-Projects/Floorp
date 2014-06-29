@@ -980,12 +980,17 @@ PendingLookup::OnStopRequestInternal(nsIRequest *aRequest,
     return NS_ERROR_CANNOT_CONVERT_DATA;
   }
 
-  // There are several more verdicts, but we only respect one for now and treat
-  // everything else as SAFE.
+  // There are several more verdicts, but we only respect DANGEROUS and
+  // DANGEROUS_HOST for now and treat everything else as SAFE.
   Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER,
     SERVER_RESPONSE_VALID);
-  if (response.verdict() == safe_browsing::ClientDownloadResponse::DANGEROUS) {
-    *aShouldBlock = true;
+  switch(response.verdict()) {
+    case safe_browsing::ClientDownloadResponse::DANGEROUS:
+    case safe_browsing::ClientDownloadResponse::DANGEROUS_HOST:
+      *aShouldBlock = true;
+      break;
+    default:
+      break;
   }
 
   return NS_OK;

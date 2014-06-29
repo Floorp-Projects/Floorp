@@ -249,64 +249,6 @@ IsClusterExtender(uint32_t aCh, uint8_t aCategory)
             (aCh >= 0xff9e && aCh <= 0xff9f));  // katakana sound marks
 }
 
-// TODO: replace this with a properties file or similar;
-// expect this to evolve as harfbuzz shaping support matures.
-//
-// The "shaping type" of each script run, as returned by this
-// function, is compared to the bits set in the
-// gfx.font_rendering.harfbuzz.scripts
-// preference to decide whether to use the harfbuzz shaper.
-//
-int32_t
-ScriptShapingType(int32_t aScriptCode)
-{
-    switch (aScriptCode) {
-    default:
-        return SHAPING_DEFAULT; // scripts not explicitly listed here are
-                                // assumed to just use default shaping
-
-    case MOZ_SCRIPT_ARABIC:
-    case MOZ_SCRIPT_SYRIAC:
-    case MOZ_SCRIPT_NKO:
-    case MOZ_SCRIPT_MANDAIC:
-        return SHAPING_ARABIC; // bidi scripts with Arabic-style shaping
-
-    case MOZ_SCRIPT_HEBREW:
-        return SHAPING_HEBREW;
-
-    case MOZ_SCRIPT_HANGUL:
-        return SHAPING_HANGUL;
-
-    case MOZ_SCRIPT_MONGOLIAN: // to be supported by the Arabic shaper?
-        return SHAPING_MONGOLIAN;
-
-    case MOZ_SCRIPT_THAI: // no complex OT features, but MS engines like to do
-                          // sequence checking
-        return SHAPING_THAI;
-
-    case MOZ_SCRIPT_BENGALI:
-    case MOZ_SCRIPT_DEVANAGARI:
-    case MOZ_SCRIPT_GUJARATI:
-    case MOZ_SCRIPT_GURMUKHI:
-    case MOZ_SCRIPT_KANNADA:
-    case MOZ_SCRIPT_MALAYALAM:
-    case MOZ_SCRIPT_ORIYA:
-    case MOZ_SCRIPT_SINHALA:
-    case MOZ_SCRIPT_TAMIL:
-    case MOZ_SCRIPT_TELUGU:
-    case MOZ_SCRIPT_KHMER:
-    case MOZ_SCRIPT_LAO:
-    case MOZ_SCRIPT_TIBETAN:
-    case MOZ_SCRIPT_NEW_TAI_LUE:
-    case MOZ_SCRIPT_TAI_LE:
-    case MOZ_SCRIPT_MYANMAR:
-    case MOZ_SCRIPT_PHAGS_PA:
-    case MOZ_SCRIPT_BATAK:
-    case MOZ_SCRIPT_BRAHMI:
-        return SHAPING_INDIC; // scripts that require Indic or other "special" shaping
-    }
-}
-
 void
 ClusterIterator::Next()
 {

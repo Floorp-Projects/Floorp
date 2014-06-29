@@ -8,9 +8,9 @@
 #include "txNodeSet.h"
 
 txResultRecycler::txResultRecycler()
-    : mEmptyStringResult(nullptr),
-      mTrueResult(nullptr),
-      mFalseResult(nullptr)
+    : mEmptyStringResult(new StringResult(nullptr)),
+      mTrueResult(new BooleanResult(true)),
+      mFalseResult(new BooleanResult(false))
 {
 }
 
@@ -28,34 +28,6 @@ txResultRecycler::~txResultRecycler()
     while (numberIter.hasNext()) {
         delete static_cast<NumberResult*>(numberIter.next());
     }
-
-    NS_IF_RELEASE(mEmptyStringResult);
-    NS_IF_RELEASE(mTrueResult);
-    NS_IF_RELEASE(mFalseResult);
-}
-
-
-nsresult
-txResultRecycler::init()
-{
-    NS_ASSERTION(!mEmptyStringResult && !mTrueResult && !mFalseResult,
-                 "Already inited");
-    mEmptyStringResult = new StringResult(nullptr);
-    NS_ENSURE_TRUE(mEmptyStringResult, NS_ERROR_OUT_OF_MEMORY);
-
-    NS_ADDREF(mEmptyStringResult);
-
-    mTrueResult = new BooleanResult(true);
-    NS_ENSURE_TRUE(mTrueResult, NS_ERROR_OUT_OF_MEMORY);
-
-    NS_ADDREF(mTrueResult);
-
-    mFalseResult = new BooleanResult(false);
-    NS_ENSURE_TRUE(mFalseResult, NS_ERROR_OUT_OF_MEMORY);
-
-    NS_ADDREF(mFalseResult);
-
-    return NS_OK;
 }
 
 

@@ -216,7 +216,33 @@ nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsSplittableFrame::DestroyFrom(aDestructRoot);
 }
 
+void
+nsImageFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+{
+  ImageFrameSuper::DidSetStyleContext(aOldStyleContext);
 
+  if (!mImage) {
+    // We'll pick this change up whenever we do get an image.
+    return;
+  }
+
+  nsStyleImageOrientation newOrientation = StyleVisibility()->mImageOrientation;
+
+  // We need to update our orientation either if we had no style context before
+  // because this is the first time it's been set, or if the image-orientation
+  // property changed from its previous value.
+  bool shouldUpdateOrientation =
+    !aOldStyleContext ||
+    aOldStyleContext->StyleVisibility()->mImageOrientation != newOrientation;
+
+  if (shouldUpdateOrientation) {
+    nsCOMPtr<imgIContainer> image(mImage->Unwrap());
+    mImage = nsLayoutUtils::OrientImage(image, newOrientation);
+
+    UpdateIntrinsicSize(mImage);
+    UpdateIntrinsicRatio(mImage);
+  }
+}
 
 void
 nsImageFrame::Init(nsIContent*       aContent,
@@ -604,16 +630,19 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
     return NS_OK;
   }
 
+  nsIntRect rect = mImage ? mImage->GetImageSpaceInvalidationRect(*aRect)
+                          : *aRect;
+
 #ifdef DEBUG_decode
   printf("Source rect (%d,%d,%d,%d)\n",
          aRect->x, aRect->y, aRect->width, aRect->height);
 #endif
 
-  if (aRect->IsEqualInterior(nsIntRect::GetMaxSizedIntRect())) {
+  if (rect.IsEqualInterior(nsIntRect::GetMaxSizedIntRect())) {
     InvalidateFrame(nsDisplayItem::TYPE_IMAGE);
     InvalidateFrame(nsDisplayItem::TYPE_ALT_FEEDBACK);
   } else {
-    nsRect invalid = SourceRectToDest(*aRect);
+    nsRect invalid = SourceRectToDest(rect);
     InvalidateFrameWithRect(invalid, nsDisplayItem::TYPE_IMAGE);
     InvalidateFrameWithRect(invalid, nsDisplayItem::TYPE_ALT_FEEDBACK);
   }

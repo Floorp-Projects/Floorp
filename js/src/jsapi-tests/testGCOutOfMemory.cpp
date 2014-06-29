@@ -34,7 +34,7 @@ BEGIN_TEST(testGCOutOfMemory)
     /* Check that we get OOM. */
     CHECK(!ok);
     CHECK(!JS_IsExceptionPending(cx));
-    CHECK_EQUAL(errorCount, 1);
+    CHECK_EQUAL(errorCount, 1u);
     JS_GC(rt);
 
     // Temporarily disabled to reopen the tree. Bug 847579.
@@ -47,7 +47,7 @@ BEGIN_TEST(testGCOutOfMemory)
          "        array.push({});"
          "    }"
          "})();", &root);
-    CHECK_EQUAL(errorCount, 1);
+    CHECK_EQUAL(errorCount, 1u);
     return true;
 }
 

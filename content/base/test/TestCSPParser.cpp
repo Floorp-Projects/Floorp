@@ -395,6 +395,14 @@ nsresult TestSimplePolicies() {
       "script-src http://www.example.com" },
     { "script-src http://www.example.com/path-1//path_2",
       "script-src http://www.example.com" },
+    { "default-src 127.0.0.1",
+      "default-src http://127.0.0.1" },
+    { "default-src 127.0.0.1:*",
+      "default-src http://127.0.0.1:*" },
+    { "default-src -; ",
+      "default-src http://-" },
+    { "script-src 1",
+      "script-src http://1" }
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
@@ -432,8 +440,6 @@ nsresult TestBadPolicies() {
     { "", "" },
     { "; ; ; ; ; ; ;", "" },
     { "defaut-src asdf", "" },
-    { "default-src -; ", "" },
-    { "script-src 1", "" },
     { "default-src: aaa", "" },
     { "default-src 'unsafe-inlin' ", "" },
     { "default-src :88", "" },

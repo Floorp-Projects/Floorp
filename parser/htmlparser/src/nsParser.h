@@ -66,6 +66,12 @@ class nsParser : public nsIParser,
                  public nsIStreamListener,
                  public nsSupportsWeakReference
 {
+    /**
+     * Destructor
+     * @update  gess5/11/98
+     */
+    virtual ~nsParser();
+
   public:
     /**
      * Called on module init
@@ -85,12 +91,6 @@ class nsParser : public nsIParser,
      * @update	gess5/11/98
      */
     nsParser();
-
-    /**
-     * Destructor
-     * @update	gess5/11/98
-     */
-    virtual ~nsParser();
 
     /**
      * Select given content sink into parser for parser output
