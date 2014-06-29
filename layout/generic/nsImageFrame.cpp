@@ -1836,19 +1836,19 @@ nsImageFrame::List(FILE* out, const char* aPrefix, uint32_t aFlags) const
 }
 #endif
 
-nsIFrame::LogicalSides
+int
 nsImageFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                      NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
-    return LogicalSides();
+    return 0;
   }
-  LogicalSides skip;
+  int skip = 0;
   if (nullptr != GetPrevInFlow()) {
-    skip |= eLogicalSideBitsBStart;
+    skip |= LOGICAL_SIDE_B_START;
   }
   if (nullptr != GetNextInFlow()) {
-    skip |= eLogicalSideBitsBEnd;
+    skip |= LOGICAL_SIDE_B_END;
   }
   return skip;
 }

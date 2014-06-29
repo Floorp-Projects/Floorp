@@ -408,8 +408,6 @@ public:
   typedef mozilla::layout::FrameChildListIterator ChildListIterator;
   typedef mozilla::layout::FrameChildListArrayIterator ChildListArrayIterator;
   typedef mozilla::gfx::Matrix Matrix;
-  typedef mozilla::Sides Sides;
-  typedef mozilla::LogicalSides LogicalSides;
 
   NS_DECL_QUERYFRAME_TARGET(nsIFrame)
 
@@ -919,10 +917,10 @@ public:
    * Return whether any radii are nonzero.
    */
   static bool ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
-                                 const nsSize& aFrameSize,
-                                 const nsSize& aBorderArea,
-                                 Sides aSkipSides,
-                                 nscoord aRadii[8]);
+                                   const nsSize& aFrameSize,
+                                   const nsSize& aBorderArea,
+                                   int aSkipSides,
+                                   nscoord aRadii[8]);
 
   /*
    * Given a set of border radii for one box (e.g., border box), convert
@@ -948,7 +946,7 @@ public:
    */
   virtual bool GetBorderRadii(const nsSize& aFrameSize,
                               const nsSize& aBorderArea,
-                              Sides aSkipSides,
+                              int aSkipSides,
                               nscoord aRadii[8]) const;
   bool GetBorderRadii(nscoord aRadii[8]) const;
 
@@ -2305,10 +2303,8 @@ public:
   bool ClearOverflowRects();
 
   /**
-   * Determine whether borders, padding, margins etc should NOT be applied
-   * on certain sides of the frame.
-   * @see mozilla::Sides in gfx/2d/BaseMargin.h
-   * @see mozilla::LogicalSides in layout/generic/WritingModes.h
+   * Determine whether borders should not be painted on certain sides of the
+   * frame.
    *
    * @note (See also bug 743402, comment 11) GetSkipSides() checks to see
    *       if this frame has a previous or next continuation to determine
@@ -2318,10 +2314,10 @@ public:
    *       passed in, indicating that it should be used to determine if sides
    *       should be skipped during reflow.
    */
-  Sides GetSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const;
-  virtual LogicalSides
+  int GetSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const;
+  virtual int
   GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const {
-    return LogicalSides();
+    return 0;
   }
 
   /**

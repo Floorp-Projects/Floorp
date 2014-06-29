@@ -589,20 +589,20 @@ nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, item);
 }
 
-nsIFrame::LogicalSides
+int
 nsTableRowFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                      NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
-    return LogicalSides();
+    return 0;
   }
 
-  LogicalSides skip;
+  int skip = 0;
   if (nullptr != GetPrevInFlow()) {
-    skip |= eLogicalSideBitsBStart;
+    skip |= LOGICAL_SIDE_B_START;
   }
   if (nullptr != GetNextInFlow()) {
-    skip |= eLogicalSideBitsBEnd;
+    skip |= LOGICAL_SIDE_B_END;
   }
   return skip;
 }
