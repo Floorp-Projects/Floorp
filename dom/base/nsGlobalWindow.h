@@ -1373,6 +1373,8 @@ protected:
 
   inline int32_t DOMMinTimeoutValue() const;
 
+
+  // Inner windows only.
   already_AddRefed<mozilla::dom::StorageEvent>
   CloneStorageEvent(const nsAString& aType,
                     const nsRefPtr<mozilla::dom::StorageEvent>& aEvent);

@@ -11429,6 +11429,8 @@ already_AddRefed<StorageEvent>
 nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
                                   const nsRefPtr<StorageEvent>& aEvent)
 {
+  MOZ_ASSERT(IsInnerWindow());
+
   StorageEventInit dict;
 
   dict.mBubbles = aEvent->Bubbles();
