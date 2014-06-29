@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <img src="big.png">
+  <script>
+    document.addEventListener("MozReftestInvalidate", function() {
+      document.querySelector("img").style.imageOrientation = "90deg";
+      document.documentElement.className = "";
+    });
+  </script>
+</html>

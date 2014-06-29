@@ -599,6 +599,7 @@ static nsresult NewImageChannel(nsIChannel **aResult,
   // If all of the proxy requests are canceled then this request should be
   // canceled too.
   //
+  aLoadFlags |= nsIChannel::LOAD_CLASSIFY_URI;
   rv = NS_NewChannel(aResult,
                      aURI,        // URI
                      nullptr,      // Cached IOService
