@@ -3359,7 +3359,9 @@ nsGlobalWindow::SetArguments(nsIArray *aArguments)
 nsresult
 nsGlobalWindow::DefineArgumentsProperty(nsIArray *aArguments)
 {
+  MOZ_ASSERT(IsInnerWindow());
   MOZ_ASSERT(!mIsModalContentWindow); // Handled separately.
+
   nsIScriptContext *ctx = GetOuterWindowInternal()->mContext;
   NS_ENSURE_TRUE(aArguments && ctx, NS_ERROR_NOT_INITIALIZED);
   AutoJSContext cx;

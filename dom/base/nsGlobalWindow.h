@@ -1096,6 +1096,7 @@ protected:
   // aDocument must not be null.
   void InnerSetNewDocument(JSContext* aCx, nsIDocument* aDocument);
 
+  // Inner windows only.
   nsresult DefineArgumentsProperty(nsIArray *aArguments);
 
   // Get the parent, returns null if this is a toplevel window
