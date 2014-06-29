@@ -693,6 +693,7 @@ public:
   OpenNoNavigate(const nsAString& aUrl, const nsAString& aName,
                  const nsAString& aOptions, nsIDOMWindow **_retval) = 0;
 
+  // Inner windows only.
   void AddAudioContext(mozilla::dom::AudioContext* aAudioContext);
   void RemoveAudioContext(mozilla::dom::AudioContext* aAudioContext);
   void MuteAudioContexts();
