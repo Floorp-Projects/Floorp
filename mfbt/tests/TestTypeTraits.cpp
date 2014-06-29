@@ -153,6 +153,16 @@ static_assert(IsSigned<const volatile long double>::value,
 static_assert(!IsUnsigned<const volatile long double>::value,
               "const volatile long double shouldn't be unsigned");
 
+class NotIntConstructible
+{
+  NotIntConstructible(int) MOZ_DELETE;
+};
+
+static_assert(!IsSigned<NotIntConstructible>::value,
+              "non-arithmetic types are not signed");
+static_assert(!IsUnsigned<NotIntConstructible>::value,
+              "non-arithmetic types are not unsigned");
+
 namespace CPlusPlus11IsBaseOf {
 
 // Adapted from C++11 § 20.9.6.

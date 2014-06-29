@@ -91,3 +91,4 @@ fuzzy(1,1) == image-orientation-background.html?90&flip      image-orientation-r
 != image-orientation-generated-content-ref.html?90   image-orientation-generated-content-ref.html?90&flip
 != image-orientation-generated-content-ref.html?180  image-orientation-generated-content-ref.html?180&flip
 != image-orientation-generated-content-ref.html?270  image-orientation-generated-content-ref.html?270&flip
+== image-orientation-dynamic.html image-orientation-dynamic-ref.html

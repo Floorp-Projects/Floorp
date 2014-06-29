@@ -17,18 +17,27 @@
                  xbl:inherits="xbl:text=label,accesskey,wrap"/>
     </content>
     <implementation implements="nsIDOMEventListener, nsIObserver">
-      <field name="_useDynamicResizer">false</field>
-      <field name="inMenuPanel">false</field>
+      <constructor>
+        // if we overflow, we have to reset the button. unfortunately we cannot
+        // use a widget listener because we need to do this *after* the node is
+        // moved, and the event happens before the node is moved.
+        this.update();
+      </constructor>
+      <property name="_anchor">
+        <getter>
+          let widgetGroup = CustomizableUI.getWidget(this.getAttribute("id"));
+          return widgetGroup.forWindow(window).anchor;
+        </getter>
+      </property>
+      <property name="_useDynamicResizer">
+        <getter>
+          let provider = Social._getProviderFromOrigin(this.getAttribute("origin"));
+          return !provider.getPageSize("marks");
+        </getter>
+      </property>
 
       <property name="panel">
         <getter>
-          let widgetGroup = CustomizableUI.getWidget(this.getAttribute("id"));
-          let widget = widgetGroup.forWindow(window);
-          this.inMenuPanel = widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL;
-          if (this.inMenuPanel) {
-            widget.node.setAttribute("closemenu", "none");
-            return document.getElementById("PanelUI-socialapi");
-          }
           return document.getAnonymousElementByAttribute(this, "anonid", "panel");
         </getter>
       </property>
@@ -41,7 +50,6 @@
           let provider = Social._getProviderFromOrigin(this.getAttribute("origin"));
           let size = provider.getPageSize("marks");
           let {width, height} = size ? size : {width: 330, height: 100};
-          this._useDynamicResizer = !size;
 
           this._frame = SharedFrame.createFrame(
             notificationFrameId, /* frame name */
@@ -89,8 +97,8 @@
           let provider = this.provider;
           // we cannot size the image when we apply it via listStyleImage, so
           // use the toolbar image
-          let place = CustomizableUI.getPlaceForItem(this);
-          val = val && place != "palette";
+          let widgetGroup = CustomizableUI.getWidget(this.getAttribute("id"));
+          val = val && !!widgetGroup.areaType;
           let icon = val ? provider.markedIcon : provider.unmarkedIcon;
           let iconURL = icon || provider.icon32URL || provider.iconURL;
           this.setAttribute("image", iconURL);
@@ -112,24 +120,26 @@
 
         // do we have a savable page loaded?
         let aURI = gBrowser.currentURI;
-        this.disabled = !aURI || !(aURI.schemeIs('http') || aURI.schemeIs('https'));
-        if (this.disabled) {
+        let disabled = !aURI || !(aURI.schemeIs('http') || aURI.schemeIs('https'));
+        // when overflowed in toolbar, we must have the attribute set
+        if (disabled) {
+          this.setAttribute("disabled", "true");
           this.isMarked = false;
         } else {
+          this.removeAttribute("disabled");
           Social.isURIMarked(provider.origin, aURI, (isMarked) => {
             this.isMarked = isMarked;
           });
         }
 
         this.content.setAttribute("origin", provider.origin);
-        if (!this.inMenuPanel) {
-          let panel = this.panel;
-          // if customization is currently happening, we may not have a panel
-          // that we can hide
-          if (panel.hidePopup) {
-            panel.hidePopup();
-            panel.hidden = true;
-          }
+
+        let panel = this.panel;
+        // if customization is currently happening, we may not have a panel
+        // that we can hide
+        if (panel.hidePopup) {
+          panel.hidePopup();
+          panel.hidden = true;
         }
         this.pageData = null;
         ]]></body>
@@ -157,7 +167,7 @@
           this._loading = false;
           this.content.removeEventListener("DOMContentLoaded", DOMContentLoaded, true);
           // add our resizer after the dom is ready
-          if (!this.inMenuPanel && this._useDynamicResizer) {
+          if (this._useDynamicResizer) {
             let DynamicResizeWatcher = Cu.import("resource:///modules/Social.jsm", {}).DynamicResizeWatcher;
             this._dynamicResizer = new DynamicResizeWatcher();
             this._dynamicResizer.start(this.panel, this.content);
@@ -213,27 +223,13 @@
           frameIter = frameIter.nextElementSibling;
         }
 
-        // if we're a slice in the hambuger, use that panel instead
-        let widgetGroup = CustomizableUI.getWidget(this.getAttribute("id"));
-        let widget = widgetGroup.forWindow(window);
-        let inMenuPanel = widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL;
-        if (inMenuPanel) {
-          PanelUI.showSubView("PanelUI-socialapi", widget.node,
-                              CustomizableUI.AREA_PANEL);
-        } else {
-          let anchor = document.getAnonymousElementByAttribute(this, "class", "toolbarbutton-icon");
+        let anchor = document.getAnonymousElementByAttribute(this._anchor, "class", "toolbarbutton-icon");
+        // Bug 849216 - open the popup in a setTimeout so we avoid the auto-rollup
+        // handling from preventing it being opened in some cases.
+        setTimeout(() => {
           panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
-          this.setAttribute("open", "true");
-        }
-        if (aResetOnClose) {
-          let evName = inMenuPanel ? "ViewHiding": "popuphidden";
-          let _hidden = () => {
-            panel.removeEventListener(evName, _hidden);
-            this.update();
-          };
-          panel.addEventListener(evName, _hidden, false);
-        }
-         ]]></body>
+        }, 0);
+        ]]></body>
        </method>
 
       <method name="markCurrentPage">
@@ -241,8 +237,7 @@
         <body><![CDATA[
         // we always set the src on click if it has not been set for this tab,
         // but we only want to open the panel if it was previously annotated.
-        let openPanel = this.isMarked || aOpenPanel ||
-                        this.inMenuPanel || !this.provider.haveLoggedInUser();
+        let openPanel = this.isMarked || aOpenPanel || !this.provider.haveLoggedInUser();
         let src = this.content.getAttribute("src");
         if (!src || src == "about:blank") {
           this.loadPanel();
@@ -287,13 +282,13 @@
         if (!this._loading && this.contentDocument &&
             this.contentDocument.readyState == "complete") {
           this.dispatchPanelEvent("socialFrameShow");
-          if (!this.inMenuPanel && this._useDynamicResizer)
+          if (this._useDynamicResizer)
             sizeSocialPanelToContent(this.panel, this.content);
         } else {
           let panelBrowserOnload = (e) => {
             this.content.removeEventListener("load", panelBrowserOnload, true);
             this.dispatchPanelEvent("socialFrameShow");
-            if (!this.inMenuPanel && this._useDynamicResizer)
+            if (this._useDynamicResizer)
               sizeSocialPanelToContent(this.panel, this.content);
           };
           this.content.addEventListener("load", panelBrowserOnload, true);
@@ -328,24 +323,22 @@
             this.setAttribute("image", uri.spec);
             }
             break;
-          case "ViewShowing":
-            this.onShown();
-            break;
-          case "ViewHiding":
-            this.dispatchPanelEvent("socialFrameHide");
-            break;
         }
         ]]></body>
       </method>
 
     </implementation>
     <handlers>
+      <handler event="popupshowing"><![CDATA[
+        this._anchor.setAttribute("open", "true");
+      ]]></handler>
       <handler event="popupshown"><![CDATA[
         this.onShown();
       ]]></handler>
       <handler event="popuphidden"><![CDATA[
         this.dispatchPanelEvent("socialFrameHide");
-        this.removeAttribute("open");
+        this._anchor.removeAttribute("open");
+        this.update();
       ]]></handler>
       <handler event="command"><![CDATA[
         this.markCurrentPage();

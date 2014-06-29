@@ -441,6 +441,13 @@ private:
   // to make sure streams aren't shared across sessions.
   uint64_t        mSerial;
 
+  // If push is disabled, we want to be able to send PROTOCOL_ERRORs if we
+  // receive a PUSH_PROMISE, but we have to wait for the SETTINGS ACK before
+  // we can actually tell the other end to go away. These help us keep track
+  // of that state so we can behave appropriately.
+  bool mWaitingForSettingsAck;
+  bool mGoAwayOnPush;
+
 private:
 /// connect tunnels
   void DispatchOnTunnel(nsAHttpTransaction *, nsIInterfaceRequestor *);
