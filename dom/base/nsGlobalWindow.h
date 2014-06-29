@@ -488,7 +488,10 @@ public:
   virtual void MaybeUpdateTouchState();
   virtual void UpdateTouchState();
   virtual bool DispatchCustomEvent(const char *aEventName);
-  virtual bool DispatchResizeEvent(const nsIntSize& aSize);
+
+  // Outer windows only.
+  bool DispatchResizeEvent(const mozilla::CSSIntSize& aSize);
+
   virtual void RefreshCompartmentPrincipal();
   virtual nsresult SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust);
 
