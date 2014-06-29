@@ -7610,6 +7610,7 @@ nsGlobalWindow::OpenNoNavigate(const nsAString& aUrl,
                                const nsAString& aOptions,
                                nsIDOMWindow **_retval)
 {
+  MOZ_ASSERT(IsOuterWindow());
   return OpenInternal(aUrl, aName, aOptions,
                       false,          // aDialog
                       false,          // aContentModal

@@ -1135,6 +1135,7 @@ protected:
 
   // Window Control Functions
 
+  // Outer windows only.
   virtual nsresult
   OpenNoNavigate(const nsAString& aUrl,
                  const nsAString& aName,

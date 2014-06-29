@@ -698,6 +698,8 @@ public:
 
   /**
    * Like nsIDOMWindow::Open, except that we don't navigate to the given URL.
+   *
+   * Outer windows only.
    */
   virtual nsresult
   OpenNoNavigate(const nsAString& aUrl, const nsAString& aName,
