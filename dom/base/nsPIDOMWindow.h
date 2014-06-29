@@ -745,6 +745,7 @@ protected:
   virtual void UpdateParentTarget() = 0;
 
   // Helper for creating performance objects.
+  // Inner windows only.
   void CreatePerformanceObjectIfNeeded();
 
   // These two variables are special in that they're set to the same
