@@ -5728,10 +5728,9 @@ nsGlobalWindow::GetScrollMaxY(int32_t* aScrollMaxY)
 }
 
 CSSIntPoint
-nsGlobalWindow::GetScrollXY(bool aDoFlush, ErrorResult& aError)
+nsGlobalWindow::GetScrollXY(bool aDoFlush)
 {
-  FORWARD_TO_OUTER_OR_THROW(GetScrollXY, (aDoFlush, aError), aError,
-                            CSSIntPoint(0, 0));
+  MOZ_ASSERT(IsOuterWindow());
 
   if (aDoFlush) {
     FlushPendingNotifications(Flush_Layout);
@@ -5749,7 +5748,7 @@ nsGlobalWindow::GetScrollXY(bool aDoFlush, ErrorResult& aError)
     // Oh, well.  This is the expensive case -- the window is scrolled and we
     // didn't actually flush yet.  Repeat, but with a flush, since the content
     // may get shorter and hence our scroll position may decrease.
-    return GetScrollXY(true, aError);
+    return GetScrollXY(true);
   }
 
   return sf->GetScrollPositionCSSPixels();
@@ -5758,7 +5757,8 @@ nsGlobalWindow::GetScrollXY(bool aDoFlush, ErrorResult& aError)
 int32_t
 nsGlobalWindow::GetScrollX(ErrorResult& aError)
 {
-  return GetScrollXY(false, aError).x;
+  FORWARD_TO_OUTER_OR_THROW(GetScrollX, (aError), aError, 0);
+  return GetScrollXY(false).x;
 }
 
 NS_IMETHODIMP
@@ -5766,14 +5766,15 @@ nsGlobalWindow::GetScrollX(int32_t* aScrollX)
 {
   NS_ENSURE_ARG_POINTER(aScrollX);
   ErrorResult rv;
-  *aScrollX = GetScrollXY(false, rv).x;
+  *aScrollX = GetScrollX(rv);
   return rv.ErrorCode();
 }
 
 int32_t
 nsGlobalWindow::GetScrollY(ErrorResult& aError)
 {
-  return GetScrollXY(false, aError).y;
+  FORWARD_TO_OUTER_OR_THROW(GetScrollY, (aError), aError, 0);
+  return GetScrollXY(false).y;
 }
 
 NS_IMETHODIMP
@@ -5781,7 +5782,7 @@ nsGlobalWindow::GetScrollY(int32_t* aScrollY)
 {
   NS_ENSURE_ARG_POINTER(aScrollY);
   ErrorResult rv;
-  *aScrollY = GetScrollXY(false, rv).y;
+  *aScrollY = GetScrollY(rv);
   return rv.ErrorCode();
 }
 

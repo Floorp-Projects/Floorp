@@ -1279,8 +1279,9 @@ protected:
 
   // If aDoFlush is true, we'll flush our own layout; otherwise we'll try to
   // just flush our parent and only flush ourselves if we think we need to.
-  mozilla::CSSIntPoint GetScrollXY(bool aDoFlush, mozilla::ErrorResult& aError);
-  nsresult GetScrollXY(int32_t* aScrollX, int32_t* aScrollY, bool aDoFlush);
+  // Outer windows only.
+  mozilla::CSSIntPoint GetScrollXY(bool aDoFlush);
+
   void GetScrollMaxXY(int32_t* aScrollMaxX, int32_t* aScrollMaxY,
                       mozilla::ErrorResult& aError);
 
