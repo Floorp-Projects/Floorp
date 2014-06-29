@@ -98,6 +98,9 @@ GamepadService::BeginShutdown()
 void
 GamepadService::AddListener(nsGlobalWindow* aWindow)
 {
+  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aWindow->IsInnerWindow());
+
   if (mShuttingDown) {
     return;
   }
@@ -117,6 +120,9 @@ GamepadService::AddListener(nsGlobalWindow* aWindow)
 void
 GamepadService::RemoveListener(nsGlobalWindow* aWindow)
 {
+  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aWindow->IsInnerWindow());
+
   if (mShuttingDown) {
     // Doesn't matter at this point. It's possible we're being called
     // as a result of our own destructor here, so just bail out.
@@ -445,6 +451,9 @@ GamepadService::SetWindowHasSeenGamepad(nsGlobalWindow* aWindow,
                                         uint32_t aIndex,
                                         bool aHasSeen)
 {
+  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aWindow->IsInnerWindow());
+
   if (mListeners.IndexOf(aWindow) == NoIndex) {
     // This window isn't even listening for gamepad events.
     return;

@@ -649,6 +649,8 @@ public:
 
   /**
    * Tell this window that there is an observer for gamepad input
+   *
+   * Inner windows only.
    */
   virtual void SetHasGamepadEventListener(bool aHasGamepad = true) = 0;
 
