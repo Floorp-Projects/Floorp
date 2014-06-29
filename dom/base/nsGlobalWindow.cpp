@@ -3464,6 +3464,8 @@ nsPIDOMWindow::SetFrameElementInternal(Element* aFrameElement)
 void
 nsPIDOMWindow::AddAudioContext(AudioContext* aAudioContext)
 {
+  MOZ_ASSERT(IsInnerWindow());
+
   mAudioContexts.AppendElement(aAudioContext);
 
   nsIDocShell* docShell = GetDocShell();
@@ -3475,12 +3477,16 @@ nsPIDOMWindow::AddAudioContext(AudioContext* aAudioContext)
 void
 nsPIDOMWindow::RemoveAudioContext(AudioContext* aAudioContext)
 {
+  MOZ_ASSERT(IsInnerWindow());
+
   mAudioContexts.RemoveElement(aAudioContext);
 }
 
 void
 nsPIDOMWindow::MuteAudioContexts()
 {
+  MOZ_ASSERT(IsInnerWindow());
+
   for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
     if (!mAudioContexts[i]->IsOffline()) {
       mAudioContexts[i]->Mute();
@@ -3491,6 +3497,8 @@ nsPIDOMWindow::MuteAudioContexts()
 void
 nsPIDOMWindow::UnmuteAudioContexts()
 {
+  MOZ_ASSERT(IsInnerWindow());
+
   for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
     if (!mAudioContexts[i]->IsOffline()) {
       mAudioContexts[i]->Unmute();
