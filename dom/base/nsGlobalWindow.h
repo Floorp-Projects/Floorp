@@ -495,9 +495,8 @@ public:
   // Inner windows only.
   virtual void RefreshCompartmentPrincipal();
 
-  virtual nsresult SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust);
-
   // Outer windows only.
+  virtual nsresult SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust);
   bool FullScreen() const;
 
   virtual void SetHasGamepadEventListener(bool aHasGamepad = true);
