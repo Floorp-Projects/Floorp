@@ -382,7 +382,7 @@ SelectionCarets::UpdateSelectionCarets()
   nsLayoutUtils::FirstAndLastRectCollector collector;
   nsRange::CollectClientRects(&collector, range,
                               range->GetStartParent(), range->StartOffset(),
-                              range->GetEndParent(), range->EndOffset());
+                              range->GetEndParent(), range->EndOffset(), true);
 
   nsIFrame* canvasFrame = mPresShell->GetCanvasFrame();
   nsIFrame* rootFrame = mPresShell->GetRootFrame();

@@ -437,12 +437,17 @@ bool HasIDIV();
 
 // Arm/D32 has double registers that can NOT be treated as float32
 // and this requires some dances in lowering.
-inline bool hasUnaliasedDouble() {
+inline bool
+hasUnaliasedDouble()
+{
     return Has32DP();
 }
+
 // On ARM, Dn aliases both S2n and S2n+1, so if you need to convert a float32
 // to a double as a temporary, you need a temporary double register.
-inline bool hasMultiAlias() {
+inline bool
+hasMultiAlias()
+{
     return true;
 }
 

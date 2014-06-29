@@ -313,6 +313,33 @@ class AsmJSModule
         bool clone(ExclusiveContext *cx, ExportedFunction *out) const;
     };
 
+    class CodeRange
+    {
+      public:
+        enum Kind { Entry, Function };
+
+      private:
+        Kind kind_;
+        uint32_t beginOffset_;
+        uint32_t endOffset_;
+        uint32_t functionNameIndex_;
+
+        friend class AsmJSModule;
+        CodeRange(Kind kind, uint32_t beginOffset, uint32_t endOffset)
+          : kind_(kind), beginOffset_(beginOffset), endOffset_(endOffset)
+        {}
+
+      public:
+        CodeRange() {}
+        Kind kind() const { return kind_; }
+        uint32_t beginOffset() const { return beginOffset_; }
+        uint32_t endOffset() const { return endOffset_; }
+        PropertyName *functionName(const AsmJSModule &module) const {
+            JS_ASSERT(kind_ == Function);
+            return module.functionNames_[functionNameIndex_].name();
+        }
+    };
+
     class Name
     {
         PropertyName *name_;
@@ -479,6 +506,7 @@ class AsmJSModule
     Vector<Exit,                   0, SystemAllocPolicy> exits_;
     Vector<ExportedFunction,       0, SystemAllocPolicy> exports_;
     Vector<jit::CallSite,          0, SystemAllocPolicy> callSites_;
+    Vector<CodeRange,              0, SystemAllocPolicy> codeRanges_;
     Vector<Name,                   0, SystemAllocPolicy> functionNames_;
     Vector<jit::AsmJSHeapAccess,   0, SystemAllocPolicy> heapAccesses_;
     Vector<jit::IonScriptCounts*,  0, SystemAllocPolicy> functionCounts_;
@@ -666,17 +694,21 @@ class AsmJSModule
         if (len > pod.minHeapLength_)
             pod.minHeapLength_ = len;
     }
-    bool addFunctionName(PropertyName *name, uint32_t *nameIndex) {
+    bool addFunctionCodeRange(PropertyName *name, uint32_t beginOffset, uint32_t endOffset) {
         JS_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
         JS_ASSERT(name->isTenured());
-        if (functionNames_.length() > jit::CallSiteDesc::FUNCTION_NAME_INDEX_MAX)
+        JS_ASSERT(beginOffset <= endOffset);
+        JS_ASSERT_IF(!codeRanges_.empty(), codeRanges_.back().endOffset() <= beginOffset);
+        if (functionNames_.length() >= UINT32_MAX)
             return false;
-        *nameIndex = functionNames_.length();
-        return functionNames_.append(name);
+        CodeRange codeRange(CodeRange::Function, beginOffset, endOffset);
+        codeRange.functionNameIndex_ = functionNames_.length();
+        return functionNames_.append(name) && codeRanges_.append(codeRange);
     }
-    PropertyName *functionName(uint32_t i) const {
-        JS_ASSERT(isFinished());
-        return functionNames_[i].name();
+    bool addEntryCodeRange(unsigned exportIndex, uint32_t endOffset) {
+        uint32_t beginOffset = exports_[exportIndex].pod.codeOffset_;
+        CodeRange codeRange(CodeRange::Entry, beginOffset, endOffset);
+        return codeRanges_.append(codeRange);
     }
     bool addExit(unsigned ffiIndex, unsigned *exitIndex) {
         JS_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
@@ -852,11 +884,15 @@ class AsmJSModule
 
     // Lookup a callsite by the return pc (from the callee to the caller).
     // Return null if no callsite was found.
-    const jit::CallSite *lookupCallSite(uint8_t *returnAddress) const;
+    const jit::CallSite *lookupCallSite(void *returnAddress) const;
+
+    // Lookup the name the code range containing the given pc. Return null if no
+    // code range was found.
+    const CodeRange *lookupCodeRange(void *pc) const;
 
     // Lookup a heap access site by the pc which performs the access. Return
     // null if no heap access was found.
-    const jit::AsmJSHeapAccess *lookupHeapAccess(uint8_t *pc) const;
+    const jit::AsmJSHeapAccess *lookupHeapAccess(void *pc) const;
 
     // The global data section is placed after the executable code (i.e., at
     // offset codeBytes_) in the module's linear allocation. The global data

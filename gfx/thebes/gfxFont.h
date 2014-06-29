@@ -1479,12 +1479,12 @@ public:
     // Shape a piece of text and store the resulting glyph data into
     // aShapedText. Parameters aOffset/aLength indicate the range of
     // aShapedText to be updated; aLength is also the length of aText.
-    virtual bool ShapeText(gfxContext      *aContext,
+    virtual bool ShapeText(gfxContext     *aContext,
                            const char16_t *aText,
-                           uint32_t         aOffset,
-                           uint32_t         aLength,
-                           int32_t          aScript,
-                           gfxShapedText   *aShapedText) = 0;
+                           uint32_t        aOffset,
+                           uint32_t        aLength,
+                           int32_t         aScript,
+                           gfxShapedText  *aShapedText) = 0;
 
     gfxFont *GetFont() const { return mFont; }
 
@@ -1658,8 +1658,6 @@ public:
     // Font metrics
     struct Metrics {
         gfxFloat xHeight;
-        gfxFloat superscriptOffset;
-        gfxFloat subscriptOffset;
         gfxFloat strikeoutSize;
         gfxFloat strikeoutOffset;
         gfxFloat underlineSize;
@@ -1998,8 +1996,7 @@ protected:
                    uint32_t       aOffset, // dest offset in gfxShapedText
                    uint32_t       aLength,
                    int32_t        aScript,
-                   gfxShapedText *aShapedText, // where to store the result
-                   bool           aPreferPlatformShaping = false);
+                   gfxShapedText *aShapedText); // where to store the result
 
     // Call the appropriate shaper to generate glyphs for aText and store
     // them into aShapedText.
@@ -2008,8 +2005,7 @@ protected:
                            uint32_t         aOffset,
                            uint32_t         aLength,
                            int32_t          aScript,
-                           gfxShapedText   *aShapedText,
-                           bool             aPreferPlatformShaping = false);
+                           gfxShapedText   *aShapedText);
 
     // Helper to adjust for synthetic bold and set character-type flags
     // in the shaped text; implementations of ShapeText should call this
@@ -2168,18 +2164,13 @@ protected:
     // measurement by mathml code
     nsAutoPtr<gfxFont>         mNonAAFont;
 
-    // we may switch between these shapers on the fly, based on the script
-    // of the text run being shaped
-    nsAutoPtr<gfxFontShaper>   mPlatformShaper;
+    // we create either or both of these shapers when needed, depending
+    // whether the font has graphite tables, and whether graphite shaping
+    // is actually enabled
     nsAutoPtr<gfxFontShaper>   mHarfBuzzShaper;
     nsAutoPtr<gfxFontShaper>   mGraphiteShaper;
 
     mozilla::RefPtr<mozilla::gfx::ScaledFont> mAzureScaledFont;
-
-    // Create a default platform text shaper for this font.
-    // (TODO: This should become pure virtual once all font backends have
-    // been updated.)
-    virtual void CreatePlatformShaper() { }
 
     // Helper for subclasses that want to initialize standard metrics from the
     // tables of sfnt (TrueType/OpenType) fonts.

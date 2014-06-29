@@ -67,8 +67,6 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
         aMetrics->zeroOrAveCharWidth = spaceWidth;
         const gfxFloat xHeight = 0.5 * emHeight;
         aMetrics->xHeight = xHeight;
-        aMetrics->superscriptOffset = xHeight;
-        aMetrics->subscriptOffset = xHeight;
         const gfxFloat underlineSize = emHeight / 14.0;
         aMetrics->underlineSize = underlineSize;
         aMetrics->underlineOffset = -underlineSize;
@@ -242,24 +240,6 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
             + 0.5 * aMetrics->strikeoutSize;
     }
     SnapLineToPixels(aMetrics->strikeoutOffset, aMetrics->strikeoutSize);
-
-    if (os2 && os2->ySuperscriptYOffset) {
-        gfxFloat val = ScaleRoundDesignUnits(os2->ySuperscriptYOffset,
-                                             ftMetrics.y_scale);
-        aMetrics->superscriptOffset = std::max(1.0, val);
-    } else {
-        aMetrics->superscriptOffset = aMetrics->xHeight;
-    }
-    
-    if (os2 && os2->ySubscriptYOffset) {
-        gfxFloat val = ScaleRoundDesignUnits(os2->ySubscriptYOffset,
-                                             ftMetrics.y_scale);
-        // some fonts have the incorrect sign. 
-        val = fabs(val);
-        aMetrics->subscriptOffset = std::max(1.0, val);
-    } else {
-        aMetrics->subscriptOffset = aMetrics->xHeight;
-    }
 
     aMetrics->maxHeight = aMetrics->maxAscent + aMetrics->maxDescent;
 

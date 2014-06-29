@@ -424,5 +424,18 @@ ClippedImage::GetOrientation()
   return InnerImage()->GetOrientation();
 }
 
+NS_IMETHODIMP_(nsIntRect)
+ClippedImage::GetImageSpaceInvalidationRect(const nsIntRect& aRect)
+{
+  if (!ShouldClip()) {
+    return InnerImage()->GetImageSpaceInvalidationRect(aRect);
+  }
+
+  nsIntRect rect(InnerImage()->GetImageSpaceInvalidationRect(aRect));
+  rect = rect.Intersect(mClip);
+  rect.MoveBy(-mClip.x, -mClip.y);
+  return rect;
+}
+
 } // namespace image
 } // namespace mozilla

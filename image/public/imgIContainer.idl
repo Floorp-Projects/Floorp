@@ -44,6 +44,7 @@ struct Orientation;
 [ref] native gfxRect(gfxRect);
 native gfxGraphicsFilter(GraphicsFilter);
 [ref] native nsIntRect(nsIntRect);
+native nsIntRectByVal(nsIntRect);
 [ref] native nsIntSize(nsIntSize);
 native nsSize(nsSize);
 [ptr] native nsIFrame(nsIFrame);
@@ -53,6 +54,7 @@ native Orientation(mozilla::image::Orientation);
 [ref] native TimeStamp(mozilla::TimeStamp);
 [ptr] native SVGImageContext(mozilla::SVGImageContext);
 native TempRefSourceSurface(mozilla::TemporaryRef<mozilla::gfx::SourceSurface>);
+native TempRefImgIContainer(already_AddRefed<imgIContainer>);
 
 
 /**
@@ -62,7 +64,7 @@ native TempRefSourceSurface(mozilla::TemporaryRef<mozilla::gfx::SourceSurface>);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(503a830c-734d-4362-91f6-73f83ac59646)]
+[scriptable, builtinclass, uuid(c9bd1257-45fb-4ea6-a669-6da212479191)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -348,4 +350,19 @@ interface imgIContainer : nsISupports
    * resetAnimation(), or requestRefresh() is called for the first time.
    */
   [notxpcom] void setAnimationStartTime([const] in TimeStamp aTime);
+
+  /*
+   * Given an invalidation rect in the coordinate system used by the decoder,
+   * returns an invalidation rect in image space.
+   *
+   * This is the identity transformation in most cases, but the result can
+   * differ if the image is wrapped by an ImageWrapper that changes its size
+   * or orientation.
+   */
+  [notxpcom] nsIntRectByVal getImageSpaceInvalidationRect([const] in nsIntRect aRect);
+
+  /*
+   * Removes any ImageWrappers and returns the unwrapped base image.
+   */
+  [notxpcom, nostdcall] TempRefImgIContainer unwrap();
 };

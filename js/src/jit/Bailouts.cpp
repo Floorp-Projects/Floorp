@@ -22,6 +22,8 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::IsInRange;
+
 // These constructor are exactly the same except for the type of the iterator
 // which is given to the SnapshotIterator constructor. Doing so avoid the
 // creation of virtual functions for the IonIterator but may introduce some
@@ -76,8 +78,8 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
     JS_ASSERT(bailoutInfo);
 
     // We don't have an exit frame.
-    MOZ_ASSERT(size_t(FAKE_JIT_TOP_FOR_BAILOUT + sizeof(IonCommonFrameLayout)) < 0x1000 &&
-               size_t(FAKE_JIT_TOP_FOR_BAILOUT) >= 0,
+    MOZ_ASSERT(IsInRange(FAKE_JIT_TOP_FOR_BAILOUT, 0, 0x1000) &&
+               IsInRange(FAKE_JIT_TOP_FOR_BAILOUT + sizeof(IonCommonFrameLayout), 0, 0x1000),
                "Fake jitTop pointer should be within the first page.");
     cx->mainThread().jitTop = FAKE_JIT_TOP_FOR_BAILOUT;
     gc::AutoSuppressGC suppress(cx);

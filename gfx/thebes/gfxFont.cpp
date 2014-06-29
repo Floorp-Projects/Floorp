@@ -23,6 +23,7 @@
 #include "gfxTypes.h"
 #include "gfxContext.h"
 #include "gfxFontMissingGlyphs.h"
+#include "gfxGraphiteShaper.h"
 #include "gfxHarfBuzzShaper.h"
 #include "gfxUserFontSet.h"
 #include "gfxPlatformFontList.h"
@@ -4074,8 +4075,7 @@ gfxFont::ShapeText(gfxContext    *aContext,
                    uint32_t       aOffset,
                    uint32_t       aLength,
                    int32_t        aScript,
-                   gfxShapedText *aShapedText,
-                   bool           aPreferPlatformShaping)
+                   gfxShapedText *aShapedText)
 {
     nsDependentCSubstring ascii((const char*)aText, aLength);
     nsAutoString utf16;
@@ -4084,7 +4084,7 @@ gfxFont::ShapeText(gfxContext    *aContext,
         return false;
     }
     return ShapeText(aContext, utf16.BeginReading(), aOffset, aLength,
-                     aScript, aShapedText, aPreferPlatformShaping);
+                     aScript, aShapedText);
 }
 
 bool
@@ -4093,32 +4093,29 @@ gfxFont::ShapeText(gfxContext      *aContext,
                    uint32_t         aOffset,
                    uint32_t         aLength,
                    int32_t          aScript,
-                   gfxShapedText   *aShapedText,
-                   bool             aPreferPlatformShaping)
+                   gfxShapedText   *aShapedText)
 {
     bool ok = false;
 
-    if (mGraphiteShaper && gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
-        ok = mGraphiteShaper->ShapeText(aContext, aText, aOffset, aLength,
-                                        aScript, aShapedText);
-    }
-
-    if (!ok && mHarfBuzzShaper && !aPreferPlatformShaping) {
-        if (gfxPlatform::GetPlatform()->UseHarfBuzzForScript(aScript)) {
-            ok = mHarfBuzzShaper->ShapeText(aContext, aText, aOffset, aLength,
+    if (FontCanSupportGraphite()) {
+        if (gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
+            if (!mGraphiteShaper) {
+                mGraphiteShaper = new gfxGraphiteShaper(this);
+            }
+            ok = mGraphiteShaper->ShapeText(aContext, aText, aOffset, aLength,
                                             aScript, aShapedText);
         }
     }
 
     if (!ok) {
-        if (!mPlatformShaper) {
-            CreatePlatformShaper();
+        if (!mHarfBuzzShaper) {
+            mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
         }
-        if (mPlatformShaper) {
-            ok = mPlatformShaper->ShapeText(aContext, aText, aOffset, aLength,
-                                            aScript, aShapedText);
-        }
+        ok = mHarfBuzzShaper->ShapeText(aContext, aText, aOffset, aLength,
+                                        aScript, aShapedText);
     }
+
+    NS_WARN_IF_FALSE(ok, "shaper failed, expect scrambled or missing text");
 
     PostShapingFixup(aContext, aText, aOffset, aLength, aShapedText);
 
@@ -4597,8 +4594,6 @@ gfxFont::InitMetricsFromSfntTables(Metrics& aMetrics)
         // this should always be present in any valid OS/2 of any version
         if (len >= offsetof(OS2Table, sTypoLineGap) + sizeof(int16_t)) {
             SET_SIGNED(aveCharWidth, os2->xAvgCharWidth);
-            SET_SIGNED(subscriptOffset, os2->ySubscriptYOffset);
-            SET_SIGNED(superscriptOffset, os2->ySuperscriptYOffset);
             SET_SIGNED(strikeoutSize, os2->yStrikeoutSize);
             SET_SIGNED(strikeoutOffset, os2->yStrikeoutPosition);
 
@@ -4660,13 +4655,6 @@ void gfxFont::CalculateDerivedMetrics(Metrics& aMetrics)
         aMetrics.maxAdvance = aMetrics.aveCharWidth;
     }
 
-    if (!aMetrics.subscriptOffset) {
-        aMetrics.subscriptOffset = aMetrics.xHeight;
-    }
-    if (!aMetrics.superscriptOffset) {
-        aMetrics.superscriptOffset = aMetrics.xHeight;
-    }
-
     if (!aMetrics.strikeoutOffset) {
         aMetrics.strikeoutOffset = aMetrics.xHeight * 0.5;
     }
@@ -4683,19 +4671,6 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont)
     if (mStyle.size == 0.0) {
         memset(aMetrics, 0, sizeof(gfxFont::Metrics));
         return;
-    }
-
-    // MS (P)Gothic and MS (P)Mincho are not having suitable values in their super script offset.
-    // If the values are not suitable, we should use x-height instead of them.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=353632
-    if (aMetrics->superscriptOffset <= 0 ||
-        aMetrics->superscriptOffset >= aMetrics->maxAscent) {
-        aMetrics->superscriptOffset = aMetrics->xHeight;
-    }
-    // And also checking the case of sub script offset. The old gfx for win has checked this too.
-    if (aMetrics->subscriptOffset <= 0 ||
-        aMetrics->subscriptOffset >= aMetrics->maxAscent) {
-        aMetrics->subscriptOffset = aMetrics->xHeight;
     }
 
     aMetrics->underlineSize = std::max(1.0, aMetrics->underlineSize);
