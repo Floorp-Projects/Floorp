@@ -677,8 +677,10 @@ public:
   /**
    * Dispatch a custom event with name aEventName targeted at this window.
    * Returns whether the default action should be performed.
+   *
+   * Outer windows only.
    */
-  virtual bool DispatchCustomEvent(const char *aEventName) = 0;
+  virtual bool DispatchCustomEvent(const nsAString& aEventName) = 0;
 
   /**
    * Notify the active inner window that the document principal may have changed

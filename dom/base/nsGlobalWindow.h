@@ -487,9 +487,9 @@ public:
 
   virtual void MaybeUpdateTouchState();
   virtual void UpdateTouchState();
-  virtual bool DispatchCustomEvent(const char *aEventName);
 
   // Outer windows only.
+  virtual bool DispatchCustomEvent(const nsAString& aEventName);
   bool DispatchResizeEvent(const mozilla::CSSIntSize& aSize);
 
   virtual void RefreshCompartmentPrincipal();
