@@ -3653,6 +3653,8 @@ nsPIDOMWindow::GetPerformance()
 void
 nsPIDOMWindow::CreatePerformanceObjectIfNeeded()
 {
+  MOZ_ASSERT(IsInnerWindow());
+
   if (mPerformance || !mDoc) {
     return;
   }
