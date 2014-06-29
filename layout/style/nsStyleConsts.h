@@ -14,10 +14,11 @@
 // XXX fold this into nsStyleContext and group by nsStyleXXX struct
 
 // Indices into border/padding/margin arrays
-#define NS_SIDE_TOP     mozilla::css::eSideTop
-#define NS_SIDE_RIGHT   mozilla::css::eSideRight
-#define NS_SIDE_BOTTOM  mozilla::css::eSideBottom
-#define NS_SIDE_LEFT    mozilla::css::eSideLeft
+namespace mozilla {
+namespace css {
+typedef mozilla::Side Side;
+}
+}
 
 #define NS_FOR_CSS_SIDES(var_) for (mozilla::css::Side var_ = NS_SIDE_TOP; var_ <= NS_SIDE_LEFT; var_++)
 static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
