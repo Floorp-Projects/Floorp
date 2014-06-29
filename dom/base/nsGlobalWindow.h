@@ -492,7 +492,9 @@ public:
   virtual bool DispatchCustomEvent(const nsAString& aEventName);
   bool DispatchResizeEvent(const mozilla::CSSIntSize& aSize);
 
+  // Inner windows only.
   virtual void RefreshCompartmentPrincipal();
+
   virtual nsresult SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust);
 
   // Outer windows only.
