@@ -104,8 +104,12 @@ DOMStorage::SetItem(const nsAString& aKey, const nsAString& aData)
       ? Telemetry::LOCALDOMSTORAGE_VALUE_SIZE_BYTES
       : Telemetry::SESSIONDOMSTORAGE_VALUE_SIZE_BYTES, aData.Length());
 
+  nsString data;
+  bool ok = data.Assign(aData, fallible_t());
+  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+
   nsString old;
-  nsresult rv = mCache->SetItem(this, aKey, nsString(aData), old);
+  nsresult rv = mCache->SetItem(this, aKey, data, old);
   if (NS_FAILED(rv)) {
     return rv;
   }
