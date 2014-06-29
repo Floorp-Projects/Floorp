@@ -22,10 +22,10 @@ public:
   void Display(nsAString& aValue);
   void TextAlign(nsAString& aValue);
   void TextIndent(nsAString& aValue);
-  void MarginLeft(nsAString& aValue) { Margin(css::eSideLeft, aValue); }
-  void MarginRight(nsAString& aValue) { Margin(css::eSideRight, aValue); }
-  void MarginTop(nsAString& aValue) { Margin(css::eSideTop, aValue); }
-  void MarginBottom(nsAString& aValue) { Margin(css::eSideBottom, aValue); }
+  void MarginLeft(nsAString& aValue) { Margin(eSideLeft, aValue); }
+  void MarginRight(nsAString& aValue) { Margin(eSideRight, aValue); }
+  void MarginTop(nsAString& aValue) { Margin(eSideTop, aValue); }
+  void MarginBottom(nsAString& aValue) { Margin(eSideBottom, aValue); }
 
   static void FormatColor(const nscolor& aValue, nsString& aFormattedValue);
   static void FormatFontStyle(const nscoord& aValue, nsAString& aFormattedValue);
@@ -36,7 +36,7 @@ private:
   StyleInfo(const StyleInfo&) MOZ_DELETE;
   StyleInfo& operator = (const StyleInfo&) MOZ_DELETE;
 
-  void Margin(css::Side aSide, nsAString& aValue);
+  void Margin(Side aSide, nsAString& aValue);
 
   dom::Element* mElement;
   nsRefPtr<nsStyleContext> mStyleContext;

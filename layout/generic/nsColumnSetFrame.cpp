@@ -110,10 +110,12 @@ nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
                    contentRect.y);
 
     nsRect lineRect(linePt, ruleSize);
+    // Remember, we only have the "left" "border". Skip everything else.
+    Sides skipSides(mozilla::eSideBitsTopBottom);
+    skipSides |= mozilla::eSideBitsRight;
     nsCSSRendering::PaintBorderWithStyleBorder(presContext, *aCtx, this,
         aDirtyRect, lineRect, border, StyleContext(),
-        // Remember, we only have the "left" "border". Skip everything else
-        (1 << NS_SIDE_TOP | 1 << NS_SIDE_RIGHT | 1 << NS_SIDE_BOTTOM));
+        skipSides);
 
     child = nextSibling;
     nextSibling = nextSibling->GetNextSibling();
