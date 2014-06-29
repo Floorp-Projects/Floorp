@@ -5877,7 +5877,7 @@ nsGlobalWindow::DispatchResizeEvent(const CSSIntSize& aSize)
 void
 nsGlobalWindow::RefreshCompartmentPrincipal()
 {
-  FORWARD_TO_INNER(RefreshCompartmentPrincipal, (), /* void */ );
+  MOZ_ASSERT(IsInnerWindow());
 
   JS_SetCompartmentPrincipals(js::GetObjectCompartment(GetWrapperPreserveColor()),
                               nsJSPrincipals::get(mDoc->NodePrincipal()));

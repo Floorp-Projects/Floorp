@@ -683,8 +683,10 @@ public:
   virtual bool DispatchCustomEvent(const nsAString& aEventName) = 0;
 
   /**
-   * Notify the active inner window that the document principal may have changed
-   * and that the compartment principal needs to be updated.
+   * Call when the document principal may have changed and the compartment
+   * principal needs to be updated.
+   *
+   * Inner windows only.
    */
   virtual void RefreshCompartmentPrincipal() = 0;
 
