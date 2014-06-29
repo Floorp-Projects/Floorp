@@ -880,22 +880,22 @@ nsInlineFrame::PushFrames(nsPresContext* aPresContext,
 
 //////////////////////////////////////////////////////////////////////
 
-nsIFrame::LogicalSides
+int
 nsInlineFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                      NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
-    return LogicalSides();
+    return 0;
   }
 
-  LogicalSides skip;
+  int skip = 0;
   if (!IsFirst()) {
     nsInlineFrame* prev = (nsInlineFrame*) GetPrevContinuation();
     if ((GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET) ||
         (prev && (prev->mRect.height || prev->mRect.width))) {
       // Prev continuation is not empty therefore we don't render our start
       // border edge.
-      skip |= eLogicalSideBitsIStart;
+      skip |= LOGICAL_SIDE_I_START;
     }
     else {
       // If the prev continuation is empty, then go ahead and let our start
@@ -908,7 +908,7 @@ nsInlineFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
         (next && (next->mRect.height || next->mRect.width))) {
       // Next continuation is not empty therefore we don't render our end
       // border edge.
-      skip |= eLogicalSideBitsIEnd;
+      skip |= LOGICAL_SIDE_I_END;
     }
     else {
       // If the next continuation is empty, then go ahead and let our end
@@ -922,15 +922,15 @@ nsInlineFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
     // a split should skip the "start" side.  But figuring out which part of
     // the split we are involves getting our first continuation, which might be
     // expensive.  So don't bother if we already have the relevant bits set.
-    if (skip != LogicalSides(eLogicalSideBitsIBoth)) {
+    if (skip != LOGICAL_SIDES_I_BOTH) {
       // We're missing one of the skip bits, so check whether we need to set it.
       // Only get the first continuation once, as an optimization.
       nsIFrame* firstContinuation = FirstContinuation();
       if (firstContinuation->FrameIsNonLastInIBSplit()) {
-        skip |= eLogicalSideBitsIEnd;
+        skip |= LOGICAL_SIDE_I_END;
       }
       if (firstContinuation->FrameIsNonFirstInIBSplit()) {
-        skip |= eLogicalSideBitsIStart;
+        skip |= LOGICAL_SIDE_I_START;
       }
     }
   }

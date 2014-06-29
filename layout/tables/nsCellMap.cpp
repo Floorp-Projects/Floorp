@@ -728,7 +728,7 @@ nsTableCellMap::Dump(char* aString) const
     printf("***** bottom borders *****\n");
     nscoord       size;
     BCBorderOwner owner;
-    mozilla::Side side;
+    mozilla::css::Side side;
     bool          segStart;
     bool          bevel;
     int32_t       colIndex;
@@ -970,7 +970,7 @@ nsTableCellMap::ResetTopStart(uint8_t    aSide,
 // top/left at that location. If the new location is at the right or bottom edge of the
 // table, then store it one of the special arrays (right most borders, bottom most borders).
 void
-nsTableCellMap::SetBCBorderEdge(mozilla::Side aSide,
+nsTableCellMap::SetBCBorderEdge(mozilla::css::Side aSide,
                                 nsCellMap&    aCellMap,
                                 uint32_t      aCellMapStart,
                                 uint32_t      aRowIndex,
@@ -1070,7 +1070,7 @@ nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
                                   uint32_t    aCellMapStart,
                                   uint32_t    aRowIndex,
                                   uint32_t    aColIndex,
-                                  mozilla::Side aOwner,
+                                  mozilla::css::Side aOwner,
                                   nscoord     aSubSize,
                                   bool        aBevel,
                                   bool        aIsBottomRight)
@@ -2584,7 +2584,7 @@ void nsCellMap::Dump(bool aIsBorderCollapse) const
     if (aIsBorderCollapse) {
       nscoord       size;
       BCBorderOwner owner;
-      mozilla::Side side;
+      mozilla::css::Side side;
       bool          segStart;
       bool          bevel;
       for (int32_t i = 0; i <= 2; i++) {

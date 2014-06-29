@@ -14,8 +14,6 @@
 #include "nsCSSRendering.h"
 #include "nsIPresShell.h"
 
-using namespace mozilla;
-
 #define COL_GROUP_TYPE_BITS          (NS_FRAME_STATE_BIT(30) | \
                                       NS_FRAME_STATE_BIT(31))
 #define COL_GROUP_TYPE_OFFSET        30
@@ -330,20 +328,20 @@ nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
   }
 }
 
-nsIFrame::LogicalSides
+int
 nsTableColGroupFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                      NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
-    return LogicalSides();
+    return 0;
   }
 
-  LogicalSides skip;
+  int skip = 0;
   if (nullptr != GetPrevInFlow()) {
-    skip |= eLogicalSideBitsBStart;
+    skip |= LOGICAL_SIDE_B_START;
   }
   if (nullptr != GetNextInFlow()) {
-    skip |= eLogicalSideBitsBEnd;
+    skip |= LOGICAL_SIDE_B_END;
   }
   return skip;
 }

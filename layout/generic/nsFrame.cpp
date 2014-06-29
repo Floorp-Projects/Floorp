@@ -952,51 +952,52 @@ nsIFrame::GetUsedPadding() const
   return padding;
 }
 
-nsIFrame::Sides
+int
 nsIFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                      NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
-    return Sides();
+    return 0;
   }
 
   // Convert the logical skip sides to physical sides using the frame's
   // writing mode
   WritingMode writingMode = GetWritingMode();
-  LogicalSides logicalSkip = GetLogicalSkipSides(aReflowState);
-  Sides skip;
+  int logicalSkip = GetLogicalSkipSides(aReflowState);
+  int skip = 0;
 
-  if (logicalSkip.BStart()) {
+  if (logicalSkip & LOGICAL_SIDE_B_START) {
     if (writingMode.IsVertical()) {
-      skip |= writingMode.IsVerticalLR() ? eSideBitsLeft : eSideBitsRight;
+      skip |= 1 << (writingMode.IsVerticalLR() ? NS_SIDE_LEFT : NS_SIDE_RIGHT);
     } else {
-      skip |= eSideBitsTop;
+      skip |= 1 << NS_SIDE_TOP;
     }
   }
 
-  if (logicalSkip.BEnd()) {
+  if (logicalSkip & LOGICAL_SIDE_B_END) {
     if (writingMode.IsVertical()) {
-      skip |= writingMode.IsVerticalLR() ? eSideBitsRight : eSideBitsLeft;
+      skip |= 1 << (writingMode.IsVerticalLR() ? NS_SIDE_RIGHT : NS_SIDE_LEFT);
     } else {
-      skip |= eSideBitsBottom;
+      skip |= 1 << NS_SIDE_BOTTOM;
     }
   }
 
-  if (logicalSkip.IStart()) {
+  if (logicalSkip & LOGICAL_SIDE_I_START) {
     if (writingMode.IsVertical()) {
-      skip |= eSideBitsTop;
+      skip |= 1 << NS_SIDE_TOP;
     } else {
-      skip |= writingMode.IsBidiLTR() ? eSideBitsLeft : eSideBitsRight;
+      skip |= 1 << (writingMode.IsBidiLTR() ? NS_SIDE_LEFT : NS_SIDE_RIGHT);
     }
   }
 
-  if (logicalSkip.IEnd()) {
+  if (logicalSkip & LOGICAL_SIDE_I_END) {
     if (writingMode.IsVertical()) {
-      skip |= eSideBitsBottom;
+      skip |= 1 << NS_SIDE_BOTTOM;
     } else {
-      skip |= writingMode.IsBidiLTR() ? eSideBitsRight : eSideBitsLeft;
+      skip |= 1 << (writingMode.IsBidiLTR() ? NS_SIDE_RIGHT : NS_SIDE_LEFT);
     }
   }
+
   return skip;
 }
 
@@ -1142,7 +1143,7 @@ bool
 nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
                              const nsSize& aFrameSize,
                              const nsSize& aBorderArea,
-                             Sides aSkipSides,
+                             int aSkipSides,
                              nscoord aRadii[8])
 {
   // Percentages are relative to whichever side they're on.
@@ -1163,28 +1164,28 @@ nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
     }
   }
 
-  if (aSkipSides.Top()) {
+  if (aSkipSides & (1 << NS_SIDE_TOP)) {
     aRadii[NS_CORNER_TOP_LEFT_X] = 0;
     aRadii[NS_CORNER_TOP_LEFT_Y] = 0;
     aRadii[NS_CORNER_TOP_RIGHT_X] = 0;
     aRadii[NS_CORNER_TOP_RIGHT_Y] = 0;
   }
 
-  if (aSkipSides.Right()) {
+  if (aSkipSides & (1 << NS_SIDE_RIGHT)) {
     aRadii[NS_CORNER_TOP_RIGHT_X] = 0;
     aRadii[NS_CORNER_TOP_RIGHT_Y] = 0;
     aRadii[NS_CORNER_BOTTOM_RIGHT_X] = 0;
     aRadii[NS_CORNER_BOTTOM_RIGHT_Y] = 0;
   }
 
-  if (aSkipSides.Bottom()) {
+  if (aSkipSides & (1 << NS_SIDE_BOTTOM)) {
     aRadii[NS_CORNER_BOTTOM_RIGHT_X] = 0;
     aRadii[NS_CORNER_BOTTOM_RIGHT_Y] = 0;
     aRadii[NS_CORNER_BOTTOM_LEFT_X] = 0;
     aRadii[NS_CORNER_BOTTOM_LEFT_Y] = 0;
   }
 
-  if (aSkipSides.Left()) {
+  if (aSkipSides & (1 << NS_SIDE_LEFT)) {
     aRadii[NS_CORNER_BOTTOM_LEFT_X] = 0;
     aRadii[NS_CORNER_BOTTOM_LEFT_Y] = 0;
     aRadii[NS_CORNER_TOP_LEFT_X] = 0;
@@ -1245,7 +1246,7 @@ nsIFrame::OutsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets)
 
 /* virtual */ bool
 nsIFrame::GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
-                         Sides aSkipSides, nscoord aRadii[8]) const
+                         int aSkipSides, nscoord aRadii[8]) const
 {
   if (IsThemed()) {
     // When we're themed, the native theme code draws the border and
