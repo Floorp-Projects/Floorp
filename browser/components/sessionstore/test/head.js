@@ -73,7 +73,7 @@ function provideWindow(aCallback, aURL, aFeatures) {
     });
   }
 
-  let win = openDialog(getBrowserURL(), "", aFeatures || "chrome,all,dialog=no", aURL);
+  let win = openDialog(getBrowserURL(), "", aFeatures || "chrome,all,dialog=no", aURL || "about:blank");
   whenWindowLoaded(win, function onWindowLoaded(aWin) {
     if (!aURL) {
       info("Loaded a blank window.");
@@ -465,7 +465,15 @@ function closeAllButPrimaryWindow() {
  * expected (e.g. reading a big session state from disk).
  */
 function whenNewWindowLoaded(aOptions, aCallback) {
-  let win = OpenBrowserWindow(aOptions);
+  let features = "";
+  let url = "about:blank";
+
+  if (aOptions && aOptions.private || false) {
+    features = ",private";
+    url = "about:privatebrowsing";
+  }
+
+  let win = openDialog(getBrowserURL(), "", "chrome,all,dialog=no" + features, url);
   whenDelayedStartupFinished(win, () => aCallback(win));
   return win;
 }
