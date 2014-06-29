@@ -1142,6 +1142,7 @@ protected:
                  const nsAString& aOptions,
                  nsIDOMWindow **_retval);
 
+private:
   /**
    * @param aUrl the URL we intend to load into the window.  If aNavigate is
    *        true, we'll actually load this URL into the window. Otherwise,
@@ -1185,6 +1186,8 @@ protected:
    *        when aCalledNoScript is true.
    *
    * @param aReturn [out] The window that was opened, if any.
+   *
+   * Outer windows only.
    */
   nsresult OpenInternal(const nsAString& aUrl,
                                     const nsAString& aName,
@@ -1200,6 +1203,7 @@ protected:
                                     JSContext *aJSCallerContext,
                                     nsIDOMWindow **aReturn);
 
+public:
   // Timeout Functions
   // Language agnostic timeout function (all args passed).
   // |interval| is in milliseconds.
