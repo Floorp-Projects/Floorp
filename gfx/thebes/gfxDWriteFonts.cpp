@@ -7,9 +7,7 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "gfxHarfBuzzShaper.h"
 #include <algorithm>
-#include "gfxGraphiteShaper.h"
 #include "gfxDWriteFontList.h"
 #include "gfxContext.h"
 #include <dwrite.h>
@@ -106,14 +104,6 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
     }
 
     ComputeMetrics(anAAOption);
-
-    if (FontCanSupportGraphite()) {
-        mGraphiteShaper = new gfxGraphiteShaper(this);
-    }
-
-    if (FontCanSupportHarfBuzz()) {
-        mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
-    }
 }
 
 gfxDWriteFont::~gfxDWriteFont()
@@ -132,32 +122,6 @@ gfxDWriteFont::CopyWithAntialiasOption(AntialiasOption anAAOption)
 {
     return new gfxDWriteFont(static_cast<gfxDWriteFontEntry*>(mFontEntry.get()),
                              &mStyle, mNeedsBold, anAAOption);
-}
-
-bool
-gfxDWriteFont::ShapeText(gfxContext      *aContext,
-                         const char16_t *aText,
-                         uint32_t         aOffset,
-                         uint32_t         aLength,
-                         int32_t          aScript,
-                         gfxShapedText   *aShapedText,
-                         bool             aPreferPlatformShaping)
-{
-    bool ok = false;
-
-    if (mGraphiteShaper && gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
-        ok = mGraphiteShaper->ShapeText(aContext, aText, aOffset, aLength,
-                                        aScript, aShapedText);
-    }
-
-    if (!ok && mHarfBuzzShaper) {
-        ok = mHarfBuzzShaper->ShapeText(aContext, aText, aOffset, aLength,
-                                        aScript, aShapedText);
-    }
-
-    PostShapingFixup(aContext, aText, aOffset, aLength, aShapedText);
-
-    return ok;
 }
 
 const gfxFont::Metrics&
@@ -316,8 +280,6 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
         fontMetrics.strikethroughPosition * mFUnitsConvFactor;
     mMetrics->strikeoutSize =
         fontMetrics.strikethroughThickness * mFUnitsConvFactor;
-    mMetrics->superscriptOffset = 0;
-    mMetrics->subscriptOffset = 0;
 
     SanitizeMetrics(mMetrics, GetFontEntry()->mIsBadUnderlineFont);
 
@@ -329,9 +291,8 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
     printf("    internalLeading: %f externalLeading: %f\n", mMetrics->internalLeading, mMetrics->externalLeading);
     printf("    spaceWidth: %f aveCharWidth: %f zeroOrAve: %f xHeight: %f\n",
            mMetrics->spaceWidth, mMetrics->aveCharWidth, mMetrics->zeroOrAveCharWidth, mMetrics->xHeight);
-    printf("    uOff: %f uSize: %f stOff: %f stSize: %f supOff: %f subOff: %f\n",
-           mMetrics->underlineOffset, mMetrics->underlineSize, mMetrics->strikeoutOffset, mMetrics->strikeoutSize,
-           mMetrics->superscriptOffset, mMetrics->subscriptOffset);
+    printf("    uOff: %f uSize: %f stOff: %f stSize: %f\n",
+           mMetrics->underlineOffset, mMetrics->underlineSize, mMetrics->strikeoutOffset, mMetrics->strikeoutSize);
 #endif
 }
 

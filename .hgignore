@@ -71,3 +71,7 @@ GTAGS
 GRTAGS
 GSYMS
 GPATH
+
+# Unit tests for Loop
+^browser/components/loop/standalone/content/config\.js$
+^browser/components/loop/standalone/node_modules/
