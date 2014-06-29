@@ -330,6 +330,8 @@ nsWebShellWindow::SizeModeChanged(nsSizeMode sizeMode)
   nsCOMPtr<nsPIDOMWindow> ourWindow =
     mDocShell ? mDocShell->GetWindow() : nullptr;
   if (ourWindow) {
+    MOZ_ASSERT(ourWindow->IsOuterWindow());
+
     // Let the application know if it's in fullscreen mode so it
     // can update its UI.
     if (sizeMode == nsSizeMode_Fullscreen) {
@@ -340,7 +342,7 @@ nsWebShellWindow::SizeModeChanged(nsSizeMode sizeMode)
     }
 
     // And always fire a user-defined sizemodechange event on the window
-    ourWindow->DispatchCustomEvent("sizemodechange");
+    ourWindow->DispatchCustomEvent(NS_LITERAL_STRING("sizemodechange"));
   }
 
   // Note the current implementation of SetSizeMode just stores
