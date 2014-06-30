@@ -16,6 +16,7 @@
 #include "GeneratedEvents.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/HashChangeEvent.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/EventDispatcher.h"
@@ -827,8 +828,13 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
   if (aEventType.LowerCaseEqualsLiteral("touchevent") &&
       TouchEvent::PrefEnabled())
     return NS_NewDOMTouchEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("hashchangeevent"))
-    return NS_NewDOMHashChangeEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+  if (aEventType.LowerCaseEqualsLiteral("hashchangeevent")) {
+    HashChangeEventInit init;
+    nsRefPtr<HashChangeEvent> event =
+      HashChangeEvent::Constructor(aOwner, EmptyString(), init);
+    event.forget(aDOMEvent);
+    return NS_OK;
+  }
   if (aEventType.LowerCaseEqualsLiteral("customevent"))
     return NS_NewDOMCustomEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("storageevent")) {
