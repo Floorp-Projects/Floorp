@@ -4,7 +4,6 @@
 
 #include "IccManager.h"
 #include "mozilla/dom/MozIccManagerBinding.h"
-#include "GeneratedEvents.h"
 #include "Icc.h"
 #include "IccListener.h"
 #include "mozilla/dom/IccChangeEvent.h"

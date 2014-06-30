@@ -13,7 +13,6 @@
 #include "nsINode.h"
 #include "nsPIDOMWindow.h"
 #include "GeckoProfiler.h"
-#include "GeneratedEvents.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/CloseEvent.h"
 #include "mozilla/dom/DeviceOrientationEvent.h"
