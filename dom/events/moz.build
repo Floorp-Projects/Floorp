@@ -36,6 +36,7 @@ EXPORTS.mozilla.dom += [
     'ClipboardEvent.h',
     'CommandEvent.h',
     'CompositionEvent.h',
+    'CustomEvent.h',
     'DataContainerEvent.h',
     'DataTransfer.h',
     'DeviceMotionEvent.h',
@@ -112,6 +113,7 @@ UNIFIED_SOURCES += [
 
 # nsEventStateManager.cpp should be built separately because of Mac OS X headers.
 SOURCES += [
+    'CustomEvent.cpp',
     'EventStateManager.cpp',
 ]
 
