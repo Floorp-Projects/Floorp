@@ -38,8 +38,12 @@ public:
 private:
   ~GeckoMediaPluginService();
 
-  GMPParent* SelectPluginFromListForAPI(const nsCString& aAPI, const nsCString& aTag);
-  GMPParent* SelectPluginForAPI(const nsCString& aAPI, const nsCString& aTag);
+  GMPParent* SelectPluginFromListForAPI(const nsAString& aOrigin,
+                                        const nsCString& aAPI,
+                                        const nsTArray<nsCString>& aTags);
+  GMPParent* SelectPluginForAPI(const nsAString& aOrigin,
+                                const nsCString& aAPI,
+                                const nsTArray<nsCString>& aTags);
   void UnloadPlugins();
 
   void RefreshPluginList();

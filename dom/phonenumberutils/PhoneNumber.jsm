@@ -8,9 +8,13 @@
 
 this.EXPORTED_SYMBOLS = ["PhoneNumber"];
 
-Components.utils.import("resource://gre/modules/PhoneNumberMetaData.jsm");
-Components.utils.import("resource://gre/modules/PhoneNumberNormalizer.jsm");
+const Cu = Components.utils;
 
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, "PHONE_NUMBER_META_DATA",
+                                  "resource://gre/modules/PhoneNumberMetaData.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PhoneNumberNormalizer",
+                                  "resource://gre/modules/PhoneNumberNormalizer.jsm");
 this.PhoneNumber = (function (dataBase) {
   // Use strict in our context only - users might not want it
   'use strict';
