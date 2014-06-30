@@ -13682,9 +13682,8 @@ class CGEventSetter(CGNativeMember):
 
 class CGEventMethod(CGNativeMember):
     def __init__(self, descriptor, method, signature, isConstructor, breakAfter=True):
-        if not isConstructor:
-            raise TypeError("Event code generator does not support methods!")
-        self.wantsConstructorForNativeCaller = True
+        self.isInit = False
+
         CGNativeMember.__init__(self, descriptor, method,
                                 CGSpecializedMethod.makeNativeName(descriptor,
                                                                    method),
@@ -13693,6 +13692,26 @@ class CGEventMethod(CGNativeMember):
                                 breakAfter=breakAfter,
                                 variadicIsSequence=True)
         self.originalArgs = list(self.args)
+
+        iface = descriptor.interface
+        allowed = isConstructor
+        if not allowed and iface.getExtendedAttribute("LegacyEventInit"):
+            # Allow it, only if it fits the initFooEvent profile exactly
+            # We could check the arg types but it's not worth the effort.
+            if (method.identifier.name == "init" + iface.identifier.name and
+                signature[1][0].type.isDOMString() and
+                signature[1][1].type.isBoolean() and
+                signature[1][2].type.isBoolean() and
+                # -3 on the left to ignore the type, bubbles, and cancelable parameters
+                # -1 on the right to ignore the .trusted property which bleeds through
+                # here because it is [Unforgeable].
+                len(signature[1]) - 3 == len(filter(lambda x: x.isAttr(), iface.members)) - 1):
+                allowed = True
+                self.isInit = True
+
+        if not allowed:
+            raise TypeError("Event code generator does not support methods!")
+
 
     def getArgs(self, returnType, argList):
         args = [self.getArg(arg) for arg in argList]
@@ -13710,18 +13729,60 @@ class CGEventMethod(CGNativeMember):
         return Argument(decl.define(), name)
 
     def declare(self, cgClass):
-        self.args = list(self.originalArgs)
-        self.args.insert(0, Argument("mozilla::dom::EventTarget*", "aOwner"))
-        constructorForNativeCaller = CGNativeMember.declare(self, cgClass)
+        if self.isInit:
+            constructorForNativeCaller = ""
+        else:
+            self.args = list(self.originalArgs)
+            self.args.insert(0, Argument("mozilla::dom::EventTarget*", "aOwner"))
+            constructorForNativeCaller = CGNativeMember.declare(self, cgClass)
+
         self.args = list(self.originalArgs)
         if needCx(None, self.arguments(), [], considerTypes=True, static=True):
             self.args.insert(0, Argument("JSContext*", "aCx"))
-        self.args.insert(0, Argument("const GlobalObject&", "aGlobal"))
+        if not self.isInit:
+            self.args.insert(0, Argument("const GlobalObject&", "aGlobal"))
         self.args.append(Argument('ErrorResult&', 'aRv'))
         return constructorForNativeCaller + CGNativeMember.declare(self, cgClass)
 
+    def defineInit(self, cgClass):
+        iface = self.descriptorProvider.interface
+        members = ""
+        while iface.identifier.name != "Event":
+            i = 3 # Skip the boilerplate args: type, bubble,s cancelable.
+            for m in iface.members:
+                if m.isAttr():
+                    # We need to initialize all the member variables that do
+                    # not come from Event.
+                    if getattr(m, "originatingInterface",
+                               iface).identifier.name == "Event":
+                        continue
+                    name = CGDictionary.makeMemberName(m.identifier.name)
+                    members += "%s = %s;\n" % (name, self.args[i].name)
+                    i += 1
+            iface = iface.parent
+
+        self.body = fill(
+            """
+            nsresult rv = InitEvent(${typeArg}, ${bubblesArg}, ${cancelableArg});
+            if (NS_FAILED(rv)) {
+              aRv.Throw(rv);
+              return;
+            }
+            ${members}
+            """,
+            typeArg = self.args[0].name,
+            bubblesArg = self.args[1].name,
+            cancelableArg = self.args[2].name,
+            members = members)
+
+        self.args.append(Argument('ErrorResult&', 'aRv'))
+
+        return CGNativeMember.define(self, cgClass)
+
     def define(self, cgClass):
         self.args = list(self.originalArgs)
+        if self.isInit:
+            return self.defineInit(cgClass)
         members = ""
         holdJS = ""
         iface = self.descriptorProvider.interface
