@@ -69,12 +69,14 @@ noparams:
         mov     eax,methodIndex
         call    dword ptr[edx+eax*4] // stdcall, i.e. callee cleans up stack.
         mov     esp,ebp
+#ifdef __clang__
         // clang-cl doesn't emit the pop and ret instructions because it doesn't realize
         // that the call instruction sets a return value in eax.  See
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1028613 and
         // http://llvm.org/bugs/show_bug.cgi?id=17201.
         pop     ebp
         ret
+#endif
     }
 }
 #pragma warning(default : 4035) // restore default
