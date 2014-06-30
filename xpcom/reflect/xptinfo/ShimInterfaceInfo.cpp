@@ -16,7 +16,6 @@
 #include "nsIDOMClientRect.h"
 #include "nsIDOMClientRectList.h"
 #include "nsIDOMClipboardEvent.h"
-#include "nsIDOMCloseEvent.h"
 #include "nsIDOMCommandEvent.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMCompositionEvent.h"
@@ -174,7 +173,6 @@
 #include "mozilla/dom/DOMRectBinding.h"
 #include "mozilla/dom/DOMRectListBinding.h"
 #include "mozilla/dom/ClipboardEventBinding.h"
-#include "mozilla/dom/CloseEventBinding.h"
 #include "mozilla/dom/CommandEventBinding.h"
 #include "mozilla/dom/CommentBinding.h"
 #include "mozilla/dom/CompositionEventBinding.h"
@@ -384,7 +382,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMClientRect, DOMRectReadOnly),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMClientRectList, DOMRectList),
   DEFINE_SHIM(ClipboardEvent),
-  DEFINE_SHIM(CloseEvent),
   DEFINE_SHIM(CommandEvent),
   DEFINE_SHIM(Comment),
   DEFINE_SHIM(CompositionEvent),
