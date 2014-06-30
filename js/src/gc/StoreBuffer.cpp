@@ -66,7 +66,7 @@ StoreBuffer::WholeCellEdges::mark(JSTracer *trc)
     JS_ASSERT(kind == JSTRACE_JITCODE);
     static_cast<jit::JitCode *>(edge)->trace(trc);
 #else
-    MOZ_ASSUME_UNREACHABLE("Only objects can be in the wholeCellBuffer if IonMonkey is disabled.");
+    MOZ_CRASH("Only objects can be in the wholeCellBuffer if IonMonkey is disabled.");
 #endif
 }
 
