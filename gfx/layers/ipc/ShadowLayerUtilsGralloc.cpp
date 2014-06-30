@@ -54,8 +54,10 @@ ParamTraits<GrallocBufferRef>::Read(const Message* aMsg, void** aIter,
   int owner;
   int index;
   if (!aMsg->ReadInt(aIter, &owner) ||
-      !aMsg->ReadInt32(aIter, &index))
+      !aMsg->ReadInt32(aIter, &index)) {
+    printf_stderr("ParamTraits<GrallocBufferRef>::Read() failed to read a message\n");
     return false;
+  }
   aParam->mOwner = owner;
   aParam->mKey = index;
   return true;
@@ -121,6 +123,7 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
       !aMsg->ReadSize(aIter, &nbytes) ||
       !aMsg->ReadSize(aIter, &nfds) ||
       !aMsg->ReadBytes(aIter, &data, nbytes)) {
+    printf_stderr("ParamTraits<MagicGrallocBufferHandle>::Read() failed to read a message\n");
     return false;
   }
 
@@ -129,15 +132,16 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
   for (size_t n = 0; n < nfds; ++n) {
     FileDescriptor fd;
     if (!aMsg->ReadFileDescriptor(aIter, &fd)) {
+      printf_stderr("ParamTraits<MagicGrallocBufferHandle>::Read() failed to read file descriptors\n");
       return false;
     }
     // If the GraphicBuffer was shared cross-process, SCM_RIGHTS does
-    // the right thing and dup's the fd.  If it's shared cross-thread,
-    // SCM_RIGHTS doesn't dup the fd.  That's surprising, but we just
-    // deal with it here.  NB: only the "default" (master) process can
-    // alloc gralloc buffers.
-    int dupFd = sameProcess && index < 0 ? dup(fd.fd) : fd.fd;
-    fds[n] = dupFd;
+    // the right thing and dup's the fd. If it's shared cross-thread,
+    // SCM_RIGHTS doesn't dup the fd. 
+    // But in shared cross-thread, dup fd is not necessary because we get
+    // a pointer to the GraphicBuffer directly from SharedBufferManagerParent
+    // and don't create a new GraphicBuffer around the fd.
+    fds[n] = fd.fd;
   }
 
   aResult->mRef.mOwner = owner;
@@ -167,6 +171,7 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
   }
 
   if (aResult->mGraphicBuffer == nullptr) {
+    printf_stderr("ParamTraits<MagicGrallocBufferHandle>::Read() failed to get gralloc buffer\n");
     return false;
   }
 
