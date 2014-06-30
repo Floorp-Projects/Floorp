@@ -38,9 +38,9 @@ public:
 
     // nsRDFResource methods:
     nsRDFResource(void);
-    virtual ~nsRDFResource(void);
 
 protected:
+    virtual ~nsRDFResource(void);
     static nsIRDFService* gRDFService;
     static nsrefcnt gRDFServiceRefCnt;
 

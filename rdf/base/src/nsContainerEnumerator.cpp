@@ -51,9 +51,10 @@ private:
     nsCOMPtr<nsIRDFNode>            mResult;
     int32_t mNextIndex;
 
+    virtual ~ContainerEnumeratorImpl();
+
 public:
     ContainerEnumeratorImpl(nsIRDFDataSource* ds, nsIRDFResource* container);
-    virtual ~ContainerEnumeratorImpl();
 
     nsresult Init();
 
