@@ -21,13 +21,15 @@
   pointer-events: auto;
 }
 
-#action-busy {
+#action-busy-undetermined {
   height: 24px;
   width: 24px;
 }
 
 window.busy .action-button,
-window:not(.busy) #action-busy {
+window:not(.busy) #action-busy,
+window.busy-undetermined #action-busy-determined,
+window.busy-determined #action-busy-undetermined {
   display: none;
 }
 
