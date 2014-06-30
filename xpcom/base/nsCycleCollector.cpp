@@ -556,6 +556,8 @@ struct PtrInfo
 private:
   EdgePool::Iterator mFirstChild;
 
+  static const uint32_t kInitialRefCount = UINT32_MAX - 1;
+
 public:
 
   PtrInfo(void* aPointer, nsCycleCollectionParticipant* aParticipant)
@@ -563,7 +565,7 @@ public:
       mParticipant(aParticipant),
       mColor(grey),
       mInternalRefs(0),
-      mRefCount(UINT32_MAX - 1),
+      mRefCount(kInitialRefCount),
       mFirstChild()
   {
     MOZ_ASSERT(aParticipant);
@@ -588,6 +590,11 @@ public:
   bool IsBlackJS() const
   {
     return mRefCount == UINT32_MAX;
+  }
+
+  bool WasTraversed() const
+  {
+    return mRefCount != kInitialRefCount;
   }
 
   EdgePool::Iterator FirstChild() const
@@ -1449,7 +1456,7 @@ GraphWalker<Visitor>::DoWalk(nsDeque& aQueue)
   while (aQueue.GetSize() > 0) {
     PtrInfo* pi = static_cast<PtrInfo*>(aQueue.PopFront());
 
-    if (pi->mParticipant && mVisitor.ShouldVisitNode(pi)) {
+    if (pi->WasTraversed() && mVisitor.ShouldVisitNode(pi)) {
       mVisitor.VisitNode(pi);
       for (EdgePool::Iterator child = pi->FirstChild(),
            child_end = pi->LastChild();
@@ -2886,7 +2893,7 @@ static void
 FloodBlackNode(uint32_t& aWhiteNodeCount, bool& aFailed, PtrInfo* aPi)
 {
     GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(aWhiteNodeCount, aFailed)).Walk(aPi);
-    MOZ_ASSERT(aPi->mColor == black || !aPi->mParticipant,
+    MOZ_ASSERT(aPi->mColor == black || !aPi->WasTraversed(),
                "FloodBlackNode should make aPi black");
 }
 
@@ -3034,6 +3041,17 @@ nsCycleCollector::ScanIncrementalRoots()
       } else {
         MOZ_ASSERT(false, "Non-JS thing with 0 refcount? Treating as live.");
       }
+    } else if (!pi->mParticipant && pi->WasTraversed()) {
+      // Dead traversed refcounted objects:
+      // If the object was traversed, it must have been alive at the start of
+      // the CC, and thus had a positive refcount. It is dead now, so its
+      // refcount must have decreased at some point during the CC. Therefore,
+      // it would be in the purple buffer if it wasn't dead, so treat it as an
+      // incremental root.
+      //
+      // This should not cause leaks because as the object died it should have
+      // released anything it held onto, which will add them to the purple
+      // buffer, which will cause them to be considered in the next CC.
     } else {
       continue;
     }
@@ -3043,14 +3061,15 @@ nsCycleCollector::ScanIncrementalRoots()
     // If there's a listener, tell it about this root. We don't bother with the
     // optimization of skipping the Walk() if pi is black: it will just return
     // without doing anything and there's no need to make this case faster.
-    if (MOZ_UNLIKELY(hasListener)) {
+    if (MOZ_UNLIKELY(hasListener) && pi->mPointer) {
+      // Dead objects aren't logged. See bug 1031370.
       mListener->NoteIncrementalRoot((uint64_t)pi->mPointer);
     }
 
     FloodBlackNode(mWhiteNodeCount, failed, pi);
   }
 
-  timeLog.Checkpoint("ScanIncrementalRoots::fix JS");
+  timeLog.Checkpoint("ScanIncrementalRoots::fix nodes");
 
   if (failed) {
     NS_ASSERTION(false, "Ran out of memory in ScanIncrementalRoots");
@@ -3077,9 +3096,10 @@ nsCycleCollector::ScanWhiteNodes(bool aFullySynchGraphBuild)
     }
     MOZ_ASSERT(pi->mColor == grey);
 
-    if (!pi->mParticipant) {
-      // This node has been deleted, so it could be in a mangled state, but
-      // that's okay because we're not going to look at it again.
+    if (!pi->WasTraversed()) {
+      // This node was deleted before it was traversed, so there's no reason
+      // to look at it.
+      MOZ_ASSERT(!pi->mParticipant, "Live nodes should all have been traversed");
       continue;
     }
 
@@ -3109,7 +3129,7 @@ nsCycleCollector::ScanBlackNodes()
   NodePool::Enumerator nodeEnum(mGraph.mNodes);
   while (!nodeEnum.IsDone()) {
     PtrInfo* pi = nodeEnum.GetNext();
-    if (pi->mColor == grey && pi->mParticipant) {
+    if (pi->mColor == grey && pi->WasTraversed()) {
       FloodBlackNode(mWhiteNodeCount, failed, pi);
     }
   }
@@ -3150,7 +3170,7 @@ nsCycleCollector::ScanRoots(bool aFullySynchGraphBuild)
     NodePool::Enumerator etor(mGraph.mNodes);
     while (!etor.IsDone()) {
       PtrInfo* pi = etor.GetNext();
-      if (!pi->mParticipant) {
+      if (!pi->WasTraversed()) {
         continue;
       }
       switch (pi->mColor) {
@@ -3165,8 +3185,7 @@ nsCycleCollector::ScanRoots(bool aFullySynchGraphBuild)
           mListener->DescribeGarbage((uint64_t)pi->mPointer);
           break;
         case grey:
-          // With incremental CC, we can end up with a grey object after
-          // scanning if it is only reachable from an object that gets freed.
+          MOZ_ASSERT(false, "All traversed objects should be black or white");
           break;
       }
     }
