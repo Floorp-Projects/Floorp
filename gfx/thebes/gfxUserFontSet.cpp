@@ -126,7 +126,7 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
                             int32_t aStretch,
                             uint32_t aItalicStyle,
                             const nsTArray<gfxFontFeature>& aFeatureSettings,
-                            const nsString& aLanguageOverride,
+                            uint32_t aLanguageOverride,
                             gfxSparseBitSet *aUnicodeRanges)
 {
     MOZ_ASSERT(aWeight != 0,
@@ -145,9 +145,6 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
         mFontFamilies.Put(key, family);
     }
 
-    uint32_t languageOverride =
-        gfxFontStyle::ParseFontLanguageOverride(aLanguageOverride);
-
     // If there's already a proxy in the family whose descriptors all match,
     // we can just move it to the end of the list instead of adding a new
     // face that will always "shadow" the old one.
@@ -164,7 +161,7 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
             static_cast<gfxProxyFontEntry*>(fontList[i].get());
         if (!existingProxyEntry->Matches(aFontFaceSrcList,
                                          aWeight, aStretch, aItalicStyle,
-                                         aFeatureSettings, languageOverride,
+                                         aFeatureSettings, aLanguageOverride,
                                          aUnicodeRanges)) {
             continue;
         }
@@ -181,7 +178,7 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
         new gfxProxyFontEntry(aFontFaceSrcList, aWeight, aStretch,
                               aItalicStyle,
                               aFeatureSettings,
-                              languageOverride,
+                              aLanguageOverride,
                               aUnicodeRanges);
     family->AddFontEntry(proxyEntry);
 #ifdef PR_LOGGING
