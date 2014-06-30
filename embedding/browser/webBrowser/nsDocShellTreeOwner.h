@@ -146,11 +146,13 @@ protected:
 //
 class ChromeTooltipListener : public nsIDOMEventListener
 {
+protected:
+  virtual ~ChromeTooltipListener ( ) ;
+
 public:
   NS_DECL_ISUPPORTS
   
   ChromeTooltipListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) ;
-  virtual ~ChromeTooltipListener ( ) ;
 
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
   NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
@@ -218,11 +220,13 @@ private:
 //
 class ChromeContextMenuListener : public nsIDOMEventListener
 {
+protected:
+  virtual ~ChromeContextMenuListener ( ) ;
+
 public:
   NS_DECL_ISUPPORTS
   
   ChromeContextMenuListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) ;
-  virtual ~ChromeContextMenuListener ( ) ;
 
   // nsIDOMContextMenuListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);

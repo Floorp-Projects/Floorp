@@ -89,10 +89,6 @@ public:
   {
   }
 
-  virtual ~nsFindContentIterator()
-  {
-  }
-
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(nsFindContentIterator)
@@ -118,6 +114,11 @@ public:
   virtual nsINode* GetCurrentNode();
   virtual bool IsDone();
   virtual nsresult PositionAt(nsINode* aCurNode);
+
+protected:
+  virtual ~nsFindContentIterator()
+  {
+  }
 
 private:
   nsCOMPtr<nsIContentIterator> mOuterIterator;
