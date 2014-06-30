@@ -168,7 +168,7 @@ class B2GRunner(RemoteRunner):
         self.outputTimeout = outputTimeout
 
         if not self._wait_for_net():
-            raise Exception("network not available, unable to start")
+            self.log.info("wait_for_net failed before restarting, continuing anyway")
 
         self._setup_remote_profile()
         # reboot device so it starts up with the proper profile
