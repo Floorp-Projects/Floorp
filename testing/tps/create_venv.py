@@ -121,7 +121,8 @@ def main():
 
     # Update config file
     config_in_path = os.path.join(here, 'config', 'config.json.in')
-    replacements = {'__TESTDIR__': testdir, '__EXTENSIONDIR__': extdir}
+    replacements = {'__TESTDIR__': testdir.replace('\\','/'),
+                    '__EXTENSIONDIR__': extdir.replace('\\','/')}
     if options.username and options.password:
         replacements.update({
             '__FX_ACCOUNT_USERNAME__': options.username,
