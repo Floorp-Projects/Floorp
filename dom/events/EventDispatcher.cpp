@@ -18,6 +18,7 @@
 #include "mozilla/dom/CloseEvent.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/HashChangeEvent.h"
+#include "mozilla/dom/PageTransitionEvent.h"
 #include "mozilla/dom/PopStateEvent.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/TouchEvent.h"
@@ -813,8 +814,14 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     return NS_NewDOMSimpleGestureEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("beforeunloadevent"))
     return NS_NewDOMBeforeUnloadEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("pagetransition"))
-    return NS_NewDOMPageTransitionEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+  // XXXkhuey this is broken
+  if (aEventType.LowerCaseEqualsLiteral("pagetransition")) {
+    PageTransitionEventInit init;
+    nsRefPtr<PageTransitionEvent> event =
+      PageTransitionEvent::Constructor(aOwner, EmptyString(), init);
+    event.forget(aDOMEvent);
+    return NS_OK;
+  }
   if (aEventType.LowerCaseEqualsLiteral("domtransaction"))
     return NS_NewDOMDOMTransactionEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("scrollareaevent"))
