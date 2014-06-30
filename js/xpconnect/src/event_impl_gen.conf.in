@@ -9,9 +9,6 @@
 
 simple_events = [
     'CustomEvent',
-    'StyleRuleChangeEvent',
-    'StyleSheetChangeEvent',
-    'StyleSheetApplicableStateChangeEvent',
   ]
 
 """ include file names """
