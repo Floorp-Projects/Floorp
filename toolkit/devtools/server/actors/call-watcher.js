@@ -318,6 +318,7 @@ let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
       return;
     }
     this._initialized = false;
+    this._finalized = true;
 
     this._contentObserver.stopListening();
     off(this._contentObserver, "global-created", this._onGlobalCreated);
@@ -534,6 +535,11 @@ let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
    * Invoked whenever an instrumented function is called.
    */
   _onContentFunctionCall: function(...details) {
+    // If the consuming tool has finalized call-watcher, ignore the
+    // still-instrumented calls.
+    if (this._finalized) {
+      return;
+    }
     let functionCall = new FunctionCallActor(this.conn, details, this._holdWeak);
     this._functionCalls.push(functionCall);
     this.onCall(functionCall);
