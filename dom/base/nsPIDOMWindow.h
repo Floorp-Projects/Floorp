@@ -122,52 +122,28 @@ public:
 
   bool HasMutationListeners(uint32_t aMutationEventType) const
   {
-    const nsPIDOMWindow *win;
+    MOZ_ASSERT(IsInnerWindow());
 
-    if (IsOuterWindow()) {
-      win = GetCurrentInnerWindow();
+    if (!mOuterWindow) {
+      NS_ERROR("HasMutationListeners() called on orphan inner window!");
 
-      if (!win) {
-        NS_ERROR("No current inner window available!");
-
-        return false;
-      }
-    } else {
-      if (!mOuterWindow) {
-        NS_ERROR("HasMutationListeners() called on orphan inner window!");
-
-        return false;
-      }
-
-      win = this;
+      return false;
     }
 
-    return (win->mMutationBits & aMutationEventType) != 0;
+    return (mMutationBits & aMutationEventType) != 0;
   }
 
   void SetMutationListeners(uint32_t aType)
   {
-    nsPIDOMWindow *win;
+    MOZ_ASSERT(IsInnerWindow());
 
-    if (IsOuterWindow()) {
-      win = GetCurrentInnerWindow();
+    if (!mOuterWindow) {
+      NS_ERROR("HasMutationListeners() called on orphan inner window!");
 
-      if (!win) {
-        NS_ERROR("No inner window available to set mutation bits on!");
-
-        return;
-      }
-    } else {
-      if (!mOuterWindow) {
-        NS_ERROR("HasMutationListeners() called on orphan inner window!");
-
-        return;
-      }
-
-      win = this;
+      return;
     }
 
-    win->mMutationBits |= aType;
+    mMutationBits |= aType;
   }
 
   virtual void MaybeUpdateTouchState() {}
