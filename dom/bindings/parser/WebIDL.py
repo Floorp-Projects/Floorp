@@ -991,7 +991,8 @@ class IDLInterface(IDLObjectWithScope):
                 self._isOnGlobalProtoChain = True
             elif (identifier == "NeedNewResolve" or
                   identifier == "OverrideBuiltins" or
-                  identifier == "ChromeOnly"):
+                  identifier == "ChromeOnly" or
+                  identifier == "LegacyEventInit"):
                 # Known extended attributes that do not take values
                 if not attr.noArguments():
                     raise WebIDLError("[%s] must take no arguments" % identifier,
