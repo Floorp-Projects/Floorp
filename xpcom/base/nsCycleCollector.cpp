@@ -1179,7 +1179,6 @@ struct SelectPointersVisitor
 {
   SelectPointersVisitor(GCGraphBuilder& aBuilder)
     : mBuilder(aBuilder)
-  
   {
   }
 
@@ -2999,30 +2998,28 @@ nsCycleCollector::ScanIncrementalRoots()
   mPurpleBuf.VisitEntries(purpleScanBlackVisitor);
   timeLog.Checkpoint("ScanIncrementalRoots::fix purple");
 
-  // Garbage collected objects:
-  // If a GCed object was added to the graph with a refcount of zero, and is
-  // now marked black by the GC, it was probably gray before and was exposed
-  // to active JS, so it may have been stored somewhere, so it needs to be
-  // treated as live.
-  if (mJSRuntime) {
-    nsCycleCollectionParticipant* jsParticipant = mJSRuntime->GCThingParticipant();
-    nsCycleCollectionParticipant* zoneParticipant = mJSRuntime->ZoneParticipant();
-    NodePool::Enumerator etor(mGraph.mNodes);
+  bool hasJSRuntime = !!mJSRuntime;
+  nsCycleCollectionParticipant* jsParticipant = hasJSRuntime ? mJSRuntime->GCThingParticipant() : nullptr;
+  nsCycleCollectionParticipant* zoneParticipant = hasJSRuntime ? mJSRuntime->ZoneParticipant() : nullptr;
+  bool hasListener = !!mListener;
 
-    while (!etor.IsDone()) {
-      PtrInfo* pi = etor.GetNext();
+  NodePool::Enumerator etor(mGraph.mNodes);
+  while (!etor.IsDone()) {
+    PtrInfo* pi = etor.GetNext();
 
-      if (!pi->IsGrayJS()) {
-        continue;
-      }
+    // As an optimization, if an object has already been determined to be live,
+    // don't consider it further.  We can't do this if there is a listener,
+    // because the listener wants to know the complete set of incremental roots.
+    if (pi->mColor == black && MOZ_LIKELY(!hasListener)) {
+      continue;
+    }
 
-      // As an optimization, if an object has already been determined to be live,
-      // don't consider it further.  We can't do this if there is a listener,
-      // because the listener wants to know the complete set of incremental roots.
-      if (pi->mColor == black && MOZ_LIKELY(!mListener)) {
-        continue;
-      }
-
+    // Garbage collected objects:
+    // If a GCed object was added to the graph with a refcount of zero, and is
+    // now marked black by the GC, it was probably gray before and was exposed
+    // to active JS, so it may have been stored somewhere, so it needs to be
+    // treated as live.
+    if (pi->IsGrayJS() && MOZ_LIKELY(hasJSRuntime)) {
       // If the object is still marked gray by the GC, nothing could have gotten
       // hold of it, so it isn't an incremental root.
       if (pi->mParticipant == jsParticipant) {
@@ -3037,21 +3034,23 @@ nsCycleCollector::ScanIncrementalRoots()
       } else {
         MOZ_ASSERT(false, "Non-JS thing with 0 refcount? Treating as live.");
       }
-
-      // At this point, pi must be an incremental root.
-
-      // If there's a listener, tell it about this root. We don't bother with the
-      // optimization of skipping the Walk() if pi is black: it will just return
-      // without doing anything and there's no need to make this case faster.
-      if (MOZ_UNLIKELY(mListener)) {
-        mListener->NoteIncrementalRoot((uint64_t)pi->mPointer);
-      }
-
-      FloodBlackNode(mWhiteNodeCount, failed, pi);
+    } else {
+      continue;
     }
 
-    timeLog.Checkpoint("ScanIncrementalRoots::fix JS");
+    // At this point, pi must be an incremental root.
+
+    // If there's a listener, tell it about this root. We don't bother with the
+    // optimization of skipping the Walk() if pi is black: it will just return
+    // without doing anything and there's no need to make this case faster.
+    if (MOZ_UNLIKELY(hasListener)) {
+      mListener->NoteIncrementalRoot((uint64_t)pi->mPointer);
+    }
+
+    FloodBlackNode(mWhiteNodeCount, failed, pi);
   }
+
+  timeLog.Checkpoint("ScanIncrementalRoots::fix JS");
 
   if (failed) {
     NS_ASSERTION(false, "Ran out of memory in ScanIncrementalRoots");
