@@ -8366,7 +8366,7 @@ class CGUnionStruct(CGThing):
                         Argument("JS::MutableHandle<JS::Value>", "rval")
                     ],
                     body=CGSwitch("mType", toJSValCases,
-                                  default=CGGeneric("return false;\n")).define(),
+                                  default=CGGeneric("return false;\n")).define() + "\nreturn false;\n",
                     const=True))
 
         constructors = [ctor]
