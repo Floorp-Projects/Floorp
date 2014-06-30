@@ -102,7 +102,6 @@ class RDFContentSinkImpl : public nsIRDFContentSink,
 {
 public:
     RDFContentSinkImpl();
-    virtual ~RDFContentSinkImpl();
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -146,6 +145,8 @@ public:
     } ContainerInfo;
 
 protected:
+    virtual ~RDFContentSinkImpl();
+
     // Text management
     void ParseText(nsIRDFNode **aResult);
 

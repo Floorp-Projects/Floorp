@@ -283,6 +283,7 @@ public:
         RDFServiceImpl::gRDFService->RegisterBlob(this);
     }
 
+protected:
     virtual ~BlobImpl()
     {
         RDFServiceImpl::gRDFService->UnregisterBlob(this);
@@ -294,6 +295,7 @@ public:
         delete[] mData.mBytes;
     }
 
+public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIRDFNODE
     NS_DECL_NSIRDFBLOB
@@ -520,7 +522,6 @@ LiteralImpl::GetValueConst(const char16_t** aValue)
 class DateImpl : public nsIRDFDate {
 public:
     DateImpl(const PRTime s);
-    virtual ~DateImpl();
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -532,6 +533,8 @@ public:
     NS_IMETHOD GetValue(PRTime *value);
 
 private:
+    virtual ~DateImpl();
+
     nsresult EqualsDate(nsIRDFDate* date, bool* result);
     PRTime mValue;
 };
@@ -626,7 +629,6 @@ DateImpl::EqualsDate(nsIRDFDate* date, bool* result)
 class IntImpl : public nsIRDFInt {
 public:
     IntImpl(int32_t s);
-    virtual ~IntImpl();
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -638,6 +640,8 @@ public:
     NS_IMETHOD GetValue(int32_t *value);
 
 private:
+    virtual ~IntImpl();
+
     nsresult EqualsInt(nsIRDFInt* value, bool* result);
     int32_t mValue;
 };

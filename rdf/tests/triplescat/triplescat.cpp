@@ -54,9 +54,11 @@
 
 class ConsoleOutputStreamImpl : public nsIOutputStream
 {
+protected:
+    virtual ~ConsoleOutputStreamImpl(void) {}
+
 public:
     ConsoleOutputStreamImpl(void) {}
-    virtual ~ConsoleOutputStreamImpl(void) {}
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
