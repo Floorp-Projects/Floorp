@@ -15,9 +15,10 @@
  */
 class nsGZFileWriter : public nsIGZFileWriter
 {
+  virtual ~nsGZFileWriter();
+
 public:
   nsGZFileWriter();
-  virtual ~nsGZFileWriter();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGZFILEWRITER

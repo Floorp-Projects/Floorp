@@ -380,6 +380,8 @@ private:
             "explicit/icu", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
             "Memory used by ICU, a Unicode and globalization support library.");
     }
+
+    ~ICUReporter() {}
 };
 
 NS_IMPL_ISUPPORTS(ICUReporter, nsIMemoryReporter)
@@ -401,6 +403,8 @@ private:
             "explicit/media/libogg", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
             "Memory allocated through libogg for Ogg, Theora, and related media files.");
     }
+
+    ~OggReporter() {}
 };
 
 NS_IMPL_ISUPPORTS(OggReporter, nsIMemoryReporter)
@@ -423,6 +427,8 @@ private:
             "explicit/media/libvpx", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
             "Memory allocated through libvpx for WebM media files.");
     }
+
+    ~VPXReporter() {}
 };
 
 NS_IMPL_ISUPPORTS(VPXReporter, nsIMemoryReporter)
@@ -446,6 +452,8 @@ private:
             "explicit/media/libnestegg", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
             "Memory allocated through libnestegg for WebM media files.");
     }
+
+    ~NesteggReporter() {}
 };
 
 NS_IMPL_ISUPPORTS(NesteggReporter, nsIMemoryReporter)

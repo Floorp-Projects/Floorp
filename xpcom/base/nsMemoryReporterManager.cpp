@@ -118,6 +118,8 @@ ResidentUniqueDistinguishedAmount(int64_t* aN)
 
 class ResidentUniqueReporter MOZ_FINAL : public nsIMemoryReporter
 {
+  ~ResidentUniqueReporter() {}
+
 public:
   NS_DECL_ISUPPORTS
 
@@ -558,6 +560,8 @@ NS_IMPL_ISUPPORTS(PrivateReporter, nsIMemoryReporter)
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
 class VsizeReporter MOZ_FINAL : public nsIMemoryReporter
 {
+  ~VsizeReporter() {}
+
 public:
   NS_DECL_ISUPPORTS
 
@@ -583,6 +587,8 @@ NS_IMPL_ISUPPORTS(VsizeReporter, nsIMemoryReporter)
 
 class ResidentReporter MOZ_FINAL : public nsIMemoryReporter
 {
+  ~ResidentReporter() {}
+
 public:
   NS_DECL_ISUPPORTS
 
@@ -615,6 +621,8 @@ NS_IMPL_ISUPPORTS(ResidentReporter, nsIMemoryReporter)
 
 class PageFaultsSoftReporter MOZ_FINAL : public nsIMemoryReporter
 {
+  ~PageFaultsSoftReporter() {}
+
 public:
   NS_DECL_ISUPPORTS
 
@@ -657,6 +665,8 @@ PageFaultsHardDistinguishedAmount(int64_t* aAmount)
 
 class PageFaultsHardReporter MOZ_FINAL : public nsIMemoryReporter
 {
+  ~PageFaultsHardReporter() {}
+
 public:
   NS_DECL_ISUPPORTS
 
@@ -704,6 +714,8 @@ HeapOverheadRatio(jemalloc_stats_t* aStats)
 
 class JemallocHeapReporter MOZ_FINAL : public nsIMemoryReporter
 {
+  ~JemallocHeapReporter() {}
+
 public:
   NS_DECL_ISUPPORTS
 
@@ -807,6 +819,8 @@ NS_IMPL_ISUPPORTS(JemallocHeapReporter, nsIMemoryReporter)
 class AtomTablesReporter MOZ_FINAL : public nsIMemoryReporter
 {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+
+  ~AtomTablesReporter() {}
 
 public:
   NS_DECL_ISUPPORTS
@@ -1443,6 +1457,8 @@ nsMemoryReporterManager::UnblockRegistrationAndRestoreOriginalReporters()
 // passed to nsIMemoryReporter::CollectReports.
 class Int64Wrapper MOZ_FINAL : public nsISupports
 {
+  ~Int64Wrapper() {}
+
 public:
   NS_DECL_ISUPPORTS
   Int64Wrapper() : mValue(0)
@@ -1455,6 +1471,8 @@ NS_IMPL_ISUPPORTS0(Int64Wrapper)
 
 class ExplicitCallback MOZ_FINAL : public nsIHandleReportCallback
 {
+  ~ExplicitCallback() {}
+
 public:
   NS_DECL_ISUPPORTS
 
