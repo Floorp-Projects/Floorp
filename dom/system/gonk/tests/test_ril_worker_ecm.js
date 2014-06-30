@@ -122,8 +122,9 @@ add_test(function test_request_exit_emergencyCbMode_when_dial() {
   };
 
   // Dial non-emergency call.
-  context.RIL.dial({number: "0912345678",
-                  isDialEmergency: false});
+  context.RIL.dialNonEmergencyNumber({number: "0912345678",
+                                      isEmergency: false,
+                                      isDialEmergency: false});
 
   // Should clear timeout event.
   do_check_eq(context.RIL._exitEmergencyCbModeTimeoutID, null);
