@@ -244,13 +244,13 @@ const char *
 js::gcstats::ExplainReason(JS::gcreason::Reason reason)
 {
     switch (reason) {
-#define SWITCH_REASON(name)                     \
+#define SWITCH_REASON(name)                         \
         case JS::gcreason::name:                    \
           return #name;
         GCREASONS(SWITCH_REASON)
 
         default:
-          MOZ_ASSUME_UNREACHABLE("bad GC reason");
+          MOZ_CRASH("bad GC reason");
 #undef SWITCH_REASON
     }
 }
