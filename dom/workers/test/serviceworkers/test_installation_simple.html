@@ -63,8 +63,8 @@
       ok(w.scope == (new URL("/*", document.baseURI)).href, "Scope should match");
       ok(w.url == (new URL("worker.js", document.baseURI)).href, "URL should be of the worker");
     }, function(e) {
-      info(e.name);
-      ok(false, "Registration should have succeeded!");
+      info("Error: " + e.name);
+      ok(false, "realWorker Registration should have succeeded!");
     });
   }
 
@@ -95,6 +95,18 @@
       });
   }
 
+  function parseError() {
+    var p = navigator.serviceWorker.register("parse_error_worker.js");
+    return p.then(function(w) {
+      ok(false, "Registration should fail with parse error");
+    }, function(e) {
+    info("NSM " + e.name);
+      ok(e instanceof Error, "Registration should fail with parse error");
+    });
+  }
+
+  // FIXME(nsm): test for parse error when Update step doesn't happen (directly from register).
+
   function runTest() {
     simpleRegister()
       .then(sameOriginWorker)
@@ -102,8 +114,8 @@
       .then(httpsOnly)
       .then(realWorker)
       .then(abortPrevious)
-      // FIXME(nsm): Uncomment once we have the error trapping patch from Bug 984048.
-      // .then(networkError404)
+      .then(networkError404)
+      .then(parseError)
       // put more tests here.
       .then(function() {
         SimpleTest.finish();
