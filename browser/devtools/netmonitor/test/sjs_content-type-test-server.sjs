@@ -29,7 +29,10 @@ function handleRequest(request, response) {
     cachedCount++;
   }
 
-  Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer).initWithCallback(() => {
+  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer.initWithCallback(() => {
+    // to avoid garbage collection
+    timer = null;
     switch (format) {
       case "txt": {
         response.setStatusLine(request.httpVersion, status, "DA DA DA");
