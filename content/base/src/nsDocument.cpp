@@ -138,7 +138,7 @@
 #include "nsIXULDocument.h"
 #include "nsIPrompt.h"
 #include "nsIPropertyBag2.h"
-#include "nsIDOMPageTransitionEvent.h"
+#include "mozilla/dom/PageTransitionEvent.h"
 #include "nsIDOMStyleRuleChangeEvent.h"
 #include "nsIDOMStyleSheetChangeEvent.h"
 #include "nsIDOMStyleSheetApplicableStateChangeEvent.h"
@@ -8690,19 +8690,22 @@ nsDocument::DispatchPageTransition(EventTarget* aDispatchTarget,
                                    const nsAString& aType,
                                    bool aPersisted)
 {
-  if (aDispatchTarget) {
-    nsCOMPtr<nsIDOMEvent> event;
-    CreateEvent(NS_LITERAL_STRING("pagetransition"), getter_AddRefs(event));
-    nsCOMPtr<nsIDOMPageTransitionEvent> ptEvent = do_QueryInterface(event);
-    if (ptEvent && NS_SUCCEEDED(ptEvent->InitPageTransitionEvent(aType, true,
-                                                                 true,
-                                                                 aPersisted))) {
-      event->SetTrusted(true);
-      event->SetTarget(this);
-      EventDispatcher::DispatchDOMEvent(aDispatchTarget, nullptr, event,
-                                        nullptr, nullptr);
-    }
+  if (!aDispatchTarget) {
+    return;
   }
+
+  PageTransitionEventInit init;
+  init.mBubbles = true;
+  init.mCancelable = true;
+  init.mPersisted = aPersisted;
+
+  nsRefPtr<PageTransitionEvent> event =
+    PageTransitionEvent::Constructor(this, aType, init);
+
+  event->SetTrusted(true);
+  event->SetTarget(this);
+  EventDispatcher::DispatchDOMEvent(aDispatchTarget, nullptr, event,
+                                    nullptr, nullptr);
 }
 
 static bool

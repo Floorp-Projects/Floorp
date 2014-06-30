@@ -10,7 +10,6 @@
 simple_events = [
     'MozSettingsEvent',
     'CustomEvent',
-    'PageTransitionEvent',
     'DOMTransactionEvent',
     'DeviceOrientationEvent',
     'MozApplicationEvent',
