@@ -29,8 +29,10 @@ document.addEventListener("hashChange", function(e) {
   is(e.isTrusted, false, "Hashchange event shouldn't be trusted.");
 }, true);
 
-let hc = document.createEvent("HashChangeEvent");
-hc.initHashChangeEvent("hashChange", true, false, "oldURL", "newURL");
+let hc = new HashChangeEvent("hashChange", { bubbles: true,
+                                             cancelable: false,
+                                             oldURL: "oldURL",
+                                             newURL: "newURL" });
 document.documentElement.dispatchEvent(hc);
 is(gotHashChange, 1, 'Document received hashchange event.');
 

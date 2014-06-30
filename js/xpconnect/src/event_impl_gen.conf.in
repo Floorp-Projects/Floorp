@@ -13,7 +13,6 @@ simple_events = [
     'PageTransitionEvent',
     'DOMTransactionEvent',
     'PopStateEvent',
-    'HashChangeEvent',
     'CloseEvent',
     'DeviceOrientationEvent',
     'MozApplicationEvent',

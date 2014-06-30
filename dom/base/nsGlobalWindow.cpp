@@ -89,7 +89,6 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPopStateEvent.h"
-#include "nsIDOMHashChangeEvent.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsPIDOMStorage.h"
 #include "nsDOMString.h"
@@ -217,6 +216,7 @@
 #include "mozilla/dom/BrowserElementDictionariesBinding.h"
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/FunctionBinding.h"
+#include "mozilla/dom/HashChangeEvent.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "nsITabChild.h"
 #include "mozilla/dom/MediaQueryList.h"
@@ -10105,27 +10105,20 @@ nsGlobalWindow::FireHashchange(const nsAString &aOldURL,
     presContext = shell->GetPresContext();
   }
 
-  // Create a new hashchange event.
-  nsCOMPtr<nsIDOMEvent> domEvent;
-  nsresult rv =
-    EventDispatcher::CreateEvent(this, presContext, nullptr,
-                                 NS_LITERAL_STRING("hashchangeevent"),
-                                 getter_AddRefs(domEvent));
-  NS_ENSURE_SUCCESS(rv, rv);
+  HashChangeEventInit init;
+  init.mBubbles = true;
+  init.mCancelable = false;
+  init.mNewURL = aNewURL;
+  init.mOldURL = aOldURL;
 
-  nsCOMPtr<nsIDOMHashChangeEvent> hashchangeEvent = do_QueryInterface(domEvent);
-  NS_ENSURE_TRUE(hashchangeEvent, NS_ERROR_UNEXPECTED);
+  nsRefPtr<HashChangeEvent> event =
+    HashChangeEvent::Constructor(this, NS_LITERAL_STRING("hashchange"),
+                                 init);
 
-  // The hashchange event bubbles and isn't cancellable.
-  rv = hashchangeEvent->InitHashChangeEvent(NS_LITERAL_STRING("hashchange"),
-                                            true, false,
-                                            aOldURL, aNewURL);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  domEvent->SetTrusted(true);
+  event->SetTrusted(true);
 
   bool dummy;
-  return DispatchEvent(hashchangeEvent, &dummy);
+  return DispatchEvent(event, &dummy);
 }
 
 nsresult
