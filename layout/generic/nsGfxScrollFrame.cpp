@@ -1912,17 +1912,12 @@ ClampAndAlignWithPixels(nscoord aDesired,
                         nscoord aAppUnitsPerPixel, double aRes,
                         nscoord aCurrent)
 {
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
-  // On mobile ignore the allowed bounds and always align to pixels
-  nscoord desired = aDesired;
-#else
   // Intersect scroll range with allowed range, by clamping the ends
   // of aRange to be within bounds
   nscoord destLower = clamped(aDestLower, aBoundLower, aBoundUpper);
   nscoord destUpper = clamped(aDestUpper, aBoundLower, aBoundUpper);
 
   nscoord desired = clamped(aDesired, destLower, destUpper);
-#endif
 
   double currentLayerVal = (aRes*aCurrent)/aAppUnitsPerPixel;
   double desiredLayerVal = (aRes*desired)/aAppUnitsPerPixel;
@@ -1933,10 +1928,6 @@ ClampAndAlignWithPixels(nscoord aDesired,
   // of the scrolled frame.
   nscoord aligned =
     NSToCoordRoundWithClamp(nearestLayerVal*aAppUnitsPerPixel/aRes);
-
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
-  return aligned;
-#else
 
   // Use a bound if it is within the allowed range and closer to desired than
   // the nearest pixel-aligned value.
@@ -1965,7 +1956,6 @@ ClampAndAlignWithPixels(nscoord aDesired,
 
   // No alignment available.
   return desired;
-#endif
 }
 
 /**
