@@ -18,14 +18,11 @@
 #include "nsTArrayForwardDeclare.h"
 #include "nsTWeakRef.h"
 
-class nsIScriptError;
-
 namespace mozilla {
 namespace dom {
 namespace workers {
 
 class ServiceWorker;
-class ServiceWorkerContainer;
 class ServiceWorkerUpdateInstance;
 
 /**
@@ -46,7 +43,6 @@ public:
   void AddPromise(Promise* aPromise);
   void ResolveAllPromises(const nsACString& aScriptSpec, const nsACString& aScope);
   void RejectAllPromises(nsresult aRv);
-  void RejectAllPromises(const ErrorEventInit& aErrorDesc);
 
   bool
   IsRejected() const
@@ -235,26 +231,8 @@ public:
                                nsresult aResult);
 
   void
-  RejectUpdatePromiseObservers(ServiceWorkerRegistration* aRegistration,
-                               const ErrorEventInit& aErrorDesc);
-
-  void
   FinishFetch(ServiceWorkerRegistration* aRegistration,
               nsPIDOMWindow* aWindow);
-
-  void
-  FinishInstall(ServiceWorkerRegistration* aRegistration);
-
-  void
-  HandleError(JSContext* aCx,
-              const nsACString& aScope,
-              const nsAString& aWorkerURL,
-              nsString aMessage,
-              nsString aFilename,
-              nsString aLine,
-              uint32_t aLineNumber,
-              uint32_t aColumnNumber,
-              uint32_t aFlags);
 
   static already_AddRefed<ServiceWorkerManager>
   GetInstance();
@@ -270,16 +248,11 @@ private:
   Install(ServiceWorkerRegistration* aRegistration,
           ServiceWorkerInfo aServiceWorkerInfo);
 
-  NS_IMETHOD
+  NS_IMETHODIMP
   CreateServiceWorkerForWindow(nsPIDOMWindow* aWindow,
                                const nsACString& aScriptSpec,
                                const nsACString& aScope,
                                ServiceWorker** aServiceWorker);
-
-  NS_IMETHOD
-  CreateServiceWorker(const nsACString& aScriptSpec,
-                      const nsACString& aScope,
-                      ServiceWorker** aServiceWorker);
 
   static PLDHashOperator
   CleanupServiceWorkerInformation(const nsACString& aDomain,
