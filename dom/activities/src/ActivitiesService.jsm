@@ -382,10 +382,6 @@ let Activities = {
         this.db.add(msg,
           function onSuccess(aEvent) {
             mm.sendAsyncMessage("Activities:Register:OK", null);
-            let res = [];
-            msg.forEach(function(aActivity) {
-              self.updateContentTypeList(aActivity, res);
-            });
           },
           function onError(aEvent) {
             msg.error = "REGISTER_ERROR";
@@ -394,10 +390,6 @@ let Activities = {
         break;
       case "Activities:Unregister":
         this.db.remove(msg);
-        let res = [];
-        msg.forEach(function(aActivity) {
-          this.updateContentTypeList(aActivity, res);
-        }, this);
         break;
       case "child-process-shutdown":
         for (let id in this.callers) {
@@ -411,30 +403,8 @@ let Activities = {
         }
         break;
     }
-  },
-
-  updateContentTypeList: function updateContentTypeList(aActivity, aResult) {
-    // Bail out if this is not a "view" activity.
-    if (aActivity.name != "view") {
-      return;
-    }
-
-    let types = aActivity.description.filters.type;
-    if (typeof types == "string") {
-      types = [types];
-    }
-
-    // Check that this is a real content type and sanitize it.
-    types.forEach(function(aContentType) {
-      let hadCharset = { };
-      let charset = { };
-      let contentType =
-        NetUtil.parseContentType(aContentType, charset, hadCharset);
-      if (contentType) {
-        aResult.push(contentType);
-      }
-    });
   }
+
 }
 
 Activities.init();
