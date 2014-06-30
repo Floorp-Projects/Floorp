@@ -50,9 +50,9 @@ function test()
   let sites = ["mozilla.org", "mozilla.com", "select.all"];
   try {
     for each (let site in sites) {
-      stmt.bindStringParameter(0, filePath);
-      stmt.bindStringParameter(1, "http://" + site + "/file");
-      stmt.bindInt32Parameter(2, dm.DOWNLOAD_FINISHED);
+      stmt.bindByIndex(0, filePath);
+      stmt.bindByIndex(1, "http://" + site + "/file");
+      stmt.bindByIndex(2, dm.DOWNLOAD_FINISHED);
 
       // Add it!
       stmt.execute();

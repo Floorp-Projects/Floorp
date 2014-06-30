@@ -145,6 +145,12 @@ function startTest() {
 
 var gCount = 0;
 
+var gFrameMsgCounts = {
+  'input': 0,
+  'im0': 0,
+  'im1': 0
+};
+
 function next(msg) {
   let wrappedMsg = SpecialPowers.wrap(msg);
   let from = wrappedMsg.data.from;
@@ -156,21 +162,49 @@ function next(msg) {
     return;
   }
 
-  gCount++;
+  let fromId = from;
+  if (from === 'im') {
+    fromId += value[1];
+  }
+  gFrameMsgCounts[fromId]++;
 
   // The texts sent from the first and the second input method are '#0' and
   // '#1' respectively.
   switch (gCount) {
-    case 1:
-      is(from, 'im', 'Message sequence unexpected (1).');
-      is(value, '#0true', 'First frame should get the context first.');
-      // Do nothing and wait for the input to show up in input frame.
-      break;
+    case 0:
+      switch (fromId) {
+        case 'im0':
+          if (gFrameMsgCounts.im0 === 1) {
+            is(value, '#0true', 'First frame should get the context first.');
+          } else {
+            ok(false, 'Unexpected multiple messages from im0.')
+          }
 
-    case 2:
-      is(from, 'input', 'Message sequence unexpected (2).');
-      is(value, '#0hello',
-         'Failed to get correct input from the first iframe.');
+          break;
+
+        case 'im1':
+          is(false, 'Shouldn\'t be hearing anything from second frame.');
+
+          break;
+
+        case 'input':
+          if (gFrameMsgCounts.input === 1) {
+            is(value, '#0hello',
+              'Failed to get correct input from the first iframe.');
+          } else {
+            ok(false, 'Unexpected multiple messages from input.')
+          }
+
+          break;
+      }
+
+      if (gFrameMsgCounts.input !== 1 ||
+          gFrameMsgCounts.im0 !== 1 ||
+          gFrameMsgCounts.im1 !== 0) {
+        return;
+      }
+
+      gCount++;
 
       let req0 = gFrames[0].setInputMethodActive(false);
       req0.onsuccess = function() {
@@ -181,43 +215,64 @@ function next(msg) {
       };
       let req1 = gFrames[1].setInputMethodActive(true);
       req1.onsuccess = function() {
-       ok(true, 'setInputMethodActive succeeded (1).');
+        ok(true, 'setInputMethodActive succeeded (1).');
       };
       req1.onerror = function() {
-       ok(false, 'setInputMethodActive failed (1): ' + this.error.name);
+        ok(false, 'setInputMethodActive failed (1): ' + this.error.name);
       };
+
       break;
 
-    case 3:
-      is(from, 'im', 'Message sequence unexpected (3).');
-      is(value, '#0false', 'First frame should have the context removed.');
-      // Do nothing and wait for the second frame to get the context;
-      break;
+    case 1:
+      switch (fromId) {
+        case 'im0':
+          if (gFrameMsgCounts.im0 === 2) {
+            is(value, '#0false', 'First frame should have the context removed.');
+          } else {
+            ok(false, 'Unexpected multiple messages from im0.')
+          }
+          break;
 
-    case 4:
-      is(from, 'im', 'Message sequence unexpected (4).');
-      is(value, '#1true', 'Second frame should get the context.');
-      // Do nothing and wait for the input to show up in input frame.
-      break;
+        case 'im1':
+          if (gFrameMsgCounts.im1 === 1) {
+            is(value, '#1true', 'Second frame should get the context.');
+          } else {
+            ok(false, 'Unexpected multiple messages from im0.')
+          }
 
-    case 5:
-      is(from, 'input', 'Message sequence unexpected (5).');
-      is(value, '#0#1hello',
-         'Failed to get correct input from the second iframe.');
+          break;
+
+        case 'input':
+          if (gFrameMsgCounts.input === 2) {
+            is(value, '#0#1hello',
+               'Failed to get correct input from the second iframe.');
+          } else {
+            ok(false, 'Unexpected multiple messages from input.')
+          }
+          break;
+      }
+
+      if (gFrameMsgCounts.input !== 2 ||
+          gFrameMsgCounts.im0 !== 2 ||
+          gFrameMsgCounts.im1 !== 1) {
+        return;
+      }
+
+      gCount++;
 
       // Receive the second input from the second iframe.
       // Deactive the second iframe.
       let req3 = gFrames[1].setInputMethodActive(false);
       req3.onsuccess = function() {
-        ok(true, 'setInputMethodActive(false) succeeded (3).');
+        ok(true, 'setInputMethodActive(false) succeeded (2).');
       };
       req3.onerror = function() {
-        ok(false, 'setInputMethodActive(false) failed (3): ' + this.error.name);
+        ok(false, 'setInputMethodActive(false) failed (2): ' + this.error.name);
       };
       break;
 
-    case 6:
-      is(from, 'im', 'Message sequence unexpected (6).');
+    case 2:
+      is(fromId, 'im1', 'Message sequence unexpected (3).');
       is(value, '#1false', 'Second frame should have the context removed.');
 
       tearDown();
