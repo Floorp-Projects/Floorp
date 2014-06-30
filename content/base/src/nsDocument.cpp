@@ -8898,8 +8898,7 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
       return;
     }
 
-    nsCOMPtr<nsPIDOMWindow> window;
-    window = do_QueryInterface(GetWindow());
+    nsPIDOMWindow* window = GetInnerWindow();
     if (window &&
         !window->HasMutationListeners(NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
       mSubtreeModifiedTargets.Clear();
