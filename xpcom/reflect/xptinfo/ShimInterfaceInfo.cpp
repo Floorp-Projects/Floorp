@@ -130,7 +130,6 @@
 #include "nsIDOMScrollAreaEvent.h"
 #include "nsIDOMSerializer.h"
 #include "nsIDOMSimpleGestureEvent.h"
-#include "nsIDOMSmartCardEvent.h"
 #ifdef MOZ_WEBSPEECH
 #include "nsIDOMSpeechRecognitionEvent.h"
 #include "nsIDOMSpeechSynthesisEvent.h"
@@ -284,7 +283,6 @@
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/dom/ScrollAreaEventBinding.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
-#include "mozilla/dom/SmartCardEventBinding.h"
 #ifdef MOZ_WEBSPEECH
 #include "mozilla/dom/SpeechRecognitionEventBinding.h"
 #include "mozilla/dom/SpeechSynthesisEventBinding.h"
@@ -489,7 +487,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(ScrollAreaEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMSerializer, XMLSerializer),
   DEFINE_SHIM(SimpleGestureEvent),
-  DEFINE_SHIM(SmartCardEvent),
 #ifdef MOZ_WEBSPEECH
   DEFINE_SHIM(SpeechRecognitionEvent),
   DEFINE_SHIM(SpeechSynthesisEvent),
