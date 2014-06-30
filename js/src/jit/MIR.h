@@ -6270,6 +6270,7 @@ class MBoundsCheck
     void setMaximum(int32_t n) {
         maximum_ = n;
     }
+    MDefinition *foldsTo(TempAllocator &alloc);
     bool congruentTo(const MDefinition *ins) const {
         if (!ins->isBoundsCheck())
             return false;
