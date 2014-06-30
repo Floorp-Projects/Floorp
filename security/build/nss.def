@@ -189,6 +189,7 @@ NSS_CMSEnvelopedData_AddRecipient
 NSS_CMSEnvelopedData_Create
 NSS_CMSEnvelopedData_GetContentInfo
 NSS_CMSMessage_ContentLevel
+NSS_CMSMessage_ContentLevelCount
 NSS_CMSMessage_Create
 NSS_CMSMessage_CreateFromDER
 NSS_CMSMessage_Destroy

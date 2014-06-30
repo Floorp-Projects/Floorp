@@ -126,16 +126,16 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
                             int32_t aStretch,
                             uint32_t aItalicStyle,
                             const nsTArray<gfxFontFeature>& aFeatureSettings,
-                            const nsString& aLanguageOverride,
+                            uint32_t aLanguageOverride,
                             gfxSparseBitSet *aUnicodeRanges)
 {
+    MOZ_ASSERT(aWeight != 0,
+               "aWeight must not be 0; use NS_FONT_WEIGHT_NORMAL instead");
+
     nsAutoString key(aFamilyName);
     ToLowerCase(key);
 
     bool found;
-
-    if (aWeight == 0)
-        aWeight = NS_FONT_WEIGHT_NORMAL;
 
     // stretch, italic/oblique ==> zero implies normal
 
@@ -144,9 +144,6 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
         family = new gfxMixedFontFamily(aFamilyName);
         mFontFamilies.Put(key, family);
     }
-
-    uint32_t languageOverride =
-        gfxFontStyle::ParseFontLanguageOverride(aLanguageOverride);
 
     // If there's already a proxy in the family whose descriptors all match,
     // we can just move it to the end of the list instead of adding a new
@@ -164,7 +161,7 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
             static_cast<gfxProxyFontEntry*>(fontList[i].get());
         if (!existingProxyEntry->Matches(aFontFaceSrcList,
                                          aWeight, aStretch, aItalicStyle,
-                                         aFeatureSettings, languageOverride,
+                                         aFeatureSettings, aLanguageOverride,
                                          aUnicodeRanges)) {
             continue;
         }
@@ -181,7 +178,7 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
         new gfxProxyFontEntry(aFontFaceSrcList, aWeight, aStretch,
                               aItalicStyle,
                               aFeatureSettings,
-                              languageOverride,
+                              aLanguageOverride,
                               aUnicodeRanges);
     family->AddFontEntry(proxyEntry);
 #ifdef PR_LOGGING
