@@ -13,11 +13,12 @@
 
 static const uint32_t kAutoArraySize = 8;
 
-class nsSupportsArray MOZ_FINAL : public nsISupportsArray {
-public:
-  nsSupportsArray(void);
+class nsSupportsArray MOZ_FINAL : public nsISupportsArray
+{
   ~nsSupportsArray(void); // nonvirtual since we're not subclassed
 
+public:
+  nsSupportsArray(void);
   static nsresult
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
