@@ -488,8 +488,10 @@ assertStmt("function f() { var x = 42; var x = 43; }",
                                               varDecl([{ id: ident("x"), init: lit(43) }])])));
 
 
-assertDecl("var {x:y} = foo;", varDecl([{ id: objPatt([{ key: ident("x"), value: ident("y") }]),
+assertDecl("var {x:y} = foo;", varDecl([{ id: objPatt([{ key: ident("x"), value: ident("y"), shorthand: false }]),
                                           init: ident("foo") }]));
+assertDecl("var {x} = foo;", varDecl([{ id: objPatt([{ key: ident("x"), value: ident("x"), shorthand: true }]),
+                                        init: ident("foo") }]));
 
 // Bug 632030: redeclarations between var and funargs, var and function
 assertStmt("function g(x) { var x }",
