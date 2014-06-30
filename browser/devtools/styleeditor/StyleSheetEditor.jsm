@@ -211,7 +211,8 @@ StyleSheetEditor.prototype = {
   fetchSource: function(callback) {
     this.styleSheet.getText().then((longStr) => {
       longStr.string().then((source) => {
-        this._state.text = prettifyCSS(source);
+        let ruleCount = this.styleSheet.ruleCount;
+        this._state.text = prettifyCSS(source, ruleCount);
         this.sourceLoaded = true;
 
         callback(source);
@@ -570,10 +571,16 @@ const LINE_SEPARATOR = CURRENT_OS === "WINNT" ? "\r\n" : "\n";
  * @return string
  *         Prettified CSS source
  */
-function prettifyCSS(text)
+function prettifyCSS(text, ruleCount)
 {
   // remove initial and terminating HTML comments and surrounding whitespace
   text = text.replace(/(?:^\s*<!--[\r\n]*)|(?:\s*-->\s*$)/g, "");
+
+  // don't attempt to prettify if there's more than one line per rule.
+  let lineCount = text.split("\n").length - 1;
+  if (ruleCount !== null && lineCount >= ruleCount) {
+    return text;
+  }
 
   let parts = [];    // indented parts
   let partStart = 0; // start offset of currently parsed part
