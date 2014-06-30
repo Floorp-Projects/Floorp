@@ -20,7 +20,7 @@ function setupAutoCompletion(ctx, options) {
   let { cm, ed, Editor } = ctx;
 
   let win = ed.container.contentWindow.wrappedJSObject;
-  let { CodeMirror, document } = win;
+  let {CodeMirror} = win;
 
   let completer = null;
   let autocompleteKey = "Ctrl-" +
@@ -33,32 +33,7 @@ function setupAutoCompletion(ctx, options) {
 
     CM_TERN_SCRIPTS.forEach(ed.loadScript, ed);
     win.tern = require("tern/tern");
-    cm.tern = new CodeMirror.TernServer({
-      defs: defs,
-      typeTip: function(data) {
-        let tip = document.createElement("span");
-        tip.className = "CodeMirror-Tern-information";
-        let tipType = document.createElement("strong");
-        tipType.appendChild(document.createTextNode(data.type || cm.l10n("autocompletion.notFound")));
-        tip.appendChild(tipType);
-
-        if (data.doc) {
-          tip.appendChild(document.createTextNode(" — " + data.doc));
-        }
-
-        if (data.url) {
-          tip.appendChild(document.createTextNode(" "));
-          let docLink = document.createElement("a");
-          docLink.textContent = "[" + cm.l10n("autocompletion.docsLink") + "]";
-          docLink.href = data.url;
-          docLink.className = "theme-link";
-          docLink.setAttribute("target", "_blank");
-          tip.appendChild(docLink);
-        }
-
-        return tip;
-      }
-    });
+    cm.tern = new CodeMirror.TernServer({ defs: defs });
     cm.on("cursorActivity", (cm) => {
       cm.tern.updateArgHints(cm);
     });
