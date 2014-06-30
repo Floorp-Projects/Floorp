@@ -516,6 +516,8 @@ if CONFIG['MOZ_WEBSPEECH']:
         'SpeechGrammarList.webidl',
         'SpeechRecognition.webidl',
         'SpeechRecognitionAlternative.webidl',
+        'SpeechRecognitionError.webidl',
+        'SpeechRecognitionEvent.webidl',
         'SpeechRecognitionResult.webidl',
         'SpeechRecognitionResultList.webidl',
         'SpeechSynthesis.webidl',
@@ -607,12 +609,6 @@ else:
         'InstallTrigger.webidl',
     ]
 
-if CONFIG['MOZ_WEBSPEECH']:
-    WEBIDL_FILES += [
-        'SpeechRecognitionError.webidl',
-        'SpeechRecognitionEvent.webidl',
-    ]
-
 if CONFIG['MOZ_B2G_FM']:
     WEBIDL_FILES += [
         'FMRadio.webidl',
@@ -666,6 +662,12 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'UserProximityEvent.webidl',
     'USSDReceivedEvent.webidl',
 ]
+
+if CONFIG['MOZ_WEBSPEECH']:
+    GENERATED_EVENTS_WEBIDL_FILES += [
+        'SpeechRecognitionEvent.webidl',
+        'SpeechSynthesisEvent.webidl',
+    ]
 
 if CONFIG['MOZ_GAMEPAD']:
     GENERATED_EVENTS_WEBIDL_FILES += [

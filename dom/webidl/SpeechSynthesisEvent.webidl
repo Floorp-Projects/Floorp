@@ -11,7 +11,6 @@
  */
 
 [Constructor(DOMString type, optional SpeechSynthesisEventInit eventInitDict),
- HeaderFile="GeneratedEventClasses.h",
  Pref="media.webspeech.synth.enabled"]
 interface SpeechSynthesisEvent : Event
 {
