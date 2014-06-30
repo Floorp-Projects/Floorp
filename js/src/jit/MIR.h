@@ -10094,7 +10094,32 @@ class MIsCallable
     static MIsCallable *New(TempAllocator &alloc, MDefinition *obj) {
         return new(alloc) MIsCallable(obj);
     }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
 
+class MIsObject
+  : public MUnaryInstruction,
+    public BoxInputsPolicy
+{
+    explicit MIsObject(MDefinition *object)
+    : MUnaryInstruction(object)
+    {
+        setResultType(MIRType_Boolean);
+        setMovable();
+    }
+  public:
+    INSTRUCTION_HEADER(IsObject);
+    static MIsObject *New(TempAllocator &alloc, MDefinition *obj) {
+        return new(alloc) MIsObject(obj);
+    }
     TypePolicy *typePolicy() {
         return this;
     }

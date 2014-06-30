@@ -306,6 +306,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(FunctionDispatch)
     SAFE_OP(TypeObjectDispatch)
     SAFE_OP(IsCallable)
+    SAFE_OP(IsObject)
     SAFE_OP(HaveSameClass)
     SAFE_OP(HasClass)
     UNSAFE_OP(EffectiveAddress)
