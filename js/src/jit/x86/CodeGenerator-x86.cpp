@@ -296,7 +296,7 @@ CodeGeneratorX86::loadViewTypeElement(Scalar::Type vt, const T &srcAddr,
       case Scalar::Uint32:  masm.movlWithPatch(srcAddr, ToRegister(out)); break;
       case Scalar::Float32: masm.movssWithPatch(srcAddr, ToFloatRegister(out)); break;
       case Scalar::Float64: masm.movsdWithPatch(srcAddr, ToFloatRegister(out)); break;
-      default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
+      default: MOZ_CRASH("unexpected array type");
     }
 }
 
@@ -417,7 +417,7 @@ CodeGeneratorX86::storeViewTypeElement(Scalar::Type vt, const LAllocation *value
       case Scalar::Uint32:  masm.movlWithPatch(ToRegister(value), dstAddr); break;
       case Scalar::Float32: masm.movssWithPatch(ToFloatRegister(value), dstAddr); break;
       case Scalar::Float64: masm.movsdWithPatch(ToFloatRegister(value), dstAddr); break;
-      default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
+      default: MOZ_CRASH("unexpected array type");
     }
 }
 
@@ -576,7 +576,7 @@ DispatchIonCache::initializeAddCacheState(LInstruction *ins, AddCacheState *addS
 {
     // On x86, where there is no general purpose scratch register available,
     // child cache classes must manually specify a dispatch scratch register.
-    MOZ_ASSUME_UNREACHABLE("x86 needs manual assignment of dispatchScratch");
+    MOZ_CRASH("x86 needs manual assignment of dispatchScratch");
 }
 
 void

@@ -1202,7 +1202,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             }
             start = poolGroup[idx].other->addPoolSize(start);
         }
-        MOZ_ASSUME_UNREACHABLE("Entry is not in a pool");
+        MOZ_CRASH("Entry is not in a pool");
     }
     void writePoolEntry(PoolEntry pe, uint8_t *buff) {
         size_t size = getPoolEntrySize(pe);

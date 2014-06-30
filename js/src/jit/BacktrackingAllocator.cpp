@@ -1267,7 +1267,7 @@ BacktrackingAllocator::populateSafepoints()
                     break;
 #endif
                   default:
-                    MOZ_ASSUME_UNREACHABLE("Bad register type");
+                    MOZ_CRASH("Bad register type");
                 }
             }
         }
@@ -1506,7 +1506,7 @@ BacktrackingAllocator::computeSpillWeight(const LiveInterval *interval)
 
           default:
             // Note: RECOVERED_INPUT will not appear in UsePositionIterator.
-            MOZ_ASSUME_UNREACHABLE("Bad use");
+            MOZ_CRASH("Bad use");
         }
     }
 
