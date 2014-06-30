@@ -61,7 +61,7 @@ operator==(const gfxFontFaceSrc& a, const gfxFontFaceSrc& b)
 class gfxUserFontData {
 public:
     gfxUserFontData()
-        : mSrcIndex(0), mFormat(0), mMetaOrigLen(0)
+        : mSrcIndex(0), mFormat(0), mMetaOrigLen(0), mPrivate(false)
     { }
     virtual ~gfxUserFontData() { }
 
