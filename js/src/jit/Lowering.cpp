@@ -3430,6 +3430,17 @@ LIRGenerator::visitIsCallable(MIsCallable *ins)
 }
 
 bool
+LIRGenerator::visitIsObject(MIsObject *ins)
+{
+    MDefinition *opd = ins->input();
+    JS_ASSERT(opd->type() == MIRType_Value);
+    LIsObject *lir = new(alloc()) LIsObject();
+    if (!useBoxAtStart(lir, LIsObject::Input, opd))
+        return false;
+    return define(lir, ins);
+}
+
+bool
 LIRGenerator::visitHaveSameClass(MHaveSameClass *ins)
 {
     MDefinition *lhs = ins->lhs();
