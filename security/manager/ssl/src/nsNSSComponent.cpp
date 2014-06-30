@@ -47,7 +47,6 @@
 #include "nsITokenPasswordDialogs.h"
 #include "nsServiceManagerUtils.h"
 #include "nsNSSShutDown.h"
-#include "GeneratedEvents.h"
 #include "SharedSSLState.h"
 #include "NSSErrorsService.h"
 

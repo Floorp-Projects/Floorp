@@ -42,7 +42,6 @@
 #include "nsWrapperCacheInlines.h"
 #include "nsIObserverService.h"
 #include "nsIWebSocketChannel.h"
-#include "GeneratedEvents.h"
 
 namespace mozilla {
 namespace dom {
