@@ -630,6 +630,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'CallEvent.webidl',
     'CallGroupErrorEvent.webidl',
     'CFStateChangeEvent.webidl',
+    'CloseEvent.webidl',
     'DataErrorEvent.webidl',
     'DataStoreChangeEvent.webidl',
     'DeviceLightEvent.webidl',

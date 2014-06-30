@@ -15,6 +15,7 @@
 #include "GeckoProfiler.h"
 #include "GeneratedEvents.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/dom/CloseEvent.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/HashChangeEvent.h"
 #include "mozilla/dom/StorageEvent.h"
@@ -823,8 +824,13 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     return NS_NewDOMScrollAreaEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("popstateevent"))
     return NS_NewDOMPopStateEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("closeevent"))
-    return NS_NewDOMCloseEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+  if (aEventType.LowerCaseEqualsLiteral("closeevent")) {
+    CloseEventInit init;
+    nsRefPtr<CloseEvent> event =
+      CloseEvent::Constructor(aOwner, EmptyString(), init);
+    event.forget(aDOMEvent);
+    return NS_OK;
+  }
   if (aEventType.LowerCaseEqualsLiteral("touchevent") &&
       TouchEvent::PrefEnabled())
     return NS_NewDOMTouchEvent(aDOMEvent, aOwner, aPresContext, nullptr);
