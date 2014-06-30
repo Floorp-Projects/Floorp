@@ -44,8 +44,8 @@
 
 <!ENTITY history_today_section "Today">
 <!ENTITY history_yesterday_section "Yesterday">
-<!ENTITY history_week_section "7 days ago">
-<!ENTITY history_older_section "Older than 7 days">
+<!ENTITY history_week_section2 "Last Week">
+<!ENTITY history_older_section2 "Last Month">
 
 <!ENTITY go "Go">
 <!ENTITY search "Search">
