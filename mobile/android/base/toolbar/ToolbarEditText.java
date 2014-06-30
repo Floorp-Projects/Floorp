@@ -392,6 +392,9 @@ public class ToolbarEditText extends CustomEditText
                     // Make the IME aware that we interrupted the setComposingText call,
                     // by having finishComposingText() send change notifications to the IME.
                     finishComposingText();
+                    if (Build.VERSION.SDK_INT >= 9) {
+                        setComposingRegion(composingStart, composingEnd);
+                    }
                     return true;
                 }
                 return false;
