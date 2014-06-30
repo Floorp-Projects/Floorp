@@ -92,6 +92,8 @@ public:
     return NS_OK;
   }
 private:
+  ~TimerCallback() {}
+
   nsIThread** mThreadPtr;
   ReentrantMonitor* mReentrantMonitor;
 };

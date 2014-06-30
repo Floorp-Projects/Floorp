@@ -20,14 +20,14 @@ class nsACString;
  */
 class nsMemoryInfoDumper : public nsIMemoryInfoDumper
 {
+  virtual ~nsMemoryInfoDumper();
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMEMORYINFODUMPER
 
   nsMemoryInfoDumper();
-  virtual ~nsMemoryInfoDumper();
 
-public:
   static void Initialize();
 
 #ifdef MOZ_DMD
