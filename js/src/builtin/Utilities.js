@@ -143,22 +143,6 @@ function CheckObjectCoercible(v) {
         ThrowError(JSMSG_CANT_CONVERT_TO, ToString(v), "object");
 }
 
-
-/********** Various utility functions **********/
-
-
-/** Returns true iff Type(v) is Object; see ES5 8.6. */
-function IsObject(v) {
-    // Watch out for |typeof null === "object"| as the most obvious pitfall.
-    // But also be careful of SpiderMonkey's objects that emulate undefined
-    // (i.e. |document.all|), which have bogus |typeof| behavior.  Detect
-    // these objects using strict equality, which said bogosity doesn't affect.
-    return (typeof v === "object" && v !== null) ||
-           typeof v === "function" ||
-           (typeof v === "undefined" && v !== undefined);
-}
-
-
 /********** Testing code **********/
 
 #ifdef ENABLE_PARALLEL_JS
