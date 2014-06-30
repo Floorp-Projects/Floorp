@@ -124,7 +124,6 @@
 #include "nsIDOMPaintRequest.h"
 #include "nsIDOMParser.h"
 #include "nsIDOMPopStateEvent.h"
-#include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMRecordErrorEvent.h"
@@ -280,7 +279,6 @@
 #include "mozilla/dom/PageTransitionEventBinding.h"
 #include "mozilla/dom/PaintRequestBinding.h"
 #include "mozilla/dom/PopStateEventBinding.h"
-#include "mozilla/dom/PopupBlockedEventBinding.h"
 #include "mozilla/dom/PositionErrorBinding.h"
 #include "mozilla/dom/ProcessingInstructionBinding.h"
 #include "mozilla/dom/RangeBinding.h"
@@ -489,7 +487,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(PaintRequest),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMParser, DOMParser),
   DEFINE_SHIM(PopStateEvent),
-  DEFINE_SHIM(PopupBlockedEvent),
   DEFINE_SHIM(ProcessingInstruction),
   DEFINE_SHIM(Range),
   DEFINE_SHIM(RecordErrorEvent),
