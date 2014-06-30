@@ -21,8 +21,6 @@ public:
     NS_DECL_NSIOBSERVER
 
     nsAppStartupNotifier();
-
-protected:
     virtual ~nsAppStartupNotifier();
 };
 

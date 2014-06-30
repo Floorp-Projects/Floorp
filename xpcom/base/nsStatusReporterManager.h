@@ -17,12 +17,12 @@ public:
 
   nsStatusReporter(nsACString& aProcess, nsACString& aDesc);
 
-private:
+  virtual ~nsStatusReporter();
+
+protected:
   nsCString sProcess;
   nsCString sName;
   nsCString sDesc;
-
-  virtual ~nsStatusReporter();
 };
 
 
@@ -33,9 +33,8 @@ public:
   NS_DECL_NSISTATUSREPORTERMANAGER
 
   nsStatusReporterManager();
+  virtual ~nsStatusReporterManager();
 
 private:
   nsCOMArray<nsIStatusReporter> mReporters;
-
-  virtual ~nsStatusReporterManager();
 };

@@ -19,14 +19,13 @@ class  nsControllerCommandTable : public nsIControllerCommandTable,
 public:
 
                   nsControllerCommandTable();
+  virtual         ~nsControllerCommandTable();
 
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSICONTROLLERCOMMANDTABLE
 
 protected:
-
-  virtual         ~nsControllerCommandTable();
 
   // Hash table of nsIControllerCommands, keyed by command name.
   nsInterfaceHashtable<nsCStringHashKey, nsIControllerCommand> mCommandsTable;

@@ -25,11 +25,10 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(IFoo, NS_IFOO_IID)
 
 class Foo MOZ_FINAL : public IFoo {
-  ~Foo();
-
 public:
 
   Foo(int32_t aID);
+  ~Foo();
 
   // nsISupports implementation
   NS_DECL_ISUPPORTS
@@ -79,6 +78,7 @@ class Bar MOZ_FINAL : public IBar {
 public:
 
   explicit Bar(nsCOMArray<IBar>& aArray);
+  ~Bar();
 
   // nsISupports implementation
   NS_DECL_ISUPPORTS
@@ -86,8 +86,6 @@ public:
   static int32_t sReleaseCalled;
 
 private:
-  ~Bar();
-
   nsCOMArray<IBar>& mArray;
 };
 

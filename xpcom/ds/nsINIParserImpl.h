@@ -20,8 +20,6 @@ class nsINIParserFactory MOZ_FINAL :
   public nsIINIParserFactory,
   public nsIFactory
 {
-  ~nsINIParserFactory() {}
-
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINIPARSERFACTORY

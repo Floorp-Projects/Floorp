@@ -35,6 +35,7 @@ class nsWebBrowserFind  : public nsIWebBrowserFind,
 {
 public:
                 nsWebBrowserFind();
+    virtual     ~nsWebBrowserFind();
     
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -47,9 +48,7 @@ public:
 
 
 protected:
-
-    virtual     ~nsWebBrowserFind();
-
+     
     bool        CanFindNext()
                 { return mSearchString.Length() != 0; }
 
