@@ -303,8 +303,10 @@ AssertMarkedOrAllocated(const EdgeValue &edge)
     if (!edge.thing || IsMarkedOrAllocated(static_cast<Cell *>(edge.thing)))
         return;
 
-    // Permanent atoms aren't marked during graph traversal.
+    // Permanent atoms and well-known symbols aren't marked during graph traversal.
     if (edge.kind == JSTRACE_STRING && static_cast<JSString *>(edge.thing)->isPermanentAtom())
+        return;
+    if (edge.kind == JSTRACE_SYMBOL && static_cast<JS::Symbol *>(edge.thing)->isWellKnownSymbol())
         return;
 
     char msgbuf[1024];
