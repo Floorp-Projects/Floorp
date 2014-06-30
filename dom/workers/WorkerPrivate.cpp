@@ -2821,16 +2821,11 @@ WorkerPrivateParent<Derived>::DispatchMessageEventToMessagePort(
     return true;
   }
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
-  port->GetParentObject(getter_AddRefs(sgo));
-  MOZ_ASSERT(sgo, "Should never happen if IsClosed() returned false!");
-  MOZ_ASSERT(sgo->GetGlobalJSObject());
-
-  nsCOMPtr<nsIScriptContext> scx = sgo->GetContext();
-  MOZ_ASSERT_IF(scx, scx->GetNativeContext());
-
-  AutoPushJSContext cx(scx ? scx->GetNativeContext() : aCx);
-  JSAutoCompartment(cx, sgo->GetGlobalJSObject());
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(port->GetParentObject()))) {
+    return false;
+  }
+  JSContext* cx = jsapi.cx();
 
   JS::Rooted<JS::Value> data(cx);
   if (!buffer.read(cx, &data, WorkerStructuredCloneCallbacks(true))) {
