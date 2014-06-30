@@ -5026,6 +5026,28 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineListNode<MPhi>
     }
     bool specializeType();
 
+#ifdef DEBUG
+    // Assert that this is a phi in a loop header with a unique predecessor and
+    // a unique backedge.
+    void assertLoopPhi() const;
+#else
+    void assertLoopPhi() const {}
+#endif
+
+    // Assuming this phi is in a loop header with a unique loop entry, return
+    // the phi operand along the loop entry.
+    MDefinition *getLoopPredecessorOperand() const {
+        assertLoopPhi();
+        return getOperand(0);
+    }
+
+    // Assuming this phi is in a loop header with a unique loop entry, return
+    // the phi operand along the loop backedge.
+    MDefinition *getLoopBackedgeOperand() const {
+        assertLoopPhi();
+        return getOperand(1);
+    }
+
     // Whether this phi's type already includes information for def.
     bool typeIncludes(MDefinition *def);
 

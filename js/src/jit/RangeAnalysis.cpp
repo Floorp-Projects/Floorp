@@ -1723,13 +1723,13 @@ RangeAnalysis::analyzeLoopIterationCount(MBasicBlock *header,
     // The first operand of the phi should be the lhs' value at the start of
     // the first executed iteration, and not a value written which could
     // replace the second operand below during the middle of execution.
-    MDefinition *lhsInitial = lhs.term->toPhi()->getOperand(0);
+    MDefinition *lhsInitial = lhs.term->toPhi()->getLoopPredecessorOperand();
     if (lhsInitial->block()->isMarked())
         return nullptr;
 
     // The second operand of the phi should be a value written by an add/sub
     // in every loop iteration, i.e. in a block which dominates the backedge.
-    MDefinition *lhsWrite = lhs.term->toPhi()->getOperand(1);
+    MDefinition *lhsWrite = lhs.term->toPhi()->getLoopBackedgeOperand();
     if (lhsWrite->isBeta())
         lhsWrite = lhsWrite->getOperand(0);
     if (!lhsWrite->isAdd() && !lhsWrite->isSub())
@@ -1809,17 +1809,11 @@ RangeAnalysis::analyzeLoopPhi(MBasicBlock *header, LoopIterationBound *loopBound
 
     JS_ASSERT(phi->numOperands() == 2);
 
-    MBasicBlock *preLoop = header->loopPredecessor();
-    JS_ASSERT(!preLoop->isMarked() && preLoop->successorWithPhis() == header);
-
-    MBasicBlock *backedge = header->backedge();
-    JS_ASSERT(backedge->isMarked() && backedge->successorWithPhis() == header);
-
-    MDefinition *initial = phi->getOperand(preLoop->positionInPhiSuccessor());
+    MDefinition *initial = phi->getLoopPredecessorOperand();
     if (initial->block()->isMarked())
         return;
 
-    SimpleLinearSum modified = ExtractLinearSum(phi->getOperand(backedge->positionInPhiSuccessor()));
+    SimpleLinearSum modified = ExtractLinearSum(phi->getLoopBackedgeOperand());
 
     if (modified.term != phi || modified.constant == 0)
         return;

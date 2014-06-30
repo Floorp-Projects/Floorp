@@ -909,6 +909,23 @@ MTypeBarrier::printOpcode(FILE *fp) const
     getOperand(0)->printName(fp);
 }
 
+#ifdef DEBUG
+void
+MPhi::assertLoopPhi() const
+{
+    // getLoopPredecessorOperand and getLoopBackedgeOperand rely on these
+    // predecessors being at indices 0 and 1.
+    MBasicBlock *pred = block()->getPredecessor(0);
+    MBasicBlock *back = block()->getPredecessor(1);
+    JS_ASSERT(pred == block()->loopPredecessor());
+    JS_ASSERT(pred->successorWithPhis() == block());
+    JS_ASSERT(pred->positionInPhiSuccessor() == 0);
+    JS_ASSERT(back == block()->backedge());
+    JS_ASSERT(back->successorWithPhis() == block());
+    JS_ASSERT(back->positionInPhiSuccessor() == 1);
+}
+#endif
+
 void
 MPhi::removeOperand(size_t index)
 {
