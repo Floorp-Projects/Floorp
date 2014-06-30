@@ -8,11 +8,9 @@
  <name>Init dictionary for the event constructor. """
 
 simple_events = [
-    'MozSettingsEvent',
     'CustomEvent',
     'DOMTransactionEvent',
     'DeviceOrientationEvent',
-    'MozApplicationEvent',
     'StyleRuleChangeEvent',
     'StyleSheetChangeEvent',
     'StyleSheetApplicableStateChangeEvent',
