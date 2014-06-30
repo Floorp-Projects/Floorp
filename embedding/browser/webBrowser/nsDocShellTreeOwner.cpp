@@ -996,8 +996,10 @@ public:
 
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSITOOLTIPTEXTPROVIDER
-    
+
 protected:
+    ~DefaultTooltipTextProvider() {}
+
     nsCOMPtr<nsIAtom>   mTag_dialog;
     nsCOMPtr<nsIAtom>   mTag_dialogheader;
     nsCOMPtr<nsIAtom>   mTag_window;
