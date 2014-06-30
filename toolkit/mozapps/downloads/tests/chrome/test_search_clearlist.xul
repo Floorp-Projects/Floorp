@@ -56,11 +56,11 @@ function test()
 
   try {
     for each (let site in sites) {
-      stmt.bindStringParameter(0, filePath);
-      stmt.bindStringParameter(1, "http://" + site + "/file");
-      stmt.bindInt32Parameter(2, dm.DOWNLOAD_FINISHED);
+      stmt.bindByIndex(0, filePath);
+      stmt.bindByIndex(1, "http://" + site + "/file");
+      stmt.bindByIndex(2, dm.DOWNLOAD_FINISHED);
       // Make the one that matches slightly older so it appears last
-      stmt.bindInt64Parameter(3, 1112223334445556 - (site == searchTerm));
+      stmt.bindByIndex(3, 1112223334445556 - (site == searchTerm));
 
       // Add it!
       stmt.execute();

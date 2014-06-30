@@ -55,7 +55,6 @@ asserts-if(gtk2Widget,0-4) test-pref(font.size.inflation.emPerLine,15) test-pref
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == disable-fontinfl-on-mobile.html disable-fontinfl-on-mobile-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == disable-fontinfl-on-mobile-2.html disable-fontinfl-on-mobile-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == disable-fontinfl-on-mobile-3.html disable-fontinfl-on-mobile-ref.html
-test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == disable-fontinfl-on-mobile-4.html disable-fontinfl-on-mobile-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) != disable-fontinfl-on-mobile-5.html disable-fontinfl-on-mobile-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == preformatted-text.html preformatted-text-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == fixed-height-body.html fixed-height-body-ref.html

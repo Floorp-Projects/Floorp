@@ -3199,12 +3199,16 @@ PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
 #endif
 
     if (mIsTransparent && !CanPaintOnBackground()) {
-        // Clear surface content for transparent rendering
-        nsRefPtr<gfxContext> ctx = new gfxContext(renderSurface);
-        ctx->SetDeviceColor(aColor);
-        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-        ctx->Rectangle(GfxFromNsRect(plPaintRect));
-        ctx->Fill();
+        RefPtr<DrawTarget> dt = CreateDrawTargetForSurface(renderSurface);
+        gfx::Rect rect(plPaintRect.x, plPaintRect.y,
+                       plPaintRect.width, plPaintRect.height);
+        // Moz2D treats OP_SOURCE operations as unbounded, so we need to
+        // clip to the rect that we want to fill:
+        dt->PushClipRect(rect);
+        dt->FillRect(rect, ColorPattern(ToColor(aColor)),
+                     DrawOptions(1.f, CompositionOp::OP_SOURCE));
+        dt->PopClip();
+        dt->Flush();
     }
 
     PaintRectToPlatformSurface(plPaintRect, renderSurface);

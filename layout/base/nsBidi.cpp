@@ -1452,7 +1452,7 @@ bool nsBidi::GetRuns()
     GetSingleRun(mParaLevel);
   } else /* NSBIDI_MIXED, length>0 */ {
     /* mixed directionality */
-    int32_t length=mLength, limit=length;
+    int32_t length=mLength, limit=mTrailingWSStart;
 
     /*
      * If there are WS characters at the end of the line
@@ -1465,7 +1465,6 @@ bool nsBidi::GetRuns()
      * In other words, for the trailing WS, it may be
      * levels[]!=paraLevel but we have to treat it like it were so.
      */
-    limit=mTrailingWSStart;
     if(limit==0) {
       /* there is only WS on this line */
       GetSingleRun(mParaLevel);
