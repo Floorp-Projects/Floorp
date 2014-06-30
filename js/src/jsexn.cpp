@@ -915,7 +915,7 @@ js_CopyErrorObject(JSContext *cx, Handle<ErrorObject*> err, HandleObject scope)
 }
 
 JS_PUBLIC_API(bool)
-JS::CreateTypeError(JSContext *cx, HandleString stack, HandleString fileName,
+JS::CreateError(JSContext *cx, JSExnType type, HandleString stack, HandleString fileName,
                     uint32_t lineNumber, uint32_t columnNumber, JSErrorReport *report,
                     HandleString message, MutableHandleValue rval)
 {
@@ -925,7 +925,7 @@ JS::CreateTypeError(JSContext *cx, HandleString stack, HandleString fileName,
         rep = CopyErrorReport(cx, report);
 
     RootedObject obj(cx,
-        js::ErrorObject::create(cx, JSEXN_TYPEERR, stack, fileName,
+        js::ErrorObject::create(cx, type, stack, fileName,
                                 lineNumber, columnNumber, &rep, message));
     if (!obj)
         return false;
