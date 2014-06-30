@@ -38,7 +38,7 @@ FINAL_LIBRARY = 'xpcom_core'
 
 LOCAL_INCLUDES += [
     '../..',
-    '../../../../xptinfo',
+    '/xpcom/reflect/xptinfo',
 ]
 
 if CONFIG['TARGET_CPU'] != 'x86_64':
