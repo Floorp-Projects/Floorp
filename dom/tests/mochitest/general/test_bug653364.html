@@ -28,8 +28,9 @@ document.addEventListener("popState", function(e) {
   is(e.isTrusted, false, "PopState event shouldn't be trusted.");
 }, true);
 
-let ps = document.createEvent("PopStateEvent");
-ps.initPopStateEvent("popState", true, false, {'foo': 'bar'});
+let ps = new PopStateEvent("popState", { bubbles: true,
+                                         cancelable: false,
+                                         state: {'foo': 'bar'} });
 document.documentElement.dispatchEvent(ps);
 is(gotPopState, 1, 'Document received PopState event.');
 

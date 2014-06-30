@@ -87,7 +87,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMPopStateEvent.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsPIDOMStorage.h"
 #include "nsDOMString.h"
@@ -216,6 +215,7 @@
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/HashChangeEvent.h"
+#include "mozilla/dom/PopStateEvent.h"
 #include "mozilla/dom/PopupBlockedEvent.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "nsITabChild.h"
@@ -10157,31 +10157,33 @@ nsGlobalWindow::DispatchSyncPopState()
     presContext = shell->GetPresContext();
   }
 
-  // Create a new popstate event
-  nsCOMPtr<nsIDOMEvent> domEvent;
-  rv = EventDispatcher::CreateEvent(this, presContext, nullptr,
-                                    NS_LITERAL_STRING("popstateevent"),
-                                    getter_AddRefs(domEvent));
-  NS_ENSURE_SUCCESS(rv, rv);
+  bool result = true;
+  nsPIDOMWindow* outerWindow = GetOuterWindow();
+  nsCOMPtr<EventTarget> outerWindowET = do_QueryInterface(outerWindow);
+  NS_ENSURE_TRUE(outerWindowET, NS_ERROR_FAILURE);
 
-  // Initialize the popstate event, which does bubble but isn't cancellable.
-  nsCOMPtr<nsIDOMPopStateEvent> popstateEvent = do_QueryInterface(domEvent);
-  rv = popstateEvent->InitPopStateEvent(NS_LITERAL_STRING("popstate"),
-                                        true, false,
-                                        stateObj);
-  NS_ENSURE_SUCCESS(rv, rv);
+  AutoJSAPI jsapi;
+  result = jsapi.Init(outerWindow);
+  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
 
-  domEvent->SetTrusted(true);
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JS::Value> stateJSValue(cx, JS::NullValue());
+  result = stateObj ? VariantToJsval(cx, stateObj, &stateJSValue) : true;
+  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
 
-  nsCOMPtr<EventTarget> outerWindow =
-    do_QueryInterface(GetOuterWindow());
-  NS_ENSURE_TRUE(outerWindow, NS_ERROR_UNEXPECTED);
+  RootedDictionary<PopStateEventInit> init(cx);
+  init.mBubbles = true;
+  init.mCancelable = false;
+  init.mState = stateJSValue;
 
-  rv = domEvent->SetTarget(outerWindow);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<PopStateEvent> event =
+    PopStateEvent::Constructor(outerWindowET, NS_LITERAL_STRING("popstate"),
+                               init);
+  event->SetTrusted(true);
+  event->SetTarget(outerWindowET);
 
   bool dummy; // default action
-  return DispatchEvent(popstateEvent, &dummy);
+  return DispatchEvent(event, &dummy);
 }
 
 // Find an nsICanvasFrame under aFrame.  Only search the principal

@@ -29,7 +29,6 @@ XPIDL_SOURCES += [
     'nsIDOMNSEvent.idl',
     'nsIDOMPageTransitionEvent.idl',
     'nsIDOMPaintRequest.idl',
-    'nsIDOMPopStateEvent.idl',
     'nsIDOMRecordErrorEvent.idl',
     'nsIDOMScrollAreaEvent.idl',
     'nsIDOMSimpleGestureEvent.idl',
