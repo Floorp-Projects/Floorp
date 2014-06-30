@@ -167,9 +167,10 @@ public:
 
 
     // add in a font face
-    // weight - 0 == unknown, [100, 900] otherwise (multiples of 100)
+    // weight - [100, 900] (multiples of 100)
     // stretch = [NS_FONT_STRETCH_ULTRA_CONDENSED, NS_FONT_STRETCH_ULTRA_EXPANDED]
     // italic style = constants in gfxFontConstants.h, e.g. NS_FONT_STYLE_NORMAL
+    // language override = result of calling gfxFontStyle::ParseFontLanguageOverride
     // TODO: support for unicode ranges not yet implemented
     gfxFontEntry *AddFontFace(const nsAString& aFamilyName,
                               const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
@@ -177,7 +178,7 @@ public:
                               int32_t aStretch,
                               uint32_t aItalicStyle,
                               const nsTArray<gfxFontFeature>& aFeatureSettings,
-                              const nsString& aLanguageOverride,
+                              uint32_t aLanguageOverride,
                               gfxSparseBitSet *aUnicodeRanges = nullptr);
 
     // add in a font face for which we have the gfxFontEntry already

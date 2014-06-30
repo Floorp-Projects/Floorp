@@ -571,13 +571,16 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
   uint32_t weight = NS_STYLE_FONT_WEIGHT_NORMAL;
   int32_t stretch = NS_STYLE_FONT_STRETCH_NORMAL;
   uint32_t italicStyle = NS_STYLE_FONT_STYLE_NORMAL;
-  nsString languageOverride;
+  uint32_t languageOverride = NO_FONT_LANGUAGE_OVERRIDE;
 
   // set up weight
   aRule->GetDesc(eCSSFontDesc_Weight, val);
   unit = val.GetUnit();
   if (unit == eCSSUnit_Integer || unit == eCSSUnit_Enumerated) {
     weight = val.GetIntValue();
+    if (weight == 0) {
+      weight = NS_STYLE_FONT_STYLE_NORMAL;
+    }
   } else if (unit == eCSSUnit_Normal) {
     weight = NS_STYLE_FONT_WEIGHT_NORMAL;
   } else {
@@ -628,7 +631,9 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
   if (unit == eCSSUnit_Normal) {
     // empty feature string
   } else if (unit == eCSSUnit_String) {
-    val.GetStringValue(languageOverride);
+    nsString stringValue;
+    val.GetStringValue(stringValue);
+    languageOverride = gfxFontStyle::ParseFontLanguageOverride(stringValue);
   } else {
     NS_ASSERTION(unit == eCSSUnit_Null,
                  "@font-face font-language-override has unexpected unit");

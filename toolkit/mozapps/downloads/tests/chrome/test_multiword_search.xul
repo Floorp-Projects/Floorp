@@ -48,12 +48,12 @@ function test()
 
   try {
     for each (let site in ["ed.agadak.net", "mozilla.org"]) {
-      stmt.bindStringParameter(0, "Super Pimped Download");
-      stmt.bindStringParameter(1, filePath);
-      stmt.bindStringParameter(2, "http://" + site + "/file");
-      stmt.bindInt32Parameter(3, dm.DOWNLOAD_FINISHED);
-      stmt.bindInt64Parameter(4, new Date(1985, 7, 2) * 1000);
-      stmt.bindInt64Parameter(5, 111222333444);
+      stmt.bindByIndex(0, "Super Pimped Download");
+      stmt.bindByIndex(1, filePath);
+      stmt.bindByIndex(2, "http://" + site + "/file");
+      stmt.bindByIndex(3, dm.DOWNLOAD_FINISHED);
+      stmt.bindByIndex(4, new Date(1985, 7, 2) * 1000);
+      stmt.bindByIndex(5, 111222333444);
 
       // Add it!
       stmt.execute();

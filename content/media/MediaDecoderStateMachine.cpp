@@ -2243,31 +2243,10 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         StopPlayback();
       }
 
-      // Put a task in the decode queue to abort any decoding operations.
-      // The reader is not supposed to put any tasks to deliver samples into
-      // the queue after we call this (unless we request another sample from it).
-      RefPtr<nsIRunnable> task;
-      task = NS_NewRunnableMethod(mReader, &MediaDecoderReader::ResetDecode);
-      mDecodeTaskQueue->Dispatch(task);
-
-      {
-        // Wait for the thread decoding to abort decoding operations and run
-        // any pending callbacks. This is important, as we don't want any
-        // pending tasks posted to the task queue by the reader to deliver
-        // any samples after we've posted the reader Shutdown() task below,
-        // as the sample-delivery tasks will keep video frames alive until
-        // after we've called Reader::Shutdown(), and shutdown on B2G will
-        // fail as there are outstanding video frames alive.
-        ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-        mDecodeTaskQueue->Flush();
-      }
-
-      // We must reset playback so that all references to frames queued
-      // in the state machine are dropped, else the Shutdown() call below
-      // can fail on B2G.
-      ResetPlayback();
+      FlushDecoding();
 
       // Put a task in the decode queue to shutdown the reader.
+      RefPtr<nsIRunnable> task;
       task = NS_NewRunnableMethod(mReader, &MediaDecoderReader::Shutdown);
       mDecodeTaskQueue->Dispatch(task);
 
@@ -2325,6 +2304,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       if (IsPlaying()) {
         StopPlayback();
       }
+      FlushDecoding();
       StopAudioThread();
       // Now that those threads are stopped, there's no possibility of
       // mPendingWakeDecoder being needed again. Revoke it.
@@ -2465,6 +2445,38 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
   }
 
   return NS_OK;
+}
+
+void
+MediaDecoderStateMachine::FlushDecoding()
+{
+  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
+               "Should be on state machine or decode thread.");
+  mDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
+
+  // Put a task in the decode queue to abort any decoding operations.
+  // The reader is not supposed to put any tasks to deliver samples into
+  // the queue after we call this (unless we request another sample from it).
+  RefPtr<nsIRunnable> task;
+  task = NS_NewRunnableMethod(mReader, &MediaDecoderReader::ResetDecode);
+  mDecodeTaskQueue->Dispatch(task);
+
+  {
+    // Wait for the thread decoding to abort decoding operations and run
+    // any pending callbacks. This is important, as we don't want any
+    // pending tasks posted to the task queue by the reader to deliver
+    // any samples after we've posted the reader Shutdown() task below,
+    // as the sample-delivery tasks will keep video frames alive until
+    // after we've called Reader::Shutdown(), and shutdown on B2G will
+    // fail as there are outstanding video frames alive.
+    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+    mDecodeTaskQueue->Flush();
+  }
+
+  // We must reset playback so that all references to frames queued
+  // in the state machine are dropped, else subsequent calls to Shutdown()
+  // or ReleaseMediaResources() can fail on B2G.
+  ResetPlayback();
 }
 
 void MediaDecoderStateMachine::RenderVideoFrame(VideoData* aData,

@@ -39,23 +39,23 @@ function startup() {
   
   db.createTable("test", "id TEXT, value INTEGER");
   var stmt = db.createStatement("INSERT INTO test (id, value) VALUES (?,?)");
-  stmt.bindStringParameter(0, "test1");
-  stmt.bindInt32Parameter(1, 0);
+  stmt.bindByIndex(0, "test1");
+  stmt.bindByIndex(1, 0);
   stmt.execute();
-  stmt.bindStringParameter(0, "test2");
-  stmt.bindInt32Parameter(1, 2147483647);
+  stmt.bindByIndex(0, "test2");
+  stmt.bindByIndex(1, 2147483647);
   stmt.execute();
-  stmt.bindStringParameter(0, "test3");
-  stmt.bindInt32Parameter(1, -2147483648);
+  stmt.bindByIndex(0, "test3");
+  stmt.bindByIndex(1, -2147483648);
   stmt.execute();
-  stmt.bindStringParameter(0, "test4");
-  stmt.bindInt64Parameter(1, 0);
+  stmt.bindByIndex(0, "test4");
+  stmt.bindByIndex(1, 0);
   stmt.execute();
-  stmt.bindStringParameter(0, "test5");
-  stmt.bindInt64Parameter(1, 3147483647);
+  stmt.bindByIndex(0, "test5");
+  stmt.bindByIndex(1, 3147483647);
   stmt.execute();
-  stmt.bindStringParameter(0, "test6");
-  stmt.bindInt64Parameter(1, -3147483648);
+  stmt.bindByIndex(0, "test6");
+  stmt.bindByIndex(1, -3147483648);
   stmt.execute();
   stmt.finalize();
 

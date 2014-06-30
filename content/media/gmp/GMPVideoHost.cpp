@@ -96,7 +96,7 @@ GMPVideoHostImpl::ActorDestroyed()
     mEncodedFrames[i - 1]->ActorDestroyed();
     mEncodedFrames.RemoveElementAt(i - 1);
   }
-  mSharedMemMgr = nullptr;  
+  mSharedMemMgr = nullptr;
 }
 
 void

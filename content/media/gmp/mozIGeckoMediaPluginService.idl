@@ -5,8 +5,11 @@
 
 #include "nsISupports.idl"
 #include "nsIThread.idl"
+#include "nsIPrincipal.idl"
 
 %{C++
+#include "nsTArray.h"
+#include "nsStringGlue.h"
 class GMPVideoDecoder;
 class GMPVideoEncoder;
 class GMPVideoHost;
@@ -16,6 +19,7 @@ class GMPVideoHost;
 [ptr] native GMPVideoEncoder(GMPVideoEncoder);
 [ptr] native GMPVideoHost(GMPVideoHost);
 [ptr] native MessageLoop(MessageLoop);
+[ptr] native TagArray(nsTArray<nsCString>);
 
 [uuid(BF5A9086-70F5-4D38-832D-1609BBF963CD)]
 interface mozIGeckoMediaPluginService : nsISupports
@@ -24,11 +28,19 @@ interface mozIGeckoMediaPluginService : nsISupports
   // Callable from any thread.
   readonly attribute nsIThread thread;
 
-  // Returns a video decoder API object that should support VP8.
+  // Returns a video decoder that supports the specified tags.
+  // The array of tags should at least contain a codec tag, and optionally
+  // other tags such as for EME keysystem.
   // Callable only on GMP thread.
-  GMPVideoDecoder getGMPVideoDecoderVP8(out GMPVideoHost outVideoHost);
+  GMPVideoDecoder getGMPVideoDecoder(in TagArray tags,
+                                     [optional] in AString origin,
+                                     out GMPVideoHost outVideoHost);
 
-  // Returns a video encoder API object that should support VP8.
+  // Returns a video encoder that supports the specified tags.
+  // The array of tags should at least contain a codec tag, and optionally
+  // other tags.
   // Callable only on GMP thread.
-  GMPVideoEncoder getGMPVideoEncoderVP8(out GMPVideoHost outVideoHost);
+  GMPVideoEncoder getGMPVideoEncoder(in TagArray tags,
+                                     [optional] in AString origin,
+                                     out GMPVideoHost outVideoHost);
 };

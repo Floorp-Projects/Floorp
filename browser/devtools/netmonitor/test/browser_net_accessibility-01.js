@@ -9,6 +9,9 @@ function test() {
   initNetMonitor(CUSTOM_GET_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
+    // It seems that this test may be slow on Ubuntu builds running on ec2.
+    requestLongerTimeout(2);
+
     let { NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
 
