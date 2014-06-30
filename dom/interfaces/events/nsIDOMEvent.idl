@@ -365,14 +365,4 @@ NS_NewDOMTouchEvent(nsIDOMEvent** aInstancePtrResult,
                     mozilla::dom::EventTarget* aOwner,
                     nsPresContext* aPresContext,
                     mozilla::WidgetTouchEvent* aEvent);
-nsresult
-NS_NewDOMMozSettingsEvent(nsIDOMEvent** aInstancePtrResult,
-                          mozilla::dom::EventTarget* aOwner,
-                          nsPresContext* aPresContext,
-                          mozilla::WidgetEvent* aEvent);
-nsresult
-NS_NewDOMMozApplicationEvent(nsIDOMEvent** aInstancePtrResult,
-                             mozilla::dom::EventTarget* aOwner,
-                             nsPresContext* aPresContext,
-                             mozilla::WidgetEvent* aEvent);
 %}
