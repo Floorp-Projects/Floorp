@@ -143,7 +143,7 @@
 #include "nsIDOMXULControlElement.h"
 #include "nsMenuPopupFrame.h"
 #endif
-#include "nsIDOMCustomEvent.h"
+#include "mozilla/dom/CustomEvent.h"
 #include "nsIFrameRequestCallback.h"
 #include "nsIJARChannel.h"
 
