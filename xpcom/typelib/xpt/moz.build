@@ -4,5 +4,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'src', 'tools']
+LIBRARY_NAME = 'xpt'
 
+DIRS += ['tools']
+
+UNIFIED_SOURCES += [
+    'xpt_arena.cpp',
+    'xpt_struct.cpp',
+    'xpt_xdr.cpp',
+]
+
+EXPORTS += [
+    'xpt_arena.h',
+    'xpt_struct.h',
+    'xpt_xdr.h',
+]
+
+FINAL_LIBRARY = 'xpcom_core'
+
+GENERATED_INCLUDES += ['/xpcom/base']
+LOCAL_INCLUDES += ['/xpcom/base']
+
+FAIL_ON_WARNINGS = True
