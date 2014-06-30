@@ -13,7 +13,6 @@ simple_events = [
     'DOMTransactionEvent',
     'DeviceOrientationEvent',
     'MozApplicationEvent',
-    'SmartCardEvent',
     'StyleRuleChangeEvent',
     'StyleSheetChangeEvent',
     'StyleSheetApplicableStateChangeEvent',

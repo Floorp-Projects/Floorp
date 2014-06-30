@@ -31,7 +31,6 @@ XPIDL_SOURCES += [
     'nsIDOMRecordErrorEvent.idl',
     'nsIDOMScrollAreaEvent.idl',
     'nsIDOMSimpleGestureEvent.idl',
-    'nsIDOMSmartCardEvent.idl',
     'nsIDOMStyleRuleChangeEvent.idl',
     'nsIDOMStyleSheetApplicableStateChangeEvent.idl',
     'nsIDOMStyleSheetChangeEvent.idl',
