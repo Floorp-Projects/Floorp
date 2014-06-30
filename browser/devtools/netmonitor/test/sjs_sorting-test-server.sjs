@@ -9,7 +9,10 @@ function handleRequest(request, response) {
   let params = request.queryString.split("&");
   let index = params.filter((s) => s.contains("index="))[0].split("=")[1];
 
-  Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer).initWithCallback(() => {
+  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer.initWithCallback(() => {
+    // to avoid garbage collection
+    timer = null;
     response.setStatusLine(request.httpVersion, index == 1 ? 101 : index * 100, "Meh");
     response.setHeader("Content-Type", "text/" + index, false);
     response.write(new Array(index * 10).join(index)); // + 0.01 KB
