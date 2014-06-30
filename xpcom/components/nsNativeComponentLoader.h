@@ -13,6 +13,16 @@
 #include "mozilla/Module.h"
 #include "prlink.h"
 
+class nsNativeModuleLoader;
+
+namespace mozilla {
+template<>
+struct HasDangerousPublicDestructor<nsNativeModuleLoader>
+{
+  static const bool value = true;
+};
+}
+
 class nsNativeModuleLoader : public mozilla::ModuleLoader
 {
  public:

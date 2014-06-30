@@ -40,6 +40,8 @@ private:
                       const char* aName,
                       const mozilla::dom::NativePropertyHooks* aNativePropHooks);
 
+    ~ShimInterfaceInfo() {}
+
 private:
     nsIID mIID;
     nsAutoCString mName;
