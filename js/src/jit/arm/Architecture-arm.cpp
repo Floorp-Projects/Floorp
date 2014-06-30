@@ -352,7 +352,7 @@ VFPRegister::getRegisterDumpOffsetInBytes()
         return id() * sizeof(float);
     if (isDouble())
         return id() * sizeof(double);
-    MOZ_ASSUME_UNREACHABLE();
+    MOZ_CRASH("Unexpected register dump offset");
 }
 
 } // namespace jit

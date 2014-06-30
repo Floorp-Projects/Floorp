@@ -173,7 +173,7 @@ MacroAssemblerX86::passABIArg(const MoveOperand &from, MoveOp::Type type)
       case MoveOp::DOUBLE:  stackForCall_ += sizeof(double); break;
       case MoveOp::INT32:   stackForCall_ += sizeof(int32_t); break;
       case MoveOp::GENERAL: stackForCall_ += sizeof(intptr_t); break;
-      default: MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
+      default: MOZ_CRASH("Unexpected argument type");
     }
     enoughMemory_ &= moveResolver_.addMove(from, to, type);
 }
