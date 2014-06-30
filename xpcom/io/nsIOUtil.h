@@ -17,6 +17,8 @@
 
 class nsIOUtil MOZ_FINAL : public nsIIOUtil
 {
+  ~nsIOUtil() {}
+
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIIOUTIL

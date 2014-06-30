@@ -36,6 +36,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsITestService, NS_ITESTSERVICE_IID)
 class nsTestService MOZ_FINAL : public nsITestService,
                                 public nsSupportsWeakReference
 {
+    ~nsTestService() {}
   public:
     NS_DECL_ISUPPORTS
 };
