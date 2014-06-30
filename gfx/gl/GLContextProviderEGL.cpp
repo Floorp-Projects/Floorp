@@ -246,7 +246,7 @@ GLContextEGL::GLContextEGL(
         mHwc = HwcComposer2D::GetInstance();
         MOZ_ASSERT(!mHwc->Initialized());
 
-        if (mHwc->Init(EGL_DISPLAY(), mSurface)) {
+        if (mHwc->Init(EGL_DISPLAY(), mSurface, this)) {
             NS_WARNING("HWComposer initialization failed!");
             mHwc = nullptr;
         }
