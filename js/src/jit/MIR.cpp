@@ -3065,6 +3065,19 @@ MSqrt::trySpecializeFloat32(TempAllocator &alloc) {
     setPolicyType(MIRType_Float32);
 }
 
+MDefinition *
+MBoundsCheck::foldsTo(TempAllocator &alloc)
+{
+    if (index()->isConstant() && length()->isConstant()) {
+       uint32_t len = length()->toConstant()->value().toInt32();
+       uint32_t idx = index()->toConstant()->value().toInt32();
+       if (idx + uint32_t(minimum()) < len && idx + uint32_t(maximum()) < len)
+           return index();
+    }
+
+    return this;
+}
+
 bool
 jit::ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id)
 {
