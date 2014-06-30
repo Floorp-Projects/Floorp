@@ -8,7 +8,7 @@ $6 = (nsIContent * const) 0x0
 (gdb) bt 3
 #0  0xb6457185 in nsIContent::SetAttr (this=0x0, aNameSpaceID=0, aName=0xb0cb064c, aValue=..., aNotify=1) at ../../dist/include/nsIContent.h:285
 #1  0xb6b72072 in nsTreeColumns::RestoreNaturalOrder (this=0xaaf83cc0) at layout/xul/base/src/tree/src/nsTreeColumns.cpp:605
-#2  0xb736c76f in NS_InvokeByIndex_P () at xpcom/reflect/xptcall/src/md/unix/xptcinvoke_gcc_x86_unix.cpp:69
+#2  0xb736c76f in NS_InvokeByIndex_P () at xpcom/reflect/xptcall/md/unix/xptcinvoke_gcc_x86_unix.cpp:69
 (More stack frames follow...)
 (gdb) frame 1
 #1  0xb6b72072 in nsTreeColumns::RestoreNaturalOrder (this=0xaaf83cc0) at layout/xul/base/src/tree/src/nsTreeColumns.cpp:605

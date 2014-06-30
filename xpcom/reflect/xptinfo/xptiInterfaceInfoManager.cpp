@@ -141,7 +141,7 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* ifac
         return;
 
     // The number of maximum methods is not arbitrary. It is the same value as
-    // in xpcom/reflect/xptcall/public/genstubs.pl; do not change this value
+    // in xpcom/reflect/xptcall/genstubs.pl; do not change this value
     // without changing that one or you WILL see problems.
     if (iface->interface_descriptor->num_methods > 250 &&
             !(XPT_ID_IS_BUILTINCLASS(iface->interface_descriptor->flags))) {
