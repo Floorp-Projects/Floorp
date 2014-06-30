@@ -43,7 +43,6 @@
 #include "nsIDOMDocumentXBL.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMElementReplaceEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMFileList.h"
@@ -201,7 +200,6 @@
 #include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/dom/DragEventBinding.h"
 #include "mozilla/dom/ElementBinding.h"
-#include "mozilla/dom/ElementReplaceEventBinding.h"
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/FileListBinding.h"
@@ -409,7 +407,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMDocumentXBL, Document),
   DEFINE_SHIM(DragEvent),
   DEFINE_SHIM(Element),
-  DEFINE_SHIM(ElementReplaceEvent),
   DEFINE_SHIM(Event),
   DEFINE_SHIM(EventTarget),
   DEFINE_SHIM(FileReader),

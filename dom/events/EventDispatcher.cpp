@@ -803,8 +803,6 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
   if (aEventType.LowerCaseEqualsLiteral("commandevent") ||
       aEventType.LowerCaseEqualsLiteral("commandevents"))
     return NS_NewDOMCommandEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("elementreplace"))
-    return NS_NewDOMElementReplaceEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("datacontainerevent") ||
       aEventType.LowerCaseEqualsLiteral("datacontainerevents"))
     return NS_NewDOMDataContainerEvent(aDOMEvent, aOwner, aPresContext, nullptr);

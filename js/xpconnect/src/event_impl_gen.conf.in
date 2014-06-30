@@ -19,7 +19,6 @@ simple_events = [
     'StyleRuleChangeEvent',
     'StyleSheetChangeEvent',
     'StyleSheetApplicableStateChangeEvent',
-    'ElementReplaceEvent',
 #ifdef MOZ_WEBSPEECH
     'SpeechSynthesisEvent',
 #endif
