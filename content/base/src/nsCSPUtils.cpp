@@ -327,11 +327,12 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce) const
 
   // Check it the allowed host starts with a wilcard.
   if (mHost.First() == '*') {
-    // Eliminate leading "*." and check if uriHost ends with defined mHost.
     NS_ASSERTION(mHost[1] == '.', "Second character needs to be '.' whenever host starts with '*'");
 
+    // Eliminate leading "*", but keeping the FULL STOP (.) thereafter before checking
+    // if the remaining characters match: see http://www.w3.org/TR/CSP11/#matching
     nsString wildCardHost = mHost;
-    wildCardHost = Substring(wildCardHost, 2, wildCardHost.Length() - 2);
+    wildCardHost = Substring(wildCardHost, 1, wildCardHost.Length() - 1);
     if (!StringEndsWith(NS_ConvertUTF8toUTF16(uriHost), wildCardHost)) {
       return false;
     }
