@@ -124,10 +124,6 @@
 #include "nsIDOMScrollAreaEvent.h"
 #include "nsIDOMSerializer.h"
 #include "nsIDOMSimpleGestureEvent.h"
-#ifdef MOZ_WEBSPEECH
-#include "nsIDOMSpeechRecognitionEvent.h"
-#include "nsIDOMSpeechSynthesisEvent.h"
-#endif // MOZ_WEBSPEECH
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIDOMStyleRuleChangeEvent.h"
@@ -271,10 +267,6 @@
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/dom/ScrollAreaEventBinding.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
-#ifdef MOZ_WEBSPEECH
-#include "mozilla/dom/SpeechRecognitionEventBinding.h"
-#include "mozilla/dom/SpeechSynthesisEventBinding.h"
-#endif // MOZ_WEBSPEECH
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/StyleSheetBinding.h"
 #include "mozilla/dom/StyleSheetListBinding.h"
@@ -469,10 +461,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(ScrollAreaEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMSerializer, XMLSerializer),
   DEFINE_SHIM(SimpleGestureEvent),
-#ifdef MOZ_WEBSPEECH
-  DEFINE_SHIM(SpeechRecognitionEvent),
-  DEFINE_SHIM(SpeechSynthesisEvent),
-#endif // MOZ_WEBSPEECH
   DEFINE_SHIM(StyleSheet),
   DEFINE_SHIM(StyleSheetList),
   DEFINE_SHIM(StyleRuleChangeEvent),
