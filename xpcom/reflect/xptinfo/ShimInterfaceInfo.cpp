@@ -126,9 +126,6 @@
 #include "nsIDOMSimpleGestureEvent.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMStyleSheetList.h"
-#include "nsIDOMStyleRuleChangeEvent.h"
-#include "nsIDOMStyleSheetApplicableStateChangeEvent.h"
-#include "nsIDOMStyleSheetChangeEvent.h"
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMText.h"
@@ -270,9 +267,6 @@
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/StyleSheetBinding.h"
 #include "mozilla/dom/StyleSheetListBinding.h"
-#include "mozilla/dom/StyleRuleChangeEventBinding.h"
-#include "mozilla/dom/StyleSheetApplicableStateChangeEventBinding.h"
-#include "mozilla/dom/StyleSheetChangeEventBinding.h"
 #include "mozilla/dom/SVGElementBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/TextBinding.h"
@@ -463,9 +457,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(SimpleGestureEvent),
   DEFINE_SHIM(StyleSheet),
   DEFINE_SHIM(StyleSheetList),
-  DEFINE_SHIM(StyleRuleChangeEvent),
-  DEFINE_SHIM(StyleSheetApplicableStateChangeEvent),
-  DEFINE_SHIM(StyleSheetChangeEvent),
   DEFINE_SHIM(SVGElement),
   DEFINE_SHIM(SVGLength),
   DEFINE_SHIM(Text),
