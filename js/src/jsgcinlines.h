@@ -9,7 +9,6 @@
 
 #include "jsgc.h"
 
-#include "gc/GCTrace.h"
 #include "gc/Zone.h"
 #include "vm/ForkJoin.h"
 
@@ -650,7 +649,6 @@ AllocateObject(ThreadSafeContext *cx, AllocKind kind, size_t nDynamicSlots, Init
         js_free(slots);
 
     CheckIncrementalZoneState(cx, obj);
-    js::gc::TraceTenuredAlloc(obj, kind);
     return obj;
 }
 
@@ -673,7 +671,6 @@ AllocateNonObject(ThreadSafeContext *cx)
         t = static_cast<T *>(js::gc::ArenaLists::refillFreeList<allowGC>(cx, kind));
 
     CheckIncrementalZoneState(cx, t);
-    js::gc::TraceTenuredAlloc(t, kind);
     return t;
 }
 
