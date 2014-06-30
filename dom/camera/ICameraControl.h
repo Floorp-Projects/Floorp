@@ -206,6 +206,8 @@ public:
   virtual nsresult Get(uint32_t aKey, int32_t& aValue) = 0;
   virtual nsresult Set(uint32_t aKey, int64_t aValue) = 0;
   virtual nsresult Get(uint32_t aKey, int64_t& aValue) = 0;
+  virtual nsresult Set(uint32_t aKey, bool aValue) = 0;
+  virtual nsresult Get(uint32_t aKey, bool& aValue) = 0;
   virtual nsresult Set(uint32_t aKey, const Size& aValue) = 0;
   virtual nsresult Get(uint32_t aKey, Size& aValue) = 0;
   virtual nsresult Set(uint32_t aKey, const nsTArray<Region>& aRegions) = 0;
