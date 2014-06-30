@@ -23,14 +23,14 @@
 
 #define FLOAT32X4_UNARY_FUNCTION_LIST(V)                                                                          \
   V(abs, (Func<Float32x4, Abs<float, Float32x4>, Float32x4>), 1, 0, Abs)                                          \
-  V(bitsToInt32x4, (FuncConvertBits<Float32x4, Int32x4>), 1, 0, BitsToInt32x4)                                    \
+  V(fromInt32x4Bits, (FuncConvertBits<Int32x4, Float32x4>), 1, 0, FromInt32x4Bits)                                \
   V(neg, (Func<Float32x4, Neg<float, Float32x4>, Float32x4>), 1, 0, Neg)                                          \
   V(not, (CoercedFunc<Float32x4, Int32x4, Not<int32_t, Int32x4>, Float32x4>), 1, 0, Not)                          \
   V(reciprocal, (Func<Float32x4, Rec<float, Float32x4>, Float32x4>), 1, 0, Reciprocal)                            \
   V(reciprocalSqrt, (Func<Float32x4, RecSqrt<float, Float32x4>, Float32x4>), 1, 0, ReciprocalSqrt)                \
   V(splat, (FuncSplat<Float32x4>), 1, 0, Splat)                                                                   \
   V(sqrt, (Func<Float32x4, Sqrt<float, Float32x4>, Float32x4>), 1, 0, Sqrt)                                       \
-  V(toInt32x4, (FuncConvert<Float32x4, Int32x4>), 1, 0, ToInt32x4)
+  V(fromInt32x4, (FuncConvert<Int32x4, Float32x4> ), 1, 0, FromInt32x4)
 
 #define FLOAT32X4_BINARY_FUNCTION_LIST(V)                                                                         \
   V(add, (Func<Float32x4, Add<float, Float32x4>, Float32x4>), 2, 0, Add)                                          \
@@ -69,11 +69,11 @@
   V(zero, (FuncZero<Int32x4>), 0, 0, Zero)
 
 #define INT32X4_UNARY_FUNCTION_LIST(V)                                                                            \
-  V(bitsToFloat32x4, (FuncConvertBits<Int32x4, Float32x4>), 1, 0, BitsToFloat32x4)                                \
+  V(fromFloat32x4Bits, (FuncConvertBits<Float32x4, Int32x4>), 1, 0, FromFloat32x4Bits)                            \
   V(neg, (Func<Int32x4, Neg<int32_t, Int32x4>, Int32x4>), 1, 0, Neg)                                              \
   V(not, (Func<Int32x4, Not<int32_t, Int32x4>, Int32x4>), 1, 0, Not)                                              \
   V(splat, (FuncSplat<Int32x4>), 0, 0, Splat)                                                                     \
-  V(toFloat32x4, (FuncConvert<Int32x4, Float32x4>), 1, 0, ToFloat32x4)
+  V(fromFloat32x4, (FuncConvert<Float32x4, Int32x4>), 1, 0, FromFloat32x4)
 
 #define INT32X4_BINARY_FUNCTION_LIST(V)                                                                           \
   V(add, (Func<Int32x4, Add<int32_t, Int32x4>, Int32x4>), 2, 0, Add)                                              \
