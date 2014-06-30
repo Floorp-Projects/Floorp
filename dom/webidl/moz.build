@@ -636,6 +636,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'DeviceOrientationEvent.webidl',
     'DeviceProximityEvent.webidl',
     'DeviceStorageChangeEvent.webidl',
+    'DOMTransactionEvent.webidl',
     'DownloadEvent.webidl',
     'ErrorEvent.webidl',
     'HashChangeEvent.webidl',
