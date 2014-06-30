@@ -368,6 +368,12 @@ public class ToolbarEditText extends CustomEditText
                     // If we have autocomplete text, the cursor is at the boundary between
                     // regular and autocomplete text. So regardless of which direction we
                     // are deleting, we should delete the autocomplete text first.
+                    // Make the IME aware that we interrupted the deleteSurroundingText call,
+                    // by restarting the IME.
+                    final InputMethodManager imm = InputMethods.getInputMethodManager(mContext);
+                    if (imm != null) {
+                        imm.restartInput(ToolbarEditText.this);
+                    }
                     return false;
                 }
                 return super.deleteSurroundingText(beforeLength, afterLength);
