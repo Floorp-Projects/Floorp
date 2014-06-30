@@ -37,6 +37,9 @@ interface nsIGfxInfo : nsISupports
   readonly attribute DOMString adapterDeviceID;
   readonly attribute DOMString adapterDeviceID2;
 
+  readonly attribute DOMString adapterSubsysID;
+  readonly attribute DOMString adapterSubsysID2;
+
   /**
    * The amount of RAM in MB in the display adapter.
    */
