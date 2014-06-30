@@ -34,7 +34,6 @@
 #include "nsIDOMDOMCursor.h"
 #include "nsIDOMDOMException.h"
 #include "nsIDOMDOMRequest.h"
-#include "nsIDOMDOMTransactionEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMDocumentType.h"
@@ -182,7 +181,6 @@
 #include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/DOMParserBinding.h"
 #include "mozilla/dom/DOMRequestBinding.h"
-#include "mozilla/dom/DOMTransactionEventBinding.h"
 #include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/dom/DocumentFragmentBinding.h"
 #include "mozilla/dom/DocumentTypeBinding.h"
@@ -380,7 +378,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(DOMCursor),
   DEFINE_SHIM(DOMException),
   DEFINE_SHIM(DOMRequest),
-  DEFINE_SHIM(DOMTransactionEvent),
   DEFINE_SHIM(Document),
   DEFINE_SHIM(DocumentFragment),
   DEFINE_SHIM(DocumentType),

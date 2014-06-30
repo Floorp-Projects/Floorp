@@ -828,8 +828,6 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     event.forget(aDOMEvent);
     return NS_OK;
   }
-  if (aEventType.LowerCaseEqualsLiteral("domtransaction"))
-    return NS_NewDOMDOMTransactionEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("scrollareaevent"))
     return NS_NewDOMScrollAreaEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("closeevent")) {
