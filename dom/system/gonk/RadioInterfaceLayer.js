@@ -24,8 +24,11 @@ Cu.import("resource://gre/modules/systemlibs.js");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
-var RIL = {};
-Cu.import("resource://gre/modules/ril_consts.js", RIL);
+XPCOMUtils.defineLazyGetter(this, "RIL", function () {
+  let obj = {};
+  Cu.import("resource://gre/modules/ril_consts.js", obj);
+  return obj;
+});
 
 // Ril quirk to attach data registration on demand.
 let RILQUIRKS_DATA_REGISTRATION_ON_DEMAND =
@@ -1629,9 +1632,7 @@ WorkerMessenger.prototype = {
           libcutils.property_get("ro.moz.ril.send_stk_profile_dl", "false") == "true",
         dataRegistrationOnDemand: RILQUIRKS_DATA_REGISTRATION_ON_DEMAND,
         subscriptionControl: RILQUIRKS_SUBSCRIPTION_CONTROL
-      },
-      rilEmergencyNumbers: libcutils.property_get("ril.ecclist") ||
-                           libcutils.property_get("ro.ril.ecclist")
+      }
     };
 
     this.send(null, "setInitialOptions", options);

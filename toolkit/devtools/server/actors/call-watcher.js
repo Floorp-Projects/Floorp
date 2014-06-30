@@ -197,12 +197,19 @@ let FunctionCallActor = protocol.ActorClass({
    *         The arguments as a string.
    */
   _generateArgsPreview: function() {
-    let { caller, args } = this.details;
+    let { caller, args, name } = this.details;
     let { global } = this.meta;
+
+    // Get method signature to determine if there are any enums
+    // used in this method.
+    let enumArgs = (CallWatcherFront.ENUM_METHODS[global] || {})[name];
+    if (typeof enumArgs === "function") {
+      enumArgs = enumArgs(args);
+    }
 
     // XXX: All of this sucks. Make this smarter, so that the frontend
     // can inspect each argument, be it object or primitive. Bug 978960.
-    let serializeArgs = () => args.map(arg => {
+    let serializeArgs = () => args.map((arg, i) => {
       if (typeof arg == "undefined") {
         return "undefined";
       }
@@ -212,12 +219,10 @@ let FunctionCallActor = protocol.ActorClass({
       if (typeof arg == "object") {
         return "Object";
       }
-      if (global == CallWatcherFront.CANVAS_WEBGL_CONTEXT) {
-        // XXX: This doesn't handle combined bitmasks. Bug 978964.
-        return getEnumsLookupTable("webgl", caller)[arg] || arg;
-      }
-      if (global == CallWatcherFront.CANVAS_2D_CONTEXT) {
-        return getEnumsLookupTable("2d", caller)[arg] || arg;
+      // If this argument matches the method's signature
+      // and is an enum, change it to its constant name.
+      if (enumArgs && enumArgs.indexOf(i) !== -1) {
+        return getEnumsLookupTable(global, caller)[arg] || arg;
       }
       return arg;
     });
@@ -557,6 +562,68 @@ CallWatcherFront.GLOBAL_SCOPE = 0;
 CallWatcherFront.UNKNOWN_SCOPE = 1;
 CallWatcherFront.CANVAS_WEBGL_CONTEXT = 2;
 CallWatcherFront.CANVAS_2D_CONTEXT = 3;
+
+CallWatcherFront.ENUM_METHODS = {};
+CallWatcherFront.ENUM_METHODS[CallWatcherFront.CANVAS_2D_CONTEXT] = {
+  asyncDrawXULElement: [6],
+  drawWindow: [6]
+};
+
+CallWatcherFront.ENUM_METHODS[CallWatcherFront.CANVAS_WEBGL_CONTEXT] = {
+  activeTexture: [0],
+  bindBuffer: [0],
+  bindFramebuffer: [0],
+  bindRenderbuffer: [0],
+  bindTexture: [0],
+  blendEquation: [0],
+  blendEquationSeparate: [0, 1],
+  blendFunc: [0, 1],
+  blendFuncSeparate: [0, 1, 2, 3],
+  bufferData: [0, 1, 2],
+  bufferSubData: [0, 1],
+  checkFramebufferStatus: [0],
+  clear: [0],
+  compressedTexImage2D: [0, 2],
+  compressedTexSubImage2D: [0, 6],
+  copyTexImage2D: [0, 2],
+  copyTexSubImage2D: [0],
+  createShader: [0],
+  cullFace: [0],
+  depthFunc: [0],
+  disable: [0],
+  drawArrays: [0],
+  drawElements: [0, 2],
+  enable: [0],
+  framebufferRenderbuffer: [0, 1, 2],
+  framebufferTexture2D: [0, 1, 2],
+  frontFace: [0],
+  generateMipmap: [0],
+  getBufferParameter: [0, 1],
+  getParameter: [0],
+  getFramebufferAttachmentParameter: [0, 1, 2],
+  getProgramParameter: [1],
+  getRenderbufferParameter: [0, 1],
+  getShaderParameter: [1],
+  getShaderPrecisionFormat: [0, 1],
+  getTexParameter: [0, 1],
+  getVertexAttrib: [1],
+  getVertexAttribOffset: [1],
+  hint: [0, 1],
+  isEnabled: [0],
+  pixelStorei: [0],
+  readPixels: [4, 5],
+  renderbufferStorage: [0, 1],
+  stencilFunc: [0],
+  stencilFuncSeparate: [0, 1],
+  stencilMaskSeparate: [0],
+  stencilOp: [0, 1, 2],
+  stencilOpSeparate: [0, 1, 2, 3],
+  texImage2D: (args) => args.length > 6 ? [0, 2, 6, 7] : [0, 2, 3, 4],
+  texParameterf: [0, 1],
+  texParameteri: [0, 1],
+  texSubImage2D: (args) => args.length === 9 ? [0, 6, 7] : [0, 4, 5],
+  vertexAttribPointer: [2]
+};
 
 /**
  * A lookup table for cross-referencing flags or properties with their name
