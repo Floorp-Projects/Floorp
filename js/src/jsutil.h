@@ -274,12 +274,30 @@ ClearAllBitArrayElements(size_t *array, size_t length)
 
 }  /* namespace js */
 
+static inline void *
+Poison(void *ptr, int value, size_t num)
+{
+    static bool inited = false;
+    static bool poison = true;
+    if (!inited) {
+        char *env = getenv("JSGC_DISABLE_POISONING");
+        if (env)
+            poison = false;
+        inited = true;
+    }
+
+    if (poison)
+        return memset(ptr, value, num);
+
+    return nullptr;
+}
+
 /* Crash diagnostics */
 #ifdef DEBUG
 # define JS_CRASH_DIAGNOSTICS 1
 #endif
 #if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
-# define JS_POISON(p, val, size) memset((p), (val), (size))
+# define JS_POISON(p, val, size) Poison(p, val, size)
 #else
 # define JS_POISON(p, val, size) ((void) 0)
 #endif
