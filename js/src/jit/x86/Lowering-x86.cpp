@@ -254,7 +254,7 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
             // See comment below.
             lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useRegisterAtStart(ins->value()));
             break;
-          default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
+          default: MOZ_CRASH("unexpected array type");
         }
         return add(lir, ins);
     }
@@ -271,7 +271,7 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
         // affects instruction layout which affects patching.
         lir = new(alloc()) LAsmJSStoreHeap(useRegisterAtStart(ptr), useRegisterAtStart(ins->value()));
         break;
-      default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
+      default: MOZ_CRASH("unexpected array type");
     }
 
     return add(lir, ins);
@@ -295,7 +295,7 @@ LIRGeneratorX86::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic
         lir = new(alloc()) LStoreTypedArrayElementStatic(useRegisterAtStart(ins->ptr()),
                                                          useRegisterAtStart(ins->value()));
         break;
-      default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
+      default: MOZ_CRASH("unexpected array type");
     }
 
     return add(lir, ins);

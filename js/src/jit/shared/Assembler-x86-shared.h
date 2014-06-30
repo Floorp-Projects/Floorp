@@ -245,7 +245,7 @@ class AssemblerX86Shared : public AssemblerShared
             return NaN_IsTrue;
         }
 
-        MOZ_ASSUME_UNREACHABLE("Unknown double condition");
+        MOZ_CRASH("Unknown double condition");
     }
 
     static void StaticAsserts() {
@@ -361,7 +361,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.movl_mr(src.address(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void movl(Register src, const Operand &dest) {
@@ -379,7 +379,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.movl_rm(src.code(), dest.address());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void movl(Imm32 imm32, const Operand &dest) {
@@ -394,7 +394,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.movl_i32m(imm32.value, dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
 
@@ -450,7 +450,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.movdqa_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void movdqa(FloatRegister src, const Operand &dest) {
@@ -463,7 +463,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.movdqa_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void cvtss2sd(FloatRegister src, FloatRegister dest) {
@@ -483,7 +483,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.movzbl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void movsbl(const Operand &src, Register dest) {
@@ -495,7 +495,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.movsbl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void movb(Register src, const Operand &dest) {
@@ -507,7 +507,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.movb_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void movb(Imm32 src, const Operand &dest) {
@@ -519,7 +519,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.movb_i8m(src.value, dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void movzwl(const Operand &src, Register dest) {
@@ -534,7 +534,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.movzwl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void movzwl(Register src, Register dest) {
@@ -549,7 +549,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.movw_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void movw(Imm32 src, const Operand &dest) {
@@ -561,7 +561,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.movw_i16m(src.value, dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void movswl(const Operand &src, Register dest) {
@@ -573,7 +573,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.movswl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void leal(const Operand &src, Register dest) {
@@ -585,7 +585,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.leal_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
 
@@ -670,7 +670,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.jmp_r(op.reg());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void cmpEAX(Label *label) { cmpSrc(label); }
@@ -769,7 +769,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.call_m(op.disp(), op.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
 
@@ -804,7 +804,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.cmpl_mr(rhs.disp(), rhs.base(), lhs.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void cmpl(Register src, Imm32 imm) {
@@ -825,7 +825,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.cmpl_im(imm.value, op.address());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void cmpl(const Operand &lhs, Register rhs) {
@@ -840,7 +840,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.cmpl_rm(rhs.code(), lhs.address());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void cmpl(const Operand &op, ImmWord imm) {
@@ -855,7 +855,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.cmpl_im(imm.value, op.address());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void cmpl(const Operand &op, ImmPtr imm) {
@@ -893,7 +893,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.testl_i32m(rhs.value, lhs.address());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
             break;
         }
     }
@@ -913,7 +913,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.addl_im(imm.value, op.address());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void subl(Imm32 imm, Register dest) {
@@ -928,7 +928,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.subl_im(imm.value, op.disp(), op.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void addl(Register src, Register dest) {
@@ -946,7 +946,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.subl_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void subl(Register src, const Operand &dest) {
@@ -958,7 +958,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.subl_rm(src.code(), dest.disp(), dest.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void orl(Register reg, Register dest) {
@@ -976,7 +976,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.orl_im(imm.value, op.disp(), op.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void xorl(Register src, Register dest) {
@@ -994,7 +994,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.xorl_im(imm.value, op.disp(), op.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void andl(Register src, Register dest) {
@@ -1012,7 +1012,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.andl_im(imm.value, op.disp(), op.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void addl(const Operand &src, Register dest) {
@@ -1024,7 +1024,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.addl_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void orl(const Operand &src, Register dest) {
@@ -1036,7 +1036,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.orl_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void xorl(const Operand &src, Register dest) {
@@ -1048,7 +1048,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.xorl_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void andl(const Operand &src, Register dest) {
@@ -1060,7 +1060,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.andl_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void imull(Register multiplier) {
@@ -1084,7 +1084,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.imull_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void negl(const Operand &src) {
@@ -1096,7 +1096,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.negl_m(src.disp(), src.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void negl(Register reg) {
@@ -1111,7 +1111,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.notl_m(src.disp(), src.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void notl(Register reg) {
@@ -1142,7 +1142,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.incl_m32(op.disp(), op.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void lock_incl(const Operand &op) {
@@ -1156,7 +1156,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.decl_m32(op.disp(), op.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void lock_decl(const Operand &op) {
@@ -1171,7 +1171,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.cmpxchg32(src.code(), op.disp(), op.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
 
@@ -1184,7 +1184,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.xaddl_rm(srcdest.code(), mem.disp(), mem.base(), mem.index(), mem.scale());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
 
@@ -1201,7 +1201,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.push_m(src.disp(), src.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void push(Register src) {
@@ -1220,7 +1220,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.pop_m(src.disp(), src.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void pop(Register src) {
@@ -1276,7 +1276,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.pinsrd_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void psrldq(Imm32 shift, FloatRegister dest) {
@@ -1305,7 +1305,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.cvtsi2sd_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void cvttsd2si(FloatRegister src, Register dest) {
@@ -1329,7 +1329,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.cvtsi2ss_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void cvtsi2ss(Register src, FloatRegister dest) {
@@ -1393,7 +1393,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.addsd_mr(src.address(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void addss(const Operand &src, FloatRegister dest) {
@@ -1409,7 +1409,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.addss_mr(src.address(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void subsd(FloatRegister src, FloatRegister dest) {
@@ -1430,7 +1430,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.subsd_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void subss(const Operand &src, FloatRegister dest) {
@@ -1443,7 +1443,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.subss_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void mulsd(FloatRegister src, FloatRegister dest) {
@@ -1460,7 +1460,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.mulsd_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void mulss(const Operand &src, FloatRegister dest) {
@@ -1473,7 +1473,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.mulss_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void mulss(FloatRegister src, FloatRegister dest) {
@@ -1498,7 +1498,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.divsd_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void divss(const Operand &src, FloatRegister dest) {
@@ -1511,7 +1511,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.divss_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void xorpd(FloatRegister src, FloatRegister dest) {
@@ -1568,7 +1568,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.minsd_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void maxsd(FloatRegister src, FloatRegister dest) {
@@ -1585,7 +1585,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.maxsd_mr(src.disp(), src.base(), dest.code());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void fisttp(const Operand &dest) {
@@ -1595,7 +1595,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.fisttp_m(dest.disp(), dest.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void fld(const Operand &dest) {
@@ -1604,7 +1604,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.fld_m(dest.disp(), dest.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void fstp(const Operand &src) {
@@ -1613,7 +1613,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.fstp_m(src.disp(), src.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void fstp32(const Operand &src) {
@@ -1622,7 +1622,7 @@ class AssemblerX86Shared : public AssemblerShared
             masm.fstp32_m(src.disp(), src.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
 
@@ -1673,14 +1673,14 @@ class AssemblerX86Shared : public AssemblerShared
     }
 
     static void PatchInstructionImmediate(uint8_t *code, PatchedImmPtr imm) {
-        MOZ_ASSUME_UNREACHABLE("Unused.");
+        MOZ_CRASH("Unused.");
     }
 
     static uint32_t NopSize() {
         return 1;
     }
     static uint8_t *NextInstruction(uint8_t *cur, uint32_t *count) {
-        MOZ_ASSUME_UNREACHABLE("nextInstruction NYI on x86");
+        MOZ_CRASH("nextInstruction NYI on x86");
     }
 
     // Toggle a jmp or cmp emitted by toggledJump().
