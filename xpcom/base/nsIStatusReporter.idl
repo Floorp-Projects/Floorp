@@ -66,6 +66,7 @@ interface nsIStatusReporterManager : nsISupports
  */
 #define NS_STATUS_REPORTER_IMPLEMENT(_classname, _name, _desc_Function)       \
     class StatusReporter_##_classname MOZ_FINAL : public nsIStatusReporter {  \
+      ~StatusReporter_##_classname() {}                                       \
     public:                                                                   \
       NS_DECL_ISUPPORTS                                                       \
       NS_IMETHOD GetName(nsACString &name)                                    \

@@ -104,6 +104,8 @@ namespace mozilla {
 
 class GenericModule MOZ_FINAL : public nsIModule
 {
+    ~GenericModule() {}
+
 public:
     GenericModule(const mozilla::Module* aData)
         : mData(aData)

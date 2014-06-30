@@ -12,6 +12,8 @@
 class nsINIParserImpl MOZ_FINAL :
   public nsIINIParser
 {
+  ~nsINIParserImpl() {}
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINIPARSER
