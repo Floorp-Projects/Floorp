@@ -13,7 +13,7 @@ SOURCES += [
 MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [
-    '/xpcom/reflect/xptinfo/src',
+    '/xpcom/reflect/xptinfo',
 ]
 
 FINAL_LIBRARY = 'xpcom_core'
