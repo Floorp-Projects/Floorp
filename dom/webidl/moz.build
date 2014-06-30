@@ -651,6 +651,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'PopStateEvent.webidl',
     'PopupBlockedEvent.webidl',
     'ProgressEvent.webidl',
+    'RecordErrorEvent.webidl',
     'RTCDataChannelEvent.webidl',
     'RTCPeerConnectionIceEvent.webidl',
     'RTCPeerConnectionIdentityErrorEvent.webidl',
