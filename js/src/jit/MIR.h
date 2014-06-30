@@ -8988,6 +8988,7 @@ class MCeil
     bool congruentTo(const MDefinition *ins) const {
         return congruentIfOperandsEqual(ins);
     }
+    void computeRange(TempAllocator &alloc);
 };
 
 // Inlined version of Math.round().
