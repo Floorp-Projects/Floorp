@@ -87,8 +87,6 @@ private:
 
 class Factory MOZ_FINAL : public nsIFactory
 {
-  ~Factory() {}
-
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -109,8 +107,6 @@ NS_IMPL_ISUPPORTS(Factory, nsIFactory)
 
 class Component1 MOZ_FINAL : public nsISupports
 {
-  ~Component1() {}
-
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -130,8 +126,6 @@ NS_INTERFACE_MAP_END
 
 class Component2 MOZ_FINAL : public nsISupports
 {
-  ~Component2() {}
-
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 

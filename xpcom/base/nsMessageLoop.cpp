@@ -34,6 +34,9 @@ class MessageLoopIdleTask
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(MessageLoopIdleTask)
   MessageLoopIdleTask(nsIRunnable* aTask, uint32_t aEnsureRunsAfterMS);
+  virtual ~MessageLoopIdleTask()
+  {
+  }
   virtual void Run();
 
 private:
@@ -41,8 +44,6 @@ private:
 
   nsCOMPtr<nsIRunnable> mTask;
   nsCOMPtr<nsITimer> mTimer;
-
-  virtual ~MessageLoopIdleTask() {}
 };
 
 /**
@@ -60,14 +61,13 @@ class MessageLoopTimerCallback
 {
 public:
   MessageLoopTimerCallback(MessageLoopIdleTask* aTask);
+  virtual ~MessageLoopTimerCallback() {};
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
 
 private:
   WeakPtr<MessageLoopIdleTask> mTask;
-
-  virtual ~MessageLoopTimerCallback() {}
 };
 
 MessageLoopIdleTask::MessageLoopIdleTask(nsIRunnable* aTask,

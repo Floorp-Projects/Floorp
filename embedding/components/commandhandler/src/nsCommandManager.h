@@ -28,6 +28,7 @@ public:
   typedef nsTArray<nsCOMPtr<nsIObserver> > ObserverList;
 
                         nsCommandManager();
+  virtual               ~nsCommandManager();
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -41,7 +42,6 @@ public:
 
 
 protected:
-  virtual               ~nsCommandManager();
 
   nsresult  GetControllerForCommand(const char * aCommand,
                                     nsIDOMWindow *aDirectedToThisWindow,

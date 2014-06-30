@@ -37,6 +37,7 @@ public:
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
 
   nsDirectoryService();
+  ~nsDirectoryService();
 
   static void RealInit();
   void RegisterCategoryProviders();
@@ -47,8 +48,6 @@ public:
   static nsDirectoryService* gService;
 
 private:
-  ~nsDirectoryService();
-
   nsresult GetCurrentProcessDirectory(nsIFile** aFile);
 
   nsInterfaceHashtable<nsCStringHashKey, nsIFile> mHashtable;

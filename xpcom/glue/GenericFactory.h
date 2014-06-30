@@ -20,8 +20,6 @@ namespace mozilla {
  */
 class GenericFactory MOZ_FINAL : public nsIFactory
 {
-  ~GenericFactory() {}
-
 public:
   typedef Module::ConstructorProcPtr ConstructorProcPtr;
 

@@ -29,10 +29,9 @@ public:
       mConsumerTarget = NS_GetCurrentThread();
     }
   }
-
-private:
   ~nsInterfaceRequestorAgg();
 
+private:
   nsCOMPtr<nsIInterfaceRequestor> mFirst, mSecond;
   nsCOMPtr<nsIEventTarget> mConsumerTarget;
 };

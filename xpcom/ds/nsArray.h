@@ -64,8 +64,6 @@ private:
         : nsArrayBase(aBaseArray)
     {
     }
-
-    ~nsArray() {}
 };
 
 class nsArrayCC MOZ_FINAL : public nsArrayBase
@@ -86,8 +84,6 @@ private:
         : nsArrayBase(aBaseArray)
     {
     }
-
-    ~nsArrayCC() {}
 };
 
 #endif

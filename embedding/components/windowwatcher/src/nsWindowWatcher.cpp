@@ -144,13 +144,11 @@ class nsWatcherWindowEnumerator : public nsISimpleEnumerator {
 
 public:
   nsWatcherWindowEnumerator(nsWindowWatcher *inWatcher);
+  virtual ~nsWatcherWindowEnumerator();
   NS_IMETHOD HasMoreElements(bool *retval);
   NS_IMETHOD GetNext(nsISupports **retval);
 
   NS_DECL_ISUPPORTS
-
-protected:
-  virtual ~nsWatcherWindowEnumerator();
 
 private:
   friend class nsWindowWatcher;

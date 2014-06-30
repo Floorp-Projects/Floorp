@@ -1013,7 +1013,6 @@ public:
     QNameCollector(nsRDFXMLSerializer* aParent)
         : mParent(aParent){}
 private:
-    ~QNameCollector() {}
     nsRDFXMLSerializer* mParent;
 };
 

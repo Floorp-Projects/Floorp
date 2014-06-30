@@ -16,8 +16,6 @@ public:
   NS_DECL_NSIPRINTPROGRESSPARAMS
 
 	nsPrintProgressParams();
-
-protected:
 	virtual ~nsPrintProgressParams();
 
 private:

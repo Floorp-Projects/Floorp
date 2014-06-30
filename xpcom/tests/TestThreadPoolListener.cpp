@@ -47,8 +47,6 @@ static bool gAllThreadsShutDown = false;
 
 class Listener MOZ_FINAL : public nsIThreadPoolListener
 {
-  ~Listener() {}
-
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITHREADPOOLLISTENER

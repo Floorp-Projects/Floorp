@@ -41,6 +41,7 @@ friend class nsWatcherWindowEnumerator;
 
 public:
   nsWindowWatcher();
+  virtual ~nsWindowWatcher();
 
   nsresult Init();
 
@@ -57,8 +58,6 @@ public:
                                           bool aSizeSpecified);
 
 protected:
-  virtual ~nsWindowWatcher();
-
   friend class nsPromptService;
   bool AddEnumerator(nsWatcherWindowEnumerator* inEnumerator);
   bool RemoveEnumerator(nsWatcherWindowEnumerator* inEnumerator);

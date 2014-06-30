@@ -50,6 +50,7 @@ public:
   NS_DECL_NSIOBSERVER
 
   Preferences();
+  virtual ~Preferences();
 
   nsresult Init();
 
@@ -352,8 +353,6 @@ public:
   static nsresult SetFloat(const char* aPref, float aValue);
 
 protected:
-  virtual ~Preferences();
-
   nsresult NotifyServiceObservers(const char *aSubject);
   /**
    * Reads the default pref file or, if that failed, try to save a new one.
