@@ -23,7 +23,6 @@ simple_events = [
     'SpeechSynthesisEvent',
 #endif
     'DeviceStorageChangeEvent',
-    'PopupBlockedEvent',
     'RecordErrorEvent',
 #ifdef MOZ_WEBSPEECH
     'SpeechRecognitionEvent',

@@ -647,6 +647,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'MozOtaStatusEvent.webidl',
     'MozSmsEvent.webidl',
     'MozStkCommandEvent.webidl',
+    'PopupBlockedEvent.webidl',
     'ProgressEvent.webidl',
     'RTCDataChannelEvent.webidl',
     'RTCPeerConnectionIceEvent.webidl',

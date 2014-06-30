@@ -87,7 +87,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPopStateEvent.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsPIDOMStorage.h"
@@ -217,6 +216,7 @@
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/HashChangeEvent.h"
+#include "mozilla/dom/PopupBlockedEvent.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "nsITabChild.h"
 #include "mozilla/dom/MediaQueryList.h"
@@ -7380,31 +7380,33 @@ bool IsPopupBlocked(nsIDocument* aDoc)
   return permission == nsIPopupWindowManager::DENY_POPUP;
 }
 
-/* static */
 void
 nsGlobalWindow::FirePopupBlockedEvent(nsIDocument* aDoc,
-                                      nsIDOMWindow *aRequestingWindow, nsIURI *aPopupURI,
-                                      const nsAString &aPopupWindowName,
-                                      const nsAString &aPopupWindowFeatures)
+                                      nsIURI* aPopupURI,
+                                      const nsAString& aPopupWindowName,
+                                      const nsAString& aPopupWindowFeatures)
 {
-  if (aDoc) {
-    // Fire a "DOMPopupBlocked" event so that the UI can hear about
-    // blocked popups.
-    nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aDoc);
-    nsCOMPtr<nsIDOMEvent> event;
-    doc->CreateEvent(NS_LITERAL_STRING("PopupBlockedEvents"), getter_AddRefs(event));
-    if (event) {
-      nsCOMPtr<nsIDOMPopupBlockedEvent> pbev(do_QueryInterface(event));
-      pbev->InitPopupBlockedEvent(NS_LITERAL_STRING("DOMPopupBlocked"),
-                                  true, true, aRequestingWindow,
-                                  aPopupURI, aPopupWindowName,
-                                  aPopupWindowFeatures);
-      event->SetTrusted(true);
+  MOZ_ASSERT(aDoc);
 
-      bool defaultActionEnabled;
-      aDoc->DispatchEvent(event, &defaultActionEnabled);
-    }
-  }
+  // Fire a "DOMPopupBlocked" event so that the UI can hear about
+  // blocked popups.
+  PopupBlockedEventInit init;
+  init.mBubbles = true;
+  init.mCancelable = true;
+  init.mRequestingWindow = this;
+  init.mPopupWindowURI = aPopupURI;
+  init.mPopupWindowName = aPopupWindowName;
+  init.mPopupWindowFeatures = aPopupWindowFeatures;
+
+  nsRefPtr<PopupBlockedEvent> event =
+    PopupBlockedEvent::Constructor(aDoc,
+                                   NS_LITERAL_STRING("DOMPopupBlocked"),
+                                   init);
+
+  event->SetTrusted(true);
+
+  bool defaultActionEnabled;
+  aDoc->DispatchEvent(event, &defaultActionEnabled);
 }
 
 static void FirePopupWindowEvent(nsIDocument* aDoc)
@@ -7541,7 +7543,7 @@ nsGlobalWindow::FireAbuseEvents(bool aBlocked, bool aWindow,
 
   // fire an event chock full of informative URIs
   if (aBlocked) {
-    FirePopupBlockedEvent(topDoc, this, popupURI, aPopupWindowName,
+    FirePopupBlockedEvent(topDoc, popupURI, aPopupWindowName,
                           aPopupWindowFeatures);
   }
   if (aWindow)

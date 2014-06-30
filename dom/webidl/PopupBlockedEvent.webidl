@@ -5,22 +5,13 @@
  */
 interface URI;
 
-[Constructor(DOMString type, optional PopupBlockedEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
+[Constructor(DOMString type, optional PopupBlockedEventInit eventInitDict)]
 interface PopupBlockedEvent : Event
 {
   readonly attribute Window? requestingWindow;
   readonly attribute URI? popupWindowURI;
   readonly attribute DOMString? popupWindowName;
   readonly attribute DOMString? popupWindowFeatures;
-
-  [Throws]
-  void initPopupBlockedEvent(DOMString type,
-                             boolean canBubble,
-                             boolean cancelable,
-                             Window? requestingWindow,
-                             URI? popupWindowURI,
-                             DOMString? popupWindowName,
-                             DOMString? popupWindowFeatures);
 };
 
 dictionary PopupBlockedEventInit : EventInit
