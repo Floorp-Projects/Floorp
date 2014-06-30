@@ -1710,6 +1710,13 @@ MacroAssemblerMIPSCompat::and32(const Address &src, Register dest)
 }
 
 void
+MacroAssemblerMIPSCompat::or32(Imm32 imm, Register dest)
+{
+    ma_or(dest, imm);
+}
+
+
+void
 MacroAssemblerMIPSCompat::or32(Imm32 imm, const Address &dest)
 {
     load32(dest, SecondScratchReg);
