@@ -1540,7 +1540,6 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject
     }
 
     // step 22
-    // FIXME: This is incorrect with respect to [[Origin]]. See bug 999156.
     resultDesc.populatePropertyDescriptor(proxy, desc);
     return true;
 }
@@ -1567,8 +1566,7 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
     if (trap.isUndefined())
         return DirectProxyHandler::defineProperty(cx, proxy, id, desc);
 
-    // step 8-9, with 9 blatantly defied.
-    // FIXME: This is incorrect with respect to [[Origin]]. See bug 601379.
+    // step 8-9
     RootedValue descObj(cx);
     if (!NewPropertyDescriptorObject(cx, desc, &descObj))
         return false;
