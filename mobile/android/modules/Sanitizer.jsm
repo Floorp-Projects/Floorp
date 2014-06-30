@@ -27,12 +27,12 @@ let downloads = {
     let dbConn = dlmgr.DBConnection;
     let stmt = dbConn.createStatement("SELECT id FROM moz_downloads WHERE " +
         "state = ? OR state = ? OR state = ? OR state = ? OR state = ? OR state = ?");
-    stmt.bindInt32Parameter(0, Ci.nsIDownloadManager.DOWNLOAD_FINISHED);
-    stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_FAILED);
-    stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_CANCELED);
-    stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_PARENTAL);
-    stmt.bindInt32Parameter(4, Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_POLICY);
-    stmt.bindInt32Parameter(5, Ci.nsIDownloadManager.DOWNLOAD_DIRTY);
+    stmt.bindByIndex(0, Ci.nsIDownloadManager.DOWNLOAD_FINISHED);
+    stmt.bindByIndex(1, Ci.nsIDownloadManager.DOWNLOAD_FAILED);
+    stmt.bindByIndex(2, Ci.nsIDownloadManager.DOWNLOAD_CANCELED);
+    stmt.bindByIndex(3, Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_PARENTAL);
+    stmt.bindByIndex(4, Ci.nsIDownloadManager.DOWNLOAD_BLOCKED_POLICY);
+    stmt.bindByIndex(5, Ci.nsIDownloadManager.DOWNLOAD_DIRTY);
     while (stmt.executeStep()) {
       aCallback(dlmgr.getDownload(stmt.row.id));
     }

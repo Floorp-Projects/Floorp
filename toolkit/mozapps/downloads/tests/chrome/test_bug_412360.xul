@@ -86,20 +86,20 @@ function test()
 
   try {
     // Saving javascript URIs doesn't work
-    stmt.bindStringParameter(0, "javascript:5");
+    stmt.bindByIndex(0, "javascript:5");
 
     // Download to a temp local file
     file = Cc["@mozilla.org/file/directory_service;1"].
            getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
     file.append("javascriptURI");
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
-    stmt.bindStringParameter(1, Cc["@mozilla.org/network/io-service;1"].
+    stmt.bindByIndex(1, Cc["@mozilla.org/network/io-service;1"].
       getService(Ci.nsIIOService).newFileURI(file).spec);
 
     // Start it as canceled
-    stmt.bindInt32Parameter(2, dm.DOWNLOAD_CANCELED);
+    stmt.bindByIndex(2, dm.DOWNLOAD_CANCELED);
 
-    stmt.bindInt32Parameter(3, Date.now() * 1000);
+    stmt.bindByIndex(3, Date.now() * 1000);
 
     // Add it!
     stmt.execute();

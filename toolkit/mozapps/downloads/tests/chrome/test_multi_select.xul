@@ -49,10 +49,10 @@ function test()
       let fileSpec = Cc["@mozilla.org/network/io-service;1"].
         getService(Ci.nsIIOService).newFileURI(file).spec;
 
-      stmt.bindStringParameter(0, "http://" + site + "/file");
-      stmt.bindInt32Parameter(1, dm.DOWNLOAD_FINISHED);
-      stmt.bindStringParameter(2, fileSpec);
-      stmt.bindStringParameter(3, "http://referrer/");
+      stmt.bindByIndex(0, "http://" + site + "/file");
+      stmt.bindByIndex(1, dm.DOWNLOAD_FINISHED);
+      stmt.bindByIndex(2, fileSpec);
+      stmt.bindByIndex(3, "http://referrer/");
 
       // Add it!
       stmt.execute();

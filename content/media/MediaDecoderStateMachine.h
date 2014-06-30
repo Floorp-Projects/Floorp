@@ -445,6 +445,11 @@ protected:
   // Resets playback timing data. Called when we seek, on the decode thread.
   void ResetPlayback();
 
+  // Orders the Reader to stop decoding, and blocks until the Reader
+  // has stopped decoding and finished delivering samples, then calls
+  // ResetPlayback() to discard all enqueued data. 
+  void FlushDecoding();
+
   // Returns the audio clock, if we have audio, or -1 if we don't.
   // Called on the state machine thread.
   int64_t GetAudioClock();
