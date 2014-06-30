@@ -187,6 +187,7 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsPrefBranch(const char *aPrefRoot, bool aDefaultBranch);
+  virtual ~nsPrefBranch();
 
   int32_t GetRootLength() { return mPrefRootLength; }
 
@@ -197,8 +198,6 @@ public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
 protected:
-  virtual ~nsPrefBranch();
-
   nsPrefBranch()    /* disallow use of this constructer */
     { }
 
@@ -233,6 +232,7 @@ class nsPrefLocalizedString : public nsIPrefLocalizedString,
 {
 public:
   nsPrefLocalizedString();
+  virtual ~nsPrefLocalizedString();
 
   NS_DECL_ISUPPORTS
   NS_FORWARD_NSISUPPORTSSTRING(mUnicodeString->)
@@ -241,8 +241,6 @@ public:
   nsresult Init();
 
 private:
-  virtual ~nsPrefLocalizedString();
-
   NS_IMETHOD GetData(char16_t**);
   NS_IMETHOD SetData(const char16_t* aData);
   NS_IMETHOD SetDataWithLength(uint32_t aLength, const char16_t *aData);
@@ -256,12 +254,11 @@ class nsRelativeFilePref : public nsIRelativeFilePref
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRELATIVEFILEPREF
-
-  nsRelativeFilePref();
-
+  
+                nsRelativeFilePref();
+  virtual       ~nsRelativeFilePref();
+  
 private:
-  virtual ~nsRelativeFilePref();
-
   nsCOMPtr<nsIFile> mFile;
   nsCString mRelativeToKey;
 };

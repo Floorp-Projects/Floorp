@@ -20,12 +20,10 @@ class nsDialogParamBlock: public nsIDialogParamBlock
 {
 public: 	
   nsDialogParamBlock();
+  virtual ~nsDialogParamBlock();
    
   NS_DECL_NSIDIALOGPARAMBLOCK
   NS_DECL_ISUPPORTS	
-
-protected:
-  virtual ~nsDialogParamBlock();
 
 private:
 

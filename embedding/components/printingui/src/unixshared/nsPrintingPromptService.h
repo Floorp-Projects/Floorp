@@ -32,15 +32,13 @@ class nsPrintingPromptService: public nsIPrintingPromptService,
 public:
 
   nsPrintingPromptService();
+  virtual ~nsPrintingPromptService();
 
   nsresult Init();
 
   NS_DECL_NSIPRINTINGPROMPTSERVICE
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_ISUPPORTS
-
-protected:
-  virtual ~nsPrintingPromptService();
 
 private:
   nsresult DoDialog(nsIDOMWindow *aParent,

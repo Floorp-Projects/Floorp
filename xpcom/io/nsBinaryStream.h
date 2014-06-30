@@ -31,6 +31,10 @@ public:
   nsBinaryOutputStream()
   {
   }
+  // virtual dtor since subclasses call our Release()
+  virtual ~nsBinaryOutputStream()
+  {
+  }
 
 protected:
   // nsISupports methods
@@ -50,12 +54,6 @@ protected:
 
   nsCOMPtr<nsIOutputStream>       mOutputStream;
   nsCOMPtr<nsIStreamBufferAccess> mBufferAccess;
-
-private:
-  // virtual dtor since subclasses call our Release()
-  virtual ~nsBinaryOutputStream()
-  {
-  }
 };
 
 #define NS_BINARYINPUTSTREAM_CID        \
@@ -76,6 +74,10 @@ public:
   nsBinaryInputStream()
   {
   }
+  // virtual dtor since subclasses call our Release()
+  virtual ~nsBinaryInputStream()
+  {
+  }
 
 protected:
   // nsISupports methods
@@ -92,12 +94,6 @@ protected:
 
   nsCOMPtr<nsIInputStream>        mInputStream;
   nsCOMPtr<nsIStreamBufferAccess> mBufferAccess;
-
-private:
-  // virtual dtor since subclasses call our Release()
-  virtual ~nsBinaryInputStream()
-  {
-  }
 };
 
 #endif // nsBinaryStream_h___

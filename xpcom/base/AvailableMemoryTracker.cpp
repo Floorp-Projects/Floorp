@@ -396,8 +396,6 @@ NS_IMPL_ISUPPORTS(LowEventsReporter, nsIMemoryReporter)
  */
 class nsJemallocFreeDirtyPagesRunnable MOZ_FINAL : public nsIRunnable
 {
-  ~nsJemallocFreeDirtyPagesRunnable() {}
-
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
@@ -424,8 +422,6 @@ nsJemallocFreeDirtyPagesRunnable::Run()
  */
 class nsMemoryPressureWatcher MOZ_FINAL : public nsIObserver
 {
-  ~nsMemoryPressureWatcher() {}
-
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER

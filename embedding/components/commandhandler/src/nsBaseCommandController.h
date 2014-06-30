@@ -27,7 +27,8 @@ class nsBaseCommandController :  public nsIController,
 {
 public:
 
-  nsBaseCommandController();
+          nsBaseCommandController();
+  virtual ~nsBaseCommandController();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -43,10 +44,7 @@ public:
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
-
-protected:
-  virtual ~nsBaseCommandController();
-
+  
 private:
 
    nsWeakPtr mCommandContextWeakPtr;

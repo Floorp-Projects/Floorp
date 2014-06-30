@@ -19,6 +19,7 @@ class nsCommandParams : public nsICommandParams
 public:
 
                       nsCommandParams();
+  virtual             ~nsCommandParams();
   
   
   NS_DECL_ISUPPORTS
@@ -27,7 +28,6 @@ public:
   nsresult            Init();
   
 protected:
-  virtual             ~nsCommandParams();
 
   struct HashEntry : public PLDHashEntryHdr
   {

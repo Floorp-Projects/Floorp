@@ -25,8 +25,6 @@ public:
   NS_DECL_NSIPRINTSTATUSFEEDBACK
 
 	nsPrintProgress(nsIPrintSettings* aPrintSettings);
-
-protected:
 	virtual ~nsPrintProgress();
 
 private:
