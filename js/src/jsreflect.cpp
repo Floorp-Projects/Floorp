@@ -665,7 +665,8 @@ class NodeBuilder
 
     bool objectPattern(NodeVector &elts, TokenPos *pos, MutableHandleValue dst);
 
-    bool propertyPattern(HandleValue key, HandleValue patt, TokenPos *pos, MutableHandleValue dst);
+    bool propertyPattern(HandleValue key, HandleValue patt, bool isShorthand, TokenPos *pos,
+                         MutableHandleValue dst);
 };
 
 } /* anonymous namespace */
@@ -1227,12 +1228,14 @@ NodeBuilder::spreadExpression(HandleValue expr, TokenPos *pos, MutableHandleValu
 }
 
 bool
-NodeBuilder::propertyPattern(HandleValue key, HandleValue patt, TokenPos *pos,
+NodeBuilder::propertyPattern(HandleValue key, HandleValue patt, bool isShorthand, TokenPos *pos,
                              MutableHandleValue dst)
 {
     RootedValue kindName(cx);
     if (!atomValue("init", &kindName))
         return false;
+
+    RootedValue isShorthandVal(cx, BooleanValue(isShorthand));
 
     RootedValue cb(cx, callbacks[AST_PROP_PATT]);
     if (!cb.isNull())
@@ -1242,6 +1245,7 @@ NodeBuilder::propertyPattern(HandleValue key, HandleValue patt, TokenPos *pos,
                    "key", key,
                    "value", patt,
                    "kind", kindName,
+                   "shorthand", isShorthandVal,
                    dst);
 }
 
@@ -3015,7 +3019,8 @@ ASTSerializer::objectPattern(ParseNode *pn, VarDeclKind *pkind, MutableHandleVal
         RootedValue key(cx), patt(cx), prop(cx);
         if (!propertyName(next->pn_left, &key) ||
             !pattern(next->pn_right, pkind, &patt) ||
-            !builder.propertyPattern(key, patt, &next->pn_pos, &prop)) {
+            !builder.propertyPattern(key, patt, next->isKind(PNK_SHORTHAND), &next->pn_pos,
+                                     &prop)) {
             return false;
         }
 
