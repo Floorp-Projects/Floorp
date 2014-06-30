@@ -1,0 +1,118 @@
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+  <script class="testbody" type="application/javascript">
+"use strict";
+var Cu = SpecialPowers.Cu;
+var rtcid = Cu.import("resource://gre/modules/media/IdpProxy.jsm");
+var IdpProxy = rtcid.IdpProxy;
+
+// here we call the identity provider directly
+function getIdentityAssertion(fingerprints, callback) {
+  var idp;
+  function handleFailure() {
+    ok(false, "Failed to talk to IdP");
+    callback();
+  }
+
+  function handleResponse(response) {
+    var wrappedResponse = SpecialPowers.wrap(response);
+    is(wrappedResponse.type, "SUCCESS",
+       "IdP provided successful response");
+    var assertion = btoa(JSON.stringify(wrappedResponse.message));
+    idp.close();
+    callback(assertion);
+  }
+
+  idp = new IdpProxy("example.com", "idp.html");
+  idp.start(handleFailure);
+  idp.send({
+    type: "SIGN",
+    message: JSON.stringify({ fingerprint: fingerprints })
+  }, handleResponse);
+}
+
+// this takes the real fingerprints and makes more
+function makeFingerprints(algo, digest) {
+  var fingerprints = [];
+  fingerprints.push({ algorithm: algo, digest: digest });
+  for (var i = 0; i < 3; ++i) {
+    fingerprints.push({
+      algorithm: algo,
+      digest: digest.replace(/:./g, ":" + i.toString(16))
+    });
+  }
+  return fingerprints;
+}
+
+var fingerprintRegex = /^a=fingerprint:(\S+) (\S+)/m;
+var identityRegex = /^a=identity:(\S+)/m;
+
+function fingerprintSdp(fingerprints) {
+  return fingerprints.map(fp => "a=fInGeRpRiNt=" + fp.algorithm +
+                                " " + fp.digest + "\n").join("");
+}
+
+// Firefox only uses a single fingerprint
+// that doesn't mean we can't have SDP that describes two
+function testMultipleFingerprints() {
+  // this one fails setRemoteDescription if the identity is not good
+  var pcStrict = new mozRTCPeerConnection({ peerIdentity: 'someone@example.com'});
+  // this one will be manually tweaked to have two fingerprints
+  var pcDouble = new mozRTCPeerConnection({});
+
+  function finished(result, message) {
+    ok(result, message);
+    pcStrict.close();
+    pcDouble.close();
+    SimpleTest.finish();
+  }
+
+  navigator.mozGetUserMedia({ audio: true, fake: true }, function(stream) {
+    ok(stream, "Got fake stream");
+    pcDouble.addStream(stream);
+
+    pcDouble.createOffer(function(offer) {
+      ok(offer, "Got offer");
+      var m = offer.sdp.match(fingerprintRegex);
+      if (!m) {
+        finished(false, "No fingerprint in offer SDP");
+        return;
+      }
+
+      var fingerprints = makeFingerprints(m[1], m[2]);
+      getIdentityAssertion(fingerprints, function(assertion) {
+        ok(assertion, "Should have assertion");
+
+        var sdp = offer.sdp.slice(0, m.index) +
+          "a=identity:" + assertion + "\n" +
+          fingerprintSdp(fingerprints.slice(1)) +
+          offer.sdp.slice(m.index);
+
+        var desc = new mozRTCSessionDescription({ type: "offer", sdp: sdp });
+        pcStrict.setRemoteDescription(desc, function() {
+          finished(true, "session description was OK");
+        }, function(err) {
+          finished(false, "error setting the session description: " + err);
+        });
+      });
+    }, function(err) {
+      finished(false, "error creating an offer: " + err);
+    });
+  }, function(err) {
+    finished(false, "error getting stream: " + err);
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  "set" : [ [ "dom.messageChannel.enabled", true ],
+            [ "media.peerconnection.identity.enabled", true ] ]
+}, testMultipleFingerprints);
+</script>
+  </body>
+</html>
