@@ -8920,6 +8920,11 @@ class MStringLength
     }
 
     void computeRange(TempAllocator &alloc);
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return true;
+    }
 };
 
 // Inlined version of Math.floor().
