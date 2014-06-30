@@ -30,7 +30,6 @@
 #include "nsIDOMDataChannel.h"
 #endif
 #include "nsIDOMDataTransfer.h"
-#include "nsIDOMDeviceOrientationEvent.h"
 #include "nsIDOMDeviceStorage.h"
 #include "nsIDOMDeviceStorageChangeEvent.h"
 #include "nsIDOMDOMCursor.h"
@@ -179,7 +178,6 @@
 #endif
 #include "mozilla/dom/DataContainerEventBinding.h"
 #include "mozilla/dom/DataTransferBinding.h"
-#include "mozilla/dom/DeviceOrientationEventBinding.h"
 #include "mozilla/dom/DeviceStorageBinding.h"
 #include "mozilla/dom/DeviceStorageChangeEventBinding.h"
 #include "mozilla/dom/DOMCursorBinding.h"
@@ -380,7 +378,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
 #endif
   DEFINE_SHIM(DataContainerEvent),
   DEFINE_SHIM(DataTransfer),
-  DEFINE_SHIM(DeviceOrientationEvent),
   DEFINE_SHIM(DeviceStorage),
   DEFINE_SHIM(DeviceStorageChangeEvent),
   DEFINE_SHIM(DOMCursor),
