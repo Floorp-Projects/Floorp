@@ -129,13 +129,13 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
                             const nsString& aLanguageOverride,
                             gfxSparseBitSet *aUnicodeRanges)
 {
+    MOZ_ASSERT(aWeight != 0,
+               "aWeight must not be 0; use NS_FONT_WEIGHT_NORMAL instead");
+
     nsAutoString key(aFamilyName);
     ToLowerCase(key);
 
     bool found;
-
-    if (aWeight == 0)
-        aWeight = NS_FONT_WEIGHT_NORMAL;
 
     // stretch, italic/oblique ==> zero implies normal
 
