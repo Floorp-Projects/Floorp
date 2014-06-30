@@ -27,11 +27,11 @@ public:
     static nsresult Create(nsISupports* aOuter,
                            const nsIID& aIID, void **aResult);
 
-    ~FileSystemDataSource() { }
     nsresult Init();
 
 private:
     FileSystemDataSource() { }
+    ~FileSystemDataSource() { }
 
     // helper methods
     bool     isFileURI(nsIRDFResource* aResource);
