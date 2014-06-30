@@ -10,7 +10,6 @@
 simple_events = [
     'CustomEvent',
     'DOMTransactionEvent',
-    'DeviceOrientationEvent',
     'StyleRuleChangeEvent',
     'StyleSheetChangeEvent',
     'StyleSheetApplicableStateChangeEvent',

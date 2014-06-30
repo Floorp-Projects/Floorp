@@ -16,6 +16,7 @@
 #include "GeneratedEvents.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/CloseEvent.h"
+#include "mozilla/dom/DeviceOrientationEvent.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/HashChangeEvent.h"
 #include "mozilla/dom/PageTransitionEvent.h"
@@ -778,8 +779,13 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
   if (aEventType.LowerCaseEqualsLiteral("textevent") ||
       aEventType.LowerCaseEqualsLiteral("textevents"))
     return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("deviceorientationevent"))
-    return NS_NewDOMDeviceOrientationEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+  if (aEventType.LowerCaseEqualsLiteral("deviceorientationevent")) {
+    DeviceOrientationEventInit init;
+    nsRefPtr<DeviceOrientationEvent> event =
+      DeviceOrientationEvent::Constructor(aOwner, EmptyString(), init);
+    event.forget(aDOMEvent);
+    return NS_OK;
+  }
   if (aEventType.LowerCaseEqualsLiteral("devicemotionevent"))
     return NS_NewDOMDeviceMotionEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("uievent") ||
