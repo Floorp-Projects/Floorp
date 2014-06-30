@@ -12,7 +12,6 @@ simple_events = [
     'CustomEvent',
     'PageTransitionEvent',
     'DOMTransactionEvent',
-    'PopStateEvent',
     'DeviceOrientationEvent',
     'MozApplicationEvent',
     'SmartCardEvent',

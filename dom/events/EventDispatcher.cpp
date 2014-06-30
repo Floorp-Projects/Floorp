@@ -18,6 +18,7 @@
 #include "mozilla/dom/CloseEvent.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/HashChangeEvent.h"
+#include "mozilla/dom/PopStateEvent.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/EventDispatcher.h"
@@ -818,12 +819,21 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     return NS_NewDOMDOMTransactionEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("scrollareaevent"))
     return NS_NewDOMScrollAreaEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("popstateevent"))
-    return NS_NewDOMPopStateEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("closeevent")) {
     CloseEventInit init;
     nsRefPtr<CloseEvent> event =
       CloseEvent::Constructor(aOwner, EmptyString(), init);
+    event.forget(aDOMEvent);
+    return NS_OK;
+  }
+  // XXXkhuey Chrome supports popstateevent here, even though it provides no
+  // initPopStateEvent method.  This is nuts ... but copying it is unlikely to
+  // break the web.
+  if (aEventType.LowerCaseEqualsLiteral("popstateevent")) {
+    AutoJSContext cx;
+    RootedDictionary<PopStateEventInit> init(cx);
+    nsRefPtr<PopStateEvent> event =
+      PopStateEvent::Constructor(aOwner, EmptyString(), init);
     event.forget(aDOMEvent);
     return NS_OK;
   }
