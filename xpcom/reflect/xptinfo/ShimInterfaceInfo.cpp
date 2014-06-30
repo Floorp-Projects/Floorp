@@ -112,9 +112,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMMouseScrollEvent.h"
 #include "nsIDOMMutationEvent.h"
-#include "nsIDOMMozApplicationEvent.h"
 #include "nsIDOMMozNamedAttrMap.h"
-#include "nsIDOMMozSettingsEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeIterator.h"
 #include "nsIDOMNotifyPaintEvent.h"
@@ -264,9 +262,7 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/MouseScrollEventBinding.h"
 #include "mozilla/dom/MutationEventBinding.h"
-#include "mozilla/dom/MozApplicationEventBinding.h"
 #include "mozilla/dom/MozNamedAttrMapBinding.h"
-#include "mozilla/dom/MozSettingsEventBinding.h"
 #include "mozilla/dom/NodeIteratorBinding.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/NotifyPaintEventBinding.h"
@@ -467,9 +463,7 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(MouseEvent),
   DEFINE_SHIM(MouseScrollEvent),
   DEFINE_SHIM(MutationEvent),
-  DEFINE_SHIM(MozApplicationEvent),
   DEFINE_SHIM(MozNamedAttrMap),
-  DEFINE_SHIM(MozSettingsEvent),
   DEFINE_SHIM(NodeIterator),
   DEFINE_SHIM(Node),
   DEFINE_SHIM(NotifyPaintEvent),
