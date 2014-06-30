@@ -50,7 +50,6 @@
 #include "DeviceStorageRequestChild.h"
 #include "nsCRT.h"
 #include "nsIObserverService.h"
-#include "GeneratedEvents.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIPermissionManager.h"

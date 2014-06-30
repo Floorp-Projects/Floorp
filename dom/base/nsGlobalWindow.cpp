@@ -176,8 +176,6 @@
 #include "nsFrameLoader.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPCOMCID.h"
-#include "GeneratedEvents.h"
-#include "GeneratedEventClasses.h"
 #include "mozIThirdPartyUtil.h"
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds

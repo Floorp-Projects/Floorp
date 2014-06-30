@@ -17,7 +17,6 @@
 #include "AudioSegment.h"
 #include "endpointer.h"
 
-#include "GeneratedEvents.h"
 #include "mozilla/dom/SpeechRecognitionEvent.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
