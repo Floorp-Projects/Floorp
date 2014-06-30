@@ -535,7 +535,6 @@ WEBIDL_FILES += [
     'DeviceOrientationEvent.webidl',
     'DeviceStorageChangeEvent.webidl',
     'DOMTransactionEvent.webidl',
-    'ElementReplaceEvent.webidl',
     'HashChangeEvent.webidl',
     'MozApplicationEvent.webidl',
     'MozSettingsEvent.webidl',
