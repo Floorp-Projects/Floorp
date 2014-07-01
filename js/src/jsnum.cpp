@@ -45,7 +45,6 @@ using mozilla::MinNumberValue;
 using mozilla::NegativeInfinity;
 using mozilla::PodCopy;
 using mozilla::PositiveInfinity;
-using mozilla::Range;
 using mozilla::RangedPtr;
 
 using JS::AutoCheckCannotGC;
@@ -178,7 +177,7 @@ ComputeAccurateBinaryBaseInteger(const CharT *start, const CharT *end, int base)
 
 template <typename CharT>
 double
-js::ParseDecimalNumber(const Range<const CharT> chars)
+js::ParseDecimalNumber(const mozilla::Range<const CharT> chars)
 {
     MOZ_ASSERT(chars.length() > 0);
     uint64_t dec = 0;
@@ -196,10 +195,10 @@ js::ParseDecimalNumber(const Range<const CharT> chars)
 }
 
 template double
-js::ParseDecimalNumber(const Range<const Latin1Char> chars);
+js::ParseDecimalNumber(const mozilla::Range<const Latin1Char> chars);
 
 template double
-js::ParseDecimalNumber(const Range<const jschar> chars);
+js::ParseDecimalNumber(const mozilla::Range<const jschar> chars);
 
 template <typename CharT>
 bool

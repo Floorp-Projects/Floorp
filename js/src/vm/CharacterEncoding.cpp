@@ -13,10 +13,9 @@
 
 using namespace JS;
 
-using mozilla::Range;
-
 Latin1CharsZ
-JS::LossyTwoByteCharsToNewLatin1CharsZ(js::ThreadSafeContext *cx, const Range<const jschar> tbchars)
+JS::LossyTwoByteCharsToNewLatin1CharsZ(js::ThreadSafeContext *cx,
+                                       const mozilla::Range<const jschar> tbchars)
 {
     JS_ASSERT(cx);
     size_t len = tbchars.length();
@@ -144,7 +143,7 @@ bufferTooSmall:
 
 template <typename CharT>
 UTF8CharsZ
-JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const Range<const CharT> chars)
+JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const mozilla::Range<const CharT> chars)
 {
     JS_ASSERT(cx);
 
@@ -165,10 +164,10 @@ JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const Range<const CharT> cha
 }
 
 template UTF8CharsZ
-JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const Range<const Latin1Char> chars);
+JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const mozilla::Range<const Latin1Char> chars);
 
 template UTF8CharsZ
-JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const Range<const jschar> chars);
+JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const mozilla::Range<const jschar> chars);
 
 static const uint32_t INVALID_UTF8 = UINT32_MAX;
 
