@@ -263,7 +263,8 @@ class MacroAssemblerARM : public Assembler
 
     // fast mod, uses scratch registers, and thus needs to be in the assembler
     // implicitly assumes that we can overwrite dest at the beginning of the sequence
-    void ma_mod_mask(Register src, Register dest, Register hold, int32_t shift);
+    void ma_mod_mask(Register src, Register dest, Register hold, Register tmp,
+                     int32_t shift);
 
     // mod, depends on integer divide instructions being supported
     void ma_smod(Register num, Register div, Register dest);

@@ -922,7 +922,8 @@ MacroAssemblerARM::ma_check_mul(Register src1, Imm32 imm, Register dest, Conditi
 }
 
 void
-MacroAssemblerARM::ma_mod_mask(Register src, Register dest, Register hold, int32_t shift)
+MacroAssemblerARM::ma_mod_mask(Register src, Register dest, Register hold, Register tmp,
+                               int32_t shift)
 {
     // MATH:
     // We wish to compute x % (1<<y) - 1 for a known constant, y.
@@ -945,20 +946,24 @@ MacroAssemblerARM::ma_mod_mask(Register src, Register dest, Register hold, int32
     //    as holding the trial subtraction as a temp value
     // dest is the accumulator (and holds the final result)
 
-    // move the whole value into the scratch register, setting the codition codes so
-    // we can muck with them later
-    as_mov(ScratchRegister, O2Reg(src), SetCond);
+    // move the whole value into tmp, setting the codition codes so we can
+    // muck with them later.
+    //
+    // Note that we cannot use ScratchRegister in place of tmp here, as ma_and
+    // below on certain architectures move the mask into ScratchRegister
+    // before performing the bitwise and.
+    as_mov(tmp, O2Reg(src), SetCond);
     // Zero out the dest.
     ma_mov(Imm32(0), dest);
     // Set the hold appropriately.
     ma_mov(Imm32(1), hold);
     ma_mov(Imm32(-1), hold, NoSetCond, Signed);
-    ma_rsb(Imm32(0), ScratchRegister, SetCond, Signed);
+    ma_rsb(Imm32(0), tmp, SetCond, Signed);
     // Begin the main loop.
     bind(&head);
 
     // Extract the bottom bits into lr.
-    ma_and(Imm32(mask), ScratchRegister, secondScratchReg_);
+    ma_and(Imm32(mask), tmp, secondScratchReg_);
     // Add those bits to the accumulator.
     ma_add(secondScratchReg_, dest, dest);
     // Do a trial subtraction, this is the same operation as cmp, but we store the dest
@@ -966,7 +971,7 @@ MacroAssemblerARM::ma_mod_mask(Register src, Register dest, Register hold, int32
     // If (sum - C) > 0, store sum - C back into sum, thus performing a modulus.
     ma_mov(secondScratchReg_, dest, NoSetCond, NotSigned);
     // Get rid of the bits that we extracted before, and set the condition codes
-    as_mov(ScratchRegister, lsr(ScratchRegister, shift), SetCond);
+    as_mov(tmp, lsr(tmp, shift), SetCond);
     // If the shift produced zero, finish, otherwise, continue in the loop.
     ma_b(&head, NonZero);
     // Check the hold to see if we need to negate the result.  Hold can only be 1 or -1,

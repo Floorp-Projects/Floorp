@@ -16,7 +16,6 @@
 #include "nsIDOMClientRect.h"
 #include "nsIDOMClientRectList.h"
 #include "nsIDOMClipboardEvent.h"
-#include "nsIDOMCloseEvent.h"
 #include "nsIDOMCommandEvent.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMCompositionEvent.h"
@@ -31,20 +30,16 @@
 #include "nsIDOMDataChannel.h"
 #endif
 #include "nsIDOMDataTransfer.h"
-#include "nsIDOMDeviceOrientationEvent.h"
 #include "nsIDOMDeviceStorage.h"
-#include "nsIDOMDeviceStorageChangeEvent.h"
 #include "nsIDOMDOMCursor.h"
 #include "nsIDOMDOMException.h"
 #include "nsIDOMDOMRequest.h"
-#include "nsIDOMDOMTransactionEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMElementReplaceEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMFileList.h"
@@ -52,7 +47,6 @@
 #include "nsIDOMFocusEvent.h"
 #include "nsIDOMFormData.h"
 #include "nsIDOMGeoPositionError.h"
-#include "nsIDOMHashChangeEvent.h"
 #include "nsIDOMHistory.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLAppletElement.h"
@@ -115,37 +109,23 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMMouseScrollEvent.h"
 #include "nsIDOMMutationEvent.h"
-#include "nsIDOMMozApplicationEvent.h"
 #include "nsIDOMMozNamedAttrMap.h"
-#include "nsIDOMMozSettingsEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeIterator.h"
 #include "nsIDOMNotifyPaintEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMOfflineResourceList.h"
-#include "nsIDOMPageTransitionEvent.h"
 #include "nsIDOMPaintRequest.h"
 #include "nsIDOMParser.h"
-#include "nsIDOMPopStateEvent.h"
-#include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMRecordErrorEvent.h"
 #include "nsIDOMRect.h"
 #include "nsIDOMScreen.h"
 #include "nsIDOMScrollAreaEvent.h"
 #include "nsIDOMSerializer.h"
 #include "nsIDOMSimpleGestureEvent.h"
-#include "nsIDOMSmartCardEvent.h"
-#ifdef MOZ_WEBSPEECH
-#include "nsIDOMSpeechRecognitionEvent.h"
-#include "nsIDOMSpeechSynthesisEvent.h"
-#endif // MOZ_WEBSPEECH
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMStyleSheetList.h"
-#include "nsIDOMStyleRuleChangeEvent.h"
-#include "nsIDOMStyleSheetApplicableStateChangeEvent.h"
-#include "nsIDOMStyleSheetChangeEvent.h"
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMText.h"
@@ -175,7 +155,6 @@
 #include "mozilla/dom/DOMRectBinding.h"
 #include "mozilla/dom/DOMRectListBinding.h"
 #include "mozilla/dom/ClipboardEventBinding.h"
-#include "mozilla/dom/CloseEventBinding.h"
 #include "mozilla/dom/CommandEventBinding.h"
 #include "mozilla/dom/CommentBinding.h"
 #include "mozilla/dom/CompositionEventBinding.h"
@@ -190,28 +169,23 @@
 #endif
 #include "mozilla/dom/DataContainerEventBinding.h"
 #include "mozilla/dom/DataTransferBinding.h"
-#include "mozilla/dom/DeviceOrientationEventBinding.h"
 #include "mozilla/dom/DeviceStorageBinding.h"
-#include "mozilla/dom/DeviceStorageChangeEventBinding.h"
 #include "mozilla/dom/DOMCursorBinding.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/DOMParserBinding.h"
 #include "mozilla/dom/DOMRequestBinding.h"
-#include "mozilla/dom/DOMTransactionEventBinding.h"
 #include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/dom/DocumentFragmentBinding.h"
 #include "mozilla/dom/DocumentTypeBinding.h"
 #include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/dom/DragEventBinding.h"
 #include "mozilla/dom/ElementBinding.h"
-#include "mozilla/dom/ElementReplaceEventBinding.h"
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/FileListBinding.h"
 #include "mozilla/dom/FileReaderBinding.h"
 #include "mozilla/dom/FocusEventBinding.h"
 #include "mozilla/dom/FormDataBinding.h"
-#include "mozilla/dom/HashChangeEventBinding.h"
 #include "mozilla/dom/HistoryBinding.h"
 #include "mozilla/dom/HTMLAnchorElementBinding.h"
 #include "mozilla/dom/HTMLAppletElementBinding.h"
@@ -275,38 +249,24 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/MouseScrollEventBinding.h"
 #include "mozilla/dom/MutationEventBinding.h"
-#include "mozilla/dom/MozApplicationEventBinding.h"
 #include "mozilla/dom/MozNamedAttrMapBinding.h"
-#include "mozilla/dom/MozSettingsEventBinding.h"
 #include "mozilla/dom/NodeIteratorBinding.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/NotifyPaintEventBinding.h"
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/OfflineResourceListBinding.h"
-#include "mozilla/dom/PageTransitionEventBinding.h"
 #include "mozilla/dom/PaintRequestBinding.h"
-#include "mozilla/dom/PopStateEventBinding.h"
-#include "mozilla/dom/PopupBlockedEventBinding.h"
 #include "mozilla/dom/PositionErrorBinding.h"
 #include "mozilla/dom/ProcessingInstructionBinding.h"
 #include "mozilla/dom/RangeBinding.h"
-#include "mozilla/dom/RecordErrorEventBinding.h"
 #include "mozilla/dom/RectBinding.h"
 #include "mozilla/dom/ScreenBinding.h"
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/dom/ScrollAreaEventBinding.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
-#include "mozilla/dom/SmartCardEventBinding.h"
-#ifdef MOZ_WEBSPEECH
-#include "mozilla/dom/SpeechRecognitionEventBinding.h"
-#include "mozilla/dom/SpeechSynthesisEventBinding.h"
-#endif // MOZ_WEBSPEECH
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/StyleSheetBinding.h"
 #include "mozilla/dom/StyleSheetListBinding.h"
-#include "mozilla/dom/StyleRuleChangeEventBinding.h"
-#include "mozilla/dom/StyleSheetApplicableStateChangeEventBinding.h"
-#include "mozilla/dom/StyleSheetChangeEventBinding.h"
 #include "mozilla/dom/SVGElementBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/TextBinding.h"
@@ -386,7 +346,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMClientRect, DOMRectReadOnly),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMClientRectList, DOMRectList),
   DEFINE_SHIM(ClipboardEvent),
-  DEFINE_SHIM(CloseEvent),
   DEFINE_SHIM(CommandEvent),
   DEFINE_SHIM(Comment),
   DEFINE_SHIM(CompositionEvent),
@@ -401,20 +360,16 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
 #endif
   DEFINE_SHIM(DataContainerEvent),
   DEFINE_SHIM(DataTransfer),
-  DEFINE_SHIM(DeviceOrientationEvent),
   DEFINE_SHIM(DeviceStorage),
-  DEFINE_SHIM(DeviceStorageChangeEvent),
   DEFINE_SHIM(DOMCursor),
   DEFINE_SHIM(DOMException),
   DEFINE_SHIM(DOMRequest),
-  DEFINE_SHIM(DOMTransactionEvent),
   DEFINE_SHIM(Document),
   DEFINE_SHIM(DocumentFragment),
   DEFINE_SHIM(DocumentType),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMDocumentXBL, Document),
   DEFINE_SHIM(DragEvent),
   DEFINE_SHIM(Element),
-  DEFINE_SHIM(ElementReplaceEvent),
   DEFINE_SHIM(Event),
   DEFINE_SHIM(EventTarget),
   DEFINE_SHIM(FileReader),
@@ -422,7 +377,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(FocusEvent),
   DEFINE_SHIM(FormData),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMGeoPositionError, PositionError),
-  DEFINE_SHIM(HashChangeEvent),
   DEFINE_SHIM(History),
   DEFINE_SHIM(HTMLAnchorElement),
   DEFINE_SHIM(HTMLAppletElement),
@@ -486,37 +440,23 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(MouseEvent),
   DEFINE_SHIM(MouseScrollEvent),
   DEFINE_SHIM(MutationEvent),
-  DEFINE_SHIM(MozApplicationEvent),
   DEFINE_SHIM(MozNamedAttrMap),
-  DEFINE_SHIM(MozSettingsEvent),
   DEFINE_SHIM(NodeIterator),
   DEFINE_SHIM(Node),
   DEFINE_SHIM(NotifyPaintEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMNSEvent, Event),
   DEFINE_SHIM(OfflineResourceList),
-  DEFINE_SHIM(PageTransitionEvent),
   DEFINE_SHIM(PaintRequest),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMParser, DOMParser),
-  DEFINE_SHIM(PopStateEvent),
-  DEFINE_SHIM(PopupBlockedEvent),
   DEFINE_SHIM(ProcessingInstruction),
   DEFINE_SHIM(Range),
-  DEFINE_SHIM(RecordErrorEvent),
   DEFINE_SHIM(Rect),
   DEFINE_SHIM(Screen),
   DEFINE_SHIM(ScrollAreaEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMSerializer, XMLSerializer),
   DEFINE_SHIM(SimpleGestureEvent),
-  DEFINE_SHIM(SmartCardEvent),
-#ifdef MOZ_WEBSPEECH
-  DEFINE_SHIM(SpeechRecognitionEvent),
-  DEFINE_SHIM(SpeechSynthesisEvent),
-#endif // MOZ_WEBSPEECH
   DEFINE_SHIM(StyleSheet),
   DEFINE_SHIM(StyleSheetList),
-  DEFINE_SHIM(StyleRuleChangeEvent),
-  DEFINE_SHIM(StyleSheetApplicableStateChangeEvent),
-  DEFINE_SHIM(StyleSheetChangeEvent),
   DEFINE_SHIM(SVGElement),
   DEFINE_SHIM(SVGLength),
   DEFINE_SHIM(Text),

@@ -198,6 +198,7 @@ private: // methods
   // If the current operator is "source" then clear the destination before we
   // draw into it, to simulate the effect of an unbounded source operator.
   void ClearSurfaceForUnboundedSource(const CompositionOp &aOperator);
+
 private: // data
   cairo_t* mContext;
   cairo_surface_t* mSurface;

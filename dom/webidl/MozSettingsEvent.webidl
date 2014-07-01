@@ -4,11 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional MozSettingsEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
+[Constructor(DOMString type, optional MozSettingsEventInit eventInitDict)]
 interface MozSettingsEvent : Event
 {
   readonly attribute DOMString? settingName;
-  [Throws]
   readonly attribute any settingValue;
 };
 

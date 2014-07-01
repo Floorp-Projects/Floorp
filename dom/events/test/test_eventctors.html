@@ -638,9 +638,9 @@ is(e.value, Infinity, "Uninitialized value should be positive infinity");
 e = new DeviceOrientationEvent("hello");
 is(e.type, "hello", "Wrong event type!");
 ok(!e.isTrusted, "Event should not be trusted");
-is(e.alpha, 0);
-is(e.beta, 0);
-is(e.gamma, 0);
+is(e.alpha, null);
+is(e.beta, null);
+is(e.gamma, null);
 is(e.absolute, false);
 
 e = new DeviceOrientationEvent("hello", { alpha: 1, beta: 2, gamma: 3, absolute: true } );

@@ -33,6 +33,8 @@ else:
             'xptcinvoke.cpp',
             'xptcstubs.cpp',
         ]
+        if CONFIG['TARGET_CPU'] == 'x86_64' or CONFIG['GNU_CXX']:
+            SOURCES['xptcinvoke.cpp'].no_pgo = True
 
 FINAL_LIBRARY = 'xpcom_core'
 
