@@ -32,7 +32,6 @@ using namespace js::types;
 
 using mozilla::IsFinite;
 using mozilla::Maybe;
-using mozilla::Range;
 using mozilla::RangedPtr;
 
 const Class js::JSONClass = {
@@ -797,7 +796,7 @@ Revive(JSContext *cx, HandleValue reviver, MutableHandleValue vp)
 
 template <typename CharT>
 bool
-js::ParseJSONWithReviver(JSContext *cx, const Range<const CharT> chars, HandleValue reviver,
+js::ParseJSONWithReviver(JSContext *cx, const mozilla::Range<const CharT> chars, HandleValue reviver,
                          MutableHandleValue vp)
 {
     /* 15.12.2 steps 2-3. */
@@ -812,11 +811,11 @@ js::ParseJSONWithReviver(JSContext *cx, const Range<const CharT> chars, HandleVa
 }
 
 template bool
-js::ParseJSONWithReviver(JSContext *cx, const Range<const Latin1Char> chars, HandleValue reviver,
-                         MutableHandleValue vp);
+js::ParseJSONWithReviver(JSContext *cx, const mozilla::Range<const Latin1Char> chars,
+                         HandleValue reviver, MutableHandleValue vp);
 
 template bool
-js::ParseJSONWithReviver(JSContext *cx, const Range<const jschar> chars, HandleValue reviver,
+js::ParseJSONWithReviver(JSContext *cx, const mozilla::Range<const jschar> chars, HandleValue reviver,
                          MutableHandleValue vp);
 
 #if JS_HAS_TOSOURCE
