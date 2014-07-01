@@ -2201,7 +2201,7 @@ class ParallelSpewer
 
         if (cx) {
             jsbytecode *pc;
-            JSScript *script = cx->currentScript(&pc);
+            RootedScript script(cx, cx->currentScript(&pc));
             if (script && pc) {
                 NonBuiltinScriptFrameIter iter(cx);
                 if (iter.done()) {

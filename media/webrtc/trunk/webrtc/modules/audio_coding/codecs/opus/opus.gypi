@@ -7,6 +7,9 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 {
+  'variables': {
+    'opus_complexity%': 0,
+  },
   'targets': [
     {
       'target_name': 'webrtc_opus',
@@ -25,6 +28,9 @@
       ],
       'include_dirs': [
         '<(webrtc_root)',
+      ],
+      'defines': [
+        'OPUS_COMPLEXITY=<(opus_complexity)'
       ],
       'sources': [
         'interface/opus_interface.h',
