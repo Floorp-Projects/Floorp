@@ -25,6 +25,7 @@
 #include "nsIDOMWindow.h"
 #include "nsFocusManager.h"
 #include "mozilla/dom/HTMLFormElement.h"
+#include "nsAttrValueOrString.h"
 
 // Responsive images!
 #include "mozilla/dom/HTMLSourceElement.h"
@@ -367,6 +368,8 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   // attributes have been set, so we'll do the image load from BindToTree.
 
   nsCOMPtr<nsIContent> thisContent = AsContent();
+  nsAttrValueOrString attrVal(aValue);
+
   if (aName == nsGkAtoms::src &&
       aNameSpaceID == kNameSpaceID_None) {
     // SetAttr handles setting src in the non-responsive case, so only handle it
@@ -374,8 +377,7 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     if (!aValue) {
       CancelImageRequests(aNotify);
     } else if (mResponsiveSelector) {
-      mResponsiveSelector->SetDefaultSource(aValue ? aValue->GetStringValue()
-                                                   : EmptyString());
+      mResponsiveSelector->SetDefaultSource(attrVal.String());
       LoadSelectedImage(false, aNotify);
     }
   } else if (aName == nsGkAtoms::srcset &&
@@ -384,14 +386,12 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
              AsContent()->IsInDoc() &&
              IsSrcsetEnabled()) {
     // We currently don't handle responsive mode until BindToTree
-    PictureSourceSrcsetChanged(thisContent,
-                               aValue ? aValue->GetStringValue() : EmptyString(),
-                               aNotify);
+    PictureSourceSrcsetChanged(thisContent, attrVal.String(), aNotify);
   } else if (aName == nsGkAtoms::sizes &&
              aNameSpaceID == kNameSpaceID_None &&
              thisContent->IsInDoc() &&
              HTMLPictureElement::IsPictureEnabled()) {
-    PictureSourceSizesChanged(thisContent, aValue->GetStringValue(), aNotify);
+    PictureSourceSizesChanged(thisContent, attrVal.String(), aNotify);
   } else if (aName == nsGkAtoms::crossorigin &&
              aNameSpaceID == kNameSpaceID_None &&
              aNotify) {
