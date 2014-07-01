@@ -491,28 +491,6 @@ boolean vcmCheckAttribs(uint32_t media_type, void *sdp_p, int level, void **rcap
 }
 
 /**
- * Add Video attributes in the offer/answer SDP
- *
- * This method is called for video codecs only. This method should populate the
- * Video SDP attributes using the SDP helper API
- *
- * @param [in] sdp_p - opaque SDP pointer to be used via SDP helper APIs
- * @param [in] level - Parameter to be used with SDP helper APIs
- * @param [in] media_type - codec for which the SDP attributes are to be populated
- * @param [in] payload_number - RTP payload type used for the SDP
- * @param [in] isOffer - boolean indicating we are encoding an offer or an aswer
- *
- * @return void
- */
-
-
-void vcmPopulateAttribs(void *sdp_p, int level, uint32_t media_type,
-                          uint16_t payload_number, boolean isOffer)
-{
-    return;
-}
-
-/**
  * Send a DTMF digit
  *
  * This method is called for sending a DTMF tone for the specified duration
