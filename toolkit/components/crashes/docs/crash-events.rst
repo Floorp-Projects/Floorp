@@ -74,6 +74,18 @@ The payload of this event is the string crash ID, very likely a UUID.
 There should be ``UUID.dmp`` and ``UUID.extra`` files on disk, saved by
 Breakpad.
 
+crash.submission.1
+^^^^^^^^^^^^
+
+This event is produced when a crash is submitted.
+
+The payload of this event is delimited by UNIX newlines (*\n*) and contains the
+following fields:
+
+* The crash ID string
+* "true" if the submission succeeded or "false" otherwise
+* The remote crash ID string if the submission succeeded
+
 Aggregated Event Log
 ====================
 
