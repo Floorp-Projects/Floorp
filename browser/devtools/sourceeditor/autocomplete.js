@@ -16,8 +16,11 @@ const privates = new WeakMap();
 /**
  * Prepares an editor instance for autocompletion.
  */
-function setupAutoCompletion(ctx, options) {
+function initializeAutoCompletion(ctx, options = {}) {
   let { cm, ed, Editor } = ctx;
+  if (privates.has(ed)) {
+    return;
+  }
 
   let win = ed.container.contentWindow.wrappedJSObject;
   let { CodeMirror, document } = win;
@@ -59,11 +62,10 @@ function setupAutoCompletion(ctx, options) {
         return tip;
       }
     });
-    cm.on("cursorActivity", (cm) => {
-      cm.tern.updateArgHints(cm);
-    });
 
     let keyMap = {};
+    let updateArgHintsCallback = cm.tern.updateArgHints.bind(cm.tern, cm);
+    cm.on("cursorActivity", updateArgHintsCallback);
 
     keyMap[autocompleteKey] = (cm) => {
       cm.tern.getHint(cm, (data) => {
@@ -79,8 +81,21 @@ function setupAutoCompletion(ctx, options) {
         ed.emit("show-information");
       });
     };
-
     cm.addKeyMap(keyMap);
+
+    let destroyTern = function() {
+      ed.off("destroy", destroyTern);
+      cm.off("cursorActivity", updateArgHintsCallback);
+      cm.removeKeyMap(keyMap);
+      win.tern = cm.tern = null;
+      privates.delete(ed);
+    };
+
+    ed.on("destroy", destroyTern);
+
+    privates.set(ed, {
+      destroy: destroyTern
+    });
 
     // TODO: Integrate tern autocompletion with this autocomplete API.
     return;
@@ -126,25 +141,46 @@ function setupAutoCompletion(ctx, options) {
       return CodeMirror.Pass;
     }
   };
-  keyMap[autocompleteKey] = cm => autoComplete(ctx);
+  let autoCompleteCallback = autoComplete.bind(null, ctx);
+  let keypressCallback = onEditorKeypress.bind(null, ctx);
+  keyMap[autocompleteKey] = autoCompleteCallback;
   cm.addKeyMap(keyMap);
 
-  cm.on("keydown", (cm, e) => onEditorKeypress(ctx, e));
-  ed.on("change", () => autoComplete(ctx));
-  ed.on("destroy", () => {
-    cm.off("keydown", (cm, e) => onEditorKeypress(ctx, e));
-    ed.off("change", () => autoComplete(ctx));
+  cm.on("keydown", keypressCallback);
+  ed.on("change", autoCompleteCallback);
+  ed.on("destroy", destroy);
+
+  function destroy() {
+    ed.off("destroy", destroy);
+    cm.off("keydown", keypressCallback);
+    ed.off("change", autoCompleteCallback);
+    cm.removeKeyMap(keyMap);
     popup.destroy();
-    popup = null;
-    completer = null;
-  });
+    keyMap = popup = completer = null;
+    privates.delete(ed);
+  }
 
   privates.set(ed, {
     popup: popup,
     completer: completer,
+    keyMap: keyMap,
+    destroy: destroy,
     insertingSuggestion: false,
     suggestionInsertedOnce: false
   });
+}
+
+/**
+ * Destroy autocompletion on an editor instance.
+ */
+function destroyAutoCompletion(ctx) {
+  let { ed } = ctx;
+  if (!privates.has(ed)) {
+    return;
+  }
+
+  let {destroy} = privates.get(ed);
+  destroy();
 }
 
 /**
@@ -226,7 +262,7 @@ function cycleSuggestions(ed, reverse) {
  * onkeydown handler for the editor instance to prevent autocompleting on some
  * keypresses.
  */
-function onEditorKeypress({ ed, Editor }, event) {
+function onEditorKeypress({ ed, Editor }, cm, event) {
   let private = privates.get(ed);
 
   // Do not try to autocomplete with multiple selections.
@@ -283,7 +319,10 @@ function onEditorKeypress({ ed, Editor }, event) {
  * Returns the private popup. This method is used by tests to test the feature.
  */
 function getPopup({ ed }) {
-  return privates.get(ed).popup;
+  if (privates.has(ed))
+    return privates.get(ed).popup;
+
+  return null;
 }
 
 /**
@@ -300,6 +339,7 @@ function getInfoAt({ ed }, caret) {
 
 // Export functions
 
-module.exports.setupAutoCompletion = setupAutoCompletion;
+module.exports.initializeAutoCompletion = initializeAutoCompletion;
+module.exports.destroyAutoCompletion = destroyAutoCompletion;
 module.exports.getAutocompletionPopup = getPopup;
 module.exports.getInfoAt = getInfoAt;
