@@ -325,7 +325,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
       if (mAdapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(VendorATI), nsCaseInsensitiveStringComparator()) && 
           (mAdapterDeviceID.LowerCaseEqualsLiteral("0x6760") ||
            mAdapterDeviceID.LowerCaseEqualsLiteral("0x9488"))) {
-        *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
+        *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
         return NS_OK;
       }
     }
