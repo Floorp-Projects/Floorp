@@ -45,9 +45,9 @@ class WrapperAnswer : public virtual JavaScriptShared
 
     bool AnswerIsExtensible(const ObjectId &objId, ReturnStatus *rs,
                             bool *result);
-    bool AnswerCall(const ObjectId &objId, const nsTArray<JSParam> &argv,
-                    ReturnStatus *rs, JSVariant *result,
-                    nsTArray<JSParam> *outparams);
+    bool AnswerCallOrConstruct(const ObjectId &objId, const nsTArray<JSParam> &argv,
+                               const bool &construct, ReturnStatus *rs, JSVariant *result,
+                               nsTArray<JSParam> *outparams);
     bool AnswerObjectClassIs(const ObjectId &objId, const uint32_t &classValue,
                              bool *result);
     bool AnswerClassName(const ObjectId &objId, nsString *result);
