@@ -4,11 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MobileMessageCursorCallback.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsIDOMDOMRequest.h"
 #include "nsIDOMMozSmsMessage.h"
 #include "nsIMobileMessageCallback.h"
 #include "DOMCursor.h"
-#include "nsCxPusher.h"
 #include "nsServiceManagerUtils.h"      // for do_GetService
 
 namespace mozilla {
@@ -59,21 +59,14 @@ MobileMessageCursorCallback::NotifyCursorResult(nsISupports* aResult)
 {
   MOZ_ASSERT(mDOMCursor);
 
-  nsresult rv;
-  nsIScriptContext* scriptContext = mDOMCursor->GetContextForEventHandlers(&rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(scriptContext, NS_ERROR_FAILURE);
-
-  AutoPushJSContext cx(scriptContext->GetNativeContext());
-  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
-
-  JS::Rooted<JSObject*> global(cx, scriptContext->GetWindowProxy());
-  NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
-
-  JSAutoCompartment ac(cx, global);
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(mDOMCursor->GetOwner()))) {
+    return NS_ERROR_FAILURE;
+  }
+  JSContext* cx = jsapi.cx();
 
   JS::Rooted<JS::Value> wrappedResult(cx);
-  rv = nsContentUtils::WrapNative(cx, aResult, &wrappedResult);
+  nsresult rv = nsContentUtils::WrapNative(cx, aResult, &wrappedResult);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDOMCursor->FireSuccess(wrappedResult);

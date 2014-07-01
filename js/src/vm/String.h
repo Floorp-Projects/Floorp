@@ -1090,6 +1090,11 @@ class MOZ_STACK_CLASS AutoStableStringChars
     bool isLatin1() const { return state_ == Latin1; }
     bool isTwoByte() const { return state_ == TwoByte; }
 
+    const jschar *twoByteChars() const {
+        MOZ_ASSERT(state_ == TwoByte);
+        return twoByteChars_;
+    }
+
     mozilla::Range<const Latin1Char> latin1Range() const {
         MOZ_ASSERT(state_ == Latin1);
         return mozilla::Range<const Latin1Char>(latin1Chars_, s_->length());

@@ -21,7 +21,6 @@ using namespace js;
 
 using mozilla::AddToHash;
 using mozilla::HashString;
-using mozilla::Range;
 using mozilla::RangedPtr;
 
 using JS::AutoCheckCannotGC;
@@ -151,7 +150,7 @@ enum EvalJSONResult {
 
 template <typename CharT>
 static bool
-EvalStringMightBeJSON(const Range<const CharT> chars)
+EvalStringMightBeJSON(const mozilla::Range<const CharT> chars)
 {
     // If the eval string starts with '(' or '[' and ends with ')' or ']', it may be JSON.
     // Try the JSON parser first because it's much faster.  If the eval string
@@ -186,7 +185,7 @@ EvalStringMightBeJSON(const Range<const CharT> chars)
 
 template <typename CharT>
 static EvalJSONResult
-ParseEvalStringAsJSON(JSContext *cx, const Range<const CharT> chars, MutableHandleValue rval)
+ParseEvalStringAsJSON(JSContext *cx, const mozilla::Range<const CharT> chars, MutableHandleValue rval)
 {
     size_t len = chars.length();
     MOZ_ASSERT((chars[0] == '(' && chars[len - 1] == ')') ||
@@ -194,7 +193,7 @@ ParseEvalStringAsJSON(JSContext *cx, const Range<const CharT> chars, MutableHand
 
     auto jsonChars = (chars[0] == '[')
                      ? chars
-                     : Range<const CharT>(chars.start().get() + 1U, len - 2);
+                     : mozilla::Range<const CharT>(chars.start().get() + 1U, len - 2);
 
     JSONParser<CharT> parser(cx, jsonChars, JSONParserBase::NoError);
     if (!parser.parse(rval))
@@ -312,7 +311,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
         esg.lookupInEvalCache(flatStr, callerScript, pc);
 
     if (!esg.foundScript()) {
-        JSScript *maybeScript;
+        RootedScript maybeScript(cx);
         unsigned lineno;
         const char *filename;
         JSPrincipals *originPrincipals;
@@ -388,7 +387,7 @@ js::DirectEvalStringFromIon(JSContext *cx,
     esg.lookupInEvalCache(flatStr, callerScript, pc);
 
     if (!esg.foundScript()) {
-        JSScript *maybeScript;
+        RootedScript maybeScript(cx);
         const char *filename;
         unsigned lineno;
         JSPrincipals *originPrincipals;
