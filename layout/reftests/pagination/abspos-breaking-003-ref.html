@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-print">
+ <head>
+  <title>AbsPos Pagination, with clip:rect()</title>
+  <style type="text/css">
+    html, body, pre { margin: 0; padding: 0; }
+    div {
+      position: absolute;
+      top: 50%;
+      border: 10px solid blue;
+      width: 50px;
+      height: 90%;
+    }
+    #mask1 {
+      border-color: white;
+      background: white;
+      clip:rect(0px, auto, 3px, 0px);
+    }
+    #mask2 {
+      border-color: white;
+      background: white;
+      clip:rect(0px, 5px, auto, 0px);
+    }
+  </style>
+ </head>
+ <body>
+ <div></div><div id="mask1"></div><div id="mask2"></div>
+</body>
+</html>
