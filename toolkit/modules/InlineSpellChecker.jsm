@@ -191,7 +191,7 @@ InlineSpellChecker.prototype = {
       if (curlang == sortedList[i].id) {
         item.setAttribute("checked", "true");
       } else {
-        var callback = function(me, val) { return function(evt) { me.selectDictionary(val); } };
+        var callback = function(me, val) { return function(evt) { me.selectDictionary(val, me.menu.ownerDocument.defaultView); } };
         item.addEventListener("command", callback(this, i), true);
       }
       if (insertBefore)
@@ -272,8 +272,20 @@ InlineSpellChecker.prototype = {
   },
 
   // callback for selecting a dictionary
-  selectDictionary: function(index)
+  selectDictionary: function(index, aWindow)
   {
+    // Avoid a crash in multiprocess until Bug 1030451 lands
+    // Remove aWindow parameter at that time
+    const Ci = Components.interfaces;
+    let chromeFlags = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).
+                                  getInterface(Ci.nsIWebNavigation).
+                                  QueryInterface(Ci.nsIDocShellTreeItem).treeOwner.
+                                  QueryInterface(Ci.nsIInterfaceRequestor).
+                                  getInterface(Ci.nsIXULWindow).chromeFlags;
+    let chromeRemoteWindow = Ci.nsIWebBrowserChrome.CHROME_REMOTE_WINDOW;
+    if (chromeFlags & chromeRemoteWindow) {
+      return;
+    }
     if (! this.mInlineSpellChecker || index < 0 || index >= this.mDictionaryNames.length)
       return;
     var spellchecker = this.mInlineSpellChecker.spellChecker;
@@ -293,8 +305,20 @@ InlineSpellChecker.prototype = {
   },
 
   // callback for enabling or disabling spellchecking
-  toggleEnabled: function()
+  toggleEnabled: function(aWindow)
   {
+    // Avoid a crash in multiprocess until Bug 1030451 lands
+    // Remove aWindow parameter at that time
+    const Ci = Components.interfaces;
+    let chromeFlags = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).
+                                  getInterface(Ci.nsIWebNavigation).
+                                  QueryInterface(Ci.nsIDocShellTreeItem).treeOwner.
+                                  QueryInterface(Ci.nsIInterfaceRequestor).
+                                  getInterface(Ci.nsIXULWindow).chromeFlags;
+    let chromeRemoteWindow = Ci.nsIWebBrowserChrome.CHROME_REMOTE_WINDOW;
+    if (chromeFlags & chromeRemoteWindow) {
+      return;
+    }
     this.mEditor.setSpellcheckUserOverride(!this.mInlineSpellChecker.enableRealTimeSpell);
   },
 
