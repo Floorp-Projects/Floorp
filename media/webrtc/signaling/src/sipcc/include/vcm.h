@@ -888,6 +888,12 @@ int vcmGetVideoCodecList(int request_type);
 int vcmGetVideoMaxSupportedPacketizationMode();
 
 /**
+ * Get supported H.264 profile-level-id
+ * @return supported profile-level-id value
+ */
+uint32_t vcmGetVideoH264ProfileLevelID();
+
+/**
  * Get the rx/tx stream statistics associated with the call.
  * The rx/tx stats are defined as comma seperated string as follows.
  * Rx_stats:
