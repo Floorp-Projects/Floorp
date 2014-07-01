@@ -59,11 +59,15 @@ exports.AppManager = AppManager = {
     this.trackWiFiRuntimes();
     this.trackSimulatorRuntimes();
 
+    this.onInstallProgress = this.onInstallProgress.bind(this);
+    AppActorFront.on("install-progress", this.onInstallProgress);
+
     this.observe = this.observe.bind(this);
     Services.prefs.addObserver(WIFI_SCANNING_PREF, this, false);
   },
 
   uninit: function() {
+    AppActorFront.off("install-progress", this.onInstallProgress);
     this._unlistenToApps();
     this.selectedProject = null;
     this.selectedRuntime = null;
@@ -132,6 +136,10 @@ exports.AppManager = AppManager = {
     }
 
     this.update("connection");
+  },
+
+  onInstallProgress: function(event, details) {
+    this.update("install-progress", details);
   },
 
   onWebAppsStoreready: function() {

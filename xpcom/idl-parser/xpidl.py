@@ -516,7 +516,7 @@ class Interface(object):
             member.resolve(self)
 
         # The number 250 is NOT arbitrary; this number is the maximum number of
-        # stub entries defined in xpcom/reflect/xptcall/public/genstubs.pl
+        # stub entries defined in xpcom/reflect/xptcall/genstubs.pl
         # Do not increase this value without increasing the number in that
         # location, or you WILL cause otherwise unknown problems!
         if self.countEntries() > 250 and not self.attributes.builtinclass:

@@ -7,6 +7,8 @@
 #ifndef jit_Label_h
 #define jit_Label_h
 
+#include "jit/Ion.h"
+
 namespace js {
 namespace jit {
 
@@ -24,10 +26,6 @@ struct LabelBase
     static const int32_t INVALID_OFFSET = -1;
 
     LabelBase() : offset_(INVALID_OFFSET), bound_(false)
-    { }
-    LabelBase(const LabelBase &label)
-      : offset_(label.offset_),
-        bound_(label.bound_)
     { }
 
     // If the label is bound, all incoming edges have been patched and any
@@ -79,10 +77,20 @@ struct LabelBase
 class Label : public LabelBase
 {
   public:
-    Label()
-    { }
-    Label(const Label &label) : LabelBase(label)
-    { }
+    ~Label()
+    {
+#ifdef DEBUG
+        // The assertion below doesn't hold if an error occurred.
+        if (OOM_counter > OOM_maxAllocations)
+            return;
+        if (IonContext *context = MaybeGetIonContext()) {
+            if (context->runtime->hadOutOfMemory())
+                return;
+        }
+
+        MOZ_ASSERT(!used());
+#endif
+    }
 };
 
 // Label's destructor asserts that if it has been used it has also been bound.
@@ -90,6 +98,14 @@ class Label : public LabelBase
 // trigger this failure innocuously. This Label silences the assertion.
 class NonAssertingLabel : public Label
 {
+  public:
+    ~NonAssertingLabel()
+    {
+#ifdef DEBUG
+        if (used())
+            bind(0);
+#endif
+    }
 };
 
 } } // namespace js::jit

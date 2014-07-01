@@ -8484,6 +8484,15 @@ CodeGenerator::visitIsCallable(LIsCallable *ins)
     return true;
 }
 
+bool
+CodeGenerator::visitIsObject(LIsObject *ins)
+{
+    Register output = ToRegister(ins->output());
+    ValueOperand value = ToValue(ins, LIsObject::Input);
+    masm.testObjectSet(Assembler::Equal, value, output);
+    return true;
+}
+
 void
 CodeGenerator::loadOutermostJSScript(Register reg)
 {

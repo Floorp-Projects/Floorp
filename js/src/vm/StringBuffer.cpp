@@ -77,7 +77,7 @@ FinishStringFlat(ExclusiveContext *cx, StringBuffer &sb, Buffer &cb)
     if (!buf)
         return nullptr;
 
-    JSFlatString *str = NewString<CanGC>(cx, buf.get(), len);
+    JSFlatString *str = NewStringDontDeflate<CanGC>(cx, buf.get(), len);
     if (!str)
         return nullptr;
 

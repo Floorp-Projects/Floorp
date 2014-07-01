@@ -96,26 +96,6 @@ addTest(function findCssSelector() {
   runNextTest();
 });
 
-addTest(function getBackgroundImageUriFromProperty() {
-
-  let data = [
-    ["background: url(foo.png);", "foo.png"],
-    ["background: url(\"foo.png\") ", "foo.png"],
-    ["background: url('foo.png') ; ", "foo.png"],
-    ["background: foo.png", null],
-    ["background: url()", ""],
-  ];
-
-  for (let i = 0; i < data.length; i++) {
-    let prop = data[i][0];
-    let result = data[i][1];
-    is (CssLogic.getBackgroundImageUriFromProperty(prop), result,
-      "Background image matches for index " + i);
-  }
-
-  runNextTest();
-});
-
   </script>
 </head>
 <body>

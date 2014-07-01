@@ -95,11 +95,20 @@ public:
 class FT2FontFamily : public gfxFontFamily
 {
 public:
+    // Flags to indicate whether a font should be "visible" in the global
+    // font list (available for use in font-family), or "hidden" (available
+    // only to support a matching data: URI used in @font-face).
+    typedef enum {
+        kVisible,
+        kHidden
+    } Visibility;
+
     FT2FontFamily(const nsAString& aName) :
         gfxFontFamily(aName) { }
 
     // Append this family's faces to the IPC fontlist
-    void AddFacesToFontList(InfallibleTArray<FontListEntry>* aFontList);
+    void AddFacesToFontList(InfallibleTArray<FontListEntry>* aFontList,
+                            Visibility aVisibility);
 };
 
 class gfxFT2FontList : public gfxPlatformFontList
@@ -122,35 +131,52 @@ public:
         return static_cast<gfxFT2FontList*>(gfxPlatformFontList::PlatformFontList());
     }
 
+    virtual void GetFontFamilyList(nsTArray<nsRefPtr<gfxFontFamily> >& aFamilyArray);
+
 protected:
+    typedef enum {
+        kUnknown,
+        kStandard
+    } StandardFile;
+
     virtual nsresult InitFontList();
 
     void AppendFaceFromFontListEntry(const FontListEntry& aFLE,
-                                     bool isStdFile);
+                                     StandardFile aStdFile);
 
     void AppendFacesFromFontFile(const nsCString& aFileName,
-                                 bool isStdFile = false,
-                                 FontNameCache *aCache = nullptr);
+                                 FontNameCache *aCache,
+                                 StandardFile aStdFile,
+                                 FT2FontFamily::Visibility aVisibility);
 
     void AppendFacesFromOmnijarEntry(nsZipArchive *aReader,
                                      const nsCString& aEntryName,
                                      FontNameCache *aCache,
                                      bool aJarChanged);
 
+    // the defaults here are suitable for reading bundled fonts from omnijar
     void AppendFacesFromCachedFaceList(const nsCString& aFileName,
-                                       bool isStdFile,
-                                       const nsCString& aFaceList);
+                                       const nsCString& aFaceList,
+                                       StandardFile aStdFile = kStandard,
+                                       FT2FontFamily::Visibility aVisibility =
+                                           FT2FontFamily::kVisible);
 
     void AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
-                       bool aStdFile, FT_Face aFace, nsCString& aFaceList);
+                       StandardFile aStdFile,
+                       FT2FontFamily::Visibility aVisibility,
+                       FT_Face aFace, nsCString& aFaceList);
 
     void FindFonts();
 
     void FindFontsInOmnijar(FontNameCache *aCache);
 
-    void FindFontsInDir(const nsCString& aDir, FontNameCache* aFNC);
+    void FindFontsInDir(const nsCString& aDir, FontNameCache* aFNC,
+                        FT2FontFamily::Visibility aVisibility);
 
     nsTHashtable<nsStringHashKey> mSkipSpaceLookupCheckFamilies;
+
+private:
+    nsRefPtrHashtable<nsStringHashKey, gfxFontFamily> mHiddenFontFamilies;
 };
 
 #endif /* GFX_FT2FONTLIST_H */

@@ -8,6 +8,11 @@ include $(topsrcdir)/config/config.mk
 # http://code.google.com/p/android/issues/detail?id=3639
 AB_rCD = $(if $(filter he, $(AB_CD)),iw,$(if $(filter id, $(AB_CD)),in,$(subst -,-r,$(AB_CD))))
 
+# The search strings path is always passed to strings.xml.in; the
+# decision to include is made based on the feature flag at the
+# inclusion site.
+SEARCHSTRINGSPATH = $(srcdir)/../../search/strings/search_strings.dtd
+
 SYNCSTRINGSPATH = $(abspath $(call MERGE_FILE,sync_strings.dtd))
 STRINGSPATH = $(abspath $(call MERGE_FILE,android_strings.dtd))
 ifeq (,$(XPI_NAME))
@@ -67,6 +72,7 @@ strings-xml-preqs =\
   $(strings-xml-in) \
   $(BRANDPATH) \
   $(STRINGSPATH) \
+  $(SEARCHSTRINGSPATH) \
   $(SYNCSTRINGSPATH) \
   $(BOOKMARKSPATH) \
   $(if $(IS_LANGUAGE_REPACK),FORCE) \
@@ -86,6 +92,7 @@ $(dir-strings-xml)/strings.xml: $(strings-xml-preqs)
 	  -DMOZ_APP_DISPLAYNAME='@MOZ_APP_DISPLAYNAME@' \
 	  -DSTRINGSPATH='$(STRINGSPATH)' \
 	  -DSYNCSTRINGSPATH='$(SYNCSTRINGSPATH)' \
+	  -DSEARCHSTRINGSPATH='$(SEARCHSTRINGSPATH)' \
       $< \
 	  -o $@)
 

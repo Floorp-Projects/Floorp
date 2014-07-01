@@ -61,7 +61,7 @@ operator==(const gfxFontFaceSrc& a, const gfxFontFaceSrc& b)
 class gfxUserFontData {
 public:
     gfxUserFontData()
-        : mSrcIndex(0), mFormat(0), mMetaOrigLen(0)
+        : mSrcIndex(0), mFormat(0), mMetaOrigLen(0), mPrivate(false)
     { }
     virtual ~gfxUserFontData() { }
 
@@ -248,10 +248,21 @@ public:
 
     class UserFontCache {
     public:
+        // Flag passed when caching a font entry, to specify whether the entry
+        // should persist in the cache or be discardable.
+        typedef enum {
+            kDiscardable,
+            kPersistent
+        } EntryPersistence;
+
         // Record a loaded user-font in the cache. This requires that the
         // font-entry's userFontData has been set up already, as it relies
         // on the URI and Principal recorded there.
-        static void CacheFont(gfxFontEntry *aFontEntry);
+        // If aPersistence is Persistent, the entry will remain in the cache
+        // across cacheservice:empty-cache notifications. This is used for
+        // "preloaded hidden fonts" on FxOS.
+        static void CacheFont(gfxFontEntry *aFontEntry,
+                              EntryPersistence aPersistence = kDiscardable);
 
         // The given gfxFontEntry is being destroyed, so remove any record that
         // refers to it.
@@ -298,13 +309,16 @@ public:
             nsCOMPtr<nsIPrincipal>  mPrincipal; // use nullptr with data: URLs
             gfxFontEntry           *mFontEntry;
             bool                    mPrivate;
+            EntryPersistence        mPersistence;
 
             Key(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                gfxFontEntry* aFontEntry, bool aPrivate)
+                gfxFontEntry* aFontEntry, bool aPrivate,
+                EntryPersistence aPersistence = kDiscardable)
                 : mURI(aURI),
                   mPrincipal(aPrincipal),
                   mFontEntry(aFontEntry),
-                  mPrivate(aPrivate)
+                  mPrivate(aPrivate),
+                  mPersistence(aPersistence)
             { }
         };
 
@@ -317,14 +331,16 @@ public:
                 : mURI(aKey->mURI),
                   mPrincipal(aKey->mPrincipal),
                   mFontEntry(aKey->mFontEntry),
-                  mPrivate(aKey->mPrivate)
+                  mPrivate(aKey->mPrivate),
+                  mPersistence(aKey->mPersistence)
             { }
 
             Entry(const Entry& aOther)
                 : mURI(aOther.mURI),
                   mPrincipal(aOther.mPrincipal),
                   mFontEntry(aOther.mFontEntry),
-                  mPrivate(aOther.mPrivate)
+                  mPrivate(aOther.mPrivate),
+                  mPersistence(aOther.mPersistence)
             { }
 
             ~Entry() { }
@@ -352,9 +368,14 @@ public:
 
             gfxFontEntry* GetFontEntry() const { return mFontEntry; }
 
-            static PLDHashOperator RemoveIfPrivate(Entry* aEntry, void* aUserData);
-            static PLDHashOperator RemoveIfMatches(Entry* aEntry, void* aUserData);
-            static PLDHashOperator DisconnectSVG(Entry* aEntry, void* aUserData);
+            static PLDHashOperator
+            RemoveUnlessPersistent(Entry* aEntry, void* aUserData);
+            static PLDHashOperator
+            RemoveIfPrivate(Entry* aEntry, void* aUserData);
+            static PLDHashOperator
+            RemoveIfMatches(Entry* aEntry, void* aUserData);
+            static PLDHashOperator
+            DisconnectSVG(Entry* aEntry, void* aUserData);
 
 #ifdef DEBUG_USERFONT_CACHE
             static PLDHashOperator DumpEntry(Entry* aEntry, void* aUserData);
@@ -377,6 +398,9 @@ public:
 
             // Whether this font was loaded from a private window.
             bool                   mPrivate;
+
+            // Whether this entry should survive cache-flushing.
+            EntryPersistence       mPersistence;
         };
 
         static nsTHashtable<Entry> *sUserFonts;
