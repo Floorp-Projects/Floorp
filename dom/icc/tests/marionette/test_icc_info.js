@@ -62,46 +62,6 @@ taskHelper.push(function basicTest() {
   taskHelper.runNext();
 });
 
-/* Test Gsm display condition change */
-taskHelper.push(function testGsmDisplayConditionChange() {
-  function testSPN(mcc, mnc, expectedIsDisplayNetworkNameRequired,
-                   expectedIsDisplaySpnRequired, callback) {
-    icc.addEventListener("iccinfochange", function handler() {
-      icc.removeEventListener("iccinfochange", handler);
-      is(icc.iccInfo.isDisplayNetworkNameRequired,
-         expectedIsDisplayNetworkNameRequired);
-      is(icc.iccInfo.isDisplaySpnRequired,
-         expectedIsDisplaySpnRequired);
-      // operatorchange will be ignored if we send commands too soon.
-      window.setTimeout(callback, 100);
-    });
-    // Send emulator command to change network mcc and mnc.
-    setEmulatorMccMnc(mcc, mnc);
-  }
-
-  let testCases = [
-    // [MCC, MNC, isDisplayNetworkNameRequired, isDisplaySpnRequired]
-    [123, 456, false, true], // Not in HPLMN.
-    [234, 136,  true, true], // Not in HPLMN, but in PLMN specified in SPDI.
-    [123, 456, false, true], // Not in HPLMN. Triggering iccinfochange
-    [466,  92,  true, true], // Not in HPLMN, but in another PLMN specified in SPDI.
-    [123, 456, false, true], // Not in HPLMN. Triggering iccinfochange
-    [310, 260,  true, true], // inside HPLMN.
-  ];
-
-  // Ignore this test if device is not in gsm mode.
-  if (!(icc.iccInfo instanceof Ci.nsIDOMMozGsmIccInfo)) {
-    taskHelper.runNext();
-    return;
-  }
-
-  (function do_call(index) {
-    let next = index < (testCases.length - 1) ? do_call.bind(null, index + 1) : taskHelper.runNext.bind(taskHelper);
-    testCases[index].push(next);
-    testSPN.apply(null, testCases[index]);
-  })(0);
-});
-
 /* Test iccInfo when card becomes undetected */
 taskHelper.push(function testCardIsNotReady() {
   // Turn off radio.
