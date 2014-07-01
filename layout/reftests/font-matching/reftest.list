@@ -49,6 +49,9 @@ random-if(cocoaWidget) != impact-bold.html impact.html # bug 539418
 == localized-family-names-003.html localized-family-names-003-ref.html
 == localized-family-names-004.html localized-family-names-004-ref.html
 
+# family names with escaped spaces shouldn't match the names without the spaces
+== familyname-escapedidents.html familyname-escapedidents-ref.html
+
 # weight mapping tests
 skip-if(B2G) HTTP(..) == normalmedium.html normalmedium-ref.html # bug 773482
 skip-if(B2G) HTTP(..) != normalmedium.html normalmedium-notref.html # bug 773482

@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional SmartCardEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
+[Constructor(DOMString type, optional SmartCardEventInit eventInitDict)]
 interface SmartCardEvent : Event
 {
   readonly attribute DOMString? tokenName;

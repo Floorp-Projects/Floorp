@@ -8,9 +8,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"
 
-#include "GeneratedEvents.h"
-#include "nsIDOMSpeechSynthesisEvent.h"
-
+#include "mozilla/dom/SpeechSynthesisEvent.h"
 #include "mozilla/dom/SpeechSynthesisUtteranceBinding.h"
 #include "SpeechSynthesisUtterance.h"
 #include "SpeechSynthesisVoice.h"
@@ -157,14 +155,16 @@ SpeechSynthesisUtterance::DispatchSpeechSynthesisEvent(const nsAString& aEventTy
                                                        float aElapsedTime,
                                                        const nsAString& aName)
 {
-  nsCOMPtr<nsIDOMEvent> domEvent;
-  NS_NewDOMSpeechSynthesisEvent(getter_AddRefs(domEvent), nullptr, nullptr, nullptr);
+  SpeechSynthesisEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mCharIndex = aCharIndex;
+  init.mElapsedTime = aElapsedTime;
+  init.mName = aName;
 
-  nsCOMPtr<nsIDOMSpeechSynthesisEvent> ssEvent = do_QueryInterface(domEvent);
-  ssEvent->InitSpeechSynthesisEvent(aEventType, false, false,
-                                    aCharIndex, aElapsedTime, aName);
-
-  DispatchTrustedEvent(domEvent);
+  nsRefPtr<SpeechSynthesisEvent> event =
+    SpeechSynthesisEvent::Constructor(this, aEventType, init);
+  DispatchTrustedEvent(event);
 }
 
 } // namespace dom
