@@ -2810,29 +2810,29 @@ js_GetScriptLineExtent(JSScript *script)
 }
 
 void
-js::DescribeScriptedCallerForCompilation(JSContext *cx, MutableHandleScript maybeScript,
+js::DescribeScriptedCallerForCompilation(JSContext *cx, JSScript **maybeScript,
                                          const char **file, unsigned *linenop,
                                          uint32_t *pcOffset, JSPrincipals **origin,
                                          LineOption opt)
 {
     if (opt == CALLED_FROM_JSOP_EVAL) {
         jsbytecode *pc = nullptr;
-        maybeScript.set(cx->currentScript(&pc));
+        *maybeScript = cx->currentScript(&pc);
         JS_ASSERT(JSOp(*pc) == JSOP_EVAL || JSOp(*pc) == JSOP_SPREADEVAL);
         JS_ASSERT(*(pc + (JSOp(*pc) == JSOP_EVAL ? JSOP_EVAL_LENGTH
                                                  : JSOP_SPREADEVAL_LENGTH)) == JSOP_LINENO);
-        *file = maybeScript->filename();
+        *file = (*maybeScript)->filename();
         *linenop = GET_UINT16(pc + (JSOp(*pc) == JSOP_EVAL ? JSOP_EVAL_LENGTH
                                                            : JSOP_SPREADEVAL_LENGTH));
-        *pcOffset = pc - maybeScript->code();
-        *origin = maybeScript->originPrincipals();
+        *pcOffset = pc - (*maybeScript)->code();
+        *origin = (*maybeScript)->originPrincipals();
         return;
     }
 
     NonBuiltinFrameIter iter(cx);
 
     if (iter.done()) {
-        maybeScript.set(nullptr);
+        *maybeScript = nullptr;
         *file = nullptr;
         *linenop = 0;
         *pcOffset = 0;
@@ -2847,10 +2847,10 @@ js::DescribeScriptedCallerForCompilation(JSContext *cx, MutableHandleScript mayb
     // These values are only used for introducer fields which are debugging
     // information and can be safely left null for asm.js frames.
     if (iter.hasScript()) {
-        maybeScript.set(iter.script());
-        *pcOffset = iter.pc() - maybeScript->code();
+        *maybeScript = iter.script();
+        *pcOffset = iter.pc() - (*maybeScript)->code();
     } else {
-        maybeScript.set(nullptr);
+        *maybeScript = nullptr;
         *pcOffset = 0;
     }
 }

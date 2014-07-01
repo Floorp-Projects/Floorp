@@ -1982,7 +1982,7 @@ enum LineOption {
 };
 
 extern void
-DescribeScriptedCallerForCompilation(JSContext *cx, MutableHandleScript maybeScript,
+DescribeScriptedCallerForCompilation(JSContext *cx, JSScript **maybeScript,
                                      const char **file, unsigned *linenop,
                                      uint32_t *pcOffset, JSPrincipals **origin,
                                      LineOption opt = NOT_CALLED_FROM_JSOP_EVAL);

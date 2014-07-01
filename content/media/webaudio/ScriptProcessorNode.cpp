@@ -402,14 +402,14 @@ private:
           return NS_OK;
         }
 
-        AutoJSAPI jsapi;
-        JSContext* cx = jsapi.cx();
-
         // Get the global for the context so that we can enter its compartment.
-        JS::Rooted<JSObject*> global(cx, node->Context()->GetGlobalJSObject());
+        JSObject* global = node->Context()->GetGlobalJSObject();
         if (NS_WARN_IF(!global)) {
           return NS_OK;
         }
+
+        AutoJSAPI jsapi;
+        JSContext* cx = jsapi.cx();
         JSAutoCompartment ac(cx, global);
 
         // Create the input buffer
