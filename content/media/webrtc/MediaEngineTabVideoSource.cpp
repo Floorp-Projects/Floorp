@@ -53,7 +53,7 @@ nsresult
 MediaEngineTabVideoSource::StopRunnable::Run()
 {
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(mVideoSource->mWindow);
-  if (privateDOMWindow && mVideoSource && privateDOMWindow->GetChromeEventHandler()) {
+  if (privateDOMWindow && privateDOMWindow->GetChromeEventHandler()) {
     privateDOMWindow->GetChromeEventHandler()->RemoveEventListener(NS_LITERAL_STRING("MozAfterPaint"), mVideoSource, false);
   }
 
@@ -284,6 +284,9 @@ MediaEngineTabVideoSource::Draw() {
 nsresult
 MediaEngineTabVideoSource::Stop(mozilla::SourceMediaStream*, mozilla::TrackID)
 {
+  if (!mWindow)
+    return NS_OK;
+
   NS_DispatchToMainThread(new StopRunnable(this));
   return NS_OK;
 }
