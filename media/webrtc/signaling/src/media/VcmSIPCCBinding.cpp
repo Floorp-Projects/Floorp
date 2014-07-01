@@ -34,6 +34,7 @@
 #ifdef MOZILLA_INTERNAL_API
 #include "nsIPrincipal.h"
 #include "nsIDocument.h"
+#include "mozilla/Preferences.h"
 #endif
 
 #include <stdlib.h>
@@ -257,16 +258,22 @@ int VcmSIPCCBinding::getVideoCodecsHw()
   // Note that currently, OMXCodecReservation needs to be held by an sp<> because it puts
   // 'this' into an sp<EventListener> to talk to the resource reservation code
 #ifdef MOZ_WEBRTC_OMX
-  android::sp<android::OMXCodecReservation> encode = new android::OMXCodecReservation(true);
-  android::sp<android::OMXCodecReservation> decode = new android::OMXCodecReservation(false);
+#ifdef MOZILLA_INTERNAL_API
+  if (Preferences::GetBool("media.peerconnection.video.h264_enabled")) {
+#endif
+    android::sp<android::OMXCodecReservation> encode = new android::OMXCodecReservation(true);
+    android::sp<android::OMXCodecReservation> decode = new android::OMXCodecReservation(false);
 
-  // Currently we just check if they're available right now, which will fail if we're
-  // trying to call ourself, for example.  It will work for most real-world cases, like
-  // if we try to add a person to a 2-way call to make a 3-way mesh call
-  if (encode->ReserveOMXCodec() && decode->ReserveOMXCodec()) {
-    CSFLogDebug( logTag, "%s: H264 hardware codec available", __FUNCTION__);
-    return VCM_CODEC_RESOURCE_H264;
-  }
+    // Currently we just check if they're available right now, which will fail if we're
+    // trying to call ourself, for example.  It will work for most real-world cases, like
+    // if we try to add a person to a 2-way call to make a 3-way mesh call
+    if (encode->ReserveOMXCodec() && decode->ReserveOMXCodec()) {
+      CSFLogDebug( logTag, "%s: H264 hardware codec available", __FUNCTION__);
+      return VCM_CODEC_RESOURCE_H264;
+    }
+#if defined( MOZILLA_INTERNAL_API)
+   }
+#endif
 #endif
 
   return 0;
