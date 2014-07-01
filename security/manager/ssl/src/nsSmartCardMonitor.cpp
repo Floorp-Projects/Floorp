@@ -6,7 +6,6 @@
 #include "pk11func.h"
 #include "nsNSSComponent.h"
 #include "nsSmartCardMonitor.h"
-#include "nsIDOMSmartCardEvent.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/unused.h"
 
@@ -292,12 +291,12 @@ void SmartCardMonitoringThread::Execute()
         // event for the previous token, do so now...
         tokenName = GetTokenName(slotID);
         if (tokenName) {
-          SendEvent(NS_LITERAL_STRING(SMARTCARDEVENT_REMOVE), tokenName);
+          SendEvent(NS_LITERAL_STRING("smartcard-remove"), tokenName);
         }
         tokenName = PK11_GetTokenName(slot);
         // save the token name and series
         SetTokenName(slotID, tokenName, series);
-        SendEvent(NS_LITERAL_STRING(SMARTCARDEVENT_INSERT), tokenName);
+        SendEvent(NS_LITERAL_STRING("smartcard-insert"), tokenName);
       }
     } else {
       // retrieve token name 
@@ -306,7 +305,7 @@ void SmartCardMonitoringThread::Execute()
       // if there's not a token name, then the software isn't expecting
       // a (or another) remove event.
       if (tokenName) {
-        SendEvent(NS_LITERAL_STRING(SMARTCARDEVENT_REMOVE), tokenName);
+        SendEvent(NS_LITERAL_STRING("smartcard-remove"), tokenName);
         // clear the token name (after we send it)
         SetTokenName(slotID, nullptr, 0);
       }

@@ -1402,7 +1402,7 @@ public:
    * into a DOM window.  This corresponds to the completion of document load,
    * or to the page's presentation being restored into an existing DOM window.
    * This notification fires applicable DOM events to the content window.  See
-   * nsIDOMPageTransitionEvent.idl for a description of the |aPersisted|
+   * PageTransitionEvent.webidl for a description of the |aPersisted|
    * parameter. If aDispatchStartTarget is null, the pageshow event is
    * dispatched on the ScriptGlobalObject for this document, otherwise it's
    * dispatched on aDispatchStartTarget.
@@ -1417,7 +1417,7 @@ public:
    * into a DOM window.  This corresponds to the unloading of the document, or
    * to the document's presentation being saved but removed from an existing
    * DOM window.  This notification fires applicable DOM events to the content
-   * window.  See nsIDOMPageTransitionEvent.idl for a description of the
+   * window.  See PageTransitionEvent.webidl for a description of the
    * |aPersisted| parameter. If aDispatchStartTarget is null, the pagehide
    * event is dispatched on the ScriptGlobalObject for this document,
    * otherwise it's dispatched on aDispatchStartTarget.

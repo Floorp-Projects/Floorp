@@ -5,12 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaRecorder.h"
-#include "GeneratedEvents.h"
 #include "MediaEncoder.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsError.h"
 #include "nsIDocument.h"
-#include "nsIDOMRecordErrorEvent.h"
+#include "mozilla/dom/RecordErrorEvent.h"
 #include "nsTArray.h"
 #include "DOMMediaStream.h"
 #include "EncodedBufferCache.h"
@@ -762,14 +761,15 @@ MediaRecorder::NotifyError(nsresult aRv)
     errorMsg = NS_LITERAL_STRING("GenericError");
   }
 
-  nsCOMPtr<nsIDOMEvent> event;
-  rv = NS_NewDOMRecordErrorEvent(getter_AddRefs(event), this, nullptr, nullptr);
+  RecordErrorEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mName = errorMsg;
 
-  nsCOMPtr<nsIDOMRecordErrorEvent> errorEvent = do_QueryInterface(event);
-  rv = errorEvent->InitRecordErrorEvent(NS_LITERAL_STRING("error"),
-                                        false, false, errorMsg);
-
+  nsRefPtr<RecordErrorEvent> event =
+    RecordErrorEvent::Constructor(this, NS_LITERAL_STRING("error"), init);
   event->SetTrusted(true);
+
   rv = DispatchDOMEvent(nullptr, event, nullptr, nullptr);
   if (NS_FAILED(rv)) {
     NS_ERROR("Failed to dispatch the error event!!!");

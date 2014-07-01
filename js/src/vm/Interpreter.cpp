@@ -553,7 +553,7 @@ js::InvokeConstructor(JSContext *cx, CallArgs args)
 }
 
 bool
-js::InvokeConstructor(JSContext *cx, Value fval, unsigned argc, Value *argv, Value *rval)
+js::InvokeConstructor(JSContext *cx, Value fval, unsigned argc, const Value *argv, Value *rval)
 {
     InvokeArgs args(cx);
     if (!args.init(argc))

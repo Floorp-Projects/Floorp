@@ -27,27 +27,28 @@ class FilteringWrapper : public Base {
 
     virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                        JS::Handle<jsid> id,
-                                       JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
+                                       JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                           JS::Handle<jsid> id,
-                                          JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
+                                          JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
     virtual bool getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                                     JS::AutoIdVector &props) MOZ_OVERRIDE;
+                                     JS::AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                           JS::AutoIdVector &props) MOZ_OVERRIDE;
+                           JS::AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool keys(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                      JS::AutoIdVector &props) MOZ_OVERRIDE;
+                      JS::AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, JS::Handle<JSObject*> wrapper, unsigned flags,
-                         JS::MutableHandle<JS::Value> vp) MOZ_OVERRIDE;
+                         JS::MutableHandle<JS::Value> vp) const MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl,
-                            JS::CallArgs args) MOZ_OVERRIDE;
+                            JS::CallArgs args) const MOZ_OVERRIDE;
 
-    virtual bool defaultValue(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint, JS::MutableHandleValue vp) MOZ_OVERRIDE;
+    virtual bool defaultValue(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint,
+                              JS::MutableHandleValue vp) const MOZ_OVERRIDE;
 
     virtual bool enter(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
-                       js::Wrapper::Action act, bool *bp) MOZ_OVERRIDE;
+                       js::Wrapper::Action act, bool *bp) const MOZ_OVERRIDE;
 
-    static FilteringWrapper singleton;
+    static const FilteringWrapper singleton;
 };
 
 }
