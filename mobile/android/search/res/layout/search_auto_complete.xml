@@ -1,0 +1,38 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             tools:context=".autocomplete.AutoCompleteFragment"
+    >
+
+    <FrameLayout
+        android:id="@+id/auto_complete_backdrop"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="#a71f1f1f"
+        android:clickable="true"
+        android:focusable="true"/>
+
+    <LinearLayout
+
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/search_card_background"
+        android:orientation="vertical"
+        >
+
+        <EditText
+            android:id="@+id/auto_complete_search_bar"
+            style="@style/AutoCompleteEditText"/>
+
+        <ListView
+            android:id="@+id/auto_complete_dropdown"
+            style="@style/AutoCompleteDropdown"/>
+    </LinearLayout>
+
+
+</FrameLayout>

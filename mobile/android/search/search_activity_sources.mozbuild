@@ -1,0 +1,21 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+search_activity_sources = [
+    'java/org/mozilla/search/autocomplete/AcceptsJumpTaps.java',
+    'java/org/mozilla/search/autocomplete/AcceptsSearchQuery.java',
+    'java/org/mozilla/search/autocomplete/AutoCompleteAdapter.java',
+    'java/org/mozilla/search/autocomplete/AutoCompleteAgentManager.java',
+    'java/org/mozilla/search/autocomplete/AutoCompleteFragment.java',
+    'java/org/mozilla/search/autocomplete/AutoCompleteModel.java',
+    'java/org/mozilla/search/autocomplete/AutoCompleteRowView.java',
+    'java/org/mozilla/search/autocomplete/AutoCompleteWordListAgent.java',
+    'java/org/mozilla/search/Constants.java',
+    'java/org/mozilla/search/DetailActivity.java',
+    'java/org/mozilla/search/MainActivity.java',
+    'java/org/mozilla/search/stream/CardStreamFragment.java',
+    'java/org/mozilla/search/stream/PreloadAgent.java',
+]
