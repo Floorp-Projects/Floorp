@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1024926
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test path length changes when manipulated</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=946529">Mozilla Bug 1024926</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <svg width="100%" height="1" id="svg">
+    <path id="path" d="M50,100l0,0l0,-50l100,0l86.3325,122.665z"></path>
+  </svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  var path = document.getElementById("path");
+
+  is(path.getTotalLength(), 500, "Unexpected path length");
+
+  for (var i = 0; i < 2; i++) {
+      path.pathSegList.removeItem(path.pathSegList.numberOfItems - 1);
+  }
+
+  is(path.getTotalLength(), 150, "Unexpected path length");
+
+  SimpleTest.finish();
+
+</script>
+</pre>
+</body>
+</html>
