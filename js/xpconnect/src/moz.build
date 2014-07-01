@@ -90,7 +90,7 @@ LOCAL_INCLUDES += [
     '/js/ipc',
     '/layout/base',
     '/layout/style',
-    '/xpcom/reflect/xptinfo/src',
+    '/xpcom/reflect/xptinfo',
 ]
 
 if CONFIG['MOZ_B2G_BT']:

@@ -163,6 +163,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineHaveSameClass(callInfo);
     if (native == intrinsic_ToObject)
         return inlineToObject(callInfo);
+    if (native == intrinsic_IsObject)
+        return inlineIsObject(callInfo);
     if (native == intrinsic_ToInteger)
         return inlineToInteger(callInfo);
     if (native == intrinsic_ToString)
@@ -1899,6 +1901,21 @@ IonBuilder::inlineIsCallable(CallInfo &callInfo)
     current->add(isCallable);
     current->push(isCallable);
 
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineIsObject(CallInfo &callInfo)
+{
+    if (callInfo.argc() != 1 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+    if (getInlineReturnType() != MIRType_Boolean)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+    MIsObject *isObject = MIsObject::New(alloc(), callInfo.getArg(0));
+    current->add(isObject);
+    current->push(isObject);
     return InliningStatus_Inlined;
 }
 

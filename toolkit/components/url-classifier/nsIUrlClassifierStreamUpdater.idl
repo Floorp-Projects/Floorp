@@ -11,22 +11,17 @@
  * downloading the whole update and then updating the sqlite database, we
  * update tables as the data is streaming in.
  */
-[scriptable, uuid(79e6b710-ce68-4639-ac6b-7d293af424a1)]
+[scriptable, uuid(e1797597-f4d6-4dd3-a1e1-745ad352cd80)]
 interface nsIUrlClassifierStreamUpdater : nsISupports
 {
   /**
-   * The Url to download from.  Should be plain ascii text.
-   */
-  attribute ACString updateUrl;
-
-  /**
-   * Try to download updates from updateUrl.  Only one instance of this
-   * runs at a time, so we return false if another instance is already
-   * running.
-   * This is used in nsIUrlListManager as well as in testing.
+   * Try to download updates from updateUrl. If an update is already in
+   * progress, queues the requested update. This is used in nsIUrlListManager
+   * as well as in testing.
    * @param aRequestTables Comma-separated list of tables included in this
    *        update.
    * @param aRequestBody The body for the request.
+   * @param aUpdateUrl The plaintext url from which to request updates.
    * @param aSuccessCallback Called after a successful update.
    * @param aUpdateErrorCallback Called for problems applying the update
    * @param aDownloadErrorCallback Called if we get an http error or a
@@ -34,6 +29,7 @@ interface nsIUrlClassifierStreamUpdater : nsISupports
    */
   boolean downloadUpdates(in ACString aRequestTables,
                           in ACString aRequestBody,
+                          in ACString aUpdateUrl,
                           in nsIUrlClassifierCallback aSuccessCallback,
                           in nsIUrlClassifierCallback aUpdateErrorCallback,
                           in nsIUrlClassifierCallback aDownloadErrorCallback);
