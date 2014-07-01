@@ -1272,10 +1272,7 @@ XrayDefineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   if (!js::IsProxy(obj))
       return true;
 
-  MOZ_ASSERT(IsDOMProxy(obj), "What kind of proxy is this?");
-
-  DOMProxyHandler* handler =
-    static_cast<DOMProxyHandler*>(js::GetProxyHandler(obj));
+  const DOMProxyHandler* handler = GetDOMProxyHandler(obj);
   return handler->defineProperty(cx, wrapper, id, desc, defined);
 }
 

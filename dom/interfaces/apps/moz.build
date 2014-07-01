@@ -10,7 +10,6 @@ XPIDL_SOURCES += [
     'nsIAppsService.idl',
     'nsIDOMApplicationRegistry.idl',
     'nsIDOMApplicationRegistry2.idl',
-    'nsIDOMMozApplicationEvent.idl',
     'nsIInterAppCommService.idl',
     'nsIInterAppCommUIGlue.idl'
 ]

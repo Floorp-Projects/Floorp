@@ -74,16 +74,16 @@ XPCOMUtils.defineLazyGetter(this, "libcutils", function() {
 #ifdef MOZ_WIDGET_ANDROID
 // On Android, define the "debug" function as a binding of the "d" function
 // from the AndroidLog module so it gets the "debug" priority and a log tag.
-// We always report debug messages on Android because it's hard to use a debug
-// build on Android and unnecessary to restrict reporting, per bug 1003469.
+// We always report debug messages on Android because it's unnecessary
+// to restrict reporting, per bug 1003469.
 let debug = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
               .AndroidLog.d.bind(null, "Webapps");
 #else
-function debug(aMsg) {
-#ifdef DEBUG
-  dump("-*- Webapps.jsm : " + aMsg + "\n");
-#endif
-}
+// Elsewhere, report debug messages only if dom.mozApps.debug is set to true.
+// The pref is only checked once, on startup, so restart after changing it.
+let debug = Services.prefs.getBoolPref("dom.mozApps.debug")
+              ? (aMsg) => dump("-*- Webapps.jsm : " + aMsg + "\n")
+              : (aMsg) => {};
 #endif
 
 function getNSPRErrorCode(err) {

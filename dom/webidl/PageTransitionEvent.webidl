@@ -4,17 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional PageTransitionEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
+[Constructor(DOMString type, optional PageTransitionEventInit eventInitDict)]
 interface PageTransitionEvent : Event
 {
   readonly attribute boolean persisted;
-
-  // initPageTransitionEvent is a Gecko specific deprecated method.
-  [Throws]
-  void initPageTransitionEvent(DOMString type,
-                               boolean canBubble,
-                               boolean cancelable,
-                               boolean persisted);
 };
 
 dictionary PageTransitionEventInit : EventInit

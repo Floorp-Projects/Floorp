@@ -373,7 +373,6 @@ if CONFIG['ENABLE_ION']:
         ]
     elif CONFIG['JS_CODEGEN_ARM']:
         SOURCES += [
-            'assembler/assembler/ARMAssembler.cpp',
             'assembler/assembler/MacroAssemblerARM.cpp',
         ]
 
