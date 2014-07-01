@@ -117,34 +117,37 @@ GetDataStoresStructuredCloneCallbacksRead(JSContext* aCx,
     return nullptr;
   }
 
-  nsRefPtr<WorkerDataStore> workerStore =
-    new WorkerDataStore(workerPrivate->GlobalScope());
-  nsMainThreadPtrHandle<DataStore> backingStore = dataStoreholder;
+  // Protect workerStoreObj from moving GC during ~nsRefPtr.
+  JS::Rooted<JSObject*> workerStoreObj(aCx, nullptr);
+  {
+    nsRefPtr<WorkerDataStore> workerStore =
+      new WorkerDataStore(workerPrivate->GlobalScope());
+    nsMainThreadPtrHandle<DataStore> backingStore = dataStoreholder;
 
-  // When we're on the worker thread, prepare a DataStoreChangeEventProxy.
-  nsRefPtr<DataStoreChangeEventProxy> eventProxy =
-    new DataStoreChangeEventProxy(workerPrivate, workerStore);
+    // When we're on the worker thread, prepare a DataStoreChangeEventProxy.
+    nsRefPtr<DataStoreChangeEventProxy> eventProxy =
+      new DataStoreChangeEventProxy(workerPrivate, workerStore);
 
-  // Add the DataStoreChangeEventProxy as an event listener on the main thread.
-  nsRefPtr<DataStoreAddEventListenerRunnable> runnable =
-    new DataStoreAddEventListenerRunnable(workerPrivate,
-                                          backingStore,
-                                          eventProxy);
-  runnable->Dispatch(aCx);
+    // Add the DataStoreChangeEventProxy as an event listener on the main thread.
+    nsRefPtr<DataStoreAddEventListenerRunnable> runnable =
+      new DataStoreAddEventListenerRunnable(workerPrivate,
+                                            backingStore,
+                                            eventProxy);
+    runnable->Dispatch(aCx);
 
-  // Point WorkerDataStore to DataStore.
-  workerStore->SetBackingDataStore(backingStore);
+    // Point WorkerDataStore to DataStore.
+    workerStore->SetBackingDataStore(backingStore);
 
-  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-  if (!global) {
-    MOZ_ASSERT(false, "cannot get global!");
-    return nullptr;
-  }
-
-  JS::Rooted<JSObject*> workerStoreObj(aCx, workerStore->WrapObject(aCx));
-  if (!JS_WrapObject(aCx, &workerStoreObj)) {
-    MOZ_ASSERT(false, "cannot wrap object for workerStoreObj!");
-    return nullptr;
+    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
+    if (!global) {
+      MOZ_ASSERT(false, "cannot get global!");
+    } else {
+      workerStoreObj = workerStore->WrapObject(aCx);
+      if (!JS_WrapObject(aCx, &workerStoreObj)) {
+        MOZ_ASSERT(false, "cannot wrap object for workerStoreObj!");
+        workerStoreObj = nullptr;
+      }
+    }
   }
 
   return workerStoreObj;
