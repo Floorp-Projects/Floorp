@@ -87,7 +87,7 @@ function run_test() {
 
     // Make sure unrelated features aren't affected
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
-    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_NO_INFO);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
     var prefs = Cc["@mozilla.org/preferences-service;1"].
           getService(Ci.nsIPrefBranch);
@@ -108,11 +108,11 @@ function run_test() {
   function ensureBlacklistUnset()
   {
     var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
-    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_NO_INFO);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
     // Make sure unrelated features aren't affected
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
-    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_NO_INFO);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
     var prefs = Cc["@mozilla.org/preferences-service;1"].
           getService(Ci.nsIPrefBranch);

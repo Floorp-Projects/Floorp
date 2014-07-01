@@ -88,9 +88,8 @@ interface nsIGfxInfo : nsISupports
    * A set of return values from GetFeatureStatus
    */
 
-  /* We don't explicitly block or discourage the feature. Which means we'll try getting it from the
-   * hardware, and see what happens. */
-  const long FEATURE_NO_INFO = 1;
+  /* The driver is save to the best of our knowledge */
+  const long FEATURE_STATUS_OK = 1;
   /* We don't know the status of the feature yet. The analysis probably hasn't finished yet. */
   const long FEATURE_STATUS_UNKNOWN = 2;
   /* This feature is blocked on this driver version. Updating driver will typically unblock it. */
