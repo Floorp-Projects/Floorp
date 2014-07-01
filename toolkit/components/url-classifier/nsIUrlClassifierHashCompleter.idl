@@ -46,21 +46,20 @@ interface nsIUrlClassifierHashCompleterCallback : nsISupports
  * This is only ever used for testing and should absolutely be deleted (I
  * think).
  */
-[scriptable, uuid(ade9b72b-3562-44f5-aba6-e63246be53ae)]
+[scriptable, uuid(231fb2ad-ea8a-4e63-a331-eafc3b434811)]
 interface nsIUrlClassifierHashCompleter : nsISupports
 {
   /**
-   * Request a completed hash.
+   * Request a completed hash from the given gethash url.
    *
    * @param partialHash
    *        The 32-bit hash encountered by the url-classifier.
+   * @param gethashUrl
+   *        The gethash url to use.
    * @param callback
    *        An nsIUrlClassifierCompleterCallback instance.
    */
   void complete(in ACString partialHash,
+                in ACString gethashUrl,
                 in nsIUrlClassifierHashCompleterCallback callback);
-  /**
-   * The URL for the gethash request
-   */
-  attribute ACString gethashUrl;
 };

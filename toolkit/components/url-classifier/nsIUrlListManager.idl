@@ -18,29 +18,29 @@ interface nsIUrlListManagerCallback : nsISupports {
 };
 
 
-[scriptable, uuid(62484bb5-bf7e-4988-9055-8803b16b48a1)]
+[scriptable, uuid(653afdc4-ad4e-4ee0-8375-c576e85ebc40)]
 interface nsIUrlListManager : nsISupports
 {
     /**
-     * Set the URL we check for updates.
+     * Get the gethash url for this table
      */
-    void setUpdateUrl(in ACString url);
+    ACString getGethashUrl(in ACString tableName);
 
     /**
-     * Set the URL that we will query for complete hashes after a partial
-     * hash match.
-     */
-    void setGethashUrl(in ACString url);
-
-    /**
-     * Add a table to the list of tables we are managing.  The name is a
+     * Add a table to the list of tables we are managing. The name is a
      * string of the format provider_name-semantic_type-table_type.  For
-     * example, goog-white-enchash or goog-black-url.
+     * @param tableName A string of the format
+     *        provider_name-semantic_type-table_type.  For example,
+     *        goog-white-enchash or goog-black-url.
+     * @param updateUrl The URL from which to fetch updates.
+     * @param gethashUrl The URL from which to fetch hash completions.
      */
-    boolean registerTable(in ACString tableName);
+    boolean registerTable(in ACString tableName,
+                          in ACString updateUrl,
+                          in ACString gethashUrl);
 
     /**
-     * Turn on update checking for a table.  I.e., during the next server
+     * Turn on update checking for a table. I.e., during the next server
      * check, download updates for this table.
      */
     void enableUpdate(in ACString tableName);
@@ -57,6 +57,4 @@ interface nsIUrlListManager : nsISupports
      */
     void safeLookup(in nsIPrincipal key,
                     in nsIUrlListManagerCallback cb);
-
-    void checkForUpdates();
 };
