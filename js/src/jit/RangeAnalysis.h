@@ -415,6 +415,7 @@ class Range : public TempObject {
     static Range *min(TempAllocator &alloc, const Range *lhs, const Range *rhs);
     static Range *max(TempAllocator &alloc, const Range *lhs, const Range *rhs);
     static Range *floor(TempAllocator &alloc, const Range *op);
+    static Range *ceil(TempAllocator &alloc, const Range *op);
 
     static bool negativeZeroMul(const Range *lhs, const Range *rhs);
 

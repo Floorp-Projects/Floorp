@@ -909,6 +909,23 @@ MTypeBarrier::printOpcode(FILE *fp) const
     getOperand(0)->printName(fp);
 }
 
+#ifdef DEBUG
+void
+MPhi::assertLoopPhi() const
+{
+    // getLoopPredecessorOperand and getLoopBackedgeOperand rely on these
+    // predecessors being at indices 0 and 1.
+    MBasicBlock *pred = block()->getPredecessor(0);
+    MBasicBlock *back = block()->getPredecessor(1);
+    JS_ASSERT(pred == block()->loopPredecessor());
+    JS_ASSERT(pred->successorWithPhis() == block());
+    JS_ASSERT(pred->positionInPhiSuccessor() == 0);
+    JS_ASSERT(back == block()->backedge());
+    JS_ASSERT(back->successorWithPhis() == block());
+    JS_ASSERT(back->positionInPhiSuccessor() == 1);
+}
+#endif
+
 void
 MPhi::removeOperand(size_t index)
 {
@@ -3063,6 +3080,19 @@ MSqrt::trySpecializeFloat32(TempAllocator &alloc) {
 
     setResultType(MIRType_Float32);
     setPolicyType(MIRType_Float32);
+}
+
+MDefinition *
+MBoundsCheck::foldsTo(TempAllocator &alloc)
+{
+    if (index()->isConstant() && length()->isConstant()) {
+       uint32_t len = length()->toConstant()->value().toInt32();
+       uint32_t idx = index()->toConstant()->value().toInt32();
+       if (idx + uint32_t(minimum()) < len && idx + uint32_t(maximum()) < len)
+           return index();
+    }
+
+    return this;
 }
 
 bool

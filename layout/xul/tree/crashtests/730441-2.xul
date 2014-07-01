@@ -5,7 +5,7 @@ Program received signal SIGSEGV, Segmentation fault.
 610	  mTree->Invalidate();
 (gdb) bt 3
 #0  0xb6b720a6 in nsTreeColumns::RestoreNaturalOrder (this=0xa947a580) at layout/xul/base/src/tree/src/nsTreeColumns.cpp:610
-#1  0xb736c76f in NS_InvokeByIndex_P () at xpcom/reflect/xptcall/src/md/unix/xptcinvoke_gcc_x86_unix.cpp:69
+#1  0xb736c76f in NS_InvokeByIndex_P () at xpcom/reflect/xptcall/md/unix/xptcinvoke_gcc_x86_unix.cpp:69
 #2  0xb6171901 in XPCWrappedNative::CallMethod (ccx=..., mode=XPCWrappedNative::CALL_METHOD)
     at js/src/xpconnect/src/xpcwrappednative.cpp:2722
 (More stack frames follow...)

@@ -89,7 +89,7 @@ LOCAL_INCLUDES += [
     '../ds',
     '../glue',
     '../io',
-    '../reflect/xptinfo/src',
+    '../reflect/xptinfo',
     '../threads',
     '/chrome/src',
     '/docshell/base',

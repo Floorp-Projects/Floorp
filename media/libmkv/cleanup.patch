@@ -1,0 +1,41 @@
+diff --git a/media/libmkv/EbmlBufferWriter.c b/media/libmkv/EbmlBufferWriter.c
+index 8c26e80..5925504 100644
+--- a/media/libmkv/EbmlBufferWriter.c
++++ b/media/libmkv/EbmlBufferWriter.c
+@@ -14,21 +14,21 @@ Ebml_Serialize(EbmlGlobal *glob, const void *buffer_in, int buffer_size, unsigne
+   /* buffer_size:
+    * 1 - int8_t;
+    * 2 - int16_t;
+-   * 3 - int32_t;
+-   * 4 - int64_t;
++   * 4 - int32_t;
++   * 8 - int64_t;
+    */
+   long i;
+   for(i = len-1; i >= 0; i--) {
+     unsigned char x;
+     if (buffer_size == 1) {
+       x = (char)(*(const int8_t *)buffer_in >> (i * 8));
+-	} else if (buffer_size == 2) {
++    } else if (buffer_size == 2) {
+       x = (char)(*(const int16_t *)buffer_in >> (i * 8));
+-	} else if (buffer_size == 4) {
++    } else if (buffer_size == 4) {
+       x = (char)(*(const int32_t *)buffer_in >> (i * 8));
+-	} else if (buffer_size == 8) {
++    } else if (buffer_size == 8) {
+       x = (char)(*(const int64_t *)buffer_in >> (i * 8));
+-	}
++    }
+     Ebml_Write(glob, &x, 1);
+   }
+ }
+@@ -65,7 +65,7 @@ void Ebml_StartSubElement(EbmlGlobal *glob, EbmlLoc *ebmlLoc, unsigned long clas
+   Ebml_WriteID(glob, class_id);
+   ebmlLoc->offset = glob->offset;
+   // todo this is always taking 8 bytes, this may need later optimization
+-  Ebml_Serialize(glob, (void *)&unknownLen,sizeof(unknownLen), 8); // this is a key that says lenght unknown
++  Ebml_Serialize(glob, (void *)&unknownLen,sizeof(unknownLen), 8); // this is a key that says length unknown
+ }
+ 
+ void Ebml_EndSubElement(EbmlGlobal *glob, EbmlLoc *ebmlLoc) {
