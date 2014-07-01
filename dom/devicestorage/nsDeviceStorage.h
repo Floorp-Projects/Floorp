@@ -224,9 +224,8 @@ private:
 };
 
 //helpers
-bool
-StringToJsval(nsPIDOMWindow* aWindow, nsAString& aString,
-              JS::MutableHandle<JS::Value> result);
+JS::Value
+StringToJsval(nsPIDOMWindow* aWindow, nsAString& aString);
 
 JS::Value
 nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile);
