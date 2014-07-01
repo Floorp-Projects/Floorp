@@ -543,15 +543,14 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
   }
 #endif
 
-  nsCOMPtr<nsIScriptContext> scriptContext =
-    GetScriptContextFromJSContext(nsContentUtils::GetCurrentJSContext());
-
   uint8_t* imageBuffer = nullptr;
   int32_t format = 0;
   if (mCurrentContext) {
     mCurrentContext->GetImageBuffer(&imageBuffer, &format);
   }
 
+  nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
+  MOZ_ASSERT(global);
   aRv = ImageEncoder::ExtractDataAsync(type,
                                        params,
                                        usingCustomParseOptions,
@@ -559,7 +558,7 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
                                        format,
                                        GetSize(),
                                        mCurrentContext,
-                                       scriptContext,
+                                       global,
                                        aCallback);
 }
 
