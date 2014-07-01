@@ -338,8 +338,7 @@ class MochitestRunner(MozbuildObject):
         if test_paths:
             resolver = self._spawn(TestResolver)
 
-            tests = list(resolver.resolve_tests(paths=test_paths, flavor=flavor,
-                cwd=context.cwd))
+            tests = list(resolver.resolve_tests(paths=test_paths, flavor=flavor))
 
             if not tests:
                 print('No tests could be found in the path specified. Please '
