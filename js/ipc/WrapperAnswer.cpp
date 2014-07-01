@@ -277,7 +277,7 @@ WrapperAnswer::AnswerHasOwn(const ObjectId &objId, const nsString &id, ReturnSta
 }
 
 bool
-WrapperAnswer::AnswerGet(const ObjectId &objId, const ObjectId &receiverId, const nsString &id,
+WrapperAnswer::AnswerGet(const ObjectId &objId, const ObjectVariant &receiverVar, const nsString &id,
 			 ReturnStatus *rs, JSVariant *result)
 {
     AutoSafeJSContext cx;
@@ -291,11 +291,11 @@ WrapperAnswer::AnswerGet(const ObjectId &objId, const ObjectId &receiverId, cons
     if (!obj)
         return fail(cx, rs);
 
-    RootedObject receiver(cx, findObjectById(cx, receiverId));
+    JSAutoCompartment comp(cx, obj);
+
+    RootedObject receiver(cx, fromObjectVariant(cx, receiverVar));
     if (!receiver)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     RootedId internedId(cx);
     if (!convertGeckoStringToId(cx, id, &internedId))
@@ -314,7 +314,7 @@ WrapperAnswer::AnswerGet(const ObjectId &objId, const ObjectId &receiverId, cons
 }
 
 bool
-WrapperAnswer::AnswerSet(const ObjectId &objId, const ObjectId &receiverId, const nsString &id,
+WrapperAnswer::AnswerSet(const ObjectId &objId, const ObjectVariant &receiverVar, const nsString &id,
 			 const bool &strict, const JSVariant &value, ReturnStatus *rs,
 			 JSVariant *result)
 {
@@ -329,11 +329,11 @@ WrapperAnswer::AnswerSet(const ObjectId &objId, const ObjectId &receiverId, cons
     if (!obj)
         return fail(cx, rs);
 
-    RootedObject receiver(cx, findObjectById(cx, receiverId));
+    JSAutoCompartment comp(cx, obj);
+
+    RootedObject receiver(cx, fromObjectVariant(cx, receiverVar));
     if (!receiver)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     LOG("set %s[%s] = %s", ReceiverObj(objId), id, InVariant(value));
 
