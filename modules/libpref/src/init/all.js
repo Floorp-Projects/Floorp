@@ -918,7 +918,7 @@ pref("network.http.default-socket-type", "");
 // the packet is lost or delayed on the route.
 pref("network.http.keep-alive.timeout", 115);
 
-// Timeout connections if an initial response is not received after 10 mins.
+// Timeout connections if an initial response is not received after 5 mins.
 pref("network.http.response.timeout", 300);
 
 // Limit the absolute number of http connections.
