@@ -24,6 +24,11 @@ public:
 
   MobileCellInfo(nsPIDOMWindow* aWindow);
 
+  MobileCellInfo(int32_t aGsmLocationAreaCode, int64_t aGsmCellId,
+                 int32_t aCdmaBaseStationId, int32_t aCdmaBaseStationLatitude,
+                 int32_t aCdmaBaseStationLongitude, int32_t aCdmaSystemId,
+                 int32_t aCdmaNetworkId);
+
   void
   Update(nsIMobileCellInfo* aInfo);
 
