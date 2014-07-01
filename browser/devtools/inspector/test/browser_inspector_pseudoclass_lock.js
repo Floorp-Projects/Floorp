@@ -16,38 +16,31 @@ const TEST_URL = 'data:text/html,' +
                  '  </div>' +
                  '</body>';
 
-function test() {
-  ignoreAllUncaughtExceptions();
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-    waitForFocus(startTests, content);
-  }, true);
-
-  content.location = TEST_URL;
-}
-
-let startTests = Task.async(function*() {
+let test = asyncTest(function*() {
+  info("Creating the test tab and opening the rule-view");
+  yield addTab(TEST_URL);
   let {toolbox, inspector, view} = yield openRuleView();
+
+  info("Selecting the test node");
   yield selectNode("#div-1", inspector);
 
-  yield performTests(inspector, view);
-
-  yield finishUp(toolbox);
-  finish();
-});
-
-function* performTests(inspector, ruleview) {
   yield togglePseudoClass(inspector);
-  yield assertPseudoAddedToNode(inspector, ruleview);
+  yield assertPseudoAddedToNode(inspector, view);
 
   yield togglePseudoClass(inspector);
   yield assertPseudoRemovedFromNode();
-  yield assertPseudoRemovedFromView(inspector, ruleview);
+  yield assertPseudoRemovedFromView(inspector, view);
 
   yield togglePseudoClass(inspector);
-  yield testNavigate(inspector, ruleview);
-}
+  yield testNavigate(inspector, view);
+
+  info("Destroying the toolbox");
+  yield toolbox.destroy();
+  yield assertPseudoRemovedFromNode(getNode("#div-1"));
+
+  gBrowser.removeCurrentTab();
+});
+
 
 function* togglePseudoClass(inspector) {
   info("Toggle the pseudoclass, wait for it to be applied");
@@ -138,13 +131,4 @@ function* assertPseudoRemovedFromView(inspector, ruleview) {
   let pseudoClassesBox = getHighlighter().querySelector(".highlighter-nodeinfobar-pseudo-classes");
   is(pseudoClassesBox.textContent, "", "pseudo-class removed from infobar selector");
   yield inspector.toolbox.highlighter.hideBoxModel();
-}
-
-function* finishUp(toolbox) {
-  let onDestroy = gDevTools.once("toolbox-destroyed");
-  toolbox.destroy();
-  yield onDestroy;
-
-  yield assertPseudoRemovedFromNode(getNode("#div-1"));
-  gBrowser.removeCurrentTab();
 }
