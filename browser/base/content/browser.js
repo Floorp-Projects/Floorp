@@ -2284,55 +2284,44 @@ function PageProxyClickHandler(aEvent)
 
 /**
  * Handle command events bubbling up from error page content
- * or from about:newtab or from remote error pages that invoke
- * us via async messaging.
+ * or from about:newtab
  */
 let BrowserOnClick = {
-  init: function () {
-    let mm = window.messageManager;
-    mm.addMessageListener("Browser:CertExceptionError", this);
-    mm.addMessageListener("Browser:SiteBlockedError", this);
-    mm.addMessageListener("Browser:NetworkError", this);
-  },
-
-  handleEvent: function (event) {
-    if (!event.isTrusted || // Don't trust synthetic events
-        event.button == 2) {
+  handleEvent: function BrowserOnClick_handleEvent(aEvent) {
+    if (!aEvent.isTrusted || // Don't trust synthetic events
+        aEvent.button == 2) {
       return;
     }
 
-    let originalTarget = event.originalTarget;
+    let originalTarget = aEvent.originalTarget;
     let ownerDoc = originalTarget.ownerDocument;
 
-    if (gMultiProcessBrowser &&
-        ownerDoc.documentURI.toLowerCase() == "about:newtab") {
-      this.onE10sAboutNewTab(event, ownerDoc);
+    // If the event came from an ssl error page, it is probably either the "Add
+    // Exception…" or "Get me out of here!" button
+    if (ownerDoc.documentURI.startsWith("about:certerror")) {
+      this.onAboutCertError(originalTarget, ownerDoc);
+    }
+    else if (ownerDoc.documentURI.startsWith("about:blocked")) {
+      this.onAboutBlocked(originalTarget, ownerDoc);
+    }
+    else if (ownerDoc.documentURI.startsWith("about:neterror")) {
+      this.onAboutNetError(originalTarget, ownerDoc);
+    }
+    else if (gMultiProcessBrowser &&
+             ownerDoc.documentURI.toLowerCase() == "about:newtab") {
+      this.onE10sAboutNewTab(aEvent, ownerDoc);
     }
     else if (ownerDoc.documentURI.startsWith("about:tabcrashed")) {
-      this.onAboutTabCrashed(event, ownerDoc);
+      this.onAboutTabCrashed(aEvent, ownerDoc);
     }
   },
 
-  receiveMessage: function (msg) {
-    switch (msg.name) {
-      case "Browser:CertExceptionError":
-        this.onAboutCertError(msg.target, msg.json.elementId,
-                              msg.json.isTopFrame, msg.json.location);
-      break;
-      case "Browser:SiteBlockedError":
-        this.onAboutBlocked(msg.json.elementId, msg.json.isMalware,
-                            msg.json.isTopFrame, msg.json.location);
-      break;
-      case "Browser:NetworkError":
-        // Reset network state, the error page will refresh on its own.
-        Services.io.offline = false;
-      break;
-    }
-  },
-
-  onAboutCertError: function (browser, elementId, isTopFrame, location) {
+  onAboutCertError: function BrowserOnClick_onAboutCertError(aTargetElm, aOwnerDoc) {
+    let elmId = aTargetElm.getAttribute("id");
     let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
-    switch (elementId) {
+    let isTopFrame = (aOwnerDoc.defaultView.parent === aOwnerDoc.defaultView);
+
+    switch (elmId) {
       case "exceptionDialogButton":
         if (isTopFrame) {
           secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_CLICK_ADD_EXCEPTION);
@@ -2344,7 +2333,7 @@ let BrowserOnClick = {
             case 2 : // Pre-fetch & pre-populate
               params.prefetchCert = true;
             case 1 : // Pre-populate
-              params.location = location;
+              params.location = aOwnerDoc.location.href;
           }
         } catch (e) {
           Components.utils.reportError("Couldn't get ssl_override pref: " + e);
@@ -2355,7 +2344,7 @@ let BrowserOnClick = {
 
         // If the user added the exception cert, attempt to reload the page
         if (params.exceptionAdded) {
-          browser.reload();
+          aOwnerDoc.location.reload();
         }
         break;
 
@@ -2381,14 +2370,20 @@ let BrowserOnClick = {
     }
   },
 
-  onAboutBlocked: function (elementId, isMalware, isTopFrame, location) {
-    // Depending on what page we are displaying here (malware/phishing)
-    // use the right strings and links for each.
-    let bucketName = isMalware ? "WARNING_MALWARE_PAGE_":"WARNING_PHISHING_PAGE_";
+  onAboutBlocked: function BrowserOnClick_onAboutBlocked(aTargetElm, aOwnerDoc) {
+    let elmId = aTargetElm.getAttribute("id");
     let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
+
+    // The event came from a button on a malware/phishing block page
+    // First check whether it's malware or phishing, so that we can
+    // use the right strings/links
+    let isMalware = /e=malwareBlocked/.test(aOwnerDoc.documentURI);
+    let bucketName = isMalware ? "WARNING_MALWARE_PAGE_":"WARNING_PHISHING_PAGE_";
     let nsISecTel = Ci.nsISecurityUITelemetry;
-    bucketName += isTopFrame ? "TOP_" : "FRAME_";
-    switch (elementId) {
+    let isIframe = (aOwnerDoc.defaultView.parent === aOwnerDoc.defaultView);
+    bucketName += isIframe ? "TOP_" : "FRAME_";
+
+    switch (elmId) {
       case "getMeOutButton":
         secHistogram.add(nsISecTel[bucketName + "GET_ME_OUT_OF_HERE"]);
         getMeOutOfHere();
@@ -2408,7 +2403,7 @@ let BrowserOnClick = {
           // append the current url, and go there.
           try {
             let reportURL = formatURL("browser.safebrowsing.malware.reportURL", true);
-            reportURL += location;
+            reportURL += aOwnerDoc.location.href;
             content.location = reportURL;
           } catch (e) {
             Components.utils.reportError("Couldn't get malware report URL: " + e);
@@ -2432,17 +2427,17 @@ let BrowserOnClick = {
    * the next page also in the parent) and instructs the browser to open the url
    * in the current tab which will make it update the remoteness of the tab.
    */
-  onE10sAboutNewTab: function(event, ownerDoc) {
-    let isTopFrame = (ownerDoc.defaultView.parent === ownerDoc.defaultView);
-    if (!isTopFrame || event.button != 0) {
+  onE10sAboutNewTab: function(aEvent, aOwnerDoc) {
+    let isTopFrame = (aOwnerDoc.defaultView.parent === aOwnerDoc.defaultView);
+    if (!isTopFrame || aEvent.button != 0) {
       return;
     }
 
-    let anchorTarget = event.originalTarget.parentNode;
+    let anchorTarget = aEvent.originalTarget.parentNode;
 
     if (anchorTarget instanceof HTMLAnchorElement &&
         anchorTarget.classList.contains("newtab-link")) {
-      event.preventDefault();
+      aEvent.preventDefault();
       openUILinkIn(anchorTarget.href, "current");
     }
   },
@@ -2451,17 +2446,17 @@ let BrowserOnClick = {
    * The about:tabcrashed can't do window.reload() because that
    * would reload the page but not use a remote browser.
    */
-  onAboutTabCrashed: function(event, ownerDoc) {
-    let isTopFrame = (ownerDoc.defaultView.parent === ownerDoc.defaultView);
+  onAboutTabCrashed: function(aEvent, aOwnerDoc) {
+    let isTopFrame = (aOwnerDoc.defaultView.parent === aOwnerDoc.defaultView);
     if (!isTopFrame) {
       return;
     }
 
-    let button = event.originalTarget;
+    let button = aEvent.originalTarget;
     if (button.id == "tryAgain") {
 #ifdef MOZ_CRASHREPORTER
-      if (ownerDoc.getElementById("checkSendReport").checked) {
-        let browser = gBrowser.getBrowserForDocument(ownerDoc);
+      if (aOwnerDoc.getElementById("checkSendReport").checked) {
+        let browser = gBrowser.getBrowserForDocument(aOwnerDoc);
         TabCrashReporter.submitCrashReport(browser);
       }
 #endif
@@ -2470,7 +2465,7 @@ let BrowserOnClick = {
     }
   },
 
-  ignoreWarningButton: function (isMalware) {
+  ignoreWarningButton: function BrowserOnClick_ignoreWarningButton(aIsMalware) {
     // Allow users to override and continue through to the site,
     // but add a notify bar as a reminder, so that they don't lose
     // track after, e.g., tab switching.
@@ -2489,7 +2484,7 @@ let BrowserOnClick = {
     }];
 
     let title;
-    if (isMalware) {
+    if (aIsMalware) {
       title = gNavigatorBundle.getString("safebrowsing.reportedAttackSite");
       buttons[1] = {
         label: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.label"),
@@ -2528,8 +2523,14 @@ let BrowserOnClick = {
     // doesn't get removed on redirects.
     notification.persistence = -1;
   },
+
+  onAboutNetError: function BrowserOnClick_onAboutNetError(aTargetElm, aOwnerDoc) {
+    let elmId = aTargetElm.getAttribute("id");
+    if (elmId != "errorTryAgain" || !/e=netOffline/.test(aOwnerDoc.documentURI))
+      return;
+    Services.io.offline = false;
+  },
 };
-BrowserOnClick.init();
 
 /**
  * Re-direct the browser to a known-safe page.  This function is
