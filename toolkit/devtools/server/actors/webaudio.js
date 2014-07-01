@@ -329,7 +329,8 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
       tracedGlobals: AUDIO_GLOBALS,
       startRecording: true,
       performReload: reload,
-      holdWeak: true
+      holdWeak: true,
+      storeCalls: false
     });
     // Bind to the `global-destroyed` event on the content observer so we can
     // unbind events between the global destruction and the `finalize` cleanup
