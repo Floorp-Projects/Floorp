@@ -195,17 +195,7 @@ ParseTask::ParseTask(ExclusiveContext *cx, JSObject *exclusiveContextGlobal, JSC
 bool
 ParseTask::init(JSContext *cx, const ReadOnlyCompileOptions &options)
 {
-    if (!this->options.copy(cx, options))
-        return false;
-
-    // Save those compilation options that the ScriptSourceObject can't
-    // point at while it's in the compilation's temporary compartment.
-    optionsElement = this->options.element();
-    this->options.setElement(nullptr);
-    optionsIntroductionScript = this->options.introductionScript();
-    this->options.setIntroductionScript(nullptr);
-
-    return true;
+    return this->options.copy(cx, options);
 }
 
 void
@@ -215,16 +205,18 @@ ParseTask::activate(JSRuntime *rt)
     cx->enterCompartment(exclusiveContextGlobal->compartment());
 }
 
-void
-ParseTask::finish()
+bool
+ParseTask::finish(JSContext *cx)
 {
     if (script) {
-        // Initialize the ScriptSourceObject slots that we couldn't while the SSO
-        // was in the temporary compartment.
-        ScriptSourceObject &sso = script->sourceObject()->as<ScriptSourceObject>();
-        sso.initElement(optionsElement);
-        sso.initIntroductionScript(optionsIntroductionScript);
+        // Finish off the ScriptSourceObject initialization that we put off in
+        // js::frontend::CreateScriptSourceObject.
+        RootedScriptSource sso(cx, &script->sourceObject()->as<ScriptSourceObject>());
+        if (!ScriptSourceObject::initFromOptions(cx, sso, options))
+            return false;
     }
+
+    return true;
 }
 
 ParseTask::~ParseTask()
@@ -802,7 +794,8 @@ GlobalHelperThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void
 
     // Move the parsed script and all its contents into the desired compartment.
     gc::MergeCompartments(parseTask->cx->compartment(), cx->compartment());
-    parseTask->finish();
+    if (!parseTask->finish(cx))
+        return nullptr;
 
     RootedScript script(rt, parseTask->script);
     assertSameCompartment(cx, script);
