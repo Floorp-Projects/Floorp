@@ -205,7 +205,7 @@ public class BrowserLocaleManager implements LocaleManager {
      *
      * If we're currently mirroring the system locale, this method returns the
      * supplied configuration's locale, unless the current activity locale is
-     * correct. , If we're not currently mirroring, this methodupdates the
+     * correct. If we're not currently mirroring, this method updates the
      * configuration object to match the user's currently selected locale, and
      * returns that, unless the current activity locale is correct.
      *
