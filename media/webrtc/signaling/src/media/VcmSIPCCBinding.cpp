@@ -2803,6 +2803,17 @@ int vcmGetVideoMaxSupportedPacketizationMode()
 }
 
 /**
+ * Get supported H.264 profile-level-id
+ * @return supported profile-level-id value
+ */
+uint32_t vcmGetVideoH264ProfileLevelID()
+{
+  // constrained baseline level 1.2
+  // XXX make variable based on openh264 and OMX support
+  return 0x42E00C;
+}
+
+/**
  *  MEDIA control received from far end on signaling path
  *
  *  @param call_handle - call_handle of the call
@@ -3040,62 +3051,6 @@ cc_boolean vcmCheckAttribs(cc_uint32_t media_type, void *sdp_p, int level, void 
 
     default:
         return FALSE;
-    }
-}
-
-/**
- * Add Video attributes in the offer/answer SDP
- *
- * This method is called for video codecs only. This method should populate the
- * Video SDP attributes using the SDP helper API
- *
- * @param [in] sdp_p - opaque SDP pointer to be used via SDP helper APIs
- * @param [in] level - Parameter to be used with SDP helper APIs
- * @param [in] media_type - codec for which the SDP attributes are to be populated
- * @param [in] payload_number - RTP payload type used for the SDP
- * @param [in] isOffer - cc_boolean indicating we are encoding an offer or an aswer
- *
- * @return void
- */
-void vcmPopulateAttribs(void *sdp_p, int level, cc_uint32_t media_type,
-                          cc_uint16_t payload_number, cc_boolean isOffer)
-{
-    CSFLogDebug( logTag, "vcmPopulateAttribs(): media=%d PT=%d, isOffer=%d", media_type, payload_number, isOffer);
-    uint16_t a_inst;//, a_inst2, a_inst3, a_inst4;
-    int profile;
-    char profile_level_id[MAX_SPROP_LEN];
-
-    switch (media_type)
-    {
-    case RTP_H264_P0:
-    case RTP_H264_P1:
-
-        if ( ccsdpAddNewAttr(sdp_p, level, 0, SDP_ATTR_FMTP, &a_inst) != SDP_SUCCESS ) return;
-
-        (void) ccsdpAttrSetFmtpPayloadType(sdp_p, level, 0, a_inst, payload_number);
-
-        if (media_type == RTP_H264_P1) {
-          (void) ccsdpAttrSetFmtpPackMode(sdp_p, level, 0, a_inst, 1 /*packetization_mode*/);
-        }
-        //(void) sdp_attr_set_fmtp_parameter_sets(sdp_p, level, 0, a_inst, "J0KAFJWgUH5A,KM4H8n==");    // NAL units 27 42 80 14 95 a0 50 7e 40 28 ce 07 f2
-
-        //profile = 0x42E000 + H264ToSDPLevel( vt_GetClientProfileLevel() );
-        profile = 0x42E00C;
-        csf_sprintf(profile_level_id, MAX_SPROP_LEN, "%X", profile);
-        (void) ccsdpAttrSetFmtpProfileLevelId(sdp_p, level, 0, a_inst, profile_level_id);
-
-        //(void) sdp_attr_set_fmtp_max_mbps(sdp_p, level, 0, a_inst, max_mbps);
-        //(void) sdp_attr_set_fmtp_max_fs(sdp_p, level, 0, a_inst, max_fs);
-        //(void) sdp_attr_set_fmtp_max_cpb(sdp_p, level, 0, a_inst, max_cpb);
-        //(void) sdp_attr_set_fmtp_max_dpb(sdp_p, level, 0, a_inst, max_dpb);
-        //(void) sdp_attr_set_fmtp_max_br(sdp_p, level, 0, a_inst, max_br);
-        //(void) sdp_add_new_bw_line(sdp_p, level, &a_inst);
-        //(void) sdp_set_bw(sdp_p, level, a_inst, SDP_BW_MODIFIER_TIAS, tias_bw);
-
-        break;
-
-    default:
-        break;
     }
 }
 
