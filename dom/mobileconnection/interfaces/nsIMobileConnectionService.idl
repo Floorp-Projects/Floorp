@@ -119,7 +119,11 @@ interface nsIMobileConnectionListener : nsISupports
   void notifyNetworkSelectionModeChanged();
 };
 
-[scriptable, builtinclass, uuid(eea91fcf-6bde-43be-aa01-d6cdfaad26e1)]
+%{C++
+#define NO_ADDITIONAL_INFORMATION 0
+%}
+
+[scriptable, builtinclass, uuid(e9d7c247-34c6-42bf-875b-f99b19db394f)]
 interface nsIMobileConnectionCallback : nsISupports
 {
   /**
@@ -152,6 +156,40 @@ interface nsIMobileConnectionCallback : nsISupports
                    [optional] in DOMString message,
                    [optional] in DOMString serviceCode,
                    [optional] in unsigned short additionalInformation);
+
+%{C++
+  // non-virtual so it won't affect the vtable
+  inline nsresult NotifyError(const nsAString& aName)
+  {
+    return NotifyError(aName, EmptyString(), EmptyString(),
+                       NO_ADDITIONAL_INFORMATION, 0 /* ARGC = 0 */);
+  }
+  // non-virtual so it won't affect the vtable
+  inline nsresult NotifyError(const nsAString& aName,
+                              const nsAString& aMessage)
+  {
+    return NotifyError(aName, aMessage, EmptyString(), NO_ADDITIONAL_INFORMATION,
+                       1 /* ARGC = 1 */);
+  }
+  // non-virtual so it won't affect the vtable
+  inline nsresult NotifyError(const nsAString& aName,
+                              const nsAString& aMessage,
+                              const nsAString& aServiceCode)
+  {
+    return NotifyError(aName, aMessage, aServiceCode, NO_ADDITIONAL_INFORMATION,
+                       2 /* ARGC = 2 */);
+  }
+  // non-virtual so it won't affect the vtable
+  inline nsresult NotifyError(const nsAString& aName,
+                              const nsAString& aMessage,
+                              const nsAString& aServiceCode,
+                              uint16_t aAdditionInformation)
+  {
+    return NotifyError(aName, aMessage, aServiceCode, aAdditionInformation,
+                       3 /* ARGC = 3 */);
+  }
+%}
+
 };
 
 %{C++
