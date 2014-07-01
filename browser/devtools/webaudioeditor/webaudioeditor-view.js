@@ -161,7 +161,7 @@ let WebAudioGraphView = {
       // Add all of the connections from this node to the edge array to be added
       // after all the nodes are added, otherwise edges will attempted to be created
       // for nodes that have not yet been added
-      AudioNodeConnections.get(node, []).forEach(dest => edges.push([node, dest]));
+      AudioNodeConnections.get(node, new Set()).forEach(dest => edges.push([node, dest]));
     });
 
     edges.forEach(([node, dest]) => graph.addEdge(null, node.id, dest.id, {
