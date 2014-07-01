@@ -27,6 +27,10 @@ public:
 
   MobileNetworkInfo(nsPIDOMWindow* aWindow);
 
+  MobileNetworkInfo(const nsAString& aShortName, const nsAString& aLongName,
+                    const nsAString& aMcc, const nsAString& aMnc,
+                    const nsAString& aState);
+
   void
   Update(nsIMobileNetworkInfo* aInfo);
 
