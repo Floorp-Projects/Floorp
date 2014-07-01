@@ -622,27 +622,58 @@ ReorderComparison(JSOp op, MDefinition **lhsp, MDefinition **rhsp)
     return op;
 }
 
+static bool
+ShouldReorderCommutative(MDefinition *lhs, MDefinition *rhs, MInstruction *ins)
+{
+    // lhs and rhs are used by the commutative operator.
+    JS_ASSERT(lhs->hasDefUses());
+    JS_ASSERT(rhs->hasDefUses());
+
+    // Ensure that if there is a constant, then it is in rhs.
+    if (rhs->isConstant())
+        return false;
+    if (lhs->isConstant())
+        return true;
+
+    // Since clobbering binary operations clobber the left operand, prefer a
+    // non-constant lhs operand with no further uses. To be fully precise, we
+    // should check whether this is the *last* use, but checking hasOneDefUse()
+    // is a decent approximation which doesn't require any extra analysis.
+    bool rhsSingleUse = rhs->hasOneDefUse();
+    bool lhsSingleUse = lhs->hasOneDefUse();
+    if (rhsSingleUse) {
+        if (!lhsSingleUse)
+            return true;
+    } else {
+        if (lhsSingleUse)
+            return false;
+    }
+
+    // If this is a reduction-style computation, such as
+    //
+    //   sum = 0;
+    //   for (...)
+    //      sum += ...;
+    //
+    // put the phi on the left to promote coalescing. This is fairly specific.
+    if (rhsSingleUse &&
+        rhs->isPhi() &&
+        rhs->block()->isLoopHeader() &&
+        ins == rhs->toPhi()->getLoopBackedgeOperand())
+    {
+        return true;
+    }
+
+    return false;
+}
+
 static void
-ReorderCommutative(MDefinition **lhsp, MDefinition **rhsp)
+ReorderCommutative(MDefinition **lhsp, MDefinition **rhsp, MInstruction *ins)
 {
     MDefinition *lhs = *lhsp;
     MDefinition *rhs = *rhsp;
 
-    // Ensure that if there is a constant, then it is in rhs.
-    // In addition, since clobbering binary operations clobber the left
-    // operand, prefer a non-constant lhs operand with no further uses.
-
-    if (rhs->isConstant())
-        return;
-
-    // lhs and rhs are used by the commutative operator. If they have any
-    // *other* uses besides, try to reorder to avoid clobbering them. To
-    // be fully precise, we should check whether this is the *last* use,
-    // but checking hasOneDefUse() is a decent approximation which doesn't
-    // require any extra analysis.
-    JS_ASSERT(lhs->hasDefUses());
-    JS_ASSERT(rhs->hasDefUses());
-    if (lhs->isConstant() || (rhs->hasOneDefUse() && !lhs->hasOneDefUse())) {
+    if (ShouldReorderCommutative(lhs, rhs, ins)) {
         *rhsp = lhs;
         *lhsp = rhs;
     }
@@ -828,7 +859,7 @@ LIRGenerator::visitTest(MTest *test)
         MDefinition *lhs = opd->getOperand(0);
         MDefinition *rhs = opd->getOperand(1);
         if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
-            ReorderCommutative(&lhs, &rhs);
+            ReorderCommutative(&lhs, &rhs, test);
             return lowerForBitAndAndBranch(new(alloc()) LBitAndAndBranch(ifTrue, ifFalse), test, lhs, rhs);
         }
     }
@@ -1011,7 +1042,7 @@ LIRGenerator::lowerBitOp(JSOp op, MInstruction *ins)
     MDefinition *rhs = ins->getOperand(1);
 
     if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
-        ReorderCommutative(&lhs, &rhs);
+        ReorderCommutative(&lhs, &rhs, ins);
         return lowerForALU(new(alloc()) LBitOpI(op), ins, lhs, rhs);
     }
 
@@ -1228,7 +1259,7 @@ LIRGenerator::visitMinMax(MMinMax *ins)
     MDefinition *first = ins->getOperand(0);
     MDefinition *second = ins->getOperand(1);
 
-    ReorderCommutative(&first, &second);
+    ReorderCommutative(&first, &second, ins);
 
     if (ins->specialization() == MIRType_Int32) {
         LMinMaxI *lir = new(alloc()) LMinMaxI(useRegisterAtStart(first), useRegisterOrConstant(second));
@@ -1390,7 +1421,7 @@ LIRGenerator::visitAdd(MAdd *ins)
 
     if (ins->specialization() == MIRType_Int32) {
         JS_ASSERT(lhs->type() == MIRType_Int32);
-        ReorderCommutative(&lhs, &rhs);
+        ReorderCommutative(&lhs, &rhs, ins);
         LAddI *lir = new(alloc()) LAddI;
 
         if (ins->fallible() && !assignSnapshot(lir, Bailout_OverflowInvalidate))
@@ -1405,13 +1436,13 @@ LIRGenerator::visitAdd(MAdd *ins)
 
     if (ins->specialization() == MIRType_Double) {
         JS_ASSERT(lhs->type() == MIRType_Double);
-        ReorderCommutative(&lhs, &rhs);
+        ReorderCommutative(&lhs, &rhs, ins);
         return lowerForFPU(new(alloc()) LMathD(JSOP_ADD), ins, lhs, rhs);
     }
 
     if (ins->specialization() == MIRType_Float32) {
         JS_ASSERT(lhs->type() == MIRType_Float32);
-        ReorderCommutative(&lhs, &rhs);
+        ReorderCommutative(&lhs, &rhs, ins);
         return lowerForFPU(new(alloc()) LMathF(JSOP_ADD), ins, lhs, rhs);
     }
 
@@ -1460,7 +1491,7 @@ LIRGenerator::visitMul(MMul *ins)
 
     if (ins->specialization() == MIRType_Int32) {
         JS_ASSERT(lhs->type() == MIRType_Int32);
-        ReorderCommutative(&lhs, &rhs);
+        ReorderCommutative(&lhs, &rhs, ins);
 
         // If our RHS is a constant -1 and we don't have to worry about
         // overflow, we can optimize to an LNegI.
@@ -1471,7 +1502,7 @@ LIRGenerator::visitMul(MMul *ins)
     }
     if (ins->specialization() == MIRType_Double) {
         JS_ASSERT(lhs->type() == MIRType_Double);
-        ReorderCommutative(&lhs, &rhs);
+        ReorderCommutative(&lhs, &rhs, ins);
 
         // If our RHS is a constant -1.0, we can optimize to an LNegD.
         if (rhs->isConstant() && rhs->toConstant()->value() == DoubleValue(-1.0))
@@ -1481,7 +1512,7 @@ LIRGenerator::visitMul(MMul *ins)
     }
     if (ins->specialization() == MIRType_Float32) {
         JS_ASSERT(lhs->type() == MIRType_Float32);
-        ReorderCommutative(&lhs, &rhs);
+        ReorderCommutative(&lhs, &rhs, ins);
 
         // We apply the same optimizations as for doubles
         if (rhs->isConstant() && rhs->toConstant()->value() == Float32Value(-1.0f))
@@ -3427,6 +3458,17 @@ LIRGenerator::visitIsCallable(MIsCallable *ins)
     JS_ASSERT(ins->object()->type() == MIRType_Object);
     JS_ASSERT(ins->type() == MIRType_Boolean);
     return define(new(alloc()) LIsCallable(useRegister(ins->object())), ins);
+}
+
+bool
+LIRGenerator::visitIsObject(MIsObject *ins)
+{
+    MDefinition *opd = ins->input();
+    JS_ASSERT(opd->type() == MIRType_Value);
+    LIsObject *lir = new(alloc()) LIsObject();
+    if (!useBoxAtStart(lir, LIsObject::Input, opd))
+        return false;
+    return define(lir, ins);
 }
 
 bool
