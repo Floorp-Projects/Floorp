@@ -212,7 +212,6 @@
         let panel = this.panel;
         let frameId = this.getAttribute("notificationFrameId");
 
-        let wasAlive = SharedFrame.isGroupAlive(frameId);
         SharedFrame.setOwner(frameId, this.content);
 
         // Clear dimensions on all browsers so the panel size will

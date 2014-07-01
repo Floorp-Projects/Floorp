@@ -245,6 +245,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitCallInstanceOf(MCallInstanceOf *ins);
     bool visitProfilerStackOp(MProfilerStackOp *ins);
     bool visitIsCallable(MIsCallable *ins);
+    bool visitIsObject(MIsObject *ins);
     bool visitHaveSameClass(MHaveSameClass *ins);
     bool visitHasClass(MHasClass *ins);
     bool visitAsmJSLoadGlobalVar(MAsmJSLoadGlobalVar *ins);

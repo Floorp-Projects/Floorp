@@ -296,6 +296,14 @@ function rconcat_number(i) {
     return i;
 }
 
+var uceFault_string_length = eval(uneval(uceFault).replace('uceFault', 'uceFault_string_length'));
+function rstring_length(i) {
+    var x = i.toString().length;
+    if (uceFault_string_length(i) || uceFault_string_length(i))
+        assertEq(x, 2);
+    return i;
+}
+
 var uceFault_floor_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_floor_number'));
 function rfloor_number(i) {
     var x = Math.floor(i + 0.1111);
@@ -425,6 +433,7 @@ for (i = 0; i < 100; i++) {
     rmod_object(i);
     rconcat_string(i);
     rconcat_number(i);
+    rstring_length(i);
     rfloor_number(i);
     rfloor_object(i);
     rround_number(i);
