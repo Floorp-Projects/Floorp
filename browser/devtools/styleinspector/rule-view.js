@@ -1236,7 +1236,7 @@ CssRuleView.prototype = {
       value = {
         property: getPropertyNameAndValue(node).name,
         value: node.parentNode.textContent,
-        url: node.textContent,
+        url: node.href,
         enabled: prop.enabled,
         overridden: prop.overridden,
         pseudoElement: prop.rule.pseudoElement,

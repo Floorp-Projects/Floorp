@@ -135,7 +135,6 @@ let PanelFrame = {
     let notificationFrameId = aToolbarButton.getAttribute("notificationFrameId");
     let notificationFrame = aWindow.document.getElementById(notificationFrameId);
 
-    let wasAlive = SharedFrame.isGroupAlive(notificationFrameId);
     SharedFrame.setOwner(notificationFrameId, notificationFrame);
 
     // Clear dimensions on all browsers so the panel size will
@@ -184,7 +183,7 @@ let PanelFrame = {
       if (!inMenuPanel)
         anchorBtn.setAttribute("open", "true");
       if (notificationFrame.contentDocument &&
-          notificationFrame.contentDocument.readyState == "complete" && wasAlive) {
+          notificationFrame.contentDocument.readyState == "complete") {
         initFrameShow();
       } else {
         // first time load, wait for load and dispatch after load

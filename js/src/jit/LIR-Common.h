@@ -5789,6 +5789,16 @@ class LIsCallable : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LIsObject : public LInstructionHelper<1, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(IsObject);
+    static const size_t Input = 0;
+    MIsObject *mir() const {
+        return mir_->toIsObject();
+    }
+};
+
 class LHaveSameClass : public LInstructionHelper<1, 2, 1>
 {
   public:

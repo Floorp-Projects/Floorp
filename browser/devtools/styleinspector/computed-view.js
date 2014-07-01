@@ -348,7 +348,7 @@ CssHtmlTree.prototype = {
       type = overlays.VIEW_NODE_VALUE_TYPE;
     } else if (classes.contains("theme-link")) {
       type = overlays.VIEW_NODE_IMAGE_URL_TYPE;
-      value.url = node.textContent;
+      value.url = node.href;
     } else {
       return null;
     }

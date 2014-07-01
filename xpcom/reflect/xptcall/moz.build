@@ -4,5 +4,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'src']
+DIRS += ['md']
 
+SOURCES += [
+    'xptcall.cpp',
+]
+
+EXPORTS += [
+    'xptcall.h',
+    'xptcstubsdecl.inc',
+    'xptcstubsdef.inc',
+]
+
+MSVC_ENABLE_PGO = True
+
+LOCAL_INCLUDES += [
+    '/xpcom/reflect/xptinfo',
+]
+
+FINAL_LIBRARY = 'xpcom_core'

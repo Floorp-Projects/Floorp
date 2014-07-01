@@ -527,7 +527,8 @@ ANDROID_GENERATED_RESFILES += [
     'res/values/strings.xml',
 ]
 
-for var in ('MOZ_ANDROID_ANR_REPORTER', 'MOZ_LINKER_EXTRACT', 'MOZILLA_OFFICIAL', 'MOZ_DEBUG'):
+for var in ('MOZ_ANDROID_ANR_REPORTER', 'MOZ_LINKER_EXTRACT', 'MOZILLA_OFFICIAL', 'MOZ_DEBUG',
+            'MOZ_ANDROID_SEARCH_ACTIVITY'):
     if CONFIG[var]:
         DEFINES[var] = 1
 
@@ -551,6 +552,26 @@ if '-march=armv7' in CONFIG['OS_CFLAGS']:
     DEFINES['MOZ_MIN_CPU_VERSION'] = 7
 else:
     DEFINES['MOZ_MIN_CPU_VERSION'] = 5
+
+if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
+    # The Search Activity is mostly independent of Fennec proper, but
+    # it does depend on Geckoview.  Therefore, we build it as a jar
+    # that depends on the Geckoview jars.
+    search_source_dir = SRCDIR + '/../search'
+    include('../search/search_activity_sources.mozbuild')
+
+    ANDROID_RES_DIRS += [search_source_dir + '/res']
+    resjar.generated_sources += ['org/mozilla/search/R.java']
+
+    search_activity = add_java_jar('search-activity')
+    search_activity.sources += [search_source_dir + '/' + f for f in search_activity_sources]
+    search_activity.javac_flags += ['-Xlint:all']
+    search_activity.extra_jars = [
+        'gecko-R.jar',
+        'gecko-browser.jar',
+        'gecko-mozglue.jar',
+        'gecko-util.jar',
+    ]
 
 generated_recursive_make_targets = ['.aapt.deps', '.locales.deps'] # Captures dependencies on Android manifest and all resources.
 

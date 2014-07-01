@@ -486,6 +486,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cond = testNull(cond, value);
         emitSet(cond, dest);
     }
+
+    void testObjectSet(Condition cond, const ValueOperand &value, Register dest) {
+        cond = testObject(cond, value);
+        emitSet(cond, dest);
+    }
+
     void testUndefinedSet(Condition cond, const ValueOperand &value, Register dest) {
         cond = testUndefined(cond, value);
         emitSet(cond, dest);

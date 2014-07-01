@@ -2298,6 +2298,12 @@ MacroAssemblerMIPSCompat::branchTestObject(Condition cond, const BaseIndex &src,
     ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_OBJECT), label, cond);
 }
 
+void
+MacroAssemblerMIPSCompat::testObjectSet(Condition cond, const ValueOperand &value, Register dest)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ma_cmp_set(dest, value.typeReg(), ImmType(JSVAL_TYPE_OBJECT), cond);
+}
 
 void
 MacroAssemblerMIPSCompat::branchTestString(Condition cond, const ValueOperand &value, Label *label)

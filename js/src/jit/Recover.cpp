@@ -510,6 +510,31 @@ RConcat::recover(JSContext *cx, SnapshotIterator &iter) const
     return true;
 }
 
+RStringLength::RStringLength(CompactBufferReader &reader)
+{}
+
+bool
+RStringLength::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue operand(cx, iter.read());
+    RootedValue result(cx);
+
+    MOZ_ASSERT(!operand.isObject());
+    if (!js::GetLengthProperty(operand, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
+MStringLength::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_StringLength));
+    return true;
+}
+
 bool
 MFloor::writeRecoverData(CompactBufferWriter &writer) const
 {
