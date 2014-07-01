@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional DeviceStorageChangeEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
+[Constructor(DOMString type, optional DeviceStorageChangeEventInit eventInitDict)]
 interface DeviceStorageChangeEvent : Event
 {
   readonly attribute DOMString? path;

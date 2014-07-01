@@ -408,7 +408,6 @@ class Assembler : public AssemblerX86Shared
     // Re-routes pending jumps to an external target, flushing the label in the
     // process.
     void retarget(Label *label, ImmPtr target, Relocation::Kind reloc) {
-        JSC::MacroAssembler::Label jsclabel;
         if (label->used()) {
             bool more;
             JSC::X86Assembler::JmpSrc jmp(label->offset());

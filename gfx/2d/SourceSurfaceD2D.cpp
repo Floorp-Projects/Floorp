@@ -176,10 +176,17 @@ DataSourceSurfaceD2D::DataSourceSurfaceD2D(SourceSurfaceD2D* aSourceSurface)
 
   renderTarget->BeginDraw();
   renderTarget->Clear(D2D1::ColorF(0, 0.0f));
-  renderTarget->DrawBitmap(aSourceSurface->mBitmap,
-                           D2D1::RectF(0, 0,
-                                       Float(mSize.width),
-                                       Float(mSize.height)));
+  if (aSourceSurface->GetFormat() != SurfaceFormat::A8) {
+    renderTarget->DrawBitmap(aSourceSurface->mBitmap,
+                             D2D1::RectF(0, 0,
+                             Float(mSize.width),
+                             Float(mSize.height)));
+  } else {
+    RefPtr<ID2D1SolidColorBrush> brush;
+    renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), byRef(brush));
+    renderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
+    renderTarget->FillOpacityMask(aSourceSurface->mBitmap, brush, D2D1_OPACITY_MASK_CONTENT_GRAPHICS);
+  }
   hr = renderTarget->EndDraw();
   if (FAILED(hr)) {
     gfxWarning() << "Failed to draw bitmap. Code: " << hr;

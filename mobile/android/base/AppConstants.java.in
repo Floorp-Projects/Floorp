@@ -163,6 +163,13 @@ public class AppConstants {
     false;
 #endif
 
+    public static final boolean MOZ_MEDIA_PLAYER =
+#ifdef MOZ_NATIVE_DEVICES
+    true;
+#else
+    false;
+#endif
+
     // Official corresponds, roughly, to whether this build is performed on
     // Mozilla's continuous integration infrastructure. You should disable
     // developer-only functionality when this flag is set.

@@ -14,7 +14,7 @@
 using namespace js;
 
 /* static */ ProxyObject *
-ProxyObject::New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, TaggedProto proto_,
+ProxyObject::New(JSContext *cx, const BaseProxyHandler *handler, HandleValue priv, TaggedProto proto_,
                  JSObject *parent_, const ProxyOptions &options)
 {
     Rooted<TaggedProto> proto(cx, proto_);
@@ -69,9 +69,9 @@ ProxyObject::initCrossCompartmentPrivate(HandleValue priv)
 }
 
 void
-ProxyObject::initHandler(BaseProxyHandler *handler)
+ProxyObject::initHandler(const BaseProxyHandler *handler)
 {
-    initSlot(HANDLER_SLOT, PrivateValue(handler));
+    initSlot(HANDLER_SLOT, PrivateValue(const_cast<BaseProxyHandler*>(handler)));
 }
 
 static void
@@ -88,7 +88,7 @@ NukeSlot(ProxyObject *proxy, uint32_t slot)
 }
 
 void
-ProxyObject::nuke(BaseProxyHandler *handler)
+ProxyObject::nuke(const BaseProxyHandler *handler)
 {
     /* Allow people to add their own number of reserved slots beyond the expected 4 */
     unsigned numSlots = JSCLASS_RESERVED_SLOTS(getClass());
