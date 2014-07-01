@@ -16,7 +16,7 @@ function dial() {
     is(telephony.calls.length, 0);
     is(cause, "BadNumberError");
 
-    emulator.runCmdWithCallback("gsm list", function(result) {
+    emulator.runWithCallback("gsm list", function(result) {
       log("Initial call list: " + result);
       cleanUp();
     });
