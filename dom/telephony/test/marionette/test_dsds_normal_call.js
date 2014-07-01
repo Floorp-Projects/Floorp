@@ -7,7 +7,7 @@ MARIONETTE_HEAD_JS = 'head.js';
 function muxModem(id) {
   let deferred = Promise.defer();
 
-  emulator.runCmdWithCallback("mux modem " + id, function() {
+  emulator.runWithCallback("mux modem " + id, function() {
     deferred.resolve();
   });
 
