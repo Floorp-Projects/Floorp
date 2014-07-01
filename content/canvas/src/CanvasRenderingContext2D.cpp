@@ -559,7 +559,11 @@ DrawTarget* CanvasRenderingContext2D::sErrorTarget = nullptr;
 
 
 CanvasRenderingContext2D::CanvasRenderingContext2D()
-  : mForceSoftware(false), mZero(false), mOpaque(false), mResetLayer(true)
+  : mForceSoftware(false)
+  // these are the default values from the Canvas spec
+  , mWidth(300), mHeight(150)
+  , mZero(false), mOpaque(false)
+  , mResetLayer(true)
   , mIPC(false)
   , mStream(nullptr)
   , mIsEntireFrameInvalid(false)
