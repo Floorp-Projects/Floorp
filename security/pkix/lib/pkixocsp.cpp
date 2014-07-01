@@ -460,14 +460,8 @@ BasicResponse(der::Input& input, Context& context)
         return der::Fail(SEC_ERROR_BAD_DER);
       }
 
-      // Unwrap the SEQUENCE that contains the certificate, which is itself a
-      // SEQUENCE.
-      der::Input::Mark mark(input.GetMark());
-      if (der::ExpectTagAndSkipValue(input, der::SEQUENCE) != der::Success) {
-        return der::Failure;
-      }
-
-      if (input.GetSECItem(siBuffer, mark, certs[numCerts]) != der::Success) {
+      if (der::ExpectTagAndGetTLV(input, der::SEQUENCE, certs[numCerts])
+            != der::Success) {
         return der::Failure;
       }
       ++numCerts;
