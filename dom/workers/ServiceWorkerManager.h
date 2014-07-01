@@ -25,6 +25,7 @@ namespace dom {
 namespace workers {
 
 class ServiceWorker;
+class ServiceWorkerContainer;
 class ServiceWorkerUpdateInstance;
 
 /**
@@ -242,6 +243,9 @@ public:
               nsPIDOMWindow* aWindow);
 
   void
+  FinishInstall(ServiceWorkerRegistration* aRegistration);
+
+  void
   HandleError(JSContext* aCx,
               const nsACString& aScope,
               const nsAString& aWorkerURL,
@@ -266,11 +270,16 @@ private:
   Install(ServiceWorkerRegistration* aRegistration,
           ServiceWorkerInfo aServiceWorkerInfo);
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   CreateServiceWorkerForWindow(nsPIDOMWindow* aWindow,
                                const nsACString& aScriptSpec,
                                const nsACString& aScope,
                                ServiceWorker** aServiceWorker);
+
+  NS_IMETHOD
+  CreateServiceWorker(const nsACString& aScriptSpec,
+                      const nsACString& aScope,
+                      ServiceWorker** aServiceWorker);
 
   static PLDHashOperator
   CleanupServiceWorkerInformation(const nsACString& aDomain,
