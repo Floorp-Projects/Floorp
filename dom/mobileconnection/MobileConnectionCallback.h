@@ -6,6 +6,7 @@
 #define mozilla_dom_MobileConnectionCallback_h
 
 #include "mozilla/dom/DOMRequest.h"
+#include "mozilla/dom/MobileConnectionIPCSerializer.h"
 #include "nsCOMPtr.h"
 #include "nsIMobileConnectionService.h"
 
@@ -29,6 +30,37 @@ public:
   NS_DECL_NSIMOBILECONNECTIONCALLBACK
 
   MobileConnectionCallback(nsPIDOMWindow* aWindow, DOMRequest* aRequest);
+
+  /**
+   * Notify Success for Send/CancelMmi.
+   */
+  nsresult
+  NotifySendCancelMmiSuccess(const nsAString& aServiceCode,
+                             const nsAString& aStatusMessage);
+  nsresult
+  NotifySendCancelMmiSuccess(const nsAString& aServiceCode,
+                             const nsAString& aStatusMessage,
+                             JS::Handle<JS::Value> aAdditionalInformation);
+  nsresult
+  NotifySendCancelMmiSuccess(const nsAString& aServiceCode,
+                             const nsAString& aStatusMessage,
+                             uint16_t aAdditionalInformation);
+  nsresult
+  NotifySendCancelMmiSuccess(const nsAString& aServiceCode,
+                             const nsAString& aStatusMessage,
+                             const nsTArray<nsString>& aAdditionalInformation);
+  nsresult
+  NotifySendCancelMmiSuccess(const nsAString& aServiceCode,
+                             const nsAString& aStatusMessage,
+                             const nsTArray<IPC::MozCallForwardingOptions>& aAdditionalInformation);
+  nsresult
+  NotifySendCancelMmiSuccess(const MozMMIResult& aResult);
+
+  /**
+   * Notify Success for GetCallForwarding.
+   */
+  nsresult
+  NotifyGetCallForwardingSuccess(const nsTArray<IPC::MozCallForwardingOptions>& aResults);
 
 private:
   ~MobileConnectionCallback() {}

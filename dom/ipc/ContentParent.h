@@ -463,6 +463,9 @@ private:
     virtual PTestShellParent* AllocPTestShellParent() MOZ_OVERRIDE;
     virtual bool DeallocPTestShellParent(PTestShellParent* shell) MOZ_OVERRIDE;
 
+    virtual PMobileConnectionParent* AllocPMobileConnectionParent(const uint32_t& aClientId) MOZ_OVERRIDE;
+    virtual bool DeallocPMobileConnectionParent(PMobileConnectionParent* aActor) MOZ_OVERRIDE;
+
     virtual bool DeallocPNeckoParent(PNeckoParent* necko) MOZ_OVERRIDE;
 
     virtual PExternalHelperAppParent* AllocPExternalHelperAppParent(
