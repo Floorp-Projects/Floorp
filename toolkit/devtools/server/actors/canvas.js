@@ -256,7 +256,8 @@ let CanvasActor = exports.CanvasActor = protocol.ActorClass({
     this._callWatcher.setup({
       tracedGlobals: CANVAS_CONTEXTS,
       tracedFunctions: ANIMATION_GENERATORS,
-      performReload: reload
+      performReload: reload,
+      storeCalls: true
     });
   }, {
     request: { reload: Option(0, "boolean") },
