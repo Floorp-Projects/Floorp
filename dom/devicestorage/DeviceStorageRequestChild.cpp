@@ -72,8 +72,8 @@ DeviceStorageRequestChild::
       nsString fullPath;
       mDSFile->GetFullPath(fullPath);
       AutoJSContext cx;
-      JS::Rooted<JS::Value> result(cx,
-        StringToJsval(mRequest->GetOwner(), fullPath));
+      JS::Rooted<JS::Value> result(cx);
+      StringToJsval(mRequest->GetOwner(), fullPath, &result);
       mRequest->FireSuccess(result);
       break;
     }
@@ -85,8 +85,8 @@ DeviceStorageRequestChild::
       nsString fullPath;
       mDSFile->GetFullPath(fullPath);
       AutoJSContext cx;
-      JS::Rooted<JS::Value> result(cx,
-        StringToJsval(mRequest->GetOwner(), fullPath));
+      JS::Rooted<JS::Value> result(cx);
+      StringToJsval(mRequest->GetOwner(), fullPath, &result);
 
       mDSFileDescriptor->mDSFile = mDSFile;
       mDSFileDescriptor->mFileDescriptor = r.fileDescriptor();
@@ -130,8 +130,8 @@ DeviceStorageRequestChild::
     {
       AvailableStorageResponse r = aValue;
       AutoJSContext cx;
-      JS::Rooted<JS::Value> result(
-        cx, StringToJsval(mRequest->GetOwner(), r.mountState()));
+      JS::Rooted<JS::Value> result(cx);
+      StringToJsval(mRequest->GetOwner(), r.mountState(), &result);
       mRequest->FireSuccess(result);
       break;
     }
@@ -140,8 +140,8 @@ DeviceStorageRequestChild::
     {
       StorageStatusResponse r = aValue;
       AutoJSContext cx;
-      JS::Rooted<JS::Value> result(
-        cx, StringToJsval(mRequest->GetOwner(), r.storageStatus()));
+      JS::Rooted<JS::Value> result(cx);
+      StringToJsval(mRequest->GetOwner(), r.storageStatus(), &result);
       mRequest->FireSuccess(result);
       break;
     }
@@ -150,8 +150,8 @@ DeviceStorageRequestChild::
     {
       FormatStorageResponse r = aValue;
       AutoJSContext cx;
-      JS::Rooted<JS::Value> result(
-        cx, StringToJsval(mRequest->GetOwner(), r.mountState()));
+      JS::Rooted<JS::Value> result(cx);
+      StringToJsval(mRequest->GetOwner(), r.mountState(), &result);
       mRequest->FireSuccess(result);
       break;
     }
@@ -160,8 +160,8 @@ DeviceStorageRequestChild::
     {
       MountStorageResponse r = aValue;
       AutoJSContext cx;
-      JS::Rooted<JS::Value> result(
-        cx, StringToJsval(mRequest->GetOwner(), r.storageStatus()));
+      JS::Rooted<JS::Value> result(cx);
+      StringToJsval(mRequest->GetOwner(), r.storageStatus(), &result);
       mRequest->FireSuccess(result);
       break;
     }
@@ -170,8 +170,8 @@ DeviceStorageRequestChild::
     {
       UnmountStorageResponse r = aValue;
       AutoJSContext cx;
-      JS::Rooted<JS::Value> result(
-        cx, StringToJsval(mRequest->GetOwner(), r.storageStatus()));
+      JS::Rooted<JS::Value> result(cx);
+      StringToJsval(mRequest->GetOwner(), r.storageStatus(), &result);
       mRequest->FireSuccess(result);
       break;
     }
