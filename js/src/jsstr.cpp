@@ -719,7 +719,7 @@ ToLowerCase(JSContext *cx, JSLinearString *str)
         newChars[length] = 0;
     }
 
-    JSString *res = NewString<CanGC>(cx, newChars.get(), length);
+    JSString *res = NewStringDontDeflate<CanGC>(cx, newChars.get(), length);
     if (!res)
         return nullptr;
 
@@ -4205,16 +4205,10 @@ js::str_fromCharCode_one_arg(JSContext *cx, HandleValue code, MutableHandleValue
         return true;
     }
 
-    jschar *chars = cx->pod_malloc<jschar>(2);
-    if (!chars)
+    jschar c = jschar(ucode);
+    JSString *str = NewStringCopyN<CanGC>(cx, &c, 1);
+    if (!str)
         return false;
-    chars[0] = jschar(ucode);
-    chars[1] = 0;
-    JSString *str = NewString<CanGC>(cx, chars, 1);
-    if (!str) {
-        js_free(chars);
-        return false;
-    }
 
     rval.setString(str);
     return true;
@@ -4280,35 +4274,6 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
 
     return proto;
 }
-
-template <AllowGC allowGC, typename CharT>
-JSFlatString *
-js::NewString(ThreadSafeContext *cx, CharT *chars, size_t length)
-{
-    if (length == 1) {
-        jschar c = chars[0];
-        if (StaticStrings::hasUnit(c)) {
-            // Free |chars| because we're taking possession of it, but it's no
-            // longer needed because we use the static string instead.
-            js_free(chars);
-            return cx->staticStrings().getUnit(c);
-        }
-    }
-
-    return JSFlatString::new_<allowGC>(cx, chars, length);
-}
-
-template JSFlatString *
-js::NewString<CanGC>(ThreadSafeContext *cx, jschar *chars, size_t length);
-
-template JSFlatString *
-js::NewString<NoGC>(ThreadSafeContext *cx, jschar *chars, size_t length);
-
-template JSFlatString *
-js::NewString<CanGC>(ThreadSafeContext *cx, Latin1Char *chars, size_t length);
-
-template JSFlatString *
-js::NewString<NoGC>(ThreadSafeContext *cx, Latin1Char *chars, size_t length);
 
 JSLinearString *
 js::NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t length)
@@ -4415,7 +4380,7 @@ NewStringDeflated(ThreadSafeContext *cx, const jschar *s, size_t n)
     }
     news[n] = '\0';
 
-    JSFlatString *str = NewString<allowGC>(cx, news.get(), n);
+    JSFlatString *str = JSFlatString::new_<allowGC>(cx, news.get(), n);
     if (!str)
         return nullptr;
 
@@ -4429,6 +4394,72 @@ NewStringDeflated(ThreadSafeContext *cx, const Latin1Char *s, size_t n)
 {
     MOZ_CRASH("Shouldn't be called for Latin1 chars");
 }
+
+template <AllowGC allowGC, typename CharT>
+JSFlatString *
+js::NewStringDontDeflate(ThreadSafeContext *cx, CharT *chars, size_t length)
+{
+    if (length == 1) {
+        jschar c = chars[0];
+        if (StaticStrings::hasUnit(c)) {
+            // Free |chars| because we're taking possession of it, but it's no
+            // longer needed because we use the static string instead.
+            js_free(chars);
+            return cx->staticStrings().getUnit(c);
+        }
+    }
+
+    return JSFlatString::new_<allowGC>(cx, chars, length);
+}
+
+template JSFlatString *
+js::NewStringDontDeflate<CanGC>(ThreadSafeContext *cx, jschar *chars, size_t length);
+
+template JSFlatString *
+js::NewStringDontDeflate<NoGC>(ThreadSafeContext *cx, jschar *chars, size_t length);
+
+template JSFlatString *
+js::NewStringDontDeflate<CanGC>(ThreadSafeContext *cx, Latin1Char *chars, size_t length);
+
+template JSFlatString *
+js::NewStringDontDeflate<NoGC>(ThreadSafeContext *cx, Latin1Char *chars, size_t length);
+
+template <AllowGC allowGC, typename CharT>
+JSFlatString *
+js::NewString(ThreadSafeContext *cx, CharT *chars, size_t length)
+{
+    if (IsSame<CharT, jschar>::value && CanStoreCharsAsLatin1(chars, length)) {
+        if (length == 1) {
+            jschar c = chars[0];
+            if (StaticStrings::hasUnit(c)) {
+                js_free(chars);
+                return cx->staticStrings().getUnit(c);
+            }
+        }
+
+        JSFlatString *s = NewStringDeflated<allowGC>(cx, chars, length);
+        if (!s)
+            return nullptr;
+
+        // Free |chars| because we're taking possession of it but not using it.
+        js_free(chars);
+        return s;
+    }
+
+    return NewStringDontDeflate<allowGC>(cx, chars, length);
+}
+
+template JSFlatString *
+js::NewString<CanGC>(ThreadSafeContext *cx, jschar *chars, size_t length);
+
+template JSFlatString *
+js::NewString<NoGC>(ThreadSafeContext *cx, jschar *chars, size_t length);
+
+template JSFlatString *
+js::NewString<CanGC>(ThreadSafeContext *cx, Latin1Char *chars, size_t length);
+
+template JSFlatString *
+js::NewString<NoGC>(ThreadSafeContext *cx, Latin1Char *chars, size_t length);
 
 namespace js {
 
@@ -4447,7 +4478,7 @@ NewStringCopyNDontDeflate(ThreadSafeContext *cx, const CharT *s, size_t n)
         PodCopy(news.get(), s, n);
         news[n] = 0;
 
-        JSFlatString *str = NewString<allowGC>(cx, news.get(), n);
+        JSFlatString *str = JSFlatString::new_<allowGC>(cx, news.get(), n);
         if (!str)
             return nullptr;
 
@@ -4465,7 +4496,7 @@ NewStringCopyNDontDeflate(ThreadSafeContext *cx, const CharT *s, size_t n)
     CopyCharsMaybeInflate(news.get(), s, n);
     news[n] = 0;
 
-    JSFlatString *str = NewString<allowGC>(cx, news.get(), n);
+    JSFlatString *str = JSFlatString::new_<allowGC>(cx, news.get(), n);
     if (!str)
         return nullptr;
 

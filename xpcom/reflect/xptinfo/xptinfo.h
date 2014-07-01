@@ -15,7 +15,7 @@ class nsIInterfaceInfoManager;
 
 // Flyweight wrapper classes for xpt_struct.h structs. 
 // Everything here is dependent upon - and sensitive to changes in -
-// xpcom/typelib/xpt/public/xpt_struct.h!
+// xpcom/typelib/xpt/xpt_struct.h!
 
 class nsXPTType : public XPTTypeDescriptorPrefix
 {
