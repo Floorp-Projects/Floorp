@@ -444,6 +444,23 @@ this.MozLoopService = {
   },
 
   /**
+   * Set any character preference under "loop.".
+   *
+   * @param {String} prefName The name of the pref without the preceding "loop."
+   * @param {String} value The value to set.
+   *
+   * Any errors thrown by the Mozilla pref API are logged to the console.
+   */
+  setLoopCharPref: function(prefName, value) {
+    try {
+      Services.prefs.setCharPref("loop." + prefName, value);
+    } catch (ex) {
+      console.log("setLoopCharPref had trouble setting " + prefName +
+        "; exception: " + ex);
+    }
+  },
+
+  /**
    * Return any preference under "loop." that's coercible to a character
    * preference.
    *
