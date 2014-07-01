@@ -19,7 +19,6 @@ resjar.generated_sources += [
 
 if CONFIG['MOZ_NATIVE_DEVICES']:
     resjar.generated_sources += ['com/google/android/gms/R.java']
-    DEFINES["GOOGLE_PLAY_SERVICES"] = 1
     resjar.generated_sources += ['android/support/v7/appcompat/R.java']
     resjar.generated_sources += ['android/support/v7/mediarouter/R.java']
 
@@ -477,6 +476,8 @@ if CONFIG['MOZ_NATIVE_DEVICES']:
     gbjar.extra_jars += [CONFIG['ANDROID_APPCOMPAT_LIB']]
     gbjar.extra_jars += [CONFIG['ANDROID_MEDIAROUTER_LIB']]
     gbjar.extra_jars += [CONFIG['GOOGLE_PLAY_SERVICES_LIB']]
+    gbjar.sources += ['ChromeCast.java']
+    gbjar.sources += ['MediaPlayerManager.java']
 
 gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough']
 
@@ -528,7 +529,7 @@ ANDROID_GENERATED_RESFILES += [
 ]
 
 for var in ('MOZ_ANDROID_ANR_REPORTER', 'MOZ_LINKER_EXTRACT', 'MOZILLA_OFFICIAL', 'MOZ_DEBUG',
-            'MOZ_ANDROID_SEARCH_ACTIVITY'):
+            'MOZ_ANDROID_SEARCH_ACTIVITY', 'MOZ_NATIVE_DEVICES'):
     if CONFIG[var]:
         DEFINES[var] = 1
 
