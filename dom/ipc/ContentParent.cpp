@@ -157,6 +157,8 @@ using namespace mozilla::system;
 
 #include "JavaScriptParent.h"
 
+#include "mozilla/RemoteSpellCheckEngineParent.h"
+
 #ifdef MOZ_B2G_FM
 #include "mozilla/dom/FMRadioParent.h"
 #endif
@@ -2690,6 +2692,20 @@ bool
 ContentParent::DeallocPBlobParent(PBlobParent* aActor)
 {
     delete aActor;
+    return true;
+}
+
+mozilla::PRemoteSpellcheckEngineParent *
+ContentParent::AllocPRemoteSpellcheckEngineParent()
+{
+    mozilla::RemoteSpellcheckEngineParent *parent = new mozilla::RemoteSpellcheckEngineParent();
+    return parent;
+}
+
+bool
+ContentParent::DeallocPRemoteSpellcheckEngineParent(PRemoteSpellcheckEngineParent *parent)
+{
+    delete parent;
     return true;
 }
 
