@@ -47,6 +47,7 @@
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MessagePortList.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/Preferences.h"
 #include "nsAlgorithm.h"
@@ -1843,14 +1844,11 @@ class WorkerPrivateParent<Derived>::SynchronizeAndResumeRunnable MOZ_FINAL
 
   WorkerPrivate* mWorkerPrivate;
   nsCOMPtr<nsPIDOMWindow> mWindow;
-  nsCOMPtr<nsIScriptContext> mScriptContext;
 
 public:
   SynchronizeAndResumeRunnable(WorkerPrivate* aWorkerPrivate,
-                               nsPIDOMWindow* aWindow,
-                               nsIScriptContext* aScriptContext)
-  : mWorkerPrivate(aWorkerPrivate), mWindow(aWindow),
-    mScriptContext(aScriptContext)
+                               nsPIDOMWindow* aWindow)
+  : mWorkerPrivate(aWorkerPrivate), mWindow(aWindow)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aWorkerPrivate);
@@ -1868,9 +1866,11 @@ private:
     AssertIsOnMainThread();
 
     if (mWorkerPrivate) {
-      AutoPushJSContext cx(mScriptContext ?
-                           mScriptContext->GetNativeContext() :
-                           nsContentUtils::GetSafeJSContext());
+      AutoJSAPI jsapi;
+      if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(mWindow))) {
+        return NS_OK;
+      }
+      JSContext* cx = jsapi.cx();
 
       if (!mWorkerPrivate->Resume(cx, mWindow)) {
         JS_ReportPendingException(cx);
@@ -1889,7 +1889,6 @@ private:
 
     mWorkerPrivate = nullptr;
     mWindow = nullptr;
-    mScriptContext = nullptr;
   }
 };
 
@@ -2609,8 +2608,7 @@ template <class Derived>
 bool
 WorkerPrivateParent<Derived>::SynchronizeAndResume(
                                                JSContext* aCx,
-                                               nsPIDOMWindow* aWindow,
-                                               nsIScriptContext* aScriptContext)
+                                               nsPIDOMWindow* aWindow)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(!GetParent());
@@ -2623,8 +2621,7 @@ WorkerPrivateParent<Derived>::SynchronizeAndResume(
   // the messages.
 
   nsRefPtr<SynchronizeAndResumeRunnable> runnable =
-    new SynchronizeAndResumeRunnable(ParentAsWorkerPrivate(), aWindow,
-                                     aScriptContext);
+    new SynchronizeAndResumeRunnable(ParentAsWorkerPrivate(), aWindow);
   if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
     JS_ReportError(aCx, "Failed to dispatch to current thread!");
     return false;

@@ -2133,7 +2133,7 @@ RuntimeService::ResumeWorkersForWindow(nsPIDOMWindow* aWindow)
                          nsContentUtils::GetSafeJSContext());
 
     for (uint32_t index = 0; index < workers.Length(); index++) {
-      if (!workers[index]->SynchronizeAndResume(cx, aWindow, scx)) {
+      if (!workers[index]->SynchronizeAndResume(cx, aWindow)) {
         JS_ReportPendingException(cx);
       }
     }
