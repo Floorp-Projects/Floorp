@@ -26,7 +26,7 @@ function dial() {
       is(outgoing, event.call);
       is(outgoing.state, "alerting");
 
-      emulator.runCmdWithCallback("gsm list", function(result) {
+      emulator.runWithCallback("gsm list", function(result) {
         log("Call list is now: " + result);
         is(result[0], "outbound to  " + number + " : ringing");
         answer();
@@ -47,13 +47,13 @@ function answer() {
 
     is(outgoing, telephony.active);
 
-    emulator.runCmdWithCallback("gsm list", function(result) {
+    emulator.runWithCallback("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "outbound to  " + number + " : active");
       hold();
     });
   };
-  emulator.runCmdWithCallback("gsm accept " + number);
+  emulator.runWithCallback("gsm accept " + number);
 }
 
 function hold() {
@@ -75,7 +75,7 @@ function hold() {
     is(telephony.active, null);
     is(telephony.calls.length, 1);
 
-    emulator.runCmdWithCallback("gsm list", function(result) {
+    emulator.runWithCallback("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "outbound to  " + number + " : held");
       hangUp();
@@ -104,7 +104,7 @@ function hangUp() {
     is(telephony.active, null);
     is(telephony.calls.length, 0);
 
-    emulator.runCmdWithCallback("gsm list", function(result) {
+    emulator.runWithCallback("gsm list", function(result) {
       log("Call list is now: " + result);
       cleanUp();
     });
