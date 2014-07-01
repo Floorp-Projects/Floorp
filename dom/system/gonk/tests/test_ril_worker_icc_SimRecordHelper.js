@@ -486,4 +486,119 @@ add_test(function test_read_new_sms_on_sim() {
   run_next_test();
 });
 
+/**
+ * Verify the result of updateDisplayCondition after reading EF_SPDI | EF_SPN.
+ */
+add_test(function test_update_display_condition() {
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let record = context.SimRecordHelper;
+  let helper = context.GsmPDUHelper;
+  let ril    = context.RIL;
+  let buf    = context.Buf;
+  let io     = context.ICCIOHelper;
 
+  function do_test_spdi() {
+    // No EF_SPN, but having EF_SPDI.
+    // It implies "ril.iccInfoPrivate.spnDisplayCondition = undefined;".
+    io.loadTransparentEF = function fakeLoadTransparentEF(options) {
+      // PLMN lists are : 234-136 and 466-92.
+      let spdi = [0xA3, 0x0B, 0x80, 0x09, 0x32, 0x64, 0x31, 0x64, 0x26, 0x9F,
+                  0xFF, 0xFF, 0xFF];
+
+      // Write data size.
+      buf.writeInt32(spdi.length * 2);
+
+      // Write data.
+      for (let i = 0; i < spdi.length; i++) {
+        helper.writeHexOctet(spdi[i]);
+      }
+
+      // Write string delimiter.
+      buf.writeStringDelimiter(spdi.length * 2);
+
+      if (options.callback) {
+        options.callback(options);
+      }
+    };
+
+    record.readSPDI();
+
+    do_check_eq(ril.iccInfo.isDisplayNetworkNameRequired, true);
+    do_check_eq(ril.iccInfo.isDisplaySpnRequired, false);
+  }
+
+  function do_test_spn(displayCondition,
+                       expectedPlmnNameDisplay,
+                       expectedSpnDisplay) {
+    io.loadTransparentEF = function fakeLoadTransparentEF(options) {
+      // "Android" as Service Provider Name.
+      let spn = [0x41, 0x6E, 0x64, 0x72, 0x6F, 0x69, 0x64];
+      if (typeof displayCondition === 'number') {
+        spn.unshift(displayCondition);
+      }
+
+      // Write data size.
+      buf.writeInt32(spn.length * 2);
+
+      // Write data.
+      for (let i = 0; i < spn.length; i++) {
+        helper.writeHexOctet(spn[i]);
+      }
+
+      // Write string delimiter.
+      buf.writeStringDelimiter(spn.length * 2);
+
+      if (options.callback) {
+        options.callback(options);
+      }
+    };
+
+    record.readSPN();
+
+    do_check_eq(ril.iccInfo.isDisplayNetworkNameRequired, expectedPlmnNameDisplay);
+    do_check_eq(ril.iccInfo.isDisplaySpnRequired, expectedSpnDisplay);
+  }
+
+  // Create empty operator object.
+  ril.operator = {};
+  // Setup SIM MCC-MNC to 310-260 as home network.
+  ril.iccInfo.mcc = 310;
+  ril.iccInfo.mnc = 260;
+
+  do_test_spdi();
+
+  // No network.
+  do_test_spn(0x00, true, true);
+  do_test_spn(0x01, true, true);
+  do_test_spn(0x02, true, false);
+  do_test_spn(0x03, true, false);
+
+  // Home network.
+  ril.operator.mcc = 310;
+  ril.operator.mnc = 260;
+  do_test_spn(0x00, false, true);
+  do_test_spn(0x01, true, true);
+  do_test_spn(0x02, false, true);
+  do_test_spn(0x03, true, true);
+
+  // Not HPLMN but in PLMN list.
+  ril.iccInfoPrivate.SPDI = [{"mcc":"234","mnc":"136"},{"mcc":"466","mnc":"92"}];
+  ril.operator.mcc = 466;
+  ril.operator.mnc = 92;
+  do_test_spn(0x00, false, true);
+  do_test_spn(0x01, true, true);
+  do_test_spn(0x02, false, true);
+  do_test_spn(0x03, true, true);
+  ril.iccInfoPrivate.SPDI = null; // reset SPDI to null;
+
+  // Non-Home network.
+  ril.operator.mcc = 466;
+  ril.operator.mnc = 01;
+  do_test_spn(0x00, true, true);
+  do_test_spn(0x01, true, true);
+  do_test_spn(0x02, true, false);
+  do_test_spn(0x03, true, false);
+
+  run_next_test();
+});
