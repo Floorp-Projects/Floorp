@@ -562,7 +562,7 @@ GlobalHelperThreadState::canStartAsmJSCompile()
 }
 
 static bool
-IonBuilderHasHigherPriority(IonBuilder *first, IonBuilder *second)
+IonBuilderHasHigherPriority(jit::IonBuilder *first, jit::IonBuilder *second)
 {
     // This method can return whatever it wants, though it really ought to be a
     // total order. The ordering is allowed to race (change on the fly), however.
