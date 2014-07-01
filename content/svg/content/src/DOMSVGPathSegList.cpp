@@ -383,6 +383,7 @@ DOMSVGPathSegList::InsertItemBefore(DOMSVGPathSeg& aNewItem,
   domItem->ToSVGPathSegEncodedData(segAsRaw);
 
   InternalList().mData.InsertElementsAt(internalIndex, segAsRaw, 1 + argCount);
+  InternalList().mCachedPath = nullptr;
   mItems.InsertElementAt(aIndex, ItemProxy(domItem.get(), internalIndex));
 
   // This MUST come after the insertion into InternalList(), or else under the
@@ -439,6 +440,7 @@ DOMSVGPathSegList::ReplaceItem(DOMSVGPathSeg& aNewItem,
   bool ok = !!InternalList().mData.ReplaceElementsAt(
                   internalIndex, 1 + oldArgCount,
                   segAsRaw, 1 + newArgCount);
+  InternalList().mCachedPath = nullptr;
   if (!ok) {
     aError.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
@@ -493,6 +495,7 @@ DOMSVGPathSegList::RemoveItem(uint32_t aIndex,
   MaybeRemoveItemFromAnimValListAt(aIndex, argCount);
 
   InternalList().mData.RemoveElementsAt(internalIndex, 1 + argCount);
+  InternalList().mCachedPath = nullptr;
   mItems.RemoveElementAt(aIndex);
 
   UpdateListIndicesFromIndex(aIndex, -(argCount + 1));
