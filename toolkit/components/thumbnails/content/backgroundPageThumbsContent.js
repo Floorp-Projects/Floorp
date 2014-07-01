@@ -84,9 +84,16 @@ const backgroundPageThumbsContent = {
     delete this._nextCapture;
     this._state = STATE_LOADING;
     this._currentCapture.pageLoadStartDate = new Date();
-    this._webNav.loadURI(this._currentCapture.url,
-                         Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT,
-                         null, null, null);
+
+    try {
+      this._webNav.loadURI(this._currentCapture.url,
+                           Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT,
+                           null, null, null);
+    } catch (e) {
+      this._failCurrentCapture("BAD_URI");
+      delete this._currentCapture;
+      this._startNextCapture();
+    }
   },
 
   onStateChange: function (webProgress, req, flags, status) {
@@ -148,6 +155,14 @@ const backgroundPageThumbsContent = {
       });
     };
     fileReader.readAsArrayBuffer(capture.imageBlob);
+  },
+
+  _failCurrentCapture: function (reason) {
+    let capture = this._currentCapture;
+    sendAsyncMessage("BackgroundPageThumbs:didCapture", {
+      id: capture.id,
+      failReason: reason,
+    });
   },
 
   // We load about:blank to finish all captures, even canceled captures.  Two
