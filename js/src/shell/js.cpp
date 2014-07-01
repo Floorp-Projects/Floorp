@@ -86,7 +86,6 @@ using mozilla::ArrayLength;
 using mozilla::NumberEqualsInt32;
 using mozilla::Maybe;
 using mozilla::PodCopy;
-using mozilla::Range;
 
 enum JSShellExitCode {
     EXITCODE_RUNTIME_ERROR      = 3,
@@ -1268,7 +1267,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             if (loadBytecode) {
                 script = JS_DecodeScript(cx, loadBuffer, loadLength, options.originPrincipals(cx));
             } else {
-                Range<const jschar> chars = codeChars.twoByteRange();
+                mozilla::Range<const jschar> chars = codeChars.twoByteRange();
                 script = JS::Compile(cx, global, options, chars.start().get(), chars.length());
             }
 
@@ -1810,7 +1809,7 @@ TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rvalArg,
     if (!stableChars.initTwoByte(cx, str))
         return JSTRAP_ERROR;
 
-    Range<const jschar> chars = stableChars.twoByteRange();
+    mozilla::Range<const jschar> chars = stableChars.twoByteRange();
     if (!frame.evaluateUCInStackFrame(cx, chars.start().get(), chars.length(),
                                       script->filename(),
                                       script->lineno(),
@@ -2532,7 +2531,7 @@ Intern(JSContext *cx, unsigned argc, jsval *vp)
     if (!strChars.initTwoByte(cx, str))
         return false;
 
-    Range<const jschar> chars = strChars.twoByteRange();
+    mozilla::Range<const jschar> chars = strChars.twoByteRange();
 
     if (!JS_InternUCStringN(cx, chars.start().get(), chars.length()))
         return false;
@@ -2767,7 +2766,7 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
     if (!strChars.initTwoByte(cx, str))
         return false;
 
-    Range<const jschar> chars = strChars.twoByteRange();
+    mozilla::Range<const jschar> chars = strChars.twoByteRange();
     size_t srclen = chars.length();
     const jschar *src = chars.start().get();
 
@@ -2865,7 +2864,7 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     if (!stableChars.initTwoByte(cx, str))
         return JSTRAP_ERROR;
 
-    Range<const jschar> chars = stableChars.twoByteRange();
+    mozilla::Range<const jschar> chars = stableChars.twoByteRange();
     JSAbstractFramePtr frame(fi.abstractFramePtr().raw(), fi.pc());
     RootedScript fpscript(cx, frame.script());
     bool ok = !!frame.evaluateUCInStackFrame(cx, chars.start().get(), chars.length(),
