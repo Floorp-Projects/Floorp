@@ -371,7 +371,10 @@ WrapperOwner::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
 		  HandleId id, MutableHandleValue vp)
 {
     ObjectId objId = idOf(proxy);
-    ObjectId receiverId = idOf(receiver);
+
+    ObjectVariant receiverVar;
+    if (!toObjectVariant(cx, receiver, &receiverVar))
+        return false;
 
     nsString idstr;
     if (!convertIdToGeckoString(cx, id, &idstr))
@@ -379,7 +382,7 @@ WrapperOwner::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
 
     JSVariant val;
     ReturnStatus status;
-    if (!CallGet(objId, receiverId, idstr, &status, &val))
+    if (!CallGet(objId, receiverVar, idstr, &status, &val))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -418,7 +421,10 @@ WrapperOwner::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiv
 		  JS::HandleId id, bool strict, JS::MutableHandleValue vp)
 {
     ObjectId objId = idOf(proxy);
-    ObjectId receiverId = idOf(receiver);
+
+    ObjectVariant receiverVar;
+    if (!toObjectVariant(cx, receiver, &receiverVar))
+        return false;
 
     nsString idstr;
     if (!convertIdToGeckoString(cx, id, &idstr))
@@ -430,7 +436,7 @@ WrapperOwner::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiv
 
     ReturnStatus status;
     JSVariant result;
-    if (!CallSet(objId, receiverId, idstr, strict, val, &status, &result))
+    if (!CallSet(objId, receiverVar, idstr, strict, val, &status, &result))
         return ipcfail(cx);
 
     LOG_STACK();

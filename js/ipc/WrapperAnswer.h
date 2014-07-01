@@ -36,10 +36,10 @@ class WrapperAnswer : public virtual JavaScriptShared
                        ReturnStatus *rs, bool *bp);
     bool AnswerHasOwn(const ObjectId &objId, const nsString &id,
                           ReturnStatus *rs, bool *bp);
-    bool AnswerGet(const ObjectId &objId, const ObjectId &receiverId,
+    bool AnswerGet(const ObjectId &objId, const ObjectVariant &receiverVar,
                        const nsString &id,
                        ReturnStatus *rs, JSVariant *result);
-    bool AnswerSet(const ObjectId &objId, const ObjectId &receiverId,
+    bool AnswerSet(const ObjectId &objId, const ObjectVariant &receiverVar,
                    const nsString &id, const bool &strict,
                    const JSVariant &value, ReturnStatus *rs, JSVariant *result);
 

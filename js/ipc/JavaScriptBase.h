@@ -67,15 +67,15 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
                       ReturnStatus *rs, bool *bp) {
         return Answer::AnswerHasOwn(objId, id, rs, bp);
     }
-    bool AnswerGet(const ObjectId &objId, const ObjectId &receiverId,
+    bool AnswerGet(const ObjectId &objId, const ObjectVariant &receiverVar,
                    const nsString &id,
                    ReturnStatus *rs, JSVariant *result) {
-        return Answer::AnswerGet(objId, receiverId, id, rs, result);
+        return Answer::AnswerGet(objId, receiverVar, id, rs, result);
     }
-    bool AnswerSet(const ObjectId &objId, const ObjectId &receiverId,
+    bool AnswerSet(const ObjectId &objId, const ObjectVariant &receiverVar,
                    const nsString &id, const bool &strict,
                    const JSVariant &value, ReturnStatus *rs, JSVariant *result) {
-        return Answer::AnswerSet(objId, receiverId, id, strict, value, rs, result);
+        return Answer::AnswerSet(objId, receiverVar, id, strict, value, rs, result);
     }
 
     bool AnswerIsExtensible(const ObjectId &objId, ReturnStatus *rs,
@@ -149,15 +149,15 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
                     ReturnStatus *rs, bool *bp) {
         return Base::CallHasOwn(objId, id, rs, bp);
     }
-    bool CallGet(const ObjectId &objId, const ObjectId &receiverId,
+    bool CallGet(const ObjectId &objId, const ObjectVariant &receiverVar,
                  const nsString &id,
                  ReturnStatus *rs, JSVariant *result) {
-        return Base::CallGet(objId, receiverId, id, rs, result);
+        return Base::CallGet(objId, receiverVar, id, rs, result);
     }
-    bool CallSet(const ObjectId &objId, const ObjectId &receiverId,
+    bool CallSet(const ObjectId &objId, const ObjectVariant &receiverVar,
                  const nsString &id, const bool &strict,
                  const JSVariant &value, ReturnStatus *rs, JSVariant *result) {
-        return Base::CallSet(objId, receiverId, id, strict, value, rs, result);
+        return Base::CallSet(objId, receiverVar, id, strict, value, rs, result);
     }
 
     bool CallIsExtensible(const ObjectId &objId, ReturnStatus *rs,

@@ -116,10 +116,10 @@ class WrapperOwner : public virtual JavaScriptShared
                          ReturnStatus *rs, bool *bp) = 0;
     virtual bool CallHasOwn(const ObjectId &objId, const nsString &id,
                             ReturnStatus *rs, bool *bp) = 0;
-    virtual bool CallGet(const ObjectId &objId, const ObjectId &receiverId,
+    virtual bool CallGet(const ObjectId &objId, const ObjectVariant &receiverVar,
                          const nsString &id,
                          ReturnStatus *rs, JSVariant *result) = 0;
-    virtual bool CallSet(const ObjectId &objId, const ObjectId &receiverId,
+    virtual bool CallSet(const ObjectId &objId, const ObjectVariant &receiverVar,
                          const nsString &id, const bool &strict,
                          const JSVariant &value, ReturnStatus *rs, JSVariant *result) = 0;
 
