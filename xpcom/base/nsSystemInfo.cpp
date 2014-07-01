@@ -20,6 +20,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsIObserverService.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK
@@ -231,15 +232,19 @@ nsSystemInfo::Init()
       return rv;
     }
   }
-  nsAutoCString hddModel, hddRevision;
-  if (NS_SUCCEEDED(GetHDDInfo(NS_APP_USER_PROFILE_50_DIR, hddModel,
-                              hddRevision))) {
-    rv = SetPropertyAsACString(NS_LITERAL_STRING("profileHDDModel"), hddModel);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = SetPropertyAsACString(NS_LITERAL_STRING("profileHDDRevision"),
-                               hddRevision);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(GetProfileHDDInfo())) {
+    // We might have been called before profile-do-change. We'll observe that
+    // event so that we can fill this in later.
+    nsCOMPtr<nsIObserverService> obsService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    rv = obsService->AddObserver(this, "profile-do-change", false);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
+  nsAutoCString hddModel, hddRevision;
   if (NS_SUCCEEDED(GetHDDInfo(NS_GRE_DIR, hddModel, hddRevision))) {
     rv = SetPropertyAsACString(NS_LITERAL_STRING("binHDDModel"), hddModel);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -383,3 +388,45 @@ nsSystemInfo::SetUint64Property(const nsAString& aPropertyName,
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Unable to set property");
   }
 }
+
+#if defined(XP_WIN)
+NS_IMETHODIMP
+nsSystemInfo::Observe(nsISupports* aSubject, const char* aTopic,
+                      const char16_t* aData)
+{
+  if (!strcmp(aTopic, "profile-do-change")) {
+    nsresult rv;
+    nsCOMPtr<nsIObserverService> obsService = do_GetService(
+                                              NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = obsService->RemoveObserver(this, "profile-do-change");
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    return GetProfileHDDInfo();
+  }
+  return NS_OK;
+}
+
+nsresult
+nsSystemInfo::GetProfileHDDInfo()
+{
+  nsAutoCString hddModel, hddRevision;
+  nsresult rv = GetHDDInfo(NS_APP_USER_PROFILE_50_DIR, hddModel, hddRevision);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = SetPropertyAsACString(NS_LITERAL_STRING("profileHDDModel"), hddModel);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = SetPropertyAsACString(NS_LITERAL_STRING("profileHDDRevision"),
+                             hddRevision);
+  return rv;
+}
+
+NS_IMPL_ISUPPORTS_INHERITED(nsSystemInfo, nsHashPropertyBag, nsIObserver)
+#endif // defined(XP_WIN)
+
