@@ -12,6 +12,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/IDBOpenDBRequestBinding.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDOMClassInfoID.h"
@@ -188,18 +189,24 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
   }
 
   // Otherwise we need to get the result from the helper.
-  AutoPushJSContext cx(GetJSContext());
-  if (!cx) {
-    IDB_WARNING("Failed to get safe JSContext!");
-    rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    SetError(rv);
-    return rv;
+  AutoJSAPI jsapi;
+  Maybe<JSAutoCompartment> ac;
+  if (GetScriptOwner()) {
+    // If we have a script owner we want the SafeJSContext and then to enter
+    // the script owner's compartment.
+    jsapi.Init();
+    ac.construct(jsapi.cx(), GetScriptOwner());
+  } else {
+    // Otherwise our owner is a window and we use that to initialize.
+    if (!jsapi.InitWithLegacyErrorReporting(GetOwner())) {
+      IDB_WARNING("Failed to initialise AutoJSAPI!");
+      rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      SetError(rv);
+      return rv;
+    }
   }
+  JSContext* cx = jsapi.cx();
 
-  JS::Rooted<JSObject*> global(cx, IDBWrapperCache::GetParentObject());
-  NS_ASSERTION(global, "This should never be null!");
-
-  JSAutoCompartment ac(cx, global);
   AssertIsRooted();
 
   JS::Rooted<JS::Value> value(cx);
@@ -262,28 +269,6 @@ IDBRequest::GetErrorCode() const
   return mErrorCode;
 }
 #endif
-
-JSContext*
-IDBRequest::GetJSContext()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  JSContext* cx;
-
-  if (GetScriptOwner()) {
-    return nsContentUtils::GetSafeJSContext();
-  }
-
-  nsresult rv;
-  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  NS_ENSURE_TRUE(sc, nullptr);
-
-  cx = sc->GetNativeContext();
-  NS_ASSERTION(cx, "Failed to get a context!");
-
-  return cx;
-}
 
 void
 IDBRequest::CaptureCaller()

@@ -86,8 +86,6 @@ public:
 
   DOMError* GetError(ErrorResult& aRv);
 
-  JSContext* GetJSContext();
-
   void
   SetActor(IndexedDBRequestParentBase* aActorParent)
   {
