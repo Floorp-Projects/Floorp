@@ -381,8 +381,12 @@ WrapperAnswer::AnswerIsExtensible(const ObjectId &objId, ReturnStatus *rs, bool 
 }
 
 bool
-WrapperAnswer::AnswerCall(const ObjectId &objId, const nsTArray<JSParam> &argv, ReturnStatus *rs,
-			  JSVariant *result, nsTArray<JSParam> *outparams)
+WrapperAnswer::AnswerCallOrConstruct(const ObjectId &objId,
+                                     const nsTArray<JSParam> &argv,
+                                     const bool &construct,
+                                     ReturnStatus *rs,
+                                     JSVariant *result,
+                                     nsTArray<JSParam> *outparams)
 {
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
@@ -434,7 +438,11 @@ WrapperAnswer::AnswerCall(const ObjectId &objId, const nsTArray<JSParam> &argv, 
         ContextOptionsRef(cx).setDontReportUncaught(true);
 
         HandleValueArray args = HandleValueArray::subarray(vals, 2, vals.length() - 2);
-        bool success = JS::Call(cx, vals[1], vals[0], args, &rval);
+        bool success;
+        if (construct)
+            success = JS::Construct(cx, vals[0], args, &rval);
+        else
+            success = JS::Call(cx, vals[1], vals[0], args, &rval);
         if (!success)
             return fail(cx, rs);
     }

@@ -80,6 +80,7 @@ class CPOWProxyHandler : public BaseProxyHandler
 
     virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE;
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) const MOZ_OVERRIDE;
+    virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const MOZ_OVERRIDE;
     virtual bool objectClassIs(HandleObject obj, js::ESClassValue classValue,
                                JSContext *cx) const MOZ_OVERRIDE;
     virtual const char* className(JSContext *cx, HandleObject proxy) const MOZ_OVERRIDE;
@@ -336,7 +337,7 @@ WrapperOwner::toString(JSContext *cx, HandleObject cpow, JS::CallArgs &args)
     // Ask the other side to call its toString method. Update the callee so that
     // it points to the CPOW and not to the synthesized CPOWToString function.
     args.setCallee(ObjectValue(*cpow));
-    if (!call(cx, cpow, args))
+    if (!callOrConstruct(cx, cpow, args, false))
         return false;
 
     if (!args.rval().isString())
@@ -482,11 +483,18 @@ WrapperOwner::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible)
 bool
 CPOWProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args) const
 {
-    FORWARD(call, (cx, proxy, args));
+    FORWARD(callOrConstruct, (cx, proxy, args, false));
 }
 
 bool
-WrapperOwner::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
+CPOWProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const
+{
+    FORWARD(callOrConstruct, (cx, proxy, args, true));
+}
+
+bool
+WrapperOwner::callOrConstruct(JSContext *cx, HandleObject proxy, const CallArgs &args,
+                              bool construct)
 {
     ObjectId objId = idOf(proxy);
 
@@ -495,7 +503,12 @@ WrapperOwner::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 
     RootedValue v(cx);
     for (size_t i = 0; i < args.length() + 2; i++) {
-        v = args.base()[i];
+        // The |this| value for constructors is a magic value that we won't be
+        // able to convert, so skip it.
+        if (i == 1 && construct)
+            v = UndefinedValue();
+        else
+            v = args.base()[i];
         if (v.isObject()) {
             RootedObject obj(cx, &v.toObject());
             if (xpc::IsOutObject(cx, obj)) {
@@ -523,7 +536,7 @@ WrapperOwner::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
     JSVariant result;
     ReturnStatus status;
     InfallibleTArray<JSParam> outparams;
-    if (!CallCall(objId, vals, &status, &result, &outparams))
+    if (!CallCallOrConstruct(objId, vals, construct, &status, &result, &outparams))
         return ipcfail(cx);
 
     LOG_STACK();
