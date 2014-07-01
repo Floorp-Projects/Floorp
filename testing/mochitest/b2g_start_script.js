@@ -9,6 +9,8 @@ let wifiSettings = __marionetteParams[3]
 let prefs = Components.classes["@mozilla.org/preferences-service;1"].
                             getService(Components.interfaces.nsIPrefBranch)
 let settings = window.navigator.mozSettings;
+let cm = Components.classes["@mozilla.org/categorymanager;1"].
+                    getService(Components.interfaces.nsICategoryManager);
 
 if (wifiSettings)
   wifiSettings = JSON.parse(wifiSettings);
@@ -19,6 +21,12 @@ const CHILD_LOGGER_SCRIPT = "chrome://specialpowers/content/MozillaLogger.js";
 
 let homescreen = document.getElementById('systemapp');
 let container = homescreen.contentWindow.document.getElementById('test-container');
+
+// Disable udpate timers which cause failure in b2g permisson prompt tests.
+if (cm) {
+  cm.deleteCategoryEntry("update-timer", "WebappsUpdateTimer", false);
+  cm.deleteCategoryEntry("update-timer", "nsUpdateService", false);
+}
 
 function openWindow(aEvent) {
   var popupIframe = aEvent.detail.frameElement;
