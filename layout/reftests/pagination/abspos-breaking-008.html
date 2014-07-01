@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-print">
+ <head>
+  <title>AbsPos Pagination, with clip:rect() and box-decoration-break:clone</title>
+  <style type="text/css">
+    html, body { margin: 0; padding: 0; }
+    div {
+      box-decoration-break: clone;
+      position: absolute;
+      top: 120px;
+      border: 10px solid blue;
+      width: 50px;
+      height: 200px;
+      clip:rect(130px, auto, auto, 5px);
+    }
+  </style>
+ </head>
+ <body>
+ <div></div>
+</body>
+</html>
