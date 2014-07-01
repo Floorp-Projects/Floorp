@@ -3213,6 +3213,17 @@ if test -n "$JSGC_USE_EXACT_ROOTING"; then
 fi
 
 dnl ========================================================
+dnl = Use GC tracing
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(gc-trace,
+[  --enable-gc-trace  Enable tracing of allocation and finalization],
+    JS_GC_TRACE=1,
+    JS_GC_TRACE= )
+if test -n "$JS_GC_TRACE"; then
+    AC_DEFINE(JS_GC_TRACE)
+fi
+
+dnl ========================================================
 dnl = Use Valgrind
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(valgrind,

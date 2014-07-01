@@ -480,10 +480,14 @@ JSObject* ThreadProfile::ToJSObject(JSContext *aCx)
 {
   JS::RootedValue val(aCx);
   std::stringstream ss;
-  JSStreamWriter b(ss);
-  StreamJSObject(b);
-  NS_ConvertUTF8toUTF16 js_string(nsDependentCString(ss.str().c_str()));
-  JS_ParseJSON(aCx, static_cast<const jschar*>(js_string.get()), js_string.Length(), &val);
+  {
+    // Define a scope to prevent a moving GC during ~JSStreamWriter from
+    // trashing the return value.
+    JSStreamWriter b(ss);
+    StreamJSObject(b);
+    NS_ConvertUTF8toUTF16 js_string(nsDependentCString(ss.str().c_str()));
+    JS_ParseJSON(aCx, static_cast<const jschar*>(js_string.get()), js_string.Length(), &val);
+  }
   return &val.toObject();
 }
 

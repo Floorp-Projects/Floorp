@@ -35,25 +35,31 @@ class TbplFormatter(BaseMachFormatter):
         return "TEST-START | %s\n" % self.id_str(data["test"])
 
     def test_status(self, data):
+        message = "- " + data["message"] if "message" in data else ""
         if "expected" in data:
-            return "TEST-UNEXPECTED-%s | %s | %s | expected %s | %s\n" % (
-                data["status"], self.id_str(data["test"]), data["subtest"], data["expected"],
-                data.get("message", ""))
-        else:
-            return "TEST-%s | %s | %s | %s\n" % (
-                data["status"], self.id_str(data["test"]), data["subtest"], data.get("message", ""))
+            failure_line = "TEST-UNEXPECTED-%s | %s | %s %s" % (
+                data["status"], self.id_str(data["test"]), data["subtest"],
+                message)
+            info_line = "TEST-INFO | expected %s\n" % data["expected"]
+            return "\n".join([failure_line, info_line])
+
+        return "TEST-%s | %s | %s %s\n" % (
+            data["status"], self.id_str(data["test"]), data["subtest"],
+            message)
 
     def test_end(self, data):
         start_time = self.test_start_times.pop(self.test_id(data["test"]))
         time = data["time"] - start_time
 
         if "expected" in data:
-            return "TEST-END UNEXPECTED-%s | %s | expected %s | %s | took %ims\n" % (
-                data["status"], self.id_str(data["test"]), data["expected"],
-                data.get("message", ""), time)
-        else:
-            return "TEST-END %s | %s | took %ims\n" % (
-                data["status"], self.id_str(data["test"]), time)
+            failure_line = "TEST-UNEXPECTED-%s | %s | %s" % (
+                data["status"], self.id_str(data["test"]),
+                data.get("message", ""))
+            info_line = "TEST-INFO expected %s | took %ims\n" % (data["expected"], time)
+            return "\n".join([failure_line, info_line])
+
+        return "TEST-%s | %s | took %ims\n" % (
+            data["status"], self.id_str(data["test"]), time)
 
     def suite_end(self, data):
         start_time = self.suite_start_time

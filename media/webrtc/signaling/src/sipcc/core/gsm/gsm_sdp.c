@@ -1137,6 +1137,7 @@ gsmsdp_set_video_media_attributes (uint32_t media_type, void *cc_sdp_p, uint16_t
                              uint16_t payload_number)
 {
     uint16_t a_inst;
+    int added_fmtp = 0;
     void *sdp_p = ((cc_sdp_t*)cc_sdp_p)->src_sdp;
     int max_fs = 0;
     int max_fr = 0;
@@ -1170,21 +1171,56 @@ gsmsdp_set_video_media_attributes (uint32_t media_type, void *cc_sdp_p, uint16_t
                                                SIPSDP_ATTR_ENCNAME_H264);
             (void) sdp_attr_set_rtpmap_clockrate(sdp_p, level, 0, a_inst,
                                              RTPMAP_VIDEO_CLOCKRATE);
+            // we know we haven't added it yet
+            if (sdp_add_new_attr(sdp_p, level, 0, SDP_ATTR_FMTP, &a_inst)
+                != SDP_SUCCESS) {
+                GSM_ERR_MSG("Failed to add attribute");
+                return;
+            }
+            added_fmtp = 1;
+            {
+                char buffer[32];
+                uint32_t profile_level_id = vcmGetVideoH264ProfileLevelID();
+                snprintf(buffer, sizeof(buffer), "0x%x", profile_level_id);
+                (void) sdp_attr_set_fmtp_profile_level_id(sdp_p, level, 0, a_inst,
+                                                          buffer);
+            }
+            if (media_type == RTP_H264_P1) {
+                (void) sdp_attr_set_fmtp_pack_mode(sdp_p, level, 0, a_inst,
+                                                   1);
+            }
+            // TODO: other parameters we may want/need to set for H.264
+        //(void) sdp_attr_set_fmtp_max_mbps(sdp_p, level, 0, a_inst, max_mbps);
+        //(void) sdp_attr_set_fmtp_max_fs(sdp_p, level, 0, a_inst, max_fs);
+        //(void) sdp_attr_set_fmtp_max_cpb(sdp_p, level, 0, a_inst, max_cpb);
+        //(void) sdp_attr_set_fmtp_max_dpb(sdp_p, level, 0, a_inst, max_dpb);
+        //(void) sdp_attr_set_fmtp_max_br(sdp_p, level, 0, a_inst, max_br);
+        //(void) sdp_add_new_bw_line(sdp_p, level, &a_inst);
+        //(void) sdp_set_bw(sdp_p, level, a_inst, SDP_BW_MODIFIER_TIAS, tias_bw);
             break;
         case RTP_VP8:
             (void) sdp_attr_set_rtpmap_encname(sdp_p, level, 0, a_inst,
                                                SIPSDP_ATTR_ENCNAME_VP8);
             (void) sdp_attr_set_rtpmap_clockrate(sdp_p, level, 0, a_inst,
                                              RTPMAP_VIDEO_CLOCKRATE);
+            break;
+        }
 
+        switch (media_type) {
+        case RTP_H264_P0:
+        case RTP_H264_P1:
+        case RTP_VP8:
             max_fs = config_get_video_max_fs((rtp_ptype) media_type);
             max_fr = config_get_video_max_fr((rtp_ptype) media_type);
 
             if (max_fs || max_fr) {
-                if (sdp_add_new_attr(sdp_p, level, 0, SDP_ATTR_FMTP, &a_inst)
-                    != SDP_SUCCESS) {
-                    GSM_ERR_MSG("Failed to add attribute");
-                    return;
+                if (!added_fmtp) {
+                    if (sdp_add_new_attr(sdp_p, level, 0, SDP_ATTR_FMTP, &a_inst)
+                        != SDP_SUCCESS) {
+                        GSM_ERR_MSG("Failed to add attribute");
+                        return;
+                    }
+                    added_fmtp = 1;
                 }
 
                 (void) sdp_attr_set_fmtp_payload_type(sdp_p, level, 0, a_inst,
@@ -1200,13 +1236,8 @@ gsmsdp_set_video_media_attributes (uint32_t media_type, void *cc_sdp_p, uint16_t
                                                     max_fr);
                 }
             }
-
             break;
         }
-    GSM_DEBUG("gsmsdp_set_video_media_attributes- populate attribs %d", payload_number );
-
-        vcmPopulateAttribs(cc_sdp_p, level, media_type, payload_number, FALSE);
-
         break;
 
         default:
@@ -3430,7 +3461,7 @@ gsmsdp_negotiate_codec (fsmdef_dcb_t *dcb_p, cc_sdp_t *sdp_p,
                                audio_coding/main/source/acm_codec_database.cc */
                             payload_info->audio.frequency = 48000;
                             payload_info->audio.packet_size = 960;
-                            payload_info->audio.bitrate = 32000;
+                            payload_info->audio.bitrate = 16000; // Increase when we have higher capture rates
                             break;
 
                         case RTP_ISAC:

@@ -21,13 +21,13 @@ class EncodingCompleteEvent : public nsRunnable
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  EncodingCompleteEvent(nsIScriptContext* aScriptContext,
+  EncodingCompleteEvent(nsIGlobalObject* aGlobal,
                         nsIThread* aEncoderThread,
                         FileCallback& aCallback)
     : mImgSize(0)
     , mType()
     , mImgData(nullptr)
-    , mScriptContext(aScriptContext)
+    , mGlobal(aGlobal)
     , mEncoderThread(aEncoderThread)
     , mCallback(&aCallback)
     , mFailed(false)
@@ -43,11 +43,10 @@ public:
       nsRefPtr<DOMFile> blob =
         DOMFile::CreateMemoryFile(mImgData, mImgSize, mType);
 
-      if (mScriptContext) {
-        JSContext* jsContext = mScriptContext->GetNativeContext();
-        if (jsContext) {
-          JS_updateMallocCounter(jsContext, mImgSize);
-        }
+      {
+        AutoJSAPI jsapi;
+        jsapi.Init(mGlobal);
+        JS_updateMallocCounter(jsapi.cx(), mImgSize);
       }
 
       mCallback->Call(blob, rv);
@@ -57,7 +56,7 @@ public:
     // released on the main thread here. Otherwise, they could be getting
     // released by EncodingRunnable's destructor on the encoding thread
     // (bug 916128).
-    mScriptContext = nullptr;
+    mGlobal = nullptr;
     mCallback = nullptr;
 
     mEncoderThread->Shutdown();
@@ -80,7 +79,7 @@ private:
   uint64_t mImgSize;
   nsAutoString mType;
   void* mImgData;
-  nsCOMPtr<nsIScriptContext> mScriptContext;
+  nsCOMPtr<nsIGlobalObject> mGlobal;
   nsCOMPtr<nsIThread> mEncoderThread;
   nsRefPtr<FileCallback> mCallback;
   bool mFailed;
@@ -209,9 +208,11 @@ ImageEncoder::ExtractDataAsync(nsAString& aType,
                                int32_t aFormat,
                                const nsIntSize aSize,
                                nsICanvasRenderingContextInternal* aContext,
-                               nsIScriptContext* aScriptContext,
+                               nsIGlobalObject* aGlobal,
                                FileCallback& aCallback)
 {
+  MOZ_ASSERT(aGlobal);
+
   nsCOMPtr<imgIEncoder> encoder = ImageEncoder::GetImageEncoder(aType);
   if (!encoder) {
     return NS_IMAGELIB_ERROR_NO_ENCODER;
@@ -222,7 +223,7 @@ ImageEncoder::ExtractDataAsync(nsAString& aType,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<EncodingCompleteEvent> completeEvent =
-    new EncodingCompleteEvent(aScriptContext, encoderThread, aCallback);
+    new EncodingCompleteEvent(aGlobal, encoderThread, aCallback);
 
   nsCOMPtr<nsIRunnable> event = new EncodingRunnable(aType,
                                                      aOptions,

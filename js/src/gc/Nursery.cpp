@@ -165,6 +165,7 @@ js::Nursery::allocateObject(JSContext *cx, size_t size, size_t numDynamic)
         JSObject *obj = static_cast<JSObject *>(allocate(totalSize));
         if (obj) {
             obj->setInitialSlots(reinterpret_cast<HeapSlot *>(size_t(obj) + size));
+            TraceNurseryAlloc(obj, size);
             return obj;
         }
         /* If we failed to allocate as a block, retry with out-of-line slots. */
@@ -184,6 +185,7 @@ js::Nursery::allocateObject(JSContext *cx, size_t size, size_t numDynamic)
     else
         freeSlots(cx, slots);
 
+    TraceNurseryAlloc(obj, size);
     return obj;
 }
 
@@ -573,6 +575,7 @@ js::Nursery::moveToTenured(MinorCollectionTracer *trc, JSObject *src)
     overlay->forwardTo(dst);
     trc->insertIntoFixupList(overlay);
 
+    TracePromoteToTenured(src, dst);
     return static_cast<void *>(dst);
 }
 
@@ -764,6 +767,8 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
 
     rt->gc.stats.count(gcstats::STAT_MINOR_GC);
 
+    TraceMinorGCStart();
+
     TIME_START(total);
 
     AutoStopVerifyingBarriers av(rt, false);
@@ -883,6 +888,8 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
         disable();
 
     TIME_END(total);
+
+    TraceMinorGCEnd();
 
 #ifdef PROFILE_NURSERY
     int64_t totalTime = TIME_TOTAL(total);
