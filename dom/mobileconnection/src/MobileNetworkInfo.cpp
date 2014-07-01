@@ -25,6 +25,22 @@ MobileNetworkInfo::MobileNetworkInfo(nsPIDOMWindow* aWindow)
   SetIsDOMBinding();
 }
 
+MobileNetworkInfo::MobileNetworkInfo(const nsAString& aShortName,
+                                     const nsAString& aLongName,
+                                     const nsAString& aMcc,
+                                     const nsAString& aMnc,
+                                     const nsAString& aState)
+  : mShortName(aShortName)
+  , mLongName(aLongName)
+  , mMcc(aMcc)
+  , mMnc(aMnc)
+  , mState(aState)
+{
+  // The parent object is nullptr when MobileNetworkInfo is created by this way.
+  // And it won't be exposed to web content.
+  SetIsDOMBinding();
+}
+
 void
 MobileNetworkInfo::Update(nsIMobileNetworkInfo* aInfo)
 {

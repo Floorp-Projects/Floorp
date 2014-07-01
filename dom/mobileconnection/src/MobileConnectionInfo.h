@@ -27,6 +27,14 @@ public:
 
   MobileConnectionInfo(nsPIDOMWindow* aWindow);
 
+  MobileConnectionInfo(const nsAString& aState, bool aConnected,
+                       bool aEmergencyCallsOnly, bool aRoaming,
+                       nsIMobileNetworkInfo* aNetworkInfo,
+                       const nsAString& aType,
+                       const Nullable<int32_t>& aSignalStrength,
+                       const Nullable<uint16_t>& aRelSignalStrength,
+                       nsIMobileCellInfo* aCellInfo);
+
   void
   Update(nsIMobileConnectionInfo* aInfo);
 
