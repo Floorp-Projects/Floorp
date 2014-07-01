@@ -2758,8 +2758,8 @@ nsXULPrototypeScript::Compile(JS::SourceBufferHolder& aSrcBuf,
         // This reference will be consumed by the NotifyOffThreadScriptCompletedRunnable.
         NS_ADDREF(aOffThreadReceiver);
     } else {
-        JS::Rooted<JSScript*> script(cx);
-        if (!JS::Compile(cx, scope, options, aSrcBuf, &script))
+        JSScript* script = JS::Compile(cx, scope, options, aSrcBuf);
+        if (!script)
             return NS_ERROR_OUT_OF_MEMORY;
         Set(script);
     }

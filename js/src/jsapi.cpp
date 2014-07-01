@@ -1090,58 +1090,54 @@ JS_TransplantObject(JSContext *cx, HandleObject origobj, HandleObject target)
     JS_ASSERT(!origobj->is<CrossCompartmentWrapperObject>());
     JS_ASSERT(!target->is<CrossCompartmentWrapperObject>());
 
+    AutoMaybeTouchDeadZones agc(cx);
+    AutoDisableProxyCheck adpc(cx->runtime());
+
+    JSCompartment *destination = target->compartment();
     RootedValue origv(cx, ObjectValue(*origobj));
     RootedObject newIdentity(cx);
 
-    {
-        // Scope to make ~AutoMaybeTouchDeadZones do its GC before the return value is on the stack.
-        AutoMaybeTouchDeadZones agc(cx);
-        AutoDisableProxyCheck adpc(cx->runtime());
-
-        JSCompartment *destination = target->compartment();
-
-        if (origobj->compartment() == destination) {
-            // If the original object is in the same compartment as the
-            // destination, then we know that we won't find a wrapper in the
-            // destination's cross compartment map and that the same
-            // object will continue to work.
-            if (!JSObject::swap(cx, origobj, target))
-                MOZ_CRASH();
-            newIdentity = origobj;
-        } else if (WrapperMap::Ptr p = destination->lookupWrapper(origv)) {
-            // There might already be a wrapper for the original object in
-            // the new compartment. If there is, we use its identity and swap
-            // in the contents of |target|.
-            newIdentity = &p->value().get().toObject();
-
-            // When we remove origv from the wrapper map, its wrapper, newIdentity,
-            // must immediately cease to be a cross-compartment wrapper. Neuter it.
-            destination->removeWrapper(p);
-            NukeCrossCompartmentWrapper(cx, newIdentity);
-
-            if (!JSObject::swap(cx, newIdentity, target))
-                MOZ_CRASH();
-        } else {
-            // Otherwise, we use |target| for the new identity object.
-            newIdentity = target;
-        }
-
-        // Now, iterate through other scopes looking for references to the
-        // old object, and update the relevant cross-compartment wrappers.
-        if (!RemapAllWrappersForObject(cx, origobj, newIdentity))
+    if (origobj->compartment() == destination) {
+        // If the original object is in the same compartment as the
+        // destination, then we know that we won't find a wrapper in the
+        // destination's cross compartment map and that the same
+        // object will continue to work.
+        if (!JSObject::swap(cx, origobj, target))
             MOZ_CRASH();
+        newIdentity = origobj;
+    } else if (WrapperMap::Ptr p = destination->lookupWrapper(origv)) {
+        // There might already be a wrapper for the original object in
+        // the new compartment. If there is, we use its identity and swap
+        // in the contents of |target|.
+        newIdentity = &p->value().get().toObject();
 
-        // Lastly, update the original object to point to the new one.
-        if (origobj->compartment() != destination) {
-            RootedObject newIdentityWrapper(cx, newIdentity);
-            AutoCompartment ac(cx, origobj);
-            if (!JS_WrapObject(cx, &newIdentityWrapper))
-                MOZ_CRASH();
-            JS_ASSERT(Wrapper::wrappedObject(newIdentityWrapper) == newIdentity);
-            if (!JSObject::swap(cx, origobj, newIdentityWrapper))
-                MOZ_CRASH();
-            origobj->compartment()->putWrapper(cx, CrossCompartmentKey(newIdentity), origv);
-        }
+        // When we remove origv from the wrapper map, its wrapper, newIdentity,
+        // must immediately cease to be a cross-compartment wrapper. Neuter it.
+        destination->removeWrapper(p);
+        NukeCrossCompartmentWrapper(cx, newIdentity);
+
+        if (!JSObject::swap(cx, newIdentity, target))
+            MOZ_CRASH();
+    } else {
+        // Otherwise, we use |target| for the new identity object.
+        newIdentity = target;
+    }
+
+    // Now, iterate through other scopes looking for references to the
+    // old object, and update the relevant cross-compartment wrappers.
+    if (!RemapAllWrappersForObject(cx, origobj, newIdentity))
+        MOZ_CRASH();
+
+    // Lastly, update the original object to point to the new one.
+    if (origobj->compartment() != destination) {
+        RootedObject newIdentityWrapper(cx, newIdentity);
+        AutoCompartment ac(cx, origobj);
+        if (!JS_WrapObject(cx, &newIdentityWrapper))
+            MOZ_CRASH();
+        JS_ASSERT(Wrapper::wrappedObject(newIdentityWrapper) == newIdentity);
+        if (!JSObject::swap(cx, origobj, newIdentityWrapper))
+            MOZ_CRASH();
+        origobj->compartment()->putWrapper(cx, CrossCompartmentKey(newIdentity), origv);
     }
 
     // The new identity object might be one of several things. Return it to avoid
@@ -4616,9 +4612,9 @@ JS::CompileOptions::wrap(JSContext *cx, JSCompartment *compartment)
     return true;
 }
 
-bool
+JSScript *
 JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
-            SourceBufferHolder &srcBuf, MutableHandleScript script)
+            SourceBufferHolder &srcBuf)
 {
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
@@ -4626,8 +4622,7 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
     assertSameCompartment(cx, obj);
     AutoLastFrameCheck lfc(cx);
 
-    script.set(frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), options, srcBuf));
-    return !!script;
+    return frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), options, srcBuf);
 }
 
 JSScript *
@@ -4635,10 +4630,7 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
             const jschar *chars, size_t length)
 {
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    RootedScript script(cx);
-    if (!Compile(cx, obj, options, srcBuf, &script))
-        return nullptr;
-    return script;
+    return Compile(cx, obj, options, srcBuf);
 }
 
 JSScript *
@@ -4677,7 +4669,8 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
         return nullptr;
     CompileOptions options(cx, optionsArg);
     options.setFileAndLine(filename, 1);
-    return Compile(cx, obj, options, file.fp());
+    JSScript *script = Compile(cx, obj, options, file.fp());
+    return script;
 }
 
 JS_PUBLIC_API(bool)
@@ -4721,16 +4714,11 @@ JS::FinishOffThreadScript(JSContext *maybecx, JSRuntime *rt, void *token)
 #ifdef JS_THREADSAFE
     JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
-    if (maybecx) {
-        RootedScript script(maybecx);
-        {
-            AutoLastFrameCheck lfc(maybecx);
-            script = HelperThreadState().finishParseTask(maybecx, rt, token);
-        }
-        return script;
-    } else {
-        return HelperThreadState().finishParseTask(maybecx, rt, token);
-    }
+    Maybe<AutoLastFrameCheck> lfc;
+    if (maybecx)
+        lfc.construct(maybecx);
+
+    return HelperThreadState().finishParseTask(maybecx, rt, token);
 #else
     MOZ_ASSUME_UNREACHABLE("Off thread compilation is not available.");
 #endif
@@ -4795,47 +4783,47 @@ JS_GetGlobalFromScript(JSScript *script)
     return &script->global();
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API(JSFunction *)
 JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
                     const char *name, unsigned nargs, const char *const *argnames,
-                    SourceBufferHolder &srcBuf, MutableHandleFunction fun)
+                    SourceBufferHolder &srcBuf)
 {
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    RootedAtom funAtom(cx);
     AutoLastFrameCheck lfc(cx);
 
+    RootedAtom funAtom(cx);
     if (name) {
         funAtom = Atomize(cx, name, strlen(name));
         if (!funAtom)
-            return false;
+            return nullptr;
     }
 
     AutoNameVector formals(cx);
     for (unsigned i = 0; i < nargs; i++) {
         RootedAtom argAtom(cx, Atomize(cx, argnames[i], strlen(argnames[i])));
         if (!argAtom || !formals.append(argAtom->asPropertyName()))
-            return false;
+            return nullptr;
     }
 
-    fun.set(NewFunction(cx, NullPtr(), nullptr, 0, JSFunction::INTERPRETED, obj,
-                        funAtom, JSFunction::FinalizeKind, TenuredObject));
+    RootedFunction fun(cx, NewFunction(cx, NullPtr(), nullptr, 0, JSFunction::INTERPRETED, obj,
+                                       funAtom, JSFunction::FinalizeKind, TenuredObject));
     if (!fun)
-        return false;
+        return nullptr;
 
-    if (!frontend::CompileFunctionBody(cx, fun, options, formals, srcBuf))
-        return false;
+    if (!frontend::CompileFunctionBody(cx, &fun, options, formals, srcBuf))
+        return nullptr;
 
     if (obj && funAtom && options.defineOnScope) {
         Rooted<jsid> id(cx, AtomToId(funAtom));
         RootedValue value(cx, ObjectValue(*fun));
         if (!JSObject::defineGeneric(cx, obj, id, value, nullptr, nullptr, JSPROP_ENUMERATE))
-            return false;
+            return nullptr;
     }
 
-    return true;
+    return fun;
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4843,11 +4831,8 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
                     const char *name, unsigned nargs, const char *const *argnames,
                     const jschar *chars, size_t length)
 {
-    RootedFunction fun(cx);
-    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    if (!JS::CompileFunction(cx, obj, options, name, nargs, argnames, srcBuf, &fun))
-        return nullptr;
-    return fun;
+  SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
+  return JS::CompileFunction(cx, obj, options, name, nargs, argnames, srcBuf);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -5215,12 +5200,13 @@ JS::Call(JSContext *cx, HandleValue thisv, HandleValue fval, const JS::HandleVal
     return Invoke(cx, thisv, fval, args.length(), args.begin(), rval);
 }
 
-static JSObject *
-JS_NewHelper(JSContext *cx, HandleObject ctor, const JS::HandleValueArray& inputArgs)
+JS_PUBLIC_API(JSObject *)
+JS_New(JSContext *cx, HandleObject ctor, const JS::HandleValueArray& inputArgs)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, ctor, inputArgs);
+    AutoLastFrameCheck lfc(cx);
 
     // This is not a simple variation of JS_CallFunctionValue because JSOP_NEW
     // is not a simple variation of JSOP_CALL. We have to determine what class
@@ -5251,17 +5237,6 @@ JS_NewHelper(JSContext *cx, HandleObject ctor, const JS::HandleValueArray& input
     }
 
     return &args.rval().toObject();
-}
-
-JS_PUBLIC_API(JSObject *)
-JS_New(JSContext *cx, HandleObject ctor, const JS::HandleValueArray& inputArgs)
-{
-    RootedObject obj(cx);
-    {
-        AutoLastFrameCheck lfc(cx);
-        obj = JS_NewHelper(cx, ctor, inputArgs);
-    }
-    return obj;
 }
 
 JS_PUBLIC_API(JSInterruptCallback)
