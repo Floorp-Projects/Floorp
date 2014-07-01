@@ -7,9 +7,7 @@
 #ifndef mozilla_dom_bluetooth_bluetoothhfpmanager_h__
 #define mozilla_dom_bluetooth_bluetoothhfpmanager_h__
 
-#include <hardware/bluetooth.h>
-#include <hardware/bt_hf.h>
-
+#include "BluetoothInterface.h"
 #include "BluetoothCommon.h"
 #include "BluetoothHfpManagerBase.h"
 #include "BluetoothRilListener.h"
