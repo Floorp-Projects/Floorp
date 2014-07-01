@@ -15,12 +15,12 @@ namespace dom {
 class WindowNamedPropertiesHandler : public BaseDOMProxyHandler
 {
 public:
-  WindowNamedPropertiesHandler() : BaseDOMProxyHandler(nullptr)
+  WindowNamedPropertiesHandler()
+    : BaseDOMProxyHandler(nullptr, /* hasPrototype = */ true)
   {
-    setHasPrototype(true);
   }
   virtual bool
-  preventExtensions(JSContext* aCx, JS::Handle<JSObject*> aProxy) MOZ_OVERRIDE
+  preventExtensions(JSContext* aCx, JS::Handle<JSObject*> aProxy) const MOZ_OVERRIDE
   {
     // Throw a TypeError, per WebIDL.
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
@@ -30,34 +30,35 @@ public:
   virtual bool
   getOwnPropertyDescriptor(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                            JS::Handle<jsid> aId,
-                           JS::MutableHandle<JSPropertyDescriptor> aDesc) MOZ_OVERRIDE;
+                           JS::MutableHandle<JSPropertyDescriptor> aDesc)
+                           const MOZ_OVERRIDE;
   virtual bool
   defineProperty(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                  JS::Handle<jsid> aId,
-                 JS::MutableHandle<JSPropertyDescriptor> aDesc) MOZ_OVERRIDE;
+                 JS::MutableHandle<JSPropertyDescriptor> aDesc) const MOZ_OVERRIDE;
   virtual bool
   ownPropNames(JSContext* aCx, JS::Handle<JSObject*> aProxy, unsigned flags,
-               JS::AutoIdVector& aProps) MOZ_OVERRIDE;
+               JS::AutoIdVector& aProps) const MOZ_OVERRIDE;
   virtual bool
   delete_(JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
-          bool* aBp) MOZ_OVERRIDE;
+          bool* aBp) const MOZ_OVERRIDE;
   virtual bool
   isExtensible(JSContext* aCx, JS::Handle<JSObject*> aProxy,
-               bool* aIsExtensible) MOZ_OVERRIDE
+               bool* aIsExtensible) const MOZ_OVERRIDE
   {
     *aIsExtensible = true;
     return true;
   }
   virtual const char*
-  className(JSContext *aCx, JS::Handle<JSObject*> aProxy) MOZ_OVERRIDE
+  className(JSContext *aCx, JS::Handle<JSObject*> aProxy) const MOZ_OVERRIDE
   {
     return "WindowProperties";
   }
 
-  static WindowNamedPropertiesHandler*
+  static const WindowNamedPropertiesHandler*
   getInstance()
   {
-    static WindowNamedPropertiesHandler instance;
+    static const WindowNamedPropertiesHandler instance;
     return &instance;
   }
 

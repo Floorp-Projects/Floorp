@@ -4049,6 +4049,12 @@ pref("dom.mozApps.maxLocalId", 1000);
 // different stages (dev, staging, prod) of the same app store.
 pref("dom.mozApps.signed_apps_installable_from", "https://marketplace.firefox.com");
 
+// Whether or not to dump mozApps debug messages to the console.
+// Only checked on startup, so restart after changing this pref.
+// Ignored on Android, where we always report debug messages because it's
+// unnecessary to restrict reporting, per bug 1003469.
+pref("dom.mozApps.debug", false);
+
 // Minimum delay in milliseconds between network activity notifications (0 means
 // no notifications). The delay is the same for both download and upload, though
 // they are handled separately. This pref is only read once at startup:

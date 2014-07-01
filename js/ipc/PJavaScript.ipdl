@@ -32,11 +32,11 @@ both:
 
     rpc Has(uint64_t objId, nsString id) returns (ReturnStatus rs, bool has);
     rpc HasOwn(uint64_t objId, nsString id) returns (ReturnStatus rs, bool has);
-    rpc Get(uint64_t objId, uint64_t receiverId, nsString id) returns (ReturnStatus rs, JSVariant result);
-    rpc Set(uint64_t objId, uint64_t receiverId, nsString id, bool strict, JSVariant value) returns (ReturnStatus rs, JSVariant result);
+    rpc Get(uint64_t objId, ObjectVariant receiver, nsString id) returns (ReturnStatus rs, JSVariant result);
+    rpc Set(uint64_t objId, ObjectVariant receiver, nsString id, bool strict, JSVariant value) returns (ReturnStatus rs, JSVariant result);
 
     rpc IsExtensible(uint64_t objId) returns (ReturnStatus rs, bool result);
-    rpc Call(uint64_t objId, JSParam[] argv) returns (ReturnStatus rs, JSVariant result, JSParam[] outparams);
+    rpc CallOrConstruct(uint64_t objId, JSParam[] argv, bool construct) returns (ReturnStatus rs, JSVariant result, JSParam[] outparams);
     rpc ObjectClassIs(uint64_t objId, uint32_t classValue) returns (bool result);
     rpc ClassName(uint64_t objId) returns (nsString name);
 

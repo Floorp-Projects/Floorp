@@ -55,7 +55,6 @@ SOURCES += [
 
 GENERATED_SOURCES += [
     'dom_quickstubs.cpp',
-    'GeneratedEvents.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
@@ -70,8 +69,6 @@ FINAL_LIBRARY = 'gklayout'
 
 GENERATED_FILES = [
     'dom_quickstubs.h',
-    'GeneratedEventClasses.h',
-    'GeneratedEvents.h',
 ]
 
 DEFINES['JS_THREADSAFE'] = True

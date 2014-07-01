@@ -100,7 +100,7 @@ private:
   void DispatchLoadEvent(nsINode* aNode);
 
   // Must be called when an error has occured during load.
-  void Error();
+  void Error(bool aUnblockScripts);
 
   // Must be called when the import document has been loaded successfully.
   void Done();
