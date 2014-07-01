@@ -173,6 +173,12 @@ AudioTrackEncoder::DeInterleaveTrackData(AudioDataValue* aInput,
   }
 }
 
+size_t
+AudioTrackEncoder::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  return mRawSegment.SizeOfExcludingThis(aMallocSizeOf);
+}
+
 void
 VideoTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                             TrackID aID,
@@ -261,6 +267,12 @@ VideoTrackEncoder::NotifyEndOfStream()
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   mEndOfStream = true;
   mReentrantMonitor.NotifyAll();
+}
+
+size_t
+VideoTrackEncoder::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  return mRawSegment.SizeOfExcludingThis(aMallocSizeOf);
 }
 
 }
