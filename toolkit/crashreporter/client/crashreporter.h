@@ -82,7 +82,6 @@ typedef std::map<std::string, std::string> StringTable;
 namespace CrashReporter {
   extern StringTable  gStrings;
   extern std::string  gSettingsPath;
-  extern std::string  gEventsPath;
   extern int          gArgc;
   extern char**       gArgv;
 
