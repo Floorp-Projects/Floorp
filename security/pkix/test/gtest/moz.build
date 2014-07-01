@@ -12,6 +12,7 @@ SOURCES += [
     'pkix_cert_extension_tests.cpp',
     'pkix_ocsp_request_tests.cpp',
     'pkixcheck_CheckKeyUsage_tests.cpp',
+    'pkixcheck_CheckTimes_tests.cpp',
     'pkixder_input_tests.cpp',
     'pkixder_pki_types_tests.cpp',
     'pkixder_universal_types_tests.cpp',
