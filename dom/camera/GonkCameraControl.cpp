@@ -474,6 +474,19 @@ nsGonkCameraControl::Get(uint32_t aKey, int64_t& aRet)
   return mParams.Get(aKey, aRet);
 }
 
+// Boolean parameter accessors.
+nsresult
+nsGonkCameraControl::Set(uint32_t aKey, bool aValue)
+{
+  return SetAndPush(aKey, aValue);
+}
+
+nsresult
+nsGonkCameraControl::Get(uint32_t aKey, bool& aRet)
+{
+  return mParams.Get(aKey, aRet);
+}
+
 // Weighted-region parameter accessors.
 nsresult
 nsGonkCameraControl::Set(uint32_t aKey, const nsTArray<Region>& aRegions)
