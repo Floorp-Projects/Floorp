@@ -829,6 +829,14 @@ nsTHashtable<gfxUserFontSet::UserFontCache::Entry>*
 NS_IMPL_ISUPPORTS(gfxUserFontSet::UserFontCache::Flusher, nsIObserver)
 
 PLDHashOperator
+gfxUserFontSet::UserFontCache::Entry::RemoveUnlessPersistent(Entry* aEntry,
+                                                             void* aUserData)
+{
+    return aEntry->mPersistence == kPersistent ? PL_DHASH_NEXT :
+                                                 PL_DHASH_REMOVE;
+}
+
+PLDHashOperator
 gfxUserFontSet::UserFontCache::Entry::RemoveIfPrivate(Entry* aEntry,
                                                       void* aUserData)
 {
@@ -861,7 +869,7 @@ gfxUserFontSet::UserFontCache::Flusher::Observe(nsISupports* aSubject,
     }
 
     if (!strcmp(aTopic, "cacheservice:empty-cache")) {
-        sUserFonts->Clear();
+        sUserFonts->EnumerateEntries(Entry::RemoveUnlessPersistent, nullptr);
     } else if (!strcmp(aTopic, "last-pb-context-exited")) {
         sUserFonts->EnumerateEntries(Entry::RemoveIfPrivate, nullptr);
     } else if (!strcmp(aTopic, "xpcom-shutdown")) {
@@ -919,7 +927,8 @@ gfxUserFontSet::UserFontCache::Entry::KeyEquals(const KeyTypePointer aKey) const
 }
 
 void
-gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry)
+gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry,
+                                         EntryPersistence aPersistence)
 {
     NS_ASSERTION(aFontEntry->mFamilyName.Length() != 0,
                  "caching a font associated with no family yet");
@@ -948,7 +957,7 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry)
         principal = data->mPrincipal;
     }
     sUserFonts->PutEntry(Key(data->mURI, principal, aFontEntry,
-                             data->mPrivate));
+                             data->mPrivate, aPersistence));
 
 #ifdef DEBUG_USERFONT_CACHE
     printf("userfontcache added fontentry: %p\n", aFontEntry);

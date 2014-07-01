@@ -331,7 +331,7 @@ FINAL_LIBRARY = 'xpcom_core'
 
 LOCAL_INCLUDES += [
     '../..',
-    '../../../../xptinfo/src',
+    '/xpcom/reflect/xptinfo',
 ]
 
 NO_PGO = True

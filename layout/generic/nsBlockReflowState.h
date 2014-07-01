@@ -180,22 +180,22 @@ public:
   // mContentArea.BSize is not NS_UNCONSTRAINEDSIZE; otherwise
   // coordinate overflow may occur.
   mozilla::LogicalRect mContentArea;
-  nscoord ContentIStart() {
+  nscoord ContentIStart() const {
     return mContentArea.IStart(mReflowState.GetWritingMode());
   }
-  nscoord ContentISize() {
+  nscoord ContentISize() const {
     return mContentArea.ISize(mReflowState.GetWritingMode());
   }
-  nscoord ContentIEnd() {
+  nscoord ContentIEnd() const {
     return mContentArea.IEnd(mReflowState.GetWritingMode());
   }
-  nscoord ContentBStart() {
+  nscoord ContentBStart() const {
     return mContentArea.BStart(mReflowState.GetWritingMode());
   }
-  nscoord ContentBSize() {
+  nscoord ContentBSize() const {
     return mContentArea.BSize(mReflowState.GetWritingMode());
   }
-  nscoord ContentBEnd() {
+  nscoord ContentBEnd() const {
     return mContentArea.BEnd(mReflowState.GetWritingMode());
   }
   nscoord mContainerWidth;
