@@ -21,12 +21,14 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla.dom.mobileconnection += [
     'ipc/MobileConnectionChild.h',
+    'ipc/MobileConnectionIPCService.h',
     'ipc/MobileConnectionParent.h',
 ]
 
 SOURCES += [
     'DOMMMIError.cpp',
     'ipc/MobileConnectionChild.cpp',
+    'ipc/MobileConnectionIPCService.cpp',
     'ipc/MobileConnectionParent.cpp',
     'MobileCellInfo.cpp',
     'MobileConnection.cpp',
