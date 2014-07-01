@@ -399,14 +399,14 @@ WebAudioDecodeJob::AllocateBuffer()
   MOZ_ASSERT(!mOutput);
   MOZ_ASSERT(NS_IsMainThread());
 
+  AutoJSAPI jsapi;
+  JSContext* cx = jsapi.cx();
+
   // We need the global for the context so that we can enter its compartment.
-  JSObject* global = mContext->GetGlobalJSObject();
+  JS::Rooted<JSObject*> global(cx, mContext->GetGlobalJSObject());
   if (NS_WARN_IF(!global)) {
     return false;
   }
-
-  AutoJSAPI jsapi;
-  JSContext* cx = jsapi.cx();
   JSAutoCompartment ac(cx, global);
 
   // Now create the AudioBuffer
