@@ -10,12 +10,6 @@
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsISimpleEnumerator.h"
-#include "mozilla/PRemoteSpellcheckEngineChild.h"
-#include "mozilla/dom/ContentChild.h"
-#include "nsXULAppAPI.h"
-
-using mozilla::dom::ContentChild;
-using mozilla::PRemoteSpellcheckEngineChild;
 
 #define DEFAULT_SPELL_CHECKER "@mozilla.org/spellchecker/engine;1"
 
@@ -44,10 +38,6 @@ mozSpellChecker::~mozSpellChecker()
   }
   mSpellCheckingEngine = nullptr;
   mPersonalDictionary = nullptr;
-
-  if(XRE_GetProcessType() == GeckoProcessType_Content) {
-    mEngine->Send__delete__(mEngine);
-  }
 }
 
 nsresult 
@@ -56,11 +46,6 @@ mozSpellChecker::Init()
   mPersonalDictionary = do_GetService("@mozilla.org/spellchecker/personaldictionary;1");
   
   mSpellCheckingEngine = nullptr;
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    mozilla::dom::ContentChild* contentChild = mozilla::dom::ContentChild::GetSingleton();
-    MOZ_ASSERT(contentChild);
-    mEngine = contentChild->SendPRemoteSpellcheckEngineConstructor();
-  }
 
   return NS_OK;
 } 
@@ -123,12 +108,6 @@ mozSpellChecker::CheckWord(const nsAString &aWord, bool *aIsMisspelled, nsTArray
 {
   nsresult result;
   bool correct;
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    nsString wordwrapped = nsString(aWord);
-    mEngine->SendCheckForMisspelling(wordwrapped, aIsMisspelled);
-    return NS_OK;
-  }
-
   if(!mSpellCheckingEngine)
     return NS_ERROR_NULL_POINTER;
 
@@ -353,13 +332,6 @@ mozSpellChecker::GetCurrentDictionary(nsAString &aDictionary)
 NS_IMETHODIMP 
 mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary)
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    nsString wrappedDict = nsString(aDictionary);
-    bool isSuccess;
-    mEngine->SendSetDictionary(wrappedDict, &isSuccess);
-    return isSuccess ? NS_OK : NS_ERROR_NOT_AVAILABLE;
-  }
-
   // Calls to mozISpellCheckingEngine::SetDictionary might destroy us
   nsRefPtr<mozSpellChecker> kungFuDeathGrip = this;
 

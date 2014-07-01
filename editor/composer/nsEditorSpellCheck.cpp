@@ -42,7 +42,6 @@
 #include "nsString.h"                   // for nsAutoString, nsString, etc
 #include "nsStringFwd.h"                // for nsAFlatString
 #include "nsStyleUtil.h"                // for nsStyleUtil
-#include "nsXULAppAPI.h"                // for XRE_GetProcessType
 
 using namespace mozilla;
 
@@ -155,12 +154,6 @@ NS_IMETHODIMP
 DictionaryFetcher::Fetch(nsIEditor* aEditor)
 {
   NS_ENSURE_ARG_POINTER(aEditor);
-
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    // ContentPrefs are currently broken under multiprocess firefox. Bug 1027898
-    // Skip this custom pref option for now in e10s
-    return  NS_ERROR_FAILURE;
-  }
 
   nsresult rv;
 
@@ -712,10 +705,6 @@ nsEditorSpellCheck::UpdateCurrentDictionary(nsIEditorSpellCheckCallback* aCallba
   NS_ENSURE_STATE(doc);
   doc->GetContentLanguage(fetcher->mRootDocContentLang);
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    DictionaryFetched(nullptr);
-  }
-
   rv = fetcher->Fetch(mEditor);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -726,37 +715,38 @@ nsresult
 nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
 {
   nsRefPtr<nsEditorSpellCheck> kungFuDeathGrip = this;
-  nsAutoString dictName;
+
   nsresult rv = NS_OK;
-  if (aFetcher) {
-    // Important: declare the holder after the callback caller so that the former
-    // is destructed first so that it's not active when the callback is called.
-    CallbackCaller callbackCaller(aFetcher->mCallback);
-    UpdateDictionnaryHolder holder(this);
 
-    if (aFetcher->mGroup < mDictionaryFetcherGroup) {
-      // SetCurrentDictionary was called after the fetch started.  Don't overwrite
-      // that dictionary with the fetched one.
-      return NS_OK;
-    }
+  // Important: declare the holder after the callback caller so that the former
+  // is destructed first so that it's not active when the callback is called.
+  CallbackCaller callbackCaller(aFetcher->mCallback);
+  UpdateDictionnaryHolder holder(this);
 
-    mPreferredLang.Assign(aFetcher->mRootContentLang);
-
-    // If we successfully fetched a dictionary from content prefs, do not go
-    // further. Use this exact dictionary.
-    dictName.Assign(aFetcher->mDictionary);
-    if (!dictName.IsEmpty()) {
-      if (NS_FAILED(SetCurrentDictionary(dictName))) { 
-        // may be dictionary was uninstalled ?
-        ClearCurrentDictionary(mEditor);
-      }
-      return NS_OK;
-    }
-
-    if (mPreferredLang.IsEmpty()) {
-      mPreferredLang.Assign(aFetcher->mRootDocContentLang);
-    }
+  if (aFetcher->mGroup < mDictionaryFetcherGroup) {
+    // SetCurrentDictionary was called after the fetch started.  Don't overwrite
+    // that dictionary with the fetched one.
+    return NS_OK;
   }
+
+  mPreferredLang.Assign(aFetcher->mRootContentLang);
+
+  // If we successfully fetched a dictionary from content prefs, do not go
+  // further. Use this exact dictionary.
+  nsAutoString dictName;
+  dictName.Assign(aFetcher->mDictionary);
+  if (!dictName.IsEmpty()) {
+    if (NS_FAILED(SetCurrentDictionary(dictName))) { 
+      // may be dictionary was uninstalled ?
+      ClearCurrentDictionary(mEditor);
+    }
+    return NS_OK;
+  }
+
+  if (mPreferredLang.IsEmpty()) {
+    mPreferredLang.Assign(aFetcher->mRootDocContentLang);
+  }
+
   // Then, try to use language computed from element
   if (!mPreferredLang.IsEmpty()) {
     dictName.Assign(mPreferredLang);

@@ -1978,12 +1978,6 @@ NS_IMETHODIMP mozInlineSpellChecker::UpdateCurrentDictionary()
     return NS_OK;
   }
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    mNumPendingUpdateCurrentDictionary++;
-    ChangeNumPendingSpellChecks(1);
-    return NS_OK;
-  }
-
   if (NS_FAILED(spellCheck->GetCurrentDictionary(mPreviousDictionary))) {
     mPreviousDictionary.Truncate();
   }
