@@ -1,0 +1,31 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources>
+
+    <!-- Base application theme. -->
+
+    <style name="AppTheme" parent="@android:style/Theme.Light.NoTitleBar">
+    </style>
+
+
+    <style name="BorderLessButton">
+    </style>
+
+    <style name="AutoCompleteDropdown">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">#fff</item>
+        <item name="android:layout_margin">10dp</item>
+    </style>
+
+    <style name="AutoCompleteEditText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:imeOptions">actionSearch</item>
+        <item name="android:inputType">textNoSuggestions|textVisiblePassword</item>
+
+    </style>
+
+</resources>

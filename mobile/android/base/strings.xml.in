@@ -8,6 +8,9 @@
 #includesubst @BRANDPATH@
 #includesubst @STRINGSPATH@
 #includesubst @SYNCSTRINGSPATH@
+#ifdef MOZ_ANDROID_SEARCH_ACTIVITY
+#includesubst @SEARCHSTRINGSPATH@
+#endif
 
 <!-- C-style format strings. -->
 <!ENTITY formatI "&#037;I">
@@ -29,6 +32,11 @@
   <string name="moz_android_shared_account_type">@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@</string>
   <string name="moz_android_shared_fxaccount_type">@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@</string>
   <string name="android_package_name_for_ui">@ANDROID_PACKAGE_NAME@</string>
+
+#ifdef MOZ_ANDROID_SEARCH_ACTIVITY
+#include ../search/strings/search_strings.xml.in
+#endif
+
 #include ../services/strings.xml.in
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
