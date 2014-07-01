@@ -292,8 +292,8 @@ BlacklistFeatureToGfxFeature(const nsAString& aFeature)
 static int32_t
 BlacklistFeatureStatusToGfxFeatureStatus(const nsAString& aStatus)
 {
-  if (aStatus.EqualsLiteral("NO_INFO"))
-    return nsIGfxInfo::FEATURE_NO_INFO;
+  if (aStatus.EqualsLiteral("STATUS_OK"))
+    return nsIGfxInfo::FEATURE_STATUS_OK;
   else if (aStatus.EqualsLiteral("BLOCKED_DRIVER_VERSION"))
     return nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
   else if (aStatus.EqualsLiteral("BLOCKED_DEVICE"))
@@ -305,7 +305,7 @@ BlacklistFeatureStatusToGfxFeatureStatus(const nsAString& aStatus)
 
   // Do not allow it to set STATUS_UNKNOWN.
 
-  return nsIGfxInfo::FEATURE_NO_INFO;
+  return nsIGfxInfo::FEATURE_STATUS_OK;
 }
 
 static VersionComparisonOp
@@ -769,9 +769,9 @@ GfxInfoBase::GetFeatureStatusImpl(int32_t aFeature,
     status = FindBlocklistedDeviceInList(GetGfxDriverInfo(), aSuggestedVersion, aFeature, os);
   }
 
-  // It's now done being processed. It's safe to set the status to NO_INFO.
+  // It's now done being processed. It's safe to set the status to STATUS_OK.
   if (status == nsIGfxInfo::FEATURE_STATUS_UNKNOWN) {
-    *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
+    *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
   } else {
     *aStatus = status;
   }
@@ -820,7 +820,7 @@ GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
   };
 
   // For every feature we know about, we evaluate whether this blacklist has a
-  // non-NO_INFO status. If it does, we set the pref we evaluate in
+  // non-STATUS_OK status. If it does, we set the pref we evaluate in
   // GetFeatureStatus above, so we don't need to hold on to this blacklist
   // anywhere permanent.
   int i = 0;
@@ -832,7 +832,7 @@ GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
                                           aDriverInfo))) {
       switch (status) {
         default:
-        case nsIGfxInfo::FEATURE_NO_INFO:
+        case nsIGfxInfo::FEATURE_STATUS_OK:
           RemovePrefForFeature(features[i]);
           break;
 

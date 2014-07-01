@@ -2011,12 +2011,12 @@ InitLayersAccelerationPrefs()
       if (gfxInfo) {
         int32_t status;
         if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &status))) {
-          if (status == nsIGfxInfo::FEATURE_NO_INFO) {
+          if (status == nsIGfxInfo::FEATURE_STATUS_OK) {
             sLayersSupportsD3D9 = true;
           }
         }
         if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS, &status))) {
-          if (status == nsIGfxInfo::FEATURE_NO_INFO) {
+          if (status == nsIGfxInfo::FEATURE_STATUS_OK) {
             sLayersSupportsD3D11 = true;
           }
         }
