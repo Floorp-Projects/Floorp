@@ -133,6 +133,24 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
+     * Set any character preference under "loop."
+     *
+     * @param {String} prefName The name of the pref without the preceding "loop."
+     * @param {String} stringValue The value to set.
+     *
+     * Any errors thrown by the Mozilla pref API are logged to the console
+     * and cause false to be returned.
+     */
+    setLoopCharPref: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function(prefName, value) {
+        MozLoopService.setLoopCharPref(prefName, value);
+      }
+    },
+
+    /**
      * Return any preference under "loop." that's coercible to a character
      * preference.
      *
