@@ -133,35 +133,6 @@ ReleaseData(void* aData)
   static_cast<DataSourceSurface*>(aData)->Release();
 }
 
-cairo_surface_t*
-CopyToImageSurface(unsigned char *aData,
-                   const IntSize &aSize,
-                   int32_t aStride,
-                   SurfaceFormat aFormat)
-{
-  cairo_surface_t* surf = cairo_image_surface_create(GfxFormatToCairoFormat(aFormat),
-                                                     aSize.width,
-                                                     aSize.height);
-  // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
-  // covers the details of how to run into it, but the full detailed
-  // investigation hasn't been done to determine the underlying cause.  We
-  // will just handle the failure to allocate the surface to avoid a crash.
-  if (cairo_surface_status(surf)) {
-    return nullptr;
-  }
-
-  unsigned char* surfData = cairo_image_surface_get_data(surf);
-  int surfStride = cairo_image_surface_get_stride(surf);
-
-  for (int32_t y = 0; y < aSize.height; ++y) {
-    memcpy(surfData + y * surfStride,
-           aData + y * aStride,
-           aSize.width * aPixelWidth);
-  }
-  cairo_surface_mark_dirty(surf);
-  return surf;
-}
-
 /**
  * Returns cairo surface for the given SourceSurface.
  * If possible, it will use the cairo_surface associated with aSurface,
@@ -206,16 +177,7 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface, bool aExistingOnly = fa
   // investigation hasn't been done to determine the underlying cause.  We
   // will just handle the failure to allocate the surface to avoid a crash.
   if (cairo_surface_status(surf)) {
-    if (cairo_surface_status(surf) == CAIRO_STATUS_INVALID_STRIDE) {
-      // If we failed because of an invalid stride then copy into
-      // a new surface with a stride that cairo chooses. No need to
-      // set user data since we're not dependent on the original
-      // data.
-      return CopyToImageSurface(data->GetData(),
-                                data->GetSize(),
-                                data->Stride(),
-                                data->GetFormat());
-    }
+    cairo_surface_destroy(surf);
     return nullptr;
   }
 
@@ -1094,13 +1056,52 @@ DrawTargetCairo::CreateFilter(FilterType aType)
   return FilterNodeSoftware::Create(aType);
 }
 
+/**
+ * Copies pixel data from aData into aSurface; aData must have the dimensions
+ * given in aSize, with a stride of aStride bytes and aPixelWidth bytes per pixel
+ */
+static void
+CopyDataToCairoSurface(cairo_surface_t* aSurface,
+                       unsigned char *aData,
+                       const IntSize &aSize,
+                       int32_t aStride,
+                       int32_t aPixelWidth)
+{
+  unsigned char* surfData = cairo_image_surface_get_data(aSurface);
+  int surfStride = cairo_image_surface_get_stride(aSurface);
+  // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
+  // covers the details of how to run into it, but the full detailed
+  // investigation hasn't been done to determine the underlying cause.  We
+  // will just handle the failure to allocate the surface to avoid a crash.
+  if (!surfData) {
+    return;
+  }
+  for (int32_t y = 0; y < aSize.height; ++y) {
+    memcpy(surfData + y * surfStride,
+           aData + y * aStride,
+           aSize.width * aPixelWidth);
+  }
+  cairo_surface_mark_dirty(aSurface);
+}
+
 TemporaryRef<SourceSurface>
 DrawTargetCairo::CreateSourceSurfaceFromData(unsigned char *aData,
                                              const IntSize &aSize,
                                              int32_t aStride,
                                              SurfaceFormat aFormat) const
 {
-  cairo_surface_t* surf = CopyToImageSurface(aData, aSize, aStride, aFormat);
+  cairo_surface_t* surf = cairo_image_surface_create(GfxFormatToCairoFormat(aFormat),
+                                                     aSize.width,
+                                                     aSize.height);
+  // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
+  // covers the details of how to run into it, but the full detailed
+  // investigation hasn't been done to determine the underlying cause.  We
+  // will just handle the failure to allocate the surface to avoid a crash.
+  if (cairo_surface_status(surf)) {
+    return nullptr;
+  }
+
+  CopyDataToCairoSurface(surf, aData, aSize, aStride, BytesPerPixel(aFormat));
 
   RefPtr<SourceSurfaceCairo> source_surf = new SourceSurfaceCairo(surf, aSize, aFormat);
   cairo_surface_destroy(surf);
