@@ -28,7 +28,14 @@ using mozilla::NativeEndian;
 # endif
 #endif
 
-#if defined(__i386__)
+#if defined(_WIN32)
+#include <intrin.h>
+static __inline uint64_t
+rdtsc(void)
+{
+    return __rdtsc();
+}
+#elif defined(__i386__)
 static __inline__ uint64_t
 rdtsc(void)
 {
