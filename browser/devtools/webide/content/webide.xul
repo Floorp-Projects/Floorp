@@ -102,7 +102,10 @@
         <toolbarbutton id="action-button-play"  class="action-button" command="cmd_play" tooltiptext="&projectMenu_play_label;"/>
         <toolbarbutton id="action-button-stop"  class="action-button" command="cmd_stop" tooltiptext="&projectMenu_stop_label;"/>
         <toolbarbutton id="action-button-debug" class="action-button" command="cmd_toggleToolbox" tooltiptext="&projectMenu_debug_label;"/>
-        <html:img id="action-busy" src="chrome://webide/skin/throbber.svg"/>
+        <hbox id="action-busy" align="center">
+          <html:img id="action-busy-undetermined" src="chrome://webide/skin/throbber.svg"/>
+          <progressmeter id="action-busy-determined"/>
+        </hbox>
       </hbox>
 
       <hbox id="panel-buttons-container">
