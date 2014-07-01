@@ -112,7 +112,7 @@ public class LastTabsPanel extends HomeFragment {
                     return;
                 }
 
-                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL);
+                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM);
 
                 final String url = c.getString(c.getColumnIndexOrThrow(Combined.URL));
                 mNewTabsListener.onNewTabs(new String[] { url });

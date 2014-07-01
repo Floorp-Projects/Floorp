@@ -70,7 +70,7 @@ class RemoteTabsList extends ExpandableListView
             return true;
         }
 
-        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.NONE, "remote");
+        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, "remote");
 
         Tabs.getInstance().loadUrl(tab.get("url"), Tabs.LOADURL_NEW_TAB);
         autoHidePanel();
