@@ -18,10 +18,6 @@
 #include "mozISpellI18NUtil.h"
 #include "nsCycleCollectionParticipant.h"
 
-namespace mozilla {
-class PRemoteSpellcheckEngineChild;
-}
-
 class mozSpellChecker : public nsISpellChecker
 {
 public:
@@ -63,7 +59,5 @@ protected:
   nsresult GetCurrentBlockIndex(nsITextServicesDocument *aDoc, int32_t *outBlockIndex);
 
   nsresult GetEngineList(nsCOMArray<mozISpellCheckingEngine> *aDictionaryList);
-
-  mozilla::PRemoteSpellcheckEngineChild *mEngine;
 };
 #endif // mozSpellChecker_h__
