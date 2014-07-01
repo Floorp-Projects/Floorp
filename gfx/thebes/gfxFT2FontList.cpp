@@ -1566,7 +1566,7 @@ gfxFT2FontList::GetDefaultFont(const gfxFontStyle* aStyle)
 {
     gfxFontFamily *ff = nullptr;
 #ifdef MOZ_WIDGET_GONK
-    ff = FindFamily(NS_LITERAL_STRING("Fira Sans OT"));
+    ff = FindFamily(NS_LITERAL_STRING("Fira Sans"));
 #elif defined(MOZ_WIDGET_ANDROID)
     ff = FindFamily(NS_LITERAL_STRING("Roboto"));
     if (!ff) {

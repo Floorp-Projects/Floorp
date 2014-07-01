@@ -30,7 +30,7 @@
             <TextView style="@style/TabsPanelItem.TextAppearance"
                       android:layout_width="match_parent"
                       android:layout_height="wrap_content"
-                      android:text="@string/private_tabs_panel_description"/>
+                      android:text="@string/private_tabs_panel_empty_desc"/>
 
         </LinearLayout>
 
