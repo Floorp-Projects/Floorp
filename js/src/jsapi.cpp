@@ -5126,6 +5126,18 @@ JS::Call(JSContext *cx, HandleValue thisv, HandleValue fval, const JS::HandleVal
     return Invoke(cx, thisv, fval, args.length(), args.begin(), rval);
 }
 
+JS_PUBLIC_API(bool)
+JS::Construct(JSContext *cx, HandleValue fval, const JS::HandleValueArray& args,
+              MutableHandleValue rval)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, fval, args);
+    AutoLastFrameCheck lfc(cx);
+
+    return InvokeConstructor(cx, fval, args.length(), args.begin(), rval.address());
+}
+
 JS_PUBLIC_API(JSObject *)
 JS_New(JSContext *cx, HandleObject ctor, const JS::HandleValueArray& inputArgs)
 {

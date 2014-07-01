@@ -3,15 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_MDDEPEND_FILES = dom_qsgen.pp event_impl_gen.pp
-
-INSTALL_TARGETS += extra_export_files
-extra_export_files_FILES := \
-  GeneratedEventClasses.h \
-  GeneratedEvents.h \
-  $(NULL)
-extra_export_files_DEST = $(DIST)/include
-extra_export_files_TARGET := export
+EXTRA_MDDEPEND_FILES = dom_qsgen.pp
 
 include $(topsrcdir)/config/rules.mk
 
@@ -32,52 +24,9 @@ dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
 	  $(ENABLE_TRACEABLE_FLAGS) \
 	  $(srcdir)/dom_quickstubs.qsconf
 
-event_impl_gen.conf : $(srcdir)/event_impl_gen.conf.in
-	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) $^ -o event_impl_gen.conf)
-
-GeneratedEvents.h: event_impl_gen.conf \
-                   $(srcdir)/event_impl_gen.py \
-                   $(LIBXUL_DIST)/sdk/bin/header.py \
-                   $(LIBXUL_DIST)/sdk/bin/xpidl.py
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  $(PLY_INCLUDE) \
-	  -I$(LIBXUL_DIST)/sdk/bin \
-	  $(srcdir)/event_impl_gen.py \
-	  -I $(DEPTH)/dist/idl \
-	  --header-output GeneratedEvents.h \
-	  event_impl_gen.conf
-
-GeneratedEventClasses.h: GeneratedEvents.cpp
-
-GeneratedEvents.cpp: GeneratedEvents.h \
-                     event_impl_gen.conf \
-                     $(srcdir)/event_impl_gen.py \
-                     $(LIBXUL_DIST)/sdk/bin/header.py \
-                     $(LIBXUL_DIST)/sdk/bin/xpidl.py
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  $(PLY_INCLUDE) \
-	  -I$(LIBXUL_DIST)/sdk/bin \
-	  $(srcdir)/event_impl_gen.py \
-	  -I $(DEPTH)/dist/idl \
-	  --class-declarations GeneratedEventClasses.h \
-	  --stub-output GeneratedEvents.cpp \
-	  --makedepend-output $(MDDEPDIR)/event_impl_gen.pp \
-	  event_impl_gen.conf
-
-GeneratedEvents-webidl: event_impl_gen.conf
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  $(PLY_INCLUDE) \
-	  -I$(LIBXUL_DIST)/sdk/bin \
-	  $(srcdir)/event_impl_gen.py \
-	  -I $(DEPTH)/dist/idl \
-	  --webidltarget=$(top_srcdir)/dom/webidl \
-	  event_impl_gen.conf
-
 GARBAGE += \
-		event_impl_gen.conf \
 		xpidl_debug \
 		$(MDDEPDIR)/dom_qsgen.pp \
 		$(MDDEPDIR)/dombindingsgen.pp \
-		$(MDDEPDIR)/event_impl_gen.pp \
 		$(wildcard $(topsrcdir)/other-licenses/ply/ply/*.pyc) \
 		$(NULL)

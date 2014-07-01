@@ -38,30 +38,30 @@ inline bool IsDOMProxy(JSObject *obj)
 class BaseDOMProxyHandler : public js::BaseProxyHandler
 {
 public:
-  BaseDOMProxyHandler(const void* aProxyFamily)
-    : js::BaseProxyHandler(aProxyFamily)
+  BaseDOMProxyHandler(const void* aProxyFamily, bool aHasPrototype = false)
+    : js::BaseProxyHandler(aProxyFamily, aHasPrototype)
   {}
 
   // Implementations of traps that can be implemented in terms of
   // fundamental traps.
   bool enumerate(JSContext* cx, JS::Handle<JSObject*> proxy,
-                 JS::AutoIdVector& props) MOZ_OVERRIDE;
+                 JS::AutoIdVector& props) const MOZ_OVERRIDE;
   bool getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> proxy,
                              JS::Handle<jsid> id,
-                             JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
+                             JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
 
   bool watch(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-             JS::Handle<JSObject*> callable) MOZ_OVERRIDE;
+             JS::Handle<JSObject*> callable) const MOZ_OVERRIDE;
   bool unwatch(JSContext* cx, JS::Handle<JSObject*> proxy,
-               JS::Handle<jsid> id) MOZ_OVERRIDE;
+               JS::Handle<jsid> id) const MOZ_OVERRIDE;
   virtual bool getOwnPropertyNames(JSContext* cx, JS::Handle<JSObject*> proxy,
-                                   JS::AutoIdVector &props) MOZ_OVERRIDE;
+                                   JS::AutoIdVector &props) const MOZ_OVERRIDE;
   // We override keys() and implement it directly instead of using the
   // default implementation, which would getOwnPropertyNames and then
   // filter out the non-enumerable ones.  This avoids doing
   // unnecessary work during enumeration.
   virtual bool keys(JSContext* cx, JS::Handle<JSObject*> proxy,
-                    JS::AutoIdVector &props) MOZ_OVERRIDE;
+                    JS::AutoIdVector &props) const MOZ_OVERRIDE;
 
 protected:
   // Hook for subclasses to implement shared getOwnPropertyNames()/keys()
@@ -69,7 +69,7 @@ protected:
   // or JSITER_OWNONLY | JSITER_HIDDEN (for getOwnPropertyNames()).
   virtual bool ownPropNames(JSContext* cx, JS::Handle<JSObject*> proxy,
                             unsigned flags,
-                            JS::AutoIdVector& props) = 0;
+                            JS::AutoIdVector& props) const = 0;
 };
 
 class DOMProxyHandler : public BaseDOMProxyHandler
@@ -80,21 +80,25 @@ public:
   {
   }
 
-  bool preventExtensions(JSContext *cx, JS::Handle<JSObject*> proxy) MOZ_OVERRIDE;
+  bool preventExtensions(JSContext *cx, JS::Handle<JSObject*> proxy) const MOZ_OVERRIDE;
   bool defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                      JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE
+                      JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE
   {
     bool unused;
     return defineProperty(cx, proxy, id, desc, &unused);
   }
   virtual bool defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                              JS::MutableHandle<JSPropertyDescriptor> desc, bool* defined);
+                              JS::MutableHandle<JSPropertyDescriptor> desc, bool* defined)
+                              const;
   bool set(JSContext *cx, JS::Handle<JSObject*> proxy, JS::Handle<JSObject*> receiver,
-           JS::Handle<jsid> id, bool strict, JS::MutableHandle<JS::Value> vp) MOZ_OVERRIDE;
+           JS::Handle<jsid> id, bool strict, JS::MutableHandle<JS::Value> vp)
+           const MOZ_OVERRIDE;
   bool delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
-               JS::Handle<jsid> id, bool* bp) MOZ_OVERRIDE;
-  bool has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id, bool* bp) MOZ_OVERRIDE;
-  bool isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *extensible) MOZ_OVERRIDE;
+               JS::Handle<jsid> id, bool* bp) const MOZ_OVERRIDE;
+  bool has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
+           bool* bp) const MOZ_OVERRIDE;
+  bool isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *extensible)
+                    const MOZ_OVERRIDE;
 
   /*
    * If assigning to proxy[id] hits a named setter with OverrideBuiltins or
@@ -102,7 +106,7 @@ public:
    * *done to false.
    */
   virtual bool setCustom(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                         JS::MutableHandle<JS::Value> vp, bool *done);
+                         JS::MutableHandle<JS::Value> vp, bool *done) const;
 
   static JSObject* GetExpandoObject(JSObject* obj)
   {
@@ -127,11 +131,11 @@ public:
                                        JS::Handle<JSObject*> obj);
 };
 
-inline DOMProxyHandler*
+inline const DOMProxyHandler*
 GetDOMProxyHandler(JSObject* obj)
 {
   MOZ_ASSERT(IsDOMProxy(obj));
-  return static_cast<DOMProxyHandler*>(js::GetProxyHandler(obj));
+  return static_cast<const DOMProxyHandler*>(js::GetProxyHandler(obj));
 }
 
 extern jsid s_length_id;

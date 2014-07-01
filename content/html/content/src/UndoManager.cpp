@@ -14,7 +14,8 @@
 #include "nsIVariant.h"
 #include "nsVariant.h"
 #include "nsINode.h"
-#include "nsIDOMDOMTransactionEvent.h"
+#include "mozilla/dom/DOMTransactionEvent.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "nsContentUtils.h"
 #include "jsapi.h"
 #include "nsIDocument.h"
@@ -1150,48 +1151,22 @@ UndoManager::DispatchTransactionEvent(JSContext* aCx, const nsAString& aType,
     return;
   }
 
-  nsRefPtr<Event> event = mHostNode->OwnerDoc()->CreateEvent(
-    NS_LITERAL_STRING("domtransaction"), aRv);
-  if (aRv.Failed()) {
+  JS::Rooted<JS::Value> array(aCx);
+  if (!ToJSValue(aCx, items, &array)) {
     return;
   }
 
-  nsCOMPtr<nsIWritableVariant> transactions = new nsVariant();
+  RootedDictionary<DOMTransactionEventInit> init(aCx);
+  init.mBubbles = true;
+  init.mCancelable = false;
+  init.mTransactions = array;
 
-  // Unwrap the DOMTransactions into jsvals, then convert
-  // to nsIVariant then put into a nsIVariant array. Arrays in XPIDL suck.
-  nsCOMArray<nsIVariant> keepAlive;
-  nsTArray<nsIVariant*> transactionItems;
-  for (uint32_t i = 0; i < items.Length(); i++) {
-    JS::Rooted<JS::Value> txVal(aCx, JS::ObjectValue(*items[i]->Callback()));
-    if (!JS_WrapValue(aCx, &txVal)) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return;
-    }
-    nsCOMPtr<nsIVariant> txVariant;
-    nsresult rv =
-      nsContentUtils::XPConnect()->JSToVariant(aCx, txVal,
-                                               getter_AddRefs(txVariant));
-    if (NS_SUCCEEDED(rv)) {
-      keepAlive.AppendObject(txVariant);
-      transactionItems.AppendElement(txVariant.get());
-    }
-  }
+  nsRefPtr<DOMTransactionEvent> event =
+    DOMTransactionEvent::Constructor(mHostNode, aType, init);
 
-  transactions->SetAsArray(nsIDataType::VTYPE_INTERFACE_IS,
-                           &NS_GET_IID(nsIVariant),
-                           transactionItems.Length(),
-                           transactionItems.Elements());
-
-  nsCOMPtr<nsIDOMDOMTransactionEvent> ptEvent = do_QueryInterface(event);
-  if (ptEvent &&
-      NS_SUCCEEDED(ptEvent->InitDOMTransactionEvent(aType, true, false,
-                                                    transactions))) {
-    event->SetTrusted(true);
-    event->SetTarget(mHostNode);
-    EventDispatcher::DispatchDOMEvent(mHostNode, nullptr, event,
-                                      nullptr, nullptr);
-  }
+  event->SetTrusted(true);
+  EventDispatcher::DispatchDOMEvent(mHostNode, nullptr, event,
+                                    nullptr, nullptr);
 }
 
 void

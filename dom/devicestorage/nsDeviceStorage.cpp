@@ -11,6 +11,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DeviceStorageBinding.h"
+#include "mozilla/dom/DeviceStorageChangeEvent.h"
 #include "mozilla/dom/DeviceStorageFileSystem.h"
 #include "mozilla/dom/devicestorage/PDeviceStorageRequestChild.h"
 #include "mozilla/dom/Directory.h"
@@ -47,10 +48,8 @@
 #include "TabChild.h"
 #include "DeviceStorageFileDescriptor.h"
 #include "DeviceStorageRequestChild.h"
-#include "nsIDOMDeviceStorageChangeEvent.h"
 #include "nsCRT.h"
 #include "nsIObserverService.h"
-#include "GeneratedEvents.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIPermissionManager.h"
@@ -4196,21 +4195,19 @@ nsDOMDeviceStorage::DispatchMountChangeEvent(nsAString& aVolumeStatus)
   }
   mLastStatus = aVolumeStatus;
 
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMDeviceStorageChangeEvent(getter_AddRefs(event), this,
-                                    nullptr, nullptr);
+  DeviceStorageChangeEventInit init;
+  init.mBubbles = true;
+  init.mCancelable = false;
+  init.mPath = mStorageName;
+  init.mReason = aVolumeStatus;
 
-  nsCOMPtr<nsIDOMDeviceStorageChangeEvent> ce = do_QueryInterface(event);
-  nsresult rv = ce->InitDeviceStorageChangeEvent(NS_LITERAL_STRING("change"),
-                                                 true, false,
-                                                 mStorageName,
-                                                 aVolumeStatus);
-  if (NS_FAILED(rv)) {
-    return;
-  }
+  nsRefPtr<DeviceStorageChangeEvent> event =
+    DeviceStorageChangeEvent::Constructor(this, NS_LITERAL_STRING("change"),
+                                          init);
+  event->SetTrusted(true);
 
   bool ignore;
-  DispatchEvent(ce, &ignore);
+  DispatchEvent(event, &ignore);
 }
 #endif
 
@@ -4286,24 +4283,19 @@ nsDOMDeviceStorage::Notify(const char* aReason, DeviceStorageFile* aFile)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMDeviceStorageChangeEvent(getter_AddRefs(event), this,
-                                    nullptr, nullptr);
+  DeviceStorageChangeEventInit init;
+  init.mBubbles = true;
+  init.mCancelable = false;
+  aFile->GetFullPath(init.mPath);
+  init.mReason.AssignWithConversion(aReason);
 
-  nsCOMPtr<nsIDOMDeviceStorageChangeEvent> ce = do_QueryInterface(event);
-
-  nsString reason;
-  reason.AssignWithConversion(aReason);
-
-  nsString fullPath;
-  aFile->GetFullPath(fullPath);
-  nsresult rv = ce->InitDeviceStorageChangeEvent(NS_LITERAL_STRING("change"),
-                                                 true, false, fullPath,
-                                                 reason);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<DeviceStorageChangeEvent> event =
+    DeviceStorageChangeEvent::Constructor(this, NS_LITERAL_STRING("change"),
+                                          init);
+  event->SetTrusted(true);
 
   bool ignore;
-  DispatchEvent(ce, &ignore);
+  DispatchEvent(event, &ignore);
   return NS_OK;
 }
 

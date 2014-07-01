@@ -21,7 +21,7 @@ namespace xpc {
 // chromeArray.forEach(..) to Just Work without explicitly listing them in
 // __exposedProps__. Since proxies don't automatically inherit behavior from
 // their prototype, we have to instrument the traps to do this manually.
-ChromeObjectWrapper ChromeObjectWrapper::singleton;
+const ChromeObjectWrapper ChromeObjectWrapper::singleton;
 
 using js::assertEnteredPolicy;
 
@@ -32,7 +32,7 @@ AllowedByBase(JSContext *cx, HandleObject wrapper, HandleId id,
     MOZ_ASSERT(js::Wrapper::wrapperHandler(wrapper) ==
                &ChromeObjectWrapper::singleton);
     bool bp;
-    ChromeObjectWrapper *handler = &ChromeObjectWrapper::singleton;
+    const ChromeObjectWrapper *handler = &ChromeObjectWrapper::singleton;
     return handler->ChromeObjectWrapperBase::enter(cx, wrapper, id, act, &bp);
 }
 
@@ -56,7 +56,7 @@ PropIsFromStandardPrototype(JSContext *cx, HandleObject wrapper,
     MOZ_ASSERT(js::Wrapper::wrapperHandler(wrapper) ==
                &ChromeObjectWrapper::singleton);
     Rooted<JSPropertyDescriptor> desc(cx);
-    ChromeObjectWrapper *handler = &ChromeObjectWrapper::singleton;
+    const ChromeObjectWrapper *handler = &ChromeObjectWrapper::singleton;
     if (!handler->ChromeObjectWrapperBase::getPropertyDescriptor(cx, wrapper, id,
                                                                  &desc) ||
         !desc.object())
@@ -70,7 +70,7 @@ bool
 ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx,
                                            HandleObject wrapper,
                                            HandleId id,
-                                           JS::MutableHandle<JSPropertyDescriptor> desc)
+                                           JS::MutableHandle<JSPropertyDescriptor> desc) const
 {
     assertEnteredPolicy(cx, wrapper, id, GET | SET);
     // First, try a lookup on the base wrapper if permitted.
@@ -101,7 +101,7 @@ ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx,
 
 bool
 ChromeObjectWrapper::has(JSContext *cx, HandleObject wrapper,
-                         HandleId id, bool *bp)
+                         HandleId id, bool *bp) const
 {
     assertEnteredPolicy(cx, wrapper, id, GET);
     // Try the lookup on the base wrapper if permitted.
@@ -130,7 +130,7 @@ ChromeObjectWrapper::has(JSContext *cx, HandleObject wrapper,
 bool
 ChromeObjectWrapper::get(JSContext *cx, HandleObject wrapper,
                          HandleObject receiver, HandleId id,
-                         MutableHandleValue vp)
+                         MutableHandleValue vp) const
 {
     assertEnteredPolicy(cx, wrapper, id, GET);
     vp.setUndefined();
@@ -165,7 +165,7 @@ ChromeObjectWrapper::get(JSContext *cx, HandleObject wrapper,
 // contacts. This isn't really ideal, but make it work for now.
 bool
 ChromeObjectWrapper::objectClassIs(HandleObject obj, js::ESClassValue classValue,
-                                   JSContext *cx)
+                                   JSContext *cx) const
 {
   return CrossCompartmentWrapper::objectClassIs(obj, classValue, cx);
 }
@@ -176,7 +176,7 @@ ChromeObjectWrapper::objectClassIs(HandleObject obj, js::ESClassValue classValue
 // whole proto remapping thing for COWs is going to be phased out anyway.
 bool
 ChromeObjectWrapper::enter(JSContext *cx, HandleObject wrapper,
-                           HandleId id, js::Wrapper::Action act, bool *bp)
+                           HandleId id, js::Wrapper::Action act, bool *bp) const
 {
     if (AllowedByBase(cx, wrapper, id, act))
         return true;

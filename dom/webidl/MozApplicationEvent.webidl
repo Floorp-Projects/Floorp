@@ -5,7 +5,7 @@
  */
 interface mozIDOMApplication;
 
-[Constructor(DOMString type, optional MozApplicationEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
+[Constructor(DOMString type, optional MozApplicationEventInit eventInitDict)]
 interface MozApplicationEvent : Event
 {
   readonly attribute mozIDOMApplication? application;
