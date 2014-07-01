@@ -138,16 +138,15 @@
 #include "nsIXULDocument.h"
 #include "nsIPrompt.h"
 #include "nsIPropertyBag2.h"
-#include "nsIDOMPageTransitionEvent.h"
-#include "nsIDOMStyleRuleChangeEvent.h"
-#include "nsIDOMStyleSheetChangeEvent.h"
-#include "nsIDOMStyleSheetApplicableStateChangeEvent.h"
+#include "mozilla/dom/PageTransitionEvent.h"
+#include "mozilla/dom/StyleRuleChangeEvent.h"
+#include "mozilla/dom/StyleSheetChangeEvent.h"
+#include "mozilla/dom/StyleSheetApplicableStateChangeEvent.h"
 #include "nsJSUtils.h"
 #include "nsFrameLoader.h"
 #include "nsEscape.h"
 #include "nsObjectLoadingContent.h"
 #include "nsHtml5TreeOpExecutor.h"
-#include "nsIDOMElementReplaceEvent.h"
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #ifdef MOZ_WEBRTC
@@ -182,7 +181,6 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/TouchEvent.h"
-#include "GeneratedEvents.h"
 
 #include "mozilla/Preferences.h"
 
@@ -3983,30 +3981,27 @@ nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
   }
 }
 
-#define DO_STYLESHEET_NOTIFICATION(createFunc, concreteInterface, initMethod, type, ...) \
-  do {                                                                  \
-    nsCOMPtr<nsIDOMEvent> event;                                        \
-    nsresult rv = createFunc(getter_AddRefs(event), this,               \
-                             mPresShell ?                               \
-                             mPresShell->GetPresContext() : nullptr,    \
-                             nullptr);                                  \
-    if (NS_FAILED(rv)) {                                                \
-      return;                                                           \
-    }                                                                   \
-    nsCOMPtr<nsIDOMCSSStyleSheet> cssSheet(do_QueryInterface(aSheet));  \
-    if (!cssSheet) {                                                    \
-      return;                                                           \
-    }                                                                   \
-    nsCOMPtr<concreteInterface> ssEvent(do_QueryInterface(event));      \
-    MOZ_ASSERT(ssEvent);                                                \
-    ssEvent->initMethod(NS_LITERAL_STRING(type), true, true,            \
-                        cssSheet, __VA_ARGS__);                         \
-    event->SetTrusted(true);                                            \
-    event->SetTarget(this);                                             \
-    nsRefPtr<AsyncEventDispatcher> asyncDispatcher =                    \
-      new AsyncEventDispatcher(this, event);                            \
-    asyncDispatcher->mDispatchChromeOnly = true;                        \
-    asyncDispatcher->PostDOMEvent();                                    \
+#define DO_STYLESHEET_NOTIFICATION(className, type, memberName, argName)      \
+  do {                                                                        \
+    nsRefPtr<CSSStyleSheet> cssSheet = do_QueryObject(aSheet);                \
+    if (!cssSheet) {                                                          \
+      return;                                                                 \
+    }                                                                         \
+                                                                              \
+    className##Init init;                                                     \
+    init.mBubbles = true;                                                     \
+    init.mCancelable = true;                                                  \
+    init.mStylesheet = cssSheet;                                              \
+    init.memberName = argName;                                                \
+                                                                              \
+    nsRefPtr<className> event =                                               \
+      className::Constructor(this, NS_LITERAL_STRING(type), init);            \
+    event->SetTrusted(true);                                                  \
+    event->SetTarget(this);                                                   \
+    nsRefPtr<AsyncEventDispatcher> asyncDispatcher =                          \
+      new AsyncEventDispatcher(this, event);                                  \
+    asyncDispatcher->mDispatchChromeOnly = true;                              \
+    asyncDispatcher->PostDOMEvent();                                          \
   } while (0);
 
 void
@@ -4015,10 +4010,9 @@ nsDocument::NotifyStyleSheetAdded(nsIStyleSheet* aSheet, bool aDocumentSheet)
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleSheetAdded, (this, aSheet, aDocumentSheet));
 
   if (StyleSheetChangeEventsEnabled()) {
-    DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleSheetChangeEvent,
-                               nsIDOMStyleSheetChangeEvent,
-                               InitStyleSheetChangeEvent,
+    DO_STYLESHEET_NOTIFICATION(StyleSheetChangeEvent,
                                "StyleSheetAdded",
+                               mDocumentSheet,
                                aDocumentSheet);
   }
 }
@@ -4029,10 +4023,9 @@ nsDocument::NotifyStyleSheetRemoved(nsIStyleSheet* aSheet, bool aDocumentSheet)
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleSheetRemoved, (this, aSheet, aDocumentSheet));
 
   if (StyleSheetChangeEventsEnabled()) {
-    DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleSheetChangeEvent,
-                               nsIDOMStyleSheetChangeEvent,
-                               InitStyleSheetChangeEvent,
+    DO_STYLESHEET_NOTIFICATION(StyleSheetChangeEvent,
                                "StyleSheetRemoved",
+                               mDocumentSheet,
                                aDocumentSheet);
   }
 }
@@ -4158,10 +4151,9 @@ nsDocument::SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
                                (this, aSheet, aApplicable));
 
   if (StyleSheetChangeEventsEnabled()) {
-    DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleSheetApplicableStateChangeEvent,
-                               nsIDOMStyleSheetApplicableStateChangeEvent,
-                               InitStyleSheetApplicableStateChangeEvent,
+    DO_STYLESHEET_NOTIFICATION(StyleSheetApplicableStateChangeEvent,
                                "StyleSheetApplicableStateChanged",
+                               mApplicable,
                                aApplicable);
   }
 
@@ -4932,10 +4924,9 @@ nsDocument::StyleRuleChanged(nsIStyleSheet* aSheet,
 
   if (StyleSheetChangeEventsEnabled()) {
     nsCOMPtr<css::Rule> rule = do_QueryInterface(aNewStyleRule);
-    DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleRuleChangeEvent,
-                               nsIDOMStyleRuleChangeEvent,
-                               InitStyleRuleChangeEvent,
+    DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
                                "StyleRuleChanged",
+                               mRule,
                                rule ? rule->GetDOMRule() : nullptr);
   }
 }
@@ -4949,10 +4940,9 @@ nsDocument::StyleRuleAdded(nsIStyleSheet* aSheet,
 
   if (StyleSheetChangeEventsEnabled()) {
     nsCOMPtr<css::Rule> rule = do_QueryInterface(aStyleRule);
-    DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleRuleChangeEvent,
-                               nsIDOMStyleRuleChangeEvent,
-                               InitStyleRuleChangeEvent,
+    DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
                                "StyleRuleAdded",
+                               mRule,
                                rule ? rule->GetDOMRule() : nullptr);
   }
 }
@@ -4966,10 +4956,9 @@ nsDocument::StyleRuleRemoved(nsIStyleSheet* aSheet,
 
   if (StyleSheetChangeEventsEnabled()) {
     nsCOMPtr<css::Rule> rule = do_QueryInterface(aStyleRule);
-    DO_STYLESHEET_NOTIFICATION(NS_NewDOMStyleRuleChangeEvent,
-                               nsIDOMStyleRuleChangeEvent,
-                               InitStyleRuleChangeEvent,
+    DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
                                "StyleRuleRemoved",
+                               mRule,
                                rule ? rule->GetDOMRule() : nullptr);
   }
 }
@@ -8691,19 +8680,22 @@ nsDocument::DispatchPageTransition(EventTarget* aDispatchTarget,
                                    const nsAString& aType,
                                    bool aPersisted)
 {
-  if (aDispatchTarget) {
-    nsCOMPtr<nsIDOMEvent> event;
-    CreateEvent(NS_LITERAL_STRING("pagetransition"), getter_AddRefs(event));
-    nsCOMPtr<nsIDOMPageTransitionEvent> ptEvent = do_QueryInterface(event);
-    if (ptEvent && NS_SUCCEEDED(ptEvent->InitPageTransitionEvent(aType, true,
-                                                                 true,
-                                                                 aPersisted))) {
-      event->SetTrusted(true);
-      event->SetTarget(this);
-      EventDispatcher::DispatchDOMEvent(aDispatchTarget, nullptr, event,
-                                        nullptr, nullptr);
-    }
+  if (!aDispatchTarget) {
+    return;
   }
+
+  PageTransitionEventInit init;
+  init.mBubbles = true;
+  init.mCancelable = true;
+  init.mPersisted = aPersisted;
+
+  nsRefPtr<PageTransitionEvent> event =
+    PageTransitionEvent::Constructor(this, aType, init);
+
+  event->SetTrusted(true);
+  event->SetTarget(this);
+  EventDispatcher::DispatchDOMEvent(aDispatchTarget, nullptr, event,
+                                    nullptr, nullptr);
 }
 
 static bool
@@ -8906,8 +8898,7 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
       return;
     }
 
-    nsCOMPtr<nsPIDOMWindow> window;
-    window = do_QueryInterface(GetWindow());
+    nsPIDOMWindow* window = GetInnerWindow();
     if (window &&
         !window->HasMutationListeners(NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
       mSubtreeModifiedTargets.Clear();

@@ -363,7 +363,7 @@ XPCCallContext::UnwrapThisIfAllowed(HandleObject obj, HandleObject fun, unsigned
     // XPC_WN_GetterSetter does.
     bool set = argc && argc != NO_ARGS && member->IsWritableAttribute();
     js::Wrapper::Action act = set ? js::Wrapper::SET : js::Wrapper::GET;
-    js::Wrapper *handler = js::Wrapper::wrapperHandler(obj);
+    const js::Wrapper *handler = js::Wrapper::wrapperHandler(obj);
     bool ignored;
     JS::Rooted<jsid> id(mJSContext, member->GetName());
     if (!handler->enter(mJSContext, obj, id, act, &ignored))

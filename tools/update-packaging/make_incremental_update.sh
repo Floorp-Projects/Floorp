@@ -275,7 +275,17 @@ done
 $BZIP2 -z9 "$updatemanifestv2" && mv -f "$updatemanifestv2.bz2" "$updatemanifestv2"
 $BZIP2 -z9 "$updatemanifestv3" && mv -f "$updatemanifestv3.bz2" "$updatemanifestv3"
 
-eval "$MAR -C \"$workdir\" -c output.mar $archivefiles"
+mar_command="$MAR"
+if [[ -n $MOZ_PRODUCT_VERSION ]]
+then
+  mar_command="$mar_command -V $MOZ_PRODUCT_VERSION"
+fi
+if [[ -n $MOZ_CHANNEL_ID ]]
+then
+  mar_command="$mar_command -H $MOZ_CHANNEL_ID"
+fi
+mar_command="$mar_command -C \"$workdir\" -c output.mar"
+eval "$mar_command $archivefiles"
 mv -f "$workdir/output.mar" "$archive"
 
 # cleanup

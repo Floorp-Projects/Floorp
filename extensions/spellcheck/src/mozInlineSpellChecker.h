@@ -77,7 +77,7 @@ public:
 
   // If we happen to know something was inserted, this is that range.
   // Can be nullptr (this only allows an optimization, so not setting doesn't hurt)
-  nsCOMPtr<nsIDOMRange> mCreatedRange;
+  nsRefPtr<nsRange> mCreatedRange;
 
   // Contains the range computed for the current word. Can be nullptr.
   nsRefPtr<nsRange> mNoCheckRange;
@@ -212,8 +212,7 @@ public:
   // examines the dom node in question and returns true if the inline spell
   // checker should skip the node (i.e. the text is inside of a block quote
   // or an e-mail signature...)
-  nsresult SkipSpellCheckForNode(nsIEditor* aEditor,
-                                 nsIDOMNode *aNode, bool * aCheckSpelling);
+  bool ShouldSpellCheckNode(nsIEditor* aEditor, nsINode *aNode);
 
   nsresult SpellCheckAfterChange(nsIDOMNode* aCursorNode, int32_t aCursorOffset,
                                  nsIDOMNode* aPreviousNode, int32_t aPreviousOffset,
@@ -224,10 +223,10 @@ public:
   nsresult ScheduleSpellCheck(const mozInlineSpellStatus& aStatus);
 
   nsresult DoSpellCheckSelection(mozInlineSpellWordUtil& aWordUtil,
-                                 nsISelection* aSpellCheckSelection,
+                                 mozilla::dom::Selection* aSpellCheckSelection,
                                  mozInlineSpellStatus* aStatus);
   nsresult DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
-                        nsISelection *aSpellCheckSelection,
+                        mozilla::dom::Selection *aSpellCheckSelection,
                         mozInlineSpellStatus* aStatus,
                         bool* aDoneChecking);
 
@@ -237,9 +236,10 @@ public:
                               int32_t aOffset,
                               nsIDOMRange **aRange);
 
-  nsresult CleanupRangesInSelection(nsISelection *aSelection);
+  nsresult CleanupRangesInSelection(mozilla::dom::Selection *aSelection);
 
-  nsresult RemoveRange(nsISelection *aSpellCheckSelection, nsIDOMRange * aRange);
+  nsresult RemoveRange(mozilla::dom::Selection *aSpellCheckSelection,
+                       nsRange *aRange);
   nsresult AddRange(nsISelection *aSpellCheckSelection, nsIDOMRange * aRange);
   bool     SpellCheckSelectionIsFull() { return mNumWordsInSpellSelection >= mMaxNumWordsInSpellSelection; }
 

@@ -17,7 +17,6 @@
 #include "nsDOMClassInfoID.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
-#include "GeneratedEvents.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"

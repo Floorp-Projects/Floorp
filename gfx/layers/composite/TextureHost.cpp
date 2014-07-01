@@ -832,6 +832,9 @@ StreamTextureHost::Lock()
   }
 
   gfx::SharedSurface* abstractSurf = mStream->SwapConsumer();
+  if (!abstractSurf) {
+    return false;
+  }
 
   bool compositorSupportsShSurfType = false;
   switch (mCompositor->GetBackendType()) {

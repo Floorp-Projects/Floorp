@@ -13,9 +13,13 @@
 #include "nsINode.h"
 #include "nsPIDOMWindow.h"
 #include "GeckoProfiler.h"
-#include "GeneratedEvents.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/dom/CloseEvent.h"
+#include "mozilla/dom/DeviceOrientationEvent.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/HashChangeEvent.h"
+#include "mozilla/dom/PageTransitionEvent.h"
+#include "mozilla/dom/PopStateEvent.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/EventDispatcher.h"
@@ -774,10 +778,13 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
   if (aEventType.LowerCaseEqualsLiteral("textevent") ||
       aEventType.LowerCaseEqualsLiteral("textevents"))
     return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("popupblockedevents"))
-    return NS_NewDOMPopupBlockedEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("deviceorientationevent"))
-    return NS_NewDOMDeviceOrientationEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+  if (aEventType.LowerCaseEqualsLiteral("deviceorientationevent")) {
+    DeviceOrientationEventInit init;
+    nsRefPtr<DeviceOrientationEvent> event =
+      DeviceOrientationEvent::Constructor(aOwner, EmptyString(), init);
+    event.forget(aDOMEvent);
+    return NS_OK;
+  }
   if (aEventType.LowerCaseEqualsLiteral("devicemotionevent"))
     return NS_NewDOMDeviceMotionEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("uievent") ||
@@ -801,8 +808,6 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
   if (aEventType.LowerCaseEqualsLiteral("commandevent") ||
       aEventType.LowerCaseEqualsLiteral("commandevents"))
     return NS_NewDOMCommandEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("elementreplace"))
-    return NS_NewDOMElementReplaceEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("datacontainerevent") ||
       aEventType.LowerCaseEqualsLiteral("datacontainerevents"))
     return NS_NewDOMDataContainerEvent(aDOMEvent, aOwner, aPresContext, nullptr);
@@ -814,21 +819,44 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     return NS_NewDOMSimpleGestureEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("beforeunloadevent"))
     return NS_NewDOMBeforeUnloadEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("pagetransition"))
-    return NS_NewDOMPageTransitionEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("domtransaction"))
-    return NS_NewDOMDOMTransactionEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+  // XXXkhuey this is broken
+  if (aEventType.LowerCaseEqualsLiteral("pagetransition")) {
+    PageTransitionEventInit init;
+    nsRefPtr<PageTransitionEvent> event =
+      PageTransitionEvent::Constructor(aOwner, EmptyString(), init);
+    event.forget(aDOMEvent);
+    return NS_OK;
+  }
   if (aEventType.LowerCaseEqualsLiteral("scrollareaevent"))
     return NS_NewDOMScrollAreaEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("popstateevent"))
-    return NS_NewDOMPopStateEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("closeevent"))
-    return NS_NewDOMCloseEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+  if (aEventType.LowerCaseEqualsLiteral("closeevent")) {
+    CloseEventInit init;
+    nsRefPtr<CloseEvent> event =
+      CloseEvent::Constructor(aOwner, EmptyString(), init);
+    event.forget(aDOMEvent);
+    return NS_OK;
+  }
+  // XXXkhuey Chrome supports popstateevent here, even though it provides no
+  // initPopStateEvent method.  This is nuts ... but copying it is unlikely to
+  // break the web.
+  if (aEventType.LowerCaseEqualsLiteral("popstateevent")) {
+    AutoJSContext cx;
+    RootedDictionary<PopStateEventInit> init(cx);
+    nsRefPtr<PopStateEvent> event =
+      PopStateEvent::Constructor(aOwner, EmptyString(), init);
+    event.forget(aDOMEvent);
+    return NS_OK;
+  }
   if (aEventType.LowerCaseEqualsLiteral("touchevent") &&
       TouchEvent::PrefEnabled())
     return NS_NewDOMTouchEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("hashchangeevent"))
-    return NS_NewDOMHashChangeEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+  if (aEventType.LowerCaseEqualsLiteral("hashchangeevent")) {
+    HashChangeEventInit init;
+    nsRefPtr<HashChangeEvent> event =
+      HashChangeEvent::Constructor(aOwner, EmptyString(), init);
+    event.forget(aDOMEvent);
+    return NS_OK;
+  }
   if (aEventType.LowerCaseEqualsLiteral("customevent"))
     return NS_NewDOMCustomEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("storageevent")) {

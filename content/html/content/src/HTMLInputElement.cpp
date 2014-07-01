@@ -851,7 +851,7 @@ HTMLInputElement::InitColorPicker()
   }
 
   if (IsPopupBlocked()) {
-    nsGlobalWindow::FirePopupBlockedEvent(doc, win, nullptr, EmptyString(), EmptyString());
+    win->FirePopupBlockedEvent(doc, nullptr, EmptyString(), EmptyString());
     return NS_OK;
   }
 
@@ -898,7 +898,7 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
   }
 
   if (IsPopupBlocked()) {
-    nsGlobalWindow::FirePopupBlockedEvent(doc, win, nullptr, EmptyString(), EmptyString());
+    win->FirePopupBlockedEvent(doc, nullptr, EmptyString(), EmptyString());
     return NS_OK;
   }
 

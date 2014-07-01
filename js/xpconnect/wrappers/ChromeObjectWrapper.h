@@ -31,17 +31,17 @@ class ChromeObjectWrapper : public ChromeObjectWrapperBase
     /* Custom traps. */
     virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                        JS::Handle<jsid> id,
-                                       JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
+                                       JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
     virtual bool has(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                     JS::Handle<jsid> id, bool *bp) MOZ_OVERRIDE;
+                     JS::Handle<jsid> id, bool *bp) const MOZ_OVERRIDE;
     virtual bool get(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> receiver,
-                     JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) MOZ_OVERRIDE;
+                     JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) const MOZ_OVERRIDE;
 
     virtual bool objectClassIs(JS::Handle<JSObject*> obj, js::ESClassValue classValue,
-                               JSContext *cx) MOZ_OVERRIDE;
+                               JSContext *cx) const MOZ_OVERRIDE;
 
     virtual bool enter(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
-                       js::Wrapper::Action act, bool *bp) MOZ_OVERRIDE;
+                       js::Wrapper::Action act, bool *bp) const MOZ_OVERRIDE;
 
     // NB: One might think we'd need to implement enumerate(), keys(), iterate(),
     // and getPropertyNames() here. However, ES5 built-in properties aren't
@@ -51,7 +51,7 @@ class ChromeObjectWrapper : public ChromeObjectWrapperBase
     // never be anything more to enumerate up the prototype chain. So we can
     // atually skip these.
 
-    static ChromeObjectWrapper singleton;
+    static const ChromeObjectWrapper singleton;
 };
 
 } /* namespace xpc */

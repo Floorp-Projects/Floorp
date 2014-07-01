@@ -48,6 +48,8 @@
       ok(data.s === "hello", "string property");
       ok(data.x.i === 10, "nested property");
       ok(data.f() === 99, "function call");
+      let obj = new data.ctor();
+      ok(obj.a === 3, "constructor call");
       ok(document.title === "Hello, Kitty", "document node");
 
       data.i = 6;
