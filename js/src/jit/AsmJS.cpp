@@ -5672,8 +5672,8 @@ CheckFunctionsParallel(ModuleCompiler &m)
 
     IonSpew(IonSpew_Logs, "Can't log asm.js script. (Compiled on background thread.)");
 
-    // Saturate all helper threads plus the main thread.
-    size_t numParallelJobs = HelperThreadState().threadCount + 1;
+    // Saturate all helper threads.
+    size_t numParallelJobs = HelperThreadState().maxAsmJSCompilationThreads();
 
     // Allocate scoped AsmJSParallelTask objects. Each contains a unique
     // LifoAlloc that provides all necessary memory for compilation.
