@@ -303,20 +303,26 @@ public class RecentTabsPanel extends HomeFragment
                                                                    RecentTabs.TYPE });
 
             if (closedTabs != null && closedTabs.length > 0) {
-                addRow(c, null, context.getString(R.string.home_closed_tabs_title), RecentTabs.TYPE_HEADER);
+                // How many closed tabs are actually displayed.
+                int visibleClosedTabs = 0;
 
                 final int length = closedTabs.length;
                 for (int i = 0; i < length; i++) {
                     final String url = closedTabs[i].url;
 
-                    // Don't show recent tabs for about:home
+                    // Don't show recent tabs for about:home.
                     if (!AboutPages.isAboutHome(url)) {
+                        // If this is the first closed tab we're adding, add a header for the section.
+                        if (visibleClosedTabs == 0) {
+                            addRow(c, null, context.getString(R.string.home_closed_tabs_title), RecentTabs.TYPE_HEADER);
+                        }
                         addRow(c, url, closedTabs[i].title, RecentTabs.TYPE_CLOSED);
+                        visibleClosedTabs++;
                     }
                 }
 
                 // Add an "Open all" button if more than 2 tabs were added to the list.
-                if (length > 1) {
+                if (visibleClosedTabs > 1) {
                     addRow(c, null, null, RecentTabs.TYPE_OPEN_ALL_CLOSED);
                 }
             }

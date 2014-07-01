@@ -8,7 +8,6 @@
 #include "mozilla/dom/MozCellBroadcastEvent.h"
 #include "nsIDOMMozCellBroadcastMessage.h"
 #include "nsServiceManagerUtils.h"
-#include "GeneratedEvents.h"
 
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
 

@@ -4,12 +4,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional DeviceOrientationEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
+[Constructor(DOMString type, optional DeviceOrientationEventInit eventInitDict), LegacyEventInit]
 interface DeviceOrientationEvent : Event
 {
-  readonly attribute double alpha;
-  readonly attribute double beta;
-  readonly attribute double gamma;
+  readonly attribute double? alpha;
+  readonly attribute double? beta;
+  readonly attribute double? gamma;
   readonly attribute boolean absolute;
 
   // initDeviceOrientationEvent is a Gecko specific deprecated method.
@@ -17,16 +17,16 @@ interface DeviceOrientationEvent : Event
   void initDeviceOrientationEvent(DOMString type,
                                   boolean canBubble,
                                   boolean cancelable,
-                                  double alpha,
-                                  double beta,
-                                  double gamma,
+                                  double? alpha,
+                                  double? beta,
+                                  double? gamma,
                                   boolean absolute);
 };
 
 dictionary DeviceOrientationEventInit : EventInit
 {
-  double alpha = 0;
-  double beta = 0;
-  double gamma = 0;
+  double? alpha = null;
+  double? beta = null;
+  double? gamma = null;
   boolean absolute = false;
 };

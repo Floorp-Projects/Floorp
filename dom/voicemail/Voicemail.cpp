@@ -14,7 +14,6 @@
 #include "mozilla/Services.h"
 #include "nsDOMClassInfo.h"
 #include "nsServiceManagerUtils.h"
-#include "GeneratedEvents.h"
 
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
 const char* kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";

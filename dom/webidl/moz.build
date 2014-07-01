@@ -516,6 +516,8 @@ if CONFIG['MOZ_WEBSPEECH']:
         'SpeechGrammarList.webidl',
         'SpeechRecognition.webidl',
         'SpeechRecognitionAlternative.webidl',
+        'SpeechRecognitionError.webidl',
+        'SpeechRecognitionEvent.webidl',
         'SpeechRecognitionResult.webidl',
         'SpeechRecognitionResultList.webidl',
         'SpeechSynthesis.webidl',
@@ -535,7 +537,6 @@ WEBIDL_FILES += [
     'DeviceOrientationEvent.webidl',
     'DeviceStorageChangeEvent.webidl',
     'DOMTransactionEvent.webidl',
-    'ElementReplaceEvent.webidl',
     'HashChangeEvent.webidl',
     'MozApplicationEvent.webidl',
     'MozSettingsEvent.webidl',
@@ -608,12 +609,6 @@ else:
         'InstallTrigger.webidl',
     ]
 
-if CONFIG['MOZ_WEBSPEECH']:
-    WEBIDL_FILES += [
-        'SpeechRecognitionError.webidl',
-        'SpeechRecognitionEvent.webidl',
-    ]
-
 if CONFIG['MOZ_B2G_FM']:
     WEBIDL_FILES += [
         'FMRadio.webidl',
@@ -630,31 +625,52 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'CallEvent.webidl',
     'CallGroupErrorEvent.webidl',
     'CFStateChangeEvent.webidl',
+    'CloseEvent.webidl',
     'DataErrorEvent.webidl',
     'DataStoreChangeEvent.webidl',
     'DeviceLightEvent.webidl',
+    'DeviceOrientationEvent.webidl',
     'DeviceProximityEvent.webidl',
+    'DeviceStorageChangeEvent.webidl',
+    'DOMTransactionEvent.webidl',
     'DownloadEvent.webidl',
     'ErrorEvent.webidl',
+    'HashChangeEvent.webidl',
     'IccChangeEvent.webidl',
     'MediaStreamEvent.webidl',
+    'MozApplicationEvent.webidl',
     'MozClirModeEvent.webidl',
     'MozContactChangeEvent.webidl',
     'MozEmergencyCbModeEvent.webidl',
     'MozInterAppMessageEvent.webidl',
     'MozMmsEvent.webidl',
     'MozOtaStatusEvent.webidl',
+    'MozSettingsEvent.webidl',
     'MozSmsEvent.webidl',
     'MozStkCommandEvent.webidl',
+    'PageTransitionEvent.webidl',
+    'PopStateEvent.webidl',
+    'PopupBlockedEvent.webidl',
     'ProgressEvent.webidl',
+    'RecordErrorEvent.webidl',
     'RTCDataChannelEvent.webidl',
     'RTCPeerConnectionIceEvent.webidl',
     'RTCPeerConnectionIdentityErrorEvent.webidl',
     'RTCPeerConnectionIdentityEvent.webidl',
+    'SmartCardEvent.webidl',
+    'StyleRuleChangeEvent.webidl',
+    'StyleSheetApplicableStateChangeEvent.webidl',
+    'StyleSheetChangeEvent.webidl',
     'TrackEvent.webidl',
     'UserProximityEvent.webidl',
     'USSDReceivedEvent.webidl',
 ]
+
+if CONFIG['MOZ_WEBSPEECH']:
+    GENERATED_EVENTS_WEBIDL_FILES += [
+        'SpeechRecognitionEvent.webidl',
+        'SpeechSynthesisEvent.webidl',
+    ]
 
 if CONFIG['MOZ_GAMEPAD']:
     GENERATED_EVENTS_WEBIDL_FILES += [

@@ -4,17 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional DOMTransactionEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
+[Constructor(DOMString type, optional DOMTransactionEventInit eventInitDict)]
 interface DOMTransactionEvent : Event
 {
-  [Throws]
   readonly attribute any transactions;
-
-  [Throws]
-  void initDOMTransactionEvent(DOMString type,
-                               boolean canBubble,
-                               boolean cancelable,
-                               any transactions);
 };
 
 dictionary DOMTransactionEventInit : EventInit
