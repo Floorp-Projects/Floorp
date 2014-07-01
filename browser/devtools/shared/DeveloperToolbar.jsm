@@ -980,7 +980,7 @@ OutputPanel.prototype._update = function() {
         this._div.removeChild(this._div.firstChild);
       }
 
-      var links = node.ownerDocument.querySelectorAll('*[href]');
+      var links = node.querySelectorAll('*[href]');
       for (var i = 0; i < links.length; i++) {
         links[i].setAttribute('target', '_blank');
       }
