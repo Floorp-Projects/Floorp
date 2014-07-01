@@ -815,42 +815,6 @@ CssLogic.shortSource = function CssLogic_shortSource(aSheet)
 }
 
 /**
- * Extract the background image URL (if any) from a property value.
- * Used, for example, for the preview tooltip in the rule view and
- * computed view.
- *
- * @param {String} aProperty
- * @param {String} aSheetHref
- * @return {string} a image URL
- */
-CssLogic.getBackgroundImageUriFromProperty = function(aProperty, aSheetHref) {
-  let startToken = "url(", start = aProperty.indexOf(startToken), end;
-  if (start === -1) {
-    return null;
-  }
-
-  aProperty = aProperty.substring(start + startToken.length).trim();
-  let quote = aProperty.substring(0, 1);
-  if (quote === "'" || quote === '"') {
-    end = aProperty.search(new RegExp(quote + "\\s*\\)"));
-    start = 1;
-  } else {
-    end = aProperty.indexOf(")");
-    start = 0;
-  }
-
-  let uri = aProperty.substring(start, end).trim();
-  if (aSheetHref) {
-    let IOService = Cc["@mozilla.org/network/io-service;1"]
-      .getService(Ci.nsIIOService);
-    let sheetUri = IOService.newURI(aSheetHref, null, null);
-    uri = sheetUri.resolve(uri);
-  }
-
-  return uri;
-}
-
-/**
  * Find the position of [element] in [nodeList].
  * @returns an index of the match, or -1 if there is no match
  */
