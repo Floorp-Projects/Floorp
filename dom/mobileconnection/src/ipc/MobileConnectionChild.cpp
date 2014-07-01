@@ -139,6 +139,19 @@ MobileConnectionChild::GetNetworkSelectionMode(nsAString& aMode)
   aMode = mNetworkSelectionMode;
 }
 
+bool
+MobileConnectionChild::SendRequest(MobileConnectionRequest aRequest,
+                                   nsIMobileConnectionCallback* aRequestCallback)
+{
+  NS_ENSURE_TRUE(mLive, false);
+
+  // Deallocated in MobileConnectionChild::DeallocPMobileConnectionRequestChild().
+  MobileConnectionRequestChild* actor = new MobileConnectionRequestChild(aRequestCallback);
+  SendPMobileConnectionRequestConstructor(actor, aRequest);
+
+  return true;
+}
+
 void
 MobileConnectionChild::ActorDestroy(ActorDestroyReason why)
 {
