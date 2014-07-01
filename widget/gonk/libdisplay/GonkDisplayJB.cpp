@@ -248,7 +248,7 @@ GonkDisplayJB::Post(buffer_handle_t buf, int fence)
     mList->hwLayers[1].flags = 0;
     mList->hwLayers[1].handle = buf;
     mList->hwLayers[1].transform = 0;
-    mList->hwLayers[1].blending = HWC_BLENDING_PREMULT;
+    mList->hwLayers[1].blending = HWC_BLENDING_NONE;
 #if ANDROID_VERSION >= 19
     if (mHwc->common.version >= HWC_DEVICE_API_VERSION_1_3) {
         mList->hwLayers[1].sourceCropf.left = 0;
@@ -266,7 +266,7 @@ GonkDisplayJB::Post(buffer_handle_t buf, int fence)
     mList->hwLayers[1].visibleRegionScreen.rects = &mList->hwLayers[1].displayFrame;
     mList->hwLayers[1].acquireFenceFd = fence;
     mList->hwLayers[1].releaseFenceFd = -1;
-#if ANDROID_VERSION == 18
+#if ANDROID_VERSION >= 18
     mList->hwLayers[1].planeAlpha = 0xFF;
 #endif
     mHwc->prepare(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
