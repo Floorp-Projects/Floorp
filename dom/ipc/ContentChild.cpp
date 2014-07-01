@@ -150,6 +150,7 @@
 #include "mozilla/dom/telephony/PTelephonyChild.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "mozilla/net/NeckoMessageUtils.h"
+#include "mozilla/RemoteSpellcheckEngineChild.h"
 
 using namespace base;
 using namespace mozilla;
@@ -1049,6 +1050,20 @@ PBlobChild*
 ContentChild::AllocPBlobChild(const BlobConstructorParams& aParams)
 {
     return nsIContentChild::AllocPBlobChild(aParams);
+}
+
+mozilla::PRemoteSpellcheckEngineChild *
+ContentChild::AllocPRemoteSpellcheckEngineChild()
+{
+    mozilla::RemoteSpellcheckEngineChild *child = new mozilla::RemoteSpellcheckEngineChild();
+    return child;
+}
+
+bool
+ContentChild::DeallocPRemoteSpellcheckEngineChild(PRemoteSpellcheckEngineChild *child)
+{
+    delete child;
+    return true;
 }
 
 bool
