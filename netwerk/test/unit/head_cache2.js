@@ -45,8 +45,6 @@ const NOTWANTED =       1 << 11;
 const COMPLETE =        1 << 12;
 // Don't write meta/data and don't set valid in the callback, consumer will do it manually
 const DONTFILL =        1 << 13;
-// Used in combination with METAONLY, don't call setValid() on the entry after metadata has been set
-const DONTSETVALID =    1 << 14;
 
 var log_c2 = true;
 function LOG_C2(o, m)
@@ -194,13 +192,8 @@ OpenCallback.prototype =
         entry.metaDataReady();
         if (self.behavior & METAONLY) {
           // Since forcing GC/CC doesn't trigger OnWriterClosed, we have to set the entry valid manually :(
-          if (!(self.behavior & DONTSETVALID))
-            entry.setValid();
-
+          entry.setValid();
           entry.close();
-          if (self.behavior & WAITFORWRITE)
-            self.goon(entry);
-
           return;
         }
         do_execute_soon(function() { // emulate more network latency
