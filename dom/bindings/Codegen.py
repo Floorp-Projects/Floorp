@@ -9375,7 +9375,9 @@ class CGProxyNamedOperation(CGProxySpecialOperation):
             unwrapString = fill(
                 """
                 if (MOZ_LIKELY(JSID_IS_ATOM(${idName}))) {
-                  ${argName}.Rebind(js::GetAtomChars(JSID_TO_ATOM(${idName})), js::GetAtomLength(JSID_TO_ATOM(${idName})));
+                  JS::AutoCheckCannotGC nogc;
+                  JSAtom* atom = JSID_TO_ATOM(${idName});
+                  ${argName}.Rebind(js::GetTwoByteAtomChars(nogc, atom), js::GetAtomLength(atom));
                 } else {
                   nameVal = js::IdToValue(${idName});
                   $*{unwrapString}
