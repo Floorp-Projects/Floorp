@@ -4477,9 +4477,9 @@ GCRuntime::endSweepPhase(JSGCInvocationKind gckind, bool lastGC)
     }
 
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        zone->setGCLastBytes(zone->gcBytes, gckind);
         if (zone->isCollecting()) {
             JS_ASSERT(zone->isGCFinished());
+            zone->setGCLastBytes(zone->gcBytes, gckind);
             zone->setGCState(Zone::NoGC);
         }
 
