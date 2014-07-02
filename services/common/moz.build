@@ -9,3 +9,10 @@ TEST_DIRS += ['tests']
 EXTRA_COMPONENTS += [
     'servicesComponents.manifest',
 ]
+
+TESTING_JS_MODULES.services.common += [
+    'modules-testing/bagheeraserver.js',
+    'modules-testing/logging.js',
+    'modules-testing/storageserver.js',
+    'modules-testing/utils.js',
+]
