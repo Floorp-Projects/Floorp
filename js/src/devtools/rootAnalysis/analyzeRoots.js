@@ -472,7 +472,7 @@ function locationLine(text)
 
 function printEntryTrace(functionName, entry)
 {
-    var gcPoint = ('gcInfo' in entry) ? entry.gcInfo.ppoint : 0;
+    var gcPoint = entry.gcInfo ? entry.gcInfo.ppoint : 0;
 
     if (!functionBodies[0].lines)
         computePrintedLines(functionName);

@@ -28,6 +28,7 @@ public:
     NS_DECL_RDFITRIPLEVISITOR
     NS_DECL_ISUPPORTS
 protected:
+    ~TriplesVisitor() {}
     nsresult writeResource(nsIRDFResource* aResource);
     nsIOutputStream* mOut;
 };

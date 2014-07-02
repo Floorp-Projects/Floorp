@@ -391,14 +391,14 @@ private:
     Assertion*      mNextAssertion;
     nsCOMPtr<nsISupportsArray> mHashArcs;
 
+    virtual ~InMemoryAssertionEnumeratorImpl();
+
 public:
     InMemoryAssertionEnumeratorImpl(InMemoryDataSource* aDataSource,
                                     nsIRDFResource* aSource,
                                     nsIRDFResource* aProperty,
                                     nsIRDFNode* aTarget,
                                     bool aTruthValue);
-
-    virtual ~InMemoryAssertionEnumeratorImpl();
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -563,12 +563,12 @@ private:
     ArcEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
                        uint32_t aNumber, void* aArg);
 
+    virtual ~InMemoryArcsEnumeratorImpl();
+
 public:
     InMemoryArcsEnumeratorImpl(InMemoryDataSource* aDataSource,
                                nsIRDFResource* aSource,
                                nsIRDFNode* aTarget);
-
-    virtual ~InMemoryArcsEnumeratorImpl();
 
     // nsISupports interface
     NS_DECL_ISUPPORTS

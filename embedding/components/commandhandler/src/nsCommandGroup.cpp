@@ -19,12 +19,13 @@ class nsGroupsEnumerator : public nsISimpleEnumerator
 {
 public:
   nsGroupsEnumerator(nsControllerCommandGroup::GroupsHashtable &inHashTable);
-  virtual ~nsGroupsEnumerator();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATOR
 
 protected:
+  virtual ~nsGroupsEnumerator();
+
   static PLDHashOperator HashEnum(const nsACString &aKey, nsTArray<nsCString> *aData, void *aClosure);
   nsresult Initialize();
 
@@ -132,12 +133,13 @@ class nsNamedGroupEnumerator : public nsISimpleEnumerator
 {
 public:
   nsNamedGroupEnumerator(nsTArray<nsCString> *inArray);
-  virtual ~nsNamedGroupEnumerator();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATOR
 
 protected:
+  virtual ~nsNamedGroupEnumerator();
+
   nsTArray<nsCString> *mGroupArray;
   int32_t mIndex;
 };

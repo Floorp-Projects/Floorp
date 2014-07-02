@@ -95,6 +95,30 @@ extern bool gBluetoothDebugFlag;
     array.AppendElement(name);                                       \
   } while(0)                                                         \
 
+/**
+ * Resolve promise with |ret| if |x| is false.
+ */
+#define BT_ENSURE_TRUE_RESOLVE(x, ret)                               \
+  do {                                                               \
+    if (MOZ_UNLIKELY(!(x))) {                                        \
+      BT_API2_LOGR("BT_ENSURE_TRUE_RESOLVE(" #x ") failed");         \
+      promise->MaybeResolve(ret);                                    \
+      return promise.forget();                                       \
+    }                                                                \
+  } while(0)
+
+/**
+ * Reject promise with |ret| if |x| is false.
+ */
+#define BT_ENSURE_TRUE_REJECT(x, ret)                                \
+  do {                                                               \
+    if (MOZ_UNLIKELY(!(x))) {                                        \
+      BT_API2_LOGR("BT_ENSURE_TRUE_REJECT(" #x ") failed");          \
+      promise->MaybeReject(ret);                                     \
+      return promise.forget();                                       \
+    }                                                                \
+  } while(0)
+
 #define BEGIN_BLUETOOTH_NAMESPACE \
   namespace mozilla { namespace dom { namespace bluetooth {
 #define END_BLUETOOTH_NAMESPACE \
@@ -102,10 +126,11 @@ extern bool gBluetoothDebugFlag;
 #define USING_BLUETOOTH_NAMESPACE \
   using namespace mozilla::dom::bluetooth;
 
-#define KEY_LOCAL_AGENT  "/B2G/bluetooth/agent"
-#define KEY_REMOTE_AGENT "/B2G/bluetooth/remote_device_agent"
-#define KEY_MANAGER      "/B2G/bluetooth/manager"
-#define KEY_ADAPTER      "/B2G/bluetooth/adapter"
+#define KEY_LOCAL_AGENT       "/B2G/bluetooth/agent"
+#define KEY_REMOTE_AGENT      "/B2G/bluetooth/remote_device_agent"
+#define KEY_MANAGER           "/B2G/bluetooth/manager"
+#define KEY_ADAPTER           "/B2G/bluetooth/adapter"
+#define KEY_DISCOVERY_HANDLE  "/B2G/bluetooth/discovery_handle"
 
 /**
  * When the connection status of a Bluetooth profile is changed, we'll notify

@@ -16,7 +16,6 @@ class nsEmbedStream : public nsISupports
  public:
 
   nsEmbedStream();
-  virtual ~nsEmbedStream();
 
   void      InitOwner      (nsIWebBrowser *aOwner);
   NS_METHOD Init           (void);
@@ -26,6 +25,9 @@ class nsEmbedStream : public nsISupports
   NS_METHOD CloseStream    (void);
 
   NS_DECL_ISUPPORTS
+
+ protected:
+  virtual ~nsEmbedStream();
 
  private:
   nsIWebBrowser            *mOwner;

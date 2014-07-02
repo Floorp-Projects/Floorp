@@ -327,11 +327,12 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce) const
 
   // Check it the allowed host starts with a wilcard.
   if (mHost.First() == '*') {
-    // Eliminate leading "*." and check if uriHost ends with defined mHost.
     NS_ASSERTION(mHost[1] == '.', "Second character needs to be '.' whenever host starts with '*'");
 
+    // Eliminate leading "*", but keeping the FULL STOP (.) thereafter before checking
+    // if the remaining characters match: see http://www.w3.org/TR/CSP11/#matching
     nsString wildCardHost = mHost;
-    wildCardHost = Substring(wildCardHost, 2, wildCardHost.Length() - 2);
+    wildCardHost = Substring(wildCardHost, 1, wildCardHost.Length() - 1);
     if (!StringEndsWith(NS_ConvertUTF8toUTF16(uriHost), wildCardHost)) {
       return false;
     }
@@ -647,45 +648,68 @@ nsCSPDirective::toString(nsAString& outStr) const
   }
 }
 
-nsContentPolicyType
-CSP_DirectiveToContentType(enum CSPDirective aDir)
+enum CSPDirective
+CSP_ContentTypeToDirective(nsContentPolicyType aType)
 {
-  switch (aDir) {
-    case CSP_IMG_SRC:    return nsIContentPolicy::TYPE_IMAGE;
-    case CSP_SCRIPT_SRC: return nsIContentPolicy::TYPE_SCRIPT;
-    case CSP_STYLE_SRC:  return nsIContentPolicy::TYPE_STYLESHEET;
-    case CSP_FONT_SRC:   return nsIContentPolicy::TYPE_FONT;
-    case CSP_MEDIA_SRC:  return nsIContentPolicy::TYPE_MEDIA;
-    case CSP_OBJECT_SRC: return nsIContentPolicy::TYPE_OBJECT;
-    case CSP_FRAME_SRC:  return nsIContentPolicy::TYPE_SUBDOCUMENT;
-    case CSP_REPORT_URI: return nsIContentPolicy::TYPE_CSP_REPORT;
+  switch (aType) {
+    case nsIContentPolicy::TYPE_IMAGE:
+      return CSP_IMG_SRC;
+
+    case nsIContentPolicy::TYPE_SCRIPT:
+      return CSP_SCRIPT_SRC;
+
+    case nsIContentPolicy::TYPE_STYLESHEET:
+      return CSP_STYLE_SRC;
+
+    case nsIContentPolicy::TYPE_FONT:
+      return CSP_FONT_SRC;
+
+    case nsIContentPolicy::TYPE_MEDIA:
+      return CSP_MEDIA_SRC;
+
+    case nsIContentPolicy::TYPE_SUBDOCUMENT:
+      return CSP_FRAME_SRC;
+
+    // BLock XSLT as script, see bug 910139
+    case nsIContentPolicy::TYPE_XSLT:
+      return CSP_SCRIPT_SRC;
 
     // TODO(sid): fix this mapping to be more precise (bug 999656)
-    case CSP_FRAME_ANCESTORS: return nsIContentPolicy::TYPE_DOCUMENT;
+    case nsIContentPolicy::TYPE_DOCUMENT:
+      return CSP_FRAME_ANCESTORS;
 
-    // Fall through to error for the following Directives:
-    case CSP_DEFAULT_SRC:
-    case CSP_CONNECT_SRC:
-    case CSP_LAST_DIRECTIVE_VALUE:
+    case nsIContentPolicy::TYPE_WEBSOCKET:
+    case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
+    case nsIContentPolicy::TYPE_BEACON:
+      return CSP_CONNECT_SRC;
+
+    case nsIContentPolicy::TYPE_OBJECT:
+    case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST:
+      return CSP_OBJECT_SRC;
+
+    case nsIContentPolicy::TYPE_XBL:
+    case nsIContentPolicy::TYPE_PING:
+    case nsIContentPolicy::TYPE_DTD:
+    case nsIContentPolicy::TYPE_OTHER:
+      return CSP_DEFAULT_SRC;
+
+    // CSP can not block csp reports, fall through to error
+    case nsIContentPolicy::TYPE_CSP_REPORT:
+    // Fall through to error for all other directives
     default:
-      NS_ASSERTION(false, "Can not convert CSPDirective into nsContentPolicyType");
+      NS_ASSERTION(false, "Can not map nsContentPolicyType to CSPDirective");
   }
-  return nsIContentPolicy::TYPE_OTHER;
+  return CSP_DEFAULT_SRC;
 }
 
 bool
-nsCSPDirective::directiveNameEqualsContentType(nsContentPolicyType aContentType) const
+nsCSPDirective::restrictsContentType(nsContentPolicyType aContentType) const
 {
   // make sure we do not check for the default src before any other sources
   if (isDefaultDirective()) {
     return false;
   }
-
-  // BLock XSLT as script, see bug 910139
-  if (aContentType == nsIContentPolicy::TYPE_XSLT) {
-    aContentType = nsIContentPolicy::TYPE_SCRIPT;
-  }
-  return aContentType == CSP_DirectiveToContentType(mDirective);
+  return mDirective == CSP_ContentTypeToDirective(aContentType);
 }
 
 void
@@ -742,7 +766,7 @@ nsCSPPolicy::permits(nsContentPolicyType aContentType,
 
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
     // Check if the directive name matches
-    if (mDirectives[i]->directiveNameEqualsContentType(aContentType)) {
+    if (mDirectives[i]->restrictsContentType(aContentType)) {
       if (!mDirectives[i]->permits(aUri, aNonce)) {
         mDirectives[i]->toString(outViolatedDirective);
         return false;
@@ -788,7 +812,7 @@ nsCSPPolicy::allows(nsContentPolicyType aContentType,
 
   // Try to find a matching directive
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
-    if (mDirectives[i]->directiveNameEqualsContentType(aContentType)) {
+    if (mDirectives[i]->restrictsContentType(aContentType)) {
       if (mDirectives[i]->allows(aKeyword, aHashOrNonce)) {
         return true;
       }
@@ -853,7 +877,7 @@ nsCSPPolicy::getDirectiveStringForContentType(nsContentPolicyType aContentType,
                                               nsAString& outDirective) const
 {
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
-    if (mDirectives[i]->directiveNameEqualsContentType(aContentType)) {
+    if (mDirectives[i]->restrictsContentType(aContentType)) {
       mDirectives[i]->toString(outDirective);
       return;
     }
