@@ -59,7 +59,6 @@
 #include "nsIMutable.h"
 #include "nsIObserverService.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsMemoryInfoDumper.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStyleSheetService.h"
 #include "nsXULAppAPI.h"
@@ -193,22 +192,22 @@ public:
     NS_DECL_ISUPPORTS
 
     MemoryReportRequestChild(uint32_t aGeneration, bool aAnonymize,
-                             const FileDescriptor& aDMDFile);
+                             const nsAString& aDMDDumpIdent);
     NS_IMETHOD Run();
 private:
     virtual ~MemoryReportRequestChild();
 
     uint32_t mGeneration;
     bool     mAnonymize;
-    FileDescriptor mDMDFile;
+    nsString mDMDDumpIdent;
 };
 
 NS_IMPL_ISUPPORTS(MemoryReportRequestChild, nsIRunnable)
 
 MemoryReportRequestChild::MemoryReportRequestChild(
-    uint32_t aGeneration, bool aAnonymize, const FileDescriptor& aDMDFile)
+    uint32_t aGeneration, bool aAnonymize, const nsAString& aDMDDumpIdent)
   : mGeneration(aGeneration), mAnonymize(aAnonymize),
-    mDMDFile(aDMDFile)
+    mDMDDumpIdent(aDMDDumpIdent)
 {
     MOZ_COUNT_CTOR(MemoryReportRequestChild);
 }
@@ -693,10 +692,10 @@ PMemoryReportRequestChild*
 ContentChild::AllocPMemoryReportRequestChild(const uint32_t& aGeneration,
                                              const bool &aAnonymize,
                                              const bool &aMinimizeMemoryUsage,
-                                             const FileDescriptor& aDMDFile)
+                                             const nsString& aDMDDumpIdent)
 {
     MemoryReportRequestChild *actor =
-        new MemoryReportRequestChild(aGeneration, aAnonymize, aDMDFile);
+        new MemoryReportRequestChild(aGeneration, aAnonymize, aDMDDumpIdent);
     actor->AddRef();
     return actor;
 }
@@ -751,7 +750,7 @@ ContentChild::RecvPMemoryReportRequestConstructor(
     const uint32_t& aGeneration,
     const bool& aAnonymize,
     const bool& aMinimizeMemoryUsage,
-    const FileDescriptor& aDMDFile)
+    const nsString& aDMDDumpIdent)
 {
     MemoryReportRequestChild *actor =
         static_cast<MemoryReportRequestChild*>(aChild);
@@ -785,7 +784,7 @@ NS_IMETHODIMP MemoryReportRequestChild::Run()
         new MemoryReportsWrapper(&reports);
     nsRefPtr<MemoryReportCallback> cb = new MemoryReportCallback(process);
     mgr->GetReportsForThisProcessExtended(cb, wrappedReports, mAnonymize,
-                                          FileDescriptorToFILE(mDMDFile, "wb"));
+                                          mDMDDumpIdent);
 
     bool sent = Send__delete__(this, mGeneration, reports);
     return sent ? NS_OK : NS_ERROR_FAILURE;

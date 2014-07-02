@@ -1104,17 +1104,8 @@ nsMemoryReporterManager::StartGettingReports()
   GetReportsState* s = mGetReportsState;
 
   // Get reports for this process.
-  FILE *parentDMDFile = nullptr;
-#ifdef MOZ_DMD
-  nsresult rv = nsMemoryInfoDumper::OpenDMDFile(s->mDMDDumpIdent, getpid(),
-                                                &parentDMDFile);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    // Proceed with the memory report as if DMD were disabled.
-    parentDMDFile = nullptr;
-  }
-#endif
   GetReportsForThisProcessExtended(s->mHandleReport, s->mHandleReportData,
-                                   s->mAnonymize, parentDMDFile);
+                                   s->mAnonymize, s->mDMDDumpIdent);
   s->mParentDone = true;
 
   // If there are no remaining child processes, we can finish up immediately.
@@ -1147,13 +1138,13 @@ nsMemoryReporterManager::GetReportsForThisProcess(
   nsISupports* aHandleReportData, bool aAnonymize)
 {
   return GetReportsForThisProcessExtended(aHandleReport, aHandleReportData,
-                                          aAnonymize, nullptr);
+                                          aAnonymize, nsString());
 }
 
 NS_IMETHODIMP
 nsMemoryReporterManager::GetReportsForThisProcessExtended(
   nsIHandleReportCallback* aHandleReport, nsISupports* aHandleReportData,
-  bool aAnonymize, FILE* aDMDFile)
+  bool aAnonymize, const nsAString& aDMDDumpIdent)
 {
   // Memory reporters are not necessarily threadsafe, so this function must
   // be called from the main thread.
@@ -1162,13 +1153,11 @@ nsMemoryReporterManager::GetReportsForThisProcessExtended(
   }
 
 #ifdef MOZ_DMD
-  if (aDMDFile) {
+  if (!aDMDDumpIdent.IsEmpty()) {
     // Clear DMD's reportedness state before running the memory
     // reporters, to avoid spurious twice-reported warnings.
     dmd::ClearReports();
   }
-#else
-  MOZ_ASSERT(!aDMDFile);
 #endif
 
   MemoryReporterArray allReporters;
@@ -1183,8 +1172,8 @@ nsMemoryReporterManager::GetReportsForThisProcessExtended(
   }
 
 #ifdef MOZ_DMD
-  if (aDMDFile) {
-    return nsMemoryInfoDumper::DumpDMDToFile(aDMDFile);
+  if (!aDMDDumpIdent.IsEmpty()) {
+    return nsMemoryInfoDumper::DumpDMD(aDMDDumpIdent);
   }
 #endif
 

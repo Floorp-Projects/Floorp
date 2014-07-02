@@ -508,12 +508,12 @@ NS_IMPL_ISUPPORTS(DumpReportCallback, nsIHandleReportCallback)
 
 static void
 MakeFilename(const char* aPrefix, const nsAString& aIdentifier,
-             int aPid, const char* aSuffix, nsACString& aResult)
+             const char* aSuffix, nsACString& aResult)
 {
   aResult = nsPrintfCString("%s-%s-%d.%s",
                             aPrefix,
                             NS_ConvertUTF16toUTF8(aIdentifier).get(),
-                            aPid, aSuffix);
+                            getpid(), aSuffix);
 }
 
 #ifdef MOZ_DMD
@@ -633,8 +633,7 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
   // each process as was the case before bug 946407.  This is so that
   // the get_about_memory.py script in the B2G repository can
   // determine when it's done waiting for files to appear.
-  MakeFilename("unified-memory-report", identifier, getpid(), "json.gz",
-               mrFilename);
+  MakeFilename("unified-memory-report", identifier, "json.gz", mrFilename);
 
   nsCOMPtr<nsIFile> mrTmpFile;
   nsresult rv;
@@ -677,25 +676,24 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
 
 #ifdef MOZ_DMD
 nsresult
-nsMemoryInfoDumper::OpenDMDFile(const nsAString& aIdentifier, int aPid,
-                                FILE** aOutFile)
+nsMemoryInfoDumper::DumpDMD(const nsAString& aIdentifier)
 {
   if (!dmd::IsRunning()) {
-    *aOutFile = nullptr;
     return NS_OK;
   }
+
+  nsresult rv;
 
   // Create a filename like dmd-<identifier>-<pid>.txt.gz, which will be used
   // if DMD is enabled.
   nsCString dmdFilename;
-  MakeFilename("dmd", aIdentifier, aPid, "txt.gz", dmdFilename);
+  MakeFilename("dmd", aIdentifier, "txt.gz", dmdFilename);
 
   // Open a new DMD file named |dmdFilename| in NS_OS_TEMP_DIR for writing,
   // and dump DMD output to it.  This must occur after the memory reporters
   // have been run (above), but before the memory-reports file has been
   // renamed (so scripts can detect the DMD file, if present).
 
-  nsresult rv;
   nsCOMPtr<nsIFile> dmdFile;
   rv = nsDumpUtils::OpenTempFile(dmdFilename,
                                  getter_AddRefs(dmdFile),
@@ -703,21 +701,15 @@ nsMemoryInfoDumper::OpenDMDFile(const nsAString& aIdentifier, int aPid,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  rv = dmdFile->OpenANSIFileDesc("wb", aOutFile);
-  NS_WARN_IF(NS_FAILED(rv));
-  return rv;
-}
 
-nsresult
-nsMemoryInfoDumper::DumpDMDToFile(FILE* aFile)
-{
   nsRefPtr<nsGZFileWriter> dmdWriter = new nsGZFileWriter();
-  nsresult rv = dmdWriter->InitANSIFileDesc(aFile);
+  rv = dmdWriter->Init(dmdFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Dump DMD output to the file.
+
   DMDWriteState state(dmdWriter);
   dmd::Writer w(DMDWrite, &state);
   dmd::Dump(w);
@@ -725,21 +717,6 @@ nsMemoryInfoDumper::DumpDMDToFile(FILE* aFile)
   rv = dmdWriter->Finish();
   NS_WARN_IF(NS_FAILED(rv));
   return rv;
-}
-
-nsresult
-nsMemoryInfoDumper::DumpDMD(const nsAString& aIdentifier)
-{
-  nsresult rv;
-  FILE* dmdFile;
-  rv = OpenDMDFile(aIdentifier, getpid(), &dmdFile);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  if (!dmdFile) {
-    return NS_OK;
-  }
-  return DumpDMDToFile(dmdFile);
 }
 #endif  // MOZ_DMD
 
