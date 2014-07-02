@@ -35,6 +35,8 @@ CopySurfaceDataToPackedArray(uint8_t* aSrc, uint8_t* aDst, IntSize aSrcSize,
 {
   MOZ_ASSERT(aBytesPerPixel > 0,
              "Negative stride for aDst not currently supported");
+  MOZ_ASSERT(BufferSizeFromStrideAndHeight(aSrcStride, aSrcSize.height) > 0,
+             "How did we end up with a surface with such a big buffer?");
 
   int packedStride = aSrcSize.width * aBytesPerPixel;
 
