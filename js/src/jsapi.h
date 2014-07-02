@@ -4173,6 +4173,10 @@ JS_StringHasLatin1Chars(JSString *str);
 extern JS_PUBLIC_API(const jschar *)
 JS_GetStringCharsAndLength(JSContext *cx, JSString *str, size_t *length);
 
+extern JS_PUBLIC_API(const JS::Latin1Char *)
+JS_GetLatin1StringCharsAndLength(JSContext *cx, const JS::AutoCheckCannotGC &nogc, JSString *str,
+                                 size_t *length);
+
 extern JS_PUBLIC_API(const jschar *)
 JS_GetTwoByteStringCharsAndLength(JSContext *cx, const JS::AutoCheckCannotGC &nogc, JSString *str,
                                   size_t *length);
