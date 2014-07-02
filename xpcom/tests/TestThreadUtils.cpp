@@ -34,6 +34,14 @@ class nsFoo : public nsISupports {
   virtual ~nsFoo() {}
 };
 
+namespace mozilla {
+template<>
+struct HasDangerousPublicDestructor<nsFoo>
+{
+  static const bool value = true;
+};
+}
+
 NS_IMPL_ISUPPORTS0(nsFoo)
 
 class TestSuicide : public nsRunnable {
@@ -55,8 +63,9 @@ private:
 };
 
 class nsBar : public nsISupports {
-  NS_DECL_ISUPPORTS
   virtual ~nsBar() {}
+public:
+  NS_DECL_ISUPPORTS
   void DoBar1(void) {
     gRunnableExecuted[TEST_CALL_VOID_ARG_VOID_RETURN] = true;
   }

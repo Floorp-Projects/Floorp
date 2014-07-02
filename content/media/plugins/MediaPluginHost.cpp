@@ -116,7 +116,7 @@ static bool IsOmxSupported()
     if (gfxInfo) {
       int32_t status;
       if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_STAGEFRIGHT, &status))) {
-        if (status != nsIGfxInfo::FEATURE_NO_INFO) {
+        if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
           NS_WARNING("XXX stagefright blacklisted\n");
           return false;
         }

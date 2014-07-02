@@ -451,17 +451,16 @@ public:
     return *aResult ? NS_OK : NS_ERROR_FAILURE;
   }
 
-  // Virtual destructor since subclass nsPathsDirectoryEnumerator
-  // does not re-implement Release()
-
-  virtual ~nsAppDirectoryEnumerator()
-  {
-  }
-
 protected:
   nsIDirectoryServiceProvider* mProvider;
   const char** mCurrentKey;
   nsCOMPtr<nsIFile> mNext;
+
+  // Virtual destructor since subclass nsPathsDirectoryEnumerator
+  // does not re-implement Release()
+  virtual ~nsAppDirectoryEnumerator()
+  {
+  }
 };
 
 NS_IMPL_ISUPPORTS(nsAppDirectoryEnumerator, nsISimpleEnumerator)
@@ -475,8 +474,11 @@ NS_IMPL_ISUPPORTS(nsAppDirectoryEnumerator, nsISimpleEnumerator)
 #define PATH_SEPARATOR ':'
 #endif
 
-class nsPathsDirectoryEnumerator : public nsAppDirectoryEnumerator
+class nsPathsDirectoryEnumerator MOZ_FINAL
+  : public nsAppDirectoryEnumerator
 {
+  ~nsPathsDirectoryEnumerator() {}
+
 public:
   /**
    * aKeyList is a null-terminated list.

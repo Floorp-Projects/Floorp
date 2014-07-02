@@ -157,28 +157,14 @@ template<typename T>
 static inline void
 CheckMarkedThing(JSTracer *trc, T **thingp)
 {
+#ifdef DEBUG
     JS_ASSERT(trc);
     JS_ASSERT(thingp);
 
-#if defined(JS_CRASH_DIAGNOSTICS) || defined(DEBUG)
     T *thing = *thingp;
-#endif
-
-#ifdef JS_CRASH_DIAGNOSTICS
-    if (uintptr_t(thing) <= ArenaSize || (uintptr_t(thing) & 1) != 0) {
-        char msgbuf[1024];
-        const char *label = trc->tracingName("<unknown>");
-        JS_snprintf(msgbuf, sizeof(msgbuf),
-                    "[crash diagnostics] Marking invalid pointer %p @ %p of type %s, named \"%s\"",
-                    thing, thingp, TraceKindAsAscii(MapTypeToTraceKind<T>::kind), label);
-        MOZ_ReportAssertionFailure(msgbuf, __FILE__, __LINE__);
-        MOZ_CRASH();
-    }
-#endif
     JS_ASSERT(*thingp);
 
-#ifdef DEBUG
-#ifdef JSGC_FJGENERATIONAL
+# ifdef JSGC_FJGENERATIONAL
     /*
      * The code below (runtimeFromMainThread(), etc) makes assumptions
      * not valid for the ForkJoin worker threads during ForkJoin GGC,
@@ -186,7 +172,7 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
      */
     if (ForkJoinContext::current())
         return;
-#endif
+# endif
 
     /* This function uses data that's not available in the nursery. */
     if (IsInsideNursery(thing))
@@ -237,7 +223,6 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
     JS_ASSERT_IF(IsThingPoisoned(thing) && rt->isHeapBusy(),
                  !InFreeList(thing->arenaHeader(), thing));
 #endif
-
 }
 
 template<typename T>

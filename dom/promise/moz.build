@@ -8,13 +8,15 @@ TEST_DIRS += ['tests']
 
 EXPORTS.mozilla.dom += [
     'Promise.h',
+    'PromiseDebugging.h',
     'PromiseNativeHandler.h',
     'PromiseWorkerProxy.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'Promise.cpp',
     'PromiseCallback.cpp',
+    'PromiseDebugging.cpp'
 ]
 
 FAIL_ON_WARNINGS = True
