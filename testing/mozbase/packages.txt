@@ -1,6 +1,7 @@
 manifestparser.pth:testing/mozbase/manifestparser
 mozb2g.pth:testing/mozbase/mozb2g
 mozcrash.pth:testing/mozbase/mozcrash
+mozdebug.pth:testing/mozbase/mozdebug
 mozdevice.pth:testing/mozbase/mozdevice
 mozfile.pth:testing/mozbase/mozfile
 mozhttpd.pth:testing/mozbase/mozhttpd
