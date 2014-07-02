@@ -46,8 +46,8 @@ class Emulator(Device):
     telnet = None
 
     def __init__(self, app_ctx, arch, resolution=None, sdcard=None, userdata=None,
-                 logdir=None, no_window=None, binary=None):
-        Device.__init__(self, app_ctx)
+                 no_window=None, binary=None, **kwargs):
+        Device.__init__(self, app_ctx, **kwargs)
 
         self.arch = ArchContext(arch, self.app_ctx, binary=binary)
         self.resolution = resolution or '320x480'
@@ -58,7 +58,6 @@ class Emulator(Device):
         if userdata:
             self.userdata = tempfile.NamedTemporaryFile(prefix='qemu-userdata')
             shutil.copyfile(userdata, self.userdata)
-        self.logdir = logdir
         self.no_window = no_window
 
         self.battery = EmulatorBattery(self)
@@ -86,14 +85,14 @@ class Emulator(Device):
                           '-qemu'] + self.arch.extra_args)
         return qemu_args
 
-    def _get_online_devices(self):
-        return set([d[0] for d in self.dm.devices() if d[1] != 'offline'])
-
     def start(self):
         """
         Starts a new emulator.
         """
-        original_devices = self._get_online_devices()
+        if self.proc:
+            return
+
+        original_devices = set(self._get_online_devices())
 
         qemu_log = None
         qemu_proc_args = {}
@@ -108,38 +107,33 @@ class Emulator(Device):
         self.proc = ProcessHandler(self.args, **qemu_proc_args)
         self.proc.run()
 
-        devices = self._get_online_devices()
+        devices = set(self._get_online_devices())
         now = datetime.datetime.now()
         while (devices - original_devices) == set([]):
             time.sleep(1)
             if datetime.datetime.now() - now > datetime.timedelta(seconds=60):
                 raise TimeoutException('timed out waiting for emulator to start')
-            devices = self._get_online_devices()
-        self.connect(devices - original_devices)
+            devices = set(self._get_online_devices())
+        devices = devices - original_devices
+        self.serial = devices.pop()
+        self.connect()
 
-    def connect(self, devices=None):
-        """
-        Connects to an already running emulator.
-        """
-        devices = list(devices or self._get_online_devices())
-        serial = [d for d in devices if d.startswith('emulator')][0]
-        self.dm._deviceSerial = serial
-        self.dm.connect()
-        self.port = int(serial[serial.rindex('-')+1:])
+    def _get_online_devices(self):
+        return set([d[0] for d in self.dm.devices() if d[1] != 'offline' if d[0].startswith('emulator')])
 
+    def connect(self):
+        """
+        Connects to a running device. If no serial was specified in the
+        constructor, defaults to the first entry in `adb devices`.
+        """
+        if self.connected:
+            return
+
+        Device.connect(self)
+
+        self.port = int(self.serial[self.serial.rindex('-')+1:])
         self.geo.set_default_location()
         self.screen.initialize()
-
-        print self.logdir
-        if self.logdir:
-            # save logcat
-            logcat_log = os.path.join(self.logdir, '%s.log' % serial)
-            if os.path.isfile(logcat_log):
-                self._rotate_log(logcat_log)
-            logcat_args = [self.app_ctx.adb, '-s', '%s' % serial,
-                           'logcat', '-v', 'threadtime']
-            self.logcat_proc = ProcessHandler(logcat_args, logfile=logcat_log)
-            self.logcat_proc.run()
 
         # setup DNS fix for networking
         self.app_ctx.dm.shellCheckOutput(['setprop', 'net.dns1', '10.0.2.3'])
@@ -172,25 +166,6 @@ class Emulator(Device):
         # Remove temporary sdcard
         if self.sdcard and os.path.isfile(self.sdcard):
             os.remove(self.sdcard)
-
-    def _rotate_log(self, srclog, index=1):
-        """
-        Rotate a logfile, by recursively rotating logs further in the sequence,
-        deleting the last file if necessary.
-        """
-        basename = os.path.basename(srclog)
-        basename = basename[:-len('.log')]
-        if index > 1:
-            basename = basename[:-len('.1')]
-        basename = '%s.%d.log' % (basename, index)
-
-        destlog = os.path.join(self.logdir, basename)
-        if os.path.isfile(destlog):
-            if index == 3:
-                os.remove(destlog)
-            else:
-                self._rotate_log(destlog, index+1)
-        shutil.move(srclog, destlog)
 
     # TODO this function is B2G specific and shouldn't live here
     @uses_marionette
