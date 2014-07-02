@@ -32,7 +32,9 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/unused.h"
 
-#define ERR_SET_PROPERTY  "SetPropertyError"
+#define ERR_SET_PROPERTY    "SetPropertyError"
+#define ERR_START_BLUETOOTH "StartBluetoothError"
+#define ERR_STOP_BLUETOOTH  "StopBluetoothError"
 
 #define ENSURE_BLUETOOTH_IS_READY(runnable, result)                    \
   do {                                                                 \
@@ -912,9 +914,18 @@ BluetoothServiceBluedroid::StartInternal(BluetoothReplyRunnable* aRunnable)
   if (NS_FAILED(ret)) {
     nsRefPtr<nsRunnable> runnable =
       new BluetoothService::ToggleBtAck(false);
+
     if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
       BT_WARNING("Failed to dispatch to main thread!");
     }
+
+    // Reject Promise
+    if(aRunnable) {
+      DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                             NS_LITERAL_STRING(ERR_START_BLUETOOTH));
+      sChangeAdapterStateRunnableArray.RemoveElement(aRunnable);
+    }
+
     BT_LOGR("Error");
   }
 
@@ -935,9 +946,18 @@ BluetoothServiceBluedroid::StopInternal(BluetoothReplyRunnable* aRunnable)
   if (NS_FAILED(ret)) {
     nsRefPtr<nsRunnable> runnable =
       new BluetoothService::ToggleBtAck(true);
+
     if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
       BT_WARNING("Failed to dispatch to main thread!");
     }
+
+    // Reject Promise
+    if(aRunnable) {
+      DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                             NS_LITERAL_STRING(ERR_STOP_BLUETOOTH));
+      sChangeAdapterStateRunnableArray.RemoveElement(aRunnable);
+    }
+
     BT_LOGR("Error");
   }
 
