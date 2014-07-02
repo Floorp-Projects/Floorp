@@ -32,7 +32,7 @@ namespace layers {
 
 map<base::ProcessId, SharedBufferManagerParent* > SharedBufferManagerParent::sManagers;
 StaticAutoPtr<Monitor> SharedBufferManagerParent::sManagerMonitor;
-Atomic<uint32_t> SharedBufferManagerParent::sBufferKey(0);
+uint64_t SharedBufferManagerParent::sBufferKey(0);
 
 #ifdef MOZ_WIDGET_GONK
 class GrallocReporter MOZ_FINAL : public nsIMemoryReporter
@@ -48,7 +48,7 @@ public:
       base::ProcessId pid = it->first;
       SharedBufferManagerParent *mgr = it->second;
 
-      std::map<int, android::sp<android::GraphicBuffer> >::iterator buf_it;
+      std::map<int64_t, android::sp<android::GraphicBuffer> >::iterator buf_it;
       for (buf_it = mgr->mBuffers.begin(); buf_it != mgr->mBuffers.end(); buf_it++) {
         nsresult rv;
         android::sp<android::GraphicBuffer> gb = buf_it->second;
@@ -204,7 +204,7 @@ bool SharedBufferManagerParent::RecvDropGrallocBuffer(const mozilla::layers::May
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   NS_ASSERTION(handle.type() == MaybeMagicGrallocBufferHandle::TGrallocBufferRef, "We shouldn't interact with the real buffer!");
-  int bufferKey = handle.get_GrallocBufferRef().mKey;
+  int64_t bufferKey = handle.get_GrallocBufferRef().mKey;
   sp<GraphicBuffer> buf = GetGraphicBuffer(bufferKey);
   MOZ_ASSERT(buf.get());
   MutexAutoLock lock(mBuffersMutex);
@@ -243,7 +243,7 @@ void SharedBufferManagerParent::DropGrallocBufferImpl(mozilla::layers::SurfaceDe
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   MutexAutoLock lock(mBuffersMutex);
-  int key = -1;
+  int64_t key = -1;
   MaybeMagicGrallocBufferHandle handle;
   if (aDesc.type() == SurfaceDescriptor::TNewSurfaceDescriptorGralloc)
     handle = aDesc.get_NewSurfaceDescriptorGralloc().buffer();
@@ -276,7 +276,7 @@ SharedBufferManagerParent* SharedBufferManagerParent::GetInstance(ProcessId id)
 
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
 android::sp<android::GraphicBuffer>
-SharedBufferManagerParent::GetGraphicBuffer(int key)
+SharedBufferManagerParent::GetGraphicBuffer(int64_t key)
 {
   MutexAutoLock lock(mBuffersMutex);
   if (mBuffers.count(key) == 1) {
