@@ -399,7 +399,7 @@ public:
     // Call TryGetMathTable to try to load the Open Type MATH table. The other
     // functions forward the call to the gfxMathTable class. The GetMath...()
     // functions MUST NOT be called unless TryGetMathTable() has returned true.
-    bool     TryGetMathTable(gfxFont* aFont);
+    bool     TryGetMathTable();
     gfxFloat GetMathConstant(MathConstant aConstant);
     bool     GetMathItalicsCorrection(uint32_t aGlyphID,
                                       gfxFloat* aItalicCorrection);
@@ -1958,6 +1958,24 @@ public:
     static void DestroySingletons() {
         delete sScriptTagToCode;
         delete sDefaultFeatures;
+    }
+
+    // Get a font dimension from the MATH table, scaled to appUnits;
+    // may only be called if mFontEntry->TryGetMathTable has succeeded
+    // (i.e. the font is known to be a valid OpenType math font).
+    nscoord GetMathConstant(gfxFontEntry::MathConstant aConstant,
+                            uint32_t aAppUnitsPerDevPixel)
+    {
+        return NSToCoordRound(mFontEntry->GetMathConstant(aConstant) *
+                              GetAdjustedSize() * aAppUnitsPerDevPixel);
+    }
+
+    // Get a dimensionless math constant (e.g. a percentage);
+    // may only be called if mFontEntry->TryGetMathTable has succeeded
+    // (i.e. the font is known to be a valid OpenType math font).
+    float GetMathConstant(gfxFontEntry::MathConstant aConstant)
+    {
+        return mFontEntry->GetMathConstant(aConstant);
     }
 
 protected:
@@ -3556,6 +3574,11 @@ public:
 
         return mFonts[i].Font();
     }
+
+    // Returns the first font in the font-group that has an OpenType MATH table,
+    // or null if no such font is available. The GetMathConstant methods may be
+    // called on the returned font.
+    gfxFont *GetFirstMathFont();
 
     uint32_t FontListLength() const {
         return mFonts.Length();
