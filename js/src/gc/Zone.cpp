@@ -31,7 +31,6 @@ JS::Zone::Zone(JSRuntime *rt)
     gcMallocBytes(0),
     gcMallocGCTriggered(false),
     gcBytes(0),
-    gcBytesAfterGC(0),
     gcTriggerBytes(0),
     data(nullptr),
     isSystem(false),
