@@ -356,8 +356,6 @@ static const uint16_t GT_VALUE_OFFSET = 2;
 // and the first two digits of the year.
 static const uint16_t UTC_VALUE_OFFSET = 4;
 
-static const uint16_t GENERALIZED_TIME_LENGTH = 17; // tvYYYYMMDDHHMMSSZ
-
 template <uint16_t LENGTH>
 void
 ExpectGoodTime(PRTime expectedValue,
