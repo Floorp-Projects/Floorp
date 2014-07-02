@@ -400,6 +400,10 @@ struct JSAtomState
 #define PROPERTYNAME_FIELD(name, code, init, clasp) js::ImmutablePropertyNamePtr name;
     JS_FOR_EACH_PROTOTYPE(PROPERTYNAME_FIELD)
 #undef PROPERTYNAME_FIELD
+
+    js::ImmutablePropertyNamePtr *wellKnownSymbolDescriptions() {
+        return &Symbol_iterator;
+    }
 };
 
 namespace js {
