@@ -157,7 +157,7 @@ JSRuntime::initializeAtoms(JSContext *cx)
     if (!wellKnownSymbols)
         return false;
 
-    ImmutablePropertyNamePtr *descriptions = &commonNames->Symbol_iterator;
+    ImmutablePropertyNamePtr *descriptions = commonNames->wellKnownSymbolDescriptions();
     ImmutableSymbolPtr *symbols = reinterpret_cast<ImmutableSymbolPtr *>(wellKnownSymbols);
     for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
         JS::Symbol *symbol = JS::Symbol::new_(cx, JS::SymbolCode(i), descriptions[i]);
