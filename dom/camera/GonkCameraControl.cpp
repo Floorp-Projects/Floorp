@@ -230,15 +230,16 @@ nsGonkCameraControl::SetConfigurationInternal(const Configuration& aConfig)
         break;
     }
 
-    nsresult rv = Set(CAMERA_PARAM_RECORDINGHINT,
-                      aConfig.mMode == kVideoMode);
+    DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = Set(CAMERA_PARAM_RECORDINGHINT, aConfig.mMode == kVideoMode);
     if (NS_FAILED(rv)) {
       DOM_CAMERA_LOGE("Failed to set recording hint (0x%x)\n", rv);
     }
   }
-
-  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   mCurrentConfiguration.mMode = aConfig.mMode;
   mCurrentConfiguration.mRecorderProfile = aConfig.mRecorderProfile;
