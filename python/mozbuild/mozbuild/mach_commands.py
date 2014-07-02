@@ -932,60 +932,29 @@ class MachDebug(MachCommandBase):
         print('mach directory:\n\t%s' % self._mach_context.topdir)
         print('state directory:\n\t%s' % state_dir)
 
-        try:
-            mb = MozbuildObject.from_environment(cwd=self._mach_context.cwd)
-        except ObjdirMismatchException as e:
-            print('Ambiguous object directory detected. We detected that '
-                'both %s and %s could be object directories. This is '
-                'typically caused by having a mozconfig pointing to a '
-                'different object directory from the current working '
-                'directory. To solve this problem, ensure you do not have a '
-                'default mozconfig in searched paths.' % (e.objdir1,
-                    e.objdir2))
-            return 1
+        print('object directory:\n\t%s' % self.topobjdir)
 
-        mozconfig = None
-
-        try:
-            mozconfig = mb.mozconfig
-            print('mozconfig path:\n\t%s' % mozconfig['path'])
-        except MozconfigFindException as e:
-            print('Unable to find mozconfig: %s' % e.message)
-            return 1
-
-        except MozconfigLoadException as e:
-            print('Error loading mozconfig: %s' % e.path)
-            print(e.message)
-
-            if e.output:
-                print('mozconfig evaluation output:')
-                for line in e.output:
-                    print(line)
-
-            return 1
-
-        print('object directory:\n\t%s' % mb.topobjdir)
-
-        if mozconfig:
-            print('mozconfig configure args:')
-            if mozconfig['configure_args']:
-                for arg in mozconfig['configure_args']:
+        if self.mozconfig['path']:
+            print('mozconfig path:\n\t%s' % self.mozconfig['path'])
+            if self.mozconfig['configure_args']:
+                print('mozconfig configure args:')
+                for arg in self.mozconfig['configure_args']:
                     print('\t%s' % arg)
 
-            print('mozconfig extra make args:')
-            if mozconfig['make_extra']:
-                for arg in mozconfig['make_extra']:
+            if self.mozconfig['make_extra']:
+                print('mozconfig extra make args:')
+                for arg in self.mozconfig['make_extra']:
                     print('\t%s' % arg)
 
-            print('mozconfig make flags:')
-            if mozconfig['make_flags']:
-                for arg in mozconfig['make_flags']:
+            if self.mozconfig['make_flags']:
+                print('mozconfig make flags:')
+                for arg in self.mozconfig['make_flags']:
                     print('\t%s' % arg)
 
         config = None
 
         try:
-            config = mb.config_environment
+            config = self.config_environment
 
         except Exception:
             pass
