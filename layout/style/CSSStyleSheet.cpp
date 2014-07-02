@@ -543,13 +543,12 @@ nsMediaList::Matches(nsPresContext* aPresContext,
   return mArray.IsEmpty();
 }
 
-nsresult
+void
 nsMediaList::SetStyleSheet(CSSStyleSheet* aSheet)
 {
   NS_ASSERTION(aSheet == mStyleSheet || !aSheet || !mStyleSheet,
                "multiple style sheets competing for one media list");
   mStyleSheet = aSheet;
-  return NS_OK;
 }
 
 already_AddRefed<nsMediaList>
