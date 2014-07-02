@@ -47,14 +47,9 @@ nsGZFileWriter::Init(nsIFile* aFile)
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  return InitANSIFileDesc(file);
-}
 
-NS_IMETHODIMP
-nsGZFileWriter::InitANSIFileDesc(FILE* aFile)
-{
-  mGZFile = gzdopen(dup(fileno(aFile)), "wb");
-  fclose(aFile);
+  mGZFile = gzdopen(dup(fileno(file)), "wb");
+  fclose(file);
 
   // gzdopen returns nullptr on error.
   if (NS_WARN_IF(!mGZFile)) {
