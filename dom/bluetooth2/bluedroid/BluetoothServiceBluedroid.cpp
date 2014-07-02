@@ -581,7 +581,7 @@ DeviceFoundCallback(int aNumProperties, bt_property_t *aProperties)
 
   BluetoothValue value = propertiesArray;
   BluetoothSignal signal(NS_LITERAL_STRING("DeviceFound"),
-                         NS_LITERAL_STRING(KEY_ADAPTER), value);
+                         NS_LITERAL_STRING(KEY_DISCOVERY_HANDLE), value);
   nsRefPtr<DistributeBluetoothSignalTask>
     t = new DistributeBluetoothSignalTask(signal);
   if (NS_FAILED(NS_DispatchToMainThread(t))) {
