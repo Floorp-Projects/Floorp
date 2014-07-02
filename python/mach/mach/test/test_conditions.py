@@ -13,9 +13,14 @@ from mach.test.common import TestBase
 from mozunit import main
 
 
-def _populate_context(context):
-    context.foo = True
-    context.bar = False
+def _populate_context(context, key=None):
+    if key is None:
+        return
+    if key == 'foo':
+        return True
+    if key == 'bar':
+        return False
+    raise AttributeError(key)
 
 class TestConditions(TestBase):
     """Tests for conditionally filtering commands."""
