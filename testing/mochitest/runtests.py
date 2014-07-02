@@ -16,6 +16,7 @@ import ctypes
 import glob
 import json
 import mozcrash
+import mozdebug
 import mozinfo
 import mozprocess
 import mozrunner
@@ -34,7 +35,6 @@ import bisection
 
 from automationutils import (
     environment,
-    getDebuggerInfo,
     isURL,
     KeyValueParseError,
     parseKeyValue,
@@ -390,7 +390,7 @@ class WebSocketServer(object):
     script = os.path.join(self._scriptdir, scriptPath)
 
     cmd = [sys.executable, script]
-    if self.debuggerInfo and self.debuggerInfo['interactive']:
+    if self.debuggerInfo and self.debuggerInfo.interactive:
         cmd += ['--interactive']
     cmd += ['-p', str(self.port), '-w', self._scriptdir, '-l',      \
            os.path.join(self._scriptdir, "websock.log"),            \
@@ -1377,8 +1377,8 @@ class Mochitest(MochitestUtilsMixin):
     interactive = False
     debug_args = None
     if debuggerInfo:
-        interactive = debuggerInfo['interactive']
-        debug_args = [debuggerInfo['path']] + debuggerInfo['args']
+        interactive = debuggerInfo.interactive
+        debug_args = [debuggerInfo.path] + debuggerInfo.args
 
     # fix default timeout
     if timeout == -1:
@@ -1407,7 +1407,7 @@ class Mochitest(MochitestUtilsMixin):
       # https://bugzilla.mozilla.org/show_bug.cgi?id=916512
       args.append('-foreground')
       if testUrl:
-        if debuggerInfo and debuggerInfo['requiresEscapedArgs']:
+        if debuggerInfo and debuggerInfo.requiresEscapedArgs:
           testUrl = testUrl.replace("&", "\\&")
         args.append(testUrl)
 
@@ -1694,10 +1694,10 @@ class Mochitest(MochitestUtilsMixin):
     #  'args': arguments to the debugger (list)
     # TODO: use mozrunner.local.debugger_arguments:
     # https://github.com/mozilla/mozbase/blob/master/mozrunner/mozrunner/local.py#L42
-    debuggerInfo = getDebuggerInfo(self.oldcwd,
-                                   options.debugger,
-                                   options.debuggerArgs,
-                                   options.debuggerInteractive)
+
+    debuggerInfo = mozdebug.get_debugger_info(options.debugger,
+                                              options.debuggerArgs,
+                                              options.debuggerInteractive)
 
     if options.useTestMediaDevices:
       devices = findTestMediaDevices(self.log)
