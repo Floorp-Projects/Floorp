@@ -79,6 +79,9 @@ class GeckoInstance(object):
 class B2GDesktopInstance(GeckoInstance):
     required_prefs = {"focusmanager.testmode": True}
 
+    def __init__(self, **kwargs):
+        super(B2GDesktopInstance, self).__init__(**kwargs)
+        self.app_args += ['-chrome', 'chrome://b2g/content/shell.html']
 
 class NullOutput(object):
     def __call__(self, line):
