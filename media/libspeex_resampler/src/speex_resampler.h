@@ -39,7 +39,7 @@
 #ifndef SPEEX_RESAMPLER_H
 #define SPEEX_RESAMPLER_H
 
-#ifdef OUTSIDE_SPEEX
+#if 1 /* OUTSIDE_SPEEX */
 
 /********* WARNING: MENTAL SANITY ENDS HERE *************/
 
@@ -47,6 +47,7 @@
    there won't be any clash if linking with Speex later on. */
 
 /* #define RANDOM_PREFIX your software name here */
+#define RANDOM_PREFIX moz_speex
 #ifndef RANDOM_PREFIX
 #error "Please define RANDOM_PREFIX (above) to something specific to your project to prevent symbol name clashes"
 #endif
