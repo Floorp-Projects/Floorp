@@ -563,6 +563,7 @@ if CONFIG['MOZ_B2G_BT']:
         WEBIDL_FILES += [
             'BluetoothAdapter2.webidl',
             'BluetoothDevice2.webidl',
+            'BluetoothDiscoveryHandle.webidl',
             'BluetoothManager2.webidl',
         ]
     else:
