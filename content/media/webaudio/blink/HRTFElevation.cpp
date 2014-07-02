@@ -28,7 +28,7 @@
 
 #include "HRTFElevation.h"
 
-#include "speex/speex_resampler.h"
+#include <speex/speex_resampler.h>
 #include "mozilla/PodOperations.h"
 #include "AudioSampleFormat.h"
 

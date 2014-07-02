@@ -1263,7 +1263,6 @@ X11/Xlocale.h
 X11/Xos.h
 X11/Xutil.h
 zmouse.h
-speex/speex_resampler.h
 soundtouch/SoundTouch.h
 #if MOZ_NATIVE_PNG==1
 png.h
@@ -1325,6 +1324,7 @@ vpx_mem/vpx_mem.h
 vorbis/codec.h
 theora/theoradec.h
 tremor/ivorbiscodec.h
+speex/speex_resampler.h
 ogg/ogg.h
 ogg/os_types.h
 nestegg/nestegg.h
