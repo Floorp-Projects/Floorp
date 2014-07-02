@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 1031934</title>
+    <style type="text/css">
+
+td { display:none; }
+
+    </style>
+</head>
+<body>
+
+<table border="1">
+<tbody style="visibility: collapse;">
+<tr><td></td></tr>
+<tr><td></td></tr>
+<tr><td></td></tr>
+<tr><td></td></tr>
+<tr><td></td></tr>
+</tbody>
+<tbody>
+<tr><td></td></tr>
+<tr><td style="display:table-cell">Hello</td></tr>
+<tr><td></td></tr>
+</tbody>
+<tbody style="visibility: collapse;">
+<tr><td></td></tr>
+<tr><td></td></tr>
+<tr><td></td></tr>
+<tr><td></td></tr>
+<tr><td></td></tr>
+</tbody>
+</table>
+
+<table border="1">
+<tbody>
+<tr style="visibility: collapse;"><td></td></tr>
+<tr style="visibility: collapse;"><td></td></tr>
+<tr style="visibility: collapse;"><td></td></tr>
+</tbody>
+<tbody>
+<tr><td></td></tr>
+<tr><td style="display:table-cell">Hello</td></tr>
+<tr><td></td></tr>
+</tbody>
+<tbody style="visibility: collapse;">
+<tr style="visibility: collapse;"><td></td></tr>
+<tr style="visibility: collapse;"><td></td></tr>
+<tr style="visibility: collapse;"><td></td></tr>
+</tbody>
+</table>
+
+</body>
+</html>

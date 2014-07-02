@@ -47,7 +47,7 @@ LayerManagerD3D9::Initialize(bool force)
   if (gfxInfo) {
     int32_t status;
     if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &status))) {
-      if (status != nsIGfxInfo::FEATURE_NO_INFO && !forceAccelerate)
+      if (status != nsIGfxInfo::FEATURE_STATUS_OK && !forceAccelerate)
       {
         NS_WARNING("Direct3D 9-accelerated layers are not supported on this system.");
         return false;

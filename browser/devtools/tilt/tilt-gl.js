@@ -1550,8 +1550,8 @@ TiltGL.isWebGLSupported = function TGL_isWebGLSupported()
     let opengl = gfxInfo.FEATURE_WEBGL_OPENGL;
 
     // if either the Angle or OpenGL renderers are available, WebGL should work
-    supported = gfxInfo.getFeatureStatus(angle) === gfxInfo.FEATURE_NO_INFO ||
-                gfxInfo.getFeatureStatus(opengl) === gfxInfo.FEATURE_NO_INFO;
+    supported = gfxInfo.getFeatureStatus(angle) === gfxInfo.FEATURE_STATUS_OK ||
+                gfxInfo.getFeatureStatus(opengl) === gfxInfo.FEATURE_STATUS_OK;
   } catch(e) {
     if (e && e.message) { TiltUtils.Output.error(e.message); }
     return false;

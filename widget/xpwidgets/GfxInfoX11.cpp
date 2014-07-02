@@ -318,7 +318,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
           !strcmp(mRenderer.get(), "GeForce 9400/PCI/SSE2") &&
           !strcmp(mVersion.get(), "3.2.0 NVIDIA 190.42"))
       {
-        *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
+        *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
         return NS_OK;
       }
 

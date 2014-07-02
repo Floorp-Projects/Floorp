@@ -237,7 +237,6 @@
 @BINPATH@/components/jar.xpt
 @BINPATH@/components/jsdebugger.xpt
 @BINPATH@/components/jsdownloads.xpt
-@BINPATH@/components/jsdservice.xpt
 @BINPATH@/components/jsinspector.xpt
 @BINPATH@/components/layout_base.xpt
 #ifdef NS_PRINTING
@@ -418,6 +417,14 @@
 @BINPATH@/components/NetworkStatsServiceProxy.manifest
 @BINPATH@/components/WifiWorker.js
 @BINPATH@/components/WifiWorker.manifest
+#endif // MOZ_WIDGET_GONK
+
+; ResourceStats
+#ifdef MOZ_WIDGET_GONK
+@BINPATH@/components/ResourceStats.js
+@BINPATH@/components/ResourceStats.manifest
+@BINPATH@/components/ResourceStatsManager.js
+@BINPATH@/components/ResourceStatsManager.manifest
 #endif // MOZ_WIDGET_GONK
 
 ; RIL

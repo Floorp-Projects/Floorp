@@ -93,7 +93,10 @@ nsHashPropertyBag::DeleteProperty(const nsAString& name)
 // nsSimpleProperty class and impl; used for GetEnumerator
 //
 
-class nsSimpleProperty MOZ_FINAL : public nsIProperty {
+class nsSimpleProperty MOZ_FINAL : public nsIProperty
+{
+    ~nsSimpleProperty() {}
+
 public:
     nsSimpleProperty(const nsAString& aName, nsIVariant* aValue)
         : mName(aName), mValue(aValue)

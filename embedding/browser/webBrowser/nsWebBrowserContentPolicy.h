@@ -14,10 +14,12 @@
 
 class nsWebBrowserContentPolicy : public nsIContentPolicy
 {
+protected:
+    virtual ~nsWebBrowserContentPolicy();
+
 public:
     nsWebBrowserContentPolicy();
-    virtual ~nsWebBrowserContentPolicy();
-    
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONTENTPOLICY
 };

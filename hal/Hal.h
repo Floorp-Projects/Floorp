@@ -616,6 +616,11 @@ uint32_t GetTotalSystemMemory();
  */
 uint32_t GetTotalSystemMemoryLevel();
 
+/**
+ * Determine whether the headphone switch event is from input device
+ */
+bool IsHeadphoneEventFromInputDev();
+
 } // namespace MOZ_HAL_NAMESPACE
 } // namespace mozilla
 

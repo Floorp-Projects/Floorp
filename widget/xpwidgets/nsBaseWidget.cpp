@@ -817,7 +817,7 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
 
     int32_t status;
     if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status))) {
-      if (status == nsIGfxInfo::FEATURE_NO_INFO) {
+      if (status == nsIGfxInfo::FEATURE_STATUS_OK) {
         whitelisted = true;
       }
     }

@@ -21,7 +21,6 @@ class nsControllerCommandGroup : public nsIControllerCommandGroup
 {
 public:
   nsControllerCommandGroup();
-  virtual ~nsControllerCommandGroup();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTROLLERCOMMANDGROUP
@@ -30,6 +29,8 @@ public:
   typedef nsClassHashtable<nsCStringHashKey, nsTArray<nsCString>> GroupsHashtable;
 
 protected:
+  virtual ~nsControllerCommandGroup();
+
   void ClearGroupsHash();
 
 protected:
