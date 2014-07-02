@@ -1259,6 +1259,15 @@ BaselineCompiler::emit_JSOP_STRING()
     return true;
 }
 
+bool
+BaselineCompiler::emit_JSOP_SYMBOL()
+{
+    unsigned which = GET_UINT8(pc);
+    JS::Symbol *sym = cx->runtime()->wellKnownSymbols->get(which);
+    frame.push(SymbolValue(sym));
+    return true;
+}
+
 typedef NativeObject *(*DeepCloneObjectLiteralFn)(JSContext *, HandleNativeObject, NewObjectKind);
 static const VMFunction DeepCloneObjectLiteralInfo =
     FunctionInfo<DeepCloneObjectLiteralFn>(DeepCloneObjectLiteral);
