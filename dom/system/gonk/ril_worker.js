@@ -14030,6 +14030,8 @@ ICCUtilsHelperObject.prototype = {
         }
       }
 
+      // See 3GPP TS 22.101 A.4 Service Provider Name indication, and TS 31.102
+      // clause 4.2.12 EF_SPN for detail.
       if (isOnMatchingPlmn) {
         // The first bit of display condition tells us if we should display
         // registered PLMN.
@@ -14049,10 +14051,7 @@ ICCUtilsHelperObject.prototype = {
           this.context.debug("PLMN isn't HPLMN and PLMN isn't in PLMN list");
         }
 
-        // We didn't found the requirement of displaying network name if
-        // current PLMN isn't HPLMN nor one of PLMN in SPDI. So we keep
-        // isDisplayNetworkNameRequired false.
-        iccInfo.isDisplayNetworkNameRequired = false;
+        iccInfo.isDisplayNetworkNameRequired = true;
         iccInfo.isDisplaySpnRequired = (displayCondition & 0x02) === 0;
       }
     }

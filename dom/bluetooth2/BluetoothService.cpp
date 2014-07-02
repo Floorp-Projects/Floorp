@@ -381,10 +381,12 @@ BluetoothService::StartBluetooth(bool aIsStartup,
    *
    * Please see bug 892392 for more information.
    */
-  if (aIsStartup || !sBluetoothService->IsEnabled()) {
+  if (aIsStartup || !IsEnabled()) {
     // Switch Bluetooth on
-    if (NS_FAILED(sBluetoothService->StartInternal(aRunnable))) {
+    nsresult rv = StartInternal(aRunnable);
+    if (NS_FAILED(rv)) {
       BT_WARNING("Bluetooth service failed to start!");
+      return rv;
     }
   } else {
     BT_WARNING("Bluetooth has already been enabled before.");
@@ -441,10 +443,12 @@ BluetoothService::StopBluetooth(bool aIsStartup,
    *
    * Please see bug 892392 for more information.
    */
-  if (aIsStartup || sBluetoothService->IsEnabled()) {
+  if (aIsStartup || IsEnabled()) {
     // Switch Bluetooth off
-    if (NS_FAILED(sBluetoothService->StopInternal(aRunnable))) {
+    nsresult rv = StopInternal(aRunnable);
+    if (NS_FAILED(rv)) {
       BT_WARNING("Bluetooth service failed to stop!");
+      return rv;
     }
   } else {
     BT_WARNING("Bluetooth has already been enabled/disabled before.");

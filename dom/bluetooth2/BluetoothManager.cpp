@@ -6,7 +6,6 @@
 
 #include "base/basictypes.h"
 #include "BluetoothManager.h"
-#include "BluetoothCommon.h"
 #include "BluetoothAdapter.h"
 #include "BluetoothService.h"
 #include "BluetoothReplyRunnable.h"
@@ -76,8 +75,8 @@ class GetAdaptersTask : public BluetoothReplyRunnable
     return true;
   }
 
-  void
-  ReleaseMembers()
+  virtual void
+  ReleaseMembers() MOZ_OVERRIDE
   {
     BluetoothReplyRunnable::ReleaseMembers();
     mManager = nullptr;
