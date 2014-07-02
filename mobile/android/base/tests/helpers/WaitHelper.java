@@ -27,7 +27,7 @@ public final class WaitHelper {
     // assertion from waitFor)?
     private static final int DEFAULT_MAX_WAIT_MS = 5000;
     private static final int PAGE_LOAD_WAIT_MS = 10000;
-    private static final int CHANGE_WAIT_MS = 10000;
+    private static final int CHANGE_WAIT_MS = 15000;
 
     // TODO: via lucasr - Add ThrobberVisibilityChangeVerifier?
     private static final ChangeVerifier[] PAGE_LOAD_VERIFIERS = new ChangeVerifier[] {
