@@ -39,10 +39,9 @@ const UDPSocket = CC("@mozilla.org/network/udp-socket;1",
                      "nsIUDPSocket",
                      "init");
 
-// TODO Bug 1027456: May need to reserve these with IANA
 const SCAN_PORT = 50624;
 const UPDATE_PORT = 50625;
-const ADDRESS = "224.0.0.200";
+const ADDRESS = "224.0.0.115";
 const REPLY_TIMEOUT = 5000;
 
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
