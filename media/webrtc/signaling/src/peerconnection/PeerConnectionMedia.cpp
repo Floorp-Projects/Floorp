@@ -572,26 +572,23 @@ PeerConnectionMedia::ConnectDtlsListener_s(const RefPtr<TransportFlow>& aFlow)
 
 #ifdef MOZILLA_INTERNAL_API
 /**
- * Tells you if any local streams is isolated.  Obviously, we want all the
- * streams to be isolated equally so that they can all be sent or not.  But we
- * can't make that determination for certain, because stream principals change.
- * Therefore, we check once when we are setting a local description and that
- * determines if we flip the "privacy requested" bit on. If a stream cannot be
- * sent, then we'll be sending black/silence later; maybe this will correct
- * itself and we can send actual content.
+ * Tells you if any local streams is isolated to a specific peer identity.
+ * Obviously, we want all the streams to be isolated equally so that they can
+ * all be sent or not.  We check once when we are setting a local description
+ * and that determines if we flip the "privacy requested" bit on.  Once the bit
+ * is on, all media originating from this peer connection is isolated.
  *
- * @param scriptPrincipal the principal
- * @returns true if any stream is isolated
+ * @returns true if any stream has a peerIdentity set on it
  */
 bool
-PeerConnectionMedia::AnyLocalStreamIsolated(nsIPrincipal *scriptPrincipal) const
+PeerConnectionMedia::AnyLocalStreamHasPeerIdentity() const
 {
   ASSERT_ON_THREAD(mMainThread);
 
   for (uint32_t u = 0; u < mLocalSourceStreams.Length(); u++) {
     // check if we should be asking for a private call for this stream
     DOMMediaStream* stream = mLocalSourceStreams[u]->GetMediaStream();
-    if (!scriptPrincipal->Subsumes(stream->GetPrincipal())) {
+    if (stream->GetPeerIdentity()) {
       return true;
     }
   }
