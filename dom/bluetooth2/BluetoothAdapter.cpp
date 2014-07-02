@@ -765,6 +765,8 @@ BluetoothAdapter::EnableDisable(bool aEnable, ErrorResult& aRv)
                                    methodName);
 
   if(NS_FAILED(bs->EnableDisable(aEnable, result))) {
+    mState = aEnable ? BluetoothAdapterState::Disabled
+                     : BluetoothAdapterState::Enabled;
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
   }
 
