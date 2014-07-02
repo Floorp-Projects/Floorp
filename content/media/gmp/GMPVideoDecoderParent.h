@@ -29,12 +29,6 @@ public:
 
   GMPVideoHostImpl& Host();
 
-  // GMPSharedMemManager
-  virtual bool MgrAllocShmem(size_t aSize,
-                             ipc::Shmem::SharedMemory::SharedMemoryType aType,
-                             ipc::Shmem* aMem) MOZ_OVERRIDE;
-  virtual bool MgrDeallocShmem(Shmem& aMem) MOZ_OVERRIDE;
-
   // GMPVideoDecoder
   virtual GMPVideoErr InitDecode(const GMPVideoCodec& aCodecSettings,
                                  GMPDecoderCallback* aCallback,
@@ -47,6 +41,21 @@ public:
   virtual GMPVideoErr Drain() MOZ_OVERRIDE;
   virtual void DecodingComplete() MOZ_OVERRIDE;
 
+  // GMPSharedMemManager
+  virtual void CheckThread();
+  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem)
+  {
+#ifdef GMP_SAFE_SHMEM
+    return AllocShmem(aSize, aType, aMem);
+#else
+    return AllocUnsafeShmem(aSize, aType, aMem);
+#endif
+  }
+  virtual void Dealloc(Shmem& aMem)
+  {
+    DeallocShmem(aMem);
+  }
+
 private:
   ~GMPVideoDecoderParent();
 
@@ -56,6 +65,9 @@ private:
   virtual bool RecvReceivedDecodedReferenceFrame(const uint64_t& aPictureId) MOZ_OVERRIDE;
   virtual bool RecvReceivedDecodedFrame(const uint64_t& aPictureId) MOZ_OVERRIDE;
   virtual bool RecvInputDataExhausted() MOZ_OVERRIDE;
+  virtual bool RecvParentShmemForPool(Shmem& aEncodedBuffer) MOZ_OVERRIDE;
+  virtual bool AnswerNeedShmem(const uint32_t& aFrameBufferSize,
+                               Shmem* aMem) MOZ_OVERRIDE;
   virtual bool Recv__delete__() MOZ_OVERRIDE;
 
   bool mCanSendMessages;

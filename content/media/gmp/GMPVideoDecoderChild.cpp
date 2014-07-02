@@ -80,22 +80,10 @@ GMPVideoDecoderChild::InputDataExhausted()
   SendInputDataExhausted();
 }
 
-bool
-GMPVideoDecoderChild::MgrAllocShmem(size_t aSize,
-                                    ipc::Shmem::SharedMemory::SharedMemoryType aType,
-                                    ipc::Shmem* aMem)
+void
+GMPVideoDecoderChild::CheckThread()
 {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
-  return AllocShmem(aSize, aType, aMem);
-}
-
-bool
-GMPVideoDecoderChild::MgrDeallocShmem(Shmem& aMem)
-{
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
-  return DeallocShmem(aMem);
 }
 
 bool
@@ -127,6 +115,18 @@ GMPVideoDecoderChild::RecvDecode(const GMPVideoEncodedFrameData& aInputFrame,
   // Ignore any return code. It is OK for this to fail without killing the process.
   mVideoDecoder->Decode(f, aMissingFrames, aCodecSpecificInfo, aRenderTimeMs);
 
+  // Return SHM to sender to recycle
+  //SendDecodeReturn(aInputFrame, aCodecSpecificInfo);
+  return true;
+}
+
+bool
+GMPVideoDecoderChild::RecvChildShmemForPool(Shmem& aFrameBuffer)
+{
+  if (aFrameBuffer.IsWritable()) {
+    mVideoHost.SharedMemMgr()->MgrDeallocShmem(GMPSharedMemManager::kGMPFrameData,
+                                               aFrameBuffer);
+  }
   return true;
 }
 
