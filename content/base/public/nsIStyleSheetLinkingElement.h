@@ -15,8 +15,6 @@ class nsIURI;
 { 0xd753c84a, 0x17fd, 0x4d5f, \
  { 0xb2, 0xe9, 0x63, 0x52, 0x8c, 0x87, 0x99, 0x7a } }
 
-class nsIStyleSheet;
-
 namespace mozilla {
 class CSSStyleSheet;
 } // namespace mozilla
@@ -37,10 +35,9 @@ public:
   /**
    * Used to obtain the style sheet linked in by this element.
    *
-   * @param aStyleSheet out parameter that returns the style
-   *                    sheet associated with this element.
+   * @return the style sheet associated with this element.
    */
-  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet) = 0;
+  NS_IMETHOD_(mozilla::CSSStyleSheet*) GetStyleSheet() = 0;
 
   /**
    * Initialize the stylesheet linking element. If aDontLoadStyle is

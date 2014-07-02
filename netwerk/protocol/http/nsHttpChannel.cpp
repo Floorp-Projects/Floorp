@@ -2163,56 +2163,39 @@ nsHttpChannel::ProcessPartialContent()
             rv = InstallOfflineCacheListener(mLogicalOffset);
             if (NS_FAILED(rv)) return rv;
         }
-
-        // merge any new headers with the cached response headers
-        rv = mCachedResponseHead->UpdateHeaders(mResponseHead->Headers());
-        if (NS_FAILED(rv)) return rv;
-
-        // update the cached response head
-        nsAutoCString head;
-        mCachedResponseHead->Flatten(head, true);
-        rv = mCacheEntry->SetMetaDataElement("response-head", head.get());
-        if (NS_FAILED(rv)) return rv;
-
-        UpdateInhibitPersistentCachingFlag();
-
-        rv = UpdateExpirationTime();
-        if (NS_FAILED(rv)) return rv;
-
-        mCachedContentIsPartial = false;
-        mConcurentCacheAccess = 0;
-
-        // notify observers interested in looking at a response that has been
-        // merged with any cached headers (http-on-examine-merged-response).
-        gHttpHandler->OnExamineMergedResponse(this);
-    }
-    else {
+    } else {
         // suspend the current transaction
         rv = mTransactionPump->Suspend();
         if (NS_FAILED(rv)) return rv;
+    }
 
-        // merge any new headers with the cached response headers
-        rv = mCachedResponseHead->UpdateHeaders(mResponseHead->Headers());
-        if (NS_FAILED(rv)) return rv;
+    // merge any new headers with the cached response headers
+    rv = mCachedResponseHead->UpdateHeaders(mResponseHead->Headers());
+    if (NS_FAILED(rv)) return rv;
 
-        // update the cached response head
-        nsAutoCString head;
-        mCachedResponseHead->Flatten(head, true);
-        rv = mCacheEntry->SetMetaDataElement("response-head", head.get());
-        if (NS_FAILED(rv)) return rv;
+    // update the cached response head
+    nsAutoCString head;
+    mCachedResponseHead->Flatten(head, true);
+    rv = mCacheEntry->SetMetaDataElement("response-head", head.get());
+    if (NS_FAILED(rv)) return rv;
 
-        // make the cached response be the current response
-        mResponseHead = Move(mCachedResponseHead);
+    // make the cached response be the current response
+    mResponseHead = Move(mCachedResponseHead);
 
-        UpdateInhibitPersistentCachingFlag();
+    UpdateInhibitPersistentCachingFlag();
 
-        rv = UpdateExpirationTime();
-        if (NS_FAILED(rv)) return rv;
+    rv = UpdateExpirationTime();
+    if (NS_FAILED(rv)) return rv;
 
-        // notify observers interested in looking at a response that has been
-        // merged with any cached headers (http-on-examine-merged-response).
-        gHttpHandler->OnExamineMergedResponse(this);
+    // notify observers interested in looking at a response that has been
+    // merged with any cached headers (http-on-examine-merged-response).
+    gHttpHandler->OnExamineMergedResponse(this);
 
+    if (mConcurentCacheAccess) {
+        mCachedContentIsPartial = false;
+        mConcurentCacheAccess = 0;
+        // Now we continue reading the network response.
+    } else {
         // the cached content is valid, although incomplete.
         mCachedContentIsValid = true;
         rv = ReadFromCache(false);

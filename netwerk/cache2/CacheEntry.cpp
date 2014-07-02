@@ -274,17 +274,35 @@ void CacheEntry::AsyncOpen(nsICacheEntryOpenCallback* aCallback, uint32_t aFlags
 
   Callback callback(this, aCallback, readonly, multithread);
 
+  if (!Open(callback, truncate, priority, bypassIfBusy)) {
+    // We get here when the callback wants to bypass cache when it's busy.
+    LOG(("  writing or revalidating, callback wants to bypass cache"));
+    callback.mNotWanted = true;
+    InvokeAvailableCallback(callback);
+  }
+}
+
+bool CacheEntry::Open(Callback & aCallback, bool aTruncate,
+                      bool aPriority, bool aBypassIfBusy)
+{
   mozilla::MutexAutoLock lock(mLock);
 
-  RememberCallback(callback, bypassIfBusy);
+  // Check state under the lock
+  if (aBypassIfBusy && (mState == WRITING || mState == REVALIDATING)) {
+    return false;
+  }
+
+  RememberCallback(aCallback);
 
   // Load() opens the lock
-  if (Load(truncate, priority)) {
+  if (Load(aTruncate, aPriority)) {
     // Loading is in progress...
-    return;
+    return true;
   }
 
   InvokeCallbacks();
+
+  return true;
 }
 
 bool CacheEntry::Load(bool aTruncate, bool aPriority)
@@ -508,19 +526,12 @@ void CacheEntry::TransferCallbacks(CacheEntry & aFromEntry)
   }
 }
 
-void CacheEntry::RememberCallback(Callback & aCallback, bool aBypassIfBusy)
+void CacheEntry::RememberCallback(Callback & aCallback)
 {
   mLock.AssertCurrentThreadOwns();
 
   LOG(("CacheEntry::RememberCallback [this=%p, cb=%p, state=%s]",
     this, aCallback.mCallback.get(), StateString(mState)));
-
-  if (aBypassIfBusy && (mState == WRITING || mState == REVALIDATING)) {
-    LOG(("  writing or revalidating, callback wants to bypass cache"));
-    aCallback.mNotWanted = true;
-    InvokeAvailableCallback(aCallback);
-    return;
-  }
 
   mCallbacks.AppendElement(aCallback);
 }
