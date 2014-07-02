@@ -496,6 +496,8 @@ public:
   }
 
 private:
+  ~DumpReportCallback() {}
+
   bool mIsFirst;
   nsRefPtr<nsGZFileWriter> mWriter;
 };
@@ -588,6 +590,8 @@ public:
   NS_IMETHOD Callback(nsISupports* aData);
 
 private:
+  ~TempDirMemoryFinishCallback() {}
+
   nsRefPtr<nsGZFileWriter> mrWriter;
   nsCOMPtr<nsIFile> mrTmpFile;
   nsCString mrFilename;
@@ -823,6 +827,8 @@ public:
   }
 
 private:
+  ~FinishReportingCallback() {}
+
   nsCOMPtr<nsIFinishDumpingCallback> mFinishDumping;
   nsCOMPtr<nsISupports> mFinishDumpingData;
 };

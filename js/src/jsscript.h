@@ -629,24 +629,29 @@ class ScriptSourceObject : public JSObject
 
     static void trace(JSTracer *trc, JSObject *obj);
     static void finalize(FreeOp *fop, JSObject *obj);
-    static ScriptSourceObject *create(ExclusiveContext *cx, ScriptSource *source,
-                                      const ReadOnlyCompileOptions &options);
+    static ScriptSourceObject *create(ExclusiveContext *cx, ScriptSource *source);
 
-    ScriptSource *source() {
+    // Initialize those properties of this ScriptSourceObject whose values
+    // are provided by |options|, re-wrapping as necessary.
+    static bool initFromOptions(JSContext *cx, HandleScriptSource source,
+                                const ReadOnlyCompileOptions &options);
+
+    ScriptSource *source() const {
         return static_cast<ScriptSource *>(getReservedSlot(SOURCE_SLOT).toPrivate());
     }
-
-    void setSource(ScriptSource *source);
-
-    JSObject *element() const;
-    void initElement(HandleObject element);
-    const Value &elementAttributeName() const;
-
+    JSObject *element() const {
+        return getReservedSlot(ELEMENT_SLOT).toObjectOrNull();
+    }
+    const Value &elementAttributeName() const {
+        return getReservedSlot(ELEMENT_PROPERTY_SLOT);
+    }
     JSScript *introductionScript() const {
+        if (getReservedSlot(INTRODUCTION_SCRIPT_SLOT).isUndefined())
+            return nullptr;
         void *untyped = getReservedSlot(INTRODUCTION_SCRIPT_SLOT).toPrivate();
+        MOZ_ASSERT(untyped);
         return static_cast<JSScript *>(untyped);
     }
-    void initIntroductionScript(JSScript *script);
 
   private:
     static const uint32_t SOURCE_SLOT = 0;

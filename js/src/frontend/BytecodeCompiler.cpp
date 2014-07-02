@@ -201,7 +201,23 @@ frontend::CreateScriptSourceObject(ExclusiveContext *cx, const ReadOnlyCompileOp
     if (!ss->initFromOptions(cx, options))
         return nullptr;
 
-    return ScriptSourceObject::create(cx, ss, options);
+    RootedScriptSource sso(cx, ScriptSourceObject::create(cx, ss));
+
+    // Off-thread compilations do all their GC heap allocation, including the
+    // SSO, in a temporary compartment. Hence, for the SSO to refer to the
+    // gc-heap-allocated values in |options|, it would need cross-compartment
+    // wrappers from the temporary compartment to the real compartment --- which
+    // would then be inappropriate once we merged the temporary and real
+    // compartments.
+    //
+    // Instead, we put off populating those SSO slots in off-thread compilations
+    // until after we've merged compartments.
+    if (cx->isJSContext()) {
+        if (!ScriptSourceObject::initFromOptions(cx->asJSContext(), sso, options))
+            return nullptr;
+    }
+
+    return sso;
 }
 
 JSScript *

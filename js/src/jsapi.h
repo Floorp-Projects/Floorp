@@ -3587,10 +3587,6 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
     uint32_t introductionOffset;
     bool hasIntroductionInfo;
 
-    // Wrap any compilation option values that need it as appropriate for
-    // use from |compartment|.
-    virtual bool wrap(JSContext *cx, JSCompartment *compartment) = 0;
-
   private:
     static JSObject * const nullObjectPtr;
     void operator=(const ReadOnlyCompileOptions &) MOZ_DELETE;
@@ -3685,8 +3681,6 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
         return true;
     }
 
-    virtual bool wrap(JSContext *cx, JSCompartment *compartment) MOZ_OVERRIDE;
-
   private:
     void operator=(const CompileOptions &rhs) MOZ_DELETE;
 };
@@ -3769,8 +3763,6 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOpti
         hasIntroductionInfo = true;
         return *this;
     }
-
-    virtual bool wrap(JSContext *cx, JSCompartment *compartment) MOZ_OVERRIDE;
 
   private:
     void operator=(const CompileOptions &rhs) MOZ_DELETE;

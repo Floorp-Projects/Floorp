@@ -150,6 +150,7 @@ gbjar.sources += [
     'db/PerProfileDatabaseProvider.java',
     'db/PerProfileDatabases.java',
     'db/ReadingListProvider.java',
+    'db/SearchHistoryProvider.java',
     'db/SharedBrowserDatabaseProvider.java',
     'db/SQLiteBridgeContentProvider.java',
     'db/SuggestedSites.java',

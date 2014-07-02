@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Bug 1032303 - CSP - Keep FULL STOP when matching *.foo.com to disallow loads from foo.com</title>
+  </head>
+  <body>
+  <!-- Please note that both scripts do *not* exist in the file system -->
+  <script src="http://test1.example.com/tests/content/base/test/csp/leading_wildcard_allowed.js" ></script>
+  <script src="http://example.com/tests/content/base/test/csp/leading_wildcard_blocked.js" ></script>
+</body>
+</html>

@@ -81,40 +81,16 @@ PeerConnectionIdp.prototype = {
     this._dispatchEvent(ev);
   },
 
-  _getFingerprintFromSdp: function(sdp) {
-    let sections = sdp.split(PeerConnectionIdp._mLinePattern);
-    let attributes = sections.map(function(sect) {
-      let m = sect.match(PeerConnectionIdp._fingerprintPattern);
-      if (m) {
-        let remainder = sect.substring(m.index + m[0].length);
-        if (!remainder.match(PeerConnectionIdp._fingerprintPattern)) {
-          return { algorithm: m[1], digest: m[2] };
-        }
-        this.reportError("validation", "two fingerprint values" +
-                         " in same media section are not supported");
-        // we have to return non-falsy here so that a media section doesn't
-        // accidentally fall back to the session-level stuff (which is bad)
-        return "error";
-      }
-      // return undefined unless there is exactly one match
-    }, this);
-
-    let sessionLevel = attributes.shift();
-    attributes = attributes.map(function(sectionLevel) {
-      return sectionLevel || sessionLevel;
-    });
-
-    let first = attributes.shift();
-    function sameAsFirst(attr) {
-      return typeof attr === "object" &&
-      first.algorithm === attr.algorithm &&
-      first.digest === attr.digest;
+  _getFingerprintsFromSdp: function(sdp) {
+    let fingerprints = {};
+    let m = sdp.match(PeerConnectionIdp._fingerprintPattern);
+    while (m) {
+      fingerprints[m[0]] = { algorithm: m[1], digest: m[2] };
+      sdp = sdp.substring(m.index + m[0].length);
+      m = sdp.match(PeerConnectionIdp._fingerprintPattern);
     }
 
-    if (typeof first === "object" && attributes.every(sameAsFirst)) {
-      return first;
-    }
-    // undefined!
+    return Object.keys(fingerprints).map(k => fingerprints[k]);
   },
 
   _getIdentityFromSdp: function(sdp) {
@@ -150,16 +126,16 @@ PeerConnectionIdp.prototype = {
    */
   verifyIdentityFromSDP: function(sdp, callback) {
     let identity = this._getIdentityFromSdp(sdp);
-    let fingerprint = this._getFingerprintFromSdp(sdp);
+    let fingerprints = this._getFingerprintsFromSdp(sdp);
     // it's safe to use the fingerprint we got from the SDP here,
     // only because we ensure that there is only one
-    if (!fingerprint || !identity) {
+    if (!identity || fingerprints.length <= 0) {
       callback(null);
       return;
     }
 
     this.setIdentityProvider(identity.idp.domain, identity.idp.protocol);
-    this._verifyIdentity(identity.assertion, fingerprint, callback);
+    this._verifyIdentity(identity.assertion, fingerprints, callback);
   },
 
   /**
@@ -197,19 +173,28 @@ PeerConnectionIdp.prototype = {
 
   // we are very defensive here when handling the message from the IdP
   // proxy so that broken IdPs can only do as little harm as possible.
-  _checkVerifyResponse: function(message, fingerprint) {
-    let warn = function(msg) {
+  _checkVerifyResponse: function(message, fingerprints) {
+    let warn = msg => {
       this.reportError("validation",
                        "assertion validation failure: " + msg);
-    }.bind(this);
+    };
+
+    let isSubsetOf = (outer, inner, cmp) => {
+      return inner.some(i => {
+        return !outer.some(o => cmp(i, o));
+      });
+    };
+    let compareFingerprints = (a, b) => {
+      return (a.digest === b.digest) && (a.algorithm === b.algorithm);
+    };
 
     try {
       let contents = JSON.parse(message.contents);
-      if (typeof contents.fingerprint !== "object") {
-        warn("fingerprint is not an object");
-      } else if (contents.fingerprint.digest !== fingerprint.digest ||
-                 contents.fingerprint.algorithm !== fingerprint.algorithm) {
-        warn("fingerprint does not match");
+      if (!Array.isArray(contents.fingerprint)) {
+        warn("fingerprint is not an array");
+      } else if (isSubsetOf(contents.fingerprint, fingerprints,
+                            compareFingerprints)) {
+        warn("fingerprints in SDP aren't a subset of those in the assertion");
       } else {
         let error = this._validateName(message.identity);
         if (error) {
@@ -227,10 +212,9 @@ PeerConnectionIdp.prototype = {
   /**
    * Asks the IdP proxy to verify an identity.
    */
-  _verifyIdentity: function(
-      assertion, fingerprint, callback) {
+  _verifyIdentity: function(assertion, fingerprints, callback) {
     function onVerification(message) {
-      if (message && this._checkVerifyResponse(message, fingerprint)) {
+      if (message && this._checkVerifyResponse(message, fingerprints)) {
         callback(message);
       } else {
         this._warning("RTC identity: assertion validation failure", null, 0);
@@ -290,12 +274,12 @@ PeerConnectionIdp.prototype = {
   },
 
   _getIdentityAssertion: function(fingerprint, callback) {
-    let [algorithm, digest] = fingerprint.split(" ");
+    let [algorithm, digest] = fingerprint.split(" ", 2);
     let message = {
-      fingerprint: {
+      fingerprint: [{
         algorithm: algorithm,
         digest: digest
-      }
+      }]
     };
     let request = {
       type: "SIGN",

@@ -166,7 +166,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t /*aFeature*/,
                               OperatingSystem* /*aOS*/ /* = nullptr */)
 {
   NS_ENSURE_ARG_POINTER(aStatus);
-  *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
+  *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
 
   return NS_OK;
 }

@@ -297,6 +297,7 @@ WEBIDL_FILES = [
     'PositionError.webidl',
     'ProcessingInstruction.webidl',
     'Promise.webidl',
+    'PromiseDebugging.webidl',
     'PushManager.webidl',
     'Range.webidl',
     'Rect.webidl',
