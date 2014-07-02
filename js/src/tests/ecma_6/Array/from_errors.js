@@ -134,8 +134,8 @@ assertEq(obj instanceof C, true);
 for (var primitive of [undefined, null, 17]) {
     assertThrowsInstanceOf(
         () => Array.from({
-            "@@iterator": () => {
-                next: () => primitive
+            [std_iterator]() {
+                return {next() { return primitive; }};
             }
         }),
         TypeError);

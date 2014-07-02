@@ -27,7 +27,7 @@ function TestIncreaseArrayLength() {
         return M2;
     }
 
-    var iter = ([])['@@iterator']();
+    var iter = ([])[std_iterator]();
     var iterProto = Object.getPrototypeOf(iter);
     var OldNext = iterProto.next;
     var NewNext = function () {

@@ -760,7 +760,7 @@ TypedArrayObject::subarray(JSContext *cx, unsigned argc, Value *vp)
 
 /* static */ const JSFunctionSpec
 TypedArrayObject::protoFunctions[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "ArrayValues", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "ArrayValues", 0, 0),                          \
     JS_FN("subarray", TypedArrayObject::subarray, 2, 0),
     JS_FN("set", TypedArrayObject::set, 2, 0),
     JS_FN("copyWithin", TypedArrayObject::copyWithin, 2, 0),
