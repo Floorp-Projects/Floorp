@@ -17,8 +17,11 @@ let testCases = [
   ["imsi", "310260000000000",    true, true               ],
   ["imsi", "310260000000000123", true, false              ],
   ["imsi", "",                   false, "InvalidParameter"],
-  // Currently we only support imsi match.
-  ["spn",  "Android",            false, "ModeNotSupported"]
+  ["spn",  "Android",            true, true               ],
+  ["spn",  "",                   false, "InvalidParameter"],
+  ["spn",  "OneTwoThree",        true, false              ],
+  // mvno type gid is not supported yet.
+  ["gid",  "A1",                 false, "ModeNotSupported"]
 ];
 
 function matchMvno(mvnoType, mvnoData, success, expectedResult) {

@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test to ensure interface is not accessible when preference is disabled</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// Test to ensure interface is not accessible when preference is disabled.
+SpecialPowers.addPermission("resourcestats-manage", true, document);
+SpecialPowers.pushPrefEnv({ 'set': [
+                            ["dom.resource_stats.enabled", false],
+                            ["dom.ignore_webidl_scope_checks", true]
+                          ]}, function() {
+  ok(SpecialPowers.hasPermission("resourcestats-manage", document),
+     "Has permission 'resourcestats-manage'.");
+  ok(!(SpecialPowers.getBoolPref("dom.resource_stats.enabled")),
+     "Preference 'dom.resource_stats.enabled' is false.");
+
+  // Check accessibility.
+  is('ResourceStatsManager' in window, false, "ResourceStatsManager should not exist.");
+  is('ResourceStatsAlarm' in window, false, "ResourceStatsAlarm should not exist.");
+  is('ResourceStats' in window, false, "ResourceStats should not exist.");
+  is('NetworkStatsData' in window, false, "NetworkStatsData should not exist.");
+  is('PowerStatsData' in window, false, "PowerStatsData should not exist.");
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

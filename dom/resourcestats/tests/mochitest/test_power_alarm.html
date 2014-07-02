@@ -1,0 +1,355 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for ResourceStats methods realted to power resource control</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+const invalidManifestURL = "app://invalid.gaiamobile.org/manifest.webapp";
+const cpuComponent = "cpu:0";
+const gpsComponent = "gps:0";
+var powerStatsMgr = null; // ResourceStatsManager for power statistics.
+
+function errorCb(reason) {
+  ok(false, reason);
+}
+
+// Check the content returned by getAlarms.
+function checkAlarmsArray(alarms) {
+  // Check if data is an array.
+  if (!Array.isArray(alarms)) {
+    throw "getAlarms does not return an array.";
+  } else {
+    ok(true, "getAlarms returns an array.")
+  }
+
+  // Iterate the array and check the type of each element.
+  var obj = null;
+  var message = null; // Message for exception
+
+  for (var i = 0; i < alarms.length; i++) {
+    obj = alarms[i];
+
+    // Check if obj is an instance os ResourceStatsAlarm.
+    if (!(obj instanceof ResourceStatsAlarm)) {
+      message = "The array contains a non-ResourceStatsAlarm object.";
+      break;
+    }
+
+    // Check if obj.type is power.
+    if (obj.type != "power") {
+      message = "The type of a ResourceStatsAlarm object is not power.";
+      break;
+    }
+  }
+
+  if (message) {
+    throw message;
+  }
+
+  ok(true, "The return is an array of ResourceStatsAlarm objects.");
+}
+
+// Test Cases for testing WebIDL methods related to resource control.
+var testCases = [
+  function() {
+    // Test removeAllAlarms.
+    var promise = powerStatsMgr.removeAllAlarms();
+    promise.then(function() {
+      ok(true, "removeAllAlarms deleted all power alarms.");
+      testMethods();
+    }, function() {
+      ok(false, "removeAllAlarms failed to delete power alarms.");
+    });
+  },
+
+  function() {
+    // Test addAlarm.
+    var threshold = Math.floor(Math.random() * 1000);
+    var promise = powerStatsMgr.addAlarm(threshold,
+                                         { 'component': cpuComponent },
+                                         { 'startTime': Date.now() });
+    promise.then(function(value) {
+      // Check the value (alarmId).
+      if (value < 0) {
+        ok(false, "addAlarm failed to create an alarm.");
+      } else {
+        ok(true, "addAlarm created an alarm.");
+        testMethods();
+      }
+    }, function() {
+      ok(false, "addAlarm failed to create an alarm.");
+    });
+  },
+
+  function() {
+    // Test addAlarm with negative threshold.
+    var threshold = -1;
+    var promise = powerStatsMgr.addAlarm(threshold,
+                                         { 'component': cpuComponent },
+                                         { 'startTime': Date.now() });
+    promise.then(function() {
+      // Check the value.
+      ok(false,
+         "addAlarm did not throw an exception when negative threshold is set.");
+    }, function() {
+      ok(true, "addAlarm threw an exception when negative threshold is set.");
+      testMethods();
+    });
+  },
+
+  function() {
+    // Test addAlarm with no threshold.
+    var promise = powerStatsMgr.addAlarm();
+    promise.then(function() {
+      // Check the value.
+      ok(false, "addAlarm did not throw an exception when no threshold.");
+    }, function() {
+      ok(true, "addAlarm threw an exception when no threshold.");
+      testMethods();
+    });
+  },
+
+  function() {
+    // Test addAlarm with negative startTime.
+    var threshold = Math.floor(Math.random() * 1000);
+    var promise = powerStatsMgr.addAlarm(threshold,
+                                         { 'component': cpuComponent },
+                                         { 'startTime': -1 });
+    promise.then(function() {
+      // Check the value.
+      ok(false,
+         "addAlarm did not throw an exception when negative startTime is set.");
+    }, function() {
+      ok(true, "addAlarm threw an exception when negative startTime is set.");
+      testMethods();
+    });
+  },
+
+  function() {
+    // Test addAlarm when manifestURL is invalid.
+    var threshold = Math.floor(Math.random() * 1000);
+    var promise = powerStatsMgr.addAlarm(threshold,
+                                         { 'component': cpuComponent,
+                                           'manifestURL': invalidManifestURL },
+                                         { 'startTime': Date.now() });
+    promise.then(function() {
+      // Check the value.
+      ok(false, "addAlarm did not throw an exception when manifestURL is invalid.");
+    }, function() {
+      ok(true, "addAlarm threw an exception when manifestURL is invalid.");
+      testMethods();
+    });
+  },
+
+  function() {
+    // Test getAlarms.
+    var alarmId;
+    var alarms;
+    var threshold = Math.floor(Math.random() * 1000);
+
+    // Execution steps:
+    // 1. Add a new alarm.
+    var promise = powerStatsMgr.addAlarm(threshold,
+                                         { 'component': cpuComponent },
+                                         { 'startTime': Date.now() });
+
+    // 2. Test getAlarms if new alarm is added.
+    var runGetAlarms = function(value) {
+      alarmId = value;
+      return powerStatsMgr.getAlarms({ 'component': cpuComponent });
+    };
+
+    // 3. Check the content returned by getAlarms.
+    var checkGetAlarmsReturn = function(value) {
+      alarms = value;
+      checkAlarmsArray(value);
+    };
+
+    // 4. Check the alarm added in step 1 is inside the return of getAlarms.
+    var checkAlarm = function (value) {
+      // Find the alarm.
+      var index = alarms.map(function(e) { return e.alarmId; })
+                    .indexOf(alarmId);
+      if (index < 0) {
+        throw "getAlarms does not get the alarm added in previous step.";
+      }
+      var alarm = alarms[index];
+
+      // Evaluate the alarm.
+      ok(alarm.threshold == threshold, "threshold is equal.");
+      ok(alarm.component == cpuComponent, "component is equal.");
+      ok(alarm.serviceType == null, "serviceType should be null.");
+      ok(alarm.manifestURL == null, "manifestURL should be null.");
+    };
+
+    // Create promise chaining.
+    promise.then(runGetAlarms)
+      .then(checkGetAlarmsReturn)
+      .then(checkAlarm)
+      .then(testMethods, errorCb); // Execute next test case.
+  },
+
+  function() {
+    // Test getAlarms with invalid manifestURL.
+    var threshold = Math.floor(Math.random() * 1000);
+    var promise = powerStatsMgr.addAlarm(threshold,
+                                         { 'component': cpuComponent,
+                                           'manifestURL': invalidManifestURL },
+                                         { 'startTime': Date.now() });
+
+    promise.then(function() {
+      // Check the value.
+      ok(false, "getAlarms did not throw an exception when manifestURL is invalid.");
+    }, function() {
+      ok(true, "getAlarms threw an exception when manifestURL is invalid.");
+      testMethods();
+    });
+  },
+
+  function() {
+    // Test getAlarms with incorrect parameter.
+    var threshold = Math.floor(Math.random() * 1000);
+
+    // Execution steps:
+    // 1. Add a new alarm.
+    var promise = powerStatsMgr.addAlarm(threshold,
+                                         { 'component': cpuComponent },
+                                         { 'startTime': Date.now() });
+
+    // 2. Call getAlarms with incorrect parameter.
+    var runGetAlarms = function() {
+      return powerStatsMgr.getAlarms({ 'component': gpsComponent });
+    };
+
+    // 3. check the content returned by getAlarms.
+    var checkGetAlarmsReturn = function(value) {
+      // Check array length
+      if (value.length) {
+        throw "getAlarms gets an alarm when using incorrect parameter.";
+      } else {
+        ok(true,
+           "getAlarms returns an empty array when using incorrect parameter.");
+      }
+    };
+
+    // Create pomise chaining.
+    promise.then(runGetAlarms)
+      .then(checkGetAlarmsReturn)
+      .then(testMethods, errorCb); // Execute next test case.
+  },
+
+  function() {
+    // Test removeAlarm
+    var alarmId;
+    var threshold = Math.floor(Math.random() * 1000);
+
+    // Execution steps:
+    // 1. Add a new alarm.
+    var promise = powerStatsMgr.addAlarm(threshold,
+                                         { 'component': cpuComponent },
+                                         { 'startTime': Date.now() });
+
+    // 2. Try to remove the new alarm.
+    var runRemoveAlarm = function(value) {
+      alarmId = value;
+      return powerStatsMgr.removeAlarm(alarmId);
+    }
+
+    // Create promise chaining.
+    promise.then(runRemoveAlarm)
+      .then(function() {
+        ok(true, "removeAlarm deleted the alarm.");
+        testMethods();
+      }, errorCb);
+  },
+
+  function() {
+    // Test removeAlarm with negative alarmId
+    var alarmId = -1;
+    var promise = powerStatsMgr.removeAlarm(alarmId);
+    promise.then(function() {
+      ok(false,
+         "removeAlarm did not throw an exception when negative alarmId is set.");
+    }, function() {
+      ok(true, "removeAlarm threw an exception when negative alarmId is set.");
+      testMethods();
+    });
+  },
+
+  function() {
+    // Test removeAlarm with invalid alarmId
+    var alarmId;
+    var threshold = Math.floor(Math.random() * 1000);
+
+    // Execution steps:
+    // 1. Add a new alarm.
+    var promise = powerStatsMgr.addAlarm(threshold,
+                                         { 'component': cpuComponent },
+                                         { 'startTime': Date.now() });
+
+    // 2. Try to remove an invalid alarm.
+    var runRemoveAlarm = function(value) {
+      alarmId = value;
+      // Because alarmId is auto-increment, any alarmId larger than the
+      // latest alarmId should be invalid.
+      return powerStatsMgr.removeAlarm(alarmId + 10);
+    }
+
+    // Create promise chaining.
+    promise.then(runRemoveAlarm)
+      .then(function() {
+        // Input with incorrect alarmId should not be resolved.
+        throw "removeAlarm should fail with invalid alarmId.";
+      }, function(reason) {
+        if (reason == "alarm not existed") {
+          ok(true, "removeAlarm with invalid alarmId should fail.")
+        } else {
+          throw reason;
+        }
+      })
+      .then(testMethods, errorCb);
+  }
+];
+
+// Test WebIDL methods related stats operation.
+function testMethods() {
+  if (!testCases.length) {
+    ok(true, "Done.");
+    SpecialPowers.removePermission("resourcestats-manage", document);
+    SimpleTest.finish();
+    return;
+  }
+
+  var testCase = testCases.shift();
+  testCase();
+}
+
+function startTest() {
+  // Create an instance of ResourceStatsManager for power.
+  powerStatsMgr = new ResourceStatsManager("power");
+  ok(powerStatsMgr, "Create powerStatsMgr.");
+
+  // Test WebIDL methods related to resource control.
+  testMethods();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// Enable permission and preference.
+SpecialPowers.addPermission("resourcestats-manage", true, document);
+SpecialPowers.pushPrefEnv({ 'set': [
+                            ["dom.resource_stats.enabled", true],
+                            ["dom.ignore_webidl_scope_checks", true]
+                          ]}, startTest);
+</script>
+</pre>
+</body>
+</html>
