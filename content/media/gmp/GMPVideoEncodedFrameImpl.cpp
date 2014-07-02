@@ -99,7 +99,7 @@ void
 GMPVideoEncodedFrameImpl::DestroyBuffer()
 {
   if (mHost && mBuffer.IsWritable()) {
-    mHost->SharedMemMgr()->MgrDeallocShmem(mBuffer);
+    mHost->SharedMemMgr()->MgrDeallocShmem(GMPSharedMemManager::kGMPEncodedData, mBuffer);
   }
   mBuffer = ipc::Shmem();
 }
@@ -107,15 +107,16 @@ GMPVideoEncodedFrameImpl::DestroyBuffer()
 GMPVideoErr
 GMPVideoEncodedFrameImpl::CreateEmptyFrame(uint32_t aSize)
 {
-  DestroyBuffer();
-
-  if (aSize != 0) {
-    if (!mHost->SharedMemMgr()->MgrAllocShmem(aSize, ipc::SharedMemory::TYPE_BASIC, &mBuffer) ||
+  if (aSize == 0) {
+    DestroyBuffer();
+  } else if (aSize > AllocatedSize()) {
+    DestroyBuffer();
+    if (!mHost->SharedMemMgr()->MgrAllocShmem(GMPSharedMemManager::kGMPEncodedData, aSize,
+                                              ipc::SharedMemory::TYPE_BASIC, &mBuffer) ||
         !Buffer()) {
       return GMPVideoAllocErr;
     }
   }
-
   mSize = aSize;
 
   return GMPVideoNoErr;
@@ -138,7 +139,7 @@ GMPVideoEncodedFrameImpl::CopyFrame(const GMPVideoEncodedFrame& aFrame)
   mTimeStamp = f.mTimeStamp;
   mCaptureTime_ms = f.mCaptureTime_ms;
   mFrameType = f.mFrameType;
-  mSize = f.mSize;
+  mSize = f.mSize; // already set...
   mCompleteFrame = f.mCompleteFrame;
   // Don't copy host, that should have been set properly on object creation via host.
 
@@ -217,7 +218,8 @@ GMPVideoEncodedFrameImpl::SetAllocatedSize(uint32_t aNewSize)
   }
 
   ipc::Shmem new_mem;
-  if (!mHost->SharedMemMgr()->MgrAllocShmem(aNewSize, ipc::SharedMemory::TYPE_BASIC, &new_mem) ||
+  if (!mHost->SharedMemMgr()->MgrAllocShmem(GMPSharedMemManager::kGMPEncodedData, aNewSize,
+                                            ipc::SharedMemory::TYPE_BASIC, &new_mem) ||
       !new_mem.get<uint8_t>()) {
     return;
   }
