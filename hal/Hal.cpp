@@ -1239,5 +1239,11 @@ GetTotalSystemMemoryLevel()
   return hal_impl::GetTotalSystemMemoryLevel();
 }
 
+bool IsHeadphoneEventFromInputDev()
+{
+  AssertMainThread();
+  RETURN_PROXY_IF_SANDBOXED(IsHeadphoneEventFromInputDev(), false);
+}
+
 } // namespace hal
 } // namespace mozilla

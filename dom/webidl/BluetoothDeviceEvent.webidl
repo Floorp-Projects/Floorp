@@ -4,14 +4,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional BluetoothDeviceEventInit eventInitDict),
- CheckPermissions="bluetooth"]
+[CheckPermissions="bluetooth",
+ Constructor(DOMString type, optional BluetoothDeviceEventInit eventInitDict)]
 interface BluetoothDeviceEvent : Event
 {
   readonly attribute BluetoothDevice? device;
+  readonly attribute DOMString?       address;
 };
 
 dictionary BluetoothDeviceEventInit : EventInit
 {
   BluetoothDevice? device = null;
+  DOMString?       address = "";
 };

@@ -443,6 +443,12 @@ StopDiskSpaceWatcher()
   NS_RUNTIMEABORT("StopDiskSpaceWatcher() can't be called from sandboxed contexts.");
 }
 
+bool IsHeadphoneEventFromInputDev()
+{
+  NS_RUNTIMEABORT("IsHeadphoneEventFromInputDev() cannot be called from sandboxed contexts.");
+  return false;
+}
+
 class HalParent : public PHalParent
                 , public BatteryObserver
                 , public NetworkObserver

@@ -225,7 +225,8 @@ StyleSheetEditor.prototype = {
   fetchSource: function(callback) {
     return this.styleSheet.getText().then((longStr) => {
       longStr.string().then((source) => {
-        this._state.text = CssLogic.prettifyCSS(source);
+        let ruleCount = this.styleSheet.ruleCount;
+        this._state.text = CssLogic.prettifyCSS(source, ruleCount);
         this.sourceLoaded = true;
 
         if (callback) {

@@ -138,6 +138,15 @@ this.FxAccountsManager = {
         // capitalization from what we sent down.  This is the server's
         // canonical capitalization and should be used instead.
         user.email = user.email || aEmail;
+
+        // If we're using server-side sign to refreshAuthentication
+        // we don't need to update local state; also because of two
+        // interacting glitches we need to bypass an event emission.
+        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1031580
+        if (this._refreshing) {
+          return Promise.resolve({user: this._user});
+        }
+
         return this._fxAccounts.setSignedInUser(user).then(
           () => {
             this._activeSession = user;

@@ -218,7 +218,7 @@ SyntaxTreesPool.prototype = {
         // Can't guarantee that the tree traversal logic is forever perfect :)
         // Language features may be added, in which case the recursive methods
         // need to be updated. If an exception is thrown here, file a bug.
-        DevToolsUtils.reportException("Syntax tree visitor for " + aUrl, e);
+        DevToolsUtils.reportException("Syntax tree visitor for " + this._url, e);
       }
     }
     this._cache.set(requestId, results);

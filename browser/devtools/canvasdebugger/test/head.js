@@ -29,6 +29,7 @@ const SIMPLE_CANVAS_URL = EXAMPLE_URL + "doc_simple-canvas.html";
 const SIMPLE_BITMASKS_URL = EXAMPLE_URL + "doc_simple-canvas-bitmasks.html";
 const SIMPLE_CANVAS_TRANSPARENT_URL = EXAMPLE_URL + "doc_simple-canvas-transparent.html";
 const SIMPLE_CANVAS_DEEP_STACK_URL = EXAMPLE_URL + "doc_simple-canvas-deep-stack.html";
+const WEBGL_ENUM_URL = EXAMPLE_URL + "doc_webgl-enum.html";
 
 // All tests are asynchronous.
 waitForExplicitFinish();

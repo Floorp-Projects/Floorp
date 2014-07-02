@@ -5,8 +5,6 @@
 "use strict";
 
 // Testing various inplace-editor behaviors in the rule-view
-// FIXME: To be split in several test files, and some of the inplace-editor
-// focus/blur/commit/revert stuff should be factored out in head.js
 
 let TEST_URL = 'url("' + TEST_URL_ROOT + 'doc_test_image.png")';
 let PAGE_CONTENT = [
@@ -14,11 +12,8 @@ let PAGE_CONTENT = [
   '  #testid {',
   '    background-color: blue;',
   '  }',
-  '  .testclass {',
-  '    background-color: green;',
-  '  }',
   '</style>',
-  '<div id="testid" class="testclass" style="background-color:red;">Styled Node</div>'
+  '<div id="testid">Styled Node</div>'
 ].join("\n");
 
 let test = asyncTest(function*() {
@@ -33,13 +28,9 @@ let test = asyncTest(function*() {
   info("Selecting the test element");
   yield selectNode("#testid", inspector);
 
-  yield testCreateNewEscape(view);
-});
-
-function* testCreateNewEscape(view) {
   info("Test creating a new property and escaping");
 
-  let elementRuleEditor = getRuleViewRuleEditor(view, 0);
+  let elementRuleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing a new property name in the rule-view");
   let editor = yield focusEditableField(elementRuleEditor.closeBrace);
@@ -48,7 +39,9 @@ function* testCreateNewEscape(view) {
   let input = editor.input;
 
   info("Entering a value in the property name editor");
+  let onModifications = elementRuleEditor.rule._applyingModifications;
   input.value = "color";
+  yield onModifications;
 
   info("Pressing return to commit and focus the new value field");
   let onValueFocus = once(elementRuleEditor.element, "focus", true);
@@ -69,7 +62,9 @@ function* testCreateNewEscape(view) {
   editor.input.value = "red";
 
   info("Escaping out of the field");
+  let onModifications = elementRuleEditor.rule._applyingModifications;
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
+  yield onModifications;
 
   info("Checking that the previous field is focused");
   let focusedElement = inplaceEditor(elementRuleEditor.rule.textProps[0].editor.valueSpan).input;
@@ -81,4 +76,4 @@ function* testCreateNewEscape(view) {
 
   is(elementRuleEditor.rule.textProps.length,  1, "Removed the new text property.");
   is(elementRuleEditor.propertyList.children.length, 1, "Removed the property editor.");
-}
+});
