@@ -174,14 +174,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     ["length", "toSource", "toString", "toLocaleString", "join", "reverse", "sort", "push",
       "pop", "shift", "unshift", "splice", "concat", "slice", "lastIndexOf", "indexOf",
       "forEach", "map", "reduce", "reduceRight", "filter", "some", "every", "find",
-      "findIndex", "copyWithin", "fill", "@@iterator", "entries", "keys", "constructor"];
+      "findIndex", "copyWithin", "fill", Symbol.iterator, "entries", "keys", "constructor"];
   if (isNightlyBuild) {
     let pjsMethods = ['mapPar', 'reducePar', 'scanPar', 'scatterPar', 'filterPar'];
     gPrototypeProperties['Array'] = gPrototypeProperties['Array'].concat(pjsMethods);
   }
   for (var c of typedArrayClasses) {
     gPrototypeProperties[c] = ["constructor", "BYTES_PER_ELEMENT", "length", "buffer",
-                               "byteLength", "byteOffset", "@@iterator", "subarray", "set",
+                               "byteLength", "byteOffset", "Symbol.iterator", "subarray", "set",
                                "copyWithin"];
   }
   for (var c of errorObjectClasses) {
@@ -211,9 +211,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     let xrayProto = Object.getPrototypeOf(xray);
     let localProto = window[classname].prototype;
     is(Object.getOwnPropertyNames(localProto).sort().toSource(),
-       gPrototypeProperties[classname].sort().toSource(),
+       gPrototypeProperties[classname].filter(id => typeof id === "string").sort().toSource(),
        "A property on the " + classname +
-       " prototype has changed! You need a security audit from an XPConnect peer");
+       " prototype has been changed! You need a security audit from an XPConnect peer");
+    is(Object.getOwnPropertySymbols(localProto).map(uneval).sort().toSource(),
+       gPrototypeProperties[classname].filter(id => typeof id !== "string").map(uneval).sort().toSource(),
+       "A symbol-keyed property on the " + classname +
+       " prototype has been changed! You need a security audit from an XPConnect peer");
 
     let protoProps = filterOut(Object.getOwnPropertyNames(localProto), propsToSkip).sort();
     let protoCallables = protoProps.filter(name => Object.getOwnPropertyDescriptor(localProto, name).get ||

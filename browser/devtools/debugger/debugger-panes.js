@@ -3261,9 +3261,9 @@ LineResults.prototype = {
 /**
  * A generator-iterator over the global, source or line results.
  */
-GlobalResults.prototype["@@iterator"] =
-SourceResults.prototype["@@iterator"] =
-LineResults.prototype["@@iterator"] = function*() {
+GlobalResults.prototype[Symbol.iterator] =
+SourceResults.prototype[Symbol.iterator] =
+LineResults.prototype[Symbol.iterator] = function*() {
   yield* this._store;
 };
 

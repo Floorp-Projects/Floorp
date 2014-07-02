@@ -4200,7 +4200,7 @@ static const JSFunctionSpec string_methods[] = {
     JS_SELF_HOSTED_FN("fontcolor","String_fontcolor",  1,0),
     JS_SELF_HOSTED_FN("fontsize", "String_fontsize",   1,0),
 
-    JS_SELF_HOSTED_FN("@@iterator", "String_iterator", 0,0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "String_iterator", 0,0),
     JS_FS_END
 };
 

@@ -3056,10 +3056,10 @@ Property.prototype = Heritage.extend(Variable.prototype, {
 /**
  * A generator-iterator over the VariablesView, Scopes, Variables and Properties.
  */
-VariablesView.prototype["@@iterator"] =
-Scope.prototype["@@iterator"] =
-Variable.prototype["@@iterator"] =
-Property.prototype["@@iterator"] = function*() {
+VariablesView.prototype[Symbol.iterator] =
+Scope.prototype[Symbol.iterator] =
+Variable.prototype[Symbol.iterator] =
+Property.prototype[Symbol.iterator] = function*() {
   yield* this._store;
 };
 

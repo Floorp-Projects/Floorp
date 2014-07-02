@@ -511,7 +511,7 @@ Promise.reject = function (aReason)
  */
 Promise.all = function (aValues)
 {
-  if (aValues == null || typeof(aValues["@@iterator"]) != "function") {
+  if (aValues == null || typeof(aValues[Symbol.iterator]) != "function") {
     throw new Error("Promise.all() expects an iterable.");
   }
 
@@ -562,7 +562,7 @@ Promise.all = function (aValues)
  */
 Promise.race = function (aValues)
 {
-  if (aValues == null || typeof(aValues["@@iterator"]) != "function") {
+  if (aValues == null || typeof(aValues[Symbol.iterator]) != "function") {
     throw new Error("Promise.race() expects an iterable.");
   }
 
