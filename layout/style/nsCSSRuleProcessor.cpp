@@ -560,9 +560,7 @@ RuleHash::~RuleHash()
         RuleValue* value = &(mUniversalRules[i]);
         nsAutoString selectorText;
         uint32_t lineNumber = value->mRule->GetLineNumber();
-        nsCOMPtr<nsIStyleSheet> sheet;
-        value->mRule->GetStyleSheet(*getter_AddRefs(sheet));
-        nsRefPtr<CSSStyleSheet> cssSheet = do_QueryObject(sheet);
+        nsRefPtr<CSSStyleSheet> cssSheet = value->mRule->GetStyleSheet();
         value->mSelector->ToString(selectorText, cssSheet);
 
         printf("    line %d, %s\n",
