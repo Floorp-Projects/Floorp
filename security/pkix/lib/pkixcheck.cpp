@@ -404,49 +404,56 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
   return Success;
 }
 
+Result
+BackCert::GetConstrainedNames(/*out*/ const CERTGeneralName** result)
+{
+  if (!constrainedNames) {
+    if (!GetArena()) {
+      return FatalError;
+    }
+
+    constrainedNames =
+      CERT_GetConstrainedCertificateNames(GetNSSCert(), arena.get(),
+                                          includeCN == IncludeCN::Yes);
+    if (!constrainedNames) {
+      return MapSECStatus(SECFailure);
+    }
+  }
+
+  *result = constrainedNames;
+  return Success;
+}
+
 // 4.2.1.10. Name Constraints
 Result
-CheckNameConstraints(const BackCert& cert)
+CheckNameConstraints(BackCert& cert)
 {
   if (!cert.encodedNameConstraints) {
     return Success;
   }
 
-  ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  PLArenaPool* arena = cert.GetArena();
   if (!arena) {
-    return MapSECStatus(SECFailure);
+    return FatalError;
   }
 
   // Owned by arena
   const CERTNameConstraints* constraints =
-    CERT_DecodeNameConstraintsExtension(arena.get(), cert.encodedNameConstraints);
+    CERT_DecodeNameConstraintsExtension(arena, cert.encodedNameConstraints);
   if (!constraints) {
     return MapSECStatus(SECFailure);
   }
 
-  for (const BackCert* child = cert.childCert; child;
-       child = child->childCert) {
-    ScopedCERTCertificate
-      nssCert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
-                                      const_cast<SECItem*>(&child->GetDER()),
-                                      nullptr, false, true));
-    if (!nssCert) {
-      return MapSECStatus(SECFailure);
+  for (BackCert* prev = cert.childCert; prev; prev = prev->childCert) {
+    const CERTGeneralName* names = nullptr;
+    Result rv = prev->GetConstrainedNames(&names);
+    if (rv != Success) {
+      return rv;
     }
-
-    bool includeCN = child->includeCN == BackCert::IncludeCN::Yes;
-    // owned by arena
-    const CERTGeneralName*
-      names(CERT_GetConstrainedCertificateNames(nssCert.get(), arena.get(),
-                                                includeCN));
-    if (!names) {
-      return MapSECStatus(SECFailure);
-    }
-
+    PORT_Assert(names);
     CERTGeneralName* currentName = const_cast<CERTGeneralName*>(names);
     do {
-      if (CERT_CheckNameSpace(arena.get(), constraints, currentName)
-            != SECSuccess) {
+      if (CERT_CheckNameSpace(arena, constraints, currentName) != SECSuccess) {
         // XXX: It seems like CERT_CheckNameSpace doesn't always call
         // PR_SetError when it fails. We set the error code here, though this
         // may be papering over some fatal errors. NSS's
