@@ -763,6 +763,11 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   -moz-image-region: rect(0, 64px, 16px, 48px);
 }
 
+/* undo close tab menu item */
+#alltabs_undoCloseTab {
+  list-style-image: url(chrome://browser/skin/undoCloseTab.png);
+}
+
 #bookmarks-button {
   -moz-image-region: rect(0px 72px 24px 48px);
 }

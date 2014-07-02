@@ -80,6 +80,8 @@ browser.jar:
         skin/classic/browser/Toolbar-lunaSilver.png
         skin/classic/browser/toolbarbutton-dropdown-arrow.png
         skin/classic/browser/toolbarbutton-dropdown-arrow-inverted.png
+        skin/classic/browser/undoCloseTab.png                        (../shared/undoCloseTab.png)
+        skin/classic/browser/undoCloseTab@2x.png                     (../shared/undoCloseTab@2x.png)
         skin/classic/browser/urlbar-arrow.png
         skin/classic/browser/urlbar-popup-blocked.png
         skin/classic/browser/urlbar-history-dropmarker.png
@@ -484,6 +486,8 @@ browser.jar:
         skin/classic/aero/browser/Toolbar-aero.png
         skin/classic/aero/browser/toolbarbutton-dropdown-arrow.png
         skin/classic/aero/browser/toolbarbutton-dropdown-arrow-inverted.png
+        skin/classic/aero/browser/undoCloseTab.png                        (../shared/undoCloseTab.png)
+        skin/classic/aero/browser/undoCloseTab@2x.png                     (../shared/undoCloseTab@2x.png)
         skin/classic/aero/browser/urlbar-arrow.png
         skin/classic/aero/browser/urlbar-popup-blocked.png
         skin/classic/aero/browser/urlbar-history-dropmarker.png
