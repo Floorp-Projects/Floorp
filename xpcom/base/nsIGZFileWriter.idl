@@ -8,9 +8,11 @@
 
 %{C++
 #include "nsDependentString.h"
+#include <stdio.h>
 %}
 
 interface nsIFile;
+[ptr] native FILE(FILE);
 
 /**
  * A simple interface for writing to a .gz file.
@@ -22,7 +24,7 @@ interface nsIFile;
  * The standard gunzip tool cannot decompress a raw gzip stream, but can handle
  * the files produced by this interface.
  */
-[scriptable, uuid(a256f26a-c603-459e-b5a4-53b4877f2cd8)]
+[scriptable, uuid(6bd5642c-1b90-4499-ba4b-199f27efaba5)]
 interface nsIGZFileWriter : nsISupports
 {
   /**
@@ -33,6 +35,12 @@ interface nsIGZFileWriter : nsISupports
    * other method on this interface without first calling init().
    */
   void init(in nsIFile file);
+
+  /**
+   * Alternate version of init() for use when the file is already opened;
+   * e.g., with a FileDescriptor passed over IPC.
+   */
+  [noscript] void initANSIFileDesc(in FILE file);
 
   /**
    * Write the given string to the file.

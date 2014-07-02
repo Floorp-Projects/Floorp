@@ -5,10 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+%{C++
+#include <stdio.h>
+%}
 
 interface nsIDOMWindow;
 interface nsIRunnable;
 interface nsISimpleEnumerator;
+[ptr] native FILE(FILE);
 
 /*
  * Memory reporters measure Firefox's memory usage.  They are primarily used to
@@ -201,7 +205,7 @@ interface nsIFinishReportingCallback : nsISupports
   void callback(in nsISupports data);
 };
 
-[scriptable, builtinclass, uuid(c27f8662-a0b7-45b3-8207-14d66b02b9c5)]
+[scriptable, builtinclass, uuid(51e17609-e98a-47cc-9f95-095ef3c3823e)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -294,15 +298,14 @@ interface nsIMemoryReporterManager : nsISupports
                                 in boolean anonymize);
 
   /*
-   * As above, but if DMD is enabled and |DMDDumpIdent| is non-empty
-   * then write a DMD report to a file in the usual temporary directory (see
-   * |dumpMemoryInfoToTempDir| in |nsIMemoryInfoDumper|.)
+   * As above, but if DMD is enabled and |DMDFile| is non-null then
+   * write a DMD report to that file and close it.
    */
   [noscript] void
     getReportsForThisProcessExtended(in nsIMemoryReporterCallback handleReport,
                                      in nsISupports handleReportData,
                                      in boolean anonymize,
-                                     in AString DMDDumpIdent);
+                                     in FILE DMDFile);
 
   /*
    * The memory reporter manager, for the most part, treats reporters
