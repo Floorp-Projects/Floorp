@@ -85,39 +85,70 @@ function expressionUsesVariable(exp, variable)
     return false;
 }
 
-function edgeUsesVariable(edge, variable)
+// Detect simple |return nullptr;| statements.
+function isReturningImmobileValue(edge, variable)
+{
+    if (variable.Kind == "Return") {
+        if (edge.Exp[0].Kind == "Var" && sameVariable(edge.Exp[0].Variable, variable)) {
+            if (edge.Exp[1].Kind == "Int" && edge.Exp[1].String == "0") {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// If the edge uses the given variable, return the earliest point at which the
+// use is definite. Usually, that means the source of the edge (anything that
+// reaches that source point will end up using the variable, but there may be
+// other ways to reach the destination of the edge.)
+//
+// Return values are implicitly used at the very last point in the function.
+// This makes a difference: if an RAII class GCs in its destructor, we need to
+// start looking at the final point in the function, not one point back from
+// that, since that would skip over the GCing call.
+//
+function edgeUsesVariable(edge, variable, body)
 {
     if (ignoreEdgeUse(edge, variable))
-        return false;
+        return 0;
+
+    if (variable.Kind == "Return" && body.Index[1] == edge.Index[1] && body.BlockId.Kind == "Function")
+        return edge.Index[1]; // Last point in function body uses the return value.
+
+    var src = edge.Index[0];
+
     switch (edge.Kind) {
 
     case "Assign":
+        if (isReturningImmobileValue(edge, variable))
+            return 0;
         if (expressionUsesVariable(edge.Exp[0], variable))
-            return true;
-        return expressionUsesVariable(edge.Exp[1], variable);
+            return src;
+        return expressionUsesVariable(edge.Exp[1], variable) ? src : 0;
 
     case "Assume":
-        return expressionUsesVariable(edge.Exp[0], variable);
+        return expressionUsesVariable(edge.Exp[0], variable) ? src : 0;
 
     case "Call":
         if (expressionUsesVariable(edge.Exp[0], variable))
-            return true;
+            return src;
         if (1 in edge.Exp && expressionUsesVariable(edge.Exp[1], variable))
-            return true;
+            return src;
         if ("PEdgeCallInstance" in edge) {
             if (expressionUsesVariable(edge.PEdgeCallInstance.Exp, variable))
-                return true;
+                return src;
         }
         if ("PEdgeCallArguments" in edge) {
             for (var exp of edge.PEdgeCallArguments.Exp) {
                 if (expressionUsesVariable(exp, variable))
-                    return true;
+                    return src;
             }
         }
-        return false;
+        return 0;
 
     case "Loop":
-        return false;
+        return 0;
 
     default:
         assert(false);
@@ -159,7 +190,7 @@ function edgeKillsVariable(edge, variable)
     if (edge.Kind == "Assign") {
         var lhs = edge.Exp[0];
         if (lhs.Kind == "Var" && sameVariable(lhs.Variable, variable))
-            return true;
+            return !isReturningImmobileValue(edge, variable);
     }
 
     if (edge.Kind != "Call")
@@ -224,7 +255,7 @@ function edgeCanGC(edge)
         var variable = callee.Variable;
         assert(variable.Kind == "Func");
         var callee = mangled(variable.Name[0]);
-        if (callee in gcFunctions)
+        if ((callee in gcFunctions) || ((callee + internalMarker) in gcFunctions))
             return "'" + variable.Name[0] + "'";
         return null;
     }
@@ -242,11 +273,11 @@ function edgeCanGC(edge)
     return indirectCallCannotGC(functionName, varName) ? null : "*" + varName;
 }
 
-function variableUseFollowsGC(suppressed, variable, worklist)
+function variableUsePrecedesGC(suppressed, variable, worklist)
 {
-    // Scan through all edges following an unrooted variable use, using an
-    // explicit worklist. A worklist contains a following edge together with a
-    // description of where one of its predecessors GC'd (if any).
+    // Scan through all edges preceding an unrooted variable use, using an
+    // explicit worklist. A worklist contains an incoming edge together with a
+    // description of where it or one of its successors GC'd (if any).
 
     while (worklist.length) {
         var entry = worklist.pop();
@@ -281,6 +312,8 @@ function variableUseFollowsGC(suppressed, variable, worklist)
                     }
                 }
             } else if (variable.Kind == "Arg" && entry.gcInfo) {
+                // The scope of arguments starts at the beginning of the
+                // function
                 return {gcInfo:entry.gcInfo, why:entry};
             }
         }
@@ -294,7 +327,7 @@ function variableUseFollowsGC(suppressed, variable, worklist)
 
             if (edgeKillsVariable(edge, variable)) {
                 if (entry.gcInfo)
-                    return {gcInfo:entry.gcInfo, why:entry};
+                    return {gcInfo: entry.gcInfo, why: {body:body, ppoint:source, gcInfo:entry.gcInfo, why:entry } }
                 if (!body.minimumUse || source < body.minimumUse)
                     body.minimumUse = source;
                 continue;
@@ -307,7 +340,7 @@ function variableUseFollowsGC(suppressed, variable, worklist)
                     gcInfo = {name:gcName, body:body, ppoint:source};
             }
 
-            if (edgeUsesVariable(edge, variable)) {
+            if (edgeUsesVariable(edge, variable, body)) {
                 if (gcInfo)
                     return {gcInfo:gcInfo, why:entry};
                 if (!body.minimumUse || source < body.minimumUse)
@@ -350,11 +383,15 @@ function variableLiveAcrossGC(suppressed, variable)
         if (!("PEdge" in body))
             continue;
         for (var edge of body.PEdge) {
-            if (edgeUsesVariable(edge, variable) && !edgeKillsVariable(edge, variable)) {
-                var worklist = [{body:body, ppoint:edge.Index[0], gcInfo:null, why:null}];
-                var call = variableUseFollowsGC(suppressed, variable, worklist);
-                if (call)
+            var usePoint = edgeUsesVariable(edge, variable, body);
+            if (usePoint && !edgeKillsVariable(edge, variable)) {
+                // Found a use, possibly after a GC.
+                var worklist = [{body:body, ppoint:usePoint, gcInfo:null, why:null}];
+                var call = variableUsePrecedesGC(suppressed, variable, worklist);
+                if (call) {
+                    call.afterGCUse = usePoint;
                     return call;
+                }
             }
         }
     }
@@ -392,8 +429,7 @@ function computePrintedLines(functionName)
 
     // Distribute lines of output to the block they originate from.
     var currentBody = null;
-    for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
+    for (var line of lines) {
         if (/^block:/.test(line)) {
             if (match = /:(loop#[\d#]+)/.exec(line)) {
                 var loop = match[1];
@@ -436,6 +472,8 @@ function locationLine(text)
 
 function printEntryTrace(functionName, entry)
 {
+    var gcPoint = ('gcInfo' in entry) ? entry.gcInfo.ppoint : 0;
+
     if (!functionBodies[0].lines)
         computePrintedLines(functionName);
 
@@ -443,17 +481,24 @@ function printEntryTrace(functionName, entry)
         var ppoint = entry.ppoint;
         var lineText = findLocation(entry.body, ppoint);
 
-        var edgeText = null;
+        var edgeText = "";
         if (entry.why && entry.why.body == entry.body) {
             // If the next point in the trace is in the same block, look for an edge between them.
             var next = entry.why.ppoint;
-            for (var line of entry.body.lines) {
-                if (match = /\((\d+),(\d+),/.exec(line)) {
-                    if (match[1] == ppoint && match[2] == next)
-                        edgeText = line; // May be multiple
+
+            if (!entry.body.edgeTable) {
+                var table = {};
+                entry.body.edgeTable = table;
+                for (var line of entry.body.lines) {
+                    if (match = /\((\d+),(\d+),/.exec(line))
+                        table[match[1] + "," + match[2]] = line; // May be multiple?
                 }
             }
+
+            edgeText = entry.body.edgeTable[ppoint + "," + next];
             assert(edgeText);
+            if (ppoint == gcPoint)
+                edgeText += " [[GC call]]";
         } else {
             // Look for any outgoing edge from the chosen point.
             for (var line of entry.body.lines) {
@@ -464,9 +509,11 @@ function printEntryTrace(functionName, entry)
                     }
                 }
             }
+            if (ppoint == entry.body.Index[1] && entry.body.BlockId.Kind == "Function")
+                edgeText += " [[end of function]]";
         }
 
-        print("    " + lineText + (edgeText ? ": " + edgeText : ""));
+        print("    " + lineText + (edgeText.length ? ": " + edgeText : ""));
         entry = entry.why;
     }
 }
@@ -499,13 +546,14 @@ function processBodies(functionName)
         return;
     var suppressed = (mangled(functionName) in suppressedFunctions);
     for (var variable of functionBodies[0].DefineVariable) {
-        if (variable.Variable.Kind == "Return")
-            continue;
         var name;
         if (variable.Variable.Kind == "This")
             name = "this";
+        else if (variable.Variable.Kind == "Return")
+            name = "<returnvalue>";
         else
             name = variable.Variable.Name[0];
+
         if (isRootedType(variable.Type)) {
             if (!variableLiveAcrossGC(suppressed, variable.Variable)) {
                 // The earliest use of the variable should be its constructor.
@@ -557,6 +605,13 @@ var each = Math.floor(N/numBatches);
 var start = minStream + each * (batch - 1);
 var end = Math.min(minStream + each * batch - 1, maxStream);
 
+// For debugging: Set this variable to the function name you're interested in
+// debugging and run once. That will print out the nameIndex of that function.
+// Insert that into the following statement to go directly to just that
+// function. Add your debugging printouts or debugger; statements or whatever.
+var theFunctionNameToFind;
+// var start = end = 12345;
+
 for (var nameIndex = start; nameIndex <= end; nameIndex++) {
     var name = xdb.read_key(nameIndex);
     var functionName = name.readString();
@@ -565,6 +620,15 @@ for (var nameIndex = start; nameIndex <= end; nameIndex++) {
     var json = data.readString();
     xdb.free_string(data);
     functionBodies = JSON.parse(json);
+
+    if (theFunctionNameToFind) {
+        if (functionName == theFunctionNameToFind) {
+            printErr("nameIndex = " + nameIndex);
+            quit(1);
+        } else {
+            continue;
+        }
+    }
 
     for (var body of functionBodies)
         body.suppressed = [];

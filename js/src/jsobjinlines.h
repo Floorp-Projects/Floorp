@@ -535,6 +535,8 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
     if (span)
         obj->initializeSlotRange(0, span);
 
+    js::gc::TraceCreateObject(obj);
+
     return obj;
 }
 
@@ -569,6 +571,8 @@ JSObject::createArray(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::
     size_t span = shape->slotSpan();
     if (span)
         obj->initializeSlotRange(0, span);
+
+    js::gc::TraceCreateObject(obj);
 
     return &obj->as<js::ArrayObject>();
 }

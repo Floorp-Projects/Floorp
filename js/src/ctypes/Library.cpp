@@ -104,13 +104,13 @@ Library::Create(JSContext* cx, jsval path_, JSCTypesCallbacks* callbacks)
   RootedFlatString pathStr(cx, JS_FlattenString(cx, path.toString()));
   if (!pathStr)
     return nullptr;
+  AutoStableStringChars pathStrChars(cx);
+  if (!pathStrChars.initTwoByte(cx, pathStr))
+    return nullptr;
 #ifdef XP_WIN
   // On Windows, converting to native charset may corrupt path string.
   // So, we have to use Unicode path directly.
-  char16ptr_t pathChars = JS_GetFlatStringChars(pathStr);
-  if (!pathChars)
-    return nullptr;
-
+  char16ptr_t pathChars = pathStrChars.twoByteChars();
   libSpec.value.pathname_u = pathChars;
   libSpec.type = PR_LibSpec_PathnameU;
 #else
@@ -119,7 +119,7 @@ Library::Create(JSContext* cx, jsval path_, JSCTypesCallbacks* callbacks)
   char* pathBytes;
   if (callbacks && callbacks->unicodeToNative) {
     pathBytes =
-      callbacks->unicodeToNative(cx, pathStr->chars(), pathStr->length());
+      callbacks->unicodeToNative(cx, pathStrChars.twoByteChars(), pathStr->length());
     if (!pathBytes)
       return nullptr;
 
@@ -127,7 +127,7 @@ Library::Create(JSContext* cx, jsval path_, JSCTypesCallbacks* callbacks)
     // Fallback: assume the platform native charset is UTF-8. This is true
     // for Mac OS X, Android, and probably Linux.
     size_t nbytes =
-      GetDeflatedUTF8StringLength(cx, pathStr->chars(), pathStr->length());
+      GetDeflatedUTF8StringLength(cx, pathStrChars.twoByteChars(), pathStr->length());
     if (nbytes == (size_t) -1)
       return nullptr;
 
@@ -135,7 +135,7 @@ Library::Create(JSContext* cx, jsval path_, JSCTypesCallbacks* callbacks)
     if (!pathBytes)
       return nullptr;
 
-    ASSERT_OK(DeflateStringToUTF8Buffer(cx, pathStr->chars(),
+    ASSERT_OK(DeflateStringToUTF8Buffer(cx, pathStrChars.twoByteChars(),
                 pathStr->length(), pathBytes, &nbytes));
     pathBytes[nbytes] = 0;
   }

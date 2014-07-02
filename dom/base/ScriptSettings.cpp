@@ -232,10 +232,16 @@ AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
 {
   mCx = aCx;
   if (aIsMainThread) {
+    // This Rooted<> is necessary only as long as AutoCxPusher::AutoCxPusher
+    // can GC, which is only possible because XPCJSContextStack::Push calls
+    // nsIPrincipal.Equals. Once that is removed, the Rooted<> will no longer
+    // be necessary.
+    JS::Rooted<JSObject*> global(JS_GetRuntime(aCx), aGlobal);
     mCxPusher.construct(mCx);
+    mAutoNullableCompartment.construct(mCx, global);
+  } else {
+    mAutoNullableCompartment.construct(mCx, aGlobal);
   }
-
-  mAutoNullableCompartment.construct(mCx, aGlobal);
 }
 
 AutoJSAPI::AutoJSAPI(nsIGlobalObject* aGlobalObject,

@@ -36,8 +36,8 @@ BEGIN_TEST(testTrap_gc)
     // compile
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, 1);
-    JS::RootedScript script(cx, JS_CompileScript(cx, global, source,
-                                                 strlen(source), options));
+    JS::RootedScript script(cx);
+    CHECK(JS_CompileScript(cx, global, source, strlen(source), options, &script));
     CHECK(script);
 
     // execute

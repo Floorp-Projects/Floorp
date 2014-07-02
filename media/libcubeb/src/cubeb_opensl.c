@@ -11,10 +11,12 @@
 #include <pthread.h>
 #include <SLES/OpenSLES.h>
 #if defined(__ANDROID__)
+#include <sys/system_properties.h>
 #include "android/sles_definitions.h"
 #include <SLES/OpenSLES_Android.h>
 #include <android/log.h>
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Cubeb_OpenSL" , ## args)
+#define ANDROID_VERSION_GINGERBREAD_MR1 10
 #endif
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
@@ -167,10 +169,37 @@ convert_stream_type_to_sl_stream(cubeb_stream_type stream_type)
 
 static void opensl_destroy(cubeb * ctx);
 
+#if defined(__ANDROID__)
+
+static int
+get_android_version(void)
+{
+  char version_string[PROP_VALUE_MAX];
+
+  memset(version_string, 0, PROP_VALUE_MAX);
+
+  int len = __system_property_get("ro.build.version.sdk", version_string);
+  if (len <= 0) {
+    LOG("Failed to get Android version!\n");
+    return len;
+  }
+
+  return (int)strtol(version_string, NULL, 10);
+}
+#endif
+
 /*static*/ int
 opensl_init(cubeb ** context, char const * context_name)
 {
   cubeb * ctx;
+
+#if defined(__ANDROID__)
+  int android_version = get_android_version();
+  if (android_version > 0 && android_version <= ANDROID_VERSION_GINGERBREAD_MR1) {
+    // Don't even attempt to run on Gingerbread and lower
+    return CUBEB_ERROR;
+  }
+#endif
 
   *context = NULL;
 
