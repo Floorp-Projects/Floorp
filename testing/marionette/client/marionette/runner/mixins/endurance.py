@@ -133,11 +133,13 @@ class MemoryEnduranceTestCaseMixin(object):
 
     def __init__(self, *args, **kwargs):
         # TODO: add desktop support
-        if self.device_manager:
-            self.add_checkpoint_function(self.memory_b2g_checkpoint)
-            self.add_process_checkpoint_function(self.memory_b2g_process_checkpoint)
+        self.add_checkpoint_function(self.memory_b2g_checkpoint)
+        self.add_process_checkpoint_function(self.memory_b2g_process_checkpoint)
 
     def memory_b2g_checkpoint(self):
+        if not self.device_manager:
+            return
+
         # Sleep to give device idle time (for gc)
         idle_time = 30
         self.marionette.log("sleeping %d seconds to give the device some idle time" % idle_time)
@@ -150,6 +152,9 @@ class MemoryEnduranceTestCaseMixin(object):
             log_file.write('%s\n' % output_str)
 
     def memory_b2g_process_checkpoint(self):
+        if not self.device_manager:
+            return
+
         # Process checkpoint data into .json
         self.marionette.log("processing checkpoint data from %s" % self.log_name)
 
