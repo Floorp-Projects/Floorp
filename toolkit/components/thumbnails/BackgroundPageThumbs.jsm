@@ -17,6 +17,7 @@ const TEL_CAPTURE_DONE_OK = 0;
 const TEL_CAPTURE_DONE_TIMEOUT = 1;
 // 2 and 3 were used when we had special handling for private-browsing.
 const TEL_CAPTURE_DONE_CRASHED = 4;
+const TEL_CAPTURE_DONE_BAD_URI = 5;
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -25,6 +26,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/PageThumbs.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+
+const global = this;
 
 const BackgroundPageThumbs = {
 
@@ -321,12 +324,21 @@ Capture.prototype = {
 
   // Called when the didCapture message is received.
   receiveMessage: function (msg) {
-    tel("CAPTURE_SERVICE_TIME_MS", new Date() - this.startDate);
+    if (msg.data.imageData)
+      tel("CAPTURE_SERVICE_TIME_MS", new Date() - this.startDate);
 
     // A different timed-out capture may have finally successfully completed, so
     // discard messages that aren't meant for this capture.
-    if (msg.json.id == this.id)
-      this._done(msg.json, TEL_CAPTURE_DONE_OK);
+    if (msg.data.id != this.id)
+      return;
+
+    if (msg.data.failReason) {
+      let reason = global["TEL_CAPTURE_DONE_" + msg.data.failReason];
+      this._done(null, reason);
+      return;
+    }
+
+    this._done(msg.data, TEL_CAPTURE_DONE_OK);
   },
 
   // Called when the timeout timer fires.
