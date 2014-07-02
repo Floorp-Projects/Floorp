@@ -46,9 +46,11 @@ static Result
 BuildForwardInner(TrustDomain& trustDomain,
                   const BackCert& subject,
                   PRTime time,
+                  EndEntityOrCA endEntityOrCA,
                   KeyPurposeId requiredEKUIfPresent,
                   const CertPolicyId& requiredPolicy,
                   const SECItem& potentialIssuerDER,
+                  /*optional*/ const SECItem* stapledOCSPResponse,
                   unsigned int subCACount,
                   /*out*/ ScopedCERTCertList& results)
 {
@@ -96,6 +98,15 @@ BuildForwardInner(TrustDomain& trustDomain,
                                 potentialIssuer.GetSubjectPublicKeyInfo());
   if (srv != SECSuccess) {
     return MapSECStatus(srv);
+  }
+
+  CertID certID(subject.GetIssuer(), potentialIssuer.GetSubjectPublicKeyInfo(),
+                subject.GetSerialNumber());
+  srv = trustDomain.CheckRevocation(endEntityOrCA, certID, time,
+                                    stapledOCSPResponse,
+                                    subject.GetAuthorityInfoAccess());
+  if (srv != SECSuccess) {
+    return MapSECStatus(SECFailure);
   }
 
   return Success;
@@ -196,28 +207,20 @@ BuildForward(TrustDomain& trustDomain,
 
   for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
        !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
-    rv = BuildForwardInner(trustDomain, subject, time, requiredEKUIfPresent,
-                           requiredPolicy, n->cert->derCert, subCACount,
-                           results);
+    rv = BuildForwardInner(trustDomain, subject, time, endEntityOrCA,
+                           requiredEKUIfPresent,
+                           requiredPolicy, n->cert->derCert,
+                           stapledOCSPResponse, subCACount, results);
     if (rv == Success) {
-      // If we found a valid chain but deferred reporting an error with the
-      // end-entity certificate, report it now.
+      // We have built a complete chain from the current subject to a root.
+
+      // If we built a valid chain but deferred reporting an error with the
+      // end-entity certificate, report that error now.
       if (deferredEndEntityError != 0) {
         return Fail(FatalError, deferredEndEntityError);
       }
 
-      CertID certID(subject.GetIssuer(), n->cert->derPublicKey,
-                    subject.GetSerialNumber());
-      SECStatus srv = trustDomain.CheckRevocation(
-                                    endEntityOrCA, certID, time,
-                                    stapledOCSPResponse,
-                                    subject.GetAuthorityInfoAccess());
-      if (srv != SECSuccess) {
-        return MapSECStatus(SECFailure);
-      }
-
-      // We found a trusted issuer. At this point, we know the cert is valid
-      // and results contains the complete cert chain.
+      // We have built a valid chain for the current subject.
       return Success;
     }
     if (rv != RecoverableError) {
