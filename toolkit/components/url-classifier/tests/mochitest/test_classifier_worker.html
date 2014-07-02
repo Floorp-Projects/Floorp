@@ -73,8 +73,8 @@ function onmessage(event)
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["urlclassifier.malware_table", "test-malware-simple"],
-            ["urlclassifier.phish_table", "test-phish-simple"]]},
+  {"set" : [["urlclassifier.malwareTable", "test-malware-simple"],
+            ["urlclassifier.phishTable", "test-phish-simple"]]},
   function() { doUpdate(testUpdate); });
 
 window.addEventListener("message", onmessage, false);
