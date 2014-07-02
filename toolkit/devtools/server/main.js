@@ -439,11 +439,11 @@ var DebuggerServer = {
   /**
    * Listens on the given port or socket file for remote debugger connections.
    *
-   * @param aPortOrPath int, string
+   * @param portOrPath int, string
    *        If given an integer, the port to listen on.
    *        Otherwise, the path to the unix socket domain file to listen on.
    */
-  openListener: function DS_openListener(aPortOrPath) {
+  openListener: function(portOrPath) {
     if (!Services.prefs.getBoolPref("devtools.debugger.remote-enabled")) {
       return false;
     }
@@ -463,11 +463,11 @@ var DebuggerServer = {
     try {
       let backlog = 4;
       let socket;
-      let port = Number(aPortOrPath);
+      let port = Number(portOrPath);
       if (port) {
         socket = new ServerSocket(port, flags, backlog);
       } else {
-        let file = nsFile(aPortOrPath);
+        let file = nsFile(portOrPath);
         if (file.exists())
           file.remove(false);
         socket = new UnixDomainServerSocket(file, parseInt("666", 8), backlog);
@@ -475,7 +475,7 @@ var DebuggerServer = {
       socket.asyncListen(this);
       this._listener = socket;
     } catch (e) {
-      dumpn("Could not start debugging listener on '" + aPortOrPath + "': " + e);
+      dumpn("Could not start debugging listener on '" + portOrPath + "': " + e);
       throw Cr.NS_ERROR_NOT_AVAILABLE;
     }
     this._socketConnections++;
@@ -486,18 +486,18 @@ var DebuggerServer = {
   /**
    * Close a previously-opened TCP listener.
    *
-   * @param aForce boolean [optional]
+   * @param force boolean [optional]
    *        If set to true, then the socket will be closed, regardless of the
    *        number of open connections.
    */
-  closeListener: function DS_closeListener(aForce) {
+  closeListener: function(force) {
     if (!this._listener || this._socketConnections == 0) {
       return false;
     }
 
     // Only close the listener when the last connection is closed, or if the
-    // aForce flag is passed.
-    if (--this._socketConnections == 0 || aForce) {
+    // force flag is passed.
+    if (--this._socketConnections == 0 || force) {
       this._listener.close();
       this._listener = null;
       this._socketConnections = 0;
