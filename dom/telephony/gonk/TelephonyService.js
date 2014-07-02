@@ -413,6 +413,16 @@ TelephonyService.prototype = {
       return;
     }
 
+    // Select a proper clientId for dialEmergency.
+    if (aIsEmergency) {
+      aClientId = gRadioInterfaceLayer.getClientIdForEmergencyCall() ;
+      if (aClientId === -1) {
+        if (DEBUG) debug("Error: No client is avaialble for emergency call.");
+        aTelephonyCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
+        return;
+      }
+    }
+
     // For DSDS, if there is aleady a call on SIM 'aClientId', we cannot place
     // any new call on other SIM.
     if (this._hasCallsOnOtherClient(aClientId)) {
