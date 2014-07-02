@@ -81,11 +81,12 @@ private:
     return SECSuccess;
   }
 
-  SECStatus FindPotentialIssuers(const SECItem* encodedIssuerName,
-                                 PRTime time,
-                                 /*out*/ ScopedCERTCertList& results)
+  SECStatus FindIssuer(const SECItem& /*encodedIssuerName*/,
+                       IssuerChecker& /*checker*/, PRTime /*time*/)
   {
-    return SECSuccess;
+    PR_NOT_REACHED("FindIssuer should not be called");
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+    return SECFailure;
   }
 
   SECStatus VerifySignedData(const CERTSignedData& signedData,

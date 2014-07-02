@@ -41,7 +41,12 @@ static Result BuildForward(TrustDomain& trustDomain,
                            unsigned int subCACount,
                            /*out*/ ScopedCERTCertList& results);
 
-class PathBuildingStep
+TrustDomain::IssuerChecker::IssuerChecker() { }
+TrustDomain::IssuerChecker::~IssuerChecker() { }
+
+// The implementation of TrustDomain::IssuerTracker is in a subclass only to
+// hide the implementation from external users.
+class PathBuildingStep : public TrustDomain::IssuerChecker
 {
 public:
   PathBuildingStep(TrustDomain& trustDomain, const BackCert& subject,
@@ -65,7 +70,7 @@ public:
   {
   }
 
-  SECStatus Build(const SECItem& potentialIssuerDER,
+  SECStatus Check(const SECItem& potentialIssuerDER,
                   /*out*/ bool& keepGoing);
 
   Result CheckResult() const;
@@ -132,7 +137,7 @@ PathBuildingStep::CheckResult() const
 
 // The code that executes in the inner loop of BuildForward
 SECStatus
-PathBuildingStep::Build(const SECItem& potentialIssuerDER,
+PathBuildingStep::Check(const SECItem& potentialIssuerDER,
                         /*out*/ bool& keepGoing)
 {
   BackCert potentialIssuer(potentialIssuerDER, &subject,
@@ -191,7 +196,7 @@ PathBuildingStep::Build(const SECItem& potentialIssuerDER,
     return RecordResult(PR_GetError(), keepGoing);
   }
 
-  return RecordResult(0, keepGoing);
+  return RecordResult(0/*PRErrorCode::success*/, keepGoing);
 }
 
 // Recursively build the path from the given subject certificate to the root.
@@ -281,24 +286,9 @@ BuildForward(TrustDomain& trustDomain,
                                stapledOCSPResponse, subCACount, results);
 
   // TODO(bug 965136): Add SKI/AKI matching optimizations
-  ScopedCERTCertList candidates;
-  if (trustDomain.FindPotentialIssuers(&subject.GetIssuer(), time,
-                                       candidates) != SECSuccess) {
+  if (trustDomain.FindIssuer(subject.GetIssuer(), pathBuilder, time)
+        != SECSuccess) {
     return MapSECStatus(SECFailure);
-  }
-  if (!candidates) {
-    return Fail(RecoverableError, SEC_ERROR_UNKNOWN_ISSUER);
-  }
-  for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
-       !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
-    bool keepGoing;
-    SECStatus srv = pathBuilder.Build(n->cert->derCert, keepGoing);
-    if (srv != SECSuccess) {
-      return MapSECStatus(SECFailure);
-    }
-    if (!keepGoing) {
-      break;
-    }
   }
 
   rv = pathBuilder.CheckResult();
