@@ -968,7 +968,7 @@ Chunk::releaseArena(ArenaHeader *aheader)
     JS_ASSERT(rt->gc.bytes >= ArenaSize);
     JS_ASSERT(zone->gcBytes >= ArenaSize);
     if (rt->gc.isBackgroundSweeping())
-        zone->reduceGCTriggerBytes(zone->gcHeapGrowthFactor * ArenaSize);
+        zone->gcBytesAfterGC -= ArenaSize;
     rt->gc.bytes -= ArenaSize;
     zone->gcBytes -= ArenaSize;
 
@@ -1670,7 +1670,8 @@ GCRuntime::onTooMuchMalloc()
 }
 
 size_t
-GCRuntime::computeTriggerBytes(double growthFactor, size_t lastBytes, JSGCInvocationKind gckind)
+GCRuntime::computeTriggerBytes(double growthFactor, size_t lastBytes,
+                               JSGCInvocationKind gckind) const
 {
     size_t base = gckind == GC_SHRINK ? lastBytes : Max(lastBytes, allocThreshold);
     double trigger = double(base) * growthFactor;
@@ -1678,7 +1679,7 @@ GCRuntime::computeTriggerBytes(double growthFactor, size_t lastBytes, JSGCInvoca
 }
 
 double
-GCRuntime::computeHeapGrowthFactor(size_t lastBytes)
+GCRuntime::computeHeapGrowthFactor(size_t lastBytes) const
 {
     /*
      * The heap growth factor depends on the heap size after a GC and the GC frequency.
@@ -1720,20 +1721,9 @@ GCRuntime::computeHeapGrowthFactor(size_t lastBytes)
 void
 Zone::setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind)
 {
-    GCRuntime &gc = runtimeFromMainThread()->gc;
+    const GCRuntime &gc = runtimeFromAnyThread()->gc;
     gcHeapGrowthFactor = gc.computeHeapGrowthFactor(lastBytes);
     gcTriggerBytes = gc.computeTriggerBytes(gcHeapGrowthFactor, lastBytes, gckind);
-}
-
-void
-Zone::reduceGCTriggerBytes(size_t amount)
-{
-    JS_ASSERT(amount > 0);
-    JS_ASSERT(gcTriggerBytes >= amount);
-    GCRuntime &gc = runtimeFromAnyThread()->gc;
-    if (gcTriggerBytes - amount < gc.allocationThreshold() * gcHeapGrowthFactor)
-        return;
-    gcTriggerBytes -= amount;
 }
 
 Allocator::Allocator(Zone *zone)
@@ -2563,6 +2553,15 @@ GCRuntime::sweepBackgroundThings(bool onBackgroundThread)
                     ArenaLists::backgroundFinalize(&fop, arenas, onBackgroundThread);
             }
         }
+    }
+
+    if (onBackgroundThread) {
+        /*
+         * Update zone triggers a second time now we have completely finished
+         * sweeping these zones.
+         */
+        for (Zone *zone = sweepingZones; zone; zone = zone->gcNextGraphNode)
+            zone->setGCLastBytes(zone->gcBytesAfterGC, lastKind);
     }
 
     sweepingZones = nullptr;
@@ -4362,7 +4361,7 @@ GCRuntime::sweepPhase(SliceBudget &sliceBudget)
 }
 
 void
-GCRuntime::endSweepPhase(JSGCInvocationKind gckind, bool lastGC)
+GCRuntime::endSweepPhase(bool lastGC)
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP);
     FreeOp fop(rt, sweepOnBackgroundThread);
@@ -4435,7 +4434,7 @@ GCRuntime::endSweepPhase(JSGCInvocationKind gckind, bool lastGC)
              * Expire needs to unlock it for other callers.
              */
             AutoLockGC lock(rt);
-            expireChunksAndArenas(gckind == GC_SHRINK);
+            expireChunksAndArenas(lastKind == GC_SHRINK);
         }
     }
 
@@ -4480,7 +4479,8 @@ GCRuntime::endSweepPhase(JSGCInvocationKind gckind, bool lastGC)
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         if (zone->isCollecting()) {
             JS_ASSERT(zone->isGCFinished());
-            zone->setGCLastBytes(zone->gcBytes, gckind);
+            zone->setGCLastBytes(zone->gcBytes, lastKind);
+            zone->gcBytesAfterGC = zone->gcBytes;
             zone->setGCState(Zone::NoGC);
         }
 
@@ -4762,6 +4762,8 @@ GCRuntime::incrementalCollectSlice(int64_t budget,
     JS_ASSERT_IF(incrementalState != NO_INCREMENTAL, isIncremental);
     isIncremental = budget != SliceBudget::Unlimited;
 
+    lastKind = gckind;
+
     if (zeal == ZealIncrementalRootsThenFinish || zeal == ZealIncrementalMarkAllThenFinish) {
         /*
          * Yields between slices occurs at predetermined points in these modes;
@@ -4849,7 +4851,7 @@ GCRuntime::incrementalCollectSlice(int64_t budget,
         if (!finished)
             break;
 
-        endSweepPhase(gckind, lastGC);
+        endSweepPhase(lastGC);
 
         if (sweepOnBackgroundThread)
             helperState.startBackgroundSweep(gckind == GC_SHRINK);
