@@ -1101,7 +1101,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     highFrequencyHeapGrowthMax(3.0),
     highFrequencyHeapGrowthMin(1.5),
     lowFrequencyHeapGrowth(1.5),
-    dynamicHeapGrowth(false),
+    dynamicHeapGrowth(true),
     dynamicMarkSlice(false),
     decommitThreshold(32 * 1024 * 1024),
     cleanUpEverything(false),
