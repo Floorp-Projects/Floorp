@@ -27,7 +27,6 @@ namespace dom {
 
 class AnyCallback;
 class DOMError;
-class ErrorEvent;
 class PromiseCallback;
 class PromiseInit;
 class PromiseNativeHandler;
@@ -93,10 +92,6 @@ public:
 
   inline void MaybeReject(nsresult aArg) {
     MOZ_ASSERT(NS_FAILED(aArg));
-    MaybeSomething(aArg, &Promise::MaybeReject);
-  }
-
-  inline void MaybeReject(ErrorEvent* aArg) {
     MaybeSomething(aArg, &Promise::MaybeReject);
   }
   // DO NOT USE MaybeRejectBrokenly with in new code.  Promises should be
