@@ -174,7 +174,7 @@ class MozbuildObject(ProcessExecutionMixin):
         if topobjdir and config_topobjdir:
             mozilla_dir = os.path.join(config_topobjdir, 'mozilla')
             if not samepath(topobjdir, config_topobjdir) \
-                and (os.path.exists(mozilla_dir) and not samepath(topobjdir,
+                and (not os.path.exists(mozilla_dir) or not samepath(topobjdir,
                 mozilla_dir)):
 
                 raise ObjdirMismatchException(topobjdir, config_topobjdir)
