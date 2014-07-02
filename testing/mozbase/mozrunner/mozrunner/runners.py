@@ -9,7 +9,7 @@ used Mozilla applications, such as Firefox or B2G emulator.
 
 from .application import get_app_context
 from .base import DeviceRunner, GeckoRuntimeRunner
-from .devices import Emulator
+from .devices import Emulator, Device
 
 
 def Runner(*args, **kwargs):
@@ -143,11 +143,39 @@ def B2GEmulatorRunner(arch='arm',
                         device_args=device_args,
                         **kwargs)
 
+def B2GDeviceRunner(b2g_home=None,
+                    adb_path=None,
+                    logdir=None,
+                    serial=None,
+                    **kwargs):
+    """
+    Create a B2G device runner.
+
+    :param b2g_home: Path to root B2G repository.
+    :param logdir: Path to save logfiles such as logcat.
+    :param serial: Serial of device to connect to as seen in `adb devices`.
+    :param profile: Profile object to use.
+    :param env: Environment variables to pass into the b2g.sh process.
+    :param clean_profile: If True, restores profile back to original state.
+    :param process_class: Class used to launch the b2g.sh process.
+    :param process_args: Arguments to pass into the b2g.sh process.
+    :param symbols_path: Path to symbol files used for crash analysis.
+    :returns: A DeviceRunner for B2G devices.
+    """
+    kwargs['app_ctx'] = get_app_context('b2g')(b2g_home, adb_path=adb_path)
+    device_args = { 'app_ctx': kwargs['app_ctx'],
+                    'logdir': logdir,
+                    'serial': serial }
+    return DeviceRunner(device_class=Device,
+                        device_args=device_args,
+                        **kwargs)
+
 
 runners = {
  'default': Runner,
  'b2g_desktop': B2GDesktopRunner,
  'b2g_emulator': B2GEmulatorRunner,
+ 'b2g_device': B2GDeviceRunner,
  'firefox': FirefoxRunner,
  'metro': MetroRunner,
  'thunderbird': ThunderbirdRunner,
