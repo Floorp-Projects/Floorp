@@ -142,17 +142,62 @@ public:
                                  const SECItem& candidateCertDER,
                          /*out*/ TrustLevel* trustLevel) = 0;
 
-  // Find all certificates (intermediate and/or root) in the certificate
-  // database that have a subject name matching |encodedIssuerName| at
-  // the given time. Certificates where the given time is not within the
-  // certificate's validity period may be excluded. On input, |results|
-  // will be null on input. If no potential issuers are found, then this
-  // function should return SECSuccess with results being either null or
-  // an empty list. Otherwise, this function should construct a
-  // CERTCertList and return it in |results|, transfering ownership.
-  virtual SECStatus FindPotentialIssuers(const SECItem* encodedIssuerName,
-                                         PRTime time,
-                                 /*out*/ ScopedCERTCertList& results) = 0;
+  class IssuerChecker
+  {
+  public:
+    virtual SECStatus Check(const SECItem& potentialIssuerDER,
+                            /*out*/ bool& keepGoing) = 0;
+  protected:
+    IssuerChecker();
+    virtual ~IssuerChecker();
+  private:
+    IssuerChecker(const IssuerChecker&) /*= delete*/;
+    void operator=(const IssuerChecker&) /*= delete*/;
+  };
+
+  // Search for a CA certificate with the given name. The implementation must
+  // call checker.Check with the DER encoding of the potential issuer
+  // certificate. The implementation must follow these rules:
+  //
+  // * The subject name of the certificate given to checker.Check must be equal
+  //   to encodedIssuerName.
+  // * The implementation must be reentrant and must limit the amount of stack
+  //   space it uses; see the note on reentrancy and stack usage below.
+  // * When checker.Check does not return SECSuccess then immediately return
+  //   SECFailure.
+  // * When checker.Check returns SECSuccess and sets keepGoing = false, then
+  //   immediately return SECSuccess.
+  // * When checker.Check returns SECSuccess and sets keepGoing = true, then
+  //   call checker.Check again with a different potential issuer certificate,
+  //   if any more are available.
+  // * When no more potential issuer certificates are available, return
+  //   SECSuccess.
+  // * Don't call checker.Check with the same potential issuer certificate more
+  //   than once in a given call of FindIssuer.
+  // * The given time parameter may be used to filter out certificates that are
+  //   not valid at the given time, or it may be ignored.
+  //
+  // Note on reentrancy and stack usage: checker.Check will attempt to
+  // recursively build a certificate path from the potential issuer it is given
+  // to a trusted root, as determined by this TrustDomain. That means that
+  // checker.Check may call any/all of the methods on this TrustDomain. In
+  // particular, there will be call stacks that look like this:
+  //
+  //    BuildCertChain
+  //      [...]
+  //        TrustDomain::FindIssuer
+  //          [...]
+  //            IssuerChecker::Check
+  //              [...]
+  //                TrustDomain::FindIssuer
+  //                  [...]
+  //                    IssuerChecker::Check
+  //                      [...]
+  //
+  // checker.Check is responsible for limiting the recursion to a reasonable
+  // limit.
+  virtual SECStatus FindIssuer(const SECItem& encodedIssuerName,
+                               IssuerChecker& checker, PRTime time) = 0;
 
   // Verify the given signature using the given public key.
   //
