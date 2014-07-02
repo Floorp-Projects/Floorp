@@ -449,6 +449,11 @@ BluetoothAdapter::SetName(const nsAString& aName, ErrorResult& aRv)
 
   nsRefPtr<Promise> promise = new Promise(global);
 
+  if (mState != BluetoothAdapterState::Enabled) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+
   if (mName.Equals(aName)) {
     // Need to resolved with "undefined" since this method is Promise<void>
     promise->MaybeResolve(JS::UndefinedHandleValue);
@@ -487,6 +492,11 @@ BluetoothAdapter::SetDiscoverable(bool aDiscoverable, ErrorResult& aRv)
   }
 
   nsRefPtr<Promise> promise = new Promise(global);
+
+  if (mState != BluetoothAdapterState::Enabled) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
 
   if (aDiscoverable == mDiscoverable) {
     // Need to resolved with "undefined" since this method is Promise<void>
