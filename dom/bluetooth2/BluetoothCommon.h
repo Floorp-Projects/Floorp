@@ -95,6 +95,30 @@ extern bool gBluetoothDebugFlag;
     array.AppendElement(name);                                       \
   } while(0)                                                         \
 
+/**
+ * Resolve promise with |ret| if |x| is false.
+ */
+#define BT_ENSURE_TRUE_RESOLVE(x, ret)                               \
+  do {                                                               \
+    if (MOZ_UNLIKELY(!(x))) {                                        \
+      BT_API2_LOGR("BT_ENSURE_TRUE_RESOLVE(" #x ") failed");         \
+      promise->MaybeResolve(ret);                                    \
+      return promise.forget();                                       \
+    }                                                                \
+  } while(0)
+
+/**
+ * Reject promise with |ret| if |x| is false.
+ */
+#define BT_ENSURE_TRUE_REJECT(x, ret)                                \
+  do {                                                               \
+    if (MOZ_UNLIKELY(!(x))) {                                        \
+      BT_API2_LOGR("BT_ENSURE_TRUE_REJECT(" #x ") failed");          \
+      promise->MaybeReject(ret);                                     \
+      return promise.forget();                                       \
+    }                                                                \
+  } while(0)
+
 #define BEGIN_BLUETOOTH_NAMESPACE \
   namespace mozilla { namespace dom { namespace bluetooth {
 #define END_BLUETOOTH_NAMESPACE \
