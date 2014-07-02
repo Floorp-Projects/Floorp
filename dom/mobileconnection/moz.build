@@ -13,6 +13,7 @@ EXPORTS.mozilla.dom += [
     'MobileCellInfo.h',
     'MobileConnection.h',
     'MobileConnectionArray.h',
+    'MobileConnectionCallback.h',
     'MobileConnectionInfo.h',
     'MobileNetworkInfo.h',
 ]
@@ -22,6 +23,7 @@ SOURCES += [
     'MobileCellInfo.cpp',
     'MobileConnection.cpp',
     'MobileConnectionArray.cpp',
+    'MobileConnectionCallback.cpp',
     'MobileConnectionInfo.cpp',
     'MobileNetworkInfo.cpp',
 ]
