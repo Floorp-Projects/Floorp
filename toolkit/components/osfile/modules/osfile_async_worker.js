@@ -1,24 +1,13 @@
-if (this.Components) {
-  throw new Error("This worker can only be loaded from a worker thread");
-}
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-// Worker thread for osfile asynchronous front-end
+if (this.Components) {
+  throw new Error("This worker can only be loaded from a worker thread");
+}
 
-// Exception names to be posted from the worker thread to main thread
-const EXCEPTION_NAMES = {
-  EvalError: "EvalError",
-  InternalError: "InternalError",
-  RangeError: "RangeError",
-  ReferenceError: "ReferenceError",
-  SyntaxError: "SyntaxError",
-  TypeError: "TypeError",
-  URIError: "URIError"
-};
+// Worker thread for osfile asynchronous front-end
 
 (function(exports) {
   "use strict";
@@ -33,108 +22,28 @@ const EXCEPTION_NAMES = {
 
   importScripts("resource://gre/modules/osfile.jsm");
 
+  let PromiseWorker = require("resource://gre/modules/workers/PromiseWorker.js");
   let SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
   let LOG = SharedAll.LOG.bind(SharedAll, "Agent");
 
-  // Post a message to the parent, decorate it with statistics if
-  // necessary. Use this instead of self.postMessage.
-  function post(message, ...transfers) {
+  let worker = new PromiseWorker.AbstractWorker();
+  worker.dispatch = function(method, args = []) {
+    return Agent[method](...args);
+  },
+  worker.log = LOG;
+  worker.postMessage = function(message, ...transfers) {
     if (timeStamps) {
       message.timeStamps = timeStamps;
       timeStamps = null;
     }
     self.postMessage(message, ...transfers);
-  }
-
- /**
-  * Communications with the controller.
-  *
-  * Accepts messages:
-  * {fun:function_name, args:array_of_arguments_or_null, id:id}
-  *
-  * Sends messages:
-  * {ok: result, id:id} / {fail: serialized_form_of_OS.File.Error, id:id}
-  */
-  self.onmessage = function onmessage(msg) {
-   let data = msg.data;
-   LOG("Received message", data);
-   let id = data.id;
-
-   let start;
-   let options;
-   if (data.args) {
-     options = data.args[data.args.length - 1];
-   }
-   // If |outExecutionDuration| option was supplied, start measuring the
-   // duration of the operation.
-   if (options && typeof options === "object" && "outExecutionDuration" in options) {
-     start = Date.now();
-   }
-
-   let result;
-   let exn;
-   let durationMs;
-   try {
-     let method = data.fun;
-     LOG("Calling method", method);
-     result = Agent[method].apply(Agent, data.args);
-     LOG("Method", method, "succeeded");
-   } catch (ex) {
-     exn = ex;
-     LOG("Error while calling agent method", exn, exn.moduleStack || exn.stack || "");
-   }
-
-   if (start) {
-     // Record duration
-     durationMs = Date.now() - start;
-     LOG("Method took", durationMs, "ms");
-   }
-
-   // Now, post a reply, possibly as an uncaught error.
-   // We post this message from outside the |try ... catch| block
-   // to avoid capturing errors that take place during |postMessage| and
-   // built-in serialization.
-   if (!exn) {
-     LOG("Sending positive reply", result, "id is", id);
-     if (result instanceof Meta) {
-       if ("transfers" in result.meta) {
-         // Take advantage of zero-copy transfers
-         post({ok: result.data, id: id, durationMs: durationMs},
-           result.meta.transfers);
-       } else {
-         post({ok: result.data, id:id, durationMs: durationMs});
-       }
-       if (result.meta.shutdown || false) {
-         // Time to close the worker
-         self.close();
-       }
-     } else {
-       post({ok: result, id:id, durationMs: durationMs});
-     }
-   } else if (exn == StopIteration) {
-     // StopIteration cannot be serialized automatically
-     LOG("Sending back StopIteration");
-     post({StopIteration: true, id: id, durationMs: durationMs});
-   } else if (exn instanceof exports.OS.File.Error) {
-     LOG("Sending back OS.File error", exn, "id is", id);
-     // Instances of OS.File.Error know how to serialize themselves
-     // (deserialization ensures that we end up with OS-specific
-     // instances of |OS.File.Error|)
-     post({fail: exports.OS.File.Error.toMsg(exn), id:id, durationMs: durationMs});
-   } else if (exn.constructor.name in EXCEPTION_NAMES) {
-     LOG("Sending back exception", exn.constructor.name);
-     post({fail: {exn: exn.constructor.name, message: exn.message,
-                  fileName: exn.moduleName || exn.fileName, lineNumber: exn.lineNumber},
-           id: id, durationMs: durationMs});
-   } else {
-     // Other exceptions do not, and should be propagated through DOM's
-     // built-in mechanism for uncaught errors, although this mechanism
-     // may lose interesting information.
-     LOG("Sending back regular error", exn, exn.moduleStack || exn.stack, "id is", id);
-
-     throw exn;
-   }
   };
+  worker.close = function() {
+    self.close();
+  };
+  let Meta = PromiseWorker.Meta;
+
+  self.addEventListener("message", msg => worker.handleMessage(msg));
 
  /**
   * A data structure used to track opened resources
@@ -234,26 +143,6 @@ const EXCEPTION_NAMES = {
   let Type = exports.OS.Shared.Type;
 
   let File = exports.OS.File;
-
-  /**
-   * A constructor used to return data to the caller thread while
-   * also executing some specific treatment (e.g. shutting down
-   * the current thread, transmitting data instead of copying it).
-   *
-   * @param {object=} data The data to return to the caller thread.
-   * @param {object=} meta Additional instructions, as an object
-   * that may contain the following fields:
-   * - {bool} shutdown If |true|, shut down the current thread after
-   *   having sent the result.
-   * - {Array} transfers An array of objects that should be transferred
-   *   instead of being copied.
-   *
-   * @constructor
-   */
-  let Meta = function Meta(data, meta) {
-    this.data = data;
-    this.meta = meta;
-  };
 
  /**
   * The agent.

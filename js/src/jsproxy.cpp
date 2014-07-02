@@ -38,9 +38,13 @@ js::AutoEnterPolicy::reportErrorIfExceptionIsNotPending(JSContext *cx, jsid id)
                              JSMSG_OBJECT_ACCESS_DENIED);
     } else {
         JSString *str = IdToString(cx, id);
-        const jschar *prop = str ? str->getCharsZ(cx) : nullptr;
-        JS_ReportErrorNumberUC(cx, js_GetErrorMessage, nullptr,
-                               JSMSG_PROPERTY_ACCESS_DENIED, prop);
+        AutoStableStringChars chars(cx);
+        const jschar *prop = nullptr;
+        if (str->ensureFlat(cx) && chars.initTwoByte(cx, str))
+            prop = chars.twoByteChars();
+
+        JS_ReportErrorNumberUC(cx, js_GetErrorMessage, nullptr, JSMSG_PROPERTY_ACCESS_DENIED,
+                               prop);
     }
 }
 

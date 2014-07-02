@@ -12,6 +12,8 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "XPCWrapper.h"
@@ -121,6 +123,18 @@ Throw(JSContext* aCx, nsresult aRv, const char* aMessage)
   }
 
   return false;
+}
+
+void
+ThrowAndReport(nsPIDOMWindow* aWindow, nsresult aRv, const char* aMessage)
+{
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(aWindow))) {
+    return;
+  }
+
+  Throw(jsapi.cx(), aRv, aMessage);
+  (void) JS_ReportPendingException(jsapi.cx());
 }
 
 already_AddRefed<Exception>
