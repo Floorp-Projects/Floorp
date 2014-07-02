@@ -122,7 +122,9 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
 
         if (Build.VERSION.SDK_INT >= 14) {
             final ActionBar actionBar = activity.getActionBar();
-            actionBar.setTitle(newTitle);
+            if (actionBar != null) {
+                actionBar.setTitle(newTitle);
+            }
         }
     }
 

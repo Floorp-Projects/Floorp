@@ -299,6 +299,8 @@ include table-overflow/reftest.list
 # table-width/
 include table-width/reftest.list
 
+include ../tables/reftests/reftest.list
+
 # text/
 include text/reftest.list
 

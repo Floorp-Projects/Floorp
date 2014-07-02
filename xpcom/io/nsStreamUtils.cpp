@@ -233,11 +233,6 @@ public:
   {
   }
 
-  // virtual since subclasses call superclass Release()
-  virtual ~nsAStreamCopier()
-  {
-  }
-
   // kick off the async copy...
   nsresult Start(nsIInputStream* aSource,
                  nsIOutputStream* aSink,
@@ -475,6 +470,11 @@ protected:
   bool                           mCloseSink;
   bool                           mCanceled;
   nsresult                       mCancelStatus;
+
+  // virtual since subclasses call superclass Release()
+  virtual ~nsAStreamCopier()
+  {
+  }
 };
 
 NS_IMPL_ISUPPORTS(nsAStreamCopier,

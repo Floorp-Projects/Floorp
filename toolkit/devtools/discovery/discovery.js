@@ -329,6 +329,9 @@ Discovery.prototype = {
     let remoteDevice = update.device;
     let remoteHost = update.from;
 
+    // Record the reply as received so it won't be purged as missing
+    this._expectingReplies.from.delete(remoteDevice);
+
     // First, loop over the known services
     for (let service in this.remoteServices) {
       let devicesWithService = this.remoteServices[service];

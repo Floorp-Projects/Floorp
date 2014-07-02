@@ -78,10 +78,10 @@ function run_test() {
   {
     if (get_platform() == "WINNT") {
       var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
-      do_check_eq(status, Ci.nsIGfxInfo.FEATURE_NO_INFO);
+      do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
     } else if (get_platform() == "Darwin") {
       status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_OPENGL_LAYERS);
-      do_check_eq(status, Ci.nsIGfxInfo.FEATURE_NO_INFO);
+      do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
     }
 
     gTestserver.stop(do_test_finished);

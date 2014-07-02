@@ -34,11 +34,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsFind)
 
   nsFind();
-  virtual ~nsFind();
 
   static already_AddRefed<nsIDOMRange> CreateRange(nsINode* aNode);
 
 protected:
+  virtual ~nsFind();
+
   // Parameters set from the interface:
   //nsCOMPtr<nsIDOMRange> mRange;   // search only in this range
   bool mFindBackward;
