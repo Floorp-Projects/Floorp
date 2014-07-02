@@ -181,11 +181,8 @@ LBlock::dump()
 static size_t
 TotalOperandCount(LRecoverInfo *recoverInfo)
 {
-    LRecoverInfo::OperandIter it(recoverInfo->begin());
-    LRecoverInfo::OperandIter end(recoverInfo->end());
     size_t accum = 0;
-
-    for (; it != end; ++it) {
+    for (LRecoverInfo::OperandIter it(recoverInfo); !it; ++it) {
         if (!it->isRecoveredOnBailout())
             accum++;
     }
