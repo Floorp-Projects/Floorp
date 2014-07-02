@@ -46,7 +46,7 @@ public:
 class BluetoothSocketInterface
 {
 public:
-  friend BluetoothInterface;
+  friend class BluetoothInterface;
 
   // Init and Cleanup is handled by BluetoothInterface
 
@@ -75,7 +75,7 @@ private:
 class BluetoothHandsfreeInterface
 {
 public:
-  friend BluetoothInterface;
+  friend class BluetoothInterface;
 
   bt_status_t Init(bthf_callbacks_t* aCallbacks);
   void        Cleanup();
@@ -137,7 +137,7 @@ private:
 class BluetoothA2dpInterface
 {
 public:
-  friend BluetoothInterface;
+  friend class BluetoothInterface;
 
   bt_status_t Init(btav_callbacks_t *aCallbacks);
   void        Cleanup();
@@ -161,7 +161,7 @@ class BluetoothAvrcpInterface
 {
 #if ANDROID_VERSION >= 18
 public:
-  friend BluetoothInterface;
+  friend class BluetoothInterface;
 
   bt_status_t Init(btrc_callbacks_t* aCallbacks);
   void        Cleanup();
