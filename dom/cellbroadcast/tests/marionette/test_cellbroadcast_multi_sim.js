@@ -1,19 +1,17 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-MARIONETTE_TIMEOUT = 60000;
+MARIONETTE_TIMEOUT = 10000;
 MARIONETTE_HEAD_JS = 'head.js';
 
 const BODY_7BITS = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
                  + "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
                  + "@@@@@@@@@@@@@"; // 93 ascii chars.
-const CB_PDU_SIZE = 88;
 
-function testReceivingMultiSIM() {
-  let CB_PDU = "";
-  while (CB_PDU.length < CB_PDU_SIZE * 2) {
-    CB_PDU += "00";
-  }
+function testReceiving_MultiSIM() {
+  log("Test receiving GSM Cell Broadcast - Multi-SIM");
+
+  let pdu = buildHexStr(0, CB_MESSAGE_SIZE_GSM * 2);
 
   let verifyCBMessage = (aMessage, aServiceId) => {
     log("Verify CB message received from serviceId: " + aServiceId);
@@ -22,13 +20,13 @@ function testReceivingMultiSIM() {
   };
 
   return selectModem(1)
-    .then(() => sendMultipleRawCbsToEmulatorAndWait([CB_PDU]))
-    .then((results) => verifyCBMessage(results[0].message, 1))
+    .then(() => sendMultipleRawCbsToEmulatorAndWait([pdu]))
+    .then((aMessage) => verifyCBMessage(aMessage, 1))
     .then(() => selectModem(0))
-    .then(() => sendMultipleRawCbsToEmulatorAndWait([CB_PDU]))
-    .then((results) => verifyCBMessage(results[0].message, 0));
+    .then(() => sendMultipleRawCbsToEmulatorAndWait([pdu]))
+    .then((aMessage) => verifyCBMessage(aMessage, 0));
 }
 
 startTestCommon(function testCaseMain() {
-  return runIfMultiSIM(testReceivingMultiSIM);
+  return runIfMultiSIM(testReceiving_MultiSIM);
 });
