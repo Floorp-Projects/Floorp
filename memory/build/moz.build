@@ -46,3 +46,5 @@ if CONFIG['MOZ_MEMORY'] and (CONFIG['OS_TARGET'] in ('WINNT', 'Darwin', 'Android
 if CONFIG['MOZ_REPLACE_MALLOC'] and CONFIG['OS_TARGET'] == 'Darwin':
     # The zone allocator for OSX needs some jemalloc internal functions
     LOCAL_INCLUDES += ['/memory/jemalloc/src/include']
+
+FAIL_ON_WARNINGS = True
