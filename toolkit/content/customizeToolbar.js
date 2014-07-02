@@ -9,6 +9,8 @@ var gToolboxChanged = false;
 var gToolboxSheet = false;
 var gPaletteBox = null;
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 function onLoad()
 {
   if ("arguments" in window && window.arguments[0]) {
@@ -457,9 +459,7 @@ function setDragActive(aItem, aValue)
 
 function addNewToolbar()
 {
-  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                .getService(Components.interfaces.nsIPromptService);
-
+  var promptService = Services.prompt;
   var stringBundle = document.getElementById("stringBundle");
   var message = stringBundle.getString("enterToolbarName");
   var title = stringBundle.getString("enterToolbarTitle");
@@ -819,6 +819,12 @@ function onPaletteDrop(aEvent)
 
 
 function isUnwantedDragEvent(aEvent) {
+  try {
+    if (Services.prefs.getBoolPref("toolkit.customization.unsafe_drag_events")) {
+      return false;
+    }
+  } catch (ex) {}
+
   /* Discard drag events that originated from a separate window to
      prevent content->chrome privilege escalations. */
   let mozSourceNode = aEvent.dataTransfer.mozSourceNode;
