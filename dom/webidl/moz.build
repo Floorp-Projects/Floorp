@@ -297,9 +297,12 @@ WEBIDL_FILES = [
     'PositionError.webidl',
     'ProcessingInstruction.webidl',
     'Promise.webidl',
+    'PromiseDebugging.webidl',
     'PushManager.webidl',
     'Range.webidl',
     'Rect.webidl',
+    'ResourceStats.webidl',
+    'ResourceStatsManager.webidl',
     'RGBColor.webidl',
     'RTCConfiguration.webidl',
     'RTCIceCandidate.webidl',
@@ -561,6 +564,7 @@ if CONFIG['MOZ_B2G_BT']:
         WEBIDL_FILES += [
             'BluetoothAdapter2.webidl',
             'BluetoothDevice2.webidl',
+            'BluetoothDiscoveryHandle.webidl',
             'BluetoothManager2.webidl',
         ]
     else:

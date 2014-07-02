@@ -1142,23 +1142,28 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
   nscoord shift = 0;
 
   if (aCollapseGroup || collapseRow) {
-    nsTableCellFrame* cellFrame = GetFirstCell();
     aDidCollapse = true;
-    int32_t rowIndex;
-    cellFrame->GetRowIndex(rowIndex);
-    shift = rowRect.height + tableFrame->GetCellSpacingY(rowIndex);
-    while (cellFrame) {
-      nsRect cRect = cellFrame->GetRect();
-      // If aRowOffset != 0, there's no point in invalidating the cells, since
-      // we've already invalidated our overflow area.  Note that we _do_ still
-      // need to invalidate if our row is not moving, because the cell might
-      // span out of this row, so invalidating our row rect won't do enough.
-      if (aRowOffset == 0) {
-        InvalidateFrame();
+    shift = rowRect.height;
+    nsTableCellFrame* cellFrame = GetFirstCell();
+    if (cellFrame) {
+      int32_t rowIndex;
+      cellFrame->GetRowIndex(rowIndex);
+      shift += tableFrame->GetCellSpacingY(rowIndex);
+      while (cellFrame) {
+        nsRect cRect = cellFrame->GetRect();
+        // If aRowOffset != 0, there's no point in invalidating the cells, since
+        // we've already invalidated our overflow area.  Note that we _do_ still
+        // need to invalidate if our row is not moving, because the cell might
+        // span out of this row, so invalidating our row rect won't do enough.
+        if (aRowOffset == 0) {
+          InvalidateFrame();
+        }
+        cRect.height = 0;
+        cellFrame->SetRect(cRect);
+        cellFrame = cellFrame->GetNextCell();
       }
-      cRect.height = 0;
-      cellFrame->SetRect(cRect);
-      cellFrame = cellFrame->GetNextCell();
+    } else {
+      shift += tableFrame->GetCellSpacingY(GetRowIndex());
     }
     rowRect.height = 0;
   }

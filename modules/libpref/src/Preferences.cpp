@@ -128,16 +128,16 @@ public:
 class ValueObserver MOZ_FINAL : public nsIObserver,
                                 public ValueObserverHashKey
 {
+  ~ValueObserver() {
+    Preferences::RemoveObserver(this, mPrefName.get());
+  }
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
   ValueObserver(const char *aPref, PrefChangedFunc aCallback)
     : ValueObserverHashKey(aPref, aCallback) { }
-
-  ~ValueObserver() {
-    Preferences::RemoveObserver(this, mPrefName.get());
-  }
 
   void AppendClosure(void *aClosure) {
     mClosures.AppendElement(aClosure);
@@ -259,6 +259,8 @@ Preferences::SizeOfIncludingThisAndOtherStuff(mozilla::MallocSizeOf aMallocSizeO
 
 class PreferenceServiceReporter MOZ_FINAL : public nsIMemoryReporter
 {
+  ~PreferenceServiceReporter() {}
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER

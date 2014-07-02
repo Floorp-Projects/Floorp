@@ -6777,7 +6777,7 @@ nsWindow::HasBogusPopupsDropShadowOnMultiMonitor() {
         if (gfxInfo) {
           int32_t status;
           if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &status))) {
-            if (status == nsIGfxInfo::FEATURE_NO_INFO || prefs.mForceAcceleration)
+            if (status == nsIGfxInfo::FEATURE_STATUS_OK || prefs.mForceAcceleration)
             {
               sHasBogusPopupsDropShadowOnMultiMonitor = TRI_TRUE;
             }

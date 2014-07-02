@@ -862,15 +862,6 @@ static const CipherPref sCipherPrefs[] = {
 
  // All the rest are disabled by default
 
- { "security.ssl3.rsa_fips_des_ede3_sha",
-   SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA, false },
- { "security.ssl3.dhe_dss_camellia_256_sha",
-   TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA, false },
- { "security.ssl3.dhe_dss_camellia_128_sha",
-   TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA, false },
- { "security.ssl3.rsa_seed_sha",
-   TLS_RSA_WITH_SEED_CBC_SHA, false },
-
  { nullptr, 0 } // end marker
 };
 

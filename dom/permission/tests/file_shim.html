@@ -21,7 +21,13 @@ TestData.prototype = {
       return null;
     }
 
-    var obj = window.navigator[this.obj];
+    // split on . to allow nested props
+    var props = this.obj.split(".");
+    var obj = window.navigator;
+
+    for (var i = 0; i < props.length && obj !== undefined; i++) {
+      obj = obj[props[i]];
+    }
 
     if ((this.webidl && obj instanceof window[this.webidl]) ||
         (this.idl && obj instanceof SpecialPowers.Ci[this.idl])) {

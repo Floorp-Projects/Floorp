@@ -10,6 +10,8 @@
 
 class nsVersionComparatorImpl MOZ_FINAL : public nsIVersionComparator
 {
+  ~nsVersionComparatorImpl() {}
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIVERSIONCOMPARATOR

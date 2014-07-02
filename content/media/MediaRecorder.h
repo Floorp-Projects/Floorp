@@ -84,6 +84,7 @@ public:
   // EventHandler
   IMPL_EVENT_HANDLER(dataavailable)
   IMPL_EVENT_HANDLER(error)
+  IMPL_EVENT_HANDLER(start)
   IMPL_EVENT_HANDLER(stop)
   IMPL_EVENT_HANDLER(warning)
 
@@ -112,8 +113,6 @@ protected:
   // Hold the sessions pointer and clean it when the DestroyRunnable for a
   // session is running.
   nsTArray<Session*> mSessions;
-  // Thread safe for mMimeType.
-  Mutex mMutex;
   // It specifies the container format as well as the audio and video capture formats.
   nsString mMimeType;
 
