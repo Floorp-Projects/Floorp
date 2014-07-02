@@ -29,12 +29,6 @@ public:
 
   GMPVideoHostImpl& Host();
 
-  // GMPSharedMemManager
-  virtual bool MgrAllocShmem(size_t aSize,
-                             ipc::Shmem::SharedMemory::SharedMemoryType aType,
-                             ipc::Shmem* aMem) MOZ_OVERRIDE;
-  virtual bool MgrDeallocShmem(Shmem& aMem) MOZ_OVERRIDE;
-
   // GMPVideoEncoder
   virtual GMPVideoErr InitEncode(const GMPVideoCodec& aCodecSettings,
                                  GMPEncoderCallback* aCallback,
@@ -48,6 +42,21 @@ public:
   virtual GMPVideoErr SetPeriodicKeyFrames(bool aEnable) MOZ_OVERRIDE;
   virtual void EncodingComplete() MOZ_OVERRIDE;
 
+  // GMPSharedMemManager
+  virtual void CheckThread();
+  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem)
+  {
+#ifdef GMP_SAFE_SHMEM
+    return AllocShmem(aSize, aType, aMem);
+#else
+    return AllocUnsafeShmem(aSize, aType, aMem);
+#endif
+  }
+  virtual void Dealloc(Shmem& aMem)
+  {
+    DeallocShmem(aMem);
+  }
+
 private:
   virtual ~GMPVideoEncoderParent();
 
@@ -55,6 +64,9 @@ private:
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
   virtual bool RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame,
                            const GMPCodecSpecificInfo& aCodecSpecificInfo) MOZ_OVERRIDE;
+  virtual bool RecvParentShmemForPool(Shmem& aFrameBuffer) MOZ_OVERRIDE;
+  virtual bool AnswerNeedShmem(const uint32_t& aEncodedBufferSize,
+                               Shmem* aMem) MOZ_OVERRIDE;
   virtual bool Recv__delete__() MOZ_OVERRIDE;
 
   bool mCanSendMessages;

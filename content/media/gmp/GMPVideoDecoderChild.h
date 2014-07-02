@@ -35,10 +35,27 @@ public:
   virtual void InputDataExhausted() MOZ_OVERRIDE;
 
   // GMPSharedMemManager
-  virtual bool MgrAllocShmem(size_t aSize,
-                             ipc::Shmem::SharedMemory::SharedMemoryType aType,
-                             ipc::Shmem* aMem) MOZ_OVERRIDE;
-  virtual bool MgrDeallocShmem(Shmem& aMem) MOZ_OVERRIDE;
+  virtual void CheckThread();
+  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem)
+  {
+#ifndef SHMEM_ALLOC_IN_CHILD
+    return CallNeedShmem(aSize, aMem);
+#else
+#ifdef GMP_SAFE_SHMEM
+    return AllocShmem(aSize, aType, aMem);
+#else
+    return AllocUnsafeShmem(aSize, aType, aMem);
+#endif
+#endif
+  }
+  virtual void Dealloc(Shmem& aMem)
+  {
+#ifndef SHMEM_ALLOC_IN_CHILD
+    SendParentShmemForPool(aMem);
+#else
+    DeallocShmem(aMem);
+#endif
+  }
 
 private:
   // PGMPVideoDecoderChild
@@ -48,6 +65,7 @@ private:
                           const bool& missingFrames,
                           const GMPCodecSpecificInfo& codecSpecificInfo,
                           const int64_t& renderTimeMs) MOZ_OVERRIDE;
+  virtual bool RecvChildShmemForPool(Shmem& aFrameBuffer) MOZ_OVERRIDE;
   virtual bool RecvReset() MOZ_OVERRIDE;
   virtual bool RecvDrain() MOZ_OVERRIDE;
   virtual bool RecvDecodingComplete() MOZ_OVERRIDE;
