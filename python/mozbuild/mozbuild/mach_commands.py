@@ -922,6 +922,7 @@ class MachDebug(MachCommandBase):
     @CommandArgument('--verbose', '-v', action='store_true',
         help='Print verbose output.')
     def environment(self, verbose=False):
+        state_dir = self._mach_context.state_dir
         import platform
         print('platform:\n\t%s' % platform.platform())
         print('python version:\n\t%s' % sys.version)
@@ -929,7 +930,7 @@ class MachDebug(MachCommandBase):
         print('mach cwd:\n\t%s' % self._mach_context.cwd)
         print('os cwd:\n\t%s' % os.getcwd())
         print('mach directory:\n\t%s' % self._mach_context.topdir)
-        print('state directory:\n\t%s' % self._mach_context.state_dir)
+        print('state directory:\n\t%s' % state_dir)
 
         try:
             mb = MozbuildObject.from_environment(cwd=self._mach_context.cwd)
