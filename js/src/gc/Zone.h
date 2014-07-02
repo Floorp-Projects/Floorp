@@ -106,7 +106,6 @@ struct Zone : public JS::shadow::Zone,
                                 size_t *baselineStubsOptimized);
 
     void setGCLastBytes(size_t lastBytes, js::JSGCInvocationKind gckind);
-    void reduceGCTriggerBytes(size_t amount);
 
     void resetGCMallocBytes();
     void setGCMaxMallocBytes(size_t value);
@@ -248,8 +247,12 @@ struct Zone : public JS::shadow::Zone,
     // updated by both the main and GC helper threads.
     mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gcBytes;
 
-    // GC trigger threshold for allocations on the GC heap.
-    size_t gcTriggerBytes;
+    // The number of bytes allocated in the GC heap for this zone after the last GC.
+    size_t gcBytesAfterGC;
+
+    // GC trigger threshold for allocations on the GC heap. It is updated by
+    // both the main and GC helper threads.
+    mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gcTriggerBytes;
 
     // Per-zone data for use by an embedder.
     void *data;
