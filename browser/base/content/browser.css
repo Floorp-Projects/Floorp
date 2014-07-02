@@ -1041,10 +1041,27 @@ toolbarpaletteitem[dragover] {
   border-right-color: transparent;
 }
 
+#customization-palette-container {
+  display: flex;
+  flex-direction: column;
+}
+
 #customization-palette:not([hidden]) {
   display: block;
+  flex: 1 1 auto;
   overflow: auto;
   min-height: 3em;
+}
+
+#customization-footer-spacer,
+#customization-spacer {
+  flex: 1 1 auto;
+}
+
+#customization-footer {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 #customization-toolbar-visibility-button > .box-inherit > .button-menu-dropmarker {
