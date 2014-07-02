@@ -305,25 +305,8 @@ TEST_F(pkixder_universal_types_tests, EnumeratedInvalidZeroLength)
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
-static PRTime
-YMDHMS(int16_t year, int16_t month, int16_t day,
-       int16_t hour, int16_t minutes, int16_t seconds)
-{
-  PRExplodedTime tm;
-  tm.tm_usec = 0;
-  tm.tm_sec = seconds;
-  tm.tm_min = minutes;
-  tm.tm_hour = hour;
-  tm.tm_mday = day;
-  tm.tm_month = month - 1; // tm_month is zero-based
-  tm.tm_year = year;
-  tm.tm_params.tp_gmt_offset = 0;
-  tm.tm_params.tp_dst_offset = 0;
-  return PR_ImplodeTime(&tm);
-}
-
 ////////////////////////////////////////
-// GeneralizedTime and TimeChoice
+// GeneralizedTime
 //
 // From RFC 5280 section 4.1.2.5.2
 //
@@ -343,107 +326,9 @@ YMDHMS(int16_t year, int16_t month, int16_t day,
 // GeneralizedTime we should not accept them, and breaking reading of these
 // other encodings is actually encouraged.
 
-// Given a DER-encoded GeneralizedTime where we want to extract the value, we
-// need to skip two bytes: the tag and the length.
-static const uint16_t GT_VALUE_OFFSET = 2;
-
-// Given a DER-encoded GeneralizedTime where we want to extract the value as
-// though it were a UTC time, we need to skip four bytes: the tag, the length
-// and the first two digits of the year.
-static const uint16_t UTC_VALUE_OFFSET = 4;
-
-static const uint16_t GENERALIZED_TIME_LENGTH = 17; // tvYYYYMMDDHHMMSSZ
-
-template <uint16_t LENGTH>
-void
-ExpectGoodTime(PRTime expectedValue,
-               const uint8_t (&generalizedTimeDER)[LENGTH])
-{
-  static_assert(LENGTH >= UTC_VALUE_OFFSET,
-                "ExpectGoodTime requires input at least UTC_VALUE_OFFSET bytes");
-
-  // GeneralizedTime
-  {
-    Input input;
-    ASSERT_EQ(Success, input.Init(generalizedTimeDER, LENGTH));
-    PRTime value = 0;
-    ASSERT_EQ(Success, GeneralizedTime(input, value));
-    EXPECT_EQ(expectedValue, value);
-  }
-
-  // TimeChoice: GeneralizedTime
-  {
-    Input input;
-    ASSERT_EQ(Success, input.Init(generalizedTimeDER + GT_VALUE_OFFSET,
-                                  LENGTH - GT_VALUE_OFFSET));
-    PRTime value = 0;
-    ASSERT_EQ(Success, TimeChoice(siGeneralizedTime, input, value));
-    EXPECT_EQ(expectedValue, value);
-  }
-
-  // TimeChoice: UTCTime
-  {
-    Input input;
-    ASSERT_EQ(Success, input.Init(generalizedTimeDER + UTC_VALUE_OFFSET,
-                                  LENGTH - UTC_VALUE_OFFSET));
-    PRTime value = 0;
-    ASSERT_EQ(Success, TimeChoice(siUTCTime, input, value));
-    EXPECT_EQ(expectedValue, value);
-  }
-}
-
-template <uint16_t LENGTH>
-void
-ExpectBadTime(const uint8_t (&generalizedTimeDER)[LENGTH])
-{
-  static_assert(LENGTH >= UTC_VALUE_OFFSET,
-                "ExpectBadTime requires input at least UTC_VALUE_OFFSET bytes");
-
-
-  // GeneralizedTime
-  {
-    Input input;
-    ASSERT_EQ(Success, input.Init(generalizedTimeDER, LENGTH));
-    PRTime value;
-    ASSERT_EQ(Failure, GeneralizedTime(input, value));
-    EXPECT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
-  }
-
-  // TimeChoice: GeneralizedTime
-  {
-    Input input;
-    ASSERT_EQ(Success,
-              input.Init(generalizedTimeDER + GT_VALUE_OFFSET,
-                         LENGTH - GT_VALUE_OFFSET));
-    PRTime value;
-    ASSERT_EQ(Failure, TimeChoice(siGeneralizedTime, input, value));
-    EXPECT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
-  }
-
-  // TimeChoice: UTCTime
-  {
-    Input input;
-    ASSERT_EQ(Success,
-              input.Init(generalizedTimeDER + UTC_VALUE_OFFSET,
-                         LENGTH - UTC_VALUE_OFFSET));
-    PRTime value;
-    ASSERT_EQ(Failure, TimeChoice(siUTCTime, input, value));
-    EXPECT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
-  }
-}
-
-// Control value: a valid time
-TEST_F(pkixder_universal_types_tests, ValidControl)
-{
-  const uint8_t GT_DER[] = {
-    0x18,                           // Generalized Time
-    15,                             // Length = 15
-    '1', '9', '9', '1', '0', '5', '0', '6', '1', '6', '4', '5', '4', '0', 'Z'
-  };
-  ExpectGoodTime(YMDHMS(1991, 5, 6, 16, 45, 40), GT_DER);
-}
-
-TEST_F(pkixder_universal_types_tests, TimeTimeZoneOffset)
+// TODO(Bug 1023605) a GeneralizedTimes with a timezone offset are should not
+// be considered valid
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeOffset)
 {
   const uint8_t DER_GENERALIZED_TIME_OFFSET[] = {
     0x18,                           // Generalized Time
@@ -451,63 +336,89 @@ TEST_F(pkixder_universal_types_tests, TimeTimeZoneOffset)
     '1', '9', '9', '1', '0', '5', '0', '6', '1', '6', '4', '5', '4', '0', '-',
     '0', '7', '0', '0'
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_OFFSET);
+
+  Input input;
+  ASSERT_EQ(Success, input.Init(DER_GENERALIZED_TIME_OFFSET,
+                                sizeof DER_GENERALIZED_TIME_OFFSET));
+
+  PRTime value = 0;
+  ASSERT_EQ(Success, GeneralizedTime(input, value));
+  ASSERT_EQ(673573540000000, value);
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidZeroLength)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeGMT)
+{
+  const uint8_t DER_GENERALIZED_TIME_GMT[] = {
+    0x18,                           // Generalized Time
+    15,                             // Length = 15
+    '1', '9', '9', '1', '0', '5', '0', '6', '1', '6', '4', '5', '4', '0', 'Z'
+  };
+
+  Input input;
+  ASSERT_EQ(Success, input.Init(DER_GENERALIZED_TIME_GMT,
+                                sizeof DER_GENERALIZED_TIME_GMT));
+  PRTime value = 0;
+  ASSERT_EQ(Success, GeneralizedTime(input, value));
+  ASSERT_EQ(673548340000000, value);
+}
+
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidZeroLength)
 {
   const uint8_t DER_GENERALIZED_TIME_INVALID_ZERO_LENGTH[] = {
     0x18,                           // GeneralizedTime
     0x00                            // Length = 0
   };
 
-  PRTime value;
-
-  // GeneralizedTime
-  Input gt;
+  Input input;
   ASSERT_EQ(Success,
-            gt.Init(DER_GENERALIZED_TIME_INVALID_ZERO_LENGTH,
-                    sizeof DER_GENERALIZED_TIME_INVALID_ZERO_LENGTH));
-  ASSERT_EQ(Failure, GeneralizedTime(gt, value));
-  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
+            input.Init(DER_GENERALIZED_TIME_INVALID_ZERO_LENGTH,
+                       sizeof DER_GENERALIZED_TIME_INVALID_ZERO_LENGTH));
 
-  static const uint8_t dummy[1] = { 'X' };
-
-  // TimeChoice: GeneralizedTime
-  Input tc_gt;
-  ASSERT_EQ(Success, tc_gt.Init(dummy, 0));
-  ASSERT_EQ(Failure, TimeChoice(siGeneralizedTime, tc_gt, value));
-  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
-
-  // TimeChoice: UTCTime
-  Input tc_utc;
-  ASSERT_EQ(Success, tc_utc.Init(dummy, 0));
-  ASSERT_EQ(Failure, TimeChoice(siUTCTime, tc_utc, value));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
   ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
 // A non zulu time should fail
-TEST_F(pkixder_universal_types_tests, TimeInvalidLocal)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidLocal)
 {
   const uint8_t DER_GENERALIZED_TIME_INVALID_LOCAL[] = {
     0x18,                           // Generalized Time
     14,                             // Length = 14
     '1', '9', '9', '1', '0', '5', '0', '6', '1', '6', '4', '5', '4', '0'
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_LOCAL);
+
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_LOCAL,
+                       sizeof DER_GENERALIZED_TIME_INVALID_LOCAL));
+
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
 // A time missing seconds and zulu should fail
-TEST_F(pkixder_universal_types_tests, TimeInvalidTruncated)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidTruncated)
 {
   const uint8_t DER_GENERALIZED_TIME_INVALID_TRUNCATED[] = {
     0x18,                           // Generalized Time
     12,                             // Length = 12
     '1', '9', '9', '1', '0', '5', '0', '6', '1', '6', '4', '5'
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_TRUNCATED);
+
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_TRUNCATED,
+                       sizeof DER_GENERALIZED_TIME_INVALID_TRUNCATED));
+
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
+// TODO(bug 1023605) Generalized Times without seconds should not be
+// considered valid
 TEST_F(pkixder_universal_types_tests, GeneralizedTimeNoSeconds)
 {
   const uint8_t DER_GENERALIZED_TIME_NO_SECONDS[] = {
@@ -515,42 +426,72 @@ TEST_F(pkixder_universal_types_tests, GeneralizedTimeNoSeconds)
     13,                             // Length = 13
     '1', '9', '9', '1', '0', '5', '0', '6', '1', '6', '4', '5', 'Z'
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_NO_SECONDS);
+
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_NO_SECONDS,
+                       sizeof DER_GENERALIZED_TIME_NO_SECONDS));
+  PRTime value = 0;
+  ASSERT_EQ(Success, GeneralizedTime(input, value));
+  ASSERT_EQ(673548300000000, value);
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidPrefixedYear)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidPrefixedYear)
 {
   const uint8_t DER_GENERALIZED_TIME_INVALID_PREFIXED_YEAR[] = {
     0x18,                           // Generalized Time
     16,                             // Length = 16
     ' ', '1', '9', '9', '1', '0', '1', '0', '1', '0', '1', '0', '1', '0', '1', 'Z'
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_PREFIXED_YEAR);
+
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_PREFIXED_YEAR,
+                       sizeof DER_GENERALIZED_TIME_INVALID_PREFIXED_YEAR));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, TimeTooManyDigits)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalid5DigitYear)
 {
-  const uint8_t DER_GENERALIZED_TIME_TOO_MANY_DIGITS[] = {
+  const uint8_t DER_GENERALIZED_TIME_INVALID_5_DIGIT_YEAR[] = {
     0x18,                           // Generalized Time
     16,                             // Length = 16
     '1', '1', '1', '1', '1', '0', '1', '0', '1', '0', '1', '0', '1', '0', '1', 'Z'
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_TOO_MANY_DIGITS);
+
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_5_DIGIT_YEAR,
+                       sizeof DER_GENERALIZED_TIME_INVALID_5_DIGIT_YEAR));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, Time13thMonth)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidMonth)
 {
-  const uint8_t DER_GENERALIZED_TIME_13TH_MONTH[] = {
+  const uint8_t DER_GENERALIZED_TIME_INVALID_MONTH[] = {
     0x18,                           // Generalized Time
     15,                             // Length = 15
     '1', '9', '9', '1', //YYYY (1991)
     '1', '3', //MM 13th month of the year
     '0', '6', '1', '6', '4', '5', '4', '0', 'Z'
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_13TH_MONTH);
+
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_MONTH,
+                       sizeof DER_GENERALIZED_TIME_INVALID_MONTH));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidDayFeb)
+// TODO(bug 1023437) Generalized times with invalid days for a given month
+// should be rejected
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidDayFeb)
 {
   const uint8_t DER_GENERALIZED_TIME_INVALID_DAY_FEB[] = {
     0x18,                           // Generalized Time
@@ -560,10 +501,18 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidDayFeb)
     '3', '0', // DD (the 30th which does not exist)
     '1', '6', '4', '5', '4', '0', 'Z'
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_DAY_FEB);
+
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_DAY_FEB,
+                       sizeof DER_GENERALIZED_TIME_INVALID_DAY_FEB));
+  PRTime value = 0;
+  ASSERT_EQ(Success, GeneralizedTime(input, value));
+  // The current invalid returned value is Sat, 02 Mar 1991 16:45:40 GMT
+  ASSERT_EQ(667932340000000, value);
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidDayDec)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidDayDec)
 {
   const uint8_t DER_GENERALIZED_TIME_INVALID_DAY_DEC[] = {
     0x18,                           // Generalized Time
@@ -573,10 +522,17 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidDayDec)
     '3', '2', // DD (the 32nd which does not exist)
     '1', '6', '4', '5', '4', '0', 'Z'
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_DAY_DEC);
+
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_DAY_DEC,
+                       sizeof DER_GENERALIZED_TIME_INVALID_DAY_DEC));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, TimeLeapSecondJune)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeLeapSecondJune)
 {
   // No leap seconds ever (allowing them would be non-trivial).
   const uint8_t DER_GENERALIZED_TIME_LEAP_SECOND_JUNE[] = {
@@ -585,10 +541,17 @@ TEST_F(pkixder_universal_types_tests, TimeLeapSecondJune)
     '2', '0', '1', '2', '0', '6', '3', '0', // YYYYMMDD (2012-06-30)
     '2', '3', '5', '9', '6', '0', 'Z' // HHMMSSZ (23:59:60 Zulu)
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_LEAP_SECOND_JUNE);
+
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_LEAP_SECOND_JUNE,
+                       sizeof DER_GENERALIZED_TIME_LEAP_SECOND_JUNE));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidHours)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidHours)
 {
   const uint8_t DER_GENERALIZED_TIME_INVALID_HOURS[] = {
     0x18,                           // Generalized Time
@@ -596,10 +559,16 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidHours)
     '2', '0', '1', '2', '0', '6', '3', '0', // YYYYMMDD (2012-06-30)
     '2', '5', '5', '9', '0', '1', 'Z' // HHMMSSZ (!!25!!:59:01 Zulu)
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_HOURS);
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_HOURS,
+                       sizeof DER_GENERALIZED_TIME_INVALID_HOURS));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidMinutes)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidMinutes)
 {
   const uint8_t DER_GENERALIZED_TIME_INVALID_MINUTES[] = {
     0x18,                           // Generalized Time
@@ -607,10 +576,16 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidMinutes)
     '2', '0', '1', '2', '0', '6', '3', '0', // YYYYMMDD (2012-06-30)
     '2', '3', '6', '0', '5', '9', 'Z' // HHMMSSZ (23:!!!60!!!:01 Zulu)
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_MINUTES);
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_MINUTES,
+                       sizeof DER_GENERALIZED_TIME_INVALID_MINUTES));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidSeconds)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidSeconds)
 {
   const uint8_t DER_GENERALIZED_TIME_INVALID_SECONDS[] = {
     0x18,                           // Generalized Time
@@ -618,10 +593,16 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidSeconds)
     '2', '0', '1', '2', '0', '6', '3', '0', // YYYYMMDD (2012-06-30)
     '2', '3', '5', '9', '6', '1', 'Z' // HHMMSSZ (23:59:!!!!61!!!! Zulu)
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_SECONDS);
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_SECONDS,
+                       sizeof DER_GENERALIZED_TIME_INVALID_SECONDS));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidZulu)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidZulu)
 {
   const uint8_t DER_GENERALIZED_TIME_INVALID_ZULU[] = {
     0x18,                           // Generalized Time
@@ -629,10 +610,16 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidZulu)
     '2', '0', '1', '2', '0', '6', '3', '0', // YYYYMMDD (2012-06-30)
     '2', '3', '5', '9', '5', '9', 'z' // HHMMSSZ (23:59:59 !!!z!!!) should be Z
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_ZULU);
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_ZULU,
+                       sizeof DER_GENERALIZED_TIME_INVALID_ZULU));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidExtraData)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidExtraData)
 {
   const uint8_t DER_GENERALIZED_TIME_INVALID_EXTRA_DATA[] = {
     0x18,                           // Generalized Time
@@ -641,10 +628,16 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidExtraData)
     '2', '3', '5', '9', '5', '9', 'Z', // HHMMSSZ (23:59:59Z)
     0 // Extra null character
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_EXTRA_DATA);
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_EXTRA_DATA,
+                       sizeof DER_GENERALIZED_TIME_INVALID_EXTRA_DATA));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidCenturyChar)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidCenturyChar)
 {
   const uint8_t DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR[] = {
     0x18,                           // Generalized Time
@@ -653,36 +646,16 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidCenturyChar)
     '1', '6', '4', '5', '4', '0', 'Z' // HHMMSSZ (16:45:40Z)
   };
 
-  // We can't use ExpectBadTime here, because ExpectBadTime requires
-  // consistent results for GeneralizedTime and UTCTime, but the results
-  // for this input are different.
-
-  // GeneralizedTime
-  {
-    Input input;
-    ASSERT_EQ(Success,
-              input.Init(DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR,
-                         sizeof DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR));
-    PRTime value = 0;
-    ASSERT_EQ(Failure, GeneralizedTime(input, value));
-    EXPECT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
-  }
-
-  // TimeChoice: GeneralizedTime
-  {
-    Input input;
-    ASSERT_EQ(Success,
-              input.Init(DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR,
-                         sizeof DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR));
-    PRTime value = 0;
-    ASSERT_EQ(Failure, TimeChoice(siGeneralizedTime, input, value));
-    EXPECT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
-  }
-
-  // This test is not applicable to TimeChoice: UTCTime
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR,
+                       sizeof DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidYearChar)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidYearChar)
 {
   const uint8_t DER_GENERALIZED_TIME_INVALID_YEAR_CHAR[] = {
     0x18,                           // Generalized Time
@@ -690,7 +663,14 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidYearChar)
     '1', '9', '9', 'I', '0', '1', '0', '6', // YYYYMMDD (199I-12-06)
     '1', '6', '4', '5', '4', '0', 'Z' // HHMMSSZ (16:45:40Z)
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_YEAR_CHAR);
+
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_YEAR_CHAR,
+                       sizeof DER_GENERALIZED_TIME_INVALID_YEAR_CHAR));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
 TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidMonthChar)
@@ -701,10 +681,17 @@ TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidMonthChar)
     '1', '9', '9', '1', '0', 'I', '0', '6', // YYYYMMDD (1991-0I-06)
     '1', '6', '4', '5', '4', '0', 'Z' // HHMMSSZ (16:45:40Z)
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_MONTH_CHAR);
+
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_MONTH_CHAR,
+                       sizeof DER_GENERALIZED_TIME_INVALID_MONTH_CHAR));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidDayChar)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidDayChar)
 {
   const uint8_t DER_GENERALIZED_TIME_INVALID_DAY_CHAR[] = {
     0x18,                           // Generalized Time
@@ -712,10 +699,17 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidDayChar)
     '1', '9', '9', '1', '0', '1', '0', 'S', // YYYYMMDD (1991-01-0S)
     '1', '6', '4', '5', '4', '0', 'Z' // HHMMSSZ (16:45:40Z)
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_DAY_CHAR);
+
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_DAY_CHAR,
+                       sizeof DER_GENERALIZED_TIME_INVALID_DAY_CHAR));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidFractionalSeconds)
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeInvalidFractionalSeconds)
 {
   const uint8_t DER_GENERALIZED_TIME_INVALID_FRACTIONAL_SECONDS[] = {
     0x18,                           // Generalized Time
@@ -723,7 +717,14 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidFractionalSeconds)
     '1', '9', '9', '1', '0', '1', '0', '1', // YYYYMMDD (1991-01-01)
     '1', '6', '4', '5', '4', '0', '.', '3', 'Z' // HHMMSS.FFF (16:45:40.3Z)
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_FRACTIONAL_SECONDS);
+
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_GENERALIZED_TIME_INVALID_FRACTIONAL_SECONDS,
+                       sizeof DER_GENERALIZED_TIME_INVALID_FRACTIONAL_SECONDS));
+  PRTime value = 0;
+  ASSERT_EQ(Failure, GeneralizedTime(input, value));
+  ASSERT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
 }
 
 TEST_F(pkixder_universal_types_tests, Integer_0_127)
