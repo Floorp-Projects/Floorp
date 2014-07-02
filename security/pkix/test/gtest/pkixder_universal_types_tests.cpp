@@ -343,6 +343,10 @@ YMDHMS(int16_t year, int16_t month, int16_t day,
 // GeneralizedTime we should not accept them, and breaking reading of these
 // other encodings is actually encouraged.
 
+// e.g. TWO_CHARS(53) => '5', '3'
+#define TWO_CHARS(t) static_cast<uint8_t>('0' + ((t) / 10u)), \
+                     static_cast<uint8_t>('0' + ((t) % 10u))
+
 // Given a DER-encoded GeneralizedTime where we want to extract the value, we
 // need to skip two bytes: the tag and the length.
 static const uint16_t GT_VALUE_OFFSET = 2;
@@ -398,7 +402,6 @@ ExpectBadTime(const uint8_t (&generalizedTimeDER)[LENGTH])
 {
   static_assert(LENGTH >= UTC_VALUE_OFFSET,
                 "ExpectBadTime requires input at least UTC_VALUE_OFFSET bytes");
-
 
   // GeneralizedTime
   {
@@ -538,7 +541,116 @@ TEST_F(pkixder_universal_types_tests, TimeTooManyDigits)
   ExpectBadTime(DER_GENERALIZED_TIME_TOO_MANY_DIGITS);
 }
 
-TEST_F(pkixder_universal_types_tests, Time13thMonth)
+// In order to ensure we we don't run into any trouble with conversions to and
+// from time_t we only accept times from 1970 onwards.
+TEST_F(pkixder_universal_types_tests, GeneralizedTimeYearValidRange)
+{
+  // Note that by using the last second of the last day of the year, we're also
+  // effectively testing all the accumulated conversions from Gregorian to to
+  // Julian time, including in particular the effects of leap years.
+
+  for (uint16_t i = 1970; i <= 9999; ++i) {
+    const uint8_t DER[] = {
+      0x18,                           // Generalized Time
+      15,                             // Length = 15
+      TWO_CHARS(i / 100), TWO_CHARS(i % 100), // YYYY
+      '1', '2', '3', '1', // 12-31
+      '2', '3', '5', '9', '5', '9', 'Z' // 23:59:59Z
+    };
+
+    PRTime expectedValue = YMDHMS(i, 12, 31, 23, 59, 59);
+
+    // We have to test GeneralizedTime separately from UTCTime instead of using
+    // ExpectGooDtime because the range of UTCTime is less than the range of
+    // GeneralizedTime.
+
+    // GeneralizedTime
+    {
+      Input input;
+      ASSERT_EQ(Success, input.Init(DER, sizeof(DER)));
+      PRTime value = 0;
+      ASSERT_EQ(Success, GeneralizedTime(input, value));
+      EXPECT_EQ(expectedValue, value);
+    }
+
+    // TimeChoice: GeneralizedTime
+    {
+      Input input;
+      ASSERT_EQ(Success, input.Init(DER + GT_VALUE_OFFSET,
+                                    sizeof(DER) - GT_VALUE_OFFSET));
+      PRTime value = 0;
+      ASSERT_EQ(Success, TimeChoice(siGeneralizedTime, input, value));
+      EXPECT_EQ(expectedValue, value);
+    }
+
+    // TimeChoice: UTCTime, which is limited to years less than 2049.
+    if (i <= 2049) {
+      Input input;
+      ASSERT_EQ(Success, input.Init(DER + UTC_VALUE_OFFSET,
+                                    sizeof(DER) - UTC_VALUE_OFFSET));
+      PRTime value = 0;
+      ASSERT_EQ(Success, TimeChoice(siUTCTime, input, value));
+      EXPECT_EQ(expectedValue, value);
+    }
+  }
+}
+
+// In order to ensure we we don't run into any trouble with conversions to and
+// from time_t we only accept times from 1970 onwards.
+TEST_F(pkixder_universal_types_tests, TimeYearInvalid1969)
+{
+  static const uint8_t DER[] = {
+    0x18,                           // Generalized Time
+    15,                             // Length = 15
+    '1', '9', '6', '9', '1', '2', '3', '1', // !!!1969!!!-12-31
+    '2', '3', '5', '9', '5', '9', 'Z' // 23:59:59Z
+  };
+  ExpectBadTime(DER);
+}
+
+static const uint8_t DAYS_IN_MONTH[] = {
+  0,  // unused
+  31, // January
+  28, // February (leap years tested separately)
+  31, // March
+  30, // April
+  31, // May
+  30, // Jun
+  31, // July
+  31, // August
+  30, // September
+  31, // October
+  30, // November
+  31, // December
+};
+
+TEST_F(pkixder_universal_types_tests, TimeMonthDaysValidRange)
+{
+  for (uint8_t month = 1; month <= 12; ++month) {
+    for (uint8_t day = 1; day <= DAYS_IN_MONTH[month]; ++day) {
+      const uint8_t DER[] = {
+        0x18,                           // Generalized Time
+        15,                             // Length = 15
+        '2', '0', '1', '5', TWO_CHARS(month), TWO_CHARS(day), // (2015-mm-dd)
+        '1', '6', '4', '5', '4', '0', 'Z' // 16:45:40
+      };
+      ExpectGoodTime(YMDHMS(2015, month, day, 16, 45, 40), DER);
+    }
+  }
+}
+
+TEST_F(pkixder_universal_types_tests, TimeMonthInvalid0)
+{
+  static const uint8_t DER[] = {
+    0x18,                           // Generalized Time
+    15,                             // Length = 15
+    '2', '0', '1', '5', '0', '0', '1', '5', // 2015-!!!00!!!-15
+    '1', '6', '4', '5', '4', '0', 'Z' // 16:45:40
+  };
+  ExpectBadTime(DER);
+}
+
+TEST_F(pkixder_universal_types_tests, TimeMonthInvalid13)
 {
   const uint8_t DER_GENERALIZED_TIME_13TH_MONTH[] = {
     0x18,                           // Generalized Time
@@ -550,75 +662,213 @@ TEST_F(pkixder_universal_types_tests, Time13thMonth)
   ExpectBadTime(DER_GENERALIZED_TIME_13TH_MONTH);
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidDayFeb)
+TEST_F(pkixder_universal_types_tests, TimeDayInvalid0)
 {
-  const uint8_t DER_GENERALIZED_TIME_INVALID_DAY_FEB[] = {
+  static const uint8_t DER[] = {
     0x18,                           // Generalized Time
     15,                             // Length = 15
-    '1', '9', '9', '1', // YYYY 1991
-    '0', '2', // MM (February)
-    '3', '0', // DD (the 30th which does not exist)
-    '1', '6', '4', '5', '4', '0', 'Z'
+    '2', '0', '1', '5', '0', '1', '0', '0', // 2015-01-!!!00!!!
+    '1', '6', '4', '5', '4', '0', 'Z' // 16:45:40
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_DAY_FEB);
+  ExpectBadTime(DER);
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidDayDec)
+TEST_F(pkixder_universal_types_tests, TimeMonthDayInvalidPastEndOfMonth)
 {
-  const uint8_t DER_GENERALIZED_TIME_INVALID_DAY_DEC[] = {
+  for (uint8_t month = 1; month <= 12; ++month) {
+    const uint8_t DER[] = {
+      0x18,                           // Generalized Time
+      15,                             // Length = 15
+      '1', '9', '9', '1', // YYYY 1991
+      TWO_CHARS(month), // MM
+      TWO_CHARS(1 + (month == 2 ? 29 : DAYS_IN_MONTH[month])), // !!!DD!!!
+      '1', '6', '4', '5', '4', '0', 'Z' // 16:45:40
+    };
+    ExpectBadTime(DER);
+  }
+}
+
+TEST_F(pkixder_universal_types_tests, TimeMonthFebLeapYear2016)
+{
+  static const uint8_t DER[] = {
     0x18,                           // Generalized Time
     15,                             // Length = 15
-    '1', '9', '9', '1', // YYYY 1991
-    '1', '2', // MM (December)
-    '3', '2', // DD (the 32nd which does not exist)
-    '1', '6', '4', '5', '4', '0', 'Z'
+    '2', '0', '1', '6', '0', '2', '2', '9', // 2016-02-29
+    '1', '6', '4', '5', '4', '0', 'Z' // 16:45:40
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_DAY_DEC);
+  ExpectGoodTime(YMDHMS(2016, 2, 29, 16, 45, 40), DER);
 }
 
-TEST_F(pkixder_universal_types_tests, TimeLeapSecondJune)
+TEST_F(pkixder_universal_types_tests, TimeMonthFebLeapYear2000)
 {
-  // No leap seconds ever (allowing them would be non-trivial).
-  const uint8_t DER_GENERALIZED_TIME_LEAP_SECOND_JUNE[] = {
+  static const uint8_t DER[] = {
+    0x18,                           // Generalized Time
+    15,                             // Length = 15
+    '2', '0', '0', '0', '0', '2', '2', '9', // 2000-02-29
+    '1', '6', '4', '5', '4', '0', 'Z' // 16:45:40
+  };
+  ExpectGoodTime(YMDHMS(2000, 2, 29, 16, 45, 40), DER);
+}
+
+TEST_F(pkixder_universal_types_tests, TimeMonthFebLeapYear2400)
+{
+  static const uint8_t DER[] = {
+    0x18,                           // Generalized Time
+    15,                             // Length = 15
+    '2', '4', '0', '0', '0', '2', '2', '9', // 2400-02-29
+    '1', '6', '4', '5', '4', '0', 'Z' // 16:45:40
+  };
+
+  // We don't use ExpectGoodTime here because UTCTime can't represent 2400.
+
+  PRTime expectedValue = YMDHMS(2400, 2, 29, 16, 45, 40);
+
+  // GeneralizedTime
+  {
+    Input input;
+    ASSERT_EQ(Success, input.Init(DER, sizeof(DER)));
+    PRTime value = 0;
+    ASSERT_EQ(Success, GeneralizedTime(input, value));
+    EXPECT_EQ(expectedValue, value);
+  }
+
+  // TimeChoice: GeneralizedTime
+  {
+    Input input;
+    ASSERT_EQ(Success, input.Init(DER + GT_VALUE_OFFSET,
+                                  sizeof(DER) - GT_VALUE_OFFSET));
+    PRTime value = 0;
+    ASSERT_EQ(Success, TimeChoice(siGeneralizedTime, input, value));
+    EXPECT_EQ(expectedValue, value);
+  }
+}
+
+TEST_F(pkixder_universal_types_tests, TimeMonthFebNotLeapYear2014)
+{
+  static const uint8_t DER[] = {
+    0x18,                           // Generalized Time
+    15,                             // Length = 15
+    '2', '0', '1', '4', '0', '2', '2', '9', // 2014-02-29
+    '1', '6', '4', '5', '4', '0', 'Z' // 16:45:40
+  };
+  ExpectBadTime(DER);
+}
+
+TEST_F(pkixder_universal_types_tests, TimeMonthFebNotLeapYear2100)
+{
+  static const uint8_t DER[] = {
+    0x18,                           // Generalized Time
+    15,                             // Length = 15
+    '2', '1', '0', '0', '0', '2', '2', '9', // 2100-02-29
+    '1', '6', '4', '5', '4', '0', 'Z' // 16:45:40
+  };
+
+  // We don't use ExpectBadTime here because UTCTime can't represent 2100.
+
+  // GeneralizedTime
+  {
+    Input input;
+    ASSERT_EQ(Success, input.Init(DER, sizeof(DER)));
+    PRTime value;
+    ASSERT_EQ(Failure, GeneralizedTime(input, value));
+    EXPECT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
+  }
+
+  // TimeChoice: GeneralizedTime
+  {
+    Input input;
+    ASSERT_EQ(Success,
+              input.Init(DER + GT_VALUE_OFFSET,
+                         sizeof(DER) - GT_VALUE_OFFSET));
+    PRTime value;
+    ASSERT_EQ(Failure, TimeChoice(siGeneralizedTime, input, value));
+    EXPECT_EQ(SEC_ERROR_INVALID_TIME, PR_GetError());
+  }
+}
+
+TEST_F(pkixder_universal_types_tests, TimeHoursValidRange)
+{
+  for (uint8_t i = 0; i <= 23; ++i) {
+    const uint8_t DER[] = {
+      0x18,                           // Generalized Time
+      15,                             // Length = 15
+      '2', '0', '1', '2', '0', '6', '3', '0', // YYYYMMDD (2012-06-30)
+      TWO_CHARS(i), '5', '9', '0', '1', 'Z' // HHMMSSZ (!!!!ii!!!!:59:01 Zulu)
+    };
+    ExpectGoodTime(YMDHMS(2012, 6, 30, i, 59, 1), DER);
+  }
+}
+
+TEST_F(pkixder_universal_types_tests, TimeHoursInvalid_24_00_00)
+{
+  static const uint8_t DER[] = {
     0x18,                           // Generalized Time
     15,                             // Length = 15
     '2', '0', '1', '2', '0', '6', '3', '0', // YYYYMMDD (2012-06-30)
-    '2', '3', '5', '9', '6', '0', 'Z' // HHMMSSZ (23:59:60 Zulu)
+    '2', '4', '0', '0', '0', '0', 'Z' // HHMMSSZ (!!24!!:00:00 Zulu)
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_LEAP_SECOND_JUNE);
+  ExpectBadTime(DER);
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidHours)
+TEST_F(pkixder_universal_types_tests, TimeMinutesValidRange)
 {
-  const uint8_t DER_GENERALIZED_TIME_INVALID_HOURS[] = {
-    0x18,                           // Generalized Time
-    15,                             // Length = 15
-    '2', '0', '1', '2', '0', '6', '3', '0', // YYYYMMDD (2012-06-30)
-    '2', '5', '5', '9', '0', '1', 'Z' // HHMMSSZ (!!25!!:59:01 Zulu)
-  };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_HOURS);
+  for (uint8_t i = 0; i <= 59; ++i) {
+    const uint8_t DER[] = {
+      0x18,                           // Generalized Time
+      15,                             // Length = 15
+      '2', '0', '1', '2', '0', '6', '3', '0', // YYYYMMDD (2012-06-30)
+      '2', '3', TWO_CHARS(i), '0', '1', 'Z' // HHMMSSZ (23:!!!!ii!!!!:01 Zulu)
+    };
+    ExpectGoodTime(YMDHMS(2012, 6, 30, 23, i, 1), DER);
+  }
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidMinutes)
+TEST_F(pkixder_universal_types_tests, TimeMinutesInvalid60)
 {
-  const uint8_t DER_GENERALIZED_TIME_INVALID_MINUTES[] = {
+  const uint8_t DER[] = {
     0x18,                           // Generalized Time
     15,                             // Length = 15
     '2', '0', '1', '2', '0', '6', '3', '0', // YYYYMMDD (2012-06-30)
     '2', '3', '6', '0', '5', '9', 'Z' // HHMMSSZ (23:!!!60!!!:01 Zulu)
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_MINUTES);
+  ExpectBadTime(DER);
 }
 
-TEST_F(pkixder_universal_types_tests, TimeInvalidSeconds)
+TEST_F(pkixder_universal_types_tests, TimeSecondsValidRange)
 {
-  const uint8_t DER_GENERALIZED_TIME_INVALID_SECONDS[] = {
+  for (uint8_t i = 0; i <= 59; ++i) {
+    const uint8_t DER[] = {
+      0x18,                           // Generalized Time
+      15,                             // Length = 15
+      '2', '0', '1', '2', '0', '6', '3', '0', // YYYYMMDD (2012-06-30)
+      '2', '3', '5', '9', TWO_CHARS(i), 'Z' // HHMMSSZ (23:59:!!!!ii!!!! Zulu)
+    };
+    ExpectGoodTime(YMDHMS(2012, 6, 30, 23, 59, i), DER);
+  }
+}
+
+// No Leap Seconds (60)
+TEST_F(pkixder_universal_types_tests, TimeSecondsInvalid60)
+{
+  static const uint8_t DER[] = {
+    0x18,                           // Generalized Time
+    15,                             // Length = 15
+    '2', '0', '1', '2', '0', '6', '3', '0', // YYYYMMDD (2012-06-30)
+    '2', '3', '5', '9', '6', '0', 'Z' // HHMMSSZ (23:59:!!!!60!!!! Zulu)
+  };
+  ExpectBadTime(DER);
+}
+
+// No Leap Seconds (61)
+TEST_F(pkixder_universal_types_tests, TimeSecondsInvalid61)
+{
+  static const uint8_t DER[] = {
     0x18,                           // Generalized Time
     15,                             // Length = 15
     '2', '0', '1', '2', '0', '6', '3', '0', // YYYYMMDD (2012-06-30)
     '2', '3', '5', '9', '6', '1', 'Z' // HHMMSSZ (23:59:!!!!61!!!! Zulu)
   };
-  ExpectBadTime(DER_GENERALIZED_TIME_INVALID_SECONDS);
+  ExpectBadTime(DER);
 }
 
 TEST_F(pkixder_universal_types_tests, TimeInvalidZulu)
