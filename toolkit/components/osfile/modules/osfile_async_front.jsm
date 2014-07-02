@@ -54,43 +54,12 @@ Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 
 // The implementation of communications
-Cu.import("resource://gre/modules/osfile/_PromiseWorker.jsm", this);
-
+Cu.import("resource://gre/modules/PromiseWorker.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
 let Native = Cu.import("resource://gre/modules/osfile/osfile_native.jsm", {});
 
-/**
- * Constructors for decoding standard exceptions
- * received from the worker.
- */
-const EXCEPTION_CONSTRUCTORS = {
-  EvalError: function(error) {
-    return new EvalError(error.message, error.fileName, error.lineNumber);
-  },
-  InternalError: function(error) {
-    return new InternalError(error.message, error.fileName, error.lineNumber);
-  },
-  RangeError: function(error) {
-    return new RangeError(error.message, error.fileName, error.lineNumber);
-  },
-  ReferenceError: function(error) {
-    return new ReferenceError(error.message, error.fileName, error.lineNumber);
-  },
-  SyntaxError: function(error) {
-    return new SyntaxError(error.message, error.fileName, error.lineNumber);
-  },
-  TypeError: function(error) {
-    return new TypeError(error.message, error.fileName, error.lineNumber);
-  },
-  URIError: function(error) {
-    return new URIError(error.message, error.fileName, error.lineNumber);
-  },
-  OSError: function(error) {
-    return OS.File.Error.fromMsg(error);
-  }
-};
 
 // It's possible for osfile.jsm to get imported before the profile is
 // set up. In this case, some path constants aren't yet available.
@@ -253,9 +222,11 @@ let Scheduler = {
    */
   get worker() {
     if (!this._worker) {
-      // Either the worker has never been created or it has been reset
-      this._worker = new PromiseWorker(
-	"resource://gre/modules/osfile/osfile_async_worker.js", LOG);
+      // Either the worker has never been created or it has been
+      // reset.  In either case, it is time to instantiate the worker.
+      this._worker = new BasePromiseWorker("resource://gre/modules/osfile/osfile_async_worker.js");
+      this._worker.log = LOG;
+      this._worker.ExceptionHandlers["OS.File.Error"] = OSError.fromMsg;
     }
     return this._worker;
   },
@@ -329,12 +300,11 @@ let Scheduler = {
       try {
         Scheduler.latestReceived = [];
         Scheduler.latestSent = [Date.now(), ...message];
-        let promise = this._worker.post(...message);
 
         // Wait for result
         let resources;
         try {
-          resources = (yield promise).ok;
+          resources = yield this._worker.post(...message);
 
           Scheduler.latestReceived = [Date.now(), message];
         } catch (ex) {
@@ -411,7 +381,7 @@ let Scheduler = {
    * @return {Promise} A promise conveying the result/error caused by
    * calling |method| with arguments |args|.
    */
-  post: function post(method, ...args) {
+  post: function post(method, args = undefined, closure = undefined) {
     if (this.shutdown) {
       LOG("OS.File is not available anymore. The following request has been rejected.",
         method, args);
@@ -426,12 +396,6 @@ let Scheduler = {
       Scheduler.Debugging.messagesSent++;
     }
 
-    // By convention, the last argument of any message may be an |options| object.
-    let options;
-    let methodArgs = args[0];
-    if (methodArgs) {
-      options = methodArgs[methodArgs.length - 1];
-    }
     Scheduler.Debugging.messagesQueued++;
     return this.push(Task.async(function*() {
       if (this.shutdown) {
@@ -443,78 +407,32 @@ let Scheduler = {
       // Update debugging information. As |args| may be quite
       // expensive, we only keep a shortened version of it.
       Scheduler.Debugging.latestReceived = null;
-      Scheduler.Debugging.latestSent = [Date.now(), method, summarizeObject(methodArgs)];
+      Scheduler.Debugging.latestSent = [Date.now(), method, summarizeObject(args)];
 
       // Don't kill the worker just yet
       Scheduler.restartTimer();
 
 
-      let data;
       let reply;
-      let isError = false;
       try {
         try {
           Scheduler.Debugging.messagesSent++;
-          data = yield this.worker.post(method, ...args);
+          Scheduler.Debugging.latestSent = Scheduler.Debugging.latestSent.slice(0, 2);
+          reply = yield this.worker.post(method, args, closure);
+          Scheduler.Debugging.latestReceived = [Date.now(), summarizeObject(reply)];
+          return reply;
         } finally {
           Scheduler.Debugging.messagesReceived++;
         }
-        reply = data;
       } catch (error) {
-        reply = error;
-        isError = true;
-        if (error instanceof PromiseWorker.WorkerError) {
-          throw EXCEPTION_CONSTRUCTORS[error.data.exn || "OSError"](error.data);
-        }
-        if (error instanceof ErrorEvent) {
-          let message = error.message;
-          if (message == "uncaught exception: [object StopIteration]") {
-            isError = false;
-            throw StopIteration;
-          }
-          throw new Error(message, error.filename, error.lineno);
-        }
+        Scheduler.Debugging.latestReceived = [Date.now(), error.message, error.fileName, error.lineNumber];
         throw error;
       } finally {
-        Scheduler.Debugging.latestSent = Scheduler.Debugging.latestSent.slice(0, 2);
-        if (isError) {
-          Scheduler.Debugging.latestReceived = [Date.now(), reply.message, reply.fileName, reply.lineNumber];
-        } else {
-          Scheduler.Debugging.latestReceived = [Date.now(), summarizeObject(reply)];
-        }
         if (firstLaunch) {
           Scheduler._updateTelemetry();
         }
-
         Scheduler.restartTimer();
       }
-
-      // Check for duration and return result.
-      if (!options) {
-        return data.ok;
-      }
-      // Check for options.outExecutionDuration.
-      if (typeof options !== "object" ||
-        !("outExecutionDuration" in options)) {
-        return data.ok;
-      }
-      // If data.durationMs is not present, return data.ok (there was an
-      // exception applying the method).
-      if (!("durationMs" in data)) {
-        return data.ok;
-      }
-      // Bug 874425 demonstrates that two successive calls to Date.now()
-      // can actually produce an interval with negative duration.
-      // We assume that this is due to an operation that is so short
-      // that Date.now() is not monotonic, so we round this up to 0.
-      let durationMs = Math.max(0, data.durationMs);
-      // Accumulate (or initialize) outExecutionDuration
-      if (typeof options.outExecutionDuration == "number") {
-        options.outExecutionDuration += durationMs;
-      } else {
-        options.outExecutionDuration = durationMs;
-      }
-      return data.ok;
     }.bind(this)));
   },
 

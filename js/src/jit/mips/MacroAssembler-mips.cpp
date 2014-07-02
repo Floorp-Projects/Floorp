@@ -620,8 +620,8 @@ MacroAssemblerMIPS::ma_div_branch_overflow(Register rd, Register rs, Imm32 imm, 
 }
 
 void
-MacroAssemblerMIPS::ma_mod_mask(Register src, Register dest, Register hold, int32_t shift,
-                                Label *negZero)
+MacroAssemblerMIPS::ma_mod_mask(Register src, Register dest, Register hold, Register remain,
+                                int32_t shift, Label *negZero)
 {
     // MATH:
     // We wish to compute x % (1<<y) - 1 for a known constant, y.
@@ -641,34 +641,32 @@ MacroAssemblerMIPS::ma_mod_mask(Register src, Register dest, Register hold, int3
     Label head, negative, sumSigned, done;
 
     // hold holds -1 if the value was negative, 1 otherwise.
-    // ScratchRegister holds the remaining bits that have not been processed
-    // lr serves as a temporary location to store extracted bits into as well
-    // as holding the trial subtraction as a temp value dest is the
-    // accumulator (and holds the final result)
+    // remain holds the remaining bits that have not been processed
+    // SecondScratchReg serves as a temporary location to store extracted bits
+    // into as well as holding the trial subtraction as a temp value dest is
+    // the accumulator (and holds the final result)
 
-    // move the whole value into the scratch register, setting the codition
-    // codes so we can muck with them later.
-    ma_move(ScratchRegister, src);
+    // move the whole value into the remain.
+    ma_move(remain, src);
     // Zero out the dest.
-    ma_subu(dest, dest, dest);
+    ma_li(dest, Imm32(0));
     // Set the hold appropriately.
-    ma_b(ScratchRegister, ScratchRegister, &negative, Signed, ShortJump);
+    ma_b(remain, remain, &negative, Signed, ShortJump);
     ma_li(hold, Imm32(1));
     ma_b(&head, ShortJump);
 
     bind(&negative);
     ma_li(hold, Imm32(-1));
-    ma_negu(ScratchRegister, ScratchRegister);
+    ma_negu(remain, remain);
 
     // Begin the main loop.
     bind(&head);
 
-    // Extract the bottom bits into lr.
-    ma_and(SecondScratchReg, ScratchRegister, Imm32(mask));
+    // Extract the bottom bits into SecondScratchReg.
+    ma_and(SecondScratchReg, remain, Imm32(mask));
     // Add those bits to the accumulator.
     as_addu(dest, dest, SecondScratchReg);
-    // Do a trial subtraction, this is the same operation as cmp, but we
-    // store the dest
+    // Do a trial subtraction
     ma_subu(SecondScratchReg, dest, Imm32(mask));
     // If (sum - C) > 0, store sum - C back into sum, thus performing a
     // modulus.
@@ -676,9 +674,9 @@ MacroAssemblerMIPS::ma_mod_mask(Register src, Register dest, Register hold, int3
     ma_move(dest, SecondScratchReg);
     bind(&sumSigned);
     // Get rid of the bits that we extracted before.
-    as_srl(ScratchRegister, ScratchRegister, shift);
+    as_srl(remain, remain, shift);
     // If the shift produced zero, finish, otherwise, continue in the loop.
-    ma_b(ScratchRegister, ScratchRegister, &head, NonZero, ShortJump);
+    ma_b(remain, remain, &head, NonZero, ShortJump);
     // Check the hold to see if we need to negate the result.
     ma_b(hold, hold, &done, NotSigned, ShortJump);
 
@@ -1675,6 +1673,12 @@ MacroAssemblerMIPSCompat::not32(Register reg)
 
 // Logical operations
 void
+MacroAssemblerMIPSCompat::and32(Register src, Register dest)
+{
+    ma_and(dest, dest, src);
+}
+
+void
 MacroAssemblerMIPSCompat::and32(Imm32 imm, Register dest)
 {
     ma_and(dest, imm);
@@ -1686,6 +1690,13 @@ MacroAssemblerMIPSCompat::and32(Imm32 imm, const Address &dest)
     load32(dest, SecondScratchReg);
     ma_and(SecondScratchReg, imm);
     store32(SecondScratchReg, dest);
+}
+
+void
+MacroAssemblerMIPSCompat::and32(const Address &src, Register dest)
+{
+    load32(src, SecondScratchReg);
+    ma_and(dest, SecondScratchReg);
 }
 
 void
@@ -2025,6 +2036,12 @@ MacroAssemblerMIPSCompat::storePtr(Register src, const Address &address)
 }
 
 void
+MacroAssemblerMIPSCompat::storePtr(Register src, const BaseIndex &address)
+{
+    ma_store(src, address, SizeWord);
+}
+
+void
 MacroAssemblerMIPSCompat::storePtr(Register src, AbsoluteAddress dest)
 {
     ma_li(ScratchRegister, Imm32((uint32_t)dest.addr));
@@ -2080,6 +2097,13 @@ void
 MacroAssemblerMIPSCompat::subPtr(Imm32 imm, const Register dest)
 {
     ma_subu(dest, dest, imm);
+}
+
+void
+MacroAssemblerMIPSCompat::subPtr(const Address &addr, const Register dest)
+{
+    loadPtr(addr, SecondScratchReg);
+    subPtr(SecondScratchReg, dest);
 }
 
 void
@@ -2713,6 +2737,35 @@ MacroAssemblerMIPSCompat::getType(const Value &val)
     return jv.s.tag;
 }
 
+template <typename T>
+void
+MacroAssemblerMIPSCompat::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T &dest,
+                                            MIRType slotType)
+{
+    if (valueType == MIRType_Double) {
+        storeDouble(value.reg().typedReg().fpu(), dest);
+        return;
+    }
+
+    // Store the type tag if needed.
+    if (valueType != slotType)
+        storeTypeTag(ImmType(ValueTypeFromMIRType(valueType)), dest);
+
+    // Store the payload.
+    if (value.constant())
+        storePayload(value.value(), dest);
+    else
+        storePayload(value.reg().typedReg().gpr(), dest);
+}
+
+template void
+MacroAssemblerMIPSCompat::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const Address &dest,
+                                            MIRType slotType);
+
+template void
+MacroAssemblerMIPSCompat::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const BaseIndex &dest,
+                                            MIRType slotType);
+
 void
 MacroAssemblerMIPSCompat::moveData(const Value &val, Register data)
 {
@@ -2904,10 +2957,11 @@ MacroAssemblerMIPSCompat::storePayload(Register src, Address dest)
 }
 
 void
-MacroAssemblerMIPSCompat::storePayload(const Value &val, Register base, Register index,
-                                       int32_t shift)
+MacroAssemblerMIPSCompat::storePayload(const Value &val, const BaseIndex &dest)
 {
-    computeScaledAddress(BaseIndex(base, index, ShiftToScale(shift)), SecondScratchReg);
+    MOZ_ASSERT(dest.offset == 0);
+
+    computeScaledAddress(dest, SecondScratchReg);
 
     moveData(val, ScratchRegister);
 
@@ -2915,9 +2969,11 @@ MacroAssemblerMIPSCompat::storePayload(const Value &val, Register base, Register
 }
 
 void
-MacroAssemblerMIPSCompat::storePayload(Register src, Register base, Register index, int32_t shift)
+MacroAssemblerMIPSCompat::storePayload(Register src, const BaseIndex &dest)
 {
-    computeScaledAddress(BaseIndex(base, index, ShiftToScale(shift)), SecondScratchReg);
+    MOZ_ASSERT(dest.offset == 0);
+
+    computeScaledAddress(dest, SecondScratchReg);
     as_sw(src, SecondScratchReg, NUNBOX32_PAYLOAD_OFFSET);
 }
 
@@ -2929,9 +2985,11 @@ MacroAssemblerMIPSCompat::storeTypeTag(ImmTag tag, Address dest)
 }
 
 void
-MacroAssemblerMIPSCompat::storeTypeTag(ImmTag tag, Register base, Register index, int32_t shift)
+MacroAssemblerMIPSCompat::storeTypeTag(ImmTag tag, const BaseIndex &dest)
 {
-    computeScaledAddress(BaseIndex(base, index, ShiftToScale(shift)), SecondScratchReg);
+    MOZ_ASSERT(dest.offset == 0);
+
+    computeScaledAddress(dest, SecondScratchReg);
     ma_li(ScratchRegister, tag);
     as_sw(ScratchRegister, SecondScratchReg, TAG_OFFSET);
 }
