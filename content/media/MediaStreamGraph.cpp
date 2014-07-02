@@ -1719,6 +1719,11 @@ MediaStreamGraphImpl::RunInStableState()
   for (uint32_t i = 0; i < controlMessagesToRunDuringShutdown.Length(); ++i) {
     controlMessagesToRunDuringShutdown[i]->RunDuringShutdown();
   }
+
+#ifdef DEBUG
+  mCanRunMessagesSynchronously = mDetectedNotRunning &&
+    mLifecycleState >= LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
+#endif
 }
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
@@ -1768,7 +1773,14 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
     // this message.
     // This should only happen during forced shutdown, or after a non-realtime
     // graph has finished processing.
+#ifdef DEBUG
+    MOZ_ASSERT(mCanRunMessagesSynchronously);
+    mCanRunMessagesSynchronously = false;
+#endif
     aMessage->RunDuringShutdown();
+#ifdef DEBUG
+    mCanRunMessagesSynchronously = true;
+#endif
     delete aMessage;
     if (IsEmpty() &&
         mLifecycleState >= LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION) {
@@ -2191,7 +2203,10 @@ MediaStream::RunAfterPendingUpdates(nsRefPtr<nsIRunnable> aRunnable)
     }
     virtual void RunDuringShutdown() MOZ_OVERRIDE
     {
-      mRunnable->Run();
+      // Don't run mRunnable now as it may call AppendMessage() which would
+      // assume that there are no remaining controlMessagesToRunDuringShutdown.
+      MOZ_ASSERT(NS_IsMainThread());
+      NS_DispatchToCurrentThread(mRunnable);
     }
   private:
     nsRefPtr<nsIRunnable> mRunnable;
@@ -2671,6 +2686,9 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime, TrackRate aSampleRate
   , mSelfRef(MOZ_THIS_IN_INITIALIZER_LIST())
   , mAudioStreamSizes()
   , mNeedsMemoryReport(false)
+#ifdef DEBUG
+  , mCanRunMessagesSynchronously(false)
+#endif
 {
 #ifdef PR_LOGGING
   if (!gMediaStreamGraphLog) {
