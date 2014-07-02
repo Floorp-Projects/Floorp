@@ -23,10 +23,10 @@ sys.path.insert(0, SCRIPT_DIRECTORY)
 from automation import Automation
 from automationutils import (
         addCommonOptions,
-        getDebuggerInfo,
         isURL,
         processLeakLog
 )
+import mozdebug
 import mozprofile
 
 def categoriesToRegex(categoryList):
@@ -320,7 +320,7 @@ class RefTest(object):
     return int(any(t.retcode != 0 for t in threads))
 
   def runSerialTests(self, testPath, options, cmdlineArgs = None):
-    debuggerInfo = getDebuggerInfo(self.oldcwd, options.debugger, options.debuggerArgs,
+    debuggerInfo = mozdebug.get_debugger_info(options.debugger, options.debuggerArgs,
         options.debuggerInteractive);
 
     profileDir = None
