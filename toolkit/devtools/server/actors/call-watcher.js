@@ -552,7 +552,6 @@ let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
 let CallWatcherFront = exports.CallWatcherFront = protocol.FrontClass(CallWatcherActor, {
   initialize: function(client, { callWatcherActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: callWatcherActor });
-    client.addActorPool(this);
     this.manage(this);
   }
 });
