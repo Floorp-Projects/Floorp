@@ -84,7 +84,8 @@ GMPPlaneImpl::MaybeResize(int32_t aNewSize) {
   }
 
   ipc::Shmem new_mem;
-  if (!mHost->SharedMemMgr()->MgrAllocShmem(aNewSize, ipc::SharedMemory::TYPE_BASIC, &new_mem) ||
+  if (!mHost->SharedMemMgr()->MgrAllocShmem(GMPSharedMemManager::kGMPFrameData, aNewSize,
+                                            ipc::SharedMemory::TYPE_BASIC, &new_mem) ||
       !new_mem.get<uint8_t>()) {
     return GMPVideoAllocErr;
   }
@@ -104,7 +105,7 @@ void
 GMPPlaneImpl::DestroyBuffer()
 {
   if (mHost && mBuffer.IsWritable()) {
-    mHost->SharedMemMgr()->MgrDeallocShmem(mBuffer);
+    mHost->SharedMemMgr()->MgrDeallocShmem(GMPSharedMemManager::kGMPFrameData, mBuffer);
   }
   mBuffer = ipc::Shmem();
 }
