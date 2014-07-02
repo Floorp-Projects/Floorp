@@ -217,11 +217,6 @@ typedef HANDLE userland_thread_t;
 
 typedef char* caddr_t;
 
-int Win_getifaddrs(struct ifaddrs**);
-#define getifaddrs(interfaces)  (int)Win_getifaddrs(interfaces)
-int win_if_nametoindex(const char *);
-#define if_nametoindex(x) win_if_nametoindex(x)
-
 #define bzero(buf, len) memset(buf, 0, len)
 #define bcopy(srcKey, dstKey, len) memcpy(dstKey, srcKey, len)
 #define snprintf(data, size, format, name) _snprintf_s(data, size, _TRUNCATE, format, name)
@@ -398,6 +393,11 @@ struct udphdr {
 	unsigned __int16 uh_ulen;
 	unsigned __int16 uh_sum;
 };
+
+int Win_getifaddrs(struct ifaddrs**);
+#define getifaddrs(interfaces)  (int)Win_getifaddrs(interfaces)
+int win_if_nametoindex(const char *);
+#define if_nametoindex(x) win_if_nametoindex(x)
 
 #else /* !defined(Userspace_os_Windows) */
 #include <sys/cdefs.h> /* needed? added from old __FreeBSD__ */

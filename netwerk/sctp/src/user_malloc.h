@@ -41,7 +41,15 @@
 #include <strings.h>
 #include <stdint.h>
 #else
-#include "netinet/sctp_os_userspace.h"
+#if defined(_MSC_VER) && _MSC_VER >= 1600
+#include <stdint.h>
+#elif defined(SCTP_STDINT_INCLUDE)
+#include SCTP_STDINT_INCLUDE
+#else
+#define uint32_t  unsigned __int32
+#define uint64_t  unsigned __int64
+#endif
+#include <winsock2.h>
 #endif
 
 #define	MINALLOCSIZE	UMA_SMALLEST_UNIT
