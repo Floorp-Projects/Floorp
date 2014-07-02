@@ -2505,6 +2505,7 @@ WifiWorker.prototype = {
         function tensPlace(percent) ((percent / 10) | 0)
 
         if (last && last.linkSpeed === info.linkSpeed &&
+            last.ipAddress === info.ipAddress &&
             tensPlace(last.relSignalStrength) === tensPlace(info.relSignalStrength)) {
           return;
         }

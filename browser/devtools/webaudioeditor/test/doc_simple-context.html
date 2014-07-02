@@ -17,7 +17,14 @@
       let osc = ctx.createOscillator();
       let gain = ctx.createGain();
       gain.gain.value = 0;
+
+      // Connect multiple times to test that it's disregarded.
       osc.connect(gain);
+      gain.connect(ctx.destination);
+      gain.connect(ctx.destination);
+      gain.connect(ctx.destination);
+      gain.connect(ctx.destination);
+      gain.connect(ctx.destination);
       gain.connect(ctx.destination);
       osc.start(0);
     </script>

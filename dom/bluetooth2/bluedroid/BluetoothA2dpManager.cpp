@@ -7,14 +7,8 @@
 #include "base/basictypes.h"
 
 #include "BluetoothA2dpManager.h"
-
-#include <hardware/bluetooth.h>
-#include <hardware/bt_av.h>
-#if ANDROID_VERSION > 17
-#include <hardware/bt_rc.h>
-#endif
-
 #include "BluetoothCommon.h"
+#include "BluetoothInterface.h"
 #include "BluetoothService.h"
 #include "BluetoothSocket.h"
 #include "BluetoothUtils.h"
