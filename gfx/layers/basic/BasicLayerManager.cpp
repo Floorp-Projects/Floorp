@@ -536,35 +536,6 @@ BasicLayerManager::AbortTransaction()
   mInTransaction = false;
 }
 
-static uint16_t sFrameCount = 0;
-void
-BasicLayerManager::RenderDebugOverlay()
-{
-  if (!gfxPrefs::DrawFrameCounter()) {
-    return;
-  }
-
-  profiler_set_frame_number(sFrameCount);
-
-  uint16_t frameNumber = sFrameCount;
-  const uint16_t bitWidth = 3;
-  for (size_t i = 0; i < 16; i++) {
-
-    gfxRGBA bitColor;
-    if ((frameNumber >> i) & 0x1) {
-      bitColor = gfxRGBA(0, 0, 0, 1.0);
-    } else {
-      bitColor = gfxRGBA(1.0, 1.0, 1.0, 1.0);
-    }
-    mTarget->NewPath();
-    mTarget->SetColor(bitColor);
-    mTarget->Rectangle(gfxRect(bitWidth*i, 0, bitWidth, bitWidth));
-    mTarget->Fill();
-  }
-  // We intentionally overflow at 2^16.
-  sFrameCount++;
-}
-
 bool
 BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
                                           void* aCallbackData,
@@ -637,7 +608,6 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
     if (mWidget) {
       FlashWidgetUpdateArea(mTarget);
     }
-    RenderDebugOverlay();
     RecordFrame();
     PostPresent();
 
