@@ -5321,6 +5321,12 @@ JS_GetStringLength(JSString *str)
     return str->length();
 }
 
+JS_PUBLIC_API(bool)
+JS_StringHasLatin1Chars(JSString *str)
+{
+    return str->hasLatin1Chars();
+}
+
 JS_PUBLIC_API(const jschar *)
 JS_GetStringCharsZ(JSContext *cx, JSString *str)
 {
@@ -5357,6 +5363,21 @@ JS_GetStringCharsAndLength(JSContext *cx, JSString *str, size_t *plength)
         return nullptr;
     *plength = linear->length();
     return linear->chars();
+}
+
+JS_PUBLIC_API(const jschar *)
+JS_GetTwoByteStringCharsAndLength(JSContext *cx, const JS::AutoCheckCannotGC &nogc, JSString *str,
+                                  size_t *plength)
+{
+    JS_ASSERT(plength);
+    AssertHeapIsIdleOrStringIsFlat(cx, str);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, str);
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
+        return nullptr;
+    *plength = linear->length();
+    return linear->twoByteChars(nogc);
 }
 
 JS_PUBLIC_API(const jschar *)
