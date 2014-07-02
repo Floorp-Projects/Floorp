@@ -29,9 +29,8 @@ BEGIN_TEST(testScriptInfo)
 
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, startLine);
-    JS::RootedScript script(cx, JS_CompileScript(cx, global, code, strlen(code),
-                                                 options));
-
+    JS::RootedScript script(cx);
+    CHECK(JS_CompileScript(cx, global, code, strlen(code), options, &script));
     CHECK(script);
 
     jsbytecode *start = JS_LineNumberToPC(cx, script, startLine);

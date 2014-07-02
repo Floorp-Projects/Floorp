@@ -2,6 +2,10 @@
 
 "use strict";
 
+// gcc appends this to mangled function names for "not in charge"
+// constructors/destructors.
+var internalMarker = " *INTERNAL* ";
+
 function assert(x, msg)
 {
     if (x)

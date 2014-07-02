@@ -2093,16 +2093,15 @@ Assembler::as_vxfer(Register vt1, Register vt2, VFPRegister vm, FloatToCore_ f2c
     } else {
         JS_ASSERT(idx == 0);
     }
-    VFPXferSize xfersz = WordTransfer;
-    uint32_t (*encodeVFP)(VFPRegister) = VN;
-    if (vt2 != InvalidReg) {
-        // We are doing a 64 bit transfer.
-        xfersz = DoubleTransfer;
-        encodeVFP = VM;
-    }
 
-    return writeVFPInst(sz, xfersz | f2c | c |
-                        RT(vt1) | maybeRN(vt2) | encodeVFP(vm) | idx);
+    if (vt2 == InvalidReg) {
+        return writeVFPInst(sz, WordTransfer | f2c | c |
+                            RT(vt1) | maybeRN(vt2) | VN(vm) | idx);
+    } else {
+        // We are doing a 64 bit transfer.
+        return writeVFPInst(sz, DoubleTransfer | f2c | c |
+                            RT(vt1) | maybeRN(vt2) | VM(vm) | idx);
+    }
 }
 enum vcvt_destFloatness {
     toInteger = 1 << 18,

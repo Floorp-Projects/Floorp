@@ -18,9 +18,8 @@ struct ScriptObjectFixture : public JSAPITest {
             uc_code[i] = code[i];
     }
 
-    bool tryScript(JS::HandleObject global, JSScript *scriptArg)
+    bool tryScript(JS::HandleObject global, JS::HandleScript script)
     {
-        JS::RootedScript script(cx, scriptArg);
         CHECK(script);
 
         JS_GC(rt);
@@ -42,8 +41,9 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript)
 {
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
-    return tryScript(global, JS_CompileScript(cx, global, code, code_size,
-                                              options));
+    JS::RootedScript script(cx);
+    CHECK(JS_CompileScript(cx, global, code, code_size, options, &script));
+    return tryScript(global, script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript)
 
@@ -51,7 +51,9 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript_empty)
 {
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
-    return tryScript(global, JS_CompileScript(cx, global, "", 0, options));
+    JS::RootedScript script(cx);
+    CHECK(JS_CompileScript(cx, global, "", 0, options, &script));
+    return tryScript(global, script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript_empty)
 
@@ -59,8 +61,9 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScriptForPrincipals)
 {
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
-    return tryScript(global, JS_CompileScript(cx, global, code, code_size,
-                                              options));
+    JS::RootedScript script(cx);
+    CHECK(JS_CompileScript(cx, global, code, code_size, options, &script));
+    return tryScript(global, script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScriptForPrincipals)
 
@@ -68,8 +71,9 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScript)
 {
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
-    return tryScript(global, JS_CompileUCScript(cx, global, uc_code, code_size,
-                                                options));
+    JS::RootedScript script(cx);
+    CHECK(JS_CompileUCScript(cx, global, uc_code, code_size, options, &script));
+    return tryScript(global, script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScript)
 
@@ -77,8 +81,9 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScript_empty)
 {
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
-    return tryScript(global, JS_CompileUCScript(cx, global, uc_code, 0,
-                                                options));
+    JS::RootedScript script(cx);
+    CHECK(JS_CompileUCScript(cx, global, uc_code, 0, options, &script));
+    return tryScript(global, script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScript_empty)
 
@@ -86,8 +91,9 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScriptForPrincipal
 {
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
-    return tryScript(global, JS_CompileUCScript(cx, global, uc_code, code_size,
-                                                options));
+    JS::RootedScript script(cx);
+    CHECK(JS_CompileUCScript(cx, global, uc_code, code_size, options, &script));
+    return tryScript(global, script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScriptForPrincipals)
 
@@ -100,7 +106,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile)
     tempScript.close();
     JS::CompileOptions options(cx);
     options.setFileAndLine(script_filename, 1);
-    JSScript *script = JS::Compile(cx, global, options, script_filename);
+    JS::RootedScript script(cx);
+    CHECK(JS::Compile(cx, global, options, script_filename, &script));
     tempScript.remove();
     return tryScript(global, script);
 }
@@ -114,7 +121,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile_empty)
     tempScript.close();
     JS::CompileOptions options(cx);
     options.setFileAndLine(script_filename, 1);
-    JSScript *script = JS::Compile(cx, global, options, script_filename);
+    JS::RootedScript script(cx);
+    CHECK(JS::Compile(cx, global, options, script_filename, &script));
     tempScript.remove();
     return tryScript(global, script);
 }
@@ -129,7 +137,9 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle)
     CHECK(fseek(script_stream, 0, SEEK_SET) != EOF);
     JS::CompileOptions options(cx);
     options.setFileAndLine(script_filename, 1);
-    return tryScript(global, JS::Compile(cx, global, options, script_stream));
+    JS::RootedScript script(cx);
+    CHECK(JS::Compile(cx, global, options, script_stream, &script));
+    return tryScript(global, script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle)
 
@@ -140,7 +150,9 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle_empty)
     FILE *script_stream = tempScript.open("temp-bug438633_JS_CompileFileHandle_empty");
     JS::CompileOptions options(cx);
     options.setFileAndLine(script_filename, 1);
-    return tryScript(global, JS::Compile(cx, global, options, script_stream));
+    JS::RootedScript script(cx);
+    CHECK(JS::Compile(cx, global, options, script_stream, &script));
+    return tryScript(global, script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle_empty)
 
@@ -152,6 +164,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandleForPrincip
     CHECK(fseek(script_stream, 0, SEEK_SET) != EOF);
     JS::CompileOptions options(cx);
     options.setFileAndLine("temporary file", 1);
-    return tryScript(global, JS::Compile(cx, global, options, script_stream));
+    JS::RootedScript script(cx);
+    CHECK(JS::Compile(cx, global, options, script_stream, &script));
+    return tryScript(global, script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandleForPrincipals)

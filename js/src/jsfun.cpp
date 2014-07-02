@@ -54,7 +54,6 @@ using namespace js::frontend;
 
 using mozilla::ArrayLength;
 using mozilla::PodCopy;
-using mozilla::Range;
 using mozilla::RangedPtr;
 
 static bool
@@ -765,7 +764,7 @@ js::FindBody(JSContext *cx, HandleFunction fun, HandleLinearString src, size_t *
     if (!stableChars.initTwoByte(cx, src))
         return false;
 
-    const Range<const jschar> srcChars = stableChars.twoByteRange();
+    const mozilla::Range<const jschar> srcChars = stableChars.twoByteRange();
     TokenStream ts(cx, options, srcChars.start().get(), srcChars.length(), nullptr);
     int nest = 0;
     bool onward = true;
@@ -1542,7 +1541,7 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
     bool isStarGenerator = generatorKind == StarGenerator;
     JS_ASSERT(generatorKind != LegacyGenerator);
 
-    JSScript *maybeScript = nullptr;
+    RootedScript maybeScript(cx);
     const char *filename;
     unsigned lineno;
     JSPrincipals *originPrincipals;
@@ -1741,7 +1740,7 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
     if (!stableChars.initTwoByte(cx, str))
         return false;
 
-    Range<const jschar> chars = stableChars.twoByteRange();
+    mozilla::Range<const jschar> chars = stableChars.twoByteRange();
     SourceBufferHolder::Ownership ownership = stableChars.maybeGiveOwnershipToCaller()
                                               ? SourceBufferHolder::GiveOwnership
                                               : SourceBufferHolder::NoOwnership;
