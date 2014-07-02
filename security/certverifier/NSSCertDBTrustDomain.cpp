@@ -56,15 +56,28 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
 }
 
 SECStatus
-NSSCertDBTrustDomain::FindPotentialIssuers(
-  const SECItem* encodedIssuerName, PRTime time,
-  /*out*/ mozilla::pkix::ScopedCERTCertList& results)
+NSSCertDBTrustDomain::FindIssuer(const SECItem& encodedIssuerName,
+                                 IssuerChecker& checker, PRTime time)
 {
-  // TODO: normalize encodedIssuerName
   // TODO: NSS seems to be ambiguous between "no potential issuers found" and
   // "there was an error trying to retrieve the potential issuers."
-  results = CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
-                                       encodedIssuerName, time, true);
+  mozilla::pkix::ScopedCERTCertList
+    candidates(CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
+                                          &encodedIssuerName, time, true));
+  if (candidates) {
+    for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
+         !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
+      bool keepGoing;
+      SECStatus srv = checker.Check(n->cert->derCert, keepGoing);
+      if (srv != SECSuccess) {
+        return SECFailure;
+      }
+      if (!keepGoing) {
+        break;
+      }
+    }
+  }
+
   return SECSuccess;
 }
 

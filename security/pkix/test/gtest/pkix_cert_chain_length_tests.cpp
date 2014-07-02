@@ -126,12 +126,26 @@ private:
     return SECSuccess;
   }
 
-  SECStatus FindPotentialIssuers(const SECItem* encodedIssuerName,
-                                 PRTime time,
-                                 /*out*/ ScopedCERTCertList& results)
+  SECStatus FindIssuer(const SECItem& encodedIssuerName,
+                       IssuerChecker& checker, PRTime time)
   {
-    results = CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
-                                         encodedIssuerName, time, true);
+    mozilla::pkix::ScopedCERTCertList
+      candidates(CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
+                                            &encodedIssuerName, time, true));
+    if (candidates) {
+      for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
+           !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
+        bool keepGoing;
+        SECStatus srv = checker.Check(n->cert->derCert, keepGoing);
+        if (srv != SECSuccess) {
+          return SECFailure;
+        }
+        if (!keepGoing) {
+          break;
+        }
+      }
+    }
+
     return SECSuccess;
   }
 
