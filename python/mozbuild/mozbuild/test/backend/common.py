@@ -83,6 +83,14 @@ CONFIGS = DefaultOnReadDict({
 
 
 class BackendTester(unittest.TestCase):
+    def setUp(self):
+        self._old_env = dict(os.environ)
+        os.environ.pop('MOZ_OBJDIR', None)
+
+    def tearDown(self):
+        os.environ.clear()
+        os.environ.update(self._old_env)
+
     def _get_environment(self, name):
         """Obtain a new instance of a ConfigEnvironment for a known profile.
 
