@@ -3572,6 +3572,48 @@ exports.testPredicateContextTargetLinkNotSet = function (assert, done) {
   });
 };
 
+// Test that the data object has the correct link for a nested image
+exports.testPredicateContextTargetLinkSetNestedImage = function (assert, done) {
+  let test = new TestHelper(assert, done);
+  let loader = test.newLoader();
+
+  let items = [loader.cm.Item({
+    label: "item",
+    context: loader.cm.PredicateContext(function (data) {
+      assert.strictEqual(data.linkURL, TEST_DOC_URL + "#nested-image");
+      return true;
+    })
+  })];
+
+  test.withTestDoc(function (window, doc) {
+    test.showMenu(doc.getElementById("predicate-test-nested-image"), function (popup) {
+      test.checkMenu(items, [], []);
+      test.done();
+    });
+  });
+};
+
+// Test that the data object has the correct link for a complex nested structure
+exports.testPredicateContextTargetLinkSetNestedStructure = function (assert, done) {
+  let test = new TestHelper(assert, done);
+  let loader = test.newLoader();
+
+  let items = [loader.cm.Item({
+    label: "item",
+    context: loader.cm.PredicateContext(function (data) {
+      assert.strictEqual(data.linkURL, TEST_DOC_URL + "#nested-structure");
+      return true;
+    })
+  })];
+
+  test.withTestDoc(function (window, doc) {
+    test.showMenu(doc.getElementById("predicate-test-nested-structure"), function (popup) {
+      test.checkMenu(items, [], []);
+      test.done();
+    });
+  });
+};
+
 // Test that the data object has the value for an input textbox
 exports.testPredicateContextTargetValueSet = function (assert, done) {
   let test = new TestHelper(assert, done);

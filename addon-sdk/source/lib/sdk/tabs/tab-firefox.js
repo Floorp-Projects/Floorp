@@ -10,8 +10,9 @@ const { has } = require("../util/array");
 const { EVENTS } = require("./events");
 const { getThumbnailURIForWindow } = require("../content/thumbnail");
 const { getFaviconURIForLocation } = require("../io/data");
-const { activateTab, getOwnerWindow, getBrowserForTab, getTabTitle, setTabTitle,
-        getTabURL, setTabURL, getTabContentType, getTabId } = require('./utils');
+const { activateTab, getOwnerWindow, getBrowserForTab, getTabTitle,
+        setTabTitle, getTabContentDocument, getTabURL, setTabURL,
+        getTabContentType, getTabId } = require('./utils');
 const { isPrivate } = require('../private-browsing/utils');
 const { isWindowPrivate } = require('../window/utils');
 const viewNS = require('../core/namespace').ns();
@@ -143,11 +144,19 @@ const TabTrait = Trait.compose(EventEmitter, {
   /**
    * Document object of the page that is currently loaded in this tab.
    */
-  get _contentDocument() this._browser.contentDocument,
+  get _contentDocument() getTabContentDocument(this._tab),
   /**
    * Window object of the page that is currently loaded in this tab.
    */
   get _contentWindow() this._browser.contentWindow,
+
+  /**
+   * tab's document readyState, or 'uninitialized' if it doesn't even exist yet.
+   */
+  get readyState() {
+    let doc = this._contentDocument;
+    return doc && doc.readyState || 'uninitialized';
+  },
 
   /**
    * Unique id for the tab, actually maps to tab.linkedPanel but with some munging.
