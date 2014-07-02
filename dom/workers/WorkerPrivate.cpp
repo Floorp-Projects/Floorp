@@ -219,17 +219,10 @@ private:
 struct WindowAction
 {
   nsPIDOMWindow* mWindow;
-  JSContext* mJSContext;
   bool mDefaultAction;
 
-  WindowAction(nsPIDOMWindow* aWindow, JSContext* aJSContext)
-  : mWindow(aWindow), mJSContext(aJSContext), mDefaultAction(true)
-  {
-    MOZ_ASSERT(aJSContext);
-  }
-
   WindowAction(nsPIDOMWindow* aWindow)
-  : mWindow(aWindow), mJSContext(nullptr), mDefaultAction(true)
+  : mWindow(aWindow), mDefaultAction(true)
   { }
 
   bool
@@ -3141,14 +3134,6 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
     // May be null.
     nsPIDOMWindow* window = sharedWorker->GetOwner();
 
-    size_t actionsIndex = windowActions.LastIndexOf(WindowAction(window));
-
-    AutoJSAPI jsapi;
-    if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(sharedWorker->GetOwner()))) {
-      continue;
-    }
-    JSContext* cx = jsapi.cx();
-
     RootedDictionary<ErrorEventInit> errorInit(aCx);
     errorInit.mBubbles = false;
     errorInit.mCancelable = true;
@@ -3161,8 +3146,7 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
       ErrorEvent::Constructor(sharedWorker, NS_LITERAL_STRING("error"),
                               errorInit);
     if (!errorEvent) {
-      Throw(cx, NS_ERROR_UNEXPECTED);
-      JS_ReportPendingException(cx);
+      ThrowAndReport(window, NS_ERROR_UNEXPECTED);
       continue;
     }
 
@@ -3171,8 +3155,7 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
     bool defaultActionEnabled;
     nsresult rv = sharedWorker->DispatchEvent(errorEvent, &defaultActionEnabled);
     if (NS_FAILED(rv)) {
-      Throw(cx, rv);
-      JS_ReportPendingException(cx);
+      ThrowAndReport(window, rv);
       continue;
     }
 
@@ -3180,12 +3163,15 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
       // Add the owning window to our list so that we will fire an error event
       // at it later.
       if (!windowActions.Contains(window)) {
-        windowActions.AppendElement(WindowAction(window, cx));
+        windowActions.AppendElement(WindowAction(window));
       }
-    } else if (actionsIndex != windowActions.NoIndex) {
-      // Any listener that calls preventDefault() will prevent the window from
-      // receiving the error event.
-      windowActions[actionsIndex].mDefaultAction = false;
+    } else {
+      size_t actionsIndex = windowActions.LastIndexOf(WindowAction(window));
+      if (actionsIndex != windowActions.NoIndex) {
+        // Any listener that calls preventDefault() will prevent the window from
+        // receiving the error event.
+        windowActions[actionsIndex].mDefaultAction = false;
+      }
     }
   }
 
@@ -3206,10 +3192,6 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
       continue;
     }
 
-    JSContext* cx = windowAction.mJSContext;
-
-    AutoCxPusher autoPush(cx);
-
     nsCOMPtr<nsIScriptGlobalObject> sgo =
       do_QueryInterface(windowAction.mWindow);
     MOZ_ASSERT(sgo);
@@ -3225,8 +3207,7 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
     nsEventStatus status = nsEventStatus_eIgnore;
     rv = sgo->HandleScriptError(init, &status);
     if (NS_FAILED(rv)) {
-      Throw(cx, rv);
-      JS_ReportPendingException(cx);
+      ThrowAndReport(windowAction.mWindow, rv);
       continue;
     }
 
