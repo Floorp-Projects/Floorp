@@ -19,9 +19,9 @@
 
 #include "libdisplay/GonkDisplay.h"
 #include "Framebuffer.h"
-#include "GLContext.h"                  // for GLContext
 #include "HwcUtils.h"
 #include "HwcComposer2D.h"
+#include "LayerScope.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
@@ -807,13 +807,32 @@ HwcComposer2D::TryRender(Layer* aRoot,
         return false;
     }
 
+    // Send data to LayerScope for debugging
+    SendtoLayerScope();
+
     if (!TryHwComposition()) {
         LOGD("H/W Composition failed");
+        LayerScope::CleanLayer();
         return false;
     }
 
     LOGD("Frame rendered");
     return true;
+}
+
+void
+HwcComposer2D::SendtoLayerScope()
+{
+    if (!LayerScope::CheckSendable()) {
+        return;
+    }
+
+    const int len = mList->numHwLayers;
+    for (int i = 0; i < len; ++i) {
+        LayerComposite* layer = mHwcLayerMap[i];
+        const hwc_rect_t r = mList->hwLayers[i].displayFrame;
+        LayerScope::SendLayer(layer, r.right - r.left, r.bottom - r.top);
+    }
 }
 
 } // namespace mozilla
