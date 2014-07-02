@@ -96,17 +96,20 @@
       // back one page in history, moves moves on input of tab document
       gQueue.push(new goBack());
 
-if (!MAC) {
       // open new tab, focus moves to urlbar
-      gQueue.push(new synthKey(tabDocument, "t", { ctrlKey: true, window: browserWindow() },
+      var synthKeyArgs;
+      if (MAC) {
+        synthKeyArgs = { metaKey: true, window: browserWindow() };
+      } else {
+        synthKeyArgs = { ctrlKey: true, window: browserWindow() };
+      }
+
+      gQueue.push(new synthKey(tabDocument, "t", synthKeyArgs,
                                new focusChecker(urlbarInput)));
 
       // close open tab, focus goes on input of tab document
-      gQueue.push(new synthKey(tabDocument, "w", { ctrlKey: true, window: browserWindow() },
+      gQueue.push(new synthKey(tabDocument, "w", synthKeyArgs,
                                new focusChecker(inputInDocument)));
-} else {
-      todo(false, "Reenable on Mac after fixing bug 746178!");
-}
 
       gQueue.onFinish = function()
       {
