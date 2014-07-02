@@ -33,33 +33,12 @@
 namespace mozilla { namespace pkix {
 
 Result
-CheckTimes(const CERTValidity& validity, PRTime time)
+CheckTimes(const CERTCertificate* cert, PRTime time)
 {
-  der::Input notBeforeInput;
-  if (notBeforeInput.Init(validity.notBefore.data, validity.notBefore.len)
-        != der::Success) {
-    return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
-  }
-  PRTime notBefore;
-  if (der::TimeChoice(validity.notBefore.type, notBeforeInput, notBefore)
-        != der::Success) {
-    return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
-  }
-  if (time < notBefore) {
-    return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
-  }
+  PR_ASSERT(cert);
 
-  der::Input notAfterInput;
-  if (notAfterInput.Init(validity.notAfter.data, validity.notAfter.len)
-        != der::Success) {
-    return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
-  }
-  PRTime notAfter;
-  if (der::TimeChoice(validity.notAfter.type, notAfterInput, notAfter)
-        != der::Success) {
-    return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
-  }
-  if (time > notAfter) {
+  SECCertTimeValidity validity = CERT_CheckCertValidTimes(cert, time, false);
+  if (validity != secCertTimeValid) {
     return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
   }
 
@@ -714,7 +693,7 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
 
   // IMPORTANT: This check must come after the other checks in order for error
   // ranking to work correctly.
-  rv = CheckTimes(cert.GetNSSCert()->validity, time);
+  rv = CheckTimes(cert.GetNSSCert(), time);
   if (rv != Success) {
     return rv;
   }
