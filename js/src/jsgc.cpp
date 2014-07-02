@@ -1696,7 +1696,8 @@ GCRuntime::computeHeapGrowthFactor(size_t lastBytes)
         factor = lowFrequencyHeapGrowth;
     } else {
         JS_ASSERT(highFrequencyHighLimitBytes > highFrequencyLowLimitBytes);
-        if (highFrequencyGC) {
+        uint64_t now = PRMJ_Now();
+        if (lastGCTime && lastGCTime + highFrequencyTimeThreshold * PRMJ_USEC_PER_MSEC > now) {
             if (lastBytes <= highFrequencyLowLimitBytes) {
                 factor = highFrequencyHeapGrowthMax;
             } else if (lastBytes >= highFrequencyHighLimitBytes) {
@@ -1709,8 +1710,10 @@ GCRuntime::computeHeapGrowthFactor(size_t lastBytes)
                 JS_ASSERT(factor <= highFrequencyHeapGrowthMax
                           && factor >= highFrequencyHeapGrowthMin);
             }
+            highFrequencyGC = true;
         } else {
             factor = lowFrequencyHeapGrowth;
+            highFrequencyGC = false;
         }
     }
 
@@ -4473,10 +4476,6 @@ GCRuntime::endSweepPhase(JSGCInvocationKind gckind, bool lastGC)
             sweepZones(&fop, lastGC);
     }
 
-    uint64_t currentTime = PRMJ_Now();
-    highFrequencyGC = dynamicHeapGrowth && lastGCTime &&
-        lastGCTime + highFrequencyTimeThreshold * PRMJ_USEC_PER_MSEC > currentTime;
-
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         if (zone->isCollecting()) {
             JS_ASSERT(zone->isGCFinished());
@@ -4510,7 +4509,7 @@ GCRuntime::endSweepPhase(JSGCInvocationKind gckind, bool lastGC)
 
     finishMarkingValidation();
 
-    lastGCTime = currentTime;
+    lastGCTime = PRMJ_Now();
 }
 
 /* Start a new heap session. */
