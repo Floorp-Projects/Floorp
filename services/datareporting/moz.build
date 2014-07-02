@@ -13,3 +13,7 @@ EXTRA_COMPONENTS += [
 EXTRA_PP_COMPONENTS += [
     'DataReportingService.js',
 ]
+
+TESTING_JS_MODULES.services.datareporting += [
+    'modules-testing/mocks.jsm',
+]

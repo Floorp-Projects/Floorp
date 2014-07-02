@@ -6,9 +6,6 @@ MODULES := policy.jsm sessions.jsm
 MODULES_PATH = $(FINAL_TARGET)/modules/services/datareporting
 PP_TARGETS += MODULES
 
-TESTING_JS_MODULES := $(addprefix modules-testing/,mocks.jsm)
-TESTING_JS_MODULE_DIR := services/datareporting
-
 include $(topsrcdir)/config/rules.mk
 
 $(FINAL_TARGET)/components/DataReportingService.js: policy.jsm sessions.jsm ../common/observers.js
