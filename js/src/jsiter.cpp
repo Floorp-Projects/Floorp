@@ -886,7 +886,7 @@ iterator_next(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static const JSFunctionSpec iterator_methods[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "LegacyIteratorShim", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "LegacyIteratorShim", 0, 0),
     JS_FN("next",      iterator_next,       0, 0),
     JS_FS_END
 };
@@ -965,7 +965,7 @@ const Class ArrayIteratorObject::class_ = {
 };
 
 static const JSFunctionSpec array_iterator_methods[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "ArrayIteratorIdentity", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "ArrayIteratorIdentity", 0, 0),
     JS_SELF_HOSTED_FN("next", "ArrayIteratorNext", 0, 0),
     JS_FS_END
 };
@@ -1004,7 +1004,7 @@ const Class StringIteratorObject::class_ = {
 };
 
 static const JSFunctionSpec string_iterator_methods[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "StringIteratorIdentity", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "StringIteratorIdentity", 0, 0),
     JS_SELF_HOSTED_FN("next", "StringIteratorNext", 0, 0),
     JS_FS_END
 };
@@ -1369,8 +1369,14 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
     args.setThis(ObjectValue(*iterableObj));
 
     RootedValue callee(cx);
+#ifdef JS_HAS_SYMBOLS
+    RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
+    if (!JSObject::getGeneric(cx, iterableObj, iterableObj, iteratorId, &callee))
+        return false;
+#else
     if (!JSObject::getProperty(cx, iterableObj, iterableObj, cx->names().std_iterator, &callee))
         return false;
+#endif
 
     // If obj[@@iterator] is undefined and we were asked to allow non-iterables,
     // bail out now without setting iterator.  This will make valueIsIterable(),

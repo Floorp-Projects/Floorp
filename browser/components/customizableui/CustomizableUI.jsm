@@ -51,6 +51,13 @@ const kSubviewEvents = [
 ];
 
 /**
+ * The method name to use for ES6 iteration. If Symbols are enabled in
+ * this build, use Symbol.iterator; otherwise "@@iterator".
+ */
+const JS_HAS_SYMBOLS = typeof Symbol === "function";
+const kIteratorSymbol = JS_HAS_SYMBOLS ? Symbol.iterator : "@@iterator";
+
+/**
  * The current version. We can use this to auto-add new default widgets as necessary.
  * (would be const but isn't because of testing purposes)
  */
@@ -2679,7 +2686,7 @@ this.CustomizableUI = {
    *     for (let window of CustomizableUI.windows) { ... }
    */
   windows: {
-    "@@iterator": function*() {
+    *[kIteratorSymbol]() {
       for (let [window,] of gBuildWindows)
         yield window;
     }
