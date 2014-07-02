@@ -1,0 +1,243 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=976963
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 976963</title>
+  <meta name="author" content="Maksim Lebedev" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    div#listener {
+      background: yellow;
+      position: absolute;
+      top: -100px;
+    }
+    div#middler {
+      background: yellow;
+      margin: 10px;
+    }
+    div#target {
+      background: yellow;
+    }
+  </style>
+  <script type="application/javascript">
+    /** Test for Bug 976963 **/
+    var All_Pointer_Events = ["pointerover",        "pointerenter",
+                              "pointermove",
+                              "pointerdown",        "pointerup",
+                              "pointerout",         "pointerleave",
+                              "pointercancel",
+                              "gotpointercapture",  "lostpointercapture"];
+
+    function on_event(object, event, callback) {
+      object.addEventListener(event, callback, false);
+    }
+    function ok(check, msg) {
+      parent.ok(check, msg);
+    }
+    function is(a, b, msg) {
+      parent.is(a, b, msg);
+    }
+
+    var listener = undefined;
+    var middler = undefined;
+    var target = undefined;
+
+    var test_ListenerGotCapture = 0;
+    var test_ListenerUnwanted = 0;
+    var test_ListenerLostCapture = 0;
+    var test_ListenerAfterCapture = 0;
+    var test_MiddlerGotCapture = 0;
+    var test_MiddlerOver = 0;
+    var test_MiddlerLeave = 0;
+    var test_MiddlerUp = 0;
+    var test_MiddlerLostCapture = 0;
+    var test_TargetDown = 0;
+    var test_TargetUnwanted = 0;
+    var test_TargetUp = 0;
+
+    var captured_event = undefined;
+    var f_gotPointerCapture = false;
+    var f_lostPointerCapture = false;
+    var f_gotMiddlerPointerCapture = false;
+
+    function listenerEventHandler(event) {
+      logger("Listener: " + event.type + ". Captured_event: " + captured_event);
+      if(test_ListenerLostCapture)
+        test_ListenerAfterCapture++;
+      if (event.type == "gotpointercapture") {
+        f_gotPointerCapture = true;
+        test_ListenerGotCapture++;
+      }
+      else if (event.type == "lostpointercapture") {
+        f_lostPointerCapture = true;
+        f_gotPointerCapture = false;
+        test_ListenerLostCapture++;
+      }
+      else if (event.type == "pointermove") {
+        ok(captured_event && captured_event.pointerId == event.pointerId, "Listener: equals pointerId for lostpointercapture event");
+        if (f_gotPointerCapture) {
+          // on first event received for capture, release capture
+          logger("Listener call release");
+          ok(!!listener, "Listener should be live!");
+          ok(typeof(listener.releasePointerCapture) == "function", "Listener should have a function releasePointerCapture");
+          listener.releasePointerCapture(event.pointerId);
+        }
+        else {
+          logger("Listener.ASSERT: " + event.type);
+          test_ListenerUnwanted++;
+          // if any other events are received after releaseCapture, then the test fails
+          ok(false, event.target.id + "-" + event.type + " should be handled by target element handler");
+        }
+      }
+      else {
+        test_ListenerUnwanted++;
+        logger("Listener.ASSERT: " + event.type);
+        ok(false, event.type + "should be never handled by listener");
+      }
+    }
+
+    function middlerEventHandler(event) {
+      logger("Middler: " + event.type + ". Captured_event: " + captured_event);
+      if (event.type == "gotpointercapture") {
+        test_MiddlerGotCapture++;
+        f_gotMiddlerPointerCapture = true;
+        ok(captured_event && captured_event.pointerId == event.pointerId, "Middler: equals pointerId for gotpointercapture event");
+      }
+      else if (event.type == "pointerover") {
+        test_MiddlerOver++;
+        ok(captured_event && captured_event.pointerId == event.pointerId, "Middler: equals pointerId for pointerover event");
+      }
+      else if (event.type == "pointerleave") {
+        test_MiddlerLeave++;
+        ok(captured_event && captured_event.pointerId == event.pointerId, "Middler: equals pointerId for pointerleave event");
+        ok(!!listener, "Listener should be live!");
+        ok(typeof(listener.setPointerCapture) == "function", "Listener should have a function setPointerCapture");
+        listener.setPointerCapture(event.pointerId);
+      }
+      else if (event.type == "lostpointercapture") {
+        test_MiddlerLostCapture++;
+        f_gotMiddlerPointerCapture = false;
+        ok(captured_event && captured_event.pointerId == event.pointerId, "Middler: equals pointerId for lostpointercapture event");
+      }
+      else if (event.type == "pointerup" ) {
+        test_MiddlerUp++;
+      }
+    }
+  
+    function targetEventHandler(event) {
+      logger("Target: " + event.type + ". Captured_event: " + captured_event);
+      if (f_gotPointerCapture || f_gotMiddlerPointerCapture) {
+        if (event.type != "pointerout" && event.type != "pointerleave") {
+          logger("Target.ASSERT: " + event.type + " " + event.pointerId);
+          test_TargetUnwanted++;
+          ok(false, "The Target element should not have received any events while capture is active. Event recieved:" + event.type + ".  ");
+        }
+      }
+      if (event.type == "pointerdown") {
+        logger("Target.pointerdown 1: " + captured_event);
+        test_TargetDown++;
+        captured_event = event;
+        ok(!!middler, "Middler should be live!");
+        ok(typeof(middler.setPointerCapture) == "function", "Middler should have a function setPointerCapture");
+        middler.setPointerCapture(event.pointerId);
+        logger("Target.pointerdown 2: " + captured_event);
+      }
+      else if (event.type == "pointerup") {
+        ok(f_lostPointerCapture, "Target should have received pointerup");
+        ok(captured_event && captured_event.pointerId == event.pointerId, "Target: equals pointerId for lostpointercapture event");
+        test_TargetUp++; // complete test
+      }
+    }
+
+    function colorerHandler(event) {
+      if(event.type == "pointerover")
+        event.target.style.background = "red";
+      else if(event.type == "pointerout")
+        event.target.style.background = "yellow";
+    }
+    
+    function setEventHandlers() {
+      listener = document.getElementById("listener");
+      middler = document.getElementById("middler");
+      target = document.getElementById("target");
+      target.style["touchAction"] = "none";
+
+      // target and listener - handle all events
+      for (var i = 0; i < All_Pointer_Events.length; i++) {
+        on_event(target,    All_Pointer_Events[i], targetEventHandler);
+        on_event(listener,  All_Pointer_Events[i], listenerEventHandler);
+        on_event(middler,   All_Pointer_Events[i], middlerEventHandler);
+        on_event(target,    All_Pointer_Events[i], colorerHandler);
+        on_event(middler,   All_Pointer_Events[i], colorerHandler);
+      }
+    }
+
+    function prepareTest() {
+      SimpleTest.waitForExplicitFinish();
+      SpecialPowers.pushPrefEnv({
+        "set": [
+          ["dom.w3c_pointer_events.enabled", true]
+        ]
+      }, executeTest);
+    }    
+    
+    function executeTest()
+    {
+      logger("executeTest");
+      setEventHandlers();
+      document.body.offsetLeft;
+      var rect = target.getBoundingClientRect();
+      synthesizePointer(target,  rect.width/2, rect.height/2, {type: "pointermove"});
+      synthesizePointer(target,  rect.width/2, rect.height/2, {type: "pointerdown"});
+      synthesizePointer(target,  rect.width/3, rect.height/3, {type: "pointermove"});
+      synthesizePointer(middler, rect.width/2, rect.height/2, {type: "pointermove"});
+      synthesizePointer(target,  rect.width/2, rect.height/2, {type: "pointermove"});
+      synthesizePointer(middler, rect.width/2, rect.height/2, {type: "pointermove"});
+      synthesizePointer(target,  rect.width/2, rect.height/2, {type: "pointermove"});
+      synthesizePointer(target,  rect.width/2, rect.height/2, {type: "pointerup"});
+      finishTest();
+    }
+
+    function finishTest() {
+      setTimeout(function() {
+        is(test_ListenerGotCapture, 1, "Listener should receive gotpointercapture event");
+        is(test_ListenerUnwanted, 0, "Listener should not receive any unwanted events");
+        is(test_ListenerLostCapture, 1, "Listener should receive lostpointercapture event");
+        is(test_ListenerAfterCapture, 0, "Listener should not receive any events after release pointer capture");
+        is(test_MiddlerGotCapture, 1, "Middler should receive gotpointercapture event");
+        is(test_MiddlerOver, 1, "Middler should receive pointerover event");
+        is(test_MiddlerLeave, 1, "Middler should receive pointerleave event");
+        is(test_MiddlerUp, 0, "Middler should not receive pointerup event");
+        is(test_MiddlerLostCapture, 1, "Middler should receive lostpointercapture event");
+        is(test_TargetDown, 1, "Target should receive pointerdown event");
+        is(test_TargetUnwanted, 0, "Target should not receive any event while pointer capture is active");
+        is(test_TargetUp, 1, "Target should receive pointerup event");
+        logger("finishTest");
+        parent.finishTest();
+      }, 1000);
+    }
+
+    function logger(message) {
+      console.log(message);
+      var log = document.getElementById('log');
+      log.innerHTML = message + "<br>" + log.innerHTML;
+    }
+  </script>
+</head>
+<body onload="prepareTest()">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=976963">Mozilla Bug 976963</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <div id="listener">div id=listener</div>
+  <div id="middler">div id=middler</div>
+  <div id="target">div id=target</div>
+  <pre id="log">
+  </pre>
+</body>
+</html>
