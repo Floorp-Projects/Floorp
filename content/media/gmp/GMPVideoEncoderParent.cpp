@@ -43,24 +43,6 @@ GMPVideoEncoderParent::Host()
   return mVideoHost;
 }
 
-bool
-GMPVideoEncoderParent::MgrAllocShmem(size_t aSize,
-                                     ipc::Shmem::SharedMemory::SharedMemoryType aType,
-                                     ipc::Shmem* aMem)
-{
-  MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
-
-  return AllocShmem(aSize, aType, aMem);
-}
-
-bool
-GMPVideoEncoderParent::MgrDeallocShmem(Shmem& aMem)
-{
-  MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
-
-  return DeallocShmem(aMem);
-}
-
 GMPVideoErr
 GMPVideoEncoderParent::InitEncode(const GMPVideoCodec& aCodecSettings,
                                   GMPEncoderCallback* aCallback,
@@ -105,6 +87,14 @@ GMPVideoEncoderParent::Encode(GMPVideoi420Frame* aInputFrame,
 
   GMPVideoi420FrameData frameData;
   inputFrameImpl->InitFrameData(frameData);
+
+  // Very rough kill-switch if the plugin stops processing.  If it's merely
+  // hung and continues, we'll come back to life eventually.
+  // 3* is because we're using 3 buffers per frame for i420 data for now.
+  if (NumInUse(kGMPFrameData) > 3*GMPSharedMemManager::kGMPBufLimit ||
+      NumInUse(kGMPEncodedData) > GMPSharedMemManager::kGMPBufLimit) {
+    return GMPVideoGenericErr;
+  }
 
   InfallibleTArray<int> frameTypes;
   frameTypes.SetCapacity(aFrameTypes.size());
@@ -210,6 +200,12 @@ GMPVideoEncoderParent::ActorDestroy(ActorDestroyReason aWhy)
   mVideoHost.ActorDestroyed();
 }
 
+void
+GMPVideoEncoderParent::CheckThread()
+{
+  MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
+}
+
 bool
 GMPVideoEncoderParent::RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame,
                                    const GMPCodecSpecificInfo& aCodecSpecificInfo)
@@ -223,6 +219,35 @@ GMPVideoEncoderParent::RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame
   // Ignore any return code. It is OK for this to fail without killing the process.
   mCallback->Encoded(f, aCodecSpecificInfo);
 
+  // Return SHM to sender to recycle
+  //SendEncodedReturn(aEncodedFrame, aCodecSpecificInfo);
+  return true;
+}
+
+bool
+GMPVideoEncoderParent::RecvParentShmemForPool(Shmem& aFrameBuffer)
+{
+  if (aFrameBuffer.IsWritable()) {
+    mVideoHost.SharedMemMgr()->MgrDeallocShmem(GMPSharedMemManager::kGMPFrameData,
+                                               aFrameBuffer);
+  }
+  return true;
+}
+
+bool
+GMPVideoEncoderParent::AnswerNeedShmem(const uint32_t& aEncodedBufferSize,
+                                       Shmem* aMem)
+{
+  ipc::Shmem mem;
+
+  if (!mVideoHost.SharedMemMgr()->MgrAllocShmem(GMPSharedMemManager::kGMPEncodedData,
+                                                aEncodedBufferSize,
+                                                ipc::SharedMemory::TYPE_BASIC, &mem))
+  {
+    return false;
+  }
+  *aMem = mem;
+  mem = ipc::Shmem();
   return true;
 }
 

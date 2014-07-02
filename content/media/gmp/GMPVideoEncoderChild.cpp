@@ -10,6 +10,8 @@
 #include "GMPVideoEncodedFrameImpl.h"
 #include "GMPVideoi420FrameImpl.h"
 
+using mozilla::ipc::ProcessChild;
+
 namespace mozilla {
 namespace gmp {
 
@@ -54,22 +56,10 @@ GMPVideoEncoderChild::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
   aEncodedFrame->Destroy();
 }
 
-bool
-GMPVideoEncoderChild::MgrAllocShmem(size_t aSize,
-                                    ipc::Shmem::SharedMemory::SharedMemoryType aType,
-                                    ipc::Shmem* aMem)
+void
+GMPVideoEncoderChild::CheckThread()
 {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
-  return AllocShmem(aSize, aType, aMem);
-}
-
-bool
-GMPVideoEncoderChild::MgrDeallocShmem(Shmem& aMem)
-{
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
-  return DeallocShmem(aMem);
 }
 
 bool
@@ -102,10 +92,19 @@ GMPVideoEncoderChild::RecvEncode(const GMPVideoi420FrameData& aInputFrame,
   for (uint32_t i = 0; i < aFrameTypes.Length(); i++) {
     frameTypes[i] = static_cast<GMPVideoFrameType>(aFrameTypes[i]);
   }
-
   // Ignore any return code. It is OK for this to fail without killing the process.
   mVideoEncoder->Encode(f, aCodecSpecificInfo, frameTypes);
 
+  return true;
+}
+
+bool
+GMPVideoEncoderChild::RecvChildShmemForPool(Shmem& aEncodedBuffer)
+{
+  if (aEncodedBuffer.IsWritable()) {
+    mVideoHost.SharedMemMgr()->MgrDeallocShmem(GMPSharedMemManager::kGMPEncodedData,
+                                               aEncodedBuffer);
+  }
   return true;
 }
 
