@@ -31,24 +31,14 @@ interface nsIVoicemailInfo : nsISupports
   readonly attribute DOMString displayName;
 };
 
-[scriptable, uuid(8f33281f-b262-4bc6-9862-2cab897245ac)]
+[scriptable, uuid(0226a2c1-a3b9-416a-92cb-c89e4dad4be0)]
 interface nsIRilContext : nsISupports
 {
-  readonly attribute DOMString radioState;
-
   readonly attribute DOMString cardState;
-
-  readonly attribute long retryCount;
 
   readonly attribute DOMString imsi;
 
-  readonly attribute DOMString networkSelectionMode;
-
   readonly attribute nsIDOMMozIccInfo iccInfo;
-
-  readonly attribute nsIMobileConnectionInfo voice;
-
-  readonly attribute nsIMobileConnectionInfo data;
 };
 
 [scriptable, function, uuid(3bc96351-53b0-47a1-a888-c74c64b60f25)]
