@@ -67,9 +67,7 @@ if (typeof Symbol === "function") {
     assertEq(descs.hasOwnProperty(s2), true);
     assertEq(descs.hasOwnProperty(s3), false);
     assertEq([].hasOwnProperty(Symbol.iterator), false);
-    if (!("@@iterator" in []))
-        throw new Error("Congratulations on implementing Symbol.iterator! Please update this test.");
-    assertEq(Array.prototype.hasOwnProperty(Symbol.iterator), false);  // should be true
+    assertEq(Array.prototype.hasOwnProperty(Symbol.iterator), true);
 
     // Object.prototype.propertyIsEnumerable
     assertEq(n.propertyIsEnumerable(s1), true);

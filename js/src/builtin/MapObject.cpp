@@ -876,7 +876,7 @@ const Class MapIteratorObject::class_ = {
 };
 
 const JSFunctionSpec MapIteratorObject::methods[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "IteratorIdentity", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0),
     JS_FN("next", next, 0, 0),
     JS_FS_END
 };
@@ -1074,7 +1074,8 @@ MapObject::initClass(JSContext *cx, JSObject *obj)
 
         // Define its alias.
         RootedValue funval(cx, ObjectValue(*fun));
-        if (!JS_DefineProperty(cx, proto, js_std_iterator_str, funval, 0))
+        RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
+        if (!JS_DefinePropertyById(cx, proto, iteratorId, funval, 0))
             return nullptr;
     }
     return proto;
@@ -1524,7 +1525,7 @@ const Class SetIteratorObject::class_ = {
 };
 
 const JSFunctionSpec SetIteratorObject::methods[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "IteratorIdentity", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0),
     JS_FN("next", next, 0, 0),
     JS_FS_END
 };
@@ -1697,7 +1698,8 @@ SetObject::initClass(JSContext *cx, JSObject *obj)
         RootedValue funval(cx, ObjectValue(*fun));
         if (!JS_DefineProperty(cx, proto, "keys", funval, 0))
             return nullptr;
-        if (!JS_DefineProperty(cx, proto, js_std_iterator_str, funval, 0))
+        RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
+        if (!JS_DefinePropertyById(cx, proto, iteratorId, funval, 0))
             return nullptr;
     }
     return proto;

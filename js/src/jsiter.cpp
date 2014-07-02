@@ -885,7 +885,7 @@ iterator_next(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static const JSFunctionSpec iterator_methods[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "LegacyIteratorShim", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "LegacyIteratorShim", 0, 0),
     JS_FN("next",      iterator_next,       0, 0),
     JS_FS_END
 };
@@ -964,7 +964,7 @@ const Class ArrayIteratorObject::class_ = {
 };
 
 static const JSFunctionSpec array_iterator_methods[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "ArrayIteratorIdentity", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "ArrayIteratorIdentity", 0, 0),
     JS_SELF_HOSTED_FN("next", "ArrayIteratorNext", 0, 0),
     JS_FS_END
 };
@@ -1003,7 +1003,7 @@ const Class StringIteratorObject::class_ = {
 };
 
 static const JSFunctionSpec string_iterator_methods[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "StringIteratorIdentity", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "StringIteratorIdentity", 0, 0),
     JS_SELF_HOSTED_FN("next", "StringIteratorNext", 0, 0),
     JS_FS_END
 };
@@ -1405,7 +1405,8 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
     args.setThis(ObjectValue(*iterableObj));
 
     RootedValue callee(cx);
-    if (!JSObject::getProperty(cx, iterableObj, iterableObj, cx->names().std_iterator, &callee))
+    RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
+    if (!JSObject::getGeneric(cx, iterableObj, iterableObj, iteratorId, &callee))
         return false;
 
     // Throw if obj[@@iterator] isn't callable if we were asked to do so.
@@ -2014,14 +2015,14 @@ NativeMethod(JSContext *cx, unsigned argc, Value *vp)
 #define JS_METHOD(name, T, impl, len, attrs) JS_FN(name, (NativeMethod<T,impl>), len, attrs)
 
 static const JSFunctionSpec star_generator_methods[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "IteratorIdentity", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0),
     JS_METHOD("next", StarGeneratorObject, star_generator_next, 1, 0),
     JS_METHOD("throw", StarGeneratorObject, star_generator_throw, 1, 0),
     JS_FS_END
 };
 
 static const JSFunctionSpec legacy_generator_methods[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "LegacyGeneratorIteratorShim", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "LegacyGeneratorIteratorShim", 0, 0),
     // "send" is an alias for "next".
     JS_METHOD("next", LegacyGeneratorObject, legacy_generator_next, 1, JSPROP_ROPERM),
     JS_METHOD("send", LegacyGeneratorObject, legacy_generator_next, 1, JSPROP_ROPERM),
