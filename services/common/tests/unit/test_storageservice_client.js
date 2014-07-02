@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-common/storageservice.js");
-Cu.import("resource://testing-common/services-common/storageserver.js");
+Cu.import("resource://testing-common/services/common/storageserver.js");
 
 function run_test() {
   initTestLogging("Trace");
