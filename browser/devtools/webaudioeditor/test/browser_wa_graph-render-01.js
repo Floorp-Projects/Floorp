@@ -5,6 +5,8 @@
  * Tests that SVG nodes and edges were created for the Graph View.
  */
 
+let connectCount = 0;
+
 function spawnTest() {
   let [target, debuggee, panel] = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
@@ -13,6 +15,8 @@ function spawnTest() {
   let started = once(gFront, "start-context");
 
   reload(target);
+
+  panelWin.on(EVENTS.CONNECT_NODE, onConnectNode);
 
   let [actors] = yield Promise.all([
     get3(gFront, "create-node"),
@@ -27,7 +31,16 @@ function spawnTest() {
   is(findGraphEdge(panelWin, oscId, gainId).toString(), "[object SVGGElement]", "found edge for osc -> gain");
   is(findGraphEdge(panelWin, gainId, destId).toString(), "[object SVGGElement]", "found edge for gain -> dest");
 
+  yield wait(1000);
+
+  is(connectCount, 2, "Only two node connect events should be fired.");
+
+  panelWin.off(EVENTS.CONNECT_NODE, onConnectNode);
+
   yield teardown(panel);
   finish();
 }
 
+function onConnectNode () {
+  ++connectCount;
+}

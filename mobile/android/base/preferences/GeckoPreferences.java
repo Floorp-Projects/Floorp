@@ -140,7 +140,9 @@ OnSharedPreferenceChangeListener
                 Log.v(LOGTAG, "Setting action bar title to " + newTitle);
 
                 final ActionBar actionBar = getActionBar();
-                actionBar.setTitle(newTitle);
+                if (actionBar != null) {
+                    actionBar.setTitle(newTitle);
+                }
             }
         }
     }
@@ -360,7 +362,9 @@ OnSharedPreferenceChangeListener
 
         if (Build.VERSION.SDK_INT >= 14) {
             final ActionBar actionBar = getActionBar();
-            actionBar.setHomeButtonEnabled(true);
+            if (actionBar != null) {
+                actionBar.setHomeButtonEnabled(true);
+            }
         }
 
         // N.B., if we ever need to redisplay the locale selection UI without
@@ -977,15 +981,15 @@ OnSharedPreferenceChangeListener
         } else if (PREFS_ANNOUNCEMENTS_ENABLED.equals(prefName)) {
             // Send a broadcast intent to the product announcements service, either to start or
             // to stop the repeated background checks.
-            broadcastAnnouncementsPref(GeckoAppShell.getContext(), ((Boolean) newValue).booleanValue());
+            broadcastAnnouncementsPref(this, ((Boolean) newValue).booleanValue());
         } else if (PREFS_UPDATER_AUTODOWNLOAD.equals(prefName)) {
-            org.mozilla.gecko.updater.UpdateServiceHelper.registerForUpdates(GeckoAppShell.getContext(), (String) newValue);
+            org.mozilla.gecko.updater.UpdateServiceHelper.registerForUpdates(this, (String) newValue);
         } else if (PREFS_HEALTHREPORT_UPLOAD_ENABLED.equals(prefName)) {
             // The healthreport pref only lives in Android, so we do not persist
             // to Gecko, but we do broadcast intent to the health report
             // background uploader service, which will start or stop the
             // repeated background upload attempts.
-            broadcastHealthReportUploadPref(GeckoAppShell.getContext(), ((Boolean) newValue).booleanValue());
+            broadcastHealthReportUploadPref(this, ((Boolean) newValue).booleanValue());
         } else if (PREFS_GEO_REPORTING.equals(prefName)) {
             // Translate boolean value to int for geo reporting pref.
             newValue = ((Boolean) newValue) ? 1 : 0;
@@ -1013,7 +1017,7 @@ OnSharedPreferenceChangeListener
     }
 
     private EditText getTextBox(int aHintText) {
-        EditText input = new FloatingHintEditText(GeckoAppShell.getContext());
+        EditText input = new FloatingHintEditText(this);
         int inputtype = InputType.TYPE_CLASS_TEXT;
         inputtype |= InputType.TYPE_TEXT_VARIATION_PASSWORD | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
         input.setInputType(inputtype);
