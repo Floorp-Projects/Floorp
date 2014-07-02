@@ -4,7 +4,7 @@
 
 #include "jsapi-tests/tests.h"
 
-using JS::CreateError;
+using JS::CreateTypeError;
 using JS::Rooted;
 using JS::ObjectValue;
 using JS::Value;
@@ -22,7 +22,7 @@ BEGIN_TEST(testUncaughtError)
         return false;
 
     Rooted<Value> err(cx);
-    if (!CreateError(cx, JSEXN_TYPEERR, empty, empty, 0, 0, nullptr, empty, &err))
+    if (!CreateTypeError(cx, empty, empty, 0, 0, nullptr, empty, &err))
         return false;
 
     Rooted<JSObject*> errObj(cx, &err.toObject());
