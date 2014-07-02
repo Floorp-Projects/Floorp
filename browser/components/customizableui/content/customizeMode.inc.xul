@@ -16,8 +16,8 @@
         &customizeMode.menuAndToolbars.emptyLink;
       </label>
     </hbox>
-    <vbox id="customization-palette" class="customization-palette" flex="1"/>
-    <spacer id="customization-spacer" flex="1"/>
+    <vbox id="customization-palette" class="customization-palette"/>
+    <spacer id="customization-spacer"/>
     <hbox id="customization-footer">
 #ifdef CAN_DRAW_IN_TITLEBAR
       <button id="customization-titlebar-visibility-button" class="customizationmode-button"
@@ -29,13 +29,16 @@
       <button id="customization-toolbar-visibility-button" label="&customizeMode.toolbars;" class="customizationmode-button" type="menu">
         <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>
       </button>
-      <spacer flex="1"/>
+      <spacer id="customization-footer-spacer"/>
       <button id="customization-undo-reset-button"
               class="customizationmode-button"
               hidden="true"
               oncommand="gCustomizeMode.undoReset();"
               label="&undoCmd.label;"/>
-      <button id="customization-reset-button" oncommand="gCustomizeMode.reset();" label="&customizeMode.restoreDefaults;" class="customizationmode-button"/>
+      <button id="customization-reset-button"
+              oncommand="gCustomizeMode.reset();"
+              label="&customizeMode.restoreDefaults;"
+              class="customizationmode-button"/>
     </hbox>
   </vbox>
   <vbox id="customization-panel-container">
