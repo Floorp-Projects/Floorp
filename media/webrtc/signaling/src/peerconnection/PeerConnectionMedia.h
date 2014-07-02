@@ -330,9 +330,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // the stream, that would potentially affect others), so that it sends
   // black/silence.  Once the peer is identified, re-enable those streams.
   void UpdateSinkIdentity_m(nsIPrincipal* aPrincipal, const PeerIdentity* aSinkIdentity);
-  // this determines if any stream is isolated, given the current
-  // document (or script) principal
-  bool AnyLocalStreamIsolated(nsIPrincipal *scriptPrincipal) const;
+  // this determines if any stream is peerIdentity constrained
+  bool AnyLocalStreamHasPeerIdentity() const;
   // When we finally learn who is on the other end, we need to change the ownership
   // on streams
   void UpdateRemoteStreamPrincipals_m(nsIPrincipal* aPrincipal);
