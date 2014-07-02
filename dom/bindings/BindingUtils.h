@@ -1056,16 +1056,16 @@ HandleNewBindingWrappingFailure(JSContext* cx, JS::Handle<JSObject*> scope,
 
 template<bool Fatal>
 inline bool
-EnumValueNotFound(JSContext* cx, const jschar* chars, size_t length,
-                  const char* type, const char* sourceDescription)
+EnumValueNotFound(JSContext* cx, JSString* str, const char* type,
+                  const char* sourceDescription)
 {
   return false;
 }
 
 template<>
 inline bool
-EnumValueNotFound<false>(JSContext* cx, const jschar* chars, size_t length,
-                         const char* type, const char* sourceDescription)
+EnumValueNotFound<false>(JSContext* cx, JSString* str, const char* type,
+                         const char* sourceDescription)
 {
   // TODO: Log a warning to the console.
   return true;
@@ -1073,34 +1073,21 @@ EnumValueNotFound<false>(JSContext* cx, const jschar* chars, size_t length,
 
 template<>
 inline bool
-EnumValueNotFound<true>(JSContext* cx, const jschar* chars, size_t length,
-                        const char* type, const char* sourceDescription)
+EnumValueNotFound<true>(JSContext* cx, JSString* str, const char* type,
+                        const char* sourceDescription)
 {
-  NS_LossyConvertUTF16toASCII deflated(static_cast<const char16_t*>(chars),
-                                       length);
+  JSAutoByteString deflated(cx, str);
+  if (!deflated) {
+    return false;
+  }
   return ThrowErrorMessage(cx, MSG_INVALID_ENUM_VALUE, sourceDescription,
-                           deflated.get(), type);
+                           deflated.ptr(), type);
 }
 
-
-template<bool InvalidValueFatal>
+template<typename CharT>
 inline int
-FindEnumStringIndex(JSContext* cx, JS::Handle<JS::Value> v, const EnumEntry* values,
-                    const char* type, const char* sourceDescription, bool* ok)
+FindEnumStringIndexImpl(const CharT* chars, size_t length, const EnumEntry* values)
 {
-  // JS_StringEqualsAscii is slow as molasses, so don't use it here.
-  JSString* str = JS::ToString(cx, v);
-  if (!str) {
-    *ok = false;
-    return 0;
-  }
-  JS::Anchor<JSString*> anchor(str);
-  size_t length;
-  const jschar* chars = JS_GetStringCharsAndLength(cx, str, &length);
-  if (!chars) {
-    *ok = false;
-    return 0;
-  }
   int i = 0;
   for (const EnumEntry* value = values; value->value; ++value, ++i) {
     if (length != value->length) {
@@ -1117,13 +1104,54 @@ FindEnumStringIndex(JSContext* cx, JS::Handle<JS::Value> v, const EnumEntry* val
     }
 
     if (equal) {
-      *ok = true;
       return i;
     }
   }
 
-  *ok = EnumValueNotFound<InvalidValueFatal>(cx, chars, length, type,
-                                             sourceDescription);
+  return -1;
+}
+
+template<bool InvalidValueFatal>
+inline int
+FindEnumStringIndex(JSContext* cx, JS::Handle<JS::Value> v, const EnumEntry* values,
+                    const char* type, const char* sourceDescription, bool* ok)
+{
+  // JS_StringEqualsAscii is slow as molasses, so don't use it here.
+  JSString* str = JS::ToString(cx, v);
+  if (!str) {
+    *ok = false;
+    return 0;
+  }
+  JS::Anchor<JSString*> anchor(str);
+
+  {
+    int index;
+    size_t length;
+    JS::AutoCheckCannotGC nogc;
+    if (JS_StringHasLatin1Chars(str)) {
+      const JS::Latin1Char* chars = JS_GetLatin1StringCharsAndLength(cx, nogc, str,
+                                                                     &length);
+      if (!chars) {
+        *ok = false;
+        return 0;
+      }
+      index = FindEnumStringIndexImpl(chars, length, values);
+    } else {
+      const jschar* chars = JS_GetTwoByteStringCharsAndLength(cx, nogc, str,
+                                                              &length);
+      if (!chars) {
+        *ok = false;
+        return 0;
+      }
+      index = FindEnumStringIndexImpl(chars, length, values);
+    }
+    if (index >= 0) {
+      *ok = true;
+      return index;
+    }
+  }
+
+  *ok = EnumValueNotFound<InvalidValueFatal>(cx, str, type, sourceDescription);
   return -1;
 }
 
