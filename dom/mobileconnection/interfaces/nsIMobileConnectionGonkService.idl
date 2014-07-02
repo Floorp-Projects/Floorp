@@ -1,0 +1,49 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIMobileConnectionService.idl"
+
+%{C++
+#define NS_MOBILECONNECTION_GONK_SERVICE_CONTRACTID \
+        "@mozilla.org/mobileconnection/mobileconnectiongonkservice;1"
+%}
+
+[scriptable, uuid(c5baceda-247a-4018-855d-ad5b00f2e4e2)]
+interface nsIMobileConnectionGonkService : nsIMobileConnectionService
+{
+  void notifyNetworkInfoChanged(in unsigned long clientId, in jsval networkInfo);
+
+  void notifyVoiceInfoChanged(in unsigned long clientId, in jsval voiceInfo);
+
+  void notifyDataInfoChanged(in unsigned long clientId, in jsval dataInfo);
+
+  void notifyDataError(in unsigned long clientId, in DOMString message);
+
+  void notifySignalStrengthChanged(in unsigned long clientId, in jsval signal);
+
+  void notifyOperatorChanged(in unsigned long clientId, in jsval info);
+
+  void notifyOtaStatusChanged(in unsigned long clientId, in DOMString status);
+
+  void notifyRadioStateChanged(in unsigned long clientId,
+                               in DOMString radioState);
+
+  void notifyUssdReceived(in unsigned long clientId,
+                          in DOMString message,
+                          in boolean sessionEnded);
+
+  void notifyEmergencyCallbackModeChanged(in unsigned long clientId,
+                                          in boolean active,
+                                          in unsigned long timeoutMs);
+
+  void notifyIccChanged(in unsigned long clientId, in DOMString iccId);
+
+  void notifyNetworkSelectModeChanged(in unsigned long clientId,
+                                      in DOMString mode);
+
+  void notifySpnAvailable(in unsigned long clientId);
+
+  void notifyLastHomeNetworkChanged(in unsigned long clientId,
+                                    in DOMString network);
+};
