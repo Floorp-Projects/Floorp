@@ -42,7 +42,7 @@ Result CheckIssuerIndependentProperties(
           unsigned int subCACount,
           /*optional out*/ TrustLevel* trustLevel = nullptr);
 
-Result CheckNameConstraints(const BackCert& cert);
+Result CheckNameConstraints(BackCert& cert);
 
 } } // namespace mozilla::pkix
 
