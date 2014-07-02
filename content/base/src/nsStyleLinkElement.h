@@ -41,7 +41,7 @@ public:
 
   // nsIStyleSheetLinkingElement  
   NS_IMETHOD SetStyleSheet(mozilla::CSSStyleSheet* aStyleSheet) MOZ_OVERRIDE;
-  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet) MOZ_OVERRIDE;
+  NS_IMETHOD_(mozilla::CSSStyleSheet*) GetStyleSheet() MOZ_OVERRIDE;
   NS_IMETHOD InitStyleLinkElement(bool aDontLoadStyle) MOZ_OVERRIDE;
   NS_IMETHOD UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
                               bool* aWillNotify,
