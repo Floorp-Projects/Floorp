@@ -34,7 +34,7 @@ MODULES_DEST = $(FINAL_TARGET)/modules/services-common
 INSTALL_TARGETS += MODULES
 
 TESTING_JS_MODULES := $(addprefix modules-testing/,$(testing_modules))
-TESTING_JS_MODULE_DIR := services-common
+TESTING_JS_MODULE_DIR := services/common
 
 PP_JS_MODULES := $(pp_modules)
 PP_JS_MODULES_PATH = $(FINAL_TARGET)/modules/services-common
