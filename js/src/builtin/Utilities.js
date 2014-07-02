@@ -31,7 +31,6 @@
 //
 // The few items below here are either self-hosted or installing them under a
 // std_Foo name would require ugly contortions, so they just get aliased here.
-var std_iterator = '@@iterator'; // FIXME: Change to be a symbol.
 var std_Array_indexOf = ArrayIndexOf;
 // WeakMap is a bare constructor without properties or methods.
 var std_WeakMap = WeakMap;

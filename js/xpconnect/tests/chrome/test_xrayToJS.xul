@@ -146,6 +146,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   var isNightlyBuild = version.endsWith("a1");
   var isReleaseBuild = !version.contains("a");
   const jsHasSymbols = typeof Symbol === "function";
+  const kIteratorSymbol = jsHasSymbols ? Symbol.iterator : "@@iterator";
   var gPrototypeProperties = {};
   gPrototypeProperties['Date'] =
     ["getTime", "getTimezoneOffset", "getYear", "getFullYear", "getUTCFullYear",
@@ -168,7 +169,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     ["length", "toSource", "toString", "toLocaleString", "join", "reverse", "sort", "push",
       "pop", "shift", "unshift", "splice", "concat", "slice", "lastIndexOf", "indexOf",
       "forEach", "map", "reduce", "reduceRight", "filter", "some", "every", "find",
-      "findIndex", "copyWithin", "fill", "@@iterator", "entries", "keys", "constructor"];
+      "findIndex", "copyWithin", "fill", kIteratorSymbol, "entries", "keys", "constructor"];
   if (isNightlyBuild) {
     let pjsMethods = ['mapPar', 'reducePar', 'scanPar', 'scatterPar', 'filterPar'];
     gPrototypeProperties['Array'] = gPrototypeProperties['Array'].concat(pjsMethods);
@@ -177,7 +178,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     gPrototypeProperties[c] = ["constructor", "BYTES_PER_ELEMENT"];
   }
   gPrototypeProperties['TypedArray'] =
-    ["length", "buffer", "byteLength", "byteOffset", "@@iterator", "subarray",
+    ["length", "buffer", "byteLength", "byteOffset", kIteratorSymbol, "subarray",
      "set", "copyWithin"];
 
   for (var c of errorObjectClasses) {
@@ -499,10 +500,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     // up is more trouble than it's worth.
 
     var typedArrayProto = Object.getPrototypeOf(Int8Array.prototype);
-
-  gPrototypeProperties['TypedArray'] =
-    ["length", "buffer", "byteLength", "byteOffset", "@@iterator", "subarray",
-     "set", "copyWithin"];
 
     var desiredInheritedProps = Object.getOwnPropertyNames(typedArrayProto).sort();
     var inheritedProps =
