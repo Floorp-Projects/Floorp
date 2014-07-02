@@ -575,8 +575,9 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper,
                                        NumberValue(JS_GetFunctionArity(JS_GetObjectFunction(target))));
                 return true;
             } else if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_NAME)) {
+                RootedString fname(cx, JS_GetFunctionId(JS_GetObjectFunction(target)));
                 FillPropertyDescriptor(desc, wrapper, JSPROP_PERMANENT | JSPROP_READONLY,
-                                       StringValue(JS_GetFunctionId(JS_GetObjectFunction(target))));
+                                       fname ? StringValue(fname) : JS_GetEmptyStringValue(cx));
             } else if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_PROTOTYPE)) {
                 // Handle the 'prototype' property to make xrayedGlobal.StandardClass.prototype work.
                 JSProtoKey standardConstructor = constructorFor(holder);
