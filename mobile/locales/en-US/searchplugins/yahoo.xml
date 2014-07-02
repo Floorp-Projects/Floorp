@@ -16,7 +16,7 @@
 <Url type="text/html" method="GET" template="https://search.yahoo.com/search">
   <Param name="p" value="{searchTerms}" />
   <Param name="ei" value="UTF-8" />
-  <Param name="fr" value="mozilla_mobile_search" />
+  <Param name="fr" value="mozmob1" />
 </Url>
 <SearchForm>https://search.yahoo.com/</SearchForm>
 </SearchPlugin>
