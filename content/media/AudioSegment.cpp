@@ -9,7 +9,7 @@
 #include "AudioMixer.h"
 #include "AudioChannelFormat.h"
 #include "Latency.h"
-#include "speex/speex_resampler.h"
+#include <speex/speex_resampler.h>
 
 namespace mozilla {
 
