@@ -15,6 +15,7 @@
 #include "nsSize.h"
 
 class nsICanvasRenderingContextInternal;
+class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
@@ -50,7 +51,7 @@ public:
                                    int32_t aFormat,
                                    const nsIntSize aSize,
                                    nsICanvasRenderingContextInternal* aContext,
-                                   nsIScriptContext* aScriptContext,
+                                   nsIGlobalObject* aGlobal,
                                    FileCallback& aCallback);
 
   // Gives you a stream containing the image represented by aImageBuffer.

@@ -116,6 +116,7 @@ UNIFIED_SOURCES += [
     'frontend/TokenStream.cpp',
     'gc/Barrier.cpp',
     'gc/ForkJoinNursery.cpp',
+    'gc/GCTrace.cpp',
     'gc/Iteration.cpp',
     'gc/Marking.cpp',
     'gc/Memory.cpp',

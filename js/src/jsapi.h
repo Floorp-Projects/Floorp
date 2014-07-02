@@ -3415,30 +3415,46 @@ extern JS_PUBLIC_API(bool)
 JS_BufferIsCompilableUnit(JSContext *cx, JS::Handle<JSObject*> obj, const char *utf8,
                           size_t length);
 
-extern JS_PUBLIC_API(JSScript *)
+/*
+ * |script| will always be set. On failure, it will be set to nullptr.
+ */
+extern JS_PUBLIC_API(bool)
 JS_CompileScript(JSContext *cx, JS::HandleObject obj,
                  const char *ascii, size_t length,
-                 const JS::CompileOptions &options);
+                 const JS::CompileOptions &options,
+                 JS::MutableHandleScript script);
 
-extern JS_PUBLIC_API(JSScript *)
+/*
+ * |script| will always be set. On failure, it will be set to nullptr.
+ */
+extern JS_PUBLIC_API(bool)
 JS_CompileUCScript(JSContext *cx, JS::HandleObject obj,
                    const jschar *chars, size_t length,
-                   const JS::CompileOptions &options);
+                   const JS::CompileOptions &options,
+                   JS::MutableHandleScript script);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalFromScript(JSScript *script);
 
-extern JS_PUBLIC_API(JSFunction *)
+/*
+ * |fun| will always be set. On failure, it will be set to nullptr.
+ */
+extern JS_PUBLIC_API(bool)
 JS_CompileFunction(JSContext *cx, JS::HandleObject obj, const char *name,
                    unsigned nargs, const char *const *argnames,
                    const char *bytes, size_t length,
-                   const JS::CompileOptions &options);
+                   const JS::CompileOptions &options,
+                   JS::MutableHandleFunction fun);
 
-extern JS_PUBLIC_API(JSFunction *)
+/*
+ * |fun| will always be set. On failure, it will be set to nullptr.
+ */
+extern JS_PUBLIC_API(bool)
 JS_CompileUCFunction(JSContext *cx, JS::HandleObject obj, const char *name,
                      unsigned nargs, const char *const *argnames,
                      const jschar *chars, size_t length,
-                     const JS::CompileOptions &options);
+                     const JS::CompileOptions &options,
+                     JS::MutableHandleFunction fun);
 
 namespace JS {
 
@@ -3760,23 +3776,28 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOpti
     void operator=(const CompileOptions &rhs) MOZ_DELETE;
 };
 
-extern JS_PUBLIC_API(JSScript *)
+/*
+ * |script| will always be set. On failure, it will be set to nullptr.
+ */
+extern JS_PUBLIC_API(bool)
 Compile(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
-        const char *bytes, size_t length);
+        SourceBufferHolder &srcBuf, JS::MutableHandleScript script);
 
-extern JS_PUBLIC_API(JSScript *)
+extern JS_PUBLIC_API(bool)
 Compile(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
-        const jschar *chars, size_t length);
+        const char *bytes, size_t length, JS::MutableHandleScript script);
 
-extern JS_PUBLIC_API(JSScript *)
+extern JS_PUBLIC_API(bool)
 Compile(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
-        SourceBufferHolder &srcBuf);
+        const jschar *chars, size_t length, JS::MutableHandleScript script);
 
-extern JS_PUBLIC_API(JSScript *)
-Compile(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options, FILE *file);
+extern JS_PUBLIC_API(bool)
+Compile(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options, FILE *file,
+        JS::MutableHandleScript script);
 
-extern JS_PUBLIC_API(JSScript *)
-Compile(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options, const char *filename);
+extern JS_PUBLIC_API(bool)
+Compile(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options, const char *filename,
+        JS::MutableHandleScript script);
 
 extern JS_PUBLIC_API(bool)
 CanCompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options, size_t length);
@@ -3805,20 +3826,20 @@ CompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options,
 extern JS_PUBLIC_API(JSScript *)
 FinishOffThreadScript(JSContext *maybecx, JSRuntime *rt, void *token);
 
-extern JS_PUBLIC_API(JSFunction *)
+extern JS_PUBLIC_API(bool)
 CompileFunction(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
                 const char *name, unsigned nargs, const char *const *argnames,
-                const char *bytes, size_t length);
+                SourceBufferHolder &srcBuf, JS::MutableHandleFunction fun);
 
-extern JS_PUBLIC_API(JSFunction *)
+extern JS_PUBLIC_API(bool)
 CompileFunction(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
                 const char *name, unsigned nargs, const char *const *argnames,
-                const jschar *chars, size_t length);
+                const char *bytes, size_t length, JS::MutableHandleFunction fun);
 
-extern JS_PUBLIC_API(JSFunction *)
+extern JS_PUBLIC_API(bool)
 CompileFunction(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
                 const char *name, unsigned nargs, const char *const *argnames,
-                SourceBufferHolder &srcBuf);
+                const jschar *chars, size_t length, JS::MutableHandleFunction fun);
 
 } /* namespace JS */
 

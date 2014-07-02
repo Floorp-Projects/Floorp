@@ -42,15 +42,18 @@
 using namespace std;
 using mozilla::NumericLimits;
 
+using JS::AutoCheckCannotGC;
+
 namespace js {
 namespace ctypes {
 
+template <typename CharT>
 size_t
-GetDeflatedUTF8StringLength(JSContext *maybecx, const jschar *chars,
+GetDeflatedUTF8StringLength(JSContext *maybecx, const CharT *chars,
                             size_t nchars)
 {
     size_t nbytes;
-    const jschar *end;
+    const CharT *end;
     unsigned c, c2;
     char buffer[10];
 
@@ -83,6 +86,7 @@ GetDeflatedUTF8StringLength(JSContext *maybecx, const jschar *chars,
 
   bad_surrogate:
     if (maybecx) {
+        js::gc::AutoSuppressGC suppress(maybecx);
         JS_snprintf(buffer, 10, "0x%x", c);
         JS_ReportErrorFlagsAndNumber(maybecx, JSREPORT_ERROR, js_GetErrorMessage,
                                      nullptr, JSMSG_BAD_SURROGATE_CHAR, buffer);
@@ -90,9 +94,29 @@ GetDeflatedUTF8StringLength(JSContext *maybecx, const jschar *chars,
     return (size_t) -1;
 }
 
+template size_t
+GetDeflatedUTF8StringLength(JSContext *maybecx, const Latin1Char *chars,
+                            size_t nchars);
+
+template size_t
+GetDeflatedUTF8StringLength(JSContext *maybecx, const jschar *chars,
+                            size_t nchars);
+
+static size_t
+GetDeflatedUTF8StringLength(JSContext *maybecx, JSLinearString *str)
+{
+    size_t length = str->length();
+
+    JS::AutoCheckCannotGC nogc;
+    return str->hasLatin1Chars()
+           ? GetDeflatedUTF8StringLength(maybecx, str->latin1Chars(nogc), length)
+           : GetDeflatedUTF8StringLength(maybecx, str->twoByteChars(nogc), length);
+}
+
+template <typename CharT>
 bool
-DeflateStringToUTF8Buffer(JSContext *maybecx, const jschar *src, size_t srclen,
-                              char *dst, size_t *dstlenp)
+DeflateStringToUTF8Buffer(JSContext *maybecx, const CharT *src, size_t srclen,
+                          char *dst, size_t *dstlenp)
 {
     size_t i, utf8Len;
     jschar c, c2;
@@ -147,10 +171,31 @@ badSurrogate:
 bufferTooSmall:
     *dstlenp = (origDstlen - dstlen);
     if (maybecx) {
+        js::gc::AutoSuppressGC suppress(maybecx);
         JS_ReportErrorNumber(maybecx, js_GetErrorMessage, nullptr,
                              JSMSG_BUFFER_TOO_SMALL);
     }
     return false;
+}
+
+template bool
+DeflateStringToUTF8Buffer(JSContext *maybecx, const Latin1Char *src, size_t srclen,
+                          char *dst, size_t *dstlenp);
+
+template bool
+DeflateStringToUTF8Buffer(JSContext *maybecx, const jschar *src, size_t srclen,
+                          char *dst, size_t *dstlenp);
+
+static bool
+DeflateStringToUTF8Buffer(JSContext *maybecx, JSLinearString *str, char *dst,
+                          size_t *dstlenp)
+{
+    size_t length = str->length();
+
+    JS::AutoCheckCannotGC nogc;
+    return str->hasLatin1Chars()
+           ? DeflateStringToUTF8Buffer(maybecx, str->latin1Chars(nogc), length, dst, dstlenp)
+           : DeflateStringToUTF8Buffer(maybecx, str->twoByteChars(nogc), length, dst, dstlenp);
 }
 
 /*******************************************************************************
@@ -1742,17 +1787,13 @@ jsvalToFloat(JSContext *cx, jsval val, FloatType* result)
   return false;
 }
 
-template<class IntegerType>
+template <class IntegerType, class CharT>
 static bool
-StringToInteger(JSContext* cx, JSString* string, IntegerType* result)
+StringToInteger(JSContext* cx, CharT* cp, size_t length, IntegerType* result)
 {
   JS_STATIC_ASSERT(NumericLimits<IntegerType>::is_exact);
 
-  const jschar* cp = string->getChars(nullptr);
-  if (!cp)
-    return false;
-
-  const jschar* end = cp + string->length();
+  const CharT* end = cp + length;
   if (cp == end)
     return false;
 
@@ -1794,6 +1835,21 @@ StringToInteger(JSContext* cx, JSString* string, IntegerType* result)
 
   *result = i;
   return true;
+}
+
+template<class IntegerType>
+static bool
+StringToInteger(JSContext* cx, JSString* string, IntegerType* result)
+{
+  JSLinearString *linear = string->ensureLinear(cx);
+  if (!linear)
+    return false;
+
+  AutoCheckCannotGC nogc;
+  size_t length = linear->length();
+  return string->hasLatin1Chars()
+         ? StringToInteger<IntegerType>(cx, linear->latin1Chars(nogc), length, result)
+         : StringToInteger<IntegerType>(cx, linear->twoByteChars(nogc), length, result);
 }
 
 // Implicitly convert val to IntegerType, allowing int, double,
@@ -2300,10 +2356,10 @@ ImplicitConvert(JSContext* cx,
       JSString* str = val.toString();                                    \
       if (str->length() != 1)                                                  \
         return TypeError(cx, #name, val);                                      \
-      const jschar *chars = str->getChars(cx);                                 \
-      if (!chars)                                                              \
+      JSLinearString *linear = str->ensureLinear(cx);                          \
+      if (!linear)                                                             \
         return false;                                                          \
-      result = chars[0];                                                       \
+      result = linear->latin1OrTwoByteChar(0);                                 \
     } else if (!jsvalToInteger(cx, val, &result)) {                            \
       return TypeError(cx, #name, val);                                        \
     }                                                                          \
@@ -2346,8 +2402,8 @@ ImplicitConvert(JSContext* cx,
       // TODO: Extend this so we can safely convert strings at other times also.
       JSString* sourceString = val.toString();
       size_t sourceLength = sourceString->length();
-      const jschar* sourceChars = sourceString->getChars(cx);
-      if (!sourceChars)
+      JSLinearString* sourceLinear = sourceString->ensureLinear(cx);
+      if (!sourceLinear)
         return false;
 
       switch (CType::GetTypeCode(baseType)) {
@@ -2355,8 +2411,7 @@ ImplicitConvert(JSContext* cx,
       case TYPE_signed_char:
       case TYPE_unsigned_char: {
         // Convert from UTF-16 to UTF-8.
-        size_t nbytes =
-          GetDeflatedUTF8StringLength(cx, sourceChars, sourceLength);
+        size_t nbytes = GetDeflatedUTF8StringLength(cx, sourceLinear);
         if (nbytes == (size_t) -1)
           return false;
 
@@ -2367,8 +2422,7 @@ ImplicitConvert(JSContext* cx,
           return false;
         }
 
-        ASSERT_OK(DeflateStringToUTF8Buffer(cx, sourceChars, sourceLength,
-                    *charBuffer, &nbytes));
+        ASSERT_OK(DeflateStringToUTF8Buffer(cx, sourceLinear, *charBuffer, &nbytes));
         (*charBuffer)[nbytes] = 0;
         *freePointer = true;
         break;
@@ -2385,7 +2439,13 @@ ImplicitConvert(JSContext* cx,
         }
 
         *freePointer = true;
-        memcpy(*jscharBuffer, sourceChars, sourceLength * sizeof(jschar));
+        if (sourceLinear->hasLatin1Chars()) {
+            AutoCheckCannotGC nogc;
+            CopyAndInflateChars(*jscharBuffer, sourceLinear->latin1Chars(nogc), sourceLength);
+        } else {
+            AutoCheckCannotGC nogc;
+            mozilla::PodCopy(*jscharBuffer, sourceLinear->twoByteChars(nogc), sourceLength);
+        }
         (*jscharBuffer)[sourceLength] = 0;
         break;
       }
@@ -2422,17 +2482,17 @@ ImplicitConvert(JSContext* cx,
     if (val.isString()) {
       JSString* sourceString = val.toString();
       size_t sourceLength = sourceString->length();
-      const jschar* sourceChars = sourceString->getChars(cx);
-      if (!sourceChars)
+      JSLinearString* sourceLinear = sourceString->ensureLinear(cx);
+      if (!sourceLinear)
         return false;
 
       switch (CType::GetTypeCode(baseType)) {
       case TYPE_char:
       case TYPE_signed_char:
       case TYPE_unsigned_char: {
-        // Convert from UTF-16 to UTF-8.
+        // Convert from UTF-16 or Latin1 to UTF-8.
         size_t nbytes =
-          GetDeflatedUTF8StringLength(cx, sourceChars, sourceLength);
+          GetDeflatedUTF8StringLength(cx, sourceLinear);
         if (nbytes == (size_t) -1)
           return false;
 
@@ -2442,8 +2502,8 @@ ImplicitConvert(JSContext* cx,
         }
 
         char* charBuffer = static_cast<char*>(buffer);
-        ASSERT_OK(DeflateStringToUTF8Buffer(cx, sourceChars, sourceLength,
-                    charBuffer, &nbytes));
+        ASSERT_OK(DeflateStringToUTF8Buffer(cx, sourceLinear, charBuffer,
+                                            &nbytes));
 
         if (targetLength > nbytes)
           charBuffer[nbytes] = 0;
@@ -2458,9 +2518,17 @@ ImplicitConvert(JSContext* cx,
           return false;
         }
 
-        memcpy(buffer, sourceChars, sourceLength * sizeof(jschar));
+        jschar *dest = static_cast<jschar*>(buffer);
+        if (sourceLinear->hasLatin1Chars()) {
+            AutoCheckCannotGC nogc;
+            CopyAndInflateChars(dest, sourceLinear->latin1Chars(nogc), sourceLength);
+        } else {
+            AutoCheckCannotGC nogc;
+            mozilla::PodCopy(dest, sourceLinear->twoByteChars(nogc), sourceLength);
+        }
+
         if (targetLength > sourceLength)
-          static_cast<jschar*>(buffer)[sourceLength] = 0;
+          dest[sourceLength] = 0;
 
         break;
       }
@@ -4290,8 +4358,8 @@ ArrayType::ConstructData(JSContext* cx,
       // including space for the terminator.
       JSString* sourceString = args[0].toString();
       size_t sourceLength = sourceString->length();
-      const jschar* sourceChars = sourceString->getChars(cx);
-      if (!sourceChars)
+      JSLinearString* sourceLinear = sourceString->ensureLinear(cx);
+      if (!sourceLinear)
         return false;
 
       switch (CType::GetTypeCode(baseType)) {
@@ -4299,7 +4367,7 @@ ArrayType::ConstructData(JSContext* cx,
       case TYPE_signed_char:
       case TYPE_unsigned_char: {
         // Determine the UTF-8 length.
-        length = GetDeflatedUTF8StringLength(cx, sourceChars, sourceLength);
+        length = GetDeflatedUTF8StringLength(cx, sourceLinear);
         if (length == (size_t) -1)
           return false;
 
@@ -4816,8 +4884,12 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
       }
 
       // Add the field to the StructType's 'prototype' property.
+      AutoStableStringChars nameChars(cx);
+      if (!nameChars.initTwoByte(cx, name))
+          return false;
+
       if (!JS_DefineUCProperty(cx, prototype,
-             name->chars(), name->length(), UndefinedHandleValue,
+             nameChars.twoByteChars(), name->length(), UndefinedHandleValue,
              JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT,
              StructType::FieldGetter, StructType::FieldSetter))
         return false;
@@ -5392,13 +5464,13 @@ IsEllipsis(JSContext* cx, jsval v, bool* isEllipsis)
   JSString* str = v.toString();
   if (str->length() != 3)
     return true;
-  const jschar* chars = str->getChars(cx);
-  if (!chars)
+  JSLinearString *linear = str->ensureLinear(cx);
+  if (!linear)
     return false;
   jschar dot = '.';
-  *isEllipsis = (chars[0] == dot &&
-                 chars[1] == dot &&
-                 chars[2] == dot);
+  *isEllipsis = (linear->latin1OrTwoByteChar(0) == dot &&
+                 linear->latin1OrTwoByteChar(1) == dot &&
+                 linear->latin1OrTwoByteChar(2) == dot);
   return true;
 }
 

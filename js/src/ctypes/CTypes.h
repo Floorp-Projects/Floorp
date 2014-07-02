@@ -95,10 +95,14 @@ void
 AppendString(Vector<jschar, N, AP> &v, JSString* str)
 {
   JS_ASSERT(str);
-  const jschar *chars = str->getChars(nullptr);
-  if (!chars)
+  JSLinearString *linear = str->ensureLinear(nullptr);
+  if (!linear)
     return;
-  v.append(chars, str->length());
+  JS::AutoCheckCannotGC nogc;
+  if (linear->hasLatin1Chars())
+    v.append(linear->latin1Chars(nogc), linear->length());
+  else
+    v.append(linear->twoByteChars(nogc), linear->length());
 }
 
 template <size_t N, class AP>
@@ -111,12 +115,20 @@ AppendString(Vector<char, N, AP> &v, JSString* str)
   if (!v.resize(vlen + alen))
     return;
 
-  const jschar *chars = str->getChars(nullptr);
-  if (!chars)
+  JSLinearString *linear = str->ensureLinear(nullptr);
+  if (!linear)
     return;
 
-  for (size_t i = 0; i < alen; ++i)
-    v[i + vlen] = char(chars[i]);
+  JS::AutoCheckCannotGC nogc;
+  if (linear->hasLatin1Chars()) {
+    const Latin1Char *chars = linear->latin1Chars(nogc);
+    for (size_t i = 0; i < alen; ++i)
+      v[i + vlen] = char(chars[i]);
+  } else {
+    const jschar *chars = linear->twoByteChars(nogc);
+    for (size_t i = 0; i < alen; ++i)
+      v[i + vlen] = char(chars[i]);
+  }
 }
 
 template <class T, size_t N, class AP, size_t ArrayLength>
@@ -147,23 +159,32 @@ PrependString(Vector<jschar, N, AP> &v, JSString* str)
   if (!v.resize(vlen + alen))
     return;
 
-  const jschar *chars = str->getChars(nullptr);
-  if (!chars)
+  JSLinearString* linear = str->ensureLinear(nullptr);
+  if (!linear)
     return;
 
   // Move vector data forward. This is safe since we've already resized.
   memmove(v.begin() + alen, v.begin(), vlen * sizeof(jschar));
 
   // Copy data to insert.
-  memcpy(v.begin(), chars, alen * sizeof(jschar));
+  JS::AutoCheckCannotGC nogc;
+  if (linear->hasLatin1Chars()) {
+    const Latin1Char *chars = linear->latin1Chars(nogc);
+    for (size_t i = 0; i < alen; i++)
+      v[i] = chars[i];
+  } else {
+    memcpy(v.begin(), linear->twoByteChars(nogc), alen * sizeof(jschar));
+  }
 }
 
+template <typename CharT>
 extern size_t
-GetDeflatedUTF8StringLength(JSContext *maybecx, const jschar *chars,
+GetDeflatedUTF8StringLength(JSContext *maybecx, const CharT *chars,
                             size_t charsLength);
 
+template <typename CharT>
 bool
-DeflateStringToUTF8Buffer(JSContext *maybecx, const jschar *src, size_t srclen,
+DeflateStringToUTF8Buffer(JSContext *maybecx, const CharT *src, size_t srclen,
                           char *dst, size_t *dstlenp);
 
 
@@ -234,13 +255,19 @@ struct FieldHashPolicy : DefaultHasher<JSFlatString*>
   typedef JSFlatString* Key;
   typedef Key Lookup;
 
-  static uint32_t hash(const Lookup &l) {
-    const jschar* s = l->chars();
-    size_t n = l->length();
+  template <typename CharT>
+  static uint32_t hash(const CharT *s, size_t n) {
     uint32_t hash = 0;
     for (; n > 0; s++, n--)
       hash = hash * 33 + *s;
     return hash;
+  }
+
+  static uint32_t hash(const Lookup &l) {
+    JS::AutoCheckCannotGC nogc;
+    return l->hasLatin1Chars()
+           ? hash(l->latin1Chars(nogc), l->length())
+           : hash(l->twoByteChars(nogc), l->length());
   }
 
   static bool match(const Key &k, const Lookup &l) {
@@ -250,7 +277,7 @@ struct FieldHashPolicy : DefaultHasher<JSFlatString*>
     if (k->length() != l->length())
       return false;
 
-    return memcmp(k->chars(), l->chars(), k->length() * sizeof(jschar)) == 0;
+    return EqualChars(k, l);
   }
 };
 

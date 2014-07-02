@@ -65,6 +65,7 @@ elif os == 'Android':
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         gyp_vars['build_with_gonk'] = 1
         gyp_vars['moz_widget_toolkit_gonk'] = 1
+        gyp_vars['opus_complexity'] = 1
         if int(CONFIG['ANDROID_VERSION']) >= 18:
           gyp_vars['moz_webrtc_omx'] = 1
     else:

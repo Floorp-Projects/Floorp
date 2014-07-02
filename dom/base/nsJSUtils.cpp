@@ -157,12 +157,13 @@ nsJSUtils::CompileFunction(JSContext* aCx,
   }
 
   // Compile.
-  JSFunction* fun = JS::CompileFunction(aCx, aTarget, aOptions,
-                                        PromiseFlatCString(aName).get(),
-                                        aArgCount, aArgArray,
-                                        PromiseFlatString(aBody).get(),
-                                        aBody.Length());
-  if (!fun) {
+  JS::Rooted<JSFunction*> fun(aCx);
+  if (!JS::CompileFunction(aCx, aTarget, aOptions,
+                           PromiseFlatCString(aName).get(),
+                           aArgCount, aArgArray,
+                           PromiseFlatString(aBody).get(),
+                           aBody.Length(), &fun))
+  {
     ReportPendingException(aCx);
     return NS_ERROR_FAILURE;
   }

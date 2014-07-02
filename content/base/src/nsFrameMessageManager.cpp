@@ -1535,13 +1535,15 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
       JS::Rooted<JSObject*> funobj(cx);
       if (aRunInGlobalScope) {
         options.setNoScriptRval(true);
-        script = JS::Compile(cx, JS::NullPtr(), options, srcBuf);
+        if (!JS::Compile(cx, JS::NullPtr(), options, srcBuf, &script)) {
+          return;
+        }
       } else {
         JS::Rooted<JSFunction *> fun(cx);
-        fun = JS::CompileFunction(cx, JS::NullPtr(), options,
-                                  nullptr, 0, nullptr, /* name, nargs, args */
-                                  srcBuf);
-        if (!fun) {
+        if (!JS::CompileFunction(cx, JS::NullPtr(), options,
+                                 nullptr, 0, nullptr, /* name, nargs, args */
+                                 srcBuf, &fun))
+        {
           return;
         }
         funobj = JS_GetFunctionObject(fun);

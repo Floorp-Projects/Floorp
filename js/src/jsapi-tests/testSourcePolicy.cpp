@@ -17,7 +17,9 @@ BEGIN_TEST(testBug795104)
     memset(s + 1, 'x', strLen - 2);
     s[strLen - 1] = '"';
     CHECK(JS::Evaluate(cx, global, opts, s, strLen));
-    CHECK(JS::CompileFunction(cx, global, opts, "f", 0, nullptr, s, strLen));
+    JS::RootedFunction fun(cx);
+    CHECK(JS::CompileFunction(cx, global, opts, "f", 0, nullptr, s, strLen, &fun));
+    CHECK(fun);
     JS_free(cx, s);
 
     return true;
