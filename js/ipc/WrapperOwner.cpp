@@ -676,15 +676,6 @@ IsCPOW(JSObject *obj)
     return IsProxy(obj) && GetProxyHandler(obj) == &CPOWProxyHandler::singleton;
 }
 
-bool
-IsWrappedCPOW(JSObject *obj)
-{
-    JSObject *unwrapped = js::CheckedUnwrap(obj, true);
-    if (!unwrapped)
-        return false;
-    return IsCPOW(unwrapped);
-}
-
 nsresult
 InstanceOf(JSObject *proxy, const nsID *id, bool *bp)
 {
