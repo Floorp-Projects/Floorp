@@ -49,22 +49,10 @@ private:
                                  AVFrame* aFrame);
 
   static int AllocateBufferCb(AVCodecContext* aCodecContext, AVFrame* aFrame);
+  static void ReleaseBufferCb(AVCodecContext* aCodecContext, AVFrame* aFrame);
 
   MediaDataDecoderCallback* mCallback;
   nsRefPtr<ImageContainer> mImageContainer;
-
-  /**
-   * Pass Image back from the allocator to our DoDecode method.
-   * We *should* return the image back through ffmpeg wrapped in an AVFrame like
-   * we're meant to. However, if avcodec_decode_video2 fails, it returns a
-   * completely different frame from the one holding our image and it will be
-   * leaked.
-   * This could be handled in the future by wrapping our Image in a reference
-   * counted AVBuffer and letting ffmpeg hold the nsAutoPtr<Image>, but
-   * currently we have to support older versions of ffmpeg which lack
-   * refcounting.
-   */
-  nsRefPtr<Image> mCurrentImage;
 };
 
 } // namespace mozilla
