@@ -498,8 +498,20 @@ SavedStacks::insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandleSav
     // script and callee should keep compartment alive.
     JSCompartment *compartment = iter.compartment();
     RootedSavedFrame parentFrame(cx);
-    if (!insertFrames(cx, ++iter, &parentFrame))
-        return false;
+
+    // If maxFrameCount is zero, then there's no limit on the number of frames.
+    if (maxFrameCount == 0) {
+        if (!insertFrames(cx, ++iter, &parentFrame, 0))
+            return false;
+    } else if (maxFrameCount == 1) {
+        // Since we were only asked to save one frame, the SavedFrame we're
+        // building here should have no parent, even if there are older frames
+        // on the stack.
+        parentFrame = nullptr;
+    } else {
+        if (!insertFrames(cx, ++iter, &parentFrame, maxFrameCount - 1))
+            return false;
+    }
 
     AutoLocationValueRooter location(cx);
     if (!getLocation(cx, script, pc, &location))
