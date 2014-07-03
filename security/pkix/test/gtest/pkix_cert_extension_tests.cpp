@@ -30,43 +30,43 @@ using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
 
 // Creates a self-signed certificate with the given extension.
-static bool
+static const SECItem*
 CreateCert(PLArenaPool* arena, const char* subjectStr,
-           const SECItem* extension,
-           /*out*/ ScopedSECKEYPrivateKey& subjectKey,
-           /*out*/ ScopedCERTCertificate& subjectCert)
+           SECItem const* const* extensions, // null-terminated array
+           /*out*/ ScopedSECKEYPrivateKey& subjectKey)
 {
   static long serialNumberValue = 0;
   ++serialNumberValue;
   const SECItem* serialNumber(CreateEncodedSerialNumber(arena,
                                                         serialNumberValue));
   if (!serialNumber) {
-    return false;
+    return nullptr;
   }
   const SECItem* issuerDER(ASCIIToDERName(arena, subjectStr));
   if (!issuerDER) {
-    return false;
+    return nullptr;
   }
   const SECItem* subjectDER(ASCIIToDERName(arena, subjectStr));
   if (!subjectDER) {
-    return false;
+    return nullptr;
   }
 
-  const SECItem* extensions[2] = { extension, nullptr };
+  return CreateEncodedCertificate(arena, v3, SEC_OID_SHA256,
+                                  serialNumber, issuerDER,
+                                  PR_Now() - ONE_DAY,
+                                  PR_Now() + ONE_DAY,
+                                  subjectDER, extensions,
+                                  nullptr, SEC_OID_SHA256, subjectKey);
+}
 
-  SECItem* certDER(CreateEncodedCertificate(arena, v3, SEC_OID_SHA256,
-                                            serialNumber, issuerDER,
-                                            PR_Now() - ONE_DAY,
-                                            PR_Now() + ONE_DAY,
-                                            subjectDER, extensions,
-                                            nullptr, SEC_OID_SHA256,
-                                            subjectKey));
-  if (!certDER) {
-    return false;
-  }
-  subjectCert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), certDER,
-                                        nullptr, false, true);
-  return subjectCert.get() != nullptr;
+// Creates a self-signed certificate with the given extension.
+static const SECItem*
+CreateCert(PLArenaPool* arena, const char* subjectStr,
+           const SECItem* extension,
+           /*out*/ ScopedSECKEYPrivateKey& subjectKey)
+{
+  const SECItem * extensions[] = { extension, nullptr };
+  return CreateCert(arena, subjectStr, extensions, subjectKey);
 }
 
 class TrustEverythingTrustDomain : public TrustDomain
@@ -88,7 +88,7 @@ private:
     return SECSuccess;
   }
 
-  SECStatus VerifySignedData(const CERTSignedData* signedData,
+  SECStatus VerifySignedData(const CERTSignedData& signedData,
                              const SECItem& subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
@@ -143,13 +143,14 @@ TEST_F(pkix_cert_extensions, UnknownCriticalExtension)
   };
   const char* certCN = "CN=Cert With Unknown Critical Extension";
   ScopedSECKEYPrivateKey key;
-  ScopedCERTCertificate cert;
-  ASSERT_TRUE(CreateCert(arena.get(), certCN, &unknownCriticalExtension, key,
-                         cert));
+  // cert is owned by the arena
+  const SECItem* cert(CreateCert(arena.get(), certCN,
+                                 &unknownCriticalExtension, key));
+  ASSERT_TRUE(cert);
   ScopedCERTCertList results;
   ASSERT_SECFailure(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION,
-                    BuildCertChain(trustDomain, cert.get(),
-                                   now, EndEntityOrCA::MustBeEndEntity,
+                    BuildCertChain(trustDomain, *cert, now,
+                                   EndEntityOrCA::MustBeEndEntity,
                                    KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::anyExtendedKeyUsage,
                                    CertPolicyId::anyPolicy,
@@ -176,12 +177,13 @@ TEST_F(pkix_cert_extensions, UnknownNonCriticalExtension)
   };
   const char* certCN = "CN=Cert With Unknown NonCritical Extension";
   ScopedSECKEYPrivateKey key;
-  ScopedCERTCertificate cert;
-  ASSERT_TRUE(CreateCert(arena.get(), certCN, &unknownNonCriticalExtension, key,
-                         cert));
+  // cert is owned by the arena
+  const SECItem* cert(CreateCert(arena.get(), certCN,
+                                 &unknownNonCriticalExtension, key));
+  ASSERT_TRUE(cert);
   ScopedCERTCertList results;
-  ASSERT_SECSuccess(BuildCertChain(trustDomain, cert.get(),
-                                   now, EndEntityOrCA::MustBeEndEntity,
+  ASSERT_SECSuccess(BuildCertChain(trustDomain, *cert, now,
+                                   EndEntityOrCA::MustBeEndEntity,
                                    KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::anyExtendedKeyUsage,
                                    CertPolicyId::anyPolicy,
@@ -209,13 +211,14 @@ TEST_F(pkix_cert_extensions, WrongOIDCriticalExtension)
   };
   const char* certCN = "CN=Cert With Critical Wrong OID Extension";
   ScopedSECKEYPrivateKey key;
-  ScopedCERTCertificate cert;
-  ASSERT_TRUE(CreateCert(arena.get(), certCN, &wrongOIDCriticalExtension, key,
-                         cert));
+  // cert is owned by the arena
+  const SECItem* cert(CreateCert(arena.get(), certCN, 
+                                 &wrongOIDCriticalExtension, key));
+  ASSERT_TRUE(cert);
   ScopedCERTCertList results;
   ASSERT_SECFailure(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION,
-                    BuildCertChain(trustDomain, cert.get(),
-                                   now, EndEntityOrCA::MustBeEndEntity,
+                    BuildCertChain(trustDomain, *cert, now,
+                                   EndEntityOrCA::MustBeEndEntity,
                                    KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::anyExtendedKeyUsage,
                                    CertPolicyId::anyPolicy,
@@ -245,12 +248,13 @@ TEST_F(pkix_cert_extensions, CriticalAIAExtension)
   };
   const char* certCN = "CN=Cert With Critical AIA Extension";
   ScopedSECKEYPrivateKey key;
-  ScopedCERTCertificate cert;
-  ASSERT_TRUE(CreateCert(arena.get(), certCN, &criticalAIAExtension, key,
-                         cert));
+  // cert is owned by the arena
+  const SECItem* cert(CreateCert(arena.get(), certCN, &criticalAIAExtension,
+                                 key));
+  ASSERT_TRUE(cert);
   ScopedCERTCertList results;
-  ASSERT_SECSuccess(BuildCertChain(trustDomain, cert.get(),
-                                   now, EndEntityOrCA::MustBeEndEntity,
+  ASSERT_SECSuccess(BuildCertChain(trustDomain, *cert, now,
+                                   EndEntityOrCA::MustBeEndEntity,
                                    KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::anyExtendedKeyUsage,
                                    CertPolicyId::anyPolicy,
@@ -277,13 +281,14 @@ TEST_F(pkix_cert_extensions, UnknownCriticalCEExtension)
   };
   const char* certCN = "CN=Cert With Unknown Critical id-ce Extension";
   ScopedSECKEYPrivateKey key;
-  ScopedCERTCertificate cert;
-  ASSERT_TRUE(CreateCert(arena.get(), certCN, &unknownCriticalCEExtension, key,
-                         cert));
+  // cert is owned by the arena
+  const SECItem* cert(CreateCert(arena.get(), certCN,
+                                 &unknownCriticalCEExtension, key));
+  ASSERT_TRUE(cert);
   ScopedCERTCertList results;
   ASSERT_SECFailure(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION,
-                    BuildCertChain(trustDomain, cert.get(),
-                                   now, EndEntityOrCA::MustBeEndEntity,
+                    BuildCertChain(trustDomain, *cert, now,
+                                   EndEntityOrCA::MustBeEndEntity,
                                    KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::anyExtendedKeyUsage,
                                    CertPolicyId::anyPolicy,
@@ -310,10 +315,46 @@ TEST_F(pkix_cert_extensions, KnownCriticalCEExtension)
   };
   const char* certCN = "CN=Cert With Known Critical id-ce Extension";
   ScopedSECKEYPrivateKey key;
-  ScopedCERTCertificate cert;
-  ASSERT_TRUE(CreateCert(arena.get(), certCN, &criticalCEExtension, key, cert));
+  // cert is owned by the arena
+  const SECItem* cert(CreateCert(arena.get(), certCN, &criticalCEExtension,
+                                 key));
+  ASSERT_TRUE(cert);
   ScopedCERTCertList results;
-  ASSERT_SECSuccess(BuildCertChain(trustDomain, cert.get(),
+  ASSERT_SECSuccess(BuildCertChain(trustDomain, *cert,
+                                   now, EndEntityOrCA::MustBeEndEntity,
+                                   KeyUsage::noParticularKeyUsageRequired,
+                                   KeyPurposeId::anyExtendedKeyUsage,
+                                   CertPolicyId::anyPolicy,
+                                   nullptr, // stapled OCSP response
+                                   results));
+}
+
+// Two subjectAltNames must result in an error.
+TEST_F(pkix_cert_extensions, DuplicateSubjectAltName)
+{
+  static const uint8_t DER_BYTES[] = {
+    0x30, 22, // SEQUENCE (length = 22)
+      0x06, 3, // OID (length = 3)
+        0x55, 0x1d, 0x11, // 2.5.29.17
+      0x04, 15, // OCTET STRING (length = 15)
+        0x30, 13, // GeneralNames (SEQUENCE) (length = 13)
+          0x82, 11, // [2] (dNSName) (length = 11)
+            'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm'
+  };
+  static const SECItem DER = {
+    siBuffer,
+    const_cast<unsigned char*>(DER_BYTES),
+    sizeof(DER_BYTES)
+  };
+  static SECItem const* const extensions[] = { &DER, &DER, nullptr };
+  static const char* certCN = "CN=Cert With Duplicate subjectAltName";
+  ScopedSECKEYPrivateKey key;
+  // cert is owned by the arena
+  const SECItem* cert(CreateCert(arena.get(), certCN, extensions, key));
+  ASSERT_TRUE(cert);
+  ScopedCERTCertList results;
+  ASSERT_SECFailure(SEC_ERROR_EXTENSION_VALUE_INVALID,
+                    BuildCertChain(trustDomain, *cert,
                                    now, EndEntityOrCA::MustBeEndEntity,
                                    KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::anyExtendedKeyUsage,

@@ -28,7 +28,7 @@ public:
                                  PRTime time,
                          /*out*/ mozilla::pkix::ScopedCERTCertList& results)
                                  MOZ_OVERRIDE;
-  SECStatus VerifySignedData(const CERTSignedData* signedData,
+  SECStatus VerifySignedData(const CERTSignedData& signedData,
                              const SECItem& subjectPublicKeyInfo) MOZ_OVERRIDE;
   SECStatus CheckRevocation(mozilla::pkix::EndEntityOrCA endEntityOrCA,
                             const mozilla::pkix::CertID& certID, PRTime time,

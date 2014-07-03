@@ -135,7 +135,7 @@ private:
     return SECSuccess;
   }
 
-  SECStatus VerifySignedData(const CERTSignedData* signedData,
+  SECStatus VerifySignedData(const CERTSignedData& signedData,
                              const SECItem& subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
@@ -188,7 +188,8 @@ protected:
 TEST_F(pkix_cert_chain_length, MaxAcceptableCertChainLength)
 {
   ScopedCERTCertList results;
-  ASSERT_SECSuccess(BuildCertChain(trustDomain, trustDomain.GetLeafeCACert(),
+  ASSERT_SECSuccess(BuildCertChain(trustDomain,
+                                   trustDomain.GetLeafeCACert()->derCert,
                                    now, EndEntityOrCA::MustBeCA,
                                    KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::id_kp_serverAuth,
@@ -203,7 +204,7 @@ TEST_F(pkix_cert_chain_length, MaxAcceptableCertChainLength)
                          "CN=Direct End-Entity",
                          EndEntityOrCA::MustBeEndEntity,
                          trustDomain.leafCAKey.get(), privateKey, cert));
-  ASSERT_SECSuccess(BuildCertChain(trustDomain, cert.get(), now,
+  ASSERT_SECSuccess(BuildCertChain(trustDomain, cert->derCert, now,
                                    EndEntityOrCA::MustBeEndEntity,
                                    KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::id_kp_serverAuth,
@@ -225,7 +226,7 @@ TEST_F(pkix_cert_chain_length, BeyondMaxAcceptableCertChainLength)
                          caPrivateKey, caCert));
   PR_SetError(0, 0);
   ASSERT_SECFailure(SEC_ERROR_UNKNOWN_ISSUER,
-                    BuildCertChain(trustDomain, caCert.get(), now,
+                    BuildCertChain(trustDomain, caCert->derCert, now,
                                    EndEntityOrCA::MustBeCA,
                                    KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::id_kp_serverAuth,
@@ -241,7 +242,7 @@ TEST_F(pkix_cert_chain_length, BeyondMaxAcceptableCertChainLength)
                          caPrivateKey.get(), privateKey, cert));
   PR_SetError(0, 0);
   ASSERT_SECFailure(SEC_ERROR_UNKNOWN_ISSUER,
-                    BuildCertChain(trustDomain, cert.get(), now,
+                    BuildCertChain(trustDomain, cert->derCert, now,
                                    EndEntityOrCA::MustBeEndEntity,
                                    KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::id_kp_serverAuth,
