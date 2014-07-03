@@ -112,7 +112,7 @@ ShadowRoot::WrapObject(JSContext* aCx)
 ShadowRoot*
 ShadowRoot::FromNode(nsINode* aNode)
 {
-  if (aNode->HasFlag(NODE_IS_IN_SHADOW_TREE) && !aNode->GetParentNode()) {
+  if (aNode->IsInShadowTree() && !aNode->GetParentNode()) {
     MOZ_ASSERT(aNode->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE,
                "ShadowRoot is a document fragment.");
     return static_cast<ShadowRoot*>(aNode);

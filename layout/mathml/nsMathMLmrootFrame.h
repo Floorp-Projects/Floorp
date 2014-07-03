@@ -40,6 +40,12 @@ public:
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
+  void
+  GetRadicalXOffsets(nscoord aIndexWidth, nscoord aSqrWidth,
+                     nsFontMetrics* aFontMetrics,
+                     nscoord* aIndexOffset,
+                     nscoord* aSqrOffset);
+
   virtual void
   GetIntrinsicWidthMetrics(nsRenderingContext* aRenderingContext,
                            nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;

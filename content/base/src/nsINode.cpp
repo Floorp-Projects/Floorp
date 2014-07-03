@@ -384,7 +384,7 @@ nsINode::GetTextContentInternal(nsAString& aTextContent)
 }
 
 nsIDocument*
-nsINode::GetCrossShadowCurrentDocInternal() const
+nsINode::GetComposedDocInternal() const
 {
   MOZ_ASSERT(HasFlag(NODE_IS_IN_SHADOW_TREE) && IsContent(),
              "Should only be caled on nodes in the shadow tree.");

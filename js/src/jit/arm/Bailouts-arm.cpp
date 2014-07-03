@@ -7,6 +7,7 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 
+#include "jit/arm/Assembler-arm.h"
 #include "jit/Bailouts.h"
 #include "jit/JitCompartment.h"
 
@@ -96,7 +97,7 @@ IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
     JSRuntime *rt = activation->compartment()->runtimeFromMainThread();
     JitCode *code = rt->jitRuntime()->getBailoutTable(bailout->frameClass());
     uintptr_t tableOffset = bailout->tableOffset();
-    uintptr_t tableStart = reinterpret_cast<uintptr_t>(code->raw());
+    uintptr_t tableStart = reinterpret_cast<uintptr_t>(Assembler::BailoutTableStart(code->raw()));
 
     JS_ASSERT(tableOffset >= tableStart &&
               tableOffset < tableStart + code->instructionsSize());
