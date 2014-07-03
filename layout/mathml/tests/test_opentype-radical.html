@@ -1,0 +1,196 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Open Type MATH - radical</title>
+    <script type="application/javascript"
+            src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript"
+            src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <meta charset="utf-8"/>
+    <style type="text/css">
+      math {
+        font-size: 10px;
+      }
+      @font-face {
+        font-family: radical-1;
+        src: url(/tests/fonts/math/radical-1.otf);
+      }
+      @font-face {
+        font-family: radical-2;
+        src: url(/tests/fonts/math/radical-2.otf);
+      }
+      @font-face {
+        font-family: radical-3;
+        src: url(/tests/fonts/math/radical-3.otf);
+      }
+      @font-face {
+        font-family: radical-4;
+        src: url(/tests/fonts/math/radical-4.otf);
+      }
+      @font-face {
+        font-family: radical-5;
+        src: url(/tests/fonts/math/radical-5.otf);
+      }
+      @font-face {
+        font-family: radical-6;
+        src: url(/tests/fonts/math/radical-6.otf);
+      }
+      @font-face {
+        font-family: radical-7;
+        src: url(/tests/fonts/math/radical-7.otf);
+      }
+    </style>
+    <script type="text/javascript">
+      SimpleTest.waitForExplicitFinish();
+
+      var epsilon = 5;
+      function almostEqual(x, y) { return Math.abs(x - y) < epsilon; }
+
+      function getBox(aId) {
+        return document.getElementById(aId).getBoundingClientRect();
+      }
+
+      function doTest() {
+        ok(almostEqual(getBox("inner1").top -
+                       getBox("outer1").top, 5*10) &&
+           almostEqual(getBox("inner2").top -
+                       getBox("outer2").top, 5*10) &&
+           almostEqual(getBox("inner3").top -
+                       getBox("outer3").top, 5*10),
+           "Bad RadicalRuleThickness");
+
+        ok(almostEqual(getBox("inner4").top -
+                       getBox("outer4").top, (7+1)*10) &&
+           almostEqual(getBox("inner5").top -
+                       getBox("outer5").top, (7+1)*10) &&
+           almostEqual(getBox("inner6").top -
+                       getBox("outer6").top, (7+1)*10),
+           "Bad RadicalExtraAscender");
+
+        ok(almostEqual(getBox("inner7").top -
+                       getBox("outer7").top, (3+1)*10) &&
+           almostEqual(getBox("inner7").top -
+                       getBox("outer8").top, (3+1)*10) &&
+           almostEqual(getBox("inner8").top -
+                       getBox("outer9").top, (3+1)*10),
+           "Bad RadicalVerticalGap");
+
+        ok(almostEqual(getBox("inner10").top -
+                       getBox("outer10").top, (9+1)*10) &&
+           almostEqual(getBox("inner11").top -
+                       getBox("outer11").top, (9+1)*10) &&
+           almostEqual(getBox("inner12").top -
+                       getBox("outer12").top, (9+1)*10),
+           "Bad RadicalDisplayStyleVerticalGap");
+
+        ok(almostEqual(getBox("base5").bottom - getBox("index5").bottom,
+                       (getBox("base5").bottom - getBox("root5").top) * .25),
+           "Bad RadicalDegreeBottomRaisePercent")
+
+        ok(almostEqual(getBox("index6").left - getBox("root6").left, 10 * 5),
+           "Bad RadicalKernBeforeDegree")
+
+        ok(almostEqual(getBox("base7").left -
+                       getBox("index7").right, 10 * (7+1)),
+           "Bad RadicalKernAfterDegree")
+
+        SimpleTest.finish();
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=961365">
+      Mozilla Bug 961365
+    </a>
+
+    <p id="display"></p>
+
+    <p>
+      <math style="font-family: radical-1;">
+        <msqrt id="outer1" mathbackground="green">
+          <mspace id="inner1" width="1em" height="1em" mathbackground="red"/>
+        </msqrt>
+        <menclose id="outer2" notation="radical" mathbackground="green">
+          <mspace id="inner2" width="1em" height="1em" mathbackground="red"/>
+        </menclose>
+        <mroot id="outer3" mathbackground="green">
+          <mspace id="inner3" width="1em" height="1em" mathbackground="red"/>
+          <mspace/>
+        </mroot>
+      </math>
+    </p>
+    <p>
+      <math style="font-family: radical-2;">
+        <msqrt id="outer4" mathbackground="green">
+          <mspace id="inner4" width="1em" height="1em" mathbackground="red"/>
+        </msqrt>
+        <menclose id="outer5" notation="radical" mathbackground="green">
+          <mspace id="inner5" width="1em" height="1em" mathbackground="red"/>
+        </menclose>
+        <mroot id="outer6" mathbackground="green">
+          <mspace id="inner6" width="1em" height="1em" mathbackground="red"/>
+          <mspace/>
+        </mroot>
+      </math>
+    </p>
+    <p>
+      <math style="font-family: radical-3;">
+        <msqrt id="outer7" mathbackground="green">
+          <mspace id="inner7" width="1em" height="1em" mathbackground="red"/>
+        </msqrt>
+        <menclose id="outer8" notation="radical" mathbackground="green">
+          <mspace id="inner8" width="1em" height="1em" mathbackground="red"/>
+        </menclose>
+        <mroot id="outer9" mathbackground="green">
+          <mspace id="inner9" width="1em" height="1em" mathbackground="red"/>
+          <mspace/>
+        </mroot>
+      </math>
+    </p>
+    <p>
+      <math style="font-family: radical-4;" displaystyle="true">
+        <msqrt id="outer10" mathbackground="green">
+          <mspace id="inner10" width="1em" height="1em" mathbackground="red"/>
+        </msqrt>
+        <menclose id="outer11" notation="radical" mathbackground="green">
+          <mspace id="inner11" width="1em" height="1em" mathbackground="red"/>
+        </menclose>
+        <mroot id="outer12" mathbackground="green">
+          <mspace id="inner12" width="1em" height="1em" mathbackground="red"/>
+          <mspace/>
+        </mroot>
+      </math>
+    </p>
+
+    <p>
+      <math style="font-family: radical-5;">
+        <mroot id="root5" mathbackground="green">
+          <mspace id="base5" width="1em" height="10em" mathbackground="red"/>
+          <mspace id="index5" width="1em" height="1em" mathbackground="blue"/>
+        </mroot>
+      </math>
+    </p>
+
+    <p>
+      <math style="font-family: radical-6;">
+        <mroot id="root6" mathbackground="green">
+          <mspace id="base6" width="1em" height="10em" mathbackground="red"/>
+          <mspace id="index6" width="1em" height="1em" mathbackground="blue"/>
+        </mroot>
+      </math>
+    </p>
+
+    <p>
+      <math style="font-family: radical-7;">
+        <mroot id="root7" mathbackground="green">
+          <mspace id="base7" width="1em" height="10em" mathbackground="red"/>
+          <mspace id="index7" width="1em" height="1em" mathbackground="blue"/>
+        </mroot>
+      </math>
+    </p>
+
+  </body>
+</html>

@@ -155,6 +155,7 @@ skip-if(B2G) == maction-dynamic-3.html maction-dynamic-3-ref.html # bug 773482
 fails == whitespace-trim-4.html whitespace-trim-4-ref.html # Bug 787215
 == whitespace-trim-5.html whitespace-trim-5-ref.html
 random-if(winWidget&&!d2d) == opentype-stretchy.html opentype-stretchy-ref.html
+== opentype-fraction-dynamic-linethickness.html opentype-fraction-dynamic-linethickness-ref.html
 == operator-1.xhtml operator-1-ref.xhtml
 == scriptshift-1.xhtml scriptshift-1-ref.xhtml
 == number-size-1.xhtml number-size-1-ref.xhtml
@@ -302,18 +303,18 @@ fails-if(B2G||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX) == mathva
 == mfrac-A-7.html mfrac-A-7-ref.html
 == mfrac-A-8.html mfrac-A-8-ref.html
 == mfrac-B-1.html mfrac-B-1-ref.html
-== mfrac-B-2.html mfrac-B-2-3-ref.html
-== mfrac-B-3.html mfrac-B-2-3-ref.html
+random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == mfrac-B-2.html mfrac-B-2-3-ref.html
+random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == mfrac-B-3.html mfrac-B-2-3-ref.html
 == mfrac-B-4.html mfrac-B-4-5-ref.html
 == mfrac-B-5.html mfrac-B-4-5-ref.html
 == mfrac-B-6.html mfrac-B-6-7-ref.html
 == mfrac-B-7.html mfrac-B-6-7-ref.html
 fuzzy-if(OSX,1,100) == mfrac-C-1.html mfrac-C-1-ref.html
-== mfrac-C-2.html mfrac-C-2-ref.html
+random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == mfrac-C-2.html mfrac-C-2-ref.html
 == mfrac-C-3.html mfrac-C-3-ref.html
 == mfrac-C-4.html mfrac-C-4-ref.html
 fuzzy-if(OSX,1,100) == mfrac-D-1.html mfrac-D-1-ref.html
-== mfrac-D-2.html mfrac-D-2-ref.html
+random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == mfrac-D-2.html mfrac-D-2-ref.html
 == mfrac-D-3.html mfrac-D-3-ref.html
 == mfrac-D-4.html mfrac-D-4-ref.html
 == mfrac-E-1.html mfrac-E-1-ref.html
