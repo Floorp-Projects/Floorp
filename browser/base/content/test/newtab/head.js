@@ -516,13 +516,13 @@ function synthesizeNativeMouseLUp(aElement) {
 }
 
 /**
- * Fires a synthetic mouse drag event on the current about:newtab page.
+ * Fires a synthetic mouse vertical drag event on the current about:newtab page.
  * @param aElement The element used to determine the cursor position.
- * @param aOffsetX The left offset that is added to the position.
+ * @param aOffsetY The top offset that is added to the position.
  */
-function synthesizeNativeMouseDrag(aElement, aOffsetX) {
+function synthesizeNativeMouseDrag(aElement, aOffsetY) {
   let msg = isMac ? 6 : 1;
-  synthesizeNativeMouseEvent(aElement, msg, aOffsetX);
+  synthesizeNativeMouseEvent(aElement, msg, 0, aOffsetY);
 }
 
 /**
