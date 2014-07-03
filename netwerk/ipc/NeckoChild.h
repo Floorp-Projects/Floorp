@@ -43,7 +43,8 @@ protected:
     AllocPWebSocketChild(const PBrowserOrId&,
                          const SerializedLoadContext&) MOZ_OVERRIDE;
   virtual bool DeallocPWebSocketChild(PWebSocketChild*) MOZ_OVERRIDE;
-  virtual PTCPSocketChild* AllocPTCPSocketChild() MOZ_OVERRIDE;
+  virtual PTCPSocketChild* AllocPTCPSocketChild(const nsString& host,
+                                                const uint16_t& port) MOZ_OVERRIDE;
   virtual bool DeallocPTCPSocketChild(PTCPSocketChild*) MOZ_OVERRIDE;
   virtual PTCPServerSocketChild*
     AllocPTCPServerSocketChild(const uint16_t& aLocalPort,

@@ -93,12 +93,19 @@ interface nsIRadioInterface : nsISupports
   void getNeighboringCellIds(in nsINeighboringCellIdsCallback callback);
 };
 
-[scriptable, uuid(d035c32e-b491-11e3-9f9d-c716fab88bd6)]
+[scriptable, uuid(78b65e8c-68e7-4510-9a05-65bba12b283e)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   readonly attribute unsigned long numRadioInterfaces;
 
   nsIRadioInterface getRadioInterface(in unsigned long clientId);
+
+  /**
+   * Select a proper client for dialing emergency call.
+   *
+   * @return clientId or -1 if none of the clients are avaialble.
+   */
+  unsigned long getClientIdForEmergencyCall();
 
   void setMicrophoneMuted(in boolean muted);
 };
