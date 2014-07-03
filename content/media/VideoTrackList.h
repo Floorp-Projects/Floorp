@@ -41,9 +41,6 @@ public:
 
   friend class VideoTrack;
 
-protected:
-  virtual VideoTrackList* AsVideoTrackList() MOZ_OVERRIDE { return this; }
-
 private:
   int32_t mSelectedIndex;
 };
