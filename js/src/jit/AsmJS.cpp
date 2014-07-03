@@ -5927,16 +5927,6 @@ static const unsigned FramePushedAfterSave = NonVolatileRegs.gprs().size() * siz
                                              NonVolatileRegs.fpus().size() * sizeof(double);
 #endif
 
-// On ARM/MIPS, we need to include an extra word of space at the top of the
-// stack so we can explicitly store the return address before making the call
-// to C++ or Ion. On x86/x64, this isn't necessary since the call instruction
-// pushes the return address.
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
-static const unsigned MaybeRetAddr = sizeof(void*);
-#else
-static const unsigned MaybeRetAddr = 0;
-#endif
-
 static bool
 GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFunc)
 {
@@ -6229,10 +6219,10 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     invokeArgTypes.infallibleAppend(typeArray, ArrayLength(typeArray));
 
     // At the point of the call, the stack layout shall be (sp grows to the left):
-    // | retaddr | stack args | padding | Value argv[] | padding | retaddr | caller stack args |
-    // The first padding ensures double-alignment of argv; the second ensures
-    // sp is aligned.
-    unsigned offsetToArgv = AlignBytes(StackArgBytes(invokeArgTypes) + MaybeRetAddr, StackAlignment);
+    //   | stack args | padding | Value argv[] | padding | retaddr | caller stack args |
+    // The padding between stack args and argv ensures that sp is aligned. The
+    // padding between argv and retaddr ensures that argv is aligned.
+    unsigned offsetToArgv = AlignBytes(StackArgBytes(invokeArgTypes), StackAlignment);
     unsigned argvBytes = Max<size_t>(1, exit.sig().args().length()) * sizeof(Value);
     unsigned stackDec = StackDecrementForCall(masm, offsetToArgv + argvBytes);
     masm.reserveStack(stackDec);
@@ -6327,7 +6317,7 @@ GenerateOOLConvert(ModuleCompiler &m, RetType retType, Label *throwLabel)
     // the stack usage here needs to kept in sync with GenerateFFIIonExit.
 
     // Store value
-    unsigned offsetToArgv = StackArgBytes(callArgTypes) + MaybeRetAddr;
+    unsigned offsetToArgv = StackArgBytes(callArgTypes);
     masm.storeValue(JSReturnOperand, Address(StackPointer, offsetToArgv));
 
     Register scratch = ABIArgGenerator::NonArgReturnVolatileReg0;
@@ -6375,6 +6365,16 @@ GenerateOOLConvert(ModuleCompiler &m, RetType retType, Label *throwLabel)
     }
 }
 
+// On ARM/MIPS, we need to include an extra word of space at the top of the
+// stack so we can explicitly store the return address before making the call
+// to C++ or Ion. On x86/x64, this isn't necessary since the call instruction
+// pushes the return address.
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+static const unsigned MaybeRetAddr = sizeof(void*);
+#else
+static const unsigned MaybeRetAddr = 0;
+#endif
+
 static void
 GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit,
                          unsigned exitIndex, Label *throwLabel)
@@ -6418,8 +6418,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     MIRType typeArray[] = { MIRType_Pointer, MIRType_Pointer }; // cx, argv
     MIRTypeVector callArgTypes(m.cx());
     callArgTypes.infallibleAppend(typeArray, ArrayLength(typeArray));
-    unsigned oolExtraBytes = sizeof(Value) + MaybeRetAddr;
-    unsigned stackDecForOOLCall = StackDecrementForCall(masm, callArgTypes, oolExtraBytes);
+    unsigned stackDecForOOLCall = StackDecrementForCall(masm, callArgTypes, sizeof(Value));
 
     // Allocate a frame large enough for both of the above calls.
     unsigned stackDec = Max(stackDecForIonCall, stackDecForOOLCall);
@@ -6644,7 +6643,7 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
     MIRTypeVector argTypes(m.cx());
     argTypes.infallibleAppend(MIRType_Pointer); // cx
 
-    unsigned stackDec = StackDecrementForCall(masm, argTypes, MaybeRetAddr);
+    unsigned stackDec = StackDecrementForCall(masm, argTypes);
     masm.reserveStack(stackDec);
 
     ABIArgMIRTypeIter i(argTypes);
