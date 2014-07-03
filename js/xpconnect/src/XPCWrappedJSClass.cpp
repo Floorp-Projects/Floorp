@@ -90,7 +90,7 @@ bool xpc_IsReportableErrorCode(nsresult code)
 
 // static
 already_AddRefed<nsXPCWrappedJSClass>
-nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID, bool allowNonScriptable)
+nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID)
 {
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     IID2WrappedJSClassMap* map = rt->GetWrappedJSClassMap();
@@ -101,7 +101,7 @@ nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID, bool allowNonScr
         nsXPConnect::XPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if (info) {
             bool canScript, isBuiltin;
-            if (NS_SUCCEEDED(info->IsScriptable(&canScript)) && (canScript || allowNonScriptable) &&
+            if (NS_SUCCEEDED(info->IsScriptable(&canScript)) && canScript &&
                 NS_SUCCEEDED(info->IsBuiltinClass(&isBuiltin)) && !isBuiltin &&
                 nsXPConnect::IsISupportsDescendant(info))
             {
@@ -202,14 +202,12 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
     // implement intentionally (for security) unscriptable interfaces.
     // We so often ask for nsISupports that we can short-circuit the test...
     if (!aIID.Equals(NS_GET_IID(nsISupports))) {
-        bool allowNonScriptable = mozilla::jsipc::IsWrappedCPOW(jsobj);
-
         nsCOMPtr<nsIInterfaceInfo> info;
         nsXPConnect::XPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if (!info)
             return nullptr;
         bool canScript, isBuiltin;
-        if (NS_FAILED(info->IsScriptable(&canScript)) || (!canScript && !allowNonScriptable) ||
+        if (NS_FAILED(info->IsScriptable(&canScript)) || !canScript ||
             NS_FAILED(info->IsBuiltinClass(&isBuiltin)) || isBuiltin)
             return nullptr;
     }
