@@ -15,11 +15,11 @@
   <remote fetch="https://git.mozilla.org/external/apitrace" name="apitrace"/>
   <default remote="caf" revision="refs/tags/android-4.0.4_r2.1" sync-j="4"/>
   <!-- Gonk specific things and forks -->
-  <project name="platform_build" path="build" remote="b2g" revision="2a165bebfa19b11b697837409f9550dd2917c46c">
+  <project name="platform_build" path="build" remote="b2g" revision="0d616942c300d9fb142483210f1dda9096c9a9fc">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="1a67356d643aa563e915aa627536ef03d373be8e"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="16f91805e556a77686b5ac774e453fd71635174c"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="230f11aff069d90d20fc2dc63b48e9ae3d4bdcd1"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="cd88d860656c31c7da7bb310d6a160d0011b0961"/>
@@ -98,11 +98,11 @@
   <project name="platform/system/vold" path="system/vold" revision="919829940468066a32f403980b43f6ebfee5d314"/>
   <!-- Emulator specific things -->
   <project name="android-development" path="development" remote="b2g" revision="9abf0ab68376afae3e1c7beefa3e9cbee2fde202"/>
-  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="3cae7eee1f7f00ba1eb53c733a8779f345055c6e"/>
+  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="3c42f55d85fd311de2ed9268a59ba1db30be2b21"/>
   <project name="platform/external/iproute2" path="external/iproute2" revision="c66c5716d5335e450f7a7b71ccc6a604fb2f41d2"/>
   <project name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="d2685281e2e54ca14d1df304867aa82c37b27162"/>
   <project name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="627f9b20fc518937b93747a7ff1ed4f5ed46e06f"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="acba00cdb4596c6dcb61ed06f14cf4ec89623539"/>
-  <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="bce69473f3d63ab927442f4301f5fb4833d20008"/>
+  <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="02c32feb2fe97037be0ac4dace3a6a5025ac895d"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="4f46930827957afbce500a4a920755a218bf3155"/>
 </manifest>
