@@ -9,7 +9,8 @@ var expect = chai.expect;
 describe("loop.panel", function() {
   "use strict";
 
-  var sandbox, notifier, fakeXHR, requests = [], savedMozLoop;
+  var sandbox, notifier, fakeXHR, requests = [], savedMozLoop,
+      fakeSeenToSPref = 0;
 
   function createTestRouter(fakeDocument) {
     return new loop.panel.PanelRouter({
@@ -45,8 +46,16 @@ describe("loop.panel", function() {
       },
       get locale() {
         return "en-US";
+      },
+      setLoopCharPref: sandbox.stub(),
+      getLoopCharPref: function () {
+        if (fakeSeenToSPref === 0) {
+          return null;
+        }
+        return 'seen';
       }
     };
+
     document.mozL10n.initialize(navigator.mozLoop);
   });
 
@@ -210,7 +219,7 @@ describe("loop.panel", function() {
 
     describe("#getCallUrl", function() {
       it("should reset all pending notifications", function() {
-        var requestCallUrl = sandbox.stub(loop.shared.Client.prototype,
+        var requestCallUrl = sandbox.stub(loop.Client.prototype,
                                           "requestCallUrl");
         var view = new loop.panel.PanelView({notifier: notifier}).render();
 
@@ -220,7 +229,7 @@ describe("loop.panel", function() {
       });
 
       it("should request a call url to the server", function() {
-        var requestCallUrl = sandbox.stub(loop.shared.Client.prototype,
+        var requestCallUrl = sandbox.stub(loop.Client.prototype,
                                           "requestCallUrl");
         var view = new loop.panel.PanelView({notifier: notifier});
         sandbox.stub(view, "getNickname").returns("foo");
@@ -232,7 +241,7 @@ describe("loop.panel", function() {
       });
 
       it("should set the call url form in a pending state", function() {
-        var requestCallUrl = sandbox.stub(loop.shared.Client.prototype,
+        var requestCallUrl = sandbox.stub(loop.Client.prototype,
                                           "requestCallUrl");
         sandbox.stub(loop.panel.PanelView.prototype, "setPending");
 
@@ -248,7 +257,7 @@ describe("loop.panel", function() {
           sandbox.stub(loop.panel.PanelView.prototype,
                        "clearPending");
           var requestCallUrl = sandbox.stub(
-            loop.shared.Client.prototype, "requestCallUrl", function(_, cb) {
+            loop.Client.prototype, "requestCallUrl", function(_, cb) {
               cb("fake error");
             });
           var view = new loop.panel.PanelView({notifier: notifier});
@@ -260,7 +269,7 @@ describe("loop.panel", function() {
 
       it("should notify the user when the operation failed", function() {
         var requestCallUrl = sandbox.stub(
-          loop.shared.Client.prototype, "requestCallUrl", function(_, cb) {
+          loop.Client.prototype, "requestCallUrl", function(_, cb) {
             cb("fake error");
           });
         var view = new loop.panel.PanelView({notifier: notifier});
@@ -278,7 +287,7 @@ describe("loop.panel", function() {
 
       beforeEach(function() {
         callUrlData = {
-          call_url: "http://call.me/",
+          callUrl: "http://call.me/",
           expiresAt: 1000
         };
       });
@@ -321,6 +330,58 @@ describe("loop.panel", function() {
         view.render();
 
         sinon.assert.calledOnce(renderDnD);
+      });
+
+      it("should render a ToSView", function() {
+        var renderToS = sandbox.stub(loop.panel.ToSView.prototype, "render");
+        var view = new loop.panel.PanelView({notifier: notifier});
+
+        view.render();
+
+        sinon.assert.calledOnce(renderToS);
+      });
+    });
+
+    describe('loop.panel.ToSView', function() {
+
+      beforeEach(function() {
+
+        $('#fixtures').append('<div id="#tos-view"></div>');
+
+      });
+
+      // XXX Until it's possible to easily test creation of text,
+      // not doing so. As it stands, the magic in the L10nView
+      // class makes stubbing BaseView.render impractical.
+
+      it("should set the value of the loop.seenToS preference to 'seen'",
+        function() {
+          var ToSView = new loop.panel.ToSView({el: $("#tos-view")});
+
+          ToSView.render();
+
+          sinon.assert.calledOnce(navigator.mozLoop.setLoopCharPref);
+          sinon.assert.calledWithExactly(navigator.mozLoop.setLoopCharPref,
+            'seenToS', 'seen');
+        });
+
+      it("should render when the value of loop.seenToS is not set", function() {
+        var renderToS = sandbox.spy(loop.panel.ToSView.prototype, "render");
+        var ToSView = new loop.panel.ToSView({el: $('#tos-view')});
+
+        ToSView.render();
+
+        sinon.assert.calledOnce(renderToS);
+      });
+
+      it("should not render when the value of loop.seenToS is set to 'seen'",
+        function() {
+        var ToSView = new loop.panel.ToSView({el: $('#tos-view')});
+        fakeSeenToSPref = 1;
+
+        ToSView.render();
+
+        sinon.assert.notCalled(navigator.mozLoop.setLoopCharPref);
       });
     });
   });

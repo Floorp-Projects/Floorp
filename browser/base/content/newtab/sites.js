@@ -158,7 +158,7 @@ Site.prototype = {
       thumbnail.style.backgroundColor = this.link.bgColor;
     }
     let uri = this.link.imageURI || PageThumbs.getThumbnailURL(this.url);
-    thumbnail.style.backgroundImage = "url(" + uri + ")";
+    thumbnail.style.backgroundImage = 'url("' + uri + '")';
   },
 
   /**
