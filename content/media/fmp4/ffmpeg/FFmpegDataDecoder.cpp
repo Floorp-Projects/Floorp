@@ -12,6 +12,7 @@
 #include "FFmpegLibs.h"
 #include "FFmpegLog.h"
 #include "FFmpegDataDecoder.h"
+#include "prsystem.h"
 
 namespace mozilla
 {
@@ -82,6 +83,10 @@ FFmpegDataDecoder<LIBAV_VER>::Init()
 
   // FFmpeg will call back to this to negotiate a video pixel format.
   mCodecContext.get_format = ChoosePixelFormat;
+
+  mCodecContext.thread_count = PR_GetNumberOfProcessors();
+  mCodecContext.thread_type = FF_THREAD_FRAME;
+  mCodecContext.thread_safe_callbacks = false;
 
   mCodecContext.extradata = mExtraData.begin();
   mCodecContext.extradata_size = mExtraData.length();
