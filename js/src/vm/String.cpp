@@ -290,7 +290,24 @@ void
 CopyChars(Latin1Char *dest, const JSLinearString &str)
 {
     AutoCheckCannotGC nogc;
-    PodCopy(dest, str.latin1Chars(nogc), str.length());
+    if (str.hasLatin1Chars()) {
+        PodCopy(dest, str.latin1Chars(nogc), str.length());
+    } else {
+        /*
+         * When we flatten a TwoByte rope, we turn child ropes (including Latin1
+         * ropes) into TwoByte dependent strings. If one of these strings is
+         * also part of another Latin1 rope tree, we can have a Latin1 rope with
+         * a TwoByte descendent and we end up here when we flatten it. Although
+         * the chars are stored as TwoByte, we know they must be in the Latin1
+         * range, so we can safely deflate here.
+         */
+        size_t len = str.length();
+        const jschar *chars = str.twoByteChars(nogc);
+        for (size_t i = 0; i < len; i++) {
+            MOZ_ASSERT(chars[i] <= JSString::MAX_LATIN1_CHAR);
+            dest[i] = chars[i];
+        }
+    }
 }
 
 } /* namespace js */
