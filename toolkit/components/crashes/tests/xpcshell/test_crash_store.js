@@ -17,8 +17,11 @@ const {
   PROCESS_TYPE_MAIN,
   PROCESS_TYPE_CONTENT,
   PROCESS_TYPE_PLUGIN,
+  PROCESS_TYPE_SUBMISSION,
   CRASH_TYPE_CRASH,
   CRASH_TYPE_HANG,
+  SUBMISSION_TYPE_SUCCEEDED,
+  SUBMISSION_TYPE_FAILED,
 } = CrashManager.prototype;
 
 const CrashStore = bsp.CrashStore;
@@ -271,6 +274,44 @@ add_task(function* test_add_plugin_hang() {
 
   let crashes = s.getCrashesOfType(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG);
   Assert.equal(crashes.length, 2);
+});
+
+add_task(function* test_add_submission() {
+  let s = yield getStore();
+
+  Assert.ok(
+    s.addCrash(PROCESS_TYPE_MAIN + "-" + CRASH_TYPE_CRASH + "-" +
+               PROCESS_TYPE_SUBMISSION, SUBMISSION_TYPE_SUCCEEDED,
+               "id1", new Date())
+  );
+  Assert.equal(s.crashesCount, 1);
+
+  let c = s.crashes[0];
+  Assert.ok(c.crashDate);
+  Assert.equal(c.type, PROCESS_TYPE_MAIN + "-" + CRASH_TYPE_CRASH + "-" +
+               PROCESS_TYPE_SUBMISSION + "-" + SUBMISSION_TYPE_SUCCEEDED);
+  Assert.ok(c.isOfType(PROCESS_TYPE_MAIN + "-" + CRASH_TYPE_CRASH + "-" +
+                       PROCESS_TYPE_SUBMISSION, SUBMISSION_TYPE_SUCCEEDED));
+
+  Assert.ok(
+    s.addCrash(PROCESS_TYPE_MAIN + "-" + CRASH_TYPE_CRASH + "-" +
+               PROCESS_TYPE_SUBMISSION, SUBMISSION_TYPE_FAILED,
+               "id2", new Date())
+  );
+  Assert.equal(s.crashesCount, 2);
+
+  // Duplicate.
+  Assert.ok(
+    s.addCrash(PROCESS_TYPE_MAIN + "-" + CRASH_TYPE_CRASH + "-" +
+               PROCESS_TYPE_SUBMISSION, SUBMISSION_TYPE_SUCCEEDED,
+               "id1", new Date())
+  );
+  Assert.equal(s.crashesCount, 2);
+
+  let crashes = s.getCrashesOfType(PROCESS_TYPE_MAIN + "-" + CRASH_TYPE_CRASH +
+                                   "-" + PROCESS_TYPE_SUBMISSION,
+                                   SUBMISSION_TYPE_SUCCEEDED);
+  Assert.equal(crashes.length, 1);
 });
 
 add_task(function* test_add_mixed_types() {
