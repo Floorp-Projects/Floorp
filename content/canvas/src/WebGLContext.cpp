@@ -437,6 +437,11 @@ WebGLContext::SetContextOptions(JSContext* aCx, JS::Handle<JS::Value> aOptions)
     // enforce that if stencil is specified, we also give back depth
     newOpts.depth |= newOpts.stencil;
 
+    // Don't do antialiasing if we've disabled MSAA.
+    if (!gfxPrefs::MSAALevel()) {
+      newOpts.antialias = false;
+    }
+
 #if 0
     GenerateWarning("aaHint: %d stencil: %d depth: %d alpha: %d premult: %d preserve: %d\n",
                newOpts.antialias ? 1 : 0,
