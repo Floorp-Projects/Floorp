@@ -9,8 +9,30 @@
 #include "nsSize.h"
 #include "nsRect.h"
 #include "ImageTypes.h"
+#include "nsString.h"
 
 namespace mozilla {
+
+struct TrackInfo {
+  void Init(const nsAString& aId,
+            const nsAString& aKind,
+            const nsAString& aLabel,
+            const nsAString& aLanguage,
+            bool aEnabled)
+  {
+    mId = aId;
+    mKind = aKind;
+    mLabel = aLabel;
+    mLanguage = aLanguage;
+    mEnabled = aEnabled;
+  }
+
+  nsString mId;
+  nsString mKind;
+  nsString mLabel;
+  nsString mLanguage;
+  bool mEnabled;
+};
 
 // Stores info relevant to presenting media frames.
 class VideoInfo {
@@ -19,7 +41,12 @@ public:
     : mDisplay(0,0)
     , mStereoMode(StereoMode::MONO)
     , mHasVideo(false)
-  {}
+  {
+    // TODO: TrackInfo should be initialized by its specific codec decoder.
+    // This following call should be removed once we have that implemented.
+    mTrackInfo.Init(NS_LITERAL_STRING("2"), NS_LITERAL_STRING("main"),
+    EmptyString(), EmptyString(), true);
+  }
 
   // Size in pixels at which the video is rendered. This is after it has
   // been scaled by its aspect ratio.
@@ -30,6 +57,8 @@ public:
 
   // True if we have an active video bitstream.
   bool mHasVideo;
+
+  TrackInfo mTrackInfo;
 };
 
 class AudioInfo {
@@ -38,7 +67,12 @@ public:
     : mRate(44100)
     , mChannels(2)
     , mHasAudio(false)
-  {}
+  {
+    // TODO: TrackInfo should be initialized by its specific codec decoder.
+    // This following call should be removed once we have that implemented.
+    mTrackInfo.Init(NS_LITERAL_STRING("1"), NS_LITERAL_STRING("main"),
+    EmptyString(), EmptyString(), true);
+  }
 
   // Sample rate.
   uint32_t mRate;
@@ -48,6 +82,8 @@ public:
 
   // True if we have an active audio bitstream.
   bool mHasAudio;
+
+  TrackInfo mTrackInfo;
 };
 
 class MediaInfo {
@@ -67,6 +103,7 @@ public:
     return HasVideo() || HasAudio();
   }
 
+  // TODO: Store VideoInfo and AudioIndo in arrays to support multi-tracks.
   VideoInfo mVideo;
   AudioInfo mAudio;
 };
