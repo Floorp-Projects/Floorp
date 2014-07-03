@@ -7,8 +7,6 @@
 #ifndef __FFmpegH264Decoder_h__
 #define __FFmpegH264Decoder_h__
 
-#include "nsTPriorityQueue.h"
-
 #include "FFmpegDataDecoder.h"
 
 namespace mozilla
@@ -67,21 +65,6 @@ private:
    * refcounting.
    */
   nsRefPtr<Image> mCurrentImage;
-
-  struct VideoDataComparator
-  {
-    bool LessThan(VideoData* const& a, VideoData* const& b) const
-    {
-      return a->mTime < b->mTime;
-    }
-  };
-
-  /**
-   * FFmpeg returns frames in DTS order, so we need to keep a heap of the
-   * previous MAX_B_FRAMES + 1 frames (all B frames in a GOP + one P frame)
-   * ordered by PTS to make sure we present video frames in the intended order.
-   */
-  nsTPriorityQueue<VideoData*, VideoDataComparator> mDelayedFrames;
 };
 
 } // namespace mozilla
