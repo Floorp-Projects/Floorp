@@ -124,6 +124,8 @@ browser.jar:
     content/browser/devtools/graphs-frame.xhtml                        (shared/widgets/graphs-frame.xhtml)
     content/browser/devtools/spectrum-frame.xhtml                      (shared/widgets/spectrum-frame.xhtml)
     content/browser/devtools/spectrum.css                              (shared/widgets/spectrum.css)
+    content/browser/devtools/cubic-bezier-frame.xhtml                  (shared/widgets/cubic-bezier-frame.xhtml)
+    content/browser/devtools/cubic-bezier.css                          (shared/widgets/cubic-bezier.css)
     content/browser/devtools/eyedropper.xul                            (eyedropper/eyedropper.xul)
     content/browser/devtools/eyedropper/crosshairs.css                 (eyedropper/crosshairs.css)
     content/browser/devtools/eyedropper/nocursor.css                   (eyedropper/nocursor.css)
