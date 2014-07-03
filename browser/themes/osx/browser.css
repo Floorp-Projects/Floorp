@@ -3729,7 +3729,17 @@ menulist.translate-infobar-element[open="true"] {
 
 menulist.translate-infobar-element > .menulist-dropmarker {
   display: -moz-box;
-  list-style-image: url("chrome://global/skin/icons/menulist-dropmarker.png");
+  list-style-image: url("chrome://global/skin/icons/glyph-dropdown.png");
+}
+
+@media (min-resolution: 2dppx) {
+  menulist.translate-infobar-element > .menulist-dropmarker {
+    list-style-image: url("chrome://global/skin/icons/glyph-dropdown@2x.png");
+  }
+
+  menulist.translate-infobar-element > .menulist-dropmarker > .dropmarker-icon {
+    width: 8px;
+  }
 }
 
 
