@@ -43,19 +43,6 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
-     * Returns the url for the Loop server from preferences.
-     *
-     * @return {String} The Loop server url
-     */
-    serverUrl: {
-      enumerable: true,
-      configurable: true,
-      get: function() {
-        return Services.prefs.getCharPref("loop.server");
-      }
-    },
-
-    /**
      * Returns the current locale of the browser.
      *
      * @returns {String} The locale string
@@ -214,7 +201,40 @@ function injectLoopAPI(targetWindow) {
           ringer = null;
         }
       }
-    }
+    },
+
+    /**
+     * Performs a hawk based request to the loop server.
+     *
+     * Callback parameters:
+     *  - {Object|null} null if success. Otherwise an object:
+     *    {
+     *      code: 401,
+     *      errno: 401,
+     *      error: "Request failed",
+     *      message: "invalid token"
+     *    }
+     *  - {String} The body of the response.
+     *
+     * @param {String} path The path to make the request to.
+     * @param {String} method The request method, e.g. 'POST', 'GET'.
+     * @param {Object} payloadObj An object which is converted to JSON and
+     *                            transmitted with the request.
+     * @param {Function} callback Called when the request completes.
+     */
+    hawkRequest: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function(path, method, payloadObj, callback) {
+        // XXX Should really return a DOM promise here.
+        return MozLoopService.hawkRequest(path, method, payloadObj).then((response) => {
+          callback(null, response.body);
+        }, (error) => {
+          callback(Cu.cloneInto(error, targetWindow));
+        });
+      }
+    },
   };
 
   let contentObj = Cu.createObjectIn(targetWindow);
