@@ -119,10 +119,6 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
                    gl->IsSupported(GLFeature::texture_half_float);
         case WebGLExtensionID::OES_texture_half_float_linear:
             return gl->IsSupported(GLFeature::texture_half_float_linear);
-        case WebGLExtensionID::WEBGL_color_buffer_float:
-            return WebGLExtensionColorBufferFloat::IsSupported(this);
-        case WebGLExtensionID::EXT_color_buffer_half_float:
-            return WebGLExtensionColorBufferHalfFloat::IsSupported(this);
         case WebGLExtensionID::OES_vertex_array_object:
             return WebGLExtensionVertexArray::IsSupported(this);
         case WebGLExtensionID::EXT_texture_filter_anisotropic:
@@ -168,6 +164,10 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
         switch (ext) {
             case WebGLExtensionID::EXT_blend_minmax:
                 return WebGLExtensionBlendMinMax::IsSupported(this);
+            case WebGLExtensionID::EXT_color_buffer_half_float:
+                return WebGLExtensionColorBufferHalfFloat::IsSupported(this);
+            case WebGLExtensionID::WEBGL_color_buffer_float:
+                return WebGLExtensionColorBufferFloat::IsSupported(this);
             default:
                 // For warnings-as-errors.
                 break;
