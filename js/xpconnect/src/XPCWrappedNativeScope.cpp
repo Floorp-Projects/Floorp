@@ -28,9 +28,7 @@ XPCWrappedNativeScope* XPCWrappedNativeScope::gDyingScopes = nullptr;
 static bool
 RemoteXULForbidsXBLScope(nsIPrincipal *aPrincipal, HandleObject aGlobal)
 {
-  // Check for random JSD scopes that don't have a principal.
-  if (!aPrincipal)
-      return false;
+  MOZ_ASSERT(aPrincipal);
 
   // The SafeJSContext is lazily created, and tends to be created at really
   // weird times, at least for xpcshell (often very early in startup or late
