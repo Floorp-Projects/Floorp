@@ -3203,6 +3203,9 @@ JSTerm.prototype = {
         case "help":
           this.hud.owner.openLink(HELP_URL);
           break;
+        case "copyValueToClipboard":
+          clipboardHelper.copyString(helperResult.value);
+          break;
       }
     }
 
