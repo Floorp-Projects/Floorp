@@ -278,7 +278,7 @@ describe("loop.panel", function() {
 
       beforeEach(function() {
         callUrlData = {
-          call_url: "http://call.me/",
+          callUrl: "http://call.me/",
           expiresAt: 1000
         };
       });
