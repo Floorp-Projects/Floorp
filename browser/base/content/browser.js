@@ -2328,14 +2328,14 @@ let BrowserOnClick = {
 
   onAboutCertError: function (browser, elementId, isTopFrame, location) {
     let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
-    switch (elementId) {
-    let docshell = aOwnerDoc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
-                                        .getInterface(Ci.nsIWebNavigation)
-                                        .QueryInterface(Ci.nsIDocShell);
-    let securityInfo = docshell.failedChannel.securityInfo;
-    let sslStatus = securityInfo.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
 
+    switch (elementId) {
       case "exceptionDialogButton":
+        let docshell = aOwnerDoc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
+                                            .getInterface(Ci.nsIWebNavigation)
+                                            .QueryInterface(Ci.nsIDocShell);
+        let securityInfo = docshell.failedChannel.securityInfo;
+        let sslStatus = securityInfo.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
         if (isTopFrame) {
           secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_CLICK_ADD_EXCEPTION);
         }
