@@ -2979,7 +2979,16 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
       ss << "</body></html>";
     }
 
-    fprintf(gfxUtils::sDumpPaintFile, "%s", ss.str().c_str());
+    char line[1024];
+    while (!ss.eof()) {
+      ss.getline(line, sizeof(line));
+      fprintf_stderr(gfxUtils::sDumpPaintFile, "%s", line);
+      if (ss.fail()) {
+        // line was too long, skip to next newline
+        ss.clear();
+        ss.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      }
+    }
 
     if (gfxUtils::sDumpPaintingToFile) {
       fclose(gfxUtils::sDumpPaintFile);
