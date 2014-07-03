@@ -42,6 +42,7 @@ FFmpegH264Decoder<LIBAV_VER>::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   mCodecContext.get_buffer = AllocateBufferCb;
+  mCodecContext.release_buffer = ReleaseBufferCb;
 
   return NS_OK;
 }
@@ -82,8 +83,8 @@ FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
 
     data = VideoData::CreateFromImage(
       info, mImageContainer, aSample->byte_offset,
-      aSample->composition_timestamp, aSample->duration, mCurrentImage,
-      aSample->is_sync_point, -1,
+      aSample->composition_timestamp, aSample->duration,
+      reinterpret_cast<Image*>(frame->opaque), aSample->is_sync_point, -1,
       gfx::IntRect(0, 0, mCodecContext.width, mCodecContext.height));
 
     mCallback->Output(data.forget());
@@ -130,6 +131,13 @@ FFmpegH264Decoder<LIBAV_VER>::AllocateBufferCb(AVCodecContext* aCodecContext,
   default:
     return avcodec_default_get_buffer(aCodecContext, aFrame);
   }
+}
+
+/* static */ void
+FFmpegH264Decoder<LIBAV_VER>::ReleaseBufferCb(AVCodecContext* aCodecContext,
+                                              AVFrame* aFrame)
+{
+  reinterpret_cast<Image*>(aFrame->opaque)->Release();
 }
 
 int
@@ -194,7 +202,7 @@ FFmpegH264Decoder<LIBAV_VER>::AllocateYUV420PVideoBuffer(
   PlanarYCbCrDataFromAVFrame(data, aFrame);
   ycbcr->SetDataNoCopy(data);
 
-  mCurrentImage.swap(image);
+  aFrame->opaque = reinterpret_cast<void*>(image.forget().take());
 
   return 0;
 }
