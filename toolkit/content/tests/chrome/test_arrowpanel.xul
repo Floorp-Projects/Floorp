@@ -23,19 +23,14 @@
           src="data:text/html,&lt;input id='input'&gt;" width="100" height="100" left="225" top="120"/>
 </stack>
 
-<panel id="panel" type="arrow" animate="false"
+<panel id="panel" type="arrow"
        onpopupshown="checkPanelPosition(this)" onpopuphidden="runNextTest.next()">
   <label id="panellabel" value="This is some text..." height="65"/>
 </panel>
 
-<panel id="bigpanel" type="arrow" animate="false"
+<panel id="bigpanel" type="arrow"
        onpopupshown="checkBigPanel(this)" onpopuphidden="runNextTest.next()">
   <button label="This is some text..." height="3000"/>
-</panel>
-
-<panel id="animatepanel" type="arrow"
-       onpopuphidden="animatedPopupHidden = true; runNextTest.next();">
-  <label value="Animate Closed" height="40"/>
 </panel>
 
 <script type="application/javascript">
@@ -46,7 +41,6 @@ SimpleTest.waitForExplicitFinish();
 var expectedAnchor = null;
 var expectedSide = "", expectedAnchorEdge = "", expectedPack = "", expectedAlignment = "";
 var zoomFactor = 1;
-var animatedPopupHidden = false;
 var runNextTest;
 
 function startTest()
@@ -174,28 +168,6 @@ function nextTest()
     $("topright").removeAttribute("right");
     $("bottomleft").removeAttribute("left");
     $("bottomright").removeAttribute("right");
-  }
-
-  // Test that a transition occurs when opening or closing the popup. The transition is
-  // disabled on Linux.
-  if (navigator.platform.indexOf("Linux") == -1) {
-    var transitions = 0;
-    function transitionEnded(event) {
-      transitions++;
-      // Two properties transition so continue on the second one finishing.
-      if (!(transitions % 2)) {
-        SimpleTest.executeSoon(() => runNextTest.next());
-      }
-    }
-
-    // Check that the transition occurs for an arrow panel with animate="true"
-    window.addEventListener("transitionend", transitionEnded, false);
-    $("animatepanel").openPopup($("topleft"), "after_start", 0, 0, false, false, null, "start");
-    yield;
-    window.removeEventListener("transitionend", transitionEnded, false);
-    synthesizeKey("VK_ESCAPE", { });
-    ok(!animatedPopupHidden, "animated popup not hidden yet");
-    yield;
   }
 
   SimpleTest.finish()
