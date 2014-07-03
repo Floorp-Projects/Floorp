@@ -184,7 +184,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
       // incorrectly fail the unit tests.
       if (!isPreload) {
         this->AsyncReportViolation(aContentLocation,
-                                   aRequestOrigin,
+                                   mSelfURI,
                                    violatedDirective,
                                    p,             /* policy index        */
                                    EmptyString(), /* no observer subject */
@@ -441,7 +441,7 @@ nsCSPContext::GetAllowsHash(const nsAString& aContent,
       mPolicies[p]->getDirectiveStringForContentType(                          \
                         nsIContentPolicy::TYPE_ ## contentPolicyType,          \
                         violatedDirective);                                    \
-      this->AsyncReportViolation(selfISupports, nullptr, violatedDirective, p, \
+      this->AsyncReportViolation(selfISupports, mSelfURI, violatedDirective, p, \
                                  NS_LITERAL_STRING(observerTopic),             \
                                  aSourceFile, aScriptSample, aLineNum);        \
     }                                                                          \
@@ -692,7 +692,7 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
 
   // line-number
   if (aLineNum != 0) {
-    csp_report.AppendASCII(", \"script-sample\": \"");
+    csp_report.AppendASCII(", \"line-number\": \"");
     csp_report.AppendInt(aLineNum);
     csp_report.AppendASCII("\"");
   }
@@ -708,12 +708,13 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
   nsCOMPtr<nsIChannel> reportChannel;
 
   for (uint32_t r = 0; r < reportURIs.Length(); r++) {
+    nsAutoCString reportURICstring = NS_ConvertUTF16toUTF8(reportURIs[r]);
     // try to create a new uri from every report-uri string
     rv = NS_NewURI(getter_AddRefs(reportURI), reportURIs[r]);
     if (NS_FAILED(rv)) {
       const char16_t* params[] = { reportURIs[r].get() };
       CSPCONTEXTLOG(("Could not create nsIURI for report URI %s",
-                     reportURIs[r].get()));
+                     reportURICstring.get()));
       CSP_LogLocalizedStr(NS_LITERAL_STRING("triedToSendReport").get(),
                           params, ArrayLength(params),
                           aSourceFile, aScriptSample, aLineNum, 0,
@@ -725,7 +726,7 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
     rv = NS_NewChannel(getter_AddRefs(reportChannel), reportURI);
     if (NS_FAILED(rv)) {
       CSPCONTEXTLOG(("Could not create new channel for report URI %s",
-                     reportURIs[r].get()));
+                     reportURICstring.get()));
       continue; // don't return yet, there may be more URIs
     }
 
@@ -771,7 +772,7 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
     if (NS_CP_REJECTED(shouldLoad)) {
       // skip unauthorized URIs
       CSPCONTEXTLOG(("nsIContentPolicy blocked sending report to %s",
-                     reportURIs[r].get()));
+                     reportURICstring.get()));
       continue; // don't return yet, there may be more URIs
     }
 
@@ -807,6 +808,8 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
                           params, ArrayLength(params),
                           aSourceFile, aScriptSample, aLineNum, 0,
                           nsIScriptError::errorFlag, "CSP", mInnerWindowID);
+    } else {
+      CSPCONTEXTLOG(("Sent violation report to URI %s", reportURICstring.get()));
     }
   }
   return NS_OK;
@@ -830,8 +833,7 @@ class CSPReportSenderRunnable MOZ_FINAL : public nsRunnable
                             uint64_t aInnerWindowID,
                             nsCSPContext* aCSPContext)
       : mBlockedContentSource(aBlockedContentSource)
-      , mOriginalURI(aOriginalURI)
-      , mViolatedPolicyIndex(aViolatedPolicyIndex)
+      , mOriginalURI(aOriginalURI) , mViolatedPolicyIndex(aViolatedPolicyIndex)
       , mReportOnlyFlag(aReportOnlyFlag)
       , mViolatedDirective(aViolatedDirective)
       , mSourceFile(aSourceFile)
