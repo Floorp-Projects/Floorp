@@ -88,7 +88,7 @@ public:
 
   // WebIDL
   already_AddRefed<SVGAnimatedNumber> PathLength();
-  float GetTotalLength(ErrorResult& rv);
+  float GetTotalLength();
   already_AddRefed<nsISVGPoint> GetPointAtLength(float distance, ErrorResult& rv);
   uint32_t GetPathSegAtLength(float distance);
   already_AddRefed<DOMSVGPathSegClosePath> CreateSVGPathSegClosePath();

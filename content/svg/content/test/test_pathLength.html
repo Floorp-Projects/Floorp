@@ -32,6 +32,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1024926
 
   is(path.getTotalLength(), 150, "Unexpected path length");
 
+  while (path.pathSegList.numberOfItems > 0) {
+      path.pathSegList.removeItem(0);
+  }
+
+  is(path.getTotalLength(), 0, "Unexpected path length");
+
   SimpleTest.finish();
 
 </script>
