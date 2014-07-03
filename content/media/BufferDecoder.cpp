@@ -159,12 +159,6 @@ BufferDecoder::QueueMetadata(int64_t aTime, MediaInfo* aInfo, MetadataTags* aTag
 }
 
 void
-BufferDecoder::RemoveMediaTracks()
-{
-  // ignore
-}
-
-void
 BufferDecoder::SetMediaEndTime(int64_t aTime)
 {
   // ignore
