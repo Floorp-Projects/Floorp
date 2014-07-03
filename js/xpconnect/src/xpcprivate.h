@@ -481,6 +481,7 @@ public:
         IDX_LENGTH                  ,
         IDX_NAME                    ,
         IDX_UNDEFINED               ,
+        IDX_EMPTYSTRING             ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 
@@ -3282,15 +3283,17 @@ Btoa(JSContext *cx, unsigned argc, jsval *vp);
 
 
 // Helper function that creates a JSFunction that wraps a native function that
-// forwards the call to the original 'callable'. If the 'doclone' argument is
-// set, it also structure clones non-native arguments for extra security.
+// forwards the call to the original 'callable'. Any object-valued arguments are
+// cloned at call time for improved security.
 bool
 NewFunctionForwarder(JSContext *cx, JS::HandleId id, JS::HandleObject callable,
-                     bool doclone, JS::MutableHandleValue vp);
+                     JS::MutableHandleValue vp);
 
+// Old-style function forwarding without structured-cloning for arguments. This
+// is deprecated.
 bool
-NewFunctionForwarder(JSContext *cx, JS::HandleObject callable,
-                     bool doclone, JS::MutableHandleValue vp);
+NewNonCloningFunctionForwarder(JSContext *cx, JS::HandleId id,
+                               JS::HandleObject callable, JS::MutableHandleValue vp);
 
 // Old fashioned xpc error reporter. Try to use JS_ReportError instead.
 nsresult

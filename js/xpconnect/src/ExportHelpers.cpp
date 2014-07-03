@@ -79,7 +79,7 @@ StackScopedCloneRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t ta
       if (!JS_WrapObject(cx, &obj))
           return nullptr;
 
-      if (!xpc::NewFunctionForwarder(cx, obj, true, &functionValue))
+      if (!xpc::NewFunctionForwarder(cx, JSID_VOIDHANDLE, obj, &functionValue))
           return nullptr;
 
       return &functionValue.toObject();
@@ -243,13 +243,15 @@ NonCloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
     return JS_CallFunctionValue(cx, obj, v, args, args.rval());
 }
 bool
-NewFunctionForwarder(JSContext *cx, HandleId id, HandleObject callable, bool doclone,
-                          MutableHandleValue vp)
+NewFunctionForwarder(JSContext *cx, HandleId idArg, HandleObject callable,
+                     MutableHandleValue vp)
 {
-    JSFunction *fun = js::NewFunctionByIdWithReserved(cx, doclone ? CloningFunctionForwarder :
-                                                                    NonCloningFunctionForwarder,
-                                                                    0,0, JS::CurrentGlobalOrNull(cx), id);
+    RootedId id(cx, idArg);
+    if (id == JSID_VOIDHANDLE)
+        id = GetRTIdByIndex(cx, XPCJSRuntime::IDX_EMPTYSTRING);
 
+    JSFunction *fun = js::NewFunctionByIdWithReserved(cx, CloningFunctionForwarder, 0,0,
+                                                      JS::CurrentGlobalOrNull(cx), id);
     if (!fun)
         return false;
 
@@ -260,15 +262,18 @@ NewFunctionForwarder(JSContext *cx, HandleId id, HandleObject callable, bool doc
 }
 
 bool
-NewFunctionForwarder(JSContext *cx, HandleObject callable, bool doclone,
-                          MutableHandleValue vp)
+NewNonCloningFunctionForwarder(JSContext *cx, HandleId id, HandleObject callable,
+                               MutableHandleValue vp)
 {
-    RootedId emptyId(cx);
-    RootedValue emptyStringValue(cx, JS_GetEmptyStringValue(cx));
-    if (!JS_ValueToId(cx, emptyStringValue, &emptyId))
+    JSFunction *fun = js::NewFunctionByIdWithReserved(cx, NonCloningFunctionForwarder,
+                                                      0,0, JS::CurrentGlobalOrNull(cx), id);
+    if (!fun)
         return false;
 
-    return NewFunctionForwarder(cx, emptyId, callable, doclone, vp);
+    JSObject *funobj = JS_GetFunctionObject(fun);
+    js::SetFunctionNativeReserved(funobj, 0, ObjectValue(*callable));
+    vp.setObject(*funobj);
+    return true;
 }
 
 bool
@@ -334,7 +339,7 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
 
         // And now, let's create the forwarder function in the target compartment
         // for the function the be exported.
-        if (!NewFunctionForwarder(cx, id, funObj, /* doclone = */ true, rval)) {
+        if (!NewFunctionForwarder(cx, id, funObj, rval)) {
             JS_ReportError(cx, "Exporting function failed");
             return false;
         }
