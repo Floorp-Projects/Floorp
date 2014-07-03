@@ -22,13 +22,13 @@ function simulateIncoming() {
     is(telephony.calls.length, 1);
     is(telephony.calls[0], incoming);
 
-    emulator.runWithCallback("gsm list", function(result) {
+    emulator.runCmdWithCallback("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "inbound from " + number + " : incoming");
       reject();
     });
   };
-  emulator.runWithCallback("gsm call " + number);
+  emulator.runCmdWithCallback("gsm call " + number);
 }
 
 function reject() {
@@ -51,7 +51,7 @@ function reject() {
     is(telephony.active, null);
     is(telephony.calls.length, 0);
 
-    emulator.runWithCallback("gsm list", function(result) {
+    emulator.runCmdWithCallback("gsm list", function(result) {
       log("Call list is now: " + result);
       cleanUp();
     });

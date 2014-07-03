@@ -11,9 +11,12 @@ import shutil
 import sys
 import which
 
+from distutils.version import StrictVersion
+
 from configobj import ConfigObjError
 from StringIO import StringIO
 
+from mozversioncontrol import get_hg_version
 from mozversioncontrol.repoupdate import (
     update_mercurial_repo,
     update_git_repo,
@@ -39,6 +42,14 @@ are up to date and you won't have to do anything.
 To begin, press the enter/return key.
 '''.strip()
 
+OLDEST_NON_LEGACY_VERSION = StrictVersion('3.0')
+LEGACY_MERCURIAL = '''
+You are running an out of date Mercurial client (%s).
+
+For a faster and better Mercurial experience, we HIGHLY recommend you
+upgrade.
+'''.strip()
+
 MISSING_USERNAME = '''
 You don't have a username defined in your Mercurial config file. In order to
 send patches to Mozilla, you'll need to attach a name and email address. If you
@@ -48,6 +59,16 @@ aren't comfortable giving us your full name, pseudonames are acceptable.
 BAD_DIFF_SETTINGS = '''
 Mozilla developers produce patches in a standard format, but your Mercurial is
 not configured to produce patches in that format.
+'''.strip()
+
+MQ_INFO = '''
+The mq extension manages patches as separate files. It provides an
+alternative to the recommended bookmark-based development workflow.
+
+If you are a newcomer to Mercurial or are coming from Git, it is
+recommended to avoid mq.
+
+Would you like to activate the mq extension
 '''.strip()
 
 BZEXPORT_INFO = '''
@@ -87,6 +108,25 @@ Your Mercurial should now be properly configured and recommended extensions
 should be up to date!
 '''.strip()
 
+REVIEWBOARD_MINIMUM_VERSION = StrictVersion('3.0.1')
+
+REVIEWBOARD_INCOMPATIBLE = '''
+Your Mercurial is too old to use the reviewboard extension, which is necessary
+to conduct code review.
+
+Please upgrade to Mercurial %s or newer to use this extension.
+'''.strip()
+
+MISSING_BUGZILLA_CREDENTIALS = '''
+You do not have your Bugzilla credentials defined in your Mercurial config.
+
+Various extensions make use of your Bugzilla credentials to interface with
+Bugzilla to enrich your development experience.
+
+Bugzilla credentials are optional. If you do not provide them, associated
+functionality will not be enabled or you will be prompted for your
+Bugzilla credentials when they are needed.
+'''.lstrip()
 
 class MercurialSetupWizard(object):
     """Command-line wizard to help users configure Mercurial."""
@@ -125,6 +165,24 @@ class MercurialSetupWizard(object):
         print(INITIAL_MESSAGE)
         raw_input()
 
+        hg_version = get_hg_version(hg)
+        if hg_version < OLDEST_NON_LEGACY_VERSION:
+            print(LEGACY_MERCURIAL % hg_version)
+            print('')
+
+            if os.name == 'nt':
+                print('Please upgrade to the latest MozillaBuild to upgrade '
+                    'your Mercurial install.')
+                print('')
+            else:
+                print('Please run |mach bootstrap| to upgrade your Mercurial '
+                    'install.')
+                print('')
+
+            if not self._prompt_yn('Would you like to continue using an old '
+                'Mercurial version'):
+                return 1
+
         if not c.have_valid_username():
             print(MISSING_USERNAME)
             print('')
@@ -153,10 +211,26 @@ class MercurialSetupWizard(object):
             'Would you like to enable the rebase extension to allow you to move'
             ' changesets around (which can help maintain a linear history)')
 
-        self.prompt_native_extension(c, 'mq',
-            'Would you like to activate the mq extension to manage patches')
+        self.prompt_native_extension(c, 'histedit',
+            'Would you like to enable the histedit extension to allow history '
+            'rewriting via the "histedit" command (similar to '
+            '`git rebase -i`)')
+
+        self.prompt_native_extension(c, 'mq', MQ_INFO)
 
         self.prompt_external_extension(c, 'bzexport', BZEXPORT_INFO)
+
+        if 'reviewboard' not in c.extensions:
+            if hg_version < REVIEWBOARD_MINIMUM_VERSION:
+                print(REVIEWBOARD_INCOMPATIBLE % REVIEWBOARD_MINIMUM_VERSION)
+            else:
+                p = os.path.join(self.vcs_tools_dir, 'hgext', 'reviewboard',
+                    'client.py')
+                self.prompt_external_extension(c, 'reviewboard',
+                    'Would you like to enable the reviewboard extension so '
+                    'you can easily initiate code reviews against Mozilla '
+                    'projects',
+                    path=p)
 
         if 'mq' in c.extensions:
             self.prompt_external_extension(c, 'mqext', MQEXT_INFO,
@@ -185,6 +259,23 @@ class MercurialSetupWizard(object):
                     c.ensure_qnew_currentuser_default()
                     print('Configured qnew to set patch author by default.')
                     print('')
+
+        if 'reviewboard' in c.extensions:
+            bzuser, bzpass = c.get_bugzilla_credentials()
+
+            if not bzuser or not bzpass:
+                print(MISSING_BUGZILLA_CREDENTIALS)
+
+            if not bzuser:
+                bzuser = self._prompt('What is your Bugzilla email address?',
+                    allow_empty=True)
+
+            if bzuser and not bzpass:
+                bzpass = self._prompt('What is your Bugzilla password?',
+                    allow_empty=True)
+
+            if bzuser or bzpass:
+                c.set_bugzilla_credentials(bzuser, bzpass)
 
         if self.update_vcs_tools:
             self.update_mercurial_repo(
@@ -281,7 +372,7 @@ class MercurialSetupWizard(object):
             print('=' * 80)
             print('')
 
-    def _prompt(self, msg):
+    def _prompt(self, msg, allow_empty=False):
         print(msg)
 
         while True:
@@ -289,6 +380,9 @@ class MercurialSetupWizard(object):
 
             if response:
                 return response
+
+            if allow_empty:
+                return None
 
             print('You must type something!')
 
