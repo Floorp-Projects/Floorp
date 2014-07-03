@@ -103,6 +103,7 @@
 #include "nsIURIFixup.h"
 #include "nsIWindowWatcher.h"
 #include "nsIXULRuntime.h"
+#include "nsMemoryInfoDumper.h"
 #include "nsMemoryReporterManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStyleSheetService.h"
@@ -2457,9 +2458,22 @@ ContentParent::Observe(nsISupports* aSubject,
             // The pre-%n part of the string should be all ASCII, so the byte
             // offset in identOffset should be correct as a char offset.
             MOZ_ASSERT(cmsg[identOffset - 1] == '=');
+            FileDescriptor dmdFileDesc;
+#ifdef MOZ_DMD
+            FILE *dmdFile;
+            nsAutoString dmdIdent(Substring(msg, identOffset));
+            nsresult rv = nsMemoryInfoDumper::OpenDMDFile(dmdIdent, Pid(), &dmdFile);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+                // Proceed with the memory report as if DMD were disabled.
+                dmdFile = nullptr;
+            }
+            if (dmdFile) {
+                dmdFileDesc = FILEToFileDescriptor(dmdFile);
+                fclose(dmdFile);
+            }
+#endif
             unused << SendPMemoryReportRequestConstructor(
-              generation, anonymize, minimize,
-              nsString(Substring(msg, identOffset)));
+              generation, anonymize, minimize, dmdFileDesc);
         }
     }
     else if (!strcmp(aTopic, "child-gc-request")){
@@ -2804,7 +2818,7 @@ PMemoryReportRequestParent*
 ContentParent::AllocPMemoryReportRequestParent(const uint32_t& aGeneration,
                                                const bool &aAnonymize,
                                                const bool &aMinimizeMemoryUsage,
-                                               const nsString &aDMDDumpIdent)
+                                               const FileDescriptor &aDMDFile)
 {
     MemoryReportRequestParent* parent = new MemoryReportRequestParent();
     return parent;

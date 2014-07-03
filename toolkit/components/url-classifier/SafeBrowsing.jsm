@@ -24,10 +24,11 @@ function getLists(prefName) {
 }
 
 // These may be a comma-separated lists of tables.
-const phishingLists = getLists("urlclassifier.phish_table");
-const malwareLists = getLists("urlclassifier.malware_table");
+const phishingLists = getLists("urlclassifier.phishTable");
+const malwareLists = getLists("urlclassifier.malwareTable");
 const downloadBlockLists = getLists("urlclassifier.downloadBlockTable");
 const downloadAllowLists = getLists("urlclassifier.downloadAllowTable");
+const trackingProtectionLists = getLists("urlclassifier.trackingTable");
 
 var debug = false;
 function log(...stuff) {
@@ -65,6 +66,11 @@ this.SafeBrowsing = {
     for (let i = 0; i < downloadAllowLists.length; ++i) {
       listManager.registerTable(downloadAllowLists[i], this.updateURL, this.gethashURL);
     }
+    for (let i = 0; i < trackingProtectionLists.length; ++i) {
+      listManager.registerTable(trackingProtectionLists[i],
+                                this.trackingUpdateURL,
+                                this.trackingGethashURL);
+    }
     this.addMozEntries();
 
     this.controlUpdateChecking();
@@ -99,7 +105,8 @@ this.SafeBrowsing = {
 
     debug = Services.prefs.getBoolPref("browser.safebrowsing.debug");
     this.phishingEnabled = Services.prefs.getBoolPref("browser.safebrowsing.enabled");
-    this.malwareEnabled  = Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
+    this.malwareEnabled = Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
+    this.trackingEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled");
     this.updateProviderURLs();
 
     // XXX The listManager backend gets confused if this is called before the
@@ -134,6 +141,10 @@ this.SafeBrowsing = {
 
     this.updateURL  = this.updateURL.replace("SAFEBROWSING_ID", clientID);
     this.gethashURL = this.gethashURL.replace("SAFEBROWSING_ID", clientID);
+    this.trackingUpdateURL = Services.urlFormatter.formatURLPref(
+      "browser.trackingprotection.updateURL");
+    this.trackingGethashURL = Services.urlFormatter.formatURLPref(
+      "browser.trackingprotection.gethashURL");
   },
 
   controlUpdateChecking: function() {
@@ -168,6 +179,13 @@ this.SafeBrowsing = {
         listManager.enableUpdate(downloadAllowLists[i]);
       } else {
         listManager.disableUpdate(downloadAllowLists[i]);
+      }
+    }
+    for (let i = 0; i < trackingProtectionLists.length; ++i) {
+      if (this.trackingEnabled) {
+        listManager.enableUpdate(trackingProtectionLists[i]);
+      } else {
+        listManager.disableUpdate(trackingProtectionLists[i]);
       }
     }
   },

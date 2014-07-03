@@ -91,11 +91,13 @@ FILE*
 FileDescriptorToFILE(const FileDescriptor& aDesc,
                      const char* aOpenMode)
 {
+  // Debug builds check whether the handle was "used", even if it's
+  // invalid, so that needs to happen first.
+  FileDescriptor::PlatformHandleType handle = aDesc.PlatformHandle();
   if (!aDesc.IsValid()) {
     errno = EBADF;
     return nullptr;
   }
-  FileDescriptor::PlatformHandleType handle = aDesc.PlatformHandle();
 #ifdef XP_WIN
   int fd = _open_osfhandle(reinterpret_cast<intptr_t>(handle), 0);
   if (fd == -1) {

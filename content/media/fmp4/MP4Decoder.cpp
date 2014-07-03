@@ -13,7 +13,7 @@
 #include "mozilla/WindowsVersion.h"
 #endif
 #ifdef MOZ_FFMPEG
-#include "FFmpegDecoderModule.h"
+#include "FFmpegRuntimeLinker.h"
 #endif
 
 namespace mozilla {
@@ -79,7 +79,7 @@ IsFFmpegAvailable()
 
   // If we can link to FFmpeg, then we can almost certainly play H264 and AAC
   // with it.
-  return FFmpegDecoderModule::Link();
+  return FFmpegRuntimeLinker::Link();
 #endif
 }
 
