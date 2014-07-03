@@ -4,10 +4,6 @@
 MARIONETTE_TIMEOUT = 10000;
 MARIONETTE_HEAD_JS = 'head.js';
 
-const BODY_7BITS = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-                 + "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-                 + "@@@@@@@@@@@@@"; // 93 ascii chars.
-
 function testReceiving_MultiSIM() {
   log("Test receiving GSM Cell Broadcast - Multi-SIM");
 
@@ -15,7 +11,7 @@ function testReceiving_MultiSIM() {
 
   let verifyCBMessage = (aMessage, aServiceId) => {
     log("Verify CB message received from serviceId: " + aServiceId);
-    is(aMessage.body, BODY_7BITS, "Checking message body.");
+    is(aMessage.body, DUMMY_BODY_7BITS, "Checking message body.");
     is(aMessage.serviceId, aServiceId, "Checking serviceId.");
   };
 
