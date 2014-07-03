@@ -127,7 +127,7 @@ loop.panel = (function(_, mozL10n) {
       this.notifier.clear();
       this.$(".action .invite").hide();
       this.$(".action .invite input").val("");
-      this.$(".action .result input").val(callUrlData.call_url);
+      this.$(".action .result input").val(callUrlData.callUrl);
       this.$(".action .result").show();
       this.$(".description p").text(__("share_link_url"));
     },

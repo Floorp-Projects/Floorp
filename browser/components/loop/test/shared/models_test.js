@@ -52,7 +52,8 @@ describe("loop.shared.models", function() {
     });
 
     describe("constructed", function() {
-      var conversation, fakeClient, fakeBaseServerUrl;
+      var conversation, fakeClient, fakeBaseServerUrl,
+          requestCallInfoStub, requestCallsInfoStub;
 
       beforeEach(function() {
         conversation = new sharedModels.ConversationModel({}, {sdk: fakeSDK});
@@ -62,6 +63,8 @@ describe("loop.shared.models", function() {
           requestCallInfo: sandbox.stub(),
           requestCallsInfo: sandbox.stub()
         };
+        requestCallInfoStub = fakeClient.requestCallInfo;
+        requestCallsInfoStub = fakeClient.requestCallsInfo;
       });
 
       describe("#initiate", function() {
@@ -69,32 +72,35 @@ describe("loop.shared.models", function() {
           function() {
             conversation.initiate({
               client: fakeClient,
-              outgoing: true
+              outgoing: true,
+              callType: "audio"
             });
 
-            sinon.assert.calledOnce(fakeClient.requestCallInfo);
-            sinon.assert.calledWith(fakeClient.requestCallInfo, "fakeToken");
+            sinon.assert.calledOnce(requestCallInfoStub);
+            sinon.assert.calledWith(requestCallInfoStub, "fakeToken", "audio");
           });
 
         it("should not call requestCallsInfo on the client for outgoing calls",
           function() {
             conversation.initiate({
               client: fakeClient,
-              outgoing: true
+              outgoing: true,
+              callType: "audio"
             });
 
-            sinon.assert.notCalled(fakeClient.requestCallsInfo);
+            sinon.assert.notCalled(requestCallsInfoStub);
           });
 
         it("call requestCallsInfo on the client for incoming calls",
           function() {
+            conversation.set("loopVersion", 42);
             conversation.initiate({
               client: fakeClient,
               outgoing: false
             });
 
-            sinon.assert.calledOnce(fakeClient.requestCallsInfo);
-            sinon.assert.calledWith(fakeClient.requestCallsInfo);
+            sinon.assert.calledOnce(requestCallsInfoStub);
+            sinon.assert.calledWith(requestCallsInfoStub, 42);
           });
 
         it("should not call requestCallInfo on the client for incoming calls",
@@ -104,13 +110,13 @@ describe("loop.shared.models", function() {
               outgoing: false
             });
 
-            sinon.assert.notCalled(fakeClient.requestCallInfo);
+            sinon.assert.notCalled(requestCallInfoStub);
           });
 
         it("should update conversation session information from server data",
           function() {
             sandbox.stub(conversation, "setReady");
-            fakeClient.requestCallInfo.callsArgWith(1, null, fakeSessionData);
+            requestCallInfoStub.callsArgWith(2, null, fakeSessionData);
 
             conversation.initiate({
               client: fakeClient,
@@ -122,7 +128,7 @@ describe("loop.shared.models", function() {
           });
 
         it("should trigger a `session:error` on failure", function(done) {
-          fakeClient.requestCallInfo.callsArgWith(1,
+          requestCallInfoStub.callsArgWith(2,
             new Error("failed: HTTP 400 Bad Request; fake"));
 
           conversation.on("session:error", function(err) {

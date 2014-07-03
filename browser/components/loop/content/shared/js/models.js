@@ -64,6 +64,8 @@ loop.shared.models = (function() {
      *
      * - {Boolean} outgoing Set to true if this model represents the
      *                            outgoing call.
+     * - {Boolean} callType Only valid for outgoing calls. The type of media in
+     *                      the call, e.g. "audio" or "audio-video"
      * - {loop.shared.Client} client  A client object to request call information
      *                                from. Expects requestCallInfo for outgoing
      *                                calls, requestCallsInfo for incoming calls.
@@ -97,7 +99,8 @@ loop.shared.models = (function() {
       }
 
       if (options.outgoing) {
-        options.client.requestCallInfo(this.get("loopToken"), handleResult.bind(this));
+        options.client.requestCallInfo(this.get("loopToken"), options.callType,
+          handleResult.bind(this));
       }
       else {
         options.client.requestCallsInfo(this.get("loopVersion"),

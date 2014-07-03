@@ -9,7 +9,7 @@ loop.Client = (function($) {
   "use strict";
 
   // The expected properties to be returned from the POST /call-url/ request.
-  const expectedCallUrlProperties = ["call_url", "expiresAt"];
+  const expectedCallUrlProperties = ["callUrl", "expiresAt"];
 
   // The expected properties to be returned from the GET /calls request.
   const expectedCallProperties = ["calls"];
@@ -114,6 +114,13 @@ loop.Client = (function($) {
 
         try {
           var urlData = JSON.parse(responseText);
+
+          // XXX Support an alternate call_url property for
+          // backwards compatibility whilst we switch over servers.
+          // Bug 1033988 will want to remove these two lines.
+          if (urlData.call_url)
+            urlData.callUrl = urlData.call_url;
+
           cb(null, this._validate(urlData, expectedCallUrlProperties));
 
           var expiresHours = this._hoursToSeconds(urlData.expiresAt);
