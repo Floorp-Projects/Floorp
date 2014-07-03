@@ -33,3 +33,5 @@ UNIFIED_SOURCES += [
 ]
 
 FINAL_LIBRARY = 'universalchardet'
+
+FAIL_ON_WARNINGS = True
