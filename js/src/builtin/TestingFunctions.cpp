@@ -880,8 +880,23 @@ static bool
 SaveStack(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    unsigned maxFrameCount = 0;
+    if (args.length() >= 1) {
+        double d;
+        if (!ToNumber(cx, args[0], &d))
+            return false;
+        if (d < 0) {
+            js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
+                                     JSDVG_SEARCH_STACK, args[0], JS::NullPtr(),
+                                     "not a valid maximum frame count", NULL);
+            return false;
+        }
+        maxFrameCount = d;
+    }
+
     Rooted<JSObject*> stack(cx);
-    if (!JS::CaptureCurrentStack(cx, &stack))
+    if (!JS::CaptureCurrentStack(cx, &stack, maxFrameCount))
         return false;
     args.rval().setObjectOrNull(stack);
     return true;
