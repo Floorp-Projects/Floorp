@@ -297,30 +297,6 @@ static inline T UnexpectedFailure(T rv)
     return rv;
 }
 
-/* void initClasses (in JSContextPtr aJSContext, in JSObjectPtr aGlobalJSObj); */
-NS_IMETHODIMP
-nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
-{
-    MOZ_ASSERT(aJSContext, "bad param");
-    MOZ_ASSERT(aGlobalJSObj, "bad param");
-    RootedObject globalJSObj(aJSContext, aGlobalJSObj);
-
-    JSAutoCompartment ac(aJSContext, globalJSObj);
-
-    XPCWrappedNativeScope* scope =
-        XPCWrappedNativeScope::GetNewOrUsed(aJSContext, globalJSObj);
-
-    if (!scope)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    scope->RemoveWrappedNativeProtos();
-
-    if (!XPCNativeWrapper::AttachNewConstructorObject(aJSContext, globalJSObj))
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    return NS_OK;
-}
-
 void
 TraceXPCGlobal(JSTracer *trc, JSObject *obj)
 {
@@ -383,7 +359,7 @@ InitGlobalObject(JSContext* aJSContext, JS::Handle<JSObject*> aGlobal, uint32_t 
     JSAutoCompartment ac(aJSContext, aGlobal);
     if (!(aFlags & nsIXPConnect::OMIT_COMPONENTS_OBJECT)) {
         // XPCCallContext gives us an active request needed to save/restore.
-        if (!GetCompartmentPrivate(aGlobal)->scope->AttachComponentsObject(aJSContext) ||
+        if (!CompartmentPrivate::Get(aGlobal)->scope->AttachComponentsObject(aJSContext) ||
             !XPCNativeWrapper::AttachNewConstructorObject(aJSContext, aGlobal)) {
             return UnexpectedFailure(false);
         }
@@ -651,7 +627,7 @@ nsXPConnect::GetWrappedNativeOfNativeObject(JSContext * aJSContext,
 
     RootedObject aScope(aJSContext, aScopeArg);
 
-    XPCWrappedNativeScope* scope = GetObjectScope(aScope);
+    XPCWrappedNativeScope* scope = ObjectScope(aScope);
     if (!scope)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -682,8 +658,8 @@ nsXPConnect::ReparentWrappedNativeIfFound(JSContext * aJSContext,
     RootedObject aScope(aJSContext, aScopeArg);
     RootedObject aNewParent(aJSContext, aNewParentArg);
 
-    XPCWrappedNativeScope* scope = GetObjectScope(aScope);
-    XPCWrappedNativeScope* scope2 = GetObjectScope(aNewParent);
+    XPCWrappedNativeScope* scope = ObjectScope(aScope);
+    XPCWrappedNativeScope* scope2 = ObjectScope(aNewParent);
     if (!scope || !scope2)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -713,7 +689,7 @@ nsXPConnect::RescueOrphansInScope(JSContext *aJSContext, JSObject *aScopeArg)
 {
     RootedObject aScope(aJSContext, aScopeArg);
 
-    XPCWrappedNativeScope *scope = GetObjectScope(aScope);
+    XPCWrappedNativeScope *scope = ObjectScope(aScope);
     if (!scope)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -839,7 +815,7 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
     RootedObject aScope(aJSContext, aScopeArg);
     JSAutoCompartment ac(aJSContext, aScope);
 
-    XPCWrappedNativeScope* scope = GetObjectScope(aScope);
+    XPCWrappedNativeScope* scope = ObjectScope(aScope);
     if (!scope)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -1231,14 +1207,14 @@ void
 SetLocationForGlobal(JSObject *global, const nsACString& location)
 {
     MOZ_ASSERT(global);
-    EnsureCompartmentPrivate(global)->SetLocation(location);
+    CompartmentPrivate::Get(global)->SetLocation(location);
 }
 
 void
 SetLocationForGlobal(JSObject *global, nsIURI *locationURI)
 {
     MOZ_ASSERT(global);
-    EnsureCompartmentPrivate(global)->SetLocationURI(locationURI);
+    CompartmentPrivate::Get(global)->SetLocationURI(locationURI);
 }
 
 } // namespace xpc

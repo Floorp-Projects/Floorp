@@ -62,9 +62,13 @@ loop.shared.models = (function() {
      *
      * Available options:
      *
-     * - {String} baseServerUrl The server URL
      * - {Boolean} outgoing Set to true if this model represents the
      *                            outgoing call.
+     * - {Boolean} callType Only valid for outgoing calls. The type of media in
+     *                      the call, e.g. "audio" or "audio-video"
+     * - {loop.shared.Client} client  A client object to request call information
+     *                                from. Expects requestCallInfo for outgoing
+     *                                calls, requestCallsInfo for incoming calls.
      *
      * Triggered events:
      *
@@ -75,10 +79,6 @@ loop.shared.models = (function() {
      * @param {Object} options Options object
      */
     initiate: function(options) {
-      var client = new loop.shared.Client({
-        baseServerUrl: options.baseServerUrl
-      });
-
       function handleResult(err, sessionData) {
         /*jshint validthis:true */
         if (err) {
@@ -99,10 +99,11 @@ loop.shared.models = (function() {
       }
 
       if (options.outgoing) {
-        client.requestCallInfo(this.get("loopToken"), handleResult.bind(this));
+        options.client.requestCallInfo(this.get("loopToken"), options.callType,
+          handleResult.bind(this));
       }
       else {
-        client.requestCallsInfo(this.get("loopVersion"),
+        options.client.requestCallsInfo(this.get("loopVersion"),
           handleResult.bind(this));
       }
     },
