@@ -1,0 +1,142 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Based on Lea Verou www.cubic-bezier.com
+   See https://github.com/LeaVerou/cubic-bezier */
+
+.coordinate-plane {
+  position: absolute;
+  line-height: 0;
+  height: 400px;
+  width: 200px;
+}
+
+.coordinate-plane:before,
+.coordinate-plane:after {
+  position: absolute;
+  bottom: 25%;
+  left: 0;
+  width: 100%;
+}
+
+.coordinate-plane:before {
+  content: "";
+  border-bottom: 2px solid;
+  transform: rotate(-90deg) translateY(2px);
+  transform-origin: bottom left;
+}
+
+.coordinate-plane:after {
+  content: "";
+  border-top: 2px solid;
+  margin-bottom: -2px;
+}
+
+.theme-dark .coordinate-plane:before,
+.theme-dark .coordinate-plane:after {
+  border-color: #eee;
+}
+
+.control-point {
+  position: absolute;
+  z-index: 1;
+  height: 10px;
+  width: 10px;
+  border: 0;
+  background: #666;
+  display: block;
+  margin: -5px 0 0 -5px;
+  outline: none;
+  border-radius: 5px;
+  padding: 0;
+
+  cursor: pointer;
+}
+
+#P1x, #P1y {
+  color: #f08;
+}
+
+#P2x, #P2y {
+  color: #0ab;
+}
+
+canvas#curve {
+  background:
+    linear-gradient(-45deg, transparent 49.7%, rgba(0,0,0,.2) 49.7%, rgba(0,0,0,.2) 50.3%, transparent 50.3%) center no-repeat,
+    repeating-linear-gradient(transparent, #eee 0, #eee .5%, transparent .5%, transparent 10%) no-repeat,
+    repeating-linear-gradient(-90deg, transparent, #eee 0, #eee .5%, transparent .5%, transparent 10%) no-repeat;
+
+  background-size: 100% 50%, 100% 50%, 100% 50%;
+  background-position: 25%, 0, 0;
+
+  -moz-user-select: none;
+}
+
+.theme-dark canvas#curve {
+  background:
+    linear-gradient(-45deg, transparent 49.7%, #eee 49.7%, #eee 50.3%, transparent 50.3%) center no-repeat,
+    repeating-linear-gradient(transparent, rgba(0,0,0,.2) 0, rgba(0,0,0,.2) .5%, transparent .5%, transparent 10%) no-repeat,
+    repeating-linear-gradient(-90deg, transparent, rgba(0,0,0,.2) 0, rgba(0,0,0,.2) .5%, transparent .5%, transparent 10%) no-repeat;
+
+  background-size: 100% 50%, 100% 50%, 100% 50%;
+  background-position: 25%, 0, 0;
+}
+
+/* Timing function preview widget */
+
+.timing-function-preview {
+  position: absolute;
+  top: 400px;
+}
+
+.timing-function-preview .scale {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  z-index: 1;
+
+  width: 200px;
+  height: 1px;
+
+  background: #ccc;
+}
+
+.timing-function-preview .dot {
+  position: absolute;
+  top: 0;
+  left: -7px;
+  z-index: 2;
+
+  width: 10px;
+  height: 10px;
+
+  border-radius: 50%;
+  border: 2px solid white;
+  background: #4C9ED9;
+}
+
+.timing-function-preview .dot.animate {
+  animation-duration: 2.5s;
+  animation-fill-mode: forwards;
+  animation-name: timing-function-preview;
+}
+
+@keyframes timing-function-preview {
+  0% {
+    left: -7px;
+  }
+  33% {
+    left: 193px;
+  }
+  50% {
+    left: 193px;
+  }
+  83% {
+    left: -7px;
+  }
+  100% {
+    left: -7px;
+  }
+}
