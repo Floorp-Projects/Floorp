@@ -226,6 +226,11 @@ function setTabTitle(tab, title) {
 }
 exports.setTabTitle = setTabTitle;
 
+function getTabContentDocument(tab) {
+  return getBrowserForTab(tab).contentDocument;
+}
+exports.getTabContentDocument = getTabContentDocument;
+
 function getTabContentWindow(tab) {
   return getBrowserForTab(tab).contentWindow;
 }

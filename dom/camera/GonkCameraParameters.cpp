@@ -149,6 +149,7 @@ GonkCameraParameters::GonkCameraParameters()
 GonkCameraParameters::~GonkCameraParameters()
 {
   MOZ_COUNT_DTOR(GonkCameraParameters);
+  mIsoModeMap.Clear();
   MOZ_ASSERT(mLock, "mLock missing in ~GonkCameraParameters()");
   if (mLock) {
     PR_DestroyRWLock(mLock);
@@ -159,20 +160,19 @@ GonkCameraParameters::~GonkCameraParameters()
 nsresult
 GonkCameraParameters::MapIsoToGonk(const nsAString& aIso, nsACString& aIsoOut)
 {
-  if (aIso.EqualsASCII("hjr")) {
-    aIsoOut = "ISO_HJR";
-  } else if (aIso.EqualsASCII("auto")) {
-    aIsoOut = "auto";
-  } else {
-    nsAutoCString v = NS_LossyConvertUTF16toASCII(aIso);
-    unsigned int iso;
-    if (sscanf(v.get(), "%u", &iso) != 1) {
-      return NS_ERROR_INVALID_ARG;
+  nsCString* s;
+  if (mIsoModeMap.Get(aIso, &s)) {
+    if (!s) {
+      DOM_CAMERA_LOGE("ISO mode '%s' maps to null Gonk ISO value\n",
+        NS_LossyConvertUTF16toASCII(aIso).get());
+      return NS_ERROR_FAILURE;
     }
-    aIsoOut = nsPrintfCString("ISO%u", iso);
+
+    aIsoOut = *s;
+    return NS_OK;
   }
 
-  return NS_OK;
+  return NS_ERROR_INVALID_ARG;
 }
 
 nsresult
@@ -184,9 +184,13 @@ GonkCameraParameters::MapIsoFromGonk(const char* aIso, nsAString& aIsoOut)
     aIsoOut.AssignASCII("auto");
   } else {
     unsigned int iso;
-    if (sscanf(aIso, "ISO%u", &iso) != 1) {
+    char ignored;
+    // Some camera libraries return ISO modes as "ISO100", others as "100".
+    if (sscanf(aIso, "ISO%u%c", &iso, &ignored) != 1 &&
+        sscanf(aIso, "%u%c", &iso, &ignored) != 1) {
       return NS_ERROR_INVALID_ARG;
     }
+    aIsoOut.Truncate(0);
     aIsoOut.AppendInt(iso);
   }
 
@@ -239,14 +243,17 @@ GonkCameraParameters::Initialize()
   // The return code from GetListAsArray() doesn't matter. If it fails,
   // the isoModes array will be empty, and the subsequent loop won't
   // execute.
+  nsString s;
   nsTArray<nsCString> isoModes;
   GetListAsArray(CAMERA_PARAM_SUPPORTED_ISOMODES, isoModes);
   for (uint32_t i = 0; i < isoModes.Length(); ++i) {
-    nsString v;
-    rv = MapIsoFromGonk(isoModes[i].get(), v);
-    if (NS_SUCCEEDED(rv)) {
-      *mIsoModes.AppendElement() = v;
+    rv = MapIsoFromGonk(isoModes[i].get(), s);
+    if (NS_FAILED(rv)) {
+      DOM_CAMERA_LOGW("Unrecognized ISO mode value '%s'\n", isoModes[i].get());
+      continue;
     }
+    *mIsoModes.AppendElement() = s;
+    mIsoModeMap.Put(s, new nsCString(isoModes[i]));
   }
 
   mInitialized = true;

@@ -259,9 +259,13 @@ function populateCallbackNodeData(node) {
   data.selectionText = selection.text;
   
   data.srcURL = node.src || null;
-  data.linkURL = node.href || null;
   data.value = node.value || null;
 
+  while (!data.linkURL && node) {
+    data.linkURL = node.href || null;
+    node = node.parentNode;
+  }
+  
   return data;
 }
 
