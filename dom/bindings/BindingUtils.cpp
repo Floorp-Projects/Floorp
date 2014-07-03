@@ -2171,9 +2171,9 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
     length = JS_GetStringLength(s);
   }
 
-  if (length >= UINT32_MAX) {
-    return false;
-  }
+  static_assert(js::MaxStringLength < UINT32_MAX,
+                "length+1 shouldn't overflow");
+
   result.SetCapacity(length+1);
   JS_EncodeStringToBuffer(cx, s, result.BeginWriting(), length);
   result.BeginWriting()[length] = '\0';
