@@ -30,6 +30,8 @@ public:
 
   static BluetoothHfpManager* Get();
   virtual ~BluetoothHfpManager() { }
+  static void InitHfpInterface();
+  static void DeinitHfpInterface();
 
   bool ConnectSco();
   bool DisconnectSco();
