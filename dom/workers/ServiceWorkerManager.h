@@ -18,6 +18,8 @@
 #include "nsTArrayForwardDeclare.h"
 #include "nsTWeakRef.h"
 
+class nsIScriptError;
+
 namespace mozilla {
 namespace dom {
 namespace workers {
@@ -43,6 +45,7 @@ public:
   void AddPromise(Promise* aPromise);
   void ResolveAllPromises(const nsACString& aScriptSpec, const nsACString& aScope);
   void RejectAllPromises(nsresult aRv);
+  void RejectAllPromises(const ErrorEventInit& aErrorDesc);
 
   bool
   IsRejected() const
@@ -231,8 +234,23 @@ public:
                                nsresult aResult);
 
   void
+  RejectUpdatePromiseObservers(ServiceWorkerRegistration* aRegistration,
+                               const ErrorEventInit& aErrorDesc);
+
+  void
   FinishFetch(ServiceWorkerRegistration* aRegistration,
               nsPIDOMWindow* aWindow);
+
+  void
+  HandleError(JSContext* aCx,
+              const nsACString& aScope,
+              const nsAString& aWorkerURL,
+              nsString aMessage,
+              nsString aFilename,
+              nsString aLine,
+              uint32_t aLineNumber,
+              uint32_t aColumnNumber,
+              uint32_t aFlags);
 
   static already_AddRefed<ServiceWorkerManager>
   GetInstance();
