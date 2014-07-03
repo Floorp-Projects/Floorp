@@ -276,7 +276,7 @@
     <groupbox id="syncOptions">
       <caption><label>&syncBrand.shortName.label;</label></caption>
       <hbox id="fxaSyncEngines">
-        <vbox>
+        <vbox align="start">
           <checkbox label="&engine.tabs.label;"
                     accesskey="&engine.tabs.accesskey;"
                     preference="engine.tabs"/>

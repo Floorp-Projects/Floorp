@@ -86,7 +86,6 @@ exports.MemoryFront = protocol.FrontClass(MemoryActor, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
     this.actorID = form.memoryActor;
-    client.addActorPool(this);
     this.manage(this);
   }
 });

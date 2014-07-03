@@ -151,28 +151,37 @@
     <vbox id="historyCustomPane">
       <separator class="thin"/>
       <vbox class="indent">
-        <checkbox id="privateBrowsingAutoStart"
-                  label="&privateBrowsingPermanent2.label;"
-                  accesskey="&privateBrowsingPermanent2.accesskey;"
-                  preference="browser.privatebrowsing.autostart"
-                  oncommand="gPrivacyPane.updateAutostart()"/>
-
+        <hbox>
+          <checkbox id="privateBrowsingAutoStart"
+                    label="&privateBrowsingPermanent2.label;"
+                    accesskey="&privateBrowsingPermanent2.accesskey;"
+                    preference="browser.privatebrowsing.autostart"
+                    oncommand="gPrivacyPane.updateAutostart()"/>
+          <spacer flex="1"/>
+        </hbox>
         <vbox class="indent">
-          <checkbox id="rememberHistory"
-                    label="&rememberHistory2.label;"
-                    accesskey="&rememberHistory2.accesskey;"
-                    preference="places.history.enabled"/>
-          <checkbox id="rememberForms"
-                    label="&rememberSearchForm.label;"
-                    accesskey="&rememberSearchForm.accesskey;"
-                    preference="browser.formfill.enable"/>
+          <hbox>
+            <checkbox id="rememberHistory"
+                      label="&rememberHistory2.label;"
+                      accesskey="&rememberHistory2.accesskey;"
+                      preference="places.history.enabled"/>
+            <spacer flex="1"/>
+          </hbox>
+          <hbox>
+            <checkbox id="rememberForms"
+                      label="&rememberSearchForm.label;"
+                      accesskey="&rememberSearchForm.accesskey;"
+                      preference="browser.formfill.enable"/>
+            <spacer flex="1"/>
+          </hbox>
 
           <hbox id="cookiesBox">
-            <checkbox id="acceptCookies" label="&acceptCookies.label;" flex="1"
+            <checkbox id="acceptCookies" label="&acceptCookies.label;"
                       preference="network.cookie.cookieBehavior"
                       accesskey="&acceptCookies.accesskey;"
                       onsyncfrompreference="return gPrivacyPane.readAcceptCookies();"
                       onsynctopreference="return gPrivacyPane.writeAcceptCookies();"/>
+            <spacer flex="1"/>
             <button id="cookieExceptions" oncommand="gPrivacyPane.showCookieExceptions();"
                     label="&cookieExceptions.label;" accesskey="&cookieExceptions.accesskey;"
                     preference="pref.privacy.disable_button.cookie_exceptions"/>
@@ -214,10 +223,11 @@
           </hbox>
           <hbox id="clearDataBox"
                 align="center">
-            <checkbox id="alwaysClear" flex="1"
+            <checkbox id="alwaysClear"
                       preference="privacy.sanitize.sanitizeOnShutdown"
                       label="&clearOnClose.label;"
                       accesskey="&clearOnClose.accesskey;"/>
+            <spacer flex="1"/>
             <button id="clearDataSettings" label="&clearOnCloseSettings.label;"
                     accesskey="&clearOnCloseSettings.accesskey;"
                     oncommand="gPrivacyPane.showClearPrivateDataSettings();"/>
