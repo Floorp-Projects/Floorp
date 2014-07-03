@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -21,14 +22,15 @@ from mozbuild.base import (
     BadEnvironmentException,
     MachCommandBase,
     MozbuildObject,
+    ObjdirMismatchException,
     PathArgument,
 )
 
 from mozbuild.backend.configenvironment import ConfigEnvironment
+from buildconfig import topsrcdir, topobjdir
 
 
 curdir = os.path.dirname(__file__)
-topsrcdir = os.path.abspath(os.path.join(curdir, '..', '..', '..', '..'))
 log_manager = LoggingManager()
 
 
@@ -37,14 +39,15 @@ class TestMozbuildObject(unittest.TestCase):
         self._old_cwd = os.getcwd()
         self._old_env = dict(os.environ)
         os.environ.pop('MOZCONFIG', None)
+        os.environ.pop('MOZ_OBJDIR', None)
 
     def tearDown(self):
         os.chdir(self._old_cwd)
         os.environ.clear()
         os.environ.update(self._old_env)
 
-    def get_base(self):
-        return MozbuildObject(topsrcdir, None, log_manager)
+    def get_base(self, topobjdir=None):
+        return MozbuildObject(topsrcdir, None, log_manager, topobjdir=topobjdir)
 
     def test_objdir_config_guess(self):
         base = self.get_base()
@@ -71,11 +74,13 @@ class TestMozbuildObject(unittest.TestCase):
                 'foo'))
             self.assertTrue(base.topobjdir.endswith('foo'))
 
-    @unittest.skip('Failing on buildbot.')
     def test_objdir_config_status(self):
         """Ensure @CONFIG_GUESS@ is handled when loading mozconfig."""
         base = self.get_base()
-        guess = base._config_guess
+        cmd = base._normalize_command(
+            [os.path.join(topsrcdir, 'build', 'autoconf', 'config.guess')],
+            True)
+        guess = subprocess.check_output(cmd, cwd=topsrcdir).strip()
 
         # There may be symlinks involved, so we use real paths to ensure
         # path consistency.
@@ -102,16 +107,17 @@ class TestMozbuildObject(unittest.TestCase):
                     mozconfig=mozconfig,
                 ), fh)
 
-            os.environ[b'MOZCONFIG'] = mozconfig
+            os.environ[b'MOZCONFIG'] = mozconfig.encode('utf-8')
             os.chdir(topobjdir)
 
-            obj = MozbuildObject.from_environment()
+            obj = MozbuildObject.from_environment(
+                detect_virtualenv_mozinfo=False)
 
             self.assertEqual(obj.topobjdir, topobjdir)
         finally:
+            os.chdir(self._old_cwd)
             shutil.rmtree(d)
 
-    @unittest.skip('Failing on buildbot.')
     def test_relative_objdir(self):
         """Relative defined objdirs are loaded properly."""
         d = os.path.realpath(tempfile.mkdtemp())
@@ -130,16 +136,18 @@ class TestMozbuildObject(unittest.TestCase):
                     mozconfig=mozconfig,
                 ), fh)
 
-            os.environ[b'MOZCONFIG'] = mozconfig
+            os.environ[b'MOZCONFIG'] = mozconfig.encode('utf-8')
             child = os.path.join(topobjdir, 'foo', 'bar')
             os.makedirs(child)
             os.chdir(child)
 
-            obj = MozbuildObject.from_environment()
+            obj = MozbuildObject.from_environment(
+                detect_virtualenv_mozinfo=False)
 
             self.assertEqual(obj.topobjdir, topobjdir)
 
         finally:
+            os.chdir(self._old_cwd)
             shutil.rmtree(d)
 
     @unittest.skipIf(not hasattr(os, 'symlink'), 'symlinks not available.')
@@ -173,9 +181,9 @@ class TestMozbuildObject(unittest.TestCase):
             self.assertEqual(obj.topobjdir, topobjdir_real)
 
         finally:
+            os.chdir(self._old_cwd)
             shutil.rmtree(d)
 
-    @unittest.skip('Failed on buildbot (bug 853954)')
     def test_mach_command_base_inside_objdir(self):
         """Ensure a MachCommandBase constructed from inside the objdir works."""
 
@@ -204,6 +212,7 @@ class TestMozbuildObject(unittest.TestCase):
             context.topdir = topsrcdir
             context.settings = None
             context.log_manager = None
+            context.detect_virtualenv_mozinfo=False
 
             o = MachCommandBase(context)
 
@@ -211,9 +220,9 @@ class TestMozbuildObject(unittest.TestCase):
             self.assertEqual(o.topsrcdir, topsrcdir)
 
         finally:
+            os.chdir(self._old_cwd)
             shutil.rmtree(d)
 
-    @unittest.skip('Failing on buildbot.')
     def test_objdir_is_srcdir_rejected(self):
         """Ensure the srcdir configurations are rejected."""
         d = os.path.realpath(tempfile.mkdtemp())
@@ -231,6 +240,41 @@ class TestMozbuildObject(unittest.TestCase):
                 MozbuildObject.from_environment(detect_virtualenv_mozinfo=False)
 
         finally:
+            os.chdir(self._old_cwd)
+            shutil.rmtree(d)
+
+    def test_objdir_mismatch(self):
+        """Ensure MachCommandBase throwing on objdir mismatch."""
+        d = os.path.realpath(tempfile.mkdtemp())
+
+        try:
+            real_topobjdir = os.path.join(d, 'real-objdir')
+            os.makedirs(real_topobjdir)
+
+            topobjdir = os.path.join(d, 'objdir')
+            os.makedirs(topobjdir)
+
+            topsrcdir = os.path.join(d, 'srcdir')
+            os.makedirs(topsrcdir)
+
+            mozconfig = os.path.join(d, 'mozconfig')
+            with open(mozconfig, 'wt') as fh:
+                fh.write('mk_add_options MOZ_OBJDIR=%s' % real_topobjdir)
+
+            mozinfo = os.path.join(topobjdir, 'mozinfo.json')
+            with open(mozinfo, 'wt') as fh:
+                json.dump(dict(
+                    topsrcdir=topsrcdir,
+                    mozconfig=mozconfig,
+                ), fh)
+
+            os.chdir(topobjdir)
+
+            with self.assertRaises(ObjdirMismatchException):
+                MozbuildObject.from_environment(detect_virtualenv_mozinfo=False)
+
+        finally:
+            os.chdir(self._old_cwd)
             shutil.rmtree(d)
 
     def test_config_guess(self):
@@ -242,9 +286,8 @@ class TestMozbuildObject(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertGreater(len(result), 0)
 
-    @unittest.skip('Failing on buildbot (bug 853954).')
     def test_config_environment(self):
-        base = self.get_base()
+        base = self.get_base(topobjdir=topobjdir)
 
         ce = base.config_environment
         self.assertIsInstance(ce, ConfigEnvironment)
@@ -255,15 +298,17 @@ class TestMozbuildObject(unittest.TestCase):
         self.assertIsInstance(base.defines, dict)
         self.assertIsInstance(base.substs, dict)
 
-    @unittest.skip('Failing on buildbot (bug 853954).')
     def test_get_binary_path(self):
-        base = self.get_base()
+        base = self.get_base(topobjdir=topobjdir)
 
         platform = sys.platform
 
         # We should ideally use the config.status from the build. Let's install
         # a fake one.
-        substs = [('MOZ_APP_NAME', 'awesomeapp')]
+        substs = [
+            ('MOZ_APP_NAME', 'awesomeapp'),
+            ('MOZ_BUILD_APP', 'awesomeapp'),
+        ]
         if sys.platform.startswith('darwin'):
             substs.append(('OS_ARCH', 'Darwin'))
             substs.append(('BIN_SUFFIX', ''))
@@ -298,7 +343,7 @@ class TestMozbuildObject(unittest.TestCase):
         if platform.startswith('darwin'):
             self.assertTrue(p.endswith('awesomeapp/Nightly.app/Contents/MacOS/awesomeapp'))
         elif platform.startswith(('win32', 'cygwin')):
-            self.assertTrue(p.endswith('awesomeapp/awesomeapp.exe'))
+            self.assertTrue(p.endswith('awesomeapp\\awesomeapp.exe'))
         else:
             self.assertTrue(p.endswith('awesomeapp/awesomeapp'))
 
