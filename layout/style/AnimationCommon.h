@@ -375,7 +375,7 @@ public:
   // Return the duration of the active interval for the given timing parameters.
   static mozilla::TimeDuration ActiveDuration(const AnimationTiming& aTiming);
 
-  nsString mName; // empty string for 'none'
+  nsString mName;
   AnimationTiming mTiming;
   // The beginning of the delay period.  This is also set to a null
   // timestamp to mark transitions that have finished and are due to

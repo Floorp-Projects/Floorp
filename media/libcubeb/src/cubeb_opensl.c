@@ -49,7 +49,7 @@ struct cubeb_stream {
   SLObjectItf playerObj;
   SLPlayItf play;
   SLBufferQueueItf bufq;
-  void *queuebuf[NBUFS];
+  uint8_t *queuebuf[NBUFS];
   int queuebuf_idx;
   long queuebuf_len;
   long bytespersec;
@@ -102,7 +102,7 @@ bufferqueue_callback(SLBufferQueueItf caller, void * user_ptr)
 
   SLuint32 i;
   for (i = state.count; i < NBUFS; i++) {
-    void *buf = stm->queuebuf[stm->queuebuf_idx];
+    uint8_t *buf = stm->queuebuf[stm->queuebuf_idx];
     long written = 0;
     pthread_mutex_lock(&stm->mutex);
     int draining = stm->draining;

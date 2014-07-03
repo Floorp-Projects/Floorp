@@ -1853,7 +1853,88 @@ check_events([{ type: 'animationstart', target: div,
                 pseudoElement: "" }],
              "events at start of animation updated to use " +
              "empty keyframes rule");
+done_div();
 
+/*
+ * Bug 1031319 - 'none' animations
+ *
+ * The code under test here is run entirely on the main thread so there is no
+ * OMTA version of these tests in test_animations_omta.html.
+ */
+
+// Setting "animation: none" after animations have finished should not trigger
+// animation events
+new_div("animation: always_fifty 1s");
+listen();
+advance_clock(0);
+advance_clock(1000);
+check_events([{ type: 'animationstart', target: div,
+                animationName: 'always_fifty', elapsedTime: 0,
+                pseudoElement: '' },
+              { type: 'animationend', target: div,
+                animationName: 'always_fifty', elapsedTime: 1,
+                pseudoElement: '' }],
+             "events after running initial animation");
+div.style.animation = "none";
+div.clientTop; // Trigger events
+check_events([], "events after setting animation to 'none'");
+done_div();
+
+// Setting "animation: " after animations have finished should not trigger
+// animation events
+new_div("animation: always_fifty 1s");
+listen();
+advance_clock(0);
+advance_clock(1000);
+check_events([{ type: 'animationstart', target: div,
+                animationName: 'always_fifty', elapsedTime: 0,
+                pseudoElement: '' },
+              { type: 'animationend', target: div,
+                animationName: 'always_fifty', elapsedTime: 1,
+                pseudoElement: '' }],
+             "events after running initial animation");
+div.style.animation = "";
+div.clientTop; // Trigger events
+check_events([], "events after setting animation to ''");
+done_div();
+
+// Setting "animation: none 1s" should not trigger events
+new_div("animation: none 1s");
+listen();
+advance_clock(0);
+advance_clock(1000);
+check_events([], "events after setting animation to 'none 1s'");
+done_div();
+
+// Setting "animation: 1s" should not trigger events
+new_div("animation: 1s");
+listen();
+advance_clock(0);
+advance_clock(1000);
+check_events([], "events after setting animation to '1s'");
+done_div();
+
+// Setting animation-name: none among other animations should cause only that
+// animation to be skipped
+new_div("animation-name: always_fifty, none, always_fifty;"
+        + " animation-duration: 1s");
+listen();
+advance_clock(0);
+advance_clock(500);
+advance_clock(500);
+check_events([{ type: 'animationstart', target: div,
+                animationName: 'always_fifty', elapsedTime: 0,
+                pseudoElement: '' },
+              { type: 'animationstart', target: div,
+                animationName: 'always_fifty', elapsedTime: 0,
+                pseudoElement: '' },
+              { type: 'animationend', target: div,
+                animationName: 'always_fifty', elapsedTime: 1,
+                pseudoElement: '' },
+              { type: 'animationend', target: div,
+                animationName: 'always_fifty', elapsedTime: 1,
+                pseudoElement: '' }],
+             "events for animation-name: a, none, a");
 done_div();
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();

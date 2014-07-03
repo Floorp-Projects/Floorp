@@ -7,9 +7,9 @@ const { Cc, Ci } = require('chrome');
 const { Class } = require('../core/heritage');
 const { tabNS, rawTabNS } = require('./namespace');
 const { EventTarget } = require('../event/target');
-const { activateTab, getTabTitle, setTabTitle, closeTab, getTabURL, getTabContentWindow,
-        getTabForBrowser,
-        setTabURL, getOwnerWindow, getTabContentType, getTabId } = require('./utils');
+const { activateTab, getTabTitle, setTabTitle, closeTab, getTabURL,
+        getTabContentWindow, getTabForBrowser, setTabURL, getOwnerWindow,
+        getTabContentDocument, getTabContentType, getTabId } = require('./utils');
 const { emit } = require('../event/core');
 const { isPrivate } = require('../private-browsing/utils');
 const { isWindowPrivate } = require('../window/utils');
@@ -95,6 +95,14 @@ const Tab = Class({
 
     // return 80x45 blank default
     return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAtCAYAAAA5reyyAAAAJElEQVRoge3BAQEAAACCIP+vbkhAAQAAAAAAAAAAAAAAAADXBjhtAAGQ0AF/AAAAAElFTkSuQmCC';
+  },
+
+  /**
+   * tab's document readyState, or 'uninitialized' if it doesn't even exist yet.
+   */
+  get readyState() {
+    let doc = getTabContentDocument(tabNS(this).tab);
+    return doc && doc.readyState || 'uninitialized';
   },
 
   get id() {
