@@ -143,6 +143,28 @@ class ArgumentParser(argparse.ArgumentParser):
         return text
 
 
+class ContextWrapper(object):
+    def __init__(self, context, handler):
+        object.__setattr__(self, '_context', context)
+        object.__setattr__(self, '_handler', handler)
+
+    def __getattribute__(self, key):
+        try:
+            return getattr(object.__getattribute__(self, '_context'), key)
+        except AttributeError as e:
+            try:
+                ret = object.__getattribute__(self, '_handler')(self, key)
+            except AttributeError, TypeError:
+                # TypeError is in case the handler comes from old code not
+                # taking a key argument.
+                raise e
+            setattr(self, key, ret)
+            return ret
+
+    def __setattr__(self, key, value):
+        setattr(object.__getattribute__(self, '_context'), key, value)
+
+
 @CommandProvider
 class Mach(object):
     """Main mach driver type.
@@ -154,10 +176,15 @@ class Mach(object):
     behavior:
 
         populate_context_handler -- If defined, it must be a callable. The
-            callable will be called with the mach.base.CommandContext instance
-            as its single argument right before command dispatch. This allows
-            modification of the context instance and thus passing of
-            arbitrary data to command handlers.
+            callable signature is the following:
+                populate_context_handler(context, key=None)
+            It acts as a fallback getter for the mach.base.CommandContext
+            instance.
+            This allows to augment the context instance with arbitrary data
+            for use in command handlers.
+            For backwards compatibility, it is also called before command
+            dispatch without a key, allowing the context handler to add
+            attributes to the context instance.
 
         require_conditions -- If True, commands that do not have any condition
             functions applied will be skipped. Defaults to False.
@@ -343,6 +370,7 @@ To see more help for a specific command, run:
 
         if self.populate_context_handler:
             self.populate_context_handler(context)
+            context = ContextWrapper(context, self.populate_context_handler)
 
         parser = self.get_argument_parser(context)
 

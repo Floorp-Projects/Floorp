@@ -44,7 +44,7 @@ VS_OUTPUT LayerQuadVS(const VS_INPUT aVertex)
 {
   VS_OUTPUT outp;
   outp.vPosition = aVertex.vPosition;
-  
+
   // We use 4 component floats to uniquely describe a rectangle, by the structure
   // of x, y, width, height. This allows us to easily generate the 4 corners
   // of any rectangle from the 4 corners of the 0,0-1,1 quad that we use as the
@@ -55,16 +55,16 @@ VS_OUTPUT LayerQuadVS(const VS_INPUT aVertex)
   float2 size = vLayerQuad.zw;
   outp.vPosition.x = position.x + outp.vPosition.x * size.x;
   outp.vPosition.y = position.y + outp.vPosition.y * size.y;
-  
+
   outp.vPosition = mul(mLayerTransform, outp.vPosition);
   outp.vPosition.xyz /= outp.vPosition.w;
   outp.vPosition = outp.vPosition - vRenderTargetOffset;
   outp.vPosition.xyz *= outp.vPosition.w;
-  
+
   // adjust our vertices to match d3d9's pixel coordinate system
   // which has pixel centers at integer locations
   outp.vPosition.xy -= 0.5;
-  
+
   outp.vPosition = mul(mProjection, outp.vPosition);
 
   position = vTextureCoords.xy;
@@ -79,7 +79,7 @@ VS_OUTPUT_MASK LayerQuadVSMask(const VS_INPUT aVertex)
 {
   VS_OUTPUT_MASK outp;
   float4 position = float4(0, 0, 0, 1);
-  
+
   // We use 4 component floats to uniquely describe a rectangle, by the structure
   // of x, y, width, height. This allows us to easily generate the 4 corners
   // of any rectangle from the 4 corners of the 0,0-1,1 quad that we use as the
@@ -89,17 +89,17 @@ VS_OUTPUT_MASK LayerQuadVSMask(const VS_INPUT aVertex)
   float2 size = vLayerQuad.zw;
   position.x = vLayerQuad.x + aVertex.vPosition.x * size.x;
   position.y = vLayerQuad.y + aVertex.vPosition.y * size.y;
-  
+
   position = mul(mLayerTransform, position);
   outp.vPosition.w = position.w;
   outp.vPosition.xyz = position.xyz / position.w;
   outp.vPosition = outp.vPosition - vRenderTargetOffset;
   outp.vPosition.xyz *= outp.vPosition.w;
-  
+
   // adjust our vertices to match d3d9's pixel coordinate system
   // which has pixel centers at integer locations
   outp.vPosition.xy -= 0.5;
-  
+
   outp.vPosition = mul(mProjection, outp.vPosition);
 
   // calculate the position on the mask texture
@@ -117,7 +117,7 @@ VS_OUTPUT_MASK_3D LayerQuadVSMask3D(const VS_INPUT aVertex)
 {
   VS_OUTPUT_MASK_3D outp;
   float4 position = float4(0, 0, 0, 1);
-  
+
   // We use 4 component floats to uniquely describe a rectangle, by the structure
   // of x, y, width, height. This allows us to easily generate the 4 corners
   // of any rectangle from the 4 corners of the 0,0-1,1 quad that we use as the
@@ -127,17 +127,17 @@ VS_OUTPUT_MASK_3D LayerQuadVSMask3D(const VS_INPUT aVertex)
   float2 size = vLayerQuad.zw;
   position.x = vLayerQuad.x + aVertex.vPosition.x * size.x;
   position.y = vLayerQuad.y + aVertex.vPosition.y * size.y;
-  
+
   position = mul(mLayerTransform, position);
   outp.vPosition.w = position.w;
   outp.vPosition.xyz = position.xyz / position.w;
   outp.vPosition = outp.vPosition - vRenderTargetOffset;
   outp.vPosition.xyz *= outp.vPosition.w;
-  
+
   // adjust our vertices to match d3d9's pixel coordinate system
   // which has pixel centers at integer locations
   outp.vPosition.xy -= 0.5;
-  
+
   outp.vPosition = mul(mProjection, outp.vPosition);
 
   // calculate the position on the mask texture
@@ -197,7 +197,7 @@ float4 YCbCrShader(const VS_OUTPUT aVertex) : COLOR
   color.g = yuv.g * 1.164 - 0.813 * yuv.r - 0.391 * yuv.b;
   color.b = yuv.g * 1.164 + yuv.b * 2.018;
   color.a = 1.0f;
- 
+
   return color * fLayerOpacity;
 }
 
@@ -250,20 +250,30 @@ float4 RGBShaderMask(const VS_OUTPUT_MASK aVertex) : COLOR
   return result * fLayerOpacity * mask;
 }
 
+/* From Rec601:
+[R]   [1.1643835616438356,  0.0,                 1.5960267857142858]      [ Y -  16]
+[G] = [1.1643835616438358, -0.3917622900949137, -0.8129676472377708]    x [Cb - 128]
+[B]   [1.1643835616438356,  2.017232142857143,   8.862867620416422e-17]   [Cr - 128]
+
+For [0,1] instead of [0,255], and to 5 places:
+[R]   [1.16438,  0.00000,  1.59603]   [ Y - 0.06275]
+[G] = [1.16438, -0.39176, -0.81297] x [Cb - 0.50196]
+[B]   [1.16438,  2.01723,  0.00000]   [Cr - 0.50196]
+*/
 float4 YCbCrShaderMask(const VS_OUTPUT_MASK aVertex) : COLOR
 {
   float4 yuv;
   float4 color;
 
-  yuv.r = tex2D(s2DCr, aVertex.vTexCoords).a - 0.5;
-  yuv.g = tex2D(s2DY, aVertex.vTexCoords).a - 0.0625;
-  yuv.b = tex2D(s2DCb, aVertex.vTexCoords).a - 0.5;
+  yuv.r = tex2D(s2DCr, aVertex.vTexCoords).a - 0.50196;
+  yuv.g = tex2D(s2DY, aVertex.vTexCoords).a  - 0.06275;
+  yuv.b = tex2D(s2DCb, aVertex.vTexCoords).a - 0.50196;
 
-  color.r = yuv.g * 1.164 + yuv.r * 1.596;
-  color.g = yuv.g * 1.164 - 0.813 * yuv.r - 0.391 * yuv.b;
-  color.b = yuv.g * 1.164 + yuv.b * 2.018;
+  color.r = yuv.g * 1.16438 + yuv.r * 1.59603;
+  color.g = yuv.g * 1.16438 - 0.81297 * yuv.r - 0.39176 * yuv.b;
+  color.b = yuv.g * 1.16438 + yuv.b * 2.01723;
   color.a = 1.0f;
- 
+
   float2 maskCoords = aVertex.vMaskCoords;
   float mask = tex2D(s2DMask, maskCoords).a;
   return color * fLayerOpacity * mask;

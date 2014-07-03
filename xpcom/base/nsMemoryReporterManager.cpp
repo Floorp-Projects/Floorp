@@ -27,7 +27,12 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h" // for dom::MemoryReport
 
-#ifndef XP_WIN
+#ifdef XP_WIN
+#include <process.h>
+#ifndef getpid
+#define getpid _getpid
+#endif
+#else
 #include <unistd.h>
 #endif
 
@@ -1104,8 +1109,17 @@ nsMemoryReporterManager::StartGettingReports()
   GetReportsState* s = mGetReportsState;
 
   // Get reports for this process.
+  FILE *parentDMDFile = nullptr;
+#ifdef MOZ_DMD
+  nsresult rv = nsMemoryInfoDumper::OpenDMDFile(s->mDMDDumpIdent, getpid(),
+                                                &parentDMDFile);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // Proceed with the memory report as if DMD were disabled.
+    parentDMDFile = nullptr;
+  }
+#endif
   GetReportsForThisProcessExtended(s->mHandleReport, s->mHandleReportData,
-                                   s->mAnonymize, s->mDMDDumpIdent);
+                                   s->mAnonymize, parentDMDFile);
   s->mParentDone = true;
 
   // If there are no remaining child processes, we can finish up immediately.
@@ -1138,13 +1152,13 @@ nsMemoryReporterManager::GetReportsForThisProcess(
   nsISupports* aHandleReportData, bool aAnonymize)
 {
   return GetReportsForThisProcessExtended(aHandleReport, aHandleReportData,
-                                          aAnonymize, nsString());
+                                          aAnonymize, nullptr);
 }
 
 NS_IMETHODIMP
 nsMemoryReporterManager::GetReportsForThisProcessExtended(
   nsIHandleReportCallback* aHandleReport, nsISupports* aHandleReportData,
-  bool aAnonymize, const nsAString& aDMDDumpIdent)
+  bool aAnonymize, FILE* aDMDFile)
 {
   // Memory reporters are not necessarily threadsafe, so this function must
   // be called from the main thread.
@@ -1153,11 +1167,13 @@ nsMemoryReporterManager::GetReportsForThisProcessExtended(
   }
 
 #ifdef MOZ_DMD
-  if (!aDMDDumpIdent.IsEmpty()) {
+  if (aDMDFile) {
     // Clear DMD's reportedness state before running the memory
     // reporters, to avoid spurious twice-reported warnings.
     dmd::ClearReports();
   }
+#else
+  MOZ_ASSERT(!aDMDFile);
 #endif
 
   MemoryReporterArray allReporters;
@@ -1172,8 +1188,8 @@ nsMemoryReporterManager::GetReportsForThisProcessExtended(
   }
 
 #ifdef MOZ_DMD
-  if (!aDMDDumpIdent.IsEmpty()) {
-    return nsMemoryInfoDumper::DumpDMD(aDMDDumpIdent);
+  if (aDMDFile) {
+    return nsMemoryInfoDumper::DumpDMDToFile(aDMDFile);
   }
 #endif
 
