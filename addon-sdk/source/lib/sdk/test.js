@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 module.metadata = {
@@ -13,18 +12,9 @@ const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const { defer } = require("sdk/core/promise");
 const BaseAssert = require("sdk/test/assert").Assert;
 const { isFunction, isObject } = require("sdk/lang/type");
+const { extend } = require("sdk/util/object");
 
 exports.Assert = BaseAssert;
-
-function extend(target) {
-  let descriptor = {}
-  Array.slice(arguments, 1).forEach(function(source) {
-    Object.getOwnPropertyNames(source).forEach(function onEach(name) {
-      descriptor[name] = Object.getOwnPropertyDescriptor(source, name);
-    });
-  });
-  return Object.create(target, descriptor);
-}
 
 /**
  * Function takes test `suite` object in CommonJS format and defines all of the
@@ -110,7 +100,6 @@ function defineTestSuite(target, suite, prefix) {
  * test runner will be able to run CommonJS test without manual changes.
  */
 exports.run = function run(exports) {
-
   // We can't leave old properties on exports since those are test in a CommonJS
   // format that why we move everything to a new `suite` object.
   let suite = {};
