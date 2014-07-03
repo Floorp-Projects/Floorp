@@ -343,7 +343,6 @@ let WebGLActor = exports.WebGLActor = protocol.ActorClass({
 let WebGLFront = exports.WebGLFront = protocol.FrontClass(WebGLActor, {
   initialize: function(client, { webglActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: webglActor });
-    client.addActorPool(this);
     this.manage(this);
   }
 });

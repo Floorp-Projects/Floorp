@@ -287,29 +287,25 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
   if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
       StyleFont()->mMathDisplay == NS_MATHML_DISPLAYSTYLE_INLINE) {
     //place like sub sup or subsup
-    nscoord scriptSpace = nsPresContext::CSSPointsToAppUnits(0.5f);
     if (tag == nsGkAtoms::munderover_) {
       return nsMathMLmmultiscriptsFrame::PlaceMultiScript(PresContext(),
                                                           aRenderingContext,
                                                           aPlaceOrigin,
                                                           aDesiredSize,
-                                                          this, 0, 0,
-                                                          scriptSpace);
+                                                          this, 0, 0);
     } else if (tag == nsGkAtoms::munder_) {
       return nsMathMLmmultiscriptsFrame::PlaceMultiScript(PresContext(),
                                                           aRenderingContext,
                                                           aPlaceOrigin,
                                                           aDesiredSize,
-                                                          this, 0, 0,
-                                                          scriptSpace);
+                                                          this, 0, 0);
     } else {
       NS_ASSERTION(tag == nsGkAtoms::mover_, "mContent->Tag() not recognized");
       return nsMathMLmmultiscriptsFrame::PlaceMultiScript(PresContext(),
                                                           aRenderingContext,
                                                           aPlaceOrigin,
                                                           aDesiredSize,
-                                                          this, 0, 0,
-                                                          scriptSpace);
+                                                          this, 0, 0);
     }
     
   }
@@ -381,6 +377,8 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
   aRenderingContext.SetFont(fm);
 
   nscoord xHeight = fm->XHeight();
+  nscoord oneDevPixel = fm->AppUnitsPerDevPixel();
+  gfxFont* mathFont = fm->GetThebesFontGroup()->GetFirstMathFont();
 
   nscoord ruleThickness;
   GetRuleThickness (aRenderingContext, fm, ruleThickness);
@@ -401,14 +399,27 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
                       dummy, bigOpSpacing2, 
                       dummy, bigOpSpacing4, 
                       bigOpSpacing5);
+    if (mathFont) {
+      // XXXfredw The Open Type MATH table has some StretchStack* parameters
+      // that we may use when the base is a stretchy horizontal operator. See
+      // bug 963131.
+      bigOpSpacing2 =
+        mathFont->GetMathConstant(gfxFontEntry::LowerLimitGapMin,
+                                  oneDevPixel);
+      bigOpSpacing4 =
+        mathFont->GetMathConstant(gfxFontEntry::LowerLimitBaselineDropMin,
+                                  oneDevPixel);
+      bigOpSpacing5 = 0;
+    }
     underDelta1 = std::max(bigOpSpacing2, (bigOpSpacing4 - bmUnder.ascent));
     underDelta2 = bigOpSpacing5;
   }
   else {
     // No corresponding rule in TeXbook - we are on our own here
     // XXX tune the gap delta between base and underscript 
-
-    // Should we use Rule 10 like \underline does?
+    // XXX Should we use Rule 10 like \underline does?
+    // XXXfredw Perhaps use the Underbar* parameters of the MATH table. See
+    // bug 963125.
     underDelta1 = ruleThickness + onePixel/2;
     underDelta2 = ruleThickness;
   }
@@ -423,11 +434,26 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
 
   if (!NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)) {    
     // Rule 13a, App. G, TeXbook
+    // XXXfredw The Open Type MATH table has some StretchStack* parameters
+    // that we may use when the base is a stretchy horizontal operator. See
+    // bug 963131.
     nscoord bigOpSpacing1, bigOpSpacing3, bigOpSpacing5, dummy; 
     GetBigOpSpacings (fm, 
                       bigOpSpacing1, dummy, 
                       bigOpSpacing3, dummy, 
                       bigOpSpacing5);
+    if (mathFont) {
+      // XXXfredw The Open Type MATH table has some StretchStack* parameters
+      // that we may use when the base is a stretchy horizontal operator. See
+      // bug 963131.
+      bigOpSpacing1 =
+        mathFont->GetMathConstant(gfxFontEntry::UpperLimitGapMin,
+                                  oneDevPixel);
+      bigOpSpacing3 =
+        mathFont->GetMathConstant(gfxFontEntry::UpperLimitBaselineRiseMin,
+                                  oneDevPixel);
+      bigOpSpacing5 = 0;
+    }
     overDelta1 = std::max(bigOpSpacing1, (bigOpSpacing3 - bmOver.descent));
     overDelta2 = bigOpSpacing5;
 
@@ -468,9 +494,15 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
     // from the baseline of the base char. we also slap on an extra
     // padding between the accent and base chars.
     overDelta1 = ruleThickness + onePixel/2;
-    if (bmBase.ascent < xHeight) {
-      // also ensure at least x-height above the baseline of the base
-      overDelta1 += xHeight - bmBase.ascent;
+    nscoord accentBaseHeight = xHeight;
+    if (mathFont) {
+      accentBaseHeight =
+        mathFont->GetMathConstant(gfxFontEntry::AccentBaseHeight,
+                                  oneDevPixel);
+    }
+    if (bmBase.ascent < accentBaseHeight) {
+      // also ensure at least accentBaseHeight above the baseline of the base
+      overDelta1 += accentBaseHeight - bmBase.ascent;
     }
     overDelta2 = ruleThickness;
   }

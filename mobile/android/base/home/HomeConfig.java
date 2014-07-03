@@ -106,14 +106,14 @@ public final class HomeConfig {
         private final AuthConfig mAuthConfig;
         private final EnumSet<Flags> mFlags;
 
-        private static final String JSON_KEY_TYPE = "type";
-        private static final String JSON_KEY_TITLE = "title";
-        private static final String JSON_KEY_ID = "id";
-        private static final String JSON_KEY_LAYOUT = "layout";
-        private static final String JSON_KEY_VIEWS = "views";
-        private static final String JSON_KEY_AUTH_CONFIG = "authConfig";
-        private static final String JSON_KEY_DEFAULT = "default";
-        private static final String JSON_KEY_DISABLED = "disabled";
+        static final String JSON_KEY_TYPE = "type";
+        static final String JSON_KEY_TITLE = "title";
+        static final String JSON_KEY_ID = "id";
+        static final String JSON_KEY_LAYOUT = "layout";
+        static final String JSON_KEY_VIEWS = "views";
+        static final String JSON_KEY_AUTH_CONFIG = "authConfig";
+        static final String JSON_KEY_DEFAULT = "default";
+        static final String JSON_KEY_DISABLED = "disabled";
 
         public enum Flags {
             DEFAULT_PANEL,
@@ -616,14 +616,14 @@ public final class HomeConfig {
         private final EmptyViewConfig mEmptyViewConfig;
         private final EnumSet<Flags> mFlags;
 
-        private static final String JSON_KEY_TYPE = "type";
-        private static final String JSON_KEY_DATASET = "dataset";
-        private static final String JSON_KEY_ITEM_TYPE = "itemType";
-        private static final String JSON_KEY_ITEM_HANDLER = "itemHandler";
-        private static final String JSON_KEY_BACK_IMAGE_URL = "backImageUrl";
-        private static final String JSON_KEY_FILTER = "filter";
-        private static final String JSON_KEY_EMPTY = "empty";
-        private static final String JSON_KEY_REFRESH_ENABLED = "refreshEnabled";
+        static final String JSON_KEY_TYPE = "type";
+        static final String JSON_KEY_DATASET = "dataset";
+        static final String JSON_KEY_ITEM_TYPE = "itemType";
+        static final String JSON_KEY_ITEM_HANDLER = "itemHandler";
+        static final String JSON_KEY_BACK_IMAGE_URL = "backImageUrl";
+        static final String JSON_KEY_FILTER = "filter";
+        static final String JSON_KEY_EMPTY = "empty";
+        static final String JSON_KEY_REFRESH_ENABLED = "refreshEnabled";
 
         public enum Flags {
             REFRESH_ENABLED
@@ -818,8 +818,8 @@ public final class HomeConfig {
         private final String mText;
         private final String mImageUrl;
 
-        private static final String JSON_KEY_TEXT = "text";
-        private static final String JSON_KEY_IMAGE_URL = "imageUrl";
+        static final String JSON_KEY_TEXT = "text";
+        static final String JSON_KEY_IMAGE_URL = "imageUrl";
 
         public EmptyViewConfig(JSONObject json) throws JSONException, IllegalArgumentException {
             mText = json.optString(JSON_KEY_TEXT, null);
@@ -888,9 +888,9 @@ public final class HomeConfig {
         private final String mButtonText;
         private final String mImageUrl;
 
-        private static final String JSON_KEY_MESSAGE_TEXT = "messageText";
-        private static final String JSON_KEY_BUTTON_TEXT = "buttonText";
-        private static final String JSON_KEY_IMAGE_URL = "imageUrl";
+        static final String JSON_KEY_MESSAGE_TEXT = "messageText";
+        static final String JSON_KEY_BUTTON_TEXT = "buttonText";
+        static final String JSON_KEY_IMAGE_URL = "imageUrl";
 
         public AuthConfig(JSONObject json) throws JSONException, IllegalArgumentException {
             mMessageText = json.optString(JSON_KEY_MESSAGE_TEXT);

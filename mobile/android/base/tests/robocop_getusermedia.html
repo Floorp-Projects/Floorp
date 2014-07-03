@@ -4,7 +4,6 @@
   <meta http-equiv="content-type" content="text/html; charset=UTF-8" charset="utf-8">
 </head>
 <body>
-  <div id="content"></div>
   <script type="application/javascript">
   var video_status = false;
   var video = document.createElement("video");
@@ -14,9 +13,6 @@
   var audio_status = false;
   var audio = document.createElement("audio");
   audio.setAttribute("controls", true);
-
-  var content = document.getElementById("content");
-  document.title = "gUM Test Page";
 
   startAudioVideo();
 
@@ -45,6 +41,7 @@
   function startMedia(param) {
     try {
       window.navigator.mozGetUserMedia(param, function(stream) {
+        message.innerHTML = "<p>Success!</p>";
         if (video_status) {
           content.appendChild(video);
           video.mozSrcObject = stream;
@@ -55,18 +52,7 @@
           audio.mozSrcObject = stream;
           audio.play();
         }
-        var audioTracks = stream.getAudioTracks();
-        var videoTracks = stream.getVideoTracks();
-        document.title = "";
-        if (audioTracks.length > 0) {
-          document.title += "audio";
-        }
-        if (videoTracks.length > 0) {
-          document.title += "video";
-        }
-        document.title += " gumtest";
       }, function(err) {
-        document.title = "failed gumtest";
         stopMedia();
       });
     } catch(e) {

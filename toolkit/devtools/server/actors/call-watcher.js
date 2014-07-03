@@ -276,7 +276,7 @@ let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
    * created, in order to instrument the specified objects and become
    * aware of everything the content does with them.
    */
-  setup: method(function({ tracedGlobals, tracedFunctions, startRecording, performReload, holdWeak }) {
+  setup: method(function({ tracedGlobals, tracedFunctions, startRecording, performReload, holdWeak, storeCalls }) {
     if (this._initialized) {
       return;
     }
@@ -286,6 +286,7 @@ let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
     this._tracedGlobals = tracedGlobals || [];
     this._tracedFunctions = tracedFunctions || [];
     this._holdWeak = !!holdWeak;
+    this._storeCalls = !!storeCalls;
     this._contentObserver = new ContentObserver(this.tabActor);
 
     on(this._contentObserver, "global-created", this._onGlobalCreated);
@@ -303,7 +304,8 @@ let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
       tracedFunctions: Option(0, "nullable:array:string"),
       startRecording: Option(0, "boolean"),
       performReload: Option(0, "boolean"),
-      holdWeak: Option(0, "boolean")
+      holdWeak: Option(0, "boolean"),
+      storeCalls: Option(0, "boolean")
     },
     oneway: true
   }),
@@ -541,7 +543,11 @@ let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
       return;
     }
     let functionCall = new FunctionCallActor(this.conn, details, this._holdWeak);
-    this._functionCalls.push(functionCall);
+
+    if (this._storeCalls) {
+      this._functionCalls.push(functionCall);
+    }
+
     this.onCall(functionCall);
   }
 });
@@ -552,7 +558,6 @@ let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
 let CallWatcherFront = exports.CallWatcherFront = protocol.FrontClass(CallWatcherActor, {
   initialize: function(client, { callWatcherActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: callWatcherActor });
-    client.addActorPool(this);
     this.manage(this);
   }
 });

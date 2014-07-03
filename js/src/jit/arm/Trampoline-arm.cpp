@@ -649,10 +649,14 @@ JitRuntime::generateBailoutTable(JSContext *cx, uint32_t frameClass)
 {
     MacroAssembler masm(cx);
 
-    Label bailout;
-    for (size_t i = 0; i < BAILOUT_TABLE_SIZE; i++)
-        masm.ma_bl(&bailout);
-    masm.bind(&bailout);
+    {
+        // Emit the table without any pools being inserted.
+        Label bailout;
+        AutoForbidPools afp(&masm);
+        for (size_t i = 0; i < BAILOUT_TABLE_SIZE; i++)
+            masm.ma_bl(&bailout);
+        masm.bind(&bailout);
+    }
 
     GenerateBailoutThunk(cx, masm, frameClass);
 
