@@ -52,9 +52,6 @@ if (!this.debug) {
   };
 }
 
-let RIL_EMERGENCY_NUMBERS;
-const DEFAULT_EMERGENCY_NUMBERS = ["112", "911"];
-
 // Timeout value for emergency callback mode.
 const EMERGENCY_CB_MODE_TIMEOUT_MS = 300000;  // 5 mins = 300000 ms.
 
@@ -1555,7 +1552,7 @@ RilObject.prototype = {
   cachedDialRequest : null,
 
   /**
-   * Dial the phone.
+   * Dial a non-emergency number.
    *
    * @param number
    *        String containing the number to dial.
@@ -1564,34 +1561,13 @@ RilObject.prototype = {
    * @param uusInfo
    *        Integer doing something XXX TODO
    */
-  dial: function(options) {
+  dialNonEmergencyNumber: function(options) {
     let onerror = (function onerror(options, errorMsg) {
       options.success = false;
       options.errorMsg = errorMsg;
       this.sendChromeMessage(options);
     }).bind(this, options);
 
-    if (this._isEmergencyNumber(options.number)) {
-      this.dialEmergencyNumber(options, onerror);
-    } else {
-      if (!this._isCdma) {
-        // TODO: Both dial() and sendMMI() functions should be unified at some
-        // point in the future. In the mean time we handle temporary CLIR MMI
-        // commands through the dial() function. Please see bug 889737.
-        let mmi = this._parseMMI(options.number);
-        if (mmi && this._isTemporaryModeCLIR(mmi)) {
-          options.number = mmi.dialNumber;
-          // In temporary mode, MMI_PROCEDURE_ACTIVATION means allowing CLI
-          // presentation, i.e. CLIR_SUPPRESSION. See TS 22.030, Annex B.
-          options.clirMode = mmi.procedure == MMI_PROCEDURE_ACTIVATION ?
-                             CLIR_SUPPRESSION : CLIR_INVOCATION;
-        }
-      }
-      this.dialNonEmergencyNumber(options, onerror);
-    }
-  },
-
-  dialNonEmergencyNumber: function(options, onerror) {
     if (this.radioState == GECKO_RADIOSTATE_OFF) {
       // Notify error in establishing the call without radio.
       onerror(GECKO_ERROR_RADIO_NOT_AVAILABLE);
@@ -1609,17 +1585,41 @@ RilObject.prototype = {
       this.exitEmergencyCbMode();
     }
 
-    if (this._isCdma && Object.keys(this.currentCalls).length == 1) {
-      // Make a Cdma 3way call.
-      options.featureStr = options.number;
-      this.sendCdmaFlashCommand(options);
-    } else {
-      options.request = REQUEST_DIAL;
-      this.sendDialRequest(options);
+    if (!this._isCdma) {
+      // TODO: Both dial() and sendMMI() functions should be unified at some
+      // point in the future. In the mean time we handle temporary CLIR MMI
+      // commands through the dial() function. Please see bug 889737.
+      let mmi = this._parseMMI(options.number);
+      if (mmi && this._isTemporaryModeCLIR(mmi)) {
+        options.number = mmi.dialNumber;
+        // In temporary mode, MMI_PROCEDURE_ACTIVATION means allowing CLI
+        // presentation, i.e. CLIR_SUPPRESSION. See TS 22.030, Annex B.
+        options.clirMode = mmi.procedure == MMI_PROCEDURE_ACTIVATION ?
+          CLIR_SUPPRESSION : CLIR_INVOCATION;
+      }
     }
+
+    options.request = REQUEST_DIAL;
+    this.sendDialRequest(options);
   },
 
-  dialEmergencyNumber: function(options, onerror) {
+  /**
+   * Dial an emergency number.
+   *
+   * @param number
+   *        String containing the number to dial.
+   * @param clirMode
+   *        Integer for showing/hidding the caller Id to the called party.
+   * @param uusInfo
+   *        Integer doing something XXX TODO
+   */
+  dialEmergencyNumber: function(options) {
+    let onerror = (function onerror(options, errorMsg) {
+      options.success = false;
+      options.errorMsg = errorMsg;
+      this.sendChromeMessage(options);
+    }).bind(this, options);
+
     options.request = RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL ?
                       REQUEST_DIAL_EMERGENCY_CALL : REQUEST_DIAL;
     if (this.radioState == GECKO_RADIOSTATE_OFF) {
@@ -1636,18 +1636,18 @@ RilObject.prototype = {
       return;
     }
 
+    this.sendDialRequest(options);
+  },
+
+  sendDialRequest: function(options) {
     if (this._isCdma && Object.keys(this.currentCalls).length == 1) {
       // Make a Cdma 3way call.
       options.featureStr = options.number;
       this.sendCdmaFlashCommand(options);
     } else {
-      this.sendDialRequest(options);
+      this.telephonyRequestQueue.push(options.request, this.sendRilRequestDial,
+                                      options);
     }
-  },
-
-  sendDialRequest: function(options) {
-    this.telephonyRequestQueue.push(options.request, this.sendRilRequestDial,
-                                    options);
   },
 
   sendRilRequestDial: function(options) {
@@ -2417,9 +2417,8 @@ RilObject.prototype = {
       return false;
     }
 
-    if (this._isEmergencyNumber(mmiString)) {
-      return false;
-    }
+    // TODO: Should take care of checking if the string is an emergency number
+    // in Bug 889737. See Bug 1023141 for more background.
 
     // In a call case.
     if (Object.getOwnPropertyNames(this.currentCalls).length > 0) {
@@ -3309,38 +3308,18 @@ RilObject.prototype = {
   },
 
   /**
-   * Check a given number against the list of emergency numbers provided by the RIL.
+   * Checks whether to temporarily suppress caller id for the call.
    *
-   * @param number
-   *        The number to look up.
+   * @param mmi
+   *        MMI full object.
    */
-   _isEmergencyNumber: function(number) {
-     // Check ril provided numbers first.
-     let numbers = RIL_EMERGENCY_NUMBERS;
-
-     if (numbers) {
-       numbers = numbers.split(",");
-     } else {
-       // No ecclist system property, so use our own list.
-       numbers = DEFAULT_EMERGENCY_NUMBERS;
-     }
-
-     return numbers.indexOf(number) != -1;
-   },
-
-   /**
-    * Checks whether to temporarily suppress caller id for the call.
-    *
-    * @param mmi
-    *        MMI full object.
-    */
-   _isTemporaryModeCLIR: function(mmi) {
-     return (mmi &&
-             mmi.serviceCode == MMI_SC_CLIR &&
-             mmi.dialNumber &&
-             (mmi.procedure == MMI_PROCEDURE_ACTIVATION ||
-              mmi.procedure == MMI_PROCEDURE_DEACTIVATION));
-   },
+  _isTemporaryModeCLIR: function(mmi) {
+    return (mmi &&
+            mmi.serviceCode == MMI_SC_CLIR &&
+            mmi.dialNumber &&
+            (mmi.procedure == MMI_PROCEDURE_ACTIVATION ||
+             mmi.procedure == MMI_PROCEDURE_DEACTIVATION));
+  },
 
   /**
    * Report STK Service is running.
@@ -4055,6 +4034,7 @@ RilObject.prototype = {
       for (let i in newCalls) {
         if (newCalls[i].state !== CALL_STATE_INCOMING) {
           callIndex = newCalls[i].callIndex;
+          newCalls[i].isEmergency = options.isEmergency;
           break;
         }
       }
@@ -4105,9 +4085,9 @@ RilObject.prototype = {
       newCall.isOutgoing = true;
     }
 
-    // Set flag for outgoing emergency call.
-    newCall.isEmergency = newCall.isOutgoing &&
-      this._isEmergencyNumber(newCall.number);
+    if (newCall.isEmergency === undefined) {
+      newCall.isEmergency = false;
+    }
 
     // Set flag for conference.
     newCall.isConference = newCall.isMpty ? true : false;
@@ -14968,7 +14948,6 @@ let ContextPool = {
 
   setInitialOptions: function(aOptions) {
     DEBUG = DEBUG_WORKER || aOptions.debug;
-    RIL_EMERGENCY_NUMBERS = aOptions.rilEmergencyNumbers;
 
     let quirks = aOptions.quirks;
     RILQUIRKS_CALLSTATE_EXTRA_UINT32 = quirks.callstateExtraUint32;
