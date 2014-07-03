@@ -269,8 +269,6 @@ let StyleSheetsFront = protocol.FrontClass(StyleSheetsActor, {
   initialize: function(client, tabForm) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.styleSheetsActor;
-
-    client.addActorPool(this);
     this.manage(this);
   }
 });

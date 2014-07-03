@@ -26,7 +26,7 @@ function testUrlTagDiscover(re) {
     let index = msg.techList.indexOf("NDEF");
     isnot(index, -1, "check for \'NDEF\' in tech list");
 
-    let records = msg.records;
+    let records = Cu.waiveXrays(msg.records);
     ok(records.length > 0);
 
     is(tnf, records[0].tnf, "check for TNF field in NDEF");

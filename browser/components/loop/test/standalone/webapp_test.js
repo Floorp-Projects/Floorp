@@ -281,10 +281,11 @@ describe("loop.webapp", function() {
 
         sinon.assert.calledOnce(fakeSubmitEvent.preventDefault);
         sinon.assert.calledOnce(initiate);
-        sinon.assert.calledWith(initiate, {
-          baseServerUrl: loop.webapp.baseServerUrl,
-          outgoing: true
-        });
+        sinon.assert.calledWith(initiate, sinon.match(function (value) {
+          return !!value.outgoing &&
+            (value.client instanceof loop.StandaloneClient) &&
+            value.client.settings.baseServerUrl === loop.webapp.baseServerUrl;
+        }, "{client: <properly constructed client>, outgoing: true}"));
       });
 
       it("should disable current form once session is initiated", function() {
