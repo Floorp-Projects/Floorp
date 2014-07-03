@@ -239,9 +239,11 @@ public:
 
   /* Adapter Properties */
 
-  int GetAdapterProperties();
-  int GetAdapterProperty(bt_property_type_t aType);
-  int SetAdapterProperty(const bt_property_t* aProperty);
+  void GetAdapterProperties(BluetoothResultHandler* aRes);
+  void GetAdapterProperty(bt_property_type_t aType,
+                          BluetoothResultHandler* aRes);
+  void SetAdapterProperty(const bt_property_t* aProperty,
+                          BluetoothResultHandler* aRes);
 
   /* Remote Device Properties */
 
