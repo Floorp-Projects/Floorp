@@ -68,16 +68,10 @@ SVGPathElement::PathLength()
 }
 
 float
-SVGPathElement::GetTotalLength(ErrorResult& rv)
+SVGPathElement::GetTotalLength()
 {
   RefPtr<Path> flat = GetPathForLengthOrPositionMeasuring();
-
-  if (!flat) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return 0.f;
-  }
-
-  return flat->ComputeLength();
+  return flat ? flat->ComputeLength() : 0.f;
 }
 
 already_AddRefed<nsISVGPoint>
@@ -353,7 +347,11 @@ SVGPathElement::GetPathLengthScale(PathLengthScaleForType aFor)
     float authorsPathLengthEstimate = mPathLength.GetAnimValue();
     if (authorsPathLengthEstimate > 0) {
       RefPtr<Path> path = GetPathForLengthOrPositionMeasuring();
-
+      if (!path) {
+        // The path is empty or invalid so its length must be zero and
+        // we know that 0 / authorsPathLengthEstimate = 0.
+        return 0.0;
+      }
       if (aFor == eForTextPath) {
         // For textPath, a transform on the referenced path affects the
         // textPath layout, so when calculating the actual path length
@@ -365,10 +363,7 @@ SVGPathElement::GetPathLengthScale(PathLengthScaleForType aFor)
           path = builder->Finish();
         }
       }
-
-      if (path) {
-        return path->ComputeLength() / authorsPathLengthEstimate;
-      }
+      return path->ComputeLength() / authorsPathLengthEstimate;
     }
   }
   return 1.0;
