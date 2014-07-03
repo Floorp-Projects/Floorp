@@ -10,7 +10,6 @@
 #include "ImageContainer.h"
 
 #include "mp4_demuxer/mp4_demuxer.h"
-#include "FFmpegRuntimeLinker.h"
 
 #include "FFmpegH264Decoder.h"
 
@@ -24,9 +23,9 @@ typedef mp4_demuxer::MP4Sample MP4Sample;
 namespace mozilla
 {
 
-FFmpegH264Decoder::FFmpegH264Decoder(
+FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
   MediaTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
-  const mp4_demuxer::VideoDecoderConfig &aConfig,
+  const mp4_demuxer::VideoDecoderConfig& aConfig,
   ImageContainer* aImageContainer)
   : FFmpegDataDecoder(aTaskQueue, AV_CODEC_ID_H264)
   , mCallback(aCallback)
@@ -37,7 +36,7 @@ FFmpegH264Decoder::FFmpegH264Decoder(
 }
 
 nsresult
-FFmpegH264Decoder::Init()
+FFmpegH264Decoder<LIBAV_VER>::Init()
 {
   nsresult rv = FFmpegDataDecoder::Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -48,7 +47,7 @@ FFmpegH264Decoder::Init()
 }
 
 void
-FFmpegH264Decoder::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
+FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
 {
   AVPacket packet;
   av_init_packet(&packet);
@@ -82,8 +81,9 @@ FFmpegH264Decoder::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
     info.mHasVideo = true;
 
     data = VideoData::CreateFromImage(
-      info, mImageContainer, aSample->byte_offset, aSample->composition_timestamp,
-      aSample->duration, mCurrentImage, aSample->is_sync_point, -1,
+      info, mImageContainer, aSample->byte_offset,
+      aSample->composition_timestamp, aSample->duration, mCurrentImage,
+      aSample->is_sync_point, -1,
       gfx::IntRect(0, 0, mCodecContext.width, mCodecContext.height));
 
     // Insert the frame into the heap for reordering.
@@ -104,7 +104,7 @@ FFmpegH264Decoder::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
 }
 
 static void
-PlanarYCbCrDataFromAVFrame(mozilla::layers::PlanarYCbCrData &aData,
+PlanarYCbCrDataFromAVFrame(mozilla::layers::PlanarYCbCrData& aData,
                            AVFrame* aFrame)
 {
   aData.mPicX = aData.mPicY = 0;
@@ -125,8 +125,8 @@ PlanarYCbCrDataFromAVFrame(mozilla::layers::PlanarYCbCrData &aData,
 }
 
 /* static */ int
-FFmpegH264Decoder::AllocateBufferCb(AVCodecContext* aCodecContext,
-                                    AVFrame* aFrame)
+FFmpegH264Decoder<LIBAV_VER>::AllocateBufferCb(AVCodecContext* aCodecContext,
+                                               AVFrame* aFrame)
 {
   MOZ_ASSERT(aCodecContext->codec_type == AVMEDIA_TYPE_VIDEO);
 
@@ -142,8 +142,8 @@ FFmpegH264Decoder::AllocateBufferCb(AVCodecContext* aCodecContext,
 }
 
 int
-FFmpegH264Decoder::AllocateYUV420PVideoBuffer(AVCodecContext* aCodecContext,
-                                              AVFrame* aFrame)
+FFmpegH264Decoder<LIBAV_VER>::AllocateYUV420PVideoBuffer(
+  AVCodecContext* aCodecContext, AVFrame* aFrame)
 {
   // Older versions of ffmpeg require that edges be allocated* around* the
   // actual image.
@@ -209,18 +209,18 @@ FFmpegH264Decoder::AllocateYUV420PVideoBuffer(AVCodecContext* aCodecContext,
 }
 
 nsresult
-FFmpegH264Decoder::Input(mp4_demuxer::MP4Sample* aSample)
+FFmpegH264Decoder<LIBAV_VER>::Input(mp4_demuxer::MP4Sample* aSample)
 {
   mTaskQueue->Dispatch(
     NS_NewRunnableMethodWithArg<nsAutoPtr<mp4_demuxer::MP4Sample> >(
-      this, &FFmpegH264Decoder::DecodeFrame,
+      this, &FFmpegH264Decoder<LIBAV_VER>::DecodeFrame,
       nsAutoPtr<mp4_demuxer::MP4Sample>(aSample)));
 
   return NS_OK;
 }
 
 void
-FFmpegH264Decoder::OutputDelayedFrames()
+FFmpegH264Decoder<LIBAV_VER>::OutputDelayedFrames()
 {
   while (!mDelayedFrames.IsEmpty()) {
     mCallback->Output(mDelayedFrames.Pop());
@@ -228,7 +228,7 @@ FFmpegH264Decoder::OutputDelayedFrames()
 }
 
 nsresult
-FFmpegH264Decoder::Drain()
+FFmpegH264Decoder<LIBAV_VER>::Drain()
 {
   // The maximum number of frames that can be waiting to be decoded is
   // max_b_frames + 1: One P frame and max_b_frames B frames.
@@ -241,14 +241,14 @@ FFmpegH264Decoder::Drain()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mTaskQueue->Dispatch(
-    NS_NewRunnableMethod(this, &FFmpegH264Decoder::OutputDelayedFrames));
+  mTaskQueue->Dispatch(NS_NewRunnableMethod(
+    this, &FFmpegH264Decoder<LIBAV_VER>::OutputDelayedFrames));
 
   return NS_OK;
 }
 
 nsresult
-FFmpegH264Decoder::Flush()
+FFmpegH264Decoder<LIBAV_VER>::Flush()
 {
   nsresult rv = FFmpegDataDecoder::Flush();
   // Even if the above fails we may as well clear our frame queue.
@@ -256,7 +256,8 @@ FFmpegH264Decoder::Flush()
   return rv;
 }
 
-FFmpegH264Decoder::~FFmpegH264Decoder() {
+FFmpegH264Decoder<LIBAV_VER>::~FFmpegH264Decoder()
+{
   MOZ_COUNT_DTOR(FFmpegH264Decoder);
   MOZ_ASSERT(mDelayedFrames.IsEmpty());
 }

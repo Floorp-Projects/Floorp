@@ -14,7 +14,13 @@
 namespace mozilla
 {
 
-class FFmpegH264Decoder : public FFmpegDataDecoder
+template <int V>
+class FFmpegH264Decoder : public FFmpegDataDecoder<V>
+{
+};
+
+template <>
+class FFmpegH264Decoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
 {
   typedef mozilla::layers::Image Image;
   typedef mozilla::layers::ImageContainer ImageContainer;
@@ -22,7 +28,7 @@ class FFmpegH264Decoder : public FFmpegDataDecoder
 public:
   FFmpegH264Decoder(MediaTaskQueue* aTaskQueue,
                     MediaDataDecoderCallback* aCallback,
-                    const mp4_demuxer::VideoDecoderConfig &aConfig,
+                    const mp4_demuxer::VideoDecoderConfig& aConfig,
                     ImageContainer* aImageContainer);
   virtual ~FFmpegH264Decoder();
 
@@ -64,7 +70,7 @@ private:
 
   struct VideoDataComparator
   {
-    bool LessThan(VideoData* const &a, VideoData* const &b) const
+    bool LessThan(VideoData* const& a, VideoData* const& b) const
     {
       return a->mTime < b->mTime;
     }
