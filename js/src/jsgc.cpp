@@ -227,8 +227,6 @@
 using namespace js;
 using namespace js::gc;
 
-using mozilla::ArrayEnd;
-using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::Swap;
 
@@ -246,7 +244,6 @@ static const int MAX_EMPTY_CHUNK_COUNT = 2;
 static const int MAX_EMPTY_CHUNK_COUNT = 30;
 #endif
 
-/* This array should be const, but that doesn't link right under GCC. */
 const AllocKind gc::slotsToThingKind[] = {
     /* 0 */  FINALIZE_OBJECT0,  FINALIZE_OBJECT2,  FINALIZE_OBJECT2,  FINALIZE_OBJECT4,
     /* 4 */  FINALIZE_OBJECT4,  FINALIZE_OBJECT8,  FINALIZE_OBJECT8,  FINALIZE_OBJECT8,
@@ -430,7 +427,7 @@ ArenaHeader::checkSynchronizedWithFreeList() const
 
     /*
      * Here this arena has free things, FreeList::lists[thingKind] is not
-     * empty and also points to this arena. Thus they must the same.
+     * empty and also points to this arena. Thus they must be the same.
      */
     JS_ASSERT(freeList->isSameNonEmptySpan(firstSpan));
 }
