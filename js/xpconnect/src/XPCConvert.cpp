@@ -880,9 +880,8 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
     // If we're not creating security wrappers, we can return the
     // XPCWrappedNative as-is here.
     flat = wrapper->GetFlatJSObject();
-    jsval v = OBJECT_TO_JSVAL(flat);
     if (!allowNativeWrapper) {
-        d.set(v);
+        d.setObjectOrNull(flat);
         if (dest)
             wrapper.forget(dest);
         if (pErr)
