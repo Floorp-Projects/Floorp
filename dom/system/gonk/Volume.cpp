@@ -59,11 +59,11 @@ Volume::Volume(const nsCSubstring& aName)
     mMountGeneration(-1),
     mMountLocked(true),  // Needs to agree with nsVolume::nsVolume
     mSharingEnabled(false),
-    mCanBeShared(true),
-    mIsSharing(false),
     mFormatRequested(false),
     mMountRequested(false),
     mUnmountRequested(false),
+    mCanBeShared(true),
+    mIsSharing(false),
     mIsFormatting(false)
 {
   DBG("Volume %s: created", NameStr());

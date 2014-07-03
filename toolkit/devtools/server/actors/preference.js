@@ -109,7 +109,6 @@ let PreferenceFront = protocol.FrontClass(PreferenceActor, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = form.preferenceActor;
-    client.addActorPool(this);
     this.manage(this);
   },
 });
