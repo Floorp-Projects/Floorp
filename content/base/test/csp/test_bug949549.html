@@ -14,7 +14,7 @@
 
   // Ensure that `setRequestContext` doesn't throw with app:// URLs
 
-  const csp = SpecialPowers.Cc["@mozilla.org/contentsecuritypolicy;1"]
+  const csp = SpecialPowers.Cc["@mozilla.org/cspcontext;1"]
               .createInstance(SpecialPowers.Ci.nsIContentSecurityPolicy);
 
   const gManifestURL = "http://www.example.com/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
