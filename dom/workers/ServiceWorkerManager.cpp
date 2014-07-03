@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMError.h"
+#include "mozilla/dom/ErrorEvent.h"
 
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
@@ -112,6 +113,49 @@ UpdatePromise::RejectAllPromises(nsresult aRv)
   }
 }
 
+void
+UpdatePromise::RejectAllPromises(const ErrorEventInit& aErrorDesc)
+{
+  MOZ_ASSERT(mState == Pending);
+  mState = Rejected;
+
+  nsTArray<nsTWeakRef<Promise>> array;
+  array.SwapElements(mPromises);
+  for (uint32_t i = 0; i < array.Length(); ++i) {
+    nsTWeakRef<Promise>& pendingPromise = array.ElementAt(i);
+    if (pendingPromise) {
+      // Since ServiceWorkerContainer is only exposed to windows we can be
+      // certain about this cast.
+      nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(pendingPromise->GetParentObject());
+      MOZ_ASSERT(go);
+
+      AutoJSAPI jsapi;
+      jsapi.Init(go);
+
+      JSContext* cx = jsapi.cx();
+
+      JS::Rooted<JSString*> stack(cx, JS_GetEmptyString(JS_GetRuntime(cx)));
+
+      JS::Rooted<JS::Value> fnval(cx);
+      ToJSValue(cx, aErrorDesc.mFilename, &fnval);
+      JS::Rooted<JSString*> fn(cx, fnval.toString());
+
+      JS::Rooted<JS::Value> msgval(cx);
+      ToJSValue(cx, aErrorDesc.mMessage, &msgval);
+      JS::Rooted<JSString*> msg(cx, msgval.toString());
+
+      JS::Rooted<JS::Value> error(cx);
+      if (!JS::CreateError(cx, JSEXN_ERR, stack, fn, aErrorDesc.mLineno,
+                           aErrorDesc.mColno, nullptr, msg, &error)) {
+        pendingPromise->MaybeReject(NS_ERROR_FAILURE);
+        continue;
+      }
+
+      pendingPromise->MaybeReject(cx, error);
+    }
+  }
+}
+
 class FinishFetchOnMainThreadRunnable : public nsRunnable
 {
   nsMainThreadPtrHandle<ServiceWorkerUpdateInstance> mUpdateInstance;
@@ -176,6 +220,12 @@ public:
       mAborted(false)
   {
     AssertIsOnMainThread();
+  }
+
+  const nsCString&
+  GetScriptSpec() const
+  {
+    return mScriptSpec;
   }
 
   void
@@ -475,6 +525,16 @@ ServiceWorkerManager::RejectUpdatePromiseObservers(ServiceWorkerRegistration* aR
   aRegistration->mUpdatePromise = nullptr;
 }
 
+void
+ServiceWorkerManager::RejectUpdatePromiseObservers(ServiceWorkerRegistration* aRegistration,
+                                                   const ErrorEventInit& aErrorDesc)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aRegistration->HasUpdatePromise());
+  aRegistration->mUpdatePromise->RejectAllPromises(aErrorDesc);
+  aRegistration->mUpdatePromise = nullptr;
+}
+
 /*
  * Update() does not return the Promise that the spec says it should. Callers
  * may access the registration's (new) Promise after calling this method.
@@ -587,6 +647,65 @@ ServiceWorkerManager::FinishFetch(ServiceWorkerRegistration* aRegistration,
 
   ServiceWorkerInfo info(aRegistration->mScriptSpec);
   Install(aRegistration, info);
+}
+
+void
+ServiceWorkerManager::HandleError(JSContext* aCx,
+                                  const nsACString& aScope,
+                                  const nsAString& aWorkerURL,
+                                  nsString aMessage,
+                                  nsString aFilename,
+                                  nsString aLine,
+                                  uint32_t aLineNumber,
+                                  uint32_t aColumnNumber,
+                                  uint32_t aFlags)
+{
+  AssertIsOnMainThread();
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aScope, nullptr, nullptr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsCString domain;
+  rv = uri->GetHost(domain);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  ServiceWorkerDomainInfo* domainInfo;
+  if (!mDomainMap.Get(domain, &domainInfo)) {
+    return;
+  }
+
+  nsCString scope;
+  scope.Assign(aScope);
+  nsRefPtr<ServiceWorkerRegistration> registration = domainInfo->GetRegistration(scope);
+  MOZ_ASSERT(registration);
+
+  RootedDictionary<ErrorEventInit> init(aCx);
+  init.mMessage = aMessage;
+  init.mFilename = aFilename;
+  init.mLineno = aLineNumber;
+  init.mColno = aColumnNumber;
+
+  // If the worker was the one undergoing registration, we reject the promises,
+  // otherwise we fire events on the ServiceWorker instances.
+
+  // If there is an update in progress and the worker that errored is the same one
+  // that is being updated, it is a sufficient test for 'this worker is being
+  // registered'.
+  // FIXME(nsm): Except the case where an update is found for a worker, in
+  // which case we'll need some other association than simply the URL.
+  if (registration->mUpdateInstance &&
+      registration->mUpdateInstance->GetScriptSpec().Equals(NS_ConvertUTF16toUTF8(aWorkerURL))) {
+    RejectUpdatePromiseObservers(registration, init);
+    // We don't need to abort here since the worker has already run.
+    registration->mUpdateInstance = nullptr;
+  } else {
+    // FIXME(nsm): Bug 983497 Fire 'error' on ServiceWorkerContainers.
+  }
 }
 
 void
