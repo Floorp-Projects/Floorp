@@ -197,7 +197,6 @@ let DeviceFront = protocol.FrontClass(DeviceActor, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = form.deviceActor;
-    client.addActorPool(this);
     this.manage(this);
   },
 

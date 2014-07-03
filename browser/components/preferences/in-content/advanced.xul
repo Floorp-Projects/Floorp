@@ -359,7 +359,7 @@
 #ifdef MOZ_UPDATER
       <groupbox id="updateApp" align="start">
         <caption><label>&updateApp.label;</label></caption>
-        <radiogroup id="updateRadioGroup"
+        <radiogroup id="updateRadioGroup" align="start"
                     oncommand="gAdvancedPane.updateWritePrefs();">
 #ifdef XP_WIN
 #ifdef MOZ_METRO
