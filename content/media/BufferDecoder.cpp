@@ -147,13 +147,13 @@ BufferDecoder::IsMediaSeekable()
 }
 
 void
-BufferDecoder::MetadataLoaded(MediaInfo* aInfo, MetadataTags* aTags)
+BufferDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags)
 {
   // ignore
 }
 
 void
-BufferDecoder::QueueMetadata(int64_t aTime, MediaInfo* aInfo, MetadataTags* aTags)
+BufferDecoder::QueueMetadata(int64_t aTime, int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags)
 {
   // ignore
 }
