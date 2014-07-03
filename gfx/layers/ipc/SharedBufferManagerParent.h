@@ -46,7 +46,7 @@ public:
    */
   static SharedBufferManagerParent* GetInstance(ProcessId id);
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  android::sp<android::GraphicBuffer> GetGraphicBuffer(int key);
+  android::sp<android::GraphicBuffer> GetGraphicBuffer(int64_t key);
   static android::sp<android::GraphicBuffer> GetGraphicBuffer(GrallocBufferRef aRef);
 #endif
   /**
@@ -95,14 +95,14 @@ protected:
   /**
    * Buffers owned by this SharedBufferManager pair
    */
-  std::map<int, android::sp<android::GraphicBuffer> > mBuffers;
+  std::map<int64_t, android::sp<android::GraphicBuffer> > mBuffers;
   Mutex mBuffersMutex;
 #endif
   
   Transport* mTransport;
   base::ProcessId mOwner;
   base::Thread* mThread;
-  static mozilla::Atomic<uint32_t> sBufferKey;
+  static uint64_t sBufferKey;
 
   static StaticAutoPtr<Monitor> sManagerMonitor;
 };

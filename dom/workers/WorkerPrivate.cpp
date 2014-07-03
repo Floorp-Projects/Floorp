@@ -78,6 +78,7 @@
 #include "Principal.h"
 #include "RuntimeService.h"
 #include "ScriptLoader.h"
+#include "ServiceWorkerManager.h"
 #include "SharedWorker.h"
 #include "WorkerFeature.h"
 #include "WorkerRunnable.h"
@@ -1327,7 +1328,15 @@ private:
         return true;
       }
 
-      if (aWorkerPrivate->IsSharedWorker() || aWorkerPrivate->IsServiceWorker()) {
+      if (aWorkerPrivate->IsServiceWorker()) {
+        nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+        MOZ_ASSERT(swm);
+        swm->HandleError(aCx, aWorkerPrivate->SharedWorkerName(),
+                         aWorkerPrivate->ScriptURL(),
+                         mMessage,
+                         mFilename, mLine, mLineNumber, mColumnNumber, mFlags);
+        return true;
+      } else if (aWorkerPrivate->IsSharedWorker()) {
         aWorkerPrivate->BroadcastErrorToSharedWorkers(aCx, mMessage, mFilename,
                                                       mLine, mLineNumber,
                                                       mColumnNumber, mFlags);

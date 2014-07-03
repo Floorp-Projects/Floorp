@@ -575,8 +575,9 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper,
                                        NumberValue(JS_GetFunctionArity(JS_GetObjectFunction(target))));
                 return true;
             } else if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_NAME)) {
+                RootedString fname(cx, JS_GetFunctionId(JS_GetObjectFunction(target)));
                 FillPropertyDescriptor(desc, wrapper, JSPROP_PERMANENT | JSPROP_READONLY,
-                                       StringValue(JS_GetFunctionId(JS_GetObjectFunction(target))));
+                                       fname ? StringValue(fname) : JS_GetEmptyStringValue(cx));
             } else if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_PROTOTYPE)) {
                 // Handle the 'prototype' property to make xrayedGlobal.StandardClass.prototype work.
                 JSProtoKey standardConstructor = constructorFor(holder);
@@ -2652,7 +2653,7 @@ XrayWrapper<Base, Traits>::setPrototypeOf(JSContext *cx, JS::HandleObject wrappe
     // The expando lives in the target's compartment, so do our installation there.
     JSAutoCompartment ac(cx, target);
 
-    RootedValue v(cx, ObjectValue(*proto));
+    RootedValue v(cx, ObjectOrNullValue(proto));
     if (!JS_WrapValue(cx, &v))
         return false;
     JS_SetReservedSlot(expando, JSSLOT_EXPANDO_PROTOTYPE, v);

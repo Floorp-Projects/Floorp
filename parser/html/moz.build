@@ -100,3 +100,4 @@ LOCAL_INCLUDES += [
     '../../content/base/src',
 ]
 
+FAIL_ON_WARNINGS = True

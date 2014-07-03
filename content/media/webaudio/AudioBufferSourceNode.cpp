@@ -155,6 +155,7 @@ public:
          (aOutRate == mBufferSampleRate && !BegunResampling()))) {
       speex_resampler_destroy(mResampler);
       mResampler = nullptr;
+      mRemainingResamplerTail = 0;
       mBeginProcessing = mStart + 0.5;
     }
 

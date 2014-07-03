@@ -338,6 +338,22 @@ ExpectTagAndGetValue(Input& input, uint8_t tag, /*out*/ Input& value)
   return input.Skip(length, value);
 }
 
+// Like ExpectTagAndGetValue, except the output SECItem will contain the
+// encoded tag and length along with the value.
+inline Result
+ExpectTagAndGetTLV(Input& input, uint8_t tag, /*out*/ SECItem& tlv)
+{
+  Input::Mark mark(input.GetMark());
+  uint16_t length;
+  if (internal::ExpectTagAndGetLength(input, tag, length) != Success) {
+    return Failure;
+  }
+  if (input.Skip(length) != Success) {
+    return Failure;
+  }
+  return input.GetSECItem(siBuffer, mark, tlv);
+}
+
 inline Result
 End(Input& input)
 {
