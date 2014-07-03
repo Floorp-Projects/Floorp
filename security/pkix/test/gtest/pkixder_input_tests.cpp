@@ -42,6 +42,26 @@ protected:
   }
 };
 
+static const uint8_t DER_SEQUENCE_EMPTY[] = {
+  0x30,                       // SEQUENCE
+  0x00,                       // length
+};
+
+static const uint8_t DER_SEQUENCE_NOT_EMPTY[] = {
+  0x30,                       // SEQUENCE
+  0x01,                       // length
+  'X',                        // value
+};
+
+static const uint8_t DER_SEQUENCE_NOT_EMPTY_VALUE[] = {
+  'X',                        // value
+};
+
+static const uint8_t DER_SEQUENCE_NOT_EMPTY_VALUE_TRUNCATED[] = {
+  0x30,                       // SEQUENCE
+  0x01,                       // length
+};
+
 const uint8_t DER_SEQUENCE_OF_INT8[] = {
   0x30,                       // SEQUENCE
   0x09,                       // length
@@ -566,6 +586,177 @@ TEST_F(pkixder_input_tests, ExpectTagAndGetLengthWithWrongLength)
 
   uint16_t length = 0;
   ASSERT_EQ(Failure, internal::ExpectTagAndGetLength(input, SEQUENCE, length));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetValue_Input_ValidEmpty)
+{
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_SEQUENCE_EMPTY, sizeof DER_SEQUENCE_EMPTY));
+  Input value;
+  ASSERT_EQ(Success, ExpectTagAndGetValue(input, SEQUENCE, value));
+  ASSERT_TRUE(value.AtEnd());
+  ASSERT_TRUE(input.AtEnd());
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetValue_Input_ValidNotEmpty)
+{
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_SEQUENCE_NOT_EMPTY, sizeof DER_SEQUENCE_NOT_EMPTY));
+  Input value;
+  ASSERT_EQ(Success, ExpectTagAndGetValue(input, SEQUENCE, value));
+  ASSERT_TRUE(value.MatchRest(DER_SEQUENCE_NOT_EMPTY_VALUE));
+  ASSERT_TRUE(input.AtEnd());
+}
+
+TEST_F(pkixder_input_tests,
+       ExpectTagAndGetValue_Input_InvalidNotEmptyValueTruncated)
+{
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_SEQUENCE_NOT_EMPTY_VALUE_TRUNCATED,
+                       sizeof DER_SEQUENCE_NOT_EMPTY_VALUE_TRUNCATED));
+  Input value;
+  ASSERT_EQ(Failure, ExpectTagAndGetValue(input, SEQUENCE, value));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetValue_Input_InvalidWrongLength)
+{
+  Input input;
+  ASSERT_EQ(Success, input.Init(DER_TRUNCATED_SEQUENCE_OF_INT8,
+                                sizeof DER_TRUNCATED_SEQUENCE_OF_INT8));
+  Input value;
+  ASSERT_EQ(Failure, ExpectTagAndGetValue(input, SEQUENCE, value));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetLength_Input_InvalidWrongTag)
+{
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_SEQUENCE_NOT_EMPTY, sizeof DER_SEQUENCE_NOT_EMPTY));
+  Input value;
+  ASSERT_EQ(Failure, ExpectTagAndGetValue(input, INTEGER, value));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetValue_SECItem_ValidEmpty)
+{
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_SEQUENCE_EMPTY, sizeof DER_SEQUENCE_EMPTY));
+  SECItem value = { siBuffer, nullptr, 5 };
+  ASSERT_EQ(Success, ExpectTagAndGetValue(input, SEQUENCE, value));
+  ASSERT_EQ(0u, value.len);
+  ASSERT_TRUE(input.AtEnd());
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetValue_SECItem_ValidNotEmpty)
+{
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_SEQUENCE_NOT_EMPTY, sizeof DER_SEQUENCE_NOT_EMPTY));
+  SECItem value;
+  ASSERT_EQ(Success, ExpectTagAndGetValue(input, SEQUENCE, value));
+  ASSERT_EQ(sizeof(DER_SEQUENCE_NOT_EMPTY_VALUE), value.len);
+  ASSERT_TRUE(value.data);
+  ASSERT_FALSE(memcmp(value.data, DER_SEQUENCE_NOT_EMPTY_VALUE,
+                      sizeof(DER_SEQUENCE_NOT_EMPTY_VALUE)));
+  ASSERT_TRUE(input.AtEnd());
+}
+
+TEST_F(pkixder_input_tests,
+       ExpectTagAndGetValue_SECItem_InvalidNotEmptyValueTruncated)
+{
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_SEQUENCE_NOT_EMPTY_VALUE_TRUNCATED,
+                       sizeof DER_SEQUENCE_NOT_EMPTY_VALUE_TRUNCATED));
+  SECItem value;
+  ASSERT_EQ(Failure, ExpectTagAndGetValue(input, SEQUENCE, value));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetValue_SECItem_InvalidWrongLength)
+{
+  Input input;
+  ASSERT_EQ(Success, input.Init(DER_TRUNCATED_SEQUENCE_OF_INT8,
+                                sizeof DER_TRUNCATED_SEQUENCE_OF_INT8));
+  SECItem value;
+  ASSERT_EQ(Failure, ExpectTagAndGetValue(input, SEQUENCE, value));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetLength_SECItem_InvalidWrongTag)
+{
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_SEQUENCE_NOT_EMPTY, sizeof DER_SEQUENCE_NOT_EMPTY));
+  SECItem value;
+  ASSERT_EQ(Failure, ExpectTagAndGetValue(input, INTEGER, value));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetTLV_SECItem_ValidEmpty)
+{
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_SEQUENCE_EMPTY, sizeof DER_SEQUENCE_EMPTY));
+  SECItem tlv = { siBuffer, nullptr, 5 };
+  ASSERT_EQ(Success, ExpectTagAndGetTLV(input, SEQUENCE, tlv));
+  ASSERT_EQ(sizeof DER_SEQUENCE_EMPTY, tlv.len);
+  ASSERT_TRUE(tlv.data);
+  ASSERT_FALSE(memcmp(tlv.data, DER_SEQUENCE_EMPTY,
+                      sizeof DER_SEQUENCE_EMPTY));
+  ASSERT_TRUE(input.AtEnd());
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetTLV_SECItem_ValidNotEmpty)
+{
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_SEQUENCE_NOT_EMPTY, sizeof DER_SEQUENCE_NOT_EMPTY));
+  SECItem tlv;
+  ASSERT_EQ(Success, ExpectTagAndGetTLV(input, SEQUENCE, tlv));
+  ASSERT_EQ(sizeof(DER_SEQUENCE_NOT_EMPTY), tlv.len);
+  ASSERT_TRUE(tlv.data);
+  ASSERT_FALSE(memcmp(tlv.data, DER_SEQUENCE_NOT_EMPTY,
+                      sizeof(DER_SEQUENCE_NOT_EMPTY)));
+  ASSERT_TRUE(input.AtEnd());
+}
+
+TEST_F(pkixder_input_tests,
+       ExpectTagAndGetTLV_SECItem_InvalidNotEmptyValueTruncated)
+{
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_SEQUENCE_NOT_EMPTY_VALUE_TRUNCATED,
+                       sizeof DER_SEQUENCE_NOT_EMPTY_VALUE_TRUNCATED));
+  SECItem tlv;
+  ASSERT_EQ(Failure, ExpectTagAndGetTLV(input, SEQUENCE, tlv));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetTLV_SECItem_InvalidWrongLength)
+{
+  Input input;
+  ASSERT_EQ(Success, input.Init(DER_TRUNCATED_SEQUENCE_OF_INT8,
+                                sizeof DER_TRUNCATED_SEQUENCE_OF_INT8));
+  SECItem tlv;
+  ASSERT_EQ(Failure, ExpectTagAndGetTLV(input, SEQUENCE, tlv));
+  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetTLV_SECItem_InvalidWrongTag)
+{
+  Input input;
+  ASSERT_EQ(Success,
+            input.Init(DER_SEQUENCE_NOT_EMPTY, sizeof DER_SEQUENCE_NOT_EMPTY));
+  SECItem tlv;
+  ASSERT_EQ(Failure, ExpectTagAndGetTLV(input, INTEGER, tlv));
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 

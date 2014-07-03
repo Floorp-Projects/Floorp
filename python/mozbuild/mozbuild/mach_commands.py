@@ -10,6 +10,8 @@ import operator
 import os
 import sys
 
+import mozpack.path as mozpath
+
 from mach.decorators import (
     CommandArgument,
     CommandProvider,
@@ -919,85 +921,127 @@ class Makefiles(MachCommandBase):
 class MachDebug(MachCommandBase):
     @Command('environment', category='build-dev',
         description='Show info about the mach and build environment.')
+    @CommandArgument('--format', default='pretty',
+        choices=['pretty', 'client.mk', 'configure', 'json'],
+        help='Print data in the given format.')
+    @CommandArgument('--output', '-o', type=str,
+        help='Output to the given file.')
     @CommandArgument('--verbose', '-v', action='store_true',
         help='Print verbose output.')
-    def environment(self, verbose=False):
+    def environment(self, format, output=None, verbose=False):
+        func = getattr(self, '_environment_%s' % format.replace('.', '_'))
+
+        if output:
+            # We want to preserve mtimes if the output file already exists
+            # and the content hasn't changed.
+            from mozbuild.util import FileAvoidWrite
+            with FileAvoidWrite(output) as out:
+                return func(out, verbose)
+        return func(sys.stdout, verbose)
+
+    def _environment_pretty(self, out, verbose):
+        state_dir = self._mach_context.state_dir
         import platform
-        print('platform:\n\t%s' % platform.platform())
-        print('python version:\n\t%s' % sys.version)
-        print('python prefix:\n\t%s' % sys.prefix)
-        print('mach cwd:\n\t%s' % self._mach_context.cwd)
-        print('os cwd:\n\t%s' % os.getcwd())
-        print('mach directory:\n\t%s' % self._mach_context.topdir)
-        print('state directory:\n\t%s' % self._mach_context.state_dir)
+        print('platform:\n\t%s' % platform.platform(), file=out)
+        print('python version:\n\t%s' % sys.version, file=out)
+        print('python prefix:\n\t%s' % sys.prefix, file=out)
+        print('mach cwd:\n\t%s' % self._mach_context.cwd, file=out)
+        print('os cwd:\n\t%s' % os.getcwd(), file=out)
+        print('mach directory:\n\t%s' % self._mach_context.topdir, file=out)
+        print('state directory:\n\t%s' % state_dir, file=out)
 
-        try:
-            mb = MozbuildObject.from_environment(cwd=self._mach_context.cwd)
-        except ObjdirMismatchException as e:
-            print('Ambiguous object directory detected. We detected that '
-                'both %s and %s could be object directories. This is '
-                'typically caused by having a mozconfig pointing to a '
-                'different object directory from the current working '
-                'directory. To solve this problem, ensure you do not have a '
-                'default mozconfig in searched paths.' % (e.objdir1,
-                    e.objdir2))
-            return 1
+        print('object directory:\n\t%s' % self.topobjdir, file=out)
 
-        mozconfig = None
+        if self.mozconfig['path']:
+            print('mozconfig path:\n\t%s' % self.mozconfig['path'], file=out)
+            if self.mozconfig['configure_args']:
+                print('mozconfig configure args:', file=out)
+                for arg in self.mozconfig['configure_args']:
+                    print('\t%s' % arg, file=out)
 
-        try:
-            mozconfig = mb.mozconfig
-            print('mozconfig path:\n\t%s' % mozconfig['path'])
-        except MozconfigFindException as e:
-            print('Unable to find mozconfig: %s' % e.message)
-            return 1
+            if self.mozconfig['make_extra']:
+                print('mozconfig extra make args:', file=out)
+                for arg in self.mozconfig['make_extra']:
+                    print('\t%s' % arg, file=out)
 
-        except MozconfigLoadException as e:
-            print('Error loading mozconfig: %s' % e.path)
-            print(e.message)
-
-            if e.output:
-                print('mozconfig evaluation output:')
-                for line in e.output:
-                    print(line)
-
-            return 1
-
-        print('object directory:\n\t%s' % mb.topobjdir)
-
-        if mozconfig:
-            print('mozconfig configure args:')
-            if mozconfig['configure_args']:
-                for arg in mozconfig['configure_args']:
-                    print('\t%s' % arg)
-
-            print('mozconfig extra make args:')
-            if mozconfig['make_extra']:
-                for arg in mozconfig['make_extra']:
-                    print('\t%s' % arg)
-
-            print('mozconfig make flags:')
-            if mozconfig['make_flags']:
-                for arg in mozconfig['make_flags']:
-                    print('\t%s' % arg)
+            if self.mozconfig['make_flags']:
+                print('mozconfig make flags:', file=out)
+                for arg in self.mozconfig['make_flags']:
+                    print('\t%s' % arg, file=out)
 
         config = None
 
         try:
-            config = mb.config_environment
+            config = self.config_environment
 
         except Exception:
             pass
 
         if config:
-            print('config topsrcdir:\n\t%s' % config.topsrcdir)
-            print('config topobjdir:\n\t%s' % config.topobjdir)
+            print('config topsrcdir:\n\t%s' % config.topsrcdir, file=out)
+            print('config topobjdir:\n\t%s' % config.topobjdir, file=out)
 
             if verbose:
-                print('config substitutions:')
+                print('config substitutions:', file=out)
                 for k in sorted(config.substs):
-                    print('\t%s: %s' % (k, config.substs[k]))
+                    print('\t%s: %s' % (k, config.substs[k]), file=out)
 
-                print('config defines:')
+                print('config defines:', file=out)
                 for k in sorted(config.defines):
-                    print('\t%s' % k)
+                    print('\t%s' % k, file=out)
+
+    def _environment_client_mk(self, out, verbose):
+        if self.mozconfig['make_extra']:
+            for arg in self.mozconfig['make_extra']:
+                print(arg, file=out)
+        objdir = mozpath.normsep(self.topobjdir)
+        print('MOZ_OBJDIR=%s' % objdir, file=out)
+        if 'MOZ_CURRENT_PROJECT' in os.environ:
+            objdir = mozpath.join(objdir, os.environ['MOZ_CURRENT_PROJECT'])
+        print('OBJDIR=%s' % objdir, file=out)
+        if self.mozconfig['path']:
+            print('FOUND_MOZCONFIG=%s' % mozpath.normsep(self.mozconfig['path']),
+                file=out)
+
+    def _environment_configure(self, out, verbose):
+        if self.mozconfig['path']:
+            # Replace ' with '"'"', so that shell quoting e.g.
+            # a'b becomes 'a'"'"'b'.
+            quote = lambda s: s.replace("'", """'"'"'""")
+            print('echo Adding configure options from %s' %
+                mozpath.normsep(self.mozconfig['path']), file=out)
+            if self.mozconfig['configure_args']:
+                for arg in self.mozconfig['configure_args']:
+                    quoted_arg = quote(arg)
+                    print("echo '  %s'" % quoted_arg, file=out)
+                    print("""set -- "$@" '%s'""" % quoted_arg, file=out)
+                for key, value in self.mozconfig['env']['added'].items():
+                    print("export %s='%s'" % (key, quote(value)), file=out)
+                for key, (old, value) in self.mozconfig['env']['modified'].items():
+                    print("export %s='%s'" % (key, quote(value)), file=out)
+                for key, value in self.mozconfig['vars']['added'].items():
+                    print("%s='%s'" % (key, quote(value)), file=out)
+                for key, (old, value) in self.mozconfig['vars']['modified'].items():
+                    print("%s='%s'" % (key, quote(value)), file=out)
+                for key in self.mozconfig['env']['removed'].keys() + \
+                        self.mozconfig['vars']['removed'].keys():
+                    print("unset %s" % key, file=out)
+
+    def _environment_json(self, out, verbose):
+        import json
+        class EnvironmentEncoder(json.JSONEncoder):
+            def default(self, obj):
+                if isinstance(obj, MozbuildObject):
+                    result = {
+                        'topsrcdir': obj.topsrcdir,
+                        'topobjdir': obj.topobjdir,
+                        'mozconfig': obj.mozconfig,
+                    }
+                    if verbose:
+                        result['substs'] = obj.substs
+                        result['defines'] = obj.defines
+                    return result
+                elif isinstance(obj, set):
+                    return list(obj)
+                return json.JSONEncoder.default(self, obj)
+        json.dump(self, cls=EnvironmentEncoder, sort_keys=True, fp=out)

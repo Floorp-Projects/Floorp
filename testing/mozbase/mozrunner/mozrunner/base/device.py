@@ -12,6 +12,7 @@ import tempfile
 import time
 
 from .runner import BaseRunner
+from ..devices import Emulator
 
 class DeviceRunner(BaseRunner):
     """
@@ -60,9 +61,21 @@ class DeviceRunner(BaseRunner):
         return cmd
 
     def start(self, *args, **kwargs):
-        if not self.device.proc:
+        if isinstance(self.device, Emulator) and not self.device.connected:
             self.device.start()
+        self.device.connect()
         self.device.setup_profile(self.profile)
+
+        # TODO: this doesn't work well when the device is running but dropped
+        # wifi for some reason. It would be good to probe the state of the device
+        # to see if we have the homescreen running, or something, before waiting here
+        self.device.wait_for_net()
+
+        if not isinstance(self.device, Emulator):
+            self.device.reboot()
+
+        if not self.device.wait_for_net():
+            raise Exception("Network did not come up when starting device")
         self.app_ctx.stop_application()
 
         BaseRunner.start(self, *args, **kwargs)
@@ -75,6 +88,9 @@ class DeviceRunner(BaseRunner):
             time.sleep(1)
         else:
             print("timed out waiting for '%s' process to start" % self.app_ctx.remote_process)
+
+        if not self.device.wait_for_net():
+            raise Exception("Failed to get a network connection")
 
     def on_output(self, line):
         match = re.findall(r"TEST-START \| ([^\s]*)", line)
