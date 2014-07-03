@@ -91,9 +91,7 @@ loop.panel = (function(_, mozL10n) {
         throw new Error("missing required notifier");
       }
       this.notifier = options.notifier;
-      this.client = new loop.shared.Client({
-        baseServerUrl: navigator.mozLoop.serverUrl
-      });
+      this.client = new loop.Client();
     },
 
     getNickname: function() {
