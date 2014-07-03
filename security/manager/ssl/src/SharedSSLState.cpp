@@ -13,6 +13,7 @@
 #include "nsThreadUtils.h"
 #include "nsCRT.h"
 #include "nsServiceManagerUtils.h"
+#include "nsRecentBadCerts.h"
 #include "PSMRunnable.h"
 #include "PublicSSL.h"
 #include "ssl.h"
@@ -27,6 +28,7 @@ using mozilla::unused;
 namespace {
 
 static Atomic<bool> sCertOverrideSvcExists(false);
+static Atomic<bool> sCertDBExists(false);
 
 class MainThreadClearer : public SyncRunnableBase
 {
@@ -46,6 +48,19 @@ public:
         icos->ClearValidityOverride(
           NS_LITERAL_CSTRING("all:temporary-certificates"),
           0);
+      }
+    }
+
+    bool certDBExists = sCertDBExists.exchange(false);
+    if (certDBExists) {
+      sCertDBExists = true;
+      nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
+      if (certdb) {
+        nsCOMPtr<nsIRecentBadCerts> badCerts;
+        certdb->GetRecentBadCerts(true, getter_AddRefs(badCerts));
+        if (badCerts) {
+          badCerts->ResetStoredCerts();
+        }
       }
     }
 
@@ -193,6 +208,12 @@ SharedSSLState::GlobalCleanup()
 SharedSSLState::NoteCertOverrideServiceInstantiated()
 {
   sCertOverrideSvcExists = true;
+}
+
+/*static*/ void
+SharedSSLState::NoteCertDBServiceInstantiated()
+{
+  sCertDBExists = true;
 }
 
 void

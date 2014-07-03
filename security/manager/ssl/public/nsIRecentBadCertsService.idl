@@ -1,0 +1,50 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+interface nsIX509Cert;
+interface nsISSLStatus;
+
+%{C++
+#define NS_RECENTBADCERTS_CONTRACTID "@mozilla.org/security/recentbadcerts;1"
+%}
+
+/**
+ * This represents a global list of recently seen bad ssl status
+ * including the bad cert.
+ * The implementation will decide how many entries it will hold,
+ * the number is expected to be small.
+ */
+[scriptable, uuid(0fed7784-d152-44d6-95a7-67a59024de0f)]
+interface nsIRecentBadCerts : nsISupports {
+  /**
+   *  Retrieve the recently seen bad ssl status for the given hostname:port.
+   *  If no SSL cert was recently seen for the given hostname:port, return null.
+   *  If a good cert was seen for the given hostname:port, return null.
+   *
+   *  @param aHostNameWithPort The host:port whose entry should be tested
+   *  @return null or a recently seen bad ssl status with cert
+   */
+  nsISSLStatus getRecentBadCert(in AString aHostNameWithPort);
+
+  /**
+   *  A bad certificate that should be remembered by the service.
+   *  Will be added as the most recently seen cert.
+   *  The service may forget older entries to make room for the new one.
+   *
+   *  @param aHostNameWithPort The host:port whose entry should be tested
+   *  @param aCert The bad ssl status with certificate
+   */
+  void addBadCert(in AString aHostNameWithPort,
+                  in nsISSLStatus aStatus);
+
+  /**
+   * Clear all stored cert data.
+   */
+  void resetStoredCerts();
+};
