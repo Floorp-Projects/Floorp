@@ -871,12 +871,17 @@ alsa_stream_destroy(cubeb_stream * stm)
   int r;
   cubeb * ctx;
 
-  assert(stm && (stm->state == INACTIVE || stm->state == ERROR));
+  assert(stm && (stm->state == INACTIVE ||
+                 stm->state == ERROR ||
+                 stm->state == DRAINING));
 
   ctx = stm->context;
 
   pthread_mutex_lock(&stm->mutex);
   if (stm->pcm) {
+    if (stm->state == DRAINING) {
+      snd_pcm_drain(stm->pcm);
+    }
     alsa_locked_pcm_close(stm->pcm);
     stm->pcm = NULL;
   }
