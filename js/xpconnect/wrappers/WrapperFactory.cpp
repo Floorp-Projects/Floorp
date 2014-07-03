@@ -53,7 +53,7 @@ WrapperFactory::GetXrayWaiver(HandleObject obj)
     // Object should come fully unwrapped but outerized.
     MOZ_ASSERT(obj == UncheckedUnwrap(obj));
     MOZ_ASSERT(!js::GetObjectClass(obj)->ext.outerObject);
-    XPCWrappedNativeScope *scope = GetObjectScope(obj);
+    XPCWrappedNativeScope *scope = ObjectScope(obj);
     MOZ_ASSERT(scope);
 
     if (!scope->mWaiverWrapperMap)
@@ -72,7 +72,7 @@ WrapperFactory::CreateXrayWaiver(JSContext *cx, HandleObject obj)
     // The caller is required to have already done a lookup.
     // NB: This implictly performs the assertions of GetXrayWaiver.
     MOZ_ASSERT(!GetXrayWaiver(obj));
-    XPCWrappedNativeScope *scope = GetObjectScope(obj);
+    XPCWrappedNativeScope *scope = ObjectScope(obj);
 
     JSAutoCompartment ac(cx, obj);
     JSObject *waiver = Wrapper::New(cx, obj,
@@ -421,7 +421,7 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
     bool waiveXrayFlag = flags & WAIVE_XRAY_WRAPPER_FLAG;
 
     const Wrapper *wrapper;
-    CompartmentPrivate *targetdata = EnsureCompartmentPrivate(target);
+    CompartmentPrivate *targetdata = CompartmentPrivate::Get(target);
 
     //
     // First, handle the special cases.
@@ -593,7 +593,7 @@ FixWaiverAfterTransplant(JSContext *cx, HandleObject oldWaiver, HandleObject new
     // There should be no same-compartment references to oldWaiver, and we
     // just remapped all cross-compartment references. It's dead, so we can
     // remove it from the map.
-    XPCWrappedNativeScope *scope = GetObjectScope(oldWaiver);
+    XPCWrappedNativeScope *scope = ObjectScope(oldWaiver);
     JSObject *key = Wrapper::wrappedObject(oldWaiver);
     MOZ_ASSERT(scope->mWaiverWrapperMap->Find(key));
     scope->mWaiverWrapperMap->Remove(key);
@@ -617,8 +617,6 @@ nsIGlobalObject *
 GetNativeForGlobal(JSObject *obj)
 {
     MOZ_ASSERT(JS_IsGlobalObject(obj));
-    if (!MaybeGetObjectScope(obj))
-        return nullptr;
 
     // Every global needs to hold a native as its private or be a
     // WebIDL object with an nsISupports DOM object.

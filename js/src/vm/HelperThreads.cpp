@@ -556,6 +556,7 @@ GlobalHelperThreadState::canStartAsmJSCompile()
 static bool
 IonBuilderHasHigherPriority(jit::IonBuilder *first, jit::IonBuilder *second)
 {
+#ifdef JS_ION
     // This method can return whatever it wants, though it really ought to be a
     // total order. The ordering is allowed to race (change on the fly), however.
 
@@ -569,6 +570,9 @@ IonBuilderHasHigherPriority(jit::IonBuilder *first, jit::IonBuilder *second)
 
     // A higher useCount indicates a higher priority.
     return first->script()->getUseCount() > second->script()->getUseCount();
+#else
+    MOZ_ASSUME_UNREACHABLE("Cannot infer priority without Ion");
+#endif
 }
 
 bool

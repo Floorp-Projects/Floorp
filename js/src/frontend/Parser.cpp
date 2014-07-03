@@ -727,7 +727,7 @@ HasFinalReturn(ParseNode *pn)
       case PNK_RETURN:
         return ENDS_IN_RETURN;
 
-      case PNK_COLON:
+      case PNK_LABEL:
       case PNK_LEXICALSCOPE:
         return HasFinalReturn(pn->expr());
 
@@ -3194,7 +3194,7 @@ Parser<FullParseHandler>::checkDestructuring(BindData<FullParseHandler> *data,
     } else {
         JS_ASSERT(left->isKind(PNK_OBJECT));
         for (ParseNode *member = left->pn_head; member; member = member->pn_next) {
-            MOZ_ASSERT(member->isKind(PNK_COLON));
+            MOZ_ASSERT(member->isKind(PNK_COLON) || member->isKind(PNK_SHORTHAND));
             ParseNode *expr = member->pn_right;
 
             if (expr->isKind(PNK_ARRAY) || expr->isKind(PNK_OBJECT)) {
@@ -4220,8 +4220,7 @@ Parser<FullParseHandler>::forStatement()
                 isForDecl = true;
                 tokenStream.consumeKnownToken(tt);
                 pn1 = variables(tt == TOK_VAR ? PNK_VAR : PNK_CONST);
-            }
-            else if (tt == TOK_LET) {
+            } else if (tt == TOK_LET) {
                 handler.disableSyntaxParser();
                 (void) tokenStream.getToken();
                 if (tokenStream.peekToken() == TOK_LP) {
@@ -4233,8 +4232,7 @@ Parser<FullParseHandler>::forStatement()
                         return null();
                     pn1 = variables(PNK_LET, nullptr, blockObj, DontHoistVars);
                 }
-            }
-            else {
+            } else {
                 pn1 = expr();
             }
             pc->parsingForInit = false;
@@ -7303,8 +7301,7 @@ Parser<ParseHandler>::objectLiteral()
 
                 if (!handler.addPropertyDefinition(literal, propname, propexpr))
                     return null();
-            }
-            else if (ltok == TOK_NAME && (tt == TOK_COMMA || tt == TOK_RC)) {
+            } else if (ltok == TOK_NAME && (tt == TOK_COMMA || tt == TOK_RC)) {
                 /*
                  * Support, e.g., |var {x, y} = o| as destructuring shorthand
                  * for |var {x: x, y: y} = o|, per proposed JS2/ES4 for JS1.8.
@@ -7319,10 +7316,10 @@ Parser<ParseHandler>::objectLiteral()
                 propname = newName(name);
                 if (!propname)
                     return null();
-                if (!handler.addShorthandPropertyDefinition(literal, propname))
+                Node ident = identifierName();
+                if (!handler.addPropertyDefinition(literal, propname, ident, true))
                     return null();
-            }
-            else {
+            } else {
                 report(ParseError, false, null(), JSMSG_COLON_AFTER_ID);
                 return null();
             }

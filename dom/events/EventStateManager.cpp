@@ -1562,17 +1562,6 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       return;
     }
 
-    // Check if selection is tracking drag gestures, if so
-    // don't interfere!
-    if (mCurrentTarget)
-    {
-      nsRefPtr<nsFrameSelection> frameSel = mCurrentTarget->GetFrameSelection();
-      if (frameSel && frameSel->GetMouseDownState()) {
-        StopTrackingDragGesture();
-        return;
-      }
-    }
-
     // If non-native code is capturing the mouse don't start a drag.
     if (nsIPresShell::IsMouseCapturePreventingDrag()) {
       StopTrackingDragGesture();
@@ -1596,12 +1585,49 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
     // fire drag gesture if mouse has moved enough
     LayoutDeviceIntPoint pt = aEvent->refPoint +
       LayoutDeviceIntPoint::FromUntyped(aEvent->widget->WidgetToScreenOffset());
-    if (DeprecatedAbs(pt.x - mGestureDownPoint.x) > pixelThresholdX ||
-        DeprecatedAbs(pt.y - mGestureDownPoint.y) > pixelThresholdY) {
+    if (Abs(pt.x - mGestureDownPoint.x) > Abs(pixelThresholdX) ||
+        Abs(pt.y - mGestureDownPoint.y) > Abs(pixelThresholdY)) {
       if (Prefs::ClickHoldContextMenu()) {
         // stop the click-hold before we fire off the drag gesture, in case
         // it takes a long time
         KillClickHoldTimer();
+      }
+
+      nsCOMPtr<nsIContent> eventContent;
+      mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(eventContent));
+
+      // Make it easier to select link text by only dragging in the vertical direction
+      bool isLinkDraggedVertical = false;
+      bool isDraggableLink = false;
+      nsCOMPtr<nsIContent> dragLinkNode = eventContent;
+      while (dragLinkNode) {
+        if (nsContentUtils::IsDraggableLink(dragLinkNode)) {
+          isDraggableLink = true;
+          // Treat as vertical drag when cursor exceeds the top or bottom of the threshold box
+          isLinkDraggedVertical = Abs(pt.y - mGestureDownPoint.y) > Abs(pixelThresholdY);
+          break;
+        }
+        dragLinkNode = dragLinkNode->GetParent();
+      }
+
+      // Check if selection is tracking drag gestures, if so
+      // don't interfere!
+      if (mCurrentTarget) {
+        nsRefPtr<nsFrameSelection> frameSel = mCurrentTarget->GetFrameSelection();
+        if (frameSel && frameSel->GetMouseDownState()) {
+          if (isLinkDraggedVertical) {
+            // Stop selecting when link dragged vertically
+            frameSel->SetMouseDownState(PR_FALSE);
+            // Clear any selection to prevent it being dragged instead of link
+            frameSel->ClearNormalSelection();
+          } else {
+            StopTrackingDragGesture();
+            // Don't register click for draggable links when selecting
+            if (isDraggableLink)
+              mLClickCount = 0;
+            return;
+          }
+        }
       }
 
       nsCOMPtr<nsISupports> container = aPresContext->GetContainerWeak();
@@ -1613,8 +1639,7 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
         new DataTransfer(window, NS_DRAGDROP_START, false, -1);
 
       nsCOMPtr<nsISelection> selection;
-      nsCOMPtr<nsIContent> eventContent, targetContent;
-      mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(eventContent));
+      nsCOMPtr<nsIContent> targetContent;
       if (eventContent)
         DetermineDragTarget(window, eventContent, dataTransfer,
                             getter_AddRefs(selection), getter_AddRefs(targetContent));

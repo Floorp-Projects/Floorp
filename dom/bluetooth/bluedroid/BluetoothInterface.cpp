@@ -5,12 +5,69 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BluetoothInterface.h"
+#include "nsAutoPtr.h"
+#include "nsThreadUtils.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
 template<class T>
 struct interface_traits
 { };
+
+//
+// Result handling
+//
+
+template <typename Obj, typename Res>
+class BluetoothInterfaceRunnable0 : public nsRunnable
+{
+public:
+  BluetoothInterfaceRunnable0(Obj* aObj, Res (Obj::*aMethod)())
+  : mObj(aObj)
+  , mMethod(aMethod)
+  {
+    MOZ_ASSERT(mObj);
+    MOZ_ASSERT(mMethod);
+  }
+
+  NS_METHOD
+  Run() MOZ_OVERRIDE
+  {
+    ((*mObj).*mMethod)();
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<Obj> mObj;
+  void (Obj::*mMethod)();
+};
+
+template <typename Obj, typename Res, typename Arg1>
+class BluetoothInterfaceRunnable1 : public nsRunnable
+{
+public:
+  BluetoothInterfaceRunnable1(Obj* aObj, Res (Obj::*aMethod)(Arg1),
+                              const Arg1& aArg1)
+  : mObj(aObj)
+  , mMethod(aMethod)
+  , mArg1(aArg1)
+  {
+    MOZ_ASSERT(mObj);
+    MOZ_ASSERT(mMethod);
+  }
+
+  NS_METHOD
+  Run() MOZ_OVERRIDE
+  {
+    ((*mObj).*mMethod)(mArg1);
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<Obj> mObj;
+  void (Obj::*mMethod)(Arg1);
+  Arg1 mArg1;
+};
 
 //
 // Socket Interface
@@ -371,6 +428,36 @@ BluetoothAvrcpInterface::SetVolume(uint8_t aVolume)
 // Bluetooth Core Interface
 //
 
+typedef
+  BluetoothInterfaceRunnable0<BluetoothResultHandler, void>
+  BluetoothResultRunnable;
+
+typedef
+  BluetoothInterfaceRunnable1<BluetoothResultHandler, void, int>
+  BluetoothErrorRunnable;
+
+static nsresult
+DispatchBluetoothResult(BluetoothResultHandler* aRes,
+                        void (BluetoothResultHandler::*aMethod)(),
+                        int aStatus)
+{
+  MOZ_ASSERT(aRes);
+
+  nsRunnable* runnable;
+
+  if (aStatus == BT_STATUS_SUCCESS) {
+    runnable = new BluetoothResultRunnable(aRes, aMethod);
+  } else {
+    runnable = new
+      BluetoothErrorRunnable(aRes, &BluetoothResultHandler::OnError, aStatus);
+  }
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  if (NS_FAILED(rv)) {
+    BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+  }
+  return rv;
+}
+
 /* returns the container structure of a variable; _t is the container's
  * type, _v the name of the variable, and _m is _v's field within _t
  */
@@ -442,158 +529,303 @@ BluetoothInterface::BluetoothInterface(const bt_interface_t* aInterface)
 BluetoothInterface::~BluetoothInterface()
 { }
 
-int
-BluetoothInterface::Init(bt_callbacks_t* aCallbacks)
+void
+BluetoothInterface::Init(bt_callbacks_t* aCallbacks,
+                         BluetoothResultHandler* aRes)
 {
-  return mInterface->init(aCallbacks);
+  int status = mInterface->init(aCallbacks);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes, &BluetoothResultHandler::Init, status);
+  }
 }
 
 void
-BluetoothInterface::Cleanup()
+BluetoothInterface::Cleanup(BluetoothResultHandler* aRes)
 {
   mInterface->cleanup();
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes, &BluetoothResultHandler::Cleanup,
+                            BT_STATUS_SUCCESS);
+  }
 }
 
-int
-BluetoothInterface::Enable()
+void
+BluetoothInterface::Enable(BluetoothResultHandler* aRes)
 {
-  return mInterface->enable();
+  int status = mInterface->enable();
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes, &BluetoothResultHandler::Enable, status);
+  }
 }
 
-int
-BluetoothInterface::Disable()
+void
+BluetoothInterface::Disable(BluetoothResultHandler* aRes)
 {
-  return mInterface->disable();
+  int status = mInterface->disable();
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes, &BluetoothResultHandler::Disable, status);
+  }
 }
 
 /* Adapter Properties */
 
-int
-BluetoothInterface::GetAdapterProperties()
+void
+BluetoothInterface::GetAdapterProperties(BluetoothResultHandler* aRes)
 {
-  return mInterface->get_adapter_properties();
+  int status = mInterface->get_adapter_properties();
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::GetAdapterProperties,
+                            status);
+  }
 }
 
-int
-BluetoothInterface::GetAdapterProperty(bt_property_type_t aType)
+void
+BluetoothInterface::GetAdapterProperty(bt_property_type_t aType,
+                                       BluetoothResultHandler* aRes)
 {
-  return mInterface->get_adapter_property(aType);
+  int status = mInterface->get_adapter_property(aType);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::GetAdapterProperty,
+                            status);
+  }
 }
 
-int
-BluetoothInterface::SetAdapterProperty(const bt_property_t* aProperty)
+void
+BluetoothInterface::SetAdapterProperty(const bt_property_t* aProperty,
+                                       BluetoothResultHandler* aRes)
 {
-  return mInterface->set_adapter_property(aProperty);
+  int status = mInterface->set_adapter_property(aProperty);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::SetAdapterProperty,
+                            status);
+  }
 }
 
 /* Remote Device Properties */
 
-int
-BluetoothInterface::GetRemoteDeviceProperties(bt_bdaddr_t *aRemoteAddr)
+void
+BluetoothInterface::GetRemoteDeviceProperties(bt_bdaddr_t *aRemoteAddr,
+                                              BluetoothResultHandler* aRes)
 {
-  return mInterface->get_remote_device_properties(aRemoteAddr);
+  int status = mInterface->get_remote_device_properties(aRemoteAddr);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::GetRemoteDeviceProperties,
+                            status);
+  }
 }
 
-int
+void
 BluetoothInterface::GetRemoteDeviceProperty(bt_bdaddr_t* aRemoteAddr,
-                                            bt_property_type_t aType)
+                                            bt_property_type_t aType,
+                                            BluetoothResultHandler* aRes)
 {
-  return mInterface->get_remote_device_property(aRemoteAddr, aType);
+  int status = mInterface->get_remote_device_property(aRemoteAddr, aType);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::GetRemoteDeviceProperty,
+                            status);
+  }
 }
 
-int
+void
 BluetoothInterface::SetRemoteDeviceProperty(bt_bdaddr_t* aRemoteAddr,
-                                            const bt_property_t* aProperty)
+                                            const bt_property_t* aProperty,
+                                            BluetoothResultHandler* aRes)
 {
-  return mInterface->set_remote_device_property(aRemoteAddr, aProperty);
+  int status = mInterface->set_remote_device_property(aRemoteAddr, aProperty);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::SetRemoteDeviceProperty,
+                            status);
+  }
 }
 
 /* Remote Services */
 
-int
+void
 BluetoothInterface::GetRemoteServiceRecord(bt_bdaddr_t* aRemoteAddr,
-                                           bt_uuid_t* aUuid)
+                                           bt_uuid_t* aUuid,
+                                           BluetoothResultHandler* aRes)
 {
-  return mInterface->get_remote_service_record(aRemoteAddr, aUuid);
+  int status = mInterface->get_remote_service_record(aRemoteAddr, aUuid);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::GetRemoteServiceRecord,
+                            status);
+  }
 }
 
-int
-BluetoothInterface::GetRemoteServices(bt_bdaddr_t* aRemoteAddr)
+void
+BluetoothInterface::GetRemoteServices(bt_bdaddr_t* aRemoteAddr,
+                                      BluetoothResultHandler* aRes)
 {
-  return mInterface->get_remote_services(aRemoteAddr);
+  int status = mInterface->get_remote_services(aRemoteAddr);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::GetRemoteServices,
+                            status);
+  }
 }
 
 /* Discovery */
 
-int
-BluetoothInterface::StartDiscovery()
+void
+BluetoothInterface::StartDiscovery(BluetoothResultHandler* aRes)
 {
-  return mInterface->start_discovery();
+  int status = mInterface->start_discovery();
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::StartDiscovery,
+                            status);
+  }
 }
 
-int
-BluetoothInterface::CancelDiscovery()
+void
+BluetoothInterface::CancelDiscovery(BluetoothResultHandler* aRes)
 {
-  return mInterface->cancel_discovery();
+  int status = mInterface->cancel_discovery();
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::CancelDiscovery,
+                            status);
+  }
 }
 
 /* Bonds */
 
-int
-BluetoothInterface::CreateBond(const bt_bdaddr_t* aBdAddr)
+void
+BluetoothInterface::CreateBond(const bt_bdaddr_t* aBdAddr,
+                               BluetoothResultHandler* aRes)
 {
-  return mInterface->create_bond(aBdAddr);
+  int status = mInterface->create_bond(aBdAddr);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::CreateBond,
+                            status);
+  }
 }
 
-int
-BluetoothInterface::RemoveBond(const bt_bdaddr_t* aBdAddr)
+void
+BluetoothInterface::RemoveBond(const bt_bdaddr_t* aBdAddr,
+                               BluetoothResultHandler* aRes)
 {
-  return mInterface->remove_bond(aBdAddr);
+  int status = mInterface->remove_bond(aBdAddr);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::RemoveBond,
+                            status);
+  }
 }
 
-int
-BluetoothInterface::CancelBond(const bt_bdaddr_t* aBdAddr)
+void
+BluetoothInterface::CancelBond(const bt_bdaddr_t* aBdAddr,
+                               BluetoothResultHandler* aRes)
 {
-  return mInterface->cancel_bond(aBdAddr);
+  int status = mInterface->cancel_bond(aBdAddr);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::CancelBond,
+                            status);
+  }
 }
 
 /* Authentication */
 
-int
+void
 BluetoothInterface::PinReply(const bt_bdaddr_t* aBdAddr, uint8_t aAccept,
-                             uint8_t aPinLen, bt_pin_code_t* aPinCode)
+                             uint8_t aPinLen, bt_pin_code_t* aPinCode,
+                             BluetoothResultHandler* aRes)
 {
-  return mInterface->pin_reply(aBdAddr, aAccept, aPinLen, aPinCode);
+  int status = mInterface->pin_reply(aBdAddr, aAccept, aPinLen, aPinCode);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::PinReply,
+                            status);
+  }
 }
 
-int
+void
 BluetoothInterface::SspReply(const bt_bdaddr_t* aBdAddr,
                              bt_ssp_variant_t aVariant,
-                             uint8_t aAccept, uint32_t aPasskey)
+                             uint8_t aAccept, uint32_t aPasskey,
+                             BluetoothResultHandler* aRes)
 {
-  return mInterface->ssp_reply(aBdAddr, aVariant, aAccept, aPasskey);
+  int status = mInterface->ssp_reply(aBdAddr, aVariant, aAccept, aPasskey);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::SspReply,
+                            status);
+  }
 }
 
 /* DUT Mode */
 
-int
-BluetoothInterface::DutModeConfigure(uint8_t aEnable)
+void
+BluetoothInterface::DutModeConfigure(uint8_t aEnable,
+                                     BluetoothResultHandler* aRes)
 {
-  return mInterface->dut_mode_configure(aEnable);
+  int status = mInterface->dut_mode_configure(aEnable);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::DutModeConfigure,
+                            status);
+  }
 }
 
-int
-BluetoothInterface::DutModeSend(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen)
+void
+BluetoothInterface::DutModeSend(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
+                                BluetoothResultHandler* aRes)
 {
-  return mInterface->dut_mode_send(aOpcode, aBuf, aLen);
+  int status = mInterface->dut_mode_send(aOpcode, aBuf, aLen);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::DutModeSend,
+                            status);
+  }
 }
 
 /* LE Mode */
 
-int
-BluetoothInterface::LeTestMode(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen)
+void
+BluetoothInterface::LeTestMode(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
+                               BluetoothResultHandler* aRes)
 {
-  return mInterface->le_test_mode(aOpcode, aBuf, aLen);
+#if ANDROID_VERSION >= 18
+  int status = mInterface->le_test_mode(aOpcode, aBuf, aLen);
+#else
+  int status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::LeTestMode,
+                            status);
+  }
 }
 
 /* Profile Interfaces */

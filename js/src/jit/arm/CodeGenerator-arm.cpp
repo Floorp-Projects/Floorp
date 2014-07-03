@@ -198,7 +198,7 @@ CodeGeneratorARM::bailoutIf(Assembler::Condition condition, LSnapshot *snapshot)
                  frameClass_.frameSize() == masm.framePushed());
 
     if (assignBailoutId(snapshot)) {
-        uint8_t *code = deoptTable_->raw() + snapshot->bailoutId() * BAILOUT_TABLE_ENTRY_SIZE;
+        uint8_t *code = Assembler::BailoutTableStart(deoptTable_->raw()) + snapshot->bailoutId() * BAILOUT_TABLE_ENTRY_SIZE;
         masm.ma_b(code, Relocation::HARDCODED, condition);
         return true;
     }
