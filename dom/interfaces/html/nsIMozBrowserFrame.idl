@@ -25,8 +25,11 @@ interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
    * Gets whether this frame really is an app frame.
    *
    * In order to really be an app frame, this frame must really be a browser
-   * frame (this requirement will go away eventually), and the frame's mozapp
-   * attribute must point to the manifest of a valid app.
+   * frame (this requirement will go away eventually), and must satisfy one
+   * and only one of the following conditions:
+   * 1. the frame's mozapp attribute must point to the manifest of a valid app
+   * 2. the frame's mozwidget attribute must point to the manifest of a valid
+   * app, and the src should be in the |widgetPages| specified by the manifest.
    */
   [infallible] readonly attribute boolean reallyIsApp;
 
@@ -41,7 +44,8 @@ interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
   [infallible] readonly attribute boolean isExpectingSystemMessage;
 
   /**
-   * Gets this frame's app manifest URL, if the frame really is an app frame.
+   * Gets this frame's app manifest URL or widget manifest URL, if the frame
+   * really is an app frame.
    * Otherwise, returns the empty string.
    *
    * This method is guaranteed not to fail.

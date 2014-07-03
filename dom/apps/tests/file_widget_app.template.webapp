@@ -1,0 +1,11 @@
+{
+  "name": "Really Rapid Release (widget)",
+  "description": "Updated even faster than <a href='http://mozilla.org'>Firefox</a>, just to annoy slashdotters.",
+  "launch_path": "/tests/dom/apps/tests/file_app.sjs?apptype=widget",
+  "icons": {
+    "128": "ICONTOKEN"
+  },
+  "widgetPages": [
+    "/tests/dom/apps/tests/file_app.sjs?apptype=widget"
+  ]
+}
