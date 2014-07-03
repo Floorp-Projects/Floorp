@@ -503,8 +503,7 @@ CodeGeneratorX86::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins)
         label = masm.movssWithPatch(PatchedAbsoluteAddress(), ToFloatRegister(ins->output()));
     else
         label = masm.movsdWithPatch(PatchedAbsoluteAddress(), ToFloatRegister(ins->output()));
-
-    masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
     return true;
 }
 
@@ -523,8 +522,7 @@ CodeGeneratorX86::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins)
         label = masm.movssWithPatch(ToFloatRegister(ins->value()), PatchedAbsoluteAddress());
     else
         label = masm.movsdWithPatch(ToFloatRegister(ins->value()), PatchedAbsoluteAddress());
-
-    masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
     return true;
 }
 
@@ -536,8 +534,7 @@ CodeGeneratorX86::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins)
     Register index = ToRegister(ins->index());
     Register out = ToRegister(ins->output());
     CodeOffsetLabel label = masm.movlWithPatch(PatchedAbsoluteAddress(), index, TimesFour, out);
-
-    masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
     return true;
 }
 
@@ -548,8 +545,7 @@ CodeGeneratorX86::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins)
 
     Register out = ToRegister(ins->output());
     CodeOffsetLabel label = masm.movlWithPatch(PatchedAbsoluteAddress(), out);
-
-    masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
     return true;
 }
 

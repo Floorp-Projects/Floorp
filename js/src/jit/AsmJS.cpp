@@ -6440,11 +6440,9 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     // 2.1. Get ExitDatum
     unsigned globalDataOffset = m.module().exitIndexToGlobalDataOffset(exitIndex);
 #if defined(JS_CODEGEN_X64)
-    CodeOffsetLabel label2 = masm.leaRipRelative(callee);
-    m.masm().append(AsmJSGlobalAccess(CodeOffsetLabel(label2.offset()), globalDataOffset));
+    m.masm().append(AsmJSGlobalAccess(masm.leaRipRelative(callee), globalDataOffset));
 #elif defined(JS_CODEGEN_X86)
-    CodeOffsetLabel label2 = masm.movlWithPatch(Imm32(0), callee);
-    m.masm().append(AsmJSGlobalAccess(CodeOffsetLabel(label2.offset()), globalDataOffset));
+    m.masm().append(AsmJSGlobalAccess(masm.movlWithPatch(Imm32(0), callee), globalDataOffset));
 #else
     masm.lea(Operand(GlobalReg, globalDataOffset), callee);
 #endif
