@@ -144,6 +144,9 @@ class WrapperOwner : public virtual JavaScriptShared
 bool
 IsCPOW(JSObject *obj);
 
+bool
+IsWrappedCPOW(JSObject *obj);
+
 nsresult
 InstanceOf(JSObject *obj, const nsID *id, bool *bp);
 

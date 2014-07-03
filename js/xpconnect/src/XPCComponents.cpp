@@ -3113,7 +3113,7 @@ nsXPCComponents_Utils::IsCrossProcessWrapper(HandleValue obj, bool *out)
     if (obj.isPrimitive())
         return NS_ERROR_INVALID_ARG;
 
-    *out = jsipc::IsCPOW(js::CheckedUnwrap(&obj.toObject()));
+    *out = jsipc::IsWrappedCPOW(&obj.toObject());
     return NS_OK;
 }
 
