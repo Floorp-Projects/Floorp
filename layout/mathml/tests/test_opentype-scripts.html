@@ -1,0 +1,268 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Open Type MATH - scripts</title>
+    <script type="application/javascript"
+            src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript"
+            src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <meta charset="utf-8"/>
+    <style type="text/css">
+      math {
+        font-size: 10px;
+      }
+      @font-face {
+        font-family: scripts-1;
+        src: url(/tests/fonts/math/scripts-1.otf);
+      }
+      @font-face {
+        font-family: scripts-2;
+        src: url(/tests/fonts/math/scripts-2.otf);
+      }
+      @font-face {
+        font-family: scripts-3;
+        src: url(/tests/fonts/math/scripts-3.otf);
+      }
+      @font-face {
+        font-family: scripts-4;
+        src: url(/tests/fonts/math/scripts-4.otf);
+      }
+      @font-face {
+        font-family: scripts-5;
+        src: url(/tests/fonts/math/scripts-5.otf);
+      }
+      @font-face {
+        font-family: scripts-6;
+        src: url(/tests/fonts/math/scripts-6.otf);
+      }
+      @font-face {
+        font-family: scripts-7;
+        src: url(/tests/fonts/math/scripts-7.otf);
+      }
+      @font-face {
+        font-family: scripts-8;
+        src: url(/tests/fonts/math/scripts-8.otf);
+      }
+    </style>
+    <script type="text/javascript">
+      SimpleTest.waitForExplicitFinish();
+
+      function doTest() {
+        var epsilon = 5;
+        function almostEqual(x, y) { return Math.abs(x - y) < epsilon; }
+
+        function getBox(aId) {
+          return document.getElementById(aId).getBoundingClientRect();
+        }
+
+        ok(almostEqual(getBox("ref1").left - getBox("sub1").right, 3*10) &&
+           almostEqual(getBox("ref2").left - getBox("sup2").right, 3*10) &&
+           almostEqual(getBox("sup32").left - getBox("sup31").right, 3*10) &&
+           almostEqual(getBox("ref3").left - getBox("sup32").right, 3*10),
+           "SpaceAfterScript");
+
+        ok(almostEqual(getBox("ref4").bottom -
+                       getBox("sup41").bottom, 7 * 10) &&
+           almostEqual(getBox("ref4").bottom -
+                       getBox("sup42").bottom, 7 * 10) &&
+           almostEqual(getBox("ref4").bottom -
+                       getBox("sup43").bottom, 7 * 10) &&
+           almostEqual(getBox("ref4").bottom -
+                     getBox("sup44").bottom, 7 * 10),
+                     "Bad SuperscriptShiftUp")
+        ok(almostEqual(getBox("ref5").bottom -
+                       getBox("sup51").bottom, 5 * 10) &&
+           almostEqual(getBox("ref5").bottom -
+                       getBox("sup52").bottom, 5 * 10) &&
+           almostEqual(getBox("ref5").bottom -
+                       getBox("sup53").bottom, 5 * 10) &&
+           almostEqual(getBox("ref5").bottom -
+                       getBox("sup54").bottom, 5 * 10),
+           "Bad SuperscriptShiftUpCramped")
+
+        ok(almostEqual(getBox("ref6").bottom -
+                       getBox("sub61").bottom, -6 * 10) &&
+           almostEqual(getBox("ref6").bottom -
+                       getBox("sub62").bottom, -6 * 10) &&
+           almostEqual(getBox("ref6").bottom -
+                       getBox("sub63").bottom, -6 * 10) &&
+           almostEqual(getBox("ref6").bottom -
+                       getBox("sub64").bottom, -6 * 10),
+           "Bad SubscriptShiftDown")
+
+        ok(almostEqual(getBox("sub7").top -
+                       getBox("sup7").bottom, 11 * 10),
+                      "Bad SubSuperscriptGapMin");
+
+        ok(almostEqual(getBox("sub8").top -
+                       getBox("sup8").bottom, 11 * 10) &&
+           almostEqual(getBox("ref8").bottom -
+                       getBox("sup8").bottom, 3 * 10),
+           "Bad SuperscriptBottomMaxWithSubscript");
+
+        ok(almostEqual(getBox("ref9").top, getBox("sub9").top),
+           "Bad SubscriptTopMax");
+
+        ok(almostEqual(getBox("ref10").bottom - getBox("sup10").bottom, 9 * 10),
+           "Bad SuperscriptBottomMin");
+
+        SimpleTest.finish();
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=961365">
+      Mozilla Bug 961365
+    </a>
+
+    <p id="display"></p>
+
+    <p>
+      <math style="font-family: scripts-1;">
+        <msub>
+          <mspace height="2em" width="2em" mathbackground="blue"/>
+          <mspace id="sub1" height="1em" width="1em" mathbackground="red"/>
+        </msub>
+        <mspace id="ref1" height="1em" width="1em" mathbackground="green"/>
+      </math>
+      <math style="font-family: scripts-1;">
+        <msup>
+          <mspace height="2em" width="2em" mathbackground="blue"/>
+          <mspace id="sup2" height="1em" width="1em" mathbackground="red"/>
+        </msup>
+        <mspace id="ref2" height="1em" width="1em" mathbackground="green"/>
+      </math>
+      <math style="font-family: scripts-1;">
+        <mmultiscripts>
+          <mspace height="2em" width="2em" mathbackground="blue"/>
+          <none/>
+          <mspace id="sup31" height="1em" width="1em" mathbackground="red"/>
+          <none/>
+          <mspace id="sup32" height="1em" width="1em" mathbackground="red"/>
+        </mmultiscripts>
+        <mspace id="ref3" height="1em" width="1em" mathbackground="green"/>
+      </math>
+    </p>
+
+    <p>
+      <math style="font-family: scripts-2;">
+        <mspace id="ref4" height="1em" width="1em" mathbackground="green"/>
+        <msup>
+          <mspace height="2em" width="2em" mathbackground="blue"/>
+          <mspace id="sup41" height="1em" width="1em" mathbackground="red"/>
+        </msup>
+        <msubsup>
+          <mspace height="2em" width="2em" mathbackground="blue"/>
+          <mspace height="1em" width="1em" mathbackground="red"/>
+          <mspace id="sup42" height="1em" width="1em" mathbackground="red"/>
+        </msubsup>
+        <mmultiscripts>
+          <mspace height="2em" width="2em" mathbackground="blue"/>
+          <none/>
+          <mspace id="sup43" height="1em" width="1em" mathbackground="red"/>
+          <none/>
+          <mspace id="sup44" height="1em" width="1em" mathbackground="red"/>
+        </mmultiscripts>
+      </math>
+    </p>
+
+    <p>
+      <math style="font-family: scripts-3;">
+        <msqrt>
+          <mspace id="ref5" height="1em" width="1em" mathbackground="green"/>
+          <msup>
+            <mspace height="2em" width="2em" mathbackground="blue"/>
+            <mspace id="sup51" height="1em" width="1em" mathbackground="red"/>
+          </msup>
+          <msubsup>
+            <mspace height="2em" width="2em" mathbackground="blue"/>
+            <mspace height="1em" width="1em" mathbackground="red"/>
+            <mspace id="sup52" height="1em" width="1em" mathbackground="red"/>
+          </msubsup>
+          <mmultiscripts>
+            <mspace height="2em" width="2em" mathbackground="blue"/>
+            <mspace height="1em" width="1em" mathbackground="red"/>
+            <mspace id="sup53" height="1em" width="1em" mathbackground="red"/>
+            <mspace height="1em" width="1em" mathbackground="red"/>
+            <mspace id="sup54" height="1em" width="1em" mathbackground="red"/>
+          </mmultiscripts>
+        </msqrt>
+      </math>
+    </p>
+
+    <p>
+      <math style="font-family: scripts-4;">
+        <mspace id="ref6" height="1em" width="1em" mathbackground="green"/>
+        <msub>
+          <mspace height="2em" width="2em" mathbackground="blue"/>
+          <mspace id="sub61" height="1em" width="1em" mathbackground="red"/>
+        </msub>
+        <msubsup>
+          <mspace height="2em" width="2em" mathbackground="blue"/>
+          <mspace id="sub62" height="1em" width="1em" mathbackground="red"/>
+          <mspace height="1em" width="1em" mathbackground="red"/>
+        </msubsup>
+        <mmultiscripts>
+          <mspace height="2em" width="2em" mathbackground="blue"/>
+          <mspace id="sub63" height="1em" width="1em" mathbackground="red"/>
+          <mspace height="1em" width="1em" mathbackground="red"/>
+          <mspace id="sub64" height="1em" width="1em" mathbackground="red"/>
+          <mspace height="1em" width="1em" mathbackground="red"/>
+        </mmultiscripts>
+      </math>
+    </p>
+
+    <p>
+      <math style="font-family: scripts-5;">
+        <msubsup>
+          <mspace height="2em" width="2em" mathbackground="blue"/>
+          <mspace id="sub7" height="1em" width="1em" mathbackground="red"/>
+          <mspace id="sup7" height="1em" width="1em" mathbackground="red"/>
+        </msubsup>
+      </math>
+    </p>
+
+    <p>
+      <math style="font-family: scripts-6;">
+        <mspace id="ref8" height="1em" width="1em" mathbackground="green"/>
+        <msubsup>
+          <mspace height="2em" width="2em" mathbackground="blue"/>
+          <mspace id="sub8" height="1em" width="1em" mathbackground="red"/>
+          <mspace id="sup8" height="1em" width="1em" mathbackground="red"/>
+        </msubsup>
+      </math>
+    </p>
+
+    <p>
+      <math style="font-family: scripts-7;">
+        <msub>
+          <mspace height="2em" width="2em" mathbackground="blue"/>
+          <mspace id="ref9" height="5em"
+                  width="1em" mathbackground="green"/>
+        </msub>
+        <msub>
+          <mspace height="2em" width="2em" mathbackground="blue"/>
+          <mspace id="sub9" height="9em"
+                  width="1em" mathbackground="red"/>
+        </msub>
+      </math>
+    </p>
+
+    <p>
+      <math style="font-family: scripts-8;">
+        <mspace id="ref10" height="1em"
+                width="1em" mathbackground="green"/>
+        <msup>
+          <mspace id="base10" height="2em"
+                  width="2em" mathbackground="blue"/>
+          <mspace id="sup10" height="1em"
+                  width="1em" mathbackground="red"/>
+        </msup>
+      </math>
+    </p>
+
+  </body>
+</html>

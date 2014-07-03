@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Open Type MATH - axis-height</title>
+    <script type="application/javascript"
+            src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript"
+            src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <meta charset="utf-8"/>
+    <style type="text/css">
+      math {
+        font-size: 10px;
+      }
+      @font-face {
+        font-family: axis-height-1;
+        src: url(/tests/fonts/math/axis-height-1.otf);
+      }
+      @font-face {
+        font-family: axis-height-2;
+        src: url(/tests/fonts/math/axis-height-2.otf);
+      }
+    </style>
+    <script type="application/javascript">
+      SimpleTest.waitForExplicitFinish();
+
+      var epsilon = 5;
+      function almostEqual(x, y) { return Math.abs(x - y) < epsilon; }
+
+      function getBox(aId) {
+        return document.getElementById(aId).getBoundingClientRect();
+      }
+
+      function doTest() {
+        ok(almostEqual(getBox("plus1").top - getBox("plus2").top, 10 * 20),
+           "Bad AxisHeight");
+
+        SimpleTest.finish();
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=961365">
+      Mozilla Bug 961365
+    </a>
+
+    <p id="display"></p>
+
+    <p>
+      <math style="font-family: axis-height-1;">
+        <mo id="plus1">+</mo>
+      </math>
+      <math style="font-family: axis-height-2;">
+        <mo id="plus2">+</mo>
+      </math>
+    </p>
+
+  </body>
+</html>
