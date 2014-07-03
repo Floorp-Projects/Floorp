@@ -147,7 +147,7 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
 }
 
 SECStatus
-NSSCertDBTrustDomain::VerifySignedData(const CERTSignedData* signedData,
+NSSCertDBTrustDomain::VerifySignedData(const CERTSignedData& signedData,
                                        const SECItem& subjectPublicKeyInfo)
 {
   return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,

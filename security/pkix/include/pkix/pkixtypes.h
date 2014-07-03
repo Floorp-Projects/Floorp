@@ -158,7 +158,7 @@ public:
   //
   // Most implementations of this function should probably forward the call
   // directly to mozilla::pkix::VerifySignedData.
-  virtual SECStatus VerifySignedData(const CERTSignedData* signedData,
+  virtual SECStatus VerifySignedData(const CERTSignedData& signedData,
                                      const SECItem& subjectPublicKeyInfo) = 0;
 
   // issuerCertToDup is only non-const so CERT_DupCertificate can be called on
