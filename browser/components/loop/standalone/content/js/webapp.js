@@ -92,7 +92,9 @@ loop.webapp = (function($, _, OT) {
     initiate: function(event) {
       event.preventDefault();
       this.model.initiate({
-        baseServerUrl: baseServerUrl,
+        client: new loop.StandaloneClient({
+          baseServerUrl: baseServerUrl,
+        }),
         outgoing: true
       });
       this.disableForm();

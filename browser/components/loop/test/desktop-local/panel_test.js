@@ -210,7 +210,7 @@ describe("loop.panel", function() {
 
     describe("#getCallUrl", function() {
       it("should reset all pending notifications", function() {
-        var requestCallUrl = sandbox.stub(loop.shared.Client.prototype,
+        var requestCallUrl = sandbox.stub(loop.Client.prototype,
                                           "requestCallUrl");
         var view = new loop.panel.PanelView({notifier: notifier}).render();
 
@@ -220,7 +220,7 @@ describe("loop.panel", function() {
       });
 
       it("should request a call url to the server", function() {
-        var requestCallUrl = sandbox.stub(loop.shared.Client.prototype,
+        var requestCallUrl = sandbox.stub(loop.Client.prototype,
                                           "requestCallUrl");
         var view = new loop.panel.PanelView({notifier: notifier});
         sandbox.stub(view, "getNickname").returns("foo");
@@ -232,7 +232,7 @@ describe("loop.panel", function() {
       });
 
       it("should set the call url form in a pending state", function() {
-        var requestCallUrl = sandbox.stub(loop.shared.Client.prototype,
+        var requestCallUrl = sandbox.stub(loop.Client.prototype,
                                           "requestCallUrl");
         sandbox.stub(loop.panel.PanelView.prototype, "setPending");
 
@@ -248,7 +248,7 @@ describe("loop.panel", function() {
           sandbox.stub(loop.panel.PanelView.prototype,
                        "clearPending");
           var requestCallUrl = sandbox.stub(
-            loop.shared.Client.prototype, "requestCallUrl", function(_, cb) {
+            loop.Client.prototype, "requestCallUrl", function(_, cb) {
               cb("fake error");
             });
           var view = new loop.panel.PanelView({notifier: notifier});
@@ -260,7 +260,7 @@ describe("loop.panel", function() {
 
       it("should notify the user when the operation failed", function() {
         var requestCallUrl = sandbox.stub(
-          loop.shared.Client.prototype, "requestCallUrl", function(_, cb) {
+          loop.Client.prototype, "requestCallUrl", function(_, cb) {
             cb("fake error");
           });
         var view = new loop.panel.PanelView({notifier: notifier});
