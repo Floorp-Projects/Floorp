@@ -276,8 +276,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x77a62cd0, 0xb34f, 0x42cb, \
-  { 0x94, 0x52, 0xae, 0xb2, 0x4d, 0x93, 0x2c, 0xb4 } }
+{ 0x3bd80589, 0xa6f4, 0x4a57, \
+  { 0xab, 0x38, 0xa0, 0x5b, 0x77, 0x4c, 0x3e, 0xa8 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -510,9 +510,17 @@ public:
    *
    * @return whether this content is in a document tree
    */
-  bool IsInDoc() const
+  bool IsInUncomposedDoc() const
   {
     return GetBoolFlag(IsInDocument);
+  }
+
+  /**
+   * @deprecated
+   */
+  bool IsInDoc() const
+  {
+    return IsInUncomposedDoc();
   }
 
   /**
@@ -521,9 +529,18 @@ public:
    *
    * @return the current document
    */
+
+  nsIDocument* GetUncomposedDoc() const
+  {
+    return IsInUncomposedDoc() ? OwnerDoc() : nullptr;
+  }
+
+  /**
+   * @deprecated
+   */
   nsIDocument *GetCurrentDoc() const
   {
-    return IsInDoc() ? OwnerDoc() : nullptr;
+    return GetUncomposedDoc();
   }
 
   /**
@@ -533,10 +550,26 @@ public:
    * that is located in the root of the "tree of trees" (see Shadow DOM
    * spec) and returns the current doc for that host.
    */
+  nsIDocument* GetComposedDoc() const
+  {
+    return IsInShadowTree() ?
+      GetComposedDocInternal() : GetUncomposedDoc();
+  }
+
+  /**
+   * @deprecated
+   */
   nsIDocument* GetCrossShadowCurrentDoc() const
   {
-    return HasFlag(NODE_IS_IN_SHADOW_TREE) ?
-      GetCrossShadowCurrentDocInternal() : GetCurrentDoc();
+    return GetComposedDoc();
+  }
+
+  /**
+   * Returns true if GetComposedDoc() would return a non-null value.
+   */
+  bool IsInComposedDoc() const
+  {
+    return IsInUncomposedDoc() || (IsInShadowTree() && GetComposedDocInternal());
   }
 
   /**
@@ -1020,6 +1053,11 @@ public:
     return HasFlag(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE | NODE_CHROME_ONLY_ACCESS);
   }
 
+  bool IsInShadowTree() const
+  {
+    return HasFlag(NODE_IS_IN_SHADOW_TREE);
+  }
+
   /**
    * Returns true if |this| node is the common ancestor of the start/end
    * nodes of a Range in a Selection or a descendant of such a common ancestor.
@@ -1203,7 +1241,7 @@ public:
 
 private:
 
-  nsIDocument* GetCrossShadowCurrentDocInternal() const;
+  nsIDocument* GetComposedDocInternal() const;
 
   nsIContent* GetNextNodeImpl(const nsINode* aRoot,
                               const bool aSkipChildren) const
@@ -1525,7 +1563,7 @@ protected:
   {
     NS_ASSERTION(aSubtreeRoot, "aSubtreeRoot can never be null!");
     NS_ASSERTION(!(IsNodeOfType(eCONTENT) && IsInDoc()) &&
-                 !HasFlag(NODE_IS_IN_SHADOW_TREE), "Shouldn't be here!");
+                 !IsInShadowTree(), "Shouldn't be here!");
     mSubtreeRoot = aSubtreeRoot;
   }
 
