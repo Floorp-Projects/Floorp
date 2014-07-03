@@ -396,13 +396,13 @@ SavedStacks::init()
 }
 
 bool
-SavedStacks::saveCurrentStack(JSContext *cx, MutableHandleSavedFrame frame)
+SavedStacks::saveCurrentStack(JSContext *cx, MutableHandleSavedFrame frame, unsigned maxFrameCount)
 {
     JS_ASSERT(initialized());
     JS_ASSERT(&cx->compartment()->savedStacks() == this);
 
     ScriptFrameIter iter(cx);
-    return insertFrames(cx, iter, frame);
+    return insertFrames(cx, iter, frame, maxFrameCount);
 }
 
 void
@@ -476,7 +476,8 @@ SavedStacks::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 }
 
 bool
-SavedStacks::insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandleSavedFrame frame)
+SavedStacks::insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandleSavedFrame frame,
+                          unsigned maxFrameCount)
 {
     if (iter.done()) {
         frame.set(nullptr);
