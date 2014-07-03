@@ -2776,6 +2776,10 @@ function nodeDocument(node) {
  * See TreeWalker documentation for explanations of the methods.
  */
 function DocumentWalker(aNode, aRootWin, aShow, aFilter, aExpandEntityReferences) {
+  if (!aRootWin.location) {
+    throw new Error("Got an invalid root window in DocumentWalker");
+  }
+
   let doc = nodeDocument(aNode);
   this.layoutHelpers = new LayoutHelpers(aRootWin);
   this.walker = doc.createTreeWalker(doc,
