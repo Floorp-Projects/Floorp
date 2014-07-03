@@ -2124,30 +2124,51 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
     pval.set(JS::StringValue(s));  // Root the new string.
   }
 
-  size_t length;
-  const jschar *chars = JS_GetStringCharsZAndLength(cx, s, &length);
-  if (!chars) {
-    return false;
-  }
-
   // Conversion from Javascript string to ByteString is only valid if all
-  // characters < 256.
-  for (size_t i = 0; i < length; i++) {
-    if (chars[i] > 255) {
+  // characters < 256. This is always the case for Latin1 strings.
+  size_t length;
+  if (!JS_StringHasLatin1Chars(s)) {
+    // ThrowErrorMessage can GC, so we first scan the string for bad chars
+    // and report the error outside the AutoCheckCannotGC scope.
+    bool foundBadChar = false;
+    size_t badCharIndex;
+    jschar badChar;
+    {
+      JS::AutoCheckCannotGC nogc;
+      const jschar* chars = JS_GetTwoByteStringCharsAndLength(cx, nogc, s, &length);
+      if (!chars) {
+        return false;
+      }
+
+      for (size_t i = 0; i < length; i++) {
+        if (chars[i] > 255) {
+          badCharIndex = i;
+          badChar = chars[i];
+          foundBadChar = true;
+          break;
+        }
+      }
+    }
+
+    if (foundBadChar) {
+      MOZ_ASSERT(badCharIndex < length);
+      MOZ_ASSERT(badChar > 255);
       // The largest unsigned 64 bit number (18,446,744,073,709,551,615) has
       // 20 digits, plus one more for the null terminator.
       char index[21];
       static_assert(sizeof(size_t) <= 8, "index array too small");
-      PR_snprintf(index, sizeof(index), "%d", i);
+      PR_snprintf(index, sizeof(index), "%d", badCharIndex);
       // A jschar is 16 bits long.  The biggest unsigned 16 bit
       // number (65,535) has 5 digits, plus one more for the null
       // terminator.
-      char badChar[6];
-      static_assert(sizeof(jschar) <= 2, "badChar array too small");
-      PR_snprintf(badChar, sizeof(badChar), "%d", chars[i]);
-      ThrowErrorMessage(cx, MSG_INVALID_BYTESTRING, index, badChar);
+      char badCharArray[6];
+      static_assert(sizeof(jschar) <= 2, "badCharArray too small");
+      PR_snprintf(badCharArray, sizeof(badCharArray), "%d", badChar);
+      ThrowErrorMessage(cx, MSG_INVALID_BYTESTRING, index, badCharArray);
       return false;
     }
+  } else {
+    length = JS_GetStringLength(s);
   }
 
   if (length >= UINT32_MAX) {

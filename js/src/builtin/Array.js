@@ -817,7 +817,7 @@ function ArrayReducePar(func, mode) {
     var numSlices = slicesInfo.count;
     var subreductions = NewDenseArray(numSlices);
 
-    ForkJoin(reduceThread, 0, numSlices, ForkJoinMode(mode), null);
+    ForkJoin(reduceThread, 0, numSlices, ForkJoinMode(mode), subreductions);
 
     var accumulator = subreductions[0];
     for (var i = 1; i < numSlices; i++)

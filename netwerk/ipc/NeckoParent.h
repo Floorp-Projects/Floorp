@@ -127,7 +127,8 @@ protected:
     AllocPWebSocketParent(const PBrowserOrId& browser,
                           const SerializedLoadContext& aSerialized) MOZ_OVERRIDE;
   virtual bool DeallocPWebSocketParent(PWebSocketParent*) MOZ_OVERRIDE;
-  virtual PTCPSocketParent* AllocPTCPSocketParent() MOZ_OVERRIDE;
+  virtual PTCPSocketParent* AllocPTCPSocketParent(const nsString& host,
+                                                  const uint16_t& port) MOZ_OVERRIDE;
 
   virtual PRemoteOpenFileParent*
     AllocPRemoteOpenFileParent(const SerializedLoadContext& aSerialized,
