@@ -2278,9 +2278,21 @@ gfxContext::PushNewDT(gfxContentType content)
   clipBounds.width = std::max(1.0f, clipBounds.width);
   clipBounds.height = std::max(1.0f, clipBounds.height);
 
+  SurfaceFormat format = gfxPlatform::GetPlatform()->Optimal2DFormatForContent(content);
+
   RefPtr<DrawTarget> newDT =
     mDT->CreateSimilarDrawTarget(IntSize(int32_t(clipBounds.width), int32_t(clipBounds.height)),
-                                  gfxPlatform::GetPlatform()->Optimal2DFormatForContent(content));
+                                 format);
+
+  if (!newDT) {
+    NS_WARNING("Failed to create DrawTarget of sufficient size.");
+    newDT = mDT->CreateSimilarDrawTarget(IntSize(64, 64), format);
+
+    if (!newDT) {
+      // If even this fails.. we're most likely just out of memory!
+      NS_ABORT_OOM(BytesPerPixel(format) * 64 * 64);
+    }
+  }
 
   Save();
 
