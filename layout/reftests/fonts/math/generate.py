@@ -56,6 +56,15 @@ def saveMathFont(aFont):
     aFont.generate(aFont.fontname + ".otf")
     print(" done.")
 
+def createSquareGlyph(aFont, aCodePoint):
+    g = aFont.createChar(aCodePoint)
+    p = g.glyphPen()
+    p.moveTo(0, 0)
+    p.lineTo(em, 0)
+    p.lineTo(em, em)
+    p.lineTo(0, em)
+    p.closePath();
+
 ################################################################################
 # Glyph variants and constructions
 f = newMathFont("stretchy")
@@ -228,4 +237,263 @@ for i in [1, 2, 7, 8, 9]:
 f[largeop[0]].verticalVariants = "uni2A1B L7 L8 L9"
 f[largeop[1]].verticalVariants = "uni2A1C L8"
 
+saveMathFont(f)
+
+################################################################################
+# Testing AxisHeight
+f = newMathFont("axis-height-1")
+f.math.AxisHeight = 0
+createSquareGlyph(f, ord("+"))
+saveMathFont(f)
+
+f = newMathFont("axis-height-2")
+f.math.AxisHeight = 20 * em
+createSquareGlyph(f, ord("+"))
+saveMathFont(f)
+
+################################################################################
+# Testing Fraction Parameters
+f = newMathFont("fraction-1")
+f.math.FractionRuleThickness = 20 * em
+f.math.FractionNumeratorShiftUp = 0
+f.math.FractionNumeratorDisplayStyleShiftUp = 0
+f.math.FractionDenominatorShiftDown = 0
+f.math.FractionNumeratorGapMin = 0
+f.math.FractionDenominatorGapMin = 0
+f.math.FractionNumeratorDisplayStyleShiftUp = 0
+f.math.FractionDenominatorDisplayStyleShiftDown = 0
+f.math.FractionNumeratorDisplayStyleGapMin = 0
+f.math.FractionDenominatorDisplayStyleGapMin = 0
+saveMathFont(f)
+
+f = newMathFont("fraction-2")
+f.math.FractionRuleThickness = 1 * em
+f.math.FractionNumeratorShiftUp = 0
+f.math.FractionDenominatorShiftDown = 0
+f.math.FractionNumeratorGapMin = 9.5 * em
+f.math.FractionDenominatorGapMin = 0
+saveMathFont(f)
+
+f = newMathFont("fraction-3")
+f.math.FractionRuleThickness = 1 * em
+f.math.FractionNumeratorShiftUp = 0
+f.math.FractionDenominatorShiftDown = 0
+f.math.FractionNumeratorGapMin = 0
+f.math.FractionDenominatorGapMin = 9.5 * em
+saveMathFont(f)
+
+f = newMathFont("fraction-4")
+f.math.FractionRuleThickness = 1 * em
+f.math.FractionNumeratorShiftUp = 3 * em
+f.math.FractionDenominatorShiftDown = 0
+f.math.FractionNumeratorGapMin = 0
+f.math.FractionDenominatorGapMin = 0
+saveMathFont(f)
+
+f = newMathFont("fraction-5")
+f.math.FractionRuleThickness = 1 * em
+f.math.FractionNumeratorShiftUp = 0
+f.math.FractionDenominatorShiftDown = 3 * em
+f.math.FractionNumeratorGapMin = 0
+f.math.FractionDenominatorGapMin = 0
+saveMathFont(f)
+
+f = newMathFont("fraction-6")
+f.math.FractionRuleThickness = 1 * em
+f.math.FractionNumeratorDisplayStyleShiftUp = 0
+f.math.FractionDenominatorDisplayStyleShiftDown = 0
+f.math.FractionNumeratorDisplayStyleGapMin = 9.5 * em
+f.math.FractionDenominatorDisplayStyleGapMin = 0
+saveMathFont(f)
+
+f = newMathFont("fraction-7")
+f.math.FractionRuleThickness = 1 * em
+f.math.FractionNumeratorDisplayStyleShiftUp = 0
+f.math.FractionDenominatorDisplayStyleShiftDown = 0
+f.math.FractionNumeratorDisplayStyleGapMin = 0
+f.math.FractionDenominatorDisplayStyleGapMin = 9.5 * em
+saveMathFont(f)
+
+f = newMathFont("fraction-8")
+f.math.FractionRuleThickness = 1 * em
+f.math.FractionNumeratorDisplayStyleShiftUp = 3 * em
+f.math.FractionDenominatorDisplayStyleShiftDown = 0
+f.math.FractionNumeratorDisplayStyleGapMin = 0
+f.math.FractionDenominatorDisplayStyleGapMin = 0
+saveMathFont(f)
+
+f = newMathFont("fraction-9")
+f.math.FractionRuleThickness = 1 * em
+f.math.FractionNumeratorDisplayStyleShiftUp = 0
+f.math.FractionDenominatorDisplayStyleShiftDown = 3 * em
+f.math.FractionNumeratorDisplayStyleGapMin = 0
+f.math.FractionDenominatorDisplayStyleGapMin = 0
+saveMathFont(f)
+
+################################################################################
+# Testing Stack Parameters
+f = newMathFont("stack-1")
+f.math.StackTopShiftUp = 0
+f.math.StackBottomShiftDown = 0
+f.math.StackGapMin = 20 * em
+saveMathFont(f)
+
+f = newMathFont("stack-2")
+f.math.StackTopShiftUp = 3 * em
+f.math.StackBottomShiftDown = 0
+f.math.StackGapMin = 0
+saveMathFont(f)
+
+f = newMathFont("stack-3")
+f.math.StackTopShiftUp = 0
+f.math.StackBottomShiftDown = 3 * em
+f.math.StackGapMin = 0
+saveMathFont(f)
+
+f = newMathFont("stack-4")
+f.math.StackTopDisplayStyleShiftUp = 0
+f.math.StackBottomDisplayStyleShiftDown = 0
+f.math.StackDisplayStyleGapMin = 20 * em
+saveMathFont(f)
+
+f = newMathFont("stack-5")
+f.math.StackTopDisplayStyleShiftUp = 3 * em
+f.math.StackBottomDisplayStyleShiftDown = 0
+f.math.StackDisplayStyleGapMin = 0
+saveMathFont(f)
+
+f = newMathFont("stack-6")
+f.math.StackTopDisplayStyleShiftUp = 0
+f.math.StackBottomDisplayStyleShiftDown = 3 * em
+f.math.StackDisplayStyleGapMin = 0
+saveMathFont(f)
+
+################################################################################
+# Testing Radical Parameters
+f = newMathFont("radical-1")
+f.math.RadicalExtraAscender = 0
+f.math.RadicalRuleThickness = 5 * em
+f.math.RadicalVerticalGap = 0
+createSquareGlyph(f, 0x221a)
+saveMathFont(f)
+
+f = newMathFont("radical-2")
+f.math.RadicalExtraAscender = 7 * em
+f.math.RadicalRuleThickness = 1 * em
+f.math.RadicalVerticalGap = 0
+createSquareGlyph(f, 0x221a)
+saveMathFont(f)
+
+f = newMathFont("radical-3")
+f.math.RadicalExtraAscender = 0
+f.math.RadicalRuleThickness = 1 * em
+f.math.RadicalVerticalGap = 3 * em
+createSquareGlyph(f, 0x221a)
+saveMathFont(f)
+
+f = newMathFont("radical-4")
+f.math.RadicalExtraAscender = 0
+f.math.RadicalRuleThickness = 1 * em
+f.math.RadicalDisplayStyleVerticalGap = 9 * em
+createSquareGlyph(f, 0x221a)
+saveMathFont(f)
+
+f = newMathFont("radical-5")
+f.math.RadicalExtraAscender = 0
+f.math.RadicalRuleThickness = 1 * em
+f.math.RadicalVerticalGap = 0
+f.math.RadicalDegreeBottomRaisePercent = 25
+createSquareGlyph(f, 0x221a)
+saveMathFont(f)
+
+f = newMathFont("radical-6")
+f.math.RadicalKernBeforeDegree = 5 * em
+f.math.RadicalKernAfterDegree = 0
+createSquareGlyph(f, 0x221a)
+saveMathFont(f)
+
+f = newMathFont("radical-7")
+f.math.RadicalKernBeforeDegree = 0
+f.math.RadicalKernAfterDegree = 7 * em
+createSquareGlyph(f, 0x221a)
+saveMathFont(f)
+
+################################################################################
+# Testing Scripts Parameters
+f = newMathFont("scripts-1")
+f.math.SpaceAfterScript = 3 * em
+saveMathFont(f)
+
+f = newMathFont("scripts-2")
+f.math.SuperscriptShiftUp = 7 * em
+saveMathFont(f)
+
+f = newMathFont("scripts-3")
+f.math.SuperscriptShiftUpCramped = 5 * em
+createSquareGlyph(f, 0x221a)
+saveMathFont(f)
+
+f = newMathFont("scripts-4")
+f.math.SubscriptShiftDown = 6 * em
+saveMathFont(f)
+
+f = newMathFont("scripts-5")
+f.math.SubSuperscriptGapMin = 11 * em
+saveMathFont(f)
+
+f = newMathFont("scripts-6")
+f.math.SubSuperscriptGapMin = 11 * em
+f.math.SuperscriptBottomMaxWithSubscript = 3 * em
+saveMathFont(f)
+
+f = newMathFont("scripts-7")
+f.math.SubscriptTopMax = 5 * em
+saveMathFont(f)
+
+f = newMathFont("scripts-8")
+f.math.SuperscriptBottomMin = 9 * em
+saveMathFont(f)
+
+################################################################################
+# Testing Limits Parameters
+f = newMathFont("limits-1")
+f.math.UpperLimitGapMin = 7 * em
+f.math.UpperLimitBaselineRiseMin = 0
+f.math.LowerLimitGapMin = 0
+f.math.LowerLimitBaselineDropMin = 0
+createSquareGlyph(f, 0x2211)
+saveMathFont(f)
+
+f = newMathFont("limits-2")
+f.math.UpperLimitGapMin = 0
+f.math.UpperLimitBaselineRiseMin = 0
+f.math.LowerLimitGapMin = 5 * em
+f.math.LowerLimitBaselineDropMin = 0
+createSquareGlyph(f, 0x2211)
+saveMathFont(f)
+
+f = newMathFont("limits-3")
+f.math.UpperLimitGapMin = 0
+f.math.UpperLimitBaselineRiseMin = 9 * em
+f.math.LowerLimitGapMin = 0
+f.math.LowerLimitBaselineDropMin = 0
+createSquareGlyph(f, 0x2211)
+saveMathFont(f)
+
+f = newMathFont("limits-4")
+f.math.UpperLimitGapMin = 0
+f.math.UpperLimitBaselineRiseMin = 0
+f.math.LowerLimitGapMin = 0
+f.math.LowerLimitBaselineDropMin = 2 * em
+createSquareGlyph(f, 0x2211)
+saveMathFont(f)
+
+f = newMathFont("limits-5")
+f.math.UpperLimitGapMin = 0
+f.math.UpperLimitBaselineRiseMin = 0
+f.math.LowerLimitGapMin = 0
+f.math.LowerLimitBaselineDropMin = 0
+f.math.AccentBaseHeight = 6 * em
+f.math.FlattenedAccentBaseHeight = 3 * em
+createSquareGlyph(f, ord("~"))
 saveMathFont(f)

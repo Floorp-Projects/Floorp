@@ -643,7 +643,7 @@ public:
             return p->value();
         if (!mTable.add(p, key, value))
             return nullptr;
-        MOZ_ASSERT(xpc::GetCompartmentPrivate(key)->scope->mWaiverWrapperMap == this);
+        MOZ_ASSERT(xpc::CompartmentPrivate::Get(key)->scope->mWaiverWrapperMap == this);
         JS_StoreObjectPostBarrierCallback(cx, KeyMarkCallback, key, this);
         return value;
     }

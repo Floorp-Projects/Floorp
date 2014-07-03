@@ -460,7 +460,7 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn)
             ParseNode *pn2;
             if (opn->isKind(PNK_OBJECT)) {
                 JS_ASSERT(opn2->isArity(PN_BINARY));
-                JS_ASSERT(opn2->isKind(PNK_COLON));
+                JS_ASSERT(opn2->isKind(PNK_COLON) || opn2->isKind(PNK_SHORTHAND));
 
                 ParseNode *tag = cloneParseTree(opn2->pn_left);
                 if (!tag)
@@ -469,7 +469,7 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn)
                 if (!target)
                     return nullptr;
 
-                pn2 = handler.new_<BinaryNode>(PNK_COLON, JSOP_INITPROP, opn2->pn_pos, tag, target);
+                pn2 = handler.new_<BinaryNode>(opn2->getKind(), JSOP_INITPROP, opn2->pn_pos, tag, target);
             } else if (opn2->isArity(PN_NULLARY)) {
                 JS_ASSERT(opn2->isKind(PNK_ELISION));
                 pn2 = cloneParseTree(opn2);

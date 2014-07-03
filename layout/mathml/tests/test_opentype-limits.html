@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Open Type MATH - limits</title>
+    <script type="application/javascript"
+            src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript"
+            src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <meta charset="utf-8"/>
+    <style type="text/css">
+      math {
+        font-size: 10px;
+      }
+      @font-face {
+        font-family: limits-1;
+        src: url(/tests/fonts/math/limits-1.otf);
+      }
+      @font-face {
+        font-family: limits-2;
+        src: url(/tests/fonts/math/limits-2.otf);
+      }
+      @font-face {
+        font-family: limits-3;
+        src: url(/tests/fonts/math/limits-3.otf);
+      }
+      @font-face {
+        font-family: limits-4;
+        src: url(/tests/fonts/math/limits-4.otf);
+      }
+      @font-face {
+        font-family: limits-5;
+        src: url(/tests/fonts/math/limits-5.otf);
+      }
+    </style>
+    <script type="text/javascript">
+      SimpleTest.waitForExplicitFinish();
+
+      var epsilon = 5;
+      function almostEqual(x, y) { return Math.abs(x - y) < epsilon; }
+
+      function getBox(aId) {
+        return document.getElementById(aId).getBoundingClientRect();
+      }
+
+      function doTest() {
+        ok(almostEqual(getBox("base1").top - getBox("over1").bottom, 7 * 10) &&
+           almostEqual(getBox("base2").top - getBox("over2").bottom, 7 * 10),
+           "Bad UpperLimitGapMin");
+
+        ok(almostEqual(getBox("under3").top - getBox("base3").bottom, 5 * 10) &&
+           almostEqual(getBox("under4").top - getBox("base4").bottom, 5 * 10),
+           "Bad LowerLimitGapMin");
+
+        ok(almostEqual(getBox("ref3").top - getBox("over5").bottom, 9 * 10) &&
+           almostEqual(getBox("ref3").top - getBox("over6").bottom, 9 * 10),
+           "UpperLimitBaselineRiseMin");
+
+        ok(almostEqual(getBox("under7").top - getBox("ref4").bottom, 2 * 10) &&
+           almostEqual(getBox("under8").top - getBox("ref4").bottom, 2 * 10),
+           "LowerLimitBaselineDropMin");
+
+        ok(almostEqual(getBox("base9").top - getBox("over9").bottom,
+                       (6 - 2) * 10) &&
+           almostEqual(getBox("base10").top - getBox("over10").bottom,
+                       (6 - 2) * 10),
+           "Bad AccentBaseHeight");
+
+        SimpleTest.finish();
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=961365">
+      Mozilla Bug 961365
+    </a>
+
+    <p id="display"></p>
+
+    <p>
+      <math style="font-family: limits-1;" displaystyle="true">
+        <mover>
+          <mo id="base1">∑</mo>
+          <mspace id="over1" height="1em" width="1em" mathbackground="red"/>
+        </mover>
+      </math>
+      <math style="font-family: limits-1;" displaystyle="true">
+        <munderover>
+          <mo id="base2">∑</mo>
+          <mspace id="under2" height="1em" width="1em" mathbackground="red"/>
+          <mspace id="over2" height="1em" width="1em" mathbackground="red"/>
+        </munderover>
+      </math>
+    </p>
+
+    <p>
+      <math style="font-family: limits-2;" displaystyle="true">
+        <munder>
+          <mo id="base3">∑</mo>
+          <mspace id="under3" height="1em" width="1em" mathbackground="red"/>
+        </munder>
+      </math>
+      <math style="font-family: limits-2;" displaystyle="true">
+        <munderover>
+          <mo id="base4">∑</mo>
+          <mspace id="under4" height="1em" width="1em" mathbackground="red"/>
+          <mspace id="over4" height="1em" width="1em" mathbackground="red"/>
+        </munderover>
+      </math>
+    </p>
+
+    <p>
+      <math style="font-family: limits-3;" displaystyle="true">
+        <mspace id="ref3" height="1em" width="1em" mathbackground="green"/>
+      </math>
+      <math style="font-family: limits-3;" displaystyle="true">
+        <mover>
+          <mo id="base5">∑</mo>
+          <mspace id="over5" height="1em" width="1em" mathbackground="red"/>
+        </mover>
+      </math>
+      <math style="font-family: limits-3;" displaystyle="true">
+        <munderover>
+          <mo id="base6">∑</mo>
+          <mspace id="under6" height="1em" width="1em" mathbackground="red"/>
+          <mspace id="over6" height="1em" width="1em" mathbackground="red"/>
+        </munderover>
+      </math>
+    </p>
+
+    <p>
+      <math style="font-family: limits-4;" displaystyle="true">
+        <mspace id="ref4" height="1em" width="1em" mathbackground="green"/>
+      </math>
+      <math style="font-family: limits-4;" displaystyle="true">
+        <munder>
+          <mo id="base7">∑</mo>
+          <mspace id="under7" height="1em" width="1em" mathbackground="red"/>
+        </munder>
+      </math>
+      <math style="font-family: limits-4;" displaystyle="true">
+        <munderover>
+          <mo id="base8">∑</mo>
+          <mspace id="under8" height="1em" width="1em" mathbackground="red"/>
+          <mspace id="over8" height="1em" width="1em" mathbackground="red"/>
+        </munderover>
+      </math>
+    </p>
+
+    <p>
+      <math style="font-family: limits-5;" displaystyle="true">
+        <mspace id="ref5" height="1em" width="1em" mathbackground="green"/>
+      </math>
+      <math style="font-family: limits-5;" displaystyle="true">
+        <mover>
+          <mspace id="base9" height="2em" width="2em" mathbackground="blue"/>
+          <mo id="over9" stretchy="false">~</mo>
+        </mover>
+      </math>
+      <math style="font-family: limits-5;" displaystyle="true">
+        <munderover>
+          <mspace id="base10" height="2em" width="2em" mathbackground="blue"/>
+          <mspace id="under10" height="1em" width="1em" mathbackground="red"/>
+          <mo id="over10" stretchy="false">~</mo>
+        </munderover>
+      </math>
+    </p>
+
+  </body>
+</html>

@@ -4065,12 +4065,11 @@ ArrayBufferBuilder::getArrayBuffer(JSContext* aCx)
   }
 
   JSObject* obj = JS_NewArrayBufferWithContents(aCx, mLength, mDataPtr);
-  mDataPtr = nullptr;
   mLength = mCapacity = 0;
   if (!obj) {
     js_free(mDataPtr);
-    return nullptr;
   }
+  mDataPtr = nullptr;
   return obj;
 }
 
