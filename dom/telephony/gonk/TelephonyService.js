@@ -374,60 +374,71 @@ TelephonyService.prototype = {
     aListener.enumerateCallStateComplete();
   },
 
+  _hasCallsOnOtherClient: function(aClientId) {
+    for (let cid = 0; cid < this._numClients; ++cid) {
+      if (cid === aClientId) {
+        continue;
+      }
+      if (Object.keys(this._currentCalls[cid]).length !== 0) {
+        return true;
+      }
+    }
+    return false;
+  },
+
+  // All calls in the conference is regarded as one conference call.
+  _numCallsOnLine: function(aClientId) {
+    let numCalls = 0;
+    let hasConference = false;
+
+    for (let cid in this._currentCalls[aClientId]) {
+      let call = this._currentCalls[aClientId][cid];
+      if (call.isConference) {
+        hasConference = true;
+      } else {
+        numCalls++;
+      }
+    }
+
+    return hasConference ? numCalls + 1 : numCalls;
+  },
+
   isDialing: false,
   dial: function(aClientId, aNumber, aIsEmergency, aTelephonyCallback) {
     if (DEBUG) debug("Dialing " + (aIsEmergency ? "emergency " : "") + aNumber);
 
     if (this.isDialing) {
-      if (DEBUG) debug("Already has a dialing call. Drop.");
+      if (DEBUG) debug("Error: Already has a dialing call.");
       aTelephonyCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
       return;
     }
 
-    function hasCallsOnOtherClient(aClientId) {
-      for (let cid = 0; cid < this._numClients; ++cid) {
-        if (cid === aClientId) {
-          continue;
-        }
-        if (Object.keys(this._currentCalls[cid]).length !== 0) {
-          return true;
-        }
+    // Select a proper clientId for dialEmergency.
+    if (aIsEmergency) {
+      aClientId = gRadioInterfaceLayer.getClientIdForEmergencyCall() ;
+      if (aClientId === -1) {
+        if (DEBUG) debug("Error: No client is avaialble for emergency call.");
+        aTelephonyCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
+        return;
       }
-      return false;
     }
 
     // For DSDS, if there is aleady a call on SIM 'aClientId', we cannot place
     // any new call on other SIM.
-    if (hasCallsOnOtherClient.call(this, aClientId)) {
-      if (DEBUG) debug("Already has a call on other sim. Drop.");
+    if (this._hasCallsOnOtherClient(aClientId)) {
+      if (DEBUG) debug("Error: Already has a call on other sim.");
       aTelephonyCallback.notifyDialError(DIAL_ERROR_OTHER_CONNECTION_IN_USE);
       return;
     }
 
-    // All calls in the conference is regarded as one conference call.
-    function numCallsOnLine(aClientId) {
-      let numCalls = 0;
-      let hasConference = false;
-
-      for (let cid in this._currentCalls[aClientId]) {
-        let call = this._currentCalls[aClientId][cid];
-        if (call.isConference) {
-          hasConference = true;
-        } else {
-          numCalls++;
-        }
-      }
-
-      return hasConference ? numCalls + 1 : numCalls;
-    }
-
-    if (numCallsOnLine.call(this, aClientId) >= 2) {
-      if (DEBUG) debug("Has more than 2 calls on line. Drop.");
+    // We can only have at most two calls on the same line (client).
+    if (this._numCallsOnLine(aClientId) >= 2) {
+      if (DEBUG) debug("Error: Has more than 2 calls on line.");
       aTelephonyCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
       return;
     }
 
-    // we don't try to be too clever here, as the phone is probably in the
+    // We don't try to be too clever here, as the phone is probably in the
     // locked state. Let's just check if it's a number without normalizing
     if (!aIsEmergency) {
       aNumber = gPhoneNumberUtils.normalize(aNumber);

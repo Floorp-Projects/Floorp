@@ -711,6 +711,34 @@ RPowHalf::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MMinMax::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_MinMax));
+    writer.writeByte(isMax_);
+    return true;
+}
+
+RMinMax::RMinMax(CompactBufferReader &reader)
+{
+    isMax_ = reader.readByte();
+}
+
+bool
+RMinMax::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue a(cx, iter.read());
+    RootedValue b(cx, iter.read());
+    RootedValue result(cx);
+
+    if (!js_minmax_impl(cx, isMax_, a, b, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MMathFunction::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());

@@ -730,7 +730,9 @@ class RunProgram(MachCommandBase):
         help='Do not pass the -no-remote argument by default.')
     @CommandArgument('+background', '+b', action='store_true',
         help='Do not pass the -foreground argument by default on Mac')
-    def run(self, params, remote, background):
+    @CommandArgument('+profile', '+P', action='store_true',
+        help='Specifiy thr profile to use')
+    def run(self, params, remote, background, profile):
         try:
             args = [self.get_binary_path('app')]
         except Exception as e:
@@ -742,6 +744,12 @@ class RunProgram(MachCommandBase):
             args.append('-no-remote')
         if not background and sys.platform == 'darwin':
             args.append('-foreground')
+        if '-profile' not in params and '-P' not in params:
+            path = os.path.join(self.topobjdir, 'tmp', 'scratch_user')
+            if not os.path.isdir(path):
+                os.makedirs(path)
+            args.append('-profile')
+            args.append(path)
         if params:
             args.extend(params)
         return self.run_process(args=args, ensure_exit_code=False,
@@ -763,6 +771,8 @@ class DebugProgram(MachCommandBase):
         help='Name of debugger to launch')
     @CommandArgument('+debugparams', default=None, metavar='params', type=str,
         help='Command-line arguments to pass to GDB or LLDB itself; split as the Bourne shell would.')
+    @CommandArgument('+profile', '+P', action='store_true',
+        help='Specifiy thr profile to use')
     # Bug 933807 introduced JS_DISABLE_SLOW_SCRIPT_SIGNALS to avoid clever
     # segfaults induced by the slow-script-detecting logic for Ion/Odin JITted
     # code.  If we don't pass this, the user will need to periodically type
@@ -770,7 +780,7 @@ class DebugProgram(MachCommandBase):
     # automatic resuming; see the bug.
     @CommandArgument('+slowscript', action='store_true',
         help='Do not set the JS_DISABLE_SLOW_SCRIPT_SIGNALS env variable; when not set, recoverable but misleading SIGSEGV instances may occur in Ion/Odin JIT code')
-    def debug(self, params, remote, background, debugger, debugparams, slowscript):
+    def debug(self, params, remote, background, profile, debugger, debugparams, slowscript):
         import which
         if debugger:
             try:
@@ -829,6 +839,12 @@ class DebugProgram(MachCommandBase):
             args.append('-foreground')
         if params:
             args.extend(params)
+        if '-profile' not in params and '-P' not in params:
+            path = os.path.join(self.topobjdir, 'tmp', 'scratch_user')
+            if not os.path.isdir(path):
+                os.makedirs(path)
+            args.append('-profile')
+            args.append(path)
         if not slowscript:
             extra_env['JS_DISABLE_SLOW_SCRIPT_SIGNALS'] = '1'
         return self.run_process(args=args, append_env=extra_env,

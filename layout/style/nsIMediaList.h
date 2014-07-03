@@ -176,7 +176,7 @@ public:
   bool Matches(nsPresContext* aPresContext,
                  nsMediaQueryResultCacheKey* aKey);
 
-  nsresult SetStyleSheet(mozilla::CSSStyleSheet* aSheet);
+  void SetStyleSheet(mozilla::CSSStyleSheet* aSheet);
   void AppendQuery(nsAutoPtr<nsMediaQuery>& aQuery) {
     // Takes ownership of aQuery
     mArray.AppendElement(aQuery.forget());
