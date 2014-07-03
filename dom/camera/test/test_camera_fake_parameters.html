@@ -120,19 +120,36 @@ var tests = [
       // we should recognize 'auto', 'hjr', and numeric modes; anything else
       // from the driver is ignored, which this test also verifies.
       test.setFakeParameters(
-        "iso=auto;iso-values=auto,ISO_HJR,ISO100,foo,ISObar,ISO200,ISO400,ISO800,ISO1600",
+        "iso=auto;iso-values=auto,ISO_HJR,ISO100,foo,ISObar,ISO150moz,ISO200,400,ISO800,1600",
         function () {
         run();
       });
     },
     test: function testFakeIso(cam, cap) {
-      // values 'foo' and 'ISObar' should not be included in isoModes
       ok(cap.isoModes.length == 7, "ISO modes length = " + cap.isoModes.length);
+
+      // make sure we're not leaking any unexpected values formats
+      ok(cap.isoModes.indexOf("ISO_HJR") == -1, "ISO mode 'ISO_HJR' does not appear");
+      ok(cap.isoModes.indexOf("_HJR") == -1, "ISO mode '_HJR' does not appear");
+      ok(cap.isoModes.indexOf("HJR") == -1, "ISO mode 'HJR' does not appear");
+      ok(cap.isoModes.indexOf("ISO100") == -1, "ISO mode 'ISO100' does not appear");
+      ok(cap.isoModes.indexOf("ISO200") == -1, "ISO mode 'ISO200' does not appear");
+      ok(cap.isoModes.indexOf("ISO800") == -1, "ISO mode 'ISO800' does not appear");
+
+      // make sure any weird values are dropped entirely
       ok(cap.isoModes.indexOf("foo") == -1, "Unknown ISO mode 'foo' is ignored");
       ok(cap.isoModes.indexOf("ISObar") == -1, "Unknown ISO mode 'ISObar' is ignored");
       ok(cap.isoModes.indexOf("bar") == -1, "Unknown ISO mode 'bar' is ignored");
+      ok(cap.isoModes.indexOf("ISO150moz") == -1, "Unknown ISO mode 'ISO150moz' is ignored");
+      ok(cap.isoModes.indexOf("150moz") == -1, "Unknown ISO mode '150moz' is ignored");
+      ok(cap.isoModes.indexOf("150") == -1, "Unknown ISO mode '150' is ignored");
 
-      // test individual ISO modes
+      // make sure expected values are present
+      [ "auto", "hjr", "100", "200", "400", "800", "1600" ].forEach(function(iso) {
+        ok(cap.isoModes.indexOf(iso) != -1, "ISO mode '" + iso + "' is present");
+      });
+
+      // test setters/getters for individual ISO modes
       cap.isoModes.forEach(function(iso, index) {
         cam.iso = iso;
         ok(cam.iso === iso,
@@ -251,7 +268,6 @@ var tests = [
       cam.exposureCompensation = -1.25;
       ok(cam.exposureCompensation == -1.5,
          "exposureCompensation(-1.25) = " + cam.exposureCompensation);
-
       // Check out-of-bounds values
       cam.exposureCompensation = cap.minExposureCompensation - 1.0;
       ok(cam.exposureCompensation == cap.minExposureCompensation,

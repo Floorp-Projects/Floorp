@@ -7,27 +7,24 @@
 #ifndef __FFmpegRuntimeLinker_h__
 #define __FFmpegRuntimeLinker_h__
 
-extern "C" {
-#pragma GCC visibility push(default)
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/imgutils.h>
-#pragma GCC visibility pop
-}
-
-#include "nsAutoPtr.h"
-
 namespace mozilla
 {
+
+class PlatformDecoderModule;
+struct AvFormatLib;
 
 class FFmpegRuntimeLinker
 {
 public:
   static bool Link();
   static void Unlink();
+  static PlatformDecoderModule* CreateDecoderModule();
 
 private:
-  static void* sLinkedLibs[];
+  static void* sLinkedLib;
+  static const AvFormatLib* sLib;
+
+  static bool Bind(const char* aLibName);
 
   static enum LinkStatus {
     LinkStatus_INIT = 0,
@@ -36,9 +33,6 @@ private:
   } sLinkStatus;
 };
 
-#define AV_FUNC(lib, func) extern typeof(func)* func;
-#include "FFmpegFunctionList.h"
-#undef AV_FUNC
 }
 
 #endif // __FFmpegRuntimeLinker_h__
