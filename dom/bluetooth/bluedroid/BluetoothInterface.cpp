@@ -656,17 +656,31 @@ BluetoothInterface::SetRemoteDeviceProperty(bt_bdaddr_t* aRemoteAddr,
 
 /* Remote Services */
 
-int
+void
 BluetoothInterface::GetRemoteServiceRecord(bt_bdaddr_t* aRemoteAddr,
-                                           bt_uuid_t* aUuid)
+                                           bt_uuid_t* aUuid,
+                                           BluetoothResultHandler* aRes)
 {
-  return mInterface->get_remote_service_record(aRemoteAddr, aUuid);
+  int status = mInterface->get_remote_service_record(aRemoteAddr, aUuid);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::GetRemoteServiceRecord,
+                            status);
+  }
 }
 
-int
-BluetoothInterface::GetRemoteServices(bt_bdaddr_t* aRemoteAddr)
+void
+BluetoothInterface::GetRemoteServices(bt_bdaddr_t* aRemoteAddr,
+                                      BluetoothResultHandler* aRes)
 {
-  return mInterface->get_remote_services(aRemoteAddr);
+  int status = mInterface->get_remote_services(aRemoteAddr);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::GetRemoteServices,
+                            status);
+  }
 }
 
 /* Discovery */

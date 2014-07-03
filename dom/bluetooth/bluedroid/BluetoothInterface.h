@@ -258,9 +258,11 @@ public:
 
   /* Remote Services */
 
-  int GetRemoteServiceRecord(bt_bdaddr_t* aRemoteAddr,
-                             bt_uuid_t* aUuid);
-  int GetRemoteServices(bt_bdaddr_t* aRemoteAddr);
+  void GetRemoteServiceRecord(bt_bdaddr_t* aRemoteAddr,
+                              bt_uuid_t* aUuid,
+                              BluetoothResultHandler* aRes);
+  void GetRemoteServices(bt_bdaddr_t* aRemoteAddr,
+                         BluetoothResultHandler* aRes);
 
   /* Discovery */
 
