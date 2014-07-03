@@ -751,7 +751,10 @@ public:
   // main thread to be presented when the |currentTime| of the media is greater
   // or equal to aPublishTime.
   void QueueMetadata(int64_t aPublishTime,
-                     MediaInfo* aInfo,
+                     int aChannels,
+                     int aRate,
+                     bool aHasAudio,
+                     bool aHasVideo,
                      MetadataTags* aTags);
 
   /******
@@ -774,7 +777,10 @@ public:
 
   // Called when the metadata from the media file has been loaded by the
   // state machine. Call on the main thread only.
-  virtual void MetadataLoaded(MediaInfo* aInfo,
+  virtual void MetadataLoaded(int aChannels,
+                              int aRate,
+                              bool aHasAudio,
+                              bool aHasVideo,
                               MetadataTags* aTags);
 
   // Called when the first frame has been loaded.
