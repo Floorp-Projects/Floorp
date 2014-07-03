@@ -147,8 +147,9 @@ body {
   margin: 0 5px;
 }
 
-.devtools-toolbar {
+#root .devtools-toolbar {
   width: 100%;
+  border-bottom-width: 0;
 }
 
 .link {

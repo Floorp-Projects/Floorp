@@ -62,6 +62,7 @@
         this._ignoreNextSelect = false;
 
         this.inputField.controllers.insertControllerAt(0, this._copyCutController);
+        this.inputField.addEventListener("paste", this, false);
         this.inputField.addEventListener("mousedown", this, false);
         this.inputField.addEventListener("mousemove", this, false);
         this.inputField.addEventListener("mouseout", this, false);
@@ -111,6 +112,7 @@
         this._prefs.removeObserver("", this);
         this._prefs = null;
         this.inputField.controllers.removeController(this._copyCutController);
+        this.inputField.removeEventListener("paste", this, false);
         this.inputField.removeEventListener("mousedown", this, false);
         this.inputField.removeEventListener("mousemove", this, false);
         this.inputField.removeEventListener("mouseout", this, false);
@@ -263,7 +265,6 @@
             return; // Do nothing for right clicks
 
           var url = this.value;
-          var mayInheritPrincipal = false;
           var postData = null;
 
           var action = this._parseActionUrl(url);
@@ -286,7 +287,7 @@
           }
           else {
             this._canonizeURL(aTriggeringEvent, response => {
-              [url, postData, mayInheritPrincipal] = response;
+              [url, postData] = response;
               if (url) {
                 matchLastLocationChange = (lastLocationChange ==
                                            gBrowser.selectedBrowser.lastLocationChange);
@@ -311,12 +312,6 @@
               let webnav = Ci.nsIWebNavigation;
               let flags = webnav.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
                           webnav.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
-              // Pass LOAD_FLAGS_DISALLOW_INHERIT_OWNER to prevent any loads from
-              // inheriting the currently loaded document's principal, unless this
-              // URL is marked as safe to inherit (e.g. came from a bookmark
-              // keyword).
-              if (!mayInheritPrincipal)
-                flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
               gBrowser.loadURIWithFlags(url, flags, null, null, postData);
             }
 
@@ -427,7 +422,7 @@
           }
 
           getShortcutOrURIAndPostData(url, data => {
-            aCallback([data.url, data.postData, data.mayInheritPrincipal]);
+            aCallback([data.url, data.postData]);
           });
         ]]></body>
       </method>
@@ -624,6 +619,36 @@
         <parameter name="aEvent"/>
         <body><![CDATA[
           switch (aEvent.type) {
+            case "paste":
+              let originalPasteData = aEvent.clipboardData.getData("text/plain");
+              if (!originalPasteData) {
+                return;
+              }
+
+              let oldValue = this.inputField.value;
+              let oldStart = oldValue.substring(0, this.inputField.selectionStart);
+              // If there is already non-whitespace content in the URL bar
+              // preceding the pasted content, it's not necessary to check
+              // protocols used by the pasted content:
+              if (oldStart.trim()) {
+                return;
+              }
+              let oldEnd = oldValue.substring(this.inputField.selectionEnd);
+
+              let pasteData = stripUnsafeProtocolOnPaste(originalPasteData);
+              if (originalPasteData != pasteData) {
+                // Unfortunately we're not allowed to set the bits being pasted
+                // so cancel this event:
+                aEvent.preventDefault();
+                aEvent.stopPropagation();
+
+                this.inputField.value = oldStart + pasteData + oldEnd;
+                // Fix up cursor/selection:
+                let newCursorPos = oldStart.length + pasteData.length;
+                this.inputField.selectionStart = newCursorPos;
+                this.inputField.selectionEnd = newCursorPos;
+              }
+              break;
             case "mousedown":
               if (this.doubleClickSelectsAll &&
                   aEvent.button == 0 && aEvent.detail == 2) {

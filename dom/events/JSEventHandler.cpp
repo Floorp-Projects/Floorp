@@ -143,7 +143,7 @@ JSEventHandler::HandleEvent(nsIDOMEvent* aEvent)
     ErrorEvent* scriptEvent = aEvent->InternalDOMEvent()->AsErrorEvent();
     if (scriptEvent) {
       scriptEvent->GetMessage(errorMsg);
-      msgOrEvent.SetAsString().SetData(errorMsg.Data(), errorMsg.Length());
+      msgOrEvent.SetAsString().Rebind(errorMsg.Data(), errorMsg.Length());
 
       scriptEvent->GetFilename(file);
       fileName = &file;

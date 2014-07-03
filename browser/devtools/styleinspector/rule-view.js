@@ -167,7 +167,7 @@ ElementStyle.prototype = {
         dummyElement.parentNode.removeChild(dummyElement);
       }
       this.dummyElementPromise = null;
-    });
+    }, console.error);
   },
 
   /**
@@ -511,7 +511,7 @@ Rule.prototype = {
 
       this._originalSourceStrings = sourceStrings;
       return sourceStrings;
-    });
+    }, console.error);
   },
 
   /**
@@ -1395,6 +1395,7 @@ CssRuleView.prototype = {
   },
 
   destroy: function() {
+    this.isDestroyed = true;
     this.clear();
 
     gDummyPromise = null;
@@ -1405,9 +1406,9 @@ CssRuleView.prototype = {
     this._prefObserver.destroy();
 
     this.element.removeEventListener("copy", this._onCopy);
-    delete this._onCopy;
+    this._onCopy = null;
 
-    delete this._outputParser;
+    this._outputParser = null;
 
     // Remove context menu
     if (this._contextmenu) {
@@ -1858,7 +1859,7 @@ RuleEditor.prototype = {
       this.rule.getOriginalSourceStrings().then((strings) => {
         sourceLabel.setAttribute("value", strings.short);
         sourceLabel.setAttribute("tooltiptext", strings.full);
-      })
+      }, console.error);
     }
   },
 
@@ -2319,6 +2320,10 @@ TextPropertyEditor.prototype = {
    * Populate the span based on changes to the TextProperty.
    */
   update: function() {
+    if (this.ruleEditor.ruleView.isDestroyed) {
+      return;
+    }
+
     if (this.prop.enabled) {
       this.enable.style.removeProperty("visibility");
       this.enable.setAttribute("checked", "");

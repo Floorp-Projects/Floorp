@@ -4166,8 +4166,20 @@ JS_FileEscapedString(FILE *fp, JSString *str, char quote);
 extern JS_PUBLIC_API(size_t)
 JS_GetStringLength(JSString *str);
 
+/* Returns true iff the string's characters are stored as Latin1. */
+extern JS_PUBLIC_API(bool)
+JS_StringHasLatin1Chars(JSString *str);
+
 extern JS_PUBLIC_API(const jschar *)
 JS_GetStringCharsAndLength(JSContext *cx, JSString *str, size_t *length);
+
+extern JS_PUBLIC_API(const JS::Latin1Char *)
+JS_GetLatin1StringCharsAndLength(JSContext *cx, const JS::AutoCheckCannotGC &nogc, JSString *str,
+                                 size_t *length);
+
+extern JS_PUBLIC_API(const jschar *)
+JS_GetTwoByteStringCharsAndLength(JSContext *cx, const JS::AutoCheckCannotGC &nogc, JSString *str,
+                                  size_t *length);
 
 extern JS_PUBLIC_API(const jschar *)
 JS_GetInternedStringChars(JSString *str);

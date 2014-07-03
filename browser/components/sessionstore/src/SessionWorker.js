@@ -10,48 +10,24 @@
 
 importScripts("resource://gre/modules/osfile.jsm");
 
+let PromiseWorker = require("resource://gre/modules/workers/PromiseWorker.js");
+
 let File = OS.File;
 let Encoder = new TextEncoder();
 let Decoder = new TextDecoder();
 
-/**
- * Communications with the controller.
- *
- * Accepts messages:
- * {fun:function_name, args:array_of_arguments_or_null, id: custom_id}
- *
- * Sends messages:
- * {ok: result, id: custom_id, telemetry: {}} /
- * {fail: serialized_form_of_OS.File.Error, id: custom_id}
- */
-self.onmessage = function (msg) {
-  let data = msg.data;
-  if (!(data.fun in Agent)) {
-    throw new Error("Cannot find method " + data.fun);
-  }
-
-  let result;
-  let id = data.id;
-
-  try {
-    result = Agent[data.fun].apply(Agent, data.args) || {};
-  } catch (ex if ex instanceof OS.File.Error) {
-    // Instances of OS.File.Error know how to serialize themselves
-    // (deserialization ensures that we end up with OS-specific
-    // instances of |OS.File.Error|)
-    self.postMessage({fail: OS.File.Error.toMsg(ex), id: id});
-    return;
-  }
-
-  // Other exceptions do not, and should be propagated through DOM's
-  // built-in mechanism for uncaught errors, although this mechanism
-  // may lose interesting information.
-  self.postMessage({
-    ok: result.result,
-    id: id,
-    telemetry: result.telemetry || {}
-  });
+let worker = new PromiseWorker.AbstractWorker();
+worker.dispatch = function(method, args = []) {
+  return Agent[method](...args);
 };
+worker.postMessage = function(result, ...transfers) {
+  self.postMessage(result, ...transfers);
+};
+worker.close = function() {
+  self.close();
+};
+
+self.addEventListener("message", msg => worker.handleMessage(msg));
 
 // The various possible states
 
