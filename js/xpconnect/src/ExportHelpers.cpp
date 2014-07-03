@@ -79,7 +79,8 @@ StackScopedCloneRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t ta
       if (!JS_WrapObject(cx, &obj))
           return nullptr;
 
-      if (!xpc::NewFunctionForwarder(cx, JSID_VOIDHANDLE, obj, &functionValue))
+      FunctionForwarderOptions forwarderOptions(cx);
+      if (!xpc::NewFunctionForwarder(cx, JSID_VOIDHANDLE, obj, forwarderOptions, &functionValue))
           return nullptr;
 
       return &functionValue.toObject();
@@ -139,9 +140,14 @@ StackScopedCloneWrite(JSContext *cx, JSStructuredCloneWriter *writer,
         return true;
     }
 
-    if (cloneData->mOptions->cloneFunctions && JS_ObjectIsCallable(cx, obj)) {
-        cloneData->mFunctions.append(obj);
-        return JS_WriteUint32Pair(writer, SCTAG_FUNCTION, cloneData->mFunctions.length() - 1);
+    if (JS_ObjectIsCallable(cx, obj)) {
+        if (cloneData->mOptions->cloneFunctions) {
+            cloneData->mFunctions.append(obj);
+            return JS_WriteUint32Pair(writer, SCTAG_FUNCTION, cloneData->mFunctions.length() - 1);
+        } else {
+            JS_ReportError(cx, "Permission denied to pass a Function via structured clone");
+            return false;
+        }
     }
 
     JS_ReportError(cx, "Encountered unsupported value type writing stack-scoped structured clone");
@@ -201,17 +207,30 @@ CloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedValue v(cx, js::GetFunctionNativeReserved(&args.callee(), 0));
-    NS_ASSERTION(v.isObject(), "weird function");
-    RootedObject origFunObj(cx, UncheckedUnwrap(&v.toObject()));
+    // Grab the options from the reserved slot.
+    RootedObject optionsObj(cx, &js::GetFunctionNativeReserved(&args.callee(), 1).toObject());
+    FunctionForwarderOptions options(cx, optionsObj);
+    if (!options.Parse())
+        return false;
+
+    // Grab and unwrap the underlying callable.
+    RootedObject forwarderObj(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
+    RootedObject origFunObj(cx, UncheckedUnwrap(forwarderObj));
     {
         JSAutoCompartment ac(cx, origFunObj);
         // Note: only the arguments are cloned not the |this| or the |callee|.
         // Function forwarder does not use those.
-        StackScopedCloneOptions options;
-        options.wrapReflectors = true;
+        StackScopedCloneOptions cloneOptions;
+        cloneOptions.wrapReflectors = true;
         for (unsigned i = 0; i < args.length(); i++) {
-            if (!StackScopedClone(cx, options, args[i])) {
+            RootedObject argObj(cx, args[i].isObject() ? &args[i].toObject() : nullptr);
+            if (options.allowCallbacks && argObj && JS_ObjectIsCallable(cx, argObj)) {
+                FunctionForwarderOptions innerOptions(cx);
+                if (!JS_WrapObject(cx, &argObj))
+                    return false;
+                if (!xpc::NewFunctionForwarder(cx, JSID_VOIDHANDLE, argObj, innerOptions, args[i]))
+                    return nullptr;
+            } else if (!StackScopedClone(cx, cloneOptions, args[i])) {
                 return false;
             }
         }
@@ -244,7 +263,7 @@ NonCloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
 }
 bool
 NewFunctionForwarder(JSContext *cx, HandleId idArg, HandleObject callable,
-                     MutableHandleValue vp)
+                     FunctionForwarderOptions &options, MutableHandleValue vp)
 {
     RootedId id(cx, idArg);
     if (id == JSID_VOIDHANDLE)
@@ -255,9 +274,18 @@ NewFunctionForwarder(JSContext *cx, HandleId idArg, HandleObject callable,
     if (!fun)
         return false;
 
-    JSObject *funobj = JS_GetFunctionObject(fun);
-    js::SetFunctionNativeReserved(funobj, 0, ObjectValue(*callable));
-    vp.setObject(*funobj);
+    // Stash the callable in slot 0.
+    AssertSameCompartment(cx, callable);
+    RootedObject funObj(cx, JS_GetFunctionObject(fun));
+    js::SetFunctionNativeReserved(funObj, 0, ObjectValue(*callable));
+
+    // Stash the options in slot 1.
+    RootedObject optionsObj(cx, options.ToJSObject(cx));
+    if (!optionsObj)
+        return false;
+    js::SetFunctionNativeReserved(funObj, 1, ObjectValue(*optionsObj));
+
+    vp.setObject(*funObj);
     return true;
 }
 
@@ -339,7 +367,9 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
 
         // And now, let's create the forwarder function in the target compartment
         // for the function the be exported.
-        if (!NewFunctionForwarder(cx, id, funObj, rval)) {
+        FunctionForwarderOptions forwarderOptions(cx);
+        forwarderOptions.allowCallbacks = options.allowCallbacks;
+        if (!NewFunctionForwarder(cx, id, funObj, forwarderOptions, rval)) {
             JS_ReportError(cx, "Exporting function failed");
             return false;
         }
