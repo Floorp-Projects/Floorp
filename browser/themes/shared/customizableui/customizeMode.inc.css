@@ -114,13 +114,13 @@
 
 #customization-footer {
   border-top: 1px solid rgb(221,221,221);
-  padding: 15px;
+  padding: 10px;
 }
 
 .customizationmode-button {
   border: 1px solid rgb(192,192,192);
   border-radius: 3px;
-  margin: 0;
+  margin: 5px;
   padding: 2px 12px;
   background-color: rgb(251,251,251);
   color: rgb(71,71,71);
@@ -133,16 +133,24 @@
   opacity: .5;
 }
 
+.customizationmode-button > .box-inherit > .box-inherit > .button-icon,
+.customizationmode-button > .button-box > .button-icon {
+  height: 24px;
+}
+
 #customization-titlebar-visibility-button {
   list-style-image: url("chrome://browser/skin/customizableui/customize-titleBar-toggle.png");
   -moz-image-region: rect(0, 24px, 24px, 0);
   padding: 2px 7px;
-  -moz-margin-end: 10px;
 }
 
 #customization-titlebar-visibility-button > .button-box > .button-text {
   /* Sadly, button.css thinks its margins are perfect for everyone. */
   -moz-margin-start: 6px !important;
+}
+
+#customization-titlebar-visibility-button > .button-box > .button-icon {
+  vertical-align: middle;
 }
 
 #customization-titlebar-visibility-button[checked] {
@@ -152,10 +160,6 @@
   text-shadow: 0 1px rgb(236, 236, 236);
   box-shadow: 0 1px rgba(255, 255, 255, 0.5),
               inset 0 1px rgb(196, 196, 196);
-}
-
-#customization-undo-reset-button {
-  -moz-margin-end: 10px;
 }
 
 #main-window[customize-entered] #customization-panel-container {

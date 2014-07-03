@@ -157,3 +157,17 @@ class MercurialConfig(object):
             d['qnew'] = '-U'
         else:
             d['qnew'] = '-U ' + d['qnew']
+
+    def get_bugzilla_credentials(self):
+        if 'bugzilla' not in self._c:
+            return None, None
+
+        b = self._c['bugzilla']
+        return b.get('username', None), b.get('password', None)
+
+    def set_bugzilla_credentials(self, username, password):
+        b = self._c.setdefault('bugzilla', {})
+        if username:
+            b['username'] = username
+        if password:
+            b['password'] = password

@@ -12,7 +12,7 @@ const timer = require("../timers");
 var cfxArgs = require("@test/options");
 const { getTabs, getURI } = require("../tabs/utils");
 const { windows, isBrowser } = require("../window/utils");
-const { defer } = require("../core/promise");
+const { defer, all } = require("../core/promise");
 
 const findAndRunTests = function findAndRunTests(options) {
   var TestFinder = require("./unit-test-finder").TestFinder;
@@ -285,43 +285,58 @@ TestRunner.prototype = {
       }
 
       let wins = windows(null, { includePrivate: true });
-      let tabs = [];
-      for (let win of wins.filter(isBrowser)) {
-        for (let tab of getTabs(win)) {
-          tabs.push(tab);
+      let winPromises = wins.map(win =>  {
+        let { promise, resolve } = defer();
+        if (["interactive", "complete"].indexOf(win.document.readyState) >= 0) {
+          resolve()
         }
-      }
-
-      if (wins.length != 1)
-        this.fail("Should not be any unexpected windows open");
-      if (tabs.length != 1)
-        this.fail("Should not be any unexpected tabs open");
-      if (tabs.length != 1 || wins.length != 1) {
-        console.log("Windows open:");
-        for (let win of wins) {
-          if (isBrowser(win)) {
-            tabs = getTabs(win);
-            console.log(win.location + " - " + tabs.map(getURI).join(", "));
-          }
-          else {
-            console.log(win.location);
-          }
+        else {
+          win.addEventListener("DOMContentLoaded", function onLoad() {
+            win.removeEventListener("DOMContentLoaded", onLoad, false);
+            resolve();
+          }, false);
         }
-      }
-
-      this.testRunSummary.push({
-        name: this.test.name,
-        passed: this.test.passed,
-        failed: this.test.failed,
-        errors: [error for (error in this.test.errors)].join(", ")
+        return promise;
       });
 
-      if (this.onDone !== null) {
-        var onDone = this.onDone;
-        var self = this;
-        this.onDone = null;
-        timer.setTimeout(function() { onDone(self); }, 0);
-      }
+      all(winPromises).then(_ => {
+        let tabs = [];
+        for (let win of wins.filter(isBrowser)) {
+          for (let tab of getTabs(win)) {
+            tabs.push(tab);
+          }
+        }
+
+        if (wins.length != 1)
+          this.fail("Should not be any unexpected windows open");
+        if (tabs.length != 1)
+          this.fail("Should not be any unexpected tabs open");
+        if (tabs.length != 1 || wins.length != 1) {
+          console.log("Windows open:");
+          for (let win of wins) {
+            if (isBrowser(win)) {
+              tabs = getTabs(win);
+              console.log(win.location + " - " + tabs.map(getURI).join(", "));
+            }
+            else {
+              console.log(win.location);
+            }
+          }
+        }
+
+        this.testRunSummary.push({
+          name: this.test.name,
+          passed: this.test.passed,
+          failed: this.test.failed,
+          errors: [error for (error in this.test.errors)].join(", ")
+        });
+
+        if (this.onDone !== null) {
+          let onDone = this.onDone;
+          this.onDone = null;
+          timer.setTimeout(_ => onDone(this), 0);
+        }
+      });
     }
   },
 
