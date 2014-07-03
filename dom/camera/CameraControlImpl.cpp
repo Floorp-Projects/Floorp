@@ -248,6 +248,20 @@ CameraControlImpl::OnPreviewStateChange(CameraControlListener::PreviewState aNew
   }
 }
 
+void
+CameraControlImpl::OnRateLimitPreview(bool aLimit)
+{
+  // This function runs on neither the Main Thread nor the Camera Thread.
+  RwLockAutoEnterRead lock(mListenerLock);
+
+  DOM_CAMERA_LOGI("OnRateLimitPreview: %d\n", aLimit);
+
+  for (uint32_t i = 0; i < mListeners.Length(); ++i) {
+    CameraControlListener* l = mListeners[i];
+    l->OnRateLimitPreview(aLimit);
+  }
+}
+
 bool
 CameraControlImpl::OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight)
 {
