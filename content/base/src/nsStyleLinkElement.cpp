@@ -343,7 +343,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   }
 
   if (mStyleSheet) {
-    if (thisContent->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    if (thisContent->IsInShadowTree()) {
       ShadowRoot* containingShadow = thisContent->GetContainingShadow();
       containingShadow->RemoveSheet(mStyleSheet);
     } else {
@@ -443,7 +443,7 @@ nsStyleLinkElement::UpdateStyleSheetScopedness(bool aIsNowScoped)
 
   nsIDocument* document = thisContent->GetOwnerDocument();
 
-  if (thisContent->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+  if (thisContent->IsInShadowTree()) {
     ShadowRoot* containingShadow = thisContent->GetContainingShadow();
     containingShadow->RemoveSheet(mStyleSheet);
 

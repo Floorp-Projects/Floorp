@@ -4529,7 +4529,7 @@ nsContentUtils::IsInSameAnonymousTree(const nsINode* aNode,
   // For nodes in a shadow tree, it is insufficient to simply compare
   // the binding parent because a node may host multiple ShadowRoots,
   // thus nodes in different shadow tree may have the same binding parent.
-  if (aNode->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+  if (aNode->IsInShadowTree()) {
     return nodeAsContent->GetContainingShadow() ==
       aContent->GetContainingShadow();
   }
