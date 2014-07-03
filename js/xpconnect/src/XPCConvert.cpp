@@ -813,7 +813,7 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
     // optimal -- we could detect this and roll the functionality into a
     // single wrapper, but the current solution is good enough for now.
     AutoJSContext cx;
-    XPCWrappedNativeScope* xpcscope = GetObjectScope(JS::CurrentGlobalOrNull(cx));
+    XPCWrappedNativeScope* xpcscope = ObjectScope(JS::CurrentGlobalOrNull(cx));
     if (!xpcscope)
         return false;
 

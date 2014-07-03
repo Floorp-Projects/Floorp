@@ -209,11 +209,11 @@ public:
     virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper) = 0;
 
     JSObject* getExpandoChain(HandleObject obj) {
-      return GetObjectScope(obj)->GetExpandoChain(obj);
+      return ObjectScope(obj)->GetExpandoChain(obj);
     }
 
     bool setExpandoChain(JSContext *cx, HandleObject obj, HandleObject chain) {
-      return GetObjectScope(obj)->SetExpandoChain(cx, obj, chain);
+      return ObjectScope(obj)->SetExpandoChain(cx, obj, chain);
     }
     bool cloneExpandoChain(JSContext *cx, HandleObject dst, HandleObject src);
 
@@ -2284,8 +2284,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
     //
     // Make sure to assert this.
     nsCOMPtr<nsIContent> content;
-    if (!desc.object() &&
-        EnsureCompartmentPrivate(wrapper)->scope->IsContentXBLScope() &&
+    if (!desc.object() && ObjectScope(wrapper)->IsContentXBLScope() &&
         (content = do_QueryInterfaceNative(cx, wrapper)))
     {
         if (!nsContentUtils::LookupBindingMember(cx, content, id, desc))
