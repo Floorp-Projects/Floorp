@@ -74,7 +74,7 @@ describe("loop.Client", function() {
 
       it("should call the callback with the url when the request succeeds", function() {
         var callUrlData = {
-          "call_url": "fakeCallUrl",
+          "callUrl": "fakeCallUrl",
           "expiresAt": 60
         };
 
@@ -90,7 +90,7 @@ describe("loop.Client", function() {
 
       it("should note the call url expiry when the request succeeds", function() {
         var callUrlData = {
-          "call_url": "fakeCallUrl",
+          "callUrl": "fakeCallUrl",
           "expiresAt": 60
         };
 

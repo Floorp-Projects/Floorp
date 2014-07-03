@@ -66,15 +66,16 @@ describe("loop.StandaloneClient", function() {
         });
 
       it("should post data for the given call", function() {
-        client.requestCallInfo("fake", callback);
+        client.requestCallInfo("fake", "audio", callback);
 
         expect(requests).to.have.length.of(1);
         expect(requests[0].url).to.be.equal("http://fake.api/calls/fake");
         expect(requests[0].method).to.be.equal("POST");
+        expect(requests[0].requestBody).to.be.equal('{"callType":"audio"}');
       });
 
       it("should receive call data for the given call", function() {
-        client.requestCallInfo("fake", callback);
+        client.requestCallInfo("fake", "audio-video", callback);
 
         var sessionData = {
           sessionId: "one",
@@ -88,7 +89,7 @@ describe("loop.StandaloneClient", function() {
       });
 
       it("should send an error when the request fails", function() {
-        client.requestCallInfo("fake", callback);
+        client.requestCallInfo("fake", "audio", callback);
 
         requests[0].respond(400, {"Content-Type": "application/json"},
                             fakeErrorRes);
@@ -98,7 +99,7 @@ describe("loop.StandaloneClient", function() {
       });
 
       it("should send an error if the data is not valid", function() {
-        client.requestCallInfo("fake", callback);
+        client.requestCallInfo("fake", "audio", callback);
 
         requests[0].respond(200, {"Content-Type": "application/json"},
                             '{"bad": "one"}');

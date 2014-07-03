@@ -95,7 +95,10 @@ loop.webapp = (function($, _, OT) {
         client: new loop.StandaloneClient({
           baseServerUrl: baseServerUrl,
         }),
-        outgoing: true
+        outgoing: true,
+        // For now, we assume both audio and video as there is no
+        // other option to select.
+        callType: "audio-video"
       });
       this.disableForm();
     }
