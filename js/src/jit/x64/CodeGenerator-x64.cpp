@@ -274,7 +274,9 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
       default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
     uint32_t after = masm.size();
-    return skipNote || masm.append(AsmJSHeapAccess(before, after, vt, ToAnyRegister(ins->output())));
+    if (!skipNote)
+        masm.append(AsmJSHeapAccess(before, after, vt, ToAnyRegister(ins->output())));
+    return true;
 }
 
 bool
@@ -322,7 +324,9 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
         }
     }
     uint32_t after = masm.size();
-    return skipNote || masm.append(AsmJSHeapAccess(before, after));
+    if (!skipNote)
+        masm.append(AsmJSHeapAccess(before, after));
+    return true;
 }
 
 bool
@@ -336,7 +340,8 @@ CodeGeneratorX64::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins)
     else
         label = masm.loadRipRelativeDouble(ToFloatRegister(ins->output()));
 
-    return masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    return true;
 }
 
 bool
@@ -353,7 +358,8 @@ CodeGeneratorX64::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins)
     else
         label = masm.storeRipRelativeDouble(ToFloatRegister(ins->value()));
 
-    return masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    return true;
 }
 
 bool
@@ -368,7 +374,8 @@ CodeGeneratorX64::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins)
     CodeOffsetLabel label = masm.leaRipRelative(tmp);
     masm.loadPtr(Operand(tmp, index, TimesEight, 0), out);
 
-    return masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    return true;
 }
 
 bool
@@ -378,7 +385,8 @@ CodeGeneratorX64::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins)
 
     CodeOffsetLabel label = masm.loadRipRelativeInt64(ToRegister(ins->output()));
 
-    return masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    return true;
 }
 
 void
