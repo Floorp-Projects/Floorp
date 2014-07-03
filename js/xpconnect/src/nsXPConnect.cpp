@@ -297,30 +297,6 @@ static inline T UnexpectedFailure(T rv)
     return rv;
 }
 
-/* void initClasses (in JSContextPtr aJSContext, in JSObjectPtr aGlobalJSObj); */
-NS_IMETHODIMP
-nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
-{
-    MOZ_ASSERT(aJSContext, "bad param");
-    MOZ_ASSERT(aGlobalJSObj, "bad param");
-    RootedObject globalJSObj(aJSContext, aGlobalJSObj);
-
-    JSAutoCompartment ac(aJSContext, globalJSObj);
-
-    XPCWrappedNativeScope* scope =
-        XPCWrappedNativeScope::GetNewOrUsed(aJSContext, globalJSObj);
-
-    if (!scope)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    scope->RemoveWrappedNativeProtos();
-
-    if (!XPCNativeWrapper::AttachNewConstructorObject(aJSContext, globalJSObj))
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    return NS_OK;
-}
-
 void
 TraceXPCGlobal(JSTracer *trc, JSObject *obj)
 {

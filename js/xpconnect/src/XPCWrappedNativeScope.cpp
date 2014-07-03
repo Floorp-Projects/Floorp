@@ -676,27 +676,6 @@ XPCWrappedNativeScope::SystemIsBeingShutDown()
 
 /***************************************************************************/
 
-static PLDHashOperator
-WNProtoRemover(PLDHashTable *table, PLDHashEntryHdr *hdr,
-               uint32_t number, void *arg)
-{
-    XPCWrappedNativeProtoMap* detachedMap = (XPCWrappedNativeProtoMap*)arg;
-
-    XPCWrappedNativeProto* proto = (XPCWrappedNativeProto*)
-        ((ClassInfo2WrappedNativeProtoMap::Entry*)hdr)->value;
-
-    detachedMap->Add(proto);
-
-    return PL_DHASH_REMOVE;
-}
-
-void
-XPCWrappedNativeScope::RemoveWrappedNativeProtos()
-{
-    mWrappedNativeProtoMap->Enumerate(WNProtoRemover,
-                                      GetRuntime()->GetDetachedWrappedNativeProtoMap());
-}
-
 JSObject *
 XPCWrappedNativeScope::GetExpandoChain(HandleObject target)
 {

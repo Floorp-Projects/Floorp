@@ -1009,8 +1009,6 @@ public:
     bool
     SetExpandoChain(JSContext *cx, JS::HandleObject target, JS::HandleObject chain);
 
-    void RemoveWrappedNativeProtos();
-
     static void
     SystemIsBeingShutDown();
 

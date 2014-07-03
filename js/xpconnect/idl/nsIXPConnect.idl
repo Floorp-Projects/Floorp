@@ -274,19 +274,12 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[noscript, uuid(523da588-95a4-469f-ba1b-c637c3ad4142)]
+[noscript, uuid(febddcc9-5a88-4121-815a-934cd159b3e9)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCONNECT_CID)
 %}
-
-    /**
-     * Initializes classes on a global object that has already been created.
-     */
-    void
-    initClasses(in JSContextPtr aJSContext,
-                in JSObjectPtr  aGlobalJSObj);
 
     /**
      * Creates a new global object using the given aCOMObj as the global
