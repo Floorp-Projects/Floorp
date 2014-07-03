@@ -14,8 +14,9 @@
 .devtools-sidebar-tabs > tabs {
   -moz-appearance: none;
   padding: 0;
+  border-width: 0;
   border-bottom-width: 1px;
-  border-bottom-style: solid;
+  border-style: solid;
   height: 24px;
   line-height: 24px;
   box-sizing: border-box;
@@ -32,6 +33,9 @@
 .devtools-toolbar checkbox .checkbox-check {
   margin: 0;
   padding: 0;
+}
+.devtools-toolbar checkbox .checkbox-label-box {
+  border: none !important; /* overrides .checkbox-label-box from checkbox.css */
 }
 .devtools-toolbar checkbox .checkbox-label-box .checkbox-label {
   margin: 0 6px !important; /* overrides .checkbox-label from checkbox.css */
