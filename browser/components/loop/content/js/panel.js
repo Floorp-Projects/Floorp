@@ -49,6 +49,24 @@ loop.panel = (function(_, mozL10n) {
     }
   });
 
+  var ToSView = sharedViews.BaseView.extend({
+    template: _.template([
+      '<p data-l10n-id="legal_text_and_links"',
+      '  data-l10n-args=\'',
+      '    {"terms_of_use_url": "https://accounts.firefox.com/legal/terms",',
+      '     "privacy_notice_url": "www.mozilla.org/privacy/"',
+      '    }\'></p>'
+    ].join('')),
+
+    render: function() {
+      if (navigator.mozLoop.getLoopCharPref('seenToS') === null) {
+        this.$el.html(this.template());
+        navigator.mozLoop.setLoopCharPref('seenToS', 'seen');
+      }
+      return this;
+    }
+  });
+
   /**
    * Panel view.
    */
@@ -63,6 +81,7 @@ loop.panel = (function(_, mozL10n) {
       '    <button type="submit" class="get-url btn btn-success"',
       '       data-l10n-id="get_a_call_url"></button>',
       '  </form>',
+      '  <p class="tos"></p>',
       '  <p class="result hide">',
       '    <input id="call-url" type="url" readonly>',
       '    <a class="go-back btn btn-info" href="" data-l10n-id="new_url"></a>',
@@ -156,6 +175,7 @@ loop.panel = (function(_, mozL10n) {
       this.$el.html(this.template());
       // Do not Disturb sub view
       this.dndView = new DoNotDisturbView({el: this.$(".dnd")}).render();
+      this.tosView = new ToSView({el: this.$(".tos")}).render();
       return this;
     }
   });
@@ -241,6 +261,7 @@ loop.panel = (function(_, mozL10n) {
     init: init,
     PanelView: PanelView,
     DoNotDisturbView: DoNotDisturbView,
-    PanelRouter: PanelRouter
+    PanelRouter: PanelRouter,
+    ToSView: ToSView
   };
 })(_, document.mozL10n);
