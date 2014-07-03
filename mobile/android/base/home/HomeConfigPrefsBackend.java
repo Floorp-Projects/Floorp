@@ -98,6 +98,22 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
     }
 
     /**
+     * Iterate through the panels to check if they are all disabled.
+     */
+    private static boolean allPanelsAreDisabled(JSONArray jsonPanels) throws JSONException {
+        final int count = jsonPanels.length();
+        for (int i = 0; i < count; i++) {
+            final JSONObject jsonPanelConfig = jsonPanels.getJSONObject(i);
+
+            if (!jsonPanelConfig.optBoolean(PanelConfig.JSON_KEY_DISABLED, false)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Migrates JSON config data storage.
      *
      * @param context Context used to get shared preferences and create built-in panel.
@@ -144,8 +160,13 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
             switch (v) {
                 case 1:
                     // Add "Recent Tabs" panel
-                    final PanelConfig recentTabsConfig = createBuiltinPanelConfig(context, PanelType.RECENT_TABS);
-                    final JSONObject jsonRecentTabsConfig = recentTabsConfig.toJSON();
+                    final JSONObject jsonRecentTabsConfig =
+                            createBuiltinPanelConfig(context, PanelType.RECENT_TABS).toJSON();
+
+                    // If any panel is enabled, then we should make the recent tabs
+                    // panel enabled.
+                    jsonRecentTabsConfig.put(PanelConfig.JSON_KEY_DISABLED,
+                                             allPanelsAreDisabled(originalJsonPanels));
 
                     // Add the new panel to the front of the array on phones.
                     if (!HardwareUtils.isTablet()) {
