@@ -14,7 +14,7 @@ import org.mozilla.gecko.tabspanel.TabsPanel.PanelView;
 
 import android.content.Context;
 import android.content.Intent;
-import android.util.AttributeSet;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -25,18 +25,14 @@ import android.widget.ScrollView;
  * contained by the {@link RemoteTabsPanel}.
  */
 class RemoteTabsSetupPanel extends ScrollView implements PanelView {
-    private LinearLayout containingLayout;
+    private final LinearLayout containingLayout;
 
     private TabsPanel tabsPanel;
 
-    public RemoteTabsSetupPanel(Context context, AttributeSet attrs) {
-        super(context, attrs);
-    }
+    public RemoteTabsSetupPanel(Context context) {
+        super(context);
 
-    @Override
-    protected void onFinishInflate() {
-        super.onFinishInflate();
-
+        LayoutInflater.from(context).inflate(R.layout.remote_tabs_setup_panel, this);
         containingLayout = (LinearLayout) findViewById(R.id.remote_tabs_setup_containing_layout);
 
         final View setupGetStartedButton =
