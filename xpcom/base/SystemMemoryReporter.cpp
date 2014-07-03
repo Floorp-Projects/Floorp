@@ -617,10 +617,10 @@ private:
         continue;
       }
       scanned = fscanf(sizeFile, "%" SCNu64, &size);
+      fclose(sizeFile);
       if (NS_WARN_IF(scanned != 1)) {
         continue;
       }
-      fclose(sizeFile);
 
       // Read mapped regions; format described below.
       uint64_t freeSize = size;
