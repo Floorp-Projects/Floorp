@@ -107,7 +107,7 @@ public:
   virtual bool RecvDropGrallocBuffer(const mozilla::layers::MaybeMagicGrallocBufferHandle& handle);
 
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  android::sp<android::GraphicBuffer> GetGraphicBuffer(int index);
+  android::sp<android::GraphicBuffer> GetGraphicBuffer(int64_t index);
 #endif
 
   base::Thread* GetThread() const;
@@ -155,7 +155,7 @@ protected:
   DeallocGrallocBufferSync(const mozilla::layers::MaybeMagicGrallocBufferHandle& handle);
 
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  std::map<int, android::sp<android::GraphicBuffer> > mBuffers;
+  std::map<int64_t, android::sp<android::GraphicBuffer> > mBuffers;
   Mutex mBufferMutex;
 #endif
 };

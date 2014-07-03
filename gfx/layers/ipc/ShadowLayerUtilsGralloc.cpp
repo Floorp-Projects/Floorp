@@ -44,7 +44,7 @@ ParamTraits<GrallocBufferRef>::Write(Message* aMsg,
                                      const paramType& aParam)
 {
   aMsg->WriteInt(aParam.mOwner);
-  aMsg->WriteInt32(aParam.mKey);
+  aMsg->WriteInt64(aParam.mKey);
 }
 
 bool
@@ -52,9 +52,9 @@ ParamTraits<GrallocBufferRef>::Read(const Message* aMsg, void** aIter,
                                     paramType* aParam)
 {
   int owner;
-  int index;
+  int64_t index;
   if (!aMsg->ReadInt(aIter, &owner) ||
-      !aMsg->ReadInt32(aIter, &index)) {
+      !aMsg->ReadInt64(aIter, &index)) {
     printf_stderr("ParamTraits<GrallocBufferRef>::Read() failed to read a message\n");
     return false;
   }
@@ -95,7 +95,7 @@ ParamTraits<MagicGrallocBufferHandle>::Write(Message* aMsg,
   flattenable->flatten(data, nbytes, fds, nfds);
 #endif
   aMsg->WriteInt(aParam.mRef.mOwner);
-  aMsg->WriteInt32(aParam.mRef.mKey);
+  aMsg->WriteInt64(aParam.mRef.mKey);
   aMsg->WriteSize(nbytes);
   aMsg->WriteSize(nfds);
 
@@ -116,10 +116,10 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
   size_t nfds;
   const char* data;
   int owner;
-  int index;
+  int64_t index;
 
   if (!aMsg->ReadInt(aIter, &owner) ||
-      !aMsg->ReadInt32(aIter, &index) ||
+      !aMsg->ReadInt64(aIter, &index) ||
       !aMsg->ReadSize(aIter, &nbytes) ||
       !aMsg->ReadSize(aIter, &nfds) ||
       !aMsg->ReadBytes(aIter, &data, nbytes)) {
