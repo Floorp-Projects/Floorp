@@ -92,8 +92,13 @@ loop.webapp = (function($, _, OT) {
     initiate: function(event) {
       event.preventDefault();
       this.model.initiate({
-        baseServerUrl: baseServerUrl,
-        outgoing: true
+        client: new loop.StandaloneClient({
+          baseServerUrl: baseServerUrl,
+        }),
+        outgoing: true,
+        // For now, we assume both audio and video as there is no
+        // other option to select.
+        callType: "audio-video"
       });
       this.disableForm();
     }
