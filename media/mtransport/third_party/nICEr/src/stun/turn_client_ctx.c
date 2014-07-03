@@ -741,7 +741,7 @@ int nr_turn_client_send_indication(nr_turn_client_ctx *ctx,
 
   _status=0;
 abort:
-  RFREE(ind);
+  nr_stun_message_destroy(&ind);
   return(_status);
 }
 
