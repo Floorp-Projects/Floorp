@@ -2068,8 +2068,6 @@ public class GeckoAppShell
 
     @WrapElementForJNI(allowMultithread = true)
     public static Context getContext() {
-        if (sContextGetter == null)
-            return null;
         return sContextGetter.getContext();
     }
 
