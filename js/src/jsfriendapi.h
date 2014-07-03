@@ -770,6 +770,8 @@ GetAtomLength(JSAtom *atom)
     return reinterpret_cast<shadow::String*>(atom)->length;
 }
 
+static const uint32_t MaxStringLength = (1 << 28) - 1;
+
 MOZ_ALWAYS_INLINE size_t
 GetStringLength(JSString *s)
 {
