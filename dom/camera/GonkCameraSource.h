@@ -127,6 +127,7 @@ private:
     List<sp<IMemory> > mFramesReceived;
     List<sp<IMemory> > mFramesBeingEncoded;
     List<int64_t> mFrameTimes;
+    bool mRateLimit;
 
     int64_t mFirstFrameTimeUs;
     int32_t mNumFramesDropped;

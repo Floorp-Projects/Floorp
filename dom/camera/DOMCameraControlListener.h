@@ -28,6 +28,7 @@ public:
   virtual void OnRecorderStateChange(RecorderState aState, int32_t aStatus, int32_t aTrackNum) MOZ_OVERRIDE;
   virtual void OnConfigurationChange(const CameraListenerConfiguration& aConfiguration) MOZ_OVERRIDE;
   virtual void OnShutter() MOZ_OVERRIDE;
+  virtual void OnRateLimitPreview(bool aLimit) MOZ_OVERRIDE;
   virtual bool OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight) MOZ_OVERRIDE;
   virtual void OnUserError(UserContext aContext, nsresult aError) MOZ_OVERRIDE;
 
