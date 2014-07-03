@@ -6,18 +6,11 @@
 
 #include <dlfcn.h>
 
-#include "nsDebug.h"
-
 #include "FFmpegRuntimeLinker.h"
-
-// For FFMPEG_LOG
-#include "FFmpegDecoderModule.h"
+#include "mozilla/ArrayUtils.h"
+#include "FFmpegLog.h"
 
 #define NUM_ELEMENTS(X) (sizeof(X) / sizeof((X)[0]))
-
-#define LIBAVCODEC 0
-#define LIBAVFORMAT 1
-#define LIBAVUTIL 2
 
 namespace mozilla
 {
@@ -25,15 +18,28 @@ namespace mozilla
 FFmpegRuntimeLinker::LinkStatus FFmpegRuntimeLinker::sLinkStatus =
   LinkStatus_INIT;
 
-static const char * const sLibNames[] = {
-  "libavcodec.so.53", "libavformat.so.53", "libavutil.so.51",
+struct AvFormatLib
+{
+  const char* Name;
+  PlatformDecoderModule* (*Factory)();
 };
 
-void* FFmpegRuntimeLinker::sLinkedLibs[NUM_ELEMENTS(sLibNames)] = {
-  nullptr, nullptr, nullptr
+template <int V> class FFmpegDecoderModule
+{
+public:
+  static PlatformDecoderModule* Create();
 };
 
-#define AV_FUNC(lib, func) typeof(func) func;
+static const AvFormatLib sLibs[] = {
+  { "libavformat.so.55", FFmpegDecoderModule<55>::Create },
+  { "libavformat.so.54", FFmpegDecoderModule<54>::Create },
+  { "libavformat.so.53", FFmpegDecoderModule<53>::Create },
+};
+
+void* FFmpegRuntimeLinker::sLinkedLib = nullptr;
+const AvFormatLib* FFmpegRuntimeLinker::sLib = nullptr;
+
+#define AV_FUNC(func) void (*func)();
 #include "FFmpegFunctionList.h"
 #undef AV_FUNC
 
@@ -44,41 +50,60 @@ FFmpegRuntimeLinker::Link()
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
 
-  for (uint32_t i = 0; i < NUM_ELEMENTS(sLinkedLibs); i++) {
-    if (!(sLinkedLibs[i] = dlopen(sLibNames[i], RTLD_NOW | RTLD_LOCAL))) {
-      NS_WARNING("Couldn't link ffmpeg libraries.");
-      goto fail;
+  for (size_t i = 0; i < ArrayLength(sLibs); i++) {
+    const AvFormatLib* lib = &sLibs[i];
+    sLinkedLib = dlopen(lib->Name, RTLD_NOW | RTLD_LOCAL);
+    if (sLinkedLib) {
+      if (Bind(lib->Name)) {
+        sLib = lib;
+        sLinkStatus = LinkStatus_SUCCEEDED;
+        return true;
+      }
+      // Shouldn't happen but if it does then we try the next lib..
+      Unlink();
     }
   }
 
-#define AV_FUNC(lib, func)                                                     \
-  func = (typeof(func))dlsym(sLinkedLibs[lib], #func);                         \
-  if (!func) {                                                                 \
-    NS_WARNING("Couldn't load FFmpeg function " #func ".");                    \
-    goto fail;                                                                 \
+  FFMPEG_LOG("H264/AAC codecs unsupported without [");
+  for (size_t i = 0; i < ArrayLength(sLibs); i++) {
+    FFMPEG_LOG("%s %s", i ? "," : "", sLibs[i].Name);
   }
-#include "FFmpegFunctionList.h"
-#undef AV_FUNC
+  FFMPEG_LOG(" ]\n");
 
-  sLinkStatus = LinkStatus_SUCCEEDED;
-  return true;
-
-fail:
   Unlink();
 
   sLinkStatus = LinkStatus_FAILED;
-  return false;
+  return nullptr;
+}
+
+/* static */ bool
+FFmpegRuntimeLinker::Bind(const char* aLibName)
+{
+#define AV_FUNC(func)                                                          \
+  if (!(func = (typeof(func))dlsym(sLinkedLib, #func))) {                      \
+    FFMPEG_LOG("Couldn't load function " #func " from %s.", aLibName);         \
+    return false;                                                              \
+  }
+#include "FFmpegFunctionList.h"
+#undef AV_FUNC
+  return true;
+}
+
+/* static */ PlatformDecoderModule*
+FFmpegRuntimeLinker::CreateDecoderModule()
+{
+  PlatformDecoderModule* module = sLib->Factory();
+  return module;
 }
 
 /* static */ void
 FFmpegRuntimeLinker::Unlink()
 {
-  FFMPEG_LOG("Unlinking ffmpeg libraries.");
-  for (uint32_t i = 0; i < NUM_ELEMENTS(sLinkedLibs); i++) {
-    if (sLinkedLibs[i]) {
-      dlclose(sLinkedLibs[i]);
-      sLinkedLibs[i] = nullptr;
-    }
+  if (sLinkedLib) {
+    dlclose(sLinkedLib);
+    sLinkedLib = nullptr;
+    sLib = nullptr;
+    sLinkStatus = LinkStatus_INIT;
   }
 }
 
