@@ -573,22 +573,42 @@ BluetoothInterface::Disable(BluetoothResultHandler* aRes)
 
 /* Adapter Properties */
 
-int
-BluetoothInterface::GetAdapterProperties()
+void
+BluetoothInterface::GetAdapterProperties(BluetoothResultHandler* aRes)
 {
-  return mInterface->get_adapter_properties();
+  int status = mInterface->get_adapter_properties();
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::GetAdapterProperties,
+                            status);
+  }
 }
 
-int
-BluetoothInterface::GetAdapterProperty(bt_property_type_t aType)
+void
+BluetoothInterface::GetAdapterProperty(bt_property_type_t aType,
+                                       BluetoothResultHandler* aRes)
 {
-  return mInterface->get_adapter_property(aType);
+  int status = mInterface->get_adapter_property(aType);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::GetAdapterProperty,
+                            status);
+  }
 }
 
-int
-BluetoothInterface::SetAdapterProperty(const bt_property_t* aProperty)
+void
+BluetoothInterface::SetAdapterProperty(const bt_property_t* aProperty,
+                                       BluetoothResultHandler* aRes)
 {
-  return mInterface->set_adapter_property(aProperty);
+  int status = mInterface->set_adapter_property(aProperty);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::SetAdapterProperty,
+                            status);
+  }
 }
 
 /* Remote Device Properties */
