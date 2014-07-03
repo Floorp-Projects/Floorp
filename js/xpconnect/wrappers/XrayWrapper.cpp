@@ -2222,7 +2222,7 @@ XrayWrapper<Base, Traits>::setPrototypeOf(JSContext *cx, JS::HandleObject wrappe
     // The expando lives in the target's compartment, so do our installation there.
     JSAutoCompartment ac(cx, target);
 
-    RootedValue v(cx, ObjectValue(*proto));
+    RootedValue v(cx, ObjectOrNullValue(proto));
     if (!JS_WrapValue(cx, &v))
         return false;
     JS_SetReservedSlot(expando, JSSLOT_EXPANDO_PROTOTYPE, v);
