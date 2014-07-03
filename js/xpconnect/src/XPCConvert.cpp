@@ -813,7 +813,7 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
     // optimal -- we could detect this and roll the functionality into a
     // single wrapper, but the current solution is good enough for now.
     AutoJSContext cx;
-    XPCWrappedNativeScope* xpcscope = GetObjectScope(JS::CurrentGlobalOrNull(cx));
+    XPCWrappedNativeScope* xpcscope = ObjectScope(JS::CurrentGlobalOrNull(cx));
     if (!xpcscope)
         return false;
 
@@ -851,11 +851,7 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
         return true;
     }
 
-    // We can't simply construct a slim wrapper. Go ahead and create an
-    // XPCWrappedNative for this object. At this point, |flat| could be
-    // non-null, meaning that either we already have a wrapped native from
-    // the cache (which might need to be QI'd to the new interface) or that
-    // we found a slim wrapper that we'll have to morph.
+    // Go ahead and create an XPCWrappedNative for this object.
     AutoMarkingNativeInterfacePtr iface(cx);
     if (iid) {
         if (Interface)
@@ -871,32 +867,9 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
         }
     }
 
-    MOZ_ASSERT(!flat || IS_WN_REFLECTOR(flat), "What kind of wrapper is this?");
-
-    nsresult rv;
-    XPCWrappedNative* wrapper;
-    nsRefPtr<XPCWrappedNative> strongWrapper;
-    if (!flat) {
-        rv = XPCWrappedNative::GetNewOrUsed(aHelper, xpcscope, iface,
-                                            getter_AddRefs(strongWrapper));
-
-        wrapper = strongWrapper;
-    } else {
-        MOZ_ASSERT(IS_WN_REFLECTOR(flat));
-
-        wrapper = XPCWrappedNative::Get(flat);
-
-        // If asked to return the wrapper we'll return a strong reference,
-        // otherwise we'll just return its JSObject in d (which should be
-        // rooted in that case).
-        if (dest)
-            strongWrapper = wrapper;
-        if (iface)
-            wrapper->FindTearOff(iface, false, &rv);
-        else
-            rv = NS_OK;
-    }
-
+    nsRefPtr<XPCWrappedNative> wrapper;
+    nsresult rv = XPCWrappedNative::GetNewOrUsed(aHelper, xpcscope, iface,
+                                                 getter_AddRefs(wrapper));
     if (NS_FAILED(rv) && pErr)
         *pErr = rv;
 
@@ -907,11 +880,10 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
     // If we're not creating security wrappers, we can return the
     // XPCWrappedNative as-is here.
     flat = wrapper->GetFlatJSObject();
-    jsval v = OBJECT_TO_JSVAL(flat);
     if (!allowNativeWrapper) {
-        d.set(v);
+        d.setObjectOrNull(flat);
         if (dest)
-            strongWrapper.forget(dest);
+            wrapper.forget(dest);
         if (pErr)
             *pErr = NS_OK;
         return true;
@@ -926,9 +898,9 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
     d.setObjectOrNull(flat);
 
     if (dest) {
-        // The strongWrapper still holds the original flat object.
+        // The wrapper still holds the original flat object.
         if (flat == original) {
-            strongWrapper.forget(dest);
+            wrapper.forget(dest);
         } else {
             nsRefPtr<XPCJSObjectHolder> objHolder =
                 XPCJSObjectHolder::newHolder(flat);

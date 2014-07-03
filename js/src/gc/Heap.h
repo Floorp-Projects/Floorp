@@ -182,8 +182,7 @@ class FreeSpan
         first = firstArg;
         last = lastArg;
         FreeSpan *lastSpan = reinterpret_cast<FreeSpan*>(last);
-        lastSpan->first = 0;
-        lastSpan->last = 0;
+        lastSpan->initAsEmpty();
         JS_ASSERT(!isEmpty());
         checkSpan(thingSize);
     }
@@ -1110,7 +1109,7 @@ Cell::chunk() const
 {
     uintptr_t addr = uintptr_t(this);
     JS_ASSERT(addr % CellSize == 0);
-    addr &= ~(ChunkSize - 1);
+    addr &= ~ChunkMask;
     return reinterpret_cast<Chunk *>(addr);
 }
 

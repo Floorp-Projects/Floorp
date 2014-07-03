@@ -63,8 +63,15 @@ function afterDragTests()
                     true, false, true, true, 2, document.documentElement, null);
   $("synthetic2").dispatchEvent(evt);
 
-  // next, dragging links and images
-  sendMouseEventsForDrag("link");
+  // link vertical dragging
+  sendMouseEventsForVerticalDrag("link");
+  is(window.getSelection().isCollapsed, true, "link vertical drag clears selection");
+
+  // link horizontal selection
+  sendMouseEventsForHorizontalSelection("link");
+  is(window.getSelection().isCollapsed, false, "link horizontal selection");
+
+  // images
   sendMouseEventsForDrag("image");
 
 //  disable testing input dragging for now, as it doesn't seem to be testable 
@@ -85,8 +92,10 @@ function afterDragTests()
   sendMouseEventsForDrag("spanfalse");
 
   synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
-  if (gExtraDragTests == 4)
-    SimpleTest.finish();
+
+  is(gExtraDragTests, 4, "number of drag events");
+
+  SimpleTest.finish();
 }
 
 function sendMouseEventsForDrag(nodeid)
@@ -95,6 +104,23 @@ function sendMouseEventsForDrag(nodeid)
   synthesizeMouse(draggable, 3, 3, { type: "mousedown" });
   synthesizeMouse(draggable, 10, 10, { type: "mousemove" });
   synthesizeMouse(draggable, 12, 12, { type: "mousemove" });
+}
+
+function sendMouseEventsForVerticalDrag(nodeid)
+{
+  var draggable = $(nodeid);
+  synthesizeMouse(draggable, 3, 3, { type: "mousedown" });
+  synthesizeMouse(draggable, 3, 10, { type: "mousemove" });
+  synthesizeMouse(draggable, 3, 12, { type: "mousemove" });
+}
+
+function sendMouseEventsForHorizontalSelection(nodeid)
+{
+  var draggable = $(nodeid);
+  synthesizeMouse(draggable, 3, 3, { type: "mousedown" });
+  synthesizeMouse(draggable, 10, 3, { type: "mousemove" });
+  synthesizeMouse(draggable, 12, 3, { type: "mousemove" });
+  synthesizeMouse(draggable, 12, 3, { type: "mouseup" });
 }
 
 function doDragStartSelection(event)

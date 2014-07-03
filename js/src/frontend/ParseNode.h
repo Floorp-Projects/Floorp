@@ -73,6 +73,7 @@ class UpvarCookie
     F(COMMA) \
     F(CONDITIONAL) \
     F(COLON) \
+    F(SHORTHAND) \
     F(POS) \
     F(NEG) \
     F(PREINCREMENT) \
@@ -388,9 +389,8 @@ enum ParseNodeKind
  * PNK_COLON    binary      key-value pair in object initializer or
  *                          destructuring lhs
  *                          pn_left: property id, pn_right: value
- *                          var {x} = object destructuring shorthand shares
- *                          PN_NAME node for x on left and right of PNK_COLON
- *                          node in PNK_OBJECT's list, has PNX_DESTRUCT flag
+ * PNK_SHORTHAND binary     Same fields as PNK_COLON. This is used for object
+ *                          literal properties using shorthand ({x}).
  * PNK_NAME,    name        pn_atom: name, string, or object atom
  * PNK_STRING               pn_op: JSOP_NAME, JSOP_STRING, or JSOP_OBJECT
  *                          If JSOP_NAME, pn_op may be JSOP_*ARG or JSOP_*VAR
@@ -677,12 +677,8 @@ class ParseNode
 #define PNX_GROUPINIT   0x02            /* var [a, b] = [c, d]; unit list */
 #define PNX_FUNCDEFS    0x04            /* contains top-level function statements */
 #define PNX_SETCALL     0x08            /* call expression in lvalue context */
-#define PNX_DESTRUCT    0x10            /* destructuring special cases:
-                                           1. shorthand syntax used, at present
-                                              object destructuring ({x,y}) only;
-                                           2. code evaluating destructuring
-                                              arguments occurs before function
-                                              body */
+#define PNX_DESTRUCT    0x10            /* code evaluating destructuring
+                                           arguments occurs before function body */
 #define PNX_SPECIALARRAYINIT 0x20       /* one or more of
                                            1. array initialiser has holes
                                            2. array initializer has spread node */

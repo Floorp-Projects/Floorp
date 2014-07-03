@@ -256,7 +256,7 @@ class JSString : public js::gc::BarrieredCell<JSString>
 
     static const uint32_t LATIN1_CHARS_BIT      = JS_BIT(6);
 
-    static const uint32_t MAX_LENGTH            = JS_BIT(28) - 1;
+    static const uint32_t MAX_LENGTH            = js::MaxStringLength;
 
     static const JS::Latin1Char MAX_LATIN1_CHAR = 0xff;
 
@@ -278,24 +278,28 @@ class JSString : public js::gc::BarrieredCell<JSString>
                        NUM_INLINE_CHARS_TWO_BYTE * sizeof(jschar)),
                       "Inline chars must fit in a JSString");
 
-        /* Ensure js::shadow::Atom has the same layout. */
-        using js::shadow::Atom;
-        static_assert(offsetof(JSString, d.u1.length) == offsetof(Atom, length),
-                      "shadow::Atom length offset must match JSString");
-        static_assert(offsetof(JSString, d.u1.flags) == offsetof(Atom, flags),
-                      "shadow::Atom flags offset must match JSString");
-        static_assert(offsetof(JSString, d.s.u2.nonInlineCharsLatin1) == offsetof(Atom, nonInlineCharsLatin1),
-                      "shadow::Atom nonInlineChars offset must match JSString");
-        static_assert(offsetof(JSString, d.s.u2.nonInlineCharsTwoByte) == offsetof(Atom, nonInlineCharsTwoByte),
-                      "shadow::Atom nonInlineChars offset must match JSString");
-        static_assert(offsetof(JSString, d.inlineStorageLatin1) == offsetof(Atom, inlineStorageLatin1),
-                      "shadow::Atom inlineStorage offset must match JSString");
-        static_assert(offsetof(JSString, d.inlineStorageTwoByte) == offsetof(Atom, inlineStorageTwoByte),
-                      "shadow::Atom inlineStorage offset must match JSString");
-        static_assert(INLINE_CHARS_BIT == Atom::INLINE_CHARS_BIT,
-                      "shadow::Atom::INLINE_CHARS_BIT must match JSString::INLINE_CHARS_BIT");
-        static_assert(LATIN1_CHARS_BIT == Atom::LATIN1_CHARS_BIT,
-                      "shadow::Atom::LATIN1_CHARS_BIT must match JSString::LATIN1_CHARS_BIT");
+        /* Ensure js::shadow::String has the same layout. */
+        using js::shadow::String;
+        static_assert(offsetof(JSString, d.u1.length) == offsetof(String, length),
+                      "shadow::String length offset must match JSString");
+        static_assert(offsetof(JSString, d.u1.flags) == offsetof(String, flags),
+                      "shadow::String flags offset must match JSString");
+        static_assert(offsetof(JSString, d.s.u2.nonInlineCharsLatin1) == offsetof(String, nonInlineCharsLatin1),
+                      "shadow::String nonInlineChars offset must match JSString");
+        static_assert(offsetof(JSString, d.s.u2.nonInlineCharsTwoByte) == offsetof(String, nonInlineCharsTwoByte),
+                      "shadow::String nonInlineChars offset must match JSString");
+        static_assert(offsetof(JSString, d.inlineStorageLatin1) == offsetof(String, inlineStorageLatin1),
+                      "shadow::String inlineStorage offset must match JSString");
+        static_assert(offsetof(JSString, d.inlineStorageTwoByte) == offsetof(String, inlineStorageTwoByte),
+                      "shadow::String inlineStorage offset must match JSString");
+        static_assert(INLINE_CHARS_BIT == String::INLINE_CHARS_BIT,
+                      "shadow::String::INLINE_CHARS_BIT must match JSString::INLINE_CHARS_BIT");
+        static_assert(LATIN1_CHARS_BIT == String::LATIN1_CHARS_BIT,
+                      "shadow::String::LATIN1_CHARS_BIT must match JSString::LATIN1_CHARS_BIT");
+        static_assert(TYPE_FLAGS_MASK == String::TYPE_FLAGS_MASK,
+                      "shadow::String::TYPE_FLAGS_MASK must match JSString::TYPE_FLAGS_MASK");
+        static_assert(ROPE_FLAGS == String::ROPE_FLAGS,
+                      "shadow::String::ROPE_FLAGS must match JSString::ROPE_FLAGS");
     }
 
     /* Avoid lame compile errors in JSRope::flatten */
