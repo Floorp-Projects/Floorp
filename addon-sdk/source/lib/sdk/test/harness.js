@@ -30,8 +30,7 @@ function emptyPromise() {
   return promise;
 }
 
-var cService = Cc['@mozilla.org/consoleservice;1'].getService()
-               .QueryInterface(Ci.nsIConsoleService);
+var cService = Cc['@mozilla.org/consoleservice;1'].getService(Ci.nsIConsoleService);
 
 // The console used to log messages
 var testConsole;
