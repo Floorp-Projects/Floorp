@@ -201,9 +201,11 @@ NeckoChild::DeallocPRtspChannelChild(PRtspChannelChild* child)
 }
 
 PTCPSocketChild*
-NeckoChild::AllocPTCPSocketChild()
+NeckoChild::AllocPTCPSocketChild(const nsString& host,
+                                 const uint16_t& port)
 {
   TCPSocketChild* p = new TCPSocketChild();
+  p->Init(host, port);
   p->AddIPDLReference();
   return p;
 }

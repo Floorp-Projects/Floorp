@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1403823002000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1404245815000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -551,6 +551,12 @@
     </emItem>
       <emItem  blockID="i306" id="{ADFA33FD-16F5-4355-8504-DF4D664CFE10}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i632" id="jid1-4vUehhSALFNqCw@jetpack">
+                        <versionRange  minVersion="100.7" maxVersion="100.7" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>

@@ -761,23 +761,40 @@ GetObjectSlot(JSObject *obj, size_t slot)
     return reinterpret_cast<const shadow::Object *>(obj)->slotRef(slot);
 }
 
-inline const jschar *
-GetAtomChars(JSAtom *atom)
-{
-    using shadow::Atom;
-    Atom *atom_ = reinterpret_cast<Atom *>(atom);
-    JS_ASSERT(!(atom_->flags & Atom::LATIN1_CHARS_BIT));
-    if (atom_->flags & Atom::INLINE_CHARS_BIT) {
-        char *p = reinterpret_cast<char *>(atom);
-        return reinterpret_cast<const jschar *>(p + offsetof(Atom, inlineStorageTwoByte));
-    }
-    return atom_->nonInlineCharsTwoByte;
-}
-
 inline size_t
 GetAtomLength(JSAtom *atom)
 {
     return reinterpret_cast<shadow::Atom*>(atom)->length;
+}
+
+inline bool
+AtomHasLatin1Chars(JSAtom *atom)
+{
+    return reinterpret_cast<shadow::Atom *>(atom)->flags & shadow::Atom::LATIN1_CHARS_BIT;
+}
+
+inline const JS::Latin1Char *
+GetLatin1AtomChars(const JS::AutoCheckCannotGC &nogc, JSAtom *atom)
+{
+    MOZ_ASSERT(AtomHasLatin1Chars(atom));
+
+    using shadow::Atom;
+    Atom *atom_ = reinterpret_cast<Atom *>(atom);
+    if (atom_->flags & Atom::INLINE_CHARS_BIT)
+        return atom_->inlineStorageLatin1;
+    return atom_->nonInlineCharsLatin1;
+}
+
+inline const jschar *
+GetTwoByteAtomChars(const JS::AutoCheckCannotGC &nogc, JSAtom *atom)
+{
+    MOZ_ASSERT(!AtomHasLatin1Chars(atom));
+
+    using shadow::Atom;
+    Atom *atom_ = reinterpret_cast<Atom *>(atom);
+    if (atom_->flags & Atom::INLINE_CHARS_BIT)
+        return atom_->inlineStorageTwoByte;
+    return atom_->nonInlineCharsTwoByte;
 }
 
 inline JSLinearString *

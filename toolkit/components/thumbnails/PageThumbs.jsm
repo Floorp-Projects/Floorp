@@ -33,7 +33,7 @@ const THUMBNAIL_DIRECTORY = "thumbnails";
 const THUMBNAIL_BG_COLOR = "#fff";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Cu.import("resource://gre/modules/osfile/_PromiseWorker.jsm", this);
+Cu.import("resource://gre/modules/PromiseWorker.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 
@@ -792,27 +792,10 @@ let PageThumbsExpiration = {
 /**
  * Interface to a dedicated thread handling I/O
  */
-
-let PageThumbsWorker = (function() {
-  let worker = new PromiseWorker("resource://gre/modules/PageThumbsWorker.js",
-    OS.Shared.LOG.bind("PageThumbs"));
-  return {
-    post: function post(...args) {
-      let promise = worker.post.apply(worker, args);
-      return promise.then(
-        null,
-        function onError(error) {
-          // Decode any serialized error
-          if (error instanceof PromiseWorker.WorkerError) {
-            throw OS.File.Error.fromMsg(error.data);
-          } else {
-            throw error;
-          }
-        }
-      );
-    }
-  };
-})();
+let PageThumbsWorker = new BasePromiseWorker("resource://gre/modules/PageThumbsWorker.js");
+// As the PageThumbsWorker performs I/O, we can receive instances of
+// OS.File.Error, so we need to install a decoder.
+PageThumbsWorker.ExceptionHandlers["OS.File.Error"] = OS.File.Error.fromMsg;
 
 let PageThumbsHistoryObserver = {
   onDeleteURI: function Thumbnails_onDeleteURI(aURI, aGUID) {
