@@ -451,7 +451,11 @@ DispatchBluetoothResult(BluetoothResultHandler* aRes,
     runnable = new
       BluetoothErrorRunnable(aRes, &BluetoothResultHandler::OnError, aStatus);
   }
-  NS_DispatchToMainThread(runnable);
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  if (NS_FAILED(rv)) {
+    BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+  }
+  return rv;
 }
 
 /* returns the container structure of a variable; _t is the container's
@@ -525,28 +529,46 @@ BluetoothInterface::BluetoothInterface(const bt_interface_t* aInterface)
 BluetoothInterface::~BluetoothInterface()
 { }
 
-int
-BluetoothInterface::Init(bt_callbacks_t* aCallbacks)
+void
+BluetoothInterface::Init(bt_callbacks_t* aCallbacks,
+                         BluetoothResultHandler* aRes)
 {
-  return mInterface->init(aCallbacks);
+  int status = mInterface->init(aCallbacks);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes, &BluetoothResultHandler::Init, status);
+  }
 }
 
 void
-BluetoothInterface::Cleanup()
+BluetoothInterface::Cleanup(BluetoothResultHandler* aRes)
 {
   mInterface->cleanup();
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes, &BluetoothResultHandler::Cleanup,
+                            BT_STATUS_SUCCESS);
+  }
 }
 
-int
-BluetoothInterface::Enable()
+void
+BluetoothInterface::Enable(BluetoothResultHandler* aRes)
 {
-  return mInterface->enable();
+  int status = mInterface->enable();
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes, &BluetoothResultHandler::Enable, status);
+  }
 }
 
-int
-BluetoothInterface::Disable()
+void
+BluetoothInterface::Disable(BluetoothResultHandler* aRes)
 {
-  return mInterface->disable();
+  int status = mInterface->disable();
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes, &BluetoothResultHandler::Disable, status);
+  }
 }
 
 /* Adapter Properties */
