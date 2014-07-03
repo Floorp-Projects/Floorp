@@ -2104,8 +2104,7 @@ NonVoidByteStringToJsval(JSContext *cx, const nsACString &str,
 
 bool
 ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
-                           JS::MutableHandle<JS::Value> pval, bool nullable,
-                           nsACString& result)
+                           bool nullable, nsACString& result)
 {
   JS::Rooted<JSString*> s(cx);
   if (v.isString()) {
@@ -2121,13 +2120,12 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
     if (!s) {
       return false;
     }
-    pval.set(JS::StringValue(s));  // Root the new string.
   }
 
   // Conversion from Javascript string to ByteString is only valid if all
   // characters < 256. This is always the case for Latin1 strings.
   size_t length;
-  if (!JS_StringHasLatin1Chars(s)) {
+  if (!js::StringHasLatin1Chars(s)) {
     // ThrowErrorMessage can GC, so we first scan the string for bad chars
     // and report the error outside the AutoCheckCannotGC scope.
     bool foundBadChar = false;
@@ -2168,12 +2166,12 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
       return false;
     }
   } else {
-    length = JS_GetStringLength(s);
+    length = js::GetStringLength(s);
   }
 
-  if (length >= UINT32_MAX) {
-    return false;
-  }
+  static_assert(js::MaxStringLength < UINT32_MAX,
+                "length+1 shouldn't overflow");
+
   result.SetCapacity(length+1);
   JS_EncodeStringToBuffer(cx, s, result.BeginWriting(), length);
   result.BeginWriting()[length] = '\0';
@@ -2477,7 +2475,7 @@ CreateGlobalOptions<nsGlobalWindow>::TraceGlobal(JSTracer* aTrc, JSObject* aObj)
   // We might be called from a GC during the creation of a global, before we've
   // been able to set up the compartment private or the XPCWrappedNativeScope,
   // so we need to null-check those.
-  xpc::CompartmentPrivate* compartmentPrivate = xpc::GetCompartmentPrivate(aObj);
+  xpc::CompartmentPrivate* compartmentPrivate = xpc::CompartmentPrivate::Get(aObj);
   if (compartmentPrivate && compartmentPrivate->scope) {
     compartmentPrivate->scope->TraceSelf(aTrc);
   }
@@ -2488,7 +2486,10 @@ bool
 CreateGlobalOptions<nsGlobalWindow>::PostCreateGlobal(JSContext* aCx,
                                                       JS::Handle<JSObject*> aGlobal)
 {
-  return XPCWrappedNativeScope::GetNewOrUsed(aCx, aGlobal);
+  // Invoking the XPCWrappedNativeScope constructor automatically hooks it
+  // up to the compartment of aGlobal.
+  (void) new XPCWrappedNativeScope(aCx, aGlobal);
+  return true;
 }
 
 #ifdef DEBUG

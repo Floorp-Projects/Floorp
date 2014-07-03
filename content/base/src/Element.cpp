@@ -751,7 +751,7 @@ void
 Element::AddToIdTable(nsIAtom* aId)
 {
   NS_ASSERTION(HasID(), "Node doesn't have an ID?");
-  if (HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+  if (IsInShadowTree()) {
     ShadowRoot* containingShadow = GetContainingShadow();
     containingShadow->AddToIdTable(this, aId);
   } else {
@@ -770,7 +770,7 @@ Element::RemoveFromIdTable()
   }
 
   nsIAtom* id = DoGetID();
-  if (HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+  if (IsInShadowTree()) {
     ShadowRoot* containingShadow = GetContainingShadow();
     // Check for containingShadow because it may have
     // been deleted during unlinking.
@@ -1232,7 +1232,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     if (aParent->HasFlag(NODE_CHROME_ONLY_ACCESS)) {
       SetFlags(NODE_CHROME_ONLY_ACCESS);
     }
-    if (aParent->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    if (aParent->IsInShadowTree()) {
       ClearSubtreeRootPointer();
       SetFlags(NODE_IS_IN_SHADOW_TREE);
     }
@@ -1291,7 +1291,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
                // And the restyle bits
                ELEMENT_ALL_RESTYLE_FLAGS);
-  } else if (!HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+  } else if (!IsInShadowTree()) {
     // If we're not in the doc and not in a shadow tree,
     // update our subtree pointer.
     SetSubtreeRootPointer(aParent->SubtreeRoot());

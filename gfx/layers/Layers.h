@@ -568,7 +568,16 @@ public:
   void Dump() {
     std::stringstream ss;
     Dump(ss);
-    printf_stderr("%s", ss.str().c_str());
+    char line[1024];
+    while (!ss.eof()) {
+      ss.getline(line, sizeof(line));
+      printf_stderr("%s", line);
+      if (ss.fail()) {
+        // line was too long, skip to next newline
+        ss.clear();
+        ss.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      }
+    }
   }
 
   /**

@@ -1,0 +1,137 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Open Type MATH - stack</title>
+    <script type="application/javascript"
+            src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript"
+            src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <meta charset="utf-8"/>
+    <style type="text/css">
+      math {
+        font-size: 10px;
+      }
+      @font-face {
+        font-family: stack-1;
+        src: url(/tests/fonts/math/stack-1.otf);
+      }
+      @font-face {
+        font-family: stack-2;
+        src: url(/tests/fonts/math/stack-2.otf);
+      }
+      @font-face {
+        font-family: stack-3;
+        src: url(/tests/fonts/math/stack-3.otf);
+      }
+      @font-face {
+        font-family: stack-4;
+        src: url(/tests/fonts/math/stack-4.otf);
+      }
+      @font-face {
+        font-family: stack-5;
+        src: url(/tests/fonts/math/stack-5.otf);
+      }
+      @font-face {
+        font-family: stack-6;
+        src: url(/tests/fonts/math/stack-6.otf);
+      }
+    </style>
+    <script type="text/javascript">
+      SimpleTest.waitForExplicitFinish();
+
+      function doTest() {
+        var epsilon = 5;
+        function almostEqual(x, y) { return Math.abs(x - y) < epsilon; }
+
+        function getBox(aId) {
+          return document.getElementById(aId).getBoundingClientRect();
+        }
+
+        /* inline style */
+        var ref = getBox("ref").height;
+
+        ok(almostEqual(getBox("d1").top - getBox("n1").bottom, ref * 20),
+           "Bad StackGapMin");
+
+        ok(almostEqual(getBox("ref").top - getBox("n2").top, ref*3),
+           "Bad StackTopShiftMin");
+
+        ok(almostEqual(getBox("d3").bottom - getBox("ref").bottom, ref*3),
+           "Bad StackBottomShiftDown");
+
+        /* display style */
+        ref = getBox("ref").height;
+
+        ok(almostEqual(getBox("d4").top - getBox("n4").bottom, ref * 20),
+           "Bad StackGapDisplayStyleMin");
+
+        ok(almostEqual(getBox("dref").top - getBox("n5").top, ref*3),
+           "Bad StackTopDisplayStyleShiftMin");
+
+        ok(almostEqual(getBox("d6").bottom - getBox("dref").bottom, ref*3),
+           "Bad StackDisplayStyleBottomShiftDown");
+
+        SimpleTest.finish();
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=961365">
+      Mozilla Bug 961365
+    </a>
+
+    <p id="display"></p>
+
+    <p>
+      <math>
+        <mspace id="ref" height="1em" width="1em" mathbackground="green"/>
+      </math>
+      <math style="font-family: stack-1;">
+        <mfrac linethickness="0">
+          <mspace id="n1" height="1em" width="1em" mathbackground="red"/>
+          <mspace id="d1" height="1em" width="1em" mathbackground="red"/>
+        </mfrac>
+      </math>
+      <math style="font-family: stack-2;">
+        <mfrac linethickness="0">
+          <mspace id="n2" height="1em" width="1em" mathbackground="red"/>
+          <mspace id="d2" height="1em" width="1em" mathbackground="red"/>
+        </mfrac>
+      </math>
+      <math style="font-family: stack-3;">
+        <mfrac linethickness="0">
+          <mspace id="n3" height="1em" width="1em" mathbackground="red"/>
+          <mspace id="d3" height="1em" width="1em" mathbackground="red"/>
+        </mfrac>
+      </math>
+    </p>
+
+    <p>
+      <math displaystyle="true">
+        <mspace id="dref" height="1em" width="1em" mathbackground="green"/>
+      </math>
+      <math displaystyle="true" style="font-family: stack-4;">
+        <mfrac linethickness="0">
+          <mspace id="n4" height="1em" width="1em" mathbackground="red"/>
+          <mspace id="d4" height="1em" width="1em" mathbackground="red"/>
+        </mfrac>
+      </math>
+      <math displaystyle="true" style="font-family: stack-5;">
+        <mfrac linethickness="0">
+          <mspace id="n5" height="1em" width="1em" mathbackground="red"/>
+          <mspace id="d5" height="1em" width="1em" mathbackground="red"/>
+        </mfrac>
+      </math>
+      <math displaystyle="true" style="font-family: stack-6;">
+        <mfrac linethickness="0">
+          <mspace id="n6" height="1em" width="1em" mathbackground="red"/>
+          <mspace id="d6" height="1em" width="1em" mathbackground="red"/>
+        </mfrac>
+      </math>
+    </p>
+
+  </body>
+</html>
