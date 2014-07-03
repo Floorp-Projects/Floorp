@@ -37,11 +37,6 @@ class AudioNode;
 class MediaStreamTrack;
 class AudioStreamTrack;
 class VideoStreamTrack;
-class AudioTrack;
-class VideoTrack;
-class AudioTrackList;
-class VideoTrackList;
-class MediaTrackListListener;
 }
 
 class MediaStreamDirectListener;
@@ -56,11 +51,6 @@ class DOMMediaStream : public nsIDOMMediaStream,
   typedef dom::MediaStreamTrack MediaStreamTrack;
   typedef dom::AudioStreamTrack AudioStreamTrack;
   typedef dom::VideoStreamTrack VideoStreamTrack;
-  typedef dom::AudioTrack AudioTrack;
-  typedef dom::VideoTrack VideoTrack;
-  typedef dom::AudioTrackList AudioTrackList;
-  typedef dom::VideoTrackList VideoTrackList;
-  typedef dom::MediaTrackListListener MediaTrackListListener;
 
 public:
   typedef uint8_t TrackTypeHints;
@@ -217,18 +207,6 @@ public:
     }
   }
 
-  /**
-   * If loading and playing a MediaStream in a media element, for each
-   * MediaStreamTrack in the MediaStream, create a corresponding AudioTrack or
-   * VideoTrack during the phase of resource fetching.
-   */
-  void ConstructMediaTracks(AudioTrackList* aAudioTrackList,
-                            VideoTrackList* aVideoTrackList);
-
-  void NotifyMediaStreamTrackCreated(MediaStreamTrack* aTrack);
-
-  void NotifyMediaStreamTrackEnded(MediaStreamTrack* aTrack);
-
 protected:
   virtual ~DOMMediaStream();
 
@@ -236,8 +214,6 @@ protected:
   void InitSourceStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents);
   void InitTrackUnionStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents);
   void InitStreamCommon(MediaStream* aStream);
-  already_AddRefed<AudioTrack> CreateAudioTrack(AudioStreamTrack* aStreamTrack);
-  already_AddRefed<VideoTrack> CreateVideoTrack(VideoStreamTrack* aStreamTrack);
 
   void CheckTracksAvailable();
 
@@ -267,10 +243,6 @@ protected:
   // Indicate what track types have been added to this stream
   uint8_t mTrackTypesAvailable;
   bool mNotifiedOfMediaStreamGraphShutdown;
-
-  // Send notifications to AudioTrackList or VideoTrackList, if this MediaStream
-  // is consumed by a HTMLMediaElement.
-  nsTArray<MediaTrackListListener> mMediaTrackListListeners;
 
 private:
   void NotifyPrincipalChanged();

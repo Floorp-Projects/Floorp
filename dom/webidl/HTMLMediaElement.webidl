@@ -86,10 +86,8 @@ interface HTMLMediaElement : HTMLElement {
 
   // TODO: Bug 847379
   // tracks
-  [Pref="media.track.enabled"]
-  readonly attribute AudioTrackList audioTracks;
-  [Pref="media.track.enabled"]
-  readonly attribute VideoTrackList videoTracks;
+  //readonly attribute AudioTrackList audioTracks;
+  //readonly attribute VideoTrackList videoTracks;
   [Pref="media.webvtt.enabled"]
   readonly attribute TextTrackList textTracks;
   [Pref="media.webvtt.enabled"]

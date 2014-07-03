@@ -76,10 +76,6 @@
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/WakeLock.h"
 
-#include "mozilla/dom/AudioTrack.h"
-#include "mozilla/dom/AudioTrackList.h"
-#include "mozilla/dom/VideoTrack.h"
-#include "mozilla/dom/VideoTrackList.h"
 #include "mozilla/dom/TextTrack.h"
 
 #include "ImageContainer.h"
@@ -429,8 +425,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTM
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPlayed);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTextTrackManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioTrackList)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVideoTrackList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaKeys)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -452,8 +446,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLE
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlayed)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTextTrackManager)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioTrackList)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mVideoTrackList)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMediaKeys)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -620,13 +612,6 @@ void HTMLMediaElement::AbortExistingLoads()
   mCurrentLoadID++;
 
   bool fireTimeUpdate = false;
-
-  // When aborting the existing loads, empty the objects in audio track list and
-  // video track list, no events (in particular, no removetrack events) are
-  // fired as part of this. Ending MediaStream sends track ended notifications,
-  // so we empty the track lists prior.
-  AudioTracks()->EmptyTracks();
-  VideoTracks()->EmptyTracks();
 
   if (mDecoder) {
     fireTimeUpdate = mDecoder->GetCurrentTime() != 0.0;
@@ -870,24 +855,6 @@ void HTMLMediaElement::NotifyLoadError()
     QueueLoadFromSourceTask();
   } else {
     NS_WARNING("Should know the source we were loading from!");
-  }
-}
-
-void HTMLMediaElement::NotifyMediaTrackEnabled(MediaTrack* aTrack)
-{
-  if (!aTrack) {
-    return;
-  }
-
-  // TODO: We are dealing with single audio track and video track for now.
-  if (AudioTrack* track = aTrack->AsAudioTrack()) {
-    if (!track->Enabled()) {
-      SetMutedInternal(mMuted | MUTED_BY_AUDIO_TRACK);
-    } else {
-      SetMutedInternal(mMuted & ~MUTED_BY_AUDIO_TRACK);
-    }
-  } else if (VideoTrack* track = aTrack->AsVideoTrack()) {
-    mDisableVideo = !track->Selected();
   }
 }
 
@@ -2045,7 +2012,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mDownloadSuspendedByCache(false),
     mAudioChannelFaded(false),
     mPlayingThroughTheAudioChannel(false),
-    mDisableVideo(false),
     mWaitingFor(MediaWaitingFor::None)
 {
 #ifdef PR_LOGGING
@@ -2821,9 +2787,6 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
   if (container) {
     GetSrcMediaStream()->AddVideoOutput(container);
   }
-
-  mSrcStream->ConstructMediaTracks(AudioTracks(), VideoTracks());
-
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
   DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
@@ -4009,26 +3972,6 @@ NS_IMETHODIMP HTMLMediaElement::WindowVolumeChanged()
 {
   SetVolumeInternal();
   return NS_OK;
-}
-
-AudioTrackList*
-HTMLMediaElement::AudioTracks()
-{
-  if (!mAudioTrackList) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(OwnerDoc()->GetParentObject());
-    mAudioTrackList = new AudioTrackList(window, this);
-  }
-  return mAudioTrackList;
-}
-
-VideoTrackList*
-HTMLMediaElement::VideoTracks()
-{
-  if (!mVideoTrackList) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(OwnerDoc()->GetParentObject());
-    mVideoTrackList = new VideoTrackList(window, this);
-  }
-  return mVideoTrackList;
 }
 
 /* readonly attribute TextTrackList textTracks; */
