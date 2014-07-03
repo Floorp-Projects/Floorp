@@ -16,7 +16,6 @@
 <script type="application/javascript"
         src="utils.js"/>
 
-<script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
 <script type="application/javascript">
 <![CDATA[
 
