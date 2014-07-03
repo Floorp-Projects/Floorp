@@ -271,9 +271,9 @@ public:
 
   /* Bonds */
 
-  int CreateBond(const bt_bdaddr_t* aBdAddr);
-  int RemoveBond(const bt_bdaddr_t* aBdAddr);
-  int CancelBond(const bt_bdaddr_t* aBdAddr);
+  void CreateBond(const bt_bdaddr_t* aBdAddr, BluetoothResultHandler* aRes);
+  void RemoveBond(const bt_bdaddr_t* aBdAddr, BluetoothResultHandler* aRes);
+  void CancelBond(const bt_bdaddr_t* aBdAddr, BluetoothResultHandler* aRes);
 
   /* Authentication */
 
