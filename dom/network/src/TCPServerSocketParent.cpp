@@ -74,8 +74,24 @@ TCPServerSocketParent::SendCallbackAccept(nsITCPSocketParent *socket)
 
   _socket->AddIPDLReference();
 
+  nsresult rv;
+
+  nsString host;
+  rv = socket->GetHost(host);
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Failed to get host from nsITCPSocketParent");
+    return NS_ERROR_FAILURE;
+  }
+
+  uint16_t port;
+  rv = socket->GetPort(&port);
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Failed to get port from nsITCPSocketParent");
+    return NS_ERROR_FAILURE;
+  }
+
   if (mNeckoParent) {
-    if (mNeckoParent->SendPTCPSocketConstructor(_psocket)) {
+    if (mNeckoParent->SendPTCPSocketConstructor(_psocket, host, port)) {
       mozilla::unused << PTCPServerSocketParent::SendCallbackAccept(_psocket);
     }
     else {
