@@ -55,12 +55,10 @@ function receiveMessage(e) {
   var src = e.source;
   var step = e.data.step;
   var id = e.data.id;
-  var timer = window.setTimeout(timeout, 10000);
   var data = new TestData(e.data.testdata);
   var success, failure;
 
   function reply(res, msg) {
-    window.clearTimeout(timer);
     window.removeEventListener("message", receiveMessage, false);
     src.postMessage({result: res, msg: msg,
                      id: id}, "*");
@@ -72,10 +70,6 @@ function receiveMessage(e) {
 
   function _failure(msg) {
     reply(false, msg);
-  }
-
-  function timeout() {
-    reply(false, "Test timed out", false);
   }
 
   // flip success and failure around for precheck
