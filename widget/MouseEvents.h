@@ -47,10 +47,8 @@ public:
   uint32_t pointerId;
   uint32_t tiltX;
   uint32_t tiltY;
-  bool retargetedByPointerCapture;
 
-  WidgetPointerHelper() : convertToPointer(true), pointerId(0), tiltX(0), tiltY(0),
-                          retargetedByPointerCapture(false) {}
+  WidgetPointerHelper() : convertToPointer(true), pointerId(0), tiltX(0), tiltY(0) {}
 
   void AssignPointerHelperData(const WidgetPointerHelper& aEvent)
   {
@@ -58,7 +56,6 @@ public:
     pointerId = aEvent.pointerId;
     tiltX = aEvent.tiltX;
     tiltY = aEvent.tiltY;
-    retargetedByPointerCapture = aEvent.retargetedByPointerCapture;
   }
 };
 
