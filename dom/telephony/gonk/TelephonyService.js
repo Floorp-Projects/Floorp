@@ -10,6 +10,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/systemlibs.js");
 
 XPCOMUtils.defineLazyGetter(this, "RIL", function () {
   let obj = {};
@@ -49,6 +50,8 @@ const AUDIO_STATE_NAME = [
   "PHONE_STATE_RINGTONE",
   "PHONE_STATE_IN_CALL"
 ];
+
+const DEFAULT_EMERGENCY_NUMBERS = ["112", "911"];
 
 let DEBUG;
 function debug(s) {
@@ -331,6 +334,26 @@ TelephonyService.prototype = {
   },
 
   /**
+   * Check a given number against the list of emergency numbers provided by the
+   * RIL.
+   *
+   * @param aNumber
+   *        The number to look up.
+   */
+  _isEmergencyNumber: function(aNumber) {
+    // Check ril provided numbers first.
+    let numbers = libcutils.property_get("ril.ecclist") ||
+                  libcutils.property_get("ro.ril.ecclist");
+    if (numbers) {
+      numbers = numbers.split(",");
+    } else {
+      // No ecclist system property, so use our own list.
+      numbers = DEFAULT_EMERGENCY_NUMBERS;
+    }
+    return numbers.indexOf(aNumber) != -1;
+  },
+
+  /**
    * nsITelephonyService interface.
    */
 
@@ -488,9 +511,14 @@ TelephonyService.prototype = {
       this.notifyCallStateChanged(aClientId, parentCall);
     };
 
+    let isEmergencyNumber = this._isEmergencyNumber(aNumber);
+    let msg = isEmergencyNumber ?
+              "dialEmergencyNumber" :
+              "dialNonEmergencyNumber";
     this.isDialing = true;
-    this._getClient(aClientId).sendWorkerMessage("dial", {
+    this._getClient(aClientId).sendWorkerMessage(msg, {
       number: aNumber,
+      isEmergency: isEmergencyNumber,
       isDialEmergency: aIsEmergency
     }, (function(response) {
       this.isDialing = false;

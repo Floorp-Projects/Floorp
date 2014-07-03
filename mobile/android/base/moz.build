@@ -612,6 +612,9 @@ cpe = main.add_classpathentry('src', SRCDIR,
         'org/mozilla/gecko/resources/**'])
 if not CONFIG['MOZ_CRASHREPORTER']:
     cpe.exclude_patterns += ['org/mozilla/gecko/CrashReporter.java']
+if not CONFIG['MOZ_NATIVE_DEVICES']:
+    cpe.exclude_patterns += ['org/mozilla/gecko/ChromeCast.java']
+    cpe.exclude_patterns += ['org/mozilla/gecko/MediaPlayerManager.java']
 main.add_classpathentry('generated', OBJDIR + '/generated',
     dstdir='generated')
 main.add_classpathentry('thirdparty', TOPSRCDIR + '/mobile/android/thirdparty',

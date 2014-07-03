@@ -172,4 +172,22 @@ exports["test modelFor(xulTab)"] = (assert, done) => {
   });
 };
 
+exports["test tab.readyState"] = (assert, done) => {
+  tabs.open({
+    url: "data:text/html;charset=utf-8,test_readyState",
+    onOpen: (tab) => {
+      assert.equal(tab.readyState, "uninitialized",
+        "tab is 'uninitialized' when opened");
+    },
+    onReady: (tab) => {
+      assert.notEqual(["interactive", "complete"].indexOf(tab.readyState), -1,
+        "tab is either interactive or complete when onReady");
+    },
+    onLoad: (tab) => {
+      assert.equal(tab.readyState, "complete", "tab is complete onLoad");
+      tab.close(defer(done));
+    }
+  });
+}
+
 require("sdk/test").run(exports);

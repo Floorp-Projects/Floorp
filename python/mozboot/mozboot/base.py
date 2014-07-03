@@ -73,7 +73,7 @@ We recommend the following tools for installing Python:
 
 
 # Upgrade Mercurial older than this.
-MODERN_MERCURIAL_VERSION = StrictVersion('2.5')
+MODERN_MERCURIAL_VERSION = StrictVersion('3.0')
 
 # Upgrade Python older than this.
 MODERN_PYTHON_VERSION = StrictVersion('2.7.3')
