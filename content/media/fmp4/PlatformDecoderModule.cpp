@@ -9,7 +9,7 @@
 #include "WMFDecoderModule.h"
 #endif
 #ifdef MOZ_FFMPEG
-#include "FFmpegDecoderModule.h"
+#include "FFmpegRuntimeLinker.h"
 #endif
 #include "mozilla/Preferences.h"
 
@@ -56,7 +56,7 @@ PlatformDecoderModule::Create()
 #endif
 #ifdef MOZ_FFMPEG
   if (sFFmpegDecoderEnabled) {
-    return new FFmpegDecoderModule();
+    return FFmpegRuntimeLinker::CreateDecoderModule();
   }
 #endif
   return nullptr;

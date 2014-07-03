@@ -858,12 +858,13 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
 
       // We need to restyle even if the transition rule no longer
       // applies (in which case we just made it not apply).
-      MOZ_ASSERT(
-        collection->mElementProperty == nsGkAtoms::transitionsProperty ||
-        collection->mElementProperty ==
-          nsGkAtoms::transitionsOfBeforeProperty ||
-        collection->mElementProperty == nsGkAtoms::transitionsOfAfterProperty,
-        "Unexpected element property; might restyle too much");
+      MOZ_ASSERT(collection->mElementProperty ==
+                   nsGkAtoms::transitionsProperty ||
+                 collection->mElementProperty ==
+                   nsGkAtoms::transitionsOfBeforeProperty ||
+                 collection->mElementProperty ==
+                   nsGkAtoms::transitionsOfAfterProperty,
+                 "Unexpected element property; might restyle too much");
       if (!canThrottleTick || transitionStartedOrEnded) {
         collection->PostRestyleForAnimation(mPresContext);
       } else {

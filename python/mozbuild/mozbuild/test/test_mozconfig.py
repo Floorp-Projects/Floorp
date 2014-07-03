@@ -29,6 +29,7 @@ class TestMozconfigLoader(unittest.TestCase):
     def setUp(self):
         self._old_env = dict(os.environ)
         os.environ.pop('MOZCONFIG', None)
+        os.environ.pop('MOZ_OBJDIR', None)
         os.environ.pop('CC', None)
         os.environ.pop('CXX', None)
         self._temp_dirs = set()
@@ -243,6 +244,7 @@ class TestMozconfigLoader(unittest.TestCase):
             'make_flags': None,
             'make_extra': None,
             'env': None,
+            'vars': None,
         })
 
     def test_read_empty_mozconfig(self):
@@ -256,9 +258,10 @@ class TestMozconfigLoader(unittest.TestCase):
             self.assertEqual(result['make_extra'], [])
 
             for f in ('added', 'removed', 'modified'):
+                self.assertEqual(len(result['vars'][f]), 0)
                 self.assertEqual(len(result['env'][f]), 0)
 
-            self.assertGreater(len(result['env']['unmodified']), 0)
+            self.assertEqual(result['env']['unmodified'], {})
 
     def test_read_capture_ac_options(self):
         """Ensures ac_add_options calls are captured."""
@@ -316,6 +319,22 @@ class TestMozconfigLoader(unittest.TestCase):
             self.assertEqual(result['make_flags'], '-j8')
             self.assertEqual(result['make_extra'], ['FOO=BAR BAZ', 'BIZ=1'])
 
+    def test_read_empty_mozconfig_objdir_environ(self):
+        os.environ[b'MOZ_OBJDIR'] = b'obj-firefox'
+        with NamedTemporaryFile(mode='w') as mozconfig:
+            result = self.get_loader().read_mozconfig(mozconfig.name)
+            self.assertEqual(result['topobjdir'], 'obj-firefox')
+
+    def test_read_capture_mk_options_objdir_environ(self):
+        """Ensures mk_add_options calls are captured and override the environ."""
+        os.environ[b'MOZ_OBJDIR'] = b'obj-firefox'
+        with NamedTemporaryFile(mode='w') as mozconfig:
+            mozconfig.write('mk_add_options MOZ_OBJDIR=/foo/bar\n')
+            mozconfig.flush()
+
+            result = self.get_loader().read_mozconfig(mozconfig.name)
+            self.assertEqual(result['topobjdir'], '/foo/bar')
+
     def test_read_moz_objdir_substitution(self):
         """Ensure @TOPSRCDIR@ substitution is recognized in MOZ_OBJDIR."""
         with NamedTemporaryFile(mode='w') as mozconfig:
@@ -337,9 +356,10 @@ class TestMozconfigLoader(unittest.TestCase):
 
             result = self.get_loader().read_mozconfig(mozconfig.name)
 
-            self.assertEqual(result['env']['added'], {
+            self.assertEqual(result['vars']['added'], {
                 'CC': '/usr/local/bin/clang',
                 'CXX': '/usr/local/bin/clang++'})
+            self.assertEqual(result['env']['added'], {})
 
     def test_read_exported_variables(self):
         """Exported variables are caught as new variables."""
@@ -349,6 +369,7 @@ class TestMozconfigLoader(unittest.TestCase):
 
             result = self.get_loader().read_mozconfig(mozconfig.name)
 
+            self.assertEqual(result['vars']['added'], {})
             self.assertEqual(result['env']['added'], {
                 'MY_EXPORTED': 'woot'})
 
@@ -362,8 +383,23 @@ class TestMozconfigLoader(unittest.TestCase):
 
             result = self.get_loader().read_mozconfig(mozconfig.name)
 
+            self.assertEqual(result['vars']['modified'], {})
             self.assertEqual(result['env']['modified'], {
                 'CC': ('/usr/bin/gcc', '/usr/local/bin/clang')
+            })
+
+    def test_read_unmodified_variables(self):
+        """Variables modified by mozconfig are detected."""
+        os.environ[b'CC'] = b'/usr/bin/gcc'
+
+        with NamedTemporaryFile(mode='w') as mozconfig:
+            mozconfig.flush()
+
+            result = self.get_loader().read_mozconfig(mozconfig.name)
+
+            self.assertEqual(result['vars']['unmodified'], {})
+            self.assertEqual(result['env']['unmodified'], {
+                'CC': '/usr/bin/gcc'
             })
 
     def test_read_removed_variables(self):
@@ -376,6 +412,7 @@ class TestMozconfigLoader(unittest.TestCase):
 
             result = self.get_loader().read_mozconfig(mozconfig.name)
 
+            self.assertEqual(result['vars']['removed'], {})
             self.assertEqual(result['env']['removed'], {
                 'CC': '/usr/bin/clang'})
 
@@ -388,10 +425,11 @@ class TestMozconfigLoader(unittest.TestCase):
 
             result = self.get_loader().read_mozconfig(mozconfig.name)
 
-            self.assertEqual(result['env']['added'], {
+            self.assertEqual(result['vars']['added'], {
                 'multi': 'foo\nbar',
                 'single': '1'
             })
+            self.assertEqual(result['env']['added'], {})
 
     def test_read_topsrcdir_defined(self):
         """Ensure $topsrcdir references work as expected."""
@@ -402,19 +440,25 @@ class TestMozconfigLoader(unittest.TestCase):
             loader = self.get_loader()
             result = loader.read_mozconfig(mozconfig.name)
 
-            self.assertEqual(result['env']['added']['TEST'],
+            self.assertEqual(result['vars']['added']['TEST'],
                 loader.topsrcdir.replace(os.sep, '/'))
+            self.assertEqual(result['env']['added'], {})
 
     def test_read_empty_variable_value(self):
         """Ensure empty variable values are parsed properly."""
         with NamedTemporaryFile(mode='w') as mozconfig:
             mozconfig.write('EMPTY=\n')
+            mozconfig.write('export EXPORT_EMPTY=\n')
             mozconfig.flush()
 
             result = self.get_loader().read_mozconfig(mozconfig.name)
 
-            self.assertIn('EMPTY', result['env']['added'])
-            self.assertEqual(result['env']['added']['EMPTY'], '')
+            self.assertEqual(result['vars']['added'], {
+                'EMPTY': '',
+            })
+            self.assertEqual(result['env']['added'], {
+                'EXPORT_EMPTY': ''
+            })
 
     def test_read_load_exception(self):
         """Ensure non-0 exit codes in mozconfigs are handled properly."""

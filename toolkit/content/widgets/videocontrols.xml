@@ -796,11 +796,14 @@
                 seekToPosition : function(newPosition) {
                     newPosition /= 1000; // convert from ms
                     this.log("+++ seeking to " + newPosition);
-                    if (isTouchControl) {
-                      this.video.fastSeek(newPosition);
-                    } else {
-                      this.video.currentTime = newPosition;
-                    }
+#ifdef MOZ_WIDGET_GONK
+                    // We use fastSeek() on B2G, and an accurate (but slower)
+                    // seek on other platforms (that are likely to be higher
+                    // perf).
+                    this.video.fastSeek(newPosition);
+#else
+                    this.video.currentTime = newPosition;
+#endif
                 },
 
                 setVolume : function(newVolume) {
