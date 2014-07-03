@@ -105,15 +105,6 @@ MediaTrackList::RemoveTrack(const nsRefPtr<MediaTrack>& aTrack)
   CreateAndDispatchTrackEventRunner(aTrack, NS_LITERAL_STRING("removetrack"));
 }
 
-void
-MediaTrackList::RemoveTracks()
-{
-  while (!mTracks.IsEmpty()) {
-    nsRefPtr<MediaTrack> track = mTracks.LastElement();
-    RemoveTrack(track);
-  }
-}
-
 already_AddRefed<AudioTrack>
 MediaTrackList::CreateAudioTrack(const nsAString& aId,
                                  const nsAString& aKind,
