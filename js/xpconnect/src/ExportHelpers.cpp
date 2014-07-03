@@ -283,7 +283,7 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
 
     RootedObject funObj(cx, &vfunction.toObject());
     RootedObject targetScope(cx, &vscope.toObject());
-    ExportOptions options(cx, hasOptions ? &voptions.toObject() : nullptr);
+    ExportFunctionOptions options(cx, hasOptions ? &voptions.toObject() : nullptr);
     if (hasOptions && !options.Parse())
         return false;
 
