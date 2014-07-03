@@ -63,6 +63,8 @@ public:
   virtual void MetadataLoaded(MediaInfo* aInfo, MetadataTags* aTags) MOZ_OVERRIDE;
   virtual void QueueMetadata(int64_t aTime, MediaInfo* aInfo, MetadataTags* aTags) MOZ_OVERRIDE;
 
+  virtual void RemoveMediaTracks() MOZ_OVERRIDE;
+
   virtual void SetMediaEndTime(int64_t aTime) MOZ_OVERRIDE;
 
   virtual void UpdatePlaybackPosition(int64_t aTime) MOZ_OVERRIDE;

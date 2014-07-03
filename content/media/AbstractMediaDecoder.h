@@ -93,6 +93,8 @@ public:
   virtual void MetadataLoaded(MediaInfo* aInfo, MetadataTags* aTags) = 0;
   virtual void QueueMetadata(int64_t aTime, MediaInfo* aInfo, MetadataTags* aTags) = 0;
 
+  virtual void RemoveMediaTracks() = 0;
+
   // Set the media end time in microseconds
   virtual void SetMediaEndTime(int64_t aTime) = 0;
 
@@ -161,6 +163,24 @@ class MetadataEventRunner : public nsRunnable
   MetadataTags* mTags;
 };
 
+class RemoveMediaTracksEventRunner : public nsRunnable
+{
+public:
+  RemoveMediaTracksEventRunner(AbstractMediaDecoder* aDecoder)
+    : mDecoder(aDecoder)
+  {}
+
+  NS_IMETHOD Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mDecoder->RemoveMediaTracks();
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<AbstractMediaDecoder> mDecoder;
+};
 
 }
 
