@@ -102,8 +102,6 @@ public class GeckoApplication extends Application
     }
 
     public void onActivityResume(GeckoActivityStatus activity) {
-	GeckoAppShell.setContextGetter(this);
-
         if (mPausedGecko) {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createAppForegroundingEvent());
             mPausedGecko = false;
