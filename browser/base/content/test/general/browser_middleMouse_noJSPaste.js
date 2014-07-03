@@ -20,7 +20,7 @@ function test() {
     let pagePrincipal = gBrowser.contentPrincipal;
 
     // copy javascript URI to the clipboard
-    let url = "javascript:1+1";
+    let url = "javascript:http://www.example.com/";
     waitForClipboard(url,
       function() {
         Components.classes["@mozilla.org/widget/clipboardhelper;1"]
@@ -39,9 +39,7 @@ function test() {
     );
 
     addPageShowListener(function () {
-      is(gBrowser.currentURI.spec, url, "url loaded by middle click");
-      ok(!gBrowser.contentPrincipal.equals(pagePrincipal),
-         "middle click load of " + url + " should produce a page with a different principal");
+      is(gBrowser.currentURI.spec, url.replace(/^javascript:/, ""), "url loaded by middle click doesn't include JS");
       finish();
     });
   });

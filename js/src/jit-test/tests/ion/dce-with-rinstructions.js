@@ -419,6 +419,45 @@ function rpowhalf_object(i) {
     return i;
 }
 
+var uceFault_min_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_min_number'));
+function rmin_number(i) {
+    var x = Math.min(i, i-1, i-2.1);
+    if (uceFault_min_number(i) || uceFault_min_number(i))
+        assertEq(x, i-2.1);
+    return i;
+}
+
+var uceFault_min_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_min_object'));
+function rmin_object(i) {
+    var t = i;
+    var o = { valueOf: function () { return t; } };
+    var x = Math.min(o, o-1, o-2.1)
+    t = 1000;
+    if (uceFault_min_object(i) || uceFault_min_object(i))
+        assertEq(x, i-2.1);
+    return i;
+}
+
+var uceFault_max_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_max_number'));
+function rmax_number(i) {
+    var x = Math.max(i, i-1, i-2.1);
+    if (uceFault_max_number(i) || uceFault_max_number(i))
+        assertEq(x, i);
+    return i;
+}
+
+var uceFault_max_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_max_object'));
+function rmax_object(i) {
+    var t = i;
+    var o = { valueOf: function () { return t; } };
+    var x = Math.max(o, o-1, o-2.1)
+    t = 1000;
+    if (uceFault_max_object(i) || uceFault_max_object(i))
+        assertEq(x, i);
+    return i;
+}
+
+
 for (i = 0; i < 100; i++) {
     rbitnot_number(i);
     rbitnot_object(i);
@@ -464,6 +503,10 @@ for (i = 0; i < 100; i++) {
     rpow_object(i);
     rpowhalf_number(i);
     rpowhalf_object(i);
+    rmin_number(i);
+    rmin_object(i);
+    rmax_number(i);
+    rmax_object(i);
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well

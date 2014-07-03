@@ -155,7 +155,8 @@ AutocompletePopup.prototype = {
    * Check if the autocomplete popup is open.
    */
   get isOpen() {
-    return this._panel.state == "open" || this._panel.state == "showing";
+    return this._panel &&
+           (this._panel.state == "open" || this._panel.state == "showing");
   },
 
   /**

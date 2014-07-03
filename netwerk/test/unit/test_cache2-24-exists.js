@@ -4,6 +4,11 @@ function run_test()
 {
   do_get_profile();
 
+  if (!newCacheBackEndUsed()) {
+    do_check_true(true, "This test checks only cache2 specific behavior.");
+    return;
+  }
+
   var mc = new MultipleCallbacks(2, function() {
     var mem = getCacheStorage("memory");
     var disk = getCacheStorage("disk");

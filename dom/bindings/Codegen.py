@@ -4435,10 +4435,10 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
             if isinstance(defaultValue, IDLNullValue):
                 assert(type.nullable())
-                defaultCode = "%s.SetNull()" % varName
+                defaultCode = "%s.SetIsVoid(true)" % varName
             else:
                 defaultCode = handleDefaultStringValue(defaultValue,
-                                                       "%s.SetData" % varName)
+                                                       "%s.Rebind" % varName)
             return handleDefault(conversionCode, defaultCode + ";\n")
 
         if isMember:
@@ -8508,7 +8508,7 @@ class CGUnionConversionStruct(CGThing):
                                     [Argument("const nsDependentString::char_type*", "aData"),
                                      Argument("nsDependentString::size_type", "aLength")],
                                     inline=True, bodyInHeader=True,
-                                    body="RawSetAs%s().SetData(aData, aLength);\n" % t.name))
+                                    body="RawSetAs%s().Rebind(aData, aLength);\n" % t.name))
 
             if vars["holderType"] is not None:
                 holderType = CGTemplatedType("Maybe",
@@ -9375,7 +9375,9 @@ class CGProxyNamedOperation(CGProxySpecialOperation):
             unwrapString = fill(
                 """
                 if (MOZ_LIKELY(JSID_IS_ATOM(${idName}))) {
-                  ${argName}.SetData(js::GetAtomChars(JSID_TO_ATOM(${idName})), js::GetAtomLength(JSID_TO_ATOM(${idName})));
+                  JS::AutoCheckCannotGC nogc;
+                  JSAtom* atom = JSID_TO_ATOM(${idName});
+                  ${argName}.Rebind(js::GetTwoByteAtomChars(nogc, atom), js::GetAtomLength(atom));
                 } else {
                   nameVal = js::IdToValue(${idName});
                   $*{unwrapString}

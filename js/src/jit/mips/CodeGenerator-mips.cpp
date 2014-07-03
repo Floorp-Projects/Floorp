@@ -793,18 +793,19 @@ CodeGeneratorMIPS::visitModMaskI(LModMaskI *ins)
 {
     Register src = ToRegister(ins->getOperand(0));
     Register dest = ToRegister(ins->getDef(0));
-    Register tmp = ToRegister(ins->getTemp(0));
+    Register tmp0 = ToRegister(ins->getTemp(0));
+    Register tmp1 = ToRegister(ins->getTemp(1));
     MMod *mir = ins->mir();
 
     if (!mir->isTruncated() && mir->canBeNegativeDividend()) {
         MOZ_ASSERT(mir->fallible());
 
         Label bail;
-        masm.ma_mod_mask(src, dest, tmp, ins->shift(), &bail);
+        masm.ma_mod_mask(src, dest, tmp0, tmp1, ins->shift(), &bail);
         if (!bailoutFrom(&bail, ins->snapshot()))
             return false;
     } else {
-        masm.ma_mod_mask(src, dest, tmp, ins->shift(), nullptr);
+        masm.ma_mod_mask(src, dest, tmp0, tmp1, ins->shift(), nullptr);
     }
     return true;
 }

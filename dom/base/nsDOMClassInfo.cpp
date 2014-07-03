@@ -2628,9 +2628,12 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   }
 
 #ifdef USE_CONTROLLERS_SHIM
+  // Note: We use |obj| rather than |aWin| to get the principal here, because
+  // this is called during Window setup when the Document isn't necessarily
+  // hooked up yet.
   if (id == XPCJSRuntime::Get()->GetStringID(XPCJSRuntime::IDX_CONTROLLERS) &&
       !xpc::IsXrayWrapper(obj) &&
-      !nsContentUtils::IsSystemPrincipal(aWin->GetPrincipal()))
+      !nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(obj)))
   {
     if (aWin->GetDoc()) {
       aWin->GetDoc()->WarnOnceAbout(nsIDocument::eWindow_Controllers);

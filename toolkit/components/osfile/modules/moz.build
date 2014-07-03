@@ -7,7 +7,6 @@
 JS_MODULES_PATH = 'modules/osfile'
 
 EXTRA_JS_MODULES += [
-    '_PromiseWorker.jsm',
     'osfile_async_front.jsm',
     'osfile_async_worker.js',
     'osfile_native.jsm',

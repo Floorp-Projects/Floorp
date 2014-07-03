@@ -1,30 +1,6 @@
-+ set -e
-+ OBJ=obj-x86_64-unknown-linux-gnu
-+ obj-x86_64-unknown-linux-gnu/dist/bin/run-mozilla.sh obj-x86_64-unknown-linux-gnu/dist/bin/xpcshell /home/mchew/mozilla-central/security/manager/tools/genHPKPStaticPins.js /home/mchew/mozilla-central/security/manager/tools/PreloadedHPKPins.json /home/mchew/mozilla-central/security/manager/ssl/tests/unit/tlsserver/default-ee.der /home/mchew/mozilla-central/security/manager/boot/src/StaticHPKPins.h
-[32405] WARNING: NS_ENSURE_SUCCESS(rv, nsresult::NS_ERROR_UNEXPECTED) failed with result 0x80004005: file /home/mchew/mozilla-central/extensions/cookie/nsPermissionManager.cpp, line 444
-[32405] WARNING: Forcing memory-only entry since CacheFileIOManager doesn't have mCacheDirectory.: file /home/mchew/mozilla-central/netwerk/cache2/CacheFile.cpp, line 474
-[32405] WARNING: Forcing memory-only entry since CacheFileIOManager doesn't have mCacheDirectory.: file /home/mchew/mozilla-central/netwerk/cache2/CacheFile.cpp, line 474
 Can't find hash in builtin certs for Chrome nickname RapidSSL, inserting GOOGLE_PIN_RapidSSL
 Can't find hash in builtin certs for Chrome nickname Entrust_G2, inserting GOOGLE_PIN_Entrust_G2
 Can't find hash in builtin certs for Chrome nickname Tor2web, inserting GOOGLE_PIN_Tor2web
 Can't find hash in builtin certs for Chrome nickname AlphaSSL_G2, inserting GOOGLE_PIN_AlphaSSL_G2
 Can't find hash in builtin certs for Chrome nickname CryptoCat1, inserting GOOGLE_PIN_CryptoCat1
 Can't find hash in builtin certs for Chrome nickname Libertylavabitcom, inserting GOOGLE_PIN_Libertylavabitcom
-[32405] WARNING: Forcing memory-only entry since CacheFileIOManager doesn't have mCacheDirectory.: file /home/mchew/mozilla-central/netwerk/cache2/CacheFile.cpp, line 474
-[32405] WARNING: '!mMainThread', file /home/mchew/mozilla-central/xpcom/threads/nsThreadManager.cpp, line 279
-[32405] WARNING: '!thread', file /home/mchew/mozilla-central/xpcom/glue/nsThreadUtils.cpp, line 194
-[32405] WARNING: '!thread', file /home/mchew/mozilla-central/xpcom/glue/nsThreadUtils.cpp, line 194
-[32405] WARNING: '!mMainThread', file /home/mchew/mozilla-central/xpcom/threads/nsThreadManager.cpp, line 269
-[32405] WARNING: 'NS_FAILED(rv)', file /home/mchew/mozilla-central/xpcom/glue/nsThreadUtils.cpp, line 180
-[32405] WARNING: Leaking the RDF Service.: file /home/mchew/mozilla-central/rdf/build/nsRDFModule.cpp, line 165
-[32405] WARNING: '!compMgr', file /home/mchew/mozilla-central/xpcom/glue/nsComponentManagerUtils.cpp, line 59
-[32405] WARNING: XPCOM objects created/destroyed from static ctor/dtor: file /home/mchew/mozilla-central/xpcom/base/nsTraceRefcnt.cpp, line 148
-[32405] WARNING: XPCOM objects created/destroyed from static ctor/dtor: file /home/mchew/mozilla-central/xpcom/base/nsTraceRefcnt.cpp, line 148
-nsStringStats
- => mAllocCount:           3577
- => mReallocCount:          444
- => mFreeCount:            3577
- => mShareCount:           8797
- => mAdoptCount:            177
- => mAdoptFreeCount:        177
- => Process ID: 32405, Thread ID: 140248381782592

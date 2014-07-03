@@ -2153,9 +2153,9 @@ ia64*-hpux*)
         # autoconf insists on passing $LDFLAGS to the compiler.
         if test -z "$CLANG_CL"; then
             LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
-        fi
-        if test -z "$DEVELOPER_OPTIONS"; then
-            LDFLAGS="$LDFLAGS -RELEASE"
+            if test -z "$DEVELOPER_OPTIONS"; then
+                LDFLAGS="$LDFLAGS -RELEASE"
+            fi
         fi
         dnl For profile-guided optimization
         PROFILE_GEN_CFLAGS="-GL"

@@ -61,6 +61,7 @@ let initTable = [
   ["io", "@mozilla.org/network/io-service;1", "nsIIOService2"],
   ["locale", "@mozilla.org/intl/nslocaleservice;1", "nsILocaleService"],
   ["logins", "@mozilla.org/login-manager;1", "nsILoginManager"],
+  ["netutil", "@mozilla.org/network/util;1", "nsINetUtil"],
   ["obs", "@mozilla.org/observer-service;1", "nsIObserverService"],
   ["perms", "@mozilla.org/permissionmanager;1", "nsIPermissionManager"],
   ["prompt", "@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService"],
