@@ -1073,6 +1073,35 @@ org.mozilla.crashes.crashes
 
 This measurement contains a historical record of application crashes.
 
+Version 4
+^^^^^^^^^
+
+This version follows up from version 3, adding submissions which are now
+tracked by the :ref:`crashes_crashmanager`.
+
+This measurement will be reported on each day there was a crash or crash
+submission. Records may contain the following fields, whose values indicate
+the number of crashes, hangs, or submissions that occurred on the given day:
+
+* main-crash
+* main-crash-submission-succeeded
+* main-crash-submission-failed
+* main-hang
+* main-hang-submission-succeeded
+* main-hang-submission-failed
+* content-crash
+* content-crash-submission-succeeded
+* content-crash-submission-failed
+* content-hang
+* content-hang-submission-succeeded
+* content-hang-submission-failed
+* plugin-crash
+* plugin-crash-submission-succeeded
+* plugin-crash-submission-failed
+* plugin-hang
+* plugin-hang-submission-succeeded
+* plugin-hang-submission-failed
+
 Version 3
 ^^^^^^^^^
 
@@ -1151,6 +1180,14 @@ Example
     "org.mozilla.crashes.crashes": {
       "_v": 2,
       "mainCrash": 2
+    }
+    "org.mozilla.crashes.crashes": {
+      "_v": 4,
+      "main-crash": 2,
+      "main-crash-submission-succeeded": 1,
+      "main-crash-submission-failed": 1,
+      "main-hang": 1,
+      "plugin-crash": 2
     }
 
 org.mozilla.healthreport.submissions
