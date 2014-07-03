@@ -64,6 +64,7 @@ public:
   virtual void OnRecorderStateChange(RecorderState aState, int32_t aStatus, int32_t aTrackNum) { }
 
   virtual void OnShutter() { }
+  virtual void OnRateLimitPreview(bool aLimit) { }
   virtual bool OnNewPreviewFrame(layers::Image* aFrame, uint32_t aWidth, uint32_t aHeight)
   {
     return false;

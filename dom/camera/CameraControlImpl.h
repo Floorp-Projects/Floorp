@@ -67,6 +67,7 @@ protected:
   void OnFacesDetected(const nsTArray<Face>& aFaces);
   void OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType);
 
+  void OnRateLimitPreview(bool aLimit);
   bool OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight);
   void OnRecorderStateChange(CameraControlListener::RecorderState aState,
                              int32_t aStatus = -1, int32_t aTrackNumber = -1);
