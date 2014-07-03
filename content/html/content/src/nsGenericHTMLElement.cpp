@@ -3102,7 +3102,7 @@ nsGenericHTMLElement::SetItemValue(JSContext* aCx, JS::Value aValue,
 
   nsAutoString string;
   JS::Rooted<JS::Value> value(aCx, aValue);
-  if (!ConvertJSValueToString(aCx, value, &value, eStringify, eStringify, string)) {
+  if (!ConvertJSValueToString(aCx, value, eStringify, eStringify, string)) {
     aError.Throw(NS_ERROR_UNEXPECTED);
     return;
   }

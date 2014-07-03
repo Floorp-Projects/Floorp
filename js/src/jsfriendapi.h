@@ -790,6 +790,12 @@ AtomHasLatin1Chars(JSAtom *atom)
     return reinterpret_cast<shadow::String *>(atom)->flags & shadow::String::LATIN1_CHARS_BIT;
 }
 
+MOZ_ALWAYS_INLINE bool
+StringHasLatin1Chars(JSString *s)
+{
+    return reinterpret_cast<shadow::String *>(s)->flags & shadow::String::LATIN1_CHARS_BIT;
+}
+
 MOZ_ALWAYS_INLINE const JS::Latin1Char *
 GetLatin1LinearStringChars(const JS::AutoCheckCannotGC &nogc, JSLinearString *linear)
 {
