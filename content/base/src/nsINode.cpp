@@ -91,6 +91,7 @@
 #include "nsUnicharUtils.h"
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
+#include "mozilla/Preferences.h"
 #include "prprf.h"
 #include "xpcpublic.h"
 #include "nsCSSRuleProcessor.h"
@@ -2735,4 +2736,11 @@ EventTarget::DispatchEvent(Event& aEvent,
   bool result = false;
   aRv = DispatchEvent(&aEvent, &result);
   return result;
+}
+
+bool
+nsINode::HasBoxQuadsSupport(JSContext* aCx, JSObject* /* unused */)
+{
+  return xpc::AccessCheck::isChrome(js::GetContextCompartment(aCx)) ||
+         Preferences::GetBool("layout.css.getBoxQuads.enabled");
 }

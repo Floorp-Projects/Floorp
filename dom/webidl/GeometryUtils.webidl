@@ -23,7 +23,7 @@ dictionary ConvertCoordinateOptions {
 
 [NoInterfaceObject]
 interface GeometryUtils {
-  [Throws, Pref="layout.css.getBoxQuads.enabled"]
+  [Throws, Func="nsINode::HasBoxQuadsSupport"]
   sequence<DOMQuad> getBoxQuads(optional BoxQuadOptions options);
   [Throws, Pref="layout.css.convertFromNode.enabled"]
   DOMQuad convertQuadFromNode(DOMQuad quad, GeometryNode from, optional ConvertCoordinateOptions options);
