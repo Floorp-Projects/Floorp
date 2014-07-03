@@ -2013,33 +2013,37 @@ ContainerState::PopThebesLayerData()
   ThebesLayerData* containingThebesLayerData =
      mLayerBuilder->GetContainingThebesLayerData();
   if (containingThebesLayerData) {
-    nsRect rect = nsLayoutUtils::TransformFrameRectToAncestor(
-      mContainerReferenceFrame,
-      data->mDispatchToContentHitRegion.GetBounds(),
-      containingThebesLayerData->mReferenceFrame);
-    containingThebesLayerData->mDispatchToContentHitRegion.Or(
-      containingThebesLayerData->mDispatchToContentHitRegion, rect);
-
-    rect = nsLayoutUtils::TransformFrameRectToAncestor(
-      mContainerReferenceFrame,
-      data->mMaybeHitRegion.GetBounds(),
-      containingThebesLayerData->mReferenceFrame);
-    containingThebesLayerData->mMaybeHitRegion.Or(
-      containingThebesLayerData->mMaybeHitRegion, rect);
-
-    // Our definitely-hit region must go to the maybe-hit-region since
-    // this function is an approximation.
-    gfx3DMatrix matrix = nsLayoutUtils::GetTransformToAncestor(
-      mContainerReferenceFrame, containingThebesLayerData->mReferenceFrame);
-    gfxMatrix matrix2D;
-    bool isPrecise = matrix.Is2D(&matrix2D) && !matrix2D.HasNonAxisAlignedTransform();
-    rect = nsLayoutUtils::TransformFrameRectToAncestor(
-      mContainerReferenceFrame,
-      data->mHitRegion.GetBounds(),
-      containingThebesLayerData->mReferenceFrame);
-    nsRegion* dest = isPrecise ? &containingThebesLayerData->mHitRegion
-                               : &containingThebesLayerData->mMaybeHitRegion;
-    dest->Or(*dest, rect);
+    if (!data->mDispatchToContentHitRegion.GetBounds().IsEmpty()) {
+      nsRect rect = nsLayoutUtils::TransformFrameRectToAncestor(
+        mContainerReferenceFrame,
+        data->mDispatchToContentHitRegion.GetBounds(),
+        containingThebesLayerData->mReferenceFrame);
+      containingThebesLayerData->mDispatchToContentHitRegion.Or(
+        containingThebesLayerData->mDispatchToContentHitRegion, rect);
+    }
+    if (!data->mMaybeHitRegion.GetBounds().IsEmpty()) {
+      nsRect rect = nsLayoutUtils::TransformFrameRectToAncestor(
+        mContainerReferenceFrame,
+        data->mMaybeHitRegion.GetBounds(),
+        containingThebesLayerData->mReferenceFrame);
+      containingThebesLayerData->mMaybeHitRegion.Or(
+        containingThebesLayerData->mMaybeHitRegion, rect);
+    }
+    if (!data->mHitRegion.GetBounds().IsEmpty()) {
+      // Our definitely-hit region must go to the maybe-hit-region since
+      // this function is an approximation.
+      gfx3DMatrix matrix = nsLayoutUtils::GetTransformToAncestor(
+        mContainerReferenceFrame, containingThebesLayerData->mReferenceFrame);
+      gfxMatrix matrix2D;
+      bool isPrecise = matrix.Is2D(&matrix2D) && !matrix2D.HasNonAxisAlignedTransform();
+      nsRect rect = nsLayoutUtils::TransformFrameRectToAncestor(
+        mContainerReferenceFrame,
+        data->mHitRegion.GetBounds(),
+        containingThebesLayerData->mReferenceFrame);
+      nsRegion* dest = isPrecise ? &containingThebesLayerData->mHitRegion
+                                 : &containingThebesLayerData->mMaybeHitRegion;
+      dest->Or(*dest, rect);
+    }
   } else {
     EventRegions regions;
     regions.mHitRegion = ScaleRegionToOutsidePixels(data->mHitRegion);
