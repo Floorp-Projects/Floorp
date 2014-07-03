@@ -10,7 +10,6 @@
 
 #include "nsAboutBloat.h"
 #include "nsStringStream.h"
-#include "nsDOMString.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
@@ -123,13 +122,6 @@ nsAboutBloat::GetURIFlags(nsIURI *aURI, uint32_t *result)
 {
     *result = 0;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAboutBloat::GetIndexedDBOriginPostfix(nsIURI *aURI, nsAString &result)
-{
-    SetDOMStringToNull(result);
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
