@@ -270,6 +270,10 @@ pretty-l10n-check:
 pretty-update-packaging:
 	$(MAKE) -C tools/update-packaging MOZ_PKG_PRETTYNAMES=1
 
+.PHONY: pretty-installer
+pretty-installer:
+	$(MAKE) installer MOZ_PKG_PRETTYNAMES=1
+
 #XXX: this is a hack, since we don't want to clobber for MSVC
 # PGO support, but we can't do this test in client.mk
 ifneq ($(OS_ARCH)_$(GNU_CC), WINNT_)

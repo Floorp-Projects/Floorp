@@ -1,3 +1,9 @@
+. "$topsrcdir/build/mozconfig.win-common"
+MOZ_AUTOMATION_CHECK=0
+MOZ_AUTOMATION_L10N_CHECK=0
+MOZ_AUTOMATION_TALOS_SENDCHANGE=0
+MOZ_AUTOMATION_UNITTEST_SENDCHANGE=0
+MOZ_AUTOMATION_UPLOAD=0
 . "$topsrcdir/browser/config/mozconfigs/win32/debug"
 
 ac_add_options --disable-unified-compilation
