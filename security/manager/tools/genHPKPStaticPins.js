@@ -33,8 +33,8 @@ const SHA1_PREFIX = "sha1/";
 const SHA256_PREFIX = "sha256/";
 const GOOGLE_PIN_PREFIX = "GOOGLE_PIN_";
 
-// Pins expire in 18 weeks
-const PINNING_MINIMUM_REQUIRED_MAX_AGE = 60 * 60 * 24 * 7 * 18;
+// Pins expire in 14 weeks (6 weeks on Beta + 8 weeks on stable)
+const PINNING_MINIMUM_REQUIRED_MAX_AGE = 60 * 60 * 24 * 7 * 14;
 
 const FILE_HEADER = "/* This Source Code Form is subject to the terms of the Mozilla Public\n" +
 " * License, v. 2.0. If a copy of the MPL was not distributed with this\n" +
