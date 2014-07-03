@@ -2363,7 +2363,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     // get the various other object pointers we need
 
     nsXPConnect* xpc = nsXPConnect::XPConnect();
-    XPCWrappedNativeScope* scope = GetObjectScope(obj);
+    XPCWrappedNativeScope* scope = ObjectScope(obj);
     nsCOMPtr<nsIXPCComponents> comp;
 
     if (!xpc || !scope || !(comp = do_QueryInterface(scope->GetComponents())))
@@ -3145,7 +3145,7 @@ nsXPCComponents_Utils::SetWantXrays(HandleValue vscope, JSContext *cx)
         return NS_ERROR_INVALID_ARG;
     JSObject *scopeObj = js::UncheckedUnwrap(&vscope.toObject());
     JSCompartment *compartment = js::GetObjectCompartment(scopeObj);
-    EnsureCompartmentPrivate(scopeObj)->wantXrays = true;
+    CompartmentPrivate::Get(scopeObj)->wantXrays = true;
     bool ok = js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
                                     js::AllCompartments());
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
@@ -3160,7 +3160,7 @@ nsXPCComponents_Utils::ForcePrivilegedComponentsForScope(HandleValue vscope,
     if (!vscope.isObject())
         return NS_ERROR_INVALID_ARG;
     JSObject *scopeObj = js::UncheckedUnwrap(&vscope.toObject());
-    XPCWrappedNativeScope *scope = GetObjectScope(scopeObj);
+    XPCWrappedNativeScope *scope = ObjectScope(scopeObj);
     scope->ForcePrivilegedComponents();
     return NS_OK;
 }
@@ -3173,7 +3173,7 @@ nsXPCComponents_Utils::GetComponentsForScope(HandleValue vscope, JSContext *cx,
     if (!vscope.isObject())
         return NS_ERROR_INVALID_ARG;
     JSObject *scopeObj = js::UncheckedUnwrap(&vscope.toObject());
-    XPCWrappedNativeScope *scope = GetObjectScope(scopeObj);
+    XPCWrappedNativeScope *scope = ObjectScope(scopeObj);
     RootedObject components(cx);
     if (!scope->GetComponentsJSObject(&components))
         return NS_ERROR_FAILURE;
