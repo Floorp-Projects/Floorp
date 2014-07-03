@@ -3,6 +3,6 @@
 var N = 1 << 16;
 var m = new Map;
 for (var i = 0; i < N; i++)
-    assertEq(m.set(i, i), undefined);
+    assertEq(m.set(i, i), m);
 for (var i = 0; i < N; i++)
     assertEq(m.get(i), i);

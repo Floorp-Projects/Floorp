@@ -1315,7 +1315,7 @@ MapObject::set_impl(JSContext *cx, CallArgs args)
         return false;
     }
     WriteBarrierPost(cx->runtime(), &map, key.get());
-    args.rval().setUndefined();
+    args.rval().set(args.thisv());
     return true;
 }
 
@@ -1777,7 +1777,7 @@ SetObject::add_impl(JSContext *cx, CallArgs args)
         return false;
     }
     WriteBarrierPost(cx->runtime(), &set, key.get());
-    args.rval().setUndefined();
+    args.rval().set(args.thisv());
     return true;
 }
 
