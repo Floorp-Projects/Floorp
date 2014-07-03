@@ -250,8 +250,25 @@ MOZ_SOURCE_STAMP := $(MOZ_SOURCE_STAMP)
 export MOZ_SOURCE_STAMP
 endif
 
+.PHONY: update-packaging
 update-packaging:
 	$(MAKE) -C tools/update-packaging
+
+.PHONY: pretty-package
+pretty-package:
+	$(MAKE) package MOZ_PKG_PRETTYNAMES=1
+
+.PHONY: pretty-package-tests
+pretty-package-tests:
+	$(MAKE) package-tests MOZ_PKG_PRETTYNAMES=1
+
+.PHONY: pretty-l10n-check
+pretty-l10n-check:
+	$(MAKE) l10n-check MOZ_PKG_PRETTYNAMES=1
+
+.PHONY: pretty-update-packaging
+pretty-update-packaging:
+	$(MAKE) -C tools/update-packaging MOZ_PKG_PRETTYNAMES=1
 
 #XXX: this is a hack, since we don't want to clobber for MSVC
 # PGO support, but we can't do this test in client.mk
