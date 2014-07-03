@@ -180,18 +180,28 @@ float4 RGBShaderMask(const VS_MASK_OUTPUT aVertex) : SV_Target
   return result * mask;
 }
 
+/* From Rec601:
+[R]   [1.1643835616438356,  0.0,                 1.5960267857142858]      [ Y -  16]
+[G] = [1.1643835616438358, -0.3917622900949137, -0.8129676472377708]    x [Cb - 128]
+[B]   [1.1643835616438356,  2.017232142857143,   8.862867620416422e-17]   [Cr - 128]
+
+For [0,1] instead of [0,255], and to 5 places:
+[R]   [1.16438,  0.00000,  1.59603]   [ Y - 0.06275]
+[G] = [1.16438, -0.39176, -0.81297] x [Cb - 0.50196]
+[B]   [1.16438,  2.01723,  0.00000]   [Cr - 0.50196]
+*/
 float4 CalculateYCbCrColor(const float2 aTexCoords)
 {
   float4 yuv;
   float4 color;
 
-  yuv.r = tCr.Sample(sSampler, aTexCoords).a - 0.5;
-  yuv.g = tY.Sample(sSampler, aTexCoords).a - 0.0625;
-  yuv.b = tCb.Sample(sSampler, aTexCoords).a - 0.5;
+  yuv.r = tCr.Sample(sSampler, aTexCoords).a - 0.50196;
+  yuv.g = tY.Sample(sSampler, aTexCoords).a  - 0.06275;
+  yuv.b = tCb.Sample(sSampler, aTexCoords).a - 0.50196;
 
-  color.r = yuv.g * 1.164 + yuv.r * 1.596;
-  color.g = yuv.g * 1.164 - 0.813 * yuv.r - 0.391 * yuv.b;
-  color.b = yuv.g * 1.164 + yuv.b * 2.018;
+  color.r = yuv.g * 1.16438 + yuv.r * 1.59603;
+  color.g = yuv.g * 1.16438 - 0.81297 * yuv.r - 0.39176 * yuv.b;
+  color.b = yuv.g * 1.16438 + yuv.b * 2.01723;
   color.a = 1.0f;
 
   return color;
