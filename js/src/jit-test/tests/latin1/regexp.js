@@ -36,3 +36,7 @@ assertEq("\u12001abcdefghijklm8".search(re), -1);
 // correctly for characters outside Latin1 with Latin1 equivalents.
 var s = toLatin1("foobar\xff5baz");
 assertEq(s.search(/bar\u0178\d/i), 3);
+
+// Bug 1032067.
+''.match(eval("/(:[aaaaa\cC]\u1200)(?:\S|(?=(\3)))+?/y"));
+assertEq(Function("return /(\uB0DA()})/.toString();")(), "/(\uB0DA()})/");
