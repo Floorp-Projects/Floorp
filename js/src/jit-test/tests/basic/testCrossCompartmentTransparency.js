@@ -83,13 +83,13 @@ test("new RegExp('1')", function(r) assertEq(String(/x/.compile(r)), String(r)))
 test("new WeakMap()", function(w) WeakMap.prototype.has.call(w, {}));
 test("new WeakMap()", function(w) WeakMap.prototype.get.call(w, {}));
 test("new WeakMap()", function(w) WeakMap.prototype.delete.call(w, {}));
-test("new WeakMap()", function(w) WeakMap.prototype.set.call(w, {}));
+test("new WeakMap()", function(w) WeakMap.prototype.set.call(w, {}).toString());
 test("new Map()", function(w) Map.prototype.has.call(w, {}));
 test("new Map()", function(w) Map.prototype.get.call(w, {}));
 test("new Map()", function(w) Map.prototype.delete.call(w, {}));
-test("new Map()", function(w) Map.prototype.set.call(w, {}));
+test("new Map()", function(w) Map.prototype.set.call(w, {}).toString());
 test("new Set()", function(w) Set.prototype.has.call(w, {}));
-test("new Set()", function(w) Set.prototype.add.call(w, {}));
+test("new Set()", function(w) Set.prototype.add.call(w, {}).toString());
 test("new Set()", function(w) Set.prototype.delete.call(w, {}));
 
 test("new Int8Array(1)", function(a) Int8Array.prototype.subarray.call(a).toString());
