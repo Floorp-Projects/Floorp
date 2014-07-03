@@ -51,6 +51,9 @@ class StringBuffer
      */
     mozilla::DebugOnly<bool> hasEnsuredTwoByteChars_;
 
+    /* Number of reserve()'d chars, see inflateChars. */
+    size_t reserved_;
+
     StringBuffer(const StringBuffer &other) MOZ_DELETE;
     void operator=(const StringBuffer &other) MOZ_DELETE;
 
@@ -71,7 +74,7 @@ class StringBuffer
 
   public:
     explicit StringBuffer(ExclusiveContext *cx)
-      : cx(cx), hasEnsuredTwoByteChars_(false)
+      : cx(cx), hasEnsuredTwoByteChars_(false), reserved_(0)
     {
         if (EnableLatin1Strings)
             cb.construct<Latin1CharBuffer>(cx);
@@ -80,6 +83,8 @@ class StringBuffer
     }
 
     inline bool reserve(size_t len) {
+        if (len > reserved_)
+            reserved_ = len;
         return isLatin1() ? latin1Chars().reserve(len) : twoByteChars().reserve(len);
     }
     inline bool resize(size_t len) {
