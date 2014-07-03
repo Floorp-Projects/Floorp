@@ -10,7 +10,11 @@ module.metadata = {
 const file = require("../io/file");
 const memory = require('./memory');
 const { Loader } = require("../test/loader");
-const cuddlefish = require("../loader/cuddlefish");
+
+const { isNative } = require('@loader/options');
+
+const cuddlefish = isNative ? require("toolkit/loader") : require("../loader/cuddlefish");
+
 const { defer, resolve } = require("../core/promise");
 const { getAddon } = require("../addon/installer");
 const { id } = require("sdk/self");
@@ -22,7 +26,7 @@ const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {}
 var ios = Cc['@mozilla.org/network/io-service;1']
           .getService(Ci.nsIIOService);
 
-const TEST_REGEX = /(([^\/]+\/)(?:lib\/)?)(tests?\/test-[^\.\/]+)\.js$/;
+const TEST_REGEX = /(([^\/]+\/)(?:lib\/)?)?(tests?\/test-[^\.\/]+)\.js$/;
 
 const { mapcat, map, filter, fromEnumerator } = require("sdk/util/sequence");
 
@@ -54,8 +58,9 @@ const getSuites = function getSuites({ id }) {
     let file = xpiURI.QueryInterface(Ci.nsIFileURL).file;
     let suites = [];
     let addEntry = (entry) => {
-      if (TEST_REGEX.test(entry)) {
-        let suite = RegExp.$2 + RegExp.$3;
+      let pass = TEST_REGEX.test(entry);
+      if (pass) {
+        let suite = (isNative ? "./" : "") + RegExp.$2 + RegExp.$3;
         suites.push(suite);
       }
     }

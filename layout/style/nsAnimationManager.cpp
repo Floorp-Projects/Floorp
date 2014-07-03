@@ -394,6 +394,15 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
   for (uint32_t animIdx = 0, animEnd = disp->mAnimationNameCount;
        animIdx != animEnd; ++animIdx) {
     const StyleAnimation& src = disp->mAnimations[animIdx];
+
+    // CSS Animations with an animation-name of "none" are represented
+    // by StyleAnimations with an empty name. Unlike animations with an empty
+    // keyframes rule, these "none" animations should not generate events
+    // at all so we drop them here.
+    if (src.GetName().IsEmpty()) {
+      continue;
+    }
+
     nsRefPtr<ElementAnimation> dest =
       *aAnimations.AppendElement(new ElementAnimation());
 
@@ -562,8 +571,6 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
         dest->mProperties.RemoveElementAt(dest->mProperties.Length() - 1);
       }
     }
-
-    aAnimations.AppendElement(dest);
   }
 }
 

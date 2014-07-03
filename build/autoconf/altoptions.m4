@@ -82,7 +82,42 @@ define(MOZ_ARG_HEADER, [# $1])
 dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
 AC_DEFUN([MOZ_READ_MOZCONFIG],
 [AC_REQUIRE([AC_INIT_BINSH])dnl
-# Read in '.mozconfig' script to set the initial options.
-# See the mozconfig2configure script for more details.
-_AUTOCONF_TOOLS_DIR=`dirname [$]0`/[$1]/build/autoconf
-. $_AUTOCONF_TOOLS_DIR/mozconfig2configure])
+inserted=
+dnl Shell is hard, so here is what the following does:
+dnl - Reset $@ (command line arguments)
+dnl - Add the configure options from mozconfig to $@ one by one
+dnl - Add the original command line arguments after that, one by one
+dnl
+dnl There are several tricks involved:
+dnl - It is not possible to preserve the whitespaces in $@ by assigning to
+dnl   another variable, so the two first steps above need to happen in the first
+dnl   iteration of the third step.
+dnl - We always want the configure options to be added, so the loop must be
+dnl   iterated at least once, so we add a dummy argument first, and discard it.
+dnl - something | while read line ... makes the while run in a subshell, meaning
+dnl   that anything it does is not propagated to the main shell, so we can't do
+dnl   set -- foo there. As a consequence, what the while loop reading mach
+dnl   environment output does is output a set of shell commands for the main shell
+dnl   to eval.
+dnl - Extra care is due when lines from mach environment output contain special
+dnl   shell characters, so we use ' for quoting and ensure no ' end up in between
+dnl   the quoting mark unescaped.
+dnl Some of the above is directly done in mach environment --format=configure.
+failed_eval() {
+  echo "Failed eval'ing the following:"
+  $(dirname [$]0)/[$1]/mach environment --format=configure
+  exit 1
+}
+
+set -- dummy "[$]@"
+for ac_option
+do
+  if test -z "$inserted"; then
+    set --
+    eval "$($(dirname [$]0)/[$1]/mach environment --format=configure)" || failed_eval
+    inserted=1
+  else
+    set -- "[$]@" "$ac_option"
+  fi
+done
+])

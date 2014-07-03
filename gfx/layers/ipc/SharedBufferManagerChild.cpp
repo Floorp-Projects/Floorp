@@ -321,7 +321,7 @@ bool SharedBufferManagerChild::RecvDropGrallocBuffer(const mozilla::layers::Mayb
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   NS_ASSERTION(handle.type() == mozilla::layers::MaybeMagicGrallocBufferHandle::TGrallocBufferRef, "shouldn't go this way");
-  int bufferKey = handle.get_GrallocBufferRef().mKey;
+  int64_t bufferKey = handle.get_GrallocBufferRef().mKey;
 
   {
     MutexAutoLock lock(mBufferMutex);
@@ -334,7 +334,7 @@ bool SharedBufferManagerChild::RecvDropGrallocBuffer(const mozilla::layers::Mayb
 
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
 android::sp<android::GraphicBuffer>
-SharedBufferManagerChild::GetGraphicBuffer(int key)
+SharedBufferManagerChild::GetGraphicBuffer(int64_t key)
 {
   MutexAutoLock lock(mBufferMutex);
   if (mBuffers.count(key) == 0)

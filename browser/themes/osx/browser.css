@@ -4426,10 +4426,6 @@ window > chatbox {
     -moz-image-region: rect(0, 96px, 48px, 48px);
   }
 
-  #customization-titlebar-visibility-button > .button-box > .button-icon {
-    width: 24px;
-  }
-
   .customization-tipPanel-infoBox {
     background-image: url(chrome://browser/skin/customizableui/info-icon-customizeTip@2x.png);
     background-size: 25px 25px;
