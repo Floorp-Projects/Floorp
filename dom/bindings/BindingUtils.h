@@ -1128,7 +1128,7 @@ FindEnumStringIndex(JSContext* cx, JS::Handle<JS::Value> v, const EnumEntry* val
     int index;
     size_t length;
     JS::AutoCheckCannotGC nogc;
-    if (JS_StringHasLatin1Chars(str)) {
+    if (js::StringHasLatin1Chars(str)) {
       const JS::Latin1Char* chars = JS_GetLatin1StringCharsAndLength(cx, nogc, str,
                                                                      &length);
       if (!chars) {
@@ -1877,11 +1877,9 @@ enum StringificationBehavior {
   eNull
 };
 
-// pval must not be null and must point to a rooted JS::Value
 template<typename T>
 static inline bool
 ConvertJSValueToString(JSContext* cx, JS::Handle<JS::Value> v,
-                       JS::MutableHandle<JS::Value> pval,
                        StringificationBehavior nullBehavior,
                        StringificationBehavior undefinedBehavior,
                        T& result)
@@ -1912,7 +1910,6 @@ ConvertJSValueToString(JSContext* cx, JS::Handle<JS::Value> v,
     if (!s) {
       return false;
     }
-    pval.set(JS::StringValue(s));  // Root the new string.
   }
 
   return binding_detail::AssignJSString(cx, result, s);
@@ -1920,8 +1917,7 @@ ConvertJSValueToString(JSContext* cx, JS::Handle<JS::Value> v,
 
 bool
 ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
-                           JS::MutableHandle<JS::Value> pval, bool nullable,
-                           nsACString& result);
+                           bool nullable, nsACString& result);
 
 template<typename T>
 void DoTraceSequence(JSTracer* trc, FallibleTArray<T>& seq);
