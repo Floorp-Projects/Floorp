@@ -77,9 +77,10 @@ class TestMozbuildObject(unittest.TestCase):
     def test_objdir_config_status(self):
         """Ensure @CONFIG_GUESS@ is handled when loading mozconfig."""
         base = self.get_base()
-        guess = subprocess.check_output(
+        cmd = base._normalize_command(
             [os.path.join(topsrcdir, 'build', 'autoconf', 'config.guess')],
-            cwd=topsrcdir).strip()
+            True)
+        guess = subprocess.check_output(cmd, cwd=topsrcdir).strip()
 
         # There may be symlinks involved, so we use real paths to ensure
         # path consistency.
