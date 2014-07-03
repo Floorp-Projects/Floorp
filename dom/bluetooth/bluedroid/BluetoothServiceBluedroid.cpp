@@ -1365,6 +1365,27 @@ BluetoothServiceBluedroid::RemoveDeviceInternal(
   return NS_OK;
 }
 
+class PinReplyResultHandler MOZ_FINAL : public BluetoothResultHandler
+{
+public:
+  PinReplyResultHandler(BluetoothReplyRunnable* aRunnable)
+  : mRunnable(aRunnable)
+  { }
+
+  void PinReply() MOZ_OVERRIDE
+  {
+    DispatchBluetoothReply(mRunnable, BluetoothValue(true), EmptyString());
+  }
+
+  void OnError(int aStatus) MOZ_OVERRIDE
+  {
+    ReplyStatusError(mRunnable, aStatus, NS_LITERAL_STRING("SetPinCode"));
+  }
+
+private:
+  BluetoothReplyRunnable* mRunnable;
+};
+
 bool
 BluetoothServiceBluedroid::SetPinCodeInternal(
   const nsAString& aDeviceAddress, const nsAString& aPinCode,
@@ -1377,15 +1398,10 @@ BluetoothServiceBluedroid::SetPinCodeInternal(
   bt_bdaddr_t remoteAddress;
   StringToBdAddressType(aDeviceAddress, &remoteAddress);
 
-  int ret = sBtInterface->PinReply(
-      &remoteAddress, true, aPinCode.Length(),
-      (bt_pin_code_t*)NS_ConvertUTF16toUTF8(aPinCode).get());
-
-  if (ret != BT_STATUS_SUCCESS) {
-    ReplyStatusError(aRunnable, ret, NS_LITERAL_STRING("SetPinCode"));
-  } else {
-    DispatchBluetoothReply(aRunnable, BluetoothValue(true), EmptyString());
-  }
+  sBtInterface->PinReply(
+    &remoteAddress, true, aPinCode.Length(),
+    (bt_pin_code_t*)NS_ConvertUTF16toUTF8(aPinCode).get(),
+    new PinReplyResultHandler(aRunnable));
 
   return true;
 }
@@ -1397,6 +1413,28 @@ BluetoothServiceBluedroid::SetPasskeyInternal(
 {
   return true;
 }
+
+class SspReplyResultHandler MOZ_FINAL : public BluetoothResultHandler
+{
+public:
+  SspReplyResultHandler(BluetoothReplyRunnable* aRunnable)
+  : mRunnable(aRunnable)
+  { }
+
+  void SspReply() MOZ_OVERRIDE
+  {
+    DispatchBluetoothReply(mRunnable, BluetoothValue(true), EmptyString());
+  }
+
+  void OnError(int aStatus) MOZ_OVERRIDE
+  {
+    ReplyStatusError(mRunnable, aStatus,
+                     NS_LITERAL_STRING("SetPairingConfirmation"));
+  }
+
+private:
+  BluetoothReplyRunnable* mRunnable;
+};
 
 bool
 BluetoothServiceBluedroid::SetPairingConfirmationInternal(
@@ -1410,15 +1448,8 @@ BluetoothServiceBluedroid::SetPairingConfirmationInternal(
   bt_bdaddr_t remoteAddress;
   StringToBdAddressType(aDeviceAddress, &remoteAddress);
 
-  int ret = sBtInterface->SspReply(&remoteAddress, (bt_ssp_variant_t)0,
-                                   aConfirm, 0);
-  if (ret != BT_STATUS_SUCCESS) {
-    ReplyStatusError(aRunnable, ret,
-                     NS_LITERAL_STRING("SetPairingConfirmation"));
-  } else {
-    DispatchBluetoothReply(aRunnable, BluetoothValue(true), EmptyString());
-  }
-
+  sBtInterface->SspReply(&remoteAddress, (bt_ssp_variant_t)0, aConfirm, 0,
+                         new SspReplyResultHandler(aRunnable));
   return true;
 }
 

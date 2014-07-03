@@ -277,11 +277,13 @@ public:
 
   /* Authentication */
 
-  int PinReply(const bt_bdaddr_t* aBdAddr, uint8_t aAccept,
-               uint8_t aPinLen, bt_pin_code_t* aPinCode);
+  void PinReply(const bt_bdaddr_t* aBdAddr, uint8_t aAccept,
+                uint8_t aPinLen, bt_pin_code_t* aPinCode,
+                BluetoothResultHandler* aRes);
 
-  int SspReply(const bt_bdaddr_t* aBdAddr, bt_ssp_variant_t aVariant,
-               uint8_t aAccept, uint32_t aPasskey);
+  void SspReply(const bt_bdaddr_t* aBdAddr, bt_ssp_variant_t aVariant,
+                uint8_t aAccept, uint32_t aPasskey,
+                BluetoothResultHandler* aRes);
 
   /* DUT Mode */
 
