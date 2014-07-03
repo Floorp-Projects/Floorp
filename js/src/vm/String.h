@@ -256,7 +256,7 @@ class JSString : public js::gc::BarrieredCell<JSString>
 
     static const uint32_t LATIN1_CHARS_BIT      = JS_BIT(6);
 
-    static const uint32_t MAX_LENGTH            = JS_BIT(28) - 1;
+    static const uint32_t MAX_LENGTH            = js::MaxStringLength;
 
     static const JS::Latin1Char MAX_LATIN1_CHAR = 0xff;
 
