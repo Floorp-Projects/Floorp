@@ -62,24 +62,27 @@ void Axis::StartTouch(int32_t aPos, uint32_t aTimestampMs) {
   mAxisLocked = false;
 }
 
-float Axis::AdjustDisplacement(float aDisplacement, float& aOverscrollAmountOut) {
+bool Axis::AdjustDisplacement(float aDisplacement,
+                              float& aDisplacementOut,
+                              float& aOverscrollAmountOut)
+{
   if (mAxisLocked) {
     aOverscrollAmountOut = 0;
-    return 0;
+    aDisplacementOut = 0;
+    return false;
   }
 
   float displacement = aDisplacement;
 
   // First consume any overscroll in the opposite direction along this axis.
+  float consumedOverscroll = 0;
   if (mOverscroll > 0 && aDisplacement < 0) {
-    float consumedOverscroll = std::min(mOverscroll, -aDisplacement);
-    mOverscroll -= consumedOverscroll;
-    displacement += consumedOverscroll;
+    consumedOverscroll = std::min(mOverscroll, -aDisplacement);
   } else if (mOverscroll < 0 && aDisplacement > 0) {
-    float consumedOverscroll = std::min(-mOverscroll, aDisplacement);
-    mOverscroll += consumedOverscroll;
-    displacement -= consumedOverscroll;
+    consumedOverscroll = 0 - std::min(-mOverscroll, aDisplacement);
   }
+  mOverscroll -= consumedOverscroll;
+  displacement += consumedOverscroll;
 
   // Split the requested displacement into an allowed displacement that does
   // not overscroll, and an overscroll amount.
@@ -90,7 +93,8 @@ float Axis::AdjustDisplacement(float aDisplacement, float& aOverscrollAmountOut)
     aOverscrollAmountOut = DisplacementWillOverscrollAmount(displacement);
     displacement -= aOverscrollAmountOut;
   }
-  return displacement;
+  aDisplacementOut = displacement;
+  return fabsf(consumedOverscroll) > EPSILON;
 }
 
 float Axis::ApplyResistance(float aRequestedOverscroll) const {
