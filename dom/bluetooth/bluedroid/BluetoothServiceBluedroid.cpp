@@ -103,6 +103,16 @@ private:
 class SetupAfterEnabledTask MOZ_FINAL : public nsRunnable
 {
 public:
+  class SetAdapterPropertyResultHandler MOZ_FINAL
+  : public BluetoothResultHandler
+  {
+  public:
+    void OnError(int aStatus) MOZ_OVERRIDE
+    {
+      BT_LOGR("Fail to set: BT_SCAN_MODE_CONNECTABLE");
+    }
+  };
+
   NS_IMETHOD
   Run()
   {
@@ -123,11 +133,8 @@ public:
     prop.len = sizeof(mode);
 
     NS_ENSURE_TRUE(sBtInterface, NS_ERROR_FAILURE);
-
-    int ret = sBtInterface->SetAdapterProperty(&prop);
-    if (ret != BT_STATUS_SUCCESS) {
-      BT_LOGR("Fail to set: BT_SCAN_MODE_CONNECTABLE");
-    }
+    sBtInterface->SetAdapterProperty(&prop,
+                                     new SetAdapterPropertyResultHandler());
 
     // Try to fire event 'AdapterAdded' to fit the original behaviour when
     // we used BlueZ as backend.
@@ -1141,6 +1148,22 @@ BluetoothServiceBluedroid::StopDiscoveryInternal(
   return NS_OK;
 }
 
+class SetAdapterPropertyResultHandler MOZ_FINAL : public BluetoothResultHandler
+{
+public:
+  SetAdapterPropertyResultHandler(BluetoothReplyRunnable* aRunnable)
+  : mRunnable(aRunnable)
+  { }
+
+  void OnError(int aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    ReplyStatusError(mRunnable, aStatus, NS_LITERAL_STRING("SetProperty"));
+  }
+private:
+  BluetoothReplyRunnable* mRunnable;
+};
+
 nsresult
 BluetoothServiceBluedroid::SetProperty(BluetoothObjectType aType,
                                        const BluetoothNamedValue& aValue,
@@ -1189,10 +1212,8 @@ BluetoothServiceBluedroid::SetProperty(BluetoothObjectType aType,
 
   sSetPropertyRunnableArray.AppendElement(aRunnable);
 
-  int ret = sBtInterface->SetAdapterProperty(&prop);
-  if (ret != BT_STATUS_SUCCESS) {
-    ReplyStatusError(aRunnable, ret, NS_LITERAL_STRING("SetProperty"));
-  }
+  sBtInterface->SetAdapterProperty(&prop,
+    new SetAdapterPropertyResultHandler(aRunnable));
 
   return NS_OK;
 }
