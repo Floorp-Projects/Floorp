@@ -36,8 +36,8 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void loadViewTypeElement(ArrayBufferView::ViewType vt, const T &srcAddr,
                                        const LDefinition *out);
     template<typename T>
-    bool storeAndNoteViewTypeElement(ArrayBufferView::ViewType vt, const LAllocation *value,
-                              const T &dstAddr);
+    void storeAndNoteViewTypeElement(ArrayBufferView::ViewType vt, const LAllocation *value,
+                                     const T &dstAddr);
     template<typename T>
     void storeViewTypeElement(ArrayBufferView::ViewType vt, const LAllocation *value,
                                         const T &dstAddr);
