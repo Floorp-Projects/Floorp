@@ -562,8 +562,6 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
         dest->mProperties.RemoveElementAt(dest->mProperties.Length() - 1);
       }
     }
-
-    aAnimations.AppendElement(dest);
   }
 }
 
