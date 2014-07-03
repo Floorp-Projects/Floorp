@@ -657,6 +657,16 @@ DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
 TemporaryRef<SourceSurface>
 DrawTargetSkia::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const
 {
+  if (aSurface.mType == NativeSurfaceType::CAIRO_SURFACE) {
+    if (aSurface.mSize.width <= 0 ||
+        aSurface.mSize.height <= 0) {
+      gfxWarning() << "Can't create a SourceSurface without a valid size";
+      return nullptr;
+    }
+    cairo_surface_t* surf = static_cast<cairo_surface_t*>(aSurface.mSurface);
+    return new SourceSurfaceCairo(surf, aSurface.mSize, aSurface.mFormat);
+  }
+
   return nullptr;
 }
 
