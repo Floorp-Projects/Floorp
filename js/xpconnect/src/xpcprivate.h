@@ -962,9 +962,6 @@ class XPCWrappedNativeScope : public PRCList
 {
 public:
 
-    static XPCWrappedNativeScope*
-    GetNewOrUsed(JSContext *cx, JS::HandleObject aGlobal);
-
     XPCJSRuntime*
     GetRuntime() const {return XPCJSRuntime::Get();}
 

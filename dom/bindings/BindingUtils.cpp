@@ -2486,7 +2486,10 @@ bool
 CreateGlobalOptions<nsGlobalWindow>::PostCreateGlobal(JSContext* aCx,
                                                       JS::Handle<JSObject*> aGlobal)
 {
-  return XPCWrappedNativeScope::GetNewOrUsed(aCx, aGlobal);
+  // Invoking the XPCWrappedNativeScope constructor automatically hooks it
+  // up to the compartment of aGlobal.
+  (void) new XPCWrappedNativeScope(aCx, aGlobal);
+  return true;
 }
 
 #ifdef DEBUG
