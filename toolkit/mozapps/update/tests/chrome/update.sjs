@@ -44,23 +44,37 @@ function handleRequest(aRequest, aResponse) {
   // mar will be downloaded asynchronously which will allow the ui to load
   // before the download completes.
   if (params.slowDownloadMar) {
+    var i;
     aResponse.processAsync();
     aResponse.setHeader("Content-Type", "binary/octet-stream");
     aResponse.setHeader("Content-Length", SIZE_SIMPLE_MAR);
+    var continueFile = AUS_Cc["@mozilla.org/file/directory_service;1"].
+                       getService(AUS_Ci.nsIProperties).
+                       get("CurWorkD", AUS_Ci.nsILocalFile);
+    var continuePath = REL_PATH_DATA + "continue";
+    var continuePathParts = continuePath.split("/");
+    for (i = 0; i < continuePathParts.length; ++i) {
+      continueFile.append(continuePathParts[i]);
+    }
+
     var marFile = AUS_Cc["@mozilla.org/file/directory_service;1"].
                   getService(AUS_Ci.nsIProperties).
                   get("CurWorkD", AUS_Ci.nsILocalFile);
     var path = REL_PATH_DATA + FILE_SIMPLE_MAR;
     var pathParts = path.split("/");
-    for(var i = 0; i < pathParts.length; ++i)
+    for (i = 0; i < pathParts.length; ++i) {
       marFile.append(pathParts[i]);
+    }
     var contents = readFileBytes(marFile);
     gTimer = AUS_Cc["@mozilla.org/timer;1"].
              createInstance(AUS_Ci.nsITimer);
     gTimer.initWithCallback(function(aTimer) {
-      aResponse.write(contents);
-      aResponse.finish();
-    }, SLOW_MAR_DOWNLOAD_INTERVAL, AUS_Ci.nsITimer.TYPE_ONE_SHOT);
+      if (continueFile.exists()) {
+        gTimer.cancel();
+        aResponse.write(contents);
+        aResponse.finish();
+      }
+    }, SLOW_MAR_DOWNLOAD_INTERVAL, AUS_Ci.nsITimer.TYPE_REPEATING_SLACK);
     return;
   }
 
