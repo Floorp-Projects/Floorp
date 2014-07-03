@@ -33,34 +33,31 @@
 namespace mozilla { namespace pkix {
 
 Result
-CheckTimes(const CERTValidity& validity, PRTime time)
+CheckValidity(const SECItem& encodedValidity, PRTime time)
 {
-  der::Input notBeforeInput;
-  if (notBeforeInput.Init(validity.notBefore.data, validity.notBefore.len)
+  der::Input validity;
+  if (validity.Init(encodedValidity.data, encodedValidity.len)
         != der::Success) {
     return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
   }
   PRTime notBefore;
-  if (der::TimeChoice(validity.notBefore.type, notBeforeInput, notBefore)
-        != der::Success) {
+  if (der::TimeChoice(validity, notBefore) != der::Success) {
     return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
   }
   if (time < notBefore) {
     return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
   }
 
-  der::Input notAfterInput;
-  if (notAfterInput.Init(validity.notAfter.data, validity.notAfter.len)
-        != der::Success) {
-    return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
-  }
   PRTime notAfter;
-  if (der::TimeChoice(validity.notAfter.type, notAfterInput, notAfter)
-        != der::Success) {
+  if (der::TimeChoice(validity, notAfter) != der::Success) {
     return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
   }
   if (time > notAfter) {
     return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
+  }
+
+  if (der::End(validity) != der::Success) {
+    return MapSECStatus(SECFailure);
   }
 
   return Success;
@@ -408,7 +405,7 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
 Result
 CheckNameConstraints(const BackCert& cert)
 {
-  if (!cert.encodedNameConstraints) {
+  if (!cert.GetNameConstraints()) {
     return Success;
   }
 
@@ -419,7 +416,7 @@ CheckNameConstraints(const BackCert& cert)
 
   // Owned by arena
   const CERTNameConstraints* constraints =
-    CERT_DecodeNameConstraintsExtension(arena.get(), cert.encodedNameConstraints);
+    CERT_DecodeNameConstraintsExtension(arena.get(), cert.GetNameConstraints());
   if (!constraints) {
     return MapSECStatus(SECFailure);
   }
@@ -619,7 +616,7 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
 
 Result
 CheckIssuerIndependentProperties(TrustDomain& trustDomain,
-                                 BackCert& cert,
+                                 const BackCert& cert,
                                  PRTime time,
                                  EndEntityOrCA endEntityOrCA,
                                  KeyUsage requiredKeyUsageIfPresent,
@@ -654,15 +651,15 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
   // 4.2.1.2. Subject Key Identifier is ignored (see bug 965136).
 
   // 4.2.1.3. Key Usage
-  rv = CheckKeyUsage(endEntityOrCA, cert.encodedKeyUsage,
+  rv = CheckKeyUsage(endEntityOrCA, cert.GetKeyUsage(),
                      requiredKeyUsageIfPresent);
   if (rv != Success) {
     return rv;
   }
 
   // 4.2.1.4. Certificate Policies
-  rv = CheckCertificatePolicies(endEntityOrCA, cert.encodedCertificatePolicies,
-                                cert.encodedInhibitAnyPolicy, trustLevel,
+  rv = CheckCertificatePolicies(endEntityOrCA, cert.GetCertificatePolicies(),
+                                cert.GetInhibitAnyPolicy(), trustLevel,
                                 requiredPolicy);
   if (rv != Success) {
     return rv;
@@ -680,8 +677,8 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
   //          checking.
 
   // 4.2.1.9. Basic Constraints.
-  rv = CheckBasicConstraints(endEntityOrCA, cert.encodedBasicConstraints,
-                             cert.version, trustLevel, subCACount);
+  rv = CheckBasicConstraints(endEntityOrCA, cert.GetBasicConstraints(),
+                             cert.GetVersion(), trustLevel, subCACount);
   if (rv != Success) {
     return rv;
   }
@@ -692,7 +689,7 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
   //           documentation about policy enforcement in pkix.h.
 
   // 4.2.1.12. Extended Key Usage
-  rv = CheckExtendedKeyUsage(endEntityOrCA, cert.encodedExtendedKeyUsage,
+  rv = CheckExtendedKeyUsage(endEntityOrCA, cert.GetExtKeyUsage(),
                              requiredEKUIfPresent);
   if (rv != Success) {
     return rv;
@@ -707,7 +704,7 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
 
   // IMPORTANT: This check must come after the other checks in order for error
   // ranking to work correctly.
-  rv = CheckTimes(cert.GetNSSCert()->validity, time);
+  rv = CheckValidity(cert.GetValidity(), time);
   if (rv != Success) {
     return rv;
   }
