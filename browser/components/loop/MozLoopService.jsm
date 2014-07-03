@@ -167,7 +167,9 @@ let MozLoopServiceInternal = {
 
     let credentials;
     if (sessionToken) {
-      credentials = deriveHawkCredentials(sessionToken, "sessionToken", 2 * 32);
+      // true = use a hex key, as required by the server (see bug 1032738).
+      credentials = deriveHawkCredentials(sessionToken, "sessionToken",
+                                          2 * 32, true);
     }
 
     return this._hawkClient.request(path, method, credentials, payloadObj);
