@@ -397,6 +397,12 @@ public:
 
   virtual JSObject* WrapObject(JSContext *aCx) MOZ_OVERRIDE;
 
+  /**
+   * returns true if we are in priviliged code or
+   * layout.css.getBoxQuads.enabled == true.
+   */
+  static bool HasBoxQuadsSupport(JSContext* aCx, JSObject* /* unused */);
+
 protected:
   /**
    * WrapNode is called from WrapObject to actually wrap this node, WrapObject
