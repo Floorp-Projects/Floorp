@@ -498,7 +498,8 @@ function ThreadActor(aHooks, aGlobal)
   this._allEventsListener = this._allEventsListener.bind(this);
 
   this._options = {
-    useSourceMaps: false
+    useSourceMaps: false,
+    autoBlackBox: false
   };
 
   this._gripDepth = 0;
@@ -536,7 +537,7 @@ ThreadActor.prototype = {
 
   get sources() {
     if (!this._sources) {
-      this._sources = new ThreadSources(this, this._options.useSourceMaps,
+      this._sources = new ThreadSources(this, this._options,
                                         this._allowSource, this.onNewSource);
     }
     return this._sources;
@@ -4967,10 +4968,11 @@ exports.AddonThreadActor = AddonThreadActor;
  * Manages the sources for a thread. Handles source maps, locations in the
  * sources, etc for ThreadActors.
  */
-function ThreadSources(aThreadActor, aUseSourceMaps, aAllowPredicate,
+function ThreadSources(aThreadActor, aOptions, aAllowPredicate,
                        aOnNewSource) {
   this._thread = aThreadActor;
-  this._useSourceMaps = aUseSourceMaps;
+  this._useSourceMaps = aOptions.useSourceMaps;
+  this._autoBlackBox = aOptions.autoBlackBox;
   this._allow = aAllowPredicate;
   this._onNewSource = aOnNewSource;
 
@@ -4990,6 +4992,13 @@ function ThreadSources(aThreadActor, aUseSourceMaps, aAllowPredicate,
  */
 ThreadSources._blackBoxedSources = new Set(["self-hosted"]);
 ThreadSources._prettyPrintedSources = new Map();
+
+/**
+ * Matches strings of the form "foo.min.js" or "foo-min.js", etc. If the regular
+ * expression matches, we can be fairly sure that the source is minified, and
+ * treat it as such.
+ */
+const MINIFIED_SOURCE_REGEXP = /\bmin\.js$/;
 
 ThreadSources.prototype = {
   /**
@@ -5022,6 +5031,10 @@ ThreadSources.prototype = {
       return this._sourceActors[url];
     }
 
+    if (this._autoBlackBox && this._isMinifiedURL(url)) {
+      this.blackBox(url);
+    }
+
     let actor = new SourceActor({
       url: url,
       thread: this._thread,
@@ -5038,6 +5051,26 @@ ThreadSources.prototype = {
       reportError(e);
     }
     return actor;
+  },
+
+  /**
+   * Returns true if the URL likely points to a minified resource, false
+   * otherwise.
+   *
+   * @param String aURL
+   *        The URL to test.
+   * @returns Boolean
+   */
+  _isMinifiedURL: function (aURL) {
+    try {
+      let url = Services.io.newURI(aURL, null, null)
+                           .QueryInterface(Ci.nsIURL);
+      return MINIFIED_SOURCE_REGEXP.test(url.fileName);
+    } catch (e) {
+      // Not a valid URL so don't try to parse out the filename, just test the
+      // whole thing with the minified source regexp.
+      return MINIFIED_SOURCE_REGEXP.test(aURL);
+    }
   },
 
   /**
@@ -5182,7 +5215,7 @@ ThreadSources.prototype = {
   getOriginalLocation: function ({ url, line, column }) {
     if (url in this._sourceMapsByGeneratedSource) {
       column = column || 0;
-      
+
       return this._sourceMapsByGeneratedSource[url]
         .then((aSourceMap) => {
           let { source: aSourceURL, line: aLine, column: aColumn } = aSourceMap.originalPositionFor({
