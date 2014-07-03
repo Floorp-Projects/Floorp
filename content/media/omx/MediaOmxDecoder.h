@@ -21,10 +21,7 @@ public:
   virtual MediaDecoder* Clone();
   virtual MediaDecoderStateMachine* CreateStateMachine();
 
-  virtual void MetadataLoaded(int aChannels,
-                              int aRate,
-                              bool aHasAudio,
-                              bool aHasVideo,
+  virtual void MetadataLoaded(MediaInfo* aInfo,
                               MetadataTags* aTags);
   virtual void ChangeState(PlayState aState);
   virtual void ApplyStateToStateMachine(PlayState aState);
