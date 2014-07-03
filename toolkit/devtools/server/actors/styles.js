@@ -29,9 +29,6 @@ exports.PSEUDO_ELEMENTS = PSEUDO_ELEMENTS;
 // Predeclare the domnode actor type for use in requests.
 types.addActorType("domnode");
 
-// Predeclare the domstylerule actor type
-types.addActorType("domstylerule");
-
 /**
  * DOM Nodes returned by the style actor will be owned by the DOM walker
  * for the connection.
@@ -53,12 +50,6 @@ types.addDictType("matchedselector", {
   selector: "string",
   value: "string",
   status: "number"
-});
-
-types.addDictType("appliedStylesReturn", {
-  entries: "array:appliedstyle",
-  rules: "array:domstylerule",
-  sheets: "array:stylesheet"
 });
 
 /**
@@ -88,9 +79,6 @@ var PageStyleActor = protocol.ActorClass({
 
     // Stores the association of DOM objects -> actors
     this.refMap = new Map;
-
-    this.onFrameUnload = this.onFrameUnload.bind(this);
-    events.on(this.inspector.tabActor, "will-navigate", this.onFrameUnload);
   },
 
   get conn() this.inspector.conn,
@@ -291,6 +279,7 @@ var PageStyleActor = protocol.ActorClass({
   /**
    * Get the set of styles that apply to a given node.
    * @param NodeActor node
+   * @param string property
    * @param object options
    *   `filter`: A string filter that affects the "matched" handling.
    *     'user': Include properties from user style sheets.
@@ -302,8 +291,46 @@ var PageStyleActor = protocol.ActorClass({
    */
   getApplied: method(function(node, options) {
     let entries = [];
+
     this.addElementRules(node.rawNode, undefined, options, entries);
-    return this.getAppliedProps(node, entries, options);
+
+    if (options.inherited) {
+      let parent = this.walker.parentNode(node);
+      while (parent && parent.rawNode.nodeType != Ci.nsIDOMNode.DOCUMENT_NODE) {
+        this.addElementRules(parent.rawNode, parent, options, entries);
+        parent = this.walker.parentNode(parent);
+      }
+    }
+
+    if (options.matchedSelectors) {
+      for (let entry of entries) {
+        if (entry.rule.type === ELEMENT_STYLE) {
+          continue;
+        }
+
+        let domRule = entry.rule.rawRule;
+        let selectors = CssLogic.getSelectors(domRule);
+        let element = entry.inherited ? entry.inherited.rawNode : node.rawNode;
+        entry.matchedSelectors = [];
+        for (let i = 0; i < selectors.length; i++) {
+          if (DOMUtils.selectorMatchesElement(element, domRule, i)) {
+            entry.matchedSelectors.push(selectors[i]);
+          }
+        }
+
+      }
+    }
+
+    let rules = new Set;
+    let sheets = new Set;
+    entries.forEach(entry => rules.add(entry.rule));
+    this.expandSets(rules, sheets);
+
+    return {
+      entries: entries,
+      rules: [...rules],
+      sheets: [...sheets]
+    }
   }, {
     request: {
       node: Arg(0, "domnode"),
@@ -311,7 +338,11 @@ var PageStyleActor = protocol.ActorClass({
       matchedSelectors: Option(1, "boolean"),
       filter: Option(1, "string")
     },
-    response: RetVal("appliedStylesReturn")
+    response: RetVal(types.addDictType("appliedStylesReturn", {
+      entries: "array:appliedstyle",
+      rules: "array:domstylerule",
+      sheets: "array:stylesheet"
+    }))
   }),
 
   _hasInheritedProps: function(style) {
@@ -380,66 +411,6 @@ var PageStyleActor = protocol.ActorClass({
         });
       }
 
-    }
-  },
-
-  /**
-   * Helper function for getApplied and addNewRule that fetches a set of
-   * style properties that apply to the given node and associated rules
-   * @param NodeActor node
-   * @param object options
-   *   `filter`: A string filter that affects the "matched" handling.
-   *     'user': Include properties from user style sheets.
-   *     'ua': Include properties from user and user-agent sheets.
-   *     Default value is 'ua'
-   *   `inherited`: Include styles inherited from parent nodes.
-   *   `matchedSeletors`: Include an array of specific selectors that
-   *     caused this rule to match its node.
-   * @param array entries
-   *   List of appliedstyle objects that lists the rules that apply to the
-   *   node. If adding a new rule to the stylesheet, only the new rule entry
-   *   is provided and only the style properties that apply to the new
-   *   rule is fetched.
-   * @returns Object containing the list of rule entries, rule actors and
-   *   stylesheet actors that applies to the given node and its associated
-   *   rules.
-   */
-  getAppliedProps: function(node, entries, options) {
-    if (options.inherited) {
-      let parent = this.walker.parentNode(node);
-      while (parent && parent.rawNode.nodeType != Ci.nsIDOMNode.DOCUMENT_NODE) {
-        this.addElementRules(parent.rawNode, parent, options, entries);
-        parent = this.walker.parentNode(parent);
-      }
-    }
-
-    if (options.matchedSelectors) {
-      for (let entry of entries) {
-        if (entry.rule.type === ELEMENT_STYLE) {
-          continue;
-        }
-
-        let domRule = entry.rule.rawRule;
-        let selectors = CssLogic.getSelectors(domRule);
-        let element = entry.inherited ? entry.inherited.rawNode : node.rawNode;
-        entry.matchedSelectors = [];
-        for (let i = 0; i < selectors.length; i++) {
-          if (DOMUtils.selectorMatchesElement(element, domRule, i)) {
-            entry.matchedSelectors.push(selectors[i]);
-          }
-        }
-      }
-    }
-
-    let rules = new Set;
-    let sheets = new Set;
-    entries.forEach(entry => rules.add(entry.rule));
-    this.expandSets(rules, sheets);
-
-    return {
-      entries: entries,
-      rules: [...rules],
-      sheets: [...sheets]
     }
   },
 
@@ -545,59 +516,6 @@ var PageStyleActor = protocol.ActorClass({
     return margins;
   },
 
-  /**
-   * On page navigation, tidy up remaining objects.
-   */
-  onFrameUnload: function() {
-    this._styleElement = null;
-  },
-
-  /**
-   * Helper function to addNewRule to construct a new style tag in the document.
-   * @returns DOMElement of the style tag
-   */
-  get styleElement() {
-    if (!this._styleElement) {
-      let document = this.inspector.window.document;
-      let style = document.createElement("style");
-      style.setAttribute("type", "text/css");
-      document.head.appendChild(style);
-      this._styleElement = style;
-    }
-
-    return this._styleElement;
-  },
-
-  /**
-   * Adds a new rule, and returns the new StyleRuleActor.
-   * @param   NodeActor node
-   * @returns StyleRuleActor of the new rule
-   */
-  addNewRule: method(function(node) {
-    let style = this.styleElement;
-    let sheet = style.sheet;
-    let rawNode = node.rawNode;
-
-    let selector;
-    if (rawNode.id) {
-      selector = "#" + rawNode.id;
-    } else if (rawNode.className) {
-      selector = "." + rawNode.className;
-    } else {
-      selector = rawNode.tagName.toLowerCase();
-    }
-
-    let index = sheet.insertRule(selector +" {}", sheet.cssRules.length);
-    let ruleActor = this._styleRef(sheet.cssRules[index]);
-    return this.getAppliedProps(node, [{ rule: ruleActor }],
-      { matchedSelectors: true });
-  }, {
-    request: {
-      node: Arg(0, "domnode")
-    },
-    response: RetVal("appliedStylesReturn")
-  }),
-
 });
 exports.PageStyleActor = PageStyleActor;
 
@@ -632,16 +550,11 @@ var PageStyleFront = protocol.FrontClass(PageStyleActor, {
     });
   }, {
     impl: "_getApplied"
-  }),
-
-  addNewRule: protocol.custom(function(node) {
-    return this._addNewRule(node).then(ret => {
-      return ret.entries[0];
-    });
-  }, {
-    impl: "_addNewRule"
   })
 });
+
+// Predeclare the domstylerule actor type
+types.addActorType("domstylerule");
 
 /**
  * An actor that represents a CSS style object on the protocol.
