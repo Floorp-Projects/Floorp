@@ -71,7 +71,7 @@ void InitGralloc() {
 
 map<base::ProcessId, SharedBufferManagerParent* > SharedBufferManagerParent::sManagers;
 StaticAutoPtr<Monitor> SharedBufferManagerParent::sManagerMonitor;
-int SharedBufferManagerParent::sBufferKey = 0;
+uint64_t SharedBufferManagerParent::sBufferKey = 0;
 
 SharedBufferManagerParent::SharedBufferManagerParent(Transport* aTransport, base::ProcessId aOwner, base::Thread* aThread)
   : mTransport(aTransport)
@@ -193,7 +193,7 @@ bool SharedBufferManagerParent::RecvDropGrallocBuffer(const mozilla::layers::May
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   NS_ASSERTION(handle.type() == MaybeMagicGrallocBufferHandle::TGrallocBufferRef, "We shouldn't interact with the real buffer!");
-  int bufferKey = handle.get_GrallocBufferRef().mKey;
+  int64_t bufferKey = handle.get_GrallocBufferRef().mKey;
   sp<GraphicBuffer> buf = GetGraphicBuffer(bufferKey);
   MOZ_ASSERT(buf.get());
   MutexAutoLock lock(mBuffersMutex);
@@ -239,7 +239,7 @@ void SharedBufferManagerParent::DropGrallocBufferImpl(mozilla::layers::SurfaceDe
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   MutexAutoLock lock(mBuffersMutex);
-  int key = -1;
+  int64_t key = -1;
   MaybeMagicGrallocBufferHandle handle;
   if (aDesc.type() == SurfaceDescriptor::TNewSurfaceDescriptorGralloc)
     handle = aDesc.get_NewSurfaceDescriptorGralloc().buffer();
@@ -272,7 +272,7 @@ SharedBufferManagerParent* SharedBufferManagerParent::GetInstance(ProcessId id)
 
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
 android::sp<android::GraphicBuffer>
-SharedBufferManagerParent::GetGraphicBuffer(int key)
+SharedBufferManagerParent::GetGraphicBuffer(int64_t key)
 {
   MutexAutoLock lock(mBuffersMutex);
   NS_ASSERTION(mBuffers.count(key) == 1, "No such buffer, or the buffer is belongs to other session");
