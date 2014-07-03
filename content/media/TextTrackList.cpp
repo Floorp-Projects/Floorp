@@ -184,7 +184,9 @@ TextTrackList::CreateAndDispatchTrackEventRunner(TextTrack* aTrack,
                                                  const nsAString& aEventName)
 {
   TrackEventInit eventInit;
-  eventInit.mTrack.SetValue().SetAsTextTrack() = aTrack;
+  eventInit.mBubbles = false;
+  eventInit.mCancelable = false;
+  eventInit.mTrack = aTrack;
   nsRefPtr<TrackEvent> event =
     TrackEvent::Constructor(this, aEventName, eventInit);
 
