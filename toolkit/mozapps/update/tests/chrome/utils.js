@@ -483,7 +483,7 @@ function delayedDefaultCallback() {
 
   if (gTest.buttonClick) {
     debugDump("clicking " + gTest.buttonClick + " button");
-    if(gTest.extraDelayedFinishFunction) {
+    if (gTest.extraDelayedFinishFunction) {
       throw("Tests cannot have a buttonClick and an extraDelayedFinishFunction property");
     }
     gDocElem.getButton(gTest.buttonClick).click();
@@ -492,6 +492,45 @@ function delayedDefaultCallback() {
     debugDump("calling extraDelayedFinishFunction " +
               gTest.extraDelayedFinishFunction.name);
     gTest.extraDelayedFinishFunction();
+  }
+}
+
+/**
+ * Gets the continue file used to signal the mock http server to continue
+ * downloading for slow download mar file tests without creating it.
+ *
+ * @return nsILocalFile for the continue file.
+ */
+function getContinueFile() {
+  let continueFile = AUS_Cc["@mozilla.org/file/directory_service;1"].
+                     getService(AUS_Ci.nsIProperties).
+                     get("CurWorkD", AUS_Ci.nsILocalFile);
+  let continuePath = REL_PATH_DATA + "/continue";
+  let continuePathParts = continuePath.split("/");
+  for (let i = 0; i < continuePathParts.length; ++i) {
+    continueFile.append(continuePathParts[i]);
+  }
+  return continueFile;
+}
+
+/**
+ * Creates the continue file used to signal the mock http server to continue
+ * downloading for slow download mar file tests.
+ */
+function createContinueFile() {
+  debugDump("creating 'continue' file for slow mar downloads");
+  writeFile(getContinueFile(), "");
+}
+
+/**
+ * Removes the continue file used to signal the mock http server to continue
+ * downloading for slow download mar file tests.
+ */
+function removeContinueFile() {
+  let continueFile = getContinueFile();
+  if (continueFile.exists()) {
+    debugDump("removing 'continue' file for slow mar downloads");
+    continueFile.remove(false);
   }
 }
 
