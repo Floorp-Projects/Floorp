@@ -17,6 +17,7 @@
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsHashKeys.h"                 // for nsUint64HashKey
 #include "nsISupportsImpl.h"            // for NS_INLINE_DECL_REFCOUNTING
+#include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 
 class nsIObserver;
 
@@ -29,7 +30,8 @@ struct FrameMetrics;
 
 class CompositorChild MOZ_FINAL : public PCompositorChild
 {
-  NS_INLINE_DECL_REFCOUNTING(CompositorChild)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorChild)
+
 public:
   CompositorChild(ClientLayerManager *aLayerManager);
 
