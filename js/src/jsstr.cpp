@@ -1169,7 +1169,7 @@ FirstCharMatcher8bit(const char *text, uint32_t n, const char pat)
 static const jschar *
 FirstCharMatcher16bit(const jschar *text, uint32_t n, const jschar pat)
 {
-#if defined(XP_DARWIN) || defined(XP_WIN)
+#if defined(XP_MACOSX) || defined(XP_WIN)
     /*
      * Performance of memchr is horrible in OSX. Windows is better,
      * but it is still better to use UnrolledMatcher.
