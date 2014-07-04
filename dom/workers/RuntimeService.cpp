@@ -1077,12 +1077,14 @@ ResolveWorkerClasses(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid
     }
   }
 
-  bool shouldResolve = false;
-
-  for (uint32_t i = 0; i < ID_COUNT; i++) {
-    if (gStringIDs[i] == aId) {
-      shouldResolve = true;
-      break;
+  // Invoking this function with JSID_VOID means "always resolve".
+  bool shouldResolve = JSID_IS_VOID(aId);
+  if (!shouldResolve) {
+    for (uint32_t i = 0; i < ID_COUNT; i++) {
+      if (gStringIDs[i] == aId) {
+        shouldResolve = true;
+        break;
+      }
     }
   }
 
