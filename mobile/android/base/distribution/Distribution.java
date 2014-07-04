@@ -54,7 +54,8 @@ import android.util.Log;
  * Handles distribution file loading and fetching,
  * and the corresponding hand-offs to Gecko.
  */
-public final class Distribution {
+@RobocopTarget
+public class Distribution {
     private static final String LOGTAG = "GeckoDistribution";
 
     private static final int STATE_UNKNOWN = 0;
@@ -108,8 +109,11 @@ public final class Distribution {
     /**
      * Used as a drop-off point for ReferrerReceiver. Checked when we process
      * first-run distribution.
+     *
+     * This is `protected` so that test code can clear it between runs.
      */
-    private static volatile ReferrerDescriptor referrer;
+    @RobocopTarget
+    protected static volatile ReferrerDescriptor referrer;
 
     private static Distribution instance;
 
@@ -134,6 +138,7 @@ public final class Distribution {
         return instance;
     }
 
+    @RobocopTarget
     public static class DistributionDescriptor {
         public final boolean valid;
         public final String id;
@@ -204,6 +209,7 @@ public final class Distribution {
      * Use <code>Context.getPackageResourcePath</code> to find an implicit
      * package path. Reuses the existing Distribution if one exists.
      */
+    @RobocopTarget
     public static void init(final Context context) {
         Distribution.init(Distribution.getInstance(context));
     }
@@ -324,9 +330,12 @@ public final class Distribution {
      * Postcondition: if this returns true, distributionDir will have been
      * set and populated.
      *
+     * This method is *only* protected for use from testDistribution.
+     *
      * @return true if we've set a distribution.
      */
-    private boolean doInit() {
+    @RobocopTarget
+    protected boolean doInit() {
         ThreadUtils.assertNotOnUiThread();
 
         // Bail if we've already tried to initialize the distribution, and
@@ -449,9 +458,13 @@ public final class Distribution {
      * Fetch the provided URI, returning a {@link JarInputStream} if the response body
      * is appropriate.
      *
+     * Protected to allow for mocking.
+     *
      * @return the entity body as a stream, or null on failure.
      */
-    private JarInputStream fetchDistribution(URI uri, HttpURLConnection connection) throws IOException {
+    @SuppressWarnings("static-method")
+    @RobocopTarget
+    protected JarInputStream fetchDistribution(URI uri, HttpURLConnection connection) throws IOException {
         final int status = connection.getResponseCode();
 
         Log.d(LOGTAG, "Distribution fetch: " + status);

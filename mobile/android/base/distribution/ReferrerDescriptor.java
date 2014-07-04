@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.distribution;
 
+import org.mozilla.gecko.mozglue.RobocopTarget;
+
 import android.net.Uri;
 
 /**
@@ -15,6 +17,7 @@ import android.net.Uri;
  *
  * "utm_source=campsource&utm_medium=campmed&utm_term=term%2Bhere&utm_content=content&utm_campaign=name"
  */
+@RobocopTarget
 public class ReferrerDescriptor {
     public final String source;
     public final String medium;
@@ -43,5 +46,10 @@ public class ReferrerDescriptor {
         term = u.getQueryParameter("utm_term");
         content = u.getQueryParameter("utm_content");
         campaign = u.getQueryParameter("utm_campaign");
+    }
+
+    @Override
+    public String toString() {
+        return "{s: " + source + ", m: " + medium + ", t: " + term + ", c: " + content + ", c: " + campaign + "}";
     }
 }

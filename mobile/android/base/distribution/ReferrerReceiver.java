@@ -33,6 +33,7 @@ public class ReferrerReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        Log.v(LOGTAG, "Received intent " + intent);
         if (!ACTION_INSTALL_REFERRER.equals(intent.getAction())) {
             // This should never happen.
             return;
