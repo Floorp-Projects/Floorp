@@ -626,6 +626,29 @@ StandardClassIsDependent(JSProtoKey key)
     return key != keyFromClass;
 }
 
+// Returns the key for the class inherited by a given standard class (that
+// is to say, the prototype of this standard class's prototype).
+//
+// You must be sure that this corresponds to a standard class with a cached
+// JSProtoKey before calling this function. In general |key| will match the
+// cached proto key, except in cases where multiple JSProtoKeys share a
+// JSClass.
+inline JSProtoKey
+ParentKeyForStandardClass(JSProtoKey key)
+{
+    // [Object] has nothing to inherit from.
+    if (key == JSProto_Object)
+        return JSProto_Null;
+
+    // If we're dependent (i.e. an Error subtype), return the key of the class
+    // we depend on.
+    if (StandardClassIsDependent(key))
+        return JSCLASS_CACHED_PROTO_KEY(ProtoKeyToClass(key));
+
+    // Otherwise, we inherit [Object].
+    return JSProto_Object;
+}
+
 inline bool
 IsInnerObject(JSObject *obj) {
     return !!GetObjectClass(obj)->ext.outerObject;
