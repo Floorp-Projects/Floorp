@@ -36,6 +36,7 @@
 #include "mozilla/Services.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
+#include "nsAboutProtocolUtils.h"
 #include "nsContentUtils.h"
 #include "nsCRTGlue.h"
 #include "nsDirectoryServiceUtils.h"
@@ -2013,6 +2014,64 @@ QuotaManager::GetInfoFromURI(nsIURI* aURI,
   return NS_OK;
 }
 
+static nsresult
+TryGetInfoForAboutURI(nsIPrincipal* aPrincipal,
+                      nsACString& aGroup,
+                      nsACString& aASCIIOrigin,
+                      StoragePrivilege* aPrivilege,
+                      PersistenceType* aDefaultPersistenceType)
+{
+  NS_ASSERTION(aPrincipal, "Don't hand me a null principal!");
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!uri) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  bool isAbout;
+  rv = uri->SchemeIs("about", &isAbout);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && isAbout, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIAboutModule> module;
+  rv = NS_GetAboutModule(uri, getter_AddRefs(module));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> inner = NS_GetInnermostURI(uri);
+  NS_ENSURE_TRUE(inner, NS_ERROR_FAILURE);
+
+  nsAutoString postfix;
+  rv = module->GetIndexedDBOriginPostfix(uri, postfix);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString origin;
+  if (DOMStringIsNull(postfix)) {
+    rv = inner->GetSpec(origin);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    nsAutoCString scheme;
+    rv = inner->GetScheme(scheme);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    origin = scheme + NS_LITERAL_CSTRING(":") + NS_ConvertUTF16toUTF8(postfix);
+  }
+
+  ToLowerCase(origin);
+  aGroup.Assign(origin);
+  aASCIIOrigin.Assign(origin);
+
+  if (aPrivilege) {
+    *aPrivilege = Content;
+  }
+
+  if (aDefaultPersistenceType) {
+    *aDefaultPersistenceType = PERSISTENCE_TYPE_PERSISTENT;
+  }
+
+  return NS_OK;
+}
+
 // static
 nsresult
 QuotaManager::GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
@@ -2023,6 +2082,14 @@ QuotaManager::GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aPrincipal, "Don't hand me a null principal!");
+
+  if (aGroup && aASCIIOrigin) {
+    nsresult rv = TryGetInfoForAboutURI(aPrincipal, *aGroup, *aASCIIOrigin,
+                                        aPrivilege, aDefaultPersistenceType);
+    if (NS_SUCCEEDED(rv)) {
+      return NS_OK;
+    }
+  }
 
   if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
     GetInfoForChrome(aGroup, aASCIIOrigin, aPrivilege, aDefaultPersistenceType);

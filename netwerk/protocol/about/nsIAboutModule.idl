@@ -8,7 +8,7 @@
 interface nsIURI;
 interface nsIChannel;
 
-[scriptable, uuid(9575693c-60d9-4332-b6b8-6c29289339cb)]
+[scriptable, uuid(1d5992c3-28b0-4ec1-9dbb-f5fde7f72199)]
 interface nsIAboutModule : nsISupports 
 {
     /**
@@ -42,11 +42,23 @@ interface nsIAboutModule : nsISupports
     const unsigned long HIDE_FROM_ABOUTABOUT = (1 << 2);
 
     /**
+     * A flag that indicates whether this about: URI wants Indexed DB enabled.
+     */
+    const unsigned long ENABLE_INDEXED_DB = (1 << 3);
+
+    /**
      * A method to get the flags that apply to a given about: URI.  The URI
      * passed in is guaranteed to be one of the URIs that this module
      * registered to deal with.
      */
     unsigned long getURIFlags(in nsIURI aURI);
+
+    /**
+     * Returns the Indexed DB origin's postfix used for the given about: URI.
+     * If the postfix returned is null then the URI's path (e.g. "home" for
+     * about:home) will be used to construct the origin.
+     */
+    DOMString getIndexedDBOriginPostfix(in nsIURI aURI);
 };
 
 %{C++
