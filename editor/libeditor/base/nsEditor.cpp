@@ -1173,15 +1173,14 @@ nsEditor::CanPasteTransferable(nsITransferable *aTransferable, bool *aCanPaste)
   return NS_ERROR_NOT_IMPLEMENTED; 
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP 
 nsEditor::SetAttribute(nsIDOMElement *aElement, const nsAString & aAttribute, const nsAString & aValue)
 {
   nsRefPtr<ChangeAttributeTxn> txn;
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  nsresult result = CreateTxnForSetAttribute(element, aAttribute, aValue,
+  nsresult result = CreateTxnForSetAttribute(aElement, aAttribute, aValue,
                                              getter_AddRefs(txn));
   if (NS_SUCCEEDED(result))  {
-    result = DoTransaction(txn);
+    result = DoTransaction(txn);  
   }
   return result;
 }
@@ -1207,15 +1206,14 @@ nsEditor::GetAttributeValue(nsIDOMElement *aElement,
   return rv;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP 
 nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsAString& aAttribute)
 {
   nsRefPtr<ChangeAttributeTxn> txn;
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  nsresult result = CreateTxnForRemoveAttribute(element, aAttribute,
+  nsresult result = CreateTxnForRemoveAttribute(aElement, aAttribute,
                                                 getter_AddRefs(txn));
   if (NS_SUCCEEDED(result))  {
-    result = DoTransaction(txn);
+    result = DoTransaction(txn);  
   }
   return result;
 }
@@ -1233,21 +1231,15 @@ nsEditor::OutputsMozDirty()
 
 NS_IMETHODIMP
 nsEditor::MarkNodeDirty(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  return MarkNodeDirty(node);
-}
-
-nsresult
-nsEditor::MarkNodeDirty(nsINode* aNode)
-{
+{  
   // Mark the node dirty, but not for webpages (bug 599983)
   if (!OutputsMozDirty()) {
     return NS_OK;
   }
-  if (aNode->IsElement()) {
-    aNode->AsElement()->SetAttr(kNameSpaceID_None, nsEditProperty::mozdirty,
-                                EmptyString(), false);
+  nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
+  if (element) {
+    element->SetAttr(kNameSpaceID_None, nsEditProperty::mozdirty,
+                     EmptyString(), false);
   }
   return NS_OK;
 }
@@ -1350,28 +1342,25 @@ NS_IMETHODIMP nsEditor::CreateNode(const nsAString& aTag,
   int32_t i;
 
   nsAutoRules beginRulesSniffing(this, EditAction::createNode, nsIEditor::eNext);
-
+  
   for (i = 0; i < mActionListeners.Count(); i++)
     mActionListeners[i]->WillCreateNode(aTag, aParent, aPosition);
 
   nsRefPtr<CreateElementTxn> txn;
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
-  nsresult result = CreateTxnForCreateElement(aTag, parent, aPosition,
+  nsresult result = CreateTxnForCreateElement(aTag, aParent, aPosition,
                                               getter_AddRefs(txn));
-  if (NS_SUCCEEDED(result))
+  if (NS_SUCCEEDED(result)) 
   {
-    result = DoTransaction(txn);
-    if (NS_SUCCEEDED(result))
+    result = DoTransaction(txn);  
+    if (NS_SUCCEEDED(result)) 
     {
-      nsCOMPtr<nsINode> newNode;
-      result = txn->GetNewNode(getter_AddRefs(newNode));
-      CallQueryInterface(newNode, aNewNode);
+      result = txn->GetNewNode(aNewNode);
       NS_ASSERTION((NS_SUCCEEDED(result)), "GetNewNode can't fail if txn::DoTransaction succeeded.");
     }
   }
-
+  
   mRangeUpdater.SelAdjCreateNode(aParent, aPosition);
-
+  
   for (i = 0; i < mActionListeners.Count(); i++)
     mActionListeners[i]->DidCreateNode(aTag, *aNewNode, aParent, aPosition, result);
 
@@ -1390,12 +1379,10 @@ NS_IMETHODIMP nsEditor::InsertNode(nsIDOMNode * aNode,
     mActionListeners[i]->WillInsertNode(aNode, aParent, aPosition);
 
   nsRefPtr<InsertElementTxn> txn;
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
-  nsresult result = CreateTxnForInsertElement(node, parent, aPosition,
+  nsresult result = CreateTxnForInsertElement(aNode, aParent, aPosition,
                                               getter_AddRefs(txn));
   if (NS_SUCCEEDED(result))  {
-    result = DoTransaction(txn);
+    result = DoTransaction(txn);  
   }
 
   mRangeUpdater.SelAdjInsertNode(aParent, aPosition);
@@ -1419,16 +1406,13 @@ nsEditor::SplitNode(nsIDOMNode * aNode,
     mActionListeners[i]->WillSplitNode(aNode, aOffset);
 
   nsRefPtr<SplitElementTxn> txn;
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  nsresult result = CreateTxnForSplitNode(node, aOffset, getter_AddRefs(txn));
-  if (NS_SUCCEEDED(result))
+  nsresult result = CreateTxnForSplitNode(aNode, aOffset, getter_AddRefs(txn));
+  if (NS_SUCCEEDED(result))  
   {
     result = DoTransaction(txn);
     if (NS_SUCCEEDED(result))
     {
-      nsCOMPtr<nsINode> leftNode;
-      result = txn->GetNewNode(getter_AddRefs(leftNode));
-      CallQueryInterface(leftNode, aNewLeftNode);
+      result = txn->GetNewNode(aNewLeftNode);
       NS_ASSERTION((NS_SUCCEEDED(result)), "result must succeeded for GetNewNode");
     }
   }
@@ -1479,15 +1463,13 @@ nsEditor::JoinNodes(nsIDOMNode * aLeftNode,
     mActionListeners[i]->WillJoinNodes(aLeftNode, aRightNode, aParent);
 
   nsRefPtr<JoinElementTxn> txn;
-  nsCOMPtr<nsINode> leftNode = do_QueryInterface(aLeftNode);
-  nsCOMPtr<nsINode> rightNode = do_QueryInterface(aRightNode);
-  result = CreateTxnForJoinNode(leftNode, rightNode, getter_AddRefs(txn));
+  result = CreateTxnForJoinNode(aLeftNode, aRightNode, getter_AddRefs(txn));
   if (NS_SUCCEEDED(result))  {
-    result = DoTransaction(txn);
+    result = DoTransaction(txn);  
   }
 
   mRangeUpdater.SelAdjJoinNodes(aLeftNode, aRightNode, aParent, offset, (int32_t)oldLeftNodeLen);
-
+  
   for (i = 0; i < mActionListeners.Count(); i++)
     mActionListeners[i]->DidJoinNodes(aLeftNode, aRightNode, aParent, result);
 
@@ -2670,7 +2652,7 @@ nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData* aElement,
 
 
 
-NS_IMETHODIMP nsEditor::CreateTxnForSplitNode(nsINode *aNode,
+NS_IMETHODIMP nsEditor::CreateTxnForSplitNode(nsIDOMNode *aNode,
                                          uint32_t    aOffset,
                                          SplitElementTxn **aTxn)
 {
@@ -2687,8 +2669,8 @@ NS_IMETHODIMP nsEditor::CreateTxnForSplitNode(nsINode *aNode,
   return rv;
 }
 
-NS_IMETHODIMP nsEditor::CreateTxnForJoinNode(nsINode  *aLeftNode,
-                                             nsINode  *aRightNode,
+NS_IMETHODIMP nsEditor::CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
+                                             nsIDOMNode  *aRightNode,
                                              JoinElementTxn **aTxn)
 {
   NS_ENSURE_TRUE(aLeftNode && aRightNode, NS_ERROR_NULL_POINTER);
@@ -4301,9 +4283,9 @@ nsEditor::DoAfterRedoTransaction()
     IncrementModificationCount(1)));
 }
 
-NS_IMETHODIMP
-nsEditor::CreateTxnForSetAttribute(Element *aElement,
-                                   const nsAString& aAttribute,
+NS_IMETHODIMP 
+nsEditor::CreateTxnForSetAttribute(nsIDOMElement *aElement, 
+                                   const nsAString& aAttribute, 
                                    const nsAString& aValue,
                                    ChangeAttributeTxn ** aTxn)
 {
@@ -4321,8 +4303,8 @@ nsEditor::CreateTxnForSetAttribute(Element *aElement,
 }
 
 
-NS_IMETHODIMP
-nsEditor::CreateTxnForRemoveAttribute(Element *aElement,
+NS_IMETHODIMP 
+nsEditor::CreateTxnForRemoveAttribute(nsIDOMElement *aElement, 
                                       const nsAString& aAttribute,
                                       ChangeAttributeTxn ** aTxn)
 {
@@ -4341,7 +4323,7 @@ nsEditor::CreateTxnForRemoveAttribute(Element *aElement,
 
 
 NS_IMETHODIMP nsEditor::CreateTxnForCreateElement(const nsAString& aTag,
-                                                  nsINode        *aParent,
+                                                  nsIDOMNode     *aParent,
                                                   int32_t         aPosition,
                                                   CreateElementTxn ** aTxn)
 {
@@ -4359,8 +4341,8 @@ NS_IMETHODIMP nsEditor::CreateTxnForCreateElement(const nsAString& aTag,
 }
 
 
-NS_IMETHODIMP nsEditor::CreateTxnForInsertElement(nsINode    * aNode,
-                                                  nsINode    * aParent,
+NS_IMETHODIMP nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
+                                                  nsIDOMNode * aParent,
                                                   int32_t      aPosition,
                                                   InsertElementTxn ** aTxn)
 {
