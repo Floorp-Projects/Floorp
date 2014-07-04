@@ -609,6 +609,23 @@ GetObjectJSClass(JSObject *obj)
     return js::Jsvalify(GetObjectClass(obj));
 }
 
+JS_FRIEND_API(const Class *)
+ProtoKeyToClass(JSProtoKey key);
+
+// Returns true if the standard class identified by |key| inherits from
+// another standard class with the same js::Class. This basically means
+// that the various properties described by our js::Class are intended
+// to live higher up on the proto chain.
+//
+// In practice, this only returns true for Error subtypes.
+inline bool
+StandardClassIsDependent(JSProtoKey key)
+{
+    JSProtoKey keyFromClass = JSCLASS_CACHED_PROTO_KEY(ProtoKeyToClass(key));
+    MOZ_ASSERT(keyFromClass);
+    return key != keyFromClass;
+}
+
 inline bool
 IsInnerObject(JSObject *obj) {
     return !!GetObjectClass(obj)->ext.outerObject;
