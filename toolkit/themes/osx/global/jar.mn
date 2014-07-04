@@ -181,8 +181,6 @@ toolkit.jar:
   skin/classic/global/media/videoClickToPlayButton.svg               (media/videoClickToPlayButton.svg)
   skin/classic/global/menu/menu-arrow.png                            (menu/menu-arrow.png)
   skin/classic/global/menu/menu-arrow@2x.png                         (menu/menu-arrow@2x.png)
-  skin/classic/global/menu/menu-check.png                            (menu/menu-check.png)
-  skin/classic/global/menu/menu-check@2x.png                         (menu/menu-check@2x.png)
   skin/classic/global/menu/shared-menu-check.png                     (../../shared/menu-check.png)
   skin/classic/global/menu/shared-menu-check@2x.png                  (../../shared/menu-check@2x.png)
   skin/classic/global/scale/scale-tray-horiz.gif                     (scale/scale-tray-horiz.gif)
