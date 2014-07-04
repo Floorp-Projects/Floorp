@@ -288,16 +288,24 @@ TextureSourceD3D9::SurfaceToTexture(DeviceManagerD3D9* aDeviceManager,
     return nullptr;
   }
 
-  nsRefPtr<gfxImageSurface> imgSurface =
-    new gfxImageSurface(reinterpret_cast<unsigned char*>(lockedRect.pBits),
-                        gfxIntSize(aSize.width, aSize.height),
-                        lockedRect.Pitch,
-                        gfxPlatform::GetPlatform()->OptimalFormatForContent(aSurface->GetContentType()));
+  {
+    RefPtr<DrawTarget> dt =
+      Factory::CreateDrawTargetForData(BackendType::CAIRO,
+                                       reinterpret_cast<unsigned char*>(lockedRect.pBits),
+                                       aSize, lockedRect.Pitch,
+                                       gfxPlatform::GetPlatform()->Optimal2DFormatForContent(aSurface->GetContentType()));
+    NativeSurface nativeSurf;
+    nativeSurf.mSize = aSize;
+    nativeSurf.mType = NativeSurfaceType::CAIRO_SURFACE;
+    // We don't know that this is actually the right format, but it's the best
+    // we can get for the content type. In practice this probably always works.
+    nativeSurf.mFormat = dt->GetFormat();
+    nativeSurf.mSurface = aSurface->CairoSurface();
 
-  nsRefPtr<gfxContext> context = new gfxContext(imgSurface);
-  context->SetSource(aSurface);
-  context->SetOperator(gfxContext::OPERATOR_SOURCE);
-  context->Paint();
+    RefPtr<SourceSurface> surf = dt->CreateSourceSurfaceFromNativeSurface(nativeSurf);
+
+    dt->CopySurface(surf, IntRect(IntPoint(), aSize), IntPoint());
+  }
 
   FinishTextures(aDeviceManager, texture, surface);
 
