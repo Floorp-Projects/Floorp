@@ -800,7 +800,7 @@ js::FindBody(JSContext *cx, HandleFunction fun, HandleLinearString src, size_t *
     *bodyStart = ts.currentToken().pos.begin;
     if (braced)
         *bodyStart += 1;
-    RangedPtr<const jschar> end = srcChars.end();
+    mozilla::RangedPtr<const jschar> end = srcChars.end();
     if (end[-1] == '}') {
         end--;
     } else {

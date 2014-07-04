@@ -667,26 +667,23 @@ class MacroAssemblerX86Shared : public Assembler
     bool buildFakeExitFrame(Register scratch, uint32_t *offset);
     void callWithExitFrame(JitCode *target);
 
-    void callIon(Register callee) {
-        call(callee);
-    }
-
-    void appendCallSite(const CallSiteDesc &desc) {
-        // Add an extra sizeof(void*) to include the return address that was
-        // pushed by the call instruction (see CallSite::stackDepth).
-        enoughMemory_ &= append(CallSite(desc, currentOffset(), framePushed_ + AsmJSFrameSize));
-    }
-
     void call(const CallSiteDesc &desc, Label *label) {
         call(label);
-        appendCallSite(desc);
+        enoughMemory_ &= append(desc, currentOffset(), framePushed_);
     }
     void call(const CallSiteDesc &desc, Register reg) {
         call(reg);
-        appendCallSite(desc);
+        enoughMemory_ &= append(desc, currentOffset(), framePushed_);
     }
-    void callIonFromAsmJS(Register reg) {
-        call(CallSiteDesc::Exit(), reg);
+    void callIon(Register callee) {
+        call(callee);
+    }
+    void callIonFromAsmJS(Register callee) {
+        call(callee);
+    }
+    void call(AsmJSImmPtr target) {
+        mov(target, eax);
+        call(eax);
     }
 
     void checkStackAlignment() {

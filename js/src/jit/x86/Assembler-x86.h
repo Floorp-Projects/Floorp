@@ -113,13 +113,6 @@ static const uint32_t StackAlignment = 4;
 static const bool StackKeptAligned = false;
 static const uint32_t CodeAlignment = 8;
 
-// As an invariant across architectures, within asm.js code:
-//   $sp % StackAlignment = (AsmJSFrameSize + masm.framePushed) % StackAlignment
-// On x86, this naturally falls out of the fact that the 'call' instruction
-// pushes the return address on the stack and masm.framePushed = 0 at the first
-// instruction of the prologue.
-static const uint32_t AsmJSFrameSize = sizeof(void*);
-
 struct ImmTag : public Imm32
 {
     ImmTag(JSValueTag mask)
@@ -381,13 +374,6 @@ class Assembler : public AssemblerX86Shared
     void call(ImmPtr target) {
         JmpSrc src = masm.call();
         addPendingJump(src, target, Relocation::HARDCODED);
-    }
-    void call(AsmJSImmPtr target) {
-        // Moving to a register is suboptimal. To fix (use a single
-        // call-immediate instruction) we'll need to distinguish a new type of
-        // relative patch to an absolute address in AsmJSAbsoluteLink.
-        mov(target, eax);
-        call(eax);
     }
 
     // Emit a CALL or CMP (nop) instruction. ToggleCall can be used to patch

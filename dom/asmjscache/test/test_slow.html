@@ -17,19 +17,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=854209
 
   <script>
   var jsFuns = SpecialPowers.Cu.getJSTestingFunctions();
-  ok(jsFuns.isAsmJSCompilationAvailable(), "asm.js compilation is available");
-  </script>
 
-  <script src="http://mochi.test:8888/tests/dom/asmjscache/test/file_slow.js"></script>
-
-  <script>
-  var w = new Worker('http://mochi.test:8888/tests/dom/asmjscache/test/file_slow.js');
-  w.onmessage = function(e) {
-      ok(e.data === "ok", "Worker asm.js tests");
-      SimpleTest.finish();
+  var completed = 0;
+  function complete() {
+      if (++completed == 2)
+          SimpleTest.finish();
   }
 
-  SimpleTest.waitForExplicitFinish();
+  if (!jsFuns.isAsmJSCompilationAvailable()) {
+      ok(true, "isAsmJSCompilationAvailable is false, skipping this test!");
+  } else {
+      var script = document.createElement("script");
+      script.src = "http://mochi.test:8888/tests/dom/asmjscache/test/file_slow.js";
+      document.body.appendChild(script);
+
+      var w = new Worker('http://mochi.test:8888/tests/dom/asmjscache/test/file_slow.js');
+      w.onmessage = function(e) {
+          ok(e.data === "ok", "Worker asm.js tests");
+          complete();
+      }
+
+      SimpleTest.waitForExplicitFinish();
+  }
+  </script>
+
+  <script>
   </script>
 
 </body>

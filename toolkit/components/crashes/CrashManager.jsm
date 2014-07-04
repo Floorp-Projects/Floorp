@@ -130,11 +130,20 @@ this.CrashManager.prototype = Object.freeze({
   // A crash in a plugin process.
   PROCESS_TYPE_PLUGIN: "plugin",
 
+  // A submission of a crash.
+  PROCESS_TYPE_SUBMISSION: "submission",
+
   // A real crash.
   CRASH_TYPE_CRASH: "crash",
 
   // A hang.
   CRASH_TYPE_HANG: "hang",
+
+  // A successful submission.
+  SUBMISSION_TYPE_SUCCEEDED: "succeeded",
+
+  // A failed submission.
+  SUBMISSION_TYPE_FAILED: "failed",
 
   DUMP_REGEX: /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.dmp$/i,
   SUBMITTED_REGEX: /^bp-(?:hr-)?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.txt$/i,
@@ -361,6 +370,38 @@ this.CrashManager.prototype = Object.freeze({
   },
 
   /**
+   * Record the occurrence of a crash submission.
+   *
+   * @param processType (string) One of the PROCESS_TYPE constants.
+   * @param crashType (string) One of the CRASH_TYPE constants.
+   * @param succeeded (boolean) Whether the submission succeeded.
+   * @param id (string) Crash ID. Likely a UUID.
+   * @param date (Date) When the crash occurred.
+   *
+   * @return boolean True if the crash submission was recorded and false if not.
+   */
+  addSubmission: function (processType, crashType, succeeded, id, date) {
+    return Task.spawn(function* () {
+      let store = yield this._getStore();
+      if (this._addSubmissionAsCrash(store, processType, crashType, succeeded,
+                                     id, date)) {
+        yield store.save();
+      }
+    }.bind(this));
+  },
+
+  _addSubmissionAsCrash: function (store, processType, crashType, succeeded,
+                                   id, date) {
+    let id = id + "-" + this.PROCESS_TYPE_SUBMISSION;
+    let process = processType + "-" + crashType + "-" +
+                  this.PROCESS_TYPE_SUBMISSION;
+    let submission_type = (
+      succeeded ? this.SUBMISSION_TYPE_SUCCEEDED : this.SUBMISSION_TYPE_FAILED);
+
+    return store.addCrash(process, submission_type, id, date);
+  },
+
+  /**
    * Obtain the paths of all unprocessed events files.
    *
    * The promise-resolved array is sorted by file mtime, oldest to newest.
@@ -425,27 +466,35 @@ this.CrashManager.prototype = Object.freeze({
       // The payload types and formats are documented in docs/crash-events.rst.
       // Do not change the format of an existing type. Instead, invent a new
       // type.
+      // DO NOT ADD NEW TYPES WITHOUT DOCUMENTING!
+      let lines = payload.split("\n");
 
-      // type in event file => [processType, crashType]
-      let eventMap = {
-        "crash.main.1": ["main", "crash"],
-      };
+      switch (type) {
+        case "crash.main.1":
+          if (lines.length > 1) {
+            this._log.warn("Multiple lines unexpected in payload for " +
+                           entry.path);
+            return this.EVENT_FILE_ERROR_MALFORMED;
+          }
+          store.addCrash(this.PROCESS_TYPE_MAIN, this.CRASH_TYPE_CRASH,
+                         payload, date);
+          break;
 
-      if (type in eventMap) {
-        let lines = payload.split("\n");
-        if (lines.length > 1) {
-          this._log.warn("Multiple lines unexpected in payload for " +
-                         entry.path);
-          return this.EVENT_FILE_ERROR_MALFORMED;
-        }
+        case "crash.submission.1":
+          if (lines.length == 3) {
+            this._addSubmissionAsCrash(store, this.PROCESS_TYPE_MAIN,
+                                       this.CRASH_TYPE_CRASH,
+                                       lines[1] === "true", lines[0], date);
+          } else {
+            return this.EVENT_FILE_ERROR_MALFORMED;
+          }
+          break;
 
-        store.addCrash(...eventMap[type], payload, date);
-        return this.EVENT_FILE_SUCCESS;
+        default:
+          return this.EVENT_FILE_ERROR_UNKNOWN_EVENT;
       }
 
-      // DO NOT ADD NEW TYPES WITHOUT DOCUMENTING!
-
-      return this.EVENT_FILE_ERROR_UNKNOWN_EVENT;
+      return this.EVENT_FILE_SUCCESS;
   },
 
   /**

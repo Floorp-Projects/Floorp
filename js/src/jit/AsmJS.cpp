@@ -16,7 +16,6 @@
 #include "jsprf.h"
 #include "prmjtime.h"
 
-#include "assembler/assembler/MacroAssembler.h"
 #include "frontend/Parser.h"
 #include "jit/AsmJSLink.h"
 #include "jit/AsmJSModule.h"
@@ -1409,9 +1408,6 @@ class MOZ_STACK_CLASS ModuleCompiler
             return false;
         return exits_.add(p, Move(exitDescriptor), *exitIndex);
     }
-    bool addFunctionName(PropertyName *name, uint32_t *index) {
-        return module_->addFunctionName(name, index);
-    }
 
     // Note a constraint on the minimum size of the heap.  The heap size is
     // constrained when linking to be at least the maximum of all such constraints.
@@ -1442,6 +1438,11 @@ class MOZ_STACK_CLASS ModuleCompiler
 
     bool finishGeneratingFunction(Func &func, MIRGenerator &mir, CodeGenerator &codegen) {
         JS_ASSERT(func.defined() && func.code()->bound());
+
+        uint32_t beginOffset = func.code()->offset();
+        uint32_t endOffset = masm_.currentOffset();
+        if (!module_->addFunctionCodeRange(func.name(), beginOffset, endOffset))
+            return false;
 
         jit::IonScriptCounts *counts = codegen.extractScriptCounts();
         if (counts && !module_->addFunctionCounts(counts)) {
@@ -1480,14 +1481,18 @@ class MOZ_STACK_CLASS ModuleCompiler
         module_->finishFunctionBodies(masm_.currentOffset());
     }
 
+    void startGeneratingEntry(unsigned exportIndex) {
+        module_->exportedFunction(exportIndex).initCodeOffset(masm_.currentOffset());
+    }
+    bool finishGeneratingEntry(unsigned exportIndex) {
+        return module_->addEntryCodeRange(exportIndex, masm_.currentOffset());
+    }
+
     void setInterpExitOffset(unsigned exitIndex) {
         module_->exit(exitIndex).initInterpOffset(masm_.currentOffset());
     }
     void setIonExitOffset(unsigned exitIndex) {
         module_->exit(exitIndex).initIonOffset(masm_.currentOffset());
-    }
-    void setEntryOffset(unsigned exportIndex) {
-        module_->exportedFunction(exportIndex).initCodeOffset(masm_.currentOffset());
     }
 
     void buildCompilationTimeReport(bool storedInCache, ScopedJSFreePtr<char> *out) {
@@ -1808,7 +1813,6 @@ class FunctionCompiler
     ModuleCompiler &       m_;
     LifoAlloc &            lifo_;
     ParseNode *            fn_;
-    uint32_t               functionNameIndex_;
 
     LocalMap               locals_;
     VarInitializerVector   varInitializers_;
@@ -1829,15 +1833,11 @@ class FunctionCompiler
     LabeledBlockMap        labeledBreaks_;
     LabeledBlockMap        labeledContinues_;
 
-    static const uint32_t NO_FUNCTION_NAME_INDEX = UINT32_MAX;
-    JS_STATIC_ASSERT(NO_FUNCTION_NAME_INDEX > CallSiteDesc::FUNCTION_NAME_INDEX_MAX);
-
   public:
     FunctionCompiler(ModuleCompiler &m, ParseNode *fn, LifoAlloc &lifo)
       : m_(m),
         lifo_(lifo),
         fn_(fn),
-        functionNameIndex_(NO_FUNCTION_NAME_INDEX),
         locals_(m.cx()),
         varInitializers_(m.cx()),
         alloc_(nullptr),
@@ -2279,12 +2279,7 @@ class FunctionCompiler
         uint32_t line, column;
         m_.tokenStream().srcCoords.lineNumAndColumnIndex(call.node_->pn_pos.begin, &line, &column);
 
-        if (functionNameIndex_ == NO_FUNCTION_NAME_INDEX) {
-            if (!m_.addFunctionName(FunctionName(fn_), &functionNameIndex_))
-                return false;
-        }
-
-        CallSiteDesc desc(line, column, functionNameIndex_);
+        CallSiteDesc desc(line, column);
         MAsmJSCall *ins = MAsmJSCall::New(alloc(), desc, callee, call.regArgs_, returnType,
                                           call.spIncrement_);
         if (!ins)
@@ -5955,7 +5950,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     // PushRegsInMask(NonVolatileRegs).
     masm.setFramePushed(0);
 
-    // See AsmJSFrameSize comment in Assembler-*.h.
+    // See AsmJSFrameSize comment in Assembler-shared.h.
 #if defined(JS_CODEGEN_ARM)
     masm.push(lr);
 #endif // JS_CODEGEN_ARM
@@ -6030,7 +6025,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
 
     // Call into the real function.
     AssertStackAlignment(masm);
-    masm.call(CallSiteDesc::Entry(), func.code());
+    masm.call(func.code());
 
     // Pop the stack and recover the original 'argv' argument passed to the
     // trampoline (which was pushed on the stack).
@@ -6214,13 +6209,17 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     m.setInterpExitOffset(exitIndex);
     masm.setFramePushed(0);
 
-    // See AsmJSFrameSize comment in Assembler-*.h.
+    // See AsmJSFrameSize comment in Assembler-shared.h.
 #if defined(JS_CODEGEN_ARM)
     masm.push(lr);
-#endif
-#if defined(JS_CODEGEN_MIPS)
+#elif defined(JS_CODEGEN_MIPS)
     masm.push(ra);
 #endif
+
+    // Store the frame pointer in AsmJSActivation::exitFP for stack unwinding.
+    Register activation = ABIArgGenerator::NonArgReturnVolatileReg0;
+    LoadAsmJSActivationIntoRegister(masm, activation);
+    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfExitFP()));
 
     MIRType typeArray[] = { MIRType_Pointer,   // cx
                             MIRType_Pointer,   // exitDatum
@@ -6240,16 +6239,11 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
 
     // Fill the argument array.
     unsigned offsetToCallerStackArgs = AsmJSFrameSize + masm.framePushed();
-    Register scratch = ABIArgGenerator::NonArgReturnVolatileReg0;
+    Register scratch = ABIArgGenerator::NonArgReturnVolatileReg1;
     FillArgumentArray(m, exit.sig().args(), offsetToArgv, offsetToCallerStackArgs, scratch);
 
     // Prepare the arguments for the call to InvokeFromAsmJS_*.
     ABIArgMIRTypeIter i(invokeArgTypes);
-    Register activation = ABIArgGenerator::NonArgReturnVolatileReg1;
-    LoadAsmJSActivationIntoRegister(masm, activation);
-
-    // Record sp in the AsmJSActivation for stack-walking.
-    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfExitSP()));
 
     // argument 0: cx
     if (i->kind() == ABIArg::GPR) {
@@ -6290,16 +6284,16 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     AssertStackAlignment(masm);
     switch (exit.sig().retType().which()) {
       case RetType::Void:
-        masm.callExit(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_Ignore), i.stackBytesConsumedSoFar());
+        masm.call(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_Ignore));
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         break;
       case RetType::Signed:
-        masm.callExit(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_ToInt32), i.stackBytesConsumedSoFar());
+        masm.call(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_ToInt32));
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.unboxInt32(argv, ReturnReg);
         break;
       case RetType::Double:
-        masm.callExit(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_ToNumber), i.stackBytesConsumedSoFar());
+        masm.call(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_ToNumber));
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.loadDouble(argv, ReturnDoubleReg);
         break;
@@ -6311,6 +6305,11 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     // Note: the caller is IonMonkey code which means there are no non-volatile
     // registers to restore.
     masm.freeStack(stackDec);
+
+    // Clear exitFP before the frame is destroyed.
+    LoadAsmJSActivationIntoRegister(masm, activation);
+    masm.storePtr(ImmWord(0), Address(activation, AsmJSActivation::offsetOfExitFP()));
+
     masm.ret();
 }
 
@@ -6334,9 +6333,6 @@ GenerateOOLConvert(ModuleCompiler &m, RetType retType, Label *throwLabel)
     Register scratch = ABIArgGenerator::NonArgReturnVolatileReg0;
     Register activation = ABIArgGenerator::NonArgReturnVolatileReg1;
     LoadAsmJSActivationIntoRegister(masm, activation);
-
-    // Record sp in the AsmJSActivation for stack-walking.
-    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfExitSP()));
 
     // Store real arguments
     ABIArgMIRTypeIter i(callArgTypes);
@@ -6365,12 +6361,12 @@ GenerateOOLConvert(ModuleCompiler &m, RetType retType, Label *throwLabel)
     AssertStackAlignment(masm);
     switch (retType.which()) {
       case RetType::Signed:
-        masm.callExit(AsmJSImmPtr(AsmJSImm_CoerceInPlace_ToInt32), i.stackBytesConsumedSoFar());
+        masm.call(AsmJSImmPtr(AsmJSImm_CoerceInPlace_ToInt32));
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.unboxInt32(Address(StackPointer, offsetToArgv), ReturnReg);
         break;
       case RetType::Double:
-        masm.callExit(AsmJSImmPtr(AsmJSImm_CoerceInPlace_ToNumber), i.stackBytesConsumedSoFar());
+        masm.call(AsmJSImmPtr(AsmJSImm_CoerceInPlace_ToNumber));
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.loadDouble(Address(StackPointer, offsetToArgv), ReturnDoubleReg);
         break;
@@ -6388,19 +6384,22 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     m.setIonExitOffset(exitIndex);
     masm.setFramePushed(0);
 
-    // See AsmJSFrameSize comment in Assembler-*.h.
-#if defined(JS_CODEGEN_X64)
-    masm.Push(HeapReg);
-#elif defined(JS_CODEGEN_ARM)
+    // See AsmJSFrameSize comment in Assembler-shared.h.
+#if defined(JS_CODEGEN_ARM)
     masm.push(lr);
-
-    // The GlobalReg (r10) and HeapReg (r11) also need to be restored before
-    // returning to asm.js code.
-    // The NANReg also needs to be restored, but is a constant and is reloaded before
-    // returning to asm.js code.
-    masm.PushRegsInMask(GeneralRegisterSet((1<<GlobalReg.code()) | (1<<HeapReg.code())));
 #elif defined(JS_CODEGEN_MIPS)
     masm.push(ra);
+#endif
+
+    // Store the frame pointer in AsmJSActivation::exitFP for stack unwinding.
+    Register activation = ABIArgGenerator::NonArgReturnVolatileReg0;
+    LoadAsmJSActivationIntoRegister(masm, activation);
+    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfExitFP()));
+
+    // Ion does not preserve nonvolatile registers, so we have to preserve them.
+#if defined(JS_CODEGEN_X64)
+    masm.Push(HeapReg);
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     masm.PushRegsInMask(GeneralRegisterSet((1<<GlobalReg.code()) | (1<<HeapReg.code())));
 #endif
 
@@ -6498,19 +6497,6 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
         Register reg2 = AsmJSIonExitRegE2;
         Register reg3 = AsmJSIonExitRegE3;
 
-        LoadAsmJSActivationIntoRegister(masm, reg0);
-
-        // Record sp in the AsmJSActivation for stack-walking.
-#if defined(JS_CODEGEN_MIPS)
-        // Add a flag to indicate to AsmJSFrameIterator that we are calling
-        // into Ion, since the offset from SP to the return address is
-        // different when calling Ion vs. the native ABI.
-        masm.ma_or(reg1, StackPointer, Imm32(0x1));
-        masm.storePtr(reg1, Address(reg0, AsmJSActivation::offsetOfExitSP()));
-#else
-        masm.storePtr(StackPointer, Address(reg0, AsmJSActivation::offsetOfExitSP()));
-#endif
-
         // The following is inlined:
         //   JSContext *cx = activation->cx();
         //   Activation *act = cx->mainThread().activation();
@@ -6524,6 +6510,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
         size_t offsetOfJitTop = offsetof(JSRuntime, mainThread) + offsetof(PerThreadData, jitTop);
         size_t offsetOfJitJSContext = offsetof(JSRuntime, mainThread) +
                                       offsetof(PerThreadData, jitJSContext);
+        LoadAsmJSActivationIntoRegister(masm, reg0);
         masm.loadPtr(Address(reg0, AsmJSActivation::offsetOfContext()), reg3);
         masm.loadPtr(Address(reg3, JSContext::offsetOfRuntime()), reg0);
         masm.loadPtr(Address(reg0, offsetOfActivation), reg1);
@@ -6595,13 +6582,19 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
 
     masm.bind(&done);
     masm.freeStack(stackDec);
+
+    // Restore non-volatile registers saved in the prologue.
 #if defined(JS_CODEGEN_X64)
     masm.Pop(HeapReg);
-#endif
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     masm.loadConstantDouble(GenericNaN(), NANReg);
     masm.PopRegsInMask(GeneralRegisterSet((1<<GlobalReg.code()) | (1<<HeapReg.code())));
 #endif
+
+    // Clear exitFP before the frame is destroyed.
+    LoadAsmJSActivationIntoRegister(masm, activation);
+    masm.storePtr(ImmWord(0), Address(activation, AsmJSActivation::offsetOfExitFP()));
+
     masm.ret();
     JS_ASSERT(masm.framePushed() == 0);
 
@@ -6642,17 +6635,19 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
     masm.align(CodeAlignment);
     masm.bind(&m.stackOverflowLabel());
 
+    // The stack-overflow is checked before bumping the stack.
+    masm.setFramePushed(0);
+
+    // Store the frame pointer in AsmJSActivation::exitFP for stack unwinding.
+    Register activation = ABIArgGenerator::NonArgReturnVolatileReg0;
+    LoadAsmJSActivationIntoRegister(masm, activation);
+    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfExitFP()));
+
     MIRTypeVector argTypes(m.cx());
     argTypes.infallibleAppend(MIRType_Pointer); // cx
 
     unsigned stackDec = StackDecrementForCall(masm, argTypes, MaybeRetAddr);
     masm.reserveStack(stackDec);
-
-    Register activation = ABIArgGenerator::NonArgReturnVolatileReg0;
-    LoadAsmJSActivationIntoRegister(masm, activation);
-
-    // Record sp in the AsmJSActivation for stack-walking.
-    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfExitSP()));
 
     ABIArgMIRTypeIter i(argTypes);
 
@@ -6668,7 +6663,11 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
     JS_ASSERT(i.done());
 
     AssertStackAlignment(masm);
-    masm.callExit(AsmJSImmPtr(AsmJSImm_ReportOverRecursed), i.stackBytesConsumedSoFar());
+    masm.call(AsmJSImmPtr(AsmJSImm_ReportOverRecursed));
+
+    // Clear exitFP before the frame is destroyed.
+    LoadAsmJSActivationIntoRegister(masm, activation);
+    masm.storePtr(ImmWord(0), Address(activation, AsmJSActivation::offsetOfExitFP()));
 
     // Don't worry about restoring the stack; throwLabel will pop everything.
     masm.jump(throwLabel);
@@ -6867,10 +6866,10 @@ static bool
 GenerateStubs(ModuleCompiler &m)
 {
     for (unsigned i = 0; i < m.module().numExportedFunctions(); i++) {
-        m.setEntryOffset(i);
+        m.startGeneratingEntry(i);
         if (!GenerateEntry(m, m.module().exportedFunction(i)))
             return false;
-        if (m.masm().oom())
+        if (m.masm().oom() || !m.finishGeneratingEntry(i))
             return false;
     }
 

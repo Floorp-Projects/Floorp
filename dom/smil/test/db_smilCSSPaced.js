@@ -100,21 +100,28 @@ var _pacedTestLists =
                             comp2_3: "4px",
                             comp1:   "6px"
                           }),
-  ],
-  lengthPx : [
-    new AnimTestcasePaced("0px; 2px; 6px",
-                          { comp0:   "0px",
-                            comp1_6: "1px",
-                            comp1_3: "2px",
-                            comp2_3: "4px",
-                            comp1:   "6px"
-                          }),
     new AnimTestcasePaced("10px; 12px; 8px",
                           { comp0:   "10px",
                             comp1_6: "11px",
                             comp1_3: "12px",
                             comp2_3: "10px",
                             comp1:   "8px"
+                          }),
+  ],
+  lengthPxSVG : [
+    new AnimTestcasePaced("0px; 2px; 6px",
+                          { comp0:   "0",
+                            comp1_6: "1",
+                            comp1_3: "2",
+                            comp2_3: "4",
+                            comp1:   "6"
+                          }),
+    new AnimTestcasePaced("10px; 12px; 8px",
+                          { comp0:   "10",
+                            comp1_6: "11",
+                            comp1_3: "12",
+                            comp2_3: "10",
+                            comp1:   "8"
                           }),
   ],
   lengthPctSVG : [
@@ -291,12 +298,12 @@ var gPacedBundles =
   ])),
   new TestcaseBundle(gPropList.stroke_dashoffset,
                      [].concat(_pacedTestLists.lengthNoUnitsSVG,
-                               _pacedTestLists.lengthPx,
+                               _pacedTestLists.lengthPxSVG,
                                _pacedTestLists.lengthPctSVG,
                                _pacedTestLists.lengthPxPctSVG)),
   new TestcaseBundle(gPropList.stroke_width,
                      [].concat(_pacedTestLists.lengthNoUnitsSVG,
-                               _pacedTestLists.lengthPx,
+                               _pacedTestLists.lengthPxSVG,
                                _pacedTestLists.lengthPctSVG,
                                _pacedTestLists.lengthPxPctSVG)),
   // XXXdholbert TODO: test 'stroke-dasharray' once we support animating it

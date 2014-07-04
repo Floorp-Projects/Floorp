@@ -197,10 +197,40 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount, DecodeStrategy
     if (!aCount || !mCurLine)
         return;
 
+    // This code assumes that mRawBuf == WIN_V3_INTERNAL_BIH_LENGTH
+    // and that sizeof(mRawBuf) >= BFH_INTERNAL_LENGTH
+    MOZ_ASSERT(sizeof(mRawBuf) == WIN_V3_INTERNAL_BIH_LENGTH);
+    MOZ_ASSERT(sizeof(mRawBuf) >= BFH_INTERNAL_LENGTH);
+    MOZ_ASSERT(OS2_INTERNAL_BIH_LENGTH < WIN_V3_INTERNAL_BIH_LENGTH);
+    // This code also assumes it's working with a byte array
+    MOZ_ASSERT(sizeof(mRawBuf[0]) == 1);
+
     if (mPos < BFH_INTERNAL_LENGTH) { /* In BITMAPFILEHEADER */
+        // BFH_INTERNAL_LENGTH < sizeof(mRawBuf)
+        // mPos < BFH_INTERNAL_LENGTH
+        // BFH_INTERNAL_LENGTH - mPos < sizeof(mRawBuf)
+        // so toCopy <= BFH_INTERNAL_LENGTH
+        // so toCopy < sizeof(mRawBuf)
+        // so toCopy > 0 && toCopy <= BFH_INTERNAL_LENGTH
         uint32_t toCopy = BFH_INTERNAL_LENGTH - mPos;
         if (toCopy > aCount)
             toCopy = aCount;
+
+        // mRawBuf is a byte array of size WIN_V3_INTERNAL_BIH_LENGTH (verified above)
+        // mPos is < BFH_INTERNAL_LENGTH
+        // BFH_INTERNAL_LENGTH < WIN_V3_INTERNAL_BIH_LENGTH
+        // so mPos < sizeof(mRawBuf)
+        //
+        // Therefore this assert should hold
+        MOZ_ASSERT(mPos < sizeof(mRawBuf));
+
+        // toCopy <= BFH_INTERNAL_LENGTH
+        // mPos >= 0 && mPos < BFH_INTERNAL_LENGTH
+        // sizeof(mRawBuf) >= BFH_INTERNAL_LENGTH (verified above)
+        //
+        // Therefore this assert should hold
+        MOZ_ASSERT(mPos + toCopy <= sizeof(mRawBuf));
+
         memcpy(mRawBuf + mPos, aBuffer, toCopy);
         mPos += toCopy;
         aCount -= toCopy;
@@ -216,14 +246,73 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount, DecodeStrategy
             mLOH = OS2_HEADER_LENGTH;
     }
     if (mPos >= BFH_INTERNAL_LENGTH && mPos < mLOH) { /* In BITMAPINFOHEADER */
+        // mLOH == WIN_V3_HEADER_LENGTH || mLOH == OS2_HEADER_LENGTH
+        // OS2_HEADER_LENGTH < WIN_V3_HEADER_LENGTH
+        // BFH_INTERNAL_LENGTH < OS2_HEADER_LENGTH
+        // BFH_INTERNAL_LENGTH < WIN_V3_HEADER_LENGTH
+        //
+        // So toCopy is in the range
+        //      1 to (WIN_V3_HEADER_LENGTH - BFH_INTERNAL_LENGTH)
+        // or   1 to (OS2_HEADER_LENGTH - BFH_INTERNAL_LENGTH)
+        //
+        // But WIN_V3_HEADER_LENGTH = BFH_INTERNAL_LENGTH + WIN_V3_INTERNAL_BIH_LENGTH
+        // and OS2_HEADER_LENGTH = BFH_INTERNAL_LENGTH + OS2_INTERNAL_BIH_LENGTH
+        //
+        // So toCopy is in the range
+        //
+        //      1 to WIN_V3_INTERNAL_BIH_LENGTH
+        // or   1 to OS2_INTERNAL_BIH_LENGTH
+        // and  OS2_INTERNAL_BIH_LENGTH < WIN_V3_INTERNAL_BIH_LENGTH
+        //
+        // sizeof(mRawBuf) = WIN_V3_INTERNAL_BIH_LENGTH
+        // so toCopy <= sizeof(mRawBuf)
         uint32_t toCopy = mLOH - mPos;
         if (toCopy > aCount)
             toCopy = aCount;
-        memcpy(mRawBuf + (mPos - BFH_INTERNAL_LENGTH), aBuffer, toCopy);
+
+        // mPos is in the range
+        //      BFH_INTERNAL_LENGTH to (WIN_V3_HEADER_LENGTH - 1)
+        //
+        // offset is then in the range (see toCopy comments for more details)
+        //      0 to (WIN_V3_INTERNAL_BIH_LENGTH - 1)
+        //
+        // sizeof(mRawBuf) is WIN_V3_INTERNAL_BIH_LENGTH so this
+        // offset stays within bounds and this assert should hold
+        const uint32_t offset = mPos - BFH_INTERNAL_LENGTH;
+        MOZ_ASSERT(offset < sizeof(mRawBuf));
+
+        // Two cases:
+        //      mPos = BFH_INTERNAL_LENGTH
+        //      mLOH = WIN_V3_HEADER_LENGTH
+        //
+        // offset = 0
+        // toCopy = WIN_V3_INTERNAL_BIH_LENGTH
+        //
+        //      This will be in the bounds of sizeof(mRawBuf)
+        //
+        // Second Case:
+        //      mPos = WIN_V3_HEADER_LENGTH - 1
+        //      mLOH = WIN_V3_HEADER_LENGTH
+        //
+        // offset = WIN_V3_INTERNAL_BIH_LENGTH - 1
+        // toCopy = 1
+        //
+        //      This will be in the bounds of sizeof(mRawBuf)
+        //
+        // As sizeof(mRawBuf) == WIN_V3_INTERNAL_BIH_LENGTH (verified above)
+        // and WIN_V3_HEADER_LENGTH is the largest range of values. If mLOH
+        // was equal to OS2_HEADER_LENGTH then the ranges are smaller.
+        MOZ_ASSERT(offset + toCopy <= sizeof(mRawBuf));
+
+        memcpy(mRawBuf + offset, aBuffer, toCopy);
         mPos += toCopy;
         aCount -= toCopy;
         aBuffer += toCopy;
     }
+
+    // At this point mPos should be >= mLOH unless aBuffer did not have enough
+    // data. In the latter case aCount should be 0.
+    MOZ_ASSERT(mPos >= mLOH || aCount == 0);
 
     // HasSize is called to ensure that if at this point mPos == mLOH but
     // we have no data left to process, the next time WriteInternal is called
@@ -376,12 +465,62 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount, DecodeStrategy
       }
     }
     else if (aCount && mBIH.compression == BI_BITFIELDS && mPos < (WIN_V3_HEADER_LENGTH + BITFIELD_LENGTH)) {
-        // If compression is used, this is a windows bitmap, hence we can
-        // use WIN_HEADER_LENGTH instead of mLOH
+        // If compression is used, this is a windows bitmap (compression can't be used with OS/2 bitmaps),
+        // hence we can use WIN_V3_HEADER_LENGTH instead of mLOH.
+        // (verified below)
+
+        // If aCount != 0 then mPos should be >= mLOH due to the if statements
+        // at the beginning of the function
+        MOZ_ASSERT(mPos >= mLOH);
+        MOZ_ASSERT(mLOH == WIN_V3_HEADER_LENGTH);
+
+        // mLOH == WIN_V3_HEADER_LENGTH (verified above)
+        // mPos >= mLOH (verified above)
+        // mPos < WIN_V3_HEADER_LENGTH + BITFIELD_LENGTH
+        //
+        // So toCopy is in the range
+        //      0 to (BITFIELD_LENGTH - 1)
         uint32_t toCopy = (WIN_V3_HEADER_LENGTH + BITFIELD_LENGTH) - mPos;
         if (toCopy > aCount)
             toCopy = aCount;
-        memcpy(mRawBuf + (mPos - WIN_V3_HEADER_LENGTH), aBuffer, toCopy);
+
+        // mPos >= WIN_V3_HEADER_LENGTH
+        // mPos < WIN_V3_HEADER_LENGTH + BITFIELD_LENGTH
+        //
+        // offset is in the range
+        //      0 to (BITFIELD_LENGTH - 1)
+        //
+        // BITFIELD_LENGTH < WIN_V3_INTERNAL_BIH_LENGTH
+        // and sizeof(mRawBuf) == WIN_V3_INTERNAL_BIH_LENGTH (verified at top of function)
+        //
+        // Therefore this assert should hold
+        const uint32_t offset = mPos - WIN_V3_HEADER_LENGTH;
+        MOZ_ASSERT(offset < sizeof(mRawBuf));
+
+        // Two cases:
+        //      mPos = WIN_V3_HEADER_LENGTH
+        //
+        // offset = 0
+        // toCopy = BITFIELD_LENGTH
+        //
+        //      This will be in the bounds of sizeof(mRawBuf)
+        //
+        // Second case:
+        //
+        //      mPos = WIN_V3_HEADER_LENGTH + BITFIELD_LENGTH - 1
+        //
+        // offset = BITFIELD_LENGTH - 1
+        // toCopy = 1
+        //
+        //      This will be in the bounds of sizeof(mRawBuf)
+        //
+        // As BITFIELD_LENGTH < WIN_V3_INTERNAL_BIH_LENGTH and
+        // sizeof(mRawBuf) == WIN_V3_INTERNAL_BIH_LENGTH
+        //
+        // Therefore this assert should hold
+        MOZ_ASSERT(offset + toCopy <= sizeof(mRawBuf));
+
+        memcpy(mRawBuf + offset, aBuffer, toCopy);
         mPos += toCopy;
         aBuffer += toCopy;
         aCount -= toCopy;
