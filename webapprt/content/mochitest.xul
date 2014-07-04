@@ -6,7 +6,8 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<window windowtype="webapprt:mochitest"
+<window id="browserTestHarness"
+        windowtype="webapprt:mochitest"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/javascript" src="chrome://webapprt/content/mochitest.js"/>

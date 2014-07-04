@@ -6,6 +6,7 @@
  * the code you put here can be evaluated by both! */
 
 Cu.import("resource://webapprt/modules/WebappRT.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
 // When WebappsHandler opens an install confirmation dialog for apps we install,
 // close it, which will be seen as the equivalent of cancelling the install.
@@ -42,7 +43,7 @@ Services.ww.registerNotification({
  *        The callback to call once the transmogrification is complete.
  */
 function becomeWebapp(manifestURL, parameters, onBecome) {
-  function observeInstall(subj, topic, data) {
+  let observeInstall = Task.async(function*(subj, topic, data) {
     Services.obs.removeObserver(observeInstall, "webapps-ask-install");
 
     // Step 2: Configure the runtime session to represent the app.
@@ -52,7 +53,7 @@ function becomeWebapp(manifestURL, parameters, onBecome) {
     let scope = {};
     Cu.import("resource://gre/modules/Webapps.jsm", scope);
     Cu.import("resource://webapprt/modules/Startup.jsm", scope);
-    scope.DOMApplicationRegistry.confirmInstall(JSON.parse(data));
+    yield scope.DOMApplicationRegistry.confirmInstall(JSON.parse(data));
 
     let installRecord = JSON.parse(data);
     installRecord.mm = subj;
@@ -68,20 +69,20 @@ function becomeWebapp(manifestURL, parameters, onBecome) {
                                    null);
     }
 
-    let promise = scope.startup(win);
-
     // During chrome tests, we use the same window to load all the tests. We
     // need to change the buildID so that the permissions for the currently
     // tested application get installed.
     Services.prefs.setCharPref("webapprt.buildID", WebappRT.config.app.manifestURL);
 
-    // During tests, the webapps registry is already loaded.
-    // The Startup module needs to be notified when the webapps registry
-    // gets loaded, so we do that now.
+    // During tests, the webapps registry is already loaded,
+    // but SystemMessageInternal expects to be notified when the registry
+    // start and then when it's ready, so we do that now.
     Services.obs.notifyObservers(this, "webapps-registry-start", null);
+    Services.obs.notifyObservers(this, "webapps-registry-ready", null);
 
-    promise.then(onBecome);
-  }
+    yield scope.startup(win);
+    onBecome();
+  });
   Services.obs.addObserver(observeInstall, "webapps-ask-install", false);
 
   // Step 1: Install the app at the URL specified by the manifest.
