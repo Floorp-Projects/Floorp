@@ -7,6 +7,7 @@
 #include "nsAboutCache.h"
 #include "nsICacheStorage.h"
 #include "CacheObserver.h"
+#include "nsDOMString.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
 #include "nsEscape.h"
@@ -106,6 +107,13 @@ nsAboutCacheEntry::GetURIFlags(nsIURI *aURI, uint32_t *result)
 {
     *result = nsIAboutModule::HIDE_FROM_ABOUTABOUT;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAboutCacheEntry::GetIndexedDBOriginPostfix(nsIURI *aURI, nsAString &result)
+{
+    SetDOMStringToNull(result);
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-----------------------------------------------------------------------------
