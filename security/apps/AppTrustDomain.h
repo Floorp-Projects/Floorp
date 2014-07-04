@@ -10,6 +10,7 @@
 #include "pkix/pkixtypes.h"
 #include "nsDebug.h"
 #include "nsIX509CertDB.h"
+#include "ScopedNSSTypes.h"
 
 namespace mozilla { namespace psm {
 
@@ -36,7 +37,7 @@ public:
 
 private:
   void* mPinArg; // non-owning!
-  mozilla::pkix::ScopedCERTCertificate mTrustedRoot;
+  ScopedCERTCertificate mTrustedRoot;
 };
 
 } } // namespace mozilla::psm

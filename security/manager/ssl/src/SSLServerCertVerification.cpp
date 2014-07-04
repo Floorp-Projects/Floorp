@@ -649,7 +649,7 @@ private:
   const RefPtr<SharedCertVerifier> mCertVerifier;
   const void* const mFdForLogging;
   const RefPtr<TransportSecurityInfo> mInfoObject;
-  const mozilla::pkix::ScopedCERTCertificate mCert;
+  const ScopedCERTCertificate mCert;
   const uint32_t mProviderFlags;
   const PRTime mTime;
   const TimeStamp mJobStartTime;

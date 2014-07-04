@@ -247,7 +247,7 @@ BuildForward(TrustDomain& trustDomain,
       return MapSECStatus(SECFailure);
     }
     for (const BackCert* cert = &subject; cert; cert = cert->childCert) {
-      ScopedCERTCertificate
+      ScopedPtr<CERTCertificate, CERT_DestroyCertificate>
         nssCert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
                                         const_cast<SECItem*>(&cert->GetDER()),
                                         nullptr, false, true));

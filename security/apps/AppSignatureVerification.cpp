@@ -26,7 +26,6 @@
 #include "nsProxyRelease.h"
 #include "nsString.h"
 #include "nsTHashtable.h"
-#include "ScopedNSSTypes.h"
 
 #include "base64.h"
 #include "certdb.h"
