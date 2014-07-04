@@ -2679,7 +2679,7 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
     }
 
     return xpc::EvalInSandbox(cx, sandbox, source, filename, lineNo,
-                              jsVersion, false, retval);
+                              jsVersion, retval);
 }
 
 NS_IMETHODIMP
