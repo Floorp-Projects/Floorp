@@ -34,10 +34,9 @@ interface nsIScriptChannel : nsISupports
   const unsigned long NO_EXECUTION = 0;
 
   /**
-   * Execute in a sandbox, no matter how the various principals involved are
-   * related to each other.
+   * There used to be an EXECUTE_IN_SANDBOX = 1 value.  It has been removed, but
+   * we're not changing the value of EXECUTE_NORMAL to avoid breaking compat.
    */
-  const unsigned long EXECUTE_IN_SANDBOX = 1;
 
   /**
    * Execute against the target environment if the principals allow it.
