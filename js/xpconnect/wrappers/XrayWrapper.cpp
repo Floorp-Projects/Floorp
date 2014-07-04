@@ -392,11 +392,12 @@ public:
         RootedObject holder(cx, ensureHolder(cx, wrapper));
         JSProtoKey key = getProtoKey(holder);
         if (isPrototype(holder)) {
-            if (key == JSProto_Object) {
+            JSProtoKey parentKey = js::ParentKeyForStandardClass(key);
+            if (parentKey == JSProto_Null) {
                 protop.set(nullptr);
                 return true;
             }
-            key = JSProto_Object;
+            key = parentKey;
         }
 
         {

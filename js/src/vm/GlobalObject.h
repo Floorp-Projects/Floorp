@@ -802,7 +802,12 @@ template<const Class *clasp>
 JSObject *
 GenericCreatePrototype(JSContext *cx, JSProtoKey key)
 {
-    return cx->global()->createBlankPrototype(cx, clasp);
+    MOZ_ASSERT(key != JSProto_Object);
+    JSProtoKey parentKey = ParentKeyForStandardClass(key);
+    if (!GlobalObject::ensureConstructor(cx, cx->global(), parentKey))
+        return nullptr;
+    JSObject *parentProto = &cx->global()->getPrototype(parentKey).toObject();
+    return cx->global()->createBlankPrototypeInheriting(cx, clasp, *parentProto);
 }
 
 } // namespace js
