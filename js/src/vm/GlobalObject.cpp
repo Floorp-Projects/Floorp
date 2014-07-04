@@ -63,7 +63,7 @@ static const ProtoTableEntry protoTable[JSProto_LIMIT] = {
 #undef INIT_FUNC
 };
 
-const js::Class *
+JS_FRIEND_API(const js::Class *)
 js::ProtoKeyToClass(JSProtoKey key)
 {
     MOZ_ASSERT(key < JSProto_LIMIT);
@@ -166,18 +166,21 @@ GlobalObject::resolveConstructor(JSContext *cx, Handle<GlobalObject*> global, JS
     global->setConstructor(key, ObjectValue(*ctor));
     global->setConstructorPropertySlot(key, ObjectValue(*ctor));
 
-    // Define any specified functions and properties.
-    if (const JSFunctionSpec *funs = clasp->spec.prototypeFunctions) {
-        if (!JS_DefineFunctions(cx, proto, funs))
-            return false;
-    }
-    if (const JSPropertySpec *props = clasp->spec.prototypeProperties) {
-        if (!JS_DefineProperties(cx, proto, props))
-            return false;
-    }
-    if (const JSFunctionSpec *funs = clasp->spec.constructorFunctions) {
-        if (!JS_DefineFunctions(cx, ctor, funs))
-            return false;
+    // Define any specified functions and properties, unless we're a dependent
+    // standard class (in which case they live on the prototype).
+    if (!StandardClassIsDependent(key)) {
+        if (const JSFunctionSpec *funs = clasp->spec.prototypeFunctions) {
+            if (!JS_DefineFunctions(cx, proto, funs))
+                return false;
+        }
+        if (const JSPropertySpec *props = clasp->spec.prototypeProperties) {
+            if (!JS_DefineProperties(cx, proto, props))
+                return false;
+        }
+        if (const JSFunctionSpec *funs = clasp->spec.constructorFunctions) {
+            if (!JS_DefineFunctions(cx, ctor, funs))
+                return false;
+        }
     }
 
     // If the prototype exists, link it with the constructor.
