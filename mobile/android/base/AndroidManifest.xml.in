@@ -290,7 +290,9 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name="org.mozilla.gecko.ReferrerReceiver" android:exported="true">
+        <!-- Catch install referrer so we can do post-install work. -->
+        <receiver android:name="org.mozilla.gecko.distribution.ReferrerReceiver"
+                  android:exported="true">
             <intent-filter>
                 <action android:name="com.android.vending.INSTALL_REFERRER" />
             </intent-filter>

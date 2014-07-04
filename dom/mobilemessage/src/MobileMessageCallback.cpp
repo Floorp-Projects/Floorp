@@ -240,9 +240,12 @@ MobileMessageCallback::NotifyGetSegmentInfoForTextFailed(int32_t aError)
 NS_IMETHODIMP
 MobileMessageCallback::NotifyGetSmscAddress(const nsAString& aSmscAddress)
 {
-  AutoJSContext cx;
-  JSString* smsc = JS_NewUCStringCopyN(cx,
-                                       static_cast<const jschar *>(aSmscAddress.BeginReading()),
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(mDOMRequest->GetOwner()))) {
+    return NotifyError(nsIMobileMessageCallback::INTERNAL_ERROR);
+  }
+  JSContext* cx = jsapi.cx();
+  JSString* smsc = JS_NewUCStringCopyN(cx, aSmscAddress.BeginReading(),
                                        aSmscAddress.Length());
 
   if (!smsc) {
