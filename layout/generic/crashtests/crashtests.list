@@ -534,3 +534,4 @@ pref(layout.css.grid.enabled,true) load 1015562.html
 asserts(1-2) load 1015563-1.html
 asserts(1-2) load 1015563-2.html
 load outline-on-frameset.xhtml
+pref(font.size.inflation.minTwips,200) load 1032450.html
