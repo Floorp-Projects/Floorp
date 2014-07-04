@@ -34,7 +34,7 @@
 // Visual C++ has supported typed enums for longer than that, but using typed
 // enums results in C4480: nonstandard extension used: specifying underlying
 // type for enum.
-#define MOZILLA_PKIX_ENUM_CLASS  __pragma(warning(disable: 4480)) enum
+#define MOZILLA_PKIX_ENUM_CLASS  __pragma(warning(suppress: 4480)) enum
 #else
 #define MOZILLA_PKIX_ENUM_CLASS enum class
 #endif
