@@ -18,7 +18,6 @@
 #include "nsStackWalkPrivate.h"
 #include "nsStackWalk.h"
 #include "nsString.h"
-#include "nsThreadUtils.h"
 
 #include "nsXULAppAPI.h"
 #ifdef XP_WIN
@@ -920,8 +919,6 @@ nsTraceRefcnt::DemangleSymbol(const char* aSymbol,
 EXPORT_XPCOM_API(void)
 NS_LogInit()
 {
-  NS_SetMainThread();
-
   // FIXME: This is called multiple times, we should probably not allow that.
 #ifdef STACKWALKING_AVAILABLE
   StackWalkInitCriticalAddress();
