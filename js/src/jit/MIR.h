@@ -9358,6 +9358,12 @@ class MArgumentsLength : public MNullaryInstruction
    }
 
     void computeRange(TempAllocator &alloc);
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+
+    bool canRecoverOnBailout() const {
+        return true;
+    }
 };
 
 // This MIR instruction is used to get an argument from the actual arguments.
