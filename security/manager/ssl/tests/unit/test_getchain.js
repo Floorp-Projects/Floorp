@@ -8,9 +8,6 @@
 do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb  = Cc["@mozilla.org/security/x509certdb;1"]
                   .getService(Ci.nsIX509CertDB);
-const certdb2 = Cc["@mozilla.org/security/x509certdb;1"]
-                  .getService(Ci.nsIX509CertDB2);
-
 // This is the list of certificates needed for the test
 // The certificates prefixed by 'int-' are intermediates
 let certList = [
@@ -29,7 +26,7 @@ function load_cert(cert_name, trust_string) {
 // the ones that I am interested in.
 function get_ca_array() {
   let ret_array = new Array();
-  let allCerts = certdb2.getCerts();
+  let allCerts = certdb.getCerts();
   let enumerator = allCerts.getEnumerator();
   while (enumerator.hasMoreElements()) {
     let cert = enumerator.getNext().QueryInterface(Ci.nsIX509Cert);

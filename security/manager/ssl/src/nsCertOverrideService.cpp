@@ -390,14 +390,11 @@ GetCertFingerprintByOidTag(nsIX509Cert *aCert,
                            SECOidTag aOidTag, 
                            nsCString &fp)
 {
-  nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(aCert);
-  if (!cert2)
-    return NS_ERROR_FAILURE;
 
-  mozilla::pkix::ScopedCERTCertificate nsscert(cert2->GetCert());
-  if (!nsscert)
+  mozilla::pkix::ScopedCERTCertificate nsscert(aCert->GetCert());
+  if (!nsscert) {
     return NS_ERROR_FAILURE;
-
+  }
   return GetCertFingerprintByOidTag(nsscert.get(), aOidTag, fp);
 }
 
@@ -425,24 +422,23 @@ GetCertFingerprintByDottedOidString(CERTCertificate* nsscert,
 
 static nsresult
 GetCertFingerprintByDottedOidString(nsIX509Cert *aCert,
-                                    const nsCString &dottedOid, 
+                                    const nsCString &dottedOid,
                                     nsCString &fp)
 {
-  nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(aCert);
-  if (!cert2)
-    return NS_ERROR_FAILURE;
 
-  mozilla::pkix::ScopedCERTCertificate nsscert(cert2->GetCert());
-  if (!nsscert)
+  mozilla::pkix::ScopedCERTCertificate nsscert(aCert->GetCert());
+  if (!nsscert) {
     return NS_ERROR_FAILURE;
+  }
 
   return GetCertFingerprintByDottedOidString(nsscert.get(), dottedOid, fp);
 }
 
 NS_IMETHODIMP
-nsCertOverrideService::RememberValidityOverride(const nsACString & aHostName, int32_t aPort, 
-                                                nsIX509Cert *aCert,
-                                                uint32_t aOverrideBits, 
+nsCertOverrideService::RememberValidityOverride(const nsACString& aHostName,
+                                                int32_t aPort,
+                                                nsIX509Cert* aCert,
+                                                uint32_t aOverrideBits,
                                                 bool aTemporary)
 {
   NS_ENSURE_ARG_POINTER(aCert);
@@ -451,13 +447,10 @@ nsCertOverrideService::RememberValidityOverride(const nsACString & aHostName, in
   if (aPort < -1)
     return NS_ERROR_INVALID_ARG;
 
-  nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(aCert);
-  if (!cert2)
+  mozilla::pkix::ScopedCERTCertificate nsscert(aCert->GetCert());
+  if (!nsscert) {
     return NS_ERROR_FAILURE;
-
-  mozilla::pkix::ScopedCERTCertificate nsscert(cert2->GetCert());
-  if (!nsscert)
-    return NS_ERROR_FAILURE;
+  }
 
   char* nickname = DefaultServerNicknameForCert(nsscert.get());
   if (!aTemporary && nickname && *nickname)

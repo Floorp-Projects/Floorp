@@ -17,7 +17,7 @@ class DispatchCertVerificationResult : public nsRunnable
 {
 public:
   DispatchCertVerificationResult(const nsMainThreadPtrHandle<nsICertVerificationListener>& aListener,
-                                 nsIX509Cert3* aCert,
+                                 nsIX509Cert* aCert,
                                  nsICertVerificationResult* aResult)
     : mListener(aListener)
     , mCert(aCert)
@@ -31,7 +31,7 @@ public:
 
 private:
   nsMainThreadPtrHandle<nsICertVerificationListener> mListener;
-  nsCOMPtr<nsIX509Cert3> mCert;
+  nsCOMPtr<nsIX509Cert> mCert;
   nsCOMPtr<nsICertVerificationResult> mResult;
 };
 } // anonymous namespace
@@ -63,9 +63,8 @@ void nsCertVerificationJob::Run()
 
     ires = vres;
   }
-  
-  nsCOMPtr<nsIX509Cert3> c3 = do_QueryInterface(mCert);
-  nsCOMPtr<nsIRunnable> r = new DispatchCertVerificationResult(mListener, c3, ires);
+
+  nsCOMPtr<nsIRunnable> r = new DispatchCertVerificationResult(mListener, mCert, ires);
   NS_DispatchToMainThread(r);
 }
 
