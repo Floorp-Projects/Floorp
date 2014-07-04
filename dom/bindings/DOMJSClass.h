@@ -99,18 +99,27 @@ struct NativeProperties
   const Prefable<const JSFunctionSpec>* staticMethods;
   jsid* staticMethodIds;
   const JSFunctionSpec* staticMethodsSpecs;
+
   const Prefable<const JSPropertySpec>* staticAttributes;
   jsid* staticAttributeIds;
   const JSPropertySpec* staticAttributeSpecs;
+
   const Prefable<const JSFunctionSpec>* methods;
   jsid* methodIds;
   const JSFunctionSpec* methodsSpecs;
+
   const Prefable<const JSPropertySpec>* attributes;
   jsid* attributeIds;
   const JSPropertySpec* attributeSpecs;
+
+  const Prefable<const JSFunctionSpec>* unforgeableMethods;
+  jsid* unforgeableMethodIds;
+  const JSFunctionSpec* unforgeableMethodSpecs;
+
   const Prefable<const JSPropertySpec>* unforgeableAttributes;
   jsid* unforgeableAttributeIds;
   const JSPropertySpec* unforgeableAttributeSpecs;
+
   const Prefable<const ConstantSpec>* constants;
   jsid* constantIds;
   const ConstantSpec* constantSpecs;

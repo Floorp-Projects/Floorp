@@ -625,6 +625,13 @@ DefineProperties(JSContext* cx, JS::Handle<JSObject*> obj,
                  const NativeProperties* chromeOnlyProperties);
 
 /*
+ * Define the unforgeable methods on an object.
+ */
+bool
+DefineUnforgeableMethods(JSContext* cx, JS::Handle<JSObject*> obj,
+                         const Prefable<const JSFunctionSpec>* props);
+
+/*
  * Define the unforgeable attributes on an object.
  */
 bool

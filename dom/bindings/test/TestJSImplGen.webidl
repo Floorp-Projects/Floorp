@@ -680,6 +680,8 @@ interface TestJSImplInterface {
   // versa.
   //   [Unforgeable] readonly attribute long unforgeableAttr;
   //   [Unforgeable, ChromeOnly] readonly attribute long unforgeableAttr2;
+  //   [Unforgeable] long unforgeableMethod();
+  //   [Unforgeable, ChromeOnly] long unforgeableMethod2();
   // FIXME: Bug 863955 No stringifiers yet
   //   stringifier;
   void passRenamedInterface(TestRenamedInterface arg);
