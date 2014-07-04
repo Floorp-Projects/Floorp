@@ -1582,7 +1582,8 @@ Accessible::ApplyARIAState(uint64_t* aState) const
   }
 
   // special case: A native button element whose role got transformed by ARIA to a toggle button
-  if (IsButton())
+  // Also applies to togglable button menus, like in the Dev Tools Web Console.
+  if (IsButton() || IsMenuButton())
     aria::MapToState(aria::eARIAPressed, element, aState);
 
   if (!mRoleMapEntry)
