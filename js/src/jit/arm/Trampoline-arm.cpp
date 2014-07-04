@@ -638,7 +638,7 @@ GenerateParallelBailoutThunk(MacroAssembler &masm, uint32_t frameClass)
     masm.passABIArg(r1);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, BailoutPar));
 
-    // Get the frame pointer of the entry fram and return.
+    // Get the frame pointer of the entry frame and return.
     masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
     masm.ma_ldr(Address(sp, 0), sp);
     masm.as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
