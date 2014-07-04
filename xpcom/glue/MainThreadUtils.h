@@ -28,21 +28,8 @@ extern NS_COM_GLUE NS_METHOD NS_GetMainThread(nsIThread** aResult);
 extern NS_COM_GLUE nsIThread* NS_GetCurrentThread();
 #endif
 
-#if defined(MOZILLA_INTERNAL_API) && defined(XP_WIN)
+#ifdef MOZILLA_INTERNAL_API
 bool NS_IsMainThread();
-#elif defined(MOZILLA_INTERNAL_API) && defined(NS_TLS)
-// This is defined in nsThreadManager.cpp and initialized to `Main` for the
-// main thread by nsThreadManager::Init.
-extern NS_TLS mozilla::threads::ID gTLSThreadID;
-#ifdef MOZ_ASAN
-// Temporary workaround, see bug 895845
-MOZ_ASAN_BLACKLIST bool NS_IsMainThread();
-#else
-inline bool NS_IsMainThread()
-{
-  return gTLSThreadID == mozilla::threads::Main;
-}
-#endif
 #else
 /**
  * Test to see if the current thread is the main thread.
