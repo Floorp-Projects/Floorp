@@ -569,7 +569,7 @@ VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
 NS_IMETHODIMP
 OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
                   /*out, optional */ nsIZipReader** aZipReader,
-                  /*out, optional */ nsIX509Cert3** aSignerCert)
+                  /*out, optional */ nsIX509Cert** aSignerCert)
 {
   NS_ENSURE_ARG_POINTER(aJarFile);
 
@@ -728,7 +728,7 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   //      but we can't do that until we switch to libpkix.
   if (aSignerCert) {
     MOZ_ASSERT(CERT_LIST_HEAD(builtChain));
-    nsCOMPtr<nsIX509Cert3> signerCert =
+    nsCOMPtr<nsIX509Cert> signerCert =
       nsNSSCertificate::Create(CERT_LIST_HEAD(builtChain)->cert);
     NS_ENSURE_TRUE(signerCert, NS_ERROR_OUT_OF_MEMORY);
     signerCert.forget(aSignerCert);
@@ -769,7 +769,7 @@ private:
   const nsCOMPtr<nsIFile> mJarFile;
   nsMainThreadPtrHandle<nsIOpenSignedAppFileCallback> mCallback;
   nsCOMPtr<nsIZipReader> mZipReader; // out
-  nsCOMPtr<nsIX509Cert3> mSignerCert; // out
+  nsCOMPtr<nsIX509Cert> mSignerCert; // out
 };
 
 } // unnamed namespace

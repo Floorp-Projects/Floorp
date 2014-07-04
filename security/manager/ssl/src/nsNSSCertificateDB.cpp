@@ -82,7 +82,7 @@ attemptToLogInWithDefaultPassword()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsNSSCertificateDB, nsIX509CertDB, nsIX509CertDB2)
+NS_IMPL_ISUPPORTS(nsNSSCertificateDB, nsIX509CertDB)
 
 nsNSSCertificateDB::nsNSSCertificateDB()
 : mBadCertsLock("nsNSSCertificateDB::mBadCertsLock")
@@ -954,14 +954,15 @@ nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  nsCOMPtr<nsIX509Cert2> nssCert = do_QueryInterface(aCert);
-  mozilla::pkix::ScopedCERTCertificate cert(nssCert->GetCert());
-  if (!cert) return NS_ERROR_FAILURE;
+  mozilla::pkix::ScopedCERTCertificate cert(aCert->GetCert());
+  if (!cert) {
+    return NS_ERROR_FAILURE;
+  }
   SECStatus srv = SECSuccess;
 
   uint32_t certType;
-  nssCert->GetCertType(&certType);
-  if (NS_FAILED(nssCert->MarkForPermDeletion()))
+  aCert->GetCertType(&certType);
+  if (NS_FAILED(aCert->MarkForPermDeletion()))
   {
     return NS_ERROR_FAILURE;
   }
@@ -998,11 +999,7 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
   }
   nsNSSCertTrust trust;
   nsresult rv;
-  nsCOMPtr<nsIX509Cert2> pipCert = do_QueryInterface(cert, &rv);
-  if (!pipCert) {
-    return rv;
-  }
-  mozilla::pkix::ScopedCERTCertificate nsscert(pipCert->GetCert());
+  mozilla::pkix::ScopedCERTCertificate nsscert(cert->GetCert());
 
   rv = attemptToLogInWithDefaultPassword();
   if (NS_WARN_IF(rv != NS_OK)) {
@@ -1054,8 +1051,7 @@ nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert,
     return NS_ERROR_NOT_AVAILABLE;
   }
   SECStatus srv;
-  nsCOMPtr<nsIX509Cert2> pipCert = do_QueryInterface(cert);
-  mozilla::pkix::ScopedCERTCertificate nsscert(pipCert->GetCert());
+  mozilla::pkix::ScopedCERTCertificate nsscert(cert->GetCert());
   CERTCertTrust nsstrust;
   srv = CERT_GetCertTrust(nsscert.get(), &nsstrust);
   if (srv != SECSuccess)
@@ -1284,7 +1280,8 @@ finish:
 
 /* nsIX509Cert getDefaultEmailEncryptionCert (); */
 NS_IMETHODIMP
-nsNSSCertificateDB::FindEmailEncryptionCert(const nsAString &aNickname, nsIX509Cert **_retval)
+nsNSSCertificateDB::FindEmailEncryptionCert(const nsAString& aNickname,
+                                            nsIX509Cert** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nullptr;
@@ -1320,7 +1317,8 @@ nsNSSCertificateDB::FindEmailEncryptionCert(const nsAString &aNickname, nsIX509C
 
 /* nsIX509Cert getDefaultEmailSigningCert (); */
 NS_IMETHODIMP
-nsNSSCertificateDB::FindEmailSigningCert(const nsAString &aNickname, nsIX509Cert **_retval)
+nsNSSCertificateDB::FindEmailSigningCert(const nsAString& aNickname,
+                                         nsIX509Cert** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nullptr;
@@ -1590,14 +1588,16 @@ nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert,
 	}
       }
     }
-    if (!dummycert) 
+    if (!dummycert) {
       break;
-    
+    }
     count++;
   }
 }
 
-NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const char *aTrust, const char *aName)
+NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char* aBase64,
+                                                    const char* aTrust,
+                                                    const char* aName)
 {
   NS_ENSURE_ARG_POINTER(aBase64);
   nsCOMPtr <nsIX509Cert> newCert;
@@ -1668,7 +1668,7 @@ nsNSSCertificateDB::AddCert(const nsACString & aCertDER, const char *aTrust,
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::SetCertTrustFromString(nsIX509Cert3* cert,
+nsNSSCertificateDB::SetCertTrustFromString(nsIX509Cert* cert,
                                            const char* trustString)
 {
   CERTCertTrust trust;
@@ -1761,11 +1761,10 @@ nsNSSCertificateDB::VerifyCertNow(nsIX509Cert* aCert,
   EnsureIdentityInfoLoaded();
 #endif
 
-  nsCOMPtr<nsIX509Cert2> x509Cert = do_QueryInterface(aCert);
-  if (!x509Cert) {
+  ScopedCERTCertificate nssCert(aCert->GetCert());
+  if (!nssCert) {
     return NS_ERROR_INVALID_ARG;
   }
-  ScopedCERTCertificate nssCert(x509Cert->GetCert());
 
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);

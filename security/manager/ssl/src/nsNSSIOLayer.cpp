@@ -387,16 +387,19 @@ nsNSSSocketInfo::JoinConnection(const nsACString& npnProtocol,
 
   ScopedCERTCertificate nssCert;
 
-  nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(SSLStatus()->mServerCert);
-  if (cert2)
-    nssCert = cert2->GetCert();
+  nsCOMPtr<nsIX509Cert> cert(SSLStatus()->mServerCert);
+  if (cert) {
+    nssCert = cert->GetCert();
+  }
 
-  if (!nssCert)
+  if (!nssCert) {
     return NS_OK;
+  }
 
   if (CERT_VerifyCertName(nssCert, PromiseFlatCString(hostname).get()) !=
-      SECSuccess)
-    return NS_OK;
+      SECSuccess) {
+      return NS_OK;
+  }
 
   // All tests pass - this is joinable
   mJoined = true;
