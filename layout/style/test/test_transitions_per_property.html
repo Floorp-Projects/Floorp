@@ -218,8 +218,8 @@ var supported_properties = {
     "stroke-dasharray": [ test_dasharray_transition ],
     // NOTE: when calc() is supported on 'stroke-dashoffset', we should
     // add test_length_percent_calc_transition.
-    "stroke-dashoffset": [ test_length_transition, test_percent_transition,
-                           test_length_unclamped, test_percent_unclamped ],
+    "stroke-dashoffset": [ test_length_transition_svg, test_percent_transition,
+                           test_length_unclamped_svg, test_percent_unclamped ],
     "stroke-miterlimit": [ test_float_aboveOne_transition,
                            test_float_aboveOne_clamped ],
     "stroke-opacity" : [ test_float_zeroToOne_transition,
@@ -228,8 +228,8 @@ var supported_properties = {
                          test_float_zeroToOne_clamped ],
     // NOTE: when calc() is supported on 'stroke-width', we should add
     // test_length_percent_calc_transition.
-    "stroke-width": [ test_length_transition, test_percent_transition,
-                      test_length_clamped, test_percent_clamped ],
+    "stroke-width": [ test_length_transition_svg, test_percent_transition,
+                      test_length_clamped_svg, test_percent_clamped ],
     "text-indent": [ test_length_transition, test_percent_transition,
                      test_length_percent_calc_transition,
                      test_length_unclamped, test_percent_unclamped ],
@@ -872,27 +872,43 @@ function check_distance(prop, start, quarter, end)
   ok(Math.abs((qe * 4 - se * 3) / se) < 0.0001, "property '" + prop + "': distance " + qe + " from quarter '" + quarter + "' to end '" + end + "' should be three quarters distance " + se + " from start '" + start + "' to end '" + end + "'");
 }
 
-function test_length_transition(prop) {
+function test_length_transition_svg_or_units(prop, numbers_are_pixels) {
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "4px", "");
   is(cs.getPropertyValue(prop), "4px",
      "length-valued property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "12px", "");
-  is(cs.getPropertyValue(prop), "6px",
+  is(cs.getPropertyValue(prop), numbers_are_pixels ? "6" : "6px",
      "length-valued property " + prop + ": interpolation of lengths");
   check_distance(prop, "4px", "6px", "12px");
 }
 
+function test_length_transition(prop) {
+  test_length_transition_svg_or_units(prop, false);
+}
+
+function test_length_transition_svg(prop) {
+  test_length_transition_svg_or_units(prop, true);
+}
+
 function test_length_clamped(prop) {
-  test_length_clamped_or_unclamped(prop, true);
+  test_length_clamped_or_unclamped(prop, true, false);
 }
 
 function test_length_unclamped(prop) {
-  test_length_clamped_or_unclamped(prop, false);
+  test_length_clamped_or_unclamped(prop, false, false);
 }
 
-function test_length_clamped_or_unclamped(prop, is_clamped) {
+function test_length_clamped_svg(prop) {
+  test_length_clamped_or_unclamped(prop, true, true);
+}
+
+function test_length_unclamped_svg(prop) {
+  test_length_clamped_or_unclamped(prop, false, true);
+}
+
+function test_length_clamped_or_unclamped(prop, is_clamped, numbers_are_pixels) {
   div.style.setProperty("transition-timing-function", FUNC_NEGATIVE, "");
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "0px", "");
@@ -900,7 +916,8 @@ function test_length_clamped_or_unclamped(prop, is_clamped) {
      "length-valued property " + prop + ": flush before clamping test");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "100px", "");
-  (is_clamped ? is : isnot)(cs.getPropertyValue(prop), "0px",
+  (is_clamped ? is : isnot)(cs.getPropertyValue(prop),
+     numbers_are_pixels ? "0" : "0px",
      "length-valued property " + prop + ": clamping of negatives");
   div.style.setProperty("transition-timing-function", "linear", "");
 }

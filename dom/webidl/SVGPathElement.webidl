@@ -13,7 +13,6 @@ interface SVGPathElement : SVGGraphicsElement {
 
   readonly attribute SVGAnimatedNumber pathLength;
 
-  [Throws]
   float getTotalLength();
   [NewObject, Throws]
   SVGPoint getPointAtLength(float distance);

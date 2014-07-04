@@ -12,7 +12,7 @@
 #include "jsfun.h"
 #include "jsscript.h"
 
-#include "jit/AsmJSLink.h"
+#include "jit/AsmJSFrameIterator.h"
 #include "jit/JitFrameIterator.h"
 #ifdef CHECK_OSIPOINT_REGISTERS
 #include "jit/Registers.h" // for RegisterDump
@@ -1511,9 +1511,7 @@ class AsmJSActivation : public Activation
     void *errorRejoinSP_;
     SPSProfiler *profiler_;
     void *resumePC_;
-    uint8_t *exitSP_;
-
-    static const intptr_t InterruptedSP = -1;
+    uint8_t *exitFP_;
 
   public:
     AsmJSActivation(JSContext *cx, AsmJSModule &module);
@@ -1529,16 +1527,18 @@ class AsmJSActivation : public Activation
 
     // Initialized by JIT code:
     static unsigned offsetOfErrorRejoinSP() { return offsetof(AsmJSActivation, errorRejoinSP_); }
-    static unsigned offsetOfExitSP() { return offsetof(AsmJSActivation, exitSP_); }
+    static unsigned offsetOfExitFP() { return offsetof(AsmJSActivation, exitFP_); }
 
     // Set from SIGSEGV handler:
-    void setInterrupted(void *pc) { resumePC_ = pc; exitSP_ = (uint8_t*)InterruptedSP; }
-    bool isInterruptedSP() const { return exitSP_ == (uint8_t*)InterruptedSP; }
+    void setResumePC(void *pc) { resumePC_ = pc; }
 
-    // Note: exitSP is the sp right before the call instruction. On x86, this
-    // means before the return address is pushed on the stack, on ARM, this
-    // means after.
-    uint8_t *exitSP() const { JS_ASSERT(!isInterruptedSP()); return exitSP_; }
+    // If pc is in C++/Ion code, exitFP points to the innermost asm.js frame
+    // (the one that called into C++). While in asm.js code, exitFP is either
+    // null or points to the innermost asm.js frame. Thus, it is always valid to
+    // unwind a non-null exitFP. The only way C++ can observe a null exitFP is
+    // asychronous interruption of asm.js execution (viz., via the profiler,
+    // a signal handler, or the interrupt exit).
+    uint8_t *exitFP() const { return exitFP_; }
 };
 
 // A FrameIter walks over the runtime's stack of JS script activations,

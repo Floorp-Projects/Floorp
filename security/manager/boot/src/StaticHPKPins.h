@@ -123,9 +123,17 @@ static const char kGOOGLE_PIN_AlphaSSL_G2Fingerprint[] =
 static const char kGOOGLE_PIN_CryptoCat1Fingerprint[] =
   "vKaqtTLWmVuXPVJE+0OqN5sRc4VCcSQHI/W3XTDVR24=";
 
+/* GOOGLE_PIN_EntrustRootEC1 */
+static const char kGOOGLE_PIN_EntrustRootEC1Fingerprint[] =
+  "/qK31kX7pz11PB7Jp4cMQOH3sMVh6Se5hb9xGGbjbyI=";
+
 /* GOOGLE_PIN_Entrust_G2 */
 static const char kGOOGLE_PIN_Entrust_G2Fingerprint[] =
   "du6FkDdMcVQ3u8prumAo6t3i3G27uMP2EOhR8R0at/U=";
+
+/* GOOGLE_PIN_GoDaddySecure */
+static const char kGOOGLE_PIN_GoDaddySecureFingerprint[] =
+  "MrZLZnJ6IGPkBm87lYywqu5Xal7O/ZUzmbuIdHMdlYc=";
 
 /* GOOGLE_PIN_Libertylavabitcom */
 static const char kGOOGLE_PIN_LibertylavabitcomFingerprint[] =
@@ -658,6 +666,33 @@ static const StaticPinset kPinset_lavabit = {
   &kPinset_lavabit_sha256
 };
 
+static const char* kPinset_dropbox_sha256_Data[] = {
+  kGOOGLE_PIN_EntrustRootEC1Fingerprint,
+  kThawte_Premium_Server_CAFingerprint,
+  kthawte_Primary_Root_CA___G3Fingerprint,
+  kthawte_Primary_Root_CAFingerprint,
+  kEntrust_net_Premium_2048_Secure_Server_CAFingerprint,
+  kDigiCert_Assured_ID_Root_CAFingerprint,
+  kGo_Daddy_Root_Certificate_Authority___G2Fingerprint,
+  kGOOGLE_PIN_GoDaddySecureFingerprint,
+  kGeoTrust_Primary_Certification_AuthorityFingerprint,
+  kGo_Daddy_Class_2_CAFingerprint,
+  kDigiCert_High_Assurance_EV_Root_CAFingerprint,
+  kthawte_Primary_Root_CA___G2Fingerprint,
+  kEntrust_Root_Certification_AuthorityFingerprint,
+  kGOOGLE_PIN_Entrust_G2Fingerprint,
+  kGeoTrust_Global_CAFingerprint,
+  kGeoTrust_Primary_Certification_Authority___G3Fingerprint,
+  kDigiCert_Global_Root_CAFingerprint,
+  kGeoTrust_Primary_Certification_Authority___G2Fingerprint,
+};
+static const StaticFingerprints kPinset_dropbox_sha256 = { 18, kPinset_dropbox_sha256_Data };
+
+static const StaticPinset kPinset_dropbox = {
+  nullptr,
+  &kPinset_dropbox_sha256
+};
+
 /* Domainlist */
 struct TransportSecurityPreload {
   const char* mHost;
@@ -676,6 +711,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "addons.mozilla.org", true, false, true, 1, &kPinset_mozilla },
   { "admin.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "android.com", true, false, false, -1, &kPinset_google_root_pems },
+  { "api.accounts.firefox.com", true, true, false, 5, &kPinset_mozilla_fxa },
   { "api.twitter.com", true, false, false, -1, &kPinset_twitterCDN },
   { "apis.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "appengine.google.com", true, false, false, -1, &kPinset_google_root_pems },
@@ -702,6 +738,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "docs.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "doubleclick.net", true, false, false, -1, &kPinset_google_root_pems },
   { "drive.google.com", true, false, false, -1, &kPinset_google_root_pems },
+  { "dropbox.com", false, true, false, -1, &kPinset_dropbox },
   { "encrypted.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "exclude-subdomains.pinning.example.com", false, false, false, 0, &kPinset_mozilla_test },
   { "g.co", true, false, false, -1, &kPinset_google_root_pems },
