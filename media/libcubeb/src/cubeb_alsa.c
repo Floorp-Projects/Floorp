@@ -220,7 +220,9 @@ rebuild(cubeb * ctx)
 static void
 poll_wake(cubeb * ctx)
 {
-  write(ctx->control_fd_write, "x", 1);
+  if (write(ctx->control_fd_write, "x", 1) < 0) {
+    /* ignore write error */
+  }
 }
 
 static void
@@ -372,7 +374,9 @@ alsa_run(cubeb * ctx)
 
   if (r > 0) {
     if (ctx->fds[0].revents & POLLIN) {
-      read(ctx->control_fd_read, &dummy, 1);
+      if (read(ctx->control_fd_read, &dummy, 1) < 0) {
+        /* ignore read error */
+      }
 
       if (ctx->shutdown) {
         pthread_mutex_unlock(&ctx->mutex);
