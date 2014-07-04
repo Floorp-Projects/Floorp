@@ -177,7 +177,7 @@ ClientTiledThebesLayer::BeginPaint()
   mPaintData.mTransformToCompBounds =
     GetTransformToAncestorsParentLayer(this, scrollAncestor);
   mPaintData.mCompositionBounds = ApplyParentLayerToLayerTransform(
-    mPaintData.mTransformToCompBounds.Inverse(), ParentLayerRect(scrollMetrics.mCompositionBounds));
+    mPaintData.mTransformToCompBounds.Inverse(), scrollMetrics.mCompositionBounds);
   TILING_PRLOG_OBJ(("TILING %p: Composition bounds %s\n", this, tmpstr.get()), mPaintData.mCompositionBounds);
 
   // Calculate the scroll offset since the last transaction
