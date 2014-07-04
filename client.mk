@@ -165,7 +165,7 @@ OBJDIR_TARGETS = install export libs clean realclean distclean maybe_clobber_pro
 
 # The default rule is build
 build::
-	$(MAKE) -f $(TOPSRCDIR)/client.mk $(if $(MOZ_PGO),profiledbuild,realbuild) CREATE_MOZCONFIG_JSON=
+	$(MAKE) -f $(TOPSRCDIR)/client.mk $(if $(MOZ_PGO),profiledbuild,realbuild)
 
 # Define mkdir
 include $(TOPSRCDIR)/config/makefiles/makeutils.mk
@@ -218,12 +218,12 @@ everything: clean build
 #  is usable in multi-pass builds, where you might not have a runnable
 #  application until all the build passes and postflight scripts have run.
 profiledbuild::
-	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_GENERATE=1 MOZ_PGO_INSTRUMENTED=1 CREATE_MOZCONFIG_JSON=
+	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_GENERATE=1 MOZ_PGO_INSTRUMENTED=1
 	$(MAKE) -C $(OBJDIR) package MOZ_PGO_INSTRUMENTED=1 MOZ_INTERNAL_SIGNING_FORMAT= MOZ_EXTERNAL_SIGNING_FORMAT=
 	rm -f $(OBJDIR)/jarlog/en-US.log
 	MOZ_PGO_INSTRUMENTED=1 JARLOG_FILE=jarlog/en-US.log EXTRA_TEST_ARGS=10 $(MAKE) -C $(OBJDIR) pgo-profile-run
-	$(MAKE) -f $(TOPSRCDIR)/client.mk maybe_clobber_profiledbuild CREATE_MOZCONFIG_JSON=
-	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_USE=1 CREATE_MOZCONFIG_JSON=
+	$(MAKE) -f $(TOPSRCDIR)/client.mk maybe_clobber_profiledbuild
+	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_USE=1
 
 #####################################################
 # Build date unification
@@ -333,14 +333,9 @@ configure-preqs = \
   $(OBJDIR)/.mozconfig.json \
   $(NULL)
 
-CREATE_MOZCONFIG_JSON = $(shell $(TOPSRCDIR)/mach environment --format=json -o $(OBJDIR)/.mozconfig.json)
-# Force CREATE_MOZCONFIG_JSON above to be resolved, without side effects in
-# case the result is non empty, and allowing an override on the make command
-# line not running the command (using := $(shell) still runs the shell command).
-ifneq (,$(CREATE_MOZCONFIG_JSON))
-endif
-
-$(OBJDIR)/.mozconfig.json: $(call mkdir_deps,$(OBJDIR)) ;
+CREATE_MOZCONFIG_JSON := $(shell $(TOPSRCDIR)/mach environment --format=json -o $(OBJDIR)/.mozconfig.json)
+$(OBJDIR)/.mozconfig.json: $(call mkdir_deps,$(OBJDIR))
+	@$(TOPSRCDIR)/mach environment --format=json -o $@
 
 save-mozconfig: $(FOUND_MOZCONFIG)
 	-cp $(FOUND_MOZCONFIG) $(OBJDIR)/.mozconfig
