@@ -2155,8 +2155,8 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
 
 #define TYPED_ARRAY_CLASS_SPEC(_typedArray)                                    \
 {                                                                              \
-    GenericCreateConstructor<_typedArray##Object::class_constructor,           \
-                             NAME_OFFSET(_typedArray), 3>,                     \
+    GenericCreateConstructor<_typedArray##Object::class_constructor, 3,        \
+                             JSFunction::FinalizeKind>,                        \
     _typedArray##Object::CreatePrototype,                                      \
     nullptr,                                                                   \
     _typedArray##Object::jsfuncs,                                              \
