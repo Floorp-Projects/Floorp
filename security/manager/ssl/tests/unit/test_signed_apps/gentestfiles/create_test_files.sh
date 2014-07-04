@@ -5,10 +5,11 @@ export NSS_DEFAULT_DB_TYPE=sql
 export BASE_PATH=`dirname $0`
 export SIGN_SCR_LOC=.
 export APPS_TEST_LOC=../../../../../../../dom/apps/tests/signed
+export TOOLKIT_WEBAPPS_TEST_LOC=../../../../../../../toolkit/webapps/tests/data/
 
 # Creates the entry zip files (unsigned apps) from the source directories
 packageApps() {
-APPS="unsigned_app_1 unsigned_app_origin"
+APPS="unsigned_app_1 unsigned_app_origin unsigned_app_origin_toolkit_webapps"
 OLD_PWD=`pwd`
 cd ${BASE_PATH}
 for i in $APPS
@@ -169,7 +170,13 @@ signApp $DB_PATH ${BASE_PATH}/unsigned_app_1.zip \
 PRIV_UID=`uuidgen`
 signApp $DB_PATH ${BASE_PATH}/unsigned_app_origin.zip \
         $TEST_APP_PATH/origin_app_1.zip \
-        $INVALID_UID 1 ${TRUSTED_EE}
+        $PRIV_UID 1 ${TRUSTED_EE}
+
+# A privileged signed app needed for a toolkit/webapps test
+PRIV_TOOLKIT_UID=`uuidgen`
+signApp $DB_PATH ${BASE_PATH}/unsigned_app_origin_toolkit_webapps.zip \
+        $TEST_APP_PATH/custom_origin.zip \
+        $PRIV_TOOLKIT_UID 1 ${TRUSTED_EE}
 
 # Now let's copy the trusted cert to the app directory so we have everything
 # on the same place...
@@ -192,7 +199,8 @@ do
     No) echo "Ok, not installing the new files"
         echo "You should run: "
         echo cp ${TEST_APP_PATH}/* ${BASE_PATH}/${APPS_TEST_LOC}
-        echo cp ${TEST_APP_PATH}/*  ${TEST_APP_PATH}/../unsigned_app_1.zip ${BASE_PATH}/..
+        echo cp ${TEST_APP_PATH}/* ${TEST_APP_PATH}/../unsigned_app_1.zip ${BASE_PATH}/..
+        echo cp ${TEST_APP_PATH}/* ${BASE_PATH}/${TOOLKIT_WEBAPPS_TEST_LOC}
         echo "to install them"
         exit 0;;
   esac
@@ -200,5 +208,6 @@ done
 
 cp ${TEST_APP_PATH}/* ${BASE_PATH}/${APPS_TEST_LOC}
 cp ${TEST_APP_PATH}/* ${TEST_APP_PATH}/../unsigned_app_1.zip ${BASE_PATH}/..
+cp ${TEST_APP_PATH}/* ${BASE_PATH}/${TOOLKIT_WEBAPPS_TEST_LOC}
 
 echo "Done!"
