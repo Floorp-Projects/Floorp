@@ -24,11 +24,9 @@ void
 ColorLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 {
   EffectChain effects(this);
-  gfxRGBA color(GetColor());
-  effects.mPrimaryEffect = new EffectSolidColor(gfx::Color(color.r,
-                                                           color.g,
-                                                           color.b,
-                                                           color.a));
+
+  GenEffectChain(effects);
+
   nsIntRect boundRect = GetBounds();
 
   LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(GetMaskLayer(),
@@ -48,6 +46,17 @@ ColorLayerComposite::RenderLayer(const nsIntRect& aClipRect)
   mCompositor->DrawDiagnostics(DiagnosticFlags::COLOR,
                                rect, clipRect,
                                transform);
+}
+
+void
+ColorLayerComposite::GenEffectChain(EffectChain& aEffect)
+{
+  aEffect.mLayerRef = this;
+  gfxRGBA color(GetColor());
+  aEffect.mPrimaryEffect = new EffectSolidColor(gfx::Color(color.r,
+                                                           color.g,
+                                                           color.b,
+                                                           color.a));
 }
 
 } /* layers */

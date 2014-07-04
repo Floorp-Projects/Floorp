@@ -62,6 +62,10 @@ FILE* OpenFile(const char* dir, const char* filename, const char* mode);
 
 extern const PRTime ONE_DAY;
 
+// e.g. YMDHMS(2016, 12, 31, 1, 23, 45) => 2016-12-31:01:23:45 (GMT)
+PRTime YMDHMS(int16_t year, int16_t month, int16_t day,
+              int16_t hour, int16_t minutes, int16_t seconds);
+
 SECStatus GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
                           /*out*/ ScopedSECKEYPrivateKey& privateKey);
 

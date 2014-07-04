@@ -86,7 +86,7 @@ class RemoteAutomation(Automation):
 
         topActivity = self._devicemanager.getTopActivity()
         if topActivity == proc.procName:
-            proc.kill()
+            proc.kill(True)
         if status == 1:
             if maxTime:
                 print "TEST-UNEXPECTED-FAIL | %s | application ran for longer than " \
@@ -287,5 +287,26 @@ class RemoteAutomation(Automation):
 
             return status
 
-        def kill(self):
-            self.dm.killProcess(self.procName)
+        def kill(self, stagedShutdown = False):
+            if stagedShutdown:
+                # Trigger an ANR report with "kill -3" (SIGQUIT)
+                self.dm.killProcess(self.procName, 3)
+                time.sleep(3)
+                # Trigger a breakpad dump with "kill -6" (SIGABRT)
+                self.dm.killProcess(self.procName, 6)
+                # Wait for process to end
+                retries = 0
+                while retries < 3:
+                    pid = self.dm.processExist(self.procName)
+                    if pid and pid > 0:
+                        print "%s still alive after SIGABRT: waiting..." % self.procName
+                        time.sleep(5)
+                    else:
+                        return
+                    retries += 1
+                self.dm.killProcess(self.procName, 9)
+                pid = self.dm.processExist(self.procName)
+                if pid and pid > 0:
+                    self.dm.killProcess(self.procName)
+            else:
+                self.dm.killProcess(self.procName)

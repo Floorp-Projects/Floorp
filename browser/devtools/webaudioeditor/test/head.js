@@ -28,6 +28,7 @@ const MEDIA_NODES_URL = EXAMPLE_URL + "doc_media-node-creation.html";
 const BUFFER_AND_ARRAY_URL = EXAMPLE_URL + "doc_buffer-and-array.html";
 const DESTROY_NODES_URL = EXAMPLE_URL + "doc_destroy-nodes.html";
 const CONNECT_TOGGLE_URL = EXAMPLE_URL + "doc_connect-toggle.html";
+const CONNECT_PARAM_URL = EXAMPLE_URL + "doc_connect-param.html";
 
 // All tests are asynchronous.
 waitForExplicitFinish();

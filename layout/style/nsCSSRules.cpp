@@ -31,7 +31,6 @@
 #include "nsStyleUtil.h"
 #include "mozilla/css/Declaration.h"
 #include "nsCSSParser.h"
-#include "nsPrintfCString.h"
 #include "nsDOMClassInfoID.h"
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
 #include "StyleRule.h"
@@ -1408,52 +1407,6 @@ AppendSerializedFontSrc(const nsCSSValue& src, nsAString & aResult)
   aResult.Truncate(aResult.Length() - 2); // remove the last comma-space
 }
 
-// print all characters with at least four hex digits
-static void
-AppendSerializedUnicodePoint(uint32_t aCode, nsACString &aBuf)
-{
-  aBuf.Append(nsPrintfCString("%04X", aCode));
-}
-
-// A unicode-range: descriptor is represented as an array of integers,
-// to be interpreted as a sequence of pairs: min max min max ...
-// It is in source order.  (Possibly it should be sorted and overlaps
-// consolidated, but right now we don't do that.)
-static void
-AppendSerializedUnicodeRange(nsCSSValue const & aValue,
-                             nsAString & aResult)
-{
-  NS_PRECONDITION(aValue.GetUnit() == eCSSUnit_Null ||
-                  aValue.GetUnit() == eCSSUnit_Array,
-                  "improper value unit for unicode-range:");
-  aResult.Truncate();
-  if (aValue.GetUnit() != eCSSUnit_Array)
-    return;
-
-  nsCSSValue::Array const & sources = *aValue.GetArrayValue();
-  nsAutoCString buf;
-
-  NS_ABORT_IF_FALSE(sources.Count() % 2 == 0,
-                    "odd number of entries in a unicode-range: array");
-
-  for (uint32_t i = 0; i < sources.Count(); i += 2) {
-    uint32_t min = sources[i].GetIntValue();
-    uint32_t max = sources[i+1].GetIntValue();
-
-    // We don't try to replicate the U+XX?? notation.
-    buf.AppendLiteral("U+");
-    AppendSerializedUnicodePoint(min, buf);
-
-    if (min != max) {
-      buf.Append('-');
-      AppendSerializedUnicodePoint(max, buf);
-    }
-    buf.AppendLiteral(", ");
-  }
-  buf.Truncate(buf.Length() - 2); // remove the last comma-space
-  CopyASCIItoUTF16(buf, aResult);
-}
-
 // Mapping from nsCSSFontDesc codes to nsCSSFontFaceStyleDecl fields.
 nsCSSValue nsCSSFontFaceStyleDecl::* const
 nsCSSFontFaceStyleDecl::Fields[] = {
@@ -1539,7 +1492,7 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
     return NS_OK;
 
   case eCSSFontDesc_UnicodeRange:
-    AppendSerializedUnicodeRange(val, aResult);
+    nsStyleUtil::AppendUnicodeRange(val, aResult);
     return NS_OK;
 
   case eCSSFontDesc_UNKNOWN:
