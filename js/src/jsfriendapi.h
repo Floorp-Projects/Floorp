@@ -11,14 +11,12 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TypedEnum.h"
 
-#include "jsapi.h" // For JSAutoByteString.  See bug 1033916.
 #include "jsbytecode.h"
 #include "jspubtd.h"
 
 #include "js/CallArgs.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
-
 
 /*
  * This macro checks if the stack pointer has exceeded a given limit. If
@@ -1194,60 +1192,6 @@ namespace js {
 // which generally matches the toString() behavior of an ErrorObject.
 extern JS_FRIEND_API(JSString *)
 ErrorReportToString(JSContext *cx, JSErrorReport *reportp);
-
-struct MOZ_STACK_CLASS JS_FRIEND_API(ErrorReport)
-{
-    ErrorReport(JSContext *cx);
-    ~ErrorReport();
-
-    bool init(JSContext *cx, JS::HandleValue exn);
-
-    JSErrorReport *report()
-    {
-        return reportp;
-    }
-
-    const char *message()
-    {
-        return message_;
-    }
-
-  private:
-    // More or less an equivalent of JS_ReportErrorNumber/js_ReportErrorNumberVA
-    // but fills in an ErrorReport instead of reporting it.  Uses varargs to
-    // make it simpler to call js_ExpandErrorArguments.
-    void populateUncaughtExceptionReport(JSContext *cx, ...);
-    void populateUncaughtExceptionReportVA(JSContext *cx, va_list ap);
-
-    // We may have a provided JSErrorReport, so need a way to represent that.
-    JSErrorReport *reportp;
-
-    // And we may have a message.
-    const char *message_;
-
-    // Or we may need to synthesize a JSErrorReport one of our own.
-    JSErrorReport ownedReport;
-
-    // Or a message of our own.  If this is non-null, we need to clean up both
-    // it and ownedReport.
-    char *ownedMessage;
-
-    // And we have a string to maybe keep alive that has pointers into
-    // it from ownedReport.
-    JS::RootedString str;
-
-    // And we need to root our exception value.
-    JS::RootedObject exnObject;
-
-    // And possibly some byte storage for our message_.
-    JSAutoByteString bytesStorage;
-
-    // And for our filename.
-    JSAutoByteString filename;
-
-    // True if we need to free message_ and the stuff in ownedReport
-    bool ownsMessageAndReport;
-};
 
 } /* namespace js */
 
