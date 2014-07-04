@@ -139,8 +139,11 @@ describe("loop.conversation", function() {
           router.accept();
 
           sinon.assert.calledOnce(conversation.initiate);
-          sinon.assert.calledWithExactly(conversation.initiate, {
-            baseServerUrl: "http://example.com",
+          sinon.assert.calledWithMatch(conversation.initiate, {
+            client: {
+              mozLoop: navigator.mozLoop,
+              settings: {}
+            },
             outgoing: false
           });
         });
