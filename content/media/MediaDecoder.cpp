@@ -24,6 +24,11 @@
 #include <algorithm>
 #include "MediaShutdownManager.h"
 #include "AudioChannelService.h"
+#include "mozilla/dom/AudioTrack.h"
+#include "mozilla/dom/AudioTrackList.h"
+#include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/dom/VideoTrack.h"
+#include "mozilla/dom/VideoTrackList.h"
 
 #ifdef MOZ_WMF
 #include "WMFDecoder.h"
@@ -433,7 +438,8 @@ MediaDecoder::MediaDecoder() :
   mPinnedForSeek(false),
   mShuttingDown(false),
   mPausedForPlaybackRateNull(false),
-  mMinimizePreroll(false)
+  mMinimizePreroll(false),
+  mMediaTracksConstructed(false)
 {
   MOZ_COUNT_CTOR(MediaDecoder);
   MOZ_ASSERT(NS_IsMainThread());
@@ -692,6 +698,9 @@ void MediaDecoder::MetadataLoaded(MediaInfo* aInfo, MetadataTags* aTags)
   if (mDuration == -1) {
     SetInfinite(true);
   }
+
+  mInfo = aInfo;
+  ConstructMediaTracks();
 
   if (mOwner) {
     // Make sure the element and the frame (if any) are told about
@@ -1149,6 +1158,12 @@ void MediaDecoder::ChangeState(PlayState aState)
     }
   }
   mPlayState = aState;
+
+  if (mPlayState == PLAY_STATE_PLAYING) {
+    ConstructMediaTracks();
+  } else if (mPlayState == PLAY_STATE_ENDED) {
+    RemoveMediaTracks();
+  }
 
   ApplyStateToStateMachine(mPlayState);
 
@@ -1772,6 +1787,73 @@ MediaDecoder::GetOwner()
 {
   MOZ_ASSERT(NS_IsMainThread());
   return mOwner;
+}
+
+void
+MediaDecoder::ConstructMediaTracks()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mMediaTracksConstructed) {
+    return;
+  }
+
+  if (!mOwner || !mInfo) {
+    return;
+  }
+
+  HTMLMediaElement* element = mOwner->GetMediaElement();
+  if (!element) {
+    return;
+  }
+
+  mMediaTracksConstructed = true;
+
+  AudioTrackList* audioList = element->AudioTracks();
+  if (audioList && mInfo->HasAudio()) {
+    TrackInfo info = mInfo->mAudio.mTrackInfo;
+    nsRefPtr<AudioTrack> track = MediaTrackList::CreateAudioTrack(
+    info.mId, info.mKind, info.mLabel, info.mLanguage, info.mEnabled);
+
+    audioList->AddTrack(track);
+  }
+
+  VideoTrackList* videoList = element->VideoTracks();
+  if (videoList && mInfo->HasVideo()) {
+    TrackInfo info = mInfo->mVideo.mTrackInfo;
+    nsRefPtr<VideoTrack> track = MediaTrackList::CreateVideoTrack(
+    info.mId, info.mKind, info.mLabel, info.mLanguage);
+
+    videoList->AddTrack(track);
+    track->SetEnabledInternal(info.mEnabled, MediaTrack::FIRE_NO_EVENTS);
+  }
+}
+
+void
+MediaDecoder::RemoveMediaTracks()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mOwner) {
+    return;
+  }
+
+  HTMLMediaElement* element = mOwner->GetMediaElement();
+  if (!element) {
+    return;
+  }
+
+  AudioTrackList* audioList = element->AudioTracks();
+  if (audioList) {
+    audioList->RemoveTracks();
+  }
+
+  VideoTrackList* videoList = element->VideoTracks();
+  if (videoList) {
+    videoList->RemoveTracks();
+  }
+
+  mMediaTracksConstructed = false;
 }
 
 MediaMemoryTracker::MediaMemoryTracker()
