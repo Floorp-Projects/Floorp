@@ -170,6 +170,8 @@ public:
   /**
    * Waits for all [CrossProcess]CompositorParent's to be gone,
    * and destroys the compositor thread and global compositor map.
+   *
+   * Does not return until all of that has completed.
    */
   static void ShutDown();
 
