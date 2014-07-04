@@ -9656,6 +9656,102 @@ ICTableSwitch::fixupJumpTable(JSScript *script, BaselineScript *baseline)
 }
 
 //
+// ArrayPush_Fallback
+//
+static bool
+DoArrayPushFallback(JSContext *cx, BaselineFrame *frame, ICArrayPush_Fallback *stub_,
+                    HandleObject obj, HandleValue v)
+{
+    // This fallback stub may trigger debug mode toggling.
+    DebugModeOSRVolatileStub<ICArrayPush_Fallback *> stub(frame, stub_);
+
+    FallbackICSpew(cx, stub, "ArrayPush");
+
+    if (!NewbornArrayPush(cx, obj, v))
+        return false;
+
+    // Check if debug mode toggling made the stub invalid.
+    if (stub.invalid())
+        return true;
+
+    if (!stub->hasStub(ICStub::ArrayPush_Native))
+    {
+        ICArrayPush_Native::Compiler compiler(cx);
+        ICStub *newStub = compiler.getStub(compiler.getStubSpace(frame->script()));
+        if (!newStub)
+            return false;
+        stub->addNewStub(newStub);
+    }
+
+    return true;
+}
+
+typedef bool (*DoArrayPushFallbackFn)(JSContext *, BaselineFrame *, ICArrayPush_Fallback *,
+              HandleObject, HandleValue);
+static const VMFunction DoArrayPushFallbackInfo = FunctionInfo<DoArrayPushFallbackFn>(DoArrayPushFallback);
+
+bool
+ICArrayPush_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
+
+    // Push arguments.
+    masm.pushValue(R0);
+    masm.push(R1.scratchReg());
+    masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+
+    return tailCallVM(DoArrayPushFallbackInfo, masm);
+}
+
+//
+// ArrayPush_Native
+//
+
+bool
+ICArrayPush_Native::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+
+    Register obj = R1.scratchReg();
+    GeneralRegisterSet regs(availableGeneralRegs(1));
+    regs.take(obj);
+    Register elementsTemp = regs.takeAny();
+    Register length = regs.takeAny();
+
+    masm.loadPtr(Address(obj, JSObject::offsetOfElements()), elementsTemp);
+    masm.load32(Address(elementsTemp, ObjectElements::offsetOfLength()), length);
+    #ifdef DEBUG
+    {
+      Label ok;
+      masm.branch32(Assembler::Equal,
+                    Address(elementsTemp,
+                            ObjectElements::offsetOfInitializedLength()),
+                    length,
+                    &ok);
+      masm.assumeUnreachable("ArrayPush array length != initializedLength");
+      masm.bind(&ok);
+    }
+    #endif
+    masm.branch32(Assembler::BelowOrEqual,
+                  Address(elementsTemp, ObjectElements::offsetOfCapacity()),
+                  length, &failure);
+    Int32Key key = Int32Key(length);
+
+    JS_STATIC_ASSERT(sizeof(Value) == 8);
+    masm.storeValue(R0, BaseIndex(elementsTemp, length, TimesEight));
+    masm.bumpKey(&key, 1);
+    masm.store32(length, Address(elementsTemp, ObjectElements::offsetOfLength()));
+    masm.store32(length, Address(elementsTemp, ObjectElements::offsetOfInitializedLength()));
+    EmitReturnFromIC(masm);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+//
 // IteratorNew_Fallback
 //
 
