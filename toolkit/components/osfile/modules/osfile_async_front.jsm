@@ -784,8 +784,8 @@ File.prototype = {
 };
 
 
-if (SharedAll.Constants.Sys.Name != "Android") {
-  /**
+if (SharedAll.Constants.Sys.Name != "Android" && SharedAll.Constants.Sys.Name != "Gonk") {
+   /**
    * Set the last access and modification date of the file.
    * The time stamp resolution is 1 second at best, but might be worse
    * depending on the platform.
