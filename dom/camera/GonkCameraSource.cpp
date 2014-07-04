@@ -57,10 +57,10 @@ struct GonkCameraSourceListener : public GonkCameraListener {
     GonkCameraSourceListener(const sp<GonkCameraSource> &source);
 
     virtual void notify(int32_t msgType, int32_t ext1, int32_t ext2);
-    virtual void postData(int32_t msgType, const sp<IMemory> &dataPtr,
+    virtual bool postData(int32_t msgType, const sp<IMemory> &dataPtr,
                           camera_frame_metadata_t *metadata);
 
-    virtual void postDataTimestamp(
+    virtual bool postDataTimestamp(
             nsecs_t timestamp, int32_t msgType, const sp<IMemory>& dataPtr);
 
 protected:
@@ -84,7 +84,7 @@ void GonkCameraSourceListener::notify(int32_t msgType, int32_t ext1, int32_t ext
     CS_LOGV("notify(%d, %d, %d)", msgType, ext1, ext2);
 }
 
-void GonkCameraSourceListener::postData(int32_t msgType, const sp<IMemory> &dataPtr,
+bool GonkCameraSourceListener::postData(int32_t msgType, const sp<IMemory> &dataPtr,
                                     camera_frame_metadata_t *metadata) {
     CS_LOGV("postData(%d, ptr:%p, size:%d)",
          msgType, dataPtr->pointer(), dataPtr->size());
@@ -92,16 +92,20 @@ void GonkCameraSourceListener::postData(int32_t msgType, const sp<IMemory> &data
     sp<GonkCameraSource> source = mSource.promote();
     if (source.get() != NULL) {
         source->dataCallback(msgType, dataPtr);
+        return true;
     }
+    return false;
 }
 
-void GonkCameraSourceListener::postDataTimestamp(
+bool GonkCameraSourceListener::postDataTimestamp(
         nsecs_t timestamp, int32_t msgType, const sp<IMemory>& dataPtr) {
 
     sp<GonkCameraSource> source = mSource.promote();
     if (source.get() != NULL) {
         source->dataCallbackTimestamp(timestamp/1000, msgType, dataPtr);
+        return true;
     }
+    return false;
 }
 
 static int32_t getColorFormat(const char* colorFormat) {
