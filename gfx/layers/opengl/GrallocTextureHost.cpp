@@ -305,13 +305,13 @@ GrallocTextureHostOGL::GrallocTextureHostOGL(TextureFlags aFlags,
     format =
       SurfaceFormatForAndroidPixelFormat(graphicBuffer->getPixelFormat(),
                                          aFlags & TextureFlags::RB_SWAPPED);
+    mTextureSource = new GrallocTextureSourceOGL(nullptr,
+                                                 this,
+                                                 graphicBuffer,
+                                                 format);
   } else {
-    NS_WARNING("gralloc buffer is nullptr");
+    printf_stderr("gralloc buffer is nullptr");
   }
-  mTextureSource = new GrallocTextureSourceOGL(nullptr,
-                                               this,
-                                               graphicBuffer,
-                                               format);
 }
 
 GrallocTextureHostOGL::~GrallocTextureHostOGL()
@@ -322,7 +322,9 @@ GrallocTextureHostOGL::~GrallocTextureHostOGL()
 void
 GrallocTextureHostOGL::SetCompositor(Compositor* aCompositor)
 {
-  mTextureSource->SetCompositor(static_cast<CompositorOGL*>(aCompositor));
+  if (mTextureSource) {
+    mTextureSource->SetCompositor(static_cast<CompositorOGL*>(aCompositor));
+  }
 }
 
 bool
@@ -344,12 +346,18 @@ GrallocTextureHostOGL::Unlock()
 bool
 GrallocTextureHostOGL::IsValid() const
 {
+  if (!mTextureSource) {
+    return false;
+  }
   return mTextureSource->IsValid();
 }
 
 gfx::SurfaceFormat
 GrallocTextureHostOGL::GetFormat() const
 {
+  if (!mTextureSource) {
+    return gfx::SurfaceFormat::UNKNOWN;
+  }
   return mTextureSource->GetFormat();
 }
 
@@ -358,6 +366,7 @@ GrallocTextureHostOGL::DeallocateSharedData()
 {
   if (mTextureSource) {
     mTextureSource->ForgetBuffer();
+    mTextureSource = nullptr;
   }
   if (mGrallocHandle.buffer().type() != SurfaceDescriptor::Tnull_t) {
     MaybeMagicGrallocBufferHandle handle = mGrallocHandle.buffer();
@@ -378,13 +387,16 @@ GrallocTextureHostOGL::ForgetSharedData()
 {
   if (mTextureSource) {
     mTextureSource->ForgetBuffer();
+    mTextureSource = nullptr;
   }
 }
 
 void
 GrallocTextureHostOGL::DeallocateDeviceData()
 {
-  mTextureSource->DeallocateDeviceData();
+  if (mTextureSource) {
+    mTextureSource->DeallocateDeviceData();
+  }
 }
 
 LayerRenderState
