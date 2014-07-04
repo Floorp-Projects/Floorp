@@ -5,12 +5,12 @@
 /*global loop, sinon */
 
 var expect = chai.expect;
-var TestUtils = React.addons.TestUtils;
 
 describe("loop.panel", function() {
   "use strict";
 
-  var sandbox, notifier, fakeXHR, requests = [];
+  var sandbox, notifier, fakeXHR, requests = [], savedMozLoop,
+      fakeSeenToSPref = 0;
 
   function createTestRouter(fakeDocument) {
     return new loop.panel.PanelRouter({
@@ -42,13 +42,18 @@ describe("loop.panel", function() {
         return "http://example.com";
       },
       getStrings: function() {
-        return JSON.stringify({textContent: "fakeText"});
+        return "{}";
       },
       get locale() {
         return "en-US";
       },
       setLoopCharPref: sandbox.stub(),
-      getLoopCharPref: sandbox.stub()
+      getLoopCharPref: function () {
+        if (fakeSeenToSPref === 0) {
+          return null;
+        }
+        return 'seen';
+      }
     };
 
     document.mozL10n.initialize(navigator.mozLoop);
@@ -56,6 +61,7 @@ describe("loop.panel", function() {
 
   afterEach(function() {
     delete navigator.mozLoop;
+    $("#fixtures").empty();
     sandbox.restore();
   });
 
@@ -84,7 +90,6 @@ describe("loop.panel", function() {
         });
 
         sandbox.stub(router, "loadView");
-        sandbox.stub(router, "loadReactComponent");
       });
 
       describe("#home", function() {
@@ -107,233 +112,277 @@ describe("loop.panel", function() {
         it("should load the home view", function() {
           router.reset();
 
-          sinon.assert.calledOnce(router.loadReactComponent);
-          sinon.assert.calledWithExactly(router.loadReactComponent,
-            sinon.match(function(value) {
-              return React.addons.TestUtils.isComponentOfType(
-                value, loop.panel.PanelView);
-            }));
+          sinon.assert.calledOnce(router.loadView);
+          sinon.assert.calledWithExactly(router.loadView,
+            sinon.match.instanceOf(loop.panel.PanelView));
         });
       });
-    });
 
-    describe("Events", function() {
-      beforeEach(function() {
-        sandbox.stub(loop.panel.PanelRouter.prototype, "trigger");
-      });
-
-      it("should listen to document visibility changes", function() {
-        var fakeDocument = {
-          hidden: true,
-          addEventListener: sandbox.spy()
-        };
-
-        var router = createTestRouter(fakeDocument);
-
-        sinon.assert.calledOnce(fakeDocument.addEventListener);
-        sinon.assert.calledWith(fakeDocument.addEventListener,
-                                "visibilitychange");
-      });
-
-      it("should trigger panel:open when the panel document is visible",
-        function() {
-          var router = createTestRouter({
-            hidden: false,
-            addEventListener: function(name, cb) {
-              cb({currentTarget: {hidden: false}});
-            }
-          });
-
-          sinon.assert.calledOnce(router.trigger);
-          sinon.assert.calledWithExactly(router.trigger, "panel:open");
-        });
-
-      it("should trigger panel:closed when the panel document is hidden",
-        function() {
-          var router = createTestRouter({
+      describe("Events", function() {
+        it("should listen to document visibility changes", function() {
+          var fakeDocument = {
             hidden: true,
-            addEventListener: function(name, cb) {
-              cb({currentTarget: {hidden: true}});
-            }
+            addEventListener: sandbox.spy()
+          };
+
+          var router = createTestRouter(fakeDocument);
+
+          sinon.assert.calledOnce(fakeDocument.addEventListener);
+          sinon.assert.calledWith(fakeDocument.addEventListener,
+                                  "visibilitychange");
+        });
+
+        it("should trigger panel:open when the panel document is visible",
+          function(done) {
+            var router = createTestRouter({
+              hidden: false,
+              addEventListener: function(name, cb) {
+                setTimeout(function() {
+                  cb({currentTarget: {hidden: false}});
+                }, 0);
+              }
+            });
+
+            router.once("panel:open", function() {
+              done();
+            });
           });
 
-          sinon.assert.calledOnce(router.trigger);
-          sinon.assert.calledWithExactly(router.trigger, "panel:closed");
-        });
+        it("should trigger panel:closed when the panel document is hidden",
+          function(done) {
+            var router = createTestRouter({
+              addEventListener: function(name, cb) {
+                hidden: true,
+                setTimeout(function() {
+                  cb({currentTarget: {hidden: true}});
+                }, 0);
+              }
+            });
+
+            router.once("panel:closed", function() {
+              done();
+            });
+          });
+      });
     });
   });
 
-  describe("loop.panel.DoNotDisturb", function() {
+  describe("loop.panel.DoNotDisturbView", function() {
     var view;
 
     beforeEach(function() {
-      view = TestUtils.renderIntoDocument(loop.panel.DoNotDisturb());
+      $("#fixtures").append('<div id="dnd-view"></div>');
+      view = new loop.panel.DoNotDisturbView({el: $("#dnd-view")});
     });
 
-    describe("Checkbox change event", function() {
+    describe("#toggle", function() {
       beforeEach(function() {
         navigator.mozLoop.doNotDisturb = false;
-
-        var checkbox = TestUtils.findRenderedDOMComponentWithTag(view, "input");
-        TestUtils.Simulate.change(checkbox);
       });
 
       it("should toggle the value of mozLoop.doNotDisturb", function() {
+        view.toggle();
+
         expect(navigator.mozLoop.doNotDisturb).eql(true);
       });
 
       it("should update the DnD checkbox value", function() {
-        expect(view.getDOMNode().querySelector("input").checked).eql(true);
+        view.toggle();
+
+        expect(view.$("input").is(":checked")).eql(true);
+      });
+    });
+
+    describe("render", function() {
+      it("should check the dnd checkbox when dnd is enabled", function() {
+        navigator.mozLoop.doNotDisturb = false;
+
+        view.render();
+
+        expect(view.$("input").is(":checked")).eql(false);
+      });
+
+      it("should uncheck the dnd checkbox when dnd is disabled", function() {
+        navigator.mozLoop.doNotDisturb = true;
+
+        view.render();
+
+        expect(view.$("input").is(":checked")).eql(true);
       });
     });
   });
 
-  describe("loop.panel.CallUrlForm", function() {
-    var fakeClient, callUrlData, view;
-
+  describe("loop.panel.PanelView", function() {
     beforeEach(function() {
-      callUrlData = {
-        call_url: "http://call.invalid/",
-        expiresAt: 1000
-      };
-
-      fakeClient = {
-        requestCallUrl: function(_, cb) {
-          cb(null, callUrlData);
-        }
-      };
-
-      view = TestUtils.renderIntoDocument(loop.panel.CallUrlForm({
-        notifier: notifier,
-        client: fakeClient
-      }));
+      $("#fixtures").append('<div id="messages"></div><div id="main"></div>');
     });
 
-    describe("#render", function() {
-      it("should render a ToSView", function() {
-        TestUtils.findRenderedComponentWithType(view, loop.panel.ToSView);
-      });
-    });
-
-    describe("Form submit event", function() {
-
-      function submitForm(callerValue) {
-        // fill caller field
-        TestUtils.Simulate.change(
-          TestUtils.findRenderedDOMComponentWithTag(view, "input"), {
-            target: {value: callerValue}
-          });
-
-        // submit form
-        TestUtils.Simulate.submit(
-          TestUtils.findRenderedDOMComponentWithTag(view, "form"));
-      }
-
+    describe("#getCallUrl", function() {
       it("should reset all pending notifications", function() {
-        submitForm("foo");
+        var requestCallUrl = sandbox.stub(loop.Client.prototype,
+                                          "requestCallUrl");
+        var view = new loop.panel.PanelView({notifier: notifier}).render();
 
-        sinon.assert.calledOnce(notifier.clear, "clear");
+        view.getCallUrl({preventDefault: sandbox.spy()});
+
+        sinon.assert.calledOnce(view.notifier.clear, "clear");
       });
 
       it("should request a call url to the server", function() {
-        fakeClient.requestCallUrl = sandbox.stub();
+        var requestCallUrl = sandbox.stub(loop.Client.prototype,
+                                          "requestCallUrl");
+        var view = new loop.panel.PanelView({notifier: notifier});
+        sandbox.stub(view, "getNickname").returns("foo");
 
-        submitForm("foo");
+        view.getCallUrl({preventDefault: sandbox.spy()});
 
-        sinon.assert.calledOnce(fakeClient.requestCallUrl);
-        sinon.assert.calledWith(fakeClient.requestCallUrl, "foo");
+        sinon.assert.calledOnce(requestCallUrl);
+        sinon.assert.calledWith(requestCallUrl, "foo");
       });
 
       it("should set the call url form in a pending state", function() {
-        // Cancel requestCallUrl effect to keep the state pending
-        fakeClient.requestCallUrl = sandbox.stub();
+        var requestCallUrl = sandbox.stub(loop.Client.prototype,
+                                          "requestCallUrl");
+        sandbox.stub(loop.panel.PanelView.prototype, "setPending");
 
-        submitForm("foo");
+        var view = new loop.panel.PanelView({notifier: notifier});
 
-        expect(view.state.pending).eql(true);
-      });
+        view.getCallUrl({preventDefault: sandbox.spy()});
 
-      it("should update state with the call url received", function() {
-        submitForm("foo");
-
-        expect(view.state.pending).eql(false);
-        expect(view.state.callUrl).eql(callUrlData.call_url);
+        sinon.assert.calledOnce(view.setPending);
       });
 
       it("should clear the pending state when a response is received",
         function() {
-          submitForm("foo");
+          sandbox.stub(loop.panel.PanelView.prototype,
+                       "clearPending");
+          var requestCallUrl = sandbox.stub(
+            loop.Client.prototype, "requestCallUrl", function(_, cb) {
+              cb("fake error");
+            });
+          var view = new loop.panel.PanelView({notifier: notifier});
 
-          expect(view.state.pending).eql(false);
+          view.getCallUrl({preventDefault: sandbox.spy()});
+
+          sinon.assert.calledOnce(view.clearPending);
         });
 
-      it("should update CallUrlResult with the call url", function() {
-        submitForm("foo");
-
-        var urlField = view.getDOMNode().querySelector("input[type='url']");
-
-        expect(urlField.value).eql(callUrlData.call_url);
-      });
-
-      it("should reset all pending notifications", function() {
-        submitForm("foo");
-
-        sinon.assert.calledOnce(view.props.notifier.clear);
-      });
-
       it("should notify the user when the operation failed", function() {
-        fakeClient.requestCallUrl = function(_, cb) {
-          cb("fake error");
-        };
+        var requestCallUrl = sandbox.stub(
+          loop.Client.prototype, "requestCallUrl", function(_, cb) {
+            cb("fake error");
+          });
+        var view = new loop.panel.PanelView({notifier: notifier});
 
-        submitForm("foo");
+        view.getCallUrl({preventDefault: sandbox.spy()});
 
-        sinon.assert.calledOnce(notifier.errorL10n);
-        sinon.assert.calledWithExactly(notifier.errorL10n,
+        sinon.assert.calledOnce(view.notifier.errorL10n);
+        sinon.assert.calledWithExactly(view.notifier.errorL10n,
                                        "unable_retrieve_url");
       });
     });
-  });
 
-  describe('loop.panel.ToSView', function() {
+    describe("#onCallUrlReceived", function() {
+      var callUrlData;
 
-    it("should set the value of the loop.seenToS preference to 'seen'",
-      function() {
-        TestUtils.renderIntoDocument(loop.panel.ToSView());
-
-        sinon.assert.calledOnce(navigator.mozLoop.setLoopCharPref);
-        sinon.assert.calledWithExactly(navigator.mozLoop.setLoopCharPref,
-          'seenToS', 'seen');
+      beforeEach(function() {
+        callUrlData = {
+          callUrl: "http://call.me/",
+          expiresAt: 1000
+        };
       });
 
-    it("should not set the value of loop.seenToS when it's already set",
-      function() {
-        navigator.mozLoop.getLoopCharPref = function() {
-          return "seen";
-        };
+      it("should update the text field with the call url", function() {
+        var view = new loop.panel.PanelView({notifier: notifier});
+        view.render();
 
-        TestUtils.renderIntoDocument(loop.panel.ToSView());
+        view.onCallUrlReceived(callUrlData);
+
+        expect(view.$("#call-url").val()).eql("http://call.me/");
+      });
+
+      it("should reset all pending notifications", function() {
+        var view = new loop.panel.PanelView({notifier: notifier}).render();
+
+        view.onCallUrlReceived(callUrlData);
+
+        sinon.assert.calledOnce(view.notifier.clear);
+      });
+    });
+
+    describe("events", function() {
+      describe("goBack", function() {
+        it("should update the button state");
+      });
+
+      describe("changeButtonState", function() {
+         it("should do set the disabled state if there is no text");
+         it("should do set the enabled state if there is text");
+      });
+    });
+
+    describe("#render", function() {
+      it("should render a DoNotDisturbView", function() {
+        var renderDnD = sandbox.stub(loop.panel.DoNotDisturbView.prototype,
+                                     "render");
+        var view = new loop.panel.PanelView({notifier: notifier});
+
+        view.render();
+
+        sinon.assert.calledOnce(renderDnD);
+      });
+
+      it("should render a ToSView", function() {
+        var renderToS = sandbox.stub(loop.panel.ToSView.prototype, "render");
+        var view = new loop.panel.PanelView({notifier: notifier});
+
+        view.render();
+
+        sinon.assert.calledOnce(renderToS);
+      });
+    });
+
+    describe('loop.panel.ToSView', function() {
+
+      beforeEach(function() {
+
+        $('#fixtures').append('<div id="#tos-view"></div>');
+
+      });
+
+      // XXX Until it's possible to easily test creation of text,
+      // not doing so. As it stands, the magic in the L10nView
+      // class makes stubbing BaseView.render impractical.
+
+      it("should set the value of the loop.seenToS preference to 'seen'",
+        function() {
+          var ToSView = new loop.panel.ToSView({el: $("#tos-view")});
+
+          ToSView.render();
+
+          sinon.assert.calledOnce(navigator.mozLoop.setLoopCharPref);
+          sinon.assert.calledWithExactly(navigator.mozLoop.setLoopCharPref,
+            'seenToS', 'seen');
+        });
+
+      it("should render when the value of loop.seenToS is not set", function() {
+        var renderToS = sandbox.spy(loop.panel.ToSView.prototype, "render");
+        var ToSView = new loop.panel.ToSView({el: $('#tos-view')});
+
+        ToSView.render();
+
+        sinon.assert.calledOnce(renderToS);
+      });
+
+      it("should not render when the value of loop.seenToS is set to 'seen'",
+        function() {
+        var ToSView = new loop.panel.ToSView({el: $('#tos-view')});
+        fakeSeenToSPref = 1;
+
+        ToSView.render();
 
         sinon.assert.notCalled(navigator.mozLoop.setLoopCharPref);
       });
-
-    it("should render when the value of loop.seenToS is not set", function() {
-      var view = TestUtils.renderIntoDocument(loop.panel.ToSView());
-
-      TestUtils.findRenderedDOMComponentWithClass(view, "tos");
-    });
-
-    it("should not render when the value of loop.seenToS is set to 'seen'",
-      function(done) {
-        navigator.mozLoop.getLoopCharPref = function() {
-          return "seen";
-        };
-
-        try {
-          TestUtils.findRenderedDOMComponentWithClass(view, "tos");
-        } catch (err) {
-          done();
-        }
     });
   });
 });

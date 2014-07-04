@@ -18,7 +18,7 @@ loop.shared.router = (function(l10n) {
   var BaseRouter = Backbone.Router.extend({
     /**
      * Active view.
-     * @type {Object}
+     * @type {loop.shared.views.BaseView}
      */
     _activeView: undefined,
 
@@ -51,38 +51,12 @@ loop.shared.router = (function(l10n) {
      *
      * @param {loop.shared.views.BaseView} view View.
      */
-    loadView: function(view) {
-      this.clearActiveView();
-      this._activeView = {type: "backbone", view: view.render().show()};
-      this.updateView(this._activeView.view.$el);
-    },
-
-    /**
-     * Renders a React component as current active view.
-     *
-     * @param {React} reactComponent React component.
-     */
-    loadReactComponent: function(reactComponent) {
-      this.clearActiveView();
-      this._activeView = {
-        type: "react",
-        view: React.renderComponent(reactComponent,
-                                    document.querySelector("#main"))
-      };
-    },
-
-    /**
-     * Clears current active view.
-     */
-    clearActiveView: function() {
-      if (!this._activeView) {
-        return;
+    loadView : function(view) {
+      if (this._activeView) {
+        this._activeView.remove();
       }
-      if (this._activeView.type === "react") {
-        React.unmountComponentAtNode(document.querySelector("#main"));
-      } else {
-        this._activeView.view.remove();
-      }
+      this._activeView = view.render().show();
+      this.updateView(this._activeView.$el);
     },
 
     /**
