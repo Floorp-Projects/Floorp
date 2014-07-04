@@ -163,6 +163,7 @@ static XP_CHAR* crashReporterPath;
 
 // Where crash events should go.
 static XP_CHAR* eventsDirectory;
+static char* eventsEnv = nullptr;
 
 // If this is false, we don't launch the crash reporter
 static bool doReport = true;
@@ -2107,10 +2108,29 @@ SetCrashEventsDir(nsIFile* aDir)
   nsString path;
   eventsDir->GetPath(path);
   eventsDirectory = reinterpret_cast<wchar_t*>(ToNewUnicode(path));
+
+  // Save the path in the environment for the crash reporter application.
+  nsAutoString eventsDirEnv(NS_LITERAL_STRING("MOZ_CRASHREPORTER_EVENTS_DIRECTORY="));
+  eventsDirEnv.Append(path);
+  _wputenv(eventsDirEnv.get());
 #else
   nsCString path;
   eventsDir->GetNativePath(path);
   eventsDirectory = ToNewCString(path);
+
+  // Save the path in the environment for the crash reporter application.
+  nsAutoCString eventsDirEnv("MOZ_CRASHREPORTER_EVENTS_DIRECTORY=");
+  eventsDirEnv.Append(path);
+
+  // PR_SetEnv() wants the string to be available for the lifetime
+  // of the app, so dup it here.
+  char* oldEventsEnv = eventsEnv;
+  eventsEnv = ToNewCString(eventsDirEnv);
+  PR_SetEnv(eventsEnv);
+
+  if (oldEventsEnv) {
+    NS_Free(oldEventsEnv);
+  }
 #endif
 }
 
