@@ -68,6 +68,7 @@
 #include "mozilla/MouseEvents.h"
 #include "AudioChannelService.h"
 #include "MessageEvent.h"
+#include "nsAboutProtocolUtils.h"
 
 // Interfaces Needed
 #include "nsIFrame.h"
@@ -10511,6 +10512,20 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
   return rv.ErrorCode();
 }
 
+static bool
+GetIndexedDBEnabledForAboutURI(nsIURI *aURI)
+{
+  nsCOMPtr<nsIAboutModule> module;
+  nsresult rv = NS_GetAboutModule(aURI, getter_AddRefs(module));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  uint32_t flags;
+  rv = module->GetURIFlags(aURI, &flags);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return flags & nsIAboutModule::ENABLE_INDEXED_DB;
+}
+
 indexedDB::IDBFactory*
 nsGlobalWindow::GetIndexedDB(ErrorResult& aError)
 {
@@ -10531,11 +10546,12 @@ nsGlobalWindow::GetIndexedDB(ErrorResult& aError)
       if (principal) {
         nsCOMPtr<nsIURI> uri;
         principal->GetURI(getter_AddRefs(uri));
-        bool isAbout = false;
-        if (uri && NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)) && isAbout) {
-          nsAutoCString path;
-          skipThirdPartyCheck = NS_SUCCEEDED(uri->GetPath(path)) &&
-                                path.EqualsLiteral("home");
+
+        if (uri) {
+          bool isAbout = false;
+          if (NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)) && isAbout) {
+            skipThirdPartyCheck = GetIndexedDBEnabledForAboutURI(uri);
+          }
         }
       }
 
