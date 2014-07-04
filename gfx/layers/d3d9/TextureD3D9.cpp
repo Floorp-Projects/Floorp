@@ -563,7 +563,7 @@ CairoTextureClientD3D9::~CairoTextureClientD3D9()
 }
 
 bool
-CairoTextureClientD3D9::Lock(OpenMode)
+CairoTextureClientD3D9::Lock(OpenMode aMode)
 {
   MOZ_ASSERT(!mIsLocked);
   if (!IsValid() || !IsAllocated()) {
@@ -586,6 +586,16 @@ CairoTextureClientD3D9::Lock(OpenMode)
   }
 
   mIsLocked = true;
+
+  // Make sure that successful write-lock means we will have a DrawTarget to
+  // write into.
+  if (aMode & OpenMode::OPEN_WRITE) {
+    mDrawTarget = BorrowDrawTarget();
+    if (!mDrawTarget) {
+      Unlock();
+      return false;
+    }
+  }
 
   if (mNeedsClear) {
     mDrawTarget = BorrowDrawTarget();
