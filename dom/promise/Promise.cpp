@@ -22,6 +22,7 @@
 #include "nsJSUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsJSEnvironment.h"
+#include "nsIScriptObjectPrincipal.h"
 
 namespace mozilla {
 namespace dom {
@@ -1039,14 +1040,22 @@ Promise::MaybeReportRejected()
     return;
   }
 
-  if (!mResult.isObject()) {
+  ThreadsafeAutoJSContext cx;
+  Maybe<JSAutoCompartment> ac;
+  Maybe<JS::Rooted<JSObject*>> obj;
+  JS::Rooted<JS::Value> val(cx, mResult);
+  if (val.isObject()) {
+    obj.construct(cx, &val.toObject());
+    ac.construct(cx, obj.ref());
+  } else if (!JS_WrapValue(cx, &val)) {
+    JS_ClearPendingException(cx);
     return;
   }
-  ThreadsafeAutoJSContext cx;
-  JS::Rooted<JSObject*> obj(cx, &mResult.toObject());
-  JSAutoCompartment ac(cx, obj);
-  JSErrorReport* report = JS_ErrorFromException(cx, obj);
-  if (!report) {
+
+  JS::ExposeValueToActiveJS(val);
+  js::ErrorReport report(cx);
+  if (!report.init(cx, val)) {
+    JS_ClearPendingException(cx);
     return;
   }
 
@@ -1055,9 +1064,24 @@ Promise::MaybeReportRejected()
   bool isChromeError = false;
 
   if (MOZ_LIKELY(NS_IsMainThread())) {
-    win =
-      do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(obj));
-    nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(obj);
+    nsIPrincipal* principal;
+    if (!obj.empty()) {
+      win =
+        do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(obj.ref()));
+      principal = nsContentUtils::ObjectPrincipal(obj.ref());
+    } else {
+      // Just use our global if we can.
+      win = do_QueryInterface(GetParentObject());
+      if (!win) {
+        // Give up.  We just have no sane way to report this.
+        return;
+      }
+      nsCOMPtr<nsIScriptObjectPrincipal> scriptPrin = do_QueryInterface(win);
+      principal = scriptPrin->GetPrincipal();
+      if (!principal) {
+        return;
+      }
+    }
     isChromeError = nsContentUtils::IsSystemPrincipal(principal);
   } else {
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
@@ -1070,9 +1094,9 @@ Promise::MaybeReportRejected()
   // AsyncErrorReporter, otherwise if the call to DispatchToMainThread fails, it
   // will leak. See Bug 958684.
   nsRefPtr<AsyncErrorReporter> r =
-    new AsyncErrorReporter(JS_GetObjectRuntime(obj),
-                           report,
-                           nullptr,
+    new AsyncErrorReporter(CycleCollectedJSRuntime::Get()->Runtime(),
+                           report.report(),
+                           report.message(),
                            isChromeError,
                            win);
   NS_DispatchToMainThread(r);
