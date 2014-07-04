@@ -537,20 +537,33 @@ class DeviceManagerSUT(DeviceManager):
 
     def killProcess(self, appname, sig=None):
         if sig:
-            self._logger.warn("killProcess(): sig parameter unsupported on SUT")
-        retries = 0
-        while retries < self.retryLimit:
-            try:
-                if self.processExist(appname):
-                    self._runCmds([{ 'cmd': 'kill ' + appname }])
-                return
-            except DMError, err:
-                retries +=1
-                self._logger.warn("try %d of %d failed to kill %s" %
-                       (retries, self.retryLimit, appname))
-                self._logger.debug(err)
-                if retries >= self.retryLimit:
+            pid = self.processExist(appname)
+            if pid and pid > 0:
+                try:
+                    self.shellCheckOutput(['kill', '-%d' % sig, str(pid)],
+                           root=True)
+                except DMError, err:
+                    self._logger.warn("unable to kill -%d %s (pid %s)" %
+                           (sig, appname, str(pid)))
+                    self._logger.debug(err)
                     raise err
+            else:
+                self._logger.warn("unable to kill -%d %s -- not running?" %
+                       (sig, appname))
+        else:
+            retries = 0
+            while retries < self.retryLimit:
+                try:
+                    if self.processExist(appname):
+                        self._runCmds([{ 'cmd': 'kill ' + appname }])
+                    return
+                except DMError, err:
+                    retries += 1
+                    self._logger.warn("try %d of %d failed to kill %s" %
+                           (retries, self.retryLimit, appname))
+                    self._logger.debug(err)
+                    if retries >= self.retryLimit:
+                        raise err
 
     def getTempDir(self):
         return self._runCmds([{ 'cmd': 'tmpd' }]).strip()
