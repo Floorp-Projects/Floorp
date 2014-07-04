@@ -54,12 +54,15 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
   , mChildProcessId(aChildProcessId)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  sMainLoop = MessageLoop::current();
+
+  // top-level actors must be destroyed on the main thread.
+  SetMessageLoopToPostDestructionTo(sMainLoop);
 
   // creates the map only if it has not been created already, so it is safe
   // with several bridges
   CompositableMap::Create();
   sImageBridges[aChildProcessId] = this;
-  sMainLoop = MessageLoop::current();
 }
 
 ImageBridgeParent::~ImageBridgeParent()
@@ -274,21 +277,10 @@ MessageLoop * ImageBridgeParent::GetMessageLoop() const {
   return mMessageLoop;
 }
 
-static void
-DeferredReleaseImageBridgeParentOnMainThread(ImageBridgeParent* aDyingImageBridgeParent)
-{
-  aDyingImageBridgeParent->Release();
-}
-
 void
 ImageBridgeParent::DeferredDestroy()
 {
-  ImageBridgeParent* self;
-  mSelfRef.forget(&self);
-
-  sMainLoop->PostTask(
-    FROM_HERE,
-    NewRunnableFunction(&DeferredReleaseImageBridgeParentOnMainThread, this));
+  mSelfRef = nullptr;
 }
 
 ImageBridgeParent*
