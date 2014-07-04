@@ -182,7 +182,16 @@ GetCurrentJSStack()
     return nullptr;
   }
 
-  // Note that CreateStack only returns JS frames, so we're done here.
+  // peel off native frames...
+  uint32_t language;
+  nsCOMPtr<nsIStackFrame> caller;
+  while (stack &&
+         NS_SUCCEEDED(stack->GetLanguage(&language)) &&
+         language != nsIProgrammingLanguage::JAVASCRIPT &&
+         NS_SUCCEEDED(stack->GetCaller(getter_AddRefs(caller))) &&
+         caller) {
+    stack = caller;
+  }
   return stack.forget();
 }
 
