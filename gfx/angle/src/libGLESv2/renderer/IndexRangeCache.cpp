@@ -9,14 +9,14 @@
 // ranges of indices.
 
 #include "libGLESv2/renderer/IndexRangeCache.h"
+#include "libGLESv2/formatutils.h"
 #include "common/debug.h"
-#include "libGLESv2/utilities.h"
 #include <tuple>
 
 namespace rx
 {
 
-void IndexRangeCache::addRange(GLenum type, intptr_t offset, GLsizei count, unsigned int minIdx, unsigned int maxIdx, 
+void IndexRangeCache::addRange(GLenum type, unsigned int offset, GLsizei count, unsigned int minIdx, unsigned int maxIdx,
                                unsigned int streamOffset)
 {
     mIndexRangeCache[IndexRange(type, offset, count)] = IndexBounds(minIdx, maxIdx, streamOffset);
@@ -31,7 +31,7 @@ void IndexRangeCache::invalidateRange(unsigned int offset, unsigned int size)
     while (i != mIndexRangeCache.end())
     {
         unsigned int rangeStart = i->second.streamOffset;
-        unsigned int rangeEnd = i->second.streamOffset + (gl::ComputeTypeSize(i->first.type) * i->first.count);
+        unsigned int rangeEnd = i->second.streamOffset + (gl::GetTypeBytes(i->first.type) * i->first.count);
 
         if (invalidateEnd < rangeStart || invalidateStart > rangeEnd)
         {
@@ -44,7 +44,7 @@ void IndexRangeCache::invalidateRange(unsigned int offset, unsigned int size)
     }
 }
 
-bool IndexRangeCache::findRange(GLenum type, intptr_t offset, GLsizei count, unsigned int *outMinIndex,
+bool IndexRangeCache::findRange(GLenum type, unsigned int offset, GLsizei count, unsigned int *outMinIndex,
                                 unsigned int *outMaxIndex, unsigned int *outStreamOffset) const
 {
     IndexRangeMap::const_iterator i = mIndexRangeCache.find(IndexRange(type, offset, count));
