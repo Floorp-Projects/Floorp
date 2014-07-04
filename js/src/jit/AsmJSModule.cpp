@@ -167,6 +167,7 @@ AsmJSModule::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModu
                         exits_.sizeOfExcludingThis(mallocSizeOf) +
                         exports_.sizeOfExcludingThis(mallocSizeOf) +
                         callSites_.sizeOfExcludingThis(mallocSizeOf) +
+                        codeRanges_.sizeOfExcludingThis(mallocSizeOf) +
                         functionNames_.sizeOfExcludingThis(mallocSizeOf) +
                         heapAccesses_.sizeOfExcludingThis(mallocSizeOf) +
                         functionCounts_.sizeOfExcludingThis(mallocSizeOf) +
@@ -189,11 +190,11 @@ struct CallSiteRetAddrOffset
 };
 
 const CallSite *
-AsmJSModule::lookupCallSite(uint8_t *returnAddress) const
+AsmJSModule::lookupCallSite(void *returnAddress) const
 {
     JS_ASSERT(isFinished());
 
-    uint32_t target = returnAddress - code_;
+    uint32_t target = ((uint8_t*)returnAddress) - code_;
     size_t lowerBound = 0;
     size_t upperBound = callSites_.length();
 
@@ -202,6 +203,45 @@ AsmJSModule::lookupCallSite(uint8_t *returnAddress) const
         return nullptr;
 
     return &callSites_[match];
+}
+
+namespace js {
+
+// Create an ordering on CodeRange and pc offsets suitable for BinarySearch.
+// Stick these in the same namespace as AsmJSModule so that argument-dependent
+// lookup will find it.
+bool
+operator==(size_t pcOffset, const AsmJSModule::CodeRange &rhs)
+{
+    return pcOffset >= rhs.begin() && pcOffset < rhs.end();
+}
+bool
+operator<=(const AsmJSModule::CodeRange &lhs, const AsmJSModule::CodeRange &rhs)
+{
+    return lhs.begin() <= rhs.begin();
+}
+bool
+operator<(size_t pcOffset, const AsmJSModule::CodeRange &rhs)
+{
+    return pcOffset < rhs.begin();
+}
+
+} // namespace js
+
+const AsmJSModule::CodeRange *
+AsmJSModule::lookupCodeRange(void *pc) const
+{
+    JS_ASSERT(isFinished());
+
+    uint32_t target = ((uint8_t*)pc) - code_;
+    size_t lowerBound = 0;
+    size_t upperBound = codeRanges_.length();
+
+    size_t match;
+    if (!BinarySearch(codeRanges_, lowerBound, upperBound, target, &match))
+        return nullptr;
+
+    return &codeRanges_[match];
 }
 
 struct HeapAccessOffset
@@ -214,12 +254,12 @@ struct HeapAccessOffset
 };
 
 const AsmJSHeapAccess *
-AsmJSModule::lookupHeapAccess(uint8_t *pc) const
+AsmJSModule::lookupHeapAccess(void *pc) const
 {
     JS_ASSERT(isFinished());
     JS_ASSERT(containsPC(pc));
 
-    uint32_t target = pc - code_;
+    uint32_t target = ((uint8_t*)pc) - code_;
     size_t lowerBound = 0;
     size_t upperBound = heapAccesses_.length();
 
@@ -292,6 +332,11 @@ AsmJSModule::finish(ExclusiveContext *cx, TokenStream &tokenStream, MacroAssembl
     for (size_t i = 0; i < callSites_.length(); i++) {
         CallSite &c = callSites_[i];
         c.setReturnAddressOffset(masm.actualOffset(c.returnAddressOffset()));
+    }
+    for (size_t i = 0; i < codeRanges_.length(); i++) {
+        CodeRange &c = codeRanges_[i];
+        c.begin_ = masm.actualOffset(c.begin_);
+        c.end_ = masm.actualOffset(c.end_);
     }
 #endif
     JS_ASSERT(pod.functionBytes_ % AsmJSPageSize == 0);
@@ -1084,6 +1129,7 @@ AsmJSModule::serializedSize() const
            SerializedVectorSize(exits_) +
            SerializedVectorSize(exports_) +
            SerializedPodVectorSize(callSites_) +
+           SerializedPodVectorSize(codeRanges_) +
            SerializedVectorSize(functionNames_) +
            SerializedPodVectorSize(heapAccesses_) +
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
@@ -1104,6 +1150,7 @@ AsmJSModule::serialize(uint8_t *cursor) const
     cursor = SerializeVector(cursor, exits_);
     cursor = SerializeVector(cursor, exports_);
     cursor = SerializePodVector(cursor, callSites_);
+    cursor = SerializePodVector(cursor, codeRanges_);
     cursor = SerializeVector(cursor, functionNames_);
     cursor = SerializePodVector(cursor, heapAccesses_);
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
@@ -1130,6 +1177,7 @@ AsmJSModule::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
     (cursor = DeserializeVector(cx, cursor, &exits_)) &&
     (cursor = DeserializeVector(cx, cursor, &exports_)) &&
     (cursor = DeserializePodVector(cx, cursor, &callSites_)) &&
+    (cursor = DeserializePodVector(cx, cursor, &codeRanges_)) &&
     (cursor = DeserializeVector(cx, cursor, &functionNames_)) &&
     (cursor = DeserializePodVector(cx, cursor, &heapAccesses_)) &&
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
@@ -1200,6 +1248,7 @@ AsmJSModule::clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) con
         !CloneVector(cx, exits_, &out.exits_) ||
         !CloneVector(cx, exports_, &out.exports_) ||
         !ClonePodVector(cx, callSites_, &out.callSites_) ||
+        !ClonePodVector(cx, codeRanges_, &out.codeRanges_) ||
         !CloneVector(cx, functionNames_, &out.functionNames_) ||
         !ClonePodVector(cx, heapAccesses_, &out.heapAccesses_) ||
         !staticLinkData_.clone(cx, &out.staticLinkData_))

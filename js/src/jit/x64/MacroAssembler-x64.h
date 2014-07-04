@@ -100,18 +100,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void call(ImmPtr target) {
         call(ImmWord(uintptr_t(target.value)));
     }
-    void call(AsmJSImmPtr target) {
-        mov(target, rax);
-        call(rax);
-    }
-
-    void call(const CallSiteDesc &desc, AsmJSImmPtr target) {
-        call(target);
-        appendCallSite(desc);
-    }
-    void callExit(AsmJSImmPtr target, uint32_t stackArgBytes) {
-        call(CallSiteDesc::Exit(), target);
-    }
 
     // Refers to the upper 32 bits of a 64-bit Value operand.
     // On x86_64, the upper 32 bits do not necessarily only contain the type.

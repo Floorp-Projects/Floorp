@@ -2,7 +2,7 @@ import os
 from setuptools import setup, find_packages
 import sys
 
-version = '0.7.10'
+version = '0.7.11'
 
 # dependencies
 with open('requirements.txt') as f:

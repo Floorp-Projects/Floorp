@@ -577,48 +577,19 @@ class CodeLocationLabel
     }
 };
 
-// Describes the user-visible properties of a callsite.
-//
-// A few general notes about the stack-walking supported by CallSite(Desc):
-//  - This information facilitates stack-walking performed by FrameIter which
-//    is used by Error.stack and other user-visible stack-walking functions.
-//  - Ion/asm.js calling conventions do not maintain a frame-pointer so
-//    stack-walking must lookup the stack depth based on the PC.
-//  - Stack-walking only occurs from C++ after a synchronous calls (JS-to-JS and
-//    JS-to-C++). Thus, we do not need to map arbitrary PCs to stack-depths,
-//    just the return address at callsites.
-//  - An exception to the above rule is the interrupt callback which can happen
-//    at arbitrary PCs. In such cases, we drop frames from the stack-walk. In
-//    the future when a full PC->stack-depth map is maintained, we handle this
-//    case.
+// While the frame-pointer chain allows the stack to be unwound without
+// metadata, Error.stack still needs to know the line/column of every call in
+// the chain. A CallSiteDesc describes the line/column of a single callsite.
+// A CallSiteDesc is created by callers of MacroAssembler.
 class CallSiteDesc
 {
     uint32_t line_;
     uint32_t column_;
-    uint32_t functionNameIndex_;
-
-    static const uint32_t sEntryTrampoline = UINT32_MAX;
-    static const uint32_t sExit = UINT32_MAX - 1;
-
   public:
-    static const uint32_t FUNCTION_NAME_INDEX_MAX = UINT32_MAX - 2;
-
     CallSiteDesc() {}
-
-    CallSiteDesc(uint32_t line, uint32_t column, uint32_t functionNameIndex)
-     : line_(line), column_(column), functionNameIndex_(functionNameIndex)
-    {}
-
-    static CallSiteDesc Entry() { return CallSiteDesc(0, 0, sEntryTrampoline); }
-    static CallSiteDesc Exit() { return CallSiteDesc(0, 0, sExit); }
-
-    bool isEntry() const { return functionNameIndex_ == sEntryTrampoline; }
-    bool isExit() const { return functionNameIndex_ == sExit; }
-    bool isNormal() const { return !(isEntry() || isExit()); }
-
-    uint32_t line() const { JS_ASSERT(isNormal()); return line_; }
-    uint32_t column() const { JS_ASSERT(isNormal()); return column_; }
-    uint32_t functionNameIndex() const { JS_ASSERT(isNormal()); return functionNameIndex_; }
+    CallSiteDesc(uint32_t line, uint32_t column) : line_(line), column_(column) {}
+    uint32_t line() const { return line_; }
+    uint32_t column() const { return column_; }
 };
 
 // Adds to CallSiteDesc the metadata necessary to walk the stack given an
@@ -641,12 +612,20 @@ struct CallSite : public CallSiteDesc
     uint32_t returnAddressOffset() const { return returnAddressOffset_; }
 
     // The stackDepth measures the amount of stack space pushed since the
-    // function was called. In particular, this includes the word pushed by the
-    // call instruction on x86/x64.
-    uint32_t stackDepth() const { JS_ASSERT(!isEntry()); return stackDepth_; }
+    // function was called. In particular, this includes the pushed return
+    // address on all archs (whether or not the call instruction pushes the
+    // return address (x86/x64) or the prologue does (ARM/MIPS).
+    uint32_t stackDepth() const { return stackDepth_; }
 };
 
 typedef Vector<CallSite, 0, SystemAllocPolicy> CallSiteVector;
+
+// As an invariant across architectures, within asm.js code:
+//    $sp % StackAlignment = (AsmJSFrameSize + masm.framePushed) % StackAlignment
+// AsmJSFrameSize is 1 word, for the return address pushed by the call (or, in
+// the case of ARM/MIPS, by the first instruction of the prologue). This means
+// masm.framePushed never includes the pushed return address.
+static const uint32_t AsmJSFrameSize = sizeof(void*);
 
 // Summarizes a heap access made by asm.js code that needs to be patched later
 // and/or looked up by the asm.js signal handlers. Different architectures need
@@ -821,7 +800,11 @@ class AssemblerShared
         return !enoughMemory_;
     }
 
-    bool append(CallSite callsite) { return callsites_.append(callsite); }
+    bool append(const CallSiteDesc &desc, size_t currentOffset, size_t framePushed) {
+        // framePushed does not include AsmJSFrameSize, so add it in here (see
+        // CallSite::stackDepth).
+        return callsites_.append(CallSite(desc, currentOffset, framePushed + AsmJSFrameSize));
+    }
     CallSiteVector &&extractCallSites() { return Move(callsites_); }
 
     bool append(AsmJSHeapAccess access) { return asmJSHeapAccesses_.append(access); }
