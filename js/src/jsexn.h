@@ -85,7 +85,7 @@ js_GetLocalizedErrorMessage(js::ExclusiveContext *cx, void *userRef, const char 
  *
  * cx must be in the same compartment as scope. errobj may be in a different
  * compartment, but it must be an Error object (not a wrapper of one) and it
- * must not be one of the prototype objects created by js_InitExceptionClasses
+ * must not be one of the standard error prototype objects
  * (errobj->getPrivate() must not be nullptr).
  */
 extern JSObject *
@@ -97,6 +97,15 @@ GetExceptionProtoKey(JSExnType exn)
     JS_ASSERT(JSEXN_ERR <= exn);
     JS_ASSERT(exn < JSEXN_LIMIT);
     return JSProtoKey(JSProto_Error + int(exn));
+}
+
+static inline JSExnType
+ExnTypeFromProtoKey(JSProtoKey key)
+{
+    JSExnType type = static_cast<JSExnType>(key - JSProto_Error);
+    JS_ASSERT(type >= JSEXN_ERR);
+    JS_ASSERT(type < JSEXN_LIMIT);
+    return type;
 }
 
 #endif /* jsexn_h */
