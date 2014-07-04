@@ -3817,7 +3817,8 @@ CSS_PROP_SVG(
     stroke_dasharray,
     StrokeDasharray,
     CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+        CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
+        CSS_PROPERTY_NUMBERS_ARE_PIXELS,
         // NOTE: Internal values have range restrictions.
     "",
     0,
@@ -3828,7 +3829,8 @@ CSS_PROP_SVG(
     stroke-dashoffset,
     stroke_dashoffset,
     StrokeDashoffset,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_NUMBERS_ARE_PIXELS,
     "",
     VARIANT_HLPN | VARIANT_OPENTYPE_SVG_KEYWORD,
     kStrokeContextValueKTable,
@@ -3880,7 +3882,8 @@ CSS_PROP_SVG(
     stroke_width,
     StrokeWidth,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE,
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_NUMBERS_ARE_PIXELS,
     "",
     VARIANT_HLPN | VARIANT_OPENTYPE_SVG_KEYWORD,
     kStrokeContextValueKTable,

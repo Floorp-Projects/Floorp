@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -60,26 +60,39 @@ nsTemporaryFileInputStream::ReadSegments(nsWriteSegmentFun writer,
   mozilla::MutexAutoLock lock(mFileDescOwner->FileMutex());
   PR_Seek64(mFileDescOwner->mFD, mStartPos, PR_SEEK_SET);
 
+  // Limit requested count to the amount remaining in our section of the file.
   count = std::min(count, uint32_t(mEndPos - mStartPos));
-  uint32_t remainBufCount = count;
 
   char buf[4096];
-  while (remainBufCount > 0) {
-    uint32_t bufCount = std::min(remainBufCount, (uint32_t)sizeof(buf));
-    int32_t read_result = PR_Read(mFileDescOwner->mFD, buf, bufCount);
-    if (read_result < 0) {
+  while (*result < count) {
+    uint32_t bufCount = std::min(count - *result, (uint32_t) sizeof(buf));
+    int32_t bytesRead = PR_Read(mFileDescOwner->mFD, buf, bufCount);
+    if (bytesRead < 0) {
       return NS_ErrorAccordingToNSPR();
     }
-    uint32_t write_result = 0;
-    nsresult rv = writer(this, closure, buf,
-                         count - remainBufCount, bufCount, &write_result);
-    remainBufCount -= bufCount;
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ASSERTION(write_result <= bufCount,
-                 "writer should not write more than we asked it to write");
-    mStartPos += bufCount;
+
+    int32_t bytesWritten = 0;
+    while (bytesWritten < bytesRead) {
+      uint32_t writerCount = 0;
+      nsresult rv = writer(this, closure, buf + bytesWritten, *result,
+                           bytesRead - bytesWritten, &writerCount);
+      if (NS_FAILED(rv) || writerCount == 0) {
+        // nsIInputStream::ReadSegments' contract specifies that errors
+        // from writer are not propagated to ReadSegments' caller.
+        //
+        // If writer fails, leaving bytes still in buf, that's okay: we
+        // only update mStartPos to reflect successful writes, so the call
+        // to PR_Seek64 at the top will restart us at the right spot.
+        return NS_OK;
+      }
+      NS_ASSERTION(writerCount <= (uint32_t) (bytesRead - bytesWritten),
+                   "writer should not write more than we asked it to write");
+      bytesWritten += writerCount;
+      *result += writerCount;
+      mStartPos += writerCount;
+    }
   }
-  *result = count;
+
   return NS_OK;
 }
 

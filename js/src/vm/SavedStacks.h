@@ -104,7 +104,7 @@ class SavedStacks {
 
     bool     init();
     bool     initialized() const { return frames.initialized(); }
-    bool     saveCurrentStack(JSContext *cx, MutableHandleSavedFrame frame);
+    bool     saveCurrentStack(JSContext *cx, MutableHandleSavedFrame frame, unsigned maxFrameCount = 0);
     void     sweep(JSRuntime *rt);
     void     trace(JSTracer *trc);
     uint32_t count();
@@ -116,7 +116,8 @@ class SavedStacks {
     SavedFrame::Set          frames;
     JSObject                 *savedFrameProto;
 
-    bool       insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandleSavedFrame frame);
+    bool       insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandleSavedFrame frame,
+                            unsigned maxFrameCount = 0);
     SavedFrame *getOrCreateSavedFrame(JSContext *cx, const SavedFrame::Lookup &lookup);
     // |SavedFrame.prototype| is created lazily and held weakly. It should only
     // be accessed through this method.

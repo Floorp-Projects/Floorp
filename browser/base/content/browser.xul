@@ -939,6 +939,7 @@
                        tooltiptext="&sharePageCmd.label;"
                        cui-areatype="toolbar"
                        removable="true"
+                       hidden="true"
                        command="Social:SharePage"/>
       </hbox>
 
