@@ -16,6 +16,7 @@
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
+#include "jit/ParallelFunctions.h"
 #include "jit/VMFunctions.h"
 
 #include "jit/ExecutionMode-inl.h"
@@ -522,6 +523,11 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     return code;
 }
 
+// NOTE: Members snapshotOffset_ and padding_ of BailoutStack
+// are not stored in PushBailoutFrame().
+static const uint32_t bailoutDataSize = sizeof(BailoutStack) - 2 * sizeof(uintptr_t);
+static const uint32_t bailoutInfoOutParamSize = 2 * sizeof(uintptr_t);
+
 /* There are two different stack layouts when doing bailout. They are
  * represented via class BailoutStack.
  *
@@ -540,13 +546,8 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
  * (See: JitRuntime::generateBailoutHandler).
  */
 static void
-GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32_t frameClass)
+PushBailoutFrame(MacroAssembler &masm, uint32_t frameClass, Register spArg)
 {
-    // NOTE: Members snapshotOffset_ and padding_ of BailoutStack
-    // are not stored in this function.
-    static const uint32_t bailoutDataSize = sizeof(BailoutStack) - 2 * sizeof(uintptr_t);
-    static const uint32_t bailoutInfoOutParamSize = 2 * sizeof(uintptr_t);
-
     // Make sure that alignment is proper.
     masm.checkStackAlignment();
 
@@ -577,7 +578,14 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32_t frameClass)
     masm.storePtr(ImmWord(frameClass), Address(StackPointer, BailoutStack::offsetOfFrameClass()));
 
     // Put pointer to BailoutStack as first argument to the Bailout()
-    masm.movePtr(StackPointer, a0);
+    masm.movePtr(StackPointer, spArg);
+}
+
+static void
+GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32_t frameClass)
+{
+    PushBailoutFrame(masm, frameClass, a0);
+
     // Put pointer to BailoutInfo
     masm.subPtr(Imm32(bailoutInfoOutParamSize), StackPointer);
     masm.storePtr(ImmPtr(nullptr), Address(StackPointer, 0));
@@ -610,6 +618,32 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32_t frameClass)
     // Jump to shared bailout tail. The BailoutInfo pointer has to be in a2.
     JitCode *bailoutTail = cx->runtime()->jitRuntime()->getBailoutTail();
     masm.branch(bailoutTail);
+}
+
+static void
+GenerateParallelBailoutThunk(MacroAssembler &masm, uint32_t frameClass)
+{
+    // As GenerateBailoutThunk, except we return an error immediately. We do
+    // the bailout dance so that we can walk the stack and have accurate
+    // reporting of frame information.
+
+    PushBailoutFrame(masm, frameClass, a0);
+
+    // Parallel bailout is like parallel failure in that we unwind all the way
+    // to the entry frame. Reserve space for the frame pointer of the entry frame.
+    const int sizeOfEntryFramePointer = sizeof(uint8_t *) * 2;
+    masm.reserveStack(sizeOfEntryFramePointer);
+    masm.movePtr(sp, a1);
+
+    masm.setupAlignedABICall(2);
+    masm.passABIArg(a0);
+    masm.passABIArg(a1);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, BailoutPar));
+
+    // Get the frame pointer of the entry frame and return.
+    masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
+    masm.loadPtr(Address(sp, 0), sp);
+    masm.ret();
 }
 
 JitCode *
