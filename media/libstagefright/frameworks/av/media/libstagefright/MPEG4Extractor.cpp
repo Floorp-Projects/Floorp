@@ -138,6 +138,7 @@ private:
         off64_t offset;
         size_t size;
         uint32_t duration;
+        uint32_t ctsOffset;
         uint8_t iv[16];
         Vector<size_t> clearsizes;
         Vector<size_t> encryptedsizes;
@@ -3013,6 +3014,7 @@ status_t MPEG4Source::parseTrackFragmentRun(off64_t offset, off64_t size) {
         tmp.offset = dataOffset;
         tmp.size = sampleSize;
         tmp.duration = sampleDuration;
+        tmp.ctsOffset = sampleCtsOffset;
         mCurrentSamples.add(tmp);
 
         dataOffset += sampleSize;
@@ -3430,7 +3432,7 @@ status_t MPEG4Source::fragmentedRead(
         const Sample *smpl = &mCurrentSamples[mCurrentSampleIndex];
         offset = smpl->offset;
         size = smpl->size;
-        cts = mCurrentTime;
+        cts = mCurrentTime + smpl->ctsOffset;
         duration = smpl->duration;
         mCurrentTime += smpl->duration;
         isSyncSample = (mCurrentSampleIndex == 0); // XXX
