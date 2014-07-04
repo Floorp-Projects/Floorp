@@ -56,6 +56,10 @@ interface ExceptionMembers
 
   // Arbitary data for the implementation.
   readonly attribute nsISupports?            data;
+
+  // Formatted exception stack
+  [Throws]
+  readonly attribute DOMString               stack;
 };
 
 [NoInterfaceObject]

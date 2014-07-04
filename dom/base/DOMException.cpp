@@ -554,6 +554,14 @@ Exception::GetData() const
 }
 
 void
+Exception::GetStack(nsAString& aStack, ErrorResult& aRv) const
+{
+  if (mLocation) {
+    aRv = mLocation->GetFormattedStack(aStack);
+  }
+}
+
+void
 Exception::Stringify(nsString& retval)
 {
   nsCString str;
