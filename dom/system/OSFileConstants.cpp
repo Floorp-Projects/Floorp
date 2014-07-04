@@ -857,6 +857,16 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
     return false;
   }
 
+#if defined(MOZ_WIDGET_GONK)
+    JSString* strVersion = JS_NewStringCopyZ(cx, "Gonk");
+    if (!strVersion){
+      return false;
+    }
+    JS::Rooted<JS::Value> valVersion(cx, STRING_TO_JSVAL(strVersion));
+    if (!JS_SetProperty(cx, objSys, "Name", valVersion)) {
+      return false;
+  }
+#else
   nsCOMPtr<nsIXULRuntime> runtime = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (runtime) {
     nsAutoCString os;
@@ -873,6 +883,7 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
       return false;
     }
   }
+#endif // defined(MOZ_WIDGET_GONK)
 
 #if defined(DEBUG)
   JS::Rooted<JS::Value> valDebug(cx, JSVAL_TRUE);
