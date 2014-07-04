@@ -2959,6 +2959,28 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Time to calculate the md5 hash for a backup"
   },
+  "FENNEC_DISTRIBUTION_REFERRER_INVALID": {
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "Whether the referrer intent specified an invalid distribution name",
+    "cpp_guard": "ANDROID"
+  },
+  "FENNEC_DISTRIBUTION_CODE_CATEGORY": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "First digit of HTTP result code, or error category, during distribution download",
+    "cpp_guard": "ANDROID"
+  },
+  "FENNEC_DISTRIBUTION_DOWNLOAD_TIME_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 100,
+    "high": "40000",
+    "n_buckets": 30,
+    "description": "Time taken to download a specified distribution file (msec)",
+    "cpp_guard": "ANDROID"
+  },
   "FENNEC_FAVICONS_COUNT": {
     "expires_in_version": "never",
     "kind": "exponential",
