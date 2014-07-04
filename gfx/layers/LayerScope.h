@@ -17,16 +17,32 @@ namespace gl { class GLContext; }
 namespace layers {
 
 struct EffectChain;
+class LayerComposite;
 
 class LayerScope {
 public:
-    static void CreateServerSocket();
-    static void DestroyServerSocket();
-    static void BeginFrame(gl::GLContext* aGLContext, int64_t aFrameStamp);
-    static void EndFrame(gl::GLContext* aGLContext);
+    static void Init();
+    static void DeInit();
     static void SendEffectChain(gl::GLContext* aGLContext,
                                 const EffectChain& aEffectChain,
-                                int aWidth, int aHeight);
+                                int aWidth,
+                                int aHeight);
+    static void SendLayer(LayerComposite* aLayer,
+                          int aWidth,
+                          int aHeight);
+    static bool CheckSendable();
+    static void CleanLayer();
+};
+
+// Perform BeginFrame and EndFrame automatically
+class LayerScopeAutoFrame {
+public:
+    LayerScopeAutoFrame(int64_t aFrameStamp);
+    ~LayerScopeAutoFrame();
+
+private:
+    static void BeginFrame(int64_t aFrameStamp);
+    static void EndFrame();
 };
 
 } /* layers */

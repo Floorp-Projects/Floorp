@@ -167,7 +167,6 @@ this.checkCert =
   if (!issuerCert)
     throw new Ce(certNotBuiltInErr, Cr.NS_ERROR_ABORT);
 
-  issuerCert = issuerCert.QueryInterface(Ci.nsIX509Cert3);
   var tokenNames = issuerCert.getAllTokenNames({});
 
   if (!tokenNames || !tokenNames.some(isBuiltinToken))

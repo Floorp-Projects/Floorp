@@ -23,7 +23,7 @@ interface nsISSLStatus : nsISupports {
    *         "unstrusted because missing or untrusted issuer"
    *       and 
    *         "untrusted because self signed"
-   *       query nsIX509Cert3::isSelfSigned 
+   *       query nsIX509Cert::isSelfSigned
    */
   readonly attribute boolean isUntrusted;
 

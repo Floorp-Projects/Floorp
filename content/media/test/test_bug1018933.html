@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1018933
+-->
+<head>
+  <meta charset='utf-8'>
+  <title>Regression test for bug 1018933 - HTMLTrackElement should create only one TextTrack</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
+  function() {
+    var video = document.createElement("video");
+    video.src = "seek.webm";
+    video.preload = "auto";
+    var trackElement = document.createElement("track");
+    trackElement.src = "basic.vtt";
+    trackElement.kind = "subtitles";
+    document.getElementById("content").appendChild(video);
+    video.appendChild(trackElement);
+
+    // Accessing the track now would have caused the bug as the track element
+    // shouldn't have had time to bind to the tree yet.
+    trackElement.track.mode = 'showing';
+
+    video.addEventListener("loadedmetadata", function run_tests() {
+      // Re-que run_tests() at the end of the event loop until the track
+      // element has loaded its data.
+      if (trackElement.readyState == 1) {
+        setTimeout(run_tests, 0);
+        return;
+      }
+      is(video.textTracks.length, 1, "Video should have one TextTrack.");
+      SimpleTest.finish();
+    });
+  }
+);
+</script>
+</pre>
+</body>
+</html>

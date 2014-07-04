@@ -6,7 +6,6 @@
 #define __NSNSSCERTIFICATEDB_H__
 
 #include "nsIX509CertDB.h"
-#include "nsIX509CertDB2.h"
 #include "nsNSSShutDown.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Mutex.h"
@@ -17,14 +16,12 @@ class nsIArray;
 class nsRecentBadCerts;
 
 class nsNSSCertificateDB : public nsIX509CertDB
-                         , public nsIX509CertDB2
                          , public nsNSSShutDownObject
 
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIX509CERTDB
-  NS_DECL_NSIX509CERTDB2
 
   nsNSSCertificateDB(); 
 

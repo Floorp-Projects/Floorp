@@ -39,10 +39,9 @@ const UDPSocket = CC("@mozilla.org/network/udp-socket;1",
                      "nsIUDPSocket",
                      "init");
 
-// TODO Bug 1027456: May need to reserve these with IANA
 const SCAN_PORT = 50624;
 const UPDATE_PORT = 50625;
-const ADDRESS = "224.0.0.200";
+const ADDRESS = "224.0.0.115";
 const REPLY_TIMEOUT = 5000;
 
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
@@ -157,6 +156,8 @@ function Discovery() {
   this._onRemoteScan = this._onRemoteScan.bind(this);
   this._onRemoteUpdate = this._onRemoteUpdate.bind(this);
   this._purgeMissingDevices = this._purgeMissingDevices.bind(this);
+
+  Services.obs.addObserver(this, "network-active-changed", false);
 
   this._getSystemInfo();
 }
@@ -293,6 +294,35 @@ Discovery.prototype = {
     this._transports.update.off("message", this._onRemoteUpdate);
     this._transports.update.destroy();
     this._transports.update = null;
+  },
+
+  observe: function(subject, topic, data) {
+    if (topic !== "network-active-changed") {
+      return;
+    }
+    let activeNetwork = subject;
+    if (!activeNetwork) {
+      log("No active network");
+      return;
+    }
+    activeNetwork = activeNetwork.QueryInterface(Ci.nsINetworkInterface);
+    log("Active network changed to: " + activeNetwork.type);
+    // UDP sockets go down when the device goes offline, so we'll restart them
+    // when the active network goes back to WiFi.
+    if (activeNetwork.type === Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
+      this._restartListening();
+    }
+  },
+
+  _restartListening: function() {
+    if (this._transports.scan) {
+      this._stopListeningForScan();
+      this._startListeningForScan();
+    }
+    if (this._transports.update) {
+      this._stopListeningForUpdate();
+      this._startListeningForUpdate();
+    }
   },
 
   /**
