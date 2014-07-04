@@ -74,10 +74,11 @@ function becomeWebapp(manifestURL, parameters, onBecome) {
     // tested application get installed.
     Services.prefs.setCharPref("webapprt.buildID", WebappRT.config.app.manifestURL);
 
-    // During tests, the webapps registry is already loaded.
-    // The Startup module needs to be notified when the webapps registry
-    // gets loaded, so we do that now.
+    // During tests, the webapps registry is already loaded,
+    // but SystemMessageInternal expects to be notified when the registry
+    // start and then when it's ready, so we do that now.
     Services.obs.notifyObservers(this, "webapps-registry-start", null);
+    Services.obs.notifyObservers(this, "webapps-registry-ready", null);
 
     yield scope.startup(win);
     onBecome();
