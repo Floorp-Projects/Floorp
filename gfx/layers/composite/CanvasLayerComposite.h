@@ -52,6 +52,8 @@ public:
 
   virtual void CleanupResources() MOZ_OVERRIDE;
 
+  virtual void GenEffectChain(EffectChain& aEffect) MOZ_OVERRIDE;
+
   CompositableHost* GetCompositableHost() MOZ_OVERRIDE;
 
   virtual LayerComposite* AsLayerComposite() MOZ_OVERRIDE { return this; }
@@ -62,6 +64,9 @@ public:
 
 protected:
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) MOZ_OVERRIDE;
+
+private:
+  gfx::Filter GetEffectFilter();
 
 private:
   RefPtr<CompositableHost> mImageHost;

@@ -706,8 +706,6 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   MOZ_ASSERT(!mFrameInProgress, "frame still in progress (should have called EndFrame or AbortFrame");
 
-  LayerScope::BeginFrame(mGLContext, PR_Now());
-
   mFrameInProgress = true;
   gfx::Rect rect;
   if (mUseExternalSurfaceSize) {
@@ -1312,8 +1310,6 @@ CompositorOGL::EndFrame()
 #endif
 
   mFrameInProgress = false;
-
-  LayerScope::EndFrame(mGLContext);
 
   if (mTarget) {
     CopyToTarget(mTarget, mTargetBounds.TopLeft(), mCurrentRenderTarget->GetTransform());

@@ -79,11 +79,20 @@ public:
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
 #endif
 
+  virtual bool Lock() MOZ_OVERRIDE;
+
+  virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual TemporaryRef<NewTextureSource> GetTextureSource();
+
+  virtual TemporaryRef<TexturedEffect> GenEffect(const gfx::Filter& aFilter) MOZ_OVERRIDE;
+
 protected:
 
   RefPtr<TextureHost> mFrontBuffer;
   nsIntRect mPictureRect;
   bool mHasPictureRect;
+  bool mLocked;
 };
 
 }

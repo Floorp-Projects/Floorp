@@ -350,8 +350,6 @@ class ChildImpl MOZ_FINAL : public BackgroundChildImpl
   nsIThread* mBoundThread;
 #endif
 
-  DebugOnly<bool> mActorDestroyed;
-
 public:
   static bool
   OpenProtocolOnMainThread(nsIEventTarget* aEventTarget);
@@ -374,15 +372,8 @@ public:
     THREADSAFETY_ASSERT(current);
   }
 
-  void
-  AssertActorDestroyed()
-  {
-    MOZ_ASSERT(mActorDestroyed, "ChildImpl::ActorDestroy not called in time");
-  }
-
   ChildImpl()
   : mBoundThread(nullptr)
-  , mActorDestroyed(false)
   {
     AssertIsOnMainThread();
   }
@@ -406,10 +397,6 @@ private:
   static bool
   GetOrCreateForCurrentThread(nsIIPCBackgroundChildCreateCallback* aCallback);
 
-  // Forwarded from BackgroundChild.
-  static void
-  CloseForCurrentThread();
-
   // Forwarded from BackgroundChildImpl.
   static BackgroundChildImpl::ThreadLocal*
   GetThreadLocalForCurrentThread();
@@ -422,17 +409,6 @@ private:
     if (threadLocalInfo) {
       if (threadLocalInfo->mActor) {
         threadLocalInfo->mActor->Close();
-        threadLocalInfo->mActor->AssertActorDestroyed();
-        // Since the actor is created on the main thread it must only
-        // be released on the main thread as well.
-        if (!NS_IsMainThread()) {
-          ChildImpl* actor;
-          threadLocalInfo->mActor.forget(&actor);
-
-          nsCOMPtr<nsIRunnable> releaser =
-            NS_NewNonOwningRunnableMethod(actor, &ChildImpl::Release);
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(releaser)));
-        }
       }
       delete threadLocalInfo;
     }
@@ -443,9 +419,7 @@ private:
 
   // This class is reference counted.
   ~ChildImpl()
-  {
-    AssertActorDestroyed();
-  }
+  { }
 
   void
   SetBoundThread()
@@ -859,13 +833,6 @@ BackgroundChild::GetOrCreateForCurrentThread(
                                  nsIIPCBackgroundChildCreateCallback* aCallback)
 {
   return ChildImpl::GetOrCreateForCurrentThread(aCallback);
-}
-
-// static
-void
-BackgroundChild::CloseForCurrentThread()
-{
-  ChildImpl::CloseForCurrentThread();
 }
 
 // -----------------------------------------------------------------------------
@@ -1611,11 +1578,7 @@ ChildImpl::GetForCurrentThread()
   auto threadLocalInfo =
     static_cast<ThreadLocalInfo*>(PR_GetThreadPrivate(sThreadLocalIndex));
 
-  if (!threadLocalInfo) {
-    return nullptr;
-  }
-
-  return threadLocalInfo->mActor;
+  return threadLocalInfo ? threadLocalInfo->mActor : nullptr;
 }
 
 // static
@@ -1677,31 +1640,6 @@ ChildImpl::GetOrCreateForCurrentThread(
   }
 
   return true;
-}
-
-// static
-void
-ChildImpl::CloseForCurrentThread()
-{
-  MOZ_ASSERT(sThreadLocalIndex != kBadThreadLocalIndex,
-             "BackgroundChild::Startup() was never called!");
-  auto threadLocalInfo =
-    static_cast<ThreadLocalInfo*>(PR_GetThreadPrivate(sThreadLocalIndex));
-
-  // If we don't have a thread local we are in one of these conditions:
-  //   1) Startup has not completed and we are racing
-  //   2) We were called again after a previous close or shutdown
-  // For now, these should not happen, so crash.  We can add extra complexity
-  // in the future if it turns out we need to support these cases.
-  if (!threadLocalInfo) {
-    MOZ_CRASH("Attempting to close a non-existent PBackground actor!");
-  }
-
-  if (threadLocalInfo->mActor) {
-    threadLocalInfo->mActor->FlushPendingInterruptQueue();
-  }
-  DebugOnly<PRStatus> status = PR_SetThreadPrivate(sThreadLocalIndex, nullptr);
-  MOZ_ASSERT(status == PR_SUCCESS);
 }
 
 // static
@@ -2008,7 +1946,6 @@ ChildImpl::ActorDestroy(ActorDestroyReason aWhy)
 {
   AssertIsOnBoundThread();
 
-  mActorDestroyed = true;
   BackgroundChildImpl::ActorDestroy(aWhy);
 }
 

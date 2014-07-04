@@ -25,7 +25,7 @@ let { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 let gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB2);
+                .getService(Ci.nsIX509CertDB);
 gCertDB.QueryInterface(Ci.nsIX509CertDB);
 
 const BUILT_IN_NICK_PREFIX = "Builtin Object Token:";
@@ -108,8 +108,7 @@ function isBuiltinToken(tokenName) {
 }
 
 function isCertBuiltIn(cert) {
-  let cert3 = cert.QueryInterface(Ci.nsIX509Cert3);
-  let tokenNames = cert3.getAllTokenNames({});
+  let tokenNames = cert.getAllTokenNames({});
   if (!tokenNames) {
     return false;
   }

@@ -12,7 +12,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIX509Cert.h"
 #include "nsNSSCertificate.h"
-#include "nsNSSCertificate.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 
@@ -356,4 +355,56 @@ nsNSSCertificateFakeTransport::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 
   *aClassIDNoAlloc = kNSSCertificateCID;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSCertificateFakeTransport::GetCertType(unsigned int*)
+{
+  NS_NOTREACHED("Unimplemented on content process");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNSSCertificateFakeTransport::GetIsSelfSigned(bool*)
+{
+  NS_NOTREACHED("Unimplemented on content process");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNSSCertificateFakeTransport::RequestUsagesArrayAsync(nsICertVerificationListener*)
+{
+  NS_NOTREACHED("Unimplemented on content process");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNSSCertificateFakeTransport::GetAllTokenNames(unsigned int*,
+                                                char16_t***)
+{
+  NS_NOTREACHED("Unimplemented on content process");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+CERTCertificate*
+nsNSSCertificateFakeTransport::GetCert()
+{
+  NS_NOTREACHED("Unimplemented on content process");
+  return nullptr;
+}
+
+NS_IMETHODIMP
+nsNSSCertificateFakeTransport::ExportAsCMS(unsigned int,
+                                           unsigned int*,
+                                           unsigned char**)
+{
+  NS_NOTREACHED("Unimplemented on content process");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNSSCertificateFakeTransport::MarkForPermDeletion()
+{
+  NS_NOTREACHED("Unimplemented on content process");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
