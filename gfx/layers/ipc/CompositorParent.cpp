@@ -321,9 +321,10 @@ CompositorParent::RecvWillStop()
   return true;
 }
 
-static void DeferredDeleteCompositorParentOnMainThread(CompositorParent* aNowReadyToDie)
+void DeferredDeleteCompositorParentOnMainThread(CompositorParent* aNowReadyToDie)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  aNowReadyToDie->mCompositorThreadHolder = nullptr;
   aNowReadyToDie->Release();
 }
 
