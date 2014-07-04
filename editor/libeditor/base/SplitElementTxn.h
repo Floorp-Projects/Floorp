@@ -9,11 +9,11 @@
 #include "EditTxn.h"                    // for EditTxn, NS_DECL_EDITTXN
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
+#include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS_INHERITED
 #include "nscore.h"                     // for NS_IMETHOD
 
 class nsEditor;
-class nsINode;
 
 /**
  * A transaction that splits an element E into two identical nodes, E1 and E2
@@ -30,7 +30,7 @@ public:
     *                 The left node will have child|content 0..aOffset-1.
     */
   NS_IMETHOD Init (nsEditor   *aEditor,
-                   nsINode *aNode,
+                   nsIDOMNode *aNode,
                    int32_t     aOffset);
 
   SplitElementTxn();
@@ -42,12 +42,12 @@ public:
 
   NS_IMETHOD RedoTransaction(void);
 
-  NS_IMETHOD GetNewNode(nsINode **aNewNode);
+  NS_IMETHOD GetNewNode(nsIDOMNode **aNewNode);
 
 protected:
-
+  
   /** the element to operate upon */
-  nsCOMPtr<nsINode> mExistingRightNode;
+  nsCOMPtr<nsIDOMNode> mExistingRightNode;
 
   /** the offset into mElement where the children of mElement are split.<BR>
     * mOffset is the index of the first child in the right node. 
@@ -56,10 +56,10 @@ protected:
   int32_t  mOffset;
 
   /** the element we create when splitting mElement */
-  nsCOMPtr<nsINode> mNewLeftNode;
+  nsCOMPtr<nsIDOMNode> mNewLeftNode;
 
   /** the parent shared by mExistingRightNode and mNewLeftNode */
-  nsCOMPtr<nsINode> mParent;
+  nsCOMPtr<nsIDOMNode> mParent;
   nsEditor*  mEditor;
 };
 
