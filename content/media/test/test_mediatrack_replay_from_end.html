@@ -1,0 +1,146 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test media tracks if replay after playback has ended</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  // Scenario to test:
+  // 1. Audio tracks and video tracks should be added to the track list when
+  //    playing, and all tracks should be removed from the list after we seek
+  //    to the end.
+  // 2. All tracks should be added back to the list if we replay from the end,
+  //    and all tracks should be removed from the list after we seek to the end.
+  // 3. After seek to the middle from end of playback, all tracks should be
+  //    added back to the list if we play from here, and all tracks should be
+  //    removed from the list after we seek to the end.
+
+  var elemType = getMajorMimeType(test.type);
+  var element = document.createElement(elemType);
+
+  var audioOnchange = 0;
+  var audioOnaddtrack = 0;
+  var audioOnremovetrack = 0;
+  var videoOnchange = 0;
+  var videoOnaddtrack = 0;
+  var videoOnremovetrack = 0;
+  var isPlaying = false;
+  var steps = 0;
+
+  element.audioTracks.onaddtrack = function(e) {
+    audioOnaddtrack++;
+  }
+
+  element.audioTracks.onremovetrack = function(e) {
+    audioOnremovetrack++;
+  }
+
+  element.videoTracks.onaddtrack = function(e) {
+    videoOnaddtrack++;
+  }
+
+  element.videoTracks.onremovetrack = function(e) {
+    videoOnremovetrack++;
+  }
+
+  function testTrackEventCalls(expectedCalls) {
+    if (test.hasAudio) {
+      is(audioOnaddtrack, expectedCalls,
+         'Calls of onaddtrack on audioTracks should be '+expectedCalls+' times.');
+      is(audioOnremovetrack, expectedCalls,
+         'Calls of onremovetrack on audioTracks should be '+expectedCalls+' times.');
+    }
+    if (test.hasVideo) {
+      is(videoOnaddtrack, expectedCalls,
+         'Calls of onaddtrack on videoTracks should be '+expectedCalls+' times.');
+      is(videoOnremovetrack, expectedCalls,
+         'Calls of onremovetrack on videoTracks should be '+expectedCalls+' times.');
+    }
+  }
+
+  function finishTesting() {
+    element.onpause = null;
+    element.onseeked = null;
+    element.onplaying = null;
+    element.onended = null;
+    manager.finished(element.token);
+  }
+
+  function onended() {
+    if (isPlaying) {
+      switch(steps) {
+        case 1:
+          testTrackEventCalls(1);
+          element.onplaying = onplaying;
+          element.play();
+          steps++;
+          break;
+        case 2:
+          testTrackEventCalls(2);
+          element.currentTime = element.duration * 0.5;
+          element.onplaying = onplaying;
+          element.play();
+          steps++;
+          break;
+        case 3:
+          testTrackEventCalls(3);
+          finishTesting();
+          break;
+      }
+    } else {
+      ok(true, 'Finish the test anyway if ended is fired before other events.');
+      finishTesting();
+    }
+  }
+
+  function seekToEnd() {
+    element.onpause = null;
+    element.currentTime = element.duration * 1.1;
+  }
+
+  function onseeked() {
+    element.onseeked = null;
+    element.onpause = seekToEnd;
+    element.pause();
+  }
+
+  function onplaying() {
+    isPlaying = true;
+    element.onplaying = null;
+    element.onseeked = onseeked;
+  }
+
+  element.token = token;
+  manager.started(token);
+
+  element.src = test.name;
+  element.test = test;
+  element.onplaying = onplaying;
+  element.onended = onended;
+  element.play();
+  steps++;
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {
+    "set": [
+      ["media.track.enabled", true]
+    ]
+  },
+  function() {
+    manager.runTests(gTrackTests, startTest);
+  });
+
+</script>
+</pre>
+</body>
+</html>

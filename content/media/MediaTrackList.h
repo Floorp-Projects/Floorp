@@ -79,6 +79,8 @@ public:
 
   void RemoveTrack(const nsRefPtr<MediaTrack>& aTrack);
 
+  void RemoveTracks();
+
   static already_AddRefed<AudioTrack>
   CreateAudioTrack(const nsAString& aId,
                    const nsAString& aKind,

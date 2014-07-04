@@ -46,6 +46,11 @@ namespace mozilla {
       void DispatchMetadataIfNeeded(AbstractMediaDecoder* aDecoder, double aCurrentTime) {
         TimedMetadata* metadata = mMetadataQueue.getFirst();
         while (metadata && aCurrentTime >= static_cast<double>(metadata->mPublishTime) / USECS_PER_S) {
+          // Remove all media tracks from the list first.
+          nsCOMPtr<nsIRunnable> removeTracksEvent =
+            new RemoveMediaTracksEventRunner(aDecoder);
+          NS_DispatchToMainThread(removeTracksEvent);
+
           nsCOMPtr<nsIRunnable> metadataUpdatedEvent =
             new MetadataEventRunner(aDecoder,
                                     metadata->mInfo.forget(),
