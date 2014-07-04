@@ -11,6 +11,8 @@
 
   <script type="application/javascript"
           src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js" />
 
   <script type="application/javascript">
   <![CDATA[
@@ -20,6 +22,10 @@
                       "Presentation label shouldn't be accessible.");
       ok(!isAccessible("presentation_descr"),
                       "Presentation description shouldn't be accessible.");
+
+      // aria-pressed
+      testRole("pressed_button", ROLE_TOGGLE_BUTTON);
+      testRole("pressed_menu_button", ROLE_TOGGLE_BUTTON);
 
       SimpleTest.finish();
     }
@@ -37,7 +43,12 @@
        title="Do not create accessibles for XUL label or description having a role of 'presentation'">
       Mozilla Bug 494345
     </a>
-  <p id="display"></p>
+    <a target="_blank"
+        href="https://bugzilla.mozilla.org/show_bug.cgi?id=1033283"
+        title="Expose pressed state on XUL menu toggle buttons">
+       Mozilla Bug 1033283
+    </a>
+    <p id="display"></p>
     <div id="content" style="display: none">
     </div>
     <pre id="test">
@@ -47,6 +58,12 @@
   <vbox flex="1">
     <label id="presentation_label" role="presentation" value="label"/>
     <description id="presentation_descr" role="presentation" value="description"/>
+    <button id="pressed_button" aria-pressed="true" label="I am pressed" />
+    <button id="pressed_menu_button" aria-pressed="true" label="I am pressed" type="menu-button">
+      <menupopup>
+        <menuitem label="I am a menu item" />
+      </menupopup>
+    </button>
   </vbox>
 
   
