@@ -153,7 +153,11 @@ EventEmitter.prototype = {
       if (!isWorker) {
         caller = components.stack.caller.caller;
         func = caller.name;
-        path = caller.filename.split(/ -> /)[1] + ":" + caller.lineNumber;
+        let file = caller.filename;
+        if (file.contains(" -> ")) {
+          file = caller.filename.split(/ -> /)[1];
+        }
+        path = file + ":" + caller.lineNumber;
       }
 
       let argOut = "(";
