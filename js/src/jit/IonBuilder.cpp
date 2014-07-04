@@ -10146,6 +10146,12 @@ IonBuilder::jsop_in_dense()
     MInitializedLength *initLength = MInitializedLength::New(alloc(), elements);
     current->add(initLength);
 
+    // If there are no holes, speculate the InArray check will not fail.
+    if (!needsHoleCheck && !failedBoundsCheck_) {
+        addBoundsCheck(idInt32, initLength);
+        return pushConstant(BooleanValue(true));
+    }
+
     // Check if id < initLength and elem[id] not a hole.
     MInArray *ins = MInArray::New(alloc(), elements, id, initLength, obj, needsHoleCheck);
 
