@@ -24,6 +24,7 @@ class QueryImpl
     virtual void end() = 0;
     virtual GLuint getResult() = 0;
     virtual GLboolean isResultAvailable() = 0;
+    virtual bool isStarted() const = 0;
 
     GLenum getType() const { return mType; }
 

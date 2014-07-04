@@ -17,6 +17,17 @@
   TypeName(const TypeName&);               \
   void operator=(const TypeName&)
 
+// Macros for writing try catch blocks. Defining ANGLE_NO_EXCEPTIONS
+// when building angle will disable the usage of try/catch for compilers
+// without proper support for them (such as clang-cl).
+#ifdef ANGLE_NO_EXCEPTIONS
+#define ANGLE_TRY if (true)
+#define ANGLE_CATCH_ALL else
+#else
+#define ANGLE_TRY try
+#define ANGLE_CATCH_ALL catch(...)
+#endif
+
 template <typename T, unsigned int N>
 inline unsigned int ArraySize(T(&)[N])
 {
@@ -42,6 +53,42 @@ void SafeRelease(T& resource)
     }
 }
 
+template <typename T>
+void SafeDelete(T*& resource)
+{
+    delete resource;
+    resource = NULL;
+}
+
+template <typename T>
+void SafeDeleteArray(T*& resource)
+{
+    delete[] resource;
+    resource = NULL;
+}
+
+// Provide a less-than function for comparing structs
+// Note: struct memory must be initialized to zero, because of packing gaps
+template <typename T>
+inline bool StructLessThan(const T &a, const T &b)
+{
+    return (memcmp(&a, &b, sizeof(T)) < 0);
+}
+
+// Provide a less-than function for comparing structs
+// Note: struct memory must be initialized to zero, because of packing gaps
+template <typename T>
+inline bool StructEquals(const T &a, const T &b)
+{
+    return (memcmp(&a, &b, sizeof(T)) == 0);
+}
+
+template <typename T>
+inline void StructZero(T *obj)
+{
+    memset(obj, 0, sizeof(T));
+}
+
 #if defined(_MSC_VER)
 #define snprintf _snprintf
 #endif
@@ -52,5 +99,7 @@ void SafeRelease(T& resource)
 
 #define GL_BGRA4_ANGLEX 0x6ABC
 #define GL_BGR5_A1_ANGLEX 0x6ABD
+#define GL_INT_64_ANGLEX 0x6ABE
+#define GL_STRUCT_ANGLEX 0x6ABF
 
 #endif // COMMON_ANGLEUTILS_H_
