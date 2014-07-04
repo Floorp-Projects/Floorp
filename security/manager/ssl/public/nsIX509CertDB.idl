@@ -8,7 +8,6 @@
 
 interface nsIArray;
 interface nsIX509Cert;
-interface nsIX509Cert3;
 interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIZipReader;
@@ -21,16 +20,16 @@ interface nsIX509CertList;
 
 typedef uint32_t AppTrustedRoot;
 
-[scriptable, function, uuid(0927baea-622d-4e41-a76d-255af426e7fb)]
+[scriptable, function, uuid(5984db62-d0e5-4671-a082-799cf7271e24)]
 interface nsIOpenSignedAppFileCallback : nsISupports
 {
   void openSignedAppFileFinished(in nsresult rv,
                                  in nsIZipReader aZipReader,
-                                 in nsIX509Cert3 aSignerCert);
+                                 in nsIX509Cert aSignerCert);
 };
 
 /**
- * This represents a service to access and manipulate 
+ * This represents a service to access and manipulate
  * X.509 certificates stored in a database.
  */
 [scriptable, uuid(7446a5b1-84ca-491f-a2fe-0bc60a71ffa5)]
@@ -49,12 +48,12 @@ interface nsIX509CertDB : nsISupports {
    *  Given a nickname and optionally a token,
    *  locate the matching certificate.
    *
-   *  @param aToken Optionally limits the scope of 
+   *  @param aToken Optionally limits the scope of
    *                this function to a token device.
    *                Can be null to mean any token.
    *  @param aNickname The nickname to be used as the key
    *                   to find a certificate.
-   *                
+   *
    *  @return The matching certificate if found.
    */
   nsIX509Cert findCertByNickname(in nsISupports aToken,
@@ -67,7 +66,7 @@ interface nsIX509CertDB : nsISupports {
    *
    *  @param aDBkey Database internal key, as obtained using
    *                attribute dbkey in nsIX509Cert.
-   *  @param aToken Optionally limits the scope of 
+   *  @param aToken Optionally limits the scope of
    *                this function to a token device.
    *                Can be null to mean any token.
    */
@@ -79,7 +78,7 @@ interface nsIX509CertDB : nsISupports {
    *    user, ca, or server cert - the nickname
    *    email cert - the email address
    *
-   *  @param aToken Optionally limits the scope of 
+   *  @param aToken Optionally limits the scope of
    *                this function to a token device.
    *                Can be null to mean any token.
    *  @param aType Type of certificate to obtain
@@ -87,7 +86,7 @@ interface nsIX509CertDB : nsISupports {
    *  @param count The number of nicknames in the returned array
    *  @param certNameList The returned array of certificate nicknames.
    */
-  void findCertNicknames(in nsISupports aToken, 
+  void findCertNicknames(in nsISupports aToken,
                          in unsigned long aType,
                          out unsigned long count,
                          [array, size_is(count)] out wstring certNameList);
@@ -97,7 +96,7 @@ interface nsIX509CertDB : nsISupports {
    *
    *  @param aNickname The nickname to be used as the key
    *                   to find the certificate.
-   *                
+   *
    *  @return The matching certificate if found.
    */
   nsIX509Cert findEmailEncryptionCert(in AString aNickname);
@@ -107,7 +106,7 @@ interface nsIX509CertDB : nsISupports {
    *
    *  @param aNickname The nickname to be used as the key
    *                   to find the certificate.
-   *                
+   *
    *  @return The matching certificate if found.
    */
   nsIX509Cert findEmailSigningCert(in AString aNickname);
@@ -115,12 +114,12 @@ interface nsIX509CertDB : nsISupports {
   /**
    *  Find a certificate by email address.
    *
-   *  @param aToken Optionally limits the scope of 
+   *  @param aToken Optionally limits the scope of
    *                this function to a token device.
    *                Can be null to mean any token.
    *  @param aEmailAddress The email address to be used as the key
    *                       to find the certificate.
-   *                
+   *
    *  @return The matching certificate if found.
    */
   nsIX509Cert findCertByEmailAddress(in nsISupports aToken,
@@ -164,7 +163,7 @@ interface nsIX509CertDB : nsISupports {
                                in nsIInterfaceRequestor ctx);
 
   /**
-   *  Import a personal certificate into the database, assuming 
+   *  Import a personal certificate into the database, assuming
    *  the database already contains the private key for this certificate.
    *
    *  @param data The raw data to be imported
@@ -184,7 +183,7 @@ interface nsIX509CertDB : nsISupports {
 
   /**
    *  Modify the trust that is stored and associated to a certificate within
-   *  a database. Separate trust is stored for 
+   *  a database. Separate trust is stored for
    *  One call manipulates the trust for one trust type only.
    *  See the trust type constants defined within this interface.
    *
@@ -203,14 +202,14 @@ interface nsIX509CertDB : nsISupports {
    *                    characters, indicating SSL, Email, and Obj signing
    *                    trust.
    */
-  void setCertTrustFromString(in nsIX509Cert3 cert, in string trustString);
+  void setCertTrustFromString(in nsIX509Cert cert, in string trustString);
 
   /**
    *  Query whether a certificate is trusted for a particular use.
    *
    *  @param cert Obtain the stored trust of this certificate.
    *  @param certType The type of the certificate. See nsIX509Cert.
-   *  @param trustType A single bit from the usages constants defined 
+   *  @param trustType A single bit from the usages constants defined
    *                   within this interface.
    *
    *  @return Returns true if the certificate is trusted for the given use.
@@ -222,7 +221,7 @@ interface nsIX509CertDB : nsISupports {
   /**
    *  Import certificate(s) from file
    *
-   *  @param aToken Optionally limits the scope of 
+   *  @param aToken Optionally limits the scope of
    *                this function to a token device.
    *                Can be null to mean any token.
    *  @param aFile Identifies a file that contains the certificate
@@ -237,7 +236,7 @@ interface nsIX509CertDB : nsISupports {
   /**
    *  Import a PKCS#12 file containing cert(s) and key(s) into the database.
    *
-   *  @param aToken Optionally limits the scope of 
+   *  @param aToken Optionally limits the scope of
    *                this function to a token device.
    *                Can be null to mean any token.
    *  @param aFile Identifies a file that contains the data
@@ -249,7 +248,7 @@ interface nsIX509CertDB : nsISupports {
   /**
    *  Export a set of certs and keys from the database to a PKCS#12 file.
    *
-   *  @param aToken Optionally limits the scope of 
+   *  @param aToken Optionally limits the scope of
    *                this function to a token device.
    *                Can be null to mean any token.
    *  @param aFile Identifies a file that will be filled with the data
@@ -316,7 +315,7 @@ interface nsIX509CertDB : nsISupports {
                               in nsIFile aJarFile,
                               in nsIOpenSignedAppFileCallback callback);
 
-  /* 
+  /*
    * Add a cert to a cert DB from a binary string.
    *
    * @param certDER The raw DER encoding of a certificate.
@@ -361,4 +360,20 @@ interface nsIX509CertDB : nsISupports {
   // Clears the OCSP cache for the current certificate verification
   // implementation.
   void clearOCSPCache();
+
+  /*
+   * Add a cert to a cert DB from a base64 encoded string.
+   *
+   * @param base64 The raw representation of a certificate,
+   *                encoded as Base 64.
+   * @param aTrust decoded by CERT_DecodeTrustString. 3 comma separated characters,
+   *                indicating SSL, Email, and Obj signing trust
+   * @param aName name of the cert for display purposes.
+   */
+  void addCertFromBase64(in string base64, in string aTrust, in string aName);
+
+  /*
+   * Get all the known certs in the database
+   */
+  nsIX509CertList getCerts();
 };

@@ -4,7 +4,6 @@
   "robocop": "TIMED_OUT",
   "content/canvas/test/webgl-conformance": "bug 865443 - separate suite -- mochitest-gl",
   "content/canvas/test/webgl-mochitest/test_no_arr_points.html": "Android 2.3 aws only; bug 1030942",
-  "content/html/content/test/test_bug659743.xml": "Android 2.3 aws only; bug 1031103",
   "docshell/test/navigation/test_reserved.html": "too slow on Android 2.3 aws only; bug 1030403",
   "dom/media/tests/mochitest": "Android 2.3 only; bug 981881",
   "layout/style/test/test_media_queries.html": "Android 2.3 aws only; bug 1030419",

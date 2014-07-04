@@ -33,8 +33,7 @@ else:
             'xptcinvoke.cpp',
             'xptcstubs.cpp',
         ]
-        if CONFIG['TARGET_CPU'] == 'x86_64' or CONFIG['GNU_CXX']:
-            SOURCES['xptcinvoke.cpp'].no_pgo = True
+        SOURCES['xptcinvoke.cpp'].no_pgo = True
 
 FINAL_LIBRARY = 'xpcom_core'
 
@@ -42,8 +41,3 @@ LOCAL_INCLUDES += [
     '../..',
     '/xpcom/reflect/xptinfo',
 ]
-
-if CONFIG['TARGET_CPU'] != 'x86_64':
-    if not CONFIG['GNU_CXX']:
-        # FIXME: bug 413019
-        NO_PGO = True
