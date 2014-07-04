@@ -18,9 +18,10 @@ class MarionetteTransport(object):
     max_packet_length = 4096
     connection_lost_msg = "Connection to Marionette server is lost. Check gecko.log (desktop firefox) or logcat (b2g) for errors."
 
-    def __init__(self, addr, port):
+    def __init__(self, addr, port, socket_timeout=360.0):
         self.addr = addr
         self.port = port
+        self.socket_timeout = socket_timeout
         self.sock = None
         self.traits = None
         self.applicationType = None
@@ -56,12 +57,12 @@ class MarionetteTransport(object):
         else:
             raise IOError(self.connection_lost_msg)
 
-    def connect(self, timeout=360.0):
+    def connect(self):
         """ Connect to the server and process the hello message we expect
             to receive in response.
         """
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.settimeout(timeout)
+        self.sock.settimeout(self.socket_timeout)
         try:
             self.sock.connect((self.addr, self.port))
         except:
