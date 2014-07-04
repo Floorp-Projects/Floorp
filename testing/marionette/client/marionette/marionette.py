@@ -560,19 +560,23 @@ class Marionette(object):
             s.close()
 
     def wait_for_port(self, timeout=60):
+        # The server will automatically send a "hello" message to clients as
+        # soon as they connect. We simply keep trying to establish a connection
+        # until we get a response.
         starttime = datetime.datetime.now()
         while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
+            sock = None
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.connect((self.host, self.port))
                 data = sock.recv(16)
-                sock.close()
-                if ':' in data:
-                    time.sleep(5)
-                    return True
+                return True
             except socket.error:
                 pass
-            time.sleep(1)
+            finally:
+                if sock:
+                    sock.close()
+            time.sleep(.1)
         return False
 
     @do_crash_check
