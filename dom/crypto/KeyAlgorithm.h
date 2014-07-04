@@ -18,7 +18,7 @@
 namespace mozilla {
 namespace dom {
 
-class CryptoKey;
+class Key;
 class KeyAlgorithm;
 
 enum KeyAlgorithmStructuredCloneTags {
