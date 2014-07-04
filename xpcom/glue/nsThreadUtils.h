@@ -565,6 +565,7 @@ private:
 #endif
 };
 
-
+void
+NS_SetMainThread();
 
 #endif  // nsThreadUtils_h__
