@@ -277,7 +277,6 @@ public:
   NS_IMETHOD GetFilename(nsAString& aFilename) MOZ_OVERRIDE;
   NS_IMETHOD GetName(nsAString& aFunction) MOZ_OVERRIDE;
   NS_IMETHOD GetCaller(nsIStackFrame** aCaller) MOZ_OVERRIDE;
-  NS_IMETHOD GetFormattedStack(nsAString& aStack) MOZ_OVERRIDE;
 
 protected:
   virtual bool IsJSFrame() const MOZ_OVERRIDE {
@@ -290,13 +289,11 @@ private:
   virtual ~JSStackFrame();
 
   JS::Heap<JSObject*> mStack;
-  nsString mFormattedStack;
 
   bool mFilenameInitialized;
   bool mFunnameInitialized;
   bool mLinenoInitialized;
   bool mCallerInitialized;
-  bool mFormattedStackInitialized;
 };
 
 JSStackFrame::JSStackFrame(JS::Handle<JSObject*> aStack)
@@ -305,7 +302,6 @@ JSStackFrame::JSStackFrame(JS::Handle<JSObject*> aStack)
   , mFunnameInitialized(false)
   , mLinenoInitialized(false)
   , mCallerInitialized(false)
-  , mFormattedStackInitialized(false)
 {
   MOZ_ASSERT(mStack);
 
@@ -496,35 +492,6 @@ NS_IMETHODIMP JSStackFrame::GetCaller(nsIStackFrame** aCaller)
 NS_IMETHODIMP StackFrame::GetCaller(nsIStackFrame** aCaller)
 {
   NS_IF_ADDREF(*aCaller = mCaller);
-  return NS_OK;
-}
-
-NS_IMETHODIMP JSStackFrame::GetFormattedStack(nsAString& aStack)
-{
-  if (!mFormattedStackInitialized) {
-    ThreadsafeAutoJSContext cx;
-    JS::Rooted<JS::Value> stack(cx, JS::ObjectValue(*mStack));
-    JS::ExposeObjectToActiveJS(mStack);
-    JSAutoCompartment ac(cx, mStack);
-    JS::Rooted<JSString*> formattedStack(cx, JS::ToString(cx, stack));
-    if (!formattedStack) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    nsDependentJSString str;
-    if (!str.init(cx, formattedStack)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    mFormattedStack = str;
-    mFormattedStackInitialized = true;
-  }
-
-  aStack = mFormattedStack;
-  return NS_OK;
-}
-
-NS_IMETHODIMP StackFrame::GetFormattedStack(nsAString& aStack)
-{
-  aStack.Truncate();
   return NS_OK;
 }
 
