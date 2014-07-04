@@ -72,8 +72,7 @@ nsRecentBadCerts::GetRecentBadCert(const nsAString & aHostNameWithPort,
 
   if (foundDER.len) {
     CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
-    mozilla::pkix::ScopedCERTCertificate nssCert(
-      CERT_FindCertByDERCert(certdb, &foundDER));
+    ScopedCERTCertificate nssCert(CERT_FindCertByDERCert(certdb, &foundDER));
     if (!nssCert) 
       nssCert = CERT_NewTempCertificate(certdb, &foundDER,
                                         nullptr, // no nickname

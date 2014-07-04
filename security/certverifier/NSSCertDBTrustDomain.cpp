@@ -19,9 +19,11 @@
 #include "prerror.h"
 #include "prmem.h"
 #include "prprf.h"
+#include "ScopedNSSTypes.h"
 #include "secerr.h"
 #include "secmod.h"
 
+using namespace mozilla;
 using namespace mozilla::pkix;
 
 #ifdef PR_LOGGING
@@ -765,7 +767,7 @@ DefaultServerNicknameForCert(CERTCertificate* cert)
 }
 
 void
-SaveIntermediateCerts(const ScopedCERTCertList& certList)
+SaveIntermediateCerts(const mozilla::pkix::ScopedCERTCertList& certList)
 {
   if (!certList) {
     return;

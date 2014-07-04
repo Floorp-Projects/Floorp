@@ -402,6 +402,14 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
 }
 
 // 4.2.1.10. Name Constraints
+
+inline void
+PORT_FreeArena_false(PLArenaPool* arena) {
+  // PL_FreeArenaPool can't be used because it doesn't actually free the
+  // memory, which doesn't work well with memory analysis tools
+  return PORT_FreeArena(arena, PR_FALSE);
+}
+
 Result
 CheckNameConstraints(const BackCert& cert)
 {
@@ -409,7 +417,8 @@ CheckNameConstraints(const BackCert& cert)
     return Success;
   }
 
-  ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  ScopedPtr<PLArenaPool, PORT_FreeArena_false>
+    arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
   if (!arena) {
     return MapSECStatus(SECFailure);
   }
@@ -423,7 +432,7 @@ CheckNameConstraints(const BackCert& cert)
 
   for (const BackCert* child = cert.childCert; child;
        child = child->childCert) {
-    ScopedCERTCertificate
+    ScopedPtr<CERTCertificate, CERT_DestroyCertificate>
       nssCert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
                                       const_cast<SECItem*>(&child->GetDER()),
                                       nullptr, false, true));
