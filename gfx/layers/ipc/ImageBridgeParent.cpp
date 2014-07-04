@@ -172,10 +172,25 @@ bool ImageBridgeParent::RecvWillStop()
   return true;
 }
 
+static void
+ReleaseImageBridgeParent(ImageBridgeParent* aImageBridgeParent)
+{
+  aImageBridgeParent->Release();
+}
+
 bool ImageBridgeParent::RecvStop()
 {
-  // Nothing to do. This message just serves as synchronization between the
+  // This message just serves as synchronization between the
   // child and parent threads during shutdown.
+
+  // There is one thing that we need to do here: temporarily addref, so that
+  // the handling of this sync message can't race with the destruction of
+  // the ImageBridgeParent, which would trigger the dreaded "mismatched CxxStackFrames"
+  // assertion of MessageChannel.
+  AddRef();
+  MessageLoop::current()->PostTask(
+    FROM_HERE,
+    NewRunnableFunction(&ReleaseImageBridgeParent, this));
   return true;
 }
 
