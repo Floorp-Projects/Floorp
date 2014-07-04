@@ -612,7 +612,6 @@ NO_PKG_FILES += \
 	res/samples \
 	res/throbber \
 	shlibsign* \
-	ssltunnel* \
 	certutil* \
 	pk12util* \
 	BadCertServer* \
@@ -628,6 +627,13 @@ NO_PKG_FILES += \
 	necko_unit_tests \
 	*.dSYM \
 	$(NULL)
+
+# If a manifest has not been supplied, the following
+# files should be excluded from the package too
+ifndef MOZ_PKG_MANIFEST
+NO_PKG_FILES += \
+	ssltunnel*
+endif
 
 # browser/locales/Makefile uses this makefile for its variable defs, but
 # doesn't want the libs:: rule.
