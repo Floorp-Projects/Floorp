@@ -786,8 +786,10 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 #ifndef MOZ_WIDGET_GONK
 #ifdef XP_WIN32
 @BINPATH@/xpcshell.exe
+@BINPATH@/ssltunnel.exe
 #else
 @BINPATH@/xpcshell
+@BINPATH@/ssltunnel
 #endif
 #endif
 @BINPATH@/chrome/icons/
