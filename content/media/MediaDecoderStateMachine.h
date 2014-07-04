@@ -323,7 +323,7 @@ public:
   // shutting down. The decoder monitor must be held while calling this.
   bool IsShutdown();
 
-  void QueueMetadata(int64_t aPublishTime, int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags);
+  void QueueMetadata(int64_t aPublishTime, MediaInfo* aInfo, MetadataTags* aTags);
 
   // Returns true if we're currently playing. The decoder monitor must
   // be held.
