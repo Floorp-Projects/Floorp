@@ -6,3 +6,16 @@ The standalone client is a set of web pages intended to be hosted on a standalon
 
 The standalone client exists in standalone/ but shares items (from content/shared/) with the desktop implementation. See the README.md file in the standalone/ directory for how to run the server locally.
 
+Working with JSX
+================
+
+You need to install the JSX compiler in order to compile the .jsx files into regular .js ones.
+
+The JSX compiler is installable using npm:
+
+    npm install -g react-tools
+
+Once installed, run it with the --watch option, eg.:
+
+    jsx --watch --x jsx browser/components/loop/content/js/src \
+                        browser/components/loop/content/js
