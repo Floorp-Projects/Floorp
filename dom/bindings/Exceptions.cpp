@@ -251,46 +251,106 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(StackDescriptionOwner)
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-class JSStackFrame : public nsIStackFrame
+class StackFrame : public nsIStackFrame
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(JSStackFrame)
+  NS_DECL_CYCLE_COLLECTION_CLASS(StackFrame)
   NS_DECL_NSISTACKFRAME
 
-  // A null aStackDescription or an aIndex that's out of range for the
-  // number of frames aStackDescription has will mean that the
-  // JSStackFrame will never look at the stack description.  Instead,
-  // it is expected to be initialized by the caller as needed.
-  JSStackFrame(StackDescriptionOwner* aStackDescription, size_t aIndex);
+  StackFrame(uint32_t aLanguage,
+             const char* aFilename,
+             const char* aFunctionName,
+             int32_t aLineNumber,
+             nsIStackFrame* aCaller);
 
-  static already_AddRefed<nsIStackFrame>
-  CreateStack(JSContext* aCx, int32_t aMaxDepth = -1);
+  StackFrame()
+    : mLineno(0)
+    , mLanguage(nsIProgrammingLanguage::UNKNOWN)
+  {
+  }
+
   static already_AddRefed<nsIStackFrame>
   CreateStackFrameLocation(uint32_t aLanguage,
                            const char* aFilename,
                            const char* aFunctionName,
                            int32_t aLineNumber,
                            nsIStackFrame* aCaller);
+protected:
+  virtual ~StackFrame();
 
-private:
-  virtual ~JSStackFrame();
-
-  bool IsJSFrame() const {
-    return mLanguage == nsIProgrammingLanguage::JAVASCRIPT;
+  virtual bool IsJSFrame() const
+  {
+    return false;
   }
 
-  int32_t GetLineno();
+  virtual int32_t GetLineno()
+  {
+    return mLineno;
+  }
 
-  nsRefPtr<StackDescriptionOwner> mStackDescription;
   nsCOMPtr<nsIStackFrame> mCaller;
-
-  // Cached values
   nsString mFilename;
   nsString mFunname;
   int32_t mLineno;
   uint32_t mLanguage;
+};
 
+StackFrame::StackFrame(uint32_t aLanguage,
+                       const char* aFilename,
+                       const char* aFunctionName,
+                       int32_t aLineNumber,
+                       nsIStackFrame* aCaller)
+  : mCaller(aCaller)
+  , mLineno(aLineNumber)
+  , mLanguage(aLanguage)
+{
+  CopyUTF8toUTF16(aFilename, mFilename);
+  CopyUTF8toUTF16(aFunctionName, mFunname);
+}
+
+StackFrame::~StackFrame()
+{
+}
+
+NS_IMPL_CYCLE_COLLECTION(StackFrame, mCaller)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(StackFrame)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(StackFrame)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StackFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIStackFrame)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+class JSStackFrame : public StackFrame
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(JSStackFrame, StackFrame)
+
+  // aStackDescription must not be null.  aIndex must be a valid index
+  // into aStackDescription.
+  JSStackFrame(StackDescriptionOwner* aStackDescription, size_t aIndex);
+
+  static already_AddRefed<nsIStackFrame>
+  CreateStack(JSContext* aCx, int32_t aMaxDepth = -1);
+
+  NS_IMETHOD GetLanguageName(nsACString& aLanguageName) MOZ_OVERRIDE;
+  NS_IMETHOD GetFilename(nsAString& aFilename) MOZ_OVERRIDE;
+  NS_IMETHOD GetName(nsAString& aFunction) MOZ_OVERRIDE;
+  NS_IMETHOD GetCaller(nsIStackFrame** aCaller) MOZ_OVERRIDE;
+
+protected:
+  virtual bool IsJSFrame() const MOZ_OVERRIDE {
+    return true;
+  }
+
+  virtual int32_t GetLineno() MOZ_OVERRIDE;
+
+private:
+  virtual ~JSStackFrame();
+
+  nsRefPtr<StackDescriptionOwner> mStackDescription;
   size_t mIndex;
 
   bool mFilenameInitialized;
@@ -301,60 +361,48 @@ private:
 
 JSStackFrame::JSStackFrame(StackDescriptionOwner* aStackDescription,
                            size_t aIndex)
-  : mLineno(0)
+  : mStackDescription(aStackDescription)
+  , mIndex(aIndex)
+  , mFilenameInitialized(false)
+  , mFunnameInitialized(false)
+  , mLinenoInitialized(false)
+  , mCallerInitialized(false)
 {
-  if (aStackDescription && aIndex < aStackDescription->NumFrames()) {
-    mStackDescription = aStackDescription;
-    mIndex = aIndex;
-    mFilenameInitialized = false;
-    mFunnameInitialized = false;
-    mLinenoInitialized = false;
-    mCallerInitialized = false;
-    mLanguage = nsIProgrammingLanguage::JAVASCRIPT;
-  } else {
-    MOZ_ASSERT(!mStackDescription);
-    mIndex = 0;
-    mFilenameInitialized = true;
-    mFunnameInitialized = true;
-    mLinenoInitialized = true;
-    mCallerInitialized = true;
-    mLanguage = nsIProgrammingLanguage::UNKNOWN;
-  }
+  MOZ_ASSERT(aStackDescription && aIndex < aStackDescription->NumFrames());
+
+  mLineno = 0;
+  mLanguage = nsIProgrammingLanguage::JAVASCRIPT;
 }
 
 JSStackFrame::~JSStackFrame()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION(JSStackFrame, mStackDescription, mCaller)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(JSStackFrame, StackFrame, mStackDescription)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(JSStackFrame)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(JSStackFrame)
+NS_IMPL_ADDREF_INHERITED(JSStackFrame, StackFrame)
+NS_IMPL_RELEASE_INHERITED(JSStackFrame, StackFrame)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JSStackFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIStackFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(JSStackFrame)
+NS_INTERFACE_MAP_END_INHERITING(StackFrame)
 
 /* readonly attribute uint32_t language; */
-NS_IMETHODIMP JSStackFrame::GetLanguage(uint32_t* aLanguage)
+NS_IMETHODIMP StackFrame::GetLanguage(uint32_t* aLanguage)
 {
   *aLanguage = mLanguage;
   return NS_OK;
 }
 
 /* readonly attribute string languageName; */
+NS_IMETHODIMP StackFrame::GetLanguageName(nsACString& aLanguageName)
+{
+  aLanguageName.AssignLiteral("C++");
+  return NS_OK;
+}
+
 NS_IMETHODIMP JSStackFrame::GetLanguageName(nsACString& aLanguageName)
 {
-  static const char js[] = "JavaScript";
-  static const char cpp[] = "C++";
-
-  if (IsJSFrame()) {
-    aLanguageName.AssignASCII(js);
-  } else {
-    aLanguageName.AssignASCII(cpp);
-  }
-
+  aLanguageName.AssignLiteral("JavaScript");
   return NS_OK;
 }
 
@@ -369,6 +417,11 @@ NS_IMETHODIMP JSStackFrame::GetFilename(nsAString& aFilename)
     mFilenameInitialized = true;
   }
 
+  return StackFrame::GetFilename(aFilename);
+}
+
+NS_IMETHODIMP StackFrame::GetFilename(nsAString& aFilename)
+{
   // The filename must be set to null if empty.
   if (mFilename.IsEmpty()) {
     aFilename.SetIsVoid(true);
@@ -392,6 +445,11 @@ NS_IMETHODIMP JSStackFrame::GetName(nsAString& aFunction)
     mFunnameInitialized = true;
   }
 
+  return StackFrame::GetName(aFunction);
+}
+
+NS_IMETHODIMP StackFrame::GetName(nsAString& aFunction)
+{
   // The function name must be set to null if empty.
   if (mFunname.IsEmpty()) {
     aFunction.SetIsVoid(true);
@@ -402,6 +460,7 @@ NS_IMETHODIMP JSStackFrame::GetName(nsAString& aFunction)
   return NS_OK;
 }
 
+// virtual
 int32_t
 JSStackFrame::GetLineno()
 {
@@ -411,18 +470,18 @@ JSStackFrame::GetLineno()
     mLinenoInitialized = true;
   }
 
-  return mLineno;
+  return StackFrame::GetLineno();
 }
 
 /* readonly attribute int32_t lineNumber; */
-NS_IMETHODIMP JSStackFrame::GetLineNumber(int32_t* aLineNumber)
+NS_IMETHODIMP StackFrame::GetLineNumber(int32_t* aLineNumber)
 {
   *aLineNumber = GetLineno();
   return NS_OK;
 }
 
 /* readonly attribute AUTF8String sourceLine; */
-NS_IMETHODIMP JSStackFrame::GetSourceLine(nsACString& aSourceLine)
+NS_IMETHODIMP StackFrame::GetSourceLine(nsACString& aSourceLine)
 {
   aSourceLine.Truncate();
   return NS_OK;
@@ -432,15 +491,27 @@ NS_IMETHODIMP JSStackFrame::GetSourceLine(nsACString& aSourceLine)
 NS_IMETHODIMP JSStackFrame::GetCaller(nsIStackFrame** aCaller)
 {
   if (!mCallerInitialized) {
-    mCaller = new JSStackFrame(mStackDescription, mIndex+1);
+    if (mIndex + 1 < mStackDescription->NumFrames()) {
+      mCaller = new JSStackFrame(mStackDescription, mIndex+1);
+    } else {
+      // Do we really need this dummy frame?  If so, we should document why... I
+      // guess for symmetry with the "nothing on the stack" case, which returns
+      // a single dummy frame?
+      mCaller = new StackFrame();
+    }
     mCallerInitialized = true;
   }
+  return StackFrame::GetCaller(aCaller);
+}
+
+NS_IMETHODIMP StackFrame::GetCaller(nsIStackFrame** aCaller)
+{
   NS_IF_ADDREF(*aCaller = mCaller);
   return NS_OK;
 }
 
 /* AUTF8String toString (); */
-NS_IMETHODIMP JSStackFrame::ToString(nsACString& _retval)
+NS_IMETHODIMP StackFrame::ToString(nsACString& _retval)
 {
   _retval.Truncate();
 
@@ -482,28 +553,25 @@ JSStackFrame::CreateStack(JSContext* aCx, int32_t aMaxDepth)
     return nullptr;
   }
 
-  nsRefPtr<StackDescriptionOwner> descOwner = new StackDescriptionOwner(desc);
-
-  nsRefPtr<JSStackFrame> first = new JSStackFrame(descOwner, 0);
+  nsCOMPtr<nsIStackFrame> first;
+  if (desc->nframes == 0) {
+    first = new StackFrame();
+  } else {
+    nsRefPtr<StackDescriptionOwner> descOwner = new StackDescriptionOwner(desc);
+    first = new JSStackFrame(descOwner, 0);
+  }
   return first.forget();
 }
 
 /* static */ already_AddRefed<nsIStackFrame>
-JSStackFrame::CreateStackFrameLocation(uint32_t aLanguage,
-                                       const char* aFilename,
-                                       const char* aFunctionName,
-                                       int32_t aLineNumber,
-                                       nsIStackFrame* aCaller)
+StackFrame::CreateStackFrameLocation(uint32_t aLanguage,
+                                     const char* aFilename,
+                                     const char* aFunctionName,
+                                     int32_t aLineNumber,
+                                     nsIStackFrame* aCaller)
 {
-  nsRefPtr<JSStackFrame> self = new JSStackFrame(nullptr, 0);
-
-  self->mLanguage = aLanguage;
-  self->mLineno = aLineNumber;
-  CopyUTF8toUTF16(aFilename, self->mFilename);
-  CopyUTF8toUTF16(aFunctionName, self->mFunname);
-
-  self->mCaller = aCaller;
-
+  nsRefPtr<StackFrame> self =
+    new StackFrame(aLanguage, aFilename, aFunctionName, aLineNumber, aCaller);
   return self.forget();
 }
 
@@ -520,9 +588,9 @@ CreateStackFrameLocation(uint32_t aLanguage,
                          int32_t aLineNumber,
                          nsIStackFrame* aCaller)
 {
-  return JSStackFrame::CreateStackFrameLocation(aLanguage, aFilename,
-                                                aFunctionName, aLineNumber,
-                                                aCaller);
+  return StackFrame::CreateStackFrameLocation(aLanguage, aFilename,
+                                              aFunctionName, aLineNumber,
+                                              aCaller);
 }
 
 } // namespace exceptions
