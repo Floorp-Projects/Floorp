@@ -624,6 +624,9 @@ class TypeSet
     // Create a new TemporaryTypeSet where undefined and/or null has been filtered out.
     TemporaryTypeSet *filter(LifoAlloc *alloc, bool filterUndefined, bool filterNull) const;
 
+    // Create a new TemporaryTypeSet where the type has been set to object.
+    TemporaryTypeSet *cloneObjectsOnly(LifoAlloc *alloc);
+
     // Trigger a read barrier on all the contents of a type set.
     static void readBarrier(const TypeSet *types);
 
