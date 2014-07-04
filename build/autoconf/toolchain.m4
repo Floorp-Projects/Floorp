@@ -26,10 +26,10 @@ COMPILER icc __INTEL_COMPILER
 #endif
 EOF
 read dummy compiler CC_VERSION <<EOF
-$($CC -E conftest.c 2>/dev/null | grep COMPILER)
+$($CC -E $CPPFLAGS $CFLAGS conftest.c 2>/dev/null | grep COMPILER)
 EOF
 read dummy cxxcompiler CXX_VERSION <<EOF
-$($CXX -E conftest.c 2>/dev/null | grep COMPILER)
+$($CXX -E $CPPFLAGS $CXXFLAGS conftest.c 2>/dev/null | grep COMPILER)
 EOF
 if test "$compiler" != "$cxxcompiler"; then
     AC_MSG_ERROR([Your C and C++ compilers are different.  You need to use the same compiler.])
