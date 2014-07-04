@@ -9576,10 +9576,8 @@ nsGlobalWindow::GetExistingListenerManager() const
 nsIScriptContext*
 nsGlobalWindow::GetContextForEventHandlers(nsresult* aRv)
 {
-  MOZ_ASSERT(IsInnerWindow());
-
   *aRv = NS_ERROR_UNEXPECTED;
-  NS_ENSURE_TRUE(IsCurrentInnerWindow(), nullptr);
+  NS_ENSURE_TRUE(!IsInnerWindow() || IsCurrentInnerWindow(), nullptr);
 
   nsIScriptContext* scx;
   if ((scx = GetContext())) {
