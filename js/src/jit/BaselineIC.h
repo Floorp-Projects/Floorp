@@ -1966,6 +1966,14 @@ class ICCompare_Fallback : public ICFallbackStub
         return space->allocate<ICCompare_Fallback>(code);
     }
 
+    static const size_t UNOPTIMIZABLE_ACCESS_BIT = 0;
+    void noteUnoptimizableAccess() {
+        extra_ |= (1u << UNOPTIMIZABLE_ACCESS_BIT);
+    }
+    bool hadUnoptimizableAccess() const {
+        return extra_ & (1u << UNOPTIMIZABLE_ACCESS_BIT);
+    }
+
     // Compiler for this stub kind.
     class Compiler : public ICStubCompiler {
       protected:

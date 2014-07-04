@@ -226,6 +226,12 @@ BaselineInspector::expectedCompareType(jsbytecode *pc)
     if (!first && !dimorphicStub(pc, &first, &second))
         return MCompare::Compare_Unknown;
 
+    if (ICStub *fallback = second ? second->next() : first->next()) {
+        JS_ASSERT(fallback->isFallback());
+        if (fallback->toCompare_Fallback()->hadUnoptimizableAccess())
+            return MCompare::Compare_Unknown;
+    }
+
     if (CanUseInt32Compare(first->kind()) && (!second || CanUseInt32Compare(second->kind()))) {
         ICCompare_Int32WithBoolean *coerce =
             first->isCompare_Int32WithBoolean()
