@@ -351,7 +351,9 @@ JitFrameIterator::machineState() const
     for (GeneralRegisterBackwardIterator iter(reader.allGprSpills()); iter.more(); iter++)
         machine.setRegisterLocation(*iter, --spill);
 
-    double *floatSpill = reinterpret_cast<double *>(spill);
+    uint8_t *spillAlign = alignDoubleSpillWithOffset(reinterpret_cast<uint8_t *>(spill), 0);
+
+    double *floatSpill = reinterpret_cast<double *>(spillAlign);
     for (FloatRegisterBackwardIterator iter(reader.allFloatSpills()); iter.more(); iter++)
         machine.setRegisterLocation(*iter, --floatSpill);
 
@@ -1055,6 +1057,43 @@ JitActivationIterator::jitStackRange(uintptr_t *&min, uintptr_t *&end)
     end = reinterpret_cast<uintptr_t *>(frames.prevFp());
 }
 
+#ifdef JS_CODEGEN_MIPS
+uint8_t *
+alignDoubleSpillWithOffset(uint8_t *pointer, int32_t offset)
+{
+    uint32_t address = reinterpret_cast<uint32_t>(pointer);
+    address = (address - offset) & ~(StackAlignment - 1);
+    return reinterpret_cast<uint8_t *>(address);
+}
+
+static void
+MarkJitExitFrameCopiedArguments(JSTracer *trc, const VMFunction *f, IonExitFooterFrame *footer)
+{
+    uint8_t *doubleArgs = reinterpret_cast<uint8_t *>(footer);
+    doubleArgs = alignDoubleSpillWithOffset(doubleArgs, sizeof(intptr_t));
+    if (f->outParam == Type_Handle)
+        doubleArgs -= sizeof(Value);
+    doubleArgs -= f->doubleByRefArgs() * sizeof(double);
+
+    for (uint32_t explicitArg = 0; explicitArg < f->explicitArgs; explicitArg++) {
+        if (f->argProperties(explicitArg) == VMFunction::DoubleByRef) {
+            // Arguments with double size can only have RootValue type.
+            if (f->argRootType(explicitArg) == VMFunction::RootValue)
+                gc::MarkValueRoot(trc, reinterpret_cast<Value*>(doubleArgs), "ion-vm-args");
+            else
+                JS_ASSERT(f->argRootType(explicitArg) == VMFunction::RootNone);
+            doubleArgs += sizeof(double);
+        }
+    }
+}
+#else
+static void
+MarkJitExitFrameCopiedArguments(JSTracer *trc, const VMFunction *f, IonExitFooterFrame *footer)
+{
+    // This is NO-OP on other platforms.
+}
+#endif
+
 static void
 MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
 {
@@ -1201,6 +1240,8 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
             break;
         }
     }
+
+    MarkJitExitFrameCopiedArguments(trc, f, footer);
 }
 
 static void
