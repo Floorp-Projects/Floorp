@@ -81,8 +81,6 @@ public:
 
   already_AddRefed<nsISupports> GetData() const;
 
-  void GetStack(nsAString& aStack, ErrorResult& aRv) const;
-
   void Stringify(nsString& retval);
 
   // XPCOM factory ctor.
