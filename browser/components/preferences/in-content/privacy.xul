@@ -78,7 +78,7 @@
 <!-- Tracking -->
 <groupbox id="trackingGroup" data-category="panePrivacy" hidden="true" align="start">
   <caption><label>&tracking.label;</label></caption>
-  <radiogroup id="doNotTrackSelection" orient="vertical"
+  <radiogroup id="doNotTrackSelection" orient="vertical" align="start"
               preference="privacy.donottrackheader.value"
               onsynctopreference="return gPrivacyPane.setTrackingPrefs()"
               onsyncfrompreference="return gPrivacyPane.getTrackingPrefs()">
@@ -151,37 +151,31 @@
     <vbox id="historyCustomPane">
       <separator class="thin"/>
       <vbox class="indent">
-        <hbox>
+        <vbox align="start">
           <checkbox id="privateBrowsingAutoStart"
                     label="&privateBrowsingPermanent2.label;"
                     accesskey="&privateBrowsingPermanent2.accesskey;"
                     preference="browser.privatebrowsing.autostart"
                     oncommand="gPrivacyPane.updateAutostart()"/>
-          <spacer flex="1"/>
-        </hbox>
+        </vbox>
         <vbox class="indent">
-          <hbox>
+          <vbox align="start">
             <checkbox id="rememberHistory"
                       label="&rememberHistory2.label;"
                       accesskey="&rememberHistory2.accesskey;"
                       preference="places.history.enabled"/>
-            <spacer flex="1"/>
-          </hbox>
-          <hbox>
             <checkbox id="rememberForms"
                       label="&rememberSearchForm.label;"
                       accesskey="&rememberSearchForm.accesskey;"
                       preference="browser.formfill.enable"/>
-            <spacer flex="1"/>
-          </hbox>
-
+          </vbox>
           <hbox id="cookiesBox">
             <checkbox id="acceptCookies" label="&acceptCookies.label;"
                       preference="network.cookie.cookieBehavior"
                       accesskey="&acceptCookies.accesskey;"
                       onsyncfrompreference="return gPrivacyPane.readAcceptCookies();"
                       onsynctopreference="return gPrivacyPane.writeAcceptCookies();"/>
-            <spacer flex="1"/>
+            <spacer flex="1" />
             <button id="cookieExceptions" oncommand="gPrivacyPane.showCookieExceptions();"
                     label="&cookieExceptions.label;" accesskey="&cookieExceptions.accesskey;"
                     preference="pref.privacy.disable_button.cookie_exceptions"/>

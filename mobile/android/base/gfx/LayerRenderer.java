@@ -136,10 +136,8 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
     public LayerRenderer(LayerView view) {
         mView = view;
-        try {
-            mOverscrollColor = view.getContext().getResources().getColor(R.color.background_normal);
-        } catch (Resources.NotFoundException nfe) { mOverscrollColor = Color.BLACK; }
-        
+        setOverscrollColor(R.color.background_normal);
+
         Bitmap scrollbarImage = view.getScrollbarImage();
         IntSize size = new IntSize(scrollbarImage.getWidth(), scrollbarImage.getHeight());
         scrollbarImage = expandCanvasToPowerOfTwo(scrollbarImage, size);
@@ -197,6 +195,12 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         checkMonitoringEnabled();
         createDefaultProgram();
         activateDefaultProgram();
+    }
+
+    void setOverscrollColor(int colorId) {
+        try {
+            mOverscrollColor = mView.getContext().getResources().getColor(colorId);
+        } catch (Resources.NotFoundException nfe) { mOverscrollColor = Color.BLACK; }
     }
 
     public void createDefaultProgram() {
@@ -717,6 +721,10 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         // thread, so this may need to be changed if any problems appear.
         if (msg == Tabs.TabEvents.SELECTED) {
             if (mView != null) {
+                final int overscrollColor =
+                        (tab.isPrivate() ? R.color.background_private : R.color.background_normal);
+                setOverscrollColor(overscrollColor);
+
                 if (mView.getChildAt(0) != null) {
                     mView.getChildAt(0).setBackgroundColor(tab.getBackgroundColor());
                 }
