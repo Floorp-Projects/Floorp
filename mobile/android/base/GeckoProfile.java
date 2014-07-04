@@ -200,6 +200,13 @@ public final class GeckoProfile {
             getGuestDir(context).mkdir();
             GeckoProfile profile = getGuestProfile(context);
             profile.lock();
+
+            /*
+             * Now do the things that createProfileDirectory normally does --
+             * right now that's kicking off DB init.
+             */
+            profile.enqueueInitialization();
+
             return profile;
         } catch (Exception ex) {
             Log.e(LOGTAG, "Error creating guest profile", ex);
