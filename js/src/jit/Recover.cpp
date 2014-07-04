@@ -559,6 +559,28 @@ MStringLength::writeRecoverData(CompactBufferWriter &writer) const
 }
 
 bool
+MArgumentsLength::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_ArgumentsLength));
+    return true;
+}
+
+RArgumentsLength::RArgumentsLength(CompactBufferReader &reader)
+{ }
+
+bool
+RArgumentsLength::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue result(cx);
+
+    result.setInt32(iter.readOuterNumActualArgs());
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MFloor::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
