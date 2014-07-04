@@ -356,7 +356,7 @@ HandleSimulatorInterrupt(JSRuntime *rt, AsmJSActivation *activation, void *fault
     if (module.containsPC((void *)rt->mainThread.simulator()->get_pc()) &&
         module.containsPC(faultingAddress))
     {
-        activation->setInterrupted(nullptr);
+        activation->setResumePC(nullptr);
         int32_t nextpc = int32_t(module.interruptExit());
         rt->mainThread.simulator()->set_resume_pc(nextpc);
         return true;
@@ -465,7 +465,7 @@ HandleException(PEXCEPTION_POINTERS exception)
     // The trampoline will jump to activation->resumePC if execution isn't
     // interrupted.
     if (module.containsPC(faultingAddress)) {
-        activation->setInterrupted(pc);
+        activation->setResumePC(pc);
         *ppc = module.interruptExit();
 
         JSRuntime::AutoLockForInterrupt lock(rt);
@@ -668,7 +668,7 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
     // The trampoline will jump to activation->resumePC if execution isn't
     // interrupted.
     if (module.containsPC(faultingAddress)) {
-        activation->setInterrupted(pc);
+        activation->setResumePC(pc);
         *ppc = module.interruptExit();
 
         JSRuntime::AutoLockForInterrupt lock(rt);
@@ -918,7 +918,7 @@ HandleSignal(int signum, siginfo_t *info, void *ctx)
     // The trampoline will jump to activation->resumePC if execution isn't
     // interrupted.
     if (module.containsPC(faultingAddress)) {
-        activation->setInterrupted(pc);
+        activation->setResumePC(pc);
         *ppc = module.interruptExit();
 
         JSRuntime::AutoLockForInterrupt lock(rt);
