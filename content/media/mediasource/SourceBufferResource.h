@@ -244,8 +244,10 @@ public:
 
   virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) MOZ_OVERRIDE
   {
-    aRanges.AppendElement(MediaByteRange(mInputBuffer.GetOffset(),
-                                         mInputBuffer.GetLength()));
+    if (mInputBuffer.GetLength()) {
+      aRanges.AppendElement(MediaByteRange(mInputBuffer.GetOffset(),
+                                           mInputBuffer.GetLength()));
+    }
     return NS_OK;
   }
 
