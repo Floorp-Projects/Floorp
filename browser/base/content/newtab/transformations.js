@@ -179,19 +179,18 @@ let gTransformation = {
       if (!aSite || aSite == gDrag.draggedSite)
         return;
 
-      let deferred = Promise.defer();
-      batch.push(deferred.promise);
-      let cb = deferred.resolve;
-
-      if (!cells[aIndex])
-        // The site disappeared from the grid, hide it.
-        this.hideSite(aSite, cb);
-      else if (this._getNodeOpacity(aSite.node) != 1)
-        // The site disappeared before but is now back, show it.
-        this.showSite(aSite, cb);
-      else
-        // The site's position has changed, move it around.
-        this._moveSite(aSite, aIndex, {unfreeze: unfreeze, callback: cb});
+      batch.push(new Promise(resolve => {
+        if (!cells[aIndex]) {
+          // The site disappeared from the grid, hide it.
+          this.hideSite(aSite, resolve);
+        } else if (this._getNodeOpacity(aSite.node) != 1) {
+          // The site disappeared before but is now back, show it.
+          this.showSite(aSite, resolve);
+        } else {
+          // The site's position has changed, move it around.
+          this._moveSite(aSite, aIndex, {unfreeze: unfreeze, callback: resolve});
+        }
+      }));
     }, this);
 
     if (callback) {

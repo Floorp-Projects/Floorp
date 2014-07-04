@@ -13,7 +13,6 @@ Cu.import("resource://gre/modules/PageThumbs.jsm");
 Cu.import("resource://gre/modules/BackgroundPageThumbs.jsm");
 Cu.import("resource://gre/modules/DirectoryLinksProvider.jsm");
 Cu.import("resource://gre/modules/NewTabUtils.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Rect",
   "resource://gre/modules/Geometry.jsm");
