@@ -3326,9 +3326,20 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
           return false;
       };
       return true;
-    case eStyleAnimType_Coord:
-      return StyleCoordToValue(*static_cast<const nsStyleCoord*>(
-        StyleDataAtOffset(styleStruct, ssOffset)), aComputedValue);
+    case eStyleAnimType_Coord: {
+      const nsStyleCoord& coord = *static_cast<const nsStyleCoord*>(
+        StyleDataAtOffset(styleStruct, ssOffset));
+      if (nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_NUMBERS_ARE_PIXELS) &&
+          coord.GetUnit() == eStyleUnit_Coord) {
+        // For SVG properties where number means the same thing as length,
+        // we want to animate them the same way.  Normalize both to number
+        // since it has more accuracy (float vs nscoord).
+        aComputedValue.SetFloatValue(nsPresContext::
+          AppUnitsToFloatCSSPixels(coord.GetCoordValue()));
+        return true;
+      }
+      return StyleCoordToValue(coord, aComputedValue);
+    }
     case eStyleAnimType_Sides_Top:
     case eStyleAnimType_Sides_Right:
     case eStyleAnimType_Sides_Bottom:

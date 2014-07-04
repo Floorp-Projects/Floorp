@@ -17,50 +17,57 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=941830
 
   <script>
   var jsFuns = SpecialPowers.Cu.getJSTestingFunctions();
-  ok(jsFuns.isAsmJSCompilationAvailable());
 
-  var asmjsCode = "function f() { 'use asm';";
-  for (var i = 0; i < 5000; i++)
-    asmjsCode += "function g" + i + "() { return " + i + "}";
-  asmjsCode += "return g42 }";
-  ok(asmjsCode.length > 100000, "code is long enough to definitely hit the cache");
+  function runTest() {
+      var asmjsCode = "function f() { 'use asm';";
+      for (var i = 0; i < 5000; i++)
+        asmjsCode += "function g" + i + "() { return " + i + "}";
+      asmjsCode += "return g42 }";
+      ok(asmjsCode.length > 100000, "code is long enough to definitely hit the cache");
 
-  var workerCode = asmjsCode;
-  workerCode += "if (f()() !== 42) postMessage('fail'); else postMessage('ok');";
-  workerCode = 'var code = "' + workerCode + '"; eval(code); eval(code)';
-  var workerBlob = new Blob([workerCode], {type:"application/javascript"});
+      var workerCode = asmjsCode;
+      workerCode += "if (f()() !== 42) postMessage('fail'); else postMessage('ok');";
+      workerCode = 'var code = "' + workerCode + '"; eval(code); eval(code)';
+      var workerBlob = new Blob([workerCode], {type:"application/javascript"});
 
-  var mainCode = asmjsCode;
-  mainCode += "ok(jsFuns.isAsmJSModuleLoadedFromCache(f), 'f is a cache hit')\n";
-  mainCode += "var g42 = f();\n";
-  mainCode += "ok(jsFuns.isAsmJSFunction(g42), 'g42 is an asm.js function');\n";
-  mainCode += "ok(g42() === 42, 'g42 returns the correct result');\n";
-  mainCode += "SimpleTest.finish();\n";
-  var mainBlob = new Blob([mainCode], {type:"application/javascript"});
+      var mainCode = asmjsCode;
+      mainCode += "ok(jsFuns.isAsmJSModuleLoadedFromCache(f), 'f is a cache hit')\n";
+      mainCode += "var g42 = f();\n";
+      mainCode += "ok(jsFuns.isAsmJSFunction(g42), 'g42 is an asm.js function');\n";
+      mainCode += "ok(g42() === 42, 'g42 returns the correct result');\n";
+      mainCode += "SimpleTest.finish();\n";
+      var mainBlob = new Blob([mainCode], {type:"application/javascript"});
 
-  var w = new Worker(URL.createObjectURL(workerBlob));
+      var w = new Worker(URL.createObjectURL(workerBlob));
 
-  var received = 0;
-  w.onmessage = function(e) {
-      switch (received) {
-        case 0:
-          ok(e.data === "ok", "Received first message");
-          received = 1;
-          break;
-        case 1:
-          ok(e.data === "ok", "Received second message");
-          received = 2;
+      var received = 0;
+      w.onmessage = function(e) {
+          switch (received) {
+            case 0:
+              ok(e.data === "ok", "Received first message");
+              received = 1;
+              break;
+            case 1:
+              ok(e.data === "ok", "Received second message");
+              received = 2;
 
-          var script = document.createElement('script');
-          script.src = URL.createObjectURL(mainBlob);
-          document.body.appendChild(script);
-          break;
-        default:
-          throw "Huh?";
+              var script = document.createElement('script');
+              script.src = URL.createObjectURL(mainBlob);
+              document.body.appendChild(script);
+              break;
+            default:
+              throw "Huh?";
+          }
       }
+
+      SimpleTest.waitForExplicitFinish();
   }
 
-  SimpleTest.waitForExplicitFinish();
+  if (!jsFuns.isAsmJSCompilationAvailable()) {
+      ok(true, "isAsmJSCompilationAvailable is false, skipping this test!");
+  } else {
+      runTest();
+  }
   </script>
 
 </body>

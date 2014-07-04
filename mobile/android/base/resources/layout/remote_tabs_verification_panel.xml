@@ -3,11 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<org.mozilla.gecko.tabspanel.RemoteTabsVerificationPanel
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone">
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
 
     <LinearLayout android:id="@+id/remote_tabs_verification_containing_layout"
                   style="@style/TabsPanelFrame"
@@ -51,4 +47,4 @@
 
     </LinearLayout>
 
-</org.mozilla.gecko.tabspanel.RemoteTabsVerificationPanel>
+</merge>

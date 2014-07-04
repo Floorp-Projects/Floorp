@@ -10,8 +10,8 @@ import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.tabspanel.TabsPanel.PanelView;
 
 import android.content.Context;
-import android.util.AttributeSet;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -25,18 +25,14 @@ import android.widget.TextView;
 class RemoteTabsVerificationPanel extends ScrollView implements PanelView {
     private static final String LOG_TAG = RemoteTabsVerificationPanel.class.getSimpleName();
 
-    private LinearLayout containingLayout;
+    private final LinearLayout containingLayout;
 
     private TabsPanel tabsPanel;
 
-    public RemoteTabsVerificationPanel(Context context, AttributeSet attrs) {
-        super(context, attrs);
-    }
+    public RemoteTabsVerificationPanel(Context context) {
+        super(context);
 
-    @Override
-    protected void onFinishInflate() {
-        super.onFinishInflate();
-
+        LayoutInflater.from(context).inflate(R.layout.remote_tabs_verification_panel, this);
         containingLayout = (LinearLayout) findViewById(R.id.remote_tabs_verification_containing_layout);
 
         final View resendLink = containingLayout.findViewById(R.id.remote_tabs_confirm_resend);

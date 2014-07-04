@@ -304,3 +304,42 @@ add_task(function* test_addCrash() {
   Assert.equal(crash.type, m.PROCESS_TYPE_PLUGIN + "-" + m.CRASH_TYPE_HANG);
   Assert.ok(crash.isOfType(m.PROCESS_TYPE_PLUGIN, m.CRASH_TYPE_HANG));
 });
+
+add_task(function* test_addSubmission() {
+  let m = yield getManager();
+
+  let crashes = yield m.getCrashes();
+  Assert.equal(crashes.length, 0);
+
+  yield m.addSubmission(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH, true,
+                        "success", DUMMY_DATE);
+  yield m.addSubmission(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH, false,
+                        "failure", DUMMY_DATE);
+
+  crashes = yield m.getCrashes();
+  Assert.equal(crashes.length, 2);
+
+  let map = new Map(crashes.map(crash => [crash.id, crash]));
+
+  let crash = map.get("success-submission");
+  Assert.ok(!!crash);
+  Assert.equal(crash.crashDate, DUMMY_DATE);
+  Assert.equal(crash.type,
+               m.PROCESS_TYPE_MAIN + "-" + m.CRASH_TYPE_CRASH + "-" +
+               m.PROCESS_TYPE_SUBMISSION + "-" + m.SUBMISSION_TYPE_SUCCEEDED);
+  Assert.ok(
+    crash.isOfType(m.PROCESS_TYPE_MAIN + "-" + m.CRASH_TYPE_CRASH + "-" +
+                   m.PROCESS_TYPE_SUBMISSION, m.SUBMISSION_TYPE_SUCCEEDED));
+
+  let crash = map.get("failure-submission");
+  Assert.ok(!!crash);
+  Assert.equal(crash.crashDate, DUMMY_DATE);
+  Assert.equal(crash.type,
+               m.PROCESS_TYPE_MAIN + "-" + m.CRASH_TYPE_CRASH + "-" +
+               m.PROCESS_TYPE_SUBMISSION + "-" + m.SUBMISSION_TYPE_FAILED);
+  Assert.ok(
+    crash.isOfType(m.PROCESS_TYPE_MAIN + "-" + m.CRASH_TYPE_CRASH + "-" +
+                   m.PROCESS_TYPE_SUBMISSION, m.SUBMISSION_TYPE_FAILED));
+
+});
+
