@@ -125,7 +125,34 @@ NS_GetMainThread(nsIThread** aResult)
 #endif
 }
 
-#ifndef MOZILLA_INTERNAL_API
+#if defined(MOZILLA_INTERNAL_API) && defined(XP_WIN)
+extern DWORD gTLSThreadIDIndex;
+bool
+NS_IsMainThread()
+{
+  return TlsGetValue(gTLSThreadIDIndex) == (void*)mozilla::threads::Main;
+}
+#elif defined(MOZILLA_INTERNAL_API) && defined(NS_TLS)
+#ifdef MOZ_ASAN
+// Temporary workaround, see bug 895845
+bool
+NS_IsMainThread()
+{
+  return gTLSThreadID == mozilla::threads::Main;
+}
+#else
+// NS_IsMainThread() is defined inline in MainThreadUtils.h
+#endif
+#else
+#ifdef MOZILLA_INTERNAL_API
+bool
+NS_IsMainThread()
+{
+  bool result = false;
+  nsThreadManager::get()->nsThreadManager::GetIsMainThread(&result);
+  return bool(result);
+}
+#else
 bool
 NS_IsMainThread()
 {
@@ -137,6 +164,7 @@ NS_IsMainThread()
   }
   return bool(result);
 }
+#endif
 #endif
 
 NS_METHOD
@@ -328,9 +356,7 @@ nsThreadPoolNaming::SetThreadPoolName(const nsACString& aPoolName,
     NS_SetThreadName(aThread, name);
   } else {
     // Set on the current thread
-#ifndef XPCOM_GLUE_AVOID_NSPR
     PR_SetCurrentThreadName(name.BeginReading());
-#endif
   }
 }
 
