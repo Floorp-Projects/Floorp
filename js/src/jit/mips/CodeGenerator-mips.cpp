@@ -197,7 +197,7 @@ CodeGeneratorMIPS::generateOutOfLineCode()
         // the same.
         masm.move32(Imm32(frameSize()), ra);
 
-        JitCode *handler = gen->jitRuntime()->getGenericBailoutHandler();
+        JitCode *handler = gen->jitRuntime()->getGenericBailoutHandler(gen->info().executionMode());
 
         masm.branch(handler);
     }
