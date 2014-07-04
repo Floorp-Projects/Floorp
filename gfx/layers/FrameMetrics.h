@@ -32,6 +32,7 @@ namespace mozilla {
 // to get a picture of how the various coordinate systems relate to each other.
 struct ParentLayerPixel {};
 
+typedef gfx::MarginTyped<ParentLayerPixel> ParentLayerMargin;
 typedef gfx::PointTyped<ParentLayerPixel> ParentLayerPoint;
 typedef gfx::RectTyped<ParentLayerPixel> ParentLayerRect;
 typedef gfx::SizeTyped<ParentLayerPixel> ParentLayerSize;
@@ -190,8 +191,8 @@ public:
   CSSToScreenScale CalculateIntrinsicScale() const
   {
     return CSSToScreenScale(
-        std::max(float(mCompositionBounds.width) / mViewport.width,
-                 float(mCompositionBounds.height) / mViewport.height));
+        std::max(mCompositionBounds.width / mViewport.width,
+                 mCompositionBounds.height / mViewport.height));
   }
 
   // Return the scale factor for converting from CSS pixels (for this layer)
@@ -257,7 +258,7 @@ public:
   // This value is valid for nested scrollable layers as well, and is still
   // relative to the layer tree origin. This value is provided by Gecko at
   // layout/paint time.
-  ParentLayerIntRect mCompositionBounds;
+  ParentLayerRect mCompositionBounds;
 
   // ---------------------------------------------------------------------------
   // The following metrics are all in CSS pixels. They are not in any uniform
