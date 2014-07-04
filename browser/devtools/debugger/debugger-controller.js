@@ -1711,6 +1711,10 @@ EventListeners.prototype = {
         throw "Error getting event listeners: " + aResponse.message;
       }
 
+      // Make sure all the listeners are sorted by the event type, since
+      // they're not guaranteed to be clustered together.
+      aResponse.listeners.sort((a, b) => a.type > b.type ? 1 : -1);
+
       // Add all the listeners in the debugger view event linsteners container.
       for (let listener of aResponse.listeners) {
         let definitionSite = yield this._getDefinitionSite(listener.function);
