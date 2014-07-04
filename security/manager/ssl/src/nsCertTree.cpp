@@ -330,7 +330,7 @@ nsCertTree::nsCertCompareFunc
 nsCertTree::GetCompareFuncFromCertType(uint32_t aType)
 {
   switch (aType) {
-    case nsIX509Cert2::ANY_CERT:
+    case nsIX509Cert::ANY_CERT:
     case nsIX509Cert::USER_CERT:
       return CmpUserCert;
     case nsIX509Cert::CA_CERT:
@@ -477,7 +477,7 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
        !CERT_LIST_END(node, aCertList);
        node = CERT_LIST_NEXT(node)) {
 
-    bool wantThisCert = (aWantedType == nsIX509Cert2::ANY_CERT);
+    bool wantThisCert = (aWantedType == nsIX509Cert::ANY_CERT);
     bool wantThisCertIfNoOverrides = false;
     bool wantThisCertIfHaveOverrides = false;
     bool addOverrides = false;
@@ -809,12 +809,7 @@ nsCertTree::DeleteEntryObject(uint32_t index)
             // although there are still overrides stored,
             // so, we keep the cert, but remove the trust
 
-            mozilla::pkix::ScopedCERTCertificate nsscert;
-
-            nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(cert);
-            if (cert2) {
-              nsscert = cert2->GetCert();
-            }
+            mozilla::pkix::ScopedCERTCertificate nsscert(cert->GetCert());
 
             if (nsscert) {
               CERTCertTrust trust;
@@ -1235,12 +1230,8 @@ nsCertTree::GetCellText(int32_t row, nsITreeColumn* col,
       (certdi->mIsTemporary) ? "CertExceptionTemporary" : "CertExceptionPermanent";
     rv = mNSSComponent->GetPIPNSSBundleString(stringID, _retval);
   } else if (NS_LITERAL_STRING("typecol").Equals(colID) && cert) {
-    nsCOMPtr<nsIX509Cert2> pipCert = do_QueryInterface(cert);
     uint32_t type = nsIX509Cert::UNKNOWN_CERT;
-
-    if (pipCert) {
-	rv = pipCert->GetCertType(&type);
-    }
+    rv = cert->GetCertType(&type);
 
     switch (type) {
     case nsIX509Cert::USER_CERT:

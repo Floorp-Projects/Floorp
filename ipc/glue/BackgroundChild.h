@@ -37,11 +37,6 @@ class PBackgroundChild;
 // (assuming success) GetForCurrentThread() will return the same actor every
 // time.
 //
-// CloseForCurrentThread() will close the current PBackground actor.  Subsequent
-// calls to GetForCurrentThread will return null.  CloseForCurrentThread() may
-// only be called exactly once per thread.  Currently it is illegal to call this
-// before the PBackground actor has been created.
-//
 // The PBackgroundChild actor and all its sub-protocol actors will be
 // automatically destroyed when its designated thread completes.
 class BackgroundChild MOZ_FINAL
@@ -60,10 +55,6 @@ public:
   // See above.
   static bool
   GetOrCreateForCurrentThread(nsIIPCBackgroundChildCreateCallback* aCallback);
-
-  // See above.
-  static void
-  CloseForCurrentThread();
 
 private:
   // Only called by ContentChild or ContentParent.

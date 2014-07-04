@@ -228,7 +228,12 @@ HTMLTrackElement::LoadResource()
     return;
   }
 
-  CreateTextTrack();
+  // We may already have a TextTrack at this point if GetTrack() has already
+  // been called. This happens, for instance, if script tries to get the
+  // TextTrack before its mTrackElement has been bound to the DOM tree.
+  if (!mTrack) {
+    CreateTextTrack();
+  }
 
   // Check for a Content Security Policy to pass down to the channel
   // created to load the media content.
