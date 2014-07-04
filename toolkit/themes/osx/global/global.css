@@ -353,6 +353,7 @@ notification > button > .button-box > .button-text {
 
 @media (min-resolution: 2dppx) {
   .close-icon > .button-icon,
+  .close-icon > .button-box > .button-icon,
   .close-icon > .toolbarbutton-icon {
     width: 16px;
   }
