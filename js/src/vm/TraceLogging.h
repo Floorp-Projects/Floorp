@@ -118,6 +118,7 @@ namespace jit {
     _(Interpreter)                                    \
     _(Invalidation)                                   \
     _(IonCompilation)                                 \
+    _(IonCompilationPaused)                           \
     _(IonLinking)                                     \
     _(IonMonkey)                                      \
     _(MinorGC)                                        \
