@@ -1,3 +1,5 @@
+// |jit-test| error: fit
+
 // Throwing an exception from an onPop handler when yielding terminates the debuggee
 // but does not close the generator-iterator.
 
