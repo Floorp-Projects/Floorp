@@ -659,10 +659,11 @@ LayerManagerComposite::ComputeRenderIntegrity()
   }
 
   const FrameMetrics& rootMetrics = root->AsContainerLayer()->GetFrameMetrics();
-  nsIntRect screenRect(rootMetrics.mCompositionBounds.x,
-                       rootMetrics.mCompositionBounds.y,
-                       rootMetrics.mCompositionBounds.width,
-                       rootMetrics.mCompositionBounds.height);
+  ParentLayerIntRect bounds = RoundedToInt(rootMetrics.mCompositionBounds);
+  nsIntRect screenRect(bounds.x,
+                       bounds.y,
+                       bounds.width,
+                       bounds.height);
 
   float lowPrecisionMultiplier = 1.0f;
   float highPrecisionMultiplier = 1.0f;
