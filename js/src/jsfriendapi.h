@@ -12,6 +12,7 @@
 #include "mozilla/TypedEnum.h"
 #include "mozilla/UniquePtr.h"
 
+#include "jsapi.h" // For JSAutoByteString.  See bug 1033916.
 #include "jsbytecode.h"
 #include "jspubtd.h"
 
@@ -826,6 +827,12 @@ GetFlatStringLength(JSFlatString *s)
     return reinterpret_cast<shadow::String*>(s)->length;
 }
 
+MOZ_ALWAYS_INLINE size_t
+GetLinearStringLength(JSLinearString *s)
+{
+    return reinterpret_cast<shadow::String*>(s)->length;
+}
+
 MOZ_ALWAYS_INLINE bool
 LinearStringHasLatin1Chars(JSLinearString *s)
 {
@@ -1253,10 +1260,137 @@ js_GetErrorMessage(void *userRef, const unsigned errorNumber);
 
 namespace js {
 
+// AutoStableStringChars is here so we can use it in ErrorReport.  It
+// should get moved out of here if we can manage it.  See bug 1040316.
+
+/*
+ * This class provides safe access to a string's chars across a GC. Once
+ * we allocate strings and chars in the nursery (bug 903519), this class
+ * will have to make a copy of the string's chars if they are allocated
+ * in the nursery, so it's best to avoid using this class unless you really
+ * need it. It's usually more efficient to use the latin1Chars/twoByteChars
+ * JSString methods and often the code can be rewritten so that only indexes
+ * instead of char pointers are used in parts of the code that can GC.
+ */
+class MOZ_STACK_CLASS AutoStableStringChars
+{
+    /* Ensure the string is kept alive while we're using its chars. */
+    JS::RootedString s_;
+    union {
+        const jschar *twoByteChars_;
+        const JS::Latin1Char *latin1Chars_;
+    };
+    enum State { Uninitialized, Latin1, TwoByte };
+    State state_;
+    bool ownsChars_;
+
+  public:
+    AutoStableStringChars(JSContext *cx)
+      : s_(cx), state_(Uninitialized), ownsChars_(false)
+    {};
+    ~AutoStableStringChars();
+
+    bool init(JSContext *cx, JSString *s);
+
+    /* Like init(), but Latin1 chars are inflated to TwoByte. */
+    bool initTwoByte(JSContext *cx, JSString *s);
+
+    bool isLatin1() const { return state_ == Latin1; }
+    bool isTwoByte() const { return state_ == TwoByte; }
+
+    const jschar *twoByteChars() const {
+        MOZ_ASSERT(state_ == TwoByte);
+        return twoByteChars_;
+    }
+
+    mozilla::Range<const JS::Latin1Char> latin1Range() const {
+        MOZ_ASSERT(state_ == Latin1);
+        return mozilla::Range<const JS::Latin1Char>(latin1Chars_,
+                                                    GetStringLength(s_));
+    }
+
+    mozilla::Range<const jschar> twoByteRange() const {
+        MOZ_ASSERT(state_ == TwoByte);
+        return mozilla::Range<const jschar>(twoByteChars_,
+                                            GetStringLength(s_));
+    }
+
+    /* If we own the chars, transfer ownership to the caller. */
+    bool maybeGiveOwnershipToCaller() {
+        MOZ_ASSERT(state_ != Uninitialized);
+        if (!ownsChars_)
+            return false;
+        state_ = Uninitialized;
+        ownsChars_ = false;
+        return true;
+    }
+
+  private:
+    AutoStableStringChars(const AutoStableStringChars &other) MOZ_DELETE;
+    void operator=(const AutoStableStringChars &other) MOZ_DELETE;
+};
+
 // Creates a string of the form |ErrorType: ErrorMessage| for a JSErrorReport,
 // which generally matches the toString() behavior of an ErrorObject.
 extern JS_FRIEND_API(JSString *)
 ErrorReportToString(JSContext *cx, JSErrorReport *reportp);
+
+struct MOZ_STACK_CLASS JS_FRIEND_API(ErrorReport)
+{
+    ErrorReport(JSContext *cx);
+    ~ErrorReport();
+
+    bool init(JSContext *cx, JS::HandleValue exn);
+
+    JSErrorReport *report()
+    {
+        return reportp;
+    }
+
+    const char *message()
+    {
+        return message_;
+    }
+
+  private:
+    // More or less an equivalent of JS_ReportErrorNumber/js_ReportErrorNumberVA
+    // but fills in an ErrorReport instead of reporting it.  Uses varargs to
+    // make it simpler to call js_ExpandErrorArguments.
+    void populateUncaughtExceptionReport(JSContext *cx, ...);
+    void populateUncaughtExceptionReportVA(JSContext *cx, va_list ap);
+
+    // We may have a provided JSErrorReport, so need a way to represent that.
+    JSErrorReport *reportp;
+
+    // And we may have a message.
+    const char *message_;
+
+    // Or we may need to synthesize a JSErrorReport one of our own.
+    JSErrorReport ownedReport;
+
+    // Or a message of our own.  If this is non-null, we need to clean up both
+    // it and ownedReport.
+    char *ownedMessage;
+
+    // And we have a string to maybe keep alive that has pointers into
+    // it from ownedReport.
+    JS::RootedString str;
+
+    // And keep its chars alive too.
+    AutoStableStringChars strChars;
+
+    // And we need to root our exception value.
+    JS::RootedObject exnObject;
+
+    // And possibly some byte storage for our message_.
+    JSAutoByteString bytesStorage;
+
+    // And for our filename.
+    JSAutoByteString filename;
+
+    // True if we need to free message_ and the stuff in ownedReport
+    bool ownsMessageAndReport;
+};
 
 } /* namespace js */
 
