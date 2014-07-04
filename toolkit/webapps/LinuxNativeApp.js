@@ -47,17 +47,17 @@ NativeApp.prototype = {
    * @param aZipPath {String} path to the zip file for packaged apps (undefined
    *                          for hosted apps)
    */
-  install: Task.async(function*(aManifest, aZipPath) {
+  install: Task.async(function*(aApp, aManifest, aZipPath) {
     if (this._dryRun) {
       return;
     }
 
     // If the application is already installed, this is a reinstallation.
-    if (WebappOSUtils.getInstallPath(this.app)) {
-      return yield this.prepareUpdate(aManifest, aZipPath);
+    if (WebappOSUtils.getInstallPath(aApp)) {
+      return yield this.prepareUpdate(aApp, aManifest, aZipPath);
     }
 
-    this._setData(aManifest);
+    this._setData(aApp, aManifest);
 
     // The installation directory name is: sanitized app name +
     // "-" + manifest url hash.
@@ -101,14 +101,14 @@ NativeApp.prototype = {
    * @param aZipPath {String} path to the zip file for packaged apps (undefined
    *                          for hosted apps)
    */
-  prepareUpdate: Task.async(function*(aManifest, aZipPath) {
+  prepareUpdate: Task.async(function*(aApp, aManifest, aZipPath) {
     if (this._dryRun) {
       return;
     }
 
-    this._setData(aManifest);
+    this._setData(aApp, aManifest);
 
-    let installDir = WebappOSUtils.getInstallPath(this.app);
+    let installDir = WebappOSUtils.getInstallPath(aApp);
     if (!installDir) {
       throw ERR_NOT_INSTALLED;
     }
@@ -142,12 +142,12 @@ NativeApp.prototype = {
   /**
    * Applies an update.
    */
-  applyUpdate: Task.async(function*() {
+  applyUpdate: Task.async(function*(aApp) {
     if (this._dryRun) {
       return;
     }
 
-    let installDir = WebappOSUtils.getInstallPath(this.app);
+    let installDir = WebappOSUtils.getInstallPath(aApp);
     let updateDir = OS.Path.join(installDir, "update");
 
     let backupDir = yield this._backupInstallation(installDir);
