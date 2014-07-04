@@ -14,6 +14,7 @@ browser.jar:
   content/browser/loop/shared/js/models.js           (content/shared/js/models.js)
   content/browser/loop/shared/js/router.js           (content/shared/js/router.js)
   content/browser/loop/shared/js/views.js            (content/shared/js/views.js)
+  content/browser/loop/shared/libs/react-0.10.0.js   (content/shared/libs/react-0.10.0.js)
   content/browser/loop/shared/libs/lodash-2.4.1.js   (content/shared/libs/lodash-2.4.1.js)
   content/browser/loop/shared/libs/jquery-2.1.0.js   (content/shared/libs/jquery-2.1.0.js)
   content/browser/loop/shared/libs/backbone-1.1.2.js (content/shared/libs/backbone-1.1.2.js)
