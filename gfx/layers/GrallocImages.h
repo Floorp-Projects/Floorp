@@ -107,6 +107,20 @@ public:
     return (static_cast<ANativeWindowBuffer*>(GetNativeBuffer()))->usage;
   }
 
+  static int GetOmxFormat(int aFormat)
+  {
+    uint32_t omxFormat = 0;
+
+    for (int i = 0; sColorIdMap[i]; i += 2) {
+      if (sColorIdMap[i] == aFormat) {
+        omxFormat = sColorIdMap[i + 1];
+        break;
+      }
+    }
+
+    return omxFormat;
+  }
+
 private:
   RefPtr<GrallocTextureClientOGL> mTextureClient;
 };
