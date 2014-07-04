@@ -30,7 +30,7 @@ function test() {
       testEventGroup("interactionEvents", false);
       testEventGroup("keyboardEvents", false);
       testEventGroup("mouseEvents", false);
-      testEventArrays("change,click,keydown,keyup", "");
+      testEventArrays("keydown,click,change,keyup", "");
 
       let updated = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_BREAKPOINTS_UPDATED);
       EventUtils.sendMouseEvent({ type: "click" }, getItemCheckboxNode(0), gDebugger);
@@ -43,7 +43,7 @@ function test() {
       testEventGroup("interactionEvents", false);
       testEventGroup("keyboardEvents", false);
       testEventGroup("mouseEvents", false);
-      testEventArrays("change,click,keydown,keyup", "change");
+      testEventArrays("keydown,click,change,keyup", "keydown");
 
       let updated = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_BREAKPOINTS_UPDATED);
       EventUtils.sendMouseEvent({ type: "click" }, getItemCheckboxNode(0), gDebugger);
@@ -56,7 +56,7 @@ function test() {
       testEventGroup("interactionEvents", false);
       testEventGroup("keyboardEvents", false);
       testEventGroup("mouseEvents", false);
-      testEventArrays("change,click,keydown,keyup", "");
+      testEventArrays("keydown,click,change,keyup", "");
 
       yield ensureThreadClientState(aPanel, "resumed");
       yield closeDebuggerAndFinish(aPanel);
