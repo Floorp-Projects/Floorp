@@ -136,6 +136,7 @@ private:
 };
 
 static StaticRefPtr<CompositorThreadHolder> sCompositorThreadHolder;
+static bool sFinishedCompositorShutDown = false;
 
 static MessageLoop* sMainLoop = nullptr;
 
@@ -178,6 +179,7 @@ CompositorThreadHolder::DestroyCompositorThread(Thread* aCompositorThread)
   DestroyCompositorMap();
   ReleaseImageBridgeParentSingleton();
   delete aCompositorThread;
+  sFinishedCompositorShutDown = true;
 }
 
 static Thread* CompositorThread() {
@@ -203,6 +205,12 @@ void CompositorParent::ShutDown()
   MOZ_ASSERT(sCompositorThreadHolder, "The compositor thread has already been shut down!");
 
   sCompositorThreadHolder = nullptr;
+
+  // No locking is needed around sFinishedCompositorShutDown because it is only
+  // ever accessed on the main thread.
+  while (!sFinishedCompositorShutDown) {
+    NS_ProcessNextEvent(nullptr, true);
+  }
 }
 
 MessageLoop* CompositorParent::CompositorLoop()
