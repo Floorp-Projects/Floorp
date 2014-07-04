@@ -733,31 +733,22 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         masm.ma_addu(argsBase, StackPointer, Imm32(IonExitFrameLayout::SizeWithFooter()));
     }
 
-    // Reserve space for the outparameter.
-    Register outReg = InvalidReg;
+    masm.alignStackPointer();
+
+    // Reserve space for the outparameter. Reserve sizeof(Value) for every
+    // case so that stack stays aligned.
+    uint32_t outParamSize = 0;
     switch (f.outParam) {
       case Type_Value:
-        outReg = t0; // Use temporary register.
-        regs.take(outReg);
-        // Value outparam has to be 8 byte aligned because the called
-        // function can use sdc1 or ldc1 instructions to access it.
-        masm.reserveStack((StackAlignment - sizeof(uintptr_t)) + sizeof(Value));
-        masm.alignPointerUp(StackPointer, outReg, StackAlignment);
+        outParamSize = sizeof(Value);
+        masm.reserveStack(outParamSize);
         break;
 
       case Type_Handle:
-        outReg = t0;
-        regs.take(outReg);
-        if (f.outParamRootType == VMFunction::RootValue) {
-            // Value outparam has to be 8 byte aligned because the called
-            // function can use sdc1 or ldc1 instructions to access it.
-            masm.reserveStack((StackAlignment - sizeof(uintptr_t)) + sizeof(Value));
-            masm.alignPointerUp(StackPointer, outReg, StackAlignment);
-            masm.storeValue(UndefinedValue(), Address(outReg, 0));
-        }
-        else {
+        {
+            uint32_t pushed = masm.framePushed();
             masm.PushEmptyRooted(f.outParamRootType);
-            masm.movePtr(StackPointer, outReg);
+            outParamSize = masm.framePushed() - pushed;
         }
         break;
 
@@ -765,30 +756,37 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
       case Type_Int32:
         MOZ_ASSERT(sizeof(uintptr_t) == sizeof(uint32_t));
       case Type_Pointer:
-        outReg = t0;
-        regs.take(outReg);
-        masm.reserveStack(sizeof(uintptr_t));
-        masm.movePtr(StackPointer, outReg);
+        outParamSize = sizeof(uintptr_t);
+        masm.reserveStack(outParamSize);
         break;
 
       case Type_Double:
-        outReg = t0;
-        regs.take(outReg);
-        // Double outparam has to be 8 byte aligned because the called
-        // function can use sdc1 or ldc1 instructions to access it.
-        masm.reserveStack((StackAlignment - sizeof(uintptr_t)) + sizeof(double));
-        masm.alignPointerUp(StackPointer, outReg, StackAlignment);
+        outParamSize = sizeof(double);
+        masm.reserveStack(outParamSize);
         break;
-
       default:
         MOZ_ASSERT(f.outParam == Type_Void);
         break;
     }
 
-    masm.setupUnalignedABICall(f.argc(), regs.getAny());
+    uint32_t outParamOffset = 0;
+    if (f.outParam != Type_Void) {
+        // Make sure that stack is double aligned after outParam.
+        MOZ_ASSERT(outParamSize <= sizeof(double));
+        outParamOffset += sizeof(double) - outParamSize;
+    }
+    // Reserve stack for double sized args that are copied to be aligned.
+    outParamOffset += f.doubleByRefArgs() * sizeof(double);
+
+    Register doubleArgs = t0;
+    masm.reserveStack(outParamOffset);
+    masm.movePtr(StackPointer, doubleArgs);
+
+    masm.setupAlignedABICall(f.argc());
     masm.passABIArg(cxreg);
 
     size_t argDisp = 0;
+    size_t doubleArgDisp = 0;
 
     // Copy any arguments.
     for (uint32_t explicitArg = 0; explicitArg < f.explicitArgs; explicitArg++) {
@@ -811,16 +809,25 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
             argDisp += sizeof(uint32_t);
             break;
           case VMFunction::DoubleByRef:
-            masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE_ADDRESS),
+            // Copy double sized argument to aligned place.
+            masm.ma_ld(ScratchFloatReg, Address(argsBase, argDisp));
+            masm.as_sd(ScratchFloatReg, doubleArgs, doubleArgDisp);
+            masm.passABIArg(MoveOperand(doubleArgs, doubleArgDisp, MoveOperand::EFFECTIVE_ADDRESS),
                             MoveOp::GENERAL);
+            doubleArgDisp += sizeof(double);
             argDisp += sizeof(double);
             break;
         }
     }
 
+    MOZ_ASSERT_IF(f.outParam != Type_Void,
+                  doubleArgDisp + sizeof(double) == outParamOffset + outParamSize);
+
     // Copy the implicit outparam, if any.
-    if (outReg != InvalidReg)
-        masm.passABIArg(outReg);
+    if (f.outParam != Type_Void) {
+        masm.passABIArg(MoveOperand(doubleArgs, outParamOffset, MoveOperand::EFFECTIVE_ADDRESS),
+                            MoveOp::GENERAL);
+    }
 
     masm.callWithABI(f.wrapped);
 
@@ -837,23 +844,17 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         MOZ_ASSUME_UNREACHABLE("unknown failure kind");
     }
 
+    masm.freeStack(outParamOffset);
+
     // Load the outparam and free any allocated stack.
     switch (f.outParam) {
       case Type_Handle:
-        if (f.outParamRootType == VMFunction::RootValue) {
-            masm.alignPointerUp(StackPointer, SecondScratchReg, StackAlignment);
-            masm.loadValue(Address(SecondScratchReg, 0), JSReturnOperand);
-            masm.freeStack((StackAlignment - sizeof(uintptr_t)) + sizeof(Value));
-        }
-        else {
-            masm.popRooted(f.outParamRootType, ReturnReg, JSReturnOperand);
-        }
+        masm.popRooted(f.outParamRootType, ReturnReg, JSReturnOperand);
         break;
 
       case Type_Value:
-        masm.alignPointerUp(StackPointer, SecondScratchReg, StackAlignment);
-        masm.loadValue(Address(SecondScratchReg, 0), JSReturnOperand);
-        masm.freeStack((StackAlignment - sizeof(uintptr_t)) + sizeof(Value));
+        masm.loadValue(Address(StackPointer, 0), JSReturnOperand);
+        masm.freeStack(sizeof(Value));
         break;
 
       case Type_Int32:
@@ -870,19 +871,20 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
       case Type_Double:
         if (cx->runtime()->jitSupportsFloatingPoint) {
-            masm.alignPointerUp(StackPointer, SecondScratchReg, StackAlignment);
-            // Address is aligned, so we can use as_ld.
-            masm.as_ld(ReturnFloatReg, SecondScratchReg, 0);
+            masm.as_ld(ReturnFloatReg, StackPointer, 0);
         } else {
             masm.assumeUnreachable("Unable to load into float reg, with no FP support.");
         }
-        masm.freeStack((StackAlignment - sizeof(uintptr_t)) + sizeof(double));
+        masm.freeStack(sizeof(double));
         break;
 
       default:
         MOZ_ASSERT(f.outParam == Type_Void);
         break;
     }
+
+    masm.restoreStackPointer();
+
     masm.leaveExitFrame();
     masm.retn(Imm32(sizeof(IonExitFrameLayout) +
                     f.explicitStackSlots() * sizeof(uintptr_t) +
