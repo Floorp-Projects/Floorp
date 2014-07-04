@@ -965,6 +965,47 @@ nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxR
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+static const NSSize kCheckmarkSize = NSMakeSize(11, 11);
+static const NSString* kCheckmarkImage = @"image.MenuOnState";
+static const CGFloat kMenuIconIndent = 6.0f;
+
+void
+nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
+                                 EventStates inState, nsIFrame* aFrame,
+                                 const NSSize& aIconSize, const NSString* aImageName)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  // Adjust size and position of our drawRect.
+  CGFloat paddingX = std::max(CGFloat(0.0), aRect.size.width - aIconSize.width);
+  CGFloat paddingY = std::max(CGFloat(0.0), aRect.size.height - aIconSize.height);
+  CGFloat paddingStartX = std::min(paddingX, kMenuIconIndent);
+  CGFloat paddingEndX = std::max(CGFloat(0.0), paddingX - kMenuIconIndent);
+  CGRect drawRect = CGRectMake(
+    aRect.origin.x + (IsFrameRTL(aFrame) ? paddingEndX : paddingStartX),
+    aRect.origin.y + ceil(paddingY / 2),
+    aIconSize.width, aIconSize.height);
+
+  NSString* state = IsDisabled(aFrame, inState) ? @"disabled" :
+    (CheckBooleanAttr(aFrame, nsGkAtoms::menuactive) ? @"pressed" : @"normal");
+
+  CUIDraw([NSWindow coreUIRenderer], drawRect, cgContext,
+          (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:
+            @"kCUIBackgroundTypeMenu", @"backgroundTypeKey",
+            aImageName, @"imageNameKey",
+            state, @"state",
+            @"image", @"widget",
+            [NSNumber numberWithBool:YES], @"is.flipped",
+            nil], nil);
+
+#if DRAW_IN_FRAME_DEBUG
+  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
+  CGContextFillRect(cgContext, drawRect);
+#endif
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 static const NSSize kHelpButtonSize = NSMakeSize(20, 20);
 
 static const CellRenderSettings pushButtonSettings = {
@@ -2217,7 +2258,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
     }
       break;
 
-    case NS_THEME_MENUITEM: {
+    case NS_THEME_MENUITEM:
+    case NS_THEME_CHECKMENUITEM: {
       bool isTransparent;
       if (thebesCtx->IsCairo()) {
         isTransparent = thebesCtx->OriginalSurface()->GetContentType() == gfxContentType::COLOR_ALPHA;
@@ -2245,6 +2287,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       // XXX pass in the menu rect instead of always using the item rect
       HIRect ignored;
       HIThemeDrawMenuItem(&macRect, &macRect, &drawInfo, cgContext, HITHEME_ORIENTATION, &ignored);
+
+      if (aWidgetType == NS_THEME_CHECKMENUITEM) {
+        DrawMenuIcon(cgContext, macRect, eventState, aFrame, kCheckmarkSize, kCheckmarkImage);
+      }
     }
       break;
 
@@ -3330,6 +3376,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_WINDOW:
     case NS_THEME_WINDOW_BUTTON_BOX:
     case NS_THEME_WINDOW_TITLEBAR:
+    case NS_THEME_CHECKMENUITEM:
     case NS_THEME_MENUPOPUP:
     case NS_THEME_MENUITEM:
     case NS_THEME_MENUSEPARATOR:
@@ -3472,6 +3519,7 @@ nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType)
     case NS_THEME_DIALOG:
     case NS_THEME_GROUPBOX:
     case NS_THEME_TAB_PANELS:
+    case NS_THEME_CHECKMENUITEM:
     case NS_THEME_MENUPOPUP:
     case NS_THEME_MENUITEM:
     case NS_THEME_MENUSEPARATOR:
