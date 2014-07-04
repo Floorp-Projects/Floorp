@@ -1997,10 +1997,14 @@ RangeAnalysis::tryHoistBoundsCheck(MBasicBlock *header, MBoundsCheck *ins)
 
     MBoundsCheckLower *lowerCheck = MBoundsCheckLower::New(alloc(), lowerTerm);
     lowerCheck->setMinimum(lowerConstant);
+    lowerCheck->computeRange(alloc());
+    lowerCheck->collectRangeInfoPreTrunc();
 
     MBoundsCheck *upperCheck = MBoundsCheck::New(alloc(), upperTerm, ins->length());
     upperCheck->setMinimum(upperConstant);
     upperCheck->setMaximum(upperConstant);
+    upperCheck->computeRange(alloc());
+    upperCheck->collectRangeInfoPreTrunc();
 
     // Hoist the loop invariant upper and lower bounds checks.
     preLoop->insertBefore(preLoop->lastIns(), lowerCheck);
