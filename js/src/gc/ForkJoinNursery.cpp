@@ -419,6 +419,7 @@ void
 ForkJoinNursery::forwardFromTenured(ForkJoinNurseryCollectionTracer *trc)
 {
     JSObject *objs[ArenaCellCount];
+    ArenaLists &lists = tenured_->arenas;
     for (size_t k=0; k < FINALIZE_LIMIT; k++) {
         AllocKind kind = (AllocKind)k;
         if (!IsFJNurseryAllocable(kind))
@@ -429,22 +430,21 @@ ForkJoinNursery::forwardFromTenured(ForkJoinNurseryCollectionTracer *trc)
         // handled.
         JS_ASSERT(kind <= FINALIZE_OBJECT_LAST);
 
+        // Clear the free list that we're currently allocating out of.
+        lists.purge(kind);
+
+        // Since we only purge once, there must not currently be any partially
+        // full arenas left to allocate out of, or we would break out early.
+        JS_ASSERT(!lists.getArenaAfterCursor(kind));
+
         ArenaIter ai;
         ai.init(const_cast<Allocator *>(tenured_), kind);
         for (; !ai.done(); ai.next()) {
-            // Do the walk in two steps to avoid problems resulting from allocating
-            // into the arena that's being walked: ArenaCellIter is not safe for that.
-            // It can happen during evacuation.
-            //
-            // ArenaCellIterUnderFinalize requires any free list to be flushed into
-            // its arena, and since we may allocate within traceObject() we must
-            // purge before each arena scan.  This is probably not very expensive,
-            // it's constant work, and inlined.
-            //
+            if (isEvacuating_ && lists.arenaIsInUse(ai.get(), kind))
+                break;
             // Use ArenaCellIterUnderFinalize, not ...UnderGC, because that side-steps
             // some assertions in the latter that are wrong for PJS collection.
             size_t numObjs = 0;
-            tenured_->arenas.purge(kind);
             for (ArenaCellIterUnderFinalize i(ai.get()); !i.done(); i.next())
                 objs[numObjs++] = i.get<JSObject>();
             for (size_t i=0; i < numObjs; i++)
