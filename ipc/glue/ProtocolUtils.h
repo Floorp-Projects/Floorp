@@ -21,7 +21,6 @@
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/ipc/MessageLink.h"
 #include "mozilla/LinkedList.h"
-#include "MainThreadUtils.h"
 
 #if defined(ANDROID) && defined(DEBUG)
 #include <android/log.h>
@@ -188,7 +187,6 @@ protected:
         : mProtocolId(aProtoId)
         , mTrans(nullptr)
     {
-      MOZ_ASSERT(NS_IsMainThread());
     }
 
     ~IToplevelProtocol();
@@ -214,12 +212,10 @@ public:
      */
     IToplevelProtocol* GetFirstOpenedActors()
     {
-        MOZ_ASSERT(NS_IsMainThread());
         return mOpenActors.getFirst();
     }
     const IToplevelProtocol* GetFirstOpenedActors() const
     {
-        MOZ_ASSERT(NS_IsMainThread());
         return mOpenActors.getFirst();
     }
 
