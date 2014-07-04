@@ -19,11 +19,11 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="b597b86274ab109d7ef530bc0c4b6adccddae4e4"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="93daa354671a698634a3dc661c8c9dcb7d824c31"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="230f11aff069d90d20fc2dc63b48e9ae3d4bdcd1"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="cd88d860656c31c7da7bb310d6a160d0011b0961"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="3326b51017252e09ccdd715dec6c5e12a7d1ecfe"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="bf9aaf39dd5a6491925a022db167c460f8207d34"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="96cdde4b5b5d8d3785b36c3c68cd746aff3005cc"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="7f9ec13a30f1b2cc8bdb1a199b7da54b9ab8860f"/>
   <!-- Stock Android things -->
@@ -98,7 +98,7 @@
   <project name="platform/system/vold" path="system/vold" revision="919829940468066a32f403980b43f6ebfee5d314"/>
   <!-- Emulator specific things -->
   <project name="android-development" path="development" remote="b2g" revision="9abf0ab68376afae3e1c7beefa3e9cbee2fde202"/>
-  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="3c42f55d85fd311de2ed9268a59ba1db30be2b21"/>
+  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="f486d0316aef2b3dea772dfb186e447e7a6a5de5"/>
   <project name="platform/external/iproute2" path="external/iproute2" revision="c66c5716d5335e450f7a7b71ccc6a604fb2f41d2"/>
   <project name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="d2685281e2e54ca14d1df304867aa82c37b27162"/>
   <project name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="627f9b20fc518937b93747a7ff1ed4f5ed46e06f"/>
