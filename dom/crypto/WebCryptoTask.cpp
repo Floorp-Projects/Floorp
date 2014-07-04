@@ -11,9 +11,9 @@
 
 #include "mozilla/dom/WebCryptoTask.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/dom/CryptoKey.h"
+#include "mozilla/dom/Key.h"
 #include "mozilla/dom/KeyAlgorithm.h"
-#include "mozilla/dom/CryptoKeyPair.h"
+#include "mozilla/dom/KeyPair.h"
 #include "mozilla/dom/AesKeyAlgorithm.h"
 #include "mozilla/dom/HmacKeyAlgorithm.h"
 #include "mozilla/dom/RsaKeyAlgorithm.h"
@@ -231,7 +231,7 @@ class AesTask : public ReturnArrayBufferViewTask
 {
 public:
   AesTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-          mozilla::dom::CryptoKey& aKey, const CryptoOperationData& aData,
+          mozilla::dom::Key& aKey, const CryptoOperationData& aData,
           bool aEncrypt)
     : mSymKey(aKey.GetSymKey())
     , mEncrypt(aEncrypt)
@@ -408,7 +408,7 @@ class RsaesPkcs1Task : public ReturnArrayBufferViewTask
 {
 public:
   RsaesPkcs1Task(JSContext* aCx, const ObjectOrString& aAlgorithm,
-                 mozilla::dom::CryptoKey& aKey, const CryptoOperationData& aData,
+                 mozilla::dom::Key& aKey, const CryptoOperationData& aData,
                  bool aEncrypt)
     : mPrivKey(aKey.GetPrivateKey())
     , mPubKey(aKey.GetPublicKey())
@@ -481,7 +481,7 @@ class HmacTask : public WebCryptoTask
 {
 public:
   HmacTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-           mozilla::dom::CryptoKey& aKey,
+           mozilla::dom::Key& aKey,
            const CryptoOperationData& aSignature,
            const CryptoOperationData& aData,
            bool aSign)
@@ -584,7 +584,7 @@ class RsassaPkcs1Task : public WebCryptoTask
 {
 public:
   RsassaPkcs1Task(JSContext* aCx, const ObjectOrString& aAlgorithm,
-                  mozilla::dom::CryptoKey& aKey,
+                  mozilla::dom::Key& aKey,
                   const CryptoOperationData& aSignature,
                   const CryptoOperationData& aData,
                   bool aSign)
@@ -775,7 +775,7 @@ public:
     }
 
     // This stuff pretty much always happens, so we'll do it here
-    mKey = new CryptoKey(global);
+    mKey = new Key(global);
     mKey->SetExtractable(aExtractable);
     mKey->ClearUsages();
     for (uint32_t i = 0; i < aKeyUsages.Length(); ++i) {
@@ -793,7 +793,7 @@ public:
   }
 
 protected:
-  nsRefPtr<CryptoKey> mKey;
+  nsRefPtr<Key> mKey;
   nsString mAlgName;
 
 private:
@@ -867,7 +867,7 @@ public:
     if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_CBC) ||
         mAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR) ||
         mAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM)) {
-      if (mKey->HasUsageOtherThan(CryptoKey::ENCRYPT | CryptoKey::DECRYPT)) {
+      if (mKey->HasUsageOtherThan(Key::ENCRYPT | Key::DECRYPT)) {
         return NS_ERROR_DOM_DATA_ERR;
       }
 
@@ -876,7 +876,7 @@ public:
       }
       algorithm = new AesKeyAlgorithm(global, mAlgName, length);
     } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_HMAC)) {
-      if (mKey->HasUsageOtherThan(CryptoKey::SIGN | CryptoKey::VERIFY)) {
+      if (mKey->HasUsageOtherThan(Key::SIGN | Key::VERIFY)) {
         return NS_ERROR_DOM_DATA_ERR;
       }
 
@@ -890,7 +890,7 @@ public:
 
     mKey->SetAlgorithm(algorithm);
     mKey->SetSymKey(mKeyData);
-    mKey->SetType(CryptoKey::SECRET);
+    mKey->SetType(Key::SECRET);
     mEarlyComplete = true;
     return NS_OK;
   }
@@ -957,19 +957,19 @@ private:
     // Import the key data itself
     ScopedSECKEYPublicKey pubKey;
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_PKCS8)) {
-      ScopedSECKEYPrivateKey privKey(CryptoKey::PrivateKeyFromPkcs8(mKeyData, locker));
+      ScopedSECKEYPrivateKey privKey(Key::PrivateKeyFromPkcs8(mKeyData, locker));
       if (!privKey.get()) {
         return NS_ERROR_DOM_DATA_ERR;
       }
 
       mKey->SetPrivateKey(privKey.get());
-      mKey->SetType(CryptoKey::PRIVATE);
+      mKey->SetType(Key::PRIVATE);
       pubKey = SECKEY_ConvertToPublicKey(privKey.get());
       if (!pubKey) {
         return NS_ERROR_DOM_UNKNOWN_ERR;
       }
     } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
-      pubKey = CryptoKey::PublicKeyFromSpki(mKeyData, locker);
+      pubKey = Key::PublicKeyFromSpki(mKeyData, locker);
       if (!pubKey.get()) {
         return NS_ERROR_DOM_DATA_ERR;
       }
@@ -979,7 +979,7 @@ private:
       }
 
       mKey->SetPublicKey(pubKey.get());
-      mKey->SetType(CryptoKey::PUBLIC);
+      mKey->SetType(Key::PUBLIC);
     } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     } else {
@@ -999,19 +999,19 @@ private:
     // Construct an appropriate KeyAlgorithm
     nsIGlobalObject* global = mKey->GetParentObject();
     if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1)) {
-      if ((mKey->GetKeyType() == CryptoKey::PUBLIC &&
-           mKey->HasUsageOtherThan(CryptoKey::ENCRYPT)) ||
-          (mKey->GetKeyType() == CryptoKey::PRIVATE &&
-           mKey->HasUsageOtherThan(CryptoKey::DECRYPT))) {
+      if ((mKey->GetKeyType() == Key::PUBLIC &&
+           mKey->HasUsageOtherThan(Key::ENCRYPT)) ||
+          (mKey->GetKeyType() == Key::PRIVATE &&
+           mKey->HasUsageOtherThan(Key::DECRYPT))) {
         return NS_ERROR_DOM_DATA_ERR;
       }
 
       mKey->SetAlgorithm(new RsaKeyAlgorithm(global, mAlgName, mModulusLength, mPublicExponent));
     } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
-      if ((mKey->GetKeyType() == CryptoKey::PUBLIC &&
-           mKey->HasUsageOtherThan(CryptoKey::VERIFY)) ||
-          (mKey->GetKeyType() == CryptoKey::PRIVATE &&
-           mKey->HasUsageOtherThan(CryptoKey::SIGN))) {
+      if ((mKey->GetKeyType() == Key::PUBLIC &&
+           mKey->HasUsageOtherThan(Key::VERIFY)) ||
+          (mKey->GetKeyType() == Key::PRIVATE &&
+           mKey->HasUsageOtherThan(Key::SIGN))) {
         return NS_ERROR_DOM_DATA_ERR;
       }
 
@@ -1035,7 +1035,7 @@ private:
 class UnifiedExportKeyTask : public ReturnArrayBufferViewTask
 {
 public:
-  UnifiedExportKeyTask(const nsAString& aFormat, CryptoKey& aKey)
+  UnifiedExportKeyTask(const nsAString& aFormat, Key& aKey)
     : mFormat(aFormat)
     , mSymKey(aKey.GetSymKey())
     , mPrivateKey(aKey.GetPrivateKey())
@@ -1078,7 +1078,7 @@ private:
 
       switch (mPrivateKey->keyType) {
         case rsaKey:
-          CryptoKey::PrivateKeyToPkcs8(mPrivateKey.get(), mResult, locker);
+          Key::PrivateKeyToPkcs8(mPrivateKey.get(), mResult, locker);
           return NS_OK;
         default:
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
@@ -1088,7 +1088,7 @@ private:
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       }
 
-      return CryptoKey::PublicKeyToSpki(mPublicKey.get(), mResult, locker);
+      return Key::PublicKeyToSpki(mPublicKey.get(), mResult, locker);
     } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
@@ -1111,9 +1111,9 @@ public:
     }
 
     // Create an empty key and set easy attributes
-    mKey = new CryptoKey(global);
+    mKey = new Key(global);
     mKey->SetExtractable(aExtractable);
-    mKey->SetType(CryptoKey::SECRET);
+    mKey->SetType(Key::SECRET);
 
     // Extract algorithm name
     nsString algName;
@@ -1142,7 +1142,7 @@ public:
         return;
       }
       algorithm = new AesKeyAlgorithm(global, algName, mLength);
-      allowedUsages = CryptoKey::ENCRYPT | CryptoKey::DECRYPT;
+      allowedUsages = Key::ENCRYPT | Key::DECRYPT;
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_HMAC)) {
       RootedDictionary<HmacKeyGenParams> params(aCx);
       mEarlyRv = Coerce(aCx, params, aAlgorithm);
@@ -1189,7 +1189,7 @@ public:
       }
 
       algorithm = new HmacKeyAlgorithm(global, algName, mLength, hashName);
-      allowedUsages = CryptoKey::SIGN | CryptoKey::VERIFY;
+      allowedUsages = Key::SIGN | Key::VERIFY;
     } else {
       mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       return;
@@ -1211,7 +1211,7 @@ public:
   }
 
 private:
-  nsRefPtr<CryptoKey> mKey;
+  nsRefPtr<Key> mKey;
   size_t mLength;
   CK_MECHANISM_TYPE mMechanism;
   CryptoBuffer mKeyData;
@@ -1263,7 +1263,7 @@ public:
     }
 
     // Create an empty key and set easy attributes
-    mKeyPair = new CryptoKeyPair(global);
+    mKeyPair = new KeyPair(global);
 
     // Extract algorithm name
     nsString algName;
@@ -1312,8 +1312,8 @@ public:
         return;
       }
 
-      privateAllowedUsages = CryptoKey::SIGN;
-      publicAllowedUsages = CryptoKey::VERIFY;
+      privateAllowedUsages = Key::SIGN;
+      publicAllowedUsages = Key::VERIFY;
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1)) {
       RootedDictionary<RsaKeyGenParams> params(aCx);
       mEarlyRv = Coerce(aCx, params, aAlgorithm);
@@ -1343,18 +1343,18 @@ public:
         return;
       }
 
-      privateAllowedUsages = CryptoKey::DECRYPT | CryptoKey::UNWRAPKEY;
-      publicAllowedUsages = CryptoKey::ENCRYPT | CryptoKey::WRAPKEY;
+      privateAllowedUsages = Key::DECRYPT | Key::UNWRAPKEY;
+      publicAllowedUsages = Key::ENCRYPT | Key::WRAPKEY;
     } else {
       mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       return;
     }
 
     mKeyPair->PrivateKey()->SetExtractable(aExtractable);
-    mKeyPair->PrivateKey()->SetType(CryptoKey::PRIVATE);
+    mKeyPair->PrivateKey()->SetType(Key::PRIVATE);
 
     mKeyPair->PublicKey()->SetExtractable(true);
-    mKeyPair->PublicKey()->SetType(CryptoKey::PUBLIC);
+    mKeyPair->PublicKey()->SetType(Key::PUBLIC);
 
     mKeyPair->PrivateKey()->ClearUsages();
     mKeyPair->PublicKey()->ClearUsages();
@@ -1374,7 +1374,7 @@ public:
   }
 
 private:
-  nsRefPtr<CryptoKeyPair> mKeyPair;
+  nsRefPtr<KeyPair> mKeyPair;
   CK_MECHANISM_TYPE mMechanism;
   PK11RSAGenParams mRsaParams;
   ScopedSECKEYPublicKey mPublicKey;
@@ -1427,7 +1427,7 @@ private:
 WebCryptoTask*
 WebCryptoTask::EncryptDecryptTask(JSContext* aCx,
                                   const ObjectOrString& aAlgorithm,
-                                  CryptoKey& aKey,
+                                  Key& aKey,
                                   const CryptoOperationData& aData,
                                   bool aEncrypt)
 {
@@ -1442,8 +1442,8 @@ WebCryptoTask::EncryptDecryptTask(JSContext* aCx,
   }
 
   // Ensure key is usable for this operation
-  if ((aEncrypt  && !aKey.HasUsage(CryptoKey::ENCRYPT)) ||
-      (!aEncrypt && !aKey.HasUsage(CryptoKey::DECRYPT))) {
+  if ((aEncrypt  && !aKey.HasUsage(Key::ENCRYPT)) ||
+      (!aEncrypt && !aKey.HasUsage(Key::DECRYPT))) {
     return new FailureTask(NS_ERROR_DOM_INVALID_ACCESS_ERR);
   }
 
@@ -1461,7 +1461,7 @@ WebCryptoTask::EncryptDecryptTask(JSContext* aCx,
 WebCryptoTask*
 WebCryptoTask::SignVerifyTask(JSContext* aCx,
                               const ObjectOrString& aAlgorithm,
-                              CryptoKey& aKey,
+                              Key& aKey,
                               const CryptoOperationData& aSignature,
                               const CryptoOperationData& aData,
                               bool aSign)
@@ -1477,8 +1477,8 @@ WebCryptoTask::SignVerifyTask(JSContext* aCx,
   }
 
   // Ensure key is usable for this operation
-  if ((aSign  && !aKey.HasUsage(CryptoKey::SIGN)) ||
-      (!aSign && !aKey.HasUsage(CryptoKey::VERIFY))) {
+  if ((aSign  && !aKey.HasUsage(Key::SIGN)) ||
+      (!aSign && !aKey.HasUsage(Key::VERIFY))) {
     return new FailureTask(NS_ERROR_DOM_INVALID_ACCESS_ERR);
   }
 
@@ -1534,7 +1534,7 @@ WebCryptoTask::ImportKeyTask(JSContext* aCx,
 
 WebCryptoTask*
 WebCryptoTask::ExportKeyTask(const nsAString& aFormat,
-                             CryptoKey& aKey)
+                             Key& aKey)
 {
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, TM_EXPORTKEY);
 
@@ -1576,7 +1576,7 @@ WebCryptoTask::GenerateKeyTask(JSContext* aCx,
 WebCryptoTask*
 WebCryptoTask::DeriveKeyTask(JSContext* aCx,
                              const ObjectOrString& aAlgorithm,
-                             CryptoKey& aBaseKey,
+                             Key& aBaseKey,
                              const ObjectOrString& aDerivedKeyType,
                              bool aExtractable,
                              const Sequence<nsString>& aKeyUsages)
@@ -1588,7 +1588,7 @@ WebCryptoTask::DeriveKeyTask(JSContext* aCx,
 WebCryptoTask*
 WebCryptoTask::DeriveBitsTask(JSContext* aCx,
                               const ObjectOrString& aAlgorithm,
-                              CryptoKey& aKey,
+                              Key& aKey,
                               uint32_t aLength)
 {
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, TM_DERIVEBITS);

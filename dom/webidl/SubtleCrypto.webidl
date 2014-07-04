@@ -102,7 +102,7 @@ dictionary EcKeyGenParams : Algorithm {
 /***** The Main API *****/
 
 [Pref="dom.webcrypto.enabled"]
-interface CryptoKey {
+interface Key {
   readonly attribute KeyType type;
   readonly attribute boolean extractable;
   readonly attribute KeyAlgorithm algorithm;
@@ -110,9 +110,9 @@ interface CryptoKey {
 };
 
 [Pref="dom.webcrypto.enabled"]
-interface CryptoKeyPair {
-  readonly attribute CryptoKey publicKey;
-  readonly attribute CryptoKey privateKey;
+interface KeyPair {
+  readonly attribute Key publicKey;
+  readonly attribute Key privateKey;
 };
 
 typedef DOMString KeyFormat;
@@ -123,16 +123,16 @@ typedef (object or DOMString) AlgorithmIdentifier;
 [Pref="dom.webcrypto.enabled"]
 interface SubtleCrypto {
   Promise encrypt(AlgorithmIdentifier algorithm,
-                  CryptoKey key,
+                  Key key,
                   CryptoOperationData data);
   Promise decrypt(AlgorithmIdentifier algorithm,
-                  CryptoKey key,
+                  Key key,
                   CryptoOperationData data);
   Promise sign(AlgorithmIdentifier algorithm,
-               CryptoKey key,
+               Key key,
                CryptoOperationData data);
   Promise verify(AlgorithmIdentifier algorithm,
-                 CryptoKey key,
+                 Key key,
                  CryptoOperationData signature,
                  CryptoOperationData data);
   Promise digest(AlgorithmIdentifier algorithm,
@@ -142,12 +142,12 @@ interface SubtleCrypto {
                       boolean extractable,
                       sequence<KeyUsage> keyUsages );
   Promise deriveKey(AlgorithmIdentifier algorithm,
-                    CryptoKey baseKey,
+                    Key baseKey,
                     AlgorithmIdentifier derivedKeyType,
                     boolean extractable,
                     sequence<KeyUsage> keyUsages );
   Promise deriveBits(AlgorithmIdentifier algorithm,
-                     CryptoKey baseKey,
+                     Key baseKey,
                      unsigned long length);
 
   Promise importKey(KeyFormat format,
@@ -155,6 +155,6 @@ interface SubtleCrypto {
                     AlgorithmIdentifier algorithm,
                     boolean extractable,
                     sequence<KeyUsage> keyUsages );
-  Promise exportKey(KeyFormat format, CryptoKey key);
+  Promise exportKey(KeyFormat format, Key key);
 };
 
