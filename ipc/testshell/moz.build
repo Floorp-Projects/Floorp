@@ -31,7 +31,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
-# For xpcshell error messages and nsDependentJSString
+# For xpcshell error messages and nsAutoJSString
 LOCAL_INCLUDES += [
     '/dom/base',
     '/js/xpconnect/src',

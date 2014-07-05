@@ -282,7 +282,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     } else if (v.isUndefined()) {
         return NS_ERROR_DOM_RETVAL_UNDEFINED;
     } else {
-        nsDependentJSString result;
+        nsAutoJSString result;
         if (!result.init(cx, v)) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
