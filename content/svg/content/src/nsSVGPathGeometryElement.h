@@ -62,7 +62,7 @@ public:
    * Returns a Path that can be used to paint, hit-test or calculate bounds for
    * this element. May return nullptr if there is no [valid] path.
    */
-  virtual mozilla::TemporaryRef<Path> BuildPath() = 0;
+  virtual mozilla::TemporaryRef<Path> BuildPath(PathBuilder* aBuilder = nullptr) = 0;
 
   virtual mozilla::TemporaryRef<Path> GetPathForLengthOrPositionMeasuring();
 
