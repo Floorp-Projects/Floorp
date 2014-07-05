@@ -394,7 +394,7 @@ SVGPathElement::BuildPath(PathBuilder* aBuilder)
     // opacity here.
     if (style->mStrokeLinecap == NS_STYLE_STROKE_LINECAP_SQUARE) {
       strokeLineCap = style->mStrokeLinecap;
-      strokeWidth = GetStrokeWidth();
+      strokeWidth = SVGContentUtils::GetStrokeWidth(this, styleContext, nullptr);
     }
   }
 
