@@ -337,6 +337,8 @@ AsmJSModule::finish(ExclusiveContext *cx, TokenStream &tokenStream, MacroAssembl
         CodeRange &c = codeRanges_[i];
         c.begin_ = masm.actualOffset(c.begin_);
         c.end_ = masm.actualOffset(c.end_);
+        JS_ASSERT(c.begin_ <= c.end_);
+        JS_ASSERT_IF(i > 0, codeRanges_[i - 1].end_ <= c.begin_);
     }
 #endif
     JS_ASSERT(pod.functionBytes_ % AsmJSPageSize == 0);

@@ -697,8 +697,6 @@ class AsmJSModule
     bool addFunctionCodeRange(PropertyName *name, uint32_t begin, uint32_t end) {
         JS_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
         JS_ASSERT(name->isTenured());
-        JS_ASSERT(begin <= end);
-        JS_ASSERT_IF(!codeRanges_.empty(), codeRanges_.back().end() <= begin);
         if (functionNames_.length() >= UINT32_MAX)
             return false;
         CodeRange codeRange(CodeRange::Function, begin, end, functionNames_.length());
