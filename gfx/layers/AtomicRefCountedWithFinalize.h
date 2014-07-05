@@ -8,10 +8,6 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/NullPtr.h"
-#include "mozilla/Likely.h"
-#include "MainThreadUtils.h"
-#include "base/message_loop.h"
-#include "base/task.h"
 
 namespace mozilla {
 
@@ -22,20 +18,9 @@ class AtomicRefCountedWithFinalize
     AtomicRefCountedWithFinalize()
       : mRecycleCallback(nullptr)
       , mRefCount(0)
-      , mMessageLoopToPostDestructionTo(nullptr)
     {}
 
     ~AtomicRefCountedWithFinalize() {}
-
-    void SetMessageLoopToPostDestructionTo(MessageLoop* l) {
-      MOZ_ASSERT(NS_IsMainThread());
-      mMessageLoopToPostDestructionTo = l;
-    }
-
-    static void DestroyToBeCalledOnMainThread(T* ptr) {
-      MOZ_ASSERT(NS_IsMainThread());
-      delete ptr;
-    }
 
   public:
     void AddRef() {
@@ -58,17 +43,7 @@ class AtomicRefCountedWithFinalize
 #endif
         T* derived = static_cast<T*>(this);
         derived->Finalize();
-        if (MOZ_LIKELY(!mMessageLoopToPostDestructionTo)) {
-          delete derived;
-        } else {
-          if (MOZ_LIKELY(NS_IsMainThread())) {
-            delete derived;
-          } else {
-            mMessageLoopToPostDestructionTo->PostTask(
-              FROM_HERE,
-              NewRunnableFunction(&DestroyToBeCalledOnMainThread, derived));
-          }
-        }
+        delete derived;
       } else if (1 == currCount && recycleCallback) {
         T* derived = static_cast<T*>(this);
         recycleCallback(derived, mClosure);
@@ -96,7 +71,6 @@ private:
     RecycleCallback mRecycleCallback;
     void *mClosure;
     Atomic<int> mRefCount;
-    MessageLoop *mMessageLoopToPostDestructionTo;
 };
 
 }

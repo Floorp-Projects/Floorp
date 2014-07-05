@@ -33,7 +33,6 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsISupportsImpl.h"
 #include "nsSize.h"                     // for nsIntSize
-#include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 
 class CancelableTask;
 class MessageLoop;
@@ -64,12 +63,10 @@ private:
   uint64_t mLayersId;
 };
 
-class CompositorThreadHolder;
-
 class CompositorParent : public PCompositorParent,
                          public ShadowLayersManager
 {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorParent)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorParent)
 
 public:
   CompositorParent(nsIWidget* aWidget,
@@ -169,10 +166,7 @@ public:
   static void StartUp();
 
   /**
-   * Waits for all [CrossProcess]CompositorParent's to be gone,
-   * and destroys the compositor thread and global compositor map.
-   *
-   * Does not return until all of that has completed.
+   * Destroys the compositor thread and the global compositor map.
    */
   static void ShutDown();
 
@@ -245,8 +239,6 @@ protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~CompositorParent();
 
-  void DeferredDestroy();
-
   virtual PLayerTransactionParent*
     AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aBackendHints,
                                  const uint64_t& aId,
@@ -266,6 +258,36 @@ protected:
   void ResumeCompositionAndResize(int width, int height);
   void ForceComposition();
   void CancelCurrentCompositeTask();
+
+  /**
+   * Creates a global map referencing each compositor by ID.
+   *
+   * This map is used by the ImageBridge protocol to trigger
+   * compositions without having to keep references to the
+   * compositor
+   */
+  static void CreateCompositorMap();
+  static void DestroyCompositorMap();
+
+  /**
+   * Creates the compositor thread.
+   *
+   * All compositors live on the same thread.
+   * The thread is not lazily created on first access to avoid dealing with
+   * thread safety. Therefore it's best to create and destroy the thread when
+   * we know we areb't using it (So creating/destroying along with gfxPlatform
+   * looks like a good place).
+   */
+  static bool CreateThread();
+
+  /**
+   * Destroys the compositor thread.
+   *
+   * It is safe to call this fucntion more than once, although the second call
+   * will have no effect.
+   * This function is not thread-safe.
+   */
+  static void DestroyThread();
 
   /**
    * Add a compositor to the global compositor map.
@@ -313,8 +335,6 @@ protected:
   CancelableTask* mForceCompositionTask;
 
   nsRefPtr<APZCTreeManager> mApzcTreeManager;
-
-  nsRefPtr<CompositorThreadHolder> mCompositorThreadHolder;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };
