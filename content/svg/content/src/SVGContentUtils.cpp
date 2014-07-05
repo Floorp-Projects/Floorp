@@ -9,7 +9,10 @@
 
 // Keep others in (case-insensitive) order:
 #include "gfxMatrix.h"
+#include "gfxPlatform.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/dom/SVGSVGElement.h"
+#include "mozilla/RefPtr.h"
 #include "nsComputedDOMStyle.h"
 #include "nsFontMetrics.h"
 #include "nsIFrame.h"
@@ -26,6 +29,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::gfx;
 
 SVGSVGElement*
 SVGContentUtils::GetOuterSVGElement(nsSVGElement *aSVGElement)
@@ -596,5 +600,10 @@ SVGContentUtils::GetPath(const nsAString& aPathString)
     return NULL;
   }
 
-  return pathData.BuildPath(mozilla::gfx::FillRule::FILL_WINDING, NS_STYLE_STROKE_LINECAP_BUTT, 1);
+  RefPtr<DrawTarget> drawTarget =
+    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+  RefPtr<PathBuilder> builder =
+    drawTarget->CreatePathBuilder(FillRule::FILL_WINDING);
+
+  return pathData.BuildPath(builder, NS_STYLE_STROKE_LINECAP_BUTT, 1);
 }
