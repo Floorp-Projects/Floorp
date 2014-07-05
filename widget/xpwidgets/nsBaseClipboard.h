@@ -25,7 +25,6 @@ class nsBaseClipboard : public nsIClipboard
 
 public:
   nsBaseClipboard();
-  virtual ~nsBaseClipboard();
 
   //nsISupports
   NS_DECL_ISUPPORTS
@@ -34,6 +33,7 @@ public:
   NS_DECL_NSICLIPBOARD
   
 protected:
+  virtual ~nsBaseClipboard();
 
   NS_IMETHOD SetNativeClipboardData ( int32_t aWhichClipboard ) = 0;
   NS_IMETHOD GetNativeClipboardData ( nsITransferable * aTransferable, int32_t aWhichClipboard ) = 0;
