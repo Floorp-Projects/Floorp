@@ -27,7 +27,6 @@ EXPORTS += [
     'ipc/CompositorChild.h',
     'ipc/CompositorParent.h',
     'ipc/ShadowLayersManager.h',
-    'ipc/ThreadSafeRefcountingWithMainThreadDestruction.h',
     'Layers.h',
     'LayerScope.h',
     'LayersLogging.h',
