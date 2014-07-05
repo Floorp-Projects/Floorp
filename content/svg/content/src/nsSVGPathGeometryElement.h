@@ -77,14 +77,6 @@ public:
    * this element.
    */
   FillRule GetFillRule();
-
-  /**
-   * Returns the current computed value of the CSS property 'stroke-width' for
-   * this element. (I.e. this does NOT take account of the value of the
-   * 'stroke' and 'stroke-opacity' properties to, say, return zero if they are
-   * "none" or "0", respectively.)
-   */
-  Float GetStrokeWidth();
 };
 
 #endif
