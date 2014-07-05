@@ -373,11 +373,13 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame, uint32_t aFor,
 
   if (!(aFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY) &&
       !aTransformRoot) {
-    if ((aFor == nsISVGChildFrame::FOR_PAINTING &&
-         NS_SVGDisplayListPaintingEnabled()) ||
-        (aFor == nsISVGChildFrame::FOR_HIT_TESTING &&
-         NS_SVGDisplayListHitTestingEnabled())) {
+    if (aFor == nsISVGChildFrame::FOR_PAINTING &&
+        NS_SVGDisplayListPaintingEnabled()) {
       return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aFrame);
+    }
+    if (aFor == nsISVGChildFrame::FOR_HIT_TESTING &&
+        NS_SVGDisplayListHitTestingEnabled()) {
+      return gfxMatrix();
     }
   }
 
@@ -759,9 +761,9 @@ nsSVGUtils::TransformOuterSVGPointToChildFrame(nsPoint aPoint,
                     "Callers must not pass a singular matrix");
   gfxMatrix canvasDevToFrameUserSpace = aFrameToCanvasTM;
   canvasDevToFrameUserSpace.Invert();
-  gfxPoint devPt = gfxPoint(aPoint.x, aPoint.y) /
-    aPresContext->AppUnitsPerDevPixel();
-  gfxPoint userPt = canvasDevToFrameUserSpace.Transform(devPt);
+  gfxPoint cssPxPt =
+    gfxPoint(aPoint.x, aPoint.y) / aPresContext->AppUnitsPerCSSPixel();
+  gfxPoint userPt = canvasDevToFrameUserSpace.Transform(cssPxPt);
   gfxPoint appPt = (userPt * aPresContext->AppUnitsPerCSSPixel()).Round();
   userPt.x = clamped(appPt.x, gfxFloat(nscoord_MIN), gfxFloat(nscoord_MAX));
   userPt.y = clamped(appPt.y, gfxFloat(nscoord_MIN), gfxFloat(nscoord_MAX));
