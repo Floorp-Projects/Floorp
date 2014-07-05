@@ -107,20 +107,7 @@ MarionetteComponent.prototype = {
         this.finalUiStartup = true;
         this.observerService.removeObserver(this, aTopic);
         this.observerService.addObserver(this, "xpcom-shutdown", false);
-
-        // Other Gecko services start during observers. This may cause race
-        // conditions with Marionette. We wait a few event loop ticks before
-        // initializing.
-        // NOTE: This is a bit hacky. If we have a dependency on something,
-        // we should explicitly wait for that thing. This solution is little
-        // better than a sleep() in hopes time fixes the problem.
-        Services.tm.currentThread.dispatch(() => {
-          Services.tm.currentThread.dispatch(() => {
-            Services.tm.currentThread.dispatch(() => {
-              this.init();
-            }, Ci.nsIThread.DISPATCH_NORMAL);
-          }, Ci.nsIThread.DISPATCH_NORMAL);
-        }, Ci.nsIThread.DISPATCH_NORMAL);
+        this.init();
         break;
       case "domwindowopened":
         this.observerService.removeObserver(this, aTopic);
