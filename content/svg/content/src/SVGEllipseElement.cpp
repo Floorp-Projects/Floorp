@@ -114,7 +114,7 @@ SVGEllipseElement::ConstructPath(gfxContext *aCtx)
 }
 
 TemporaryRef<Path>
-SVGEllipseElement::BuildPath()
+SVGEllipseElement::BuildPath(PathBuilder* aBuilder)
 {
   float x, y, rx, ry;
   GetAnimatedLengthValues(&x, &y, &rx, &ry, nullptr);
@@ -123,7 +123,7 @@ SVGEllipseElement::BuildPath()
     return nullptr;
   }
 
-  RefPtr<PathBuilder> pathBuilder = CreatePathBuilder();
+  RefPtr<PathBuilder> pathBuilder = aBuilder ? aBuilder : CreatePathBuilder();
 
   EllipseToBezier(pathBuilder.get(), Point(x, y), Size(rx, ry));
 
