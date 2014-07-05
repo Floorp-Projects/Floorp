@@ -283,13 +283,13 @@ SandboxEvalInWindow(JSContext *cx, unsigned argc, jsval *vp)
     RootedString srcString(cx, args[0].toString());
     RootedObject targetScope(cx, &args[1].toObject());
 
-    nsDependentJSString srcDepString;
-    if (!srcDepString.init(cx, srcString)) {
+    nsAutoJSString srcAutoString;
+    if (!srcAutoString.init(cx, srcString)) {
         JS_ReportError(cx, "Source string is invalid");
         return false;
     }
 
-    return EvalInWindow(cx, srcDepString, targetScope, args.rval());
+    return EvalInWindow(cx, srcAutoString, targetScope, args.rval());
 }
 
 static bool
@@ -1037,7 +1037,7 @@ ParsePrincipal(JSContext *cx, HandleString codebase, nsIPrincipal **principal)
     MOZ_ASSERT(principal);
     MOZ_ASSERT(codebase);
     nsCOMPtr<nsIURI> uri;
-    nsDependentJSString codebaseStr;
+    nsAutoJSString codebaseStr;
     NS_ENSURE_TRUE(codebaseStr.init(cx, codebase), false);
     nsresult rv = NS_NewURI(getter_AddRefs(uri), codebaseStr);
     if (NS_FAILED(rv)) {
@@ -1283,8 +1283,10 @@ OptionsBase::ParseString(const char *name, nsString &prop)
         return false;
     }
 
-    nsDependentJSString strVal;
-    strVal.init(mCx, value.toString());
+    nsAutoJSString strVal;
+    if (!strVal.init(mCx, value.toString()))
+        return false;
+
     prop = strVal;
     return true;
 }
