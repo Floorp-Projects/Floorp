@@ -1365,8 +1365,7 @@ nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, gfxTextContextPaint *aContextPaint)
 
   nsSVGElement *ctx = static_cast<nsSVGElement*>(content);
 
-  return SVGContentUtils::CoordToFloat(aFrame->PresContext(), ctx,
-                                       style->mStrokeWidth);
+  return SVGContentUtils::CoordToFloat(ctx, style->mStrokeWidth);
 }
 
 void
@@ -1421,7 +1420,6 @@ GetStrokeDashData(nsIFrame* aFrame,
                   gfxTextContextPaint *aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
-  nsPresContext *presContext = aFrame->PresContext();
   nsIContent *content = aFrame->GetContent();
   nsSVGElement *ctx = static_cast<nsSVGElement*>
     (content->IsNodeOfType(nsINode::eTEXT) ?
@@ -1457,8 +1455,7 @@ GetStrokeDashData(nsIFrame* aFrame,
     const nsStyleCoord *dasharray = style->mStrokeDasharray;
 
     for (uint32_t i = 0; i < count; i++) {
-      aDashes[i] = SVGContentUtils::CoordToFloat(presContext,
-                                                 ctx,
+      aDashes[i] = SVGContentUtils::CoordToFloat(ctx,
                                                  dasharray[i]) * pathScale;
       if (aDashes[i] < 0.0) {
         return false;
@@ -1470,8 +1467,7 @@ GetStrokeDashData(nsIFrame* aFrame,
   if (aContextPaint && style->mStrokeDashoffsetFromObject) {
     *aDashOffset = aContextPaint->GetStrokeDashOffset();
   } else {
-    *aDashOffset = SVGContentUtils::CoordToFloat(presContext,
-                                                 ctx,
+    *aDashOffset = SVGContentUtils::CoordToFloat(ctx,
                                                  style->mStrokeDashoffset);
   }
   
