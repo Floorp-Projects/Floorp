@@ -346,9 +346,9 @@ function setupSearchEngine()
 /**
  * Inform the test harness that we're done loading the page.
  */
-function loadSucceeded()
+function loadCompleted()
 {
-  var event = new CustomEvent("AboutHomeLoadSnippetsSucceeded", {bubbles:true});
+  var event = new CustomEvent("AboutHomeLoadSnippetsCompleted", {bubbles:true});
   document.dispatchEvent(event);
 }
 
@@ -381,32 +381,29 @@ function loadSnippets()
   if (updateURL && shouldUpdate) {
     // Try to update from network.
     let xhr = new XMLHttpRequest();
+    xhr.timeout = 5000;
     try {
       xhr.open("GET", updateURL, true);
     } catch (ex) {
       showSnippets();
-      loadSucceeded();
+      loadCompleted();
       return;
     }
     // Even if fetching should fail we don't want to spam the server, thus
     // set the last update time regardless its results.  Will retry tomorrow.
     gSnippetsMap.set("snippets-last-update", Date.now());
-    xhr.onerror = function (event) {
-      showSnippets();
-    };
-    xhr.onload = function (event)
-    {
+    xhr.onloadend = function (event) {
       if (xhr.status == 200) {
         gSnippetsMap.set("snippets", xhr.responseText);
         gSnippetsMap.set("snippets-cached-version", currentVersion);
       }
       showSnippets();
-      loadSucceeded();
+      loadCompleted();
     };
     xhr.send(null);
   } else {
     showSnippets();
-    loadSucceeded();
+    loadCompleted();
   }
 }
 
