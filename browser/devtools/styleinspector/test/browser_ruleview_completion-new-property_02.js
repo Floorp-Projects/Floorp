@@ -39,8 +39,8 @@ let testData = [
   ["VK_ESCAPE", {}, null, -1, 0]
 ];
 
-let TEST_URL = "data:text/html,<h1 style='border: 1px solid red'>Filename:"+
-               " browser_bug894376_css_value_completion_new_property_value_pair.js</h1>";
+let TEST_URL = "data:text/html,<style>h1{border: 1px solid red}</style>" +
+  "<h1>Test element</h1>";
 
 let test = asyncTest(function*() {
   yield addTab(TEST_URL);
@@ -50,7 +50,7 @@ let test = asyncTest(function*() {
   yield selectNode("h1", inspector);
 
   info("Focusing a new css property editable property");
-  let brace = view.doc.querySelectorAll(".ruleview-ruleclose")[0];
+  let brace = view.doc.querySelectorAll(".ruleview-ruleclose")[1];
   let editor = yield focusEditableField(brace);
 
   info("Starting to test for css property completion");
@@ -70,7 +70,7 @@ function* testCompletion([key, modifiers, completion, index, total], editor, vie
 
   if (/tab/ig.test(key)) {
     info("Waiting for the new property or value editor to get focused");
-    let brace = view.doc.querySelector(".ruleview-ruleclose");
+    let brace = view.doc.querySelectorAll(".ruleview-ruleclose")[1];
     onKeyPress = once(brace.parentNode, "focus", true);
   } else if (/(right|back_space|escape|return)/ig.test(key) ||
              (modifiers.accelKey || modifiers.ctrlKey)) {
