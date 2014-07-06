@@ -237,7 +237,7 @@ public:
    * its children.
    */
   void UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream>* aStack,
-                                  already_AddRefed<MediaStream> aStream);
+                                  MediaStream* aStream);
   /**
    * Mark aStream and all its inputs (recursively) as consumed.
    */
@@ -426,12 +426,17 @@ public:
   // mLifecycleState > LIFECYCLE_RUNNING in which case the graph thread
   // is not running and this state can be used from the main thread.
 
-  nsTArray<nsRefPtr<MediaStream> > mStreams;
+  /**
+   * The graph keeps a reference to each stream.
+   * References are maintained manually to simplify reordering without
+   * unnecessary thread-safe refcount changes.
+   */
+  nsTArray<MediaStream*> mStreams;
   /**
    * mOldStreams is used as temporary storage for streams when computing the
    * order in which we compute them.
    */
-  nsTArray<nsRefPtr<MediaStream> > mOldStreams;
+  nsTArray<MediaStream*> mOldStreams;
   /**
    * The current graph time for the current iteration of the RunThread control
    * loop.

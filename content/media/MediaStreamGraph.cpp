@@ -90,7 +90,7 @@ void
 MediaStreamGraphImpl::AddStream(MediaStream* aStream)
 {
   aStream->mBufferStartTime = mCurrentTime;
-  *mStreams.AppendElement() = already_AddRefed<MediaStream>(aStream);
+  mStreams.AppendElement(aStream);
   STREAM_LOG(PR_LOG_DEBUG, ("Adding media stream %p to the graph", aStream));
 
   SetStreamOrderDirty();
@@ -113,8 +113,8 @@ MediaStreamGraphImpl::RemoveStream(MediaStream* aStream)
 
   SetStreamOrderDirty();
 
-  // This unrefs the stream, probably destroying it
   mStreams.RemoveElement(aStream);
+  NS_RELEASE(aStream); // probably destroying it
 
   STREAM_LOG(PR_LOG_DEBUG, ("Removing media stream %p from the graph", aStream));
 }
@@ -532,9 +532,9 @@ MediaStreamGraphImpl::MarkConsumed(MediaStream* aStream)
 
 void
 MediaStreamGraphImpl::UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream>* aStack,
-                                                 already_AddRefed<MediaStream> aStream)
+                                                 MediaStream* aStream)
 {
-  nsRefPtr<MediaStream> stream = aStream;
+  MediaStream* stream = aStream;
   NS_ASSERTION(!stream->mHasBeenOrdered, "stream should not have already been ordered");
   if (stream->mIsOnOrderingStack) {
     MediaStream* iter = aStack->getLast();
@@ -582,8 +582,7 @@ MediaStreamGraphImpl::UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream
     for (uint32_t i = 0; i < ps->mInputs.Length(); ++i) {
       MediaStream* source = ps->mInputs[i]->mSource;
       if (!source->mHasBeenOrdered) {
-        nsRefPtr<MediaStream> s = source;
-        UpdateStreamOrderForStream(aStack, s.forget());
+        UpdateStreamOrderForStream(aStack, source);
       }
     }
     aStack->popLast();
@@ -591,7 +590,7 @@ MediaStreamGraphImpl::UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream
   }
 
   stream->mHasBeenOrdered = true;
-  *mStreams.AppendElement() = stream.forget();
+  *mStreams.AppendElement() = stream;
 }
 
 static void AudioMixerCallback(AudioDataValue* aMixedBuffer,
@@ -646,12 +645,12 @@ MediaStreamGraphImpl::UpdateStreamOrder()
 
   mozilla::LinkedList<MediaStream> stack;
   for (uint32_t i = 0; i < mOldStreams.Length(); ++i) {
-    nsRefPtr<MediaStream>& s = mOldStreams[i];
+    MediaStream* s = mOldStreams[i];
     if (s->IsIntrinsicallyConsumed()) {
       MarkConsumed(s);
     }
     if (!s->mHasBeenOrdered) {
-      UpdateStreamOrderForStream(&stack, s.forget());
+      UpdateStreamOrderForStream(&stack, s);
     }
   }
 }
