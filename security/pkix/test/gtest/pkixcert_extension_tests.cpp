@@ -109,7 +109,7 @@ private:
   }
 };
 
-class pkix_cert_extensions: public NSSTest
+class pkixcert_extension: public NSSTest
 {
 public:
   static void SetUpTestCase()
@@ -121,12 +121,12 @@ protected:
   static TrustEverythingTrustDomain trustDomain;
 };
 
-/*static*/ TrustEverythingTrustDomain pkix_cert_extensions::trustDomain;
+/*static*/ TrustEverythingTrustDomain pkixcert_extension::trustDomain;
 
 // Tests that a critical extension not in the id-ce or id-pe arcs (which is
 // thus unknown to us) is detected and that verification fails with the
 // appropriate error.
-TEST_F(pkix_cert_extensions, UnknownCriticalExtension)
+TEST_F(pkixcert_extension, UnknownCriticalExtension)
 {
   static const uint8_t unknownCriticalExtensionBytes[] = {
     0x30, 0x19, // SEQUENCE (length = 25)
@@ -161,7 +161,7 @@ TEST_F(pkix_cert_extensions, UnknownCriticalExtension)
 
 // Tests that a non-critical extension not in the id-ce or id-pe arcs (which is
 // thus unknown to us) verifies successfully.
-TEST_F(pkix_cert_extensions, UnknownNonCriticalExtension)
+TEST_F(pkixcert_extension, UnknownNonCriticalExtension)
 {
   static const uint8_t unknownNonCriticalExtensionBytes[] = {
     0x30, 0x16, // SEQUENCE (length = 22)
@@ -195,7 +195,7 @@ TEST_F(pkix_cert_extensions, UnknownNonCriticalExtension)
 // Tests that an incorrect OID for id-pe-authorityInformationAccess
 // (when marked critical) is detected and that verification fails.
 // (Until bug 1020993 was fixed, the code checked for this OID.)
-TEST_F(pkix_cert_extensions, WrongOIDCriticalExtension)
+TEST_F(pkixcert_extension, WrongOIDCriticalExtension)
 {
   static const uint8_t wrongOIDCriticalExtensionBytes[] = {
     0x30, 0x10, // SEQUENCE (length = 16)
@@ -213,7 +213,7 @@ TEST_F(pkix_cert_extensions, WrongOIDCriticalExtension)
   const char* certCN = "CN=Cert With Critical Wrong OID Extension";
   ScopedSECKEYPrivateKey key;
   // cert is owned by the arena
-  const SECItem* cert(CreateCert(arena.get(), certCN, 
+  const SECItem* cert(CreateCert(arena.get(), certCN,
                                  &wrongOIDCriticalExtension, key));
   ASSERT_TRUE(cert);
   ScopedCERTCertList results;
@@ -229,7 +229,7 @@ TEST_F(pkix_cert_extensions, WrongOIDCriticalExtension)
 
 // Tests that a id-pe-authorityInformationAccess critical extension
 // is detected and that verification succeeds.
-TEST_F(pkix_cert_extensions, CriticalAIAExtension)
+TEST_F(pkixcert_extension, CriticalAIAExtension)
 {
   // XXX: According to RFC 5280 an AIA that consists of an empty sequence is
   // not legal, but  we accept it and that is not what we're testing here.
@@ -266,7 +266,7 @@ TEST_F(pkix_cert_extensions, CriticalAIAExtension)
 // We know about some id-ce extensions (OID arc 2.5.29), but not all of them.
 // Tests that an unknown id-ce extension is detected and that verification
 // fails.
-TEST_F(pkix_cert_extensions, UnknownCriticalCEExtension)
+TEST_F(pkixcert_extension, UnknownCriticalCEExtension)
 {
   static const uint8_t unknownCriticalCEExtensionBytes[] = {
     0x30, 0x0a, // SEQUENCE (length = 10)
@@ -299,7 +299,7 @@ TEST_F(pkix_cert_extensions, UnknownCriticalCEExtension)
 
 // Tests that a certificate with a known critical id-ce extension (in this case,
 // OID 2.5.29.54, which is id-ce-inhibitAnyPolicy), verifies successfully.
-TEST_F(pkix_cert_extensions, KnownCriticalCEExtension)
+TEST_F(pkixcert_extension, KnownCriticalCEExtension)
 {
   static const uint8_t criticalCEExtensionBytes[] = {
     0x30, 0x0d, // SEQUENCE (length = 13)
@@ -331,7 +331,7 @@ TEST_F(pkix_cert_extensions, KnownCriticalCEExtension)
 }
 
 // Two subjectAltNames must result in an error.
-TEST_F(pkix_cert_extensions, DuplicateSubjectAltName)
+TEST_F(pkixcert_extension, DuplicateSubjectAltName)
 {
   static const uint8_t DER_BYTES[] = {
     0x30, 22, // SEQUENCE (length = 22)
