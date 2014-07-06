@@ -204,6 +204,40 @@ private:
   void operator=(const BackCert&); /* = delete */;
 };
 
+class NonOwningDERArray : public DERArray
+{
+public:
+  NonOwningDERArray()
+    : numItems(0)
+  {
+    // we don't need to initialize the items array because we always check
+    // numItems before accessing i.
+  }
+
+  virtual size_t GetLength() const { return numItems; }
+
+  virtual const SECItem* GetDER(size_t i) const
+  {
+    return i < numItems ? items[i] : nullptr;
+  }
+
+  Result Append(const SECItem& der)
+  {
+    if (numItems >= MAX_LENGTH) {
+      return Fail(RecoverableError, SEC_ERROR_INVALID_ARGS);
+    }
+    items[numItems] = &der;
+    ++numItems;
+    return Success;
+  }
+
+  // Public so we can static_assert on this. Keep in sync with MAX_SUBCA_COUNT.
+  static const size_t MAX_LENGTH = 8;
+private:
+  const SECItem* items[MAX_LENGTH]; // avoids any heap allocations
+  size_t numItems;
+};
+
 } } // namespace mozilla::pkix
 
 #endif // mozilla_pkix__pkixutil_h
