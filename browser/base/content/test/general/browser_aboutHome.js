@@ -397,7 +397,7 @@ function test()
       let snippetsPromise = promiseSetupSnippetsMap(tab, test.setup);
 
       // Start loading about:home and wait for it to complete.
-      yield promiseTabLoadEvent(tab, "about:home", "AboutHomeLoadSnippetsSucceeded");
+      yield promiseTabLoadEvent(tab, "about:home", "AboutHomeLoadSnippetsCompleted");
 
       // This promise should already be resolved since the page is done,
       // but we still want to get the snippets map out of it.
@@ -412,35 +412,6 @@ function test()
     ok(false, "Unexpected Exception: " + ex);
     finish();
   });
-}
-
-/**
- * Starts a load in an existing tab and waits for it to finish (via some event).
- *
- * @param aTab
- *        The tab to load into.
- * @param aUrl
- *        The url to load.
- * @param aEvent
- *        The load event type to wait for.  Defaults to "load".
- * @return {Promise} resolved when the event is handled.
- */
-function promiseTabLoadEvent(aTab, aURL, aEventType="load")
-{
-  let deferred = Promise.defer();
-  info("Wait tab event: " + aEventType);
-  aTab.linkedBrowser.addEventListener(aEventType, function load(event) {
-    if (event.originalTarget != aTab.linkedBrowser.contentDocument ||
-        event.target.location.href == "about:blank") {
-      info("skipping spurious load event");
-      return;
-    }
-    aTab.linkedBrowser.removeEventListener(aEventType, load, true);
-    info("Tab event received: " + aEventType);
-    deferred.resolve();
-  }, true, true);
-  aTab.linkedBrowser.loadURI(aURL);
-  return deferred.promise;
 }
 
 /**
