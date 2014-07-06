@@ -1,3 +1,5 @@
+== 723669.html 723669-ref.html
+
 skip-if(B2G&&browserIsRemote) == basic.xul basic-ref.xul
 random-if(Android) skip-if(B2G&&browserIsRemote) == basic-negcoord.xul basic-negcoord-ref.xul
 skip-if(B2G&&browserIsRemote) != blur.xul blur-notref.xul

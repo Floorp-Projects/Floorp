@@ -9,6 +9,8 @@
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "GLContext.h"
 
+#include "MurmurHash3.h"
+
 using namespace mozilla;
 
 /** Takes an ASCII string like "foo[i]", turns it into "foo" and returns "[i]" in bracketPart
@@ -235,6 +237,25 @@ WebGLProgram::GetUniformInfoForMappedIdentifier(const nsACString& name) {
     // we don't check if that Get failed, as if it did, it left info with default values
 
     return info;
+}
+
+/* static */ uint64_t
+WebGLProgram::IdentifierHashFunction(const char *ident, size_t size)
+{
+    uint64_t outhash[2];
+    // NB: we use the x86 function everywhere, even though it's suboptimal perf
+    // on x64.  They return different results; not sure if that's a requirement.
+    MurmurHash3_x86_128(ident, size, 0, &outhash[0]);
+    return outhash[0];
+}
+
+/* static */ void
+WebGLProgram::HashMapIdentifier(const nsACString& name, nsCString *hashedName)
+{
+    uint64_t hash = IdentifierHashFunction(name.BeginReading(), name.Length());
+    hashedName->Truncate();
+    // This MUST MATCH angle/src/compiler/translator/HashNames.h HASHED_NAME_PREFIX
+    hashedName->AppendPrintf("webgl_%llx", hash);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLProgram, mAttachedShaders)

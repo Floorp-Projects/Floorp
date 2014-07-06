@@ -7,9 +7,7 @@
 LIBRARY_NAME = 'speex'
 
 EXPORTS.speex += [
-    'speex_config_types.h',
     'speex_resampler.h',
-    'speex_types.h',
 ]
 
 SOURCES += [
@@ -26,9 +24,6 @@ FINAL_LIBRARY = 'gkmedias'
 
 # We don't compile the full speex codec, only the resampler.
 DEFINES['OUTSIDE_SPEEX'] = True
-# Speex wants a random prefix when building in another program, to avoid name
-# clashes
-DEFINES['RANDOM_PREFIX'] = 'speex'
 # We don't use -fvisibility=hidden
 DEFINES['SPX_RESAMPLE_EXPORT'] = ''
 

@@ -99,6 +99,9 @@ extern bool
 js_math_random(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern bool
+js_math_abs_handle(JSContext *cx, js::HandleValue v, js::MutableHandleValue r);
+
+extern bool
 js_math_abs(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern bool

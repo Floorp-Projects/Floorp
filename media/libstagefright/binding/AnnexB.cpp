@@ -66,8 +66,9 @@ AnnexB::ConvertExtraDataToAnnexB(mozilla::Vector<uint8_t>& aExtraData)
     ConvertSPSOrPPS(reader, reader.ReadU8() & 31, &annexB);
     ConvertSPSOrPPS(reader, reader.ReadU8(), &annexB);
 
-    MOZ_ASSERT(!reader.Remaining());
+    // MP4Box adds extra bytes that we ignore. I don't know what they do.
   }
+  reader.DiscardRemaining();
 
   return annexB;
 }

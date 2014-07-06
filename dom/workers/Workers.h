@@ -170,6 +170,9 @@ enum WorkerPreference
 };
 
 // All of these are implemented in RuntimeService.cpp
+
+// Resolves all of the worker classes onto |aObjp| if one of them matches |aId|
+// or if |aId| is JSID_VOID.
 bool
 ResolveWorkerClasses(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
                      JS::MutableHandle<JSObject*> aObjp);

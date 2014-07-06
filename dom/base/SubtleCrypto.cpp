@@ -46,7 +46,7 @@ SubtleCrypto::WrapObject(JSContext* aCx)
 already_AddRefed<Promise>
 SubtleCrypto::Encrypt(JSContext* cx,
                       const ObjectOrString& algorithm,
-                      Key& key,
+                      CryptoKey& key,
                       const CryptoOperationData& data)
 {
   SUBTLECRYPTO_METHOD_BODY(Encrypt, cx, algorithm, key, data)
@@ -55,7 +55,7 @@ SubtleCrypto::Encrypt(JSContext* cx,
 already_AddRefed<Promise>
 SubtleCrypto::Decrypt(JSContext* cx,
                       const ObjectOrString& algorithm,
-                      Key& key,
+                      CryptoKey& key,
                       const CryptoOperationData& data)
 {
   SUBTLECRYPTO_METHOD_BODY(Decrypt, cx, algorithm, key, data)
@@ -64,7 +64,7 @@ SubtleCrypto::Decrypt(JSContext* cx,
 already_AddRefed<Promise>
 SubtleCrypto::Sign(JSContext* cx,
                    const ObjectOrString& algorithm,
-                   Key& key,
+                   CryptoKey& key,
                    const CryptoOperationData& data)
 {
   SUBTLECRYPTO_METHOD_BODY(Sign, cx, algorithm, key, data)
@@ -73,7 +73,7 @@ SubtleCrypto::Sign(JSContext* cx,
 already_AddRefed<Promise>
 SubtleCrypto::Verify(JSContext* cx,
                      const ObjectOrString& algorithm,
-                     Key& key,
+                     CryptoKey& key,
                      const CryptoOperationData& signature,
                      const CryptoOperationData& data)
 {
@@ -103,7 +103,7 @@ SubtleCrypto::ImportKey(JSContext* cx,
 
 already_AddRefed<Promise>
 SubtleCrypto::ExportKey(const nsAString& format,
-                        Key& key)
+                        CryptoKey& key)
 {
   SUBTLECRYPTO_METHOD_BODY(ExportKey, format, key)
 }
@@ -118,7 +118,7 @@ SubtleCrypto::GenerateKey(JSContext* cx, const ObjectOrString& algorithm,
 already_AddRefed<Promise>
 SubtleCrypto::DeriveKey(JSContext* cx,
                         const ObjectOrString& algorithm,
-                        Key& baseKey,
+                        CryptoKey& baseKey,
                         const ObjectOrString& derivedKeyType,
                         bool extractable, const Sequence<nsString>& keyUsages)
 {
@@ -129,7 +129,7 @@ SubtleCrypto::DeriveKey(JSContext* cx,
 already_AddRefed<Promise>
 SubtleCrypto::DeriveBits(JSContext* cx,
                          const ObjectOrString& algorithm,
-                         Key& baseKey,
+                         CryptoKey& baseKey,
                          uint32_t length)
 {
   SUBTLECRYPTO_METHOD_BODY(DeriveBits, cx, algorithm, baseKey, length)

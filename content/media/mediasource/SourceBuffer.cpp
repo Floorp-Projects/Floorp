@@ -10,6 +10,7 @@
 #include "MediaDecoder.h"
 #include "MediaSourceDecoder.h"
 #include "SourceBufferResource.h"
+#include "mozilla/Endian.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/dom/MediaSourceBinding.h"
@@ -152,6 +153,25 @@ public:
   }
 };
 
+class MP4ContainerParser : public ContainerParser {
+public:
+  bool IsInitSegmentPresent(const uint8_t* aData, uint32_t aLength)
+  {
+    // Each MP4 atom has a chunk size and chunk type. The root chunk in an MP4
+    // file is the 'ftyp' atom followed by a file type. We just check for a
+    // vaguely valid 'ftyp' atom.
+
+    if (aLength < 8) {
+      return false;
+    }
+
+    uint32_t chunk_size = BigEndian::readUint32(aData);
+    return chunk_size > 8 && aData[4] == 'f' && aData[5] == 't' &&
+      aData[6] == 'y' && aData[7] == 'p';
+  }
+};
+
+
 /*static*/ ContainerParser*
 ContainerParser::CreateForMIMEType(const nsACString& aType)
 {
@@ -159,7 +179,9 @@ ContainerParser::CreateForMIMEType(const nsACString& aType)
     return new WebMContainerParser();
   }
 
-  // XXX: Plug in parsers for MPEG4, etc. here.
+  if (aType.LowerCaseEqualsLiteral("video/mp4") || aType.LowerCaseEqualsLiteral("audio/mp4")) {
+    return new MP4ContainerParser();
+  }
   return new ContainerParser();
 }
 

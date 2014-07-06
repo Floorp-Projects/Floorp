@@ -12,8 +12,7 @@ let { Cc, Ci, CC } = require('chrome');
 let { PlainTextConsole } = require('../console/plain-text');
 let { stdout } = require('../system');
 let ScriptError = CC('@mozilla.org/scripterror;1', 'nsIScriptError');
-let consoleService = Cc['@mozilla.org/consoleservice;1'].getService().
-                     QueryInterface(Ci.nsIConsoleService);
+let consoleService = Cc['@mozilla.org/consoleservice;1'].getService(Ci.nsIConsoleService);
 
 // On windows dump does not writes into stdout so cfx can't read thous dumps.
 // To workaround this issue we write to a special file from which cfx will
