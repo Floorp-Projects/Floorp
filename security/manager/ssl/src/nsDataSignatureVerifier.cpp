@@ -130,7 +130,7 @@ VerifyCMSDetachedSignatureIncludingCertificate(
     return NS_ERROR_INVALID_ARG;
   }
 
-  ScopedPtr<NSSCMSMessage, NSS_CMSMessage_Destroy>
+  ScopedNSSCMSMessage
     cmsMsg(NSS_CMSMessage_CreateFromDER(const_cast<SECItem*>(&buffer), nullptr,
                                         nullptr, nullptr, nullptr, nullptr,
                                         nullptr));
@@ -223,7 +223,7 @@ namespace {
 struct VerifyCertificateContext
 {
   nsCOMPtr<nsICertificatePrincipal> principal;
-  mozilla::pkix::ScopedCERTCertList builtChain;
+  ScopedCERTCertList builtChain;
 };
 
 static nsresult

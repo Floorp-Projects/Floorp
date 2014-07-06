@@ -26,6 +26,7 @@
 
 #include "pkix/bind.h"
 #include "pkix/pkix.h"
+#include "pkix/ScopedPtr.h"
 #include "pkixcheck.h"
 #include "pkixder.h"
 #include "pkixutil.h"
