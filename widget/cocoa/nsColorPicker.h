@@ -35,6 +35,8 @@ public:
   void Done();
 
 private:
+  ~nsColorPicker();
+
   static NSColor* GetNSColorFromHexString(const nsAString& aColor);
   static void GetHexStringFromNSColor(NSColor* aColor, nsAString& aResult);
 
