@@ -180,7 +180,7 @@ public:
   }
 };
 
-class pkix_cert_chain_length : public NSSTest
+class pkixbuild : public NSSTest
 {
 public:
   static void SetUpTestCase()
@@ -197,9 +197,9 @@ protected:
   static TestTrustDomain trustDomain;
 };
 
-/*static*/ TestTrustDomain pkix_cert_chain_length::trustDomain;
+/*static*/ TestTrustDomain pkixbuild::trustDomain;
 
-TEST_F(pkix_cert_chain_length, MaxAcceptableCertChainLength)
+TEST_F(pkixbuild, MaxAcceptableCertChainLength)
 {
   ScopedCERTCertList results;
   ASSERT_SECSuccess(BuildCertChain(trustDomain,
@@ -227,7 +227,7 @@ TEST_F(pkix_cert_chain_length, MaxAcceptableCertChainLength)
                                    results));
 }
 
-TEST_F(pkix_cert_chain_length, BeyondMaxAcceptableCertChainLength)
+TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
 {
   ScopedCERTCertList results;
 
