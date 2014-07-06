@@ -11,6 +11,8 @@
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "gfxSVGGlyphs.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 #include "nsRenderingContext.h"
@@ -447,8 +449,21 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
     return bbox;
   }
 
-  nsRefPtr<gfxContext> tmpCtx =
-    new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
+  RefPtr<DrawTarget> tmpDT;
+#ifdef XP_WIN
+  // Unfortunately D2D backed DrawTarget produces bounds with rounding errors
+  // when whole number results are expected, even in the case of trivial
+  // calculations. To avoid that and meet the expectations of web content we
+  // have to use a CAIRO DrawTarget. The most efficient way to do that is to
+  // wrap the cached cairo_surface_t from ScreenReferenceSurface():
+  nsRefPtr<gfxASurface> refSurf =
+    gfxPlatform::GetPlatform()->ScreenReferenceSurface();
+  tmpDT = gfxPlatform::GetPlatform()->
+    CreateDrawTargetForSurface(refSurf, IntSize(1, 1));
+#else
+  tmpDT = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+#endif
+  nsRefPtr<gfxContext> tmpCtx = new gfxContext(tmpDT);
 
   GeneratePath(tmpCtx, aToBBoxUserspace);
   tmpCtx->IdentityMatrix();
