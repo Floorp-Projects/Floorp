@@ -114,6 +114,17 @@ function windowLoad(event, win, dialog) {
         pm.remove("test.com", "popup");
       },
     },
+    {
+      test: function() {
+        url.value = "test.com";
+        btnAllow.doCommand();
+        pm.remove("test.com", "cookie");
+        is(tree.view.rowCount, 0, "display should update when cookie permission is deleted");
+      },
+      observances: [{ type: "cookie", host: "test.com", data: "added",
+                      capability: allow },
+                    { type: "cookie", host: "test.com", data: "deleted" }]
+    },
   ];
 
   let permObserver = {
