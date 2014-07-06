@@ -3245,6 +3245,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         assert isinstance(jsonifier, bool)
         self._jsonifier = jsonifier
         self._specialType = specialType
+        self._unforgeable = False
 
         if static and identifier.name == "prototype":
             raise WebIDLError("The identifier of a static operation must not be 'prototype'",
@@ -3520,9 +3521,10 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                               "[SetterThrows]",
                               [attr.location, self.location])
         elif identifier == "Unforgeable":
-            raise WebIDLError("Methods must not be flagged as "
-                              "[Unforgeable]",
-                              [attr.location, self.location])
+            if self.isStatic():
+                raise WebIDLError("[Unforgeable] is only allowed on non-static "
+                                  "methods", [attr.location, self.location])
+            self._unforgeable = True
         elif identifier == "SameObject":
             raise WebIDLError("Methods must not be flagged as [SameObject]",
                               [attr.location, self.location]);
@@ -3562,6 +3564,9 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
 
     def returnsPromise(self):
         return self._overloads[0].returnType.isPromise()
+
+    def isUnforgeable(self):
+        return self._unforgeable
 
     def _getDependentObjects(self):
         deps = set()

@@ -45,6 +45,24 @@ using mozilla::PodZero;
 static void
 exn_finalize(FreeOp *fop, JSObject *obj);
 
+bool
+Error(JSContext *cx, unsigned argc, Value *vp);
+
+static bool
+exn_toSource(JSContext *cx, unsigned argc, Value *vp);
+
+static bool
+exn_toString(JSContext *cx, unsigned argc, Value *vp);
+
+static const JSFunctionSpec exception_methods[] = {
+#if JS_HAS_TOSOURCE
+    JS_FN(js_toSource_str, exn_toSource, 0, 0),
+#endif
+    JS_FN(js_toString_str, exn_toString, 0, 0),
+    JS_FS_END
+};
+
+
 const Class ErrorObject::class_ = {
     js_Error_str,
     JSCLASS_IMPLEMENTS_BARRIERS |
@@ -60,7 +78,14 @@ const Class ErrorObject::class_ = {
     exn_finalize,
     nullptr,                 /* call        */
     nullptr,                 /* hasInstance */
-    nullptr                  /* construct   */
+    nullptr,                 /* construct   */
+    nullptr,                 /* trace       */
+    {
+        ErrorObject::createConstructor,
+        ErrorObject::createProto,
+        nullptr,
+        exception_methods
+    }
 };
 
 JSErrorReport *
@@ -290,7 +315,7 @@ js_ErrorFromException(JSContext *cx, HandleObject objArg)
     return obj->as<ErrorObject>().getOrCreateErrorReport(cx);
 }
 
-static bool
+bool
 Error(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -506,14 +531,6 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif
 
-static const JSFunctionSpec exception_methods[] = {
-#if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,   exn_toSource,           0,0),
-#endif
-    JS_FN(js_toString_str,   exn_toString,           0,0),
-    JS_FS_END
-};
-
 /* JSProto_ ordering for exceptions shall match JSEXN_ constants. */
 JS_STATIC_ASSERT(JSEXN_ERR == 0);
 JS_STATIC_ASSERT(JSProto_Error + JSEXN_INTERNALERR  == JSProto_InternalError);
@@ -524,23 +541,21 @@ JS_STATIC_ASSERT(JSProto_Error + JSEXN_SYNTAXERR    == JSProto_SyntaxError);
 JS_STATIC_ASSERT(JSProto_Error + JSEXN_TYPEERR      == JSProto_TypeError);
 JS_STATIC_ASSERT(JSProto_Error + JSEXN_URIERR       == JSProto_URIError);
 
-/* static */ ErrorObject *
-ErrorObject::createProto(JSContext *cx, JS::Handle<GlobalObject*> global, JSExnType type,
-                         JS::HandleObject proto)
+/* static */ JSObject *
+ErrorObject::createProto(JSContext *cx, JSProtoKey key)
 {
-    RootedObject errorProto(cx);
-    errorProto = global->createBlankPrototypeInheriting(cx, &ErrorObject::class_, *proto);
+    RootedObject errorProto(cx, GenericCreatePrototype<&ErrorObject::class_>(cx, key));
     if (!errorProto)
         return nullptr;
 
     Rooted<ErrorObject*> err(cx, &errorProto->as<ErrorObject>());
     RootedString emptyStr(cx, cx->names().empty);
+    JSExnType type = ExnTypeFromProtoKey(key);
     if (!ErrorObject::init(cx, err, type, nullptr, emptyStr, emptyStr, 0, 0, emptyStr))
         return nullptr;
 
     // The various prototypes also have .name in addition to the normal error
     // instance properties.
-    JSProtoKey key = GetExceptionProtoKey(type);
     RootedPropertyName name(cx, ClassName(key, cx));
     RootedValue nameValue(cx, StringValue(name));
     if (!JSObject::defineProperty(cx, err, cx->names().name, nameValue,
@@ -549,50 +564,19 @@ ErrorObject::createProto(JSContext *cx, JS::Handle<GlobalObject*> global, JSExnT
         return nullptr;
     }
 
-    // Create the corresponding constructor.
-    RootedFunction ctor(cx, global->createConstructor(cx, Error, name, 1,
-                                                      JSFunction::ExtendedFinalizeKind));
-    if (!ctor)
-        return nullptr;
-    ctor->setExtendedSlot(0, Int32Value(int32_t(type)));
-
-    if (!LinkConstructorAndPrototype(cx, ctor, err))
-        return nullptr;
-
-    if (!GlobalObject::initBuiltinConstructor(cx, global, key, ctor, err))
-        return nullptr;
-
-    return err;
+    return errorProto;
 }
 
-JSObject *
-js_InitExceptionClasses(JSContext *cx, HandleObject obj)
+/* static */ JSObject *
+ErrorObject::createConstructor(JSContext *cx, JSProtoKey key)
 {
-    JS_ASSERT(obj->is<GlobalObject>());
-    JS_ASSERT(obj->isNative());
-
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-
-    RootedObject objProto(cx, global->getOrCreateObjectPrototype(cx));
-    if (!objProto)
+    RootedObject ctor(cx);
+    ctor = GenericCreateConstructor<Error, 1, JSFunction::ExtendedFinalizeKind>(cx, key);
+    if (!ctor)
         return nullptr;
 
-    /* Initialize the base Error class first. */
-    RootedObject errorProto(cx, ErrorObject::createProto(cx, global, JSEXN_ERR, objProto));
-    if (!errorProto)
-        return nullptr;
-
-    /* |Error.prototype| alone has method properties. */
-    if (!DefinePropertiesAndFunctions(cx, errorProto, nullptr, exception_methods))
-        return nullptr;
-
-    /* Define all remaining *Error constructors. */
-    for (int i = JSEXN_ERR + 1; i < JSEXN_LIMIT; i++) {
-        if (!ErrorObject::createProto(cx, global, JSExnType(i), errorProto))
-            return nullptr;
-    }
-
-    return errorProto;
+    ctor->as<JSFunction>().setExtendedSlot(0, Int32Value(ExnTypeFromProtoKey(key)));
+    return ctor;
 }
 
 const JSErrorFormatString*

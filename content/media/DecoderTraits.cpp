@@ -401,6 +401,11 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
     result = CANPLAY_MAYBE;
   }
 #endif
+#ifdef MOZ_FMP4
+  if (IsMP4SupportedType(nsDependentCString(aMIMEType))) {
+    result = aHaveRequestedCodecs ? CANPLAY_YES : CANPLAY_MAYBE;
+  }
+#endif
 #ifdef MOZ_GSTREAMER
   if (GStreamerDecoder::CanHandleMediaType(nsDependentCString(aMIMEType),
                                            aHaveRequestedCodecs ? &aRequestedCodecs : nullptr)) {

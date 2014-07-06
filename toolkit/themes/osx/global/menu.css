@@ -185,35 +185,9 @@ menulist[editable="true"] > menupopup > menuitem > .menu-iconic-left {
 
 /* ::::: checked menuitems ::::: */
 
-:not(menulist) > menupopup > menuitem[checked="true"] > .menu-iconic-left,
-:not(menulist) > menupopup > menuitem[selected="true"] > .menu-iconic-left {
-  padding-top: 1px;
-  -moz-margin-start: -15px;
-  -moz-padding-start: 15px;
-  background: -moz-image-rect("chrome://global/skin/menu/menu-check.png", 0, 11, 11, 0) bottom left no-repeat transparent;
-}
-
-:not(menulist) > menupopup > menuitem[checked="true"] > .menu-iconic-left:-moz-locale-dir(rtl),
-:not(menulist) > menupopup > menuitem[selected="true"] > .menu-iconic-left:-moz-locale-dir(rtl) {
-  background-position: bottom right;
-}
-
-:not(menulist) > menupopup > menuitem[checked="true"][_moz-menuactive="true"]:not([disabled="true"]) > .menu-iconic-left,
-:not(menulist) > menupopup > menuitem[selected="true"][_moz-menuactive="true"]:not([disabled="true"]) > .menu-iconic-left {
-  background-image: -moz-image-rect("chrome://global/skin/menu/menu-check.png", 0, 22, 11, 11);
-}
-
-@media (min-resolution: 2dppx) {
-  :not(menulist) > menupopup > menuitem[checked="true"] > .menu-iconic-left,
-  :not(menulist) > menupopup > menuitem[selected="true"] > .menu-iconic-left {
-    background-size: 11px 11px;
-    background-image: -moz-image-rect("chrome://global/skin/menu/menu-check@2x.png", 0, 22, 22, 0);
-  }
-
-  :not(menulist) > menupopup > menuitem[checked="true"][_moz-menuactive="true"]:not([disabled="true"]) > .menu-iconic-left,
-  :not(menulist) > menupopup > menuitem[selected="true"][_moz-menuactive="true"]:not([disabled="true"]) > .menu-iconic-left {
-    background-image: -moz-image-rect("chrome://global/skin/menu/menu-check@2x.png", 0, 44, 22, 22);
-  }
+:not(menulist) > menupopup > menuitem[checked="true"],
+:not(menulist) > menupopup > menuitem[selected="true"] {
+  -moz-appearance: checkmenuitem;
 }
 
 menulist:not([editable="true"]) > menupopup > menuitem[checked="true"]::before,

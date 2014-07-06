@@ -39,33 +39,35 @@ namespace gl
 }
 
 // A macro to output a trace of a function call and its arguments to the debugging log
-#if defined(ANGLE_DISABLE_TRACE) && defined(ANGLE_DISABLE_PERF)
-#define TRACE(message, ...) (void(0))
-#else
+#if defined(ANGLE_ENABLE_TRACE) || defined(ANGLE_ENABLE_PERF)
 #define TRACE(message, ...) gl::trace(true, "trace: %s(%d): " message "\n", __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#else
+#define TRACE(message, ...) (void(0))
 #endif
 
 // A macro to output a function call and its arguments to the debugging log, to denote an item in need of fixing.
-#if defined(ANGLE_DISABLE_TRACE) && defined(ANGLE_DISABLE_PERF)
-#define FIXME(message, ...) (void(0))
-#else
+#if defined(ANGLE_ENABLE_TRACE) || defined(ANGLE_ENABLE_PERF)
 #define FIXME(message, ...) gl::trace(false, "fixme: %s(%d): " message "\n", __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#else
+#define FIXME(message, ...) (void(0))
 #endif
 
 // A macro to output a function call and its arguments to the debugging log, in case of error.
-#if defined(ANGLE_DISABLE_TRACE) && defined(ANGLE_DISABLE_PERF)
-#define ERR(message, ...) (void(0))
-#else
+#if defined(ANGLE_ENABLE_TRACE) || defined(ANGLE_ENABLE_PERF)
 #define ERR(message, ...) gl::trace(false, "err: %s(%d): " message "\n", __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#else
+#define ERR(message, ...) (void(0))
 #endif
 
 // A macro to log a performance event around a scope.
-#if defined(ANGLE_DISABLE_TRACE) && defined(ANGLE_DISABLE_PERF)
-#define EVENT(message, ...) (void(0))
-#elif defined(_MSC_VER)
-#define EVENT(message, ...) gl::ScopedPerfEventHelper scopedPerfEventHelper ## __LINE__(__FUNCTION__ message "\n", __VA_ARGS__);
+#if defined(ANGLE_ENABLE_TRACE) || defined(ANGLE_ENABLE_PERF)
+#if defined(_MSC_VER)
+#define EVENT(message, ...) gl::ScopedPerfEventHelper scopedPerfEventHelper ## __LINE__("%s" message "\n", __FUNCTION__, __VA_ARGS__);
 #else
 #define EVENT(message, ...) gl::ScopedPerfEventHelper scopedPerfEventHelper(message "\n", ##__VA_ARGS__);
+#endif // _MSC_VER
+#else
+#define EVENT(message, ...) (void(0))
 #endif
 
 // A macro asserting a condition and outputting failures to the debug log
@@ -75,15 +77,24 @@ namespace gl
         ERR("\t! Assert failed in %s(%d): "#expression"\n", __FUNCTION__, __LINE__); \
         assert(expression); \
     } while(0)
+#define UNUSED_ASSERTION_VARIABLE(variable)
 #else
 #define ASSERT(expression) (void(0))
+#define UNUSED_ASSERTION_VARIABLE(variable) ((void)variable)
 #endif
 
 // A macro to indicate unimplemented functionality
+
+// Define NOASSERT_UNIMPLEMENTED to non zero to skip the assert fail in the unimplemented checks
+// This will allow us to test with some automated test suites (eg dEQP) without crashing
+#ifndef NOASSERT_UNIMPLEMENTED
+#define NOASSERT_UNIMPLEMENTED 0
+#endif
+
 #if !defined(NDEBUG)
 #define UNIMPLEMENTED() do { \
     FIXME("\t! Unimplemented: %s(%d)\n", __FUNCTION__, __LINE__); \
-    assert(false); \
+    assert(NOASSERT_UNIMPLEMENTED); \
     } while(0)
 #else
     #define UNIMPLEMENTED() FIXME("\t! Unimplemented: %s(%d)\n", __FUNCTION__, __LINE__)
@@ -99,9 +110,7 @@ namespace gl
     #define UNREACHABLE() ERR("\t! Unreachable reached: %s(%d)\n", __FUNCTION__, __LINE__)
 #endif
 
-// A macro that determines whether an object has a given runtime type. MSVC uses _CPPRTTI.
-// GCC uses __GXX_RTTI, but the macro was introduced in version 4.3, so we assume that all older
-// versions support RTTI.
+// A macro that determines whether an object has a given runtime type.
 #if !defined(NDEBUG) && (!defined(_MSC_VER) || defined(_CPPRTTI)) && (!defined(__GNUC__) || __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 3) || defined(__GXX_RTTI))
 #define HAS_DYNAMIC_TYPE(type, obj) (dynamic_cast<type >(obj) != NULL)
 #else
@@ -109,6 +118,13 @@ namespace gl
 #endif
 
 // A macro functioning as a compile-time assert to validate constant conditions
-#define META_ASSERT(condition) typedef int COMPILE_TIME_ASSERT_##__LINE__[static_cast<bool>(condition)?1:-1]
+#if defined(_MSC_VER) && _MSC_VER >= 1600
+#define META_ASSERT_MSG(condition, msg) static_assert(condition, msg)
+#else
+#define META_ASSERT_CONCAT(a, b) a ## b
+#define META_ASSERT_CONCAT2(a, b) META_ASSERT_CONCAT(a, b)
+#define META_ASSERT_MSG(condition, msg) typedef int META_ASSERT_CONCAT2(COMPILE_TIME_ASSERT_, __LINE__)[static_cast<bool>(condition)?1:-1]
+#endif
+#define META_ASSERT(condition) META_ASSERT_MSG(condition, "compile time assertion failed.")
 
 #endif   // COMMON_DEBUG_H_

@@ -13,7 +13,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/SubtleCryptoBinding.h"
-#include "mozilla/dom/Key.h"
+#include "mozilla/dom/CryptoKey.h"
 
 namespace mozilla {
 namespace dom {
@@ -87,13 +87,13 @@ public:
 protected:
   static WebCryptoTask* EncryptDecryptTask(JSContext* aCx,
                            const ObjectOrString& aAlgorithm,
-                           Key& aKey,
+                           CryptoKey& aKey,
                            const CryptoOperationData& aData,
                            bool aEncrypt);
 
   static WebCryptoTask* SignVerifyTask(JSContext* aCx,
                           const ObjectOrString& aAlgorithm,
-                          Key& aKey,
+                          CryptoKey& aKey,
                           const CryptoOperationData& aSignature,
                           const CryptoOperationData& aData,
                           bool aSign);
@@ -101,7 +101,7 @@ protected:
 public:
   static WebCryptoTask* EncryptTask(JSContext* aCx,
                           const ObjectOrString& aAlgorithm,
-                          Key& aKey,
+                          CryptoKey& aKey,
                           const CryptoOperationData& aData)
   {
     return EncryptDecryptTask(aCx, aAlgorithm, aKey, aData, true);
@@ -109,7 +109,7 @@ public:
 
   static WebCryptoTask* DecryptTask(JSContext* aCx,
                           const ObjectOrString& aAlgorithm,
-                          Key& aKey,
+                          CryptoKey& aKey,
                           const CryptoOperationData& aData)
   {
     return EncryptDecryptTask(aCx, aAlgorithm, aKey, aData, false);
@@ -117,7 +117,7 @@ public:
 
   static WebCryptoTask* SignTask(JSContext* aCx,
                           const ObjectOrString& aAlgorithm,
-                          Key& aKey,
+                          CryptoKey& aKey,
                           const CryptoOperationData& aData)
   {
     CryptoOperationData dummy;
@@ -127,7 +127,7 @@ public:
 
   static WebCryptoTask* VerifyTask(JSContext* aCx,
                           const ObjectOrString& aAlgorithm,
-                          Key& aKey,
+                          CryptoKey& aKey,
                           const CryptoOperationData& aSignature,
                           const CryptoOperationData& aData)
   {
@@ -145,7 +145,7 @@ public:
                           bool aExtractable,
                           const Sequence<nsString>& aKeyUsages);
   static WebCryptoTask* ExportKeyTask(const nsAString& aFormat,
-                          Key& aKey);
+                          CryptoKey& aKey);
   static WebCryptoTask* GenerateKeyTask(JSContext* aCx,
                           const ObjectOrString& aAlgorithm,
                           bool aExtractable,
@@ -153,13 +153,13 @@ public:
 
   static WebCryptoTask* DeriveKeyTask(JSContext* aCx,
                           const ObjectOrString& aAlgorithm,
-                          Key& aBaseKey,
+                          CryptoKey& aBaseKey,
                           const ObjectOrString& aDerivedKeyType,
                           bool extractable,
                           const Sequence<nsString>& aKeyUsages);
   static WebCryptoTask* DeriveBitsTask(JSContext* aCx,
                           const ObjectOrString& aAlgorithm,
-                          Key& aKey,
+                          CryptoKey& aKey,
                           uint32_t aLength);
 
 protected:

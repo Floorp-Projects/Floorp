@@ -206,7 +206,7 @@ TCPSocketParent::SendEvent(const nsAString& aType, JS::Handle<JS::Value> aDataVa
   CallbackData data;
   if (aDataVal.isString()) {
     JSString* jsstr = aDataVal.toString();
-    nsDependentJSString str;
+    nsAutoJSString str;
     if (!str.init(aCx, jsstr)) {
       FireInteralError(this, __LINE__);
       return NS_ERROR_OUT_OF_MEMORY;
@@ -235,7 +235,7 @@ TCPSocketParent::SendEvent(const nsAString& aType, JS::Handle<JS::Value> aDataVa
       data = SendableData(arr);
 
     } else {
-      nsDependentJSString name;
+      nsAutoJSString name;
 
       JS::Rooted<JS::Value> val(aCx);
       if (!JS_GetProperty(aCx, obj, "name", &val)) {

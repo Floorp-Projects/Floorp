@@ -4,6 +4,15 @@
 == abspos-breaking-000.xhtml abspos-breaking-000.ref.xhtml
 == abspos-breaking-001.xhtml abspos-breaking-000.ref.xhtml
 == abspos-breaking-002.xhtml abspos-breaking-000.ref.xhtml
+== abspos-breaking-003.html abspos-breaking-003-ref.html
+== abspos-breaking-004.html abspos-breaking-004-ref.html
+== abspos-breaking-005.html abspos-breaking-005-ref.html
+== abspos-breaking-006.html abspos-breaking-006-ref.html
+pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-007.html abspos-breaking-007-ref.html
+skip-if(B2G) pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-008.html abspos-breaking-008-ref.html
+skip-if(B2G) pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-009.html abspos-breaking-009-ref.html
+skip-if(B2G) pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-010.html abspos-breaking-010-ref.html
+== abspos-breaking-011.html abspos-breaking-011-ref.html
 == abspos-overflow-01.xhtml abspos-overflow-01.ref.xhtml
 == abspos-overflow-01-cols.xhtml abspos-overflow-01-cols.ref.xhtml
 == border-breaking-000-cols.xhtml border-breaking-000-cols.ref.xhtml
