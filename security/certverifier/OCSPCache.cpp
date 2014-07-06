@@ -29,6 +29,7 @@
 #include "NSSCertDBTrustDomain.h"
 #include "pk11pub.h"
 #include "pkix/pkixtypes.h"
+#include "ScopedNSSTypes.h"
 #include "secerr.h"
 
 #ifdef PR_LOGGING
@@ -38,16 +39,6 @@ extern PRLogModuleInfo* gCertVerifierLog;
 using namespace mozilla::pkix;
 
 namespace mozilla { namespace psm {
-
-void
-MozillaPKIX_PK11_DestroyContext_true(PK11Context* context)
-{
-  PK11_DestroyContext(context, true);
-}
-
-typedef mozilla::pkix::ScopedPtr<PK11Context,
-                                 MozillaPKIX_PK11_DestroyContext_true>
-                                 ScopedPK11Context;
 
 // Let derIssuer be the DER encoding of the issuer of aCert.
 // Let derPublicKey be the DER encoding of the public key of aIssuerCert.

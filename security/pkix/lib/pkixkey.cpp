@@ -29,6 +29,7 @@
 #include "cryptohi.h"
 #include "keyhi.h"
 #include "pkix/pkix.h"
+#include "pkix/ScopedPtr.h"
 #include "prerror.h"
 #include "secerr.h"
 
