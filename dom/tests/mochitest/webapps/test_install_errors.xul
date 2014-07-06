@@ -91,7 +91,7 @@ function invalidContent(next) {
   var request = navigator.mozApps.install(url, null);
 
   request.onerror = function onInstallError() {
-    is(this.error.name, "INVALID_MANIFEST", "manifest with bad content type");
+    is(this.error.name, "INVALID_MANIFEST_CONTENT_TYPE", "manifest with bad content type");
     next();
   };
 
