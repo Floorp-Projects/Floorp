@@ -9,10 +9,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -20,6 +22,10 @@ public class ReferrerReceiver extends BroadcastReceiver {
     private static final String LOGTAG = "GeckoReferrerReceiver";
 
     private static final String ACTION_INSTALL_REFERRER = "com.android.vending.INSTALL_REFERRER";
+
+    // Sent when we're done.
+    @RobocopTarget
+    public static final String ACTION_REFERRER_RECEIVED = "org.mozilla.fennec.REFERRER_RECEIVED";
 
     /**
      * If the install intent has this source, we'll track the campaign ID.
@@ -52,6 +58,10 @@ public class ReferrerReceiver extends BroadcastReceiver {
         if (TextUtils.equals(referrer.source, MOZILLA_UTM_SOURCE)) {
             propagateMozillaCampaign(referrer);
         }
+
+        // Broadcast a secondary, local intent to allow test code to respond.
+        final Intent receivedIntent = new Intent(ACTION_REFERRER_RECEIVED);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(receivedIntent);
     }
 
 

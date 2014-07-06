@@ -196,6 +196,12 @@ public class GeckoSwipeRefreshLayout extends ViewGroup {
         super.onAttachedToWindow();
         removeCallbacks(mCancel);
         removeCallbacks(mReturnToStartPosition);
+
+        // Sometimes the inner view doesn't get a proper layout
+        // pass when re-attached to the view tree (see bug 1010986).
+        if (getChildCount() > 0) {
+            getChildAt(0).forceLayout();
+        }
     }
 
     @Override
