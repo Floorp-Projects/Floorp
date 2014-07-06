@@ -190,7 +190,7 @@ private:
       return false;
     }
 
-    nsDependentJSString contentType;
+    nsAutoJSString contentType;
     if (!contentType.init(aCx, jsContentType)) {
       return false;
     }

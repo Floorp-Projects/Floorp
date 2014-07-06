@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 2.7.  */
+/* A Bison parser, made by GNU Bison 2.7.1.  */
 
 /* Bison implementation for Yacc-like parsers in C
    
-      Copyright (C) 1984, 1989-1990, 2000-2012 Free Software Foundation, Inc.
+      Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
    
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "2.7"
+#define YYBISON_VERSION "2.7.1"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -91,6 +91,12 @@
 #endif
 
 #include "ExpressionParser.h"
+
+#if defined(_MSC_VER)
+#include <malloc.h>
+#else
+#include <stdlib.h>
+#endif
 
 #include <cassert>
 #include <sstream>
@@ -258,12 +264,21 @@ typedef short int yytype_int16;
 # endif
 #endif
 
+#ifndef __attribute__
+/* This feature is available in gcc versions 2.5 and later.  */
+# if (! defined __GNUC__ || __GNUC__ < 2 \
+      || (__GNUC__ == 2 && __GNUC_MINOR__ < 5))
+#  define __attribute__(Spec) /* empty */
+# endif
+#endif
+
 /* Suppress unused-variable warnings by "using" E.  */
 #if ! defined lint || defined __GNUC__
 # define YYUSE(E) ((void) (E))
 #else
 # define YYUSE(E) /* empty */
 #endif
+
 
 /* Identity function, used to suppress warnings about constant conditions.  */
 #ifndef lint
@@ -495,9 +510,9 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    91,    91,    98,    99,   102,   105,   108,   111,   114,
-     117,   120,   123,   126,   129,   132,   135,   138,   141,   144,
-     157,   170,   173,   176,   179,   182,   185
+       0,    97,    97,   104,   105,   108,   111,   114,   117,   120,
+     123,   126,   129,   132,   135,   138,   141,   144,   147,   150,
+     163,   176,   179,   182,   185,   188,   191
 };
 #endif
 
@@ -762,11 +777,7 @@ yy_symbol_value_print (yyoutput, yytype, yyvaluep, context)
 # else
   YYUSE (yyoutput);
 # endif
-  switch (yytype)
-    {
-      default:
-        break;
-    }
+  YYUSE (yytype);
 }
 
 
@@ -1160,12 +1171,7 @@ yydestruct (yymsg, yytype, yyvaluep, context)
     yymsg = "Deleting";
   YY_SYMBOL_PRINT (yymsg, yytype, yyvaluep, yylocationp);
 
-  switch (yytype)
-    {
-
-      default:
-        break;
-    }
+  YYUSE (yytype);
 }
 
 
@@ -1581,7 +1587,7 @@ yyreduce:
             std::ostringstream stream;
             stream << (yyvsp[(1) - (3)]) << " % " << (yyvsp[(3) - (3)]);
             std::string text = stream.str();
-            context->diagnostics->report(pp::Diagnostics::DIVISION_BY_ZERO,
+            context->diagnostics->report(pp::Diagnostics::PP_DIVISION_BY_ZERO,
                                          context->token->location,
                                          text.c_str());
             YYABORT;
@@ -1598,7 +1604,7 @@ yyreduce:
             std::ostringstream stream;
             stream << (yyvsp[(1) - (3)]) << " / " << (yyvsp[(3) - (3)]);
             std::string text = stream.str();
-            context->diagnostics->report(pp::Diagnostics::DIVISION_BY_ZERO,
+            context->diagnostics->report(pp::Diagnostics::PP_DIVISION_BY_ZERO,
                                          context->token->location,
                                          text.c_str());
             YYABORT;
@@ -1885,73 +1891,92 @@ yyreturn:
 
 
 
-int yylex(YYSTYPE* lvalp, Context* context)
+int yylex(YYSTYPE *lvalp, Context *context)
 {
     int type = 0;
 
-    pp::Token* token = context->token;
+    pp::Token *token = context->token;
     switch (token->type)
     {
-      case pp::Token::CONST_INT:
-      {
+      case pp::Token::CONST_INT: {
         unsigned int val = 0;
         if (!token->uValue(&val))
         {
-            context->diagnostics->report(pp::Diagnostics::INTEGER_OVERFLOW,
+            context->diagnostics->report(pp::Diagnostics::PP_INTEGER_OVERFLOW,
                                          token->location, token->text);
         }
         *lvalp = static_cast<YYSTYPE>(val);
         type = TOK_CONST_INT;
         break;
       }
-      case pp::Token::OP_OR: type = TOK_OP_OR; break;
-      case pp::Token::OP_AND: type = TOK_OP_AND; break;
-      case pp::Token::OP_NE: type = TOK_OP_NE; break;
-      case pp::Token::OP_EQ: type = TOK_OP_EQ; break;
-      case pp::Token::OP_GE: type = TOK_OP_GE; break;
-      case pp::Token::OP_LE: type = TOK_OP_LE; break;
-      case pp::Token::OP_RIGHT: type = TOK_OP_RIGHT; break;
-      case pp::Token::OP_LEFT: type = TOK_OP_LEFT; break;
-      case '|': type = '|'; break;
-      case '^': type = '^'; break;
-      case '&': type = '&'; break;
-      case '>': type = '>'; break;
-      case '<': type = '<'; break;
-      case '-': type = '-'; break;
-      case '+': type = '+'; break;
-      case '%': type = '%'; break;
-      case '/': type = '/'; break;
-      case '*': type = '*'; break;
-      case '!': type = '!'; break;
-      case '~': type = '~'; break;
-      case '(': type = '('; break;
-      case ')': type = ')'; break;
+      case pp::Token::OP_OR:
+        type = TOK_OP_OR;
+        break;
+      case pp::Token::OP_AND:
+        type = TOK_OP_AND;
+        break;
+      case pp::Token::OP_NE:
+        type = TOK_OP_NE;
+        break;
+      case pp::Token::OP_EQ:
+        type = TOK_OP_EQ;
+        break;
+      case pp::Token::OP_GE:
+        type = TOK_OP_GE;
+        break;
+      case pp::Token::OP_LE:
+        type = TOK_OP_LE;
+        break;
+      case pp::Token::OP_RIGHT:
+        type = TOK_OP_RIGHT;
+        break;
+      case pp::Token::OP_LEFT:
+        type = TOK_OP_LEFT;
+        break;
+      case '|':
+      case '^':
+      case '&':
+      case '>':
+      case '<':
+      case '-':
+      case '+':
+      case '%':
+      case '/':
+      case '*':
+      case '!':
+      case '~':
+      case '(':
+      case ')':
+        type = token->type;
+        break;
 
-      default: break;
+      default:
+        break;
     }
 
     // Advance to the next token if the current one is valid.
-    if (type != 0) context->lexer->lex(token);
+    if (type != 0)
+        context->lexer->lex(token);
 
     return type;
 }
 
-void yyerror(Context* context, const char* reason)
+void yyerror(Context *context, const char *reason)
 {
-    context->diagnostics->report(pp::Diagnostics::INVALID_EXPRESSION,
+    context->diagnostics->report(pp::Diagnostics::PP_INVALID_EXPRESSION,
                                  context->token->location,
                                  reason);
 }
 
 namespace pp {
 
-ExpressionParser::ExpressionParser(Lexer* lexer, Diagnostics* diagnostics) :
-    mLexer(lexer),
-    mDiagnostics(diagnostics)
+ExpressionParser::ExpressionParser(Lexer *lexer, Diagnostics *diagnostics)
+    : mLexer(lexer),
+      mDiagnostics(diagnostics)
 {
 }
 
-bool ExpressionParser::parse(Token* token, int* result)
+bool ExpressionParser::parse(Token *token, int *result)
 {
     Context context;
     context.diagnostics = mDiagnostics;
@@ -1966,12 +1991,12 @@ bool ExpressionParser::parse(Token* token, int* result)
         break;
 
       case 2:
-        mDiagnostics->report(Diagnostics::OUT_OF_MEMORY, token->location, "");
+        mDiagnostics->report(Diagnostics::PP_OUT_OF_MEMORY, token->location, "");
         break;
 
       default:
         assert(false);
-        mDiagnostics->report(Diagnostics::INTERNAL_ERROR, token->location, "");
+        mDiagnostics->report(Diagnostics::PP_INTERNAL_ERROR, token->location, "");
         break;
     }
 

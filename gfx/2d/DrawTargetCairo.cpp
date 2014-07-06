@@ -690,8 +690,14 @@ DrawTargetCairo::DrawPattern(const Pattern& aPattern,
   AutoClearDeviceOffset clear(aPattern);
 
   cairo_pattern_t* pat = GfxPatternToCairoPattern(aPattern, aOptions.mAlpha);
-  if (!pat)
+  if (!pat) {
     return;
+  }
+  if (cairo_pattern_status(pat)) {
+    cairo_pattern_destroy(pat);
+    gfxWarning() << "Invalid pattern";
+    return;
+  }
 
   cairo_set_source(mContext, pat);
 
@@ -754,6 +760,11 @@ DrawTargetCairo::CopySurfaceInternal(cairo_surface_t* aSurface,
                                      const IntRect &aSource,
                                      const IntPoint &aDest)
 {
+  if (cairo_surface_status(aSurface)) {
+    gfxWarning() << "Invalid surface";
+    return;
+  }
+
   cairo_identity_matrix(mContext);
 
   cairo_set_source_surface(mContext, aSurface, aDest.x - aSource.x, aDest.y - aSource.y);
@@ -953,12 +964,20 @@ DrawTargetCairo::Mask(const Pattern &aSource,
   cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
 
   cairo_pattern_t* source = GfxPatternToCairoPattern(aSource, aOptions.mAlpha);
-  if (!source)
+  if (!source) {
     return;
+  }
 
   cairo_pattern_t* mask = GfxPatternToCairoPattern(aMask, aOptions.mAlpha);
   if (!mask) {
     cairo_pattern_destroy(source);
+    return;
+  }
+
+  if (cairo_pattern_status(source) || cairo_pattern_status(mask)) {
+    cairo_pattern_destroy(source);
+    cairo_pattern_destroy(mask);
+    gfxWarning() << "Invalid pattern";
     return;
   }
 
@@ -986,8 +1005,15 @@ DrawTargetCairo::MaskSurface(const Pattern &aSource,
   cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
 
   cairo_pattern_t* pat = GfxPatternToCairoPattern(aSource, aOptions.mAlpha);
-  if (!pat)
+  if (!pat) {
     return;
+  }
+
+  if (cairo_pattern_status(pat)) {
+    cairo_pattern_destroy(pat);
+    gfxWarning() << "Invalid pattern";
+    return;
+  }
 
   cairo_set_source(mContext, pat);
 

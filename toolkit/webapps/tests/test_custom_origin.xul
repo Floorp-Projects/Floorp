@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1029674
+-->
+<window title="Mozilla Bug 1029674"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
+  <script type="application/javascript" src="head.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1029674"
+     target="_blank">Mozilla Bug 1029674</a>
+  </body>
+
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 1029674 **/
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NativeApp.jsm");
+Cu.import("resource://gre/modules/WebappOSUtils.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
+
+let runTest = Task.async(function*() {
+  let manifest = yield readJSON(getTestFilePath("data/custom_origin.webapp"));
+
+  let app = {
+    name: manifest.name,
+    manifestURL: "http://test/chrome/toolkit/webapps/tests/data/custom_origin.webapp",
+    origin: "app://test.origin.privileged.app",
+  };
+
+  let testAppInfo = new TestAppInfo(app, true);
+
+  // Get to a clean state before the test
+  yield testAppInfo.cleanup();
+
+  SimpleTest.registerCleanupFunction(() => testAppInfo.cleanup());
+
+  setDryRunPref();
+
+  // Use the test root certificate for the test
+  Cu.import("resource://gre/modules/StoreTrustAnchor.jsm");
+  let oldIndex = TrustedRootCertificate.index;
+  TrustedRootCertificate.index = Ci.nsIX509CertDB.AppXPCShellRoot;
+
+  SimpleTest.registerCleanupFunction(function() {
+    TrustedRootCertificate.index = oldIndex;
+  });
+
+  // Allow signed apps to be installed from the test origin
+  let oldSignedAppOrigins;
+  try {
+    oldSignedAppOrigins = Services.prefs.getCharPref("dom.mozApps.signed_apps_installable_from");
+  } catch (ex) {}
+
+  let newSignedAppOrigins = oldSignedAppOrigins.concat(",chrome://mochitests");
+  Services.prefs.setCharPref("dom.mozApps.signed_apps_installable_from", newSignedAppOrigins);
+
+  SimpleTest.registerCleanupFunction(function() {
+    Services.prefs.setCharPref("dom.mozApps.signed_apps_installable_from", oldSignedAppOrigins);
+  });
+
+  // On Mac build servers, we don't have enough privileges to write to /Applications,
+  // so we install apps in a user-owned directory.
+  if (MAC) {
+    yield setMacRootInstallDir(OS.Path.join(OS.Constants.Path.homeDir, "Applications"));
+  }
+
+  confirmNextInstall();
+
+  let request = navigator.mozApps.installPackage("http://test/chrome/toolkit/webapps/tests/data/custom_origin.webapp");
+
+  let (deferred = Promise.defer()) {
+    request.onerror = function() {
+      deferred.reject(this.error.name);
+    };
+    request.onsuccess = deferred.resolve;
+    yield deferred.promise;
+  }
+
+  let appObject = request.result;
+  ok(appObject, "app is non-null");
+
+  let (deferred = Promise.defer()) {
+    appObject.ondownloaderror = function() {
+      deferred.reject(this.error.name);
+    };
+    appObject.ondownloadapplied = deferred.resolve;
+    yield deferred.promise;
+  };
+
+  while (!WebappOSUtils.isLaunchable(app)) {
+    yield wait(1000);
+  }
+  ok(true, "App launchable");
+
+  let exeFile = getFile(testAppInfo.exePath);
+
+  ok(exeFile.isExecutable(), "webapprt executable is executable");
+
+  let appClosed = false;
+
+  testAppInfo.appProcess.init(exeFile)
+  testAppInfo.appProcess.runAsync([], 0, () => appClosed = true);
+
+  while (!(yield wasAppSJSAccessed()) && !appClosed) {
+    yield wait(1000);
+  }
+  ok(!appClosed, "App was launched and is still running");
+
+  SimpleTest.finish();
+});
+
+runTest().catch((e) => {
+  ok(false, "Error during test: " + e);
+  SimpleTest.finish();
+});
+
+]]>
+</script>
+</window>

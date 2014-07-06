@@ -250,7 +250,7 @@ AutoMounterSetting::Observe(nsISupports* aSubject,
   }
 
   JSString *jsKey = JS::ToString(cx, key);
-  nsDependentJSString keyStr;
+  nsAutoJSString keyStr;
   if (!keyStr.init(cx, jsKey)) {
     return NS_OK;
   }

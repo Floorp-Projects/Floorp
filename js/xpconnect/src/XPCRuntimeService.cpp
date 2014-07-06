@@ -30,6 +30,7 @@ NS_IMPL_RELEASE(BackstagePass)
 #define XPC_MAP_CLASSNAME           BackstagePass
 #define XPC_MAP_QUOTED_CLASSNAME   "BackstagePass"
 #define                             XPC_MAP_WANT_NEWRESOLVE
+#define                             XPC_MAP_WANT_ENUMERATE
 #define                             XPC_MAP_WANT_FINALIZE
 #define                             XPC_MAP_WANT_PRECREATE
 
@@ -72,6 +73,22 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
         *objpArg = objp;
         return NS_OK;
     }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+BackstagePass::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *objArg, bool *_retval)
+{
+    JS::RootedObject obj(cx, objArg);
+
+    *_retval = JS_EnumerateStandardClasses(cx, obj);
+    NS_ENSURE_TRUE(*_retval, NS_ERROR_FAILURE);
+
+    JS::RootedObject ignored(cx);
+    *_retval = ResolveWorkerClasses(cx, obj, JSID_VOIDHANDLE, &ignored);
+    NS_ENSURE_TRUE(*_retval, NS_ERROR_FAILURE);
 
     return NS_OK;
 }

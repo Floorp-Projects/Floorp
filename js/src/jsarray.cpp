@@ -3129,7 +3129,7 @@ const Class ArrayObject::class_ = {
     nullptr,        /* construct   */
     nullptr,        /* trace       */
     {
-        GenericCreateConstructor<js_Array, NAME_OFFSET(Array), 1>,
+        GenericCreateConstructor<js_Array, 1, JSFunction::FinalizeKind>,
         CreateArrayPrototype,
         array_static_methods,
         array_methods

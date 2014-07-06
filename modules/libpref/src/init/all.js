@@ -346,6 +346,9 @@ pref("media.tabstreaming.time_per_frame", 40);
 pref("media.webvtt.enabled", true);
 pref("media.webvtt.regions.enabled", false);
 
+// AudioTrack and VideoTrack support
+pref("media.track.enabled", false);
+
 // Whether to enable MediaSource support
 pref("media.mediasource.enabled", false);
 

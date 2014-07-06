@@ -213,7 +213,7 @@ TCPSocketChild::SendSend(JS::Handle<JS::Value> aData,
 {
   if (aData.isString()) {
     JSString* jsstr = aData.toString();
-    nsDependentJSString str;
+    nsAutoJSString str;
     bool ok = str.init(aCx, jsstr);
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
     SendData(str, aTrackingNumber);

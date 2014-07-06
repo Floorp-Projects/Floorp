@@ -274,7 +274,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[noscript, uuid(febddcc9-5a88-4121-815a-934cd159b3e9)]
+[noscript, uuid(9ec7367c-0dde-4b7a-963c-5a590ee3ee42)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -511,10 +511,6 @@ interface nsIXPConnect : nsISupports
      *           the script. The actual evaluation will happen on a new
      *           temporary context.
      * @param sandbox The sandbox object to evaluate the script in.
-     * @param returnStringOnly The only results to come out of the
-     *                         computation (including exceptions) will
-     *                         be coerced into strings created in the
-     *                         sandbox.
      * @return The result of the evaluation as a jsval. If the caller
      *         intends to use the return value from this call the caller
      *         is responsible for rooting the jsval before making a call
@@ -522,8 +518,7 @@ interface nsIXPConnect : nsISupports
      */
     [noscript] jsval evalInSandboxObject(in AString source, in string filename,
                                          in JSContextPtr cx,
-                                         in JSObjectPtr sandbox,
-                                         in boolean returnStringOnly);
+                                         in JSObjectPtr sandbox);
 
     /**
      * Whether or not XPConnect should report all JS exceptions when returning

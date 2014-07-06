@@ -69,7 +69,10 @@ describe("loop.shared.router", function() {
         it("should set the active view", function() {
           router.loadView(view);
 
-          expect(router._activeView).eql(view);
+          expect(router._activeView).eql({
+            type: "backbone",
+            view: view
+          });
         });
 
         it("should load and render the passed view", function() {

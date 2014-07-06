@@ -287,7 +287,7 @@ MediaPermissionRequest::Allow(JS::HandleValue aChoices)
     if (!JS_GetProperty(cx, obj, AUDIO_PERMISSION_NAME, &v) || !v.isString()) {
       return NS_ERROR_FAILURE;
     }
-    nsDependentJSString deviceName;
+    nsAutoJSString deviceName;
     if (!deviceName.init(cx, v)) {
       MOZ_ASSERT(false, "Couldn't initialize string from aChoices");
       return NS_ERROR_FAILURE;
@@ -301,7 +301,7 @@ MediaPermissionRequest::Allow(JS::HandleValue aChoices)
     if (!JS_GetProperty(cx, obj, VIDEO_PERMISSION_NAME, &v) || !v.isString()) {
       return NS_ERROR_FAILURE;
     }
-    nsDependentJSString deviceName;
+    nsAutoJSString deviceName;
     if (!deviceName.init(cx, v)) {
       MOZ_ASSERT(false, "Couldn't initialize string from aChoices");
       return NS_ERROR_FAILURE;

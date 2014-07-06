@@ -342,7 +342,7 @@ nsContentPermissionRequestProxy::Allow(JS::HandleValue aChoices)
           !val.isString()) {
         // no setting for the permission type, skip it
       } else {
-        nsDependentJSString choice;
+        nsAutoJSString choice;
         if (!choice.init(cx, val)) {
           return NS_ERROR_FAILURE;
         }

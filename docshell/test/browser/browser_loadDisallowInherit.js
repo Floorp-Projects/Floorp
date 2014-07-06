@@ -47,7 +47,9 @@ function test() {
 
   let urls = [
     "data:text/html,<body>hi",
-    "javascript:1;"
+    // We used to test javascript: here as well, but now that we no longer run
+    // javascript: in a sandbox, we end up not running it at all in the
+    // DISALLOW_INHERIT_OWNER case, so never actually do a load for it at all.
   ];
 
   function nextTest() {
