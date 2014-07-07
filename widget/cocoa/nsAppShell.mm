@@ -49,6 +49,8 @@ public:
   NS_DECL_ISUPPORTS;
 
 private:
+  ~MacWakeLockListener() {}
+
   IOPMAssertionID mAssertionID = kIOPMNullAssertionID;
 
   NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) {

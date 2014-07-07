@@ -241,7 +241,7 @@ SVGImageElement::ConstructPath(gfxContext *aCtx)
 }
 
 TemporaryRef<Path>
-SVGImageElement::BuildPath()
+SVGImageElement::BuildPath(PathBuilder* aBuilder)
 {
   // We get called in order to get bounds for this element, and for
   // hit-testing against it. For that we just pretend to be a rectangle.
@@ -253,7 +253,7 @@ SVGImageElement::BuildPath()
     return nullptr;
   }
 
-  RefPtr<PathBuilder> pathBuilder = CreatePathBuilder();
+  RefPtr<PathBuilder> pathBuilder = aBuilder ? aBuilder : CreatePathBuilder();
 
   Rect r(x, y, width, height);
   pathBuilder->MoveTo(r.TopLeft());

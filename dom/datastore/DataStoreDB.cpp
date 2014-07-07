@@ -68,6 +68,8 @@ public:
 
 private:
   IDBDatabase* mDatabase;
+
+  ~VersionChangeListener() {}
 };
 
 NS_IMPL_ISUPPORTS(VersionChangeListener, nsIDOMEventListener)

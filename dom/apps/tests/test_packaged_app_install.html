@@ -110,7 +110,7 @@ var steps = [
     var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true" +
                           "&noManifestContentType=true";
-    checkAppInstallError(miniManifestURL, "INVALID_MANIFEST");
+    checkAppInstallError(miniManifestURL, "INVALID_MANIFEST_CONTENT_TYPE");
   },
   function() {
     // Test mini-manifest 'size' value is not number. Bug 839435.

@@ -5769,7 +5769,7 @@ DumpProperty(JSObject *obj, Shape &shape)
     jsid id = shape.propid();
     uint8_t attrs = shape.attributes();
 
-    fprintf(stderr, "    ((JSShape *) %p) ", (void *) &shape);
+    fprintf(stderr, "    ((js::Shape *) %p) ", (void *) &shape);
     if (attrs & JSPROP_ENUMERATE) fprintf(stderr, "enumerate ");
     if (attrs & JSPROP_READONLY) fprintf(stderr, "readonly ");
     if (attrs & JSPROP_PERMANENT) fprintf(stderr, "permanent ");
@@ -5785,10 +5785,8 @@ DumpProperty(JSObject *obj, Shape &shape)
     else if (!shape.hasDefaultSetter())
         fprintf(stderr, "setterOp=%p ", JS_FUNC_TO_DATA_PTR(void *, shape.setterOp()));
 
-    if (JSID_IS_ATOM(id))
-        JSID_TO_STRING(id)->dump();
-    else if (JSID_IS_INT(id))
-        fprintf(stderr, "%d", (int) JSID_TO_INT(id));
+    if (JSID_IS_ATOM(id) || JSID_IS_INT(id) || JSID_IS_SYMBOL(id))
+        dumpValue(js::IdToValue(id));
     else
         fprintf(stderr, "unknown jsid %p", (void *) JSID_BITS(id));
 
