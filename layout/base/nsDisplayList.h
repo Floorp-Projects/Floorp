@@ -1704,10 +1704,21 @@ public:
   bool DidComputeVisibility() const { return mDidComputeVisibility; }
 #endif
 
+  void SetDidComputeVisibility()
+  {
+#if defined(DEBUG) || defined(MOZ_DUMP_PAINTING)
+    mDidComputeVisibility = true;
+#endif
+  }
   void SetIsOpaque()
   {
     mIsOpaque = true;
   }
+  void SetNeedsTransparentSurface()
+  {
+    mForceTransparentSurface = true;
+  }
+
   nsRect GetVisibleRect() const { return mVisibleRect; }
 
 private:
