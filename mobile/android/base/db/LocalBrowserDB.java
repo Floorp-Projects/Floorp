@@ -11,7 +11,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -33,7 +32,6 @@ import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
-import org.mozilla.gecko.db.BrowserDB.FilterFlags;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
 import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
@@ -509,19 +507,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     }
 
     @Override
-    public Cursor filter(ContentResolver cr, CharSequence constraint, int limit,
-                         EnumSet<FilterFlags> flags) {
-        String selection = "";
-        String[] selectionArgs = null;
-
-        if (flags.contains(FilterFlags.EXCLUDE_PINNED_SITES)) {
-            selection = Combined.URL + " NOT IN (SELECT " +
-                                                 Bookmarks.URL + " FROM bookmarks WHERE " +
-                                                 DBUtils.qualifyColumn("bookmarks", Bookmarks.PARENT) + " = ? AND " +
-                                                 DBUtils.qualifyColumn("bookmarks", Bookmarks.IS_DELETED) + " == 0)";
-            selectionArgs = new String[] { String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID) };
-        }
-
+    public Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
         return filterAllSites(cr,
                               new String[] { Combined._ID,
                                              Combined.URL,
@@ -531,8 +517,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                                              Combined.HISTORY_ID },
                               constraint,
                               limit,
-                              null,
-                              selection, selectionArgs);
+                              null);
     }
 
     @Override
