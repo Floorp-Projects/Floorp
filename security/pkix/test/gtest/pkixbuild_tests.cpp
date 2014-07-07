@@ -63,13 +63,12 @@ CreateCert(PLArenaPool* arena, const char* issuerStr,
     }
   }
 
-  SECItem* certDER(CreateEncodedCertificate(arena, v3, SEC_OID_SHA256,
-                                            serialNumber, issuerDER,
-                                            PR_Now() - ONE_DAY,
-                                            PR_Now() + ONE_DAY,
-                                            subjectDER, extensions,
-                                            issuerKey, SEC_OID_SHA256,
-                                            subjectKey));
+  SECItem* certDER(CreateEncodedCertificate(
+                     arena, v3, SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
+                     serialNumber, issuerDER,
+                     PR_Now() - ONE_DAY, PR_Now() + ONE_DAY,
+                     subjectDER, extensions, issuerKey, SEC_OID_SHA256,
+                     subjectKey));
   if (!certDER) {
     return false;
   }
