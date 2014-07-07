@@ -221,14 +221,8 @@ GetPropertyOperation(JSContext *cx, InterpreterFrame *fp, HandleScript script, j
             return true;
     }
 
-    RootedId id(cx, NameToId(script->getName(pc)));
-
-    if (id == NameToId(cx->names().callee) && IsOptimizedArguments(fp, lval.address())) {
-        vp.setObject(fp->callee());
-        return true;
-    }
-
     Rooted<GlobalObject*> global(cx, &fp->global());
+    RootedId id(cx, NameToId(script->getName(pc)));
     RootedObject obj(cx);
 
     /* Optimize (.1).toString(). */
