@@ -110,8 +110,7 @@ if CONFIG['MOZ_NFC']:
         'NfcContentHelper.js',
     ]
     EXTRA_JS_MODULES += [
-    'nfc_consts.js',
-    'nfc_worker.js',
+       'nfc_consts.js',
     ]
 
 FAIL_ON_WARNINGS = True
