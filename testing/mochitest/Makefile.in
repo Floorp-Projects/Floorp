@@ -13,6 +13,7 @@ USE_EXTENSION_MANIFEST = 1
 # files that get copied into $objdir/_tests/
 SERV_FILES = 	\
 		runtests.py \
+		bisection.py \
 		automation.py \
 		runtestsb2g.py \
 		runtestsremote.py \
