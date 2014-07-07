@@ -151,7 +151,7 @@ ADBHost
 .. automethod:: ADBHost.command(self, cmds, timeout=None)
 .. automethod:: ADBHost.command_output(self, cmds, timeout=None)
 .. automethod:: ADBHost.start_server(self, timeout=None)
-.. automethod:: ADBHost.kill_server(self, cmds, timeout=None)
+.. automethod:: ADBHost.kill_server(self, timeout=None)
 .. automethod:: ADBHost.devices(self, timeout=None)
 
 ADBDevice
