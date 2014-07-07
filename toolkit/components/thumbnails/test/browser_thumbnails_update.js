@@ -67,14 +67,15 @@ function simpleCaptureTest() {
     is(numNotifications, 1, "got notification of item being created.");
     // The capture is now "fresh" - so requesting the URL should not cause
     // a new capture.
-    PageThumbs.captureAndStoreIfStale(browser);
-    is(numNotifications, 1, "still only 1 notification of item being created.");
+    PageThumbs.captureAndStoreIfStale(browser, function() {
+      is(numNotifications, 1, "still only 1 notification of item being created.");
 
-    ensureThumbnailStale(URL);
-    // Ask for it to be updated.
-    PageThumbs.captureAndStoreIfStale(browser);
-    // But it's async, so wait - our observer above will call next() when
-    // the notification comes.
+      ensureThumbnailStale(URL);
+      // Ask for it to be updated.
+      PageThumbs.captureAndStoreIfStale(browser);
+      // But it's async, so wait - our observer above will call next() when
+      // the notification comes.
+    });
   });
   yield undefined // wait for callbacks to call 'next'...
 }
