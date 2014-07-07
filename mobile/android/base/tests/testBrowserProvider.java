@@ -476,12 +476,12 @@ public class testBrowserProvider extends ContentProviderTest {
                 int parentId = c.getInt(c.getColumnIndex(BrowserContract.Bookmarks.PARENT));
 
                 if (guid.equals(BrowserContract.Bookmarks.PLACES_FOLDER_GUID)) {
-                    mAsserter.is(new Integer(id), new Integer(rootId), "The id of places folder is correct");
+                    mAsserter.is(id, rootId, "The id of places folder is correct");
                 } else if (guid.equals(BrowserContract.Bookmarks.READING_LIST_FOLDER_GUID)) {
-                    mAsserter.is(new Integer(id), new Integer(readingListId), "The id of reading list folder is correct");
+                    mAsserter.is(id, readingListId, "The id of reading list folder is correct");
                 }
 
-                mAsserter.is(new Integer(parentId), new Integer(rootId),
+                mAsserter.is(parentId, rootId,
                              "The PARENT of the " + guid + " special folder is correct");
             }
 
@@ -530,11 +530,11 @@ public class testBrowserProvider extends ContentProviderTest {
                          "Inserted bookmark has correct is-deleted state");
 
             id = insertWithNullCol(BrowserContract.Bookmarks.POSITION);
-            mAsserter.is(new Long(id), new Long(-1),
+            mAsserter.is(id, -1L,
                          "Should not be able to insert bookmark with null position");
 
             id = insertWithNullCol(BrowserContract.Bookmarks.TYPE);
-            mAsserter.is(new Long(id), new Long(-1),
+            mAsserter.is(id, -1L,
                          "Should not be able to insert bookmark with null type");
 
             if (Build.VERSION.SDK_INT >= 8 &&
@@ -547,7 +547,7 @@ public class testBrowserProvider extends ContentProviderTest {
                     id = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, b));
                 } catch (Exception e) {}
 
-                mAsserter.is(new Long(id), new Long(-1),
+                mAsserter.is(id, -1L,
                              "Should not be able to insert bookmark with invalid parent");
             }
 
@@ -755,12 +755,12 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Bookmarks.TYPE)), u.getAsString(BrowserContract.Bookmarks.TYPE),
                          "Inserted bookmark has correct type");
 
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Bookmarks.DATE_CREATED))),
-                         new Long(dateCreated),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Bookmarks.DATE_CREATED)),
+                         dateCreated,
                          "Updated bookmark has same creation date");
 
-            mAsserter.isnot(new Long(c.getLong(c.getColumnIndex(BrowserContract.Bookmarks.DATE_MODIFIED))),
-                            new Long(dateModified),
+            mAsserter.isnot(c.getLong(c.getColumnIndex(BrowserContract.Bookmarks.DATE_MODIFIED)),
+                            dateModified,
                             "Updated bookmark has new modification date");
 
             updated = updateWithNullCol(id, BrowserContract.Bookmarks.POSITION);
@@ -948,11 +948,11 @@ public class testBrowserProvider extends ContentProviderTest {
                          "Inserted history entry has correct is-deleted state");
 
             id = insertWithNullCol(BrowserContract.History.URL);
-            mAsserter.is(new Long(id), new Long(-1),
+            mAsserter.is(id, -1L,
                          "Should not be able to insert history with null URL");
 
             id = insertWithNullCol(BrowserContract.History.VISITS);
-            mAsserter.is(new Long(id), new Long(-1),
+            mAsserter.is(id, -1L,
                          "Should not be able to insert history with null number of visits");
             c.close();
         }
@@ -1112,12 +1112,12 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.History.DATE_LAST_VISITED)), u.getAsString(BrowserContract.History.DATE_LAST_VISITED),
                          "Updated history entry has correct last visited date");
 
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.History.DATE_CREATED))),
-                         new Long(dateCreated),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.History.DATE_CREATED)),
+                         dateCreated,
                          "Updated history entry has same creation date");
 
-            mAsserter.isnot(new Long(c.getLong(c.getColumnIndex(BrowserContract.History.DATE_MODIFIED))),
-                            new Long(dateModified),
+            mAsserter.isnot(c.getLong(c.getColumnIndex(BrowserContract.History.DATE_MODIFIED)),
+                            dateModified,
                             "Updated history entry has new modification date");
 
             updated = updateWithNullCol(id, BrowserContract.History.URL);
@@ -1228,7 +1228,7 @@ public class testBrowserProvider extends ContentProviderTest {
             long dateCreated = c.getLong(c.getColumnIndex(BrowserContract.History.DATE_CREATED));
             long dateModified = c.getLong(c.getColumnIndex(BrowserContract.History.DATE_MODIFIED));
 
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.History.VISITS))), new Long(1),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.History.VISITS)), 1L,
                          "Inserted history entry has correct default number of visits");
             mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.History.TITLE)), TEST_URL_1,
                          "Inserted history entry has correct default title");
@@ -1249,11 +1249,11 @@ public class testBrowserProvider extends ContentProviderTest {
 
             mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.History.TITLE)), TEST_TITLE,
                          "Updated history entry has correct title");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.History.VISITS))), new Long(2),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.History.VISITS)), 2L,
                          "Updated history entry has correct number of visits");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.History.DATE_CREATED))), new Long(dateCreated),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.History.DATE_CREATED)), dateCreated,
                          "Updated history entry has same creation date");
-            mAsserter.isnot(new Long(c.getLong(c.getColumnIndex(BrowserContract.History.DATE_MODIFIED))), new Long(dateModified),
+            mAsserter.isnot(c.getLong(c.getColumnIndex(BrowserContract.History.DATE_MODIFIED)), dateModified,
                             "Updated history entry has new modification date");
 
             // Create a new history entry, specifying visits and history
@@ -1276,7 +1276,7 @@ public class testBrowserProvider extends ContentProviderTest {
             dateCreated = c.getLong(c.getColumnIndex(BrowserContract.History.DATE_CREATED));
             dateModified = c.getLong(c.getColumnIndex(BrowserContract.History.DATE_MODIFIED));
 
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.History.VISITS))), new Long(10),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.History.VISITS)), 10L,
                          "Inserted history entry has correct specified number of visits");
             mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.History.TITLE)), TEST_TITLE,
                          "Inserted history entry has correct specified title");
@@ -1298,11 +1298,11 @@ public class testBrowserProvider extends ContentProviderTest {
                          "Updated history entry has correct unchanged title");
             mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.History.URL)), TEST_URL_2,
                          "Updated history entry has correct unchanged URL");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.History.VISITS))), new Long(20),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.History.VISITS)), 20L,
                          "Updated history entry has correct number of visits");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.History.DATE_CREATED))), new Long(dateCreated),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.History.DATE_CREATED)), dateCreated,
                          "Updated history entry has same creation date");
-            mAsserter.isnot(new Long(c.getLong(c.getColumnIndex(BrowserContract.History.DATE_MODIFIED))), new Long(dateModified),
+            mAsserter.isnot(c.getLong(c.getColumnIndex(BrowserContract.History.DATE_MODIFIED)), dateModified,
                             "Updated history entry has new modification date");
             c.close();
 
@@ -1439,12 +1439,12 @@ public class testBrowserProvider extends ContentProviderTest {
 
             // First combined entry is basic history entry
             mAsserter.is(c.moveToFirst(), true, "Found basic history entry");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined._ID))), new Long(0),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined._ID)), 0L,
                          "Combined _id column should always be 0");
             // TODO: Should we change BrowserProvider to make this return -1, not 0?
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID))), new Long(0),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID)), 0L,
                          "Bookmark id should be 0 for basic history entry");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined.HISTORY_ID))), new Long(basicHistoryId),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined.HISTORY_ID)), basicHistoryId,
                          "Basic history entry has correct history id");
             mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Combined.TITLE)), TITLE_1,
                          "Basic history entry has correct title");
@@ -1452,16 +1452,16 @@ public class testBrowserProvider extends ContentProviderTest {
                          "Basic history entry has correct url");
             mAsserter.is(c.getInt(c.getColumnIndex(BrowserContract.Combined.VISITS)), VISITS,
                          "Basic history entry has correct number of visits");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined.DATE_LAST_VISITED))), new Long(LAST_VISITED),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined.DATE_LAST_VISITED)), LAST_VISITED,
                          "Basic history entry has correct last visit time");
 
             // Second combined entry is basic bookmark entry
             mAsserter.is(c.moveToNext(), true, "Found basic bookmark entry");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined._ID))), new Long(0),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined._ID)), 0L,
                          "Combined _id column should always be 0");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID))), new Long(basicBookmarkId),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID)), basicBookmarkId,
                          "Basic bookmark entry has correct bookmark id");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined.HISTORY_ID))), new Long(-1),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined.HISTORY_ID)), -1L,
                          "History id should be -1 for basic bookmark entry");
             mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Combined.TITLE)), TITLE_2,
                          "Basic bookmark entry has correct title");
@@ -1469,12 +1469,12 @@ public class testBrowserProvider extends ContentProviderTest {
                          "Basic bookmark entry has correct url");
             mAsserter.is(c.getInt(c.getColumnIndex(BrowserContract.Combined.VISITS)), -1,
                          "Visits should be -1 for basic bookmark entry");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined.DATE_LAST_VISITED))), new Long(-1),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined.DATE_LAST_VISITED)), -1L,
                          "Basic entry has correct last visit time");
 
             // Third combined entry is a combined history/bookmark entry
             mAsserter.is(c.moveToNext(), true, "Found third combined entry");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined._ID))), new Long(0),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined._ID)), 0L,
                          "Combined _id column should always be 0");
             // The bookmark data (bookmark_id and title) associated with the combined entry is non-deterministic,
             // it might end up with data coming from any of the matching bookmark entries.
@@ -1484,13 +1484,13 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Combined.TITLE)).equals(TITLE_3_BOOKMARK) ||
                          c.getString(c.getColumnIndex(BrowserContract.Combined.TITLE)).equals(TITLE_3_BOOKMARK2), true,
                          "Combined entry has title corresponding to bookmark entry");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined.HISTORY_ID))), new Long(combinedHistoryId),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined.HISTORY_ID)), combinedHistoryId,
                          "Combined entry has correct history id");
             mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Combined.URL)), URL_3,
                          "Combined entry has correct url");
             mAsserter.is(c.getInt(c.getColumnIndex(BrowserContract.Combined.VISITS)), VISITS,
                          "Combined entry has correct number of visits");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined.DATE_LAST_VISITED))), new Long(LAST_VISITED),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined.DATE_LAST_VISITED)), LAST_VISITED,
                          "Combined entry has correct last visit time");
             c.close();
         }
@@ -1578,7 +1578,7 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.getCount(), 1, "1 combined entry found");
 
             mAsserter.is(c.moveToFirst(), true, "Found combined entry with bookmark id");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID))), new Long(combinedBookmarkId),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID)), combinedBookmarkId,
                          "Bookmark id should be set correctly on combined entry");
 
             int deleted = mProvider.delete(BrowserContract.Bookmarks.CONTENT_URI,
@@ -1592,7 +1592,7 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.getCount(), 1, "1 combined entry found");
 
             mAsserter.is(c.moveToFirst(), true, "Found combined entry without bookmark id");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID))), new Long(0),
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID)), 0L,
                          "Bookmark id should not be set to removed bookmark id");
             c.close();
         }
@@ -1778,8 +1778,8 @@ public class testBrowserProvider extends ContentProviderTest {
                 Log.w(LOGTAG, "after operation, notifyChangeList = " + mResolver.notifyChangeList);
             }
 
-            mAsserter.is(Long.valueOf(mResolver.notifyChangeList.size()),
-                         Long.valueOf(1),
+            mAsserter.is((long) mResolver.notifyChangeList.size(),
+                         1L,
                          "Content observer was notified exactly once by " + operation);
 
             Uri uri = mResolver.notifyChangeList.poll();
@@ -1801,8 +1801,8 @@ public class testBrowserProvider extends ContentProviderTest {
             mResolver.notifyChangeList.clear();
             long id = ContentUris.parseId(mProvider.insert(BrowserContract.History.CONTENT_URI, h));
 
-            mAsserter.isnot(Long.valueOf(id),
-                            Long.valueOf(-1),
+            mAsserter.isnot(id,
+                            -1L,
                             "Inserted item has valid id");
 
             ensureOnlyChangeNotifiedStartsWith(BrowserContract.History.CONTENT_URI, "insert");
@@ -1815,8 +1815,8 @@ public class testBrowserProvider extends ContentProviderTest {
                                                BrowserContract.History._ID + " = ?",
                                                new String[] { String.valueOf(id) });
 
-            mAsserter.is(Long.valueOf(numUpdated),
-                         Long.valueOf(1),
+            mAsserter.is(numUpdated,
+                         1L,
                          "Correct number of items are updated");
 
             ensureOnlyChangeNotifiedStartsWith(BrowserContract.History.CONTENT_URI, "update");
@@ -1825,8 +1825,8 @@ public class testBrowserProvider extends ContentProviderTest {
             mResolver.notifyChangeList.clear();
             long numDeleted = mProvider.delete(BrowserContract.History.CONTENT_URI, null, null);
 
-            mAsserter.is(Long.valueOf(numDeleted),
-                         Long.valueOf(1),
+            mAsserter.is(numDeleted,
+                         1L,
                          "Correct number of items are deleted");
 
             ensureOnlyChangeNotifiedStartsWith(BrowserContract.History.CONTENT_URI, "delete");
@@ -1837,8 +1837,8 @@ public class testBrowserProvider extends ContentProviderTest {
             mResolver.notifyChangeList.clear();
             long numBulkInserted = mProvider.bulkInsert(BrowserContract.History.CONTENT_URI, hs);
 
-            mAsserter.is(Long.valueOf(numBulkInserted),
-                         Long.valueOf(1),
+            mAsserter.is(numBulkInserted,
+                         1L,
                          "Correct number of items are bulkInserted");
 
             ensureOnlyChangeNotifiedStartsWith(BrowserContract.History.CONTENT_URI, "bulkInsert");
