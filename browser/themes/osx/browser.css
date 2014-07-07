@@ -3704,6 +3704,7 @@ menulist.translate-infobar-element {
   background-image: linear-gradient(#FFFFFF, rgba(255,255,255,0.1));
   color: #333333;
   padding: 0;
+  min-height: 22px !important;
 }
 
 menulist.translate-infobar-element > .menulist-label-box {
@@ -3714,7 +3715,8 @@ menulist.translate-infobar-element > .menulist-label-box {
 }
 
 menulist.translate-infobar-element:hover {
-  background-image: linear-gradient(#FFFFFF, rgba(255,255,255,0.6));
+  background: #f0f0f0;
+  box-shadow: 0 1px 0 hsla(0,0%,100%,.1) inset,  0 0 0 1px hsla(0,0%,100%,.05) inset,  0 1px 0 hsla(210,54%,20%,.01),  0 0 4px hsla(206,100%,20%,.1);
 }
 
 menulist.translate-infobar-element[open="true"] {
