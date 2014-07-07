@@ -1004,7 +1004,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "torproject.org", false, true, false, -1, &kPinset_tor },
   { "translate.googleapis.com", true, false, false, -1, &kPinset_google_root_pems },
   { "twimg.com", true, false, false, -1, &kPinset_twitterCDN },
-  { "twitter.com", true, true, false, -1, &kPinset_twitterCDN },
+  { "twitter.com", true, false, false, -1, &kPinset_twitterCDN },
   { "urchin.com", true, false, false, -1, &kPinset_google_root_pems },
   { "w-spotlight.appspot.com", true, false, false, -1, &kPinset_google_root_pems },
   { "wallet.google.com", true, false, false, -1, &kPinset_google_root_pems },

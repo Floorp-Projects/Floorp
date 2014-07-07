@@ -88,6 +88,8 @@
              oncommand="DebuggerView.Options._toggleShowVariablesFilterBox()"/>
     <command id="toggleShowOriginalSource"
              oncommand="DebuggerView.Options._toggleShowOriginalSource()"/>
+    <command id="toggleAutoBlackBox"
+             oncommand="DebuggerView.Options._toggleAutoBlackBox()"/>
     <command id="toggleTracing"
              oncommand="DebuggerView.Tracer._onToggleTracing()"/>
     <command id="startTracing"
@@ -209,6 +211,11 @@
                 label="&debuggerUI.showOriginalSource;"
                 accesskey="&debuggerUI.showOriginalSource.accesskey;"
                 command="toggleShowOriginalSource"/>
+      <menuitem id="auto-black-box"
+                type="checkbox"
+                label="&debuggerUI.autoBlackBox;"
+                accesskey="&debuggerUI.autoBlackBox.accesskey;"
+                command="toggleAutoBlackBox"/>
     </menupopup>
   </popupset>
 

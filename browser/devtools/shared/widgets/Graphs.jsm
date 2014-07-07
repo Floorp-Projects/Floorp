@@ -32,8 +32,8 @@ const GRAPH_REGION_LINE_COLOR = "rgba(237,38,85,0.8)";
 
 const GRAPH_STRIPE_PATTERN_WIDTH = 16; // px
 const GRAPH_STRIPE_PATTERN_HEIGHT = 16; // px
-const GRAPH_STRIPE_PATTERN_LINE_WIDTH = 4; // px
-const GRAPH_STRIPE_PATTERN_LINE_SPACING = 8; // px
+const GRAPH_STRIPE_PATTERN_LINE_WIDTH = 2; // px
+const GRAPH_STRIPE_PATTERN_LINE_SPACING = 4; // px
 
 // Line graph constants.
 
@@ -41,7 +41,7 @@ const LINE_GRAPH_DAMPEN_VALUES = 0.85;
 const LINE_GRAPH_MIN_SQUARED_DISTANCE_BETWEEN_POINTS = 400; // 20 px
 const LINE_GRAPH_TOOLTIP_SAFE_BOUNDS = 10; // px
 
-const LINE_GRAPH_STROKE_WIDTH = 2; // px
+const LINE_GRAPH_STROKE_WIDTH = 1; // px
 const LINE_GRAPH_STROKE_COLOR = "rgba(255,255,255,0.9)";
 const LINE_GRAPH_HELPER_LINES_DASH = [5]; // px
 const LINE_GRAPH_HELPER_LINES_WIDTH = 1; // px
@@ -62,7 +62,7 @@ const LINE_GRAPH_REGION_STRIPES_COLOR = "rgba(237,38,85,0.2)";
 
 const BAR_GRAPH_DAMPEN_VALUES = 0.75;
 const BAR_GRAPH_BARS_MARGIN_TOP = 1; // px
-const BAR_GRAPH_BARS_MARGIN_END = 2; // px
+const BAR_GRAPH_BARS_MARGIN_END = 1; // px
 const BAR_GRAPH_MIN_BARS_WIDTH = 5; // px
 const BAR_GRAPH_MIN_BLOCKS_HEIGHT = 1; // px
 
@@ -1111,7 +1111,7 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     gradient.addColorStop(1, LINE_GRAPH_BACKGROUND_GRADIENT_END);
     ctx.fillStyle = gradient;
     ctx.strokeStyle = LINE_GRAPH_STROKE_COLOR;
-    ctx.lineWidth = LINE_GRAPH_STROKE_WIDTH;
+    ctx.lineWidth = LINE_GRAPH_STROKE_WIDTH * this._pixelRatio;
     ctx.beginPath();
 
     let prevX = 0;
@@ -1379,6 +1379,8 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     // information about the data source, and how a "bar" contains "blocks".
 
     let prevHeight = [];
+    let scaledMarginEnd = BAR_GRAPH_BARS_MARGIN_END * this._pixelRatio;
+    let unscaledMarginTop = BAR_GRAPH_BARS_MARGIN_TOP;
 
     for (let type = 0; type < totalTypes; type++) {
       ctx.fillStyle = this.format[type].color || "#000";
@@ -1410,13 +1412,13 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
           ctx.lineTo(blockLeft, bottom);
 
           if (prevHeight[tick] === undefined) {
-            prevHeight[tick] = averageHeight + BAR_GRAPH_BARS_MARGIN_TOP;
+            prevHeight[tick] = averageHeight + unscaledMarginTop;
           } else {
-            prevHeight[tick] += averageHeight + BAR_GRAPH_BARS_MARGIN_TOP;
+            prevHeight[tick] += averageHeight + unscaledMarginTop;
           }
         }
 
-        prevLeft += blockWidth + BAR_GRAPH_BARS_MARGIN_END;
+        prevLeft += blockWidth + scaledMarginEnd;
         skippedHeight = 0;
         skippedCount = 0;
       }
@@ -1451,6 +1453,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     let prevLeft = 0;
     let skippedCount = 0;
     let skippedHeight = 0;
+    let scaledMarginEnd = BAR_GRAPH_BARS_MARGIN_END * this._pixelRatio;
 
     for (let { delta, values } of data) {
       let barLeft = (delta - dataOffsetX) * dataScaleX;
@@ -1466,7 +1469,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
       let averageHeight = (barHeight + skippedHeight) / (skippedCount + 1);
       maxHeight = Math.max(averageHeight, maxHeight);
 
-      prevLeft += barWidth;
+      prevLeft += barWidth + scaledMarginEnd;
       skippedHeight = 0;
       skippedCount = 0;
     }
@@ -1558,12 +1561,16 @@ AbstractCanvasGraph.getStripePattern = function(data) {
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, width, height);
 
+  let pixelRatio = ownerDocument.defaultView.devicePixelRatio;
+  let scaledLineWidth = GRAPH_STRIPE_PATTERN_LINE_WIDTH * pixelRatio;
+  let scaledLineSpacing = GRAPH_STRIPE_PATTERN_LINE_SPACING * pixelRatio;
+
   ctx.strokeStyle = stripesColor;
-  ctx.lineWidth = GRAPH_STRIPE_PATTERN_LINE_WIDTH;
+  ctx.lineWidth = scaledLineWidth;
   ctx.lineCap = "square";
   ctx.beginPath();
 
-  for (let i = -height; i <= height; i += GRAPH_STRIPE_PATTERN_LINE_SPACING) {
+  for (let i = -height; i <= height; i += scaledLineSpacing) {
     ctx.moveTo(width, i);
     ctx.lineTo(0, i + height);
   }

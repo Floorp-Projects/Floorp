@@ -308,7 +308,8 @@ CodeGeneratorX86::loadAndNoteViewTypeElement(ArrayBufferView::ViewType vt, const
     uint32_t before = masm.size();
     loadViewTypeElement(vt, srcAddr, out);
     uint32_t after = masm.size();
-    return masm.append(AsmJSHeapAccess(before, after, vt, ToAnyRegister(out)));
+    masm.append(AsmJSHeapAccess(before, after, vt, ToAnyRegister(out)));
+    return true;
 }
 
 bool
@@ -381,7 +382,8 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     loadViewTypeElement(vt, srcAddr, out);
     uint32_t after = masm.size();
     masm.bind(ool->rejoin());
-    return masm.append(AsmJSHeapAccess(before, after, vt, ToAnyRegister(out), cmp.offset()));
+    masm.append(AsmJSHeapAccess(before, after, vt, ToAnyRegister(out), cmp.offset()));
+    return true;
 }
 
 bool
@@ -420,14 +422,14 @@ CodeGeneratorX86::storeViewTypeElement(ArrayBufferView::ViewType vt, const LAllo
 }
 
 template<typename T>
-bool
+void
 CodeGeneratorX86::storeAndNoteViewTypeElement(ArrayBufferView::ViewType vt, const LAllocation *value,
                                               const T &dstAddr)
 {
     uint32_t before = masm.size();
     storeViewTypeElement(vt, value, dstAddr);
     uint32_t after = masm.size();
-    return masm.append(AsmJSHeapAccess(before, after));
+    masm.append(AsmJSHeapAccess(before, after));
 }
 
 bool
@@ -463,14 +465,17 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
         // immediate in the instruction. This displacement will fixed up when the
         // base address is known during dynamic linking (AsmJSModule::initHeap).
         PatchedAbsoluteAddress dstAddr((void *) ptr->toConstant()->toInt32());
-        return storeAndNoteViewTypeElement(vt, value, dstAddr);
+        storeAndNoteViewTypeElement(vt, value, dstAddr);
+        return true;
     }
 
     Register ptrReg = ToRegister(ptr);
     Address dstAddr(ptrReg, 0);
 
-    if (mir->skipBoundsCheck())
-        return storeAndNoteViewTypeElement(vt, value, dstAddr);
+    if (mir->skipBoundsCheck()) {
+        storeAndNoteViewTypeElement(vt, value, dstAddr);
+        return true;
+    }
 
     CodeOffsetLabel cmp = masm.cmplWithPatch(ptrReg, Imm32(0));
     Label rejoin;
@@ -480,7 +485,8 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
     storeViewTypeElement(vt, value, dstAddr);
     uint32_t after = masm.size();
     masm.bind(&rejoin);
-    return masm.append(AsmJSHeapAccess(before, after, cmp.offset()));
+    masm.append(AsmJSHeapAccess(before, after, cmp.offset()));
+    return true;
 }
 
 bool
@@ -497,8 +503,8 @@ CodeGeneratorX86::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins)
         label = masm.movssWithPatch(PatchedAbsoluteAddress(), ToFloatRegister(ins->output()));
     else
         label = masm.movsdWithPatch(PatchedAbsoluteAddress(), ToFloatRegister(ins->output()));
-
-    return masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
+    return true;
 }
 
 bool
@@ -516,8 +522,8 @@ CodeGeneratorX86::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins)
         label = masm.movssWithPatch(ToFloatRegister(ins->value()), PatchedAbsoluteAddress());
     else
         label = masm.movsdWithPatch(ToFloatRegister(ins->value()), PatchedAbsoluteAddress());
-
-    return masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
+    return true;
 }
 
 bool
@@ -528,8 +534,8 @@ CodeGeneratorX86::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins)
     Register index = ToRegister(ins->index());
     Register out = ToRegister(ins->output());
     CodeOffsetLabel label = masm.movlWithPatch(PatchedAbsoluteAddress(), index, TimesFour, out);
-
-    return masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
+    return true;
 }
 
 bool
@@ -539,8 +545,8 @@ CodeGeneratorX86::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins)
 
     Register out = ToRegister(ins->output());
     CodeOffsetLabel label = masm.movlWithPatch(PatchedAbsoluteAddress(), out);
-
-    return masm.append(AsmJSGlobalAccess(CodeOffsetLabel(label.offset()), mir->globalDataOffset()));
+    masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
+    return true;
 }
 
 void

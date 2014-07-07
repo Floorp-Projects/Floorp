@@ -29,6 +29,7 @@ import time
 import traceback
 import urllib2
 import zipfile
+import bisection
 
 from automationutils import environment, getDebuggerInfo, isURL, KeyValueParseError, parseKeyValue, processLeakLog, dumpScreen, ShutdownLeaks, printstatus, LSANLeaks
 from datetime import datetime
@@ -453,72 +454,27 @@ class MochitestUtilsMixin(object):
       testURL = "about:blank"
     return testURL
 
-  def buildTestPath(self, options, disabled=True):
+  def buildTestPath(self, options, testsToFilter=None, disabled=True):
     """ Build the url path to the specific test harness and test file or directory
         Build a manifest of tests to run and write out a json file for the harness to read
+        testsToFilter option is used to filter/keep the tests provided in the list
 
         disabled -- This allows to add all disabled tests on the build side
                     and then on the run side to only run the enabled ones
     """
-    self.setTestRoot(options)
-    manifest = self.getTestManifest(options)
 
-    if manifest:
-      # Python 2.6 doesn't allow unicode keys to be used for keyword
-      # arguments. This gross hack works around the problem until we
-      # rid ourselves of 2.6.
-      info = {}
-      for k, v in mozinfo.info.items():
-        if isinstance(k, unicode):
-          k = k.encode('ascii')
-        info[k] = v
+    tests = self.getActiveTests(options, disabled)
+    paths = []
 
-      # Bug 883858 - return all tests including disabled tests
-      testPath = self.getTestPath(options)
-      testPath = testPath.replace('\\', '/')
-      if testPath.endswith('.html') or \
-         testPath.endswith('.xhtml') or \
-         testPath.endswith('.xul') or \
-         testPath.endswith('.js'):
-          # In the case where we have a single file, we don't want to filter based on options such as subsuite.
-          tests = manifest.active_tests(disabled=disabled, options=None, **info)
-          for test in tests:
-              if 'disabled' in test:
-                  del test['disabled']
-      else:
-          tests = manifest.active_tests(disabled=disabled, options=options, **info)
-      paths = []
+    for test in tests:
+      if testsToFilter and (test['path'] not in testsToFilter):
+        continue
+      paths.append(test)
 
-      for test in tests:
-        pathAbs = os.path.abspath(test['path'])
-        assert pathAbs.startswith(self.testRootAbs)
-        tp = pathAbs[len(self.testRootAbs):].replace('\\', '/').strip('/')
-
-        # Filter out tests if we are using --test-path
-        if testPath and not tp.startswith(testPath):
-          continue
-
-        if not self.isTest(options, tp):
-          log.warning('Warning: %s from manifest %s is not a valid test' % (test['name'], test['manifest']))
-          continue
-
-        testob = {'path': tp}
-        if test.has_key('disabled'):
-          testob['disabled'] = test['disabled']
-        paths.append(testob)
-
-      # Sort tests so they are run in a deterministic order.
-      def path_sort(ob1, ob2):
-        path1 = ob1['path'].split('/')
-        path2 = ob2['path'].split('/')
-        return cmp(path1, path2)
-
-      paths.sort(path_sort)
-
-      # Bug 883865 - add this functionality into manifestparser
-      with open(os.path.join(SCRIPT_DIR, 'tests.json'), 'w') as manifestFile:
-        manifestFile.write(json.dumps({'tests': paths}))
-      options.manifestFile = 'tests.json'
+    # Bug 883865 - add this functionality into manifestparser
+    with open(os.path.join(SCRIPT_DIR, 'tests.json'), 'w') as manifestFile:
+      manifestFile.write(json.dumps({'tests': paths}))
+    options.manifestFile = 'tests.json'
 
     return self.buildTestURL(options)
 
@@ -898,6 +854,13 @@ class Mochitest(MochitestUtilsMixin):
 
 
     self.haveDumpedScreen = False
+    # Create variables to count the number of passes, fails, todos.
+    self.countpass = 0
+    self.countfail = 0
+    self.counttodo = 0
+
+    self.expectedError = {}
+    self.result = {}
 
   def extraPrefs(self, extraPrefs):
     """interpolate extra preferences from option strings"""
@@ -1078,6 +1041,7 @@ class Mochitest(MochitestUtilsMixin):
           os.remove(options.pidFile + ".xpcshell.pid")
       except:
         log.warn("cleaning up pidfile '%s' was unsuccessful from the test harness", options.pidFile)
+    options.manifestFile = None
 
   def dumpScreen(self, utilityPath):
     if self.haveDumpedScreen:
@@ -1189,7 +1153,8 @@ class Mochitest(MochitestUtilsMixin):
              onLaunch=None,
              webapprtChrome=False,
              screenshotOnFail=False,
-             testPath=None):
+             testPath=None,
+             bisectChunk=None):
     """
     Run the app, log the duration it took to execute, return the status code.
     Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing for |timeout| seconds.
@@ -1255,6 +1220,7 @@ class Mochitest(MochitestUtilsMixin):
                                          dump_screen_on_fail=screenshotOnFail,
                                          shutdownLeaks=shutdownLeaks,
                                          lsanLeaks=lsanLeaks,
+                                         bisectChunk=bisectChunk
         )
 
       def timeoutHandler():
@@ -1340,21 +1306,131 @@ class Mochitest(MochitestUtilsMixin):
 
     return status
 
+  def initializeLooping(self, options):
+    """
+      This method is used to clear the contents before each run of for loop.
+      This method is used for --run-by-dir and --bisect-chunk.
+    """
+    self.expectedError.clear()
+    self.result.clear()
+    options.manifestFile = None
+    options.profilePath = None
+    self.urlOpts = []
+
+  def getActiveTests(self, options, disabled=True):
+    """
+      This method is used to parse the manifest and return active filtered tests.
+    """
+    self.setTestRoot(options)
+    manifest = self.getTestManifest(options)
+
+    if manifest:
+      # Python 2.6 doesn't allow unicode keys to be used for keyword
+      # arguments. This gross hack works around the problem until we
+      # rid ourselves of 2.6.
+      info = {}
+      for k, v in mozinfo.info.items():
+        if isinstance(k, unicode):
+          k = k.encode('ascii')
+        info[k] = v
+
+      # Bug 883858 - return all tests including disabled tests
+      testPath = self.getTestPath(options)
+      testPath = testPath.replace('\\', '/')
+      if testPath.endswith('.html') or \
+         testPath.endswith('.xhtml') or \
+         testPath.endswith('.xul') or \
+         testPath.endswith('.js'):
+          # In the case where we have a single file, we don't want to filter based on options such as subsuite.
+          tests = manifest.active_tests(disabled=disabled, options=None, **info)
+          for test in tests:
+              if 'disabled' in test:
+                  del test['disabled']
+      else:
+          tests = manifest.active_tests(disabled=disabled, options=options, **info)
+    paths = []
+
+    for test in tests:
+      pathAbs = os.path.abspath(test['path'])
+      assert pathAbs.startswith(self.testRootAbs)
+      tp = pathAbs[len(self.testRootAbs):].replace('\\', '/').strip('/')
+
+      # Filter out tests if we are using --test-path
+      if testPath and not tp.startswith(testPath):
+        continue
+
+      if not self.isTest(options, tp):
+        log.warning('Warning: %s from manifest %s is not a valid test' % (test['name'], test['manifest']))
+        continue
+
+      testob = {'path': tp}
+      if test.has_key('disabled'):
+        testob['disabled'] = test['disabled']
+      paths.append(testob)
+
+    def path_sort(ob1, ob2):
+        path1 = ob1['path'].split('/')
+        path2 = ob2['path'].split('/')
+        return cmp(path1, path2)
+
+    paths.sort(path_sort)
+
+    return paths
+
+  def getTestsToRun(self, options):
+    """
+      This method makes a list of tests that are to be run. Required mainly for --bisect-chunk.
+    """
+    tests = self.getActiveTests(options)
+    testsToRun = []
+    for test in tests:
+      if test.has_key('disabled'):
+        continue
+      testsToRun.append(test['path'])
+
+    return testsToRun
+
+  def runMochitests(self, options, onLaunch=None):
+    "This is a base method for calling other methods in this class for --bisect-chunk."
+    testsToRun = self.getTestsToRun(options)
+
+    # Making an instance of bisect class for --bisect-chunk option.
+    bisect = bisection.Bisect(self)
+    finished = False
+    status = 0
+    while not finished:
+      if options.bisectChunk:
+        testsToRun = bisect.pre_test(options, testsToRun, status)
+
+      self.doTests(options, onLaunch, testsToRun)
+      if options.bisectChunk:
+        status = bisect.post_test(options, self.expectedError, self.result)
+      else:
+        status = -1
+
+      if status == -1:
+        finished = True
+
+    # We need to print the summary only if options.bisectChunk has a value.
+    # Also we need to make sure that we do not print the summary in between running tests via --run-by-dir.
+    if options.bisectChunk and options.bisectChunk in self.result:
+      bisect.print_summary()
+      return -1
+
+    return 0
+
   def runTests(self, options, onLaunch=None):
     """ Prepare, configure, run tests and cleanup """
-
-    # Create variables to count the number of passes, fails, todos.
-    self.countpass = 0
-    self.countfail = 0
-    self.counttodo = 0
 
     self.setTestRoot(options)
 
     if not options.runByDir:
-      return self.doTests(options, onLaunch)
+      self.runMochitests(options, onLaunch)
+      return 0
 
+    # code for --run-by-dir
     dirs = self.getDirectories(options)
-    
+
     if options.totalChunks > 1:
       chunkSize = int(len(dirs) / options.totalChunks) + 1
       start = chunkSize * (options.thisChunk-1)
@@ -1366,8 +1442,6 @@ class Mochitest(MochitestUtilsMixin):
     options.chunkByDir = 0
     inputTestPath = self.getTestPath(options)
     for dir in dirs:
-      options.manifestFile = None
-
       if inputTestPath and not inputTestPath.startswith(dir):
         continue
 
@@ -1377,9 +1451,9 @@ class Mochitest(MochitestUtilsMixin):
       # If we are using --run-by-dir, we should not use the profile path (if) provided
       # by the user, since we need to create a new directory for each run. We would face problems
       # if we use the directory provided by the user.
-      options.profilePath = None
-      self.urlOpts = []
-      self.doTests(options, onLaunch)
+      runResult = self.runMochitests(options, onLaunch)
+      if runResult == -1:
+        return 0
 
     # printing total number of tests
     if options.browserChrome:
@@ -1396,7 +1470,12 @@ class Mochitest(MochitestUtilsMixin):
       print "3 INFO Todo:    %s" % self.counttodo
       print "4 INFO SimpleTest FINISHED"
 
-  def doTests(self, options, onLaunch=None):
+  def doTests(self, options, onLaunch=None, testsToFilter = None):
+    # A call to initializeLooping method is required in case of --run-by-dir or --bisect-chunk
+    # since we need to initialize variables for each loop.
+    if options.bisectChunk or options.runByDir:
+      self.initializeLooping(options)
+
     # get debugger info, a dict of:
     # {'path': path to the debugger (string),
     #  'interactive': whether the debugger is interactive or not (bool)
@@ -1431,7 +1510,8 @@ class Mochitest(MochitestUtilsMixin):
     try:
       self.startServers(options, debuggerInfo)
 
-      testURL = self.buildTestPath(options)
+      # testsToFilter parameter is used to filter out the test list that is sent to buildTestPath
+      testURL = self.buildTestPath(options, testsToFilter)
 
       # read the number of tests here, if we are not going to run any, terminate early
       if os.path.exists(os.path.join(SCRIPT_DIR, 'tests.json')):
@@ -1488,7 +1568,8 @@ class Mochitest(MochitestUtilsMixin):
                              onLaunch=onLaunch,
                              webapprtChrome=options.webapprtChrome,
                              screenshotOnFail=options.screenshotOnFail,
-                             testPath=options.testPath
+                             testPath=options.testPath,
+                             bisectChunk=options.bisectChunk
         )
       except KeyboardInterrupt:
         log.info("runtests.py | Received keyboard interrupt.\n");
@@ -1532,7 +1613,7 @@ class Mochitest(MochitestUtilsMixin):
 
   class OutputHandler(object):
     """line output handler for mozrunner"""
-    def __init__(self, harness, utilityPath, symbolsPath=None, dump_screen_on_timeout=True, dump_screen_on_fail=False, shutdownLeaks=None, lsanLeaks=None):
+    def __init__(self, harness, utilityPath, symbolsPath=None, dump_screen_on_timeout=True, dump_screen_on_fail=False, shutdownLeaks=None, lsanLeaks=None, bisectChunk=None):
       """
       harness -- harness instance
       dump_screen_on_timeout -- whether to dump the screen on timeout
@@ -1544,6 +1625,7 @@ class Mochitest(MochitestUtilsMixin):
       self.dump_screen_on_fail = dump_screen_on_fail
       self.shutdownLeaks = shutdownLeaks
       self.lsanLeaks = lsanLeaks
+      self.bisectChunk = bisectChunk
 
       # perl binary to use
       self.perl = which('perl')
@@ -1560,6 +1642,9 @@ class Mochitest(MochitestUtilsMixin):
       """per line handler of output for mozprocess"""
       for handler in self.outputHandlers():
         line = handler(line)
+      if self.bisectChunk:
+        self.record_result(line)
+        self.first_error(line)
     __call__ = processOutputLine
 
     def outputHandlers(self):
@@ -1629,6 +1714,25 @@ class Mochitest(MochitestUtilsMixin):
 
     # output line handlers:
     # these take a line and return a line
+    def record_result(self, line):
+      if "TEST-START" in line: #by default make the result key equal to pass.
+        key = line.split('|')[-1].split('/')[-1].strip()
+        self.harness.result[key] = "PASS"
+      elif "TEST-UNEXPECTED" in line:
+        key = line.split('|')[-2].split('/')[-1].strip()
+        self.harness.result[key] = "FAIL"
+      elif "TEST-KNOWN-FAIL" in line:
+        key = line.split('|')[-2].split('/')[-1].strip()
+        self.harness.result[key] = "TODO"
+      return line
+
+    def first_error(self, line):
+      if "TEST-UNEXPECTED-FAIL" in line:
+        key = line.split('|')[-2].split('/')[-1].strip()
+        if key not in self.harness.expectedError:
+          self.harness.expectedError[key] = line.split('|')[-1].strip()
+      return line
+
     def countline(self, line):
       val = 0
       try:

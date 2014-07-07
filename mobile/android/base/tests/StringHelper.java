@@ -10,7 +10,7 @@ public class StringHelper {
     };
     public static final String[] DEFAULT_BOOKMARKS_URLS = new String[] {
         "about:firefox",
-        "http://support.mozilla.org/en-US/products/mobile",
+        "https://support.mozilla.org/en-US/products/mobile",
         "https://addons.mozilla.org/en-US/android/"
     };
     public static final int DEFAULT_BOOKMARKS_COUNT = DEFAULT_BOOKMARKS_TITLES.length;

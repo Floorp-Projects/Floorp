@@ -566,11 +566,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void call(const CallSiteDesc &desc, const Register reg) {
         call(reg);
-        enoughMemory_ &= append(desc, currentOffset(), framePushed_);
+        append(desc, currentOffset(), framePushed_);
     }
     void call(const CallSiteDesc &desc, Label *label) {
         call(label);
-        enoughMemory_ &= append(desc, currentOffset(), framePushed_);
+        append(desc, currentOffset(), framePushed_);
     }
 
     void branch(JitCode *c) {

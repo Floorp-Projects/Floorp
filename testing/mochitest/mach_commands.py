@@ -198,7 +198,7 @@ class MochitestRunner(MozbuildObject):
         jsdebugger=False, debug_on_failure=False, start_at=None, end_at=None,
         e10s=False, dmd=False, dump_output_directory=None,
         dump_about_memory_after_test=False, dump_dmd_after_test=False,
-        install_extension=None, quiet=False, environment=[], app_override=None, runByDir=False,
+        install_extension=None, quiet=False, environment=[], app_override=None, bisectChunk=None, runByDir=False,
         useTestMediaDevices=False, **kwargs):
         """Runs a mochitest.
 
@@ -324,6 +324,7 @@ class MochitestRunner(MozbuildObject):
         options.dumpOutputDirectory = dump_output_directory
         options.quiet = quiet
         options.environment = environment
+        options.bisectChunk = bisectChunk
         options.runByDir = runByDir
         options.useTestMediaDevices = useTestMediaDevices
 
@@ -540,6 +541,11 @@ def MochitestCommand(func):
                                  dest='runByDir',
         help='Run each directory in a single browser instance with a fresh profile.')
     func = runbydir(func)
+
+    bisect_chunk = CommandArgument('--bisect-chunk', type=str,
+                                 dest='bisectChunk',
+        help='Specify the failing test name to find the previous tests that may be causing the failure.')
+    func = bisect_chunk(func)
 
     test_media = CommandArgument('--use-test-media-devices', default=False,
                                  action='store_true',

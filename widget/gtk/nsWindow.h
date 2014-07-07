@@ -363,6 +363,11 @@ private:
     int32_t             mTransparencyBitmapWidth;
     int32_t             mTransparencyBitmapHeight;
 
+#if GTK_CHECK_VERSION(3,4,0)
+    // This field omits duplicate scroll events caused by GNOME bug 726878.
+    guint32             mLastScrollEventTime;
+#endif
+
 #ifdef MOZ_HAVE_SHMIMAGE
     // If we're using xshm rendering, mThebesSurface wraps mShmImage
     nsRefPtr<nsShmImage>  mShmImage;

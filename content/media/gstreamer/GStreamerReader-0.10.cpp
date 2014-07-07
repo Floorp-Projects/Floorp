@@ -129,12 +129,12 @@ nsRefPtr<PlanarYCbCrImage> GStreamerReader::GetImageFromBuffer(GstBuffer* aBuffe
 
   data.mYChannel = GST_BUFFER_DATA(aBuffer);
   data.mYStride = gst_video_format_get_row_stride(mFormat, 0, mPicture.width);
-  data.mYSize = gfx::IntSize(data.mYStride,
-      gst_video_format_get_component_height(mFormat, 0, mPicture.height));
+  data.mYSize = gfx::IntSize(gst_video_format_get_component_width(mFormat, 0, mPicture.width),
+                             gst_video_format_get_component_height(mFormat, 0, mPicture.height));
   data.mYSkip = 0;
   data.mCbCrStride = gst_video_format_get_row_stride(mFormat, 1, mPicture.width);
-  data.mCbCrSize = gfx::IntSize(data.mCbCrStride,
-      gst_video_format_get_component_height(mFormat, 1, mPicture.height));
+  data.mCbCrSize = gfx::IntSize(gst_video_format_get_component_width(mFormat, 1, mPicture.width),
+                                gst_video_format_get_component_height(mFormat, 1, mPicture.height));
   data.mCbChannel = data.mYChannel + gst_video_format_get_component_offset(mFormat, 1,
       mPicture.width, mPicture.height);
   data.mCrChannel = data.mYChannel + gst_video_format_get_component_offset(mFormat, 2,
