@@ -37,7 +37,6 @@
 #include "nsIPrompt.h"
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
-#include "nsRecentBadCerts.h"
 #include "SharedSSLState.h"
 
 #include "nspr.h"
@@ -83,12 +82,6 @@ attemptToLogInWithDefaultPassword()
 }
 
 NS_IMPL_ISUPPORTS(nsNSSCertificateDB, nsIX509CertDB)
-
-nsNSSCertificateDB::nsNSSCertificateDB()
-: mBadCertsLock("nsNSSCertificateDB::mBadCertsLock")
-{
-  SharedSSLState::NoteCertDBServiceInstantiated();
-}
 
 nsNSSCertificateDB::~nsNSSCertificateDB()
 {
@@ -1708,29 +1701,6 @@ nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
 
   *_retval = nssCertList;
   NS_ADDREF(*_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSCertificateDB::GetRecentBadCerts(bool isPrivate, nsIRecentBadCerts** result)
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  MutexAutoLock lock(mBadCertsLock);
-  if (isPrivate) {
-    if (!mPrivateRecentBadCerts) {
-      mPrivateRecentBadCerts = new nsRecentBadCerts;
-    }
-    NS_ADDREF(*result = mPrivateRecentBadCerts);
-  } else {
-    if (!mPublicRecentBadCerts) {
-      mPublicRecentBadCerts = new nsRecentBadCerts;
-    }
-    NS_ADDREF(*result = mPublicRecentBadCerts);
-  }
   return NS_OK;
 }
 
