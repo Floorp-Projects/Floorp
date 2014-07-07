@@ -8,6 +8,10 @@
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/LocalMediaStreamBinding.h"
 #include "mozilla/dom/AudioNode.h"
+#include "mozilla/dom/AudioTrack.h"
+#include "mozilla/dom/AudioTrackList.h"
+#include "mozilla/dom/VideoTrack.h"
+#include "mozilla/dom/VideoTrackList.h"
 #include "MediaStreamGraph.h"
 #include "AudioStreamTrack.h"
 #include "VideoStreamTrack.h"
@@ -84,11 +88,13 @@ public:
       nsRefPtr<MediaStreamTrack> track;
       if (mEvents & MediaStreamListener::TRACK_EVENT_CREATED) {
         track = stream->CreateDOMTrack(mID, mType);
+        stream->NotifyMediaStreamTrackCreated(track);
       } else {
         track = stream->GetDOMTrackFor(mID);
       }
       if (mEvents & MediaStreamListener::TRACK_EVENT_ENDED) {
         track->NotifyEnded();
+        stream->NotifyMediaStreamTrackEnded(track);
       }
       return NS_OK;
     }
@@ -372,6 +378,91 @@ DOMMediaStream::CheckTracksAvailable()
       continue;
     }
     cb->NotifyTracksAvailable(this);
+  }
+}
+
+already_AddRefed<AudioTrack>
+DOMMediaStream::CreateAudioTrack(AudioStreamTrack* aStreamTrack)
+{
+  nsAutoString id;
+  nsAutoString label;
+  aStreamTrack->GetId(id);
+  aStreamTrack->GetLabel(label);
+
+  return MediaTrackList::CreateAudioTrack(id, NS_LITERAL_STRING("main"),
+                                          label, EmptyString(),
+                                          aStreamTrack->Enabled());
+}
+
+already_AddRefed<VideoTrack>
+DOMMediaStream::CreateVideoTrack(VideoStreamTrack* aStreamTrack)
+{
+  nsAutoString id;
+  nsAutoString label;
+  aStreamTrack->GetId(id);
+  aStreamTrack->GetLabel(label);
+
+  return MediaTrackList::CreateVideoTrack(id, NS_LITERAL_STRING("main"),
+                                          label, EmptyString());
+}
+
+void
+DOMMediaStream::ConstructMediaTracks(AudioTrackList* aAudioTrackList,
+                                     VideoTrackList* aVideoTrackList)
+{
+  if (mHintContents & DOMMediaStream::HINT_CONTENTS_AUDIO) {
+    MediaTrackListListener listener(aAudioTrackList);
+    mMediaTrackListListeners.AppendElement(listener);
+  }
+  if (mHintContents & DOMMediaStream::HINT_CONTENTS_VIDEO) {
+    MediaTrackListListener listener(aVideoTrackList);
+    mMediaTrackListListeners.AppendElement(listener);
+  }
+
+  int firstEnabledVideo = -1;
+  for (uint32_t i = 0; i < mTracks.Length(); ++i) {
+    if (AudioStreamTrack* t = mTracks[i]->AsAudioStreamTrack()) {
+      nsRefPtr<AudioTrack> track = CreateAudioTrack(t);
+      aAudioTrackList->AddTrack(track);
+    } else if (VideoStreamTrack* t = mTracks[i]->AsVideoStreamTrack()) {
+      nsRefPtr<VideoTrack> track = CreateVideoTrack(t);
+      aVideoTrackList->AddTrack(track);
+      firstEnabledVideo = (t->Enabled() && firstEnabledVideo < 0)
+                          ? (aVideoTrackList->Length() - 1)
+                          : firstEnabledVideo;
+    }
+  }
+
+  if (aVideoTrackList->Length() > 0) {
+    // If media resource does not indicate a particular set of video tracks to
+    // enable, the one that is listed first in the element's videoTracks object
+    // must be selected.
+    int index = firstEnabledVideo >= 0 ? firstEnabledVideo : 0;
+    (*aVideoTrackList)[index]->SetEnabledInternal(true, MediaTrack::FIRE_NO_EVENTS);
+  }
+}
+
+void
+DOMMediaStream::NotifyMediaStreamTrackCreated(MediaStreamTrack* aTrack)
+{
+  for (uint32_t i = 0; i < mMediaTrackListListeners.Length(); ++i) {
+    if (AudioStreamTrack* t = aTrack->AsAudioStreamTrack()) {
+      nsRefPtr<AudioTrack> track = CreateAudioTrack(t);
+      mMediaTrackListListeners[i].NotifyMediaTrackCreated(track);
+    } else if (VideoStreamTrack* t = aTrack->AsVideoStreamTrack()) {
+      nsRefPtr<VideoTrack> track = CreateVideoTrack(t);
+      mMediaTrackListListeners[i].NotifyMediaTrackCreated(track);
+    }
+  }
+}
+
+void
+DOMMediaStream::NotifyMediaStreamTrackEnded(MediaStreamTrack* aTrack)
+{
+  nsAutoString id;
+  aTrack->GetId(id);
+  for (uint32_t i = 0; i < mMediaTrackListListeners.Length(); ++i) {
+    mMediaTrackListListeners[i].NotifyMediaTrackEnded(id);
   }
 }
 

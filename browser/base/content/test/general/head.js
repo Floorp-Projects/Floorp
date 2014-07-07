@@ -219,11 +219,7 @@ function whenNewTabLoaded(aWindow, aCallback) {
 }
 
 function whenTabLoaded(aTab, aCallback) {
-  let browser = aTab.linkedBrowser;
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    executeSoon(aCallback);
-  }, true);
+  promiseTabLoadEvent(aTab).then(aCallback);
 }
 
 function promiseTabLoaded(aTab) {
@@ -311,6 +307,7 @@ function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
 function promiseTopicObserved(topic)
 {
   let deferred = Promise.defer();
+  info("Waiting for observer topic " + topic);
   Services.obs.addObserver(function PTO_observe(subject, topic, data) {
     Services.obs.removeObserver(PTO_observe, topic);
     deferred.resolve([subject, data]);
@@ -397,8 +394,7 @@ let FullZoomHelper = {
     let didLoad = false;
     let didZoom = false;
 
-    tab.linkedBrowser.addEventListener("load", function (event) {
-      event.currentTarget.removeEventListener("load", arguments.callee, true);
+    promiseTabLoadEvent(tab).then(event => {
       didLoad = true;
       if (didZoom)
         deferred.resolve();
@@ -472,3 +468,46 @@ let FullZoomHelper = {
   },
 };
 
+/**
+ * Waits for a load (or custom) event to finish in a given tab. If provided
+ * load an uri into the tab.
+ *
+ * @param tab
+ *        The tab to load into.
+ * @param [optional] url
+ *        The url to load, or the current url.
+ * @param [optional] event
+ *        The load event type to wait for.  Defaults to "load".
+ * @return {Promise} resolved when the event is handled.
+ * @resolves to the received event
+ * @rejects if a valid load event is not received within a meaningful interval
+ */
+function promiseTabLoadEvent(tab, url, eventType="load")
+{
+  let deferred = Promise.defer();
+  info("Wait tab event: " + eventType);
+
+  function handle(event) {
+    if (event.originalTarget != tab.linkedBrowser.contentDocument ||
+        event.target.location.href == "about:blank" ||
+        (url && event.target.location.href != url)) {
+      info("Skipping spurious '" + eventType + "'' event" +
+           " for " + event.target.location.href);
+      return;
+    }
+    clearTimeout(timeout);
+    tab.linkedBrowser.removeEventListener(eventType, handle, true);
+    info("Tab event received: " + eventType);
+    deferred.resolve(event);
+  }
+
+  let timeout = setTimeout(() => {
+    tab.linkedBrowser.removeEventListener(eventType, handle, true);
+    deferred.reject(new Error("Timed out while waiting for a '" + eventType + "'' event"));
+  }, 30000);
+
+  tab.linkedBrowser.addEventListener(eventType, handle, true, true);
+  if (url)
+    tab.linkedBrowser.loadURI(url);
+  return deferred.promise;
+}

@@ -53,8 +53,11 @@ a {
   margin: 0 0 1em 0;
 }
 
-.share .action p.dnd {
-  margin-top: 1em;
+p.dnd {
+  margin: 0 10px 10px 10px;
+  /* The panel won't increase its height when using a bottom margin, while it
+     works using a padding */
+  padding-bottom: 10px;
 }
 
 .share .action input[type="text"],
@@ -65,6 +68,7 @@ a {
   font-size: .9em;
   width: 65%;
   padding: .5em;
+  margin-right: .35em;
 }
 
 .share .action input.pending {

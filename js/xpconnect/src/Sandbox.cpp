@@ -283,13 +283,13 @@ SandboxEvalInWindow(JSContext *cx, unsigned argc, jsval *vp)
     RootedString srcString(cx, args[0].toString());
     RootedObject targetScope(cx, &args[1].toObject());
 
-    nsDependentJSString srcDepString;
-    if (!srcDepString.init(cx, srcString)) {
+    nsAutoJSString srcAutoString;
+    if (!srcAutoString.init(cx, srcString)) {
         JS_ReportError(cx, "Source string is invalid");
         return false;
     }
 
-    return EvalInWindow(cx, srcDepString, targetScope, args.rval());
+    return EvalInWindow(cx, srcAutoString, targetScope, args.rval());
 }
 
 static bool
@@ -1037,7 +1037,7 @@ ParsePrincipal(JSContext *cx, HandleString codebase, nsIPrincipal **principal)
     MOZ_ASSERT(principal);
     MOZ_ASSERT(codebase);
     nsCOMPtr<nsIURI> uri;
-    nsDependentJSString codebaseStr;
+    nsAutoJSString codebaseStr;
     NS_ENSURE_TRUE(codebaseStr.init(cx, codebase), false);
     nsresult rv = NS_NewURI(getter_AddRefs(uri), codebaseStr);
     if (NS_FAILED(rv)) {
@@ -1283,8 +1283,10 @@ OptionsBase::ParseString(const char *name, nsString &prop)
         return false;
     }
 
-    nsDependentJSString strVal;
-    strVal.init(mCx, value.toString());
+    nsAutoJSString strVal;
+    if (!strVal.init(mCx, value.toString()))
+        return false;
+
     prop = strVal;
     return true;
 }
@@ -1505,7 +1507,7 @@ ContextHolder::~ContextHolder()
 nsresult
 xpc::EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& source,
                    const nsACString& filename, int32_t lineNo,
-                   JSVersion jsVersion, bool returnStringOnly, MutableHandleValue rval)
+                   JSVersion jsVersion, MutableHandleValue rval)
 {
     JS_AbortIfWrongThread(JS_GetRuntime(cx));
     rval.set(UndefinedValue());
@@ -1556,22 +1558,11 @@ xpc::EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& sour
         JS::RootedObject rootedSandbox(sandcx, sandbox);
         ok = JS::Evaluate(sandcx, rootedSandbox, options,
                           PromiseFlatString(source).get(), source.Length(), &v);
-        if (ok && returnStringOnly && !v.isUndefined()) {
-            JSString *str = ToString(sandcx, v);
-            ok = !!str;
-            v = ok ? JS::StringValue(str) : JS::UndefinedValue();
-        }
 
         // If the sandbox threw an exception, grab it off the context.
         if (JS_GetPendingException(sandcx, &exn)) {
             MOZ_ASSERT(!ok);
             JS_ClearPendingException(sandcx);
-            if (returnStringOnly) {
-                // The caller asked for strings only, convert the
-                // exception into a string.
-                JSString *str = ToString(sandcx, exn);
-                exn = str ? JS::StringValue(str) : JS::UndefinedValue();
-            }
         }
     }
 

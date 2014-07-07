@@ -86,7 +86,7 @@ const BackgroundPageThumbs = {
     // incorrect, and no big deal when it is.  After the capture is done, we
     // atomically test whether the file exists before writing it.
     PageThumbsStorage.fileExistsForURL(url).then(exists => {
-      if (exists.ok) {
+      if (exists) {
         if (options.onDone)
           options.onDone(url);
         return;

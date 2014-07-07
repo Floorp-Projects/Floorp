@@ -89,6 +89,7 @@ public:
   virtual void Run() = 0;
   // When we're shutting down the application, most messages are ignored but
   // some cleanup messages should still be processed (on the main thread).
+  // This must not add new control messages to the graph.
   virtual void RunDuringShutdown() {}
   MediaStream* GetStream() { return mStream; }
 
@@ -642,6 +643,14 @@ private:
    * Indicates that the MSG thread should gather data for a memory report.
    */
   bool mNeedsMemoryReport;
+
+#ifdef DEBUG
+  /**
+   * Used to assert when AppendMessage() runs ControlMessages synchronously.
+   */
+  bool mCanRunMessagesSynchronously;
+#endif
+
 };
 
 }

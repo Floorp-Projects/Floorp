@@ -1,0 +1,30 @@
+diff --git a/media/libspeex_resampler/src/speex_resampler.h b/media/libspeex_resampler/src/speex_resampler.h
+--- a/media/libspeex_resampler/src/speex_resampler.h
++++ b/media/libspeex_resampler/src/speex_resampler.h
+@@ -34,24 +34,25 @@
+    ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+ */
+ 
+ 
+ #ifndef SPEEX_RESAMPLER_H
+ #define SPEEX_RESAMPLER_H
+ 
+-#ifdef OUTSIDE_SPEEX
++#if 1 /* OUTSIDE_SPEEX */
+ 
+ /********* WARNING: MENTAL SANITY ENDS HERE *************/
+ 
+ /* If the resampler is defined outside of Speex, we change the symbol names so that 
+    there won't be any clash if linking with Speex later on. */
+ 
+ /* #define RANDOM_PREFIX your software name here */
++#define RANDOM_PREFIX moz_speex
+ #ifndef RANDOM_PREFIX
+ #error "Please define RANDOM_PREFIX (above) to something specific to your project to prevent symbol name clashes"
+ #endif
+ 
+ #define CAT_PREFIX2(a,b) a ## b
+ #define CAT_PREFIX(a,b) CAT_PREFIX2(a, b)
+       
+ #define speex_resampler_init CAT_PREFIX(RANDOM_PREFIX,_resampler_init)

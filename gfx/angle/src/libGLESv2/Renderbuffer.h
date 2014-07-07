@@ -12,7 +12,7 @@
 #ifndef LIBGLESV2_RENDERBUFFER_H_
 #define LIBGLESV2_RENDERBUFFER_H_
 
-#define GL_APICALL
+#include <GLES3/gl3.h>
 #include <GLES2/gl2.h>
 
 #include "common/angleutils.h"
@@ -23,12 +23,15 @@ namespace rx
 class Renderer;
 class SwapChain;
 class RenderTarget;
+class TextureStorage;
 }
 
 namespace gl
 {
 class Texture2D;
 class TextureCubeMap;
+class Texture3D;
+class Texture2DArray;
 class Renderbuffer;
 class Colorbuffer;
 class DepthStencilbuffer;
@@ -45,6 +48,7 @@ class RenderbufferInterface
 
     virtual rx::RenderTarget *getRenderTarget() = 0;
     virtual rx::RenderTarget *getDepthStencil() = 0;
+    virtual rx::TextureStorage *getTextureStorage() = 0;
 
     virtual GLsizei getWidth() const = 0;
     virtual GLsizei getHeight() const = 0;
@@ -52,14 +56,10 @@ class RenderbufferInterface
     virtual GLenum getActualFormat() const = 0;
     virtual GLsizei getSamples() const = 0;
 
-    GLuint getRedSize() const;
-    GLuint getGreenSize() const;
-    GLuint getBlueSize() const;
-    GLuint getAlphaSize() const;
-    GLuint getDepthSize() const;
-    GLuint getStencilSize() const;
-
     virtual unsigned int getSerial() const = 0;
+
+    virtual bool isTexture() const = 0;
+    virtual unsigned int getTextureSerial() const = 0;
 
   private:
     DISALLOW_COPY_AND_ASSIGN(RenderbufferInterface);
@@ -68,7 +68,7 @@ class RenderbufferInterface
 class RenderbufferTexture2D : public RenderbufferInterface
 {
   public:
-    RenderbufferTexture2D(Texture2D *texture, GLenum target);
+    RenderbufferTexture2D(Texture2D *texture, GLint level);
 
     virtual ~RenderbufferTexture2D();
 
@@ -77,6 +77,7 @@ class RenderbufferTexture2D : public RenderbufferInterface
 
     rx::RenderTarget *getRenderTarget();
     rx::RenderTarget *getDepthStencil();
+    rx::TextureStorage *getTextureStorage();
 
     virtual GLsizei getWidth() const;
     virtual GLsizei getHeight() const;
@@ -86,17 +87,20 @@ class RenderbufferTexture2D : public RenderbufferInterface
 
     virtual unsigned int getSerial() const;
 
+    virtual bool isTexture() const;
+    virtual unsigned int getTextureSerial() const;
+
   private:
     DISALLOW_COPY_AND_ASSIGN(RenderbufferTexture2D);
 
     BindingPointer <Texture2D> mTexture2D;
-    GLenum mTarget;
+    const GLint mLevel;
 };
 
 class RenderbufferTextureCubeMap : public RenderbufferInterface
 {
   public:
-    RenderbufferTextureCubeMap(TextureCubeMap *texture, GLenum target);
+    RenderbufferTextureCubeMap(TextureCubeMap *texture, GLenum faceTarget, GLint level);
 
     virtual ~RenderbufferTextureCubeMap();
 
@@ -105,6 +109,7 @@ class RenderbufferTextureCubeMap : public RenderbufferInterface
 
     rx::RenderTarget *getRenderTarget();
     rx::RenderTarget *getDepthStencil();
+    rx::TextureStorage *getTextureStorage();
 
     virtual GLsizei getWidth() const;
     virtual GLsizei getHeight() const;
@@ -114,11 +119,81 @@ class RenderbufferTextureCubeMap : public RenderbufferInterface
 
     virtual unsigned int getSerial() const;
 
+    virtual bool isTexture() const;
+    virtual unsigned int getTextureSerial() const;
+
   private:
     DISALLOW_COPY_AND_ASSIGN(RenderbufferTextureCubeMap);
 
     BindingPointer <TextureCubeMap> mTextureCubeMap;
-    GLenum mTarget;
+    const GLint mLevel;
+    const GLenum mFaceTarget;
+};
+
+class RenderbufferTexture3DLayer : public RenderbufferInterface
+{
+public:
+    RenderbufferTexture3DLayer(Texture3D *texture, GLint level, GLint layer);
+
+    virtual ~RenderbufferTexture3DLayer();
+
+    void addProxyRef(const Renderbuffer *proxy);
+    void releaseProxy(const Renderbuffer *proxy);
+
+    rx::RenderTarget *getRenderTarget();
+    rx::RenderTarget *getDepthStencil();
+    rx::TextureStorage *getTextureStorage();
+
+    virtual GLsizei getWidth() const;
+    virtual GLsizei getHeight() const;
+    virtual GLenum getInternalFormat() const;
+    virtual GLenum getActualFormat() const;
+    virtual GLsizei getSamples() const;
+
+    virtual unsigned int getSerial() const;
+
+    virtual bool isTexture() const;
+    virtual unsigned int getTextureSerial() const;
+
+private:
+    DISALLOW_COPY_AND_ASSIGN(RenderbufferTexture3DLayer);
+
+    BindingPointer<Texture3D> mTexture3D;
+    const GLint mLevel;
+    const GLint mLayer;
+};
+
+class RenderbufferTexture2DArrayLayer : public RenderbufferInterface
+{
+public:
+    RenderbufferTexture2DArrayLayer(Texture2DArray *texture, GLint level, GLint layer);
+
+    virtual ~RenderbufferTexture2DArrayLayer();
+
+    void addProxyRef(const Renderbuffer *proxy);
+    void releaseProxy(const Renderbuffer *proxy);
+
+    rx::RenderTarget *getRenderTarget();
+    rx::RenderTarget *getDepthStencil();
+    rx::TextureStorage *getTextureStorage();
+
+    virtual GLsizei getWidth() const;
+    virtual GLsizei getHeight() const;
+    virtual GLenum getInternalFormat() const;
+    virtual GLenum getActualFormat() const;
+    virtual GLsizei getSamples() const;
+
+    virtual unsigned int getSerial() const;
+
+    virtual bool isTexture() const;
+    virtual unsigned int getTextureSerial() const;
+
+private:
+    DISALLOW_COPY_AND_ASSIGN(RenderbufferTexture2DArrayLayer);
+
+    BindingPointer<Texture2DArray> mTexture2DArray;
+    const GLint mLevel;
+    const GLint mLayer;
 };
 
 // A class derived from RenderbufferStorage is created whenever glRenderbufferStorage
@@ -133,6 +208,7 @@ class RenderbufferStorage : public RenderbufferInterface
 
     virtual rx::RenderTarget *getRenderTarget();
     virtual rx::RenderTarget *getDepthStencil();
+    virtual rx::TextureStorage *getTextureStorage();
 
     virtual GLsizei getWidth() const;
     virtual GLsizei getHeight() const;
@@ -142,8 +218,10 @@ class RenderbufferStorage : public RenderbufferInterface
 
     virtual unsigned int getSerial() const;
 
-    static unsigned int issueSerial();
-    static unsigned int issueCubeSerials();
+    virtual bool isTexture() const;
+    virtual unsigned int getTextureSerial() const;
+
+    static unsigned int issueSerials(GLuint count);
 
   protected:
     GLsizei mWidth;
@@ -179,6 +257,7 @@ class Renderbuffer : public RefCountObject
 
     rx::RenderTarget *getRenderTarget();
     rx::RenderTarget *getDepthStencil();
+    rx::TextureStorage *getTextureStorage();
 
     GLsizei getWidth() const;
     GLsizei getHeight() const;
@@ -190,15 +269,21 @@ class Renderbuffer : public RefCountObject
     GLuint getAlphaSize() const;
     GLuint getDepthSize() const;
     GLuint getStencilSize() const;
+    GLenum getComponentType() const;
+    GLenum getColorEncoding() const;
     GLsizei getSamples() const;
 
     unsigned int getSerial() const;
+
+    bool isTexture() const;
+    unsigned int getTextureSerial() const;
 
     void setStorage(RenderbufferStorage *newStorage);
 
   private:
     DISALLOW_COPY_AND_ASSIGN(Renderbuffer);
 
+    rx::Renderer const *mRenderer;
     RenderbufferInterface *mInstance;
 };
 

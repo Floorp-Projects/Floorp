@@ -1,217 +1,35 @@
-This is the ANGLE project, from http://code.google.com/p/angleproject/
+This is the ANGLE project, originally from https://chromium.googlesource.com/angle/angle 
 
-Current revision: f3fc6571dca9832876e09c63b0958d413737757b
-Date of revision: 2013-08-02
+The Mozilla upstream is the 'mozilla' branch from https://github.com/mozilla/angle, which
+includes Mozilla-specific patches on top of upstream.
 
-== Applied local patches ==
-In this order:
-  angle-build-stdcall-alias.patch:
-    Fix an issue GCC has with linking to undecorated stdcalls.
+=== How to upgrade ANGLE ===
 
-  angle-build-dedupe-debug-cpp-h.patch:
-    Rename: "src/compiler/debug.{cpp,h}"
-    To:     "src/compiler/compiler_debug.{cpp,h}"
-    Repair includes accordingly.
+1. git clone https://github.com/mozilla/angle angle
 
-  angle-build-d3dcompiler-list.patch:
-    Move `ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES` define from make files to
-    Renderer.cpp, where it's used.
+2. Go into the angle dir, and add the google upstream as a remote:
+     git remote add google https://chromium.googlesource.com/angle/angle
 
-  angle-build-khrplatform-h-path.patch:
-    Fix include path for khrplatform.h.
+3. Fetch the new google upstream:
+     git fetch google
 
-  angle-build-case-sensitive.patch
-    Fixes cross compilation on case sensitive OSes.
+4. Switch to the mozilla branch
+     git checkout mozilla
 
-  angle-build-dedupe-uniform-cpp-h.patch:
-    Rename: "src/compiler/Uniform.{cpp,h}"
-    To:     "src/compiler/CompilerUniform.{cpp,h}"
-    Repair includes accordingly.
+5. Rebase the mozilla branch on top of the new google master.  Fix up patches along the way,
+   remove unneded commits.
+     git rebase -i google/master
 
-  angle-build-ttype.patch:
-    Remove bit-field markings for TType, since GCC4.7 emits a default
-    copy constructor which fails to compile.
+6. Re-generate moz.build files:
+     ./gyp_mozbuild
 
-  angle-long-ident-hash.patch:
-    Use MurmurHash3 for long identifier hashing. See bug 676071, where we used
-    Spooky Hash, before ANGLE came with MurmurHash3.
+7. nuke mozilla-central/gfx/angle directory
 
-  angle-faceforward-emu.patch:
-    Adds emulation for faceforward(float,float,float), which is needed to
-    prevent crashing on Mac+Intel. See bug 771406.
+8. copy all the relevant files from the github checkout
+     cd mozilla-central
+     mkdir gfx/angle
+     cp -r /c/proj/angle/[A-Z]* /c/proj/angle/{include,src,moz.build} gfx/angle
 
-  angle-default-clamp-strat.patch:
-    Fixes TCompiler::Init to treat `resources.ArrayIndexClampingStrategy`
-    as a request for the default strategy.
-
-  angle-tex-pool-default.patch:
-    Don't use D3DPOOL_MANAGED on D3D9. Just use D3DPOOL_DEFAULT.
-
-  angle-build-unified.patch:
-    Fixes required to make angle compile in unified mode
-    Note that a different version of this patch was upstreamed, so the next time that
-    Angle is updated this patch can be discarded.  See:
-    https://chromium.googlesource.com/angle/angle/+/0dd3b3ff66cdc50882125d21e60112d5161279b4
-    https://chromium.googlesource.com/angle/angle/+/0685fbde65a3e90d8d4d4a6c72f2cc1771617fd0
-
-  angle-fix-vc12.patch:
-    Fixes angle to build on Visual Studio 2013
-
-  angle-d3dcc47.patch:
-    Tell ANGLE about d3dcompiler_47.dll from WinSDK 8.1.
-
-  angle-fix-issue-651.patch:
-    Fixes crash in TSymbolTableLevel::~TSymbolTableLevel with GCC 4.9
-
-In addition to these patches, the Makefile.in and moz.build build files are ours,
-they're not present in upsteam ANGLE. Therefore, changes made to the build files
-should not be stored in the local .patch files.
-
-
-== How to do a clean-slate upgrade ==
-1.  Backup our moz-specific files:
-      README.mozilla
-      Makefile.in
-      moz.build
-      *.patch
-      src/libEGL/Makefile.in
-      src/libEGL/moz.build
-      src/libGLESv2/Makefile.in
-      src/libGLESv2/moz.build
-
-2.  $ rm -rf gfx/angle
-
-3.  Copy the folder containing the angle rev you want onto gfx/angle.
-    $ svn export -r <rev> <src> <moz-central>/gfx/angle
-    Or:
-    $ git checkout-index --prefix <moz-central>/gfx/angle/ -a
-
-4.  Fold our moz-specific files into this new angle folder. (Makefiles, README)
-4a. Remove the unused files. (test/, samples/, msvc files)
-
-5.  Clear out the "Applied Local Patches" section above, since we're going to
-    repopulate it.
-
-6.  Re-apply the angle-build-*.patch files and record them above.
-
-7.  Update the Makefile.in files with the current deps from the .gyp(i) files.
-
-8.  Build. Fix things until it builds.
-
-9.  Reapply the rest of the .patch files and record them above.
+9.  Build. Fix things until it builds.
 
 10. Try runs and reviews!
-
-
-== Applying Diffs ==
-In general:
-$ patch -p1 -R < gfx/angle/angle-some-bug-fix.patch
-
-SVN diffs however can be iffy. They don't seem to be completely compatible
-with `patch`. Be aware that you'll likely get rejects whenever a file is
-removed.
-
-
-
-== How to do an incremental update ==
-Same general idea here, but instead of nuking the ANGLE dir, we're going to
-have to get a diff between revs from SVN, and deal with applying that. We
-also naturally have to peel off our local patches before we can apply a diff
-from upstream.
-
-1. Unapply patches
-
-Unapply them in reverse order, so iterate over the above list of applied patch
-starting from the bottom. You most likely want to record these patch-unapply
-operations as individual patches themselves, in order to re-apply patches later.
-
-$ cd /path/to/mozilla-central
-
-$ patch -p1 -R < gfx/angle/angle-some-bug-fix.patch
-$ hg qnew unapply-angle-some-bug-fix.patch
-
-2. Apply diff with new ANGLE version
-
-Check at the top of this file what ANGLE revision we currently have. Let's say it's
-r123. Check at the ANGLE Web site what recent revisions look like to figure what
-revision seems safe. Let's say we want r456.
-
-$ cd
-$ svn checkout http://angleproject.googlecode.com/svn/trunk/ angleproject
-$ cd angleproject
-$ svn diff -r 123:456 > ~/angle-diff-from-123-to-456
-$ cd /path/to/mozilla-central
-$ cd gfx/angle
-$ patch -p0 < ~/angle-diff-from-123-to-456
-$ cd ../..
-$ hg status
-# hg add any new ANGLE files under gfx/angle
-$ hg qnew angle-diff-from-123-to-456
-
-3. Reapply patches
-
-You may have to skip reapplying certain patches there, for example if they have
-been integrated into ANGLE since our last update. The short patch descriptions above
-in this file should help you make that decision.
-
-If you have recorded the individual patch unapply operations in step 1 as separate
-Mercurial patches, this will be easy, just apply the inverse patches now, in reverse
-order:
-
-$ patch -p1 -R < .hg/patches/unapply-angle-some-bug-fix.patch
-$ hg status
-# hg add any new ANGLE files under gfx/angle
-$ hg qnew angle-some-bug-fix.patch
-
-Note that here you need to proceed in the reverse order of what you did in step 1.
-
-4. Update our Makefiles
-
-Open your ANGLE diff file (~/angle-diff-from-123-to-456), search for GYP files
-(e.g. build_angle.gyp), it's easy-to-read JSON. It may list additions of new files,
-or removal of old files. You have to reflect this in our Makefiles:
-
-gfx/angle/Makefile.in
-gfx/angle/src/libEGL/Makefile.in
-gfx/angle/src/libGLESv2/Makefile.in
-
-The first one is our main Makefile. It has basically the ANGLE shader compiler.
-Changes there will typically have to be applied also to the two other Makefiles.
-These two other Makefiles are Windows-only and build the ANGLE GLES2-on-top-of-D3D
-implementation.
-
-5. Update patch files
-
-Something like:
-
-$ cp .hg/patches/angle-some-bug-fix.patch gfx/angle
-
-For each patch that you reapplied.
-
-If a patch was removed (not reapplied), remove the corresponding patch file.
-
-6. Update this README.mozilla
-
-You'll have to update at least the ANGLE revision number and probably the patch
-list as well.
-
-7. Push to Try
-
-Make sure to test both Windows and non-Windows, and enable mochitest-1 in your
-Try options. You may want reftest as well, as we have WebGL reftests.
-
-8. Get reviews.
-
-Typically, you would get review on your Makefiles patch, and any
-new patches that you need to add to get this update to work.
-
-You do not need a review for the ANGLE diff itself and for trivial updates of
-existing patches.
-
-
-== Visual Studio Solution Files ==
-Ignore these. We don't use them anymore. We use custom Makefiles.
-
-
-== Generated parser code==
-Don't bother about that anymore. The parser is now generated and included in the ANGLE svn repo.

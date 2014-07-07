@@ -19,6 +19,7 @@
 
 #include "nsString.h"
 #include "nsDebug.h"
+#include "nsReadableUtils.h"
 
 #include "gfxContext.h"
 #include "gfxPlatform.h"
@@ -137,9 +138,16 @@ WebGLContext::BindAttribLocation(WebGLProgram *prog, GLuint location,
     if (!ValidateAttribIndex(location, "bindAttribLocation"))
         return;
 
+    if (StringBeginsWith(name, NS_LITERAL_STRING("gl_")))
+        return ErrorInvalidOperation("bindAttribLocation: can't set the location of a name that starts with 'gl_'");
+
     NS_LossyConvertUTF16toASCII cname(name);
     nsCString mappedName;
-    prog->MapIdentifier(cname, &mappedName);
+    if (mShaderValidation) {
+        WebGLProgram::HashMapIdentifier(cname, &mappedName);
+    } else {
+        mappedName.Assign(cname);
+    }
 
     MakeContextCurrent();
     gl->fBindAttribLocation(progname, location, mappedName.get());
@@ -2996,286 +3004,295 @@ WebGLContext::CompileShader(WebGLShader *shader)
 
     shader->SetCompileStatus(false);
 
+    // nothing to do if the validator is disabled
+    if (!mShaderValidation)
+        return;
+
+    // nothing to do if translation was already done
+    if (!shader->NeedsTranslation())
+        return;
+
     MakeContextCurrent();
 
     ShShaderOutput targetShaderSourceLanguage = gl->IsGLES() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT;
-    bool useShaderSourceTranslation = true;
 
-    if (shader->NeedsTranslation() && mShaderValidation) {
-        ShHandle compiler = 0;
-        ShBuiltInResources resources;
-        memset(&resources, 0, sizeof(ShBuiltInResources));
+    ShHandle compiler = 0;
+    ShBuiltInResources resources;
 
-        resources.MaxVertexAttribs = mGLMaxVertexAttribs;
-        resources.MaxVertexUniformVectors = mGLMaxVertexUniformVectors;
-        resources.MaxVaryingVectors = mGLMaxVaryingVectors;
-        resources.MaxVertexTextureImageUnits = mGLMaxVertexTextureImageUnits;
-        resources.MaxCombinedTextureImageUnits = mGLMaxTextureUnits;
-        resources.MaxTextureImageUnits = mGLMaxTextureImageUnits;
-        resources.MaxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
-        resources.MaxDrawBuffers = mGLMaxDrawBuffers;
+    memset(&resources, 0, sizeof(ShBuiltInResources));
 
-        if (IsExtensionEnabled(WebGLExtensionID::EXT_frag_depth))
-            resources.EXT_frag_depth = 1;
+    ShInitBuiltInResources(&resources);
 
-        if (IsExtensionEnabled(WebGLExtensionID::OES_standard_derivatives))
-            resources.OES_standard_derivatives = 1;
+    resources.MaxVertexAttribs = mGLMaxVertexAttribs;
+    resources.MaxVertexUniformVectors = mGLMaxVertexUniformVectors;
+    resources.MaxVaryingVectors = mGLMaxVaryingVectors;
+    resources.MaxVertexTextureImageUnits = mGLMaxVertexTextureImageUnits;
+    resources.MaxCombinedTextureImageUnits = mGLMaxTextureUnits;
+    resources.MaxTextureImageUnits = mGLMaxTextureImageUnits;
+    resources.MaxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
+    resources.MaxDrawBuffers = mGLMaxDrawBuffers;
 
-        if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers))
-            resources.EXT_draw_buffers = 1;
+    if (IsExtensionEnabled(WebGLExtensionID::EXT_frag_depth))
+        resources.EXT_frag_depth = 1;
 
-        // Tell ANGLE to allow highp in frag shaders. (unless disabled)
-        // If underlying GLES doesn't have highp in frag shaders, it should complain anyways.
-        resources.FragmentPrecisionHigh = mDisableFragHighP ? 0 : 1;
+    if (IsExtensionEnabled(WebGLExtensionID::OES_standard_derivatives))
+        resources.OES_standard_derivatives = 1;
 
-        if (gl->WorkAroundDriverBugs()) {
+    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers))
+        resources.EXT_draw_buffers = 1;
+
+    // Tell ANGLE to allow highp in frag shaders. (unless disabled)
+    // If underlying GLES doesn't have highp in frag shaders, it should complain anyways.
+    resources.FragmentPrecisionHigh = mDisableFragHighP ? 0 : 1;
+
+    resources.HashFunction = WebGLProgram::IdentifierHashFunction;
+
+    if (gl->WorkAroundDriverBugs()) {
 #ifdef XP_MACOSX
-            if (gl->Vendor() == gl::GLVendor::NVIDIA) {
-                // Work around bug 890432
-                resources.MaxExpressionComplexity = 1000;
-            }
+        if (gl->Vendor() == gl::GLVendor::NVIDIA) {
+            // Work around bug 890432
+            resources.MaxExpressionComplexity = 1000;
+        }
 #endif
-        }
+    }
 
-        // We're storing an actual instance of StripComments because, if we don't, the
-        // cleanSource nsAString instance will be destroyed before the reference is
-        // actually used.
-        StripComments stripComments(shader->Source());
-        const nsAString& cleanSource = Substring(stripComments.result().Elements(), stripComments.length());
-        if (!ValidateGLSLString(cleanSource, "compileShader"))
-            return;
+    // We're storing an actual instance of StripComments because, if we don't, the
+    // cleanSource nsAString instance will be destroyed before the reference is
+    // actually used.
+    StripComments stripComments(shader->Source());
+    const nsAString& cleanSource = Substring(stripComments.result().Elements(), stripComments.length());
+    if (!ValidateGLSLString(cleanSource, "compileShader"))
+        return;
 
-        // shaderSource() already checks that the source stripped of comments is in the
-        // 7-bit ASCII range, so we can skip the NS_IsAscii() check.
-        NS_LossyConvertUTF16toASCII sourceCString(cleanSource);
+    // shaderSource() already checks that the source stripped of comments is in the
+    // 7-bit ASCII range, so we can skip the NS_IsAscii() check.
+    NS_LossyConvertUTF16toASCII sourceCString(cleanSource);
 
-        if (gl->WorkAroundDriverBugs()) {
-            const uint32_t maxSourceLength = 0x3ffff;
-            if (sourceCString.Length() > maxSourceLength)
-                return ErrorInvalidValue("compileShader: source has more than %d characters",
-                                         maxSourceLength);
-        }
+    if (gl->WorkAroundDriverBugs()) {
+        const uint32_t maxSourceLength = 0x3ffff;
+        if (sourceCString.Length() > maxSourceLength)
+            return ErrorInvalidValue("compileShader: source has more than %d characters",
+                                     maxSourceLength);
+    }
 
-        const char *s = sourceCString.get();
+    const char *s = sourceCString.get();
 
 #define WEBGL2_BYPASS_ANGLE
 #ifdef WEBGL2_BYPASS_ANGLE
-        /*
-         * The bypass don't bring a full support for GLSL ES 3.0, but the main purpose
-         * is to natively bring gl_InstanceID (to do instanced rendering) and gl_FragData
-         *
-         * To remove the bypass code, just comment #define WEBGL2_BYPASS_ANGLE above
-         *
-         * To bypass angle, the context must be a WebGL 2 and the shader must have the
-         * following line at the very top :
-         *      #version proto-200
-         *
-         * In this case, byPassANGLE == true and here is what we do :
-         *  We create two shader source code:
-         *    - one for the driver, that enable GL_EXT_gpu_shader4
-         *    - one for the angle compilor, to get informations about vertex attributes
-         *      and uniforms
-         */
-        static const char *bypassPrefixSearch = "#version proto-200";
-        static const char *bypassANGLEPrefix[2] = {"precision mediump float;\n"
-                                                   "#define gl_VertexID 0\n"
-                                                   "#define gl_InstanceID 0\n",
+    /*
+     * The bypass don't bring a full support for GLSL ES 3.0, but the main purpose
+     * is to natively bring gl_InstanceID (to do instanced rendering) and gl_FragData
+     *
+     * To remove the bypass code, just comment #define WEBGL2_BYPASS_ANGLE above
+     *
+     * To bypass angle, the context must be a WebGL 2 and the shader must have the
+     * following line at the very top :
+     *      #version proto-200
+     *
+     * In this case, byPassANGLE == true and here is what we do :
+     *  We create two shader source code:
+     *    - one for the driver, that enable GL_EXT_gpu_shader4
+     *    - one for the angle compilor, to get informations about vertex attributes
+     *      and uniforms
+     */
+    static const char *bypassPrefixSearch = "#version proto-200";
+    static const char *bypassANGLEPrefix[2] = {"precision mediump float;\n"
+                                               "#define gl_VertexID 0\n"
+                                               "#define gl_InstanceID 0\n",
 
-                                                   "precision mediump float;\n"
-                                                   "#extension GL_EXT_draw_buffers : enable\n"
-                                                   "#define gl_PrimitiveID 0\n"};
+                                               "precision mediump float;\n"
+                                               "#extension GL_EXT_draw_buffers : enable\n"
+                                               "#define gl_PrimitiveID 0\n"};
 
-        const bool bypassANGLE = IsWebGL2() && (strstr(s, bypassPrefixSearch) != 0);
+    const bool bypassANGLE = IsWebGL2() && (strstr(s, bypassPrefixSearch) != 0);
 
-        const char *angleShaderCode = s;
-        nsTArray<char> bypassANGLEShaderCode;
-        nsTArray<char> bypassDriverShaderCode;
+    const char *angleShaderCode = s;
+    nsTArray<char> bypassANGLEShaderCode;
+    nsTArray<char> bypassDriverShaderCode;
 
-        if (bypassANGLE) {
-            const int bypassStage = (shader->ShaderType() == LOCAL_GL_FRAGMENT_SHADER) ? 1 : 0;
-            const char *originalShader = strstr(s, bypassPrefixSearch) + strlen(bypassPrefixSearch);
-            int originalShaderSize = strlen(s) - (originalShader - s);
-            int bypassShaderCodeSize = originalShaderSize + 4096 + 1;
+    if (bypassANGLE) {
+        const int bypassStage = (shader->ShaderType() == LOCAL_GL_FRAGMENT_SHADER) ? 1 : 0;
+        const char *originalShader = strstr(s, bypassPrefixSearch) + strlen(bypassPrefixSearch);
+        int originalShaderSize = strlen(s) - (originalShader - s);
+        int bypassShaderCodeSize = originalShaderSize + 4096 + 1;
 
-            bypassANGLEShaderCode.SetLength(bypassShaderCodeSize);
-            strcpy(bypassANGLEShaderCode.Elements(), bypassANGLEPrefix[bypassStage]);
-            strcat(bypassANGLEShaderCode.Elements(), originalShader);
+        bypassANGLEShaderCode.SetLength(bypassShaderCodeSize);
+        strcpy(bypassANGLEShaderCode.Elements(), bypassANGLEPrefix[bypassStage]);
+        strcat(bypassANGLEShaderCode.Elements(), originalShader);
 
-            bypassDriverShaderCode.SetLength(bypassShaderCodeSize);
-            strcpy(bypassDriverShaderCode.Elements(), "#extension GL_EXT_gpu_shader4 : enable\n");
-            strcat(bypassDriverShaderCode.Elements(), originalShader);
+        bypassDriverShaderCode.SetLength(bypassShaderCodeSize);
+        strcpy(bypassDriverShaderCode.Elements(), "#extension GL_EXT_gpu_shader4 : enable\n");
+        strcat(bypassDriverShaderCode.Elements(), originalShader);
 
-            angleShaderCode = bypassANGLEShaderCode.Elements();
-        }
+        angleShaderCode = bypassANGLEShaderCode.Elements();
+    }
 #endif
 
-        compiler = ShConstructCompiler((ShShaderType) shader->ShaderType(),
-                                       SH_WEBGL_SPEC,
-                                       targetShaderSourceLanguage,
-                                       &resources);
+    compiler = ShConstructCompiler((ShShaderType) shader->ShaderType(),
+                                   SH_WEBGL_SPEC,
+                                   targetShaderSourceLanguage,
+                                   &resources);
 
-        int compileOptions = SH_ATTRIBUTES_UNIFORMS |
-                             SH_ENFORCE_PACKING_RESTRICTIONS;
+    int compileOptions = SH_VARIABLES |
+                         SH_ENFORCE_PACKING_RESTRICTIONS |
+                         SH_INIT_VARYINGS_WITHOUT_STATIC_USE |
+                         SH_OBJECT_CODE;
 
-        if (resources.MaxExpressionComplexity > 0) {
-            compileOptions |= SH_LIMIT_EXPRESSION_COMPLEXITY;
-        }
+    if (resources.MaxExpressionComplexity > 0) {
+        compileOptions |= SH_LIMIT_EXPRESSION_COMPLEXITY;
+    }
 
-        // We want to do this everywhere, but:
-#ifndef XP_MACOSX // To do this on Mac, we need to do it only on Mac OSX > 10.6 as this
-                  // causes the shader compiler in 10.6 to crash
-        compileOptions |= SH_CLAMP_INDIRECT_ARRAY_BOUNDS;
+#ifndef XP_MACOSX
+    // We want to do this everywhere, but to do this on Mac, we need
+    // to do it only on Mac OSX > 10.6 as this causes the shader
+    // compiler in 10.6 to crash
+    compileOptions |= SH_CLAMP_INDIRECT_ARRAY_BOUNDS;
 #endif
-
-        if (useShaderSourceTranslation) {
-            compileOptions |= SH_OBJECT_CODE
-                            | SH_MAP_LONG_VARIABLE_NAMES;
 
 #ifdef XP_MACOSX
-            if (gl->WorkAroundDriverBugs()) {
-                // Work around bug 665578 and bug 769810
-                if (gl->Vendor() == gl::GLVendor::ATI) {
-                    compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
-                }
-
-                // Work around bug 735560
-                if (gl->Vendor() == gl::GLVendor::Intel) {
-                    compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
-                }
-            }
-#endif
+    if (gl->WorkAroundDriverBugs()) {
+        // Work around bug 665578 and bug 769810
+        if (gl->Vendor() == gl::GLVendor::ATI) {
+            compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
         }
+
+        // Work around bug 735560
+        if (gl->Vendor() == gl::GLVendor::Intel) {
+            compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
+        }
+
+        // Work around bug 636926
+        if (gl->Vendor() == gl::GLVendor::NVIDIA) {
+            compileOptions |= SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX;
+        }
+
+        // Work around https://bugs.webkit.org/show_bug.cgi?id=124684,
+        // https://chromium.googlesource.com/angle/angle/+/5e70cf9d0b1bb
+        compileOptions |= SH_UNFOLD_SHORT_CIRCUIT;
+    }
+#endif
 
 #ifdef WEBGL2_BYPASS_ANGLE
-        if (!ShCompile(compiler, &angleShaderCode, 1, compileOptions)) {
+    if (!ShCompile(compiler, &angleShaderCode, 1, compileOptions)) {
 #else
-        if (!ShCompile(compiler, &s, 1, compileOptions)) {
+    if (!ShCompile(compiler, &s, 1, compileOptions)) {
 #endif
-            size_t lenWithNull = 0;
-            ShGetInfo(compiler, SH_INFO_LOG_LENGTH, &lenWithNull);
+        size_t lenWithNull = 0;
+        ShGetInfo(compiler, SH_INFO_LOG_LENGTH, &lenWithNull);
 
-            if (!lenWithNull) {
-                // Error in ShGetInfo.
-                shader->SetTranslationFailure(NS_LITERAL_CSTRING("Internal error: failed to get shader info log"));
-            } else {
-                size_t len = lenWithNull - 1;
-
-                nsAutoCString info;
-                info.SetLength(len); // Allocates len+1, for the null-term.
-                ShGetInfoLog(compiler, info.BeginWriting());
-
-                shader->SetTranslationFailure(info);
-            }
-            ShDestruct(compiler);
-            shader->SetCompileStatus(false);
-            return;
-        }
-
-        size_t num_attributes = 0;
-        ShGetInfo(compiler, SH_ACTIVE_ATTRIBUTES, &num_attributes);
-        size_t num_uniforms = 0;
-        ShGetInfo(compiler, SH_ACTIVE_UNIFORMS, &num_uniforms);
-        size_t attrib_max_length = 0;
-        ShGetInfo(compiler, SH_ACTIVE_ATTRIBUTE_MAX_LENGTH, &attrib_max_length);
-        size_t uniform_max_length = 0;
-        ShGetInfo(compiler, SH_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_max_length);
-        size_t mapped_max_length = 0;
-        ShGetInfo(compiler, SH_MAPPED_NAME_MAX_LENGTH, &mapped_max_length);
-
-        shader->mAttribMaxNameLength = attrib_max_length;
-
-        shader->mAttributes.Clear();
-        shader->mUniforms.Clear();
-        shader->mUniformInfos.Clear();
-
-        nsAutoArrayPtr<char> attribute_name(new char[attrib_max_length+1]);
-        nsAutoArrayPtr<char> uniform_name(new char[uniform_max_length+1]);
-        nsAutoArrayPtr<char> mapped_name(new char[mapped_max_length+1]);
-
-        for (size_t i = 0; i < num_uniforms; i++) {
-            size_t length;
-            int size;
-            ShDataType type;
-            ShGetActiveUniform(compiler, (int)i,
-                                &length, &size, &type,
-                                uniform_name,
-                                mapped_name);
-            if (useShaderSourceTranslation) {
-                shader->mUniforms.AppendElement(WebGLMappedIdentifier(
-                                                    nsDependentCString(uniform_name),
-                                                    nsDependentCString(mapped_name)));
-            }
-
-            // we always query uniform info, regardless of useShaderSourceTranslation,
-            // as we need it to validate uniform setter calls, and it doesn't rely on
-            // shader translation.
-            char mappedNameLength = strlen(mapped_name);
-            char mappedNameLastChar = mappedNameLength > 1
-                                      ? mapped_name[mappedNameLength - 1]
-                                      : 0;
-            shader->mUniformInfos.AppendElement(WebGLUniformInfo(
-                                                    size,
-                                                    mappedNameLastChar == ']',
-                                                    type));
-        }
-
-        if (useShaderSourceTranslation) {
-
-            for (size_t i = 0; i < num_attributes; i++) {
-                size_t length;
-                int size;
-                ShDataType type;
-                ShGetActiveAttrib(compiler, (int)i,
-                                  &length, &size, &type,
-                                  attribute_name,
-                                  mapped_name);
-                shader->mAttributes.AppendElement(WebGLMappedIdentifier(
-                                                    nsDependentCString(attribute_name),
-                                                    nsDependentCString(mapped_name)));
-            }
-
-            size_t lenWithNull = 0;
-            ShGetInfo(compiler, SH_OBJECT_CODE_LENGTH, &lenWithNull);
-            MOZ_ASSERT(lenWithNull >= 1);
+        if (!lenWithNull) {
+            // Error in ShGetInfo.
+            shader->SetTranslationFailure(NS_LITERAL_CSTRING("Internal error: failed to get shader info log"));
+        } else {
             size_t len = lenWithNull - 1;
 
-            nsAutoCString translatedSrc;
-            translatedSrc.SetLength(len); // Allocates len+1, for the null-term.
-            ShGetObjectCode(compiler, translatedSrc.BeginWriting());
+            nsAutoCString info;
+            info.SetLength(len); // Allocates len+1, for the null-term.
+            ShGetInfoLog(compiler, info.BeginWriting());
 
-            CopyASCIItoUTF16(translatedSrc, shader->mTranslatedSource);
+            shader->SetTranslationFailure(info);
+        }
+        ShDestruct(compiler);
+        shader->SetCompileStatus(false);
+        return;
+    }
 
-            const char *ts = translatedSrc.get();
+    size_t num_attributes = 0;
+    ShGetInfo(compiler, SH_ACTIVE_ATTRIBUTES, &num_attributes);
+    size_t num_uniforms = 0;
+    ShGetInfo(compiler, SH_ACTIVE_UNIFORMS, &num_uniforms);
+    size_t attrib_max_length = 0;
+    ShGetInfo(compiler, SH_ACTIVE_ATTRIBUTE_MAX_LENGTH, &attrib_max_length);
+    size_t uniform_max_length = 0;
+    ShGetInfo(compiler, SH_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_max_length);
+    size_t mapped_max_length = 0;
+    ShGetInfo(compiler, SH_MAPPED_NAME_MAX_LENGTH, &mapped_max_length);
+
+    shader->mAttribMaxNameLength = attrib_max_length;
+
+    shader->mAttributes.Clear();
+    shader->mUniforms.Clear();
+    shader->mUniformInfos.Clear();
+
+    nsAutoArrayPtr<char> attribute_name(new char[attrib_max_length+1]);
+    nsAutoArrayPtr<char> uniform_name(new char[uniform_max_length+1]);
+    nsAutoArrayPtr<char> mapped_name(new char[mapped_max_length+1]);
+
+    for (size_t i = 0; i < num_uniforms; i++) {
+        size_t length;
+        int size;
+        ShDataType type;
+        ShPrecisionType precision;
+        int staticUse;
+        ShGetVariableInfo(compiler, SH_ACTIVE_UNIFORMS, (int)i,
+                          &length, &size, &type,
+                          &precision, &staticUse,
+                          uniform_name,
+                          mapped_name);
+
+        shader->mUniforms.AppendElement(WebGLMappedIdentifier(
+                                            nsDependentCString(uniform_name),
+                                            nsDependentCString(mapped_name)));
+
+        // we need uniform info to validate uniform setter calls
+        char mappedNameLength = strlen(mapped_name);
+        char mappedNameLastChar = mappedNameLength > 1
+                                  ? mapped_name[mappedNameLength - 1]
+                                  : 0;
+        shader->mUniformInfos.AppendElement(WebGLUniformInfo(
+                                                size,
+                                                mappedNameLastChar == ']',
+                                                type));
+    }
+
+    for (size_t i = 0; i < num_attributes; i++) {
+        size_t length;
+        int size;
+        ShDataType type;
+        ShPrecisionType precision;
+        int staticUse;
+        ShGetVariableInfo(compiler, SH_ACTIVE_ATTRIBUTES, (int)i,
+                          &length, &size, &type,
+                          &precision, &staticUse,
+                          attribute_name,
+                          mapped_name);
+        shader->mAttributes.AppendElement(WebGLMappedIdentifier(
+                                              nsDependentCString(attribute_name),
+                                              nsDependentCString(mapped_name)));
+    }
+
+    size_t lenWithNull = 0;
+    ShGetInfo(compiler, SH_OBJECT_CODE_LENGTH, &lenWithNull);
+    MOZ_ASSERT(lenWithNull >= 1);
+    size_t len = lenWithNull - 1;
+
+    nsAutoCString translatedSrc;
+    translatedSrc.SetLength(len); // Allocates len+1, for the null-term.
+    ShGetObjectCode(compiler, translatedSrc.BeginWriting());
+
+    CopyASCIItoUTF16(translatedSrc, shader->mTranslatedSource);
+
+    const char *ts = translatedSrc.get();
 
 #ifdef WEBGL2_BYPASS_ANGLE
-            if (bypassANGLE) {
-                const char* driverShaderCode = bypassDriverShaderCode.Elements();
-                gl->fShaderSource(shadername, 1, (const GLchar**) &driverShaderCode, nullptr);
-            }
-            else {
-                gl->fShaderSource(shadername, 1, &ts, nullptr);
-            }
-#else
-            gl->fShaderSource(shadername, 1, &ts, nullptr);
-#endif
-        } else { // not useShaderSourceTranslation
-            // we just pass the raw untranslated shader source. We then can't use ANGLE idenfier mapping.
-            // that's really bad, as that means we can't be 100% conformant. We should work towards always
-            // using ANGLE identifier mapping.
-            gl->fShaderSource(shadername, 1, &s, nullptr);
-
-            CopyASCIItoUTF16(s, shader->mTranslatedSource);
-        }
-
-        shader->SetTranslationSuccess();
-
-        ShDestruct(compiler);
-
-        gl->fCompileShader(shadername);
-        GLint ok;
-        gl->fGetShaderiv(shadername, LOCAL_GL_COMPILE_STATUS, &ok);
-        shader->SetCompileStatus(ok);
+    if (bypassANGLE) {
+        const char* driverShaderCode = bypassDriverShaderCode.Elements();
+        gl->fShaderSource(shadername, 1, (const GLchar**) &driverShaderCode, nullptr);
+    } else {
+        gl->fShaderSource(shadername, 1, &ts, nullptr);
     }
+#else
+    gl->fShaderSource(shadername, 1, &ts, nullptr);
+#endif
+
+    shader->SetTranslationSuccess();
+
+    ShDestruct(compiler);
+
+    gl->fCompileShader(shadername);
+    GLint ok;
+    gl->fGetShaderiv(shadername, LOCAL_GL_COMPILE_STATUS, &ok);
+    shader->SetCompileStatus(ok);
 }
 
 void

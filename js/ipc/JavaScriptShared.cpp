@@ -254,10 +254,10 @@ JavaScriptShared::toVariant(JSContext *cx, JS::HandleValue from, JSVariant *to)
 
       case JSTYPE_STRING:
       {
-        nsDependentJSString dep;
-        if (!dep.init(cx, from))
+        nsAutoJSString autoStr;
+        if (!autoStr.init(cx, from))
             return false;
-        *to = dep;
+        *to = autoStr;
         return true;
       }
 

@@ -178,7 +178,7 @@ this.WebappManager = {
     this._deleteAppcachePath(aData.app.manifest);
 
     DOMApplicationRegistry.registryReady.then(() => {
-      DOMApplicationRegistry.confirmInstall(aData, file, (function(aManifest) {
+      DOMApplicationRegistry.confirmInstall(aData, file, (function(aApp, aManifest) {
         this._postInstall(aData.profilePath, aManifest, aData.app.origin, aData.app.apkPackageName);
       }).bind(this));
     });

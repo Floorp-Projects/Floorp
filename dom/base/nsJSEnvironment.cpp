@@ -56,7 +56,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/ImageData.h"
-#include "mozilla/dom/Key.h"
+#include "mozilla/dom/CryptoKey.h"
 #include "mozilla/dom/ImageDataBinding.h"
 #include "mozilla/dom/SubtleCryptoBinding.h"
 #include "nsAXPCNativeCallContext.h"
@@ -2821,7 +2821,7 @@ NS_DOMReadStructuredClone(JSContext* cx,
     // Prevent the return value from being trashed by a GC during ~nsRefPtr.
     JS::Rooted<JSObject*> result(cx);
     {
-      nsRefPtr<Key> key = new Key(global);
+      nsRefPtr<CryptoKey> key = new CryptoKey(global);
       if (!key->ReadStructuredClone(reader)) {
         result = nullptr;
       } else {
@@ -2859,8 +2859,8 @@ NS_DOMWriteStructuredClone(JSContext* cx,
   }
 
   // Handle Key cloning
-  Key* key;
-  if (NS_SUCCEEDED(UNWRAP_OBJECT(Key, obj, key))) {
+  CryptoKey* key;
+  if (NS_SUCCEEDED(UNWRAP_OBJECT(CryptoKey, obj, key))) {
     return JS_WriteUint32Pair(writer, SCTAG_DOM_WEBCRYPTO_KEY, 0) &&
            key->WriteStructuredClone(writer);
   }

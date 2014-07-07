@@ -17,14 +17,16 @@
 
 class nsPrintProgress : public nsIPrintProgress, public nsIPrintStatusFeedback
 {
-public: 
+public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPRINTPROGRESS
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSIPRINTSTATUSFEEDBACK
 
-	nsPrintProgress();
-	virtual ~nsPrintProgress();
+  nsPrintProgress();
+
+protected:
+  virtual ~nsPrintProgress();
 
 private:
   nsresult ReleaseListeners();

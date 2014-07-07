@@ -170,8 +170,10 @@ SmsFilter::SetNumbers(JSContext* aCx, JS::Handle<JS::Value> aNumbers)
       return NS_ERROR_INVALID_ARG;
     }
 
-    nsDependentJSString number;
-    number.init(aCx, jsNumber.toString());
+    nsAutoJSString number;
+    if (!number.init(aCx, jsNumber.toString())) {
+      return NS_ERROR_FAILURE;
+    }
 
     numbers.AppendElement(number);
   }

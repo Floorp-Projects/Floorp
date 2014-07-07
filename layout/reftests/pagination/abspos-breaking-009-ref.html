@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html class="reftest-print">
+ <head>
+  <title>AbsPos Pagination, with clip:rect() and box-decoration-break:clone</title>
+  <style type="text/css">
+    html, body, pre { margin: 0; padding: 0; }
+    div {
+      position: absolute;
+      top: 100px;
+      border: 10px solid blue;
+      width: 50px;
+      height: 220px;
+    }
+    #mask1 {
+      border-color: white;
+      background: white;
+      clip:rect(0px, auto, 212px, 0px);
+    }
+    #mask2 {
+      border-color: white;
+      background: white;
+      clip:rect(200px, 5px, auto, 0px);
+    }
+    #mask3 {
+      border-color: white;
+      background: white;
+      clip:rect(222px, auto, auto, 0px);
+    }
+    #mask4 {
+      border-color: white;
+      background: white;
+      clip:rect(200px, auto, auto, 65px);
+    }
+  </style>
+ </head>
+ <body>
+ <div></div><div id="mask1"></div><div id="mask2"></div><div id="mask3"></div><div id="mask4"></div>
+</body>
+</html>
