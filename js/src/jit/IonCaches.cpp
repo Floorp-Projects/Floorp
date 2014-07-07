@@ -389,13 +389,15 @@ IonCache::attachStub(MacroAssembler &masm, StubAttacher &attacher, Handle<JitCod
     // Update the success path to continue after the IC initial jump.
     attacher.patchRejoinJump(masm, code);
 
-    // Update the failure path.
-    attacher.patchNextStubJump(masm, code);
-
     // Replace the STUB_ADDR constant by the address of the generated stub, such
     // as it can be kept alive even if the cache is flushed (see
     // MarkJitExitFrame).
     attacher.patchStubCodePointer(masm, code);
+
+    // Update the failure path. Note it is this patch that makes the stub
+    // accessible for parallel ICs so it should not be moved unless you really
+    // know what is going on.
+    attacher.patchNextStubJump(masm, code);
 }
 
 bool
@@ -403,12 +405,14 @@ IonCache::linkAndAttachStub(JSContext *cx, MacroAssembler &masm, StubAttacher &a
                             IonScript *ion, const char *attachKind)
 {
     Rooted<JitCode *> code(cx);
-    AutoFlushICache afc("IonCache");
-    LinkStatus status = linkCode(cx, masm, ion, code.address());
-    if (status != LINK_GOOD)
-        return status != LINK_ERROR;
-
-    attachStub(masm, attacher, code);
+    {
+        // Need to exit the AutoFlushICache context to flush the cache
+        // before attaching the stub below.
+        AutoFlushICache afc("IonCache");
+        LinkStatus status = linkCode(cx, masm, ion, code.address());
+        if (status != LINK_GOOD)
+            return status != LINK_ERROR;
+    }
 
     if (pc_) {
         IonSpew(IonSpew_InlineCaches, "Cache %p(%s:%d/%d) generated %s %s stub at %p",
@@ -422,6 +426,8 @@ IonCache::linkAndAttachStub(JSContext *cx, MacroAssembler &masm, StubAttacher &a
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "IonCache");
 #endif
+
+    attachStub(masm, attacher, code);
 
     return true;
 }
