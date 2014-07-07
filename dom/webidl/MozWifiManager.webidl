@@ -315,7 +315,7 @@ interface MozWifiManager : EventTarget {
    * An event listener that is called with information about the signal
    * strength and link speed every 5 seconds.
    */
-  attribute EventHandler onconnectionInfoUpdate;
+  attribute EventHandler onconnectioninfoupdate;
 
   /**
    * These two events fire when the wifi system is brought online or taken
@@ -328,5 +328,5 @@ interface MozWifiManager : EventTarget {
    * An event listener that is called with information about the number
    * of wifi stations connected to wifi hotspot every 5 seconds.
    */
-  attribute EventHandler onstationInfoUpdate;
+  attribute EventHandler onstationinfoupdate;
 };

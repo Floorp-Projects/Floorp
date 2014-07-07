@@ -26,7 +26,7 @@ function hookScreen(window) {
   let nodePrincipal = window.document.nodePrincipal;
   let origin = nodePrincipal.origin;
   if (nodePrincipal.appStatus == nodePrincipal.APP_STATUS_NOT_INSTALLED) {
-    Cu.reportError('deny mozLockOrientation:' + origin + 'is not installed');
+    // Only inject screen mock for apps
     return;
   }
 

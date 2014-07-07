@@ -4194,14 +4194,32 @@ nsDOMDeviceStorage::EnumerateInternal(const nsAString& aPath,
 
 #ifdef MOZ_WIDGET_GONK
 void
-nsDOMDeviceStorage::DispatchMountChangeEvent(nsAString& aVolumeStatus)
+nsDOMDeviceStorage::DispatchStatusChangeEvent(nsAString& aStatus)
 {
-  if (aVolumeStatus == mLastStatus) {
+  if (aStatus == mLastStatus) {
     // We've already sent this status, don't bother sending it again.
     return;
   }
-  mLastStatus = aVolumeStatus;
+  mLastStatus = aStatus;
 
+  DeviceStorageChangeEventInit init;
+  init.mBubbles = true;
+  init.mCancelable = false;
+  init.mPath = mStorageName;
+  init.mReason = aStatus;
+
+  nsRefPtr<DeviceStorageChangeEvent> event =
+    DeviceStorageChangeEvent::Constructor(this, NS_LITERAL_STRING("change"),
+                                          init);
+  event->SetTrusted(true);
+
+  bool ignore;
+  DispatchEvent(event, &ignore);
+}
+
+void
+nsDOMDeviceStorage::DispatchStorageStatusChangeEvent(nsAString& aVolumeStatus)
+{
   DeviceStorageChangeEventInit init;
   init.mBubbles = true;
   init.mCancelable = false;
@@ -4209,7 +4227,7 @@ nsDOMDeviceStorage::DispatchMountChangeEvent(nsAString& aVolumeStatus)
   init.mReason = aVolumeStatus;
 
   nsRefPtr<DeviceStorageChangeEvent> event =
-    DeviceStorageChangeEvent::Constructor(this, NS_LITERAL_STRING("change"),
+    DeviceStorageChangeEvent::Constructor(this, NS_LITERAL_STRING("storage-state-change"),
                                           init);
   event->SetTrusted(true);
 
@@ -4268,9 +4286,15 @@ nsDOMDeviceStorage::Observe(nsISupports *aSubject,
     }
 
     DeviceStorageFile dsf(mStorageType, mStorageName);
-    nsString status;
+    nsString status, storageStatus;
+
+    // Get Status (one of "available, unavailable, shared")
     dsf.GetStatus(status);
-    DispatchMountChangeEvent(status);
+    DispatchStatusChangeEvent(status);
+
+    // Get real volume status (defined in dom/system/gonk/nsIVolume.idl)
+    dsf.GetStorageStatus(storageStatus);
+    DispatchStorageStatusChangeEvent(storageStatus);
     return NS_OK;
   }
 #endif

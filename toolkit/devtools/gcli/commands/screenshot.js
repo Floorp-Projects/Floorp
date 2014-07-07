@@ -124,6 +124,8 @@ exports.items = [
             height = rect.height;
           }
         } else {
+          // Bug 961832: GCLI screenshot shows fixed position element in wrong position if
+          // we don't scroll to top
           window.scrollTo(0,0);
           width = window.innerWidth + window.scrollMaxX;
           height = window.innerHeight + window.scrollMaxY;
