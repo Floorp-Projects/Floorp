@@ -9,7 +9,7 @@ interface nsIWifiTetheringCallback;
 /**
  * Information about networks that is exposed to network manager API consumers.
  */
-[scriptable, uuid(cb62ae03-6bda-43ff-9560-916d60203d33)]
+[scriptable, uuid(8f9ab9e0-72c1-4874-80c7-8143353b979f)]
 interface nsINetworkInterface : nsISupports
 {
   const long NETWORK_STATE_UNKNOWN = -1;
@@ -17,6 +17,8 @@ interface nsINetworkInterface : nsISupports
   const long NETWORK_STATE_CONNECTED = 1;
   const long NETWORK_STATE_DISCONNECTING = 2;
   const long NETWORK_STATE_DISCONNECTED = 3;
+  const long NETWORK_STATE_ENABLED = 4;
+  const long NETWORK_STATE_DISABLED = 5;
 
   /**
    * Current network state, one of the NETWORK_STATE_* constants.
@@ -34,6 +36,7 @@ interface nsINetworkInterface : nsISupports
   const long NETWORK_TYPE_WIFI_P2P    = 4;
   const long NETWORK_TYPE_MOBILE_IMS  = 5;
   const long NETWORK_TYPE_MOBILE_DUN  = 6;
+  const long NETWORK_TYPE_ETHERNET    = 7;
 
   /**
    * Network type. One of the NETWORK_TYPE_* constants.
@@ -97,7 +100,7 @@ interface nsINetworkInterface : nsISupports
 /**
  * Manage network interfaces.
  */
-[scriptable, uuid(3ea50550-4b3c-11e3-8f96-0800200c9a66)]
+[scriptable, uuid(1ba9346b-53b5-4660-9dc6-58f0b258d0a6)]
 interface nsINetworkManager : nsISupports
 {
   /**
@@ -134,6 +137,15 @@ interface nsINetworkManager : nsISupports
    * non-mobile network types, sub-id is always 'device'.
    */
   readonly attribute jsval networkInterfaces;
+
+  /**
+   * Priority list of network types. An array of
+   * nsINetworkInterface::NETWORK_TYPE_* constants.
+   *
+   * The piror position of the type indicates the higher priority. The priority
+   * is used to determine route when there are multiple connected networks.
+   */
+  attribute jsval networkTypePriorityList;
 
   /**
    * The preferred network type. One of the

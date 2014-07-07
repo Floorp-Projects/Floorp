@@ -15,13 +15,14 @@ class nsMacDockSupport : public nsIMacDockSupport, public nsITaskbarProgress
 {
 public:
   nsMacDockSupport();
-  virtual ~nsMacDockSupport();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMACDOCKSUPPORT
   NS_DECL_NSITASKBARPROGRESS
 
 protected:
+  virtual ~nsMacDockSupport();
+
   nsCOMPtr<nsIStandaloneNativeMenu> mDockMenu;
   nsString mBadgeText;
 

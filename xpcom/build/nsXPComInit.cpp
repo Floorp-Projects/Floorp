@@ -811,16 +811,16 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
             }
         }
 
+        // This must happen after the shutdown of media and widgets, which
+        // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
         NS_ProcessPendingEvents(thread);
+        gfxPlatform::ShutdownLayersIPC();
+
         mozilla::scache::StartupCache::DeleteSingleton();
         if (observerService)
             (void) observerService->
                 NotifyObservers(nullptr, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID,
                                 nullptr);
-
-        // This must happen after the shutdown of media and widgets, which
-        // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
-        gfxPlatform::ShutdownLayersIPC();
 
         gXPCOMThreadsShutDown = true;
         NS_ProcessPendingEvents(thread);

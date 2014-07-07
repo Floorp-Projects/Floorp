@@ -890,6 +890,9 @@ public:
 
     return NS_OK;
   }
+
+private:
+  ~DMDReporter() {}
 };
 NS_IMPL_ISUPPORTS(DMDReporter, nsIMemoryReporter)
 
@@ -2009,6 +2012,9 @@ public:
     // Do nothing;  the reporter has already reported to DMD.
     return NS_OK;
   }
+
+private:
+  ~DoNothingCallback() {}
 };
 
 NS_IMPL_ISUPPORTS(DoNothingCallback, nsIHandleReportCallback)
