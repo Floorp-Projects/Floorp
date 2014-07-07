@@ -287,6 +287,12 @@ DOMCameraControlListener::OnShutter()
   NS_DispatchToMainThread(new Callback(mDOMCameraControl));
 }
 
+void
+DOMCameraControlListener::OnRateLimitPreview(bool aLimit)
+{
+  mStream->RateLimit(aLimit);
+}
+
 bool
 DOMCameraControlListener::OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight)
 {

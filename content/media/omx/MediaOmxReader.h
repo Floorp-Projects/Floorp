@@ -104,6 +104,8 @@ public:
   // ANDROID_VERSION < 19
   void CheckAudioOffload();
 #endif
+
+  void ReleaseDecoder();
 };
 
 } // namespace mozilla
