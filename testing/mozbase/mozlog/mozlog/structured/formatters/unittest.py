@@ -3,11 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys
-
 import base
-from .. import handlers
-
 
 class UnittestFormatter(base.BaseFormatter):
     """Formatter designed to produce output in a format like that used by

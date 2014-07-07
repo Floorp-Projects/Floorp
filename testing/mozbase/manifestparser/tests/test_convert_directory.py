@@ -11,7 +11,6 @@ import unittest
 
 from manifestparser import convert
 from manifestparser import ManifestParser
-from StringIO import StringIO
 
 here = os.path.dirname(os.path.abspath(__file__))
 

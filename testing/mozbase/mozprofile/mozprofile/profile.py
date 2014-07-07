@@ -7,7 +7,6 @@ __all__ = ['Profile',
            'MetroFirefoxProfile',
            'ThunderbirdProfile']
 
-import json
 import os
 import time
 import tempfile
