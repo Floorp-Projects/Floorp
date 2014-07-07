@@ -170,6 +170,7 @@ GonkCameraSource::GonkCameraSource(
       mStarted(false),
       mNumFramesEncoded(0),
       mTimeBetweenFrameCaptureUs(0),
+      mRateLimit(false),
       mFirstFrameTimeUs(0),
       mNumFramesDropped(0),
       mNumGlitches(0),
@@ -589,6 +590,10 @@ status_t GonkCameraSource::reset() {
         }
     }
     stopCameraRecording();
+    if (mRateLimit) {
+      mRateLimit = false;
+      mCameraHw->OnRateLimitPreview(false);
+    }
     releaseCamera();
 
     if (mCollectStats) {
@@ -692,51 +697,65 @@ status_t GonkCameraSource::read(
 
 void GonkCameraSource::dataCallbackTimestamp(int64_t timestampUs,
         int32_t msgType, const sp<IMemory> &data) {
+    bool rateLimit;
+    bool prevRateLimit;
     CS_LOGV("dataCallbackTimestamp: timestamp %lld us", timestampUs);
-    Mutex::Autolock autoLock(mLock);
-    if (!mStarted || (mNumFramesReceived == 0 && timestampUs < mStartTimeUs)) {
-        CS_LOGV("Drop frame at %lld/%lld us", timestampUs, mStartTimeUs);
-        releaseOneRecordingFrame(data);
-        return;
-    }
-
-    if (mNumFramesReceived > 0) {
-        CHECK(timestampUs > mLastFrameTimestampUs);
-        if (timestampUs - mLastFrameTimestampUs > mGlitchDurationThresholdUs) {
-            ++mNumGlitches;
+    {
+        Mutex::Autolock autoLock(mLock);
+        if (!mStarted || (mNumFramesReceived == 0 && timestampUs < mStartTimeUs)) {
+            CS_LOGV("Drop frame at %lld/%lld us", timestampUs, mStartTimeUs);
+            releaseOneRecordingFrame(data);
+            return;
         }
-    }
 
-    // May need to skip frame or modify timestamp. Currently implemented
-    // by the subclass CameraSourceTimeLapse.
-    if (skipCurrentFrame(timestampUs)) {
-        releaseOneRecordingFrame(data);
-        return;
-    }
-
-    mLastFrameTimestampUs = timestampUs;
-    if (mNumFramesReceived == 0) {
-        mFirstFrameTimeUs = timestampUs;
-        // Initial delay
-        if (mStartTimeUs > 0) {
-            if (timestampUs < mStartTimeUs) {
-                // Frame was captured before recording was started
-                // Drop it without updating the statistical data.
-                releaseOneRecordingFrame(data);
-                return;
+        if (mNumFramesReceived > 0) {
+            CHECK(timestampUs > mLastFrameTimestampUs);
+            if (timestampUs - mLastFrameTimestampUs > mGlitchDurationThresholdUs) {
+                ++mNumGlitches;
             }
-            mStartTimeUs = timestampUs - mStartTimeUs;
         }
-    }
-    ++mNumFramesReceived;
 
-    CHECK(data != NULL && data->size() > 0);
-    mFramesReceived.push_back(data);
-    int64_t timeUs = mStartTimeUs + (timestampUs - mFirstFrameTimeUs);
-    mFrameTimes.push_back(timeUs);
-    CS_LOGV("initial delay: %lld, current time stamp: %lld",
-        mStartTimeUs, timeUs);
-    mFrameAvailableCondition.signal();
+        // May need to skip frame or modify timestamp. Currently implemented
+        // by the subclass CameraSourceTimeLapse.
+        if (skipCurrentFrame(timestampUs)) {
+            releaseOneRecordingFrame(data);
+            return;
+        }
+
+        mLastFrameTimestampUs = timestampUs;
+        if (mNumFramesReceived == 0) {
+            mFirstFrameTimeUs = timestampUs;
+            // Initial delay
+            if (mStartTimeUs > 0) {
+                if (timestampUs < mStartTimeUs) {
+                    // Frame was captured before recording was started
+                    // Drop it without updating the statistical data.
+                    releaseOneRecordingFrame(data);
+                    return;
+                }
+                mStartTimeUs = timestampUs - mStartTimeUs;
+            }
+        }
+        ++mNumFramesReceived;
+
+        // If a backlog is building up in the receive queue, we are likely
+        // resource constrained and we need to throttle
+        prevRateLimit = mRateLimit;
+        rateLimit = mFramesReceived.empty();
+        mRateLimit = rateLimit;
+
+        CHECK(data != NULL && data->size() > 0);
+        mFramesReceived.push_back(data);
+        int64_t timeUs = mStartTimeUs + (timestampUs - mFirstFrameTimeUs);
+        mFrameTimes.push_back(timeUs);
+        CS_LOGV("initial delay: %lld, current time stamp: %lld",
+            mStartTimeUs, timeUs);
+        mFrameAvailableCondition.signal();
+    }
+
+    if(prevRateLimit != rateLimit) {
+        mCameraHw->OnRateLimitPreview(rateLimit);
+    }
 }
 
 bool GonkCameraSource::isMetaDataStoredInVideoBuffers() const {

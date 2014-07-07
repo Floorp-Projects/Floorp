@@ -321,6 +321,40 @@ function rstring_length(i) {
     return i;
 }
 
+var uceFault_arguments_length_1 = eval(uneval(uceFault).replace('uceFault', 'uceFault_arguments_length_1'));
+function rarguments_length_1(i) {
+    var x = arguments.length;
+    if (uceFault_arguments_length_1(i) || uceFault_arguments_length_1(i))
+        assertEq(x, 1);
+    return i;
+}
+
+var uceFault_arguments_length_3 = eval(uneval(uceFault).replace('uceFault', 'uceFault_arguments_length_3'));
+function rarguments_length_3(i) {
+    var x = arguments.length;
+    if (uceFault_arguments_length_3(i) || uceFault_arguments_length_3(i))
+        assertEq(x, 3);
+    return i;
+}
+
+function ret_argumentsLength() { return arguments.length; }
+
+var uceFault_inline_arguments_length_1 = eval(uneval(uceFault).replace('uceFault', 'uceFault_inline_arguments_length_1'));
+function rinline_arguments_length_1(i) {
+    var x = ret_argumentsLength.apply(this, arguments);
+    if (uceFault_inline_arguments_length_1(i) || uceFault_inline_arguments_length_1(i))
+        assertEq(x, 1);
+    return i;
+}
+
+var uceFault_inline_arguments_length_3 = eval(uneval(uceFault).replace('uceFault', 'uceFault_inline_arguments_length_3'));
+function rinline_arguments_length_3(i) {
+    var x = ret_argumentsLength.apply(this, arguments);
+    if (uceFault_inline_arguments_length_3(i) || uceFault_inline_arguments_length_3(i))
+        assertEq(x, 3);
+    return i;
+}
+
 var uceFault_floor_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_floor_number'));
 function rfloor_number(i) {
     var x = Math.floor(i + 0.1111);
@@ -510,6 +544,10 @@ for (i = 0; i < 100; i++) {
     rconcat_string(i);
     rconcat_number(i);
     rstring_length(i);
+    rarguments_length_1(i);
+    rarguments_length_3(i, 0, 1);
+    rinline_arguments_length_1(i);
+    rinline_arguments_length_3(i, 0, 1);
     rfloor_number(i);
     rfloor_object(i);
     rround_number(i);
