@@ -224,6 +224,14 @@ NSSCertDBTrustDomain::VerifySignedData(const SignedDataWithSignature& signedData
                                            mPinArg);
 }
 
+SECStatus
+NSSCertDBTrustDomain::DigestBuf(const SECItem& item,
+                                /*out*/ uint8_t* digestBuf, size_t digestBufLen)
+{
+  return ::mozilla::pkix::DigestBuf(item, digestBuf, digestBufLen);
+}
+
+
 static PRIntervalTime
 OCSPFetchingTypeToTimeoutTime(NSSCertDBTrustDomain::OCSPFetching ocspFetching)
 {
@@ -489,7 +497,8 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
   if (cachedResponseErrorCode == 0 ||
       cachedResponseErrorCode == SEC_ERROR_OCSP_UNKNOWN_CERT ||
       cachedResponseErrorCode == SEC_ERROR_OCSP_OLD_RESPONSE) {
-    const SECItem* request(CreateEncodedOCSPRequest(arena.get(), certID));
+    const SECItem* request(CreateEncodedOCSPRequest(*this, arena.get(),
+                                                    certID));
     if (!request) {
       return SECFailure;
     }

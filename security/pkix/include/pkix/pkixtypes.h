@@ -304,6 +304,21 @@ public:
   // directly to mozilla::pkix::VerifySignedData.
   virtual SECStatus VerifySignedData(const SignedDataWithSignature& signedData,
                                      const SECItem& subjectPublicKeyInfo) = 0;
+
+  // Compute the SHA-1 hash of the data in the current item.
+  //
+  // item contains the data to hash.
+  // digestBuf must point to a buffer to where the SHA-1 hash will be written.
+  // digestBufLen must be DIGEST_LENGTH (20, the length of a SHA-1 hash).
+  //
+  // TODO(bug 966856): Add SHA-2 support
+  // TODO: Taking the output buffer as (uint8_t*, size_t) is counter to our
+  // other, extensive, memory safety efforts in mozilla::pkix, and we should
+  // find a way to provide a more-obviously-safe interface.
+  static const size_t DIGEST_LENGTH = 20; // length of SHA-1 digest
+  virtual SECStatus DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
+                              size_t digestBufLen) = 0;
+
 protected:
   TrustDomain() { }
 
