@@ -252,9 +252,11 @@ public:
   bool IsTunnel() { return mIsTunnel; }
 private:
   void ClearTransactionsBlockedOnTunnel();
+  void MapStreamToPlainText();
   void MapStreamToHttpConnection();
 
   bool mIsTunnel;
+  bool mPlainTextTunnel;
 };
 
 }} // namespace mozilla::net
