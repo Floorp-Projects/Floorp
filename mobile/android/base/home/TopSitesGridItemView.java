@@ -136,9 +136,8 @@ public class TopSitesGridItemView extends RelativeLayout {
     public void blankOut() {
         mUrl = "";
         mTitle = "";
-        mType = TopSites.TYPE_BLANK;
+        updateType(TopSites.TYPE_BLANK);
         updateTitleView();
-        mTitleView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         setLoadId(Favicons.NOT_LOADING);
         Picasso.with(getContext()).cancelRequest(mThumbnailView);
         displayThumbnail(R.drawable.top_site_add);
@@ -182,12 +181,7 @@ public class TopSitesGridItemView extends RelativeLayout {
             Picasso.with(getContext()).cancelRequest(mThumbnailView);
         }
 
-        if (mType != type) {
-            mType = type;
-
-            int pinResourceId = (type == TopSites.TYPE_PINNED ? R.drawable.pin : 0); 
-            mTitleView.setCompoundDrawablesWithIntrinsicBounds(pinResourceId, 0, 0, 0);
-
+        if (updateType(type)) {
             changed = true;
         }
 
@@ -289,6 +283,23 @@ public class TopSitesGridItemView extends RelativeLayout {
             final int bgColor = Favicons.getFaviconColor(mFaviconURL);
             mThumbnailView.setBackgroundColorWithOpacityFilter(bgColor);
         }
+    }
+
+    /**
+     * Update the item type associated with this view. Returns true if
+     * the type has changed, false otherwise.
+     */
+    private boolean updateType(int type) {
+        if (mType == type) {
+            return false;
+        }
+
+        mType = type;
+
+        int pinResourceId = (type == TopSites.TYPE_PINNED ? R.drawable.pin : 0);
+        mTitleView.setCompoundDrawablesWithIntrinsicBounds(pinResourceId, 0, 0, 0);
+
+        return true;
     }
 
     /**
