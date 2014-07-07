@@ -277,7 +277,7 @@ js::ObjectToSource(JSContext *cx, HandleObject obj)
             if (gsop[j]) {
                 if (!buf.append(gsop[j]) || !buf.append(' '))
                     return nullptr;
-            } 
+            }
             if (JSID_IS_SYMBOL(id) && !buf.append('['))
                 return nullptr;
             if (!buf.append(idstr))
@@ -1226,3 +1226,13 @@ const JSFunctionSpec js::object_static_methods[] = {
     JS_FN("isSealed",                  obj_isSealed,                1,0),
     JS_FS_END
 };
+
+/*
+ * For Object, self-hosted functions have to be done at a different
+ * time, after the intrinsic holder has been set, so we put them
+ * in a different array.
+ */
+const JSFunctionSpec js::object_static_selfhosted_methods[] = {
+    JS_FS_END
+};
+
