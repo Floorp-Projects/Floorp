@@ -31,6 +31,54 @@
 using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
 
+class CreateEncodedOCSPRequestTrustDomain : public TrustDomain
+{
+private:
+  virtual SECStatus GetCertTrust(EndEntityOrCA, const CertPolicyId&,
+                                 const SECItem&, /*out*/ TrustLevel*)
+  {
+    ADD_FAILURE();
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+    return SECFailure;
+  }
+
+  virtual SECStatus FindIssuer(const SECItem&, IssuerChecker&, PRTime)
+  {
+    ADD_FAILURE();
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+    return SECFailure;
+  }
+
+  virtual SECStatus CheckRevocation(EndEntityOrCA, const CertID&, PRTime,
+                                    const SECItem*, const SECItem*)
+  {
+    ADD_FAILURE();
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+    return SECFailure;
+  }
+
+  virtual SECStatus IsChainValid(const DERArray&)
+  {
+    ADD_FAILURE();
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+    return SECFailure;
+  }
+
+  virtual SECStatus VerifySignedData(const SignedDataWithSignature&,
+                                     const SECItem&)
+  {
+    ADD_FAILURE();
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+    return SECFailure;
+  }
+
+  virtual SECStatus DigestBuf(const SECItem& item, /*out*/ uint8_t *digestBuf,
+                              size_t digestBufLen)
+  {
+    return ::mozilla::pkix::DigestBuf(item, digestBuf, digestBufLen);
+  }
+};
+
 class pkixocsp_CreateEncodedOCSPRequest : public NSSTest
 {
 protected:
@@ -86,6 +134,7 @@ protected:
     return SECSuccess;
   }
 
+  CreateEncodedOCSPRequestTrustDomain trustDomain;
 };
 
 // Test that the large length of the child serial number causes
@@ -96,7 +145,7 @@ TEST_F(pkixocsp_CreateEncodedOCSPRequest, ChildCertLongSerialNumberTest)
   ScopedSECItem issuerSPKI;
   ASSERT_EQ(SECSuccess,
             MakeIssuerCertIDComponents("CN=CA", issuerDER, issuerSPKI));
-  ASSERT_FALSE(CreateEncodedOCSPRequest(arena.get(),
+  ASSERT_FALSE(CreateEncodedOCSPRequest(trustDomain, arena.get(),
                                         CertID(*issuerDER, *issuerSPKI,
                                                *unsupportedLongSerialNumber)));
   ASSERT_EQ(SEC_ERROR_BAD_DATA, PR_GetError());
@@ -110,7 +159,7 @@ TEST_F(pkixocsp_CreateEncodedOCSPRequest, LongestSupportedSerialNumberTest)
   ScopedSECItem issuerSPKI;
   ASSERT_EQ(SECSuccess,
             MakeIssuerCertIDComponents("CN=CA", issuerDER, issuerSPKI));
-  ASSERT_TRUE(CreateEncodedOCSPRequest(arena.get(),
+  ASSERT_TRUE(CreateEncodedOCSPRequest(trustDomain, arena.get(),
                                         CertID(*issuerDER, *issuerSPKI,
                                                *longestRequiredSerialNumber)));
 }
