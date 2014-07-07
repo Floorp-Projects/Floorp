@@ -63,6 +63,8 @@ public:
   virtual FrameSearchResult PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                      bool aRespectClusters = true) MOZ_OVERRIDE;
   
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
+
   // nsIHTMLReflow overrides
   virtual void AddInlineMinWidth(nsRenderingContext *aRenderingContext,
                                  InlineMinWidthData *aData) MOZ_OVERRIDE;
@@ -165,6 +167,9 @@ private:
   enum DrainFlags {
     eDontReparentFrames = 1, // skip reparenting the overflow list frames
     eInFirstLine = 2, // the request is for an inline descendant of a nsFirstLineFrame
+    eForDestroy = 4, // the request is from DestroyFrom; in this case we do the
+                     // minimal work required since the frame is about to be
+                     // destroyed (just fixup parent pointers)
   };
   /**
    * Move any frames on our overflow list to the end of our principal list.

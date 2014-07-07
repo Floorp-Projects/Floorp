@@ -177,6 +177,20 @@ nsInlineFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
 }
 
 void
+nsInlineFrame::DestroyFrom(nsIFrame* aDestructRoot)
+{
+  nsFrameList* overflowFrames = GetOverflowFrames();
+  if (overflowFrames) {
+    // Fixup the parent pointers for any child frames on the OverflowList.
+    // nsIFrame::DestroyFrom depends on that to find the sticky scroll
+    // container (an ancestor).
+    nsIFrame* lineContainer = nsLayoutUtils::FindNearestBlockAncestor(this);
+    DrainSelfOverflowListInternal(eForDestroy, lineContainer);
+  }
+  nsContainerFrame::DestroyFrom(aDestructRoot);
+}
+
+void
 nsInlineFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
@@ -422,11 +436,12 @@ nsInlineFrame::DrainSelfOverflowListInternal(DrainFlags aFlags,
       if (aLineContainer && aLineContainer->GetPrevContinuation()) {
         ReparentFloatsForInlineChild(aLineContainer, firstChild, true);
       }
-      const bool inFirstLine = (aFlags & eInFirstLine);
+      const bool doReparentSC =
+        (aFlags & eInFirstLine) && !(aFlags & eForDestroy);
       RestyleManager* restyleManager = PresContext()->RestyleManager();
       for (nsIFrame* f = firstChild; f; f = f->GetNextSibling()) {
         f->SetParent(this);
-        if (inFirstLine) {
+        if (doReparentSC) {
           restyleManager->ReparentStyleContext(f);
           nsLayoutUtils::MarkDescendantsDirty(f);
         }
