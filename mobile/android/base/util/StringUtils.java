@@ -11,6 +11,7 @@ import android.text.TextUtils;
 public class StringUtils {
 
     private static final String FILTER_URL_PREFIX = "filter://";
+    private static final String USER_ENTERED_URL_PREFIX = "user-entered:";
 
     /*
      * This method tries to guess if the given string could be a search query or URL,
@@ -159,6 +160,10 @@ public class StringUtils {
         final String scheme = Uri.parse(url).getScheme();
         return !("about".equals(scheme) || "chrome".equals(scheme) ||
                 "file".equals(scheme) || "resource".equals(scheme));
+    }
+
+    public static boolean isUserEnteredUrl(String url) {
+        return (url != null && url.startsWith(USER_ENTERED_URL_PREFIX));
     }
 
     /**
