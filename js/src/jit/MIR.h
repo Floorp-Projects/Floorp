@@ -6255,11 +6255,7 @@ class MNot
     }
     bool writeRecoverData(CompactBufferWriter &writer) const;
     bool canRecoverOnBailout() const {
-        // Non objects are recoverable and objects that cannot emulate
-        // undefined get folded into 'true' by GVN.
-        // So the only way to reach this function with an operand that
-        // is an object is when that object might emulate undefined.
-        return !operandMightEmulateUndefined_;
+        return true;
     }
 };
 
