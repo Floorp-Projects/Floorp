@@ -355,7 +355,7 @@
   <string name="bookmarkdefaults_url_addons">https://addons.mozilla.org/@AB_CD@/android/</string>
 
   <string name="bookmarkdefaults_title_support">@bookmarks_support@</string>
-  <string name="bookmarkdefaults_url_support">http://support.mozilla.org/@AB_CD@/products/mobile</string>
+  <string name="bookmarkdefaults_url_support">https://support.mozilla.org/@AB_CD@/products/mobile</string>
   <string name="bookmarkdefaults_favicon_abouthome">chrome/chrome/content/branding/favicon64.png</string>
 
   <!-- Icon is automatically generated from R.drawable.bookmarkdefaults_favicon_marketplace -->
