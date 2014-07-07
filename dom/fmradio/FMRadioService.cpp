@@ -681,7 +681,7 @@ FMRadioService::Observe(nsISupports * aSubject,
   }
 
   JS::Rooted<JSString*> jsKey(cx, key.toString());
-  nsDependentJSString keyStr;
+  nsAutoJSString keyStr;
   if (!keyStr.init(cx, jsKey)) {
     return NS_OK;
   }

@@ -233,7 +233,7 @@ public:
   virtual void Unpin() MOZ_OVERRIDE {}
   virtual double GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE { return 0; }
   virtual int64_t GetLength() MOZ_OVERRIDE { return mInputBuffer.GetLength(); }
-  virtual int64_t GetNextCachedData(int64_t aOffset) MOZ_OVERRIDE { return aOffset; }
+  virtual int64_t GetNextCachedData(int64_t aOffset) MOZ_OVERRIDE { return GetLength() == aOffset ? -1 : aOffset; }
   virtual int64_t GetCachedDataEnd(int64_t aOffset) MOZ_OVERRIDE { return GetLength(); }
   virtual bool IsDataCachedToEndOfResource(int64_t aOffset) MOZ_OVERRIDE { return false; }
   virtual bool IsSuspendedByCache() MOZ_OVERRIDE { return false; }
@@ -244,8 +244,10 @@ public:
 
   virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) MOZ_OVERRIDE
   {
-    aRanges.AppendElement(MediaByteRange(mInputBuffer.GetOffset(),
-                                         mInputBuffer.GetLength()));
+    if (mInputBuffer.GetLength()) {
+      aRanges.AppendElement(MediaByteRange(mInputBuffer.GetOffset(),
+                                           mInputBuffer.GetLength()));
+    }
     return NS_OK;
   }
 

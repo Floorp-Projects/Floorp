@@ -8,8 +8,13 @@
 #include "SVGContentUtils.h"
 
 // Keep others in (case-insensitive) order:
+#include "gfx2DGlue.h"
 #include "gfxMatrix.h"
+#include "gfxPlatform.h"
+#include "gfxSVGGlyphs.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/dom/SVGSVGElement.h"
+#include "mozilla/RefPtr.h"
 #include "nsComputedDOMStyle.h"
 #include "nsFontMetrics.h"
 #include "nsIFrame.h"
@@ -20,12 +25,14 @@
 #include "nsContentUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
-#include "gfx2DGlue.h"
+#include "nsStyleContext.h"
 #include "nsSVGPathDataParser.h"
 #include "SVGPathData.h"
+#include "SVGPathElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::gfx;
 
 SVGSVGElement*
 SVGContentUtils::GetOuterSVGElement(nsSVGElement *aSVGElement)
@@ -52,6 +59,179 @@ SVGContentUtils::ActivateByHyperlink(nsIContent *aContent)
                     "Expecting an animation element");
 
   static_cast<SVGAnimationElement*>(aContent)->ActivateByHyperlink();
+}
+
+enum DashState {
+  eDashedStroke,
+  eContinuousStroke, //< all dashes, no gaps
+  eNoStroke          //< all gaps, no dashes
+};
+
+static DashState
+GetStrokeDashData(SVGContentUtils::AutoStrokeOptions* aStrokeOptions,
+                  nsSVGElement* aElement,
+                  const nsStyleSVG* aStyleSVG,
+                  gfxTextContextPaint *aContextPaint)
+{
+  size_t dashArrayLength;
+  Float totalLengthOfDashes = 0.0, totalLengthOfGaps = 0.0;
+
+  if (aContextPaint && aStyleSVG->mStrokeDasharrayFromObject) {
+    const FallibleTArray<gfxFloat>& dashSrc = aContextPaint->GetStrokeDashArray();
+    dashArrayLength = dashSrc.Length();
+    if (dashArrayLength <= 0) {
+      return eContinuousStroke;
+    }
+    Float* dashPattern = aStrokeOptions->InitDashPattern(dashArrayLength);
+    if (!dashPattern) {
+      return eContinuousStroke;
+    }
+    for (size_t i = 0; i < dashArrayLength; i++) {
+      if (dashSrc[i] < 0.0) {
+        return eContinuousStroke; // invalid
+      }
+      dashPattern[i] = Float(dashSrc[i]);
+      (i % 2 ? totalLengthOfGaps : totalLengthOfDashes) += dashSrc[i];
+    }
+  } else {
+    const nsStyleCoord *dasharray = aStyleSVG->mStrokeDasharray;
+    dashArrayLength = aStyleSVG->mStrokeDasharrayLength;
+    if (dashArrayLength <= 0) {
+      return eContinuousStroke;
+    }
+    Float pathScale = 1.0;
+    if (aElement->Tag() == nsGkAtoms::path) {
+      pathScale = static_cast<SVGPathElement*>(aElement)->
+        GetPathLengthScale(SVGPathElement::eForStroking);
+      if (pathScale <= 0) {
+        return eContinuousStroke;
+      }
+    }
+    Float* dashPattern = aStrokeOptions->InitDashPattern(dashArrayLength);
+    if (!dashPattern) {
+      return eContinuousStroke;
+    }
+    for (uint32_t i = 0; i < dashArrayLength; i++) {
+      Float dashLength =
+        SVGContentUtils::CoordToFloat(aElement, dasharray[i]) * pathScale;
+      if (dashLength < 0.0) {
+        return eContinuousStroke; // invalid
+      }
+      dashPattern[i] = dashLength;
+      (i % 2 ? totalLengthOfGaps : totalLengthOfDashes) += dashLength;
+    }
+  }
+
+  // Now that aStrokeOptions.mDashPattern is fully initialized we can safely
+  // set mDashLength:
+  aStrokeOptions->mDashLength = dashArrayLength;
+
+  if (totalLengthOfDashes <= 0 || totalLengthOfGaps <= 0) {
+    if (totalLengthOfGaps > 0 && totalLengthOfDashes <= 0) {
+      return eNoStroke;
+    }
+    return eContinuousStroke;
+  }
+
+  if (aContextPaint && aStyleSVG->mStrokeDashoffsetFromObject) {
+    aStrokeOptions->mDashOffset = Float(aContextPaint->GetStrokeDashOffset());
+  } else {
+    aStrokeOptions->mDashOffset =
+      SVGContentUtils::CoordToFloat(aElement, aStyleSVG->mStrokeDashoffset);
+  }
+
+  return eDashedStroke;
+}
+
+void
+SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
+                                  nsSVGElement* aElement,
+                                  nsStyleContext* aStyleContext,
+                                  gfxTextContextPaint *aContextPaint)
+{
+  nsRefPtr<nsStyleContext> styleContext;
+  if (aStyleContext) {
+    styleContext = aStyleContext;
+  } else {
+    styleContext =
+      nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement, nullptr,
+                                                           nullptr);
+  }
+
+  if (!styleContext) {
+    return;
+  }
+
+  const nsStyleSVG* styleSVG = styleContext->StyleSVG();
+
+  DashState dashState =
+    GetStrokeDashData(aStrokeOptions, aElement, styleSVG, aContextPaint);
+
+  if (dashState == eNoStroke) {
+    // Hopefully this will shortcircuit any stroke operations:
+    aStrokeOptions->mLineWidth = 0;
+    return;
+  }
+  if (dashState == eContinuousStroke) {
+    // Prevent our caller from wasting time looking at the dash array:
+    aStrokeOptions->mDashLength = 0;
+  }
+
+  aStrokeOptions->mLineWidth =
+    GetStrokeWidth(aElement, styleContext, aContextPaint);
+
+  aStrokeOptions->mMiterLimit = Float(styleSVG->mStrokeMiterlimit);
+
+  switch (styleSVG->mStrokeLinejoin) {
+  case NS_STYLE_STROKE_LINEJOIN_MITER:
+    aStrokeOptions->mLineJoin = JoinStyle::MITER;
+    break;
+  case NS_STYLE_STROKE_LINEJOIN_ROUND:
+    aStrokeOptions->mLineJoin = JoinStyle::ROUND;
+    break;
+  case NS_STYLE_STROKE_LINEJOIN_BEVEL:
+    aStrokeOptions->mLineJoin = JoinStyle::BEVEL;
+    break;
+  }
+
+  switch (styleSVG->mStrokeLinecap) {
+  case NS_STYLE_STROKE_LINECAP_BUTT:
+    aStrokeOptions->mLineCap = CapStyle::BUTT;
+    break;
+  case NS_STYLE_STROKE_LINECAP_ROUND:
+    aStrokeOptions->mLineCap = CapStyle::ROUND;
+    break;
+  case NS_STYLE_STROKE_LINECAP_SQUARE:
+    aStrokeOptions->mLineCap = CapStyle::SQUARE;
+    break;
+  }
+}
+
+Float
+SVGContentUtils::GetStrokeWidth(nsSVGElement* aElement,
+                                nsStyleContext* aStyleContext,
+                                gfxTextContextPaint *aContextPaint)
+{
+  nsRefPtr<nsStyleContext> styleContext;
+  if (aStyleContext) {
+    styleContext = aStyleContext;
+  } else {
+    styleContext =
+      nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement, nullptr,
+                                                           nullptr);
+  }
+
+  if (!styleContext) {
+    return 0.0f;
+  }
+
+  const nsStyleSVG* styleSVG = styleContext->StyleSVG();
+
+  if (aContextPaint && styleSVG->mStrokeWidthFromObject) {
+    return aContextPaint->GetStrokeWidth();
+  }
+
+  return SVGContentUtils::CoordToFloat(aElement, styleSVG->mStrokeWidth);
 }
 
 float
@@ -567,8 +747,7 @@ SVGContentUtils::ParseInteger(const nsAString& aString,
 }
 
 float
-SVGContentUtils::CoordToFloat(nsPresContext *aPresContext,
-                              nsSVGElement *aContent,
+SVGContentUtils::CoordToFloat(nsSVGElement *aContent,
                               const nsStyleCoord &aCoord)
 {
   switch (aCoord.GetUnit()) {
@@ -597,5 +776,10 @@ SVGContentUtils::GetPath(const nsAString& aPathString)
     return NULL;
   }
 
-  return pathData.BuildPath(mozilla::gfx::FillRule::FILL_WINDING, NS_STYLE_STROKE_LINECAP_BUTT, 1);
+  RefPtr<DrawTarget> drawTarget =
+    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+  RefPtr<PathBuilder> builder =
+    drawTarget->CreatePathBuilder(FillRule::FILL_WINDING);
+
+  return pathData.BuildPath(builder, NS_STYLE_STROKE_LINECAP_BUTT, 1);
 }

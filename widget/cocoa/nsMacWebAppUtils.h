@@ -11,10 +11,12 @@
 class nsMacWebAppUtils : public nsIMacWebAppUtils {
 public:
   nsMacWebAppUtils() {}
-  virtual ~nsMacWebAppUtils() {}
-  
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMACWEBAPPUTILS
+
+protected:
+  virtual ~nsMacWebAppUtils() {}
 };
 
 #endif //_MAC_WEB_APP_UTILS_H_

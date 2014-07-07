@@ -1437,7 +1437,7 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
                 JS::Rooted<JSString*> str(cx, JS::ToString(cx, v));
                 NS_ENSURE_TRUE(str, NS_ERROR_FAILURE);
 
-                nsDependentJSString value;
+                nsAutoJSString value;
                 NS_ENSURE_TRUE(value.init(cx, str), NS_ERROR_FAILURE);
 
                 *aResult = new StringResult(value, nullptr);

@@ -22,5 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bustage pile-up on inbound that appears to need clobbering to go away for good.
+b=1010371; ANGLE update. Files got moved around, needs a clobber to fix.
 

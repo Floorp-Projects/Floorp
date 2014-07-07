@@ -49,4 +49,9 @@ GLenum Query::getType() const
     return mQuery->getType();
 }
 
+bool Query::isStarted() const
+{
+    return mQuery->isStarted();
+}
+
 }

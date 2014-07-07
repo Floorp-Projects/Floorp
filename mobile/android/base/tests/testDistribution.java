@@ -17,13 +17,17 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.distribution.ReferrerDescriptor;
+import org.mozilla.gecko.distribution.ReferrerReceiver;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 /**
@@ -139,41 +143,65 @@ public class testDistribution extends ContentProviderTest {
         doTestInvalidReferrerIntent();
     }
 
+    private void doReferrerTest(String ref, final TestableDistribution distribution, final Runnable distributionReady) throws InterruptedException {
+        final Intent intent = new Intent(ACTION_INSTALL_REFERRER);
+        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, CLASS_REFERRER_RECEIVER);
+        intent.putExtra("referrer", ref);
+
+        final BroadcastReceiver receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.i(LOGTAG, "Test received " + intent.getAction());
+
+                ThreadUtils.postToBackgroundThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        distribution.addOnDistributionReadyCallback(distributionReady);
+                        distribution.go();
+                    }
+                });
+            }
+        };
+
+        IntentFilter intentFilter = new IntentFilter(ReferrerReceiver.ACTION_REFERRER_RECEIVED);
+        final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(mActivity);
+        localBroadcastManager.registerReceiver(receiver, intentFilter);
+
+        Log.i(LOGTAG, "Broadcasting referrer intent.");
+        try {
+            mActivity.sendBroadcast(intent, null);
+            synchronized (distribution) {
+                distribution.wait(WAIT_TIMEOUT_MSEC);
+            }
+        } finally {
+            localBroadcastManager.unregisterReceiver(receiver);
+        }
+    }
+
     public void doTestValidReferrerIntent() throws Exception {
-        // Send the faux-download intent.
         // Equivalent to
         // am broadcast -a com.android.vending.INSTALL_REFERRER \
         //              -n org.mozilla.fennec/org.mozilla.gecko.distribution.ReferrerReceiver \
         //              --es "referrer" "utm_source=mozilla&utm_medium=testmedium&utm_term=testterm&utm_content=testcontent&utm_campaign=distribution"
         final String ref = "utm_source=mozilla&utm_medium=testmedium&utm_term=testterm&utm_content=testcontent&utm_campaign=distribution";
-        final Intent intent = new Intent(ACTION_INSTALL_REFERRER);
-        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, CLASS_REFERRER_RECEIVER);
-        intent.putExtra("referrer", ref);
-        mActivity.sendBroadcast(intent);
-
-        // Wait for the intent to be processed.
         final TestableDistribution distribution = new TestableDistribution(mActivity);
-
-        final Object wait = new Object();
-        distribution.addOnDistributionReadyCallback(new Runnable() {
+        final Runnable distributionReady = new Runnable() {
             @Override
             public void run() {
+                Log.i(LOGTAG, "Test told distribution is ready.");
                 mAsserter.ok(!distribution.exists(), "Not processed.", "No download because we're offline.");
                 ReferrerDescriptor referrerValue = TestableDistribution.getReferrerDescriptorForTesting();
                 mAsserter.dumpLog("Referrer was " + referrerValue);
                 mAsserter.is(referrerValue.content, "testcontent", "Referrer content");
                 mAsserter.is(referrerValue.medium, "testmedium", "Referrer medium");
                 mAsserter.is(referrerValue.campaign, "distribution", "Referrer campaign");
-                synchronized (wait) {
-                    wait.notifyAll();
+                synchronized (distribution) {
+                    distribution.notifyAll();
                 }
             }
-        });
+        };
 
-        distribution.go();
-        synchronized (wait) {
-            wait.wait(WAIT_TIMEOUT_MSEC);
-        }
+        doReferrerTest(ref, distribution, distributionReady);
     }
 
     /**
@@ -182,37 +210,25 @@ public class testDistribution extends ContentProviderTest {
      * even if we *do* include it in a Campaign:Set message.
      */
     public void doTestInvalidReferrerIntent() throws Exception {
-        // Send the faux-download intent.
         // Equivalent to
         // am broadcast -a com.android.vending.INSTALL_REFERRER \
         //              -n org.mozilla.fennec/org.mozilla.gecko.distribution.ReferrerReceiver \
         //              --es "referrer" "utm_source=mozilla&utm_medium=testmedium&utm_term=testterm&utm_content=testcontent&utm_campaign=testname"
         final String ref = "utm_source=mozilla&utm_medium=testmedium&utm_term=testterm&utm_content=testcontent&utm_campaign=testname";
-        final Intent intent = new Intent(ACTION_INSTALL_REFERRER);
-        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, CLASS_REFERRER_RECEIVER);
-        intent.putExtra("referrer", ref);
-        mActivity.sendBroadcast(intent);
-
-        // Wait for the intent to be processed.
         final TestableDistribution distribution = new TestableDistribution(mActivity);
-
-        final Object wait = new Object();
-        distribution.addOnDistributionReadyCallback(new Runnable() {
+        final Runnable distributionReady = new Runnable() {
             @Override
             public void run() {
                 mAsserter.ok(!distribution.exists(), "Not processed.", "No download because campaign was wrong.");
                 ReferrerDescriptor referrerValue = TestableDistribution.getReferrerDescriptorForTesting();
                 mAsserter.is(referrerValue, null, "No referrer.");
-                synchronized (wait) {
-                    wait.notifyAll();
+                synchronized (distribution) {
+                    distribution.notifyAll();
                 }
             }
-        });
+        };
 
-        distribution.go();
-        synchronized (wait) {
-            wait.wait(WAIT_TIMEOUT_MSEC);
-        }
+        doReferrerTest(ref, distribution, distributionReady);
     }
 
     // Initialize the distribution from the mock package.

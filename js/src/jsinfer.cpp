@@ -679,6 +679,18 @@ TypeSet::filter(LifoAlloc *alloc, bool filterUndefined, bool filterNull) const
     return res;
 }
 
+TemporaryTypeSet *
+TypeSet::cloneObjectsOnly(LifoAlloc *alloc)
+{
+    TemporaryTypeSet *res = clone(alloc);
+    if (!res)
+        return nullptr;
+
+    res->flags &= TYPE_FLAG_ANYOBJECT;
+
+    return res;
+}
+
 /* static */ TemporaryTypeSet *
 TypeSet::unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc)
 {

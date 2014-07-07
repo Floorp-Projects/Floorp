@@ -320,6 +320,13 @@ DefinePrefable(JSContext* cx, JS::Handle<JSObject*> obj,
 }
 
 bool
+DefineUnforgeableMethods(JSContext* cx, JS::Handle<JSObject*> obj,
+                         const Prefable<const JSFunctionSpec>* props)
+{
+  return DefinePrefable(cx, obj, props);
+}
+
+bool
 DefineUnforgeableAttributes(JSContext* cx, JS::Handle<JSObject*> obj,
                             const Prefable<const JSPropertySpec>* props)
 {

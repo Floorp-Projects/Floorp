@@ -22,14 +22,10 @@ namespace mozilla {
       // The metadata. The ownership is transfered to the element when dispatching to
       // the main threads.
       nsAutoPtr<MetadataTags> mTags;
-      // The sample rate of this media.
-      int mRate;
-      // The number of channel of this media.
-      int mChannels;
-      // True if this media has an audio track.
-      bool mHasAudio;
-      // True if this media has a video track.
-      bool mHasVideo;
+      // The media info, including the info of audio tracks and video tracks.
+      // The ownership is transfered to MediaDecoder when dispatching to the
+      // main thread.
+      nsAutoPtr<MediaInfo> mInfo;
   };
 
   // This class encapsulate the logic to give the metadata from the reader to
@@ -50,13 +46,15 @@ namespace mozilla {
       void DispatchMetadataIfNeeded(AbstractMediaDecoder* aDecoder, double aCurrentTime) {
         TimedMetadata* metadata = mMetadataQueue.getFirst();
         while (metadata && aCurrentTime >= static_cast<double>(metadata->mPublishTime) / USECS_PER_S) {
+          // Remove all media tracks from the list first.
+          nsCOMPtr<nsIRunnable> removeTracksEvent =
+            new RemoveMediaTracksEventRunner(aDecoder);
+          NS_DispatchToMainThread(removeTracksEvent);
+
           nsCOMPtr<nsIRunnable> metadataUpdatedEvent =
-            new AudioMetadataEventRunner(aDecoder,
-                                         metadata->mChannels,
-                                         metadata->mRate,
-                                         metadata->mHasAudio,
-                                         metadata->mHasVideo,
-                                         metadata->mTags.forget());
+            new MetadataEventRunner(aDecoder,
+                                    metadata->mInfo.forget(),
+                                    metadata->mTags.forget());
           NS_DispatchToMainThread(metadataUpdatedEvent);
           delete mMetadataQueue.popFirst();
           metadata = mMetadataQueue.getFirst();

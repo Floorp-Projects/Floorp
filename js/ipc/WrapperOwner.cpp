@@ -344,7 +344,7 @@ WrapperOwner::toString(JSContext *cx, HandleObject cpow, JS::CallArgs &args)
         return true;
 
     RootedString cpowResult(cx, args.rval().toString());
-    nsDependentJSString toStringResult;
+    nsAutoJSString toStringResult;
     if (!toStringResult.init(cx, cpowResult))
         return false;
 

@@ -55,14 +55,11 @@ void MediaOmxDecoder::SetCanOffloadAudio(bool aCanOffloadAudio)
   mCanOffloadAudio = aCanOffloadAudio;
 }
 
-void MediaOmxDecoder::MetadataLoaded(int aChannels,
-                                     int aRate,
-                                     bool aHasAudio,
-                                     bool aHasVideo,
+void MediaOmxDecoder::MetadataLoaded(MediaInfo* aInfo,
                                      MetadataTags* aTags)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MediaDecoder::MetadataLoaded(aChannels, aRate, aHasAudio, aHasVideo, aTags);
+  MediaDecoder::MetadataLoaded(aInfo, aTags);
 
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   if (!mCanOffloadAudio || mFallbackToStateMachine || mOutputStreams.Length() ||

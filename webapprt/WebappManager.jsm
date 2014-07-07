@@ -42,7 +42,7 @@ this.WebappManager = {
     let nativeApp = new NativeApp(aApp, aManifest,
                                   WebappRT.config.app.categories,
                                   WebappRT.config.registryDir);
-    nativeApp.prepareUpdate(aManifest, aZipPath);
+    nativeApp.prepareUpdate(aApp, aManifest, aZipPath);
   },
 
   doInstall: function(data, window) {
@@ -79,8 +79,8 @@ this.WebappManager = {
       }
 
       DOMApplicationRegistry.confirmInstall(data, localDir,
-        function (aManifest, aZipPath) {
-          nativeApp.install(aManifest, aZipPath);
+        function (aApp, aManifest, aZipPath) {
+          nativeApp.install(aApp, aManifest, aZipPath);
         }
       );
     } else {

@@ -3070,10 +3070,24 @@ IonBuilder::filterTypesAtTest(MTest *test)
     bool trueBranch = test->ifTrue() == current;
 
     MDefinition *subject = nullptr;
-    bool removeUndefined;
-    bool removeNull;
+    bool removeUndefined = false;
+    bool removeNull = false;
+    bool setTypeToObject = false;
 
-    test->filtersUndefinedOrNull(trueBranch, &subject, &removeUndefined, &removeNull);
+    // setTypeToObject is set to true only when we're sure that the type is object.
+    // If IsObject results to true, and we're in the true branch,
+    // then setTypeToObject is true. Similarly, if the instruction is !IsObject and
+    // we're not in true branch.
+    MDefinition *ins = test->getOperand(0);
+    if (ins->isIsObject() && trueBranch) {
+        setTypeToObject = true;
+        subject = ins->getOperand(0);
+    } else if (!trueBranch && ins->isNot() && ins->toNot()->getOperand(0)->isIsObject()) {
+        setTypeToObject = true;
+        subject = ins->getOperand(0)->getOperand(0);
+    } else {
+        test->filtersUndefinedOrNull(trueBranch, &subject, &removeUndefined, &removeNull);
+    }
 
     // The test filters no undefined or null.
     if (!subject)
@@ -3083,9 +3097,11 @@ IonBuilder::filterTypesAtTest(MTest *test)
     if (!subject->resultTypeSet() || subject->resultTypeSet()->unknown())
         return true;
 
-    // Only do this optimization if the typeset does contains null or undefined.
-    if ((!(removeUndefined && subject->resultTypeSet()->hasType(types::Type::UndefinedType())) &&
-         !(removeNull && subject->resultTypeSet()->hasType(types::Type::NullType()))))
+    // Only do this optimization if the typeset does contains null or undefined
+    // or if type isn't already object only.
+    if (!(removeUndefined && subject->resultTypeSet()->hasType(types::Type::UndefinedType())) &&
+        !(removeNull && subject->resultTypeSet()->hasType(types::Type::NullType())) &&
+        !(setTypeToObject && subject->type() != MIRType_Object))
     {
         return true;
     }
@@ -3100,9 +3116,12 @@ IonBuilder::filterTypesAtTest(MTest *test)
 
         // Create replacement MIR with filtered TypesSet.
         if (!replace) {
-            types::TemporaryTypeSet *type =
-                subject->resultTypeSet()->filter(alloc_->lifoAlloc(), removeUndefined,
-                                                                      removeNull);
+            types::TemporaryTypeSet *type;
+            if (setTypeToObject)
+                type = subject->resultTypeSet()->cloneObjectsOnly(alloc_->lifoAlloc());
+            else
+                type = subject->resultTypeSet()->filter(alloc_->lifoAlloc(), removeUndefined,
+                                                                             removeNull);
             if (!type)
                 return false;
 
@@ -10126,6 +10145,12 @@ IonBuilder::jsop_in_dense()
 
     MInitializedLength *initLength = MInitializedLength::New(alloc(), elements);
     current->add(initLength);
+
+    // If there are no holes, speculate the InArray check will not fail.
+    if (!needsHoleCheck && !failedBoundsCheck_) {
+        addBoundsCheck(idInt32, initLength);
+        return pushConstant(BooleanValue(true));
+    }
 
     // Check if id < initLength and elem[id] not a hole.
     MInArray *ins = MInArray::New(alloc(), elements, id, initLength, obj, needsHoleCheck);

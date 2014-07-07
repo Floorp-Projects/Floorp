@@ -110,6 +110,9 @@ public:
     // public post-link data
     std::map<GLint, nsCString> mActiveAttribMap;
 
+    static uint64_t IdentifierHashFunction(const char *ident, size_t size);
+    static void HashMapIdentifier(const nsACString& name, nsCString *hashedName);
+
 protected:
     ~WebGLProgram() {
         DeleteOnce();

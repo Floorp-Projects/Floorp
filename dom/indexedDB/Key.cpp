@@ -112,7 +112,7 @@ Key::EncodeJSValInternal(JSContext* aCx, JS::Handle<JS::Value> aVal,
                 "Unable to encode jsvals.");
 
   if (aVal.isString()) {
-    nsDependentJSString str;
+    nsAutoJSString str;
     if (!str.init(aCx, aVal)) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;

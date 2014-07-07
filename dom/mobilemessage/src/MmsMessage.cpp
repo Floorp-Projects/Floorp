@@ -250,8 +250,11 @@ MmsMessage::Create(int32_t aId,
       return NS_ERROR_INVALID_ARG;
     }
 
-    nsDependentJSString receiverStr;
-    receiverStr.init(aCx, receiverJsVal.toString());
+    nsAutoJSString receiverStr;
+    if (!receiverStr.init(aCx, receiverJsVal.toString())) {
+      return NS_ERROR_FAILURE;
+    }
+
     receivers.AppendElement(receiverStr);
   }
 
