@@ -20,6 +20,7 @@ function startTest() {
 
   var source = context.createBufferSource();
   source.buffer = buffer;
+  source.loop = true;
 
   var dest = context.createMediaStreamDestination();
   source.connect(dest);
