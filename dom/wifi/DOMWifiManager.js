@@ -77,10 +77,10 @@ MozWifiCapabilities.prototype = {
 
 function DOMWifiManager() {
   this.defineEventHandlerGetterSetter("onstatuschange");
-  this.defineEventHandlerGetterSetter("onconnectionInfoUpdate");
+  this.defineEventHandlerGetterSetter("onconnectioninfoupdate");
   this.defineEventHandlerGetterSetter("onenabled");
   this.defineEventHandlerGetterSetter("ondisabled");
-  this.defineEventHandlerGetterSetter("onstationInfoUpdate");
+  this.defineEventHandlerGetterSetter("onstationinfoupdate");
 }
 
 DOMWifiManager.prototype = {
@@ -117,9 +117,9 @@ DOMWifiManager.prototype = {
                       "WifiManager:onconnecting", "WifiManager:onassociate",
                       "WifiManager:onconnect", "WifiManager:ondisconnect",
                       "WifiManager:onwpstimeout", "WifiManager:onwpsfail",
-                      "WifiManager:onwpsoverlap", "WifiManager:connectionInfoUpdate",
+                      "WifiManager:onwpsoverlap", "WifiManager:connectioninfoupdate",
                       "WifiManager:onauthenticating", "WifiManager:onconnectingfailed",
-                      "WifiManager:stationInfoUpdate"];
+                      "WifiManager:stationinfoupdate"];
     this.initDOMRequestHelper(aWindow, messages);
     this._mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
 
@@ -379,7 +379,7 @@ DOMWifiManager.prototype = {
         this._fireStatusChangeEvent();
         break;
 
-      case "WifiManager:connectionInfoUpdate":
+      case "WifiManager:connectioninfoupdate":
         this._lastConnectionInfo = this._convertConnectionInfo(msg);
         this._fireConnectionInfoUpdate(msg);
         break;
@@ -394,7 +394,7 @@ DOMWifiManager.prototype = {
         this._connectionStatus = "authenticating";
         this._fireStatusChangeEvent();
         break;
-      case "WifiManager:stationInfoUpdate":
+      case "WifiManager:stationinfoupdate":
         this._stationNumber = msg.station;
         this._fireStationInfoUpdate(msg);
         break;
@@ -426,7 +426,7 @@ DOMWifiManager.prototype = {
   },
 
   _fireStationInfoUpdate: function onStationInfoUpdate(info) {
-    var evt = new this._window.MozWifiStationInfoEvent("stationInfoUpdate",
+    var evt = new this._window.MozWifiStationInfoEvent("stationinfoupdate",
                                                        { station: this._stationNumber}
                                                       );
     this.__DOM_IMPL__.dispatchEvent(evt);

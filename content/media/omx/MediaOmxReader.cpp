@@ -66,13 +66,20 @@ nsresult MediaOmxReader::Init(MediaDecoderReader* aCloneDonor)
   return NS_OK;
 }
 
-void MediaOmxReader::Shutdown()
+void MediaOmxReader::ReleaseDecoder()
 {
-  ReleaseMediaResources();
   if (mOmxDecoder.get()) {
     mOmxDecoder->ReleaseDecoder();
   }
   mOmxDecoder.clear();
+}
+
+void MediaOmxReader::Shutdown()
+{
+  ReleaseMediaResources();
+  nsCOMPtr<nsIRunnable> event =
+    NS_NewRunnableMethod(this, &MediaOmxReader::ReleaseDecoder);
+  NS_DispatchToMainThread(event);
 }
 
 bool MediaOmxReader::IsWaitingMediaResources()
