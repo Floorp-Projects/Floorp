@@ -295,6 +295,7 @@ public class TopSitesGridItemView extends RelativeLayout {
         }
 
         mType = type;
+        refreshDrawableState();
 
         int pinResourceId = (type == TopSites.TYPE_PINNED ? R.drawable.pin : 0);
         mTitleView.setCompoundDrawablesWithIntrinsicBounds(pinResourceId, 0, 0, 0);
@@ -313,9 +314,6 @@ public class TopSitesGridItemView extends RelativeLayout {
         } else {
             mTitleView.setText(R.string.home_top_sites_add);
         }
-
-        // Refresh for state change.
-        refreshDrawableState();
     }
 
     public void setLoadId(int aLoadId) {
