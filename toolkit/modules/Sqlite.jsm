@@ -42,7 +42,7 @@ let connectionCounters = new Map();
  */
 let isClosed = false;
 
-this.Debugging = {
+let Debugging = {
   // Tests should fail if a connection auto closes.  The exception is
   // when finalization itself is tested, in which case this flag
   // should be set to false.
