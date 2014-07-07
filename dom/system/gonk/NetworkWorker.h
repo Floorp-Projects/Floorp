@@ -11,6 +11,8 @@
 #include "nsCOMPtr.h"
 #include "nsThread.h"
 
+class NetworkParams;
+
 namespace mozilla {
 
 class NetworkWorker MOZ_FINAL : public nsINetworkWorker
@@ -28,6 +30,9 @@ private:
   ~NetworkWorker();
 
   static void NotifyResult(mozilla::dom::NetworkResultOptions& aResult);
+
+  void HandleBlockingCommand(NetworkParams& aParams);
+  void RunDhcp(NetworkParams& aParams);
 
   nsCOMPtr<nsINetworkEventListener> mListener;
 };

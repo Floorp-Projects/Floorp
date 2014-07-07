@@ -12,12 +12,14 @@ class nsUserInfo: public nsIUserInfo
 {
 public:
   nsUserInfo();
-  virtual ~nsUserInfo() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIUSERINFO
-  
+
   nsresult GetPrimaryEmailAddress(nsCString &aEmailAddress);  
+
+protected:
+  virtual ~nsUserInfo() {}
 };
 
 #endif /* __nsUserInfo_h */

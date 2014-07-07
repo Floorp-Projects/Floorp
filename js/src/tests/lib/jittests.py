@@ -84,6 +84,7 @@ class Test:
         self.jitflags = []     # jit flags to enable
         self.slow = False      # True means the test is slow-running
         self.allow_oom = False # True means that OOM is not considered a failure
+        self.allow_unhandlable_oom = False # True means CrashAtUnhandlableOOM is not considered a failure
         self.allow_overrecursed = False # True means that hitting recursion the
                                         # limits is not considered a failure.
         self.valgrind = False  # True means run under valgrind
@@ -96,6 +97,7 @@ class Test:
         t.jitflags = self.jitflags[:]
         t.slow = self.slow
         t.allow_oom = self.allow_oom
+        t.allow_unhandlable_oom = self.allow_unhandlable_oom
         t.allow_overrecursed = self.allow_overrecursed
         t.valgrind = self.valgrind
         t.tz_pacific = self.tz_pacific
@@ -141,6 +143,8 @@ class Test:
                         test.slow = True
                     elif name == 'allow-oom':
                         test.allow_oom = True
+                    elif name == 'allow-unhandlable-oom':
+                        test.allow_unhandlable_oom = True
                     elif name == 'allow-overrecursed':
                         test.allow_overrecursed = True
                     elif name == 'valgrind':
@@ -388,6 +392,11 @@ def check_output(out, err, rc, timed_out, test):
         # Allow a non-zero exit code if we want to allow OOM, but only if we
         # actually got OOM.
         if test.allow_oom and 'out of memory' in err and 'Assertion failure' not in err:
+            return True
+
+        # Allow a non-zero exit code if we want to allow unhandlable OOM, but
+        # only if we actually got unhandlable OOM.
+        if test.allow_unhandlable_oom and 'Assertion failure: [unhandlable oom]' in err:
             return True
 
         # Allow a non-zero exit code if we want to all too-much-recursion and
