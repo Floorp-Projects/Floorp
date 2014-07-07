@@ -195,7 +195,6 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     if (type == EnterJitBaseline) {
         // Handle OSR.
         GeneralRegisterSet regs(GeneralRegisterSet::All());
-        regs.take(JSReturnOperand);
         regs.take(OsrFrameReg);
         regs.take(BaselineFrameReg);
         regs.take(reg_code);
@@ -250,12 +249,15 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.passABIArg(numStackValues);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, jit::InitBaselineFrameForOsr));
 
+        regs.add(OsrFrameReg);
+        regs.add(scratch);
+        regs.add(numStackValues);
+        regs.take(JSReturnOperand);
+        regs.take(ReturnReg);
         Register jitcode = regs.takeAny();
         masm.loadPtr(Address(StackPointer, 0), jitcode);
         masm.loadPtr(Address(StackPointer, sizeof(uintptr_t)), framePtr);
         masm.freeStack(2 * sizeof(uintptr_t));
-
-        MOZ_ASSERT(jitcode != ReturnReg);
 
         Label error;
         masm.freeStack(IonExitFrameLayout::SizeWithFooter());
