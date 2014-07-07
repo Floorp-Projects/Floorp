@@ -37,6 +37,7 @@ SharedBufferManagerChild::SharedBufferManagerChild()
   : mBufferMutex("BufferMonitor")
 #endif
 {
+
 }
 
 static bool
@@ -153,9 +154,8 @@ bool
 SharedBufferManagerChild::StartUpOnThread(base::Thread* aThread)
 {
   NS_ABORT_IF_FALSE(aThread, "SharedBufferManager needs a thread.");
-  if (sSharedBufferManagerChildSingleton != nullptr) {
+  if (sSharedBufferManagerChildSingleton != nullptr)
     return false;
-  }
 
   sSharedBufferManagerChildThread = aThread;
   if (!aThread->IsRunning()) {
@@ -337,10 +337,8 @@ android::sp<android::GraphicBuffer>
 SharedBufferManagerChild::GetGraphicBuffer(int64_t key)
 {
   MutexAutoLock lock(mBufferMutex);
-  if (mBuffers.count(key) == 0) {
-    printf_stderr("SharedBufferManagerChild::GetGraphicBuffer -- invalid key");
+  if (mBuffers.count(key) == 0)
     return nullptr;
-  }
   return mBuffers[key];
 }
 #endif
