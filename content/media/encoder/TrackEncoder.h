@@ -31,14 +31,7 @@ class MediaStreamGraph;
 class TrackEncoder
 {
 public:
-  TrackEncoder()
-    : mReentrantMonitor("media.TrackEncoder")
-    , mEncodingComplete(false)
-    , mEosSetInEncoder(false)
-    , mInitialized(false)
-    , mEndOfStream(false)
-    , mCanceled(false)
-  {}
+  TrackEncoder();
 
   virtual ~TrackEncoder() {}
 
@@ -131,6 +124,12 @@ protected:
    * mReentrantMonitor.
    */
   bool mCanceled;
+
+#ifdef PR_LOGGING
+  // How many times we have tried to initialize the encoder.
+  uint32_t mAudioInitCounter;
+  uint32_t mVideoInitCounter;
+#endif
 };
 
 class AudioTrackEncoder : public TrackEncoder
