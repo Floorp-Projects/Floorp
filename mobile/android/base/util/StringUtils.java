@@ -160,4 +160,25 @@ public class StringUtils {
         return !("about".equals(scheme) || "chrome".equals(scheme) ||
                 "file".equals(scheme) || "resource".equals(scheme));
     }
+
+    /**
+     * Given a url with a user-entered scheme, extract the
+     * scheme-specific component. For e.g, given "user-entered://www.google.com",
+     * this method returns "//www.google.com". If the passed url
+     * does not have a user-entered scheme, the same url will be returned.
+     *
+     * @param  url to be decoded
+     * @return url component entered by user
+     */
+    public static String decodeUserEnteredUrl(String url) {
+        Uri uri = Uri.parse(url);
+        if ("user-entered".equals(uri.getScheme())) {
+            return uri.getSchemeSpecificPart();
+        }
+        return url;
+    }
+
+    public static String encodeUserEnteredUrl(String url) {
+        return Uri.fromParts("user-entered", url, null).toString();
+    }
 }
