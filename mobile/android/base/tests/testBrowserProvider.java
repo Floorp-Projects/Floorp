@@ -1553,20 +1553,18 @@ public class testBrowserProvider extends ContentProviderTest {
             final Cursor c = mProvider.query(BrowserContract.Combined.CONTENT_URI, null, "", null, null);
             try {
                 mAsserter.is(c.getCount(), 4, "4 combined entries found");
+                while (c.moveToNext()) {
+                    long id = c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID));
+
+                    int display = c.getInt(c.getColumnIndex(BrowserContract.Combined.DISPLAY));
+                    int expectedDisplay = (id == readingListItemId || id == readingListItemId2 ? BrowserContract.Combined.DISPLAY_READER : BrowserContract.Combined.DISPLAY_NORMAL);
+
+                    mAsserter.is(new Integer(display), new Integer(expectedDisplay),
+                                     "Combined display column should always be DISPLAY_READER for the reading list item");
+                }
             } finally {
                 c.close();
             }
-
-            while (c.moveToNext()) {
-                long id = c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID));
-
-                int display = c.getInt(c.getColumnIndex(BrowserContract.Combined.DISPLAY));
-                int expectedDisplay = (id == readingListItemId || id == readingListItemId2 ? BrowserContract.Combined.DISPLAY_READER : BrowserContract.Combined.DISPLAY_NORMAL);
-
-                mAsserter.is(new Integer(display), new Integer(expectedDisplay),
-                                 "Combined display column should always be DISPLAY_READER for the reading list item");
-            }
-            c.close();
         }
     }
 
