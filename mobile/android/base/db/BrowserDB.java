@@ -13,6 +13,7 @@ import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.util.StringUtils;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -181,7 +182,15 @@ public class BrowserDB {
     private static void appendUrlsFromCursor(List<String> urls, Cursor c) {
         c.moveToPosition(-1);
         while (c.moveToNext()) {
-            urls.add(c.getString(c.getColumnIndex(URLColumns.URL)));
+            String url = c.getString(c.getColumnIndex(URLColumns.URL));
+
+            // Do a simpler check before decoding to avoid parsing
+            // all URLs unnecessarily.
+            if (StringUtils.isUserEnteredUrl(url)) {
+                url = StringUtils.decodeUserEnteredUrl(url);
+            }
+
+            urls.add(url);
         };
     }
 
