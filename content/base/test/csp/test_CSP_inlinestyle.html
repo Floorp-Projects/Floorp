@@ -94,17 +94,13 @@ function checkIfDone() {
     SimpleTest.finish();
 }
 
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-  function() {
-    // save this for last so that our listeners are registered.
-    // ... this loads the testbed of good and bad requests.
-    document.getElementById('cspframe1').src = 'file_CSP_inlinestyle_main.html';
-    document.getElementById('cspframe1').addEventListener('load', checkStyles, false);
-    document.getElementById('cspframe2').src = 'file_CSP_inlinestyle_main_allowed.html';
-    document.getElementById('cspframe2').addEventListener('load', checkStylesAllowed, false);
-  }
-);
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe1').src = 'file_CSP_inlinestyle_main.html';
+document.getElementById('cspframe1').addEventListener('load', checkStyles, false);
+document.getElementById('cspframe2').src = 'file_CSP_inlinestyle_main_allowed.html';
+document.getElementById('cspframe2').addEventListener('load', checkStylesAllowed, false);
+
 </script>
 </pre>
 </body>

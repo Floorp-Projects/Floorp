@@ -58,13 +58,8 @@ function checkBlocked () {
   SimpleTest.finish();
 }
 
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-  function () {
-    document.getElementById('xsltframe').addEventListener('load', checkAllowed, false);
-    document.getElementById('xsltframe').src = 'file_CSP_bug910139.sjs';
-  }
-);
+document.getElementById('xsltframe').addEventListener('load', checkAllowed, false);
+document.getElementById('xsltframe').src = 'file_CSP_bug910139.sjs';
 
 </script>
 </body>
