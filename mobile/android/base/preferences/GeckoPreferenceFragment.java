@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.preferences;
 
-import java.lang.reflect.Field;
 import java.util.Locale;
 
 import org.mozilla.gecko.BrowserLocaleManager;
@@ -27,7 +26,6 @@ import android.preference.PreferenceScreen;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.ViewConfiguration;
 
 /* A simple implementation of PreferenceFragment for large screen devices
  * This will strip category headers (so that they aren't shown to the user twice)
@@ -196,31 +194,6 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
         super.onDestroy();
         if (mPrefsRequestId > 0) {
             PrefsHelper.removeObserver(mPrefsRequestId);
-        }
-    }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        showOverflowMenu(activity);
-    }
-
-    /*
-     * Force the overflow 3-dot menu to be displayed if it isn't already displayed.
-     *
-     * This is an ugly hack for 4.0+ Android devices that don't have a dedicated menu button
-     * because Android does not provide a public API to display the ActionBar overflow menu.
-     */
-    private void showOverflowMenu(Activity activity) {
-        try {
-            ViewConfiguration config = ViewConfiguration.get(activity);
-            Field menuOverflow = ViewConfiguration.class.getDeclaredField("sHasPermanentMenuKey");
-            if (menuOverflow != null) {
-                menuOverflow.setAccessible(true);
-                menuOverflow.setBoolean(config, false);
-            }
-        } catch (Exception e) {
-            Log.d(LOGTAG, "Failed to force overflow menu, ignoring.");
         }
     }
 }
