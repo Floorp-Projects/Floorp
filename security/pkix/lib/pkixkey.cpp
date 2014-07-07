@@ -28,6 +28,7 @@
 #include "cert.h"
 #include "cryptohi.h"
 #include "keyhi.h"
+#include "pk11pub.h"
 #include "pkix/pkix.h"
 #include "pkix/ScopedPtr.h"
 #include "prerror.h"
@@ -116,6 +117,26 @@ VerifySignedData(const SignedDataWithSignature& sd,
   return VFY_VerifyDataDirect(sd.data.data, static_cast<int>(sd.data.len),
                               pubKey.get(), &sd.signature, pubKeyAlg,
                               digestAlg, nullptr, pkcs11PinArg);
+}
+
+SECStatus
+DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
+{
+  static_assert(TrustDomain::DIGEST_LENGTH == SHA1_LENGTH,
+                "TrustDomain::DIGEST_LENGTH must be 20 (SHA-1 digest length)");
+  if (digestBufLen != TrustDomain::DIGEST_LENGTH) {
+    PR_NOT_REACHED("invalid hash length");
+    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
+    return SECFailure;
+  }
+  if (item.len >
+      static_cast<decltype(item.len)>(std::numeric_limits<int32_t>::max())) {
+    PR_NOT_REACHED("large OCSP responses should have already been rejected");
+    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
+    return SECFailure;
+  }
+  return PK11_HashBuf(SEC_OID_SHA1, digestBuf, item.data,
+                      static_cast<int32_t>(item.len));
 }
 
 } } // namespace mozilla::pkix
