@@ -49,7 +49,7 @@ let FramerateActor = exports.FramerateActor = protocol.ActorClass({
     this._ticks = [];
 
     this._startTime = this._chromeWin.performance.now();
-    this._chromeWin.requestAnimationFrame(this._onRefreshDriverTick);
+    this._rafID = this._chromeWin.requestAnimationFrame(this._onRefreshDriverTick);
   }, {
   }),
 
@@ -60,11 +60,8 @@ let FramerateActor = exports.FramerateActor = protocol.ActorClass({
     if (!this._recording) {
       return [];
     }
-    this._recording = false;
-
-    // We don't need to store the ticks array for future use, release it.
     let ticks = this.getPendingTicks(beginAt, endAt);
-    this._ticks = null;
+    this.cancelRecording();
     return ticks;
   }, {
     request: {
@@ -72,6 +69,17 @@ let FramerateActor = exports.FramerateActor = protocol.ActorClass({
       endAt: Arg(1, "nullable:number")
     },
     response: { ticks: RetVal("array:number") }
+  }),
+
+  /**
+   * Stops monitoring framerate, without returning the recorded values.
+   */
+  cancelRecording: method(function() {
+    this._chromeWin.cancelAnimationFrame(this._rafID);
+    this._recording = false;
+    this._ticks = null;
+    this._rafID = -1;
+  }, {
   }),
 
   /**
@@ -97,7 +105,7 @@ let FramerateActor = exports.FramerateActor = protocol.ActorClass({
     if (!this._recording) {
       return;
     }
-    this._chromeWin.requestAnimationFrame(this._onRefreshDriverTick);
+    this._rafID = this._chromeWin.requestAnimationFrame(this._onRefreshDriverTick);
 
     // Store the amount of time passed since the recording started.
     let currentTime = this._chromeWin.performance.now();
