@@ -13,4 +13,6 @@ for var in ('COMMON_SYMBOLS', 'GTK2_SYMBOLS', 'GTK3_SYMBOLS'):
 
 LIBRARY_NAME = 'mozgtk_stub'
 
+SONAME = 'mozgtk'
+
 FORCE_SHARED_LIB = True
