@@ -30,12 +30,14 @@ public:
   NS_DECL_NSITIMERCALLBACK
 
   OSXNotificationCenter();
-  virtual ~OSXNotificationCenter();
 
   nsresult Init();
   void CloseAlertCocoaString(NSString *aAlertName);
   void OnClick(NSString *aAlertName);
   void ShowPendingNotification(OSXNotificationInfo *osxni);
+
+protected:
+  virtual ~OSXNotificationCenter();
 
 private:
   mozNotificationCenterDelegate *mDelegate;
