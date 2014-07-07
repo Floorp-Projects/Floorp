@@ -47,7 +47,7 @@ window.onload = function() {
         ok(rawData, "There should be a recording available.");
         is(rawData.length, 0, "...but it should be empty.");
 
-        var timeline = front.plotFPS(rawData);
+        var timeline = FramerateFront.plotFPS(rawData);
         is(timeline.length, 2,
           "There should be one measurement plotted, with two entries.");
 
