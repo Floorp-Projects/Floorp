@@ -1406,7 +1406,7 @@ var gApplicationsPane = {
 
     {
       var askMenuItem = document.createElement("menuitem");
-      askMenuItem.setAttribute("alwaysAsk", "true");
+      askMenuItem.setAttribute("action", Ci.nsIHandlerInfo.alwaysAsk);
       let label;
       if (isFeedType(handlerInfo.type))
         label = this._prefsBundle.getFormattedString("previewInApp",
