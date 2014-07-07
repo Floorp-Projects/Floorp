@@ -406,6 +406,21 @@ abort:
   return(_status);
 }
 
+static int nr_socket_buffered_stun_arm_writable_cb(nr_socket_buffered_stun *sock)
+{
+  int r, _status;
+  NR_SOCKET fd;
+
+  if ((r=nr_socket_getfd(sock->inner, &fd)))
+    ABORT(r);
+
+  NR_ASYNC_WAIT(fd, NR_ASYNC_WAIT_WRITE, nr_socket_buffered_stun_writable_cb, sock);
+
+  _status=0;
+abort:
+  return(_status);
+}
+
 static int nr_socket_buffered_stun_write(void *obj,const void *msg, size_t len, size_t *written)
 {
   nr_socket_buffered_stun *sock = (nr_socket_buffered_stun *)obj;
@@ -446,12 +461,8 @@ static int nr_socket_buffered_stun_write(void *obj,const void *msg, size_t len, 
   }
 
   if (sock->pending && !already_armed) {
-    NR_SOCKET fd;
-
-    if ((r=nr_socket_getfd(sock->inner, &fd)))
-      ABORT(r);
-
-    NR_ASYNC_WAIT(fd, NR_ASYNC_WAIT_WRITE, nr_socket_buffered_stun_writable_cb, sock);
+      if ((r=nr_socket_buffered_stun_arm_writable_cb(sock)))
+        ABORT(r);
   }
 
   *written = original_len;
@@ -497,5 +508,7 @@ static void nr_socket_buffered_stun_writable_cb(NR_SOCKET s, int how, void *arg)
 abort:
   if (_status && _status != R_WOULDBLOCK) {
     nr_socket_buffered_stun_failed(sock);
+  } else if (sock->pending) {
+    nr_socket_buffered_stun_arm_writable_cb(sock);
   }
 }
