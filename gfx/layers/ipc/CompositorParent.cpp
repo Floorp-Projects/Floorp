@@ -101,42 +101,29 @@ static void DestroyCompositorMap()
 // See ImageBridgeChild.cpp
 void ReleaseImageBridgeParentSingleton();
 
-class CompositorThreadHolder MOZ_FINAL
+CompositorThreadHolder::CompositorThreadHolder()
+  : mCompositorThread(CreateCompositorThread())
 {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorThreadHolder)
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_COUNT_CTOR(CompositorThreadHolder);
+}
 
-public:
-  CompositorThreadHolder()
-    : mCompositorThread(CreateCompositorThread())
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_COUNT_CTOR(CompositorThreadHolder);
-  }
+CompositorThreadHolder::~CompositorThreadHolder()
+{
+  MOZ_ASSERT(NS_IsMainThread());
 
-  Thread* GetCompositorThread() const {
-    return mCompositorThread;
-  }
+  MOZ_COUNT_DTOR(CompositorThreadHolder);
 
-private:
-  ~CompositorThreadHolder()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    MOZ_COUNT_DTOR(CompositorThreadHolder);
-
-    DestroyCompositorThread(mCompositorThread);
-  }
-
-  Thread* const mCompositorThread;
-
-  static Thread* CreateCompositorThread();
-  static void DestroyCompositorThread(Thread* aCompositorThread);
-
-  friend class CompositorParent;
-};
+  DestroyCompositorThread(mCompositorThread);
+}
 
 static StaticRefPtr<CompositorThreadHolder> sCompositorThreadHolder;
 static bool sFinishedCompositorShutDown = false;
+
+CompositorThreadHolder* GetCompositorThreadHolder()
+{
+  return sCompositorThreadHolder;
+}
 
 /* static */ Thread*
 CompositorThreadHolder::CreateCompositorThread()
@@ -174,7 +161,6 @@ CompositorThreadHolder::DestroyCompositorThread(Thread* aCompositorThread)
   MOZ_ASSERT(!sCompositorThreadHolder, "We shouldn't be destroying the compositor thread yet.");
 
   DestroyCompositorMap();
-  ReleaseImageBridgeParentSingleton();
   delete aCompositorThread;
   sFinishedCompositorShutDown = true;
 }
@@ -200,6 +186,8 @@ void CompositorParent::ShutDown()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on the main Thread!");
   MOZ_ASSERT(sCompositorThreadHolder, "The compositor thread has already been shut down!");
+
+  ReleaseImageBridgeParentSingleton();
 
   sCompositorThreadHolder = nullptr;
 
