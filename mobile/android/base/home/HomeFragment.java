@@ -191,7 +191,7 @@ abstract class HomeFragment extends Fragment {
 
             // Some pinned site items have "user-entered" urls. URLs entered in the PinSiteDialog are wrapped in
             // a special URI until we can get a valid URL. If the url is a user-entered url, decode the URL before loading it.
-            final Tab newTab = Tabs.getInstance().loadUrl(decodeUserEnteredUrl(url), flags);
+            final Tab newTab = Tabs.getInstance().loadUrl(StringUtils.decodeUserEnteredUrl(url), flags);
             final String message = isPrivate ?
                     getResources().getString(R.string.new_private_tab_opened) :
                     getResources().getString(R.string.new_tab_opened);
@@ -257,22 +257,6 @@ abstract class HomeFragment extends Fragment {
         return mCanLoadHint;
     }
 
-    /**
-     * Given a url with a user-entered scheme, extract the
-     * scheme-specific component. For e.g, given "user-entered://www.google.com",
-     * this method returns "//www.google.com". If the passed url
-     * does not have a user-entered scheme, the same url will be returned.
-     *
-     * @param  url to be decoded
-     * @return url component entered by user
-     */
-    public static String decodeUserEnteredUrl(String url) {
-        Uri uri = Uri.parse(url);
-        if ("user-entered".equals(uri.getScheme())) {
-            return uri.getSchemeSpecificPart();
-        }
-        return url;
-    }
 
     protected abstract void load();
 
