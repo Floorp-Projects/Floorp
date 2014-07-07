@@ -501,7 +501,6 @@ RNot::recover(JSContext *cx, SnapshotIterator &iter) const
     RootedValue v(cx, iter.read());
     RootedValue result(cx);
 
-    MOZ_ASSERT(!v.isObject());
     result.setBoolean(!ToBoolean(v));
 
     iter.storeInstructionResult(result);
@@ -556,6 +555,28 @@ MStringLength::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
     writer.writeUnsigned(uint32_t(RInstruction::Recover_StringLength));
+    return true;
+}
+
+bool
+MArgumentsLength::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_ArgumentsLength));
+    return true;
+}
+
+RArgumentsLength::RArgumentsLength(CompactBufferReader &reader)
+{ }
+
+bool
+RArgumentsLength::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue result(cx);
+
+    result.setInt32(iter.readOuterNumActualArgs());
+
+    iter.storeInstructionResult(result);
     return true;
 }
 

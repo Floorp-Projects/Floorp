@@ -69,9 +69,9 @@ class B2GMochitest(MochitestUtilsMixin):
             test_url += "?" + "&".join(self.urlOpts)
         self.test_script_args.append(test_url)
 
-    def buildTestPath(self, options):
+    def buildTestPath(self, options, testsToFilter=None):
         if options.manifestFile != 'tests.json':
-            super(B2GMochitest, self).buildTestPath(options, disabled=False)
+            super(B2GMochitest, self).buildTestPath(options, testsToFilter, disabled=False)
         return self.buildTestURL(options)
 
     def build_profile(self, options):
