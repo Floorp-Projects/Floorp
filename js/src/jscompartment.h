@@ -589,7 +589,7 @@ class ErrorCopier
     mozilla::Maybe<AutoCompartment> &ac;
 
   public:
-    ErrorCopier(mozilla::Maybe<AutoCompartment> &ac)
+    explicit ErrorCopier(mozilla::Maybe<AutoCompartment> &ac)
       : ac(ac) {}
     ~ErrorCopier();
 };
