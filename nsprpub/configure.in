@@ -1915,8 +1915,6 @@ tools are selected during the Xcode/Developer Tools installation.])
         # Use temp file for windres (bug 213281)
         RCFLAGS='-O coff --use-temp-file'
     else
-        CC=cl
-        CXX=cl
         LD=link
         AR='lib -NOLOGO -OUT:"$@"'
         AR_FLAGS=

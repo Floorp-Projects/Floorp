@@ -318,7 +318,7 @@ TraceActor.prototype = {
    * Called by the engine when a frame is entered. Sends an unsolicited packet
    * to the client carrying requested trace information.
    *
-   * @param aFrame Debugger.frame
+   * @param aFrame Debugger.Frame
    *        The stack frame that was entered.
    */
   onEnterFrame: function(aFrame) {

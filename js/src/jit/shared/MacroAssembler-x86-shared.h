@@ -669,11 +669,11 @@ class MacroAssemblerX86Shared : public Assembler
 
     void call(const CallSiteDesc &desc, Label *label) {
         call(label);
-        enoughMemory_ &= append(desc, currentOffset(), framePushed_);
+        append(desc, currentOffset(), framePushed_);
     }
     void call(const CallSiteDesc &desc, Register reg) {
         call(reg);
-        enoughMemory_ &= append(desc, currentOffset(), framePushed_);
+        append(desc, currentOffset(), framePushed_);
     }
     void callIon(Register callee) {
         call(callee);

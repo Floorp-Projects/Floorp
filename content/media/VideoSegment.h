@@ -96,8 +96,10 @@ public:
   VideoSegment();
   ~VideoSegment();
 
-  void AppendFrame(already_AddRefed<Image>&& aImage, TrackTicks aDuration,
-                   const IntSize& aIntrinsicSize);
+  void AppendFrame(already_AddRefed<Image>&& aImage,
+                   TrackTicks aDuration,
+                   const IntSize& aIntrinsicSize,
+                   bool aForceBlack = false);
   const VideoFrame* GetFrameAt(TrackTicks aOffset, TrackTicks* aStart = nullptr)
   {
     VideoChunk* c = FindChunkContaining(aOffset, aStart);

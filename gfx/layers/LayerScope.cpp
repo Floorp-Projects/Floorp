@@ -489,7 +489,7 @@ public:
             return false;
 
         // then the image data
-        if (mCompresseddata.get() && !WriteToStream(mCompresseddata.get(), mDatasize))
+        if (mCompresseddata.get() && !WriteToStream(mCompresseddata, mDatasize))
             return false;
 
         // then pad out to 4 bytes
@@ -518,12 +518,12 @@ private:
             mPacket.stride = aImage->Stride();
             mPacket.dataSize = aImage->GetSize().height * aImage->Stride();
 
-            mCompresseddata = std::auto_ptr<char>(
-                (char*)moz_malloc(LZ4::maxCompressedSize(mPacket.dataSize)));
+            mCompresseddata =
+                new char[LZ4::maxCompressedSize(mPacket.dataSize)];
             if (mCompresseddata.get()) {
                 int ndatasize = LZ4::compress((char*)aImage->GetData(),
                                               mPacket.dataSize,
-                                              mCompresseddata.get());
+                                              mCompresseddata);
                 if (ndatasize > 0) {
                     mDatasize = ndatasize;
 
@@ -550,7 +550,7 @@ protected:
 
     // Packet data
     DebugGLData::TexturePacket mPacket;
-    std::auto_ptr<char> mCompresseddata;
+    nsAutoArrayPtr<char> mCompresseddata;
     uint32_t mDatasize;
 };
 
@@ -651,7 +651,7 @@ public:
         nsresult rv = NS_OK;
 
         while ((d = mList.popFirst()) != nullptr) {
-            std::auto_ptr<DebugGLData> cleaner(d);
+            nsAutoPtr<DebugGLData> cleaner(d);
             if (!d->Write()) {
                 rv = NS_ERROR_FAILURE;
                 break;

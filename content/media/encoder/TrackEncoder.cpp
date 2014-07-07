@@ -207,8 +207,10 @@ VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
   while (!iter.IsEnded()) {
     VideoChunk chunk = *iter;
     nsRefPtr<layers::Image> image = chunk.mFrame.GetImage();
-    mRawSegment.AppendFrame(image.forget(), chunk.GetDuration(),
-                            chunk.mFrame.GetIntrinsicSize().ToIntSize());
+    mRawSegment.AppendFrame(image.forget(),
+                            chunk.GetDuration(),
+                            chunk.mFrame.GetIntrinsicSize().ToIntSize(),
+                            chunk.mFrame.GetForceBlack());
     iter.Next();
   }
 
