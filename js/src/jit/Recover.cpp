@@ -501,7 +501,6 @@ RNot::recover(JSContext *cx, SnapshotIterator &iter) const
     RootedValue v(cx, iter.read());
     RootedValue result(cx);
 
-    MOZ_ASSERT(!v.isObject());
     result.setBoolean(!ToBoolean(v));
 
     iter.storeInstructionResult(result);
