@@ -5184,18 +5184,22 @@ function middleMousePaste(event) {
 function stripUnsafeProtocolOnPaste(pasteData) {
   // Don't allow pasting in full URIs which inherit the security context.
   const URI_INHERITS_SECURITY_CONTEXT = Ci.nsIProtocolHandler.URI_INHERITS_SECURITY_CONTEXT;
+
   let pastedURI;
-  pasteData = pasteData.trim();
-  do {
-    if (pastedURI) {
-      pasteData = pastedURI.path.trim();
-    }
+  try {
+    pastedURI = makeURI(pasteData.trim());
+  } catch (ex) {
+    return pasteData;
+  }
+
+  while (Services.netutil.URIChainHasFlags(pastedURI, URI_INHERITS_SECURITY_CONTEXT)) {
+    pasteData = pastedURI.path.trim();
     try {
       pastedURI = makeURI(pasteData);
     } catch (ex) {
       break;
     }
-  } while (Services.netutil.URIChainHasFlags(pastedURI, URI_INHERITS_SECURITY_CONTEXT));
+  }
 
   return pasteData;
 }
