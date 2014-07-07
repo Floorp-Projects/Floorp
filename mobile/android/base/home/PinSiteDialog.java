@@ -10,6 +10,7 @@ import java.util.EnumSet;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserDB.FilterFlags;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.util.StringUtils;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -114,7 +115,7 @@ class PinSiteDialog extends DialogFragment {
                 // a special URI until we can get a valid URL for this bookmark.
                 final String text = mSearch.getText().toString().trim();
                 if (!TextUtils.isEmpty(text)) {
-                    final String url = TopSitesPanel.encodeUserEnteredUrl(text);
+                    final String url = StringUtils.encodeUserEnteredUrl(text);
                     mOnSiteSelectedListener.onSiteSelected(url, text);
                     dismiss();
                 }

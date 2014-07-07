@@ -356,7 +356,8 @@ public class TopSitesPanel extends HomeFragment {
 
         if (itemId == R.id.top_sites_edit) {
             // Decode "user-entered" URLs before showing them.
-            mEditPinnedSiteListener.onEditPinnedSite(info.position, decodeUserEnteredUrl(info.url));
+            mEditPinnedSiteListener.onEditPinnedSite(info.position,
+                                                     StringUtils.decodeUserEnteredUrl(info.url));
 
             Telemetry.sendUIEvent(TelemetryContract.Event.EDIT);
             return true;
@@ -376,10 +377,6 @@ public class TopSitesPanel extends HomeFragment {
         // Gecko thread priority, we ensure that the UI appears quickly. The
         // priority is reset to normal once thumbnails are loaded.
         ThreadUtils.reduceGeckoPriority(PRIORITY_RESET_TIMEOUT);
-    }
-
-    static String encodeUserEnteredUrl(String url) {
-        return Uri.fromParts("user-entered", url, null).toString();
     }
 
     /**
