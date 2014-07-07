@@ -358,10 +358,19 @@ function OpenedConnection(connection, basename, number, options) {
   }
 
   this._deferredClose = Promise.defer();
+  this._closeRequested = false;
 
   Barriers.connections.client.addBlocker(
     this._connectionIdentifier + ": waiting for shutdown",
-    this._deferredClose.promise
+    this._deferredClose.promise,
+    () =>  ({
+      identifier: this._connectionIdentifier,
+      isCloseRequested: this._closeRequested,
+      hasDbConn: !!this._dbConn,
+      hasInProgressTransaction: !!this._inProgressTransaction,
+      pendingStatements: this._pendingStatements.size,
+      statementCounter: this._statementCounter,
+    })
   );
 }
 
@@ -419,6 +428,8 @@ OpenedConnection.prototype = Object.freeze({
    * @return Promise<>
    */
   close: function () {
+    this._closeRequested = true;
+
     if (!this._connection) {
       return this._deferredClose.promise;
     }
