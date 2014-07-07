@@ -10,7 +10,7 @@ PACKAGE_VERSION = '0.0'
 
 try:
     pwd = os.path.dirname(os.path.abspath(__file__))
-    description = open(os.path.join(here, 'README.rst')).read()
+    description = open(os.path.join(pwd, 'README.rst')).read()
 except:
     description = ''
 

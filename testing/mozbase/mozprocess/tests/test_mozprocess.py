@@ -4,13 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import optparse
 import os
 import subprocess
 import sys
 import unittest
 from mozprocess import processhandler
-from time import sleep
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -145,9 +143,9 @@ class ProcTest(unittest.TestCase):
         """Command line raises an exception when the arguments are specified ambiguously"""
         err = None
         try:
-            p = processhandler.ProcessHandler([self.proclaunch, "process_normal_finish.ini"],
-                                              args=["1", "2", "3"],
-                                              cwd=here)
+            processhandler.ProcessHandler([self.proclaunch, "process_normal_finish.ini"],
+                                          args=["1", "2", "3"],
+                                          cwd=here)
         except TypeError, e:
             err = e
 
@@ -163,9 +161,9 @@ class ProcTest(unittest.TestCase):
         """Command line raises an exception when the arguments are specified ambiguously"""
         err = None
         try:
-            p = processhandler.ProcessHandler([self.proclaunch, "process_normal_finish.ini"],
-                                              args=["1", "2", "3"],
-                                              cwd=here)
+            processhandler.ProcessHandler([self.proclaunch, "process_normal_finish.ini"],
+                                          args=["1", "2", "3"],
+                                          cwd=here)
         except TypeError, e:
             err = e
 
