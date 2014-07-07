@@ -1399,15 +1399,21 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
         {}
 
-#ifdef JS_DEBUG
       public:
+#ifdef JS_DEBUG
         uint32_t initialStack;
 #endif
+        uint32_t alignmentPadding;
     };
+
+    void alignFrameForICArguments(AfterICSaveLive &aic);
+    void restoreFrameAlignmentForICArguments(AfterICSaveLive &aic);
 
     AfterICSaveLive icSaveLive(RegisterSet &liveRegs) {
         PushRegsInMask(liveRegs);
-        return AfterICSaveLive(framePushed());
+        AfterICSaveLive aic(framePushed());
+        alignFrameForICArguments(aic);
+        return aic;
     }
 
     bool icBuildOOLFakeExitFrame(void *fakeReturnAddr, AfterICSaveLive &aic) {
@@ -1415,6 +1421,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void icRestoreLive(RegisterSet &liveRegs, AfterICSaveLive &aic) {
+        restoreFrameAlignmentForICArguments(aic);
         JS_ASSERT(framePushed() == aic.initialStack);
         PopRegsInMask(liveRegs);
     }
