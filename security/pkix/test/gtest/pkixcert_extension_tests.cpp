@@ -51,7 +51,8 @@ CreateCert(PLArenaPool* arena, const char* subjectStr,
     return nullptr;
   }
 
-  return CreateEncodedCertificate(arena, v3, SEC_OID_SHA256,
+  return CreateEncodedCertificate(arena, v3,
+                                  SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
                                   serialNumber, issuerDER,
                                   PR_Now() - ONE_DAY,
                                   PR_Now() + ONE_DAY,
