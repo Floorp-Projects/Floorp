@@ -81,15 +81,14 @@ js_GetLocalizedErrorMessage(js::ExclusiveContext *cx, void *userRef, const char 
                             const unsigned errorNumber);
 
 /*
- * Make a copy of errobj parented to scope.
+ * Make a copy of errobj parented to cx's compartment's global.
  *
- * cx must be in the same compartment as scope. errobj may be in a different
- * compartment, but it must be an Error object (not a wrapper of one) and it
- * must not be one of the standard error prototype objects
- * (errobj->getPrivate() must not be nullptr).
+ * errobj may be in a different compartment than cx, but it must be an Error
+ * object (not a wrapper of one) and it must not be one of the standard error
+ * prototype objects (errobj->getPrivate() must not be nullptr).
  */
 extern JSObject *
-js_CopyErrorObject(JSContext *cx, JS::Handle<js::ErrorObject*> errobj, js::HandleObject scope);
+js_CopyErrorObject(JSContext *cx, JS::Handle<js::ErrorObject*> errobj);
 
 static inline JSProtoKey
 GetExceptionProtoKey(JSExnType exn)
