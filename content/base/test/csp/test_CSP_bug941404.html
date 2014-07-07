@@ -97,13 +97,9 @@ window.testResult = function(testname, result, msg) {
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-  function() {
-    // save this for last so that our listeners are registered.
-    // ... this loads the testbed of good and bad requests.
-    document.getElementById('cspframe').src = 'file_CSP_bug941404.html';
-  });
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'file_CSP_bug941404.html';
 
 </script>
 </pre>
