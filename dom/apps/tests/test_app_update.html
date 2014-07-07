@@ -140,10 +140,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     request.onsuccess = continueTest;
     yield undefined;
 
-    // Check the uninstalled app.
-    checkAppState(app, false, 3, continueTest);
-    yield undefined;
-
     // Install the cached app.
     setAppVersion(3, continueTest);
     yield undefined;
@@ -186,11 +182,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     request.onerror = mozAppsError;
     request.onsuccess = continueTest;
     yield undefined;
-    ok(true, "Uninstalled app");
-
-    // Check the uninstalled app.
-    checkAppState(app, false, 3, continueTest);
-    yield undefined;
+    info("Uninstalled app");
   }
 
   function setAppVersion(version, cb) {
