@@ -75,10 +75,10 @@ DeallocateExecutableMemory(uint8_t *code, size_t totalBytes)
 #endif
 }
 
-AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t funcStart,
-                         uint32_t offsetToEndOfUseAsm, bool strict)
-  : funcStart_(funcStart),
-    offsetToEndOfUseAsm_(offsetToEndOfUseAsm),
+AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t srcStart, uint32_t srcBodyStart,
+                         bool strict)
+  : srcStart_(srcStart),
+    srcBodyStart_(srcBodyStart),
     scriptSource_(scriptSource),
     globalArgumentName_(nullptr),
     importArgumentName_(nullptr),
@@ -278,10 +278,10 @@ AsmJSModule::finish(ExclusiveContext *cx, TokenStream &tokenStream, MacroAssembl
 
     uint32_t endBeforeCurly = tokenStream.currentToken().pos.end;
     uint32_t endAfterCurly = tokenStream.peekTokenPos().end;
-    JS_ASSERT(endBeforeCurly >= offsetToEndOfUseAsm_);
-    JS_ASSERT(endAfterCurly >= offsetToEndOfUseAsm_);
-    pod.funcLength_ = endBeforeCurly - funcStart_;
-    pod.funcLengthWithRightBrace_ = endAfterCurly - funcStart_;
+    JS_ASSERT(endBeforeCurly >= srcBodyStart_);
+    JS_ASSERT(endAfterCurly >= srcBodyStart_);
+    pod.srcLength_ = endBeforeCurly - srcStart_;
+    pod.srcLengthWithRightBrace_ = endAfterCurly - srcStart_;
 
     // The global data section sits immediately after the executable (and
     // other) data allocated by the MacroAssembler, so ensure it is
@@ -1214,7 +1214,7 @@ AsmJSModule::clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) con
 {
     AutoUnprotectCodeForClone cloneGuard(cx, *this);
 
-    *moduleOut = cx->new_<AsmJSModule>(scriptSource_, funcStart_, offsetToEndOfUseAsm_, pod.strict_);
+    *moduleOut = cx->new_<AsmJSModule>(scriptSource_, srcStart_, srcBodyStart_, pod.strict_);
     if (!*moduleOut)
         return false;
 
@@ -1671,11 +1671,11 @@ js::LookupAsmJSModuleInCache(ExclusiveContext *cx,
     if (!moduleChars.match(parser))
         return true;
 
-    uint32_t funcStart = parser.pc->maybeFunction->pn_body->pn_pos.begin;
-    uint32_t offsetToEndOfUseAsm = parser.tokenStream.currentToken().pos.end;
+    uint32_t srcStart = parser.pc->maybeFunction->pn_body->pn_pos.begin;
+    uint32_t srcBodyStart = parser.tokenStream.currentToken().pos.end;
     bool strict = parser.pc->sc->strict && !parser.pc->sc->hasExplicitUseStrict();
     ScopedJSDeletePtr<AsmJSModule> module(
-        cx->new_<AsmJSModule>(parser.ss, funcStart, offsetToEndOfUseAsm, strict));
+        cx->new_<AsmJSModule>(parser.ss, srcStart, srcBodyStart, strict));
     if (!module)
         return false;
     cursor = module->deserialize(cx, cursor);
@@ -1696,7 +1696,7 @@ js::LookupAsmJSModuleInCache(ExclusiveContext *cx,
 
     module->staticallyLink(cx);
 
-    parser.tokenStream.advance(module->funcEndBeforeCurly());
+    parser.tokenStream.advance(module->srcEndBeforeCurly());
 
     int64_t usecAfter = PRMJ_Now();
     int ms = (usecAfter - usecBefore) / PRMJ_USEC_PER_MSEC;
