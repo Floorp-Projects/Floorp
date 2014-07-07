@@ -416,7 +416,7 @@ CertVerifier::MozillaPKIXVerifyCert(
         rv = BuildCertChain(emailTrust, cert, time, endEntityOrCA, keyUsage,
                             eku, SEC_OID_X509_ANY_POLICY,
                             stapledOCSPResponse, builtChain);
-        if (rv == SECFailure && SEC_ERROR_UNKNOWN_ISSUER) {
+        if (rv == SECFailure && PR_GetError() == SEC_ERROR_UNKNOWN_ISSUER) {
           NSSCertDBTrustDomain objectSigningTrust(trustObjectSigning,
                                                   ocspFetching, mOCSPCache,
                                                   pinArg);
