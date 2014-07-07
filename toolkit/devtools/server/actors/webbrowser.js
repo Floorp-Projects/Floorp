@@ -1382,7 +1382,7 @@ BrowserAddonActor.prototype = {
       return { error: "wrongState" };
     }
 
-    this._contextPool.remoteActor(this._threadActor);
+    this._contextPool.removeActor(this._threadActor);
 
     this._threadActor = null;
 
