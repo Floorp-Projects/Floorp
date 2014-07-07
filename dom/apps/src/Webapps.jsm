@@ -162,7 +162,7 @@ this.DOMApplicationRegistry = {
     this.messages = ["Webapps:Install", "Webapps:Uninstall",
                      "Webapps:GetSelf", "Webapps:CheckInstalled",
                      "Webapps:GetInstalled", "Webapps:GetNotInstalled",
-                     "Webapps:Launch", "Webapps:GetAll",
+                     "Webapps:Launch",
                      "Webapps:InstallPackage",
                      "Webapps:GetList", "Webapps:RegisterForMessages",
                      "Webapps:UnregisterForMessages",
@@ -1073,9 +1073,8 @@ this.DOMApplicationRegistry = {
     Services.prefs.setBoolPref("dom.mozApps.used", true);
 
     // We need to check permissions for calls coming from mozApps.mgmt.
-    // These are: getAll(), getNotInstalled(), applyDownload() and uninstall().
-    if (["Webapps:GetAll",
-         "Webapps:GetNotInstalled",
+    // These are: getNotInstalled(), applyDownload() and uninstall().
+    if (["Webapps:GetNotInstalled",
          "Webapps:ApplyDownload",
          "Webapps:Uninstall"].indexOf(aMessage.name) != -1) {
       if (!aMessage.target.assertPermission("webapps-manage")) {
@@ -1119,9 +1118,6 @@ this.DOMApplicationRegistry = {
         break;
       case "Webapps:GetNotInstalled":
         this.getNotInstalled(msg, mm);
-        break;
-      case "Webapps:GetAll":
-        this.doGetAll(msg, mm);
         break;
       case "Webapps:InstallPackage": {
 #ifdef MOZ_WIDGET_ANDROID
@@ -3714,13 +3710,6 @@ this.DOMApplicationRegistry = {
       for (let i = 0; i < aResult.length; i++)
         aData.apps[i].manifest = aResult[i].manifest;
       aMm.sendAsyncMessage("Webapps:GetNotInstalled:Return:OK", aData);
-    });
-  },
-
-  doGetAll: function(aData, aMm) {
-    this.getAll(function (apps) {
-      aData.apps = apps;
-      aMm.sendAsyncMessage("Webapps:GetAll:Return:OK", aData);
     });
   },
 
