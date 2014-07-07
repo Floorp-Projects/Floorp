@@ -18,7 +18,6 @@
 #include "basic/BasicLayers.h"          // for BasicLayerManager, etc
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxCachedTempSurface.h"       // for gfxCachedTempSurface
 #include "gfxColor.h"                   // for gfxRGBA
 #include "gfxContext.h"                 // for gfxContext, etc
 #include "gfxImageSurface.h"            // for gfxImageSurface
@@ -98,7 +97,8 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer,
     // clipped precisely to the visible region.
     *aNeedsClipToVisibleRegion = !didCompleteClip || aRegion.GetNumRects() > 1;
     MOZ_ASSERT(!aContext->IsCairo());
-    result = PushGroupWithCachedSurface(aContext, gfxContentType::COLOR);
+    aContext->PushGroup(gfxContentType::COLOR);
+    result = aContext;
   } else {
     *aNeedsClipToVisibleRegion = false;
     result = aContext;
@@ -235,7 +235,6 @@ BasicLayerManager::BasicLayerManager(nsIWidget* aWidget) :
   mPhase(PHASE_NONE),
   mWidget(aWidget)
   , mDoubleBuffering(BufferMode::BUFFER_NONE), mUsingDefaultTarget(false)
-  , mCachedSurfaceInUse(false)
   , mTransactionIncomplete(false)
   , mCompositorMightResample(false)
 {
@@ -247,7 +246,6 @@ BasicLayerManager::BasicLayerManager() :
   mPhase(PHASE_NONE),
   mWidget(nullptr)
   , mDoubleBuffering(BufferMode::BUFFER_NONE), mUsingDefaultTarget(false)
-  , mCachedSurfaceInUse(false)
   , mTransactionIncomplete(false)
 {
   MOZ_COUNT_CTOR(BasicLayerManager);
@@ -284,53 +282,6 @@ BasicLayerManager::BeginTransaction()
   mInTransaction = true;
   mUsingDefaultTarget = true;
   BeginTransactionWithTarget(mDefaultTarget);
-}
-
-already_AddRefed<gfxContext>
-BasicLayerManager::PushGroupWithCachedSurface(gfxContext *aTarget,
-                                              gfxContentType aContent)
-{
-  nsRefPtr<gfxContext> ctx;
-  // We can't cache Azure DrawTargets at this point.
-  if (!mCachedSurfaceInUse && aTarget->IsCairo()) {
-    gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
-    aTarget->IdentityMatrix();
-
-    nsRefPtr<gfxASurface> currentSurf = aTarget->CurrentSurface();
-    gfxRect clip = aTarget->GetClipExtents();
-    clip.RoundOut();
-
-    ctx = mCachedSurface.Get(aContent, clip, currentSurf);
-
-    if (ctx) {
-      mCachedSurfaceInUse = true;
-      /* Align our buffer for the original surface */
-      ctx->SetMatrix(saveMatrix.Matrix());
-      return ctx.forget();
-    }
-  }
-
-  ctx = aTarget;
-  ctx->PushGroup(aContent);
-  return ctx.forget();
-}
-
-void
-BasicLayerManager::PopGroupToSourceWithCachedSurface(gfxContext *aTarget, gfxContext *aPushed)
-{
-  if (!aTarget)
-    return;
-  if (aTarget->IsCairo()) {
-    nsRefPtr<gfxASurface> current = aPushed->CurrentSurface();
-    if (mCachedSurface.IsSurface(current)) {
-      gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
-      aTarget->IdentityMatrix();
-      aTarget->SetSource(current);
-      mCachedSurfaceInUse = false;
-      return;
-    }
-  }
-  aTarget->PopGroupToSource();
 }
 
 void
@@ -924,7 +875,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
       nsRefPtr<gfxContext> groupTarget = PushGroupForLayer(aTarget, aLayer, aLayer->GetEffectiveVisibleRegion(),
                                       &needsClipToVisibleRegion);
       PaintSelfOrChildren(paintLayerContext, groupTarget);
-      PopGroupToSourceWithCachedSurface(aTarget, groupTarget);
+      aTarget->PopGroupToSource();
       FlushGroup(paintLayerContext, needsClipToVisibleRegion);
     } else {
       PaintSelfOrChildren(paintLayerContext, aTarget);
@@ -988,7 +939,6 @@ BasicLayerManager::ClearCachedResources(Layer* aSubtree)
   } else if (mRoot) {
     ClearLayer(mRoot);
   }
-  mCachedSurface.Expire();
 }
 void
 BasicLayerManager::ClearLayer(Layer* aLayer)
