@@ -815,18 +815,18 @@ class MOZ_STACK_CLASS ModuleCompiler
   public:
     class Func
     {
-        PropertyName *name_;
-        bool defined_;
-        uint32_t srcOffset_;
-        uint32_t endOffset_;
         Signature sig_;
+        PropertyName *name_;
         Label *code_;
-        unsigned compileTime_;
+        uint32_t srcBegin_;
+        uint32_t srcEnd_;
+        uint32_t compileTime_;
+        bool defined_;
 
       public:
         Func(PropertyName *name, Signature &&sig, Label *code)
-          : name_(name), defined_(false), srcOffset_(0), endOffset_(0), sig_(Move(sig)),
-            code_(code), compileTime_(0)
+          : sig_(Move(sig)), name_(name), code_(code), srcBegin_(0), srcEnd_(0),
+            compileTime_(0), defined_(false)
         {}
 
         PropertyName *name() const { return name_; }
@@ -838,19 +838,19 @@ class MOZ_STACK_CLASS ModuleCompiler
 
             // The begin/end char range is relative to the beginning of the module.
             // hence the assertions.
-            JS_ASSERT(fn->pn_pos.begin > m.moduleStart());
+            JS_ASSERT(fn->pn_pos.begin > m.srcStart());
             JS_ASSERT(fn->pn_pos.begin <= fn->pn_pos.end);
-            srcOffset_ = fn->pn_pos.begin - m.moduleStart();
-            endOffset_ = fn->pn_pos.end - m.moduleStart();
+            srcBegin_ = fn->pn_pos.begin - m.srcStart();
+            srcEnd_ = fn->pn_pos.end - m.srcStart();
         }
 
-        uint32_t srcOffset() const { JS_ASSERT(defined_); return srcOffset_; }
-        uint32_t endOffset() const { JS_ASSERT(defined_); return endOffset_; }
+        uint32_t srcBegin() const { JS_ASSERT(defined_); return srcBegin_; }
+        uint32_t srcEnd() const { JS_ASSERT(defined_); return srcEnd_; }
         Signature &sig() { return sig_; }
         const Signature &sig() const { return sig_; }
         Label *code() const { return code_; }
-        unsigned compileTime() const { return compileTime_; }
-        void accumulateCompileTime(unsigned ms) { compileTime_ += ms; }
+        uint32_t compileTime() const { return compileTime_; }
+        void accumulateCompileTime(uint32_t ms) { compileTime_ += ms; }
     };
 
     class Global
@@ -1137,15 +1137,15 @@ class MOZ_STACK_CLASS ModuleCompiler
             return false;
         }
 
-        uint32_t funcStart = parser_.pc->maybeFunction->pn_body->pn_pos.begin;
-        uint32_t offsetToEndOfUseAsm = tokenStream().currentToken().pos.end;
+        uint32_t srcStart = parser_.pc->maybeFunction->pn_body->pn_pos.begin;
+        uint32_t srcBodyStart = tokenStream().currentToken().pos.end;
 
         // "use strict" should be added to the source if we are in an implicit
         // strict context, see also comment above addUseStrict in
         // js::FunctionToString.
         bool strict = parser_.pc->sc->strict && !parser_.pc->sc->hasExplicitUseStrict();
 
-        module_ = cx_->new_<AsmJSModule>(parser_.ss, funcStart, offsetToEndOfUseAsm, strict);
+        module_ = cx_->new_<AsmJSModule>(parser_.ss, srcStart, srcBodyStart, strict);
         if (!module_)
             return false;
 
@@ -1212,7 +1212,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         SlowFunction sf;
         sf.name = func.name();
         sf.ms = func.compileTime();
-        tokenStream().srcCoords.lineNumAndColumnIndex(func.srcOffset(), &sf.line, &sf.column);
+        tokenStream().srcCoords.lineNumAndColumnIndex(func.srcBegin(), &sf.line, &sf.column);
         return slowFunctions_.append(sf);
     }
 
@@ -1226,7 +1226,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     Label &interruptLabel() { return interruptLabel_; }
     bool hasError() const { return errorString_ != nullptr; }
     const AsmJSModule &module() const { return *module_.get(); }
-    uint32_t moduleStart() const { return module_->funcStart(); }
+    uint32_t srcStart() const { return module_->srcStart(); }
 
     ParseNode *moduleFunctionNode() const { return moduleFunctionNode_; }
     PropertyName *moduleFunctionName() const { return moduleFunctionName_; }
@@ -1394,7 +1394,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         for (unsigned i = 0; i < args.length(); i++)
             argCoercions[i] = args[i].toCoercion();
         AsmJSModule::ReturnType retType = func->sig().retType().toModuleReturnType();
-        return module_->addExportedFunction(func->name(), func->srcOffset(), func->endOffset(),
+        return module_->addExportedFunction(func->name(), func->srcBegin(), func->srcEnd(),
                                             maybeFieldName, Move(argCoercions), retType);
     }
     bool addExit(unsigned ffiIndex, PropertyName *name, Signature &&sig, unsigned *exitIndex) {
@@ -1439,9 +1439,10 @@ class MOZ_STACK_CLASS ModuleCompiler
     bool finishGeneratingFunction(Func &func, MIRGenerator &mir, CodeGenerator &codegen) {
         JS_ASSERT(func.defined() && func.code()->bound());
 
-        uint32_t beginOffset = func.code()->offset();
-        uint32_t endOffset = masm_.currentOffset();
-        if (!module_->addFunctionCodeRange(func.name(), beginOffset, endOffset))
+        PropertyName *name = func.name();
+        uint32_t codeBegin = func.code()->offset();
+        uint32_t codeEnd = masm_.currentOffset();
+        if (!module_->addFunctionCodeRange(name, codeBegin, codeEnd))
             return false;
 
         jit::IonScriptCounts *counts = codegen.extractScriptCounts();
@@ -1452,22 +1453,18 @@ class MOZ_STACK_CLASS ModuleCompiler
 
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
         unsigned line = 0, column = 0;
-        tokenStream().srcCoords.lineNumAndColumnIndex(func.srcOffset(), &line, &column);
-        unsigned startCodeOffset = func.code()->offset();
-        unsigned endCodeOffset = masm_.currentOffset();
-        if (!module_->addProfiledFunction(func.name(), startCodeOffset, endCodeOffset, line, column))
+        tokenStream().srcCoords.lineNumAndColumnIndex(func.srcBegin(), &line, &column);
+        if (!module_->addProfiledFunction(name, codeBegin, codeEnd, line, column))
             return false;
 # ifdef JS_ION_PERF
+        // Per-block profiling info uses significantly more memory so only store
+        // this information if it is actively requested.
         if (PerfBlockEnabled()) {
-            // Per-block profiling info uses significantly more memory so only
-            // store this information if it is actively requested.
-            mir.perfSpewer().noteBlocksOffsets();
-            unsigned endInlineCodeOffset = mir.perfSpewer().endInlineCode.offset();
-            if (!module_->addPerfProfiledBlocks(func.name(), startCodeOffset, endInlineCodeOffset,
-                                                endCodeOffset, mir.perfSpewer().basicBlocks()))
-            {
+            AsmJSPerfSpewer &ps = mir.perfSpewer();
+            ps.noteBlocksOffsets();
+            unsigned inlineEnd = ps.endInlineCode.offset();
+            if (!module_->addProfiledBlocks(name, codeBegin, inlineEnd, codeEnd, ps.basicBlocks()))
                 return false;
-            }
         }
 # endif
 #endif
@@ -5423,11 +5420,11 @@ CheckFunctionsSequential(ModuleCompiler &m)
         IonSpewNewFunction(&mir->graph(), NullPtr());
 
         if (!OptimizeMIR(mir))
-            return m.failOffset(func->srcOffset(), "internal compiler failure (probably out of memory)");
+            return m.failOffset(func->srcBegin(), "internal compiler failure (probably out of memory)");
 
         LIRGraph *lir = GenerateLIR(mir);
         if (!lir)
-            return m.failOffset(func->srcOffset(), "internal compiler failure (probably out of memory)");
+            return m.failOffset(func->srcBegin(), "internal compiler failure (probably out of memory)");
 
         func->accumulateCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
 
@@ -5687,7 +5684,7 @@ CheckFunctionsParallel(ModuleCompiler &m)
         // If failure was triggered by a helper thread, report error.
         if (void *maybeFunc = HelperThreadState().maybeAsmJSFailedFunction()) {
             ModuleCompiler::Func *func = reinterpret_cast<ModuleCompiler::Func *>(maybeFunc);
-            return m.failOffset(func->srcOffset(), "allocation failure during compilation");
+            return m.failOffset(func->srcBegin(), "allocation failure during compilation");
         }
 
         // Otherwise, the error occurred on the main thread and was already reported.
