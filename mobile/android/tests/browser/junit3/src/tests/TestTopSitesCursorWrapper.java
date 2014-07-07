@@ -22,7 +22,6 @@ public class TestTopSitesCursorWrapper extends BrowserTestCase {
     private String[] TOP_SITES_COLUMNS = new String[] { Combined._ID,
                                                         Combined.URL,
                                                         Combined.TITLE,
-                                                        Combined.DISPLAY,
                                                         Combined.BOOKMARK_ID,
                                                         Combined.HISTORY_ID };
 
@@ -49,7 +48,6 @@ public class TestTopSitesCursorWrapper extends BrowserTestCase {
             row.add(-1);
             row.add(TOP_PREFIX + "url" + i);
             row.add(TOP_PREFIX + "title" + i);
-            row.add(Combined.DISPLAY_NORMAL);
             row.add(i);
             row.add(i);
         }
