@@ -5,8 +5,11 @@
 
 package org.mozilla.gecko.home;
 
+import java.util.EnumSet;
+
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.BrowserDB.FilterFlags;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -24,35 +27,52 @@ class SearchLoader {
     public static final String LOGTAG = "GeckoSearchLoader";
 
     private static final String KEY_SEARCH_TERM = "search_term";
+    private static final String KEY_FILTER_FLAGS = "flags";
 
     private SearchLoader() {
     }
 
+    @SuppressWarnings("unchecked")
     public static Loader<Cursor> createInstance(Context context, Bundle args) {
         if (args != null) {
             final String searchTerm = args.getString(KEY_SEARCH_TERM);
-            return new SearchCursorLoader(context, searchTerm);
+            final EnumSet<FilterFlags> flags =
+                    (EnumSet<FilterFlags>) args.getSerializable(KEY_FILTER_FLAGS);
+            return new SearchCursorLoader(context, searchTerm, flags);
         } else {
-            return new SearchCursorLoader(context, "");
+            return new SearchCursorLoader(context, "", EnumSet.noneOf(FilterFlags.class));
         }
     }
 
-    private static Bundle createArgs(String searchTerm) {
+    private static Bundle createArgs(String searchTerm, EnumSet<FilterFlags> flags) {
         Bundle args = new Bundle();
         args.putString(SearchLoader.KEY_SEARCH_TERM, searchTerm);
+        args.putSerializable(SearchLoader.KEY_FILTER_FLAGS, flags);
 
         return args;
     }
 
     public static void init(LoaderManager manager, int loaderId,
-                               LoaderCallbacks<Cursor> callbacks, String searchTerm) {
-        final Bundle args = createArgs(searchTerm);
+                            LoaderCallbacks<Cursor> callbacks, String searchTerm) {
+        init(manager, loaderId, callbacks, searchTerm, EnumSet.noneOf(FilterFlags.class));
+    }
+
+    public static void init(LoaderManager manager, int loaderId,
+                            LoaderCallbacks<Cursor> callbacks, String searchTerm,
+                            EnumSet<FilterFlags> flags) {
+        final Bundle args = createArgs(searchTerm, flags);
         manager.initLoader(loaderId, args, callbacks);
     }
 
     public static void restart(LoaderManager manager, int loaderId,
                                LoaderCallbacks<Cursor> callbacks, String searchTerm) {
-        final Bundle args = createArgs(searchTerm);
+        restart(manager, loaderId, callbacks, searchTerm, EnumSet.noneOf(FilterFlags.class));
+    }
+
+    public static void restart(LoaderManager manager, int loaderId,
+                               LoaderCallbacks<Cursor> callbacks, String searchTerm,
+                               EnumSet<FilterFlags> flags) {
+        final Bundle args = createArgs(searchTerm, flags);
         manager.restartLoader(loaderId, args, callbacks);
     }
 
@@ -65,15 +85,19 @@ class SearchLoader {
         // The target search term associated with the loader
         private final String mSearchTerm;
 
-        public SearchCursorLoader(Context context, String searchTerm) {
+        // The filter flags associated with the loader
+        private final EnumSet<FilterFlags> mFlags;
+
+        public SearchCursorLoader(Context context, String searchTerm, EnumSet<FilterFlags> flags) {
             super(context);
             mSearchTerm = searchTerm;
+            mFlags = flags;
         }
 
         @Override
         public Cursor loadCursor() {
             final long start = SystemClock.uptimeMillis();
-            final Cursor cursor = BrowserDB.filter(getContext().getContentResolver(), mSearchTerm, SEARCH_LIMIT);
+            final Cursor cursor = BrowserDB.filter(getContext().getContentResolver(), mSearchTerm, SEARCH_LIMIT, mFlags);
             final long end = SystemClock.uptimeMillis();
             final long took = end - start;
             Telemetry.HistogramAdd(TELEMETRY_HISTOGRAM_LOAD_CURSOR, (int) Math.min(took, Integer.MAX_VALUE));
