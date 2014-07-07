@@ -252,7 +252,6 @@ public class testBrowserProvider extends ContentProviderTest {
         mTests.add(new TestCombinedView());
         mTests.add(new TestCombinedViewDisplay());
         mTests.add(new TestCombinedViewWithDeletedBookmark());
-        mTests.add(new TestCombinedViewWithDeletedReadingListItem());
         mTests.add(new TestExpireHistory());
 
         mTests.add(new TestBrowserProviderNotifications());
@@ -455,21 +454,18 @@ public class testBrowserProvider extends ContentProviderTest {
                                        BrowserContract.Bookmarks.GUID + " = ? OR " +
                                        BrowserContract.Bookmarks.GUID + " = ? OR " +
                                        BrowserContract.Bookmarks.GUID + " = ? OR " +
-                                       BrowserContract.Bookmarks.GUID + " = ? OR " +
                                        BrowserContract.Bookmarks.GUID + " = ?",
                                        new String[] { BrowserContract.Bookmarks.PLACES_FOLDER_GUID,
                                                       BrowserContract.Bookmarks.MOBILE_FOLDER_GUID,
                                                       BrowserContract.Bookmarks.MENU_FOLDER_GUID,
                                                       BrowserContract.Bookmarks.TAGS_FOLDER_GUID,
                                                       BrowserContract.Bookmarks.TOOLBAR_FOLDER_GUID,
-                                                      BrowserContract.Bookmarks.UNFILED_FOLDER_GUID,
-                                                      BrowserContract.Bookmarks.READING_LIST_FOLDER_GUID },
+                                                      BrowserContract.Bookmarks.UNFILED_FOLDER_GUID},
                                        null);
 
-            mAsserter.is(c.getCount(), 7, "Right number of special folders");
+            mAsserter.is(c.getCount(), 6, "Right number of special folders");
 
             int rootId = BrowserContract.Bookmarks.FIXED_ROOT_ID;
-            int readingListId = BrowserContract.Bookmarks.FIXED_READING_LIST_ID;
 
             while (c.moveToNext()) {
                 int id = c.getInt(c.getColumnIndex(BrowserContract.Bookmarks._ID));
@@ -478,8 +474,6 @@ public class testBrowserProvider extends ContentProviderTest {
 
                 if (guid.equals(BrowserContract.Bookmarks.PLACES_FOLDER_GUID)) {
                     mAsserter.is(id, rootId, "The id of places folder is correct");
-                } else if (guid.equals(BrowserContract.Bookmarks.READING_LIST_FOLDER_GUID)) {
-                    mAsserter.is(id, readingListId, "The id of reading list folder is correct");
                 }
 
                 mAsserter.is(parentId, rootId,
@@ -1512,12 +1506,10 @@ public class testBrowserProvider extends ContentProviderTest {
             final String TITLE_2 = "Test Page 2";
             final String TITLE_3_HISTORY = "Test Page 3 (History Entry)";
             final String TITLE_3_BOOKMARK = "Test Page 3 (Bookmark Entry)";
-            final String TITLE_4 = "Test Page 4";
 
             final String URL_1 = "http://example.com";
             final String URL_2 = "http://example.org";
             final String URL_3 = "http://examples2.com";
-            final String URL_4 = "http://readinglist.com";
 
             final int VISITS = 10;
             final long LAST_VISITED = System.currentTimeMillis();
@@ -1540,28 +1532,9 @@ public class testBrowserProvider extends ContentProviderTest {
                 BrowserContract.Bookmarks.TYPE_BOOKMARK, 0, "tags", "description", "keyword");
             mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, combinedBookmark);
 
-            // Create a reading list entries
-            int readingListId = BrowserContract.Bookmarks.FIXED_READING_LIST_ID;
-            ContentValues readingListItem = createBookmark(TITLE_3_BOOKMARK, URL_3, readingListId,
-                BrowserContract.Bookmarks.TYPE_BOOKMARK, 0, "tags", "description", "keyword");
-            long readingListItemId = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, readingListItem));
-
-            ContentValues readingListItem2 = createBookmark(TITLE_4, URL_4, readingListId,
-                BrowserContract.Bookmarks.TYPE_BOOKMARK, 0, "tags", "description", "keyword");
-            long readingListItemId2 = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, readingListItem2));
-
             final Cursor c = mProvider.query(BrowserContract.Combined.CONTENT_URI, null, "", null, null);
             try {
-                mAsserter.is(c.getCount(), 4, "4 combined entries found");
-                while (c.moveToNext()) {
-                    long id = c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID));
-
-                    int display = c.getInt(c.getColumnIndex(BrowserContract.Combined.DISPLAY));
-                    int expectedDisplay = (id == readingListItemId || id == readingListItemId2 ? BrowserContract.Combined.DISPLAY_READER : BrowserContract.Combined.DISPLAY_NORMAL);
-
-                    mAsserter.is(new Integer(display), new Integer(expectedDisplay),
-                                     "Combined display column should always be DISPLAY_READER for the reading list item");
-                }
+                mAsserter.is(c.getCount(), 3, "3 combined entries found");
             } finally {
                 c.close();
             }
@@ -1605,52 +1578,6 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.moveToFirst(), true, "Found combined entry without bookmark id");
             mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID)), 0L,
                          "Bookmark id should not be set to removed bookmark id");
-            c.close();
-        }
-    }
-
-    private class TestCombinedViewWithDeletedReadingListItem extends TestCase {
-        @Override
-        public void test() throws Exception {
-            final String TITLE = "Test Page 1";
-            final String URL = "http://example.com";
-            final int VISITS = 10;
-            final long LAST_VISITED = System.currentTimeMillis();
-
-            // Create a combined history entry
-            ContentValues combinedHistory = createHistoryEntry(TITLE, URL, VISITS, LAST_VISITED);
-            mProvider.insert(BrowserContract.History.CONTENT_URI, combinedHistory);
-
-            // Create a combined bookmark entry
-            int readingListId = BrowserContract.Bookmarks.FIXED_READING_LIST_ID;
-            ContentValues combinedReadingListItem = createBookmark(TITLE, URL, readingListId,
-                BrowserContract.Bookmarks.TYPE_BOOKMARK, 0, "tags", "description", "keyword");
-            long combinedReadingListItemId = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, combinedReadingListItem));
-
-            Cursor c = mProvider.query(BrowserContract.Combined.CONTENT_URI, null, "", null, null);
-            mAsserter.is(c.getCount(), 1, "1 combined entry found");
-
-            mAsserter.is(c.moveToFirst(), true, "Found combined entry with bookmark id");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID))), new Long(combinedReadingListItemId),
-                         "Bookmark id should be set correctly on combined entry");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined.DISPLAY))), new Long(BrowserContract.Combined.DISPLAY_READER),
-                         "Combined entry should have reader display type");
-
-            int deleted = mProvider.delete(BrowserContract.Bookmarks.CONTENT_URI,
-                                           BrowserContract.Bookmarks._ID + " = ?",
-                                           new String[] { String.valueOf(combinedReadingListItemId) });
-
-            mAsserter.is((deleted == 1), true, "Inserted combined reading list item was deleted");
-            c.close();
-
-            c = mProvider.query(BrowserContract.Combined.CONTENT_URI, null, "", null, null);
-            mAsserter.is(c.getCount(), 1, "1 combined entry found");
-
-            mAsserter.is(c.moveToFirst(), true, "Found combined entry without bookmark id");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID))), new Long(0),
-                         "Bookmark id should not be set to removed bookmark id");
-            mAsserter.is(new Long(c.getLong(c.getColumnIndex(BrowserContract.Combined.DISPLAY))), new Long(BrowserContract.Combined.DISPLAY_NORMAL),
-                         "Combined entry should have reader display type");
             c.close();
         }
     }
