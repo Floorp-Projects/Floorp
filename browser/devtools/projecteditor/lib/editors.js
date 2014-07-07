@@ -165,11 +165,6 @@ var TextEditor = Class({
     });
 
     this.appended = this.editor.appendTo(this.elt);
-    this.appended.then(() => {
-      if (this.editor) {
-        this.editor.setupAutoCompletion();
-      }
-    });
   },
 
   /**
