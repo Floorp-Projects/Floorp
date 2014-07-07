@@ -737,9 +737,6 @@ enum AsmJSImmKind
     AsmJSImm_LogD,
     AsmJSImm_PowD,
     AsmJSImm_ATan2D,
-#ifdef DEBUG
-    AsmJSImm_AssumeUnreachable,
-#endif
     AsmJSImm_Invalid
 };
 
@@ -800,21 +797,22 @@ class AssemblerShared
         return !enoughMemory_;
     }
 
-    bool append(const CallSiteDesc &desc, size_t currentOffset, size_t framePushed) {
+    void append(const CallSiteDesc &desc, size_t currentOffset, size_t framePushed) {
         // framePushed does not include AsmJSFrameSize, so add it in here (see
         // CallSite::stackDepth).
-        return callsites_.append(CallSite(desc, currentOffset, framePushed + AsmJSFrameSize));
+        CallSite callsite(desc, currentOffset, framePushed + AsmJSFrameSize);
+        enoughMemory_ &= callsites_.append(callsite);
     }
     CallSiteVector &&extractCallSites() { return Move(callsites_); }
 
-    bool append(AsmJSHeapAccess access) { return asmJSHeapAccesses_.append(access); }
+    void append(AsmJSHeapAccess access) { enoughMemory_ &= asmJSHeapAccesses_.append(access); }
     AsmJSHeapAccessVector &&extractAsmJSHeapAccesses() { return Move(asmJSHeapAccesses_); }
 
-    bool append(AsmJSGlobalAccess access) { return asmJSGlobalAccesses_.append(access); }
+    void append(AsmJSGlobalAccess access) { enoughMemory_ &= asmJSGlobalAccesses_.append(access); }
     size_t numAsmJSGlobalAccesses() const { return asmJSGlobalAccesses_.length(); }
     AsmJSGlobalAccess asmJSGlobalAccess(size_t i) const { return asmJSGlobalAccesses_[i]; }
 
-    bool append(AsmJSAbsoluteLink link) { return asmJSAbsoluteLinks_.append(link); }
+    void append(AsmJSAbsoluteLink link) { enoughMemory_ &= asmJSAbsoluteLinks_.append(link); }
     size_t numAsmJSAbsoluteLinks() const { return asmJSAbsoluteLinks_.length(); }
     AsmJSAbsoluteLink asmJSAbsoluteLink(size_t i) const { return asmJSAbsoluteLinks_[i]; }
 };

@@ -58,7 +58,7 @@ window.onload = function() {
   function onRecordingStopped(front, rawData) {
     ok(rawData, "There should be a recording available.");
 
-    var timeline = front.plotFPS(rawData);
+    var timeline = FramerateFront.plotFPS(rawData);
     ok(timeline.length >= 2,
       "There should be at least one measurement available, with two entries.");
 

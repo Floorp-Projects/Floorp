@@ -6,7 +6,7 @@
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_minified_bogus_map.html";
-const JS_URL = EXAMPLE_URL + "code_math_bogus_map.min.js";
+const JS_URL = EXAMPLE_URL + "code_math_bogus_map.js";
 
 // This test causes an error to be logged in the console, which appears in TBPL
 // logs, so we are disabling that here.
@@ -46,7 +46,7 @@ function test() {
 }
 
 function checkInitialSource() {
-  isnot(gSources.selectedValue.indexOf(".min.js"), -1,
+  isnot(gSources.selectedValue.indexOf("code_math_bogus_map.js"), -1,
     "The debugger should show the minified js file.");
 }
 

@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Bug 1007200 - Create a framerate actor
+Bug 1034648 - Tests whether a framerate recording can be cancelled.
 -->
 <head>
   <meta charset="utf-8">
@@ -43,30 +43,31 @@ window.onload = function() {
       var form = aResponse.tabs[aResponse.selected];
       var front = FramerateFront(client, form);
 
-      front.stopRecording().then(rawData => {
-        ok(rawData, "There should be a recording available.");
-        is(rawData.length, 0, "...but it should be empty.");
+      front.startRecording().then(() => {
+        window.setTimeout(() => {
+          front.cancelRecording().then(() => {
+            window.setTimeout(() => {
+              front.getPendingTicks().then(rawTicks => {
+                ok(rawTicks,
+                  "The returned pending ticks should be empty (1).");
+                is(rawTicks.length, 0,
+                  "The returned pending ticks should be empty (2).");
 
-        var timeline = FramerateFront.plotFPS(rawData);
-        is(timeline.length, 2,
-          "There should be one measurement plotted, with two entries.");
+                front.stopRecording().then(rawData => {
+                  ok(rawData,
+                    "The returned raw data should be an empty array (1).");
+                  is(rawData.length, 0,
+                    "The returned raw data should be an empty array (2).");
 
-        info("The framerate should be assumed to be 0 if the recording is empty.");
-
-        is(timeline[0].delta, 0,
-          "The first time delta should be 0.");
-        is(timeline[0].value, 0,
-          "The first framerate value should be 0.");
-
-        is(timeline[1].delta, 100,
-          "The last time delta should be 100 (the default interval value).");
-        is(timeline[1].value, 0,
-          "The last framerate value should be 0.");
-
-        client.close(() => {
-          DebuggerServer.destroy();
-          SimpleTest.finish()
-        });
+                  client.close(() => {
+                    DebuggerServer.destroy();
+                    SimpleTest.finish()
+                  });
+                });
+              });
+            }, 1000);
+          });
+        }, 1000);
       });
     });
   });

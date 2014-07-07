@@ -197,6 +197,7 @@ function OptionsView() {
   this._toggleShowVariablesOnlyEnum = this._toggleShowVariablesOnlyEnum.bind(this);
   this._toggleShowVariablesFilterBox = this._toggleShowVariablesFilterBox.bind(this);
   this._toggleShowOriginalSource = this._toggleShowOriginalSource.bind(this);
+  this._toggleAutoBlackBox = this._toggleAutoBlackBox.bind(this);
 }
 
 OptionsView.prototype = {
@@ -214,6 +215,7 @@ OptionsView.prototype = {
     this._showVariablesOnlyEnumItem = document.getElementById("show-vars-only-enum");
     this._showVariablesFilterBoxItem = document.getElementById("show-vars-filter-box");
     this._showOriginalSourceItem = document.getElementById("show-original-source");
+    this._autoBlackBoxItem = document.getElementById("auto-black-box");
 
     this._autoPrettyPrint.setAttribute("checked", Prefs.autoPrettyPrint);
     this._pauseOnExceptionsItem.setAttribute("checked", Prefs.pauseOnExceptions);
@@ -222,7 +224,9 @@ OptionsView.prototype = {
     this._showVariablesOnlyEnumItem.setAttribute("checked", Prefs.variablesOnlyEnumVisible);
     this._showVariablesFilterBoxItem.setAttribute("checked", Prefs.variablesSearchboxVisible);
     this._showOriginalSourceItem.setAttribute("checked", Prefs.sourceMapsEnabled);
+    this._autoBlackBoxItem.setAttribute("checked", Prefs.autoBlackBox);
   },
+
 
   /**
    * Destruction function, called when the debugger is closed.
@@ -322,7 +326,30 @@ OptionsView.prototype = {
     window.once(EVENTS.OPTIONS_POPUP_HIDDEN, () => {
       // The popup panel needs more time to hide after triggering onpopuphidden.
       window.setTimeout(() => {
-        DebuggerController.reconfigureThread(pref);
+        DebuggerController.reconfigureThread({
+          useSourceMaps: pref,
+          autoBlackBox: Prefs.autoBlackBox
+        });
+      }, POPUP_HIDDEN_DELAY);
+    });
+  },
+
+  /**
+   * Listener handling the 'automatically black box minified sources' menuitem
+   * command.
+   */
+  _toggleAutoBlackBox: function() {
+    let pref = Prefs.autoBlackBox =
+      this._autoBlackBoxItem.getAttribute("checked") == "true";
+
+    // Don't block the UI while reconfiguring the server.
+    window.once(EVENTS.OPTIONS_POPUP_HIDDEN, () => {
+      // The popup panel needs more time to hide after triggering onpopuphidden.
+      window.setTimeout(() => {
+        DebuggerController.reconfigureThread({
+          useSourceMaps: Prefs.sourceMapsEnabled,
+          autoBlackBox: pref
+        });
       }, POPUP_HIDDEN_DELAY);
     });
   },
@@ -332,7 +359,8 @@ OptionsView.prototype = {
   _showPanesOnStartupItem: null,
   _showVariablesOnlyEnumItem: null,
   _showVariablesFilterBoxItem: null,
-  _showOriginalSourceItem: null
+  _showOriginalSourceItem: null,
+  _autoBlackBoxItem: null
 };
 
 /**

@@ -21,6 +21,7 @@ LayoutChangesObserver.prototype._clearTimeout = function() {};
 function MockTabActor() {
   this.window = new MockWindow();
   this.windows = [this.window];
+  this.attached = true;
 }
 
 function MockWindow() {}
