@@ -1,0 +1,137 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, function, uuid(2a3ad56c-edc0-439f-8aae-900b331ddf49)]
+interface nsIEthernetManagerCallback : nsISupports
+{
+  /**
+   * Callback function used to report the success of different operations.
+   *
+   * @param success
+   *        Boolean value indicates the success of an operation.
+   * @prarm message
+   *        Message reported in the end of operation.
+   */
+  void notify(in boolean success, in DOMString message);
+};
+
+[scriptable, function, uuid(1746e7dd-92d4-43fa-8ef4-bc13d0b60353)]
+interface nsIEthernetManagerScanCallback : nsISupports
+{
+  /**
+   * Callback function used to report the result of scan function.
+   *
+   * @param list
+   *        List of available ethernet interfaces.
+   */
+  void notify(in jsval list);
+};
+
+/**
+ * An internal idl provides control to ethernet interfaces.
+ */
+[scriptable, uuid(a96441dd-36b3-4f7f-963b-2c032e28a039)]
+interface nsIEthernetManager : nsISupports
+{
+  /**
+   * List of exisiting interface name.
+   */
+  readonly attribute jsval interfaceList;
+
+  /**
+   * Scan available ethernet interfaces on device.
+   *
+   * @param callback
+   *        Callback function.
+   */
+  void scan(in nsIEthernetManagerScanCallback callback);
+
+  /**
+   * Add a new interface to the interface list.
+   *
+   * @param ifname
+   *        Interface name. Should be the form of "eth*".
+   * @param callback
+   *        Callback function.
+   */
+  void addInterface(in DOMString ifname,
+                    in nsIEthernetManagerCallback callback);
+
+  /**
+   * Remove an existing interface from the interface list.
+   *
+   * @param ifname
+   *        Interface name.
+   * @param Callback
+   *        Callback function.
+   */
+  void removeInterface(in DOMString ifname,
+                       in nsIEthernetManagerCallback callback);
+
+  /**
+   * Update a conifg of an existing interface in the interface list.
+   *
+   * @param ifname
+   *        Interface name.
+   * @param config
+   *        .ip: ip address.
+   *        .prefixLength: mask length.
+   *        .gateway: gateway.
+   *        .dnses: dnses.
+   *        .httpProxyHost: http proxy host.
+   *        .httpProxyPort: http porxy port.
+   *        .ipMode: ip mode, can be 'dhcp' or 'static'.
+   * @param callback
+   *        Callback function.
+   */
+  void updateInterfaceConfig(in DOMString ifname,
+                             in jsval config,
+                             in nsIEthernetManagerCallback callback);
+
+  /**
+   * Enable networking of an existing interface in the interface list.
+   *
+   * @param ifname
+   *        Interface name.
+   * @param callback
+   *        Callback function.
+   */
+  void enable(in DOMString ifname,
+              in nsIEthernetManagerCallback callback);
+
+  /**
+   * Disable networking of an existing interface in the interface list.
+   *
+   * @param ifname
+   *        Interface name.
+   * @param callback
+   *        Callback function.
+   */
+  void disable(in DOMString ifname,
+               in nsIEthernetManagerCallback callback);
+
+  /**
+   * Make an existing interface connect to network.
+   *
+   * @param ifname
+   *        Interface name.
+   * @param callback
+   *        Callback function.
+   */
+  void connect(in DOMString ifname,
+               in nsIEthernetManagerCallback callback);
+
+  /**
+   * Disconnect a connected interface in the interface list.
+   *
+   * @param ifname
+   *        Interface name.
+   * @param callback
+   *        Callback function.
+   */
+  void disconnect(in DOMString ifname,
+                  in nsIEthernetManagerCallback callback);
+};
