@@ -22,5 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-b=1010371; ANGLE update. Files got moved around, needs a clobber to fix.
-
+bug 940506: removing idl files appears to break the build without a clobber
