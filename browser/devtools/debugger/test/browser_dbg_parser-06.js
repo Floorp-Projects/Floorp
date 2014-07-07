@@ -60,7 +60,13 @@ function test() {
   verify("foo = bar", e => e.name == "bar", [1, 6], [1, 9]);
   verify("\nfoo\n=\nbar\n", e => e.name == "bar", [4, 0], [4, 3]);
 
-  // LabeledStatement and ContinueStatement, because it's 1968 again
+  // LabeledStatement, BreakStatement and ContinueStatement, because it's 1968 again
+
+  verify("foo: bar", e => e.name == "foo", [1, 0], [1, 3]);
+  verify("\nfoo\n:\nbar\n", e => e.name == "foo", [2, 0], [2, 3]);
+
+  verify("foo: for(;;) break foo", e => e.name == "foo", [1, 19], [1, 22]);
+  verify("\nfoo\n:\nfor(\n;\n;\n)\nbreak\nfoo\n", e => e.name == "foo", [9, 0], [9, 3]);
 
   verify("foo: bar", e => e.name == "foo", [1, 0], [1, 3]);
   verify("\nfoo\n:\nbar\n", e => e.name == "foo", [2, 0], [2, 3]);

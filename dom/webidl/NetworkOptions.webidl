@@ -3,7 +3,7 @@
 * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
-* This dictionnary holds the parameters sent to the network worker.
+* This dictionary holds the parameters sent to the network worker.
 */
 dictionary NetworkCommandOptions
 {
@@ -55,6 +55,7 @@ dictionary NetworkCommandOptions
   DOMString preExternalIfname;        // for "updateUpStream".
   DOMString curInternalIfname;        // for "updateUpStream".
   DOMString curExternalIfname;        // for "updateUpStream".
+  boolean isBlocking;                 // for "runDhcp".
 };
 
 /**
@@ -81,4 +82,18 @@ dictionary NetworkResultOptions
   boolean success = false;            // for "setDhcpServer".
   DOMString curExternalIfname = "";   // for "updateUpStream".
   DOMString curInternalIfname = "";   // for "updateUpStream".
+
+  DOMString ipAddr = "";              // for "runDhcp", "getInterfaceConfig".
+  DOMString gateway = "";             // for "runDhcp".
+  DOMString dns1 = "";                // for "runDhcp".
+  DOMString dns2 = "";                // for "runDhcp".
+  DOMString server = "";              // for "runDhcp".
+  short lease = 0;                    // for "runDhcp".
+  DOMString vendorInfo = "";          // for "runDhcp".
+  short maskLength = 0;               // for "runDhcp".
+
+  DOMString flag = "down";            // for "getInterfaceConfig".
+  DOMString macAddr = "";             // for "getInterfaceConfig".
+
+  sequence<DOMString> interfaceList;  // for "getInterfaceList".
 };

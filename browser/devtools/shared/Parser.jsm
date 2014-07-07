@@ -450,8 +450,8 @@ let ParserHelpers = {
         loc.end.column = loc.start.column + aNode.name.length;
         return loc;
       }
-      if (parentType == "ContinueStatement") {
-        // e.g. continue label
+      if (parentType == "ContinueStatement" || parentType == "BreakStatement") {
+        // e.g. continue label; or break label;
         // The location is unavailable for the identifier node "label".
         let loc = Cu.cloneInto(parentLocation, {});
         loc.start.line = loc.end.line;
