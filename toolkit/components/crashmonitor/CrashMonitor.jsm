@@ -165,10 +165,9 @@ this.CrashMonitor = {
     }, this);
 
     // Add shutdown blocker for profile-before-change
-    OS.File.profileBeforeChange.addBlocker(
+    AsyncShutdown.profileBeforeChange.addBlocker(
       "CrashMonitor: Writing notifications to file after receiving profile-before-change",
-      CrashMonitorInternal.profileBeforeChangeDeferred.promise,
-      () => this.checkpoints
+      CrashMonitorInternal.profileBeforeChangeDeferred.promise
     );
 
     CrashMonitorInternal.initialized = true;
