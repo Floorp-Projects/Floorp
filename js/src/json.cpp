@@ -292,7 +292,7 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
 static inline bool
 IsFilteredValue(const Value &v)
 {
-    return v.isUndefined() || IsCallable(v);
+    return v.isUndefined() || v.isSymbol() || IsCallable(v);
 }
 
 /* ES5 15.12.3 JO. */

@@ -54,7 +54,7 @@ public:
 
   // nsSVGPathGeometryElement methods:
   virtual void ConstructPath(gfxContext *aCtx) MOZ_OVERRIDE;
-  virtual TemporaryRef<Path> BuildPath() MOZ_OVERRIDE;
+  virtual TemporaryRef<Path> BuildPath(PathBuilder* aBuilder = nullptr) MOZ_OVERRIDE;
 
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const MOZ_OVERRIDE;

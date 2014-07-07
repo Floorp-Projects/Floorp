@@ -119,9 +119,9 @@ SVGLineElement::ConstructPath(gfxContext *aCtx)
 }
 
 TemporaryRef<Path>
-SVGLineElement::BuildPath()
+SVGLineElement::BuildPath(PathBuilder* aBuilder)
 {
-  RefPtr<PathBuilder> pathBuilder = CreatePathBuilder();
+  RefPtr<PathBuilder> pathBuilder = aBuilder ? aBuilder : CreatePathBuilder();
 
   float x1, y1, x2, y2;
   GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nullptr);

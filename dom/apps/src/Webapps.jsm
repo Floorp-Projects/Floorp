@@ -2135,7 +2135,7 @@ this.DOMApplicationRegistry = {
       if (xhr.status == 200) {
         if (!AppsUtils.checkManifestContentType(app.installOrigin, app.origin,
                                                 xhr.getResponseHeader("content-type"))) {
-          sendError("INVALID_MANIFEST");
+          sendError("INVALID_MANIFEST_CONTENT_TYPE");
           return;
         }
 
@@ -2235,7 +2235,7 @@ this.DOMApplicationRegistry = {
       if (xhr.status == 200) {
         if (!AppsUtils.checkManifestContentType(app.installOrigin, app.origin,
                                                 xhr.getResponseHeader("content-type"))) {
-          sendError("INVALID_MANIFEST");
+          sendError("INVALID_MANIFEST_CONTENT_TYPE");
           return;
         }
 
