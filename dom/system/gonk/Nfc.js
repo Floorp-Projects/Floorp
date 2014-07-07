@@ -501,7 +501,11 @@ Nfc.prototype = {
     }
 
     switch (message.type) {
-      case "techDiscovered":
+      case "InitializedNotification":
+        // Do nothing.
+        break;
+      case "TechDiscoveredNotification":
+        message.type = "techDiscovered";
         this._currentSessionId = message.sessionId;
 
         // Check if the session token already exists. If exists, continue to use the same one.
@@ -516,7 +520,8 @@ Nfc.prototype = {
 
         gSystemMessenger.broadcastMessage("nfc-manager-tech-discovered", message);
         break;
-      case "techLost":
+      case "TechLostNotification":
+        message.type = "techLost";
         gMessageManager._unregisterMessageTarget(this.sessionTokenMap[this._currentSessionId], null);
 
         // Update the upper layers with a session token (alias)
