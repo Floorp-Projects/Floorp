@@ -5,7 +5,10 @@
 
 package org.mozilla.gecko.home;
 
+import java.util.EnumSet;
+
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserDB.FilterFlags;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 
 import android.content.Context;
@@ -191,7 +194,9 @@ class PinSiteDialog extends DialogFragment {
 
     private void filter(String searchTerm) {
         // Restart loaders with the new search term
-        SearchLoader.restart(getLoaderManager(), LOADER_ID_SEARCH, mLoaderCallbacks, searchTerm);
+        SearchLoader.restart(getLoaderManager(), LOADER_ID_SEARCH,
+                             mLoaderCallbacks, searchTerm,
+                             EnumSet.of(FilterFlags.EXCLUDE_PINNED_SITES));
     }
 
     public void setOnSiteSelectedListener(OnSiteSelectedListener listener) {
