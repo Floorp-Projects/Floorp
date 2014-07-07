@@ -99,15 +99,23 @@ class ADBTimeoutError(Exception):
 
 
 class ADBCommand(object):
-    """ADBCommand provides a basic interface to adb commands.
+    """ADBCommand provides a basic interface to adb commands
+    which is used to provide the 'command' methods for the
+    classes ADBHost and ADBDevice.
+
+    ADBCommand should only be used as the base class for other
+    classes and should not be instantiated directly. To enforce this
+    restriction calling ADBCommand's constructor will raise a
+    NonImplementedError exception.
 
     ::
 
        from mozdevice import ADBCommand
 
-       adbcommand = ADBCommand(...)
-       print adbcommand.command_output(["devices"])
-
+       try:
+           adbcommand = ADBCommand(...)
+       except NotImplementedError:
+           print "ADBCommand can not be instantiated."
 
     """
 
@@ -126,13 +134,17 @@ class ADBCommand(object):
                  * ADBTimeoutError
 
         """
+        if self.__class__ == ADBCommand:
+            raise NotImplementedError
+
         self._logger = logging.getLogger(logger_name)
         self._adb_path = adb
         self._log_level = log_level
         self._timeout = timeout
         self._polling_interval = 0.1
 
-        self._logger.debug("ADBCommand: %s" % self.__dict__)
+        self._logger.debug("%s: %s" % (self.__class__.__name__,
+                                       self.__dict__))
 
     # Host Command methods
 
@@ -141,7 +153,7 @@ class ADBCommand(object):
 
         :param cmds: list containing the command and its arguments to be
             executed.
-        :param device_serial: optional string specifying the device'
+        :param device_serial: optional string specifying the device's
             serial number if the adb command is to be executed against
             a specific device.
         :param timeout: optional integer specifying the maximum time in
@@ -154,16 +166,17 @@ class ADBCommand(object):
         command() provides a low level interface for executing
         commands on the host via adb.
 
-        For commands targeting specific devices, ADBDevice.command is
-        preferred. To execute shell commands on specific devices, 
-        ADBDevice.shell is preferred.
+        command() executes on the host in such a fashion that stdout
+        and stderr of the adb process are file handles on the host and
+        the exit code is available as the exit code of the adb
+        process.
 
         The caller provides a list containing commands, as well as a
         timeout period in seconds.
 
         A subprocess is spawned to execute adb with stdout and stderr
-        directed to named temporary files. If the process takes longer
-        than the specified timeout, the process is terminated.
+        directed to temporary files. If the process takes longer than
+        the specified timeout, the process is terminated.
 
         It is the caller's responsibilty to clean up by closing
         the stdout and stderr temporary files.
@@ -179,7 +192,6 @@ class ADBCommand(object):
         if timeout is None:
             timeout = self._timeout
 
-        timeout = int(timeout)
         start_time = time.time()
         adb_process.exitcode = adb_process.proc.poll()
         while ((time.time() - start_time) <= timeout and
@@ -201,7 +213,7 @@ class ADBCommand(object):
 
         :param cmds: list containing the command and its arguments to be
             executed.
-        :param device_serial: optional string specifying the device'
+        :param device_serial: optional string specifying the device's
             serial number if the adb command is to be executed against
             a specific device.
         :param timeout: optional integer specifying the maximum time in seconds
@@ -248,7 +260,8 @@ class ADBCommand(object):
 
 
 class ADBHost(ADBCommand):
-    """ADBHost provides a basic interface to adb host commands.
+    """ADBHost provides a basic interface to adb host commands
+    which do not target a specific device.
 
     ::
 
@@ -258,6 +271,78 @@ class ADBHost(ADBCommand):
        adbhost.start_server()
 
     """
+    def __init__(self,
+                 adb='adb',
+                 logger_name='adb',
+                 log_level=logging.INFO,
+                 timeout=300):
+        """Initializes the ADBHost object.
+
+        :param adb: path to adb executable. Defaults to 'adb'.
+        :param logger_name: logging logger name. Defaults to 'adb'.
+        :param log_level: logging level. Defaults to logging.INFO.
+
+        :raises: * ADBError
+                 * ADBTimeoutError
+
+        """
+        ADBCommand.__init__(self, adb=adb, logger_name=logger_name,
+                            log_level=log_level, timeout=timeout)
+
+    def command(self, cmds, timeout=None):
+        """Executes an adb command on the host.
+
+        :param cmds: list containing the command and its arguments to be
+            executed.
+        :param timeout: optional integer specifying the maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.  This timeout is per adb call. The
+            total time spent may exceed this value. If it is not
+            specified, the value set in the ADBHost constructor is used.
+        :returns: :class:`mozdevice.ADBProcess`
+
+        command() provides a low level interface for executing
+        commands on the host via adb.
+
+        command() executes on the host in such a fashion that stdout
+        and stderr of the adb process are file handles on the host and
+        the exit code is available as the exit code of the adb
+        process.
+
+        The caller provides a list containing commands, as well as a
+        timeout period in seconds.
+
+        A subprocess is spawned to execute adb with stdout and stderr
+        directed to temporary files. If the process takes longer than
+        the specified timeout, the process is terminated.
+
+        It is the caller's responsibilty to clean up by closing
+        the stdout and stderr temporary files.
+
+        """
+        return ADBCommand.command(self, cmds, timeout=timeout)
+
+    def command_output(self, cmds, timeout=None):
+        """Executes an adb command on the host returning stdout.
+
+        :param cmds: list containing the command and its arguments to be
+            executed.
+        :param timeout: optional integer specifying the maximum time in seconds
+            for any spawned adb process to complete before throwing
+            an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADBHost constructor is used.
+        :returns: string - content of stdout.
+
+        :raises: * ADBTimeoutError - raised if the command takes longer than
+                   timeout seconds.
+                 * ADBError - raised if the command exits with a
+                   non-zero exit code.
+
+        """
+        return ADBCommand.command_output(self, cmds, timeout=timeout)
+
     def start_server(self, timeout=None):
         """Starts the adb server.
 
@@ -341,9 +426,10 @@ class ADBHost(ADBCommand):
                 devices.append(device)
         return devices
 
+
 class ADBDevice(ADBCommand):
     """ADBDevice provides methods which can be used to interact with
-    Android-based devices.
+    the associated Android-based device.
 
     Android specific features such as Application management are not
     included but are provided via the ADBAndroid interface.
@@ -553,7 +639,7 @@ class ADBDevice(ADBCommand):
     # Host Command methods
 
     def command(self, cmds, timeout=None):
-        """Executes an adb command on the host.
+        """Executes an adb command on the host against the device.
 
         :param cmds: list containing the command and its arguments to be
             executed.
@@ -565,14 +651,21 @@ class ADBDevice(ADBCommand):
         :returns: :class:`mozdevice.ADBProcess`
 
         command() provides a low level interface for executing
-        commands on the host via adb.  For executing shell commands on
-        the device, use ADBDevice.shell().  The caller provides a list
-        containing commands, as well as a timeout period in seconds.
+        commands for a specific device on the host via adb.
+
+        command() executes on the host in such a fashion that stdout
+        and stderr of the adb process are file handles on the host and
+        the exit code is available as the exit code of the adb
+        process.
+
+        For executing shell commands on the device, use
+        ADBDevice.shell().  The caller provides a list containing
+        commands, as well as a timeout period in seconds.
 
         A subprocess is spawned to execute adb for the device with
-        stdout and stderr directed to named temporary files. If the
-        process takes longer than the specified timeout, the process
-        is terminated.
+        stdout and stderr directed to temporary files. If the process
+        takes longer than the specified timeout, the process is
+        terminated.
 
         It is the caller's responsibilty to clean up by closing
         the stdout and stderr temporary files.
@@ -584,8 +677,8 @@ class ADBDevice(ADBCommand):
                                   timeout=timeout)
 
     def command_output(self, cmds, timeout=None):
-        """Executes an adb command on the host returning stdout.
-
+        """Executes an adb command on the host against the device returning
+        stdout.
 
         :param cmds: list containing the command and its arguments to be
             executed.
@@ -629,11 +722,22 @@ class ADBDevice(ADBCommand):
                  device is not rooted.
 
         shell() provides a low level interface for executing commands
-        on the device via adb shell.  the caller provides a flag
-        indicating if the command is to be executed as root, a string
-        for any requested working directory, a hash defining the
-        environment, a string containing shell commands, as well as a
-        timeout period in seconds.
+        on the device via adb shell.
+
+        shell() executes on the host in such as fashion that stdout
+        contains the stdout of the host abd process combined with the
+        combined stdout/stderr of the shell command on the device
+        while stderr is still the stderr of the adb process on the
+        host. The exit code of shell() is the exit code of
+        the adb command if it was non-zero or the extracted exit code
+        from the stdout/stderr of the shell command executed on the
+        device.
+
+        The caller provides a flag indicating if the command is to be
+        executed as root, a string for any requested working
+        directory, a hash defining the environment, a string
+        containing shell commands, as well as a timeout period in
+        seconds.
 
         The command line to be executed is created to set the current
         directory, set the required environment variables, optionally
@@ -651,6 +755,7 @@ class ADBDevice(ADBCommand):
 
         It is the caller's responsibilty to clean up by closing
         the stdout and stderr temporary files.
+
         """
         if root:
             ld_library_path='LD_LIBRARY_PATH=/vendor/lib:/system/lib'
@@ -683,7 +788,6 @@ class ADBDevice(ADBCommand):
         if timeout is None:
             timeout = self._timeout
 
-        timeout = int(timeout)
         start_time = time.time()
         exitcode = adb_process.proc.poll()
         while ((time.time() - start_time) <= timeout) and exitcode == None:
@@ -693,8 +797,10 @@ class ADBDevice(ADBCommand):
             adb_process.proc.kill()
             adb_process.timedout = True
             adb_process.exitcode = adb_process.proc.poll()
-        else:
+        elif exitcode == 0:
             adb_process.exitcode = self._get_exitcode(adb_process.stdout_file)
+        else:
+            adb_process.exitcode = exitcode
 
         adb_process.stdout_file.seek(0, os.SEEK_SET)
         adb_process.stderr_file.seek(0, os.SEEK_SET)
