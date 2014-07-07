@@ -45,6 +45,18 @@ let emulator = (function() {
     return deferred.promise;
   };
 
+ function deactivate() {
+    let deferred = Promise.defer();
+    let cmd = 'nfc nci rf_intf_deactivate_ntf';
+
+    this.run(cmd, function(result) {
+      is(result.pop(), 'OK', 'check deactivate');
+      deferred.resolve();
+    });
+
+    return deferred.promise;
+  };
+
   function notifyDiscoverRE(re, type) {
     let deferred = Promise.defer();
     let cmd = 'nfc nci rf_discover_ntf ' + re + ' ' + type;
@@ -88,6 +100,7 @@ let emulator = (function() {
   return {
     run: run,
     activateRE: activateRE,
+    deactivate: deactivate,
     notifyDiscoverRE: notifyDiscoverRE,
     setTagData: setTagData,
     snepPutNdef: snepPutNdef
