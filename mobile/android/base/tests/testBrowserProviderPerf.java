@@ -5,10 +5,12 @@
 package org.mozilla.gecko.tests;
 
 import java.io.File;
+import java.util.EnumSet;
 import java.util.Random;
 import java.util.UUID;
 
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserDB.FilterFlags;
 import org.mozilla.gecko.db.BrowserProvider;
 import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.util.FileUtils;
@@ -270,7 +272,8 @@ public class testBrowserProviderPerf extends BaseRobocopTest {
         // Make sure we're querying the right profile.
         final LocalBrowserDB db = new LocalBrowserDB(mProfile);
 
-        final Cursor before = db.filter(mResolver, KNOWN_PREFIX, limit);
+        final Cursor before = db.filter(mResolver, KNOWN_PREFIX, limit,
+                                        EnumSet.noneOf(FilterFlags.class));
         try {
             mAsserter.is(before.getCount(), 0, "Starts empty");
         } finally {
@@ -295,7 +298,8 @@ public class testBrowserProviderPerf extends BaseRobocopTest {
 
         // Time the query.
         final long start = SystemClock.uptimeMillis();
-        final Cursor c = db.filter(mResolver, KNOWN_PREFIX, limit);
+        final Cursor c = db.filter(mResolver, KNOWN_PREFIX, limit,
+                                   EnumSet.noneOf(FilterFlags.class));
 
         try {
             final int count = c.getCount();
