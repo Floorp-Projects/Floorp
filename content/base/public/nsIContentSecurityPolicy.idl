@@ -221,18 +221,6 @@ interface nsIContentSecurityPolicy : nsISerializable
                    in ACString        aMimeTypeGuess,
                    in nsISupports     aExtra);
 
-  /**
-   * Delegate method called by the service when sub-elements of the protected
-   * document are being processed.  Given a bit of information about the request,
-   * decides whether or not the policy is satisfied.
-   */
-  short shouldProcess(in nsContentPolicyType   aContentType,
-                      in nsIURI          aContentLocation,
-                      in nsIURI          aRequestOrigin,
-                      in nsISupports     aContext,
-                      in ACString        aMimeType,
-                      in nsISupports     aExtra);
-
 %{ C++
 // nsIObserver topic to fire when the policy encounters a violation.
 #define CSP_VIOLATION_TOPIC "csp-on-violate-policy"
