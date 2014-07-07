@@ -1984,10 +1984,21 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
 
     if (conn) {
         MOZ_ASSERT(trans->Caps() & NS_HTTP_STICKY_CONNECTION);
-        MOZ_ASSERT(((int32_t)ent->mActiveConns.IndexOf(conn)) != -1,
-                   "Sticky Connection Not In Active List");
         LOG(("nsHttpConnectionMgr::ProcessNewTransaction trans=%p "
              "sticky connection=%p\n", trans, conn.get()));
+
+        if (static_cast<int32_t>(ent->mActiveConns.IndexOf(conn)) == -1) {
+            LOG(("nsHttpConnectionMgr::ProcessNewTransaction trans=%p "
+                 "sticky connection=%p needs to go on the active list\n", trans, conn.get()));
+
+            // make sure it isn't on the idle list - we expect this to be an
+            // unknown fresh connection
+            MOZ_ASSERT(static_cast<int32_t>(ent->mIdleConns.IndexOf(conn)) == -1);
+            MOZ_ASSERT(!conn->IsExperienced());
+
+            AddActiveConn(conn, ent); // make it active
+        }
+
         trans->SetConnection(nullptr);
         rv = DispatchTransaction(ent, trans, conn);
     } else {

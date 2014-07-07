@@ -111,6 +111,13 @@ public:
         return mConnInfo->UsingHttpsProxy() && !mTLSFilter && mConnInfo->UsingConnect();
     }
 
+    // A connection is forced into plaintext when it is intended to be used as a CONNECT
+    // tunnel but the setup fails. The plaintext only carries the CONNECT error.
+    void ForcePlainText()
+    {
+        mForcePlainText = true;
+    }
+
     nsISocketTransport   *Transport()      { return mSocketTransport; }
     nsAHttpTransaction   *Transaction()    { return mTransaction; }
     nsHttpConnectionInfo *ConnectionInfo() { return mConnInfo; }
@@ -283,6 +290,7 @@ private:
     bool                            mProxyConnectInProgress;
     bool                            mExperienced;
     bool                            mInSpdyTunnel;
+    bool                            mForcePlainText;
 
     // The number of <= HTTP/1.1 transactions performed on this connection. This
     // excludes spdy transactions.
