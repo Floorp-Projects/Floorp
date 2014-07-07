@@ -27,7 +27,6 @@ class nsMenuGroupOwnerX : public nsMenuObjectX, public nsIMutationObserver
 {
 public:
   nsMenuGroupOwnerX();
-  virtual ~nsMenuGroupOwnerX();
 
   nsresult Create(nsIContent * aContent);
 
@@ -42,6 +41,8 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER
 
 protected:
+  virtual ~nsMenuGroupOwnerX();
+
   nsChangeObserver* LookupContentChangeObserver(nsIContent* aContent);
 
   uint32_t  mCurrentCommandID;  // unique command id (per menu-bar) to

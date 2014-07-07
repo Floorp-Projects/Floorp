@@ -19,10 +19,12 @@ public:
     NS_DECL_NSIOBSERVER
 
     nsNetworkLinkService();
-    virtual ~nsNetworkLinkService();
 
     nsresult Init();
     nsresult Shutdown();
+
+protected:
+    virtual ~nsNetworkLinkService();
 
 private:
     bool mLinkUp;

@@ -17,10 +17,12 @@ class nsScreenManagerCocoa : public nsIScreenManager
 {
 public:
     nsScreenManagerCocoa();
-    virtual ~nsScreenManagerCocoa();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCREENMANAGER
+
+protected:
+    virtual ~nsScreenManagerCocoa();
 
 private:
 

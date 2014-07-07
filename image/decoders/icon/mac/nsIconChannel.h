@@ -31,11 +31,12 @@ public:
   NS_DECL_NSISTREAMLISTENER
 
   nsIconChannel();
-  virtual ~nsIconChannel();
 
   nsresult Init(nsIURI* uri);
 
 protected:
+  virtual ~nsIconChannel();
+
   nsCOMPtr<nsIURI> mUrl;
   nsCOMPtr<nsIURI> mOriginalURI;
   int64_t          mContentLength;

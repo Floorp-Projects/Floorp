@@ -43,10 +43,6 @@ public:
     SetIsDOMBinding();
   }
 
-  ~DOMMatrixReadOnly()
-  {
-  }
-
 #define GetMatrixMember(entry2D, entry3D, default) \
 { \
   if (mMatrix3D) { \
@@ -135,6 +131,10 @@ protected:
   nsCOMPtr<nsISupports>     mParent;
   nsAutoPtr<gfx::Matrix>    mMatrix2D;
   nsAutoPtr<gfx::Matrix4x4> mMatrix3D;
+
+  ~DOMMatrixReadOnly()
+  {
+  }
 private:
   DOMMatrixReadOnly() MOZ_DELETE;
   DOMMatrixReadOnly(const DOMMatrixReadOnly&) MOZ_DELETE;
@@ -248,6 +248,8 @@ public:
   DOMMatrix* SetMatrixValue(const nsAString& aTransformList, ErrorResult& aRv);
 private:
   void Ensure3DMatrix();
+
+  ~DOMMatrix() {}
 };
 
 }

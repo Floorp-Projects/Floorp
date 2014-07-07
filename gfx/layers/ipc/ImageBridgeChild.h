@@ -17,6 +17,7 @@
 #include "mozilla/layers/PImageBridgeChild.h"
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsRegion.h"                   // for nsIntRegion
+
 class MessageLoop;
 struct nsIntPoint;
 struct nsIntRect;
