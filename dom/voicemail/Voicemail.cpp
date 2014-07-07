@@ -20,7 +20,7 @@ const char* kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
 
 using namespace mozilla::dom;
 
-class Voicemail::Listener : public nsIVoicemailListener
+class Voicemail::Listener MOZ_FINAL : public nsIVoicemailListener
 {
   Voicemail* mVoicemail;
 
