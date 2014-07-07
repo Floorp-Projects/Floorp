@@ -119,9 +119,9 @@ EventListenerInfo::ToSource(nsAString& aResult)
   if (GetJSVal(cx, ac, &v)) {
     JSString* str = JS_ValueToSource(cx, v);
     if (str) {
-      nsDependentJSString depStr;
-      if (depStr.init(cx, str)) {
-        aResult.Assign(depStr);
+      nsAutoJSString autoStr;
+      if (autoStr.init(cx, str)) {
+        aResult.Assign(autoStr);
       }
     }
   }

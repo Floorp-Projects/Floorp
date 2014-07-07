@@ -10,6 +10,7 @@
 #include "nsIClassInfoImpl.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "mozilla/ThreadLocal.h"
 #ifdef MOZ_CANARY
 #include <fcntl.h>
 #include <unistd.h>
@@ -23,6 +24,26 @@ DWORD gTLSThreadIDIndex = TlsAlloc();
 #elif defined(NS_TLS)
 NS_TLS mozilla::threads::ID gTLSThreadID = mozilla::threads::Generic;
 #endif
+
+static mozilla::ThreadLocal<bool> sTLSIsMainThread;
+
+bool
+NS_IsMainThread()
+{
+  return sTLSIsMainThread.get();
+}
+
+void
+NS_SetMainThread()
+{
+  if (!sTLSIsMainThread.initialized()) {
+    if (!sTLSIsMainThread.init()) {
+      MOZ_CRASH();
+    }
+    sTLSIsMainThread.set(true);
+  }
+  MOZ_ASSERT(NS_IsMainThread());
+}
 
 typedef nsTArray<nsRefPtr<nsThread>> nsThreadArray;
 

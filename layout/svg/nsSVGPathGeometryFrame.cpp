@@ -7,9 +7,12 @@
 #include "nsSVGPathGeometryFrame.h"
 
 // Keep others in (case-insensitive) order:
+#include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "gfxSVGGlyphs.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 #include "nsRenderingContext.h"
@@ -20,6 +23,7 @@
 #include "nsSVGUtils.h"
 #include "mozilla/ArrayUtils.h"
 #include "SVGAnimatedTransformList.h"
+#include "SVGContentUtils.h"
 #include "SVGGraphicsElement.h"
 
 using namespace mozilla;
@@ -234,51 +238,77 @@ nsSVGPathGeometryFrame::PaintSVG(nsRenderingContext *aContext,
 nsIFrame*
 nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
-  gfxMatrix canvasTM = GetCanvasTM(FOR_HIT_TESTING);
-  if (canvasTM.IsSingular()) {
+  gfxMatrix hitTestingTM = GetCanvasTM(FOR_HIT_TESTING);
+  if (hitTestingTM.IsSingular()) {
     return nullptr;
   }
-  uint16_t fillRule, hitTestFlags;
+  FillRule fillRule;
+  uint16_t hitTestFlags;
   if (GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) {
     hitTestFlags = SVG_HIT_TEST_FILL;
-    fillRule = StyleSVG()->mClipRule;
+    fillRule = StyleSVG()->mClipRule == NS_STYLE_FILL_RULE_NONZERO
+                 ? FillRule::FILL_WINDING : FillRule::FILL_EVEN_ODD;
   } else {
     hitTestFlags = GetHitTestFlags();
-    // XXX once bug 614732 is fixed, aPoint won't need any conversion in order
-    // to compare it with mRect.
     nsPoint point =
-      nsSVGUtils::TransformOuterSVGPointToChildFrame(aPoint, canvasTM, PresContext());
+      nsSVGUtils::TransformOuterSVGPointToChildFrame(aPoint, hitTestingTM, PresContext());
     if (!hitTestFlags || ((hitTestFlags & SVG_HIT_TEST_CHECK_MRECT) &&
-                          !mRect.Contains(point)))
+                          !mRect.Contains(point))) {
       return nullptr;
-    fillRule = StyleSVG()->mFillRule;
+    }
+    fillRule = StyleSVG()->mFillRule == NS_STYLE_FILL_RULE_NONZERO
+                 ? FillRule::FILL_WINDING : FillRule::FILL_EVEN_ODD;
   }
 
   bool isHit = false;
 
-  nsRefPtr<gfxContext> tmpCtx =
-    new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
+  nsSVGPathGeometryElement* content =
+    static_cast<nsSVGPathGeometryElement*>(mContent);
 
-  GeneratePath(tmpCtx, ToMatrix(canvasTM));
-  gfxPoint userSpacePoint =
-    tmpCtx->DeviceToUser(gfxPoint(PresContext()->AppUnitsToGfxUnits(aPoint.x),
-                                  PresContext()->AppUnitsToGfxUnits(aPoint.y)));
+  // Using ScreenReferenceDrawTarget() opens us to Moz2D backend specific hit-
+  // testing bugs. Maybe we should use a BackendType::CAIRO DT for hit-testing
+  // so that we get more consistent/backwards compatible results?
+  RefPtr<DrawTarget> drawTarget =
+    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+  RefPtr<PathBuilder> builder =
+    drawTarget->CreatePathBuilder(fillRule);
+  RefPtr<Path> path = content->BuildPath(builder);
+  if (!path) {
+    return nullptr; // no path, so we don't paint anything that can be hit
+  }
 
-  if (fillRule == NS_STYLE_FILL_RULE_EVENODD)
-    tmpCtx->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
-  else
-    tmpCtx->SetFillRule(gfxContext::FILL_RULE_WINDING);
+  if (!hitTestingTM.IsIdentity()) {
+    // We'll only get here if we don't have a nsDisplayItem that has called us
+    // (for example, if we're a NS_FRAME_IS_NONDISPLAY frame under a clipPath).
+    RefPtr<PathBuilder> builder =
+      path->TransformedCopyToBuilder(ToMatrix(hitTestingTM), fillRule);
+    path = builder->Finish();
+  }
 
-  if (hitTestFlags & SVG_HIT_TEST_FILL)
-    isHit = tmpCtx->PointInFill(userSpacePoint);
+  int32_t appUnitsPerCSSPx = PresContext()->AppUnitsPerCSSPixel();
+  Point userSpacePoint = Point(Float(aPoint.x) / appUnitsPerCSSPx,
+                               Float(aPoint.y) / appUnitsPerCSSPx);
+
+  if (hitTestFlags & SVG_HIT_TEST_FILL) {
+    isHit = path->ContainsPoint(userSpacePoint, Matrix());
+  }
   if (!isHit && (hitTestFlags & SVG_HIT_TEST_STROKE)) {
-    nsSVGUtils::SetupCairoStrokeGeometry(this, tmpCtx);
-    // tmpCtx's matrix may have transformed by SetupCairoStrokeGeometry
-    // if there is a non-scaling stroke. We need to transform userSpacePoint
-    // so that everything is using the same co-ordinate system.
-    userSpacePoint =
-      nsSVGUtils::GetStrokeTransform(this).Invert().Transform(userSpacePoint);
-    isHit = tmpCtx->PointInStroke(userSpacePoint);
+    SVGContentUtils::AutoStrokeOptions stroke;
+    SVGContentUtils::GetStrokeOptions(&stroke, content, StyleContext(), nullptr);
+    Matrix nonScalingStrokeMatrix =
+      ToMatrix(nsSVGUtils::GetStrokeTransform(this));
+    if (!nonScalingStrokeMatrix.IsIdentity()) {
+      // We need to transform the path back into the appropriate ancestor
+      // coordinate system in order for non-scaled stroke to be correct.
+      // Naturally we also need to transform the point into the same
+      // coordinate system in order to hit-test against the path.
+      nonScalingStrokeMatrix.Invert();
+      userSpacePoint = ToMatrix(hitTestingTM) * nonScalingStrokeMatrix * userSpacePoint;
+      RefPtr<PathBuilder> builder =
+        path->TransformedCopyToBuilder(nonScalingStrokeMatrix, fillRule);
+      path = builder->Finish();
+    }
+    isHit = path->StrokeContainsPoint(stroke, userSpacePoint, Matrix());
   }
 
   if (isHit && nsSVGUtils::HitTestClip(this, aPoint))
@@ -419,8 +449,21 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
     return bbox;
   }
 
-  nsRefPtr<gfxContext> tmpCtx =
-    new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
+  RefPtr<DrawTarget> tmpDT;
+#ifdef XP_WIN
+  // Unfortunately D2D backed DrawTarget produces bounds with rounding errors
+  // when whole number results are expected, even in the case of trivial
+  // calculations. To avoid that and meet the expectations of web content we
+  // have to use a CAIRO DrawTarget. The most efficient way to do that is to
+  // wrap the cached cairo_surface_t from ScreenReferenceSurface():
+  nsRefPtr<gfxASurface> refSurf =
+    gfxPlatform::GetPlatform()->ScreenReferenceSurface();
+  tmpDT = gfxPlatform::GetPlatform()->
+    CreateDrawTargetForSurface(refSurf, IntSize(1, 1));
+#else
+  tmpDT = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+#endif
+  nsRefPtr<gfxContext> tmpCtx = new gfxContext(tmpDT);
 
   GeneratePath(tmpCtx, aToBBoxUserspace);
   tmpCtx->IdentityMatrix();
@@ -512,9 +555,11 @@ gfxMatrix
 nsSVGPathGeometryFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 {
   if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY) && !aTransformRoot) {
-    if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||
-        (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled())) {
+    if (aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) {
       return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
+    }
+    if (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled()) {
+      return gfxMatrix();
     }
   }
 

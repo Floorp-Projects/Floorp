@@ -3506,16 +3506,11 @@ CreateSandboxObject(JSContext *cx, JS::MutableHandleValue vp, nsISupports *prinO
 // that *rval doesn't get collected during the call or usage after the
 // call. This helper will use filename and lineNo for error reporting,
 // and if no filename is provided it will use the codebase from the
-// principal and line number 1 as a fallback. if returnStringOnly is
-// true, then the result in *rval, or the exception in cx->exception
-// will be coerced into strings. If an exception is thrown converting
-// an exception to a string, evalInSandbox will return an NS_ERROR_*
-// result, and cx->exception will be empty.
+// principal and line number 1 as a fallback.
 nsresult
 EvalInSandbox(JSContext *cx, JS::HandleObject sandbox, const nsAString& source,
               const nsACString& filename, int32_t lineNo,
-              JSVersion jsVersion, bool returnStringOnly,
-              JS::MutableHandleValue rval);
+              JSVersion jsVersion, JS::MutableHandleValue rval);
 
 nsresult
 GetSandboxAddonId(JSContext *cx, JS::HandleObject sandboxArg,

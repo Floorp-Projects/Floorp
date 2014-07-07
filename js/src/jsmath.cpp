@@ -89,6 +89,19 @@ const Class js::MathClass = {
 };
 
 bool
+js_math_abs_handle(JSContext *cx, js::HandleValue v, js::MutableHandleValue r)
+{
+    double x;
+    if (!ToNumber(cx, v, &x))
+        return false;
+
+    double z = Abs(x);
+    r.setNumber(z);
+
+    return true;
+}
+
+bool
 js_math_abs(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -98,13 +111,7 @@ js_math_abs(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    double z = Abs(x);
-    args.rval().setNumber(z);
-    return true;
+    return js_math_abs_handle(cx, args[0], args.rval());
 }
 
 #if defined(SOLARIS) && defined(__GNUC__)

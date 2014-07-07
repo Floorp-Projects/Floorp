@@ -77,9 +77,6 @@ ArrayBoundsClamper::ArrayBoundsClamper()
 
 void ArrayBoundsClamper::SetClampingStrategy(ShArrayIndexClampingStrategy clampingStrategy)
 {
-    ASSERT(clampingStrategy == SH_CLAMP_WITH_CLAMP_INTRINSIC ||
-           clampingStrategy == SH_CLAMP_WITH_USER_DEFINED_INT_CLAMP_FUNCTION);
-
     mClampingStrategy = clampingStrategy;
 }
 

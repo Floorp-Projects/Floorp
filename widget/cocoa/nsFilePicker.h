@@ -21,7 +21,6 @@ class nsFilePicker : public nsBaseFilePicker
 {
 public:
   nsFilePicker(); 
-  virtual ~nsFilePicker();
 
   NS_DECL_ISUPPORTS
 
@@ -46,6 +45,7 @@ public:
   NSArray* GetFilterList();
 
 protected:
+  virtual ~nsFilePicker();
 
   virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle);
 

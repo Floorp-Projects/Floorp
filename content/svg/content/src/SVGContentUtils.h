@@ -10,12 +10,15 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include "mozilla/fallible.h"
+#include "mozilla/gfx/2D.h" // for StrokeOptions
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/RangedPtr.h"
 #include "nsError.h"
 #include "nsStringFwd.h"
 #include "gfx2DGlue.h"
 
+class gfxTextContextPaint;
 class nsIContent;
 class nsIDocument;
 class nsIFrame;
@@ -58,6 +61,8 @@ IsSVGWhitespace(char16_t aChar)
 class SVGContentUtils
 {
 public:
+  typedef mozilla::gfx::Float Float;
+  typedef mozilla::gfx::StrokeOptions StrokeOptions;
   typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
   typedef mozilla::SVGPreserveAspectRatio SVGPreserveAspectRatio;
 
@@ -75,6 +80,64 @@ public:
    * be called from layout/base without adding to that directory's include paths.
    */
   static void ActivateByHyperlink(nsIContent *aContent);
+
+  /**
+   * Moz2D's StrokeOptions requires someone else to own its mDashPattern
+   * buffer, which is a pain when you want to initialize a StrokeOptions object
+   * in a helper function and pass it out. This sub-class owns the mDashPattern
+   * buffer so that consumers of such a helper function don't need to worry
+   * about creating it, passing it in, or deleting it. (An added benefit is
+   * that in the typical case when stroke-dasharray is short it will avoid
+   * allocating.)
+   */
+  struct AutoStrokeOptions : public StrokeOptions {
+    AutoStrokeOptions()
+    {
+      MOZ_ASSERT(mDashLength == 0, "InitDashPattern() depends on this");
+    }
+    ~AutoStrokeOptions() {
+      if (mDashPattern && mDashPattern != mSmallArray) {
+        delete [] mDashPattern;
+      }
+    }
+    /**
+     * Creates the buffer to store the stroke-dasharray, assuming out-of-memory
+     * does not occur. The buffer's address is assigned to mDashPattern and
+     * returned to the caller as a non-const pointer (so that the caller can
+     * initialize the values in the buffer, since mDashPattern is const).
+     */
+    Float* InitDashPattern(size_t aDashCount) {
+      if (aDashCount <= MOZ_ARRAY_LENGTH(mSmallArray)) {
+        mDashPattern = mSmallArray;
+        return mSmallArray;
+      }
+      static const mozilla::fallible_t fallible = mozilla::fallible_t();
+      Float* nonConstArray = new (fallible) Float[aDashCount];
+      mDashPattern = nonConstArray;
+      return nonConstArray;
+    }
+  private:
+    // Most dasharrays will fit in this and save us allocating
+    Float mSmallArray[16];
+  };
+
+  static void GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
+                               nsSVGElement* aElement,
+                               nsStyleContext* aStyleContext,
+                               gfxTextContextPaint *aContextPaint);
+
+  /**
+   * Returns the current computed value of the CSS property 'stroke-width' for
+   * the given element. aStyleContext may be provided as an optimization. 
+   * aContextPaint is also optional.
+   *
+   * Note that this function does NOT take account of the value of the 'stroke'
+   * and 'stroke-opacity' properties to, say, return zero if they are "none" or
+   * "0", respectively.
+   */
+  static Float GetStrokeWidth(nsSVGElement* aElement,
+                              nsStyleContext* aStyleContext,
+                              gfxTextContextPaint *aContextPaint);
 
   /*
    * Get the number of CSS px (user units) per em (i.e. the em-height in user
@@ -241,8 +304,7 @@ public:
    * Factor (straight userspace), Coord (dimensioned), and Percent (of
    * aContent's SVG viewport)
    */
-  static float CoordToFloat(nsPresContext *aPresContext,
-                            nsSVGElement *aContent,
+  static float CoordToFloat(nsSVGElement *aContent,
                             const nsStyleCoord &aCoord);
   /**
    * Parse the SVG path string

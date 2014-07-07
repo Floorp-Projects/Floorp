@@ -420,8 +420,10 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
     Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
     Rooted<WeakMapObject*> map(cx, &thisObj->as<WeakMapObject>());
 
-    args.rval().setUndefined();
-    return SetWeakMapEntryInternal(cx, map, key, value);
+    if (!SetWeakMapEntryInternal(cx, map, key, value))
+        return false;
+    args.rval().set(args.thisv());
+    return true;
 }
 
 static bool

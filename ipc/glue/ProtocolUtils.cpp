@@ -19,11 +19,14 @@ namespace ipc {
 
 IToplevelProtocol::~IToplevelProtocol()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   mOpenActors.clear();
 }
 
 void IToplevelProtocol::AddOpenedActor(IToplevelProtocol* aActor)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
 #ifdef DEBUG
   for (const IToplevelProtocol* actor = mOpenActors.getFirst();
        actor;

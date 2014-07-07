@@ -303,7 +303,7 @@ nsSVGForeignObjectFrame::GetFrameForPoint(const nsPoint &aPoint)
   
   // Convert aPoint from app units in canvas space to user space:
 
-  gfxPoint pt = gfxPoint(aPoint.x, aPoint.y) / PresContext()->AppUnitsPerDevPixel();
+  gfxPoint pt = gfxPoint(aPoint.x, aPoint.y) / PresContext()->AppUnitsPerCSSPixel();
   pt = tm.Transform(pt);
 
   if (!gfxRect(0.0f, 0.0f, width, height).Contains(pt))
@@ -493,9 +493,11 @@ gfxMatrix
 nsSVGForeignObjectFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 {
   if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY) && !aTransformRoot) {
-    if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||
-        (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled())) {
+    if (aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) {
       return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
+    }
+    if (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled()) {
+      return gfxMatrix();
     }
   }
   if (!mCanvasTM) {

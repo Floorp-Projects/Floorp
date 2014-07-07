@@ -5409,7 +5409,7 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
   // Function name is the type of the custom element.
   JSString* jsFunName =
     JS_GetFunctionId(JS_ValueToFunction(aCx, args.calleev()));
-  nsDependentJSString elemName;
+  nsAutoJSString elemName;
   if (!elemName.init(aCx, jsFunName)) {
     return true;
   }

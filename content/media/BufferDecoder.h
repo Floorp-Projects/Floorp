@@ -60,8 +60,10 @@ public:
 
   virtual bool IsMediaSeekable() MOZ_OVERRIDE;
 
-  virtual void MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags) MOZ_OVERRIDE;
-  virtual void QueueMetadata(int64_t aTime, int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags) MOZ_OVERRIDE;
+  virtual void MetadataLoaded(MediaInfo* aInfo, MetadataTags* aTags) MOZ_OVERRIDE;
+  virtual void QueueMetadata(int64_t aTime, MediaInfo* aInfo, MetadataTags* aTags) MOZ_OVERRIDE;
+
+  virtual void RemoveMediaTracks() MOZ_OVERRIDE;
 
   virtual void SetMediaEndTime(int64_t aTime) MOZ_OVERRIDE;
 

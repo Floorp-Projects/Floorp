@@ -1620,6 +1620,17 @@ nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp, nsRect* aRect,
   }
 
   *aRect = aDisp->mClip;
+  if (MOZ_LIKELY(StyleBorder()->mBoxDecorationBreak ==
+                   NS_STYLE_BOX_DECORATION_BREAK_SLICE)) {
+    // The clip applies to the joined boxes so it's relative the first
+    // continuation.
+    nscoord y = 0;
+    for (nsIFrame* f = GetPrevContinuation(); f; f = f->GetPrevContinuation()) {
+      y += f->GetRect().height;
+    }
+    aRect->MoveBy(nsPoint(0, -y));
+  }
+
   if (NS_STYLE_CLIP_RIGHT_AUTO & aDisp->mClipFlags) {
     aRect->width = aSize.width - aRect->x;
   }

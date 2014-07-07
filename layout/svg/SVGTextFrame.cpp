@@ -3419,6 +3419,9 @@ SVGTextFrame::FindCloserFrameForSelection(
                      TextRenderedRun::eIncludeStroke |
                      TextRenderedRun::eNoHorizontalOverflow;
     SVGBBox userRect = run.GetUserSpaceRect(presContext, flags);
+    float devPxPerCSSPx = presContext->CSSPixelsToDevPixels(1.f);
+    userRect.Scale(devPxPerCSSPx);
+
     if (!userRect.IsEmpty()) {
       nsRect rect = nsSVGUtils::ToCanvasBounds(userRect.ToThebesRect(),
                                                GetCanvasTM(FOR_HIT_TESTING),
@@ -3699,7 +3702,8 @@ SVGTextFrame::GetFrameForPoint(const nsPoint& aPoint)
 
   nsPresContext* presContext = PresContext();
 
-  gfxPoint pointInOuterSVGUserUnits = AppUnitsToGfxUnits(aPoint, presContext);
+  gfxPoint pointInOuterSVGUserUnits =
+    gfxPoint(aPoint.x, aPoint.y) / PresContext()->AppUnitsPerCSSPixel();
 
   TextRenderedRunIterator it(this);
   nsIFrame* hit = nullptr;
@@ -3869,9 +3873,11 @@ SVGTextFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 {
   if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY) &&
       !aTransformRoot) {
-    if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||
-        (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled())) {
+    if (aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) {
       return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
+    }
+    if (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled()) {
+      return gfxMatrix();
     }
   }
   if (!mCanvasTM) {
@@ -5094,8 +5100,7 @@ SVGTextFrame::ShouldRenderAsPath(nsRenderingContext* aContext,
 
   // Text has a stroke.
   if (style->HasStroke() &&
-      SVGContentUtils::CoordToFloat(PresContext(),
-                                    static_cast<nsSVGElement*>(mContent),
+      SVGContentUtils::CoordToFloat(static_cast<nsSVGElement*>(mContent),
                                     style->mStrokeWidth) > 0) {
     return true;
   }

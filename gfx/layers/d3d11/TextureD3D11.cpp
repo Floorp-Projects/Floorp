@@ -100,14 +100,16 @@ DataTextureSourceD3D11::~DataTextureSourceD3D11()
 
 
 template<typename T> // ID3D10Texture2D or ID3D11Texture2D
-static void LockD3DTexture(T* aTexture)
+static bool LockD3DTexture(T* aTexture)
 {
   MOZ_ASSERT(aTexture);
   RefPtr<IDXGIKeyedMutex> mutex;
   aTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
-  if (mutex) {
-    mutex->AcquireSync(0, INFINITE);
+  if (!mutex) {
+    return false;
   }
+  mutex->AcquireSync(0, INFINITE);
+  return true;
 }
 
 template<typename T> // ID3D10Texture2D or ID3D11Texture2D
@@ -180,8 +182,21 @@ TextureClientD3D11::Lock(OpenMode aMode)
     return false;
   }
   MOZ_ASSERT(!mIsLocked, "The Texture is already locked!");
-  LockD3DTexture(mTexture.get());
-  mIsLocked = true;
+
+  mIsLocked = LockD3DTexture(mTexture.get());
+  if (!mIsLocked) {
+    return false;
+  }
+
+  // Make sure that successful write-lock means we will have a DrawTarget to
+  // write into.
+  if (aMode & OpenMode::OPEN_WRITE) {
+    mDrawTarget = BorrowDrawTarget();
+    if (!mDrawTarget) {
+      Unlock();
+      return false;
+    }
+  }
 
   if (mNeedsClear) {
     mDrawTarget = BorrowDrawTarget();
@@ -230,6 +245,7 @@ TextureClientD3D11::BorrowDrawTarget()
     return mDrawTarget;
   }
 
+  // This may return a null DrawTarget
   mDrawTarget = Factory::CreateDrawTargetForD3D10Texture(mTexture, mFormat);
   return mDrawTarget;
 }
@@ -324,10 +340,9 @@ DXGITextureHostD3D11::Lock()
     mSize = IntSize(desc.Width, desc.Height);
   }
 
-  LockD3DTexture(mTextureSource->GetD3D11Texture());
+  mIsLocked = LockD3DTexture(mTextureSource->GetD3D11Texture());
 
-  mIsLocked = true;
-  return true;
+  return mIsLocked;
 }
 
 void

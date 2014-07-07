@@ -471,11 +471,12 @@ static void
 FillSurface(gfxASurface* aSurface, const nsIntRegion& aRegion,
             const nsIntPoint& aOffset, const gfxRGBA& aColor)
 {
-  nsRefPtr<gfxContext> ctx = new gfxContext(aSurface);
-  ctx->Translate(-gfxPoint(aOffset.x, aOffset.y));
-  gfxUtils::ClipToRegion(ctx, aRegion);
-  ctx->SetColor(aColor);
-  ctx->Paint();
+  nsIntRegionRectIterator iter(aRegion);
+  const nsIntRect* r;
+  while ((r = iter.Next()) != nullptr) {
+    nsIntRect rect = *r + aOffset;
+    gfxUtils::ClearThebesSurface(aSurface, &rect, aColor);
+  }
 }
 
 void
@@ -526,17 +527,13 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
   if (!destinationSurface)
     return;
 
-  nsRefPtr<gfxContext> context;
-  if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(BackendType::CAIRO)) {
-     RefPtr<DrawTarget> dt =
-        gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(destinationSurface,
-                                                               IntSize(destinationSurface->GetSize().width,
-                                                                       destinationSurface->GetSize().height));
+  MOZ_ASSERT(gfxPlatform::GetPlatform()->SupportsAzureContentForType(BackendType::CAIRO));
+  RefPtr<DrawTarget> dt =
+    gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(destinationSurface,
+                                                           IntSize(destinationSurface->GetSize().width,
+                                                                   destinationSurface->GetSize().height));
 
-    context = new gfxContext(dt);
-  } else {
-    context = new gfxContext(destinationSurface);
-  }
+  nsRefPtr<gfxContext> context = new gfxContext(dt);
 
   context->Translate(gfxPoint(-bounds.x, -bounds.y));
   LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();

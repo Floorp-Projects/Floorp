@@ -177,7 +177,7 @@ menuitem[_moz-menuactive="true"],
 menulist > menupopup > menuitem,
 .menulist-menupopup > menu,
 menulist > menupopup > menu {
-  -moz-appearance: none;
+  -moz-appearance: none !important;
   border: 1px solid transparent;
   -moz-padding-start: 5px;
   -moz-padding-end: 5px;

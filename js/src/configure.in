@@ -389,7 +389,7 @@ esac
 
 case "$target" in
 *-mingw*)
-    if test "$GCC" != "yes" -a -z "$CLANG_CC"; then
+    if test "$GCC" != "yes"; then
         # Check to see if we are really running in a msvc environemnt
         _WIN32_MSVC=1
 
@@ -476,7 +476,9 @@ case "$target" in
 
         CFLAGS="$CFLAGS -D_HAS_EXCEPTIONS=0"
         CXXFLAGS="$CXXFLAGS -D_HAS_EXCEPTIONS=0"
-    elif test -z "$CLANG_CC"; then
+
+        MOZ_FIND_WINSDK_VERSION
+    else
         # Check w32api version
         _W32API_MAJOR_VERSION=`echo $W32API_VERSION | $AWK -F\. '{ print $1 }'`
         _W32API_MINOR_VERSION=`echo $W32API_VERSION | $AWK -F\. '{ print $2 }'`
@@ -514,11 +516,6 @@ case "$target" in
 
         MOZ_WINSDK_MAXVER=0x06010000
     fi # !GNU_CC
-
-    # If MSVC or clang
-    if test "$GCC" != "yes" -o -n "$CLANG_CC" ; then
-        MOZ_FIND_WINSDK_VERSION
-    fi
 
     AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
     AC_DEFINE_UNQUOTED(_WIN32_WINNT,0x$WINVER)
@@ -1681,9 +1678,9 @@ ia64*-hpux*)
         # autoconf insists on passing $LDFLAGS to the compiler.
         if test -z "$CLANG_CL"; then
             LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
-        fi
-        if test -z "$DEVELOPER_OPTIONS"; then
-            LDFLAGS="$LDFLAGS -RELEASE"
+            if test -z "$DEVELOPER_OPTIONS"; then
+                LDFLAGS="$LDFLAGS -RELEASE"
+            fi
         fi
         dnl For profile-guided optimization
         PROFILE_GEN_CFLAGS="-GL"

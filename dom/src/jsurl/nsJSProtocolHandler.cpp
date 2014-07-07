@@ -237,9 +237,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     if (NS_FAILED(rv))
         return rv;
 
-    bool useSandbox =
-        (aExecutionPolicy == nsIScriptChannel::EXECUTE_IN_SANDBOX);
-
     // New script entry point required, due to the "Create a script" step of
     // http://www.whatwg.org/specs/web-apps/current-work/#javascript-protocol
     AutoEntryScript entryScript(innerGlobal, true,
@@ -248,97 +245,44 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     JS::Rooted<JSObject*> globalJSObject(cx, innerGlobal->GetGlobalJSObject());
     NS_ENSURE_TRUE(globalJSObject, NS_ERROR_UNEXPECTED);
 
-    if (!useSandbox) {
-        //-- Don't outside a sandbox unless the script principal subsumes the
-        //   principal of the context.
-        nsIPrincipal* objectPrincipal = nsContentUtils::ObjectPrincipal(globalJSObject);
+    //-- Don't execute unless the script principal subsumes the
+    //   principal of the context.
+    nsIPrincipal* objectPrincipal = nsContentUtils::ObjectPrincipal(globalJSObject);
 
-        bool subsumes;
-        rv = principal->Subsumes(objectPrincipal, &subsumes);
-        if (NS_FAILED(rv))
-            return rv;
+    bool subsumes;
+    rv = principal->Subsumes(objectPrincipal, &subsumes);
+    if (NS_FAILED(rv))
+        return rv;
 
-        useSandbox = !subsumes;
+    if (!subsumes) {
+        return NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
 
     JS::Rooted<JS::Value> v (cx, JS::UndefinedValue());
     // Finally, we have everything needed to evaluate the expression.
-    if (useSandbox) {
-        // We were asked to use a sandbox, or the channel owner isn't allowed
-        // to execute in this context.  Evaluate the javascript URL in a
-        // sandbox to prevent it from accessing data it doesn't have
-        // permissions to access.
+    JS::CompileOptions options(cx);
+    options.setFileAndLine(mURL.get(), 1)
+           .setVersion(JSVERSION_DEFAULT);
+    nsJSUtils::EvaluateOptions evalOptions;
+    evalOptions.setCoerceToString(true);
+    rv = nsJSUtils::EvaluateString(cx, NS_ConvertUTF8toUTF16(script),
+                                   globalJSObject, options, evalOptions, &v);
 
-        // First check to make sure it's OK to evaluate this script to
-        // start with.  For example, script could be disabled.
-        if (!securityManager->ScriptAllowed(globalJSObject)) {
-            // Treat this as returning undefined from the script.  That's what
-            // nsJSContext does.
-            return NS_ERROR_DOM_RETVAL_UNDEFINED;
-        }
-
-        nsIXPConnect *xpc = nsContentUtils::XPConnect();
-
-        nsCOMPtr<nsIXPConnectJSObjectHolder> sandbox;
-        // Important: Use a null principal here
-        rv = xpc->CreateSandbox(cx, nullptr, getter_AddRefs(sandbox));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // The nsXPConnect sandbox API gives us a wrapper to the sandbox for
-        // our current compartment. Because our current context doesn't necessarily
-        // subsume that of the sandbox, we want to unwrap and enter the sandbox's
-        // compartment. It's a shame that the APIs here are so clunkly. :-(
-        JS::Rooted<JSObject*> sandboxObj(cx, sandbox->GetJSObject());
-        NS_ENSURE_STATE(sandboxObj);
-        sandboxObj = js::UncheckedUnwrap(sandboxObj);
-        JSAutoCompartment ac(cx, sandboxObj);
-
-        // Push our JSContext on the context stack so the EvalInSandboxObject call (and
-        // JS_ReportPendingException, if relevant) will use the principal of cx.
-        nsCxPusher pusher;
-        pusher.Push(cx);
-        rv = xpc->EvalInSandboxObject(NS_ConvertUTF8toUTF16(script),
-                                      /* filename = */ nullptr, cx,
-                                      sandboxObj, true, &v);
-
-        // Propagate and report exceptions that happened in the
-        // sandbox.
-        if (JS_IsExceptionPending(cx)) {
-            JS_ReportPendingException(cx);
-        }
-    } else {
-        // No need to use the sandbox, evaluate the script directly in
-        // the given scope.
-        JS::CompileOptions options(cx);
-        options.setFileAndLine(mURL.get(), 1)
-               .setVersion(JSVERSION_DEFAULT);
-        nsJSUtils::EvaluateOptions evalOptions;
-        evalOptions.setCoerceToString(true);
-        rv = nsJSUtils::EvaluateString(cx, NS_ConvertUTF8toUTF16(script),
-                                       globalJSObject, options, evalOptions, &v);
-
-        // If there's an error on cx as a result of that call, report
-        // it now -- either we're just running under the event loop,
-        // so we shouldn't propagate JS exceptions out of here, or we
-        // can't be sure that our caller is JS (and if it's not we'll
-        // lose the error), or it might be JS that then proceeds to
-        // cause an error of its own (which will also make us lose
-        // this error).
-        ::JS_ReportPendingException(cx);
-    }
-
-    // If we took the sandbox path above, v might be in the sandbox
-    // compartment.
-    if (!JS_WrapValue(cx, &v)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+    // If there's an error on cx as a result of that call, report
+    // it now -- either we're just running under the event loop,
+    // so we shouldn't propagate JS exceptions out of here, or we
+    // can't be sure that our caller is JS (and if it's not we'll
+    // lose the error), or it might be JS that then proceeds to
+    // cause an error of its own (which will also make us lose
+    // this error).
+    ::JS_ReportPendingException(cx);
 
     if (NS_FAILED(rv) || !(v.isString() || v.isUndefined())) {
         return NS_ERROR_MALFORMED_URI;
     } else if (v.isUndefined()) {
         return NS_ERROR_DOM_RETVAL_UNDEFINED;
     } else {
-        nsDependentJSString result;
+        nsAutoJSString result;
         if (!result.init(cx, v)) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -434,7 +378,7 @@ nsJSChannel::nsJSChannel() :
     mLoadFlags(LOAD_NORMAL),
     mActualLoadFlags(LOAD_NORMAL),
     mPopupState(openOverridden),
-    mExecutionPolicy(EXECUTE_IN_SANDBOX),
+    mExecutionPolicy(NO_EXECUTION),
     mIsAsync(true),
     mIsActive(false),
     mOpenedStreamChannel(false)

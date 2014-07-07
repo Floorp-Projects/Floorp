@@ -126,8 +126,8 @@ convertJSValToVariant(
     return new FloatVariant(aValue.toDouble());
 
   if (aValue.isString()) {
-    nsDependentJSString value;
-    if (!value.init(aCtx, aValue))
+    nsAutoJSString value;
+    if (!value.init(aCtx, aValue.toString()))
         return nullptr;
     return new TextVariant(value);
   }
