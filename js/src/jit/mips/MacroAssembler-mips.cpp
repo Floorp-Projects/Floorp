@@ -3234,6 +3234,26 @@ MacroAssemblerMIPSCompat::restoreStackPointer()
 }
 
 void
+MacroAssembler::alignFrameForICArguments(AfterICSaveLive &aic)
+{
+    if (framePushed() % StackAlignment != 0) {
+        aic.alignmentPadding = StackAlignment - (framePushed() % StackAlignment);
+        reserveStack(aic.alignmentPadding);
+    } else {
+        aic.alignmentPadding = 0;
+    }
+    MOZ_ASSERT(framePushed() % StackAlignment == 0);
+    checkStackAlignment();
+}
+
+void
+MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive &aic)
+{
+    if (aic.alignmentPadding != 0)
+        freeStack(aic.alignmentPadding);
+}
+
+void
 MacroAssemblerMIPSCompat::callWithABIPre(uint32_t *stackAdjust, bool callFromAsmJS)
 {
     MOZ_ASSERT(inCall_);
