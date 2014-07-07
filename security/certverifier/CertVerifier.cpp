@@ -388,7 +388,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
         rv = BuildCertChain(emailTrust, cert, time, endEntityOrCA, keyUsage,
                             eku, CertPolicyId::anyPolicy,
                             stapledOCSPResponse, builtChain);
-        if (rv == SECFailure && SEC_ERROR_UNKNOWN_ISSUER) {
+        if (rv == SECFailure && PR_GetError() == SEC_ERROR_UNKNOWN_ISSUER) {
           NSSCertDBTrustDomain objectSigningTrust(trustObjectSigning,
                                                   ocspFetching, mOCSPCache,
                                                   pinArg, ocspGETConfig);
