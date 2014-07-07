@@ -555,11 +555,14 @@ public class TopSitesPanel extends HomeFragment {
                 return;
             }
 
+            // Make sure we query suggested images without the user-entered wrapper.
+            final String decodedUrl = StringUtils.decodeUserEnteredUrl(url);
+
             // Suggested images have precedence over thumbnails, no need to wait
             // for them to be loaded. See: CursorLoaderCallbacks.onLoadFinished()
-            final String imageUrl = BrowserDB.getSuggestedImageUrlForUrl(url);
+            final String imageUrl = BrowserDB.getSuggestedImageUrlForUrl(decodedUrl);
             if (!TextUtils.isEmpty(imageUrl)) {
-                final int bgColor = BrowserDB.getSuggestedBackgroundColorForUrl(url);
+                final int bgColor = BrowserDB.getSuggestedBackgroundColorForUrl(decodedUrl);
                 view.displayThumbnail(imageUrl, bgColor);
                 return;
             }
