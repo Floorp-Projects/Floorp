@@ -12,7 +12,7 @@ from StringIO import StringIO
 from xml.etree.ElementTree import ElementTree
 
 from mozbuild.base import MozbuildObject
-os.environ.pop('MOZ_OBJDIR')
+os.environ.pop('MOZ_OBJDIR', None)
 build_obj = MozbuildObject.from_environment()
 
 from runxpcshelltests import XPCShellTests
