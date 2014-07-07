@@ -9,6 +9,7 @@ LIBRARY_NAME = 'media_gtest'
 UNIFIED_SOURCES += [
     'TestAudioCompactor.cpp',
     'TestTrackEncoder.cpp',
+    'TestVideoSegment.cpp'
 ]
 
 if CONFIG['MOZ_WEBM_ENCODER']:

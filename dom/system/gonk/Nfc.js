@@ -286,7 +286,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     isRegisteredP2PTarget: function isRegisteredP2PTarget(appId, event) {
       let targetInfo = this.peerTargetsMap[appId];
       // Check if it is a registered target for the 'event'
-      return ((targetInfo != null) && (targetInfo.event & event !== 0));
+      return ((targetInfo != null) && ((targetInfo.event & event) !== 0));
     },
 
     notifyPeerEvent: function notifyPeerEvent(appId, event) {
@@ -527,7 +527,7 @@ Nfc.prototype = {
 
         gSystemMessenger.broadcastMessage("nfc-manager-tech-lost", message);
         // Notify 'PeerLost' to appropriate registered target, if any
-        gMessageManager.notifyPeerEvent(this.currentPeerAppId, NFC.NFC_PEER_EVENT_LOST);
+        gMessageManager.notifyPeerEvent(gMessageManager.currentPeerAppId, NFC.NFC_PEER_EVENT_LOST);
         delete this.sessionTokenMap[this._currentSessionId];
         this._currentSessionId = null;
         this.currentPeerAppId = null;
