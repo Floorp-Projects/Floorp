@@ -94,12 +94,7 @@ function test() {
   loadNextTest();
 }
 
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-  function () {
-    loadNextTest();
-  }
-);
+loadNextTest();
 
 </script>
 </body>
