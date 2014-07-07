@@ -1741,9 +1741,9 @@ nsHttpTransaction::ReleaseBlockingTransaction()
 // nsHttpTransaction deletion event
 //-----------------------------------------------------------------------------
 
-class DeleteHttpTransaction : public nsRunnable {
+class nsDeleteHttpTransaction : public nsRunnable {
 public:
-    DeleteHttpTransaction(nsHttpTransaction *trans)
+    nsDeleteHttpTransaction(nsHttpTransaction *trans)
         : mTrans(trans)
     {}
 
@@ -1767,7 +1767,7 @@ nsHttpTransaction::DeleteSelfOnConsumerThread()
         delete this;
     } else {
         LOG(("proxying delete to consumer thread...\n"));
-        nsCOMPtr<nsIRunnable> event = new DeleteHttpTransaction(this);
+        nsCOMPtr<nsIRunnable> event = new nsDeleteHttpTransaction(this);
         if (NS_FAILED(mConsumerTarget->Dispatch(event, NS_DISPATCH_NORMAL)))
             NS_WARNING("failed to dispatch nsHttpDeleteTransaction event");
     }
