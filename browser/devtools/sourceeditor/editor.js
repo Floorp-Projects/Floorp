@@ -345,6 +345,14 @@ Editor.prototype = {
   },
 
   /**
+   * Returns a boolean indicating whether the editor is ready to
+   * use.  Use appendTo(el).then(() => {}) for most cases
+   */
+  isAppended: function() {
+    return editors.has(this);
+  },
+
+  /**
    * Returns the currently active highlighting mode.
    * See Editor.modes for the list of all suppoert modes.
    */
