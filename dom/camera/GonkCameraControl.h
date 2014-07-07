@@ -52,10 +52,11 @@ public:
   void OnFacesDetected(camera_frame_metadata_t* aMetaData);
   void OnTakePictureComplete(uint8_t* aData, uint32_t aLength);
   void OnTakePictureError();
+  void OnRateLimitPreview(bool aLimit);
   void OnNewPreviewFrame(layers::TextureClient* aBuffer);
   void OnRecorderEvent(int msg, int ext1, int ext2);
   void OnSystemError(CameraControlListener::SystemContext aWhere, nsresult aError);
- 
+
   // See ICameraControl.h for getter/setter return values.
   virtual nsresult Set(uint32_t aKey, const nsAString& aValue) MOZ_OVERRIDE;
   virtual nsresult Get(uint32_t aKey, nsAString& aValue) MOZ_OVERRIDE;
@@ -84,6 +85,7 @@ public:
 protected:
   ~nsGonkCameraControl();
 
+  using CameraControlImpl::OnRateLimitPreview;
   using CameraControlImpl::OnNewPreviewFrame;
   using CameraControlImpl::OnAutoFocusComplete;
   using CameraControlImpl::OnFacesDetected;
@@ -178,6 +180,7 @@ private:
 };
 
 // camera driver callbacks
+void OnRateLimitPreview(nsGonkCameraControl* gc, bool aLimit);
 void OnTakePictureComplete(nsGonkCameraControl* gc, uint8_t* aData, uint32_t aLength);
 void OnTakePictureError(nsGonkCameraControl* gc);
 void OnAutoFocusComplete(nsGonkCameraControl* gc, bool aSuccess);
