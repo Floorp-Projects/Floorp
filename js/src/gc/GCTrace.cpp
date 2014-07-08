@@ -17,6 +17,7 @@
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 JS_STATIC_ASSERT(AllocKinds == FINALIZE_LIMIT);
 JS_STATIC_ASSERT(LastObjectAllocKind == FINALIZE_OBJECT_LAST);
@@ -24,6 +25,7 @@ JS_STATIC_ASSERT(LastObjectAllocKind == FINALIZE_OBJECT_LAST);
 static FILE *gcTraceFile = nullptr;
 
 static HashSet<const Class *, DefaultHasher<const Class *>, SystemAllocPolicy> tracedClasses;
+static HashSet<const TypeObject *, DefaultHasher<const TypeObject *>, SystemAllocPolicy> tracedTypes;
 
 static inline void
 WriteWord(uint64_t data)
@@ -77,19 +79,23 @@ TraceString(const char* string)
 bool
 js::gc::InitTrace(GCRuntime &gc)
 {
+    /* This currently does not support multiple runtimes. */
+    MOZ_ALWAYS_TRUE(!gcTraceFile);
+
     char *filename = getenv("JS_GC_TRACE");
     if (!filename)
         return true;
 
-    if (!tracedClasses.init())
+    if (!tracedClasses.init() || !tracedTypes.init()) {
+        FinishTrace();
         return false;
-
-    /* This currently does not support multiple runtimes. */
-    JS_ASSERT(!gcTraceFile);
+    }
 
     gcTraceFile = fopen(filename, "w");
-    if (!gcTraceFile)
+    if (!gcTraceFile) {
+        FinishTrace();
         return false;
+    }
 
     TraceEvent(TraceEventInit, 0, TraceFormatVersion);
 
@@ -103,8 +109,12 @@ js::gc::InitTrace(GCRuntime &gc)
 void
 js::gc::FinishTrace()
 {
-    if (gcTraceFile)
+    if (gcTraceFile) {
         fclose(gcTraceFile);
+        gcTraceFile = nullptr;
+    }
+    tracedClasses.finish();
+    tracedTypes.finish();
 }
 
 bool
@@ -141,7 +151,41 @@ MaybeTraceClass(const Class *clasp)
     TraceString(clasp->name);
     TraceInt(clasp->flags);
     TraceInt(clasp->finalize != nullptr);
-    tracedClasses.put(clasp);
+
+    MOZ_ALWAYS_TRUE(tracedClasses.put(clasp));
+}
+
+static void
+MaybeTraceType(TypeObject *type)
+{
+    if (tracedTypes.has(type))
+        return;
+
+    MaybeTraceClass(type->clasp());
+    TraceEvent(TraceEventTypeInfo, uint64_t(type));
+    TraceAddress(type->clasp());
+    TraceInt(type->flags());
+
+    MOZ_ALWAYS_TRUE(tracedTypes.put(type));
+}
+
+void
+js::gc::TraceTypeNewScript(TypeObject *type)
+{
+    const size_t bufLength = 128;
+    static char buffer[bufLength];
+    JS_ASSERT(type->hasNewScript());
+    JSAtom *funName = type->newScript()->fun->displayAtom();
+    if (!funName)
+        return;
+
+    size_t length = funName->length();
+    MOZ_ALWAYS_TRUE(length < bufLength);
+    CopyChars(reinterpret_cast<Latin1Char *>(buffer), *funName);
+    buffer[length] = 0;
+
+    TraceEvent(TraceEventTypeNewScript, uint64_t(type));
+    TraceString(buffer);
 }
 
 void
@@ -150,10 +194,10 @@ js::gc::TraceCreateObject(JSObject* object)
     if (!gcTraceFile)
         return;
 
-    const Class *clasp = object->type()->clasp();
-    MaybeTraceClass(clasp);
+    TypeObject *type = object->type();
+    MaybeTraceType(type);
     TraceEvent(TraceEventCreateObject, uint64_t(object));
-    TraceAddress(clasp);
+    TraceAddress(type);
 }
 
 void
@@ -184,6 +228,10 @@ js::gc::TraceMajorGCStart()
 void
 js::gc::TraceTenuredFinalize(Cell *thing)
 {
+    if (!gcTraceFile)
+        return;
+    if (thing->tenuredGetAllocKind() == FINALIZE_TYPE_OBJECT)
+        tracedTypes.remove(static_cast<const TypeObject *>(thing));
     TraceEvent(TraceEventTenuredFinalize, uint64_t(thing));
 }
 
