@@ -45,7 +45,8 @@ public:
   NS_IMETHOD GetNewNode(nsIDOMNode **aNewNode);
 
 protected:
-  
+  virtual ~SplitElementTxn();
+
   /** the element to operate upon */
   nsCOMPtr<nsIDOMNode> mExistingRightNode;
 

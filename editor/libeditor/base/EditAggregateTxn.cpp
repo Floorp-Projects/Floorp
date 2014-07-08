@@ -16,6 +16,10 @@ EditAggregateTxn::EditAggregateTxn()
 {
 }
 
+EditAggregateTxn::~EditAggregateTxn()
+{
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(EditAggregateTxn, EditTxn,
                                    mChildren)
 
