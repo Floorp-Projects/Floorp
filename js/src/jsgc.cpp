@@ -1098,7 +1098,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     highFrequencyHeapGrowthMax(3.0),
     highFrequencyHeapGrowthMin(1.5),
     lowFrequencyHeapGrowth(1.5),
-    dynamicHeapGrowth(true),
+    dynamicHeapGrowth(false),
     dynamicMarkSlice(false),
     decommitThreshold(32 * 1024 * 1024),
     cleanUpEverything(false),
@@ -1384,13 +1384,9 @@ GCRuntime::setParameter(JSGCParamKey key, uint32_t value)
         break;
       case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
         highFrequencyLowLimitBytes = value * 1024 * 1024;
-        if (highFrequencyLowLimitBytes >= highFrequencyHighLimitBytes)
-            highFrequencyHighLimitBytes = highFrequencyLowLimitBytes + 1;
         break;
       case JSGC_HIGH_FREQUENCY_HIGH_LIMIT:
         highFrequencyHighLimitBytes = value * 1024 * 1024;
-        if (highFrequencyLowLimitBytes >= highFrequencyHighLimitBytes)
-            highFrequencyLowLimitBytes = highFrequencyHighLimitBytes - 1;
         break;
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
         highFrequencyHeapGrowthMax = value / 100.0;
