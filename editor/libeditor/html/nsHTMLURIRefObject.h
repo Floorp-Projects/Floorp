@@ -21,11 +21,10 @@ class nsIDOMNode;
     { 0xb2, 0x9c, 0xc3, 0xd6, 0x3a, 0x58, 0xf1, 0xd2 } \
 }
 
-class nsHTMLURIRefObject : public nsIURIRefObject
+class nsHTMLURIRefObject MOZ_FINAL : public nsIURIRefObject
 {
 public:
   nsHTMLURIRefObject();
-  virtual ~nsHTMLURIRefObject();
 
   // Interfaces for addref and release and queryinterface
   NS_DECL_ISUPPORTS
@@ -33,19 +32,13 @@ public:
   NS_DECL_NSIURIREFOBJECT
 
 protected:
+  virtual ~nsHTMLURIRefObject();
+
   nsCOMPtr<nsIDOMNode> mNode;
   nsCOMPtr<nsIDOMMozNamedAttrMap> mAttributes;
   uint32_t mCurAttrIndex;
   uint32_t mAttributeCnt;
 };
-
-namespace mozilla {
-template<>
-struct HasDangerousPublicDestructor<nsHTMLURIRefObject>
-{
-  static const bool value = true;
-};
-}
 
 nsresult NS_NewHTMLURIRefObject(nsIURIRefObject** aResult, nsIDOMNode* aNode);
 
