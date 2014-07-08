@@ -8,6 +8,9 @@
 #include "nsIContentPermissionPrompt.h"
 #include "nsTArray.h"
 #include "nsIMutableArray.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
+#include "PCOMContentPermissionRequestChild.h"
+#include "nsPIDOMWindow.h"
 
 class nsContentPermissionRequestProxy;
 
@@ -81,6 +84,33 @@ class nsContentPermissionRequestProxy : public nsIContentPermissionRequest
   // Non-owning pointer to the ContentPermissionRequestParent object which owns this proxy.
   mozilla::dom::ContentPermissionRequestParent* mParent;
   nsTArray<mozilla::dom::PermissionRequest> mPermissionRequests;
+};
+
+/**
+ * RemotePermissionRequest will send a prompt ipdl request to b2g process.
+ */
+class RemotePermissionRequest : public nsIContentPermissionRequest
+                              , public PCOMContentPermissionRequestChild
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICONTENTPERMISSIONREQUEST
+
+  RemotePermissionRequest(nsIContentPermissionRequest* aRequest,
+                          nsPIDOMWindow* aWindow);
+  virtual ~RemotePermissionRequest() {}
+
+  // It will be called when prompt dismissed.
+  virtual bool Recv__delete__(const bool &aAllow,
+                              const nsTArray<PermissionChoice>& aChoices) MOZ_OVERRIDE;
+  virtual void IPDLRelease() MOZ_OVERRIDE { Release(); }
+
+  static uint32_t ConvertArrayToPermissionRequest(
+                                nsIArray* aSrcArray,
+                                nsTArray<PermissionRequest>& aDesArray);
+private:
+  nsCOMPtr<nsIContentPermissionRequest> mRequest;
+  nsCOMPtr<nsPIDOMWindow>               mWindow;
 };
 
 #endif // nsContentPermissionHelper_h
