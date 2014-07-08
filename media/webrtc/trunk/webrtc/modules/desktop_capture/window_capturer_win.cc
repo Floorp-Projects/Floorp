@@ -89,6 +89,7 @@ class WindowCapturerWin : public WindowCapturer {
   // WindowCapturer interface.
   virtual bool GetWindowList(WindowList* windows) OVERRIDE;
   virtual bool SelectWindow(WindowId id) OVERRIDE;
+  virtual bool BringSelectedWindowToFront() OVERRIDE;
 
   // DesktopCapturer interface.
   virtual void Start(Callback* callback) OVERRIDE;
@@ -157,6 +158,16 @@ bool WindowCapturerWin::SelectWindow(WindowId id) {
   return true;
 }
 
+bool WindowCapturerWin::BringSelectedWindowToFront() {
+  if (!window_)
+    return false;
+
+  if (!IsWindow(window_) || !IsWindowVisible(window_) || IsIconic(window_))
+    return false;
+
+  return SetForegroundWindow(window_) != 0;
+}
+
 void WindowCapturerWin::Start(Callback* callback) {
   assert(!callback_);
   assert(callback);
@@ -217,11 +228,11 @@ void WindowCapturerWin::Capture(const DesktopRegion& region) {
   // When composition is enabled the DC returned by GetWindowDC() doesn't always
   // have window frame rendered correctly. Windows renders it only once and then
   // caches the result between captures. We hack it around by calling
-  // PrintWindow() whenever window size changes - it somehow affects what we
-  // get from BitBlt() on the subsequent captures.
+  // PrintWindow() whenever window size changes, including the first time of
+  // capturing - it somehow affects what we get from BitBlt() on the subsequent
+  // captures.
 
-  if (!IsAeroEnabled() ||
-      (!previous_size_.is_empty() && !previous_size_.equals(frame->size()))) {
+  if (!IsAeroEnabled() || !previous_size_.equals(frame->size())) {
     result = PrintWindow(window_, mem_dc, 0);
   }
 

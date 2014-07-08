@@ -15,6 +15,7 @@
 #include <X11/extensions/Xcomposite.h>
 #include <X11/extensions/Xrender.h>
 #include <X11/Xutil.h>
+
 #include <algorithm>
 #include <cassert>
 
@@ -84,7 +85,8 @@ class XWindowProperty {
   DISALLOW_COPY_AND_ASSIGN(XWindowProperty);
 };
 
-class WindowCapturerLinux : public WindowCapturer {
+class WindowCapturerLinux : public WindowCapturer,
+                            public SharedXDisplay::XEventHandler {
  public:
   WindowCapturerLinux(const DesktopCaptureOptions& options);
   virtual ~WindowCapturerLinux();
@@ -92,10 +94,14 @@ class WindowCapturerLinux : public WindowCapturer {
   // WindowCapturer interface.
   virtual bool GetWindowList(WindowList* windows) OVERRIDE;
   virtual bool SelectWindow(WindowId id) OVERRIDE;
+  virtual bool BringSelectedWindowToFront() OVERRIDE;
 
   // DesktopCapturer interface.
   virtual void Start(Callback* callback) OVERRIDE;
   virtual void Capture(const DesktopRegion& region) OVERRIDE;
+
+  // SharedXDisplay::XEventHandler interface.
+  virtual bool HandleXEvent(const XEvent& event) OVERRIDE;
 
  private:
   Display* display() { return x_display_->display(); }
@@ -146,9 +152,13 @@ WindowCapturerLinux::WindowCapturerLinux(const DesktopCaptureOptions& options)
   } else {
     LOG(LS_INFO) << "Xcomposite extension not available or too old.";
   }
+
+  x_display_->AddEventHandler(ConfigureNotify, this);
 }
 
-WindowCapturerLinux::~WindowCapturerLinux() {}
+WindowCapturerLinux::~WindowCapturerLinux() {
+  x_display_->RemoveEventHandler(ConfigureNotify, this);
+}
 
 bool WindowCapturerLinux::GetWindowList(WindowList* windows) {
   WindowList result;
@@ -194,6 +204,9 @@ bool WindowCapturerLinux::SelectWindow(WindowId id) {
   if (!x_server_pixel_buffer_.Init(display(), id))
     return false;
 
+  // Tell the X server to send us window resizing events.
+  XSelectInput(display(), id, StructureNotifyMask);
+
   selected_window_ = id;
 
   // In addition to needing X11 server-side support for Xcomposite, it actually
@@ -208,6 +221,55 @@ bool WindowCapturerLinux::SelectWindow(WindowId id) {
   return true;
 }
 
+bool WindowCapturerLinux::BringSelectedWindowToFront() {
+  if (!selected_window_)
+    return false;
+
+  unsigned int num_children;
+  ::Window* children;
+  ::Window parent;
+  ::Window root;
+  // Find the root window to pass event to.
+  int status = XQueryTree(
+      display(), selected_window_, &root, &parent, &children, &num_children);
+  if (status == 0) {
+    LOG(LS_ERROR) << "Failed to query for the root window.";
+    return false;
+  }
+
+  if (children)
+    XFree(children);
+
+  XRaiseWindow(display(), selected_window_);
+
+  // Some window managers (e.g., metacity in GNOME) consider it illegal to
+  // raise a window without also giving it input focus with
+  // _NET_ACTIVE_WINDOW, so XRaiseWindow() on its own isn't enough.
+  Atom atom = XInternAtom(display(), "_NET_ACTIVE_WINDOW", True);
+  if (atom != None) {
+    XEvent xev;
+    xev.xclient.type = ClientMessage;
+    xev.xclient.serial = 0;
+    xev.xclient.send_event = True;
+    xev.xclient.window = selected_window_;
+    xev.xclient.message_type = atom;
+
+    // The format member is set to 8, 16, or 32 and specifies whether the
+    // data should be viewed as a list of bytes, shorts, or longs.
+    xev.xclient.format = 32;
+
+    memset(xev.xclient.data.l, 0, sizeof(xev.xclient.data.l));
+
+    XSendEvent(display(),
+               root,
+               False,
+               SubstructureRedirectMask | SubstructureNotifyMask,
+               &xev);
+  }
+  XFlush(display());
+  return true;
+}
+
 void WindowCapturerLinux::Start(Callback* callback) {
   assert(!callback_);
   assert(callback);
@@ -216,6 +278,8 @@ void WindowCapturerLinux::Start(Callback* callback) {
 }
 
 void WindowCapturerLinux::Capture(const DesktopRegion& region) {
+  x_display_->ProcessPendingXEvents();
+
   if (!has_composite_extension_) {
     // Without the Xcomposite extension we capture when the whole window is
     // visible on screen and not covered by any other window. This is not
@@ -233,6 +297,20 @@ void WindowCapturerLinux::Capture(const DesktopRegion& region) {
                                      frame);
 
   callback_->OnCaptureCompleted(frame);
+}
+
+bool WindowCapturerLinux::HandleXEvent(const XEvent& event) {
+  if (event.type == ConfigureNotify) {
+    XConfigureEvent xce = event.xconfigure;
+    if (!DesktopSize(xce.width, xce.height).equals(
+            x_server_pixel_buffer_.window_size())) {
+      if (!x_server_pixel_buffer_.Init(display(), selected_window_)) {
+        LOG(LS_ERROR) << "Failed to initialize pixel buffer after resizing.";
+      }
+      return true;
+    }
+  }
+  return false;
 }
 
 ::Window WindowCapturerLinux::GetApplicationWindow(::Window window) {
