@@ -68,6 +68,10 @@ SVGAElement::SVGAElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
 {
 }
 
+SVGAElement::~SVGAElement()
+{
+}
+
 already_AddRefed<SVGAnimatedString>
 SVGAElement::Href()
 {

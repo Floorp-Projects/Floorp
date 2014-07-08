@@ -29,6 +29,10 @@ nsSVGPolyElement::nsSVGPolyElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
 {
 }
 
+nsSVGPolyElement::~nsSVGPolyElement()
+{
+}
+
 already_AddRefed<DOMSVGPointList>
 nsSVGPolyElement::Points()
 {

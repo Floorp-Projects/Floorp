@@ -29,6 +29,7 @@ class SVGAnimationElement : public SVGAnimationElementBase,
 protected:
   SVGAnimationElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   nsresult Init();
+  virtual ~SVGAnimationElement();
 
 public:
   // interfaces:
