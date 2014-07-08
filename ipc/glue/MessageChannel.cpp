@@ -1662,11 +1662,10 @@ MessageChannel::Close()
         }
 
         if (ChannelOpening == mChannelState) {
-            // SynchronouslyClose() waits for an ack from the other side, so
-            // the opening sequence should complete before this returns.
+            // Mimic CloseWithError().
             SynchronouslyClose();
             mChannelState = ChannelError;
-            NotifyMaybeChannelError();
+            PostErrorNotifyTask();
             return;
         }
 
