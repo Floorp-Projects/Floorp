@@ -1309,6 +1309,14 @@ WebrtcVideoConduit::CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
     cinst.codecSpecific.H264.constraints = codecInfo->mConstraints;
     cinst.codecSpecific.H264.level = codecInfo->mLevel;
     cinst.codecSpecific.H264.packetizationMode = codecInfo->mPacketizationMode;
+    if (codecInfo->mMaxBitrate > 0 && codecInfo->mMaxBitrate < cinst.maxBitrate) {
+      cinst.maxBitrate = codecInfo->mMaxBitrate;
+    }
+    if (codecInfo->mMaxMBPS > 0) {
+      // Not supported yet!
+      CSFLogError(logTag,  "%s H.264 max_mbps not supported yet  ", __FUNCTION__);
+    }
+    // XXX parse the encoded SPS/PPS data
     // paranoia
     cinst.codecSpecific.H264.spsData = nullptr;
     cinst.codecSpecific.H264.spsLen = 0;

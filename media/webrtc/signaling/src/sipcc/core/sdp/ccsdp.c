@@ -5,6 +5,14 @@
 #include "sdp.h"
 #include "ccapi.h"
 
+int ccsdpAttrGetFmtpInst(void *sdp_ptr, u16 level, u16 payload_num)
+{
+  cc_sdp_t *sdpp = sdp_ptr;
+  if ( sdpp->dest_sdp == NULL ) {
+    return NULL;
+  }
+  return sdp_find_fmtp_inst(sdpp->dest_sdp, level, payload_num);
+}
 
 const char* ccsdpAttrGetFmtpParamSets(void *sdp_ptr, u16 level,
                                             u8 cap_num, u16 inst_num)
