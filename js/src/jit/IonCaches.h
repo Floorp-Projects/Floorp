@@ -375,7 +375,7 @@ class RepatchIonCache : public IonCache
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
         uint32_t i = 0;
         while (i < REJOIN_LABEL_OFFSET)
-            ptr = Assembler::nextInstruction(ptr, &i);
+            ptr = Assembler::NextInstruction(ptr, &i);
 #endif
         return CodeLocationLabel(ptr);
     }

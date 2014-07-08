@@ -6752,7 +6752,7 @@ GenerateInterruptExit(ModuleCompiler &m, Label *throwLabel)
 
     // Pop resumePC into PC. Clobber HeapReg to make the jump and restore it
     // during jump delay slot.
-    JS_ASSERT(Imm16::isInSignedRange(AsmJSModule::heapGlobalDataOffset()));
+    JS_ASSERT(Imm16::IsInSignedRange(AsmJSModule::heapGlobalDataOffset()));
     masm.pop(HeapReg);
     masm.as_jr(HeapReg);
     masm.loadPtr(Address(GlobalReg, AsmJSModule::heapGlobalDataOffset()), HeapReg);

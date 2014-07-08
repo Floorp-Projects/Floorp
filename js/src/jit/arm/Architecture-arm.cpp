@@ -160,9 +160,9 @@ uint32_t GetARMFlags()
                 isSet = true;
 #if defined(__ARM_ARCH_7__) || defined (__ARM_ARCH_7A__)
                 // This should really be detected at runtime, but /proc/*/auxv
-                // doesn't seem to carry the ISA.  We could look in
-                // /proc/cpuinfo as well, but the chances that it will be
-                // different from this are low.
+                // doesn't seem to carry the ISA. We could look in /proc/cpuinfo
+                // as well, but the chances that it will be different from this
+                // are low.
                 flags |= HWCAP_ARMv7;
 #endif
                 return flags;
@@ -314,14 +314,14 @@ VFPRegister::ReduceSetForPush(const FloatRegisterSet &s)
     FloatRegisterSet mod;
     for (TypedRegisterIterator<FloatRegister> iter(s); iter.more(); iter++) {
         if ((*iter).isSingle()) {
-            // add in just this float
+            // Add in just this float.
             mod.addUnchecked(*iter);
         } else if ((*iter).id() < 16) {
-            // a double with an overlay, add in both floats
+            // A double with an overlay, add in both floats.
             mod.addUnchecked((*iter).singleOverlay(0));
             mod.addUnchecked((*iter).singleOverlay(1));
         } else {
-            // add in the lone double in the range 16-31
+            // Add in the lone double in the range 16-31.
             mod.addUnchecked(*iter);
         }
     }
