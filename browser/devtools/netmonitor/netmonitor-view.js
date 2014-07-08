@@ -118,7 +118,7 @@ let NetMonitorView = {
   /**
    * Destroys the UI for all the displayed panes.
    */
-  _destroyPanes: function() {
+  _destroyPanes: Task.async(function*() {
     dumpn("Destroying the NetMonitorView panes");
 
     Prefs.networkDetailsWidth = this._detailsPane.getAttribute("width");
@@ -126,7 +126,12 @@ let NetMonitorView = {
 
     this._detailsPane = null;
     this._detailsPaneToggleButton = null;
-  },
+
+    for (let p of this._editorPromises.values()) {
+      let editor = yield p;
+      editor.destroy();
+    }
+  }),
 
   /**
    * Gets the visibility state of the network details pane.

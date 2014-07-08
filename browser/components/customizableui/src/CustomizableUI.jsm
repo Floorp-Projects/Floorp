@@ -1275,7 +1275,6 @@ let CustomizableUIInternal = {
         shortcut = ShortcutUtils.findShortcut(document.getElementById(commandId));
     }
     if (!shortcut) {
-      ERROR("Could not find a keyboard shortcut for '" + aShortcutNode.outerHTML + "'.");
       return;
     }
 

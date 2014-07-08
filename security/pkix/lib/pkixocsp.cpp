@@ -156,12 +156,17 @@ CheckOCSPResponseSignerCert(TrustDomain& trustDomain,
   }
 
   // TODO(bug 926260): check name constraints
-  return potentialSigner.VerifyOwnSignatureWithKey(trustDomain,
-                                                   issuerSubjectPublicKeyInfo);
+  SECStatus srv = trustDomain.VerifySignedData(potentialSigner.GetSignedData(),
+                                               issuerSubjectPublicKeyInfo);
+  if (srv != SECSuccess) {
+    return MapSECStatus(srv);
+  }
 
   // TODO: check for revocation of the OCSP responder certificate unless no-check
   // or the caller forcing no-check. To properly support the no-check policy, we'd
   // need to enforce policy constraints from the issuerChain.
+
+  return Success;
 }
 
 MOZILLA_PKIX_ENUM_CLASS ResponderIDType : uint8_t
@@ -233,7 +238,7 @@ VerifyOCSPSignedData(TrustDomain& trustDomain,
                      const CERTSignedData& signedResponseData,
                      const SECItem& spki)
 {
-  SECStatus srv(trustDomain.VerifySignedData(&signedResponseData, spki));
+  SECStatus srv = trustDomain.VerifySignedData(signedResponseData, spki);
   if (srv != SECSuccess) {
     if (PR_GetError() == SEC_ERROR_BAD_SIGNATURE) {
       PR_SetError(SEC_ERROR_OCSP_BAD_SIGNATURE, 0);
@@ -267,8 +272,8 @@ VerifySignature(Context& context, ResponderIDType responderIDType,
   }
 
   for (size_t i = 0; i < numCerts; ++i) {
-    BackCert cert(nullptr, BackCert::IncludeCN::No);
-    rv = cert.Init(certs[i]);
+    BackCert cert(certs[i], nullptr, BackCert::IncludeCN::No);
+    rv = cert.Init();
     if (rv != Success) {
       return rv;
     }
@@ -314,7 +319,7 @@ SECStatus
 VerifyEncodedOCSPResponse(TrustDomain& trustDomain, const struct CertID& certID,
                           PRTime time, uint16_t maxOCSPLifetimeInDays,
                           const SECItem& encodedResponse,
-                          bool& expired,
+                          /*out*/ bool& expired,
                           /*optional out*/ PRTime* thisUpdate,
                           /*optional out*/ PRTime* validThrough)
 {
@@ -444,7 +449,7 @@ BasicResponse(der::Input& input, Context& context)
 
     // [0] wrapper
     if (der::ExpectTagAndSkipLength(
-          input, der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 0)
+          input, der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0)
         != der::Success) {
       return der::Failure;
     }

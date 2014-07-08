@@ -192,7 +192,10 @@ var ShellDeck = Class({
       this.deck.selectedPanel = shell.elt;
       this._activeShell = shell;
 
-      shell.load();
+      // Only reload the shell if the editor doesn't have local changes.
+      if (shell.editor.isClean()) {
+        shell.load();
+      }
       shell.editorLoaded.then(() => {
         // Handle case where another shell has been requested before this
         // one is finished loading.

@@ -3660,7 +3660,11 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
   }
   nsRefPtr<gfxContext> thebes;
   RefPtr<DrawTarget> drawDT;
-  if (gfxPlatform::GetPlatform()->SupportsAzureContentForDrawTarget(mTarget)) {
+  // Rendering directly is faster and can be done if mTarget supports Azure
+  // and does not need alpha blending.
+  if (gfxPlatform::GetPlatform()->SupportsAzureContentForDrawTarget(mTarget) &&
+      GlobalAlpha() == 1.0f)
+  {
     thebes = new gfxContext(mTarget);
     thebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21,
                                 matrix._22, matrix._31, matrix._32));
@@ -3698,7 +3702,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
     mgfx::Rect sourceRect(0, 0, sw, sh);
     mTarget->DrawSurface(source, destRect, sourceRect,
                          DrawSurfaceOptions(mgfx::Filter::POINT),
-                         DrawOptions(1.0f, CompositionOp::OP_OVER,
+                         DrawOptions(GlobalAlpha(), CompositionOp::OP_OVER,
                                      AntialiasMode::NONE));
     mTarget->Flush();
   } else {

@@ -216,12 +216,8 @@ public class BrowserContract {
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "combined");
 
-        public static final int DISPLAY_NORMAL = 0;
-        public static final int DISPLAY_READER = 1;
-
         public static final String BOOKMARK_ID = "bookmark_id";
         public static final String HISTORY_ID = "history_id";
-        public static final String DISPLAY = "display";
     }
 
     public static final class Schema {
@@ -384,6 +380,10 @@ public class BrowserContract {
             private Combined() {}
 
             public static final String THUMBNAIL = "thumbnail";
+            public static final String DISPLAY = "display";
+
+            public static final int DISPLAY_NORMAL = 0;
+            public static final int DISPLAY_READER = 1;
         }
 
         static final String TABLE_BOOKMARKS_JOIN_IMAGES = Bookmarks.TABLE_NAME + " LEFT OUTER JOIN " +

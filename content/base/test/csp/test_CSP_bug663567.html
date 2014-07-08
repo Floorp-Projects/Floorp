@@ -65,16 +65,11 @@ function checkBlocked () {
   checkExplicitFinish();
 }
 
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-  function () {
-    document.getElementById('xsltframe').addEventListener('load', checkAllowed, false);
-    document.getElementById('xsltframe').src = 'file_CSP_bug663567_allows.xml';
+document.getElementById('xsltframe').addEventListener('load', checkAllowed, false);
+document.getElementById('xsltframe').src = 'file_CSP_bug663567_allows.xml';
 
-    document.getElementById('xsltframe2').addEventListener('load', checkBlocked, false);
-    document.getElementById('xsltframe2').src = 'file_CSP_bug663567_blocks.xml';
-  }
-);
+document.getElementById('xsltframe2').addEventListener('load', checkBlocked, false);
+document.getElementById('xsltframe2').src = 'file_CSP_bug663567_blocks.xml';
 
 </script>
 </body>

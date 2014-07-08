@@ -391,7 +391,7 @@ GetCertFingerprintByOidTag(nsIX509Cert *aCert,
                            nsCString &fp)
 {
 
-  mozilla::pkix::ScopedCERTCertificate nsscert(aCert->GetCert());
+  ScopedCERTCertificate nsscert(aCert->GetCert());
   if (!nsscert) {
     return NS_ERROR_FAILURE;
   }
@@ -426,7 +426,7 @@ GetCertFingerprintByDottedOidString(nsIX509Cert *aCert,
                                     nsCString &fp)
 {
 
-  mozilla::pkix::ScopedCERTCertificate nsscert(aCert->GetCert());
+  ScopedCERTCertificate nsscert(aCert->GetCert());
   if (!nsscert) {
     return NS_ERROR_FAILURE;
   }
@@ -447,7 +447,7 @@ nsCertOverrideService::RememberValidityOverride(const nsACString& aHostName,
   if (aPort < -1)
     return NS_ERROR_INVALID_ARG;
 
-  mozilla::pkix::ScopedCERTCertificate nsscert(aCert->GetCert());
+  ScopedCERTCertificate nsscert(aCert->GetCert());
   if (!nsscert) {
     return NS_ERROR_FAILURE;
   }

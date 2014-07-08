@@ -1598,8 +1598,7 @@ ConcatJSString(JSContext* cx, const char* pre, JS::Handle<JSString*> str, const 
 
 bool
 NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
-               JS::Handle<JSObject*> obj, const char* pre,
-               const char* post,
+               JS::Handle<JSObject*> obj,
                JS::MutableHandle<JS::Value> v)
 {
   JS::Rooted<JSPropertyDescriptor> toStringDesc(cx);
@@ -1644,7 +1643,6 @@ NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
         JS::Rooted<JSFunction*> fun(cx, JS_GetObjectFunction(obj));
         str = JS_DecompileFunction(cx, fun, 0);
       }
-      str = ConcatJSString(cx, pre, str, post);
     }
   }
 

@@ -100,13 +100,9 @@ window.examiner = new examiner();
 SimpleTest.waitForExplicitFinish();
 
 // load the resource which will generate a CSP violation report
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-    function() {
-      // save this for last so that our listeners are registered.
-      // ... this loads the testbed of good and bad requests.
-      document.getElementById("cspframe").src = testFile;
-    });
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById("cspframe").src = testFile;
 </script>
 </pre>
 </body>

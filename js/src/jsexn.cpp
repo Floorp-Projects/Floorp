@@ -869,10 +869,8 @@ js_ReportUncaughtException(JSContext *cx)
 }
 
 JSObject *
-js_CopyErrorObject(JSContext *cx, Handle<ErrorObject*> err, HandleObject scope)
+js_CopyErrorObject(JSContext *cx, Handle<ErrorObject*> err)
 {
-    assertSameCompartment(cx, scope);
-
     js::ScopedJSFreePtr<JSErrorReport> copyReport;
     if (JSErrorReport *errorReport = err->getErrorReport()) {
         copyReport = CopyErrorReport(cx, errorReport);

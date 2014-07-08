@@ -37,7 +37,6 @@
 #include "nsIPrompt.h"
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
-#include "nsRecentBadCerts.h"
 #include "SharedSSLState.h"
 
 #include "nspr.h"
@@ -84,12 +83,6 @@ attemptToLogInWithDefaultPassword()
 
 NS_IMPL_ISUPPORTS(nsNSSCertificateDB, nsIX509CertDB)
 
-nsNSSCertificateDB::nsNSSCertificateDB()
-: mBadCertsLock("nsNSSCertificateDB::mBadCertsLock")
-{
-  SharedSSLState::NoteCertDBServiceInstantiated();
-}
-
 nsNSSCertificateDB::~nsNSSCertificateDB()
 {
   nsNSSShutDownPreventionLock locker;
@@ -112,7 +105,7 @@ nsNSSCertificateDB::FindCertByNickname(nsISupports *aToken,
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  mozilla::pkix::ScopedCERTCertificate cert;
+  ScopedCERTCertificate cert;
   char *asciiname = nullptr;
   NS_ConvertUTF16toUTF8 aUtf8Nickname(nickname);
   asciiname = const_cast<char*>(aUtf8Nickname.get());
@@ -158,7 +151,7 @@ nsNSSCertificateDB::FindCertByDBKey(const char *aDBkey, nsISupports *aToken,
     return NS_ERROR_INVALID_ARG;
   }
 
-  mozilla::pkix::ScopedCERTCertificate cert;
+  ScopedCERTCertificate cert;
   // someday maybe we can speed up the search using the moduleID and slotID
   // moduleID = NS_NSS_GET_LONG(keyItem.data);
   // slotID = NS_NSS_GET_LONG(&keyItem.data[NS_NSS_LONG]);
@@ -202,8 +195,7 @@ nsNSSCertificateDB::FindCertNicknames(nsISupports *aToken,
   /*
    * obtain the cert list from NSS
    */
-  mozilla::pkix::ScopedCERTCertList certList;
-  certList = PK11_ListCerts(PK11CertListUnique, nullptr);
+  ScopedCERTCertList certList(PK11_ListCerts(PK11CertListUnique, nullptr));
   if (!certList)
     goto cleanup;
   /*
@@ -357,9 +349,8 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
     return rv;
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Creating temp cert\n"));
-  mozilla::pkix::ScopedCERTCertificate tmpCert;
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
-  tmpCert = CERT_FindCertByDERCert(certdb, &der);
+  ScopedCERTCertificate tmpCert(CERT_FindCertByDERCert(certdb, &der));
   if (!tmpCert) {
     tmpCert = CERT_NewTempCertificate(certdb, &der,
                                       nullptr, false, true);
@@ -414,7 +405,7 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
   // Import additional delivered certificates that can be verified.
 
   // build a CertList for filtering
-  mozilla::pkix::ScopedCERTCertList certList(CERT_NewCertList());
+  ScopedCERTCertList certList(CERT_NewCertList());
   if (!certList) {
     return NS_ERROR_FAILURE;
   }
@@ -560,7 +551,7 @@ nsNSSCertificateDB::ImportEmailCertificate(uint8_t * data, uint32_t length,
   nsresult nsrv = NS_OK;
   CERTCertDBHandle *certdb;
   CERTCertificate **certArray = nullptr;
-  mozilla::pkix::ScopedCERTCertList certList;
+  ScopedCERTCertList certList;
   CERTCertListNode *node;
   SECItem **rawArray;
   int numcerts;
@@ -673,7 +664,7 @@ nsNSSCertificateDB::ImportServerCertificate(uint8_t * data, uint32_t length,
 
   SECStatus srv = SECFailure;
   nsresult nsrv = NS_OK;
-  mozilla::pkix::ScopedCERTCertificate cert;
+  ScopedCERTCertificate cert;
   SECItem **rawCerts = nullptr;
   int numcerts;
   int i;
@@ -878,7 +869,7 @@ nsNSSCertificateDB::ImportUserCertificate(uint8_t *data, uint32_t length, nsIInt
   SECItem *CACerts;
   CERTDERCerts * collectArgs;
   PLArenaPool *arena;
-  mozilla::pkix::ScopedCERTCertificate cert;
+  ScopedCERTCertificate cert;
 
   arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   if (!arena) {
@@ -954,7 +945,7 @@ nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  mozilla::pkix::ScopedCERTCertificate cert(aCert->GetCert());
+  ScopedCERTCertificate cert(aCert->GetCert());
   if (!cert) {
     return NS_ERROR_FAILURE;
   }
@@ -999,7 +990,7 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
   }
   nsNSSCertTrust trust;
   nsresult rv;
-  mozilla::pkix::ScopedCERTCertificate nsscert(cert->GetCert());
+  ScopedCERTCertificate nsscert(cert->GetCert());
 
   rv = attemptToLogInWithDefaultPassword();
   if (NS_WARN_IF(rv != NS_OK)) {
@@ -1051,7 +1042,7 @@ nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert,
     return NS_ERROR_NOT_AVAILABLE;
   }
   SECStatus srv;
-  mozilla::pkix::ScopedCERTCertificate nsscert(cert->GetCert());
+  ScopedCERTCertificate nsscert(cert->GetCert());
   CERTCertTrust nsstrust;
   srv = CERT_GetCertTrust(nsscert.get(), &nsstrust);
   if (srv != SECSuccess)
@@ -1300,9 +1291,10 @@ nsNSSCertificateDB::FindEmailEncryptionCert(const nsAString& aNickname,
   asciiname = const_cast<char*>(aUtf8Nickname.get());
 
   /* Find a good cert in the user's database */
-  mozilla::pkix::ScopedCERTCertificate cert;
-  cert = CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(), asciiname, 
-           certUsageEmailRecipient, true, ctx);
+  ScopedCERTCertificate cert(CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(),
+                                                      asciiname,
+                                                      certUsageEmailRecipient,
+                                                      true, ctx));
   if (!cert) {
     return NS_OK;
   }
@@ -1331,15 +1323,16 @@ nsNSSCertificateDB::FindEmailSigningCert(const nsAString& aNickname,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mozilla::pkix::ScopedCERTCertificate cert;
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   char *asciiname = nullptr;
   NS_ConvertUTF16toUTF8 aUtf8Nickname(aNickname);
   asciiname = const_cast<char*>(aUtf8Nickname.get());
 
   /* Find a good cert in the user's database */
-  cert = CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(), asciiname, 
-           certUsageEmailSigner, true, ctx);
+  ScopedCERTCertificate cert(CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(),
+                                                      asciiname,
+                                                      certUsageEmailSigner,
+                                                      true, ctx));
   if (!cert) {
     return NS_OK;
   }
@@ -1462,10 +1455,9 @@ nsNSSCertificateDB::ConstructX509(const char* certDER,
   secitem_cert.data = (unsigned char*)certDER;
   secitem_cert.len = lengthDER;
 
-  mozilla::pkix::ScopedCERTCertificate cert;
-  cert =
-    CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &secitem_cert,
-                            nullptr, false, true);
+  ScopedCERTCertificate cert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
+                                                     &secitem_cert, nullptr,
+                                                     false, true));
   if (!cert)
     return (PORT_GetError() == SEC_ERROR_NO_MEMORY)
       ? NS_ERROR_OUT_OF_MEMORY : NS_ERROR_FAILURE;
@@ -1561,7 +1553,7 @@ nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert,
       PR_smprintf_free(tmp);
     }
 
-    mozilla::pkix::ScopedCERTCertificate dummycert;
+    ScopedCERTCertificate dummycert;
 
     if (PK11_IsInternal(slot)) {
       /* look up the nickname to make sure it isn't in use already */
@@ -1624,7 +1616,7 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char* aBase64,
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Creating temp cert\n"));
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
-  mozilla::pkix::ScopedCERTCertificate tmpCert(CERT_FindCertByDERCert(certdb, &der));
+  ScopedCERTCertificate tmpCert(CERT_FindCertByDERCert(certdb, &der));
   if (!tmpCert)
     tmpCert = CERT_NewTempCertificate(certdb, &der,
                                       nullptr, false, true);
@@ -1679,7 +1671,7 @@ nsNSSCertificateDB::SetCertTrustFromString(nsIX509Cert* cert,
   if (srv != SECSuccess) {
     return MapSECStatus(SECFailure);
   }
-  mozilla::pkix::ScopedCERTCertificate nssCert(cert->GetCert());
+  ScopedCERTCertificate nssCert(cert->GetCert());
 
   nsresult rv = attemptToLogInWithDefaultPassword();
   if (NS_WARN_IF(rv != NS_OK)) {
@@ -1709,29 +1701,6 @@ nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
 
   *_retval = nssCertList;
   NS_ADDREF(*_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSCertificateDB::GetRecentBadCerts(bool isPrivate, nsIRecentBadCerts** result)
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  MutexAutoLock lock(mBadCertsLock);
-  if (isPrivate) {
-    if (!mPrivateRecentBadCerts) {
-      mPrivateRecentBadCerts = new nsRecentBadCerts;
-    }
-    NS_ADDREF(*result = mPrivateRecentBadCerts);
-  } else {
-    if (!mPublicRecentBadCerts) {
-      mPublicRecentBadCerts = new nsRecentBadCerts;
-    }
-    NS_ADDREF(*result = mPublicRecentBadCerts);
-  }
   return NS_OK;
 }
 

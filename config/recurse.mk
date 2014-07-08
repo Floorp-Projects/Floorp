@@ -121,8 +121,8 @@ recurse_$(CURRENT_TIER):
 
 # Creating binaries-deps.mk directly would make us build it twice: once when beginning
 # the build because of the include, and once at the end because of the stamps.
-binaries-deps: $(addsuffix /binaries,$(CURRENT_DIRS))
-	@$(call py_action,link_deps,-o $@.mk --group-by-depfile --topsrcdir $(topsrcdir) --topobjdir $(DEPTH) --dist $(DIST) --guard $(addprefix ',$(addsuffix ',$^)))
+binaries-deps:
+	@$(call py_action,link_deps,-o $@.mk --group-by-depfile --topsrcdir $(topsrcdir) --topobjdir $(DEPTH) --dist $(DIST) --guard $(addprefix ',$(addsuffix ', $(wildcard $(addsuffix /binaries,$(CURRENT_DIRS))))))
 	@$(TOUCH) $@
 
 ifeq (recurse_binaries,$(MAKECMDGOALS))

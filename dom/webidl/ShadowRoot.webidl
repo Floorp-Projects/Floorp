@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="dom.webcomponents.enabled"]
+[Func="nsDocument::IsWebComponentsEnabled"]
 interface ShadowRoot : DocumentFragment
 {
   Element? getElementById(DOMString elementId);

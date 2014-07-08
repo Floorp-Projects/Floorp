@@ -1479,7 +1479,7 @@ public:
                                     uint32_t aNamespaceID,
                                     mozilla::ErrorResult& rv);
 
-  static bool IsRegisterElementEnabled(JSContext* aCx, JSObject* aObject);
+  static bool IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject);
 
   // The "registry" from the web components spec.
   nsRefPtr<mozilla::dom::Registry> mRegistry;

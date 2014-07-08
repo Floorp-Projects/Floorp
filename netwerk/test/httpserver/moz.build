@@ -16,4 +16,8 @@ EXTRA_COMPONENTS += [
     'httpd.js',
 ]
 
+TESTING_JS_MODULES += [
+    'httpd.js',
+]
+
 JAR_MANIFESTS += ['jar.mn']

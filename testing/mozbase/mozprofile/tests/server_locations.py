@@ -5,9 +5,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mozfile
-import os
-import shutil
-import tempfile
 import unittest
 from mozprofile.permissions import ServerLocations, \
     MissingPrimaryLocationError, MultiplePrimaryLocationsError, \

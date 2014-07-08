@@ -695,6 +695,7 @@ WebConsoleFrame.prototype = {
       }, this);
 
       aButton.setAttribute("checked", someChecked);
+      aButton.setAttribute("aria-pressed", someChecked);
     }, this);
 
     if (!this.owner._browserConsole) {
@@ -834,12 +835,14 @@ WebConsoleFrame.prototype = {
           Array.forEach(buttons, (button) => {
             if (button !== target) {
               button.setAttribute("checked", false);
+              button.setAttribute("aria-pressed", false);
               this._setMenuState(button, false);
             }
           });
           state = true;
         }
         target.setAttribute("checked", state);
+        target.setAttribute("aria-pressed", state);
 
         // This is a filter button with a drop-down, and the user clicked the
         // main part of the button. Go through all the severities and toggle
@@ -888,6 +891,7 @@ WebConsoleFrame.prototype = {
         }
         let toolbarButton = menuPopup.parentNode;
         toolbarButton.setAttribute("checked", someChecked);
+        toolbarButton.setAttribute("aria-pressed", someChecked);
         break;
       }
     }

@@ -218,8 +218,7 @@ SpecialPowers.addPermission("browser", true, "https://example.com");
 
 SpecialPowers.pushPrefEnv({'set': [["dom.mozBrowserFramesEnabled", true],
                                    ["security.apps.privileged.CSP.default", DEFAULT_CSP_PRIV],
-                                   ["security.apps.certified.CSP.default", DEFAULT_CSP_CERT],
-                                   ["security.csp.speccompliant", true]]},
+                                   ["security.apps.certified.CSP.default", DEFAULT_CSP_CERT]]},
                           function() {  gTestRunner.next(); });
 
 

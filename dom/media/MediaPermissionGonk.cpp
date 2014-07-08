@@ -150,7 +150,6 @@ public:
 
   MediaPermissionRequest(nsRefPtr<dom::GetUserMediaRequest> &aRequest,
                          nsTArray<nsCOMPtr<nsIMediaDevice> > &aDevices);
-  virtual ~MediaPermissionRequest() {}
 
   // It will be called when prompt dismissed.
   virtual bool Recv__delete__(const bool &allow,
@@ -158,6 +157,9 @@ public:
   virtual void IPDLRelease() MOZ_OVERRIDE { Release(); }
 
   already_AddRefed<nsPIDOMWindow> GetOwner();
+
+protected:
+  virtual ~MediaPermissionRequest() {}
 
 private:
   nsresult DoAllow(const nsString &audioDevice, const nsString &videoDevice);
@@ -378,6 +380,8 @@ public:
 
   MediaDeviceSuccessCallback(nsRefPtr<dom::GetUserMediaRequest> &aRequest)
     : mRequest(aRequest) {}
+
+protected:
   virtual ~MediaDeviceSuccessCallback() {}
 
 private:
@@ -479,6 +483,7 @@ public:
   MediaDeviceErrorCallback(const nsAString &aCallID)
     : mCallID(aCallID) {}
 
+protected:
   virtual ~MediaDeviceErrorCallback() {}
 
 private:

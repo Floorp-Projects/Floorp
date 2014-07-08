@@ -235,13 +235,9 @@ window.testResult = function(testname, result, msg) {
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-   function() {
-    // save this for last so that our listeners are registered.
-    // ... this loads the testbed of good and bad requests.
-    document.getElementById('cspframe').src = 'http://mochi.test:8888' + path + 'file_bug836922_npolicies.html';
-  });
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'http://mochi.test:8888' + path + 'file_bug836922_npolicies.html';
 
 </script>
 </pre>

@@ -81,6 +81,14 @@ def print_header_file(fd, conf):
                 fd.write("  %s\n" % attributeVariableTypeAndName(a))
             fd.write("};\n\n")
 
+            fd.write("namespace mozilla {\n"
+                     "template<>\n"
+                     "struct HasDangerousPublicDestructor<%s>\n"
+                     "{\n"
+                     "  static const bool value = true;\n"
+                     "};\n"
+                     "}\n" % classname)
+
     fd.write("#endif\n")
 
 def interfaceAttributeTypes(idl):

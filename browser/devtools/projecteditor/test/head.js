@@ -303,3 +303,22 @@ function onceEditorSave(projecteditor) {
   });
   return def.promise;
 }
+
+function onPopupShow(menu) {
+  let defer = promise.defer();
+  menu.addEventListener("popupshown", function onpopupshown() {
+    menu.removeEventListener("popupshown", onpopupshown);
+    defer.resolve();
+  });
+  return defer.promise;
+}
+
+function onPopupHidden(menu) {
+  let defer = promise.defer();
+  menu.addEventListener("popuphidden", function onpopuphidden() {
+    menu.removeEventListener("popuphidden", onpopuphidden);
+    defer.resolve();
+  });
+  return defer.promise;
+}
+

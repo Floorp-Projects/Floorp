@@ -147,14 +147,9 @@ function receiveMessage(event) {
 window.examiner = new examiner();
 SimpleTest.waitForExplicitFinish();
 
-// added this so the tests run even if we don't flip the pref on by default.
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-  function() {
-    // save this for last so that our listeners are registered.
-    // ... this loads the testbed of good and bad requests.
-    document.getElementById('cspframe').src = 'file_CSP_frameancestors_main.html';
-  });
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'file_CSP_frameancestors_main.html';
 
 </script>
 </pre>

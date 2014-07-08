@@ -14,5 +14,3 @@ EXTRA_COMPONENTS += \
                    httpd.manifest \
                    $(NULL)
 endif
-
-TESTING_JS_MODULES = httpd.js

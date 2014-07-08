@@ -2100,11 +2100,11 @@ XrayToString(JSContext *cx, unsigned argc, Value *vp)
 
     RootedObject obj(cx, XrayTraits::getTargetObject(wrapper));
 
+    if (UseDOMXray(obj))
+        return NativeToString(cx, wrapper, obj, args.rval());
+
     static const char start[] = "[object XrayWrapper ";
     static const char end[] = "]";
-    if (UseDOMXray(obj))
-        return NativeToString(cx, wrapper, obj, start, end, args.rval());
-
     nsAutoString result;
     result.AppendASCII(start);
 
