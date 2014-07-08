@@ -6,10 +6,10 @@
 
 /* General utilities used throughout devtools. */
 
-// hasChrome is provided as a global by the loader. It is true if we are running
-// on the main thread, and false if we are running on a worker thread.
 var { Ci, Cu } = require("chrome");
 var Services = require("Services");
+var promise = require("promise");
+var { setTimeout } = require("Timer");
 
 /**
  * Turn the error |aError| into a string, without fail.
