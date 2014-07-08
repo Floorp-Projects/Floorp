@@ -90,17 +90,12 @@ MapSECStatus(SECStatus srv)
 class BackCert
 {
 public:
-  // IncludeCN::No means that name constraint enforcement should not consider
-  // the subject CN as a possible dNSName. IncludeCN::Yes means that name
-  // constraint enforcement will consider the subject CN as a possible dNSName.
-  MOZILLA_PKIX_ENUM_CLASS IncludeCN { No = 0, Yes = 1 };
-
   // certDER and childCert must be valid for the lifetime of BackCert.
-  BackCert(const SECItem& certDER, const BackCert* childCert,
-           IncludeCN includeCN)
+  BackCert(const SECItem& certDER, EndEntityOrCA endEntityOrCA,
+           const BackCert* childCert)
     : der(certDER)
+    , endEntityOrCA(endEntityOrCA)
     , childCert(childCert)
-    , includeCN(includeCN)
   {
   }
 
@@ -147,8 +142,8 @@ private:
   const SECItem& der;
 
 public:
+  const EndEntityOrCA endEntityOrCA;
   BackCert const* const childCert;
-  const IncludeCN includeCN;
 
 private:
   der::Version version;
