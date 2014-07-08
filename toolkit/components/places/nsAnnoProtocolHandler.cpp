@@ -179,6 +179,9 @@ public:
     return NS_OK;
   }
 
+protected:
+  virtual ~faviconAsyncLoader() {}
+
 private:
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIOutputStream> mOutputStream;
