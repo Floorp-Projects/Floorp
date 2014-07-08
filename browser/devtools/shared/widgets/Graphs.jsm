@@ -136,9 +136,11 @@ GraphSelectionResizer.prototype = {
 this.AbstractCanvasGraph = function(parent, name, sharpness) {
   EventEmitter.decorate(this);
 
-  this._ready = promise.defer();
   this._parent = parent;
+  this._ready = promise.defer();
+
   this._uid = "canvas-graph-" + Date.now();
+  this._renderTargets = new Map();
 
   AbstractCanvasGraph.createIframe(GRAPH_SRC, parent, iframe => {
     this._iframe = iframe;
@@ -232,6 +234,7 @@ AbstractCanvasGraph.prototype = {
     this._data = null;
     this._regions = null;
     this._cachedGraphImage = null;
+    this._renderTargets.clear();
     gCachedStripePattern.clear();
   },
 
@@ -573,6 +576,38 @@ AbstractCanvasGraph.prototype = {
 
     this._shouldRedraw = true;
     this.emit("refresh");
+  },
+
+  /**
+   * Gets a canvas with the specified name, for this graph.
+   *
+   * If it doesn't exist yet, it will be created, otherwise the cached instance
+   * will be cleared and returned.
+   *
+   * @param string name
+   *        The canvas name.
+   * @param number width, height [optional]
+   *        A custom width and height for the canvas. Defaults to this graph's
+   *        container canvas width and height.
+   */
+  _getNamedCanvas: function(name, width = this._width, height = this._height) {
+    let cachedRenderTarget = this._renderTargets.get(name);
+    if (cachedRenderTarget) {
+      let { canvas, ctx } = cachedRenderTarget;
+      canvas.width = width;
+      canvas.height = height;
+      ctx.clearRect(0, 0, width, height);
+      return cachedRenderTarget;
+    }
+
+    let canvas = this._document.createElementNS(HTML_NS, "canvas");
+    let ctx = canvas.getContext("2d");
+    canvas.width = width;
+    canvas.height = height;
+
+    let renderTarget = { canvas: canvas, ctx: ctx };
+    this._renderTargets.set(name, renderTarget);
+    return renderTarget;
   },
 
   /**
@@ -1074,10 +1109,9 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * @see AbstractCanvasGraph.prototype.buildGraphImage
    */
   buildGraphImage: function() {
-    let canvas = this._document.createElementNS(HTML_NS, "canvas");
-    let ctx = canvas.getContext("2d");
-    let width = canvas.width = this._width;
-    let height = canvas.height = this._height;
+    let { canvas, ctx } = this._getNamedCanvas("line-graph-data");
+    let width = this._width;
+    let height = this._height;
 
     let totalTicks = this._data.length;
     let firstTick = this._data[0].delta;
@@ -1342,11 +1376,9 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     if (!this.format || !this.format.length) {
       throw "The graph format traits are mandatory to style the data source.";
     }
-
-    let canvas = this._document.createElementNS(HTML_NS, "canvas");
-    let ctx = canvas.getContext("2d");
-    let width = canvas.width = this._width;
-    let height = canvas.height = this._height;
+    let { canvas, ctx } = this._getNamedCanvas("bar-graph-data");
+    let width = this._width;
+    let height = this._height;
 
     let totalTypes = this.format.length;
     let totalTicks = this._data.length;
