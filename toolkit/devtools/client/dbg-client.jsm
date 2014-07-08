@@ -614,6 +614,9 @@ DebuggerClient.prototype = {
    * @return Request
    *         This object emits a number of events to allow you to respond to
    *         different parts of the request lifecycle.
+   *         It is also a Promise object, with a `then` method, that is resolved
+   *         whenever a JSON or a Bulk response is received; and is rejected
+   *         if the response is an error.
    *         Note: This return value can be ignored if you are using JSON alone,
    *         because the callback provided in |aOnResponse| will be bound to the
    *         "json-reply" event automatically.
@@ -664,6 +667,27 @@ DebuggerClient.prototype = {
 
     this._pendingRequests.push(request);
     this._sendRequests();
+
+    // Implement a Promise like API on the returned object
+    // that resolves/rejects on request response
+    let deferred = promise.defer();
+    function listenerJson(resp) {
+      request.off("json-reply", listenerJson);
+      request.off("bulk-reply", listenerBulk);
+      if (resp.error) {
+        deferred.reject(resp);
+      } else {
+        deferred.resolve(resp);
+      }
+    }
+    function listenerBulk(resp) {
+      request.off("json-reply", listenerJson);
+      request.off("bulk-reply", listenerBulk);
+      deferred.resolve(resp);
+    }
+    request.on("json-reply", listenerJson);
+    request.on("bulk-reply", listenerBulk);
+    request.then = deferred.promise.then.bind(deferred.promise);
 
     return request;
   },
