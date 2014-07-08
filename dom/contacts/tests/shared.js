@@ -3,6 +3,7 @@
 // Fix the environment to run Contacts tests
 if (SpecialPowers.isMainProcess()) {
   SpecialPowers.Cu.import("resource://gre/modules/ContactService.jsm");
+  SpecialPowers.Cu.import("resource://gre/modules/PermissionPromptHelper.jsm");
 }
 
 SpecialPowers.addPermission("contacts-write", true, document);
