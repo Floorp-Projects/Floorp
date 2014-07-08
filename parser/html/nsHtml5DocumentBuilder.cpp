@@ -86,7 +86,8 @@ nsHtml5DocumentBuilder::UpdateStyleSheet(nsIContent* aElement)
     nsAutoString relVal;
     aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, relVal);
     if (!relVal.IsEmpty()) {
-      uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(relVal);
+      uint32_t linkTypes =
+        nsStyleLinkElement::ParseLinkTypes(relVal, aElement->NodePrincipal());
       bool hasPrefetch = linkTypes & nsStyleLinkElement::ePREFETCH;
       if (hasPrefetch || (linkTypes & nsStyleLinkElement::eNEXT)) {
         nsAutoString hrefVal;
