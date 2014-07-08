@@ -193,10 +193,10 @@ def main(args=sys.argv[1:]):
             for dep in value:
                 if dep in mozbase_packages and dep not in deps:
                     key, value = get_dependencies(os.path.join(here, dep))
-                    deps[key] = [sanitize_dependency(dep) for dep in value]
+                    deps[key] = [dep for dep in value]
 
                     for dep in value:
-                        alldeps[sanitize_dependency(dep)] = ''.join(dep.split())
+                        alldeps[dep] = ''.join(dep.split())
                     mapping[package] = key
                     flag = True
                     break

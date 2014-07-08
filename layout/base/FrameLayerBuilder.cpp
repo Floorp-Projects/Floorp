@@ -1624,7 +1624,8 @@ SetVisibleRegionForLayer(Layer* aLayer, const nsIntRegion& aLayerVisibleRegion,
   nsIntRect childBounds = aLayerVisibleRegion.GetBounds();
   gfxRect childGfxBounds(childBounds.x, childBounds.y,
                          childBounds.width, childBounds.height);
-  gfxRect layerVisible = transform.UntransformBounds(itemVisible, childGfxBounds);
+  gfxRect layerVisible = transform.Inverse().ProjectRectBounds(itemVisible);
+  layerVisible = layerVisible.Intersect(childGfxBounds);
   layerVisible.RoundOut();
 
   nsIntRect visibleRect;

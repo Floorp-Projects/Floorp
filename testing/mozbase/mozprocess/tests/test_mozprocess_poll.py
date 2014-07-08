@@ -4,7 +4,6 @@ import os
 import signal
 import unittest
 
-import mozinfo
 from mozprocess import processhandler
 
 import proctest

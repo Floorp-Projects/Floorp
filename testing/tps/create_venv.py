@@ -14,7 +14,9 @@ import os
 import shutil
 import subprocess
 import sys
-import urllib
+import urllib2
+import zipfile
+
 
 here = os.path.dirname(os.path.abspath(__file__))
 usage_message = """
@@ -33,7 +35,11 @@ See runtps --help for all options
 
 ***********************************************************************
 """
-virtualenv_url = 'https://raw.github.com/pypa/virtualenv/1.9.1/virtualenv.py'
+
+# Link to the folder, which contains the zip archives of virtualenv
+URL_VIRTUALENV = 'https://codeload.github.com/pypa/virtualenv/zip/'
+VERSION_VIRTUALENV = '1.10.1'
+
 
 if sys.platform == 'win32':
     bin_name = os.path.join('Scripts', 'activate.bat')
@@ -43,6 +49,59 @@ else:
     bin_name = os.path.join('bin', 'activate')
     activate_env = os.path.join('bin', 'activate_this.py')
     python_env = os.path.join('bin', 'python')
+
+
+def download(url, target):
+    """Downloads the specified url to the given target."""
+    response = urllib2.urlopen(url)
+    with open(target, 'wb') as f:
+        f.write(response.read())
+
+    return target
+
+
+def setup_virtualenv(target, python_bin=None):
+    script_path = os.path.join(here, 'virtualenv-%s' % VERSION_VIRTUALENV,
+                               'virtualenv.py')
+
+    print 'Downloading virtualenv %s' % VERSION_VIRTUALENV
+    zip_path = download(URL_VIRTUALENV + VERSION_VIRTUALENV,
+                        os.path.join(here, 'virtualenv.zip'))
+
+    try:
+        with zipfile.ZipFile(zip_path, 'r') as f:
+            f.extractall(here)
+
+        print 'Creating new virtual environment'
+        cmd_args = [sys.executable, script_path, target]
+
+        if python_bin:
+            cmd_args.extend(['-p', python_bin])
+
+        subprocess.check_call(cmd_args)
+    finally:
+        try:
+            os.remove(zip_path)
+        except OSError:
+            pass
+
+        shutil.rmtree(os.path.dirname(script_path), ignore_errors=True)
+
+
+def update_configfile(source, target, replacements):
+    lines = []
+
+    with open(source) as config:
+        for line in config:
+            for source_string, target_string in replacements.iteritems():
+                if target_string:
+                    line = line.replace(source_string, target_string)
+            lines.append(line)
+
+    with open(target, 'w') as config:
+        for line in lines:
+            config.write(line)
+
 
 def main():
     parser = optparse.OptionParser('Usage: %prog [options] path_to_venv')
@@ -90,12 +149,7 @@ def main():
     target = args[0]
     assert(target)
 
-    # Create a virtual environment
-    urllib.urlretrieve(virtualenv_url, 'virtualenv.py')
-    cmd_args = [sys.executable, 'virtualenv.py', target]
-    if options.python:
-        cmd_args.extend(['-p', options.python])
-    subprocess.check_call(cmd_args)
+    setup_virtualenv(target, python_bin=options.python)
 
     # Activate tps environment
     tps_env = os.path.join(target, activate_env)
@@ -116,47 +170,21 @@ def main():
         testdir = os.path.join(here, 'tests')
         extdir = os.path.join(here, 'extensions')
 
-    assert(os.path.exists(testdir))
-    assert(os.path.exists(extdir))
+    update_configfile(os.path.join(here, 'config', 'config.json.in'),
+                      os.path.join(target, 'config.json'),
+                      replacements={
+                      '__TESTDIR__': testdir.replace('\\','/'),
+                      '__EXTENSIONDIR__': extdir.replace('\\','/'),
+                      '__FX_ACCOUNT_USERNAME__': options.username,
+                      '__FX_ACCOUNT_PASSWORD__': options.password,
+                      '__SYNC_ACCOUNT_USERNAME__': options.sync_username,
+                      '__SYNC_ACCOUNT_PASSWORD__': options.sync_password,
+                      '__SYNC_ACCOUNT_PASSPHRASE__': options.sync_passphrase})
 
-    # Update config file
-    config_in_path = os.path.join(here, 'config', 'config.json.in')
-    replacements = {'__TESTDIR__': testdir.replace('\\','/'),
-                    '__EXTENSIONDIR__': extdir.replace('\\','/')}
-    if options.username and options.password:
-        replacements.update({
-            '__FX_ACCOUNT_USERNAME__': options.username,
-            '__FX_ACCOUNT_PASSWORD__': options.password})
-    else:
-        print 'Firefox Account credentials not specified. Please update the ' \
-              'config file manually.'
-
-    if options.sync_username and options.sync_password and options.passphrase:
-        replacements.update({
-            '__SYNC_ACCOUNT_USERNAME__': options.sync_username,
-            '__SYNC_ACCOUNT_PASSWORD__': options.sync_password,
-            '__SYNC_ACCOUNT_PASSPHRASE__': options.sync_passphrase})
-    else:
-        print "Firefox Sync account credentials not specified. Please " \
-              "update the config file manually."
-
-    lines = []
-    with open(config_in_path) as config:
-        for line in config:
-            for source_string, target_string in replacements.iteritems():
-                line = line.replace(source_string, target_string)
-            lines.append(line)
-
-    with open(os.path.join(target, 'config.json'), 'w') as config:
-        for line in lines:
-            config.write(line)
-
-    # Clean up files created by setup.py
-    shutil.rmtree(os.path.join(here, 'build'))
-    shutil.rmtree(os.path.join(here, 'dist'))
-    shutil.rmtree(os.path.join(here, 'tps.egg-info'))
-    os.remove(os.path.join(here, 'virtualenv.py'))
-    os.remove(os.path.join(here, 'virtualenv.pyc'))
+    if not (options.username and options.password):
+        print '\nFirefox Account credentials not specified.'
+    if not (options.sync_username and options.sync_password and options.passphrase):
+        print '\nFirefox Sync account credentials not specified.'
 
     # Print the user instructions
     print usage_message.format(TARGET=target,

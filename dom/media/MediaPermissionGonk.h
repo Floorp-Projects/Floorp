@@ -23,6 +23,8 @@ public:
   NS_DECL_NSIOBSERVER
 
   static MediaPermissionManager* GetInstance();
+
+protected:
   virtual ~MediaPermissionManager();
 
 private:
