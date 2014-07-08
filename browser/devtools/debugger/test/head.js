@@ -752,6 +752,10 @@ function getBlackBoxButton(aPanel) {
   return aPanel.panelWin.document.getElementById("black-box");
 }
 
+function getSelectedSourceElement(aPanel) {
+    return gPanel.panelWin.DebuggerView.Sources.selectedItem.target;
+}
+
 function toggleBlackBoxing(aPanel, aSource = null) {
   function clickBlackBoxButton() {
     getBlackBoxButton(aPanel).click();
