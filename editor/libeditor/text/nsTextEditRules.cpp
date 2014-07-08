@@ -481,10 +481,10 @@ GetTextNode(nsISelection *selection, nsEditor *editor) {
     // if node is null, return it to indicate there's no text
     NS_ENSURE_TRUE(node, nullptr);
     // This should be the root node, walk the tree looking for text nodes
-    mozilla::dom::NodeFilterHolder filter;
-    mozilla::dom::NodeIterator iter(node, nsIDOMNodeFilter::SHOW_TEXT, filter);
+    NodeFilterHolder filter;
+    nsRefPtr<NodeIterator> iter = new NodeIterator(node, nsIDOMNodeFilter::SHOW_TEXT, filter);
     while (!editor->IsTextNode(selNode)) {
-      if (NS_FAILED(res = iter.NextNode(getter_AddRefs(selNode))) || !selNode) {
+      if (NS_FAILED(res = iter->NextNode(getter_AddRefs(selNode))) || !selNode) {
         return nullptr;
       }
     }
