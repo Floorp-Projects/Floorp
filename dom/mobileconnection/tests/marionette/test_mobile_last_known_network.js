@@ -10,4 +10,4 @@ startTestCommon(function() {
   is(mobileConnection.lastKnownNetwork, "310-260");
   // The emulator's hard coded icc's mcc, mnc codes and spn.
   is(mobileConnection.lastKnownHomeNetwork, "310-260-Android");
-});
+}, ["mobilenetwork"]);

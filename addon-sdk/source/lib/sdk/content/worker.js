@@ -199,6 +199,7 @@ destroy.define(Worker, function (worker, reason) {
   // Specifying no type or listener removes all listeners
   // from target
   off(worker);
+  off(worker.port);
 });
 
 /**

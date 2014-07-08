@@ -3,7 +3,7 @@
 
 "use strict";
 
-Cu.import("resource://testing-common/services-common/bagheeraserver.js");
+Cu.import("resource://testing-common/services/common/bagheeraserver.js");
 
 function run_test() {
   run_next_test();

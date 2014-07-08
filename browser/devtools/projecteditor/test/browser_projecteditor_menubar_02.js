@@ -106,21 +106,3 @@ function openAndCloseMenu(menu) {
   EventUtils.synthesizeMouseAtCenter(menu, {}, menu.ownerDocument.defaultView);
   yield hidden;
 }
-
-function onPopupShow(menu) {
-  let defer = promise.defer();
-  menu.addEventListener("popupshown", function onpopupshown() {
-    menu.removeEventListener("popupshown", onpopupshown);
-    defer.resolve();
-  });
-  return defer.promise;
-}
-
-function onPopupHidden(menu) {
-  let defer = promise.defer();
-  menu.addEventListener("popuphidden", function onpopupshown() {
-    menu.removeEventListener("popuphidden", onpopupshown);
-    defer.resolve();
-  });
-  return defer.promise;
-}
