@@ -145,6 +145,10 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags)
   mTLSVersionRange.max = 0;
 }
 
+nsNSSSocketInfo::~nsNSSSocketInfo()
+{
+}
+
 NS_IMPL_ISUPPORTS_INHERITED(nsNSSSocketInfo, TransportSecurityInfo,
                             nsISSLSocketControl,
                             nsIClientAuthUserDecision)
