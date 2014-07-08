@@ -124,7 +124,6 @@ nsHtml5TreeOperation::AppendTextToTextNode(const char16_t* aBuffer,
 {
   NS_PRECONDITION(aTextNode, "Got null text node.");
   MOZ_ASSERT(aBuilder);
-  MOZ_ASSERT(aBuilder->GetDocument() == aTextNode->OwnerDoc());
   MOZ_ASSERT(aBuilder->IsInDocUpdate());
   uint32_t oldLength = aTextNode->TextLength();
   CharacterDataChangeInfo info = {
