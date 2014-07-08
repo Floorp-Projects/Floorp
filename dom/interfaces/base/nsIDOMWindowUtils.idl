@@ -47,8 +47,9 @@ interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 interface nsITranslationNodeList;
+interface nsIContentPermissionRequest;
 
-[scriptable, uuid(46e3f206-9a8f-4d66-8248-7ec6a37de45a)]
+[scriptable, uuid(ca202fa7-7b8f-4814-acc3-a8545f67320b)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1663,6 +1664,12 @@ interface nsIDOMWindowUtils : nsISupports {
      * purpose of the test for bug 503926.
      */
     void xpconnectArgument(in nsIDOMWindowUtils aThis);
+
+    /**
+     * Helper for JS components that need to send permission requests with
+     * e10s support properly.
+     */
+     void askPermission(in nsIContentPermissionRequest aRequest);
 };
 
 [scriptable, uuid(c694e359-7227-4392-a138-33c0cc1f15a6)]
