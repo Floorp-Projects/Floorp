@@ -42,6 +42,9 @@ public:
   {
     aRv = InitCommandEvent(aType, aCanBubble, aCancelable, aCommand);
   }
+
+protected:
+  ~CommandEvent() {}
 };
 
 } // namespace dom

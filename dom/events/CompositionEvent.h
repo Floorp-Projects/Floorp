@@ -45,6 +45,8 @@ public:
   }
 
 protected:
+  ~CompositionEvent() {}
+
   nsString mData;
   nsString mLocale;
 };

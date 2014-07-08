@@ -53,6 +53,10 @@ public:
   already_AddRefed<DOMRect> BoundingClientRect();
 
   already_AddRefed<PaintRequestList> PaintRequests();
+
+protected:
+  ~NotifyPaintEvent() {}
+
 private:
   nsRegion GetRegion();
 
