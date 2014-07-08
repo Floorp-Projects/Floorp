@@ -55,16 +55,17 @@ enum State
 typedef uint64_t address;
 typedef uint8_t AllocKind;
 typedef uint8_t ClassId;
+typedef uint64_t TypeId;
 
 struct AllocInfo
 {
     const uint64_t serial;
     const AllocKind kind;
     const Heap initialHeap;
-    ClassId classId;
+    TypeId typeId;
 
     AllocInfo(uint64_t allocCount, uint8_t kind, Heap loc)
-      : serial(allocCount), kind(kind), initialHeap(loc), classId(0)
+      : serial(allocCount), kind(kind), initialHeap(loc), typeId(0)
     {
         assert(kind < AllocKinds);
         assert(initialHeap < HeapKinds);
@@ -82,15 +83,38 @@ struct ClassInfo
       : id(id), name(name), flags(flags), hasFinalizer(hasFinalizer) {}
 };
 
+struct TypeInfo
+{
+    const TypeId id;
+    const ClassId classId;
+    const uint32_t flags;
+    const char *name;
+
+    TypeInfo(TypeId id, ClassId classId, uint32_t flags)
+      : id(id), classId(classId), flags(flags), name(nullptr) {}
+
+    const char *getName() {
+        if (name)
+            return name;
+        static char buffer[32];
+        sprintf(buffer, "type %ld", id);
+        return buffer;
+    }
+};
+
 typedef std::unordered_map<address, AllocInfo> AllocMap;
 typedef std::unordered_map<address, ClassId> ClassMap;
 typedef std::vector<ClassInfo> ClassVector;
+typedef std::unordered_map<address, TypeId> TypeMap;
+typedef std::vector<TypeInfo> TypeVector;
 
 uint64_t thingSizes[AllocKinds];
 AllocMap nurseryThings;
 AllocMap tenuredThings;
 ClassMap classMap;
 ClassVector classes;
+TypeMap typeMap;
+TypeVector types;
 uint64_t allocCount = 0;
 
 // Collected data
@@ -108,10 +132,13 @@ const unsigned LifetimeBinTotal = MaxLifetimeBins;
 const unsigned AugClasses = MaxClasses + 1;
 const unsigned ClassTotal = MaxClasses;
 
+struct EmptyArrayTag {};
+
 template <typename T, size_t length>
 struct Array
 {
     Array() {}
+    Array(const EmptyArrayTag&) { zero(); }
     void zero() { memset(&elements, 0, sizeof(elements)); }
     T &operator[](size_t index) {
         assert(index < length);
@@ -130,10 +157,12 @@ Array<Array<uint64_t, AllocKinds>, HeapKinds> allocCountByHeapAndKind;
 Array<Array<uint64_t, MaxLifetimeBins>, HeapKinds> allocCountByHeapAndLifetime;
 Array<Array<Array<uint64_t, MaxLifetimeBins>, AllocKinds>, HeapKinds> allocCountByHeapKindAndLifetime;
 Array<uint64_t, MaxClasses> objectCountByClass;
+std::vector<uint64_t> objectCountByType;
 Array<Array<uint64_t, MaxClasses>, HeapKinds> objectCountByHeapAndClass;
 Array<Array<Array<uint64_t, MaxLifetimeBins>, MaxClasses>, HeapKinds> objectCountByHeapClassAndLifetime;
 Array<Array<uint64_t, MaxLifetimeBins>, FinalizerKinds> heapObjectCountByFinalizerAndLifetime;
 Array<Array<uint64_t, MaxLifetimeBins>, MaxClasses> finalizedHeapObjectCountByClassAndLifetime;
+std::vector<Array<Array<uint64_t, MaxLifetimeBins>, HeapKinds> > objectCountByTypeHeapAndLifetime;
 
 static void
 die(const char *format, ...)
@@ -406,6 +435,41 @@ outputLifetimeByClass(FILE *file, unsigned initialHeap)
 }
 
 static void
+outputLifetimeByType(FILE *file, unsigned initialHeap)
+{
+    assert(initialHeap < AugHeapKinds);
+
+    fprintf(file, "# Lifetime of %s things (in log2 bins) by type\n", heapName(initialHeap));
+    fprintf(file, "# NB invalid unless execution was traced with appropriate zeal\n");
+    fprintf(file, "# Total allocations: %" PRIu64 "\n", allocCount);
+
+    // There are many types but few are frequently used.
+    const size_t minObjectCount = 1;
+    const size_t outputEntries = 10;
+    std::vector<TypeId> topTypes;
+    for (size_t i = 0; i < types.size(); ++i) {
+        if (objectCountByType.at(i) > minObjectCount)
+            topTypes.push_back(i);
+    }
+    std::sort(topTypes.begin(), topTypes.end(),
+              [] (TypeId a, TypeId b) { return objectCountByType.at(a) > objectCountByType.at(b); });
+    size_t count = std::min(outputEntries, topTypes.size());
+
+    fprintf(file, "Lifetime");
+    for (unsigned i = 0; i < count; ++i)
+        fprintf(file, ", %15s", types[topTypes[i]].getName());
+    fprintf(file, "\n");
+
+    for (unsigned i = 0; i < lifetimeBins; ++i) {
+        fprintf(file, "%8d", binLimit(i));
+        for (unsigned j = 0; j < count; ++j)
+            fprintf(file, ", %8" PRIu64,
+                    objectCountByTypeHeapAndLifetime.at(topTypes[j])[initialHeap][i]);
+        fprintf(file, "\n");
+    }
+}
+
+static void
 processAlloc(const AllocInfo &info, uint64_t finalizeTime)
 {
     uint64_t lifetime = finalizeTime - info.serial;
@@ -419,14 +483,18 @@ processAlloc(const AllocInfo &info, uint64_t finalizeTime)
     ++allocCountByHeapKindAndLifetime[info.initialHeap][info.kind][lifetimeBin];
 
     if (info.kind <= LastObjectAllocKind) {
-        ++objectCountByClass[info.classId];
-        ++objectCountByHeapAndClass[info.initialHeap][info.classId];
-        ++objectCountByHeapClassAndLifetime[info.initialHeap][info.classId][lifetimeBin];
+        const TypeInfo &typeInfo = types[info.typeId];
+        const ClassInfo &classInfo = classes[typeInfo.classId];
+        ++objectCountByType.at(typeInfo.id);
+        ++objectCountByClass[classInfo.id];
+        ++objectCountByHeapAndClass[info.initialHeap][classInfo.id];
+        ++objectCountByHeapClassAndLifetime[info.initialHeap][classInfo.id][lifetimeBin];
+        ++objectCountByTypeHeapAndLifetime.at(typeInfo.id)[info.initialHeap][lifetimeBin];
         if (info.initialHeap == TenuredHeap) {
-            FinalizerKind f = classes[info.classId].hasFinalizer;
+            FinalizerKind f = classes[classInfo.id].hasFinalizer;
             ++heapObjectCountByFinalizerAndLifetime[f][lifetimeBin];
             if (f == HasFinalizer)
-                ++finalizedHeapObjectCountByClassAndLifetime[info.classId][lifetimeBin];
+                ++finalizedHeapObjectCountByClassAndLifetime[classInfo.id][lifetimeBin];
         }
     }
 
@@ -532,6 +600,53 @@ readClassInfo(FILE *file, address clasp)
     createClassInfo(name, flags, hasFinalizer, clasp);
 }
 
+static ClassId
+lookupClassId(address clasp)
+{
+    auto i = classMap.find(clasp);
+    assert(i != classMap.end());
+    ClassId id = i->second;
+    assert(id < classes.size());
+    return id;
+}
+
+static void
+createTypeInfo(ClassId classId, uint32_t flags, address typeObject = 0)
+{
+    TypeId id = types.size();
+    types.push_back(TypeInfo(id, classId, flags));
+    if (typeObject)
+        typeMap.emplace(typeObject, id);
+    objectCountByType.push_back(0);
+    objectCountByTypeHeapAndLifetime.push_back(EmptyArrayTag());
+}
+
+static void
+readTypeInfo(FILE *file, address typeObject)
+{
+    assert(typeObject);
+    address clasp = expectDataAddress(file);
+    uint32_t flags = expectDataInt(file);
+    createTypeInfo(lookupClassId(clasp), flags, typeObject);
+}
+
+static TypeId
+lookupTypeId(address typeObject)
+{
+    auto i = typeMap.find(typeObject);
+    assert(i != typeMap.end());
+    TypeId id = i->second;
+    assert(id < types.size());
+    return id;
+}
+
+static void
+setTypeName(address typeObject, const char *name)
+{
+    TypeId id = lookupTypeId(typeObject);
+    types[id].name = name;
+}
+
 static void
 allocHeapThing(address thing, AllocKind kind)
 {
@@ -547,20 +662,15 @@ allocNurseryThing(address thing, AllocKind kind)
 }
 
 static void
-setObjectClass(address obj, address clasp)
+setObjectType(address obj, address typeObject)
 {
-    auto i = classMap.find(clasp);
-    assert(i != classMap.end());
-    ClassId id = i->second;
-    assert(id < classes.size());
-
     auto j = nurseryThings.find(obj);
     if (j == nurseryThings.end()) {
         j = tenuredThings.find(obj);
         if (j == tenuredThings.end())
             die("Can't find allocation for object %p", obj);
     }
-    j->second.classId = id;
+    j->second.typeId = lookupTypeId(typeObject);
 }
 
 static void
@@ -642,6 +752,8 @@ processTraceFile(const char *filename)
     assert(lifetimeBins <= MaxLifetimeBins);
 
     createClassInfo("unknown", 0, NoFinalizer);
+    createTypeInfo(0, 0);
+    types[0].name = "unknown";
 
     State state = StateMutator;
     while (readTrace(file, trace)) {
@@ -659,9 +771,17 @@ processTraceFile(const char *filename)
           assert(state == StateMutator);
           readClassInfo(file, getTracePayload(trace));
           break;
+      case TraceEventTypeInfo:
+          assert(state == StateMutator);
+          readTypeInfo(file, getTracePayload(trace));
+          break;
+      case TraceEventTypeNewScript:
+          assert(state == StateMutator);
+          setTypeName(getTracePayload(trace), expectDataString(file));
+          break;
       case TraceEventCreateObject:
           assert(state == StateMutator);
-          setObjectClass(getTracePayload(trace), expectDataAddress(file));
+          setObjectType(getTracePayload(trace), expectDataAddress(file));
           break;
       case TraceEventMinorGCStart:
           assert(state == StateMutator);
@@ -744,5 +864,9 @@ main(int argc, const char *argv[])
                    outputLifetimeByHasFinalizer);
     withOutputFile(outputBase, "finalizedHeapObjectlifetimeByClass",
                    outputFinalizedHeapObjectLifetimeByClass);
+    withOutputFile(outputBase, "lifetimeByTypeForNursery",
+                   std::bind(outputLifetimeByType, _1, Nursery));
+    withOutputFile(outputBase, "lifetimeByTypeForHeap",
+                   std::bind(outputLifetimeByType, _1, TenuredHeap));
     return 0;
 }

@@ -23,6 +23,8 @@ enum GCTraceEvent {
     TraceEventNurseryAlloc,
     TraceEventTenuredAlloc,
     TraceEventClassInfo,
+    TraceEventTypeInfo,
+    TraceEventTypeNewScript,
     TraceEventCreateObject,
     TraceEventMinorGCStart,
     TraceEventPromoteToTenured,
