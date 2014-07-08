@@ -678,8 +678,10 @@ exports.testContentScriptWhenOnTabOpen = function(assert, done) {
 // test timing for all 3 contentScriptWhen options (start, ready, end)
 // for PageMods created while the tab is interactive (in tab.onReady)
 exports.testContentScriptWhenOnTabReady = function(assert, done) {
-  const url = "data:text/html;charset=utf-8,testContentScriptWhenOnTabReady";
-
+  // need a bit bigger document to get the right timing of events with e10s
+  let iframeURL = 'data:text/html;charset=utf-8,testContentScriptWhenOnTabReady';
+  let iframe = '<iframe src="' + iframeURL + '" />';
+  let url = 'data:text/html;charset=utf-8,' + encodeURIComponent(iframe);
   tabs.open({
     url: url,
     onReady: function(tab) {

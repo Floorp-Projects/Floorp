@@ -248,6 +248,9 @@ LayerManagerComposite::EndTransaction(DrawThebesLayerCallback aCallback,
 
     Render();
     mGeometryChanged = false;
+  } else {
+    // Modified layer tree
+    mGeometryChanged = true;
   }
 
   mCompositor->ClearTargetContext();
@@ -429,6 +432,8 @@ LayerManagerComposite::Render()
       }
     }
     mCompositor->EndFrameForExternalComposition(mWorldMatrix);
+    // Reset the invalid region as compositing is done
+    mInvalidRegion.SetEmpty();
     return;
   }
 

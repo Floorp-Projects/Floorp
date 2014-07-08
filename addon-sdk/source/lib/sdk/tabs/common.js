@@ -17,6 +17,7 @@ function Options(options) {
     },
     isPinned: { is: ["undefined", "boolean"] },
     isPrivate: { is: ["undefined", "boolean"] },
+    inNewWindow: { is: ["undefined", "boolean"] },
     onOpen: { is: ["undefined", "function"] },
     onClose: { is: ["undefined", "function"] },
     onReady: { is: ["undefined", "function"] },

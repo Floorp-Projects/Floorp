@@ -17,7 +17,7 @@ var DeletePlugin = Class({
     this.host.addCommand(this, {
       id: "cmd-delete"
     });
-    this.host.createMenuItem({
+    this.contextMenuItem = this.host.createMenuItem({
       parent: this.host.contextMenuPopup,
       label: getLocalizedString("projecteditor.deleteLabel"),
       command: "cmd-delete"
@@ -32,6 +32,19 @@ var DeletePlugin = Class({
       getLocalizedString("projecteditor.deletePromptTitle"),
       deletePromptMessage
     );
+  },
+
+  onContextMenuOpen: function(resource) {
+    // Do not allow deletion of the top level items in the tree.  In the
+    // case of the Web IDE in particular this can leave the UI in a weird
+    // state. If we'd like to add ability to delete the project folder from
+    // the tree in the future, then the UI could be cleaned up by listening
+    // to the ProjectTree's "resource-removed" event.
+    if (!resource.parent) {
+      this.contextMenuItem.setAttribute("hidden", "true");
+    } else {
+      this.contextMenuItem.removeAttribute("hidden");
+    }
   },
 
   onCommand: function(cmd) {

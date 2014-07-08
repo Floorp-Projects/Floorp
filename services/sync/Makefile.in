@@ -55,13 +55,6 @@ sync_stage_modules := \
   enginesync.js \
   $(NULL)
 
-sync_testing_modules := \
-  fakeservices.js \
-  rotaryengine.js \
-  utils.js \
-  fxa_utils.js \
-  $(NULL)
-
 JS_EXPORTS_FILES := $(srcdir)/services-sync.js
 JS_EXPORTS_DEST = $(FINAL_TARGET)/$(PREF_DIR)
 INSTALL_TARGETS += JS_EXPORTS
@@ -78,6 +71,3 @@ INSTALL_TARGETS += SYNC_ENGINES
 SYNC_STAGES_FILES := $(addprefix modules/stages/,$(sync_stage_modules))
 SYNC_STAGES_DEST = $(FINAL_TARGET)/modules/services-sync/stages
 INSTALL_TARGETS += SYNC_STAGES
-
-TESTING_JS_MODULES := $(addprefix modules-testing/,$(sync_testing_modules))
-TESTING_JS_MODULE_DIR := services/sync

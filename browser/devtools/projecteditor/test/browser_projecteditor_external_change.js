@@ -22,8 +22,40 @@ let test = asyncTest(function*() {
     let resource = resources.filter(r=>r.basename === data.basename)[0];
     yield selectFile(projecteditor, resource);
     yield testChangeFileExternally(projecteditor, getTempFile(data.path).path, data.newContent);
+    yield testChangeUnsavedFileExternally(projecteditor, getTempFile(data.path).path, data.newContent + "[changed]");
   }
 });
+
+function testChangeUnsavedFileExternally(projecteditor, filePath, newData) {
+  info ("Testing file external changes for: " + filePath);
+
+  let editor = projecteditor.currentEditor;
+  let resource = projecteditor.resourceFor(editor);
+  let initialData = yield getFileData(filePath);
+
+  is (resource.path, filePath, "Resource path is set correctly");
+  is (editor.editor.getText(), initialData, "Editor is loaded with correct file contents");
+
+  info ("Editing but not saving file in project editor");
+  ok (editor.isClean(), "Editor is clean");
+  editor.editor.setText("foobar");
+  ok (!editor.isClean(), "Editor is dirty");
+
+  info ("Editor has been selected, writing to file externally");
+  yield writeToFile(resource.path, newData);
+
+  info ("Selecting another resource, then reselecting this one");
+  projecteditor.projectTree.selectResource(resource.store.root);
+  yield onceEditorActivated(projecteditor);
+  projecteditor.projectTree.selectResource(resource);
+  yield onceEditorActivated(projecteditor);
+
+  let editor = projecteditor.currentEditor;
+  info ("Checking to make sure the editor is now populated correctly");
+  is (editor.editor.getText(), "foobar", "Editor has not been updated with new file contents");
+
+  info ("Finished checking saving for " + filePath);
+}
 
 function testChangeFileExternally(projecteditor, filePath, newData) {
   info ("Testing file external changes for: " + filePath);

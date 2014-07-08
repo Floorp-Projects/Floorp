@@ -506,6 +506,21 @@ class JARManifest(SandboxDerived):
         self.path = path
 
 
+class JavaScriptModules(SandboxDerived):
+    """Describes a JavaScript module."""
+
+    __slots__ = (
+        'modules',
+        'flavor',
+    )
+
+    def __init__(self, sandbox, modules, flavor):
+        super(JavaScriptModules, self).__init__(sandbox)
+
+        self.modules = modules
+        self.flavor = flavor
+
+
 class SandboxWrapped(SandboxDerived):
     """Generic sandbox container object for a wrapped rich object.
 

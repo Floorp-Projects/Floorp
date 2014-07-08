@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/browserid_identity.js");
 Cu.import("resource://services-common/tokenserverclient.js");
-Cu.import("resource://testing-common/services-common/logging.js");
+Cu.import("resource://testing-common/services/common/logging.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
 // This shouldn't be here - it should be part of the xpcshell harness.

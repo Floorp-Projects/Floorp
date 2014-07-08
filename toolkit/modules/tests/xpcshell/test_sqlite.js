@@ -84,7 +84,7 @@ function getDummyTempDatabase(name, extraOptions={}) {
 }
 
 function run_test() {
-  Cu.import("resource://testing-common/services-common/logging.js");
+  Cu.import("resource://testing-common/services/common/logging.js");
   initTestLogging("Trace");
 
   run_next_test();
