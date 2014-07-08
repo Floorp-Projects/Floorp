@@ -77,6 +77,7 @@
 #include "nsIDOMNode.h"
 #include "nsISupportsUtils.h"
 #include "nsString.h"
+#include "nsAutoPtr.h"
 
 // String classes change too often and I can't keep up.
 // Set this macro to this week's approved case-insensitive compare routine.
