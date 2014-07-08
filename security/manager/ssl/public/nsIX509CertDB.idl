@@ -11,7 +11,6 @@ interface nsIX509Cert;
 interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIZipReader;
-interface nsIRecentBadCerts;
 interface nsIX509CertList;
 
 %{C++
@@ -32,7 +31,7 @@ interface nsIOpenSignedAppFileCallback : nsISupports
  * This represents a service to access and manipulate
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(7446a5b1-84ca-491f-a2fe-0bc60a71ffa5)]
+[scriptable, uuid(dd6e4af8-23bb-41d9-a1e3-9ce925429f2f)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -279,16 +278,6 @@ interface nsIX509CertDB : nsISupports {
    *  @return The new certificate object.
    */
   nsIX509Cert constructX509(in string certDER, in unsigned long length);
-
-  /*
-   *  Obtain a reference to the appropriate service for recent
-   *  bad certificates. May only be called on the main thread.
-   *
-   *  @param isPrivate True if the service for certs for private connections
-   *                   is desired, false otherwise.
-   *  @return The requested service.
-   */
-  nsIRecentBadCerts getRecentBadCerts(in boolean isPrivate);
 
   /**
    *  Verifies the signature on the given JAR file to verify that it has a

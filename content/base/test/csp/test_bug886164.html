@@ -157,18 +157,14 @@ window.testResult = function(testname, result, msg) {
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-  function() {
-    // save this for last so that our listeners are registered.
-    // ... this loads the testbed of good and bad requests.
-    document.getElementById('cspframe').src = 'file_bug886164.html';
-    document.getElementById('cspframe2').src = 'file_bug886164_2.html';
-    document.getElementById('cspframe3').src = 'file_bug886164_3.html';
-    document.getElementById('cspframe4').src = 'file_bug886164_4.html';
-    document.getElementById('cspframe5').src = 'file_bug886164_5.html';
-    document.getElementById('cspframe6').src = 'file_bug886164_6.html';
-  });
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'file_bug886164.html';
+document.getElementById('cspframe2').src = 'file_bug886164_2.html';
+document.getElementById('cspframe3').src = 'file_bug886164_3.html';
+document.getElementById('cspframe4').src = 'file_bug886164_4.html';
+document.getElementById('cspframe5').src = 'file_bug886164_5.html';
+document.getElementById('cspframe6').src = 'file_bug886164_6.html';
 
 </script>
 </pre>

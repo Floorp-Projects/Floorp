@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from ctypes import sizeof, windll, addressof, c_wchar, create_unicode_buffer
+from ctypes import sizeof, windll, addressof, create_unicode_buffer
 from ctypes.wintypes import DWORD, HANDLE
 
 PROCESS_TERMINATE = 0x0001

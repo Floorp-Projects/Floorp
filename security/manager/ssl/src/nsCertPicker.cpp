@@ -50,14 +50,13 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
   {
     // Iterate over all certs. This assures that user is logged in to all hardware tokens.
     nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
-    mozilla::pkix::ScopedCERTCertList allcerts(
-      PK11_ListCerts(PK11CertListUnique, ctx));
+    ScopedCERTCertList allcerts(PK11_ListCerts(PK11CertListUnique, ctx));
   }
 
   /* find all user certs that are valid and for SSL */
   /* note that we are allowing expired certs in this list */
 
-  mozilla::pkix::ScopedCERTCertList certList(
+  ScopedCERTCertList certList(
     CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(), 
                               (SECCertUsage)certUsage,
                               !allowDuplicateNicknames,

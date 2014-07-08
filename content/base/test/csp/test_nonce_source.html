@@ -112,14 +112,10 @@ function checkInlineScriptsAndStyles () {
 window.examiner = new examiner();
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-  function() {
-    // save this for last so that our listeners are registered.
-    // ... this loads the testbed of good and bad requests.
-    document.getElementById('cspframe').src = 'file_nonce_source.html';
-    document.getElementById('cspframe').addEventListener('load', checkInlineScriptsAndStyles, false);
-  });
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'file_nonce_source.html';
+document.getElementById('cspframe').addEventListener('load', checkInlineScriptsAndStyles, false);
 </script>
 </pre>
 </body>

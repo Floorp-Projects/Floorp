@@ -496,7 +496,7 @@ SignedData(PLArenaPool* arena, const SECItem* tbsData,
       return nullptr;
     }
     certsNested = EncodeNested(arena,
-                               der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 0,
+                               der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0,
                                certsSequence);
     if (!certsNested) {
       return nullptr;
@@ -745,7 +745,7 @@ TBSCertificate(PLArenaPool* arena, long versionValue,
       return nullptr;
     }
     SECItem* version(EncodeNested(arena,
-                                  der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 0,
+                                  der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0,
                                   versionInteger));
     if (!version) {
       return nullptr;
@@ -829,7 +829,7 @@ TBSCertificate(PLArenaPool* arena, long versionValue,
       return nullptr;
     }
     SECItem* extensionsWrapped(
-      EncodeNested(arena, der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 3,
+      EncodeNested(arena, der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 3,
                    allExtensions));
     if (!extensions) {
       return nullptr;
@@ -1354,7 +1354,7 @@ CertStatus(OCSPResponseContext& context)
       }
       // TODO(bug 980536): add support for revocationReason
       return EncodeNested(context.arena,
-                          der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 1,
+                          der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1,
                           revocationTime);
     }
     default:

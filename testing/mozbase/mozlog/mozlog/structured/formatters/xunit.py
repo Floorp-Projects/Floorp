@@ -2,7 +2,6 @@ import types
 from xml.etree import ElementTree
 
 import base
-from .. import handlers
 
 def format_test_id(test_id):
     """Take a test id and return something that looks a bit like

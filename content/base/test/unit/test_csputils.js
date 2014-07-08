@@ -500,7 +500,7 @@ test(function test_FrameAncestor_ignores_userpass_bug779918() {
       function testPermits(aChildUri, aParentUri, aContentType) {
         let cspObj = Cc["@mozilla.org/contentsecuritypolicy;1"]
                        .createInstance(Ci.nsIContentSecurityPolicy);
-        cspObj.appendPolicy(testPolicy, aChildUri, false, false);
+        cspObj.appendPolicy(testPolicy, aChildUri, false);
         let docshellparent = Cc["@mozilla.org/docshell;1"]
                                .createInstance(Ci.nsIDocShell);
         let docshellchild  = Cc["@mozilla.org/docshell;1"]
@@ -677,9 +677,9 @@ test(
        *
        *   Document with CSP: https://foobar.com:4443
        *   Transmitted policy:
-       *       "allow 'self' a.com"
+       *       "default-src 'self' a.com"
        *   Explicit policy:
-       *       "allow https://foobar.com:4443 https://a.com:443"
+       *       "default-src https://foobar.com:4443 https://a.com:443"
        *
        * This test examines scheme and nonstandard port inheritance.
        */
@@ -716,7 +716,7 @@ test(
 test(
     function test_bug634773_noneAndStarAreDifferent() {
       /**
-       * Bug 634773 is that allow * and allow 'none' end up "equal" via
+       * Bug 634773 is that default-src * and default-src 'none' end up "equal" via
        * CSPSourceList.prototype.equals(), which is wrong.  This tests that
        * doesn't happen.
        */
@@ -748,7 +748,7 @@ test(
       };
 
       const policy = "script-src 'self'";
-      cspObj.appendPolicy(policy, selfURI, false, true);
+      cspObj.appendPolicy(policy, selfURI, false);
 
       // Spec-Compliant policy default-src defaults to *.
       // This means all images are allowed, and only 'self'
@@ -833,13 +833,13 @@ test(function test_csp_permits_case_insensitive() {
 test(function test_CSPRep_fromPolicyURI_failswhenmixed() {
         var cspr;
         var self = "http://localhost:" + POLICY_PORT;
-        var closed_policy = CSPRep.fromString("allow 'none'");
+        var closed_policy = CSPRep.fromString("default-src 'none'");
         var my_uri_policy = "policy-uri " + POLICY_URI;
 
         //print(" --- Ignore the following two errors if they print ---");
-        cspr = CSPRep.fromString("allow *; " + my_uri_policy, URI(self));
+        cspr = CSPRep.fromString("default-src *; " + my_uri_policy, URI(self));
 
-        //"Parsing should fail when 'policy-uri' is mixed with allow directive"
+        //"Parsing should fail when 'policy-uri' is mixed with default-src directive"
         do_check_equivalent(cspr, closed_policy);
         cspr = CSPRep.fromString("img-src 'self'; " + my_uri_policy, URI(self));
 

@@ -110,13 +110,9 @@ window.testResult = function(testname, result, msg) {
 SimpleTest.waitForExplicitFinish();
 
 // save this for last so that our listeners are registered.
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-    function() {
-      // ... this loads the testbed of good and bad requests.
-      document.getElementById('cspframe').src = 'file_multi_policy_injection_bypass.html';
-      document.getElementById('cspframe2').src = 'file_multi_policy_injection_bypass_2.html';
-    });
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'file_multi_policy_injection_bypass.html';
+document.getElementById('cspframe2').src = 'file_multi_policy_injection_bypass_2.html';
 </script>
 </pre>
 </body>
