@@ -34,8 +34,6 @@ Result CheckValidity(const SECItem& encodedValidity, PRTime time);
 
 } } // namespace mozilla::pkix
 
-static const SECItem empty_null = { siBuffer, nullptr, 0 };
-
 static const PRTime PAST_TIME(YMDHMS(1998, 12, 31, 12, 23, 56));
 
 #define OLDER_GENERALIZEDTIME \
