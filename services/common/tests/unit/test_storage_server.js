@@ -4,7 +4,7 @@
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-common/utils.js");
-Cu.import("resource://testing-common/services-common/storageserver.js");
+Cu.import("resource://testing-common/services/common/storageserver.js");
 
 const DEFAULT_USER = "123";
 const DEFAULT_PASSWORD = "password";

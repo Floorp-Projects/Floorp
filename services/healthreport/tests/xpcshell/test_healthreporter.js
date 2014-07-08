@@ -17,7 +17,7 @@ Cu.import("resource://gre/modules/services/datareporting/policy.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://testing-common/services-common/bagheeraserver.js");
+Cu.import("resource://testing-common/services/common/bagheeraserver.js");
 Cu.import("resource://testing-common/services/metrics/mocks.jsm");
 Cu.import("resource://testing-common/services/healthreport/utils.jsm");
 Cu.import("resource://testing-common/AppData.jsm");

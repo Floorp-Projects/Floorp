@@ -11,3 +11,7 @@ TEST_DIRS += ['tests']
 EXTRA_PP_COMPONENTS += [
     'HealthReportComponents.manifest',
 ]
+
+TESTING_JS_MODULES.services.healthreport += [
+    'modules-testing/utils.jsm',
+]
