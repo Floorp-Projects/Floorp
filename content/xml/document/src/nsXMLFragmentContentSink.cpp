@@ -36,7 +36,6 @@ class nsXMLFragmentContentSink : public nsXMLContentSink,
 {
 public:
   nsXMLFragmentContentSink();
-  virtual ~nsXMLFragmentContentSink();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -79,6 +78,8 @@ public:
   NS_IMETHOD SetPreventScriptExecution(bool aPreventScriptExecution);
 
 protected:
+  virtual ~nsXMLFragmentContentSink();
+
   virtual bool SetDocElement(int32_t aNameSpaceID, 
                                nsIAtom *aTagName,
                                nsIContent *aContent);
