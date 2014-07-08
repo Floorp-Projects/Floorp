@@ -187,7 +187,7 @@ IsAddressableGCThing(JSRuntime *rt, uintptr_t w,
 
     Chunk *chunk = Chunk::fromAddress(addr);
 
-    if (!rt->gc.chunkSet.has(chunk))
+    if (!rt->gc.hasChunk(chunk))
         return CGCT_NOTCHUNK;
 
     /*
