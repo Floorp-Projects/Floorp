@@ -201,6 +201,10 @@ DelayNode::DelayNode(AudioContext* aContext, double aMaxDelay)
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
 }
 
+DelayNode::~DelayNode()
+{
+}
+
 size_t
 DelayNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {

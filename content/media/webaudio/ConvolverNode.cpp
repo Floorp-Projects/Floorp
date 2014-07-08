@@ -194,6 +194,10 @@ ConvolverNode::ConvolverNode(AudioContext* aContext)
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
 }
 
+ConvolverNode::~ConvolverNode()
+{
+}
+
 size_t
 ConvolverNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {

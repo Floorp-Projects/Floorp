@@ -318,6 +318,10 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   }
 }
 
+AudioDestinationNode::~AudioDestinationNode()
+{
+}
+
 size_t
 AudioDestinationNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
