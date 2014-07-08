@@ -7,7 +7,6 @@
 let Cu = Components.utils;
 let Ci = Components.interfaces;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/sessionstore/FrameTree.jsm", this);
 let gFrameTree = new FrameTree(this);
 
@@ -19,47 +18,6 @@ gFrameTree.addObserver({
   onFrameTreeCollected: function () {
     sendAsyncMessage("ss-test:onFrameTreeCollected");
   }
-});
-
-let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-webNav.sessionHistory.addSHistoryListener({
-  OnHistoryNewEntry: function () {
-    sendAsyncMessage("ss-test:OnHistoryNewEntry");
-  },
-
-  OnHistoryGoBack: function () {
-    sendAsyncMessage("ss-test:OnHistoryGoBack");
-    return true;
-  },
-
-  OnHistoryGoForward: function () {
-    sendAsyncMessage("ss-test:OnHistoryGoForward");
-    return true;
-  },
-
-  OnHistoryGotoIndex: function () {
-    sendAsyncMessage("ss-test:OnHistoryGotoIndex");
-    return true;
-  },
-
-  OnHistoryPurge: function () {
-    sendAsyncMessage("ss-test:OnHistoryPurge");
-    return true;
-  },
-
-  OnHistoryReload: function () {
-    sendAsyncMessage("ss-test:OnHistoryReload");
-    return true;
-  },
-
-  OnHistoryReplaceEntry: function () {
-    sendAsyncMessage("ss-test:OnHistoryReplaceEntry");
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsISHistoryListener,
-    Ci.nsISupportsWeakReference
-  ])
 });
 
 /**
