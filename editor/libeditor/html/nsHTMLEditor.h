@@ -94,8 +94,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLEditor, nsPlaintextEditor)
 
 
-           nsHTMLEditor();
-  virtual  ~nsHTMLEditor();
+  nsHTMLEditor();
 
   bool GetReturnInParagraphCreatesNewParagraph();
 
@@ -260,6 +259,8 @@ public:
   static bool NodeIsBlockStatic(const mozilla::dom::Element* aElement);
   static nsresult NodeIsBlockStatic(nsIDOMNode *aNode, bool *aIsBlock);
 protected:
+  virtual ~nsHTMLEditor();
+
   using nsEditor::IsBlockNode;
   virtual bool IsBlockNode(nsINode *aNode);
 
