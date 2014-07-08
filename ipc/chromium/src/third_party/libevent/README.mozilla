@@ -15,3 +15,5 @@ These files are taken from libevent-2.0.21-stable built on the development envir
 4. Apply "openbsd-no-arc4random_addrandom.patch", which fixes the build on OpenBSD (which doesnt provide arc4random_addrandom anymore, see #931354)
 
 5. Apply "libevent-use-non-deprecated-syscalls.patch", which fixes the build on AArch64 architecture (which does not provide deprecated syscalls)
+
+6. Apply "libevent-dont-use-issetugid-on-android.patch'. which fixes the build on Android L preview
