@@ -1,52 +1,28 @@
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
-function test()
-{
-  //ignoreAllUncaughtExceptions();
+// Test to ensure inspector handles deletion of selected node correctly.
 
-  let node, iframe, inspector;
+const TEST_URL = TEST_URL_ROOT + "browser_inspector_destroyselection.html";
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    waitForFocus(setupTest, content);
-  }, true);
+let test = asyncTest(function* () {
+  let { inspector } = yield openInspectorForURL(TEST_URL);
+  let iframe = getNode("iframe");
+  let span = getNode("span", { document: iframe.contentDocument });
 
-  content.location = "http://mochi.test:8888/browser/browser/devtools/inspector/test/browser_inspector_destroyselection.html";
+  yield selectNode(span, inspector);
 
-  function setupTest()
-  {
-    iframe = content.document.querySelector("iframe");
-    node = iframe.contentDocument.querySelector("span");
-    openInspector(runTests);
-  }
+  info("Removing selected <span> element.");
+  let parentNode = span.parentNode;
+  span.remove();
 
-  function runTests(aInspector)
-  {
-    inspector = aInspector;
-    inspector.selection.setNode(node);
-    inspector.once("inspector-updated", () => {
-      let parentNode = node.parentNode;
-      parentNode.removeChild(node);
+  let lh = new LayoutHelpers(window.content);
+  ok(!lh.isNodeConnected(span), "Node considered as disconnected.");
 
-      let tmp = {};
-      Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm", tmp);
-      let lh = new tmp.LayoutHelpers(window.content);
-      ok(!lh.isNodeConnected(node), "Node considered as disconnected.");
-
-      // Wait for the inspector to process the mutation
-      inspector.once("inspector-updated", () => {
-        is(inspector.selection.node, parentNode, "parent of selection got selected");
-        finishUp();
-      });
-    });
-  };
-
-  function finishUp() {
-    node = null;
-    gBrowser.removeCurrentTab();
-    finish();
-  }
-}
-
+  // Wait for the inspector to process the mutation
+  yield inspector.once("inspector-updated");
+  is(inspector.selection.node, parentNode,
+    "Parent node of selected <span> got selected.");
+});

@@ -1,77 +1,45 @@
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
-function test() {
-  let iframe;
-  let iframeLoads = 0;
-  let checksAfterLoads = false;
-  let inspector;
+// Test that the highlighter element picker still works through iframe
+// navigations.
 
-  function startTest() {
-    openInspector(aInspector => {
-      inspector = aInspector;
-      runInspectorTests();
-    });
+const TEST_URI = "data:text/html;charset=utf-8," +
+  "<p>bug 699308 - test iframe navigation</p>" +
+  "<iframe src='data:text/html;charset=utf-8,hello world'></iframe>";
+
+let test = asyncTest(function* () {
+  let { inspector, toolbox } = yield openInspectorForURL(TEST_URI);
+  let iframe = getNode("iframe");
+
+  info("Starting element picker.");
+  yield toolbox.highlighterUtils.startPicker();
+
+  info("Waiting for highlighter to activate.");
+  let highlighterShowing = toolbox.once("highlighter-ready");
+  EventUtils.synthesizeMouse(content.document.body, 1, 1,
+    {type: "mousemove"}, content);
+  yield highlighterShowing;
+
+  ok(isHighlighting(), "Inspector is highlighting.");
+
+  yield reloadFrame();
+  info("Frame reloaded. Reloading again.");
+
+  yield reloadFrame();
+  info("Frame reloaded twice.");
+
+  ok(isHighlighting(), "Inspector is highlighting after iframe nav.");
+
+  info("Stopping element picker.");
+  yield toolbox.highlighterUtils.stopPicker();
+
+  function reloadFrame() {
+    info("Reloading frame.");
+    let frameLoaded = once(iframe, "load");
+    iframe.contentWindow.location.reload();
+    return frameLoaded;
   }
-
-  function showHighlighter(cb) {
-    inspector.toolbox.highlighterUtils.startPicker().then(() => {
-      EventUtils.synthesizeMouse(content.document.body, 1, 1,
-        {type: "mousemove"}, content);
-      inspector.toolbox.once("highlighter-ready", cb);
-    });
-  }
-
-  function runInspectorTests() {
-    iframe = content.document.querySelector("iframe");
-    ok(iframe, "found the iframe element");
-
-    showHighlighter(() => {
-      ok(isHighlighting(), "Inspector is highlighting");
-
-      iframe.addEventListener("load", onIframeLoad, false);
-      executeSoon(() => {
-        iframe.contentWindow.location = "javascript:location.reload()";
-      });
-    });
-  }
-
-  function onIframeLoad() {
-    if (++iframeLoads != 2) {
-      executeSoon(function() {
-        iframe.contentWindow.location = "javascript:location.reload()";
-      });
-      return;
-    }
-
-    iframe.removeEventListener("load", onIframeLoad, false);
-    info("Finished reloading iframe and inspector updated");
-
-    ok(isHighlighting(), "Inspector is highlighting after iframe nav");
-
-    checksAfterLoads = true;
-
-    finishTest();
-  }
-
-  function finishTest() {
-    is(iframeLoads, 2, "iframe loads");
-    ok(checksAfterLoads, "the Inspector tests got the chance to run after iframe reloads");
-
-    inspector.toolbox.highlighterUtils.stopPicker().then(() => {
-      iframe = null;
-      gBrowser.removeCurrentTab();
-      executeSoon(finish);
-    });
-  }
-
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onBrowserLoad() {
-    gBrowser.selectedBrowser.removeEventListener("load", onBrowserLoad, true);
-    waitForFocus(startTest, content);
-  }, true);
-
-  content.location = "data:text/html;charset=utf-8," +
-                     "<p>bug 699308 - test iframe navigation</p>" +
-                     "<iframe src='data:text/html;charset=utf-8,hello world'></iframe>";
-}
+});

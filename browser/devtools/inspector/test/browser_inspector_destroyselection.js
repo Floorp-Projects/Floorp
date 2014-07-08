@@ -1,50 +1,26 @@
+/* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
-function test()
-{
-  let node, iframe, inspector;
+// Test to ensure inspector can handle destruction of selected node inside an
+// iframe.
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    waitForFocus(setupTest, content);
-  }, true);
+const TEST_URL = TEST_URL_ROOT + "browser_inspector_destroyselection.html";
 
-  content.location = "http://mochi.test:8888/browser/browser/devtools/inspector/test/browser_inspector_destroyselection.html";
+let test = asyncTest(function* () {
+  let { inspector } = yield openInspectorForURL(TEST_URL);
 
-  function setupTest()
-  {
-    iframe = content.document.querySelector("iframe");
-    node = iframe.contentDocument.querySelector("span");
-    openInspector(runTests);
-  }
+  let iframe = getNode("iframe");
+  let node = getNode("span", { document: iframe.contentDocument });
+  yield selectNode(node, inspector);
 
-  function runTests(aInspector)
-  {
-    inspector = aInspector;
-    inspector.selection.setNode(node);
+  info("Removing iframe.");
+  iframe.remove();
 
-    inspector.once("inspector-updated", () => {
-      iframe.parentNode.removeChild(iframe);
-      iframe = null;
+  let lh = new LayoutHelpers(window.content);
+  ok(!lh.isNodeConnected(node), "Node considered as disconnected.");
+  ok(!inspector.selection.isConnected(), "Selection considered as disconnected.");
 
-      let tmp = {};
-      Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm", tmp);
-      let lh = new tmp.LayoutHelpers(window.content);
-      ok(!lh.isNodeConnected(node), "Node considered as disconnected.");
-      ok(!inspector.selection.isConnected(), "Selection considered as disconnected");
-
-      inspector.once("inspector-updated", () => {
-        finishUp();
-      });
-    });
-  }
-
-  function finishUp() {
-    node = inspector = null;
-    gBrowser.removeCurrentTab();
-    finish();
-  }
-}
-
+  yield inspector.once("inspector-updated");
+});
