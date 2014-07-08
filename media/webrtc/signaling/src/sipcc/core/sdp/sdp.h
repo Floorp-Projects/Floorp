@@ -1225,6 +1225,7 @@ extern sdp_result_e sdp_add_media_profile_payload_type(void *sdp_ptr,
                                sdp_payload_ind_e indicator);
 
 /* sdp_attr_access.c */
+extern int sdp_find_fmtp_inst(sdp_t *sdp_ptr, u16 level, u16 payload_num);
 extern sdp_result_e sdp_add_new_attr(void *sdp_ptr, u16 level, u8 cap_num,
                                      sdp_attr_e attr_type, u16 *inst_num);
 extern sdp_result_e sdp_copy_attr (void *src_sdp_ptr, void *dst_sdp_ptr,
