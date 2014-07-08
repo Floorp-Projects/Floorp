@@ -5,7 +5,6 @@ import tempfile
 import zipfile
 
 import mozfile
-import mozhttpd
 
 
 here = os.path.dirname(os.path.abspath(__file__))

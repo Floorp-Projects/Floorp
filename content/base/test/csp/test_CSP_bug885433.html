@@ -50,15 +50,10 @@ function checkBlocked () {
   SimpleTest.finish();
 }
 
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-  function () {
-    document.getElementById('cspframe').src = 'file_CSP_bug885433_allows.html';
-    document.getElementById('cspframe').addEventListener('load', checkAllowed, false);
-    document.getElementById('cspframe2').src = 'file_CSP_bug885433_blocks.html';
-    document.getElementById('cspframe2').addEventListener('load', checkBlocked, false);
-  }
-);
+document.getElementById('cspframe').src = 'file_CSP_bug885433_allows.html';
+document.getElementById('cspframe').addEventListener('load', checkAllowed, false);
+document.getElementById('cspframe2').src = 'file_CSP_bug885433_blocks.html';
+document.getElementById('cspframe2').addEventListener('load', checkBlocked, false);
 </script>
 </pre>
 </body>

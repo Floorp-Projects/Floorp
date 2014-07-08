@@ -3,7 +3,6 @@
 import os
 import stat
 import shutil
-import tempfile
 import threading
 import time
 import unittest
@@ -32,7 +31,7 @@ class FileOpenCloseThread(threading.Thread):
         self.delete = delete
 
     def run(self):
-        with open(self.path) as f:
+        with open(self.path):
             time.sleep(self.delay)
         if self.delete:
             try:

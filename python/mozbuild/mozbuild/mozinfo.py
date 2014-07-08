@@ -78,7 +78,6 @@ def build_dict(config, env=os.environ):
     d['debug'] = substs.get('MOZ_DEBUG') == '1'
     d['crashreporter'] = bool(substs.get('MOZ_CRASHREPORTER'))
     d['datareporting'] = bool(substs.get('MOZ_DATA_REPORTING'))
-    d['fxaccounts'] = substs.get('MOZ_SERVICES_FXACCOUNTS') == '1'
     d['healthreport'] = substs.get('MOZ_SERVICES_HEALTHREPORT') == '1'
     d['asan'] = substs.get('MOZ_ASAN') == '1'
     d['tests_enabled'] = substs.get('ENABLE_TESTS') == "1"

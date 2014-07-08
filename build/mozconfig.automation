@@ -19,3 +19,15 @@ mk_add_options "export MOZ_AUTOMATION_UNITTEST_SENDCHANGE=${MOZ_AUTOMATION_UNITT
 mk_add_options "export MOZ_AUTOMATION_UPDATE_PACKAGING=${MOZ_AUTOMATION_UPDATE_PACKAGING-0}"
 mk_add_options "export MOZ_AUTOMATION_UPLOAD=${MOZ_AUTOMATION_UPLOAD-1}"
 mk_add_options "export MOZ_AUTOMATION_UPLOAD_SYMBOLS=${MOZ_AUTOMATION_UPLOAD_SYMBOLS-0}"
+
+# If we are also building with MOZ_PKG_PRETTYNAMES, set the corresponding
+# stages.
+if test "$MOZ_AUTOMATION_PRETTY" = "1"; then
+    mk_add_options "export MOZ_AUTOMATION_PRETTY_PACKAGE=${MOZ_AUTOMATION_PACKAGE-1}"
+    mk_add_options "export MOZ_AUTOMATION_PRETTY_PACKAGE_TESTS=${MOZ_AUTOMATION_PACKAGE_TESTS-1}"
+    mk_add_options "export MOZ_AUTOMATION_PRETTY_L10N_CHECK=${MOZ_AUTOMATION_L10N_CHECK-1}"
+
+    # Note that we always build the update packaging with pretty names even if
+    # we don't build it without, so this is set to 1.
+    mk_add_options "export MOZ_AUTOMATION_PRETTY_UPDATE_PACKAGING=1"
+fi

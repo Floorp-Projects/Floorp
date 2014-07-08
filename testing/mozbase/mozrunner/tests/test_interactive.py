@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
-import os
 import threading
 from time import sleep
-import unittest
 
 import mozrunnertest
 
