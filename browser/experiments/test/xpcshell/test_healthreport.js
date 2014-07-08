@@ -6,6 +6,7 @@
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource:///modules/experiments/Experiments.jsm");
+Cu.import("resource://testing-common/AddonManagerTesting.jsm");
 Cu.import("resource://testing-common/services/healthreport/utils.jsm");
 Cu.import("resource://testing-common/services/common/logging.js");
 
@@ -28,6 +29,7 @@ function run_test() {
 add_test(function setup() {
   do_get_profile();
   initTestLogging();
+  loadAddonManager();
 
   Services.prefs.setBoolPref(PREF_EXPERIMENTS_ENABLED, true);
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
