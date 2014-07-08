@@ -14,7 +14,9 @@ navigator.mozGetUserMedia({audio: true}, function(stream) {
     testAudio.mozSrcObject = stream;
     testAudio.play();
     }, function(err) {
-    console.log(err);
+      // Don't go orange if we can't get an audio input stream,
+      // as this is not what we are trying to test and can happen on Windows.
+      document.querySelector("html").className = "";
     });
 </script>
 
