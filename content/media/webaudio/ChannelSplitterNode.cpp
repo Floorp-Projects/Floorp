@@ -64,6 +64,10 @@ ChannelSplitterNode::ChannelSplitterNode(AudioContext* aContext,
                                                      MediaStreamGraph::INTERNAL_STREAM);
 }
 
+ChannelSplitterNode::~ChannelSplitterNode()
+{
+}
+
 JSObject*
 ChannelSplitterNode::WrapObject(JSContext* aCx)
 {

@@ -39,6 +39,9 @@ public:
     return mRenderedBuffer;
   }
 
+protected:
+  virtual ~OfflineAudioCompletionEvent();
+
 private:
   nsRefPtr<AudioBuffer> mRenderedBuffer;
 };

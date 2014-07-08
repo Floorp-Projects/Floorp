@@ -222,6 +222,10 @@ DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
 }
 
+DynamicsCompressorNode::~DynamicsCompressorNode()
+{
+}
+
 size_t
 DynamicsCompressorNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
