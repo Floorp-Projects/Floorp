@@ -731,10 +731,13 @@ Toolbox.prototype = {
     if (id === "options") {
       // Options panel is special.  It doesn't belong in the same container as
       // the other tabs.
+      radio.setAttribute("role", "button");
       let optionTabContainer = this.doc.getElementById("toolbox-option-container");
       optionTabContainer.appendChild(radio);
       deck.appendChild(vbox);
     } else {
+      radio.setAttribute("role", "tab");
+
       // If there is no tab yet, or the ordinal to be added is the largest one.
       if (tabs.childNodes.length == 0 ||
           tabs.lastChild.getAttribute("ordinal") <= toolDefinition.ordinal) {
@@ -849,10 +852,12 @@ Toolbox.prototype = {
     let selected = this.doc.querySelector(".devtools-tab[selected]");
     if (selected) {
       selected.removeAttribute("selected");
+      selected.setAttribute("aria-selected", "false");
     }
 
     let tab = this.doc.getElementById("toolbox-tab-" + id);
     tab.setAttribute("selected", "true");
+    tab.setAttribute("aria-selected", "true");
 
     // If options is selected, the separator between it and the
     // command buttons should be hidden.
