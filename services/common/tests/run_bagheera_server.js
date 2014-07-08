@@ -12,7 +12,7 @@
  *   $ make bagheera-server
  */
 
-Cu.import("resource://testing-common/services-common/bagheeraserver.js");
+Cu.import("resource://testing-common/services/common/bagheeraserver.js");
 
 initTestLogging();
 

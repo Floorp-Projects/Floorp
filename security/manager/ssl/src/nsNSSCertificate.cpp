@@ -36,7 +36,6 @@
 #include "nsIObjectInputStream.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsXULAppAPI.h"
-#include "ScopedNSSTypes.h"
 #include "nsProxyRelease.h"
 #include "mozilla/Base64.h"
 #include "NSSCertDBTrustDomain.h"

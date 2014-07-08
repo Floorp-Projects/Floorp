@@ -79,7 +79,7 @@ function makeTest(id, expectedJSON, useReportOnlyPolicy, callback) {
 
   // Load up the policy
   // set as report-only if that's the case
-  csp.appendPolicy(policy, selfuri, useReportOnlyPolicy, true);
+  csp.appendPolicy(policy, selfuri, useReportOnlyPolicy);
 
   // prime the report server
   var handler = makeReportHandler("/test" + id, "Test " + id, expectedJSON);

@@ -30,6 +30,78 @@
 #include "mozilla/MacroArgs.h"
 #include "mozilla/MacroForEach.h"
 
+namespace mozilla {
+template <typename T>
+struct HasDangerousPublicDestructor
+{
+  static const bool value = false;
+};
+}
+
+#if defined(__clang__)
+   // bug 1028428 shows that at least in FreeBSD 10.0 with Clang 3.4 and libc++ 3.4,
+   // std::is_destructible is buggy in that it returns false when it should return true
+   // on ipc::SharedMemory. On the other hand, all Clang versions currently in use
+   // seem to handle the fallback just fine.
+#  define MOZ_CAN_USE_IS_DESTRUCTIBLE_FALLBACK
+#elif defined(__GNUC__)
+   // GCC 4.7 is has buggy std::is_destructible
+#  if MOZ_USING_LIBSTDCXX && MOZ_GCC_VERSION_AT_LEAST(4, 8, 0)
+#    define MOZ_HAVE_STD_IS_DESTRUCTIBLE
+   // Some GCC versions have an ICE when using destructors in decltype().
+   // Works for me on GCC 4.8.2 on Fedora 20 x86-64.
+#  elif MOZ_GCC_VERSION_AT_LEAST(4, 8, 2)
+#    define MOZ_CAN_USE_IS_DESTRUCTIBLE_FALLBACK
+#  endif
+#endif
+
+#ifdef MOZ_HAVE_STD_IS_DESTRUCTIBLE
+#  include <type_traits>
+#  define MOZ_IS_DESTRUCTIBLE(X) (std::is_destructible<X>::value)
+#elif defined MOZ_CAN_USE_IS_DESTRUCTIBLE_FALLBACK
+  namespace mozilla {
+    struct IsDestructibleFallbackImpl
+    {
+      template<typename T> static T&& Declval();
+
+      template<typename T, typename = decltype(Declval<T>().~T())>
+      static TrueType Test(int);
+
+      template<typename>
+      static FalseType Test(...);
+
+      template<typename T>
+      struct Selector
+      {
+        typedef decltype(Test<T>(0)) type;
+      };
+    };
+
+    template<typename T>
+    struct IsDestructibleFallback
+      : IsDestructibleFallbackImpl::Selector<T>::type
+    {
+    };
+  }
+#  define MOZ_IS_DESTRUCTIBLE(X) (mozilla::IsDestructibleFallback<X>::value)
+#endif
+
+#ifdef MOZ_IS_DESTRUCTIBLE
+#define MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(X) \
+  static_assert(!MOZ_IS_DESTRUCTIBLE(X) || \
+                mozilla::HasDangerousPublicDestructor<X>::value, \
+                "Reference-counted class " #X " should not have a public destructor. " \
+                "Try to make this class's destructor non-public. If that is really " \
+                "not possible, you can whitelist this class by providing a " \
+                "HasDangerousPublicDestructor specialization for it."); \
+  static_assert(!mozilla::HasDangerousPublicDestructor<X>::value || \
+                MOZ_IS_DESTRUCTIBLE(X), \
+                "Class " #X " has no public destructor. That's good! So please " \
+                "remove the HasDangerousPublicDestructor specialization for it.");
+#else
+#define MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(X)
+#endif
+
 inline nsISupports*
 ToSupports(nsISupports* aSupports)
 {
@@ -334,6 +406,7 @@ public:
  */
 
 #define NS_IMPL_CC_NATIVE_ADDREF_BODY(_class)                                 \
+    MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(_class)                                \
     MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");                      \
     NS_ASSERT_OWNINGTHREAD(_class);                                           \
     nsrefcnt count =                                                          \
@@ -411,78 +484,6 @@ public:
  */
 #define NS_INIT_ISUPPORTS() ((void)0)
 
-namespace mozilla {
-template<typename T>
-struct HasDangerousPublicDestructor
-{
-  static const bool value = false;
-};
-}
-
-#if defined(__clang__)
-   // bug 1028428 shows that at least in FreeBSD 10.0 with Clang 3.4 and libc++ 3.4,
-   // std::is_destructible is buggy in that it returns false when it should return true
-   // on ipc::SharedMemory. On the other hand, all Clang versions currently in use
-   // seem to handle the fallback just fine.
-#  define MOZ_CAN_USE_IS_DESTRUCTIBLE_FALLBACK
-#elif defined(__GNUC__)
-   // GCC 4.7 is has buggy std::is_destructible
-#  if MOZ_USING_LIBSTDCXX && MOZ_GCC_VERSION_AT_LEAST(4, 8, 0)
-#    define MOZ_HAVE_STD_IS_DESTRUCTIBLE
-   // Some GCC versions have an ICE when using destructors in decltype().
-   // Works for me on GCC 4.8.2 on Fedora 20 x86-64.
-#  elif MOZ_GCC_VERSION_AT_LEAST(4, 8, 2)
-#    define MOZ_CAN_USE_IS_DESTRUCTIBLE_FALLBACK
-#  endif
-#endif
-
-#ifdef MOZ_HAVE_STD_IS_DESTRUCTIBLE
-#  include <type_traits>
-#  define MOZ_IS_DESTRUCTIBLE(X) (std::is_destructible<X>::value)
-#elif defined MOZ_CAN_USE_IS_DESTRUCTIBLE_FALLBACK
-  namespace mozilla {
-    struct IsDestructibleFallbackImpl
-    {
-      template<typename T> static T&& Declval();
-
-      template<typename T, typename = decltype(Declval<T>().~T())>
-      static TrueType Test(int);
-
-      template<typename>
-      static FalseType Test(...);
-
-      template<typename T>
-      struct Selector
-      {
-        typedef decltype(Test<T>(0)) type;
-      };
-    };
-
-    template<typename T>
-    struct IsDestructibleFallback
-      : IsDestructibleFallbackImpl::Selector<T>::type
-    {
-    };
-  }
-#  define MOZ_IS_DESTRUCTIBLE(X) (mozilla::IsDestructibleFallback<X>::value)
-#endif
-
-#ifdef MOZ_IS_DESTRUCTIBLE
-#define MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(X) \
-  static_assert(!MOZ_IS_DESTRUCTIBLE(X) || \
-                mozilla::HasDangerousPublicDestructor<X>::value, \
-                "Reference-counted classes should not have a public destructor. " \
-                "Try to make this class's destructor non-public. If that is really " \
-                "not possible, you can whitelist this class by providing a " \
-                "HasDangerousPublicDestructor specialization for it."); \
-  static_assert(!mozilla::HasDangerousPublicDestructor<X>::value || \
-                MOZ_IS_DESTRUCTIBLE(X), \
-                "This class has no public destructor. That's good! So please " \
-                "remove the HasDangerousPublicDestructor specialization for it.");
-#else
-#define MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(X)
-#endif
-
 /**
  * Use this macro to declare and implement the AddRef & Release methods for a
  * given non-XPCOM <i>_class</i>.
@@ -555,6 +556,7 @@ public:
 #define NS_IMPL_ADDREF(_class)                                                \
 NS_IMETHODIMP_(MozExternalRefCountType) _class::AddRef(void)                  \
 {                                                                             \
+  MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(_class)                                  \
   MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");                        \
   if (!mRefCnt.isThreadSafe)                                                  \
     NS_ASSERT_OWNINGTHREAD(_class);                                           \
@@ -573,6 +575,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) _class::AddRef(void)                  \
 #define NS_IMPL_ADDREF_USING_AGGREGATOR(_class, _aggregator)                  \
 NS_IMETHODIMP_(MozExternalRefCountType) _class::AddRef(void)                  \
 {                                                                             \
+  MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(_class)                                  \
   NS_PRECONDITION(_aggregator, "null aggregator");                            \
   return (_aggregator)->AddRef();                                             \
 }
@@ -648,6 +651,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) _class::Release(void)                 \
 #define NS_IMPL_CYCLE_COLLECTING_ADDREF(_class)                               \
 NS_IMETHODIMP_(MozExternalRefCountType) _class::AddRef(void)                  \
 {                                                                             \
+  MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(_class)                                  \
   MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");                        \
   NS_ASSERT_OWNINGTHREAD(_class);                                             \
   nsISupports *base = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Upcast(this);    \

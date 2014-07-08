@@ -8,15 +8,18 @@ LIBRARY_NAME = 'mozillapkix_gtest'
 
 SOURCES += [
     'nssgtest.cpp',
-    'pkix_cert_chain_length_tests.cpp',
-    'pkix_cert_extension_tests.cpp',
-    'pkix_ocsp_request_tests.cpp',
+    'pkixbuild_tests.cpp',
+    'pkixcert_extension_tests.cpp',
     'pkixcheck_CheckKeyUsage_tests.cpp',
-    'pkixcheck_CheckTimes_tests.cpp',
+    'pkixcheck_CheckValidity_tests.cpp',
+
+    # The naming conventions are described in ./README.txt.
+
     'pkixder_input_tests.cpp',
     'pkixder_pki_types_tests.cpp',
     'pkixder_universal_types_tests.cpp',
     'pkixgtest.cpp',
+    'pkixocsp_CreateEncodedOCSPRequest_tests.cpp',
 ]
 
 LOCAL_INCLUDES += [

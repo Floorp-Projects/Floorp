@@ -9,7 +9,7 @@ class BasicTest(unittest.TestCase):
         """Tests DeviceManager initialization."""
         a = MockAgent(self)
 
-        d = mozdevice.DroidSUT("127.0.0.1", port=a.port, logLevel=mozlog.DEBUG)
+        mozdevice.DroidSUT("127.0.0.1", port=a.port, logLevel=mozlog.DEBUG)
         # all testing done in device's constructor
         a.wait()
 
@@ -21,7 +21,7 @@ class BasicTest(unittest.TestCase):
                 ("mkdr /mnt/sdcard/tests", "/mnt/sdcard/tests successfully created"),
                 ("ver", "SUTAgentAndroid Version 1.14")]
         a = MockAgent(self, start_commands = cmds)
-        dm = mozdevice.DroidSUT("127.0.0.1", port=a.port, logLevel=mozlog.DEBUG)
+        mozdevice.DroidSUT("127.0.0.1", port=a.port, logLevel=mozlog.DEBUG)
         a.wait()
 
     def test_timeout_normal(self):

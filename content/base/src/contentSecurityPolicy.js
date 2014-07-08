@@ -385,7 +385,7 @@ ContentSecurityPolicy.prototype = {
    * @returns the count of policies.
    */
   appendPolicy:
-  function csp_appendPolicy(aPolicy, selfURI, aReportOnly, aSpecCompliant) {
+  function csp_appendPolicy(aPolicy, selfURI, aReportOnly) {
     return this._appendPolicyInternal(aPolicy, selfURI, aReportOnly, true);
   },
 

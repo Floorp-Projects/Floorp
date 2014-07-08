@@ -192,8 +192,7 @@ CSPPolicyURIListener.prototype = {
     if (Components.isSuccessCode(status)) {
       // send the policy we received back to the parent document's CSP
       // for parsing
-      this._csp.appendPolicy(this._policy, this._docURI,
-                             this._reportOnly, true);
+      this._csp.appendPolicy(this._policy, this._docURI, this._reportOnly);
     }
     else {
       // problem fetching policy so fail closed by appending a "block it all"
@@ -201,8 +200,7 @@ CSPPolicyURIListener.prototype = {
       // this policy is used.
       this._csp.log(WARN_FLAG, CSPLocalizer.getFormatStr("errorFetchingPolicy",
                                                          [status]));
-      this._csp.appendPolicy("default-src 'none'", this._docURI,
-                             this._reportOnly, true);
+      this._csp.appendPolicy("default-src 'none'", this._docURI, this._reportOnly);
     }
     // resume the parent document request
     this._docRequest.resume();
@@ -228,7 +226,7 @@ this.CSPRep = function CSPRep() {
   this._directives = {};
 }
 
-// Source directives for our CSP 1.0 spec compliant implementation.
+// Source directives for our CSP 1.0 implementation.
 CSPRep.SRC_DIRECTIVES = {
   DEFAULT_SRC:      "default-src",
   SCRIPT_SRC:       "script-src",

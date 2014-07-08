@@ -13,7 +13,6 @@ __all__ = ['MissingPrimaryLocationError', 'MultiplePrimaryLocationsError',
            'Permissions']
 
 import codecs
-import itertools
 import os
 import sqlite3
 import urlparse

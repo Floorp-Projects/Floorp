@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
   do_get_profile();
 
   let ns = {};
-  Cu.import("resource://testing-common/services-common/logging.js", ns);
+  Cu.import("resource://testing-common/services/common/logging.js", ns);
 
   ns.initTestLogging("Trace");
 }).call(this);

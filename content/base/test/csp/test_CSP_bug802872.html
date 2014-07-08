@@ -25,33 +25,28 @@ var checkExplicitFinish = function () {
   }
 }
 
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-  function () {
-    // add event listeners for CSP-permitted EventSrc callbacks
-    addEventListener('allowedEventSrcCallbackOK', function (e) {
-      ok(true, "OK: CSP allows EventSource for whitelisted domain!");
-      checkExplicitFinish();
-    }, false);
-    addEventListener('allowedEventSrcCallbackFailed', function (e) {
-      ok(false, "Error: CSP blocks EventSource for whitelisted domain!");
-      checkExplicitFinish();
-    }, false);
+// add event listeners for CSP-permitted EventSrc callbacks
+addEventListener('allowedEventSrcCallbackOK', function (e) {
+  ok(true, "OK: CSP allows EventSource for whitelisted domain!");
+  checkExplicitFinish();
+}, false);
+addEventListener('allowedEventSrcCallbackFailed', function (e) {
+  ok(false, "Error: CSP blocks EventSource for whitelisted domain!");
+  checkExplicitFinish();
+}, false);
 
-    // add event listeners for CSP-blocked EventSrc callbacks
-    addEventListener('blockedEventSrcCallbackOK', function (e) {
-      ok(false, "Error: CSP allows EventSource to not whitelisted domain!");
-      checkExplicitFinish();
-    }, false);
-    addEventListener('blockedEventSrcCallbackFailed', function (e) {
-      ok(true, "OK: CSP blocks EventSource for not whitelisted domain!");
-      checkExplicitFinish();
-    }, false);
+// add event listeners for CSP-blocked EventSrc callbacks
+addEventListener('blockedEventSrcCallbackOK', function (e) {
+  ok(false, "Error: CSP allows EventSource to not whitelisted domain!");
+  checkExplicitFinish();
+}, false);
+addEventListener('blockedEventSrcCallbackFailed', function (e) {
+  ok(true, "OK: CSP blocks EventSource for not whitelisted domain!");
+  checkExplicitFinish();
+}, false);
 
-    // load it
-    document.getElementById('eventframe').src = 'file_CSP_bug802872.html';
-  }
-);
+// load it
+document.getElementById('eventframe').src = 'file_CSP_bug802872.html';
 
 </script>
 </body>

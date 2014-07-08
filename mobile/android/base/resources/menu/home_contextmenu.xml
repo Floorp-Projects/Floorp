@@ -11,9 +11,6 @@
     <item android:id="@+id/home_open_private_tab"
           android:title="@string/contextmenu_open_private_tab"/>
 
-    <item android:id="@+id/home_open_in_reader"
-          android:title="@string/contextmenu_open_in_reader"/>
-
     <item android:id="@+id/home_copyurl"
           android:title="@string/contextmenu_copyurl"/>
 

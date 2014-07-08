@@ -120,21 +120,30 @@ nsStyleLinkElement::SetLineNumber(uint32_t aLineNumber)
 }
 
 /* static */ bool
-nsStyleLinkElement::IsImportEnabled()
+nsStyleLinkElement::IsImportEnabled(nsIPrincipal* aPrincipal)
 {
   static bool sAdded = false;
-  static bool sImportEnabled;
+  static bool sWebComponentsEnabled;
   if (!sAdded) {
     // This part runs only once because of the static flag.
-    Preferences::AddBoolVarCache(&sImportEnabled,
+    Preferences::AddBoolVarCache(&sWebComponentsEnabled,
                                  "dom.webcomponents.enabled",
                                  false);
     sAdded = true;
   }
-  return sImportEnabled;
+
+  if (sWebComponentsEnabled) {
+    return true;
+  }
+
+  // If the web components pref is not enabled, check
+  // if we are in a certified app because imports is enabled
+  // for certified apps.
+  return aPrincipal &&
+    aPrincipal->GetAppStatus() == nsIPrincipal::APP_STATUS_CERTIFIED;
 }
 
-static uint32_t ToLinkMask(const nsAString& aLink)
+static uint32_t ToLinkMask(const nsAString& aLink, nsIPrincipal* aPrincipal)
 { 
   if (aLink.EqualsLiteral("prefetch"))
     return nsStyleLinkElement::ePREFETCH;
@@ -146,13 +155,14 @@ static uint32_t ToLinkMask(const nsAString& aLink)
     return nsStyleLinkElement::eNEXT;
   else if (aLink.EqualsLiteral("alternate"))
     return nsStyleLinkElement::eALTERNATE;
-  else if (aLink.EqualsLiteral("import") && nsStyleLinkElement::IsImportEnabled())
+  else if (aLink.EqualsLiteral("import") && aPrincipal &&
+           nsStyleLinkElement::IsImportEnabled(aPrincipal))
     return nsStyleLinkElement::eHTMLIMPORT;
   else 
     return 0;
 }
 
-uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes)
+uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes, nsIPrincipal* aPrincipal)
 {
   uint32_t linkMask = 0;
   nsAString::const_iterator start, done;
@@ -169,7 +179,7 @@ uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes)
     if (nsContentUtils::IsHTMLWhitespace(*current)) {
       if (inString) {
         nsContentUtils::ASCIIToLower(Substring(start, current), subString);
-        linkMask |= ToLinkMask(subString);
+        linkMask |= ToLinkMask(subString, aPrincipal);
         inString = false;
       }
     }
@@ -183,7 +193,7 @@ uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes)
   }
   if (inString) {
     nsContentUtils::ASCIIToLower(Substring(start, current), subString);
-    linkMask |= ToLinkMask(subString);
+    linkMask |= ToLinkMask(subString, aPrincipal);
   }
   return linkMask;
 }

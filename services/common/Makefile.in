@@ -18,13 +18,6 @@ pp_modules := \
   rest.js \
   $(NULL)
 
-testing_modules := \
-  bagheeraserver.js \
-  logging.js \
-  storageserver.js \
-  utils.js \
-  $(NULL)
-
 JS_EXPORTS_FILES := $(srcdir)/services-common.js
 JS_EXPORTS_DEST = $(FINAL_TARGET)/$(PREF_DIR)
 INSTALL_TARGETS += JS_EXPORTS
@@ -32,9 +25,6 @@ INSTALL_TARGETS += JS_EXPORTS
 MODULES_FILES := $(modules)
 MODULES_DEST = $(FINAL_TARGET)/modules/services-common
 INSTALL_TARGETS += MODULES
-
-TESTING_JS_MODULES := $(addprefix modules-testing/,$(testing_modules))
-TESTING_JS_MODULE_DIR := services-common
 
 PP_JS_MODULES := $(pp_modules)
 PP_JS_MODULES_PATH = $(FINAL_TARGET)/modules/services-common

@@ -1,0 +1,89 @@
+#! /usr/bin/env python
+
+import os
+from distutils import spawn
+import subprocess
+from threading import Thread
+import argparse
+
+src_files = []  # files to be compiled
+
+# search for react-tools install
+jsx_path = spawn.find_executable('jsx')
+if jsx_path is None:
+    print 'You do not have the react-tools installed'
+    print 'Please do $ npm install -g react-tools'
+    exit(1)
+
+# parse the CLI arguments
+description = 'Loop build tool for JSX files. ' + \
+              'Will scan entire loop directory and compile them in place. ' + \
+              'Must be executed from browser/components/loop directory.'
+
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument('--watch', '-w', action='store_true', help='continuous' +
+                    'build based on file changes (optional)')
+args = parser.parse_args()
+
+# loop through all tuples and get unique dirs only
+unique_jsx_dirs = []
+
+# find all .jsx files
+for dirname, dirnames, filenames in os.walk('.'):
+    for filename in filenames:
+        if '.jsx' == os.path.splitext(filename)[1]:  # (root, ext)
+            src_files.append(filename)
+            if dirname not in unique_jsx_dirs:
+                unique_jsx_dirs.append(dirname)
+
+
+def jsx_run_watcher(path):
+    subprocess.call(['jsx', '-w', '-x', 'jsx', path, path])
+
+
+def start_jsx_watcher_threads(dirs):
+    """
+        starts a thread with a jsx watch process
+        for every dir in the dirs argument
+    """
+    threads = []
+    for udir in dirs:
+        t = Thread(target=jsx_run_watcher, args=(udir,))
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()
+
+
+def check_file_packaging(srcs):
+    """
+        get all lines from jar.mn file
+        check against the files we are going to compile.
+        Note that this only looks at filenames, and will miss
+        the one of two identically named files.
+    """
+    # get all lines from jar.mn
+    packaged_files = [line.strip() for line in open('./jar.mn')]
+
+    # loop through our compiled files and compare against jar.mn
+    # XXX fix to use paths so that identically named files don't get overlooked
+    # and update the docstring for this function
+    missing_jar_files = []  # initially empty
+    for src_file in srcs:
+        transpiled_file = os.path.splitext(src_file)[0] + ".js"  # (root, ext)
+        if not any(transpiled_file in x for x in packaged_files):
+            missing_jar_files.append(transpiled_file)
+
+    # output a message to the user
+    if len(missing_jar_files):
+        for f in missing_jar_files:
+            print f + ' not in jar.mn file'
+
+check_file_packaging(src_files)
+
+if args.watch:
+    start_jsx_watcher_threads(unique_jsx_dirs)
+else:
+    for d in unique_jsx_dirs:
+        out = subprocess.call(['jsx', '-x', 'jsx', d, d])

@@ -53,8 +53,6 @@ function testPref(ed, win) {
   info ("Preffing autocompletion off");
   Services.prefs.setBoolPref(AUTOCOMPLETION_PREF, false);
 
-  ed.setupAutoCompletion();
-
   ok (ed.getOption("autocomplete"), "Autocompletion is still set");
   ok (!win.tern, "Tern is no longer defined on the window");
 

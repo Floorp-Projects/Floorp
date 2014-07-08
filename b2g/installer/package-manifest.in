@@ -832,10 +832,8 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/SimulatorScreen.js
 #endif
 
-#ifdef MOZ_SERVICES_FXACCOUNTS
 @BINPATH@/components/FxAccountsUIGlue.js
 @BINPATH@/components/services_fxaccounts.xpt
-#endif
 
 @BINPATH@/components/DataStore.manifest
 @BINPATH@/components/DataStoreImpl.js

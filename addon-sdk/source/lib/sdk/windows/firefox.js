@@ -70,6 +70,9 @@ const BrowserWindowTrait = Trait.compose(
       else if ('url' in options) {
         this._tabOptions = [ Options(options.url) ];
       }
+      for (let tab of this._tabOptions) {
+        tab.inNewWindow = true;
+      }
 
       this._isPrivate = isPrivateBrowsingSupported && !!options.isPrivate;
 

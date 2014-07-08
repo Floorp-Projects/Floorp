@@ -49,14 +49,10 @@ var checkTestResults = function() {
 // set up and go
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-    function() {
-      // save this for last so that our listeners are registered.
-      // ... this loads the testbed of good and bad requests.
-      document.getElementById('cspframe').src = 'file_CSP_evalscript_main.html';
-      document.getElementById('cspframe2').src = 'file_CSP_evalscript_main_allowed.html';
-    });
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'file_CSP_evalscript_main.html';
+document.getElementById('cspframe2').src = 'file_CSP_evalscript_main_allowed.html';
 </script>
 </pre>
 </body>

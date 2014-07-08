@@ -116,27 +116,30 @@ AppendToString(std::stringstream& aStream, const nsIntSize& sz,
 
 void
 AppendToString(std::stringstream& aStream, const FrameMetrics& m,
-               const char* pfx, const char* sfx)
+               const char* pfx, const char* sfx, bool detailed)
 {
   aStream << pfx;
-  AppendToString(aStream, m.mViewport, "{ viewport=");
-  AppendToString(aStream, m.mCompositionBounds, " cb=");
-  AppendToString(aStream, m.GetScrollOffset(), " viewportScroll=");
-  AppendToString(aStream, m.mDisplayPort, " displayport=");
-  AppendToString(aStream, m.mCriticalDisplayPort, " critdp=");
-  AppendToString(aStream, m.mScrollableRect, " scrollableRect=");
-  AppendToString(aStream, m.GetScrollId(), " scrollId=", " }");
-  aStream << sfx;
-}
-
-void
-AppendToString(std::stringstream& aStream, const IntSize& size,
-               const char* pfx, const char* sfx)
-{
-  aStream << pfx;
-  aStream << nsPrintfCString(
-    "(width=%d, height=%d)",
-    size.width, size.height).get();
+  AppendToString(aStream, m.mCompositionBounds, "{ cb=");
+  AppendToString(aStream, m.mScrollableRect, " sr=");
+  AppendToString(aStream, m.GetScrollOffset(), " s=");
+  AppendToString(aStream, m.mDisplayPort, " dp=");
+  AppendToString(aStream, m.mCriticalDisplayPort, " cdp=");
+  if (!detailed) {
+    aStream << nsPrintfCString(" z=%.3f }", m.GetZoom().scale).get();
+  } else {
+    AppendToString(aStream, m.GetDisplayPortMargins(), " dpm=");
+    aStream << nsPrintfCString(" um=%d", m.GetUseDisplayPortMargins()).get();
+    AppendToString(aStream, m.GetRootCompositionSize(), " rcs=");
+    AppendToString(aStream, m.mViewport, " v=");
+    aStream << nsPrintfCString(" z=(ld=%.3f r=%.3f cr=%.3f z=%.3f ts=%.3f)",
+            m.mDevPixelsPerCSSPixel.scale, m.mResolution.scale,
+            m.mCumulativeResolution.scale, m.GetZoom().scale,
+            m.mTransformScale.scale).get();
+    aStream << nsPrintfCString(" u=(%d %lu)",
+            m.GetScrollOffsetUpdated(), m.GetScrollGeneration()).get();
+    aStream << nsPrintfCString(" i=(%ld %lld) }",
+            m.GetPresShellId(), m.GetScrollId()).get();
+  }
   aStream << sfx;
 }
 

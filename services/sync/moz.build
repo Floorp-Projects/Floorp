@@ -14,3 +14,10 @@ EXTRA_COMPONENTS += [
 EXTRA_PP_COMPONENTS += [
     'SyncComponents.manifest',
 ]
+
+TESTING_JS_MODULES.services.sync += [
+    'modules-testing/fakeservices.js',
+    'modules-testing/fxa_utils.js',
+    'modules-testing/rotaryengine.js',
+    'modules-testing/utils.js',
+]

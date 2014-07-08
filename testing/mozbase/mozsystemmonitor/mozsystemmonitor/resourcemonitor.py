@@ -564,7 +564,7 @@ class SystemResourceMonitor(object):
             o['end'] = None
             o['duration'] = None
 
-        o['events'] = [list(e) for e in self.events]
+        o['events'] = [list(ev) for ev in self.events]
 
         for phase, v in self.phases.items():
             e = dict(

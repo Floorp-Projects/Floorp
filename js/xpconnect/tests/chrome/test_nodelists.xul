@@ -26,7 +26,7 @@
         is(list.item, list.item, "don't recreate functions for each get");
 
         var list2 = list[2];
-        ok(list[2].toString().indexOf("[object HTMLParagraphElement"), "list[2] exists");
+        ok(list[2].toString().indexOf("[object HTMLParagraphElement") >= 0, "list[2] exists");
         ok("2" in list, "in operator works");
 
         is(win.document.body.removeChild(win.document.body.lastChild), list2, "remove last paragraph element");

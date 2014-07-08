@@ -195,7 +195,6 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         map.put(Combined._ID, Combined._ID);
         map.put(Combined.BOOKMARK_ID, Combined.BOOKMARK_ID);
         map.put(Combined.HISTORY_ID, Combined.HISTORY_ID);
-        map.put(Combined.DISPLAY, "MAX(" + Combined.DISPLAY + ") AS " + Combined.DISPLAY);
         map.put(Combined.URL, Combined.URL);
         map.put(Combined.TITLE, Combined.TITLE);
         map.put(Combined.VISITS, Combined.VISITS);

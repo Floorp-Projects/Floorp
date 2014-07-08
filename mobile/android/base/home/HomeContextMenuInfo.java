@@ -21,7 +21,6 @@ public class HomeContextMenuInfo extends AdapterContextMenuInfo {
     public String url;
     public String title;
     public boolean isFolder = false;
-    public int display = Combined.DISPLAY_NORMAL;
     public int historyId = -1;
     public int bookmarkId = -1;
     public int readingListItemId = -1;

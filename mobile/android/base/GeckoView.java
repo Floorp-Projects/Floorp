@@ -277,16 +277,16 @@ public class GeckoView extends LayerView
             String hint = message.optString("hint");
             if ("alert".equals(hint)) {
                 String text = message.optString("text");
-                mChromeDelegate.onAlert(GeckoView.this, null, text, new PromptResult(message.optString("guid")));
+                mChromeDelegate.onAlert(GeckoView.this, null, text, new PromptResult(message));
             } else if ("confirm".equals(hint)) {
                 String text = message.optString("text");
-                mChromeDelegate.onConfirm(GeckoView.this, null, text, new PromptResult(message.optString("guid")));
+                mChromeDelegate.onConfirm(GeckoView.this, null, text, new PromptResult(message));
             } else if ("prompt".equals(hint)) {
                 String text = message.optString("text");
                 String defaultValue = message.optString("textbox0");
-                mChromeDelegate.onPrompt(GeckoView.this, null, text, defaultValue, new PromptResult(message.optString("guid")));
+                mChromeDelegate.onPrompt(GeckoView.this, null, text, defaultValue, new PromptResult(message));
             } else if ("remotedebug".equals(hint)) {
-                mChromeDelegate.onDebugRequest(GeckoView.this, new PromptResult(message.optString("guid")));
+                mChromeDelegate.onDebugRequest(GeckoView.this, new PromptResult(message));
             }
         }
     }
@@ -439,16 +439,15 @@ public class GeckoView extends LayerView
         private final int RESULT_OK = 0;
         private final int RESULT_CANCEL = 1;
 
-        private final String mGUID;
+        private final JSONObject mMessage;
 
-        public PromptResult(String guid) {
-            mGUID = guid;
+        public PromptResult(JSONObject message) {
+            mMessage = message;
         }
 
         private JSONObject makeResult(int resultCode) {
             JSONObject result = new JSONObject();
             try {
-                result.put("guid", mGUID);
                 result.put("button", resultCode);
             } catch(JSONException ex) { }
             return result;
@@ -459,7 +458,7 @@ public class GeckoView extends LayerView
         */
         public void confirm() {
             JSONObject result = makeResult(RESULT_OK);
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Prompt:Reply", result.toString()));
+            EventDispatcher.sendResponse(mMessage, result);
         }
 
         /**
@@ -471,7 +470,7 @@ public class GeckoView extends LayerView
             try {
                 result.put("textbox0", value);
             } catch(JSONException ex) { }
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Prompt:Reply", result.toString()));
+            EventDispatcher.sendResponse(mMessage, result);
         }
 
         /**
@@ -479,7 +478,7 @@ public class GeckoView extends LayerView
         */
         public void cancel() {
             JSONObject result = makeResult(RESULT_CANCEL);
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Prompt:Reply", result.toString()));
+            EventDispatcher.sendResponse(mMessage, result);
         }
     }
 

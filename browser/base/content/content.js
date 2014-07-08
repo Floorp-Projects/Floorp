@@ -307,10 +307,15 @@ let ClickEventHandler = {
   },
 
   onAboutCertError: function (targetElement, ownerDoc) {
+    let docshell = ownerDoc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
+                                       .getInterface(Ci.nsIWebNavigation)
+                                       .QueryInterface(Ci.nsIDocShell);
     sendAsyncMessage("Browser:CertExceptionError", {
       location: ownerDoc.location.href,
       elementId: targetElement.getAttribute("id"),
-      isTopFrame: (ownerDoc.defaultView.parent === ownerDoc.defaultView)
+      isTopFrame: (ownerDoc.defaultView.parent === ownerDoc.defaultView),
+    }, {
+      failedChannel: docshell.failedChannel
     });
   },
 

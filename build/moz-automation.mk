@@ -22,9 +22,13 @@ AUTOMATION_UPLOAD_OUTPUT = $(DIST)/automation-upload.txt
 tier_BUILD_SYMBOLS = buildsymbols
 tier_CHECK = check
 tier_L10N_CHECK = l10n-check
+tier_PRETTY_L10N_CHECK = pretty-l10n-check
 tier_PACKAGE = package
+tier_PRETTY_PACKAGE = pretty-package
 tier_PACKAGE_TESTS = package-tests
+tier_PRETTY_PACKAGE_TESTS = pretty-package-tests
 tier_UPDATE_PACKAGING = update-packaging
+tier_PRETTY_UPDATE_PACKAGING = pretty-update-packaging
 tier_UPLOAD_SYMBOLS = uploadsymbols
 tier_UPLOAD = upload
 
@@ -32,7 +36,20 @@ tier_UPLOAD = upload
 # TIERS for mach display. As such, the MOZ_AUTOMATION_TIERS are roughly sorted
 # here in the order that they will be executed (since mach doesn't know of the
 # dependencies between them).
-moz_automation_symbols = PACKAGE_TESTS BUILD_SYMBOLS UPLOAD_SYMBOLS PACKAGE UPDATE_PACKAGING CHECK L10N_CHECK UPLOAD
+moz_automation_symbols = \
+  PACKAGE_TESTS \
+  PRETTY_PACKAGE_TESTS \
+  BUILD_SYMBOLS \
+  UPLOAD_SYMBOLS \
+  PACKAGE \
+  PRETTY_PACKAGE \
+  UPDATE_PACKAGING \
+  PRETTY_UPDATE_PACKAGING \
+  CHECK \
+  L10N_CHECK \
+  PRETTY_L10N_CHECK \
+  UPLOAD \
+  $(NULL)
 MOZ_AUTOMATION_TIERS := $(foreach sym,$(moz_automation_symbols),$(if $(filter 1,$(MOZ_AUTOMATION_$(sym))),$(tier_$(sym))))
 
 # Dependencies between automation build steps
@@ -52,6 +69,13 @@ automation/upload: automation/update-packaging
 # changes the binaries/libs, and that's what we package/test.
 automation/package: automation/buildsymbols
 automation/check: automation/buildsymbols
+
+# The 'pretty' versions of targets run before the regular ones to avoid
+# conflicts in writing to the same files.
+automation/package: automation/pretty-package
+automation/package-tests: automation/pretty-package-tests
+automation/l10n-check: automation/pretty-l10n-check
+automation/update-packaging: automation/pretty-update-packaging
 
 automation/build: $(addprefix automation/,$(MOZ_AUTOMATION_TIERS))
 	$(PYTHON) $(topsrcdir)/build/gen_mach_buildprops.py --complete-mar-file $(DIST)/$(COMPLETE_MAR) --upload-output $(AUTOMATION_UPLOAD_OUTPUT)
