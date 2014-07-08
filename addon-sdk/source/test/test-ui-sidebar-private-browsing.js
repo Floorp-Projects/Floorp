@@ -65,7 +65,7 @@ exports.testSidebarIsNotOpenInNewPrivateWindow = function(assert, done) {
       assert.equal(isSidebarShowing(window), true, 'the sidebar is showing');
       assert.equal(isShowing(sidebar), true, 'the sidebar is showing');
 
-      let window2 = window.OpenBrowserWindow({private: true});
+      let window2 = window.OpenBrowserWindow({ private: true });
       windowPromise(window2, 'load').then(focus).then(function() {
         // TODO: find better alt to setTimeout...
         setTimeout(function() {
