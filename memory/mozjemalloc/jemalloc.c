@@ -225,7 +225,6 @@
 
 #if defined(MOZ_MEMORY_LINUX) && !defined(MOZ_MEMORY_ANDROID)
 #define	_GNU_SOURCE /* For mremap(2). */
-#define	issetugid() 0
 #if 0 /* Enable in order to test decommit code on Linux. */
 #  define MALLOC_DECOMMIT
 #endif
@@ -266,7 +265,6 @@ static unsigned long tlsIndex = 0xffffffff;
 
 #define	__thread
 #define	_pthread_self() __threadid()
-#define	issetugid() 0
 
 /* use MSVC intrinsics */
 #pragma intrinsic(_BitScanForward)
@@ -5680,8 +5678,7 @@ malloc_init_hard(void)
 			}
 			break;
 		case 1:
-			if (issetugid() == 0 && (opts =
-			    getenv("MALLOC_OPTIONS")) != NULL) {
+			if ((opts = getenv("MALLOC_OPTIONS")) != NULL) {
 				/*
 				 * Do nothing; opts is already initialized to
 				 * the value of the MALLOC_OPTIONS environment
