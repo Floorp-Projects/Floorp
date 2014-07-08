@@ -185,19 +185,6 @@ ContactManager.prototype = {
           Services.DOMRequest.fireError(req.cursor, msg.errorMsg);
         }
         break;
-      case "PermissionPromptHelper:AskPermission:OK":
-        if (DEBUG) debug("id: " + msg.requestID);
-        req = this.getRequest(msg.requestID);
-        if (!req) {
-          break;
-        }
-
-        if (msg.result == Ci.nsIPermissionManager.ALLOW_ACTION) {
-          req.allow();
-        } else {
-          req.cancel();
-        }
-        break;
       case "Contact:Changed":
         // Fire oncontactchange event
         if (DEBUG) debug("Contacts:ContactChanged: " + msg.contactID + ", " + msg.reason);
@@ -235,6 +222,7 @@ ContactManager.prototype = {
 
   askPermission: function (aAccess, aRequest, aAllowCallback, aCancelCallback) {
     if (DEBUG) debug("askPermission for contacts");
+
     let access;
     switch(aAccess) {
       case "create":
@@ -255,38 +243,42 @@ ContactManager.prototype = {
       }
 
     // Shortcut for ALLOW_ACTION so we avoid a parent roundtrip
+    let principal = this._window.document.nodePrincipal;
     let type = "contacts-" + access;
     let permValue =
-      Services.perms.testExactPermissionFromPrincipal(this._window.document.nodePrincipal, type);
+      Services.perms.testExactPermissionFromPrincipal(principal, type);
     if (permValue == Ci.nsIPermissionManager.ALLOW_ACTION) {
       aAllowCallback();
       return;
+    } else if (permValue == Ci.nsIPermissionManager.DENY_ACTION) {
+      aCancelCallback();
     }
 
-    let requestID = this.getRequestId({
-      request: aRequest,
-      allow: function() {
-        aAllowCallback();
-      }.bind(this),
-      cancel : function() {
-        if (aCancelCallback) {
-          aCancelCallback()
-        } else if (aRequest) {
-          Services.DOMRequest.fireError(aRequest, "Not Allowed");
-        }
-      }.bind(this)
-    });
-
-    let principal = this._window.document.nodePrincipal;
-    cpmm.sendAsyncMessage("PermissionPromptHelper:AskPermission", {
+    // Create an array with a single nsIContentPermissionType element.
+    let type = {
       type: "contacts",
       access: access,
-      requestID: requestID,
-      origin: principal.origin,
-      appID: principal.appId,
-      browserFlag: principal.isInBrowserElement,
-      windowID: this._window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID
-    });
+      options: null,
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionType])
+    };
+    let typeArray = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+    typeArray.appendElement(type, false);
+
+    // create a nsIContentPermissionRequest
+    let request = {
+      types: typeArray,
+      principal: principal,
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionRequest]),
+      allow: aAllowCallback,
+      cancel: aCancelCallback,
+      window: this._window
+    };
+
+    // Using askPermission from nsIDOMWindowUtils that takes care of the
+    // remoting if needed.
+    let windowUtils = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindowUtils);
+    windowUtils.askPermission(request);
   },
 
   save: function save(aContact) {
@@ -464,7 +456,6 @@ ContactManager.prototype = {
                               "Contact:Save:Return:OK", "Contact:Save:Return:KO",
                               "Contact:Remove:Return:OK", "Contact:Remove:Return:KO",
                               "Contact:Changed",
-                              "PermissionPromptHelper:AskPermission:OK",
                               "Contacts:GetAll:Next", "Contacts:GetAll:Return:KO",
                               "Contacts:Count",
                               "Contacts:Revision", "Contacts:GetRevision:Return:KO",]);
