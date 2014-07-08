@@ -1,14 +1,13 @@
 // Test corner cases of for-of iteration over Arrays.
-// The current spidermonkey JSOP_SPREAD implementation for function calls
-// with '...rest' arguments uses a ForOfIterator to extract values from
-// the array, so we use that mechanism to test ForOfIterator here.
+// The current SetObject::construct method uses a ForOfIterator to extract
+// values from the array, so we use that mechanism to test ForOfIterator here.
 
 //
 // Check array length increases changes during iteration.
 //
 function TestIncreaseArrayLength() {
     function doIter(f, arr) {
-        return f(...arr)
+        return f(...new Set(arr));
     }
 
     function fun(a, b, c) {
