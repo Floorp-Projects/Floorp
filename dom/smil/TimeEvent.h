@@ -53,6 +53,8 @@ public:
   }
 
 private:
+  ~TimeEvent() {}
+
   nsCOMPtr<nsIDOMWindow> mView;
   int32_t mDetail;
 };

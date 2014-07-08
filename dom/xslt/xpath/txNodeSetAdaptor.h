@@ -26,6 +26,9 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_TXINODESET
 
+protected:
+    ~txNodeSetAdaptor() {}
+
 private:
     txNodeSet* NodeSet()
     {

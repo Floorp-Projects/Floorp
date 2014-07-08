@@ -75,13 +75,13 @@ public:
 
   DOMRequest(nsPIDOMWindow* aWindow);
 
+protected:
   virtual ~DOMRequest()
   {
     mResult = JSVAL_VOID;
     mozilla::DropJSObjects(this);
   }
 
-protected:
   void FireEvent(const nsAString& aType, bool aBubble, bool aCancelable);
 
   void RootResultVal();

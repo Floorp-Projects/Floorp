@@ -38,6 +38,9 @@ public:
   void Reset();
   void FireDone();
 
+protected:
+  ~DOMCursor() {}
+
 private:
   DOMCursor() MOZ_DELETE;
 
