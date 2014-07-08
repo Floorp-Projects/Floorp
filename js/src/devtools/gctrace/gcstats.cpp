@@ -37,6 +37,14 @@ enum Heap
     HeapKinds
 };
 
+enum FinalizerKind
+{
+    NoFinalizer,
+    HasFinalizer,
+
+    FinalizerKinds
+};
+
 enum State
 {
     StateMutator,
@@ -68,9 +76,10 @@ struct ClassInfo
     const ClassId id;
     const char *name;
     const uint32_t flags;
+    const FinalizerKind hasFinalizer;
 
-    ClassInfo(ClassId id, const char *name, uint32_t flags)
-      : id(id), name(name), flags(flags) {}
+    ClassInfo(ClassId id, const char *name, uint32_t flags, FinalizerKind hasFinalizer)
+      : id(id), name(name), flags(flags), hasFinalizer(hasFinalizer) {}
 };
 
 typedef std::unordered_map<address, AllocInfo> AllocMap;
@@ -123,6 +132,8 @@ Array<Array<Array<uint64_t, MaxLifetimeBins>, AllocKinds>, HeapKinds> allocCount
 Array<uint64_t, MaxClasses> objectCountByClass;
 Array<Array<uint64_t, MaxClasses>, HeapKinds> objectCountByHeapAndClass;
 Array<Array<Array<uint64_t, MaxLifetimeBins>, MaxClasses>, HeapKinds> objectCountByHeapClassAndLifetime;
+Array<Array<uint64_t, MaxLifetimeBins>, FinalizerKinds> heapObjectCountByFinalizerAndLifetime;
+Array<Array<uint64_t, MaxLifetimeBins>, MaxClasses> finalizedHeapObjectCountByClassAndLifetime;
 
 static void
 die(const char *format, ...)
@@ -313,6 +324,44 @@ outputLifetimeByHeap(FILE *file)
 }
 
 static void
+outputLifetimeByHasFinalizer(FILE *file)
+{
+    fprintf(file, "# Lifetime of heap allocated objects by prescence of finalizer\n");
+    fprintf(file, "# NB invalid unless execution was traced with appropriate zeal\n");
+    fprintf(file, "# Total allocations: %" PRIu64 "\n", allocCount);
+    fprintf(file, "Lifetime, NoFinalizer, HasFinalizer\n");
+
+    for (unsigned i = 0; i < lifetimeBins; ++i) {
+        fprintf(file, "%8d", binLimit(i));
+        for (unsigned j = 0; j < FinalizerKinds; ++j)
+            fprintf(file, ", %8" PRIu64,
+                    heapObjectCountByFinalizerAndLifetime[j][i]);
+        fprintf(file, "\n");
+    }
+}
+
+static void
+outputFinalizedHeapObjectLifetimeByClass(FILE *file)
+{
+    fprintf(file, "# Lifetime of finalized heap objects by class\n");
+    fprintf(file, "# NB invalid unless execution was traced with appropriate zeal\n");
+    fprintf(file, "# Total allocations: %" PRIu64 "\n", allocCount);
+    fprintf(file, "Lifetime");
+    for (unsigned i = 0; i < classes.size(); ++i)
+        fprintf(file, ", %15s", classes[i].name);
+    fprintf(file, "\n");
+
+    for (unsigned i = 0; i < lifetimeBins; ++i) {
+        fprintf(file, "%8d", binLimit(i));
+        for (unsigned j = 0; j < classes.size(); ++j) {
+            fprintf(file, ", %8" PRIu64,
+                    finalizedHeapObjectCountByClassAndLifetime[j][i]);
+        }
+        fprintf(file, "\n");
+    }
+}
+
+static void
 outputLifetimeByKind(FILE *file, unsigned initialHeap)
 {
     assert(initialHeap < AugHeapKinds);
@@ -373,6 +422,12 @@ processAlloc(const AllocInfo &info, uint64_t finalizeTime)
         ++objectCountByClass[info.classId];
         ++objectCountByHeapAndClass[info.initialHeap][info.classId];
         ++objectCountByHeapClassAndLifetime[info.initialHeap][info.classId][lifetimeBin];
+        if (info.initialHeap == TenuredHeap) {
+            FinalizerKind f = classes[info.classId].hasFinalizer;
+            ++heapObjectCountByFinalizerAndLifetime[f][lifetimeBin];
+            if (f == HasFinalizer)
+                ++finalizedHeapObjectCountByClassAndLifetime[info.classId][lifetimeBin];
+        }
     }
 
     uint64_t size = thingSizes[info.kind];
@@ -458,10 +513,11 @@ expectDataString(FILE *file)
 }
 
 static void
-createClassInfo(const char *name, uint32_t flags, address clasp = 0)
+createClassInfo(const char *name, uint32_t flags, FinalizerKind hasFinalizer,
+                address clasp = 0)
 {
     ClassId id = classes.size();
-    classes.push_back(ClassInfo(id, name, flags));
+    classes.push_back(ClassInfo(id, name, flags, hasFinalizer));
     if (clasp)
         classMap.emplace(clasp, id);
 }
@@ -470,9 +526,10 @@ static void
 readClassInfo(FILE *file, address clasp)
 {
     assert(clasp);
-    uint32_t flags = expectDataInt(file);
     char *name = expectDataString(file);
-    createClassInfo(name, flags, clasp);
+    uint32_t flags = expectDataInt(file);
+    FinalizerKind hasFinalizer = expectDataInt(file) != 0 ? HasFinalizer : NoFinalizer;
+    createClassInfo(name, flags, hasFinalizer, clasp);
 }
 
 static void
@@ -584,7 +641,7 @@ processTraceFile(const char *filename)
     lifetimeBins = getBin(maxTraces) + 1;
     assert(lifetimeBins <= MaxLifetimeBins);
 
-    createClassInfo("unknown", 0);
+    createClassInfo("unknown", 0, NoFinalizer);
 
     State state = StateMutator;
     while (readTrace(file, trace)) {
@@ -683,5 +740,9 @@ main(int argc, const char *argv[])
     withOutputFile(outputBase, "lifetimeByKindForHeap",
                    std::bind(outputLifetimeByKind, _1, TenuredHeap));
     withOutputFile(outputBase, "lifetimeByHeap", outputLifetimeByHeap);
+    withOutputFile(outputBase, "lifetimeByHasFinalizer",
+                   outputLifetimeByHasFinalizer);
+    withOutputFile(outputBase, "finalizedHeapObjectlifetimeByClass",
+                   outputFinalizedHeapObjectLifetimeByClass);
     return 0;
 }
