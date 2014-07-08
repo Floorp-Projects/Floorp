@@ -44,7 +44,6 @@ public:
   bool SocketCreated();
   void NoteSocketCreated();
   static void NoteCertOverrideServiceInstantiated();
-  static void NoteCertDBServiceInstantiated();
   bool IsOCSPStaplingEnabled() const { return mOCSPStaplingEnabled; }
 
 private:

@@ -2,9 +2,6 @@ from sut import MockAgent
 import mozdevice
 import mozlog
 import unittest
-import hashlib
-import tempfile
-import os
 
 class PullTest(unittest.TestCase):
 

@@ -22,12 +22,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850442
 SimpleTest.waitForExplicitFinish();
 
 resume_geolocationProvider(function() {
-  force_prompt(true, test1);
+    force_prompt(true, function () {
+      set_network_request_cache_enabled(false, function() {
+        test1();
+      });
+    });
 });
 
 function done() {
-  resume_geolocationProvider(function() {
-    SimpleTest.finish();
+  set_network_request_cache_enabled(true, function() {
+    resume_geolocationProvider(function() {
+      SimpleTest.finish();
+    });
   });
 }
 

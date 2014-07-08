@@ -95,56 +95,110 @@ public:
   // constraint enforcement will consider the subject CN as a possible dNSName.
   MOZILLA_PKIX_ENUM_CLASS IncludeCN { No = 0, Yes = 1 };
 
-  // nssCert and childCert must be valid for the lifetime of BackCert
-  BackCert(BackCert* childCert, IncludeCN includeCN)
-    : encodedAuthorityInfoAccess(nullptr)
-    , encodedBasicConstraints(nullptr)
-    , encodedCertificatePolicies(nullptr)
-    , encodedExtendedKeyUsage(nullptr)
-    , encodedKeyUsage(nullptr)
-    , encodedNameConstraints(nullptr)
-    , encodedInhibitAnyPolicy(nullptr)
+  // certDER and childCert must be valid for the lifetime of BackCert.
+  BackCert(const SECItem& certDER, const BackCert* childCert,
+           IncludeCN includeCN)
+    : der(certDER)
     , childCert(childCert)
     , includeCN(includeCN)
   {
   }
 
-  Result Init(const SECItem& certDER);
+  Result Init();
 
-  const SECItem& GetDER() const { return nssCert->derCert; }
-  const SECItem& GetIssuer() const { return nssCert->derIssuer; }
-  const SECItem& GetSerialNumber() const { return nssCert->serialNumber; }
-  const SECItem& GetSubject() const { return nssCert->derSubject; }
+  const SECItem& GetDER() const { return der; }
+  const der::Version GetVersion() const { return version; }
+  const CERTSignedData& GetSignedData() const { return signedData; }
+  const SECItem& GetIssuer() const { return issuer; }
+  // XXX: "validity" is a horrible name for the structure that holds
+  // notBefore & notAfter, but that is the name used in RFC 5280 and we use the
+  // RFC 5280 names for everything.
+  const SECItem& GetValidity() const { return validity; }
+  const SECItem& GetSerialNumber() const { return serialNumber; }
+  const SECItem& GetSubject() const { return subject; }
   const SECItem& GetSubjectPublicKeyInfo() const
   {
-    return nssCert->derPublicKey;
+    return subjectPublicKeyInfo;
+  }
+  const SECItem* GetAuthorityInfoAccess() const
+  {
+    return MaybeSECItem(authorityInfoAccess);
+  }
+  const SECItem* GetBasicConstraints() const
+  {
+    return MaybeSECItem(basicConstraints);
+  }
+  const SECItem* GetCertificatePolicies() const
+  {
+    return MaybeSECItem(certificatePolicies);
+  }
+  const SECItem* GetExtKeyUsage() const { return MaybeSECItem(extKeyUsage); }
+  const SECItem* GetKeyUsage() const { return MaybeSECItem(keyUsage); }
+  const SECItem* GetInhibitAnyPolicy() const
+  {
+    return MaybeSECItem(inhibitAnyPolicy);
+  }
+  const SECItem* GetNameConstraints() const
+  {
+    return MaybeSECItem(nameConstraints);
   }
 
-  Result VerifyOwnSignatureWithKey(TrustDomain& trustDomain,
-                                   const SECItem& subjectPublicKeyInfo) const;
+private:
+  const SECItem& der;
 
-  der::Version version;
-
-  const SECItem* encodedAuthorityInfoAccess;
-  const SECItem* encodedBasicConstraints;
-  const SECItem* encodedCertificatePolicies;
-  const SECItem* encodedExtendedKeyUsage;
-  const SECItem* encodedKeyUsage;
-  const SECItem* encodedNameConstraints;
-  const SECItem* encodedInhibitAnyPolicy;
-
-  BackCert* const childCert;
+public:
+  BackCert const* const childCert;
   const IncludeCN includeCN;
 
-  // Only non-const so that we can pass this to TrustDomain::IsRevoked,
-  // which only takes a non-const pointer because VerifyEncodedOCSPResponse
-  // requires it, and that is only because the implementation of
-  // VerifyEncodedOCSPResponse does a CERT_DupCertificate. TODO: get rid
-  // of that CERT_DupCertificate so that we can make all these things const.
-  /*const*/ CERTCertificate* GetNSSCert() const { return nssCert.get(); }
-
 private:
-  ScopedCERTCertificate nssCert;
+  der::Version version;
+
+  // When parsing certificates in BackCert::Init, we don't accept empty
+  // extensions. Consequently, we don't have to store a distinction between
+  // empty extensions and extensions that weren't included. However, when
+  // *processing* extensions, we distinguish between whether an extension was
+  // included or not based on whetehr the GetXXX function for the extension
+  // returns nullptr.
+  static inline const SECItem* MaybeSECItem(const SECItem& item)
+  {
+    return item.len > 0 ? &item : nullptr;
+  }
+
+  // Helper classes to zero-initialize these fields on construction and to
+  // document that they contain non-owning pointers to the data they point
+  // to.
+  struct NonOwningSECItem : public SECItemStr {
+    NonOwningSECItem()
+    {
+      data = nullptr;
+      len = 0;
+    }
+  };
+  struct NonOwningCERTSignedData : public CERTSignedDataStr {
+    NonOwningCERTSignedData() { memset(this, 0, sizeof(*this)); }
+  };
+
+  NonOwningCERTSignedData signedData;
+  NonOwningSECItem issuer;
+  // XXX: "validity" is a horrible name for the structure that holds
+  // notBefore & notAfter, but that is the name used in RFC 5280 and we use the
+  // RFC 5280 names for everything.
+  NonOwningSECItem validity;
+  NonOwningSECItem serialNumber;
+  NonOwningSECItem subject;
+  NonOwningSECItem subjectPublicKeyInfo;
+
+  NonOwningSECItem authorityInfoAccess;
+  NonOwningSECItem basicConstraints;
+  NonOwningSECItem certificatePolicies;
+  NonOwningSECItem extKeyUsage;
+  NonOwningSECItem inhibitAnyPolicy;
+  NonOwningSECItem keyUsage;
+  NonOwningSECItem nameConstraints;
+  NonOwningSECItem subjectAltName;
+
+  der::Result RememberExtension(der::Input& extnID, const SECItem& extnValue,
+                                /*out*/ bool& understood);
 
   BackCert(const BackCert&) /* = delete */;
   void operator=(const BackCert&); /* = delete */;
