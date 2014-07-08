@@ -1539,36 +1539,26 @@ DataChannelConnection::HandleAssociationChangeEvent(const struct sctp_assoc_chan
 void
 DataChannelConnection::HandlePeerAddressChangeEvent(const struct sctp_paddr_change *spc)
 {
-  char addr_buf[INET6_ADDRSTRLEN];
   const char *addr = "";
+#if !defined(__Userspace_os_Windows)
+  char addr_buf[INET6_ADDRSTRLEN];
   struct sockaddr_in *sin;
   struct sockaddr_in6 *sin6;
-#if defined(__Userspace_os_Windows)
-  DWORD addr_len = INET6_ADDRSTRLEN;
 #endif
 
   switch (spc->spc_aaddr.ss_family) {
   case AF_INET:
-    sin = (struct sockaddr_in *)&spc->spc_aaddr;
 #if !defined(__Userspace_os_Windows)
+    sin = (struct sockaddr_in *)&spc->spc_aaddr;
     addr = inet_ntop(AF_INET, &sin->sin_addr, addr_buf, INET6_ADDRSTRLEN);
-#else
-    if (WSAAddressToStringA((LPSOCKADDR)sin, sizeof(sin->sin_addr), nullptr,
-                            addr_buf, &addr_len)) {
-      return;
-    }
 #endif
     break;
   case AF_INET6:
-    sin6 = (struct sockaddr_in6 *)&spc->spc_aaddr;
 #if !defined(__Userspace_os_Windows)
+    sin6 = (struct sockaddr_in6 *)&spc->spc_aaddr;
     addr = inet_ntop(AF_INET6, &sin6->sin6_addr, addr_buf, INET6_ADDRSTRLEN);
-#else
-    if (WSAAddressToStringA((LPSOCKADDR)sin6, sizeof(sin6), nullptr,
-                            addr_buf, &addr_len)) {
-      return;
-    }
 #endif
+    break;
   case AF_CONN:
     addr = "DTLS connection";
     break;
