@@ -1009,12 +1009,14 @@ void vcmSetRtcpDscp(cc_groupid_t group_id, int dscp);
  * @param [in] media_type - codec for which we are negotiating
  * @param [in] sdp_p - opaque SDP pointer to be used via SDP helper APIs
  * @param [in] level - Parameter to be used with SDP helper APIs
+ * @param [in] remote_pt - payload type remote is using for this codec
  * @param [out] rcapptr - variable to return the allocated attrib structure
  *
  * @return cc_boolean - true if attributes are accepted false otherwise
  */
 
-cc_boolean vcmCheckAttribs(cc_uint32_t media_type, void *sdp_p, int level, void **rcapptr);
+cc_boolean vcmCheckAttribs(cc_uint32_t media_type, void *sdp_p, int level,
+                           int remote_pt, void **rcapptr);
 
 /**
  * Add Video attributes in the offer/answer SDP

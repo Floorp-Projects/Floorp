@@ -3501,12 +3501,12 @@ gsmsdp_negotiate_codec (fsmdef_dcb_t *dcb_p, cc_sdp_t *sdp_p,
 
 
                 } else if (media->type == SDP_MEDIA_VIDEO) {
-                    if ( media-> video != NULL ) {
+                    if ( media->video != NULL ) {
                        vcmFreeMediaPtr(media->video);
                        media->video = NULL;
                     }
 
-                    if (!vcmCheckAttribs(codec, sdp_p, level,
+                    if (!vcmCheckAttribs(codec, sdp_p, level, remote_pt,
                                          &media->video)) {
                           GSM_DEBUG(DEB_L_C_F_PREFIX"codec= %d ignored - "
                                "attribs not accepted\n",

@@ -264,6 +264,17 @@ typedef enum {
 } sdp_setup_type_e;
 
 /**
+ * Returns the inst_num value for the specified FTMP attr
+ *
+ * @param[in]  sdp_handle     The SDP handle
+ * @param[in]  level       The level to check for the attribute.
+ *
+ * @return     inst_num    The attribute instance number to check, or -1 for failure
+ */
+
+int ccsdpAttrGetFmtpInst(void *sdp_handle, uint16_t level, uint16_t payload_num);
+
+/**
  * Gets the value of the fmtp attribute- parameter-sets parameter for H.264 codec
  *
  * @param[in]  sdp_handle     The SDP handle
