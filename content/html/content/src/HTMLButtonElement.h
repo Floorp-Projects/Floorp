@@ -25,7 +25,6 @@ public:
 
   HTMLButtonElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                       FromParser aFromParser = NOT_FROM_PARSER);
-  virtual ~HTMLButtonElement();
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLButtonElement,
                                            nsGenericHTMLFormElementWithState)
@@ -162,6 +161,8 @@ public:
   // nsIConstraintValidation::SetCustomValidity() is fine.
 
 protected:
+  virtual ~HTMLButtonElement();
+
   uint8_t mType;
   bool mDisabledChanged;
   bool mInInternalActivate;

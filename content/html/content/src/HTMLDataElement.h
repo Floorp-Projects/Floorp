@@ -18,7 +18,6 @@ class HTMLDataElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
   HTMLDataElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual ~HTMLDataElement();
 
   // HTMLDataElement WebIDL
   void GetValue(nsAString& aValue)
@@ -36,6 +35,8 @@ public:
   virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
 
 protected:
+  virtual ~HTMLDataElement();
+
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 };
 

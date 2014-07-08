@@ -20,7 +20,6 @@ public:
     : nsGenericHTMLElement(aNodeInfo)
   {
   }
-  virtual ~HTMLLegendElement();
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLLegendElement, legend)
 
@@ -85,6 +84,8 @@ public:
   }
 
 protected:
+  virtual ~HTMLLegendElement();
+
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
   /**

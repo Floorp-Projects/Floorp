@@ -21,7 +21,6 @@ class HTMLHRElement MOZ_FINAL : public nsGenericHTMLElement,
 {
 public:
   HTMLHRElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual ~HTMLHRElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -71,6 +70,8 @@ public:
   }
 
 protected:
+  virtual ~HTMLHRElement();
+
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
 private:

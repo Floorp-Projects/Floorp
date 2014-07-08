@@ -18,7 +18,6 @@ class HTMLMetaElement MOZ_FINAL : public nsGenericHTMLElement,
 {
 public:
   HTMLMetaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual ~HTMLMetaElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -59,6 +58,8 @@ public:
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
 protected:
+  virtual ~HTMLMetaElement();
+
   virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
 };

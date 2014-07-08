@@ -28,7 +28,6 @@ class HTMLAreaElement MOZ_FINAL : public nsGenericHTMLElement,
 {
 public:
   HTMLAreaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual ~HTMLAreaElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -173,6 +172,8 @@ public:
   }
 
 protected:
+  virtual ~HTMLAreaElement();
+
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
   virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
