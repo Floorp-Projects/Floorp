@@ -1428,7 +1428,7 @@ class LSafepoint : public TempObject
         // In general, pointer arithmetic on code is bad, but in this case,
         // getting the return address from a call instruction, stepping over pools
         // would be wrong.
-        return osiCallPointOffset_ + Assembler::patchWrite_NearCallSize();
+        return osiCallPointOffset_ + Assembler::PatchWrite_NearCallSize();
     }
     uint32_t osiCallPointOffset() const {
         return osiCallPointOffset_;

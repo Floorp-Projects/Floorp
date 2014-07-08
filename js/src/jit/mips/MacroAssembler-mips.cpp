@@ -267,28 +267,28 @@ MacroAssemblerMIPS::ma_li(Register dest, AbsoluteLabel *label)
 void
 MacroAssemblerMIPS::ma_li(Register dest, Imm32 imm)
 {
-    if (Imm16::isInSignedRange(imm.value)) {
+    if (Imm16::IsInSignedRange(imm.value)) {
         as_addiu(dest, zero, imm.value);
-    } else if (Imm16::isInUnsignedRange(imm.value)) {
-        as_ori(dest, zero, Imm16::lower(imm).encode());
-    } else if (Imm16::lower(imm).encode() == 0) {
-        as_lui(dest, Imm16::upper(imm).encode());
+    } else if (Imm16::IsInUnsignedRange(imm.value)) {
+        as_ori(dest, zero, Imm16::Lower(imm).encode());
+    } else if (Imm16::Lower(imm).encode() == 0) {
+        as_lui(dest, Imm16::Upper(imm).encode());
     } else {
-        as_lui(dest, Imm16::upper(imm).encode());
-        as_ori(dest, dest, Imm16::lower(imm).encode());
+        as_lui(dest, Imm16::Upper(imm).encode());
+        as_ori(dest, dest, Imm16::Lower(imm).encode());
     }
 }
 
 
 // This method generates lui and ori instruction pair that can be modified by
-// updateLuiOriValue, either during compilation (eg. Assembler::bind), or
+// UpdateLuiOriValue, either during compilation (eg. Assembler::bind), or
 // during execution (eg. jit::PatchJump).
 void
 MacroAssemblerMIPS::ma_liPatchable(Register dest, Imm32 imm)
 {
     m_buffer.ensureSpace(2 * sizeof(uint32_t));
-    as_lui(dest, Imm16::upper(imm).encode());
-    as_ori(dest, dest, Imm16::lower(imm).encode());
+    as_lui(dest, Imm16::Upper(imm).encode());
+    as_ori(dest, dest, Imm16::Lower(imm).encode());
 }
 
 void
@@ -392,7 +392,7 @@ MacroAssemblerMIPS::ma_and(Register rd, Imm32 imm)
 void
 MacroAssemblerMIPS::ma_and(Register rd, Register rs, Imm32 imm)
 {
-    if (Imm16::isInUnsignedRange(imm.value)) {
+    if (Imm16::IsInUnsignedRange(imm.value)) {
         as_andi(rd, rs, imm.value);
     } else {
         ma_li(ScratchRegister, imm);
@@ -422,7 +422,7 @@ MacroAssemblerMIPS::ma_or(Register rd, Imm32 imm)
 void
 MacroAssemblerMIPS::ma_or(Register rd, Register rs, Imm32 imm)
 {
-    if (Imm16::isInUnsignedRange(imm.value)) {
+    if (Imm16::IsInUnsignedRange(imm.value)) {
         as_ori(rd, rs, imm.value);
     } else {
         ma_li(ScratchRegister, imm);
@@ -452,7 +452,7 @@ MacroAssemblerMIPS::ma_xor(Register rd, Imm32 imm)
 void
 MacroAssemblerMIPS::ma_xor(Register rd, Register rs, Imm32 imm)
 {
-    if (Imm16::isInUnsignedRange(imm.value)) {
+    if (Imm16::IsInUnsignedRange(imm.value)) {
         as_xori(rd, rs, imm.value);
     } else {
         ma_li(ScratchRegister, imm);
@@ -466,7 +466,7 @@ MacroAssemblerMIPS::ma_xor(Register rd, Register rs, Imm32 imm)
 void
 MacroAssemblerMIPS::ma_addu(Register rd, Register rs, Imm32 imm)
 {
-    if (Imm16::isInSignedRange(imm.value)) {
+    if (Imm16::IsInSignedRange(imm.value)) {
         as_addiu(rd, rs, imm.value);
     } else {
         ma_li(ScratchRegister, imm);
@@ -507,7 +507,7 @@ MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs, Imm32 imm, Labe
 {
     // Check for signed range because of as_addiu
     // Check for unsigned range because of as_xori
-    if (Imm16::isInSignedRange(imm.value) && Imm16::isInUnsignedRange(imm.value)) {
+    if (Imm16::IsInSignedRange(imm.value) && Imm16::IsInUnsignedRange(imm.value)) {
         Label goodAddition;
         as_addiu(rd, rs, imm.value);
 
@@ -536,7 +536,7 @@ MacroAssemblerMIPS::ma_subu(Register rd, Register rs, Register rt)
 void
 MacroAssemblerMIPS::ma_subu(Register rd, Register rs, Imm32 imm)
 {
-    if (Imm16::isInSignedRange(-imm.value)) {
+    if (Imm16::IsInSignedRange(-imm.value)) {
         as_addiu(rd, rs, -imm.value);
     } else {
         ma_li(ScratchRegister, imm);
@@ -701,7 +701,7 @@ MacroAssemblerMIPS::ma_load(Register dest, Address address,
 {
     int16_t encodedOffset;
     Register base;
-    if (!Imm16::isInSignedRange(address.offset)) {
+    if (!Imm16::IsInSignedRange(address.offset)) {
         ma_li(ScratchRegister, Imm32(address.offset));
         as_addu(ScratchRegister, address.base, ScratchRegister);
         base = ScratchRegister;
@@ -747,7 +747,7 @@ MacroAssemblerMIPS::ma_store(Register data, Address address, LoadStoreSize size,
 {
     int16_t encodedOffset;
     Register base;
-    if (!Imm16::isInSignedRange(address.offset)) {
+    if (!Imm16::IsInSignedRange(address.offset)) {
         ma_li(ScratchRegister, Imm32(address.offset));
         as_addu(ScratchRegister, address.base, ScratchRegister);
         base = ScratchRegister;
@@ -828,7 +828,7 @@ MacroAssemblerMIPS::ma_sw(Imm32 imm, Address address)
     MOZ_ASSERT(address.base != ScratchRegister);
     ma_li(ScratchRegister, imm);
 
-    if (Imm16::isInSignedRange(address.offset)) {
+    if (Imm16::IsInSignedRange(address.offset)) {
         as_sw(ScratchRegister, address.base, Imm16(address.offset).encode());
     } else {
         MOZ_ASSERT(address.base != SecondScratchReg);
@@ -939,11 +939,11 @@ MacroAssemblerMIPS::branchWithCode(InstImm code, Label *label, JumpKind jumpKind
     if (label->bound()) {
         int32_t offset = label->offset() - m_buffer.nextOffset().getOffset();
 
-        if (BOffImm16::isInRange(offset))
+        if (BOffImm16::IsInRange(offset))
             jumpKind = ShortJump;
 
         if (jumpKind == ShortJump) {
-            MOZ_ASSERT(BOffImm16::isInRange(offset));
+            MOZ_ASSERT(BOffImm16::IsInRange(offset));
             code.setBOffImm16(BOffImm16(offset));
             writeInst(code.encode());
             as_nop();
@@ -1358,7 +1358,7 @@ MacroAssemblerMIPS::ma_mv(ValueOperand src, FloatRegister dest)
 void
 MacroAssemblerMIPS::ma_ls(FloatRegister ft, Address address)
 {
-    if (Imm16::isInSignedRange(address.offset)) {
+    if (Imm16::IsInSignedRange(address.offset)) {
         as_ls(ft, address.base, Imm16(address.offset).encode());
     } else {
         MOZ_ASSERT(address.base != ScratchRegister);
@@ -1375,7 +1375,7 @@ MacroAssemblerMIPS::ma_ld(FloatRegister ft, Address address)
     // alignment.
 
     int32_t off2 = address.offset + TAG_OFFSET;
-    if (Imm16::isInSignedRange(address.offset) && Imm16::isInSignedRange(off2)) {
+    if (Imm16::IsInSignedRange(address.offset) && Imm16::IsInSignedRange(off2)) {
         as_ls(ft, address.base, Imm16(address.offset).encode());
         as_ls(getOddPair(ft), address.base, Imm16(off2).encode());
     } else {
@@ -1390,7 +1390,7 @@ void
 MacroAssemblerMIPS::ma_sd(FloatRegister ft, Address address)
 {
     int32_t off2 = address.offset + TAG_OFFSET;
-    if (Imm16::isInSignedRange(address.offset) && Imm16::isInSignedRange(off2)) {
+    if (Imm16::IsInSignedRange(address.offset) && Imm16::IsInSignedRange(off2)) {
         as_ss(ft, address.base, Imm16(address.offset).encode());
         as_ss(getOddPair(ft), address.base, Imm16(off2).encode());
     } else {
@@ -1411,7 +1411,7 @@ MacroAssemblerMIPS::ma_sd(FloatRegister ft, BaseIndex address)
 void
 MacroAssemblerMIPS::ma_ss(FloatRegister ft, Address address)
 {
-    if (Imm16::isInSignedRange(address.offset)) {
+    if (Imm16::IsInSignedRange(address.offset)) {
         as_ss(ft, address.base, Imm16(address.offset).encode());
     } else {
         ma_li(ScratchRegister, Imm32(address.offset));
@@ -2845,7 +2845,7 @@ MacroAssemblerMIPSCompat::storeValue(JSValueType type, Register reg, BaseIndex d
 
     // Make sure that ma_sw doesn't clobber ScratchRegister
     int32_t offset = dest.offset;
-    if (!Imm16::isInSignedRange(offset)) {
+    if (!Imm16::IsInSignedRange(offset)) {
         ma_li(SecondScratchReg, Imm32(offset));
         as_addu(ScratchRegister, ScratchRegister, SecondScratchReg);
         offset = 0;
@@ -2889,7 +2889,7 @@ MacroAssemblerMIPSCompat::storeValue(const Value &val, BaseIndex dest)
 
     // Make sure that ma_sw doesn't clobber ScratchRegister
     int32_t offset = dest.offset;
-    if (!Imm16::isInSignedRange(offset)) {
+    if (!Imm16::IsInSignedRange(offset)) {
         ma_li(SecondScratchReg, Imm32(offset));
         as_addu(ScratchRegister, ScratchRegister, SecondScratchReg);
         offset = 0;
