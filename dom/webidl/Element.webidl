@@ -201,11 +201,11 @@ partial interface Element {
 
 // http://w3c.github.io/webcomponents/spec/shadow/#extensions-to-element-interface
 partial interface Element {
-  [Throws,Pref="dom.webcomponents.enabled"]
+  [Throws,Func="nsDocument::IsWebComponentsEnabled"]
   ShadowRoot createShadowRoot();
-  [Pref="dom.webcomponents.enabled"]
+  [Func="nsDocument::IsWebComponentsEnabled"]
   NodeList getDestinationInsertionPoints();
-  [Pref="dom.webcomponents.enabled"]
+  [Func="nsDocument::IsWebComponentsEnabled"]
   readonly attribute ShadowRoot? shadowRoot;
 };
 
