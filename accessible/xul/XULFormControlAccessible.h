@@ -55,6 +55,8 @@ public:
   virtual bool IsAcceptableChild(Accessible* aPossibleChild) const MOZ_OVERRIDE;
 
 protected:
+  virtual ~XULButtonAccessible();
+
   // XULButtonAccessible
   bool ContainsMenu();
 };
