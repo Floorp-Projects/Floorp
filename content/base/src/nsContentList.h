@@ -131,6 +131,9 @@ public:
   }
   virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
 
+protected:
+  virtual ~nsSimpleContentList() {}
+
 private:
   // This has to be a strong reference, the root might go away before the list.
   nsCOMPtr<nsINode> mRoot;
@@ -249,12 +252,13 @@ public:
                 nsIAtom* aMatchAtom = nullptr,
                 int32_t aMatchNameSpaceId = kNameSpaceID_None,
                 bool aFuncMayDependOnAttr = true);
-  virtual ~nsContentList();
 
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 protected:
+  virtual ~nsContentList();
+
   virtual JSObject* GetWrapperPreserveColorInternal() MOZ_OVERRIDE
   {
     return nsWrapperCache::GetWrapperPreserveColor();

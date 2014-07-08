@@ -44,7 +44,6 @@ public:
 
   ShadowRoot(nsIContent* aContent, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
              nsXBLPrototypeBinding* aProtoBinding);
-  virtual ~ShadowRoot();
 
   void AddToIdTable(Element* aElement, nsIAtom* aId);
   void RemoveFromIdTable(Element* aElement, nsIAtom* aId);
@@ -128,6 +127,7 @@ public:
   void SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError);
   void StyleSheetChanged();
 protected:
+  virtual ~ShadowRoot();
 
   // The pool host is the parent of the nodes that will be distributed
   // into the insertion points in this ShadowRoot. See |ChangeShadowRoot|.
@@ -176,7 +176,6 @@ class ShadowRootStyleSheetList : public StyleSheetList
 {
 public:
   ShadowRootStyleSheetList(ShadowRoot* aShadowRoot);
-  virtual ~ShadowRootStyleSheetList();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ShadowRootStyleSheetList, StyleSheetList)
@@ -190,6 +189,8 @@ public:
   virtual CSSStyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) MOZ_OVERRIDE;
 
 protected:
+  virtual ~ShadowRootStyleSheetList();
+
   nsRefPtr<ShadowRoot> mShadowRoot;
 };
 

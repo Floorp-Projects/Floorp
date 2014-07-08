@@ -65,6 +65,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileIOObject, DOMEventTargetHelper)
 
 protected:
+  virtual ~FileIOObject();
+
   // Implemented by the derived class to do whatever it needs to do for abort
   virtual void DoAbort(nsAString& aEvent) = 0;
 

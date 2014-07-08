@@ -390,6 +390,9 @@ public:
   // nsITimerCallback
   NS_IMETHOD Notify(nsITimer *timer);
 
+protected:
+  virtual ~nsStopPluginRunnable() {}
+
 private:
   nsCOMPtr<nsITimer> mTimer;
   nsRefPtr<nsPluginInstanceOwner> mInstanceOwner;
