@@ -35,7 +35,6 @@ class nsDOMFileReader : public mozilla::dom::FileIOObject,
   typedef mozilla::dom::GlobalObject GlobalObject;
 public:
   nsDOMFileReader();
-  virtual ~nsDOMFileReader();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -114,6 +113,8 @@ public:
   void RootResultArrayBuffer();
 
 protected:
+  virtual ~nsDOMFileReader();
+
   enum eDataFormat {
     FILE_AS_ARRAYBUFFER,
     FILE_AS_BINARY,
