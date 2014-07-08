@@ -21,7 +21,6 @@ public:
   NS_DECL_NSITREEBOXOBJECT
 
   nsTreeBoxObject();
-  ~nsTreeBoxObject();
 
   nsTreeBodyFrame* GetTreeBody(bool aFlushLayout = false);
   nsTreeBodyFrame* GetCachedTreeBody() { return mTreeBody; }
@@ -31,6 +30,7 @@ public:
   virtual void ClearCachedValues() MOZ_OVERRIDE;
 
 protected:
+  ~nsTreeBoxObject();
   nsTreeBodyFrame* mTreeBody;
   nsCOMPtr<nsITreeView> mView;
 };
