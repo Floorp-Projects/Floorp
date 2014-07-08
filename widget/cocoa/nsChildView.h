@@ -404,9 +404,8 @@ private:
   typedef mozilla::layers::APZCTreeManager APZCTreeManager;
 
 public:
-                          nsChildView();
-  virtual                 ~nsChildView();
-  
+  nsChildView();
+
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIWidget interface
@@ -595,6 +594,7 @@ public:
   APZCTreeManager* APZCTM() { return mAPZCTreeManager; }
 
 protected:
+  virtual ~nsChildView();
 
   void              ReportMoveEvent();
   void              ReportSizeEvent();

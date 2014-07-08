@@ -75,7 +75,6 @@ class nsWindow : public nsBaseWidget, public nsSupportsWeakReference
 {
 public:
     nsWindow();
-    virtual ~nsWindow();
 
     static void ReleaseGlobals();
 
@@ -298,6 +297,8 @@ public:
     { return SynthesizeNativeMouseEvent(aPoint, GDK_MOTION_NOTIFY, 0); }
 
 protected:
+    virtual ~nsWindow();
+
     // event handling code
     void DispatchActivateEvent(void);
     void DispatchDeactivateEvent(void);

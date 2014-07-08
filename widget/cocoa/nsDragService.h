@@ -19,7 +19,6 @@ class nsDragService : public nsBaseDragService
 {
 public:
   nsDragService();
-  virtual ~nsDragService();
 
   // nsIDragService
   NS_IMETHOD InvokeDragSession(nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables,
@@ -30,6 +29,9 @@ public:
   NS_IMETHOD GetData(nsITransferable * aTransferable, uint32_t aItemIndex);
   NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, bool *_retval);
   NS_IMETHOD GetNumDropItems(uint32_t * aNumItems);
+
+protected:
+  virtual ~nsDragService();
 
 private:
 
