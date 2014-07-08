@@ -56,6 +56,9 @@ public:
                             aRelatedNode ? aRelatedNode->AsDOMNode() : nullptr,
                             aPrevValue, aNewValue, aAttrName, aAttrChange);
   }
+
+protected:
+  ~MutationEvent() {}
 };
 
 } // namespace dom

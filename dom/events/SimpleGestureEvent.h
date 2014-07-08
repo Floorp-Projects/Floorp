@@ -68,6 +68,9 @@ public:
                                  aRelatedTarget, aAllowedDirections,
                                  aDirection, aDelta, aClickCount);
   }
+
+protected:
+  ~SimpleGestureEvent() {}
 };
 
 } // namespace dom
