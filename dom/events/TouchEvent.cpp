@@ -128,8 +128,8 @@ TouchEvent::Touches()
     WidgetTouchEvent* touchEvent = mEvent->AsTouchEvent();
     if (mEvent->message == NS_TOUCH_END || mEvent->message == NS_TOUCH_CANCEL) {
       // for touchend events, remove any changed touches from the touches array
-      nsTArray< nsRefPtr<Touch> > unchangedTouches;
-      const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
+      WidgetTouchEvent::TouchArray unchangedTouches;
+      const WidgetTouchEvent::TouchArray& touches = touchEvent->touches;
       for (uint32_t i = 0; i < touches.Length(); ++i) {
         if (!touches[i]->mChanged) {
           unchangedTouches.AppendElement(touches[i]);
@@ -149,7 +149,7 @@ TouchEvent::TargetTouches()
   if (!mTargetTouches) {
     nsTArray< nsRefPtr<Touch> > targetTouches;
     WidgetTouchEvent* touchEvent = mEvent->AsTouchEvent();
-    const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
+    const WidgetTouchEvent::TouchArray& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       // for touchend/cancel events, don't append to the target list if this is a
       // touch that is ending
@@ -171,7 +171,7 @@ TouchEvent::ChangedTouches()
   if (!mChangedTouches) {
     nsTArray< nsRefPtr<Touch> > changedTouches;
     WidgetTouchEvent* touchEvent = mEvent->AsTouchEvent();
-    const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
+    const WidgetTouchEvent::TouchArray& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       if (touches[i]->mChanged) {
         changedTouches.AppendElement(touches[i]);
