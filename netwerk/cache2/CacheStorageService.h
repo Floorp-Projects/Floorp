@@ -10,11 +10,13 @@
 
 #include "nsITimer.h"
 #include "nsClassHashtable.h"
+#include "nsDataHashtable.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/TimeStamp.h"
 #include "nsTArray.h"
 
 class nsIURI;
@@ -143,6 +145,12 @@ private:
   void RecordMemoryOnlyEntry(CacheEntry* aEntry,
                              bool aOnlyInMemory,
                              bool aOverwrite);
+
+private:
+  // These are helpers for telemetry monitorying of the memory pools.
+  void TelemetryPrune(TimeStamp &now);
+  void TelemetryRecordEntryCreation(CacheEntry const* entry);
+  void TelemetryRecordEntryRemoval(CacheEntry const* entry);
 
 private:
   // Following methods are thread safe to call.
@@ -323,6 +331,12 @@ private:
     nsRefPtr<CacheStorageService> mService;
     uint32_t mWhat;
   };
+
+  // Used just for telemetry purposes, accessed only on the management thread.
+  // Note: not included in the memory reporter, this is not expected to be huge
+  // and also would be complicated to report since reporting happens on the main
+  // thread but this table is manipulated on the management thread.
+  nsDataHashtable<nsCStringHashKey, mozilla::TimeStamp> mPurgeTimeStamps;
 };
 
 template<class T>
