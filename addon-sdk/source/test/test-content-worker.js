@@ -937,4 +937,31 @@ exports["test:global postMessage"] = WorkerTest(
     });
 });
 
+exports["test:destroy unbinds listeners from port"] = WorkerTest(
+  "data:text/html;charset=utf-8,portdestroyer",
+  function(assert, browser, done) {
+    let destroyed = false;
+    let worker = Worker({
+      window: browser.contentWindow,
+      contentScript: "new " + function WorkerScope() {
+        self.port.emit("destroy");
+        setInterval(self.port.emit, 10, "ping");
+      },
+      onDestroy: done
+    });
+    worker.port.on("ping", () => {
+      if (destroyed) {
+        assert.fail("Should not call events on port after destroy.");
+      }
+    });
+    worker.port.on("destroy", () => {
+      destroyed = true;
+      worker.destroy();
+      assert.pass("Worker destroyed, waiting for no future listeners handling events.");
+      setTimeout(done, 500);
+    });
+  }
+);
+
+
 require("test").run(exports);
