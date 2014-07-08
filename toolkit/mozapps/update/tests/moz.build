@@ -10,7 +10,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
     XPCSHELL_TESTS_MANIFESTS += ['unit_base_updater/xpcshell.ini']
 
-    if CONFIG['MOZ_MAINTENANCE_SERVICE']:
+    if CONFIG['MOZ_MAINTENANCE_SERVICE'] and not CONFIG['HAVE_64BIT_BUILD']:
         XPCSHELL_TESTS_MANIFESTS += ['unit_service_updater/xpcshell.ini']
 
     SIMPLE_PROGRAMS = [
@@ -33,7 +33,7 @@ for var in ('MOZ_APP_NAME', 'MOZ_APP_BASENAME', 'MOZ_APP_DISPLAYNAME',
 
 DEFINES['NS_NO_XPCOM'] = True
 
-if CONFIG['MOZ_MAINTENANCE_SERVICE']:
+if CONFIG['MOZ_MAINTENANCE_SERVICE'] and not CONFIG['HAVE_64BIT_BUILD']:
     DEFINES['MOZ_MAINTENANCE_SERVICE'] = CONFIG['MOZ_MAINTENANCE_SERVICE']
 
 # For debugging purposes only

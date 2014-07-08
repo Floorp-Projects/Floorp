@@ -35,24 +35,24 @@
 namespace mozilla { namespace pkix {
 
 SECStatus
-VerifySignedData(const CERTSignedData* sd, const SECItem& subjectPublicKeyInfo,
+VerifySignedData(const CERTSignedData& sd, const SECItem& subjectPublicKeyInfo,
                  void* pkcs11PinArg)
 {
-  if (!sd || !sd->data.data || !sd->signatureAlgorithm.algorithm.data ||
-      !sd->signature.data) {
+  if (!sd.data.data || !sd.signatureAlgorithm.algorithm.data ||
+      !sd.signature.data) {
     PR_NOT_REACHED("invalid args to VerifySignedData");
     PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;
   }
 
   // See bug 921585.
-  if (sd->data.len > static_cast<unsigned int>(std::numeric_limits<int>::max())) {
+  if (sd.data.len > static_cast<unsigned int>(std::numeric_limits<int>::max())) {
     PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;
   }
 
   // convert sig->len from bit counts to byte count.
-  SECItem sig = sd->signature;
+  SECItem sig = sd.signature;
   DER_ConvertBitString(&sig);
 
   ScopedPtr<CERTSubjectPublicKeyInfo, SECKEY_DestroySubjectPublicKeyInfo>
@@ -67,8 +67,8 @@ VerifySignedData(const CERTSignedData* sd, const SECItem& subjectPublicKeyInfo,
   }
 
   SECOidTag hashAlg;
-  if (VFY_VerifyDataWithAlgorithmID(sd->data.data, static_cast<int>(sd->data.len),
-                                    pubKey.get(), &sig, &sd->signatureAlgorithm,
+  if (VFY_VerifyDataWithAlgorithmID(sd.data.data, static_cast<int>(sd.data.len),
+                                    pubKey.get(), &sig, &sd.signatureAlgorithm,
                                     &hashAlg, pkcs11PinArg) != SECSuccess) {
     return SECFailure;
   }

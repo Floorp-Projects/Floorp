@@ -31,7 +31,6 @@ XPIDL_SOURCES += [
     'nsIPKCS11ModuleDB.idl',
     'nsIPKCS11Slot.idl',
     'nsIProtectedAuthThread.idl',
-    'nsIRecentBadCertsService.idl',
     'nsISSLErrorListener.idl',
     'nsISSLStatus.idl',
     'nsIStreamCipher.idl',

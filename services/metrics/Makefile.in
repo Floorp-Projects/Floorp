@@ -2,18 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-testing_modules := \
-  mocks.jsm \
-  $(NULL)
-
 # We install Metrics.jsm into the "main" JSM repository and the rest in
 # services. External consumers should only go through Metrics.jsm.
 MAIN_JS_MODULE := Metrics.jsm
 MAIN_JS_MODULE_PATH = $(FINAL_TARGET)/modules
 PP_TARGETS += MAIN_JS_MODULE
-
-TESTING_JS_MODULES := $(addprefix modules-testing/,$(testing_modules))
-TESTING_JS_MODULE_DIR := services/metrics
 
 include $(topsrcdir)/config/rules.mk
 

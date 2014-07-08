@@ -6,20 +6,18 @@ import mozhttpd
 import urllib2
 import os
 import unittest
-import time
 
 here = os.path.dirname(os.path.abspath(__file__))
 
 class RequestLogTest(unittest.TestCase):
 
     def check_logging(self, log_requests=False):
-        filelist = os.listdir(here)
 
         httpd = mozhttpd.MozHttpd(port=0, docroot=here, log_requests=log_requests)
         httpd.start(block=False)
         url = "http://%s:%s/" % ('127.0.0.1', httpd.httpd.server_port)
         f = urllib2.urlopen(url)
-        data = f.read()
+        f.read()
 
         return httpd.request_log
 

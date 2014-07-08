@@ -258,7 +258,7 @@ ffs (int x)
 	    __asm _emit ((__COUNTER__>>8) & 0xff) \
 	    __asm _emit ((__COUNTER__>>16) & 0xff)\
 	    __asm _emit ((__COUNTER__>>24) & 0xff)\
-	    __asm lea eax, file                   \
+	    __asm lea eax, dword ptr file         \
 	    __asm __internal_skip_line_no:        \
 	};                                        \
     } while (0)

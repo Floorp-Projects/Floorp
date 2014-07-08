@@ -243,7 +243,7 @@ CheckChainAgainstAllNames(const CERTCertList* certList, const PRTime time,
     return false;
   }
 
-  mozilla::pkix::ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
   if (!arena) {
     return false;
   }

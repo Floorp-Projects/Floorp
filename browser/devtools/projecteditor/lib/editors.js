@@ -40,6 +40,11 @@ var ItchEditor = Class({
     emit(this, name, ...args);
   },
 
+  /* Does the editor not have any unsaved changes? */
+  isClean: function() {
+    return true;
+  },
+
   /**
    * Initialize the editor with a single host.  This should be called
    * by objects extending this object with:
@@ -145,6 +150,13 @@ var TextEditor = Class({
     return extraKeys;
   },
 
+  isClean: function() {
+    if (!this.editor.isAppended()) {
+      return true;
+    }
+    return this.editor.isClean();
+  },
+
   initialize: function(document, mode=Editor.modes.text) {
     ItchEditor.prototype.initialize.apply(this, arguments);
     this.label = mode.name;
@@ -165,11 +177,6 @@ var TextEditor = Class({
     });
 
     this.appended = this.editor.appendTo(this.elt);
-    this.appended.then(() => {
-      if (this.editor) {
-        this.editor.setupAutoCompletion();
-      }
-    });
   },
 
   /**

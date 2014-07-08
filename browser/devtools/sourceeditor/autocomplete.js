@@ -11,14 +11,14 @@ const CM_TERN_SCRIPTS = [
   "chrome://browser/content/devtools/codemirror/show-hint.js"
 ];
 
-const privates = new WeakMap();
+const autocompleteMap = new WeakMap();
 
 /**
  * Prepares an editor instance for autocompletion.
  */
 function initializeAutoCompletion(ctx, options = {}) {
   let { cm, ed, Editor } = ctx;
-  if (privates.has(ed)) {
+  if (autocompleteMap.has(ed)) {
     return;
   }
 
@@ -88,12 +88,12 @@ function initializeAutoCompletion(ctx, options = {}) {
       cm.off("cursorActivity", updateArgHintsCallback);
       cm.removeKeyMap(keyMap);
       win.tern = cm.tern = null;
-      privates.delete(ed);
+      autocompleteMap.delete(ed);
     };
 
     ed.on("destroy", destroyTern);
 
-    privates.set(ed, {
+    autocompleteMap.set(ed, {
       destroy: destroyTern
     });
 
@@ -126,8 +126,8 @@ function initializeAutoCompletion(ctx, options = {}) {
     "Up": cycle.bind(null, true),
     "Enter": () => {
       if (popup && popup.isOpen) {
-        if (!privates.get(ed).suggestionInsertedOnce) {
-          privates.get(ed).insertingSuggestion = true;
+        if (!autocompleteMap.get(ed).suggestionInsertedOnce) {
+          autocompleteMap.get(ed).insertingSuggestion = true;
           let {label, preLabel, text} = popup.getItemAtIndex(0);
           let cur = ed.getCursor();
           ed.replaceText(text.slice(preLabel.length), cur, cur);
@@ -157,10 +157,10 @@ function initializeAutoCompletion(ctx, options = {}) {
     cm.removeKeyMap(keyMap);
     popup.destroy();
     keyMap = popup = completer = null;
-    privates.delete(ed);
+    autocompleteMap.delete(ed);
   }
 
-  privates.set(ed, {
+  autocompleteMap.set(ed, {
     popup: popup,
     completer: completer,
     keyMap: keyMap,
@@ -175,11 +175,11 @@ function initializeAutoCompletion(ctx, options = {}) {
  */
 function destroyAutoCompletion(ctx) {
   let { ed } = ctx;
-  if (!privates.has(ed)) {
+  if (!autocompleteMap.has(ed)) {
     return;
   }
 
-  let {destroy} = privates.get(ed);
+  let {destroy} = autocompleteMap.get(ed);
   destroy();
 }
 
@@ -187,7 +187,7 @@ function destroyAutoCompletion(ctx) {
  * Provides suggestions to autocomplete the current token/word being typed.
  */
 function autoComplete({ ed, cm }) {
-  let private = privates.get(ed);
+  let private = autocompleteMap.get(ed);
   let { completer, popup } = private;
   if (!completer || private.insertingSuggestion || private.doNotAutocomplete) {
     private.insertingSuggestion = false;
@@ -223,7 +223,7 @@ function autoComplete({ ed, cm }) {
  * when `reverse` is not true. Opposite otherwise.
  */
 function cycleSuggestions(ed, reverse) {
-  let private = privates.get(ed);
+  let private = autocompleteMap.get(ed);
   let { popup, completer } = private;
   let cur = ed.getCursor();
   private.insertingSuggestion = true;
@@ -263,7 +263,7 @@ function cycleSuggestions(ed, reverse) {
  * keypresses.
  */
 function onEditorKeypress({ ed, Editor }, cm, event) {
-  let private = privates.get(ed);
+  let private = autocompleteMap.get(ed);
 
   // Do not try to autocomplete with multiple selections.
   if (ed.hasMultipleSelections()) {
@@ -319,8 +319,8 @@ function onEditorKeypress({ ed, Editor }, cm, event) {
  * Returns the private popup. This method is used by tests to test the feature.
  */
 function getPopup({ ed }) {
-  if (privates.has(ed))
-    return privates.get(ed).popup;
+  if (autocompleteMap.has(ed))
+    return autocompleteMap.get(ed).popup;
 
   return null;
 }
@@ -330,11 +330,19 @@ function getPopup({ ed }) {
  * implementation of completer supports it.
  */
 function getInfoAt({ ed }, caret) {
-  let completer = privates.get(ed).completer;
+  let completer = autocompleteMap.get(ed).completer;
   if (completer && completer.getInfoAt)
     return completer.getInfoAt(ed.getText(), caret);
 
   return null;
+}
+
+/**
+ * Returns whether autocompletion is enabled for this editor.
+ * Used for testing
+ */
+function isAutocompletionEnabled({ ed }) {
+  return autocompleteMap.has(ed);
 }
 
 // Export functions
@@ -343,3 +351,4 @@ module.exports.initializeAutoCompletion = initializeAutoCompletion;
 module.exports.destroyAutoCompletion = destroyAutoCompletion;
 module.exports.getAutocompletionPopup = getPopup;
 module.exports.getInfoAt = getInfoAt;
+module.exports.isAutocompletionEnabled = isAutocompletionEnabled;

@@ -86,9 +86,9 @@ AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot)
 }
 
 SECStatus
-AppTrustDomain::FindPotentialIssuers(const SECItem* encodedIssuerName,
-                                     PRTime time,
-                             /*out*/ mozilla::pkix::ScopedCERTCertList& results)
+AppTrustDomain::FindIssuer(const SECItem& encodedIssuerName,
+                           IssuerChecker& checker, PRTime time)
+
 {
   MOZ_ASSERT(mTrustedRoot);
   if (!mTrustedRoot) {
@@ -96,8 +96,31 @@ AppTrustDomain::FindPotentialIssuers(const SECItem* encodedIssuerName,
     return SECFailure;
   }
 
-  results = CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
-                                       encodedIssuerName, time, true);
+  // TODO(bug 1035418): If/when mozilla::pkix relaxes the restriction that
+  // FindIssuer must only pass certificates with a matching subject name to
+  // checker.Check, we can stop using CERT_CreateSubjectCertList and instead
+  // use logic like this:
+  //
+  // 1. First, try the trusted trust anchor.
+  // 2. Secondly, iterate through the certificates that were stored in the CMS
+  //    message, passing each one to checker.Check.
+  mozilla::pkix::ScopedCERTCertList
+    candidates(CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
+                                          &encodedIssuerName, time, true));
+  if (candidates) {
+    for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
+         !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
+      bool keepGoing;
+      SECStatus srv = checker.Check(n->cert->derCert, keepGoing);
+      if (srv != SECSuccess) {
+        return SECFailure;
+      }
+      if (!keepGoing) {
+        break;
+      }
+    }
+  }
+
   return SECSuccess;
 }
 
@@ -162,7 +185,7 @@ AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
 }
 
 SECStatus
-AppTrustDomain::VerifySignedData(const CERTSignedData* signedData,
+AppTrustDomain::VerifySignedData(const CERTSignedData& signedData,
                                  const SECItem& subjectPublicKeyInfo)
 {
   return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,

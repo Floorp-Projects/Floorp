@@ -66,13 +66,8 @@ window.done = function(result) {
 SimpleTest.waitForExplicitFinish();
 
 // save this for last so that our listeners are registered.
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-    function() {
-      // save this for last so that our listeners are registered.
-      // ... this loads the testbed of good and bad requests.
-      document.getElementById('content_iframe').src = 'file_redirect_content.sjs?302';
-    });
+// ... this loads the testbed of good and bad requests.
+document.getElementById('content_iframe').src = 'file_redirect_content.sjs?302';
 </script>
 </pre>
 </body>

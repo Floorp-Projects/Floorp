@@ -2222,8 +2222,10 @@ nsLayoutUtils::TransformPoints(nsIFrame* aFromFrame, nsIFrame* aToFrame,
       aToFrame->PresContext()->AppUnitsPerDevPixel());
   for (uint32_t i = 0; i < aPointCount; ++i) {
     LayoutDevicePoint devPixels = aPoints[i] * devPixelsPerCSSPixelFromFrame;
+    // What should the behaviour be if some of the points aren't invertible
+    // and others are? Just assume all points are for now.
     gfxPoint toDevPixels = downToDest.ProjectPoint(
-        upToAncestor.ProjectPoint(gfxPoint(devPixels.x, devPixels.y)));
+        upToAncestor.Transform(gfxPoint(devPixels.x, devPixels.y))).As2DPoint();
     // Divide here so that when the devPixelsPerCSSPixels are the same, we get the correct
     // answer instead of some inaccuracy multiplying a number by its reciprocal.
     aPoints[i] = LayoutDevicePoint(toDevPixels.x, toDevPixels.y) /
@@ -2251,10 +2253,15 @@ nsLayoutUtils::TransformPoint(nsIFrame* aFromFrame, nsIFrame* aToFrame,
     1.0f / aFromFrame->PresContext()->AppUnitsPerDevPixel();
   float devPixelsPerAppUnitToFrame =
     1.0f / aToFrame->PresContext()->AppUnitsPerDevPixel();
-  gfxPoint toDevPixels = downToDest.ProjectPoint(
-      upToAncestor.ProjectPoint(
+  gfxPointH3D toDevPixels = downToDest.ProjectPoint(
+      upToAncestor.Transform(
         gfxPoint(aPoint.x * devPixelsPerAppUnitFromFrame,
                  aPoint.y * devPixelsPerAppUnitFromFrame)));
+  if (!toDevPixels.HasPositiveWCoord()) {
+    // Not strictly true, but we failed to get a valid point in this
+    // coordinate space.
+    return NONINVERTIBLE_TRANSFORM;
+  }
   aPoint.x = toDevPixels.x / devPixelsPerAppUnitToFrame;
   aPoint.y = toDevPixels.y / devPixelsPerAppUnitToFrame;
   return TRANSFORM_SUCCEEDED;
@@ -2341,7 +2348,12 @@ TransformGfxPointFromAncestor(nsIFrame *aFrame,
                          NSAppUnitsToFloatPixels(childBounds.y, factor),
                          NSAppUnitsToFloatPixels(childBounds.width, factor),
                          NSAppUnitsToFloatPixels(childBounds.height, factor));
-  return ctm.UntransformPoint(aPoint, childGfxBounds, aOut);
+  gfxPointH3D point = ctm.Inverse().ProjectPoint(aPoint);
+  if (!point.HasPositiveWCoord()) {
+    return false;
+  }
+  *aOut = point.As2DPoint();
+  return true;
 }
 
 static gfxRect

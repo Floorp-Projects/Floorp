@@ -49,7 +49,6 @@ SOURCES += [
     'nsProtectedAuthThread.cpp',
     'nsPSMBackgroundThread.cpp',
     'nsRandomGenerator.cpp',
-    'nsRecentBadCerts.cpp',
     'nsSDR.cpp',
     'NSSErrorsService.cpp',
     'nsSSLSocketProvider.cpp',

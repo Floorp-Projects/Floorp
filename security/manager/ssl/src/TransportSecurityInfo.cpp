@@ -606,7 +606,7 @@ GetSubjectAltNames(CERTCertificate *nssCert,
     return false;
   }
 
-  mozilla::pkix::ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
   if (!arena) {
     return false;
   }
@@ -686,7 +686,7 @@ AppendErrorTextMismatch(const nsString &host,
   const char16_t *params[1];
   nsresult rv;
 
-  mozilla::pkix::ScopedCERTCertificate nssCert(ix509->GetCert());
+  ScopedCERTCertificate nssCert(ix509->GetCert());
 
   if (!nssCert) {
     // We are unable to extract the valid names, say "not valid for name".

@@ -120,15 +120,10 @@ function checkInlineWithNone() {
                     "Inline scripts should be blocked (style-src 'unsafe-inline' with none)");
 }
 
-SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true]]},
-  function () {
-    document.getElementById('testframe1').src = 'file_CSP_bug909029_star.html';
-    document.getElementById('testframe1').addEventListener('load', checkInlineWithStar, false);
-    document.getElementById('testframe2').src = 'file_CSP_bug909029_none.html';
-    document.getElementById('testframe2').addEventListener('load', checkInlineWithNone, false);
-  }
-);
+document.getElementById('testframe1').src = 'file_CSP_bug909029_star.html';
+document.getElementById('testframe1').addEventListener('load', checkInlineWithStar, false);
+document.getElementById('testframe2').src = 'file_CSP_bug909029_none.html';
+document.getElementById('testframe2').addEventListener('load', checkInlineWithNone, false);
     </script>
   </body>
 </html>

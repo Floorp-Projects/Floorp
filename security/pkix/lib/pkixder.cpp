@@ -174,26 +174,33 @@ daysBeforeYear(int year)
        + ((year - 1) / 400); // except years divisible by 400.
 }
 
+namespace internal {
+
 // We parse GeneralizedTime and UTCTime according to RFC 5280 and we do not
 // accept all time formats allowed in the ASN.1 spec. That is,
 // GeneralizedTime must always be in the format YYYYMMDDHHMMSSZ and UTCTime
 // must always be in the format YYMMDDHHMMSSZ. Timezone formats of the form
 // +HH:MM or -HH:MM or NOT accepted.
 Result
-TimeChoice(SECItemType type, Input& input, /*out*/ PRTime& time)
+TimeChoice(Input& tagged, uint8_t expectedTag, /*out*/ PRTime& time)
 {
   int days;
 
+  Input input;
+  if (ExpectTagAndGetValue(tagged, expectedTag, input) != Success) {
+    return Failure;
+  }
+
   int yearHi;
   int yearLo;
-  if (type == siGeneralizedTime) {
+  if (expectedTag == GENERALIZED_TIME) {
     if (ReadTwoDigits(input, 0, 99, yearHi) != Success) {
       return Failure;
     }
     if (ReadTwoDigits(input, 0, 99, yearLo) != Success) {
       return Failure;
     }
-  } else if (type == siUTCTime) {
+  } else if (expectedTag == UTCTime) {
     if (ReadTwoDigits(input, 0, 99, yearLo) != Success) {
       return Failure;
     }
@@ -304,5 +311,7 @@ TimeChoice(SECItemType type, Input& input, /*out*/ PRTime& time)
   time = totalSeconds * PR_USEC_PER_SEC;
   return Success;
 }
+
+} // namespace internal
 
 } } } // namespace mozilla::pkix::der

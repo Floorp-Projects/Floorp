@@ -111,7 +111,6 @@ public class HistoryPanel extends HomeFragment {
                 final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, id);
                 info.url = cursor.getString(cursor.getColumnIndexOrThrow(Combined.URL));
                 info.title = cursor.getString(cursor.getColumnIndexOrThrow(Combined.TITLE));
-                info.display = cursor.getInt(cursor.getColumnIndexOrThrow(Combined.DISPLAY));
                 info.historyId = cursor.getInt(cursor.getColumnIndexOrThrow(Combined.HISTORY_ID));
                 final int bookmarkIdCol = cursor.getColumnIndexOrThrow(Combined.BOOKMARK_ID);
                 if (cursor.isNull(bookmarkIdCol)) {
