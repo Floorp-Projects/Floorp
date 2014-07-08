@@ -111,8 +111,7 @@ var testResult = function(testName, url, result) {
 SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.pushPrefEnv(
-  {'set':[["security.csp.speccompliant", true],
-          // This defaults to 0 ("preload none") on mobile (B2G/Android), which
+  {'set':[// This defaults to 0 ("preload none") on mobile (B2G/Android), which
           // blocks loading the resource until the user interacts with a
           // corresponding widget, which breaks the media_* tests. We set it
           // back to the default used by desktop Firefox to get consistent

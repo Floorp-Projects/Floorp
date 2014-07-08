@@ -7,7 +7,6 @@ see https://bugzilla.mozilla.org/show_bug.cgi?id=722804
 
 import os
 import tempfile
-import time
 import unittest
 from mozprofile.prefs import Preferences
 from mozprofile.profile import Profile

@@ -40,11 +40,7 @@ SpecialPowers.registerConsoleListener(function ConsoleMsgListener(aMsg) {
 
 // set up and start testing
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv(
-  {'set': [["security.csp.speccompliant", true]]},
-  function() {
-    document.getElementById('cspframe').src = 'file_report_uri_missing_in_report_only_header.html';
-});
+document.getElementById('cspframe').src = 'file_report_uri_missing_in_report_only_header.html';
 </script>
 </pre>
 </body>

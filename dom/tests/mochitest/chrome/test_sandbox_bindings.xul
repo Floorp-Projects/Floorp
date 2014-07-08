@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
 
       try {
         var css = Components.utils.evalInSandbox("CSSStyleDeclaration", sandbox);
-        is(css.prototype, "[object XrayWrapper [object CSSStyleDeclarationPrototype]]", "'CSSStyleDeclaration.prototype' in a sandbox should return the CSSStyleDeclaration interface prototype object");
+        is(css.prototype, "[object CSSStyleDeclarationPrototype]", "'CSSStyleDeclaration.prototype' in a sandbox should return the CSSStyleDeclaration interface prototype object");
       } catch (e) {
         ok(false, "'CSSStyleDeclaration' shouldn't throw in a sandbox");
       }
@@ -94,7 +94,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       }
       try {
         var xhr = Components.utils.evalInSandbox("XMLHttpRequest", sandbox);
-        is(xhr, "[object XrayWrapper " + XMLHttpRequest + "]", "'XMLHttpRequest' in a sandbox should return the XMLHttpRequest interface object");
+        is(xhr, XMLHttpRequest + "", "'XMLHttpRequest' in a sandbox should return the XMLHttpRequest interface object");
         ok(isXrayWrapper(xhr.prototype), "Getting the prototype property on an Xray wrapper of an interface object should return an Xray wrapper");
         isnot(Object.getOwnPropertyDescriptor(xhr, "UNSENT"), undefined,
               "We should claim to have an UNSENT constant");
@@ -109,13 +109,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       }
       try {
         var xhr = Components.utils.evalInSandbox("new XMLHttpRequest()", sandbox);
-        is("" + xhr, "[object XrayWrapper " + new XMLHttpRequest() + "]", "'XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
+        is("" + xhr, new XMLHttpRequest() + "", "'XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
       } catch (e) {
         ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox (1)");
       }
       try {
         var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype.toString = function () { return 'Failed'; }; new XMLHttpRequest();", sandbox);
-        is(xhr.toString(), "[object XrayWrapper " + new XMLHttpRequest() + "]", "XMLHttpRequest.prototype.toString in the sandbox should not override the native toString behaviour");
+        is(xhr.toString(), new XMLHttpRequest() + "", "XMLHttpRequest.prototype.toString in the sandbox should not override the native toString behaviour");
       } catch (e) {
         ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox (2)");
       }
@@ -141,7 +141,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         Components.utils.evalInSandbox("document.defaultView.XMLHttpRequest = function() {};", sandbox);
         var win = Components.utils.evalInSandbox("document.defaultView", sandbox);
         var xhr = new win.XMLHttpRequest();
-        is("" + xhr, "[object XrayWrapper " + new XMLHttpRequest() + "]", "'XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
+        is("" + xhr, new XMLHttpRequest() + "", "'XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
       } catch (e) {
         ok(false, "'XMLHttpRequest()' shouldn't throw in a sandbox");
       }

@@ -11,7 +11,6 @@ If no profile is specified, a new profile is created and the path of the resulti
 """
 
 import sys
-from addons import AddonManager
 from optparse import OptionParser
 from prefs import Preferences
 from profile import FirefoxProfile

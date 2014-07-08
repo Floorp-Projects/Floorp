@@ -4,7 +4,6 @@
 
 from __future__ import unicode_literals
 
-import sys
 from collections import defaultdict
 from multiprocessing import current_process
 from threading import current_thread, Lock

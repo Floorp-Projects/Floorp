@@ -35,6 +35,15 @@ extern Result CheckKeyUsage(EndEntityOrCA endEntityOrCA,
 
 } } // namespace mozilla::pkix
 
+class pkixcheck_CheckKeyUsage : public ::testing::Test
+{
+public:
+  pkixcheck_CheckKeyUsage()
+  {
+    PR_SetError(0, 0);
+  }
+};
+
 #define ASSERT_BAD(x) \
   ASSERT_RecoverableError(SEC_ERROR_INADEQUATE_KEY_USAGE, x)
 
@@ -56,7 +65,7 @@ static const SECItem empty_nonnull = { siBuffer, &dummy, 0 };
 // Note that keyCertSign is really the only interesting case for CA
 // certificates since we don't support cRLSign.
 
-TEST(pkixcheck_CheckKeyUsage, EE_none)
+TEST_F(pkixcheck_CheckKeyUsage, EE_none)
 {
   // The input SECItem is nullptr. This means the cert had no keyUsage
   // extension. This is always valid because no key usage in an end-entity
@@ -76,7 +85,7 @@ TEST(pkixcheck_CheckKeyUsage, EE_none)
                                KeyUsage::keyAgreement));
 }
 
-TEST(pkixcheck_CheckKeyUsage, EE_empty)
+TEST_F(pkixcheck_CheckKeyUsage, EE_empty)
 {
   // The input SECItem is empty. The cert had an empty keyUsage extension,
   // which is syntactically invalid.
@@ -86,14 +95,14 @@ TEST(pkixcheck_CheckKeyUsage, EE_empty)
                            KeyUsage::digitalSignature));
 }
 
-TEST(pkixcheck_CheckKeyUsage, CA_none)
+TEST_F(pkixcheck_CheckKeyUsage, CA_none)
 {
   // A CA certificate does not have a KU extension.
   ASSERT_Success(CheckKeyUsage(EndEntityOrCA::MustBeCA, nullptr,
                                KeyUsage::keyCertSign));
 }
 
-TEST(pkixcheck_CheckKeyUsage, CA_empty)
+TEST_F(pkixcheck_CheckKeyUsage, CA_empty)
 {
   // A CA certificate has an empty KU extension.
   ASSERT_BAD(CheckKeyUsage(EndEntityOrCA::MustBeCA, &empty_null,
@@ -102,14 +111,14 @@ TEST(pkixcheck_CheckKeyUsage, CA_empty)
                            KeyUsage::keyCertSign));
 }
 
-TEST(pkixchekc_CheckKeyusage, maxUnusedBits)
+TEST_F(pkixcheck_CheckKeyUsage, maxUnusedBits)
 {
   NAMED_SIMPLE_KU(encoded, 7, 0x80);
   ASSERT_Success(CheckKeyUsage(EndEntityOrCA::MustBeEndEntity, &encoded,
                                KeyUsage::digitalSignature));
 }
 
-TEST(pkixchekc_CheckKeyusage, tooManyUnusedBits)
+TEST_F(pkixcheck_CheckKeyUsage, tooManyUnusedBits)
 {
   static uint8_t oneValueByteData[] = {
     0x03/*BIT STRING*/, 0x02/*LENGTH=2*/, 8/*unused bits*/, 0x80
@@ -134,7 +143,7 @@ TEST(pkixchekc_CheckKeyusage, tooManyUnusedBits)
                            KeyUsage::digitalSignature));
 }
 
-TEST(pkixcheck_CheckKeyUsage, NoValueBytes_NoPaddingBits)
+TEST_F(pkixcheck_CheckKeyUsage, NoValueBytes_NoPaddingBits)
 {
   static const uint8_t DER_BYTES[] = {
     0x03/*BIT STRING*/, 0x01/*LENGTH=1*/, 0/*unused bits*/
@@ -151,7 +160,7 @@ TEST(pkixcheck_CheckKeyUsage, NoValueBytes_NoPaddingBits)
                            KeyUsage::keyCertSign));
 }
 
-TEST(pkixcheck_CheckKeyUsage, NoValueBytes_7PaddingBits)
+TEST_F(pkixcheck_CheckKeyUsage, NoValueBytes_7PaddingBits)
 {
   static const uint8_t DER_BYTES[] = {
     0x03/*BIT STRING*/, 0x01/*LENGTH=1*/, 7/*unused bits*/
@@ -202,7 +211,7 @@ void ASSERT_SimpleCase(uint8_t unusedBits, uint8_t bits, KeyUsage usage)
   ASSERT_BAD(CheckKeyUsage(EndEntityOrCA::MustBeCA, &twoByteNotGood, usage));
 }
 
-TEST(pkixcheck_CheckKeyUsage, simpleCases)
+TEST_F(pkixcheck_CheckKeyUsage, simpleCases)
 {
   ASSERT_SimpleCase(7, 0x80, KeyUsage::digitalSignature);
   ASSERT_SimpleCase(6, 0x40, KeyUsage::nonRepudiation);
@@ -212,7 +221,7 @@ TEST(pkixcheck_CheckKeyUsage, simpleCases)
 }
 
 // Only CAs are allowed to assert keyCertSign
-TEST(pkixcheck_CheckKeyUsage, keyCertSign)
+TEST_F(pkixcheck_CheckKeyUsage, keyCertSign)
 {
   NAMED_SIMPLE_KU(good, 2, 0x04);
   ASSERT_BAD(CheckKeyUsage(EndEntityOrCA::MustBeEndEntity, &good,
@@ -242,7 +251,7 @@ TEST(pkixcheck_CheckKeyUsage, keyCertSign)
                            KeyUsage::keyCertSign));
 }
 
-TEST(pkixcheck_CheckKeyUsage, unusedBitNotZero)
+TEST_F(pkixcheck_CheckKeyUsage, unusedBitNotZero)
 {
   // single byte control case
   static uint8_t controlOneValueByteData[] = {

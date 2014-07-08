@@ -991,10 +991,8 @@ pref("touchcaret.enabled", false);
 pref("selectioncaret.enabled", false);
 
 // Enable sync and mozId with Firefox Accounts.
-#ifdef MOZ_SERVICES_FXACCOUNTS
 pref("services.sync.fxaccounts.enabled", true);
 pref("identity.fxaccounts.enabled", true);
-#endif
 
 // Mobile Identity API.
 pref("services.mobileid.server.uri", "https://msisdn-dev.stage.mozaws.net");

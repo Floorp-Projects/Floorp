@@ -42,6 +42,7 @@ namespace jit {
     _(PowHalf)                                  \
     _(MinMax)                                   \
     _(Abs)                                      \
+    _(Sqrt)                                     \
     _(NewObject)                                \
     _(NewDerivedTypedObject)
 
@@ -407,6 +408,21 @@ class RAbs MOZ_FINAL : public RInstruction
 {
   public:
     RINSTRUCTION_HEADER_(Abs)
+
+    virtual uint32_t numOperands() const {
+        return 1;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RSqrt MOZ_FINAL : public RInstruction
+{
+  private:
+    bool isFloatOperation_;
+
+  public:
+    RINSTRUCTION_HEADER_(Sqrt)
 
     virtual uint32_t numOperands() const {
         return 1;

@@ -1464,8 +1464,6 @@ class ADBDevice(ADBCommand):
         if not isinstance(process_name, basestring):
             raise ADBError("Process name %s is not a string" % process_name)
 
-        pid = None
-
         # Filter out extra spaces.
         parts = [x for x in process_name.split(' ') if x != '']
         process_name = ' '.join(parts)
