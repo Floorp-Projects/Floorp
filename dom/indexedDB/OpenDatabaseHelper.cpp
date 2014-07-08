@@ -1502,6 +1502,8 @@ public:
   OnExclusiveAccessAcquired() MOZ_OVERRIDE;
 
 protected:
+  virtual ~SetVersionHelper() {}
+
   virtual nsresult Init() MOZ_OVERRIDE;
 
   virtual nsresult DoDatabaseWork(mozIStorageConnection* aConnection)
@@ -1583,6 +1585,8 @@ public:
   OnExclusiveAccessAcquired() MOZ_OVERRIDE;
 
 protected:
+  virtual ~DeleteDatabaseHelper() {}
+
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
   nsresult Init();
 

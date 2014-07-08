@@ -1682,6 +1682,7 @@ public:
     return PL_DHASH_NEXT;
   }
 
+protected:
   ~nsGlobalChromeWindow()
   {
     NS_ABORT_IF_FALSE(mCleanMessageManager,
@@ -1698,6 +1699,7 @@ public:
     mCleanMessageManager = false;
   }
 
+public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsGlobalChromeWindow,
                                            nsGlobalWindow)
 
@@ -1736,6 +1738,9 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMMODALCONTENTWINDOW
+
+protected:
+  ~nsGlobalModalWindow() {}
 };
 
 /* factory function */
