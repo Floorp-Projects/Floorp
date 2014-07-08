@@ -42,8 +42,26 @@ let MockAsyncShutdown = {
       do_print("Mock profileBeforeChange blocker for '" + aName + "'");
       MockAsyncShutdown.hook = aBlocker;
     }
-  }
+  },
+  Barrier: function (name) {
+    this.name = name;
+    this.client.addBlocker = (name, blocker) => {
+      do_print("Mock Barrier blocker for '" + name + "' for barrier '" + this.name + "'");
+      this.blockers.push({name: name, blocker: blocker});
+    };
+  },
 };
+
+MockAsyncShutdown.Barrier.prototype = Object.freeze({
+  blockers: [],
+  client: {},
+  wait: Task.async(function* () {
+    for (let b of this.blockers) {
+      yield b.blocker();
+    }
+  }),
+});
+
 AMscope.AsyncShutdown = MockAsyncShutdown;
 
 var gInternalManager = null;
