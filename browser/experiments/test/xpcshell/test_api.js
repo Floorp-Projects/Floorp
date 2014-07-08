@@ -1526,9 +1526,8 @@ add_task(function* testEnabledAfterRestart() {
   Assert.ok(addons[0].isActive, "That experiment is active.");
 
   dump("Restarting Addon Manager\n");
-  experiments._unregisterWithAddonManager();
   restartManager();
-  experiments._registerWithAddonManager();
+  experiments = new Experiments.Experiments(gPolicy);
 
   addons = yield getExperimentAddons();
   Assert.equal(addons.length, 1, "The experiment is still there after restart.");
@@ -1585,7 +1584,6 @@ add_task(function* test_foreignUninstallAndRestart() {
   Assert.ok(!experimentList[0].active, "Experiment 1 should not be active anymore.");
 
   // Fake restart behaviour.
-  yield experiments.uninit();
   restartManager();
   experiments = new Experiments.Experiments(gPolicy);
   yield experiments.updateManifest();

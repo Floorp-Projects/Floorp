@@ -68,8 +68,6 @@ add_task(function* test_setup() {
   Services.prefs.setBoolPref(PREF_EXPERIMENTS_ENABLED, true);
   Services.prefs.setIntPref(PREF_LOGGING_LEVEL, 0);
   Services.prefs.setBoolPref(PREF_LOGGING_DUMP, true);
-
-  let experiments = new Experiments.Experiments();
 });
 
 function arraysEqual(a, b) {
