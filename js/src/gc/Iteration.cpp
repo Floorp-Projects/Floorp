@@ -85,7 +85,7 @@ js::IterateChunks(JSRuntime *rt, void *data, IterateChunkCallback chunkCallback)
 {
     AutoPrepareForTracing prep(rt, SkipAtoms);
 
-    for (js::GCChunkSet::Range r = rt->gc.chunkSet.all(); !r.empty(); r.popFront())
+    for (js::GCChunkSet::Range r = rt->gc.allChunks(); !r.empty(); r.popFront())
         chunkCallback(rt, data, r.front());
 }
 

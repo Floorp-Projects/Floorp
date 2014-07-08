@@ -834,13 +834,6 @@ struct Chunk
 
     void decommitAllArenas(JSRuntime *rt);
 
-    /* Must be called with the GC lock taken. */
-    static inline void release(JSRuntime *rt, Chunk *chunk);
-    static inline void releaseList(JSRuntime *rt, Chunk *chunkListHead);
-
-    /* Must be called with the GC lock taken. */
-    inline void prepareToBeFreed(JSRuntime *rt);
-
     /*
      * Assuming that the info.prevp points to the next field of the previous
      * chunk in a doubly-linked list, get that chunk.

@@ -49,7 +49,7 @@ JS::Zone::Zone(JSRuntime *rt)
     JS_ASSERT(reinterpret_cast<JS::shadow::Zone *>(this) ==
               static_cast<JS::shadow::Zone *>(this));
 
-    setGCMaxMallocBytes(rt->gc.maxMallocBytes * 0.9);
+    setGCMaxMallocBytes(rt->gc.maxMallocBytesAllocated() * 0.9);
 }
 
 Zone::~Zone()
