@@ -453,7 +453,7 @@ function Barrier(name) {
         frames.push(frame.filename + ":" + frame.name + ":" + frame.lineNumber);
         frame = frame.caller;
       }
-      let stack = Task.Debugging.generateReadableStack(frames.join("\n"));
+      let stack = Task.Debugging.generateReadableStack(frames.join("\n")).split("\n");
 
       let set = this._conditions.get(condition);
       if (!set) {
