@@ -387,7 +387,14 @@ nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 #include "nsHTTPCompressConv.h"
 #include "mozTXTToHTMLConv.h"
 #include "nsUnknownDecoder.h"
+
 #include "nsTXTToHTMLConv.h"
+namespace mozilla {
+namespace net {
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsTXTToHTMLConv, Init)
+} // namespace net
+} // namespace mozilla
+
 #include "nsIndexedToHTML.h"
 #ifdef BUILD_BINHEX_DECODER
 #include "nsBinHexDecoder.h"
@@ -396,7 +403,6 @@ nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 nsresult NS_NewMultiMixedConv (nsMultiMixedConv** result);
 nsresult MOZ_NewTXTToHTMLConv (mozTXTToHTMLConv** result);
 nsresult NS_NewHTTPCompressConv  (nsHTTPCompressConv ** result);
-nsresult NS_NewNSTXTToHTMLConv(nsTXTToHTMLConv** result);
 nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
 
 #define FTP_TO_INDEX                 "?from=text/ftp-dir&to=application/http-index-format"
@@ -608,37 +614,6 @@ CreateNewBinaryDetectorFactory(nsISupports *aOuter, REFNSIID aIID, void **aResul
     return NS_ERROR_OUT_OF_MEMORY;
   }
   NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-  return rv;
-}
-
-static nsresult
-CreateNewNSTXTToHTMLConvFactory(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-  nsresult rv;
-
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = nullptr;
-
-  if (aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
-  nsTXTToHTMLConv *inst;
-  
-  inst = new nsTXTToHTMLConv();
-  if (!inst) return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(inst);
-  rv = inst->Init();
-  if (NS_FAILED(rv)) {
-    delete inst;
-    return rv;
-  }
   rv = inst->QueryInterface(aIID, aResult);
   NS_RELEASE(inst);
 
@@ -879,7 +854,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_UNKNOWNDECODER_CID, false, nullptr, CreateNewUnknownDecoderFactory },
     { &kNS_BINARYDETECTOR_CID, false, nullptr, CreateNewBinaryDetectorFactory },
     { &kNS_HTTPCOMPRESSCONVERTER_CID, false, nullptr, CreateNewHTTPCompressConvFactory },
-    { &kNS_NSTXTTOHTMLCONVERTER_CID, false, nullptr, CreateNewNSTXTToHTMLConvFactory },
+    { &kNS_NSTXTTOHTMLCONVERTER_CID, false, nullptr, mozilla::net::nsTXTToHTMLConvConstructor },
 #ifdef BUILD_BINHEX_DECODER
     { &kNS_BINHEXDECODER_CID, false, nullptr, nsBinHexDecoderConstructor },
 #endif
