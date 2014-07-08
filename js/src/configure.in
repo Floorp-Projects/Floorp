@@ -3246,14 +3246,10 @@ fi
 dnl ========================================================
 dnl = Use generational GC
 dnl ========================================================
-dnl Use generational GC by default in all shell builds. The top-level mozilla
-dnl configure.in will configure SpiderMonkey with --disable-gcgenerational as
-dnl needed on a per-platform basis.
-JSGC_GENERATIONAL=1
-MOZ_ARG_DISABLE_BOOL(gcgenerational,
-[  --disable-gcgenerational Disable generational GC],
-    JSGC_GENERATIONAL= ,
-    JSGC_GENERATIONAL=1 )
+MOZ_ARG_ENABLE_BOOL(gcgenerational,
+[  --enable-gcgenerational Enable generational GC],
+    JSGC_GENERATIONAL=1,
+    JSGC_GENERATIONAL= )
 if test -n "$JSGC_GENERATIONAL"; then
     AC_DEFINE(JSGC_GENERATIONAL)
 fi
