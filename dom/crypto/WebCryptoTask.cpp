@@ -1167,8 +1167,8 @@ public:
       if (params.mLength.WasPassed()) {
         mLength = params.mLength.Value();
       } else {
-        KeyAlgorithm hashAlg(global, hashName);
-        switch (hashAlg.Mechanism()) {
+        nsRefPtr<KeyAlgorithm> hashAlg = new KeyAlgorithm(global, hashName);
+        switch (hashAlg->Mechanism()) {
           case CKM_SHA_1:
           case CKM_SHA256:
             mLength = 512;
