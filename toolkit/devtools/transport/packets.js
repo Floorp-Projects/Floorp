@@ -28,7 +28,7 @@ const { Cc, Ci, Cu } = require("chrome");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { dumpn, dumpv } = DevToolsUtils;
 const StreamUtils = require("devtools/toolkit/transport/stream-utils");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const promise = require("promise");
 
 DevToolsUtils.defineLazyGetter(this, "unicodeConverter", () => {
   const unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]

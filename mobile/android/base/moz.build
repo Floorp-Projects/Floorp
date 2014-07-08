@@ -17,7 +17,7 @@ resjar.generated_sources += [
     'org/mozilla/gecko/R.java',
 ]
 
-if CONFIG['MOZ_NATIVE_DEVICES']:
+if CONFIG['MOZ_NATIVE_CASTING']:
     resjar.generated_sources += ['com/google/android/gms/R.java']
     resjar.generated_sources += ['android/support/v7/appcompat/R.java']
     resjar.generated_sources += ['android/support/v7/mediarouter/R.java']
@@ -473,7 +473,7 @@ gbjar.extra_jars = [
     'websockets.jar',
 ]
 
-if CONFIG['MOZ_NATIVE_DEVICES']:
+if CONFIG['MOZ_NATIVE_CASTING']:
     gbjar.extra_jars += [CONFIG['ANDROID_APPCOMPAT_LIB']]
     gbjar.extra_jars += [CONFIG['ANDROID_MEDIAROUTER_LIB']]
     gbjar.extra_jars += [CONFIG['GOOGLE_PLAY_SERVICES_LIB']]
@@ -530,7 +530,7 @@ ANDROID_GENERATED_RESFILES += [
 ]
 
 for var in ('MOZ_ANDROID_ANR_REPORTER', 'MOZ_LINKER_EXTRACT', 'MOZILLA_OFFICIAL', 'MOZ_DEBUG',
-            'MOZ_ANDROID_SEARCH_ACTIVITY', 'MOZ_NATIVE_DEVICES'):
+            'MOZ_ANDROID_SEARCH_ACTIVITY', 'MOZ_NATIVE_CASTING'):
     if CONFIG[var]:
         DEFINES[var] = 1
 
@@ -613,7 +613,7 @@ cpe = main.add_classpathentry('src', SRCDIR,
         'org/mozilla/gecko/resources/**'])
 if not CONFIG['MOZ_CRASHREPORTER']:
     cpe.exclude_patterns += ['org/mozilla/gecko/CrashReporter.java']
-if not CONFIG['MOZ_NATIVE_DEVICES']:
+if not CONFIG['MOZ_NATIVE_CASTING']:
     cpe.exclude_patterns += ['org/mozilla/gecko/ChromeCast.java']
     cpe.exclude_patterns += ['org/mozilla/gecko/MediaPlayerManager.java']
 main.add_classpathentry('generated', OBJDIR + '/generated',

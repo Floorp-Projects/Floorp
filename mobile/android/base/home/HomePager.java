@@ -231,7 +231,6 @@ public class HomePager extends ViewPager {
                             PropertyAnimator.Property.ALPHA,
                             1.0f);
         }
-        Telemetry.startUISession(TelemetryContract.Session.HOME);
     }
 
     /**
@@ -244,7 +243,6 @@ public class HomePager extends ViewPager {
 
         // Stop UI Telemetry sessions.
         stopCurrentPanelTelemetrySession();
-        Telemetry.stopUISession(TelemetryContract.Session.HOME);
     }
 
     /**
