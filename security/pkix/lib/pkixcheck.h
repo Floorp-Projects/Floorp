@@ -35,14 +35,14 @@ Result CheckIssuerIndependentProperties(
           TrustDomain& trustDomain,
           const BackCert& cert,
           PRTime time,
-          EndEntityOrCA endEntityOrCA,
           KeyUsage requiredKeyUsageIfPresent,
           KeyPurposeId requiredEKUIfPresent,
           const CertPolicyId& requiredPolicy,
           unsigned int subCACount,
           /*optional out*/ TrustLevel* trustLevel = nullptr);
 
-Result CheckNameConstraints(const BackCert& cert);
+Result CheckNameConstraints(const BackCert& cert,
+                            KeyPurposeId requiredEKUIfPresent);
 
 } } // namespace mozilla::pkix
 

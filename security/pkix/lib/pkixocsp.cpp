@@ -138,7 +138,6 @@ CheckOCSPResponseSignerCert(TrustDomain& trustDomain,
   // TODO(bug 926261): If we're validating for a policy then the policy OID we
   // are validating for should be passed to CheckIssuerIndependentProperties.
   rv = CheckIssuerIndependentProperties(trustDomain, potentialSigner, time,
-                                        EndEntityOrCA::MustBeEndEntity,
                                         KeyUsage::noParticularKeyUsageRequired,
                                         KeyPurposeId::id_kp_OCSPSigning,
                                         CertPolicyId::anyPolicy, 0);
@@ -272,7 +271,7 @@ VerifySignature(Context& context, ResponderIDType responderIDType,
   }
 
   for (size_t i = 0; i < numCerts; ++i) {
-    BackCert cert(certs[i], nullptr, BackCert::IncludeCN::No);
+    BackCert cert(certs[i], EndEntityOrCA::MustBeEndEntity, nullptr);
     rv = cert.Init();
     if (rv != Success) {
       return rv;
