@@ -1529,7 +1529,7 @@ MacroAssemblerMIPSCompat::callIon(Register callee)
 void
 MacroAssemblerMIPSCompat::callIonFromAsmJS(Register callee)
 {
-    ma_callIonNoPush(reg);
+    ma_callIonNoPush(callee);
 
     // The Ion ABI has the callee pop the return address off the stack.
     // The asm.js caller assumes that the call leaves sp unchanged, so bump
@@ -3507,7 +3507,7 @@ MacroAssemblerMIPSCompat::toggledCall(JitCode *target, bool enabled)
         as_nop();
         as_nop();
     }
-    MOZ_ASSERT(nextOffset().getOffset() - offset.offset() == ToggledCallSize());
+    MOZ_ASSERT(nextOffset().getOffset() - offset.offset() == ToggledCallSize(nullptr));
     return offset;
 }
 
