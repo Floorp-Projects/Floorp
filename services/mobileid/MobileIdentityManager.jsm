@@ -69,7 +69,6 @@ let MobileIdentityManager = {
     Services.obs.addObserver(this, "xpcom-shutdown", false);
     ppmm.addMessageListener(GET_ASSERTION_IPC_MSG, this);
     this.messageManagers = {};
-    // TODO: Store keyPairs and certificates in disk. Bug 1021605.
     this.keyPairs = {};
     this.certificates = {};
   },
@@ -149,6 +148,26 @@ let MobileIdentityManager = {
     }
 
     return this._iccInfo;
+#endif
+    return null;
+  },
+
+  get iccIds() {
+#ifdef MOZ_B2G_RIL
+    if (this._iccIds) {
+      return this._iccIds;
+    }
+
+    this._iccIds = [];
+    if (!this.iccInfo) {
+      return this._iccIds;
+    }
+
+    for (let i = 0; i < this.iccInfo.length; i++) {
+      this._iccIds.push(this.iccInfo[i].iccId);
+    }
+
+    return this._iccIds;
 #endif
     return null;
   },
@@ -597,7 +616,7 @@ let MobileIdentityManager = {
           phoneInfo = new MobileIdentityUIGluePhoneInfo(
             aCreds.msisdn,
             null,           // operator
-            null,           // service ID
+            undefined,      // service ID
             !!aCreds.iccId, // external
             true            // primary
           );
@@ -623,7 +642,7 @@ let MobileIdentityManager = {
           let creds = this.iccInfo[promptResult.serviceId].credentials;
           if (creds) {
             this.credStore.add(creds.iccId, creds.msisdn, aPrincipal.origin,
-                               creds.sessionToken);
+                               creds.sessionToken, this.iccIds);
             return creds;
           }
         }
@@ -636,7 +655,7 @@ let MobileIdentityManager = {
           (creds) => {
             if (creds) {
               this.credStore.add(creds.iccId, creds.msisdn, aPrincipal.origin,
-                                 creds.sessionToken);
+                                 creds.sessionToken, this.iccIds);
               return creds;
             }
             // Otherwise, we need to verify the new number selected by the
@@ -646,6 +665,35 @@ let MobileIdentityManager = {
         );
       }
     );
+  },
+
+  /*********************************************************
+   * Credentials check
+   *********************************************************/
+
+  checkNewCredentials: function(aOldCreds, aNewCreds, aOrigin) {
+    // If there were previous credentials and the user changed her
+    // choice, we need to remove the origin from the old credentials.
+    if (aNewCreds.msisdn != aOldCreds.msisdn) {
+      return this.credStore.removeOrigin(aOldCreds.msisdn,
+                                         aOrigin)
+      .then(
+        () => {
+          return aNewCreds;
+        }
+      );
+    } else {
+      // Otherwise, we update the status of the SIM cards in the device
+      // so we know that the user decided not to take the chance to change
+      // her selection. We won't bother her again until a new SIM card
+      // change is detected.
+      return this.credStore.setDeviceIccIds(aOldCreds.msisdn, this.iccIds)
+      .then(
+        () => {
+          return aOldCreds;
+        }
+      );
+    }
   },
 
   /*********************************************************
@@ -685,7 +733,8 @@ let MobileIdentityManager = {
               this.credStore.add(aCredentials.iccId,
                                  aCredentials.msisdn,
                                  aOrigin,
-                                 aCredentials.sessionToken)
+                                 aCredentials.sessionToken,
+                                 this.iccIds)
               .then(
                 () => {
                   deferred.resolve(assertion);
@@ -721,31 +770,60 @@ let MobileIdentityManager = {
           return;
         }
 
-        // Even if we already have credentials for this origin, the consumer of
-        // the API might want to force the identity selection dialog.
+        // Even if we already have credentials for this origin, the consumer
+        // of the API might want to force the identity selection dialog.
         if (aOptions.forceSelection) {
-          return this.promptAndVerify(principal, manifestURL, creds);
-        }
-
-        // It is possible that the ICC associated with the stored
-        // credentials is not present in the device anymore, so we ask the
-        // user if she still wants to use it anyway or if she prefers to use
-        // another phone number.
-        // If the credentials are associated with an external SIM or there is
-        // no SIM in the device, we just return the credentials.
-        if (this.iccInfo && creds.iccId) {
-          for (let i = 0; i < this.iccInfo.length; i++) {
-            if (this.iccInfo[i].iccId == creds.iccId) {
-              return creds;
+          return this.promptAndVerify(principal, manifestURL, creds)
+          .then(
+            (newCreds) => {
+              return this.checkNewCredentials(creds, newCreds,
+                                              principal.origin);
             }
-          }
-          // At this point we know that the SIM associated with the credentials
-          // is not present in the device any more, so we need to ask the user
-          // what to do.
-          return this.promptAndVerify(principal, manifestURL, creds);
+          );
         }
 
-        return creds;
+        // SIM change scenario.
+
+        // It is possible that the SIM cards inserted in the device at the
+        // moment of the previous verification where we obtained the credentials
+        // has changed. In that case, we need to let the user knowabout this
+        // situation. Otherwise, we just return the credentials.
+        log.debug("Looking for SIM changes. Credentials ICCS ${creds} " +
+                  "Device ICCS ${device}", { creds: creds.deviceIccIds,
+                                             device: this.iccIds });
+        let simChanged = (creds.deviceIccIds == null && this.iccIds != null) ||
+                         (creds.deviceIccIds != null && this.iccIds == null);
+
+        if (!simChanged &&
+            creds.deviceIccIds != null &&
+            this.IccIds != null) {
+          simChanged = creds.deviceIccIds.length != this.iccIds.length;
+        }
+
+        if (!simChanged &&
+            creds.deviceIccIds != null &&
+            this.IccIds != null) {
+          let intersection = creds.deviceIccIds.filter((n) => {
+            return this.iccIds.indexOf(n) != -1;
+          });
+          simChanged = intersection.length != creds.deviceIccIds.length ||
+                       intersection.length != this.iccIds.length;
+        }
+
+        if (!simChanged) {
+          return creds;
+        }
+
+        // At this point we know that the SIM associated with the credentials
+        // is not present in the device any more or a new SIM has been detected,
+        // so we need to ask the user what to do.
+        return this.promptAndVerify(principal, manifestURL, creds)
+        .then(
+          (newCreds) => {
+            return this.checkNewCredentials(creds, newCreds,
+                                            principal.origin);
+          }
+        );
       }
     )
     .then(
