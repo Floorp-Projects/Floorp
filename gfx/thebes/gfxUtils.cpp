@@ -773,10 +773,10 @@ gfxUtils::ClampToScaleFactor(gfxFloat aVal)
 
   gfxFloat power = log(aVal)/log(kScaleResolution);
 
-  // If power is within 1e-6 of an integer, round to nearest to
+  // If power is within 1e-5 of an integer, round to nearest to
   // prevent floating point errors, otherwise round up to the
   // next integer value.
-  if (fabs(power - NS_round(power)) < 1e-6) {
+  if (fabs(power - NS_round(power)) < 1e-5) {
     power = NS_round(power);
   } else if (inverse) {
     power = floor(power);
