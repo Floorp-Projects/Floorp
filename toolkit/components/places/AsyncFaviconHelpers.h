@@ -193,9 +193,9 @@ public:
                                   bool aFaviconLoadPrivate,
                                   nsCOMPtr<nsIFaviconDataCallback>& aCallback);
 
+protected:
   virtual ~AsyncFetchAndSetIconFromNetwork();
 
-protected:
   IconData mIcon;
   PageData mPage;
   const bool mFaviconLoadPrivate;
