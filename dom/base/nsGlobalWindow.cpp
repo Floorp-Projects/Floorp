@@ -275,6 +275,7 @@ static PopupControlState    gPopupControlState         = openAbused;
 static int32_t              gRunningTimeoutDepth       = 0;
 static bool                 gMouseDown                 = false;
 static bool                 gDragServiceDisabled       = false;
+static bool                 gSelectionCaretPrefEnabled = false;
 static FILE                *gDumpFile                  = nullptr;
 static uint64_t             gNextWindowID              = 0;
 static uint32_t             gSerialCounter             = 0;
@@ -1176,6 +1177,9 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
                                 DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
     Preferences::AddBoolVarCache(&sIdleObserversAPIFuzzTimeDisabled, 
                                  "dom.idle-observers-api.fuzz_time.disabled",
+                                 false);
+    Preferences::AddBoolVarCache(&gSelectionCaretPrefEnabled,
+                                 "selectioncaret.enabled",
                                  false);
   }
 
@@ -9271,7 +9275,7 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, in
     }
   }
 
-  if (mDoc && anAction.EqualsLiteral("selectionchange")) {
+  if (gSelectionCaretPrefEnabled && mDoc && anAction.EqualsLiteral("selectionchange")) {
     SelectionChangeEventInit init;
     init.mBubbles = true;
     if (aSel) {
