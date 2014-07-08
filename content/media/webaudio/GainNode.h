@@ -38,6 +38,9 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
 
+protected:
+  virtual ~GainNode();
+
 private:
   static void SendGainToStream(AudioNode* aNode);
 

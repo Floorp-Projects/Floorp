@@ -77,6 +77,10 @@ ChannelMergerNode::ChannelMergerNode(AudioContext* aContext,
                                                      MediaStreamGraph::INTERNAL_STREAM);
 }
 
+ChannelMergerNode::~ChannelMergerNode()
+{
+}
+
 JSObject*
 ChannelMergerNode::WrapObject(JSContext* aCx)
 {

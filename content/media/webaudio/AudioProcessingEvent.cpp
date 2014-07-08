@@ -31,6 +31,10 @@ AudioProcessingEvent::AudioProcessingEvent(ScriptProcessorNode* aOwner,
   SetIsDOMBinding();
 }
 
+AudioProcessingEvent::~AudioProcessingEvent()
+{
+}
+
 JSObject*
 AudioProcessingEvent::WrapObject(JSContext* aCx)
 {

@@ -27,8 +27,6 @@ class PannerNode : public AudioNode,
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(PannerNode)
   explicit PannerNode(AudioContext* aContext);
-  virtual ~PannerNode();
-
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
@@ -204,6 +202,9 @@ public:
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
+protected:
+  virtual ~PannerNode();
 
 private:
   friend class AudioListener;
