@@ -87,10 +87,15 @@ class nsHtml5TreeOpExecutor : public nsHtml5DocumentBuilder,
     bool                          mAlreadyComplainedAboutCharset;
 
   public:
-  
+
     nsHtml5TreeOpExecutor();
+
+  protected:
+
     virtual ~nsHtml5TreeOpExecutor();
-  
+
+  public:
+
     // nsIContentSink
 
     /**
