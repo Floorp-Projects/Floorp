@@ -34,6 +34,34 @@ addMessageListener("Browser:HideSessionRestoreButton", function (message) {
   }
 });
 
+addMessageListener("Browser:Reload", function(message) {
+  /* First, we'll try to use the session history object to reload so
+   * that framesets are handled properly. If we're in a special
+   * window (such as view-source) that has no session history, fall
+   * back on using the web navigation's reload method.
+   */
+
+  let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+  try {
+    let sh = webNav.sessionHistory;
+    if (sh)
+      webNav = sh.QueryInterface(Ci.nsIWebNavigation);
+  } catch (e) {
+  }
+
+  let reloadFlags = message.data.flags;
+  let handlingUserInput;
+  try {
+    handlingUserInput = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIDOMWindowUtils)
+                               .setHandlingUserInput(message.data.handlingUserInput);
+    webNav.reload(reloadFlags);
+  } catch (e) {
+  } finally {
+    handlingUserInput.destruct();
+  }
+});
+
 addEventListener("DOMFormHasPassword", function(event) {
   InsecurePasswordUtils.checkForInsecurePasswords(event.target);
   LoginManagerContent.onFormPassword(event);
