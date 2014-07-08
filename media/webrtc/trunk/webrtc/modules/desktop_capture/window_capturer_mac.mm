@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <ApplicationServices/ApplicationServices.h>
+#include <Cocoa/Cocoa.h>
 #include <CoreFoundation/CoreFoundation.h>
 
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
@@ -49,6 +50,7 @@ class WindowCapturerMac : public WindowCapturer {
   // WindowCapturer interface.
   virtual bool GetWindowList(WindowList* windows) OVERRIDE;
   virtual bool SelectWindow(WindowId id) OVERRIDE;
+  virtual bool BringSelectedWindowToFront() OVERRIDE;
 
   // DesktopCapturer interface.
   virtual void Start(Callback* callback) OVERRIDE;
@@ -131,6 +133,43 @@ bool WindowCapturerMac::SelectWindow(WindowId id) {
 
   window_id_ = id;
   return true;
+}
+
+bool WindowCapturerMac::BringSelectedWindowToFront() {
+  if (!window_id_)
+    return false;
+
+  CGWindowID ids[1];
+  ids[0] = window_id_;
+  CFArrayRef window_id_array =
+      CFArrayCreate(NULL, reinterpret_cast<const void **>(&ids), 1, NULL);
+
+  CFArrayRef window_array =
+      CGWindowListCreateDescriptionFromArray(window_id_array);
+  if (window_array == NULL || 0 == CFArrayGetCount(window_array)) {
+    // Could not find the window. It might have been closed.
+    LOG(LS_INFO) << "Window not found";
+    CFRelease(window_id_array);
+    return false;
+  }
+
+  CFDictionaryRef window = reinterpret_cast<CFDictionaryRef>(
+      CFArrayGetValueAtIndex(window_array, 0));
+  CFNumberRef pid_ref = reinterpret_cast<CFNumberRef>(
+      CFDictionaryGetValue(window, kCGWindowOwnerPID));
+
+  int pid;
+  CFNumberGetValue(pid_ref, kCFNumberIntType, &pid);
+
+  // TODO(jiayl): this will bring the process main window to the front. We
+  // should find a way to bring only the window to the front.
+  bool result =
+      [[NSRunningApplication runningApplicationWithProcessIdentifier: pid]
+          activateWithOptions: NSApplicationActivateIgnoringOtherApps];
+
+  CFRelease(window_id_array);
+  CFRelease(window_array);
+  return result;
 }
 
 void WindowCapturerMac::Start(Callback* callback) {
