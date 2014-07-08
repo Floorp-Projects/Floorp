@@ -197,21 +197,11 @@ public class TwoLinePageRow extends LinearLayout
             final int bookmarkIdIndex = cursor.getColumnIndex(Combined.BOOKMARK_ID);
             if (bookmarkIdIndex != -1) {
                 final long bookmarkId = cursor.getLong(bookmarkIdIndex);
-                final int displayIndex = cursor.getColumnIndex(Combined.DISPLAY);
-
-                final int display;
-                if (displayIndex != -1) {
-                    display = cursor.getInt(displayIndex);
-                } else {
-                    display = Combined.DISPLAY_NORMAL;
-                }
 
                 // The bookmark id will be 0 (null in database) when the url
                 // is not a bookmark.
                 if (bookmarkId == 0) {
                     setPageTypeIcon(NO_ICON);
-                } else if (display == Combined.DISPLAY_READER) {
-                    setPageTypeIcon(R.drawable.ic_url_bar_reader);
                 } else {
                     setPageTypeIcon(R.drawable.ic_url_bar_star);
                 }

@@ -5,7 +5,7 @@
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://testing-common/services-common/logging.js");
+Cu.import("resource://testing-common/services/common/logging.js");
 
 let btoa = Cu.import("resource://gre/modules/Log.jsm").btoa;
 let atob = Cu.import("resource://gre/modules/Log.jsm").atob;

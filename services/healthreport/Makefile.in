@@ -8,10 +8,6 @@ modules := \
   providers.jsm \
   $(NULL)
 
-testing_modules := \
-  utils.jsm \
-  $(NULL)
-
 healthreport_depends = \
   HealthReport.jsm \
   ../common/async.js \
@@ -35,9 +31,6 @@ MODULES := $(modules)
 MODULES_PATH = $(FINAL_TARGET)/modules/services/healthreport
 MODULES_FLAGS := $(extra_pp_flags)
 PP_TARGETS += MODULES
-
-TESTING_JS_MODULES := $(addprefix modules-testing/,$(testing_modules))
-TESTING_JS_MODULE_DIR := services/healthreport
 
 include $(topsrcdir)/config/rules.mk
 

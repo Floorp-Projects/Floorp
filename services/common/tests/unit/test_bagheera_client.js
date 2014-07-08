@@ -5,7 +5,7 @@
 
 Cu.import("resource://services-common/bagheeraclient.js");
 Cu.import("resource://services-common/rest.js");
-Cu.import("resource://testing-common/services-common/bagheeraserver.js");
+Cu.import("resource://testing-common/services/common/bagheeraserver.js");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
