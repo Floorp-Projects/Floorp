@@ -358,6 +358,15 @@ this.PermissionsTable =  { geolocation: {
                              app: DENY_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: PROMPT_ACTION
+                           },
+                           // This permission doesn't actually grant access to
+                           // anything. It exists only to check the correctness
+                           // of web prompt composed permissions in tests.
+                           "test-permission": {
+                             app: PROMPT_ACTION,
+                             privileged: PROMPT_ACTION,
+                             certified: ALLOW_ACTION,
+                             access: ["read", "write", "create"]
                            }
                          };
 
