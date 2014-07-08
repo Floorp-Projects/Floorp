@@ -174,6 +174,10 @@ nsXULElement::nsXULElement(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo)
     }
 }
 
+nsXULElement::~nsXULElement()
+{
+}
+
 nsXULElement::nsXULSlots::nsXULSlots()
     : nsXULElement::nsDOMSlots()
 {
