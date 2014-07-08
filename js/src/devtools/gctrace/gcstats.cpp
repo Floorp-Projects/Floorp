@@ -99,93 +99,30 @@ const unsigned LifetimeBinTotal = MaxLifetimeBins;
 const unsigned AugClasses = MaxClasses + 1;
 const unsigned ClassTotal = MaxClasses;
 
-struct CountByHeap
+template <typename T, size_t length>
+struct Array
 {
-    CountByHeap() { memset(this, 0, sizeof(*this)); }
-    void inc(Heap heap) {
-        assert(heap < AugHeapKinds);
-        ++count[heap];
-        ++count[HeapTotal];
-    }
-    uint64_t get(unsigned heap) {
-        assert(heap < AugHeapKinds);
-        return count[heap];
+    Array() {}
+    void zero() { memset(&elements, 0, sizeof(elements)); }
+    T &operator[](size_t index) {
+        assert(index < length);
+        return elements[index];
     }
   private:
-    uint64_t count[AugHeapKinds];
-};
-
-struct CountByHeapAndKind
-{
-    CountByHeapAndKind() {}
-    void inc(Heap heap, AllocKind kind) {
-        assert(kind < AugAllocKinds);
-        count[kind].inc(heap);
-        count[AllocKindTotal].inc(heap);
-    }
-    uint64_t get(unsigned heap, unsigned kind) {
-        assert(kind < AugAllocKinds);
-        return count[kind].get(heap);
-    }
-  private:
-    CountByHeap count[AugAllocKinds];
-};
-
-struct CountByHeapKindAndLifetime
-{
-    CountByHeapKindAndLifetime() {}
-    void inc(Heap heap, AllocKind kind, unsigned lifetimeBin) {
-        assert(lifetimeBin < MaxLifetimeBins);
-        count[lifetimeBin].inc(heap, kind);
-        count[LifetimeBinTotal].inc(heap, kind);
-    }
-    uint64_t get(unsigned heap, unsigned kind, unsigned lifetimeBin) {
-        assert(lifetimeBin < AugLifetimeBins);
-        return count[lifetimeBin].get(heap, kind);
-    }
-  private:
-    CountByHeapAndKind count[AugLifetimeBins];
-};
-
-struct CountByHeapAndClass
-{
-    CountByHeapAndClass() {}
-    void inc(Heap heap, unsigned classId) {
-        assert(classId < MaxClasses);
-        count[classId].inc(heap);
-        count[ClassTotal].inc(heap);
-    }
-    uint64_t get(unsigned heap, unsigned classId) {
-        assert(classId < AugClasses);
-        return count[classId].get(heap);
-    }
-  private:
-    CountByHeap count[AugClasses];
-};
-
-struct CountByHeapClassAndLifetime
-{
-    CountByHeapClassAndLifetime() {}
-    void inc(Heap heap, unsigned classId, unsigned lifetimeBin) {
-        assert(lifetimeBin < MaxLifetimeBins);
-        count[lifetimeBin].inc(heap, classId);
-        count[LifetimeBinTotal].inc(heap, classId);
-    }
-    uint64_t get(unsigned heap, unsigned classId, unsigned lifetimeBin) {
-        assert(lifetimeBin < AugLifetimeBins);
-        return count[lifetimeBin].get(heap, classId);
-    }
-  private:
-    CountByHeapAndClass count[AugLifetimeBins];
+    T elements[length];
 };
 
 unsigned timesliceSize;
 unsigned lifetimeBins;
-CountByHeapKindAndLifetime allocTotals;
-std::vector<CountByHeapKindAndLifetime> allocTotalsBySlice;
-CountByHeapClassAndLifetime objectTotals;
 std::vector<uint64_t> gcBytesAllocatedInSlice;
 std::vector<uint64_t> gcBytesFreedInSlice;
+
+Array<Array<uint64_t, AllocKinds>, HeapKinds> allocCountByHeapAndKind;
+Array<Array<uint64_t, MaxLifetimeBins>, HeapKinds> allocCountByHeapAndLifetime;
+Array<Array<Array<uint64_t, MaxLifetimeBins>, AllocKinds>, HeapKinds> allocCountByHeapKindAndLifetime;
+Array<uint64_t, MaxClasses> objectCountByClass;
+Array<Array<uint64_t, MaxClasses>, HeapKinds> objectCountByHeapAndClass;
+Array<Array<Array<uint64_t, MaxLifetimeBins>, MaxClasses>, HeapKinds> objectCountByHeapClassAndLifetime;
 
 static void
 die(const char *format, ...)
@@ -335,8 +272,8 @@ outputThingCounts(FILE *file)
     fprintf(file, "Kind, Nursery, Tenured heap\n");
     for (unsigned i = 0; i < AllocKinds; ++i) {
         fprintf(file, "%15s, %8" PRIu64 ", %8" PRIu64 "\n", allocKindName(i),
-                allocTotals.get(Nursery, i, LifetimeBinTotal),
-                allocTotals.get(TenuredHeap, i, LifetimeBinTotal));
+                allocCountByHeapAndKind[Nursery][i],
+                allocCountByHeapAndKind[TenuredHeap][i]);
     }
 }
 
@@ -350,9 +287,9 @@ outputObjectCounts(FILE *file)
     for (unsigned i = 0; i < classes.size(); ++i) {
         fprintf(file, "%30s, %8" PRIu64 ", %8" PRIu64 ", %8" PRIu64 "\n",
                 classes[i].name,
-                objectTotals.get(Nursery, i, LifetimeBinTotal),
-                objectTotals.get(TenuredHeap, i, LifetimeBinTotal),
-                objectTotals.get(HeapTotal, i, LifetimeBinTotal));
+                objectCountByHeapAndClass[Nursery][i],
+                objectCountByHeapAndClass[TenuredHeap][i],
+                objectCountByClass[i]);
     }
 }
 
@@ -370,7 +307,7 @@ outputLifetimeByHeap(FILE *file)
     for (unsigned i = 0; i < lifetimeBins; ++i) {
         fprintf(file, "%8d", binLimit(i));
         for (unsigned j = 0; j < HeapKinds; ++j)
-            fprintf(file, ", %8" PRIu64, allocTotals.get(j, AllocKindTotal, i));
+            fprintf(file, ", %8" PRIu64, allocCountByHeapAndLifetime[j][i]);
         fprintf(file, "\n");
     }
 }
@@ -391,7 +328,8 @@ outputLifetimeByKind(FILE *file, unsigned initialHeap)
     for (unsigned i = 0; i < lifetimeBins; ++i) {
         fprintf(file, "%8d", binLimit(i));
         for (unsigned j = 0; j < AllocKinds; ++j)
-            fprintf(file, ", %8" PRIu64, allocTotals.get(initialHeap, j, i));
+            fprintf(file, ", %8" PRIu64,
+                    allocCountByHeapKindAndLifetime[initialHeap][j][i]);
         fprintf(file, "\n");
     }
 }
@@ -412,27 +350,8 @@ outputLifetimeByClass(FILE *file, unsigned initialHeap)
     for (unsigned i = 0; i < lifetimeBins; ++i) {
         fprintf(file, "%8d", binLimit(i));
         for (unsigned j = 0; j < classes.size(); ++j)
-            fprintf(file, ", %8" PRIu64, objectTotals.get(initialHeap, j, i));
-        fprintf(file, "\n");
-    }
-}
-
-static void
-outputLifetimeBySlice(FILE *file)
-{
-    fprintf(file, "# Lifetime (in log2 bins) by allocation timeslice for all things\n");
-    fprintf(file, "Timeslice");
-    for (unsigned i = 0; i < lifetimeBins; ++i)
-        fprintf(file, ", Lifetime<%d", binLimit(i));
-    fprintf(file, "\n");
-
-    uint64_t timesliceCount = allocCount / timesliceSize + 1;
-    for (uint64_t i = 0; i < timesliceCount; ++i) {
-        fprintf(file, "%8" PRIu64, i);
-        for (unsigned j = 0; j < lifetimeBins; ++j) {
             fprintf(file, ", %8" PRIu64,
-                    allocTotalsBySlice[i].get(HeapTotal, AllocKindTotal, j));
-        }
+                    objectCountByHeapClassAndLifetime[initialHeap][j][i]);
         fprintf(file, "\n");
     }
 }
@@ -446,10 +365,15 @@ processAlloc(const AllocInfo &info, uint64_t finalizeTime)
     unsigned lifetimeBin = getBin(lifetime);
     assert(lifetimeBin < lifetimeBins);
 
-    allocTotals.inc(info.initialHeap, info.kind, lifetimeBin);
-    allocTotalsBySlice[timeslice].inc(info.initialHeap, info.kind, lifetimeBin);
-    if (info.kind <= LastObjectAllocKind)
-        objectTotals.inc(info.initialHeap, info.classId, lifetimeBin);
+    ++allocCountByHeapAndKind[info.initialHeap][info.kind];
+    ++allocCountByHeapAndLifetime[info.initialHeap][lifetimeBin];
+    ++allocCountByHeapKindAndLifetime[info.initialHeap][info.kind][lifetimeBin];
+
+    if (info.kind <= LastObjectAllocKind) {
+        ++objectCountByClass[info.classId];
+        ++objectCountByHeapAndClass[info.initialHeap][info.classId];
+        ++objectCountByHeapClassAndLifetime[info.initialHeap][info.classId][lifetimeBin];
+    }
 
     uint64_t size = thingSizes[info.kind];
     gcBytesAllocatedInSlice[timeslice] += size;
@@ -655,7 +579,6 @@ processTraceFile(const char *filename)
         timesliceSize *= 2;
 
     size_t maxTimeslices = maxTraces / timesliceSize;
-    allocTotalsBySlice.reserve(maxTimeslices);
     gcBytesAllocatedInSlice.reserve(maxTimeslices);
     gcBytesFreedInSlice.reserve(maxTimeslices);
     lifetimeBins = getBin(maxTraces) + 1;
@@ -728,7 +651,7 @@ void withOutputFile(const char *base, const char *name, func f)
 {
     const size_t bufSize = 256;
     char filename[bufSize];
-    int r = snprintf(filename, bufSize, "%s%s", base, name);
+    int r = snprintf(filename, bufSize, "%s-%s.csv", base, name);
     assert(r > 0 && r < bufSize);
 
     FILE *file = fopen(filename, "w");
@@ -751,15 +674,14 @@ main(int argc, const char *argv[])
     processTraceFile(inputFile);
 
     using namespace std::placeholders;
-    withOutputFile(outputBase, "-bytesAllocatedBySlice.csv", outputGcBytesAllocated);
-    withOutputFile(outputBase, "-bytesUsedBySlice.csv", outputGcBytesUsed);
-    withOutputFile(outputBase, "-thingCounts.csv", outputThingCounts);
-    withOutputFile(outputBase, "-objectCounts.csv", outputObjectCounts);
-    withOutputFile(outputBase, "-lifetimeByClassForNursery.csv",
+    withOutputFile(outputBase, "bytesAllocatedBySlice", outputGcBytesAllocated);
+    withOutputFile(outputBase, "bytesUsedBySlice", outputGcBytesUsed);
+    withOutputFile(outputBase, "thingCounts", outputThingCounts);
+    withOutputFile(outputBase, "objectCounts", outputObjectCounts);
+    withOutputFile(outputBase, "lifetimeByClassForNursery",
                    std::bind(outputLifetimeByClass, _1, Nursery));
-    withOutputFile(outputBase, "-lifetimeByKindForHeap.csv",
+    withOutputFile(outputBase, "lifetimeByKindForHeap",
                    std::bind(outputLifetimeByKind, _1, TenuredHeap));
-    withOutputFile(outputBase, "-lifetimeByHeap.csv", outputLifetimeByHeap);
-    withOutputFile(outputBase, "-lifetimeBySlice.csv", outputLifetimeBySlice);
+    withOutputFile(outputBase, "lifetimeByHeap", outputLifetimeByHeap);
     return 0;
 }
