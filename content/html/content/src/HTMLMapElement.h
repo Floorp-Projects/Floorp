@@ -44,6 +44,8 @@ public:
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
 protected:
+  ~HTMLMapElement() {}
+
   nsRefPtr<nsContentList> mAreas;
 };
 

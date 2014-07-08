@@ -27,7 +27,6 @@ class HTMLTrackElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
   HTMLTrackElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual ~HTMLTrackElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -128,6 +127,8 @@ public:
   void DropChannel();
 
 protected:
+  virtual ~HTMLTrackElement();
+
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
   void OnChannelRedirect(nsIChannel* aChannel, nsIChannel* aNewChannel,
                          uint32_t aFlags);

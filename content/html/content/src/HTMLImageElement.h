@@ -28,7 +28,6 @@ class HTMLImageElement MOZ_FINAL : public nsGenericHTMLElement,
   friend class HTMLSourceElement;
 public:
   explicit HTMLImageElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual ~HTMLImageElement();
 
   static already_AddRefed<HTMLImageElement>
     Image(const GlobalObject& aGlobal,
@@ -189,6 +188,8 @@ public:
   virtual void DestroyContent() MOZ_OVERRIDE;
 
 protected:
+  virtual ~HTMLImageElement();
+
   // Resolve and load the current mResponsiveSelector (responsive mode) or src
   // attr image.
   nsresult LoadSelectedImage(bool aForce, bool aNotify);

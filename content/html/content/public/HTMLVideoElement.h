@@ -22,7 +22,6 @@ class HTMLVideoElement MOZ_FINAL : public HTMLMediaElement,
 {
 public:
   HTMLVideoElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual ~HTMLVideoElement();
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLVideoElement, video)
 
@@ -109,6 +108,8 @@ public:
   already_AddRefed<VideoPlaybackQuality> GetVideoPlaybackQuality();
 
 protected:
+  virtual ~HTMLVideoElement();
+
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
   virtual void WakeLockCreate();
