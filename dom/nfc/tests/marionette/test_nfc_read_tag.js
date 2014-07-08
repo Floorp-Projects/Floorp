@@ -6,11 +6,10 @@ MARIONETTE_HEAD_JS = "head.js";
 
 let url = "http://www.mozilla.org";
 
-// TODO : Get this from emulator console command.
-const T1T_RE_INDEX = 2;
-const T2T_RE_INDEX = 3;
-const T3T_RE_INDEX = 4;
-const T4T_RE_INDEX = 5;
+const T1T_RE_INDEX   = 2;
+const T2T_RE_INDEX   = 3;
+const T3T_RE_INDEX   = 4;
+const T4T_RE_INDEX   = 5;
 
 function testUrlTagDiscover(re) {
   log("Running \'testUrlTagDiscover\'");
@@ -41,6 +40,26 @@ function testUrlTagDiscover(re) {
   .then(() => emulator.activateRE(re));
 }
 
+function testEmptyTagDiscover(re) {
+  log("Running \'testEmptyTagDiscover\'");
+
+  window.navigator.mozSetMessageHandler("nfc-manager-tech-discovered", function(msg) {
+    log("Received \'nfc-manager-tech-ndiscovered\'");
+    is(msg.type, "techDiscovered", "check for correct message type");
+    let index = msg.techList.indexOf("NDEF");
+    isnot(index, -1, "check for \'NDEF\' in tech list");
+
+    let records = msg.records;
+    ok(records == null);
+
+    toggleNFC(false).then(runNextTest);
+  });
+
+  toggleNFC(true)
+  .then(() => emulator.clearTagData(re))
+  .then(() => emulator.activateRE(re));
+}
+
 function testUrlT1TDiscover() {
   testUrlTagDiscover(T1T_RE_INDEX);
 }
@@ -57,11 +76,31 @@ function testUrlT4TDiscover() {
   testUrlTagDiscover(T4T_RE_INDEX);
 }
 
+function testEmptyT1TDiscover() {
+  testEmptyTagDiscover(T1T_RE_INDEX);
+}
+
+function testEmptyT2TDiscover() {
+  testEmptyTagDiscover(T2T_RE_INDEX);
+}
+
+function testEmptyT3TDiscover() {
+  testEmptyTagDiscover(T3T_RE_INDEX);
+}
+
+function testEmptyT4TDiscover() {
+  testEmptyTagDiscover(T4T_RE_INDEX);
+}
+
 let tests = [
-  testUrlT1TDiscover,
-  testUrlT2TDiscover,
-  testUrlT3TDiscover,
-  testUrlT4TDiscover
+    testUrlT1TDiscover,
+    testUrlT2TDiscover,
+    testUrlT3TDiscover,
+    testUrlT4TDiscover,
+    testEmptyT1TDiscover,
+    testEmptyT2TDiscover,
+    testEmptyT3TDiscover,
+    testEmptyT4TDiscover
 ];
 
 SpecialPowers.pushPermissions(
