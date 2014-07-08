@@ -405,8 +405,7 @@ Experiments.Experiments.prototype = {
 
     gPrefsTelemetry.observe(PREF_TELEMETRY_ENABLED, this._telemetryStatusChanged, this);
 
-    AsyncShutdown.profileBeforeChange.addBlocker("Experiments.jsm shutdown",
-      this.uninit.bind(this));
+    AddonManager.shutdown.addBlocker("Experiments.jsm shutdown", this.uninit.bind(this));
 
     this._registerWithAddonManager();
 
