@@ -32,3 +32,13 @@
 <!ENTITY translateWebPages.accesskey  "T">
 <!ENTITY translateExceptions.label    "Exceptions…">
 <!ENTITY translateExceptions.accesskey "x">
+
+<!-- LOCALIZATION NOTE (translation.options.attribution.beforeLogo,
+  -                     translation.options.attribution.afterLogo):
+  -  These 2 strings are displayed before and after a 'Microsoft Translator'
+  -  logo.
+  -  The translations for these strings should match the translations in
+  -  browser/translation.dtd
+  -->
+<!ENTITY translation.options.attribution.beforeLogo "Translations by">
+<!ENTITY translation.options.attribution.afterLogo "">
