@@ -17,7 +17,7 @@ interface nsIPrincipal;
  * one of these per document/principal.
  */
 
-[scriptable, uuid(1ae83090-e1e1-4272-b0c4-0fbd751c1e27)]
+[scriptable, uuid(15c409c5-ebf8-457c-a8dd-5b169ca0b218)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
 
@@ -55,13 +55,9 @@ interface nsIContentSecurityPolicy : nsISerializable
    * @param reportOnly
    *        Should this policy affect content, script and style processing or
    *        just send reports if it is violated?
-   * @param specCompliant
-   *        Whether or not the policy conforms to the W3C specification.
-   *        If this is false, that indicates this policy is from the older
-   *        implementation with different semantics and directive names.
    */
   void appendPolicy(in AString policyString, in nsIURI selfURI,
-                    in boolean reportOnly, in boolean specCompliant);
+                    in boolean reportOnly);
 
   /**
    * Whether this policy allows in-page script.

@@ -18,10 +18,10 @@ def diff(profile1, profile2, diff_function=difflib.unified_diff):
     parts = {}
     parts_dict = {}
     for index in (0, 1):
-        profile = profiles[index]
+        prof = profiles[index]
 
         # first part, the path, isn't useful for diffing
-        parts[index] = profile.summary(return_parts=True)[1:]
+        parts[index] = prof.summary(return_parts=True)[1:]
 
         parts_dict[index] = dict(parts[index])
 

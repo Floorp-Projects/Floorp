@@ -16,7 +16,7 @@ class ParamTests(unittest.TestCase):
             print("output " + str(line))
         err = None
         try:
-            p = processhandler.ProcessHandler(['ls','-l'], processOutputLine=output)
+            processhandler.ProcessHandler(['ls','-l'], processOutputLine=output)
         except (TypeError, AttributeError) as e:
             err = e
         self.assertFalse(err)
@@ -27,7 +27,7 @@ class ParamTests(unittest.TestCase):
             print("output " + str(line))
         err = None
         try:
-            p = processhandler.ProcessHandler(['ls','-l'], processOutputLine=[output])
+            processhandler.ProcessHandler(['ls','-l'], processOutputLine=[output])
         except (TypeError, AttributeError) as e:
             err = e
         self.assertFalse(err)
@@ -39,7 +39,7 @@ class ParamTests(unittest.TestCase):
             print("timeout!")
         err = None
         try:
-            p = processhandler.ProcessHandler(['sleep', '2'], onTimeout=timeout)
+            processhandler.ProcessHandler(['sleep', '2'], onTimeout=timeout)
         except (TypeError, AttributeError) as e:
             err = e
         self.assertFalse(err)
@@ -50,7 +50,7 @@ class ParamTests(unittest.TestCase):
             print("timeout!")
         err = None
         try:
-            p = processhandler.ProcessHandler(['sleep', '2'], onTimeout=[timeout])
+            processhandler.ProcessHandler(['sleep', '2'], onTimeout=[timeout])
         except (TypeError, AttributeError) as e:
             err = e
         self.assertFalse(err)
@@ -61,7 +61,7 @@ class ParamTests(unittest.TestCase):
             print("finished!")
         err = None
         try:
-            p = processhandler.ProcessHandler(['sleep', '1'], onFinish=finish)
+            processhandler.ProcessHandler(['sleep', '1'], onFinish=finish)
         except (TypeError, AttributeError) as e:
             err = e
         self.assertFalse(err)
@@ -72,7 +72,7 @@ class ParamTests(unittest.TestCase):
             print("finished!")
         err = None
         try:
-            p = processhandler.ProcessHandler(['sleep', '1'], onFinish=[finish])
+            processhandler.ProcessHandler(['sleep', '1'], onFinish=[finish])
         except (TypeError, AttributeError) as e:
             err = e
         self.assertFalse(err)

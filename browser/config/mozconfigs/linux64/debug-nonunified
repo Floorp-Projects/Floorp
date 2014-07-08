@@ -1,3 +1,7 @@
+MOZ_AUTOMATION_UPLOAD=0
+MOZ_AUTOMATION_UNITTEST_SENDCHANGE=0
+MOZ_AUTOMATION_CHECK=0
+
 . "$topsrcdir/browser/config/mozconfigs/linux64/debug"
 
 ac_add_options --disable-unified-compilation

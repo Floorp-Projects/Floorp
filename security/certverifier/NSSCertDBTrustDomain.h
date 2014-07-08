@@ -53,17 +53,15 @@ public:
                        CertVerifier::ocsp_get_config ocspGETConfig,
                        CERTChainVerifyCallback* checkChainCallback = nullptr);
 
-  virtual SECStatus FindPotentialIssuers(
-                        const SECItem* encodedIssuerName,
-                        PRTime time,
-                /*out*/ mozilla::pkix::ScopedCERTCertList& results);
+  virtual SECStatus FindIssuer(const SECItem& encodedIssuerName,
+                               IssuerChecker& checker, PRTime time);
 
   virtual SECStatus GetCertTrust(mozilla::pkix::EndEntityOrCA endEntityOrCA,
                                  const mozilla::pkix::CertPolicyId& policy,
                                  const SECItem& candidateCertDER,
                          /*out*/ mozilla::pkix::TrustLevel* trustLevel);
 
-  virtual SECStatus VerifySignedData(const CERTSignedData* signedData,
+  virtual SECStatus VerifySignedData(const CERTSignedData& signedData,
                                      const SECItem& subjectPublicKeyInfo);
 
   virtual SECStatus CheckRevocation(mozilla::pkix::EndEntityOrCA endEntityOrCA,

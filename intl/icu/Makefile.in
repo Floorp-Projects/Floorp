@@ -51,10 +51,12 @@ default:: buildicu
 # - Options for genrb: -k strict parsing; -R omit collation tailoring rules.
 buildicu::
 # ICU's build system is full of races, so force non-parallel build.
+# Msys screws up GENRBOPTS when it contains spaces, so all genrb flags need
+# to be stuck together. See https://bugzilla.mozilla.org/show_bug.cgi?id=1034594#c34
 ifdef CROSS_COMPILE
-	+$(MAKE) -j1 -C host STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R -C'
+	+$(MAKE) -j1 -C host STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-kRC'
 endif
-	+$(MAKE) -j1 -C target STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
+	+$(MAKE) -j1 -C target STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-kR'
 	$(ICU_LIB_RENAME)
 
 distclean clean::
