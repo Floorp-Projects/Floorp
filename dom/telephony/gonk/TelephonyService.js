@@ -649,10 +649,6 @@ TelephonyService.prototype = {
       return;
     }
     gAudioManager.microphoneMuted = aMuted;
-
-    if (!this._numActiveCall) {
-      gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
-    }
   },
 
   get speakerEnabled() {
@@ -667,10 +663,6 @@ TelephonyService.prototype = {
     let force = aEnabled ? nsIAudioManager.FORCE_SPEAKER :
                            nsIAudioManager.FORCE_NONE;
     gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION, force);
-
-    if (!this._numActiveCall) {
-      gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
-    }
   },
 
   /**
