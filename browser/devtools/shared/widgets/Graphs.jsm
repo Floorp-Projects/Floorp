@@ -395,7 +395,7 @@ AbstractCanvasGraph.prototype = {
    */
   getMappedSelection: function(unpack = e => e.delta) {
     if (!this.hasData() || !this.hasSelection()) {
-      return { start: null, end: null };
+      return { min: null, max: null };
     }
     let selection = this.getSelection();
     let totalTicks = this._data.length;
@@ -404,8 +404,9 @@ AbstractCanvasGraph.prototype = {
 
     // The selection's start and end values are not guaranteed to be ascending.
     // This can happen, for example, when click & dragging from right to left.
-    let min = Math.min(selection.start, selection.end);
-    let max = Math.max(selection.start, selection.end);
+    // Also make sure that the selection bounds fit inside the canvas bounds.
+    let min = Math.max(Math.min(selection.start, selection.end), 0);
+    let max = Math.min(Math.max(selection.start, selection.end), this._width);
     min = map(min, 0, this._width, firstTick, lastTick);
     max = map(max, 0, this._width, firstTick, lastTick);
 
