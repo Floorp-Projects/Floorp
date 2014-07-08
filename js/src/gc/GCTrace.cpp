@@ -138,8 +138,9 @@ MaybeTraceClass(const Class *clasp)
         return;
 
     TraceEvent(TraceEventClassInfo, uint64_t(clasp));
-    TraceInt(clasp->flags);
     TraceString(clasp->name);
+    TraceInt(clasp->flags);
+    TraceInt(clasp->finalize != nullptr);
     tracedClasses.put(clasp);
 }
 
