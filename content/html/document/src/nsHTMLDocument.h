@@ -45,7 +45,6 @@ public:
   using nsDocument::GetPlugins;
 
   nsHTMLDocument();
-  ~nsHTMLDocument();
   virtual nsresult Init() MOZ_OVERRIDE;
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -248,6 +247,8 @@ public:
   virtual nsHTMLDocument* AsHTMLDocument() MOZ_OVERRIDE { return this; }
 
 protected:
+  ~nsHTMLDocument();
+
   nsresult GetBodySize(int32_t* aWidth,
                        int32_t* aHeight);
 

@@ -82,6 +82,8 @@ public:
   static int32_t MapScrollingAttribute(const nsAttrValue* aValue);
 
 protected:
+  virtual ~nsGenericHTMLFrameElement() {}
+
   virtual mozilla::dom::Element* ThisFrameElement() MOZ_OVERRIDE
   {
     return this;

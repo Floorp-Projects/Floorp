@@ -18,7 +18,6 @@ public:
     : nsGenericHTMLElement(aNodeInfo)
   {
   }
-  virtual ~HTMLFontElement();
 
   void GetColor(nsString& aColor)
   {
@@ -54,6 +53,8 @@ public:
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
 protected:
+  virtual ~HTMLFontElement();
+
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
 private:

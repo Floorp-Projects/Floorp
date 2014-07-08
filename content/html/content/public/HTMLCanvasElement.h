@@ -48,7 +48,6 @@ class HTMLCanvasElement MOZ_FINAL : public nsGenericHTMLElement,
 
 public:
   HTMLCanvasElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual ~HTMLCanvasElement();
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLCanvasElement, canvas)
 
@@ -208,6 +207,8 @@ public:
   nsresult GetContext(const nsAString& aContextId, nsISupports** aContext);
 
 protected:
+  virtual ~HTMLCanvasElement();
+
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
   nsIntSize GetWidthHeight();

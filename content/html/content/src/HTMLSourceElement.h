@@ -23,7 +23,6 @@ class HTMLSourceElement MOZ_FINAL : public nsGenericHTMLElement,
 {
 public:
   HTMLSourceElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual ~HTMLSourceElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -103,6 +102,8 @@ public:
   }
 
 protected:
+  virtual ~HTMLSourceElement();
+
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
 protected:
