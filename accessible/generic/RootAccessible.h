@@ -24,7 +24,6 @@ class RootAccessible : public DocAccessibleWrap,
 public:
   RootAccessible(nsIDocument* aDocument, nsIContent* aRootContent,
                  nsIPresShell* aPresShell);
-  virtual ~RootAccessible();
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -44,6 +43,7 @@ public:
   virtual void DocumentActivated(DocAccessible* aDocument);
 
 protected:
+  virtual ~RootAccessible();
 
   /**
    * Add/remove DOM event listeners.

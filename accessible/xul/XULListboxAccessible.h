@@ -67,7 +67,6 @@ class XULListboxAccessible : public XULSelectControlAccessible,
 {
 public:
   XULListboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~XULListboxAccessible() {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -107,6 +106,8 @@ public:
   virtual Accessible* ContainerWidget() const;
 
 protected:
+  virtual ~XULListboxAccessible() {}
+
   bool IsMulticolumn();
 };
 
@@ -121,7 +122,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   XULListitemAccessible(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~XULListitemAccessible() {}
 
   // nsIAccessible
   NS_IMETHOD GetActionName(uint8_t index, nsAString& aName);
@@ -138,6 +138,8 @@ public:
   virtual Accessible* ContainerWidget() const;
 
 protected:
+  virtual ~XULListitemAccessible();
+
   // Accessible
   virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
 
@@ -181,6 +183,9 @@ public:
   virtual uint32_t RowIdx() const MOZ_OVERRIDE;
   virtual void ColHeaderCells(nsTArray<Accessible*>* aHeaderCells) MOZ_OVERRIDE;
   virtual bool Selected() MOZ_OVERRIDE;
+
+protected:
+  virtual ~XULListCellAccessible() {}
 };
 
 } // namespace a11y

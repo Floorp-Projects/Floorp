@@ -107,6 +107,8 @@ public:
   void TreeViewChanged(nsITreeView* aView);
 
 protected:
+  virtual ~XULTreeAccessible();
+
   /**
    * Creates tree item accessible for the given row index.
    */
@@ -190,6 +192,8 @@ public:
   virtual void RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx) = 0;
 
 protected:
+  virtual ~XULTreeItemAccessibleBase();
+
   enum { eAction_Click = 0, eAction_Expand = 1 };
 
   // Accessible
@@ -242,6 +246,7 @@ public:
   virtual void RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx);
 
 protected:
+  virtual ~XULTreeItemAccessible();
 
   // Accessible
   virtual void CacheChildren();
