@@ -1904,11 +1904,11 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
             MOZ_ASSERT(opened);
 #endif
         }
-    }
 #ifdef MOZ_WIDGET_GONK
-    DebugOnly<bool> opened = PSharedBufferManager::Open(this);
-    MOZ_ASSERT(opened);
+        DebugOnly<bool> opened = PSharedBufferManager::Open(this);
+        MOZ_ASSERT(opened);
 #endif
+    }
 
     if (aSendRegisteredChrome) {
         nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
