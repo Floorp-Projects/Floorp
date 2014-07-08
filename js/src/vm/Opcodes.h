@@ -690,20 +690,8 @@
      *   nuses: (argc+2)
      */ \
     macro(JSOP_NEW,       82, js_new_str,   NULL,         3, -1,  1,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
-    /*
-     * Pops the top three values on the stack as 'iterator', 'index' and 'obj',
-     * iterates over 'iterator' and stores the iteration values as 'index + i'
-     * elements of 'obj', pushes 'obj' and 'index + iteration count' onto the
-     * stack.
-     *
-     * This opcode is used in Array literals with spread and spreadcall
-     * arguments as well as in destructing assignment with rest element.
-     *   Category: Literals
-     *   Type: Array
-     *   Operands:
-     *   Stack: obj, index, iterator => obj, (index + iteration count)
-     */ \
-    macro(JSOP_SPREAD,    83, "spread",     NULL,         1,  3,  2,  JOF_BYTE|JOF_ELEM|JOF_SET) \
+    \
+    macro(JSOP_UNUSED83,  83, "unused83",   NULL,         1,  0,  0,  JOF_BYTE) \
     \
     /*
      * Fast get op for function arguments and local variables.
