@@ -23,7 +23,6 @@ class XMLDocument : public nsDocument
 {
 public:
   XMLDocument(const char* aContentType = "application/xml");
-  virtual ~XMLDocument();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -68,6 +67,8 @@ public:
   using nsDocument::GetLocation;
 
 protected:
+  virtual ~XMLDocument();
+
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
   friend nsresult (::NS_NewXMLDocument)(nsIDocument**, bool, bool);
