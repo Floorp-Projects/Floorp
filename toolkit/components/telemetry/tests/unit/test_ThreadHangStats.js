@@ -20,6 +20,17 @@ function run_test() {
     return;
   }
 
+  if (Services.appinfo.OS === 'Linux' || Services.appinfo.OS === 'Android') {
+    // We use the rt_tgsigqueueinfo syscall on Linux which requires a
+    // certain kernel version. It's not an error if the system running
+    // the test is older than that.
+    let kernel = Services.sysinfo.kernel_version || Services.sysinfo.version;
+    if (Services.vc.compare(kernel, '2.6.31') < 0) {
+      ok("Hang reporting not supported for old kernel.");
+      return;
+    }
+  }
+
   // Run two events in the event loop:
   // the first event causes a hang;
   // the second event checks results from the first event.
