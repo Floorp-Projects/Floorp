@@ -12,7 +12,7 @@ EXTRA_COMPONENTS += [
     'B2GAboutRedirector.js',
     'ContentPermissionPrompt.js',
     'FilePicker.js',
-    'FxAccountsUIGlue.js'
+    'FxAccountsUIGlue.js',
     'HelperAppDialog.js',
     'InterAppCommUIGlue.js',
     'MailtoProtocolHandler.js',
@@ -49,7 +49,7 @@ EXTRA_JS_MODULES += [
     'AppFrames.jsm',
     'ContentRequestHelper.jsm',
     'ErrorPage.jsm',
-    'FxAccountsMgmtService.jsm'
+    'FxAccountsMgmtService.jsm',
     'SignInToWebsite.jsm',
     'SystemAppProxy.jsm',
     'TelURIParser.jsm',
