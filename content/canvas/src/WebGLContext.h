@@ -80,6 +80,7 @@ class WebGLVertexArray;
 
 namespace dom {
 class ImageData;
+class Element;
 
 struct WebGLContextAttributes;
 template<typename> struct Nullable;
@@ -460,6 +461,10 @@ public:
                     dom::ImageData* pixels, ErrorResult& rv);
     // Allow whatever element types the bindings are willing to pass
     // us in TexImage2D
+    bool TexImageFromVideoElement(GLenum target, GLint level,
+                                  GLenum internalformat, GLenum format, GLenum type,
+                                  mozilla::dom::Element& image);
+
     template<class ElementType>
     void TexImage2D(GLenum target, GLint level,
                     GLenum internalformat, GLenum format, GLenum type,
@@ -467,6 +472,17 @@ public:
     {
         if (IsContextLost())
             return;
+
+        WebGLTexture* tex = activeBoundTextureForTarget(target);
+
+        if (!tex)
+            return ErrorInvalidOperation("no texture is bound to this target");
+
+        // Trying to handle the video by GPU directly first
+        if (TexImageFromVideoElement(target, level, internalformat, format, type, elt)) {
+            return;
+        }
+
         RefPtr<gfx::DataSourceSurface> data;
         WebGLTexelFormat srcFormat;
         nsLayoutUtils::SurfaceFromElementResult res = SurfaceFromElement(elt);
@@ -482,6 +498,7 @@ public:
                                0, format, type, data->GetData(), byteLength,
                                -1, srcFormat, mPixelStorePremultiplyAlpha);
     }
+
     void TexParameterf(GLenum target, GLenum pname, GLfloat param) {
         TexParameter_base(target, pname, nullptr, &param);
     }
@@ -507,6 +524,12 @@ public:
     {
         if (IsContextLost())
             return;
+
+        // Trying to handle the video by GPU directly first
+        if (TexImageFromVideoElement(target, level, format, format, type, elt)) {
+            return;
+        }
+
         RefPtr<gfx::DataSourceSurface> data;
         WebGLTexelFormat srcFormat;
         nsLayoutUtils::SurfaceFromElementResult res = SurfaceFromElement(elt);
