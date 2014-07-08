@@ -3,109 +3,55 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
-let doc;
-let div1;
-let div2;
-let iframe1;
-let iframe2;
-let inspector;
+// Testing that moving the mouse over the document with the element picker
+// started highlights nodes
 
-function createDocument() {
-  doc.title = "Inspector iframe Tests";
+const NESTED_FRAME_SRC = "data:text/html;charset=utf-8," +
+  "nested iframe<div>nested div</div>";
 
-  iframe1 = doc.createElement('iframe');
+const OUTER_FRAME_SRC = "data:text/html;charset=utf-8," +
+  "little frame<div>little div</div>" +
+  "<iframe src='" + NESTED_FRAME_SRC + "' />";
 
-  iframe1.addEventListener("load", function () {
-    iframe1.removeEventListener("load", arguments.callee, false);
+const TEST_URI = "data:text/html;charset=utf-8," +
+  "iframe tests for inspector" +
+  "<iframe src=\"" + OUTER_FRAME_SRC + "\" />";
 
-    div1 = iframe1.contentDocument.createElement('div');
-    div1.textContent = 'little div';
-    iframe1.contentDocument.body.appendChild(div1);
+let test = asyncTest(function*() {
+  let { inspector } = yield openInspectorForURL(TEST_URI);
+  let outerFrame = getNode("iframe");
+  let outerFrameDiv = getNode("div", { document: outerFrame.contentDocument});
+  let innerFrame = getNode("iframe", { document: outerFrame.contentDocument});
+  let innerFrameDiv = getNode("div", { document: innerFrame.contentDocument});
 
-    iframe2 = iframe1.contentDocument.createElement('iframe');
+  info("Waiting for element picker to activate.");
+  yield inspector.toolbox.highlighterUtils.startPicker();
 
-    iframe2.addEventListener('load', function () {
-      iframe2.removeEventListener("load", arguments.callee, false);
+  info("Moving mouse over outerFrameDiv");
+  yield moveMouseOver(outerFrameDiv);
+  is(getHighlitNode(), outerFrameDiv, "outerFrameDiv is highlighted.");
 
-      div2 = iframe2.contentDocument.createElement('div');
-      div2.textContent = 'nested div';
-      iframe2.contentDocument.body.appendChild(div2);
+  info("Moving mouse over innerFrameDiv");
+  yield moveMouseOver(innerFrameDiv);
+  is(getHighlitNode(), innerFrameDiv, "innerFrameDiv is highlighted.");
 
-      // Open the inspector, start the picker mode, and start the tests
-      openInspector(aInspector => {
-        inspector = aInspector;
-        inspector.toolbox.highlighterUtils.startPicker().then(runTests);
-      });
-    }, false);
+  info("Selecting root node");
+  yield selectNode(content.document.documentElement, inspector);
 
-    iframe2.src = 'data:text/html,nested iframe';
-    iframe1.contentDocument.body.appendChild(iframe2);
-  }, false);
+  info("Selecting an element from the nested iframe directly");
+  yield selectNode(innerFrameDiv, inspector);
 
-  iframe1.src = 'data:text/html,little iframe';
-  doc.body.appendChild(iframe1);
-}
+  is(inspector.breadcrumbs.nodeHierarchy.length, 9, "Breadcrumbs have 9 items.");
 
-function moveMouseOver(aElement, cb) {
-  inspector.toolbox.once("picker-node-hovered", cb);
-  EventUtils.synthesizeMouseAtCenter(aElement, {type: "mousemove"},
-    aElement.ownerDocument.defaultView);
-}
+  info("Waiting for element picker to deactivate.");
+  yield inspector.toolbox.highlighterUtils.stopPicker();
 
-function runTests() {
-  testDiv1Highlighter();
-}
-
-function testDiv1Highlighter() {
-  moveMouseOver(div1, () => {
-    is(getHighlitNode(), div1, "highlighter matches selection of div1");
-    testDiv2Highlighter();
-  });
-}
-
-function testDiv2Highlighter() {
-  moveMouseOver(div2, () => {
-    is(getHighlitNode(), div2, "highlighter matches selection of div2");
-    selectRoot();
-  });
-}
-
-function selectRoot() {
-  // Select the root document element to clear the breadcrumbs.
-  inspector.selection.setNode(doc.documentElement, null);
-  inspector.once("inspector-updated", selectIframe);
-}
-
-function selectIframe() {
-  // Directly select an element in an iframe (without navigating to it
-  // with mousemoves).
-  inspector.selection.setNode(div2, null);
-  inspector.once("inspector-updated", () => {
-    let breadcrumbs = inspector.breadcrumbs;
-    is(breadcrumbs.nodeHierarchy.length, 9, "Should have 9 items");
-    finishUp();
-  });
-}
-
-function finishUp() {
-  inspector.toolbox.highlighterUtils.stopPicker().then(() => {
-    doc = div1 = div2 = iframe1 = iframe2 = inspector = null;
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.closeToolbox(target);
-    gBrowser.removeCurrentTab();
-    finish();
-  });
-}
-
-function test() {
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-    doc = content.document;
-    gBrowser.selectedBrowser.focus();
-    createDocument();
-  }, true);
-
-  content.location = "data:text/html,iframe tests for inspector";
-}
+  function moveMouseOver(element) {
+    info("Waiting for element " + element + " to be highlighted");
+    EventUtils.synthesizeMouseAtCenter(element, {type: "mousemove"},
+                               element.ownerDocument.defaultView);
+    return inspector.toolbox.once("picker-node-hovered");
+  }
+});

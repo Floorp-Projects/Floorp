@@ -1,38 +1,27 @@
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
-// Test that the highlighter's picker should be stopped when a different tool is
+// Test that the highlighter's picker is stopped when a different tool is
 // selected
 
-function test() {
-  let {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+const TEST_URI = "data:text/html;charset=UTF-8," +
+  "testing the highlighter goes away on tool selection";
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    waitForFocus(setupTest, content);
-  }, true);
-  content.location = "data:text/html,testing the highlighter goes away on tool selection";
+let test = asyncTest(function* () {
+  let { toolbox } = yield openInspectorForURL(TEST_URI);
+  let pickerStopped = toolbox.once("picker-stopped");
 
-  function setupTest() {
-    openInspector((aInspector, toolbox) => {
-      let pickerStopped = toolbox.once("picker-stopped");
+  info("Starting the inspector picker");
+  yield toolbox.highlighterUtils.startPicker();
 
-      Task.spawn(function() {
-        info("Starting the inspector picker");
-        yield toolbox.highlighterUtils.startPicker();
-        info("Selecting another tool than the inspector in the toolbox");
-        yield toolbox.selectNextTool();
-        info("Waiting for the picker-stopped event to be fired")
-        yield pickerStopped;
-        ok(true, "picker-stopped event fired after switch tools, so picker is closed");
-      }).then(null, ok.bind(null, false)).then(finishUp);
-    });
-  }
+  info("Selecting another tool than the inspector in the toolbox");
+  yield toolbox.selectNextTool();
 
-  function finishUp() {
-    gBrowser.removeCurrentTab();
-    finish();
-  }
-}
+  info("Waiting for the picker-stopped event to be fired");
+  yield pickerStopped;
+
+  ok(true, "picker-stopped event fired after switch tools; picker is closed");
+});
