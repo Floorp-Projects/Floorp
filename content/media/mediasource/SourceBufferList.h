@@ -80,6 +80,8 @@ public:
   bool AllContainsTime(double aTime);
 
 private:
+  ~SourceBufferList();
+
   friend class AsyncEventRunner<SourceBufferList>;
   void DispatchSimpleEvent(const char* aName);
   void QueueAsyncSimpleEvent(const char* aName);
