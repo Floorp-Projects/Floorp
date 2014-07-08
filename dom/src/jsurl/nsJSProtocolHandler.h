@@ -91,6 +91,8 @@ public:
     //NS_IMETHOD QueryInterface( const nsIID& aIID, void** aInstancePtr );
 
 protected:
+    virtual ~nsJSURI() {}
+
     virtual nsresult EqualsInternal(nsIURI* other,
                                     RefHandlingEnum refHandlingMode,
                                     bool* result) MOZ_OVERRIDE;

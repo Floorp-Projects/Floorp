@@ -29,7 +29,6 @@ public:
 
   PerformanceResourceTiming(nsPerformanceTiming* aPerformanceTiming,
                             nsPerformance* aPerformance);
-  virtual ~PerformanceResourceTiming();
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
@@ -123,6 +122,8 @@ public:
   }
 
 protected:
+  virtual ~PerformanceResourceTiming();
+
   nsString mInitiatorType;
   nsRefPtr<nsPerformanceTiming> mTiming;
 };

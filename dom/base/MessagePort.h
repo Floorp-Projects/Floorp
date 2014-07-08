@@ -62,7 +62,6 @@ public:
                                            DOMEventTargetHelper)
 
   MessagePort(nsPIDOMWindow* aWindow);
-  ~MessagePort();
 
   virtual JSObject*
   WrapObject(JSContext* aCx) MOZ_OVERRIDE;
@@ -96,6 +95,8 @@ public:
   Clone() MOZ_OVERRIDE;
 
 private:
+  ~MessagePort();
+
   // Dispatch events from the Message Queue using a nsRunnable.
   void Dispatch();
 
