@@ -60,11 +60,7 @@ startTest(function() {
     // Dial in
     .then(() => gRemoteDial(inNumber))
     .then(call => { inCall = call; })
-    // TODO - Bug 948860: should this be {RINGTONE, RINGTONE, RINGTONE}?
-    // From current UX spec, there is no chance that an user may enable speaker
-    // during alerting, so basically this 'set speaker enable' action can't
-    // happen in B2G.
-    .then(() => check(PHONE_STATE_RINGTONE, PHONE_STATE_NORMAL, PHONE_STATE_NORMAL))
+    .then(() => check(PHONE_STATE_RINGTONE, PHONE_STATE_RINGTONE, PHONE_STATE_RINGTONE))
     .then(() => gAnswer(inCall))
     .then(() => check(PHONE_STATE_IN_CALL, PHONE_STATE_IN_CALL))
     // Hang up all
