@@ -282,11 +282,10 @@ nsHTMLURIRefObject::SetNode(nsIDOMNode *aNode)
 
 nsresult NS_NewHTMLURIRefObject(nsIURIRefObject** aResult, nsIDOMNode* aNode)
 {
-  nsHTMLURIRefObject* refObject = new nsHTMLURIRefObject();
+  nsRefPtr<nsHTMLURIRefObject> refObject = new nsHTMLURIRefObject();
   nsresult rv = refObject->SetNode(aNode);
   if (NS_FAILED(rv)) {
     *aResult = 0;
-    delete refObject;
     return rv;
   }
   return refObject->QueryInterface(NS_GET_IID(nsIURIRefObject),
