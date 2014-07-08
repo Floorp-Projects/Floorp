@@ -485,7 +485,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     // this instruction.
     CodeOffsetLabel toggledCall(JitCode *target, bool enabled);
 
-    static size_t ToggledCallSize() {
+    static size_t ToggledCallSize(uint8_t *code) {
         // Four instructions used in: MacroAssemblerMIPSCompat::toggledCall
         return 4 * sizeof(uint32_t);
     }
