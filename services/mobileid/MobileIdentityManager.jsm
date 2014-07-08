@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [];
+this.EXPORTED_SYMBOLS = ["MobileIdentityManager"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
@@ -62,7 +62,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "iccProvider",
 #endif
 
 
-let MobileIdentityManager = {
+this.MobileIdentityManager = {
 
   init: function() {
     log.debug("MobileIdentityManager init");
@@ -106,11 +106,10 @@ let MobileIdentityManager = {
    ********************************************************/
 
   get iccInfo() {
-#ifdef MOZ_B2G_RIL
     if (this._iccInfo) {
       return this._iccInfo;
     }
-
+#ifdef MOZ_B2G_RIL
     this._iccInfo = [];
     for (let i = 0; i < gRil.numRadioInterfaces; i++) {
       let rilContext = gRil.getRadioInterface(i).rilContext;
@@ -258,7 +257,9 @@ let MobileIdentityManager = {
     // verification mechanisms for these SIM cards.
     // All this information will be stored in iccInfo.
     if (!this.iccInfo || !this.iccInfo.length) {
-      return Promise.resolve();
+      let deferred = Promise.defer();
+      deferred.resolve(null);
+      return deferred.promise;
     }
 
     let promises = [];
@@ -316,6 +317,25 @@ let MobileIdentityManager = {
       deferred.reject
     );
     return deferred.promise;
+  },
+
+  /*********************************************************
+   * Setters (for test only purposes)
+   ********************************************************/
+  set ui(aUi) {
+    this._ui = aUi;
+  },
+
+  set credStore(aCredStore) {
+    this._credStore = aCredStore;
+  },
+
+  set client(aClient) {
+    this._client = aClient;
+  },
+
+  set iccInfo(aIccInfo) {
+    this._iccInfo = aIccInfo;
   },
 
   /*********************************************************
@@ -546,7 +566,7 @@ let MobileIdentityManager = {
     .then(
       (result) => {
         if (!result ||
-            (!result.phoneNumber && !result.serviceId)) {
+            (!result.phoneNumber && (result.serviceId === undefined))) {
           return Promise.reject(ERROR_INTERNAL_INVALID_PROMPT_RESULT);
         }
 
@@ -556,7 +576,7 @@ let MobileIdentityManager = {
         // If the user selected one of the existing SIM cards we have to check
         // that we either have the MSISDN for that SIM or we can do a silent
         // verification that does not require us to have the MSISDN in advance.
-        if (result.serviceId) {
+        if (result.serviceId !== undefined) {
           let icc = this.iccInfo[result.serviceId];
           log.debug("icc ${}", icc);
           if (!icc || !icc.msisdn && !icc.canDoSilentVerification) {
@@ -760,7 +780,7 @@ let MobileIdentityManager = {
     // First of all we look if we already have credentials for this origin.
     // If we don't have credentials it means that it is the first time that
     // the caller requested an assertion.
-    return this.credStore.getByOrigin(aPrincipal.origin)
+    this.credStore.getByOrigin(aPrincipal.origin)
     .then(
       (creds) => {
         log.debug("creds ${creds} - ${origin}", { creds: creds,
@@ -841,7 +861,8 @@ let MobileIdentityManager = {
           );
           if (permission == Ci.nsIPermissionManager.ALLOW_ACTION) {
             return creds;
-          } else if (permission == Ci.nsIPermissionManager.DENY_ACTION) {
+          } else if (permission == Ci.nsIPermissionManager.DENY_ACTION ||
+                     permission == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
             return Promise.reject(ERROR_PERMISSION_DENIED);
           }
           return this.promptAndVerify(principal, manifestURL, creds);

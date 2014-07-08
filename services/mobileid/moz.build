@@ -6,6 +6,8 @@
 
 PARALLEL_DIRS += ['interfaces']
 
+TEST_DIRS += ['tests']
+
 EXTRA_JS_MODULES += [
     'MobileIdentityClient.jsm',
     'MobileIdentityCommon.jsm',
