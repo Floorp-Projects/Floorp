@@ -589,7 +589,7 @@ MediaEngineWebRTCAudioSource::Process(int channel,
       // Note: due to evil magic, the nsAutoPtr<AudioSegment>'s ownership transfers to
       // the Runnable (AutoPtr<> = AutoPtr<>)
       RUN_ON_THREAD(mThread, WrapRunnable(mSources[i], &SourceMediaStream::AppendToTrack,
-                                          mTrackID, segment, nullptr),
+                                          mTrackID, segment, (AudioSegment *) nullptr),
                     NS_DISPATCH_NORMAL);
     }
   }
