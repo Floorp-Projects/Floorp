@@ -124,7 +124,7 @@
 #define _EVENT_HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `issetugid' function. */
-#define _EVENT_HAVE_ISSETUGID 1
+/* #undef _EVENT_HAVE_ISSETUGID */
 
 /* Define to 1 if you have the `kqueue' function. */
 /* #undef _EVENT_HAVE_KQUEUE */

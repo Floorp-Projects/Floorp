@@ -1,0 +1,22 @@
+diff --git a/ipc/chromium/src/third_party/libevent/android/event2/event-config.h b/ipc/chromium/src/third_party/libevent/android/event2/event-config.h
+--- a/ipc/chromium/src/third_party/libevent/android/event2/event-config.h
++++ b/ipc/chromium/src/third_party/libevent/android/event2/event-config.h
+@@ -119,17 +119,17 @@
+ 
+ /* Define to 1 if you have the `inet_pton' function. */
+ #define _EVENT_HAVE_INET_PTON 1
+ 
+ /* Define to 1 if you have the <inttypes.h> header file. */
+ #define _EVENT_HAVE_INTTYPES_H 1
+ 
+ /* Define to 1 if you have the `issetugid' function. */
+-#define _EVENT_HAVE_ISSETUGID 1
++/* #undef _EVENT_HAVE_ISSETUGID */
+ 
+ /* Define to 1 if you have the `kqueue' function. */
+ /* #undef _EVENT_HAVE_KQUEUE */
+ 
+ /* Define if the system has zlib */
+ #define _EVENT_HAVE_LIBZ 1
+ 
+ /* Define to 1 if you have the <memory.h> header file. */
