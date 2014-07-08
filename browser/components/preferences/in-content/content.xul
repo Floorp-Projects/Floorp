@@ -139,11 +139,13 @@
                 label="&translateWebPages.label;." accesskey="&translateWebPages.accesskey;"
                 onsyncfrompreference="return gContentPane.updateButtons('translateButton',
                                               'browser.translation.detectLanguage');"/>
-      <label>Übersetzungen von</label>
+      <label>&translation.options.attribution.beforeLogo;</label>
       <separator orient="vertical" class="thin"/>
       <image id="translationAttributionImage" aria-label="Microsoft Translator"
              onclick="gContentPane.openTranslationProviderAttribution()"
              src="chrome://browser/content/microsoft-translator-attribution.png"/>
+      <separator orient="vertical" class="thin"/>
+      <label>&translation.options.attribution.afterLogo;</label>
     </hbox>
     <button id="translateButton" label="&translateExceptions.label;"
             oncommand="gContentPane.showTranslationExceptions();"
