@@ -28,8 +28,6 @@
 namespace mozilla {
 namespace layers {
 
-PRLogModuleInfo* gTilingLog;
-
 using namespace mozilla::gfx;
 
 void
@@ -161,9 +159,6 @@ ClientLayerManager::CreateThebesLayerWithHint(ThebesLayerCreationHint aHint)
       (AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_OPENGL ||
        AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D9 ||
        AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D11)) {
-    if (!gTilingLog) {
-      gTilingLog = PR_NewLogModule("tiling");
-    }
     if (gfxPrefs::LayersUseSimpleTiles()) {
       nsRefPtr<SimpleClientTiledThebesLayer> layer =
         new SimpleClientTiledThebesLayer(this, aHint);
