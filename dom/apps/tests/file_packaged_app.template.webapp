@@ -8,6 +8,7 @@
      "geolocation": {},
      "audio-capture": {},
      "video-capture": {},
+     "test-permission": {"access": "readonly"},
      "downloads": {}
    },
   "launch_path": "tests/dom/apps/tests/file_packaged_app.sjs",
