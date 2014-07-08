@@ -2149,6 +2149,24 @@ public:
    */
   static bool IsContentInsertionPoint(const nsIContent* aContent);
 
+  /**
+   * Returns whether a given header is forbidden for an XHR or fetch
+   * request.
+   */
+  static bool IsForbiddenRequestHeader(const nsACString& aHeader);
+
+  /**
+   * Returns whether a given header is forbidden for a system XHR
+   * request.
+   */
+  static bool IsForbiddenSystemRequestHeader(const nsACString& aHeader);
+
+  /**
+   * Returns whether a given header is forbidden for an XHR or fetch
+   * response.
+   */
+  static bool IsForbiddenResponseHeader(const nsACString& aHeader);
+
 private:
   static bool InitializeEventTable();
 
