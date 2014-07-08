@@ -43,8 +43,6 @@ public:
 
   void Init(const nsAString& aSessionId);
 
-  ~MediaKeySession();
-
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   // Mark this as resultNotAddRefed to return raw pointers
@@ -77,6 +75,8 @@ public:
   bool IsClosed() const;
 
 private:
+  ~MediaKeySession();
+
   nsRefPtr<Promise> mClosed;
 
   nsRefPtr<MediaKeyError> mMediaKeyError;
