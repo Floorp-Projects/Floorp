@@ -6,7 +6,10 @@
 
 DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
 
-include('android-services.mozbuild')
+include('background_junit3_sources.mozbuild')
+
+jar = add_java_jar('background-junit3')
+jar.sources += background_junit3_sources
 
 main = add_android_eclipse_project('BackgroundInstrumentationTests', OBJDIR + '/AndroidManifest.xml')
 main.package_name = 'org.mozilla.gecko.background.tests'
