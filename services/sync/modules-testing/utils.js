@@ -26,7 +26,7 @@ Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/browserid_identity.js");
-Cu.import("resource://testing-common/services-common/logging.js");
+Cu.import("resource://testing-common/services/common/logging.js");
 Cu.import("resource://testing-common/services/sync/fakeservices.js");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");

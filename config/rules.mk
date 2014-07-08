@@ -1280,28 +1280,6 @@ endif
 endif
 
 ################################################################################
-# Copy testing-only JS modules to appropriate destination.
-#
-# For each file defined in TESTING_JS_MODULES, copy it to
-# objdir/_tests/modules/. If TESTING_JS_MODULE_DIR is defined, that path
-# wlll be appended to the output directory.
-
-ifdef ENABLE_TESTS
-ifdef TESTING_JS_MODULES
-testmodulesdir = $(DEPTH)/_tests/modules/$(TESTING_JS_MODULE_DIR)
-
-GENERATED_DIRS += $(testmodulesdir)
-
-ifndef NO_DIST_INSTALL
-TESTING_JS_MODULES_FILES := $(TESTING_JS_MODULES)
-TESTING_JS_MODULES_DEST := $(testmodulesdir)
-INSTALL_TARGETS += TESTING_JS_MODULES
-endif
-
-endif
-endif
-
-################################################################################
 # SDK
 
 ifneq (,$(SDK_LIBRARY))
