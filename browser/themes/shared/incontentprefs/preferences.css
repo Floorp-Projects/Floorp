@@ -7,6 +7,7 @@
 
 #dialogBox,
 dialog,
+window,
 prefwindow,
 .windowDialog,
 page {
@@ -849,6 +850,13 @@ description > html|a {
 #dialogBox {
   border: 1px solid #666;
   display: -moz-box;
+  margin: 0;
+  padding-right: 6px;
+  padding-left: 6px;
+}
+
+#dialogTitle {
+  -moz-margin-start: 5px !important;
 }
 
 .close-icon {
@@ -867,8 +875,17 @@ description > html|a {
 
 #dialogFrame {
   /* Default dialog dimensions */
-  height: 30em;
-  width: 30em;
+  height: 20em;
+  width: 66ch;
+}
+
+/* needs to be removed with bug 1035625 */
+:-moz-any(dialog, window, prefwindow) resizer {
+  display: none;
+}
+
+tree:not(#rejectsTree) {
+  min-height: 15em;
 }
 
 /**

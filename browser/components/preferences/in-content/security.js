@@ -55,10 +55,8 @@ var gSecurityPane = {
       params.introText = bundlePrefs.getString("addonspermissionstext");
     }
 
-    openDialog("chrome://browser/content/preferences/permissions.xul",
-               "Browser:Permissions",
-               "modal=yes",
-               params);
+    gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
+                    null, params);
   },
 
   /**
@@ -109,10 +107,7 @@ var gSecurityPane = {
    */
   showPasswordExceptions: function ()
   {
-    openDialog("chrome://passwordmgr/content/passwordManagerExceptions.xul",
-               "Toolkit:PasswordManagerExceptions",
-               "modal=yes",
-               null);
+    gSubDialog.open("chrome://passwordmgr/content/passwordManagerExceptions.xul");
   },
 
   /**
@@ -191,12 +186,12 @@ var gSecurityPane = {
       promptService.alert(window,
                           bundle.getString("pw_change_failed_title"),
                           bundle.getString("pw_change2empty_in_fips_mode"));
+      this._initMasterPasswordUI();
     }
     else {
-      openDialog("chrome://mozapps/content/preferences/removemp.xul",
-                 "Toolkit:RemoveMasterPassword", "modal=yes", null);
+      gSubDialog.open("chrome://mozapps/content/preferences/removemp.xul",
+                      null, null, this._initMasterPasswordUI.bind(this));
     }
-    this._initMasterPasswordUI();
   },
 
   /**
@@ -204,9 +199,8 @@ var gSecurityPane = {
    */
   changeMasterPassword: function ()
   {
-    openDialog("chrome://mozapps/content/preferences/changemp.xul",
-               "Toolkit:ChangeMasterPassword", "modal=yes", null);
-    this._initMasterPasswordUI();
+    gSubDialog.open("chrome://mozapps/content/preferences/changemp.xul",
+                    null, null, this._initMasterPasswordUI.bind(this));
   },
 
   /**
@@ -215,9 +209,7 @@ var gSecurityPane = {
    */
   showPasswords: function ()
   {
-    openDialog("chrome://passwordmgr/content/passwordManager.xul",
-               "Toolkit:PasswordManager",
-               "modal=yes", null);
+    gSubDialog.open("chrome://passwordmgr/content/passwordManager.xul");
   }
 
 };
