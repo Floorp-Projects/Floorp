@@ -44,7 +44,6 @@ var gCSSFontFaceDescriptors = {
 			"local(Times New Roman)",
 			"local(\'Times New Roman\')",
 			"local(\"Times New Roman\")",
-			"local(serif)", /* is this valid? */
 			"local(\"serif\")",
 			"url(404.ttf) format(\"truetype\", \"unknown\"), local(Times New Roman), url(\'404.eot\')",
 		],
@@ -53,6 +52,7 @@ var gCSSFontFaceDescriptors = {
 			"url(404.ttf) format(\"truetype\" \"opentype\")",
 			"url(404.ttf) format(\"truetype\",)",
 			"local(\"Times New\" Roman)",
+			"local(serif)", /* is this valid? */
 		]
 	},
 	"unicode-range": {
