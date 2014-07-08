@@ -6620,8 +6620,8 @@ EvictTouchPoint(nsRefPtr<dom::Touch>& aTouch,
 static PLDHashOperator
 AppendToTouchList(const uint32_t& aKey, nsRefPtr<dom::Touch>& aData, void *aTouchList)
 {
-  nsTArray< nsRefPtr<dom::Touch> >* touches =
-    static_cast<nsTArray< nsRefPtr<dom::Touch> >*>(aTouchList);
+  WidgetTouchEvent::TouchArray* touches =
+    static_cast<WidgetTouchEvent::TouchArray*>(aTouchList);
   aData->mChanged = false;
   touches->AppendElement(aData);
   return PL_DHASH_NEXT;
@@ -6630,7 +6630,7 @@ AppendToTouchList(const uint32_t& aKey, nsRefPtr<dom::Touch>& aData, void *aTouc
 void
 PresShell::EvictTouches()
 {
-  nsTArray< nsRefPtr<dom::Touch> > touches;
+  WidgetTouchEvent::TouchArray touches;
   gCaptureTouchList->Enumerate(&AppendToTouchList, &touches);
   for (uint32_t i = 0; i < touches.Length(); ++i) {
     EvictTouchPoint(touches[i], mDocument);
@@ -7208,7 +7208,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       case NS_TOUCH_END: {
         // get the correct shell to dispatch to
         WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
-        nsTArray< nsRefPtr<dom::Touch> >& touches = touchEvent->touches;
+        WidgetTouchEvent::TouchArray& touches = touchEvent->touches;
         for (uint32_t i = 0; i < touches.Length(); ++i) {
           dom::Touch* touch = touches[i];
           if (!touch) {
@@ -7574,7 +7574,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
         // the start of a new touch session and evict any old touches in the
         // queue
         if (touchEvent->touches.Length() == 1) {
-          nsTArray< nsRefPtr<dom::Touch> > touches;
+          WidgetTouchEvent::TouchArray touches;
           gCaptureTouchList->Enumerate(&AppendToTouchList, (void *)&touches);
           for (uint32_t i = 0; i < touches.Length(); ++i) {
             EvictTouchPoint(touches[i]);
@@ -7598,7 +7598,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
         // Remove the changed touches
         // need to make sure we only remove touches that are ending here
         WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
-        nsTArray< nsRefPtr<dom::Touch> >& touches = touchEvent->touches;
+        WidgetTouchEvent::TouchArray& touches = touchEvent->touches;
         for (uint32_t i = 0; i < touches.Length(); ++i) {
           dom::Touch* touch = touches[i];
           if (!touch) {
@@ -7625,7 +7625,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
       case NS_TOUCH_MOVE: {
         // Check for touches that changed. Mark them add to queue
         WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
-        nsTArray< nsRefPtr<dom::Touch> >& touches = touchEvent->touches;
+        WidgetTouchEvent::TouchArray& touches = touchEvent->touches;
         bool haveChanged = false;
         for (int32_t i = touches.Length(); i; ) {
           --i;
