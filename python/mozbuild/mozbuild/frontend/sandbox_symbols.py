@@ -210,6 +210,18 @@ VARIABLES = {
         ``JS_MODULES_PATH`` defaults to ``modules`` if left undefined.
         """, 'libs'),
 
+    'TESTING_JS_MODULES': (HierarchicalStringList, list,
+        """JavaScript modules to install in the test-only destination.
+
+        Some JavaScript modules (JSMs) are test-only and not distributed
+        with Firefox. This variable defines them.
+
+        To install modules in a subdirectory, use properties of this
+        variable to control the final destination. e.g.
+
+        ``TESTING_JS_MODULES.foo += ['module.jsm']``.
+        """, 'libs'),
+
     'EXTRA_PP_COMPONENTS': (StrictOrderingOnAppendList, list,
         """Javascript XPCOM files.
 

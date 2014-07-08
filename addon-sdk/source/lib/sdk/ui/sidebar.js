@@ -33,6 +33,7 @@ const { isLocalURL } = require('../url');
 const { ensure } = require('../system/unload');
 const { identify } = require('./id');
 const { uuid } = require('../util/uuid');
+const { viewFor } = require('../view/core');
 
 const sidebarNS = ns();
 
@@ -239,12 +240,8 @@ const Sidebar = Class({
     updateURL(this, v);
     modelFor(this).url = v;
   },
-  show: function() {
-    return showSidebar(null, this);
-  },
-  hide: function() {
-    return hideSidebar(null, this);
-  },
+  show: function(window) showSidebar(viewFor(window), this),
+  hide: function(window) hideSidebar(viewFor(window), this),
   dispose: function() {
     const internals = sidebarNS(this);
 

@@ -274,7 +274,6 @@
 
   <string name="contextmenu_open_new_tab">&contextmenu_open_new_tab;</string>
   <string name="contextmenu_open_private_tab">&contextmenu_open_private_tab;</string>
-  <string name="contextmenu_open_in_reader">&contextmenu_open_in_reader;</string>
   <string name="contextmenu_remove">&contextmenu_remove;</string>
   <string name="contextmenu_add_to_launcher">&contextmenu_add_to_launcher;</string>
   <string name="contextmenu_share">&contextmenu_share;</string>

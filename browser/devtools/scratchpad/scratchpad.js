@@ -1613,7 +1613,6 @@ var Scratchpad = {
     this.editor.appendTo(editorElement).then(() => {
       var lines = initialText.split("\n");
 
-      this.editor.setupAutoCompletion();
       this.editor.on("change", this._onChanged);
       this._onPaste = WebConsoleUtils.pasteHandlerGen(this.editor.container.contentDocument.body,
                                                       document.querySelector('#scratchpad-notificationbox'));
@@ -2323,6 +2322,12 @@ var CloseObserver = {
 
   uninit: function CO_uninit()
   {
+    // Will throw exception if removeObserver is called twice.
+    if (this._uninited) {
+      return;
+    }
+
+    this._uninited = true;
     Services.obs.removeObserver(this, "browser-lastwindow-close-requested",
                                 false);
   },
