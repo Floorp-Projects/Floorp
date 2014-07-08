@@ -429,6 +429,22 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "Fail cleanly when NSS refuses to generate a key pair",
+  function() {
+    var that = this;
+    var alg = {
+      name: "RSAES-PKCS1-v1_5",
+      modulusLength: 2299, // NSS does not like this key length
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+    };
+
+    crypto.subtle.generateKey(alg, false, ["encrypt"])
+      .then( error(that), complete(that) );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "SHA-256 digest",
   function() {
     var that = this;
