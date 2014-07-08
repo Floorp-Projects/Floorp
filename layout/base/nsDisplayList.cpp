@@ -652,6 +652,11 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     if (nsLayoutUtils::GetCriticalDisplayPort(content, &dp)) {
       metrics.mCriticalDisplayPort = CSSRect::FromAppUnits(dp);
     }
+    DisplayPortMarginsPropertyData* marginsData =
+        static_cast<DisplayPortMarginsPropertyData*>(content->GetProperty(nsGkAtoms::DisplayPortMargins));
+    if (marginsData) {
+      metrics.SetDisplayPortMargins(marginsData->mMargins);
+    }
   }
 
   nsIScrollableFrame* scrollableFrame = nullptr;
