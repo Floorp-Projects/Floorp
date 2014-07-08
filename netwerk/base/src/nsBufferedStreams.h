@@ -71,7 +71,6 @@ public:
     NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
     nsBufferedInputStream() : nsBufferedStream() {}
-    virtual ~nsBufferedInputStream() {}
 
     static nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
@@ -81,6 +80,8 @@ public:
     }
 
 protected:
+    virtual ~nsBufferedInputStream() {}
+
     NS_IMETHOD Fill();
     NS_IMETHOD Flush() { return NS_OK; } // no-op for input streams
 };
@@ -100,7 +101,6 @@ public:
     NS_DECL_NSISTREAMBUFFERACCESS
 
     nsBufferedOutputStream() : nsBufferedStream() {}
-    virtual ~nsBufferedOutputStream() { nsBufferedOutputStream::Close(); }
 
     static nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
@@ -110,6 +110,8 @@ public:
     }
 
 protected:
+    virtual ~nsBufferedOutputStream() { nsBufferedOutputStream::Close(); }
+
     NS_IMETHOD Fill() { return NS_OK; } // no-op for output streams
 
     nsCOMPtr<nsISafeOutputStream> mSafeStream; // QI'd from mStream
