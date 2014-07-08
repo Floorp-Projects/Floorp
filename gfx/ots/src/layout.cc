@@ -55,27 +55,27 @@ bool ParseLangSysTable(const ots::OpenTypeFile *file,
   if (!subtable->ReadU16(&offset_lookup_order) ||
       !subtable->ReadU16(&req_feature_index) ||
       !subtable->ReadU16(&feature_count)) {
-    return OTS_FAILURE_MSG("Failed to read langsys header for table %4s", (char *)&tag);
+    return OTS_FAILURE_MSG("Failed to read langsys header for tag %4.4s", (char *)&tag);
   }
   // |offset_lookup_order| is reserved and should be NULL.
   if (offset_lookup_order != 0) {
-    return OTS_FAILURE_MSG("Bad lookup offset order %d in table %4s", offset_lookup_order, (char *)&tag);
+    return OTS_FAILURE_MSG("Bad lookup offset order %d for langsys tag %4.4s", offset_lookup_order, (char *)&tag);
   }
   if (req_feature_index != kNoRequiredFeatureIndexDefined &&
       req_feature_index >= num_features) {
-    return OTS_FAILURE_MSG("Bad required features index %d in table %4s", req_feature_index, (char *)&tag);
+    return OTS_FAILURE_MSG("Bad required features index %d for langsys tag %4.4s", req_feature_index, (char *)&tag);
   }
   if (feature_count > num_features) {
-    return OTS_FAILURE_MSG("Bad feature count %d in table %4s", feature_count, (char *)&tag);
+    return OTS_FAILURE_MSG("Bad feature count %d for langsys tag %4.4s", feature_count, (char *)&tag);
   }
 
   for (unsigned i = 0; i < feature_count; ++i) {
     uint16_t feature_index = 0;
     if (!subtable->ReadU16(&feature_index)) {
-      return OTS_FAILURE_MSG("Failed to read feature index %d in table %4s", i, (char *)&tag);
+      return OTS_FAILURE_MSG("Failed to read feature index %d for langsys tag %4.4s", i, (char *)&tag);
     }
     if (feature_index >= num_features) {
-      return OTS_FAILURE_MSG("Bad feature index %d for feature %d in table %4s", feature_index, i, (char *)&tag);
+      return OTS_FAILURE_MSG("Bad feature index %d for feature %d for langsys tag %4.4s", feature_index, i, (char *)&tag);
     }
   }
   return true;
@@ -90,20 +90,20 @@ bool ParseScriptTable(const ots::OpenTypeFile *file,
   uint16_t lang_sys_count = 0;
   if (!subtable.ReadU16(&offset_default_lang_sys) ||
       !subtable.ReadU16(&lang_sys_count)) {
-    return OTS_FAILURE_MSG("Failed to read script header for table %4s", (char *)&tag);
+    return OTS_FAILURE_MSG("Failed to read script header for script tag %4.4s", (char *)&tag);
   }
 
   // The spec requires a script table for 'DFLT' tag must contain non-NULL
   // |offset_default_lang_sys| and |lang_sys_count| == 0
   if (tag == kScriptTableTagDflt &&
       (offset_default_lang_sys == 0 || lang_sys_count != 0)) {
-    return OTS_FAILURE_MSG("DFLT table doesn't satisfy the spec. in table %4s", (char *)&tag);
+    return OTS_FAILURE_MSG("DFLT table doesn't satisfy the spec. for script tag %4.4s", (char *)&tag);
   }
 
   const unsigned lang_sys_record_end =
       6 * static_cast<unsigned>(lang_sys_count) + 4;
   if (lang_sys_record_end > std::numeric_limits<uint16_t>::max()) {
-    return OTS_FAILURE_MSG("Bad end of langsys record %d in table %4s", lang_sys_record_end, (char *)&tag);
+    return OTS_FAILURE_MSG("Bad end of langsys record %d for script tag %4.4s", lang_sys_record_end, (char *)&tag);
   }
 
   std::vector<LangSysRecord> lang_sys_records;
@@ -112,11 +112,11 @@ bool ParseScriptTable(const ots::OpenTypeFile *file,
   for (unsigned i = 0; i < lang_sys_count; ++i) {
     if (!subtable.ReadU32(&lang_sys_records[i].tag) ||
         !subtable.ReadU16(&lang_sys_records[i].offset)) {
-      return OTS_FAILURE_MSG("Failed to read langsys record header %d for table %4s", i, (char *)&tag);
+      return OTS_FAILURE_MSG("Failed to read langsys record header %d for script tag %4.4s", i, (char *)&tag);
     }
     // The record array must store the records alphabetically by tag
     if (last_tag != 0 && last_tag > lang_sys_records[i].tag) {
-      return OTS_FAILURE_MSG("Bad last tag %d for langsys record %d in table %4s", last_tag, i, (char *)&tag);
+      return OTS_FAILURE_MSG("Bad last tag %d for langsys record %d for script tag %4.4s", last_tag, i, (char *)&tag);
     }
     if (lang_sys_records[i].offset < lang_sys_record_end ||
         lang_sys_records[i].offset >= length) {
@@ -130,7 +130,7 @@ bool ParseScriptTable(const ots::OpenTypeFile *file,
   for (unsigned i = 0; i < lang_sys_count; ++i) {
     subtable.set_offset(lang_sys_records[i].offset);
     if (!ParseLangSysTable(file, &subtable, lang_sys_records[i].tag, num_features)) {
-      return OTS_FAILURE_MSG("Failed to parse langsys table %d (%4s) in table %4s", i, (char *)&lang_sys_records[i].tag, (char *)&tag);
+      return OTS_FAILURE_MSG("Failed to parse langsys table %d (%4.4s) for script tag %4.4s", i, (char *)&lang_sys_records[i].tag, (char *)&tag);
     }
   }
 
@@ -158,7 +158,7 @@ bool ParseFeatureTable(const ots::OpenTypeFile *file,
   if (offset_feature_params != 0 &&
       (offset_feature_params < feature_table_end ||
        offset_feature_params >= length)) {
-    return OTS_FAILURE_MSG("Badd feature parames offset %d", offset_feature_params);
+    return OTS_FAILURE_MSG("Bad feature params offset %d", offset_feature_params);
   }
 
   for (unsigned i = 0; i < lookup_count; ++i) {
@@ -1228,7 +1228,7 @@ bool ParseScriptListTable(const ots::OpenTypeFile *file,
     }
     last_tag = record.tag;
     if (record.offset < script_record_end || record.offset >= length) {
-      return OTS_FAILURE_MSG("Bad record offset %d for script %4s entry %d in script list table", record.offset, (char *)&record.tag, i);
+      return OTS_FAILURE_MSG("Bad record offset %d for script %4.4s entry %d in script list table", record.offset, (char *)&record.tag, i);
     }
     script_list.push_back(record);
   }
@@ -1284,7 +1284,7 @@ bool ParseFeatureListTable(const ots::OpenTypeFile *file,
     last_tag = feature_records[i].tag;
     if (feature_records[i].offset < feature_record_end ||
         feature_records[i].offset >= length) {
-      return OTS_FAILURE_MSG("Bad feature offset %d for feature %d %4s", feature_records[i].offset, i, (char *)&feature_records[i].tag);
+      return OTS_FAILURE_MSG("Bad feature offset %d for feature %d %4.4s", feature_records[i].offset, i, (char *)&feature_records[i].tag);
     }
   }
 
