@@ -394,11 +394,6 @@ MozInputContext.prototype = {
       return;
     }
 
-    // Update context first before resolving promise to avoid race condition
-    if (json.selectioninfo) {
-      this.updateSelectionContext(json.selectioninfo);
-    }
-
     switch (msg.name) {
       case "Keyboard:SendKey:Result:OK":
         resolver.resolve();
