@@ -1736,6 +1736,33 @@ sdp_result_e sdp_find_attr_list (sdp_t *sdp_p, u16 level, u8 cap_num,
     return (SDP_SUCCESS);
 }
 
+/* Find fmtp inst_num with correct payload value or -1 for failure */
+int sdp_find_fmtp_inst (sdp_t *sdp_p, u16 level, u16 payload_num)
+{
+    u16          attr_count=0;
+    sdp_mca_t   *mca_p;
+    sdp_mca_t   *cap_p;
+    sdp_attr_t  *attr_p;
+
+    /* Attr is at a media level */
+    mca_p = sdp_find_media_level(sdp_p, level);
+    if (mca_p == NULL) {
+      return (-1);
+    }
+    for (attr_p = mca_p->media_attrs_p; attr_p != NULL;
+         attr_p = attr_p->next_p) {
+      if (attr_p->type == SDP_ATTR_FMTP) {
+        attr_count++;
+        if (attr_p->attr.fmtp.payload_num == payload_num) {
+          return (attr_count);
+        }
+      }
+    }
+
+    return (-1);
+
+}
+
 /* Function:    sdp_find_attr
  * Description: Find the specified attribute in an SDP structure.
  *              Note: This is not an API for the application but an internal
@@ -12628,4 +12655,3 @@ sdp_attr_set_extmap(void *sdp_ptr, u16 level, u16 id, const char* uri, u16 inst)
     sstrncpy(attr_p->attr.extmap.uri, uri, SDP_MAX_STRING_LEN+1);
     return (SDP_SUCCESS);
 }
-
