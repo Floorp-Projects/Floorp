@@ -5,7 +5,7 @@
 
 // Testing that the gcli 'inspect' command works as it should.
 
-const TEST_URI = TEST_URL_ROOT + "browser_inspector_cmd_inspect.html";
+const TEST_URI = TEST_URL_ROOT + "doc_inspector_gcli-inspect-command.html";
 
 let test = asyncTest(function* () {
   return helpers.addTabWithToolbar(TEST_URI, function(options) {
