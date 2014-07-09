@@ -3118,10 +3118,37 @@ static inline gfxSize RoundToFloatPrecision(const gfxSize& aSize)
   return gfxSize(float(aSize.width), float(aSize.height));
 }
 
+static void RestrictScaleToMaxLayerSize(gfxSize& aScale,
+                                        const nsRect& aVisibleRect,
+                                        nsIFrame* aContainerFrame,
+                                        Layer* aContainerLayer)
+{
+  if (!aContainerLayer->Manager()->IsWidgetLayerManager()) {
+    return;
+  }
+
+  nsIntRect pixelSize =
+    aVisibleRect.ScaleToOutsidePixels(aScale.width, aScale.height,
+                                      aContainerFrame->PresContext()->AppUnitsPerDevPixel());
+
+  int32_t maxLayerSize = aContainerLayer->GetMaxLayerSize();
+
+  if (pixelSize.width > maxLayerSize) {
+    float scale = (float)pixelSize.width / maxLayerSize;
+    scale = gfxUtils::ClampToScaleFactor(scale);
+    aScale.width /= scale;
+  }
+  if (pixelSize.height > maxLayerSize) {
+    float scale = (float)pixelSize.height / maxLayerSize;
+    scale = gfxUtils::ClampToScaleFactor(scale);
+    aScale.height /= scale;
+  }
+}
 static bool
 ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
                            nsDisplayListBuilder* aDisplayListBuilder,
                            nsIFrame* aContainerFrame,
+                           const nsRect& aVisibleRect,
                            const gfx3DMatrix* aTransform,
                            const ContainerLayerParameters& aIncomingScale,
                            ContainerLayer* aLayer,
@@ -3212,6 +3239,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
     if (fabs(scale.width) < 1e-8 || fabs(scale.height) < 1e-8) {
       scale = gfxSize(1.0, 1.0);
     }
+    RestrictScaleToMaxLayerSize(scale, aVisibleRect, aContainerFrame, aLayer);
   } else {
     scale = gfxSize(1.0, 1.0);
   }
@@ -3349,8 +3377,8 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   }
 
   ContainerLayerParameters scaleParameters;
-  if (!ChooseScaleAndSetTransform(this, aBuilder, aContainerFrame, aTransform, aParameters,
-                                  containerLayer, state, scaleParameters)) {
+  if (!ChooseScaleAndSetTransform(this, aBuilder, aContainerFrame, aChildren.GetVisibleRect(),
+                                  aTransform, aParameters, containerLayer, state, scaleParameters)) {
     return nullptr;
   }
 
