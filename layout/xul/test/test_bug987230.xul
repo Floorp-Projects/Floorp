@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=987230
+-->
+<window title="Mozilla Bug 987230"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="SimpleTest.waitForFocus(nextTest, window)">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=987230"
+     target="_blank">Mozilla Bug 987230</a>
+  </body>
+
+  <vbox>
+    <toolbar>
+      <toolbarbutton id="toolbarbutton-anchor"
+                     label="Anchor"
+                     consumeanchor="toolbarbutton-anchor"
+                     onclick="onAnchorClick(event)"
+                     style="padding: 50px !important; list-style-image: url(chrome://branding/content/icon32.png)"/>
+    </toolbar>
+    <spacer flex="1"/>
+    <hbox id="hbox-anchor"
+          style="padding: 20px"
+          onclick="onAnchorClick(event)">
+      <hbox id="inner-anchor"
+        consumeanchor="hbox-anchor"
+        >
+        Another anchor
+      </hbox>
+    </hbox>
+    <spacer flex="1"/>
+  </vbox>
+
+  <panel id="mypopup"
+         type="arrow"
+         onpopupshown="onMyPopupShown(event)"
+         onpopuphidden="onMyPopupHidden(event)">This is a test popup</panel>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 987230 **/
+  SimpleTest.waitForExplicitFinish();
+
+  const Ci = Components.interfaces;
+  const Cc = Components.classes;
+
+  let platform = navigator.platform.toLowerCase();
+  let isWindows = platform.startsWith("win");
+  let mouseDown = isWindows ? 2 : 1;
+  let mouseUp = isWindows ? 4 : 2;
+  let mouseMove = isWindows ? 1 : 5;
+  let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindowUtils);
+  let scale = utils.screenPixelsPerCSSPixel;
+
+
+  function synthesizeNativeMouseClick(aElement, aOffsetX, aOffsetY) {
+    let rect = aElement.getBoundingClientRect();
+    let win = aElement.ownerDocument.defaultView;
+    let x = aOffsetX + win.mozInnerScreenX + rect.left;
+    let y = aOffsetY + win.mozInnerScreenY + rect.top;
+
+    utils.sendNativeMouseEvent(x * scale, y * scale, mouseDown, 0, null);
+    utils.sendNativeMouseEvent(x * scale, y * scale, mouseUp, 0, null);
+  }
+
+  function onMyPopupHidden(e) {
+    ok(true, "Popup hidden");
+    if (outerAnchor.id == "toolbarbutton-anchor") {
+      popupHasShown = false;
+      outerAnchor = document.getElementById("hbox-anchor");
+      anchor = document.getElementById("inner-anchor");
+      nextTest();
+    } else {
+      //XXXgijs set mouse position back outside the iframe:
+      let frameRect = window.frameElement.getBoundingClientRect();
+      let outsideOfFrameX = (window.mozInnerScreenX + frameRect.width + 100) * scale;
+      let outsideOfFrameY = Math.max(0, window.mozInnerScreenY - 100) * scale;
+
+      utils.sendNativeMouseEvent(outsideOfFrameX, outsideOfFrameY, mouseMove, 0, null);
+      SimpleTest.finish();
+    }
+  }
+
+  let popupHasShown = false;
+  function onMyPopupShown(e) {
+    popupHasShown = true;
+    synthesizeNativeMouseClick(outerAnchor, 5, 5);
+  }
+
+  function onAnchorClick(e) {
+    info("click: " + e.target.id);
+    ok(!popupHasShown, "Popup should only be shown once");
+    popup.openPopup(anchor, "bottomcenter topright");
+  }
+
+  let popup = document.getElementById("mypopup");
+  let outerAnchor = document.getElementById("toolbarbutton-anchor");
+  let anchor = document.getAnonymousElementByAttribute(outerAnchor, "class", "toolbarbutton-icon");
+
+  function nextTest(e) {
+    synthesizeMouse(outerAnchor, 5, 5, {});
+  }
+
+  ]]>
+  </script>
+</window>
