@@ -3666,7 +3666,7 @@ HandlingUserInputHelper::Destruct()
   return NS_OK;
 }
 
-}
+} // unnamed namespace
 
 NS_IMETHODIMP
 nsDOMWindowUtils::SetHandlingUserInput(bool aHandlingUserInput,
