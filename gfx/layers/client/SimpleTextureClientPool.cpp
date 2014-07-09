@@ -64,7 +64,6 @@ SimpleTextureClientPool::GetTextureClient(bool aAutoRecycle)
   RefPtr<TextureClient> textureClient;
   if (mAvailableTextureClients.size()) {
     textureClient = mAvailableTextureClients.top();
-    textureClient->WaitForBufferOwnership();
     mAvailableTextureClients.pop();
     RECYCLE_LOG("%s Skip allocate (%i left), returning %p\n", (mFormat == SurfaceFormat::B8G8R8A8?"poolA":"poolX"), mAvailableTextureClients.size(), textureClient.get());
 
