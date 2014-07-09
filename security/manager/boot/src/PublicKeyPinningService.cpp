@@ -168,10 +168,10 @@ CheckPinsForHostname(const CERTCertList *certList, const char *hostname,
     PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
            ("pkpin: Querying pinsets for host: '%s'\n", evalHost));
     foundEntry = (TransportSecurityPreload *)bsearch(evalHost,
-                                      kPublicKeyPinningPreloadList,
-                                      kPublicKeyPinningPreloadListLength,
-                                      sizeof(TransportSecurityPreload),
-                                      TransportSecurityPreloadCompare);
+      kPublicKeyPinningPreloadList,
+      sizeof(kPublicKeyPinningPreloadList) / sizeof(TransportSecurityPreload),
+      sizeof(TransportSecurityPreload),
+      TransportSecurityPreloadCompare);
     if (foundEntry) {
       PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
              ("pkpin: Found pinset for host: '%s'\n", evalHost));
