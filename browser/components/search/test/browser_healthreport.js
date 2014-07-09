@@ -6,6 +6,7 @@
 function test() {
   requestLongerTimeout(2);
   waitForExplicitFinish();
+  resetPreferences();
 
   try {
     let cm = Components.classes["@mozilla.org/categorymanager;1"]
@@ -101,3 +102,10 @@ function test() {
 
 }
 
+function resetPreferences() {
+  let service = Components.classes["@mozilla.org/datareporting/service;1"]
+                                  .getService(Components.interfaces.nsISupports)
+                                  .wrappedJSObject;
+  service.policy._prefs.resetBranch("datareporting.policy.");
+  service.policy.dataSubmissionPolicyBypassNotification = true;
+}
