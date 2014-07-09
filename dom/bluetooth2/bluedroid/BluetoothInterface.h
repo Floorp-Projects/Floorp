@@ -230,11 +230,12 @@ class BluetoothInterface
 public:
   static BluetoothInterface* GetInstance();
 
-  int  Init(bt_callbacks_t* aCallbacks);
-  void Cleanup();
+  void Init(bt_callbacks_t* aCallbacks, BluetoothResultHandler* aRes);
+  void Cleanup(BluetoothResultHandler* aRes);
 
-  int Enable();
-  int Disable();
+  void Enable(BluetoothResultHandler* aRes);
+  void Disable(BluetoothResultHandler* aRes);
+
 
   /* Adapter Properties */
 
