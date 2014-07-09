@@ -613,24 +613,45 @@ BluetoothInterface::SetAdapterProperty(const bt_property_t* aProperty,
 
 /* Remote Device Properties */
 
-int
-BluetoothInterface::GetRemoteDeviceProperties(bt_bdaddr_t *aRemoteAddr)
+void
+BluetoothInterface::GetRemoteDeviceProperties(bt_bdaddr_t *aRemoteAddr,
+                                              BluetoothResultHandler* aRes)
 {
-  return mInterface->get_remote_device_properties(aRemoteAddr);
+  int status = mInterface->get_remote_device_properties(aRemoteAddr);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::GetRemoteDeviceProperties,
+                            status);
+  }
 }
 
-int
+void
 BluetoothInterface::GetRemoteDeviceProperty(bt_bdaddr_t* aRemoteAddr,
-                                            bt_property_type_t aType)
+                                            bt_property_type_t aType,
+                                            BluetoothResultHandler* aRes)
 {
-  return mInterface->get_remote_device_property(aRemoteAddr, aType);
+  int status = mInterface->get_remote_device_property(aRemoteAddr, aType);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::GetRemoteDeviceProperty,
+                            status);
+  }
 }
 
-int
+void
 BluetoothInterface::SetRemoteDeviceProperty(bt_bdaddr_t* aRemoteAddr,
-                                            const bt_property_t* aProperty)
+                                            const bt_property_t* aProperty,
+                                            BluetoothResultHandler* aRes)
 {
-  return mInterface->set_remote_device_property(aRemoteAddr, aProperty);
+  int status = mInterface->set_remote_device_property(aRemoteAddr, aProperty);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::SetRemoteDeviceProperty,
+                            status);
+  }
 }
 
 /* Remote Services */

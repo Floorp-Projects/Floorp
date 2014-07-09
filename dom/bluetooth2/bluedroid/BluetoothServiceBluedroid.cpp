@@ -57,6 +57,7 @@ static InfallibleTArray<nsString> sAdapterBondedAddressArray;
 // Static variables below should only be used on *main thread*
 static BluetoothInterface* sBtInterface;
 static nsTArray<nsRefPtr<BluetoothProfileController> > sControllerArray;
+static InfallibleTArray<BluetoothNamedValue> sRemoteDevicesPack;
 static nsTArray<int> sRequestedDeviceCountArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sChangeAdapterStateRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sChangeDiscoveryRunnableArray;
@@ -490,8 +491,6 @@ public:
       BT_WARNING("Failed to dispatch to main thread!");
       return NS_OK;
     }
-
-    static InfallibleTArray<BluetoothNamedValue> sRemoteDevicesPack;
 
     // Use address as the index
     sRemoteDevicesPack.AppendElement(
@@ -1079,6 +1078,39 @@ BluetoothServiceBluedroid::GetAdaptersInternal(
   return NS_OK;
 }
 
+class GetRemoteDevicePropertiesResultHandler MOZ_FINAL
+: public BluetoothResultHandler
+{
+public:
+  GetRemoteDevicePropertiesResultHandler(const nsAString& aDeviceAddress)
+  : mDeviceAddress(aDeviceAddress)
+  { }
+
+  void OnError(int aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    BT_WARNING("GetRemoteDeviceProperties(%s) failed: %d",
+               NS_ConvertUTF16toUTF8(mDeviceAddress).get(), aStatus);
+
+    /* dispatch result after final pending operation */
+    if (--sRequestedDeviceCountArray[0] == 0) {
+      if (!sGetDeviceRunnableArray.IsEmpty()) {
+        DispatchBluetoothReply(
+          sGetDeviceRunnableArray[0], sRemoteDevicesPack,
+          NS_LITERAL_STRING("GetRemoteDeviceProperties failed"));
+        sGetDeviceRunnableArray.RemoveElementAt(0);
+      }
+
+      sRequestedDeviceCountArray.RemoveElementAt(0);
+      sRemoteDevicesPack.Clear();
+    }
+  }
+
+private:
+  nsString mDeviceAddress;
+};
+
 nsresult
 BluetoothServiceBluedroid::GetConnectedDevicePropertiesInternal(
   uint16_t aServiceUuid, BluetoothReplyRunnable* aRunnable)
@@ -1110,21 +1142,17 @@ BluetoothServiceBluedroid::GetConnectedDevicePropertiesInternal(
     return NS_OK;
   }
 
+  sRequestedDeviceCountArray.AppendElement(requestedDeviceCount);
+  sGetDeviceRunnableArray.AppendElement(aRunnable);
+
   for (int i = 0; i < requestedDeviceCount; i++) {
     // Retrieve all properties of devices
     bt_bdaddr_t addressType;
     StringToBdAddressType(deviceAddresses[i], &addressType);
 
-    int ret = sBtInterface->GetRemoteDeviceProperties(&addressType);
-    if (ret != BT_STATUS_SUCCESS) {
-      DispatchBluetoothReply(aRunnable, BluetoothValue(true),
-                             NS_LITERAL_STRING("GetConnectedDeviceFailed"));
-      return NS_OK;
-    }
+    sBtInterface->GetRemoteDeviceProperties(&addressType,
+      new GetRemoteDevicePropertiesResultHandler(deviceAddresses[i]));
   }
-
-  sRequestedDeviceCountArray.AppendElement(requestedDeviceCount);
-  sGetDeviceRunnableArray.AppendElement(aRunnable);
 
   return NS_OK;
 }
@@ -1144,20 +1172,17 @@ BluetoothServiceBluedroid::GetPairedDevicePropertiesInternal(
     return NS_OK;
   }
 
+  sRequestedDeviceCountArray.AppendElement(requestedDeviceCount);
+  sGetDeviceRunnableArray.AppendElement(aRunnable);
+
   for (int i = 0; i < requestedDeviceCount; i++) {
     // Retrieve all properties of devices
     bt_bdaddr_t addressType;
     StringToBdAddressType(aDeviceAddress[i], &addressType);
-    int ret = sBtInterface->GetRemoteDeviceProperties(&addressType);
-    if (ret != BT_STATUS_SUCCESS) {
-      DispatchBluetoothReply(aRunnable, BluetoothValue(true),
-                             NS_LITERAL_STRING("GetPairedDeviceFailed"));
-      return NS_OK;
-    }
-  }
 
-  sRequestedDeviceCountArray.AppendElement(requestedDeviceCount);
-  sGetDeviceRunnableArray.AppendElement(aRunnable);
+    sBtInterface->GetRemoteDeviceProperties(&addressType,
+      new GetRemoteDevicePropertiesResultHandler(aDeviceAddress[i]));
+  }
 
   return NS_OK;
 }
