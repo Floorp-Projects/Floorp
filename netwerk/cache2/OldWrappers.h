@@ -70,9 +70,11 @@ public:
                 nsILoadContextInfo* aLoadInfo,
                 bool aWriteToDisk,
                 uint32_t aFlags);
-  virtual ~_OldCacheLoad();
 
   nsresult Start();
+
+protected:
+  virtual ~_OldCacheLoad();
 
 private:
   void Check();

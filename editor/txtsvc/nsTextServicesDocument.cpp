@@ -1979,37 +1979,21 @@ nsTextServicesDocument::DidJoinNodes(nsIDOMNode  *aLeftNode,
 nsresult
 nsTextServicesDocument::CreateContentIterator(nsIDOMRange *aRange, nsIContentIterator **aIterator)
 {
-  nsresult result;
-
   NS_ENSURE_TRUE(aRange && aIterator, NS_ERROR_NULL_POINTER);
 
-  *aIterator = 0;
+  *aIterator = nullptr;
 
   // Create a nsFilteredContentIterator
-  // This class wraps the ContentIterator in order to give itself a chance 
+  // This class wraps the ContentIterator in order to give itself a chance
   // to filter out certain content nodes
-  nsFilteredContentIterator* filter = new nsFilteredContentIterator(mTxtSvcFilter);
-  *aIterator = static_cast<nsIContentIterator *>(filter);
-  if (*aIterator) {
-    NS_IF_ADDREF(*aIterator);
-    result = filter ? NS_OK : NS_ERROR_FAILURE;
-  } else {
-    delete filter;
-    result = NS_ERROR_FAILURE;
-  }
-  NS_ENSURE_SUCCESS(result, result);
+  nsRefPtr<nsFilteredContentIterator> filter = new nsFilteredContentIterator(mTxtSvcFilter);
 
-  NS_ENSURE_TRUE(*aIterator, NS_ERROR_NULL_POINTER);
-
-  result = (*aIterator)->Init(aRange);
-
-  if (NS_FAILED(result))
-  {
-    NS_RELEASE((*aIterator));
-    *aIterator = 0;
+  nsresult result = filter->Init(aRange);
+  if (NS_FAILED(result)) {
     return result;
   }
 
+  filter.forget(aIterator);
   return NS_OK;
 }
 

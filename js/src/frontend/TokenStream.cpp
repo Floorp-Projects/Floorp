@@ -1748,7 +1748,7 @@ bool TokenStream::getStringOrTemplateToken(int qc, Token **tp)
                 }
                 if (c == '\r') {
                     c = '\n';
-                    if (peekChar() == '\n')
+                    if (userbuf.peekRawChar() == '\n')
                         skipChars(1);
                 }
             } else if (qc == '`' && c == '$') {

@@ -449,8 +449,8 @@ class Marionette(object):
                  profile=None, emulator=None, sdcard=None, emulator_img=None,
                  emulator_binary=None, emulator_res=None, connect_to_running_emulator=False,
                  gecko_log=None, homedir=None, baseurl=None, no_window=False, logdir=None,
-                 busybox=None, symbols_path=None, timeout=None, device_serial=None,
-                 adb_path=None):
+                 busybox=None, symbols_path=None, timeout=None, socket_timeout=360,
+                 device_serial=None, adb_path=None):
         self.host = host
         self.port = self.local_port = port
         self.bin = bin
@@ -464,6 +464,7 @@ class Marionette(object):
         self.no_window = no_window
         self._test_name = None
         self.timeout = timeout
+        self.socket_timeout=socket_timeout
         self.device_serial = device_serial
 
         if bin:
@@ -520,7 +521,7 @@ class Marionette(object):
             self.port = self.emulator.setup_port_forwarding(self.port)
             assert(self.emulator.wait_for_port(self.port)), "Timed out waiting for port!"
 
-        self.client = MarionetteTransport(self.host, self.port)
+        self.client = MarionetteTransport(self.host, self.port, self.socket_timeout)
 
         if emulator:
             if busybox:

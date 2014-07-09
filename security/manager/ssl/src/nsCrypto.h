@@ -50,7 +50,6 @@ class nsCrypto: public mozilla::dom::Crypto
 {
 public:
   nsCrypto();
-  virtual ~nsCrypto();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -87,6 +86,9 @@ public:
                         nsAString& aReturn) MOZ_OVERRIDE;
 
   virtual void Logout(mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+
+protected:
+  virtual ~nsCrypto();
 
 private:
   static already_AddRefed<nsIPrincipal> GetScriptPrincipal(JSContext *cx);

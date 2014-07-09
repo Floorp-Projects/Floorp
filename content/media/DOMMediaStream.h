@@ -289,7 +289,6 @@ class DOMLocalMediaStream : public DOMMediaStream,
 {
 public:
   DOMLocalMediaStream() {}
-  virtual ~DOMLocalMediaStream();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -308,6 +307,9 @@ public:
    */
   static already_AddRefed<DOMLocalMediaStream>
   CreateTrackUnionStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents = 0);
+
+protected:
+  virtual ~DOMLocalMediaStream();
 };
 
 class DOMAudioNodeMediaStream : public DOMMediaStream
@@ -315,7 +317,6 @@ class DOMAudioNodeMediaStream : public DOMMediaStream
   typedef dom::AudioNode AudioNode;
 public:
   DOMAudioNodeMediaStream(AudioNode* aNode);
-  ~DOMAudioNodeMediaStream();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream)
@@ -327,6 +328,9 @@ public:
   CreateTrackUnionStream(nsIDOMWindow* aWindow,
                          AudioNode* aNode,
                          TrackTypeHints aHintContents = 0);
+
+protected:
+  ~DOMAudioNodeMediaStream();
 
 private:
   // If this object wraps a stream owned by an AudioNode, we need to ensure that

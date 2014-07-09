@@ -65,9 +65,10 @@ public:
               const bool& aForceSave,
               const OptionalURIParams& aReferrer,
               PBrowserParent* aBrowser);
-    virtual ~ExternalHelperAppParent();
 
 protected:
+  virtual ~ExternalHelperAppParent();
+
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
   void Delete();
 

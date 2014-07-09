@@ -36,6 +36,9 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
+protected:
+  virtual ~ChannelSplitterNode();
+
 private:
   const uint16_t mOutputCount;
 };

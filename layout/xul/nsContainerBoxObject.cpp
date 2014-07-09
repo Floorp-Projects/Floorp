@@ -26,6 +26,8 @@ class nsContainerBoxObject : public nsBoxObject,
                              public nsIEditorBoxObject,
                              public nsIIFrameBoxObject
 {
+protected:
+  virtual ~nsContainerBoxObject() {}
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICONTAINERBOXOBJECT

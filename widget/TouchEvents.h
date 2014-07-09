@@ -155,6 +155,8 @@ public:
 class WidgetTouchEvent : public WidgetInputEvent
 {
 public:
+  typedef nsTArray<nsRefPtr<mozilla::dom::Touch>> TouchArray;
+
   virtual WidgetTouchEvent* AsTouchEvent() MOZ_OVERRIDE { return this; }
 
   WidgetTouchEvent()
@@ -196,7 +198,7 @@ public:
     return result;
   }
 
-  nsTArray<nsRefPtr<mozilla::dom::Touch>> touches;
+  TouchArray touches;
 
   void AssignTouchEventData(const WidgetTouchEvent& aEvent, bool aCopyTargets)
   {

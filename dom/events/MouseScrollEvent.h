@@ -50,6 +50,9 @@ public:
                                aCtrlKey, aAltKey, aShiftKey, aMetaKey, aButton,
                                aRelatedTarget, aAxis);
   }
+
+protected:
+  ~MouseScrollEvent() {}
 };
 
 } // namespace dom

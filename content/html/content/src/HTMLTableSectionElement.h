@@ -74,6 +74,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(HTMLTableSectionElement,
                                                      nsGenericHTMLElement)
 protected:
+  virtual ~HTMLTableSectionElement();
+
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
   nsRefPtr<nsContentList> mRows;

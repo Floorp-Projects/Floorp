@@ -18,10 +18,7 @@ class nsIDOMRange;
 class nsINode;
 class nsITextServicesFilter;
 
-/**
- * 
- */
-class nsFilteredContentIterator : public nsIContentIterator
+class nsFilteredContentIterator MOZ_FINAL : public nsIContentIterator
 {
 public:
 
@@ -30,8 +27,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsFilteredContentIterator)
 
   nsFilteredContentIterator(nsITextServicesFilter* aFilter);
-
-  virtual ~nsFilteredContentIterator();
 
   /* nsIContentIterator */
   virtual nsresult Init(nsINode* aRoot);
@@ -50,6 +45,8 @@ public:
 
 protected:
   nsFilteredContentIterator() { }
+
+  virtual ~nsFilteredContentIterator();
 
   // enum to give us the direction
   typedef enum {eDirNotSet, eForward, eBackward} eDirectionType;
@@ -73,13 +70,5 @@ protected:
   bool                            mIsOutOfRange;
   eDirectionType                  mDirection;
 };
-
-namespace mozilla {
-template<>
-struct HasDangerousPublicDestructor<nsFilteredContentIterator>
-{
-  static const bool value = true;
-};
-}
 
 #endif

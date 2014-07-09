@@ -91,7 +91,6 @@ public:
     NS_IMETHOD GetRequestMethod(nsACString& aMethod);
 
     nsHttpChannel();
-    virtual ~nsHttpChannel();
 
     virtual nsresult Init(nsIURI *aURI, uint32_t aCaps, nsProxyInfo *aProxyInfo,
                           uint32_t aProxyResolveFlags,
@@ -187,6 +186,9 @@ public: /* internal necko use only */
       nsHttpChannel* mChannel;
       uint32_t mKeep : 2;
     };
+
+protected:
+    virtual ~nsHttpChannel();
 
 private:
     typedef nsresult (nsHttpChannel::*nsContinueRedirectionFunc)(nsresult result);

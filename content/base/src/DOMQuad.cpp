@@ -138,6 +138,8 @@ public:
   }
 
 protected:
+  virtual ~QuadBounds() {}
+
   nsRefPtr<DOMQuad> mQuad;
 };
 

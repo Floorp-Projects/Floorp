@@ -87,13 +87,15 @@ class XPCShellRunner(MozbuildObject):
                            debuggerInteractive=debuggerInteractive,
                            rerun_failures=rerun_failures)
             return
+        elif test_paths:
+            test_paths = [self._wrap_path_argument(p).relpath() for p in test_paths]
 
         if test_objects:
             tests = test_objects
         else:
             resolver = self._spawn(TestResolver)
             tests = list(resolver.resolve_tests(paths=test_paths,
-                flavor='xpcshell', cwd=self.cwd))
+                flavor='xpcshell'))
 
         if not tests:
             raise InvalidTestPathError('We could not find an xpcshell test '

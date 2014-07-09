@@ -54,11 +54,6 @@ public:
     MOZ_COUNT_CTOR(ArchiveZipFileImpl);
   }
 
-  virtual ~ArchiveZipFileImpl()
-  {
-    MOZ_COUNT_DTOR(ArchiveZipFileImpl);
-  }
-
   // Overrides:
   virtual nsresult GetInternalStream(nsIInputStream**) MOZ_OVERRIDE;
 
@@ -71,6 +66,11 @@ public:
   }
 
 protected:
+  virtual ~ArchiveZipFileImpl()
+  {
+    MOZ_COUNT_DTOR(ArchiveZipFileImpl);
+  }
+
   virtual already_AddRefed<nsIDOMBlob> CreateSlice(uint64_t aStart,
                                                    uint64_t aLength,
                                                    const nsAString& aContentType) MOZ_OVERRIDE;

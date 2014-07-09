@@ -20,7 +20,7 @@
 
 #include "mozilla/Observer.h"
 #include "mozilla/dom/ScreenOrientation.h"
-#include "mozilla/Scoped.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 class ProcessOrientation;
@@ -59,7 +59,7 @@ public:
 private:
   bool mAutoOrientationEnabled;
   uint32_t mAllowedOrientations;
-  mozilla::ScopedDeletePtr<mozilla::ProcessOrientation> mOrientation;
+  mozilla::UniquePtr<mozilla::ProcessOrientation> mOrientation;
 
   static const uint32_t sDefaultOrientations =
       mozilla::dom::eScreenOrientation_PortraitPrimary |

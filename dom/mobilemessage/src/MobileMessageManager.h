@@ -126,6 +126,8 @@ public:
   IMPL_EVENT_HANDLER(readerror)
 
 private:
+  ~MobileMessageManager() {}
+
   /**
    * Internal Send() method used to send one message.
    */
