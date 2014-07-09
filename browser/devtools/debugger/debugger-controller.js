@@ -10,7 +10,6 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
 const NEW_SOURCE_IGNORED_URLS = ["debugger eval code", "self-hosted", "XStringBundle"];
 const NEW_SOURCE_DISPLAY_DELAY = 200; // ms
-const EDITOR_BREAKPOINTS_UPDATE_DELAY = 200; // ms
 const FETCH_SOURCE_RESPONSE_DELAY = 200; // ms
 const FETCH_EVENT_LISTENERS_DELAY = 200; // ms
 const FRAME_STEP_CLEAR_DELAY = 100; // ms
@@ -1174,9 +1173,7 @@ SourceScripts.prototype = {
     // If there are any stored breakpoints for this source, display them again,
     // both in the editor and the breakpoints pane.
     DebuggerController.Breakpoints.updatePaneBreakpoints();
-    setNamedTimeout("update-editor-bp", EDITOR_BREAKPOINTS_UPDATE_DELAY, () => {
-      DebuggerController.Breakpoints.updateEditorBreakpoints();
-    });
+    DebuggerController.Breakpoints.updateEditorBreakpoints();
 
     // Make sure the events listeners are up to date.
     if (DebuggerView.instrumentsPaneTab == "events-tab") {
@@ -1867,7 +1864,7 @@ Breakpoints.prototype = {
 
       // Update the view only if the breakpoint is in the currently shown source.
       if (currentSourceUrl == breakpointUrl) {
-        this._showBreakpoint(breakpointClient, { noPaneUpdate: true });
+        yield this._showBreakpoint(breakpointClient, { noPaneUpdate: true });
       }
     }
   }),
@@ -1886,7 +1883,7 @@ Breakpoints.prototype = {
 
       // Update the view only if the breakpoint exists in a known source.
       if (container.containsValue(breakpointUrl)) {
-        this._showBreakpoint(breakpointClient, { noEditorUpdate: true });
+        yield this._showBreakpoint(breakpointClient, { noEditorUpdate: true });
       }
     }
   }),
@@ -1979,7 +1976,7 @@ Breakpoints.prototype = {
       aBreakpointClient.text = DebuggerView.editor.getText(line).trim();
 
       // Show the breakpoint in the editor and breakpoints pane, and resolve.
-      this._showBreakpoint(aBreakpointClient, aOptions);
+      yield this._showBreakpoint(aBreakpointClient, aOptions);
 
       // Notify that we've added a breakpoint.
       window.emit(EVENTS.BREAKPOINT_ADDED, aBreakpointClient);
@@ -2131,13 +2128,14 @@ Breakpoints.prototype = {
    *        @see DebuggerController.Breakpoints.addBreakpoint
    */
   _showBreakpoint: function(aBreakpointData, aOptions = {}) {
+    let tasks = [];
     let currentSourceUrl = DebuggerView.Sources.selectedValue;
     let location = aBreakpointData.location;
 
     // Update the editor if required.
     if (!aOptions.noEditorUpdate && !aBreakpointData.disabled) {
       if (location.url == currentSourceUrl) {
-        DebuggerView.editor.addBreakpoint(location.line - 1);
+        tasks.push(DebuggerView.editor.addBreakpoint(location.line - 1));
       }
     }
 
@@ -2145,6 +2143,8 @@ Breakpoints.prototype = {
     if (!aOptions.noPaneUpdate) {
       DebuggerView.Sources.addBreakpoint(aBreakpointData, aOptions);
     }
+
+    return promise.all(tasks);
   },
 
   /**
