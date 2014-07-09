@@ -427,7 +427,7 @@ let PageStyleHandler = {
   },
 
   get markupDocumentViewer() {
-    return docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+    return docShell.contentViewer;
   },
 
   // Called synchronously via CPOW from the parent.

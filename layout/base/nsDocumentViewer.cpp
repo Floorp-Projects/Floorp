@@ -50,7 +50,6 @@
 #include "nsIContentViewerFile.h"
 #include "mozilla/CSSStyleSheet.h"
 #include "mozilla/css/Loader.h"
-#include "nsIMarkupDocumentViewer.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsDocShell.h"
@@ -221,7 +220,6 @@ private:
 class nsDocumentViewer : public nsIContentViewer,
                            public nsIContentViewerEdit,
                            public nsIContentViewerFile,
-                           public nsIMarkupDocumentViewer,
                            public nsIDocumentViewerPrint
 
 #ifdef NS_PRINTING
@@ -250,16 +248,12 @@ public:
   // nsIContentViewerFile
   NS_DECL_NSICONTENTVIEWERFILE
 
-  // nsIMarkupDocumentViewer
-  NS_DECL_NSIMARKUPDOCUMENTVIEWER
-
 #ifdef NS_PRINTING
   // nsIWebBrowserPrint
   NS_DECL_NSIWEBBROWSERPRINT
 #endif
 
-  typedef void (*CallChildFunc)(nsIMarkupDocumentViewer* aViewer,
-                                void* aClosure);
+  typedef void (*CallChildFunc)(nsIContentViewer* aViewer, void* aClosure);
   void CallChildren(CallChildFunc aFunc, void* aClosure);
 
   // nsIDocumentViewerPrint Printing Methods
@@ -518,7 +512,6 @@ NS_IMPL_RELEASE(nsDocumentViewer)
 
 NS_INTERFACE_MAP_BEGIN(nsDocumentViewer)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewer)
-    NS_INTERFACE_MAP_ENTRY(nsIMarkupDocumentViewer)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewerFile)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewerEdit)
     NS_INTERFACE_MAP_ENTRY(nsIDocumentViewerPrint)
@@ -2765,10 +2758,6 @@ nsDocumentViewer::GetPrintable(bool *aPrintable)
   return NS_OK;
 }
 
-//*****************************************************************************
-// nsIMarkupDocumentViewer
-//*****************************************************************************
-
 NS_IMETHODIMP nsDocumentViewer::ScrollToNode(nsIDOMNode* aNode)
 {
   NS_ENSURE_ARG(aNode);
@@ -2815,10 +2804,7 @@ nsDocumentViewer::CallChildren(CallChildFunc aFunc, void* aClosure)
         childAsShell->GetContentViewer(getter_AddRefs(childCV));
         if (childCV)
         {
-          nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
-          if (markupCV) {
-            (*aFunc)(markupCV, aClosure);
-          }
+          (*aFunc)(childCV, aClosure);
         }
       }
     }
@@ -2831,7 +2817,7 @@ struct LineBoxInfo
 };
 
 static void
-ChangeChildPaintingEnabled(nsIMarkupDocumentViewer* aChild, void* aClosure)
+ChangeChildPaintingEnabled(nsIContentViewer* aChild, void* aClosure)
 {
   bool* enablePainting = (bool*) aClosure;
   if (*enablePainting) {
@@ -2842,7 +2828,7 @@ ChangeChildPaintingEnabled(nsIMarkupDocumentViewer* aChild, void* aClosure)
 }
 
 static void
-ChangeChildMaxLineBoxWidth(nsIMarkupDocumentViewer* aChild, void* aClosure)
+ChangeChildMaxLineBoxWidth(nsIContentViewer* aChild, void* aClosure)
 {
   struct LineBoxInfo* lbi = (struct LineBoxInfo*) aClosure;
   aChild->ChangeMaxLineBoxWidth(lbi->mMaxLineBoxWidth);
@@ -2854,22 +2840,20 @@ struct ZoomInfo
 };
 
 static void
-SetChildTextZoom(nsIMarkupDocumentViewer* aChild, void* aClosure)
+SetChildTextZoom(nsIContentViewer* aChild, void* aClosure)
 {
   struct ZoomInfo* ZoomInfo = (struct ZoomInfo*) aClosure;
   aChild->SetTextZoom(ZoomInfo->mZoom);
 }
 
 static void
-SetChildMinFontSize(nsIMarkupDocumentViewer* aChild, void* aClosure)
+SetChildMinFontSize(nsIContentViewer* aChild, void* aClosure)
 {
-  nsCOMPtr<nsIMarkupDocumentViewer> branch =
-    do_QueryInterface(aChild);
-  branch->SetMinFontSize(NS_PTR_TO_INT32(aClosure));
+  aChild->SetMinFontSize(NS_PTR_TO_INT32(aClosure));
 }
 
 static void
-SetChildFullZoom(nsIMarkupDocumentViewer* aChild, void* aClosure)
+SetChildFullZoom(nsIContentViewer* aChild, void* aClosure)
 {
   struct ZoomInfo* ZoomInfo = (struct ZoomInfo*) aClosure;
   aChild->SetFullZoom(ZoomInfo->mZoom);
@@ -3083,7 +3067,7 @@ nsDocumentViewer::GetFullZoom(float* aFullZoom)
 }
 
 static void
-SetChildAuthorStyleDisabled(nsIMarkupDocumentViewer* aChild, void* aClosure)
+SetChildAuthorStyleDisabled(nsIContentViewer* aChild, void* aClosure)
 {
   bool styleDisabled  = *static_cast<bool*>(aClosure);
   aChild->SetAuthorStyleDisabled(styleDisabled);
@@ -3127,7 +3111,7 @@ ExtResourceEmulateMedium(nsIDocument* aDocument, void* aClosure)
 }
 
 static void
-ChildEmulateMedium(nsIMarkupDocumentViewer* aChild, void* aClosure)
+ChildEmulateMedium(nsIContentViewer* aChild, void* aClosure)
 {
   const nsAString* mediaType = static_cast<nsAString*>(aClosure);
   aChild->EmulateMedium(*mediaType);
@@ -3164,7 +3148,7 @@ ExtResourceStopEmulatingMedium(nsIDocument* aDocument, void* aClosure)
 }
 
 static void
-ChildStopEmulatingMedium(nsIMarkupDocumentViewer* aChild, void* aClosure)
+ChildStopEmulatingMedium(nsIContentViewer* aChild, void* aClosure)
 {
   aChild->StopEmulatingMedium();
 }
@@ -3192,7 +3176,7 @@ NS_IMETHODIMP nsDocumentViewer::GetForceCharacterSet(nsACString& aForceCharacter
 }
 
 static void
-SetChildForceCharacterSet(nsIMarkupDocumentViewer* aChild, void* aClosure)
+SetChildForceCharacterSet(nsIContentViewer* aChild, void* aClosure)
 {
   const nsACString* charset = static_cast<nsACString*>(aClosure);
   aChild->SetForceCharacterSet(*charset);
@@ -3229,7 +3213,7 @@ NS_IMETHODIMP nsDocumentViewer::GetHintCharacterSetSource(int32_t *aHintCharacte
 }
 
 static void
-SetChildHintCharacterSetSource(nsIMarkupDocumentViewer* aChild, void* aClosure)
+SetChildHintCharacterSetSource(nsIContentViewer* aChild, void* aClosure)
 {
   aChild->SetHintCharacterSetSource(NS_PTR_TO_INT32(aClosure));
 }
@@ -3245,7 +3229,7 @@ nsDocumentViewer::SetHintCharacterSetSource(int32_t aHintCharacterSetSource)
 }
 
 static void
-SetChildHintCharacterSet(nsIMarkupDocumentViewer* aChild, void* aClosure)
+SetChildHintCharacterSet(nsIContentViewer* aChild, void* aClosure)
 {
   const nsACString* charset = static_cast<nsACString*>(aClosure);
   aChild->SetHintCharacterSet(*charset);
@@ -3261,14 +3245,14 @@ nsDocumentViewer::SetHintCharacterSet(const nsACString& aHintCharacterSet)
 }
 
 static void
-AppendChildSubtree(nsIMarkupDocumentViewer* aChild, void* aClosure)
+AppendChildSubtree(nsIContentViewer* aChild, void* aClosure)
 {
-  nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> >& array =
-    *static_cast<nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> >*>(aClosure);
+  nsTArray<nsCOMPtr<nsIContentViewer> >& array =
+    *static_cast<nsTArray<nsCOMPtr<nsIContentViewer> >*>(aClosure);
   aChild->AppendSubtree(array);
 }
 
-NS_IMETHODIMP nsDocumentViewer::AppendSubtree(nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> >& aArray)
+NS_IMETHODIMP nsDocumentViewer::AppendSubtree(nsTArray<nsCOMPtr<nsIContentViewer> >& aArray)
 {
   aArray.AppendElement(this);
   CallChildren(AppendChildSubtree, &aArray);

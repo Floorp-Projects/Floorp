@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=396367
     function getdocviewer() {
       var navigator1 = top.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebNavigation);
       var docShell = navigator1.QueryInterface(Components.interfaces.nsIDocShell);
-      var docviewer = docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+      var docviewer = docShell.contentViewer;
       return docviewer;
     }
   </script>

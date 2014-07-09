@@ -7,7 +7,7 @@ function doe() {
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var navigator1 = top.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebNavigation);
 var docShell = navigator1.QueryInterface(Components.interfaces.nsIDocShell);
-var docviewer = docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+var docviewer = docShell.contentViewer;
 docviewer.textZoom=i;
 i=i+0.2;
 if (i>10)

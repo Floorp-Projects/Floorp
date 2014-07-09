@@ -24,7 +24,6 @@
 class nsIEditor;
 class nsIParser;
 class nsIURI;
-class nsIMarkupDocumentViewer;
 class nsIDocShell;
 class nsICachingChannel;
 class nsIWyciwygChannel;
@@ -300,10 +299,10 @@ protected:
 
   static uint32_t gWyciwygSessionCnt;
 
-  static void TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,
+  static void TryHintCharset(nsIContentViewer* aContentViewer,
                              int32_t& aCharsetSource,
                              nsACString& aCharset);
-  void TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
+  void TryUserForcedCharset(nsIContentViewer* aCv,
                             nsIDocShell*  aDocShell,
                             int32_t& aCharsetSource,
                             nsACString& aCharset);

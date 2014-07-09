@@ -45,7 +45,7 @@ let PageStyleInternal = {
     });
 
     let markupDocumentViewer =
-      docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+      docShell.contentViewer;
 
     if (markupDocumentViewer.authorStyleDisabled) {
       result = result || {};
@@ -68,7 +68,7 @@ let PageStyleInternal = {
     let disabled = pageStyle == NO_STYLE;
 
     let markupDocumentViewer =
-      docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+      docShell.contentViewer;
     markupDocumentViewer.authorStyleDisabled = disabled;
 
     for (let [frame, data] of frameList) {
@@ -101,7 +101,7 @@ let PageStyleInternal = {
   restoreTree: function (docShell, data) {
     let disabled = data.disabled || false;
     let markupDocumentViewer =
-      docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+      docShell.contentViewer;
     markupDocumentViewer.authorStyleDisabled = disabled;
 
     function restoreFrame(root, data) {

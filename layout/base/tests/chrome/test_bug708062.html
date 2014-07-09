@@ -30,7 +30,7 @@ function doTest() {
 
   var navigator1 = f.contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebNavigation);
   var docShell = navigator1.QueryInterface(Components.interfaces.nsIDocShell);
-  var docviewer = docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+  var docviewer = docShell.contentViewer;
 
   var d = f.contentDocument.getElementById('d');
 
