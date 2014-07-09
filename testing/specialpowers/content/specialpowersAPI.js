@@ -72,10 +72,6 @@ function wrapIfUnwrapped(x) {
   return isWrapper(x) ? x : wrapPrivileged(x);
 }
 
-function isXrayWrapper(x) {
-  return Cu.isXrayWrapper(x);
-}
-
 function isObjectOrArray(obj) {
   if (Object(obj) !== obj)
     return false;
@@ -250,6 +246,13 @@ SpecialPowersHandler.prototype.doGetPropertyDescriptor = function(name, own) {
   // Note that we have several cases here, each of which requires special handling.
   //
   var desc;
+  function isWrappedNativeXray(o) {
+    if (!Cu.isXrayWrapper(o))
+      return false;
+    var proto = Object.getPrototypeOf(o);
+    return /XPC_WN/.test(Cu.getClassName(o, /* unwrap = */ true)) ||
+           (proto && /XPC_WN/.test(Cu.getClassName(proto, /* unwrap = */ true)));
+  }
 
   // Case 1: Own Properties.
   //
@@ -257,22 +260,21 @@ SpecialPowersHandler.prototype.doGetPropertyDescriptor = function(name, own) {
   if (own)
     desc = callGetOwnPropertyDescriptor(obj, name);
 
-  // Case 2: Not own, not Xray-wrapped.
+  // Case 2: Not own, meaningful prototype.
   //
   // Here, we can just crawl the prototype chain, calling
   // Object.getOwnPropertyDescriptor until we find what we want.
   //
   // NB: Make sure to check this.wrappedObject here, rather than obj, because
   // we may have waived Xray on obj above.
-  else if (!isXrayWrapper(this.wrappedObject))
+  else if (!isWrappedNativeXray(this.wrappedObject))
     desc = crawlProtoChain(obj, function(o) {return callGetOwnPropertyDescriptor(o, name);});
 
-  // Case 3: Not own, Xray-wrapped.
+  // Case 3: Not own, no meaningful prototype. This corresponds to old-style
+  // XPCWrappedNative XrayWrappers.
   //
-  // This one is harder, because we Xray wrappers are flattened and don't have
-  // a prototype. Xray wrappers are proxies themselves, so we'd love to just call
-  // through to XrayWrapper<Base>::getPropertyDescriptor(). Unfortunately though,
-  // we don't have any way to do that. :-(
+  // This one is harder, because we these XrayWrappers are flattened and don't have
+  // a prototype.
   //
   // So we first try with a call to getOwnPropertyDescriptor(). If that fails,
   // we make up a descriptor, using some assumptions about what kinds of things
