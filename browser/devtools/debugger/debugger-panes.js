@@ -147,7 +147,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     contents.setAttribute("tooltiptext", unicodeUrl);
 
     // Append a source item to this container.
-    this.push([contents, fullUrl], {
+    const item = this.push([contents, fullUrl], {
       staged: aOptions.staged, /* stage the item to be appended later? */
       attachment: {
         label: label,
@@ -157,6 +157,11 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
         source: aSource
       }
     });
+
+    // If source is blackboxed, apply appropriate style
+    if (gThreadClient.source(aSource).isBlackBoxed) {
+      item.target.classList.add("black-boxed");
+    }
   },
 
   /**
