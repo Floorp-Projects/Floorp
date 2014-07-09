@@ -330,6 +330,54 @@ function testReceiving_GSM_ServiceCategory() {
     .then((aMessage) => verifyCBMessage(aMessage));
 }
 
+function testReceiving_GSM_PaddingCharacters() {
+  log("Test receiving GSM Cell Broadcast - Padding Characters <CR>");
+
+  let promise = Promise.resolve();
+
+  let testContents = [
+    { pdu:
+        // CB PDU with GSM 7bit encoded text of
+        // "The quick brown fox jumps over the lazy dog
+        //  \r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r
+        //  \r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r
+        //  \r\r\r\r\r\r\r\r"
+        "C0020001011154741914AFA7C76B9058" +
+        "FEBEBB41E6371EA4AEB7E173D0DB5E96" +
+        "83E8E832881DD6E741E4F7B9D168341A" +
+        "8D46A3D168341A8D46A3D168341A8D46" +
+        "A3D168341A8D46A3D168341A8D46A3D1" +
+        "68341A8D46A3D100",
+      text:
+        "The quick brown fox jumps over the lazy dog"
+    },
+    { pdu:
+        // CB PDU with UCS2 encoded text of
+        // "The quick brown fox jumps over\r\r\r\r\r\r\r\r\r\r\r"
+        "C0020001481100540068006500200071" +
+        "007500690063006b002000620072006f" +
+        "0077006e00200066006f00780020006a" +
+        "0075006d007000730020006f00760065" +
+        "0072000D000D000D000D000D000D000D" +
+        "000D000D000D000D",
+      text:
+        "The quick brown fox jumps over"
+    }
+  ];
+
+  let verifyCBMessage = (aMessage, aText) => {
+    is(aMessage.body, aText, "aMessage.body");
+  };
+
+  testContents.forEach(function(aTestContent) {
+    promise = promise
+      .then(() => sendMultipleRawCbsToEmulatorAndWait([aTestContent.pdu]))
+      .then((aMessage) => verifyCBMessage(aMessage, aTestContent.text));
+  });
+
+  return promise;
+}
+
 startTestCommon(function testCaseMain() {
   return testReceiving_GSM_MessageAttributes()
     .then(() => testReceiving_GSM_GeographicalScope())
@@ -341,5 +389,6 @@ startTestCommon(function testCaseMain() {
     .then(() => testReceiving_GSM_EmergencyUserAlert())
     .then(() => testReceiving_GSM_Popup())
     .then(() => testReceiving_GSM_Multipart())
-    .then(() => testReceiving_GSM_ServiceCategory());
+    .then(() => testReceiving_GSM_ServiceCategory())
+    .then(() => testReceiving_GSM_PaddingCharacters());
 });

@@ -259,6 +259,11 @@ GrallocTextureSourceOGL::SetCompositableBackendSpecificData(CompositableBackendS
 
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl()->fBindTexture(textureTarget, tex);
+
+  // Setup texure parameters at the first binding.
+  gl()->fTexParameteri(textureTarget, LOCAL_GL_TEXTURE_WRAP_T, GetWrapMode());
+  gl()->fTexParameteri(textureTarget, LOCAL_GL_TEXTURE_WRAP_S, GetWrapMode());
+
   // create new EGLImage
   mEGLImage = EGLImageCreateFromNativeBuffer(gl(), mGraphicBuffer->getNativeBuffer());
   BindEGLImage();
