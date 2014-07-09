@@ -23,7 +23,8 @@
          always be visible and must not move or resize when the indicator
          state changes, otherwise the panel could change its position or lose
          its arrow unexpectedly. -->
-    <stack id="downloads-indicator-anchor" class="toolbarbutton-icon">
+    <stack id="downloads-indicator-anchor" class="toolbarbutton-icon"
+           consumeanchor="downloads-button">
       <vbox id="downloads-indicator-progress-area" pack="center">
         <description id="downloads-indicator-counter"/>
         <progressmeter id="downloads-indicator-progress" class="plain"

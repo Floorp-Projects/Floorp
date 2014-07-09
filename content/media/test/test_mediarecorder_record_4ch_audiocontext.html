@@ -21,6 +21,7 @@ function startTest() {
 
   var source = context.createBufferSource();
   source.buffer = buffer;
+  source.loop = true;
   var dest = context.createMediaStreamDestination();
   var stopTriggered = false;
   var onstopTriggered = false;

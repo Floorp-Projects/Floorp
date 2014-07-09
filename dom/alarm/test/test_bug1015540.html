@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test data Paramter of Alarm API for Bug 1015540</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1015540">Bug 1015540</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+  <script type="application/javascript">
+
+  "use strict";
+
+  // Verify passing a cross-origin object for the data paramter
+  function testCrossOriginObject() {
+    var tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    var data = document.getElementById('ifr').contentWindow;
+
+    try {
+      navigator.mozAlarms.add(tomorrow, "honorTimezone", data);
+      ok(false, "Adding alarms for cross-origin objects should be prohibited.");
+    } catch (e) {
+      ok(true, "Adding alarms for cross-origin objects is prohibited.");
+    }
+
+    SimpleTest.finish();
+  }
+
+  function startTests() {
+    SpecialPowers.pushPrefEnv({
+      "set": [["dom.mozAlarms.enabled", true]]
+    }, function() {
+   	  SpecialPowers.addPermission("alarms", true, document);
+      var isAllowedToTest = true;
+
+      if (navigator.appVersion.indexOf("Android") !== -1) {
+        ok(true, "mozAlarms is not allowed on Android for now. " +
+                 "TODO Bug 863557.");
+        isAllowedToTest = false;
+      } else if (SpecialPowers.wrap(document).nodePrincipal.appStatus ==
+                 SpecialPowers.Ci.nsIPrincipal.APP_STATUS_NOT_INSTALLED) {
+        ok(true, "mozAlarms is not allowed for non-installed apps. " +
+                 "TODO Bug 876981.");
+        isAllowedToTest = false;
+      }
+
+      if (isAllowedToTest) {
+        ok(true, "Start to test...");
+        testCrossOriginObject();
+      } else {
+        // A sanity check to make sure we must run tests on Firefox OS (B2G).
+        if (navigator.userAgent.indexOf("Mobile") != -1 &&
+            navigator.appVersion.indexOf("Android") == -1) {
+          ok(false, "Should run the test on Firefox OS (B2G)!");
+        }
+
+        SimpleTest.finish();
+      }
+    });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  </script>
+</pre>
+<iframe id="ifr" onload="startTests()" src="http://example.org/tests/dom/alarm/test/file_empty.html"></iframe>
+</body>
+</html>

@@ -756,13 +756,7 @@ File.prototype = {
   },
 
   /**
-   * Set the file's access permissions.  Without any options, the
-   * permissions are set to an approximation of what they would have
-   * been if the file had been created in its current directory in the
-   * "most typical" fashion for the operating system.  In the current
-   * implementation, this means that on Unix-like systems (including
-   * Android, B2G, etc) we set the POSIX file mode to (0666 & ~umask),
-   * and on Windows, we do nothing.
+   * Set the file's access permissions.  This does nothing on Windows.
    *
    * This operation is likely to fail if applied to a file that was
    * not created by the currently running program (more precisely,
@@ -770,12 +764,16 @@ File.prototype = {
    * user account).  It may also fail, or silently do nothing, if the
    * filesystem containing the file does not support access permissions.
    *
-   * @param {*=} options
-   * - {number} unixMode     If present, the POSIX file mode is set to exactly
-   *                         this value, unless |unixHonorUmask| is also
-   *                         present.
-   * - {bool} unixHonorUmask If true, any |unixMode| value is modified by the
-   *                         process umask, as open() would have done.
+   * @param {*=} options Object specifying the requested permissions:
+   *
+   * - {number} unixMode The POSIX file mode to set on the file.  If omitted,
+   *  the POSIX file mode is reset to the default used by |OS.file.open|.  If
+   *  specified, the permissions will respect the process umask as if they
+   *  had been specified as arguments of |OS.File.open|, unless the
+   *  |unixHonorUmask| parameter tells otherwise.
+   * - {bool} unixHonorUmask If omitted or true, any |unixMode| value is
+   *  modified by the process umask, as |OS.File.open| would have done.  If
+   *  false, the exact value of |unixMode| will be applied.
    */
   setPermissions: function setPermissions(options = {}) {
     return Scheduler.post("File_prototype_setPermissions",
@@ -784,8 +782,8 @@ File.prototype = {
 };
 
 
-if (SharedAll.Constants.Sys.Name != "Android") {
-  /**
+if (SharedAll.Constants.Sys.Name != "Android" && SharedAll.Constants.Sys.Name != "Gonk") {
+   /**
    * Set the last access and modification date of the file.
    * The time stamp resolution is 1 second at best, but might be worse
    * depending on the platform.
@@ -881,13 +879,7 @@ File.setDates = function setDates(path, accessDate, modificationDate) {
 };
 
 /**
- * Set the file's access permissions.  Without any options, the
- * permissions are set to an approximation of what they would have
- * been if the file had been created in its current directory in the
- * "most typical" fashion for the operating system.  In the current
- * implementation, this means that on Unix-like systems (including
- * Android, B2G, etc) we set the POSIX file mode to (0666 & ~umask),
- * and on Windows, we do nothing.
+ * Set the file's access permissions.  This does nothing on Windows.
  *
  * This operation is likely to fail if applied to a file that was
  * not created by the currently running program (more precisely,
@@ -895,14 +887,17 @@ File.setDates = function setDates(path, accessDate, modificationDate) {
  * user account).  It may also fail, or silently do nothing, if the
  * filesystem containing the file does not support access permissions.
  *
- * @param {string} path   The path to the file.
+ * @param {string} path The path to the file.
+ * @param {*=} options Object specifying the requested permissions:
  *
- * @param {*=} options
- * - {number} unixMode     If present, the POSIX file mode is set to exactly
- *                         this value, unless |unixHonorUmask| is also
- *                         present.
- * - {bool} unixHonorUmask If true, any |unixMode| value is modified by the
- *                         process umask, as open() would have done.
+ * - {number} unixMode The POSIX file mode to set on the file.  If omitted,
+ *  the POSIX file mode is reset to the default used by |OS.file.open|.  If
+ *  specified, the permissions will respect the process umask as if they
+ *  had been specified as arguments of |OS.File.open|, unless the
+ *  |unixHonorUmask| parameter tells otherwise.
+ * - {bool} unixHonorUmask If omitted or true, any |unixMode| value is
+ *  modified by the process umask, as |OS.File.open| would have done.  If
+ *  false, the exact value of |unixMode| will be applied.
  */
 File.setPermissions = function setPermissions(path, options = {}) {
   return Scheduler.post("setPermissions",

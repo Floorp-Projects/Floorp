@@ -1,5 +1,7 @@
+/* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // Test that locking the pseudoclass displays correctly in the ruleview
 
@@ -18,8 +20,8 @@ const TEST_URL = 'data:text/html,' +
 
 let test = asyncTest(function*() {
   info("Creating the test tab and opening the rule-view");
-  yield addTab(TEST_URL);
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {toolbox, inspector} = yield openInspectorForURL(TEST_URL);
+  let view = yield ensureRuleView(inspector);
 
   info("Selecting the test node");
   yield selectNode("#div-1", inspector);
@@ -37,8 +39,6 @@ let test = asyncTest(function*() {
   info("Destroying the toolbox");
   yield toolbox.destroy();
   yield assertPseudoRemovedFromNode(getNode("#div-1"));
-
-  gBrowser.removeCurrentTab();
 });
 
 
@@ -48,19 +48,13 @@ function* togglePseudoClass(inspector) {
   // Give the inspector panels a chance to update when the pseudoclass changes
   let onPseudo = inspector.selection.once("pseudoclass");
   let onRefresh = inspector.once("rule-view-refreshed");
-  let onMutations = waitForMutation(inspector);
+  let onMutations = inspector.walker.once("mutations");
 
   yield inspector.togglePseudoClass(PSEUDO);
 
   yield onPseudo;
   yield onRefresh;
   yield onMutations;
-}
-
-function waitForMutation(inspector) {
-  let def = promise.defer();
-  inspector.walker.once("mutations", def.resolve);
-  return def.promise;
 }
 
 function* testNavigate(inspector, ruleview) {
@@ -131,4 +125,16 @@ function* assertPseudoRemovedFromView(inspector, ruleview) {
   let pseudoClassesBox = getHighlighter().querySelector(".highlighter-nodeinfobar-pseudo-classes");
   is(pseudoClassesBox.textContent, "", "pseudo-class removed from infobar selector");
   yield inspector.toolbox.highlighter.hideBoxModel();
+}
+
+function* ensureRuleView(inspector) {
+  if (!inspector.sidebar.getWindowForTab("ruleview")) {
+    info("Waiting for ruleview initialization to complete.");
+    yield inspector.sidebar.once("ruleview-ready");
+  }
+
+  info("Selecting the ruleview sidebar");
+  inspector.sidebar.select("ruleview");
+
+  return inspector.sidebar.getWindowForTab("ruleview")["ruleview"].view;
 }
