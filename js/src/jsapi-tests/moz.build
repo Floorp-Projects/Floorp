@@ -81,6 +81,7 @@ UNIFIED_SOURCES += [
 
 if CONFIG['ENABLE_ION']:
     UNIFIED_SOURCES += [
+        'testJitFoldsTo.cpp',
         'testJitRValueAlloc.cpp',
     ]
 
