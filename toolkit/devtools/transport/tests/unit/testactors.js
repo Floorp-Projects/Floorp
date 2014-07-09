@@ -6,6 +6,7 @@ const { ActorPool, appendExtraActors, createExtraActors } =
 const { RootActor } = require("devtools/server/actors/root");
 const { ThreadActor } = require("devtools/server/actors/script");
 const { DebuggerServer } = require("devtools/server/main");
+const promise = require("promise");
 
 var gTestGlobals = [];
 DebuggerServer.addTestGlobal = function(aGlobal) {

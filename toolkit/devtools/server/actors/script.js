@@ -7,12 +7,16 @@
 "use strict";
 
 const Services = require("Services");
-const { Cc, Ci, Cu, components } = require("chrome");
+const { Cc, Ci, Cu, components, ChromeWorker } = require("chrome");
 const { ActorPool } = require("devtools/server/actors/common");
 const { DebuggerServer } = require("devtools/server/main");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { dbg_assert, dumpn, update } = DevToolsUtils;
 const { SourceMapConsumer, SourceMapGenerator } = require("source-map");
+const promise = require("promise");
+const Debugger = require("Debugger");
+const xpcInspector = require("xpcInspector");
+
 const { defer, resolve, reject, all } = require("devtools/toolkit/deprecated-sync-thenables");
 const { CssLogic } = require("devtools/styleinspector/css-logic");
 

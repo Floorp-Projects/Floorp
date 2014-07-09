@@ -113,9 +113,10 @@
                             accesskey="&translation.options.preferences.accesskey;"/>
               <xul:menuitem class="translation-attribution subviewbutton panel-subview-footer"
                             oncommand="document.getBindingParent(this).openProviderAttribution();">
-                <xul:label>Übersetzungen von</xul:label>
+                <xul:label>&translation.options.attribution.beforeLogo;</xul:label>
                 <xul:image src="chrome://browser/content/microsoft-translator-attribution.png"
                            aria-label="Microsoft Translator"/>
+                <xul:label>&translation.options.attribution.afterLogo;</xul:label>
               </xul:menuitem>
             </xul:menupopup>
           </xul:button>

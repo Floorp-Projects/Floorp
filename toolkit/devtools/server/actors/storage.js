@@ -1184,7 +1184,7 @@ StorageActors.createActor({
       principal = Services.scriptSecurityManager.getCodebasePrincipal(uri);
     }
 
-    return indexedDB.openForPrincipal(principal, name);
+    return require("indexedDB").openForPrincipal(principal, name);
   },
 
   /**

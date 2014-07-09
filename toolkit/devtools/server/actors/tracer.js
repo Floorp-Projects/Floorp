@@ -7,9 +7,7 @@
 const { Cu } = require("chrome");
 const { DebuggerServer } = require("devtools/server/main");
 const { DevToolsUtils } = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
-
-Cu.import("resource://gre/modules/jsdebugger.jsm");
-addDebuggerToGlobal(this);
+const Debugger = require("Debugger");
 
 // TODO bug 943125: remove this polyfill and use Debugger.Frame.prototype.depth
 // once it is implemented.
