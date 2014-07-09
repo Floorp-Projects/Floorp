@@ -105,10 +105,14 @@ static bool LockD3DTexture(T* aTexture)
   MOZ_ASSERT(aTexture);
   RefPtr<IDXGIKeyedMutex> mutex;
   aTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
-  if (!mutex) {
-    return false;
+  // Textures created by the DXVA decoders don't have a mutex for synchronization
+  if (mutex) {
+    HRESULT hr = mutex->AcquireSync(0, INFINITE);
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to lock the texture");
+      return false;
+    }
   }
-  mutex->AcquireSync(0, INFINITE);
   return true;
 }
 
@@ -119,7 +123,10 @@ static void UnlockD3DTexture(T* aTexture)
   RefPtr<IDXGIKeyedMutex> mutex;
   aTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
   if (mutex) {
-    mutex->ReleaseSync(0);
+    HRESULT hr = mutex->ReleaseSync(0);
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to unlock the texture");
+    }
   }
 }
 
@@ -364,11 +371,12 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
                                nsIntRegion* aDestRegion,
                                IntPoint* aSrcOffset)
 {
-  // Right now we only support full surface update. If aDestRegion is provided,
-  // It will be ignored. Incremental update with a source offset is only used
-  // on Mac so it is not clear that we ever will need to support it for D3D.
+  // Incremental update with a source offset is only used on Mac so it is not
+  // clear that we ever will need to support it for D3D.
   MOZ_ASSERT(!aSrcOffset);
   MOZ_ASSERT(aSurface);
+
+  HRESULT hr;
 
   if (!mCompositor || !mCompositor->GetDevice()) {
     return false;
@@ -380,23 +388,59 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
   mSize = aSurface->GetSize();
   mFormat = aSurface->GetFormat();
 
-  CD3D11_TEXTURE2D_DESC desc(dxgiFormat, mSize.width, mSize.height,
-                             1, 1, D3D11_BIND_SHADER_RESOURCE,
-                             D3D11_USAGE_IMMUTABLE);
+  CD3D11_TEXTURE2D_DESC desc(dxgiFormat, mSize.width, mSize.height, 1, 1);
 
   int32_t maxSize = mCompositor->GetMaxTextureSize();
   if ((mSize.width <= maxSize && mSize.height <= maxSize) ||
       (mFlags & TextureFlags::DISALLOW_BIGIMAGE)) {
-    D3D11_SUBRESOURCE_DATA initData;
-    initData.pSysMem = aSurface->GetData();
-    initData.SysMemPitch = aSurface->Stride();
 
-    mCompositor->GetDevice()->CreateTexture2D(&desc, &initData, byRef(mTexture));
-    mIsTiled = false;
-    if (!mTexture) {
-      Reset();
-      return false;
+    if (mTexture) {
+      D3D11_TEXTURE2D_DESC currentDesc;
+      mTexture->GetDesc(&currentDesc);
+
+      // Make sure there's no size mismatch, if there is, recreate.
+      if (currentDesc.Width != mSize.width || currentDesc.Height != mSize.height ||
+          currentDesc.Format != dxgiFormat) {
+        mTexture = nullptr;
+        // Make sure we upload the whole surface.
+        aDestRegion = nullptr;
+      }
     }
+
+    if (!mTexture) {
+      hr = mCompositor->GetDevice()->CreateTexture2D(&desc, nullptr, byRef(mTexture));
+      mIsTiled = false;
+      if (FAILED(hr) || !mTexture) {
+        Reset();
+        return false;
+      }
+    }
+
+    DataSourceSurface::MappedSurface map;
+    aSurface->Map(DataSourceSurface::MapType::READ, &map);
+
+    if (aDestRegion) {
+      nsIntRegionRectIterator iter(*aDestRegion);
+      const nsIntRect *iterRect;
+      while ((iterRect = iter.Next())) {
+        D3D11_BOX box;
+        box.front = 0;
+        box.back = 1;
+        box.left = iterRect->x;
+        box.top = iterRect->y;
+        box.right = iterRect->XMost();
+        box.bottom = iterRect->YMost();
+
+        void* data = map.mData + map.mStride * iterRect->y + BytesPerPixel(aSurface->GetFormat()) * iterRect->x;
+
+        mCompositor->GetDC()->UpdateSubresource(mTexture, 0, &box, data, map.mStride, map.mStride * mSize.height);
+      }
+    } else {
+      mCompositor->GetDC()->UpdateSubresource(mTexture, 0, nullptr, aSurface->GetData(),
+                                              aSurface->Stride(), aSurface->Stride() * mSize.height);
+    }
+
+    aSurface->Unmap();
   } else {
     mIsTiled = true;
     uint32_t tileCount = GetRequiredTilesD3D11(mSize.width, maxSize) *
@@ -410,6 +454,7 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
 
       desc.Width = tileRect.width;
       desc.Height = tileRect.height;
+      desc.Usage = D3D11_USAGE_IMMUTABLE;
 
       D3D11_SUBRESOURCE_DATA initData;
       initData.pSysMem = aSurface->GetData() +
@@ -417,8 +462,8 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
                          tileRect.x * bpp;
       initData.SysMemPitch = aSurface->Stride();
 
-      mCompositor->GetDevice()->CreateTexture2D(&desc, &initData, byRef(mTileTextures[i]));
-      if (!mTileTextures[i]) {
+      hr = mCompositor->GetDevice()->CreateTexture2D(&desc, &initData, byRef(mTileTextures[i]));
+      if (FAILED(hr) || !mTileTextures[i]) {
         Reset();
         return false;
       }
