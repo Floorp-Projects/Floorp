@@ -35,38 +35,6 @@ namespace mozilla {
 
 static MediaPermissionManager *gMediaPermMgr = nullptr;
 
-static uint32_t
-ConvertArrayToPermissionRequest(nsIArray* aSrcArray,
-                                nsTArray<PermissionRequest>& aDesArray)
-{
-  uint32_t len = 0;
-  aSrcArray->GetLength(&len);
-  for (uint32_t i = 0; i < len; i++) {
-    nsCOMPtr<nsIContentPermissionType> cpt = do_QueryElementAt(aSrcArray, i);
-    nsAutoCString type;
-    nsAutoCString access;
-    cpt->GetType(type);
-    cpt->GetAccess(access);
-
-    nsCOMPtr<nsIArray> optionArray;
-    cpt->GetOptions(getter_AddRefs(optionArray));
-    uint32_t optionsLength = 0;
-    optionArray->GetLength(&optionsLength);
-    nsTArray<nsString> options;
-    for (uint32_t j = 0; j < optionsLength; ++j) {
-      nsCOMPtr<nsISupportsString> isupportsString = do_QueryElementAt(optionArray, j);
-      if (isupportsString) {
-        nsString option;
-        isupportsString->GetData(option);
-        options.AppendElement(option);
-      }
-    }
-
-    aDesArray.AppendElement(PermissionRequest(type, access, options));
-  }
-  return len;
-}
-
 static void
 CreateDeviceNameList(nsTArray<nsCOMPtr<nsIMediaDevice> > &aDevices,
                      nsTArray<nsString> &aDeviceNameList)
@@ -449,7 +417,7 @@ MediaDeviceSuccessCallback::DoPrompt(nsRefPtr<MediaPermissionRequest> &req)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsTArray<PermissionRequest> permArray;
-    ConvertArrayToPermissionRequest(typeArray, permArray);
+    RemotePermissionRequest::ConvertArrayToPermissionRequest(typeArray, permArray);
 
     nsCOMPtr<nsIPrincipal> principal;
     rv = req->GetPrincipal(getter_AddRefs(principal));

@@ -4,29 +4,19 @@
 navigator.mozGetUserMedia({audio: true}, function(stream) {
     stream.getAudioTracks()[0].enabled = false;
     var testAudio = document.getElementById('testAudio');
-    // temporary log for bug 1031137.
-    ["abort", "canplay", "canplaythrough", "durationchange", "emptied", "ended",
-    "error", "loadeddata", "loadedmetadata", "loadstart", "pause", "play",
-    "playing", "progress", "ratechange", "seeked", "seeking", "stalled", "suspend",
-    "timeupdate", "volumechange", "waiting"].forEach(function(v) {
-      testAudio.addEventListener(v, function() {
-        dump("event received: " + v + "\n");
-      });
-    });
-
     // Wait some time for good measure
     var eventReceived = 0;
     testAudio.addEventListener("timeupdate", function() {
-      dump("timeupdate received (index:" + eventReceived + ")\n");
       if (++eventReceived == 3) {
         document.querySelector("html").className = "";
       }
-    });
-
+    })
     testAudio.mozSrcObject = stream;
     testAudio.play();
     }, function(err) {
-    dump(err + "\n");
+      // Don't go orange if we can't get an audio input stream,
+      // as this is not what we are trying to test and can happen on Windows.
+      document.querySelector("html").className = "";
     });
 </script>
 

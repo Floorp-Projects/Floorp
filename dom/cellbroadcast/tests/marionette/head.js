@@ -5,6 +5,151 @@ const {Cc: Cc, Ci: Ci, Cr: Cr, Cu: Cu} = SpecialPowers;
 
 let Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
 
+const PDU_DCS_CODING_GROUP_BITS          = 0xF0;
+const PDU_DCS_MSG_CODING_7BITS_ALPHABET  = 0x00;
+const PDU_DCS_MSG_CODING_8BITS_ALPHABET  = 0x04;
+const PDU_DCS_MSG_CODING_16BITS_ALPHABET = 0x08;
+
+const PDU_DCS_MSG_CLASS_BITS             = 0x03;
+const PDU_DCS_MSG_CLASS_NORMAL           = 0xFF;
+const PDU_DCS_MSG_CLASS_0                = 0x00;
+const PDU_DCS_MSG_CLASS_ME_SPECIFIC      = 0x01;
+const PDU_DCS_MSG_CLASS_SIM_SPECIFIC     = 0x02;
+const PDU_DCS_MSG_CLASS_TE_SPECIFIC      = 0x03;
+const PDU_DCS_MSG_CLASS_USER_1           = 0x04;
+const PDU_DCS_MSG_CLASS_USER_2           = 0x05;
+
+const GECKO_SMS_MESSAGE_CLASSES = {};
+GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_NORMAL]       = "normal";
+GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_0]            = "class-0";
+GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_ME_SPECIFIC]  = "class-1";
+GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_SIM_SPECIFIC] = "class-2";
+GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_TE_SPECIFIC]  = "class-3";
+GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_USER_1]       = "user-1";
+GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_USER_2]       = "user-2";
+
+const CB_MESSAGE_SIZE_GSM  = 88;
+const CB_MESSAGE_SIZE_ETWS = 56;
+
+const CB_GSM_MESSAGEID_ETWS_BEGIN = 0x1100;
+const CB_GSM_MESSAGEID_ETWS_END   = 0x1107;
+
+const CB_GSM_GEOGRAPHICAL_SCOPE_NAMES = [
+  "cell-immediate",
+  "plmn",
+  "location-area",
+  "cell"
+];
+
+const CB_ETWS_WARNING_TYPE_NAMES = [
+  "earthquake",
+  "tsunami",
+  "earthquake-tsunami",
+  "test",
+  "other"
+];
+
+const CB_DCS_LANG_GROUP_1 = [
+  "de", "en", "it", "fr", "es", "nl", "sv", "da", "pt", "fi",
+  "no", "el", "tr", "hu", "pl", null
+];
+const CB_DCS_LANG_GROUP_2 = [
+  "cs", "he", "ar", "ru", "is", null, null, null, null, null,
+  null, null, null, null, null, null
+];
+
+/**
+ * Compose input number into specified number of semi-octets.
+ *
+ * @param: aNum
+ *         The number to be converted.
+ * @param: aNumSemiOctets
+ *         Number of semi-octects to be composed to.
+ *
+ * @return The composed Hex String.
+ */
+function buildHexStr(aNum, aNumSemiOctets) {
+  let str = aNum.toString(16);
+  ok(str.length <= aNumSemiOctets);
+  while (str.length < aNumSemiOctets) {
+    str = "0" + str;
+  }
+  return str;
+}
+
+/**
+ * Helper function to decode the given DCS into encoding type, language,
+ * language indicator and message class.
+ *
+ * @param: aDcs
+ *         The DCS to be decoded.
+ *
+ * @return [encoding, language, hasLanguageIndicator,
+ *          GECKO_SMS_MESSAGE_CLASSES[messageClass]]
+ */
+function decodeGsmDataCodingScheme(aDcs) {
+  let language = null;
+  let hasLanguageIndicator = false;
+  let encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+  let messageClass = PDU_DCS_MSG_CLASS_NORMAL;
+
+  switch (aDcs & PDU_DCS_CODING_GROUP_BITS) {
+    case 0x00: // 0000
+      language = CB_DCS_LANG_GROUP_1[aDcs & 0x0F];
+      break;
+
+    case 0x10: // 0001
+      switch (aDcs & 0x0F) {
+        case 0x00:
+          hasLanguageIndicator = true;
+          break;
+        case 0x01:
+          encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
+          hasLanguageIndicator = true;
+          break;
+      }
+      break;
+
+    case 0x20: // 0010
+      language = CB_DCS_LANG_GROUP_2[aDcs & 0x0F];
+      break;
+
+    case 0x40: // 01xx
+    case 0x50:
+    //case 0x60:
+    //case 0x70:
+    case 0x90: // 1001
+      encoding = (aDcs & 0x0C);
+      if (encoding == 0x0C) {
+        encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+      }
+      messageClass = (aDcs & PDU_DCS_MSG_CLASS_BITS);
+      break;
+
+    case 0xF0:
+      encoding = (aDcs & 0x04) ? PDU_DCS_MSG_CODING_8BITS_ALPHABET
+                              : PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+      switch(aDcs & PDU_DCS_MSG_CLASS_BITS) {
+        case 0x01: messageClass = PDU_DCS_MSG_CLASS_USER_1; break;
+        case 0x02: messageClass = PDU_DCS_MSG_CLASS_USER_2; break;
+        case 0x03: messageClass = PDU_DCS_MSG_CLASS_TE_SPECIFIC; break;
+      }
+      break;
+
+    case 0x30: // 0011 (Reserved)
+    case 0x80: // 1000 (Reserved)
+    case 0xA0: // 1010..1100 (Reserved)
+    case 0xB0:
+    case 0xC0:
+      break;
+    default:
+      throw new Error("Unsupported CBS data coding scheme: " + aDcs);
+  }
+
+  return [encoding, language, hasLanguageIndicator,
+          GECKO_SMS_MESSAGE_CLASSES[messageClass]];
+}
+
 /**
  * Push required permissions and test if |navigator.mozCellBroadcast| exists.
  * Resolve if it does, reject otherwise.
@@ -148,7 +293,7 @@ function sendMultipleRawCbsToEmulatorAndWait(aPdus) {
     promises.push(sendRawCbsToEmulator(pdu));
   }
 
-  return Promise.all(promises);
+  return Promise.all(promises).then(aResults => aResults[0].message);
 }
 
 /**

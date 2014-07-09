@@ -1459,6 +1459,29 @@
     "n_values": 4,
     "description": "HTTP Cache v2 Miss by half-life value (6h, 1d, 7d, 50d)"
   },
+  "HTTP_CACHE_ENTRY_RELOAD_TIME": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "900000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time before we reload an HTTP cache entry again to memory"
+  },
+  "HTTP_CACHE_ENTRY_ALIVE_TIME": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "7200000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time for which an HTTP cache entry is kept warmed in memory"
+  },
+  "HTTP_CACHE_ENTRY_REUSE_COUNT": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "20",
+    "n_buckets": 19,
+    "description": "Reuse count of an HTTP cache entry warmed in memory"
+  },
   "HTTP_MEMORY_CACHE_DISPOSITION_2": {
     "expires_in_version": "never",
     "kind": "enumerated",
