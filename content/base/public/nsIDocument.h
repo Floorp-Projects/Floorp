@@ -132,8 +132,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0xc9e11955, 0xaa55, 0x49a1, \
-  { 0x94, 0x29, 0x58, 0xe9, 0xbe, 0xf6, 0x79, 0x54 } }
+{ 0xd3bf7259, 0xbe90, 0x4de7, \
+  { 0x85, 0x77, 0x22, 0xf2, 0x45, 0xf8, 0x16, 0xd5} }
 
 // Enum for requesting a particular type of document when creating a doc
 enum DocumentFlavor {
@@ -851,6 +851,7 @@ public:
   };
 
   virtual nsresult LoadAdditionalStyleSheet(additionalSheetType aType, nsIURI* aSheetURI) = 0;
+  virtual nsresult AddAdditionalStyleSheet(additionalSheetType aType, nsIStyleSheet* aSheet) = 0;
   virtual void RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* sheetURI) = 0;
   virtual nsIStyleSheet* FirstAdditionalAuthorSheet() = 0;
 
