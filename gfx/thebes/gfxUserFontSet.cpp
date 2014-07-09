@@ -351,7 +351,7 @@ gfxProxyFontEntry::LoadNext(gfxMixedFontFamily *aFamily,
                 LOG(("fontset (%p) [src %d] loaded local: (%s) for (%s) gen: %8.8x\n",
                      mFontSet, mSrcIndex,
                      NS_ConvertUTF16toUTF8(currSrc.mLocalName).get(),
-                     NS_ConvertUTF16toUTF8(aFamily->Name()).get(),
+                     NS_ConvertUTF16toUTF8(mFamilyName).get(),
                      uint32_t(mFontSet->mGeneration)));
                 fe->mFeatureSettings.AppendElements(mFeatureSettings);
                 fe->mLanguageOverride = mLanguageOverride;
@@ -366,7 +366,7 @@ gfxProxyFontEntry::LoadNext(gfxMixedFontFamily *aFamily,
                 LOG(("fontset (%p) [src %d] failed local: (%s) for (%s)\n",
                      mFontSet, mSrcIndex,
                      NS_ConvertUTF16toUTF8(currSrc.mLocalName).get(),
-                     NS_ConvertUTF16toUTF8(aFamily->Name()).get()));
+                     NS_ConvertUTF16toUTF8(mFamilyName).get()));
             }
         }
 
@@ -434,7 +434,7 @@ gfxProxyFontEntry::LoadNext(gfxMixedFontFamily *aFamily,
                                 currSrc.mURI->GetSpec(fontURI);
                                 LOG(("userfonts (%p) [src %d] loading uri: (%s) for (%s)\n",
                                      mFontSet, mSrcIndex, fontURI.get(),
-                                     NS_ConvertUTF16toUTF8(aFamily->Name()).get()));
+                                     NS_ConvertUTF16toUTF8(mFamilyName).get()));
                             }
 #endif
                             return STATUS_LOADING;
@@ -466,7 +466,7 @@ gfxProxyFontEntry::LoadNext(gfxMixedFontFamily *aFamily,
 
     // all src's failed; mark this entry as unusable (so fallback will occur)
     LOG(("userfonts (%p) failed all src for (%s)\n",
-        mFontSet, NS_ConvertUTF16toUTF8(aFamily->Name()).get()));
+        mFontSet, NS_ConvertUTF16toUTF8(mFamilyName).get()));
     mLoadingState = LOADING_FAILED;
 
     return STATUS_END_OF_LIST;
@@ -538,7 +538,7 @@ gfxProxyFontEntry::LoadFont(gfxMixedFontFamily *aFamily,
             mSrcList[mSrcIndex].mURI->GetSpec(fontURI);
             LOG(("userfonts (%p) [src %d] loaded uri: (%s) for (%s) gen: %8.8x\n",
                  this, mSrcIndex, fontURI.get(),
-                 NS_ConvertUTF16toUTF8(aFamily->Name()).get(),
+                 NS_ConvertUTF16toUTF8(mFamilyName).get(),
                  uint32_t(mFontSet->mGeneration)));
         }
 #endif
@@ -552,7 +552,7 @@ gfxProxyFontEntry::LoadFont(gfxMixedFontFamily *aFamily,
             LOG(("userfonts (%p) [src %d] failed uri: (%s) for (%s)"
                  " error making platform font\n",
                  this, mSrcIndex, fontURI.get(),
-                 NS_ConvertUTF16toUTF8(aFamily->Name()).get()));
+                 NS_ConvertUTF16toUTF8(mFamilyName).get()));
         }
 #endif
     }
