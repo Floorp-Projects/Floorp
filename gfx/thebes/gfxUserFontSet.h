@@ -188,15 +188,13 @@ public:
     // Whether there is a face with this family name
     bool HasFamily(const nsAString& aFamilyName) const
     {
-        return LookupFamily(aFamilyName) != nullptr;
+        return GetFamily(aFamilyName) != nullptr;
     }
 
-    // Look up and return the gfxMixedFontFamily in mFontFamilies with
-    // the given name
-    gfxMixedFontFamily* LookupFamily(const nsAString& aName) const;
+    gfxFontFamily *GetFamily(const nsAString& aName) const;
 
     // Lookup a font entry for a given style, returns null if not loaded.
-    // aFamily must be a family returned by our LookupFamily method.
+    // aFamily must be a family returned by our GetFamily method.
     gfxFontEntry *FindFontEntry(gfxFontFamily *aFamily,
                                 const gfxFontStyle& aFontStyle,
                                 bool& aNeedsBold,
@@ -431,10 +429,6 @@ protected:
 
     // helper method for performing the actual userfont set rebuild
     virtual void DoRebuildUserFontSet() = 0;
-
-    // creates a new gfxMixedFontFamily in mFontFamilies, or returns an existing
-    // family if there is one
-    gfxMixedFontFamily* GetFamily(const nsAString& aFamilyName);
 
     // font families defined by @font-face rules
     nsRefPtrHashtable<nsStringHashKey, gfxMixedFontFamily> mFontFamilies;
