@@ -286,11 +286,31 @@
       <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
                 accesskey="&customizeMenu.moveToPanel.accesskey;"
                 label="&customizeMenu.moveToPanel.label;"
+                contexttype="toolbaritem"
                 class="customize-context-moveToPanel"/>
       <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode)"
                 accesskey="&customizeMenu.removeFromToolbar.accesskey;"
                 label="&customizeMenu.removeFromToolbar.label;"
+                contexttype="toolbaritem"
                 class="customize-context-removeFromToolbar"/>
+      <menuitem id="toolbar-context-reloadAllTabs"
+                class="toolbaritem-tabsmenu"
+                contexttype="tabbar"
+                oncommand="gBrowser.reloadAllTabs();"
+                label="&reloadAllTabs.label;"
+                accesskey="&toolbarContextMenu.reloadAllTabs.accesskey;"/>
+      <menuitem id="toolbar-context-bookmarkAllTabs"
+                class="toolbaritem-tabsmenu"
+                contexttype="tabbar"
+                command="Browser:BookmarkAllTabs"
+                label="&bookmarkAllTabs.label;"
+                accesskey="&toolbarContextMenu.bookmarkAllTabs.accesskey;"/>
+      <menuitem id="toolbar-context-undoCloseTab"
+                class="toolbaritem-tabsmenu"
+                contexttype="tabbar"
+                label="&undoCloseTab.label;"
+                accesskey="&toolbarContextMenu.undoCloseTab.accesskey;"
+                observes="History:UndoCloseTab"/>
       <menuseparator/>
       <menuseparator id="viewToolbarsMenuSeparator"/>
       <!-- XXXgijs: we're using oncommand handler here to avoid the event being

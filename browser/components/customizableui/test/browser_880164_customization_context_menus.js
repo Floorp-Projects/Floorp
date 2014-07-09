@@ -35,6 +35,44 @@ add_task(function() {
   yield hiddenPromise;
 });
 
+// Right-click on an empty bit of tabstrip should
+// show a context menu without options to move it,
+// but with tab-specific options instead.
+add_task(function() {
+  // ensure there are tabs to reload/bookmark:
+  let extraTab = gBrowser.selectedTab = gBrowser.addTab();
+  yield promiseTabLoadEvent(extraTab, "http://example.com/");
+  let contextMenu = document.getElementById("toolbar-context-menu");
+  let shownPromise = popupShown(contextMenu);
+  let tabstrip = document.getElementById("tabbrowser-tabs");
+  let rect = tabstrip.getBoundingClientRect();
+  EventUtils.synthesizeMouse(tabstrip, rect.width - 2, 2, {type: "contextmenu", button: 2 });
+  yield shownPromise;
+
+  let closedTabsAvailable = SessionStore.getClosedTabCount(window) == 0;
+  info("Closed tabs: " + closedTabsAvailable);
+  let expectedEntries = [
+    ["#toolbar-context-reloadAllTabs", true],
+    ["#toolbar-context-bookmarkAllTabs", true],
+    ["#toolbar-context-undoCloseTab", !closedTabsAvailable],
+    ["---"]
+  ];
+  if (!isOSX) {
+    expectedEntries.push(["#toggle_toolbar-menubar", true]);
+  }
+  expectedEntries.push(
+    ["#toggle_PersonalToolbar", true],
+    ["---"],
+    [".viewCustomizeToolbar", true]
+  );
+  checkContextMenu(contextMenu, expectedEntries);
+
+  let hiddenPromise = popupHidden(contextMenu);
+  contextMenu.hidePopup();
+  yield hiddenPromise;
+  gBrowser.removeTab(extraTab);
+});
+
 // Right-click on an empty bit of extra toolbar should
 // show a context menu with moving options disabled,
 // and a toggle option for the extra toolbar
