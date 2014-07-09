@@ -2632,24 +2632,14 @@ function BrowserReloadWithFlags(reloadFlags) {
     return;
   }
 
-  /* First, we'll try to use the session history object to reload so
-   * that framesets are handled properly. If we're in a special
-   * window (such as view-source) that has no session history, fall
-   * back on using the web navigation's reload method.
-   */
+  let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindowUtils);
 
-  var webNav = gBrowser.webNavigation;
-  try {
-    var sh = webNav.sessionHistory;
-    if (sh)
-      webNav = sh.QueryInterface(nsIWebNavigation);
-  } catch (e) {
-  }
-
-  try {
-    webNav.reload(reloadFlags);
-  } catch (e) {
-  }
+  gBrowser.selectedBrowser
+          .messageManager
+          .sendAsyncMessage("Browser:Reload",
+                            { flags: reloadFlags,
+                              handlingUserInput: windowUtils.isHandlingUserInput });
 }
 
 var PrintPreviewListener = {
