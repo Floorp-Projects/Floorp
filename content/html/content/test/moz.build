@@ -6,7 +6,7 @@
 
 MOCHITEST_MANIFESTS += ['forms/mochitest.ini', 'mochitest.ini']
 
-MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
+MOCHITEST_CHROME_MANIFESTS += ['chrome.ini', 'forms/chrome.ini']
 
 BROWSER_CHROME_MANIFESTS += ['browser.ini']
 
