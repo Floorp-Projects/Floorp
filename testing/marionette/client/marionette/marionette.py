@@ -81,7 +81,7 @@ class HTMLElement(object):
 
         :param x: X-coordinate of tap event. If not given, default to the
          center of the element.
-        :param x: X-coordinate of tap event. If not given, default to the
+        :param y: Y-coordinate of tap event. If not given, default to the
          center of the element.
         '''
         return self.marionette._send_message('singleTap', 'ok', id=self.id, x=x, y=y)
