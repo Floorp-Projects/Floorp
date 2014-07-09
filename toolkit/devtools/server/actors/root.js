@@ -124,7 +124,10 @@ RootActor.prototype = {
     bulk: true,
     // Whether the style rule actor implements the modifySelector method
     // that modifies the rule's selector
-    selectorEditable: true
+    selectorEditable: true,
+    // Whether the page style actor implements the addNewRule method that
+    // adds new rules to the page
+    addNewRule: true
   },
 
   /**

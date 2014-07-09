@@ -17,7 +17,7 @@
     
     <content>
       <children includes="observes|template|menupopup|panel|tooltip"/>
-      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label"/>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,consumeanchor"/>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
                  xbl:inherits="value=label,accesskey,crop,wrap"/>
       <xul:label class="toolbarbutton-multiline-text" flex="1"
@@ -29,7 +29,7 @@
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
     <content>
       <children includes="observes|template|menupopup|panel|tooltip"/>
-      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,type"/>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,type,consumeanchor"/>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
                  xbl:inherits="value=label,accesskey,crop,dragover-top,wrap"/>
       <xul:label class="toolbarbutton-multiline-text" flex="1"
@@ -45,7 +45,7 @@
       <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:hbox flex="1" align="center">
         <xul:vbox flex="1" align="center">
-          <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label"/>
+          <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,consumeanchor"/>
           <xul:label class="toolbarbutton-text" crop="right" flex="1"
                      xbl:inherits="value=label,accesskey,crop,dragover-top,wrap"/>
           <xul:label class="toolbarbutton-multiline-text" flex="1"

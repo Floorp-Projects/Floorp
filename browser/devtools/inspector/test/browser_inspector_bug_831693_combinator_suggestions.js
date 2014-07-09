@@ -1,111 +1,157 @@
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
-function test()
-{
-  let inspector, searchBox, state, popup;
+// Testing that searching for combining selectors using the inspector search
+// field produces correct suggestions.
 
-  // The various states of the inspector: [key, suggestions array]
-  // [
-  //  what key to press,
-  //  suggestions array with count [
-  //    [suggestion1, count1], [suggestion2] ...
-  //  ] count can be left to represent 1
-  // ]
-  let keyStates = [
-    ["d", [["div", 4]]],
-    ["i", [["div", 4]]],
-    ["v", []],
-    [" ", [["div div", 2], ["div span", 2]]],
-    [">", [["div >div", 2], ["div >span", 2]]],
-    ["VK_BACK_SPACE", [["div div", 2], ["div span", 2]]],
-    ["+", [["div +span"]]],
-    ["VK_BACK_SPACE", [["div div", 2], ["div span", 2]]],
-    ["VK_BACK_SPACE", []],
-    ["VK_BACK_SPACE", [["div", 4]]],
-    ["VK_BACK_SPACE", [["div", 4]]],
-    ["VK_BACK_SPACE", []],
-    ["p", []],
-    [" ", [["p strong"]]],
-    ["+", [["p +button"], ["p +p"]]],
-    ["b", [["p +button"]]],
-    ["u", [["p +button"]]],
-    ["t", [["p +button"]]],
-    ["t", [["p +button"]]],
-    ["o", [["p +button"]]],
-    ["n", []],
-    ["+", [["p +button+p"]]],
-  ];
+const TEST_URL = TEST_URL_ROOT + "browser_inspector_bug_831693_search_suggestions.html";
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    waitForFocus(setupTest, content);
-  }, true);
-
-  content.location = "http://mochi.test:8888/browser/browser/devtools/inspector/test/browser_inspector_bug_831693_search_suggestions.html";
-
-  function $(id) {
-    if (id == null) return null;
-    return content.document.getElementById(id);
-  }
-
-  function setupTest()
+// An array of (key, suggestions) pairs where key is a key to press and
+// suggestions is an array of suggestions that should be shown in the popup.
+// Suggestion is an object with label of the entry and optional count
+// (defaults to 1)
+const TEST_DATA = [
   {
-    openInspector(startTest);
-  }
-
-  function startTest(aInspector)
+    key: "d",
+    suggestions: [{label: "div", count: 4}]
+  },
   {
-    inspector = aInspector;
-
-    searchBox =
-      inspector.panelWin.document.getElementById("inspector-searchbox");
-    popup = inspector.searchSuggestions.searchPopup;
-
-    focusSearchBoxUsingShortcut(inspector.panelWin, function() {
-      searchBox.addEventListener("command", checkState, true);
-      checkStateAndMoveOn(0);
-    });
+    key: "i",
+    suggestions: [{label: "div", count: 4}]
+  },
+  {
+    key: "v",
+    suggestions: []
+  },
+  {
+    key: " ",
+    suggestions: [
+      {label: "div div", count: 2},
+      {label: "div span", count: 2}
+    ]
+  },
+  {
+    key: ">",
+    suggestions: [
+      {label: "div >div", count: 2},
+      {label: "div >span", count: 2}
+    ]
+  },
+  {
+    key: "VK_BACK_SPACE",
+    suggestions: [
+      {label: "div div", count: 2 },
+      {label: "div span", count: 2}
+    ]
+  },
+  {
+    key: "+",
+    suggestions: [{label: "div +span"}]
+  },
+  {
+    key: "VK_BACK_SPACE",
+    suggestions: [
+      {label: "div div", count: 2 },
+      {label: "div span", count: 2}
+    ]
+  },
+  {
+    key: "VK_BACK_SPACE",
+    suggestions: []
+  },
+  {
+    key: "VK_BACK_SPACE",
+    suggestions: [{label: "div", count: 4}]
+  },
+  {
+    key: "VK_BACK_SPACE",
+    suggestions: [{label: "div", count: 4}]
+  },
+  {
+    key: "VK_BACK_SPACE",
+    suggestions: []
+  },
+  {
+    key: "p",
+    suggestions: []
+  },
+  {
+    key: " ",
+    suggestions: [{label: "p strong"}]
+  },
+  {
+    key: "+",
+    suggestions: [
+      {label: "p +button" },
+      {label: "p +p"}
+    ]
+  },
+  {
+    key: "b",
+    suggestions: [{label: "p +button"}]
+  },
+  {
+    key: "u",
+    suggestions: [{label: "p +button"}]
+  },
+  {
+    key: "t",
+    suggestions: [{label: "p +button"}]
+  },
+  {
+    key: "t",
+    suggestions: [{label: "p +button"}]
+  },
+  {
+    key: "o",
+    suggestions: [{label: "p +button"}]
+  },
+  {
+    key: "n",
+    suggestions: []
+  },
+  {
+    key: "+",
+    suggestions: [{label: "p +button+p"}]
   }
+];
 
-  function checkStateAndMoveOn(index) {
-    if (index == keyStates.length) {
-      finishUp();
-      return;
-    }
+let test = asyncTest(function* () {
+  let { inspector } = yield openInspectorForURL(TEST_URL);
+  let searchBox = inspector.searchBox;
+  let popup = inspector.searchSuggestions.searchPopup;
 
-    let [key, suggestions] = keyStates[index];
-    state = index;
+  yield focusSearchBoxUsingShortcut(inspector.panelWin);
 
-    info("pressing key " + key + " to get suggestions " +
-         JSON.stringify(suggestions));
+  for (let { key, suggestions } of TEST_DATA) {
+    info("Pressing " + key + " to get " + formatSuggestions(suggestions));
+
+    let command = once(searchBox, "command");
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
-  }
+    yield command;
 
-  function checkState(event) {
-    inspector.searchSuggestions._lastQuery.then(() => {
-      let [key, suggestions] = keyStates[state];
-      let actualSuggestions = popup.getItems();
-      is(popup.isOpen ? actualSuggestions.length: 0, suggestions.length,
-         "There are expected number of suggestions at " + state + "th step.");
-      actualSuggestions = actualSuggestions.reverse();
-      for (let i = 0; i < suggestions.length; i++) {
-        is(suggestions[i][0], actualSuggestions[i].label,
-           "The suggestion at " + i + "th index for " + state +
-           "th step is correct.")
-        is(suggestions[i][1] || 1, actualSuggestions[i].count,
-           "The count for suggestion at " + i + "th index for " + state +
-           "th step is correct.")
-      }
-      checkStateAndMoveOn(state + 1);
-    });
-  }
+    info("Waiting for search query to complete");
+    yield inspector.searchSuggestions._lastQuery;
 
-  function finishUp() {
-    searchBox = null;
-    popup = null;
-    gBrowser.removeCurrentTab();
-    finish();
+    info("Query completed. Performing checks for input '" + searchBox.value + "'");
+    let actualSuggestions = popup.getItems().reverse();
+
+    is(popup.isOpen ? actualSuggestions.length: 0, suggestions.length,
+       "There are expected number of suggestions.");
+
+    for (let i = 0; i < suggestions.length; i++) {
+      is(suggestions[i].label, actualSuggestions[i].label,
+         "The suggestion at " + i + "th index is correct.");
+      is(suggestions[i].count || 1, actualSuggestions[i].count,
+         "The count for suggestion at " + i + "th index is correct.");
+    }
   }
+});
+
+function formatSuggestions(suggestions) {
+  return "[" + suggestions
+                .map(s => "'" + s.label + "' (" + s.count || 1 + ")")
+                .join(", ") + "]";
 }

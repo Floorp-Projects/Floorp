@@ -1,218 +1,210 @@
+/* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
 http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
+// Test context menu functionality:
+// 1) menu items are disabled/enabled depending on the clicked node
+// 2) actions triggered by the items work correctly
 
-function test() {
-
-  let clipboard = require("sdk/clipboard");
-  let doc;
-  let inspector;
-
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    doc = content.document;
-    waitForFocus(setupTest, content);
-  }, true);
-
-  content.location = "http://mochi.test:8888/browser/browser/devtools/" +
-                     "inspector/test/browser_inspector_menu.html";
-
-  function setupTest() {
-    openInspector(runTests);
+const TEST_URL = TEST_URL_ROOT + "browser_inspector_menu.html";
+const MENU_SENSITIVITY_TEST_DATA = [
+  {
+    desc: "doctype node",
+    selector: null,
+    disabled: true,
+  },
+  {
+    desc: "element node",
+    selector: "p",
+    disabled: false,
   }
+];
 
-  function runTests(aInspector) {
-    inspector = aInspector;
-    checkDocTypeMenuItems();
-  }
-
-  function checkDocTypeMenuItems() {
-    info("Checking context menu entries for doctype node");
-    inspector.selection.setNode(doc.doctype);
-    inspector.once("inspector-updated", () => {
-      let docTypeNode = getMarkupTagNodeContaining("<!DOCTYPE html>");
-
-      // Right-click doctype tag
-      contextMenuClick(docTypeNode);
-
-      checkDisabled("node-menu-copyinner");
-      checkDisabled("node-menu-copyouter");
-      checkDisabled("node-menu-copyuniqueselector");
-      checkDisabled("node-menu-delete");
-      checkDisabled("node-menu-pasteouterhtml");
-
-      for (let name of ["hover", "active", "focus"]) {
-        checkDisabled("node-menu-pseudo-" + name);
-      }
-
-      checkElementMenuItems();
-    });
-  }
-
-  function checkElementMenuItems() {
-    info("Checking context menu entries for p tag");
-    inspector.selection.setNode(doc.querySelector("p"));
-    inspector.once("inspector-updated", () => {
-      let tag = getMarkupTagNodeContaining("p");
-
-      // Right-click p tag
-      contextMenuClick(tag);
-
-      checkEnabled("node-menu-copyinner");
-      checkEnabled("node-menu-copyouter");
-      checkEnabled("node-menu-copyuniqueselector");
-      checkEnabled("node-menu-delete");
-
-      for (let name of ["hover", "active", "focus"]) {
-        checkEnabled("node-menu-pseudo-" + name);
-      }
-
-      checkElementPasteOuterHTMLMenuItemForText();
-    });
-  }
-
-  function checkPasteOuterHTMLMenuItem(data, type, check, next) {
-    clipboard.set(data, type);
-    inspector.selection.setNode(doc.querySelector("p"));
-    inspector.once("inspector-updated", () => {
-      contextMenuClick(getMarkupTagNodeContaining("p"));
-      check("node-menu-pasteouterhtml");
-      next();
-    });
-  }
-
-  function checkElementPasteOuterHTMLMenuItemForText() {
-    checkPasteOuterHTMLMenuItem(
-      "some text",
-      undefined,
-      checkEnabled,
-      checkElementPasteOuterHTMLMenuItemForImage);
-  }
-
-  function checkElementPasteOuterHTMLMenuItemForImage() {
-    checkPasteOuterHTMLMenuItem(
+const PASTE_OUTER_HTML_TEST_DATA = [
+  {
+    desc: "some text",
+    clipboardData: "some text",
+    clipboardDataType: undefined,
+    disabled: false
+  },
+  {
+    desc: "base64 encoded image data uri",
+    clipboardData:
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABC" +
       "AAAAAA6fptVAAAACklEQVQYV2P4DwABAQEAWk1v8QAAAABJRU5ErkJggg==",
-      undefined,
-      checkDisabled,
-      checkElementPasteOuterHTMLMenuItemForHTML);
+    clipboardDataType: undefined,
+    disabled: true
+  },
+  {
+    desc: "html",
+    clipboardData: "<p>some text</p>",
+    clipboardDataType: "html",
+    disabled: false
+  },
+  {
+    desc: "empty string",
+    clipboardData: "",
+    clipboardDataType: undefined,
+    disabled: true
+  },
+  {
+    desc: "whitespace only",
+    clipboardData: " \n\n\t\n\n  \n",
+    clipboardDataType: undefined,
+    disabled: true
+  },
+];
+
+const COPY_ITEMS_TEST_DATA = [
+  {
+    desc: "copy inner html",
+    id: "node-menu-copyinner",
+    text: "This is some example text",
+  },
+  {
+    desc: "copy outer html",
+    id: "node-menu-copyouter",
+    text: "<p>This is some example text</p>",
+  },
+  {
+    desc: "copy unique selector",
+    id: "node-menu-copyuniqueselector",
+    text: "body > div:nth-child(1) > p:nth-child(2)",
+  },
+];
+
+let clipboard = devtools.require("sdk/clipboard");
+registerCleanupFunction(() => {
+  clipboard = null;
+});
+
+let test = asyncTest(function* () {
+  let { inspector } = yield openInspectorForURL(TEST_URL);
+
+  yield testMenuItemSensitivity();
+  yield testPasteOuterHTMLMenuItemSensitivity();
+  yield testCopyMenuItems();
+  yield testPasteOuterHTMLMenu();
+  yield testDeleteNode();
+  yield testDeleteRootNode();
+
+  function* testMenuItemSensitivity() {
+    info("Testing sensitivity of menu items for different elements.");
+
+    const MENU_ITEMS = [
+      "node-menu-copyinner",
+      "node-menu-copyouter",
+      "node-menu-copyuniqueselector",
+      "node-menu-delete",
+      "node-menu-pasteouterhtml",
+      "node-menu-pseudo-hover",
+      "node-menu-pseudo-active",
+      "node-menu-pseudo-focus"
+    ];
+
+    // To ensure clipboard contains something to paste.
+    clipboard.set("<p>test</p>", "html");
+
+    for (let {desc, selector, disabled} of MENU_SENSITIVITY_TEST_DATA) {
+      info("Testing context menu entries for " + desc);
+
+      let node = getNode(selector) || content.document.doctype;
+      yield selectNode(node, inspector);
+
+      contextMenuClick(getContainerForRawNode(inspector.markup, node).tagLine);
+
+      for (let name of MENU_ITEMS) {
+        checkMenuItem(name, disabled);
+      }
+    }
   }
 
-  function checkElementPasteOuterHTMLMenuItemForHTML() {
-    checkPasteOuterHTMLMenuItem(
-      "<p>some text</p>",
-      "html",
-      checkEnabled,
-      checkElementPasteOuterHTMLMenuItemForEmptyString);
+  function* testPasteOuterHTMLMenuItemSensitivity() {
+    info("Checking 'Paste Outer HTML' menu item sensitivity for different types" +
+         "of data");
+
+    let node = getNode("p");
+    let markupTagLine = getContainerForRawNode(inspector.markup, node).tagLine;
+
+    for (let data of PASTE_OUTER_HTML_TEST_DATA) {
+      let { desc, clipboardData, clipboardDataType, disabled } = data;
+      info("Checking 'Paste Outer HTML' for " + desc);
+      clipboard.set(clipboardData, clipboardDataType);
+
+      yield selectNode(node, inspector);
+
+      contextMenuClick(markupTagLine);
+      checkMenuItem("node-menu-pasteouterhtml", disabled);
+    }
   }
 
-  function checkElementPasteOuterHTMLMenuItemForEmptyString() {
-    checkPasteOuterHTMLMenuItem(
-      "",
-      undefined,
-      checkDisabled,
-      checkElementPasteOuterHTMLMenuItemForWhitespaceOnly);
+  function* testCopyMenuItems() {
+    info("Testing various copy actions of context menu.");
+    for (let {desc, id, text} of COPY_ITEMS_TEST_DATA) {
+      info("Testing " + desc);
+
+      let item = inspector.panelDoc.getElementById(id);
+      ok(item, "The popup has a " + desc + " menu item.");
+
+      let deferred = promise.defer();
+      waitForClipboard(text, () => item.doCommand(),
+                       deferred.resolve, deferred.reject);
+      yield deferred.promise;
+    }
   }
 
-  function checkElementPasteOuterHTMLMenuItemForWhitespaceOnly() {
-    checkPasteOuterHTMLMenuItem(
-      " \n\n\t\n\n  \n",
-      undefined,
-      checkDisabled,
-      testCopyInnerMenu);
-  }
-
-  function testCopyInnerMenu() {
-    let copyInner = inspector.panelDoc.getElementById("node-menu-copyinner");
-    ok(copyInner, "the popup menu has a copy inner html menu item");
-
-    waitForClipboard("This is some example text",
-                     function() { copyInner.doCommand(); },
-                     testCopyOuterMenu, testCopyOuterMenu);
-  }
-
-  function testCopyOuterMenu() {
-    let copyOuter = inspector.panelDoc.getElementById("node-menu-copyouter");
-    ok(copyOuter, "the popup menu has a copy outer html menu item");
-
-    waitForClipboard("<p>This is some example text</p>",
-                     function() { copyOuter.doCommand(); },
-                     testCopyUniqueSelectorMenu, testCopyUniqueSelectorMenu);
-  }
-
-  function testCopyUniqueSelectorMenu() {
-    let copyUniqueSelector = inspector.panelDoc.getElementById("node-menu-copyuniqueselector");
-    ok(copyUniqueSelector, "the popup menu has a copy unique selector menu item");
-
-    waitForClipboard("body > div:nth-child(1) > p:nth-child(2)",
-                     function() { copyUniqueSelector.doCommand(); },
-                     testPasteOuterHTMLMenu, testPasteOuterHTMLMenu);
-  }
-
-  function testPasteOuterHTMLMenu() {
+  function* testPasteOuterHTMLMenu() {
+    info("Testing that 'Paste Outer HTML' menu item works.");
     clipboard.set("this was pasted");
-    inspector.selection.setNode(doc.querySelector("h1"));
-    inspector.once("inspector-updated", () => {
-      contextMenuClick(getMarkupTagNodeContaining("h1"));
-      let menu = inspector.panelDoc.getElementById("node-menu-pasteouterhtml");
-      let event = document.createEvent("XULCommandEvent");
-      event.initCommandEvent("command", true, true, window, 0, false, false,
-                             false, false, null);
-      menu.dispatchEvent(event);
-      inspector.selection.once("new-node", (event, oldNode, newNode) => {
-        ok(doc.body.outerHTML.contains(clipboard.get()),
-           "Clipboard content was pasted into the node's outer HTML.");
-        ok(!doc.querySelector("h1"), "The original node was removed.");
-        testDeleteNode();
-      });
-    });
+
+    let node = getNode("h1");
+    yield selectNode(node, inspector);
+
+    contextMenuClick(getContainerForRawNode(inspector.markup, node).tagLine);
+
+    let menu = inspector.panelDoc.getElementById("node-menu-pasteouterhtml");
+    dispatchCommandEvent(menu);
+
+    info("Waiting for inspector selection to update");
+    yield inspector.selection.once("new-node");
+
+    ok(content.document.body.outerHTML.contains(clipboard.get()),
+       "Clipboard content was pasted into the node's outer HTML.");
+    ok(!getNode("h1", { expectNoMatch: true }), "The original node was removed.");
   }
 
-  function testDeleteNode() {
+  function* testDeleteNode() {
+    info("Testing 'Delete Node' menu item for normal elements.");
     let deleteNode = inspector.panelDoc.getElementById("node-menu-delete");
     ok(deleteNode, "the popup menu has a delete menu item");
 
-    inspector.once("inspector-updated", deleteTest);
+    let updated = inspector.once("inspector-updated");
 
-    let commandEvent = document.createEvent("XULCommandEvent");
-    commandEvent.initCommandEvent("command", true, true, window, 0, false, false,
-                                  false, false, null);
-    deleteNode.dispatchEvent(commandEvent);
+    info("Triggering 'Delete Node' and waiting for inspector to update");
+    dispatchCommandEvent(deleteNode);
+    yield updated;
+
+    ok(!getNode("p", { expectNoMatch: true }), "Node deleted");
   }
 
-  function deleteTest() {
-    let p = doc.querySelector("P");
-    is(p, null, "node deleted");
+  function* testDeleteRootNode() {
+    info("Testing 'Delete Node' menu item does not delete root node.");
+    yield selectNode(content.document.documentElement, inspector);
 
-    deleteRootNode();
-  }
+    let deleteNode = inspector.panelDoc.getElementById("node-menu-delete");
+    dispatchCommandEvent(deleteNode);
 
-  function deleteRootNode() {
-    inspector.selection.setNode(doc.documentElement);
-
-    inspector.once("inspector-updated", () => {
-      let deleteNode = inspector.panelDoc.getElementById("node-menu-delete");
-      let commandEvent = inspector.panelDoc.createEvent("XULCommandEvent");
-      commandEvent.initCommandEvent("command", true, true, window, 0, false, false,
-                                    false, false, null);
-      deleteNode.dispatchEvent(commandEvent);
-      executeSoon(isRootStillAlive);
+    executeSoon(() => {
+      ok(content.document.documentElement, "Document element still alive.");
     });
   }
 
-  function isRootStillAlive() {
-    ok(doc.documentElement, "Document element still alive.");
-    gBrowser.removeCurrentTab();
-    finish();
-  }
-
-  function getMarkupTagNodeContaining(text) {
-    let tags = inspector._markupFrame.contentDocument.querySelectorAll("span");
-    for (let tag of tags) {
-      if (tag.textContent == text) {
-        return tag;
-      }
+  function checkMenuItem(elementId, disabled) {
+    if (disabled) {
+      checkDisabled(elementId);
+    } else {
+      checkEnabled(elementId);
     }
   }
 
@@ -228,7 +220,16 @@ function test() {
       '"' + elt.label + '" context menu option is disabled');
   }
 
+  function dispatchCommandEvent(node) {
+    info("Dispatching command event on " + node);
+    let commandEvent = document.createEvent("XULCommandEvent");
+    commandEvent.initCommandEvent("command", true, true, window, 0, false, false,
+                                  false, false, null);
+    node.dispatchEvent(commandEvent);
+  }
+
   function contextMenuClick(element) {
+    info("Simulating contextmenu event on " + element);
     let evt = element.ownerDocument.createEvent('MouseEvents');
     let button = 2;  // right click
 
@@ -238,4 +239,4 @@ function test() {
 
     element.dispatchEvent(evt);
   }
-}
+});
