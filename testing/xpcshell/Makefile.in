@@ -28,22 +28,12 @@ EXTRA_BUILD_FILES := \
   manifestparser.py \
   $(NULL)
 
-MOZDEVICE_FILES := \
-  devicemanager.py \
-  devicemanagerADB.py \
-  devicemanagerSUT.py \
-  Zeroconf.py \
-  $(NULL)
-
 # Components / typelibs that don't get packaged with
 # the build, but that we need for the test harness.
 TEST_HARNESS_COMPONENTS := \
   httpd.js \
   httpd.manifest \
   $(NULL)
-
-MOZINFO_FILES := \
-  mozinfo.py
 
 # Rules for staging the necessary harness bits for a test package
 PKG_STAGE = $(DIST)/test-stage
@@ -55,11 +45,9 @@ libs::
 
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/xpcshell/tests
-	@(cd $(topsrcdir)/testing/mozbase/mozinfo/mozinfo && tar $(TAR_CREATE_FLAGS) - $(MOZINFO_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
 	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
 	@(cd $(topsrcdir)/build && tar $(TAR_CREATE_FLAGS) - $(EXTRA_BUILD_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
 	@cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/xpcshell
 	@cp $(DEPTH)/build/automation.py $(PKG_STAGE)/xpcshell
-	@(cd $(topsrcdir)/testing/mozbase/mozdevice/mozdevice && tar $(TAR_CREATE_FLAGS) - $(MOZDEVICE_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
 	(cd $(DEPTH)/_tests/xpcshell/ && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/xpcshell/tests && tar -xf -)
 	@(cd $(DIST)/bin/components && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_COMPONENTS)) | (cd $(PKG_STAGE)/bin/components && tar -xf -)
