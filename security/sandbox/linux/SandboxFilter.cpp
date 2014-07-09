@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <linux/net.h>
+#include <linux/ipc.h>
 
 namespace mozilla {
 
@@ -84,6 +85,14 @@ SandboxFilterImpl::Build() {
 #define SOCKETCALL(name, NAME) SYSCALL_WITH_ARG(socketcall, 0, SYS_##NAME)
 #else
 #define SOCKETCALL(name, NAME) SYSCALL(name)
+#endif
+
+  // i386 multiplexes all the SysV-IPC-related interfaces into a single
+  // syscall.
+#if SYSCALL_EXISTS(ipc)
+#define SYSVIPCCALL(name, NAME) SYSCALL_WITH_ARG(ipc, 0, NAME)
+#else
+#define SYSVIPCCALL(name, NAME) SYSCALL(name)
 #endif
 
   /* Most used system calls should be at the top of the whitelist
@@ -247,12 +256,16 @@ SandboxFilterImpl::Build() {
   Allow(SYSCALL(stat));
   Allow(SYSCALL(getdents));
   Allow(SYSCALL(lstat));
+#if SYSCALL_EXISTS(mmap2)
+  Allow(SYSCALL(mmap2));
+#else
   Allow(SYSCALL(mmap));
+#endif
   Allow(SYSCALL(openat));
   Allow(SYSCALL(fcntl));
   Allow(SYSCALL(fstat));
   Allow(SYSCALL(readlink));
-  Allow(SYSCALL(getsockname));
+  Allow(SOCKETCALL(getsockname, GETSOCKNAME));
   Allow(SYSCALL(getuid));
   Allow(SYSCALL(geteuid));
   Allow(SYSCALL(mkdir));
@@ -261,9 +274,13 @@ SandboxFilterImpl::Build() {
   Allow(SYSCALL(pread64));
   Allow(SYSCALL(statfs));
   Allow(SYSCALL(pipe));
+#if SYSCALL_EXISTS(ugetrlimit)
+  Allow(SYSCALL(ugetrlimit));
+#else
   Allow(SYSCALL(getrlimit));
-  Allow(SYSCALL(shutdown));
-  Allow(SYSCALL(getpeername));
+#endif
+  Allow(SOCKETCALL(shutdown, SHUTDOWN));
+  Allow(SOCKETCALL(getpeername, GETPEERNAME));
   Allow(SYSCALL(eventfd2));
   Allow(SYSCALL(clock_getres));
   Allow(SYSCALL(sysinfo));
@@ -274,32 +291,38 @@ SandboxFilterImpl::Build() {
   Allow(SYSCALL(getegid));
   Allow(SYSCALL(inotify_init1));
   Allow(SYSCALL(wait4));
-  Allow(SYSCALL(shmctl));
+  Allow(SYSVIPCCALL(shmctl, SHMCTL));
   Allow(SYSCALL(set_robust_list));
   Allow(SYSCALL(rmdir));
-  Allow(SYSCALL(recvfrom));
-  Allow(SYSCALL(shmdt));
+  Allow(SOCKETCALL(recvfrom, RECVFROM));
+  Allow(SYSVIPCCALL(shmdt, SHMDT));
   Allow(SYSCALL(pipe2));
-  Allow(SYSCALL(setsockopt));
-  Allow(SYSCALL(shmat));
+  Allow(SOCKETCALL(setsockopt, SETSOCKOPT));
+  Allow(SYSVIPCCALL(shmat, SHMAT));
   Allow(SYSCALL(set_tid_address));
   Allow(SYSCALL(inotify_add_watch));
   Allow(SYSCALL(rt_sigprocmask));
-  Allow(SYSCALL(shmget));
+  Allow(SYSVIPCCALL(shmget, SHMGET));
   Allow(SYSCALL(getgid));
+#if SYSCALL_EXISTS(utimes)
+  Allow(SYSCALL(utimes));
+#else
   Allow(SYSCALL(utime));
+#endif
+#if SYSCALL_EXISTS(arch_prctl)
   Allow(SYSCALL(arch_prctl));
+#endif
   Allow(SYSCALL(sched_getaffinity));
   /* We should remove all of the following in the future (possibly even more) */
-  Allow(SYSCALL(socket));
+  Allow(SOCKETCALL(socket, SOCKET));
   Allow(SYSCALL(chmod));
   Allow(SYSCALL(execve));
   Allow(SYSCALL(rename));
   Allow(SYSCALL(symlink));
-  Allow(SYSCALL(connect));
+  Allow(SOCKETCALL(connect, CONNECT));
   Allow(SYSCALL(quotactl));
   Allow(SYSCALL(kill));
-  Allow(SYSCALL(sendto));
+  Allow(SOCKETCALL(sendto, SENDTO));
 #endif
 
   /* nsSystemInfo uses uname (and we cache an instance, so */
