@@ -778,6 +778,7 @@ static GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
 
     GrGLExtensions extensions;
     if (!extensions.init(i->fStandard, glGetString_mozilla, NULL, glGetIntegerv_mozilla)) {
+        delete i;
         return nullptr;
     }
 
