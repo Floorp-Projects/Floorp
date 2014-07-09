@@ -293,7 +293,9 @@ WifiGeoPositionProvider.prototype = {
     let self = this;
     let settingsCallback = {
       handle: function(name, result) {
-        if (name == SETTINGS_DEBUG_ENABLED) {
+        // Stop the B2G UI setting from overriding the js prefs setting, and turning off logging
+        // If gLoggingEnabled is already on during startup, that means it was set in js prefs.
+        if (name == SETTINGS_DEBUG_ENABLED && !gLoggingEnabled) {
           gLoggingEnabled = result;
         } else if (name == SETTINGS_WIFI_ENABLED) {
           gWifiScanningEnabled = result;
