@@ -173,7 +173,13 @@ function MixedTest6B() {
 
 function MixedTest6C() {
   gTestBrowser.removeEventListener("load", MixedTest6C, true);
-  waitForCondition(function() content.document.getElementById('f1').contentDocument.getElementById('p1').innerHTML == "hello", MixedTest6D, "Waited too long for mixed script to run in Test 6");
+  waitForCondition(function() {
+    try {
+      return content.document.getElementById('f1').contentDocument.getElementById('p1').innerHTML == "hello";
+    } catch (e) {
+      return false;
+    }
+  }, MixedTest6D, "Waited too long for mixed script to run in Test 6");
 }
 function MixedTest6D() {
   ok(content.document.getElementById('f1').contentDocument.getElementById('p1').innerHTML == "hello","Mixed script didn't load in Test 6");
