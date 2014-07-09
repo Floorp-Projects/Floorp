@@ -1,3 +1,4 @@
+/* jshint moz: true, esnext: true */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -450,6 +451,41 @@ this.PushService = {
   _willBeWokenUpByUDP: false,
 
   /**
+   * Holds if the adaptive ping is enabled. This is read on init().
+   * If adaptive ping is enabled, a new ping is calculed each time we receive
+   * a pong message, trying to maximize network resources while minimizing
+   * cellular signalling storms.
+   */
+  _adaptiveEnabled: false,
+
+  /**
+   * This saves a flag about if we need to recalculate a new ping, based on:
+   *   1) the gap between the maximum working ping and the first ping that
+   *      gives an error (timeout) OR
+   *   2) we have reached the pref of the maximum value we allow for a ping
+   *      (services.push.adaptive.upperLimit)
+   */
+  _recalculatePing: true,
+
+  /**
+   * This map holds a (pingInterval, triedTimes) of each pingInterval tried.
+   * It is used to check if the pingInterval has been tested enough to know that
+   * is incorrect and is above the limit the network allow us to keep the
+   * connection open.
+   */
+  _pingIntervalRetryTimes: {},
+
+  /**
+   * Holds the lastGoodPingInterval for our current connection.
+   */
+  _lastGoodPingInterval: 0,
+
+  /**
+   * Maximum ping interval that we can reach.
+   */
+  _upperLimit: 0,
+
+  /**
    * Sends a message to the Push Server through an open websocket.
    * typeof(msg) shall be an object
    */
@@ -480,6 +516,8 @@ this.PushService = {
     this._alarmID = null;
 
     this._requestTimeout = prefs.get("requestTimeout");
+    this._adaptiveEnabled = prefs.get('adaptive.enabled');
+    this._upperLimit = prefs.get('adaptive.upperLimit');
 
     this._startListeningIfChannelsPresent();
 
@@ -592,6 +630,8 @@ this.PushService = {
    */
   _reconnectAfterBackoff: function() {
     debug("reconnectAfterBackoff()");
+    //Calculate new ping interval
+    this._calculateAdaptivePing(true /* wsWentDown */);
 
     // Calculate new timeout, but cap it to pingInterval.
     let retryTimeout = prefs.get("retryBaseInterval") *
@@ -602,6 +642,146 @@ this.PushService = {
 
     debug("Retry in " + retryTimeout + " Try number " + this._retryFailCount);
     this._setAlarm(retryTimeout);
+  },
+
+  /**
+   * We need to calculate a new ping based on:
+   *  1) Latest good ping
+   *  2) A safe gap between 1) and the calculated new ping (which is
+   *  by default, 1 minute)
+   *
+   * This is for 3G networks, whose connections keepalives differ broadly,
+   * for example:
+   *  1) Movistar Spain: 29 minutes
+   *  2) VIVO Brazil: 5 minutes
+   *  3) Movistar Colombia: XXX minutes
+   *
+   * So a fixed ping is not good for us for two reasons:
+   *  1) We might lose the connection, so we need to reconnect again (wasting
+   *  resources)
+   *  2) We use a lot of network signaling just for pinging.
+   *
+   * This algorithm tries to search the best value between a disconnection and a
+   * valid ping, to ensure better battery life and network resources usage.
+   *
+   * The value is saved in services.push.pingInterval
+   * @param wsWentDown [Boolean] if the WebSocket was closed or it is still alive
+   *
+   */
+  _calculateAdaptivePing: function(wsWentDown) {
+    debug('_calculateAdaptivePing()');
+    if (!this._adaptiveEnabled) {
+      debug('Adaptive ping is disabled');
+      return;
+    }
+
+    if (this._retryFailCount > 0) {
+      debug('Push has failed to connect to the Push Server ' +
+        this._retryFailCount + ' times. ' +
+        'Do not calculate a new pingInterval now');
+      return;
+    }
+
+    if (!this._recalculatePing && !wsWentDown) {
+      debug('We do not need to recalculate the ping now, based on previous data');
+      return;
+    }
+
+    // Save actual state of the network
+    let ns = this._getNetworkInformation();
+
+    if (ns.ip) {
+      // mobile
+      debug('mobile');
+      let oldNetwork = prefs.get('adaptive.mobile');
+      let newNetwork = 'mobile-' + ns.mcc + '-' + ns.mnc;
+
+      // Mobile networks differ, reset all intervals and pings
+      if (oldNetwork !== newNetwork) {
+        // Network differ, reset all values
+        debug('Mobile networks differ. Old network is ' + oldNetwork +
+              ' and new is ' + newNetwork);
+        prefs.set('adaptive.mobile', newNetwork);
+        //We reset the upper bound member
+        this._recalculatePing = true;
+        this._pingIntervalRetryTimes = {};
+
+        // Put default values
+        let defaultPing = prefs.get('pingInterval.default');
+        prefs.set('pingInterval', defaultPing);
+        this._lastGoodPingInterval = defaultPing;
+
+      } else {
+        // Mobile network is the same, let's just update things
+        prefs.set('pingInterval', prefs.get('pingInterval.mobile'));
+        this._lastGoodPingInterval = prefs.get('adaptive.lastGoodPingInterval.mobile');
+      }
+
+    } else {
+      // wifi
+      debug('wifi');
+      prefs.set('pingInterval', prefs.get('pingInterval.wifi'));
+      this._lastGoodPingInterval = prefs.get('adaptive.lastGoodPingInterval.wifi');
+    }
+
+    let nextPingInterval;
+    let lastTriedPingInterval = prefs.get('pingInterval');
+    if (wsWentDown) {
+      debug('The WebSocket was disconnected, calculating next ping');
+
+      // If we have not tried this pingInterval yet, initialize
+      this._pingIntervalRetryTimes[lastTriedPingInterval] =
+           (this._pingIntervalRetryTimes[lastTriedPingInterval] || 0) + 1;
+
+       // Try the pingInterval at least 3 times, just to be sure that the
+       // calculated interval is not valid.
+       if (this._pingIntervalRetryTimes[lastTriedPingInterval] < 2) {
+         debug('pingInterval= ' + lastTriedPingInterval + ' tried only ' +
+           this._pingIntervalRetryTimes[lastTriedPingInterval] + ' times');
+         return;
+       }
+
+       // Latest ping was invalid, we need to lower the limit to limit / 2
+       nextPingInterval = Math.floor(lastTriedPingInterval / 2);
+
+      // If the new ping interval is close to the last good one, we are near
+      // optimum, so stop calculating.
+      if (nextPingInterval - this._lastGoodPingInterval < prefs.get('adaptive.gap')) {
+        debug('We have reached the gap, we have finished the calculation');
+        debug('nextPingInterval=' + nextPingInterval);
+        debug('lastGoodPing=' + this._lastGoodPingInterval);
+        nextPingInterval = this._lastGoodPingInterval;
+        this._recalculatePing = false;
+      } else {
+        debug('We need to calculate next time');
+        this._recalculatePing = true;
+      }
+
+    } else {
+      debug('The WebSocket is still up');
+      this._lastGoodPingInterval = lastTriedPingInterval;
+      nextPingInterval = Math.floor(lastTriedPingInterval * 1.5);
+    }
+
+    // Check if we have reached the upper limit
+    if (this._upperLimit < nextPingInterval) {
+      debug('Next ping will be bigger than the configured upper limit, capping interval');
+      this._recalculatePing = false;
+      this._lastGoodPingInterval = lastTriedPingInterval;
+      nextPingInterval = lastTriedPingInterval;
+    }
+
+    debug('Setting the pingInterval to ' + nextPingInterval);
+    prefs.set('pingInterval', nextPingInterval);
+
+    //Save values for our current network
+    if (ns.ip) {
+      prefs.set('pingInterval.mobile', nextPingInterval);
+      prefs.set('adaptive.lastGoodPingInterval.mobile', this._lastGoodPingInterval);
+    } else {
+      prefs.set('pingInterval.wifi', nextPingInterval);
+      prefs.set('adaptive.lastGoodPingInterval.wifi', this._lastGoodPingInterval);
+    }
   },
 
   _beginWSSetup: function() {
@@ -1393,10 +1573,6 @@ this.PushService = {
 
     this._waitingForPong = false;
 
-    // Reset the ping timer.  Note: This path is executed at every step of the
-    // handshake, so this alarm does not need to be set explicitly at startup.
-    this._setAlarm(prefs.get("pingInterval"));
-
     let reply = undefined;
     try {
       reply = JSON.parse(message);
@@ -1405,8 +1581,29 @@ this.PushService = {
       return;
     }
 
-    if (typeof reply.messageType != "string") {
-      debug("messageType not a string " + reply.messageType);
+    // If we are not waiting for a hello message, reset the retry fail count
+    if (this._currentState != STATE_WAITING_FOR_HELLO) {
+      debug('Reseting _retryFailCount and _pingIntervalRetryTimes');
+      this._retryFailCount = 0;
+      this._pingIntervalRetryTimes = {};
+    }
+
+    let doNotHandle = false;
+    if ((message === '{}') ||
+        (reply.messageType === undefined) ||
+        (reply.messageType === "ping") ||
+        (typeof reply.messageType != "string")) {
+      debug('Pong received');
+      this._calculateAdaptivePing(false);
+      doNotHandle = true;
+    }
+
+    // Reset the ping timer.  Note: This path is executed at every step of the
+    // handshake, so this alarm does not need to be set explicitly at startup.
+    this._setAlarm(prefs.get("pingInterval"));
+
+    // If it is a ping, do not handle the message.
+    if (doNotHandle) {
       return;
     }
 
