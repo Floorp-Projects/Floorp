@@ -36,10 +36,9 @@ function uninstallExperimentAddons() {
 
 function testCleanup(experimentsInstance) {
   return Task.spawn(function* () {
-    yield experimentsInstance.uninit();
-    yield removeCacheFile();
+    yield promiseRestartManager();
     yield uninstallExperimentAddons();
-    restartManager();
+    yield removeCacheFile();
   });
 }
 
@@ -349,7 +348,7 @@ add_task(function* test_getActiveExperimentID() {
   Assert.equal(experiments.getActiveExperimentID(), EXPERIMENT1_ID,
                "getActiveExperimentID should return the active experiment1");
 
-  yield experiments.uninit();
+  yield promiseRestartManager();
   Assert.equal(experiments.getActiveExperimentID(), EXPERIMENT1_ID,
                "getActiveExperimentID should return the active experiment1 after uninit()");
 
@@ -1526,7 +1525,7 @@ add_task(function* testEnabledAfterRestart() {
   Assert.ok(addons[0].isActive, "That experiment is active.");
 
   dump("Restarting Addon Manager\n");
-  restartManager();
+  yield promiseRestartManager();
   experiments = new Experiments.Experiments(gPolicy);
 
   addons = yield getExperimentAddons();
@@ -1584,7 +1583,7 @@ add_task(function* test_foreignUninstallAndRestart() {
   Assert.ok(!experimentList[0].active, "Experiment 1 should not be active anymore.");
 
   // Fake restart behaviour.
-  restartManager();
+  yield promiseRestartManager();
   experiments = new Experiments.Experiments(gPolicy);
   yield experiments.updateManifest();
 
