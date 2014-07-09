@@ -16,7 +16,8 @@ namespace mozilla {
 /**
  * Wrapper class used to initialize static data used by the TimeStamp class
  */
-struct TimeStampInitialization {
+struct TimeStampInitialization
+{
   /**
    * First timestamp taken when the class static initializers are run. This
    * timestamp is used to sanitize timestamps coming from different sources.
@@ -30,12 +31,14 @@ struct TimeStampInitialization {
    */
   TimeStamp mProcessCreation;
 
-  TimeStampInitialization() {
+  TimeStampInitialization()
+  {
     TimeStamp::Startup();
     mFirstTimeStamp = TimeStamp::Now();
   };
 
-  ~TimeStampInitialization() {
+  ~TimeStampInitialization()
+  {
     TimeStamp::Shutdown();
   };
 };
@@ -48,7 +51,7 @@ TimeStamp::ProcessCreation(bool& aIsInconsistent)
   aIsInconsistent = false;
 
   if (sInitOnce.mProcessCreation.IsNull()) {
-    char *mozAppRestart = PR_GetEnv("MOZ_APP_RESTART");
+    char* mozAppRestart = PR_GetEnv("MOZ_APP_RESTART");
     TimeStamp ts;
 
     /* When calling PR_SetEnv() with an empty value the existing variable may
