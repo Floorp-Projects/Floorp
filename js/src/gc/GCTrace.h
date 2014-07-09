@@ -29,6 +29,7 @@ extern void TraceMinorGCEnd();
 extern void TraceMajorGCStart();
 extern void TraceTenuredFinalize(Cell *thing);
 extern void TraceMajorGCEnd();
+extern void TraceTypeNewScript(js::types::TypeObject *type);
 
 #else
 
@@ -44,6 +45,7 @@ inline void TraceMinorGCEnd() {}
 inline void TraceMajorGCStart() {}
 inline void TraceTenuredFinalize(Cell *thing) {}
 inline void TraceMajorGCEnd() {}
+inline void TraceTypeNewScript(js::types::TypeObject *type) {}
 
 #endif
 
