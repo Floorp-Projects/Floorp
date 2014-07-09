@@ -128,7 +128,7 @@ TouchEvent::Touches()
     WidgetTouchEvent* touchEvent = mEvent->AsTouchEvent();
     if (mEvent->message == NS_TOUCH_END || mEvent->message == NS_TOUCH_CANCEL) {
       // for touchend events, remove any changed touches from the touches array
-      WidgetTouchEvent::TouchArray unchangedTouches;
+      WidgetTouchEvent::AutoTouchArray unchangedTouches;
       const WidgetTouchEvent::TouchArray& touches = touchEvent->touches;
       for (uint32_t i = 0; i < touches.Length(); ++i) {
         if (!touches[i]->mChanged) {
@@ -147,7 +147,7 @@ TouchList*
 TouchEvent::TargetTouches()
 {
   if (!mTargetTouches) {
-    nsTArray< nsRefPtr<Touch> > targetTouches;
+    WidgetTouchEvent::AutoTouchArray targetTouches;
     WidgetTouchEvent* touchEvent = mEvent->AsTouchEvent();
     const WidgetTouchEvent::TouchArray& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
@@ -169,7 +169,7 @@ TouchList*
 TouchEvent::ChangedTouches()
 {
   if (!mChangedTouches) {
-    nsTArray< nsRefPtr<Touch> > changedTouches;
+    WidgetTouchEvent::AutoTouchArray changedTouches;
     WidgetTouchEvent* touchEvent = mEvent->AsTouchEvent();
     const WidgetTouchEvent::TouchArray& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {

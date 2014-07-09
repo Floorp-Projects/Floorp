@@ -10,8 +10,8 @@
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/TouchEvents.h"
 #include "nsJSEnvironment.h"
-#include "nsTArray.h"
 #include "nsWrapperCache.h"
 
 class nsAString;
@@ -33,7 +33,7 @@ public:
     nsJSContext::LikelyShortLivingObjectCreated();
   }
   TouchList(nsISupports* aParent,
-            const nsTArray<nsRefPtr<Touch> >& aTouches)
+            const WidgetTouchEvent::TouchArray& aTouches)
     : mParent(aParent)
     , mPoints(aTouches)
   {
@@ -78,7 +78,7 @@ protected:
   ~TouchList() {}
 
   nsCOMPtr<nsISupports> mParent;
-  nsTArray<nsRefPtr<Touch> > mPoints;
+  WidgetTouchEvent::TouchArray mPoints;
 };
 
 class TouchEvent : public UIEvent
