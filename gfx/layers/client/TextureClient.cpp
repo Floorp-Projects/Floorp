@@ -235,13 +235,13 @@ DisableGralloc(SurfaceFormat aFormat, const gfx::IntSize& aSizeHint)
 }
 #endif
 
-// static
+static
 TemporaryRef<TextureClient>
-TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
-                                             SurfaceFormat aFormat,
-                                             TextureFlags aTextureFlags,
-                                             gfx::BackendType aMoz2DBackend,
-                                             const gfx::IntSize& aSizeHint)
+CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
+                              SurfaceFormat aFormat,
+                              TextureFlags aTextureFlags,
+                              gfx::BackendType aMoz2DBackend,
+                              const gfx::IntSize& aSizeHint)
 {
   if (aMoz2DBackend == gfx::BackendType::NONE) {
     aMoz2DBackend = gfxPlatform::GetPlatform()->GetContentBackend();
@@ -315,11 +315,52 @@ TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
 
   // Can't do any better than a buffer texture client.
   if (!result) {
-    result = CreateBufferTextureClient(aAllocator, aFormat, aTextureFlags, aMoz2DBackend);
+    result = TextureClient::CreateBufferTextureClient(aAllocator, aFormat, aTextureFlags, aMoz2DBackend);
   }
 
   MOZ_ASSERT(!result || result->CanExposeDrawTarget(), "texture cannot expose a DrawTarget?");
   return result;
+}
+
+// static
+TemporaryRef<TextureClient>
+TextureClient::CreateForDrawing(ISurfaceAllocator* aAllocator,
+                                gfx::SurfaceFormat aFormat,
+                                gfx::IntSize aSize,
+                                gfx::BackendType aMoz2DBackend,
+                                TextureFlags aTextureFlags,
+                                TextureAllocationFlags aAllocFlags)
+{
+  RefPtr<TextureClient> texture =
+    CreateTextureClientForDrawing(aAllocator, aFormat,
+                                  aTextureFlags, aMoz2DBackend,
+                                  aSize);
+  if (texture) {
+    if (!texture->AllocateForSurface(aSize, aAllocFlags)) {
+      return nullptr;
+    }
+  }
+  return texture;
+}
+
+// static
+TemporaryRef<BufferTextureClient>
+TextureClient::CreateForRawBufferAccess(ISurfaceAllocator* aAllocator,
+                                        gfx::SurfaceFormat aFormat,
+                                        gfx::IntSize aSize,
+                                        gfx::BackendType aMoz2DBackend,
+                                        TextureFlags aTextureFlags,
+                                        TextureAllocationFlags aAllocFlags)
+{
+  RefPtr<BufferTextureClient> texture =
+    CreateBufferTextureClient(aAllocator, aFormat,
+                              aTextureFlags, aMoz2DBackend);
+  if (texture) {
+    if (!texture->AllocateForSurface(aSize, aAllocFlags)) {
+      return nullptr;
+    }
+  }
+  return texture;
 }
 
 // static
