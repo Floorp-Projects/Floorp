@@ -40,6 +40,7 @@
 #include "mozilla/dom/Telephony.h"
 #include "mozilla/dom/Voicemail.h"
 #include "mozilla/dom/TVManager.h"
+#include "mozilla/dom/VRDevice.h"
 #include "mozilla/Hal.h"
 #include "nsISiteSpecificUserAgent.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -1721,6 +1722,32 @@ Navigator::GetGamepads(nsTArray<nsRefPtr<Gamepad> >& aGamepads,
   win->GetGamepads(aGamepads);
 }
 #endif
+
+already_AddRefed<Promise>
+Navigator::GetVRDevices(ErrorResult& aRv)
+{
+  if (!mWindow || !mWindow->GetDocShell()) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
+  nsRefPtr<Promise> p = Promise::Create(go, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsGlobalWindow* win = static_cast<nsGlobalWindow*>(mWindow.get());
+
+  nsTArray<nsRefPtr<VRDevice>> vrDevs;
+  if (!win->GetVRDevices(vrDevs)) {
+    p->MaybeReject(NS_ERROR_FAILURE);
+  } else {
+    p->MaybeResolve(vrDevs);
+  }
+
+  return p.forget();
+}
 
 //*****************************************************************************
 //    Navigator::nsIMozNavigatorNetwork
