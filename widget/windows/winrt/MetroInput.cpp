@@ -219,15 +219,15 @@ namespace {
    *
    * @param aKey the key of the current element being enumerated
    * @param aData the value of the current element being enumerated
-   * @param aTouchList the {@link nsTArray} to append to
+   * @param aTouchList the {@link WidgetTouchEvent::TouchArray} to append to
    */
   PLDHashOperator
   AppendToTouchList(const unsigned int& aKey,
                     nsRefPtr<Touch>& aData,
                     void *aTouchList)
   {
-    nsTArray<nsRefPtr<Touch> > *touches =
-              static_cast<nsTArray<nsRefPtr<Touch> > *>(aTouchList);
+    WidgetTouchEvent::TouchArray* touches =
+              static_cast<WidgetTouchEvent::TouchArray*>(aTouchList);
     nsRefPtr<Touch> copy = new Touch(aData->mIdentifier,
                aData->mRefPoint,
                aData->mRadius,
@@ -771,7 +771,7 @@ MetroInput::TransformRefPoint(const Foundation::Point& aPosition, LayoutDeviceIn
 void
 MetroInput::TransformTouchEvent(WidgetTouchEvent* aEvent)
 {
-  nsTArray< nsRefPtr<dom::Touch> >& touches = aEvent->touches;
+  WidgetTouchEvent::TouchArray& touches = aEvent->touches;
   for (uint32_t i = 0; i < touches.Length(); ++i) {
     dom::Touch* touch = touches[i];
     if (touch) {
@@ -1171,7 +1171,7 @@ static void DumpTouchIds(const char* aTarget, WidgetTouchEvent* aEvent)
     WinUtils::Log("DumpTouchIds: NS_TOUCH_CANCEL block");
     break;
   }
-  nsTArray< nsRefPtr<dom::Touch> >& touches = aEvent->touches;
+  WidgetTouchEvent::TouchArray& touches = aEvent->touches;
   for (uint32_t i = 0; i < touches.Length(); ++i) {
     dom::Touch* touch = touches[i];
     if (!touch) {
@@ -1459,7 +1459,7 @@ MetroInput::DispatchTouchCancel(WidgetTouchEvent* aEvent)
   // for. Note we can't rely on mTouches here since touchends remove points
   // from it.
   WidgetTouchEvent touchEvent(true, NS_TOUCH_CANCEL, mWidget.Get());
-  nsTArray< nsRefPtr<dom::Touch> >& touches = aEvent->touches;
+  WidgetTouchEvent::TouchArray& touches = aEvent->touches;
   for (uint32_t i = 0; i < touches.Length(); ++i) {
     dom::Touch* touch = touches[i];
     if (!touch) {

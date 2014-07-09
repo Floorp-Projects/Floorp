@@ -62,7 +62,7 @@ public:
   nsresult Init(nsIChannel* aChannel, bool aAllowDataURI = false);
 
 private:
-  ~nsCORSListenerProxy() {}
+  ~nsCORSListenerProxy();
 
   nsresult UpdateChannel(nsIChannel* aChannel, bool aAllowDataURI = false);
   nsresult CheckRequestApproved(nsIRequest* aRequest);

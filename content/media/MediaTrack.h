@@ -38,8 +38,6 @@ public:
              const nsAString& aLabel,
              const nsAString& aLanguage);
 
-  virtual ~MediaTrack();
-
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaTrack, DOMEventTargetHelper)
 
@@ -88,6 +86,8 @@ public:
   friend class MediaTrackList;
 
 protected:
+  virtual ~MediaTrack();
+
   void SetTrackList(MediaTrackList* aList);
   void Init(nsPIDOMWindow* aOwnerWindow);
 

@@ -57,7 +57,6 @@ public:
             TextTrackMode aMode,
             TextTrackReadyState aReadyState,
             TextTrackSource aTextTrackSource);
-  ~TextTrack();
 
   void SetDefaultSettings();
 
@@ -121,6 +120,8 @@ public:
   }
 
 private:
+  ~TextTrack();
+
   nsRefPtr<TextTrackList> mTextTrackList;
 
   TextTrackKind mKind;

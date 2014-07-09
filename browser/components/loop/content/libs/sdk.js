@@ -1,20 +1,20 @@
 /**
- * @license  OpenTok JavaScript Library v2.2.5
+ * @license  OpenTok JavaScript Library v2.2.6
  * http://www.tokbox.com/
  *
  * Copyright (c) 2014 TokBox, Inc.
  * Released under the MIT license
  * http://opensource.org/licenses/MIT
  *
- * Date: May 22 07:14:18 2014
+ * Date: June 24 11:09:07 2014
  */
 
 (function(window) {
   if (!window.OT) window.OT = {};
 
   OT.properties = {
-    version: 'v2.2.5',         // The current version (eg. v2.0.4) (This is replaced by gradle)
-    build: '12d9384',    // The current build hash (This is replaced by gradle)
+    version: 'v2.2.6',         // The current version (eg. v2.0.4) (This is replaced by gradle)
+    build: 'd326ad1',    // The current build hash (This is replaced by gradle)
 
     // Whether or not to turn on debug logging by default
     debug: 'false',
@@ -22,12 +22,11 @@
     websiteURL: 'http://www.tokbox.com',
 
     // The URL of the CDN
-    // XXX: patched for loop so we use local files
-    cdnURL: 'loop/otcdn',
+    cdnURL: 'http://static.opentok.com',
     // The URL to use for logging
     loggingURL: 'https://hlg.tokbox.com/prod',
     // The anvil API URL
-    apiURL: 'https://anvil.opentok.com',
+    apiURL: 'http://anvil.opentok.com',
 
     // What protocol to use when connecting to the rumor web socket
     messagingProtocol: 'wss',
@@ -37,10 +36,7 @@
     // If this environment supports SSL
     supportSSL: 'true',
     // The CDN to use if we're using SSL
-    // XXX: patched for loop so we use local files
-    cdnURLSSL: 'loop/otcdn',
-    // The loggging URL to use if we're using SSL
-    loggingURLSSL: 'https://hlg.tokbox.com/prod',
+    cdnURLSSL: 'https://static.opentok.com',
     // The anvil API URL to use if we're using SSL
     apiURLSSL: 'https://anvil.opentok.com',
 
@@ -2886,6 +2882,9 @@ OTHelpers.centerElement = function(element, width, height) {
     if (enumerable === void 0) enumerable = false;
 
     for (var key in getters) {
+      if(!getters.hasOwnProperty(key)) {
+        continue;
+      }
       propsDefinition[key] = {
         get: getters[key],
         enumerable: enumerable
@@ -3018,13 +3017,20 @@ OTHelpers.centerElement = function(element, width, height) {
     if (props.supportSSL && (window.location.protocol.indexOf('https') >= 0 ||
       window.location.protocol.indexOf('chrome-extension') >= 0)) {
       props.assetURL = props.cdnURLSSL + '/webrtc/' + props.version;
-      props.loggingURL = props.loggingURLSSL;
     } else {
       props.assetURL = props.cdnURL + '/webrtc/' + props.version;
     }
 
     props.configURL = props.assetURL + '/js/dynamic_config.min.js';
     props.cssURL = props.assetURL + '/css/ot.min.css';
+    
+    if (window.OTProperties) {
+      // Allow window.OTProperties to override cdnURL, configURL, assetURL and cssURL
+      if (window.OTProperties.cdnURL) props.cdnURL = window.OTProperties.cdnURL;
+      if (window.OTProperties.configURL) props.configURL = window.OTProperties.configURL;
+      if (window.OTProperties.assetURL) props.assetURL = window.OTProperties.assetURL;
+      if (window.OTProperties.cssURL) props.cssURL = window.OTProperties.cssURL;
+    }
 
     return props;
   }(OT.properties);
@@ -3519,8 +3525,7 @@ OTHelpers.centerElement = function(element, width, height) {
   /* global mozRTCPeerConnection */
 
   var nativeGetUserMedia,
-      mozToW3CErrors,
-      chromeToW3CErrors,
+      vendorToW3CErrors,
       gumNamesToMessages,
       mapVendorErrorName,
       parseErrorEvent,
@@ -3601,21 +3606,19 @@ OTHelpers.centerElement = function(element, width, height) {
 
   // Mozilla error strings and the equivalent W3C names. NOT_SUPPORTED_ERROR does not
   // exist in the spec right now, so we'll include Mozilla's error description.
-  mozToW3CErrors = {
+  // Chrome TrackStartError is triggered when the camera is already used by another app (Windows)
+  vendorToW3CErrors = {
     PERMISSION_DENIED: 'PermissionDeniedError',
     NOT_SUPPORTED_ERROR: 'NotSupportedError',
     MANDATORY_UNSATISFIED_ERROR: ' ConstraintNotSatisfiedError',
     NO_DEVICES_FOUND: 'NoDevicesFoundError',
-    HARDWARE_UNAVAILABLE: 'HardwareUnavailableError'
-  };
-
-  // Chrome only seems to expose a single error with a code of 1 right now.
-  chromeToW3CErrors = {
-    1: 'PermissionDeniedError'
+    HARDWARE_UNAVAILABLE: 'HardwareUnavailableError',
+    TrackStartError: 'HardwareUnavailableError'
   };
 
   gumNamesToMessages = {
     PermissionDeniedError: 'End-user denied permission to hardware devices',
+    PermissionDismissedError: 'End-user dismissed permission to hardware devices',
     NotSupportedError: 'A constraint specified is not supported by the browser.',
     ConstraintNotSatisfiedError: 'It\'s not possible to satisfy one or more constraints ' +
       'passed into the getUserMedia function',
@@ -3626,16 +3629,22 @@ OTHelpers.centerElement = function(element, width, height) {
       'that the chosen devices are not in use by another application.'
   };
 
-// Map vendor error strings to names and messages
-  mapVendorErrorName = function mapVendorErrorName (vendorErrorName, vendorErrors) {
-    var errorName = vendorErrors[vendorErrorName],
-        errorMessage = gumNamesToMessages[errorName];
+  // Map vendor error strings to names and messages if possible
+  mapVendorErrorName = function mapVendorErrorName(vendorErrorName, vendorErrors) {
+    var errorName, errorMessage;
 
-    if (!errorMessage) {
+    if(vendorErrors.hasOwnProperty(vendorErrorName)) {
+      errorName = vendorErrors[vendorErrorName];
+    } else {
       // This doesn't map to a known error from the Media Capture spec, it's
       // probably a custom vendor error message.
-      errorMessage = null; // This is undefined?
       errorName = vendorErrorName;
+    }
+
+    if(gumNamesToMessages.hasOwnProperty(errorName)) {
+      errorMessage = gumNamesToMessages[errorName];
+    } else {
+      errorMessage = 'Unknown Error while getting user media';
     }
 
     return {
@@ -3646,30 +3655,17 @@ OTHelpers.centerElement = function(element, width, height) {
 
   // Parse and normalise a getUserMedia error event from Chrome or Mozilla
   // @ref http://dev.w3.org/2011/webrtc/editor/getusermedia.html#idl-def-NavigatorUserMediaError
-  parseErrorEvent = function parseErrorObject (event) {
+  parseErrorEvent = function parseErrorObject(event) {
     var error;
 
     if (OT.$.isObject(event) && event.name) {
-      error = {
-        name: event.name,
-        message: event.message || gumNamesToMessages[event.name],
-        constraintName: event.constraintName
-      };
-
-    } else if (OT.$.isObject(event)) {
-      error = mapVendorErrorName(event.code, chromeToW3CErrors);
-
-      // message and constraintName are probably missing if the
-      // property is also omitted, but just in case they aren't.
-      if (event.message) error.message = event.message;
-      if (event.constraintName) error.constraintName = event.constraintName;
-
-    } else if (event && mozToW3CErrors.hasOwnProperty(event)) {
-      error = mapVendorErrorName(event, mozToW3CErrors);
-
+      error = mapVendorErrorName(event.name, vendorToW3CErrors);
+      error.constraintName = event.constraintName;
+    } else if (typeof event === 'string') {
+      error = mapVendorErrorName(event, vendorToW3CErrors);
     } else {
       error = {
-        message: 'Unknown Error while getting user media'
+        message: 'Unknown Error type while getting media'
       };
     }
 
@@ -3682,6 +3678,9 @@ OTHelpers.centerElement = function(element, width, height) {
     if (!constraints || !OT.$.isObject(constraints)) return true;
 
     for (var key in constraints) {
+      if(!constraints.hasOwnProperty(key)) {
+        continue;
+      }
       if (constraints[key]) return false;
     }
 
@@ -3769,6 +3768,29 @@ OTHelpers.centerElement = function(element, width, height) {
     return OT.$.supportsWebRTC() && OT.$.browser() === 'Chrome';
   };
 
+  OT.$.shouldAskForDevices = function(callback) {
+    var memoiseReply = function(audio, video) {
+      OT.$.shouldAskForDevices = function(callback) {
+        setTimeout(callback.bind(null, { video: video, audio: audio }));
+      };
+      OT.$.shouldAskForDevices(callback);
+    };
+    var MST = window.MediaStreamTrack;
+    if(MST != null && OT.$.isFunction(MST.getSources)) {
+      window.MediaStreamTrack.getSources(function(sources) {
+        var hasAudio = sources.some(function(src) {
+          return src.kind === 'audio';
+        });
+        var hasVideo = sources.some(function(src) {
+          return src.kind === 'video';
+        });
+        memoiseReply(hasAudio, hasVideo);
+      });
+    } else {
+      memoiseReply(true, true);
+    }
+  };
+
   // A wrapper for the builtin navigator.getUserMedia. In addition to the usual
   // getUserMedia behaviour, this helper method also accepts a accessDialogOpened
   // and accessDialogClosed callback.
@@ -3850,23 +3872,8 @@ OTHelpers.centerElement = function(element, width, height) {
           var error = parseErrorEvent(event);
 
           // The error name 'PERMISSION_DENIED' is from an earlier version of the spec
-          if (error.name === 'PermissionDeniedError') {
-            var MST = window.MediaStreamTrack;
-            if(MST != null && OT.$.isFunction(MST.getSources)) {
-              window.MediaStreamTrack.getSources(function(sources) {
-                if(sources.length > 0) {
-                  accessDenied.call(null, error);
-                } else {
-                  failure.call(null, {
-                    name: 'NoDevicesFoundError',
-                    message: gumNamesToMessages.NoDevicesFoundError
-                  });
-                }
-              });
-            } else {
-              accessDenied.call(null, error);
-            }
-
+          if (error.name === 'PermissionDeniedError' || error.name === 'PermissionDismissedError') {
+            accessDenied.call(null, error);
           } else {
             failure.call(null, error);
           }
@@ -4203,6 +4210,24 @@ OTHelpers.centerElement = function(element, width, height) {
 
           this.trigger('orientationChanged');
         }
+      },
+
+      // see https://wiki.mozilla.org/WebAPI/AudioChannels
+      // The audioChannelType is currently only available in Firefox. This property returns
+      // "unknown" in other browser. The related HTML tag attribute is "mozaudiochannel"
+      audioChannelType: {
+        get: function() {
+          if ('mozAudioChannelType' in this.domElement) {
+            return this.domElement.mozAudioChannelType;
+          } else {
+            return 'unknown';
+          }
+        },
+        set: function(type) {
+          if ('mozAudioChannelType' in this.domElement) {
+            this.domElement.mozAudioChannelType = type;
+          }
+        }
       }
     });
   }
@@ -4221,6 +4246,9 @@ OTHelpers.centerElement = function(element, width, height) {
       }
 
       for (var key in attributes) {
+        if(!attributes.hasOwnProperty(key)) {
+          continue;
+        }
         videoElement.setAttribute(key, attributes[key]);
       }
     }
@@ -5328,6 +5356,9 @@ OTHelpers.centerElement = function(element, width, height) {
 
       return _models.filter(function(model) {
         for (var key in attrsOrFilterFn) {
+          if(!attrsOrFilterFn.hasOwnProperty(key)) {
+            continue;
+          }
           if (model[key] !== attrsOrFilterFn[key]) return false;
         }
 
@@ -5346,6 +5377,9 @@ OTHelpers.centerElement = function(element, width, height) {
       else {
         filterFn = function(model) {
           for (var key in attrsOrFilterFn) {
+            if(!attrsOrFilterFn.hasOwnProperty(key)) {
+              continue;
+            }
             if (model[key] !== attrsOrFilterFn[key]) return false;
           }
 
@@ -6194,6 +6228,19 @@ OTHelpers.centerElement = function(element, width, height) {
     this.newValue = newValue;
   };
 
+/**
+ * Defines event objects for the <code>archiveStarted</code> and <code>archiveStopped</code> events.
+ * The Session object dispatches these events when an archive recording of the session starts and
+ * stops.
+ *
+ * @property {String} id The archive ID.
+ * @property {String} name The name of the archive. You can assign an archive a name when you create
+ * it, using the <a href="http://www.tokbox.com/opentok/api">OpenTok REST API</a> or one of the
+ * <a href="http://www.tokbox.com/opentok/libraries/server">OpenTok server SDKs</a>.
+ *
+ * @class ArchiveEvent
+ * @augments Event
+ */
   OT.ArchiveEvent = function (type, archive) {
     OT.Event.call(this, type, false);
     this.type = type;
@@ -9182,6 +9229,9 @@ OTHelpers.centerElement = function(element, width, height) {
     i = 0;
 
     for (var key in this.headers) {
+      if(!this.headers.hasOwnProperty(key)) {
+        continue;
+      }
       headerKey.push(new TextEncoder('utf-8').encode(key));
       headerVal.push(new TextEncoder('utf-8').encode(this.headers[key]));
       cBuf += 4;
@@ -11361,6 +11411,9 @@ OTHelpers.centerElement = function(element, width, height) {
           oldVideoDimensions = {};
 
       for (var key in attributes) {
+        if(!attributes.hasOwnProperty(key)) {
+          continue;
+        }
         // we shouldn't really read this before we know the key is valid
         var oldValue = this[key];
 
@@ -11440,7 +11493,9 @@ OTHelpers.centerElement = function(element, width, height) {
  * Date object by calling <code>new Date(creationTime)</code>, where <code>creationTime</code> is
  * the <code>creationTime</code> property of the Stream object.
  *
- * @property {Number} fps The frame rate of the video stream.
+ * @property {Number} frameRate The frame rate of the video stream. This property is only set if the
+ * publisher of the stream specifies a frame rate when calling the <code>OT.initPublisher()</code>
+ * method; otherwise, this property is undefined.
  *
  * @property {Boolean} hasAudio Whether the stream has audio. This property can change if the
  * publisher turns on or off audio (by calling
@@ -11671,6 +11726,9 @@ OTHelpers.centerElement = function(element, width, height) {
     // Mass update, called by Raptor.Dispatcher
     this._.update = function (attributes) {
       for (var key in attributes) {
+        if(!attributes.hasOwnProperty(key)) {
+          continue;
+        }
         this._.updateProperty(key, attributes[key]);
       }
     }.bind(this);
@@ -11697,6 +11755,9 @@ OTHelpers.centerElement = function(element, width, height) {
     // Mass update, called by Raptor.Dispatcher
     this._.update = function (attributes) {
       for (var key in attributes) {
+        if(!attributes.hasOwnProperty(key)) {
+          continue;
+        }
         var oldValue = this[key];
         this[key] = attributes[key];
         
@@ -13609,10 +13670,13 @@ OTHelpers.centerElement = function(element, width, height) {
     this.getAll = function() {
       var style = OT.$.clone(_style);
 
-      for (var i in style) {
-        if (_COMPONENT_STYLES.indexOf(i) < 0) {
+      for (var key in style) {
+        if(!style.hasOwnProperty(key)) {
+          continue;
+        }
+        if (_COMPONENT_STYLES.indexOf(key) < 0) {
           // Strip unnecessary properties out, should this happen on Set?
-          delete style[i];
+          delete style[key];
         }
       }
 
@@ -13633,6 +13697,9 @@ OTHelpers.centerElement = function(element, width, height) {
       var oldValue, newValue;
 
       for (var key in newStyles) {
+        if(!newStyles.hasOwnProperty(key)) {
+          continue;
+        }
         newValue = castValue(newStyles[key]);
 
         if (isValidStyle(key, newValue)) {
@@ -14107,6 +14174,8 @@ OTHelpers.centerElement = function(element, width, height) {
             connectionId: _session && _session.connected ? _session.connection.connectionId : null,
             partnerId: _session ? _session.apiKey : OT.APIKEY,
             streamId: _stream ? _stream.id : null,
+            width: _container ? OT.$.width(_container.domElement)  : undefined,
+            height: _container ? OT.$.height(_container.domElement)  : undefined,
             widgetId: _guid,
             version: OT.properties.version,
             'media_server_name': _session ? _session.sessionInfo.messagingServer : null,
@@ -14138,7 +14207,9 @@ OTHelpers.centerElement = function(element, width, height) {
           OT.debug('OT.Publisher.onLoaded');
 
           _state.set('MediaBound');
-          _container.loading = false;
+          // If we have a session and we haven't created the stream yet then
+          // wait until that is complete before hiding the loading spinner
+          _container.loading = this.session ? !_stream : false;
           _loaded = true;
 
           _createChrome.call(this);
@@ -14256,6 +14327,7 @@ OTHelpers.centerElement = function(element, width, height) {
         },
 
         accessDialogPrompt,
+        accessDialogChromeTimeout,
         accessDialogFirefoxTimeout,
         accessDialogWasOpened = false,
 
@@ -14272,7 +14344,9 @@ OTHelpers.centerElement = function(element, width, height) {
             function(event) {
               if(!event.isDefaultPrevented()) {
                 if(browser.browser === 'Chrome') {
-                  accessDialogPrompt = OT.Dialogs.AllowDeny.Chrome.initialPrompt();
+                  accessDialogChromeTimeout = setTimeout(function() {
+                    accessDialogPrompt = OT.Dialogs.AllowDeny.Chrome.initialPrompt();
+                  }, 5000);
                 } else if(browser.browser === 'Firefox') {
                   accessDialogFirefoxTimeout = setTimeout(function() {
                     accessDialogPrompt = OT.Dialogs.AllowDeny.Firefox.maybeDenied();
@@ -14285,6 +14359,11 @@ OTHelpers.centerElement = function(element, width, height) {
 
         onAccessDialogClosed = function() {
           logAnalyticsEvent('accessDialog', 'Closed', '', '');
+
+          if(accessDialogChromeTimeout) {
+            clearTimeout(accessDialogChromeTimeout);
+            accessDialogChromeTimeout = null;
+          }
 
           if(accessDialogFirefoxTimeout) {
             clearTimeout(accessDialogFirefoxTimeout);
@@ -14364,6 +14443,7 @@ OTHelpers.centerElement = function(element, width, height) {
           _stream.on('destroyed', this.disconnect, this);
 
           _state.set('Publishing');
+          _container.loading = !_loaded;
           _publishStartTime = new Date();
 
           this.trigger('publishComplete', null, this);
@@ -14559,7 +14639,7 @@ OTHelpers.centerElement = function(element, width, height) {
         publishVideo : true,
         mirror: true
       });
-        
+
       if (!_publishProperties.constraints) {
         _publishProperties.constraints = OT.$.clone(defaultConstraints);
         if (_publishProperties.resolution) {
@@ -14621,14 +14701,24 @@ OTHelpers.centerElement = function(element, width, height) {
         _container = new OT.WidgetView(targetElement, _publishProperties);
         _domId = _container.domId;
 
-        OT.$.getUserMedia(
-          _publishProperties.constraints,
-          onStreamAvailable.bind(this),
-          onStreamAvailableError.bind(this),
-          onAccessDialogOpened.bind(this),
-          onAccessDialogClosed.bind(this),
-          onAccessDenied.bind(this)
-        );
+        OT.$.shouldAskForDevices(function(devices) {
+          if(!devices.video) {
+            OT.warn('Setting video constraint to false, there are no video sources');
+            _publishProperties.constraints.video = false;
+          }
+          if(!devices.audio) {
+            OT.warn('Setting audio constraint to false, there are no audio sources');
+            _publishProperties.constraints.audio = false;
+          }
+          OT.$.getUserMedia(
+            _publishProperties.constraints,
+            onStreamAvailable.bind(this),
+            onStreamAvailableError.bind(this),
+            onAccessDialogOpened.bind(this),
+            onAccessDialogClosed.bind(this),
+            onAccessDenied.bind(this)
+          );
+        }.bind(this));
       }, this);
 
       return this;
@@ -15197,6 +15287,8 @@ OTHelpers.centerElement = function(element, width, height) {
             var QoSBlob = {
               widget_type: 'Subscriber',
               stream_type : 'WebRTC',
+              width: _container ? OT.$.width(_container.domElement) : undefined,
+              height: _container ? OT.$.height(_container.domElement) : undefined,
               session_id: _session ? _session.sessionId : null,
               connectionId: _session ? _session.connection.connectionId : null,
               media_server_name: _session ? _session.sessionInfo.messagingServer : null,
@@ -15320,6 +15412,8 @@ OTHelpers.centerElement = function(element, width, height) {
           _subscribeAudioFalseWorkaround = preserver;
 
           var streamElement = new OT.VideoElement();
+          // makes the incoming audio streams takes priority (will impact only FF OS for now)
+          streamElement.audioChannelType = 'telephony';
 
           // Initialize the audio volume
           streamElement.setAudioVolume(_audioVolume);
@@ -17920,6 +18014,26 @@ OTHelpers.centerElement = function(element, width, height) {
       }.bind(this)
     }, true);
 
+
+  /**
+   * Dispatched when an archive recording of the session starts.
+   *
+   * @name archiveStarted
+   * @event
+   * @memberof Session
+   * @see ArchiveEvent
+   * @see <a href="http://www.tokbox.com/opentok/tutorials/archiving">Archiving overview</a>.
+   */
+
+  /**
+   * Dispatched when an archive recording of the session stops.
+   *
+   * @name archiveStopped
+   * @event
+   * @memberof Session
+   * @see ArchiveEvent
+   * @see <a href="http://www.tokbox.com/opentok/tutorials/archiving">Archiving overview</a>.
+   */
 
   /**
    * A new client, other than your own, has connected to the session.

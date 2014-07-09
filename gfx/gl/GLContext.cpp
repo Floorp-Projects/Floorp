@@ -2097,30 +2097,30 @@ GLBlitHelper*
 GLContext::BlitHelper()
 {
     if (!mBlitHelper) {
-        mBlitHelper = new GLBlitHelper(this);
+        mBlitHelper = MakeUnique<GLBlitHelper>(this);
     }
 
-    return mBlitHelper;
+    return mBlitHelper.get();
 }
 
 GLBlitTextureImageHelper*
 GLContext::BlitTextureImageHelper()
 {
     if (!mBlitTextureImageHelper) {
-        mBlitTextureImageHelper = new GLBlitTextureImageHelper(this);
+        mBlitTextureImageHelper = MakeUnique<GLBlitTextureImageHelper>(this);
     }
 
-    return mBlitTextureImageHelper;
+    return mBlitTextureImageHelper.get();
 }
 
 GLReadTexImageHelper*
 GLContext::ReadTexImageHelper()
 {
     if (!mReadTexImageHelper) {
-        mReadTexImageHelper = new GLReadTexImageHelper(this);
+        mReadTexImageHelper = MakeUnique<GLReadTexImageHelper>(this);
     }
 
-    return mReadTexImageHelper;
+    return mReadTexImageHelper.get();
 }
 
 bool

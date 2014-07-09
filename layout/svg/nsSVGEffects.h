@@ -183,6 +183,9 @@ public:
   // nsISVGFilterReference
   virtual void Invalidate() MOZ_OVERRIDE { DoUpdate(); };
 
+protected:
+  virtual ~nsSVGFilterReference() {}
+
 private:
   // nsSVGIDRenderingObserver
   virtual void DoUpdate() MOZ_OVERRIDE;

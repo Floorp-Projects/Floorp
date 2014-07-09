@@ -45,7 +45,6 @@ public:
     : nsGenericHTMLElement(aNodeInfo)
   {
   }
-  virtual ~HTMLBodyElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -133,6 +132,8 @@ public:
   virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
 
 protected:
+  virtual ~HTMLBodyElement();
+
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
   nsRefPtr<BodyRule> mContentStyleRule;

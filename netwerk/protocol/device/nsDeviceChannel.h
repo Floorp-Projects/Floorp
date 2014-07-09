@@ -14,11 +14,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   nsDeviceChannel();
-  ~nsDeviceChannel();
 
   nsresult Init(nsIURI* uri);
   nsresult OpenContentStream(bool aAsync,
                              nsIInputStream **aStream,
                              nsIChannel **aChannel);
+
+protected:
+  ~nsDeviceChannel();
 };
 #endif

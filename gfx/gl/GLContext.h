@@ -25,6 +25,8 @@
 #undef GetClassName
 #endif
 
+#include "mozilla/UniquePtr.h"
+
 #include "GLDefs.h"
 #include "GLLibraryLoader.h"
 #include "gfx3DMatrix.h"
@@ -40,7 +42,6 @@
 #include "GLContextSymbols.h"
 #include "base/platform_thread.h"       // for PlatformThreadId
 #include "mozilla/GenericRefCounted.h"
-#include "mozilla/Scoped.h"
 #include "gfx2DGlue.h"
 
 class nsIntRegion;
@@ -2743,9 +2744,9 @@ protected:
     static unsigned sCurrentGLContextTLS;
 #endif
 
-    ScopedDeletePtr<GLBlitHelper> mBlitHelper;
-    ScopedDeletePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
-    ScopedDeletePtr<GLReadTexImageHelper> mReadTexImageHelper;
+    UniquePtr<GLBlitHelper> mBlitHelper;
+    UniquePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
+    UniquePtr<GLReadTexImageHelper> mReadTexImageHelper;
 
 public:
     GLBlitHelper* BlitHelper();
