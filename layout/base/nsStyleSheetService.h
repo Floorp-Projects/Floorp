@@ -63,7 +63,7 @@ class nsStyleSheetService MOZ_FINAL
   // Like LoadAndRegisterSheet, but doesn't notify.  If successful, the
   // new sheet will be the last sheet in mSheets[aSheetType].
   nsresult LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
-                                                    uint32_t aSheetType);
+                                        uint32_t aSheetType);
 
   nsCOMArray<nsIStyleSheet> mSheets[3];
 };
