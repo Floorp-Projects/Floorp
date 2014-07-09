@@ -15,7 +15,5 @@ interface nsITouchEventReceiver : nsISupports {
   [implicit_jscontext] attribute jsval           ontouchstart;
   [implicit_jscontext] attribute jsval           ontouchend;
   [implicit_jscontext] attribute jsval           ontouchmove;
-  [implicit_jscontext] attribute jsval           ontouchenter;
-  [implicit_jscontext] attribute jsval           ontouchleave;
   [implicit_jscontext] attribute jsval           ontouchcancel;
 };

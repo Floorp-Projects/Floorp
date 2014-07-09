@@ -559,14 +559,6 @@ TOUCH_EVENT(touchmove,
             NS_TOUCH_MOVE,
             EventNameType_All,
             NS_TOUCH_EVENT )
-TOUCH_EVENT(touchenter,
-            NS_TOUCH_ENTER,
-            EventNameType_All,
-            NS_TOUCH_EVENT )
-TOUCH_EVENT(touchleave,
-            NS_TOUCH_LEAVE,
-            EventNameType_All,
-            NS_TOUCH_EVENT)
 TOUCH_EVENT(touchcancel,
             NS_TOUCH_CANCEL,
             EventNameType_All,
