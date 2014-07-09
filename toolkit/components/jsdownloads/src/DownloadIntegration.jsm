@@ -611,14 +611,15 @@ this.DownloadIntegration = {
       }
 #endif
 
-      // Now that the file is completely downloaded, mark it
-      // accessible by other users on this system, if the user's
-      // global preferences so indicate.  (On Unix, this applies the
-      // umask.  On Windows, currently does nothing.)
-      // Errors should be reported, but are not fatal.
+      // Now that the file is completely downloaded, make it accessible by other
+      // users on this system.  On Unix, the umask of the process is respected.
+      // This call has no effect on Windows.
       try {
-        yield OS.File.setPermissions(aDownload.target.path);
+        yield OS.File.setPermissions(aDownload.target.path,
+                                     { unixMode: 0o666 });
       } catch (ex) {
+        // Errors with making the permissions less restrictive should be
+        // reported, but should not prevent the download from completing.
         Cu.reportError(ex);
       }
 
