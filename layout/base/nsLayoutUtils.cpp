@@ -3000,7 +3000,9 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     char line[1024];
     while (!ss.eof()) {
       ss.getline(line, sizeof(line));
-      fprintf_stderr(gfxUtils::sDumpPaintFile, "%s", line);
+      if (!ss.eof() || strlen(line) > 0) {
+        fprintf_stderr(gfxUtils::sDumpPaintFile, "%s\n", line);
+      }
       if (ss.fail()) {
         // line was too long, skip to next newline
         ss.clear();

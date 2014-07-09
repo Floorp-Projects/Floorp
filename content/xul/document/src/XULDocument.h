@@ -94,7 +94,6 @@ class XULDocument MOZ_FINAL : public XMLDocument,
 {
 public:
     XULDocument();
-    virtual ~XULDocument();
 
     // nsISupports interface
     NS_DECL_ISUPPORTS_INHERITED
@@ -226,6 +225,8 @@ public:
     }
 
 protected:
+    virtual ~XULDocument();
+
     // Implementation methods
     friend nsresult
     (::NS_NewXULDocument(nsIXULDocument** aResult));

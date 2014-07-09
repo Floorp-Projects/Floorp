@@ -24,11 +24,12 @@ public:
     : nsGenericHTMLElement(aNodeInfo)
   {
   }
-  virtual ~HTMLSpanElement();
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
 protected:
+  virtual ~HTMLSpanElement();
+
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 };
 

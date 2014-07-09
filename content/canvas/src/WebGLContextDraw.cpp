@@ -627,8 +627,8 @@ void
 WebGLContext::BindFakeBlackTexturesHelper(
     GLenum target,
     const nsTArray<WebGLRefPtr<WebGLTexture> > & boundTexturesArray,
-    ScopedDeletePtr<FakeBlackTexture> & opaqueTextureScopedPtr,
-    ScopedDeletePtr<FakeBlackTexture> & transparentTextureScopedPtr)
+    UniquePtr<FakeBlackTexture> & opaqueTextureScopedPtr,
+    UniquePtr<FakeBlackTexture> & transparentTextureScopedPtr)
 {
     for (int32_t i = 0; i < mGLMaxTextureUnits; ++i) {
         if (!boundTexturesArray[i]) {
@@ -644,15 +644,14 @@ WebGLContext::BindFakeBlackTexturesHelper(
 
         bool alpha = s == WebGLTextureFakeBlackStatus::UninitializedImageData &&
                      FormatHasAlpha(boundTexturesArray[i]->ImageInfoBase().WebGLFormat());
-        ScopedDeletePtr<FakeBlackTexture>&
+        UniquePtr<FakeBlackTexture>&
             blackTexturePtr = alpha
                               ? transparentTextureScopedPtr
                               : opaqueTextureScopedPtr;
 
         if (!blackTexturePtr) {
             GLenum format = alpha ? LOCAL_GL_RGBA : LOCAL_GL_RGB;
-            blackTexturePtr
-                = new FakeBlackTexture(gl, target, format);
+            blackTexturePtr = MakeUnique<FakeBlackTexture>(gl, target, format);
         }
 
         gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);

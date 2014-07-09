@@ -27,6 +27,7 @@ protected:
   friend nsresult (::NS_NewSVGStyleElement(nsIContent **aResult,
                                            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   SVGStyleElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  ~SVGStyleElement();
 
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 

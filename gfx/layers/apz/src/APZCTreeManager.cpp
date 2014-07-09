@@ -365,8 +365,16 @@ ApplyTransform(nsIntPoint* aPoint, const gfx3DMatrix& aMatrix)
   aPoint->y = NS_lround(result.y);
 }
 
+/*static*/ template<class T> void
+TransformScreenToGecko(T* aPoint, AsyncPanZoomController* aApzc, APZCTreeManager* aApzcTm)
+{
+  gfx3DMatrix transformToApzc, transformToGecko;
+  aApzcTm->GetInputTransforms(aApzc, transformToApzc, transformToGecko);
+  ApplyTransform(aPoint, transformToApzc * transformToGecko);
+}
+
 nsEventStatus
-APZCTreeManager::ReceiveInputEvent(const InputData& aEvent,
+APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
                                    ScrollableLayerGuid* aOutTargetGuid)
 {
   nsEventStatus result = nsEventStatus_eIgnore;
@@ -374,11 +382,11 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent,
   gfx3DMatrix transformToGecko;
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
-      MultiTouchInput touchInput = aEvent.AsMultiTouchInput();
+      MultiTouchInput& touchInput = aEvent.AsMultiTouchInput();
       result = ProcessTouchInput(touchInput, aOutTargetGuid);
       break;
     } case PANGESTURE_INPUT: {
-      const PanGestureInput& panInput = aEvent.AsPanGestureInput();
+      PanGestureInput& panInput = aEvent.AsPanGestureInput();
       bool inOverscrolledApzc = false;
       nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(panInput.mPanStartPoint,
                                                             &inOverscrolledApzc);
@@ -387,11 +395,19 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent,
             panInput.mType == PanGestureInput::PANGESTURE_MOMENTUMSTART) {
           BuildOverscrollHandoffChain(apzc);
         }
-        apzc->GetGuid(aOutTargetGuid);
-        GetInputTransforms(apzc, transformToApzc, transformToGecko);
+
+        // When passing the event to the APZC, we need to apply a different
+        // transform than the one in TransformScreenToGecko, so we need to
+        // make a copy of the event.
         PanGestureInput inputForApzc(panInput);
+        GetInputTransforms(apzc, transformToApzc, transformToGecko);
         ApplyTransform(&(inputForApzc.mPanStartPoint), transformToApzc);
         result = apzc->ReceiveInputEvent(inputForApzc);
+
+        // Update the out-parameters so they are what the caller expects.
+        apzc->GetGuid(aOutTargetGuid);
+        TransformScreenToGecko(&(panInput.mPanStartPoint), apzc, this);
+
         if (panInput.mType == PanGestureInput::PANGESTURE_END ||
             panInput.mType == PanGestureInput::PANGESTURE_MOMENTUMEND) {
           ClearOverscrollHandoffChain();
@@ -399,32 +415,44 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent,
       }
       break;
     } case PINCHGESTURE_INPUT: {
-      const PinchGestureInput& pinchInput = aEvent.AsPinchGestureInput();
+      PinchGestureInput& pinchInput = aEvent.AsPinchGestureInput();
       bool inOverscrolledApzc = false;
       nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(pinchInput.mFocusPoint,
                                                             &inOverscrolledApzc);
       if (apzc) {
-        apzc->GetGuid(aOutTargetGuid);
-        GetInputTransforms(apzc, transformToApzc, transformToGecko);
+        // When passing the event to the APZC, we need to apply a different
+        // transform than the one in TransformScreenToGecko, so we need to
+        // make a copy of the event.
         PinchGestureInput inputForApzc(pinchInput);
+        GetInputTransforms(apzc, transformToApzc, transformToGecko);
         ApplyTransform(&(inputForApzc.mFocusPoint), transformToApzc);
         apzc->ReceiveInputEvent(inputForApzc);
+
+        // Update the out-parameters so they are what the caller expects.
+        apzc->GetGuid(aOutTargetGuid);
+        TransformScreenToGecko(&(pinchInput.mFocusPoint), apzc, this);
       }
       result = inOverscrolledApzc ? nsEventStatus_eConsumeNoDefault
              : apzc ? nsEventStatus_eConsumeDoDefault
              : nsEventStatus_eIgnore;
       break;
     } case TAPGESTURE_INPUT: {
-      const TapGestureInput& tapInput = aEvent.AsTapGestureInput();
+      TapGestureInput& tapInput = aEvent.AsTapGestureInput();
       bool inOverscrolledApzc = false;
       nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(ScreenPoint(tapInput.mPoint),
                                                             &inOverscrolledApzc);
       if (apzc) {
-        apzc->GetGuid(aOutTargetGuid);
-        GetInputTransforms(apzc, transformToApzc, transformToGecko);
+        // When passing the event to the APZC, we need to apply a different
+        // transform than the one in TransformScreenToGecko, so we need to
+        // make a copy of the event.
         TapGestureInput inputForApzc(tapInput);
+        GetInputTransforms(apzc, transformToApzc, transformToGecko);
         ApplyTransform(&(inputForApzc.mPoint), transformToApzc);
         apzc->ReceiveInputEvent(inputForApzc);
+
+        // Update the out-parameters so they are what the caller expects.
+        apzc->GetGuid(aOutTargetGuid);
+        TransformScreenToGecko(&(tapInput.mPoint), apzc, this);
       }
       result = inOverscrolledApzc ? nsEventStatus_eConsumeNoDefault
              : apzc ? nsEventStatus_eConsumeDoDefault

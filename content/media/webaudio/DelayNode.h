@@ -43,6 +43,9 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
 
+protected:
+  virtual ~DelayNode();
+
 private:
   static void SendDelayToStream(AudioNode* aNode);
   friend class DelayNodeEngine;

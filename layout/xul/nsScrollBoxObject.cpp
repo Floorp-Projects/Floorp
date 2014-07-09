@@ -22,13 +22,13 @@ public:
   NS_DECL_NSISCROLLBOXOBJECT
 
   nsScrollBoxObject();
-  virtual ~nsScrollBoxObject();
 
   virtual nsIScrollableFrame* GetScrollFrame() {
     return do_QueryFrame(GetFrame(false));
   }
 
-  /* additional members */
+protected:
+  virtual ~nsScrollBoxObject();
 };
 
 /* Implementation file */

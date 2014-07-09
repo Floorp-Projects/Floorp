@@ -27,8 +27,8 @@ class MediaKeyNeededEvent MOZ_FINAL : public Event
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MediaKeyNeededEvent, Event)
-  virtual ~MediaKeyNeededEvent();
 protected:
+  virtual ~MediaKeyNeededEvent();
   MediaKeyNeededEvent(EventTarget* aOwner);
 
   nsString mInitDataType;

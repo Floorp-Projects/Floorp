@@ -24,7 +24,6 @@ class HTMLStyleElement MOZ_FINAL : public nsGenericHTMLElement,
 {
 public:
   HTMLStyleElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual ~HTMLStyleElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -87,6 +86,8 @@ public:
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
 protected:
+  virtual ~HTMLStyleElement();
+
   already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline) MOZ_OVERRIDE;
   void GetStyleSheetInfo(nsAString& aTitle,
                          nsAString& aType,
