@@ -1345,6 +1345,25 @@ BluetoothServiceBluedroid::UpdateSdpRecords(
   return true;
 }
 
+class CreateBondResultHandler MOZ_FINAL : public BluetoothResultHandler
+{
+public:
+  CreateBondResultHandler(BluetoothReplyRunnable* aRunnable)
+  : mRunnable(aRunnable)
+  {
+    MOZ_ASSERT(mRunnable);
+  }
+
+  void OnError(int aStatus) MOZ_OVERRIDE
+  {
+    sBondingRunnableArray.RemoveElement(mRunnable);
+    ReplyStatusError(mRunnable, aStatus, NS_LITERAL_STRING("CreatedPairedDevice"));
+  }
+
+private:
+  BluetoothReplyRunnable* mRunnable;
+};
+
 nsresult
 BluetoothServiceBluedroid::CreatePairedDeviceInternal(
   const nsAString& aDeviceAddress, int aTimeout,
@@ -1357,15 +1376,31 @@ BluetoothServiceBluedroid::CreatePairedDeviceInternal(
   bt_bdaddr_t remoteAddress;
   StringToBdAddressType(aDeviceAddress, &remoteAddress);
 
-  int ret = sBtInterface->CreateBond(&remoteAddress);
-  if (ret != BT_STATUS_SUCCESS) {
-    ReplyStatusError(aRunnable, ret, NS_LITERAL_STRING("CreatedPairedDevice"));
-  } else {
-    sBondingRunnableArray.AppendElement(aRunnable);
-  }
+  sBondingRunnableArray.AppendElement(aRunnable);
 
+  sBtInterface->CreateBond(&remoteAddress,
+                           new CreateBondResultHandler(aRunnable));
   return NS_OK;
 }
+
+class RemoveBondResultHandler MOZ_FINAL : public BluetoothResultHandler
+{
+public:
+  RemoveBondResultHandler(BluetoothReplyRunnable* aRunnable)
+  : mRunnable(aRunnable)
+  {
+    MOZ_ASSERT(mRunnable);
+  }
+
+  void OnError(int aStatus) MOZ_OVERRIDE
+  {
+    sUnbondingRunnableArray.RemoveElement(mRunnable);
+    ReplyStatusError(mRunnable, aStatus, NS_LITERAL_STRING("RemoveDevice"));
+  }
+
+private:
+  BluetoothReplyRunnable* mRunnable;
+};
 
 nsresult
 BluetoothServiceBluedroid::RemoveDeviceInternal(
@@ -1378,13 +1413,10 @@ BluetoothServiceBluedroid::RemoveDeviceInternal(
   bt_bdaddr_t remoteAddress;
   StringToBdAddressType(aDeviceAddress, &remoteAddress);
 
-  int ret = sBtInterface->RemoveBond(&remoteAddress);
-  if (ret != BT_STATUS_SUCCESS) {
-    ReplyStatusError(aRunnable, ret,
-                     NS_LITERAL_STRING("RemoveDevice"));
-  } else {
-    sUnbondingRunnableArray.AppendElement(aRunnable);
-  }
+  sUnbondingRunnableArray.AppendElement(aRunnable);
+
+  sBtInterface->RemoveBond(&remoteAddress,
+                           new RemoveBondResultHandler(aRunnable));
 
   return NS_OK;
 }
