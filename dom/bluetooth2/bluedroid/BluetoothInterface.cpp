@@ -685,16 +685,28 @@ BluetoothInterface::GetRemoteServices(bt_bdaddr_t* aRemoteAddr,
 
 /* Discovery */
 
-int
-BluetoothInterface::StartDiscovery()
+void
+BluetoothInterface::StartDiscovery(BluetoothResultHandler* aRes)
 {
-  return mInterface->start_discovery();
+  int status = mInterface->start_discovery();
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::StartDiscovery,
+                            status);
+  }
 }
 
-int
-BluetoothInterface::CancelDiscovery()
+void
+BluetoothInterface::CancelDiscovery(BluetoothResultHandler* aRes)
 {
-  return mInterface->cancel_discovery();
+  int status = mInterface->cancel_discovery();
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::CancelDiscovery,
+                            status);
+  }
 }
 
 /* Bonds */
