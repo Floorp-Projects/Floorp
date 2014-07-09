@@ -5180,7 +5180,7 @@ gfxFontGroup::FindPlatformFont(const nsAString& aName,
             // If the fontSet matches the family, but the font has not yet finished
             // loading (nor has its load timeout fired), the fontGroup should wait
             // for the download, and not actually draw its text yet.
-            family = mUserFontSet->GetFamily(aName);
+            family = mUserFontSet->LookupFamily(aName);
             if (family) {
                 bool waitForUserFont = false;
                 fe = mUserFontSet->FindFontEntry(family, mStyle,
