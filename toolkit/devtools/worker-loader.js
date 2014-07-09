@@ -311,18 +311,16 @@ if (typeof Components === "object") {
     createSandbox: createSandbox,
     globals: {
       "isWorker": true,
-      "Debugger": Debugger,
-      "setInterval": Timer.setInterval,
-      "setTimeout": Timer.setTimeout,
-      "clearInterval": Timer.clearInterval,
-      "clearTimeout": Timer.clearTimeout,
-      "xpcInspector": xpcInspector,
       "reportError": Cu.reportError,
     },
     loadInSandbox: loadInSandbox,
     modules: {
       "Services": {},
       "chrome": chrome,
+      "promise": Promise,
+      "Debugger": Debugger,
+      "xpcInspector": xpcInspector,
+      "Timer": Object.create(Timer)
     },
     paths: {
       "": "resource://gre/modules/commonjs/",
