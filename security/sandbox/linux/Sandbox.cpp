@@ -441,7 +441,7 @@ Die::SandboxDie(const char* msg, const char* file, int line)
 namespace logging {
 
 LogMessage::LogMessage(const char *file, int line, int)
-  : line_(line), file_(file)
+  : file_(file), line_(line)
 {
   MOZ_CRASH("Unexpected call to logging::LogMessage::LogMessage");
 }
