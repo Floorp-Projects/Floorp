@@ -22,12 +22,12 @@ function ifWebGLSupported() {
   vsEditor.replaceText("vec3", { line: 7, ch: 22 }, { line: 7, ch: 26 });
   yield once(panel.panelWin, EVENTS.SHADER_COMPILED);
 
-  // Synthesizing 'mouseenter' events doesn't work, hack around this by
+  // Synthesizing 'mouseover' events doesn't work, hack around this by
   // manually calling the event listener with the expected arguments.
   let editorDocument = vsEditor.container.contentDocument;
   let marker = editorDocument.querySelector(".error");
   let parsed = ShadersEditorsView._errors.vs[0].messages;
-  ShadersEditorsView._onMarkerMouseEnter(7, marker, parsed);
+  ShadersEditorsView._onMarkerMouseOver(7, marker, parsed);
 
   let tooltip = marker._markerErrorsTooltip;
   ok(tooltip, "A tooltip was created successfully.");
