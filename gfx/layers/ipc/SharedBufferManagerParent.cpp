@@ -98,13 +98,19 @@ SharedBufferManagerParent::SharedBufferManagerParent(Transport* aTransport, base
   , mBuffersMutex("BuffersMonitor")
 #endif
 {
-  if (!sManagerMonitor)
+  if (!sManagerMonitor) {
     sManagerMonitor = new Monitor("Manager Monitor");
+  }
 
   MonitorAutoLock lock(*sManagerMonitor.get());
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread");
-  if (!aThread->IsRunning())
+  if (!aThread->IsRunning()) {
     aThread->Start();
+  }
+
+  if (sManagers.count(aOwner) != 0) {
+    printf_stderr("SharedBufferManagerParent already exists.");
+  }
   mOwner = aOwner;
   sManagers[aOwner] = this;
 }
@@ -124,6 +130,7 @@ void
 SharedBufferManagerParent::ActorDestroy(ActorDestroyReason aWhy)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
+  MutexAutoLock lock(mBuffersMutex);
   mBuffers.clear();
 #endif
 }
@@ -142,19 +149,15 @@ PSharedBufferManagerParent* SharedBufferManagerParent::Create(Transport* aTransp
   if (!base::OpenProcessHandle(aOtherProcess, &processHandle)) {
     return nullptr;
   }
-
   base::Thread* thread = nullptr;
-  if (sManagers.count(aOtherProcess) == 1) {
-    thread = sManagers[aOtherProcess]->mThread;
-  }
-  else {
-    char thrname[128];
-    base::snprintf(thrname, 128, "BufMgrParent#%d", aOtherProcess);
-    thread = new base::Thread(thrname);
-  }
+  char thrname[128];
+  base::snprintf(thrname, 128, "BufMgrParent#%d", aOtherProcess);
+  thread = new base::Thread(thrname);
+
   SharedBufferManagerParent* manager = new SharedBufferManagerParent(aTransport, aOtherProcess, thread);
-  if (!thread->IsRunning())
+  if (!thread->IsRunning()) {
     thread->Start();
+  }
   thread->message_loop()->PostTask(FROM_HERE,
                                    NewRunnableFunction(ConnectSharedBufferManagerInParentProcess,
                                                        manager, aTransport, processHandle));
@@ -187,14 +190,19 @@ bool SharedBufferManagerParent::RecvAllocateGrallocBuffer(const IntSize& aSize, 
     return true;
   }
 
+  int64_t bufferKey;
+  {
+    MonitorAutoLock lock(*sManagerMonitor.get());
+    bufferKey = ++sBufferKey; 
+  }
   GrallocBufferRef ref;
   ref.mOwner = mOwner;
-  ref.mKey = ++sBufferKey;
+  ref.mKey = bufferKey;
   *aHandle = MagicGrallocBufferHandle(outgoingBuffer, ref);
 
   {
     MutexAutoLock lock(mBuffersMutex);
-    mBuffers[sBufferKey] = outgoingBuffer;
+    mBuffers[bufferKey] = outgoingBuffer;
   }
 #endif
   return true;
@@ -227,8 +235,9 @@ void SharedBufferManagerParent::DropGrallocBufferSync(SharedBufferManagerParent*
 
 void SharedBufferManagerParent::DropGrallocBuffer(mozilla::layers::SurfaceDescriptor aDesc)
 {
-  if (aDesc.type() != SurfaceDescriptor::TNewSurfaceDescriptorGralloc)
+  if (aDesc.type() != SurfaceDescriptor::TNewSurfaceDescriptorGralloc) {
     return;
+  }
 
   if (PlatformThread::CurrentId() == mThread->thread_id()) {
     DropGrallocBufferImpl(aDesc);
@@ -245,15 +254,17 @@ void SharedBufferManagerParent::DropGrallocBufferImpl(mozilla::layers::SurfaceDe
   MutexAutoLock lock(mBuffersMutex);
   int64_t key = -1;
   MaybeMagicGrallocBufferHandle handle;
-  if (aDesc.type() == SurfaceDescriptor::TNewSurfaceDescriptorGralloc)
+  if (aDesc.type() == SurfaceDescriptor::TNewSurfaceDescriptorGralloc) {
     handle = aDesc.get_NewSurfaceDescriptorGralloc().buffer();
-  else
+  } else {
     return;
+  }
 
-  if (handle.type() == MaybeMagicGrallocBufferHandle::TGrallocBufferRef)
+  if (handle.type() == MaybeMagicGrallocBufferHandle::TGrallocBufferRef) {
     key = handle.get_GrallocBufferRef().mKey;
-  else if (handle.type() == MaybeMagicGrallocBufferHandle::TMagicGrallocBufferHandle)
+  } else if (handle.type() == MaybeMagicGrallocBufferHandle::TMagicGrallocBufferHandle) {
     key = handle.get_MagicGrallocBufferHandle().mRef.mKey;
+  }
 
   NS_ASSERTION(key != -1, "Invalid buffer key");
   NS_ASSERTION(mBuffers.count(key) == 1, "No such buffer");
@@ -281,9 +292,9 @@ SharedBufferManagerParent::GetGraphicBuffer(int64_t key)
   MutexAutoLock lock(mBuffersMutex);
   if (mBuffers.count(key) == 1) {
     return mBuffers[key];
-  }
-  else {
+  } else {
     // The buffer can be dropped, or invalid
+    printf_stderr("SharedBufferManagerParent::GetGraphicBuffer -- invalid key");
     return nullptr;
   }
 }
