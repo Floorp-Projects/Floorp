@@ -21,7 +21,7 @@ function visible_loader() {
   loader.require("devtools/css-color");
 
   let dbg = new Debugger();
-  let sandbox = loader._provider.loader.sandboxes[COLOR_URI];
+  let sandbox = loader._provider.loader.sharedGlobalSandbox;
 
   try {
     dbg.addDebuggee(sandbox);
@@ -37,7 +37,7 @@ function invisible_loader() {
   loader.require("devtools/css-color");
 
   let dbg = new Debugger();
-  let sandbox = loader._provider.loader.sandboxes[COLOR_URI];
+  let sandbox = loader._provider.loader.sharedGlobalSandbox;
 
   try {
     dbg.addDebuggee(sandbox);

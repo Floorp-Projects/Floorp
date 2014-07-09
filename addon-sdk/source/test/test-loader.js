@@ -343,4 +343,27 @@ exports['test console global by default'] = function (assert) {
   function fakeConsole () {};
 };
 
+exports['test shared globals'] = function(assert) {
+  let uri = root + '/fixtures/loader/cycles/';
+  let loader = Loader({ paths: { '': uri }, sharedGlobal: true,
+                        sharedGlobalBlacklist: ['b'] });
+
+  let program = main(loader, 'main');
+
+  // As it is hard to verify what is the global of an object
+  // (due to wrappers) we check that we see the `foo` symbol
+  // being manually injected into the shared global object
+  loader.sharedGlobalSandbox.foo = true;
+
+  let m = loader.sandboxes[uri + 'main.js'];
+  let a = loader.sandboxes[uri + 'a.js'];
+  let b = loader.sandboxes[uri + 'b.js'];
+
+  assert.ok(Cu.getGlobalForObject(m).foo, "main is shared");
+  assert.ok(Cu.getGlobalForObject(a).foo, "a is shared");
+  assert.ok(!Cu.getGlobalForObject(b).foo, "b isn't shared");
+
+  unload(loader);
+}
+
 require('test').run(exports);

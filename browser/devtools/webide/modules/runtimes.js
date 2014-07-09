@@ -9,6 +9,7 @@ const {Simulator} = Cu.import("resource://gre/modules/devtools/Simulator.jsm");
 const {ConnectionManager, Connection} = require("devtools/client/connection-manager");
 const {DebuggerServer} = require("resource://gre/modules/devtools/dbg-server.jsm");
 const discovery = require("devtools/toolkit/discovery/discovery");
+const promise = require("promise");
 
 const Strings = Services.strings.createBundle("chrome://webide/content/webide.properties");
 

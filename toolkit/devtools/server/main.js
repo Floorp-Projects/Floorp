@@ -19,6 +19,7 @@ let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let { dumpn, dumpv, dbg_assert } = DevToolsUtils;
 let Services = require("Services");
 let EventEmitter = require("devtools/toolkit/event-emitter");
+let Debugger = require("Debugger");
 
 // Until all Debugger server code is converted to SDK modules,
 // imports Components.* alias from chrome module.
@@ -842,6 +843,15 @@ if (this.exports) {
 }
 // Needed on B2G (See header note)
 this.DebuggerServer = DebuggerServer;
+
+// When using DebuggerServer.addActors, some symbols are expected to be in
+// the scope of the added actor even before the corresponding modules are
+// loaded, so let's explicitly bind the expected symbols here.
+let includes = ["Components", "Ci", "Cu", "require", "Services", "DebuggerServer",
+                "ActorPool", "DevToolsUtils"];
+includes.forEach(name => {
+  DebuggerServer[name] = this[name];
+});
 
 // Export ActorPool for requirers of main.js
 if (this.exports) {

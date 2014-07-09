@@ -82,6 +82,16 @@ let emulator = (function() {
     return deferred.promise;
   };
 
+  function clearTagData(re) {
+    let deferred = Promise.defer();
+    let cmd = "nfc tag clear " + re;
+
+    this.run(cmd, function(result) {
+      is(result.pop(), "OK", "clear tag" + re);
+      deferred.resolve();
+    });
+  }
+
   function snepPutNdef(dsap, ssap, flags, tnf, type, payload, id) {
     let deferred = Promise.defer();
     let cmd = "nfc snep put " + dsap + " " + ssap + " [" + flags + "," +
@@ -103,6 +113,7 @@ let emulator = (function() {
     deactivate: deactivate,
     notifyDiscoverRE: notifyDiscoverRE,
     setTagData: setTagData,
+    clearTagData: clearTagData,
     snepPutNdef: snepPutNdef
   };
 }());

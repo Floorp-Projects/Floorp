@@ -22,4 +22,6 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-bug 940506: removing idl files appears to break the build without a clobber
+Bug 1033481 - Use a .mozbuild file rather than a .mk in
+m/a/tests/background/junit3 -- doesn't clean the classes* directory
+when moving from in APK to in JAR building.

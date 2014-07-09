@@ -36,9 +36,10 @@ this.MobileIdentityCredentialsStore.prototype = {
      * We will be storing objects like:
      *  {
      *    msisdn: <string> (key),
-     *    iccId: <string> (index),
+     *    iccId: <string> (index, optional),
+     *    deviceIccIds: <array>,
      *    origin: <array> (index),
-     *    msisdnSessionToken: <string>
+     *    msisdnSessionToken: <string>,
      *  }
      */
     let objectStore = aDb.createObjectStore(CREDENTIALS_STORE_NAME, {
@@ -49,9 +50,9 @@ this.MobileIdentityCredentialsStore.prototype = {
     objectStore.createIndex("origin", "origin", { unique: true, multiEntry: true });
   },
 
-  add: function(aIccId, aMsisdn, aOrigin, aSessionToken) {
+  add: function(aIccId, aMsisdn, aOrigin, aSessionToken, aDeviceIccIds) {
     log.debug("put " + aIccId + ", " + aMsisdn + ", " + aOrigin + ", " +
-              aSessionToken);
+              aSessionToken + ", " + aDeviceIccIds);
     if (!aOrigin || !aSessionToken) {
       return Promise.reject(ERROR_INTERNAL_DB_ERROR);
     }
@@ -82,7 +83,8 @@ this.MobileIdentityCredentialsStore.prototype = {
               iccId: aIccId,
               msisdn: aMsisdn,
               origin: [aOrigin],
-              sessionToken: aSessionToken
+              sessionToken: aSessionToken,
+              deviceIccIds: aDeviceIccIds
             };
             aStore.add(record);
           }
@@ -168,6 +170,88 @@ this.MobileIdentityCredentialsStore.prototype = {
       deferred.resolve,
       deferred.reject
     );
+    return deferred.promise;
+  },
+
+  removeValue: function(aMsisdn, aKey, aValue) {
+    log.debug("Removing " + aKey + " with value " + aValue);
+    if (!aMsisdn || !aKey) {
+      return Promise.reject();
+    }
+
+    let deferred = Promise.defer();
+    this.newTxn(
+      "readwrite",
+      CREDENTIALS_STORE_NAME,
+      (aTxn, aStore) => {
+        let range = IDBKeyRange.only(aMsisdn);
+        let cursorReq = aStore.openCursor(range);
+        cursorReq.onsuccess = function(aEvent) {
+          let cursor = aEvent.target.result;
+          let record;
+          if (!cursor || !cursor.value) {
+            return Promise.resolve();
+          }
+          record = cursor.value;
+          if (!record[aKey]) {
+            return Promise.reject();
+          }
+          if (aValue) {
+            let index = record[aKey].indexOf(aValue);
+            if (index != -1) {
+              record[aKey].splice(index, 1);
+            }
+          } else {
+            record[aKey] = undefined;
+          }
+          log.debug("Removal done ${}", record);
+          cursor.update(record);
+          deferred.resolve();
+        };
+        cursorReq.onerror = function(aEvent) {
+          log.error(aEvent.target.error);
+          deferred.reject(ERROR_INTERNAL_DB_ERROR);
+        };
+      }, null, deferred.reject);
+
+    return deferred.promise;
+  },
+
+  removeOrigin: function(aMsisdn, aOrigin) {
+    log.debug("removeOrigin " + aMsisdn + " " + aOrigin);
+    return this.removeValue(aMsisdn, "origin", aOrigin);
+  },
+
+  setDeviceIccIds: function(aMsisdn, aDeviceIccIds) {
+    log.debug("Setting icc ids " + aDeviceIccIds + " for " + aMsisdn);
+    if (!aMsisdn) {
+      return Promise.reject();
+    }
+
+    let deferred = Promise.defer();
+    this.newTxn(
+      "readwrite",
+      CREDENTIALS_STORE_NAME,
+      (aTxn, aStore) => {
+        let range = IDBKeyRange.only(aMsisdn);
+        let cursorReq = aStore.openCursor(range);
+        cursorReq.onsuccess = function(aEvent) {
+          let cursor = aEvent.target.result;
+          let record;
+          if (!cursor || !cursor.value) {
+            return Promise.resolve();
+          }
+          record = cursor.value;
+          record.deviceIccIds = aDeviceIccIds;
+          cursor.update(record);
+          deferred.resolve();
+        };
+        cursorReq.onerror = function(aEvent) {
+          log.error(aEvent.target.error);
+          deferred.reject(ERROR_INTERNAL_DB_ERROR);
+        };
+      }, null, deferred.reject);
+
     return deferred.promise;
   }
 };

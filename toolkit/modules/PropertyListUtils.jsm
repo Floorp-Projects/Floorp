@@ -238,7 +238,7 @@ this.PropertyListUtils = Object.freeze({
  *        ArrayBuffer object from which the binary plist should be read.
  */
 function BinaryPropertyListReader(aBuffer) {
-  this._buffer = aBuffer;
+  this._dataView = new DataView(aBuffer);
 
   const JS_MAX_INT = Math.pow(2,53);
   this._JS_MAX_INT_SIGNED = ctypes.Int64(JS_MAX_INT);
@@ -268,7 +268,7 @@ BinaryPropertyListReader.prototype = {
 
   _readTrailerInfo: function BPLR__readTrailer() {
     // The first 6 bytes of the 32-bytes trailer are unused
-    let trailerOffset = this._buffer.byteLength - 26;
+    let trailerOffset = this._dataView.byteLength - 26;
     [this._offsetTableIntegerSize, this._objectRefSize] =
       this._readUnsignedInts(trailerOffset, 1, 2);
 
@@ -282,24 +282,9 @@ BinaryPropertyListReader.prototype = {
                                                this._numberOfObjects);
   },
 
-  // TODO: This should be removed once DataView is implemented (Bug 575688).
-  _swapForBigEndian:
-  function BPLR__swapForBigEndian(aByteOffset, aIntSize, aNumberOfInts) {
-    let bytesCount = aIntSize * aNumberOfInts;
-    let bytes = new Uint8Array(this._buffer, aByteOffset, bytesCount);
-    let swapped = new Uint8Array(bytesCount);
-    for (let i = 0; i < aNumberOfInts; i++) {
-      for (let j = 0; j < aIntSize; j++) {
-        swapped[(i * aIntSize) + j] = bytes[(i * aIntSize) + (aIntSize - 1 - j)];
-      }
-    }
-    return swapped;
-  },
-
   _readSignedInt64: function BPLR__readSignedInt64(aByteOffset) {
-    let swapped = this._swapForBigEndian(aByteOffset, 8, 1);
-    let lo = new Uint32Array(swapped.buffer, 0, 1)[0];
-    let hi = new Int32Array(swapped.buffer, 4, 1)[0];
+    let lo = this._dataView.getUint32(aByteOffset + 4);
+    let hi = this._dataView.getInt32(aByteOffset);
     let int64 = ctypes.Int64.join(hi, lo);
     if (ctypes.Int64.compare(int64, this._JS_MAX_INT_SIGNED) == 1 ||
         ctypes.Int64.compare(int64, this._JS_MIN_INT) == -1)
@@ -309,11 +294,10 @@ BinaryPropertyListReader.prototype = {
   },
 
   _readReal: function BPLR__readReal(aByteOffset, aRealSize) {
-    let swapped = this._swapForBigEndian(aByteOffset, aRealSize, 1);
     if (aRealSize == 4)
-      return new Float32Array(swapped.buffer, 0, 1)[0];
+      return this._dataView.getFloat32(aByteOffset);
     if (aRealSize == 8)
-      return new Float64Array(swapped.buffer, 0, 1)[0];
+      return this._dataView.getFloat64(aByteOffset);
 
     throw new Error("Unsupported real size: " + aRealSize);
   },
@@ -414,38 +398,39 @@ BinaryPropertyListReader.prototype = {
    */
   _readUnsignedInts:
   function BPLR__readUnsignedInts(aByteOffset, aIntSize, aLength, aBigIntAllowed) {
-    if (aIntSize == 1)
-      return new Uint8Array(this._buffer, aByteOffset, aLength);
-
-    // There are two reasons for the complexity you see here:
-    // (1) 64-bit integers - For which we use ctypes. When possible, the
-    //     number is converted back to js's default float-64 type.
-    // (2) The DataView object for ArrayBuffer, which takes care of swaping
-    //     bytes, is not yet implemented (bug 575688).
-    let swapped = this._swapForBigEndian(aByteOffset, aIntSize, aLength);
-    if (aIntSize == 2)
-      return new Uint16Array(swapped.buffer);
-    if (aIntSize == 4)
-      return new Uint32Array(swapped.buffer);
-    if (aIntSize == 8) {
-      let intsArray = [];
-      let lo_hi_view = new Uint32Array(swapped.buffer);
-      for (let i = 0; i < lo_hi_view.length; i += 2) {
-        let [lo, hi] = [lo_hi_view[i], lo_hi_view[i+1]];
+    let uints = [];
+    for (let offset = aByteOffset;
+         offset < aByteOffset + aIntSize * aLength;
+         offset += aIntSize) {
+      if (aIntSize == 1) {
+        uints.push(this._dataView.getUint8(offset));
+      }
+      else if (aIntSize == 2) {
+        uints.push(this._dataView.getUint16(offset));
+      }
+      else if (aIntSize == 4) {
+        uints.push(this._dataView.getUint32(offset));
+      }
+      else if (aIntSize == 8) {
+        let lo = this._dataView.getUint32(offset + 4);
+        let hi = this._dataView.getUint32(offset);
         let uint64 = ctypes.UInt64.join(hi, lo);
         if (ctypes.UInt64.compare(uint64, this._JS_MAX_INT_UNSIGNED) == 1) {
           if (aBigIntAllowed === true)
-            intsArray.push(PropertyListUtils.wrapInt64(uint64.toString()));
+            uints.push(PropertyListUtils.wrapInt64(uint64.toString()));
           else
             throw new Error("Integer too big to be read as float 64");
         }
         else {
-          intsArray.push(parseInt(uint64.toString(), 10));
+          uints.push(parseInt(uint64, 10));
         }
       }
-      return intsArray;
+      else {
+        throw new Error("Unsupported size: " + aIntSize);
+      }
     }
-    throw new Error("Unsupported size: " + aIntSize);
+
+    return uints;
   },
 
   /**
@@ -601,7 +586,7 @@ BinaryPropertyListReader.prototype = {
 
       case this.OBJECT_TYPE_BITS.DATA: {
         let [offset, bytesCount] = this._readDataOffsetAndCount(objOffset);
-        value = this._readUnsignedInts(offset, 1, bytesCount);
+        value = new Uint8Array(this._readUnsignedInts(offset, 1, bytesCount));
         break;
       }
 
