@@ -34,7 +34,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIIOService.h"
-#include "nsIMarkupDocumentViewer.h"
 #include "nsIObserverService.h"
 #include "nsIWindowMediator.h"
 #include "nsIScreenManager.h"
@@ -984,14 +983,13 @@ void nsXULWindow::OnChromeLoaded()
       // (if LoadSizeFromXUL set the size, mIntrinsicallySized will be false)
       nsCOMPtr<nsIContentViewer> cv;
       mDocShell->GetContentViewer(getter_AddRefs(cv));
-      nsCOMPtr<nsIMarkupDocumentViewer> markupViewer = do_QueryInterface(cv);
-      if (markupViewer) {
+      if (cv) {
         nsCOMPtr<nsIDocShellTreeItem> docShellAsItem = do_QueryInterface(mDocShell);
         nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
         docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
         if (treeOwner) {
           int32_t width, height;
-          markupViewer->GetContentSize(&width, &height);
+          cv->GetContentSize(&width, &height);
           treeOwner->SizeShellTo(docShellAsItem, width, height);
         }
       }

@@ -217,7 +217,7 @@ function setScale(win, scale)
   var wn = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
               .getInterface(Components.interfaces.nsIWebNavigation);
   var shell = wn.QueryInterface(Components.interfaces.nsIDocShell);
-  var docViewer = shell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+  var docViewer = shell.contentViewer;
   docViewer.fullZoom = scale;
   zoomFactor = scale;
 }

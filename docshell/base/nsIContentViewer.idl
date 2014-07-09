@@ -7,11 +7,14 @@
 interface nsIDocShell;
 interface nsIDocument;
 interface nsIDOMDocument;
+interface nsIDOMNode;
 interface nsISHEntry;
 interface nsIPrintSettings;
 
 
 %{ C++
+#include "nsTArray.h"
+
 class nsIWidget;
 struct nsIntRect;
 class nsIPresShell;
@@ -26,8 +29,9 @@ class nsDOMNavigationTiming;
 [ptr] native nsPresContextPtr(nsPresContext);
 [ptr] native nsViewPtr(nsView);
 [ptr] native nsDOMNavigationTimingPtr(nsDOMNavigationTiming);
+[ref] native nsIContentViewerTArray(nsTArray<nsCOMPtr<nsIContentViewer> >);
 
-[scriptable, builtinclass, uuid(f92298b8-4fe3-40d1-aad7-44e704fffd0d)]
+[scriptable, builtinclass, uuid(702e0a92-7d63-490e-b5ee-d247e6bd4588)]
 interface nsIContentViewer : nsISupports
 {
 
@@ -197,4 +201,81 @@ interface nsIContentViewer : nsISupports
    * Set collector for navigation timing data (load, unload events).
    */
   [noscript,notxpcom,nostdcall] void setNavigationTiming(in nsDOMNavigationTimingPtr aTiming);
+  /*
+  Scrolls to a given DOM content node. 
+  */
+  void scrollToNode(in nsIDOMNode node);
+
+  /** The amount by which to scale all text. Default is 1.0. */
+  attribute float textZoom;
+
+  /** The amount by which to scale all lengths. Default is 1.0. */
+  attribute float fullZoom;
+
+  /** Disable entire author style level (including HTML presentation hints) */
+  attribute boolean authorStyleDisabled;
+
+  /**
+   * XXX comm-central only: bug 829543. Not the Character Encoding menu in 
+     * browser!
+   */
+  attribute ACString forceCharacterSet;
+
+  /**
+   * XXX comm-central only: bug 829543.
+   */
+  attribute ACString hintCharacterSet;
+
+  /**
+   * XXX comm-central only: bug 829543.
+   */
+  attribute int32_t hintCharacterSetSource;
+
+  /**
+   * Requests the size of the content to the container.
+   */
+  void getContentSize(out long width, out long height);
+
+  /** The minimum font size  */
+  attribute long minFontSize;
+
+  /**
+   * Append |this| and all of its descendants to the given array,
+   * in depth-first pre-order traversal.
+   */
+  [noscript] void appendSubtree(in nsIContentViewerTArray array);
+
+  /**
+   * Set the maximum line width for the document.
+   * NOTE: This will generate a reflow!
+   *
+   * @param maxLineWidth The maximum width of any line boxes on the page,
+   *        in CSS pixels.
+   */
+  void changeMaxLineBoxWidth(in int32_t maxLineBoxWidth);
+
+  /**
+   * Instruct the refresh driver to discontinue painting until further
+   * notice.
+   */
+  void pausePainting();
+
+  /**
+   * Instruct the refresh driver to resume painting after a previous call to
+   * pausePainting().
+   */
+  void resumePainting();
+
+  /*
+   * Render the document as if being viewed on a device with the specified
+   * media type. This will cause a reflow.
+   *
+   * @param mediaType The media type to be emulated
+   */
+  void emulateMedium(in AString aMediaType);
+
+  /*
+   * Restore the viewer's natural media type
+   */
+  void stopEmulatingMedium();
 };
