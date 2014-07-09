@@ -75,8 +75,12 @@ function wrapIfUnwrapped(x) {
 function isObjectOrArray(obj) {
   if (Object(obj) !== obj)
     return false;
+  let arrayClasses = ['Object', 'Array', 'Int8Array', 'Uint8Array',
+                      'Int16Array', 'Uint16Array', 'Int32Array',
+                      'Uint32Array', 'Float32Array', 'Float64Array',
+                      'Uint8ClampedArray'];
   let className = Cu.getClassName(obj, true);
-  return className == 'Object' || className == 'Array';
+  return arrayClasses.indexOf(className) != -1;
 }
 
 function callGetOwnPropertyDescriptor(obj, name) {
