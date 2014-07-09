@@ -82,6 +82,9 @@ protected:
     int32_t                         mPriority;
     bool                            mIsCanceling;
 
+    // Set if this loadgroup allows loads from private networks (RFC1918 etc).
+    bool                            mAllowLoadsFromPrivateNetworks;
+
     /* Telemetry */
     mozilla::TimeStamp              mDefaultRequestCreationTime;
     bool                            mDefaultLoadIsTimed;
