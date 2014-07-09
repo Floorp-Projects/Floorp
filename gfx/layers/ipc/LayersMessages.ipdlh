@@ -227,6 +227,10 @@ struct ContainerLayerAttributes {
   float preYScale;
   float inheritedXScale;
   float inheritedYScale;
+  // This is a bare pointer; LayerTransactionParent::RecvUpdate prevents this
+  // from being used when !IsSameProcess(), but we should make this truly
+  // cross process at some point by passing the HMDConfig
+  uint64_t hmdInfo;
 };
 struct ColorLayerAttributes     { LayerColor color; nsIntRect bounds; };
 struct CanvasLayerAttributes    { GraphicsFilterType filter; nsIntRect bounds; };

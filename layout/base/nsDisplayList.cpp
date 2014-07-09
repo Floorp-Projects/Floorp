@@ -5678,8 +5678,7 @@ nsDisplayVR::BuildLayer(nsDisplayListBuilder* aBuilder,
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
                            newContainerParameters, nullptr, flags);
 
-  // This gets uncommented when it's implemented by the layers functionality patch
-  //container->SetVRHMDInfo(mHMD);
+  container->SetVRHMDInfo(mHMD);
   container->SetUserData(nsIFrame::LayerIsPrerenderedDataKey(),
                          /*the value is irrelevant*/nullptr);
 
