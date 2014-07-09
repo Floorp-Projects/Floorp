@@ -727,7 +727,7 @@ var NodeListActor = exports.NodeListActor = protocol.ActorClass({
   initialize: function(walker, nodeList) {
     protocol.Actor.prototype.initialize.call(this);
     this.walker = walker;
-    this.nodeList = nodeList;
+    this.nodeList = nodeList || [];
   },
 
   destroy: function() {
