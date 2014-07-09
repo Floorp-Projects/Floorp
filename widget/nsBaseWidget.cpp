@@ -738,7 +738,7 @@ NS_IMETHODIMP nsBaseWidget::HideWindowChrome(bool aShouldHide)
 // Put the window into full-screen mode
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen)
+NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen, nsIScreen* aScreen)
 {
   HideWindowChrome(aFullScreen);
 
@@ -758,12 +758,16 @@ NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen)
     screenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
     NS_ASSERTION(screenManager, "Unable to grab screenManager.");
     if (screenManager) {
-      nsCOMPtr<nsIScreen> screen;
-      screenManager->ScreenForRect(mOriginalBounds->x,
-                                   mOriginalBounds->y,
-                                   mOriginalBounds->width,
-                                   mOriginalBounds->height,
-                                   getter_AddRefs(screen));
+      nsCOMPtr<nsIScreen> screen = aScreen;
+      if (!screen) {
+        // no screen was passed in, use the one that the window is on
+        screenManager->ScreenForRect(mOriginalBounds->x,
+                                     mOriginalBounds->y,
+                                     mOriginalBounds->width,
+                                     mOriginalBounds->height,
+                                     getter_AddRefs(screen));
+      }
+
       if (screen) {
         int32_t left, top, width, height;
         if (NS_SUCCEEDED(screen->GetRectDisplayPix(&left, &top, &width, &height))) {
