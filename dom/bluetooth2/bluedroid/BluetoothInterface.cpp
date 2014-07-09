@@ -783,24 +783,49 @@ BluetoothInterface::SspReply(const bt_bdaddr_t* aBdAddr,
 
 /* DUT Mode */
 
-int
-BluetoothInterface::DutModeConfigure(uint8_t aEnable)
+void
+BluetoothInterface::DutModeConfigure(uint8_t aEnable,
+                                     BluetoothResultHandler* aRes)
 {
-  return mInterface->dut_mode_configure(aEnable);
+  int status = mInterface->dut_mode_configure(aEnable);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::DutModeConfigure,
+                            status);
+  }
 }
 
-int
-BluetoothInterface::DutModeSend(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen)
+void
+BluetoothInterface::DutModeSend(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
+                                BluetoothResultHandler* aRes)
 {
-  return mInterface->dut_mode_send(aOpcode, aBuf, aLen);
+  int status = mInterface->dut_mode_send(aOpcode, aBuf, aLen);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::DutModeSend,
+                            status);
+  }
 }
 
 /* LE Mode */
 
-int
-BluetoothInterface::LeTestMode(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen)
+void
+BluetoothInterface::LeTestMode(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
+                               BluetoothResultHandler* aRes)
 {
-  return mInterface->le_test_mode(aOpcode, aBuf, aLen);
+#if ANDROID_VERSION >= 18
+  int status = mInterface->le_test_mode(aOpcode, aBuf, aLen);
+#else
+  int status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::LeTestMode,
+                            status);
+  }
 }
 
 /* Profile Interfaces */
