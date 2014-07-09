@@ -123,6 +123,15 @@ struct MallocProvider
         return (T *)calloc_(numElems * sizeof(T));
     }
 
+    template <class T>
+    mozilla::UniquePtr<T[], JS::FreePolicy>
+    make_zeroed_pod_array(size_t numElems,
+                          JSCompartment *comp = nullptr,
+                          JSContext *cx = nullptr)
+    {
+        return mozilla::UniquePtr<T[], JS::FreePolicy>(pod_calloc<T>(numElems, comp, cx));
+    }
+
     JS_DECLARE_NEW_METHODS(new_, malloc_, MOZ_ALWAYS_INLINE)
 };
 
