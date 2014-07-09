@@ -1797,7 +1797,7 @@ function VariableBubbleView() {
   dumpn("VariableBubbleView was instantiated");
 
   this._onMouseMove = this._onMouseMove.bind(this);
-  this._onMouseLeave = this._onMouseLeave.bind(this);
+  this._onMouseOut = this._onMouseOut.bind(this);
   this._onPopupHiding = this._onPopupHiding.bind(this);
 }
 
@@ -1810,7 +1810,7 @@ VariableBubbleView.prototype = {
 
     this._editorContainer = document.getElementById("editor");
     this._editorContainer.addEventListener("mousemove", this._onMouseMove, false);
-    this._editorContainer.addEventListener("mouseleave", this._onMouseLeave, false);
+    this._editorContainer.addEventListener("mouseout", this._onMouseOut, false);
 
     this._tooltip = new Tooltip(document, {
       closeOnEvents: [{
@@ -1835,7 +1835,7 @@ VariableBubbleView.prototype = {
 
     this._tooltip.panel.removeEventListener("popuphiding", this._onPopupHiding);
     this._editorContainer.removeEventListener("mousemove", this._onMouseMove, false);
-    this._editorContainer.removeEventListener("mouseleave", this._onMouseLeave, false);
+    this._editorContainer.removeEventListener("mouseout", this._onMouseOut, false);
   },
 
   /**
@@ -2052,9 +2052,9 @@ VariableBubbleView.prototype = {
   },
 
   /**
-   * The mouseleave listener for the source editor container node.
+   * The mouseout listener for the source editor container node.
    */
-  _onMouseLeave: function() {
+  _onMouseOut: function() {
     clearNamedTimeout("editor-mouse-move");
   },
 
