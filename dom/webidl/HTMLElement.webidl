@@ -111,10 +111,6 @@ interface TouchEventHandlers {
   [Func="nsGenericHTMLElement::TouchEventsEnabled"]
            attribute EventHandler ontouchmove;
   [Func="nsGenericHTMLElement::TouchEventsEnabled"]
-           attribute EventHandler ontouchenter;
-  [Func="nsGenericHTMLElement::TouchEventsEnabled"]
-           attribute EventHandler ontouchleave;
-  [Func="nsGenericHTMLElement::TouchEventsEnabled"]
            attribute EventHandler ontouchcancel;
 };
 

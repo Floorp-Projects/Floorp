@@ -44,12 +44,6 @@ MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
     case NS_TOUCH_END:
       mType = MULTITOUCH_END;
       break;
-    case NS_TOUCH_ENTER:
-      mType = MULTITOUCH_ENTER;
-      break;
-    case NS_TOUCH_LEAVE:
-      mType = MULTITOUCH_LEAVE;
-      break;
     case NS_TOUCH_CANCEL:
       mType = MULTITOUCH_CANCEL;
       break;
