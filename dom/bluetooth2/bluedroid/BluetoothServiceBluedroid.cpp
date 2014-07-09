@@ -177,7 +177,7 @@ public:
     // Cleanup bluetooth interfaces after BT state becomes BT_STATE_OFF.
     BluetoothHfpManager::DeinitHfpInterface();
     BluetoothA2dpManager::DeinitA2dpInterface();
-    sBtInterface->Cleanup();
+    sBtInterface->Cleanup(nullptr);
 
     return NS_OK;
   }
@@ -812,23 +812,51 @@ EnsureBluetoothHalLoad()
   return true;
 }
 
-static bool
-EnableInternal()
+class EnableResultHandler MOZ_FINAL : public BluetoothResultHandler
 {
-  int ret = sBtInterface->Init(&sBluetoothCallbacks);
-  if (ret != BT_STATUS_SUCCESS) {
-    BT_LOGR("Error while setting the callbacks");
-    sBtInterface = nullptr;
-    return false;
+public:
+  void OnError(int aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    BT_LOGR("BluetoothInterface::Enable failed: %d", aStatus);
+
+    nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
+    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+      BT_WARNING("Failed to dispatch to main thread!");
+    }
+  }
+};
+
+class InitResultHandler MOZ_FINAL : public BluetoothResultHandler
+{
+public:
+  void Init() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // Register all the bluedroid callbacks before enable() get called
+    // It is required to register a2dp callbacks before a2dp media task starts up.
+    // If any interface cannot be initialized, turn on bluetooth core anyway.
+    BluetoothHfpManager::InitHfpInterface();
+    BluetoothA2dpManager::InitA2dpInterface();
+    sBtInterface->Enable(new EnableResultHandler());
   }
 
-  // Register all the bluedroid callbacks before enable() get called
-  // It is required to register a2dp callbacks before a2dp media task starts up.
-  // If any interface cannot be initialized, turn on bluetooth core anyway.
-  BluetoothHfpManager::InitHfpInterface();
-  BluetoothA2dpManager::InitA2dpInterface();
-  return sBtInterface->Enable();
-}
+  void OnError(int aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    BT_LOGR("BluetoothInterface::Init failed: %d", aStatus);
+
+    sBtInterface = nullptr;
+
+    nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
+    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+      BT_WARNING("Failed to dispatch to main thread!");
+    }
+  }
+};
 
 static nsresult
 StartGonkBluetooth()
@@ -842,19 +870,33 @@ StartGonkBluetooth()
 
   if (bs->IsEnabled()) {
     // Keep current enable status
-    nsRefPtr<nsRunnable> runnable =
-      new BluetoothService::ToggleBtAck(true);
+    nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(true);
     if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
       BT_WARNING("Failed to dispatch to main thread!");
     }
     return NS_OK;
   }
 
-  int ret = EnableInternal();
-  NS_ENSURE_TRUE(ret == BT_STATUS_SUCCESS, NS_ERROR_FAILURE);
+  sBtInterface->Init(&sBluetoothCallbacks, new InitResultHandler());
 
   return NS_OK;
 }
+
+class DisableResultHandler MOZ_FINAL : public BluetoothResultHandler
+{
+public:
+  void OnError(int aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    BT_LOGR("BluetoothInterface::Disable failed: %d", aStatus);
+
+    nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(true);
+    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+      BT_WARNING("Failed to dispatch to main thread!");
+    }
+  }
+};
 
 static nsresult
 StopGonkBluetooth()
@@ -868,16 +910,14 @@ StopGonkBluetooth()
 
   if (!bs->IsEnabled()) {
     // Keep current enable status
-    nsRefPtr<nsRunnable> runnable =
-      new BluetoothService::ToggleBtAck(false);
+    nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
     if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
       BT_WARNING("Failed to dispatch to main thread!");
     }
     return NS_OK;
   }
 
-  int ret = sBtInterface->Disable();
-  NS_ENSURE_TRUE(ret == BT_STATUS_SUCCESS, NS_ERROR_FAILURE);
+  sBtInterface->Disable(new DisableResultHandler());
 
   return NS_OK;
 }
