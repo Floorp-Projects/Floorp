@@ -711,22 +711,43 @@ BluetoothInterface::CancelDiscovery(BluetoothResultHandler* aRes)
 
 /* Bonds */
 
-int
-BluetoothInterface::CreateBond(const bt_bdaddr_t* aBdAddr)
+void
+BluetoothInterface::CreateBond(const bt_bdaddr_t* aBdAddr,
+                               BluetoothResultHandler* aRes)
 {
-  return mInterface->create_bond(aBdAddr);
+  int status = mInterface->create_bond(aBdAddr);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::CreateBond,
+                            status);
+  }
 }
 
-int
-BluetoothInterface::RemoveBond(const bt_bdaddr_t* aBdAddr)
+void
+BluetoothInterface::RemoveBond(const bt_bdaddr_t* aBdAddr,
+                               BluetoothResultHandler* aRes)
 {
-  return mInterface->remove_bond(aBdAddr);
+  int status = mInterface->remove_bond(aBdAddr);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::RemoveBond,
+                            status);
+  }
 }
 
-int
-BluetoothInterface::CancelBond(const bt_bdaddr_t* aBdAddr)
+void
+BluetoothInterface::CancelBond(const bt_bdaddr_t* aBdAddr,
+                               BluetoothResultHandler* aRes)
 {
-  return mInterface->cancel_bond(aBdAddr);
+  int status = mInterface->cancel_bond(aBdAddr);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::CancelBond,
+                            status);
+  }
 }
 
 /* Authentication */
