@@ -1056,7 +1056,8 @@ js::RequestInterruptForAsmJSCode(JSRuntime *rt, int interruptModeRaw)
     activation->module().protectCode(rt);
 }
 
-#if defined(MOZ_ASAN) && defined(JS_STANDALONE)
+// This is not supported by clang-cl yet.
+#if defined(MOZ_ASAN) && defined(JS_STANDALONE) && !defined(_MSC_VER)
 // Usually, this definition is found in mozglue (see mozglue/build/AsanOptions.cpp).
 // However, when doing standalone JS builds, mozglue is not used and we must ensure
 // that we still allow custom SIGSEGV handlers for asm.js and ion to work correctly.
