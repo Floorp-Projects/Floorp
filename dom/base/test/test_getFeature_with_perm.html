@@ -38,7 +38,7 @@ function testSupported() {
       ok(typeof mem === 'undefined', "hardware.memory is not support on this platform");
     }
 
-    SimpleTest.finish();
+    runNextTest();
 
   },function(mem) {
     ok(false, "The Promise should not be rejected");
@@ -49,17 +49,56 @@ function testNotSupported() {
   var tv;
   navigator.getFeature("hardware.tv").then(function(tv) {
     ok(typeof tv === 'undefined', "Resolve the Promise with undefined value (hardware.tv)");
-    testSupported();
+    runNextTest();
   },function(tv) {
     ok(false, "The Promise should not be rejected")
   });
 }
 
+function createManifestTest(aFeature) {
+  return function() {
+    var res;
+    navigator.getFeature(aFeature).then(function(res) {
+      ok(res === true, "Resolve the Promise with 'true' for " + aFeature);
+      runNextTest();
+    },function(tv) {
+      ok(false, "The Promise should not be rejected")
+    });
+  }
+}
+
+var currentTest = -1;
+var tests = [
+  testNotSupported,
+  testSupported,
+  createManifestTest("manifest.origin"),
+  createManifestTest("manifest.redirects")
+];
+
+function runNextTest() {
+  currentTest++;
+  if (currentTest < tests.length) {
+    tests[currentTest]();
+  } else {
+    SimpleTest.finish();
+  }
+}
+
+info("About to run " + tests.length + " tests");
+
 SpecialPowers.pushPermissions([
   {type: "feature-detection", allow: 1, context: document}
 ], function() {
   ok('getFeature' in navigator, "navigator.getFeature should exist");
-  testNotSupported();
+  // B2G specific manifest features.
+  // Touching navigator before pushPermissions makes it fail.
+  if (!navigator.userAgent.contains("Android") &&
+        /Mobile|Tablet/.test(navigator.userAgent)) {
+    info("Adding B2G specific tests");
+    tests.push(createManifestTest("manifest.chrome.navigation"));
+    tests.push(createManifestTest("manifest.precompile"));
+  }
+  runNextTest();
   ok(true, "Test DONE");
 });
 
