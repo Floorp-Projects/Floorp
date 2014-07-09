@@ -186,6 +186,8 @@ frontend::CreateScriptSourceObject(ExclusiveContext *cx, const ReadOnlyCompileOp
         return nullptr;
 
     RootedScriptSource sso(cx, ScriptSourceObject::create(cx, ss));
+    if (!sso)
+        return nullptr;
 
     // Off-thread compilations do all their GC heap allocation, including the
     // SSO, in a temporary compartment. Hence, for the SSO to refer to the
