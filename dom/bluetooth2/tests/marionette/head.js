@@ -504,6 +504,64 @@ function waitForAdapterStateChanged(aAdapter, aStateChangesInOrder) {
 }
 
 /**
+ * Wait for an 'onattributechanged' event for a specified attribute and compare
+ * the new value with the expected value.
+ *
+ * Resolve if the specified event occurs. Never reject.
+ *
+ * Fulfill params: a BluetoothAttributeEvent with property attrs that contains
+ *                 changed BluetoothAdapterAttributes.
+ *
+ * @param aAdapter
+ *        The BluetoothAdapter you want to use.
+ * @param aAttrName
+ *        The name of the attribute of adapter.
+ * @param aExpectedValue
+ *        The expected new value of the attribute.
+ *
+ * @return A deferred promise.
+ */
+function waitForAdapterAttributeChanged(aAdapter, aAttrName, aExpectedValue) {
+  let deferred = Promise.defer();
+
+  aAdapter.onattributechanged = function(aEvent) {
+    let i = aEvent.attrs.indexOf(aAttrName);
+    if (i >= 0) {
+      switch (aEvent.attrs[i]) {
+        case "state":
+          log("  'state' changed to " + aAdapter.state);
+          is(aAdapter.state, aExpectedValue, "adapter.state");
+          break;
+        case "name":
+          log("  'name' changed to " + aAdapter.name);
+          is(aAdapter.name, aExpectedValue, "adapter.name");
+          break;
+        case "address":
+          log("  'address' changed to " + aAdapter.address);
+          is(aAdapter.address, aExpectedValue, "adapter.address");
+          break;
+        case "discoverable":
+          log("  'discoverable' changed to " + aAdapter.discoverable);
+          is(aAdapter.discoverable, aExpectedValue, "adapter.discoverable");
+          break;
+        case "discovering":
+          log("  'discovering' changed to " + aAdapter.discovering);
+          is(aAdapter.discovering, aExpectedValue, "adapter.discovering");
+          break;
+        case "unknown":
+        default:
+          ok(false, "Unknown attribute '" + aAttrName + "' changed." );
+          break;
+      }
+      aAdapter.onattributechanged = null;
+      deferred.resolve(aEvent);
+    }
+  };
+
+  return deferred.promise;
+}
+
+/**
  * Flush permission settings and call |finish()|.
  */
 function cleanUp() {
