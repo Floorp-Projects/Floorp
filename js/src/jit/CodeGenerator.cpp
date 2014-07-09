@@ -6723,7 +6723,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
         ionScript->setHasUncompiledCallTarget();
 
     invalidateEpilogueData_.fixup(&masm);
-    Assembler::patchDataWithValueCheck(CodeLocationLabel(code, invalidateEpilogueData_),
+    Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, invalidateEpilogueData_),
                                        ImmPtr(ionScript),
                                        ImmPtr((void*)-1));
 
@@ -6745,7 +6745,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
 
     for (size_t i = 0; i < ionScriptLabels_.length(); i++) {
         ionScriptLabels_[i].fixup(&masm);
-        Assembler::patchDataWithValueCheck(CodeLocationLabel(code, ionScriptLabels_[i]),
+        Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, ionScriptLabels_[i]),
                                            ImmPtr(ionScript),
                                            ImmPtr((void*)-1));
     }
@@ -6783,14 +6783,14 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
     for (uint32_t i = 0; i < patchableTraceLoggers_.length(); i++) {
         patchableTraceLoggers_[i].fixup(&masm);
-        Assembler::patchDataWithValueCheck(CodeLocationLabel(code, patchableTraceLoggers_[i]),
+        Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, patchableTraceLoggers_[i]),
                                            ImmPtr(logger),
                                            ImmPtr(nullptr));
     }
     uint32_t scriptId = TraceLogCreateTextId(logger, script);
     for (uint32_t i = 0; i < patchableTLScripts_.length(); i++) {
         patchableTLScripts_[i].fixup(&masm);
-        Assembler::patchDataWithValueCheck(CodeLocationLabel(code, patchableTLScripts_[i]),
+        Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, patchableTLScripts_[i]),
                                            ImmPtr((void *) uintptr_t(scriptId)),
                                            ImmPtr((void *)0));
     }

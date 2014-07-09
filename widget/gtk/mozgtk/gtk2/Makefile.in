@@ -4,7 +4,6 @@
 
 include $(topsrcdir)/config/rules.mk
 
-LDFLAGS += -Wl,-soname=$(DLL_PREFIX)mozgtk$(DLL_SUFFIX)
 
 # If LDFLAGS contains -Wl,--as-needed, we need to add -Wl,--no-as-needed
 # before the gtk libraries, otherwise the linker will drop those dependencies

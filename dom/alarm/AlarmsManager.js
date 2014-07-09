@@ -61,12 +61,15 @@ AlarmsManager.prototype = {
         break;
     }
 
+    let sandbox = new Cu.Sandbox(Cu.getWebIDLCallerPrincipal());
+    sandbox.data = aData;
+    let data = Cu.evalInSandbox("JSON.stringify(data)", sandbox);
     let request = this.createRequest();
     this._cpmm.sendAsyncMessage("AlarmsManager:Add",
                                 { requestId: this.getRequestId(request),
                                   date: aDate,
                                   ignoreTimezone: isIgnoreTimezone,
-                                  data: aData,
+                                  data: data,
                                   pageURL: this._pageURL,
                                   manifestURL: this._manifestURL });
     return request;
@@ -109,13 +112,16 @@ AlarmsManager.prototype = {
         // We don't need to expose everything to the web content.
         let alarms = [];
         json.alarms.forEach(function trimAlarmInfo(aAlarm) {
+          let sandbox = new Cu.Sandbox(this._principal);
+          sandbox.data = aAlarm.data;
+          let data = Cu.evalInSandbox("JSON.parse(data)", sandbox);
           let alarm = { "id": aAlarm.id,
                         "date": aAlarm.date,
                         "respectTimezone": aAlarm.ignoreTimezone ?
                                              "ignoreTimezone" : "honorTimezone",
-                        "data": aAlarm.data };
+                        "data": data };
           alarms.push(alarm);
-        });
+        }.bind(this));
 
         Services.DOMRequest.fireSuccess(request,
                                         Cu.cloneInto(alarms, this._window));
@@ -153,10 +159,11 @@ AlarmsManager.prototype = {
     // Get the manifest URL if this is an installed app
     let appsService = Cc["@mozilla.org/AppsService;1"]
                         .getService(Ci.nsIAppsService);
-    let principal = aWindow.document.nodePrincipal;
-    this._pageURL = principal.URI.spec;
-    this._manifestURL = appsService.getManifestURLByLocalId(principal.appId);
     this._window = aWindow;
+    this._principal = this._window.document.nodePrincipal;
+    this._pageURL = this._principal.URI.spec;
+    this._manifestURL =
+      appsService.getManifestURLByLocalId(this._principal.appId);
   },
 
   // Called from DOMRequestIpcHelper.

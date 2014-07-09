@@ -36,7 +36,7 @@ ICCompare_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     masm.tagValue(JSVAL_TYPE_BOOLEAN, R0.payloadReg(), R0);
     EmitReturnFromIC(masm);
 
-    // Failure case - jump to next stub
+    // Failure case - jump to next stub.
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
 
@@ -62,7 +62,7 @@ ICCompare_Double::Compiler::generateStubCode(MacroAssembler &masm)
     masm.tagValue(JSVAL_TYPE_BOOLEAN, dest, R0);
     EmitReturnFromIC(masm);
 
-    // Failure case - jump to next stub
+    // Failure case - jump to next stub.
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
     return true;
@@ -82,7 +82,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
-    // Add R0 and R1.  Don't need to explicitly unbox, just use R2's payloadReg.
+    // Add R0 and R1. Don't need to explicitly unbox, just use R2's payloadReg.
     Register scratchReg = R2.payloadReg();
 
     // DIV and MOD need an extra non-volatile ValueOperand to hold R0.
@@ -95,12 +95,12 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
       case JSOP_ADD:
         masm.ma_add(R0.payloadReg(), R1.payloadReg(), scratchReg, SetCond);
 
-        // Just jump to failure on overflow.  R0 and R1 are preserved, so we can just jump to
-        // the next stub.
+        // Just jump to failure on overflow. R0 and R1 are preserved, so we can
+        // just jump to the next stub.
         masm.j(Assembler::Overflow, &failure);
 
-        // Box the result and return.  We know R0.typeReg() already contains the integer
-        // tag, so we just need to move the result value into place.
+        // Box the result and return. We know R0.typeReg() already contains the
+        // integer tag, so we just need to move the result value into place.
         masm.mov(scratchReg, R0.payloadReg());
         break;
       case JSOP_SUB:
@@ -131,7 +131,8 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         masm.ma_cmp(R0.payloadReg(), Imm32(0), Assembler::LessThan);
         masm.j(Assembler::Equal, &failure);
 
-        // The call will preserve registers r4-r11. Save R0 and the link register.
+        // The call will preserve registers r4-r11. Save R0 and the link
+        // register.
         JS_ASSERT(R1 == ValueOperand(r5, r4));
         JS_ASSERT(R0 == ValueOperand(r3, r2));
         masm.moveValue(R0, savedValue);
@@ -222,7 +223,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         break;
     }
 
-    // Failure case - jump to next stub
+    // Failure case - jump to next stub.
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
 

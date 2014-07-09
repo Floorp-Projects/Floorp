@@ -14,7 +14,8 @@
 
 #include "js/Utility.h"
 
-// gcc appears to use __ARM_PCS_VFP to denote that the target is a hard-float target.
+// Gcc appears to use __ARM_PCS_VFP to denote that the target is a hard-float
+// target.
 #if defined(__ARM_PCS_VFP)
 #define JS_CODEGEN_ARM_HARDFP
 #endif
@@ -38,11 +39,11 @@ static const uint32_t ShadowStackSpace = 0;
 // These offsets are related to bailouts.
 ////
 
-// Size of each bailout table entry. On arm, this is presently
-// a single call (which is wrong!). the call clobbers lr.
-// For now, I've dealt with this by ensuring that we never allocate to lr.
-// it should probably be 8 bytes, a mov of an immediate into r12 (not
-// allocated presently, or ever) followed by a branch to the apropriate code.
+// Size of each bailout table entry. On arm, this is presently a single call
+// (which is wrong!). The call clobbers lr.
+// For now, I've dealt with this by ensuring that we never allocate to lr. It
+// should probably be 8 bytes, a mov of an immediate into r12 (not allocated
+// presently, or ever) followed by a branch to the apropriate code.
 static const uint32_t BAILOUT_TABLE_ENTRY_SIZE    = 4;
 
 class Registers
@@ -139,7 +140,7 @@ class Registers
     // Registers returned from a JS -> C call.
     static const uint32_t CallMask =
         (1 << Registers::r0) |
-        (1 << Registers::r1);  // used for double-size returns
+        (1 << Registers::r1);  // Used for double-size returns.
 
     static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
     typedef uint32_t SetType;
@@ -240,9 +241,9 @@ class TypedRegisterSet;
 class VFPRegister
 {
   public:
-    // What type of data is being stored in this register?
-    // UInt / Int are specifically for vcvt, where we need
-    // to know how the data is supposed to be converted.
+    // What type of data is being stored in this register? UInt / Int are
+    // specifically for vcvt, where we need to know how the data is supposed to
+    // be converted.
     enum RegType {
         Single = 0x0,
         Double = 0x1,
@@ -255,13 +256,11 @@ class VFPRegister
 
   protected:
     RegType kind : 2;
-    // ARM doesn't have more than 32 registers...
-    // don't take more bits than we'll need.
-    // Presently, I don't have plans to address the upper
-    // and lower halves of the double registers seprately, so
-    // 5 bits should suffice.  If I do decide to address them seprately
-    // (vmov, I'm looking at you), I will likely specify it as a separate
-    // field.
+    // ARM doesn't have more than 32 registers. Don't take more bits than we'll
+    // need. Presently, we don't have plans to address the upper and lower
+    // halves of the double registers seprately, so 5 bits should suffice. If we
+    // do decide to address them seprately (vmov, I'm looking at you), we will
+    // likely specify it as a separate field.
   public:
     Code code_ : 5;
   protected:
@@ -307,7 +306,7 @@ class VFPRegister
     struct VFPRegIndexSplit;
     VFPRegIndexSplit encode();
 
-    // for serializing values
+    // For serializing values.
     struct VFPRegIndexSplit {
         const uint32_t block : 4;
         const uint32_t bit : 1;
@@ -325,8 +324,8 @@ class VFPRegister
 
     Code code() const {
         JS_ASSERT(!_isInvalid && !_isMissing);
-        // this should only be used in areas where we only have doubles
-        // and singles.
+        // This should only be used in areas where we only have doubles and
+        // singles.
         JS_ASSERT(isFloat());
         return Code(code_);
     }
@@ -391,8 +390,8 @@ class VFPRegister
     }
     // |   d0    |
     // | s0 | s1 |
-    // if we've stored s0 and s1 in memory, we also want to say that d0
-    // is stored there, but it is only stored at the location where it is aligned
+    // If we've stored s0 and s1 in memory, we also want to say that d0 is
+    // stored there, but it is only stored at the location where it is aligned
     // e.g. at s0, not s1.
     void alignedAliased(uint32_t aliasIdx, VFPRegister *ret) {
         if (aliasIdx == 0) {
@@ -424,8 +423,7 @@ class VFPRegister
 
 };
 
-// The only floating point register set that we work with
-// are the VFP Registers
+// The only floating point register set that we work with are the VFP Registers.
 typedef VFPRegister FloatRegister;
 
 uint32_t GetARMFlags();
@@ -435,16 +433,16 @@ bool HasVFP();
 bool Has32DP();
 bool HasIDIV();
 
-// Arm/D32 has double registers that can NOT be treated as float32
-// and this requires some dances in lowering.
+// Arm/D32 has double registers that can NOT be treated as float32 and this
+// requires some dances in lowering.
 inline bool
 hasUnaliasedDouble()
 {
     return Has32DP();
 }
 
-// On ARM, Dn aliases both S2n and S2n+1, so if you need to convert a float32
-// to a double as a temporary, you need a temporary double register.
+// On ARM, Dn aliases both S2n and S2n+1, so if you need to convert a float32 to
+// a double as a temporary, you need a temporary double register.
 inline bool
 hasMultiAlias()
 {
@@ -453,8 +451,9 @@ hasMultiAlias()
 
 bool ParseARMHwCapFlags(const char *armHwCap);
 
-// If the simulator is used then the ABI choice is dynamic.  Otherwise the ABI is static
-// and useHardFpABI is inlined so that unused branches can be optimized away.
+// If the simulator is used then the ABI choice is dynamic. Otherwise the ABI is
+// static and useHardFpABI is inlined so that unused branches can be optimized
+// away.
 #if defined(JS_ARM_SIMULATOR)
 bool UseHardFpABI();
 #else

@@ -155,7 +155,7 @@ JitFrameIterator::checkInvalidation(IonScript **ionScriptOut) const
 
     int32_t invalidationDataOffset = ((int32_t *) returnAddr)[-1];
     uint8_t *ionScriptDataOffset = returnAddr + invalidationDataOffset;
-    IonScript *ionScript = (IonScript *) Assembler::getPointer(ionScriptDataOffset);
+    IonScript *ionScript = (IonScript *) Assembler::GetPointer(ionScriptDataOffset);
     JS_ASSERT(ionScript->containsReturnAddress(returnAddr));
     *ionScriptOut = ionScript;
     return true;
@@ -1426,7 +1426,7 @@ OsiIndex::returnPointDisplacement() const
     // In general, pointer arithmetic on code is bad, but in this case,
     // getting the return address from a call instruction, stepping over pools
     // would be wrong.
-    return callPointDisplacement_ + Assembler::patchWrite_NearCallSize();
+    return callPointDisplacement_ + Assembler::PatchWrite_NearCallSize();
 }
 
 SnapshotIterator::SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshotOffset,

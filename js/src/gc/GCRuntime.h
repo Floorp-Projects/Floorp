@@ -321,9 +321,8 @@ class GCRuntime
 
     bool isGcNeeded() { return isNeeded; }
 
-    double computeHeapGrowthFactor(size_t lastBytes) const;
-    size_t computeTriggerBytes(double growthFactor, size_t lastBytes,
-                               JSGCInvocationKind gckind) const;
+    double computeHeapGrowthFactor(size_t lastBytes);
+    size_t computeTriggerBytes(double growthFactor, size_t lastBytes, JSGCInvocationKind gckind);
     size_t allocationThreshold() { return allocThreshold; }
 
     JSGCMode gcMode() const { return mode; }
@@ -394,7 +393,7 @@ class GCRuntime
     bool releaseObservedTypes();
     void endSweepingZoneGroup();
     bool sweepPhase(SliceBudget &sliceBudget);
-    void endSweepPhase(bool lastGC);
+    void endSweepPhase(JSGCInvocationKind gckind, bool lastGC);
     void sweepZones(FreeOp *fop, bool lastGC);
     void decommitArenasFromAvailableList(Chunk **availableListHeadp);
     void decommitArenas();
@@ -513,9 +512,6 @@ class GCRuntime
 
     /* Whether all compartments are being collected in first GC slice. */
     bool                  isFull;
-
-    /* The kind of the last collection. */
-    JSGCInvocationKind    lastKind;
 
     /* The reason that an interrupt-triggered GC should be called. */
     JS::gcreason::Reason  triggerReason;
