@@ -8598,6 +8598,10 @@ IonBuilder::jsop_getprop(PropertyName *name)
     if (!getPropTryArgumentsLength(&emitted, obj) || emitted)
         return emitted;
 
+    // Try to optimize arguments.callee.
+    if (!getPropTryArgumentsCallee(&emitted, obj, name) || emitted)
+        return emitted;
+
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
     BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
                                                        obj, name, types);
@@ -8662,17 +8666,34 @@ IonBuilder::jsop_getprop(PropertyName *name)
 }
 
 bool
-IonBuilder::getPropTryArgumentsLength(bool *emitted, MDefinition *obj)
+IonBuilder::checkIsDefinitelyOptimizedArguments(MDefinition *obj, bool *isOptimizedArgs)
 {
-    JS_ASSERT(*emitted == false);
     if (obj->type() != MIRType_MagicOptimizedArguments) {
         if (script()->argumentsHasVarBinding() &&
             obj->mightBeType(MIRType_MagicOptimizedArguments))
         {
             return abort("Type is not definitely lazy arguments.");
         }
+
+        *isOptimizedArgs = false;
         return true;
     }
+
+    *isOptimizedArgs = true;
+    return true;
+}
+
+bool
+IonBuilder::getPropTryArgumentsLength(bool *emitted, MDefinition *obj)
+{
+    JS_ASSERT(*emitted == false);
+
+    bool isOptimizedArgs = false;
+    if (!checkIsDefinitelyOptimizedArguments(obj, &isOptimizedArgs))
+        return false;
+    if (!isOptimizedArgs)
+        return true;
+
     if (JSOp(*pc) != JSOP_LENGTH)
         return true;
 
@@ -8690,6 +8711,27 @@ IonBuilder::getPropTryArgumentsLength(bool *emitted, MDefinition *obj)
 
     // We are inlining and know the number of arguments the callee pushed
     return pushConstant(Int32Value(inlineCallInfo_->argv().length()));
+}
+
+bool
+IonBuilder::getPropTryArgumentsCallee(bool *emitted, MDefinition *obj, PropertyName *name)
+{
+    JS_ASSERT(*emitted == false);
+
+    bool isOptimizedArgs = false;
+    if (!checkIsDefinitelyOptimizedArguments(obj, &isOptimizedArgs))
+        return false;
+    if (!isOptimizedArgs)
+        return true;
+
+    if (name != names().callee)
+        return true;
+
+    obj->setImplicitlyUsedUnchecked();
+    current->push(getCallee());
+
+    *emitted = true;
+    return true;
 }
 
 bool

@@ -423,6 +423,7 @@ class ICEntry
     _(GetProp_CallDOMProxyWithGenerationNative)\
     _(GetProp_DOMProxyShadowed) \
     _(GetProp_ArgumentsLength)  \
+    _(GetProp_ArgumentsCallee)  \
                                 \
     _(SetProp_Fallback)         \
     _(SetProp_Native)           \
@@ -5073,6 +5074,39 @@ class ICGetProp_ArgumentsLength : public ICStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICGetProp_ArgumentsLength::New(space, getStubCode());
+        }
+    };
+};
+
+class ICGetProp_ArgumentsCallee : public ICMonitoredStub
+{
+    friend class ICStubSpace;
+
+  protected:
+    ICGetProp_ArgumentsCallee(JitCode *stubCode, ICStub *firstMonitorStub);
+
+  public:
+    static inline ICGetProp_ArgumentsCallee *New(ICStubSpace *space, JitCode *code,
+                                                 ICStub *firstMonitorStub)
+    {
+        if (!code)
+            return nullptr;
+        return space->allocate<ICGetProp_ArgumentsCallee>(code, firstMonitorStub);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        ICStub *firstMonitorStub_;
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, ICStub *firstMonitorStub)
+          : ICStubCompiler(cx, ICStub::GetProp_ArgumentsCallee),
+            firstMonitorStub_(firstMonitorStub)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICGetProp_ArgumentsCallee::New(space, getStubCode(), firstMonitorStub_);
         }
     };
 };

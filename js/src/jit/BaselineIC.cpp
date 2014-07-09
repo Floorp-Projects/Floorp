@@ -6072,6 +6072,48 @@ ICGetIntrinsic_Constant::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
+TryAttachMagicArgumentsGetPropStub(JSContext *cx, JSScript *script, ICGetProp_Fallback *stub,
+                                   HandlePropertyName name, HandleValue val, HandleValue res,
+                                   bool *attached)
+{
+    MOZ_ASSERT(!*attached);
+
+    if (!val.isMagic(JS_OPTIMIZED_ARGUMENTS))
+        return true;
+
+    // Try handling arguments.callee on optimized arguments.
+    if (name == cx->names().callee) {
+        IonSpew(IonSpew_BaselineIC, "  Generating GetProp(MagicArgs.callee) stub");
+
+        // Unlike ICGetProp_ArgumentsLength, only magic argument stubs are
+        // supported at the moment.
+        ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
+
+        // XXXshu the compiler really should be stack allocated, but stack
+        // allocating it causes the test_temporary_storage indexedDB test to
+        // fail on GCC 4.7-compiled ARMv6 optimized builds on Android 2.3 and
+        // below with a NotFoundError, despite that test never exercising this
+        // code.
+        //
+        // Instead of tracking down the GCC bug, I've opted to heap allocate
+        // instead.
+        ScopedJSDeletePtr<ICGetProp_ArgumentsCallee::Compiler> compiler;
+        compiler = js_new<ICGetProp_ArgumentsCallee::Compiler>(cx, monitorStub);
+        if (!compiler)
+            return false;
+        ICStub *newStub = compiler->getStub(compiler->getStubSpace(script));
+        if (!newStub)
+            return false;
+        stub->addNewStub(newStub);
+
+        *attached = true;
+        return true;
+    }
+
+    return true;
+}
+
+static bool
 TryAttachLengthStub(JSContext *cx, JSScript *script, ICGetProp_Fallback *stub, HandleValue val,
                     HandleValue res, bool *attached)
 {
@@ -6426,6 +6468,41 @@ TryAttachNativeDoesNotExistStub(JSContext *cx, HandleScript script, jsbytecode *
 }
 
 static bool
+ComputeGetPropResult(JSContext *cx, BaselineFrame *frame, JSOp op, HandlePropertyName name,
+                     MutableHandleValue val, MutableHandleValue res)
+{
+    // Handle arguments.length and arguments.callee on optimized arguments, as
+    // it is not an object.
+    if (val.isMagic(JS_OPTIMIZED_ARGUMENTS) && IsOptimizedArguments(frame, val.address())) {
+        if (op == JSOP_LENGTH) {
+            res.setInt32(frame->numActualArgs());
+        } else {
+            MOZ_ASSERT(name == cx->names().callee);
+            res.setObject(*frame->callee());
+        }
+    } else {
+        // Handle when val is an object.
+        RootedObject obj(cx, ToObjectFromStack(cx, val));
+        if (!obj)
+            return false;
+
+        RootedId id(cx, NameToId(name));
+        if (!JSObject::getGeneric(cx, obj, obj, id, res))
+            return false;
+
+#if JS_HAS_NO_SUCH_METHOD
+        // Handle objects with __noSuchMethod__.
+        if (op == JSOP_CALLPROP && MOZ_UNLIKELY(res.isUndefined()) && val.isObject()) {
+            if (!OnUnknownMethod(cx, obj, IdToValue(id), res))
+                return false;
+        }
+#endif
+    }
+
+    return true;
+}
+
+static bool
 DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub_,
                   MutableHandleValue val, MutableHandleValue res)
 {
@@ -6439,41 +6516,8 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub_
     JS_ASSERT(op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH || op == JSOP_GETXPROP);
 
     RootedPropertyName name(cx, frame->script()->getName(pc));
-
-    if (op == JSOP_LENGTH && val.isMagic(JS_OPTIMIZED_ARGUMENTS)) {
-        // Handle arguments.length access.
-        if (IsOptimizedArguments(frame, val.address())) {
-            res.setInt32(frame->numActualArgs());
-
-            // Monitor result
-            types::TypeScript::Monitor(cx, frame->script(), pc, res);
-            if (!stub->addMonitorStubForValue(cx, frame->script(), res))
-                return false;
-
-            bool attached = false;
-            if (!TryAttachLengthStub(cx, frame->script(), stub, val, res, &attached))
-                return false;
-            JS_ASSERT(attached);
-
-            return true;
-        }
-    }
-
-    RootedObject obj(cx, ToObjectFromStack(cx, val));
-    if (!obj)
+    if (!ComputeGetPropResult(cx, frame, op, name, val, res))
         return false;
-
-    RootedId id(cx, NameToId(name));
-    if (!JSObject::getGeneric(cx, obj, obj, id, res))
-        return false;
-
-#if JS_HAS_NO_SUCH_METHOD
-    // Handle objects with __noSuchMethod__.
-    if (op == JSOP_CALLPROP && MOZ_UNLIKELY(res.isUndefined()) && val.isObject()) {
-        if (!OnUnknownMethod(cx, obj, IdToValue(id), res))
-            return false;
-    }
-#endif
 
     types::TypeScript::Monitor(cx, frame->script(), pc, res);
 
@@ -6498,6 +6542,11 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub_
         if (attached)
             return true;
     }
+
+    if (!TryAttachMagicArgumentsGetPropStub(cx, frame->script(), stub, name, val, res, &attached))
+        return false;
+    if (attached)
+        return true;
 
     RootedScript script(cx, frame->script());
 
@@ -7308,6 +7357,35 @@ ICGetProp_ArgumentsLength::Compiler::generateStubCode(MacroAssembler &masm)
     masm.rshiftPtr(Imm32(ArgumentsObject::PACKED_BITS_COUNT), scratchReg);
     masm.tagValue(JSVAL_TYPE_INT32, scratchReg, R0);
     EmitReturnFromIC(masm);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+ICGetProp_ArgumentsCallee::ICGetProp_ArgumentsCallee(JitCode *stubCode, ICStub *firstMonitorStub)
+  : ICMonitoredStub(GetProp_ArgumentsCallee, stubCode, firstMonitorStub)
+{ }
+
+bool
+ICGetProp_ArgumentsCallee::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+
+    // Ensure that this is lazy arguments.
+    masm.branchTestMagicValue(Assembler::NotEqual, R0, JS_OPTIMIZED_ARGUMENTS, &failure);
+
+    // Ensure that frame has not loaded different arguments object since.
+    masm.branchTest32(Assembler::NonZero,
+                      Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags()),
+                      Imm32(BaselineFrame::HAS_ARGS_OBJ),
+                      &failure);
+
+    Address callee(BaselineFrameReg, BaselineFrame::offsetOfCalleeToken());
+    masm.loadPtr(callee, R0.scratchReg());
+    masm.tagValue(JSVAL_TYPE_OBJECT, R0.scratchReg(), R0);
+
+    EmitEnterTypeMonitorIC(masm);
 
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
