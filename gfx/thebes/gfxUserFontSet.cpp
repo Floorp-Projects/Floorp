@@ -595,9 +595,18 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
     MOZ_ASSERT(aWeight != 0,
                "aWeight must not be 0; use NS_FONT_WEIGHT_NORMAL instead");
 
+    nsAutoString key(aFamilyName);
+    ToLowerCase(key);
+
+    bool found;
+
     // stretch, italic/oblique ==> zero implies normal
 
-    gfxMixedFontFamily* family = GetFamily(aFamilyName);
+    gfxMixedFontFamily *family = mFontFamilies.GetWeak(key, &found);
+    if (!family) {
+        family = new gfxMixedFontFamily(aFamilyName);
+        mFontFamilies.Put(key, family);
+    }
 
     // If there's already a proxy in the family whose descriptors all match,
     // we can just move it to the end of the list instead of adding a new
@@ -654,7 +663,17 @@ void
 gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
                             gfxFontEntry     *aFontEntry)
 {
-    gfxMixedFontFamily* family = GetFamily(aFamilyName);
+    nsAutoString key(aFamilyName);
+    ToLowerCase(key);
+
+    bool found;
+
+    gfxMixedFontFamily *family = mFontFamilies.GetWeak(key, &found);
+    if (!family) {
+        family = new gfxMixedFontFamily(aFamilyName);
+        mFontFamilies.Put(key, family);
+    }
+
     family->AddFontEntry(aFontEntry);
 }
 
@@ -768,27 +787,13 @@ gfxUserFontSet::RebuildLocalRules()
     }
 }
 
-gfxMixedFontFamily*
-gfxUserFontSet::LookupFamily(const nsAString& aFamilyName) const
+gfxFontFamily*
+gfxUserFontSet::GetFamily(const nsAString& aFamilyName) const
 {
     nsAutoString key(aFamilyName);
     ToLowerCase(key);
 
     return mFontFamilies.GetWeak(key);
-}
-
-gfxMixedFontFamily*
-gfxUserFontSet::GetFamily(const nsAString& aFamilyName)
-{
-    nsAutoString key(aFamilyName);
-    ToLowerCase(key);
-
-    gfxMixedFontFamily* family = mFontFamilies.GetWeak(key);
-    if (!family) {
-        family = new gfxMixedFontFamily(aFamilyName);
-        mFontFamilies.Put(key, family);
-    }
-    return family;
 }
 
 struct FindFamilyCallbackData {
