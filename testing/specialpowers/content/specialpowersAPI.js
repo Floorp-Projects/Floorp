@@ -83,7 +83,30 @@ function isObjectOrArray(obj) {
   return arrayClasses.indexOf(className) != -1;
 }
 
+// In general, we want Xray wrappers for content DOM objects, because waiving
+// Xray gives us Xray waiver wrappers that clamp the principal when we cross
+// compartment boundaries. However, there are some exceptions where we want
+// to use a waiver:
+//
+// * Xray adds some gunk to toString(), which has the potential to confuse
+//   consumers that aren't expecting Xray wrappers. Since toString() is a
+//   non-privileged method that returns only strings, we can just waive Xray
+//   for that case.
+//
+// * We implement Xrays to pure JS [[Object]] and [[Array]] instances that
+//   filter out tricky things like callables. This is the right thing for
+//   security in general, but tends to break tests that try to pass object
+//   literals into SpecialPowers. So we waive [[Object]] and [[Array]]
+//   instances before inspecting properties.
+function waiveXraysIfAppropriate(obj, propName) {
+  if (propName == 'toString' || isObjectOrArray(obj))
+    return XPCNativeWrapper.unwrap(obj);
+  return obj;
+}
+
 function callGetOwnPropertyDescriptor(obj, name) {
+  obj = waiveXraysIfAppropriate(obj, name);
+
   // Quickstubbed getters and setters are propertyOps, and don't get reified
   // until someone calls __lookupGetter__ or __lookupSetter__ on them (note
   // that there are special version of those functions for quickstubs, so
@@ -230,31 +253,13 @@ SpecialPowersHandler.prototype.doGetPropertyDescriptor = function(name, own) {
   if (name == "__exposedProps__")
     return { value: ExposedPropsWaiver, writable: false, configurable: false, enumerable: false };
 
-  // In general, we want Xray wrappers for content DOM objects, because waiving
-  // Xray gives us Xray waiver wrappers that clamp the principal when we cross
-  // compartment boundaries. However, there are some exceptions where we want
-  // to use a waiver:
-  //
-  // * Xray adds some gunk to toString(), which has the potential to confuse
-  //   consumers that aren't expecting Xray wrappers. Since toString() is a
-  //   non-privileged method that returns only strings, we can just waive Xray
-  //   for that case.
-  //
-  // *  We implement Xrays to pure JS [[Object]] and [[Array]] instances that
-  //    filter out tricky things like callables. This is the right thing for
-  //    security in general, but tends to break tests that try to pass object
-  //    literals into SpecialPowers. So we waive [[Object]] and [[Array]]
-  //    instances before inspecting properties.
-  var obj = this.wrappedObject;
-  if (name == 'toString' || isObjectOrArray(obj))
-    obj = XPCNativeWrapper.unwrap(obj);
-
   //
   // Call through to the wrapped object.
   //
   // Note that we have several cases here, each of which requires special handling.
   //
   var desc;
+  var obj = this.wrappedObject;
   function isWrappedNativeXray(o) {
     if (!Cu.isXrayWrapper(o))
       return false;
@@ -289,6 +294,7 @@ SpecialPowersHandler.prototype.doGetPropertyDescriptor = function(name, own) {
   // we make up a descriptor, using some assumptions about what kinds of things
   // tend to live on the prototypes of Xray-wrapped objects.
   else {
+    obj = waiveXraysIfAppropriate(obj, name);
     desc = Object.getOwnPropertyDescriptor(obj, name);
     if (!desc) {
       var getter = Object.prototype.__lookupGetter__.call(obj, name);
