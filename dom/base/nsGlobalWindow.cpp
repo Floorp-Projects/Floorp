@@ -190,6 +190,8 @@
 #include "mozilla/dom/GamepadService.h"
 #endif
 
+#include "mozilla/dom/VRDevice.h"
+
 #include "nsRefreshDriver.h"
 
 #include "mozilla/dom/SelectionChangeEvent.h"
@@ -1134,7 +1136,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mCleanedUp(false),
     mDialogAbuseCount(0),
     mAreDialogsEnabled(true),
-    mCanSkipCCGeneration(0)
+    mCanSkipCCGeneration(0),
+    mVRDevicesInitialized(false)
 {
   nsLayoutStatics::AddRef();
 
@@ -1771,6 +1774,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGamepads)
 #endif
 
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVRDevices)
+
   // Traverse stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParentTarget)
@@ -1831,6 +1836,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
 #ifdef MOZ_GAMEPAD
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGamepads)
 #endif
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mVRDevices)
 
   // Unlink stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeEventHandler)
@@ -13416,7 +13423,26 @@ nsGlobalWindow::SyncGamepadState()
     mGamepads.EnumerateRead(EnumGamepadsForSync, nullptr);
   }
 }
-#endif
+#endif // MOZ_GAMEPAD
+
+bool
+nsGlobalWindow::GetVRDevices(nsTArray<nsRefPtr<mozilla::dom::VRDevice>>& aDevices)
+{
+  FORWARD_TO_INNER(GetVRDevices, (aDevices), false);
+
+  if (!mVRDevicesInitialized) {
+    bool ok = mozilla::dom::VRDevice::CreateAllKnownVRDevices(ToSupports(this), mVRDevices);
+    if (!ok) {
+      mVRDevices.Clear();
+      return false;
+    }
+  }
+
+  mVRDevicesInitialized = true;
+  aDevices = mVRDevices;
+  return true;
+}
+
 // nsGlobalChromeWindow implementation
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalChromeWindow)

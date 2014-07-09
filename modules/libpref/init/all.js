@@ -4221,6 +4221,10 @@ pref("dom.browserElement.maxScreenshotDelayMS", 2000);
 // Whether we should show the placeholder when the element is focused but empty.
 pref("dom.placeholder.show_on_focus", true);
 
+pref("dom.vr.enabled", false);
+// 0 = never; 1 = only if real devices aren't there; 2 = always
+pref("dom.vr.add-test-devices", 1);
+
 // MMS UA Profile settings
 pref("wap.UAProf.url", "");
 pref("wap.UAProf.tagname", "x-wap-profile");
