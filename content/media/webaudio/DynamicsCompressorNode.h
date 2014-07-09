@@ -64,6 +64,9 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
 
+protected:
+  virtual ~DynamicsCompressorNode();
+
 private:
   static void SendThresholdToStream(AudioNode* aNode);
   static void SendKneeToStream(AudioNode* aNode);

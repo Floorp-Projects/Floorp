@@ -24,7 +24,6 @@ class OuterDocAccessible : public AccessibleWrap
 {
 public:
   OuterDocAccessible(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~OuterDocAccessible();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -47,6 +46,8 @@ public:
   virtual uint8_t ActionCount();
 
 protected:
+  virtual ~OuterDocAccessible();
+
   // Accessible
   virtual void CacheChildren();
 };

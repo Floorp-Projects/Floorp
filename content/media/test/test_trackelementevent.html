@@ -34,7 +34,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true],
 
     var events = 0;
     function countEvent() {
-      ok(true, "A loaded or error event should have happened.");
+      ok(true, "A load or error event should have happened.");
       events++ && events == 3 && SimpleTest.finish();
     }
 
@@ -42,11 +42,11 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true],
       ok(false, "Event should not have been called.");
     }
 
-    trackOne.addEventListener("loaded", countEvent);
+    trackOne.addEventListener("load", countEvent);
     trackOne.addEventListener("error", shouldNotBeCalled)
-    trackTwo.addEventListener("loaded", shouldNotBeCalled);
+    trackTwo.addEventListener("load", shouldNotBeCalled);
     trackTwo.addEventListener("error", countEvent);
-    trackThree.addEventListener("loaded", shouldNotBeCalled);
+    trackThree.addEventListener("load", shouldNotBeCalled);
     trackThree.addEventListener("error", countEvent);
 
     document.getElementById("content").appendChild(video);

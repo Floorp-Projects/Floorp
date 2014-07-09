@@ -19,7 +19,6 @@ class HTMLOptGroupElement MOZ_FINAL : public nsGenericHTMLElement,
 {
 public:
   HTMLOptGroupElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual ~HTMLOptGroupElement();
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLOptGroupElement, optgroup)
 
@@ -66,6 +65,8 @@ public:
   }
 
 protected:
+  virtual ~HTMLOptGroupElement();
+
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
 protected:

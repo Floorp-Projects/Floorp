@@ -29,7 +29,6 @@ class SpeechSynthesisUtterance MOZ_FINAL : public DOMEventTargetHelper
 
 public:
   SpeechSynthesisUtterance(nsPIDOMWindow* aOwnerWindow, const nsAString& aText);
-  virtual ~SpeechSynthesisUtterance();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SpeechSynthesisUtterance,
@@ -92,6 +91,7 @@ public:
   IMPL_EVENT_HANDLER(boundary)
 
 private:
+  virtual ~SpeechSynthesisUtterance();
 
   void DispatchSpeechSynthesisEvent(const nsAString& aEventType,
                                     uint32_t aCharIndex,
