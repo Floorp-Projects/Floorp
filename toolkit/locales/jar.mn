@@ -104,7 +104,6 @@
   locale/@AB_CD@/mozapps/handling/handling.properties             (%chrome/mozapps/handling/handling.properties)
   locale/@AB_CD@/mozapps/plugins/plugins.dtd                      (%chrome/mozapps/plugins/plugins.dtd)
   locale/@AB_CD@/mozapps/plugins/plugins.properties               (%chrome/mozapps/plugins/plugins.properties)
-  locale/@AB_CD@/mozapps/preferences/ocsp.dtd                     (%chrome/mozapps/preferences/ocsp.dtd)
   locale/@AB_CD@/mozapps/preferences/changemp.dtd                 (%chrome/mozapps/preferences/changemp.dtd)
   locale/@AB_CD@/mozapps/preferences/removemp.dtd                 (%chrome/mozapps/preferences/removemp.dtd)
   locale/@AB_CD@/mozapps/preferences/preferences.properties       (%chrome/mozapps/preferences/preferences.properties)
