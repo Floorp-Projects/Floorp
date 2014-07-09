@@ -247,11 +247,14 @@ public:
 
   /* Remote Device Properties */
 
-  int GetRemoteDeviceProperties(bt_bdaddr_t *aRemoteAddr);
-  int GetRemoteDeviceProperty(bt_bdaddr_t* aRemoteAddr,
-                              bt_property_type_t aType);
-  int SetRemoteDeviceProperty(bt_bdaddr_t* aRemoteAddr,
-                              const bt_property_t* aProperty);
+  void GetRemoteDeviceProperties(bt_bdaddr_t *aRemoteAddr,
+                                 BluetoothResultHandler* aRes);
+  void GetRemoteDeviceProperty(bt_bdaddr_t* aRemoteAddr,
+                               bt_property_type_t aType,
+                               BluetoothResultHandler* aRes);
+  void SetRemoteDeviceProperty(bt_bdaddr_t* aRemoteAddr,
+                               const bt_property_t* aProperty,
+                               BluetoothResultHandler* aRes);
 
   /* Remote Services */
 
