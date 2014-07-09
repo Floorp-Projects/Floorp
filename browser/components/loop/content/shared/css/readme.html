@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/.  -->
@@ -98,10 +98,11 @@
   <h3>Large with controls</h3>
 
   <div class="conversation">
-    <nav class="controls">
-      <button class="btn">Start</button>
-      <button class="btn">Stop</button>
-    </nav>
+    <ul class="controls">
+      <li><button class="btn btn-hangup" title="Hangup"></button></li>
+      <li><button class="btn media-control btn-mute-video streaming" title="Mute video"></button></li>
+      <li><button class="btn media-control btn-mute-audio" title="Mute audio"></button></li>
+    </ul>
     <div class="media nested">
       <video class="remote"></video>
       <video class="local"></video>
@@ -112,6 +113,11 @@
 
   <div style="width: 204px">
     <div class="conversation">
+      <ul class="controls">
+        <li><button class="btn btn-hangup" title="Hangup"></button></li>
+        <li><button class="btn media-control btn-mute-video streaming" title="Mute video"></button></li>
+        <li><button class="btn media-control btn-mute-audio" title="Mute audio"></button></li>
+      </ul>
       <div class="media nested">
         <video class="remote"></video>
         <video class="local"></video>
@@ -125,6 +131,68 @@
     <div class="media side-by-side">
       <video class="remote"></video>
       <video class="local"></video>
+    </div>
+  </div>
+
+  <h2>Controls button variants</h2>
+
+  <h3>Nothing muted</h3>
+
+  <div style="width: 204px; min-height: 26px">
+    <div class="conversation">
+      <ul class="controls">
+        <li><button class="btn btn-hangup" title="Hangup"></button></li>
+        <li><button class="btn media-control btn-mute-video" title="Mute video"></button></li>
+        <li><button class="btn media-control btn-mute-audio" title="Mute audio"></button></li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Local audio muted</h3>
+
+  <div style="width: 204px; min-height: 26px">
+    <div class="conversation">
+      <ul class="controls">
+        <li><button class="btn btn-hangup" title="Hangup"></button></li>
+        <li><button class="btn media-control btn-mute-video" title="Mute video"></button></li>
+        <li><button class="btn media-control btn-mute-audio muted" title="Mute audio"></button></li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Local video muted</h3>
+
+  <div style="width: 204px; min-height: 26px">
+    <div class="conversation">
+      <ul class="controls">
+        <li><button class="btn btn-hangup" title="Hangup"></button></li>
+        <li><button class="btn media-control btn-mute-video muted" title="Mute video"></button></li>
+        <li><button class="btn media-control btn-mute-audio" title="Mute audio"></button></li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Local audio streaming</h3>
+
+  <div style="width: 204px; min-height: 26px">
+    <div class="conversation">
+      <ul class="controls">
+        <li><button class="btn btn-hangup" title="Hangup"></button></li>
+        <li><button class="btn media-control btn-mute-video" title="Mute video"></button></li>
+        <li><button class="btn media-control btn-mute-audio streaming" title="Mute audio"></button></li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Local video streaming</h3>
+
+  <div style="width: 204px; min-height: 26px">
+    <div class="conversation">
+      <ul class="controls">
+        <li><button class="btn btn-hangup" title="Hangup"></button></li>
+        <li><button class="btn media-control btn-mute-video streaming" title="Mute video"></button></li>
+        <li><button class="btn media-control btn-mute-audio" title="Mute audio"></button></li>
+      </ul>
     </div>
   </div>
 

@@ -59,7 +59,9 @@ describe("loop.shared.views", function() {
       }, Backbone.Events);
       fakePublisher = {
         on: sandbox.spy(),
-        off: sandbox.spy()
+        off: sandbox.spy(),
+        publishAudio: sandbox.spy(),
+        publishVideo: sandbox.spy()
       };
       fakeSDK = {
         initPublisher: sandbox.stub().returns(fakePublisher),
@@ -124,7 +126,7 @@ describe("loop.shared.views", function() {
           function() {
             view.publish();
 
-            sinon.assert.calledTwice(fakePublisher.on);
+            sinon.assert.called(fakePublisher.on);
             sinon.assert.calledWith(fakePublisher.on, "accessDialogOpened");
             sinon.assert.calledWith(fakePublisher.on, "accessDenied");
           });
@@ -155,6 +157,66 @@ describe("loop.shared.views", function() {
             sinon.assert.calledWith(fakePublisher.off, "accessDialogOpened");
             sinon.assert.calledWith(fakePublisher.off, "accessDenied");
           });
+      });
+
+      describe("#toggleMuteAudio", function() {
+        var view;
+
+        beforeEach(function() {
+          view = new sharedViews.ConversationView({
+            sdk: fakeSDK,
+            model: model
+          });
+          view.publish();
+        });
+
+        it("should unpublish local audio when enabled", function() {
+          view.localStream = {hasAudio: true};
+
+          view.toggleMuteAudio({preventDefault: sandbox.spy()});
+
+          sinon.assert.calledOnce(fakePublisher.publishAudio);
+          sinon.assert.calledWithExactly(fakePublisher.publishAudio, false);
+        });
+
+        it("should publish local audio when disabled", function() {
+          view.localStream = {hasAudio: false};
+
+          view.toggleMuteAudio({preventDefault: sandbox.spy()});
+
+          sinon.assert.calledOnce(fakePublisher.publishAudio);
+          sinon.assert.calledWithExactly(fakePublisher.publishAudio, true);
+        });
+      });
+
+      describe("#toggleMuteVideo", function() {
+        var view;
+
+        beforeEach(function() {
+          view = new sharedViews.ConversationView({
+            sdk: fakeSDK,
+            model: model
+          });
+          view.publish();
+        });
+
+        it("should unpublish local video when enabled", function() {
+          view.localStream = {hasVideo: true};
+
+          view.toggleMuteVideo({preventDefault: sandbox.spy()});
+
+          sinon.assert.calledOnce(fakePublisher.publishVideo);
+          sinon.assert.calledWithExactly(fakePublisher.publishVideo, false);
+        });
+
+        it("should publish local video when disabled", function() {
+          view.localStream = {hasVideo: false};
+
+          view.toggleMuteVideo({preventDefault: sandbox.spy()});
+
+          sinon.assert.calledOnce(fakePublisher.publishVideo);
+          sinon.assert.calledWithExactly(fakePublisher.publishVideo, true);
+        });
       });
 
       describe("Model events", function() {
