@@ -637,14 +637,15 @@ CairoImage::GetTextureClient(CompositableClient *aClient)
 
   // gfx::BackendType::NONE means default to content backend
   textureClient = aClient->CreateTextureClientForDrawing(surface->GetFormat(),
-                                                         surface->GetSize(),
+                                                         TextureFlags::DEFAULT,
                                                          gfx::BackendType::NONE,
-                                                         TextureFlags::DEFAULT);
+                                                         surface->GetSize());
   if (!textureClient) {
     return nullptr;
   }
   MOZ_ASSERT(textureClient->CanExposeDrawTarget());
-  if (!textureClient->Lock(OpenMode::OPEN_WRITE_ONLY)) {
+  if (!textureClient->AllocateForSurface(surface->GetSize()) ||
+      !textureClient->Lock(OpenMode::OPEN_WRITE_ONLY)) {
     return nullptr;
   }
 

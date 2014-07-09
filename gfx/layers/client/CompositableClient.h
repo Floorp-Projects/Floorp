@@ -134,10 +134,9 @@ public:
 
   TemporaryRef<TextureClient>
   CreateTextureClientForDrawing(gfx::SurfaceFormat aFormat,
-                                gfx::IntSize aSize,
-                                gfx::BackendType aMoz2DBackend,
                                 TextureFlags aTextureFlags,
-                                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT);
+                                gfx::BackendType aMoz2dBackend,
+                                const gfx::IntSize& aSizeHint);
 
   virtual void SetDescriptorFromReply(TextureIdentifier aTextureId,
                                       const SurfaceDescriptor& aDescriptor)
