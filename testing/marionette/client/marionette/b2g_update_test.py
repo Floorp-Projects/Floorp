@@ -25,7 +25,7 @@ class B2GUpdateMarionetteClient(MarionetteTransport):
     MAX_RETRIES     = 24
 
     def __init__(self, addr, port, runner):
-        super(B2GUpdateMarionetteClient, self).__init__(addr, port)
+        super(B2GUpdateMarionetteClient, self).__init__(addr, port, self.CONNECT_TIMEOUT)
         self.runner = runner
 
     def connect(self):
@@ -36,7 +36,7 @@ class B2GUpdateMarionetteClient(MarionetteTransport):
         """
         for i in range(self.MAX_RETRIES):
             try:
-                MarionetteTransport.connect(self, timeout=self.CONNECT_TIMEOUT)
+                MarionetteTransport.connect(self)
                 break
             except:
                 if i == self.MAX_RETRIES - 1:

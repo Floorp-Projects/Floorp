@@ -60,6 +60,7 @@ public:
   virtual a11y::role NativeRole();
 
 protected:
+  virtual ~XULTreeGridAccessible();
 
   // XULTreeAccessible
   virtual already_AddRefed<Accessible>
@@ -100,6 +101,7 @@ public:
   virtual void RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx);
 
 protected:
+  virtual ~XULTreeGridRowAccessible();
 
   // Accessible
   virtual void CacheChildren();
@@ -184,6 +186,8 @@ public:
   bool CellInvalidated();
 
 protected:
+  virtual ~XULTreeGridCellAccessible();
+
   // Accessible
   virtual Accessible* GetSiblingAtOffset(int32_t aOffset,
                                          nsresult* aError = nullptr) const;

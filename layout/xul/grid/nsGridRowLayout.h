@@ -53,6 +53,7 @@ protected:
   virtual void ChildAddedOrRemoved(nsIFrame* aBox, nsBoxLayoutState& aState)=0;
 
   nsGridRowLayout();
+  virtual ~nsGridRowLayout();
 };
 
 #endif

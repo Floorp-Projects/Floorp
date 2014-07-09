@@ -289,7 +289,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     NS_ENSURE_TRUE(mTrackUnionStream, NS_ERROR_FAILURE);
-    mTrackUnionStream->ChangeExplicitBlockerCount(-1);
+    mTrackUnionStream->ChangeExplicitBlockerCount(1);
 
     return NS_OK;
   }
@@ -300,7 +300,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     NS_ENSURE_TRUE(mTrackUnionStream, NS_ERROR_FAILURE);
-    mTrackUnionStream->ChangeExplicitBlockerCount(1);
+    mTrackUnionStream->ChangeExplicitBlockerCount(-1);
 
     return NS_OK;
   }

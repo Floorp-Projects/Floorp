@@ -90,7 +90,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SourceBuffer, DOMEventTargetHelper)
 
   static already_AddRefed<SourceBuffer> Create(MediaSource* aMediaSource, const nsACString& aType);
-  ~SourceBuffer();
 
   MediaSource* GetParentObject() const;
 
@@ -113,6 +112,8 @@ public:
   bool ContainsTime(double aTime);
 
 private:
+  ~SourceBuffer();
+
   SourceBuffer(MediaSource* aMediaSource, const nsACString& aType);
 
   friend class AsyncEventRunner<SourceBuffer>;

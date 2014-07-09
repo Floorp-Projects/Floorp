@@ -116,7 +116,7 @@ class SavedStacks {
     SavedFrame::Set          frames;
     JSObject                 *savedFrameProto;
 
-    bool       insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandleSavedFrame frame,
+    bool       insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFrame frame,
                             unsigned maxFrameCount = 0);
     SavedFrame *getOrCreateSavedFrame(JSContext *cx, const SavedFrame::Lookup &lookup);
     // |SavedFrame.prototype| is created lazily and held weakly. It should only

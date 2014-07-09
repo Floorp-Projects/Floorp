@@ -25,7 +25,6 @@ class HTMLLinkElement MOZ_FINAL : public nsGenericHTMLElement,
 {
 public:
   HTMLLinkElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual ~HTMLLinkElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -144,6 +143,8 @@ public:
   }
 
 protected:
+  virtual ~HTMLLinkElement();
+
   // nsStyleLinkElement
   virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline) MOZ_OVERRIDE;
   virtual void GetStyleSheetInfo(nsAString& aTitle,

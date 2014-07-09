@@ -17,7 +17,6 @@ class HTMLModElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
   HTMLModElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual ~HTMLModElement();
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
@@ -37,6 +36,9 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::datetime, aDateTime, aRv);
   }
+
+protected:
+  virtual ~HTMLModElement();
 
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 };

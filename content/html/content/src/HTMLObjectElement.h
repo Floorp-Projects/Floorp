@@ -24,7 +24,6 @@ class HTMLObjectElement MOZ_FINAL : public nsGenericHTMLFormElement
 public:
   HTMLObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                     FromParser aFromParser = NOT_FROM_PARSER);
-  virtual ~HTMLObjectElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -235,6 +234,8 @@ private:
   
   virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
+
+  virtual ~HTMLObjectElement();
 
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
