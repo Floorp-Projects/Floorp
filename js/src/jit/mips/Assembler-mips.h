@@ -103,8 +103,8 @@ static MOZ_CONSTEXPR_VAR Register PreBarrierReg = a1;
 static MOZ_CONSTEXPR_VAR Register InvalidReg = { Registers::invalid_reg };
 static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { FloatRegisters::invalid_freg };
 
-static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = v1;
-static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = v0;
+static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = a3;
+static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = a2;
 static MOZ_CONSTEXPR_VAR Register StackPointer = sp;
 static MOZ_CONSTEXPR_VAR Register FramePointer = InvalidReg;
 static MOZ_CONSTEXPR_VAR Register ReturnReg = v0;
@@ -127,7 +127,7 @@ static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnData = JSReturnReg_Data;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnType = JSReturnReg_Type;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD0 = a0;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = a1;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = a2;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = t0;
 
 static MOZ_CONSTEXPR_VAR FloatRegister f0  = {FloatRegisters::f0};
 static MOZ_CONSTEXPR_VAR FloatRegister f2  = {FloatRegisters::f2};

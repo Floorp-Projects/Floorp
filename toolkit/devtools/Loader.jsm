@@ -44,19 +44,11 @@ let Timer = Cu.import("resource://gre/modules/Timer.jsm", {});
 
 let loaderGlobals = {
   isWorker: false,
-  Debugger: Debugger,
-  promise: promise,
   reportError: Cu.reportError,
-  setInterval: Timer.setInterval,
-  setTimeout: Timer.setTimeout,
-  clearInterval: Timer.clearInterval,
-  clearTimeout: Timer.clearTimeout,
-  xpcInspector: xpcInspector,
 
   btoa: btoa,
   console: console,
   _Iterator: Iterator,
-  ChromeWorker: ChromeWorker,
   loader: {
     lazyGetter: XPCOMUtils.defineLazyGetter.bind(XPCOMUtils),
     lazyImporter: XPCOMUtils.defineLazyModuleGetter.bind(XPCOMUtils),
@@ -64,16 +56,30 @@ let loaderGlobals = {
   },
 };
 
+let loaderModules = {
+  "Debugger": Debugger,
+  "Services": Object.create(Services),
+  "Timer": Object.create(Timer),
+  "toolkit/loader": loader,
+  "xpcInspector": xpcInspector,
+  "promise": promise,
+};
+try {
+  let { indexedDB } = Cu.Sandbox(this, {wantGlobalProperties:["indexedDB"]});
+  loaderModules.indexedDB = indexedDB;
+} catch(e) {
+  // On xpcshell, we can't instantiate indexedDB without crashing
+}
+
+let sharedGlobalBlacklist = ["sdk/indexed-db", "devtools/toolkit/qrcode/decoder/index"];
+
 // Used when the tools should be loaded from the Firefox package itself (the default)
 function BuiltinProvider() {}
 BuiltinProvider.prototype = {
   load: function() {
     this.loader = new loader.Loader({
       id: "fx-devtools",
-      modules: {
-        "Services": Object.create(Services),
-        "toolkit/loader": loader,
-      },
+      modules: loaderModules,
       paths: {
         // When you add a line to this mapping, don't forget to make a
         // corresponding addition to the SrcdirProvider mapping below as well.
@@ -103,7 +109,9 @@ BuiltinProvider.prototype = {
         "xpcshell-test": "resource://test"
       },
       globals: loaderGlobals,
-      invisibleToDebugger: this.invisibleToDebugger
+      invisibleToDebugger: this.invisibleToDebugger,
+      sharedGlobal: true,
+      sharedGlobalBlacklist: sharedGlobalBlacklist
     });
 
     return promise.resolve(undefined);
@@ -153,10 +161,7 @@ SrcdirProvider.prototype = {
     let sourceMapURI = this.fileURI(OS.Path.join(toolkitDir), "SourceMap.jsm");
     this.loader = new loader.Loader({
       id: "fx-devtools",
-      modules: {
-        "Services": Object.create(Services),
-        "toolkit/loader": loader,
-      },
+      modules: loaderModules,
       paths: {
         "": "resource://gre/modules/commonjs/",
         "main": mainURI,
@@ -181,7 +186,9 @@ SrcdirProvider.prototype = {
         "source-map": sourceMapURI,
       },
       globals: loaderGlobals,
-      invisibleToDebugger: this.invisibleToDebugger
+      invisibleToDebugger: this.invisibleToDebugger,
+      sharedGlobal: true,
+      sharedGlobalBlacklist: sharedGlobalBlacklist
     });
 
     return this._writeManifest(devtoolsDir).then(null, Cu.reportError);

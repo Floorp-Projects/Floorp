@@ -56,48 +56,53 @@ class B2GTestResultMixin(object):
         self.result_modifiers.append(self.b2g_output_modifier)
         self.b2g_pid = kwargs.pop('b2g_pid')
 
-    def b2g_output_modifier(self, test, result_expected, result_actual, output, context):
+    def _diagnose_socket(self):
         # This function will check if b2g is running and report any recent errors. This is
         # used in automation since a plain timeout error doesn't tell you
         # much information about what actually is going on
-        def diagnose_socket(output):
-            dm_type = os.environ.get('DM_TRANS', 'adb')
-            if dm_type == 'adb':
-                device_manager = get_dm(self.marionette)
-                pid = get_b2g_pid(device_manager)
-                if pid:
-                    # find recent errors
-                    message = ""
-                    error_re = re.compile(r"""[\s\S]*(exception|error)[\s\S]*""", flags=re.IGNORECASE)
-                    logcat = device_manager.getLogcat()
-                    latest = []
-                    iters = len(logcat) - 1
-                    # reading from the latest line
-                    while len(latest) < 5 and iters >= 0:
-                        line = logcat[iters]
-                        error_log_line = error_re.match(line)
-                        if error_log_line is not None:
-                            latest.append(line)
-                        iters -= 1
-                    message += "\nMost recent errors/exceptions are:\n"
-                    for line in reversed(latest):
-                        message += "%s" % line
-                    b2g_status = ""
-                    if pid != self.b2g_pid:
-                        b2g_status = "The B2G process has restarted after crashing during the tests so "
-                    else:
-                        b2g_status = "B2G is still running but "
-                    output += "%s\n%sMarionette can't respond due to either a Gecko, Gaia or Marionette error. " \
-                              "Above, the 5 most recent errors are " \
-                              "listed. Check logcat for all errors if these errors are not the cause " \
-                              "of the failure." % (message, b2g_status)
-                else:
-                    output += "B2G process has died"
-            return output
-        # output is the actual string output from the test, so we have to do string comparison
-        if "Broken pipe" in output:
-            output = diagnose_socket(output)
-        elif "Connection timed out" in output:
-            output = diagnose_socket(output)
-        return result_expected, result_actual, output, context
 
+        extra_output = None
+        dm_type = os.environ.get('DM_TRANS', 'adb')
+        if dm_type == 'adb':
+            device_manager = get_dm(self.marionette)
+            pid = get_b2g_pid(device_manager)
+            if pid:
+                # find recent errors
+                message = ""
+                error_re = re.compile(r"""[\s\S]*(exception|error)[\s\S]*""",
+                                      flags=re.IGNORECASE)
+                logcat = device_manager.getLogcat()
+                latest = []
+                iters = len(logcat) - 1
+                # reading from the latest line
+                while len(latest) < 5 and iters >= 0:
+                    line = logcat[iters]
+                    error_log_line = error_re.match(line)
+                    if error_log_line is not None:
+                        latest.append(line)
+                    iters -= 1
+                message += "\nMost recent errors/exceptions are:\n"
+                for line in reversed(latest):
+                    message += "%s" % line
+                b2g_status = ""
+                if pid != self.b2g_pid:
+                    b2g_status = "The B2G process has restarted after crashing during  the tests so "
+                else:
+                    b2g_status = "B2G is still running but "
+                extra_output = ("%s\n%sMarionette can't respond due to either a Gecko, Gaia or Marionette error. "
+                                "Above, the 5 most recent errors are listed. "
+                                "Check logcat for all errors if these errors are not the cause "
+                                "of the failure." % (message, b2g_status))
+            else:
+                extra_output = "B2G process has died"
+        return extra_output
+
+    def b2g_output_modifier(self, test, result_expected, result_actual, output, context):
+        # output is the actual string output from the test, so we have to do string comparison
+        if "Broken pipe" in output or "Connection timed out" in output:
+            extra_output = self._diagnose_socket()
+            if extra_output:
+                self.logger.error(extra_output)
+                output += extra_output
+
+        return result_expected, result_actual, output, context

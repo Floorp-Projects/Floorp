@@ -188,6 +188,27 @@ struct VMFunction
         return stackSlots;
     }
 
+    size_t doubleByRefArgs() const {
+        size_t count = 0;
+
+        // Fetch all explicit arguments.
+        uint32_t n =
+            ((1 << (explicitArgs * 2)) - 1) // = Explicit argument mask.
+            & argumentProperties;
+
+        // Filter double-size arguments (0x5 = 0b0101) and take (&) only
+        // arguments passed by reference (0b1010 >> 1 == 0b0101).
+        n = (n & 0x55555555) & (n >> 1);
+
+        // Add the number of double-word transfered by refference. (expect a
+        // few loop iterations)
+        while (n) {
+            count++;
+            n &= n - 1;
+        }
+        return count;
+    }
+
     VMFunction()
       : wrapped(nullptr),
         explicitArgs(0),

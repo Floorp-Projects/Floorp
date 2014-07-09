@@ -69,9 +69,9 @@ public:
   nsIURI* GetURI() const { return mURI; }
   // Accessible at any time
   bool IsUsingDisk() const { return mUseDisk; }
-  bool SetUsingDisk(bool aUsingDisk);
   bool IsReferenced() const;
   bool IsFileDoomed();
+  bool IsDoomed() const { return mIsDoomed; }
 
   // Methods for entry management (eviction from memory),
   // called only on the management thread.
@@ -79,10 +79,13 @@ public:
   // TODO make these inline
   double GetFrecency() const;
   uint32_t GetExpirationTime() const;
+  uint32_t UseCount() const { return mUseCount; }
 
   bool IsRegistered() const;
   bool CanRegister() const;
   void SetRegistered(bool aRegistered);
+
+  TimeStamp const& LoadStart() const { return mLoadStart; }
 
   enum EPurge {
     PURGE_DATA_ONLY_DISK_BACKED,
@@ -94,8 +97,8 @@ public:
   void PurgeAndDoom();
   void DoomAlreadyRemoved();
 
-  nsresult HashingKeyWithStorage(nsACString &aResult);
-  nsresult HashingKey(nsACString &aResult);
+  nsresult HashingKeyWithStorage(nsACString &aResult) const;
+  nsresult HashingKey(nsACString &aResult) const;
 
   static nsresult HashingKey(nsCSubstring const& aStorageID,
                              nsCSubstring const& aEnhanceID,
@@ -342,6 +345,7 @@ private:
   nsCOMPtr<nsISupports> mSecurityInfo;
   int64_t mPredictedDataSize;
   mozilla::TimeStamp mLoadStart;
+  uint32_t mUseCount;
   nsCOMPtr<nsIThread> mReleaseThread;
 };
 

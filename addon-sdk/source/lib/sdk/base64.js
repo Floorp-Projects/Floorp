@@ -11,7 +11,9 @@ module.metadata = {
 const { Cu } = require("chrome");
 
 // Passing an empty object as second argument to avoid scope's pollution
-const { atob, btoa } = Cu.import("resource://gre/modules/Services.jsm", {});
+// (devtools loader injects these symbols as global and prevent using
+// const here)
+var { atob, btoa } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 function isUTF8(charset) {
   let type = typeof charset;

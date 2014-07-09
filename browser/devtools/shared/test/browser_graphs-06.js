@@ -65,6 +65,14 @@ function testGraph(graph) {
     "The mapped selection's min value is correct (5).");
   is(graph.getMappedSelection().max, max,
     "The mapped selection's max value is correct (6).");
+
+  graph.setSelection({ start: graph.width + 100, end: -100 });
+  min = map(0, 0, graph.width, 112, 4180);
+  max = map(graph.width, 0, graph.width, 112, 4180);
+  is(graph.getMappedSelection().min, min,
+    "The mapped selection's min value is correct (7).");
+  is(graph.getMappedSelection().max, max,
+    "The mapped selection's max value is correct (8).");
 }
 
 /**

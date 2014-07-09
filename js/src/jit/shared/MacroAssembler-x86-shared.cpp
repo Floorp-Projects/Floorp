@@ -146,6 +146,18 @@ MacroAssemblerX86Shared::callWithExitFrame(JitCode *target)
     call(target);
 }
 
+void
+MacroAssembler::alignFrameForICArguments(AfterICSaveLive &aic)
+{
+    // Exists for MIPS compatibility.
+}
+
+void
+MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive &aic)
+{
+    // Exists for MIPS compatibility.
+}
+
 bool
 MacroAssemblerX86Shared::buildOOLFakeExitFrame(void *fakeReturnAddr)
 {

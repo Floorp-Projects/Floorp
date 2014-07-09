@@ -28,24 +28,11 @@ class nsIEventTarget;
 class nsIInputStream;
 class nsIOutputStream;
 
-namespace mozilla {
-
-namespace net {
+namespace mozilla { namespace net {
 
 class nsHttpChunkedDecoder;
 class nsHttpRequestHead;
 class nsHttpResponseHead;
-class nsHttpTransaction;
-
-}
-
-template<>
-struct HasDangerousPublicDestructor<net::nsHttpTransaction>
-{
-  static const bool value = true;
-};
-
-namespace net {
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction represents a single HTTP transaction.  It is thread-safe,
@@ -64,7 +51,6 @@ public:
     NS_DECL_NSIOUTPUTSTREAMCALLBACK
 
     nsHttpTransaction();
-    virtual ~nsHttpTransaction();
 
     //
     // called to initialize the transaction
@@ -147,6 +133,9 @@ public:
     nsHttpTransaction *QueryHttpTransaction() MOZ_OVERRIDE { return this; }
 
 private:
+    friend class DeleteHttpTransaction;
+    virtual ~nsHttpTransaction();
+
     nsresult Restart();
     nsresult RestartInProgress();
     char    *LocateHttpStart(char *buf, uint32_t len,

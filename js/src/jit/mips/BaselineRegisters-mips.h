@@ -17,7 +17,7 @@ namespace jit {
 static MOZ_CONSTEXPR_VAR Register BaselineFrameReg = s5;
 static MOZ_CONSTEXPR_VAR Register BaselineStackReg = sp;
 
-static MOZ_CONSTEXPR_VAR ValueOperand R0(v1, v0);
+static MOZ_CONSTEXPR_VAR ValueOperand R0(a3, a2);
 static MOZ_CONSTEXPR_VAR ValueOperand R1(s7, s6);
 static MOZ_CONSTEXPR_VAR ValueOperand R2(t7, t6);
 
