@@ -442,7 +442,7 @@ Rule.prototype = {
       return this._title;
     }
     this._title = CssLogic.shortSource(this.sheet);
-    if (this.domRule.type !== ELEMENT_STYLE) {
+    if (this.domRule.type !== ELEMENT_STYLE && this.ruleLine > 0) {
       this._title += ":" + this.ruleLine;
     }
 
@@ -1076,6 +1076,7 @@ function CssRuleView(aInspector, aDoc, aStore, aPageStyle) {
 
   this._buildContextMenu = this._buildContextMenu.bind(this);
   this._contextMenuUpdate = this._contextMenuUpdate.bind(this);
+  this._onAddRule = this._onAddRule.bind(this);
   this._onSelectAll = this._onSelectAll.bind(this);
   this._onCopy = this._onCopy.bind(this);
   this._onCopyColor = this._onCopyColor.bind(this);
@@ -1125,6 +1126,11 @@ CssRuleView.prototype = {
     this._contextmenu.addEventListener("popupshowing", this._contextMenuUpdate);
     this._contextmenu.id = "rule-view-context-menu";
 
+    this.menuitemAddRule = createMenuItem(this._contextmenu, {
+      label: "ruleView.contextmenu.addRule",
+      accesskey: "ruleView.contextmenu.addRule.accessKey",
+      command: this._onAddRule
+    });
     this.menuitemSelectAll = createMenuItem(this._contextmenu, {
       label: "ruleView.contextmenu.selectAll",
       accesskey: "ruleView.contextmenu.selectAll.accessKey",
@@ -1140,7 +1146,7 @@ CssRuleView.prototype = {
       accesskey: "ruleView.contextmenu.copyColor.accessKey",
       command: this._onCopyColor
     });
-    this.menuitemSources= createMenuItem(this._contextmenu, {
+    this.menuitemSources = createMenuItem(this._contextmenu, {
       label: "ruleView.contextmenu.showOrigSources",
       accesskey: "ruleView.contextmenu.showOrigSources.accessKey",
       command: this._onToggleOrigSources
@@ -1352,6 +1358,43 @@ CssRuleView.prototype = {
   _onToggleOrigSources: function() {
     let isEnabled = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
     Services.prefs.setBoolPref(PREF_ORIG_SOURCES, !isEnabled);
+  },
+
+  /**
+   * Add a new rule to the current element.
+   */
+  _onAddRule: function() {
+    let elementStyle = this._elementStyle;
+    let element = elementStyle.element;
+    let rules = elementStyle.rules;
+    let client = this.inspector.toolbox._target.client;
+
+    if (!client.traits.addNewRule) {
+      return;
+    }
+
+    this.pageStyle.addNewRule(element).then(options => {
+      let newRule = new Rule(elementStyle, options);
+      rules.push(newRule);
+      let editor = new RuleEditor(this, newRule);
+
+      // Insert the new rule editor after the inline element rule
+      if (rules.length <= 1) {
+        this.element.appendChild(editor.element);
+      } else {
+        for (let rule of rules) {
+          if (rule.selectorText === "element") {
+            let referenceElement = rule.editor.element.nextSibling;
+            this.element.insertBefore(editor.element, referenceElement);
+            break;
+          }
+        }
+      }
+
+      // Focus and make the new rule's selector editable
+      editor.selectorText.click();
+      elementStyle._changed();
+    });
   },
 
   setPageStyle: function(aPageStyle) {
@@ -1852,6 +1895,9 @@ RuleEditor.prototype = {
       }
     } else {
       sourceLabel.setAttribute("value", this.rule.title);
+      if (this.rule.ruleLine == -1 && this.rule.domRule.parentStyleSheet) {
+        sourceLabel.parentNode.setAttribute("unselectable", "true");
+      }
     }
 
     let showOrig = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);

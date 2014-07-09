@@ -12,21 +12,21 @@
 
       var iframe = document.createElement('iframe');
       document.body.appendChild(iframe);
-      iframe.parentNode.removeChild(iframe);
+      iframe.remove();
 
       yay.textContent = "before events";
 
       document.addEventListener("DOMContentLoaded", function() {
         var iframe = document.createElement('iframe');
         document.body.appendChild(iframe);
-        iframe.parentNode.removeChild(iframe);
+        iframe.remove();
 
         yay.textContent = "DOMContentLoaded";
       });
       window.addEventListener("load", function() {
         var iframe = document.createElement('iframe');
         document.body.appendChild(iframe);
-        iframe.parentNode.removeChild(iframe);
+        iframe.remove();
 
         yay.textContent = "load";
       });

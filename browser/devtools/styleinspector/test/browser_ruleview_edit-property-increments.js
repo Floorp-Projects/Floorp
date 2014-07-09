@@ -116,7 +116,10 @@ function* testShorthandIncrements(view) {
     3: {start: "0px 0px 0px 0px", end: "1px 0px 0px 0px", selectAll: true},
     4: {shift: true, start: "0px 0px 0px 0px", end: "10px 0px 0px 0px", selectAll: true},
     5: {down: true, start: "0px 0px 0px 0px", end: "0px 0px -1px 0px", selection: [8,11]},
-    6: {down: true, shift: true, start: "0px 0px 0px 0px", end: "-10px 0px 0px 0px", selectAll: true}
+    6: {down: true, shift: true, start: "0px 0px 0px 0px", end: "-10px 0px 0px 0px", selectAll: true},
+    7: {up: true, start: "0.1em .1em 0em 0em", end: "0.1em 1.1em 0em 0em", selection: [6, 9]},
+    8: {up: true, alt: true, start: "0.1em .9em 0em 0em", end: "0.1em 1em 0em 0em", selection: [6, 9]},
+    9: {up: true, shift: true, start: "0.2em .2em 0em 0em", end: "0.2em 10.2em 0em 0em", selection: [6, 9]}
   });
 };
 

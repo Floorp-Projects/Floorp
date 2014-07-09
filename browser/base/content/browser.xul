@@ -751,6 +751,7 @@
                    onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);"
                    ondragstart="gIdentityHandler.onDragStart(event);">
                 <image id="page-proxy-favicon"
+                       consumeanchor="identity-box"
                        onclick="PageProxyClickHandler(event);"
                        pageproxystate="invalid"/>
                 <hbox id="identity-icon-labels">
@@ -976,6 +977,7 @@
         <toolbarbutton id="PanelUI-menu-button"
                        class="toolbarbutton-1"
                        cui-areatype="toolbar"
+                       consumeanchor="PanelUI-button"
                        label="&brandShortName;"
                        tooltiptext="&appmenu.tooltip;"/>
       </toolbaritem>
