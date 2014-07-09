@@ -774,7 +774,7 @@ nsUserFontSet::LogMessage(gfxMixedFontFamily* aFamily,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  NS_ConvertUTF16toUTF8 familyName(aFamily->Name());
+  NS_ConvertUTF16toUTF8 familyName(aProxy->mFamilyName);
   nsAutoCString fontURI;
   if (aProxy->mSrcIndex == aProxy->mSrcList.Length()) {
     fontURI.AppendLiteral("(end of source list)");
