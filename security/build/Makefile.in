@@ -284,7 +284,9 @@ ifdef MOZ_FOLD_LIBS
 # TODO: The following can be replaced by something simpler when bug 844880
 # is fixed.
 # All static libraries required for nss, smime, ssl and nssutil.
-NSS_STATIC_LIBS := $(shell $(MAKE) --no-print-directory -f $(srcdir)/nss.mk DEPTH='$(DEPTH)' topsrcdir='$(topsrcdir)' srcdir='$(srcdir)' echo-variable-libs)
+# The strip is needed to remove potential linefeed characters, since they hang
+# around in some cases on Windows.
+NSS_STATIC_LIBS := $(strip $(shell $(MAKE) --no-print-directory -f $(srcdir)/nss.mk DEPTH='$(DEPTH)' topsrcdir='$(topsrcdir)' srcdir='$(srcdir)' echo-variable-libs))
 # Corresponding build directories
 NSS_STATIC_DIRS := $(foreach lib,$(NSS_STATIC_LIBS),$(patsubst %/,%,$(dir $(lib))))
 NSS_DIRS += $(NSS_STATIC_DIRS)
