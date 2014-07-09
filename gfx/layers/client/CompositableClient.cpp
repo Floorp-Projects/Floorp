@@ -191,16 +191,15 @@ CompositableClient::CreateBufferTextureClient(SurfaceFormat aFormat,
 }
 
 TemporaryRef<TextureClient>
-CompositableClient::CreateTextureClientForDrawing(gfx::SurfaceFormat aFormat,
-                                                  gfx::IntSize aSize,
-                                                  gfx::BackendType aMoz2DBackend,
+CompositableClient::CreateTextureClientForDrawing(SurfaceFormat aFormat,
                                                   TextureFlags aTextureFlags,
-                                                  TextureAllocationFlags aAllocFlags)
+                                                  gfx::BackendType aMoz2DBackend,
+                                                  const IntSize& aSizeHint)
 {
-  return TextureClient::CreateForDrawing(GetForwarder(),
-                                         aFormat, aSize, aMoz2DBackend,
-                                         aTextureFlags | mTextureFlags,
-                                         aAllocFlags);
+  return TextureClient::CreateTextureClientForDrawing(GetForwarder(), aFormat,
+                                                      aTextureFlags | mTextureFlags,
+                                                      aMoz2DBackend,
+                                                      aSizeHint);
 }
 
 bool
