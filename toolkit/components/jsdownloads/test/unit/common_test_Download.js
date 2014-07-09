@@ -168,6 +168,26 @@ add_task(function test_basic_tryToKeepPartialData()
 });
 
 /**
+ * Tests the permissions of the final target file once the download finished.
+ */
+add_task(function test_basic_unix_permissions()
+{
+  // This test is only executed on Linux and Mac.
+  if (Services.appinfo.OS != "Darwin" && Services.appinfo.OS != "Linux") {
+    do_print("Skipping test_basic_unix_permissions");
+    return;
+  }
+
+  let download = yield promiseStartDownload(httpUrl("source.txt"));
+  yield promiseDownloadStopped(download);
+
+  // The file should readable and writable by everyone, but the restrictions
+  // from the umask of the process should still apply.
+  do_check_eq((yield OS.File.stat(download.target.path)).unixMode,
+              0o666 & ~OS.Constants.Sys.umask);
+});
+
+/**
  * Checks the referrer for downloads.
  */
 add_task(function test_referrer()
