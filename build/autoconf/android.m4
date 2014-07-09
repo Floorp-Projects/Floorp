@@ -347,8 +347,8 @@ case "$target" in
     fi
     AC_MSG_RESULT([$ANDROID_COMPAT_LIB])
 
-    if test -n "$MOZ_NATIVE_CASTING" ; then
-        AC_SUBST(MOZ_NATIVE_CASTING)
+    if test -n "$MOZ_NATIVE_DEVICES" ; then
+        AC_SUBST(MOZ_NATIVE_DEVICES)
 
         AC_MSG_CHECKING([for google play services])
         GOOGLE_PLAY_SERVICES_LIB="${ANDROID_SDK_ROOT}/extras/google/google_play_services/libproject/google-play-services_lib/libs/google-play-services.jar"

@@ -164,7 +164,7 @@ public class AppConstants {
 #endif
 
     public static final boolean MOZ_MEDIA_PLAYER =
-#ifdef MOZ_NATIVE_CASTING
+#ifdef MOZ_NATIVE_DEVICES
     true;
 #else
     false;
