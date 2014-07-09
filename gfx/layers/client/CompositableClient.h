@@ -226,8 +226,6 @@ public:
 
   static uint64_t GetTrackersHolderId(PCompositableChild* aActor);
 
-  TextureFlags GetTextureFlags() const { return mTextureFlags; }
-
 protected:
   CompositableChild* mCompositableChild;
   CompositableForwarder* mForwarder;
