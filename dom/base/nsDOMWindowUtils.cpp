@@ -90,6 +90,8 @@
 #include "GeckoProfiler.h"
 #include "mozilla/Preferences.h"
 #include "nsIContentIterator.h"
+#include "nsIDOMStyleSheet.h"
+#include "nsIStyleSheet.h"
 #include "nsContentPermissionHelper.h"
 
 #ifdef XP_WIN
@@ -3365,6 +3367,28 @@ nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   nsIDocument::additionalSheetType type = convertSheetType(aSheetType);
 
   return doc->LoadAdditionalStyleSheet(type, aSheetURI);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::AddSheet(nsIDOMStyleSheet *aSheet, uint32_t aSheetType)
+{
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+
+  NS_ENSURE_ARG_POINTER(aSheet);
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||
+                aSheetType == USER_SHEET ||
+                aSheetType == AUTHOR_SHEET);
+
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  nsIDocument::additionalSheetType type = convertSheetType(aSheetType);
+  nsCOMPtr<nsIStyleSheet> sheet = do_QueryInterface(aSheet);
+  NS_ENSURE_TRUE(sheet, NS_ERROR_FAILURE);
+  if (sheet->GetOwningDocument()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return doc->AddAdditionalStyleSheet(type, sheet);
 }
 
 NS_IMETHODIMP
