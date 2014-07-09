@@ -34,6 +34,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/WindowBinding.h"
+#include "mozilla/dom/ElementBinding.h"
 #include "Units.h"
 
 class nsIDOMEventListener;
@@ -724,7 +725,7 @@ public:
       nsIPresShell::SetCapturingContent(nullptr, 0);
     }
   }
-  void MozRequestFullScreen();
+  void MozRequestFullScreen(const RequestFullscreenOptions& aOptions);
   void MozRequestPointerLock();
   Attr* GetAttributeNode(const nsAString& aName);
   already_AddRefed<Attr> SetAttributeNode(Attr& aNewAttr,
@@ -1768,7 +1769,7 @@ NS_IMETHOD ReleaseCapture(void) MOZ_FINAL                                     \
 }                                                                             \
 NS_IMETHOD MozRequestFullScreen(void) MOZ_FINAL                               \
 {                                                                             \
-  Element::MozRequestFullScreen();                                            \
+  Element::MozRequestFullScreen(mozilla::dom::RequestFullscreenOptions());    \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD MozRequestPointerLock(void) MOZ_FINAL                              \
