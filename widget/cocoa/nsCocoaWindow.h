@@ -275,7 +275,7 @@ public:
     NS_IMETHOD              SetSizeMode(int32_t aMode);
     NS_IMETHOD              HideWindowChrome(bool aShouldHide);
     void                    EnteredFullScreen(bool aFullScreen);
-    NS_IMETHOD              MakeFullScreen(bool aFullScreen);
+    NS_IMETHOD              MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr);
     NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint);
     NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint);
     NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
