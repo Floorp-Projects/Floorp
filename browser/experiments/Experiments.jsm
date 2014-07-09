@@ -547,16 +547,17 @@ Experiments.Experiments.prototype = {
   _unregisterWithAddonManager: function () {
     this._log.trace("Unregistering instance with Addon Manager.");
 
+    this._log.trace("Removing install listener from add-on manager.");
+    AddonManager.removeInstallListener(this);
+    this._log.trace("Removing addon listener from add-on manager.");
+    AddonManager.removeAddonListener(this);
+
     if (gAddonProvider) {
       this._log.trace("Unregistering previous experiment add-on provider.");
       AddonManagerPrivate.unregisterProvider(gAddonProvider);
       gAddonProvider = null;
     }
 
-    this._log.trace("Removing install listener from add-on manager.");
-    AddonManager.removeInstallListener(this);
-    this._log.trace("Removing addon listener from add-on manager.");
-    AddonManager.removeAddonListener(this);
     this._log.trace("Finished unregistering with addon manager.");
   },
 
