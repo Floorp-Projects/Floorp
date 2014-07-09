@@ -307,14 +307,14 @@ function synthesizePointerAtPoint(left, top, aEvent, aWindow)
     var synthesized = ("isSynthesized" in aEvent) ? aEvent.isSynthesized : true;
 
     if (("type" in aEvent) && aEvent.type) {
-      defaultPrevented = utils.sendPointerEvent(aEvent.type, left, top, button,
-                                                clickCount, modifiers, false,
-                                                pressure, inputSource,
-                                                synthesized);
+      defaultPrevented = utils.sendPointerEventToWindow(aEvent.type, left, top, button,
+                                                        clickCount, modifiers, false,
+                                                        pressure, inputSource,
+                                                        synthesized);
     }
     else {
-      utils.sendPointerEvent("pointerdown", left, top, button, clickCount, modifiers, false, pressure, inputSource);
-      utils.sendPointerEvent("pointerup", left, top, button, clickCount, modifiers, false, pressure, inputSource);
+      utils.sendPointerEventToWindow("pointerdown", left, top, button, clickCount, modifiers, false, pressure, inputSource);
+      utils.sendPointerEventToWindow("pointerup", left, top, button, clickCount, modifiers, false, pressure, inputSource);
     }
   }
 
