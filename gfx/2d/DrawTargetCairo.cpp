@@ -130,9 +130,7 @@ static cairo_user_data_key_t surfaceDataKey;
 void
 ReleaseData(void* aData)
 {
-  DataSourceSurface *data = static_cast<DataSourceSurface*>(aData);
-  data->Unmap();
-  data->Release();
+  static_cast<DataSourceSurface*>(aData)->Release();
 }
 
 cairo_surface_t*
@@ -197,17 +195,12 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface, bool aExistingOnly = fa
     return nullptr;
   }
 
-  DataSourceSurface::MappedSurface map;
-  if (!data->Map(DataSourceSurface::READ, &map)) {
-    return nullptr;
-  }
-
   cairo_surface_t* surf =
-    cairo_image_surface_create_for_data(map.mData,
+    cairo_image_surface_create_for_data(data->GetData(),
                                         GfxFormatToCairoFormat(data->GetFormat()),
                                         data->GetSize().width,
                                         data->GetSize().height,
-                                        map.mStride);
+                                        data->Stride());
 
   // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
   // covers the details of how to run into it, but the full detailed
@@ -219,22 +212,18 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface, bool aExistingOnly = fa
       // a new surface with a stride that cairo chooses. No need to
       // set user data since we're not dependent on the original
       // data.
-      cairo_surface_t* result =
-        CopyToImageSurface(map.mData,
-                           data->GetSize(),
-                           map.mStride,
-                           data->GetFormat());
-      data->Unmap();
-      return result;
+      return CopyToImageSurface(data->GetData(),
+                                data->GetSize(),
+                                data->Stride(),
+                                data->GetFormat());
     }
-    data->Unmap();
     return nullptr;
   }
 
   cairo_surface_set_user_data(surf,
-                              &surfaceDataKey,
-                              data.forget().drop(),
-                              ReleaseData);
+ 				                      &surfaceDataKey,
+ 				                      data.forget().drop(),
+ 				                      ReleaseData);
   return surf;
 }
 
