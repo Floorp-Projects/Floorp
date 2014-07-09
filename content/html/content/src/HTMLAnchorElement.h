@@ -31,7 +31,6 @@ public:
     , Link(MOZ_THIS_IN_INITIALIZER_LIST())
   {
   }
-  virtual ~HTMLAnchorElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -199,6 +198,8 @@ public:
   }
 
 protected:
+  virtual ~HTMLAnchorElement();
+
   virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;

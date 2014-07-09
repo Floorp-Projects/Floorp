@@ -17,6 +17,10 @@ DeleteNodeTxn::DeleteNodeTxn()
 {
 }
 
+DeleteNodeTxn::~DeleteNodeTxn()
+{
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteNodeTxn, EditTxn,
                                    mNode,
                                    mParent,

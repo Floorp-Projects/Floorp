@@ -15,6 +15,7 @@
 #include "WebGLVertexArray.h"
 #include "WebGLQuery.h"
 
+#include "GLBlitHelper.h"
 #include "AccessCheck.h"
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
@@ -28,6 +29,7 @@
 #include "nsIVariant.h"
 
 #include "ImageEncoder.h"
+#include "ImageContainer.h"
 
 #include "gfxContext.h"
 #include "gfxPattern.h"
@@ -57,6 +59,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/ProcessPriorityManager.h"
 #include "mozilla/EnumeratedArrayCycleCollection.h"
@@ -1521,6 +1524,65 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
                     DrawOptions(1.0f, CompositionOp::OP_SOURCE));
 
     return dt->Snapshot();
+}
+
+bool WebGLContext::TexImageFromVideoElement(GLenum target, GLint level,
+                              GLenum internalformat, GLenum format, GLenum type,
+                              mozilla::dom::Element& elt)
+{
+    HTMLVideoElement* video = HTMLVideoElement::FromContentOrNull(&elt);
+    if (!video) {
+        return false;
+    }
+
+    uint16_t readyState;
+    if (NS_SUCCEEDED(video->GetReadyState(&readyState)) &&
+        readyState < nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA)
+    {
+        //No frame inside, just return
+        return false;
+    }
+
+    // If it doesn't have a principal, just bail
+    nsCOMPtr<nsIPrincipal> principal = video->GetCurrentPrincipal();
+    if (!principal) {
+        return false;
+    }
+
+    mozilla::layers::ImageContainer* container = video->GetImageContainer();
+    if (!container) {
+        return false;
+    }
+
+    if (video->GetCORSMode() == CORS_NONE) {
+        bool subsumes;
+        nsresult rv = mCanvasElement->NodePrincipal()->Subsumes(principal, &subsumes);
+        if (NS_FAILED(rv) || !subsumes) {
+            GenerateWarning("It is forbidden to load a WebGL texture from a cross-domain element that has not been validated with CORS. "
+                                "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
+            return false;
+        }
+    }
+
+    gl->MakeCurrent();
+    nsRefPtr<mozilla::layers::Image> srcImage = container->LockCurrentImage();
+    WebGLTexture* tex = activeBoundTextureForTarget(target);
+
+    const WebGLTexture::ImageInfo& info = tex->ImageInfoAt(target, 0);
+    bool dimensionsMatch = info.Width() == srcImage->GetSize().width &&
+                           info.Height() == srcImage->GetSize().height;
+    if (!dimensionsMatch) {
+        // we need to allocation
+        gl->fTexImage2D(target, level, internalformat, srcImage->GetSize().width, srcImage->GetSize().height, 0, format, type, nullptr);
+    }
+    bool ok = gl->BlitHelper()->BlitImageToTexture(srcImage.get(), srcImage->GetSize(), tex->GLName(), target, mPixelStoreFlipY);
+    if (ok) {
+        tex->SetImageInfo(target, level, srcImage->GetSize().width, srcImage->GetSize().height, format, type, WebGLImageDataStatus::InitializedImageData);
+        tex->Bind(target);
+    }
+    srcImage = nullptr;
+    container->UnlockCurrentImage();
+    return ok;
 }
 
 //

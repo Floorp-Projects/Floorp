@@ -71,6 +71,9 @@ public:
                        aKeyCode, aCharCode);
   }
 
+protected:
+  ~KeyboardEvent() {}
+
 private:
   // True, if the instance is created with Constructor().
   bool mInitializedByCtor;

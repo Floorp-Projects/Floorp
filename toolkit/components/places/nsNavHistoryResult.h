@@ -438,7 +438,6 @@ public:
     bool aReadOnly, nsNavHistoryQueryOptions* aOptions);
 
   virtual nsresult Refresh();
-  virtual ~nsNavHistoryContainerResultNode();
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYCONTAINERRESULTNODE_IID)
 
@@ -602,6 +601,7 @@ public:
                         bool aRecursive, bool aOnlyOne);
 
 protected:
+  virtual ~nsNavHistoryContainerResultNode();
 
   enum AsyncCanceledState {
     NOT_CANCELED, CANCELED, CANCELED_RESTART_NEEDED
@@ -639,8 +639,6 @@ public:
                               PRTime aTime,
                               const nsCOMArray<nsNavHistoryQuery>& aQueries,
                               nsNavHistoryQueryOptions* aOptions);
-
-  virtual ~nsNavHistoryQueryResultNode();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_COMMON_RESULTNODE_TO_BASE
@@ -696,6 +694,9 @@ public:
 
   // Tracks transition type filters shared by all mQueries.
   nsTArray<uint32_t> mTransitions;
+
+protected:
+  virtual ~nsNavHistoryQueryResultNode();
 };
 
 
@@ -712,8 +713,6 @@ public:
   nsNavHistoryFolderResultNode(const nsACString& aTitle,
                                nsNavHistoryQueryOptions* options,
                                int64_t aFolderId);
-
-  virtual ~nsNavHistoryFolderResultNode();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_COMMON_RESULTNODE_TO_BASE_NO_GETITEMMID
@@ -761,6 +760,9 @@ public:
 
   nsNavHistoryResultNode* FindChildById(int64_t aItemId,
                                         uint32_t* aNodeIndex);
+
+protected:
+  virtual ~nsNavHistoryFolderResultNode();
 
 private:
 

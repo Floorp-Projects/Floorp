@@ -784,7 +784,7 @@ TabParent::MapEventCoordinatesForChildProcess(
     aEvent->refPoint = LayoutDeviceIntPoint();
     // Then offset all the touch points by that distance, to put them
     // in the space where top-left is 0,0.
-    const nsTArray< nsRefPtr<Touch> >& touches =
+    const WidgetTouchEvent::TouchArray& touches =
       aEvent->AsTouchEvent()->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       Touch* touch = touches[i];

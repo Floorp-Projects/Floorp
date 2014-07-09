@@ -71,6 +71,7 @@ public:
   void SetDownload(const nsAString & aDownload, ErrorResult& rv);
 
 protected:
+  virtual ~SVGAElement();
 
   virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
 

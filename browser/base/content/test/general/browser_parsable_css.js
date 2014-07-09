@@ -14,7 +14,7 @@ const kWhitelist = [
   {sourceName: /codemirror\.css/i}, /* CodeMirror is imported as-is, see bug 1004423 */
   {sourceName: /web\/viewer\.css/i, errorMessage: /Unknown pseudo-class.*(fullscreen|selection)/i }, /* PDFjs is futureproofing its pseudoselectors, and those rules are dropped. */
   {sourceName: /aboutaccounts\/(main|normalize)\.css/i}, /* Tracked in bug 1004428 */
-  {sourceName: /otcdn\/webrtc\/.*\.css$/i /* TokBox SDK assets, see bug 1003029 */}
+  {sourceName: /loop\/.*sdk-content\/.*\.css$/i /* TokBox SDK assets, see bug 1032469 */}
 ];
 
 /**

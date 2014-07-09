@@ -25,7 +25,6 @@ public:
 
   HTMLScriptElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                     FromParser aFromParser);
-  virtual ~HTMLScriptElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -74,6 +73,8 @@ public:
   void SetAsync(bool aValue, ErrorResult& rv);
 
 protected:
+  virtual ~HTMLScriptElement();
+
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
   // nsScriptElement
   virtual bool HasScriptContent() MOZ_OVERRIDE;
