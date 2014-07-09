@@ -469,7 +469,8 @@ SelectionCarets::UpdateSelectionCarets()
                            false);
     startFrame->PeekOffset(&pos);
     nsCOMPtr<nsIContent> endContent = do_QueryInterface(range->GetEndParent());
-    if (nsLayoutUtils::CompareTreePosition(pos.mResultContent, endContent) > 0 ||
+    if ((pos.mResultContent &&
+         nsLayoutUtils::CompareTreePosition(pos.mResultContent, endContent) > 0) ||
         (pos.mResultContent == endContent &&
          pos.mContentOffset >= range->EndOffset())) {
       isTilt = true;
