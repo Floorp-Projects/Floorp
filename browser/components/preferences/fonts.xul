@@ -17,15 +17,7 @@
             title="&fontsDialog.title;"
             dlgbuttons="accept,cancel,help"
             ondialoghelp="openPrefsHelp()"
-#ifdef XP_UNIX
-#ifdef XP_MACOSX
-            style="width: &window.macWidth; !important;">
-#else
-            style="width: &window.unixWidth; !important;">
-#endif
-#else
-            style="width: &window.width; !important;">
-#endif
+            style="">
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
