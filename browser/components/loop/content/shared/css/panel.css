@@ -3,9 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Panel styles */
-
-a {
-  color: #0095DD;
+body {
+  font-size: 12px;
 }
 
 .panel {
@@ -14,18 +13,16 @@ a {
   overflow: hidden;
 }
 
+.component-spacer {
+  padding: 5px 10px;
+}
+
 .spacer {
   margin-bottom: 1em;
 }
 
 .share {
-  background: #f2f2f2;
-}
-
-.share .description {
-  background: #f7f7f7 url("../img/icon_32.png") no-repeat 1em 1.5em;
-  border-bottom: 1px solid #c3c3c3;
-  padding: 1em 1em 0 4em;
+  background: #fbfbfb;
 }
 
 .share .description .field {
@@ -43,21 +40,16 @@ a {
   width: 180px;
 }
 
+.description-content {
+  margin: .5em 0;
+  font-size: 1em;
+  font-weight: 700;
+  font-family: Open Sans,sans-serif;
+  color: #666;
+}
+
 .share .action {
   clear: right;
-  padding: 1em;
-  border-top: 1px solid #fafafa;
-}
-
-.share .action p {
-  margin: 0 0 1em 0;
-}
-
-p.dnd {
-  margin: 0 10px 10px 10px;
-  /* The panel won't increase its height when using a bottom margin, while it
-     works using a padding */
-  padding-bottom: 10px;
 }
 
 .share .action input[type="text"],
@@ -65,10 +57,13 @@ p.dnd {
   border: 1px solid #ccc; /* Overriding background style for a text input (see
                              below) resets its borders to a weird beveled style;
                              defining a default 1px border solves the issue. */
-  font-size: .9em;
-  width: 65%;
-  padding: .5em;
-  margin-right: .35em;
+  font-size: 1em;
+  width: 100%;
+  padding: 0 10px;
+  margin: 5px 0;
+  border-radius: 2px;
+  outline: 0;
+  height: 24px;
 }
 
 .share .action input.pending {
@@ -84,15 +79,102 @@ p.dnd {
   padding-top: 6px;
 }
 
-.tos {
-  font-size: .6rem;
-  color: #a8a8a8;
-  text-align: center;
-  padding: 1rem;
-}
-
 /* Specific cases */
 
 .panel #messages .alert {
   margin-bottom: 0;
 }
+
+/* DnD menu */
+
+.dnd-status {
+  border: 1px solid transparent;
+  padding: 2px 4px;
+  font-size: .9em;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.dnd-status:hover {
+  border: 1px solid #DDD;
+  background: #F1F1F1;
+}
+
+.do-not-disturb {
+  position: relative;
+}
+
+.dnd-menu {
+  position: absolute;
+  top: -35px;
+  left: 10px;
+  background: #fdfdfd;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  list-style: none;
+  padding: 5px;
+  border-radius: 2px;
+}
+
+.dnd-menu-item {
+  text-align: left;
+  margin: .3em 0;
+  padding: .2em .5em;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font-size: 1em;
+  white-space: nowrap;
+}
+
+.dnd-menu-item:hover {
+  border: 1px solid #ccc;
+  background: #eee;
+}
+
+/* Status badges -- Available/Unavailable */
+
+.status {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin: 0 5px;
+  border-radius: 50%;
+}
+
+.status-available {
+  background: #6cb23e;
+}
+
+.status-dnd {
+  border: 1px solid #888;
+}
+
+/* Terms of Service */
+
+.terms-service {
+  padding: 3px 10px 10px;
+  background: #FFF;
+  text-align: center;
+  opacity: .5;
+  transition: opacity .3s;
+  font-family: 'Lucida Grande', sans-serif;
+  font-size: .9em;
+}
+
+.terms-service a {
+  color: #0095dd;
+}
+
+/* Footer */
+
+.footer {
+  font-size: 1em;
+  border-top: 1px solid #D1D1D1;
+  background: #EAEAEA;
+  color: #7F7F7F;
+  display: flex;
+  align-items: center;
+  margin-top: auto;
+  flex-direction: row;
+}
+
