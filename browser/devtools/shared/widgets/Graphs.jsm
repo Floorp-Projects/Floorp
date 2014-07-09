@@ -136,9 +136,11 @@ GraphSelectionResizer.prototype = {
 this.AbstractCanvasGraph = function(parent, name, sharpness) {
   EventEmitter.decorate(this);
 
-  this._ready = promise.defer();
   this._parent = parent;
+  this._ready = promise.defer();
+
   this._uid = "canvas-graph-" + Date.now();
+  this._renderTargets = new Map();
 
   AbstractCanvasGraph.createIframe(GRAPH_SRC, parent, iframe => {
     this._iframe = iframe;
@@ -231,7 +233,9 @@ AbstractCanvasGraph.prototype = {
 
     this._data = null;
     this._regions = null;
+    this._cachedBackgroundImage = null;
     this._cachedGraphImage = null;
+    this._renderTargets.clear();
     gCachedStripePattern.clear();
   },
 
@@ -253,6 +257,14 @@ AbstractCanvasGraph.prototype = {
    */
   fixedWidth: null,
   fixedHeight: null,
+
+  /**
+   * Optionally builds and caches a background image for this graph.
+   * Inheriting classes may override this method.
+   */
+  buildBackgroundImage: function() {
+    return null;
+  },
 
   /**
    * Builds and caches a graph image, based on the data source supplied
@@ -278,6 +290,7 @@ AbstractCanvasGraph.prototype = {
    */
   setData: function(data) {
     this._data = data;
+    this._cachedBackgroundImage = this.buildBackgroundImage();
     this._cachedGraphImage = this.buildGraphImage();
     this._shouldRedraw = true;
   },
@@ -392,7 +405,7 @@ AbstractCanvasGraph.prototype = {
    */
   getMappedSelection: function(unpack = e => e.delta) {
     if (!this.hasData() || !this.hasSelection()) {
-      return { start: null, end: null };
+      return { min: null, max: null };
     }
     let selection = this.getSelection();
     let totalTicks = this._data.length;
@@ -401,8 +414,9 @@ AbstractCanvasGraph.prototype = {
 
     // The selection's start and end values are not guaranteed to be ascending.
     // This can happen, for example, when click & dragging from right to left.
-    let min = Math.min(selection.start, selection.end);
-    let max = Math.max(selection.start, selection.end);
+    // Also make sure that the selection bounds fit inside the canvas bounds.
+    let min = Math.max(Math.min(selection.start, selection.end), 0);
+    let max = Math.min(Math.max(selection.start, selection.end), this._width);
     min = map(min, 0, this._width, firstTick, lastTick);
     max = map(max, 0, this._width, firstTick, lastTick);
 
@@ -564,15 +578,48 @@ AbstractCanvasGraph.prototype = {
     this._width = this._canvas.width = bounds.width * this._pixelRatio;
     this._height = this._canvas.height = bounds.height * this._pixelRatio;
 
-    if (this._data) {
+    if (this.hasData()) {
+      this._cachedBackgroundImage = this.buildBackgroundImage();
       this._cachedGraphImage = this.buildGraphImage();
     }
-    if (this._regions) {
+    if (this.hasRegions()) {
       this._bakeRegions(this._regions, this._cachedGraphImage);
     }
 
     this._shouldRedraw = true;
     this.emit("refresh");
+  },
+
+  /**
+   * Gets a canvas with the specified name, for this graph.
+   *
+   * If it doesn't exist yet, it will be created, otherwise the cached instance
+   * will be cleared and returned.
+   *
+   * @param string name
+   *        The canvas name.
+   * @param number width, height [optional]
+   *        A custom width and height for the canvas. Defaults to this graph's
+   *        container canvas width and height.
+   */
+  _getNamedCanvas: function(name, width = this._width, height = this._height) {
+    let cachedRenderTarget = this._renderTargets.get(name);
+    if (cachedRenderTarget) {
+      let { canvas, ctx } = cachedRenderTarget;
+      canvas.width = width;
+      canvas.height = height;
+      ctx.clearRect(0, 0, width, height);
+      return cachedRenderTarget;
+    }
+
+    let canvas = this._document.createElementNS(HTML_NS, "canvas");
+    let ctx = canvas.getContext("2d");
+    canvas.width = width;
+    canvas.height = height;
+
+    let renderTarget = { canvas: canvas, ctx: ctx };
+    this._renderTargets.set(name, renderTarget);
+    return renderTarget;
   },
 
   /**
@@ -598,14 +645,16 @@ AbstractCanvasGraph.prototype = {
     if (!this._shouldRedraw) {
       return;
     }
-
     let ctx = this._ctx;
     ctx.clearRect(0, 0, this._width, this._height);
 
-    // Draw the graph underneath the cursor and selection.
-    if (this.hasData()) {
+    if (this._cachedBackgroundImage) {
+      ctx.drawImage(this._cachedBackgroundImage, 0, 0, this._width, this._height);
+    }
+    if (this._cachedGraphImage) {
       ctx.drawImage(this._cachedGraphImage, 0, 0, this._width, this._height);
     }
+
     if (this.hasCursor()) {
       this._drawCliphead();
     }
@@ -1009,7 +1058,7 @@ AbstractCanvasGraph.prototype = {
    * Listener for the "resize" event on the graph's parent node.
    */
   _onResize: function() {
-    if (this._cachedGraphImage) {
+    if (this.hasData()) {
       setNamedTimeout(this._uid, GRAPH_RESIZE_EVENTS_DRAIN, this.refresh);
     }
   }
@@ -1074,10 +1123,9 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * @see AbstractCanvasGraph.prototype.buildGraphImage
    */
   buildGraphImage: function() {
-    let canvas = this._document.createElementNS(HTML_NS, "canvas");
-    let ctx = canvas.getContext("2d");
-    let width = canvas.width = this._width;
-    let height = canvas.height = this._height;
+    let { canvas, ctx } = this._getNamedCanvas("line-graph-data");
+    let width = this._width;
+    let height = this._height;
 
     let totalTicks = this._data.length;
     let firstTick = this._data[0].delta;
@@ -1335,6 +1383,24 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   minBlocksHeight: BAR_GRAPH_MIN_BLOCKS_HEIGHT,
 
   /**
+   * Renders the graph's background.
+   * @see AbstractCanvasGraph.prototype.buildBackgroundImage
+   */
+  buildBackgroundImage: function() {
+    let { canvas, ctx } = this._getNamedCanvas("bar-graph-background");
+    let width = this._width;
+    let height = this._height;
+
+    let gradient = ctx.createLinearGradient(0, 0, 0, height);
+    gradient.addColorStop(0, BAR_GRAPH_BACKGROUND_GRADIENT_START);
+    gradient.addColorStop(1, BAR_GRAPH_BACKGROUND_GRADIENT_END);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
+    return canvas;
+  },
+
+  /**
    * Renders the graph on a canvas.
    * @see AbstractCanvasGraph.prototype.buildGraphImage
    */
@@ -1342,11 +1408,9 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     if (!this.format || !this.format.length) {
       throw "The graph format traits are mandatory to style the data source.";
     }
-
-    let canvas = this._document.createElementNS(HTML_NS, "canvas");
-    let ctx = canvas.getContext("2d");
-    let width = canvas.width = this._width;
-    let height = canvas.height = this._height;
+    let { canvas, ctx } = this._getNamedCanvas("bar-graph-data");
+    let width = this._width;
+    let height = this._height;
 
     let totalTypes = this.format.length;
     let totalTicks = this._data.length;
@@ -1363,14 +1427,6 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
       dataOffsetX: firstTick,
       minBarsWidth: minBarsWidth
     }) * BAR_GRAPH_DAMPEN_VALUES;
-
-    // Draw the background.
-
-    let gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, BAR_GRAPH_BACKGROUND_GRADIENT_START);
-    gradient.addColorStop(1, BAR_GRAPH_BACKGROUND_GRADIENT_END);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
 
     // Draw the graph.
 

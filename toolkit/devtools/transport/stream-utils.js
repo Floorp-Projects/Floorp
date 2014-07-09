@@ -9,6 +9,7 @@ const Services = require("Services");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { dumpv } = DevToolsUtils;
 const EventEmitter = require("devtools/toolkit/event-emitter");
+const promise = require("promise");
 
 DevToolsUtils.defineLazyGetter(this, "IOUtil", () => {
   return Cc["@mozilla.org/io-util;1"].getService(Ci.nsIIOUtil);

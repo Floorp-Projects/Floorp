@@ -46,6 +46,8 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "gDebug",
   "@mozilla.org/xpcom/debug;1", "nsIDebug");
 Object.defineProperty(this, "gCrashReporter", {
@@ -441,6 +443,18 @@ function Barrier(name) {
       for (frame = leaf; frame != null && frame.filename == leaf.filename; frame = frame.caller) {
         // Climb up the stack
       }
+      let filename = frame ? frame.filename : "?";
+      let lineNumber = frame ? frame.lineNumber : -1;
+
+      // Now build the rest of the stack as a string, using Task.jsm's rewriting
+      // to ensure that we do not lose information at each call to `Task.spawn`.
+      let frames = [];
+      while (frame != null) {
+        frames.push(frame.filename + ":" + frame.name + ":" + frame.lineNumber);
+        frame = frame.caller;
+      }
+      let stack = Task.Debugging.generateReadableStack(frames.join("\n")).split("\n");
+
       let set = this._conditions.get(condition);
       if (!set) {
         set = [];
@@ -448,8 +462,9 @@ function Barrier(name) {
       }
       set.push({name: name,
                 fetchState: fetchState,
-                filename: frame ? frame.filename : "?",
-                lineNumber: frame ? frame.lineNumber : -1});
+                filename: filename,
+                lineNumber: lineNumber,
+                stack: stack});
     }.bind(this),
 
     /**
@@ -496,12 +511,13 @@ Barrier.prototype = Object.freeze({
       return "Complete";
     }
     let frozen = [];
-    for (let {name, isComplete, fetchState, filename, lineNumber} of this._monitors) {
+    for (let {name, isComplete, fetchState, stack, filename, lineNumber} of this._monitors) {
       if (!isComplete) {
         frozen.push({name: name,
                      state: safeGetState(fetchState),
                      filename: filename,
-                     lineNumber: lineNumber});
+                     lineNumber: lineNumber,
+                     stack: stack});
       }
     }
     return frozen;
@@ -555,7 +571,7 @@ Barrier.prototype = Object.freeze({
     for (let _condition of conditions.keys()) {
       for (let current of conditions.get(_condition)) {
         let condition = _condition; // Avoid capturing the wrong variable
-        let {name, fetchState, filename, lineNumber} = current;
+        let {name, fetchState, stack, filename, lineNumber} = current;
 
         // An indirection on top of condition, used to let clients
         // cancel a blocker through removeBlocker.
@@ -585,6 +601,7 @@ Barrier.prototype = Object.freeze({
             isComplete: false,
             name: name,
             fetchState: fetchState,
+            stack: stack,
             filename: filename,
             lineNumber: lineNumber
           };

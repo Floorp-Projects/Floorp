@@ -330,34 +330,37 @@ var Addons = {
     try {
       let optionsURL = aListItem.getAttribute("optionsURL");
       let xhr = new XMLHttpRequest();
-      xhr.open("GET", optionsURL, false);
-      xhr.send();
-      if (xhr.responseXML) {
-        // Only allow <setting> for now
-        let settings = xhr.responseXML.querySelectorAll(":root > setting");
-        if (settings.length > 0) {
-          for (let i = 0; i < settings.length; i++) {
-            var setting = settings[i];
-            var desc = stripTextNodes(setting).trim();
-            if (!setting.hasAttribute("desc"))
-              setting.setAttribute("desc", desc);
-            box.appendChild(setting);
-          }
-          // Send an event so add-ons can prepopulate any non-preference based
-          // settings
-          let event = document.createEvent("Events");
-          event.initEvent("AddonOptionsLoad", true, false);
-          window.dispatchEvent(event);
+      xhr.open("GET", optionsURL, true);
+      xhr.onload = function(e) {
+        if (xhr.responseXML) {
+          // Only allow <setting> for now
+          let settings = xhr.responseXML.querySelectorAll(":root > setting");
+          if (settings.length > 0) {
+            for (let i = 0; i < settings.length; i++) {
+              var setting = settings[i];
+              var desc = stripTextNodes(setting).trim();
+              if (!setting.hasAttribute("desc")) {
+                setting.setAttribute("desc", desc);
+              }
+              box.appendChild(setting);
+            }
+            // Send an event so add-ons can prepopulate any non-preference based
+            // settings
+            let event = document.createEvent("Events");
+            event.initEvent("AddonOptionsLoad", true, false);
+            window.dispatchEvent(event);
   
-          // Also send a notification to match the behavior of desktop Firefox
-          let id = aListItem.getAttribute("addonID");
-          Services.obs.notifyObservers(document, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED, id);
-        } else {
-          // No options, so hide the header and reset the list item
-          detailItem.setAttribute("optionsURL", "");
-          aListItem.setAttribute("optionsURL", "");
+            // Also send a notification to match the behavior of desktop Firefox
+            let id = aListItem.getAttribute("addonID");
+            Services.obs.notifyObservers(document, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED, id);
+          } else {
+            // No options, so hide the header and reset the list item
+            detailItem.setAttribute("optionsURL", "");
+            aListItem.setAttribute("optionsURL", "");
+          }
         }
       }
+      xhr.send(null);
     } catch (e) { }
 
     let list = document.querySelector("#addons-list");

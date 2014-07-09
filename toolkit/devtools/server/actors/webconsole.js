@@ -10,6 +10,7 @@ const { Cc, Ci, Cu } = require("chrome");
 const { DebuggerServer, ActorPool } = require("devtools/server/main");
 const { EnvironmentActor, LongStringActor, ObjectActor, ThreadActor } = require("devtools/server/actors/script");
 const { update } = require("devtools/toolkit/DevToolsUtils");
+const Debugger = require("Debugger");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 

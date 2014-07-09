@@ -14,14 +14,13 @@ const { indexedDB } = require("sdk/indexed-db");
  * a unique `location` object.
  */
 
-const global = this;
 const IDB = {
   _db: null,
 
   open: function () {
     let deferred = promise.defer();
 
-    let request = global.indexedDB.open("AppProjects", 5);
+    let request = indexedDB.open("AppProjects", 5);
     request.onerror = function(event) {
       deferred.reject("Unable to open AppProjects indexedDB. " +
                       "Error code: " + event.target.errorCode);

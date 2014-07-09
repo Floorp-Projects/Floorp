@@ -29,6 +29,7 @@ const { dumpn, dumpv } = DevToolsUtils;
 const StreamUtils = require("devtools/toolkit/transport/stream-utils");
 const { Packet, JSONPacket, BulkPacket } =
   require("devtools/toolkit/transport/packets");
+const promise = require("promise");
 
 DevToolsUtils.defineLazyGetter(this, "Pipe", () => {
   return CC("@mozilla.org/pipe;1", "nsIPipe", "init");

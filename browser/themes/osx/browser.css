@@ -3627,6 +3627,7 @@ notification[value="translation"] {
 }
 
 button.translate-infobar-element {
+  background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.1)) repeat scroll 0% 0% padding-box transparent;
   color: #333333;
   border: 1px solid;
   border-color: rgba(23, 51, 78, 0.15) rgba(23, 51, 78, 0.17) rgba(23, 51, 78, 0.2);
@@ -3650,6 +3651,7 @@ label.translate-infobar-element {
 }
 
 button.translate-infobar-element:hover {
+  background: #f0f0f0;
   box-shadow: 0 1px 0 hsla(0,0%,100%,.1) inset,  0 0 0 1px hsla(0,0%,100%,.05) inset,  0 1px 0 hsla(210,54%,20%,.01),  0 0 4px hsla(206,100%,20%,.1);
 }
 
@@ -3660,7 +3662,7 @@ button.translate-infobar-element:active {
 
 button.translate-infobar-element[anonid="translate"] {
   color: #ffffff;
-  background-image: linear-gradient(#4cb1ff, #1793e5);
+  background: linear-gradient(#4cb1ff, #1793e5);
   box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset,  0 0 0 1px hsla(0,0%,100%,.1) inset,  0 1px 0 hsla(210,54%,20%,.03);
   border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2);
   padding: 0 1.1em  !important;;
@@ -3668,35 +3670,28 @@ button.translate-infobar-element[anonid="translate"] {
 
 button.translate-infobar-element[anonid="translate"]:hover {
   background-image: linear-gradient(#66bdff, #0d9eff);
-}
-
-button.translate-infobar-element[anonid="notNow"] {
-  background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.1)) repeat scroll 0% 0% padding-box transparent;
-}
-
-button.translate-infobar-element[anonid="notNow"]:hover {
-  background: #f0f0f0;
+  box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset,  0 0 0 1px hsla(0,0%,100%,.1) inset,  0 1px 0 hsla(210,54%,20%,.03),  0 0 4px hsla(206,100%,20%,.2);
 }
 
 button.translate-infobar-element.options-menu-button {
   -moz-padding-start: 0.5em !important;
-  -moz-padding-end: 0.3em !important;
+  -moz-padding-end: 0em !important;
 }
 
 button.translate-infobar-element.options-menu-button > .button-box > .button-menu-dropmarker {
   display: -moz-box;
-  list-style-image: url("chrome://browser/skin/toolbarbutton-dropmarker.png");
+  list-style-image: url("chrome://global/skin/icons/glyph-dropdown.png");
   padding: 0 !important;
   margin: 0 !important;
 }
 
-@media (min-resolution: 1.25dppx) {
+@media (min-resolution: 2dppx) {
   button.translate-infobar-element.options-menu-button > .button-box > .button-menu-dropmarker {
-    list-style-image: url("chrome://browser/skin/toolbarbutton-dropmarker@2x.png");
+    list-style-image: url("chrome://global/skin/icons/glyph-dropdown@2x.png");
   }
 
   button.translate-infobar-element.options-menu-button > .button-box > .button-menu-dropmarker > .dropmarker-icon {
-    width: 7px;
+    width: 8px;
   }
 }
 
@@ -3709,6 +3704,7 @@ menulist.translate-infobar-element {
   background-image: linear-gradient(#FFFFFF, rgba(255,255,255,0.1));
   color: #333333;
   padding: 0;
+  min-height: 22px !important;
 }
 
 menulist.translate-infobar-element > .menulist-label-box {
@@ -3719,7 +3715,8 @@ menulist.translate-infobar-element > .menulist-label-box {
 }
 
 menulist.translate-infobar-element:hover {
-  background-image: linear-gradient(#FFFFFF, rgba(255,255,255,0.6));
+  background: #f0f0f0;
+  box-shadow: 0 1px 0 hsla(0,0%,100%,.1) inset,  0 0 0 1px hsla(0,0%,100%,.05) inset,  0 1px 0 hsla(210,54%,20%,.01),  0 0 4px hsla(206,100%,20%,.1);
 }
 
 menulist.translate-infobar-element[open="true"] {
@@ -3729,7 +3726,17 @@ menulist.translate-infobar-element[open="true"] {
 
 menulist.translate-infobar-element > .menulist-dropmarker {
   display: -moz-box;
-  list-style-image: url("chrome://global/skin/icons/menulist-dropmarker.png");
+  list-style-image: url("chrome://global/skin/icons/glyph-dropdown.png");
+}
+
+@media (min-resolution: 2dppx) {
+  menulist.translate-infobar-element > .menulist-dropmarker {
+    list-style-image: url("chrome://global/skin/icons/glyph-dropdown@2x.png");
+  }
+
+  menulist.translate-infobar-element > .menulist-dropmarker > .dropmarker-icon {
+    width: 8px;
+  }
 }
 
 
