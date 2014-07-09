@@ -1862,7 +1862,7 @@ CodeGeneratorMIPS::generateInvalidateEpilogue()
     // Ensure that there is enough space in the buffer for the OsiPoint
     // patching to occur. Otherwise, we could overwrite the invalidation
     // epilogue.
-    for (size_t i = 0; i < sizeof(void *); i += Assembler::nopSize())
+    for (size_t i = 0; i < sizeof(void *); i += Assembler::NopSize())
         masm.nop();
 
     masm.bind(&invalidate_);

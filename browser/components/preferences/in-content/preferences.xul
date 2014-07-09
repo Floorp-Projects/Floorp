@@ -186,7 +186,7 @@
                 role="dialog"
                 aria-labelledby="dialogTitle">
         <caption class="titlebar" flex="1" align="center">
-          <label id="dialogTitle" class="header" flex="1"></label>
+          <label id="dialogTitle" class="title" flex="1"></label>
           <button id="dialogClose"
                   class="close-icon"
                   aria-label="&preferencesCloseButton.label;"/>

@@ -3,63 +3,41 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
+// Test that inspector updates when page is navigated.
 
-function test() {
-  let inspector, toolbox;
+const TEST_URL_FILE = "browser/browser/devtools/inspector/test/" +
+  "browser_inspector_breadcrumbs.html";
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    waitForFocus(function() {
-      let target = TargetFactory.forTab(gBrowser.selectedTab);
-      gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
-        startInspectorTests(toolbox);
-      }).then(null, console.error);
-    }, content);
-  }, true);
+const TEST_URL_1 = "http://test1.example.org/" + TEST_URL_FILE;
+const TEST_URL_2 = "http://test2.example.org/" + TEST_URL_FILE;
 
-  content.location = "http://test1.example.org/browser/browser/devtools/inspector/test/browser_inspector_breadcrumbs.html";
+let test = asyncTest(function* () {
+  let { inspector } = yield openInspectorForURL(TEST_URL_1);
+  let markuploaded = inspector.once("markuploaded");
 
-  function startInspectorTests(aToolbox)
-  {
-    toolbox = aToolbox;
-    inspector = toolbox.getCurrentPanel();
-    info("Inspector started");
-    let node = content.document.querySelector("#i1");
-    inspector.selection.setNode(node);
-    inspector.once("inspector-updated", () => {
-      is(inspector.selection.node, node, "Node selected.");
-      inspector.once("markuploaded", onSecondLoad);
-      content.location = "http://test2.example.org/browser/browser/devtools/inspector/test/browser_inspector_breadcrumbs.html";
-    });
-  }
+  yield selectNode("#i1", inspector);
 
-  function onSecondLoad() {
-    info("New page loaded");
-    let node = content.document.querySelector("#i1");
-    inspector.selection.setNode(node);
+  info("Navigating to a different page.");
+  content.location = TEST_URL_2;
 
-    inspector.once("inspector-updated", () => {
-      is(inspector.selection.node, node, "Node re-selected.");
-      inspector.once("markuploaded", onThirdLoad);
-      content.history.go(-1);
-    });
-  }
+  info("Waiting for markup view to load after navigation.");
+  yield markuploaded;
 
-  function onThirdLoad() {
-    info("Old page loaded");
-    is(content.location.href, "http://test1.example.org/browser/browser/devtools/inspector/test/browser_inspector_breadcrumbs.html");
-    let node = content.document.querySelector("#i1");
-    inspector.selection.setNode(node);
-    inspector.once("inspector-updated", () => {
-      is(inspector.selection.node, node, "Node re-selected.");
-      inspector.once("markuploaded", onThirdLoad);
-      toolbox.destroy();
-      gBrowser.removeCurrentTab();
-      finish();
-    });
-  }
-}
+  ok(true, "New page loaded");
+  yield selectNode("#i1", inspector);
 
+  markuploaded = inspector.once("markuploaded");
 
+  info("Going back in history");
+  content.history.go(-1);
+
+  info("Waiting for markup view to load after going back in history.");
+  yield markuploaded;
+
+  ok(true, "Old page loaded");
+  is(content.location.href, TEST_URL_1, "URL is correct.");
+
+  yield selectNode("#i1", inspector);
+});

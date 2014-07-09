@@ -15,7 +15,12 @@ add_task(function* check_definition() {
   do_check_true(OS.Constants.Path!=null);
   do_check_true(OS.Constants.Sys!=null);
   //check system name
-  do_check_eq(OS.Constants.Sys.Name, Services.appinfo.OS);
+  if (OS.Constants.Sys.Name == "Gonk") {
+  // Services.appinfo.OS doesn't know the difference between Gonk and Android
+    do_check_eq(Services.appinfo.OS, "Android");
+  } else {
+    do_check_eq(Services.appinfo.OS, OS.Constants.Sys.Name);
+  }
 
   //check if using DEBUG build
   if (Components.classes["@mozilla.org/xpcom/debug;1"].getService(Components.interfaces.nsIDebug2).isDebugBuild == true) {

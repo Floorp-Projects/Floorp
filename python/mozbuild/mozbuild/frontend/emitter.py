@@ -389,6 +389,13 @@ class TreeMetadataEmitter(LoggingMixin):
             self._final_libs.append((sandbox['OBJDIR'], libname, final_lib))
             passthru.variables['FORCE_STATIC_LIB'] = True
 
+        soname = sandbox.get('SONAME')
+        if soname:
+            if not sandbox.get('FORCE_SHARED_LIB'):
+                raise SandboxValidationError('SONAME applicable only for shared libraries')
+            else:
+                passthru.variables['SONAME'] = soname
+
         # While there are multiple test manifests, the behavior is very similar
         # across them. We enforce this by having common handling of all
         # manifests and outputting a single class type with the differences

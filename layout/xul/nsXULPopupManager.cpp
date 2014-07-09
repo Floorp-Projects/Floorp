@@ -206,6 +206,24 @@ nsXULPopupManager::Rollup(uint32_t aCount, const nsIntPoint* pos, nsIContent** a
     // clicking on a menu doesn't reopen the menu.
     if (!consume && pos) {
       nsCOMPtr<nsIContent> anchor = item->Frame()->GetAnchor();
+
+      // Check if the anchor has indicated another node to use for checking
+      // for roll-up. That way, we can anchor a popup on anonymous content or
+      // an individual icon, while clicking elsewhere within a button or other
+      // container doesn't result in us re-opening the popup.
+      if (anchor) {
+        nsAutoString consumeAnchor;
+        anchor->GetAttr(kNameSpaceID_None, nsGkAtoms::consumeanchor,
+                        consumeAnchor);
+        if (!consumeAnchor.IsEmpty()) {
+          nsIDocument* doc = anchor->GetOwnerDocument();
+          nsIContent* newAnchor = doc->GetElementById(consumeAnchor);
+          if (newAnchor) {
+            anchor = newAnchor;
+          }
+        }
+      }
+
       if (anchor && anchor->GetPrimaryFrame()) {
         // It's possible that some other element is above the anchor at the same
         // position, but the only thing that would happen is that the mouse
