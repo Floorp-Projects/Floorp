@@ -355,7 +355,6 @@ gfxProxyFontEntry::LoadNext(gfxMixedFontFamily *aFamily,
                      uint32_t(mFontSet->mGeneration)));
                 fe->mFeatureSettings.AppendElements(mFeatureSettings);
                 fe->mLanguageOverride = mLanguageOverride;
-                fe->mFamilyName = mFamilyName;
                 // For src:local(), we don't care whether the request is from
                 // a private window as there's no issue of caching resources;
                 // local fonts are just available all the time.
@@ -529,7 +528,6 @@ gfxProxyFontEntry::LoadFont(gfxMixedFontFamily *aFamily,
         // newly-created font entry
         fe->mFeatureSettings.AppendElements(mFeatureSettings);
         fe->mLanguageOverride = mLanguageOverride;
-        fe->mFamilyName = mFamilyName;
         StoreUserFontData(fe, mFontSet->GetPrivateBrowsing(), originalFullName,
                           &metadata, metaOrigLen);
 #ifdef PR_LOGGING
@@ -644,7 +642,6 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
                               aFeatureSettings,
                               aLanguageOverride,
                               aUnicodeRanges);
-    proxyEntry->mFamilyName = aFamilyName;
     family->AddFontEntry(proxyEntry);
 #ifdef PR_LOGGING
     if (LOG_ENABLED()) {
