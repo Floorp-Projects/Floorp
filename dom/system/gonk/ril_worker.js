@@ -8506,6 +8506,24 @@ GsmPDUHelperObject.prototype = {
         msg.body = this.readUCS2String.call(bufAdapter, length);
         break;
     }
+
+    // According to 9.3.19 CBS-Message-Information-Page in TS 23.041:
+    // "
+    //  This parameter is of a fixed length of 82 octets and carries up to and
+    //  including 82 octets of user information. Where the user information is
+    //  less than 82 octets, the remaining octets must be filled with padding.
+    // "
+    // According to 6.2.1.1 GSM 7 bit Default Alphabet and 6.2.3 UCS2 in
+    // TS 23.038, the padding character is <CR>.
+    if (!msg.body) {
+      return;
+    }
+    for (let i = msg.body.length - 1; i >= 0; i--) {
+      if (msg.body.charAt(i) !== '\r') {
+        msg.body = msg.body.substring(0, i + 1);
+        break;
+      }
+    }
   },
 
   /**

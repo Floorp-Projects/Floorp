@@ -438,9 +438,9 @@ class BOffImm16
       : data ((offset - 4) >> 2 & Imm16Mask)
     {
         MOZ_ASSERT((offset & 0x3) == 0);
-        MOZ_ASSERT(isInRange(offset));
+        MOZ_ASSERT(IsInRange(offset));
     }
-    static bool isInRange(int offset) {
+    static bool IsInRange(int offset) {
         if ((offset - 4) < (INT16_MIN << 2))
             return false;
         if ((offset - 4) > (INT16_MAX << 2))
@@ -479,9 +479,9 @@ class JOffImm26
       : data ((offset - 4) >> 2 & Imm26Mask)
     {
         MOZ_ASSERT((offset & 0x3) == 0);
-        MOZ_ASSERT(isInRange(offset));
+        MOZ_ASSERT(IsInRange(offset));
     }
-    static bool isInRange(int offset) {
+    static bool IsInRange(int offset) {
         if ((offset - 4) < -536870912)
             return false;
         if ((offset - 4) > 536870908)
@@ -518,16 +518,16 @@ class Imm16
     uint32_t decodeUnsigned() {
         return value;
     }
-    static bool isInSignedRange(int32_t imm) {
+    static bool IsInSignedRange(int32_t imm) {
         return imm >= INT16_MIN  && imm <= INT16_MAX;
     }
-    static bool isInUnsignedRange(uint32_t imm) {
+    static bool IsInUnsignedRange(uint32_t imm) {
         return imm <= UINT16_MAX ;
     }
-    static Imm16 lower (Imm32 imm) {
+    static Imm16 Lower (Imm32 imm) {
         return Imm16(imm.value & 0xffff);
     }
-    static Imm16 upper (Imm32 imm) {
+    static Imm16 Upper (Imm32 imm) {
         return Imm16((imm.value >> 16) & 0xffff);
     }
 };
@@ -749,7 +749,7 @@ class Assembler : public AssemblerShared
     }
 
   public:
-    static uintptr_t getPointer(uint8_t *);
+    static uintptr_t GetPointer(uint8_t *);
 
     bool oom() const;
 
@@ -791,7 +791,7 @@ class Assembler : public AssemblerShared
     BufferOffset writeInst(uint32_t x, uint32_t *dest = nullptr);
     // A static variant for the cases where we don't want to have an assembler
     // object at all. Normally, you would use the dummy (nullptr) object.
-    static void writeInstStatic(uint32_t x, uint32_t *dest);
+    static void WriteInstStatic(uint32_t x, uint32_t *dest);
 
   public:
     BufferOffset align(int alignment);
@@ -1012,37 +1012,37 @@ class Assembler : public AssemblerShared
     void flushBuffer() {
     }
 
-    static uint32_t patchWrite_NearCallSize();
-    static uint32_t nopSize() { return 4; }
+    static uint32_t PatchWrite_NearCallSize();
+    static uint32_t NopSize() { return 4; }
 
-    static uint32_t extractLuiOriValue(Instruction *inst0, Instruction *inst1);
-    static void updateLuiOriValue(Instruction *inst0, Instruction *inst1, uint32_t value);
-    static void writeLuiOriInstructions(Instruction *inst, Instruction *inst1,
+    static uint32_t ExtractLuiOriValue(Instruction *inst0, Instruction *inst1);
+    static void UpdateLuiOriValue(Instruction *inst0, Instruction *inst1, uint32_t value);
+    static void WriteLuiOriInstructions(Instruction *inst, Instruction *inst1,
                                         Register reg, uint32_t value);
 
-    static void patchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall);
-    static void patchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newValue,
+    static void PatchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall);
+    static void PatchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newValue,
                                         PatchedImmPtr expectedValue);
-    static void patchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue,
+    static void PatchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue,
                                         ImmPtr expectedValue);
-    static void patchWrite_Imm32(CodeLocationLabel label, Imm32 imm);
+    static void PatchWrite_Imm32(CodeLocationLabel label, Imm32 imm);
 
-    static void patchInstructionImmediate(uint8_t *code, PatchedImmPtr imm);
+    static void PatchInstructionImmediate(uint8_t *code, PatchedImmPtr imm);
 
-    static uint32_t alignDoubleArg(uint32_t offset) {
+    static uint32_t AlignDoubleArg(uint32_t offset) {
         return (offset + 1U) &~ 1U;
     }
 
-    static uint8_t *nextInstruction(uint8_t *instruction, uint32_t *count = nullptr);
+    static uint8_t *NextInstruction(uint8_t *instruction, uint32_t *count = nullptr);
 
     static void ToggleToJmp(CodeLocationLabel inst_);
     static void ToggleToCmp(CodeLocationLabel inst_);
 
     static void ToggleCall(CodeLocationLabel inst_, bool enabled);
 
-    static void updateBoundsCheck(uint32_t logHeapSize, Instruction *inst);
+    static void UpdateBoundsCheck(uint32_t logHeapSize, Instruction *inst);
     void processCodeLabels(uint8_t *rawCode);
-    static int32_t extractCodeLabelOffset(uint8_t *code);
+    static int32_t ExtractCodeLabelOffset(uint8_t *code);
 
     bool bailed() {
         return m_buffer.bail();

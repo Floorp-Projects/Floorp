@@ -738,7 +738,8 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
     }
   }
 
-  if (gfxPlatform::UsesOffMainThreadCompositing()) {
+  if (gfxPlatform::UsesOffMainThreadCompositing() &&
+      XRE_GetProcessType() == GeckoProcessType_Default) {
     // Our remote frame will push layers updates to the compositor,
     // and we'll keep an indirect reference to that tree.
     *aId = mLayersId = CompositorParent::AllocateLayerTreeId();
