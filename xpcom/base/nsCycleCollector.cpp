@@ -826,9 +826,9 @@ struct WeakMapping
   PtrInfo* mVal;
 };
 
-class GCGraphBuilder;
+class CCGraphBuilder;
 
-struct GCGraph
+struct CCGraph
 {
   NodePool mNodes;
   EdgePool mEdges;
@@ -839,12 +839,12 @@ private:
   PLDHashTable mPtrToNodeMap;
 
 public:
-  GCGraph() : mRootCount(0)
+  CCGraph() : mRootCount(0)
   {
     mPtrToNodeMap.ops = nullptr;
   }
 
-  ~GCGraph()
+  ~CCGraph()
   {
     if (mPtrToNodeMap.ops) {
       PL_DHashTableFinish(&mPtrToNodeMap);
@@ -853,7 +853,7 @@ public:
 
   void Init()
   {
-    MOZ_ASSERT(IsEmpty(), "Failed to call GCGraph::Clear");
+    MOZ_ASSERT(IsEmpty(), "Failed to call CCGraph::Clear");
     PL_DHashTableInit(&mPtrToNodeMap, &PtrNodeOps, nullptr,
                       sizeof(PtrToNodeEntry), 32768);
   }
@@ -900,7 +900,7 @@ public:
 };
 
 PtrInfo*
-GCGraph::FindNode(void* aPtr)
+CCGraph::FindNode(void* aPtr)
 {
   PtrToNodeEntry* e =
     static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, aPtr,
@@ -912,7 +912,7 @@ GCGraph::FindNode(void* aPtr)
 }
 
 PtrToNodeEntry*
-GCGraph::AddNodeToMap(void* aPtr)
+CCGraph::AddNodeToMap(void* aPtr)
 {
   PtrToNodeEntry* e =
     static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, aPtr,
@@ -925,7 +925,7 @@ GCGraph::AddNodeToMap(void* aPtr)
 }
 
 void
-GCGraph::RemoveNodeFromMap(void* aPtr)
+CCGraph::RemoveNodeFromMap(void* aPtr)
 {
   PL_DHashTableOperate(&mPtrToNodeMap, aPtr, PL_DHASH_REMOVE);
 }
@@ -1094,7 +1094,7 @@ public:
     aBlock->VisitEntries(*this, visitor);
   }
 
-  void SelectPointers(GCGraphBuilder& aBuilder);
+  void SelectPointers(CCGraphBuilder& aBuilder);
 
   // RemoveSkippable removes entries from the purple buffer synchronously
   // (1) if aAsyncSnowWhiteFreeing is false and nsPurpleBufferEntry::mRefCnt is 0 or
@@ -1179,12 +1179,12 @@ public:
 };
 
 static bool
-AddPurpleRoot(GCGraphBuilder& aBuilder, void* aRoot,
+AddPurpleRoot(CCGraphBuilder& aBuilder, void* aRoot,
               nsCycleCollectionParticipant* aParti);
 
 struct SelectPointersVisitor
 {
-  SelectPointersVisitor(GCGraphBuilder& aBuilder)
+  SelectPointersVisitor(CCGraphBuilder& aBuilder)
     : mBuilder(aBuilder)
   {
   }
@@ -1202,11 +1202,11 @@ struct SelectPointersVisitor
   }
 
 private:
-  GCGraphBuilder& mBuilder;
+  CCGraphBuilder& mBuilder;
 };
 
 void
-nsPurpleBuffer::SelectPointers(GCGraphBuilder& aBuilder)
+nsPurpleBuffer::SelectPointers(CCGraphBuilder& aBuilder)
 {
   SelectPointersVisitor visitor(aBuilder);
   VisitEntries(visitor);
@@ -1258,8 +1258,8 @@ class nsCycleCollector : public nsIMemoryReporter
   CycleCollectedJSRuntime* mJSRuntime;
 
   ccPhase mIncrementalPhase;
-  GCGraph mGraph;
-  nsAutoPtr<GCGraphBuilder> mBuilder;
+  CCGraph mGraph;
+  nsAutoPtr<CCGraphBuilder> mBuilder;
   nsAutoPtr<NodePool::Enumerator> mCurrNode;
   nsCOMPtr<nsICycleCollectorListener> mListener;
 
@@ -1375,7 +1375,7 @@ private:
 
 public:
   void Walk(PtrInfo* aPi);
-  void WalkFromRoots(GCGraph& aGraph);
+  void WalkFromRoots(CCGraph& aGraph);
   // copy-constructing the visitor should be cheap, and less
   // indirection than using a reference
   GraphWalker(const Visitor aVisitor) : mVisitor(aVisitor)
@@ -1439,7 +1439,7 @@ GraphWalker<Visitor>::Walk(PtrInfo* aPi)
 
 template <class Visitor>
 MOZ_NEVER_INLINE void
-GraphWalker<Visitor>::WalkFromRoots(GCGraph& aGraph)
+GraphWalker<Visitor>::WalkFromRoots(CCGraph& aGraph)
 {
   nsDeque queue;
   NodePool::Enumerator etor(aGraph.mNodes);
@@ -2016,11 +2016,11 @@ nsCycleCollectorLoggerConstructor(nsISupports* aOuter,
 // Bacon & Rajan's |MarkRoots| routine.
 ////////////////////////////////////////////////////////////////////////
 
-class GCGraphBuilder : public nsCycleCollectionTraversalCallback,
+class CCGraphBuilder : public nsCycleCollectionTraversalCallback,
   public nsCycleCollectionNoteRootCallback
 {
 private:
-  GCGraph& mGraph;
+  CCGraph& mGraph;
   CycleCollectorResults& mResults;
   NodePool::Builder mNodeBuilder;
   EdgePool::Builder mEdgeBuilder;
@@ -2033,12 +2033,12 @@ private:
   bool mRanOutOfMemory;
 
 public:
-  GCGraphBuilder(GCGraph& aGraph,
+  CCGraphBuilder(CCGraph& aGraph,
                  CycleCollectorResults& aResults,
                  CycleCollectedJSRuntime* aJSRuntime,
                  nsICycleCollectorListener* aListener,
                  bool aMergeZones);
-  virtual ~GCGraphBuilder();
+  virtual ~CCGraphBuilder();
 
   bool WantAllTraces() const
   {
@@ -2121,7 +2121,7 @@ private:
   }
 };
 
-GCGraphBuilder::GCGraphBuilder(GCGraph& aGraph,
+CCGraphBuilder::CCGraphBuilder(CCGraph& aGraph,
                                CycleCollectorResults& aResults,
                                CycleCollectedJSRuntime* aJSRuntime,
                                nsICycleCollectorListener* aListener,
@@ -2160,12 +2160,12 @@ GCGraphBuilder::GCGraphBuilder(GCGraph& aGraph,
              nsCycleCollectionTraversalCallback::WantAllTraces());
 }
 
-GCGraphBuilder::~GCGraphBuilder()
+CCGraphBuilder::~CCGraphBuilder()
 {
 }
 
 PtrInfo*
-GCGraphBuilder::AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant)
+CCGraphBuilder::AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant)
 {
   PtrToNodeEntry* e = mGraph.AddNodeToMap(aPtr);
   if (!e) {
@@ -2188,7 +2188,7 @@ GCGraphBuilder::AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant)
 }
 
 MOZ_NEVER_INLINE void
-GCGraphBuilder::Traverse(PtrInfo* aPtrInfo)
+CCGraphBuilder::Traverse(PtrInfo* aPtrInfo)
 {
   mCurrPi = aPtrInfo;
 
@@ -2205,13 +2205,13 @@ GCGraphBuilder::Traverse(PtrInfo* aPtrInfo)
 }
 
 void
-GCGraphBuilder::SetLastChild()
+CCGraphBuilder::SetLastChild()
 {
   mCurrPi->SetLastChild(mEdgeBuilder.Mark());
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteXPCOMRoot(nsISupports* aRoot)
+CCGraphBuilder::NoteXPCOMRoot(nsISupports* aRoot)
 {
   aRoot = CanonicalizeXPCOMParticipant(aRoot);
   NS_ASSERTION(aRoot,
@@ -2224,7 +2224,7 @@ GCGraphBuilder::NoteXPCOMRoot(nsISupports* aRoot)
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteJSRoot(void* aRoot)
+CCGraphBuilder::NoteJSRoot(void* aRoot)
 {
   if (JS::Zone* zone = MergeZone(aRoot)) {
     NoteRoot(zone, mJSZoneParticipant);
@@ -2234,14 +2234,14 @@ GCGraphBuilder::NoteJSRoot(void* aRoot)
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteNativeRoot(void* aRoot,
+CCGraphBuilder::NoteNativeRoot(void* aRoot,
                                nsCycleCollectionParticipant* aParticipant)
 {
   NoteRoot(aRoot, aParticipant);
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::DescribeRefCountedNode(nsrefcnt aRefCount, const char* aObjName)
+CCGraphBuilder::DescribeRefCountedNode(nsrefcnt aRefCount, const char* aObjName)
 {
   if (aRefCount == 0) {
     Fault("zero refcount", mCurrPi);
@@ -2260,7 +2260,7 @@ GCGraphBuilder::DescribeRefCountedNode(nsrefcnt aRefCount, const char* aObjName)
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::DescribeGCedNode(bool aIsMarked, const char* aObjName,
+CCGraphBuilder::DescribeGCedNode(bool aIsMarked, const char* aObjName,
                                  uint64_t aCompartmentAddress)
 {
   uint32_t refCount = aIsMarked ? UINT32_MAX : 0;
@@ -2275,7 +2275,7 @@ GCGraphBuilder::DescribeGCedNode(bool aIsMarked, const char* aObjName,
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteXPCOMChild(nsISupports* aChild)
+CCGraphBuilder::NoteXPCOMChild(nsISupports* aChild)
 {
   nsCString edgeName;
   if (WantDebugInfo()) {
@@ -2294,7 +2294,7 @@ GCGraphBuilder::NoteXPCOMChild(nsISupports* aChild)
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteNativeChild(void* aChild,
+CCGraphBuilder::NoteNativeChild(void* aChild,
                                 nsCycleCollectionParticipant* aParticipant)
 {
   nsCString edgeName;
@@ -2311,7 +2311,7 @@ GCGraphBuilder::NoteNativeChild(void* aChild,
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteJSChild(void* aChild)
+CCGraphBuilder::NoteJSChild(void* aChild)
 {
   if (!aChild) {
     return;
@@ -2333,7 +2333,7 @@ GCGraphBuilder::NoteJSChild(void* aChild)
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteNextEdgeName(const char* aName)
+CCGraphBuilder::NoteNextEdgeName(const char* aName)
 {
   if (WantDebugInfo()) {
     mNextEdgeName = aName;
@@ -2341,7 +2341,7 @@ GCGraphBuilder::NoteNextEdgeName(const char* aName)
 }
 
 PtrInfo*
-GCGraphBuilder::AddWeakMapNode(void* aNode)
+CCGraphBuilder::AddWeakMapNode(void* aNode)
 {
   MOZ_ASSERT(aNode, "Weak map node should be non-null.");
 
@@ -2356,7 +2356,7 @@ GCGraphBuilder::AddWeakMapNode(void* aNode)
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteWeakMapping(void* aMap, void* aKey, void* aKdelegate, void* aVal)
+CCGraphBuilder::NoteWeakMapping(void* aMap, void* aKey, void* aKdelegate, void* aVal)
 {
   // Don't try to optimize away the entry here, as we've already attempted to
   // do that in TraceWeakMapping in nsXPConnect.
@@ -2373,7 +2373,7 @@ GCGraphBuilder::NoteWeakMapping(void* aMap, void* aKey, void* aKdelegate, void* 
 }
 
 static bool
-AddPurpleRoot(GCGraphBuilder& aBuilder, void* aRoot,
+AddPurpleRoot(CCGraphBuilder& aBuilder, void* aRoot,
               nsCycleCollectionParticipant* aParti)
 {
   CanonicalizeParticipant(&aRoot, &aParti);
@@ -2398,7 +2398,7 @@ public:
   }
 
   // The logic of the Note*Child functions must mirror that of their
-  // respective functions in GCGraphBuilder.
+  // respective functions in CCGraphBuilder.
   NS_IMETHOD_(void) NoteXPCOMChild(nsISupports* aChild);
   NS_IMETHOD_(void) NoteNativeChild(void* aChild,
                                     nsCycleCollectionParticipant* aHelper);
@@ -2944,7 +2944,7 @@ nsCycleCollector::ScanWeakMaps()
 class PurpleScanBlackVisitor
 {
 public:
-  PurpleScanBlackVisitor(GCGraph& aGraph, nsICycleCollectorListener* aListener,
+  PurpleScanBlackVisitor(CCGraph& aGraph, nsICycleCollectorListener* aListener,
                          uint32_t& aCount, bool& aFailed)
     : mGraph(aGraph), mListener(aListener), mCount(aCount), mFailed(aFailed)
   {
@@ -2979,7 +2979,7 @@ public:
   }
 
 private:
-  GCGraph& mGraph;
+  CCGraph& mGraph;
   nsICycleCollectorListener* mListener;
   uint32_t& mCount;
   bool& mFailed;
@@ -3735,7 +3735,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
   mResults.mMergedZones = mergeZones;
 
   MOZ_ASSERT(!mBuilder, "Forgot to clear mBuilder");
-  mBuilder = new GCGraphBuilder(mGraph, mResults, mJSRuntime, mListener, mergeZones);
+  mBuilder = new CCGraphBuilder(mGraph, mResults, mJSRuntime, mListener, mergeZones);
 
   if (mJSRuntime) {
     mJSRuntime->TraverseRoots(*mBuilder);
