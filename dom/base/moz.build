@@ -161,6 +161,7 @@ LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/html/document/src',
     '/content/xul/document/src',
+    '/layout/base',
     '/layout/generic',
     '/layout/style',
     '/layout/xul',
