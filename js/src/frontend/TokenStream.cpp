@@ -9,6 +9,7 @@
 #include "frontend/TokenStream.h"
 
 #include "mozilla/PodOperations.h"
+#include "mozilla/UniquePtr.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -35,6 +36,7 @@ using mozilla::Maybe;
 using mozilla::PodAssign;
 using mozilla::PodCopy;
 using mozilla::PodZero;
+using mozilla::UniquePtr;
 
 struct KeywordInfo {
     const char  *chars;         // C string with keyword text
@@ -354,9 +356,6 @@ TokenStream::TokenStream(ExclusiveContext *cx, const ReadOnlyCompileOptions &opt
 
 TokenStream::~TokenStream()
 {
-    js_free(displayURL_);
-    js_free(sourceMapURL_);
-
     JS_ASSERT_IF(originPrincipals, originPrincipals->refcount);
 }
 
@@ -854,7 +853,9 @@ TokenStream::getDirectives(bool isMultiline, bool shouldWarnDeprecated)
 bool
 TokenStream::getDirective(bool isMultiline, bool shouldWarnDeprecated,
                           const char *directive, int directiveLength,
-                          const char *errorMsgPragma, jschar **destination) {
+                          const char *errorMsgPragma,
+                          UniquePtr<jschar[], JS::FreePolicy> *destination)
+{
     JS_ASSERT(directiveLength <= 18);
     jschar peeked[18];
     int32_t c;
@@ -886,12 +887,11 @@ TokenStream::getDirective(bool isMultiline, bool shouldWarnDeprecated,
 
         size_t length = tokenbuf.length();
 
-        js_free(*destination);
-        *destination = cx->pod_malloc<jschar>(length + 1);
+        *destination = cx->make_pod_array<jschar>(length + 1);
         if (!*destination)
             return false;
 
-        PodCopy(*destination, tokenbuf.begin(), length);
+        PodCopy(destination->get(), tokenbuf.begin(), length);
         (*destination)[length] = '\0';
     }
 
