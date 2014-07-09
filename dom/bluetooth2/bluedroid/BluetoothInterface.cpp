@@ -5,12 +5,69 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BluetoothInterface.h"
+#include "nsAutoPtr.h"
+#include "nsThreadUtils.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
 template<class T>
 struct interface_traits
 { };
+
+//
+// Result handling
+//
+
+template <typename Obj, typename Res>
+class BluetoothInterfaceRunnable0 : public nsRunnable
+{
+public:
+  BluetoothInterfaceRunnable0(Obj* aObj, Res (Obj::*aMethod)())
+  : mObj(aObj)
+  , mMethod(aMethod)
+  {
+    MOZ_ASSERT(mObj);
+    MOZ_ASSERT(mMethod);
+  }
+
+  NS_METHOD
+  Run() MOZ_OVERRIDE
+  {
+    ((*mObj).*mMethod)();
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<Obj> mObj;
+  void (Obj::*mMethod)();
+};
+
+template <typename Obj, typename Res, typename Arg1>
+class BluetoothInterfaceRunnable1 : public nsRunnable
+{
+public:
+  BluetoothInterfaceRunnable1(Obj* aObj, Res (Obj::*aMethod)(Arg1),
+                              const Arg1& aArg1)
+  : mObj(aObj)
+  , mMethod(aMethod)
+  , mArg1(aArg1)
+  {
+    MOZ_ASSERT(mObj);
+    MOZ_ASSERT(mMethod);
+  }
+
+  NS_METHOD
+  Run() MOZ_OVERRIDE
+  {
+    ((*mObj).*mMethod)(mArg1);
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<Obj> mObj;
+  void (Obj::*mMethod)(Arg1);
+  Arg1 mArg1;
+};
 
 //
 // Socket Interface
@@ -370,6 +427,36 @@ BluetoothAvrcpInterface::SetVolume(uint8_t aVolume)
 //
 // Bluetooth Core Interface
 //
+
+typedef
+  BluetoothInterfaceRunnable0<BluetoothResultHandler, void>
+  BluetoothResultRunnable;
+
+typedef
+  BluetoothInterfaceRunnable1<BluetoothResultHandler, void, int>
+  BluetoothErrorRunnable;
+
+static nsresult
+DispatchBluetoothResult(BluetoothResultHandler* aRes,
+                        void (BluetoothResultHandler::*aMethod)(),
+                        int aStatus)
+{
+  MOZ_ASSERT(aRes);
+
+  nsRunnable* runnable;
+
+  if (aStatus == BT_STATUS_SUCCESS) {
+    runnable = new BluetoothResultRunnable(aRes, aMethod);
+  } else {
+    runnable = new
+      BluetoothErrorRunnable(aRes, &BluetoothResultHandler::OnError, aStatus);
+  }
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  if (NS_FAILED(rv)) {
+    BT_LOGR("NS_DispatchToMainThread failed: %X", rv);
+  }
+  return rv;
+}
 
 /* returns the container structure of a variable; _t is the container's
  * type, _v the name of the variable, and _m is _v's field within _t
