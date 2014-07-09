@@ -1,44 +1,18 @@
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
-function test() {
-  ignoreAllUncaughtExceptions();
+// A regression test for bug 665880 to make sure elements inside <object> can
+// be inspected without exceptions.
 
-  let doc;
-  let objectNode;
+const TEST_URI = "data:text/html;charset=utf-8," +
+  "<object><p>browser_inspector_inspect-object-element.js</p></object>";
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-    doc = content.document;
-    waitForFocus(setupObjectInspectionTest, content);
-  }, true);
+let test = asyncTest(function* () {
+  let { inspector } = yield openInspectorForURL(TEST_URI);
+  let objectNode = getNode("object");
+  ok(objectNode, "We have the object node");
 
-  content.location = "data:text/html,<object style='padding: 100px'><p>foobar</p></object>";
-
-  function setupObjectInspectionTest() {
-    objectNode = doc.querySelector("object");
-    ok(objectNode, "we have the object node");
-    openInspector(runObjectInspectionTest);
-  }
-
-  function runObjectInspectionTest(inspector) {
-    inspector.once("inspector-updated", performTestComparison);
-    inspector.selection.setNode(objectNode, "");
-  }
-
-  function performTestComparison() {
-    is(getActiveInspector().selection.node, objectNode, "selection matches node");
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    executeSoon(function() {
-      gDevTools.closeToolbox(target);
-      finishUp();
-    });
-  }
-
-  function finishUp() {
-    doc = objectNode = null;
-    gBrowser.removeCurrentTab();
-    finish();
-  }
-}
+  yield selectNode(objectNode, inspector);
+});

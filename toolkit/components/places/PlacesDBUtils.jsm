@@ -960,32 +960,7 @@ this.PlacesDBUtils = {
       places_root: PlacesUtils.placesRootId
     };
 
-    let outstandingProbes = 0;
-
-    function reportResult(aProbe, aValue) {
-      outstandingProbes--;
-
-      let value = aValue;
-      try {
-        if ("callback" in aProbe) {
-          value = aProbe.callback(value);
-        }
-        probeValues[aProbe.histogram] = value;
-        Services.telemetry.getHistogramById(aProbe.histogram).add(value);
-      } catch (ex) {
-        Components.utils.reportError("Error adding value " + value +
-                                     " to histogram " + aProbe.histogram +
-                                     ": " + ex);
-      }
-
-      if (!outstandingProbes && aHealthReportCallback) {
-        try {
-          aHealthReportCallback(probeValues);
-        } catch (ex) {
-          Components.utils.reportError(ex);
-        }
-      }
-    }
+    let outstandingProbes = [];
 
     for (let i = 0; i < probes.length; i++) {
       let probe = probes[i];
@@ -994,32 +969,61 @@ this.PlacesDBUtils = {
         continue;
       }
 
-      outstandingProbes++;
-
-      if (!("query" in probe)) {
-        reportResult(probe);
-        continue;
-      }
-
-      let stmt = DBConn.createAsyncStatement(probe.query);
-      for (param in params) {
-        if (probe.query.indexOf(":" + param) > 0) {
-          stmt.params[param] = params[param];
+      let promiseDone = new Promise((resolve, reject) => {
+        if (!("query" in probe)) {
+          resolve([probe]);
+          return;
         }
-      }
 
-      try {
-        stmt.executeAsync({
-          handleError: PlacesDBUtils._handleError,
-          handleResult: function (aResultSet) {
-            let row = aResultSet.getNextRow();
-            reportResult(probe, row.getResultByIndex(0));
-          },
-          handleCompletion: function () {}
-        });
-      } finally{
-        stmt.finalize();
-      }
+        let stmt = DBConn.createAsyncStatement(probe.query);
+        for (let param in params) {
+          if (probe.query.indexOf(":" + param) > 0) {
+            stmt.params[param] = params[param];
+          }
+        }
+
+        try {
+          stmt.executeAsync({
+            handleError: reject,
+            handleResult: function (aResultSet) {
+              let row = aResultSet.getNextRow();
+              resolve([probe, row.getResultByIndex(0)]);
+            },
+            handleCompletion: function () {}
+          });
+        } finally{
+          stmt.finalize();
+        }
+      });
+
+      // Report the result of the probe through Telemetry.
+      // The resulting promise cannot reject.
+      promiseDone = promiseDone.then(
+        // On success
+        ([aProbe, aValue]) => {
+          let value = aValue;
+          try {
+            if ("callback" in aProbe) {
+              value = aProbe.callback(value);
+            }
+            probeValues[aProbe.histogram] = value;
+            Services.telemetry.getHistogramById(aProbe.histogram).add(value);
+          } catch (ex) {
+            Components.utils.reportError("Error adding value " + value +
+                                         " to histogram " + aProbe.histogram +
+                                         ": " + ex);
+          }
+        },
+        // On failure
+        this._handleError);
+
+      outstandingProbes.push(promiseDone);
+    }
+
+    if (aHealthReportCallback) {
+      Promise.all(outstandingProbes).then(() =>
+        aHealthReportCallback(probeValues)
+      );
     }
 
     PlacesDBUtils._executeTasks(tasks);

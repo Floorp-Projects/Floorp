@@ -4,114 +4,84 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function test() {
-  let inspector, toolbox;
-  let page1 = "http://mochi.test:8888/browser/browser/devtools/inspector/test/browser_inspector_select_last_selected.html";
-  let page2 = "http://mochi.test:8888/browser/browser/devtools/inspector/test/browser_inspector_select_last_selected2.html";
+// Checks that the expected default node is selected after a page navigation or
+// a reload.
+let PAGE_1 = TEST_URL_ROOT + "browser_inspector_select_last_selected.html";
+let PAGE_2 = TEST_URL_ROOT + "browser_inspector_select_last_selected2.html";
 
-  // Create a tab, load test HTML, wait for load and start the tests
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    waitForFocus(function() {
-      openInspector((aInspector, aToolbox) => {
-        inspector = aInspector;
-        toolbox = aToolbox;
-        startTests();
-      });
-    }, content);
-  }, true);
-  content.location = page1;
-
-  function startTests() {
-    testSameNodeSelectedOnPageReload();
-  }
-
-  function endTests() {
-    inspector.destroy();
-    toolbox.destroy().then(() => {
-      toolbox = inspector = page1 = page2 = null;
-      gBrowser.removeCurrentTab();
-      finish();
-    });
-  }
-
-  function loadPageAnd(page, callback) {
-    inspector.once("new-root", () => {
-      callback();
-    });
-
-    if (page) {
-      content.location = page;
-    } else {
-      content.location.reload();
-    }
-  }
-
-  function reloadAndReselect(id, callback) {
-    let div = content.document.getElementById(id);
-
-    inspector.once("inspector-updated", () => {
-      is(inspector.selection.node, div);
-
-      loadPageAnd(false, () => {
-        is(inspector.selection.node.id, id, "Node re-selected after reload");
-        callback();
-      });
-    });
-
-    inspector.selection.setNode(div);
-  }
-
-  // Test that nodes selected on the test page remain selected after reload
-  function testSameNodeSelectedOnPageReload()
+// An array of test cases with following properties:
+// - url: URL to navigate to. If URL == content.location, reload instead.
+// - nodeToSelect: a selector for a node to select before navigation. If null,
+//                 whatever is selected stays selected.
+// - selectedNode: a selector for a node that is selected after navigation.
+let TEST_DATA = [
   {
-    // Select a few nodes and check they are re-selected after reload of the same
-    // page
-    reloadAndReselect("id1", () => {
-      reloadAndReselect("id2", () => {
-        reloadAndReselect("id3", () => {
-          reloadAndReselect("id4", testBodySelectedOnNavigate);
-        });
-      });
-    });
+    url: PAGE_1,
+    nodeToSelect: "#id1",
+    selectedNode: "#id1"
+  },
+  {
+    url: PAGE_1,
+    nodeToSelect: "#id2",
+    selectedNode: "#id2"
+  },
+  {
+    url: PAGE_1,
+    nodeToSelect: "#id3",
+    selectedNode: "#id3"
+  },
+  {
+    url: PAGE_1,
+    nodeToSelect: "#id4",
+    selectedNode: "#id4"
+  },
+  {
+    url: PAGE_2,
+    nodeToSelect: null,
+    selectedNode: "body"
+  },
+  {
+    url: PAGE_1,
+    nodeToSelect: "#id5",
+    selectedNode: "body"
+  },
+  {
+    url: PAGE_2,
+    nodeToSelect: null,
+    selectedNode: "body"
+  }
+];
+
+let test = asyncTest(function* () {
+  let { inspector } = yield openInspectorForURL(PAGE_1);
+
+  for (let { url, nodeToSelect, selectedNode } of TEST_DATA) {
+    if (nodeToSelect) {
+      info("Selecting node " + nodeToSelect + " before navigation.");
+      yield selectNode(nodeToSelect, inspector);
+    }
+
+    yield navigateToAndWaitForNewRoot(url);
+
+    info("Waiting for inspector to update after new-root event.");
+    yield inspector.once("inspector-updated");
+
+    is(inspector.selection.node, getNode(selectedNode),
+       selectedNode + " is selected after navigation.");
   }
 
-  // Test that since the previously selected node doesn't exist on the new page
-  // the body is selected
-  function testBodySelectedOnNavigate() {
-    // Last node selected was id4, go to a different page and check body is
-    // selected
-    loadPageAnd(page2, () => {
-      is(
-        inspector.selection.node.tagName.toLowerCase(),
-        "body",
-        "Node not found, body selected"
-      );
-      testSameNodeSelectedOnNavigateAwayAndBack();
-    });
+  function navigateToAndWaitForNewRoot(url) {
+    info("Navigating and waiting for new-root event after navigation.");
+    let newRoot = inspector.once("new-root");
+
+    if (url == content.location) {
+      info("Reloading page.");
+      content.location.reload();
+    } else {
+      info("Navigating to " + url);
+      content.location = url;
+    }
+
+    return newRoot;
   }
-
-  // Test that the node selected on page 1 gets selected again after a navigation
-  // is made to another page and back again
-  function testSameNodeSelectedOnNavigateAwayAndBack() {
-    // On page2, select id5
-    let id = "id5";
-    let div = content.document.getElementById(id);
-
-    inspector.once("inspector-updated", () => {
-      is(inspector.selection.node.id, id);
-
-      // go to page1 but do not select anything
-      loadPageAnd(page1, () => {
-          // go back to page2 and check id5 is still the current selection
-        loadPageAnd(page2, () => {
-          is(inspector.selection.node.id, id, "Node re-selected after navigation");
-          endTests();
-        });
-      });
-    });
-
-    inspector.selection.setNode(div);
-  }
-}
+});

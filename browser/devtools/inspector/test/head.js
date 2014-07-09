@@ -1,6 +1,8 @@
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 const Cu = Components.utils;
 const Ci = Components.interfaces;
@@ -13,8 +15,8 @@ const Cc = Components.classes;
 
 //Services.prefs.setBoolPref("devtools.dump.emit", true);
 
+const TEST_URL_ROOT = "http://example.com/browser/browser/devtools/inspector/test/";
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
-const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
 
 // All test are asynchronous
 waitForExplicitFinish();
@@ -47,6 +49,22 @@ SimpleTest.registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.inspector.activeSidebar");
 });
 
+registerCleanupFunction(() => {
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  gDevTools.closeToolbox(target);
+
+  // Move the mouse outside inspector. If the test happened fake a mouse event
+  // somewhere over inspector the pointer is considered to be there when the
+  // next test begins. This might cause unexpected events to be emitted when
+  // another test moves the mouse.
+  EventUtils.synthesizeMouseAtPoint(1, 1, {type: "mousemove"}, window);
+
+  while (gBrowser.tabs.length > 1) {
+    gBrowser.removeCurrentTab();
+  }
+
+});
+
 /**
  * Define an async test based on a generator function
  */
@@ -59,32 +77,59 @@ function asyncTest(generator) {
  * @param {String} url The url to be loaded in the new tab
  * @return a promise that resolves to the tab object when the url is loaded
  */
-function addTab(url) {
-  let def = promise.defer();
-
+let addTab = Task.async(function* (url) {
+  info("Adding a new tab with URL: '" + url + "'");
   let tab = gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    info("URL " + url + " loading complete into new test tab");
-    waitForFocus(() => {
-      def.resolve(tab);
-    }, content);
-  }, true);
-  content.location = url;
+  let loaded = once(gBrowser.selectedBrowser, "load", true);
 
-  return def.promise;
-}
+  content.location = url;
+  yield loaded;
+
+  info("URL '" + url + "' loading complete");
+
+  let def = promise.defer();
+  let isBlank = url == "about:blank";
+  waitForFocus(def.resolve, content, isBlank);
+
+  yield def.promise;
+
+  return tab;
+});
 
 /**
  * Simple DOM node accesor function that takes either a node or a string css
  * selector as argument and returns the corresponding node
  * @param {String|DOMNode} nodeOrSelector
+ * @param {Object} options
+ *        An object containing any of the following options:
+ *        - document: HTMLDocument that should be queried for the selector.
+ *                    Default: content.document.
+ *        - expectNoMatch: If true and a node matches the given selector, a
+ *                         failure is logged for an unexpected match.
+ *                         If false and nothing matches the given selector, a
+ *                         failure is logged for a missing match.
+ *                         Default: false.
  * @return {DOMNode}
  */
-function getNode(nodeOrSelector) {
-  return typeof nodeOrSelector === "string" ?
-    content.document.querySelector(nodeOrSelector) :
-    nodeOrSelector;
+function getNode(nodeOrSelector, options = {}) {
+  let document = options.document || content.document;
+  let noMatches = !!options.expectNoMatch;
+
+  if (typeof nodeOrSelector === "string") {
+    info("Looking for a node that matches selector " + nodeOrSelector);
+    let node = document.querySelector(nodeOrSelector);
+    if (noMatches) {
+      ok(!node, "Selector " + nodeOrSelector + " didn't match any nodes.");
+    }
+    else {
+      ok(node, "Selector " + nodeOrSelector + " matched a node.");
+    }
+
+    return node;
+  }
+
+  info("Looking for a node but selector was not a string.");
+  return nodeOrSelector;
 }
 
 /**
@@ -102,10 +147,24 @@ function getNode(nodeOrSelector) {
 function selectNode(nodeOrSelector, inspector, reason="test") {
   info("Selecting the node " + nodeOrSelector);
   let node = getNode(nodeOrSelector);
-  let updated = inspector.once("inspector-updated");
+  let updated = inspector.once("inspector-updated", () => {
+    is(inspector.selection.node, node, "Correct node was selected");
+  });
   inspector.selection.setNode(node, reason);
   return updated;
 }
+
+/**
+ * Open the inspector in a tab with given URL.
+ * @param {string} url  The URL to open.
+ * @return A promise that is resolved once the tab and inspector have loaded
+ *         with an object: { tab, toolbox, inspector }.
+ */
+let openInspectorForURL = Task.async(function* (url) {
+  let tab = yield addTab(url);
+  let { inspector, toolbox } = yield openInspector();
+  return { tab, inspector, toolbox };
+});
 
 /**
  * Open the toolbox, with the inspector tool visible.
@@ -167,61 +226,6 @@ function waitForToolboxFrameFocus(toolbox) {
   let win = toolbox.frame.contentWindow;
   waitForFocus(def.resolve, win);
   return def.promise;
-}
-
-/**
- * Open the toolbox, with the inspector tool visible, and the sidebar that
- * corresponds to the given id selected
- * @return a promise that resolves when the inspector is ready and the sidebar
- * view is visible and ready
- */
-let openInspectorSideBar = Task.async(function*(id) {
-  let {toolbox, inspector} = yield openInspector();
-
-  if (!hasSideBarTab(inspector, id)) {
-    info("Waiting for the " + id + " sidebar to be ready");
-    yield inspector.sidebar.once(id + "-ready");
-  }
-
-  info("Selecting the " + id + " sidebar");
-  inspector.sidebar.select(id);
-
-  return {
-    toolbox: toolbox,
-    inspector: inspector,
-    view: inspector.sidebar.getWindowForTab(id)[id].view
-  };
-});
-
-/**
- * Open the toolbox, with the inspector tool visible, and the computed-view
- * sidebar tab selected.
- * @return a promise that resolves when the inspector is ready and the computed
- * view is visible and ready
- */
-function openComputedView() {
-  return openInspectorSideBar("computedview");
-}
-
-/**
- * Open the toolbox, with the inspector tool visible, and the rule-view
- * sidebar tab selected.
- * @return a promise that resolves when the inspector is ready and the rule
- * view is visible and ready
- */
-function openRuleView() {
-  return openInspectorSideBar("ruleview");
-}
-
-/**
- * Checks whether the inspector's sidebar corresponding to the given id already
- * exists
- * @param {InspectorPanel}
- * @param {String}
- * @return {Boolean}
- */
-function hasSideBarTab(inspector, id) {
-  return !!inspector.sidebar.getWindowForTab(id);
 }
 
 function getActiveInspector()
@@ -373,40 +377,8 @@ function getHighlitNode()
   }
 }
 
-function computedView()
-{
-  let sidebar = getActiveInspector().sidebar;
-  let iframe = sidebar.tabbox.querySelector(".iframe-computedview");
-  return iframe.contentWindow.computedView;
-}
-
-function computedViewTree()
-{
-  return computedView().view;
-}
-
-function ruleView()
-{
-  let sidebar = getActiveInspector().sidebar;
-  let iframe = sidebar.tabbox.querySelector(".iframe-ruleview");
-  return iframe.contentWindow.ruleView;
-}
-
-function getComputedView() {
-  let inspector = getActiveInspector();
-  return inspector.sidebar.getWindowForTab("computedview").computedview.view;
-}
-
-function waitForView(aName, aCallback) {
-  let inspector = getActiveInspector();
-  if (inspector.sidebar.getTab(aName)) {
-    aCallback();
-  } else {
-    inspector.sidebar.once(aName + "-ready", aCallback);
-  }
-}
-
-function synthesizeKeyFromKeyTag(aKeyId) {
+function synthesizeKeyFromKeyTag(aKeyId, aDocument = null) {
+  let document = aDocument || document;
   let key = document.getElementById(aKeyId);
   isnot(key, null, "Successfully retrieved the <key> node");
 
@@ -432,53 +404,20 @@ function synthesizeKeyFromKeyTag(aKeyId) {
   EventUtils.synthesizeKey(name, modifiers);
 }
 
-function focusSearchBoxUsingShortcut(panelWin, callback) {
-  panelWin.focus();
-  let key = panelWin.document.getElementById("nodeSearchKey");
-  isnot(key, null, "Successfully retrieved the <key> node");
-
-  let modifiersAttr = key.getAttribute("modifiers");
-
-  let name = null;
-
-  if (key.getAttribute("keycode")) {
-    name = key.getAttribute("keycode");
-  } else if (key.getAttribute("key")) {
-    name = key.getAttribute("key");
-  }
-
-  isnot(name, null, "Successfully retrieved keycode/key");
-
-  let modifiers = {
-    shiftKey: modifiersAttr.match("shift"),
-    ctrlKey: modifiersAttr.match("ctrl"),
-    altKey: modifiersAttr.match("alt"),
-    metaKey: modifiersAttr.match("meta"),
-    accelKey: modifiersAttr.match("accel")
-  };
-
+let focusSearchBoxUsingShortcut = Task.async(function* (panelWin, callback) {
+  info("Focusing search box");
   let searchBox = panelWin.document.getElementById("inspector-searchbox");
-  searchBox.addEventListener("focus", function onFocus() {
-    searchBox.removeEventListener("focus", onFocus, false);
-    callback && callback();
-  }, false);
-  EventUtils.synthesizeKey(name, modifiers);
-}
+  let focused = once(searchBox, "focus");
 
-function getComputedPropertyValue(aName)
-{
-  let computedview = getComputedView();
-  let props = computedview.styleDocument.querySelectorAll(".property-view");
+  panelWin.focus();
+  synthesizeKeyFromKeyTag("nodeSearchKey", panelWin.document);
 
-  for (let prop of props) {
-    let name = prop.querySelector(".property-name");
+  yield focused;
 
-    if (name.textContent === aName) {
-      let value = prop.querySelector(".property-value");
-      return value.textContent;
-    }
+  if (callback) {
+    callback();
   }
-}
+});
 
 function isNodeCorrectlyHighlighted(node, prefix="") {
   let boxModel = getBoxModelStatus();
@@ -507,36 +446,33 @@ function getContainerForRawNode(markupView, rawNode)
   return container;
 }
 
-SimpleTest.registerCleanupFunction(function () {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  gDevTools.closeToolbox(target);
-});
-
 /**
- * Define an async test based on a generator function
+ * Wait for eventName on target.
+ * @param {Object} target An observable object that either supports on/off or
+ * addEventListener/removeEventListener
+ * @param {String} eventName
+ * @param {Boolean} useCapture Optional, for addEventListener/removeEventListener
+ * @return A promise that resolves when the event has been handled
  */
-function asyncTest(generator) {
-  return () => Task.spawn(generator).then(null, ok.bind(null, false)).then(finish);
-}
+function once(target, eventName, useCapture=false) {
+  info("Waiting for event: '" + eventName + "' on " + target + ".");
 
-/**
- * Add a new test tab in the browser and load the given url.
- * @param {String} url The url to be loaded in the new tab
- * @return a promise that resolves to the tab object when the url is loaded
- */
-function addTab(url) {
-  info("Adding a new tab with URL: '" + url + "'");
-  let def = promise.defer();
+  let deferred = promise.defer();
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    info("URL '" + url + "' loading complete");
-    waitForFocus(() => {
-      def.resolve(tab);
-    }, content);
-  }, true);
-  content.location = url;
+  for (let [add, remove] of [
+    ["addEventListener", "removeEventListener"],
+    ["addListener", "removeListener"],
+    ["on", "off"]
+  ]) {
+    if ((add in target) && (remove in target)) {
+      target[add](eventName, function onEvent(...aArgs) {
+        info("Got event: '" + eventName + "' on " + target + ".");
+        target[remove](eventName, onEvent, useCapture);
+        deferred.resolve.apply(deferred, aArgs);
+      }, useCapture);
+      break;
+    }
+  }
 
-  return def.promise;
+  return deferred.promise;
 }
