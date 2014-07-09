@@ -6806,6 +6806,47 @@ nsContentUtils::IsContentInsertionPoint(const nsIContent* aContent)
   return false;
 }
 
+// static
+bool
+nsContentUtils::IsForbiddenRequestHeader(const nsACString& aHeader)
+{
+  if (IsForbiddenSystemRequestHeader(aHeader)) {
+    return true;
+  }
+
+  return StringBeginsWith(aHeader, NS_LITERAL_CSTRING("proxy-"),
+                          nsCaseInsensitiveCStringComparator()) ||
+         StringBeginsWith(aHeader, NS_LITERAL_CSTRING("sec-"),
+                          nsCaseInsensitiveCStringComparator());
+}
+
+// static
+bool
+nsContentUtils::IsForbiddenSystemRequestHeader(const nsACString& aHeader)
+{
+  static const char *kInvalidHeaders[] = {
+    "accept-charset", "accept-encoding", "access-control-request-headers",
+    "access-control-request-method", "connection", "content-length",
+    "cookie", "cookie2", "content-transfer-encoding", "date", "dnt",
+    "expect", "host", "keep-alive", "origin", "referer", "te", "trailer",
+    "transfer-encoding", "upgrade", "user-agent", "via"
+  };
+  for (uint32_t i = 0; i < ArrayLength(kInvalidHeaders); ++i) {
+    if (aHeader.LowerCaseEqualsASCII(kInvalidHeaders[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// static
+bool
+nsContentUtils::IsForbiddenResponseHeader(const nsACString& aHeader)
+{
+  return (aHeader.LowerCaseEqualsASCII("set-cookie") ||
+          aHeader.LowerCaseEqualsASCII("set-cookie2"));
+}
+
 bool
 nsContentUtils::DOMWindowDumpEnabled()
 {

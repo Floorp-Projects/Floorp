@@ -7,6 +7,7 @@
 #include <algorithm>
 #include "mozilla/Assertions.h"
 #include "MediaTrackConstraints.h"
+#include "mtransport/runnable_utils.h"
 
 // scoped_ptr.h uses FF
 #ifdef FF
@@ -570,23 +571,26 @@ MediaEngineWebRTCAudioSource::Process(int channel,
     sample* dest = static_cast<sample*>(buffer->Data());
     memcpy(dest, audio10ms, length * sizeof(sample));
 
-    AudioSegment segment;
+    nsAutoPtr<AudioSegment> segment(new AudioSegment());
     nsAutoTArray<const sample*,1> channels;
     channels.AppendElement(dest);
-    segment.AppendFrames(buffer.forget(), channels, length);
+    segment->AppendFrames(buffer.forget(), channels, length);
     TimeStamp insertTime;
-    segment.GetStartTime(insertTime);
+    segment->GetStartTime(insertTime);
 
-    SourceMediaStream *source = mSources[i];
-    if (source) {
-      // This is safe from any thread, and is safe if the track is Finished
-      // or Destroyed.
+    if (mSources[i]) {
       // Make sure we include the stream and the track.
       // The 0:1 is a flag to note when we've done the final insert for a given input block.
-      LogTime(AsyncLatencyLogger::AudioTrackInsertion, LATENCY_STREAM_ID(source, mTrackID),
+      LogTime(AsyncLatencyLogger::AudioTrackInsertion, LATENCY_STREAM_ID(mSources[i], mTrackID),
               (i+1 < len) ? 0 : 1, insertTime);
 
-      source->AppendToTrack(mTrackID, &segment);
+      // This is safe from any thread, and is safe if the track is Finished
+      // or Destroyed.
+      // Note: due to evil magic, the nsAutoPtr<AudioSegment>'s ownership transfers to
+      // the Runnable (AutoPtr<> = AutoPtr<>)
+      RUN_ON_THREAD(mThread, WrapRunnable(mSources[i], &SourceMediaStream::AppendToTrack,
+                                          mTrackID, segment, (AudioSegment *) nullptr),
+                    NS_DISPATCH_NORMAL);
     }
   }
 

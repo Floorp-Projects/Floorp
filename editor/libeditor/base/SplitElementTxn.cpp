@@ -24,6 +24,10 @@ SplitElementTxn::SplitElementTxn()
 {
 }
 
+SplitElementTxn::~SplitElementTxn()
+{
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SplitElementTxn, EditTxn,
                                    mParent,
                                    mNewLeftNode)

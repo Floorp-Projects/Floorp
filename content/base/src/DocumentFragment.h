@@ -66,10 +66,6 @@ public:
     Init();
   }
 
-  virtual ~DocumentFragment()
-  {
-  }
-
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
   // nsIContent
@@ -140,6 +136,10 @@ public:
 #endif
 
 protected:
+  virtual ~DocumentFragment()
+  {
+  }
+
   nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
   nsIContent* mHost; // Weak
 };

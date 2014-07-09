@@ -18,13 +18,15 @@ class HTMLCanvasAccessible : public HyperTextAccessibleWrap
 {
 public:
   HTMLCanvasAccessible(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~HTMLCanvasAccessible() { }
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
   virtual a11y::role NativeRole();
+
+protected:
+  virtual ~HTMLCanvasAccessible() { }
 };
 
 } // namespace a11y

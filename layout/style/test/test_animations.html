@@ -1937,6 +1937,27 @@ check_events([{ type: 'animationstart', target: div,
              "events for animation-name: a, none, a");
 done_div();
 
+/*
+ * Bug 1033881 - Non-matching animation-name
+ *
+ * The code under test here is run entirely on the main thread so there is no
+ * OMTA version of these tests in test_animations_omta.html.
+ */
+
+new_div("animation-name: non_existent, always_fifty; animation-duration: 1s");
+listen();
+advance_clock(0);
+advance_clock(500);
+advance_clock(500);
+check_events([{ type: 'animationstart', target: div,
+                animationName: 'always_fifty', elapsedTime: 0,
+                pseudoElement: '' },
+              { type: 'animationend', target: div,
+                animationName: 'always_fifty', elapsedTime: 1,
+                pseudoElement: '' }],
+             "events for animation-name: non_existent, always_fifty");
+done_div();
+
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 
 </script>

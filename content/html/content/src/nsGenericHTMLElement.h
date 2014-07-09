@@ -292,6 +292,8 @@ public:
   }
 
 protected:
+  virtual ~nsGenericHTMLElement() {}
+
   // These methods are used to implement element-specific behavior of Get/SetItemValue
   // when an element has @itemprop but no @itemscope.
   virtual void GetItemValueText(nsAString& text);
@@ -1262,7 +1264,6 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
 {
 public:
   nsGenericHTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual ~nsGenericHTMLFormElement();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -1346,6 +1347,8 @@ public:
   virtual bool IsLabelable() const MOZ_OVERRIDE;
 
 protected:
+  virtual ~nsGenericHTMLFormElement();
+
   virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                  const nsAttrValueOrString* aValue,
                                  bool aNotify) MOZ_OVERRIDE;

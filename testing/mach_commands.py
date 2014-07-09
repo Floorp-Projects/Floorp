@@ -190,8 +190,8 @@ class Test(MachCommandBase):
                 continue
 
             # Now look for file/directory matches in the TestResolver.
-            tests = list(resolver.resolve_tests(paths=[entry],
-                cwd=self._mach_context.cwd))
+            relpath = self._wrap_path_argument(entry).relpath()
+            tests = list(resolver.resolve_tests(paths=[relpath]))
             run_tests.extend(tests)
 
             if not tests:

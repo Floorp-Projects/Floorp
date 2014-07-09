@@ -101,6 +101,7 @@
     // Google's root PEMs. Chrome pins only to their intermediate certs, but
     // they'd like us to be more liberal. For the initial list, we are using
     // the certs from http://pki.google.com/roots.pem.
+    // We have no built-in for commented out CAs.
     {
       "name": "google_root_pems",
       "sha256_hashes": [
@@ -125,11 +126,10 @@
         "DigiCert Global Root CA",
         "DigiCert High Assurance EV Root CA",
         "Entrust.net Premium 2048 Secure Server CA",
-        "Entrust.net Secure Server CA",
+        // "Entrust.net Secure Server CA",
         "Entrust Root Certification Authority",
         "Equifax Secure CA",
         "Equifax Secure eBusiness CA 1",
-        // We have no built-in for this.
         // "Equifax Secure eBusiness CA 2",
         "Equifax Secure Global eBusiness CA",
         "GeoTrust Global CA",
@@ -144,9 +144,9 @@
         "GlobalSign Root CA - R3",
         "Go Daddy Class 2 CA",
         "Go Daddy Root Certificate Authority - G2",
-        "GTE CyberTrust Global Root",
+        // "GTE CyberTrust Global Root",
         "Network Solutions Certificate Authority",
-        "RSA Root Certificate 1",
+        // "RSA Root Certificate 1",
         "Starfield Class 2 CA",
         "Starfield Root Certificate Authority - G2",
         "Starfield Services Root Certificate Authority - G2",
@@ -164,8 +164,8 @@
         "Thawte Server CA",
         "UTN DATACorp SGC Root CA",
         "UTN USERFirst Hardware Root CA",
-        "ValiCert Class 1 VA",
-        "ValiCert Class 2 VA",
+        // "ValiCert Class 1 VA",
+        // "ValiCert Class 2 VA",
         "Verisign Class 3 Public Primary Certification Authority",
         "Verisign Class 3 Public Primary Certification Authority",
         "Verisign Class 3 Public Primary Certification Authority - G2",

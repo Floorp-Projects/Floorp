@@ -43,6 +43,9 @@ public:
   // GetPseudoElement(nsAString& aPreudoElement)
 
   float ElapsedTime();
+
+protected:
+  ~TransitionEvent() {}
 };
 
 } // namespace dom
