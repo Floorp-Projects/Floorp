@@ -26,9 +26,9 @@ class CodeGeneratorARM : public CodeGeneratorShared
     // Label for the common return path.
     NonAssertingLabel returnLabel_;
     NonAssertingLabel deoptLabel_;
-    // ugh.  this is not going to be pretty to move over.
-    // stack slotted variables are not useful on arm.
-    // it looks like this will need to return one of two types.
+    // Ugh. This is not going to be pretty to move over. Stack slotted variables
+    // are not useful on arm. It looks like this will need to return one of two
+    // types.
     inline Operand ToOperand(const LAllocation &a) {
         if (a.isGeneralReg())
             return Operand(a.toGeneralReg()->reg());
