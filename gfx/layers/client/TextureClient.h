@@ -139,14 +139,6 @@ public:
                    TextureFlags aTextureFlags,
                    TextureAllocationFlags flags = ALLOC_DEFAULT);
 
-  // Creates and allocates a BufferTextureClient supporting the YCbCr format.
-  static TemporaryRef<BufferTextureClient>
-  CreateForYCbCr(ISurfaceAllocator* aAllocator,
-                 gfx::IntSize aYSize,
-                 gfx::IntSize aCbCrSize,
-                 StereoMode aStereoMode,
-                 TextureFlags aTextureFlags);
-
   // Creates and allocates a BufferTextureClient (can beaccessed through raw
   // pointers).
   static TemporaryRef<BufferTextureClient>
