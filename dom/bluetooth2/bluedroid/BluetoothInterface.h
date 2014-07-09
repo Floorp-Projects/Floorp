@@ -266,8 +266,8 @@ public:
 
   /* Discovery */
 
-  int StartDiscovery();
-  int CancelDiscovery();
+  void StartDiscovery(BluetoothResultHandler* aRes);
+  void CancelDiscovery(BluetoothResultHandler* aRes);
 
   /* Bonds */
 
