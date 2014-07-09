@@ -11,8 +11,11 @@ Cu.import("resource://services-common/utils.js");
 Cu.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsMgmtService",
-                                  "resource://gre/modules/FxAccountsMgmtService.jsm",
-                                  "FxAccountsMgmtService");
+  "resource://gre/modules/FxAccountsMgmtService.jsm",
+  "FxAccountsMgmtService");
+
+XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsManager",
+  "resource://gre/modules/FxAccountsManager.jsm");
 
 // At end of test, restore original state
 const ORIGINAL_AUTH_URI = Services.prefs.getCharPref("identity.fxaccounts.auth.uri");
@@ -156,6 +159,22 @@ add_test(function test_invalidEmailCase_signIn() {
       },
     },
   });
+});
+
+add_test(function testHandleGetAssertionError_defaultCase() {
+  do_test_pending();
+
+  FxAccountsManager.getAssertion(null).then(
+    success => {
+      // getAssertion should throw with invalid audience
+      ok(false);
+    },
+    reason => {
+      equal("INVALID_AUDIENCE", reason.error);
+      do_test_finished();
+      run_next_test();
+    }
+  )
 });
 
 // End of tests
