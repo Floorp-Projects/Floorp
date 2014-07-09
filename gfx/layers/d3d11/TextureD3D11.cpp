@@ -105,10 +105,14 @@ static bool LockD3DTexture(T* aTexture)
   MOZ_ASSERT(aTexture);
   RefPtr<IDXGIKeyedMutex> mutex;
   aTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
-  if (!mutex) {
-    return false;
+  // Textures created by the DXVA decoders don't have a mutex for synchronization
+  if (mutex) {
+    HRESULT hr = mutex->AcquireSync(0, INFINITE);
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to lock the texture");
+      return false;
+    }
   }
-  mutex->AcquireSync(0, INFINITE);
   return true;
 }
 
@@ -119,7 +123,10 @@ static void UnlockD3DTexture(T* aTexture)
   RefPtr<IDXGIKeyedMutex> mutex;
   aTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
   if (mutex) {
-    mutex->ReleaseSync(0);
+    HRESULT hr = mutex->ReleaseSync(0);
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to unlock the texture");
+    }
   }
 }
 
