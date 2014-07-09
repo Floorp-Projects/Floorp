@@ -1,0 +1,67 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIHttpChannelInternal;
+interface nsIOutputStream;
+interface nsIURI;
+
+/**
+ * Interface to allow implementors of nsINetworkInterceptController to control the behaviour
+ * of intercepted channels without tying implementation details of the interception to
+ * the actual channel. nsIInterceptedChannel is expected to be implemented by objects
+ * which do not implement nsIChannel.
+ */
+
+[scriptable, uuid(0b5f82a7-5824-4a0d-bf5c-8a8a7684c0c8)]
+interface nsIInterceptedChannel : nsISupports
+{
+    /**
+     * Instruct a channel that has been intercepted to continue with the original
+     * network request.
+     */
+    void resetInterception();
+
+    /**
+     * Attach a header name/value pair to the forthcoming synthesized response.
+     * Overwrites any existing header value.
+     */
+    void synthesizeHeader(in ACString name, in ACString value);
+
+    /**
+     * Instruct a channel that has been intercepted that a response has been
+     * synthesized and can now be read. No further header modification is allowed
+     * after this point.
+     */
+    void finishSynthesizedResponse();
+};
+
+/**
+ * Interface to allow consumers to attach themselves to a channel's
+ * notification callbacks/loadgroup and determine if a given channel
+ * request should be intercepted before any network request is initiated.
+ */
+
+[scriptable, uuid(b3ad3e9b-91d8-44d0-a0c5-dc2e9374f599)]
+interface nsINetworkInterceptController : nsISupports
+{
+    /**
+     * Returns true if a channel should avoid initiating any network
+     * requests until specifically instructed to do so.
+     *
+     * @param aURI the URI being requested by a channel
+     */
+    bool shouldPrepareForIntercept(in nsIURI aURI);
+
+    /**
+     * Notification when a given intercepted channel is prepared to accept a synthesized
+     * response via the provided stream.
+     *
+     * @param aChannel the controlling interface for a channel that has been intercepted
+     * @param aStream a stream directly into the channel's synthesized response body
+     */
+    void channelIntercepted(in nsIInterceptedChannel aChannel, in nsIOutputStream aStream);
+};
