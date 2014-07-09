@@ -982,18 +982,15 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         }
     }
 
+    bool reused = !!p;
+    bool tookPreallocated = false;
     if (!p) {
         p = MaybeTakePreallocatedAppProcess(manifestURL,
                                             initialPriority);
-        if (!p) {
-#ifdef MOZ_NUWA_PROCESS
-            if (Preferences::GetBool("dom.ipc.processPrelaunch.enabled",
-                                     false)) {
-                // Returning nullptr from here so the frame loader will retry
-                // later when we have a spare process.
-                return nullptr;
-            }
-#endif
+        tookPreallocated = !!p;
+        if (!tookPreallocated) {
+            // XXXkhuey Nuwa wants the frame loader to try again later, but the
+            // frame loader is really not set up to do that ...
             NS_WARNING("Unable to use pre-allocated app process");
             p = new ContentParent(ownApp,
                                   /* aOpener = */ nullptr,
@@ -1017,6 +1014,29 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         p->ChildID(),
         p->IsForApp(),
         p->IsForBrowser());
+    if (!browser) {
+        // We failed to actually start the PBrowser.  This can happen if the
+        // other process has already died.
+        if (!reused) {
+            // Don't leave a broken ContentParent in the hashtable.
+            p->KillHard();
+            sAppContentParents->Remove(manifestURL);
+            p = nullptr;
+        }
+
+        // If we took the preallocated process and it was already dead, try
+        // again with a non-preallocated process.  We can be sure this won't
+        // loop forever, because the next time through there will be no
+        // preallocated process to take.
+        if (tookPreallocated) {
+          return ContentParent::CreateBrowserOrApp(aContext,
+                                                   aFrameElement,
+                                                   aOpenerContentParent);
+        }
+
+        // Otherwise just give up.
+        return nullptr;
+    }
 
     p->MaybeTakeCPUWakeLock(aFrameElement);
 
