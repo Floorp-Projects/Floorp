@@ -1649,8 +1649,10 @@ interface nsIDOMWindowUtils : nsISupports {
    AString getOMTAStyle(in nsIDOMElement aElement, in AString aProperty);
 
    /**
-    * If we are currently handling user input, this informs the event state
-    * manager. Remember to call destruct() on the return value!
+    * If aHandlingInput is true, this informs the event state manager that
+    * we're handling user input. Otherwise, this is a no-op (as by default
+    * we're not handling user input).
+    * Remember to call destruct() on the return value!
     * See also nsIDOMWindowUtils::isHandlingUserInput.
     */
    nsIJSRAIIHelper setHandlingUserInput(in boolean aHandlingInput);
