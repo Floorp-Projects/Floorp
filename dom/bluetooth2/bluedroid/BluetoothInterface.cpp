@@ -752,19 +752,33 @@ BluetoothInterface::CancelBond(const bt_bdaddr_t* aBdAddr,
 
 /* Authentication */
 
-int
+void
 BluetoothInterface::PinReply(const bt_bdaddr_t* aBdAddr, uint8_t aAccept,
-                             uint8_t aPinLen, bt_pin_code_t* aPinCode)
+                             uint8_t aPinLen, bt_pin_code_t* aPinCode,
+                             BluetoothResultHandler* aRes)
 {
-  return mInterface->pin_reply(aBdAddr, aAccept, aPinLen, aPinCode);
+  int status = mInterface->pin_reply(aBdAddr, aAccept, aPinLen, aPinCode);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::PinReply,
+                            status);
+  }
 }
 
-int
+void
 BluetoothInterface::SspReply(const bt_bdaddr_t* aBdAddr,
                              bt_ssp_variant_t aVariant,
-                             uint8_t aAccept, uint32_t aPasskey)
+                             uint8_t aAccept, uint32_t aPasskey,
+                             BluetoothResultHandler* aRes)
 {
-  return mInterface->ssp_reply(aBdAddr, aVariant, aAccept, aPasskey);
+  int status = mInterface->ssp_reply(aBdAddr, aVariant, aAccept, aPasskey);
+
+  if (aRes) {
+    DispatchBluetoothResult(aRes,
+                            &BluetoothResultHandler::SspReply,
+                            status);
+  }
 }
 
 /* DUT Mode */
