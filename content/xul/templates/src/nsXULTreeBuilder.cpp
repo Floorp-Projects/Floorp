@@ -64,6 +64,7 @@ protected:
     NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
     nsXULTreeBuilder();
+    ~nsXULTreeBuilder();
 
     /**
      * Uninitialize the template builder
@@ -290,6 +291,10 @@ NS_INTERFACE_MAP_END_INHERITING(nsXULTemplateBuilder)
 
 nsXULTreeBuilder::nsXULTreeBuilder()
     : mSortDirection(eDirection_Natural), mSortHints(0)
+{
+}
+
+nsXULTreeBuilder::~nsXULTreeBuilder()
 {
 }
 

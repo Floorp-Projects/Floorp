@@ -47,6 +47,7 @@ interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 interface nsITranslationNodeList;
+interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
 [scriptable, uuid(ca202fa7-7b8f-4814-acc3-a8545f67320b)]
@@ -1640,6 +1641,13 @@ interface nsIDOMWindowUtils : nsISupports {
    AString getOMTAStyle(in nsIDOMElement aElement, in AString aProperty);
 
    /**
+    * If we are currently handling user input, this informs the event state
+    * manager. Remember to call destruct() on the return value!
+    * See also nsIDOMWindowUtils::isHandlingUserInput.
+    */
+   nsIJSRAIIHelper setHandlingUserInput(in boolean aHandlingInput);
+
+   /**
     * Get the content- and compositor-side APZ test data instances.
     * The return values are of type APZTestData (see APZTestData.webidl).
     */
@@ -1680,4 +1688,13 @@ interface nsITranslationNodeList : nsISupports {
   // A translation root is a block element, or an inline element
   // which its parent is not a translation node.
   boolean isTranslationRootAtIndex(in unsigned long index);
+};
+
+/**
+ * JS doesn't do RAII very well. We can use this interface to make remembering
+ * to destruct an object in a finally clause easier.
+ */
+[scriptable, uuid(52e5a996-d0a9-4efc-a6fa-24489c532b19)]
+interface nsIJSRAIIHelper : nsISupports {
+  void destruct();
 };

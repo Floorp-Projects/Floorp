@@ -13877,8 +13877,8 @@ class CGEventClass(CGBindingImplClass):
             public:
               NS_DECL_ISUPPORTS_INHERITED
               NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(${nativeType}, ${parentType})
-              virtual ~${nativeType}();
             protected:
+              virtual ~${nativeType}();
               ${nativeType}(mozilla::dom::EventTarget* aOwner);
 
             """,

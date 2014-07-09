@@ -29,7 +29,6 @@ public:
    * MediaStream owned by aStream.
    */
   MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID);
-  virtual ~MediaStreamTrack();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamTrack,
@@ -54,6 +53,8 @@ public:
   void NotifyEnded() { mEnded = true; }
 
 protected:
+  virtual ~MediaStreamTrack();
+
   nsRefPtr<DOMMediaStream> mStream;
   TrackID mTrackID;
   nsID mID;

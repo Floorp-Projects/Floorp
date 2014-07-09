@@ -24,6 +24,7 @@ protected:
   friend nsresult (::NS_NewSVGTitleElement(nsIContent **aResult,
                                            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   SVGTitleElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  ~SVGTitleElement();
 
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 

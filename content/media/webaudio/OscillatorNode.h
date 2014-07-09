@@ -23,7 +23,6 @@ class OscillatorNode : public AudioNode,
 {
 public:
   explicit OscillatorNode(AudioContext* aContext);
-  virtual ~OscillatorNode();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(OscillatorNode, AudioNode)
@@ -88,6 +87,9 @@ public:
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
+protected:
+  virtual ~OscillatorNode();
 
 private:
   static void SendFrequencyToStream(AudioNode* aNode);

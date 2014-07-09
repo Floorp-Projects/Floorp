@@ -71,6 +71,8 @@ public:
   already_AddRefed<SVGAnimatedString> Href();
 
 protected:
+  ~SVGScriptElement();
+
   virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
 
   enum { HREF };

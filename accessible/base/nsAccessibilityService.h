@@ -51,8 +51,10 @@ public:
   typedef mozilla::a11y::Accessible Accessible;
   typedef mozilla::a11y::DocAccessible DocAccessible;
 
+protected:
   virtual ~nsAccessibilityService();
 
+public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLERETRIEVAL
   NS_DECL_NSIOBSERVER

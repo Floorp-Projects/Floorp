@@ -31,6 +31,10 @@ namespace mozilla {
 
 namespace dom {
 
+SourceBufferList::~SourceBufferList()
+{
+}
+
 SourceBuffer*
 SourceBufferList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {

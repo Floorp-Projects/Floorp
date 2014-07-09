@@ -24,6 +24,10 @@ InsertElementTxn::InsertElementTxn()
 {
 }
 
+InsertElementTxn::~InsertElementTxn()
+{
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertElementTxn, EditTxn,
                                    mNode,
                                    mParent)
