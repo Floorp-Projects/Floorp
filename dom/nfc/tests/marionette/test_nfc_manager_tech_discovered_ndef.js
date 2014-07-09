@@ -6,8 +6,8 @@ MARIONETTE_HEAD_JS = 'head.js';
 
 let tnf = NDEF.TNF_WELL_KNOWN;
 let type = "U";
-let payload = "https://www.example.com";
 let id = "";
+let payload = "https://www.example.com";
 
 let ndef = null;
 
@@ -35,7 +35,7 @@ function testReceiveNDEF() {
   toggleNFC(true)
     .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0))
     .then(() => SNEP.put(SNEP.SAP_NDEF, SNEP.SAP_NDEF, 0, tnf, btoa(type),
-                         btoa(payload), btoa(id)));
+                         btoa(id), btoa(payload)));
 }
 
 let tests = [
