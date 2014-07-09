@@ -390,6 +390,9 @@ public:
   // nsITimerCallback
   NS_IMETHOD Notify(nsITimer *timer);
 
+protected:
+  virtual ~nsStopPluginRunnable() {}
+
 private:
   nsCOMPtr<nsITimer> mTimer;
   nsRefPtr<nsPluginInstanceOwner> mInstanceOwner;
@@ -2450,7 +2453,7 @@ nsObjectLoadingContent::UnloadObject(bool aResetState)
 
   mScriptRequested = false;
 
-  if (!mInstanceOwner) {
+  if (mIsStopping) {
     // The protochain is normally thrown out after a plugin stops, but if we
     // re-enter while stopping a plugin and try to load something new, we need
     // to throw away the old protochain in the nested unload.

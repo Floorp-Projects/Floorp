@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -3586,6 +3587,74 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
     aResult.Truncate();
   }
 
+  return NS_OK;
+}
+
+namespace {
+
+class HandlingUserInputHelper MOZ_FINAL : public nsIJSRAIIHelper
+{
+public:
+  HandlingUserInputHelper(bool aHandlingUserInput);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIJSRAIIHELPER
+
+private:
+  ~HandlingUserInputHelper();
+
+  bool mHandlingUserInput;
+  bool mDestructCalled;
+};
+
+NS_IMPL_ISUPPORTS(HandlingUserInputHelper, nsIJSRAIIHelper)
+
+HandlingUserInputHelper::HandlingUserInputHelper(bool aHandlingUserInput)
+  : mHandlingUserInput(aHandlingUserInput),
+    mDestructCalled(false)
+{
+  if (aHandlingUserInput) {
+    EventStateManager::StartHandlingUserInput();
+  }
+}
+
+HandlingUserInputHelper::~HandlingUserInputHelper()
+{
+  // We assert, but just in case, make sure we notify the ESM.
+  MOZ_ASSERT(mDestructCalled);
+  if (!mDestructCalled) {
+    Destruct();
+  }
+}
+
+NS_IMETHODIMP
+HandlingUserInputHelper::Destruct()
+{
+  if (NS_WARN_IF(mDestructCalled)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mDestructCalled = true;
+  if (mHandlingUserInput) {
+    EventStateManager::StopHandlingUserInput();
+  }
+
+  return NS_OK;
+}
+
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SetHandlingUserInput(bool aHandlingUserInput,
+                                       nsIJSRAIIHelper** aHelper)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsRefPtr<HandlingUserInputHelper> helper(
+    new HandlingUserInputHelper(aHandlingUserInput));
+  helper.forget(aHelper);
   return NS_OK;
 }
 

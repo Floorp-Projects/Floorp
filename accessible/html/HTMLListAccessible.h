@@ -23,7 +23,6 @@ class HTMLListAccessible : public HyperTextAccessibleWrap
 public:
   HTMLListAccessible(nsIContent* aContent, DocAccessible* aDoc) :
     HyperTextAccessibleWrap(aContent, aDoc) { mGenericTypes |= eList; }
-  virtual ~HTMLListAccessible() { }
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -31,6 +30,9 @@ public:
   // Accessible
   virtual a11y::role NativeRole();
   virtual uint64_t NativeState();
+
+protected:
+  virtual ~HTMLListAccessible() { }
 };
 
 
@@ -41,7 +43,6 @@ class HTMLLIAccessible : public HyperTextAccessibleWrap
 {
 public:
   HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~HTMLLIAccessible() { }
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -60,6 +61,8 @@ public:
   void UpdateBullet(bool aHasBullet);
 
 protected:
+  virtual ~HTMLLIAccessible() { }
+
   // Accessible
   virtual void CacheChildren();
 

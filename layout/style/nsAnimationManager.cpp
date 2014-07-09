@@ -395,11 +395,17 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
        animIdx != animEnd; ++animIdx) {
     const StyleAnimation& src = disp->mAnimations[animIdx];
 
-    // CSS Animations with an animation-name of "none" are represented
-    // by StyleAnimations with an empty name. Unlike animations with an empty
-    // keyframes rule, these "none" animations should not generate events
-    // at all so we drop them here.
-    if (src.GetName().IsEmpty()) {
+    // CSS Animations whose animation-name does not match a @keyframes rule do
+    // not generate animation events. This includes when the animation-name is
+    // "none" which is represented by an empty name in the StyleAnimation.
+    // Since such animations neither affect style nor dispatch events, we do
+    // not generate a corresponding ElementAnimation for them.
+    nsCSSKeyframesRule* rule =
+      src.GetName().IsEmpty()
+      ? nullptr
+      : mPresContext->StyleSet()->KeyframesRuleForName(mPresContext,
+                                                       src.GetName());
+    if (!rule) {
       continue;
     }
 
@@ -421,14 +427,6 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       dest->mPauseStart = now;
     } else {
       dest->mPauseStart = TimeStamp();
-    }
-
-    nsCSSKeyframesRule* rule =
-      mPresContext->StyleSet()->KeyframesRuleForName(mPresContext,
-                                                     dest->mName);
-    if (!rule) {
-      // no segments
-      continue;
     }
 
     // While current drafts of css3-animations say that later keyframes

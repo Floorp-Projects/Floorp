@@ -23,6 +23,8 @@ public:
   nsFileChannel(nsIURI *uri);
 
 protected:
+  ~nsFileChannel();
+
   // Called to construct a blocking file input stream for the given file.  This
   // method also returns a best guess at the content-type for the data stream.
   // NOTE: If the channel has a type hint set, contentType will be left

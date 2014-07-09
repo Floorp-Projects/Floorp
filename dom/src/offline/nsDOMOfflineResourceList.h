@@ -54,7 +54,6 @@ public:
   nsDOMOfflineResourceList(nsIURI* aManifestURI,
                            nsIURI* aDocumentURI,
                            nsPIDOMWindow* aWindow);
-  virtual ~nsDOMOfflineResourceList();
 
   void FirePendingEvents();
   void Disconnect();
@@ -129,6 +128,9 @@ public:
   {
     aRv = MozRemove(aURI);
   }
+
+protected:
+  virtual ~nsDOMOfflineResourceList();
 
 private:
   nsresult SendEvent(const nsAString &aEventName);
