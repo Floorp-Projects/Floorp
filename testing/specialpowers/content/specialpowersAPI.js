@@ -184,8 +184,13 @@ function crawlProtoChain(obj, fn) {
   var rv = fn(obj);
   if (rv !== undefined)
     return rv;
-  if (Object.getPrototypeOf(obj))
-    return crawlProtoChain(Object.getPrototypeOf(obj), fn);
+  // Follow the prototype chain of the underlying object in cases where it differs
+  // from the Xray prototype chain. This is important for things like Opaque Xray
+  // Wrappers, which always get Object.prototype as their proto.
+  let proto = Cu.unwaiveXrays(Object.getPrototypeOf(Cu.waiveXrays(obj)));
+  if (proto)
+    return crawlProtoChain(proto, fn);
+  return undefined;
 };
 
 /*
