@@ -181,6 +181,50 @@ private:
 // Bluetooth Core Interface
 //
 
+class BluetoothResultHandler
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothResultHandler)
+
+  virtual ~BluetoothResultHandler() { }
+
+  virtual void OnError(int aStatus)
+  {
+    BT_LOGR("Received error code %d", aStatus);
+  }
+
+  virtual void Init() { }
+  virtual void Cleanup() { }
+  virtual void Enable() { }
+  virtual void Disable() { }
+
+  virtual void GetAdapterProperties() { }
+  virtual void GetAdapterProperty() { }
+  virtual void SetAdapterProperty() { }
+
+  virtual void GetRemoteDeviceProperties() { }
+  virtual void GetRemoteDeviceProperty() { }
+  virtual void SetRemoteDeviceProperty() { }
+
+  virtual void GetRemoteServiceRecord() { }
+  virtual void GetRemoteServices() { }
+
+  virtual void StartDiscovery() { }
+  virtual void CancelDiscovery() { }
+
+  virtual void CreateBond() { }
+  virtual void RemoveBond() { }
+  virtual void CancelBond() { }
+
+  virtual void PinReply() { }
+  virtual void SspReply() { }
+
+  virtual void DutModeConfigure() { }
+  virtual void DutModeSend() { }
+
+  virtual void LeTestMode() { }
+};
+
 class BluetoothInterface
 {
 public:
