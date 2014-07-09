@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for addSheet</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1024707">Mozilla Bug 1024707</a>
+
+<iframe id="iframe1" src="http://mochi.test:8888/tests/layout/style/test/chrome/additional_sheets_helper.html"></iframe>
+<iframe id="iframe2" src="http://mochi.test:8888/tests/layout/style/test/chrome/additional_sheets_helper.html"></iframe>
+
+<pre id="test">
+<script type="application/javascript; version=1.8">
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+let IO = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+
+let service = Cc["@mozilla.org/content/style-sheet-service;1"]
+                .getService(Ci.nsIStyleSheetService);
+
+function test(win, sheet) {
+    let cs = win.getComputedStyle(win.document.body, null);
+    is(cs.getPropertyValue('color'), "rgb(0, 0, 0)", "should have default color");
+    var windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
+    windowUtils.addSheet(sheet, Ci.nsIDOMWindowUtils.USER_SHEET);
+    is(cs.getPropertyValue('color'), "rgb(255, 0, 0)", "should have changed color to red");
+}
+
+function run() {
+    var uri = IO.newURI("data:text/css,body{color:red;}", null, null);
+    let sheet = service.preloadSheet(uri, Ci.nsIStyleSheetService.USER_SHEET);
+
+    test(document.getElementById("iframe1").contentWindow, sheet);
+    test(document.getElementById("iframe2").contentWindow, sheet);
+
+    SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>
