@@ -248,7 +248,7 @@ class AssemblerX86Shared : public AssemblerShared
         MOZ_ASSUME_UNREACHABLE("Unknown double condition");
     }
 
-    static void staticAsserts() {
+    static void StaticAsserts() {
         // DoubleConditionBits should not interfere with x86 condition codes.
         JS_STATIC_ASSERT(!((Equal | NotEqual | Above | AboveOrEqual | Below |
                             BelowOrEqual | Parity | NoParity) & DoubleConditionBits));
@@ -282,7 +282,7 @@ class AssemblerX86Shared : public AssemblerShared
 
     void executableCopy(void *buffer);
     void processCodeLabels(uint8_t *rawCode);
-    static int32_t extractCodeLabelOffset(uint8_t *code) {
+    static int32_t ExtractCodeLabelOffset(uint8_t *code) {
         return *(uintptr_t *)code;
     }
     void copyJumpRelocationTable(uint8_t *dest);
@@ -1640,46 +1640,46 @@ class AssemblerX86Shared : public AssemblerShared
 
     // Patching.
 
-    static size_t patchWrite_NearCallSize() {
+    static size_t PatchWrite_NearCallSize() {
         return 5;
     }
-    static uintptr_t getPointer(uint8_t *instPtr) {
+    static uintptr_t GetPointer(uint8_t *instPtr) {
         uintptr_t *ptr = ((uintptr_t *) instPtr) - 1;
         return *ptr;
     }
     // Write a relative call at the start location |dataLabel|.
     // Note that this DOES NOT patch data that comes before |label|.
-    static void patchWrite_NearCall(CodeLocationLabel startLabel, CodeLocationLabel target) {
+    static void PatchWrite_NearCall(CodeLocationLabel startLabel, CodeLocationLabel target) {
         uint8_t *start = startLabel.raw();
         *start = 0xE8;
-        ptrdiff_t offset = target - startLabel - patchWrite_NearCallSize();
+        ptrdiff_t offset = target - startLabel - PatchWrite_NearCallSize();
         JS_ASSERT(int32_t(offset) == offset);
         *((int32_t *) (start + 1)) = offset;
     }
 
-    static void patchWrite_Imm32(CodeLocationLabel dataLabel, Imm32 toWrite) {
+    static void PatchWrite_Imm32(CodeLocationLabel dataLabel, Imm32 toWrite) {
         *((int32_t *) dataLabel.raw() - 1) = toWrite.value;
     }
 
-    static void patchDataWithValueCheck(CodeLocationLabel data, PatchedImmPtr newData,
+    static void PatchDataWithValueCheck(CodeLocationLabel data, PatchedImmPtr newData,
                                         PatchedImmPtr expectedData) {
         // The pointer given is a pointer to *after* the data.
         uintptr_t *ptr = ((uintptr_t *) data.raw()) - 1;
         JS_ASSERT(*ptr == (uintptr_t)expectedData.value);
         *ptr = (uintptr_t)newData.value;
     }
-    static void patchDataWithValueCheck(CodeLocationLabel data, ImmPtr newData, ImmPtr expectedData) {
-        patchDataWithValueCheck(data, PatchedImmPtr(newData.value), PatchedImmPtr(expectedData.value));
+    static void PatchDataWithValueCheck(CodeLocationLabel data, ImmPtr newData, ImmPtr expectedData) {
+        PatchDataWithValueCheck(data, PatchedImmPtr(newData.value), PatchedImmPtr(expectedData.value));
     }
 
-    static void patchInstructionImmediate(uint8_t *code, PatchedImmPtr imm) {
+    static void PatchInstructionImmediate(uint8_t *code, PatchedImmPtr imm) {
         MOZ_ASSUME_UNREACHABLE("Unused.");
     }
 
-    static uint32_t nopSize() {
+    static uint32_t NopSize() {
         return 1;
     }
-    static uint8_t *nextInstruction(uint8_t *cur, uint32_t *count) {
+    static uint8_t *NextInstruction(uint8_t *cur, uint32_t *count) {
         MOZ_ASSUME_UNREACHABLE("nextInstruction NYI on x86");
     }
 

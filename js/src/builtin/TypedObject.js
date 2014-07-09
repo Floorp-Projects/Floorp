@@ -46,7 +46,7 @@
     callFunction(std_Object_hasOwnProperty, obj, prop)
 
 function TypedObjectTypeDescr(typedObj) {
-  return TYPROTO_DESCR(typedObj.__proto__);
+  return TYPROTO_DESCR(std_Object_getPrototypeOf(typedObj));
 }
 
 ///////////////////////////////////////////////////////////////////////////

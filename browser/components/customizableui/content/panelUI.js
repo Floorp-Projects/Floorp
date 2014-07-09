@@ -363,6 +363,9 @@ const PanelUI = {
         document.getAnonymousElementByAttribute(aAnchor, "class",
                                                 "toolbarbutton-icon");
 
+      if (iconAnchor && aAnchor.id) {
+        iconAnchor.setAttribute("consumeanchor", aAnchor.id);
+      }
       tempPanel.openPopup(iconAnchor || aAnchor, "bottomcenter topright");
     }
   },
