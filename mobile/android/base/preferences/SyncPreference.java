@@ -27,6 +27,8 @@ class SyncPreference extends Preference {
     private void openSync11Settings() {
         // Show Sync setup if no accounts exist; otherwise, show account settings.
         if (SyncAccounts.syncAccountsExist(mContext)) {
+            // We don't check for failure here. If you already have Sync set up,
+            // then there's nothing we can do.
             SyncAccounts.openSyncSettings(mContext);
             return;
         }
@@ -51,8 +53,9 @@ class SyncPreference extends Preference {
         // If there's a legacy Sync account (or a pickled one on disk),
         // open the settings page.
         if (SyncAccounts.syncAccountsExist(mContext)) {
-            SyncAccounts.openSyncSettings(mContext);
-            return;
+            if (SyncAccounts.openSyncSettings(mContext) != null) {
+                return;
+            }
         }
 
         // Otherwise, launch the FxA "Get started" activity, which will
