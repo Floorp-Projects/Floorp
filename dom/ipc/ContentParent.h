@@ -385,7 +385,7 @@ private:
     virtual bool RecvGetProcessAttributes(uint64_t* aId,
                                           bool* aIsForApp,
                                           bool* aIsForBrowser) MOZ_OVERRIDE;
-    virtual bool RecvGetXPCOMProcessAttributes(bool* aIsOffline) MOZ_OVERRIDE;
+    virtual bool RecvGetXPCOMProcessAttributes(bool* aIsOffline, bool* aIsLangRTL) MOZ_OVERRIDE;
 
     virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) MOZ_OVERRIDE;
 
