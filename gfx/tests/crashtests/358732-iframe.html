@@ -15,7 +15,7 @@ function do_onload() {
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var navigator = parent.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebNavigation);
 var docShell = navigator.QueryInterface(Components.interfaces.nsIDocShell);
-docviewer = docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+docviewer = docShell.contentViewer;
 
 setTimeout(doe,500, 0.2);
 }
