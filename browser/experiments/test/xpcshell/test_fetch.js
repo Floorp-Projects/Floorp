@@ -45,7 +45,7 @@ add_task(function* test_fetchAndCache() {
   yield ex.updateManifest();
   Assert.notEqual(ex._experiments.size, 0, "There should be cached experiments now.");
 
-  yield ex.uninit();
+  yield promiseRestartManager();
 });
 
 add_task(function* test_checkCache() {
@@ -53,7 +53,7 @@ add_task(function* test_checkCache() {
   yield ex.notify();
   Assert.notEqual(ex._experiments.size, 0, "There should be cached experiments now.");
 
-  yield ex.uninit();
+  yield promiseRestartManager();
 });
 
 add_task(function* test_fetchInvalid() {
@@ -68,6 +68,6 @@ add_task(function* test_fetchInvalid() {
   yield ex.updateManifest()
   Assert.notEqual(ex._experiments.size, 0, "There should still be experiments: fetch failure shouldn't remove them.");
 
-  yield ex.uninit();
+  yield promiseRestartManager();
 });
 
