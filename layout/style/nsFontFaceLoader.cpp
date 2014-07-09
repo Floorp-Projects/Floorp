@@ -579,7 +579,7 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
   if (unit == eCSSUnit_Integer || unit == eCSSUnit_Enumerated) {
     weight = val.GetIntValue();
     if (weight == 0) {
-      weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+      weight = NS_STYLE_FONT_STYLE_NORMAL;
     }
   } else if (unit == eCSSUnit_Normal) {
     weight = NS_STYLE_FONT_WEIGHT_NORMAL;
