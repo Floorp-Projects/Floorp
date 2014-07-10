@@ -1902,7 +1902,7 @@ nsCrypto::GenerateCRMFRequest(JSContext* aContext,
   }
 
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  if (!nsContentUtils::GetContentSecurityPolicy(aContext, getter_AddRefs(csp))) {
+  if (!nsContentUtils::GetContentSecurityPolicy(getter_AddRefs(csp))) {
     NS_ERROR("Error: failed to get CSP");
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
