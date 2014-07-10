@@ -80,25 +80,6 @@ private:
   Pattern *mPattern;
 };
 
-gfxContext::gfxContext(gfxASurface *surface)
-  : mRefCairo(nullptr)
-  , mSurface(surface)
-{
-  MOZ_COUNT_CTOR(gfxContext);
-
-  mCairo = cairo_create(surface->CairoSurface());
-  mFlags = surface->GetDefaultContextFlags();
-  if (mSurface->GetRotateForLandscape()) {
-    // Rotate page 90 degrees to draw landscape page on portrait paper
-    gfxIntSize size = mSurface->GetSize();
-    Translate(gfxPoint(0, size.width));
-    gfxMatrix matrix(0, -1,
-                      1,  0,
-                      0,  0);
-    Multiply(matrix);
-  }
-}
-
 gfxContext::gfxContext(DrawTarget *aTarget, const Point& aDeviceOffset)
   : mPathIsRect(false)
   , mTransformChanged(false)
