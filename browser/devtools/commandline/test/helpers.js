@@ -489,9 +489,9 @@ helpers._actual = {
   },
 
   unassigned: function(options) {
-    return options.requisition._unassigned.map(assignment => {
+    return options.requisition._unassigned.map(function(assignment) {
       return assignment.arg.toString();
-    });
+    }.bind(this));
   },
 
   outputState: function(options) {
@@ -540,7 +540,7 @@ helpers._createDebugCheck = function(options) {
   var hintsPromise = helpers._actual.hints(options);
   var predictionsPromise = helpers._actual.predictions(options);
 
-  return Promise.all(hintsPromise, predictionsPromise).then((values) => {
+  return Promise.all([ hintsPromise, predictionsPromise ]).then(function(values) {
     var hints = values[0];
     var predictions = values[1];
     var output = '';
@@ -610,7 +610,7 @@ helpers._createDebugCheck = function(options) {
     output += ']);';
 
     return output;
-  }, util.errorHandler);
+  }.bind(this), util.errorHandler);
 };
 
 /**
@@ -933,7 +933,7 @@ helpers._exec = function(options, name, expected) {
   }
 
   try {
-    return requisition.exec({ hidden: true }).then((output) => {
+    return requisition.exec({ hidden: true }).then(function(output) {
       if ('type' in expected) {
         assert.is(output.type,
                   expected.type,
@@ -993,7 +993,7 @@ helpers._exec = function(options, name, expected) {
         }
         return { output: output, text: textOutput };
       });
-    }).then(function(data) {
+    }.bind(this)).then(function(data) {
       if (expected.error) {
         cli.logErrors = origLogErrors;
       }
@@ -1229,6 +1229,9 @@ helpers.audit = function(options, audits) {
     });
   }).then(function() {
     return options.automator.setInput('');
+  }, function(ex) {
+    options.automator.setInput('');
+    throw ex;
   });
 };
 

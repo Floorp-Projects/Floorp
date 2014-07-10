@@ -46,7 +46,7 @@ exports.testIntroStatus = function(options) {
   return helpers.audit(options, [
     {
       skipRemainingIf: function commandIntroMissing() {
-        return options.requisition.canon.getCommand('intro') == null;
+        return options.requisition.system.commands.get('intro') == null;
       },
       setup:    'intro',
       check: {

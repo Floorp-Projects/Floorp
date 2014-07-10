@@ -71,7 +71,7 @@ exports.items = [
         cwd: context.shell.cwd
       };
 
-      return host.spawn(spawnSpec).then(function(output) {
+      return host.spawn(context, spawnSpec).then(function(output) {
         if (output.code === 0) {
           return output;
         }
