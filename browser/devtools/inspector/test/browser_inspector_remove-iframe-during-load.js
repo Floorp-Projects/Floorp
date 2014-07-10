@@ -6,7 +6,7 @@
 // Testing that the inspector doesn't go blank when navigating to a page that
 // deletes an iframe while loading.
 
-const TEST_URL = TEST_URL_ROOT + "browser_inspector_dead_node_exception.html";
+const TEST_URL = TEST_URL_ROOT + "doc_inspector_remove-iframe-during-load.html";
 
 let test = asyncTest(function* () {
   let { inspector, toolbox } = yield openInspectorForURL("about:blank");

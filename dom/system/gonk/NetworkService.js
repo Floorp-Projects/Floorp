@@ -12,7 +12,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
 const NETWORKSERVICE_CONTRACTID = "@mozilla.org/network/service;1";
-const NETWORKSERVICE_CID = Components.ID("{48c13741-aec9-4a86-8962-432011708261}");
+const NETWORKSERVICE_CID = Components.ID("{baec696c-c78d-42db-8b44-603f8fbfafb4}");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gNetworkWorker",
                                    "@mozilla.org/network/worker;1",
@@ -540,81 +540,6 @@ NetworkService.prototype = {
       if(DEBUG) debug("updateUpStream result: Code " + code + " reason " + reason);
       callback.updateUpStreamResult(!isError(code), data.curExternalIfname);
     });
-  },
-
-  getInterfaces: function(callback) {
-    let params = {
-      cmd: "getInterfaces",
-      isAsync: true
-    };
-
-    this.controlMessage(params, function(data) {
-      if(DEBUG) debug("getInterfaces result: " + JSON.stringify(data));
-      let success = !isError(data.resultCode);
-      callback.getInterfacesResult(success, data.interfaceList);
-    });
-  },
-
-  setInterfaceConfig: function(config, callback) {
-    config.cmd = "setInterfaceConfig";
-    config.isAsync = true;
-
-    this.controlMessage(config, function(data) {
-      if(DEBUG) debug("setInterfaceConfig result: " + JSON.stringify(data));
-      let success = !isError(data.resultCode);
-      callback.setInterfaceConfigResult(success);
-    });
-  },
-
-  getInterfaceConfig: function(ifname, callback) {
-    let params = {
-      cmd: "getInterfaceConfig",
-      ifname: ifname,
-      isAsync: true
-    };
-
-    this.controlMessage(params, function(data) {
-      if(DEBUG) debug("getInterfaceConfig result: " + JSON.stringify(data));
-      let success = !isError(data.resultCode);
-      let result = { ip: data.ipAddr,
-                     prefix: data.maskLength,
-                     link: data.flag,
-                     mac: data.macAddr };
-      callback.getInterfaceConfigResult(success, result);
-    });
-  },
-
-  runDhcp: function(ifname, callback) {
-    let params = {
-      cmd: "runDhcp",
-      ifname: ifname,
-      isBlocking: true
-    };
-
-    this.controlMessage(params, function(data) {
-      if(DEBUG) debug("runDhcp result: " + JSON.stringify(data));
-      let success = data.success;
-      let result = {
-        ip: data.ipAddr,
-        gateway: data.gateway,
-        dns1: data.dns1,
-        dns2: data.dns2,
-        prefix: data.maskLength,
-        server: data.server
-      };
-
-      callback.runDhcpResult(success, result);
-    });
-  },
-
-  stopDhcp: function(ifname) {
-    let params = {
-      cmd: "stopDhcp",
-      ifname: ifname,
-      isAsync: true
-    };
-
-    this.controlMessage(params);
   },
 
   shutdown: false,
