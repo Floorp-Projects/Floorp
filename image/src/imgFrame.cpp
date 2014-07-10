@@ -393,20 +393,6 @@ bool imgFrame::Draw(gfxContext *aContext, GraphicsFilter aFilter,
     if (mSinglePixelColor.a == 0.0) {
       return true;
     }
-
-    if (aContext->IsCairo()) {
-      gfxContext::GraphicsOperator op = aContext->CurrentOperator();
-      if (op == gfxContext::OPERATOR_OVER && mSinglePixelColor.a == 1.0) {
-        aContext->SetOperator(gfxContext::OPERATOR_SOURCE);
-      }
-      aContext->SetDeviceColor(ThebesColor(mSinglePixelColor));
-      aContext->NewPath();
-      aContext->Rectangle(aFill);
-      aContext->Fill();
-      aContext->SetOperator(op);
-      aContext->SetDeviceColor(gfxRGBA(0,0,0,0));
-      return true;
-    }
     RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
     dt->FillRect(ToRect(aFill),
                  ColorPattern(mSinglePixelColor),
