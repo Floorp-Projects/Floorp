@@ -16,7 +16,7 @@ function handleTechnologyDiscoveredRE0(msg) {
   is(msg.type, 'techDiscovered', 'check for correct message type');
   is(msg.techList[0], 'P2P', 'check for correct tech type');
 
-  emulator.deactivate();
+  NCI.deactivate();
 }
 
 function testTechLost() {
@@ -26,7 +26,7 @@ function testTechLost() {
   window.navigator.mozSetMessageHandler(
     'nfc-manager-tech-lost', handleTechnologyLost);
 
-  toggleNFC(true).then(() => emulator.activateRE(0));
+  toggleNFC(true).then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0));
 }
 
 let tests = [
