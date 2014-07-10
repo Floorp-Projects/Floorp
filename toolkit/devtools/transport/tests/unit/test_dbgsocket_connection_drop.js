@@ -13,8 +13,6 @@ Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 
 const { RawPacket } = devtools.require("devtools/toolkit/transport/packets");
 
-let port = 2929;
-
 function run_test() {
   do_print("Starting test at " + new Date().toTimeString());
   initTestDebuggerServer();
@@ -49,15 +47,15 @@ function test_socket_conn_drops_after_too_long_header() {
 }
 
 function test_helper(payload) {
-  try_open_listener();
+  let listener = DebuggerServer.openListener(-1);
 
-  let transport = debuggerSocketConnect("127.0.0.1", port);
+  let transport = debuggerSocketConnect("127.0.0.1", listener.port);
   transport.hooks = {
     onPacket: function(aPacket) {
       this.onPacket = function(aPacket) {
         do_throw(new Error("This connection should be dropped."));
         transport.close();
-      }
+      };
 
       // Inject the payload directly into the stream.
       transport._outgoing.push(new RawPacket(transport, payload));
@@ -69,14 +67,4 @@ function test_helper(payload) {
     },
   };
   transport.ready();
-}
-
-function try_open_listener() {
-  try {
-    do_check_true(DebuggerServer.openListener(port));
-  } catch (e) {
-    // In case the port is unavailable, pick a random one between 2000 and 65000.
-    port = Math.floor(Math.random() * (65000 - 2000 + 1)) + 2000;
-    try_open_listener();
-  }
 }
