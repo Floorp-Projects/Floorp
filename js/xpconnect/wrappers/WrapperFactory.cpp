@@ -335,10 +335,6 @@ DEBUG_CheckUnwrapSafety(HandleObject obj, const js::Wrapper *handler,
     if (AccessCheck::isChrome(target) || xpc::IsUniversalXPConnectEnabled(target)) {
         // If the caller is chrome (or effectively so), unwrap should always be allowed.
         MOZ_ASSERT(!handler->hasSecurityPolicy());
-    } else if (handler == &FilteringWrapper<CrossCompartmentSecurityWrapper, GentlyOpaque>::singleton) {
-        // We explicitly use a SecurityWrapper to protect privileged callers from
-        // less-privileged objects that they should never see. Skip the check in
-        // this case.
     } else {
         // Otherwise, it should depend on whether the target subsumes the origin.
         MOZ_ASSERT(handler->hasSecurityPolicy() == !AccessCheck::subsumesConsideringDomain(target, origin));
@@ -459,7 +455,7 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
              !waiveXrayFlag && xrayType == NotXray &&
              IsContentXBLScope(target))
     {
-        wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper, GentlyOpaque>::singleton;
+        wrapper = &PermissiveXrayOpaque::singleton;
     }
 
     //

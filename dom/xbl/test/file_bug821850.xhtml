@@ -105,14 +105,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           <parameter name="arg" />
           <body>
             is(typeof arg.prop, 'undefined', "No properties");
+            is(arg.wrappedJSObject.prop, 2, "Underlying object has properties");
             is(Object.getOwnPropertyNames(arg).length, 0, "Should have no own properties");
-            try {
-              arg.foo = 2;
-              ok(true, "Stuff fails silently");
-            } catch (e) {
-              ok(false, "Stuff should fail silently");
-            }
-            is(typeof arg.foo, 'undefined', "Shouldn't place props");
+            is(Object.getOwnPropertyNames(arg.wrappedJSObject).length, 1, "Underlying object has properties");
+            arg.foo = 2;
+            is(arg.foo, 2, "Should place expandos");
+            is(typeof arg.wrappedJSObject.foo, 'undefined', "Expandos should be invisible to content");
           </body>
         </method>
         <property name="prop" exposeToUntrustedContent="true">
