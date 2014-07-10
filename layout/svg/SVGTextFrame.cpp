@@ -3167,7 +3167,7 @@ SVGTextFrame::Init(nsIContent*       aContent,
   AddStateBits((aParent->GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) |
                NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_SVG_TEXT);
 
-  mMutationObserver.StartObserving(this);
+  mMutationObserver = new MutationObserver(this);
 }
 
 void

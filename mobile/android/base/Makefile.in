@@ -67,7 +67,7 @@ JAVA_BOOTCLASSPATH = \
 JAVA_BOOTCLASSPATH := $(subst $(NULL) ,:,$(strip $(JAVA_BOOTCLASSPATH)))
 
 # If native devices are enabled, add Google Play Services and some of the v7 compat libraries
-ifdef MOZ_NATIVE_CASTING
+ifdef MOZ_NATIVE_DEVICES
     JAVA_CLASSPATH += \
         $(GOOGLE_PLAY_SERVICES_LIB) \
         $(ANDROID_MEDIAROUTER_LIB) \
@@ -304,7 +304,7 @@ generated/android/support/v7/appcompat/R.java: .aapt.deps ;
 generated/android/support/v7/mediarouter/R.java: .aapt.deps ;
 generated/com/google/android/gms/R.java: .aapt.deps ;
 
-ifdef MOZ_NATIVE_CASTING
+ifdef MOZ_NATIVE_DEVICES
     extra_packages += android.support.v7.appcompat
     extra_res_dirs += $(ANDROID_APPCOMPAT_RES)
 

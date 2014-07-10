@@ -459,6 +459,18 @@ pref("services.push.retryBaseInterval", 5000);
 pref("services.push.pingInterval", 1800000); // 30 minutes
 // How long before a DOMRequest errors as timeout
 pref("services.push.requestTimeout", 10000);
+pref("services.push.pingInterval.default", 180000);// 3 min
+pref("services.push.pingInterval.mobile", 180000); // 3 min
+pref("services.push.pingInterval.wifi", 180000);  // 3 min
+// Adaptive ping
+pref("services.push.adaptive.enabled", true);
+pref("services.push.adaptive.lastGoodPingInterval", 180000);// 3 min
+pref("services.push.adaptive.lastGoodPingInterval.mobile", 180000);// 3 min
+pref("services.push.adaptive.lastGoodPingInterval.wifi", 180000);// 3 min
+// Valid gap between the biggest good ping and the bad ping
+pref("services.push.adaptive.gap", 60000); // 1 minute
+// We limit the ping to this maximum value
+pref("services.push.adaptive.upperLimit", 1740000); // 29 min
 // enable udp wakeup support
 pref("services.push.udp.wakeupEnabled", true);
 // This value should be the prefix to be added to the current PDP context[1]

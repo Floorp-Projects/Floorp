@@ -177,17 +177,19 @@ else
 SHARED_LIBRARY		:= $(DLL_PREFIX)$(SHARED_LIBRARY_NAME)$(DLL_SUFFIX)
 endif
 
-ifdef SONAME
-DSO_SONAME			= $(DLL_PREFIX)$(SONAME)$(DLL_SUFFIX)
-else
-DSO_SONAME			= $(notdir $@)
-endif
-
 EMBED_MANIFEST_AT=2
 
 endif # MKSHLIB
 endif # FORCE_SHARED_LIB
 endif # LIBRARY
+
+ifdef MKSHLIB
+ifdef SONAME
+DSO_SONAME			= $(DLL_PREFIX)$(SONAME)$(DLL_SUFFIX)
+else
+DSO_SONAME			= $(notdir $@)
+endif
+endif # MKSHLIB
 
 ifdef FORCE_STATIC_LIB
 ifndef FORCE_SHARED_LIB
@@ -581,10 +583,8 @@ endif
 # default rule before including rules.mk
 default all::
 	$(MAKE) export
-ifdef MOZ_PSEUDO_DERECURSE
 ifdef COMPILE_ENVIRONMENT
 	$(MAKE) compile
-endif
 endif
 	$(MAKE) libs
 	$(MAKE) tools

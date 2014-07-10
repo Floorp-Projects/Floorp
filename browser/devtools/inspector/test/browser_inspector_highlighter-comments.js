@@ -9,7 +9,7 @@
 // highlighter, depending on the type of node hovered over.
 
 const TEST_PAGE = TEST_URL_ROOT +
-  "browser_inspector_bug_958456_highlight_comments.html";
+  "doc_inspector_highlighter-comments.html";
 
 let test = asyncTest(function* () {
   let { inspector } = yield openInspectorForURL(TEST_PAGE);

@@ -252,23 +252,16 @@ const JSFunctionSpec js::ScalarTypeDescr::typeObjectMethods[] = {
     JS_FS_END
 };
 
-static int32_t ScalarSizes[] = {
-#define SCALAR_SIZE(_kind, _type, _name)                        \
-    sizeof(_type),
-    JS_FOR_EACH_SCALAR_TYPE_REPR(SCALAR_SIZE) 0
-#undef SCALAR_SIZE
-};
-
 int32_t
 ScalarTypeDescr::size(Type t)
 {
-    return ScalarSizes[t];
+    return Scalar::byteSize(t);
 }
 
 int32_t
 ScalarTypeDescr::alignment(Type t)
 {
-    return ScalarSizes[t];
+    return Scalar::byteSize(t);
 }
 
 /*static*/ const char *
@@ -278,6 +271,9 @@ ScalarTypeDescr::typeName(Type type)
 #define NUMERIC_TYPE_TO_STRING(constant_, type_, name_) \
         case constant_: return #name_;
         JS_FOR_EACH_SCALAR_TYPE_REPR(NUMERIC_TYPE_TO_STRING)
+#undef NUMERIC_TYPE_TO_STRING
+      case Scalar::TypeMax:
+        MOZ_CRASH();
     }
     MOZ_ASSUME_UNREACHABLE("Invalid type");
 }
@@ -299,7 +295,7 @@ ScalarTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
     if (!ToNumber(cx, args[0], &number))
         return false;
 
-    if (type == ScalarTypeDescr::TYPE_UINT8_CLAMPED)
+    if (type == Scalar::Uint8Clamped)
         number = ClampDoubleToUint8(number);
 
     switch (type) {
@@ -312,7 +308,8 @@ ScalarTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
 
         JS_FOR_EACH_SCALAR_TYPE_REPR(SCALARTYPE_CALL)
 #undef SCALARTYPE_CALL
-
+      case Scalar::TypeMax:
+        MOZ_CRASH();
     }
     return true;
 }
@@ -377,6 +374,7 @@ ReferenceTypeDescr::typeName(Type type)
 #define NUMERIC_TYPE_TO_STRING(constant_, type_, name_) \
         case constant_: return #name_;
         JS_FOR_EACH_REFERENCE_TYPE_REPR(NUMERIC_TYPE_TO_STRING)
+#undef NUMERIC_TYPE_TO_STRING
     }
     MOZ_ASSUME_UNREACHABLE("Invalid type");
 }
