@@ -158,11 +158,10 @@ cc_return_t CC_CallFeature_backSpace(cc_call_handle_t call_handle);
 cc_return_t CC_CallFeature_dial(cc_call_handle_t call_handle, cc_sdp_direction_t video_pref, const cc_string_t numbers);
 
 cc_return_t CC_CallFeature_CreateOffer(cc_call_handle_t call_handle,
-                                       cc_media_constraints_t *constraints,
+                                       cc_media_options_t *options,
                                        Timecard *tc);
 
 cc_return_t CC_CallFeature_CreateAnswer(cc_call_handle_t call_handle,
-                                        cc_media_constraints_t *constraints,
                                         Timecard *tc);
 
 cc_return_t CC_CallFeature_SetLocalDescription(cc_call_handle_t call_handle,
@@ -180,8 +179,7 @@ cc_return_t CC_CallFeature_SetPeerConnection(cc_call_handle_t call_handle, cc_pe
 cc_return_t CC_CallFeature_AddStream(cc_call_handle_t call_handle,
                                      cc_media_stream_id_t stream_id,
                                      cc_media_track_id_t id,
-                                     cc_media_type_t media_type,
-                                     cc_media_constraints_t *constraints);
+                                     cc_media_type_t media_type);
 
 cc_return_t CC_CallFeature_RemoveStream(cc_call_handle_t call_handle, cc_media_stream_id_t stream_id, cc_media_track_id_t id, cc_media_type_t media_type);
 

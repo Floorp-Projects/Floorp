@@ -53,7 +53,7 @@ typedef struct {
   cc_media_track_id_t       track_id;
   cc_media_type_t           media_type;
   cc_level_t                level;
-  cc_media_constraints_t *  constraints;
+  cc_media_options_t *      options;
   Timecard *                timecard;
 } ccSession_feature_t;
 
