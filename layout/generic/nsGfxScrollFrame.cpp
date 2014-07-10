@@ -1824,7 +1824,8 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mOuter(aOuter)
   , mAsyncScroll(nullptr)
   , mAsyncSmoothMSDScroll(nullptr)
-  , mOriginOfLastScroll(nsGkAtoms::other)
+  , mLastScrollOrigin(nsGkAtoms::other)
+  , mLastSmoothScrollOrigin(nullptr)
   , mScrollGeneration(++sScrollGenerationCounter)
   , mDestination(0, 0)
   , mScrollPosAtLastPaint(0, 0)
@@ -2051,6 +2052,19 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
             currentVelocity = mAsyncScroll->VelocityAt(now);
           }
           mAsyncScroll = nullptr;
+        }
+
+        if (gfxPrefs::AsyncPanZoomEnabled()) {
+          // The animation will be handled in the compositor, pass the
+          // information needed to start the animation and skip the main-thread
+          // animation for this scroll.
+          mLastSmoothScrollOrigin = aOrigin;
+          mScrollGeneration = ++sScrollGenerationCounter;
+
+          // Schedule a paint to ensure that the frame metrics get updated on
+          // the compositor thread.
+          mOuter->SchedulePaint();
+          return;
         }
 
         mAsyncSmoothMSDScroll =
@@ -2404,7 +2418,8 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
   nsPoint oldScrollFramePos = mScrolledFrame->GetPosition();
   // Update frame position for scrolling
   mScrolledFrame->SetPosition(mScrollPort.TopLeft() - pt);
-  mOriginOfLastScroll = aOrigin;
+  mLastScrollOrigin = aOrigin;
+  mLastSmoothScrollOrigin = nullptr;
   mScrollGeneration = ++sScrollGenerationCounter;
 
   // We pass in the amount to move visually
