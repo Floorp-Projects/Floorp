@@ -236,7 +236,7 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
 
   nsAutoCString ref;
   aURI->GetRef(ref);
-  mozilla::net::nsMediaFragmentURIParser parser(ref);
+  net::nsMediaFragmentURIParser parser(ref);
   if (parser.HasResolution()) {
     newImage->SetRequestedResolution(parser.GetResolution());
   }

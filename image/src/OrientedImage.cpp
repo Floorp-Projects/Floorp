@@ -11,13 +11,14 @@
 
 #include "OrientedImage.h"
 
-using namespace mozilla::gfx;
-
 using std::swap;
-using mozilla::layers::LayerManager;
-using mozilla::layers::ImageContainer;
 
 namespace mozilla {
+
+using namespace gfx;
+using layers::LayerManager;
+using layers::ImageContainer;
+
 namespace image {
 
 NS_IMPL_ISUPPORTS_INHERITED0(OrientedImage, ImageWrapper)
@@ -107,7 +108,7 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   }
 
   // Create a surface to draw into.
-  mozilla::RefPtr<DrawTarget> target =
+  RefPtr<DrawTarget> target =
     gfxPlatform::GetPlatform()->
       CreateOffscreenContentDrawTarget(IntSize(width, height), surfaceFormat);
   if (!target) {
