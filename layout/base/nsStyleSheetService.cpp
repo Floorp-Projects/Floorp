@@ -215,6 +215,27 @@ nsStyleSheetService::SheetRegistered(nsIURI *sheetURI,
 }
 
 NS_IMETHODIMP
+nsStyleSheetService::PreloadSheet(nsIURI *aSheetURI, uint32_t aSheetType,
+                                  nsIDOMStyleSheet **aSheet)
+{
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||
+                aSheetType == USER_SHEET ||
+                aSheetType == AUTHOR_SHEET);
+  NS_ENSURE_ARG_POINTER(aSheetURI);
+  NS_PRECONDITION(aSheet, "Null out param");
+
+  nsRefPtr<css::Loader> loader = new css::Loader();
+
+  // Allow UA sheets, but not user sheets, to use unsafe rules
+  nsRefPtr<CSSStyleSheet> sheet;
+  nsresult rv = loader->LoadSheetSync(aSheetURI, aSheetType == AGENT_SHEET,
+                                      true, getter_AddRefs(sheet));
+  NS_ENSURE_SUCCESS(rv, rv);
+  sheet.forget(aSheet);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsStyleSheetService::UnregisterSheet(nsIURI *aSheetURI, uint32_t aSheetType)
 {
   NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||

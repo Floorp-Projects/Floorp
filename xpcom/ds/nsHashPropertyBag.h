@@ -11,32 +11,30 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsInterfaceHashtable.h"
 
-class nsHashPropertyBag : public nsIWritablePropertyBag
-                               , public nsIWritablePropertyBag2
+class nsHashPropertyBag
+  : public nsIWritablePropertyBag
+  , public nsIWritablePropertyBag2
 {
 public:
-    nsHashPropertyBag() { }
+  nsHashPropertyBag() {}
 
-    NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
-    NS_DECL_NSIPROPERTYBAG
+  NS_DECL_NSIPROPERTYBAG
+  NS_DECL_NSIPROPERTYBAG2
 
-    NS_DECL_NSIPROPERTYBAG2
-
-    NS_DECL_NSIWRITABLEPROPERTYBAG
-
-    NS_DECL_NSIWRITABLEPROPERTYBAG2
+  NS_DECL_NSIWRITABLEPROPERTYBAG
+  NS_DECL_NSIWRITABLEPROPERTYBAG2
 
 protected:
-    // a hash table of string -> nsIVariant
-    nsInterfaceHashtable<nsStringHashKey, nsIVariant> mPropertyHash;
+  // a hash table of string -> nsIVariant
+  nsInterfaceHashtable<nsStringHashKey, nsIVariant> mPropertyHash;
 
-    virtual ~nsHashPropertyBag() {}
+  virtual ~nsHashPropertyBag() {}
 };
 
 // Note: NS_NewHashPropertyBag returns a HPB that
 // uses a non-thread-safe internal hash
-extern "C" nsresult
-NS_NewHashPropertyBag(nsIWritablePropertyBag* *_retval);
+extern "C" nsresult NS_NewHashPropertyBag(nsIWritablePropertyBag** aResult);
 
 #endif /* nsHashPropertyBag_h___ */

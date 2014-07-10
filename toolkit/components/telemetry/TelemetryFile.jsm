@@ -179,6 +179,9 @@ this.TelemetryFile = {
         }
 
         yield Promise.all(result);
+
+        Services.telemetry.getHistogramById('TELEMETRY_FILES_EVICTED').
+          add(sortedEntries.length - MAX_LRU_PINGS);
       }
 
       yield iter.close();

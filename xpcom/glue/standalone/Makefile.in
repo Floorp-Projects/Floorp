@@ -3,13 +3,4 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 DIST_INSTALL	= 1
-
-include $(topsrcdir)/config/rules.mk
-
-ifdef _MSC_VER
-# Don't include directives in obj files about which CRT to use
-OS_COMPILE_CXXFLAGS += -Zl
-OS_COMPILE_CFLAGS += -Zl
-endif

@@ -48,6 +48,7 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsICategoryManager.h"
 #include "nsPluginStreamListenerPeer.h"
+#include "mozilla/LoadInfo.h"
 #include "mozilla/Preferences.h"
 
 #include "nsEnumeratorUtils.h"
@@ -2851,7 +2852,10 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
 
   if (doc) {
     // Set the owner of channel to the document principal...
-    channel->SetOwner(doc->NodePrincipal());
+    nsCOMPtr<nsILoadInfo> loadInfo =
+      new LoadInfo(doc->NodePrincipal(), LoadInfo::eInheritPrincipal,
+                   LoadInfo::eNotSandboxed);
+    channel->SetLoadInfo(loadInfo);
 
     // And if it's a script allow it to execute against the
     // document's script context.

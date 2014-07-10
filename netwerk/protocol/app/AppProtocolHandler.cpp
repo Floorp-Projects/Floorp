@@ -9,6 +9,7 @@
 #include "nsJARChannel.h"
 #include "nsNetCID.h"
 #include "nsIAppsService.h"
+#include "nsILoadInfo.h"
 #include "nsCxPusher.h"
 #include "nsXULAppAPI.h"
 
@@ -39,6 +40,7 @@ private:
   nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsILoadGroup>      mLoadGroup;
   nsLoadFlags                 mLoadFlags;
+  nsCOMPtr<nsILoadInfo>       mLoadInfo;
 };
 
 NS_IMPL_ISUPPORTS(DummyChannel, nsIRequest, nsIChannel, nsIJARChannel)
@@ -192,6 +194,18 @@ NS_IMETHODIMP DummyChannel::GetOwner(nsISupports**)
 NS_IMETHODIMP DummyChannel::SetOwner(nsISupports*)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP DummyChannel::GetLoadInfo(nsILoadInfo** aLoadInfo)
+{
+  NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP DummyChannel::SetLoadInfo(nsILoadInfo* aLoadInfo)
+{
+  mLoadInfo = aLoadInfo;
+  return NS_OK;
 }
 
 NS_IMETHODIMP DummyChannel::GetNotificationCallbacks(nsIInterfaceRequestor**)

@@ -86,7 +86,7 @@ class Bisect(object):
             tests = self.get_tests_for_bisection(options, tests)
             status = self.setup(tests)
 
-        return self.next_chunk_reverse(options, status)
+        return self.next_chunk_binary(options, status)
 
     def post_test(self, options, expectedError, result):
         "This method is used to call other methods to summarize results and check whether a sanity check is done or not."
@@ -115,13 +115,11 @@ class Bisect(object):
         "This method is used to bisect the tests in a reverse search fashion."
 
         # Base Cases.
-        if self.contents['loop'] == 0:
-            self.contents['loop'] += 1
+        if self.contents['loop'] <= 1:
             self.contents['testsToRun'] = self.contents['tests']
-            return self.contents['testsToRun']
-        if self.contents['loop'] == 1:
+            if self.contents['loop'] == 1:
+                self.contents['testsToRun'] = [self.contents['tests'][-1]]
             self.contents['loop'] += 1
-            self.contents['testsToRun'] = [self.contents['tests'][-1]]
             return self.contents['testsToRun']
 
         if 'result' in self.contents:
@@ -145,6 +143,42 @@ class Bisect(object):
         start = self.contents['start']
         end = self.contents['end'] + 1
         self.contents['testsToRun'] = self.contents['tests'][start:end]
+        self.contents['testsToRun'].append(self.contents['tests'][-1])
+        self.contents['loop'] += 1
+
+        return self.contents['testsToRun']
+
+    def next_chunk_binary(self, options, status):
+        "This method is used to bisect the tests in a binary search fashion."
+
+        # Base cases.
+        if self.contents['loop'] <= 1:
+            self.contents['testsToRun'] = self.contents['tests']
+            if self.contents['loop'] == 1:
+                self.contents['testsToRun'] = [self.contents['tests'][-1]]
+            self.contents['loop'] += 1
+            return self.contents['testsToRun']
+
+        # Initialize the contents dict.
+        if status:
+            totalTests = len(self.contents['tests'])
+            self.contents['start'] = 0
+            self.contents['end'] = totalTests - 2
+
+        mid = (self.contents['start'] + self.contents['end']) / 2
+        if 'result' in self.contents:
+            if self.contents['result'] == "PASS":
+                self.contents['end'] = mid
+
+            elif self.contents['result'] == "FAIL":
+                self.contents['start'] = mid + 1
+
+        mid = (self.contents['start'] + self.contents['end']) / 2
+        start = mid + 1
+        end = self.contents['end'] + 1
+        self.contents['testsToRun'] = self.contents['tests'][start:end]
+        if not self.contents['testsToRun']:
+            self.contents['testsToRun'].append(self.contents['tests'][mid])
         self.contents['testsToRun'].append(self.contents['tests'][-1])
         self.contents['loop'] += 1
 

@@ -1461,7 +1461,7 @@ XPCConvert::JSTypedArray2Native(void** d,
     void* output = nullptr;
 
     switch (JS_GetArrayBufferViewType(jsArray)) {
-    case js::ArrayBufferView::TYPE_INT8:
+    case js::Scalar::Int8:
         if (!CheckTargetAndPopulate(nsXPTType::T_I8, type,
                                     sizeof(int8_t), count,
                                     jsArray, &output, pErr)) {
@@ -1469,8 +1469,8 @@ XPCConvert::JSTypedArray2Native(void** d,
         }
         break;
 
-    case js::ArrayBufferView::TYPE_UINT8:
-    case js::ArrayBufferView::TYPE_UINT8_CLAMPED:
+    case js::Scalar::Uint8:
+    case js::Scalar::Uint8Clamped:
         if (!CheckTargetAndPopulate(nsXPTType::T_U8, type,
                                     sizeof(uint8_t), count,
                                     jsArray, &output, pErr)) {
@@ -1478,7 +1478,7 @@ XPCConvert::JSTypedArray2Native(void** d,
         }
         break;
 
-    case js::ArrayBufferView::TYPE_INT16:
+    case js::Scalar::Int16:
         if (!CheckTargetAndPopulate(nsXPTType::T_I16, type,
                                     sizeof(int16_t), count,
                                     jsArray, &output, pErr)) {
@@ -1486,7 +1486,7 @@ XPCConvert::JSTypedArray2Native(void** d,
         }
         break;
 
-    case js::ArrayBufferView::TYPE_UINT16:
+    case js::Scalar::Uint16:
         if (!CheckTargetAndPopulate(nsXPTType::T_U16, type,
                                     sizeof(uint16_t), count,
                                     jsArray, &output, pErr)) {
@@ -1494,7 +1494,7 @@ XPCConvert::JSTypedArray2Native(void** d,
         }
         break;
 
-    case js::ArrayBufferView::TYPE_INT32:
+    case js::Scalar::Int32:
         if (!CheckTargetAndPopulate(nsXPTType::T_I32, type,
                                     sizeof(int32_t), count,
                                     jsArray, &output, pErr)) {
@@ -1502,7 +1502,7 @@ XPCConvert::JSTypedArray2Native(void** d,
         }
         break;
 
-    case js::ArrayBufferView::TYPE_UINT32:
+    case js::Scalar::Uint32:
         if (!CheckTargetAndPopulate(nsXPTType::T_U32, type,
                                     sizeof(uint32_t), count,
                                     jsArray, &output, pErr)) {
@@ -1510,7 +1510,7 @@ XPCConvert::JSTypedArray2Native(void** d,
         }
         break;
 
-    case js::ArrayBufferView::TYPE_FLOAT32:
+    case js::Scalar::Float32:
         if (!CheckTargetAndPopulate(nsXPTType::T_FLOAT, type,
                                     sizeof(float), count,
                                     jsArray, &output, pErr)) {
@@ -1518,7 +1518,7 @@ XPCConvert::JSTypedArray2Native(void** d,
         }
         break;
 
-    case js::ArrayBufferView::TYPE_FLOAT64:
+    case js::Scalar::Float64:
         if (!CheckTargetAndPopulate(nsXPTType::T_DOUBLE, type,
                                     sizeof(double), count,
                                     jsArray, &output, pErr)) {
