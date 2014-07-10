@@ -6,7 +6,7 @@
 // Test to ensure inspector can handle destruction of selected node inside an
 // iframe.
 
-const TEST_URL = TEST_URL_ROOT + "browser_inspector_destroyselection.html";
+const TEST_URL = TEST_URL_ROOT + "doc_inspector_delete-selected-node-01.html";
 
 let test = asyncTest(function* () {
   let { inspector } = yield openInspectorForURL(TEST_URL);
