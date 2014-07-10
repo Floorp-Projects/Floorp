@@ -32,6 +32,7 @@
 #include "nsCxPusher.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
+#include "nsJSUtils.h"
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -257,26 +258,23 @@ Print(JSContext *cx, unsigned argc, jsval *vp)
     args.rval().setUndefined();
 
     RootedString str(cx);
-    nsAutoCString utf8str;
-    size_t length;
-    const jschar *chars;
+    nsAutoCString utf8output;
 
     for (unsigned i = 0; i < args.length(); i++) {
         str = ToString(cx, args[i]);
         if (!str)
             return false;
-        chars = JS_GetStringCharsAndLength(cx, str, &length);
-        if (!chars)
+
+        JSAutoByteString utf8str;
+        if (!utf8str.encodeUtf8(cx, str))
             return false;
 
         if (i)
-            utf8str.Append(' ');
-        AppendUTF16toUTF8(Substring(reinterpret_cast<const char16_t*>(chars),
-                                    length),
-                          utf8str);
+            utf8output.Append(' ');
+        utf8output.Append(utf8str.ptr(), utf8str.length());
     }
-    utf8str.Append('\n');
-    fputs(utf8str.get(), gOutFile);
+    utf8output.Append('\n');
+    fputs(utf8output.get(), gOutFile);
     fflush(gOutFile);
     return true;
 }
@@ -294,22 +292,22 @@ Dump(JSContext *cx, unsigned argc, jsval *vp)
     if (!str)
         return false;
 
-    size_t length;
-    const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
-    if (!chars)
+    JSAutoByteString utf8str;
+    if (!utf8str.encodeUtf8(cx, str))
         return false;
 
-    NS_ConvertUTF16toUTF8 utf8str(reinterpret_cast<const char16_t*>(chars),
-                                  length);
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.get());
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.ptr());
 #endif
 #ifdef XP_WIN
     if (IsDebuggerPresent()) {
-      OutputDebugStringW(reinterpret_cast<const wchar_t*>(chars));
+        nsAutoJSString wstr;
+        if (!wstr.init(cx, str))
+            return false;
+        OutputDebugStringW(wstr.get());
     }
 #endif
-    fputs(utf8str.get(), gOutFile);
+    fputs(utf8str.ptr(), gOutFile);
     fflush(gOutFile);
     return true;
 }
