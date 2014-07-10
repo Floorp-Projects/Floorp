@@ -283,10 +283,7 @@ GetNamedPropertyAsVariantRaw(XPCCallContext& ccx,
     RootedValue val(ccx);
 
     return JS_GetPropertyById(ccx, aJSObj, aName, &val) &&
-           // Note that this always takes the T_INTERFACE path through
-           // JSData2Native, so the value passed for useAllocator
-           // doesn't really matter. We pass true for consistency.
-           XPCConvert::JSData2Native(aResult, val, type, true,
+           XPCConvert::JSData2Native(aResult, val, type,
                                      &NS_GET_IID(nsIVariant), pErr);
 }
 
@@ -1350,13 +1347,13 @@ pre_call_clean_up:
     (defined(__powerpc__) && !defined (__powerpc64__)))
         if (type_tag == nsXPTType::T_JSVAL) {
             if (!XPCConvert::JSData2Native(*(void**)(&pv->val), val, type,
-                                           !param.IsDipper(), &param_iid, nullptr))
+                                           &param_iid, nullptr))
                 break;
         } else
 #endif
         {
             if (!XPCConvert::JSData2Native(&pv->val, val, type,
-                                           !param.IsDipper(), &param_iid, nullptr))
+                                           &param_iid, nullptr))
                 break;
         }
     }
@@ -1429,7 +1426,7 @@ pre_call_clean_up:
                     break;
             } else {
                 if (!XPCConvert::JSData2Native(&pv->val, val, type,
-                                               true, &param_iid,
+                                               &param_iid,
                                                nullptr))
                     break;
             }
