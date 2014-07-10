@@ -200,6 +200,10 @@ ADBAndroid
 ``````````
 .. autoclass:: ADBAndroid
 
+Informational methods
++++++++++++++++++++++
+.. automethod:: ADBAndroid.get_battery_percentage(self, timeout=None)
+
 System control methods
 ++++++++++++++++++++++
 .. automethod:: ADBAndroid.is_device_ready(self, timeout=None)

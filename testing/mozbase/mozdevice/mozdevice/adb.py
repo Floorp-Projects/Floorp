@@ -224,10 +224,8 @@ class ADBCommand(object):
             set in the ADBCommand constructor is used.
         :returns: string - content of stdout.
 
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         adb_process = None
@@ -335,10 +333,8 @@ class ADBHost(ADBCommand):
             set in the ADBHost constructor is used.
         :returns: string - content of stdout.
 
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         return ADBCommand.command_output(self, cmds, timeout=timeout)
@@ -351,10 +347,8 @@ class ADBHost(ADBCommand):
             throwing an ADBTimeoutError.  This timeout is per adb call. The
             total time spent may exceed this value. If it is not
             specified, the value set in the ADBHost constructor is used.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         self.command_output(["start-server"], timeout=timeout)
@@ -367,10 +361,8 @@ class ADBHost(ADBCommand):
             throwing an ADBTimeoutError.  This timeout is per adb call. The
             total time spent may exceed this value. If it is not
             specified, the value set in the ADBHost constructor is used.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         self.command_output(["kill-server"], timeout=timeout)
@@ -384,10 +376,8 @@ class ADBHost(ADBCommand):
             total time spent may exceed this value. If it is not
             specified, the value set in the ADBHost constructor is used.
         :returns: an object contain
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         The output of adb devices -l ::
 
@@ -592,8 +582,7 @@ class ADBDevice(ADBCommand):
         :param root: optional boolean specifying if the command should
             be executed as root.
         :raises: * ADBTimeoutError
-                 * ADBRootError - raised if root is requested but the
-                   device is not rooted.
+                 * ADBRootError
                  * ADBError
 
         """
@@ -690,10 +679,8 @@ class ADBDevice(ADBCommand):
             set in the ADBDevice constructor is used.
         :returns: string - content of stdout.
 
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         return ADBCommand.command_output(self, cmds,
@@ -718,8 +705,7 @@ class ADBDevice(ADBCommand):
         :param root: optional boolean specifying if the command should
             be executed as root.
         :returns: :class:`mozdevice.ADBProcess`
-        :raises: ADBRootError - raised if root is requested but the
-                 device is not rooted.
+        :raises: ADBRootError
 
         shell() provides a low level interface for executing commands
         on the device via adb shell.
@@ -826,10 +812,8 @@ class ADBDevice(ADBCommand):
             be executed as root.
         :returns: boolean
 
-        :raises: * ADBTimeoutError  - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBRootError - raised if root is requested but the
-                   device is not rooted.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
 
         """
         adb_process = None
@@ -861,12 +845,9 @@ class ADBDevice(ADBCommand):
             optional boolean specifying if the command
             should be executed as root.
         :returns: string - content of stdout.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBRootError - raised if root is requested but the
-                   device is not rooted.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
+                 * ADBError
 
         """
         adb_process = None
@@ -907,10 +888,8 @@ class ADBDevice(ADBCommand):
             adb call. The total time spent may exceed this
             value. If it is not specified, the value set
             in the ADBDevice constructor is used.
-        :raises: * ADBTimeoutError - raised if adb logcat takes longer than
-                   timeout seconds.
-                 * ADBError - raised if adb logcat exits with a non-zero
-                   exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         self.command_output(["logcat", "-c"], timeout=timeout)
@@ -940,10 +919,8 @@ class ADBDevice(ADBCommand):
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
         :returns: list of lines logcat output.
-        :raises: * ADBTimeoutError - raised if adb logcat takes longer than
-                   timeout seconds.
-                 * ADBError - raised if adb logcat exits with a non-zero
-                   exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         cmds = ["logcat", "-v", format, "-d"] + filter_specs
@@ -965,10 +942,8 @@ class ADBDevice(ADBCommand):
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
         :returns: string value of property.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if adb shell getprop exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         output = self.shell_output('getprop %s' % prop, timeout=timeout)
@@ -984,10 +959,8 @@ class ADBDevice(ADBCommand):
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
         :returns: string value of adb get-state.
-        :raises: * ADBTimeoutError - raised if adb get-state takes longer
-                   than timeout seconds.
-                 * ADBError - raised if adb get-state exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         output = self.command_output(["get-state"], timeout=timeout).strip()
@@ -1011,12 +984,9 @@ class ADBDevice(ADBCommand):
             set in the ADBDevice constructor is used.
         :param root: optional boolean specifying if the command should
             be executed as root.
-        :raises: * ADBTimeoutError - raised if any of the adb commands takes
-                   longer than timeout seconds.
-                 * ADBRootError - raised if root is requested but the
-                   device is not rooted.
-                 * ADBError  - raised if any of the adb commands raises
-                   an uncaught ADBError.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
+                 * ADBError
 
         """
         path = posixpath.normpath(path.strip())
@@ -1061,10 +1031,8 @@ class ADBDevice(ADBCommand):
         :param root: optional boolean specifying if the command should be
             executed as root.
         :returns: boolean - True if path exists.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBRootError - raised if root is requested but the
-                   device is not rooted.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
 
         """
         path = posixpath.normpath(path)
@@ -1084,10 +1052,8 @@ class ADBDevice(ADBCommand):
             be executed as root.
         :returns: boolean - True if path exists on the device and is a
             directory.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBRootError - raised if root is requested but the
-                   device is not rooted.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
 
         """
         path = posixpath.normpath(path)
@@ -1107,10 +1073,8 @@ class ADBDevice(ADBCommand):
             be executed as root.
         :returns: boolean - True if path exists on the device and is a
             file.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBRootError - raised if root is requested but the
-                   device is not rooted.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
 
         """
         path = posixpath.normpath(path)
@@ -1132,10 +1096,8 @@ class ADBDevice(ADBCommand):
         :param root: optional boolean specifying if the command should
             be executed as root.
         :returns: list of files/directories contained in the directory.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBRootError - raised if root is requested but the
-                   device is not rooted.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
 
         """
         path = posixpath.normpath(path.strip())
@@ -1168,13 +1130,9 @@ class ADBDevice(ADBCommand):
             set in the ADBDevice constructor is used.
         :param root: optional boolean specifying if the command should
             be executed as root.
-        :raises: * ADBTimeoutError - raised if any adb command takes longer
-                   than timeout seconds.
-                 * ADBRootError - raised if root is requested but the
-                   device is not rooted.
-                 * ADBError - raised if adb shell mkdir exits with a
-                   non-zero exit code or if the directory is not
-                   created.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
+                 * ADBError
 
         """
         path = posixpath.normpath(path)
@@ -1215,10 +1173,8 @@ class ADBDevice(ADBCommand):
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
-        :raises: * ADBTimeoutError - raised if the adb push takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the adb push exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         self.command_output(["push", os.path.realpath(local), remote],
@@ -1241,14 +1197,9 @@ class ADBDevice(ADBCommand):
             set in the ADBDevice constructor is used.
         :param root: optional boolean specifying if the command should
             be executed as root.
-        :raises: * ADBTimeoutError - raised if any of the adb commands takes
-                   longer than timeout seconds.
-                 * ADBRootError - raised if root is requested but the
-                   device is not rooted.
-                 * ADBError - raised if the adb shell rm command exits
-                   with a non-zero exit code or if the file is not
-                   removed, or if force was not specified and the
-                   file did not exist.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
+                 * ADBError
 
         """
         cmd = "rm"
@@ -1274,13 +1225,9 @@ class ADBDevice(ADBCommand):
             set in the ADBDevice constructor is used.
         :param root: optional boolean specifying if the command should
             be executed as root.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBRootError - raised if root is requested but the
-                   device is not rooted.
-                 * ADBError - raised if the adb shell rmdir command
-                   exits with a non-zero exit code or if the
-                   directory was not removed..
+        :raises: * ADBTimeoutError
+                 * ADBRootError
+                 * ADBError
 
         """
         self.shell_output("rmdir %s" % path, timeout=timeout, root=root)
@@ -1301,11 +1248,8 @@ class ADBDevice(ADBCommand):
             the value set in the ADBDevice constructor is used.
         :returns: list of (pid, name, user) tuples for running processes
             on the device.
-        :raises: * ADBTimeoutError - raised if the adb shell ps command
-                   takes longer than timeout seconds.
-                 * ADBError - raised if the adb shell ps command exits
-                   with a non-zero exit code or if the ps output
-                   is not in the expected format.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         adb_process = None
@@ -1365,13 +1309,9 @@ class ADBDevice(ADBCommand):
             set in the ADBDevice constructor is used.
         :param root: optional boolean specifying if the command should
             be executed as root.
-        :raises: * ADBTimeoutError - raised if adb shell kill takes longer
-                   than timeout seconds.
-                 * ADBRootError - raised if root is requested but the
-                   device is not rooted.
-                 * ADBError - raised if adb shell kill exits with a
-                   non-zero exit code or not all of the processes have
-                   been killed.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
+                 * ADBError
 
         """
         pid_list = [str(pid) for pid in pids]
@@ -1417,12 +1357,9 @@ class ADBDevice(ADBCommand):
         :param root: optional boolean specifying if the command should
             be executed as root.
 
-        :raises: * ADBTimeoutError - raised if any of the adb commands takes
-                   longer than timeout seconds.
-                 * ADBRootError - raised if root is requested but the
-                   device is not rooted.
-                 * ADBError - raised if any of the adb commands raises
-                   ADBError or if the process is not killed.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
+                 * ADBError
 
         """
         procs = self.get_process_list(timeout=timeout)
@@ -1454,11 +1391,8 @@ class ADBDevice(ADBCommand):
             set in the ADBDevice constructor is used.
         :returns: boolean - True if process exists.
 
-        :raises: * ADBTimeoutError - raised if any of the adb commands takes
-                   longer than timeout seconds.
-                 * ADBError - raised if the adb shell ps command exits
-                   with a non-zero exit code or if the ps output is
-                   not in the expected format.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         if not isinstance(process_name, basestring):
