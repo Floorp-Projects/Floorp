@@ -819,25 +819,27 @@ static const CipherPref sCipherPrefs[] = {
    TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA, true },
 
  { "security.ssl3.ecdhe_rsa_des_ede3_sha",
-   TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA, true }, // deprecated (3DES)
+   TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA, false }, // deprecated (3DES)
 
  { "security.ssl3.dhe_rsa_aes_128_sha",
    TLS_DHE_RSA_WITH_AES_128_CBC_SHA, true },
+
  { "security.ssl3.dhe_rsa_camellia_128_sha",
-   TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA, true },
+   TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA, false }, // deprecated (Camellia)
 
  { "security.ssl3.dhe_rsa_aes_256_sha",
    TLS_DHE_RSA_WITH_AES_256_CBC_SHA, true },
+
  { "security.ssl3.dhe_rsa_camellia_256_sha",
-   TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA, true },
+   TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA, false }, // deprecated (Camellia)
 
  { "security.ssl3.dhe_rsa_des_ede3_sha",
-   TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA, true }, // deprecated (3DES)
+   TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA, false }, // deprecated (3DES)
 
  { "security.ssl3.dhe_dss_aes_128_sha",
    TLS_DHE_DSS_WITH_AES_128_CBC_SHA, true }, // deprecated (DSS)
  { "security.ssl3.dhe_dss_aes_256_sha",
-   TLS_DHE_DSS_WITH_AES_256_CBC_SHA, true }, // deprecated (DSS)
+   TLS_DHE_DSS_WITH_AES_256_CBC_SHA, false }, // deprecated (DSS)
 
  { "security.ssl3.ecdhe_rsa_rc4_128_sha",
    TLS_ECDHE_RSA_WITH_RC4_128_SHA, true }, // deprecated (RC4)
@@ -847,11 +849,11 @@ static const CipherPref sCipherPrefs[] = {
  { "security.ssl3.rsa_aes_128_sha",
    TLS_RSA_WITH_AES_128_CBC_SHA, true }, // deprecated (RSA key exchange)
  { "security.ssl3.rsa_camellia_128_sha",
-   TLS_RSA_WITH_CAMELLIA_128_CBC_SHA, true }, // deprecated (RSA key exchange)
+   TLS_RSA_WITH_CAMELLIA_128_CBC_SHA, false }, // deprecated (RSA, Camellia)
  { "security.ssl3.rsa_aes_256_sha",
    TLS_RSA_WITH_AES_256_CBC_SHA, true }, // deprecated (RSA key exchange)
  { "security.ssl3.rsa_camellia_256_sha",
-   TLS_RSA_WITH_CAMELLIA_256_CBC_SHA, true }, // deprecated (RSA key exchange)
+   TLS_RSA_WITH_CAMELLIA_256_CBC_SHA, false }, // deprecated (RSA, Camellia)
  { "security.ssl3.rsa_des_ede3_sha",
    TLS_RSA_WITH_3DES_EDE_CBC_SHA, true }, // deprecated (RSA key exchange, 3DES)
 

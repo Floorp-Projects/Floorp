@@ -3751,7 +3751,6 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
 static bool ShouldDrawRectsSeparately(gfxContext* aContext, DrawRegionClip aClip)
 {
   if (!gfxPrefs::LayoutPaintRectsSeparately() ||
-      aContext->IsCairo() ||
       aClip == DrawRegionClip::CLIP_NONE) {
     return false;
   }

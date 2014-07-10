@@ -773,11 +773,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nsIAtom* frameType = aFrame->GetType();
   bool isText = frameType == nsGkAtoms::textFrame;
   
-  // Compute the available size for the frame. This available width
-  // includes room for the side margins.
-  // For now, set the available height to unconstrained always.
-  nsSize availSize(mBlockReflowState->ComputedWidth(), NS_UNCONSTRAINEDSIZE);
-
   // Inline-ish and text-ish things don't compute their width;
   // everything else does.  We need to give them an available width that
   // reflects the space left on the line.
@@ -790,6 +785,13 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // Setup reflow state for reflowing the frame
   Maybe<nsHTMLReflowState> reflowStateHolder;
   if (!isText) {
+    // Compute the available size for the frame. This available width
+    // includes room for the side margins.
+    // For now, set the available block-size to unconstrained always.
+    nsSize availSize =
+      LogicalSize(mBlockReflowState->GetWritingMode(),
+                  mBlockReflowState->ComputedISize(), NS_UNCONSTRAINEDSIZE).
+        GetPhysicalSize(mBlockReflowState->GetWritingMode());
     reflowStateHolder.construct(mPresContext, *psd->mReflowState,
                                 aFrame, availSize);
     nsHTMLReflowState& reflowState = reflowStateHolder.ref();

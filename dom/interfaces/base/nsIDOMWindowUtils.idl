@@ -51,7 +51,7 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
-[scriptable, uuid(0ef9e8bb-b934-4f6b-ae05-e98774d8d3d3)]
+[scriptable, uuid(11911980-607c-4efd-aacc-de3b9005c058)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -371,8 +371,8 @@ interface nsIDOMWindowUtils : nsISupports {
                            [optional] in long aPointerId,
                            [optional] in long aWidth,
                            [optional] in long aHeight,
-                           [optional] in long tiltX,
-                           [optional] in long tiltY,
+                           [optional] in long aTiltX,
+                           [optional] in long aTiltY,
                            [optional] in boolean aIsPrimary,
                            [optional] in boolean aIsSynthesized);
 
@@ -428,6 +428,27 @@ interface nsIDOMWindowUtils : nsISupports {
                               [optional] in float aPressure,
                               [optional] in unsigned short aInputSourceArg,
                               [optional] in boolean aIsSynthesized);
+
+  /** The same as sendPointerEvent but ensures that the event
+   *  is dispatched to this DOM window or one of its children.
+   */
+  [optional_argc]
+  void sendPointerEventToWindow(in AString aType,
+                                in float aX,
+                                in float aY,
+                                in long aButton,
+                                in long aClickCount,
+                                in long aModifiers,
+                                [optional] in boolean aIgnoreRootScrollFrame,
+                                [optional] in float aPressure,
+                                [optional] in unsigned short aInputSourceArg,
+                                [optional] in long aPointerId,
+                                [optional] in long aWidth,
+                                [optional] in long aHeight,
+                                [optional] in long aTiltX,
+                                [optional] in long aTiltY,
+                                [optional] in boolean aIsPrimary,
+                                [optional] in boolean aIsSynthesized);
 
   /** The same as sendTouchEvent but ensures that the event is dispatched to
    *  this DOM window or one of its children.

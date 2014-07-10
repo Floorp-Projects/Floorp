@@ -183,9 +183,8 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
 bool
 gfxWindowsNativeDrawing::IsDoublePass()
 {
-    if (!mContext->IsCairo() &&
-        (mContext->GetDrawTarget()->GetBackendType() != mozilla::gfx::BackendType::CAIRO ||
-         mContext->GetDrawTarget()->IsDualDrawTarget())) {
+    if (mContext->GetDrawTarget()->GetBackendType() != mozilla::gfx::BackendType::CAIRO ||
+        mContext->GetDrawTarget()->IsDualDrawTarget()) {
       return true;
     }
 

@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=982039
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 982039</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 982039 **/
+  SimpleTest.waitForExplicitFinish();
+  function test() {
+    var f = document.getElementById("testform");
+    f.elements[0].disabled = true;
+    is(f.checkValidity(), false,
+       "Setting a radiobutton to disabled shouldn't make form valid.");
+
+    f.elements[1].checked = true;
+    ok(f.checkValidity(), "Form should be now valid.");
+
+    f.elements[0].required = false;
+    f.elements[1].required = false;
+    f.elements[2].required = false;
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body onload="test()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=982039">Mozilla Bug 982039</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<form action="#" id="testform">
+  <input type="radio" name="radio" value="1" required>
+  <input type="radio" name="radio" value="2" required>
+  <input type="radio" name="radio" value="3" required>
+</form>
+</body>
+</html>

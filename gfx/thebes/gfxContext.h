@@ -41,10 +41,6 @@ class gfxContext MOZ_FINAL {
     NS_INLINE_DECL_REFCOUNTING(gfxContext)
 
 public:
-    /**
-     * Initialize this context from a surface.
-     */
-    gfxContext(gfxASurface *surface);
 
     /**
      * Initialize this context from a DrawTarget.
@@ -689,8 +685,6 @@ public:
     void ClearFlag(int32_t aFlag) { mFlags &= ~aFlag; }
     int32_t GetFlags() const { return mFlags; }
 
-    bool IsCairo() const { return !mDT; }
-
     // Work out whether cairo will snap inter-glyph spacing to pixels.
     void GetRoundOffsetsToPixels(bool *aRoundX, bool *aRoundY);
 
@@ -798,7 +792,6 @@ private:
   AzureState &CurrentState() { return mStateStack[mStateStack.Length() - 1]; }
   const AzureState &CurrentState() const { return mStateStack[mStateStack.Length() - 1]; }
 
-  cairo_t *mCairo;
   cairo_t *mRefCairo;
   nsRefPtr<gfxASurface> mSurface;
   int32_t mFlags;
@@ -965,19 +958,9 @@ public:
     gfxContextAutoDisableSubpixelAntialiasing(gfxContext *aContext, bool aDisable)
     {
         if (aDisable) {
-            if (aContext->IsCairo()) {
-                mSurface = aContext->CurrentSurface();
-                if (!mSurface) {
-                  return;
-                }
-                mSubpixelAntialiasingEnabled = mSurface->GetSubpixelAntialiasingEnabled();
-                mSurface->SetSubpixelAntialiasingEnabled(false);
-            } else {
-                mDT = aContext->GetDrawTarget();
-
-                mSubpixelAntialiasingEnabled = mDT->GetPermitSubpixelAA();
-                mDT->SetPermitSubpixelAA(false);
-            }
+            mDT = aContext->GetDrawTarget();
+            mSubpixelAntialiasingEnabled = mDT->GetPermitSubpixelAA();
+            mDT->SetPermitSubpixelAA(false);
         }
     }
     ~gfxContextAutoDisableSubpixelAntialiasing()

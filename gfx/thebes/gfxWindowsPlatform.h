@@ -60,7 +60,6 @@ struct DCFromContext {
     DCFromContext(gfxContext *aContext) {
         dc = nullptr;
         nsRefPtr<gfxASurface> aSurface = aContext->CurrentSurface();
-        NS_ASSERTION(aSurface || !aContext->IsCairo(), "DCFromContext: null surface");
         if (aSurface &&
             (aSurface->GetType() == gfxSurfaceType::Win32 ||
              aSurface->GetType() == gfxSurfaceType::Win32Printing))
@@ -131,8 +130,6 @@ public:
 
     virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont>
       GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
-    virtual already_AddRefed<gfxASurface>
-      GetThebesSurfaceForDrawTarget(mozilla::gfx::DrawTarget *aTarget);
 
     enum RenderMode {
         /* Use GDI and windows surfaces */
