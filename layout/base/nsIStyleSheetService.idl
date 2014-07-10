@@ -8,13 +8,14 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
+interface nsIDOMStyleSheet;
 
 /*
  * nsIStyleSheetService allows extensions or embeddors to add to the
  * built-in list of user or agent style sheets.
  */
 
-[scriptable, uuid(1f42a6a2-ab0a-45d4-8a96-396f58ea6c6d)]
+[scriptable, uuid(4de68896-e8eb-41de-8237-a797b570ac4a)]
 interface nsIStyleSheetService : nsISupports
 {
   const unsigned long AGENT_SHEET = 0;
@@ -45,6 +46,12 @@ interface nsIStyleSheetService : nsISupports
    * added to the list of style sheets specified by |type|.
    */
   boolean sheetRegistered(in nsIURI sheetURI, in unsigned long type);
+
+  /**
+   * Synchronously loads a style sheet from |sheetURI| and returns the
+   * new style sheet object. Can be used with nsIDOMWindowUtils.addSheet.
+   */
+  nsIDOMStyleSheet preloadSheet(in nsIURI sheetURI, in unsigned long type);
 
   /**
    * Remove the style sheet at |sheetURI| from the list of style sheets

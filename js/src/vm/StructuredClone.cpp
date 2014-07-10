@@ -75,16 +75,16 @@ enum StructuredDataType MOZ_ENUM_TYPE(uint32_t) {
     SCTAG_DO_NOT_USE_2, // Required for backwards compatibility
     SCTAG_TYPED_ARRAY_OBJECT,
     SCTAG_TYPED_ARRAY_V1_MIN = 0xFFFF0100,
-    SCTAG_TYPED_ARRAY_V1_INT8 = SCTAG_TYPED_ARRAY_V1_MIN + ScalarTypeDescr::TYPE_INT8,
-    SCTAG_TYPED_ARRAY_V1_UINT8 = SCTAG_TYPED_ARRAY_V1_MIN + ScalarTypeDescr::TYPE_UINT8,
-    SCTAG_TYPED_ARRAY_V1_INT16 = SCTAG_TYPED_ARRAY_V1_MIN + ScalarTypeDescr::TYPE_INT16,
-    SCTAG_TYPED_ARRAY_V1_UINT16 = SCTAG_TYPED_ARRAY_V1_MIN + ScalarTypeDescr::TYPE_UINT16,
-    SCTAG_TYPED_ARRAY_V1_INT32 = SCTAG_TYPED_ARRAY_V1_MIN + ScalarTypeDescr::TYPE_INT32,
-    SCTAG_TYPED_ARRAY_V1_UINT32 = SCTAG_TYPED_ARRAY_V1_MIN + ScalarTypeDescr::TYPE_UINT32,
-    SCTAG_TYPED_ARRAY_V1_FLOAT32 = SCTAG_TYPED_ARRAY_V1_MIN + ScalarTypeDescr::TYPE_FLOAT32,
-    SCTAG_TYPED_ARRAY_V1_FLOAT64 = SCTAG_TYPED_ARRAY_V1_MIN + ScalarTypeDescr::TYPE_FLOAT64,
-    SCTAG_TYPED_ARRAY_V1_UINT8_CLAMPED = SCTAG_TYPED_ARRAY_V1_MIN + ScalarTypeDescr::TYPE_UINT8_CLAMPED,
-    SCTAG_TYPED_ARRAY_V1_MAX = SCTAG_TYPED_ARRAY_V1_MIN + ScalarTypeDescr::TYPE_MAX - 1,
+    SCTAG_TYPED_ARRAY_V1_INT8 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Int8,
+    SCTAG_TYPED_ARRAY_V1_UINT8 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Uint8,
+    SCTAG_TYPED_ARRAY_V1_INT16 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Int16,
+    SCTAG_TYPED_ARRAY_V1_UINT16 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Uint16,
+    SCTAG_TYPED_ARRAY_V1_INT32 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Int32,
+    SCTAG_TYPED_ARRAY_V1_UINT32 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Uint32,
+    SCTAG_TYPED_ARRAY_V1_FLOAT32 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Float32,
+    SCTAG_TYPED_ARRAY_V1_FLOAT64 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Float64,
+    SCTAG_TYPED_ARRAY_V1_UINT8_CLAMPED = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Uint8Clamped,
+    SCTAG_TYPED_ARRAY_V1_MAX = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::TypeMax - 1,
 
     /*
      * Define a separate range of numbers for Transferable-only tags, since
@@ -327,7 +327,7 @@ js_GetSCOffset(JSStructuredCloneWriter* writer)
 
 JS_STATIC_ASSERT(SCTAG_END_OF_BUILTIN_TYPES <= JS_SCTAG_USER_MIN);
 JS_STATIC_ASSERT(JS_SCTAG_USER_MIN <= JS_SCTAG_USER_MAX);
-JS_STATIC_ASSERT(ScalarTypeDescr::TYPE_INT8 == 0);
+JS_STATIC_ASSERT(Scalar::Int8 == 0);
 
 static void
 ReportErrorTransferable(JSContext *cx, const JSStructuredCloneCallbacks *callbacks)
@@ -1224,7 +1224,7 @@ bool
 JSStructuredCloneReader::readTypedArray(uint32_t arrayType, uint32_t nelems, Value *vp,
                                         bool v1Read)
 {
-    if (arrayType > ScalarTypeDescr::TYPE_UINT8_CLAMPED) {
+    if (arrayType > Scalar::Uint8Clamped) {
         JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
                              JSMSG_SC_BAD_SERIALIZED_DATA, "unhandled typed array element type");
         return false;
@@ -1255,31 +1255,31 @@ JSStructuredCloneReader::readTypedArray(uint32_t arrayType, uint32_t nelems, Val
     RootedObject obj(context(), nullptr);
 
     switch (arrayType) {
-      case ScalarTypeDescr::TYPE_INT8:
+      case Scalar::Int8:
         obj = JS_NewInt8ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case ScalarTypeDescr::TYPE_UINT8:
+      case Scalar::Uint8:
         obj = JS_NewUint8ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case ScalarTypeDescr::TYPE_INT16:
+      case Scalar::Int16:
         obj = JS_NewInt16ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case ScalarTypeDescr::TYPE_UINT16:
+      case Scalar::Uint16:
         obj = JS_NewUint16ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case ScalarTypeDescr::TYPE_INT32:
+      case Scalar::Int32:
         obj = JS_NewInt32ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case ScalarTypeDescr::TYPE_UINT32:
+      case Scalar::Uint32:
         obj = JS_NewUint32ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case ScalarTypeDescr::TYPE_FLOAT32:
+      case Scalar::Float32:
         obj = JS_NewFloat32ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case ScalarTypeDescr::TYPE_FLOAT64:
+      case Scalar::Float64:
         obj = JS_NewFloat64ArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
-      case ScalarTypeDescr::TYPE_UINT8_CLAMPED:
+      case Scalar::Uint8Clamped:
         obj = JS_NewUint8ClampedArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
       default:
@@ -1311,18 +1311,18 @@ static size_t
 bytesPerTypedArrayElement(uint32_t arrayType)
 {
     switch (arrayType) {
-      case ScalarTypeDescr::TYPE_INT8:
-      case ScalarTypeDescr::TYPE_UINT8:
-      case ScalarTypeDescr::TYPE_UINT8_CLAMPED:
+      case Scalar::Int8:
+      case Scalar::Uint8:
+      case Scalar::Uint8Clamped:
         return sizeof(uint8_t);
-      case ScalarTypeDescr::TYPE_INT16:
-      case ScalarTypeDescr::TYPE_UINT16:
+      case Scalar::Int16:
+      case Scalar::Uint16:
         return sizeof(uint16_t);
-      case ScalarTypeDescr::TYPE_INT32:
-      case ScalarTypeDescr::TYPE_UINT32:
-      case ScalarTypeDescr::TYPE_FLOAT32:
+      case Scalar::Int32:
+      case Scalar::Uint32:
+      case Scalar::Float32:
         return sizeof(uint32_t);
-      case ScalarTypeDescr::TYPE_FLOAT64:
+      case Scalar::Float64:
         return sizeof(uint64_t);
       default:
         MOZ_ASSUME_UNREACHABLE("unknown TypedArrayObject type");
@@ -1336,7 +1336,7 @@ bytesPerTypedArrayElement(uint32_t arrayType)
 bool
 JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, Value *vp)
 {
-    JS_ASSERT(arrayType <= ScalarTypeDescr::TYPE_UINT8_CLAMPED);
+    JS_ASSERT(arrayType <= Scalar::Uint8Clamped);
 
     uint32_t nbytes = nelems * bytesPerTypedArrayElement(arrayType);
     JSObject *obj = ArrayBufferObject::create(context(), nbytes);
@@ -1347,18 +1347,18 @@ JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, 
     JS_ASSERT(buffer.byteLength() == nbytes);
 
     switch (arrayType) {
-      case ScalarTypeDescr::TYPE_INT8:
-      case ScalarTypeDescr::TYPE_UINT8:
-      case ScalarTypeDescr::TYPE_UINT8_CLAMPED:
+      case Scalar::Int8:
+      case Scalar::Uint8:
+      case Scalar::Uint8Clamped:
         return in.readArray((uint8_t*) buffer.dataPointer(), nelems);
-      case ScalarTypeDescr::TYPE_INT16:
-      case ScalarTypeDescr::TYPE_UINT16:
+      case Scalar::Int16:
+      case Scalar::Uint16:
         return in.readArray((uint16_t*) buffer.dataPointer(), nelems);
-      case ScalarTypeDescr::TYPE_INT32:
-      case ScalarTypeDescr::TYPE_UINT32:
-      case ScalarTypeDescr::TYPE_FLOAT32:
+      case Scalar::Int32:
+      case Scalar::Uint32:
+      case Scalar::Float32:
         return in.readArray((uint32_t*) buffer.dataPointer(), nelems);
-      case ScalarTypeDescr::TYPE_FLOAT64:
+      case Scalar::Float64:
         return in.readArray((uint64_t*) buffer.dataPointer(), nelems);
       default:
         MOZ_ASSUME_UNREACHABLE("unknown TypedArrayObject type");

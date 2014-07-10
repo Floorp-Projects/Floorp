@@ -288,6 +288,20 @@ HttpBaseChannel::SetOwner(nsISupports *aOwner)
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::SetLoadInfo(nsILoadInfo *aLoadInfo)
+{
+  mLoadInfo = aLoadInfo;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetLoadInfo(nsILoadInfo **aLoadInfo)
+{
+  NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetNotificationCallbacks(nsIInterfaceRequestor **aCallbacks)
 {
   *aCallbacks = mCallbacks;
@@ -1885,13 +1899,6 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   newChannel->SetNotificationCallbacks(mCallbacks);
   newChannel->SetLoadFlags(newLoadFlags);
 
-  // If our owner is a null principal it will have been set as a security
-  // measure, so we want to propagate it to the new channel.
-  nsCOMPtr<nsIPrincipal> ownerPrincipal = do_QueryInterface(mOwner);
-  if (ownerPrincipal && ownerPrincipal->GetIsNullPrincipal()) {
-    newChannel->SetOwner(mOwner);
-  }
-
   // Try to preserve the privacy bit if it has been overridden
   if (mPrivateBrowsingOverriden) {
     nsCOMPtr<nsIPrivateBrowsingChannel> newPBChannel =
@@ -1900,6 +1907,9 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
       newPBChannel->SetPrivate(mPrivateBrowsing);
     }
   }
+
+  // Propagate our loadinfo if needed.
+  newChannel->SetLoadInfo(mLoadInfo);
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
   if (!httpChannel)

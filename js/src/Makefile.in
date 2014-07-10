@@ -232,12 +232,6 @@ else
 SHARED_LIBRARY_LIBS += $(MOZ_ICU_LIBS)
 endif
 
-# Prevent floating point errors caused by VC++ optimizations
-ifdef _MSC_VER
-# XXX We should add this to CXXFLAGS, too?
-CFLAGS += -fp:precise
-endif # _MSC_VER
-
 ifeq ($(OS_ARCH),FreeBSD)
 EXTRA_LIBS	+= -pthread
 endif

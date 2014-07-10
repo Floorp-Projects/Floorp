@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -429,6 +429,20 @@ NS_IMETHODIMP
 nsBaseChannel::SetOwner(nsISupports *aOwner)
 {
   mOwner = aOwner;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseChannel::SetLoadInfo(nsILoadInfo* aLoadInfo)
+{
+  mLoadInfo = aLoadInfo;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseChannel::GetLoadInfo(nsILoadInfo** aLoadInfo)
+{
+  NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
   return NS_OK;
 }
 

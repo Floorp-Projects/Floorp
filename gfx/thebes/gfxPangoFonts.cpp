@@ -794,7 +794,7 @@ FindFontPatterns(gfxUserFontSet *mUserFontSet,
     style.stretch = aStretch;
 
     gfxUserFcFontEntry *fontEntry = nullptr;
-    gfxFontFamily *family = mUserFontSet->GetFamily(utf16Family);
+    gfxFontFamily *family = mUserFontSet->LookupFamily(utf16Family);
     if (family) {
         fontEntry = static_cast<gfxUserFcFontEntry*>
             (mUserFontSet->FindFontEntry(family, style, needsBold,

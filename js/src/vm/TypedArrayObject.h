@@ -9,7 +9,6 @@
 
 #include "jsobj.h"
 
-#include "builtin/TypedObject.h"
 #include "gc/Barrier.h"
 #include "js/Class.h"
 #include "vm/ArrayBufferObject.h"
@@ -39,8 +38,8 @@ class TypedArrayObject : public ArrayBufferViewObject
                   "bad inlined constant in jsfriendapi.h");
 
   public:
-    static const Class classes[ScalarTypeDescr::TYPE_MAX];
-    static const Class protoClasses[ScalarTypeDescr::TYPE_MAX];
+    static const Class classes[Scalar::TypeMax];
+    static const Class protoClasses[Scalar::TypeMax];
 
     static const size_t FIXED_DATA_START = DATA_SLOT + 1;
 
@@ -59,8 +58,8 @@ class TypedArrayObject : public ArrayBufferViewObject
         return gc::GetGCObjectKind(FIXED_DATA_START + dataSlots);
     }
 
-    ScalarTypeDescr::Type type() const {
-        return (ScalarTypeDescr::Type) getFixedSlot(TYPE_SLOT).toInt32();
+    Scalar::Type type() const {
+        return (Scalar::Type) getFixedSlot(TYPE_SLOT).toInt32();
     }
 
     static Value bufferValue(TypedArrayObject *tarr) {
@@ -70,7 +69,7 @@ class TypedArrayObject : public ArrayBufferViewObject
         return tarr->getFixedSlot(BYTEOFFSET_SLOT);
     }
     static Value byteLengthValue(TypedArrayObject *tarr) {
-        int32_t size = ScalarTypeDescr::size(tarr->type());
+        int32_t size = Scalar::byteSize(tarr->type());
         return Int32Value(tarr->getFixedSlot(LENGTH_SLOT).toInt32() * size);
     }
     static Value lengthValue(TypedArrayObject *tarr) {
@@ -109,28 +108,8 @@ class TypedArrayObject : public ArrayBufferViewObject
 
     void neuter(void *newData);
 
-    static uint32_t slotWidth(int atype) {
-        switch (atype) {
-          case ScalarTypeDescr::TYPE_INT8:
-          case ScalarTypeDescr::TYPE_UINT8:
-          case ScalarTypeDescr::TYPE_UINT8_CLAMPED:
-            return 1;
-          case ScalarTypeDescr::TYPE_INT16:
-          case ScalarTypeDescr::TYPE_UINT16:
-            return 2;
-          case ScalarTypeDescr::TYPE_INT32:
-          case ScalarTypeDescr::TYPE_UINT32:
-          case ScalarTypeDescr::TYPE_FLOAT32:
-            return 4;
-          case ScalarTypeDescr::TYPE_FLOAT64:
-            return 8;
-          default:
-            MOZ_ASSUME_UNREACHABLE("invalid typed array type");
-        }
-    }
-
     int slotWidth() {
-        return slotWidth(type());
+        return Scalar::byteSize(type());
     }
 
     /*
@@ -142,21 +121,21 @@ class TypedArrayObject : public ArrayBufferViewObject
     static int lengthOffset();
     static int dataOffset();
 
-    static bool isOriginalLengthGetter(ScalarTypeDescr::Type type, Native native);
+    static bool isOriginalLengthGetter(Scalar::Type type, Native native);
 };
 
 inline bool
 IsTypedArrayClass(const Class *clasp)
 {
     return &TypedArrayObject::classes[0] <= clasp &&
-           clasp < &TypedArrayObject::classes[ScalarTypeDescr::TYPE_MAX];
+           clasp < &TypedArrayObject::classes[Scalar::TypeMax];
 }
 
 inline bool
 IsTypedArrayProtoClass(const Class *clasp)
 {
     return &TypedArrayObject::protoClasses[0] <= clasp &&
-           clasp < &TypedArrayObject::protoClasses[ScalarTypeDescr::TYPE_MAX];
+           clasp < &TypedArrayObject::protoClasses[Scalar::TypeMax];
 }
 
 bool
@@ -206,21 +185,21 @@ IsTypedArrayIndex(jsid id, uint64_t *indexp)
 }
 
 static inline unsigned
-TypedArrayShift(ArrayBufferView::ViewType viewType)
+TypedArrayShift(Scalar::Type viewType)
 {
     switch (viewType) {
-      case ArrayBufferView::TYPE_INT8:
-      case ArrayBufferView::TYPE_UINT8:
-      case ArrayBufferView::TYPE_UINT8_CLAMPED:
+      case Scalar::Int8:
+      case Scalar::Uint8:
+      case Scalar::Uint8Clamped:
         return 0;
-      case ArrayBufferView::TYPE_INT16:
-      case ArrayBufferView::TYPE_UINT16:
+      case Scalar::Int16:
+      case Scalar::Uint16:
         return 1;
-      case ArrayBufferView::TYPE_INT32:
-      case ArrayBufferView::TYPE_UINT32:
-      case ArrayBufferView::TYPE_FLOAT32:
+      case Scalar::Int32:
+      case Scalar::Uint32:
+      case Scalar::Float32:
         return 2;
-      case ArrayBufferView::TYPE_FLOAT64:
+      case Scalar::Float64:
         return 3;
       default:;
     }
