@@ -537,6 +537,19 @@ tail =
         self.assertEquals(1, self.x.passCount)
         self.assertEquals(0, self.x.failCount)
 
+    def testLogCorrectFileName(self):
+        """
+        Make sure a meaningful filename and line number is logged
+        by a passing test.
+        """
+        self.writeFile("test_add_test_simple.js", ADD_TEST_SIMPLE)
+        self.writeManifest(["test_add_test_simple.js"])
+
+        self.assertTestResult(True, verbose=True)
+        self.assertInLog("true == true")
+        self.assertNotInLog("[do_check_true :")
+        self.assertInLog("[test_simple : 5]")
+
     def testAddTestFailing(self):
         """
         Ensure add_test() with a failing test is reported.
