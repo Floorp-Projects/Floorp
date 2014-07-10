@@ -34,6 +34,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Base64.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/LoadInfo.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMediaElement.h"
@@ -6429,15 +6430,25 @@ bool
 nsContentUtils::SetUpChannelOwner(nsIPrincipal* aLoadingPrincipal,
                                   nsIChannel* aChannel,
                                   nsIURI* aURI,
-                                  bool aSetUpForAboutBlank,
-                                  bool aForceOwner)
+                                  bool aInheritForAboutBlank,
+                                  bool aIsSandboxed,
+                                  bool aForceInherit)
 {
+  if (!aLoadingPrincipal) {
+    // Nothing to do here
+    MOZ_ASSERT(!aIsSandboxed);
+    return false;
+  }
+
+  // If we're sandboxed, make sure to clear any owner the channel
+  // might already have.
+  if (aIsSandboxed) {
+    aChannel->SetOwner(nullptr);
+  }
+
+  // Set the loadInfo of the channel, but only tell the channel to
+  // inherit if it can't provide its own security context.
   //
-  // Set the owner of the channel, but only for channels that can't
-  // provide their own security context.
-  //
-  // XXX: It seems wrong that the owner is ignored - even if one is
-  //      supplied) unless the URI is javascript or data or about:blank.
   // XXX: If this is ever changed, check all callers for what owners
   //      they're passing in.  In particular, see the code and
   //      comments in nsDocShell::LoadURI where we fall back on
@@ -6445,57 +6456,40 @@ nsContentUtils::SetUpChannelOwner(nsIPrincipal* aLoadingPrincipal,
   //      very wrong if this code changed anything but channels that
   //      can't provide their own security context!
   //
-  //      (Currently chrome URIs set the owner when they are created!
-  //      So setting a nullptr owner would be bad!)
-  //
-  // If aForceOwner is true, the owner will be set, even for a channel that
-  // can provide its own security context. This is used for the HTML5 IFRAME
-  // sandbox attribute, so we can force the channel (and its document) to
-  // explicitly have a null principal.
-  bool inherit;
-  // We expect URIInheritsSecurityContext to return success for an
-  // about:blank URI, so don't call NS_IsAboutBlank() if this call fails.
-  // This condition needs to match the one in nsDocShell::InternalLoad where
-  // we're checking for things that will use the owner.
-  if (aForceOwner || ((NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherit)) &&
-      (inherit || (aSetUpForAboutBlank && NS_IsAboutBlank(aURI)))))) {
-#ifdef DEBUG
-    // Assert that aForceOwner is only set for null principals for non-srcdoc
-    // loads.  (Strictly speaking not all uses of about:srcdoc would be 
-    // srcdoc loads, but the URI is non-resolvable in cases where it is not).
-    if (aForceOwner) {
-      nsAutoCString uriStr;
-      aURI->GetSpec(uriStr);
-      if(!uriStr.EqualsLiteral("about:srcdoc") &&
-         !uriStr.EqualsLiteral("view-source:about:srcdoc")) {
-        nsCOMPtr<nsIURI> ownerURI;
-        nsresult rv = aLoadingPrincipal->GetURI(getter_AddRefs(ownerURI));
-        MOZ_ASSERT(NS_SUCCEEDED(rv) && SchemeIs(ownerURI, NS_NULLPRINCIPAL_SCHEME));
-      }
-    }
-#endif
-    aChannel->SetOwner(aLoadingPrincipal);
-    return true;
+  // If aForceInherit is true, we will inherit, even for a channel that
+  // can provide its own security context. This is used for srcdoc loads.
+  bool inherit = aForceInherit;
+  if (!inherit) {
+    bool uriInherits;
+    // We expect URIInheritsSecurityContext to return success for an
+    // about:blank URI, so don't call NS_IsAboutBlank() if this call fails.
+    // This condition needs to match the one in nsDocShell::InternalLoad where
+    // we're checking for things that will use the owner.
+    inherit =
+      (NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &uriInherits)) &&
+       (uriInherits || (aInheritForAboutBlank && NS_IsAboutBlank(aURI)))) ||
+      //
+      // file: uri special-casing
+      //
+      // If this is a file: load opened from another file: then it may need
+      // to inherit the owner from the referrer so they can script each other.
+      // If we don't set the owner explicitly then each file: gets an owner
+      // based on its own codebase later.
+      //
+      (URIIsLocalFile(aURI) &&
+       NS_SUCCEEDED(aLoadingPrincipal->CheckMayLoad(aURI, false, false)) &&
+       // One more check here.  CheckMayLoad will always return true for the
+       // system principal, but we do NOT want to inherit in that case.
+       !IsSystemPrincipal(aLoadingPrincipal));
   }
 
-  //
-  // file: uri special-casing
-  //
-  // If this is a file: load opened from another file: then it may need
-  // to inherit the owner from the referrer so they can script each other.
-  // If we don't set the owner explicitly then each file: gets an owner
-  // based on its own codebase later.
-  //
-  if (URIIsLocalFile(aURI) && aLoadingPrincipal &&
-      NS_SUCCEEDED(aLoadingPrincipal->CheckMayLoad(aURI, false, false)) &&
-      // One more check here.  CheckMayLoad will always return true for the
-      // system principal, but we do NOT want to inherit in that case.
-      !IsSystemPrincipal(aLoadingPrincipal)) {
-    aChannel->SetOwner(aLoadingPrincipal);
-    return true;
-  }
-
-  return false;
+  nsCOMPtr<nsILoadInfo> loadInfo =
+    new LoadInfo(aLoadingPrincipal,
+                 inherit ?
+                   LoadInfo::eInheritPrincipal : LoadInfo::eDontInheritPrincipal,
+                 aIsSandboxed ? LoadInfo::eSandboxed : LoadInfo::eNotSandboxed);
+  aChannel->SetLoadInfo(loadInfo);
+  return inherit && !aIsSandboxed;
 }
 
 /* static */
