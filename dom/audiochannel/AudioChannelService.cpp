@@ -151,6 +151,13 @@ AudioChannelService::RegisterType(AudioChannel aChannel, uint64_t aChildID,
   mChannelCounters[type].AppendElement(aChildID);
 
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
+
+    // We must keep the childIds in order to decide which app is allowed to play
+    // with then telephony channel.
+    if (aChannel == AudioChannel::Telephony) {
+      RegisterTelephonyChild(aChildID);
+    }
+
     // Since there is another telephony registered, we can unregister old one
     // immediately.
     if (mDeferTelChannelTimer && aChannel == AudioChannel::Telephony) {
@@ -234,15 +241,21 @@ AudioChannelService::UnregisterType(AudioChannel aChannel,
   // There are two reasons to defer the decrease of telephony channel.
   // 1. User can have time to remove device from his ear before music resuming.
   // 2. Give BT SCO to be disconnected before starting to connect A2DP.
-  if (XRE_GetProcessType() == GeckoProcessType_Default &&
-      aChannel == AudioChannel::Telephony &&
-      (mChannelCounters[AUDIO_CHANNEL_INT_TELEPHONY_HIDDEN].Length() +
-       mChannelCounters[AUDIO_CHANNEL_INT_TELEPHONY].Length()) == 1) {
-    mTimerElementHidden = aElementHidden;
-    mTimerChildID = aChildID;
-    mDeferTelChannelTimer = do_CreateInstance("@mozilla.org/timer;1");
-    mDeferTelChannelTimer->InitWithCallback(this, 1500, nsITimer::TYPE_ONE_SHOT);
-    return;
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+
+    if (aChannel == AudioChannel::Telephony) {
+      UnregisterTelephonyChild(aChildID);
+    }
+
+    if (aChannel == AudioChannel::Telephony &&
+        (mChannelCounters[AUDIO_CHANNEL_INT_TELEPHONY_HIDDEN].Length() +
+         mChannelCounters[AUDIO_CHANNEL_INT_TELEPHONY].Length()) == 1) {
+      mTimerElementHidden = aElementHidden;
+      mTimerChildID = aChildID;
+      mDeferTelChannelTimer = do_CreateInstance("@mozilla.org/timer;1");
+      mDeferTelChannelTimer->InitWithCallback(this, 1500, nsITimer::TYPE_ONE_SHOT);
+      return;
+    }
   }
 
   UnregisterTypeInternal(aChannel, aElementHidden, aChildID, aWithVideo);
@@ -358,7 +371,7 @@ AudioChannelService::GetStateInternal(AudioChannel aChannel, uint64_t aChildID,
     if (CheckVolumeFadedCondition(newType, aElementHidden)) {
       return AUDIO_CHANNEL_STATE_FADED;
     }
-    return AUDIO_CHANNEL_STATE_NORMAL;
+    return CheckTelephonyPolicy(aChannel, aChildID);
   }
 
   // We are not visible, maybe we have to mute.
@@ -387,7 +400,34 @@ AudioChannelService::GetStateInternal(AudioChannel aChannel, uint64_t aChildID,
     return AUDIO_CHANNEL_STATE_MUTED;
   }
 
-  return AUDIO_CHANNEL_STATE_NORMAL;
+  return CheckTelephonyPolicy(aChannel, aChildID);
+}
+
+AudioChannelState
+AudioChannelService::CheckTelephonyPolicy(AudioChannel aChannel,
+                                          uint64_t aChildID)
+{
+  // Only the latest childID is allowed to play with telephony channel.
+  if (aChannel != AudioChannel::Telephony) {
+    return AUDIO_CHANNEL_STATE_NORMAL;
+  }
+
+  MOZ_ASSERT(!mTelephonyChildren.IsEmpty());
+
+#if DEBUG
+  bool found = false;
+  for (uint32_t i = 0, len = mTelephonyChildren.Length(); i < len; ++i) {
+    if (mTelephonyChildren[i].mChildID == aChildID) {
+      found = true;
+      break;
+    }
+  }
+
+  MOZ_ASSERT(found);
+#endif
+
+  return mTelephonyChildren.LastElement().mChildID == aChildID
+           ? AUDIO_CHANNEL_STATE_NORMAL : AUDIO_CHANNEL_STATE_MUTED;
 }
 
 bool
@@ -985,4 +1025,40 @@ AudioChannelService::GetDefaultAudioChannelString(nsAString& aString)
       }
     }
   }
+}
+
+void
+AudioChannelService::RegisterTelephonyChild(uint64_t aChildID)
+{
+  for (uint32_t i = 0, len = mTelephonyChildren.Length(); i < len; ++i) {
+    if (mTelephonyChildren[i].mChildID == aChildID) {
+      ++mTelephonyChildren[i].mInstances;
+
+      if (i != len - 1) {
+        TelephonyChild child = mTelephonyChildren[i];
+        mTelephonyChildren.RemoveElementAt(i);
+        mTelephonyChildren.AppendElement(child);
+      }
+
+      return;
+    }
+  }
+
+  mTelephonyChildren.AppendElement(TelephonyChild(aChildID));
+}
+
+void
+AudioChannelService::UnregisterTelephonyChild(uint64_t aChildID)
+{
+  for (uint32_t i = 0, len = mTelephonyChildren.Length(); i < len; ++i) {
+    if (mTelephonyChildren[i].mChildID == aChildID) {
+      if (!--mTelephonyChildren[i].mInstances) {
+        mTelephonyChildren.RemoveElementAt(i);
+      }
+
+      return;
+    }
+  }
+
+  MOZ_ASSERT(false, "This should not happen.");
 }

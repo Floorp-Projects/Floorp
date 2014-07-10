@@ -150,6 +150,11 @@ protected:
   void SetDefaultVolumeControlChannelInternal(int32_t aChannel,
                                               bool aHidden, uint64_t aChildID);
 
+  AudioChannelState CheckTelephonyPolicy(AudioChannel aChannel,
+                                         uint64_t aChildID);
+  void RegisterTelephonyChild(uint64_t aChildID);
+  void UnregisterTelephonyChild(uint64_t aChildID);
+
   AudioChannelService();
   virtual ~AudioChannelService();
 
@@ -224,6 +229,19 @@ protected:
   int32_t mCurrentVisibleHigherChannel;
 
   nsTArray<uint64_t> mWithVideoChildIDs;
+
+  // Telephony Channel policy is "LIFO", the last app to require the resource is
+  // allowed to play. The others are muted.
+  struct TelephonyChild {
+    uint64_t mChildID;
+    uint32_t mInstances;
+
+    explicit TelephonyChild(uint64_t aChildID)
+      : mChildID(aChildID)
+      , mInstances(1)
+    {}
+  };
+  nsTArray<TelephonyChild> mTelephonyChildren;
 
   // mPlayableHiddenContentChildID stores the ChildID of the process which can
   // play content channel(s) in the background.
