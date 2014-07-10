@@ -50,6 +50,7 @@
 
 #ifdef XP_WIN
 #include "SharedSurfaceANGLE.h"
+#include "mozilla/layers/TextureDIB.h"
 #endif
 
 #if 0
@@ -201,6 +202,7 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
   switch (aDesc.type()) {
     case SurfaceDescriptor::TSurfaceDescriptorShmem:
     case SurfaceDescriptor::TSurfaceDescriptorMemory:
+    case SurfaceDescriptor::TSurfaceDescriptorDIB:
       return CreateBackendIndependentTextureHost(aDesc, aDeallocator, aFlags);
 
     case SurfaceDescriptor::TSharedTextureDescriptor:
@@ -227,7 +229,6 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
 
 #ifdef XP_WIN
     case SurfaceDescriptor::TSurfaceDescriptorD3D9:
-    case SurfaceDescriptor::TSurfaceDescriptorDIB:
       return CreateTextureHostD3D9(aDesc, aDeallocator, aFlags);
 
     case SurfaceDescriptor::TSurfaceDescriptorD3D10:
@@ -264,6 +265,12 @@ CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
                                      aFlags);
       break;
     }
+#ifdef XP_WIN
+    case SurfaceDescriptor::TSurfaceDescriptorDIB: {
+      result = new DIBTextureHost(aFlags, aDesc);
+      break;
+    }
+#endif
     default: {
       NS_WARNING("No backend independent TextureHost for this descriptor type");
     }
