@@ -31,6 +31,7 @@
 #include "nsIResumableChannel.h"
 #include "nsITraceableChannel.h"
 #include "nsILoadContext.h"
+#include "nsILoadInfo.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "nsThreadUtils.h"
 #include "PrivateBrowsingChannel.h"
@@ -95,6 +96,8 @@ public:
   NS_IMETHOD GetURI(nsIURI **aURI);
   NS_IMETHOD GetOwner(nsISupports **aOwner);
   NS_IMETHOD SetOwner(nsISupports *aOwner);
+  NS_IMETHOD GetLoadInfo(nsILoadInfo **aLoadInfo);
+  NS_IMETHOD SetLoadInfo(nsILoadInfo *aLoadInfo);
   NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor **aCallbacks);
   NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks);
   NS_IMETHOD GetContentType(nsACString& aContentType);
@@ -274,6 +277,7 @@ protected:
   nsCOMPtr<nsISupports>             mListenerContext;
   nsCOMPtr<nsILoadGroup>            mLoadGroup;
   nsCOMPtr<nsISupports>             mOwner;
+  nsCOMPtr<nsILoadInfo>             mLoadInfo;
   nsCOMPtr<nsIInterfaceRequestor>   mCallbacks;
   nsCOMPtr<nsIProgressEventSink>    mProgressSink;
   nsCOMPtr<nsIURI>                  mReferrer;

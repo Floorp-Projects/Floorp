@@ -286,6 +286,20 @@ nsWyciwygChannel::SetOwner(nsISupports* aOwner)
 }
 
 NS_IMETHODIMP
+nsWyciwygChannel::GetLoadInfo(nsILoadInfo **aLoadInfo)
+{
+  NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWyciwygChannel::SetLoadInfo(nsILoadInfo* aLoadInfo)
+{
+  mLoadInfo = aLoadInfo;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWyciwygChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aCallbacks)
 {
   *aCallbacks = mCallbacks.get();
