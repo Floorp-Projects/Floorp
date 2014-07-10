@@ -83,7 +83,7 @@ interface NavigatorStorageUtils {
 
 [NoInterfaceObject]
 interface NavigatorFeatures {
-  [Func="Navigator::HasFeatureDetectionSupport"]
+  [CheckPermissions="feature-detection"]
   Promise getFeature(DOMString name);
 };
 
@@ -252,10 +252,12 @@ partial interface Navigator {
   boolean mozIsLocallyAvailable(DOMString uri, boolean whenOffline);
 };
 
+#ifdef MOZ_WEBSMS_BACKEND
 partial interface Navigator {
-  [Func="Navigator::HasMobileMessageSupport"]
+  [CheckPermissions="sms", Pref="dom.sms.enabled"]
   readonly attribute MozMobileMessageManager? mozMobileMessage;
 };
+#endif
 
 // NetworkInformation
 partial interface Navigator {
@@ -331,7 +333,7 @@ partial interface Navigator {
 #ifdef MOZ_TIME_MANAGER
 // nsIDOMMozNavigatorTime
 partial interface Navigator {
-  [Throws, Func="Navigator::HasTimeSupport"]
+  [Throws, CheckPermissions="time"]
   readonly attribute MozTimeManager mozTime;
 };
 #endif // MOZ_TIME_MANAGER
