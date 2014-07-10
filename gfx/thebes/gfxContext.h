@@ -792,7 +792,6 @@ private:
   AzureState &CurrentState() { return mStateStack[mStateStack.Length() - 1]; }
   const AzureState &CurrentState() const { return mStateStack[mStateStack.Length() - 1]; }
 
-  cairo_t *mCairo;
   cairo_t *mRefCairo;
   nsRefPtr<gfxASurface> mSurface;
   int32_t mFlags;
