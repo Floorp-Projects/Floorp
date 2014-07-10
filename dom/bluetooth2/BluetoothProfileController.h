@@ -27,19 +27,19 @@ BEGIN_BLUETOOTH_NAMESPACE
  */
 
 // Bit 23 ~ Bit 13: Major service class
-#define GET_MAJOR_SERVICE_CLASS(cod) ((cod & 0xffe000) >> 13)
+#define GET_MAJOR_SERVICE_CLASS(cod) (((cod) & 0xffe000) >> 13)
 
 // Bit 12 ~ Bit 8: Major device class
-#define GET_MAJOR_DEVICE_CLASS(cod)  ((cod & 0x1f00) >> 8)
+#define GET_MAJOR_DEVICE_CLASS(cod)  (((cod) & 0x1f00) >> 8)
 
 // Bit 7 ~ Bit 2: Minor device class
-#define GET_MINOR_DEVICE_CLASS(cod)  ((cod & 0xfc) >> 2)
+#define GET_MINOR_DEVICE_CLASS(cod)  (((cod) & 0xfc) >> 2)
 
 // Audio: Major service class = 0x100 (Bit 21 is set)
-#define HAS_AUDIO(cod)               (cod & 0x200000)
+#define HAS_AUDIO(cod)               ((cod) & 0x200000)
 
 // Rendering: Major service class = 0x20 (Bit 18 is set)
-#define HAS_RENDERING(cod)           (cod & 0x40000)
+#define HAS_RENDERING(cod)           ((cod) & 0x40000)
 
 // Peripheral: Major device class = 0x5
 #define IS_PERIPHERAL(cod)           (GET_MAJOR_DEVICE_CLASS(cod) == 0x5)

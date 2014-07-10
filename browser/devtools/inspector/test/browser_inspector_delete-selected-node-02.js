@@ -10,7 +10,7 @@
 // box model view, and breadcrumbs, reset accordingly to show the right node
 
 const TEST_PAGE = TEST_URL_ROOT +
-  "browser_inspector_bug_848731_reset_selection_on_delete.html";
+  "doc_inspector_delete-selected-node-02.html";
 
 let test = asyncTest(function* () {
   let { inspector } = yield openInspectorForURL(TEST_PAGE);

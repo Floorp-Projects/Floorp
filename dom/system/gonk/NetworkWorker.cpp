@@ -18,8 +18,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
-#define PROPERTY_VALUE_MAX 80
-
 namespace mozilla {
 
 nsCOMPtr<nsIThread> gWorkerThread;
@@ -39,15 +37,6 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
 
 #define COPY_FIELD(prop) mResult.prop = aResult.prop;
-#define COPY_SEQUENCE_FIELD(prop, type)                                                   \
-    if (aResult.prop.WasPassed()) {                                                       \
-      mozilla::dom::Sequence<type > const & currentValue = aResult.prop.InternalValue();  \
-      uint32_t length = currentValue.Length();                                            \
-      mResult.prop.Construct();                                                           \
-      for (uint32_t idx = 0; idx < length; idx++) {                                       \
-        mResult.prop.Value().AppendElement(currentValue[idx]);                            \
-      }                                                                                   \
-    }
     COPY_FIELD(mId)
     COPY_FIELD(mRet)
     COPY_FIELD(mBroadcast)
@@ -64,16 +53,6 @@ public:
     COPY_FIELD(mSuccess)
     COPY_FIELD(mCurExternalIfname)
     COPY_FIELD(mCurInternalIfname)
-    COPY_FIELD(mIpAddr)
-    COPY_FIELD(mGateway)
-    COPY_FIELD(mDns1)
-    COPY_FIELD(mDns2)
-    COPY_FIELD(mServer)
-    COPY_FIELD(mLease)
-    COPY_FIELD(mVendorInfo)
-    COPY_FIELD(mMaskLength)
-    COPY_FIELD(mFlag)
-    COPY_SEQUENCE_FIELD(mInterfaceList, nsString)
 #undef COPY_FIELD
   }
 
@@ -107,66 +86,6 @@ public:
     if (gNetworkUtils) {
       gNetworkUtils->ExecuteCommand(mParams);
     }
-    return NS_OK;
-  }
-private:
-  NetworkParams mParams;
-};
-
-// Runnable used for blocking command.
-class RunDhcpEvent : public nsRunnable
-{
-public:
-  RunDhcpEvent(const NetworkParams& aParams)
-  : mParams(aParams)
-  {}
-
-  NS_IMETHOD Run()
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    nsAutoPtr<NetUtils> netUtils;
-    netUtils = new NetUtils();
-
-    NetworkResultOptions result;
-    result.mId = mParams.mId;
-
-    int32_t status;
-    char ipaddr[PROPERTY_VALUE_MAX];
-    char gateway[PROPERTY_VALUE_MAX];
-    uint32_t prefixLength;
-    char dns1[PROPERTY_VALUE_MAX];
-    char dns2[PROPERTY_VALUE_MAX];
-    char server[PROPERTY_VALUE_MAX];
-    uint32_t lease;
-    char vendorinfo[PROPERTY_VALUE_MAX];
-    status = netUtils->do_dhcp_do_request(NS_ConvertUTF16toUTF8(mParams.mIfname).get(),
-                                          ipaddr,
-                                          gateway,
-                                          &prefixLength,
-                                          dns1,
-                                          dns2,
-                                          server,
-                                          &lease,
-                                          vendorinfo);
-
-
-    if (status == 0) {
-      // run dhcp success.
-      result.mSuccess = true;
-      result.mIpAddr = NS_ConvertUTF8toUTF16(ipaddr);
-      result.mGateway = NS_ConvertUTF8toUTF16(gateway);
-      result.mDns1 = NS_ConvertUTF8toUTF16(dns1);
-      result.mDns2 = NS_ConvertUTF8toUTF16(dns2);
-      result.mServer = NS_ConvertUTF8toUTF16(server);
-      result.mLease = lease;
-      result.mVendorInfo = NS_ConvertUTF8toUTF16(vendorinfo);
-      result.mMaskLength = prefixLength;
-    }
-
-    nsCOMPtr<nsIRunnable> runnable = new NetworkResultDispatcher(result);
-    NS_DispatchToMainThread(runnable);
-
     return NS_OK;
   }
 private:
@@ -305,37 +224,13 @@ NetworkWorker::PostMessage(JS::Handle<JS::Value> aOptions, JSContext* aCx)
     return NS_ERROR_FAILURE;
   }
 
-  NetworkParams NetworkParams(options);
-
-  if (NetworkParams.mIsBlocking) {
-    NetworkWorker::HandleBlockingCommand(NetworkParams);
-    return NS_OK;
-  }
-
   // Dispatch the command to the control thread.
+  NetworkParams NetworkParams(options);
   nsCOMPtr<nsIRunnable> runnable = new NetworkCommandDispatcher(NetworkParams);
   if (gWorkerThread) {
     gWorkerThread->Dispatch(runnable, nsIEventTarget::DISPATCH_NORMAL);
   }
   return NS_OK;
-}
-
-void
-NetworkWorker::HandleBlockingCommand(NetworkParams& aOptions)
-{
-  if (aOptions.mCmd.EqualsLiteral("runDhcp")) {
-    NetworkWorker::RunDhcp(aOptions);
-  }
-}
-
-void
-NetworkWorker::RunDhcp(NetworkParams& aOptions)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIRunnable> runnable = new RunDhcpEvent(aOptions);
-  nsCOMPtr<nsIThread> thread;
-  NS_NewThread(getter_AddRefs(thread), runnable);
 }
 
 void

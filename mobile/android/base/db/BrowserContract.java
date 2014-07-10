@@ -33,6 +33,9 @@ public class BrowserContract {
     public static final String READING_LIST_AUTHORITY = AppConstants.ANDROID_PACKAGE_NAME + ".db.readinglist";
     public static final Uri READING_LIST_AUTHORITY_URI = Uri.parse("content://" + READING_LIST_AUTHORITY);
 
+    public static final String SEARCH_HISTORY_AUTHORITY = AppConstants.ANDROID_PACKAGE_NAME + ".db.searchhistory";
+    public static final Uri SEARCH_HISTORY_AUTHORITY_URI = Uri.parse("content://" + SEARCH_HISTORY_AUTHORITY);
+
     public static final String PARAM_PROFILE = "profile";
     public static final String PARAM_PROFILE_PATH = "profilePath";
     public static final String PARAM_LIMIT = "limit";
@@ -431,6 +434,17 @@ public class BrowserContract {
         public static final String DISPLAY = "display";
 
         public static final String TYPE = "type";
+    }
+
+    @RobocopTarget
+    public static final class SearchHistory implements CommonColumns, HistoryColumns {
+        private SearchHistory() {}
+
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/searchhistory";
+        public static final String QUERY = "query";
+        public static final String TABLE_NAME = "searchhistory";
+
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(SEARCH_HISTORY_AUTHORITY_URI, "searchhistory");
     }
 
     @RobocopTarget
