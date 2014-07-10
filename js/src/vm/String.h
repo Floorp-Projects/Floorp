@@ -953,6 +953,14 @@ class JSExternalString : public JSFlatString
         return d.s.u3.externalFinalizer;
     }
 
+    /*
+     * External chars are never allocated inline or in the nursery, so we can
+     * safely expose this without requiring an AutoCheckCannotGC argument.
+     */
+    const jschar *twoByteChars() const {
+        return rawTwoByteChars();
+    }
+
     /* Only called by the GC for strings with the FINALIZE_EXTERNAL_STRING kind. */
 
     inline void finalize(js::FreeOp *fop);
