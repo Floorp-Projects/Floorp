@@ -288,6 +288,20 @@ HttpBaseChannel::SetOwner(nsISupports *aOwner)
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::SetLoadInfo(nsILoadInfo *aLoadInfo)
+{
+  mLoadInfo = aLoadInfo;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetLoadInfo(nsILoadInfo **aLoadInfo)
+{
+  NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetNotificationCallbacks(nsIInterfaceRequestor **aCallbacks)
 {
   *aCallbacks = mCallbacks;

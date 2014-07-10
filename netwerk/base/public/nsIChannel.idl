@@ -9,6 +9,7 @@ interface nsIURI;
 interface nsIInterfaceRequestor;
 interface nsIInputStream;
 interface nsIStreamListener;
+interface nsILoadInfo;
 
 /**
  * The nsIChannel interface allows clients to construct "GET" requests for
@@ -24,7 +25,7 @@ interface nsIStreamListener;
  *
  * This interface must be used only from the XPCOM main thread.
  */
-[scriptable, uuid(2a8a7237-c1e2-4de7-b669-2002af29e42d)]
+[scriptable, uuid(3423767b-9f4e-430e-9859-67a83ffb689d)]
 interface nsIChannel : nsIRequest
 {
     /**
@@ -302,4 +303,11 @@ interface nsIChannel : nsIRequest
      * @deprecated Use contentDisposition/contentDispositionFilename instead.
      */
     readonly attribute ACString contentDispositionHeader;
+
+    /**
+     * The nsILoadInfo for this load.  This is immutable for the
+     * lifetime of the load and should be passed through across
+     * redirects and the like.
+     */
+    attribute nsILoadInfo loadInfo;
 };

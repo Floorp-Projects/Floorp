@@ -464,6 +464,20 @@ WyciwygChannelChild::SetOwner(nsISupports * aOwner)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+WyciwygChannelChild::GetLoadInfo(nsILoadInfo **aLoadInfo)
+{
+  NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WyciwygChannelChild::SetLoadInfo(nsILoadInfo* aLoadInfo)
+{
+  mLoadInfo = aLoadInfo;
+  return NS_OK;
+}
+
 /* attribute nsIInterfaceRequestor notificationCallbacks; */
 NS_IMETHODIMP
 WyciwygChannelChild::GetNotificationCallbacks(nsIInterfaceRequestor * *aCallbacks)
