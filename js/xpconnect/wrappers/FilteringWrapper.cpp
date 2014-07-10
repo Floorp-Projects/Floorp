@@ -141,22 +141,6 @@ FilteringWrapper<Base, Policy>::defaultValue(JSContext *cx, HandleObject obj,
     return Base::defaultValue(cx, obj, hint, vp);
 }
 
-// With our entirely-opaque wrapper, the DefaultValue algorithm throws,
-// causing spurious exceptions. Manually implement something benign.
-template<>
-bool
-FilteringWrapper<CrossCompartmentSecurityWrapper, GentlyOpaque>
-                ::defaultValue(JSContext *cx, HandleObject obj,
-                               JSType hint, MutableHandleValue vp) const
-{
-    JSString *str = JS_NewStringCopyZ(cx, "[Opaque]");
-    if (!str)
-        return false;
-    vp.set(JS::StringValue(str));
-    return true;
-}
-
-
 template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::enter(JSContext *cx, HandleObject wrapper,
@@ -190,18 +174,15 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, HandleObject wrapper,
 #define DXOW   FilteringWrapper<SecurityXrayDOM, CrossOriginAccessiblePropertiesOnly>
 #define NNXOW FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>
 #define NNXOWC FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>
-#define GO FilteringWrapper<CrossCompartmentSecurityWrapper, GentlyOpaque>
+
 template<> const XOW XOW::singleton(0);
 template<> const DXOW DXOW::singleton(0);
 template<> const NNXOW NNXOW::singleton(0);
 template<> const NNXOWC NNXOWC::singleton(0);
-
-template<> const GO GO::singleton(0);
 
 template class XOW;
 template class DXOW;
 template class NNXOW;
 template class NNXOWC;
 template class ChromeObjectWrapperBase;
-template class GO;
 }
