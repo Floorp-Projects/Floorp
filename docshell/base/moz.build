@@ -46,10 +46,12 @@ EXPORTS += [
 EXPORTS.mozilla += [
     'IHistory.h',
     'LoadContext.h',
+    'LoadInfo.h',
 ]
 
 UNIFIED_SOURCES += [
     'LoadContext.cpp',
+    'LoadInfo.cpp',
     'nsAboutRedirector.cpp',
     'nsDefaultURIFixup.cpp',
     'nsDocShellEditorData.cpp',
