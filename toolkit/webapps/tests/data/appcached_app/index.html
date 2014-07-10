@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html manifest="manifest.appcache">
+<head>
+<title>Test app</title>
+</head>
+<body>
+<script type="application/javascript">
+window.applicationCache.addEventListener('noupdate', function(aEvent) {
+  var iframe = document.getElementById('ifr');
+  iframe.src = "http://127.0.0.1:8888/chrome/toolkit/webapps/tests/app.sjs?appreq";
+}, false);
+</script>
+<iframe id="ifr"></iframe>
+</body>
+</html>
