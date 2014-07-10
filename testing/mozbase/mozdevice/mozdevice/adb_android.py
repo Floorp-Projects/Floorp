@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import re
 import time
 
 from adb import ADBDevice, ADBError
@@ -11,6 +12,42 @@ from distutils.version import StrictVersion
 
 class ADBAndroidMixin(object):
     """Mixin to extend ADB with Android-specific functionality"""
+
+    # Informational methods
+
+    def get_battery_percentage(self, timeout=None):
+        """Returns the battery charge as a percentage.
+
+        :param timeout: optional integer specifying the maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+        :returns: battery charge as a percentage.
+        :raises: * ADBTimeoutError
+                 * ADBError
+
+        """
+        level = None
+        scale = None
+        percentage = 0
+        cmd = "dumpsys battery"
+        re_parameter = re.compile(r'\s+(\w+):\s+(\d+)')
+        lines = self.shell_output(cmd, timeout=timeout).split('\r')
+        for line in lines:
+            match = re_parameter.match(line)
+            if match:
+                parameter = match.group(1)
+                value = match.group(2)
+                if parameter == 'level':
+                    level = float(value)
+                elif parameter == 'scale':
+                    scale = float(value)
+                if parameter is not None and scale is not None:
+                    percentage = 100.0*level/scale
+                    break
+        return percentage
 
     # System control methods
 
@@ -26,9 +63,8 @@ class ADBAndroidMixin(object):
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the wait-for-device command fails.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         self.command_output(["wait-for-device"], timeout=timeout)
@@ -75,10 +111,8 @@ class ADBAndroidMixin(object):
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         try:
@@ -102,10 +136,8 @@ class ADBAndroidMixin(object):
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         reboot() reboots the device, issues an adb wait-for-device in order to
         wait for the device to complete rebooting, then calls is_device_ready()
@@ -129,10 +161,8 @@ class ADBAndroidMixin(object):
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         data = self.command_output(["install", apk_path], timeout=timeout)
@@ -151,10 +181,8 @@ class ADBAndroidMixin(object):
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         pm_error_string = 'Error: Could not access the Package Manager'
@@ -185,10 +213,8 @@ class ADBAndroidMixin(object):
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         # If fail_if_running is True, we throw an exception here. Only one
@@ -244,10 +270,8 @@ class ADBAndroidMixin(object):
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         extras = {}
@@ -283,10 +307,8 @@ class ADBAndroidMixin(object):
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         version = self.shell_output("getprop ro.build.version.release",
@@ -324,10 +346,8 @@ class ADBAndroidMixin(object):
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         if self.is_app_installed(app_name, timeout=timeout):
@@ -349,10 +369,8 @@ class ADBAndroidMixin(object):
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :raises: * ADBTimeoutError - raised if the command takes longer than
-                   timeout seconds.
-                 * ADBError - raised if the command exits with a
-                   non-zero exit code.
+        :raises: * ADBTimeoutError
+                 * ADBError
 
         """
         output = self.command_output(["install", "-r", apk_path],
