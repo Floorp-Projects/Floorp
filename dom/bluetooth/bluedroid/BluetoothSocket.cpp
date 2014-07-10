@@ -159,7 +159,7 @@ public:
     mShuttingDownOnIOThread = true;
   }
 
-  void Connect();
+  void Connect(int aFd);
   void Listen(int aFd);
 
   void SetUpIO(bool aWrite)
@@ -392,16 +392,20 @@ private:
 class SocketConnectTask : public DroidSocketImplTask
 {
 public:
-  SocketConnectTask(DroidSocketImpl* aDroidSocketImpl)
+  SocketConnectTask(DroidSocketImpl* aDroidSocketImpl, int aFd)
   : DroidSocketImplTask(aDroidSocketImpl)
+  , mFd(aFd)
   { }
 
   void Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(!IsCanceled());
-    GetDroidSocketImpl()->Connect();
+    GetDroidSocketImpl()->Connect(mFd);
   }
+
+private:
+  int mFd;
 };
 
 class SocketListenTask : public DroidSocketImplTask
@@ -438,38 +442,21 @@ public:
 };
 
 void
-DroidSocketImpl::Connect()
+DroidSocketImpl::Connect(int aFd)
 {
-  MOZ_ASSERT(sBluetoothSocketInterface);
+  MOZ_ASSERT(aFd >= 0);
 
-  bt_bdaddr_t remoteBdAddress;
-  StringToBdAddressType(mDeviceAddress, &remoteBdAddress);
-
-  // TODO: uuid as argument
-  int fd = -1;
-  bt_status_t status =
-    sBluetoothSocketInterface->Connect(&remoteBdAddress,
-                                       BTSOCK_RFCOMM,
-                                       UUID_OBEX_OBJECT_PUSH,
-                                       mChannel,
-                                       fd,
-                                       (BTSOCK_FLAG_ENCRYPT * mEncrypt) |
-                                       (BTSOCK_FLAG_AUTH * mAuth));
-  NS_ENSURE_TRUE_VOID(status == BT_STATUS_SUCCESS);
-  NS_ENSURE_TRUE_VOID(fd >= 0);
-
-  int flags = TEMP_FAILURE_RETRY(fcntl(fd, F_GETFL));
+  int flags = TEMP_FAILURE_RETRY(fcntl(aFd, F_GETFL));
   NS_ENSURE_TRUE_VOID(flags >= 0);
 
   if (!(flags & O_NONBLOCK)) {
-    int res = TEMP_FAILURE_RETRY(fcntl(fd, F_SETFL, flags | O_NONBLOCK));
+    int res = TEMP_FAILURE_RETRY(fcntl(aFd, F_SETFL, flags | O_NONBLOCK));
     NS_ENSURE_TRUE_VOID(!res);
   }
 
-  SetFd(fd);
+  SetFd(aFd);
 
   AddWatchers(READ_WATCHER, true);
-  AddWatchers(WRITE_WATCHER, false);
 }
 
 void
@@ -674,6 +661,32 @@ BluetoothSocket::CloseDroidSocket()
   OnDisconnect();
 }
 
+class ConnectResultHandler MOZ_FINAL : public BluetoothSocketResultHandler
+{
+public:
+  ConnectResultHandler(DroidSocketImpl* aImpl)
+  : mImpl(aImpl)
+  {
+    MOZ_ASSERT(mImpl);
+  }
+
+  void Connect(int aFd) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+                                     new SocketConnectTask(mImpl, aFd));
+  }
+
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    BT_WARNING("Connect failed: %d", (int)aStatus);
+  }
+
+private:
+  DroidSocketImpl* mImpl;
+};
+
 bool
 BluetoothSocket::Connect(const nsAString& aDeviceAddress, int aChannel)
 {
@@ -683,9 +696,18 @@ BluetoothSocket::Connect(const nsAString& aDeviceAddress, int aChannel)
   mIsServer = false;
   mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this, aDeviceAddress,
                               aChannel, mAuth, mEncrypt);
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                   new SocketConnectTask(mImpl));
 
+  bt_bdaddr_t remoteBdAddress;
+  StringToBdAddressType(aDeviceAddress, &remoteBdAddress);
+
+  // TODO: uuid as argument
+  sBluetoothSocketInterface->Connect(&remoteBdAddress,
+                                     BTSOCK_RFCOMM,
+                                     UUID_OBEX_OBJECT_PUSH,
+                                     aChannel,
+                                     (BTSOCK_FLAG_ENCRYPT * mEncrypt) |
+                                     (BTSOCK_FLAG_AUTH * mAuth),
+                                     new ConnectResultHandler(mImpl));
   return true;
 }
 

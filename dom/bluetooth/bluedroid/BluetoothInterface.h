@@ -51,9 +51,9 @@ public:
               const char* aServiceName, const uint8_t* aServiceUuid,
               int aChannel, int aFlags, BluetoothSocketResultHandler* aRes);
 
-  bt_status_t Connect(const bt_bdaddr_t* aBdAddr, btsock_type_t aType,
-                      const uint8_t* aUuid, int aChannel, int& aSockFd,
-                      int aFlags);
+  void Connect(const bt_bdaddr_t* aBdAddr, btsock_type_t aType,
+               const uint8_t* aUuid, int aChannel, int aFlags,
+               BluetoothSocketResultHandler* aRes);
 
 protected:
   BluetoothSocketInterface(const btsock_interface_t* aInterface);
