@@ -153,7 +153,8 @@ class StructuredLogger(object):
         """
         self._log_data("test_start", {"test": test})
 
-    def test_status(self, test, subtest, status, expected="PASS", message=None):
+    def test_status(self, test, subtest, status, expected="PASS", message=None,
+                    stack=None, extra=None):
         """
         Log a test_status message indicating a subtest result. Tests that
         do not have subtests are not expected to produce test_status messages.
@@ -163,6 +164,8 @@ class StructuredLogger(object):
         :param status: Status string indicating the subtest result
         :param expected: Status string indicating the expected subtest result.
         :param message: String containing a message associated with the result.
+        :param stack: a stack trace encountered during test execution.
+        :param extra: suite-specific data associated with the test result.
         """
         if status.upper() not in ["PASS", "FAIL", "TIMEOUT", "NOTRUN", "ASSERT"]:
             raise ValueError("Unrecognised status %s" % status)
@@ -173,9 +176,14 @@ class StructuredLogger(object):
             data["message"] = message
         if expected != data["status"]:
             data["expected"] = expected
+        if stack is not None:
+            data["stack"] = stack
+        if extra is not None:
+            data["extra"] = extra
         self._log_data("test_status", data)
 
-    def test_end(self, test, status, expected="OK", message=None, extra=None):
+    def test_end(self, test, status, expected="OK", message=None, stack=None,
+                 extra=None):
         """
         Log a test_end message indicating that a test completed. For tests
         with subtests this indicates whether the overall test completed without
@@ -186,6 +194,7 @@ class StructuredLogger(object):
         :param status: Status string indicating the test result
         :param expected: Status string indicating the expected test result.
         :param message: String containing a message associated with the result.
+        :param stack: a stack trace encountered during test execution.
         :param extra: suite-specific data associated with the test result.
         """
         if status.upper() not in ["PASS", "FAIL", "OK", "ERROR", "TIMEOUT",
@@ -197,6 +206,8 @@ class StructuredLogger(object):
             data["message"] = message
         if expected != data["status"] and status != "SKIP":
             data["expected"] = expected
+        if stack is not None:
+            data["stack"] = stack
         if extra is not None:
             data["extra"] = extra
         self._log_data("test_end", data)
