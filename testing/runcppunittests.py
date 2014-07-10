@@ -7,10 +7,13 @@
 from __future__ import with_statement
 import sys, os, tempfile, shutil
 from optparse import OptionParser
-import mozprocess, mozinfo, mozlog, mozcrash, mozfile
+import mozprocess
+import mozinfo
+import mozcrash
+import mozfile
 from contextlib import contextmanager
-
-log = mozlog.getLogger('cppunittests')
+from mozlog import structured
+from subprocess import PIPE
 
 class CPPUnitTests(object):
     # Time (seconds) to wait for test process to complete
@@ -18,7 +21,7 @@ class CPPUnitTests(object):
     # Time (seconds) in which process will be killed if it produces no output.
     TEST_PROC_NO_OUTPUT_TIMEOUT = 300
 
-    def run_one_test(self, prog, env, symbols_path=None):
+    def run_one_test(self, prog, env, symbols_path=None, interactive=False):
         """
         Run a single C++ unit test program.
 
@@ -31,28 +34,44 @@ class CPPUnitTests(object):
         Return True if the program exits with a zero status, False otherwise.
         """
         basename = os.path.basename(prog)
-        log.info("Running test %s", basename)
+        self.log.test_start(basename)
         with mozfile.TemporaryDirectory() as tempdir:
-            proc = mozprocess.ProcessHandler([prog],
-                                             cwd=tempdir,
-                                             env=env)
+            if interactive:
+                # For tests run locally, via mach, print output directly
+                proc = mozprocess.ProcessHandler([prog],
+                                                 cwd=tempdir,
+                                                 env=env,
+                                                 storeOutput=False)
+            else:
+                proc = mozprocess.ProcessHandler([prog],
+                                                 cwd=tempdir,
+                                                 env=env,
+                                                 storeOutput=True,
+                                                 processOutputLine=lambda _: None)
             #TODO: After bug 811320 is fixed, don't let .run() kill the process,
             # instead use a timeout in .wait() and then kill to get a stack.
             proc.run(timeout=CPPUnitTests.TEST_PROC_TIMEOUT,
                      outputTimeout=CPPUnitTests.TEST_PROC_NO_OUTPUT_TIMEOUT)
             proc.wait()
+            if proc.output:
+                output = "\n%s" % "\n".join(proc.output)
+                self.log.process_output(proc.pid, output, command=[prog])
             if proc.timedOut:
-                log.testFail("%s | timed out after %d seconds",
-                             basename, CPPUnitTests.TEST_PROC_TIMEOUT)
+                message = "timed out after %d seconds" % CPPUnitTests.TEST_PROC_TIMEOUT
+                self.log.test_end(basename, status='TIMEOUT', expected='PASS',
+                                  message=message)
                 return False
             if mozcrash.check_for_crashes(tempdir, symbols_path,
                                           test_name=basename):
-                log.testFail("%s | test crashed", basename)
+                self.log.test_end(basename, status='CRASH', expected='PASS')
                 return False
             result = proc.proc.returncode == 0
             if not result:
-                log.testFail("%s | test failed with return code %d",
-                             basename, proc.proc.returncode)
+                self.log.test_end(basename, status='FAIL', expected='PASS',
+                                  message=("test failed with return code %d" %
+                                           proc.proc.returncode))
+            else:
+                self.log.test_end(basename, status='PASS', expected='PASS')
             return result
 
     def build_core_environment(self, env = {}):
@@ -94,13 +113,13 @@ class CPPUnitTests(object):
         llvmsym = os.path.join(self.xre_path, "llvm-symbolizer")
         if os.path.isfile(llvmsym):
             env["ASAN_SYMBOLIZER_PATH"] = llvmsym
-            log.info("ASan using symbolizer at %s", llvmsym)
+            self.log.info("ASan using symbolizer at %s" % llvmsym)
         else:
-            log.info("Failed to find ASan symbolizer at %s", llvmsym)
+            self.log.info("Failed to find ASan symbolizer at %s" % llvmsym)
 
         return env
 
-    def run_tests(self, programs, xre_path, symbols_path=None):
+    def run_tests(self, programs, xre_path, symbols_path=None, interactive=False):
         """
         Run a set of C++ unit test programs.
 
@@ -114,19 +133,23 @@ class CPPUnitTests(object):
         otherwise.
         """
         self.xre_path = xre_path
+        self.log = structured.structuredlog.get_default_logger()
+        self.log.suite_start(programs)
         env = self.build_environment()
         pass_count = 0
         fail_count = 0
         for prog in programs:
-            single_result = self.run_one_test(prog, env, symbols_path)
+            single_result = self.run_one_test(prog, env, symbols_path, interactive)
             if single_result:
                 pass_count += 1
             else:
                 fail_count += 1
+        self.log.suite_end()
 
-        log.info("Result summary:")
-        log.info("Passed: %d" % pass_count)
-        log.info("Failed: %d" % fail_count)
+        # Mozharness-parseable summary formatting.
+        self.log.info("Result summary:")
+        self.log.info("cppunittests INFO | Passed: %d" % pass_count)
+        self.log.info("cppunittests INFO | Failed: %d" % fail_count)
         return fail_count == 0
 
 class CPPUnittestOptions(OptionParser):
@@ -171,6 +194,7 @@ def extract_unittests_from_args(args, manifest_file):
 
 def main():
     parser = CPPUnittestOptions()
+    structured.commandline.add_logging_group(parser)
     options, args = parser.parse_args()
     if not args:
         print >>sys.stderr, """Usage: %s <test binary> [<test binary>...]""" % sys.argv[0]
@@ -178,17 +202,22 @@ def main():
     if not options.xre_path:
         print >>sys.stderr, """Error: --xre-path is required"""
         sys.exit(1)
-        
+
+    log = structured.commandline.setup_logging("cppunittests",
+                                               options,
+                                               {"tbpl": sys.stdout})
+
     progs = extract_unittests_from_args(args, options.manifest_file)
     options.xre_path = os.path.abspath(options.xre_path)
     tester = CPPUnitTests()
+
     try:
         result = tester.run_tests(progs, options.xre_path, options.symbols_path)
-    except Exception, e:
+    except Exception as e:
         log.error(str(e))
         result = False
+
     sys.exit(0 if result else 1)
 
 if __name__ == '__main__':
     main()
-
