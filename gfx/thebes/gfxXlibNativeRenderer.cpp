@@ -140,10 +140,6 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
                                   uint32_t flags,
                                   Screen *screen, Visual *visual)
 {
-    if (ctx->IsCairo()) {
-        return DrawCairo(ctx->GetCairo(), size, flags, screen, visual);
-    }
-
     // We need to actually borrow the context because we want to read out the
     // clip rectangles.
     BorrowedCairoContext borrowed(ctx->GetDrawTarget());
@@ -529,19 +525,11 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
     gfxPoint offset(drawingRect.x, drawingRect.y);
 
     DrawingMethod method;
-    cairo_surface_t* cairoTarget = nullptr;
-    DrawTarget* drawTarget = nullptr;
-    gfxPoint deviceTranslation;
-    if (ctx->IsCairo()) {
-        cairoTarget = cairo_get_group_target(ctx->GetCairo());
-        deviceTranslation = ctx->CurrentMatrix().GetTranslation();
-    } else {
-        drawTarget = ctx->GetDrawTarget();
-        Matrix dtTransform = drawTarget->GetTransform();
-        deviceTranslation = gfxPoint(dtTransform._31, dtTransform._32);
-        cairoTarget = static_cast<cairo_surface_t*>
+    DrawTarget* drawTarget = ctx->GetDrawTarget();
+    Matrix dtTransform = drawTarget->GetTransform();
+    gfxPoint deviceTranslation = gfxPoint(dtTransform._31, dtTransform._32);
+    cairo_surface_t* cairoTarget = static_cast<cairo_surface_t*>
             (drawTarget->GetNativeSurface(NativeSurfaceType::CAIRO_SURFACE));
-    }
 
     cairo_surface_t* tempXlibSurface =
         CreateTempXlibSurface(cairoTarget, drawTarget, size,

@@ -540,7 +540,7 @@ MozMillElement.prototype.rightClick = function (aOffsetX, aOffsetY, aExpectedEve
  * @param {Touch[]} [aEvent.touches]
  *        A TouchList of all the Touch objects representing all current points
  *        of contact with the surface, regardless of target or changed status
- * @param {Number} [aEvent.type=*|touchstart|touchend|touchmove|touchenter|touchleave|touchcancel]
+ * @param {Number} [aEvent.type=*|touchstart|touchend|touchmove|touchcancel]
  *        The type of touch event that occurred
  * @param {Element} [aEvent.target]
  *        The target of the touches associated with this event. This target

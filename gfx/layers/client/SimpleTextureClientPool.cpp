@@ -72,12 +72,12 @@ SimpleTextureClientPool::GetTextureClient(bool aAutoRecycle)
     if (gfxPrefs::ForceShmemTiles()) {
       textureClient = TextureClient::CreateBufferTextureClient(mSurfaceAllocator,
         mFormat, TextureFlags::IMMEDIATE_UPLOAD | TextureFlags::RECYCLE, gfx::BackendType::NONE);
+      if (!textureClient->AllocateForSurface(mSize, ALLOC_DEFAULT)) {
+        NS_WARNING("TextureClient::AllocateForSurface failed!");
+      }
     } else {
-      textureClient = TextureClient::CreateTextureClientForDrawing(mSurfaceAllocator,
-        mFormat, TextureFlags::DEFAULT | TextureFlags::RECYCLE, gfx::BackendType::NONE, mSize);
-    }
-    if (!textureClient->AllocateForSurface(mSize, ALLOC_DEFAULT)) {
-      NS_WARNING("TextureClient::AllocateForSurface failed!");
+      textureClient = TextureClient::CreateForDrawing(mSurfaceAllocator,
+        mFormat, mSize, gfx::BackendType::NONE, TextureFlags::DEFAULT | TextureFlags::RECYCLE);
     }
     RECYCLE_LOG("%s Must allocate (0 left), returning %p\n", (mFormat == SurfaceFormat::B8G8R8A8?"poolA":"poolX"), textureClient.get());
   }

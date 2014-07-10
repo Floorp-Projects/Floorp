@@ -32,7 +32,9 @@ export-preqs = \
   $(call mkdir_deps,$(CURDIR)/third_party/libevent) \
   $(NULL)
 
-export:: $(export-preqs)
+export:: $(DIST)/third_party/libevent/event.h
+
+$(DIST)/third_party/libevent/event.h:: $(export-preqs)
 	echo '#include <event.h>' > $(CURDIR)/third_party/libevent/event.h
 
 endif # }
