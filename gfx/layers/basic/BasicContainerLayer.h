@@ -86,12 +86,6 @@ public:
                         void* aCallbackData,
                         ReadbackProcessor* aReadback) MOZ_OVERRIDE;
 
-  /**
-   * We don't really have a hard restriction for max layer size, but we pick
-   * 4096 to avoid excessive memory usage.
-   */
-  virtual int32_t GetMaxLayerSize() MOZ_OVERRIDE { return 4096; }
-
 protected:
   BasicLayerManager* BasicManager()
   {
