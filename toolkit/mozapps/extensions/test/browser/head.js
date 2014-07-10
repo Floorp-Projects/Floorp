@@ -357,7 +357,7 @@ function close_manager(aManagerWindow, aCallback, aLongerTimeout) {
 
     aManagerWindow.addEventListener("unload", function() {
       try {
-        dump("Manager window unload handler");
+        dump("Manager window unload handler\n");
         this.removeEventListener("unload", arguments.callee, false);
         resolve();
       } catch(e) {
@@ -1103,7 +1103,7 @@ MockAddon.prototype = {
   get applyBackgroundUpdates() {
     return this._applyBackgroundUpdates;
   },
-  
+
   set applyBackgroundUpdates(val) {
     if (val != AddonManager.AUTOUPDATE_DEFAULT &&
         val != AddonManager.AUTOUPDATE_DISABLE &&
