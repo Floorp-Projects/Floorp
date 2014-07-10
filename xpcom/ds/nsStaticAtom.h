@@ -20,28 +20,30 @@ typedef char16_t nsStaticAtomStringType;
  * the above macros to initialize these structs. They should never be accessed
  * directly other than from AtomTable.cpp
  */
-struct nsStaticAtom {
-    nsStringBuffer* mStringBuffer;
-    nsIAtom ** mAtom;
+struct nsStaticAtom
+{
+  nsStringBuffer* mStringBuffer;
+  nsIAtom** mAtom;
 };
 
 /**
  * This is a struct with the same binary layout as a nsStringBuffer.
  */
-template <uint32_t size>
-struct nsFakeStringBuffer {
-    int32_t mRefCnt;
-    uint32_t mSize;
-    nsStaticAtomStringType mStringData[size];
+template<uint32_t size>
+struct nsFakeStringBuffer
+{
+  int32_t mRefCnt;
+  uint32_t mSize;
+  nsStaticAtomStringType mStringData[size];
 };
 
 // Register an array of static atoms with the atom table
 template<uint32_t N>
 nsresult
-NS_RegisterStaticAtoms(const nsStaticAtom (&atoms)[N])
+NS_RegisterStaticAtoms(const nsStaticAtom (&aAtoms)[N])
 {
-    extern nsresult RegisterStaticAtoms(const nsStaticAtom*, uint32_t aAtomCount);
-    return RegisterStaticAtoms(atoms, N);
+  extern nsresult RegisterStaticAtoms(const nsStaticAtom*, uint32_t aAtomCount);
+  return RegisterStaticAtoms(aAtoms, N);
 }
 
 #endif

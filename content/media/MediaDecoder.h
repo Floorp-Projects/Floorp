@@ -813,7 +813,7 @@ public:
   // Called when the backend has changed the current playback
   // position. It dispatches a timeupdate event and invalidates the frame.
   // This must be called on the main thread only.
-  void PlaybackPositionChanged();
+  virtual void PlaybackPositionChanged();
 
   // Calls mElement->UpdateReadyStateForData, telling it whether we have
   // data for the next frame and if we're buffering. Main thread only.

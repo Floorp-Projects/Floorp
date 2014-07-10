@@ -105,6 +105,9 @@ FORCE_STATIC_LIB = True
 
 if CONFIG['_MSC_VER']:
     DEFINES['_USE_ANSI_CPP'] = True
+    # Don't include directives about which CRT to use
+    CFLAGS += ['-Zl']
+    CXXFLAGS += ['-Zl']
 
 LOCAL_INCLUDES += [
     '../build',

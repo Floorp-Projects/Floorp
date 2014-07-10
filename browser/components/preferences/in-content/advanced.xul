@@ -107,7 +107,7 @@
               name="browser.search.update"
               type="bool"/>
 
-  <!-- Encryption tab -->
+  <!-- Certificates tab -->
   <preference id="security.default_personal_cert"
               name="security.default_personal_cert"
               type="string"/>
@@ -115,9 +115,14 @@
   <preference id="security.disable_button.openCertManager"
               name="security.disable_button.openCertManager"
               type="bool"/>
+
   <preference id="security.disable_button.openDeviceManager"
               name="security.disable_button.openDeviceManager"
               type="bool"/>
+
+  <preference id="security.OCSP.enabled"
+              name="security.OCSP.enabled"
+              type="int"/>
 </preferences>
 
 #ifdef HAVE_SHELL_SERVICE
@@ -439,14 +444,20 @@
 
         <separator/>
 
+        <checkbox id="enableOCSP"
+                  label="&enableOCSP.label;"
+                  accesskey="&enableOCSP.accesskey;"
+                  onsyncfrompreference="return gAdvancedPane.readEnableOCSP();"
+                  onsynctopreference="return gAdvancedPane.writeEnableOCSP();"
+                  preference="security.OCSP.enabled"/>
+
+        <separator/>
+
         <hbox>
           <button id="viewCertificatesButton"
                   label="&viewCerts.label;" accesskey="&viewCerts.accesskey;"
                   oncommand="gAdvancedPane.showCertificates();"
                   preference="security.disable_button.openCertManager"/>
-          <button id="verificationButton"
-                  label="&verify2.label;" accesskey="&verify2.accesskey;"
-                  oncommand="gAdvancedPane.showOCSP();"/>
           <button id="viewSecurityDevicesButton"
                   label="&viewSecurityDevices.label;" accesskey="&viewSecurityDevices.accesskey;"
                   oncommand="gAdvancedPane.showSecurityDevices();"

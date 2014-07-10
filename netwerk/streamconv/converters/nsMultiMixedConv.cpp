@@ -252,6 +252,18 @@ nsPartChannel::SetOwner(nsISupports* aOwner)
 }
 
 NS_IMETHODIMP
+nsPartChannel::GetLoadInfo(nsILoadInfo* *aLoadInfo)
+{
+    return mMultipartChannel->GetLoadInfo(aLoadInfo);
+}
+
+NS_IMETHODIMP
+nsPartChannel::SetLoadInfo(nsILoadInfo* aLoadInfo)
+{
+    return mMultipartChannel->SetLoadInfo(aLoadInfo);
+}
+
+NS_IMETHODIMP
 nsPartChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aCallbacks)
 {
     return mMultipartChannel->GetNotificationCallbacks(aCallbacks);

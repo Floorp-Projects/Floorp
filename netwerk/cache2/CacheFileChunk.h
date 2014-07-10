@@ -70,9 +70,9 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   bool DispatchRelease();
 
-  CacheFileChunk(CacheFile *aFile, uint32_t aIndex);
+  CacheFileChunk(CacheFile *aFile, uint32_t aIndex, bool aInitByWriter);
 
-  void     InitNew(CacheFileChunkListener *aCallback);
+  void     InitNew();
   nsresult Read(CacheFileHandle *aHandle, uint32_t aLen,
                 CacheHash::Hash16_t aHash,
                 CacheFileChunkListener *aCallback);
@@ -103,7 +103,7 @@ public:
 
   char *       BufForWriting() const;
   const char * BufForReading() const;
-  void         EnsureBufSize(uint32_t aBufSize);
+  nsresult     EnsureBufSize(uint32_t aBufSize);
   uint32_t     MemorySize() const { return sizeof(CacheFileChunk) + mRWBufSize + mBufSize; }
 
   // Memory reporting
@@ -117,12 +117,15 @@ private:
 
   virtual ~CacheFileChunk();
 
+  bool CanAllocate(uint32_t aSize);
+  void ChunkAllocationChanged();
+  mozilla::Atomic<uint32_t>& ChunksMemoryUsage();
+
   enum EState {
     INITIAL = 0,
     READING = 1,
     WRITING = 2,
-    READY   = 3,
-    ERROR   = 4
+    READY   = 3
   };
 
   uint32_t mIndex;
@@ -134,6 +137,11 @@ private:
                          // changing this member happens under the CacheFile's
                          // lock.
   uint32_t mDataSize;
+
+  uint32_t   mReportedAllocation;
+  bool const mLimitAllocation : 1; // Whether this chunk respects limit for disk
+                                   // chunks memory usage.
+  bool const mIsPriority : 1;
 
   char    *mBuf;
   uint32_t mBufSize;

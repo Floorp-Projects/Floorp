@@ -8,7 +8,7 @@
 
 /* NOTE: this interface is completely undesigned, not stable and likely to change */
 
-[scriptable, uuid(1194ba76-aeb5-48df-abfd-844740ce3696)]
+[scriptable, uuid(27212e99-ed25-449b-b79f-32ecb88d251e)]
 interface nsIGfxInfo : nsISupports
 {
   /*
@@ -36,6 +36,9 @@ interface nsIGfxInfo : nsISupports
   
   readonly attribute DOMString adapterDeviceID;
   readonly attribute DOMString adapterDeviceID2;
+
+  readonly attribute DOMString adapterSubsysID;
+  readonly attribute DOMString adapterSubsysID2;
 
   /**
    * The amount of RAM in MB in the display adapter.

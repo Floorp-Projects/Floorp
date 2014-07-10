@@ -244,7 +244,7 @@ bool
 CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
 {
     MAsmJSLoadHeap *mir = ins->mir();
-    ArrayBufferView::ViewType vt = mir->viewType();
+    Scalar::Type vt = mir->viewType();
     const LAllocation *ptr = ins->ptr();
 
     // No need to note the access if it will never fault.
@@ -263,14 +263,14 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
 
     uint32_t before = masm.size();
     switch (vt) {
-      case ArrayBufferView::TYPE_INT8:    masm.movsbl(srcAddr, ToRegister(ins->output())); break;
-      case ArrayBufferView::TYPE_UINT8:   masm.movzbl(srcAddr, ToRegister(ins->output())); break;
-      case ArrayBufferView::TYPE_INT16:   masm.movswl(srcAddr, ToRegister(ins->output())); break;
-      case ArrayBufferView::TYPE_UINT16:  masm.movzwl(srcAddr, ToRegister(ins->output())); break;
-      case ArrayBufferView::TYPE_INT32:
-      case ArrayBufferView::TYPE_UINT32:  masm.movl(srcAddr, ToRegister(ins->output())); break;
-      case ArrayBufferView::TYPE_FLOAT32: masm.loadFloat32(srcAddr, ToFloatRegister(ins->output())); break;
-      case ArrayBufferView::TYPE_FLOAT64: masm.loadDouble(srcAddr, ToFloatRegister(ins->output())); break;
+      case Scalar::Int8:    masm.movsbl(srcAddr, ToRegister(ins->output())); break;
+      case Scalar::Uint8:   masm.movzbl(srcAddr, ToRegister(ins->output())); break;
+      case Scalar::Int16:   masm.movswl(srcAddr, ToRegister(ins->output())); break;
+      case Scalar::Uint16:  masm.movzwl(srcAddr, ToRegister(ins->output())); break;
+      case Scalar::Int32:
+      case Scalar::Uint32:  masm.movl(srcAddr, ToRegister(ins->output())); break;
+      case Scalar::Float32: masm.loadFloat32(srcAddr, ToFloatRegister(ins->output())); break;
+      case Scalar::Float64: masm.loadDouble(srcAddr, ToFloatRegister(ins->output())); break;
       default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
     uint32_t after = masm.size();
@@ -283,7 +283,7 @@ bool
 CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
 {
     MAsmJSStoreHeap *mir = ins->mir();
-    ArrayBufferView::ViewType vt = mir->viewType();
+    Scalar::Type vt = mir->viewType();
     const LAllocation *ptr = ins->ptr();
     // No need to note the access if it will never fault.
     bool skipNote = mir->skipBoundsCheck();
@@ -302,24 +302,24 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
     uint32_t before = masm.size();
     if (ins->value()->isConstant()) {
         switch (vt) {
-          case ArrayBufferView::TYPE_INT8:
-          case ArrayBufferView::TYPE_UINT8:   masm.movb(Imm32(ToInt32(ins->value())), dstAddr); break;
-          case ArrayBufferView::TYPE_INT16:
-          case ArrayBufferView::TYPE_UINT16:  masm.movw(Imm32(ToInt32(ins->value())), dstAddr); break;
-          case ArrayBufferView::TYPE_INT32:
-          case ArrayBufferView::TYPE_UINT32:  masm.movl(Imm32(ToInt32(ins->value())), dstAddr); break;
+          case Scalar::Int8:
+          case Scalar::Uint8:   masm.movb(Imm32(ToInt32(ins->value())), dstAddr); break;
+          case Scalar::Int16:
+          case Scalar::Uint16:  masm.movw(Imm32(ToInt32(ins->value())), dstAddr); break;
+          case Scalar::Int32:
+          case Scalar::Uint32:  masm.movl(Imm32(ToInt32(ins->value())), dstAddr); break;
           default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
         }
     } else {
         switch (vt) {
-          case ArrayBufferView::TYPE_INT8:
-          case ArrayBufferView::TYPE_UINT8:   masm.movb(ToRegister(ins->value()), dstAddr); break;
-          case ArrayBufferView::TYPE_INT16:
-          case ArrayBufferView::TYPE_UINT16:  masm.movw(ToRegister(ins->value()), dstAddr); break;
-          case ArrayBufferView::TYPE_INT32:
-          case ArrayBufferView::TYPE_UINT32:  masm.movl(ToRegister(ins->value()), dstAddr); break;
-          case ArrayBufferView::TYPE_FLOAT32: masm.storeFloat32(ToFloatRegister(ins->value()), dstAddr); break;
-          case ArrayBufferView::TYPE_FLOAT64: masm.storeDouble(ToFloatRegister(ins->value()), dstAddr); break;
+          case Scalar::Int8:
+          case Scalar::Uint8:   masm.movb(ToRegister(ins->value()), dstAddr); break;
+          case Scalar::Int16:
+          case Scalar::Uint16:  masm.movw(ToRegister(ins->value()), dstAddr); break;
+          case Scalar::Int32:
+          case Scalar::Uint32:  masm.movl(ToRegister(ins->value()), dstAddr); break;
+          case Scalar::Float32: masm.storeFloat32(ToFloatRegister(ins->value()), dstAddr); break;
+          case Scalar::Float64: masm.storeDouble(ToFloatRegister(ins->value()), dstAddr); break;
           default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
         }
     }

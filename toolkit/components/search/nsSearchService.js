@@ -2732,7 +2732,41 @@ Engine.prototype = {
     }
 
     return result;
-  }
+  },
+
+  /**
+   * Opens a speculative connection to the engine's search URI
+   * (and suggest URI, if different) to reduce request latency
+   *
+   * @param  options
+   *         An object that must contain the following fields:
+   *         {window} the content window for the window performing the search
+   *
+   * @throws NS_ERROR_INVALID_ARG if options is omitted or lacks required
+   *         elemeents
+   */
+  speculativeConnect: function SRCH_ENG_speculativeConnect(options) {
+    if (!options || !options.window) {
+      Cu.reportError("invalid options arg passed to nsISearchEngine.speculativeConnect");
+      throw Cr.NS_ERROR_INVALID_ARG;
+    }
+    let connector =
+        Services.io.QueryInterface(Components.interfaces.nsISpeculativeConnect);
+
+    let searchURI = this.getSubmission("dummy").uri;
+
+    let callbacks = options.window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                           .getInterface(Components.interfaces.nsIWebNavigation)
+                           .QueryInterface(Components.interfaces.nsILoadContext);
+
+    connector.speculativeConnect(searchURI, callbacks);
+
+    if (this.supportsResponseType(URLTYPE_SUGGEST_JSON)) {
+      let suggestURI = this.getSubmission("dummy", URLTYPE_SUGGEST_JSON).uri;
+      if (suggestURI.prePath != searchURI.prePath)
+        connector.speculativeConnect(suggestURI, callbacks);
+    }
+  },
 };
 
 // nsISearchSubmission

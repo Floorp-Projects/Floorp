@@ -2112,14 +2112,14 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
         case LOCAL_GL_UNSIGNED_BYTE:
             isReadTypeValid = true;
             bytesPerPixel = 1*channels;
-            requiredDataType = js::ArrayBufferView::TYPE_UINT8;
+            requiredDataType = js::Scalar::Uint8;
             break;
         case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
         case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
         case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
             isReadTypeValid = true;
             bytesPerPixel = 2;
-            requiredDataType = js::ArrayBufferView::TYPE_UINT16;
+            requiredDataType = js::Scalar::Uint16;
             break;
         case LOCAL_GL_FLOAT:
             if (IsExtensionEnabled(WebGLExtensionID::WEBGL_color_buffer_float) ||
@@ -2128,7 +2128,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
                 isReadTypeValid = true;
                 isReadTypeFloat = true;
                 bytesPerPixel = 4*channels;
-                requiredDataType = js::ArrayBufferView::TYPE_FLOAT32;
+                requiredDataType = js::Scalar::Float32;
             }
             break;
     }

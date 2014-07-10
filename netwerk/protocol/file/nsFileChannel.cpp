@@ -178,19 +178,13 @@ public:
                           uint32_t count, nsIEventTarget *target);
 
 private:
+  virtual ~nsFileUploadContentStream() {}
+
   void OnCopyComplete();
 
   nsRefPtr<nsFileCopyEvent> mCopyEvent;
   nsCOMPtr<nsITransportEventSink> mSink;
 };
-
-namespace mozilla {
-template<>
-struct HasDangerousPublicDestructor<nsFileUploadContentStream>
-{
-  static const bool value = true;
-};
-}
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsFileUploadContentStream,
                              nsBaseContentStream)
@@ -365,14 +359,13 @@ nsFileChannel::OpenContentStream(bool async, nsIInputStream **result,
     if (NS_FAILED(rv))
       return rv;
 
-    nsFileUploadContentStream *uploadStream =
+    nsRefPtr<nsFileUploadContentStream> uploadStream =
         new nsFileUploadContentStream(async, fileStream, mUploadStream,
                                       mUploadLength, this);
     if (!uploadStream || !uploadStream->IsInitialized()) {
-      delete uploadStream;
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    stream = uploadStream;
+    stream = uploadStream.forget();
 
     mContentLength = 0;
 

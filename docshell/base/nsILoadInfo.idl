@@ -1,0 +1,42 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: ft=cpp tw=78 sw=2 et ts=2 sts=2 cin
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+/**
+ * An nsILoadOwner represents per-load information about who started the load.
+ */
+[scriptable, builtinclass, uuid(046db047-a1c1-4519-8ec7-99f3054bc9ac)]
+interface nsILoadInfo : nsISupports
+{
+  /**
+   * loadingPrincipal is the principal that started the load.  Will
+   * never be null.
+   */
+  readonly attribute nsIPrincipal loadingPrincipal;
+
+  /**
+   * A C++-friendly version of loadingPrincipal.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(LoadingPrincipal)]
+  nsIPrincipal binaryLoadingPrincipal();
+
+  /**
+   * If forceInheritPrincipal is true, the data coming from the channel should
+   * use loadingPrincipal for its principal, even when the data is loaded over
+   * http:// or another protocol that would normally use a URI-based principal.
+   * This attribute will never be true when loadingSandboxed is true.
+   */
+  [infallible] readonly attribute boolean forceInheritPrincipal;
+
+  /**
+   * If loadingSandboxed is true, the data coming from the channel is
+   * being loaded sandboxed, so it should have a nonce origin and
+   * hence should use a NullPrincipal.
+   */
+  [infallible] readonly attribute boolean loadingSandboxed;
+};

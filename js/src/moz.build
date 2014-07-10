@@ -458,6 +458,9 @@ if CONFIG['_MSC_VER']:
         SOURCES['builtin/RegExp.cpp'].no_pgo = True # Bug 772303
     elif CONFIG['CPU_ARCH'] == 'x86_64' and CONFIG['JS_HAS_CTYPES']:
         SOURCES['ctypes/CTypes.cpp'].no_pgo = True # Bug 810661
+    # Prevent floating point errors caused by VC++ optimizations
+    # XXX We should add this to CXXFLAGS, too?
+    CFLAGS += ['-fp:precise']
 
 # Needed to "configure" it correctly.  Unfortunately these
 # flags wind up being applied to all code in js/src, not just

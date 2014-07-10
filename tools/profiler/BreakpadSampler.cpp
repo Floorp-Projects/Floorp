@@ -159,6 +159,7 @@ void populateBuffer(UnwinderThreadBuffer* utb, TickSample* sample,
 {
   ThreadProfile& sampledThreadProfile = *sample->threadProfile;
   PseudoStack* stack = sampledThreadProfile.GetPseudoStack();
+  stack->updateGeneration(sampledThreadProfile.GetGenerationID());
 
   /* Manufacture the ProfileEntries that we will give to the unwinder
      thread, and park them in |utb|. */
@@ -180,7 +181,6 @@ void populateBuffer(UnwinderThreadBuffer* utb, TickSample* sample,
       stack->addStoredMarker(marker);
       utb__addEntry( utb, ProfileEntry('m', marker) );
     }
-    stack->updateGeneration(sampledThreadProfile.GetGenerationID());
     if (jankOnly) {
       // if we are on a different event we can discard any temporary samples
       // we've kept around

@@ -1242,41 +1242,53 @@ ErrorReportToString(JSContext *cx, JSErrorReport *reportp);
 extern JS_FRIEND_API(uint64_t)
 js_GetSCOffset(JSStructuredCloneWriter* writer);
 
-/* Typed Array functions, implemented in jstypedarray.cpp */
-
 namespace js {
-namespace ArrayBufferView {
+namespace Scalar {
 
-enum ViewType {
-    TYPE_INT8 = 0,
-    TYPE_UINT8,
-    TYPE_INT16,
-    TYPE_UINT16,
-    TYPE_INT32,
-    TYPE_UINT32,
-    TYPE_FLOAT32,
-    TYPE_FLOAT64,
+/* Scalar types which can appear in typed arrays and typed objects. */
+enum Type {
+    Int8 = 0,
+    Uint8,
+    Int16,
+    Uint16,
+    Int32,
+    Uint32,
+    Float32,
+    Float64,
 
     /*
      * Special type that is a uint8_t, but assignments are clamped to [0, 256).
      * Treat the raw data type as a uint8_t.
      */
-    TYPE_UINT8_CLAMPED,
+    Uint8Clamped,
 
-    /*
-     * Type returned for a DataView. Note that there is no single element type
-     * in this case.
-     */
-    TYPE_DATAVIEW,
-
-    TYPE_MAX
+    TypeMax
 };
 
-} /* namespace ArrayBufferView */
+static inline size_t
+byteSize(Type atype)
+{
+    switch (atype) {
+      case Int8:
+      case Uint8:
+      case Uint8Clamped:
+        return 1;
+      case Int16:
+      case Uint16:
+        return 2;
+      case Int32:
+      case Uint32:
+      case Float32:
+        return 4;
+      case Float64:
+        return 8;
+      default:
+        MOZ_ASSUME_UNREACHABLE("invalid type");
+    }
+}
 
+} /* namespace Scalar */
 } /* namespace js */
-
-typedef js::ArrayBufferView::ViewType JSArrayBufferViewType;
 
 /*
  * Create a new typed array with nelements elements.
@@ -1529,13 +1541,13 @@ extern JS_FRIEND_API(JSObject *)
 JS_GetObjectAsArrayBuffer(JSObject *obj, uint32_t *length, uint8_t **data);
 
 /*
- * Get the type of elements in a typed array, or TYPE_DATAVIEW if a DataView.
+ * Get the type of elements in a typed array, or TypeMax if a DataView.
  *
  * |obj| must have passed a JS_IsArrayBufferView/JS_Is*Array test, or somehow
  * be known that it would pass such a test: it is an ArrayBufferView or a
  * wrapper of an ArrayBufferView, and the unwrapping will succeed.
  */
-extern JS_FRIEND_API(JSArrayBufferViewType)
+extern JS_FRIEND_API(js::Scalar::Type)
 JS_GetArrayBufferViewType(JSObject *obj);
 
 /*

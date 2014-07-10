@@ -58,6 +58,17 @@ pref("browser.cache.memory.enable",         true);
 // Max-size (in KB) for entries in memory cache. Set to -1 for no limit.
 // (Note: entries bigger than than 90% of the mem-cache are never cached)
 pref("browser.cache.memory.max_entry_size",  5120);
+// Memory limit (in kB) for new cache data not yet written to disk. Writes to
+// the cache are buffered and written to disk on background with low priority.
+// With a slow persistent storage these buffers may grow when data is coming
+// fast from the network. When the amount of unwritten data is exceeded, new
+// writes will simply fail. We have two buckets, one for important data
+// (priority) like html, css, fonts and js, and one for other data like images,
+// video, etc.
+// Note: 0 means no limit.
+pref("browser.cache.disk.max_chunks_memory_usage", 10240);
+pref("browser.cache.disk.max_priority_chunks_memory_usage", 10240);
+
 pref("browser.cache.disk_cache_ssl",        true);
 // 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
 pref("browser.cache.check_doc_frequency",   3);

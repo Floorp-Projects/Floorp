@@ -818,7 +818,11 @@ public:
         {
             aFontEntry->mIgnoreGDEF = true;
         }
-        aFontEntry->mFamilyName = Name();
+        if (aFontEntry->mFamilyName.IsEmpty()) {
+            aFontEntry->mFamilyName = Name();
+        } else {
+            MOZ_ASSERT(aFontEntry->mFamilyName.Equals(Name()));
+        }
         aFontEntry->mSkipDefaultFeatureSpaceCheck = mSkipDefaultFeatureSpaceCheck;
         mAvailableFonts.AppendElement(aFontEntry);
     }

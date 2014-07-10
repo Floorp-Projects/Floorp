@@ -111,9 +111,9 @@ PostToRIL(JSContext *aCx,
         }
 
         uint32_t type = JS_GetArrayBufferViewType(obj);
-        if (type != js::ArrayBufferView::TYPE_INT8 &&
-            type != js::ArrayBufferView::TYPE_UINT8 &&
-            type != js::ArrayBufferView::TYPE_UINT8_CLAMPED) {
+        if (type != js::Scalar::Int8 &&
+            type != js::Scalar::Uint8 &&
+            type != js::Scalar::Uint8Clamped) {
             JS_ReportError(aCx, "Typed array data is not octets");
             return false;
         }

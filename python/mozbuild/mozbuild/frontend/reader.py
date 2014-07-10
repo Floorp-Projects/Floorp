@@ -344,7 +344,30 @@ class MozbuildSandbox(Sandbox):
 
 class SandboxValidationError(Exception):
     """Represents an error encountered when validating sandbox results."""
-    pass
+    def __init__(self, message, sandbox):
+        Exception.__init__(self, message)
+        self.sandbox = sandbox
+
+    def __str__(self):
+        s = StringIO()
+
+        delim = '=' * 30
+        s.write('\n%s\nERROR PROCESSING MOZBUILD FILE\n%s\n\n' % (delim, delim))
+
+        s.write('The error occurred while processing the following file or ')
+        s.write('one of the files it includes:\n')
+        s.write('\n')
+        s.write('    %s/moz.build\n' % self.sandbox['SRCDIR'])
+        s.write('\n')
+
+        s.write('The error occurred when validating the result of ')
+        s.write('the execution. The reported error is:\n')
+        s.write('\n')
+        s.write(''.join('    %s\n' % l
+                        for l in self.message.splitlines()))
+        s.write('\n')
+
+        return s.getvalue()
 
 
 class BuildReaderError(Exception):
@@ -403,7 +426,7 @@ class BuildReaderError(Exception):
         s = StringIO()
 
         delim = '=' * 30
-        s.write('%s\nERROR PROCESSING MOZBUILD FILE\n%s\n\n' % (delim, delim))
+        s.write('\n%s\nERROR PROCESSING MOZBUILD FILE\n%s\n\n' % (delim, delim))
 
         s.write('The error occurred while processing the following file:\n')
         s.write('\n')
@@ -774,11 +797,11 @@ class BuildReader(object):
         if var in forbidden:
             matches = [v for v in forbidden[var] if sandbox[v]]
             if matches:
-                raise SandboxValidationError('%s is registered as %s in %s/moz.build.\n'
+                raise SandboxValidationError('%s is registered as %s.\n'
                     'The %s variable%s not allowed in such directories.'
-                    % (sandbox['RELATIVEDIR'], var, metadata['parent'],
+                    % (var, metadata['parent'],
                        ' and '.join(', '.join(matches).rsplit(', ', 1)),
-                       's are' if len(matches) > 1 else ' is'))
+                       's are' if len(matches) > 1 else ' is'), sandbox)
 
         # We first collect directories populated in variables.
         dir_vars = ['DIRS', 'PARALLEL_DIRS', 'TOOL_DIRS']
@@ -796,7 +819,7 @@ class BuildReader(object):
             for v in ('input', 'variables'):
                 if not getattr(gyp_dir, v):
                     raise SandboxValidationError('Missing value for '
-                        'GYP_DIRS["%s"].%s' % (target_dir, v))
+                        'GYP_DIRS["%s"].%s' % (target_dir, v), sandbox)
 
             # The make backend assumes sandboxes for sub-directories are
             # emitted after their parent, so accumulate the gyp sandboxes.
@@ -808,8 +831,8 @@ class BuildReader(object):
             for s in gyp_dir.non_unified_sources:
                 source = mozpath.normpath(mozpath.join(curdir, s))
                 if not os.path.exists(source):
-                    raise SandboxValidationError('Cannot find %s referenced '
-                        'from %s' % (source, path))
+                    raise SandboxValidationError('Cannot find %s.' % source,
+                        sandbox)
                 non_unified_sources.add(source)
             for gyp_sandbox in read_from_gyp(sandbox.config,
                                              mozpath.join(curdir, gyp_dir.input),
@@ -848,7 +871,7 @@ class BuildReader(object):
                 if d in recurse_info:
                     raise SandboxValidationError(
                         'Directory (%s) registered multiple times in %s' % (
-                            d, var))
+                            d, var), sandbox)
 
                 recurse_info[d] = {'tier': metadata.get('tier', None),
                                    'parent': sandbox['RELATIVEDIR'],
@@ -861,7 +884,7 @@ class BuildReader(object):
         if 'TIERS' in sandbox:
             if not read_tiers:
                 raise SandboxValidationError(
-                    'TIERS defined but it should not be')
+                    'TIERS defined but it should not be', sandbox)
 
             for tier, values in sandbox['TIERS'].items():
                 # We don't descend into static directories because static by
@@ -870,7 +893,7 @@ class BuildReader(object):
                     if d in recurse_info:
                         raise SandboxValidationError(
                             'Tier directory (%s) registered multiple '
-                            'times in %s' % (d, tier))
+                            'times in %s' % (d, tier), sandbox)
                     recurse_info[d] = {'tier': tier,
                                        'parent': sandbox['RELATIVEDIR'],
                                        'var': 'DIRS'}
@@ -886,7 +909,7 @@ class BuildReader(object):
             if not is_read_allowed(child_path, sandbox.config):
                 raise SandboxValidationError(
                     'Attempting to process file outside of allowed paths: %s' %
-                        child_path)
+                        child_path, sandbox)
 
             if not descend:
                 continue

@@ -4517,7 +4517,7 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
     else
         chars = InflateString(cx, bytes, &length);
     if (!chars)
-        return nullptr;
+        return false;
 
     return Compile(cx, obj, options, chars, length, script);
 }
@@ -4528,7 +4528,7 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
 {
     FileContents buffer(cx);
     if (!ReadCompleteFile(cx, fp, buffer))
-        return nullptr;
+        return false;
 
     return Compile(cx, obj, options, buffer.begin(), buffer.length(), script);
 }
@@ -4539,7 +4539,7 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
 {
     AutoFile file;
     if (!file.open(cx, filename))
-        return nullptr;
+        return false;
     CompileOptions options(cx, optionsArg);
     options.setFileAndLine(filename, 1);
     return Compile(cx, obj, options, file.fp(), script);

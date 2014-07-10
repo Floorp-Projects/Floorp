@@ -4,9 +4,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIST_INSTALL	= 1
-
-include $(topsrcdir)/config/rules.mk
-
-ifdef _MSC_VER
-OS_COMPILE_CFLAGS += -Zl
-endif

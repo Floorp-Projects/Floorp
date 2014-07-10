@@ -2224,29 +2224,29 @@ bool CanConvertTypedArrayItemTo(JSObject *baseType, JSObject *valObj, JSContext 
   }
   TypeCode elementTypeCode;
   switch (JS_GetArrayBufferViewType(valObj)) {
-  case ScalarTypeDescr::TYPE_INT8:
+  case Scalar::Int8:
     elementTypeCode = TYPE_int8_t;
     break;
-  case ScalarTypeDescr::TYPE_UINT8:
-  case ScalarTypeDescr::TYPE_UINT8_CLAMPED:
+  case Scalar::Uint8:
+  case Scalar::Uint8Clamped:
     elementTypeCode = TYPE_uint8_t;
     break;
-  case ScalarTypeDescr::TYPE_INT16:
+  case Scalar::Int16:
     elementTypeCode = TYPE_int16_t;
     break;
-  case ScalarTypeDescr::TYPE_UINT16:
+  case Scalar::Uint16:
     elementTypeCode = TYPE_uint16_t;
     break;
-  case ScalarTypeDescr::TYPE_INT32:
+  case Scalar::Int32:
     elementTypeCode = TYPE_int32_t;
     break;
-  case ScalarTypeDescr::TYPE_UINT32:
+  case Scalar::Uint32:
     elementTypeCode = TYPE_uint32_t;
     break;
-  case ScalarTypeDescr::TYPE_FLOAT32:
+  case Scalar::Float32:
     elementTypeCode = TYPE_float32_t;
     break;
-  case ScalarTypeDescr::TYPE_FLOAT64:
+  case Scalar::Float64:
     elementTypeCode = TYPE_float64_t;
     break;
   default:

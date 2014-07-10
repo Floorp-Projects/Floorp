@@ -20,6 +20,7 @@
 #include "nsStreamUtils.h"
 #include "nsIPrincipal.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/LoadInfo.h"
 #include "nsSVGUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsHostObjectProtocolHandler.h"
@@ -371,7 +372,10 @@ gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen)
                                   SVG_CONTENT_TYPE, UTF8_CHARSET);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    channel->SetOwner(principal);
+    nsCOMPtr<nsILoadInfo> loadInfo =
+      new LoadInfo(principal, LoadInfo::eInheritPrincipal,
+                   LoadInfo::eNotSandboxed);
+    channel->SetLoadInfo(loadInfo);
 
     // Set this early because various decisions during page-load depend on it.
     document->SetIsBeingUsedAsImage();

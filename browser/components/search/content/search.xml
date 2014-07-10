@@ -36,7 +36,6 @@
                    autocompletepopup="PopupAutoComplete"
                    autocompletesearch="search-autocomplete"
                    autocompletesearchparam="searchbar-history"
-                   timeout="250"
                    maxrows="10"
                    completeselectedindex="true"
                    showcommentcolumn="true"
@@ -536,22 +535,7 @@
       <![CDATA[
         // Speculatively connect to the current engine's search URI (and
         // suggest URI, if different) to reduce request latency
-
-        const SUGGEST_TYPE = "application/x-suggestions+json";
-        var engine = this.currentEngine;
-        var connector =
-            Services.io.QueryInterface(Components.interfaces.nsISpeculativeConnect);
-        var searchURI = engine.getSubmission("dummy", null, "searchbar").uri;
-        let callbacks = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                              .getInterface(Components.interfaces.nsIWebNavigation)
-                              .QueryInterface(Components.interfaces.nsILoadContext);
-        connector.speculativeConnect(searchURI, callbacks);
-
-        if (engine.supportsResponseType(SUGGEST_TYPE)) {
-          var suggestURI = engine.getSubmission("dummy", SUGGEST_TYPE, "searchbar").uri;
-          if (suggestURI.prePath != searchURI.prePath)
-            connector.speculativeConnect(suggestURI, callbacks);
-        }
+        this.currentEngine.speculativeConnect({window: window});
       ]]></handler>
     </handlers>
   </binding>

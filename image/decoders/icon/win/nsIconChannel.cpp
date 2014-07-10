@@ -664,6 +664,18 @@ NS_IMETHODIMP nsIconChannel::SetOwner(nsISupports* aOwner)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsIconChannel::GetLoadInfo(nsILoadInfo* *aLoadInfo)
+{
+  NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsIconChannel::SetLoadInfo(nsILoadInfo* aLoadInfo)
+{
+  mLoadInfo = aLoadInfo;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsIconChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
   *aNotificationCallbacks = mCallbacks.get();

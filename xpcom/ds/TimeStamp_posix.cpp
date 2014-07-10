@@ -58,15 +58,15 @@ static uint64_t sResolutionSigDigs;
 
 static const uint16_t kNsPerUs   =       1000;
 static const uint64_t kNsPerMs   =    1000000;
-static const uint64_t kNsPerSec  = 1000000000; 
+static const uint64_t kNsPerSec  = 1000000000;
 static const double kNsPerMsd    =    1000000.0;
 static const double kNsPerSecd   = 1000000000.0;
 
 static uint64_t
-TimespecToNs(const struct timespec& ts)
+TimespecToNs(const struct timespec& aTs)
 {
-  uint64_t baseNs = uint64_t(ts.tv_sec) * kNsPerSec;
-  return baseNs + uint64_t(ts.tv_nsec);
+  uint64_t baseNs = uint64_t(aTs.tv_sec) * kNsPerSec;
+  return baseNs + uint64_t(aTs.tv_nsec);
 }
 
 static uint64_t
@@ -108,8 +108,9 @@ ClockResolutionNs()
     end = ClockTimeNs();
 
     uint64_t candidate = (start - end);
-    if (candidate < minres)
+    if (candidate < minres) {
       minres = candidate;
+    }
   }
 
   if (0 == minres) {
@@ -165,20 +166,22 @@ static bool gInitialized = false;
 nsresult
 TimeStamp::Startup()
 {
-  if (gInitialized)
+  if (gInitialized) {
     return NS_OK;
+  }
 
   struct timespec dummy;
-  if (0 != clock_gettime(CLOCK_MONOTONIC, &dummy))
-      NS_RUNTIMEABORT("CLOCK_MONOTONIC is absent!");
+  if (clock_gettime(CLOCK_MONOTONIC, &dummy) != 0) {
+    NS_RUNTIMEABORT("CLOCK_MONOTONIC is absent!");
+  }
 
   sResolution = ClockResolutionNs();
 
   // find the number of significant digits in sResolution, for the
   // sake of ToSecondsSigDigits()
   for (sResolutionSigDigs = 1;
-       !(sResolutionSigDigs == sResolution
-         || 10*sResolutionSigDigs > sResolution);
+       !(sResolutionSigDigs == sResolution ||
+         10 * sResolutionSigDigs > sResolution);
        sResolutionSigDigs *= 10);
 
   gInitialized = true;
@@ -204,36 +207,40 @@ TimeStamp::Now(bool aHighResolution)
 // Returns 0 if an error occurred.
 
 static uint64_t
-JiffiesSinceBoot(const char *aFile)
+JiffiesSinceBoot(const char* aFile)
 {
   char stat[512];
 
-  FILE *f = fopen(aFile, "r");
-  if (!f)
+  FILE* f = fopen(aFile, "r");
+  if (!f) {
     return 0;
+  }
 
   int n = fread(&stat, 1, sizeof(stat) - 1, f);
 
   fclose(f);
 
-  if (n <= 0)
+  if (n <= 0) {
     return 0;
+  }
 
   stat[n] = 0;
 
   long long unsigned startTime = 0; // instead of uint64_t to keep GCC quiet
-  char *s = strrchr(stat, ')');
+  char* s = strrchr(stat, ')');
 
-  if (!s)
+  if (!s) {
     return 0;
+  }
 
   int rv = sscanf(s + 2,
                   "%*c %*d %*d %*d %*d %*d %*u %*u %*u %*u "
                   "%*u %*u %*u %*d %*d %*d %*d %*d %*d %llu",
                   &startTime);
 
-  if (rv != 1 || !startTime)
+  if (rv != 1 || !startTime) {
     return 0;
+  }
 
   return startTime;
 }
@@ -245,24 +252,26 @@ JiffiesSinceBoot(const char *aFile)
 // if an error occurred 0 will be stored instead.
 
 static void
-ComputeProcessUptimeThread(void *aTime)
+ComputeProcessUptimeThread(void* aTime)
 {
-  uint64_t *uptime = static_cast<uint64_t *>(aTime);
+  uint64_t* uptime = static_cast<uint64_t*>(aTime);
   long hz = sysconf(_SC_CLK_TCK);
 
   *uptime = 0;
 
-  if (!hz)
+  if (!hz) {
     return;
+  }
 
   char threadStat[40];
-  sprintf(threadStat, "/proc/self/task/%d/stat", (pid_t) syscall(__NR_gettid));
+  sprintf(threadStat, "/proc/self/task/%d/stat", (pid_t)syscall(__NR_gettid));
 
   uint64_t threadJiffies = JiffiesSinceBoot(threadStat);
   uint64_t selfJiffies = JiffiesSinceBoot("/proc/self/stat");
 
-  if (!threadJiffies || !selfJiffies)
+  if (!threadJiffies || !selfJiffies) {
     return;
+  }
 
   *uptime = ((threadJiffies - selfJiffies) * kNsPerSec) / hz;
 }
@@ -274,7 +283,7 @@ uint64_t
 TimeStamp::ComputeProcessUptime()
 {
   uint64_t uptime = 0;
-  PRThread *thread = PR_CreateThread(PR_USER_THREAD,
+  PRThread* thread = PR_CreateThread(PR_USER_THREAD,
                                      ComputeProcessUptimeThread,
                                      &uptime,
                                      PR_PRIORITY_NORMAL,
@@ -319,15 +328,17 @@ TimeStamp::ComputeProcessUptime()
   size_t bufferSize = sizeof(proc);
   rv = sysctl(mib, mibLen, &proc, &bufferSize, nullptr, 0);
 
-  if (rv == -1)
+  if (rv == -1) {
     return 0;
+  }
 
-  uint64_t startTime = ((uint64_t)proc.KP_START_SEC * kNsPerSec)
-    + (proc.KP_START_USEC * kNsPerUs);
+  uint64_t startTime = ((uint64_t)proc.KP_START_SEC * kNsPerSec) +
+    (proc.KP_START_USEC * kNsPerUs);
   uint64_t now = ((uint64_t)ts.tv_sec * kNsPerSec) + ts.tv_nsec;
 
-  if (startTime > now)
+  if (startTime > now) {
     return 0;
+  }
 
   return (now - startTime) / kNsPerUs;
 }
