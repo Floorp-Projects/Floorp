@@ -1993,20 +1993,27 @@ public:
   static nsresult URIInheritsSecurityContext(nsIURI *aURI, bool *aResult);
 
   /**
-   * Set the given principal as the owner of the given channel, if
-   * needed.  aURI must be the URI of aChannel.  aPrincipal may be
-   * null.  If aSetUpForAboutBlank is true, then about:blank will get
-   * the principal set up on it. If aForceOwner is true, the owner
-   * will be set on the channel, even if the principal can be determined
-   * from the channel.
-   * The return value is whether the principal was set up as the owner
-   * of the channel.
+   * Set the given principal as the principal on the nsILoadInfo of the given
+   * channel, and tell the channel to inherit it if needed.  aPrincipal may be
+   * null, in which case this method is a no-op.
+   *
+   * If aLoadingPrincipal is not null, aURI must be the URI of aChannel.  If
+   * aInheritForAboutBlank is true, then about:blank will be told to inherit the
+   * principal. If aForceInherit is true, the channel will be told to inherit
+   * the principal no matter what, as long as the principal is not null.
+   *
+   * If aIsSandboxed is true, then aLoadingPrincipal must not be null.  In this
+   * case, the owner on the channel, if any, will be reset to null and the
+   * nsILoadInfo will say the channel should be sandboxed.
+   *
+   * The return value is whether the channel was told to inherit the principal.
    */
   static bool SetUpChannelOwner(nsIPrincipal* aLoadingPrincipal,
                                 nsIChannel* aChannel,
                                 nsIURI* aURI,
-                                bool aSetUpForAboutBlank,
-                                bool aForceOwner = false);
+                                bool aInheritForAboutBlank,
+                                bool aIsSandboxed,
+                                bool aForceInherit);
 
   static nsresult Btoa(const nsAString& aBinaryData,
                        nsAString& aAsciiBase64String);
