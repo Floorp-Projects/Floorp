@@ -209,6 +209,12 @@ var gEditItemOverlay = {
       // observe only tags changes, through bookmarks.
       if (this._itemId != -1 || this._uri || this._multiEdit)
         PlacesUtils.bookmarks.addObserver(this, false);
+
+      this._element("namePicker").addEventListener("blur", this);
+      this._element("locationField").addEventListener("blur", this);
+      this._element("tagsField").addEventListener("blur", this);
+      this._element("keywordField").addEventListener("blur", this);
+      this._element("descriptionField").addEventListener("blur", this);
       window.addEventListener("unload", this, false);
       this._observersAdded = true;
     }
@@ -388,6 +394,12 @@ var gEditItemOverlay = {
       if (this._itemId != -1 || this._uri || this._multiEdit)
         PlacesUtils.bookmarks.removeObserver(this);
 
+      this._element("namePicker").removeEventListener("blur", this);
+      this._element("locationField").removeEventListener("blur", this);
+      this._element("tagsField").removeEventListener("blur", this);
+      this._element("keywordField").removeEventListener("blur", this);
+      this._element("descriptionField").removeEventListener("blur", this);
+
       this._observersAdded = false;
     }
 
@@ -528,7 +540,7 @@ var gEditItemOverlay = {
     return false;
   },
 
-  onNamePickerChange: function EIO_onNamePickerChange() {
+  onNamePickerBlur: function EIO_onNamePickerBlur() {
     if (this._itemId == -1)
       return;
 
@@ -878,6 +890,11 @@ var gEditItemOverlay = {
       }
       this._element("tagsField").value = tags.join(", ");
       this._updateTags();
+      break;
+    case "blur":
+      let replaceFn = (str, firstLetter) => firstLetter.toUpperCase();
+      let nodeName = aEvent.target.id.replace(/editBMPanel_(\w)/, replaceFn);
+      this["on" + nodeName + "Blur"]();
       break;
     case "unload":
       this.uninitPanel(false);
