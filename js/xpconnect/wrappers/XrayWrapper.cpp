@@ -194,6 +194,10 @@ public:
         return true;
     }
 
+    static const char *className(JSContext *cx, HandleObject wrapper, const js::Wrapper& baseInstance) {
+        return baseInstance.className(cx, wrapper);
+    }
+
     virtual void preserveWrapper(JSObject *target) = 0;
 
     static bool set(JSContext *cx, HandleObject wrapper, HandleObject receiver, HandleId id,
@@ -454,6 +458,91 @@ const JSClass JSXrayTraits::HolderClass = {
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
+// These traits are used when the target is not Xrayable and we therefore want
+// to make it opaque modulo the usual Xray machinery (like expandos and
+// .wrappedJSObject).
+class OpaqueXrayTraits : public XrayTraits
+{
+public:
+    enum {
+        HasPrototype = 1
+    };
+    static const XrayType Type = XrayForOpaqueObject;
+
+    virtual bool resolveNativeProperty(JSContext *cx, HandleObject wrapper,
+                                       HandleObject holder, HandleId id,
+                                       MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE
+    {
+        MOZ_CRASH("resolveNativeProperty hook should never be called with HasPrototype = 1");
+    }
+
+    bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
+                        MutableHandle<JSPropertyDescriptor> desc,
+                        Handle<JSPropertyDescriptor> existingDesc, bool *defined)
+    {
+        *defined = false;
+        return true;
+    }
+
+    virtual bool enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags,
+                                AutoIdVector &props)
+    {
+        return true;
+    }
+
+    static bool call(JSContext *cx, HandleObject wrapper,
+                     const JS::CallArgs &args, const js::Wrapper& baseInstance)
+    {
+        RootedValue v(cx, ObjectValue(*wrapper));
+        js_ReportIsNotFunction(cx, v);
+        return false;
+    }
+
+    static bool construct(JSContext *cx, HandleObject wrapper,
+                          const JS::CallArgs &args, const js::Wrapper& baseInstance)
+    {
+        RootedValue v(cx, ObjectValue(*wrapper));
+        js_ReportIsNotFunction(cx, v);
+        return false;
+    }
+
+    static bool isResolving(JSContext *cx, JSObject *holder, jsid id)
+    {
+        return false;
+    }
+
+    typedef ResolvingIdDummy ResolvingIdImpl;
+
+    bool getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
+                               JS::HandleObject target,
+                               JS::MutableHandleObject protop)
+    {
+        // Opaque wrappers just get targetGlobal.Object.prototype as their
+        // prototype. This is preferable to using a null prototype because it
+        // lets things like |toString| and |__proto__| work.
+        {
+            JSAutoCompartment ac(cx, target);
+            if (!JS_GetClassPrototype(cx, JSProto_Object, protop))
+                return false;
+        }
+        return JS_WrapObject(cx, protop);
+    }
+
+    static const char *className(JSContext *cx, HandleObject wrapper, const js::Wrapper& baseInstance) {
+        return "Opaque";
+    }
+
+    virtual void preserveWrapper(JSObject *target) MOZ_OVERRIDE { }
+
+    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper) MOZ_OVERRIDE
+    {
+        RootedObject global(cx, JS_GetGlobalForObject(cx, wrapper));
+        return JS_NewObjectWithGivenProto(cx, nullptr, JS::NullPtr(), global);
+    }
+
+    static OpaqueXrayTraits singleton;
+};
+
 inline bool
 SilentFailure(JSContext *cx, HandleId id, const char *reason)
 {
@@ -506,7 +595,8 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext *cx,
             return SilentFailure(cx, id, "Value not same-origin with target");
 
         // Disallow non-Xrayable objects.
-        if (GetXrayType(propObj) == NotXray)
+        XrayType xrayType = GetXrayType(propObj);
+        if (xrayType == NotXray || xrayType == XrayForOpaqueObject)
             return SilentFailure(cx, id, "Value not Xrayable");
 
         // Disallow callables.
@@ -949,6 +1039,7 @@ JSXrayTraits::createHolder(JSContext *cx, JSObject *wrapper)
 XPCWrappedNativeXrayTraits XPCWrappedNativeXrayTraits::singleton;
 DOMXrayTraits DOMXrayTraits::singleton;
 JSXrayTraits JSXrayTraits::singleton;
+OpaqueXrayTraits OpaqueXrayTraits::singleton;
 
 XrayTraits*
 GetXrayTraits(JSObject *obj)
@@ -960,6 +1051,8 @@ GetXrayTraits(JSObject *obj)
         return &XPCWrappedNativeXrayTraits::singleton;
       case XrayForJSObject:
         return &JSXrayTraits::singleton;
+      case XrayForOpaqueObject:
+        return &OpaqueXrayTraits::singleton;
       default:
         return nullptr;
     }
@@ -2606,6 +2699,13 @@ XrayWrapper<Base, Traits>::construct(JSContext *cx, HandleObject wrapper, const 
 }
 
 template <typename Base, typename Traits>
+const char *
+XrayWrapper<Base, Traits>::className(JSContext *cx, HandleObject wrapper) const
+{
+    return Traits::className(cx, wrapper, Base::singleton);
+}
+
+template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::defaultValue(JSContext *cx, HandleObject wrapper,
                                         JSType hint, MutableHandleValue vp) const
@@ -2700,6 +2800,10 @@ template class SecurityXrayDOM;
 template<>
 const PermissiveXrayJS PermissiveXrayJS::singleton(0);
 template class PermissiveXrayJS;
+
+template<>
+const PermissiveXrayOpaque PermissiveXrayOpaque::singleton(0);
+template class PermissiveXrayOpaque;
 
 template<>
 const SCSecurityXrayXPCWN SCSecurityXrayXPCWN::singleton(0);
