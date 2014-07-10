@@ -253,8 +253,12 @@ class MachCommands(MachCommandBase):
             'executed.')
 
     def run_cppunit_test(self, **params):
+        from mozlog.structured import commandline
         import runcppunittests as cppunittests
-        import logging
+
+        log = commandline.setup_logging("cppunittest",
+                                        {},
+                                        {"tbpl": sys.stdout})
 
         if len(params['test_files']) == 0:
             testdir = os.path.join(self.distdir, 'cppunittests')
@@ -269,11 +273,9 @@ class MachCommands(MachCommandBase):
 
         tester = cppunittests.CPPUnitTests()
         try:
-            result = tester.run_tests(progs, self.bindir, symbols_path)
-        except Exception, e:
-            self.log(logging.ERROR, 'cppunittests',
-                {'exception': str(e)},
-                'Caught exception running cpp unit tests: {exception}')
+            result = tester.run_tests(progs, self.bindir, symbols_path, interactive=True)
+        except Exception as e:
+            log.error("Caught exception running cpp unit tests: %s" % str(e))
             result = False
 
         return 0 if result else 1
