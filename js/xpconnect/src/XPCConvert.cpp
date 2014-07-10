@@ -376,7 +376,7 @@ bool ConvertToPrimitive(JSContext *cx, HandleValue v, T *retval)
 bool
 XPCConvert::JSData2Native(void* d, HandleValue s,
                           const nsXPTType& type,
-                          const nsID* iid,
+                          bool useAllocator, const nsID* iid,
                           nsresult* pErr)
 {
     NS_PRECONDITION(d, "bad param");
@@ -474,7 +474,10 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     case nsXPTType::T_ASTRING:
     {
         if (s.isUndefined()) {
-            (**((nsAString**)d)).SetIsVoid(true);
+            if (useAllocator)
+                *((const nsAString**)d) = &NullString();
+            else
+                (**((nsAString**)d)).SetIsVoid(true);
             return true;
         }
         // Fall through to T_DOMSTRING case.
@@ -482,7 +485,10 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     case nsXPTType::T_DOMSTRING:
     {
         if (s.isNull()) {
-            (**((nsAString**)d)).SetIsVoid(true);
+            if (useAllocator)
+                *((const nsAString**)d) = &NullString();
+            else
+                (**((nsAString**)d)).SetIsVoid(true);
             return true;
         }
         size_t length = 0;
@@ -493,17 +499,27 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
             if (!str)
                 return false;
 
-            chars = JS_GetStringCharsAndLength(cx, str, &length);
+            chars = useAllocator ? JS_GetStringCharsZAndLength(cx, str, &length)
+                                 : JS_GetStringCharsAndLength(cx, str, &length);
             if (!chars)
                 return false;
 
             if (!length) {
-                (**((nsAString**)d)).Truncate();
+                if (useAllocator)
+                    *((const nsAString**)d) = &EmptyString();
+                else
+                    (**((nsAString**)d)).Truncate();
                 return true;
             }
         }
 
-        nsString* ws = *((nsString**)d);
+        nsString* ws;
+        if (useAllocator) {
+            ws = nsXPConnect::GetRuntimeInstance()->NewShortLivedString();
+            *((const nsString**)d) = ws;
+        } else {
+            ws = *((nsString**)d);
+        }
 
         if (!str) {
             ws->AssignLiteral(MOZ_UTF16("undefined"));
@@ -515,6 +531,10 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
             // The characters represent a literal char16_t string constant
             // compiled into libxul, such as the string "undefined" above.
             ws->AssignLiteral(chars, length);
+        } else if (useAllocator && STRING_TO_JSVAL(str) == s) {
+            // The JS string will exist over the function call.
+            // We don't need to copy the characters in this case.
+            ws->Rebind(chars, length);
         } else {
             ws->Assign(chars, length);
         }
@@ -595,8 +615,12 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         JSString* str;
 
         if (s.isNull() || s.isUndefined()) {
-            nsCString* rs = *((nsCString**)d);
-            rs->SetIsVoid(true);
+            if (useAllocator) {
+                *((const nsACString**)d) = &NullCString();
+            } else {
+                nsCString* rs = *((nsCString**)d);
+                rs->SetIsVoid(true);
+            }
             return true;
         }
 
@@ -608,12 +632,26 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         }
 
         if (!length) {
-            nsCString* rs = *((nsCString**)d);
-            rs->Truncate();
+            if (useAllocator) {
+                *((const nsACString**)d) = &EmptyCString();
+            } else {
+                nsCString* rs = *((nsCString**)d);
+                rs->Truncate();
+            }
             return true;
         }
 
-        nsCString *rs = *((nsCString**)d);
+        nsCString *rs;
+        if (useAllocator) {
+            // Use nsCString to enable sharing
+            rs = new nsCString();
+            if (!rs)
+                return false;
+
+            *((const nsCString**)d) = rs;
+        } else {
+            rs = *((nsCString**)d);
+        }
         CopyUTF16toUTF8(Substring(chars, length), *rs);
         return true;
     }
@@ -621,9 +659,18 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     case nsXPTType::T_CSTRING:
     {
         if (s.isNull() || s.isUndefined()) {
-            nsACString* rs = *((nsACString**)d);
-            rs->Truncate();
-            rs->SetIsVoid(true);
+            if (useAllocator) {
+                nsACString *rs = new nsCString();
+                if (!rs)
+                    return false;
+
+                rs->SetIsVoid(true);
+                *((nsACString**)d) = rs;
+            } else {
+                nsACString* rs = *((nsACString**)d);
+                rs->Truncate();
+                rs->SetIsVoid(true);
+            }
             return true;
         }
 
@@ -639,12 +686,25 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         }
 
         if (!length) {
-            nsCString* rs = *((nsCString**)d);
-            rs->Truncate();
+            if (useAllocator) {
+                *((const nsACString**)d) = &EmptyCString();
+            } else {
+                nsCString* rs = *((nsCString**)d);
+                rs->Truncate();
+            }
             return true;
         }
 
-        nsACString *rs = *((nsACString**)d);
+        nsACString *rs;
+        if (useAllocator) {
+            rs = new nsCString();
+            if (!rs)
+                return false;
+            *((const nsACString**)d) = rs;
+        } else {
+            rs = *((nsACString**)d);
+        }
+
         rs->SetLength(uint32_t(length));
         if (rs->Length() != uint32_t(length)) {
             return false;
@@ -1548,7 +1608,7 @@ XPCConvert::JSArray2Native(void** d, HandleValue s,
         for (initedCount = 0; initedCount < count; initedCount++) {            \
             if (!JS_GetElement(cx, jsarray, initedCount, &current) ||          \
                 !JSData2Native(((_t*)array)+initedCount, current, type,        \
-                               iid, pErr))                                     \
+                               true, iid, pErr))                               \
                 goto failure;                                                  \
         }                                                                      \
     PR_END_MACRO
