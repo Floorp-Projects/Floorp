@@ -164,6 +164,7 @@ NS_INTERFACE_MAP_BEGIN(HttpBaseChannel)
   NS_INTERFACE_MAP_ENTRY(nsIEncodedChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
+  NS_INTERFACE_MAP_ENTRY(nsIForcePendingChannel)
   NS_INTERFACE_MAP_ENTRY(nsIRedirectHistory)
   NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
   NS_INTERFACE_MAP_ENTRY(nsIUploadChannel2)
@@ -1637,6 +1638,18 @@ HttpBaseChannel::ForcePending(bool aForcePending)
   mForcePending = aForcePending;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+HttpBaseChannel::GetLastModifiedTime(PRTime* lastModifiedTime)
+{
+  if (!mResponseHead)
+    return NS_ERROR_NOT_AVAILABLE;
+  uint32_t lastMod;
+  mResponseHead->GetLastModifiedValue(&lastMod);
+  *lastModifiedTime = lastMod;
+  return NS_OK;
+}
+
 
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsISupportsPriority

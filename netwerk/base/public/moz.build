@@ -43,6 +43,7 @@ XPIDL_SOURCES += [
     'nsIExternalProtocolHandler.idl',
     'nsIFileStreams.idl',
     'nsIFileURL.idl',
+    'nsIForcePendingChannel.idl',
     'nsIIncrementalDownload.idl',
     'nsIInputStreamChannel.idl',
     'nsIInputStreamPump.idl',
