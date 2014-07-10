@@ -31,7 +31,7 @@ var Status = require('../types/types').Status;
  * Helper for the parse() function from the file type.
  * See gcli/util/filesystem.js for details
  */
-exports.parse = function(typed, options) {
+exports.parse = function(context, typed, options) {
   return filesystem.stat(typed).then(function(stats) {
     // The 'save-as' case - the path should not exist but does
     if (options.existing === 'no' && stats.exists) {

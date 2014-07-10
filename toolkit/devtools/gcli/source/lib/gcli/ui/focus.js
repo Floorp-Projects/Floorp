@@ -18,7 +18,6 @@
 
 var util = require('../util/util');
 var l10n = require('../util/l10n');
-var settings = require('../settings');
 
 /**
  * Record how much help the user wants from the tooltip
@@ -59,12 +58,13 @@ exports.items = [
  * It does this simply by postponing the hide events by 250ms to see if
  * something else takes focus.
  */
-function FocusManager(document) {
+function FocusManager(document, settings) {
   if (document == null) {
     throw new Error('document == null');
   }
 
   this.document = document;
+  this.settings = settings;
   this.debug = false;
   this.blurDelay = 150;
   this.window = this.document.defaultView;
@@ -84,7 +84,7 @@ function FocusManager(document) {
     this.document.addEventListener('focus', this._focused, true);
   }
 
-  var eagerHelper = settings.getSetting('eagerHelper');
+  var eagerHelper = this.settings.get('eagerHelper');
   eagerHelper.onChange.add(this._eagerHelperChanged, this);
 
   this.isTooltipVisible = undefined;
@@ -96,7 +96,7 @@ function FocusManager(document) {
  * Avoid memory leaks
  */
 FocusManager.prototype.destroy = function() {
-  var eagerHelper = settings.getSetting('eagerHelper');
+  var eagerHelper = this.settings.get('eagerHelper');
   eagerHelper.onChange.remove(this._eagerHelperChanged, this);
 
   this.document.removeEventListener('focus', this._focused, true);
@@ -116,6 +116,7 @@ FocusManager.prototype.destroy = function() {
 
   this._focused = undefined;
   this.document = undefined;
+  this.settings = undefined;
   this.window = undefined;
 };
 
@@ -355,7 +356,7 @@ FocusManager.prototype._checkShow = function() {
  * available inputs
  */
 FocusManager.prototype._shouldShowTooltip = function() {
-  var eagerHelper = settings.getSetting('eagerHelper');
+  var eagerHelper = this.settings.get('eagerHelper');
   if (eagerHelper.value === Eagerness.NEVER) {
     return { visible: false, reason: 'eagerHelperNever' };
   }

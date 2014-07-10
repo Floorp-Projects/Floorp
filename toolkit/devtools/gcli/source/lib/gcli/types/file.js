@@ -89,7 +89,7 @@ exports.items = [
         existing: this.existing,
         matches: this.matches
       };
-      var promise = fileparser.parse(arg.text, options);
+      var promise = fileparser.parse(context, arg.text, options);
 
       return promise.then(function(reply) {
         return new Conversion(reply.value, arg, reply.status,

@@ -68,7 +68,7 @@ exports.testAllPredictions1 = function(options) {
     return;
   }
 
-  var resource = options.requisition.types.createType('resource');
+  var resource = options.requisition.system.types.createType('resource');
   return resource.getLookup().then(function(opts) {
     assert.ok(opts.length > 1, 'have all resources');
 
@@ -84,7 +84,7 @@ exports.testScriptPredictions = function(options) {
     return;
   }
 
-  var types = options.requisition.types;
+  var types = options.requisition.system.types;
   var resource = types.createType({ name: 'resource', include: 'text/javascript' });
   return resource.getLookup().then(function(opts) {
     assert.ok(opts.length > 1, 'have js resources');
@@ -101,7 +101,7 @@ exports.testStylePredictions = function(options) {
     return;
   }
 
-  var types = options.requisition.types;
+  var types = options.requisition.system.types;
   var resource = types.createType({ name: 'resource', include: 'text/css' });
   return resource.getLookup().then(function(opts) {
     assert.ok(opts.length >= 1, 'have css resources');
@@ -117,7 +117,7 @@ exports.testAllPredictions2 = function(options) {
     assert.log('Skipping checks due to nodom document.stylsheets support.');
     return;
   }
-  var types = options.requisition.types;
+  var types = options.requisition.system.types;
 
   var scriptRes = types.createType({ name: 'resource', include: 'text/javascript' });
   return scriptRes.getLookup().then(function(scriptOptions) {
@@ -139,7 +139,7 @@ exports.testAllPredictions3 = function(options) {
     return;
   }
 
-  var types = options.requisition.types;
+  var types = options.requisition.system.types;
   var res1 = types.createType({ name: 'resource' });
   return res1.getLookup().then(function(options1) {
     var res2 = types.createType('resource');

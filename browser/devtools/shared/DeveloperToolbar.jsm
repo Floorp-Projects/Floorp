@@ -73,8 +73,7 @@ let CommandUtils = {
    */
   createRequisition: function(environment) {
     return gcli.load().then(() => {
-      let Requisition = require("gcli/cli").Requisition
-      return new Requisition({ environment: environment });
+      return gcli.createRequisition({ environment: environment });
     });
   },
 
@@ -319,9 +318,9 @@ Object.defineProperty(DeveloperToolbar.prototype, 'sequenceId', {
  */
 DeveloperToolbar.prototype.toggle = function() {
   if (this.visible) {
-    return this.hide();
+    return this.hide().catch(console.error);
   } else {
-    return this.show(true);
+    return this.show(true).catch(console.error);
   }
 };
 

@@ -7,8 +7,6 @@ let prefBranch = Cc["@mozilla.org/preferences-service;1"]
                     .getService(Ci.nsIPrefService).getBranch(null)
                     .QueryInterface(Ci.nsIPrefBranch2);
 
-let settings = require("gcli/settings");
-
 const TEST_URI = "data:text/html;charset=utf-8,gcli-pref2";
 
 function test() {
@@ -27,7 +25,9 @@ function spawnTest() {
       setup: 'pref show devtools.editor.tabsize',
       check: {
         args: {
-          setting: { value: settings.getSetting("devtools.editor.tabsize") }
+          setting: {
+            value: options.requisition.system.settings.get("devtools.editor.tabsize")
+          }
         },
       },
       exec: {
@@ -38,7 +38,9 @@ function spawnTest() {
       setup: 'pref set devtools.editor.tabsize 20',
       check: {
         args: {
-          setting: { value: settings.getSetting("devtools.editor.tabsize") },
+          setting: {
+            value: options.requisition.system.settings.get("devtools.editor.tabsize")
+          },
           value: { value: 20 }
         },
       },
@@ -54,7 +56,9 @@ function spawnTest() {
       setup: 'pref show devtools.editor.tabsize',
       check: {
         args: {
-          setting: { value: settings.getSetting("devtools.editor.tabsize") }
+          setting: {
+            value: options.requisition.system.settings.get("devtools.editor.tabsize")
+          }
         },
       },
       exec: {
@@ -65,7 +69,9 @@ function spawnTest() {
       setup: 'pref set devtools.editor.tabsize 1',
       check: {
         args: {
-          setting: { value: settings.getSetting("devtools.editor.tabsize") },
+          setting: {
+            value: options.requisition.system.settings.get("devtools.editor.tabsize")
+          },
           value: { value: 1 }
         },
       },
@@ -77,7 +83,9 @@ function spawnTest() {
       setup: 'pref show devtools.editor.tabsize',
       check: {
         args: {
-          setting: { value: settings.getSetting("devtools.editor.tabsize") }
+          setting: {
+            value: options.requisition.system.settings.get("devtools.editor.tabsize")
+          }
         },
       },
       exec: {
