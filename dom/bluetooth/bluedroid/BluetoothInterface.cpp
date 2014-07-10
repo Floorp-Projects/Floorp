@@ -84,6 +84,36 @@ struct interface_traits<BluetoothSocketInterface>
   }
 };
 
+typedef
+  BluetoothInterfaceRunnable1<BluetoothSocketResultHandler, void, int>
+  BluetoothSocketIntResultRunnable;
+
+typedef
+  BluetoothInterfaceRunnable1<BluetoothSocketResultHandler, void, bt_status_t>
+  BluetoothSocketErrorRunnable;
+
+static nsresult
+DispatchBluetoothSocketResult(BluetoothSocketResultHandler* aRes,
+                              void (BluetoothSocketResultHandler::*aMethod)(int),
+                              int aArg, bt_status_t aStatus)
+{
+  MOZ_ASSERT(aRes);
+
+  nsRunnable* runnable;
+
+  if (aStatus == BT_STATUS_SUCCESS) {
+    runnable = new BluetoothSocketIntResultRunnable(aRes, aMethod, aArg);
+  } else {
+    runnable = new BluetoothSocketErrorRunnable(aRes,
+      &BluetoothSocketResultHandler::OnError, aStatus);
+  }
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  if (NS_FAILED(rv)) {
+    BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+  }
+  return rv;
+}
+
 bt_status_t
 BluetoothSocketInterface::Listen(btsock_type_t aType,
                                  const char* aServiceName,
