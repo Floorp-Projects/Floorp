@@ -20,7 +20,6 @@ export
 
 compile
    Build the *compile* tier. The *compile* tier compiles all C/C++ files.
-   Only applies to builds with ``MOZ_PSEUDO_DERECURSE``.
 
 libs
    Build the *libs* tier. The *libs* tier performs linking and performs
@@ -36,7 +35,6 @@ binaries:
    build, but allows for much faster rebuilds of C/C++ code. For performance
    reasons, however, it skips nss, nspr, icu and ffi. This is targeted to
    improve local developer workflow when touching C/C++ code.
-   Only applies to builds with ``MOZ_PSEUDO_DERECURSE``.
 
 install-manifests
    Process install manifests. Install manifests handle the installation of
