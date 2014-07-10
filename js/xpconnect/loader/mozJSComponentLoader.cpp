@@ -38,6 +38,7 @@
 #include "nsDOMBlobBuilder.h"
 #include "jsprf.h"
 #include "nsJSPrincipals.h"
+#include "nsJSUtils.h"
 #include "xpcprivate.h"
 #include "xpcpublic.h"
 #include "nsContentUtils.h"
@@ -111,26 +112,26 @@ Dump(JSContext *cx, unsigned argc, Value *vp)
     if (args.length() == 0)
         return true;
 
-    JSString *str = JS::ToString(cx, args[0]);
+    RootedString str(cx, JS::ToString(cx, args[0]));
     if (!str)
         return false;
 
-    size_t length;
-    const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
-    if (!chars)
+    JSAutoByteString utf8str;
+    if (!utf8str.encodeUtf8(cx, str))
         return false;
 
-    NS_ConvertUTF16toUTF8 utf8str(reinterpret_cast<const char16_t*>(chars),
-                                  length);
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.get());
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.ptr());
 #endif
 #ifdef XP_WIN
     if (IsDebuggerPresent()) {
-      OutputDebugStringW(reinterpret_cast<const wchar_t*>(chars));
+        nsAutoJSString wstr;
+        if (!wstr.init(cx, str))
+            return false;
+        OutputDebugStringW(wstr.get());
     }
 #endif
-    fputs(utf8str.get(), stdout);
+    fputs(utf8str.ptr(), stdout);
     fflush(stdout);
     return true;
 }

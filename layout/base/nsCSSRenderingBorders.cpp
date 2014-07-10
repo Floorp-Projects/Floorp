@@ -1068,21 +1068,9 @@ nsCSSBorderRenderer::CreateCornerGradient(mozilla::css::Corner aCorner,
   pat2.y = cornerOrigin.y -
     mBorderWidths[cornerWidth[aCorner]]  * gradientCoeff[aCorner].b;
 
-  float gradientOffset;
-  
-  if (mContext->IsCairo() &&
-      (mContext->OriginalSurface()->GetType() == gfxSurfaceType::D2D ||
-       mContext->OriginalSurface()->GetType() == gfxSurfaceType::Quartz))
-  {
-    // On quarz this doesn't do exactly the right thing, but it does do what
-    // most other browsers do and doing the 'right' thing seems to be
-    // hard with the quartz cairo backend.
-    gradientOffset = 0;
-  } else {
-    // When cairo/Azure does the gradient drawing this gives us pretty nice behavior!
-    gradientOffset = 0.25 / sqrt(pow(mBorderWidths[cornerHeight[aCorner]], 2) +
-                                 pow(mBorderWidths[cornerHeight[aCorner]], 2));
-  }
+  float gradientOffset =
+    0.25 / sqrt(pow(mBorderWidths[cornerHeight[aCorner]], 2) +
+                pow(mBorderWidths[cornerHeight[aCorner]], 2));
 
   nsRefPtr<gfxPattern> pattern = new gfxPattern(pat1.x, pat1.y, pat2.x, pat2.y);
   pattern->AddColorStop(0.5 - gradientOffset, gfxRGBA(aFirstColor));
@@ -1188,154 +1176,6 @@ nsCSSBorderRenderer::DrawSingleWidthSolidBorder()
 
 void
 nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
-{
-  const gfxFloat alpha = 0.55191497064665766025;
-
-  const twoFloats cornerMults[4] = { { -1,  0 },
-                                      {  0, -1 },
-                                      { +1,  0 },
-                                      {  0, +1 } };
-
-  const twoFloats centerAdjusts[4] = { { 0, +0.5 },
-                                        { -0.5, 0 },
-                                        { 0, -0.5 },
-                                        { +0.5, 0 } };
-
-  gfxPoint pc, pci, p0, p1, p2, p3, pd, p3i;
-
-  gfxCornerSizes innerRadii;
-  ComputeInnerRadii(mBorderRadii, mBorderWidths, &innerRadii);
-
-  gfxRect strokeRect = mOuterRect;
-  strokeRect.Deflate(gfxMargin(mBorderWidths[0] / 2.0, mBorderWidths[1] / 2.0,
-                               mBorderWidths[2] / 2.0, mBorderWidths[3] / 2.0));
-
-  NS_FOR_CSS_CORNERS(i) {
-      // the corner index -- either 1 2 3 0 (cw) or 0 3 2 1 (ccw)
-    mozilla::css::Corner c = mozilla::css::Corner((i+1) % 4);
-    mozilla::css::Corner prevCorner = mozilla::css::Corner(i);
-
-    // i+2 and i+3 respectively.  These are used to index into the corner
-    // multiplier table, and were deduced by calculating out the long form
-    // of each corner and finding a pattern in the signs and values.
-    int i1 = (i+1) % 4;
-    int i2 = (i+2) % 4;
-    int i3 = (i+3) % 4;
-
-    pc = mOuterRect.AtCorner(c);
-    pci = mInnerRect.AtCorner(c);
-    mContext->SetLineWidth(mBorderWidths[i]);
-
-    nscolor firstColor, secondColor;
-    if (IsVisible(mBorderStyles[i]) && IsVisible(mBorderStyles[i1])) {
-      firstColor = mBorderColors[i];
-      secondColor = mBorderColors[i1];
-    } else if (IsVisible(mBorderStyles[i])) {
-      firstColor = mBorderColors[i];
-      secondColor = mBorderColors[i];
-    } else {
-      firstColor = mBorderColors[i1];
-      secondColor = mBorderColors[i1];
-    }
-
-    mContext->NewPath();
-
-    gfxPoint strokeStart, strokeEnd;
-
-    strokeStart.x = mOuterRect.AtCorner(prevCorner).x +
-      mBorderCornerDimensions[prevCorner].width * cornerMults[i2].a;
-    strokeStart.y = mOuterRect.AtCorner(prevCorner).y +
-      mBorderCornerDimensions[prevCorner].height * cornerMults[i2].b;
-
-    strokeEnd.x = pc.x + mBorderCornerDimensions[c].width * cornerMults[i].a;
-    strokeEnd.y = pc.y + mBorderCornerDimensions[c].height * cornerMults[i].b;
-
-    strokeStart.x += centerAdjusts[i].a * mBorderWidths[i];
-    strokeStart.y += centerAdjusts[i].b * mBorderWidths[i];
-    strokeEnd.x += centerAdjusts[i].a * mBorderWidths[i];
-    strokeEnd.y += centerAdjusts[i].b * mBorderWidths[i];
-
-    mContext->MoveTo(strokeStart);
-    mContext->LineTo(strokeEnd);
-    mContext->SetColor(gfxRGBA(mBorderColors[i]));
-    mContext->Stroke();
-
-    if (firstColor != secondColor) {
-      nsRefPtr<gfxPattern> pattern =
-        CreateCornerGradient(c, firstColor, secondColor);
-      mContext->SetPattern(pattern);
-    } else {
-      mContext->SetColor(firstColor);
-    }     
-    
-    if (mBorderRadii[c].width > 0 && mBorderRadii[c].height > 0) {
-      p0.x = pc.x + cornerMults[i].a * mBorderRadii[c].width;
-      p0.y = pc.y + cornerMults[i].b * mBorderRadii[c].height;
-
-      p3.x = pc.x + cornerMults[i3].a * mBorderRadii[c].width;
-      p3.y = pc.y + cornerMults[i3].b * mBorderRadii[c].height;
-
-      p1.x = p0.x + alpha * cornerMults[i2].a * mBorderRadii[c].width;
-      p1.y = p0.y + alpha * cornerMults[i2].b * mBorderRadii[c].height;
-
-      p2.x = p3.x - alpha * cornerMults[i3].a * mBorderRadii[c].width;
-      p2.y = p3.y - alpha * cornerMults[i3].b * mBorderRadii[c].height;
-
-      mContext->NewPath();
-            
-      gfxPoint cornerStart;
-      cornerStart.x = pc.x + cornerMults[i].a * mBorderCornerDimensions[c].width;
-      cornerStart.y = pc.y + cornerMults[i].b * mBorderCornerDimensions[c].height;
-
-      mContext->MoveTo(cornerStart);
-      mContext->LineTo(p0);
-
-      mContext->CurveTo(p1, p2, p3);
-            
-      gfxPoint outerCornerEnd;
-      outerCornerEnd.x = pc.x + cornerMults[i3].a * mBorderCornerDimensions[c].width;
-      outerCornerEnd.y = pc.y + cornerMults[i3].b * mBorderCornerDimensions[c].height;
-
-      mContext->LineTo(outerCornerEnd);
-
-      p0.x = pci.x + cornerMults[i].a * innerRadii[c].width;
-      p0.y = pci.y + cornerMults[i].b * innerRadii[c].height;
-
-      p3i.x = pci.x + cornerMults[i3].a * innerRadii[c].width;
-      p3i.y = pci.y + cornerMults[i3].b * innerRadii[c].height;
-
-      p1.x = p0.x + alpha * cornerMults[i2].a * innerRadii[c].width;
-      p1.y = p0.y + alpha * cornerMults[i2].b * innerRadii[c].height;
-
-      p2.x = p3i.x - alpha * cornerMults[i3].a * innerRadii[c].width;
-      p2.y = p3i.y - alpha * cornerMults[i3].b * innerRadii[c].height;
-      mContext->LineTo(p3i);
-      mContext->CurveTo(p2, p1, p0);
-      mContext->ClosePath();
-      mContext->Fill();
-    } else {
-      gfxPoint c1, c2, c3, c4;
-
-      c1.x = pc.x + cornerMults[i].a * mBorderCornerDimensions[c].width;
-      c1.y = pc.y + cornerMults[i].b * mBorderCornerDimensions[c].height;
-      c2 = pc;
-      c3.x = pc.x + cornerMults[i3].a * mBorderCornerDimensions[c].width;
-      c3.y = pc.y + cornerMults[i3].b * mBorderCornerDimensions[c].height;
-
-      mContext->NewPath();
-      mContext->MoveTo(c1);
-      mContext->LineTo(c2);
-      mContext->LineTo(c3);
-      mContext->LineTo(pci);
-      mContext->ClosePath();
-
-      mContext->Fill();
-    }
-  }
-}
-
-void
-nsCSSBorderRenderer::DrawNoCompositeColorSolidBorderAzure()
 {
   DrawTarget *dt = mContext->GetDrawTarget();
 
@@ -1714,11 +1554,7 @@ nsCSSBorderRenderer::DrawBorders()
   if (allBordersSolid && !hasCompositeColors &&
       !mAvoidStroke)
   {
-    if (mContext->IsCairo()) {
-      DrawNoCompositeColorSolidBorder();
-    } else {
-      DrawNoCompositeColorSolidBorderAzure();
-    }
+    DrawNoCompositeColorSolidBorder();
     return;
   }
 

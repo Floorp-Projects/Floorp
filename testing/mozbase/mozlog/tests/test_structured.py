@@ -86,6 +86,26 @@ class TestStructuredLog(BaseStructuredTest):
     def test_status_2(self):
         self.assertRaises(ValueError, self.logger.test_status, "test1", "subtest name", "XXXUNKNOWNXXX")
 
+    def test_status_extra(self):
+        self.logger.test_status("test1", "subtest name", "FAIL", expected="PASS", extra={"data": 42})
+        self.assert_log_equals({"action": "test_status",
+                                "subtest": "subtest name",
+                                "status": "FAIL",
+                                "expected": "PASS",
+                                "test": "test1",
+                                "extra": {"data":42}
+                            })
+
+    def test_status_stack(self):
+        self.logger.test_status("test1", "subtest name", "FAIL", expected="PASS", stack="many\nlines\nof\nstack")
+        self.assert_log_equals({"action": "test_status",
+                                "subtest": "subtest name",
+                                "status": "FAIL",
+                                "expected": "PASS",
+                                "test": "test1",
+                                "stack": "many\nlines\nof\nstack"
+                            })
+
     def test_end(self):
         self.logger.test_end("test1", "fail", message="Test message")
         self.assert_log_equals({"action": "test_end",
@@ -103,6 +123,14 @@ class TestStructuredLog(BaseStructuredTest):
 
     def test_end_2(self):
         self.assertRaises(ValueError, self.logger.test_end, "test1", "XXXUNKNOWNXXX")
+
+    def test_end_stack(self):
+        self.logger.test_end("test1", "PASS", expected="PASS", stack="many\nlines\nof\nstack")
+        self.assert_log_equals({"action": "test_end",
+                                "status": "PASS",
+                                "test": "test1",
+                                "stack": "many\nlines\nof\nstack"
+                            })
 
     def test_process(self):
         self.logger.process_output(1234, "test output")

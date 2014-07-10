@@ -434,9 +434,7 @@ enum nsEventStructType
 #define NS_TOUCH_START               (NS_TOUCH_EVENT_START)
 #define NS_TOUCH_MOVE                (NS_TOUCH_EVENT_START+1)
 #define NS_TOUCH_END                 (NS_TOUCH_EVENT_START+2)
-#define NS_TOUCH_ENTER               (NS_TOUCH_EVENT_START+3)
-#define NS_TOUCH_LEAVE               (NS_TOUCH_EVENT_START+4)
-#define NS_TOUCH_CANCEL              (NS_TOUCH_EVENT_START+5)
+#define NS_TOUCH_CANCEL              (NS_TOUCH_EVENT_START+3)
 
 // Pointerlock DOM API
 #define NS_POINTERLOCK_START         5300

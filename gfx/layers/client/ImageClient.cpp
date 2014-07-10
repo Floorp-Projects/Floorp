@@ -276,14 +276,12 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
     if (!mFrontBuffer) {
       gfxImageFormat format
         = gfxPlatform::GetPlatform()->OptimalFormatForContent(gfx::ContentForFormat(surface->GetFormat()));
-      mFrontBuffer = CreateTextureClientForDrawing(gfx::ImageFormatToSurfaceFormat(format),
-                                                   mTextureFlags, gfx::BackendType::NONE, size);
-      MOZ_ASSERT(mFrontBuffer->CanExposeDrawTarget());
-      if (!mFrontBuffer->AllocateForSurface(size)) {
-        mFrontBuffer = nullptr;
+      mFrontBuffer = CreateTextureClientForDrawing(gfx::ImageFormatToSurfaceFormat(format), size,
+                                                   gfx::BackendType::NONE, mTextureFlags);
+      if (!mFrontBuffer) {
         return false;
       }
-
+      MOZ_ASSERT(mFrontBuffer->CanExposeDrawTarget());
       bufferCreated = true;
     }
 

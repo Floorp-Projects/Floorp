@@ -21,26 +21,45 @@ class GMPVideoHost;
 [ptr] native MessageLoop(MessageLoop);
 [ptr] native TagArray(nsTArray<nsCString>);
 
-[uuid(BF5A9086-70F5-4D38-832D-1609BBF963CD)]
+[scriptable, uuid(63fc797f-9d01-43f4-8b93-5b1fe713c2f8)]
 interface mozIGeckoMediaPluginService : nsISupports
 {
-  // Returns the GMP thread.
-  // Callable from any thread.
+  /**
+   * The GMP thread. Callable from any thread.
+   */
   readonly attribute nsIThread thread;
 
-  // Returns a video decoder that supports the specified tags.
-  // The array of tags should at least contain a codec tag, and optionally
-  // other tags such as for EME keysystem.
-  // Callable only on GMP thread.
+  /**
+   * Get a video decoder that supports the specified tags.
+   * The array of tags should at least contain a codec tag, and optionally
+   * other tags such as for EME keysystem.
+   * Callable only on GMP thread.
+   */
+  [noscript]
   GMPVideoDecoder getGMPVideoDecoder(in TagArray tags,
                                      [optional] in AString origin,
                                      out GMPVideoHost outVideoHost);
 
-  // Returns a video encoder that supports the specified tags.
-  // The array of tags should at least contain a codec tag, and optionally
-  // other tags.
-  // Callable only on GMP thread.
+  /**
+   * Get a video encoder that supports the specified tags.
+   * The array of tags should at least contain a codec tag, and optionally
+   * other tags.
+   * Callable only on GMP thread.
+   */
+  [noscript]
   GMPVideoEncoder getGMPVideoEncoder(in TagArray tags,
                                      [optional] in AString origin,
                                      out GMPVideoHost outVideoHost);
+
+  /**
+   * Add a directory to scan for gecko media plugins.
+   * @note Main-thread API.
+   */
+  void addPluginDirectory(in AString directory);
+
+  /**
+   * Remove a directory for gecko media plugins.
+   * @note Main-thread API.
+   */
+  void removePluginDirectory(in AString directory);
 };

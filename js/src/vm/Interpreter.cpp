@@ -1597,6 +1597,7 @@ CASE(JSOP_UNUSED50)
 CASE(JSOP_UNUSED51)
 CASE(JSOP_UNUSED52)
 CASE(JSOP_UNUSED57)
+CASE(JSOP_UNUSED83)
 CASE(JSOP_UNUSED101)
 CASE(JSOP_UNUSED102)
 CASE(JSOP_UNUSED103)
@@ -3178,21 +3179,6 @@ CASE(JSOP_INITELEM_INC)
 }
 END_CASE(JSOP_INITELEM_INC)
 
-CASE(JSOP_SPREAD)
-{
-    HandleValue countVal = REGS.stackHandleAt(-2);
-    RootedObject &arr = rootObject0;
-    arr = &REGS.sp[-3].toObject();
-    HandleValue iterator = REGS.stackHandleAt(-1);
-    MutableHandleValue resultCountVal = REGS.stackHandleAt(-2);
-
-    if (!SpreadOperation(cx, arr, countVal, iterator, resultCountVal))
-        goto error;
-
-    REGS.sp--;
-}
-END_CASE(JSOP_SPREAD)
-
 CASE(JSOP_GOSUB)
 {
     PUSH_BOOLEAN(false);
@@ -3895,34 +3881,6 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
         return false;
 
     return InitGetterSetterOperation(cx, pc, obj, id, val);
-}
-
-bool
-js::SpreadOperation(JSContext *cx, HandleObject arr, HandleValue countVal,
-                    HandleValue iterator, MutableHandleValue resultCountVal)
-{
-    int32_t count = countVal.toInt32();
-    ForOfIterator iter(cx);
-    RootedValue iterVal(cx, iterator);
-    if (!iter.initWithIterator(iterVal))
-        return false;
-    while (true) {
-        bool done;
-        if (!iter.next(&iterVal, &done))
-            return false;
-        if (done)
-            break;
-        if (count == INT32_MAX) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
-                                 JSMSG_SPREAD_TOO_LARGE);
-            return false;
-        }
-        if (!JSObject::defineElement(cx, arr, count++, iterVal, nullptr, nullptr,
-                                     JSPROP_ENUMERATE))
-            return false;
-    }
-    resultCountVal.setInt32(count);
-    return true;
 }
 
 bool

@@ -120,18 +120,42 @@ public:
   TextureClient(TextureFlags aFlags = TextureFlags::DEFAULT);
   virtual ~TextureClient();
 
+  // Creates a TextureClient that can be accessed through a raw pointer.
+  // XXX - this doesn't allocate the texture data.
+  // Prefer CreateForRawBufferAccess which returns a BufferTextureClient
+  // only if allocation suceeded.
   static TemporaryRef<BufferTextureClient>
   CreateBufferTextureClient(ISurfaceAllocator* aAllocator,
                             gfx::SurfaceFormat aFormat,
                             TextureFlags aTextureFlags,
                             gfx::BackendType aMoz2dBackend);
 
+  // Creates and allocates a TextureClient usable with Moz2D.
   static TemporaryRef<TextureClient>
-  CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
-                                gfx::SurfaceFormat aFormat,
-                                TextureFlags aTextureFlags,
-                                gfx::BackendType aMoz2dBackend,
-                                const gfx::IntSize& aSizeHint);
+  CreateForDrawing(ISurfaceAllocator* aAllocator,
+                   gfx::SurfaceFormat aFormat,
+                   gfx::IntSize aSize,
+                   gfx::BackendType aMoz2dBackend,
+                   TextureFlags aTextureFlags,
+                   TextureAllocationFlags flags = ALLOC_DEFAULT);
+
+  // Creates and allocates a BufferTextureClient supporting the YCbCr format.
+  static TemporaryRef<BufferTextureClient>
+  CreateForYCbCr(ISurfaceAllocator* aAllocator,
+                 gfx::IntSize aYSize,
+                 gfx::IntSize aCbCrSize,
+                 StereoMode aStereoMode,
+                 TextureFlags aTextureFlags);
+
+  // Creates and allocates a BufferTextureClient (can beaccessed through raw
+  // pointers).
+  static TemporaryRef<BufferTextureClient>
+  CreateForRawBufferAccess(ISurfaceAllocator* aAllocator,
+                           gfx::SurfaceFormat aFormat,
+                           gfx::IntSize aSize,
+                           gfx::BackendType aMoz2dBackend,
+                           TextureFlags aTextureFlags,
+                           TextureAllocationFlags flags = ALLOC_DEFAULT);
 
   virtual TextureClientYCbCr* AsTextureClientYCbCr() { return nullptr; }
 

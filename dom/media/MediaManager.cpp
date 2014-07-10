@@ -23,6 +23,7 @@
 #include "nsIDocument.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsNetUtil.h"
 #include "mozilla/Types.h"
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/dom/ContentChild.h"
@@ -1477,13 +1478,28 @@ MediaManager::GetUserMedia(bool aPrivileged,
     return NS_OK;
   }
 #endif
+  nsIURI* docURI = aWindow->GetDocumentURI();
+#ifdef MOZ_LOOP
+  {
+    bool isLoop = false;
+    nsCOMPtr<nsIURI> loopURI;
+    nsresult rv = NS_NewURI(getter_AddRefs(loopURI), "about:loopconversation");
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = docURI->EqualsExceptRef(loopURI, &isLoop);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (isLoop) {
+      aPrivileged = true;
+    }
+  }
+#endif
+
   // XXX No full support for picture in Desktop yet (needs proper UI)
   if (aPrivileged ||
       (c.mFake && !Preferences::GetBool("media.navigator.permission.fake"))) {
     mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
   } else {
     bool isHTTPS = false;
-    nsIURI* docURI = aWindow->GetDocumentURI();
     if (docURI) {
       docURI->SchemeIs("https", &isHTTPS);
     }

@@ -6599,6 +6599,8 @@ HTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
   bool notify = !mParserCreating;
   nsCOMPtr<nsIDOMHTMLInputElement> selection = GetSelectedRadioButton();
 
+  aIgnoreSelf = aIgnoreSelf || !IsMutable();
+
   // If there is no selection, that might mean the radio is not in a group.
   // In that case, we can look for the checked state of the radio.
   bool selected = selection || (!aIgnoreSelf && mChecked);
@@ -6624,7 +6626,7 @@ HTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
                  : container->GetRequiredRadioCount(name);
   }
 
-  valueMissing = IsMutable() && required && !selected;
+  valueMissing = required && !selected;
 
   if (container->GetValueMissingState(name) != valueMissing) {
     container->SetValueMissingState(name, valueMissing);
