@@ -35,6 +35,7 @@ interface nsIDOMNodeList;
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 interface nsIDOMEvent;
+interface nsIDOMStyleSheet;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 interface nsIDOMWindow;
@@ -50,7 +51,7 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
-[scriptable, uuid(ca202fa7-7b8f-4814-acc3-a8545f67320b)]
+[scriptable, uuid(0ef9e8bb-b934-4f6b-ae05-e98774d8d3d3)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1563,15 +1564,22 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * Sheets added via this API take effect immediately on the document.
    */
-  void loadSheet(in nsIURI sheetURI,
-                           in unsigned long type);
+  void loadSheet(in nsIURI sheetURI, in unsigned long type);
+
+  /**
+   * Adds a style sheet to the list of additional style sheets of the document.
+   *
+   * Style sheets can be preloaded with nsIStyleSheetService.preloadSheet.
+   *
+   * Sheets added via this API take effect immediately on the document.
+   */
+  void addSheet(in nsIDOMStyleSheet sheet, in unsigned long type);
 
   /**
    * Remove the document style sheet at |sheetURI| from the list of additional 
    * style sheets of the document.  The removal takes effect immediately.
    */
-  void removeSheet(in nsIURI sheetURI,
-                                in unsigned long type);
+  void removeSheet(in nsIURI sheetURI, in unsigned long type);
 
   /**
    * Returns true if a user input is being handled.
@@ -1641,8 +1649,10 @@ interface nsIDOMWindowUtils : nsISupports {
    AString getOMTAStyle(in nsIDOMElement aElement, in AString aProperty);
 
    /**
-    * If we are currently handling user input, this informs the event state
-    * manager. Remember to call destruct() on the return value!
+    * If aHandlingInput is true, this informs the event state manager that
+    * we're handling user input. Otherwise, this is a no-op (as by default
+    * we're not handling user input).
+    * Remember to call destruct() on the return value!
     * See also nsIDOMWindowUtils::isHandlingUserInput.
     */
    nsIJSRAIIHelper setHandlingUserInput(in boolean aHandlingInput);

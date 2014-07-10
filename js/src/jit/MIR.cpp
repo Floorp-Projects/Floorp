@@ -7,6 +7,7 @@
 #include "jit/MIR.h"
 
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/MathAlgorithms.h"
 
 #include <ctype.h>
 
@@ -132,6 +133,38 @@ EvaluateConstantOperands(TempAllocator &alloc, MBinaryInstruction *ins, bool *pt
     }
 
     return MConstant::New(alloc, ret);
+}
+
+static MMul *
+EvaluateExactReciprocal(TempAllocator &alloc, MDiv *ins)
+{
+    // we should fold only when it is a floating point operation
+    if (!IsFloatingPointType(ins->type()))
+        return nullptr;
+
+    MDefinition *left = ins->getOperand(0);
+    MDefinition *right = ins->getOperand(1);
+
+    if (!right->isConstant())
+        return nullptr;
+
+    Value rhs = right->toConstant()->value();
+
+    int32_t num;
+    if (!mozilla::NumberIsInt32(rhs.toNumber(), &num))
+        return nullptr;
+
+    // check if rhs is a power of two
+    if (mozilla::Abs(num) & (mozilla::Abs(num) - 1))
+        return nullptr;
+
+    Value ret;
+    ret.setDouble(1.0 / (double) num);
+    MConstant *foldedRhs = MConstant::New(alloc, ret);
+    foldedRhs->setResultType(ins->type());
+    ins->block()->insertBefore(ins, foldedRhs);
+
+    return MMul::New(alloc, left, foldedRhs, ins->type());
 }
 
 void
@@ -1503,6 +1536,9 @@ MDiv::foldsTo(TempAllocator &alloc)
         return this;
 
     if (MDefinition *folded = EvaluateConstantOperands(alloc, this))
+        return folded;
+
+    if (MDefinition *folded = EvaluateExactReciprocal(alloc, this))
         return folded;
 
     return this;
@@ -3115,7 +3151,7 @@ jit::ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id)
 
 bool
 jit::ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id,
-                               ScalarTypeDescr::Type *arrayType)
+                               Scalar::Type *arrayType)
 {
     if (obj->mightBeType(MIRType_String))
         return false;
@@ -3127,8 +3163,8 @@ jit::ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id,
     if (!types)
         return false;
 
-    *arrayType = (ScalarTypeDescr::Type) types->getTypedArrayType();
-    return *arrayType != ScalarTypeDescr::TYPE_MAX;
+    *arrayType = types->getTypedArrayType();
+    return *arrayType != Scalar::TypeMax;
 }
 
 bool

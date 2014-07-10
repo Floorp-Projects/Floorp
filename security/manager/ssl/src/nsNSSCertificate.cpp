@@ -11,6 +11,7 @@
 #include "CertVerifier.h"
 #include "ExtendedValidation.h"
 #include "pkix/pkixtypes.h"
+#include "pkix/ScopedPtr.h"
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsNSSCleaner.h"
 #include "nsCOMPtr.h"
@@ -39,9 +40,9 @@
 #include "nsProxyRelease.h"
 #include "mozilla/Base64.h"
 #include "NSSCertDBTrustDomain.h"
-
 #include "nspr.h"
 #include "certdb.h"
+#include "pkix/pkixtypes.h"
 #include "secerr.h"
 #include "nssb64.h"
 #include "secasn1.h"
@@ -828,19 +829,23 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
   nsresult rv;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting chain for \"%s\"\n", mCert->nickname));
 
-  ::mozilla::pkix::ScopedCERTCertList nssChain;
+  ScopedCERTCertList nssChain;
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
   // We want to test all usages, but we start with server because most of the
   // time Firefox users care about server certs.
-  certVerifier->VerifyCert(mCert.get(),
-                           certificateUsageSSLServer, PR_Now(),
-                           nullptr, /*XXX fixme*/
-                           nullptr, /* hostname */
-                           CertVerifier::FLAG_LOCAL_ONLY,
-                           nullptr, /* stapledOCSPResponse */
-                           &nssChain);
+  if (certVerifier->VerifyCert(mCert.get(),
+                               certificateUsageSSLServer, PR_Now(),
+                               nullptr, /*XXX fixme*/
+                               nullptr, /* hostname */
+                               CertVerifier::FLAG_LOCAL_ONLY,
+                               nullptr, /* stapledOCSPResponse */
+                               &nssChain) != SECSuccess) {
+    nssChain = nullptr;
+    // keep going
+  }
+
   // This is the whitelist of all non-SSLServer usages that are supported by
   // verifycert.
   const int otherUsagesToTest = certificateUsageSSLClient |
@@ -858,13 +863,16 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
            ("pipnss: PKIX attempting chain(%d) for '%s'\n",
             usage, mCert->nickname));
-    certVerifier->VerifyCert(mCert.get(),
-                             usage, PR_Now(),
-                             nullptr, /*XXX fixme*/
-                             nullptr, /*hostname*/
-                             CertVerifier::FLAG_LOCAL_ONLY,
-                             nullptr, /* stapledOCSPResponse */
-                             &nssChain);
+    if (certVerifier->VerifyCert(mCert.get(),
+                                 usage, PR_Now(),
+                                 nullptr, /*XXX fixme*/
+                                 nullptr, /*hostname*/
+                                 CertVerifier::FLAG_LOCAL_ONLY,
+                                 nullptr, /* stapledOCSPResponse */
+                                 &nssChain) != SECSuccess) {
+      nssChain = nullptr;
+      // keep going
+    }
   }
 
   if (!nssChain) {
@@ -1498,13 +1506,51 @@ nsNSSCertificate::GetValidEVPolicyOid(nsACString& outDottedOid)
   return NS_OK;
 }
 
+namespace mozilla {
+
+// TODO(bug 1036065): It seems like we only construct CERTCertLists for the
+// purpose of constructing nsNSSCertLists, so maybe we should change this
+// function to output an nsNSSCertList instead.
+SECStatus
+ConstructCERTCertListFromReversedDERArray(
+  const mozilla::pkix::DERArray& certArray,
+  /*out*/ ScopedCERTCertList& certList)
+{
+  certList = CERT_NewCertList();
+  if (!certList) {
+    return SECFailure;
+  }
+
+  CERTCertDBHandle* certDB(CERT_GetDefaultCertDB()); // non-owning
+
+  size_t numCerts = certArray.GetLength();
+  for (size_t i = 0; i < numCerts; ++i) {
+    SECItem* certDER(const_cast<SECItem*>(certArray.GetDER(i)));
+    ScopedCERTCertificate cert(CERT_NewTempCertificate(certDB, certDER,
+                                                       nullptr, false, true));
+    if (!cert) {
+      return SECFailure;
+    }
+    // certArray is ordered with the root first, but we want the resulting
+    // certList to have the root last.
+    if (CERT_AddCertToListHead(certList, cert) != SECSuccess) {
+      return SECFailure;
+    }
+    cert.forget(); // cert is now owned by certList.
+  }
+
+  return SECSuccess;
+}
+
+} // namespace mozilla
+
 NS_IMPL_ISUPPORTS(nsNSSCertList, nsIX509CertList)
 
-nsNSSCertList::nsNSSCertList(mozilla::pkix::ScopedCERTCertList& certList,
+nsNSSCertList::nsNSSCertList(ScopedCERTCertList& certList,
                              const nsNSSShutDownPreventionLock& proofOfLock)
 {
   if (certList) {
-    mCertList = certList.release();
+    mCertList = certList.forget();
   } else {
     mCertList = CERT_NewCertList();
   }

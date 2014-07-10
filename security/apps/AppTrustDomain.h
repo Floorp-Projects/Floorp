@@ -17,7 +17,7 @@ namespace mozilla { namespace psm {
 class AppTrustDomain MOZ_FINAL : public mozilla::pkix::TrustDomain
 {
 public:
-  AppTrustDomain(void* pinArg);
+  AppTrustDomain(ScopedCERTCertList&, void* pinArg);
 
   SECStatus SetTrustedRoot(AppTrustedRoot trustedRoot);
 
@@ -33,9 +33,10 @@ public:
                             const mozilla::pkix::CertID& certID, PRTime time,
                             /*optional*/ const SECItem* stapledOCSPresponse,
                             /*optional*/ const SECItem* aiaExtension);
-  SECStatus IsChainValid(const CERTCertList* certChain) { return SECSuccess; }
+  SECStatus IsChainValid(const mozilla::pkix::DERArray& certChain);
 
 private:
+  /*out*/ ScopedCERTCertList& mCertChain;
   void* mPinArg; // non-owning!
   ScopedCERTCertificate mTrustedRoot;
 };

@@ -33,8 +33,8 @@ public:
 
   void Shutdown();
 
-  static nsresult
-  Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+  static nsresult Create(nsISupports* aOuter, const nsIID& aIID,
+                         void** aInstancePtr);
 
   // Unmark any strongly held observers implemented in JS so the cycle
   // collector will not traverse them.

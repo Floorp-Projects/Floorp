@@ -8,6 +8,7 @@
 #include "mozilla/net/PWyciwygChannelChild.h"
 #include "nsIWyciwygChannel.h"
 #include "nsIChannel.h"
+#include "nsILoadInfo.h"
 #include "PrivateBrowsingChannel.h"
 
 class nsIProgressEventSink;
@@ -90,6 +91,7 @@ private:
   nsCOMPtr<nsIURI>                  mURI;
   nsCOMPtr<nsIURI>                  mOriginalURI;
   nsCOMPtr<nsISupports>             mOwner;
+  nsCOMPtr<nsILoadInfo>             mLoadInfo;
   nsCOMPtr<nsIInterfaceRequestor>   mCallbacks;
   nsCOMPtr<nsIProgressEventSink>    mProgressSink;
   nsCOMPtr<nsILoadGroup>            mLoadGroup;

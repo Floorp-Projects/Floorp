@@ -144,6 +144,28 @@ var gAdvancedPane = {
     return checkbox.checked ? (this._storedSpellCheck == 2 ? 2 : 1) : 0;
   },
 
+  /**
+   * security.OCSP.enabled is an integer value for legacy reasons.
+   * A value of 1 means OCSP is enabled. Any other value means it is disabled.
+   */
+  readEnableOCSP: function ()
+  {
+    var preference = document.getElementById("security.OCSP.enabled");
+    // This is the case if the preference is the default value.
+    if (preference.value === undefined) {
+      return true;
+    }
+    return preference.value == 1;
+  },
+
+  /**
+   * See documentation for readEnableOCSP.
+   */
+  writeEnableOCSP: function ()
+  {
+    var checkbox = document.getElementById("enableOCSP");
+    return checkbox.checked ? 1 : 0;
+  },
 
   /**
    * When the user toggles the layers.acceleration.disabled pref,
@@ -791,16 +813,6 @@ var gAdvancedPane = {
   {
     openDialog("chrome://pippki/content/certManager.xul",
                "mozilla:certmanager",
-               "modal=yes", null);
-  },
-
-  /**
-   * Displays a dialog in which OCSP preferences can be configured.
-   */
-  showOCSP: function ()
-  {
-    openDialog("chrome://mozapps/content/preferences/ocsp.xul",
-               "mozilla:crlmanager",
                "modal=yes", null);
   },
 

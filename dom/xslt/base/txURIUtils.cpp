@@ -7,6 +7,9 @@
 #include "nsNetUtil.h"
 #include "nsIDocument.h"
 #include "nsIPrincipal.h"
+#include "mozilla/LoadInfo.h"
+
+using mozilla::LoadInfo;
 
 /**
  * URIUtils
@@ -62,7 +65,10 @@ URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
                                     loadGroup))) {
             return;
         }
-        channel->SetOwner(sourcePrincipal);
+        nsCOMPtr<nsILoadInfo> loadInfo =
+            new LoadInfo(sourcePrincipal, LoadInfo::eInheritPrincipal,
+                         LoadInfo::eNotSandboxed);
+        channel->SetLoadInfo(loadInfo);
     }
     aNewDoc->Reset(channel, loadGroup);
     aNewDoc->SetPrincipal(sourcePrincipal);

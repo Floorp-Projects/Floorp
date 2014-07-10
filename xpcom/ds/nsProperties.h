@@ -23,15 +23,16 @@
 typedef nsInterfaceHashtable<nsCharPtrHashKey, nsISupports>
         nsProperties_HashBase;
 
-class nsProperties MOZ_FINAL : public nsIProperties,
-                               public nsProperties_HashBase {
+class nsProperties MOZ_FINAL
+  : public nsIProperties
+  , public nsProperties_HashBase
+{
 public:
-
   NS_DECL_AGGREGATED
   NS_DECL_NSIPROPERTIES
 
   nsProperties(nsISupports *aOuter) { NS_INIT_AGGREGATED(aOuter); }
-  ~nsProperties() { }
+  ~nsProperties() {}
 };
 
 #endif /* nsProperties_h___ */

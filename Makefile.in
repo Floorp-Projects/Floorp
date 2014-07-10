@@ -167,7 +167,7 @@ endif
 endif
 
 default all::
-	$(call BUILDSTATUS,TIERS export $(if $(COMPILE_ENVIRONMENT),$(if $(MOZ_PSEUDO_DERECURSE),compile ))libs tools $(if $(MOZ_AUTOMATION),$(MOZ_AUTOMATION_TIERS)))
+	$(call BUILDSTATUS,TIERS export $(if $(COMPILE_ENVIRONMENT),compile )libs tools $(if $(MOZ_AUTOMATION),$(MOZ_AUTOMATION_TIERS)))
 
 include $(topsrcdir)/config/rules.mk
 
@@ -309,11 +309,9 @@ config/export:
 
 endif
 
-ifdef MOZ_PSEUDO_DERECURSE
 # Interdependencies for parallel export.
 js/xpconnect/src/export: dom/bindings/export xpcom/xpidl/export
 accessible/xpcom/export: xpcom/xpidl/export
 ifdef ENABLE_CLANG_PLUGIN
 js/src/export config/export: build/clang-plugin/export
-endif
 endif

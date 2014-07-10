@@ -4,8 +4,6 @@
 
 toolkit.jar:
 % content mozapps %content/mozapps/
-  content/mozapps/preferences/ocsp.js                           (ocsp.js)
-  content/mozapps/preferences/ocsp.xul                          (ocsp.xul)
   content/mozapps/preferences/fontbuilder.js                    (fontbuilder.js)
   content/mozapps/preferences/changemp.js                       (changemp.js)
   content/mozapps/preferences/changemp.xul                      (changemp.xul)

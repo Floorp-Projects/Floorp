@@ -11,13 +11,13 @@
 
 class nsAtomService MOZ_FINAL : public nsIAtomService
 {
- public:
+public:
   nsAtomService();
   NS_DECL_THREADSAFE_ISUPPORTS
-    
+
   NS_DECL_NSIATOMSERVICE
 
- private:
+private:
   ~nsAtomService() {}
 };
 

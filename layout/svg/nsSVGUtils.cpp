@@ -372,6 +372,10 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame, uint32_t aFor,
   // XXX yuck, we really need a common interface for GetCanvasTM
 
   if (!aFrame->IsFrameOfType(nsIFrame::eSVG)) {
+    if (aFor == nsISVGChildFrame::FOR_HIT_TESTING &&
+        NS_SVGDisplayListHitTestingEnabled()) {
+      return gfxMatrix();
+    }
     return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aFrame);
   }
 

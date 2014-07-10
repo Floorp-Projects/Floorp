@@ -26,7 +26,6 @@ let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 let gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
                 .getService(Ci.nsIX509CertDB);
-gCertDB.QueryInterface(Ci.nsIX509CertDB);
 
 const BUILT_IN_NICK_PREFIX = "Builtin Object Token:";
 const SHA1_PREFIX = "sha1/";
@@ -431,8 +430,9 @@ function writeFingerprints(certNameToSKD, certSKDToName, name, hashes, type) {
     writeString("  0\n");
   }
   writeString("};\n");
-  writeString("static const StaticFingerprints " + varPrefix + " = { " +
-          hashes.length + ", " + varPrefix + "_Data };\n\n");
+  writeString("static const StaticFingerprints " + varPrefix + " = {\n  " +
+    "sizeof(" + varPrefix + "_Data) / sizeof(const char*),\n  " + varPrefix +
+    "_Data\n};\n\n");
 }
 
 function writeEntry(entry) {
@@ -483,8 +483,7 @@ function writeDomainList(chromeImportedEntries) {
   }
   writeString("};\n");
 
-  writeString("\nstatic const int kPublicKeyPinningPreloadListLength = " +
-          count + ";\n");
+  writeString("\n// Pinning Preload List Length = " + count + ";\n");
   writeString("\nstatic const int32_t kUnknownId = -1;\n");
 }
 

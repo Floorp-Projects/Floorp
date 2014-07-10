@@ -19,3 +19,6 @@
 == bmp-not-square-4bpp.bmp bmp-not-square-4bpp.png
 == os2bmp-size-32x32-4bpp.bmp bmp-size-32x32-4bpp.png
 == top-to-bottom-16x16-4bpp.bmp  bmp-size-16x16-4bpp.png
+# test that delta skips are drawn as transparent
+# taken from http://bmptestsuite.sourceforge.net/
+== rle4-delta-320x240.bmp rle4-delta-320x240.png

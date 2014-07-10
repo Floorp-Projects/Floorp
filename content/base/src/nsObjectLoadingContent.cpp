@@ -2367,18 +2367,11 @@ nsObjectLoadingContent::OpenChannel()
 
   // Set up the channel's principal and such, like nsDocShell::DoURILoad does.
   // If the content being loaded should be sandboxed with respect to origin we
-  // create a new null principal here. nsContentUtils::SetUpChannelOwner is
-  // used with a flag to force it to be set as the channel owner.
-  nsCOMPtr<nsIPrincipal> ownerPrincipal;
-  uint32_t sandboxFlags = doc->GetSandboxFlags();
-  if (sandboxFlags & SANDBOXED_ORIGIN) {
-    ownerPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1");
-  } else {
-    // Not sandboxed - we allow the content to assume its natural owner.
-    ownerPrincipal = thisContent->NodePrincipal();
-  }
-  nsContentUtils::SetUpChannelOwner(ownerPrincipal, chan, mURI, true,
-                                    sandboxFlags & SANDBOXED_ORIGIN);
+  // tell SetUpChannelOwner that.
+  nsContentUtils::SetUpChannelOwner(thisContent->NodePrincipal(), chan, mURI,
+                                    true,
+                                    doc->GetSandboxFlags() & SANDBOXED_ORIGIN,
+                                    false);
 
   nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(chan);
   if (scriptChannel) {

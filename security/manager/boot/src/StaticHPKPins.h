@@ -429,7 +429,10 @@ static const char* kPinset_google_root_pems_sha256_Data[] = {
   kAffirmTrust_PremiumFingerprint,
   kAddTrust_Qualified_Certificates_RootFingerprint,
 };
-static const StaticFingerprints kPinset_google_root_pems_sha256 = { 64, kPinset_google_root_pems_sha256_Data };
+static const StaticFingerprints kPinset_google_root_pems_sha256 = {
+  sizeof(kPinset_google_root_pems_sha256_Data) / sizeof(const char*),
+  kPinset_google_root_pems_sha256_Data
+};
 
 static const StaticPinset kPinset_google_root_pems = {
   nullptr,
@@ -459,7 +462,10 @@ static const char* kPinset_mozilla_sha256_Data[] = {
   kDigiCert_Global_Root_CAFingerprint,
   kGeoTrust_Primary_Certification_Authority___G2Fingerprint,
 };
-static const StaticFingerprints kPinset_mozilla_sha256 = { 21, kPinset_mozilla_sha256_Data };
+static const StaticFingerprints kPinset_mozilla_sha256 = {
+  sizeof(kPinset_mozilla_sha256_Data) / sizeof(const char*),
+  kPinset_mozilla_sha256_Data
+};
 
 static const StaticPinset kPinset_mozilla = {
   nullptr,
@@ -469,7 +475,10 @@ static const StaticPinset kPinset_mozilla = {
 static const char* kPinset_mozilla_fxa_sha256_Data[] = {
   kDigiCert_Global_Root_CAFingerprint,
 };
-static const StaticFingerprints kPinset_mozilla_fxa_sha256 = { 1, kPinset_mozilla_fxa_sha256_Data };
+static const StaticFingerprints kPinset_mozilla_fxa_sha256 = {
+  sizeof(kPinset_mozilla_fxa_sha256_Data) / sizeof(const char*),
+  kPinset_mozilla_fxa_sha256_Data
+};
 
 static const StaticPinset kPinset_mozilla_fxa = {
   nullptr,
@@ -479,7 +488,10 @@ static const StaticPinset kPinset_mozilla_fxa = {
 static const char* kPinset_mozilla_test_sha256_Data[] = {
   kEnd_Entity_Test_CertFingerprint,
 };
-static const StaticFingerprints kPinset_mozilla_test_sha256 = { 1, kPinset_mozilla_test_sha256_Data };
+static const StaticFingerprints kPinset_mozilla_test_sha256 = {
+  sizeof(kPinset_mozilla_test_sha256_Data) / sizeof(const char*),
+  kPinset_mozilla_test_sha256_Data
+};
 
 static const StaticPinset kPinset_mozilla_test = {
   nullptr,
@@ -490,7 +502,10 @@ static const StaticPinset kPinset_mozilla_test = {
 static const char* kPinset_test_sha1_Data[] = {
   kTestSPKIFingerprint,
 };
-static const StaticFingerprints kPinset_test_sha1 = { 1, kPinset_test_sha1_Data };
+static const StaticFingerprints kPinset_test_sha1 = {
+  sizeof(kPinset_test_sha1_Data) / sizeof(const char*),
+  kPinset_test_sha1_Data
+};
 
 static const StaticPinset kPinset_test = {
   &kPinset_test_sha1,
@@ -501,7 +516,10 @@ static const char* kPinset_google_sha1_Data[] = {
   kGoogleG2Fingerprint,
   kGoogleBackup2048Fingerprint,
 };
-static const StaticFingerprints kPinset_google_sha1 = { 2, kPinset_google_sha1_Data };
+static const StaticFingerprints kPinset_google_sha1 = {
+  sizeof(kPinset_google_sha1_Data) / sizeof(const char*),
+  kPinset_google_sha1_Data
+};
 
 static const StaticPinset kPinset_google = {
   &kPinset_google_sha1,
@@ -513,13 +531,19 @@ static const char* kPinset_tor_sha1_Data[] = {
   kTor2Fingerprint,
   kTor3Fingerprint,
 };
-static const StaticFingerprints kPinset_tor_sha1 = { 3, kPinset_tor_sha1_Data };
+static const StaticFingerprints kPinset_tor_sha1 = {
+  sizeof(kPinset_tor_sha1_Data) / sizeof(const char*),
+  kPinset_tor_sha1_Data
+};
 
 static const char* kPinset_tor_sha256_Data[] = {
   kDigiCert_High_Assurance_EV_Root_CAFingerprint,
   kGOOGLE_PIN_RapidSSLFingerprint,
 };
-static const StaticFingerprints kPinset_tor_sha256 = { 2, kPinset_tor_sha256_Data };
+static const StaticFingerprints kPinset_tor_sha256 = {
+  sizeof(kPinset_tor_sha256_Data) / sizeof(const char*),
+  kPinset_tor_sha256_Data
+};
 
 static const StaticPinset kPinset_tor = {
   &kPinset_tor_sha1,
@@ -529,7 +553,10 @@ static const StaticPinset kPinset_tor = {
 static const char* kPinset_twitterCom_sha1_Data[] = {
   kTwitter1Fingerprint,
 };
-static const StaticFingerprints kPinset_twitterCom_sha1 = { 1, kPinset_twitterCom_sha1_Data };
+static const StaticFingerprints kPinset_twitterCom_sha1 = {
+  sizeof(kPinset_twitterCom_sha1_Data) / sizeof(const char*),
+  kPinset_twitterCom_sha1_Data
+};
 
 static const char* kPinset_twitterCom_sha256_Data[] = {
   kVerisign_Class_2_Public_Primary_Certification_Authority___G2Fingerprint,
@@ -554,7 +581,10 @@ static const char* kPinset_twitterCom_sha256_Data[] = {
   kVerisign_Class_3_Public_Primary_Certification_AuthorityFingerprint,
   kGeoTrust_Primary_Certification_Authority___G2Fingerprint,
 };
-static const StaticFingerprints kPinset_twitterCom_sha256 = { 21, kPinset_twitterCom_sha256_Data };
+static const StaticFingerprints kPinset_twitterCom_sha256 = {
+  sizeof(kPinset_twitterCom_sha256_Data) / sizeof(const char*),
+  kPinset_twitterCom_sha256_Data
+};
 
 static const StaticPinset kPinset_twitterCom = {
   &kPinset_twitterCom_sha1,
@@ -564,7 +594,10 @@ static const StaticPinset kPinset_twitterCom = {
 static const char* kPinset_twitterCDN_sha1_Data[] = {
   kTwitter1Fingerprint,
 };
-static const StaticFingerprints kPinset_twitterCDN_sha1 = { 1, kPinset_twitterCDN_sha1_Data };
+static const StaticFingerprints kPinset_twitterCDN_sha1 = {
+  sizeof(kPinset_twitterCDN_sha1_Data) / sizeof(const char*),
+  kPinset_twitterCDN_sha1_Data
+};
 
 static const char* kPinset_twitterCDN_sha256_Data[] = {
   kVerisign_Class_2_Public_Primary_Certification_Authority___G2Fingerprint,
@@ -610,7 +643,10 @@ static const char* kPinset_twitterCDN_sha256_Data[] = {
   kComodo_AAA_Services_rootFingerprint,
   kAddTrust_Qualified_Certificates_RootFingerprint,
 };
-static const StaticFingerprints kPinset_twitterCDN_sha256 = { 42, kPinset_twitterCDN_sha256_Data };
+static const StaticFingerprints kPinset_twitterCDN_sha256 = {
+  sizeof(kPinset_twitterCDN_sha256_Data) / sizeof(const char*),
+  kPinset_twitterCDN_sha256_Data
+};
 
 static const StaticPinset kPinset_twitterCDN = {
   &kPinset_twitterCDN_sha1,
@@ -621,7 +657,10 @@ static const char* kPinset_tor2web_sha256_Data[] = {
   kGOOGLE_PIN_Tor2webFingerprint,
   kGOOGLE_PIN_AlphaSSL_G2Fingerprint,
 };
-static const StaticFingerprints kPinset_tor2web_sha256 = { 2, kPinset_tor2web_sha256_Data };
+static const StaticFingerprints kPinset_tor2web_sha256 = {
+  sizeof(kPinset_tor2web_sha256_Data) / sizeof(const char*),
+  kPinset_tor2web_sha256_Data
+};
 
 static const StaticPinset kPinset_tor2web = {
   nullptr,
@@ -632,7 +671,10 @@ static const char* kPinset_cryptoCat_sha256_Data[] = {
   kDigiCert_High_Assurance_EV_Root_CAFingerprint,
   kGOOGLE_PIN_CryptoCat1Fingerprint,
 };
-static const StaticFingerprints kPinset_cryptoCat_sha256 = { 2, kPinset_cryptoCat_sha256_Data };
+static const StaticFingerprints kPinset_cryptoCat_sha256 = {
+  sizeof(kPinset_cryptoCat_sha256_Data) / sizeof(const char*),
+  kPinset_cryptoCat_sha256_Data
+};
 
 static const StaticPinset kPinset_cryptoCat = {
   nullptr,
@@ -642,7 +684,10 @@ static const StaticPinset kPinset_cryptoCat = {
 static const char* kPinset_lavabit_sha256_Data[] = {
   kGOOGLE_PIN_LibertylavabitcomFingerprint,
 };
-static const StaticFingerprints kPinset_lavabit_sha256 = { 1, kPinset_lavabit_sha256_Data };
+static const StaticFingerprints kPinset_lavabit_sha256 = {
+  sizeof(kPinset_lavabit_sha256_Data) / sizeof(const char*),
+  kPinset_lavabit_sha256_Data
+};
 
 static const StaticPinset kPinset_lavabit = {
   nullptr,
@@ -669,7 +714,10 @@ static const char* kPinset_dropbox_sha256_Data[] = {
   kDigiCert_Global_Root_CAFingerprint,
   kGeoTrust_Primary_Certification_Authority___G2Fingerprint,
 };
-static const StaticFingerprints kPinset_dropbox_sha256 = { 18, kPinset_dropbox_sha256_Data };
+static const StaticFingerprints kPinset_dropbox_sha256 = {
+  sizeof(kPinset_dropbox_sha256_Data) / sizeof(const char*),
+  kPinset_dropbox_sha256_Data
+};
 
 static const StaticPinset kPinset_dropbox = {
   nullptr,
@@ -1015,8 +1063,8 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "ytimg.com", true, false, false, -1, &kPinset_google_root_pems },
 };
 
-static const int kPublicKeyPinningPreloadListLength = 325;
+// Pinning Preload List Length = 325;
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1413306296143000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1413400280364000);

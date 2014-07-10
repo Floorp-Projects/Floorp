@@ -4152,6 +4152,12 @@
     "extended_statistics_ok": true,
     "description": "Number of histograms with total count low errors"
   },
+  "TELEMETRY_FILES_EVICTED": {
+    "expires_in_version": "36",
+    "kind": "enumerated",
+    "n_values": 30,
+    "description": "Number of telemetry pings evicted at startup"
+  },
   "TELEMETRY_TEST_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
@@ -6177,6 +6183,18 @@
     "n_buckets": 50,
     "extended_statistics_ok": true,
     "description": "Time spent to open an existing cache entry"
+  },
+  "NETWORK_CACHE_V2_OUTPUT_STREAM_STATUS": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "7",
+    "description": "Final status of the CacheFileOutputStream (0=ok, 1=other error, 2=out of memory, 3=disk full, 4=file corrupted, 5=file not found, 6=binding aborted)"
+  },
+  "NETWORK_CACHE_V2_INPUT_STREAM_STATUS": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "7",
+    "description": "Final status of the CacheFileInputStream (0=ok, 1=other error, 2=out of memory, 3=disk full, 4=file corrupted, 5=file not found, 6=binding aborted)"
   },
   "SQLITEBRIDGE_PROVIDER_PASSWORDS_LOCKED": {
     "expires_in_version": "never",

@@ -72,18 +72,41 @@ function wrapIfUnwrapped(x) {
   return isWrapper(x) ? x : wrapPrivileged(x);
 }
 
-function isXrayWrapper(x) {
-  return Cu.isXrayWrapper(x);
-}
-
 function isObjectOrArray(obj) {
   if (Object(obj) !== obj)
     return false;
+  let arrayClasses = ['Object', 'Array', 'Int8Array', 'Uint8Array',
+                      'Int16Array', 'Uint16Array', 'Int32Array',
+                      'Uint32Array', 'Float32Array', 'Float64Array',
+                      'Uint8ClampedArray'];
   let className = Cu.getClassName(obj, true);
-  return className == 'Object' || className == 'Array';
+  return arrayClasses.indexOf(className) != -1;
+}
+
+// In general, we want Xray wrappers for content DOM objects, because waiving
+// Xray gives us Xray waiver wrappers that clamp the principal when we cross
+// compartment boundaries. However, there are some exceptions where we want
+// to use a waiver:
+//
+// * Xray adds some gunk to toString(), which has the potential to confuse
+//   consumers that aren't expecting Xray wrappers. Since toString() is a
+//   non-privileged method that returns only strings, we can just waive Xray
+//   for that case.
+//
+// * We implement Xrays to pure JS [[Object]] and [[Array]] instances that
+//   filter out tricky things like callables. This is the right thing for
+//   security in general, but tends to break tests that try to pass object
+//   literals into SpecialPowers. So we waive [[Object]] and [[Array]]
+//   instances before inspecting properties.
+function waiveXraysIfAppropriate(obj, propName) {
+  if (propName == 'toString' || isObjectOrArray(obj))
+    return XPCNativeWrapper.unwrap(obj);
+  return obj;
 }
 
 function callGetOwnPropertyDescriptor(obj, name) {
+  obj = waiveXraysIfAppropriate(obj, name);
+
   // Quickstubbed getters and setters are propertyOps, and don't get reified
   // until someone calls __lookupGetter__ or __lookupSetter__ on them (note
   // that there are special version of those functions for quickstubs, so
@@ -184,8 +207,13 @@ function crawlProtoChain(obj, fn) {
   var rv = fn(obj);
   if (rv !== undefined)
     return rv;
-  if (Object.getPrototypeOf(obj))
-    return crawlProtoChain(Object.getPrototypeOf(obj), fn);
+  // Follow the prototype chain of the underlying object in cases where it differs
+  // from the Xray prototype chain. This is important for things like Opaque Xray
+  // Wrappers, which always get Object.prototype as their proto.
+  let proto = Cu.unwaiveXrays(Object.getPrototypeOf(Cu.waiveXrays(obj)));
+  if (proto)
+    return crawlProtoChain(proto, fn);
+  return undefined;
 };
 
 /*
@@ -225,31 +253,20 @@ SpecialPowersHandler.prototype.doGetPropertyDescriptor = function(name, own) {
   if (name == "__exposedProps__")
     return { value: ExposedPropsWaiver, writable: false, configurable: false, enumerable: false };
 
-  // In general, we want Xray wrappers for content DOM objects, because waiving
-  // Xray gives us Xray waiver wrappers that clamp the principal when we cross
-  // compartment boundaries. However, there are some exceptions where we want
-  // to use a waiver:
-  //
-  // * Xray adds some gunk to toString(), which has the potential to confuse
-  //   consumers that aren't expecting Xray wrappers. Since toString() is a
-  //   non-privileged method that returns only strings, we can just waive Xray
-  //   for that case.
-  //
-  // *  We implement Xrays to pure JS [[Object]] and [[Array]] instances that
-  //    filter out tricky things like callables. This is the right thing for
-  //    security in general, but tends to break tests that try to pass object
-  //    literals into SpecialPowers. So we waive [[Object]] and [[Array]]
-  //    instances before inspecting properties.
-  var obj = this.wrappedObject;
-  if (name == 'toString' || isObjectOrArray(obj))
-    obj = XPCNativeWrapper.unwrap(obj);
-
   //
   // Call through to the wrapped object.
   //
   // Note that we have several cases here, each of which requires special handling.
   //
   var desc;
+  var obj = this.wrappedObject;
+  function isWrappedNativeXray(o) {
+    if (!Cu.isXrayWrapper(o))
+      return false;
+    var proto = Object.getPrototypeOf(o);
+    return /XPC_WN/.test(Cu.getClassName(o, /* unwrap = */ true)) ||
+           (proto && /XPC_WN/.test(Cu.getClassName(proto, /* unwrap = */ true)));
+  }
 
   // Case 1: Own Properties.
   //
@@ -257,27 +274,27 @@ SpecialPowersHandler.prototype.doGetPropertyDescriptor = function(name, own) {
   if (own)
     desc = callGetOwnPropertyDescriptor(obj, name);
 
-  // Case 2: Not own, not Xray-wrapped.
+  // Case 2: Not own, meaningful prototype.
   //
   // Here, we can just crawl the prototype chain, calling
   // Object.getOwnPropertyDescriptor until we find what we want.
   //
   // NB: Make sure to check this.wrappedObject here, rather than obj, because
   // we may have waived Xray on obj above.
-  else if (!isXrayWrapper(this.wrappedObject))
+  else if (!isWrappedNativeXray(this.wrappedObject))
     desc = crawlProtoChain(obj, function(o) {return callGetOwnPropertyDescriptor(o, name);});
 
-  // Case 3: Not own, Xray-wrapped.
+  // Case 3: Not own, no meaningful prototype. This corresponds to old-style
+  // XPCWrappedNative XrayWrappers.
   //
-  // This one is harder, because we Xray wrappers are flattened and don't have
-  // a prototype. Xray wrappers are proxies themselves, so we'd love to just call
-  // through to XrayWrapper<Base>::getPropertyDescriptor(). Unfortunately though,
-  // we don't have any way to do that. :-(
+  // This one is harder, because we these XrayWrappers are flattened and don't have
+  // a prototype.
   //
   // So we first try with a call to getOwnPropertyDescriptor(). If that fails,
   // we make up a descriptor, using some assumptions about what kinds of things
   // tend to live on the prototypes of Xray-wrapped objects.
   else {
+    obj = waiveXraysIfAppropriate(obj, name);
     desc = Object.getOwnPropertyDescriptor(obj, name);
     if (!desc) {
       var getter = Object.prototype.__lookupGetter__.call(obj, name);

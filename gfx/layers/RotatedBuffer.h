@@ -208,7 +208,10 @@ public:
    */
   struct PaintState {
     PaintState()
-      : mMode(SurfaceMode::SURFACE_NONE)
+      : mRegionToDraw()
+      , mRegionToInvalidate()
+      , mMode(SurfaceMode::SURFACE_NONE)
+      , mClip(DrawRegionClip::CLIP_NONE)
       , mContentType(gfxContentType::SENTINEL)
       , mDidSelfCopy(false)
     {}

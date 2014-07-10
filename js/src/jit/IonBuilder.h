@@ -381,7 +381,7 @@ class IonBuilder : public MIRGenerator
     MInstruction *addShapeGuard(MDefinition *obj, Shape *const shape, BailoutKind bailoutKind);
 
     MDefinition *convertShiftToMaskForStaticTypedArray(MDefinition *id,
-                                                       ArrayBufferView::ViewType viewType);
+                                                       Scalar::Type viewType);
 
     bool invalidatedIdempotentCache();
 
@@ -399,7 +399,9 @@ class IonBuilder : public MIRGenerator
     MDefinition *tryInnerizeWindow(MDefinition *obj);
 
     // jsop_getprop() helpers.
+    bool checkIsDefinitelyOptimizedArguments(MDefinition *obj, bool *isOptimizedArgs);
     bool getPropTryArgumentsLength(bool *emitted, MDefinition *obj);
+    bool getPropTryArgumentsCallee(bool *emitted, MDefinition *obj, PropertyName *name);
     bool getPropTryConstant(bool *emitted, MDefinition *obj, PropertyName *name,
                             types::TemporaryTypeSet *types);
     bool getPropTryDefiniteSlot(bool *emitted, MDefinition *obj, PropertyName *name,
