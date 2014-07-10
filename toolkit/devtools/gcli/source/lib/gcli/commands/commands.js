@@ -19,8 +19,6 @@
 var util = require('../util/util');
 var l10n = require('../util/l10n');
 
-var centralTypes = require('../types/types').centralTypes;
-
 /**
  * Implement the localization algorithm for any documentation objects (i.e.
  * description and manual) in a command.
@@ -68,7 +66,7 @@ function lookup(data, onUndefined) {
 
 /**
  * The command object is mostly just setup around a commandSpec (as passed to
- * #addCommand()).
+ * Commands.add()).
  */
 function Command(types, commandSpec) {
   Object.keys(commandSpec).forEach(function(key) {
@@ -328,11 +326,10 @@ exports.Parameter = Parameter;
 
 
 /**
- * A canon is a store for a list of commands
+ * A store for a list of commands
  */
-function Canon(options) {
-  options  = options || {};
-  this.types = options.types || centralTypes;
+function Commands(types) {
+  this.types = types;
 
   // A lookup hash of our registered commands
   this._commands = {};
@@ -342,19 +339,19 @@ function Canon(options) {
   this._commandSpecs = {};
 
   // Enable people to be notified of changes to the list of commands
-  this.onCanonChange = util.createEvent('canon.onCanonChange');
+  this.onCommandsChange = util.createEvent('commands.onCommandsChange');
 }
 
 /**
- * Add a command to the canon of known commands.
+ * Add a command to the list of known commands.
  * This function is exposed to the outside world (via gcli/index). It is
  * documented in docs/index.md for all the world to see.
  * @param commandSpec The command and its metadata.
  * @return The new command
  */
-Canon.prototype.addCommand = function(commandSpec) {
+Commands.prototype.add = function(commandSpec) {
   if (this._commands[commandSpec.name] != null) {
-    // Roughly canon.removeCommand() without the event call, which we do later
+    // Roughly commands.remove() without the event call, which we do later
     delete this._commands[commandSpec.name];
     this._commandNames = this._commandNames.filter(function(test) {
       return test !== commandSpec.name;
@@ -368,17 +365,17 @@ Canon.prototype.addCommand = function(commandSpec) {
 
   this._commandSpecs[commandSpec.name] = commandSpec;
 
-  this.onCanonChange();
+  this.onCommandsChange();
   return command;
 };
 
 /**
- * Remove an individual command. The opposite of #addCommand().
+ * Remove an individual command. The opposite of Commands.add().
  * Removing a non-existent command is a no-op.
  * @param commandOrName Either a command name or the command itself.
  * @return true if a command was removed, false otherwise.
  */
-Canon.prototype.removeCommand = function(commandOrName) {
+Commands.prototype.remove = function(commandOrName) {
   var name = typeof commandOrName === 'string' ?
           commandOrName :
           commandOrName.name;
@@ -387,14 +384,14 @@ Canon.prototype.removeCommand = function(commandOrName) {
     return false;
   }
 
-  // See start of canon.addCommand if changing this code
+  // See start of commands.add if changing this code
   delete this._commands[name];
   delete this._commandSpecs[name];
   this._commandNames = this._commandNames.filter(function(test) {
     return test !== name;
   });
 
-  this.onCanonChange();
+  this.onCommandsChange();
   return true;
 };
 
@@ -402,7 +399,7 @@ Canon.prototype.removeCommand = function(commandOrName) {
  * Retrieve a command by name
  * @param name The name of the command to retrieve
  */
-Canon.prototype.getCommand = function(name) {
+Commands.prototype.get = function(name) {
   // '|| undefined' is to silence 'reference to undefined property' warnings
   return this._commands[name] || undefined;
 };
@@ -410,24 +407,17 @@ Canon.prototype.getCommand = function(name) {
 /**
  * Get an array of all the registered commands.
  */
-Canon.prototype.getCommands = function() {
+Commands.prototype.getAll = function() {
   return Object.keys(this._commands).map(function(name) {
     return this._commands[name];
   }, this);
 };
 
 /**
- * Get an array containing the names of the registered commands.
- */
-Canon.prototype.getCommandNames = function() {
-  return this._commandNames.slice(0);
-};
-
-/**
  * Get access to the stored commandMetaDatas (i.e. before they were made into
  * instances of Command/Parameters) so we can remote them.
  */
-Canon.prototype.getCommandSpecs = function() {
+Commands.prototype.getCommandSpecs = function() {
   var commandSpecs = [];
 
   Object.keys(this._commands).forEach(function(name) {
@@ -452,7 +442,7 @@ Canon.prototype.getCommandSpecs = function() {
  * @param to URL-like string that describes where the commands are executed.
  * This is to complete the parent command description.
  */
-Canon.prototype.addProxyCommands = function(commandSpecs, remoter, prefix, to) {
+Commands.prototype.addProxyCommands = function(commandSpecs, remoter, prefix, to) {
   if (prefix != null) {
     if (this._commands[prefix] != null) {
       throw new Error(l10n.lookupFormat('canonProxyExists', [ prefix ]));
@@ -460,7 +450,7 @@ Canon.prototype.addProxyCommands = function(commandSpecs, remoter, prefix, to) {
 
     // We need to add the parent command so all the commands from the other
     // system have a parent
-    this.addCommand({
+    this.add({
       name: prefix,
       isProxy: true,
       description: l10n.lookupFormat('canonProxyDesc', [ to ]),
@@ -481,7 +471,7 @@ Canon.prototype.addProxyCommands = function(commandSpecs, remoter, prefix, to) {
       commandSpec.name = prefix + ' ' + commandSpec.name;
     }
     commandSpec.isProxy = true;
-    this.addCommand(commandSpec);
+    this.add(commandSpec);
   }.bind(this));
 };
 
@@ -489,7 +479,7 @@ Canon.prototype.addProxyCommands = function(commandSpecs, remoter, prefix, to) {
  * Remove a set of commands added with addProxyCommands.
  * @param prefix The name prefix that we assign to all command names
  */
-Canon.prototype.removeProxyCommands = function(prefix) {
+Commands.prototype.removeProxyCommands = function(prefix) {
   var toRemove = [];
   Object.keys(this._commandSpecs).forEach(function(name) {
     if (name.indexOf(prefix) === 0) {
@@ -499,9 +489,9 @@ Canon.prototype.removeProxyCommands = function(prefix) {
 
   var removed = [];
   toRemove.forEach(function(name) {
-    var command = this.getCommand(name);
+    var command = this.get(name);
     if (command.isProxy) {
-      this.removeCommand(name);
+      this.remove(name);
       removed.push(name);
     }
     else {
@@ -513,9 +503,7 @@ Canon.prototype.removeProxyCommands = function(prefix) {
   return removed;
 };
 
-exports.Canon = Canon;
-
-exports.centralCanon = new Canon();
+exports.Commands = Commands;
 
 /**
  * CommandOutputManager stores the output objects generated by executed

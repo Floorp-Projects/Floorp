@@ -45,7 +45,7 @@ function test() {
 exports.testPrefShowStatus = function(options) {
   return helpers.audit(options, [
     {
-      skipRemainingIf: options.requisition.canon.getCommand('pref') == null,
+      skipRemainingIf: options.requisition.system.commands.get('pref') == null,
       setup:    'pref s',
       check: {
         typed:  'pref s',
@@ -114,7 +114,7 @@ exports.testPrefShowStatus = function(options) {
 exports.testPrefSetStatus = function(options) {
   return helpers.audit(options, [
     {
-      skipRemainingIf: options.requisition.canon.getCommand('pref') == null,
+      skipRemainingIf: options.requisition.system.commands.get('pref') == null,
       setup:    'pref s',
       check: {
         typed:  'pref s',

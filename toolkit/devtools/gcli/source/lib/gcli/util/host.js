@@ -18,7 +18,7 @@
 
 var Cc = require('chrome').Cc;
 var Ci = require('chrome').Ci;
-var URL = require("sdk/url").URL;
+var URL = require('sdk/url').URL;
 
 var Task = require('resource://gre/modules/Task.jsm').Task;
 
@@ -61,7 +61,7 @@ exports.Highlighter = Highlighter;
 /**
  * See docs in lib/gcli/util/host.js
  */
-exports.spawn = function(spawnSpec) {
+exports.spawn = function(context, spawnSpec) {
   throw new Error('Not supported');
 };
 

@@ -10,8 +10,6 @@ let prefBranch = Cc["@mozilla.org/preferences-service;1"]
 let supportsString = Cc["@mozilla.org/supports-string;1"]
                       .createInstance(Ci.nsISupportsString);
 
-let settings = require("gcli/settings");
-
 const TEST_URI = "data:text/html;charset=utf-8,gcli-settings";
 
 function test() {
@@ -22,9 +20,14 @@ function spawnTest() {
   // Setup
   let options = yield helpers.openTab(TEST_URI);
 
-  let tiltEnabled = settings.getSetting("devtools.tilt.enabled");
-  let tabSize = settings.getSetting("devtools.editor.tabsize");
-  let remoteHost = settings.getSetting("devtools.debugger.remote-host");
+  require("devtools/commandline/commands-index");
+  let gcli = require("gcli/index");
+  yield gcli.load();
+  let settings = gcli.settings;
+
+  let tiltEnabled = settings.get("devtools.tilt.enabled");
+  let tabSize = settings.get("devtools.editor.tabsize");
+  let remoteHost = settings.get("devtools.debugger.remote-host");
 
   let tiltEnabledOrig = prefBranch.getBoolPref("devtools.tilt.enabled");
   let tabSizeOrig = prefBranch.getIntPref("devtools.editor.tabsize");

@@ -100,7 +100,7 @@ exports.testContext = function(options) {
         args: {
           command: { name: 'context' },
           prefix: {
-            value: options.requisition.canon.getCommand('tsn'),
+            value: options.requisition.system.commands.get('tsn'),
             status: 'VALID',
             message: ''
           }
@@ -195,7 +195,7 @@ exports.testContext = function(options) {
         args: {
           command: { name: 'context' },
           prefix: {
-            value: options.requisition.canon.getCommand('tsn ext'),
+            value: options.requisition.system.commands.get('tsn ext'),
             status: 'VALID',
             message: ''
           }
@@ -220,7 +220,7 @@ exports.testContext = function(options) {
         args: {
           command: { name: 'context' },
           prefix: {
-            value: options.requisition.canon.getCommand('tsn deep'),
+            value: options.requisition.system.commands.get('tsn deep'),
             status: 'VALID',
             message: ''
           }
