@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1017086
+-->
+  <head>
+    <meta charset="utf-8">
+    <title>Test for Bug 1017086</title>
+    <meta name="author" content="Maksim Lebedev" />
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script type="text/javascript">
+      /** Test for Bug 1017086 **/
+      var pointer_events_enabled = true;
+      function prepareTest() {
+        SimpleTest.waitForExplicitFinish();
+        turnOnOffPointerEvents(startTest);
+      }
+      function turnOnOffPointerEvents(callback) {
+        SpecialPowers.pushPrefEnv({
+          "set": [
+            ["dom.w3c_pointer_events.enabled", pointer_events_enabled]
+          ]
+        }, callback);
+      }
+      function startTest() {
+        var iframe = document.getElementById("testFrame");
+        iframe.src = "bug1017086_inner.html";
+      }
+      function part_of_checks(pointer_events, check, window, document, testelem) {
+        for(item in pointer_events) { check(true,  pointer_events[item], window, "window"); }
+        /** TODO
+        for(item in pointer_events) { check(false, pointer_events[item], document, "document"); }
+        **/
+        for(item in pointer_events) { check(true,  pointer_events[item], testelem, "element"); }
+        SimpleTest.finish();
+      }
+    </script>
+  </head>
+  <body onload="prepareTest()">
+    <iframe id="testFrame" height="700" width="700"></iframe>
+  </body>
+</html>
