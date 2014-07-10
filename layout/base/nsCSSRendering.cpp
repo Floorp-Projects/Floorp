@@ -2528,34 +2528,23 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   bool isRepeat = aGradient->mRepeating || forceRepeatToCoverTiles;
 
   // Now set normalized color stops in pattern.
-  if (!ctx->IsCairo()) {
-    // Offscreen gradient surface cache (not a tile):
-    // On some backends (e.g. D2D), the GradientStops object holds an offscreen surface
-    // which is a lookup table used to evaluate the gradient. This surface can use
-    // much memory (ram and/or GPU ram) and can be expensive to create. So we cache it.
-    // The cache key correlates 1:1 with the arguments for CreateGradientStops (also the implied backend type)
-    // Note that GradientStop is a simple struct with a stop value (while GradientStops has the surface).
-    nsTArray<gfx::GradientStop> rawStops(stops.Length());
-    rawStops.SetLength(stops.Length());
-    for(uint32_t i = 0; i < stops.Length(); i++) {
-      rawStops[i].color = gfx::Color(stops[i].mColor.r, stops[i].mColor.g, stops[i].mColor.b, stops[i].mColor.a);
-      rawStops[i].offset = stopScale * (stops[i].mPosition - stopOrigin);
-    }
-    mozilla::RefPtr<mozilla::gfx::GradientStops> gs =
-      gfxGradientCache::GetOrCreateGradientStops(ctx->GetDrawTarget(),
-                                                 rawStops,
-                                                 isRepeat ? gfx::ExtendMode::REPEAT : gfx::ExtendMode::CLAMP);
-    gradientPattern->SetColorStops(gs);
-  } else {
-    for (uint32_t i = 0; i < stops.Length(); i++) {
-      double pos = stopScale*(stops[i].mPosition - stopOrigin);
-      gradientPattern->AddColorStop(pos, stops[i].mColor);
-    }
-    // Set repeat mode. Default cairo extend mode is PAD.
-    if (isRepeat) {
-      gradientPattern->SetExtend(gfxPattern::EXTEND_REPEAT);
-    }
+  // Offscreen gradient surface cache (not a tile):
+  // On some backends (e.g. D2D), the GradientStops object holds an offscreen surface
+  // which is a lookup table used to evaluate the gradient. This surface can use
+  // much memory (ram and/or GPU ram) and can be expensive to create. So we cache it.
+  // The cache key correlates 1:1 with the arguments for CreateGradientStops (also the implied backend type)
+  // Note that GradientStop is a simple struct with a stop value (while GradientStops has the surface).
+  nsTArray<gfx::GradientStop> rawStops(stops.Length());
+  rawStops.SetLength(stops.Length());
+  for(uint32_t i = 0; i < stops.Length(); i++) {
+    rawStops[i].color = gfx::Color(stops[i].mColor.r, stops[i].mColor.g, stops[i].mColor.b, stops[i].mColor.a);
+    rawStops[i].offset = stopScale * (stops[i].mPosition - stopOrigin);
   }
+  mozilla::RefPtr<mozilla::gfx::GradientStops> gs =
+    gfxGradientCache::GetOrCreateGradientStops(ctx->GetDrawTarget(),
+                                               rawStops,
+                                               isRepeat ? gfx::ExtendMode::REPEAT : gfx::ExtendMode::CLAMP);
+  gradientPattern->SetColorStops(gs);
 
   // Paint gradient tiles. This isn't terribly efficient, but doing it this
   // way is simple and sure to get pixel-snapping right. We could speed things

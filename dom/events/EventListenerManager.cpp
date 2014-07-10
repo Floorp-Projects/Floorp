@@ -328,8 +328,6 @@ EventListenerManager::AddEventListenerInternal(
   } else if (aTypeAtom == nsGkAtoms::ontouchstart ||
              aTypeAtom == nsGkAtoms::ontouchend ||
              aTypeAtom == nsGkAtoms::ontouchmove ||
-             aTypeAtom == nsGkAtoms::ontouchenter ||
-             aTypeAtom == nsGkAtoms::ontouchleave ||
              aTypeAtom == nsGkAtoms::ontouchcancel) {
     mMayHaveTouchEventListener = true;
     nsPIDOMWindow* window = GetInnerWindowForTarget();

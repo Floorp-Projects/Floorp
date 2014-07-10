@@ -64,8 +64,6 @@ public:
     // lower threshold on font anti-aliasing
     uint32_t GetAntiAliasingThreshold() { return mFontAntiAliasingThreshold; }
 
-    virtual already_AddRefed<gfxASurface>
-    GetThebesSurfaceForDrawTarget(mozilla::gfx::DrawTarget *aTarget);
 private:
     virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size);
 
