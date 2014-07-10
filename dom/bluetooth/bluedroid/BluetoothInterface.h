@@ -24,6 +24,22 @@ class BluetoothInterface;
 // Socket Interface
 //
 
+class BluetoothSocketResultHandler
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothSocketResultHandler)
+
+  virtual ~BluetoothSocketResultHandler() { }
+
+  virtual void OnError(bt_status_t aStatus)
+  {
+    BT_WARNING("received error code %d", (int)aStatus);
+  }
+
+  virtual void Listen(int aSockFd) { }
+  virtual void Connect(int aSockFd) { }
+};
+
 class BluetoothSocketInterface
 {
 public:
