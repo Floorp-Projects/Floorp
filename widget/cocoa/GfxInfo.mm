@@ -245,6 +245,20 @@ GfxInfo::GetAdapterDeviceID2(nsAString & aAdapterDeviceID)
   return NS_ERROR_FAILURE;
 }
 
+/* readonly attribute DOMString adapterSubsysID; */
+NS_IMETHODIMP
+GfxInfo::GetAdapterSubsysID(nsAString & aAdapterSubsysID)
+{
+  return NS_ERROR_FAILURE;
+}
+
+/* readonly attribute DOMString adapterSubsysID2; */
+NS_IMETHODIMP
+GfxInfo::GetAdapterSubsysID2(nsAString & aAdapterSubsysID)
+{
+  return NS_ERROR_FAILURE;
+}
+
 /* readonly attribute boolean isGPU2Active; */
 NS_IMETHODIMP
 GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active)
@@ -256,18 +270,22 @@ void
 GfxInfo::AddCrashReportAnnotations()
 {
 #if defined(MOZ_CRASHREPORTER)
-  nsString deviceID, vendorID;
-  nsAutoCString narrowDeviceID, narrowVendorID;
+  nsString deviceID, vendorID, driverVersion;
+  nsAutoCString narrowDeviceID, narrowVendorID, narrowDriverVersion;
 
   GetAdapterDeviceID(deviceID);
   CopyUTF16toUTF8(deviceID, narrowDeviceID);
   GetAdapterVendorID(vendorID);
   CopyUTF16toUTF8(vendorID, narrowVendorID);
+  GetAdapterDriverVersion(driverVersion);
+  CopyUTF16toUTF8(driverVersion, narrowDriverVersion);
 
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterVendorID"),
                                      narrowVendorID);
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterDeviceID"),
                                      narrowDeviceID);
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterDriverVersion"),
+                                     narrowDriverVersion);
   /* Add an App Note for now so that we get the data immediately. These
    * can go away after we store the above in the socorro db */
   nsAutoCString note;
