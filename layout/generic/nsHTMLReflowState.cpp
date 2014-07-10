@@ -329,9 +329,9 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
                         const nsMargin* aBorder,
                         const nsMargin* aPadding)
 {
-  NS_WARN_IF_FALSE(AvailableWidth() != NS_UNCONSTRAINEDSIZE,
-                   "have unconstrained width; this should only result from "
-                   "very large sizes, not attempts at intrinsic width "
+  NS_WARN_IF_FALSE(AvailableISize() != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained inline-size; this should only result from "
+                   "very large sizes, not attempts at intrinsic inline-size "
                    "calculation");
 
   mStylePosition = frame->StylePosition();
@@ -405,9 +405,9 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
   NS_WARN_IF_FALSE((mFrameType == NS_CSS_FRAME_TYPE_INLINE &&
                     !frame->IsFrameOfType(nsIFrame::eReplaced)) ||
                    type == nsGkAtoms::textFrame ||
-                   ComputedWidth() != NS_UNCONSTRAINEDSIZE,
-                   "have unconstrained width; this should only result from "
-                   "very large sizes, not attempts at intrinsic width "
+                   ComputedISize() != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained inline-size; this should only result from "
+                   "very large sizes, not attempts at intrinsic inline-size "
                    "calculation");
 }
 
