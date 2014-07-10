@@ -74,8 +74,11 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 
     gfx::SurfaceFormat surfaceFormat = gfx::ImageFormatToSurfaceFormat(format);
     mBuffer = CreateTextureClientForCanvas(surfaceFormat, aSize, flags, aLayer);
+    if (!mBuffer) {
+      NS_WARNING("Failed to allocate the TextureClient");
+      return;
+    }
     MOZ_ASSERT(mBuffer->CanExposeDrawTarget());
-    mBuffer->AllocateForSurface(aSize);
 
     bufferCreated = true;
   }
@@ -118,16 +121,20 @@ CanvasClient2D::CreateTextureClientForCanvas(gfx::SurfaceFormat aFormat,
     // We want a cairo backend here as we don't want to be copying into
     // an accelerated backend and we like LockBits to work. This is currently
     // the most effective way to make this work.
-    return CreateBufferTextureClient(aFormat, aFlags, BackendType::CAIRO);
+    return TextureClient::CreateForRawBufferAccess(GetForwarder(),
+                                                   aFormat, aSize, BackendType::CAIRO,
+                                                   mTextureInfo.mTextureFlags | aFlags);
   }
 
   gfx::BackendType backend = gfxPlatform::GetPlatform()->GetPreferredCanvasBackend();
 #ifdef XP_WIN
-  return CreateTextureClientForDrawing(aFormat, aFlags, backend, aSize);
+  return CreateTextureClientForDrawing(aFormat, aSize, backend, aFlags);
 #else
   // XXX - We should use CreateTextureClientForDrawing, but we first need
   // to use double buffering.
-  return CreateBufferTextureClient(aFormat, aFlags, backend);
+  return TextureClient::CreateForRawBufferAccess(GetForwarder(),
+                                                 aFormat, aSize, backend,
+                                                 mTextureInfo.mTextureFlags | aFlags);
 #endif
 }
 
