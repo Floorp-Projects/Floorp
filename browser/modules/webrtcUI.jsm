@@ -128,28 +128,8 @@ function prompt(aContentWindow, aCallID, aAudioRequested, aVideoRequested, aDevi
   let chromeDoc = browser.ownerDocument;
   let chromeWin = chromeDoc.defaultView;
   let stringBundle = chromeWin.gNavigatorBundle;
-#ifdef MOZ_LOOP
-  let host;
-  // For Loop protocols that start with about:, use brandShortName instead of the host for now.
-  // Bug 990678 will implement improvements/replacements for the permissions dialog, so this
-  // should become unnecessary.
-  if (uri.spec.startsWith("about:loop")) {
-    let brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
-
-    host = brandBundle.GetStringFromName("brandShortName");
-  }
-  else {
-    // uri.host throws for about: protocols, so we have to do this once we know
-    // it isn't about:loop.
-    host = uri.host;
-  }
-
-  let message = stringBundle.getFormattedString("getUserMedia.share" + requestType + ".message",
-                                                [ host ]);
-#else
   let message = stringBundle.getFormattedString("getUserMedia.share" + requestType + ".message",
                                                 [ uri.host ]);
-#endif
 
   let mainAction = {
     label: PluralForm.get(requestType == "CameraAndMicrophone" ? 2 : 1,
