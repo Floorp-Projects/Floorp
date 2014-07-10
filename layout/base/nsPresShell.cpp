@@ -6872,8 +6872,16 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     UpdateActivePointerState(aEvent);
   }
 
-  if (!nsContentUtils::IsSafeToRunScript())
+  if (!nsContentUtils::IsSafeToRunScript() &&
+      aEvent->IsAllowedToDispatchDOMEvent()) {
+#ifdef DEBUG
+    if (aEvent->IsIMERelatedEvent()) {
+      nsPrintfCString warning("%d event is discarded", aEvent->message);
+      NS_WARNING(warning.get());
+    }
+#endif
     return NS_OK;
+  }
 
   nsIContent* capturingContent =
     (aEvent->HasMouseEventMessage() ||
@@ -7721,6 +7729,8 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
         nsContentUtils::SetIsHandlingKeyBoardEvent(true);
       }
       if (aEvent->IsAllowedToDispatchDOMEvent()) {
+        MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
+          "Somebody changed aEvent to cause a DOM event!");
         nsPresShellEventCB eventCB(this);
         if (aEvent->eventStructType == NS_TOUCH_EVENT) {
           DispatchTouchEvent(aEvent, aStatus, &eventCB, touchIsNew);
