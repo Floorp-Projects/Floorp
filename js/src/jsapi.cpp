@@ -5385,6 +5385,49 @@ JS_GetTwoByteStringCharsAndLength(JSContext *cx, const JS::AutoCheckCannotGC &no
 }
 
 JS_PUBLIC_API(const jschar *)
+JS_GetTwoByteExternalStringChars(JSString *str)
+{
+    return str->asExternal().twoByteChars();
+}
+
+JS_PUBLIC_API(bool)
+JS_GetStringCharAt(JSContext *cx, JSString *str, size_t index, jschar *res)
+{
+    AssertHeapIsIdleOrStringIsFlat(cx, str);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, str);
+
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
+        return false;
+
+    *res = linear->latin1OrTwoByteChar(index);
+    return true;
+}
+
+JS_PUBLIC_API(jschar)
+JS_GetFlatStringCharAt(JSFlatString *str, size_t index)
+{
+    return str->latin1OrTwoByteChar(index);
+}
+
+JS_PUBLIC_API(bool)
+JS_CopyStringChars(JSContext *cx, mozilla::Range<jschar> dest, JSString *str)
+{
+    AssertHeapIsIdleOrStringIsFlat(cx, str);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, str);
+
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
+        return false;
+
+    MOZ_ASSERT(linear->length() <= dest.length());
+    CopyChars(dest.start().get(), *linear);
+    return true;
+}
+
+JS_PUBLIC_API(const jschar *)
 JS_GetInternedStringChars(JSString *str)
 {
     JS_ASSERT(str->isAtom());
