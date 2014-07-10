@@ -25,9 +25,9 @@ interface PeerConnectionImpl  {
                   nsISupports thread);
   /* JSEP calls */
   [Throws]
-  void createOffer(optional MediaConstraintsInternal constraints);
+  void createOffer(optional RTCOfferOptions options);
   [Throws]
-  void createAnswer(optional MediaConstraintsInternal constraints);
+  void createAnswer();
   [Throws]
   void setLocalDescription(long action, DOMString sdp);
   [Throws]
@@ -40,8 +40,7 @@ interface PeerConnectionImpl  {
 
   /* Adds the stream created by GetUserMedia */
   [Throws]
-  void addStream(MediaStream stream,
-                 optional MediaConstraintsInternal constraints);
+  void addStream(MediaStream stream);
   [Throws]
   void removeStream(MediaStream stream);
   [Throws]

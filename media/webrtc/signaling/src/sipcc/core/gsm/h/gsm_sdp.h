@@ -119,8 +119,7 @@ cc_causes_t gsmsdp_check_ice_attributes_exist(fsm_fcb_t *fcb_p);
 cc_causes_t gsmsdp_install_peer_ice_attributes(fsm_fcb_t *fcb_p);
 cc_causes_t gsmsdp_configure_dtls_data_attributes(fsm_fcb_t *fcb_p);
 cc_causes_t gsmsdp_find_level_from_mid(fsmdef_dcb_t * dcb, const char * mid, uint16_t *level);
-void gsmsdp_process_cap_constraints(fsmdef_dcb_t *dcb,
-                                    cc_media_constraints_t* constraints);
+void gsmsdp_process_cap_options(fsmdef_dcb_t *dcb, cc_media_options_t* options);
 cc_causes_t
 gsmsdp_get_offered_media_types (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean *has_audio, boolean *has_video, boolean *has_data);
 fsmdef_media_t* gsmsdp_find_media_by_media_type(fsmdef_dcb_t *dcb, sdp_media_e 	media_type);
