@@ -361,9 +361,17 @@ function deleteMessagesById(aMessageIds) {
     return [];
   }
 
+  let promises = [];
+  promises.push(waitForManagerEvent("deleted"));
+
   let request = manager.delete(aMessageIds);
-  return wrapDomRequestAsPromise(request)
-      .then((aEvent) => { return aEvent.target.result; });
+  promises.push(wrapDomRequestAsPromise(request));
+
+  return Promise.all(promises)
+    .then((aResults) => {
+      return { deletedInfo: aResults[0],
+               deletedFlags: aResults[1].target.result };
+    });
 }
 
 /**

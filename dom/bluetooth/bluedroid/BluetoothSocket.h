@@ -23,30 +23,8 @@ public:
                   bool aAuth,
                   bool aEncrypt);
 
-  /**
-   * Connect to remote server as a client.
-   *
-   * The steps are as following:
-   * 1) BluetoothSocket acquires fd from bluedroid, and creates
-   *    a DroidSocketImpl to watch read/write of the fd.
-   * 2) DroidSocketImpl receives first 2 messages to get socket info.
-   * 3) Obex client session starts.
-   */
   bool Connect(const nsAString& aDeviceAddress, int aChannel);
 
-  /**
-   * Listen to incoming connection as a server.
-   *
-   * The steps are as following:
-   * 1) BluetoothSocket acquires fd from bluedroid, and creates
-   *    a DroidSocketImpl to watch read of the fd. DroidSocketImpl
-   *    receives the 1st message immediately.
-   * 2) When there's incoming connection, DroidSocketImpl receives
-   *    2nd message to get socket info and client fd.
-   * 3) DroidSocketImpl stops watching read of original fd and
-   *    starts to watch read/write of client fd.
-   * 4) Obex server session starts.
-   */
   bool Listen(int aChannel);
 
   inline void Disconnect()
@@ -65,6 +43,11 @@ public:
     aDeviceAddress = mDeviceAddress;
   }
 
+  inline void SetAddress(const nsAString& aDeviceAddress)
+  {
+    mDeviceAddress = aDeviceAddress;
+  }
+
   void CloseDroidSocket();
   bool SendDroidSocketData(mozilla::ipc::UnixSocketRawData* aData);
 
@@ -74,10 +57,6 @@ private:
   nsString mDeviceAddress;
   bool mAuth;
   bool mEncrypt;
-  bool mIsServer;
-  int mReceivedSocketInfoLength;
-
-  bool ReceiveSocketInfo(nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage);
 };
 
 END_BLUETOOTH_NAMESPACE

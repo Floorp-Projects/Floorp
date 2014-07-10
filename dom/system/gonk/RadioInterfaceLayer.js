@@ -1367,7 +1367,7 @@ DataConnectionHandler.prototype = {
       return;
     }
 
-    if (defaultDataCallConnected && wifi_active) {
+    if (networkInterface.enabled && wifi_active) {
       if (DEBUG) {
         this.debug("Disconnect data call when Wifi is connected.");
       }
@@ -1375,7 +1375,7 @@ DataConnectionHandler.prototype = {
       return;
     }
 
-    if (!this.dataCallSettings.enabled || networkInterface.enabled) {
+    if (!this.dataCallSettings.enabled || defaultDataCallConnected) {
       if (DEBUG) {
         this.debug("Data call settings: nothing to do.");
       }
