@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXPORTS.protobuf.google.protobuf += [
+EXPORTS.google.protobuf += [
     'google/protobuf/extension_set.h',
     'google/protobuf/generated_message_util.h',
     'google/protobuf/message_lite.h',
@@ -13,7 +13,7 @@ EXPORTS.protobuf.google.protobuf += [
     'google/protobuf/wire_format_lite_inl.h',
 ]
 
-EXPORTS.protobuf.google.protobuf.stubs += [
+EXPORTS.google.protobuf.stubs += [
     'google/protobuf/stubs/common.h',
     'google/protobuf/stubs/hash.h',
     'google/protobuf/stubs/map-util.h',
@@ -21,7 +21,7 @@ EXPORTS.protobuf.google.protobuf.stubs += [
     'google/protobuf/stubs/stl_util-inl.h',
 ]
 
-EXPORTS.protobuf.google.protobuf.io += [
+EXPORTS.google.protobuf.io += [
     'google/protobuf/io/coded_stream.h',
     'google/protobuf/io/coded_stream_inl.h',
     'google/protobuf/io/zero_copy_stream.h',
