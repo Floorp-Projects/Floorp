@@ -101,8 +101,8 @@ function log(msg, prefix = "", error = null) {
 function warn(msg, error = null) {
   return log(msg, "WARNING: ", error);
 }
-function err(msg, error = null) {
-  return log(msg, "ERROR: ", error);
+function fatalerr(msg, error = null) {
+  return log(msg, "FATAL ERROR: ", error);
 }
 
 // Utility function designed to get the current state of execution
@@ -721,7 +721,7 @@ Barrier.prototype = Object.freeze({
 	    " within a reasonable amount of time. Causing a crash to" +
 	    " ensure that we do not leave the user with an unresponsive" +
 	    " process draining resources.";
-	  err(msg);
+	  fatalerr(msg);
 	  if (gCrashReporter && gCrashReporter.enabled) {
             let data = {
               phase: topic,
