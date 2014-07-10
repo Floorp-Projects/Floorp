@@ -16,10 +16,13 @@ function openContextMenuFor(element, shiftkey, waitForSpellCheck) {
       synthesizeMouse(element, 2, 2, eventDetails, element.ownerDocument.defaultView);
     }
 
-    if (waitForSpellCheck)
+    if (waitForSpellCheck) {
+      var { onSpellCheck } = SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm", {});
       onSpellCheck(element, actuallyOpenContextMenuFor);
-    else
+    }
+    else {
       actuallyOpenContextMenuFor();
+    }
 }
 
 function closeContextMenu() {
