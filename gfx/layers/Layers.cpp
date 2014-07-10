@@ -1621,29 +1621,6 @@ SetAntialiasingFlags(Layer* aLayer, DrawTarget* aTarget)
   aTarget->SetPermitSubpixelAA(permitSubpixelAA);
 }
 
-void
-SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
-{
-  if (!aTarget->IsCairo()) {
-    SetAntialiasingFlags(aLayer, aTarget->GetDrawTarget());
-    return;
-  }
-
-  bool permitSubpixelAA = !(aLayer->GetContentFlags() & Layer::CONTENT_DISABLE_SUBPIXEL_AA);
-  nsRefPtr<gfxASurface> surface = aTarget->CurrentSurface();
-  if (surface->GetContentType() != gfxContentType::COLOR_ALPHA) {
-    // Destination doesn't have alpha channel; no need to set any special flags
-    surface->SetSubpixelAntialiasingEnabled(permitSubpixelAA);
-    return;
-  }
-
-  const nsIntRect& bounds = aLayer->GetVisibleRegion().GetBounds();
-  permitSubpixelAA &= !(aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) ||
-      surface->GetOpaqueRect().Contains(
-      aTarget->UserToDevice(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height)));
-  surface->SetSubpixelAntialiasingEnabled(permitSubpixelAA);
-}
-
 PRLogModuleInfo* LayerManager::sLog;
 
 } // namespace layers
