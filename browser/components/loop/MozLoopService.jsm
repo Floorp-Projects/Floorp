@@ -365,7 +365,7 @@ let MozLoopServiceInternal = {
           }
         };
 
-        // Send job to worker to do saving to
+        // Send job to worker to do log sanitation, transcoding and saving to
         // disk for pickup by telemetry on next startup, which then uploads it.
 
         let worker = new ChromeWorker("MozLoopWorker.js");
