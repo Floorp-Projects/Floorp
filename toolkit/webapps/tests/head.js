@@ -267,7 +267,8 @@ function TestAppInfo(aApp, aIsPackaged) {
           removed = true;
         } catch (ex if ex instanceof OS.File.Error &&
                  (ex.winLastError == OS.Constants.Win.ERROR_ACCESS_DENIED ||
-                  ex.winLastError == OS.Constants.Win.ERROR_SHARING_VIOLATION)) {
+                  ex.winLastError == OS.Constants.Win.ERROR_SHARING_VIOLATION ||
+                  ex.winLastError == OS.Constants.Win.ERROR_DIR_NOT_EMPTY)) {
           // Wait 100 ms before attempting to remove again.
           yield wait(100);
         }
