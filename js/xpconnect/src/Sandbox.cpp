@@ -98,13 +98,8 @@ SandboxDump(JSContext *cx, unsigned argc, jsval *vp)
     if (!str)
         return false;
 
-    size_t length;
-    const jschar *chars = JS_GetStringCharsZAndLength(cx, str, &length);
-    if (!chars)
-        return false;
-
-    nsDependentString wstr(chars, length);
-    char *cstr = ToNewUTF8String(wstr);
+    JSAutoByteString utf8str;
+    char *cstr = utf8str.encodeUtf8(cx, str);
     if (!cstr)
         return false;
 
@@ -123,7 +118,6 @@ SandboxDump(JSContext *cx, unsigned argc, jsval *vp)
 
     fputs(cstr, stdout);
     fflush(stdout);
-    NS_Free(cstr);
     args.rval().setBoolean(true);
     return true;
 }
