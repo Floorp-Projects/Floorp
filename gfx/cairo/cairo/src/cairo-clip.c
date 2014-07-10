@@ -954,7 +954,6 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 			      int *tx, int *ty)
 {
     const cairo_rectangle_int_t *clip_extents = &clip_path->extents;
-    cairo_rectangle_int_t surface_extents;
     cairo_bool_t need_translate;
     cairo_surface_t *surface;
     cairo_clip_path_t *prev;
@@ -968,36 +967,27 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
     }
 
     clip_extents = &clip_path->extents;
-    if (_cairo_surface_get_extents (target, &surface_extents))
-    {
-    	_cairo_rectangle_intersect(&surface_extents, clip_extents);
-    }
-    else
-    {
-    	surface_extents = *clip_extents;
-    }
-
     if (clip_path->surface != NULL &&
 	clip_path->surface->backend == target->backend)
     {
-	*tx = surface_extents.x;
-	*ty = surface_extents.y;
+	*tx = clip_extents->x;
+	*ty = clip_extents->y;
 	return clip_path->surface;
     }
 
     surface = _cairo_surface_create_similar_scratch (target,
 						     CAIRO_CONTENT_ALPHA,
-						     surface_extents.width,
-						     surface_extents.height);
+						     clip_extents->width,
+						     clip_extents->height);
     if (surface == NULL) {
 	surface = cairo_image_surface_create (CAIRO_FORMAT_A8,
-					      surface_extents.width,
-					      surface_extents.height);
+					      clip_extents->width,
+					      clip_extents->height);
     }
     if (unlikely (surface->status))
 	return surface;
 
-    need_translate = surface_extents.x | surface_extents.y;
+    need_translate = clip_extents->x | clip_extents->y;
     if (clip_path->flags & CAIRO_CLIP_PATH_IS_BOX &&
 	clip_path->path.maybe_fill_region)
     {
@@ -1019,8 +1009,8 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 
 	if (need_translate) {
 	    _cairo_path_fixed_translate (&clip_path->path,
-					 _cairo_fixed_from_int (-surface_extents.x),
-					 _cairo_fixed_from_int (-surface_extents.y));
+					 _cairo_fixed_from_int (-clip_extents->x),
+					 _cairo_fixed_from_int (-clip_extents->y));
 	}
 	status = _cairo_surface_fill (surface,
 				      CAIRO_OPERATOR_ADD,
@@ -1032,8 +1022,8 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 				      NULL);
 	if (need_translate) {
 	    _cairo_path_fixed_translate (&clip_path->path,
-					 _cairo_fixed_from_int (surface_extents.x),
-					 _cairo_fixed_from_int (surface_extents.y));
+					 _cairo_fixed_from_int (clip_extents->x),
+					 _cairo_fixed_from_int (clip_extents->y));
 	}
 
 	if (unlikely (status))
@@ -1053,8 +1043,8 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 	{
 	    if (need_translate) {
 		_cairo_path_fixed_translate (&prev->path,
-					     _cairo_fixed_from_int (-surface_extents.x),
-					     _cairo_fixed_from_int (-surface_extents.y));
+					     _cairo_fixed_from_int (-clip_extents->x),
+					     _cairo_fixed_from_int (-clip_extents->y));
 	    }
 	    status = _cairo_surface_fill (surface,
 					  CAIRO_OPERATOR_IN,
@@ -1066,8 +1056,8 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 					  NULL);
 	    if (need_translate) {
 		_cairo_path_fixed_translate (&prev->path,
-					     _cairo_fixed_from_int (surface_extents.x),
-					     _cairo_fixed_from_int (surface_extents.y));
+					     _cairo_fixed_from_int (clip_extents->x),
+					     _cairo_fixed_from_int (clip_extents->y));
 	    }
 
 	    if (unlikely (status))
@@ -1087,8 +1077,8 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 	    _cairo_pattern_init_for_surface (&pattern, prev_surface);
 	    pattern.base.filter = CAIRO_FILTER_NEAREST;
 	    cairo_matrix_init_translate (&pattern.base.matrix,
-					 surface_extents.x - prev_tx,
-					 surface_extents.y - prev_ty);
+					 clip_extents->x - prev_tx,
+					 clip_extents->y - prev_ty);
 	    status = _cairo_surface_paint (surface,
 					   CAIRO_OPERATOR_IN,
 					   &pattern.base,
@@ -1104,8 +1094,8 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 	prev = prev->prev;
     }
 
-    *tx = surface_extents.x;
-    *ty = surface_extents.y;
+    *tx = clip_extents->x;
+    *ty = clip_extents->y;
     cairo_surface_destroy (clip_path->surface);
     return clip_path->surface = surface;
 
