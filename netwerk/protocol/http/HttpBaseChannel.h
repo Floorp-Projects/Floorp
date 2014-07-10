@@ -19,6 +19,7 @@
 #include "nsIHttpChannel.h"
 #include "nsHttpHandler.h"
 #include "nsIHttpChannelInternal.h"
+#include "nsIForcePendingChannel.h"
 #include "nsIRedirectHistory.h"
 #include "nsIUploadChannel.h"
 #include "nsIUploadChannel2.h"
@@ -63,6 +64,7 @@ class HttpBaseChannel : public nsHashPropertyBag
                       , public nsITraceableChannel
                       , public PrivateBrowsingChannel<HttpBaseChannel>
                       , public nsITimedChannel
+                      , public nsIForcePendingChannel
 {
 protected:
   virtual ~HttpBaseChannel();
@@ -173,6 +175,7 @@ public:
   NS_IMETHOD SetResponseTimeoutEnabled(bool aEnable);
   NS_IMETHOD AddRedirect(nsIPrincipal *aRedirect);
   NS_IMETHOD ForcePending(bool aForcePending);
+  NS_IMETHOD GetLastModifiedTime(PRTime* lastModifiedTime);
 
   inline void CleanRedirectCacheChainIfNecessary()
   {
