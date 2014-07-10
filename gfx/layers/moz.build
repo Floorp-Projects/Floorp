@@ -44,6 +44,10 @@ EXPORTS += [
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     UNIFIED_SOURCES += [
         'D3D9SurfaceImage.cpp',
+        'TextureDIB.cpp',
+    ]
+    EXPORTS.mozilla.layers += [
+        'TextureDIB.h',
     ]
     if CONFIG['MOZ_ENABLE_D3D9_LAYER']:
         EXPORTS += [
