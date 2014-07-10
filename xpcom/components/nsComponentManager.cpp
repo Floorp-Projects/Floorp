@@ -61,7 +61,6 @@
 #include "ManifestParser.h"
 #include "mozilla/Services.h"
 
-#include "nsManifestLineReader.h"
 #include "mozilla/GenericFactory.h"
 #include "nsSupportsPrimitives.h"
 #include "nsArray.h"

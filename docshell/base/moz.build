@@ -20,6 +20,7 @@ XPIDL_SOURCES += [
     'nsIDownloadHistory.idl',
     'nsIGlobalHistory2.idl',
     'nsILoadContext.idl',
+    'nsILoadInfo.idl',
     'nsIMarkupDocumentViewer.idl',
     'nsIPrivacyTransitionObserver.idl',
     'nsIReflowObserver.idl',
@@ -45,10 +46,12 @@ EXPORTS += [
 EXPORTS.mozilla += [
     'IHistory.h',
     'LoadContext.h',
+    'LoadInfo.h',
 ]
 
 UNIFIED_SOURCES += [
     'LoadContext.cpp',
+    'LoadInfo.cpp',
     'nsAboutRedirector.cpp',
     'nsDefaultURIFixup.cpp',
     'nsDocShellEditorData.cpp',

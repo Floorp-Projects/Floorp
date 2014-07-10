@@ -8,7 +8,7 @@
 // Test that inspector updates when page is navigated.
 
 const TEST_URL_FILE = "browser/browser/devtools/inspector/test/" +
-  "browser_inspector_breadcrumbs.html";
+  "doc_inspector_breadcrumbs.html";
 
 const TEST_URL_1 = "http://test1.example.org/" + TEST_URL_FILE;
 const TEST_URL_2 = "http://test2.example.org/" + TEST_URL_FILE;

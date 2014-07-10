@@ -92,7 +92,7 @@
 
         <meta-data android:name="com.sec.android.support.multiwindow" android:value="true"/>
 
-#ifdef MOZ_NATIVE_CASTING
+#ifdef MOZ_NATIVE_DEVICES
         <!-- This resources comes from Google Play Services. Required for casting support. -->
         <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
 #endif

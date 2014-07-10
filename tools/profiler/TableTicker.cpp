@@ -602,6 +602,7 @@ void TableTicker::InplaceTick(TickSample* sample)
   ThreadProfile& currThreadProfile = *sample->threadProfile;
 
   PseudoStack* stack = currThreadProfile.GetPseudoStack();
+  stack->updateGeneration(currThreadProfile.GetGenerationID());
   bool recordSample = true;
 #if defined(XP_WIN)
   bool powerSample = false;
@@ -617,7 +618,6 @@ void TableTicker::InplaceTick(TickSample* sample)
       stack->addStoredMarker(marker);
       currThreadProfile.addTag(ProfileEntry('m', marker));
     }
-    stack->updateGeneration(currThreadProfile.GetGenerationID());
 
 #if defined(XP_WIN)
     if (mProfilePower) {

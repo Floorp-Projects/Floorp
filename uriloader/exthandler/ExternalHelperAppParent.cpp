@@ -322,6 +322,19 @@ ExternalHelperAppParent::SetOwner(nsISupports* aOwner)
 }
 
 NS_IMETHODIMP
+ExternalHelperAppParent::GetLoadInfo(nsILoadInfo* *aLoadInfo)
+{
+  *aLoadInfo = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ExternalHelperAppParent::SetLoadInfo(nsILoadInfo* aLoadInfo)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 ExternalHelperAppParent::GetNotificationCallbacks(nsIInterfaceRequestor* *aCallbacks)
 {
   *aCallbacks = nullptr;

@@ -164,8 +164,8 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
     string.AppendInt((uint64_t)aItem);
     aStream << nsPrintfCString("<a href=\"javascript:ViewImage('%s')\">", string.BeginReading());
   }
-  aStream << nsPrintfCString("%s %p(%s) bounds(%d,%d,%d,%d) visible(%d,%d,%d,%d) componentAlpha(%d,%d,%d,%d) clip(%s) %s",
-          aItem->Name(), (void*)f, NS_ConvertUTF16toUTF8(fName).get(),
+  aStream << nsPrintfCString("%s p=0x%p f=0x%p(%s) bounds(%d,%d,%d,%d) visible(%d,%d,%d,%d) componentAlpha(%d,%d,%d,%d) clip(%s) %s",
+          aItem->Name(), aItem, (void*)f, NS_ConvertUTF16toUTF8(fName).get(),
           rect.x, rect.y, rect.width, rect.height,
           vis.x, vis.y, vis.width, vis.height,
           component.x, component.y, component.width, component.height,
@@ -202,7 +202,7 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
     if (aDumpHtml) {
       aStream << nsPrintfCString(" <a href=\"#%p\">layer=%p</a>", layer, layer);
     } else {
-      aStream << nsPrintfCString(" layer=%p", layer);
+      aStream << nsPrintfCString(" layer=0x%p", layer);
     }
   }
   if (aItem->GetType() == nsDisplayItem::TYPE_SVG_EFFECTS) {

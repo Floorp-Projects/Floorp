@@ -14,78 +14,72 @@ template<char16_t delimiter>
 class CharTokenizer
 {
 public:
-    CharTokenizer(const nsSubstring& aSource)
-    {
-      aSource.BeginReading(mIter);
-      aSource.EndReading(mEnd);
+  CharTokenizer(const nsSubstring& aSource)
+  {
+    aSource.BeginReading(mIter);
+    aSource.EndReading(mEnd);
+  }
+
+  /**
+   * Checks if any more tokens are available.
+   */
+  bool hasMoreTokens() { return mIter != mEnd; }
+
+  /**
+   * Returns the next token.
+   */
+  const nsDependentSubstring nextToken()
+  {
+    nsSubstring::const_char_iterator begin = mIter;
+    while (mIter != mEnd && (*mIter) != delimiter) {
+      ++mIter;
+    }
+    nsSubstring::const_char_iterator end = mIter;
+    if (mIter != mEnd) {
+      ++mIter;
     }
 
-    /**
-     * Checks if any more tokens are available.
-     */
-    bool hasMoreTokens()
-    {
-      return mIter != mEnd;
-    }
-
-    /**
-     * Returns the next token.
-     */
-    const nsDependentSubstring nextToken()
-    {
-      nsSubstring::const_char_iterator begin = mIter;
-      while (mIter != mEnd && (*mIter) != delimiter) {
-        ++mIter;
-      }
-      nsSubstring::const_char_iterator end = mIter;
-      if (mIter != mEnd) {
-        ++mIter;
-      }
-
-      return Substring(begin, end);
-    }
+    return Substring(begin, end);
+  }
 
 private:
-    nsSubstring::const_char_iterator mIter, mEnd;
+  nsSubstring::const_char_iterator mIter, mEnd;
 };
 
 template<char delimiter>
 class CCharTokenizer
 {
 public:
-    CCharTokenizer(const nsCSubstring& aSource)
-    {
-      aSource.BeginReading(mIter);
-      aSource.EndReading(mEnd);
+  CCharTokenizer(const nsCSubstring& aSource)
+  {
+    aSource.BeginReading(mIter);
+    aSource.EndReading(mEnd);
+  }
+
+  /**
+   * Checks if any more tokens are available.
+   */
+  bool hasMoreTokens() { return mIter != mEnd; }
+
+  /**
+   * Returns the next token.
+   */
+  const nsDependentCSubstring nextToken()
+  {
+    nsCSubstring::const_char_iterator begin = mIter;
+    while (mIter != mEnd && (*mIter) != delimiter) {
+      ++mIter;
+    }
+    nsCSubstring::const_char_iterator end = mIter;
+    if (mIter != mEnd) {
+      ++mIter;
     }
 
-    /**
-     * Checks if any more tokens are available.
-     */
-    bool hasMoreTokens()
-    {
-      return mIter != mEnd;
-    }
-
-    /**
-     * Returns the next token.
-     */
-    const nsDependentCSubstring nextToken()
-    {
-      nsCSubstring::const_char_iterator begin = mIter;
-      while (mIter != mEnd && (*mIter) != delimiter) {
-        ++mIter;
-      }
-      nsCSubstring::const_char_iterator end = mIter;
-      if (mIter != mEnd) {
-        ++mIter;
-      }
-
-      return Substring(begin, end);
-    }
+    return Substring(begin, end);
+  }
 
 private:
-    nsCSubstring::const_char_iterator mIter, mEnd;
+  nsCSubstring::const_char_iterator mIter, mEnd;
 };
 
 } // namespace mozilla

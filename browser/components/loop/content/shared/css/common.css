@@ -17,7 +17,7 @@ body {
   padding: 0;
   font-family: "Helvetica Neue", Helvetica, Arial, sans;
   font-size: 14px;
-  background: #f2f2f2;
+  background: #fbfbfb;
 }
 
 button {
@@ -70,7 +70,15 @@ img {
 }
 
 .btn-info {
-  background: #428BCA;
+  background: #0095dd;
+}
+
+.btn-info:hover {
+  background: #008acb;
+}
+
+.btn-info:active {
+  background: #006b9d;
 }
 
 .btn-success {

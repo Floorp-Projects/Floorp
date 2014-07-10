@@ -22,26 +22,81 @@ loop.panel = (function(_, mozL10n) {
   var router;
 
   /**
-   * Do not disturb panel subview.
+   * Availability drop down menu subview.
    */
-  var DoNotDisturb = React.createClass({displayName: 'DoNotDisturb',
+  var AvailabilityDropdown = React.createClass({displayName: 'AvailabilityDropdown',
     getInitialState: function() {
-      return {doNotDisturb: navigator.mozLoop.doNotDisturb};
+      return {
+        doNotDisturb: navigator.mozLoop.doNotDisturb,
+        showMenu: false
+      };
     },
 
-    handleCheckboxChange: function() {
-      // Note: side effect!
-      navigator.mozLoop.doNotDisturb = !navigator.mozLoop.doNotDisturb;
-      this.setState({doNotDisturb: navigator.mozLoop.doNotDisturb});
+    showDropdownMenu: function() {
+      this.setState({showMenu: true});
+    },
+
+    hideDropdownMenu: function() {
+      this.setState({showMenu: false});
+    },
+
+    // XXX target event can either be the li, the span or the i tag
+    // this makes it easier to figure out the target by making a
+    // closure with the desired status already passed in.
+    changeAvailability: function(newAvailabilty) {
+      return function(event) {
+        // Note: side effect!
+        switch (newAvailabilty) {
+          case 'available':
+            this.setState({doNotDisturb: false});
+            navigator.mozLoop.doNotDisturb = false;
+            break;
+          case 'do-not-disturb':
+            this.setState({doNotDisturb: true});
+            navigator.mozLoop.doNotDisturb = true;
+            break;
+        }
+        this.hideDropdownMenu();
+      }.bind(this);
     },
 
     render: function() {
       // XXX https://github.com/facebook/react/issues/310 for === htmlFor
+      var cx = React.addons.classSet;
+      var availabilityStatus = cx({
+        'status': true,
+        'status-dnd': this.state.doNotDisturb,
+        'status-available': !this.state.doNotDisturb
+      });
+      var availabilityDropdown = cx({
+        'dnd-menu': true,
+        'hide': !this.state.showMenu
+      });
+      var availabilityText = this.state.doNotDisturb ?
+                              __("display_name_dnd_status") :
+                              __("display_name_available_status");
+
       return (
-        React.DOM.p( {className:"dnd"}, 
-          React.DOM.input( {type:"checkbox", checked:this.state.doNotDisturb,
-                 id:"dnd-component", onChange:this.handleCheckboxChange} ),
-          React.DOM.label( {htmlFor:"dnd-component"}, __("do_not_disturb"))
+        React.DOM.div( {className:"footer component-spacer"}, 
+          React.DOM.div( {className:"do-not-disturb"}, 
+            React.DOM.p( {className:"dnd-status", onClick:this.showDropdownMenu}, 
+              React.DOM.span(null, availabilityText),
+              React.DOM.i( {className:availabilityStatus})
+            ),
+            React.DOM.ul( {className:availabilityDropdown,
+                onMouseLeave:this.hideDropdownMenu}, 
+              React.DOM.li( {onClick:this.changeAvailability("available"),
+                  className:"dnd-menu-item dnd-make-available"}, 
+                React.DOM.i( {className:"status status-available"}),
+                React.DOM.span(null, __("display_name_available_status"))
+              ),
+              React.DOM.li( {onClick:this.changeAvailability("do-not-disturb"),
+                  className:"dnd-menu-item dnd-make-unavailable"}, 
+                React.DOM.i( {className:"status status-dnd"}),
+                React.DOM.span(null, __("display_name_dnd_status"))
+              )
+            )
+          )
         )
       );
     }
@@ -60,7 +115,7 @@ loop.panel = (function(_, mozL10n) {
 
       if (!this.state.seenToS) {
         navigator.mozLoop.setLoopCharPref('seenToS', 'seen');
-        return React.DOM.p( {className:"tos",
+        return React.DOM.p( {className:"terms-service",
                   dangerouslySetInnerHTML:{__html: tosHTML}});
       } else {
         return React.DOM.div(null );
@@ -75,9 +130,9 @@ loop.panel = (function(_, mozL10n) {
 
     render: function() {
       return (
-        React.DOM.div( {className:"share generate-url"}, 
+        React.DOM.div( {className:"component-spacer share generate-url"}, 
           React.DOM.div( {className:"description"}, 
-            React.DOM.p(null, this.props.summary)
+            React.DOM.p( {className:"description-content"}, this.props.summary)
           ),
           React.DOM.div( {className:"action"}, 
             this.props.children
@@ -88,61 +143,27 @@ loop.panel = (function(_, mozL10n) {
   });
 
   var CallUrlResult = React.createClass({displayName: 'CallUrlResult',
-    propTypes: {
-      callUrl: React.PropTypes.string.isRequired,
-      retry: React.PropTypes.func.isRequired
-    },
-
-    handleButtonClick: function() {
-      this.props.retry();
-    },
-
-    render: function() {
-      // XXX setting elem value from a state (in the callUrl input)
-      // makes it immutable ie read only but that is fine in our case.
-      // readOnly attr will suppress a warning regarding this issue
-      // from the react lib.
-      return (
-        PanelLayout( {summary:__("share_link_url")}, 
-          React.DOM.div( {className:"invite"}, 
-            React.DOM.input( {type:"url", value:this.props.callUrl, readOnly:"true"} ),
-            React.DOM.button( {onClick:this.handleButtonClick,
-                    className:"btn btn-success"}, __("new_url"))
-          )
-        )
-      );
-    }
-  });
-
-  var CallUrlForm = React.createClass({displayName: 'CallUrlForm',
-    propTypes: {
-      client: React.PropTypes.object.isRequired,
-      notifier: React.PropTypes.object.isRequired
-    },
 
     getInitialState: function() {
       return {
         pending: false,
-        disabled: true,
-        callUrl: false
+        callUrl: ''
       };
     },
 
-    retry: function() {
-      this.setState(this.getInitialState());
+    /**
+    * Returns a random 5 character string used to identify
+    * the conversation.
+    * XXX this will go away once the backend changes
+    */
+    conversationIdentifier: function() {
+      return Math.random().toString(36).substring(5);
     },
 
-    handleTextChange: function(event) {
-      this.setState({disabled: !event.currentTarget.value});
-    },
-
-    handleFormSubmit: function(event) {
-      event.preventDefault();
-
+    componentDidMount: function() {
       this.setState({pending: true});
-
-      this.props.client.requestCallUrl(
-        this.refs.caller.getDOMNode().value, this._onCallUrlReceived);
+      this.props.client.requestCallUrl(this.conversationIdentifier(),
+                                       this._onCallUrlReceived);
     },
 
     _onCallUrlReceived: function(err, callUrlData) {
@@ -160,30 +181,17 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      // If we have a call url, render result
-      if (this.state.callUrl) {
-        return (
-          CallUrlResult( {callUrl:this.state.callUrl, retry:this.retry})
-        );
-      }
-
-      // If we don't display the form
+      // XXX setting elem value from a state (in the callUrl input)
+      // makes it immutable ie read only but that is fine in our case.
+      // readOnly attr will suppress a warning regarding this issue
+      // from the react lib.
       var cx = React.addons.classSet;
       return (
-        PanelLayout( {summary:__("get_link_to_share")}, 
-          React.DOM.form( {className:"invite", onSubmit:this.handleFormSubmit}, 
-
-            React.DOM.input( {type:"text", name:"caller", ref:"caller", required:"required",
-                   className:cx({'pending': this.state.pending}),
-                   onChange:this.handleTextChange,
-                   placeholder:__("call_identifier_textinput_placeholder")} ),
-
-            React.DOM.button( {type:"submit", className:"get-url btn btn-success",
-                    disabled:this.state.disabled}, 
-              __("get_a_call_url")
-            )
-          ),
-          ToSView(null )
+        PanelLayout( {summary:__("share_link_header_text")}, 
+          React.DOM.div( {className:"invite"}, 
+            React.DOM.input( {type:"url", value:this.state.callUrl, readOnly:"true",
+                   className:cx({'pending': this.state.pending})} )
+          )
         )
       );
     }
@@ -201,9 +209,10 @@ loop.panel = (function(_, mozL10n) {
     render: function() {
       return (
         React.DOM.div(null, 
-          CallUrlForm( {client:this.props.client,
+          CallUrlResult( {client:this.props.client,
                        notifier:this.props.notifier} ),
-          DoNotDisturb(null )
+          ToSView(null ),
+          AvailabilityDropdown(null )
         )
       );
     }
@@ -229,7 +238,8 @@ loop.panel = (function(_, mozL10n) {
 
       this._registerVisibilityChangeEvent();
 
-      this.on("panel:open panel:closed", this.reset, this);
+      this.on("panel:open panel:closed", this.clearNotifications, this);
+      this.on("panel:open", this.reset, this);
     },
 
     /**
@@ -242,6 +252,8 @@ loop.panel = (function(_, mozL10n) {
      * @link  http://www.w3.org/TR/page-visibility/
      */
     _registerVisibilityChangeEvent: function() {
+      // XXX pass in the visibility status to detect when to generate a new
+      // panel view
       this.document.addEventListener("visibilitychange", function(event) {
         this.trigger(event.currentTarget.hidden ? "panel:closed"
                                                 : "panel:open");
@@ -253,6 +265,10 @@ loop.panel = (function(_, mozL10n) {
      */
     home: function() {
       this.reset();
+    },
+
+    clearNotifications: function() {
+      this._notifier.clear();
     },
 
     /**
@@ -290,8 +306,8 @@ loop.panel = (function(_, mozL10n) {
 
   return {
     init: init,
-    DoNotDisturb: DoNotDisturb,
-    CallUrlForm: CallUrlForm,
+    AvailabilityDropdown: AvailabilityDropdown,
+    CallUrlResult: CallUrlResult,
     PanelView: PanelView,
     PanelRouter: PanelRouter,
     ToSView: ToSView

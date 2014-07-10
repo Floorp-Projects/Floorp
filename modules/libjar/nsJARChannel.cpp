@@ -585,6 +585,20 @@ nsJARChannel::SetOwner(nsISupports *aOwner)
 }
 
 NS_IMETHODIMP
+nsJARChannel::GetLoadInfo(nsILoadInfo **aLoadInfo)
+{
+  NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::SetLoadInfo(nsILoadInfo* aLoadInfo)
+{
+  mLoadInfo = aLoadInfo;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsJARChannel::GetNotificationCallbacks(nsIInterfaceRequestor **aCallbacks)
 {
     NS_IF_ADDREF(*aCallbacks = mCallbacks);
