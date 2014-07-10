@@ -506,6 +506,49 @@ BluetoothSocketInterface::Connect(const bt_bdaddr_t* aBdAddr,
   }
 }
 
+/* Specializes SocketMessageWatcher for Accept operations by
+ * reading the socket messages from Bluedroid and forwarding
+ * the received client socket to the resource handler. The
+ * first message is received immediately. When there's a new
+ * connection, Bluedroid sends the 2nd message with the socket
+ * info and socket file descriptor.
+ */
+class AcceptWatcher MOZ_FINAL : public SocketMessageWatcher
+{
+public:
+  AcceptWatcher(int aFd, BluetoothSocketResultHandler* aRes)
+  : SocketMessageWatcher(aFd)
+  , mRes(aRes)
+  {
+    /* not supplying a result handler leaks received file descriptor */
+    MOZ_ASSERT(mRes);
+  }
+
+  void Proceed(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    if (mRes) {
+      DispatchBluetoothSocketResult(mRes,
+                                    &BluetoothSocketResultHandler::Accept,
+                                    GetClientFd(), GetBdAddress(),
+                                    GetConnectionStatus(),
+                                    aStatus);
+    }
+    MessageLoopForIO::current()->PostTask(
+      FROM_HERE, new DeleteTask<AcceptWatcher>(this));
+  }
+
+private:
+  nsRefPtr<BluetoothSocketResultHandler> mRes;
+};
+
+void
+BluetoothSocketInterface::Accept(int aFd, BluetoothSocketResultHandler* aRes)
+{
+  /* receive Bluedroid's socket-setup messages and client fd */
+  Task* t = new SocketMessageWatcherTask(new AcceptWatcher(aFd, aRes));
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, t);
+}
+
 BluetoothSocketInterface::BluetoothSocketInterface(
   const btsock_interface_t* aInterface)
 : mInterface(aInterface)
