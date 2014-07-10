@@ -149,7 +149,9 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
   if (sameProcess) {
     aResult->mGraphicBuffer = SharedBufferManagerParent::GetGraphicBuffer(aResult->mRef);
   } else {
-    aResult->mGraphicBuffer = SharedBufferManagerChild::GetSingleton()->GetGraphicBuffer(index);
+    if (SharedBufferManagerChild::GetSingleton()->IsValidKey(index)) {
+      aResult->mGraphicBuffer = SharedBufferManagerChild::GetSingleton()->GetGraphicBuffer(index);
+    }
     MOZ_ASSERT(!aResult->mGraphicBuffer.get());
 
     // Deserialize GraphicBuffer
