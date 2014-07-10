@@ -29,21 +29,3 @@ MACH_NO_WRITE_TIMES
    If defined, mach commands will not prefix output lines with the
    elapsed time since program start. This option is equivalent to
    passing ``--log-no-times`` to mach.
-
-MOZ_PSEUDO_DERECURSE
-   Activate an *experimental* build mode where make directory traversal
-   is derecursified. This mode should result in faster build times at
-   the expense of busted builds from time-to-time. The end goal is for
-   this build mode to be the default. At which time, this variable will
-   likely go away.
-
-   A value of ``1`` activates the mode with full optimizations.
-
-   A value of ``no-parallel-export`` activates the mode without
-   optimizations to the *export* tier, which are known to be slightly
-   buggy.
-
-   A value of ``no-skip`` activates the mode without optimizations to skip
-   some directories during traversal.
-
-   Values may be combined with a comma.

@@ -583,10 +583,8 @@ endif
 # default rule before including rules.mk
 default all::
 	$(MAKE) export
-ifdef MOZ_PSEUDO_DERECURSE
 ifdef COMPILE_ENVIRONMENT
 	$(MAKE) compile
-endif
 endif
 	$(MAKE) libs
 	$(MAKE) tools
