@@ -8,7 +8,8 @@
 #include "imgIScriptedNotificationObserver.h"
 #include "nsCycleCollectionParticipant.h"
 
-using namespace mozilla::image;
+namespace mozilla {
+namespace image {
 
 NS_IMPL_CYCLE_COLLECTION(ScriptedNotificationObserver, mInner)
 
@@ -47,3 +48,6 @@ ScriptedNotificationObserver::Notify(imgIRequest* aRequest,
     return mInner->IsAnimated(aRequest);
   return NS_OK;
 }
+
+} // namespace image
+} // namespace mozilla

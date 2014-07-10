@@ -364,7 +364,7 @@ VectorImage::FrameRect(uint32_t aWhichFrame)
 }
 
 size_t
-VectorImage::HeapSizeOfSourceWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const
+VectorImage::HeapSizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
   // We're not storing the source data -- we just feed that directly to
   // our helper SVG document as we receive it, for it to parse.
@@ -376,7 +376,7 @@ VectorImage::HeapSizeOfSourceWithComputedFallback(mozilla::MallocSizeOf aMallocS
 }
 
 size_t
-VectorImage::HeapSizeOfDecodedWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const
+VectorImage::HeapSizeOfDecodedWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
   // If implementing this, we'll need to restructure our callers to make sure
   // any amount we return is attributed to the vector images measure (i.e.
@@ -503,7 +503,7 @@ VectorImage::ShouldAnimate()
 }
 
 NS_IMETHODIMP_(void)
-VectorImage::SetAnimationStartTime(const mozilla::TimeStamp& aTime)
+VectorImage::SetAnimationStartTime(const TimeStamp& aTime)
 {
   // We don't care about animation start time.
 }
@@ -533,7 +533,7 @@ VectorImage::GetWidth(int32_t* aWidth)
 //******************************************************************************
 /* [notxpcom] void requestRefresh ([const] in TimeStamp aTime); */
 NS_IMETHODIMP_(void)
-VectorImage::RequestRefresh(const mozilla::TimeStamp& aTime)
+VectorImage::RequestRefresh(const TimeStamp& aTime)
 {
   if (HadRecentRefresh(aTime)) {
     return;
@@ -755,7 +755,7 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
 /* [noscript] ImageContainer getImageContainer(); */
 NS_IMETHODIMP
 VectorImage::GetImageContainer(LayerManager* aManager,
-                               mozilla::layers::ImageContainer** _retval)
+                               layers::ImageContainer** _retval)
 {
   *_retval = nullptr;
   return NS_OK;
@@ -915,7 +915,7 @@ VectorImage::CreateDrawableAndShow(const SVGDrawingParameters& aParams)
     return Show(svgDrawable, aParams);
 
   // Try to create an offscreen surface.
-  mozilla::RefPtr<mozilla::gfx::DrawTarget> target =
+  RefPtr<gfx::DrawTarget> target =
    gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(aParams.imageRect.Size(), gfx::SurfaceFormat::B8G8R8A8);
 
   // If we couldn't create the draw target, it was probably because it would end

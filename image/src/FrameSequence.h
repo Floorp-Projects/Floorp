@@ -174,7 +174,7 @@ public:
   uint32_t GetNumFrames() const;
 
   size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocation,
-                                                 mozilla::MallocSizeOf aMallocSizeOf) const;
+                                                 MallocSizeOf aMallocSizeOf) const;
 
 private: // data
   //! All the frames of the image

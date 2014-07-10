@@ -13,13 +13,16 @@
 #include "gfxDrawable.h"
 #include "imgIContainer.h"
 
+namespace mozilla {
+namespace image {
+
 class imgFrame
 {
-  typedef mozilla::gfx::Color Color;
-  typedef mozilla::gfx::DataSourceSurface DataSourceSurface;
-  typedef mozilla::gfx::IntSize IntSize;
-  typedef mozilla::gfx::SourceSurface SourceSurface;
-  typedef mozilla::gfx::SurfaceFormat SurfaceFormat;
+  typedef gfx::Color Color;
+  typedef gfx::DataSourceSurface DataSourceSurface;
+  typedef gfx::IntSize IntSize;
+  typedef gfx::SourceSurface SourceSurface;
+  typedef gfx::SurfaceFormat SurfaceFormat;
 
 public:
   imgFrame();
@@ -67,7 +70,7 @@ public:
 
   void SetDiscardable();
 
-  mozilla::TemporaryRef<SourceSurface> GetSurface();
+  TemporaryRef<SourceSurface> GetSurface();
 
   Color
   SinglePixelColor()
@@ -80,11 +83,11 @@ public:
     return mSinglePixel;
   }
 
-  mozilla::TemporaryRef<SourceSurface> CachedSurface();
+  TemporaryRef<SourceSurface> CachedSurface();
 
   size_t SizeOfExcludingThisWithComputedFallbackIfHeap(
            gfxMemoryLocation aLocation,
-           mozilla::MallocSizeOf aMallocSizeOf) const;
+           MallocSizeOf aMallocSizeOf) const;
 
   uint8_t GetPaletteDepth() const { return mPaletteDepth; }
   uint32_t PaletteDataLength() const {
@@ -117,15 +120,15 @@ private: // methods
                                       SourceSurface*     aSurface);
 
 private: // data
-  mozilla::RefPtr<DataSourceSurface> mImageSurface;
-  mozilla::RefPtr<SourceSurface> mOptSurface;
+  RefPtr<DataSourceSurface> mImageSurface;
+  RefPtr<SourceSurface> mOptSurface;
 
   IntSize      mSize;
   nsIntPoint   mOffset;
 
   nsIntRect    mDecoded;
 
-  mutable mozilla::Mutex mDecodedMutex;
+  mutable Mutex mDecodedMutex;
 
   // The palette and image data for images that are paletted, since Cairo
   // doesn't support these images.
@@ -142,8 +145,8 @@ private: // data
   /** Indicates how many readers currently have locked this frame */
   int32_t mLockCount;
 
-  mozilla::RefPtr<mozilla::VolatileBuffer> mVBuf;
-  mozilla::VolatileBufferPtr<uint8_t> mVBufPtr;
+  RefPtr<VolatileBuffer> mVBuf;
+  VolatileBufferPtr<uint8_t> mVBufPtr;
 
   SurfaceFormat mFormat;
   uint8_t      mPaletteDepth;
@@ -157,8 +160,6 @@ private: // data
   bool mInformedDiscardTracker;
 };
 
-namespace mozilla {
-namespace image {
   // An RAII class to ensure it's easy to balance locks and unlocks on
   // imgFrames.
   class AutoFrameLocker
@@ -183,7 +184,8 @@ namespace image {
     imgFrame* mFrame;
     bool mSucceeded;
   };
-}
-}
+
+} // namespace image
+} // namespace mozilla
 
 #endif /* imgFrame_h */

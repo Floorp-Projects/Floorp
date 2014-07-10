@@ -123,14 +123,14 @@ class DiscardTracker
     static nsCOMPtr<nsITimer> sTimer;
     static bool sInitialized;
     static bool sTimerOn;
-    static mozilla::Atomic<bool> sDiscardRunnablePending;
+    static Atomic<bool> sDiscardRunnablePending;
     static uint64_t sCurrentDecodedImageBytes;
     static uint32_t sMinDiscardTimeoutMs;
     static uint32_t sMaxDecodedImageKB;
     static uint32_t sHardLimitDecodedImageKB;
     // Lock for safegarding the 64-bit sCurrentDecodedImageBytes
     static PRLock *sAllocationLock;
-    static mozilla::Mutex* sNodeListMutex;
+    static Mutex* sNodeListMutex;
     static Atomic<bool> sShutdown;
 };
 
