@@ -21,7 +21,6 @@ Browser context menu tests.
 <script class="testbody" type="text/javascript">
 
 SpecialPowers.Cu.import("resource://gre/modules/InlineSpellChecker.jsm", window);
-SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm", window);
 
 const Ci = SpecialPowers.Ci;
 
@@ -83,13 +82,13 @@ function runTest(testNum) {
                     "context-inspect", true];
   }
 
-  switch (testNum) {
-    case 1:
+  var tests = [
+    function () {
         // Invoke context menu for next test.
         openContextMenuFor(text);
-        break;
+    },
 
-    case 2:
+    function () {
         // Context menu for plain text
         plainTextItems = ["context-navigation", null,
                               ["context-back",         false,
@@ -108,9 +107,9 @@ function runTest(testNum) {
         checkContextMenu(plainTextItems);
         closeContextMenu();
         openContextMenuFor(link); // Invoke context menu for next test.
-        break;
+    },
 
-    case 3:
+    function () {
         // Context menu for text link
         if (perWindowPrivateBrowsing) {
           checkContextMenu(["context-openlinkintab", true,
@@ -134,18 +133,18 @@ function runTest(testNum) {
         }
         closeContextMenu();
         openContextMenuFor(mailto); // Invoke context menu for next test.
-        break;
+    },
 
-    case 4:
+    function () {
         // Context menu for text mailto-link
         checkContextMenu(["context-copyemail", true,
                           "context-searchselect", true
                         ].concat(inspectItems));
         closeContextMenu();
         openContextMenuFor(img); // Invoke context menu for next test.
-        break;
+    },
 
-    case 5:
+    function () {
         // Context menu for an image
         checkContextMenu(["context-viewimage",            true,
                           "context-copyimage-contents",   true,
@@ -158,9 +157,9 @@ function runTest(testNum) {
                          ].concat(inspectItems));
         closeContextMenu();
         openContextMenuFor(canvas); // Invoke context menu for next test.
-        break;
+    },
 
-    case 6:
+    function () {
         // Context menu for a canvas
         checkContextMenu(["context-viewimage",    true,
                           "context-saveimage",    true,
@@ -168,9 +167,9 @@ function runTest(testNum) {
                          ].concat(inspectItems));
         closeContextMenu();
         openContextMenuFor(video_ok); // Invoke context menu for next test.
-        break;
+    },
 
-    case 7:
+    function () {
         // Context menu for a video (with a VALID media source)
         checkContextMenu(["context-media-play",         true,
                           "context-media-mute",         true,
@@ -192,9 +191,9 @@ function runTest(testNum) {
                          ].concat(inspectItems));
         closeContextMenu();
         openContextMenuFor(audio_in_video); // Invoke context menu for next test.
-        break;
+    },
 
-    case 8:
+    function () {
         // Context menu for a video (with an audio-only file)
           checkContextMenu(["context-media-play",         true,
                             "context-media-mute",         true,
@@ -212,9 +211,9 @@ function runTest(testNum) {
                            ].concat(inspectItems));
         closeContextMenu();
         openContextMenuFor(video_bad); // Invoke context menu for next test.
-        break;
+    },
 
-    case 9:
+    function () {
         // Context menu for a video (with an INVALID media source)
         checkContextMenu(["context-media-play",         false,
                           "context-media-mute",         false,
@@ -236,9 +235,9 @@ function runTest(testNum) {
                          ].concat(inspectItems));
         closeContextMenu();
         openContextMenuFor(video_bad2); // Invoke context menu for next test.
-        break;
+    },
 
-    case 10:
+    function () {
         // Context menu for a video (with an INVALID media source)
         checkContextMenu(["context-media-play",         false,
                           "context-media-mute",         false,
@@ -260,9 +259,9 @@ function runTest(testNum) {
                          ].concat(inspectItems));
         closeContextMenu();
         openContextMenuFor(iframe); // Invoke context menu for next test.
-        break;
+    },
 
-    case 11:
+    function () {
         // Context menu for an iframe
         checkContextMenu(["context-navigation", null,
                               ["context-back",         false,
@@ -294,9 +293,9 @@ function runTest(testNum) {
                          ].concat(inspectItems));
         closeContextMenu();
         openContextMenuFor(video_in_iframe); // Invoke context menu for next test.
-        break;
+    },
 
-    case 12:
+    function () {
         // Context menu for a video in an iframe
         checkContextMenu(["context-media-play",         true,
                           "context-media-mute",         true,
@@ -330,9 +329,9 @@ function runTest(testNum) {
                                "context-viewframeinfo",     true], null].concat(inspectItems));
         closeContextMenu();
         openContextMenuFor(image_in_iframe); // Invoke context menu for next test.
-        break;
+    },
 
-    case 13:
+    function () {
         // Context menu for an image in an iframe
         checkContextMenu(["context-viewimage",            true,
                           "context-copyimage-contents",   true,
@@ -356,11 +355,28 @@ function runTest(testNum) {
                                "---",                       null,
                                "context-viewframeinfo",     true], null].concat(inspectItems));
         closeContextMenu();
-        openContextMenuFor(textarea, false, true); // Invoke context menu for next test, but wait for the spellcheck.
-        break;
+        openContextMenuFor(textarea); // Invoke context menu for next test
+    },
 
-    case 14:
-        // Context menu for textarea
+    function () {
+        // Context menu for textarea before spell check initialization finishes
+        checkContextMenu(["context-undo",                false,
+                          "---",                         null,
+                          "context-cut",                 false,
+                          "context-copy",                false,
+                          "context-paste",               null,
+                          "context-delete",              false,
+                          "---",                         null,
+                          "context-selectall",           true,
+                          "---",                         null,
+                          "spell-add-dictionaries-main", true,
+                         ].concat(inspectItems));
+        closeContextMenu();
+        openContextMenuFor(textarea, false, true); // Invoke context menu for next test, but wait for the spellcheck.
+    },
+
+    function () {
+        // Context menu for textarea after spell check initialization finishes
         checkContextMenu(["*chubbiness",         true, // spelling suggestion
                           "spell-add-to-dictionary", true,
                           "---",                 null,
@@ -382,16 +398,16 @@ function runTest(testNum) {
         contextMenu.ownerDocument.getElementById("spell-add-to-dictionary").doCommand(); // Add to dictionary
         closeContextMenu();
         openContextMenuFor(text); // Invoke context menu for next test.
-        break;
+    },
 
-    case 15:
+    function () {
         // Re-check context menu for plain text to make sure it hasn't changed
         checkContextMenu(plainTextItems);
         closeContextMenu();
         openContextMenuFor(textarea, false, true); // Invoke context menu for next test.
-        break;
+    },
 
-    case 16:
+    function () {
         // Context menu for textarea after a word has been added
         // to the dictionary
         checkContextMenu(["spell-undo-add-to-dictionary", true,
@@ -414,9 +430,9 @@ function runTest(testNum) {
         contextMenu.ownerDocument.getElementById("spell-undo-add-to-dictionary").doCommand(); // Undo add to dictionary
         closeContextMenu();
         openContextMenuFor(contenteditable, false, true);
-        break;
+    },
 
-    case 17:
+    function () {
         // Context menu for contenteditable
         checkContextMenu(["spell-no-suggestions", false,
                           "spell-add-to-dictionary", true,
@@ -439,15 +455,15 @@ function runTest(testNum) {
 
         closeContextMenu();
         openContextMenuFor(link); // Invoke context menu for next test.
-        break;
+    },
 
-    case 18:
+    function () {
         executeCopyCommand("cmd_copyLink", "http://mozilla.com/");
         closeContextMenu();
         openContextMenuFor(pagemenu); // Invoke context menu for next test.
-        break;
+    },
 
-    case 19:
+    function () {
         // Context menu for element with assigned content context menu
         checkContextMenu(["context-navigation", null,
                               ["context-back",         false,
@@ -497,9 +513,9 @@ function runTest(testNum) {
         SpecialPowers.setBoolPref("full-screen-api.approval-required", false);
         SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
         full_screen_element.mozRequestFullScreen();
-        break;
+    },
 
-    case 20:
+    function () {
         // Context menu for DOM Fullscreen mode (NOTE: this is *NOT* on an img)
         checkContextMenu(["context-navigation", null,
                               ["context-back",            false,
@@ -527,9 +543,9 @@ function runTest(testNum) {
         }
         subwindow.addEventListener("mozfullscreenchange", openPagemenu, false);
         subwindow.document.mozCancelFullScreen();
-        break;
+    },
 
-    case 21:
+    function () {
         // Context menu for element with assigned content context menu
         // The shift key should bypass content context menu processing
         checkContextMenu(["context-navigation", null,
@@ -549,9 +565,9 @@ function runTest(testNum) {
         closeContextMenu();
         selectText(selecttext); // Select text prior to opening context menu.
         openContextMenuFor(selecttext); // Invoke context menu for next test.
-        return;
+    },
 
-    case 22:
+    function () {
         // Context menu for selected text
         if (SpecialPowers.Services.appinfo.OS == "Darwin") {
           // This test is only enabled on Mac due to bug 736399.
@@ -565,9 +581,9 @@ function runTest(testNum) {
         closeContextMenu();
         selectText(selecttextlink); // Select text prior to opening context menu.
         openContextMenuFor(selecttextlink); // Invoke context menu for next test.
-        return;
+    },
 
-    case 23:
+    function () {
         // Context menu for selected text which matches valid URL pattern
         if (SpecialPowers.Services.appinfo.OS == "Darwin") {
           // This test is only enabled on Mac due to bug 736399.
@@ -605,9 +621,9 @@ function runTest(testNum) {
         subwindow.getSelection().removeAllRanges();
 
         openContextMenuFor(imagelink)
-        break;
+    },
 
-    case 24:
+    function () {
         // Context menu for image link
         if (perWindowPrivateBrowsing) {
           checkContextMenu(["context-openlinkintab", true,
@@ -648,9 +664,9 @@ function runTest(testNum) {
         closeContextMenu();
         selectInputText(select_inputtext); // Select text prior to opening context menu.
         openContextMenuFor(select_inputtext); // Invoke context menu for next test.
-        return;
+    },
 
-    case 25:
+    function () {
         // Context menu for selected text in input
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
@@ -667,9 +683,9 @@ function runTest(testNum) {
         closeContextMenu();
         selectInputText(select_inputtext_password); // Select text prior to opening context menu.
         openContextMenuFor(select_inputtext_password); // Invoke context menu for next test.
-        return;
+    },
 
-    case 26:
+    function () {
         // Context menu for selected text in input[type="password"]
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
@@ -690,9 +706,9 @@ function runTest(testNum) {
         closeContextMenu();
         subwindow.getSelection().removeAllRanges();
         openContextMenuFor(plugin);
-        return;
+    },
 
-    case 27:
+    function () {
         // Context menu for click-to-play blocked plugin
         checkContextMenu(["context-navigation", null,
                               ["context-back",         false,
@@ -715,9 +731,9 @@ function runTest(testNum) {
         SpecialPowers.clearUserPref("plugins.click_to_play");
         getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_ENABLED;
         openContextMenuFor(longdesc);
-        return;
+    },
 
-    case 28:
+    function () {
         // Context menu for an image with longdesc
         checkContextMenu(["context-viewimage",            true,
                           "context-copyimage-contents",   true,
@@ -731,9 +747,9 @@ function runTest(testNum) {
                          ].concat(inspectItems));
         closeContextMenu();
         openContextMenuFor(srcdoc);
-        return;
+    },
 
-    case 29:
+    function () {
         // Context menu for an iframe with srcdoc attribute set
         checkContextMenu(["context-navigation", null,
                               ["context-back",         false,
@@ -760,9 +776,9 @@ function runTest(testNum) {
         ].concat(inspectItems));
         closeContextMenu();
         openContextMenuFor(inputspellfalse, false, true); // Invoke context menu for next test.
-        break;
+    },
 
-    case 30:
+    function () {
         // Context menu for text input field with spellcheck=false
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
@@ -779,7 +795,8 @@ function runTest(testNum) {
         // finish test
         subwindow.close();
         SimpleTest.finish();
-        return;
+    },
+  ];
 
     /*
      * Other things that would be nice to test:
@@ -787,17 +804,11 @@ function runTest(testNum) {
      *  - test execution of menu items (maybe as a separate test?)
      */
 
-    default:
-        ok(false, "Unexpected invocation of test #" + testNum);
-        subwindow.close();
-        SimpleTest.finish();
-        return;
-  }
-
+  tests[testNum]();
 }
 
 
-var testNum = 1;
+var testNum;
 var subwindow, chromeWin, contextMenu;
 var text, link, mailto, input, img, canvas, video_ok, video_bad, video_bad2,
     iframe, video_in_iframe, image_in_iframe, textarea, contenteditable,
@@ -857,7 +868,8 @@ function startTest() {
     srcdoc = subwindow.document.getElementById("test-srcdoc");
 
     contextMenu.addEventListener("popupshown", function() { runTest(++testNum); }, false);
-    runTest(1);
+    testNum = 0;
+    runTest(testNum);
 }
 
 // We open this in a separate window, because the Mochitests run inside a frame.

@@ -1064,7 +1064,7 @@ Types.prototype.getTypeNames = function() {
  * #getType() is called with a 'name' that matches Type.prototype.name we will
  * pass the typeSpec into this constructor.
  */
-Types.prototype.addType = function(type) {
+Types.prototype.add = function(type) {
   if (typeof type === 'object') {
     if (!type.name) {
       throw new Error('All registered types must have a name');
@@ -1099,12 +1099,12 @@ Types.prototype.addType = function(type) {
 /**
  * Remove a type from the list available to the system
  */
-Types.prototype.removeType = function(type) {
+Types.prototype.remove = function(type) {
   delete this._registered[type.name];
 };
 
 /**
- * Find a type, previously registered using #addType()
+ * Find a previously registered type
  */
 Types.prototype.createType = function(typeSpec) {
   if (typeof typeSpec === 'string') {
@@ -1151,8 +1151,3 @@ Types.prototype.createType = function(typeSpec) {
 
   return newType;
 };
-
-/**
- * Create a central type repository to be used by default
- */
-exports.centralTypes = new Types();

@@ -64,25 +64,19 @@ function setContentDocument(document) {
  * - chromeWindow
  * - commandOutputManager (optional)
  */
-function FFDisplay(options) {
+function FFDisplay(system, options) {
   if (options.eval) {
     cli.setEvalFunction(options.eval);
   }
   setContentDocument(options.contentDocument);
 
-  this.commandOutputManager = options.commandOutputManager;
-  if (this.commandOutputManager == null) {
-    this.commandOutputManager = new CommandOutputManager();
-  }
-
-  this.onOutput = this.commandOutputManager.onOutput;
-  this.requisition = new Requisition({
+  this.requisition = new Requisition(system, {
     environment: options.environment,
-    document: options.outputDocument,
-    commandOutputManager: this.commandOutputManager
+    document: options.outputDocument
   });
+  this.onOutput = this.requisition.commandOutputManager.onOutput;
 
-  this.focusManager = new FocusManager(options.chromeDocument);
+  this.focusManager = new FocusManager(options.chromeDocument, system.settings);
   this.onVisibilityChange = this.focusManager.onVisibilityChange;
 
   this.inputter = new Inputter(options, {
@@ -124,7 +118,7 @@ function FFDisplay(options) {
  * separate method
  */
 FFDisplay.prototype.maybeShowIntro = function() {
-  intro.maybeShowIntro(this.commandOutputManager,
+  intro.maybeShowIntro(this.requisition.commandOutputManager,
                        this.requisition.conversionContext);
 };
 

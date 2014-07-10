@@ -74,18 +74,18 @@ exports.items = [
           isFirefox: false,
           isPhantomjs: false,
           isNoDom: true,
-          requisition: new Requisition()
+          requisition: new Requisition(context.system)
         };
         options.automator = createRequisitionAutomator(options.requisition);
       }
 
       var requisition = options.requisition;
-      requisition.canon.getCommand('mocks').on(requisition);
+      requisition.system.commands.get('mocks').on(requisition);
       helpers.resetResponseTimes();
       examiner.reset();
 
       return args.suite.run(options).then(function() {
-        requisition.canon.getCommand('mocks').off(requisition);
+        requisition.system.commands.get('mocks').off(requisition);
         var output = context.typedData('examiner-output', examiner.toRemote());
 
         if (output.data.summary.status === stati.pass) {
