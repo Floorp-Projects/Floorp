@@ -2156,7 +2156,7 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
     }
 
     nsresult err;
-    if (!XPCConvert::JSData2Native(&dp->val, src, type, true, &param_iid, &err)) {
+    if (!XPCConvert::JSData2Native(&dp->val, src, type, &param_iid, &err)) {
         ThrowBadParam(err, i, mCallContext);
         return false;
     }
@@ -2276,7 +2276,7 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
             }
         }
     } else {
-        if (!XPCConvert::JSData2Native(&dp->val, src, type, true,
+        if (!XPCConvert::JSData2Native(&dp->val, src, type,
                                        &param_iid, &err)) {
             ThrowBadParam(err, i, mCallContext);
             return false;
