@@ -149,7 +149,7 @@ const WorkerSandbox = EventEmitter.compose({
     // have access to all standard globals (window, document, ...)
     let content = this._sandbox = sandbox(principals, {
       sandboxPrototype: proto,
-      wantXrays: true,
+      wantXrays: !worker._injectInDocument,
       wantGlobalProperties: wantGlobalProperties,
       sameZoneAs: window,
       metadata: {
