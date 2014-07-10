@@ -25,19 +25,6 @@ public:
 
   bool Connect(const nsAString& aDeviceAddress, int aChannel);
 
-  /**
-   * Listen to incoming connection as a server.
-   *
-   * The steps are as following:
-   * 1) BluetoothSocket acquires fd from bluedroid, and creates
-   *    a DroidSocketImpl to watch read of the fd. DroidSocketImpl
-   *    receives the 1st message immediately.
-   * 2) When there's incoming connection, DroidSocketImpl receives
-   *    2nd message to get socket info and client fd.
-   * 3) DroidSocketImpl stops watching read of original fd and
-   *    starts to watch read/write of client fd.
-   * 4) Obex server session starts.
-   */
   bool Listen(int aChannel);
 
   inline void Disconnect()

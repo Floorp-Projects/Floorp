@@ -39,6 +39,8 @@ public:
   virtual void Listen(int aSockFd) { }
   virtual void Connect(int aSockFd, const nsAString& aBdAddress,
                        int aConnectionState) { }
+  virtual void Accept(int aSockFd, const nsAString& aBdAddress,
+                      int aConnectionState) { }
 };
 
 class BluetoothSocketInterface
@@ -55,6 +57,8 @@ public:
   void Connect(const bt_bdaddr_t* aBdAddr, btsock_type_t aType,
                const uint8_t* aUuid, int aChannel, int aFlags,
                BluetoothSocketResultHandler* aRes);
+
+  void Accept(int aFd, BluetoothSocketResultHandler* aRes);
 
 protected:
   BluetoothSocketInterface(const btsock_interface_t* aInterface);
