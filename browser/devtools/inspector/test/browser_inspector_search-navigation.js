@@ -67,7 +67,7 @@ function test()
     waitForFocus(setupTest, content);
   }, true);
 
-  content.location = "http://mochi.test:8888/browser/browser/devtools/inspector/test/browser_inspector_bug_831693_search_suggestions.html";
+  content.location = "http://mochi.test:8888/browser/browser/devtools/inspector/test/doc_inspector_search-suggestions.html";
 
   function $(id) {
     if (id == null) return null;
