@@ -1099,19 +1099,6 @@ GetRoundOutDeviceClipExtents(gfxContext* aCtx)
   return r;
 }
 
-/**
- * Copy the contents of aSrc to aDest, translated by aTranslation.
- */
-static void
-CopySurface(gfxASurface* aSrc, gfxASurface* aDest, const gfxPoint& aTranslation)
-{
-  cairo_t *cr = cairo_create(aDest->CairoSurface());
-  cairo_set_source_surface(cr, aSrc->CairoSurface(), aTranslation.x, aTranslation.y);
-  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_paint(cr);
-  cairo_destroy(cr);
-}
-
 void
 gfxContext::PushGroupAndCopyBackground(gfxContentType content)
 {
