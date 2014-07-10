@@ -5,7 +5,7 @@
 "use strict";
 
 const TEST_URI = "http://example.com/browser/browser/devtools/inspector/" +
-                 "test/browser_inspector_infobar.html";
+                 "test/doc_inspector_infobar.html";
 const DOORHANGER_ARROW_HEIGHT = 5;
 
 // Test that hovering over nodes in the markup-view shows the highlighter over

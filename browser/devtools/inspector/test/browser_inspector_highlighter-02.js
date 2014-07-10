@@ -8,7 +8,7 @@
 
 // Test that the highlighter is correctly displayed over a variety of elements
 
-const TEST_URI = TEST_URL_ROOT + "browser_inspector_highlighter.html";
+const TEST_URI = TEST_URL_ROOT + "doc_inspector_highlighter.html";
 
 let test = asyncTest(function*() {
   let { inspector } = yield openInspectorForURL(TEST_URI);

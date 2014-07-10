@@ -14,6 +14,7 @@ let {OutputParser} = devtools.require("devtools/output-parser");
 
 const COLOR_CLASS = "color-class";
 const URL_CLASS = "url-class";
+const CUBIC_BEZIER_CLASS = "bezier-class";
 
 function test() {
   function countAll(fragment) {
@@ -25,11 +26,17 @@ function test() {
   function countUrls(fragment) {
     return fragment.querySelectorAll("." + URL_CLASS).length;
   }
+  function countCubicBeziers(fragment) {
+    return fragment.querySelectorAll("." + CUBIC_BEZIER_CLASS).length;
+  }
   function getColor(fragment, index) {
     return fragment.querySelectorAll("." + COLOR_CLASS)[index||0].textContent;
   }
   function getUrl(fragment, index) {
     return fragment.querySelectorAll("." + URL_CLASS)[index||0].textContent;
+  }
+  function getCubicBezier(fragment, index) {
+    return fragment.querySelectorAll("." + CUBIC_BEZIER_CLASS)[index||0].textContent;
   }
 
   let testData = [
@@ -225,6 +232,67 @@ function test() {
         is(countAll(fragment), 1);
         is(getUrl(fragment), "../../../look/at/this/folder/structure/../../red.blue.green.svg");
       }
+    },
+    {
+      name: "transition-timing-function",
+      value: "linear",
+      test: fragment => {
+        is(countCubicBeziers(fragment), 1);
+        is(getCubicBezier(fragment), "linear");
+      }
+    },
+    {
+      name: "animation-timing-function",
+      value: "ease-in-out",
+      test: fragment => {
+        is(countCubicBeziers(fragment), 1);
+        is(getCubicBezier(fragment), "ease-in-out");
+      }
+    },
+    {
+      name: "animation-timing-function",
+      value: "cubic-bezier(.1, 0.55, .9, -3.45)",
+      test: fragment => {
+        is(countCubicBeziers(fragment), 1);
+        is(getCubicBezier(fragment), "cubic-bezier(.1, 0.55, .9, -3.45)");
+      }
+    },
+    {
+      name: "animation",
+      value: "move 3s cubic-bezier(.1, 0.55, .9, -3.45)",
+      test: fragment => {
+        is(countCubicBeziers(fragment), 1);
+        is(getCubicBezier(fragment), "cubic-bezier(.1, 0.55, .9, -3.45)");
+      }
+    },
+    {
+      name: "transition",
+      value: "top 1s ease-in",
+      test: fragment => {
+        is(countCubicBeziers(fragment), 1);
+        is(getCubicBezier(fragment), "ease-in");
+      }
+    },
+    {
+      name: "transition",
+      value: "top 3s steps(4, end)",
+      test: fragment => {
+        is(countAll(fragment), 0);
+      }
+    },
+    {
+      name: "transition",
+      value: "top 3s step-start",
+      test: fragment => {
+        is(countAll(fragment), 0);
+      }
+    },
+    {
+      name: "transition",
+      value: "top 3s step-end",
+      test: fragment => {
+        is(countAll(fragment), 0);
+      }
     }
   ];
 
@@ -235,6 +303,7 @@ function test() {
     data.test(parser.parseCssProperty(data.name, data.value, {
       colorClass: COLOR_CLASS,
       urlClass: URL_CLASS,
+      bezierClass: CUBIC_BEZIER_CLASS,
       defaultColorType: false
     }));
   }

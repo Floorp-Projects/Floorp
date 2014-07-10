@@ -309,7 +309,6 @@ function CreateSocialMarkWidget(aId, aProvider) {
       node.setAttribute('type', "socialmark");
       node.style.listStyleImage = "url(" + (aProvider.unmarkedIcon || aProvider.icon32URL || aProvider.iconURL) + ")";
       node.setAttribute("origin", aProvider.origin);
-      node.setAttribute("oncommand", "this.markCurrentPage();");
 
       let window = aDocument.defaultView;
       let menuLabel = window.gNavigatorBundle.getFormattedString("social.markpageMenu.label", [aProvider.name]);
