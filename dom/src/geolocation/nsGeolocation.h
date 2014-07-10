@@ -145,9 +145,6 @@ public:
   int32_t WatchPosition(PositionCallback& aCallback, PositionErrorCallback* aErrorCallback, const PositionOptions& aOptions, ErrorResult& aRv);
   void GetCurrentPosition(PositionCallback& aCallback, PositionErrorCallback* aErrorCallback, const PositionOptions& aOptions, ErrorResult& aRv);
 
-  void SetCachedPosition(Position* aPosition);
-  Position* GetCachedPosition();
-
   // Returns true if any of the callbacks are repeating
   bool HasActiveCallbacks();
 
@@ -205,9 +202,6 @@ private:
 
   // owning back pointer.
   nsRefPtr<nsGeolocationService> mService;
-
-  // cached Position wrapper
-  nsRefPtr<Position> mCachedPosition;
 
   // Watch ID
   uint32_t mLastWatchId;

@@ -502,10 +502,9 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
     return;
   }
 
-  nsRefPtr<Position> wrapped, cachedWrapper = mLocator->GetCachedPosition();
-  if (cachedWrapper && aPosition == cachedWrapper->GetWrappedGeoPosition()) {
-    wrapped = cachedWrapper;
-  } else if (aPosition) {
+  nsRefPtr<Position> wrapped;
+
+  if (aPosition) {
     nsCOMPtr<nsIDOMGeoPositionCoords> coords;
     aPosition->GetCoords(getter_AddRefs(coords));
     if (coords) {
@@ -518,7 +517,6 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
     return;
   }
 
-  mLocator->SetCachedPosition(wrapped);
   if (!mIsWatchPositionRequest) {
     // Cancel timer and position updates in case the position
     // callback spins the event loop
@@ -1030,7 +1028,6 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(Geolocation)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Geolocation)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Geolocation,
-                                      mCachedPosition,
                                       mPendingCallbacks,
                                       mWatchingCallbacks,
                                       mPendingRequests)
@@ -1201,18 +1198,6 @@ Geolocation::NotifyError(uint16_t aErrorCode)
   }
 
   return NS_OK;
-}
-
-void
-Geolocation::SetCachedPosition(Position* aPosition)
-{
-  mCachedPosition = aPosition;
-}
-
-Position*
-Geolocation::GetCachedPosition()
-{
-  return mCachedPosition;
 }
 
 void
