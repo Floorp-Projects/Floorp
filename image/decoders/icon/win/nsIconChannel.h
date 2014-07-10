@@ -13,6 +13,7 @@
 #include "nsXPIDLString.h"
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
+#include "nsILoadInfo.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIURI.h"
@@ -45,6 +46,7 @@ protected:
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsISupports>  mOwner; 
+  nsCOMPtr<nsILoadInfo>  mLoadInfo;
 
   nsCOMPtr<nsIInputStreamPump> mPump;
   nsCOMPtr<nsIStreamListener>  mListener;

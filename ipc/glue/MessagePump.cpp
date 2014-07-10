@@ -7,6 +7,7 @@
 #include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
+#include "nsICancelableRunnable.h"
 
 #include "base/basictypes.h"
 #include "base/logging.h"
@@ -40,7 +41,7 @@ static mozilla::DebugOnly<MessagePump::Delegate*> gFirstDelegate;
 namespace mozilla {
 namespace ipc {
 
-class DoWorkRunnable MOZ_FINAL : public nsIRunnable,
+class DoWorkRunnable MOZ_FINAL : public nsICancelableRunnable,
                                  public nsITimerCallback
 {
 public:
@@ -53,12 +54,15 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSICANCELABLERUNNABLE
 
 private:
   ~DoWorkRunnable()
   { }
 
   MessagePump* mPump;
+  // DoWorkRunnable is designed as a stateless singleton.  Do not add stateful
+  // members here!
 };
 
 } /* namespace ipc */
@@ -211,7 +215,8 @@ MessagePump::DoDelayedWork(base::MessagePump::Delegate* aDelegate)
   }
 }
 
-NS_IMPL_ISUPPORTS(DoWorkRunnable, nsIRunnable, nsITimerCallback)
+NS_IMPL_ISUPPORTS(DoWorkRunnable, nsIRunnable, nsITimerCallback,
+                                  nsICancelableRunnable)
 
 NS_IMETHODIMP
 DoWorkRunnable::Run()
@@ -239,6 +244,20 @@ DoWorkRunnable::Notify(nsITimer* aTimer)
 
   mPump->DoDelayedWork(loop);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DoWorkRunnable::Cancel()
+{
+  // Workers require cancelable runnables, but we can't really cancel cleanly
+  // here.  If we don't process this runnable then we will leave something
+  // unprocessed in the message_loop.  Therefore, eagerly complete our work
+  // instead by immediately calling Run().  Run() should be called separately
+  // after this.  Unfortunately we cannot use flags to verify this because
+  // DoWorkRunnable is a stateless singleton that can be in the event queue
+  // multiple times simultaneously.
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(Run()));
   return NS_OK;
 }
 

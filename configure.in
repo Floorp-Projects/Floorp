@@ -481,16 +481,24 @@ case "$target" in
         if test "$_CC_MAJOR_VERSION" = "16"; then
             _CC_SUITE=10
             MSVS_VERSION=2010
+            MSVC_C_RUNTIME_DLL=msvcr100.dll
+            MSVC_CXX_RUNTIME_DLL=msvcp100.dll
         elif test "$_CC_MAJOR_VERSION" = "17"; then
             _CC_SUITE=11
             MSVS_VERSION=2012
+            MSVC_C_RUNTIME_DLL=msvcr110.dll
+            MSVC_CXX_RUNTIME_DLL=msvcp110.dll
         elif test "$_CC_MAJOR_VERSION" = "18"; then
             _CC_SUITE=12
             MSVS_VERSION=2013
+            MSVC_C_RUNTIME_DLL=msvcr120.dll
+            MSVC_CXX_RUNTIME_DLL=msvcp120.dll
         else
             AC_MSG_ERROR([This version ($CC_VERSION) of the MSVC compiler is unsupported. See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         fi
         AC_SUBST(MSVS_VERSION)
+        AC_SUBST(MSVC_C_RUNTIME_DLL)
+        AC_SUBST(MSVC_CXX_RUNTIME_DLL)
 
         # Disable SEH on clang-cl because it doesn't implement them yet.
         if test -z "$CLANG_CL"; then
@@ -3895,7 +3903,6 @@ MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
 MOZ_ANDROID_OMTC=
-MOZ_NATIVE_CASTING=1
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
@@ -7674,19 +7681,6 @@ else
     OMNIJAR_NAME=omni.ja
 fi
 
-dnl ========================================================
-dnl = --disable-native-casting
-dnl ========================================================
-
-MOZ_ARG_DISABLE_BOOL(native-casting,
-[  --disable-native-casting      Disable native casting devices],
-    MOZ_NATIVE_CASTING=,
-    MOZ_NATIVE_CASTING=1)
-if test "$MOZ_NATIVE_CASTING"; then
-  AC_DEFINE(MOZ_NATIVE_CASTING)
-fi
-
-AC_SUBST(MOZ_NATIVE_CASTING)
 AC_SUBST(OMNIJAR_NAME)
 AC_SUBST(MOZ_OMNIJAR)
 AC_SUBST(MOZ_PACKAGER_FORMAT)

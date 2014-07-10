@@ -452,6 +452,22 @@ nsViewSourceChannel::SetOwner(nsISupports* aOwner)
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::GetLoadInfo(nsILoadInfo* *aLoadInfo)
+{
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
+
+    return mChannel->GetLoadInfo(aLoadInfo);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetLoadInfo(nsILoadInfo* aLoadInfo)
+{
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
+
+    return mChannel->SetLoadInfo(aLoadInfo);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
