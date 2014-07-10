@@ -1000,10 +1000,10 @@
             oldBrowser.setAttribute("type", "content-targetable");
             oldBrowser.docShellIsActive = false;
 
-            var updateBlockedPopups = false;
+            var updatePageReport = false;
             if ((oldBrowser.blockedPopups && !newBrowser.blockedPopups) ||
-                (!oldBrowser.blockedPopups && newBrowser.blockedPopups))
-              updateBlockedPopups = true;
+                (!oldBrowser.pageReport && newBrowser.pageReport))
+              updatePageReport = true;
 
             newBrowser.setAttribute("type", "content-primary");
             newBrowser.docShellIsActive =
@@ -1023,8 +1023,8 @@
 
             this._appendStatusPanel();
 
-            if (updateBlockedPopups)
-              this.mCurrentBrowser.updateBlockedPopups(false);
+            if (updatePageReport)
+              this.mCurrentBrowser.updatePageReport();
 
             // Update the URL bar.
             var loc = this.mCurrentBrowser.currentURI;
@@ -2812,6 +2812,10 @@
           }
         ]]></body>
       </method>
+
+      <property name="pageReport"
+                onget="return this.mCurrentBrowser.pageReport;"
+                readonly="true"/>
 
       <property name="currentURI"
                 onget="return this.mCurrentBrowser.currentURI;"
