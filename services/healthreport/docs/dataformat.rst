@@ -1630,6 +1630,10 @@ deniedTranslationOffer
     Integer count of the number of times the user opted-out offered
     page translation, either by the Not Now button or by the notification's
     close button in the "offer" state.
+autoRejectedTranlationOffer
+    Integer count of the number of times the user is not offered page
+    translation because they had previously clicked "Never translate this
+    language" or "Never translate this site".
 showOriginalContent
     Integer count of the number of times the user activated the Show Original
     command.
@@ -1672,6 +1676,7 @@ Example
       "detectedLanguageChangedAfter": 2,
       "targetLanguageChanged": 0,
       "deniedTranslationOffer": 3,
+      "autoRejectedTranlationOffer": 1,
       "showOriginalContent": 2,
       "translationOpportunityCountsByLanguage": {
         "fr": 100,
