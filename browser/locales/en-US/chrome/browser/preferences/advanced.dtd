@@ -128,9 +128,9 @@
 <!ENTITY certs.auto.accesskey            "S">
 <!ENTITY certs.ask                       "Ask me every time">
 <!ENTITY certs.ask.accesskey             "A">
+<!ENTITY enableOCSP.label                "Query OCSP responder servers to confirm the current validity of certificates">
+<!ENTITY enableOCSP.accesskey            "Q">
 <!ENTITY viewCerts.label                 "View Certificates">
 <!ENTITY viewCerts.accesskey             "C">
-<!ENTITY verify2.label                   "Validation">
-<!ENTITY verify2.accesskey               "V">
 <!ENTITY viewSecurityDevices.label       "Security Devices">
 <!ENTITY viewSecurityDevices.accesskey   "D">

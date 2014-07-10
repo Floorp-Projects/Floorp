@@ -10,6 +10,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
+#include "nsILoadInfo.h"
 #include "nsIWyciwygChannel.h"
 #include "nsIStreamListener.h"
 #include "nsICacheEntryOpenCallback.h"
@@ -90,6 +91,7 @@ protected:
     nsCOMPtr<nsIURI>                    mURI;
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsISupports>               mOwner;
+    nsCOMPtr<nsILoadInfo>               mLoadInfo;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
     nsCOMPtr<nsIProgressEventSink>      mProgressSink;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;

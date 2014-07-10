@@ -33,9 +33,10 @@
 static PRLogModuleInfo*
 GetTimeStampLog()
 {
-  static PRLogModuleInfo *sLog;
-  if (!sLog)
+  static PRLogModuleInfo* sLog;
+  if (!sLog) {
     sLog = PR_NewLogModule("TimeStampWindows");
+  }
   return sLog;
 }
   #define LOG(x)  PR_LOG(GetTimeStampLog(), PR_LOG_DEBUG, x)
@@ -194,8 +195,9 @@ MozGetTickCount64()
 
   // Pull the rollover counter forward only if new value of GTC goes way
   // down under the last saved result
-  if ((sLastGTCResult > GTC) && ((sLastGTCResult - GTC) > (1UL << 30)))
+  if ((sLastGTCResult > GTC) && ((sLastGTCResult - GTC) > (1UL << 30))) {
     ++sLastGTCRollover;
+  }
 
   sLastGTCResult = GTC;
   return ULONGLONG(sLastGTCRollover) << 32 | sLastGTCResult;
@@ -221,8 +223,9 @@ InitThresholds()
 
   LOG(("TimeStamp: timeIncrement=%d [100ns]", timeIncrement));
 
-  if (!timeIncrement)
+  if (!timeIncrement) {
     timeIncrement = kDefaultTimeIncrement;
+  }
 
   // Ceiling to a millisecond
   // Example values: 156001, 210000
@@ -263,8 +266,9 @@ InitResolution()
     ULONGLONG end = PerformanceCounter();
 
     ULONGLONG candidate = (end - start);
-    if (candidate < minres)
+    if (candidate < minres) {
       minres = candidate;
+    }
   } while (--loops && minres);
 
   if (0 == minres) {
@@ -284,8 +288,7 @@ InitResolution()
   // sake of ToSecondsSigDigits()
   ULONGLONG sigDigs;
   for (sigDigs = 1;
-       !(sigDigs == result
-         || 10*sigDigs > result);
+       !(sigDigs == result || 10 * sigDigs > result);
        sigDigs *= 10);
 
   sResolutionSigDigs = sigDigs;
@@ -322,25 +325,29 @@ TimeStampValue::operator-=(const int64_t aOther)
 // If the duration is less then two seconds, perform check of QPC stability
 // by comparing both GTC and QPC calculated durations of this and aOther.
 uint64_t
-TimeStampValue::CheckQPC(const TimeStampValue &aOther) const
+TimeStampValue::CheckQPC(const TimeStampValue& aOther) const
 {
   uint64_t deltaGTC = mGTC - aOther.mGTC;
 
-  if (!mHasQPC || !aOther.mHasQPC) // Both not holding QPC
+  if (!mHasQPC || !aOther.mHasQPC) { // Both not holding QPC
     return deltaGTC;
+  }
 
   uint64_t deltaQPC = mQPC - aOther.mQPC;
 
-  if (sHasStableTSC) // For stable TSC there is no need to check
+  if (sHasStableTSC) { // For stable TSC there is no need to check
     return deltaQPC;
+  }
 
-  if (!sUseQPC) // QPC globally disabled
+  if (!sUseQPC) { // QPC globally disabled
     return deltaGTC;
+  }
 
   // Check QPC is sane before using it.
   int64_t diff = DeprecatedAbs(int64_t(deltaQPC) - int64_t(deltaGTC));
-  if (diff <= sGTCResulutionThreshold)
+  if (diff <= sGTCResulutionThreshold) {
     return deltaQPC;
+  }
 
   // Treat absolutely for calibration purposes
   int64_t duration = DeprecatedAbs(int64_t(deltaGTC));
@@ -349,8 +356,9 @@ TimeStampValue::CheckQPC(const TimeStampValue &aOther) const
   LOG(("TimeStamp: QPC check after %llums with overflow %1.4fms",
        mt2ms(duration), mt2ms_f(overflow)));
 
-  if (overflow <= sFailureThreshold) // We are in the limit, let go.
-    return deltaQPC; // XXX Should we return GTC here?
+  if (overflow <= sFailureThreshold) {  // We are in the limit, let go.
+    return deltaQPC;  // XXX Should we return GTC here?
+  }
 
   // QPC deviates, don't use it, since now this method may only return deltaGTC.
   LOG(("TimeStamp: QPC jittered over failure threshold"));
@@ -366,21 +374,20 @@ TimeStampValue::CheckQPC(const TimeStampValue &aOther) const
       // There's already been an error in the last fault intollerant interval.
       // Time since now to the checkpoint actually holds information on how many
       // failures there were in the failure free interval we have defined.
-      uint64_t failureCount = (sFaultIntoleranceCheckpoint - now + sFailureFreeInterval - 1) /
-                               sFailureFreeInterval;
+      uint64_t failureCount =
+        (sFaultIntoleranceCheckpoint - now + sFailureFreeInterval - 1) /
+        sFailureFreeInterval;
       if (failureCount > kMaxFailuresPerInterval) {
         sUseQPC = false;
         LOG(("TimeStamp: QPC disabled"));
-      }
-      else {
+      } else {
         // Move the fault intolerance checkpoint more to the future, prolong it
         // to reflect the number of detected failures.
         ++failureCount;
         sFaultIntoleranceCheckpoint = now + failureCount * sFailureFreeInterval;
         LOG(("TimeStamp: recording %dth QPC failure", failureCount));
       }
-    }
-    else {
+    } else {
       // Setup fault intolerance checkpoint in the future for first detected error.
       sFaultIntoleranceCheckpoint = now + sFailureFreeInterval;
       LOG(("TimeStamp: recording 1st QPC failure"));
@@ -391,10 +398,11 @@ TimeStampValue::CheckQPC(const TimeStampValue &aOther) const
 }
 
 uint64_t
-TimeStampValue::operator-(const TimeStampValue &aOther) const
+TimeStampValue::operator-(const TimeStampValue& aOther) const
 {
-  if (mIsNull && aOther.mIsNull)
+  if (mIsNull && aOther.mIsNull) {
     return uint64_t(0);
+  }
 
   return CheckQPC(aOther);
 }
@@ -437,9 +445,11 @@ TimeDuration::Resolution()
 static bool
 HasStableTSC()
 {
-  union {
+  union
+  {
     int regs[4];
-    struct {
+    struct
+    {
       int nIds;
       char cpuString[12];
     };
@@ -449,15 +459,18 @@ HasStableTSC()
   // Only allow Intel CPUs for now
   // The order of the registers is reg[1], reg[3], reg[2].  We just adjust the
   // string so that we can compare in one go.
-  if (_strnicmp(cpuInfo.cpuString, "GenuntelineI", sizeof(cpuInfo.cpuString)))
+  if (_strnicmp(cpuInfo.cpuString, "GenuntelineI",
+                sizeof(cpuInfo.cpuString))) {
     return false;
+  }
 
   int regs[4];
 
   // detect if the Advanced Power Management feature is supported
   __cpuid(regs, 0x80000000);
-  if (regs[0] < 0x80000007)
+  if (regs[0] < 0x80000007) {
     return false;
+  }
 
   __cpuid(regs, 0x80000007);
   // if bit 8 is set than TSC will run at a constant rate
@@ -471,8 +484,8 @@ TimeStamp::Startup()
   // Decide which implementation to use for the high-performance timer.
 
   HMODULE kernelDLL = GetModuleHandleW(L"kernel32.dll");
-  sGetTickCount64 = reinterpret_cast<GetTickCount64_t>
-    (GetProcAddress(kernelDLL, "GetTickCount64"));
+  sGetTickCount64 = reinterpret_cast<GetTickCount64_t>(
+    GetProcAddress(kernelDLL, "GetTickCount64"));
   if (!sGetTickCount64) {
     // If the platform does not support the GetTickCount64 (Windows XP doesn't),
     // then use our fallback implementation based on GetTickCount.
@@ -533,14 +546,16 @@ TimeStamp::ComputeProcessUptime()
   FILETIME now;
   bool success = SystemTimeToFileTime(&nowSys, &now);
 
-  if (!success)
+  if (!success) {
     return 0;
+  }
 
   FILETIME start, foo, bar, baz;
   success = GetProcessTimes(GetCurrentProcess(), &start, &foo, &bar, &baz);
 
-  if (!success)
+  if (!success) {
     return 0;
+  }
 
   ULARGE_INTEGER startUsec = {
     start.dwLowDateTime,

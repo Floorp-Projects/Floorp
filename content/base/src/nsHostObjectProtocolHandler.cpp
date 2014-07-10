@@ -15,8 +15,10 @@
 #include "mozilla/dom/MediaSource.h"
 #include "nsIMemoryReporter.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/LoadInfo.h"
 
 using mozilla::dom::DOMFileImpl;
+using mozilla::LoadInfo;
 
 // -----------------------------------------------------------------------
 // Hash table
@@ -506,8 +508,6 @@ nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
                                 stream);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsISupports> owner = do_QueryInterface(info->mPrincipal);
-
   nsString type;
   rv = blob->GetType(type);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -523,7 +523,10 @@ nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
   rv = blob->GetSize(&size);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  channel->SetOwner(owner);
+  nsCOMPtr<nsILoadInfo> loadInfo =
+    new mozilla::LoadInfo(info->mPrincipal, LoadInfo::eInheritPrincipal,
+                          LoadInfo::eNotSandboxed);
+  channel->SetLoadInfo(loadInfo);
   channel->SetOriginalURI(uri);
   channel->SetContentType(NS_ConvertUTF16toUTF8(type));
   channel->SetContentLength(size);

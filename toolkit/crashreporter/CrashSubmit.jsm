@@ -185,9 +185,10 @@ function writeSubmittedReport(crashID, viewURL) {
 }
 
 // the Submitter class represents an individual submission.
-function Submitter(id, submitSuccess, submitError, noThrottle,
+function Submitter(id, processType, submitSuccess, submitError, noThrottle,
                    extraExtraKeyVals) {
   this.id = id;
+  this.processType = processType;
   this.successCallback = submitSuccess;
   this.errorCallback = submitError;
   this.noThrottle = noThrottle;
@@ -198,12 +199,6 @@ function Submitter(id, submitSuccess, submitError, noThrottle,
 Submitter.prototype = {
   submitSuccess: function Submitter_submitSuccess(ret)
   {
-    if (!ret.CrashID) {
-      this.notifyStatus(FAILED);
-      this.cleanup();
-      return;
-    }
-
     // Write out the details file to submitted/
     writeSubmittedReport(ret.CrashID, ret.ViewURL);
 
@@ -288,12 +283,25 @@ Submitter.prototype = {
     let self = this;
     xhr.addEventListener("readystatechange", function (aEvt) {
       if (xhr.readyState == 4) {
-        if (xhr.status != 200) {
-          self.notifyStatus(FAILED);
-          self.cleanup();
-        } else {
-          let ret = parseKeyValuePairs(xhr.responseText);
+        let ret =
+          xhr.status == 200 ? parseKeyValuePairs(xhr.responseText) : {};
+        let submitted = !!ret.CrashID;
+
+        if (self.processType) {
+          // TODO: Use exact crash time?
+          let crashTime = new Date();
+          let manager = Services.crashmanager;
+          manager.addSubmission(self.processType, manager.CRASH_TYPE_CRASH,
+                                submitted, submitted ? ret.CrashID : "",
+                                crashTime);
+        }
+
+        if (submitted) {
           self.submitSuccess(ret);
+        }
+        else {
+           self.notifyStatus(FAILED);
+           self.cleanup();
         }
       }
     }, false);
@@ -389,6 +397,9 @@ this.CrashSubmit = {
    *        Filename (minus .dmp extension) of the minidump to submit.
    * @param params
    *        An object containing any of the following optional parameters:
+   *        - processType
+   *          One of the CrashManager.PROCESS_TYPE constants. If set, a
+   *          submission event is recorded in CrashManager.
    *        - submitSuccess
    *          A function that will be called if the report is submitted
    *          successfully with two parameters: the id that was passed
@@ -417,11 +428,14 @@ this.CrashSubmit = {
   submit: function CrashSubmit_submit(id, params)
   {
     params = params || {};
+    let processType = null;
     let submitSuccess = null;
     let submitError = null;
     let noThrottle = false;
     let extraExtraKeyVals = null;
 
+    if ('processType' in params)
+      processType = params.processType;
     if ('submitSuccess' in params)
       submitSuccess = params.submitSuccess;
     if ('submitError' in params)
@@ -431,11 +445,8 @@ this.CrashSubmit = {
     if ('extraExtraKeyVals' in params)
       extraExtraKeyVals = params.extraExtraKeyVals;
 
-    let submitter = new Submitter(id,
-                                  submitSuccess,
-                                  submitError,
-                                  noThrottle,
-                                  extraExtraKeyVals);
+    let submitter = new Submitter(id, processType, submitSuccess, submitError,
+                                  noThrottle, extraExtraKeyVals);
     CrashSubmit._activeSubmissions.push(submitter);
     return submitter.submit();
   },

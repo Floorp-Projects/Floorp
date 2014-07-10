@@ -501,7 +501,7 @@ nsNSSCertificateDB::ImportCertificates(uint8_t * data, uint32_t length,
 static 
 SECStatus 
 ImportCertsIntoPermanentStorage(
-  const mozilla::pkix::ScopedCERTCertList& certChain,
+  const ScopedCERTCertList& certChain,
   const SECCertUsage usage, const PRBool caOnly)
 {
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
@@ -622,7 +622,7 @@ nsNSSCertificateDB::ImportEmailCertificate(uint8_t * data, uint32_t length,
       continue;
     }
 
-    mozilla::pkix::ScopedCERTCertList certChain;
+    ScopedCERTCertList certChain;
 
     SECStatus rv = certVerifier->VerifyCert(node->cert,
                                             certificateUsageEmailRecipient,
@@ -791,7 +791,7 @@ nsNSSCertificateDB::ImportValidCACertsInList(CERTCertList *certList, nsIInterfac
   for (node = CERT_LIST_HEAD(certList);
        !CERT_LIST_END(node,certList);
        node = CERT_LIST_NEXT(node)) {
-    mozilla::pkix::ScopedCERTCertList certChain;
+    ScopedCERTCertList certChain;
     SECStatus rv = certVerifier->VerifyCert(node->cert,
                                             certificateUsageVerifyCA,
                                             PR_Now(), ctx, nullptr, 0, nullptr,
@@ -1692,8 +1692,7 @@ nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsCOMPtr<nsIX509CertList> nssCertList;
-  mozilla::pkix::ScopedCERTCertList certList(
-    PK11_ListCerts(PK11CertListUnique, ctx));
+  ScopedCERTCertList certList(PK11_ListCerts(PK11CertListUnique, ctx));
 
   // nsNSSCertList 1) adopts certList, and 2) handles the nullptr case fine.
   // (returns an empty list) 
@@ -1738,7 +1737,7 @@ nsNSSCertificateDB::VerifyCertNow(nsIX509Cert* aCert,
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);
 
-  mozilla::pkix::ScopedCERTCertList resultChain;
+  ScopedCERTCertList resultChain;
   SECOidTag evOidPolicy;
   SECStatus srv;
 

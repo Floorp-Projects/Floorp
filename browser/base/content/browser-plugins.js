@@ -495,7 +495,10 @@ var gPluginHandler = {
       if (this.getPluginUI(plugin, "submitURLOptIn").checked)
         keyVals.PluginContentURL = plugin.ownerDocument.URL;
     }
-    this.CrashSubmit.submit(pluginDumpID, { extraExtraKeyVals: keyVals });
+
+    let pluginProcessType = Services.crashmanager.PROCESS_TYPE_PLUGIN;
+    this.CrashSubmit.submit(pluginDumpID, { processType: pluginProcessType,
+                                            extraExtraKeyVals: keyVals });
     if (browserDumpID)
       this.CrashSubmit.submit(browserDumpID);
   },

@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "ExtendedValidation.h"
+#include "nsNSSCertificate.h"
 #include "NSSErrorsService.h"
 #include "OCSPRequestor.h"
 #include "certdb.h"
@@ -16,6 +17,7 @@
 #include "nss.h"
 #include "pk11pub.h"
 #include "pkix/pkix.h"
+#include "pkix/ScopedPtr.h"
 #include "prerror.h"
 #include "prmem.h"
 #include "prprf.h"
@@ -45,15 +47,17 @@ typedef ScopedPtr<SECMODModule, SECMOD_DestroyModule> ScopedSECMODModule;
 NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
                                            OCSPFetching ocspFetching,
                                            OCSPCache& ocspCache,
-                                           void* pinArg,
+             /*optional but shouldn't be*/ void* pinArg,
                                            CertVerifier::ocsp_get_config ocspGETConfig,
-                                           CERTChainVerifyCallback* checkChainCallback)
+                              /*optional*/ CERTChainVerifyCallback* checkChainCallback,
+                              /*optional*/ ScopedCERTCertList* builtChain)
   : mCertDBTrustType(certDBTrustType)
   , mOCSPFetching(ocspFetching)
   , mOCSPCache(ocspCache)
   , mPinArg(pinArg)
   , mOCSPGetConfig(ocspGETConfig)
   , mCheckChainCallback(checkChainCallback)
+  , mBuiltChain(builtChain)
 {
 }
 
@@ -63,7 +67,7 @@ NSSCertDBTrustDomain::FindIssuer(const SECItem& encodedIssuerName,
 {
   // TODO: NSS seems to be ambiguous between "no potential issuers found" and
   // "there was an error trying to retrieve the potential issuers."
-  mozilla::pkix::ScopedCERTCertList
+  ScopedCERTCertList
     candidates(CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
                                           &encodedIssuerName, time, true));
   if (candidates) {
@@ -562,34 +566,45 @@ NSSCertDBTrustDomain::VerifyAndMaybeCacheEncodedOCSPResponse(
 }
 
 SECStatus
-NSSCertDBTrustDomain::IsChainValid(const CERTCertList* certChain) {
-  SECStatus rv = SECFailure;
-
+NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray)
+{
   PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
-      ("NSSCertDBTrustDomain: Top of IsChainValid mCheckCallback=%p",
+      ("NSSCertDBTrustDomain: Top of IsChainValid mCheckChainCallback=%p",
        mCheckChainCallback));
 
-  if (!mCheckChainCallback) {
+  if (!mBuiltChain && !mCheckChainCallback) {
+    // No need to create a CERTCertList, and nothing else to do.
     return SECSuccess;
   }
-  if (!mCheckChainCallback->isChainValid) {
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
-    return SECFailure;
-  }
-  PRBool chainOK;
-  rv = (mCheckChainCallback->isChainValid)(mCheckChainCallback->isChainValidArg,
-                                           certChain, &chainOK);
+
+  ScopedCERTCertList certList;
+  SECStatus rv = ConstructCERTCertListFromReversedDERArray(certArray, certList);
   if (rv != SECSuccess) {
     return rv;
   }
-  // rv = SECSuccess only implies successful call, now is time
-  // to check the chain check status
-  // we should only return success if the chain is valid
-  if (chainOK) {
-    return SECSuccess;
+
+  if (mCheckChainCallback) {
+    if (!mCheckChainCallback->isChainValid) {
+      PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
+      return SECFailure;
+    }
+    PRBool chainOK;
+    rv = (mCheckChainCallback->isChainValid)(
+            mCheckChainCallback->isChainValidArg, certList.get(), &chainOK);
+    if (rv != SECSuccess) {
+      return rv;
+    }
+    if (!chainOK) {
+      PR_SetError(PSM_ERROR_KEY_PINNING_FAILURE, 0);
+      return SECFailure;
+    }
   }
-  PR_SetError(PSM_ERROR_KEY_PINNING_FAILURE, 0);
-  return SECFailure;
+
+  if (mBuiltChain) {
+    *mBuiltChain = certList.forget();
+  }
+
+  return SECSuccess;
 }
 
 namespace {
@@ -767,7 +782,7 @@ DefaultServerNicknameForCert(CERTCertificate* cert)
 }
 
 void
-SaveIntermediateCerts(const mozilla::pkix::ScopedCERTCertList& certList)
+SaveIntermediateCerts(const ScopedCERTCertList& certList)
 {
   if (!certList) {
     return;

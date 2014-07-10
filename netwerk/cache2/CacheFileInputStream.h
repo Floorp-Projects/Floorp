@@ -46,6 +46,9 @@ private:
   nsresult CloseWithStatusLocked(nsresult aStatus);
   void ReleaseChunk();
   void EnsureCorrectChunk(bool aReleaseOnly);
+
+  // CanRead returns negative value when output stream truncates the data before
+  // the input stream's mPos.
   void CanRead(int64_t *aCanRead, const char **aBuf);
   void NotifyListener();
   void MaybeNotifyListener();

@@ -579,7 +579,7 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
   if (unit == eCSSUnit_Integer || unit == eCSSUnit_Enumerated) {
     weight = val.GetIntValue();
     if (weight == 0) {
-      weight = NS_STYLE_FONT_STYLE_NORMAL;
+      weight = NS_STYLE_FONT_WEIGHT_NORMAL;
     }
   } else if (unit == eCSSUnit_Normal) {
     weight = NS_STYLE_FONT_WEIGHT_NORMAL;
@@ -774,7 +774,7 @@ nsUserFontSet::LogMessage(gfxMixedFontFamily* aFamily,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  NS_ConvertUTF16toUTF8 familyName(aFamily->Name());
+  NS_ConvertUTF16toUTF8 familyName(aProxy->mFamilyName);
   nsAutoCString fontURI;
   if (aProxy->mSrcIndex == aProxy->mSrcList.Length()) {
     fontURI.AppendLiteral("(end of source list)");

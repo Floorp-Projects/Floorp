@@ -23,37 +23,57 @@ class TimeStampValue
   bool mHasQPC;
   bool mIsNull;
 
-  TimeStampValue(uint64_t GTC, uint64_t QPC, bool hasQPC);
+  TimeStampValue(uint64_t aGTC, uint64_t aQPC, bool aHasQPC);
 
-  uint64_t CheckQPC(const TimeStampValue &aOther) const;
+  uint64_t CheckQPC(const TimeStampValue& aOther) const;
 
   struct _SomethingVeryRandomHere;
-  MOZ_CONSTEXPR TimeStampValue(_SomethingVeryRandomHere* nullValue)
-    : mGTC(0), mQPC(0), mHasQPC(false), mIsNull(true) {}
-
+  MOZ_CONSTEXPR TimeStampValue(_SomethingVeryRandomHere* aNullValue)
+    : mGTC(0)
+    , mQPC(0)
+    , mHasQPC(false)
+    , mIsNull(true)
+  {
+  }
 
 public:
-  uint64_t operator-(const TimeStampValue &aOther) const;
+  uint64_t operator-(const TimeStampValue& aOther) const;
 
   TimeStampValue operator+(const int64_t aOther) const
-    { return TimeStampValue(mGTC + aOther, mQPC + aOther, mHasQPC); }
+  {
+    return TimeStampValue(mGTC + aOther, mQPC + aOther, mHasQPC);
+  }
   TimeStampValue operator-(const int64_t aOther) const
-    { return TimeStampValue(mGTC - aOther, mQPC - aOther, mHasQPC); }
+  {
+    return TimeStampValue(mGTC - aOther, mQPC - aOther, mHasQPC);
+  }
   TimeStampValue& operator+=(const int64_t aOther);
   TimeStampValue& operator-=(const int64_t aOther);
 
-  bool operator<(const TimeStampValue &aOther) const
-    { return int64_t(*this - aOther) < 0; }
-  bool operator>(const TimeStampValue &aOther) const
-    { return int64_t(*this - aOther) > 0; }
-  bool operator<=(const TimeStampValue &aOther) const
-    { return int64_t(*this - aOther) <= 0; }
-  bool operator>=(const TimeStampValue &aOther) const
-    { return int64_t(*this - aOther) >= 0; }
-  bool operator==(const TimeStampValue &aOther) const
-    { return int64_t(*this - aOther) == 0; }
-  bool operator!=(const TimeStampValue &aOther) const
-    { return int64_t(*this - aOther) != 0; }
+  bool operator<(const TimeStampValue& aOther) const
+  {
+    return int64_t(*this - aOther) < 0;
+  }
+  bool operator>(const TimeStampValue& aOther) const
+  {
+    return int64_t(*this - aOther) > 0;
+  }
+  bool operator<=(const TimeStampValue& aOther) const
+  {
+    return int64_t(*this - aOther) <= 0;
+  }
+  bool operator>=(const TimeStampValue& aOther) const
+  {
+    return int64_t(*this - aOther) >= 0;
+  }
+  bool operator==(const TimeStampValue& aOther) const
+  {
+    return int64_t(*this - aOther) == 0;
+  }
+  bool operator!=(const TimeStampValue& aOther) const
+  {
+    return int64_t(*this - aOther) != 0;
+  }
 };
 
 }

@@ -184,10 +184,6 @@ fi
 dnl A high level macro for selecting compiler options.
 AC_DEFUN([MOZ_COMPILER_OPTS],
 [
-  if test "${MOZ_PSEUDO_DERECURSE-unset}" = unset; then
-    MOZ_PSEUDO_DERECURSE=1
-  fi
-
   MOZ_DEBUGGING_OPTS
   MOZ_RTTI
 if test "$CLANG_CXX"; then

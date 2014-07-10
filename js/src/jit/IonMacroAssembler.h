@@ -708,26 +708,26 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     template<typename T>
-    void loadFromTypedArray(int arrayType, const T &src, AnyRegister dest, Register temp, Label *fail);
+    void loadFromTypedArray(Scalar::Type arrayType, const T &src, AnyRegister dest, Register temp, Label *fail);
 
     template<typename T>
-    void loadFromTypedArray(int arrayType, const T &src, const ValueOperand &dest, bool allowDouble,
+    void loadFromTypedArray(Scalar::Type arrayType, const T &src, const ValueOperand &dest, bool allowDouble,
                             Register temp, Label *fail);
 
     template<typename S, typename T>
-    void storeToTypedIntArray(int arrayType, const S &value, const T &dest) {
+    void storeToTypedIntArray(Scalar::Type arrayType, const S &value, const T &dest) {
         switch (arrayType) {
-          case ScalarTypeDescr::TYPE_INT8:
-          case ScalarTypeDescr::TYPE_UINT8:
-          case ScalarTypeDescr::TYPE_UINT8_CLAMPED:
+          case Scalar::Int8:
+          case Scalar::Uint8:
+          case Scalar::Uint8Clamped:
             store8(value, dest);
             break;
-          case ScalarTypeDescr::TYPE_INT16:
-          case ScalarTypeDescr::TYPE_UINT16:
+          case Scalar::Int16:
+          case Scalar::Uint16:
             store16(value, dest);
             break;
-          case ScalarTypeDescr::TYPE_INT32:
-          case ScalarTypeDescr::TYPE_UINT32:
+          case Scalar::Int32:
+          case Scalar::Uint32:
             store32(value, dest);
             break;
           default:
@@ -735,8 +735,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
     }
 
-    void storeToTypedFloatArray(int arrayType, FloatRegister value, const BaseIndex &dest);
-    void storeToTypedFloatArray(int arrayType, FloatRegister value, const Address &dest);
+    void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const BaseIndex &dest);
+    void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const Address &dest);
 
     Register extractString(const Address &address, Register scratch) {
         return extractObject(address, scratch);

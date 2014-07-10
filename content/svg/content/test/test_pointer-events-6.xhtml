@@ -1,0 +1,70 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=500174
+-->
+<head>
+  <title>Test pointer events for clip-path on non-SVG elements</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="run()">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function run()
+{
+  var div = document.getElementById("div");
+  // Get the coords of the origin of the SVG canvas:
+  var originX = div.offsetLeft;
+  var originY = div.offsetTop;
+  var elementFromPoint;
+
+  elementFromPoint = document.elementFromPoint(originX + 18, originY + 30);
+  isnot(elementFromPoint, div, 'Outside left edge of clipped area');
+
+  elementFromPoint = document.elementFromPoint(originX + 22, originY + 30);
+  is(elementFromPoint, div, 'Inside left edge of clipped area');
+
+  elementFromPoint = document.elementFromPoint(originX + 30, originY + 18);
+  isnot(elementFromPoint, div, 'Outside top edge of clipped area');
+
+  elementFromPoint = document.elementFromPoint(originX + 30, originY + 22);
+  is(elementFromPoint, div, 'Inside top edge of clipped area');
+
+  elementFromPoint = document.elementFromPoint(originX + 42, originY + 30);
+  isnot(elementFromPoint, div, 'Outside right edge of clipped area');
+
+  elementFromPoint = document.elementFromPoint(originX + 38, originY + 30);
+  is(elementFromPoint, div, 'Inside right edge of clipped area');
+
+  elementFromPoint = document.elementFromPoint(originX + 30, originY + 42);
+  isnot(elementFromPoint, div, 'Outside bottom edge of clipped area');
+
+  elementFromPoint = document.elementFromPoint(originX + 30, originY + 38);
+  is(elementFromPoint, div, 'Inside bottom edge of clipped area');
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=500174">Mozilla Bug 500174</a>
+<p id="display"></p>
+<div id="content">
+
+  <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" id="svg">
+    <defs>
+      <clipPath id="clip">
+        <rect x="20" y="20" width="20" height="20"/>
+      </clipPath>
+    </defs>
+  </svg>
+  <div id="div" style="width:100px; height:100px; clip-path:url(#clip)"></div>
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

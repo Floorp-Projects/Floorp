@@ -60,9 +60,8 @@
 #define JS_TYPEREPR_X4_KIND             5
 
 // These constants are for use exclusively in JS code. In C++ code,
-// prefer ScalarTypeRepresentation::TYPE_INT8 etc, which allows
-// you to write a switch which will receive a warning if you omit a
-// case.
+// prefer Scalar::Int8 etc, which allows you to write a switch which will
+// receive a warning if you omit a case.
 #define JS_SCALARTYPEREPR_INT8          0
 #define JS_SCALARTYPEREPR_UINT8         1
 #define JS_SCALARTYPEREPR_INT16         2

@@ -65,8 +65,9 @@ ClockResolutionNs()
     end = ClockTime();
 
     uint64_t candidate = (start - end);
-    if (candidate < minres)
+    if (candidate < minres) {
       minres = candidate;
+    }
   }
 
   if (0 == minres) {
@@ -115,16 +116,18 @@ TimeDuration::Resolution()
 nsresult
 TimeStamp::Startup()
 {
-  if (gInitialized)
+  if (gInitialized) {
     return NS_OK;
+  }
 
   mach_timebase_info_data_t timebaseInfo;
   // Apple's QA1398 suggests that the output from mach_timebase_info
   // will not change while a program is running, so it should be safe
   // to cache the result.
   kern_return_t kr = mach_timebase_info(&timebaseInfo);
-  if (kr != KERN_SUCCESS)
+  if (kr != KERN_SUCCESS) {
     NS_RUNTIMEABORT("mach_timebase_info failed");
+  }
 
   sNsPerTick = double(timebaseInfo.numer) / timebaseInfo.denom;
 
@@ -133,8 +136,8 @@ TimeStamp::Startup()
   // find the number of significant digits in sResolution, for the
   // sake of ToSecondsSigDigits()
   for (sResolutionSigDigs = 1;
-       !(sResolutionSigDigs == sResolution
-         || 10*sResolutionSigDigs > sResolution);
+       !(sResolutionSigDigs == sResolution ||
+         10 * sResolutionSigDigs > sResolution);
        sResolutionSigDigs *= 10);
 
   gInitialized = true;
@@ -178,16 +181,18 @@ TimeStamp::ComputeProcessUptime()
   size_t bufferSize = sizeof(proc);
   rv = sysctl(mib, mibLen, &proc, &bufferSize, nullptr, 0);
 
-  if (rv == -1)
+  if (rv == -1) {
     return 0;
+  }
 
   uint64_t startTime =
     ((uint64_t)proc.kp_proc.p_un.__p_starttime.tv_sec * kUsPerSec) +
     proc.kp_proc.p_un.__p_starttime.tv_usec;
   uint64_t now = (tv.tv_sec * kUsPerSec) + tv.tv_usec;
 
-  if (startTime > now)
+  if (startTime > now) {
     return 0;
+  }
 
   return now - startTime;
 }

@@ -8,35 +8,17 @@ include $(topsrcdir)/config/rules.mk
 
 ifdef WIN32_REDIST_DIR
 
-ifeq (1600,$(_MSC_VER))
 REDIST_FILES = \
-  msvcp100.dll \
-  msvcr100.dll \
+  $(MSVC_C_RUNTIME_DLL) \
+  $(MSVC_CXX_RUNTIME_DLL) \
   $(NULL)
-endif
 
-ifeq (1700,$(_MSC_VER))
-REDIST_FILES = \
-  msvcp110.dll \
-  msvcr110.dll \
-  $(NULL)
-endif
-
-ifeq (1800,$(_MSC_VER))
-REDIST_FILES = \
-  msvcp120.dll \
-  msvcr120.dll \
-  $(NULL)
-endif
-
-ifdef REDIST_FILES
 libs-preqs = \
   $(call mkdir_deps,$(FINAL_TARGET)) \
   $(NULL)
 
 libs:: $(libs-preqs)
 	install --preserve-timestamps $(foreach f,$(REDIST_FILES),'$(WIN32_REDIST_DIR)'/$(f)) $(FINAL_TARGET)
-endif
 
 endif # WIN32_REDIST_DIR
 

@@ -21,7 +21,7 @@ public:
   // of the caller to manage the memory of the MediaResource object.
   SubBufferDecoder(MediaResource* aResource, MediaSourceDecoder* aParentDecoder)
     : BufferDecoder(aResource), mParentDecoder(aParentDecoder), mReader(nullptr)
-    , mMediaDuration(-1), mMediaStartTime(0)
+    , mMediaDuration(-1), mMediaStartTime(0), mDiscarded(false)
   {
   }
 
@@ -83,11 +83,23 @@ public:
     mMediaStartTime = aMediaStartTime;
   }
 
+  bool IsDiscarded()
+  {
+    return mDiscarded;
+  }
+
+  void SetDiscarded()
+  {
+    GetResource()->Ended();
+    mDiscarded = true;
+  }
+
 private:
   MediaSourceDecoder* mParentDecoder;
   nsRefPtr<MediaDecoderReader> mReader;
   int64_t mMediaDuration;
   int64_t mMediaStartTime;
+  bool mDiscarded;
 };
 
 } // namespace mozilla

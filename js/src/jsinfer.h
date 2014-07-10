@@ -749,7 +749,7 @@ class TemporaryTypeSet : public TypeSet
     JSObject *getCommonPrototype();
 
     /* Get the typed array type of all objects in this set, or TypedArrayObject::TYPE_MAX. */
-    int getTypedArrayType();
+    Scalar::Type getTypedArrayType();
 
     /* Whether all objects have JSCLASS_IS_DOMJSCLASS set. */
     bool isDOMClass();
