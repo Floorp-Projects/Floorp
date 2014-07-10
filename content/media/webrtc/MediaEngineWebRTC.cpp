@@ -267,7 +267,14 @@ MediaEngineWebRTC::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSourc
 
   int nDevices = 0;
   ptrVoEHw->GetNumOfRecordingDevices(nDevices);
-  for (int i = 0; i < nDevices; i++) {
+  int i;
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+  i = 0; // Bug 1037025 - let the OS handle defaulting for now on android/b2g
+#else
+  // -1 is "default communications device" depending on OS in webrtc.org code
+  i = -1;
+#endif
+  for (; i < nDevices; i++) {
     // We use constants here because GetRecordingDeviceName takes char[128].
     char deviceName[128];
     char uniqueId[128];
