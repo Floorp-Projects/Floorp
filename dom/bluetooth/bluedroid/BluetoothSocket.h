@@ -23,15 +23,6 @@ public:
                   bool aAuth,
                   bool aEncrypt);
 
-  /**
-   * Connect to remote server as a client.
-   *
-   * The steps are as following:
-   * 1) BluetoothSocket acquires fd from bluedroid, and creates
-   *    a DroidSocketImpl to watch read/write of the fd.
-   * 2) DroidSocketImpl receives first 2 messages to get socket info.
-   * 3) Obex client session starts.
-   */
   bool Connect(const nsAString& aDeviceAddress, int aChannel);
 
   /**
@@ -63,6 +54,11 @@ public:
   inline void GetAddress(nsAString& aDeviceAddress)
   {
     aDeviceAddress = mDeviceAddress;
+  }
+
+  inline void SetAddress(const nsAString& aDeviceAddress)
+  {
+    mDeviceAddress = aDeviceAddress;
   }
 
   void CloseDroidSocket();
