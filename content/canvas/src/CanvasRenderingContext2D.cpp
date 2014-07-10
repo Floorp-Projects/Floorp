@@ -975,6 +975,15 @@ CanvasRenderingContext2D::EnsureTarget()
     }
 
     mTarget->ClearRect(mgfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
+    if (mTarget->GetBackendType() == mgfx::BackendType::CAIRO) {
+      // Cairo doesn't play well with huge clips. When given a very big clip it
+      // will try to allocate big mask surface without taking the target
+      // size into account which can cause OOM. See bug 1034593.
+      // This limits the clip extents to the size of the canvas.
+      // A fix in Cairo would probably be preferable, but requires somewhat
+      // invasive changes.
+      mTarget->PushClipRect(mgfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
+    }
     // Force a full layer transaction since we didn't have a layer before
     // and now we might need one.
     if (mCanvasElement) {
@@ -1060,6 +1069,11 @@ CanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *shell,
   if (!mTarget) {
     EnsureErrorTarget();
     mTarget = sErrorTarget;
+  }
+
+  if (mTarget->GetBackendType() == mgfx::BackendType::CAIRO) {
+    // Cf comment in EnsureTarget
+    mTarget->PushClipRect(mgfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
   }
 
   return NS_OK;
