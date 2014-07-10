@@ -27,6 +27,20 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+
+/* Bionic might not have the newer version of the v4l2 headers that
+ * define these controls, so we define them here if they're not found.
+ */
+#ifndef V4L2_CTRL_CLASS_FM_RX
+#define V4L2_CTRL_CLASS_FM_RX 0x00a10000
+#define V4L2_CID_FM_RX_CLASS_BASE (V4L2_CTRL_CLASS_FM_RX | 0x900)
+#define V4L2_CID_TUNE_DEEMPHASIS  (V4L2_CID_FM_RX_CLASS_BASE + 1)
+#define V4L2_DEEMPHASIS_DISABLED  0
+#define V4L2_DEEMPHASIS_50_uS     1
+#define V4L2_DEEMPHASIS_75_uS     2
+#define V4L2_CID_RDS_RECEPTION    (V4L2_CID_FM_RX_CLASS_BASE + 2)
+#endif
+
 namespace mozilla {
 namespace hal_impl {
 
@@ -316,6 +330,26 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
   rc = ioctl(fd, VIDIOC_S_TUNER, &tuner);
   if (rc < 0) {
     HAL_LOG(("Unable to adjust band limits"));
+  }
+
+  int emphasis;
+  switch (aInfo.preEmphasis()) {
+  case 0:
+    emphasis = V4L2_DEEMPHASIS_DISABLED;
+    break;
+  case 50:
+    emphasis = V4L2_DEEMPHASIS_50_uS;
+    break;
+  case 75:
+    emphasis = V4L2_DEEMPHASIS_75_uS;
+    break;
+  default:
+    MOZ_CRASH("Invalid preemphasis setting");
+    break;
+  }
+  rc = setControl(V4L2_CID_TUNE_DEEMPHASIS, emphasis);
+  if (rc < 0) {
+    HAL_LOG(("Unable to configure deemphasis"));
   }
 
   sRadioFD = fd.forget();
