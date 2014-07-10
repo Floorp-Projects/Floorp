@@ -17,6 +17,7 @@ const char* kSmsDeliveryErrorObserverTopic   = "sms-delivery-error";
 const char* kSilentSmsReceivedObserverTopic  = "silent-sms-received";
 const char* kSmsReadSuccessObserverTopic     = "sms-read-success";
 const char* kSmsReadErrorObserverTopic       = "sms-read-error";
+const char* kSmsDeletedObserverTopic         = "sms-deleted";
 
 } // namespace mobilemessage
 } // namespace dom

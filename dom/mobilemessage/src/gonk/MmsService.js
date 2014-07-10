@@ -37,10 +37,10 @@ const kSmsDeliverySuccessObserverTopic   = "sms-delivery-success";
 const kSmsDeliveryErrorObserverTopic     = "sms-delivery-error";
 const kSmsReadSuccessObserverTopic       = "sms-read-success";
 const kSmsReadErrorObserverTopic         = "sms-read-error";
+const kSmsDeletedObserverTopic           = "sms-deleted";
 
 const NS_XPCOM_SHUTDOWN_OBSERVER_ID      = "xpcom-shutdown";
 const kNetworkConnStateChangedTopic      = "network-connection-state-changed";
-const kMobileMessageDeletedObserverTopic = "mobile-message-deleted";
 
 const kPrefRilRadioDisabled              = "ril.radio.disabled";
 
@@ -910,7 +910,7 @@ CancellableTransaction.prototype = {
   registerRunCallback: function(callback) {
     if (!this.isObserversAdded) {
       Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-      Services.obs.addObserver(this, kMobileMessageDeletedObserverTopic, false);
+      Services.obs.addObserver(this, kSmsDeletedObserverTopic, false);
       Services.prefs.addObserver(kPrefRilRadioDisabled, this, false);
       Services.prefs.addObserver(kPrefDefaultServiceId, this, false);
       this.isObserversAdded = true;
@@ -923,7 +923,7 @@ CancellableTransaction.prototype = {
   removeObservers: function() {
     if (this.isObserversAdded) {
       Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-      Services.obs.removeObserver(this, kMobileMessageDeletedObserverTopic);
+      Services.obs.removeObserver(this, kSmsDeletedObserverTopic);
       Services.prefs.removeObserver(kPrefRilRadioDisabled, this);
       Services.prefs.removeObserver(kPrefDefaultServiceId, this);
       this.isObserversAdded = false;
@@ -972,13 +972,11 @@ CancellableTransaction.prototype = {
         this.cancelRunning(_MMS_ERROR_SHUTDOWN);
         break;
       }
-      case kMobileMessageDeletedObserverTopic: {
-        data = JSON.parse(data);
-        if (data.id != this.cancellableId) {
-          return;
+      case kSmsDeletedObserverTopic: {
+        if (subject && subject.deletedMessageIds &&
+            subject.deletedMessageIds.indexOf(this.cancellableId) >= 0) {
+          this.cancelRunning(_MMS_ERROR_MESSAGE_DELETED);
         }
-
-        this.cancelRunning(_MMS_ERROR_MESSAGE_DELETED);
         break;
       }
       case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID: {

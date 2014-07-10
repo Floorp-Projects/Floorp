@@ -249,6 +249,10 @@ const kEventConstructors = {
                                                           return new MozEmergencyCbModeEvent(aName, aProps);
                                                        },
                                              },
+  MozMessageDeletedEvent:                    { create: function (aName, aProps) {
+                                                         return new MozMessageDeletedEvent(aName, aProps);
+                                                       },
+                                             },
   MozMmsEvent:                               { create: function (aName, aProps) {
                                                          return new MozMmsEvent(aName, aProps);
                                                        },
