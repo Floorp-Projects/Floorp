@@ -107,8 +107,10 @@ public:
   virtual bool RecvDropGrallocBuffer(const mozilla::layers::MaybeMagicGrallocBufferHandle& handle);
 
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  android::sp<android::GraphicBuffer> GetGraphicBuffer(int64_t index);
+  android::sp<android::GraphicBuffer> GetGraphicBuffer(int64_t key);
 #endif
+
+  bool IsValidKey(int64_t key);
 
   base::Thread* GetThread() const;
 
