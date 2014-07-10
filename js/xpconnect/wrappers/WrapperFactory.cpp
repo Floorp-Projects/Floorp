@@ -421,7 +421,6 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
     bool waiveXrayFlag = flags & WAIVE_XRAY_WRAPPER_FLAG;
 
     const Wrapper *wrapper;
-    CompartmentPrivate *targetdata = CompartmentPrivate::Get(target);
 
     //
     // First, handle the special cases.
@@ -476,7 +475,9 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
         //
         // Xrays are a bidirectional protection, since it affords clarity to the
         // caller and privacy to the callee.
-        bool wantXrays = !(sameOrigin && !targetdata->wantXrays);
+        bool sameOriginXrays = CompartmentPrivate::Get(origin)->wantXrays ||
+                               CompartmentPrivate::Get(target)->wantXrays;
+        bool wantXrays = !sameOrigin || sameOriginXrays;
 
         // If Xrays are warranted, the caller may waive them for non-security
         // wrappers.
