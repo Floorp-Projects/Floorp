@@ -3034,7 +3034,10 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // on the childs available space.
       // XXX building a complete nsHTMLReflowState just to get the margin-top
       // seems like a waste. And we do this for almost every block!
-      nsSize availSpace(aState.ContentISize(), NS_UNCONSTRAINEDSIZE);
+      nsSize availSpace =
+        LogicalSize(aState.mReflowState.GetWritingMode(),
+                    aState.ContentISize(), NS_UNCONSTRAINEDSIZE).
+          GetPhysicalSize(aState.mReflowState.GetWritingMode());
       nsHTMLReflowState reflowState(aState.mPresContext, aState.mReflowState,
                                     frame, availSpace);
 
@@ -5752,7 +5755,7 @@ nsBlockFrame::AdjustFloatAvailableSpace(nsBlockReflowState& aState,
                          availISize, availBSize);
 
   // for now return a physical rect
-  return availSpace.GetPhysicalRect(wm, aState.ContentISize());
+  return availSpace.GetPhysicalRect(wm, aState.mContainerWidth);
 }
 
 nscoord
