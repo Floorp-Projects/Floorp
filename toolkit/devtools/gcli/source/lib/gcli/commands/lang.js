@@ -17,7 +17,6 @@
 'use strict';
 
 var l10n = require('../util/l10n');
-var languages = require('../languages/languages');
 var cli = require('../cli');
 
 exports.items = [
@@ -26,8 +25,8 @@ exports.items = [
     item: 'type',
     name: 'language',
     parent: 'selection',
-    lookup: function() {
-      return languages.getLanguages().map(function(language) {
+    lookup: function(context) {
+      return context.system.languages.getAll().map(function(language) {
         return { name: language.name, value: language };
       });
     }

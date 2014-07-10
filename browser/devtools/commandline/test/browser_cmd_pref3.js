@@ -10,8 +10,6 @@ let prefBranch = Cc["@mozilla.org/preferences-service;1"]
 let supportsString = Cc["@mozilla.org/supports-string;1"]
                       .createInstance(Ci.nsISupportsString);
 
-let settings = require("gcli/settings");
-
 const TEST_URI = "data:text/html;charset=utf-8,gcli-pref3";
 
 function test() {
@@ -31,7 +29,9 @@ function spawnTest() {
       setup: 'pref show devtools.debugger.remote-host',
       check: {
         args: {
-          setting: { value: settings.getSetting("devtools.debugger.remote-host") }
+          setting: {
+            value: options.requisition.system.settings.get("devtools.debugger.remote-host")
+          }
         },
       },
       exec: {
@@ -42,7 +42,9 @@ function spawnTest() {
       setup: 'pref set devtools.debugger.remote-host e.com',
       check: {
         args: {
-          setting: { value: settings.getSetting("devtools.debugger.remote-host") },
+          setting: {
+            value: options.requisition.system.settings.get("devtools.debugger.remote-host")
+          },
           value: { value: "e.com" }
         },
       },
@@ -54,7 +56,9 @@ function spawnTest() {
       setup: 'pref show devtools.debugger.remote-host',
       check: {
         args: {
-          setting: { value: settings.getSetting("devtools.debugger.remote-host") }
+          setting: {
+            value: options.requisition.system.settings.get("devtools.debugger.remote-host")
+          }
         },
       },
       exec: {
@@ -70,7 +74,9 @@ function spawnTest() {
       setup: 'pref set devtools.debugger.remote-host moz.foo',
       check: {
         args: {
-          setting: { value: settings.getSetting("devtools.debugger.remote-host") },
+          setting: {
+            value: options.requisition.system.settings.get("devtools.debugger.remote-host")
+          },
           value: { value: "moz.foo" }
         },
       },
@@ -82,7 +88,9 @@ function spawnTest() {
       setup: 'pref show devtools.debugger.remote-host',
       check: {
         args: {
-          setting: { value: settings.getSetting("devtools.debugger.remote-host") }
+          setting: {
+            value: options.requisition.system.settings.get("devtools.debugger.remote-host")
+          }
         },
       },
       exec: {

@@ -66,7 +66,7 @@ exports.testFlatCommand = function(options) {
 };
 
 exports.testJavascript = function(options) {
-  if (!options.requisition.canon.getCommand('{')) {
+  if (!options.requisition.system.commands.get('{')) {
     assert.log('Skipping testJavascript because { is not registered');
     return;
   }

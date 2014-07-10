@@ -17,8 +17,7 @@
 'use strict';
 
 var api = require('../api');
-var connectors = require('./connectors');
-var Canon = require('../commands/commands').Canon;
+var Commands = require('../commands/commands').Commands;
 var Types = require('../types/types').Types;
 
 // Patch-up IE9
@@ -56,6 +55,7 @@ var items = [
   require('../types/union').items,
   require('../types/url').items,
 
+  require('../fields/fields').items,
   require('../fields/delegate').items,
   require('../fields/selection').items,
 
@@ -101,32 +101,32 @@ var requiredConverters = [
  .filter(function(item) { return item.item === 'converter'; });
 
 /**
- * Connect to a remote system and setup the canon/types/converters etc needed
+ * Connect to a remote system and setup the commands/types/converters etc needed
  * to make it all work
  */
 exports.connect = function(options) {
   options = options || {};
 
-  var gcli = api.getApi();
+  var system = api.createSystem();
 
   // Ugly hack, to aid testing
-  exports.api = gcli;
+  exports.api = system;
 
-  options.types = gcli.types = new Types();
-  options.canon = gcli.canon = new Canon({ types: gcli.types });
+  options.types = system.types = new Types();
+  options.commands = system.commands = new Commands(system.types);
 
-  gcli.addItems(items);
-  gcli.addItems(requiredConverters);
+  system.addItems(items);
+  system.addItems(requiredConverters);
 
-  var connector = connectors.get(options.connector);
+  var connector = system.connectors.get(options.connector);
   return connector.connect(options.url).then(function(connection) {
     options.connection = connection;
-    connection.on('canonChanged', function(specs) {
-      exports.addItems(gcli, specs, connection);
+    connection.on('commandsChanged', function(specs) {
+      exports.addItems(system, specs, connection);
     });
 
     return connection.call('specs').then(function(specs) {
-      exports.addItems(gcli, specs, connection);
+      exports.addItems(system, specs, connection);
       return connection;
     });
   });
@@ -139,7 +139,7 @@ exports.addItems = function(gcli, specs, connection) {
 };
 
 /**
- * Take the data from the 'specs' command (or the 'canonChanged' event) and
+ * Take the data from the 'specs' command (or the 'commandsChanged' event) and
  * add function to proxy the execution back over the connection
  */
 exports.addLocalFunctions = function(specs, connection) {
@@ -177,9 +177,9 @@ exports.addLocalFunctions = function(specs, connection) {
 };
 
 exports.removeRemoteItems = function(gcli, connection) {
-  gcli.canon.getCommands().forEach(function(command) {
+  gcli.commands.getAll().forEach(function(command) {
     if (command.connection === connection) {
-      gcli.canon.removeCommand(command);
+      gcli.commands.remove(command);
     }
   });
 };

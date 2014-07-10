@@ -46,7 +46,7 @@ function test() {
 var Status = require('gcli/types/types').Status;
 
 exports.testParse = function(options) {
-  var date = options.requisition.types.createType('date');
+  var date = options.requisition.system.types.createType('date');
   return date.parseString('now').then(function(conversion) {
     // Date comparison - these 2 dates may not be the same, but how close is
     // close enough? If this test takes more than 30secs to run the it will
@@ -62,7 +62,7 @@ exports.testParse = function(options) {
 exports.testMaxMin = function(options) {
   var max = new Date();
   var min = new Date();
-  var types = options.requisition.types;
+  var types = options.requisition.system.types;
   var date = types.createType({ name: 'date', max: max, min: min });
   assert.is(date.getMax(), max, 'max setup');
 
@@ -71,7 +71,7 @@ exports.testMaxMin = function(options) {
 };
 
 exports.testIncrement = function(options) {
-  var date = options.requisition.types.createType('date');
+  var date = options.requisition.system.types.createType('date');
   return date.parseString('now').then(function(conversion) {
     var plusOne = date.increment(conversion.value);
     var minusOne = date.decrement(plusOne);

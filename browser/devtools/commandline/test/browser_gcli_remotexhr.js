@@ -310,7 +310,7 @@ exports.testRemoteXhr = function(options) {
       },
       exec: {
         output: [
-          /^GCLI is an experiment/,
+          /GCLI is an experiment/,
           /F1\/Escape/
         ],
         type: 'intro',

@@ -56,7 +56,7 @@ exports.shutdown = function(options) {
 };
 
 function forEachType(options, typeSpec, callback) {
-  var types = options.requisition.types;
+  var types = options.requisition.system.types;
   return util.promiseEach(types.getTypeNames(), function(name) {
     typeSpec.name = name;
     typeSpec.requisition = options.requisition;
@@ -147,7 +147,7 @@ exports.testGetSpec = function(options) {
     var str = JSON.stringify(spec);
     assert.ok(str != null, 'serializable spec for ' + type.name);
 
-    var example = options.requisition.types.createType(spec);
+    var example = options.requisition.system.types.createType(spec);
     assert.ok(example != null, 'creatable spec for ' + type.name);
   });
 };
