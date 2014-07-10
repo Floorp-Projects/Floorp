@@ -10,6 +10,7 @@
 #define _WIN32_WINNT 0x602
 #include <objbase.h>
 #include <shobjidl.h>
+#pragma comment(lib, "ole32.lib")
 #endif
 
 #include <windows.h>
