@@ -181,9 +181,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   }
   for (var c of typedArrayClasses) {
     gPrototypeProperties[c] = ["constructor", "BYTES_PER_ELEMENT", "length", "buffer",
-                               "byteLength", "byteOffset", "@@iterator", "subarray", "set"];
-    if (!isReleaseBuild)
-      gPrototypeProperties[c].push("move");
+                               "byteLength", "byteOffset", "@@iterator", "subarray", "set",
+                               "copyWithin"];
   }
   for (var c of errorObjectClasses) {
       gPrototypeProperties[c] = ["constructor", "name",
