@@ -133,6 +133,7 @@ struct MallocProvider
     }
 
     JS_DECLARE_NEW_METHODS(new_, malloc_, MOZ_ALWAYS_INLINE)
+    JS_DECLARE_MAKE_METHODS(make_unique, new_, MOZ_ALWAYS_INLINE)
 };
 
 } /* namespace js */
