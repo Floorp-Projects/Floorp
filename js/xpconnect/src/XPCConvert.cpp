@@ -65,8 +65,8 @@ UnwrapNativeCPOW(nsISupports* wrapper)
 {
     nsCOMPtr<nsIXPConnectWrappedJS> underware = do_QueryInterface(wrapper);
     if (underware) {
-        JSObject* mainObj = underware->GetJSObject();
-        if (mainObj && mozilla::jsipc::IsCPOW(mainObj))
+        JSObject *mainObj = underware->GetJSObject();
+        if (mainObj && mozilla::jsipc::IsWrappedCPOW(mainObj))
             return mainObj;
     }
     return nullptr;
