@@ -298,6 +298,20 @@ let TranslationHealthReport = {
     this._withProvider(provider => provider.recordMissedTranslationOpportunity(language));
   },
 
+  /**
+   * Record an automatically rejected translation offer in the health
+   * report. A translation offer is automatically rejected when a user
+   * has previously clicked "Never translate this language" or "Never
+   * translate this site", which results in the infobar not being shown for
+   * the translation opportunity.
+   *
+   * These translation opportunities should still be recorded in addition to
+   * recording the automatic rejection of the offer.
+   */
+  recordAutoRejectedTranslationOffer: function () {
+    this._withProvider(provider => provider.recordAutoRejectedTranslationOffer());
+  },
+
    /**
    * Record a translation in the health report.
    * @param langFrom
@@ -413,6 +427,7 @@ TranslationMeasurement1.prototype = Object.freeze({
     showOriginalContent: DAILY_COUNTER_FIELD,
     detectLanguageEnabled: DAILY_LAST_NUMERIC_FIELD,
     showTranslationUI: DAILY_LAST_NUMERIC_FIELD,
+    autoRejectedTranslationOffer: DAILY_COUNTER_FIELD,
   },
 
   shouldIncludeField: function (field) {
@@ -508,6 +523,15 @@ TranslationProvider.prototype = Object.freeze({
       yield m.setDailyLastText("missedTranslationOpportunityCountsByLanguage",
                                langCounts, date);
 
+    }.bind(this));
+  },
+
+  recordAutoRejectedTranslationOffer: function (date=new Date()) {
+    let m = this.getMeasurement(TranslationMeasurement1.prototype.name,
+                                TranslationMeasurement1.prototype.version);
+
+    return this._enqueueTelemetryStorageTask(function* recordTask() {
+      yield m.incrementDailyCounter("autoRejectedTranslationOffer", date);
     }.bind(this));
   },
 
