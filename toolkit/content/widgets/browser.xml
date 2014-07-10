@@ -562,6 +562,22 @@
         <body>
           <![CDATA[
             this.attachFormFill();
+            if (this.pageReport) {
+              var i = 0;
+              while (i < this.pageReport.length) {
+                // Filter out irrelevant reports.
+                if (this.pageReport[i].requestingWindow &&
+                    (this.pageReport[i].requestingWindow.document ==
+                     this.pageReport[i].requestingDocument))
+                  i++;
+                else
+                  this.pageReport.splice(i, 1);
+              }
+              if (this.pageReport.length == 0) {
+                this.pageReport = null;
+                this.updatePageReport();
+              }
+            }
          ]]>
         </body>
       </method>
@@ -570,6 +586,10 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
+            if (this.pageReport) {
+              this.pageReport = null;
+              this.updatePageReport();
+            }
             // Delete the feeds cache if we're hiding the topmost page
             // (as opposed to one of its iframes).
             if (this.feeds && aEvent.target == this.contentDocument)
@@ -584,16 +604,9 @@
         </body>
       </method>
 
-      <method name="updateBlockedPopups">
-        <parameter name="aBlockedPopups"/>
-        <parameter name="aFreshPopup"/>
+      <method name="updatePageReport">
         <body>
           <![CDATA[
-            this.blockedPopups = aBlockedPopups;
-            if (aFreshPopup) {
-              this.blockedPopups.reported = false;
-            }
-
             var event = document.createEvent("Events");
             event.initEvent("DOMUpdatePageReport", true, true);
             this.dispatchEvent(event);
@@ -601,20 +614,30 @@
         </body>
       </method>
 
-      <method name="unblockPopup">
-        <parameter name="aPopupIndex"/>
-        <body><![CDATA[
-          this.messageManager.sendAsyncMessage("PopupBlocking:UnblockPopup",
-                                               {index: aPopupIndex});
-        ]]></body>
+      <method name="onPopupBlocked">
+        <parameter name="evt"/>
+        <body>
+          <![CDATA[
+            if (!this.pageReport) {
+              this.pageReport = new Array();
+            }
+
+            var obj = { requestingWindow: evt.requestingWindow,
+                        // Record the current document in the requesting window
+                        // before it can change.
+                        requestingDocument: evt.requestingWindow.document,
+                        popupWindowURI: evt.popupWindowURI,
+                        popupWindowFeatures: evt.popupWindowFeatures,
+                        popupWindowName: evt.popupWindowName };
+
+            this.pageReport.push(obj);
+            this.pageReport.reported = false;
+            this.updatePageReport();
+          ]]>
+        </body>
       </method>
 
-      <field name="blockedPopups">null</field>
-
-      <!-- Obsolete name for blockedPopups. Used by metro and android. -->
-      <property name="pageReport"
-         onget="return this.blockedPopups;"
-         readonly="true"/>
+      <field name="pageReport">null</field>
 
       <property name="securityUI">
         <getter>
@@ -764,10 +787,10 @@
           if (!this.isRemoteBrowser) {
             this.addEventListener("pageshow", this.onPageShow, true);
             this.addEventListener("pagehide", this.onPageHide, true);
+            this.addEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
           }
 
           if (this.messageManager) {
-            this.messageManager.addMessageListener("PopupBlocking:UpdateBlockedPopups", this);
             this.messageManager.addMessageListener("Autoscroll:Start", this);
             this.messageManager.addMessageListener("Autoscroll:Cancel", this);
             this.messageManager.loadFrameScript("chrome://global/content/browser-content.js", true);
@@ -813,6 +836,7 @@
           if (!this.isRemoteBrowser) {
             this.removeEventListener("pageshow", this.onPageShow, true);
             this.removeEventListener("pagehide", this.onPageHide, true);
+            this.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
           }
 
           if (this._autoScrollNeedsCleanup) {
@@ -832,9 +856,6 @@
         <body><![CDATA[
           let data = aMessage.data;
           switch (aMessage.name) {
-	    case "PopupBlocking:UpdateBlockedPopups":
-              this.updateBlockedPopups(data.blockedPopups, data.freshPopup);
-              break;
             case "Autoscroll:Start": {
               if (!this.autoscrollEnabled) {
                 return false;
