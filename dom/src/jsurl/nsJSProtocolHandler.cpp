@@ -41,6 +41,7 @@
 #include "nsThreadUtils.h"
 #include "nsIScriptChannel.h"
 #include "nsIDocument.h"
+#include "nsILoadInfo.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIWritablePropertyBag2.h"
@@ -887,6 +888,18 @@ NS_IMETHODIMP
 nsJSChannel::SetOwner(nsISupports* aOwner)
 {
     return mStreamChannel->SetOwner(aOwner);
+}
+
+NS_IMETHODIMP
+nsJSChannel::GetLoadInfo(nsILoadInfo* *aLoadInfo)
+{
+    return mStreamChannel->GetLoadInfo(aLoadInfo);
+}
+
+NS_IMETHODIMP
+nsJSChannel::SetLoadInfo(nsILoadInfo* aLoadInfo)
+{
+    return mStreamChannel->SetLoadInfo(aLoadInfo);
 }
 
 NS_IMETHODIMP
