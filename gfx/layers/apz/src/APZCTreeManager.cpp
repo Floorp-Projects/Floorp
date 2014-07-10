@@ -960,11 +960,17 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint, bool* aOutInOverscroll
   nsRefPtr<AsyncPanZoomController> target;
   // The root may have siblings, so check those too
   gfxPoint point(aPoint.x, aPoint.y);
+  bool inOverscrolledApzc = false;
   for (AsyncPanZoomController* apzc = mRootApzc; apzc; apzc = apzc->GetPrevSibling()) {
-    target = GetAPZCAtPoint(apzc, point, aOutInOverscrolledApzc);
+    target = GetAPZCAtPoint(apzc, point, &inOverscrolledApzc);
     if (target) {
       break;
     }
+  }
+  // If we are in an overscrolled APZC, we should be returning nullptr.
+  MOZ_ASSERT(!(target && inOverscrolledApzc));
+  if (aOutInOverscrolledApzc) {
+    *aOutInOverscrolledApzc = inOverscrolledApzc;
   }
   return target.forget();
 }
@@ -1139,6 +1145,10 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc,
   if (hitTestPointForChildLayers.HasPositiveWCoord()) {
     for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
       AsyncPanZoomController* match = GetAPZCAtPoint(child, hitTestPointForChildLayers.As2DPoint(), aOutInOverscrolledApzc);
+      if (*aOutInOverscrolledApzc) {
+        // We matched an overscrolled APZC, abort.
+        return nullptr;
+      }
       if (match) {
         result = match;
         break;
@@ -1156,9 +1166,7 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc,
   // the result is inside an overscrolled APZC, inform our caller of this
   // (callers typically ignore events targeted at overscrolled APZCs).
   if (result && aApzc->IsOverscrolled()) {
-    if (aOutInOverscrolledApzc) {
-      *aOutInOverscrolledApzc = true;
-    }
+    *aOutInOverscrolledApzc = true;
     result = nullptr;
   }
 
