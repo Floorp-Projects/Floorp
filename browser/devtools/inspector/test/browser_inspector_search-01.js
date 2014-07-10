@@ -6,7 +6,7 @@
 // Test that searching for nodes in the search field actually selects those
 // nodes.
 
-const TEST_URL = TEST_URL_ROOT + "browser_inspector_bug_650804_search.html";
+const TEST_URL = TEST_URL_ROOT + "doc_inspector_search.html";
 
 // Indexes of the keys in the KEY_STATES array that should listen to "keypress"
 // event instead of "command". These are keys that don't change the content of

@@ -408,6 +408,14 @@ BinaryPropertyListReader.prototype = {
       else if (aIntSize == 2) {
         uints.push(this._dataView.getUint16(offset));
       }
+      else if (aIntSize == 3) {
+        let int24 = Uint8Array(4);
+        int24[3] = 0;
+        int24[2] = this._dataView.getUint8(offset);
+        int24[1] = this._dataView.getUint8(offset + 1);
+        int24[0] = this._dataView.getUint8(offset + 2);
+        uints.push(Uint32Array(int24.buffer)[0]);
+      }
       else if (aIntSize == 4) {
         uints.push(this._dataView.getUint32(offset));
       }

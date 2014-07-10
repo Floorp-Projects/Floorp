@@ -573,9 +573,7 @@ let PlacesProvider = {
               title: title,
               frecency: frecency,
               lastVisitDate: lastVisitDate,
-              bgColor: "transparent",
               type: "history",
-              imageURI: null,
             });
           }
         }
@@ -650,6 +648,7 @@ let PlacesProvider = {
         url: aURI.spec,
         frecency: aNewFrecency,
         lastVisitDate: aLastVisitDate,
+        type: "history",
       });
     }
   },

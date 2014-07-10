@@ -101,65 +101,10 @@ interface nsIUpdateUpStreamCallback : nsISupports
   void updateUpStreamResult(in boolean success, in DOMString externalIfname);
 };
 
-[scriptable, function, uuid(4a9166f3-7e4f-4d10-bb5c-b49ee21d6184)]
-interface nsIRunDhcpCallback : nsISupports
-{
-  /**
-   * Callback function used to report the result of dhcp request.
-   *
-   * @param success
-   *        Boolean to indicate the operation is successful or not.
-   */
-  void runDhcpResult(in boolean success, in jsval result);
-};
-
-[scriptable, function, uuid(88e3ee22-f1b3-4fa0-8a5d-793fb827c42c)]
-interface nsIGetInterfacesCallback : nsISupports
-{
-  /**
-   * Callback function used to return the list of existing network interfaces.
-   *
-   * @param success
-   *        Boolean to indicate the operation is successful or not.
-   * @param interfaceList
-   *        An array of interface name.
-   */
-  void getInterfacesResult(in boolean success, in jsval interfaceList);
-};
-
-[scriptable, function, uuid(064e02a3-d2c0-42c5-a293-1efa84056100)]
-interface nsIGetInterfaceConfigCallback : nsISupports
-{
-  /**
-   * Callback function used to return the network config of a given interface.
-   *
-   * @param success
-   *        Boolean to indicate the operation is successful or not.
-   * @param result
-   *        .ip: Ip address.
-   *        .prefix: mask length.
-   *        .link: network link properties.
-   *        .mac: mac address.
-   */
-  void getInterfaceConfigResult(in boolean success, in jsval result);
-};
-
-[scriptable, function, uuid(b370f360-6ba8-4517-a4f9-31e8f004ee91)]
-interface nsISetInterfaceConfigCallback : nsISupports
-{
-  /**
-   * Callback function used to set network cofig for a specified interface.
-   *
-   * @param success
-   *        Boolean to indicate the operation is successful or not.
-   */
-  void setInterfaceConfigResult(in boolean success);
-};
-
 /**
  * Provide network services.
  */
-[scriptable, uuid(48c13741-aec9-4a86-8962-432011708261)]
+[scriptable, uuid(f96461fa-e844-45d2-a6c3-8cd23ab0916b)]
 interface nsINetworkService : nsISupports
 {
   /**
@@ -400,53 +345,4 @@ interface nsINetworkService : nsISupports
   void updateUpStream(in jsval previous,
                       in jsval current,
                       in nsIUpdateUpStreamCallback callback);
-
-  /**
-   * Run Dhcp request.
-   *
-   * @param ifname
-   *        Target interface.
-   * @param callback
-   *        Callback function to report the result.
-   */
-  void runDhcp(in DOMString ifname, in nsIRunDhcpCallback callback);
-
-  /**
-   * Stop Dhcp daemon.
-   *
-   * @param ifname
-   *        Target interface.
-   */
-  void stopDhcp(in DOMString ifname);
-
-  /*
-   * Obtain interfaces list.
-   *
-   * @param callback
-   *        Callback function to return the result.
-   */
-  void getInterfaces(in nsIGetInterfacesCallback callback);
-
-  /**
-   * Set config for a network interface.
-   *
-   * @param config
-   *        .ifname: Target interface.
-   *        .ip: Ip address.
-   *        .prefix: mask length.
-   *        .link: network link properties.
-   * @param callback
-   *        Callback function to report the result.
-   */
-  void setInterfaceConfig(in jsval config, in nsISetInterfaceConfigCallback callback);
-
-  /**
-   * Get config of a network interface.
-   *
-   * @param ifname
-   *        Target interface.
-   * @param callback
-   *        Callback function to report the result.
-   */
-  void getInterfaceConfig(in DOMString ifname, in nsIGetInterfaceConfigCallback callback);
 };

@@ -5,7 +5,7 @@
 
 // Test to ensure inspector handles deletion of selected node correctly.
 
-const TEST_URL = TEST_URL_ROOT + "browser_inspector_destroyselection.html";
+const TEST_URL = TEST_URL_ROOT + "doc_inspector_delete-selected-node-01.html";
 
 let test = asyncTest(function* () {
   let { inspector } = yield openInspectorForURL(TEST_URL);

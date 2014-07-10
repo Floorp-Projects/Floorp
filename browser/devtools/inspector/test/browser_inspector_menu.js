@@ -7,7 +7,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 // 1) menu items are disabled/enabled depending on the clicked node
 // 2) actions triggered by the items work correctly
 
-const TEST_URL = TEST_URL_ROOT + "browser_inspector_menu.html";
+const TEST_URL = TEST_URL_ROOT + "doc_inspector_menu.html";
 const MENU_SENSITIVITY_TEST_DATA = [
   {
     desc: "doctype node",
