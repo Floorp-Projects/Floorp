@@ -189,33 +189,28 @@ bool
 ContentClientRemoteBuffer::CreateAndAllocateTextureClient(RefPtr<TextureClient>& aClient,
                                                           TextureFlags aFlags)
 {
+  TextureAllocationFlags allocFlags = TextureAllocationFlags::ALLOC_CLEAR_BUFFER;
+  if (aFlags & TextureFlags::ON_WHITE) {
+    allocFlags = TextureAllocationFlags::ALLOC_CLEAR_BUFFER_WHITE;
+  }
+
   // gfx::BackendType::NONE means fallback to the content backend
-  aClient = CreateTextureClientForDrawing(mSurfaceFormat,
-                                          mTextureInfo.mTextureFlags | aFlags,
+  aClient = CreateTextureClientForDrawing(mSurfaceFormat, mSize,
                                           gfx::BackendType::NONE,
-                                          mSize);
+                                          mTextureInfo.mTextureFlags | aFlags,
+                                          allocFlags);
+  if (!aClient) {
+    // try with ALLOC_FALLBACK
+    aClient = CreateTextureClientForDrawing(mSurfaceFormat, mSize,
+                                            gfx::BackendType::NONE,
+                                            mTextureInfo.mTextureFlags
+                                            | TextureFlags::ALLOC_FALLBACK
+                                            | aFlags,
+                                            allocFlags);
+  }
+
   if (!aClient) {
     return false;
-  }
-
-  TextureAllocationFlags flags = TextureAllocationFlags::ALLOC_CLEAR_BUFFER;
-  if (aFlags & TextureFlags::ON_WHITE) {
-    flags = TextureAllocationFlags::ALLOC_CLEAR_BUFFER_WHITE;
-  }
-
-  if (!aClient->AllocateForSurface(mSize, flags)) {
-    aClient = CreateTextureClientForDrawing(mSurfaceFormat,
-                mTextureInfo.mTextureFlags | TextureFlags::ALLOC_FALLBACK | aFlags,
-                gfx::BackendType::NONE,
-                mSize);
-    if (!aClient) {
-      return false;
-    }
-    if (!aClient->AllocateForSurface(mSize, flags)) {
-      NS_WARNING("Could not allocate texture client");
-      aClient = nullptr;
-      return false;
-    }
   }
 
   NS_WARN_IF_FALSE(aClient->IsValid(), "Created an invalid texture client");

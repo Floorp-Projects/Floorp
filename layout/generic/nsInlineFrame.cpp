@@ -722,15 +722,15 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     // and bottom border and padding. The height of children do not
     // affect our height.
     aMetrics.SetBlockStartAscent(fm->MaxAscent());
-    aMetrics.Height() = fm->MaxHeight();
+    aMetrics.BSize(lineWM) = fm->MaxHeight();
   } else {
     NS_WARNING("Cannot get font metrics - defaulting sizes to 0");
     aMetrics.SetBlockStartAscent(aMetrics.Height() = 0);
   }
   aMetrics.SetBlockStartAscent(aMetrics.BlockStartAscent() +
                                framePadding.BStart(frameWM));
-  aMetrics.Height() += aReflowState.ComputedPhysicalBorderPadding().top +
-    aReflowState.ComputedPhysicalBorderPadding().bottom;
+  aMetrics.BSize(lineWM) +=
+    aReflowState.ComputedLogicalBorderPadding().BStartEnd(frameWM);
 
   // For now our overflow area is zero. The real value will be
   // computed in |nsLineLayout::RelativePositionFrames|.

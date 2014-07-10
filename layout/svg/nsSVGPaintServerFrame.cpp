@@ -24,9 +24,7 @@ nsSVGPaintServerFrame::SetupPaintServer(gfxContext *aContext,
   if (!pattern)
     return false;
 
-  if (!aContext->IsCairo()) {
-    pattern->CacheColorStops(aContext->GetDrawTarget());
-  }
+  pattern->CacheColorStops(aContext->GetDrawTarget());
 
   aContext->SetPattern(pattern);
   return true;
