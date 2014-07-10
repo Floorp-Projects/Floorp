@@ -180,22 +180,28 @@ private:
   int64_t mTimeThreshold;
   bool mDropVideoBeforeThreshold;
 
-  bool MaybeSwitchVideoReaders() {
+  enum SwitchState {
+    SWITCHSTATE_SEEKING,
+    SWITCHSTATE_PLAYING
+  };
+
+  bool MaybeSwitchVideoReaders(SwitchState aState = SWITCHSTATE_PLAYING) {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     MOZ_ASSERT(mActiveVideoDecoder != -1);
 
     InitializePendingDecoders();
 
     for (uint32_t i = mActiveVideoDecoder + 1; i < mDecoders.Length(); ++i) {
-      if (!mDecoders[i]->GetReader()->GetMediaInfo().HasVideo()) {
+      SubBufferDecoder* decoder = mDecoders[i];
+      if (decoder->IsDiscarded() || !decoder->GetReader()->GetMediaInfo().HasVideo()) {
         continue;
       }
-      if (mTimeThreshold >= mDecoders[i]->GetMediaStartTime()) {
+
+      if (aState == SWITCHSTATE_SEEKING || mTimeThreshold >= mDecoders[i]->GetMediaStartTime()) {
         GetVideoReader()->SetIdle();
 
         mActiveVideoDecoder = i;
         MSE_DEBUG("%p MSR::DecodeVF switching to %d", this, mActiveVideoDecoder);
-
         return true;
       }
     }
@@ -478,7 +484,7 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
   while (!mMediaSource->ActiveSourceBuffers()->AllContainsTime(target)
          && !IsShutdown()) {
     mMediaSource->WaitForData();
-    MaybeSwitchVideoReaders();
+    MaybeSwitchVideoReaders(SWITCHSTATE_SEEKING);
   }
 
   if (IsShutdown()) {

@@ -44,8 +44,6 @@ EXTRA_PP_COMPONENTS += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     EXTRA_COMPONENTS += [
-        'EthernetManager.js',
-        'EthernetManager.manifest',
         'NetworkStatsManager.js',
         'NetworkStatsManager.manifest',
         'NetworkStatsServiceProxy.js',

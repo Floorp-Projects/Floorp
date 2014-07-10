@@ -22,8 +22,7 @@ endif
 #   make -C foo/baz
 #   make -C qux
 
-# MOZ_PSEUDO_DERECURSE can have values other than 1.
-ifeq (1_.,$(if $(MOZ_PSEUDO_DERECURSE),1)_$(DEPTH))
+ifeq (.,$(DEPTH))
 
 include root.mk
 
@@ -106,6 +105,8 @@ $(addsuffix /$(CURRENT_TIER),$(filter-out config,$(CURRENT_DIRS))): config/$(CUR
 endif
 
 ifdef COMPILE_ENVIRONMENT
+# Disable dependency aggregation on PGO builds because of bug 934166.
+ifeq (,$(MOZ_PGO)$(MOZ_PROFILE_USE)$(MOZ_PROFILE_GENERATE))
 ifneq (,$(filter libs binaries,$(CURRENT_TIER)))
 # When doing a "libs" build, target_libs.mk ensures the interesting dependency data
 # is available in the "binaries" stamp. Once recursion is done, aggregate all that
@@ -132,6 +133,8 @@ endif
 endif
 
 DIST_GARBAGE += binaries-deps.mk binaries-deps
+
+endif
 
 endif
 
@@ -185,9 +188,7 @@ endif # ifdef TIERS
 
 endif # ifeq ($(NO_RECURSE_MAKELEVEL),$(MAKELEVEL))
 
-endif # ifeq (1_.,$(MOZ_PSEUDO_DERECURSE)_$(DEPTH))
-
-ifdef MOZ_PSEUDO_DERECURSE
+endif # ifeq (.,$(DEPTH))
 
 ifdef COMPILE_ENVIRONMENT
 
@@ -204,13 +205,14 @@ ALL_DEP_FILES := \
 endif
 
 binaries libs:: $(TARGETS) $(BINARIES_PP)
+# Disable dependency aggregation on PGO builds because of bug 934166.
+ifeq (,$(MOZ_PGO)$(MOZ_PROFILE_USE)$(MOZ_PROFILE_GENERATE))
 ifneq (.,$(DEPTH))
 	@$(if $^,$(call py_action,link_deps,-o binaries --group-all --topsrcdir $(topsrcdir) --topobjdir $(DEPTH) --dist $(DIST) $(ALL_DEP_FILES)))
 endif
-
 endif
 
-endif # ifdef MOZ_PSEUDO_DERECURSE
+endif
 
 recurse:
 	@$(RECURSED_COMMAND)

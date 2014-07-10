@@ -1931,14 +1931,14 @@ TemporaryTypeSet::forAllClasses(bool (*func)(const Class* clasp))
     return true_results ? ForAllResult::ALL_TRUE : ForAllResult::ALL_FALSE;
 }
 
-int
+Scalar::Type
 TemporaryTypeSet::getTypedArrayType()
 {
     const Class *clasp = getKnownClass();
 
     if (clasp && IsTypedArrayClass(clasp))
-        return clasp - &TypedArrayObject::classes[0];
-    return ScalarTypeDescr::TYPE_MAX;
+        return (Scalar::Type) (clasp - &TypedArrayObject::classes[0]);
+    return Scalar::TypeMax;
 }
 
 bool

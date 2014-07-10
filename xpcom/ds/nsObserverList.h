@@ -22,26 +22,26 @@ class ObserverServiceReporter;
 
 struct ObserverRef
 {
-  ObserverRef(const ObserverRef& o) :
-    isWeakRef(o.isWeakRef), ref(o.ref) { }
-  
-  ObserverRef(nsIObserver* aObserver) : isWeakRef(false), ref(aObserver) { }
-  ObserverRef(nsIWeakReference* aWeak) : isWeakRef(true), ref(aWeak) { }
+  ObserverRef(const ObserverRef& aO) : isWeakRef(aO.isWeakRef), ref(aO.ref) {}
+  ObserverRef(nsIObserver* aObserver) : isWeakRef(false), ref(aObserver) {}
+  ObserverRef(nsIWeakReference* aWeak) : isWeakRef(true), ref(aWeak) {}
 
   bool isWeakRef;
   nsCOMPtr<nsISupports> ref;
 
-  nsIObserver* asObserver() {
+  nsIObserver* asObserver()
+  {
     NS_ASSERTION(!isWeakRef, "Isn't a strong ref.");
-    return static_cast<nsIObserver*>((nsISupports*) ref);
+    return static_cast<nsIObserver*>((nsISupports*)ref);
   }
 
-  nsIWeakReference* asWeak() {
+  nsIWeakReference* asWeak()
+  {
     NS_ASSERTION(isWeakRef, "Isn't a weak ref.");
-    return static_cast<nsIWeakReference*>((nsISupports*) ref);
+    return static_cast<nsIWeakReference*>((nsISupports*)ref);
   }
 
-  bool operator==(nsISupports* b) const { return ref == b; }
+  bool operator==(nsISupports* aRhs) const { return ref == aRhs; }
 };
 
 class nsObserverList : public nsCharPtrHashKey
@@ -49,22 +49,27 @@ class nsObserverList : public nsCharPtrHashKey
   friend class nsObserverService;
 
 public:
-  nsObserverList(const char *key) : nsCharPtrHashKey(key)
-  { MOZ_COUNT_CTOR(nsObserverList); }
+  nsObserverList(const char* aKey) : nsCharPtrHashKey(aKey)
+  {
+    MOZ_COUNT_CTOR(nsObserverList);
+  }
 
-  ~nsObserverList() { MOZ_COUNT_DTOR(nsObserverList); }
+  ~nsObserverList()
+  {
+    MOZ_COUNT_DTOR(nsObserverList);
+  }
 
-  nsresult AddObserver(nsIObserver* anObserver, bool ownsWeak);
-  nsresult RemoveObserver(nsIObserver* anObserver);
+  nsresult AddObserver(nsIObserver* aObserver, bool aOwnsWeak);
+  nsresult RemoveObserver(nsIObserver* aObserver);
 
-  void NotifyObservers(nsISupports *aSubject,
-                       const char *aTopic,
-                       const char16_t *someData);
-  nsresult GetObserverList(nsISimpleEnumerator** anEnumerator);
+  void NotifyObservers(nsISupports* aSubject,
+                       const char* aTopic,
+                       const char16_t* aSomeData);
+  nsresult GetObserverList(nsISimpleEnumerator** aEnumerator);
 
   // Fill an array with the observers of this category.
   // The array is filled in last-added-first order.
-  void FillObserverArray(nsCOMArray<nsIObserver> &aArray);
+  void FillObserverArray(nsCOMArray<nsIObserver>& aArray);
 
   // Unmark any strongly held observers implemented in JS so the cycle
   // collector will not traverse them.
@@ -77,16 +82,16 @@ private:
 class nsObserverEnumerator MOZ_FINAL : public nsISimpleEnumerator
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISIMPLEENUMERATOR
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISIMPLEENUMERATOR
 
-    nsObserverEnumerator(nsObserverList* aObserverList);
+  nsObserverEnumerator(nsObserverList* aObserverList);
 
 private:
-    ~nsObserverEnumerator() { }
+  ~nsObserverEnumerator() {}
 
-    int32_t mIndex; // Counts up from 0
-    nsCOMArray<nsIObserver> mObservers;
+  int32_t mIndex; // Counts up from 0
+  nsCOMArray<nsIObserver> mObservers;
 };
 
 #endif /* nsObserverList_h___ */

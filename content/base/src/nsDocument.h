@@ -809,6 +809,7 @@ public:
                                             bool aApplicable) MOZ_OVERRIDE;
 
   virtual nsresult LoadAdditionalStyleSheet(additionalSheetType aType, nsIURI* aSheetURI) MOZ_OVERRIDE;
+  virtual nsresult AddAdditionalStyleSheet(additionalSheetType aType, nsIStyleSheet* aSheet) MOZ_OVERRIDE;
   virtual void RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* sheetURI) MOZ_OVERRIDE;
   virtual nsIStyleSheet* FirstAdditionalAuthorSheet() MOZ_OVERRIDE;
 

@@ -1202,7 +1202,7 @@ WebGLContext::ValidateTexInputData(GLenum type, int jsArrayType, WebGLTexImageFu
     // First, we check for packed types
     switch (type) {
     case LOCAL_GL_UNSIGNED_BYTE:
-        validInput = (jsArrayType == -1 || jsArrayType == js::ArrayBufferView::TYPE_UINT8);
+        validInput = (jsArrayType == -1 || jsArrayType == js::Scalar::Uint8);
         break;
 
     case LOCAL_GL_HALF_FLOAT:
@@ -1211,16 +1211,16 @@ WebGLContext::ValidateTexInputData(GLenum type, int jsArrayType, WebGLTexImageFu
     case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
     case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
     case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-        validInput = (jsArrayType == -1 || jsArrayType == js::ArrayBufferView::TYPE_UINT16);
+        validInput = (jsArrayType == -1 || jsArrayType == js::Scalar::Uint16);
         break;
 
     case LOCAL_GL_UNSIGNED_INT:
     case LOCAL_GL_UNSIGNED_INT_24_8:
-        validInput = (jsArrayType == -1 || jsArrayType == js::ArrayBufferView::TYPE_UINT32);
+        validInput = (jsArrayType == -1 || jsArrayType == js::Scalar::Uint32);
         break;
 
     case LOCAL_GL_FLOAT:
-        validInput = (jsArrayType == -1 || jsArrayType == js::ArrayBufferView::TYPE_FLOAT32);
+        validInput = (jsArrayType == -1 || jsArrayType == js::Scalar::Float32);
         break;
 
     default:

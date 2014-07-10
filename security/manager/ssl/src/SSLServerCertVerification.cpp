@@ -739,7 +739,7 @@ AuthCertificate(CertVerifier& certVerifier, TransportSecurityInfo* infoObject,
   bool saveIntermediates =
     !(providerFlags & nsISocketProvider::NO_PERMANENT_STORAGE);
 
-  mozilla::pkix::ScopedCERTCertList certList;
+  ScopedCERTCertList certList;
   SECOidTag evOidPolicy;
   rv = certVerifier.VerifySSLServerCert(cert, stapledOCSPResponse,
                                         time, infoObject,
