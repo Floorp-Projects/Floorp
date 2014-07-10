@@ -74,7 +74,6 @@ nsEventStatus GestureEventListener::HandleInputEvent(const MultiTouchInput& aEve
 
   switch (aEvent.mType) {
   case MultiTouchInput::MULTITOUCH_START:
-  case MultiTouchInput::MULTITOUCH_ENTER:
     mTouches.Clear();
     for (size_t i = 0; i < aEvent.mTouches.Length(); i++) {
       mTouches.AppendElement(aEvent.mTouches[i]);
@@ -90,7 +89,6 @@ nsEventStatus GestureEventListener::HandleInputEvent(const MultiTouchInput& aEve
     rv = HandleInputTouchMove();
     break;
   case MultiTouchInput::MULTITOUCH_END:
-  case MultiTouchInput::MULTITOUCH_LEAVE:
     for (size_t i = 0; i < aEvent.mTouches.Length(); i++) {
       for (size_t j = 0; j < mTouches.Length(); j++) {
         if (aEvent.mTouches[i].mIdentifier == mTouches[j].mIdentifier) {

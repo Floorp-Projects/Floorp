@@ -342,7 +342,7 @@ this.WebappOSUtils = {
       if (aResult == Cr.NS_OK) {
         deferred.resolve(true);
       } else {
-        deferred.resolve("Error moving the app to the Trash: " + aResult);
+        deferred.reject("Error moving the app to the Trash: " + aResult);
       }
     });
 

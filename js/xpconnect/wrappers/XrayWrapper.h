@@ -49,12 +49,14 @@ class XrayTraits;
 class XPCWrappedNativeXrayTraits;
 class DOMXrayTraits;
 class JSXrayTraits;
+class OpaqueXrayTraits;
 
 
 enum XrayType {
     XrayForDOMObject,
     XrayForWrappedNative,
     XrayForJSObject,
+    XrayForOpaqueObject,
     NotXray
 };
 
@@ -102,6 +104,7 @@ class XrayWrapper : public Base {
     virtual bool construct(JSContext *cx, JS::Handle<JSObject*> wrapper,
                            const JS::CallArgs &args) const MOZ_OVERRIDE;
 
+    virtual const char *className(JSContext *cx, JS::HandleObject proxy) const MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, JS::HandleObject wrapper,
                               JSType hint, JS::MutableHandleValue vp)
                               const MOZ_OVERRIDE;
@@ -144,6 +147,7 @@ class XrayWrapper : public Base {
 #define PermissiveXrayDOM xpc::XrayWrapper<js::CrossCompartmentWrapper, xpc::DOMXrayTraits>
 #define SecurityXrayDOM xpc::XrayWrapper<js::CrossCompartmentSecurityWrapper, xpc::DOMXrayTraits>
 #define PermissiveXrayJS xpc::XrayWrapper<js::CrossCompartmentWrapper, xpc::JSXrayTraits>
+#define PermissiveXrayOpaque xpc::XrayWrapper<js::CrossCompartmentWrapper, xpc::OpaqueXrayTraits>
 #define SCSecurityXrayXPCWN xpc::XrayWrapper<js::SameCompartmentSecurityWrapper, xpc::XPCWrappedNativeXrayTraits>
 
 class SandboxProxyHandler : public js::Wrapper {

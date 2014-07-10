@@ -134,7 +134,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
 
   // Mozilla-specific stuff
 
-  [SetterThrows=Workers]
+  [ChromeOnly, SetterThrows=Workers]
   attribute boolean mozBackgroundRequest;
 
   [ChromeOnly]

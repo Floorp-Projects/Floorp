@@ -203,9 +203,6 @@ struct nsCSSBorderRenderer {
   // Draw any border which is solid on all sides and does not use
   // CompositeColors.
   void DrawNoCompositeColorSolidBorder();
-  // Draw any border which is solid on all sides and does not use
-  // CompositeColors. Using Azure.
-  void DrawNoCompositeColorSolidBorderAzure();
 
   // Draw a solid border that has no border radius (i.e. is rectangular) and
   // uses CompositeColors.
