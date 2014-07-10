@@ -1,0 +1,5 @@
+{
+  "name": "App using AppCache",
+  "launch_path": "/chrome/toolkit/webapps/tests/data/appcached_app/index.html",
+  "appcache_path": "/chrome/toolkit/webapps/tests/data/appcached_app/manifest.appcache"
+}
