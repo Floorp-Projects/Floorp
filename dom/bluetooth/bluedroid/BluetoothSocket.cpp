@@ -170,6 +170,7 @@ public:
 
   void Connect(int aFd);
   void Listen(int aFd);
+  void Accept(int aFd);
 
   void ConnectClientFd()
   {
@@ -553,6 +554,32 @@ DroidSocketImpl::Listen(int aFd)
   AddWatchers(READ_WATCHER, true);
 }
 
+void
+DroidSocketImpl::Accept(int aFd)
+{
+  Close();
+
+  int flags = TEMP_FAILURE_RETRY(fcntl(aFd, F_GETFL));
+  NS_ENSURE_TRUE_VOID(flags >= 0);
+
+  if (!(flags & O_NONBLOCK)) {
+    int res = TEMP_FAILURE_RETRY(fcntl(aFd, F_SETFL, flags | O_NONBLOCK));
+    NS_ENSURE_TRUE_VOID(!res);
+  }
+
+  SetFd(aFd);
+  mConnectionStatus = SOCKET_IS_CONNECTED;
+
+  nsRefPtr<OnSocketEventRunnable> r =
+    new OnSocketEventRunnable(this, OnSocketEventRunnable::CONNECT_SUCCESS);
+  NS_DispatchToMainThread(r);
+
+  AddWatchers(READ_WATCHER, true);
+  if (!mOutgoingQ.IsEmpty()) {
+    AddWatchers(WRITE_WATCHER, false);
+  }
+}
+
 ssize_t
 DroidSocketImpl::ReadMsg(int aFd, void *aBuffer, size_t aLength)
 {
@@ -667,57 +694,97 @@ DroidSocketImpl::OnSocketCanReceiveWithoutBlocking(int aFd)
   MOZ_CRASH("We returned early");
 }
 
+class AcceptTask MOZ_FINAL : public DroidSocketImplTask
+{
+public:
+  AcceptTask(DroidSocketImpl* aDroidSocketImpl, int aFd)
+  : DroidSocketImplTask(aDroidSocketImpl)
+  , mFd(aFd)
+  { }
+
+  void Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(!IsCanceled());
+
+    GetDroidSocketImpl()->Accept(mFd);
+  }
+
+private:
+  int mFd;
+};
+
+class AcceptResultHandler MOZ_FINAL : public BluetoothSocketResultHandler
+{
+public:
+  AcceptResultHandler(DroidSocketImpl* aImpl)
+  : mImpl(aImpl)
+  {
+    MOZ_ASSERT(mImpl);
+  }
+
+  void Accept(int aFd, const nsAString& aBdAddress,
+              int aConnectionStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (mImpl->IsShutdownOnMainThread()) {
+      BT_LOGD("mConsumer is null, aborting receive!");
+      return;
+    }
+
+    mImpl->mConsumer->SetAddress(aBdAddress);
+    XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new AcceptTask(mImpl, aFd));
+  }
+
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    BT_LOGR("BluetoothSocketInterface::Accept failed: %d", (int)aStatus);
+  }
+
+private:
+  DroidSocketImpl* mImpl;
+};
+
+class AcceptRunnable MOZ_FINAL : public nsRunnable
+{
+public:
+  AcceptRunnable(int aFd, DroidSocketImpl* aImpl)
+  : mFd(aFd)
+  , mImpl(aImpl)
+  {
+    MOZ_ASSERT(mImpl);
+  }
+
+  NS_IMETHOD Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(sBluetoothSocketInterface);
+
+    sBluetoothSocketInterface->Accept(mFd, new AcceptResultHandler(mImpl));
+
+    return NS_OK;
+  }
+
+private:
+  int mFd;
+  DroidSocketImpl* mImpl;
+};
+
 void
 DroidSocketImpl::OnSocketCanAcceptWithoutBlocking(int aFd)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!mShuttingDownOnIOThread);
 
-  // Read all of the incoming data.
-  while (true) {
-    nsAutoPtr<UnixSocketRawData> incoming(new UnixSocketRawData(MAX_READ_SIZE));
+  /* When a listening socket is ready for receiving data,
+   * we can call |Accept| on it.
+   */
 
-    ssize_t ret;
-    if (!mReadMsgForClientFd) {
-      ret = read(aFd, incoming->mData, incoming->mSize);
-    } else {
-      ret = ReadMsg(aFd, incoming->mData, incoming->mSize);
-    }
-
-    if (ret <= 0) {
-      if (ret == -1) {
-        if (errno == EINTR) {
-          continue; // retry system call when interrupted
-        }
-        if (errno == EAGAIN || errno == EWOULDBLOCK) {
-          return; // no data available: return and re-poll
-        }
-
-        BT_WARNING("Cannot read from network");
-        // else fall through to error handling on other errno's
-      }
-
-      // We're done with our descriptors. Ensure that spurious events don't
-      // cause us to end up back here.
-      RemoveWatchers(READ_WATCHER | WRITE_WATCHER);
-      nsRefPtr<RequestClosingSocketTask> t = new RequestClosingSocketTask(this);
-      NS_DispatchToMainThread(t);
-      return;
-    }
-
-    incoming->mSize = ret;
-    nsRefPtr<SocketReceiveTask> t =
-      new SocketReceiveTask(this, incoming.forget());
-    NS_DispatchToMainThread(t);
-
-    // If ret is less than MAX_READ_SIZE, there's no
-    // more data in the socket for us to read now.
-    if (ret < ssize_t(MAX_READ_SIZE)) {
-      return;
-    }
-  }
-
-  MOZ_CRASH("We returned early");
+  RemoveWatchers(READ_WATCHER);
+  nsRefPtr<AcceptRunnable> t = new AcceptRunnable(aFd, this);
+  NS_DispatchToMainThread(t);
 }
 
 void
@@ -999,11 +1066,6 @@ BluetoothSocket::ReceiveSocketInfo(nsAutoPtr<UnixSocketRawData>& aMessage)
 void
 BluetoothSocket::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
 {
-  /* clients handle socket setup in BluetoothInterface::Connect */
-  if (mIsServer && ReceiveSocketInfo(aMessage)) {
-    return;
-  }
-
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mObserver);
   mObserver->ReceiveSocketData(this, aMessage);
