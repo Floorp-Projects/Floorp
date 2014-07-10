@@ -8,16 +8,12 @@
 #include "GMPVideoDecoderParent.h"
 #include "nsIObserverService.h"
 #include "GeckoChildProcessHost.h"
-#if defined(XP_WIN)
-#include "nsIWindowsRegKey.h"
-#endif
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SyncRunnable.h"
-#include "nsDirectoryServiceUtils.h"
-#include "nsDirectoryServiceDefs.h"
 #include "nsXPCOMPrivate.h"
-#include "nsISimpleEnumerator.h"
 #include "mozilla/Services.h"
+#include "nsNativeCharsetUtils.h"
+#include "nsIConsoleService.h"
 
 namespace mozilla {
 namespace gmp {
@@ -113,16 +109,6 @@ GeckoMediaPluginService::Init()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // Cache user directory while we're on the main thread. We do this because
-  // if we try to use "~" in a path during plugin lookup on a non-main thread,
-  // the nsIFile code will try to resolve it using NS_GetSpecialDirectory, which
-  // doesn't work on non-main threads.
-  nsCOMPtr<nsIFile> homeDir;
-  NS_GetSpecialDirectory(NS_OS_HOME_DIR, getter_AddRefs(homeDir));
-  if (homeDir) {
-    homeDir->GetPath(mHomePath);
-  }
-
   nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
   MOZ_ASSERT(obsService);
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false)));
@@ -182,6 +168,9 @@ GeckoMediaPluginService::GetThread(nsIThread** aThread)
     if (NS_FAILED(rv)) {
       return rv;
     }
+
+    // Tell the thread to initialize plugins
+    mGMPThread->Dispatch(NS_NewRunnableMethod(this, &GeckoMediaPluginService::LoadFromEnvironment), NS_DISPATCH_NORMAL);
   }
 
   NS_ADDREF(mGMPThread);
@@ -272,27 +261,79 @@ GeckoMediaPluginService::UnloadPlugins()
   mPlugins.Clear();
 }
 
+void
+GeckoMediaPluginService::LoadFromEnvironment()
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+
+  const char* env = PR_GetEnv("MOZ_GMP_PATH");
+  if (!env || !*env) {
+    return;
+  }
+
+  nsString allpaths;
+  if (NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(env), allpaths)))) {
+    return;
+  }
+
+  uint32_t pos = 0;
+  while (pos < allpaths.Length()) {
+    // Loop over multiple path entries separated by colons (*nix) or
+    // semicolons (Windows)
+    int32_t next = allpaths.FindChar(XPCOM_ENV_PATH_SEPARATOR[0], pos);
+    if (next == -1) {
+      AddOnGMPThread(nsDependentSubstring(allpaths, pos));
+      break;
+    } else {
+      AddOnGMPThread(nsDependentSubstring(allpaths, pos, next - pos));
+      pos = next + 1;
+    }
+  }
+}
+
+NS_IMETHODIMP
+GeckoMediaPluginService::PathRunnable::Run()
+{
+  if (mAdd) {
+    mService->AddOnGMPThread(mPath);
+  } else {
+    mService->RemoveOnGMPThread(mPath);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GeckoMediaPluginService::AddPluginDirectory(const nsAString& aDirectory)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = GetThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsCOMPtr<nsIRunnable> r = new PathRunnable(this, aDirectory, true);
+  thread->Dispatch(r, NS_DISPATCH_NORMAL);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GeckoMediaPluginService::RemovePluginDirectory(const nsAString& aDirectory)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = GetThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsCOMPtr<nsIRunnable> r = new PathRunnable(this, aDirectory, false);
+  thread->Dispatch(r, NS_DISPATCH_NORMAL);
+  return NS_OK;
+}
+
 GMPParent*
 GeckoMediaPluginService::SelectPluginForAPI(const nsAString& aOrigin,
                                             const nsCString& aAPI,
                                             const nsTArray<nsCString>& aTags)
-{
-  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
-
-  GMPParent* gmp = SelectPluginFromListForAPI(aOrigin, aAPI, aTags);
-  if (gmp) {
-    return gmp;
-  }
-
-  RefreshPluginList();
-
-  return SelectPluginFromListForAPI(aOrigin, aAPI, aTags);
-}
-
-GMPParent*
-GeckoMediaPluginService::SelectPluginFromListForAPI(const nsAString& aOrigin,
-                                                    const nsCString& aAPI,
-                                                    const nsTArray<nsCString>& aTags)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
 
@@ -323,159 +364,20 @@ GeckoMediaPluginService::SelectPluginFromListForAPI(const nsAString& aOrigin,
   return nullptr;
 }
 
-nsresult
-GeckoMediaPluginService::GetDirectoriesToSearch(nsTArray<nsCOMPtr<nsIFile>> &aDirs)
-{
-  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
-
-#if defined(XP_MACOSX)
-  nsCOMPtr<nsIFile> searchDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  MOZ_ASSERT(!mHomePath.IsEmpty());
-  nsresult rv = searchDir->InitWithPath(mHomePath + NS_LITERAL_STRING("/Library/Internet Plug-Ins/"));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  aDirs.AppendElement(searchDir);
-  searchDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  rv = searchDir->InitWithPath(NS_LITERAL_STRING("/Library/Internet Plug-Ins/"));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  aDirs.AppendElement(searchDir);
-#elif defined(OS_POSIX)
-  nsCOMPtr<nsIFile> searchDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  nsresult rv = searchDir->InitWithPath(NS_LITERAL_STRING("/usr/lib/mozilla/plugins/"));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  aDirs.AppendElement(searchDir);
-#endif
-  return NS_OK;
-}
-
-#if defined(XP_WIN)
-static nsresult
-GetPossiblePluginsForRegRoot(uint32_t aKey, nsTArray<nsCOMPtr<nsIFile>>& aDirs)
-{
-  nsCOMPtr<nsIWindowsRegKey> regKey = do_CreateInstance("@mozilla.org/windows-registry-key;1");
-  if (!regKey) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv = regKey->Open(aKey,
-                             NS_LITERAL_STRING("Software\\MozillaPlugins"),
-                             nsIWindowsRegKey::ACCESS_READ);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  uint32_t childCount = 0;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(regKey->GetChildCount(&childCount)));
-  for (uint32_t index = 0; index < childCount; index++) {
-    nsAutoString childName;
-    rv = regKey->GetChildName(index, childName);
-    if (NS_FAILED(rv)) {
-      continue;
-    }
-
-    nsCOMPtr<nsIWindowsRegKey> childKey;
-    rv = regKey->OpenChild(childName, nsIWindowsRegKey::ACCESS_QUERY_VALUE,
-                           getter_AddRefs(childKey));
-    if (NS_FAILED(rv) || !childKey) {
-      continue;
-    }
-
-    nsAutoString path;
-    rv = childKey->ReadStringValue(NS_LITERAL_STRING("Path"), path);
-    if (NS_FAILED(rv)) {
-      continue;
-    }
-
-    nsCOMPtr<nsIFile> localFile;
-    if (NS_SUCCEEDED(NS_NewLocalFile(path, true, getter_AddRefs(localFile))) &&
-        localFile) {
-      bool isFileThere = false;
-      if (NS_SUCCEEDED(localFile->Exists(&isFileThere)) && isFileThere) {
-        aDirs.AppendElement(localFile);
-      }
-    }
-  }
-
-  regKey->Close();
-
-  return NS_OK;
-}
-#endif
-
-nsresult
-GeckoMediaPluginService::GetPossiblePlugins(nsTArray<nsCOMPtr<nsIFile>>& aDirs)
-{
-  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
-
-#if defined(XP_WIN)
-  // The ROOT_KEY_CURRENT_USER entry typically fails to open, causing this call to
-  // fail. Don't check any return values because if we find nothing we don't care.
-  GetPossiblePluginsForRegRoot(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER, aDirs);
-  GetPossiblePluginsForRegRoot(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, aDirs);
-#endif
-  return NS_OK;
-}
-
-nsresult
-GeckoMediaPluginService::SearchDirectory(nsIFile* aSearchDir)
-{
-  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
-  MOZ_ASSERT(aSearchDir);
-
-  nsCOMPtr<nsISimpleEnumerator> iter;
-  nsresult rv = aSearchDir->GetDirectoryEntries(getter_AddRefs(iter));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  bool hasMore;
-  while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> supports;
-    rv = iter->GetNext(getter_AddRefs(supports));
-    if (NS_FAILED(rv)) {
-      continue;
-    }
-    nsCOMPtr<nsIFile> dirEntry(do_QueryInterface(supports, &rv));
-    if (NS_FAILED(rv)) {
-      continue;
-    }
-    ProcessPossiblePlugin(dirEntry);
-  }
-
-  return NS_OK;
-}
 
 void
-GeckoMediaPluginService::ProcessPossiblePlugin(nsIFile* aDir)
+GeckoMediaPluginService::AddOnGMPThread(const nsAString& aDirectory)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
-  MOZ_ASSERT(aDir);
 
-  bool isDirectory = false;
-  nsresult rv = aDir->IsDirectory(&isDirectory);
-  if (NS_FAILED(rv) || !isDirectory) {
-    return;
-  }
-
-  nsAutoString leafName;
-  rv = aDir->GetLeafName(leafName);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  NS_NAMED_LITERAL_STRING(prefix, "gmp-");
-  if (leafName.Length() <= prefix.Length() ||
-      !Substring(leafName, 0, prefix.Length()).Equals(prefix)) {
+  nsCOMPtr<nsIFile> directory;
+  nsresult rv = NS_NewLocalFile(aDirectory, false, getter_AddRefs(directory));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
   nsRefPtr<GMPParent> gmp = new GMPParent();
-  rv = gmp->Init(aDir);
+  rv = gmp->Init(directory);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -484,35 +386,28 @@ GeckoMediaPluginService::ProcessPossiblePlugin(nsIFile* aDir)
 }
 
 void
-GeckoMediaPluginService::RefreshPluginList()
+GeckoMediaPluginService::RemoveOnGMPThread(const nsAString& aDirectory)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
 
-  for (uint32_t iPlusOne = mPlugins.Length(); iPlusOne > 0; iPlusOne--) {
-    if (mPlugins[iPlusOne - 1]->State() == GMPStateNotLoaded) {
-      mPlugins.RemoveElementAt(iPlusOne - 1);
+  nsCOMPtr<nsIFile> directory;
+  nsresult rv = NS_NewLocalFile(aDirectory, false, getter_AddRefs(directory));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  for (uint32_t i = 0; i < mPlugins.Length(); ++i) {
+    nsCOMPtr<nsIFile> pluginpath = mPlugins[i]->GetDirectory();
+    bool equals;
+    if (NS_SUCCEEDED(directory->Equals(pluginpath, &equals)) && equals) {
+      mPlugins[i]->UnloadProcess();
+      mPlugins.RemoveElementAt(i);
+      return;
     }
   }
-
-  nsTArray<nsCOMPtr<nsIFile>> searchDirs;
-  nsresult rv = GetDirectoriesToSearch(searchDirs);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  for (uint32_t i = 0; i < searchDirs.Length(); i++) {
-    SearchDirectory(searchDirs[i]);
-  }
-
-  nsTArray<nsCOMPtr<nsIFile>> possiblePlugins;
-  rv = GetPossiblePlugins(possiblePlugins);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  for (uint32_t i = 0; i < possiblePlugins.Length(); i++) {
-    ProcessPossiblePlugin(possiblePlugins[i]);
-  }
+  NS_WARNING("Removing GMP which was never added.");
+  nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+  cs->LogStringMessage(MOZ_UTF16("Removing GMP which was never added."));
 }
 
 } // namespace gmp
