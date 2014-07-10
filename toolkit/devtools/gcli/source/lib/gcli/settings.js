@@ -44,15 +44,136 @@ var util = require('./util/util');
 var DEVTOOLS_PREFIX = 'devtools.gcli.';
 
 /**
- * The type library that we use in creating types for settings
+ * A manager for the registered Settings
  */
-var types;
+function Settings(types, settingValues) {
+  this._types = types;
+
+  if (settingValues != null) {
+    throw new Error('settingValues is not supported when writing to prefs');
+  }
+
+  // Collection of preferences for sorted access
+  this._settingsAll = [];
+
+  // Collection of preferences for fast indexed access
+  this._settingsMap = new Map();
+
+  // Flag so we know if we've read the system preferences
+  this._hasReadSystem = false;
+
+  // Event for use to detect when the list of settings changes
+  this.onChange = util.createEvent('Settings.onChange');
+}
 
 /**
- * A class to wrap up the properties of a preference.
+ * Load system prefs if they've not been loaded already
+ * @return true
+ */
+Settings.prototype._readSystem = function() {
+  if (this._hasReadSystem) {
+    return;
+  }
+
+  imports.prefBranch.getChildList('').forEach(function(name) {
+    var setting = new Setting(this, name);
+    this._settingsAll.push(setting);
+    this._settingsMap.set(name, setting);
+  }.bind(this));
+
+  this._settingsAll.sort(function(s1, s2) {
+    return s1.name.localeCompare(s2.name);
+  }.bind(this));
+
+  this._hasReadSystem = true;
+};
+
+/**
+ * Get an array containing all known Settings filtered to match the given
+ * filter (string) at any point in the name of the setting
+ */
+Settings.prototype.getAll = function(filter) {
+  this._readSystem();
+
+  if (filter == null) {
+    return this._settingsAll;
+  }
+
+  return this._settingsAll.filter(function(setting) {
+    return setting.name.indexOf(filter) !== -1;
+  }.bind(this));
+};
+
+/**
+ * Add a new setting
+ * @return The new Setting object
+ */
+Settings.prototype.add = function(prefSpec) {
+  var setting = new Setting(this, prefSpec);
+
+  if (this._settingsMap.has(setting.name)) {
+    // Once exists already, we're going to need to replace it in the array
+    for (var i = 0; i < this._settingsAll.length; i++) {
+      if (this._settingsAll[i].name === setting.name) {
+        this._settingsAll[i] = setting;
+      }
+    }
+  }
+
+  this._settingsMap.set(setting.name, setting);
+  this.onChange({ added: setting.name });
+
+  return setting;
+};
+
+/**
+ * Getter for an existing setting. Generally use of this function should be
+ * avoided. Systems that define a setting should export it if they wish it to
+ * be available to the outside, or not otherwise. Use of this function breaks
+ * that boundary and also hides dependencies. Acceptable uses include testing
+ * and embedded uses of GCLI that pre-define all settings (e.g. Firefox)
+ * @param name The name of the setting to fetch
+ * @return The found Setting object, or undefined if the setting was not found
+ */
+Settings.prototype.get = function(name) {
+  // We might be able to give the answer without needing to read all system
+  // settings if this is an internal setting
+  var found = this._settingsMap.get(name);
+  if (!found) {
+    found = this._settingsMap.get(DEVTOOLS_PREFIX + name);
+  }
+
+  if (found) {
+    return found;
+  }
+
+  if (this._hasReadSystem) {
+    return undefined;
+  }
+  else {
+    this._readSystem();
+    found = this._settingsMap.get(name);
+    if (!found) {
+      found = this._settingsMap.get(DEVTOOLS_PREFIX + name);
+    }
+    return found;
+  }
+};
+
+/**
+ * Remove a setting. A no-op in this case
+ */
+Settings.prototype.remove = function() {
+};
+
+exports.Settings = Settings;
+
+/**
+ * A class to wrap up the properties of a Setting.
  * @see toolkit/components/viewconfig/content/config.js
  */
-function Setting(prefSpec) {
+function Setting(settings, prefSpec) {
+  this._settings = settings;
   if (typeof prefSpec === 'string') {
     // We're coming from getAll() i.e. a full listing of prefs
     this.name = prefSpec;
@@ -76,19 +197,27 @@ function Setting(prefSpec) {
 }
 
 /**
+ * Reset this setting to it's initial default value
+ */
+Setting.prototype.setDefault = function() {
+  imports.prefBranch.clearUserPref(this.name);
+  Services.prefs.savePrefFile(null);
+};
+
+/**
  * What type is this property: boolean/integer/string?
  */
 Object.defineProperty(Setting.prototype, 'type', {
   get: function() {
     switch (imports.prefBranch.getPrefType(this.name)) {
       case imports.prefBranch.PREF_BOOL:
-        return types.createType('boolean');
+        return this._settings._types.createType('boolean');
 
       case imports.prefBranch.PREF_INT:
-        return types.createType('number');
+        return this._settings._types.createType('number');
 
       case imports.prefBranch.PREF_STRING:
-        return types.createType('string');
+        return this._settings._types.createType('string');
 
       default:
         throw new Error('Unknown type for ' + this.name);
@@ -154,154 +283,3 @@ Object.defineProperty(Setting.prototype, 'value', {
 
   enumerable: true
 });
-
-/**
- * Reset this setting to it's initial default value
- */
-Setting.prototype.setDefault = function() {
-  imports.prefBranch.clearUserPref(this.name);
-  Services.prefs.savePrefFile(null);
-};
-
-
-/**
- * Collection of preferences for sorted access
- */
-var settingsAll = [];
-
-/**
- * Collection of preferences for fast indexed access
- */
-var settingsMap = new Map();
-
-/**
- * Flag so we know if we've read the system preferences
- */
-var hasReadSystem = false;
-
-/**
- * Clear out all preferences and return to initial state
- */
-function reset() {
-  settingsMap = new Map();
-  settingsAll = [];
-  hasReadSystem = false;
-}
-
-/**
- * Reset everything on startup and shutdown because we're doing lazy loading
- */
-exports.startup = function(t) {
-  reset();
-  types = t;
-  if (types == null) {
-    throw new Error('no types');
-  }
-};
-
-exports.shutdown = function() {
-  reset();
-};
-
-/**
- * Load system prefs if they've not been loaded already
- * @return true
- */
-function readSystem() {
-  if (hasReadSystem) {
-    return;
-  }
-
-  imports.prefBranch.getChildList('').forEach(function(name) {
-    var setting = new Setting(name);
-    settingsAll.push(setting);
-    settingsMap.set(name, setting);
-  });
-
-  settingsAll.sort(function(s1, s2) {
-    return s1.name.localeCompare(s2.name);
-  });
-
-  hasReadSystem = true;
-}
-
-/**
- * Get an array containing all known Settings filtered to match the given
- * filter (string) at any point in the name of the setting
- */
-exports.getAll = function(filter) {
-  readSystem();
-
-  if (filter == null) {
-    return settingsAll;
-  }
-
-  return settingsAll.filter(function(setting) {
-    return setting.name.indexOf(filter) !== -1;
-  });
-};
-
-/**
- * Add a new setting.
- */
-exports.addSetting = function(prefSpec) {
-  var setting = new Setting(prefSpec);
-
-  if (settingsMap.has(setting.name)) {
-    // Once exists already, we're going to need to replace it in the array
-    for (var i = 0; i < settingsAll.length; i++) {
-      if (settingsAll[i].name === setting.name) {
-        settingsAll[i] = setting;
-      }
-    }
-  }
-
-  settingsMap.set(setting.name, setting);
-  exports.onChange({ added: setting.name });
-
-  return setting;
-};
-
-/**
- * Getter for an existing setting. Generally use of this function should be
- * avoided. Systems that define a setting should export it if they wish it to
- * be available to the outside, or not otherwise. Use of this function breaks
- * that boundary and also hides dependencies. Acceptable uses include testing
- * and embedded uses of GCLI that pre-define all settings (e.g. Firefox)
- * @param name The name of the setting to fetch
- * @return The found Setting object, or undefined if the setting was not found
- */
-exports.getSetting = function(name) {
-  // We might be able to give the answer without needing to read all system
-  // settings if this is an internal setting
-  var found = settingsMap.get(name);
-  if (!found) {
-    found = settingsMap.get(DEVTOOLS_PREFIX + name);
-  }
-
-  if (found) {
-    return found;
-  }
-
-  if (hasReadSystem) {
-    return undefined;
-  }
-  else {
-    readSystem();
-    found = settingsMap.get(name);
-    if (!found) {
-      found = settingsMap.get(DEVTOOLS_PREFIX + name);
-    }
-    return found;
-  }
-};
-
-/**
- * Event for use to detect when the list of settings changes
- */
-exports.onChange = util.createEvent('Settings.onChange');
-
-/**
- * Remove a setting. A no-op in this case
- */
-exports.removeSetting = function() { };

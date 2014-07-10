@@ -168,7 +168,7 @@
             label="&csscoverage.backButton;"
             onclick="${onback}"/>
       </xul:toolbar>
-      <!-- The data for this comes from UsageReportActor.createPageReport -->
+      <!-- The data for this comes from CSSUsageActor.createPageReport -->
       <div class="csscoverage-report-container">
         <div class="csscoverage-report-content">
           <div class="csscoverage-report-summary">
@@ -204,7 +204,7 @@
             </div>
             <p>
               &csscoverage.footer1;
-              <a target="_blank" href="&csscoverage.footer2;">&csscoverage.footer3;</a>
+              <a target="_blank" href="&csscoverage.footer2a;">&csscoverage.footer3;</a>
               &csscoverage.footer4;
             </p>
           </div>

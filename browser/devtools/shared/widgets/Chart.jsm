@@ -102,8 +102,8 @@ function PieTableChart(node, pie, table) {
  *                    ascending by `size`.
  * @return PieTableChart
  *         A pie+table chart proxy instance, which emits the following events:
- *           - "mouseenter", when the mouse enters a slice or a row
- *           - "mouseleave", when the mouse leaves a slice or a row
+ *           - "mouseover", when the mouse enters a slice or a row
+ *           - "mouseout", when the mouse leaves a slice or a row
  *           - "click", when the mouse enters a slice or a row
  */
 function createPieTableChart(document, { title, diameter, data, strings, totals, sorted }) {
@@ -138,28 +138,28 @@ function createPieTableChart(document, { title, diameter, data, strings, totals,
     proxy.emit(event, item)
   });
 
-  pie.on("mouseenter", (event, item) => {
+  pie.on("mouseover", (event, item) => {
     proxy.emit(event, item);
     if (table.rows.has(item)) {
       table.rows.get(item).setAttribute("focused", "");
     }
   });
 
-  pie.on("mouseleave", (event, item) => {
+  pie.on("mouseout", (event, item) => {
     proxy.emit(event, item);
     if (table.rows.has(item)) {
       table.rows.get(item).removeAttribute("focused");
     }
   });
 
-  table.on("mouseenter", (event, item) => {
+  table.on("mouseover", (event, item) => {
     proxy.emit(event, item);
     if (pie.slices.has(item)) {
       pie.slices.get(item).setAttribute("focused", "");
     }
   });
 
-  table.on("mouseleave", (event, item) => {
+  table.on("mouseout", (event, item) => {
     proxy.emit(event, item);
     if (pie.slices.has(item)) {
       pie.slices.get(item).removeAttribute("focused");
@@ -192,8 +192,8 @@ function createPieTableChart(document, { title, diameter, data, strings, totals,
  *          - radius: optional, the radius of the chart, in pixels.
  * @return PieChart
  *         A pie chart proxy instance, which emits the following events:
- *           - "mouseenter", when the mouse enters a slice
- *           - "mouseleave", when the mouse leaves a slice
+ *           - "mouseover", when the mouse enters a slice
+ *           - "mouseout", when the mouse leaves a slice
  *           - "click", when the mouse clicks a slice
  */
 function createPieChart(document, { data, width, height, centerX, centerY, radius }) {
@@ -280,7 +280,7 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
     pathNode.setAttribute("style", data.length > 1 ? hoverTransform : "");
 
     proxy.slices.set(sliceInfo, pathNode);
-    delegate(proxy, ["click", "mouseenter", "mouseleave"], pathNode, sliceInfo);
+    delegate(proxy, ["click", "mouseover", "mouseout"], pathNode, sliceInfo);
     container.appendChild(pathNode);
 
     if (sliceInfo.label && sliceAngle > NAMED_SLICE_MIN_ANGLE) {
@@ -335,8 +335,8 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
  *                    }
  * @return TableChart
  *         A table chart proxy instance, which emits the following events:
- *           - "mouseenter", when the mouse enters a row
- *           - "mouseleave", when the mouse leaves a row
+ *           - "mouseover", when the mouse enters a row
+ *           - "mouseout", when the mouse leaves a row
  *           - "click", when the mouse clicks a row
  */
 function createTableChart(document, { title, data, strings, totals }) {
@@ -393,7 +393,7 @@ function createTableChart(document, { title, data, strings, totals }) {
     }
 
     proxy.rows.set(rowInfo, rowNode);
-    delegate(proxy, ["click", "mouseenter", "mouseleave"], rowNode, rowInfo);
+    delegate(proxy, ["click", "mouseover", "mouseout"], rowNode, rowInfo);
     tableNode.appendChild(rowNode);
   }
 
@@ -437,7 +437,7 @@ XPCOMUtils.defineLazyGetter(this, "emptyTableChartData", () => {
  * @param EventEmitter emitter
  *        The event emitter proxy instance.
  * @param array events
- *        An array of events, e.g. ["mouseenter", "mouseleave"].
+ *        An array of events, e.g. ["mouseover", "mouseout"].
  * @param nsIDOMNode node
  *        The element firing the DOM events.
  * @param any args

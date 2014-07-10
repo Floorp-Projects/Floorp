@@ -76,14 +76,14 @@ exports.testScript = function(options) {
   return helpers.audit(options, [
     {
       skipIf: function commandJsMissing() {
-        return options.requisition.canon.getCommand('{') == null;
+        return options.requisition.system.commands.get('{') == null;
       },
       setup: '{ wind<TAB>',
       check: { input: '{ window' }
     },
     {
       skipIf: function commandJsMissing() {
-        return options.requisition.canon.getCommand('{') == null;
+        return options.requisition.system.commands.get('{') == null;
       },
       setup: '{ window.docum<TAB>',
       check: { input: '{ window.document' }
@@ -95,7 +95,7 @@ exports.testJsdom = function(options) {
   return helpers.audit(options, [
     {
       skipIf: function jsDomOrCommandJsMissing() {
-        return options.requisition.canon.getCommand('{') == null;
+        return options.requisition.system.commands.get('{') == null;
       },
       setup: '{ window.document.titl<TAB>',
       check: { input: '{ window.document.title ' }
