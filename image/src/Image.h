@@ -80,8 +80,8 @@ public:
   /**
    * The components that make up SizeOfData().
    */
-  virtual size_t HeapSizeOfSourceWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
-  virtual size_t HeapSizeOfDecodedWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
+  virtual size_t HeapSizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const = 0;
+  virtual size_t HeapSizeOfDecodedWithComputedFallback(MallocSizeOf aMallocSizeOf) const = 0;
   virtual size_t NonHeapSizeOfDecoded() const = 0;
   virtual size_t OutOfProcessSizeOfDecoded() const = 0;
 
@@ -195,7 +195,7 @@ protected:
    *
    * Otherwise, this method updates mLastRefreshTime to aTime & returns false.
    */
-  bool HadRecentRefresh(const mozilla::TimeStamp& aTime);
+  bool HadRecentRefresh(const TimeStamp& aTime);
 
   /**
    * Decides whether animation should or should not be happening,

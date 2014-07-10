@@ -10,12 +10,13 @@
 
 #include "mozilla/MemoryReporting.h"
 
-using mozilla::gfx::DataSourceSurface;
-using mozilla::gfx::SourceSurface;
-using mozilla::layers::LayerManager;
-using mozilla::layers::ImageContainer;
-
 namespace mozilla {
+
+using gfx::DataSourceSurface;
+using gfx::SourceSurface;
+using layers::LayerManager;
+using layers::ImageContainer;
+
 namespace image {
 
 // Inherited methods from Image.
@@ -45,13 +46,13 @@ ImageWrapper::SizeOfData()
 }
 
 size_t
-ImageWrapper::HeapSizeOfSourceWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const
+ImageWrapper::HeapSizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
   return mInnerImage->HeapSizeOfSourceWithComputedFallback(aMallocSizeOf);
 }
 
 size_t
-ImageWrapper::HeapSizeOfDecodedWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const
+ImageWrapper::HeapSizeOfDecodedWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
   return mInnerImage->HeapSizeOfDecodedWithComputedFallback(aMallocSizeOf);
 }
@@ -276,7 +277,7 @@ ImageWrapper::RequestDiscard()
 }
 
 NS_IMETHODIMP_(void)
-ImageWrapper::RequestRefresh(const mozilla::TimeStamp& aTime)
+ImageWrapper::RequestRefresh(const TimeStamp& aTime)
 {
   return mInnerImage->RequestRefresh(aTime);
 }
@@ -312,7 +313,7 @@ ImageWrapper::GetFirstFrameDelay()
 }
 
 NS_IMETHODIMP_(void)
-ImageWrapper::SetAnimationStartTime(const mozilla::TimeStamp& aTime)
+ImageWrapper::SetAnimationStartTime(const TimeStamp& aTime)
 {
   mInnerImage->SetAnimationStartTime(aTime);
 }

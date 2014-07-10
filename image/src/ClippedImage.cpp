@@ -13,12 +13,13 @@
 #include "Orientation.h"
 #include "SVGImageContext.h"
 
-using namespace mozilla;
-using namespace mozilla::gfx;
-using mozilla::layers::LayerManager;
-using mozilla::layers::ImageContainer;
 
 namespace mozilla {
+
+using namespace gfx;
+using layers::LayerManager;
+using layers::ImageContainer;
+
 namespace image {
 
 class ClippedImageCachedSurface

@@ -5,9 +5,6 @@
 
 #include "FrameSequence.h"
 
-using namespace mozilla;
-using namespace mozilla::image;
-
 namespace mozilla {
 namespace image {
 

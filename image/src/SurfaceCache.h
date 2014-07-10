@@ -135,9 +135,9 @@ struct SurfaceCache
    * @param aImageKey    Key data identifying which image the surface belongs to.
    * @param aSurfaceKey  Key data which uniquely identifies the requested surface.
    */
-  static void Insert(mozilla::gfx::DrawTarget* aTarget,
-                     const ImageKey            aImageKey,
-                     const SurfaceKey&         aSurfaceKey);
+  static void Insert(gfx::DrawTarget*  aTarget,
+                     const ImageKey    aImageKey,
+                     const SurfaceKey& aSurfaceKey);
 
   /*
    * Checks if a surface of a given size could possibly be stored in the cache.

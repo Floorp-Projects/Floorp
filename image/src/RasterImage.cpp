@@ -53,10 +53,12 @@
 #include "ipc/Nuwa.h"
 #endif
 
-using namespace mozilla;
-using namespace mozilla::gfx;
-using namespace mozilla::image;
-using namespace mozilla::layers;
+namespace mozilla {
+
+using namespace gfx;
+using namespace layers;
+
+namespace image {
 
 // a mask for flags that will affect the decoding
 #define DECODE_FLAGS_MASK (imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA | imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION)
@@ -370,9 +372,6 @@ public:
 private:
   nsAutoPtr<ScaleRequest> mScaleRequest;
 };
-
-namespace mozilla {
-namespace image {
 
 /* static */ StaticRefPtr<RasterImage::DecodePool> RasterImage::DecodePool::sSingleton;
 static nsCOMPtr<nsIThread> sScaleWorkerThread = nullptr;

@@ -24,7 +24,7 @@ static const char* sDiscardTimeoutPref = "image.mem.min_discard_timeout_ms";
 /* static */ uint32_t DiscardTracker::sMaxDecodedImageKB = 42 * 1024;
 /* static */ uint32_t DiscardTracker::sHardLimitDecodedImageKB = 0;
 /* static */ PRLock * DiscardTracker::sAllocationLock = nullptr;
-/* static */ mozilla::Mutex* DiscardTracker::sNodeListMutex = nullptr;
+/* static */ Mutex* DiscardTracker::sNodeListMutex = nullptr;
 /* static */ Atomic<bool> DiscardTracker::sShutdown(false);
 
 /*
