@@ -101,6 +101,7 @@
 #include "nsITimer.h"
 #include "nsISHistoryInternal.h"
 #include "nsIPrincipal.h"
+#include "nsNullPrincipal.h"
 #include "nsISHEntry.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPromptFactory.h"
@@ -168,6 +169,7 @@
 #include "nsCxPusher.h"
 #include "nsIChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
+#include "nsILoadInfo.h"
 #include "nsSandboxFlags.h"
 #include "nsXULAppAPI.h"
 #include "nsDOMNavigationTiming.h"
@@ -11091,6 +11093,21 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
             discardLayoutState = ShouldDiscardLayoutState(httpChannel);
         }
         aChannel->GetOwner(getter_AddRefs(owner));
+        if (!owner) {
+            nsCOMPtr<nsILoadInfo> loadInfo;
+            aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+            if (loadInfo) {
+                // For now keep storing just the principal in the SHEntry.
+                if (loadInfo->GetLoadingSandboxed()) {
+                    owner = do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID, &rv);
+                    if (NS_WARN_IF(NS_FAILED(rv))) {
+                        return rv;
+                    }
+                } else if (loadInfo->GetForceInheritPrincipal()) {
+                    owner = loadInfo->LoadingPrincipal();
+                }
+            }
+        }
     }
 
     //Title is set in nsDocShell::SetTitle()
