@@ -4,9 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <sys/socket.h>
+#include "base/message_loop.h"
 #include "BluetoothInterface.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
+#include "nsXULAppAPI.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -69,6 +72,40 @@ private:
   Arg1 mArg1;
 };
 
+template <typename Obj, typename Res,
+          typename Arg1, typename Arg2, typename Arg3>
+class BluetoothInterfaceRunnable3 : public nsRunnable
+{
+public:
+  BluetoothInterfaceRunnable3(Obj* aObj,
+                              Res (Obj::*aMethod)(Arg1, Arg2, Arg3),
+                              const Arg1& aArg1, const Arg2& aArg2,
+                              const Arg3& aArg3)
+  : mObj(aObj)
+  , mMethod(aMethod)
+  , mArg1(aArg1)
+  , mArg2(aArg2)
+  , mArg3(aArg3)
+  {
+    MOZ_ASSERT(mObj);
+    MOZ_ASSERT(mMethod);
+  }
+
+  NS_METHOD
+  Run() MOZ_OVERRIDE
+  {
+    ((*mObj).*mMethod)(mArg1, mArg2, mArg3);
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<Obj> mObj;
+  void (Obj::*mMethod)(Arg1, Arg2, Arg3);
+  Arg1 mArg1;
+  Arg2 mArg2;
+  Arg3 mArg3;
+};
+
 //
 // Socket Interface
 //
@@ -89,6 +126,11 @@ typedef
   BluetoothSocketIntResultRunnable;
 
 typedef
+  BluetoothInterfaceRunnable3<BluetoothSocketResultHandler,
+                              void, int, const nsAString_internal&, int>
+  BluetoothSocketIntStringIntResultRunnable;
+
+typedef
   BluetoothInterfaceRunnable1<BluetoothSocketResultHandler, void, bt_status_t>
   BluetoothSocketErrorRunnable;
 
@@ -103,6 +145,31 @@ DispatchBluetoothSocketResult(BluetoothSocketResultHandler* aRes,
 
   if (aStatus == BT_STATUS_SUCCESS) {
     runnable = new BluetoothSocketIntResultRunnable(aRes, aMethod, aArg);
+  } else {
+    runnable = new BluetoothSocketErrorRunnable(aRes,
+      &BluetoothSocketResultHandler::OnError, aStatus);
+  }
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  if (NS_FAILED(rv)) {
+    BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+  }
+  return rv;
+}
+
+static nsresult
+DispatchBluetoothSocketResult(
+  BluetoothSocketResultHandler* aRes,
+  void (BluetoothSocketResultHandler::*aMethod)(int, const nsAString&, int),
+  int aArg1, const nsAString& aArg2, int aArg3, bt_status_t aStatus)
+{
+  MOZ_ASSERT(aRes);
+
+  nsRunnable* runnable;
+
+  if (aStatus == BT_STATUS_SUCCESS) {
+    runnable = new BluetoothSocketIntStringIntResultRunnable(aRes, aMethod,
+                                                             aArg1, aArg2,
+                                                             aArg3);
   } else {
     runnable = new BluetoothSocketErrorRunnable(aRes,
       &BluetoothSocketResultHandler::OnError, aStatus);
@@ -131,6 +198,293 @@ BluetoothSocketInterface::Listen(btsock_type_t aType,
   }
 }
 
+#define CMSGHDR_CONTAINS_FD(_cmsghdr) \
+    ( ((_cmsghdr)->cmsg_level == SOL_SOCKET) && \
+      ((_cmsghdr)->cmsg_type == SCM_RIGHTS) )
+
+/* |SocketMessageWatcher| receives Bluedroid's socket setup
+ * messages on the I/O thread. You need to inherit from this
+ * class to make use of it.
+ *
+ * Bluedroid sends two socket info messages (20 bytes) at
+ * the beginning of a connection to both peers.
+ *
+ *   - 1st message: [channel:4]
+ *   - 2nd message: [size:2][bd address:6][channel:4][connection status:4]
+ *
+ * On the server side, the second message will contain a
+ * socket file descriptor for the connection. The client
+ * uses the original file descriptor.
+ */
+class SocketMessageWatcher : public MessageLoopForIO::Watcher
+{
+public:
+  static const unsigned char MSG1_SIZE = 4;
+  static const unsigned char MSG2_SIZE = 16;
+
+  static const unsigned char OFF_CHANNEL1 = 0;
+  static const unsigned char OFF_SIZE = 4;
+  static const unsigned char OFF_BDADDRESS = 6;
+  static const unsigned char OFF_CHANNEL2 = 12;
+  static const unsigned char OFF_STATUS = 16;
+
+  SocketMessageWatcher(int aFd)
+  : mFd(aFd)
+  , mClientFd(-1)
+  , mLen(0)
+  { }
+
+  virtual ~SocketMessageWatcher()
+  { }
+
+  virtual void Proceed(bt_status_t aStatus) = 0;
+
+  void OnFileCanReadWithoutBlocking(int aFd) MOZ_OVERRIDE
+  {
+    bt_status_t status;
+
+    switch (mLen) {
+      case 0:
+        status = RecvMsg1();
+        break;
+      case MSG1_SIZE:
+        status = RecvMsg2();
+        break;
+      default:
+        /* message-size error */
+        status = BT_STATUS_FAIL;
+        break;
+    }
+
+    if (IsComplete() || status != BT_STATUS_SUCCESS) {
+      mWatcher.StopWatchingFileDescriptor();
+      Proceed(status);
+    }
+  }
+
+  void OnFileCanWriteWithoutBlocking(int aFd) MOZ_OVERRIDE
+  { }
+
+  void Watch()
+  {
+    MessageLoopForIO::current()->WatchFileDescriptor(
+      mFd,
+      true,
+      MessageLoopForIO::WATCH_READ,
+      &mWatcher,
+      this);
+  }
+
+  bool IsComplete() const
+  {
+    return mLen == (MSG1_SIZE + MSG2_SIZE);
+  }
+
+  int GetFd() const
+  {
+    return mFd;
+  }
+
+  int32_t GetChannel1() const
+  {
+    return ReadInt32(OFF_CHANNEL1);
+  }
+
+  int32_t GetSize() const
+  {
+    return ReadInt16(OFF_SIZE);
+  }
+
+  nsString GetBdAddress() const
+  {
+    nsString bdAddress;
+    ReadBdAddress(OFF_BDADDRESS, bdAddress);
+    return bdAddress;
+  }
+
+  int32_t GetChannel2() const
+  {
+    return ReadInt32(OFF_CHANNEL2);
+  }
+
+  int32_t GetConnectionStatus() const
+  {
+    return ReadInt32(OFF_STATUS);
+  }
+
+  int GetClientFd() const
+  {
+    return mClientFd;
+  }
+
+private:
+  bt_status_t RecvMsg1()
+  {
+    struct iovec iv;
+    memset(&iv, 0, sizeof(iv));
+    iv.iov_base = mBuf;
+    iv.iov_len = MSG1_SIZE;
+
+    struct msghdr msg;
+    memset(&msg, 0, sizeof(msg));
+    msg.msg_iov = &iv;
+    msg.msg_iovlen = 1;
+
+    ssize_t res = TEMP_FAILURE_RETRY(recvmsg(mFd, &msg, MSG_NOSIGNAL));
+    if (res < 0) {
+      return BT_STATUS_FAIL;
+    }
+
+    mLen += res;
+
+    return BT_STATUS_SUCCESS;
+  }
+
+  bt_status_t RecvMsg2()
+  {
+    struct iovec iv;
+    memset(&iv, 0, sizeof(iv));
+    iv.iov_base = mBuf + MSG1_SIZE;
+    iv.iov_len = MSG2_SIZE;
+
+    struct msghdr msg;
+    struct cmsghdr cmsgbuf[2 * sizeof(cmsghdr) + 0x100];
+    memset(&msg, 0, sizeof(msg));
+    msg.msg_iov = &iv;
+    msg.msg_iovlen = 1;
+    msg.msg_control = cmsgbuf;
+    msg.msg_controllen = sizeof(cmsgbuf);
+
+    ssize_t res = TEMP_FAILURE_RETRY(recvmsg(mFd, &msg, MSG_NOSIGNAL));
+    if (res < 0) {
+      return BT_STATUS_FAIL;
+    }
+
+    mLen += res;
+
+    if (msg.msg_flags & (MSG_CTRUNC | MSG_OOB | MSG_ERRQUEUE)) {
+      return BT_STATUS_FAIL;
+    }
+
+    struct cmsghdr *cmsgptr = CMSG_FIRSTHDR(&msg);
+
+    // Extract client fd from message header
+    for (; cmsgptr; cmsgptr = CMSG_NXTHDR(&msg, cmsgptr)) {
+      if (CMSGHDR_CONTAINS_FD(cmsgptr)) {
+        // if multiple file descriptors have been sent, we close
+        // all but the final one.
+        if (mClientFd != -1) {
+          TEMP_FAILURE_RETRY(close(mClientFd));
+        }
+        // retrieve sent client fd
+        mClientFd = *(static_cast<int*>(CMSG_DATA(cmsgptr)));
+      }
+    }
+
+    return BT_STATUS_SUCCESS;
+  }
+
+  int16_t ReadInt16(unsigned long aOffset) const
+  {
+    /* little-endian buffer */
+    return (static_cast<int16_t>(mBuf[aOffset + 1]) << 8) |
+            static_cast<int16_t>(mBuf[aOffset]);
+  }
+
+  int32_t ReadInt32(unsigned long aOffset) const
+  {
+    /* little-endian buffer */
+    return (static_cast<int32_t>(mBuf[aOffset + 3]) << 24) |
+           (static_cast<int32_t>(mBuf[aOffset + 2]) << 16) |
+           (static_cast<int32_t>(mBuf[aOffset + 1]) << 8) |
+            static_cast<int32_t>(mBuf[aOffset]);
+  }
+
+  void ReadBdAddress(unsigned long aOffset, nsAString& aBdAddress) const
+  {
+    char str[18];
+    sprintf(str, "%02x:%02x:%02x:%02x:%02x:%02x",
+            mBuf[aOffset + 0], mBuf[aOffset + 1], mBuf[aOffset + 2],
+            mBuf[aOffset + 3], mBuf[aOffset + 4], mBuf[aOffset + 5]);
+    aBdAddress.AssignLiteral(str);
+  }
+
+  MessageLoopForIO::FileDescriptorWatcher mWatcher;
+  int mFd;
+  int mClientFd;
+  unsigned char mLen;
+  uint8_t mBuf[MSG1_SIZE + MSG2_SIZE];
+};
+
+/* |SocketMessageWatcherTask| starts a SocketMessageWatcher
+ * on the I/O task
+ */
+class SocketMessageWatcherTask MOZ_FINAL : public Task
+{
+public:
+  SocketMessageWatcherTask(SocketMessageWatcher* aWatcher)
+  : mWatcher(aWatcher)
+  {
+    MOZ_ASSERT(mWatcher);
+  }
+
+  void Run() MOZ_OVERRIDE
+  {
+    mWatcher->Watch();
+  }
+
+private:
+  SocketMessageWatcher* mWatcher;
+};
+
+/* |DeleteTask| deletes a class instance on the I/O thread
+ */
+template <typename T>
+class DeleteTask MOZ_FINAL : public Task
+{
+public:
+  DeleteTask(T* aPtr)
+  : mPtr(aPtr)
+  { }
+
+  void Run() MOZ_OVERRIDE
+  {
+    mPtr = nullptr;
+  }
+
+private:
+  nsAutoPtr<T> mPtr;
+};
+
+/* |ConnectWatcher| specializes SocketMessageWatcher for
+ * connect operations by reading the socket messages from
+ * Bluedroid and forwarding the connected socket to the
+ * resource handler.
+ */
+class ConnectWatcher MOZ_FINAL : public SocketMessageWatcher
+{
+public:
+  ConnectWatcher(int aFd, BluetoothSocketResultHandler* aRes)
+  : SocketMessageWatcher(aFd)
+  , mRes(aRes)
+  { }
+
+  void Proceed(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    if (mRes) {
+      DispatchBluetoothSocketResult(mRes,
+                                   &BluetoothSocketResultHandler::Connect,
+                                    GetFd(), GetBdAddress(),
+                                    GetConnectionStatus(), aStatus);
+    }
+    MessageLoopForIO::current()->PostTask(
+      FROM_HERE, new DeleteTask<ConnectWatcher>(this));
+  }
+
+private:
+  nsRefPtr<BluetoothSocketResultHandler> mRes;
+};
+
 void
 BluetoothSocketInterface::Connect(const bt_bdaddr_t* aBdAddr,
                                   btsock_type_t aType, const uint8_t* aUuid,
@@ -141,10 +495,14 @@ BluetoothSocketInterface::Connect(const bt_bdaddr_t* aBdAddr,
 
   bt_status_t status = mInterface->connect(aBdAddr, aType, aUuid, aChannel,
                                            &fd, aFlags);
-  if (aRes) {
-    DispatchBluetoothSocketResult(aRes,
-                                  &BluetoothSocketResultHandler::Connect,
-                                  fd, status);
+  if (status == BT_STATUS_SUCCESS) {
+    /* receive Bluedroid's socket-setup messages */
+    Task* t = new SocketMessageWatcherTask(new ConnectWatcher(fd, aRes));
+    XRE_GetIOMessageLoop()->PostTask(FROM_HERE, t);
+  } else if (aRes) {
+      DispatchBluetoothSocketResult(aRes,
+                                    &BluetoothSocketResultHandler::Connect,
+                                    -1, EmptyString(), 0, status);
   }
 }
 
