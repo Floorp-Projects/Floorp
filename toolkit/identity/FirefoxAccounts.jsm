@@ -185,9 +185,10 @@ FxAccountsService.prototype = {
         this.doLogin(aRPId, data);
       },
       error => {
-        log.error("get assertion failed: " + JSON.stringify(error));
+        log.debug("get assertion failed: " + JSON.stringify(error));
         // Cancellation is passed through an error channel; here we reroute.
-        if (error.error && (error.error.details == "DIALOG_CLOSED_BY_USER")) {
+        if ((error.error && (error.error.details == "DIALOG_CLOSED_BY_USER")) ||
+            (error.details == "DIALOG_CLOSED_BY_USER")) {
           return this.doCancel(aRPId);
         }
         this.doError(aRPId, error);
