@@ -61,27 +61,14 @@ PRLogModuleInfo* sTextStoreLog = nullptr;
 class InputScopeImpl MOZ_FINAL : public ITfInputScope
 {
 public:
-  InputScopeImpl(const nsTArray<InputScope>& aList) :
-    mRefCnt(1),
-    mInputScopes(aList)
+  InputScopeImpl(const nsTArray<InputScope>& aList)
+    : mInputScopes(aList)
   {
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
       ("TSF: 0x%p InputScopeImpl()", this));
   }
 
-  STDMETHODIMP_(ULONG) AddRef(void) { return ++mRefCnt; }
-
-  STDMETHODIMP_(ULONG) Release(void)
-  {
-    --mRefCnt;
-    if (mRefCnt) {
-      return mRefCnt;
-    }
-    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-      ("TSF: 0x%p InputScopeImpl::Release() final", this));
-    delete this;
-    return 0;
-  }
+  NS_INLINE_DECL_IUNKNOWN_REFCOUNTING(InputScopeImpl)
 
   STDMETHODIMP QueryInterface(REFIID riid, void** ppv)
   {
@@ -127,7 +114,6 @@ public:
   STDMETHODIMP GetXML(BSTR *pbstrXML) { return E_NOTIMPL; }
 
 private:
-  DWORD mRefCnt;
   nsTArray<InputScope> mInputScopes;
 };
 
@@ -519,7 +505,6 @@ GetDisplayAttrStr(const TF_DISPLAYATTRIBUTE &aDispAttr)
 nsTextStore::nsTextStore()
  : mContent(mComposition, mSelection)
 {
-  mRefCnt = 1;
   mEditCookie = 0;
   mIPProfileCookie = TF_INVALID_COOKIE;
   mLangProfileCookie = TF_INVALID_COOKIE;
@@ -759,20 +744,6 @@ nsTextStore::QueryInterface(REFIID riid,
     ("TSF: 0x%p nsTextStore::QueryInterface() FAILED, riid=%s",
      this, GetRIIDNameStr(riid).get()));
   return E_NOINTERFACE;
-}
-
-STDMETHODIMP_(ULONG) nsTextStore::AddRef()
-{
-  return ++mRefCnt;
-}
-
-STDMETHODIMP_(ULONG) nsTextStore::Release()
-{
-  --mRefCnt;
-  if (0 != mRefCnt)
-    return mRefCnt;
-  delete this;
-  return 0;
 }
 
 STDMETHODIMP
@@ -2252,7 +2223,8 @@ nsTextStore::RetrieveRequestedAttrs(ULONG ulCount,
 
     if (mInputScopeRequested) {
       paAttrVals->varValue.vt = VT_UNKNOWN;
-      paAttrVals->varValue.punkVal = (IUnknown*) new InputScopeImpl(mInputScopes);
+      nsRefPtr<IUnknown> inputScope = new InputScopeImpl(mInputScopes);
+      paAttrVals->varValue.punkVal = inputScope.forget().take();
     }
 
     mInputScopeDetected = mInputScopeRequested = false;
