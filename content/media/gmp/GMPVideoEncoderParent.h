@@ -65,7 +65,6 @@ private:
   // PGMPVideoEncoderParent
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
   virtual bool RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame,
-                           const GMPBufferType& aBufferType,
                            const nsTArray<uint8_t>& aCodecSpecificInfo) MOZ_OVERRIDE;
   virtual bool RecvParentShmemForPool(Shmem& aFrameBuffer) MOZ_OVERRIDE;
   virtual bool AnswerNeedShmem(const uint32_t& aEncodedBufferSize,

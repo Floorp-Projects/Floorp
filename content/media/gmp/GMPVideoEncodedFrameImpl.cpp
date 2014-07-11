@@ -19,7 +19,8 @@ GMPVideoEncodedFrameImpl::GMPVideoEncodedFrameImpl(GMPVideoHostImpl* aHost)
   mFrameType(kGMPDeltaFrame),
   mSize(0),
   mCompleteFrame(false),
-  mHost(aHost)
+  mHost(aHost),
+  mBufferType(GMP_BufferSingle)
 {
   MOZ_ASSERT(aHost);
   aHost->EncodedFrameCreated(this);
@@ -35,7 +36,8 @@ GMPVideoEncodedFrameImpl::GMPVideoEncodedFrameImpl(const GMPVideoEncodedFrameDat
   mSize(aFrameData.mSize()),
   mCompleteFrame(aFrameData.mCompleteFrame()),
   mHost(aHost),
-  mBuffer(aFrameData.mBuffer())
+  mBuffer(aFrameData.mBuffer()),
+  mBufferType(aFrameData.mBufferType())
 {
   MOZ_ASSERT(aHost);
   aHost->EncodedFrameCreated(this);
@@ -92,6 +94,7 @@ GMPVideoEncodedFrameImpl::RelinquishFrameData(GMPVideoEncodedFrameData& aFrameDa
   aFrameData.mSize() = mSize;
   aFrameData.mCompleteFrame() = mCompleteFrame;
   aFrameData.mBuffer() = mBuffer;
+  aFrameData.mBufferType() = mBufferType;
 
   // This method is called right before Shmem is sent to another process.
   // We need to effectively zero out our member copy so that we don't
@@ -147,6 +150,7 @@ GMPVideoEncodedFrameImpl::CopyFrame(const GMPVideoEncodedFrame& aFrame)
   mFrameType = f.mFrameType;
   mSize = f.mSize; // already set...
   mCompleteFrame = f.mCompleteFrame;
+  mBufferType = f.mBufferType;
   // Don't copy host, that should have been set properly on object creation via host.
 
   return GMPNoErr;
@@ -288,6 +292,18 @@ void
 GMPVideoEncodedFrameImpl::Destroy()
 {
   delete this;
+}
+
+GMPBufferType
+GMPVideoEncodedFrameImpl::BufferType() const
+{
+  return mBufferType;
+}
+
+void
+GMPVideoEncodedFrameImpl::SetBufferType(GMPBufferType aBufferType)
+{
+  mBufferType = aBufferType;
 }
 
 } // namespace gmp

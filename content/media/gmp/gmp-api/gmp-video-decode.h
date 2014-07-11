@@ -84,7 +84,6 @@ public:
   // - aInputFrame: Frame to decode. Call Destroy() on frame when it's decoded.
   // - aMissingFrames: True if one or more frames have been lost since the
   //                   previous decode call.
-  // - aBufferType : type of frame to encode
   // - aCodecSpecificInfo : codec specific data, pointer to a
   //                        GMPCodecSpecificInfo structure appropriate for
   //                        this codec type.
@@ -93,7 +92,6 @@ public:
   //                  decoders with internal rendering.
   virtual GMPErr Decode(GMPVideoEncodedFrame* aInputFrame,
                         bool aMissingFrames,
-                        GMPBufferType aBufferType,
                         const uint8_t* aCodecSpecificInfo,
                         uint32_t aCodecSpecificInfoLength,
                         int64_t aRenderTimeMs = -1) = 0;
