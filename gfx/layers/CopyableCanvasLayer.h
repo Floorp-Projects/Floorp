@@ -21,11 +21,8 @@
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 
 namespace mozilla {
-
-namespace gfx {
+namespace gl{
 class SurfaceStream;
-class SharedSurface;
-class SurfaceFactory;
 }
 
 namespace layers {
@@ -52,10 +49,10 @@ protected:
   void UpdateTarget(gfx::DrawTarget* aDestTarget = nullptr);
 
   RefPtr<gfx::SourceSurface> mSurface;
-  nsRefPtr<mozilla::gl::GLContext> mGLContext;
+  nsRefPtr<gl::GLContext> mGLContext;
   mozilla::RefPtr<mozilla::gfx::DrawTarget> mDrawTarget;
 
-  RefPtr<gfx::SurfaceStream> mStream;
+  RefPtr<gl::SurfaceStream> mStream;
 
   uint32_t mCanvasFramebuffer;
 

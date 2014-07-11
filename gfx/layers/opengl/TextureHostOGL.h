@@ -45,6 +45,9 @@ struct nsIntSize;
 namespace mozilla {
 namespace gfx {
 class DataSourceSurface;
+}
+
+namespace gl {
 class SurfaceStream;
 }
 

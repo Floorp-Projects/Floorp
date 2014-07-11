@@ -1669,22 +1669,15 @@ GLContext::PublishFrame()
 {
     MOZ_ASSERT(mScreen);
 
-    if (!mScreen->PublishFrame(OffscreenSize()))
-        return false;
-
-    return true;
+    return mScreen->PublishFrame(OffscreenSize());
 }
 
-SharedSurface_GL*
+SharedSurface*
 GLContext::RequestFrame()
 {
     MOZ_ASSERT(mScreen);
 
-    SharedSurface* ret = mScreen->Stream()->SwapConsumer();
-    if (!ret)
-        return nullptr;
-
-    return SharedSurface_GL::Cast(ret);
+    return mScreen->Stream()->SwapConsumer();
 }
 
 
