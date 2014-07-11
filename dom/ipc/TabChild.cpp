@@ -750,6 +750,39 @@ private:
     }
 };
 
+class TabChild::DelayedDeleteRunnable MOZ_FINAL
+  : public nsRunnable
+{
+    nsRefPtr<TabChild> mTabChild;
+
+public:
+    DelayedDeleteRunnable(TabChild* aTabChild)
+      : mTabChild(aTabChild)
+    {
+        MOZ_ASSERT(NS_IsMainThread());
+        MOZ_ASSERT(aTabChild);
+    }
+
+private:
+    ~DelayedDeleteRunnable()
+    {
+        MOZ_ASSERT(NS_IsMainThread());
+        MOZ_ASSERT(!mTabChild);
+    }
+
+    NS_IMETHOD
+    Run()
+    {
+        MOZ_ASSERT(NS_IsMainThread());
+        MOZ_ASSERT(mTabChild);
+
+        unused << PBrowserChild::Send__delete__(mTabChild);
+
+        mTabChild = nullptr;
+        return NS_OK;
+    }
+};
+
 StaticRefPtr<TabChild> sPreallocatedTab;
 
 /*static*/
@@ -2748,7 +2781,12 @@ TabChild::RecvDestroy()
   // XXX what other code in ~TabChild() should we be running here?
   DestroyWindow();
 
-  return Send__delete__(this);
+  // Bounce through the event loop once to allow any delayed teardown runnables
+  // that were just generated to have a chance to run.
+  nsCOMPtr<nsIRunnable> deleteRunnable = new DelayedDeleteRunnable(this);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(deleteRunnable)));
+
+  return true;
 }
 
 bool
