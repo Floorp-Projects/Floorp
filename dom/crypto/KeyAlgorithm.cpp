@@ -50,8 +50,6 @@ KeyAlgorithm::KeyAlgorithm(nsIGlobalObject* aGlobal, const nsString& aName)
     mMechanism = CKM_RSA_PKCS;
   } else if (mName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
     mMechanism = CKM_RSA_PKCS;
-  } else if (mName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
-    mMechanism = CKM_RSA_PKCS_OAEP;
   } else {
     mMechanism = UNKNOWN_CK_MECHANISM;
   }
