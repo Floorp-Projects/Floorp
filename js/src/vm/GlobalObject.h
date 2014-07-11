@@ -807,6 +807,15 @@ GenericCreatePrototype(JSContext *cx, JSProtoKey key)
     return cx->global()->createBlankPrototypeInheriting(cx, clasp, *parentProto);
 }
 
+inline JSProtoKey
+StandardProtoKeyOrNull(const JSObject *obj)
+{
+    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(obj->getClass());
+    if (key == JSProto_Error)
+        return GetExceptionProtoKey(obj->as<ErrorObject>().type());
+    return key;
+}
+
 } // namespace js
 
 template<>
