@@ -36,25 +36,26 @@ namespace mozilla {
  */
 class SHA1Sum
 {
-    union {
-        uint32_t w[16]; /* input buffer */
-        uint8_t b[64];
-    } u;
-    uint64_t size; /* count of hashed bytes. */
-    unsigned H[22]; /* 5 state variables, 16 tmp values, 1 extra */
-    bool mDone;
+  union
+  {
+    uint32_t mW[16]; /* input buffer */
+    uint8_t mB[64];
+  } mU;
+  uint64_t mSize; /* count of hashed bytes. */
+  unsigned mH[22]; /* 5 state variables, 16 tmp values, 1 extra */
+  bool mDone;
 
-  public:
-    MFBT_API SHA1Sum();
+public:
+  MFBT_API SHA1Sum();
 
-    static const size_t HashSize = 20;
-    typedef uint8_t Hash[HashSize];
+  static const size_t kHashSize = 20;
+  typedef uint8_t Hash[kHashSize];
 
-    /* Add len bytes of dataIn to the data sequence being hashed. */
-    MFBT_API void update(const void* dataIn, uint32_t len);
+  /* Add len bytes of dataIn to the data sequence being hashed. */
+  MFBT_API void update(const void* aData, uint32_t aLength);
 
-    /* Compute the final hash of all data into hashOut. */
-    MFBT_API void finish(SHA1Sum::Hash& hashOut);
+  /* Compute the final hash of all data into hashOut. */
+  MFBT_API void finish(SHA1Sum::Hash& aHashOut);
 };
 
 } /* namespace mozilla */

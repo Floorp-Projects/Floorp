@@ -27,6 +27,7 @@ public:
   void Run()
   {
     mTask->Run();
+    mTask->Destroy();
     mTask = nullptr;
   }
 
@@ -35,7 +36,7 @@ private:
   {
   }
 
-  nsAutoPtr<GMPTask> mTask;
+  GMPTask* mTask;
 };
 
 class SyncRunnable MOZ_FINAL
@@ -71,6 +72,7 @@ public:
   void Run()
   {
     mTask->Run();
+    mTask->Destroy();
     mTask = nullptr;
     MonitorAutoLock lock(mMonitor);
     mDone = true;
@@ -83,7 +85,7 @@ private:
   }
 
   bool mDone;
-  nsAutoPtr<GMPTask> mTask;
+  GMPTask* mTask;
   MessageLoop* mMessageLoop;
   Monitor mMonitor;
 };
@@ -108,7 +110,6 @@ RunOnMainThread(GMPTask* aTask)
   }
 
   nsRefPtr<Runnable> r = new Runnable(aTask);
-
   sMainLoop->PostTask(FROM_HERE, NewRunnableMethod(r.get(), &Runnable::Run));
 
   return GMPNoErr;
@@ -152,6 +153,9 @@ InitPlatformAPI(GMPPlatformAPI& aPlatformAPI)
   aPlatformAPI.runonmainthread = &RunOnMainThread;
   aPlatformAPI.syncrunonmainthread = &SyncRunOnMainThread;
   aPlatformAPI.createmutex = &CreateMutex;
+  aPlatformAPI.createrecord = nullptr;
+  aPlatformAPI.settimer = nullptr;
+  aPlatformAPI.getcurrenttime = nullptr;
 }
 
 GMPThreadImpl::GMPThreadImpl()

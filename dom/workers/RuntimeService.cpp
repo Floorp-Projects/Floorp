@@ -357,14 +357,14 @@ LoadRuntimeAndContextOptions(const char* aPrefName, void* /* aClosure */)
   if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("native_regexp"))) {
     runtimeOptions.setNativeRegExp(true);
   }
+  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("werror"))) {
+    runtimeOptions.setWerror(true);
+  }
 
   // Common options.
   JS::ContextOptions commonContextOptions = kRequiredContextOptions;
   if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("strict"))) {
     commonContextOptions.setExtraWarnings(true);
-  }
-  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("werror"))) {
-    commonContextOptions.setWerror(true);
   }
 
   // Content options.

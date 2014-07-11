@@ -37,19 +37,20 @@
 #include <vector>
 #include <stdint.h>
 
-#include "gmp-video-errors.h"
+#include "gmp-errors.h"
 #include "gmp-video-frame-i420.h"
 #include "gmp-video-frame-encoded.h"
 #include "gmp-video-codec.h"
 
 // ALL METHODS MUST BE CALLED ON THE MAIN THREAD
-class GMPEncoderCallback
+class GMPVideoEncoderCallback
 {
 public:
-  virtual ~GMPEncoderCallback() {}
+  virtual ~GMPVideoEncoderCallback() {}
 
   virtual void Encoded(GMPVideoEncodedFrame* aEncodedFrame,
-                       const GMPCodecSpecificInfo& aCodecSpecificInfo) = 0;
+                       const uint8_t* aCodecSpecificInfo,
+                       uint32_t aCodecSpecificInfoLength) = 0;
 };
 
 // ALL METHODS MUST BE CALLED ON THE MAIN THREAD
@@ -62,26 +63,38 @@ public:
   //
   // Input:
   // - codecSettings : Codec settings
+  // - aCodecSpecific : codec specific data, pointer to a
+  //                    GMPCodecSpecific structure appropriate for
+  //                    this codec type.
+  // - aCodecSpecificLength : number of bytes in aCodecSpecific
   // - aCallback: Subclass should retain reference to it until EncodingComplete
   //              is called. Do not attempt to delete it, host retains ownership.
-  // - numberOfCores : Number of cores available for the encoder
-  // - maxPayloadSize : The maximum size each payload is allowed
+  // - aNnumberOfCores : Number of cores available for the encoder
+  // - aMaxPayloadSize : The maximum size each payload is allowed
   //                    to have. Usually MTU - overhead.
-  virtual GMPVideoErr InitEncode(const GMPVideoCodec& aCodecSettings,
-                                 GMPEncoderCallback* aCallback,
-                                 int32_t aNumberOfCores,
-                                 uint32_t aMaxPayloadSize) = 0;
+  virtual GMPErr InitEncode(const GMPVideoCodec& aCodecSettings,
+                            const uint8_t* aCodecSpecific,
+                            uint32_t aCodecSpecificLength,
+                            GMPVideoEncoderCallback* aCallback,
+                            int32_t aNumberOfCores,
+                            uint32_t aMaxPayloadSize) = 0;
 
   // Encode an I420 frame (as a part of a video stream). The encoded frame
   // will be returned to the user through the encode complete callback.
   //
   // Input:
-  // - inputFrame : Frame to be encoded
-  // - codecSpecificInfo : Pointer to codec specific data
-  // - frame_types : The frame type to encode
-  virtual GMPVideoErr Encode(GMPVideoi420Frame* aInputFrame,
-                             const GMPCodecSpecificInfo& aCodecSpecificInfo,
-                             const std::vector<GMPVideoFrameType>& aFrameTypes) = 0;
+  // - aInputFrame : Frame to be encoded
+  // - aCodecSpecificInfo : codec specific data, pointer to a
+  //                        GMPCodecSpecificInfo structure appropriate for
+  //                        this codec type.
+  // - aCodecSpecificInfoLength : number of bytes in aCodecSpecific
+  // - aFrameTypes : The frame type to encode
+  // - aFrameTypesLength : The number of elements in aFrameTypes array.
+  virtual GMPErr Encode(GMPVideoi420Frame* aInputFrame,
+                        const uint8_t* aCodecSpecificInfo,
+                        uint32_t aCodecSpecificInfoLength,
+                        const GMPVideoFrameType* aFrameTypes,
+                        uint32_t aFrameTypesLength) = 0;
 
   // Inform the encoder about the packet loss and round trip time on the
   // network used to decide the best pattern and signaling.
@@ -89,19 +102,19 @@ public:
   // - packetLoss : Fraction lost (loss rate in percent =
   // 100 * packetLoss / 255)
   // - rtt : Round-trip time in milliseconds
-  virtual GMPVideoErr SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT) = 0;
+  virtual GMPErr SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT) = 0;
 
   // Inform the encoder about the new target bit rate.
   //
   // - newBitRate : New target bit rate
   // - frameRate : The target frame rate
-  virtual GMPVideoErr SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) = 0;
+  virtual GMPErr SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) = 0;
 
   // Use this function to enable or disable periodic key frames. Can be useful for codecs
   // which have other ways of stopping error propagation.
   //
   // - enable : Enable or disable periodic key frames
-  virtual GMPVideoErr SetPeriodicKeyFrames(bool aEnable) = 0;
+  virtual GMPErr SetPeriodicKeyFrames(bool aEnable) = 0;
 
   // May free Encoder memory.
   virtual void EncodingComplete() = 0;

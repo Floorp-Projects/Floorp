@@ -1864,6 +1864,7 @@ ScriptSource::performXDR(XDRState<mode> *xdr)
 
         if (mode == XDR_DECODE) {
             size_t byteLen = (sourceMapURLLen + 1) * sizeof(jschar);
+            MOZ_ASSERT(!sourceMapURL_, "Don't leak sourceMapURL_");
             sourceMapURL_ = static_cast<jschar *>(xdr->cx()->malloc_(byteLen));
             if (!sourceMapURL_)
                 return false;
@@ -2035,14 +2036,16 @@ ScriptSource::setSourceMapURL(ExclusiveContext *cx, const jschar *sourceMapURL)
 {
     JS_ASSERT(sourceMapURL);
     if (hasSourceMapURL()) {
-        if (cx->isJSContext() &&
-            !JS_ReportErrorFlagsAndNumber(cx->asJSContext(), JSREPORT_WARNING,
-                                          js_GetErrorMessage, nullptr,
-                                          JSMSG_ALREADY_HAS_PRAGMA, filename_,
-                                          "//# sourceMappingURL"))
-        {
-            return false;
+        // Warn about the replacement, but use the new one.
+        if (cx->isJSContext()) {
+            JS_ReportErrorFlagsAndNumber(cx->asJSContext(), JSREPORT_WARNING,
+                                         js_GetErrorMessage, nullptr,
+                                         JSMSG_ALREADY_HAS_PRAGMA, filename_,
+                                         "//# sourceMappingURL");
         }
+
+        js_free(sourceMapURL_);
+        sourceMapURL_ = nullptr;
     }
 
     size_t len = js_strlen(sourceMapURL) + 1;

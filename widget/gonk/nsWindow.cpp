@@ -27,7 +27,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "Framebuffer.h"
 #include "gfxContext.h"
-#include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "GLContextProvider.h"

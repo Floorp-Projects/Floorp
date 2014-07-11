@@ -40,7 +40,8 @@ GMPVideoEncoderChild::Host()
 
 void
 GMPVideoEncoderChild::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
-                              const GMPCodecSpecificInfo& aCodecSpecificInfo)
+                              const uint8_t* aCodecSpecificInfo,
+                              uint32_t aCodecSpecificInfoLength)
 {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
@@ -49,31 +50,22 @@ GMPVideoEncoderChild::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
   GMPVideoEncodedFrameData frameData;
   ef->RelinquishFrameData(frameData);
 
-  SendEncoded(frameData, aCodecSpecificInfo);
+  nsTArray<uint8_t> codecSpecific;
+  codecSpecific.AppendElements(aCodecSpecificInfo, aCodecSpecificInfoLength);
+  SendEncoded(frameData, codecSpecific);
 
   aEncodedFrame->Destroy();
 }
 
-bool
-GMPVideoEncoderChild::MgrAllocShmem(size_t aSize,
-                                    ipc::Shmem::SharedMemory::SharedMemoryType aType,
-                                    ipc::Shmem* aMem)
+void
+GMPVideoEncoderChild::CheckThread()
 {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
-  return AllocShmem(aSize, aType, aMem);
-}
-
-bool
-GMPVideoEncoderChild::MgrDeallocShmem(Shmem& aMem)
-{
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
-  return DeallocShmem(aMem);
 }
 
 bool
 GMPVideoEncoderChild::RecvInitEncode(const GMPVideoCodec& aCodecSettings,
+                                     const nsTArray<uint8_t>& aCodecSpecific,
                                      const int32_t& aNumberOfCores,
                                      const uint32_t& aMaxPayloadSize)
 {
@@ -82,15 +74,20 @@ GMPVideoEncoderChild::RecvInitEncode(const GMPVideoCodec& aCodecSettings,
   }
 
   // Ignore any return code. It is OK for this to fail without killing the process.
-  mVideoEncoder->InitEncode(aCodecSettings, this, aNumberOfCores, aMaxPayloadSize);
+  mVideoEncoder->InitEncode(aCodecSettings,
+                            aCodecSpecific.Elements(),
+                            aCodecSpecific.Length(),
+                            this,
+                            aNumberOfCores,
+                            aMaxPayloadSize);
 
   return true;
 }
 
 bool
 GMPVideoEncoderChild::RecvEncode(const GMPVideoi420FrameData& aInputFrame,
-                                 const GMPCodecSpecificInfo& aCodecSpecificInfo,
-                                 const InfallibleTArray<int>& aFrameTypes)
+                                 const nsTArray<uint8_t>& aCodecSpecificInfo,
+                                 const nsTArray<GMPVideoFrameType>& aFrameTypes)
 {
   if (!mVideoEncoder) {
     return false;
@@ -98,14 +95,23 @@ GMPVideoEncoderChild::RecvEncode(const GMPVideoi420FrameData& aInputFrame,
 
   auto f = new GMPVideoi420FrameImpl(aInputFrame, &mVideoHost);
 
-  std::vector<GMPVideoFrameType> frameTypes(aFrameTypes.Length());
-  for (uint32_t i = 0; i < aFrameTypes.Length(); i++) {
-    frameTypes[i] = static_cast<GMPVideoFrameType>(aFrameTypes[i]);
-  }
-
   // Ignore any return code. It is OK for this to fail without killing the process.
-  mVideoEncoder->Encode(f, aCodecSpecificInfo, frameTypes);
+  mVideoEncoder->Encode(f,
+                        aCodecSpecificInfo.Elements(),
+                        aCodecSpecificInfo.Length(),
+                        aFrameTypes.Elements(),
+                        aFrameTypes.Length());
 
+  return true;
+}
+
+bool
+GMPVideoEncoderChild::RecvChildShmemForPool(Shmem& aEncodedBuffer)
+{
+  if (aEncodedBuffer.IsWritable()) {
+    mVideoHost.SharedMemMgr()->MgrDeallocShmem(GMPSharedMemManager::kGMPEncodedData,
+                                               aEncodedBuffer);
+  }
   return true;
 }
 

@@ -58,6 +58,7 @@ public:
 
     virtual status_t read(MediaBuffer **buffer, const ReadOptions *options = NULL);
     virtual status_t fragmentedRead(MediaBuffer **buffer, const ReadOptions *options = NULL);
+    virtual Vector<Indice> exportIndex();
 
 protected:
     virtual ~MPEG4Source();
@@ -3627,6 +3628,35 @@ status_t MPEG4Source::fragmentedRead(
 
         return OK;
     }
+}
+
+Vector<MediaSource::Indice> MPEG4Source::exportIndex()
+{
+  Vector<Indice> index;
+  for (uint32_t sampleIndex = 0; sampleIndex < mSampleTable->countSamples();
+          sampleIndex++) {
+      off64_t offset;
+      size_t size;
+      uint32_t compositionTime;
+      uint32_t duration;
+      bool isSyncSample;
+      if (mSampleTable->getMetaDataForSample(sampleIndex, &offset, &size,
+                                             &compositionTime, &duration,
+                                             &isSyncSample) != OK) {
+          ALOGE("Unexpected sample table problem");
+          continue;
+      }
+
+      Indice indice;
+      indice.start_offset = offset;
+      indice.end_offset = offset + size;
+      indice.start_composition = (compositionTime * 1000000ll) / mTimescale,
+      indice.end_composition = ((compositionTime + duration) * 1000000ll) /
+              mTimescale;
+      indice.sync = isSyncSample;
+      index.add(indice);
+  }
+  return index;
 }
 
 MPEG4Extractor::Track *MPEG4Extractor::findTrackByMimePrefix(

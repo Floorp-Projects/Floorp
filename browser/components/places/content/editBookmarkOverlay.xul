@@ -33,7 +33,6 @@
                  control="editBMPanel_namePicker"
                  observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_namePicker"
-                   onblur="gEditItemOverlay.onNamePickerChange();"
                    observes="paneElementsBroadcaster"/>
         </row>
 
@@ -45,7 +44,6 @@
                  observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_locationField"
                    class="uri-element"
-                   onblur="gEditItemOverlay.onLocationFieldBlur();"
                    observes="paneElementsBroadcaster"/>
         </row>
 
@@ -150,7 +148,6 @@
                      completedefaultindex="true"
                      tabscrolling="true"
                      showcommentcolumn="true"
-                     onblur="gEditItemOverlay.onTagsFieldBlur();"
                      observes="paneElementsBroadcaster"
                      placeholder="&editBookmarkOverlay.tagsEmptyDesc.label;"/>
             <button id="editBMPanel_tagsSelectorExpander"
@@ -180,7 +177,6 @@
                  control="editBMPanel_keywordField"
                  observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_keywordField"
-                   onblur="gEditItemOverlay.onKeywordFieldBlur();"
                    observes="paneElementsBroadcaster"/>
         </row>
 
@@ -193,7 +189,6 @@
                  observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_descriptionField"
                    multiline="true"
-                   onblur="gEditItemOverlay.onDescriptionFieldBlur();"
                    observes="paneElementsBroadcaster"/>
         </row>
       </rows>

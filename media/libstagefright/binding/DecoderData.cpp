@@ -129,6 +129,31 @@ MP4Sample::Update()
 }
 
 void
+MP4Sample::Pad(size_t aPaddingBytes)
+{
+  MOZ_ASSERT(data == mMediaBuffer->data());
+
+  size_t newSize = size + aPaddingBytes;
+
+  // If the existing MediaBuffer has enough space then we just recycle it. If
+  // not then we copy to a new buffer.
+  uint8_t* newData = mMediaBuffer && newSize <= mMediaBuffer->size()
+                       ? data
+                       : new uint8_t[newSize];
+
+  memset(newData + size, 0, aPaddingBytes);
+
+  if (newData != data) {
+    memcpy(newData, data, size);
+    extra_buffer = data = newData;
+    if (mMediaBuffer) {
+      mMediaBuffer->release();
+      mMediaBuffer = nullptr;
+    }
+  }
+}
+
+void
 MP4Sample::Prepend(const uint8_t* aData, size_t aSize)
 {
   size_t newSize = size + aSize;

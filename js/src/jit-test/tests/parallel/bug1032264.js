@@ -6,4 +6,6 @@ if (getBuildConfiguration().parallelJS) {
           throw x;
       }
   });
+} else {
+  throw 503;
 }

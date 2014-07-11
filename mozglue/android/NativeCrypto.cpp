@@ -64,11 +64,11 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_mozilla_gecko_background_native
 
   env->ReleaseByteArrayElements(jstr, str, JNI_ABORT);
 
-  jbyteArray out = env->NewByteArray(SHA1Sum::HashSize);
+  jbyteArray out = env->NewByteArray(SHA1Sum::kHashSize);
   if (out == NULL) {
     return NULL;
   }
-  env->SetByteArrayRegion(out, 0, SHA1Sum::HashSize, (jbyte *) hashResult);
+  env->SetByteArrayRegion(out, 0, SHA1Sum::kHashSize, (jbyte *) hashResult);
 
   return out;
 }

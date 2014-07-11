@@ -11,6 +11,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PeerConnectionIdp",
   "resource://gre/modules/media/PeerConnectionIdp.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "convertToRTCStatsReport",
+  "resource://gre/modules/media/RTCStatsReport.jsm");
 
 const PC_CONTRACT = "@mozilla.org/dom/peerconnection;1";
 const PC_OBS_CONTRACT = "@mozilla.org/dom/peerconnectionobserver;1";
@@ -187,16 +189,7 @@ function RTCStatsReport(win, dict) {
 
   this._win = win;
   this._pcid = dict.pcid;
-  this._report = {};
-  appendStats(dict.inboundRTPStreamStats, this._report);
-  appendStats(dict.outboundRTPStreamStats, this._report);
-  appendStats(dict.mediaStreamTrackStats, this._report);
-  appendStats(dict.mediaStreamStats, this._report);
-  appendStats(dict.transportStats, this._report);
-  appendStats(dict.iceComponentStats, this._report);
-  appendStats(dict.iceCandidatePairStats, this._report);
-  appendStats(dict.iceCandidateStats, this._report);
-  appendStats(dict.codecStats, this._report);
+  this._report = convertToRTCStatsReport(dict);
 }
 RTCStatsReport.prototype = {
   classDescription: "RTCStatsReport",
