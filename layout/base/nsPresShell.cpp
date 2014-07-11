@@ -112,7 +112,6 @@
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsStyleSheetService.h"
-#include "gfxImageSurface.h"
 #include "gfxContext.h"
 #include "gfxUtils.h"
 #include "nsSMILAnimationController.h"
