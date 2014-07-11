@@ -495,8 +495,6 @@ WebrtcGmpVideoDecoder::Decode_g(const webrtc::EncodedImage& aInputImage,
 
   // XXX At this point, we only will get mode1 data (a single length and a buffer)
   // Session_info.cc/etc code needs to change to support mode 0.
-  MOZ_ASSERT(ntohl(*(reinterpret_cast<uint32_t*>(const_cast<uint8_t*>(aInputImage._buffer)))) ==
-             0x00000001);
   *(reinterpret_cast<uint32_t*>(frame->Buffer())) = frame->Size();
 
   // XXX It'd be wonderful not to have to memcpy the encoded data!
