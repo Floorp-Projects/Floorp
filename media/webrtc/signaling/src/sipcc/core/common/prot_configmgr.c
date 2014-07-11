@@ -606,12 +606,16 @@ sip_config_video_add_codecs (rtp_ptype aSupportedCodecs[],
     count++;
   }
   if ( codec_mask & VCM_CODEC_RESOURCE_H264) {
-    if (vcmGetVideoMaxSupportedPacketizationMode() == 1) {
+    int modes = vcmGetH264SupportedPacketizationModes();
+    // prefer mode 1 to mode 0
+    if (modes & VCM_H264_MODE_1) {
       aSupportedCodecs[count] = RTP_H264_P1;
       count++;
     }
-    aSupportedCodecs[count] = RTP_H264_P0;
-    count++;
+    if (modes & VCM_H264_MODE_0) {
+      aSupportedCodecs[count] = RTP_H264_P0;
+      count++;
+    }
   }
   if ( codec_mask & VCM_CODEC_RESOURCE_H263) {
     aSupportedCodecs[count] = RTP_H263;
