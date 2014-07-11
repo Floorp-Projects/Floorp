@@ -1566,10 +1566,13 @@ ReloadPrefsCallback(const char *pref, void *data)
 
     sDiscardSystemSource = Preferences::GetBool(JS_OPTIONS_DOT_STR "discardSystemSource");
 
+    bool werror = Preferences::GetBool(JS_OPTIONS_DOT_STR "werror");
+
     JS::RuntimeOptionsRef(rt).setBaseline(useBaseline)
                              .setIon(useIon)
                              .setAsmJS(useAsmJS)
-                             .setNativeRegExp(useNativeRegExp);
+                             .setNativeRegExp(useNativeRegExp)
+                             .setWerror(werror);
 
     JS_SetParallelParsingEnabled(rt, parallelParsing);
     JS_SetOffthreadIonCompilationEnabled(rt, offthreadIonCompilation);
