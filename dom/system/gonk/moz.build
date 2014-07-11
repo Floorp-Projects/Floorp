@@ -41,6 +41,8 @@ SOURCES += [
     'AutoMounter.cpp',
     'AutoMounterSetting.cpp',
     'GonkGPSGeolocationProvider.cpp',
+    'MozMtpDatabase.cpp',
+    'MozMtpServer.cpp',
     'NetworkUtils.cpp',
     'NetworkWorker.cpp',
     'nsVolume.cpp',
@@ -56,6 +58,11 @@ SOURCES += [
     'VolumeServiceIOThread.cpp',
     'VolumeServiceTest.cpp',
 ]
+
+if CONFIG['ANDROID_VERSION'] >= '17':
+    CXXFLAGS += ['-I%s/frameworks/av/media/mtp' % CONFIG['ANDROID_SOURCE']]
+else:
+    CXXFLAGS += ['-I%s/frameworks/base/media/mtp' % CONFIG['ANDROID_SOURCE']]
 
 if CONFIG['ENABLE_TESTS']:
     XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
