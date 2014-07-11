@@ -3,7 +3,7 @@
 <head>
 <script>
 var gTS = window.location.toString;
-var gGHR = Object.__lookupGetter__.call(window.location, 'href');
+var gGHR = Object.getOwnPropertyDescriptor(window.location, 'href').get;
 function getTests(fromOuter) {
 
   function loc() fromOuter ? window.location : location;
@@ -23,18 +23,12 @@ function getTests(fromOuter) {
     getLocationApply3: function() {
       return Function.call.apply(gTS, [loc()]);
     },
-    getLocationViaPrototype: function() {
-      return Location.prototype.toString.call(loc());
-    },
     getHref: function() {
       return loc().href;
     },
     getHrefViaApply: function() {
       return Function.call.apply(gGHR, [loc()]);
     },
-    getHrefViaPrototype: function() {
-      return Object.getOwnPropertyDescriptor(Location.prototype, 'href').get.call(loc());
-    }
   }
 };
 
