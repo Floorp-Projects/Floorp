@@ -40,8 +40,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
 
 
 const ERRORS = {
-  "ERROR_NOT_AUTHORIZED_FOR_FIREFOX_ACCOUNTS":
-    "Only privileged and certified apps may use Firefox Accounts",
   "ERROR_INVALID_ASSERTION_AUDIENCE":
     "Assertion audience may not differ from origin",
   "ERROR_REQUEST_WHILE_NOT_HANDLING_USER_INPUT":
@@ -150,7 +148,12 @@ nsDOMIdentity.prototype = {
       // broken client to be able to call watch() any more.  It's broken.
       return;
     }
-    this._identityInternal._mm.sendAsyncMessage("Identity:RP:Watch", message);
+    this._identityInternal._mm.sendAsyncMessage(
+      "Identity:RP:Watch",
+      message,
+      null,
+      this._window.document.nodePrincipal
+    );
   },
 
   request: function nsDOMIdentity_request(aOptions = {}) {
@@ -221,7 +224,12 @@ nsDOMIdentity.prototype = {
     }
 
     this._rpCalls++;
-    this._identityInternal._mm.sendAsyncMessage("Identity:RP:Request", message);
+    this._identityInternal._mm.sendAsyncMessage(
+      "Identity:RP:Request",
+      message,
+      null,
+      this._window.document.nodePrincipal
+    );
   },
 
   logout: function nsDOMIdentity_logout() {
@@ -241,7 +249,12 @@ nsDOMIdentity.prototype = {
       return;
     }
 
-    this._identityInternal._mm.sendAsyncMessage("Identity:RP:Logout", message);
+    this._identityInternal._mm.sendAsyncMessage(
+      "Identity:RP:Logout",
+      message,
+      null,
+      this._window.document.nodePrincipal
+    );
   },
 
   /*
@@ -324,8 +337,12 @@ nsDOMIdentity.prototype = {
     }
 
     this._beginProvisioningCallback = aCallback;
-    this._identityInternal._mm.sendAsyncMessage("Identity:IDP:BeginProvisioning",
-                                                this.DOMIdentityMessage());
+    this._identityInternal._mm.sendAsyncMessage(
+      "Identity:IDP:BeginProvisioning",
+      this.DOMIdentityMessage(),
+      null,
+      this._window.document.nodePrincipal
+    );
   },
 
   genKeyPair: function nsDOMIdentity_genKeyPair(aCallback) {
@@ -341,8 +358,12 @@ nsDOMIdentity.prototype = {
     }
 
     this._genKeyPairCallback = aCallback;
-    this._identityInternal._mm.sendAsyncMessage("Identity:IDP:GenKeyPair",
-                                                this.DOMIdentityMessage());
+    this._identityInternal._mm.sendAsyncMessage(
+      "Identity:IDP:GenKeyPair",
+      this.DOMIdentityMessage(),
+      null,
+      this._window.document.nodePrincipal
+    );
   },
 
   registerCertificate: function nsDOMIdentity_registerCertificate(aCertificate) {
@@ -357,7 +378,12 @@ nsDOMIdentity.prototype = {
 
     let message = this.DOMIdentityMessage();
     message.cert = aCertificate;
-    this._identityInternal._mm.sendAsyncMessage("Identity:IDP:RegisterCertificate", message);
+    this._identityInternal._mm.sendAsyncMessage(
+      "Identity:IDP:RegisterCertificate",
+      message,
+      null,
+      this._window.document.nodePrincipal
+    );
   },
 
   raiseProvisioningFailure: function nsDOMIdentity_raiseProvisioningFailure(aReason) {
@@ -372,7 +398,12 @@ nsDOMIdentity.prototype = {
 
     let message = this.DOMIdentityMessage();
     message.reason = aReason;
-    this._identityInternal._mm.sendAsyncMessage("Identity:IDP:ProvisioningFailure", message);
+    this._identityInternal._mm.sendAsyncMessage(
+      "Identity:IDP:ProvisioningFailure",
+      message,
+      null,
+      this._window.document.nodePrincipal
+    );
   },
 
   /**
@@ -392,8 +423,12 @@ nsDOMIdentity.prototype = {
     }
 
     this._beginAuthenticationCallback = aCallback;
-    this._identityInternal._mm.sendAsyncMessage("Identity:IDP:BeginAuthentication",
-                                                this.DOMIdentityMessage());
+    this._identityInternal._mm.sendAsyncMessage(
+      "Identity:IDP:BeginAuthentication",
+      this.DOMIdentityMessage(),
+      null,
+      this._window.document.nodePrincipal
+    );
   },
 
   completeAuthentication: function nsDOMIdentity_completeAuthentication() {
@@ -405,8 +440,12 @@ nsDOMIdentity.prototype = {
     }
     this._authenticationEnded = true;
 
-    this._identityInternal._mm.sendAsyncMessage("Identity:IDP:CompleteAuthentication",
-                                                this.DOMIdentityMessage());
+    this._identityInternal._mm.sendAsyncMessage(
+      "Identity:IDP:CompleteAuthentication",
+      this.DOMIdentityMessage(),
+      null,
+      this._window.document.nodePrincipal
+    );
   },
 
   raiseAuthenticationFailure: function nsDOMIdentity_raiseAuthenticationFailure(aReason) {
@@ -419,7 +458,12 @@ nsDOMIdentity.prototype = {
 
     let message = this.DOMIdentityMessage();
     message.reason = aReason;
-    this._identityInternal._mm.sendAsyncMessage("Identity:IDP:AuthenticationFailure", message);
+    this._identityInternal._mm.sendAsyncMessage(
+      "Identity:IDP:AuthenticationFailure",
+      message,
+      null,
+      this._window.document.nodePrincipal
+    );
   },
 
   // Private.
@@ -510,7 +554,8 @@ nsDOMIdentity.prototype = {
       case "Identity:RP:Watch:OnCancel":
         // Do we have a watcher?
         if (!this._rpWatcher) {
-          this._log("WARNING: Received OnCancel message, but there is no RP watcher");
+          this._log("WARNING: Received OnCancel message, but there is no RP " +
+                    "watcher");
           return;
         }
 
@@ -520,7 +565,8 @@ nsDOMIdentity.prototype = {
         break;
       case "Identity:RP:Watch:OnError":
         if (!this._rpWatcher) {
-          this._log("WARNING: Received OnError message, but there is no RP watcher");
+          this._log("WARNING: Received OnError message, but there is no RP " +
+                    "watcher");
           return;
         }
 
@@ -593,7 +639,6 @@ nsDOMIdentity.prototype = {
     let message = {
       errors: []
     };
-    let principal = Ci.nsIPrincipal;
 
     objectCopy(aOptions, message);
 
@@ -602,19 +647,6 @@ nsDOMIdentity.prototype = {
 
     // window origin
     message.origin = this._origin;
-
-    // On b2g, an app's status can be NOT_INSTALLED, INSTALLED, PRIVILEGED, or
-    // CERTIFIED.  Compare the appStatus value to the constants enumerated in
-    // Ci.nsIPrincipal.APP_STATUS_*.
-    message.appStatus = this._appStatus;
-
-    // Currently, we only permit certified and privileged apps to use
-    // Firefox Accounts.
-    if (aOptions.wantIssuer == "firefox-accounts" &&
-        this._appStatus !== principal.APP_STATUS_PRIVILEGED &&
-        this._appStatus !== principal.APP_STATUS_CERTIFIED) {
-      message.errors.push("ERROR_NOT_AUTHORIZED_FOR_FIREFOX_ACCOUNTS");
-    }
 
     // Normally the window origin will be the audience in assertions.  On b2g,
     // certified apps have the power to override this and declare any audience
@@ -628,7 +660,7 @@ nsDOMIdentity.prototype = {
     // and then post-message the results down to their app.
     let _audience = message.origin;
     if (message.audience && message.audience != message.origin) {
-      if (this._appStatus === principal.APP_STATUS_CERTIFIED) {
+      if (this._appStatus === Ci.nsIPrincipal.APP_STATUS_CERTIFIED) {
         _audience = message.audience;
         this._log("Certified app setting assertion audience: " + _audience);
       } else {
@@ -648,7 +680,9 @@ nsDOMIdentity.prototype = {
     this._log("nsDOMIdentity uninit() " + this._id);
     this._identityInternal._mm.sendAsyncMessage(
       "Identity:RP:Unwatch",
-      { id: this._id }
+      { id: this._id },
+      null,
+      this._window.document.nodePrincipal
     );
   }
 

@@ -10,6 +10,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const PREF_FXA_ENABLED = "identity.fxaccounts.enabled";
+const FXA_PERMISSION = "firefox-accounts";
 
 // This is the parent process corresponding to nsDOMIdentity.
 this.EXPORTED_SYMBOLS = ["DOMIdentity"];
@@ -37,6 +38,10 @@ XPCOMUtils.defineLazyModuleGetter(this,
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
+
+XPCOMUtils.defineLazyServiceGetter(this, "permissionManager",
+                                   "@mozilla.org/permissionmanager;1",
+                                   "nsIPermissionManager");
 
 function log(...aMessageArgs) {
   Logger.log.apply(Logger, ["DOMIdentity"].concat(aMessageArgs));
@@ -234,6 +239,28 @@ this.DOMIdentity = {
     this._mmContexts.delete(targetMM);
   },
 
+  hasPermission: function(aMessage) {
+    // We only check that the firefox accounts permission is present in the
+    // manifest.
+    if (aMessage.json && aMessage.json.wantIssuer == "firefox-accounts") {
+      if (!aMessage.principal) {
+        return false;
+      }
+      let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                     .getService(Ci.nsIScriptSecurityManager);
+      let uri = Services.io.newURI(aMessage.principal.origin, null, null);
+      let principal = secMan.getAppCodebasePrincipal(uri,
+        aMessage.principal.appId, aMessage.principal.isInBrowserElement);
+
+      let permission =
+        permissionManager.testPermissionFromPrincipal(principal,
+                                                      FXA_PERMISSION);
+      return permission != Ci.nsIPermissionManager.UNKNOWN_ACTION &&
+             permission != Ci.nsIPermissionManager.DENY_ACTION;
+    }
+    return true;
+  },
+
   // nsIMessageListener
   receiveMessage: function DOMIdentity_receiveMessage(aMessage) {
     let msg = aMessage.json;
@@ -241,6 +268,10 @@ this.DOMIdentity = {
     // Target is the frame message manager that called us and is
     // used to send replies back to the proper window.
     let targetMM = aMessage.target;
+
+    if (!this.hasPermission(aMessage)) {
+      throw new Error("PERMISSION_DENIED");
+    }
 
     switch (aMessage.name) {
       // RP
