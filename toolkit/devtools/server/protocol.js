@@ -1107,7 +1107,9 @@ let Front = Class({
 
     let deferred = this._requests.shift();
     if (packet.error) {
-      deferred.reject(packet.error);
+      let message = (packet.error == "unknownError" && packet.message) ?
+                    packet.message : packet.error;
+      deferred.reject(message);
     } else {
       deferred.resolve(packet);
     }
