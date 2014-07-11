@@ -23,24 +23,34 @@
     window.realParent.postMessage(JSON.stringify(message), "*");
   }
 
-  function onready() {
-    navigator.mozId.request();
-  }
-
-  function onlogin(backedAssertion) {
-    postResults({success: true, backedAssertion: backedAssertion});
-  }
-
-  function onerror(error) {
-    postResults({success: false, error: error});
-  }
-
-  onmessage = function(message) {
+  onmessage = function(event) {
     navigator.mozId.watch({
-      wantIssuer: message.data.wantIssuer,
-      onready: onready,
-      onerror: onerror,
-      onlogin: onlogin,
+      wantIssuer: event.data.wantIssuer,
+      onready: function() {
+        try {
+          navigator.mozId.request();
+        } catch(e) {
+          postResults({
+            success: false,
+            error: e,
+            appIndex: event.data.appIndex
+          });
+        }
+      },
+      onlogin: function(backedAssertion) {
+        postResults({
+          success: true,
+          backedAssertion: backedAssertion,
+          appIndex: event.data.appIndex
+        });
+      },
+      onerror: function(error) {
+        postResults({
+          success: false,
+          error: error,
+          appIndex: event.data.appIndex
+        });
+      },
       onlogout: function() {},
     });
   };
