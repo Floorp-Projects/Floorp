@@ -5958,45 +5958,11 @@ gfxFont::GetSmallCapsFont()
     return fe->FindOrMakeFont(&style, needsBold);
 }
 
-void
-gfxFont::CalculateSubSuperSizeAndOffset(int32_t aAppUnitsPerDevPixel,
-                                        gfxFloat& aSubSuperSizeRatio,
-                                        float& aBaselineOffset)
-{
-    gfxFloat cssPixelSize = mStyle.size * aAppUnitsPerDevPixel /
-                                AppUnitsPerCSSPixel();
-
-    // calculate reduced size, roughly mimicing behavior of font-size: smaller
-    if (cssPixelSize < NS_FONT_SUB_SUPER_SMALL_SIZE) {
-        aSubSuperSizeRatio = NS_FONT_SUB_SUPER_SIZE_RATIO_SMALL;
-    } else if (cssPixelSize >= NS_FONT_SUB_SUPER_SMALL_SIZE) {
-        aSubSuperSizeRatio = NS_FONT_SUB_SUPER_SIZE_RATIO_LARGE;
-    } else {
-        gfxFloat t = (cssPixelSize - NS_FONT_SUB_SUPER_SMALL_SIZE) /
-                         (NS_FONT_SUB_SUPER_LARGE_SIZE -
-                          NS_FONT_SUB_SUPER_SMALL_SIZE);
-        aSubSuperSizeRatio = (1.0 - t) * NS_FONT_SUB_SUPER_SIZE_RATIO_SMALL +
-                            t * NS_FONT_SUB_SUPER_SIZE_RATIO_LARGE;
-    }
-
-    // calculate the baseline offset
-    if (mStyle.variantSubSuper == NS_FONT_VARIANT_POSITION_SUPER) {
-        aBaselineOffset = mStyle.size * -NS_FONT_SUPERSCRIPT_OFFSET_RATIO;
-    } else {
-        aBaselineOffset = mStyle.size * NS_FONT_SUBSCRIPT_OFFSET_RATIO;
-    }
-}
-
 already_AddRefed<gfxFont>
 gfxFont::GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel)
 {
     gfxFontStyle style(*GetStyle());
-    gfxFloat subSuperSizeRatio;
-    CalculateSubSuperSizeAndOffset(aAppUnitsPerDevPixel,
-                                   subSuperSizeRatio,
-                                   style.baselineOffset);
-    style.size *= subSuperSizeRatio;
-    style.variantSubSuper = NS_FONT_VARIANT_POSITION_NORMAL;
+    style.AdjustForSubSuperscript(aAppUnitsPerDevPixel);
     gfxFontEntry* fe = GetFontEntry();
     bool needsBold = style.weight >= 600 && !fe->IsBold();
     return fe->FindOrMakeFont(&style, needsBold);
@@ -6526,6 +6492,38 @@ gfxFontStyle::ComputeWeight() const
         baseWeight = 9;
 
     return baseWeight;
+}
+
+void
+gfxFontStyle::AdjustForSubSuperscript(int32_t aAppUnitsPerDevPixel)
+{
+    NS_PRECONDITION(variantSubSuper != NS_FONT_VARIANT_POSITION_NORMAL &&
+                    baselineOffset == 0,
+                    "can't adjust this style for sub/superscript");
+
+    // calculate the baseline offset (before changing the size)
+    if (variantSubSuper == NS_FONT_VARIANT_POSITION_SUPER) {
+        baselineOffset = size * -NS_FONT_SUPERSCRIPT_OFFSET_RATIO;
+    } else {
+        baselineOffset = size * NS_FONT_SUBSCRIPT_OFFSET_RATIO;
+    }
+
+    // calculate reduced size, roughly mimicing behavior of font-size: smaller
+    float cssSize = size * aAppUnitsPerDevPixel / AppUnitsPerCSSPixel();
+    if (cssSize < NS_FONT_SUB_SUPER_SMALL_SIZE) {
+        cssSize *= NS_FONT_SUB_SUPER_SIZE_RATIO_SMALL;
+    } else if (cssSize >= NS_FONT_SUB_SUPER_SMALL_SIZE) {
+        cssSize *= NS_FONT_SUB_SUPER_SIZE_RATIO_LARGE;
+    } else {
+        gfxFloat t = (cssSize - NS_FONT_SUB_SUPER_SMALL_SIZE) /
+                         (NS_FONT_SUB_SUPER_LARGE_SIZE -
+                          NS_FONT_SUB_SUPER_SMALL_SIZE);
+        size *= (1.0 - t) * NS_FONT_SUB_SUPER_SIZE_RATIO_SMALL +
+                    t * NS_FONT_SUB_SUPER_SIZE_RATIO_LARGE;
+    }
+
+    // clear the variant field
+    variantSubSuper = NS_FONT_VARIANT_POSITION_NORMAL;
 }
 
 void
