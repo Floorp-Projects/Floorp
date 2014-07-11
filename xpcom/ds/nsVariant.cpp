@@ -1557,6 +1557,18 @@ nsVariant::SetFromWStringWithSize(nsDiscriminatedUnion* aData, uint32_t aSize,
   DATA_SETTER_EPILOGUE(aData, VTYPE_WSTRING_SIZE_IS);
 }
 /* static */ nsresult
+nsVariant::AllocateWStringWithSize(nsDiscriminatedUnion* aData, uint32_t aSize)
+{
+  DATA_SETTER_PROLOGUE(aData);
+  if (!(aData->u.wstr.mWStringValue =
+          (char16_t*)NS_Alloc((aSize + 1) * sizeof(char16_t)))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  aData->u.wstr.mWStringValue[aSize] = '\0';
+  aData->u.wstr.mWStringLength = aSize;
+  DATA_SETTER_EPILOGUE(aData, VTYPE_WSTRING_SIZE_IS);
+}
+/* static */ nsresult
 nsVariant::SetToVoid(nsDiscriminatedUnion* aData)
 {
   DATA_SETTER_PROLOGUE(aData);
