@@ -114,6 +114,7 @@ let CSSUsageActor = protocol.ActorClass({
       throw new Error(l10n.lookup("csscoverageRunningError"));
     }
 
+    this._isOneShot = false;
     this._visitedPages = new Set();
     this._knownRules = new Map();
     this._running = true;
@@ -180,6 +181,7 @@ let CSSUsageActor = protocol.ActorClass({
       throw new Error(l10n.lookup("csscoverageRunningError"));
     }
 
+    this._isOneShot = true;
     this._visitedPages = new Set();
     this._knownRules = new Map();
 
@@ -390,6 +392,10 @@ let CSSUsageActor = protocol.ActorClass({
 
     if (this._visitedPages == null) {
       throw new Error(l10n.lookup("csscoverageNotRunError"));
+    }
+
+    if (this._isOneShot) {
+      throw new Error(l10n.lookup("csscoverageOneShotReportError"));
     }
 
     // Helper function to create a JSONable data structure representing a rule
