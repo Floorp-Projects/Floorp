@@ -849,9 +849,9 @@ public:
             !data &&
             Vendor() == GLVendor::NVIDIA)
         {
-            ScopedDeleteArray<char> buf(new char[1]);
+            UniquePtr<char[]> buf = MakeUnique<char[]>(1);
             buf[0] = 0;
-            fBufferSubData(target, size-1, 1, buf);
+            fBufferSubData(target, size-1, 1, buf.get());
         }
     }
 
