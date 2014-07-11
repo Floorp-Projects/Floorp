@@ -35,11 +35,11 @@ class DeviceManagerADB(DeviceManager):
     def __init__(self, host=None, port=5555, retryLimit=5, packageName='fennec',
                  adbPath='adb', deviceSerial=None, deviceRoot=None,
                  logLevel=mozlog.ERROR, autoconnect=True, **kwargs):
-        DeviceManager.__init__(self, logLevel)
+        DeviceManager.__init__(self, logLevel=logLevel,
+                               deviceRoot=deviceRoot)
         self.host = host
         self.port = port
         self.retryLimit = retryLimit
-        self.deviceRoot = deviceRoot
 
         # the path to adb, or 'adb' to assume that it's on the PATH
         self._adbPath = adbPath
@@ -70,9 +70,6 @@ class DeviceManagerADB(DeviceManager):
 
             # verify that we can connect to the device. can't continue
             self._verifyDevice()
-
-            # set up device root
-            self._setupDeviceRoot()
 
             # Some commands require root to work properly, even with ADB (e.g.
             # grabbing APKs out of /data). For these cases, we check whether
@@ -449,20 +446,13 @@ class DeviceManagerADB(DeviceManager):
 
         return md5
 
-    def _setupDeviceRoot(self):
-        """
-        setup the device root and cache its value
-        """
-        # if self.deviceRoot is already set, create it if necessary, and use it
-        if self.deviceRoot:
-            if not self.dirExists(self.deviceRoot):
-                try:
-                    self.mkDir(self.deviceRoot)
-                except:
-                    self._logger.error("Unable to create device root %s" % self.deviceRoot)
-                    raise
-            return
+    def _setupDeviceRoot(self, deviceRoot):
+        # user-specified device root, create it and return it
+        if deviceRoot:
+            self.mkDir(deviceRoot)
+            return deviceRoot
 
+        # we must determine the device root ourselves
         paths = [('/storage/sdcard0', 'tests'),
                  ('/storage/sdcard1', 'tests'),
                  ('/sdcard', 'tests'),
@@ -470,42 +460,24 @@ class DeviceManagerADB(DeviceManager):
                  ('/data/local', 'tests')]
         for (basePath, subPath) in paths:
             if self.dirExists(basePath):
-                testRoot = os.path.join(basePath, subPath)
+                root = os.path.join(basePath, subPath)
                 try:
-                    self.mkDir(testRoot)
-                    self.deviceRoot = testRoot
-                    return
+                    self.mkDir(root)
+                    return root
                 except:
                     pass
 
         raise DMError("Unable to set up device root using paths: [%s]"
                         % ", ".join(["'%s'" % os.path.join(b, s) for b, s in paths]))
 
-    def getDeviceRoot(self):
-        return self.deviceRoot
-
     def getTempDir(self):
         # Cache result to speed up operations depending
         # on the temporary directory.
         if not self._tempDir:
-            self._tempDir = self.getDeviceRoot() + "/tmp"
+            self._tempDir = "%s/tmp" % self.deviceRoot
             self.mkDir(self._tempDir)
 
         return self._tempDir
-
-    def getAppRoot(self, packageName):
-        devroot = self.getDeviceRoot()
-        if (devroot == None):
-            return None
-
-        if (packageName and self.dirExists('/data/data/' + packageName)):
-            self._packageName = packageName
-            return '/data/data/' + packageName
-        elif (self._packageName and self.dirExists('/data/data/' + self._packageName)):
-            return '/data/data/' + self._packageName
-
-        # Failure (either not installed or not a recognized platform)
-        raise DMError("Failed to get application root for: %s" % packageName)
 
     def reboot(self, wait = False, **kwargs):
         self._checkCmd(["reboot"])

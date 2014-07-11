@@ -123,7 +123,7 @@ class RemoteOptions(MochitestOptions):
 
     def verifyRemoteOptions(self, options, automation):
         if not options.remoteTestRoot:
-            options.remoteTestRoot = automation._devicemanager.getDeviceRoot()
+            options.remoteTestRoot = automation._devicemanager.deviceRoot
 
         if options.remoteWebServer == None:
             if os.name != "nt":
@@ -500,12 +500,12 @@ class MochiRemote(Mochitest):
                 logcat = self._dm.getLogcat(filterOutRegexps=fennecLogcatFilters)
                 log.info('\n'+(''.join(logcat)))
             log.info("Device info: %s", self._dm.getInfo())
-            log.info("Test root: %s", self._dm.getDeviceRoot())
+            log.info("Test root: %s", self._dm.deviceRoot)
         except devicemanager.DMError:
             log.warn("Error getting device information")
 
     def buildRobotiumConfig(self, options, browserEnv):
-        deviceRoot = self._dm.getDeviceRoot()
+        deviceRoot = self._dm.deviceRoot
         fHandle = tempfile.NamedTemporaryFile(suffix='.config',
                                               prefix='robotium-',
                                               dir=os.getcwd(),
@@ -597,7 +597,7 @@ def main():
     log.info("Android sdk version '%s'; will use this to filter manifests" % str(androidVersion))
     mozinfo.info['android_version'] = androidVersion
 
-    deviceRoot = dm.getDeviceRoot()
+    deviceRoot = dm.deviceRoot
     if options.dmdPath:
         dmdLibrary = "libdmd.so"
         dmdPathOnDevice = os.path.join(deviceRoot, dmdLibrary)

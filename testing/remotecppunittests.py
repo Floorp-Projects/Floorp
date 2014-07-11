@@ -28,7 +28,7 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
         cppunittests.CPPUnitTests.__init__(self)
         self.options = options
         self.device = devmgr
-        self.remote_test_root = self.device.getDeviceRoot() + "/cppunittests"
+        self.remote_test_root = self.device.deviceRoot + "/cppunittests"
         self.remote_bin_dir = posixpath.join(self.remote_test_root, "b")
         self.remote_tmp_dir = posixpath.join(self.remote_test_root, "tmp")
         self.remote_home_dir = posixpath.join(self.remote_test_root, "h")
