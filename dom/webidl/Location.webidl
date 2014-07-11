@@ -11,8 +11,7 @@
  * and create derivative works of this document.
  */
 
-// No support for [Unforgeable] on interfaces yet
-//[Unforgeable]
+[Unforgeable]
 interface Location {
   void assign(DOMString url);
   void replace(DOMString url);
