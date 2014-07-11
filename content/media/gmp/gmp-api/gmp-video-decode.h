@@ -65,8 +65,13 @@ class GMPVideoDecoder
 public:
   virtual ~GMPVideoDecoder() {}
 
-  // aCallback: Subclass should retain reference to it until DecodingComplete
-  //            is called. Do not attempt to delete it, host retains ownership.
+  // - aCodecSettings: Details of decoder to create.
+  // - aCodecSpecific: codec specific data, cast to a GMPVideoCodecXXX struct
+  //                   to get codec specific config data.
+  // - aCodecSpecificLength: number of bytes in aCodecSpecific.
+  // - aCallback: Subclass should retain reference to it until DecodingComplete
+  //              is called. Do not attempt to delete it, host retains ownership.
+  // aCoreCount: number of CPU cores.
   virtual GMPErr InitDecode(const GMPVideoCodec& aCodecSettings,
                             const uint8_t* aCodecSpecific,
                             uint32_t aCodecSpecificLength,
@@ -76,21 +81,21 @@ public:
   // Decode encoded frame (as a part of a video stream). The decoded frame
   // will be returned to the user through the decode complete callback.
   //
-  // inputFrame:        Frame to decode.
-  //
-  // missingFrames:     True if one or more frames have been lost since the previous decode call.
-  //
-  // fragmentation:     Specifies where the encoded frame can be split into separate fragments.
-  //                    The meaning of fragment is codec specific, but often means that each
-  //                    fragment is decodable by itself.
-  //
-  // codecSpecificInfo: Codec-specific data
-  //
-  // renderTimeMs :     System time to render in milliseconds. Only used by decoders with internal
-  //                    rendering.
+  // - aInputFrame: Frame to decode. Call Destroy() on frame when it's decoded.
+  // - aMissingFrames: True if one or more frames have been lost since the
+  //                   previous decode call.
+  // - aBufferType : type of frame to encode
+  // - aCodecSpecificInfo : codec specific data, pointer to a
+  //                        GMPCodecSpecificInfo structure appropriate for
+  //                        this codec type.
+  // - aCodecSpecificInfoLength : number of bytes in aCodecSpecificInfo
+  // - renderTimeMs : System time to render in milliseconds. Only used by
+  //                  decoders with internal rendering.
   virtual GMPErr Decode(GMPVideoEncodedFrame* aInputFrame,
                         bool aMissingFrames,
-                        const GMPCodecSpecificInfo& aCodecSpecificInfo,
+                        GMPBufferType aBufferType,
+                        const uint8_t* aCodecSpecificInfo,
+                        uint32_t aCodecSpecificInfoLength,
                         int64_t aRenderTimeMs = -1) = 0;
 
   // Reset decoder state and prepare for a new call to Decode(...).
