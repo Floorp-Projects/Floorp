@@ -125,6 +125,8 @@
 #include "prio.h"
 #include "private/pprio.h"
 
+#include "nsIBidiKeyboard.h"
+
 #if defined(ANDROID) || defined(LINUX)
 #include "nsSystemInfo.h"
 #endif
@@ -2604,12 +2606,19 @@ ContentParent::RecvGetProcessAttributes(uint64_t* aId,
 }
 
 bool
-ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline)
+ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline, bool* aIsLangRTL)
 {
     nsCOMPtr<nsIIOService> io(do_GetIOService());
     NS_ASSERTION(io, "No IO service?");
     DebugOnly<nsresult> rv = io->GetOffline(aIsOffline);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed getting offline?");
+
+    nsIBidiKeyboard* bidi = nsContentUtils::GetBidiKeyboard();
+
+    *aIsLangRTL = false;
+    if (bidi) {
+        bidi->IsLangRTL(aIsLangRTL);
+    }
 
     return true;
 }

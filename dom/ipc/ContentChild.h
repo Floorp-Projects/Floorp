@@ -251,6 +251,8 @@ public:
 
     virtual bool RecvSpeakerManagerNotify() MOZ_OVERRIDE;
 
+    virtual bool RecvBidiKeyboardNotify(const bool& isLangRTL) MOZ_OVERRIDE;
+
     virtual bool RecvNotifyVisited(const URIParams& aURI) MOZ_OVERRIDE;
     // auto remove when alertfinished is received.
     nsresult AddRemoteAlertObserver(const nsString& aData, nsIObserver* aObserver);
