@@ -576,7 +576,14 @@ nsTextStore::Init(ITfThreadMgr* aThreadMgr)
 nsTextStore::~nsTextStore()
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-    ("TSF: 0x%p nsTextStore instance is destroyed, "
+    ("TSF: 0x%p nsTextStore instance is destroyed", this));
+}
+
+void
+nsTextStore::Shutdown()
+{
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+    ("TSF: 0x%p nsTextStore::Shutdown() "
      "mWidget=0x%p, mDocumentMgr=0x%p, mContext=0x%p, mIPProfileCookie=0x%08X, "
      "mLangProfileCookie=0x%08X",
      this, mWidget.get(), mDocumentMgr.get(), mContext.get(),
@@ -588,13 +595,13 @@ nsTextStore::~nsTextStore()
       sTsfThreadMgr->QueryInterface(IID_ITfSource, getter_AddRefs(source));
     if (FAILED(hr)) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-        ("TSF: 0x%p   ~nsTextStore FAILED to get ITfSource instance "
-         "(0x%08X)", this, hr));
+        ("TSF: 0x%p   nsTextStore::Shutdown() FAILED to get "
+         "ITfSource instance (0x%08X)", this, hr));
     } else {
       hr = source->UnadviseSink(mIPProfileCookie);
       if (FAILED(hr)) {
         PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-          ("TSF: 0x%p   ~nsTextStore FAILED to uninstall "
+          ("TSF: 0x%p   nsTextStore::Shutdown() FAILED to uninstall "
            "ITfInputProcessorProfileActivationSink (0x%08X)",
            this, hr));
       }
@@ -607,13 +614,13 @@ nsTextStore::~nsTextStore()
       sTsfThreadMgr->QueryInterface(IID_ITfSource, getter_AddRefs(source));
     if (FAILED(hr)) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-        ("TSF: 0x%p   ~nsTextStore FAILED to get ITfSource instance "
-         "(0x%08X)", this, hr));
+        ("TSF: 0x%p   nsTextStore::Shutdown() FAILED to get "
+         "ITfSource instance (0x%08X)", this, hr));
     } else {
       hr = source->UnadviseSink(mLangProfileCookie);
       if (FAILED(hr)) {
         PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-          ("TSF: 0x%p   ~nsTextStore FAILED to uninstall "
+          ("TSF: 0x%p   nsTextStore::Shutdown() FAILED to uninstall "
            "ITfActiveLanguageProfileNotifySink (0x%08X)",
            this, hr));
       }
@@ -3861,6 +3868,10 @@ void
 nsTextStore::Terminate(void)
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS, ("TSF: nsTextStore::Terminate()"));
+
+  if (sTsfTextStore) {
+    sTsfTextStore->Shutdown();
+  }
 
   NS_IF_RELEASE(sDisplayAttrMgr);
   NS_IF_RELEASE(sCategoryMgr);
