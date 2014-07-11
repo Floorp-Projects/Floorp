@@ -12,6 +12,7 @@ public class FennecMochitestAssert implements Assert {
     private LinkedList<testInfo> mTestList = new LinkedList<testInfo>();
 
     // Internal state variables to make logging match up with existing mochitests
+    private int mLineNumber = 0;
     private int mPassed = 0;
     private int mFailed = 0;
     private int mTodo = 0;
@@ -44,13 +45,13 @@ public class FennecMochitestAssert implements Assert {
 
         String message;
         if (!mLogStarted) {
-            dumpLog("SimpleTest START");
+            dumpLog(Integer.toString(mLineNumber++) + " INFO SimpleTest START");
             mLogStarted = true;
         }
 
         if (mLogTestName != "") {
             long diff = SystemClock.uptimeMillis() - mStartTime;
-            message = "TEST-END | " + mLogTestName;
+            message = Integer.toString(mLineNumber++) + " INFO TEST-END | " + mLogTestName;
             message += " | finished in " + diff + "ms";
             dumpLog(message);
             mLogTestName = "";
@@ -62,7 +63,7 @@ public class FennecMochitestAssert implements Assert {
         mLogTestName = nameParts[nameParts.length - 1];
         mStartTime = SystemClock.uptimeMillis();
 
-        dumpLog("TEST-START | " + mLogTestName);
+        dumpLog(Integer.toString(mLineNumber++) + " INFO TEST-START | " + mLogTestName);
     }
 
     class testInfo {
@@ -94,7 +95,7 @@ public class FennecMochitestAssert implements Assert {
         String diag = test.mName;
         if (test.mDiag != null) diag += " - " + test.mDiag;
 
-        String message = resultString + " | " + mLogTestName + " | " + diag;
+        String message = Integer.toString(mLineNumber++) + " INFO " + resultString + " | " + mLogTestName + " | " + diag;
         dumpLog(message);
 
         if (test.mInfo) {
@@ -116,21 +117,21 @@ public class FennecMochitestAssert implements Assert {
 
         if (mLogTestName != "") {
             long diff = SystemClock.uptimeMillis() - mStartTime;
-            message = "TEST-END | " + mLogTestName;
+            message = Integer.toString(mLineNumber++) + " INFO TEST-END | " + mLogTestName;
             message += " | finished in " + diff + "ms";
             dumpLog(message);
             mLogTestName = "";
         }
 
-        message = "TEST-START | Shutdown";
+        message = Integer.toString(mLineNumber++) + " INFO TEST-START | Shutdown";
         dumpLog(message);
-        message = "Passed: " + Integer.toString(mPassed);
+        message = Integer.toString(mLineNumber++) + " INFO Passed: " + Integer.toString(mPassed);
         dumpLog(message);
-        message = "Failed: " + Integer.toString(mFailed);
+        message = Integer.toString(mLineNumber++) + " INFO Failed: " + Integer.toString(mFailed);
         dumpLog(message);
-        message = "Todo: " + Integer.toString(mTodo);
+        message = Integer.toString(mLineNumber++) + " INFO Todo: " + Integer.toString(mTodo);
         dumpLog(message);
-        message = "SimpleTest FINISHED";
+        message = Integer.toString(mLineNumber++) + " INFO SimpleTest FINISHED";
         dumpLog(message);
     }
 

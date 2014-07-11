@@ -53,7 +53,7 @@ MemoryStats.constructPathname = function (directory, basename) {
     return d.path;
 }
 
-MemoryStats.dump = function (logger,
+MemoryStats.dump = function (dumpFn,
                              testNumber,
                              testURL,
                              dumpOutputDirectory,
@@ -75,9 +75,9 @@ MemoryStats.dump = function (logger,
             MemoryStats._hasMemoryStatistics[stat] = supported;
         }
         if (supported == MEM_STAT_SUPPORTED) {
-            logger.info("MEMORY STAT " + stat + " after test: " + mrm[stat]);
+            dumpFn("TEST-INFO | MEMORY STAT " + stat + " after test: " + mrm[stat]);
         } else if (firstAccess) {
-            logger.info("MEMORY STAT " + stat + " not supported in this build configuration.");
+            dumpFn("TEST-INFO | MEMORY STAT " + stat + " not supported in this build configuration.");
         }
     }
 
@@ -85,19 +85,20 @@ MemoryStats.dump = function (logger,
         var basename = "about-memory-" + testNumber + ".json.gz";
         var dumpfile = MemoryStats.constructPathname(dumpOutputDirectory,
                                                      basename);
-        logger.info(testURL + " | MEMDUMP-START " + dumpfile);
+        dumpFn("TEST-INFO | " + testURL + " | MEMDUMP-START " + dumpfile);
         var md = MemoryStats._getService("@mozilla.org/memory-info-dumper;1",
                                          "nsIMemoryInfoDumper");
         md.dumpMemoryReportsToNamedFile(dumpfile, function () {
-            logger.info("TEST-INFO | " + testURL + " | MEMDUMP-END");
+            dumpFn("TEST-INFO | " + testURL + " | MEMDUMP-END");
         }, null, /* anonymize = */ false);
+
     }
 
     if (dumpDMD && typeof(DMDReportAndDump) != undefined) {
         var basename = "dmd-" + testNumber + ".txt";
         var dumpfile = MemoryStats.constructPathname(dumpOutputDirectory,
                                                      basename);
-        logger.info(testURL + " | DMD-DUMP " + dumpfile);
+        dumpFn("TEST-INFO | " + testURL + " | DMD-DUMP " + dumpfile);
         DMDReportAndDump(dumpfile);
     }
 };
