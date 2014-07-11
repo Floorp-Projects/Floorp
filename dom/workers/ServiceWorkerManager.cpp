@@ -916,7 +916,8 @@ ServiceWorkerManager::Install(ServiceWorkerRegistration* aRegistration,
   // a wait is likely to be required only when performing networking or storage
   // transactions in the first place.
 
-  // FIXME(nsm): Bug 983497. Fire "updatefound" on ServiceWorkerContainers.
+  FireEventOnServiceWorkerContainers(aRegistration,
+                                     NS_LITERAL_STRING("updatefound"));
 }
 
 class ActivationRunnable : public nsRunnable
