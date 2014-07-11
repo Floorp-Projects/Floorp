@@ -557,9 +557,10 @@ nsXPCComponents_InterfacesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
     if (38 != JS_GetStringLength(str))
         return NS_OK;
 
-    if (const jschar *name = JS_GetInternedStringChars(str)) {
+    JSAutoByteString utf8str;
+    if (utf8str.encodeUtf8(cx, str)) {
         nsID iid;
-        if (!iid.Parse(NS_ConvertUTF16toUTF8(name).get()))
+        if (!iid.Parse(utf8str.ptr()))
             return NS_OK;
 
         nsCOMPtr<nsIInterfaceInfo> info;
@@ -2605,13 +2606,12 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext *cx)
         frame->GetLineNumber(&lineNo);
     }
 
-    const jschar *msgchars = JS_GetStringCharsZ(cx, msgstr);
-    if (!msgchars)
+    nsAutoJSString msg;
+    if (!msg.init(cx, msgstr))
         return NS_OK;
 
     nsresult rv = scripterr->InitWithWindowID(
-            nsDependentString(static_cast<const char16_t *>(msgchars)),
-            fileName, EmptyString(), lineNo, 0, 0,
+            msg, fileName, EmptyString(), lineNo, 0, 0,
             "XPConnect JavaScript", innerWindowID);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
