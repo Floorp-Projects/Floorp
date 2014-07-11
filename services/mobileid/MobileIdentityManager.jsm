@@ -360,6 +360,25 @@ this.MobileIdentityManager = {
   },
 
   /*********************************************************
+   * Result helpers
+   *********************************************************/
+  success: function(aPromiseId, aResult) {
+    let mm = this.messageManagers[aPromiseId];
+    mm.sendAsyncMessage("MobileId:GetAssertion:Return:OK", {
+      promiseId: aPromiseId,
+      result: aResult
+    });
+  },
+
+  error: function(aPromiseId, aError) {
+    let mm = this.messageManagers[aPromiseId];
+    mm.sendAsyncMessage("MobileId:GetAssertion:Return:KO", {
+      promiseId: aPromiseId,
+      error: aError
+    });
+  },
+
+  /*********************************************************
    * Permissions helper
    ********************************************************/
 
@@ -779,8 +798,19 @@ this.MobileIdentityManager = {
 
     let uri = Services.io.newURI(aPrincipal.origin, null, null);
     let principal = securityManager.getAppCodebasePrincipal(
-      uri, aPrincipal.appid, aPrincipal.isInBrowserElement);
+      uri, aPrincipal.appId, aPrincipal.isInBrowserElement);
     let manifestURL = appsService.getManifestURLByLocalId(aPrincipal.appId);
+
+    let permission = permissionManager.testPermissionFromPrincipal(
+      principal,
+      MOBILEID_PERM
+    );
+
+    if (permission == Ci.nsIPermissionManager.DENY_ACTION ||
+        permission == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
+      this.error(aPromiseId, ERROR_PERMISSION_DENIED);
+      return;
+    }
 
     let _creds;
 
@@ -864,15 +894,8 @@ this.MobileIdentityManager = {
         // If we've just prompted the user in the previous step, the permission
         // is already granted and stored so we just progress the credentials.
         if (creds) {
-          let permission = permissionManager.testPermissionFromPrincipal(
-            principal,
-            MOBILEID_PERM
-          );
           if (permission == Ci.nsIPermissionManager.ALLOW_ACTION) {
             return creds;
-          } else if (permission == Ci.nsIPermissionManager.DENY_ACTION ||
-                     permission == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
-            return Promise.reject(ERROR_PERMISSION_DENIED);
           }
           return this.promptAndVerify(principal, manifestURL, creds);
         }
@@ -910,11 +933,7 @@ this.MobileIdentityManager = {
 
         this.ui.verified(decodedPayload.verifiedMSISDN);
 
-        let mm = this.messageManagers[aPromiseId];
-        mm.sendAsyncMessage("MobileId:GetAssertion:Return:OK", {
-          promiseId: aPromiseId,
-          result: assertion
-        });
+        this.success(aPromiseId, assertion);
       }
     )
     .then(
@@ -938,11 +957,7 @@ this.MobileIdentityManager = {
         // Notify the error to the UI.
         this.ui.error(error);
 
-        let mm = this.messageManagers[aPromiseId];
-        mm.sendAsyncMessage("MobileId:GetAssertion:Return:KO", {
-          promiseId: aPromiseId,
-          error: error
-        });
+        this.error(aPromiseId, error);
       }
     );
   },
