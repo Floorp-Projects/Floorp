@@ -12,6 +12,7 @@
 #include "GMPMessageUtils.h"
 #include "nsAutoRef.h"
 #include "nsThreadUtils.h"
+#include "mozilla/gmp/GMPTypes.h"
 
 template <>
 class nsAutoRefTraits<GMPVideoEncodedFrame> : public nsPointerRefTraits<GMPVideoEncodedFrame>
@@ -42,32 +43,33 @@ GMPVideoDecoderParent::Host()
   return mVideoHost;
 }
 
-GMPVideoErr
+nsresult
 GMPVideoDecoderParent::InitDecode(const GMPVideoCodec& aCodecSettings,
-                                  GMPDecoderCallback* aCallback,
+                                  const nsTArray<uint8_t>& aCodecSpecific,
+                                  GMPVideoDecoderCallback* aCallback,
                                   int32_t aCoreCount)
 {
   if (!mCanSendMessages) {
     NS_WARNING("Trying to use an invalid GMP video decoder!");
-    return GMPVideoGenericErr;
+    return NS_ERROR_FAILURE;
   }
 
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
   if (!aCallback) {
-    return GMPVideoGenericErr;
+    return NS_ERROR_FAILURE;
   }
   mCallback = aCallback;
 
-  if (!SendInitDecode(aCodecSettings, aCoreCount)) {
-    return GMPVideoGenericErr;
+  if (!SendInitDecode(aCodecSettings, aCodecSpecific, aCoreCount)) {
+    return NS_ERROR_FAILURE;
   }
 
   // Async IPC, we don't have access to a return value.
-  return GMPVideoNoErr;
+  return NS_OK;
 }
 
-GMPVideoErr
+nsresult
 GMPVideoDecoderParent::Decode(GMPVideoEncodedFrame* aInputFrame,
                               bool aMissingFrames,
                               const GMPCodecSpecificInfo& aCodecSpecificInfo,
@@ -77,7 +79,7 @@ GMPVideoDecoderParent::Decode(GMPVideoEncodedFrame* aInputFrame,
 
   if (!mCanSendMessages) {
     NS_WARNING("Trying to use an invalid GMP video decoder!");
-    return GMPVideoGenericErr;
+    return NS_ERROR_FAILURE;
   }
 
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
@@ -92,63 +94,63 @@ GMPVideoDecoderParent::Decode(GMPVideoEncodedFrame* aInputFrame,
   // 3* is because we're using 3 buffers per frame for i420 data for now.
   if (NumInUse(kGMPFrameData) > 3*GMPSharedMemManager::kGMPBufLimit ||
       NumInUse(kGMPEncodedData) > GMPSharedMemManager::kGMPBufLimit) {
-    return GMPVideoGenericErr;
+    return NS_ERROR_FAILURE;
   }
 
   if (!SendDecode(frameData,
                   aMissingFrames,
                   aCodecSpecificInfo,
                   aRenderTimeMs)) {
-    return GMPVideoGenericErr;
+    return NS_ERROR_FAILURE;
   }
 
   // Async IPC, we don't have access to a return value.
-  return GMPVideoNoErr;
+  return NS_OK;
 }
 
-GMPVideoErr
+nsresult
 GMPVideoDecoderParent::Reset()
 {
   if (!mCanSendMessages) {
     NS_WARNING("Trying to use an invalid GMP video decoder!");
-    return GMPVideoGenericErr;
+    return NS_ERROR_FAILURE;
   }
 
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
   if (!SendReset()) {
-    return GMPVideoGenericErr;
+    return NS_ERROR_FAILURE;
   }
 
   // Async IPC, we don't have access to a return value.
-  return GMPVideoNoErr;
+  return NS_OK;
 }
 
-GMPVideoErr
+nsresult
 GMPVideoDecoderParent::Drain()
 {
   if (!mCanSendMessages) {
     NS_WARNING("Trying to use an invalid GMP video decoder!");
-    return GMPVideoGenericErr;
+    return NS_ERROR_FAILURE;
   }
 
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
   if (!SendDrain()) {
-    return GMPVideoGenericErr;
+    return NS_ERROR_FAILURE;
   }
 
   // Async IPC, we don't have access to a return value.
-  return GMPVideoNoErr;
+  return NS_OK;
 }
 
 // Note: Consider keeping ActorDestroy sync'd up when making changes here.
-void
+nsresult
 GMPVideoDecoderParent::DecodingComplete()
 {
   if (!mCanSendMessages) {
     NS_WARNING("Trying to use an invalid GMP video decoder!");
-    return;
+    return NS_ERROR_FAILURE;
   }
 
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
@@ -160,6 +162,8 @@ GMPVideoDecoderParent::DecodingComplete()
   mVideoHost.DoneWithAPI();
 
   unused << SendDecodingComplete();
+
+  return NS_OK;
 }
 
 // Note: Keep this sync'd up with DecodingComplete
@@ -232,6 +236,32 @@ GMPVideoDecoderParent::RecvInputDataExhausted()
 
   // Ignore any return code. It is OK for this to fail without killing the process.
   mCallback->InputDataExhausted();
+
+  return true;
+}
+
+bool
+GMPVideoDecoderParent::RecvDrainComplete()
+{
+  if (!mCallback) {
+    return false;
+  }
+
+  // Ignore any return code. It is OK for this to fail without killing the process.
+  mCallback->DrainComplete();
+
+  return true;
+}
+
+bool
+GMPVideoDecoderParent::RecvResetComplete()
+{
+  if (!mCallback) {
+    return false;
+  }
+
+  // Ignore any return code. It is OK for this to fail without killing the process.
+  mCallback->ResetComplete();
 
   return true;
 }

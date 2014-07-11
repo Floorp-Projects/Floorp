@@ -81,6 +81,22 @@ GMPVideoDecoderChild::InputDataExhausted()
 }
 
 void
+GMPVideoDecoderChild::DrainComplete()
+{
+  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
+
+  SendDrainComplete();
+}
+
+void
+GMPVideoDecoderChild::ResetComplete()
+{
+  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
+
+  SendResetComplete();
+}
+
+void
 GMPVideoDecoderChild::CheckThread()
 {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
@@ -88,6 +104,7 @@ GMPVideoDecoderChild::CheckThread()
 
 bool
 GMPVideoDecoderChild::RecvInitDecode(const GMPVideoCodec& aCodecSettings,
+                                     const nsTArray<uint8_t>& aCodecSpecific,
                                      const int32_t& aCoreCount)
 {
   if (!mVideoDecoder) {
@@ -95,8 +112,11 @@ GMPVideoDecoderChild::RecvInitDecode(const GMPVideoCodec& aCodecSettings,
   }
 
   // Ignore any return code. It is OK for this to fail without killing the process.
-  mVideoDecoder->InitDecode(aCodecSettings, this, aCoreCount);
-
+  mVideoDecoder->InitDecode(aCodecSettings,
+                            aCodecSpecific.Elements(),
+                            aCodecSpecific.Length(),
+                            this,
+                            aCoreCount);
   return true;
 }
 
@@ -115,8 +135,6 @@ GMPVideoDecoderChild::RecvDecode(const GMPVideoEncodedFrameData& aInputFrame,
   // Ignore any return code. It is OK for this to fail without killing the process.
   mVideoDecoder->Decode(f, aMissingFrames, aCodecSpecificInfo, aRenderTimeMs);
 
-  // Return SHM to sender to recycle
-  //SendDecodeReturn(aInputFrame, aCodecSpecificInfo);
   return true;
 }
 
