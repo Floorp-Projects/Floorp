@@ -268,7 +268,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame *aSource,
     if (!nonScalingStrokeTM.Invert()) {
       return nullptr;
     }
-    patternMatrix.Multiply(nonScalingStrokeTM);
+    patternMatrix *= nonScalingStrokeTM;
   }
 
   if (!patternMatrix.Invert()) {

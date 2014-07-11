@@ -53,15 +53,13 @@ public:
     /**
      * Post-multiplies m onto the matrix.
      */
-    const gfxMatrix& operator *= (const gfxMatrix& m) {
-        return Multiply(m);
-    }
+    const gfxMatrix& operator *= (const gfxMatrix& m);
 
     /**
      * Multiplies *this with m and returns the result.
      */
     gfxMatrix operator * (const gfxMatrix& m) const {
-        return gfxMatrix(*this).Multiply(m);
+        return gfxMatrix(*this) *= m;
     }
 
     /* Returns true if the other matrix is fuzzy-equal to this matrix.
@@ -127,15 +125,6 @@ public:
      * @param radians Angle in radians.
      */
     const gfxMatrix& Rotate(gfxFloat radians);
-
-     /**
-      * Multiplies the current matrix with m.
-      * This is a post-multiplication, i.e. the transformations of m are
-      * applied _after_ the existing transformations.
-      *
-      * XXX is that difference (compared to Rotate etc) a good thing?
-      */
-    const gfxMatrix& Multiply(const gfxMatrix& m);
 
     /**
      * Multiplies the current matrix with m.

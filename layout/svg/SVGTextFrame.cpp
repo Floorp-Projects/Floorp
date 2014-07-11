@@ -975,7 +975,7 @@ TextRenderedRun::GetUserSpaceRect(nsPresContext* aContext,
   }
   gfxMatrix m = GetTransformFromRunUserSpaceToUserSpace(aContext);
   if (aAdditionalTransform) {
-    m.Multiply(*aAdditionalTransform);
+    m *= *aAdditionalTransform;
   }
   return m.TransformBounds(r.ToThebesRect());
 }
@@ -3594,8 +3594,7 @@ SVGTextFrame::PaintSVG(nsRenderingContext* aContext,
     return NS_ERROR_FAILURE;
   }
 
-  gfxMatrix matrixForPaintServers(canvasTM);
-  matrixForPaintServers.Multiply(initialMatrix);
+  gfxMatrix matrixForPaintServers = canvasTM * initialMatrix;
 
   // Check if we need to draw anything.
   if (aDirtyRect) {
@@ -3658,8 +3657,8 @@ SVGTextFrame::PaintSVG(nsRenderingContext* aContext,
     // Set up the transform for painting the text frame for the substring
     // indicated by the run.
     gfxMatrix runTransform =
-      run.GetTransformFromUserSpaceForPainting(presContext, item);
-    runTransform.Multiply(currentMatrix);
+      run.GetTransformFromUserSpaceForPainting(presContext, item) *
+      currentMatrix;
     gfx->SetMatrix(runTransform);
 
     if (drawMode != DrawMode(0)) {
@@ -3718,8 +3717,8 @@ SVGTextFrame::GetFrameForPoint(const nsPoint& aPoint)
       continue;
     }
 
-    gfxMatrix m = GetCanvasTM(FOR_HIT_TESTING);
-    m.PreMultiply(run.GetTransformFromRunUserSpaceToUserSpace(presContext));
+    gfxMatrix m = run.GetTransformFromRunUserSpaceToUserSpace(presContext) *
+                    GetCanvasTM(FOR_HIT_TESTING);
     if (!m.Invert()) {
       return nullptr;
     }
@@ -5451,9 +5450,8 @@ SVGTextFrame::TransformFrameRectToTextChild(const gfxRect& aRect,
     if (!userSpaceToRunUserSpace.Invert()) {
       return result;
     }
-    gfxMatrix m;
-    m.PreMultiply(userSpaceToRunUserSpace);
-    m.PreMultiply(run.GetTransformFromRunUserSpaceToFrameUserSpace(presContext));
+    gfxMatrix m = run.GetTransformFromRunUserSpaceToFrameUserSpace(presContext) *
+                    userSpaceToRunUserSpace;
     gfxRect incomingRectInFrameUserSpace =
       m.TransformBounds(incomingRectInUserSpace);
 

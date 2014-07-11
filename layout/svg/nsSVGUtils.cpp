@@ -1125,8 +1125,7 @@ PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
   double style_expansion =
     aStyleExpansionFactor * nsSVGUtils::GetStrokeWidth(aFrame);
 
-  gfxMatrix matrix = aMatrix;
-  matrix.Multiply(nsSVGUtils::GetStrokeTransform(aFrame));
+  gfxMatrix matrix = aMatrix * nsSVGUtils::GetStrokeTransform(aFrame);
 
   double dx = style_expansion * (fabs(matrix._11) + fabs(matrix._21));
   double dy = style_expansion * (fabs(matrix._22) + fabs(matrix._12));
