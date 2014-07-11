@@ -58,6 +58,22 @@ gfxMatrix::PreMultiply(const gfxMatrix& m)
     return *this;
 }
 
+/* static */ gfxMatrix
+gfxMatrix::Rotation(gfxFloat aAngle)
+{
+    gfxMatrix newMatrix;
+
+    gfxFloat s = sin(aAngle);
+    gfxFloat c = cos(aAngle);
+
+    newMatrix._11 = c;
+    newMatrix._12 = s;
+    newMatrix._21 = -s;
+    newMatrix._22 = c;
+
+    return newMatrix;
+}
+
 gfxPoint
 gfxMatrix::Transform(const gfxPoint& point) const
 {

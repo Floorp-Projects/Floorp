@@ -144,6 +144,23 @@ public:
      */
     const gfxMatrix& PreMultiply(const gfxMatrix& m);
 
+    static gfxMatrix Translation(gfxFloat aX, gfxFloat aY)
+    {
+        return gfxMatrix(1.0, 0.0, 0.0, 1.0, aX, aY);
+    }
+
+    static gfxMatrix Translation(gfxPoint aPoint)
+    {
+        return Translation(aPoint.x, aPoint.y);
+    }
+
+    static gfxMatrix Rotation(gfxFloat aAngle);
+
+    static gfxMatrix Scaling(gfxFloat aX, gfxFloat aY)
+    {
+        return gfxMatrix(aX, 0.0, 0.0, aY, 0.0, 0.0);
+    }
+
     /**
      * Transforms a point according to this matrix.
      */
