@@ -150,7 +150,7 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Type type)
             switch (type) {
               case MoveOp::FLOAT32: stackForCall_ += sizeof(float);  break;
               case MoveOp::DOUBLE:  stackForCall_ += sizeof(double); break;
-              default: MOZ_CRASH("Unexpected float register class argument type");
+              default: MOZ_ASSUME_UNREACHABLE("Unexpected float register class argument type");
             }
         }
         break;
@@ -170,7 +170,7 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Type type)
         break;
       }
       default:
-        MOZ_CRASH("Unexpected argument type");
+        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
     }
 
     enoughMemory_ = moveResolver_.addMove(from, to, type);

@@ -1032,7 +1032,7 @@ LIRGenerator::visitCompare(MCompare *comp)
         return define(lir, comp);
     }
 
-    MOZ_CRASH("Unrecognized compare type.");
+    MOZ_ASSUME_UNREACHABLE("Unrecognized compare type.");
 }
 
 bool
@@ -1769,7 +1769,7 @@ LIRGenerator::visitToDouble(MToDouble *convert)
       default:
         // Objects might be effectful.
         // Strings are complicated - we don't handle them yet.
-        MOZ_CRASH("unexpected type");
+        MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
 }
 
@@ -1818,7 +1818,7 @@ LIRGenerator::visitToFloat32(MToFloat32 *convert)
       default:
         // Objects might be effectful.
         // Strings are complicated - we don't handle them yet.
-        MOZ_CRASH("unexpected type");
+        MOZ_ASSUME_UNREACHABLE("unexpected type");
         return false;
     }
 }
@@ -1864,11 +1864,11 @@ LIRGenerator::visitToInt32(MToInt32 *convert)
       case MIRType_Object:
       case MIRType_Undefined:
         // Objects might be effectful. Undefined and symbols coerce to NaN, not int32.
-        MOZ_CRASH("ToInt32 invalid input type");
+        MOZ_ASSUME_UNREACHABLE("ToInt32 invalid input type");
         return false;
 
       default:
-        MOZ_CRASH("unexpected type");
+        MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
 }
 
@@ -1907,7 +1907,7 @@ LIRGenerator::visitTruncateToInt32(MTruncateToInt32 *truncate)
       default:
         // Objects might be effectful.
         // Strings are complicated - we don't handle them yet.
-        MOZ_CRASH("unexpected type");
+        MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
 }
 
@@ -1966,7 +1966,7 @@ LIRGenerator::visitToString(MToString *ins)
 
       default:
         // Float32 and objects are not supported.
-        MOZ_CRASH("unexpected type");
+        MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
 }
 
@@ -2178,7 +2178,7 @@ LIRGenerator::visitLoadSlot(MLoadSlot *ins)
 
       case MIRType_Undefined:
       case MIRType_Null:
-        MOZ_CRASH("typed load must have a payload");
+        MOZ_ASSUME_UNREACHABLE("typed load must have a payload");
 
       default:
         return define(new(alloc()) LLoadSlotT(useRegister(ins->slots())), ins);
@@ -2277,7 +2277,7 @@ LIRGenerator::visitStoreSlot(MStoreSlot *ins)
         return add(new(alloc()) LStoreSlotT(useRegister(ins->slots()), useRegister(ins->value())), ins);
 
       case MIRType_Float32:
-        MOZ_CRASH("Float32 shouldn't be stored in a slot.");
+        MOZ_ASSUME_UNREACHABLE("Float32 shouldn't be stored in a slot.");
 
       default:
         return add(new(alloc()) LStoreSlotT(useRegister(ins->slots()), useRegisterOrConstant(ins->value())),
@@ -2520,7 +2520,7 @@ LIRGenerator::visitNot(MNot *ins)
       }
 
       default:
-        MOZ_CRASH("Unexpected MIRType.");
+        MOZ_ASSUME_UNREACHABLE("Unexpected MIRType.");
     }
 }
 
@@ -2596,10 +2596,9 @@ LIRGenerator::visitLoadElement(MLoadElement *ins)
             return false;
         return defineBox(lir, ins);
       }
-
       case MIRType_Undefined:
       case MIRType_Null:
-        MOZ_CRASH("typed load must have a payload");
+        MOZ_ASSUME_UNREACHABLE("typed load must have a payload");
 
       default:
       {
@@ -2707,7 +2706,7 @@ LIRGenerator::visitArrayPopShift(MArrayPopShift *ins)
       }
       case MIRType_Undefined:
       case MIRType_Null:
-        MOZ_CRASH("typed load must have a payload");
+        MOZ_ASSUME_UNREACHABLE("typed load must have a payload");
 
       default:
       {
@@ -2816,7 +2815,7 @@ LIRGenerator::visitClampToUint8(MClampToUint8 *ins)
       }
 
       default:
-        MOZ_CRASH("unexpected type");
+        MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
 }
 
@@ -3129,7 +3128,8 @@ LIRGenerator::visitAssertRange(MAssertRange *ins)
         break;
 
       default:
-        MOZ_CRASH("Unexpected Range for MIRType");
+        MOZ_ASSUME_UNREACHABLE("Unexpected Range for MIRType");
+        break;
     }
 
     lir->setMir(ins);
@@ -3532,7 +3532,7 @@ LIRGenerator::visitAsmJSReturn(MAsmJSReturn *ins)
     else if (rval->type() == MIRType_Int32)
         lir->setOperand(0, useFixed(rval, ReturnReg));
     else
-        MOZ_CRASH("Unexpected asm.js return type");
+        MOZ_ASSUME_UNREACHABLE("Unexpected asm.js return type");
     return add(lir);
 }
 

@@ -27,7 +27,8 @@ using namespace js::jit;
 bool
 MNode::writeRecoverData(CompactBufferWriter &writer) const
 {
-    MOZ_CRASH("This instruction is not serializable");
+    MOZ_ASSUME_UNREACHABLE("This instruction is not serializable");
+    return false;
 }
 
 void
@@ -47,7 +48,7 @@ RInstruction::readRecoverData(CompactBufferReader &reader, RInstructionStorage *
 
       case Recover_Invalid:
       default:
-        MOZ_CRASH("Bad decoding of the previous instruction?");
+        MOZ_ASSUME_UNREACHABLE("Bad decoding of the previous instruction?");
         break;
     }
 }
@@ -135,7 +136,7 @@ RResumePoint::RResumePoint(CompactBufferReader &reader)
 bool
 RResumePoint::recover(JSContext *cx, SnapshotIterator &iter) const
 {
-    MOZ_CRASH("This instruction is not recoverable.");
+    MOZ_ASSUME_UNREACHABLE("This instruction is not recoverable.");
 }
 
 bool
@@ -824,7 +825,8 @@ MMathFunction::writeRecoverData(CompactBufferWriter &writer) const
         writer.writeUnsigned(uint32_t(RInstruction::Recover_Round));
         return true;
       default:
-        MOZ_CRASH("Unknown math function.");
+        MOZ_ASSUME_UNREACHABLE("Unknown math function.");
+        return false;
     }
 }
 

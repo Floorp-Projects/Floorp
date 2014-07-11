@@ -379,10 +379,10 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         mov(ImmWord(uintptr_t(imm.value)), dest);
     }
     void mov(Register src, Address dest) {
-        MOZ_CRASH("NYI-IC");
+        MOZ_ASSUME_UNREACHABLE("NYI-IC");
     }
     void mov(Address src, Register dest) {
-        MOZ_CRASH("NYI-IC");
+        MOZ_ASSUME_UNREACHABLE("NYI-IC");
     }
 
     void call(const Register reg) {
@@ -997,7 +997,7 @@ public:
             ma_addTestOverflow(dest, dest, src, overflow);
             break;
           default:
-            MOZ_CRASH("NYI");
+            MOZ_ASSUME_UNREACHABLE("NYI");
         }
     }
     template <typename T>
@@ -1012,7 +1012,7 @@ public:
             ma_b(dest, dest, overflow, cond);
             break;
           default:
-            MOZ_CRASH("NYI");
+            MOZ_ASSUME_UNREACHABLE("NYI");
         }
     }
 

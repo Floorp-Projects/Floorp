@@ -541,13 +541,13 @@ LIRGeneratorARM::lowerTruncateFToInt32(MTruncateToInt32 *ins)
 bool
 LIRGeneratorARM::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSUME_UNREACHABLE("NYI");
 }
 
 bool
 LIRGeneratorARM::visitForkJoinGetSlice(MForkJoinGetSlice *ins)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSUME_UNREACHABLE("NYI");
 }
 
 //__aeabi_uidiv
