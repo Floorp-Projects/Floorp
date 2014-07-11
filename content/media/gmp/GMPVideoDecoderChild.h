@@ -11,6 +11,7 @@
 #include "gmp-video-decode.h"
 #include "GMPSharedMemManager.h"
 #include "GMPVideoHost.h"
+#include "mozilla/gmp/GMPTypes.h"
 
 namespace mozilla {
 namespace gmp {
@@ -18,7 +19,7 @@ namespace gmp {
 class GMPChild;
 
 class GMPVideoDecoderChild : public PGMPVideoDecoderChild,
-                             public GMPDecoderCallback,
+                             public GMPVideoDecoderCallback,
                              public GMPSharedMemManager
 {
 public:
@@ -28,11 +29,13 @@ public:
   void Init(GMPVideoDecoder* aDecoder);
   GMPVideoHostImpl& Host();
 
-  // GMPDecoderCallback
+  // GMPVideoDecoderCallback
   virtual void Decoded(GMPVideoi420Frame* decodedFrame) MOZ_OVERRIDE;
   virtual void ReceivedDecodedReferenceFrame(const uint64_t pictureId) MOZ_OVERRIDE;
   virtual void ReceivedDecodedFrame(const uint64_t pictureId) MOZ_OVERRIDE;
   virtual void InputDataExhausted() MOZ_OVERRIDE;
+  virtual void DrainComplete() MOZ_OVERRIDE;
+  virtual void ResetComplete() MOZ_OVERRIDE;
 
   // GMPSharedMemManager
   virtual void CheckThread();
@@ -60,6 +63,7 @@ public:
 private:
   // PGMPVideoDecoderChild
   virtual bool RecvInitDecode(const GMPVideoCodec& codecSettings,
+                              const nsTArray<uint8_t>& aCodecSpecific,
                               const int32_t& coreCount) MOZ_OVERRIDE;
   virtual bool RecvDecode(const GMPVideoEncodedFrameData& inputFrame,
                           const bool& missingFrames,

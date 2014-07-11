@@ -10,8 +10,6 @@
 #include "GMPVideoEncodedFrameImpl.h"
 #include "GMPVideoi420FrameImpl.h"
 
-using mozilla::ipc::ProcessChild;
-
 namespace mozilla {
 namespace gmp {
 
@@ -64,6 +62,7 @@ GMPVideoEncoderChild::CheckThread()
 
 bool
 GMPVideoEncoderChild::RecvInitEncode(const GMPVideoCodec& aCodecSettings,
+                                     const nsTArray<uint8_t>& aCodecSpecific,
                                      const int32_t& aNumberOfCores,
                                      const uint32_t& aMaxPayloadSize)
 {
@@ -72,7 +71,12 @@ GMPVideoEncoderChild::RecvInitEncode(const GMPVideoCodec& aCodecSettings,
   }
 
   // Ignore any return code. It is OK for this to fail without killing the process.
-  mVideoEncoder->InitEncode(aCodecSettings, this, aNumberOfCores, aMaxPayloadSize);
+  mVideoEncoder->InitEncode(aCodecSettings,
+                            aCodecSpecific.Elements(),
+                            aCodecSpecific.Length(),
+                            this,
+                            aNumberOfCores,
+                            aMaxPayloadSize);
 
   return true;
 }
@@ -80,7 +84,7 @@ GMPVideoEncoderChild::RecvInitEncode(const GMPVideoCodec& aCodecSettings,
 bool
 GMPVideoEncoderChild::RecvEncode(const GMPVideoi420FrameData& aInputFrame,
                                  const GMPCodecSpecificInfo& aCodecSpecificInfo,
-                                 const InfallibleTArray<int>& aFrameTypes)
+                                 const nsTArray<GMPVideoFrameType>& aFrameTypes)
 {
   if (!mVideoEncoder) {
     return false;
@@ -88,12 +92,8 @@ GMPVideoEncoderChild::RecvEncode(const GMPVideoi420FrameData& aInputFrame,
 
   auto f = new GMPVideoi420FrameImpl(aInputFrame, &mVideoHost);
 
-  std::vector<GMPVideoFrameType> frameTypes(aFrameTypes.Length());
-  for (uint32_t i = 0; i < aFrameTypes.Length(); i++) {
-    frameTypes[i] = static_cast<GMPVideoFrameType>(aFrameTypes[i]);
-  }
   // Ignore any return code. It is OK for this to fail without killing the process.
-  mVideoEncoder->Encode(f, aCodecSpecificInfo, frameTypes);
+  mVideoEncoder->Encode(f, aCodecSpecificInfo, aFrameTypes.Elements(), aFrameTypes.Length());
 
   return true;
 }

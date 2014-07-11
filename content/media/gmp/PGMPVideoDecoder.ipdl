@@ -19,6 +19,7 @@ intr protocol PGMPVideoDecoder
   manager PGMP;
 child:
   async InitDecode(GMPVideoCodec aCodecSettings,
+                   uint8_t[] aCodecSpecific,
                    int32_t aCoreCount);
   async Decode(GMPVideoEncodedFrameData aInputFrame,
                bool aMissingFrames,
@@ -35,6 +36,8 @@ parent:
   async ReceivedDecodedReferenceFrame(uint64_t aPictureId);
   async ReceivedDecodedFrame(uint64_t aPictureId);
   async InputDataExhausted();
+  async DrainComplete();
+  async ResetComplete();
   async ParentShmemForPool(Shmem aEncodedBuffer);
   // MUST be intr - if sync and we create a new Shmem, when the returned
   // Shmem is received in the Child it will fail to Deserialize
