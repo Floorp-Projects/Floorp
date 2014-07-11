@@ -179,7 +179,7 @@ static inline der::Result ResponseBytes(der::Input&, Context&);
 static inline der::Result BasicResponse(der::Input&, Context&);
 static inline der::Result ResponseData(
                               der::Input& tbsResponseData, Context& context,
-                              const CERTSignedData& signedResponseData,
+                              const SignedDataWithSignature& signedResponseData,
                               /*const*/ SECItem* certs, size_t numCerts);
 static inline der::Result SingleResponse(der::Input& input,
                                           Context& context);
@@ -234,7 +234,7 @@ MatchResponderID(ResponderIDType responderIDType,
 
 static Result
 VerifyOCSPSignedData(TrustDomain& trustDomain,
-                     const CERTSignedData& signedResponseData,
+                     const SignedDataWithSignature& signedResponseData,
                      const SECItem& spki)
 {
   SECStatus srv = trustDomain.VerifySignedData(signedResponseData, spki);
@@ -255,7 +255,8 @@ VerifyOCSPSignedData(TrustDomain& trustDomain,
 static Result
 VerifySignature(Context& context, ResponderIDType responderIDType,
                 const SECItem& responderID, const SECItem* certs,
-                size_t numCerts, const CERTSignedData& signedResponseData)
+                size_t numCerts,
+                const SignedDataWithSignature& signedResponseData)
 {
   bool match;
   Result rv = MatchResponderID(responderIDType, responderID,
@@ -428,7 +429,7 @@ der::Result
 BasicResponse(der::Input& input, Context& context)
 {
   der::Input tbsResponseData;
-  CERTSignedData signedData;
+  SignedDataWithSignature signedData;
   if (der::SignedData(input, tbsResponseData, signedData) != der::Success) {
     if (PR_GetError() == SEC_ERROR_BAD_SIGNATURE) {
       PR_SetError(SEC_ERROR_OCSP_BAD_SIGNATURE, 0);
@@ -483,7 +484,7 @@ BasicResponse(der::Input& input, Context& context)
 //    responseExtensions  [1] EXPLICIT Extensions OPTIONAL }
 static inline der::Result
 ResponseData(der::Input& input, Context& context,
-             const CERTSignedData& signedResponseData,
+             const SignedDataWithSignature& signedResponseData,
              /*const*/ SECItem* certs, size_t numCerts)
 {
   der::Version version;
@@ -678,8 +679,13 @@ CertID(der::Input& input, const Context& context, /*out*/ bool& match)
 {
   match = false;
 
-  SECAlgorithmID hashAlgorithm;
-  if (der::AlgorithmIdentifier(input, hashAlgorithm) != der::Success) {
+  DigestAlgorithm hashAlgorithm;
+  if (der::DigestAlgorithmIdentifier(input, hashAlgorithm) != der::Success) {
+    if (PR_GetError() == SEC_ERROR_INVALID_ALGORITHM) {
+      // Skip entries that are hashed with algorithms we don't support.
+      input.SkipToEnd();
+      return der::Success;
+    }
     return der::Failure;
   }
 
@@ -710,8 +716,7 @@ CertID(der::Input& input, const Context& context, /*out*/ bool& match)
 
   // TODO: support SHA-2 hashes.
 
-  SECOidTag hashAlg = SECOID_GetAlgorithmTag(&hashAlgorithm);
-  if (hashAlg != SEC_OID_SHA1) {
+  if (hashAlgorithm != DigestAlgorithm::sha1) {
     // Again, not interested in this response. Consume input, return success.
     input.SkipToEnd();
     return der::Success;

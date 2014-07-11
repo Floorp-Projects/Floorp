@@ -86,8 +86,9 @@ BackCert::Init()
   // XXX: Ignored. What are we supposed to check? This seems totally redundant
   // with Certificate.signatureAlgorithm. Is it important to check that they
   // are consistent with each other? It doesn't seem to matter!
-  SECAlgorithmID signature;
-  if (der::AlgorithmIdentifier(tbsCertificate, signature) != der::Success) {
+  SignatureAlgorithm signature;
+  if (der::SignatureAlgorithmIdentifier(tbsCertificate, signature)
+        != der::Success) {
     return MapSECStatus(SECFailure);
   }
   if (der::ExpectTagAndGetTLV(tbsCertificate, der::SEQUENCE, issuer)

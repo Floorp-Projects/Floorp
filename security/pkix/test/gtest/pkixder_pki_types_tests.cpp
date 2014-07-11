@@ -26,7 +26,6 @@
 #include <vector>
 #include <gtest/gtest.h>
 
-#include "pkix/bind.h"
 #include "pkixder.h"
 
 using namespace mozilla::pkix::der;
@@ -41,59 +40,6 @@ protected:
     PR_SetError(0, 0);
   }
 };
-
-TEST_F(pkixder_pki_types_tests, AlgorithmIdentifierNoParams)
-{
-  const uint8_t DER_ALGORITHM_IDENTIFIER_NO_PARAMS[] = {
-    0x30/*SEQUENCE*/, 0x06/*LENGTH*/,
-    0x06, 0x04, 0xde, 0xad, 0xbe, 0xef   // OID
-  };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_ALGORITHM_IDENTIFIER_NO_PARAMS,
-                                sizeof DER_ALGORITHM_IDENTIFIER_NO_PARAMS));
-
-  const uint8_t expectedAlgorithmID[] = {
-    0xde, 0xad, 0xbe, 0xef
-  };
-
-  SECAlgorithmID algorithmID;
-  ASSERT_EQ(Success, AlgorithmIdentifier(input, algorithmID));
-
-  ASSERT_EQ(sizeof expectedAlgorithmID, algorithmID.algorithm.len);
-  ASSERT_EQ(0, memcmp(algorithmID.algorithm.data, expectedAlgorithmID,
-                      sizeof expectedAlgorithmID));
-
-  ASSERT_EQ(0u, algorithmID.parameters.len);
-  ASSERT_FALSE(algorithmID.parameters.data);
-}
-
-TEST_F(pkixder_pki_types_tests, AlgorithmIdentifierNullParams)
-{
-  const uint8_t DER_ALGORITHM_IDENTIFIER_NULL_PARAMS[] = {
-    0x30, 0x08,                         // SEQUENCE
-    0x06, 0x04, 0xde, 0xad, 0xbe, 0xef, // OID
-    0x05, 0x00                          // NULL
-  };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_ALGORITHM_IDENTIFIER_NULL_PARAMS,
-                                sizeof DER_ALGORITHM_IDENTIFIER_NULL_PARAMS));
-
-  const uint8_t expectedAlgorithmID[] = {
-    0xde, 0xad, 0xbe, 0xef
-  };
-
-  SECAlgorithmID algorithmID;
-  ASSERT_EQ(Success, AlgorithmIdentifier(input, algorithmID));
-
-  ASSERT_EQ(sizeof expectedAlgorithmID, algorithmID.algorithm.len);
-  ASSERT_TRUE(memcmp(algorithmID.algorithm.data, expectedAlgorithmID,
-                     sizeof expectedAlgorithmID) == 0);
-
-  ASSERT_EQ((size_t) 0, algorithmID.parameters.len);
-  ASSERT_EQ(NULL, algorithmID.parameters.data);
-}
 
 TEST_F(pkixder_pki_types_tests, CertificateSerialNumber)
 {
@@ -266,4 +212,5 @@ TEST_F(pkixder_pki_types_tests, OptionalVersionMissing)
   ASSERT_EQ(Success, OptionalVersion(input, version));
   ASSERT_EQ(Version::v1, version);
 }
+
 } // unnamed namespace

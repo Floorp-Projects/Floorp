@@ -27,8 +27,9 @@ public:
                  /*out*/ mozilla::pkix::TrustLevel* trustLevel) MOZ_OVERRIDE;
   SECStatus FindIssuer(const SECItem& encodedIssuerName,
                        IssuerChecker& checker, PRTime time) MOZ_OVERRIDE;
-  SECStatus VerifySignedData(const CERTSignedData& signedData,
-                             const SECItem& subjectPublicKeyInfo) MOZ_OVERRIDE;
+  SECStatus VerifySignedData(
+              const mozilla::pkix::SignedDataWithSignature& signedData,
+              const SECItem& subjectPublicKeyInfo) MOZ_OVERRIDE;
   SECStatus CheckRevocation(mozilla::pkix::EndEntityOrCA endEntityOrCA,
                             const mozilla::pkix::CertID& certID, PRTime time,
                             /*optional*/ const SECItem* stapledOCSPresponse,

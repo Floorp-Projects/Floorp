@@ -62,8 +62,9 @@ public:
                                  const SECItem& candidateCertDER,
                          /*out*/ mozilla::pkix::TrustLevel* trustLevel);
 
-  virtual SECStatus VerifySignedData(const CERTSignedData& signedData,
-                                     const SECItem& subjectPublicKeyInfo);
+  virtual SECStatus VerifySignedData(
+                      const mozilla::pkix::SignedDataWithSignature& signedData,
+                      const SECItem& subjectPublicKeyInfo);
 
   virtual SECStatus CheckRevocation(mozilla::pkix::EndEntityOrCA endEntityOrCA,
                                     const mozilla::pkix::CertID& certID,

@@ -98,7 +98,7 @@ SECStatus BuildCertChain(TrustDomain& trustDomain, const SECItem& cert,
             /*optional*/ const SECItem* stapledOCSPResponse);
 
 // Verify the given signed data using the given public key.
-SECStatus VerifySignedData(const CERTSignedData& sd,
+SECStatus VerifySignedData(const SignedDataWithSignature& sd,
                            const SECItem& subjectPublicKeyInfo,
                            void* pkcs11PinArg);
 
