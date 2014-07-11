@@ -1,0 +1,40 @@
+option optimize_for = LITE_RUNTIME;
+
+package mozilla.layers.layerscope;
+
+message FramePacket {
+  optional uint64 value = 1;
+}
+
+message ColorPacket {
+  required uint64 layerref = 1;
+  optional uint32 width = 2;
+  optional uint32 height = 3;
+  optional uint32 color = 4;
+}
+
+message TexturePacket {
+  required uint64 layerref = 1;
+  optional uint32 width = 2;
+  optional uint32 height = 3;
+  optional uint32 stride = 4;
+  optional uint32 name = 5;
+  optional uint32 target = 6;
+  optional uint32 dataformat = 7;
+  optional uint64 glcontext = 8;
+  optional bytes data = 9;
+}
+
+message Packet {
+  enum DataType {
+    FRAMESTART = 1;
+    FRAMEEND = 2;
+    COLOR = 3;
+    TEXTURE = 4;
+  }
+  required DataType type = 1;
+
+  optional FramePacket frame = 2;
+  optional ColorPacket color = 3;
+  optional TexturePacket texture = 4;
+}

@@ -284,7 +284,11 @@ SVGDrawingCallback::operator()(gfxContext* aContext,
   aContext->Clip();
 
   gfxContextMatrixAutoSaveRestore contextMatrixRestorer(aContext);
-  aContext->Multiply(gfxMatrix(aTransform).Invert());
+  gfxMatrix matrix = aTransform;
+  if (!matrix.Invert()) {
+    return false;
+  }
+  aContext->Multiply(matrix);
   aContext->Scale(1.0 / mScale.width, 1.0 / mScale.height);
 
   nsPresContext* presContext = presShell->GetPresContext();

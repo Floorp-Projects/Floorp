@@ -6,8 +6,11 @@
 #define MP4_DEMUXER_H_
 
 #include "nsAutoPtr.h"
-#include "mozilla/gfx/Rect.h"
+#include "nsTArray.h"
 #include "mp4_demuxer/DecoderData.h"
+#include "mp4_demuxer/Interval.h"
+
+namespace mozilla { class MediaByteRange; }
 
 namespace mp4_demuxer
 {
@@ -51,6 +54,10 @@ public:
 
   const AudioDecoderConfig& AudioConfig() { return mAudioConfig; }
   const VideoDecoderConfig& VideoConfig() { return mVideoConfig; }
+
+  void ConvertByteRangesToTime(
+    const nsTArray<mozilla::MediaByteRange>& aByteRanges,
+    nsTArray<Interval<Microseconds> >* aIntervals);
 
 private:
   AudioDecoderConfig mAudioConfig;

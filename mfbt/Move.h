@@ -144,8 +144,8 @@ namespace mozilla {
  * - First, when a function template takes an argument that is an rvalue
  *   reference to a template argument (like 'XArg&& x' and 'YArg&& y' above),
  *   then when the argument is applied to an lvalue, the template argument
- *   resolves to 'T &'; and when it is applied to an rvalue, the template
- *   argument resolves to 'T &&'. Thus, in a call to C::C like:
+ *   resolves to 'T&'; and when it is applied to an rvalue, the template
+ *   argument resolves to 'T&&'. Thus, in a call to C::C like:
  *
  *      X foo(int);
  *      Y yy;

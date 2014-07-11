@@ -88,6 +88,9 @@ AssertGCThingHasType(js::gc::Cell *cell, JSGCTraceKind kind) {}
 namespace JS {
 struct Zone;
 
+/* Default size for the generational nursery in bytes. */
+const uint32_t DefaultNurseryBytes = 16 * 1024 * 1024;
+
 /*
  * We cannot expose the class hierarchy: the implementation is hidden. Instead
  * we provide cast functions with strong debug-mode assertions.

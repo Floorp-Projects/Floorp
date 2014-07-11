@@ -85,11 +85,14 @@ FFmpegDataDecoder<LIBAV_VER>::Init()
   mCodecContext.get_format = ChoosePixelFormat;
 
   mCodecContext.thread_count = PR_GetNumberOfProcessors();
-  mCodecContext.thread_type = FF_THREAD_FRAME;
+  mCodecContext.thread_type = FF_THREAD_SLICE | FF_THREAD_FRAME;
   mCodecContext.thread_safe_callbacks = false;
 
-  mCodecContext.extradata = mExtraData.begin();
   mCodecContext.extradata_size = mExtraData.length();
+  for (int i = 0; i < FF_INPUT_BUFFER_PADDING_SIZE; i++) {
+    mExtraData.append(0);
+  }
+  mCodecContext.extradata = mExtraData.begin();
 
   AVDictionary* opts = nullptr;
   if (avcodec_open2(&mCodecContext, codec, &opts) < 0) {

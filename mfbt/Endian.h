@@ -474,7 +474,8 @@ protected:
    * Likewise, but converts values in place.
    */
   template<typename T>
-  static void swapToBigEndianInPlace(T* aPtr, size_t aCount) {
+  static void swapToBigEndianInPlace(T* aPtr, size_t aCount)
+  {
     maybeSwapInPlace<ThisEndian, Big>(aPtr, aCount);
   }
 

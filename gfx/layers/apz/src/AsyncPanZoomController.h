@@ -712,12 +712,6 @@ protected:
   // would significantly limit what methods could be 'const'.
   mutable ReentrantMonitor mMonitor;
 
-  // Specifies whether we should use touch-action css property. Initialized from
-  // the preferences. This property (in comparison with the global one) simplifies
-  // testing apzc with (and without) touch-action property enabled concurrently
-  // (e.g. with the gtest framework).
-  bool mTouchActionPropertyEnabled;
-
   // Stores the state of panning and zooming this frame. This is protected by
   // |mMonitor|; that is, it should be held whenever this is updated.
   PanZoomState mState;

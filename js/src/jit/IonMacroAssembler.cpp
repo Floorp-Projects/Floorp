@@ -297,7 +297,7 @@ StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, cons
         masm.storeDouble(value, dest);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid typed array type");
+        MOZ_CRASH("Invalid typed array type");
     }
 }
 
@@ -363,7 +363,7 @@ MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T &src, AnyRegi
         canonicalizeDouble(dest.fpu());
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid typed array type");
+        MOZ_CRASH("Invalid typed array type");
     }
 }
 
@@ -424,7 +424,7 @@ MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T &src, const V
         boxDouble(ScratchDoubleReg, dest);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid typed array type");
+        MOZ_CRASH("Invalid typed array type");
     }
 }
 
@@ -978,7 +978,7 @@ MacroAssembler::checkInterruptFlagPar(Register tempReg, Label *fail)
     movePtr(ImmPtr(GetIonContext()->runtime->addressOfInterruptPar()), tempReg);
     branch32(Assembler::NonZero, Address(tempReg, 0), Imm32(0), fail);
 #else
-    MOZ_ASSUME_UNREACHABLE("JSRuntime::interruptPar doesn't exist on non-threadsafe builds.");
+    MOZ_CRASH("JSRuntime::interruptPar doesn't exist on non-threadsafe builds.");
 #endif
 }
 
@@ -1236,7 +1236,7 @@ MacroAssembler::loadContext(Register cxReg, Register scratch, ExecutionMode exec
         loadForkJoinContext(cxReg, scratch);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+        MOZ_CRASH("No such execution mode");
     }
 }
 
@@ -1279,7 +1279,7 @@ MacroAssembler::enterExitFrameAndLoadContext(const VMFunction *f, Register cxReg
         enterParallelExitFrameAndLoadContext(f, cxReg, scratch);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+        MOZ_CRASH("No such execution mode");
     }
 }
 
@@ -1297,7 +1297,7 @@ MacroAssembler::enterFakeExitFrame(Register cxReg, Register scratch,
         enterFakeParallelExitFrame(cxReg, scratch, codeVal);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+        MOZ_CRASH("No such execution mode");
     }
 }
 
@@ -1319,7 +1319,7 @@ MacroAssembler::handleFailure(ExecutionMode executionMode)
         handler = JS_FUNC_TO_DATA_PTR(void *, jit::HandleParallelFailure);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+        MOZ_CRASH("No such execution mode");
     }
     MacroAssemblerSpecific::handleFailureWithHandler(handler);
 
@@ -1612,7 +1612,7 @@ MacroAssembler::PushEmptyRooted(VMFunction::RootType rootType)
 {
     switch (rootType) {
       case VMFunction::RootNone:
-        MOZ_ASSUME_UNREACHABLE("Handle must have root type");
+        MOZ_CRASH("Handle must have root type");
       case VMFunction::RootObject:
       case VMFunction::RootString:
       case VMFunction::RootPropertyName:
@@ -1632,7 +1632,7 @@ MacroAssembler::popRooted(VMFunction::RootType rootType, Register cellReg,
 {
     switch (rootType) {
       case VMFunction::RootNone:
-        MOZ_ASSUME_UNREACHABLE("Handle must have root type");
+        MOZ_CRASH("Handle must have root type");
       case VMFunction::RootObject:
       case VMFunction::RootString:
       case VMFunction::RootPropertyName:
@@ -1703,7 +1703,7 @@ MacroAssembler::convertTypedOrValueToFloatingPoint(TypedOrValueRegister src, Flo
         loadConstantFloatingPoint(GenericNaN(), float(GenericNaN()), output, outputType);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Bad MIRType");
+        MOZ_CRASH("Bad MIRType");
     }
 }
 
@@ -1918,7 +1918,7 @@ MacroAssembler::convertTypedOrValueToInt(TypedOrValueRegister src, FloatRegister
         jump(fail);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Bad MIRType");
+        MOZ_CRASH("Bad MIRType");
     }
 }
 
@@ -2004,7 +2004,7 @@ MacroAssembler::branchEqualTypeIfNeeded(MIRType type, MDefinition *maybeDef, Reg
             branchTestObject(Equal, tag, label);
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("Unsupported type");
+            MOZ_CRASH("Unsupported type");
         }
     }
 }

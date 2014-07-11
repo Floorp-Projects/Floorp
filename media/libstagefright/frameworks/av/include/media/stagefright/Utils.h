@@ -41,7 +41,7 @@ uint64_t U64LE_AT(const uint8_t *ptr);
 uint64_t ntoh64(uint64_t x);
 uint64_t hton64(uint64_t x);
 
-struct MetaData;
+class MetaData;
 struct AMessage;
 status_t convertMetaDataToMessage(
         const sp<MetaData> &meta, sp<AMessage> *format);

@@ -48,11 +48,8 @@
 #undef compress
 #include "mozilla/Compression.h"
 
-#ifdef __GNUC__
-#define PACKED_STRUCT __attribute__((packed))
-#else
-#define PACKED_STRUCT
-#endif
+// Protocol buffer (generated automatically)
+#include "protobuf/LayerScopePacket.pb.h"
 
 namespace mozilla {
 namespace layers {
@@ -61,6 +58,7 @@ using namespace mozilla::Compression;
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
 using namespace mozilla;
+using namespace layerscope;
 
 class DebugDataSender;
 class DebugGLData;
@@ -243,9 +241,9 @@ private:
         SHA1Sum sha1;
         nsCString combined(wsKey + guid);
         sha1.update(combined.get(), combined.Length());
-        uint8_t digest[SHA1Sum::HashSize]; // SHA1 digests are 20 bytes long.
+        uint8_t digest[SHA1Sum::kHashSize]; // SHA1 digests are 20 bytes long.
         sha1.finish(digest);
-        nsCString newString(reinterpret_cast<char*>(digest), SHA1Sum::HashSize);
+        nsCString newString(reinterpret_cast<char*>(digest), SHA1Sum::kHashSize);
         Base64Encode(newString, res);
 
         nsCString response("HTTP/1.1 101 Switching Protocols\r\n");
@@ -351,7 +349,7 @@ public:
 
     static LayerScopeWebSocketManager* GetSocketManager()
     {
-        return sWebSocketManager.get();
+        return sWebSocketManager;
     }
 
 private:
@@ -360,103 +358,68 @@ private:
 
 StaticAutoPtr<LayerScopeWebSocketManager> WebSocketHelper::sWebSocketManager;
 
-class DebugGLData : public LinkedListElement<DebugGLData> {
+/*
+ * DebugGLData is the base class of
+ * 1. DebugGLFrameStatusData (Frame start/end packet)
+ * 2. DebugGLColorData (Color data packet)
+ * 3. DebugGLTextureData (Texture data packet)
+ */
+class DebugGLData: public LinkedListElement<DebugGLData> {
 public:
-    typedef enum {
-        FrameStart,
-        FrameEnd,
-        TextureData,
-        ColorData
-    } DataType;
+    DebugGLData(Packet::DataType aDataType)
+        : mDataType(aDataType)
+    { }
 
     virtual ~DebugGLData() { }
 
-    DataType GetDataType() const { return mDataType; }
-    intptr_t GetContextAddress() const { return mContextAddress; }
-    int64_t GetValue() const { return mValue; }
+    Packet::DataType GetDataType() const { return mDataType; }
 
-    DebugGLData(DataType dataType)
-        : mDataType(dataType),
-          mContextAddress(0),
-          mValue(0)
-    { }
+    virtual bool Write() = 0;
 
-    DebugGLData(DataType dataType, GLContext* cx)
-        : mDataType(dataType),
-          mContextAddress(reinterpret_cast<intptr_t>(cx)),
-          mValue(0)
-    { }
-
-    DebugGLData(DataType dataType, GLContext* cx, int64_t value)
-        : mDataType(dataType),
-          mContextAddress(reinterpret_cast<intptr_t>(cx)),
-          mValue(value)
-    { }
-
-    virtual bool Write() {
-        if (mDataType != FrameStart &&
-            mDataType != FrameEnd)
-        {
-            NS_WARNING("Unimplemented data type!");
-            return false;
-        }
-
-        DebugGLData::BasicPacket packet;
-
-        packet.type = mDataType;
-        packet.ptr = static_cast<uint64_t>(mContextAddress);
-        packet.value = mValue;
-
-        return WriteToStream(&packet, sizeof(packet));
-    }
-
-    static bool WriteToStream(void *ptr, uint32_t size) {
+    static bool WriteToStream(Packet& aPacket) {
         if (!WebSocketHelper::GetSocketManager())
             return true;
-        return WebSocketHelper::GetSocketManager()->WriteAll(ptr, size);
+
+        uint32_t size = aPacket.ByteSize();
+        nsAutoArrayPtr<uint8_t> data(new uint8_t[size]);
+        aPacket.SerializeToArray(data, size);
+        return WebSocketHelper::GetSocketManager()->WriteAll(data, size);
     }
 
 protected:
-    DataType mDataType;
-    intptr_t mContextAddress;
-    int64_t mValue;
+    Packet::DataType mDataType;
+};
 
+class DebugGLFrameStatusData : public DebugGLData
+{
 public:
-  // the data packet formats; all packed
-#ifdef _MSC_VER
-#pragma pack(push, 1)
-#endif
-    typedef struct {
-        uint32_t type;
-        uint64_t ptr;
-        uint64_t value;
-    } PACKED_STRUCT BasicPacket;
+    DebugGLFrameStatusData(Packet::DataType aDataType,
+                           int64_t aValue)
+        : DebugGLData(aDataType),
+          mFrameStamp(aValue)
+    { }
 
-    typedef struct {
-        uint32_t type;
-        uint64_t ptr;
-        uint64_t layerref;
-        uint32_t color;
-        uint32_t width;
-        uint32_t height;
-    } PACKED_STRUCT ColorPacket;
+    DebugGLFrameStatusData(Packet::DataType aDataType)
+        : DebugGLData(aDataType),
+          mFrameStamp(0)
+    { }
 
-    typedef struct {
-        uint32_t type;
-        uint64_t ptr;
-        uint64_t layerref;
-        uint32_t name;
-        uint32_t width;
-        uint32_t height;
-        uint32_t stride;
-        uint32_t format;
-        uint32_t target;
-        uint32_t dataFormat;
-        uint32_t dataSize;
-    } PACKED_STRUCT TexturePacket;
-#ifdef _MSC_VER
-#pragma pack(pop)
-#endif
+    int64_t GetFrameStamp() const { return mFrameStamp; }
+
+    virtual bool Write() MOZ_OVERRIDE {
+        Packet packet;
+        packet.set_type(mDataType);
+
+        FramePacket *fp = packet.mutable_frame();
+        fp->set_value(mFrameStamp);
+
+        if (!WriteToStream(packet))
+            return false;
+        return true;
+    }
+
+protected:
+    int64_t mFrameStamp;
 };
 
 class DebugGLTextureData : public DebugGLData {
@@ -466,10 +429,11 @@ public:
                        GLenum target,
                        GLuint name,
                        DataSourceSurface* img)
-        : DebugGLData(DebugGLData::TextureData, cx),
+        : DebugGLData(Packet::TEXTURE),
           mLayerRef(layerRef),
           mTarget(target),
           mName(name),
+          mContextAddress(reinterpret_cast<intptr_t>(cx)),
           mDatasize(0)
     {
         // pre-packing
@@ -479,67 +443,58 @@ public:
         pack(img);
     }
 
-    void *GetLayerRef() const { return mLayerRef; }
+    const void* GetLayerRef() const { return mLayerRef; }
     GLuint GetName() const { return mName; }
     GLenum GetTextureTarget() const { return mTarget; }
+    intptr_t GetContextAddress() const { return mContextAddress; }
+    uint32_t GetDataSize() const { return mDatasize; }
 
-    virtual bool Write() {
-        // write the packet header data
-        if (!WriteToStream(&mPacket, sizeof(mPacket)))
+    virtual bool Write() MOZ_OVERRIDE {
+        if (!WriteToStream(mPacket))
             return false;
-
-        // then the image data
-        if (mCompresseddata.get() && !WriteToStream(mCompresseddata, mDatasize))
-            return false;
-
-        // then pad out to 4 bytes
-        if (mDatasize % 4 != 0) {
-            static char buf[] = { 0, 0, 0, 0 };
-            if (!WriteToStream(buf, 4 - (mDatasize % 4)))
-                return false;
-        }
-
         return true;
     }
 
 private:
     void pack(DataSourceSurface* aImage) {
-        mPacket.type = mDataType;
-        mPacket.ptr = static_cast<uint64_t>(mContextAddress);
-        mPacket.layerref = reinterpret_cast<uint64_t>(mLayerRef);
-        mPacket.name = mName;
-        mPacket.format = 0;
-        mPacket.target = mTarget;
-        mPacket.dataFormat = LOCAL_GL_RGBA;
+        mPacket.set_type(mDataType);
+
+        TexturePacket *tp = mPacket.mutable_texture();
+        tp->set_layerref(reinterpret_cast<uint64_t>(mLayerRef));
+        tp->set_name(mName);
+        tp->set_target(mTarget);
+        tp->set_dataformat(LOCAL_GL_RGBA);
+        tp->set_glcontext(static_cast<uint64_t>(mContextAddress));
 
         if (aImage) {
-            mPacket.width = aImage->GetSize().width;
-            mPacket.height = aImage->GetSize().height;
-            mPacket.stride = aImage->Stride();
-            mPacket.dataSize = aImage->GetSize().height * aImage->Stride();
+            tp->set_width(aImage->GetSize().width);
+            tp->set_height(aImage->GetSize().height);
+            tp->set_stride(aImage->Stride());
 
-            mCompresseddata =
-                new char[LZ4::maxCompressedSize(mPacket.dataSize)];
-            if (mCompresseddata.get()) {
+            mDatasize = aImage->GetSize().height * aImage->Stride();
+
+            nsAutoArrayPtr<char> compresseddata(
+                new char[LZ4::maxCompressedSize(mDatasize)]);
+            if (compresseddata.get()) {
                 int ndatasize = LZ4::compress((char*)aImage->GetData(),
-                                              mPacket.dataSize,
-                                              mCompresseddata);
+                                              mDatasize,
+                                              compresseddata);
                 if (ndatasize > 0) {
                     mDatasize = ndatasize;
-
-                    mPacket.dataFormat = (1 << 16) | mPacket.dataFormat;
-                    mPacket.dataSize = mDatasize;
+                    tp->set_dataformat((1 << 16 | tp->dataformat()));
+                    tp->set_data(compresseddata, mDatasize);
                 } else {
                     NS_WARNING("Compress data failed");
+                    tp->set_data(aImage->GetData(), mDatasize);
                 }
             } else {
-                NS_WARNING("Couldn't moz_malloc for compressed data.");
+                NS_WARNING("Couldn't new compressed data.");
+                tp->set_data(aImage->GetData(), mDatasize);
             }
         } else {
-            mPacket.width = 0;
-            mPacket.height = 0;
-            mPacket.stride = 0;
-            mPacket.dataSize = 0;
+            tp->set_width(0);
+            tp->set_height(0);
+            tp->set_stride(0);
         }
     }
 
@@ -547,37 +502,42 @@ protected:
     void* mLayerRef;
     GLenum mTarget;
     GLuint mName;
+    intptr_t mContextAddress;
+    uint32_t mDatasize;
 
     // Packet data
-    DebugGLData::TexturePacket mPacket;
-    nsAutoArrayPtr<char> mCompresseddata;
-    uint32_t mDatasize;
+    Packet mPacket;
 };
 
 class DebugGLColorData : public DebugGLData {
 public:
-    DebugGLColorData(void* layerRef, const gfxRGBA& color, int width, int height)
-        : DebugGLData(DebugGLData::ColorData),
+    DebugGLColorData(void* layerRef,
+                     const gfxRGBA& color,
+                     int width,
+                     int height)
+        : DebugGLData(Packet::COLOR),
           mLayerRef(layerRef),
           mColor(color.Packed()),
           mSize(width, height)
     { }
 
-    void *GetLayerRef() const { return mLayerRef; }
+    const void* GetLayerRef() const { return mLayerRef; }
     uint32_t GetColor() const { return mColor; }
     const nsIntSize& GetSize() const { return mSize; }
 
-    virtual bool Write() {
-        DebugGLData::ColorPacket packet;
+    virtual bool Write() MOZ_OVERRIDE {
+        Packet packet;
+        packet.set_type(mDataType);
 
-        packet.type = mDataType;
-        packet.ptr = static_cast<uint64_t>(mContextAddress);
-        packet.layerref = reinterpret_cast<uintptr_t>(mLayerRef);
-        packet.color = mColor;
-        packet.width = mSize.width;
-        packet.height = mSize.height;
+        ColorPacket *cp = packet.mutable_color();
+        cp->set_layerref(reinterpret_cast<uint64_t>(mLayerRef));
+        cp->set_color(mColor);
+        cp->set_width(mSize.width);
+        cp->set_height(mSize.height);
 
-        return WriteToStream(&packet, sizeof(packet));
+        if (!WriteToStream(packet))
+            return false;
+        return true;
     }
 
 protected:
@@ -1016,7 +976,7 @@ LayerScopeAutoFrame::BeginFrame(int64_t aFrameStamp)
     }
 
     WebSocketHelper::GetSocketManager()->AppendDebugData(
-        new DebugGLData(DebugGLData::FrameStart, nullptr, aFrameStamp));
+        new DebugGLFrameStatusData(Packet::FRAMESTART, aFrameStamp));
 }
 
 void
@@ -1027,7 +987,7 @@ LayerScopeAutoFrame::EndFrame()
     }
 
     WebSocketHelper::GetSocketManager()->AppendDebugData(
-        new DebugGLData(DebugGLData::FrameEnd, nullptr));
+        new DebugGLFrameStatusData(Packet::FRAMEEND));
     WebSocketHelper::GetSocketManager()->DispatchDebugData();
 }
 

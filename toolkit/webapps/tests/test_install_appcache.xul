@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1034730
+-->
+<window title="Mozilla Bug 1034730"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
+  <script type="application/javascript" src="head.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1034730"
+     target="_blank">Mozilla Bug 1034730</a>
+  </body>
+
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 1034730 **/
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NativeApp.jsm");
+Cu.import("resource://gre/modules/WebappOSUtils.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
+
+let runTest = Task.async(function*() {
+  let manifest = yield readJSON(getTestFilePath("data/appcached_app/manifest.webapp"));
+
+  let app = {
+    name: manifest.name,
+    manifestURL: "http://127.0.0.1:8888/chrome/toolkit/webapps/tests/data/appcached_app/manifest.webapp",
+    origin: "http://127.0.0.1:8888/",
+  };
+
+  let testAppInfo = new TestAppInfo(app, false);
+
+  // Get to a clean state before the test
+  yield testAppInfo.cleanup();
+
+  SimpleTest.registerCleanupFunction(() => testAppInfo.cleanup());
+
+  setDryRunPref();
+
+  // On Mac build servers, we don't have enough privileges to write to /Applications,
+  // so we install apps in a user-owned directory.
+  if (MAC) {
+    yield setMacRootInstallDir(OS.Path.join(OS.Constants.Path.homeDir, "Applications"));
+  }
+
+  confirmNextInstall();
+
+  let request = navigator.mozApps.install(app.manifestURL);
+
+  let (deferred = Promise.defer()) {
+    request.onerror = function() {
+      deferred.reject(this.error.name);
+    };
+    request.onsuccess = deferred.resolve;
+    yield deferred.promise;
+  }
+
+  let appObject = request.result;
+  ok(appObject, "app is non-null");
+
+  while (!WebappOSUtils.isLaunchable(app)) {
+    yield wait(1000);
+  }
+  ok(true, "App launchable");
+
+  let (size = 0) {
+    do {
+      try {
+        size = yield dirSize(OS.Path.join(testAppInfo.profileDir.path, "OfflineCache"));
+      } catch (e) {
+        yield wait(1000);
+      }
+    } while (size == 0);
+    ok(size > 100000, "There are some files in the OfflineCache directory");
+  }
+
+  let exeFile = getFile(testAppInfo.exePath);
+
+  let appClosed = false;
+
+  testAppInfo.appProcess.init(exeFile)
+  testAppInfo.appProcess.runAsync([], 0, () => appClosed = true);
+
+  while (!(yield wasAppSJSAccessed()) && !appClosed) {
+    yield wait(1000);
+  }
+  ok(!appClosed, "App was launched and is still running");
+
+  let (size = 0) {
+    do {
+      try {
+        size = yield dirSize(OS.Path.join(testAppInfo.cacheDir.path, "OfflineCache"));
+      } catch (e) {
+        yield wait(1000);
+      }
+    } while (size == 0);
+    ok(size > 100000, "There are some files in the OfflineCache directory");
+  }
+
+  SimpleTest.finish();
+});
+
+runTest().catch((e) => {
+  ok(false, "Error during test: " + e);
+  SimpleTest.finish();
+});
+
+]]>
+</script>
+</window>

@@ -760,7 +760,7 @@ DebugPrologue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *mustRet
         return false;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid trap status");
+        MOZ_CRASH("Invalid trap status");
     }
 }
 
@@ -917,7 +917,7 @@ HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, bool *mus
         return false;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid trap status");
+        MOZ_CRASH("Invalid trap status");
     }
 
     return true;
@@ -955,7 +955,7 @@ OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *m
         return false;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid trap status");
+        MOZ_CRASH("Invalid trap status");
     }
 }
 

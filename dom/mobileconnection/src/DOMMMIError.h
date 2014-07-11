@@ -44,6 +44,9 @@ public:
   }
 
 private:
+  ~DOMMMIError() {}
+
+private:
   nsString mServiceCode;
   Nullable<int16_t> mInfo;
 };

@@ -1361,7 +1361,7 @@ BaselineCompiler::storeValue(const StackValue *source, const Address &dest,
         masm.storeValue(scratch, dest);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid kind");
+        MOZ_CRASH("Invalid kind");
     }
 }
 

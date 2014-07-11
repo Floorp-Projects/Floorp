@@ -478,7 +478,8 @@ static bool
 Options(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS::CallArgs args = CallArgsFromVp(argc, vp);
-    ContextOptions oldOptions = ContextOptionsRef(cx);
+    ContextOptions oldContextOptions = ContextOptionsRef(cx);
+    RuntimeOptions oldRuntimeOptions = RuntimeOptionsRef(cx);
 
     for (unsigned i = 0; i < args.length(); ++i) {
         JSString *str = ToString(cx, args[i]);
@@ -492,7 +493,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
         if (strcmp(opt.ptr(), "strict") == 0)
             ContextOptionsRef(cx).toggleExtraWarnings();
         else if (strcmp(opt.ptr(), "werror") == 0)
-            ContextOptionsRef(cx).toggleWerror();
+            RuntimeOptionsRef(cx).toggleWerror();
         else if (strcmp(opt.ptr(), "strict_mode") == 0)
             ContextOptionsRef(cx).toggleStrictMode();
         else {
@@ -503,21 +504,21 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     char *names = nullptr;
-    if (oldOptions.extraWarnings()) {
+    if (oldContextOptions.extraWarnings()) {
         names = JS_sprintf_append(names, "%s", "strict");
         if (!names) {
             JS_ReportOutOfMemory(cx);
             return false;
         }
     }
-    if (oldOptions.werror()) {
+    if (oldRuntimeOptions.werror()) {
         names = JS_sprintf_append(names, "%s%s", names ? "," : "", "werror");
         if (!names) {
             JS_ReportOutOfMemory(cx);
             return false;
         }
     }
-    if (names && oldOptions.strictMode()) {
+    if (names && oldContextOptions.strictMode()) {
         names = JS_sprintf_append(names, "%s%s", names ? "," : "", "strict_mode");
         if (!names) {
             JS_ReportOutOfMemory(cx);
@@ -1031,7 +1032,7 @@ ProcessArgsForCompartment(JSContext *cx, char **argv, int argc)
                 return;
             break;
         case 'S':
-            ContextOptionsRef(cx).toggleWerror();
+            RuntimeOptionsRef(cx).toggleWerror();
         case 's':
             ContextOptionsRef(cx).toggleExtraWarnings();
             break;

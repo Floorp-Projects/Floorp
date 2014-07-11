@@ -6425,11 +6425,9 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
 }
 
 bool
-nsContentUtils::GetContentSecurityPolicy(JSContext* aCx,
-                                         nsIContentSecurityPolicy** aCSP)
+nsContentUtils::GetContentSecurityPolicy(nsIContentSecurityPolicy** aCSP)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  MOZ_ASSERT(aCx == GetCurrentJSContext());
 
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   nsresult rv = SubjectPrincipal()->GetCsp(getter_AddRefs(csp));

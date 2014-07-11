@@ -8,16 +8,6 @@ ifeq ($(OS_ARCH),WINNT)
 endif
 endif
 
-# COMPONENT_LIBS is mosly useless since bug 935881, but is kept for
-# MOZ_APP_COMPONENT_LIBS, used by comm-central, and gtest linking.
-SHARED_LIBRARY_LIBS += \
-  $(foreach component,$(COMPONENT_LIBS),$(DEPTH)/staticlib/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \
-  $(NULL)
-
-ifdef MOZ_APP_COMPONENT_LIBS
-COMPONENT_LIBS += $(MOZ_APP_COMPONENT_LIBS)
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CXXFLAGS += $(TK_CFLAGS)
 endif

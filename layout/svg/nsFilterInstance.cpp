@@ -315,7 +315,10 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
   nsRefPtr<nsRenderingContext> tmpCtx(new nsRenderingContext());
   tmpCtx->Init(mTargetFrame->PresContext()->DeviceContext(), ctx);
 
-  gfxMatrix deviceToFilterSpace = GetFilterSpaceToDeviceSpaceTransform().Invert();
+  gfxMatrix deviceToFilterSpace = GetFilterSpaceToDeviceSpaceTransform();
+  if (!deviceToFilterSpace.Invert()) {
+    return NS_ERROR_FAILURE;
+  }
   gfxContext *gfx = tmpCtx->ThebesContext();
   gfx->Multiply(deviceToFilterSpace);
 
@@ -398,7 +401,10 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
   // space to device space and back again). However, that would make the
   // code more complex while being hard to get right without introducing
   // subtle bugs, and in practice it probably makes no real difference.)
-  gfxMatrix deviceToFilterSpace = GetFilterSpaceToDeviceSpaceTransform().Invert();
+  gfxMatrix deviceToFilterSpace = GetFilterSpaceToDeviceSpaceTransform();
+  if (!deviceToFilterSpace.Invert()) {
+    return NS_ERROR_FAILURE;
+  }
   tmpCtx->ThebesContext()->Multiply(deviceToFilterSpace);
   mPaintCallback->Paint(tmpCtx, mTargetFrame, &dirty, mTransformRoot);
 

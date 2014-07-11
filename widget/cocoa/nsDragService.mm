@@ -31,7 +31,6 @@
 #include "nsCocoaUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxPlatform.h"
-#include "gfxImageSurface.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

@@ -2600,7 +2600,9 @@ RasterImage::DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
   nsIntRect framerect = frame->GetRect();
   gfxMatrix userSpaceToImageSpace = aUserSpaceToImageSpace;
   gfxMatrix imageSpaceToUserSpace = aUserSpaceToImageSpace;
-  imageSpaceToUserSpace.Invert();
+  if (!imageSpaceToUserSpace.Invert()) {
+    return false;
+  }
   gfxSize scale = imageSpaceToUserSpace.ScaleFactors(true);
   nsIntRect subimage = aSubimage;
   RefPtr<SourceSurface> surf;
@@ -2621,8 +2623,7 @@ RasterImage::DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
       needScaleReq = !surf;
       if (surf) {
         frame = mScaleResult.frame;
-        userSpaceToImageSpace.Multiply(gfxMatrix().Scale(scale.width,
-                                                         scale.height));
+        userSpaceToImageSpace *= gfxMatrix::Scaling(scale.width, scale.height);
 
         // Since we're switching to a scaled image, we need to transform the
         // area of the subimage to draw accordingly, since imgFrame::Draw()

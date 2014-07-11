@@ -154,27 +154,8 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
         ICU_CPPFLAGS="$ICU_CPPFLAGS -I$icudir/common -I$icudir/i18n"
 
         ICU_CROSS_BUILD_OPT=""
-        ICU_SRCDIR=""
-        if test "$HOST_OS_ARCH" = "WINNT"; then
-    	ICU_SRCDIR="--srcdir=$(cd $srcdir/intl/icu/source; pwd -W)"
-        fi
 
         if test "$CROSS_COMPILE"; then
-    	# Building host tools.  It is necessary to build target binary.
-    	case "$HOST_OS_ARCH" in
-    	    Darwin)
-    		ICU_TARGET=MacOSX
-    		;;
-    	    Linux)
-    		ICU_TARGET=Linux
-    		;;
-    	    WINNT)
-    		ICU_TARGET=MSYS/MSVC
-    		;;
-            DragonFly|FreeBSD|NetBSD|OpenBSD|GNU_kFreeBSD)
-    		ICU_TARGET=BSD
-    		;;
-    	esac
     	# Remove _DEPEND_CFLAGS from HOST_FLAGS to avoid configure error
     	HOST_ICU_CFLAGS="$HOST_CFLAGS"
     	HOST_ICU_CXXFLAGS="$HOST_CXXFLAGS"
@@ -196,24 +177,20 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
 
     	abs_srcdir=`(cd $srcdir; pwd)`
     	mkdir -p $_objdir/intl/icu/host
-    	(cd $_objdir/intl/icu/host
-    	 MOZ_SUBCONFIGURE_WRAP([.],[
-    	 AR="$HOST_AR" RANLIB="$HOST_RANLIB" \
-    	 CC="$HOST_CC" CXX="$HOST_CXX" LD="$HOST_LD" \
-    	 CFLAGS="$HOST_ICU_CFLAGS $HOST_OPTIMIZE_FLAGS" \
-    	 CPPFLAGS="$ICU_CPPFLAGS" \
-    	 CXXFLAGS="$HOST_ICU_CXXFLAGS $HOST_OPTIMIZE_FLAGS" \
-    	 LDFLAGS="$HOST_LDFLAGS" \
-    		$SHELL $abs_srcdir/intl/icu/source/runConfigureICU \
-    		$HOST_ICU_BUILD_OPTS \
-    		$ICU_TARGET \
-    	dnl Shell quoting is fun.
-    		${ICU_SRCDIR+"$ICU_SRCDIR"} \
-    		--enable-static --disable-shared \
-    		--enable-extras=no --enable-icuio=no --enable-layout=no \
-    		--enable-tests=no --enable-samples=no || exit 1
-    	 ])
-    	) || exit 1
+        (export AR="$HOST_AR"
+         export RANLIB="$HOST_RANLIB"
+         export CC="$HOST_CC"
+         export CXX="$HOST_CXX"
+         export CPP="$HOST_CPP"
+         export LD="$HOST_LD"
+         export CFLAGS="$HOST_ICU_CFLAGS $HOST_OPTIMIZE_FLAGS"
+         export CPPFLAGS="$ICU_CPPFLAGS"
+         export CXXFLAGS="$HOST_ICU_CXXFLAGS $HOST_OPTIMIZE_FLAGS"
+         export LDFLAGS="$HOST_LDFLAGS"
+         ac_configure_args="$HOST_ICU_BUILD_OPTS"
+         ac_configure_args="$ac_configure_args --enable-static --disable-shared --enable-extras=no --enable-icuio=no --enable-layout=no --enable-tests=no --enable-samples=no"
+         AC_OUTPUT_SUBDIRS(intl/icu/source:intl/icu/host)
+        ) || exit 1
     	# generate config/icucross.mk
     	$GMAKE -C $_objdir/intl/icu/host/ config/icucross.mk
 
@@ -308,29 +285,18 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
           fi
         fi
 
-        # We cannot use AC_OUTPUT_SUBDIRS since ICU tree is out of spidermonkey.
-        # When using AC_OUTPUT_SUBDIRS, objdir of ICU is out of objdir
-        # due to relative path.
-        # If building ICU moves into root of mozilla tree, we can use
-        # AC_OUTPUT_SUBDIR instead.
-        mkdir -p $_objdir/intl/icu/target
-        (cd $_objdir/intl/icu/target
-         MOZ_SUBCONFIGURE_WRAP([.],[
-           AR="$AR" CC="$CC" CXX="$CXX" LD="$LD" \
-           ARFLAGS="$ARFLAGS" \
-           CPPFLAGS="$ICU_CPPFLAGS $CPPFLAGS" \
-           CFLAGS="$ICU_CFLAGS" \
-           CXXFLAGS="$ICU_CXXFLAGS" \
-           LDFLAGS="$ICU_LDFLAGS $LDFLAGS" \
-           $SHELL $_topsrcdir/intl/icu/source/configure \
-    		$ICU_BUILD_OPTS \
-    		$ICU_CROSS_BUILD_OPT \
-    		$ICU_LINK_OPTS \
-    		${ICU_SRCDIR+"$ICU_SRCDIR"} \
-    		$ICU_TARGET_OPT \
-    		--disable-extras --disable-icuio --disable-layout \
-    		--disable-tests --disable-samples || exit 1
-           ])
+        (export AR="$AR"
+         export CC="$CC"
+         export CXX="$CXX"
+         export LD="$LD"
+         export ARFLAGS="$ARFLAGS"
+         export CPPFLAGS="$ICU_CPPFLAGS $CPPFLAGS"
+         export CFLAGS="$ICU_CFLAGS"
+         export CXXFLAGS="$ICU_CXXFLAGS"
+         export LDFLAGS="$ICU_LDFLAGS $LDFLAGS"
+         ac_configure_args="$ICU_BUILD_OPTS $ICU_CROSS_BUILD_OPT $ICU_LINK_OPTS $ICU_TARGET_OPT"
+         ac_configure_args="$ac_configure_args --disable-extras --disable-icuio --disable-layout --disable-tests --disable-samples"
+         AC_OUTPUT_SUBDIRS(intl/icu/source:intl/icu/target)
         ) || exit 1
     fi
 
