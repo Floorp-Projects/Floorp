@@ -1746,7 +1746,7 @@ public:
   float GetPreYScale() const { return mPreYScale; }
   float GetInheritedXScale() const { return mInheritedXScale; }
   float GetInheritedYScale() const { return mInheritedYScale; }
-  
+
   gfxRGBA GetBackgroundColor() const { return mBackgroundColor; }
 
   MOZ_LAYER_DECL_NAME("ContainerLayer", TYPE_CONTAINER)
