@@ -7,7 +7,7 @@ include protocol PGMP;
 include GMPTypes;
 
 using GMPVideoCodec from "gmp-video-codec.h";
-using GMPCodecSpecificInfo from "gmp-video-codec.h";
+using GMPBufferType from "gmp-video-codec.h";
 
 include "GMPMessageUtils.h";
 
@@ -23,7 +23,8 @@ child:
                    int32_t aCoreCount);
   async Decode(GMPVideoEncodedFrameData aInputFrame,
                bool aMissingFrames,
-               GMPCodecSpecificInfo aCodecSpecificInfo,
+               GMPBufferType aBufferType,
+               uint8_t[] aCodecSpecificInfo,
                int64_t aRenderTimeMs);
   async Reset();
   async Drain();

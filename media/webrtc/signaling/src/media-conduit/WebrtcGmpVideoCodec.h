@@ -38,7 +38,7 @@
 namespace mozilla {
 
 class WebrtcGmpVideoEncoder : public WebrtcVideoEncoder,
-                              public GMPVideoEncoderCallback
+                              public GMPVideoEncoderCallbackProxy
 {
 public:
   WebrtcGmpVideoEncoder();
@@ -66,7 +66,8 @@ public:
 
   // GMPVideoEncoderCallback virtual functions.
   virtual void Encoded(GMPVideoEncodedFrame* aEncodedFrame,
-                       const GMPCodecSpecificInfo& aCodecSpecificInfo) MOZ_OVERRIDE;
+                       GMPBufferType aBufferType,
+                       const nsTArray<uint8_t>& aCodecSpecificInfo) MOZ_OVERRIDE;
 
 
 private:

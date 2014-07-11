@@ -49,7 +49,9 @@ public:
   virtual ~GMPVideoEncoderCallback() {}
 
   virtual void Encoded(GMPVideoEncodedFrame* aEncodedFrame,
-                       const GMPCodecSpecificInfo& aCodecSpecificInfo) = 0;
+                       GMPBufferType aBufferType,
+                       const uint8_t* aCodecSpecificInfo,
+                       uint32_t aCodecSpecificInfoLength) = 0;
 };
 
 // ALL METHODS MUST BE CALLED ON THE MAIN THREAD
@@ -62,7 +64,9 @@ public:
   //
   // Input:
   // - codecSettings : Codec settings
-  // - aCodecSpecific : codec specific data
+  // - aCodecSpecific : codec specific data, pointer to a
+  //                    GMPCodecSpecific structure appropriate for
+  //                    this codec type.
   // - aCodecSpecificLength : number of bytes in aCodecSpecific
   // - aCallback: Subclass should retain reference to it until EncodingComplete
   //              is called. Do not attempt to delete it, host retains ownership.
@@ -81,11 +85,15 @@ public:
   //
   // Input:
   // - aInputFrame : Frame to be encoded
-  // - aCodecSpecificInfo : Pointer to codec specific data
+  // - aCodecSpecificInfo : codec specific data, pointer to a
+  //                        GMPCodecSpecificInfo structure appropriate for
+  //                        this codec type.
+  // - aCodecSpecificInfoLength : number of bytes in aCodecSpecific
   // - aFrameTypes : The frame type to encode
   // - aFrameTypesLength : The number of elements in aFrameTypes array.
   virtual GMPErr Encode(GMPVideoi420Frame* aInputFrame,
-                        const GMPCodecSpecificInfo& aCodecSpecificInfo,
+                        const uint8_t* aCodecSpecificInfo,
+                        uint32_t aCodecSpecificInfoLength,
                         const GMPVideoFrameType* aFrameTypes,
                         uint32_t aFrameTypesLength) = 0;
 
