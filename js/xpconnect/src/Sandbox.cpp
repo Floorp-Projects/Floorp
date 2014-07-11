@@ -964,13 +964,8 @@ xpc::CreateSandboxObject(JSContext *cx, MutableHandleValue vp, nsISupports *prin
             return NS_ERROR_XPC_UNEXPECTED;
     }
 
-    // We have this crazy behavior where wantXrays=false also implies that the
-    // returned sandbox is implicitly waived. We've stopped advertising it, but
-    // keep supporting it for now.
     vp.setObject(*sandbox);
-    if (options.wantXrays && !JS_WrapValue(cx, vp))
-        return NS_ERROR_UNEXPECTED;
-    if (!options.wantXrays && !xpc::WrapperFactory::WaiveXrayAndWrap(cx, vp))
+    if (!JS_WrapValue(cx, vp))
         return NS_ERROR_UNEXPECTED;
 
     // Set the location information for the new global, so that tools like
@@ -1438,6 +1433,12 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
     if (NS_FAILED(rv))
         return ThrowAndFail(rv, cx, _retval);
+
+    // We have this crazy behavior where wantXrays=false also implies that the
+    // returned sandbox is implicitly waived. We've stopped advertising it, but
+    // keep supporting it for now.
+    if (!options.wantXrays && !xpc::WrapperFactory::WaiveXrayAndWrap(cx, args.rval()))
+        return NS_ERROR_UNEXPECTED;
 
     *_retval = true;
     return NS_OK;
