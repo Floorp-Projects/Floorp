@@ -94,15 +94,8 @@ MediaDecoderStateMachineScheduler::Schedule(int64_t aUsecs)
 {
   mMonitor.AssertCurrentThreadIn();
 
-  switch(mState) {
-  case SCHEDULER_STATE_SHUTDOWN:
+  if (mState == SCHEDULER_STATE_SHUTDOWN) {
     return NS_ERROR_FAILURE;
-  case SCHEDULER_STATE_FROZEN:
-    mState = SCHEDULER_STATE_FROZEN_WITH_PENDING_TASK;
-  case SCHEDULER_STATE_FROZEN_WITH_PENDING_TASK:
-    return NS_OK;
-  case SCHEDULER_STATE_NONE:
-    break;
   }
 
   aUsecs = std::max<int64_t>(aUsecs, 0);
@@ -171,9 +164,6 @@ void
 MediaDecoderStateMachineScheduler::ScheduleAndShutdown()
 {
   mMonitor.AssertCurrentThreadIn();
-  if (IsFrozen()) {
-    ThawScheduling();
-  }
   // Schedule next cycle to handle SHUTDOWN in state machine thread.
   Schedule();
   // This must be set after calling Schedule()
@@ -202,35 +192,6 @@ MediaDecoderStateMachineScheduler::ResetTimer()
   mMonitor.AssertCurrentThreadIn();
   mTimer->Cancel();
   mTimeout = TimeStamp();
-}
-
-void MediaDecoderStateMachineScheduler::FreezeScheduling()
-{
-  mMonitor.AssertCurrentThreadIn();
-  if (mState == SCHEDULER_STATE_SHUTDOWN) {
-    return;
-  }
-  MOZ_ASSERT(mState == SCHEDULER_STATE_NONE);
-  mState = !IsScheduled() ? SCHEDULER_STATE_FROZEN :
-                            SCHEDULER_STATE_FROZEN_WITH_PENDING_TASK;
-  // Nullify pending timer task if any.
-  ++mTimerId;
-  mTimeout = TimeStamp();
-}
-
-void MediaDecoderStateMachineScheduler::ThawScheduling()
-{
-  mMonitor.AssertCurrentThreadIn();
-  if (mState == SCHEDULER_STATE_SHUTDOWN) {
-    return;
-  }
-  // We should be in frozen state and no pending timer task.
-  MOZ_ASSERT(IsFrozen() && !IsScheduled());
-  bool pendingTask = mState == SCHEDULER_STATE_FROZEN_WITH_PENDING_TASK;
-  mState = SCHEDULER_STATE_NONE;
-  if (pendingTask) {
-    Schedule();
-  }
 }
 
 } // namespace mozilla
