@@ -3951,6 +3951,14 @@ nsTextStore::ProcessMessage(nsWindowBase* aWindow, UINT aMessage,
         aLParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
       }
       break;
+    case WM_ENTERIDLE:
+      // When an modal dialog such as a file picker is open, composition
+      // should be committed because IME might be used on it.
+      if (!IsComposingOn(aWindow)) {
+        break;
+      }
+      CommitComposition(false);
+      break;
   }
 }
 
