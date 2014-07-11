@@ -422,9 +422,15 @@ xpc_qsDOMString::xpc_qsDOMString(JSContext *cx, HandleValue v,
     if (!s)
         return;
 
-    nsAutoString *str = new(mBuf) implementation_type();
+    size_t len;
+    const jschar *chars = JS_GetStringCharsZAndLength(cx, s, &len);
+    if (!chars) {
+        mValid = false;
+        return;
+    }
 
-    mValid = AssignJSString(cx, *str, s);
+    new(mBuf) implementation_type(chars, len);
+    mValid = true;
 }
 
 xpc_qsACString::xpc_qsACString(JSContext *cx, HandleValue v,
@@ -465,13 +471,14 @@ xpc_qsAUTF8String::xpc_qsAUTF8String(JSContext *cx, HandleValue v, MutableHandle
     if (!s)
         return;
 
-    nsAutoJSString str;
-    if (!str.init(cx, s)) {
+    size_t len;
+    const char16_t *chars = JS_GetStringCharsZAndLength(cx, s, &len);
+    if (!chars) {
         mValid = false;
         return;
     }
 
-    new(mBuf) implementation_type(str);
+    new(mBuf) implementation_type(chars, len);
     mValid = true;
 }
 
