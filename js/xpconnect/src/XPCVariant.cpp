@@ -6,6 +6,8 @@
 
 /* nsIVariant implementation for xpconnect. */
 
+#include "mozilla/Range.h"
+
 #include "xpcprivate.h"
 #include "nsCxPusher.h"
 
@@ -58,10 +60,7 @@ XPCTraceableVariant::~XPCTraceableVariant()
 
     MOZ_ASSERT(val.isGCThing(), "Must be traceable or unlinked");
 
-    // If val is JSVAL_STRING, we don't need to clean anything up; simply
-    // removing the string from the root set is good.
-    if (!val.isString())
-        nsVariant::Cleanup(&mData);
+    nsVariant::Cleanup(&mData);
 
     if (!val.isNull())
         RemoveFromRootSet();
@@ -96,10 +95,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
     JS::Value val = tmp->GetJSValPreserveColor();
 
-    // We're sharing val's buffer, clear the pointer to it so Cleanup() won't
-    // try to delete it
-    if (val.isString())
-        tmp->mData.u.wstr.mWStringValue = nullptr;
     nsVariant::Cleanup(&tmp->mData);
 
     if (val.isMarkable()) {
@@ -288,25 +283,18 @@ bool XPCVariant::InitializeData(JSContext* cx)
         if (!str)
             return false;
 
-        // Don't use nsVariant::SetFromWStringWithSize, because that will copy
-        // the data.  Just handle this ourselves.  Note that it's ok to not
-        // copy because we added mJSVal as a GC root.
         MOZ_ASSERT(mData.mType == nsIDataType::VTYPE_EMPTY,
                    "Why do we already have data?");
 
-        // Despite the fact that the variant holds the length, there are
-        // implicit assumptions that mWStringValue[mWStringLength] == 0
-        size_t length;
-        const jschar *chars = JS_GetStringCharsZAndLength(cx, str, &length);
-        if (!chars)
+        size_t length = JS_GetStringLength(str);
+        if (!NS_SUCCEEDED(nsVariant::AllocateWStringWithSize(&mData, length)))
             return false;
 
-        mData.u.wstr.mWStringValue = const_cast<jschar *>(chars);
-        // Use C-style cast, because reinterpret cast from size_t to
-        // uint32_t is not valid on some platforms.
-        mData.u.wstr.mWStringLength = (uint32_t)length;
-        mData.mType = nsIDataType::VTYPE_WSTRING_SIZE_IS;
+        mozilla::Range<jschar> destChars(mData.u.wstr.mWStringValue, length);
+        if (!JS_CopyStringChars(cx, destChars, str))
+            return false;
 
+        MOZ_ASSERT(mData.u.wstr.mWStringValue[length] == '\0');
         return true;
     }
 
