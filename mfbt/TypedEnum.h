@@ -69,13 +69,12 @@
  * in namespace scope to handle bits that can only be implemented with
  * namespace-scoped code.  For example:
  *
- *   class FooBar {
- *
+ *   class FooBar
+ *   {
  *     MOZ_BEGIN_NESTED_ENUM_CLASS(Enum, int32_t)
  *       A,
  *       B = 6
  *     MOZ_END_NESTED_ENUM_CLASS(Enum)
- *
  *   };
  *
  *   MOZ_FINISH_NESTED_ENUM_CLASS(FooBar::Enum)
@@ -148,28 +147,28 @@
 #  define MOZ_BEGIN_NESTED_ENUM_CLASS_HELPER1(Name) \
      class Name \
      { \
-       public: \
-         enum Enum \
-         {
+     public: \
+       enum Enum \
+       {
    /* Two-argument form. */
 #  define MOZ_BEGIN_NESTED_ENUM_CLASS_HELPER2(Name, type) \
      class Name \
      { \
-       public: \
-         enum Enum MOZ_ENUM_TYPE(type) \
-         {
+     public: \
+       enum Enum MOZ_ENUM_TYPE(type) \
+       {
 #  define MOZ_END_NESTED_ENUM_CLASS(Name) \
-         }; \
-         Name() {} \
-         MOZ_CONSTEXPR Name(Enum aEnum) : mEnum(aEnum) {} \
-         template<typename Other> \
-         explicit MOZ_CONSTEXPR Name(Other num) : mEnum((Enum)num) {} \
-         MOZ_CONSTEXPR operator Enum() const { return mEnum; } \
-         explicit MOZ_CONSTEXPR Name(const mozilla::CastableTypedEnumResult<Name>& aOther) \
-           : mEnum(aOther.get()) \
-         {} \
-       private: \
-         Enum mEnum; \
+       }; \
+       Name() {} \
+       MOZ_CONSTEXPR Name(Enum aEnum) : mEnum(aEnum) {} \
+       template<typename Other> \
+       explicit MOZ_CONSTEXPR Name(Other num) : mEnum((Enum)num) {} \
+       MOZ_CONSTEXPR operator Enum() const { return mEnum; } \
+       explicit MOZ_CONSTEXPR Name(const mozilla::CastableTypedEnumResult<Name>& aOther) \
+         : mEnum(aOther.get()) \
+       {} \
+     private: \
+       Enum mEnum; \
      };
 #  define MOZ_FINISH_NESTED_ENUM_CLASS(Name) \
      inline int operator+(const int&, const Name::Enum&) MOZ_DELETE; \
@@ -253,14 +252,14 @@
    *
    *    S<E, E::Bar> s;
    *
-   * In this example, the second template parameter to S is meant to be of type T,
-   * but on non-C++11 compilers, type T is a class type, not an integer type, so
-   * it is not accepted as the type of a constant template parameter. One would
-   * then want to use MOZ_ENUM_CLASS_ENUM_TYPE(T), but that doesn't work either
-   * as T depends on template parameters (more specifically here, T _is_ a template
-   * parameter) so as MOZ_ENUM_CLASS_ENUM_TYPE(T) expands to T::Enum, we are missing
-   * the required "typename" keyword. So here, MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE
-   * is needed.
+   * In this example, the second template parameter to S is meant to be of type
+   * T, but on non-C++11 compilers, type T is a class type, not an integer
+   * type, so it is not accepted as the type of a constant template parameter.
+   * One would then want to use MOZ_ENUM_CLASS_ENUM_TYPE(T), but that doesn't
+   * work either as T depends on template parameters (more specifically here, T
+   * _is_ a template parameter) so as MOZ_ENUM_CLASS_ENUM_TYPE(T) expands to
+   * T::Enum, we are missing the required "typename" keyword. So here,
+   * MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE is needed.
    */
 #  define MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(Name) typename Name::Enum
 #endif

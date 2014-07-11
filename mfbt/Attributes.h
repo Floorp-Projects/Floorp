@@ -155,9 +155,10 @@
  *   template<typename T>
  *   class Ptr
  *   {
- *     T* ptr;
- *     MOZ_EXPLICIT_CONVERSION operator bool() const {
- *       return ptr != nullptr;
+ *     T* mPtr;
+ *     MOZ_EXPLICIT_CONVERSION operator bool() const
+ *     {
+ *       return mPtr != nullptr;
  *     }
  *   };
  *
@@ -206,7 +207,8 @@
  * function does not return.  (The function definition does not need to be
  * annotated.)
  *
- * MOZ_ReportCrash(const char* s, const char* file, int ln) MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
+ * MOZ_ReportCrash(const char* s, const char* file, int ln)
+ *   MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
  *
  * Some static analyzers, like scan-build from clang, can use this information
  * to eliminate false positives.  From the upstream documentation of scan-build:
@@ -447,13 +449,13 @@
  *
  *   typedef int MOZ_TYPE_ATTRIBUTE MagicInt;
  *   int MOZ_TYPE_ATTRIBUTE someVariable;
- *   int * MOZ_TYPE_ATTRIBUTE magicPtrInt;
- *   int MOZ_TYPE_ATTRIBUTE * ptrToMagicInt;
+ *   int* MOZ_TYPE_ATTRIBUTE magicPtrInt;
+ *   int MOZ_TYPE_ATTRIBUTE* ptrToMagicInt;
  *
  * Attributes that apply to statements precede the statement:
  *
  *   MOZ_IF_ATTRIBUTE if (x == 0)
- *   MOZ_DO_ATTRIBUTE do { } while(0);
+ *   MOZ_DO_ATTRIBUTE do { } while (0);
  *
  * Attributes that apply to labels precede the label:
  *
