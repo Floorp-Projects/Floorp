@@ -186,8 +186,8 @@ DOMRequestIpcHelper.prototype = {
 
     if (this._listeners) {
       Object.keys(this._listeners).forEach((aName) => {
-        this._listeners[aName] ? cpmm.removeWeakMessageListener(aName, this)
-                               : cpmm.removeMessageListener(aName, this);
+        this._listeners[aName].weakRef ? cpmm.removeWeakMessageListener(aName, this)
+                                       : cpmm.removeMessageListener(aName, this);
         delete this._listeners[aName];
       });
     }
