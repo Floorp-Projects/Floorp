@@ -100,7 +100,6 @@ class VideoSegment;
 class MediaTaskQueue;
 class SharedThreadPool;
 class AudioSink;
-class MediaDecoderStateMachineScheduler;
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with MediaDecoderStateMachine::GetCurrentTime
@@ -280,7 +279,7 @@ public:
   }
 
   // Returns the shared state machine thread.
-  nsIEventTarget* GetStateMachineThread() const;
+  nsIEventTarget* GetStateMachineThread();
 
   // Calls ScheduleStateMachine() after taking the decoder lock. Also
   // notifies the decoder thread in case it's waiting on the decoder lock.
@@ -291,9 +290,8 @@ public:
   // earlier, in which case the request is discarded.
   nsresult ScheduleStateMachine(int64_t aUsecs = 0);
 
-  // Callback function registered with MediaDecoderStateMachineScheduler
-  // to run state machine cycles.
-  static nsresult TimeoutExpired(void* aClosure);
+  // Timer function to implement ScheduleStateMachine(aUsecs).
+  nsresult TimeoutExpired(int aGeneration);
 
   // Set the media fragment end time. aEndTime is in microseconds.
   void SetFragmentEndTime(int64_t aEndTime);
@@ -449,7 +447,7 @@ protected:
 
   // Orders the Reader to stop decoding, and blocks until the Reader
   // has stopped decoding and finished delivering samples, then calls
-  // ResetPlayback() to discard all enqueued data.
+  // ResetPlayback() to discard all enqueued data. 
   void FlushDecoding();
 
   // Returns the audio clock, if we have audio, or -1 if we don't.
@@ -612,7 +610,10 @@ protected:
   // periodically via timer to ensure the video stays in sync.
   nsresult RunStateMachine();
 
-  bool IsStateMachineScheduled() const;
+  bool IsStateMachineScheduled() const {
+    AssertCurrentThreadInMonitor();
+    return !mTimeout.IsNull();
+  }
 
   // Returns true if we're not playing and the decode thread has filled its
   // decode buffers and is waiting. We can shut the decode thread down in this
@@ -649,10 +650,6 @@ protected:
   // state machine, audio and main threads.
   nsRefPtr<MediaDecoder> mDecoder;
 
-  // Used to schedule state machine cycles. This should never outlive
-  // the life cycle of the state machine.
-  const nsAutoPtr<MediaDecoderStateMachineScheduler> mScheduler;
-
   // Time at which the last video sample was requested. If it takes too long
   // before the sample arrives, we will increase the amount of audio we buffer.
   // This is necessary for legacy synchronous decoders to prevent underruns.
@@ -676,6 +673,19 @@ protected:
   // the "decode thread", though in practise tasks can run on a different
   // thread every time they're called.
   RefPtr<MediaTaskQueue> mDecodeTaskQueue;
+
+  RefPtr<SharedThreadPool> mStateMachineThreadPool;
+
+  // Timer to run the state machine cycles. Used by
+  // ScheduleStateMachine(). Access protected by decoder monitor.
+  nsCOMPtr<nsITimer> mTimer;
+
+  // Timestamp at which the next state machine cycle will run.
+  // Access protected by decoder monitor.
+  TimeStamp mTimeout;
+
+  // Used to check if there are state machine cycles are running in sequence.
+  DebugOnly<bool> mInRunningStateMachine;
 
   // The time that playback started from the system clock. This is used for
   // timing the presentation of video frames when there's no audio.
@@ -901,6 +911,9 @@ protected:
   // by the decoder monitor.
   bool mDecodeThreadWaiting;
 
+  // True is we are decoding a realtime stream, like a camera stream
+  bool mRealTime;
+
   // True if we've dispatched a task to the decode task queue to call
   // ReadMetadata on the reader. We maintain a flag to ensure that we don't
   // dispatch multiple tasks to re-do the metadata loading.
@@ -929,6 +942,9 @@ protected:
   mozilla::MediaMetadataManager mMetadataManager;
 
   MediaDecoderOwner::NextFrameStatus mLastFrameStatus;
+
+  // The id of timer tasks, used to ignore tasks that are scheduled previously.
+  int mTimerId;
 };
 
 } // namespace mozilla;
