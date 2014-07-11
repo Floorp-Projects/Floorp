@@ -5,6 +5,7 @@
 
 #include "NativeJSContainer.h"
 #include "AndroidBridge.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "prthread.h"
 #include "nsJSUtils.h"
@@ -198,7 +199,8 @@ public:
             return nullptr;
         }
         size_t newIndex = container->mRootedObjects.length();
-        PersistentObjectPtr rootedJSObject(new PersistentObject(cx, jsObject));
+        PersistentObjectPtr rootedJSObject =
+            MakeUnique<PersistentObject>(cx, jsObject);
         if (!container->mRootedObjects.append(Move(rootedJSObject))) {
             AndroidBridge::ThrowException(env,
                 "java/lang/OutOfMemoryError", "Cannot allocate object");
@@ -233,7 +235,7 @@ public:
         MOZ_ASSERT(mBuffer.data());
         MOZ_ALWAYS_TRUE(mBuffer.read(mThreadContext, &value));
         if (value.isObject()) {
-            mJSObject = new PersistentObject(mThreadContext, &value.toObject());
+            mJSObject = MakeUnique<PersistentObject>(mThreadContext, &value.toObject());
         }
         if (!mJSObject) {
             AndroidBridge::ThrowException(env,
@@ -281,7 +283,7 @@ private:
     }
 
     typedef JS::PersistentRooted<JSObject*>   PersistentObject;
-    typedef ScopedDeletePtr<PersistentObject> PersistentObjectPtr;
+    typedef UniquePtr<PersistentObject> PersistentObjectPtr;
 
     // Thread that the object is valid on
     PRThread* mThread;
@@ -443,7 +445,7 @@ struct PrimitiveProperty
 
     static ArrayType NewArray(JNIEnv* env, jobject instance, JSContext* cx,
                               JS::HandleObject array, size_t length) {
-        ScopedDeleteArray<Type> buffer(new Type[length]);
+        UniquePtr<Type[]> buffer = MakeUnique<Type[]>(length);
         for (size_t i = 0; i < length; i++) {
             JS::RootedValue elem(cx);
             if (!CheckJSCall(env, JS_GetElement(cx, array, i, &elem)) ||
@@ -457,7 +459,7 @@ struct PrimitiveProperty
         if (!jarray) {
             return nullptr;
         }
-        (env->*SetArrayRegionMethod)(jarray, 0, length, buffer);
+        (env->*SetArrayRegionMethod)(jarray, 0, length, buffer.get());
         if (env->ExceptionCheck()) {
             return nullptr;
         }
