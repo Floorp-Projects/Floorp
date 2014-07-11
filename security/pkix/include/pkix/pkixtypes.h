@@ -146,8 +146,16 @@ public:
   class IssuerChecker
   {
   public:
+    // potentialIssuerDER is the complete DER encoding of the certificate to
+    // be checked as a potential issuer.
+    //
+    // If additionalNameConstraints is not nullptr then it must point to an
+    // encoded NameConstraints extension value; in that case, those name
+    // constraints will be checked in addition to any any name constraints
+    // contained in potentialIssuerDER.
     virtual SECStatus Check(const SECItem& potentialIssuerDER,
-                            /*out*/ bool& keepGoing) = 0;
+               /*optional*/ const SECItem* additionalNameConstraints,
+                    /*out*/ bool& keepGoing) = 0;
   protected:
     IssuerChecker();
     virtual ~IssuerChecker();
