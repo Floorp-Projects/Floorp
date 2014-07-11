@@ -306,12 +306,6 @@ js_strdup(js::ThreadSafeContext *cx, const jschar *s)
     return js::DuplicateString(cx, s).release();
 }
 
-inline char *
-js_strdup(js::ThreadSafeContext *cx, const char *s)
-{
-    return js::DuplicateString(cx, s).release();
-}
-
 extern bool
 js_str_toString(JSContext *cx, unsigned argc, js::Value *vp);
 
