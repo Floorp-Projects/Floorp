@@ -22,31 +22,49 @@
     window.realParent.postMessage(JSON.stringify(message), "*");
   }
 
-  function onready() {
-    navigator.mozId.request();
-  }
-
-  function onlogin(backedAssertion) {
-    postResults({success: true, backedAssertion: backedAssertion});
-  }
-
-  function onerror(error) {
-    postResults({success: false, error: error});
-  }
-
   onmessage = function(event) {
-    navigator.mozId.watch({
-      wantIssuer: "firefox-accounts",
-      audience: event.data.audience,
-      onready: onready,
-      onlogin: onlogin,
-      onerror: onerror,
+    try {
+      navigator.mozId.watch({
+        wantIssuer: "firefox-accounts",
+        audience: event.data.audience,
+        onready: function() {
+          try {
+            navigator.mozId.request();
+          } catch(e) {
+            postResults({
+              success: false,
+              error: e,
+              appIndex: event.data.appIndex
+            });
+          }
+        },
+        onlogin: function(backedAssertion) {
+          postResults({
+            success: true,
+            backedAssertion: backedAssertion,
+            appIndex: event.data.appIndex
+          });
+        },
+        onerror: function(error) {
+          postResults({
+            success: false,
+            error: error,
+            appIndex: event.data.appIndex
+          });
+        },
 
-      // onlogout will actually be called every time watch() is invoked,
-      // because fxa will find no signed-in user and so trigger logout.
-      // For this test, though, we don't care and just ignore logout.
-      onlogout: function () {},
-    });
+        // onlogout will actually be called every time watch() is invoked,
+        // because fxa will find no signed-in user and so trigger logout.
+        // For this test, though, we don't care and just ignore logout.
+        onlogout: function () {},
+      });
+    } catch (e) {
+      postResults({
+        success: false,
+        error: e,
+        appIndex: event.data.appIndex
+      });
+    }
   };
 
 </script>
