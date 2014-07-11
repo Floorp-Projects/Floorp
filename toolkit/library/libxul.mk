@@ -134,6 +134,7 @@ OS_LIBS += \
   -lstagefright_omx \
   -lbinder \
   -lgui \
+  -lmtp \
   $(NULL)
 endif
 
