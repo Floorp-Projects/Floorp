@@ -98,7 +98,7 @@ public:
      * XXX should this do something with the return value of
      * cairo_matrix_invert?
      */
-    const gfxMatrix& Invert();
+    bool Invert();
 
     /**
      * Check if matrix is singular (no inverse exists).

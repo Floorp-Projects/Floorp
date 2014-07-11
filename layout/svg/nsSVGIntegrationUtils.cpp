@@ -628,7 +628,11 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   aContext->Rectangle(aFillRect);
   aContext->Clip();
 
-  aContext->Multiply(gfxMatrix(aTransform).Invert());
+  gfxMatrix invmatrix = aTransform;
+  if (!invmatrix.Invert()) {
+    return false;
+  }
+  aContext->Multiply(invmatrix);
 
   // nsLayoutUtils::PaintFrame will anchor its painting at mFrame. But we want
   // to have it anchored at the top left corner of the bounding box of all of
