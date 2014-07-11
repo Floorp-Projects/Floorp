@@ -14,7 +14,6 @@
 #include "X11/Xlib.h"
 #endif
 
-class gfxImageSurface;
 class gfxFontconfigUtils;
 class QWindow;
 

@@ -25,7 +25,6 @@
 #include "nsComponentManagerUtils.h"
 
 #include "imgIContainer.h"
-#include "gfxImageSurface.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
