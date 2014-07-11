@@ -23,7 +23,6 @@
 #define WEBCRYPTO_ALG_HMAC          "HMAC"
 #define WEBCRYPTO_ALG_RSAES_PKCS1   "RSAES-PKCS1-v1_5"
 #define WEBCRYPTO_ALG_RSASSA_PKCS1  "RSASSA-PKCS1-v1_5"
-#define WEBCRYPTO_ALG_RSA_OAEP      "RSA-OAEP"
 
 // WebCrypto key formats
 #define WEBCRYPTO_KEY_FORMAT_RAW    "raw"
