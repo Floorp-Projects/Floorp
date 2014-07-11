@@ -791,3 +791,95 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
                                               *response, expired));
   ASSERT_FALSE(expired);
 }
+
+class pkixocsp_VerifyEncodedResponse_GetCertTrust
+  : public pkixocsp_VerifyEncodedResponse_DelegatedResponder {
+public:
+  pkixocsp_VerifyEncodedResponse_GetCertTrust()
+    : signerCertDER(nullptr)
+    , response(nullptr)
+  {
+  }
+
+  void SetUp()
+  {
+    pkixocsp_VerifyEncodedResponse_DelegatedResponder::SetUp();
+    response = CreateEncodedIndirectOCSPSuccessfulResponse(
+                          "CN=OCSPGetCertTrustTest Signer",
+                          OCSPResponseContext::good, byKey,
+                          SEC_OID_OCSP_RESPONDER, &signerCertDER);
+    if (!response || !signerCertDER) {
+      PR_Abort();
+    }
+  }
+
+  class TrustDomain : public OCSPTestTrustDomain
+  {
+  public:
+    TrustDomain()
+      : certTrustLevel(TrustLevel::InheritsTrust)
+    {
+    }
+
+    bool SetCertTrust(const SECItem* certDER, TrustLevel certTrustLevel)
+    {
+      this->certDER = certDER;
+      this->certTrustLevel = certTrustLevel;
+      return true;
+    }
+  private:
+    virtual SECStatus GetCertTrust(EndEntityOrCA endEntityOrCA,
+                                   const CertPolicyId&,
+                                   const SECItem& candidateCert,
+                           /*out*/ TrustLevel* trustLevel)
+    {
+      EXPECT_EQ(endEntityOrCA, EndEntityOrCA::MustBeEndEntity);
+      EXPECT_TRUE(trustLevel);
+      EXPECT_TRUE(certDER);
+      EXPECT_TRUE(SECITEM_ItemsAreEqual(certDER, &candidateCert));
+      *trustLevel = certTrustLevel;
+      return SECSuccess;
+    }
+
+    const SECItem* certDER; // weak pointer
+    TrustLevel certTrustLevel;
+  };
+
+  TrustDomain trustDomain;
+  const SECItem* signerCertDER; // owned by arena
+  SECItem* response; // owned by arena
+};
+
+TEST_F(pkixocsp_VerifyEncodedResponse_GetCertTrust, InheritTrust)
+{
+  ASSERT_TRUE(trustDomain.SetCertTrust(signerCertDER,
+                                       TrustLevel::InheritsTrust));
+  bool expired;
+  ASSERT_SECSuccess(VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                              *response, expired));
+  ASSERT_FALSE(expired);
+}
+
+TEST_F(pkixocsp_VerifyEncodedResponse_GetCertTrust, TrustAnchor)
+{
+  ASSERT_TRUE(trustDomain.SetCertTrust(signerCertDER,
+                                       TrustLevel::TrustAnchor));
+  bool expired;
+  ASSERT_SECSuccess(VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                              *response, expired));
+  ASSERT_FALSE(expired);
+}
+
+TEST_F(pkixocsp_VerifyEncodedResponse_GetCertTrust, ActivelyDistrusted)
+{
+  ASSERT_TRUE(trustDomain.SetCertTrust(signerCertDER,
+                                       TrustLevel::ActivelyDistrusted));
+  bool expired;
+  ASSERT_SECFailure(SEC_ERROR_OCSP_INVALID_SIGNING_CERT,
+                    VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                              *response, expired));
+  ASSERT_FALSE(expired);
+}
