@@ -7,32 +7,38 @@ include protocol PGMP;
 include GMPTypes;
 
 using GMPVideoCodec from "gmp-video-codec.h";
-using GMPCodecSpecificInfo from "gmp-video-codec.h";
+using GMPVideoFrameType from "gmp-video-frame-encoded.h";
 
 include "GMPMessageUtils.h";
 
 namespace mozilla {
 namespace gmp {
 
-async protocol PGMPVideoEncoder
+intr protocol PGMPVideoEncoder
 {
   manager PGMP;
 child:
-  InitEncode(GMPVideoCodec aCodecSettings,
-             int32_t aNumberOfCores,
-             uint32_t aMaxPayloadSize);
-  Encode(GMPVideoi420FrameData aInputFrame,
-         GMPCodecSpecificInfo aCodecSpecificInfo,
-         int[] aFrameTypes);
-  SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT);
-  SetRates(uint32_t aNewBitRate, uint32_t aFrameRate);
-  SetPeriodicKeyFrames(bool aEnable);
-  EncodingComplete();
+  async InitEncode(GMPVideoCodec aCodecSettings,
+                   uint8_t[] aCodecSpecific,
+                   int32_t aNumberOfCores,
+                   uint32_t aMaxPayloadSize);
+  async Encode(GMPVideoi420FrameData aInputFrame,
+               uint8_t[] aCodecSpecificInfo,
+               GMPVideoFrameType[] aFrameTypes);
+  async SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT);
+  async SetRates(uint32_t aNewBitRate, uint32_t aFrameRate);
+  async SetPeriodicKeyFrames(bool aEnable);
+  async EncodingComplete();
+  async ChildShmemForPool(Shmem aEncodedBuffer);
 
 parent:
-  __delete__();
-  Encoded(GMPVideoEncodedFrameData aEncodedFrame,
-          GMPCodecSpecificInfo aCodecSpecificInfo);
+  async __delete__();
+  async Encoded(GMPVideoEncodedFrameData aEncodedFrame,
+                uint8_t[] aCodecSpecificInfo);
+  async ParentShmemForPool(Shmem aFrameBuffer);
+  // MUST be intr - if sync and we create a new Shmem, when the returned
+  // Shmem is received in the Child it will fail to Deserialize
+  intr NeedShmem(uint32_t aEncodedBufferSize) returns (Shmem aMem);
 };
 
 } // namespace gmp

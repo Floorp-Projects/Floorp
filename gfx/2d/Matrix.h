@@ -72,12 +72,22 @@ public:
 
     return *this;
   }
+  
+  Matrix &Translate(const Point &aPoint)
+  {
+    return Translate(aPoint.x, aPoint.y);
+  }
 
   Matrix &PostTranslate(Float aX, Float aY)
   {
     _31 += aX;
     _32 += aY;
     return *this;
+  }
+
+  Matrix &PostTranslate(const Point &aPoint)
+  {
+    return PostTranslate(aPoint.x, aPoint.y);
   }
 
   Matrix &Rotate(Float aAngle)
@@ -191,6 +201,13 @@ public:
     return HasNonTranslation() ||
       !FuzzyEqual(_31, floor(_31 + 0.5)) ||
       !FuzzyEqual(_32, floor(_32 + 0.5));
+  }
+
+  /**
+   * Returns true if the matrix only has an integer translation.
+   */
+  bool HasOnlyIntegerTranslation() const {
+    return !HasNonIntegerTranslation();
   }
 
   /**

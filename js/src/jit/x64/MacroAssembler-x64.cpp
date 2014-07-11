@@ -150,7 +150,7 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Type type)
             switch (type) {
               case MoveOp::FLOAT32: stackForCall_ += sizeof(float);  break;
               case MoveOp::DOUBLE:  stackForCall_ += sizeof(double); break;
-              default: MOZ_ASSUME_UNREACHABLE("Unexpected float register class argument type");
+              default: MOZ_CRASH("Unexpected float register class argument type");
             }
         }
         break;
@@ -170,7 +170,7 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Type type)
         break;
       }
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
+        MOZ_CRASH("Unexpected argument type");
     }
 
     enoughMemory_ = moveResolver_.addMove(from, to, type);
@@ -419,7 +419,7 @@ MacroAssemblerX64::branchPtrInNurseryRange(Condition cond, Register ptr, Registe
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), ScratchReg);
     addPtr(ptr, ScratchReg);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              ScratchReg, Imm32(Nursery::NurserySize), label);
+              ScratchReg, Imm32(nursery.nurserySize()), label);
 }
 
 void
@@ -435,7 +435,7 @@ MacroAssemblerX64::branchValueIsNurseryObject(Condition cond, ValueOperand value
     movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), ScratchReg);
     addPtr(value.valueReg(), ScratchReg);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              ScratchReg, Imm32(Nursery::NurserySize), label);
+              ScratchReg, Imm32(nursery.nurserySize()), label);
 }
 
 #endif

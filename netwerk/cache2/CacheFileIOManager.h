@@ -115,7 +115,7 @@ public:
     HandleHashKey(KeyTypePointer aKey)
     {
       MOZ_COUNT_CTOR(HandleHashKey);
-      mHash = (SHA1Sum::Hash*)new uint8_t[SHA1Sum::HashSize];
+      mHash = (SHA1Sum::Hash*)new uint8_t[SHA1Sum::kHashSize];
       memcpy(mHash, aKey, sizeof(SHA1Sum::Hash));
     }
     HandleHashKey(const HandleHashKey& aOther)
@@ -376,7 +376,7 @@ private:
   // It is called in EvictIfOverLimitInternal() just before we decide whether to
   // start overlimit eviction or not and also in OverLimitEvictionInternal()
   // before we start an eviction loop.
-  nsresult UpdateSmartCacheSize();
+  nsresult UpdateSmartCacheSize(int64_t aFreeSpace);
 
   // Memory reporting (private part)
   size_t SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const;

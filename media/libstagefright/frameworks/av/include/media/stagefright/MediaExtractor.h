@@ -23,7 +23,7 @@
 namespace stagefright {
 
 class DataSource;
-class MediaSource;
+struct MediaSource;
 class MetaData;
 
 class MediaExtractor : public RefBase {

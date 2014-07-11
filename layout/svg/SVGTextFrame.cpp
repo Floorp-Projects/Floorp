@@ -975,7 +975,7 @@ TextRenderedRun::GetUserSpaceRect(nsPresContext* aContext,
   }
   gfxMatrix m = GetTransformFromRunUserSpaceToUserSpace(aContext);
   if (aAdditionalTransform) {
-    m.Multiply(*aAdditionalTransform);
+    m *= *aAdditionalTransform;
   }
   return m.TransformBounds(r.ToThebesRect());
 }
@@ -1064,7 +1064,10 @@ TextRenderedRun::GetCharNumAtPosition(nsPresContext* aContext,
 
   // Convert the point from user space into run user space, and take
   // into account any mFontSizeScaleFactor.
-  gfxMatrix m = GetTransformFromRunUserSpaceToUserSpace(aContext).Invert();
+  gfxMatrix m = GetTransformFromRunUserSpaceToUserSpace(aContext);
+  if (!m.Invert()) {
+    return -1;
+  }
   gfxPoint p = m.Transform(aPoint) / cssPxPerDevPx * mFontSizeScaleFactor;
 
   // First check that the point lies vertically between the top and bottom
@@ -3033,7 +3036,9 @@ SVGTextContextPaint::Paint::GetPattern(float aOpacity,
       // m maps original-user-space to pattern space
       gfxMatrix m = pattern->GetMatrix();
       gfxMatrix deviceToOriginalUserSpace = mContextMatrix;
-      deviceToOriginalUserSpace.Invert();
+      if (!deviceToOriginalUserSpace.Invert()) {
+        return nullptr;
+      }
       // mPatternMatrix maps device space to pattern space via original user space
       mPatternMatrix = deviceToOriginalUserSpace * m;
     }
@@ -3589,8 +3594,7 @@ SVGTextFrame::PaintSVG(nsRenderingContext* aContext,
     return NS_ERROR_FAILURE;
   }
 
-  gfxMatrix matrixForPaintServers(canvasTM);
-  matrixForPaintServers.Multiply(initialMatrix);
+  gfxMatrix matrixForPaintServers = canvasTM * initialMatrix;
 
   // Check if we need to draw anything.
   if (aDirtyRect) {
@@ -3653,8 +3657,8 @@ SVGTextFrame::PaintSVG(nsRenderingContext* aContext,
     // Set up the transform for painting the text frame for the substring
     // indicated by the run.
     gfxMatrix runTransform =
-      run.GetTransformFromUserSpaceForPainting(presContext, item);
-    runTransform.Multiply(currentMatrix);
+      run.GetTransformFromUserSpaceForPainting(presContext, item) *
+      currentMatrix;
     gfx->SetMatrix(runTransform);
 
     if (drawMode != DrawMode(0)) {
@@ -3713,9 +3717,11 @@ SVGTextFrame::GetFrameForPoint(const nsPoint& aPoint)
       continue;
     }
 
-    gfxMatrix m = GetCanvasTM(FOR_HIT_TESTING);
-    m.PreMultiply(run.GetTransformFromRunUserSpaceToUserSpace(presContext));
-    m.Invert();
+    gfxMatrix m = run.GetTransformFromRunUserSpaceToUserSpace(presContext) *
+                    GetCanvasTM(FOR_HIT_TESTING);
+    if (!m.Invert()) {
+      return nullptr;
+    }
 
     gfxPoint pointInRunUserSpace = m.Transform(pointInOuterSVGUserUnits);
     gfxRect frameRect =
@@ -5364,9 +5370,11 @@ SVGTextFrame::TransformFramePointToTextChild(const gfxPoint& aPoint,
                      TextRenderedRun::eNoHorizontalOverflow;
     gfxRect runRect = run.GetRunUserSpaceRect(presContext, flags).ToThebesRect();
 
-    gfxPoint pointInRunUserSpace =
-      run.GetTransformFromRunUserSpaceToUserSpace(presContext).Invert().
-          Transform(pointInUserSpace);
+    gfxMatrix m = run.GetTransformFromRunUserSpaceToUserSpace(presContext);
+    if (!m.Invert()) {
+      return aPoint;
+    }
+    gfxPoint pointInRunUserSpace = m.Transform(pointInUserSpace);
 
     if (Inside(runRect, pointInRunUserSpace)) {
       // The point was inside the rendered run's rect, so we choose it.
@@ -5437,9 +5445,13 @@ SVGTextFrame::TransformFrameRectToTextChild(const gfxRect& aRect,
                              aChildFrame);
   for (TextRenderedRun run = it.Current(); run.mFrame; run = it.Next()) {
     // Convert the incoming rect into frame user space.
-    gfxMatrix m;
-    m.PreMultiply(run.GetTransformFromRunUserSpaceToUserSpace(presContext).Invert());
-    m.PreMultiply(run.GetTransformFromRunUserSpaceToFrameUserSpace(presContext));
+    gfxMatrix userSpaceToRunUserSpace =
+      run.GetTransformFromRunUserSpaceToUserSpace(presContext);
+    if (!userSpaceToRunUserSpace.Invert()) {
+      return result;
+    }
+    gfxMatrix m = run.GetTransformFromRunUserSpaceToFrameUserSpace(presContext) *
+                    userSpaceToRunUserSpace;
     gfxRect incomingRectInFrameUserSpace =
       m.TransformBounds(incomingRectInUserSpace);
 

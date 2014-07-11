@@ -26,8 +26,9 @@ namespace mozilla {
  *   Vector<int> sortedInts = ...
  *
  *   size_t match;
- *   if (BinarySearch(sortedInts, 0, sortedInts.length(), 13, &match))
+ *   if (BinarySearch(sortedInts, 0, sortedInts.length(), 13, &match)) {
  *     printf("found 13 at %lu\n", match);
+ *   }
  */
 
 template <typename Container, typename T>

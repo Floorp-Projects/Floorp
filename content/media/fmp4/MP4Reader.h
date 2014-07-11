@@ -52,6 +52,9 @@ public:
 
   virtual bool IsMediaSeekable() MOZ_OVERRIDE;
 
+  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered,
+                               int64_t aStartTime) MOZ_OVERRIDE;
+
 private:
 
   // Destroys all decoder resources.

@@ -17,6 +17,8 @@ namespace js {
 struct ThreadSafeContext;
 }
 
+class JSFlatString;
+
 namespace JS {
 
 /*
@@ -201,6 +203,20 @@ UTF8CharsToNewTwoByteCharsZ(JSContext *cx, const UTF8Chars utf8, size_t *outlen)
  */
 extern TwoByteCharsZ
 LossyUTF8CharsToNewTwoByteCharsZ(JSContext *cx, const UTF8Chars utf8, size_t *outlen);
+
+/*
+ * Returns the length of the char buffer required to encode |s| as UTF8.
+ * Does not include the null-terminator.
+ */
+JS_PUBLIC_API(size_t)
+GetDeflatedUTF8StringLength(JSFlatString *s);
+
+/*
+ * Encode |src| as UTF8. The caller must ensure |dst| has enough space.
+ * Does not write the null terminator.
+ */
+JS_PUBLIC_API(void)
+DeflateStringToUTF8Buffer(JSFlatString *src, mozilla::RangedPtr<char> dst);
 
 } // namespace JS
 

@@ -84,9 +84,27 @@ const ContentPanning = {
   },
 
   handleEvent: function cp_handleEvent(evt) {
-    // Ignore events targeting a <iframe mozbrowser> since those will be
-    // handle by the BrowserElementPanning.js instance of it.
+    // Ignore events targeting an oop <iframe mozbrowser> since those will be
+    // handle by the BrowserElementPanning.js instance in the child process.
     if (evt.target instanceof Ci.nsIMozBrowserFrame) {
+      return;
+    }
+
+    // For in-process <iframe mozbrowser> the events are not targetting
+    // directly the container iframe element, but some node of the document.
+    // So, the BrowserElementPanning instance of the system app will receive
+    // the sequence of touch events, as well as the BrowserElementPanning
+    // instance in the targetted app.
+    // As a result, multiple mozbrowser iframes will try to interpret the
+    // sequence of touch events, which may results into multiple clicks.
+    let targetWindow = evt.target.ownerDocument.defaultView;
+    let frameElement = targetWindow.frameElement;
+    while (frameElement) {
+      targetWindow = frameElement.ownerDocument.defaultView;
+      frameElement = targetWindow.frameElement;
+    }
+
+    if (content !== targetWindow) {
       return;
     }
 

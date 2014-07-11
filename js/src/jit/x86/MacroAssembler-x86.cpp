@@ -173,7 +173,7 @@ MacroAssemblerX86::passABIArg(const MoveOperand &from, MoveOp::Type type)
       case MoveOp::DOUBLE:  stackForCall_ += sizeof(double); break;
       case MoveOp::INT32:   stackForCall_ += sizeof(int32_t); break;
       case MoveOp::GENERAL: stackForCall_ += sizeof(intptr_t); break;
-      default: MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
+      default: MOZ_CRASH("Unexpected argument type");
     }
     enoughMemory_ &= moveResolver_.addMove(from, to, type);
 }
@@ -430,7 +430,7 @@ MacroAssemblerX86::branchPtrInNurseryRange(Condition cond, Register ptr, Registe
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
     addPtr(ptr, temp);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              temp, Imm32(Nursery::NurserySize), label);
+              temp, Imm32(nursery.nurserySize()), label);
 }
 
 void

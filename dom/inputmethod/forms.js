@@ -508,17 +508,18 @@ let FormAssistant = {
       case "Forms:Input:SendKey":
         CompositionManager.endComposition('');
 
+        let flags = domWindowUtils.KEY_FLAG_NOT_SYNTHESIZED_FOR_TESTS;
         this._editing = true;
         let doKeypress = domWindowUtils.sendKeyEvent('keydown', json.keyCode,
-                                  json.charCode, json.modifiers);
+                                                     json.charCode, json.modifiers, flags);
         if (doKeypress) {
           domWindowUtils.sendKeyEvent('keypress', json.keyCode,
-                                  json.charCode, json.modifiers);
+                                      json.charCode, json.modifiers, flags);
         }
 
         if(!json.repeat) {
           domWindowUtils.sendKeyEvent('keyup', json.keyCode,
-                                    json.charCode, json.modifiers);
+                                      json.charCode, json.modifiers, flags);
         }
 
         this._editing = false;

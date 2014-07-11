@@ -305,6 +305,7 @@ UNIFIED_SOURCES += [
     'opengl/TextureClientOGL.cpp',
     'opengl/TextureHostOGL.cpp',
     'opengl/TexturePoolOGL.cpp',
+    'protobuf/LayerScopePacket.pb.cc',
     'ReadbackProcessor.cpp',
     'RenderTrace.cpp',
     'RotatedBuffer.cpp',
@@ -317,6 +318,9 @@ SOURCES += [
     'Layers.cpp',
     'LayerTreeInvalidation.cpp',
 ]
+
+# Disable RTTI in google protocol buffer
+DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
 
 # Workaround compiler bug (Bug 795594)
 if CONFIG['_MSC_VER'] and CONFIG['CPU_ARCH'] == 'x86_64':
