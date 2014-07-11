@@ -422,14 +422,14 @@ class StoreBuffer
 
     bool aboutToOverflow_;
     bool enabled_;
-    mozilla::DebugOnly<bool> entered; /* For ReentrancyGuard. */
+    mozilla::DebugOnly<bool> mEntered; /* For ReentrancyGuard. */
 
   public:
     explicit StoreBuffer(JSRuntime *rt, const Nursery &nursery)
       : bufferVal(), bufferCell(), bufferSlot(), bufferWholeCell(),
         bufferRelocVal(), bufferRelocCell(), bufferGeneric(),
         runtime_(rt), nursery_(nursery), aboutToOverflow_(false), enabled_(false),
-        entered(false)
+        mEntered(false)
     {
     }
 

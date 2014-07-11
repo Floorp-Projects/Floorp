@@ -74,34 +74,32 @@ namespace mozilla {
 template<typename E>
 class CastableTypedEnumResult
 {
-  private:
-    const E mValue;
+private:
+  const E mValue;
 
-  public:
-    explicit MOZ_CONSTEXPR CastableTypedEnumResult(E value)
-      : mValue(value)
-    {}
+public:
+  explicit MOZ_CONSTEXPR CastableTypedEnumResult(E aValue)
+    : mValue(aValue)
+  {}
 
-    MOZ_CONSTEXPR operator E() const { return mValue; }
+  MOZ_CONSTEXPR operator E() const { return mValue; }
 
-    template<typename DestinationType>
-    MOZ_EXPLICIT_CONVERSION MOZ_CONSTEXPR
-    operator DestinationType() const {
-      return DestinationType(mValue);
-    }
+  template<typename DestinationType>
+  MOZ_EXPLICIT_CONVERSION MOZ_CONSTEXPR
+  operator DestinationType() const { return DestinationType(mValue); }
 
-    MOZ_CONSTEXPR bool operator !() const { return !bool(mValue); }
+  MOZ_CONSTEXPR bool operator !() const { return !bool(mValue); }
 
 #ifndef MOZ_HAVE_CXX11_STRONG_ENUMS
-    // This get() method is used to implement a constructor in the
-    // non-c++11 fallback path for MOZ_BEGIN_ENUM_CLASS, taking a
-    // CastableTypedEnumResult. If we try to implement it using the
-    // above conversion operator E(), then at least clang 3.3
-    // (when forced to take the non-c++11 fallback path) compiles
-    // this constructor to an infinite recursion. So we introduce this
-    // get() method, that does exactly the same as the conversion operator,
-    // to work around this.
-    MOZ_CONSTEXPR E get() const { return mValue; }
+  // This get() method is used to implement a constructor in the
+  // non-c++11 fallback path for MOZ_BEGIN_ENUM_CLASS, taking a
+  // CastableTypedEnumResult. If we try to implement it using the
+  // above conversion operator E(), then at least clang 3.3
+  // (when forced to take the non-c++11 fallback path) compiles
+  // this constructor to an infinite recursion. So we introduce this
+  // get() method, that does exactly the same as the conversion operator,
+  // to work around this.
+  MOZ_CONSTEXPR E get() const { return mValue; }
 #endif
 };
 

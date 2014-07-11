@@ -41,14 +41,14 @@ uintptr_t gMozillaPoisonSize;
 // file.
 
 #ifdef _WIN32
-static void *
+static void*
 ReserveRegion(uintptr_t aRegion, uintptr_t aSize)
 {
-  return VirtualAlloc((void *)aRegion, aSize, MEM_RESERVE, PAGE_NOACCESS);
+  return VirtualAlloc((void*)aRegion, aSize, MEM_RESERVE, PAGE_NOACCESS);
 }
 
 static void
-ReleaseRegion(void *aRegion, uintptr_t aSize)
+ReleaseRegion(void* aRegion, uintptr_t aSize)
 {
   VirtualFree(aRegion, aSize, MEM_RELEASE);
 }
@@ -77,7 +77,7 @@ GetDesiredRegionSize()
 #define RESERVE_FAILED 0
 
 #elif defined(__OS2__)
-static void *
+static void*
 ReserveRegion(uintptr_t aRegion, uintptr_t aSize)
 {
   // OS/2 doesn't support allocation at an arbitrary address,
@@ -86,7 +86,7 @@ ReserveRegion(uintptr_t aRegion, uintptr_t aSize)
 }
 
 static void
-ReleaseRegion(void *aRegion, uintptr_t aSize)
+ReleaseRegion(void* aRegion, uintptr_t aSize)
 {
   return;
 }
@@ -112,7 +112,7 @@ GetDesiredRegionSize()
 
 #include "mozilla/TaggedAnonymousMemory.h"
 
-static void *
+static void*
 ReserveRegion(uintptr_t aRegion, uintptr_t aSize)
 {
   return MozTaggedAnonymousMmap(reinterpret_cast<void*>(aRegion), aSize,
@@ -121,7 +121,7 @@ ReserveRegion(uintptr_t aRegion, uintptr_t aSize)
 }
 
 static void
-ReleaseRegion(void *aRegion, uintptr_t aSize)
+ReleaseRegion(void* aRegion, uintptr_t aSize)
 {
   munmap(aRegion, aSize);
 }
@@ -147,7 +147,7 @@ GetDesiredRegionSize()
 #endif // system dependencies
 
 static_assert(sizeof(uintptr_t) == 4 || sizeof(uintptr_t) == 8, "");
-static_assert(sizeof(uintptr_t) == sizeof(void *), "");
+static_assert(sizeof(uintptr_t) == sizeof(void*), "");
 
 static uintptr_t
 ReservePoisonArea(uintptr_t rgnsize)
@@ -163,8 +163,8 @@ ReservePoisonArea(uintptr_t rgnsize)
 
   // First see if we can allocate the preferred poison address from the OS.
   uintptr_t candidate = (0xF0DEAFFF & ~(rgnsize-1));
-  void *result = ReserveRegion(candidate, rgnsize);
-  if (result == (void *)candidate) {
+  void* result = ReserveRegion(candidate, rgnsize);
+  if (result == (void*)candidate) {
     // success - inaccessible page allocated
     return candidate;
   }
