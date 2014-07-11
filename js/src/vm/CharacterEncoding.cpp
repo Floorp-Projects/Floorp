@@ -65,44 +65,49 @@ GetDeflatedUTF8StringLength(const CharT *chars, size_t nchars)
     return nbytes;
 }
 
-JS_PUBLIC_API(size_t)
-JS::GetDeflatedUTF8StringLength(JSFlatString *s)
-{
-    JS::AutoCheckCannotGC nogc;
-    return s->hasLatin1Chars()
-           ? ::GetDeflatedUTF8StringLength(s->latin1Chars(nogc), s->length())
-           : ::GetDeflatedUTF8StringLength(s->twoByteChars(nogc), s->length());
+static bool
+PutUTF8ReplacementCharacter(char **dst, size_t *dstlenp) {
+    if (*dstlenp < 3)
+        return false;
+    *(*dst)++ = (char) 0xEF;
+    *(*dst)++ = (char) 0xBF;
+    *(*dst)++ = (char) 0xBD;
+    *dstlenp -= 3;
+    return true;
 }
 
-static void
-PutUTF8ReplacementCharacter(mozilla::RangedPtr<char> &dst)
-{
-    *dst++ = char(0xEF);
-    *dst++ = char(0xBF);
-    *dst++ = char(0xBD);
-}
-
+/*
+ * Write up to |*dstlenp| bytes into |dst|.  Writes the number of bytes used
+ * into |*dstlenp| on success.  Returns false on failure.
+ */
 template <typename CharT>
-static void
-DeflateStringToUTF8Buffer(const CharT *src, size_t srclen, mozilla::RangedPtr<char> dst)
+static bool
+DeflateStringToUTF8Buffer(js::ThreadSafeContext *cx, const CharT *src, size_t srclen,
+                          char *dst, size_t *dstlenp)
 {
+    size_t dstlen = *dstlenp;
+    size_t origDstlen = dstlen;
+
     while (srclen) {
         uint32_t v;
         jschar c = *src++;
         srclen--;
         if (c >= 0xDC00 && c <= 0xDFFF) {
-            PutUTF8ReplacementCharacter(dst);
+            if (!PutUTF8ReplacementCharacter(&dst, &dstlen))
+                goto bufferTooSmall;
             continue;
         } else if (c < 0xD800 || c > 0xDBFF) {
             v = c;
         } else {
             if (srclen < 1) {
-                PutUTF8ReplacementCharacter(dst);
+                if (!PutUTF8ReplacementCharacter(&dst, &dstlen))
+                    goto bufferTooSmall;
                 continue;
             }
             jschar c2 = *src;
             if ((c2 < 0xDC00) || (c2 > 0xDFFF)) {
-                PutUTF8ReplacementCharacter(dst);
+                if (!PutUTF8ReplacementCharacter(&dst, &dstlen))
+                    goto bufferTooSmall;
                 continue;
             }
             src++;
@@ -112,24 +117,31 @@ DeflateStringToUTF8Buffer(const CharT *src, size_t srclen, mozilla::RangedPtr<ch
         size_t utf8Len;
         if (v < 0x0080) {
             /* no encoding necessary - performance hack */
-            *dst++ = char(v);
+            if (dstlen == 0)
+                goto bufferTooSmall;
+            *dst++ = (char) v;
             utf8Len = 1;
         } else {
             uint8_t utf8buf[4];
             utf8Len = js_OneUcs4ToUtf8Char(utf8buf, v);
+            if (utf8Len > dstlen)
+                goto bufferTooSmall;
             for (size_t i = 0; i < utf8Len; i++)
-                *dst++ = char(utf8buf[i]);
+                *dst++ = (char) utf8buf[i];
         }
+        dstlen -= utf8Len;
     }
-}
+    *dstlenp = (origDstlen - dstlen);
+    return true;
 
-JS_PUBLIC_API(void)
-JS::DeflateStringToUTF8Buffer(JSFlatString *src, mozilla::RangedPtr<char> dst)
-{
-    JS::AutoCheckCannotGC nogc;
-    return src->hasLatin1Chars()
-           ? ::DeflateStringToUTF8Buffer(src->latin1Chars(nogc), src->length(), dst)
-           : ::DeflateStringToUTF8Buffer(src->twoByteChars(nogc), src->length(), dst);
+bufferTooSmall:
+    *dstlenp = (origDstlen - dstlen);
+    if (cx->isJSContext()) {
+        js::gc::AutoSuppressGC suppress(cx->asJSContext());
+        JS_ReportErrorNumber(cx->asJSContext(), js_GetErrorMessage, nullptr,
+                             JSMSG_BUFFER_TOO_SMALL);
+    }
+    return false;
 }
 
 template <typename CharT>
@@ -140,7 +152,7 @@ JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const mozilla::Range<const C
 
     /* Get required buffer size. */
     const CharT *str = chars.start().get();
-    size_t len = ::GetDeflatedUTF8StringLength(str, chars.length());
+    size_t len = GetDeflatedUTF8StringLength(str, chars.length());
 
     /* Allocate buffer. */
     char *utf8 = cx->pod_malloc<char>(len + 1);
@@ -148,7 +160,7 @@ JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const mozilla::Range<const C
         return UTF8CharsZ();
 
     /* Encode to UTF8. */
-    ::DeflateStringToUTF8Buffer(str, chars.length(), mozilla::RangedPtr<char>(utf8, len));
+    JS_ALWAYS_TRUE(DeflateStringToUTF8Buffer(cx, str, chars.length(), utf8, &len));
     utf8[len] = '\0';
 
     return UTF8CharsZ(utf8, len);
