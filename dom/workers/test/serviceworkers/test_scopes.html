@@ -1,0 +1,69 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 984048 - Test scope glob matching.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  function registerWorkers() {
+    return Promise.all([
+      navigator.serviceWorker.register("worker.js", { scope: "*" }),
+      navigator.serviceWorker.register("worker.js", { scope: "sub/dir/*"}),
+      navigator.serviceWorker.register("worker.js", { scope: "sub/dir*" }),
+      navigator.serviceWorker.register("worker.js", { scope: "sub/dir" }),
+      navigator.serviceWorker.register("worker.js", { scope: "sub/dir/a*" }),
+      navigator.serviceWorker.register("worker.js", { scope: "sub*" }),
+    ]);
+  }
+
+  function testScopes() {
+    return new Promise(function(resolve, reject) {
+      var getScope = navigator.serviceWorker.getScopeForUrl.bind(navigator.serviceWorker);
+      var base = new URL(".", document.baseURI);
+
+      function p(s) {
+        return base + s;
+      }
+
+      ok(getScope(p("index.html")) === p("*"), "Scope should match");
+      ok(getScope(p("sua.html")) === p("*"), "Scope should match");
+      ok(getScope(p("sub.html")) === p("sub*"), "Scope should match");
+      ok(getScope(p("sub/dir.html")) === p("sub/dir*"), "Scope should match");
+      ok(getScope(p("sub/dir")) === p("sub/dir"), "Scope should match");
+      ok(getScope(p("sub/dir/foo")) === p("sub/dir/*"), "Scope should match");
+      ok(getScope(p("sub/dir/afoo")) === p("sub/dir/a*"), "Scope should match");
+      resolve(true);
+    });
+  }
+
+  function runTest() {
+    registerWorkers()
+      .then(testScopes)
+      .then(function() {
+        SimpleTest.finish();
+      }).catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+
