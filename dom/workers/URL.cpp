@@ -318,52 +318,54 @@ public:
   {
     AssertIsOnMainThread();
 
+    ErrorResult rv;
     switch (mType) {
       case GetterHref:
-        mURLProxy->URL()->GetHref(mValue);
+        mURLProxy->URL()->GetHref(mValue, rv);
         break;
 
       case GetterOrigin:
-        mURLProxy->URL()->GetOrigin(mValue);
+        mURLProxy->URL()->GetOrigin(mValue, rv);
         break;
 
       case GetterProtocol:
-        mURLProxy->URL()->GetProtocol(mValue);
+        mURLProxy->URL()->GetProtocol(mValue, rv);
         break;
 
       case GetterUsername:
-        mURLProxy->URL()->GetUsername(mValue);
+        mURLProxy->URL()->GetUsername(mValue, rv);
         break;
 
       case GetterPassword:
-        mURLProxy->URL()->GetPassword(mValue);
+        mURLProxy->URL()->GetPassword(mValue, rv);
         break;
 
       case GetterHost:
-        mURLProxy->URL()->GetHost(mValue);
+        mURLProxy->URL()->GetHost(mValue, rv);
         break;
 
       case GetterHostname:
-        mURLProxy->URL()->GetHostname(mValue);
+        mURLProxy->URL()->GetHostname(mValue, rv);
         break;
 
       case GetterPort:
-        mURLProxy->URL()->GetPort(mValue);
+        mURLProxy->URL()->GetPort(mValue, rv);
         break;
 
       case GetterPathname:
-        mURLProxy->URL()->GetPathname(mValue);
+        mURLProxy->URL()->GetPathname(mValue, rv);
         break;
 
       case GetterSearch:
-        mURLProxy->URL()->GetSearch(mValue);
+        mURLProxy->URL()->GetSearch(mValue, rv);
         break;
 
       case GetterHash:
-        mURLProxy->URL()->GetHash(mValue);
+        mURLProxy->URL()->GetHash(mValue, rv);
         break;
     }
 
+    MOZ_ASSERT(!rv.Failed());
     return true;
   }
 
@@ -413,39 +415,39 @@ public:
         break;
 
       case SetterProtocol:
-        mURLProxy->URL()->SetProtocol(mValue);
+        mURLProxy->URL()->SetProtocol(mValue, mRv);
         break;
 
       case SetterUsername:
-        mURLProxy->URL()->SetUsername(mValue);
+        mURLProxy->URL()->SetUsername(mValue, mRv);
         break;
 
       case SetterPassword:
-        mURLProxy->URL()->SetPassword(mValue);
+        mURLProxy->URL()->SetPassword(mValue, mRv);
         break;
 
       case SetterHost:
-        mURLProxy->URL()->SetHost(mValue);
+        mURLProxy->URL()->SetHost(mValue, mRv);
         break;
 
       case SetterHostname:
-        mURLProxy->URL()->SetHostname(mValue);
+        mURLProxy->URL()->SetHostname(mValue, mRv);
         break;
 
       case SetterPort:
-        mURLProxy->URL()->SetPort(mValue);
+        mURLProxy->URL()->SetPort(mValue, mRv);
         break;
 
       case SetterPathname:
-        mURLProxy->URL()->SetPathname(mValue);
+        mURLProxy->URL()->SetPathname(mValue, mRv);
         break;
 
       case SetterSearch:
-        mURLProxy->URL()->SetSearch(mValue);
+        mURLProxy->URL()->SetSearch(mValue, mRv);
         break;
 
       case SetterHash:
-        mURLProxy->URL()->SetHash(mValue);
+        mURLProxy->URL()->SetHash(mValue, mRv);
         break;
     }
 
@@ -547,7 +549,7 @@ URL::WrapObject(JSContext* aCx)
 }
 
 void
-URL::GetHref(nsString& aHref) const
+URL::GetHref(nsString& aHref, ErrorResult& aRv) const
 {
   nsRefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterHref, aHref,
@@ -573,7 +575,7 @@ URL::SetHref(const nsAString& aHref, ErrorResult& aRv)
 }
 
 void
-URL::GetOrigin(nsString& aOrigin) const
+URL::GetOrigin(nsString& aOrigin, ErrorResult& aRv) const
 {
   nsRefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterOrigin, aOrigin,
@@ -585,7 +587,7 @@ URL::GetOrigin(nsString& aOrigin) const
 }
 
 void
-URL::GetProtocol(nsString& aProtocol) const
+URL::GetProtocol(nsString& aProtocol, ErrorResult& aRv) const
 {
   nsRefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterProtocol, aProtocol,
@@ -597,7 +599,7 @@ URL::GetProtocol(nsString& aProtocol) const
 }
 
 void
-URL::SetProtocol(const nsAString& aProtocol)
+URL::SetProtocol(const nsAString& aProtocol, ErrorResult& aRv)
 {
   ErrorResult rv;
   nsRefPtr<SetterRunnable> runnable =
@@ -610,7 +612,7 @@ URL::SetProtocol(const nsAString& aProtocol)
 }
 
 void
-URL::GetUsername(nsString& aUsername) const
+URL::GetUsername(nsString& aUsername, ErrorResult& aRv) const
 {
   nsRefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterUsername, aUsername,
@@ -622,7 +624,7 @@ URL::GetUsername(nsString& aUsername) const
 }
 
 void
-URL::SetUsername(const nsAString& aUsername)
+URL::SetUsername(const nsAString& aUsername, ErrorResult& aRv)
 {
   ErrorResult rv;
   nsRefPtr<SetterRunnable> runnable =
@@ -635,7 +637,7 @@ URL::SetUsername(const nsAString& aUsername)
 }
 
 void
-URL::GetPassword(nsString& aPassword) const
+URL::GetPassword(nsString& aPassword, ErrorResult& aRv) const
 {
   nsRefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterPassword, aPassword,
@@ -647,7 +649,7 @@ URL::GetPassword(nsString& aPassword) const
 }
 
 void
-URL::SetPassword(const nsAString& aPassword)
+URL::SetPassword(const nsAString& aPassword, ErrorResult& aRv)
 {
   ErrorResult rv;
   nsRefPtr<SetterRunnable> runnable =
@@ -660,7 +662,7 @@ URL::SetPassword(const nsAString& aPassword)
 }
 
 void
-URL::GetHost(nsString& aHost) const
+URL::GetHost(nsString& aHost, ErrorResult& aRv) const
 {
   nsRefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterHost, aHost,
@@ -672,7 +674,7 @@ URL::GetHost(nsString& aHost) const
 }
 
 void
-URL::SetHost(const nsAString& aHost)
+URL::SetHost(const nsAString& aHost, ErrorResult& aRv)
 {
   ErrorResult rv;
   nsRefPtr<SetterRunnable> runnable =
@@ -685,7 +687,7 @@ URL::SetHost(const nsAString& aHost)
 }
 
 void
-URL::GetHostname(nsString& aHostname) const
+URL::GetHostname(nsString& aHostname, ErrorResult& aRv) const
 {
   nsRefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterHostname, aHostname,
@@ -697,7 +699,7 @@ URL::GetHostname(nsString& aHostname) const
 }
 
 void
-URL::SetHostname(const nsAString& aHostname)
+URL::SetHostname(const nsAString& aHostname, ErrorResult& aRv)
 {
   ErrorResult rv;
   nsRefPtr<SetterRunnable> runnable =
@@ -710,7 +712,7 @@ URL::SetHostname(const nsAString& aHostname)
 }
 
 void
-URL::GetPort(nsString& aPort) const
+URL::GetPort(nsString& aPort, ErrorResult& aRv) const
 {
   nsRefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterPort, aPort,
@@ -722,7 +724,7 @@ URL::GetPort(nsString& aPort) const
 }
 
 void
-URL::SetPort(const nsAString& aPort)
+URL::SetPort(const nsAString& aPort, ErrorResult& aRv)
 {
   ErrorResult rv;
   nsRefPtr<SetterRunnable> runnable =
@@ -735,7 +737,7 @@ URL::SetPort(const nsAString& aPort)
 }
 
 void
-URL::GetPathname(nsString& aPathname) const
+URL::GetPathname(nsString& aPathname, ErrorResult& aRv) const
 {
   nsRefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterPathname, aPathname,
@@ -747,7 +749,7 @@ URL::GetPathname(nsString& aPathname) const
 }
 
 void
-URL::SetPathname(const nsAString& aPathname)
+URL::SetPathname(const nsAString& aPathname, ErrorResult& aRv)
 {
   ErrorResult rv;
   nsRefPtr<SetterRunnable> runnable =
@@ -760,7 +762,7 @@ URL::SetPathname(const nsAString& aPathname)
 }
 
 void
-URL::GetSearch(nsString& aSearch) const
+URL::GetSearch(nsString& aSearch, ErrorResult& aRv) const
 {
   nsRefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterSearch, aSearch,
@@ -772,7 +774,7 @@ URL::GetSearch(nsString& aSearch) const
 }
 
 void
-URL::SetSearch(const nsAString& aSearch)
+URL::SetSearch(const nsAString& aSearch, ErrorResult& aRv)
 {
   SetSearchInternal(aSearch);
   UpdateURLSearchParams();
@@ -814,7 +816,7 @@ URL::SetSearchParams(URLSearchParams& aSearchParams)
 }
 
 void
-URL::GetHash(nsString& aHash) const
+URL::GetHash(nsString& aHash, ErrorResult& aRv) const
 {
   nsRefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterHash, aHash,
@@ -826,7 +828,7 @@ URL::GetHash(nsString& aHash) const
 }
 
 void
-URL::SetHash(const nsAString& aHash)
+URL::SetHash(const nsAString& aHash, ErrorResult& aRv)
 {
   ErrorResult rv;
   nsRefPtr<SetterRunnable> runnable =
@@ -906,7 +908,8 @@ URL::UpdateURLSearchParams()
 {
   if (mSearchParams) {
     nsString search;
-    GetSearch(search);
+    ErrorResult rv;
+    GetSearch(search, rv);
     mSearchParams->ParseInput(NS_ConvertUTF16toUTF8(Substring(search, 1)), this);
   }
 }
