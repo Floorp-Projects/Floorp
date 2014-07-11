@@ -4625,7 +4625,7 @@ GetPropertyHelperInline(JSContext *cx,
 
             /*
              * Don't warn in self-hosted code (where the further presence of
-             * JS::ContextOptions::werror() would result in impossible-to-avoid
+             * JS::RuntimeOptions::werror() would result in impossible-to-avoid
              * errors to entirely-innocent client code).
              */
             if (script->selfHosted())
