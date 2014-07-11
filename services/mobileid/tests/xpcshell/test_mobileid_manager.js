@@ -29,9 +29,10 @@ const GET_ASSERTION_RETURN_KO = "MobileId:GetAssertion:Return:KO";
 // === Globals ===
 
 const ORIGIN = "app://afakeorigin";
+const APP_ID = 1;
 const PRINCIPAL = {
   origin: ORIGIN,
-  appId: "123"
+  appId: APP_ID
 };
 const PHONE_NUMBER = "+34666555444";
 const ANOTHER_PHONE_NUMBER = "+44123123123";
@@ -45,25 +46,25 @@ const CERTIFICATE = "eyJhbGciOiJEUzI1NiJ9.eyJsYXN0QXV0aEF0IjoxNDA0NDY5NzkyODc3LC
 
 // === Helpers ===
 
-function addPermission(aOrigin, aAction) {
+function addPermission(aAction) {
   let uri = Cc["@mozilla.org/network/io-service;1"]
               .getService(Ci.nsIIOService)
-              .newURI(aOrigin, null, null);
+              .newURI(ORIGIN, null, null);
   let _principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
                      .getService(Ci.nsIScriptSecurityManager)
-                     .getNoAppCodebasePrincipal(uri);
+                     .getAppCodebasePrincipal(uri, APP_ID, false);
   let pm = Cc["@mozilla.org/permissionmanager;1"]
              .getService(Ci.nsIPermissionManager);
   pm.addFromPrincipal(_principal, MOBILEID_PERM, aAction);
 }
 
-function removePermission(aOrigin) {
+function removePermission() {
   let uri = Cc["@mozilla.org/network/io-service;1"]
               .getService(Ci.nsIIOService)
-              .newURI(aOrigin, null, null);
+              .newURI(ORIGIN, null, null);
   let _principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
                      .getService(Ci.nsIScriptSecurityManager)
-                     .getNoAppCodebasePrincipal(uri);
+                     .getAppCodebasePrincipal(uri, APP_ID, false);
   let pm = Cc["@mozilla.org/permissionmanager;1"]
              .getService(Ci.nsIPermissionManager);
   pm.removeFromPrincipal(_principal, MOBILEID_PERM);
@@ -362,6 +363,7 @@ function cleanup() {
   MobileIdentityManager.client = kMobileIdentityClient;
   MobileIdentityManager.ui = null;
   MobileIdentityManager.iccInfo = null;
+  removePermission(ORIGIN);
 }
 
 // Unregister mocks and restore original code.
@@ -446,6 +448,8 @@ add_test(function() {
       run_next_test();
     }
   };
+
+  addPermission(Ci.nsIPermissionManager.ALLOW_ACTION);
 
   MobileIdentityManager.receiveMessage({
     name: GET_ASSERTION_IPC_MSG,
@@ -735,7 +739,7 @@ add_test(function() {
     }
   };
 
-  addPermission(ORIGIN, Ci.nsIPermissionManager.ALLOW_ACTION);
+  addPermission(Ci.nsIPermissionManager.ALLOW_ACTION);
 
   MobileIdentityManager.receiveMessage({
     name: GET_ASSERTION_IPC_MSG,
@@ -795,7 +799,7 @@ add_test(function() {
     }
   };
 
-  addPermission(ORIGIN, Ci.nsIPermissionManager.PROMPT_ACTION);
+  addPermission(Ci.nsIPermissionManager.PROMPT_ACTION);
 
   MobileIdentityManager.receiveMessage({
     name: GET_ASSERTION_IPC_MSG,
@@ -843,13 +847,11 @@ add_test(function() {
       // Check spied calls.
 
       // MockCredStore.
-      credStore._("getByOrigin").callsLength(1);
-      credStore._("getByOrigin").call(1).arg(1, ORIGIN);
+      credStore._("getByOrigin").callsLength(0);
 
       // MockUI.
       ui._("startFlow").callsLength(0);
-      ui._("error").callsLength(1);
-      ui._("error").call(1).arg(1, ERROR_PERMISSION_DENIED);
+      ui._("error").callsLength(0);
 
       do_test_finished();
       run_next_test();
@@ -932,6 +934,8 @@ add_test(function() {
       run_next_test();
     }
   };
+
+  addPermission(Ci.nsIPermissionManager.ALLOW_ACTION);
 
   MobileIdentityManager.receiveMessage({
     name: GET_ASSERTION_IPC_MSG,
@@ -1292,7 +1296,7 @@ add_test(function() {
     }
   };
 
-  addPermission(ORIGIN, Ci.nsIPermissionManager.ALLOW_ACTION);
+  addPermission(Ci.nsIPermissionManager.ALLOW_ACTION);
 
   MobileIdentityManager.receiveMessage({
     name: GET_ASSERTION_IPC_MSG,
