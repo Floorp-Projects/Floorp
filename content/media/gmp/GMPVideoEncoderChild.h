@@ -30,7 +30,9 @@ public:
 
   // GMPVideoEncoderCallback
   virtual void Encoded(GMPVideoEncodedFrame* aEncodedFrame,
-                       const GMPCodecSpecificInfo& aCodecSpecificInfo) MOZ_OVERRIDE;
+                       GMPBufferType aBufferType,
+                       const uint8_t* aCodecSpecificInfo,
+                       uint32_t aCodecSpecificInfoLength) MOZ_OVERRIDE;
 
   // GMPSharedMemManager
   virtual void CheckThread();
@@ -62,7 +64,7 @@ private:
                               const int32_t& aNumberOfCores,
                               const uint32_t& aMaxPayloadSize) MOZ_OVERRIDE;
   virtual bool RecvEncode(const GMPVideoi420FrameData& aInputFrame,
-                          const GMPCodecSpecificInfo& aCodecSpecificInfo,
+                          const nsTArray<uint8_t>& aCodecSpecificInfo,
                           const nsTArray<GMPVideoFrameType>& aFrameTypes) MOZ_OVERRIDE;
   virtual bool RecvChildShmemForPool(Shmem& aEncodedBuffer) MOZ_OVERRIDE;
   virtual bool RecvSetChannelParameters(const uint32_t& aPacketLoss,

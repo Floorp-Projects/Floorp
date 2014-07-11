@@ -23,7 +23,8 @@ public:
                               int32_t aCoreCount) = 0;
   virtual nsresult Decode(GMPVideoEncodedFrame* aInputFrame,
                           bool aMissingFrames,
-                          const GMPCodecSpecificInfo& aCodecSpecificInfo,
+                          GMPBufferType aBufferType,
+                          const nsTArray<uint8_t>& aCodecSpecificInfo,
                           int64_t aRenderTimeMs = -1) = 0;
   virtual nsresult Reset() = 0;
   virtual nsresult Drain() = 0;

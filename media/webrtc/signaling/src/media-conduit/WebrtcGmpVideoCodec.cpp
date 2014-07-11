@@ -242,6 +242,8 @@ WebrtcGmpVideoEncoder::Encode_g(const webrtc::I420VideoFrame* aInputImage,
   GMPCodecSpecificInfo info;
   memset(&info, 0, sizeof(info));
   info.mCodecType = kGMPVideoCodecH264;
+  nsTArray<uint8_t> codecSpecificInfo;
+  codecSpecificInfo.AppendElements((uint8_t*)&info, sizeof(GMPCodecSpecificInfo));
 
   nsTArray<GMPVideoFrameType> gmp_frame_types;
   for (auto it = aFrameTypes->begin(); it != aFrameTypes->end(); ++it) {
@@ -256,7 +258,7 @@ WebrtcGmpVideoEncoder::Encode_g(const webrtc::I420VideoFrame* aInputImage,
   }
 
   LOGD(("GMP Encode: %llu", (aInputImage->timestamp() * 1000ll)/90));
-  err = mGMP->Encode(frame, info, gmp_frame_types);
+  err = mGMP->Encode(frame, codecSpecificInfo, gmp_frame_types);
   if (err != GMPNoErr) {
     return err;
   }
@@ -315,15 +317,15 @@ WebrtcGmpVideoEncoder::SetRates_g(uint32_t aNewBitRate, uint32_t aFrameRate)
 // GMPVideoEncoderCallback virtual functions.
 void
 WebrtcGmpVideoEncoder::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
-                               const GMPCodecSpecificInfo& aCodecSpecificInfo)
+                               GMPBufferType aBufferType,
+                               const nsTArray<uint8_t>& aCodecSpecificInfo)
 {
   if (mCallback) { // paranoia
     webrtc::VideoFrameType ft;
     GmpFrameTypeToWebrtcFrameType(aEncodedFrame->FrameType(), &ft);
-    GMPBufferType type = aCodecSpecificInfo.mBufferType;
     uint32_t timestamp = (aEncodedFrame->TimeStamp() * 90ll + 999)/1000;
 
-    LOGD(("GMP Encoded: %llu, type %d, len %d", aEncodedFrame->TimeStamp(), type,
+    LOGD(("GMP Encoded: %llu, type %d, len %d", aEncodedFrame->TimeStamp(), aBufferType,
          aEncodedFrame->Size()));
 
     // Right now makes one Encoded() callback per unit
@@ -333,7 +335,7 @@ WebrtcGmpVideoEncoder::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
     uint8_t *end = aEncodedFrame->Buffer() + aEncodedFrame->Size();
     uint32_t size;
     while (buffer < end) {
-      switch (type) {
+      switch (aBufferType) {
         case GMP_BufferSingle:
           size = aEncodedFrame->Size();
           break;
@@ -360,7 +362,7 @@ WebrtcGmpVideoEncoder::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
           break;
         default:
           // really that it's not in the enum; gives more readable error
-          MOZ_ASSERT(aCodecSpecificInfo.mBufferType != GMP_BufferSingle);
+          MOZ_ASSERT(aBufferType != GMP_BufferSingle);
           aEncodedFrame->Destroy();
           return;
       }
@@ -515,11 +517,16 @@ WebrtcGmpVideoDecoder::Decode_g(const webrtc::EncodedImage& aInputImage,
   GMPCodecSpecificInfo info;
   memset(&info, 0, sizeof(info));
   info.mCodecType = kGMPVideoCodecH264;
-  info.mBufferType = GMP_BufferLength32;
   info.mCodecSpecific.mH264.mSimulcastIdx = 0;
+  nsTArray<uint8_t> codecSpecificInfo;
+  codecSpecificInfo.AppendElements((uint8_t*)&info, sizeof(GMPCodecSpecificInfo));
 
   LOGD(("GMP Decode: %llu, len %d", frame->TimeStamp(), aInputImage._length));
-  nsresult rv = mGMP->Decode(frame, aMissingFrames, info, aRenderTimeMs);
+  nsresult rv = mGMP->Decode(frame,
+                             aMissingFrames,
+                             GMP_BufferLength32,
+                             codecSpecificInfo,
+                             aRenderTimeMs);
   if (NS_FAILED(rv)) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
