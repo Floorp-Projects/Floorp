@@ -34,7 +34,6 @@
 #ifndef GMP_VIDEO_FRAME_h_
 #define GMP_VIDEO_FRAME_h_
 
-#include "gmp-video-errors.h"
 #include "gmp-video-plane.h"
 
 enum GMPVideoFrameFormat {

@@ -13,6 +13,12 @@
 #include <assert.h>
 #include <string.h>
 
+#ifdef WIN32
+#include <winsock2.h>
+#else
+#include <arpa/inet.h>
+#endif
+
 #include "webrtc/modules/rtp_rtcp/interface/rtp_payload_registry.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_video_generic.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
@@ -265,7 +271,55 @@ int32_t RTPReceiverVideo::ReceiveH264Codec(WebRtcRTPHeader* rtp_header,
     RTPVideoHeaderH264* h264_header = &rtp_header->type.Video.codecHeader.H264;
     h264_header->nalu_header        = original_nal_header;
     h264_header->single_nalu        = false;
+
+  } else if (nal_type == RtpFormatH264::kH264NALU_STAPA) {
+
+    payload = const_cast<uint8_t*> (payload_data) +
+              RtpFormatH264::kH264NALHeaderLengthInBytes;
+    size_t size = payload_data_length -
+                  RtpFormatH264::kH264NALHeaderLengthInBytes;
+    uint32_t timestamp = rtp_header->header.timestamp;
+    rtp_header->type.Video.codec    = kRtpVideoH264;
+    rtp_header->type.Video.isFirstPacket = true;
+    RTPVideoHeaderH264* h264_header = &rtp_header->type.Video.codecHeader.H264;
+    h264_header->single_nalu        = true;
+
+    while (size > 0) {
+      payload_length = ntohs(*(reinterpret_cast<uint16_t*>(payload)));
+      // payload_length includes the NAL type byte
+      payload += sizeof(uint16_t); // points to NAL byte and then N bytes of NAL data
+      h264_header->nalu_header        = payload[0];
+      switch (*payload & RtpFormatH264::kH264NAL_TypeMask) {
+        case RtpFormatH264::kH264NALU_SPS:
+          // TODO(jesup): Evil hack.  see below
+          rtp_header->header.timestamp = timestamp - 20;
+          rtp_header->frameType = kVideoFrameKey;
+          break;
+        case RtpFormatH264::kH264NALU_PPS:
+          // TODO(jesup): Evil hack.  see below
+          rtp_header->header.timestamp = timestamp - 10;
+          rtp_header->frameType = kVideoFrameKey;
+          break;
+        case RtpFormatH264::kH264NALU_IDR:
+          rtp_header->frameType = kVideoFrameKey;
+          break;
+        default:
+          rtp_header->frameType = kVideoFrameDelta;
+          break;
+      }
+      if (data_callback_->OnReceivedPayloadData(payload,
+                                                payload_length,
+                                                rtp_header) != 0) {
+        return -1;
+      }
+      payload += payload_length;
+      assert(size >= sizeof(uint16_t) + payload_length);
+      size -= sizeof(uint16_t) + payload_length;
+    }
+    return 0;
+
   } else {
+
     // single NALU
     payload = const_cast<uint8_t*> (payload_data);
     payload_length = payload_data_length;

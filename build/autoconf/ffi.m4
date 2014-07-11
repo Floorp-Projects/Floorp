@@ -88,13 +88,9 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
 
     # Use a separate cache file for libffi, since it does things differently
     # from our configure.
-    mkdir -p $_objdir/js/src/ctypes/libffi
-    old_cache_file=$cache_file
-    cache_file=$_objdir/js/src/ctypes/libffi/config.cache
     old_config_files=$CONFIG_FILES
     unset CONFIG_FILES
     AC_OUTPUT_SUBDIRS(js/src/ctypes/libffi)
-    cache_file=$old_cache_file
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
     CONFIG_FILES=$old_config_files
   fi

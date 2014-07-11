@@ -365,7 +365,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
   aFill = imageSpaceToUserSpace.Transform(aSourceRect);
 
   aSubimage = aSubimage.Intersect(available) - gfxPoint(aPadding.left, aPadding.top);
-  aUserSpaceToImageSpace.Multiply(gfxMatrix().Translate(-gfxPoint(aPadding.left, aPadding.top)));
+  aUserSpaceToImageSpace *= gfxMatrix::Translation(-aPadding.left, -aPadding.top);
   aSourceRect = aSourceRect - gfxPoint(aPadding.left, aPadding.top);
   aImageRect = gfxRect(0, 0, mSize.width, mSize.height);
 

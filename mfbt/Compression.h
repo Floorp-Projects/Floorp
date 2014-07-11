@@ -94,7 +94,7 @@ public:
    */
   static MFBT_API bool
   decompress(const char* aSource, size_t aInputSize, char* aDest,
-             size_t aMaxOutputSize, size_t *aOutputSize);
+             size_t aMaxOutputSize, size_t* aOutputSize);
 
   /*
    * Provides the maximum size that LZ4 may output in a "worst case"

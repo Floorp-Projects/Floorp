@@ -1529,23 +1529,10 @@ HTMLInputElement::GetAutocomplete(nsAString& aValue)
 {
   aValue.Truncate(0);
   const nsAttrValue* attributeVal = GetParsedAttr(nsGkAtoms::autocomplete);
-  if (!attributeVal ||
-      mAutocompleteAttrState == nsContentUtils::eAutocompleteAttrState_Invalid) {
-    return NS_OK;
-  }
-  if (mAutocompleteAttrState == nsContentUtils::eAutocompleteAttrState_Valid) {
-    uint32_t atomCount = attributeVal->GetAtomCount();
-    for (uint32_t i = 0; i < atomCount; i++) {
-      if (i != 0) {
-        aValue.Append(' ');
-      }
-      aValue.Append(nsDependentAtomString(attributeVal->AtomAt(i)));
-    }
-    nsContentUtils::ASCIIToLower(aValue);
-    return NS_OK;
-  }
 
-  mAutocompleteAttrState = nsContentUtils::SerializeAutocompleteAttribute(attributeVal, aValue);
+  mAutocompleteAttrState =
+    nsContentUtils::SerializeAutocompleteAttribute(attributeVal, aValue,
+                                                   mAutocompleteAttrState);
   return NS_OK;
 }
 
@@ -1553,6 +1540,15 @@ NS_IMETHODIMP
 HTMLInputElement::SetAutocomplete(const nsAString& aValue)
 {
   return SetAttr(kNameSpaceID_None, nsGkAtoms::autocomplete, nullptr, aValue, true);
+}
+
+void
+HTMLInputElement::GetAutocompleteInfo(AutocompleteInfo& aInfo)
+{
+  const nsAttrValue* attributeVal = GetParsedAttr(nsGkAtoms::autocomplete);
+  mAutocompleteAttrState =
+    nsContentUtils::SerializeAutocompleteAttribute(attributeVal, aInfo,
+                                                   mAutocompleteAttrState);
 }
 
 int32_t

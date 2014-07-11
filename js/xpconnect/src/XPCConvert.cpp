@@ -7,6 +7,7 @@
 /* Data conversion between native and JavaScript types. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Range.h"
 
 #include "xpcprivate.h"
 #include "nsIAtom.h"
@@ -18,6 +19,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/CharacterEncoding.h"
 #include "jsprf.h"
 #include "JavaScriptParent.h"
 
@@ -65,8 +67,8 @@ UnwrapNativeCPOW(nsISupports* wrapper)
 {
     nsCOMPtr<nsIXPConnectWrappedJS> underware = do_QueryInterface(wrapper);
     if (underware) {
-        JSObject* mainObj = underware->GetJSObject();
-        if (mainObj && mozilla::jsipc::IsCPOW(mainObj))
+        JSObject *mainObj = underware->GetJSObject();
+        if (mainObj && mozilla::jsipc::IsWrappedCPOW(mainObj))
             return mainObj;
     }
     return nullptr;
@@ -364,6 +366,16 @@ CheckJSCharInCharRange(jschar c)
 
     return true;
 }
+
+template<typename CharT>
+static void
+CheckCharsInCharRange(const CharT *chars, size_t len)
+{
+    for (size_t i = 0; i < len; i++) {
+        if (!CheckJSCharInCharRange(chars[i]))
+            break;
+    }
+}
 #endif
 
 template<typename T>
@@ -414,12 +426,14 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         if (!str) {
             return false;
         }
-        size_t length;
-        const jschar* chars = JS_GetStringCharsAndLength(cx, str, &length);
-        if (!chars) {
-            return false;
+
+        jschar ch;
+        if (JS_GetStringLength(str) == 0) {
+            ch = 0;
+        } else {
+            if (!JS_GetStringCharAt(cx, str, 0, &ch))
+                return false;
         }
-        jschar ch = length ? chars[0] : 0;
 #ifdef DEBUG
         CheckJSCharInCharRange(ch);
 #endif
@@ -432,16 +446,17 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         if (!(str = ToString(cx, s))) {
             return false;
         }
-        size_t length;
-        const jschar* chars = JS_GetStringCharsAndLength(cx, str, &length);
-        if (!chars) {
-            return false;
-        }
+        size_t length = JS_GetStringLength(str);
         if (length == 0) {
             *((uint16_t*)d) = 0;
             break;
         }
-        *((uint16_t*)d) = uint16_t(chars[0]);
+
+        jschar ch;
+        if (!JS_GetStringCharAt(cx, str, 0, &ch))
+            return false;
+
+        *((uint16_t*)d) = uint16_t(ch);
         break;
     }
     case nsXPTType::T_JSVAL :
@@ -492,18 +507,13 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
             return true;
         }
         size_t length = 0;
-        const char16_t* chars = nullptr;
         JSString* str = nullptr;
         if (!s.isUndefined()) {
             str = ToString(cx, s);
             if (!str)
                 return false;
 
-            chars = useAllocator ? JS_GetStringCharsZAndLength(cx, str, &length)
-                                 : JS_GetStringCharsAndLength(cx, str, &length);
-            if (!chars)
-                return false;
-
+            length = JS_GetStringLength(str);
             if (!length) {
                 if (useAllocator)
                     *((const nsAString**)d) = &EmptyString();
@@ -526,17 +536,16 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         } else if (XPCStringConvert::IsDOMString(str)) {
             // The characters represent an existing nsStringBuffer that
             // was shared by XPCStringConvert::ReadableToJSVal.
+            const jschar *chars = JS_GetTwoByteExternalStringChars(str);
             nsStringBuffer::FromData((void *)chars)->ToString(length, *ws);
         } else if (XPCStringConvert::IsLiteral(str)) {
             // The characters represent a literal char16_t string constant
             // compiled into libxul, such as the string "undefined" above.
+            const jschar *chars = JS_GetTwoByteExternalStringChars(str);
             ws->AssignLiteral(chars, length);
-        } else if (useAllocator && STRING_TO_JSVAL(str) == s) {
-            // The JS string will exist over the function call.
-            // We don't need to copy the characters in this case.
-            ws->Rebind(chars, length);
         } else {
-            ws->Assign(chars, length);
+            if (!AssignJSString(cx, *ws, str))
+                return false;
         }
         return true;
     }
@@ -553,16 +562,18 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
             return false;
         }
 #ifdef DEBUG
-        const jschar* chars=nullptr;
-        if (nullptr != (chars = JS_GetStringCharsZ(cx, str))) {
-            bool legalRange = true;
-            int len = JS_GetStringLength(str);
-            const jschar* t;
-            int32_t i=0;
-            for (t=chars; (i< len) && legalRange ; i++,t++) {
-                if (!CheckJSCharInCharRange(*t))
-                    break;
-            }
+        if (JS_StringHasLatin1Chars(str)) {
+            size_t len;
+            AutoCheckCannotGC nogc;
+            const Latin1Char *chars = JS_GetLatin1StringCharsAndLength(cx, nogc, str, &len);
+            if (chars)
+                CheckCharsInCharRange(chars, len);
+        } else {
+            size_t len;
+            AutoCheckCannotGC nogc;
+            const jschar *chars = JS_GetTwoByteStringCharsAndLength(cx, nogc, str, &len);
+            if (chars)
+                CheckCharsInCharRange(chars, len);
         }
 #endif // DEBUG
         size_t length = JS_GetStringEncodingLength(cx, str);
@@ -581,7 +592,6 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
 
     case nsXPTType::T_WCHAR_STR:
     {
-        const jschar* chars=nullptr;
         JSString* str;
 
         if (s.isUndefined() || s.isNull()) {
@@ -592,28 +602,22 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         if (!(str = ToString(cx, s))) {
             return false;
         }
-        if (!(chars = JS_GetStringCharsZ(cx, str))) {
-            return false;
-        }
         int len = JS_GetStringLength(str);
         int byte_len = (len+1)*sizeof(jschar);
         if (!(*((void**)d) = nsMemory::Alloc(byte_len))) {
             // XXX should report error
             return false;
         }
-        jschar* destchars = *((jschar**)d);
-        memcpy(destchars, chars, byte_len);
-        destchars[len] = 0;
+        mozilla::Range<jschar> destChars(*((jschar**)d), len + 1);
+        if (!JS_CopyStringChars(cx, destChars, str))
+            return false;
+        destChars[len] = 0;
 
         return true;
     }
 
     case nsXPTType::T_UTF8STRING:
     {
-        const jschar* chars;
-        size_t length;
-        JSString* str;
-
         if (s.isNull() || s.isUndefined()) {
             if (useAllocator) {
                 *((const nsACString**)d) = &NullCString();
@@ -625,12 +629,11 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         }
 
         // The JS val is neither null nor void...
-
-        if (!(str = ToString(cx, s))||
-            !(chars = JS_GetStringCharsAndLength(cx, str, &length))) {
+        JSString *str = ToString(cx, s);
+        if (!str)
             return false;
-        }
 
+        size_t length = JS_GetStringLength(str);
         if (!length) {
             if (useAllocator) {
                 *((const nsACString**)d) = &EmptyCString();
@@ -652,7 +655,16 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         } else {
             rs = *((nsCString**)d);
         }
-        CopyUTF16toUTF8(Substring(chars, length), *rs);
+
+        JSFlatString *flat = JS_FlattenString(cx, str);
+        if (!flat)
+            return false;
+
+        size_t utf8Length = JS::GetDeflatedUTF8StringLength(flat);
+        rs->SetLength(utf8Length);
+
+        JS::DeflateStringToUTF8Buffer(flat, mozilla::RangedPtr<char>(rs->BeginWriting(), utf8Length));
+        MOZ_ASSERT(rs->get()[utf8Length] == '\0');
         return true;
     }
 
@@ -729,15 +741,13 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         } else if (iid->Equals(NS_GET_IID(nsIAtom)) && s.isString()) {
             // We're trying to pass a string as an nsIAtom.  Let's atomize!
             JSString* str = s.toString();
-            const char16_t* chars = JS_GetStringCharsZ(cx, str);
-            if (!chars) {
+            nsAutoJSString autoStr;
+            if (!autoStr.init(cx, str)) {
                 if (pErr)
                     *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
                 return false;
             }
-            uint32_t length = JS_GetStringLength(str);
-            nsCOMPtr<nsIAtom> atom =
-                NS_NewAtom(nsDependentSubstring(chars, chars + length));
+            nsCOMPtr<nsIAtom> atom = NS_NewAtom(autoStr);
             atom.forget((nsISupports**)d);
             return true;
         }
@@ -1793,7 +1803,6 @@ XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
 
         case nsXPTType::T_PWSTRING_SIZE_IS:
         {
-            const jschar* chars=nullptr;
             JSString* str;
 
             if (s.isUndefined() || s.isNull()) {
@@ -1825,19 +1834,18 @@ XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
                     *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
                 return false;
             }
-            if (len < count)
-                len = count;
 
-            if (!(chars = JS_GetStringCharsZ(cx, str))) {
-                return false;
-            }
+            len = count;
+
             uint32_t alloc_len = (len + 1) * sizeof(jschar);
             if (!(*((void**)d) = nsMemory::Alloc(alloc_len))) {
                 // XXX should report error
                 return false;
             }
-            memcpy(*((jschar**)d), chars, alloc_len);
-            (*((jschar**)d))[count] = 0;
+            mozilla::Range<jschar> destChars(*((jschar**)d), len + 1);
+            if (!JS_CopyStringChars(cx, destChars, str))
+                return false;
+            destChars[count] = 0;
 
             return true;
         }
