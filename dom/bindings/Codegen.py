@@ -2200,6 +2200,23 @@ class MethodDefiner(PropertyDefiner):
             condition, specData, doIdArrays)
 
 
+def IsCrossOriginWritable(attr, descriptor):
+    """
+    Return whether the IDLAttribute in question is cross-origin writable on the
+    interface represented by descriptor.  This is needed to handle the fact that
+    some, but not all, interfaces implementing URLUtils want a cross-origin
+    writable .href.
+    """
+    crossOriginWritable = attr.getExtendedAttribute("CrossOriginWritable")
+    if not crossOriginWritable:
+        return False
+    if crossOriginWritable == True:
+        return True
+    assert (isinstance(crossOriginWritable, list) and
+            len(crossOriginWritable) == 1)
+    return crossOriginWritable[0] == descriptor.interface.identifier.name
+
+
 class AttrDefiner(PropertyDefiner):
     def __init__(self, descriptor, name, static, unforgeable=False):
         assert not (static and unforgeable)
@@ -2263,7 +2280,7 @@ class AttrDefiner(PropertyDefiner):
             else:
                 if attr.hasLenientThis():
                     accessor = "genericLenientSetter"
-                elif attr.getExtendedAttribute("CrossOriginWritable"):
+                elif IsCrossOriginWritable(attr, self.descriptor):
                     accessor = "genericCrossOriginSetter"
                 elif self.descriptor.needsSpecialGenericOps():
                     accessor = "genericSetter"
@@ -10396,13 +10413,13 @@ class CGDescriptor(CGThing):
                         cgThings.append(CGSpecializedSetter(descriptor, m))
                         if m.hasLenientThis():
                             hasLenientSetter = True
-                        elif m.getExtendedAttribute("CrossOriginWritable"):
+                        elif IsCrossOriginWritable(m, descriptor):
                             crossOriginSetters.add(m.identifier.name)
                         elif descriptor.needsSpecialGenericOps():
                             hasSetter = True
                 elif m.getExtendedAttribute("PutForwards"):
                     cgThings.append(CGSpecializedForwardingSetter(descriptor, m))
-                    if m.getExtendedAttribute("CrossOriginWritable"):
+                    if IsCrossOriginWritable(m, descriptor):
                         crossOriginSetters.add(m.identifier.name)
                     elif descriptor.needsSpecialGenericOps():
                         hasSetter = True
