@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/UniquePtr.h"
+
 #include "GLContext.h"
 #include "ScopedGLHelpers.h"
 
@@ -428,7 +430,7 @@ ScopedGLDrawState::ScopedGLDrawState(GLContext* aGL)
     mGL->GetUIntegerv(LOCAL_GL_CURRENT_PROGRAM, &boundProgram);
     mGL->GetUIntegerv(LOCAL_GL_ARRAY_BUFFER_BINDING, &boundBuffer);
     mGL->GetUIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, &maxAttrib);
-    attrib_enabled = new GLint[maxAttrib];
+    attrib_enabled = MakeUnique<GLint[]>(maxAttrib);
 
     for (unsigned int i = 0; i < maxAttrib; i++) {
         mGL->fGetVertexAttribiv(i, LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED, &attrib_enabled[i]);
