@@ -25,7 +25,6 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/Hal.h"
 #include "mozilla/StaticPtr.h"
-#include "MozMtpServer.h"
 #include "nsAutoPtr.h"
 #include "nsMemory.h"
 #include "nsString.h"
@@ -36,7 +35,6 @@
 #include "VolumeManager.h"
 
 using namespace mozilla::hal;
-USING_MTP_NAMESPACE
 
 /**************************************************************************
 *
@@ -71,7 +69,6 @@ USING_MTP_NAMESPACE
 
 #define ICS_SYS_USB_FUNCTIONS "/sys/devices/virtual/android_usb/android0/functions"
 #define ICS_SYS_UMS_DIRECTORY "/sys/devices/virtual/android_usb/android0/f_mass_storage"
-#define ICS_SYS_MTP_DIRECTORY "/sys/devices/virtual/android_usb/android0/f_mtp"
 #define ICS_SYS_USB_STATE     "/sys/devices/virtual/android_usb/android0/state"
 
 #define USE_DEBUG 0
@@ -232,9 +229,6 @@ public:
     }
   }
 
-  void StartMtpServer();
-  void StopMtpServer();
-
   void UpdateState();
 
   const char* ModeStr(int32_t aMode)
@@ -353,7 +347,6 @@ private:
 };
 
 static StaticRefPtr<AutoMounter> sAutoMounter;
-static StaticRefPtr<MozMtpServer> sMozMtpServer;
 
 /***************************************************************************/
 
@@ -405,25 +398,6 @@ AutoMounterResponseCallback::ResponseReceived(const VolumeCommand* aCommand)
   }
 }
 
-void
-AutoMounter::StartMtpServer()
-{
-  if (sMozMtpServer) {
-    // Mtp Server is already running - nothing to do
-    return;
-  }
-  LOG("Starting MtpServer");
-  sMozMtpServer = new MozMtpServer();
-  sMozMtpServer->Run();
-}
-
-void
-AutoMounter::StopMtpServer()
-{
-  LOG("Stopping MtpServer");
-  sMozMtpServer = nullptr;
-}
-
 /***************************************************************************/
 
 void
@@ -467,23 +441,22 @@ AutoMounter::UpdateState()
 
   bool  umsAvail = false;
   bool  umsEnabled = false;
-  bool  mtpAvail = false;
-  bool  mtpEnabled = false;
 
   if (access(ICS_SYS_USB_FUNCTIONS, F_OK) == 0) {
-    char functionsStr[60];
-    if (!ReadSysFile(ICS_SYS_USB_FUNCTIONS, functionsStr, sizeof(functionsStr))) {
-      ERR("Error reading file '%s': %s", ICS_SYS_USB_FUNCTIONS, strerror(errno));
-      functionsStr[0] = '\0';
-    }
     umsAvail = (access(ICS_SYS_UMS_DIRECTORY, F_OK) == 0);
     if (umsAvail) {
-      umsEnabled = strstr(functionsStr, "mass_storage") != nullptr;
+      char functionsStr[60];
+      if (ReadSysFile(ICS_SYS_USB_FUNCTIONS, functionsStr, sizeof(functionsStr))) {
+        umsEnabled = strstr(functionsStr, "mass_storage") != nullptr;
+      } else {
+        ERR("Error reading file '%s': %s", ICS_SYS_USB_FUNCTIONS, strerror(errno));
+        umsEnabled = false;
+      }
+    } else {
+      umsEnabled = false;
     }
-    mtpAvail = (access(ICS_SYS_MTP_DIRECTORY, F_OK) == 0);
-    if (mtpAvail) {
-      mtpEnabled = strstr(functionsStr, "mtp") != nullptr;
-    }
+  } else {
+    umsAvail = ReadSysFile(GB_SYS_UMS_ENABLE, &umsEnabled);
   }
 
   bool usbCablePluggedIn = IsUsbCablePluggedIn();
@@ -496,19 +469,9 @@ AutoMounter::UpdateState()
     }
   }
 
-  bool tryToShare = (((umsAvail && umsEnabled) || (mtpAvail && mtpEnabled))
-                  && enabled && usbCablePluggedIn);
-  LOG("UpdateState: ums:%d%d mtp:%d%d mode:%d usbCablePluggedIn:%d tryToShare:%d",
-      umsAvail, umsEnabled, mtpAvail, mtpEnabled, mMode, usbCablePluggedIn, tryToShare);
-
-  if (mtpAvail && mtpEnabled) {
-    if (enabled && usbCablePluggedIn) {
-      StartMtpServer();
-    } else {
-      StopMtpServer();
-    }
-    return;
-  }
+  bool tryToShare = (umsAvail && umsEnabled && enabled && usbCablePluggedIn);
+  LOG("UpdateState: umsAvail:%d umsEnabled:%d mode:%d usbCablePluggedIn:%d tryToShare:%d",
+      umsAvail, umsEnabled, mMode, usbCablePluggedIn, tryToShare);
 
   bool filesOpen = false;
   static unsigned filesOpenDelayCount = 0;
@@ -939,9 +902,6 @@ AutoMounterUnmountVolume(const nsCString& aVolumeName)
 void
 ShutdownAutoMounter()
 {
-  if (sAutoMounter) {
-    sAutoMounter->StopMtpServer();
-  }
   sAutoMounterSetting = nullptr;
   sUsbCableObserver = nullptr;
 
