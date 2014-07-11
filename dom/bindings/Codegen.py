@@ -489,10 +489,22 @@ def PrototypeIDAndDepth(descriptor):
     return (prototypeID, depth)
 
 
+def MemberIsUnforgeable(member, descriptor):
+    # Note: "or" and "and" return either their LHS or RHS, not
+    # necessarily booleans.  Make sure to return a boolean from this
+    # method, because callers will compare its return value to
+    # booleans.
+    return bool((member.isAttr() or member.isMethod()) and
+                not member.isStatic() and
+                (member.isUnforgeable() or
+                 descriptor.interface.getExtendedAttribute("Unforgeable")))
+
+
 def UseHolderForUnforgeable(descriptor):
     return (descriptor.concrete and
             descriptor.proxy and
-            any(m for m in descriptor.interface.members if (m.isAttr() or m.isMethod()) and m.isUnforgeable()))
+            any(m for m in descriptor.interface.members
+                if MemberIsUnforgeable(m, descriptor)))
 
 
 def CallOnUnforgeableHolder(descriptor, code, isXrayCheck=None,
@@ -1999,7 +2011,7 @@ class MethodDefiner(PropertyDefiner):
         if descriptor.interface.hasInterfacePrototypeObject() or static:
             methods = [m for m in descriptor.interface.members if
                        m.isMethod() and m.isStatic() == static and
-                       m.isUnforgeable() == unforgeable and
+                       MemberIsUnforgeable(m, descriptor) == unforgeable and
                        not m.isIdentifierLess()]
         else:
             methods = []
@@ -2072,7 +2084,8 @@ class MethodDefiner(PropertyDefiner):
 
         if not static:
             stringifier = descriptor.operations['Stringifier']
-            if stringifier:
+            if (stringifier and
+                unforgeable == MemberIsUnforgeable(stringifier, descriptor)):
                 toStringDesc = {
                     "name": "toString",
                     "nativeName": stringifier.identifier.name,
@@ -2097,6 +2110,18 @@ class MethodDefiner(PropertyDefiner):
                     self.chrome.append(toJSONDesc)
                 else:
                     self.regular.append(toJSONDesc)
+            if (unforgeable and
+                descriptor.interface.getExtendedAttribute("Unforgeable")):
+                # Synthesize our valueOf method
+                self.regular.append({
+                    "name": 'valueOf',
+                    "nativeName": "UnforgeableValueOf",
+                    "methodInfo": False,
+                    "length": 0,
+                    "flags": "JSPROP_ENUMERATE", # readonly/permanent added
+                                                 # automatically.
+                    "condition": MemberCondition(None, None)
+                })
         elif (descriptor.interface.isJSImplemented() and
               descriptor.interface.hasInterfaceObject()):
             self.chrome.append({
@@ -2127,7 +2152,7 @@ class MethodDefiner(PropertyDefiner):
             return m["condition"]
 
         def flags(m):
-            unforgeable = " | JSPROP_PERMANENT" if self.unforgeable else ""
+            unforgeable = " | JSPROP_PERMANENT | JSPROP_READONLY" if self.unforgeable else ""
             return m["flags"] + unforgeable
 
         def specData(m):
@@ -2184,7 +2209,7 @@ class AttrDefiner(PropertyDefiner):
         if descriptor.interface.hasInterfacePrototypeObject() or static:
             attributes = [m for m in descriptor.interface.members if
                           m.isAttr() and m.isStatic() == static and
-                          m.isUnforgeable() == unforgeable]
+                          MemberIsUnforgeable(m, descriptor) == unforgeable]
         else:
             attributes = []
         self.chrome = [m for m in attributes if isChromeOnly(m)]
@@ -2786,6 +2811,11 @@ def InitUnforgeablePropertiesOnObject(descriptor, obj, properties, failureReturn
     """
     unforgeables = []
 
+    if failureReturnValue:
+        failureReturnValue = " " + failureReturnValue
+    else:
+        failureReturnValue = ""
+
     defineUnforgeableAttrs = fill(
         """
         if (!DefineUnforgeableAttributes(aCx, ${obj}, %s)) {
@@ -2793,7 +2823,7 @@ def InitUnforgeablePropertiesOnObject(descriptor, obj, properties, failureReturn
         }
         """,
         obj=obj,
-        rv=" " + failureReturnValue if failureReturnValue else "")
+        rv=failureReturnValue)
     defineUnforgeableMethods = fill(
         """
         if (!DefineUnforgeableMethods(aCx, ${obj}, %s)) {
@@ -2801,7 +2831,7 @@ def InitUnforgeablePropertiesOnObject(descriptor, obj, properties, failureReturn
         }
         """,
         obj=obj,
-        rv=" " + failureReturnValue if failureReturnValue else "")
+        rv=failureReturnValue)
 
     unforgeableMembers = [
         (defineUnforgeableAttrs, properties.unforgeableAttrs),
@@ -2814,6 +2844,19 @@ def InitUnforgeablePropertiesOnObject(descriptor, obj, properties, failureReturn
             unforgeables.append(
                 CGIfWrapper(CGGeneric(template % array.variableName(True)),
                             "nsContentUtils::ThreadsafeIsCallerChrome()"))
+
+    if descriptor.interface.getExtendedAttribute("Unforgeable"):
+        # We do our undefined toJSON here, not as a regular property
+        # because we don't have a concept of value props anywhere.
+        unforgeables.append(CGGeneric(fill(
+            """
+            if (!JS_DefineProperty(aCx, ${obj}, "toJSON", JS::UndefinedHandleValue,
+                                   JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
+              return${rv};
+            }
+            """,
+            obj=obj,
+            rv=failureReturnValue)))
 
     return CGList(unforgeables)
 
