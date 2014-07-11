@@ -15,24 +15,35 @@
 
 [NoInterfaceObject]
 interface URLUtils {
-  [SetterThrows]
   // Bug 824857: no support for stringifier attributes yet.
   //  stringifier attribute DOMString href;
+  [Throws]
            attribute DOMString href;
+  [Throws]
   readonly attribute DOMString origin;
 
+  [Throws]
            attribute DOMString protocol;
+  [Throws]
            attribute DOMString username;
+  [Throws]
            attribute DOMString password;
+  [Throws]
            attribute DOMString host;
+  [Throws]
            attribute DOMString hostname;
+  [Throws]
            attribute DOMString port;
+  [Throws]
            attribute DOMString pathname;
+  [Throws]
            attribute DOMString search;
            attribute URLSearchParams searchParams;
+  [Throws]
            attribute DOMString hash;
 
   // Bug 824857 should remove this.
+  [Throws]
   stringifier;
 };
 
