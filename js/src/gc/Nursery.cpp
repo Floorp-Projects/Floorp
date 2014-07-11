@@ -49,20 +49,27 @@ static int64_t GCReportThreshold = INT64_MAX;
 #endif
 
 bool
-js::Nursery::init()
+js::Nursery::init(uint32_t maxNurseryBytes)
 {
+    /* maxNurseryBytes parameter is rounded down to a multiple of chunk size. */
+    numNurseryChunks_ = maxNurseryBytes >> ChunkShift;
+
+    /* If no chunks are specified then the nursery is permenantly disabled. */
+    if (numNurseryChunks_ == 0)
+        return true;
+
     if (!hugeSlots.init())
         return false;
 
-    void *heap = runtime()->gc.pageAllocator.mapAlignedPages(NurserySize, Alignment);
+    void *heap = runtime()->gc.pageAllocator.mapAlignedPages(nurserySize(), Alignment);
     if (!heap)
         return false;
 
     heapStart_ = uintptr_t(heap);
-    heapEnd_ = heapStart_ + NurserySize;
+    heapEnd_ = heapStart_ + nurserySize();
     currentStart_ = start();
     numActiveChunks_ = 1;
-    JS_POISON(heap, JS_FRESH_NURSERY_PATTERN, NurserySize);
+    JS_POISON(heap, JS_FRESH_NURSERY_PATTERN, nurserySize());
     setCurrentChunk(0);
     updateDecommittedRegion();
 
@@ -79,14 +86,14 @@ js::Nursery::init()
 js::Nursery::~Nursery()
 {
     if (start())
-        runtime()->gc.pageAllocator.unmapPages((void *)start(), NurserySize);
+        runtime()->gc.pageAllocator.unmapPages((void *)start(), nurserySize());
 }
 
 void
 js::Nursery::updateDecommittedRegion()
 {
 #ifndef JS_GC_ZEAL
-    if (numActiveChunks_ < NumNurseryChunks) {
+    if (numActiveChunks_ < numNurseryChunks_) {
         // Bug 994054: madvise on MacOS is too slow to make this
         //             optimization worthwhile.
 # ifndef XP_MACOSX
@@ -140,7 +147,7 @@ js::Nursery::isEmpty() const
 void
 js::Nursery::enterZealMode() {
     if (isEnabled())
-        numActiveChunks_ = NumNurseryChunks;
+        numActiveChunks_ = numNurseryChunks_;
 }
 
 void
@@ -951,15 +958,15 @@ js::Nursery::sweep()
 {
 #ifdef JS_GC_ZEAL
     /* Poison the nursery contents so touching a freed object will crash. */
-    JS_POISON((void *)start(), JS_SWEPT_NURSERY_PATTERN, NurserySize);
-    for (int i = 0; i < NumNurseryChunks; ++i)
+    JS_POISON((void *)start(), JS_SWEPT_NURSERY_PATTERN, nurserySize());
+    for (int i = 0; i < numNurseryChunks_; ++i)
         initChunk(i);
 
     if (runtime()->gcZeal() == ZealGenerationalGCValue) {
-        MOZ_ASSERT(numActiveChunks_ == NumNurseryChunks);
+        MOZ_ASSERT(numActiveChunks_ == numNurseryChunks_);
 
         /* Only reset the alloc point when we are close to the end. */
-        if (currentChunk_ + 1 == NumNurseryChunks)
+        if (currentChunk_ + 1 == numNurseryChunks_)
             setCurrentChunk(0);
     } else
 #endif
@@ -981,9 +988,9 @@ js::Nursery::growAllocableSpace()
 {
 #ifdef JS_GC_ZEAL
     MOZ_ASSERT_IF(runtime()->gcZeal() == ZealGenerationalGCValue,
-                  numActiveChunks_ == NumNurseryChunks);
+                  numActiveChunks_ == numNurseryChunks_);
 #endif
-    numActiveChunks_ = Min(numActiveChunks_ * 2, NumNurseryChunks);
+    numActiveChunks_ = Min(numActiveChunks_ * 2, numNurseryChunks_);
 }
 
 void

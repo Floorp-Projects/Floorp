@@ -102,7 +102,8 @@ template<> struct AbsReturnTypeFixed<int64_t> { typedef uint64_t Type; };
 template<typename T>
 struct AbsReturnType : AbsReturnTypeFixed<T> {};
 
-template<> struct AbsReturnType<char> : EnableIf<char(-1) < char(0), unsigned char> {};
+template<> struct AbsReturnType<char> :
+  EnableIf<char(-1) < char(0), unsigned char> {};
 template<> struct AbsReturnType<signed char> { typedef unsigned char Type; };
 template<> struct AbsReturnType<short> { typedef unsigned short Type; };
 template<> struct AbsReturnType<int> { typedef unsigned int Type; };
@@ -145,7 +146,8 @@ Abs<long double>(const long double aLongDouble)
 
 } // namespace mozilla
 
-#if defined(_WIN32) && (_MSC_VER >= 1300) && (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_X64))
+#if defined(_WIN32) && (_MSC_VER >= 1300) && \
+    (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_X64))
 #  define MOZ_BITSCAN_WINDOWS
 
 #  include <intrin.h>

@@ -1979,6 +1979,23 @@ CacheFileIOManager::WriteInternal(CacheFileHandle *aHandle, int64_t aOffset,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  // Check whether this write would cause critical low disk space.
+  if (aHandle->mFileSize < aOffset + aCount) {
+    int64_t freeSpace = -1;
+    rv = mCacheDirectory->GetDiskSpaceAvailable(&freeSpace);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      LOG(("CacheFileIOManager::WriteInternal() - GetDiskSpaceAvailable() "
+           "failed! [rv=0x%08x]", rv));
+    } else {
+      uint32_t limit = CacheObserver::DiskFreeSpaceHardLimit();
+      if (freeSpace - aOffset - aCount + aHandle->mFileSize < limit) {
+        LOG(("CacheFileIOManager::WriteInternal() - Low free space, refusing "
+             "to write! [freeSpace=%lld, limit=%u]", freeSpace, limit));
+        return NS_ERROR_FILE_DISK_FULL;
+      }
+    }
+  }
+
   // Write invalidates the entry by default
   aHandle->mInvalid = true;
 
@@ -2553,16 +2570,31 @@ CacheFileIOManager::EvictIfOverLimitInternal()
     return NS_OK;
   }
 
-  UpdateSmartCacheSize();
+  int64_t freeSpace;
+  rv = mCacheDirectory->GetDiskSpaceAvailable(&freeSpace);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    freeSpace = -1;
+
+    // Do not change smart size.
+    LOG(("CacheFileIOManager::EvictIfOverLimitInternal() - "
+         "GetDiskSpaceAvailable() failed! [rv=0x%08x]", rv));
+  } else {
+    UpdateSmartCacheSize(freeSpace);
+  }
 
   uint32_t cacheUsage;
   rv = CacheIndex::GetCacheSize(&cacheUsage);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t cacheLimit = CacheObserver::DiskCacheCapacity() >> 10;
-  if (cacheUsage <= cacheLimit) {
-    LOG(("CacheFileIOManager::EvictIfOverLimitInternal() - Cache size under "
-         "limit. [cacheSize=%u, limit=%u]", cacheUsage, cacheLimit));
+  uint32_t freeSpaceLimit = CacheObserver::DiskFreeSpaceSoftLimit();
+
+  if (cacheUsage <= cacheLimit &&
+      (freeSpace == -1 || freeSpace >= freeSpaceLimit)) {
+    LOG(("CacheFileIOManager::EvictIfOverLimitInternal() - Cache size and free "
+         "space in limits. [cacheSize=%ukB, cacheSizeLimit=%ukB, "
+         "freeSpace=%lld, freeSpaceLimit=%u]", cacheUsage, cacheLimit,
+         freeSpace, freeSpaceLimit));
     return NS_OK;
   }
 
@@ -2601,22 +2633,38 @@ CacheFileIOManager::OverLimitEvictionInternal()
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  UpdateSmartCacheSize();
-
   while (true) {
+    int64_t freeSpace = -1;
+    rv = mCacheDirectory->GetDiskSpaceAvailable(&freeSpace);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // Do not change smart size.
+      LOG(("CacheFileIOManager::EvictIfOverLimitInternal() - "
+           "GetDiskSpaceAvailable() failed! [rv=0x%08x]", rv));
+    } else {
+      UpdateSmartCacheSize(freeSpace);
+    }
+
     uint32_t cacheUsage;
     rv = CacheIndex::GetCacheSize(&cacheUsage);
     NS_ENSURE_SUCCESS(rv, rv);
 
     uint32_t cacheLimit = CacheObserver::DiskCacheCapacity() >> 10;
-    if (cacheUsage <= cacheLimit) {
-      LOG(("CacheFileIOManager::OverLimitEvictionInternal() - Cache size under "
+    uint32_t freeSpaceLimit = CacheObserver::DiskFreeSpaceSoftLimit();
+
+    if (cacheUsage > cacheLimit) {
+      LOG(("CacheFileIOManager::OverLimitEvictionInternal() - Cache size over "
            "limit. [cacheSize=%u, limit=%u]", cacheUsage, cacheLimit));
+    } else if (freeSpace != 1 && freeSpace < freeSpaceLimit) {
+      LOG(("CacheFileIOManager::OverLimitEvictionInternal() - Free space under "
+           "limit. [freeSpace=%lld, freeSpaceLimit=%u]", freeSpace,
+           freeSpaceLimit));
+    } else {
+      LOG(("CacheFileIOManager::OverLimitEvictionInternal() - Cache size and "
+           "free space in limits. [cacheSize=%ukB, cacheSizeLimit=%ukB, "
+           "freeSpace=%lld, freeSpaceLimit=%u]", cacheUsage, cacheLimit,
+           freeSpace, freeSpaceLimit));
       return NS_OK;
     }
-
-    LOG(("CacheFileIOManager::OverLimitEvictionInternal() - Cache size over "
-         "limit. [cacheSize=%u, limit=%u]", cacheUsage, cacheLimit));
 
     if (CacheIOThread::YieldAndRerun()) {
       LOG(("CacheFileIOManager::OverLimitEvictionInternal() - Breaking loop "
@@ -3760,7 +3808,7 @@ SmartCacheSize(const uint32_t availKB)
 }
 
 nsresult
-CacheFileIOManager::UpdateSmartCacheSize()
+CacheFileIOManager::UpdateSmartCacheSize(int64_t aFreeSpace)
 {
   MOZ_ASSERT(mIOThread->IsCurrentThread());
 
@@ -3797,18 +3845,9 @@ CacheFileIOManager::UpdateSmartCacheSize()
     return rv;
   }
 
-  int64_t avail;
-  rv = mCacheDirectory->GetDiskSpaceAvailable(&avail);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    // Do not change smart size.
-    LOG(("CacheFileIOManager::UpdateSmartCacheSize() - GetDiskSpaceAvailable() "
-         "failed! [rv=0x%08x]", rv));
-    return rv;
-  }
-
   mLastSmartSizeTime = TimeStamp::NowLoRes();
 
-  uint32_t smartSize = SmartCacheSize(static_cast<uint32_t>(avail / 1024) +
+  uint32_t smartSize = SmartCacheSize(static_cast<uint32_t>(aFreeSpace / 1024) +
                                       cacheUsage);
 
   if (smartSize == (CacheObserver::DiskCacheCapacity() >> 10)) {

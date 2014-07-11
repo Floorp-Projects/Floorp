@@ -477,8 +477,7 @@ public:
   /**
    * Get the ContentSecurityPolicy for a JS context.
    **/
-  static bool GetContentSecurityPolicy(JSContext* aCx,
-                                       nsIContentSecurityPolicy** aCSP);
+  static bool GetContentSecurityPolicy(nsIContentSecurityPolicy** aCSP);
 
   // Returns the subject principal. Guaranteed to return non-null. May only
   // be called when nsContentUtils is initialized.

@@ -17,11 +17,10 @@ gfxMatrix::Reset()
     return *this;
 }
 
-const gfxMatrix&
+bool
 gfxMatrix::Invert()
 {
-    cairo_matrix_invert(CAIRO_MATRIX(this));
-    return *this;
+    return cairo_matrix_invert(CAIRO_MATRIX(this)) == CAIRO_STATUS_SUCCESS;
 }
 
 const gfxMatrix&
@@ -46,7 +45,7 @@ gfxMatrix::Rotate(gfxFloat radians)
 }
 
 const gfxMatrix&
-gfxMatrix::Multiply(const gfxMatrix& m)
+gfxMatrix::operator *= (const gfxMatrix& m)
 {
     cairo_matrix_multiply(CAIRO_MATRIX(this), CAIRO_MATRIX(this), CONST_CAIRO_MATRIX(&m));
     return *this;
@@ -57,6 +56,22 @@ gfxMatrix::PreMultiply(const gfxMatrix& m)
 {
     cairo_matrix_multiply(CAIRO_MATRIX(this), CONST_CAIRO_MATRIX(&m), CAIRO_MATRIX(this));
     return *this;
+}
+
+/* static */ gfxMatrix
+gfxMatrix::Rotation(gfxFloat aAngle)
+{
+    gfxMatrix newMatrix;
+
+    gfxFloat s = sin(aAngle);
+    gfxFloat c = cos(aAngle);
+
+    newMatrix._11 = c;
+    newMatrix._12 = s;
+    newMatrix._21 = -s;
+    newMatrix._22 = c;
+
+    return newMatrix;
 }
 
 gfxPoint
