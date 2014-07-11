@@ -495,9 +495,10 @@ let Impl = {
     // gfxInfo fields are not always available, get what we can.
     let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
     let gfxfields = ["adapterDescription", "adapterVendorID", "adapterDeviceID",
-                     "adapterRAM", "adapterDriver", "adapterDriverVersion",
-                     "adapterDriverDate", "adapterDescription2",
-                     "adapterVendorID2", "adapterDeviceID2", "adapterRAM2",
+                     "adapterSubsysID", "adapterRAM", "adapterDriver",
+                     "adapterDriverVersion", "adapterDriverDate",
+                     "adapterDescription2", "adapterVendorID2",
+                     "adapterDeviceID2", "adapterSubsysID2", "adapterRAM2",
                      "adapterDriver2", "adapterDriverVersion2",
                      "adapterDriverDate2", "isGPU2Active", "D2DEnabled",
                      "DWriteEnabled", "DWriteVersion"
