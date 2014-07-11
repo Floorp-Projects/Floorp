@@ -9649,7 +9649,7 @@ nsGlobalWindow::GetPrivateRoot()
 }
 
 
-nsIDOMLocation*
+nsLocation*
 nsGlobalWindow::GetLocation(ErrorResult& aError)
 {
   FORWARD_TO_INNER_OR_THROW(GetLocation, (aError), aError, nullptr);
