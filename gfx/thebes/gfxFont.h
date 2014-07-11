@@ -179,6 +179,10 @@ struct gfxFontStyle {
 
     int8_t ComputeWeight() const;
 
+    // Adjust this style to simulate sub/superscript (as requested in the
+    // variantSubSuper field) using size and baselineOffset instead.
+    void AdjustForSubSuperscript(int32_t aAppUnitsPerDevPixel);
+
     bool Equals(const gfxFontStyle& other) const {
         return
             (*reinterpret_cast<const uint64_t*>(&size) ==

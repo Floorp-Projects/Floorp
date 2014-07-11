@@ -1529,13 +1529,8 @@ already_AddRefed<gfxFont>
 gfxFcFont::GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel)
 {
     gfxFontStyle style(*GetStyle());
-    gfxFloat subSuperSizeRatio;
-    CalculateSubSuperSizeAndOffset(aAppUnitsPerDevPixel,
-                                   subSuperSizeRatio,
-                                   style.baselineOffset);
-    style.size *= subSuperSizeRatio;
-    style.variantSubSuper = NS_FONT_VARIANT_POSITION_NORMAL;
-    return MakeScaledFont(&style, subSuperSizeRatio);
+    style.AdjustForSubSuperscript(aAppUnitsPerDevPixel);
+    return MakeScaledFont(&style, style.size / GetStyle()->size);
 }
 
 already_AddRefed<gfxFont>
