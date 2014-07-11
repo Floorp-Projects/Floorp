@@ -85,7 +85,7 @@ FFmpegDataDecoder<LIBAV_VER>::Init()
   mCodecContext.get_format = ChoosePixelFormat;
 
   mCodecContext.thread_count = PR_GetNumberOfProcessors();
-  mCodecContext.thread_type = FF_THREAD_FRAME;
+  mCodecContext.thread_type = FF_THREAD_SLICE | FF_THREAD_FRAME;
   mCodecContext.thread_safe_callbacks = false;
 
   mCodecContext.extradata = mExtraData.begin();
