@@ -25,7 +25,7 @@
 
 #include "mozilla/Endian.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/Scoped.h"
+#include "mozilla/UniquePtr.h"
 
 #include "nsCRT.h"
 #include "nsString.h"
@@ -36,8 +36,9 @@
 
 #include "jsfriendapi.h"
 
+using mozilla::MakeUnique;
 using mozilla::PodCopy;
-using mozilla::ScopedDeleteArray;
+using mozilla::UniquePtr;
 
 NS_IMPL_ISUPPORTS(nsBinaryOutputStream,
                   nsIObjectOutputStream,
@@ -846,7 +847,7 @@ nsBinaryInputStream::ReadArrayBuffer(uint32_t aLength,
   }
 
   uint32_t bufSize = std::min<uint32_t>(aLength, 4096);
-  ScopedDeleteArray<char> buf(new char[bufSize]);
+  UniquePtr<char[]> buf = MakeUnique<char[]>(bufSize);
 
   uint32_t remaining = aLength;
   *rLength = 0;
@@ -854,7 +855,7 @@ nsBinaryInputStream::ReadArrayBuffer(uint32_t aLength,
     // Read data into temporary buffer.
     uint32_t bytesRead;
     uint32_t amount = std::min(remaining, bufSize);
-    nsresult rv = Read(buf, amount, &bytesRead);
+    nsresult rv = Read(buf.get(), amount, &bytesRead);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
