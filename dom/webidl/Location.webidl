@@ -13,8 +13,13 @@
 
 [Unforgeable]
 interface Location {
+  [Throws]
   void assign(DOMString url);
+  [Throws]
   void replace(DOMString url);
-  void reload();
+  // XXXbz there is no forceget argument in the spec!  See bug 1037721.
+  [Throws]
+  void reload(optional boolean forceget = false);
 };
-Location implements URLUtils;
+// No support for .searchParams on Location yet.  See bug 1037715.
+Location implements URLUtilsNoSearchParams;

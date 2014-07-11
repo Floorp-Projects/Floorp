@@ -14,7 +14,7 @@
  */
 
 [NoInterfaceObject]
-interface URLUtils {
+interface URLUtilsNoSearchParams {
   // Bug 824857: no support for stringifier attributes yet.
   //  stringifier attribute DOMString href;
   [Throws]
@@ -38,7 +38,7 @@ interface URLUtils {
            attribute DOMString pathname;
   [Throws]
            attribute DOMString search;
-           attribute URLSearchParams searchParams;
+  // searchParams should go here once Location implements it.  See bug 1037715.
   [Throws]
            attribute DOMString hash;
 
@@ -47,3 +47,8 @@ interface URLUtils {
   stringifier;
 };
 
+[NoInterfaceObject]
+interface URLUtils : URLUtilsNoSearchParams
+{
+           attribute URLSearchParams searchParams;
+};

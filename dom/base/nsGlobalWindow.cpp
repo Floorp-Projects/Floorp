@@ -9656,7 +9656,7 @@ nsGlobalWindow::GetLocation(ErrorResult& aError)
 
   nsIDocShell *docShell = GetDocShell();
   if (!mLocation && docShell) {
-    mLocation = new nsLocation(docShell);
+    mLocation = new nsLocation(this, docShell);
   }
   return mLocation;
 }
