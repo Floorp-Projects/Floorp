@@ -3516,7 +3516,7 @@ MacroAssemblerMIPSCompat::branchPtrInNurseryRange(Condition cond, Register ptr, 
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), SecondScratchReg);
     addPtr(ptr, SecondScratchReg);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              SecondScratchReg, Imm32(Nursery::NurserySize), label);
+              SecondScratchReg, Imm32(nursery.nurserySize()), label);
 }
 
 void

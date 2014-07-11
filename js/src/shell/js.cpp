@@ -2893,7 +2893,7 @@ WorkerMain(void *arg)
 {
     WorkerInput *input = (WorkerInput *) arg;
 
-    JSRuntime *rt = JS_NewRuntime(8L * 1024L * 1024L, input->runtime);
+    JSRuntime *rt = JS_NewRuntime(8L * 1024L * 1024L, 2L * 1024L * 1024L, input->runtime);
     if (!rt) {
         js_delete(input);
         return;
@@ -6344,6 +6344,9 @@ main(int argc, char **argv, char **envp)
         || !op.addIntOption('\0', "mips-sim-stop-at", "NUMBER", "Stop the MIPS simulator after the given "
                             "NUMBER of instructions.", -1)
 #endif
+#ifdef JSGC_GENERATIONAL
+        || !op.addIntOption('\0', "nursery-size", "SIZE-MB", "Set the maximum nursery size in MB", 16)
+#endif
     )
     {
         return EXIT_FAILURE;
@@ -6409,8 +6412,13 @@ main(int argc, char **argv, char **envp)
     if (!JS_Init())
         return 1;
 
+    size_t nurseryBytes = JS::DefaultNurseryBytes;
+#ifdef JSGC_GENERATIONAL
+    nurseryBytes = op.getIntOption("nursery-size") * 1024L * 1024L;
+#endif
+
     /* Use the same parameters as the browser in xpcjsruntime.cpp. */
-    rt = JS_NewRuntime(32L * 1024L * 1024L);
+    rt = JS_NewRuntime(32L * 1024L * 1024L, nurseryBytes);
     if (!rt)
         return 1;
 
