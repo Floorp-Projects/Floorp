@@ -15,8 +15,8 @@ GMPVideoi420FrameImpl::GMPVideoi420FrameImpl(GMPVideoHostImpl* aHost)
   mVPlane(aHost),
   mWidth(0),
   mHeight(0),
-  mTimestamp(0ll),
-  mDuration(0ll)
+  mTimestamp(0),
+  mRenderTime_ms(0)
 {
   MOZ_ASSERT(aHost);
 }
@@ -29,7 +29,7 @@ GMPVideoi420FrameImpl::GMPVideoi420FrameImpl(const GMPVideoi420FrameData& aFrame
   mWidth(aFrameData.mWidth()),
   mHeight(aFrameData.mHeight()),
   mTimestamp(aFrameData.mTimestamp()),
-  mDuration(aFrameData.mDuration())
+  mRenderTime_ms(aFrameData.mRenderTime_ms())
 {
   MOZ_ASSERT(aHost);
 }
@@ -47,7 +47,7 @@ GMPVideoi420FrameImpl::InitFrameData(GMPVideoi420FrameData& aFrameData)
   aFrameData.mWidth() = mWidth;
   aFrameData.mHeight() = mHeight;
   aFrameData.mTimestamp() = mTimestamp;
-  aFrameData.mDuration() = mDuration;
+  aFrameData.mRenderTime_ms() = mRenderTime_ms;
   return true;
 }
 
@@ -106,12 +106,12 @@ GMPVideoi420FrameImpl::GetPlane(GMPPlaneType aType) {
   return nullptr;
 }
 
-GMPErr
+GMPVideoErr
 GMPVideoi420FrameImpl::CreateEmptyFrame(int32_t aWidth, int32_t aHeight,
                                         int32_t aStride_y, int32_t aStride_u, int32_t aStride_v)
 {
   if (!CheckDimensions(aWidth, aHeight, aStride_y, aStride_u, aStride_v)) {
-    return GMPGenericErr;
+    return GMPVideoGenericErr;
   }
 
   int32_t size_y = aStride_y * aHeight;
@@ -119,28 +119,28 @@ GMPVideoi420FrameImpl::CreateEmptyFrame(int32_t aWidth, int32_t aHeight,
   int32_t size_u = aStride_u * half_height;
   int32_t size_v = aStride_v * half_height;
 
-  GMPErr err = mYPlane.CreateEmptyPlane(size_y, aStride_y, size_y);
-  if (err != GMPNoErr) {
+  GMPVideoErr err = mYPlane.CreateEmptyPlane(size_y, aStride_y, size_y);
+  if (err != GMPVideoNoErr) {
     return err;
   }
   err = mUPlane.CreateEmptyPlane(size_u, aStride_u, size_u);
-  if (err != GMPNoErr) {
+  if (err != GMPVideoNoErr) {
     return err;
   }
   err = mVPlane.CreateEmptyPlane(size_v, aStride_v, size_v);
-  if (err != GMPNoErr) {
+  if (err != GMPVideoNoErr) {
     return err;
   }
 
   mWidth = aWidth;
   mHeight = aHeight;
-  mTimestamp = 0ll;
-  mDuration = 0ll;
+  mTimestamp = 0;
+  mRenderTime_ms = 0;
 
-  return GMPNoErr;
+  return GMPVideoNoErr;
 }
 
-GMPErr
+GMPVideoErr
 GMPVideoi420FrameImpl::CreateFrame(int32_t aSize_y, const uint8_t* aBuffer_y,
                                    int32_t aSize_u, const uint8_t* aBuffer_u,
                                    int32_t aSize_v, const uint8_t* aBuffer_v,
@@ -152,58 +152,58 @@ GMPVideoi420FrameImpl::CreateFrame(int32_t aSize_y, const uint8_t* aBuffer_y,
   MOZ_ASSERT(aBuffer_v);
 
   if (aSize_y < 1 || aSize_u < 1 || aSize_v < 1) {
-    return GMPGenericErr;
+    return GMPVideoGenericErr;
   }
 
   if (!CheckDimensions(aWidth, aHeight, aStride_y, aStride_u, aStride_v)) {
-    return GMPGenericErr;
+    return GMPVideoGenericErr;
   }
 
-  GMPErr err = mYPlane.Copy(aSize_y, aStride_y, aBuffer_y);
-  if (err != GMPNoErr) {
+  GMPVideoErr err = mYPlane.Copy(aSize_y, aStride_y, aBuffer_y);
+  if (err != GMPVideoNoErr) {
     return err;
   }
   err = mUPlane.Copy(aSize_u, aStride_u, aBuffer_u);
-  if (err != GMPNoErr) {
+  if (err != GMPVideoNoErr) {
     return err;
   }
   err = mVPlane.Copy(aSize_v, aStride_v, aBuffer_v);
-  if (err != GMPNoErr) {
+  if (err != GMPVideoNoErr) {
     return err;
   }
 
   mWidth = aWidth;
   mHeight = aHeight;
 
-  return GMPNoErr;
+  return GMPVideoNoErr;
 }
 
-GMPErr
+GMPVideoErr
 GMPVideoi420FrameImpl::CopyFrame(const GMPVideoi420Frame& aFrame)
 {
   auto& f = static_cast<const GMPVideoi420FrameImpl&>(aFrame);
 
-  GMPErr err = mYPlane.Copy(f.mYPlane);
-  if (err != GMPNoErr) {
+  GMPVideoErr err = mYPlane.Copy(f.mYPlane);
+  if (err != GMPVideoNoErr) {
     return err;
   }
 
   err = mUPlane.Copy(f.mUPlane);
-  if (err != GMPNoErr) {
+  if (err != GMPVideoNoErr) {
     return err;
   }
 
   err = mVPlane.Copy(f.mVPlane);
-  if (err != GMPNoErr) {
+  if (err != GMPVideoNoErr) {
     return err;
   }
 
   mWidth = f.mWidth;
   mHeight = f.mHeight;
   mTimestamp = f.mTimestamp;
-  mDuration = f.mDuration;
+  mRenderTime_ms = f.mRenderTime_ms;
 
-  return GMPNoErr;
+  return GMPVideoNoErr;
 }
 
 void
@@ -216,7 +216,7 @@ GMPVideoi420FrameImpl::SwapFrame(GMPVideoi420Frame* aFrame)
   std::swap(mWidth, f->mWidth);
   std::swap(mHeight, f->mHeight);
   std::swap(mTimestamp, f->mTimestamp);
-  std::swap(mDuration, f->mDuration);
+  std::swap(mRenderTime_ms, f->mRenderTime_ms);
 }
 
 uint8_t*
@@ -259,28 +259,28 @@ GMPVideoi420FrameImpl::Stride(GMPPlaneType aType) const
   return -1;
 }
 
-GMPErr
+GMPVideoErr
 GMPVideoi420FrameImpl::SetWidth(int32_t aWidth)
 {
   if (!CheckDimensions(aWidth, mHeight,
                        mYPlane.Stride(), mUPlane.Stride(),
                        mVPlane.Stride())) {
-    return GMPGenericErr;
+    return GMPVideoGenericErr;
   }
   mWidth = aWidth;
-  return GMPNoErr;
+  return GMPVideoNoErr;
 }
 
-GMPErr
+GMPVideoErr
 GMPVideoi420FrameImpl::SetHeight(int32_t aHeight)
 {
   if (!CheckDimensions(mWidth, aHeight,
                        mYPlane.Stride(), mUPlane.Stride(),
                        mVPlane.Stride())) {
-    return GMPGenericErr;
+    return GMPVideoGenericErr;
   }
   mHeight = aHeight;
-  return GMPNoErr;
+  return GMPVideoNoErr;
 }
 
 int32_t
@@ -296,27 +296,27 @@ GMPVideoi420FrameImpl::Height() const
 }
 
 void
-GMPVideoi420FrameImpl::SetTimestamp(uint64_t aTimestamp)
+GMPVideoi420FrameImpl::SetTimestamp(uint32_t aTimestamp)
 {
   mTimestamp = aTimestamp;
 }
 
-uint64_t
+uint32_t
 GMPVideoi420FrameImpl::Timestamp() const
 {
   return mTimestamp;
 }
 
 void
-GMPVideoi420FrameImpl::SetDuration(uint64_t aDuration)
+GMPVideoi420FrameImpl::SetRenderTime_ms(int64_t aRenderTime_ms)
 {
-  mDuration = aDuration;
+  mRenderTime_ms = aRenderTime_ms;
 }
 
-uint64_t
-GMPVideoi420FrameImpl::Duration() const
+int64_t
+GMPVideoi420FrameImpl::RenderTime_ms() const
 {
-  return mDuration;
+  return mRenderTime_ms;
 }
 
 bool

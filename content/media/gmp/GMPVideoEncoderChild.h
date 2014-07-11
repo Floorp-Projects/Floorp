@@ -18,7 +18,7 @@ namespace gmp {
 class GMPChild;
 
 class GMPVideoEncoderChild : public PGMPVideoEncoderChild,
-                             public GMPVideoEncoderCallback,
+                             public GMPEncoderCallback,
                              public GMPSharedMemManager
 {
 public:
@@ -28,45 +28,24 @@ public:
   void Init(GMPVideoEncoder* aEncoder);
   GMPVideoHostImpl& Host();
 
-  // GMPVideoEncoderCallback
+  // GMPEncoderCallback
   virtual void Encoded(GMPVideoEncodedFrame* aEncodedFrame,
-                       GMPBufferType aBufferType,
-                       const uint8_t* aCodecSpecificInfo,
-                       uint32_t aCodecSpecificInfoLength) MOZ_OVERRIDE;
+                       const GMPCodecSpecificInfo& aCodecSpecificInfo) MOZ_OVERRIDE;
 
   // GMPSharedMemManager
-  virtual void CheckThread();
-  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem)
-  {
-#ifndef SHMEM_ALLOC_IN_CHILD
-    return CallNeedShmem(aSize, aMem);
-#else
-#ifdef GMP_SAFE_SHMEM
-    return AllocShmem(aSize, aType, aMem);
-#else
-    return AllocUnsafeShmem(aSize, aType, aMem);
-#endif
-#endif
-  }
-  virtual void Dealloc(Shmem& aMem)
-  {
-#ifndef SHMEM_ALLOC_IN_CHILD
-    SendParentShmemForPool(aMem);
-#else
-    DeallocShmem(aMem);
-#endif
-  }
+  virtual bool MgrAllocShmem(size_t aSize,
+                             ipc::Shmem::SharedMemory::SharedMemoryType aType,
+                             ipc::Shmem* aMem) MOZ_OVERRIDE;
+  virtual bool MgrDeallocShmem(Shmem& aMem) MOZ_OVERRIDE;
 
 private:
   // PGMPVideoEncoderChild
   virtual bool RecvInitEncode(const GMPVideoCodec& aCodecSettings,
-                              const nsTArray<uint8_t>& aCodecSpecific,
                               const int32_t& aNumberOfCores,
                               const uint32_t& aMaxPayloadSize) MOZ_OVERRIDE;
   virtual bool RecvEncode(const GMPVideoi420FrameData& aInputFrame,
-                          const nsTArray<uint8_t>& aCodecSpecificInfo,
-                          const nsTArray<GMPVideoFrameType>& aFrameTypes) MOZ_OVERRIDE;
-  virtual bool RecvChildShmemForPool(Shmem& aEncodedBuffer) MOZ_OVERRIDE;
+                          const GMPCodecSpecificInfo& aCodecSpecificInfo,
+                          const InfallibleTArray<int>& aFrameTypes) MOZ_OVERRIDE;
   virtual bool RecvSetChannelParameters(const uint32_t& aPacketLoss,
                                         const uint32_t& aRTT) MOZ_OVERRIDE;
   virtual bool RecvSetRates(const uint32_t& aNewBitRate,

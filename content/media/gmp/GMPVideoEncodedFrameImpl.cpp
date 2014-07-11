@@ -14,8 +14,8 @@ namespace gmp {
 GMPVideoEncodedFrameImpl::GMPVideoEncodedFrameImpl(GMPVideoHostImpl* aHost)
 : mEncodedWidth(0),
   mEncodedHeight(0),
-  mTimeStamp(0ll),
-  mDuration(0ll),
+  mTimeStamp(0),
+  mCaptureTime_ms(0),
   mFrameType(kGMPDeltaFrame),
   mSize(0),
   mCompleteFrame(false),
@@ -29,8 +29,8 @@ GMPVideoEncodedFrameImpl::GMPVideoEncodedFrameImpl(const GMPVideoEncodedFrameDat
                                                    GMPVideoHostImpl* aHost)
 : mEncodedWidth(aFrameData.mEncodedWidth()),
   mEncodedHeight(aFrameData.mEncodedHeight()),
-  mTimeStamp(aFrameData.mTimestamp()),
-  mDuration(aFrameData.mDuration()),
+  mTimeStamp(aFrameData.mTimeStamp()),
+  mCaptureTime_ms(aFrameData.mCaptureTime_ms()),
   mFrameType(static_cast<GMPVideoFrameType>(aFrameData.mFrameType())),
   mSize(aFrameData.mSize()),
   mCompleteFrame(aFrameData.mCompleteFrame()),
@@ -47,12 +47,6 @@ GMPVideoEncodedFrameImpl::~GMPVideoEncodedFrameImpl()
   if (mHost) {
     mHost->EncodedFrameDestroyed(this);
   }
-}
-
-const GMPEncryptedBufferData*
-GMPVideoEncodedFrameImpl::GetDecryptionData() const
-{
-  return nullptr;
 }
 
 GMPVideoFrameFormat
@@ -86,8 +80,8 @@ GMPVideoEncodedFrameImpl::RelinquishFrameData(GMPVideoEncodedFrameData& aFrameDa
 {
   aFrameData.mEncodedWidth() = mEncodedWidth;
   aFrameData.mEncodedHeight() = mEncodedHeight;
-  aFrameData.mTimestamp() = mTimeStamp;
-  aFrameData.mDuration() = mDuration;
+  aFrameData.mTimeStamp() = mTimeStamp;
+  aFrameData.mCaptureTime_ms() = mCaptureTime_ms;
   aFrameData.mFrameType() = mFrameType;
   aFrameData.mSize() = mSize;
   aFrameData.mCompleteFrame() = mCompleteFrame;
@@ -105,37 +99,36 @@ void
 GMPVideoEncodedFrameImpl::DestroyBuffer()
 {
   if (mHost && mBuffer.IsWritable()) {
-    mHost->SharedMemMgr()->MgrDeallocShmem(GMPSharedMemManager::kGMPEncodedData, mBuffer);
+    mHost->SharedMemMgr()->MgrDeallocShmem(mBuffer);
   }
   mBuffer = ipc::Shmem();
 }
 
-GMPErr
+GMPVideoErr
 GMPVideoEncodedFrameImpl::CreateEmptyFrame(uint32_t aSize)
 {
-  if (aSize == 0) {
-    DestroyBuffer();
-  } else if (aSize > AllocatedSize()) {
-    DestroyBuffer();
-    if (!mHost->SharedMemMgr()->MgrAllocShmem(GMPSharedMemManager::kGMPEncodedData, aSize,
-                                              ipc::SharedMemory::TYPE_BASIC, &mBuffer) ||
+  DestroyBuffer();
+
+  if (aSize != 0) {
+    if (!mHost->SharedMemMgr()->MgrAllocShmem(aSize, ipc::SharedMemory::TYPE_BASIC, &mBuffer) ||
         !Buffer()) {
-      return GMPAllocErr;
+      return GMPVideoAllocErr;
     }
   }
+
   mSize = aSize;
 
-  return GMPNoErr;
+  return GMPVideoNoErr;
 }
 
-GMPErr
+GMPVideoErr
 GMPVideoEncodedFrameImpl::CopyFrame(const GMPVideoEncodedFrame& aFrame)
 {
   auto& f = static_cast<const GMPVideoEncodedFrameImpl&>(aFrame);
 
   if (f.mSize != 0) {
-    GMPErr err = CreateEmptyFrame(f.mSize);
-    if (err != GMPNoErr) {
+    GMPVideoErr err = CreateEmptyFrame(f.mSize);
+    if (err != GMPVideoNoErr) {
       return err;
     }
     memcpy(Buffer(), f.Buffer(), f.mSize);
@@ -143,13 +136,13 @@ GMPVideoEncodedFrameImpl::CopyFrame(const GMPVideoEncodedFrame& aFrame)
   mEncodedWidth = f.mEncodedWidth;
   mEncodedHeight = f.mEncodedHeight;
   mTimeStamp = f.mTimeStamp;
-  mDuration = f.mDuration;
+  mCaptureTime_ms = f.mCaptureTime_ms;
   mFrameType = f.mFrameType;
-  mSize = f.mSize; // already set...
+  mSize = f.mSize;
   mCompleteFrame = f.mCompleteFrame;
   // Don't copy host, that should have been set properly on object creation via host.
 
-  return GMPNoErr;
+  return GMPVideoNoErr;
 }
 
 void
@@ -177,27 +170,27 @@ GMPVideoEncodedFrameImpl::EncodedHeight()
 }
 
 void
-GMPVideoEncodedFrameImpl::SetTimeStamp(uint64_t aTimeStamp)
+GMPVideoEncodedFrameImpl::SetTimeStamp(uint32_t aTimeStamp)
 {
   mTimeStamp = aTimeStamp;
 }
 
-uint64_t
+uint32_t
 GMPVideoEncodedFrameImpl::TimeStamp()
 {
   return mTimeStamp;
 }
 
 void
-GMPVideoEncodedFrameImpl::SetDuration(uint64_t aDuration)
+GMPVideoEncodedFrameImpl::SetCaptureTime(int64_t aCaptureTime)
 {
-  mDuration = aDuration;
+  mCaptureTime_ms = aCaptureTime;
 }
 
-uint64_t
-GMPVideoEncodedFrameImpl::Duration() const
+int64_t
+GMPVideoEncodedFrameImpl::CaptureTime()
 {
-  return mDuration;
+  return mCaptureTime_ms;
 }
 
 void
@@ -224,8 +217,7 @@ GMPVideoEncodedFrameImpl::SetAllocatedSize(uint32_t aNewSize)
   }
 
   ipc::Shmem new_mem;
-  if (!mHost->SharedMemMgr()->MgrAllocShmem(GMPSharedMemManager::kGMPEncodedData, aNewSize,
-                                            ipc::SharedMemory::TYPE_BASIC, &new_mem) ||
+  if (!mHost->SharedMemMgr()->MgrAllocShmem(aNewSize, ipc::SharedMemory::TYPE_BASIC, &new_mem) ||
       !new_mem.get<uint8_t>()) {
     return;
   }

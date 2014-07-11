@@ -7,42 +7,32 @@ include protocol PGMP;
 include GMPTypes;
 
 using GMPVideoCodec from "gmp-video-codec.h";
-using GMPBufferType from "gmp-video-codec.h";
+using GMPCodecSpecificInfo from "gmp-video-codec.h";
 
 include "GMPMessageUtils.h";
 
 namespace mozilla {
 namespace gmp {
 
-intr protocol PGMPVideoDecoder
+async protocol PGMPVideoDecoder
 {
   manager PGMP;
 child:
-  async InitDecode(GMPVideoCodec aCodecSettings,
-                   uint8_t[] aCodecSpecific,
-                   int32_t aCoreCount);
-  async Decode(GMPVideoEncodedFrameData aInputFrame,
-               bool aMissingFrames,
-               GMPBufferType aBufferType,
-               uint8_t[] aCodecSpecificInfo,
-               int64_t aRenderTimeMs);
-  async Reset();
-  async Drain();
-  async DecodingComplete();
-  async ChildShmemForPool(Shmem aFrameBuffer);
-
+  InitDecode(GMPVideoCodec aCodecSettings,
+             int32_t aCoreCount);
+  Decode(GMPVideoEncodedFrameData aInputFrame,
+         bool aMissingFrames,
+         GMPCodecSpecificInfo aCodecSpecificInfo,
+         int64_t aRenderTimeMs);
+  Reset();
+  Drain();
+  DecodingComplete();
 parent:
-  async __delete__();
-  async Decoded(GMPVideoi420FrameData aDecodedFrame);
-  async ReceivedDecodedReferenceFrame(uint64_t aPictureId);
-  async ReceivedDecodedFrame(uint64_t aPictureId);
-  async InputDataExhausted();
-  async DrainComplete();
-  async ResetComplete();
-  async ParentShmemForPool(Shmem aEncodedBuffer);
-  // MUST be intr - if sync and we create a new Shmem, when the returned
-  // Shmem is received in the Child it will fail to Deserialize
-  intr NeedShmem(uint32_t aFrameBufferSize) returns (Shmem aMem);
+  __delete__();
+  Decoded(GMPVideoi420FrameData aDecodedFrame);
+  ReceivedDecodedReferenceFrame(uint64_t aPictureId);
+  ReceivedDecodedFrame(uint64_t aPictureId);
+  InputDataExhausted();
 };
 
 } // namespace gmp

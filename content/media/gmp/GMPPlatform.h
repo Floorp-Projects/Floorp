@@ -13,8 +13,6 @@
 namespace mozilla {
 namespace gmp {
 
-class GMPChild;
-
 void InitPlatformAPI(GMPPlatformAPI& aPlatformAPI);
 
 class GMPThreadImpl : public GMPThread
