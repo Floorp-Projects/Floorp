@@ -48,7 +48,7 @@ for moz_config_dir in $1; do
   esac
 
   if test -d "$moz_config_dir"; then
-    (cd "$moz_config_dir"; $PYTHON $_topsrcdir/build/subconfigure.py dump "$_CONFIG_SHELL")
+    (cd "$moz_config_dir"; eval $PYTHON $_topsrcdir/build/subconfigure.py dump "$_CONFIG_SHELL" $ac_configure_args)
   else
     mkdir -p "$moz_config_dir"
   fi
