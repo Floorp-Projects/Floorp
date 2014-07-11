@@ -226,6 +226,7 @@ protected:
   ~nsTextStore();
 
   bool Init(ITfThreadMgr* aThreadMgr);
+  void Shutdown();
 
   static void MarkContextAsKeyboardDisabled(ITfContext* aContext);
   static void MarkContextAsEmpty(ITfContext* aContext);
