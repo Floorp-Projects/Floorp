@@ -2793,14 +2793,15 @@ int vcmGetVideoCodecList(int request_type)
 }
 
 /**
- * Get max supported H.264 video packetization mode.
- * @return maximum supported video packetization mode for H.264. Value returned
- * must be 0 or 1. Value 2 is not supported yet.
+ * Get supported H.264 video packetization modes
+ * @return mask of supported video packetization modes for H.264. Value returned
+ * must be 1 to 3 (bit 0 is mode 0, bit 1 is mode 1.
+ * Bit 2 (Mode 2) is not supported yet.
  */
-int vcmGetVideoMaxSupportedPacketizationMode()
+int vcmGetH264SupportedPacketizationModes()
 {
-  // We support mode 1 packetization in webrtc
-  return 1;
+  // We support mode 1 packetization only in webrtc currently
+  return VCM_H264_MODE_1;
 }
 
 /**
