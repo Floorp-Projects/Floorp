@@ -89,6 +89,8 @@ gfxContext::gfxContext(DrawTarget *aTarget, const Point& aDeviceOffset)
   , mDT(aTarget)
   , mOriginalDT(aTarget)
 {
+  MOZ_ASSERT(aTarget, "Don't create a gfxContext without a DrawTarget");
+
   MOZ_COUNT_CTOR(gfxContext);
 
   mStateStack.SetLength(1);
@@ -111,18 +113,16 @@ gfxContext::~gfxContext()
   if (mRefCairo) {
     cairo_destroy(mRefCairo);
   }
-  if (mDT) {
-    for (int i = mStateStack.Length() - 1; i >= 0; i--) {
-      for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
-        mDT->PopClip();
-      }
-
-      if (mStateStack[i].clipWasReset) {
-        break;
-      }
+  for (int i = mStateStack.Length() - 1; i >= 0; i--) {
+    for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
+      mDT->PopClip();
     }
-    mDT->Flush();
+
+    if (mStateStack[i].clipWasReset) {
+      break;
+    }
   }
+  mDT->Flush();
   MOZ_COUNT_DTOR(gfxContext);
 }
 
@@ -1027,9 +1027,6 @@ gfxContext::Mask(gfxASurface *surface, const gfxPoint& offset)
 void
 gfxContext::Mask(SourceSurface *surface, const Point& offset)
 {
-  MOZ_ASSERT(mDT);
-
-
   // We clip here to bind to the mask surface bounds, see above.
   mDT->MaskSurface(GeneralPattern(this),
             surface,
@@ -1314,31 +1311,19 @@ gfxContext::RoundedRectangle(const gfxRect& rect,
 void
 gfxContext::WriteAsPNG(const char* aFile)
 {
-  if (mDT) {
-    gfxUtils::WriteAsPNG(mDT, aFile);
-  } else {
-    NS_WARNING("No DrawTarget found!");
-  }
+  gfxUtils::WriteAsPNG(mDT, aFile);
 }
 
 void 
 gfxContext::DumpAsDataURI()
 {
-  if (mDT) {
-    gfxUtils::DumpAsDataURI(mDT);
-  } else {
-    NS_WARNING("No DrawTarget found!");
-  }
+  gfxUtils::DumpAsDataURI(mDT);
 }
 
 void 
 gfxContext::CopyAsDataURI()
 {
-  if (mDT) {
-    gfxUtils::CopyAsDataURI(mDT);
-  } else {
-    NS_WARNING("No DrawTarget found!");
-  }
+  gfxUtils::CopyAsDataURI(mDT);
 }
 #endif
 
