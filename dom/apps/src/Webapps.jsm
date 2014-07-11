@@ -2552,6 +2552,19 @@ this.DOMApplicationRegistry = {
 
     this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
 
+    if (!aData.isPackage) {
+      this.updateAppHandlers(null, app.manifest, app);
+      if (aInstallSuccessCallback) {
+        try {
+          yield aInstallSuccessCallback(app, app.manifest);
+        } catch (e) {
+          // Ignore exceptions during the local installation of
+          // an app. If it fails, the app will anyway be considered
+          // as not installed because isLaunchable will return false.
+        }
+      }
+    }
+
     // The presence of a requestID means that we have a page to update.
     if (aData.isPackage && aData.apkInstall && !aData.requestID) {
       // Skip directly to onInstallSuccessAck, since there isn't
@@ -2563,13 +2576,6 @@ this.DOMApplicationRegistry = {
       // the installing page about the successful install, after which it'll
       // respond Webapps:Install:Return:Ack, which calls onInstallSuccessAck.
       this.broadcastMessage("Webapps:Install:Return:OK", aData);
-    }
-
-    if (!aData.isPackage) {
-      this.updateAppHandlers(null, app.manifest, app);
-      if (aInstallSuccessCallback) {
-        aInstallSuccessCallback(app, app.manifest);
-      }
     }
 
     Services.obs.notifyObservers(null, "webapps-installed",
@@ -2642,6 +2648,16 @@ this.DOMApplicationRegistry = {
     this.updateDataStore(this.webapps[aId].localId, aNewApp.origin,
                          aNewApp.manifestURL, aManifest);
 
+    if (aInstallSuccessCallback) {
+      try {
+        yield aInstallSuccessCallback(aNewApp, aManifest, zipFile.path);
+      } catch (e) {
+        // Ignore exceptions during the local installation of
+        // an app. If it fails, the app will anyway be considered
+        // as not installed because isLaunchable will return false.
+      }
+    }
+
     this.broadcastMessage("Webapps:UpdateState", {
       app: app,
       manifest: aManifest,
@@ -2655,10 +2671,6 @@ this.DOMApplicationRegistry = {
       eventType: ["downloadsuccess", "downloadapplied"],
       manifestURL: aNewApp.manifestURL
     });
-
-    if (aInstallSuccessCallback) {
-      aInstallSuccessCallback(aNewApp, aManifest, zipFile.path);
-    }
   }),
 
   _nextLocalId: function() {
