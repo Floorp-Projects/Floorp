@@ -9,13 +9,13 @@ include protocol PGMPVideoEncoder;
 namespace mozilla {
 namespace gmp {
 
-intr protocol PGMP
+async protocol PGMP
 {
   manages PGMPVideoDecoder;
   manages PGMPVideoEncoder;
 child:
-  async PGMPVideoDecoder();
-  async PGMPVideoEncoder();
+  PGMPVideoDecoder();
+  PGMPVideoEncoder();
 };
 
 } // namespace gmp

@@ -16,7 +16,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsIFile.h"
-#include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 
 class nsILineInputStream;
 class nsIThread;
@@ -39,7 +38,7 @@ enum GMPState {
 class GMPParent MOZ_FINAL : public PGMPParent
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(GMPParent)
+  NS_INLINE_DECL_REFCOUNTING(GMPParent)
 
   GMPParent();
 

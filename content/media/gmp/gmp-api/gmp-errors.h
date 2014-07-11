@@ -35,16 +35,7 @@
 
 typedef enum {
   GMPNoErr = 0,
-  GMPGenericErr = 1,
-  GMPClosedErr = 2,
-  GMPAllocErr = 3,
-  GMPNotImplementedErr = 4,
-  GMPNotClosedErr = 5,
-  GMPQuotaExceededErr = 6,
-  GMPLastErr // Placeholder, must be last. This enum's values must remain consecutive!
+  GMPGenericErr = 1
 } GMPErr;
-
-#define GMP_SUCCEEDED(x) ((x) == GMPNoErr)
-#define GMP_FAILED(x) ((x) != GMPNoErr)
 
 #endif // GMP_ERRORS_h_

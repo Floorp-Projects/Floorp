@@ -8,10 +8,10 @@ namespace gmp {
 
 struct GMPVideoEncodedFrameData
 {
+  int64_t mCaptureTime_ms;
   uint32_t mEncodedWidth;
   uint32_t mEncodedHeight;
-  uint64_t mTimestamp; // microseconds
-  uint64_t mDuration; // microseconds
+  uint32_t mTimeStamp;
   uint32_t mFrameType;
   uint32_t mSize;
   Shmem mBuffer;
@@ -32,8 +32,8 @@ struct GMPVideoi420FrameData
   GMPPlaneData mVPlane;
   int32_t mWidth;
   int32_t mHeight;
-  uint64_t mTimestamp; // microseconds
-  uint64_t mDuration; // microseconds
+  uint32_t mTimestamp;
+  int64_t mRenderTime_ms;
 };
 
 }
