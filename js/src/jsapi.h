@@ -1783,6 +1783,9 @@ IdentifyStandardInstanceOrPrototype(JSObject *obj);
 extern JS_PUBLIC_API(JSProtoKey)
 IdentifyStandardConstructor(JSObject *obj);
 
+extern JS_PUBLIC_API(void)
+ProtoKeyToId(JSContext *cx, JSProtoKey key, JS::MutableHandleId idp);
+
 } /* namespace JS */
 
 extern JS_PUBLIC_API(JSProtoKey)
