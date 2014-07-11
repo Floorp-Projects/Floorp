@@ -4563,16 +4563,26 @@ js_strcmp(const jschar *lhs, const jschar *rhs)
     }
 }
 
+UniquePtr<char[], JS::FreePolicy>
+js::DuplicateString(js::ThreadSafeContext *cx, const char *s)
+{
+    size_t n = strlen(s) + 1;
+    auto ret = cx->make_pod_array<char>(n);
+    if (!ret)
+        return nullptr;
+    PodCopy(ret.get(), s, n);
+    return ret;
+}
+
 UniquePtr<jschar[], JS::FreePolicy>
 js::DuplicateString(js::ThreadSafeContext *cx, const jschar *s)
 {
-    size_t n = js_strlen(s);
-    auto ret = cx->make_pod_array<jschar>(n + 1);
+    size_t n = js_strlen(s) + 1;
+    auto ret = cx->make_pod_array<jschar>(n);
     if (!ret)
         return ret;
-    js_strncpy(ret.get(), s, n);
-    ret[n] = '\0';
-    return Move(ret);
+    PodCopy(ret.get(), s, n);
+    return ret;
 }
 
 template <typename CharT>

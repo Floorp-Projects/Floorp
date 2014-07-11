@@ -785,9 +785,6 @@ js_ReportValueErrorFlags(JSContext *cx, unsigned flags, const unsigned errorNumb
 
 extern const JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 
-char *
-js_strdup(js::ExclusiveContext *cx, const char *s);
-
 #ifdef JS_THREADSAFE
 # define JS_ASSERT_REQUEST_DEPTH(cx)  JS_ASSERT((cx)->runtime()->requestDepth >= 1)
 #else
