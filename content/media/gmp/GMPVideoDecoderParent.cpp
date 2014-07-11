@@ -72,7 +72,6 @@ GMPVideoDecoderParent::InitDecode(const GMPVideoCodec& aCodecSettings,
 nsresult
 GMPVideoDecoderParent::Decode(GMPVideoEncodedFrame* aInputFrame,
                               bool aMissingFrames,
-                              GMPBufferType aBufferType,
                               const nsTArray<uint8_t>& aCodecSpecificInfo,
                               int64_t aRenderTimeMs)
 {
@@ -100,7 +99,6 @@ GMPVideoDecoderParent::Decode(GMPVideoEncodedFrame* aInputFrame,
 
   if (!SendDecode(frameData,
                   aMissingFrames,
-                  aBufferType,
                   aCodecSpecificInfo,
                   aRenderTimeMs)) {
     return NS_ERROR_FAILURE;

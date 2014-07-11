@@ -203,7 +203,6 @@ GMPVideoEncoderParent::CheckThread()
 
 bool
 GMPVideoEncoderParent::RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame,
-                                   const GMPBufferType& aBufferType,
                                    const nsTArray<uint8_t>& aCodecSpecificInfo)
 {
   if (!mCallback) {
@@ -213,7 +212,7 @@ GMPVideoEncoderParent::RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame
   auto f = new GMPVideoEncodedFrameImpl(aEncodedFrame, &mVideoHost);
 
   // Ignore any return code. It is OK for this to fail without killing the process.
-  mCallback->Encoded(f, aBufferType, aCodecSpecificInfo);
+  mCallback->Encoded(f, aCodecSpecificInfo);
 
   // Return SHM to sender to recycle
   //SendEncodedReturn(aEncodedFrame, aCodecSpecificInfo);

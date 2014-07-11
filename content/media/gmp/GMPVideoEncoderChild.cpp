@@ -40,7 +40,6 @@ GMPVideoEncoderChild::Host()
 
 void
 GMPVideoEncoderChild::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
-                              GMPBufferType aBufferType,
                               const uint8_t* aCodecSpecificInfo,
                               uint32_t aCodecSpecificInfoLength)
 {
@@ -53,7 +52,7 @@ GMPVideoEncoderChild::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
 
   nsTArray<uint8_t> codecSpecific;
   codecSpecific.AppendElements(aCodecSpecificInfo, aCodecSpecificInfoLength);
-  SendEncoded(frameData, aBufferType, codecSpecific);
+  SendEncoded(frameData, codecSpecific);
 
   aEncodedFrame->Destroy();
 }

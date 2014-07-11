@@ -37,7 +37,6 @@ public:
                               int32_t aCoreCount) MOZ_OVERRIDE;
   virtual nsresult Decode(GMPVideoEncodedFrame* aInputFrame,
                           bool aMissingFrames,
-                          GMPBufferType aBufferType,
                           const nsTArray<uint8_t>& aCodecSpecificInfo,
                           int64_t aRenderTimeMs = -1) MOZ_OVERRIDE;
   virtual nsresult Reset() MOZ_OVERRIDE;

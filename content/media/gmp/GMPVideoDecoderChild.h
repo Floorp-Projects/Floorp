@@ -67,7 +67,6 @@ private:
                               const int32_t& aCoreCount) MOZ_OVERRIDE;
   virtual bool RecvDecode(const GMPVideoEncodedFrameData& aInputFrame,
                           const bool& aMissingFrames,
-                          const GMPBufferType& aBufferType,
                           const nsTArray<uint8_t>& aCodecSpecificInfo,
                           const int64_t& aRenderTimeMs) MOZ_OVERRIDE;
   virtual bool RecvChildShmemForPool(Shmem& aFrameBuffer) MOZ_OVERRIDE;

@@ -37,6 +37,7 @@
 #include <stdint.h>
 #include "gmp-decryption.h"
 #include "gmp-video-frame.h"
+#include "gmp-video-codec.h"
 
 enum GMPVideoFrameType
 {
@@ -86,6 +87,9 @@ public:
   virtual bool     CompleteFrame() = 0;
   virtual const uint8_t* Buffer() const = 0;
   virtual uint8_t*       Buffer() = 0;
+  virtual GMPBufferType  BufferType() const = 0;
+  virtual void     SetBufferType(GMPBufferType aBufferType) = 0;
+
   // Get data describing how this frame is encrypted, or nullptr if the
   // frame is not encrypted.
   virtual const GMPEncryptedBufferData* GetDecryptionData() const = 0;
