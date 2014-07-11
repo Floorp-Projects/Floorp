@@ -40,13 +40,8 @@ nsresult
 MediaEngineTabVideoSource::StartRunnable::Run()
 {
   mVideoSource->Draw();
-  nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(mVideoSource->mWindow);
-  if (privateDOMWindow) {
-    privateDOMWindow->GetChromeEventHandler()->AddEventListener(NS_LITERAL_STRING("MozAfterPaint"), mVideoSource, false);
-  } else {
-    mVideoSource->mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    mVideoSource->mTimer->InitWithCallback(mVideoSource, mVideoSource->mTimePerFrame, nsITimer:: TYPE_REPEATING_SLACK);
-  }
+  mVideoSource->mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  mVideoSource->mTimer->InitWithCallback(mVideoSource, mVideoSource->mTimePerFrame, nsITimer:: TYPE_REPEATING_SLACK);
   mVideoSource->mTabSource->NotifyStreamStart(mVideoSource->mWindow);
   return NS_OK;
 }
@@ -55,9 +50,6 @@ nsresult
 MediaEngineTabVideoSource::StopRunnable::Run()
 {
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(mVideoSource->mWindow);
-  if (privateDOMWindow && privateDOMWindow->GetChromeEventHandler()) {
-    privateDOMWindow->GetChromeEventHandler()->RemoveEventListener(NS_LITERAL_STRING("MozAfterPaint"), mVideoSource, false);
-  }
 
   if (mVideoSource->mTimer) {
     mVideoSource->mTimer->Cancel();
