@@ -7,13 +7,13 @@ let pairs = [
   ["javascript:", ""],
   ["javascript:1+1", "1+1"],
   ["javascript:document.domain", "document.domain"],
-  ["data:text/html,<body>hi</body>", "text/html,<body>hi</body>"],
+  ["data:text/html,<body>hi</body>", "data:text/html,<body>hi</body>"],
   // Nested things get confusing because some things don't parse as URIs:
   ["javascript:javascript:alert('hi!')", "alert('hi!')"],
-  ["data:data:text/html,<body>hi</body>", "text/html,<body>hi</body>"],
+  ["data:data:text/html,<body>hi</body>", "data:data:text/html,<body>hi</body>"],
   ["javascript:data:javascript:alert('hi!')", "data:javascript:alert('hi!')"],
-  ["javascript:data:text/html,javascript:alert('hi!')", "text/html,javascript:alert('hi!')"],
-  ["data:data:text/html,javascript:alert('hi!')", "text/html,javascript:alert('hi!')"],
+  ["javascript:data:text/html,javascript:alert('hi!')", "data:text/html,javascript:alert('hi!')"],
+  ["data:data:text/html,javascript:alert('hi!')", "data:data:text/html,javascript:alert('hi!')"],
 ];
 
 let clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);

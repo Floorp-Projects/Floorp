@@ -293,6 +293,7 @@ this.MobileIdentityManager = {
   },
 
   getCertificate: function(aSessionToken, aPublicKey) {
+    log.debug("getCertificate");
     if (this.certificates[aSessionToken] &&
         this.certificates[aSessionToken].validUntil > this.client.hawk.now()) {
       return Promise.resolve(this.certificates[aSessionToken].cert);
@@ -308,6 +309,7 @@ this.MobileIdentityManager = {
                      aPublicKey)
     .then(
       (signedCert) => {
+        log.debug("Got signed certificate");
         this.certificates[aSessionToken] = {
           cert: signedCert.cert,
           validUntil: validUntil
@@ -355,6 +357,25 @@ this.MobileIdentityManager = {
       return;
     }
     this.doVerification();
+  },
+
+  /*********************************************************
+   * Result helpers
+   *********************************************************/
+  success: function(aPromiseId, aResult) {
+    let mm = this.messageManagers[aPromiseId];
+    mm.sendAsyncMessage("MobileId:GetAssertion:Return:OK", {
+      promiseId: aPromiseId,
+      result: aResult
+    });
+  },
+
+  error: function(aPromiseId, aError) {
+    let mm = this.messageManagers[aPromiseId];
+    mm.sendAsyncMessage("MobileId:GetAssertion:Return:KO", {
+      promiseId: aPromiseId,
+      error: aError
+    });
   },
 
   /*********************************************************
@@ -565,6 +586,7 @@ this.MobileIdentityManager = {
     return this.ui.startFlow(aManifestURL, phoneInfoArray)
     .then(
       (result) => {
+        log.debug("startFlow result ${} ", result);
         if (!result ||
             (!result.phoneNumber && (result.serviceId === undefined))) {
           return Promise.reject(ERROR_INTERNAL_INVALID_PROMPT_RESULT);
@@ -576,7 +598,9 @@ this.MobileIdentityManager = {
         // If the user selected one of the existing SIM cards we have to check
         // that we either have the MSISDN for that SIM or we can do a silent
         // verification that does not require us to have the MSISDN in advance.
-        if (result.serviceId !== undefined) {
+        // result.serviceId can be "0".
+        if (result.serviceId !== undefined &&
+            result.serviceId !== null) {
           let icc = this.iccInfo[result.serviceId];
           log.debug("icc ${}", icc);
           if (!icc || !icc.msisdn && !icc.canDoSilentVerification) {
@@ -774,8 +798,21 @@ this.MobileIdentityManager = {
 
     let uri = Services.io.newURI(aPrincipal.origin, null, null);
     let principal = securityManager.getAppCodebasePrincipal(
-      uri, aPrincipal.appid, aPrincipal.isInBrowserElement);
+      uri, aPrincipal.appId, aPrincipal.isInBrowserElement);
     let manifestURL = appsService.getManifestURLByLocalId(aPrincipal.appId);
+
+    let permission = permissionManager.testPermissionFromPrincipal(
+      principal,
+      MOBILEID_PERM
+    );
+
+    if (permission == Ci.nsIPermissionManager.DENY_ACTION ||
+        permission == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
+      this.error(aPromiseId, ERROR_PERMISSION_DENIED);
+      return;
+    }
+
+    let _creds;
 
     // First of all we look if we already have credentials for this origin.
     // If we don't have credentials it means that it is the first time that
@@ -790,9 +827,11 @@ this.MobileIdentityManager = {
           return;
         }
 
+        _creds = creds;
+
         // Even if we already have credentials for this origin, the consumer
         // of the API might want to force the identity selection dialog.
-        if (aOptions.forceSelection) {
+        if (aOptions.forceSelection || aOptions.refreshCredentials) {
           return this.promptAndVerify(principal, manifestURL, creds)
           .then(
             (newCreds) => {
@@ -855,15 +894,8 @@ this.MobileIdentityManager = {
         // If we've just prompted the user in the previous step, the permission
         // is already granted and stored so we just progress the credentials.
         if (creds) {
-          let permission = permissionManager.testPermissionFromPrincipal(
-            principal,
-            MOBILEID_PERM
-          );
           if (permission == Ci.nsIPermissionManager.ALLOW_ACTION) {
             return creds;
-          } else if (permission == Ci.nsIPermissionManager.DENY_ACTION ||
-                     permission == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
-            return Promise.reject(ERROR_PERMISSION_DENIED);
           }
           return this.promptAndVerify(principal, manifestURL, creds);
         }
@@ -901,25 +933,31 @@ this.MobileIdentityManager = {
 
         this.ui.verified(decodedPayload.verifiedMSISDN);
 
-        let mm = this.messageManagers[aPromiseId];
-        mm.sendAsyncMessage("MobileId:GetAssertion:Return:OK", {
-          promiseId: aPromiseId,
-          result: assertion
-        });
+        this.success(aPromiseId, assertion);
       }
     )
     .then(
       null,
       (error) => {
-        log.error("getMobileIdAssertion rejected with " + error);
+        log.error("getMobileIdAssertion rejected with ${}", error);
+
+        // If we got an invalid token error means that the credentials that
+        // we have are not valid anymore and so we need to refresh them. We
+        // do that removing the stored credentials and starting over. We also
+        // make sure that we do this only once.
+        if (error === ERROR_INVALID_AUTH_TOKEN &&
+            !aOptions.refreshCredentials) {
+          log.debug("Need to get new credentials");
+          aOptions.refreshCredentials = true;
+          _creds && this.credStore.delete(_creds.msisdn);
+          this.getMobileIdAssertion(aPrincipal, aPromiseId, aOptions);
+          return;
+        }
+
         // Notify the error to the UI.
         this.ui.error(error);
 
-        let mm = this.messageManagers[aPromiseId];
-        mm.sendAsyncMessage("MobileId:GetAssertion:Return:KO", {
-          promiseId: aPromiseId,
-          error: error
-        });
+        this.error(aPromiseId, error);
       }
     );
   },
