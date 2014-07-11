@@ -73,6 +73,8 @@ IsJSXraySupported(JSProtoKey key)
 {
     if (IsTypedArrayKey(key))
         return true;
+    if (IsErrorObjectKey(key))
+        return true;
     switch (key) {
       case JSProto_Date:
       case JSProto_Object:
