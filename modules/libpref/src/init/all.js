@@ -2747,8 +2747,11 @@ pref("network.autodial-helper.enabled", true);
 pref("intl.keyboard.per_window_layout", false);
 
 #ifdef NS_ENABLE_TSF
-// Enable/Disable TSF support
+// Enable/Disable TSF support on Vista or later.
 pref("intl.tsf.enable", false);
+// Force enable TSF even on WinXP or WinServer 2003.
+// Be aware, TSF framework on prior to Vista is not enough stable.
+pref("intl.tsf.force_enable", false);
 
 // Support IMEs implemented with IMM in TSF mode.
 pref("intl.tsf.support_imm", true);
