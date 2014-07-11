@@ -18,7 +18,7 @@ interface nsIUrlListManagerCallback : nsISupports {
 };
 
 
-[scriptable, uuid(653afdc4-ad4e-4ee0-8375-c576e85ebc40)]
+[scriptable, uuid(5d5ed98f-72cd-46b6-a9fe-76418adfdfeb)]
 interface nsIUrlListManager : nsISupports
 {
     /**
@@ -49,6 +49,11 @@ interface nsIUrlListManager : nsISupports
      * Turn off update checking for a table.
      */
     void disableUpdate(in ACString tableName);
+
+    /**
+     * Toggle update checking, if necessary.
+     */
+    void maybeToggleUpdateChecking();
 
     /**
      * Lookup a key.  Should not raise exceptions.  Calls the callback
