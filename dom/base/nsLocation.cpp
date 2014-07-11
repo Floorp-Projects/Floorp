@@ -32,6 +32,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsNullPrincipal.h"
 #include "ScriptSettings.h"
+#include "mozilla/dom/LocationBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -60,6 +61,7 @@ nsLocation::nsLocation(nsPIDOMWindow* aWindow, nsIDocShell *aDocShell)
 {
   MOZ_ASSERT(aDocShell);
   MOZ_ASSERT(mInnerWindow->IsInnerWindow());
+  SetIsDOMBinding();
 
   mDocShell = do_GetWeakReference(aDocShell);
 }
@@ -1030,4 +1032,10 @@ nsLocation::CallerSubsumes()
   nsresult rv = nsContentUtils::SubjectPrincipal()->SubsumesConsideringDomain(sop->GetPrincipal(), &subsumes);
   NS_ENSURE_SUCCESS(rv, false);
   return subsumes;
+}
+
+JSObject*
+nsLocation::WrapObject(JSContext* aCx)
+{
+  return LocationBinding::Wrap(aCx, this);
 }

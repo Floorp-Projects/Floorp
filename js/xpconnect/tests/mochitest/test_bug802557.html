@@ -35,12 +35,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=802557
       // [getter, description, locationObj, bound]
       gGetters = [[ location.toString, 'toString from LW' ],
                   [ gLoc.toString, 'toString from XLW' ],
-                  [ Location.prototype.toString, 'toString from Location.prototype' ],
-                  [ iWin.Location.prototype.toString, 'toString from iWin.Location.prototype' ],
                   [ Object.__lookupGetter__.call(location, 'href'), 'href getter from LW' ],
                   [ Object.__lookupGetter__.call(gLoc, 'href'), 'href getter from XLW' ],
-                  [ Object.getOwnPropertyDescriptor(Location.prototype, 'href').get, 'href getter from Location.prototype' ],
-                  [ Object.getOwnPropertyDescriptor(iWin.Location.prototype, 'href').get, 'href getter from iWin.Location.prototype' ],
+                  [ Object.getOwnPropertyDescriptor(location, 'href').get, 'href getter from location' ],
+                  [ Object.getOwnPropertyDescriptor(gLoc, 'href').get, 'href getter from iWin.location' ],
                   [ function() { return this + ''; }, 'implicit conversion via [[DefaultValue]]', /* doMessageCheck = */ true ]];
       gGetters.forEach(function(item) {
         try {
@@ -71,6 +69,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=802557
         var f = gTestFunctions[fun];
         checkThrows(f, "calling " + fun);
       }
+
+      // Verify that URL.prototype.toString can't be applied to Location
+      var threw = false;
+      try {
+        URL.prototype.toString.call(location);
+      } catch (e) {
+        threw = true;
+      }
+      ok(threw,
+         "Should not be able to use URL.prototype.toString on a Location instance");
+  
+      // Verify that URL.prototype.href getter can't be applied to Location
+      threw = false;
+      var reachedTest = false;
+      try {
+        var get = Object.getOwnPropertyDescriptor(URL.prototype, "href").get;
+        is(typeof(get), "function", "Should have an href getter on URL.prototype");
+        var reachedTest = true;
+        get.call(location);
+      } catch (e) {
+        threw = true;
+      }
+      ok(reachedTest,
+         "Should not be able to find URL.prototype.href getter");
+      ok(threw,
+         "Should not be able to use URL.prototype.href getter on a Location instance");
       SimpleTest.finish();
     }
   }
