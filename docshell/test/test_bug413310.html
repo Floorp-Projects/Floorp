@@ -33,7 +33,7 @@ var textContent;
 
 SimpleTest.waitForExplicitFinish();
 
-addLoadEvent(function() { setTimeout(doNextStep, 0); });
+addLoadEvent(doNextStep);
 
 function doNextStep() {
   ++step;
