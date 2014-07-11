@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Preferences.h"
+#include "mozilla/UniquePtr.h"
 
 #include "SharedSurfaceGralloc.h"
 
@@ -221,7 +222,7 @@ SharedSurface_Gralloc::Fence()
     // work.  glReadPixels seems to, though.
     if (gfxPrefs::GrallocFenceWithReadPixels()) {
         mGL->MakeCurrent();
-        ScopedDeleteArray<char> buf(new char[4]);
+        UniquePtr<char[]> buf = MakeUnique<char>(4);
         mGL->fReadPixels(0, 0, 1, 1, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, buf);
     }
 }
