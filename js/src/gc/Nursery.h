@@ -86,25 +86,27 @@ class RelocationOverlay
 class Nursery
 {
   public:
-    static const int NumNurseryChunks = 16;
-    static const int LastNurseryChunk = NumNurseryChunks - 1;
     static const size_t Alignment = gc::ChunkSize;
     static const size_t ChunkShift = gc::ChunkShift;
-    static const size_t NurserySize = gc::ChunkSize * NumNurseryChunks;
 
     explicit Nursery(JSRuntime *rt)
       : runtime_(rt),
         position_(0),
-        heapStart_(0),
-        heapEnd_(0),
         currentStart_(0),
         currentEnd_(0),
+        heapStart_(0),
+        heapEnd_(0),
         currentChunk_(0),
-        numActiveChunks_(0)
+        numActiveChunks_(0),
+        numNurseryChunks_(0)
     {}
     ~Nursery();
 
-    bool init();
+    bool init(uint32_t numNurseryChunks);
+
+    bool exists() const { return numNurseryChunks_ != 0; }
+    size_t numChunks() const { return numNurseryChunks_; }
+    size_t nurserySize() const { return numNurseryChunks_ << ChunkShift; }
 
     void enable();
     void disable();
@@ -170,7 +172,7 @@ class Nursery
         return numActiveChunks_ * gc::ChunkSize;
     }
     size_t sizeOfHeapDecommitted() const {
-        return (NumNurseryChunks - numActiveChunks_) * gc::ChunkSize;
+        return (numNurseryChunks_ - numActiveChunks_) * gc::ChunkSize;
     }
     size_t sizeOfHugeSlots(mozilla::MallocSizeOf mallocSizeOf) const {
         size_t total = 0;
@@ -204,21 +206,24 @@ class Nursery
     /* Pointer to the first unallocated byte in the nursery. */
     uintptr_t position_;
 
-    /* Pointer to first and last address of the total nursery allocation. */
-    uintptr_t heapStart_;
-    uintptr_t heapEnd_;
-
     /* Pointer to the logical start of the Nursery. */
     uintptr_t currentStart_;
 
     /* Pointer to the last byte of space in the current chunk. */
     uintptr_t currentEnd_;
 
+    /* Pointer to first and last address of the total nursery allocation. */
+    uintptr_t heapStart_;
+    uintptr_t heapEnd_;
+
     /* The index of the chunk that is currently being allocated from. */
     int currentChunk_;
 
     /* The index after the last chunk that we will allocate from. */
     int numActiveChunks_;
+
+    /* Number of chunks allocated for the nursery. */
+    int numNurseryChunks_;
 
     /*
      * The set of externally malloced slots potentially kept live by objects
@@ -243,7 +248,7 @@ class Nursery
     static_assert(sizeof(NurseryChunkLayout) == gc::ChunkSize,
                   "Nursery chunk size must match gc::Chunk size.");
     NurseryChunkLayout &chunk(int index) const {
-        JS_ASSERT(index < NumNurseryChunks);
+        JS_ASSERT(index < numNurseryChunks_);
         JS_ASSERT(start());
         return reinterpret_cast<NurseryChunkLayout *>(start())[index];
     }
@@ -256,7 +261,7 @@ class Nursery
     }
 
     MOZ_ALWAYS_INLINE void setCurrentChunk(int chunkno) {
-        JS_ASSERT(chunkno < NumNurseryChunks);
+        JS_ASSERT(chunkno < numNurseryChunks_);
         JS_ASSERT(chunkno < numActiveChunks_);
         currentChunk_ = chunkno;
         position_ = chunk(chunkno).start();

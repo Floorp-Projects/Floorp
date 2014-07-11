@@ -1264,7 +1264,9 @@ extern JS_PUBLIC_API(void)
 JS_ShutDown(void);
 
 extern JS_PUBLIC_API(JSRuntime *)
-JS_NewRuntime(uint32_t maxbytes, JSRuntime *parentRuntime = nullptr);
+JS_NewRuntime(uint32_t maxbytes,
+              uint32_t maxNurseryBytes = JS::DefaultNurseryBytes,
+              JSRuntime *parentRuntime = nullptr);
 
 extern JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt);

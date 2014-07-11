@@ -4573,7 +4573,7 @@ MacroAssemblerARMCompat::branchPtrInNurseryRange(Condition cond, Register ptr, R
     ma_mov(Imm32(startChunk), secondScratchReg_);
     as_rsb(secondScratchReg_, secondScratchReg_, lsr(ptr, Nursery::ChunkShift));
     branch32(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-              secondScratchReg_, Imm32(Nursery::NumNurseryChunks), label);
+              secondScratchReg_, Imm32(nursery.numChunks()), label);
 }
 
 void
