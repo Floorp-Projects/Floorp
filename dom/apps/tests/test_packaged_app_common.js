@@ -57,13 +57,17 @@ var PackagedTestHelper = (function PackagedTestHelper() {
     finish();
   }
 
-  function setAppVersion(aVersion, aCb, aDontUpdatePackage) {
+  function setAppVersion(aVersion, aCb, aDontUpdatePackage, aAllowCancel) {
     var xhr = new XMLHttpRequest();
     var dontUpdate = "";
+    var allowCancel = "";
     if (aDontUpdatePackage) {
       dontUpdate = "&dontUpdatePackage=1";
     }
-    var url = gSJS + "?setVersion=" + aVersion + dontUpdate;
+    if (aAllowCancel) {
+      allowCancel= "&allowCancel=1";
+    }
+    var url = gSJS + "?setVersion=" + aVersion + dontUpdate + allowCancel;
     xhr.addEventListener("load", function() {
                            is(xhr.responseText, "OK", "setAppVersion OK");
                            aCb();
