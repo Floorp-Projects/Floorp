@@ -244,7 +244,7 @@ class DMCli(object):
 
     def install(self, args):
         basename = os.path.basename(args.file)
-        app_path_on_device = posixpath.join(self.dm.getDeviceRoot(),
+        app_path_on_device = posixpath.join(self.dm.deviceRoot,
                                             basename)
         self.dm.pushFile(args.file, app_path_on_device)
         self.dm.installApp(app_path_on_device)
