@@ -113,7 +113,7 @@
                             accesskey="&translation.options.preferences.accesskey;"/>
               <xul:menuitem class="translation-attribution subviewbutton panel-subview-footer"
                             oncommand="document.getBindingParent(this).openProviderAttribution();">
-                <xul:label>Übersetzungen von</xul:label>
+                <xul:label anonid="beforeLogo"/>
                 <xul:image src="chrome://browser/content/microsoft-translator-attribution.png"
                            aria-label="Microsoft Translator"/>
               </xul:menuitem>
@@ -296,6 +296,9 @@
             item = this._getAnonElt("neverForSite");
             item.disabled =
               perms.testExactPermission(uri, "translate") == perms.DENY_ACTION;
+
+            this._getAnonElt("beforeLogo").textContent =
+              Translation.getAttributionString();
           ]]>
         </body>
       </method>

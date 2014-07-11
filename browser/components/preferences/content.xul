@@ -149,7 +149,7 @@
                         label="&translateWebPages.label;." accesskey="&translateWebPages.accesskey;"
                         onsyncfrompreference="return gContentPane.updateButtons('translateButton',
                                               'browser.translation.detectLanguage');"/>
-              <label>Übersetzungen von</label>
+              <label id="translationAttributionBeforeLogo"/>
               <image id="translationAttributionImage" aria-label="Microsoft Translator"
                      onclick="gContentPane.openTranslationProviderAttribution()"
                      src="chrome://browser/content/microsoft-translator-attribution.png"/>
