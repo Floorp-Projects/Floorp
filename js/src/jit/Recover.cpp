@@ -829,6 +829,35 @@ MMathFunction::writeRecoverData(CompactBufferWriter &writer) const
 }
 
 bool
+MStringSplit::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_StringSplit));
+    return true;
+}
+
+RStringSplit::RStringSplit(CompactBufferReader &reader)
+{}
+
+bool
+RStringSplit::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedString str(cx, iter.read().toString());
+    RootedString sep(cx, iter.read().toString());
+    RootedTypeObject typeObj(cx, iter.read().toObject().type());
+
+    RootedValue result(cx);
+
+    JSObject *res = str_split_string(cx, typeObj, str, sep);
+    if (!res)
+        return false;
+
+    result.setObject(*res);
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MNewObject::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
