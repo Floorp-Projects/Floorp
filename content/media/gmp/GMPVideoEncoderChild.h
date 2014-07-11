@@ -18,7 +18,7 @@ namespace gmp {
 class GMPChild;
 
 class GMPVideoEncoderChild : public PGMPVideoEncoderChild,
-                             public GMPEncoderCallback,
+                             public GMPVideoEncoderCallback,
                              public GMPSharedMemManager
 {
 public:
@@ -28,7 +28,7 @@ public:
   void Init(GMPVideoEncoder* aEncoder);
   GMPVideoHostImpl& Host();
 
-  // GMPEncoderCallback
+  // GMPVideoEncoderCallback
   virtual void Encoded(GMPVideoEncodedFrame* aEncodedFrame,
                        const GMPCodecSpecificInfo& aCodecSpecificInfo) MOZ_OVERRIDE;
 
@@ -58,11 +58,12 @@ public:
 private:
   // PGMPVideoEncoderChild
   virtual bool RecvInitEncode(const GMPVideoCodec& aCodecSettings,
+                              const nsTArray<uint8_t>& aCodecSpecific,
                               const int32_t& aNumberOfCores,
                               const uint32_t& aMaxPayloadSize) MOZ_OVERRIDE;
   virtual bool RecvEncode(const GMPVideoi420FrameData& aInputFrame,
                           const GMPCodecSpecificInfo& aCodecSpecificInfo,
-                          const InfallibleTArray<int>& aFrameTypes) MOZ_OVERRIDE;
+                          const nsTArray<GMPVideoFrameType>& aFrameTypes) MOZ_OVERRIDE;
   virtual bool RecvChildShmemForPool(Shmem& aEncodedBuffer) MOZ_OVERRIDE;
   virtual bool RecvSetChannelParameters(const uint32_t& aPacketLoss,
                                         const uint32_t& aRTT) MOZ_OVERRIDE;

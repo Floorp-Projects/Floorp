@@ -183,7 +183,7 @@ NS_IMETHODIMP
 GeckoMediaPluginService::GetGMPVideoDecoder(nsTArray<nsCString>* aTags,
                                             const nsAString& aOrigin,
                                             GMPVideoHost** aOutVideoHost,
-                                            GMPVideoDecoder** aGMPVD)
+                                            GMPVideoDecoderProxy** aGMPVD)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
   NS_ENSURE_ARG(aTags && aTags->Length() > 0);
@@ -217,7 +217,7 @@ NS_IMETHODIMP
 GeckoMediaPluginService::GetGMPVideoEncoder(nsTArray<nsCString>* aTags,
                                             const nsAString& aOrigin,
                                             GMPVideoHost** aOutVideoHost,
-                                            GMPVideoEncoder** aGMPVE)
+                                            GMPVideoEncoderProxy** aGMPVE)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
   NS_ENSURE_ARG(aTags && aTags->Length() > 0);

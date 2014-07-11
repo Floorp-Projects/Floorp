@@ -73,21 +73,21 @@ GMPPlaneImpl::InitPlaneData(GMPPlaneData& aPlaneData)
   return true;
 }
 
-GMPVideoErr
+GMPErr
 GMPPlaneImpl::MaybeResize(int32_t aNewSize) {
   if (aNewSize <= AllocatedSize()) {
-    return GMPVideoNoErr;
+    return GMPNoErr;
   }
 
   if (!mHost) {
-    return GMPVideoGenericErr;
+    return GMPGenericErr;
   }
 
   ipc::Shmem new_mem;
   if (!mHost->SharedMemMgr()->MgrAllocShmem(GMPSharedMemManager::kGMPFrameData, aNewSize,
                                             ipc::SharedMemory::TYPE_BASIC, &new_mem) ||
       !new_mem.get<uint8_t>()) {
-    return GMPVideoAllocErr;
+    return GMPAllocErr;
   }
 
   if (mBuffer.IsReadable()) {
@@ -98,7 +98,7 @@ GMPPlaneImpl::MaybeResize(int32_t aNewSize) {
 
   mBuffer = new_mem;
 
-  return GMPVideoNoErr;
+  return GMPNoErr;
 }
 
 void
@@ -110,31 +110,31 @@ GMPPlaneImpl::DestroyBuffer()
   mBuffer = ipc::Shmem();
 }
 
-GMPVideoErr
+GMPErr
 GMPPlaneImpl::CreateEmptyPlane(int32_t aAllocatedSize, int32_t aStride, int32_t aPlaneSize)
 {
   if (aAllocatedSize < 1 || aStride < 1 || aPlaneSize < 1) {
-    return GMPVideoGenericErr;
+    return GMPGenericErr;
   }
 
-  GMPVideoErr err = MaybeResize(aAllocatedSize);
-  if (err != GMPVideoNoErr) {
+  GMPErr err = MaybeResize(aAllocatedSize);
+  if (err != GMPNoErr) {
     return err;
   }
 
   mSize = aPlaneSize;
   mStride = aStride;
 
-  return GMPVideoNoErr;
+  return GMPNoErr;
 }
 
-GMPVideoErr
+GMPErr
 GMPPlaneImpl::Copy(const GMPPlane& aPlane)
 {
   auto& planeimpl = static_cast<const GMPPlaneImpl&>(aPlane);
 
-  GMPVideoErr err = MaybeResize(planeimpl.mSize);
-  if (err != GMPVideoNoErr) {
+  GMPErr err = MaybeResize(planeimpl.mSize);
+  if (err != GMPNoErr) {
     return err;
   }
 
@@ -145,14 +145,14 @@ GMPPlaneImpl::Copy(const GMPPlane& aPlane)
   mSize = planeimpl.mSize;
   mStride = planeimpl.mStride;
 
-  return GMPVideoNoErr;
+  return GMPNoErr;
 }
 
-GMPVideoErr
+GMPErr
 GMPPlaneImpl::Copy(int32_t aSize, int32_t aStride, const uint8_t* aBuffer)
 {
-  GMPVideoErr err = MaybeResize(aSize);
-  if (err != GMPVideoNoErr) {
+  GMPErr err = MaybeResize(aSize);
+  if (err != GMPNoErr) {
     return err;
   }
 
@@ -163,7 +163,7 @@ GMPPlaneImpl::Copy(int32_t aSize, int32_t aStride, const uint8_t* aBuffer)
   mSize = aSize;
   mStride = aStride;
 
-  return GMPVideoNoErr;
+  return GMPNoErr;
 }
 
 void
