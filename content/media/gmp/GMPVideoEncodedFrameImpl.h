@@ -89,6 +89,8 @@ public:
   virtual bool     CompleteFrame() MOZ_OVERRIDE;
   virtual const uint8_t* Buffer() const MOZ_OVERRIDE;
   virtual uint8_t* Buffer() MOZ_OVERRIDE;
+  virtual GMPBufferType BufferType() const MOZ_OVERRIDE;
+  virtual void     SetBufferType(GMPBufferType aBufferType) MOZ_OVERRIDE;
   virtual const    GMPEncryptedBufferData* GetDecryptionData() const MOZ_OVERRIDE;
 
 private:
@@ -103,6 +105,7 @@ private:
   bool     mCompleteFrame;
   GMPVideoHostImpl* mHost;
   ipc::Shmem mBuffer;
+  GMPBufferType mBufferType;
 };
 
 } // namespace gmp

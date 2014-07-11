@@ -30,7 +30,6 @@ public:
 
   // GMPVideoEncoderCallback
   virtual void Encoded(GMPVideoEncodedFrame* aEncodedFrame,
-                       GMPBufferType aBufferType,
                        const uint8_t* aCodecSpecificInfo,
                        uint32_t aCodecSpecificInfoLength) MOZ_OVERRIDE;
 
