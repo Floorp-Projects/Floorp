@@ -4,7 +4,7 @@
 'use strict';
 
 /* globals log, is, ok, runTests, toggleNFC, runNextTest,
-   SpecialPowers, nfc, enableRE0 */
+   SpecialPowers, nfc */
 
 const MARIONETTE_TIMEOUT = 30000;
 const MARIONETTE_HEAD_JS = 'head.js';
@@ -50,7 +50,7 @@ function testWithTargetNoSessionToken() {
 function testWithSessionTokenWithTarget() {
   log('testWithSessionTokenWithTarget');
   toggleNFC(true)
-  .then(enableRE0)
+  .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0))
   .then(registerOnpeerready)
   .then(() => fireCheckP2PReg(MANIFEST_URL))
   .then((result) => {
@@ -69,7 +69,7 @@ function testWithSessionTokenWithTarget() {
 function testWithSessionTokenNoTarget() {
   log('testWithSessionTokenNoTarget');
   toggleNFC(true)
-  .then(enableRE0)
+  .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0))
   .then(() => fireCheckP2PReg(MANIFEST_URL))
   .then((result) => {
     is(result, false,
@@ -87,7 +87,7 @@ function testWithSessionTokenNoTarget() {
 function testWithSessionTokenWrongTarget() {
   log('testWithSessionTokenWrongTarget');
   toggleNFC(true)
-  .then(enableRE0)
+  .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0))
   .then(registerOnpeerready)
   .then(() => fireCheckP2PReg(FAKE_MANIFEST_URL))
   .then((result) => {
