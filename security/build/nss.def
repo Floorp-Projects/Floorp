@@ -652,4 +652,5 @@ VFY_CreateContext
 VFY_DestroyContext
 VFY_End
 VFY_Update
+VFY_VerifyDataDirect
 VFY_VerifyDataWithAlgorithmID

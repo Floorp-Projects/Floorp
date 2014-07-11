@@ -90,7 +90,7 @@ private:
     return SECFailure;
   }
 
-  SECStatus VerifySignedData(const CERTSignedData& signedData,
+  SECStatus VerifySignedData(const SignedDataWithSignature& signedData,
                              const SECItem& subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
