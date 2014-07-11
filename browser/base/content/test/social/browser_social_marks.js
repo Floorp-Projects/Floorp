@@ -280,6 +280,56 @@ var tests = {
     });
   },
 
+  testMarkMicrodata: function(next) {
+    let provider = Social._getProviderFromOrigin(manifest2.origin);
+    let port = provider.getWorkerPort();
+    let target, testTab;
+
+    // browser_share tests microdata on the full page, this is testing a
+    // specific target element.
+    let expecting = JSON.stringify({
+      "url": "https://example.com/browser/browser/base/content/test/social/microdata.html",
+      "microdata": {
+        "items": [{
+            "types": ["http://schema.org/UserComments"],
+            "properties": {
+              "url": ["https://example.com/browser/browser/base/content/test/social/microdata.html#c2"],
+              "creator": [{
+                  "types": ["http://schema.org/Person"],
+                  "properties": {
+                    "name": ["Charlotte"]
+                  }
+                }
+              ],
+              "commentTime": ["2013-08-29"]
+            }
+          }
+        ]
+      }
+    });
+
+    port.onmessage = function (e) {
+      let topic = e.data.topic;
+      switch (topic) {
+        case "got-share-data-message":
+          is(JSON.stringify(e.data.result), expecting, "microdata data ok");
+          gBrowser.removeTab(testTab);
+          port.close();
+          next();
+          break;
+      }
+    }
+    port.postMessage({topic: "test-init"});
+
+    let url = "https://example.com/browser/browser/base/content/test/social/microdata.html"
+    addTab(url, function(tab) {
+      testTab = tab;
+      let doc = tab.linkedBrowser.contentDocument;
+      target = doc.getElementById("test-comment");
+      SocialMarks.markLink(manifest2.origin, url, target);
+    });
+  },
+
   testButtonOnDisable: function(next) {
     // enable the provider now
     let provider = Social._getProviderFromOrigin(manifest2.origin);

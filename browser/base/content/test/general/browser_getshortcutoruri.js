@@ -11,9 +11,10 @@ function getPostDataString(aIS) {
   return dataLines[dataLines.length-1];
 }
 
-function keywordResult(aURL, aPostData) {
+function keywordResult(aURL, aPostData, aIsUnsafe) {
   this.url = aURL;
   this.postData = aPostData;
+  this.isUnsafe = aIsUnsafe;
 }
 
 function keyWordData() {}
@@ -52,20 +53,20 @@ var testData = [
    new keywordResult("http://bmget-nosearch/", null)],
 
   [new searchKeywordData("searchget", "http://searchget/?search={searchTerms}", null, "foo4"),
-   new keywordResult("http://searchget/?search=foo4", null)],
+   new keywordResult("http://searchget/?search=foo4", null, true)],
 
   [new searchKeywordData("searchpost", "http://searchpost/", "search={searchTerms}", "foo5"),
-   new keywordResult("http://searchpost/", "search=foo5")],
+   new keywordResult("http://searchpost/", "search=foo5", true)],
 
   [new searchKeywordData("searchpostget", "http://searchpostget/?search1={searchTerms}", "search2={searchTerms}", "foo6"),
-   new keywordResult("http://searchpostget/?search1=foo6", "search2=foo6")],
+   new keywordResult("http://searchpostget/?search1=foo6", "search2=foo6", true)],
 
   // Bookmark keywords that don't take parameters should not be activated if a
   // parameter is passed (bug 420328).
   [new bmKeywordData("bmget-noparam", "http://bmget-noparam/", null, "foo7"),
-   new keywordResult(null, null)],
+   new keywordResult(null, null, true)],
   [new bmKeywordData("bmpost-noparam", "http://bmpost-noparam/", "not_a=param", "foo8"),
-   new keywordResult(null, null)],
+   new keywordResult(null, null, true)],
 
   // Test escaping (%s = escaped, %S = raw)
   // UTF-8 default
@@ -87,7 +88,7 @@ var testData = [
   // getShortcutOrURIAndPostData for non-keywords (setupKeywords only adds keywords for
   // bmKeywordData objects)
   [{keyword: "http://gavinsharp.com"},
-   new keywordResult(null, null)]
+   new keywordResult(null, null, true)]
 ];
 
 function test() {
@@ -108,6 +109,7 @@ function test() {
       let expected = result.url || query;
       is(returnedData.url, expected, "got correct URL for " + data.keyword);
       is(getPostDataString(returnedData.postData), result.postData, "got correct postData for " + data.keyword);
+      is(returnedData.mayInheritPrincipal, !result.isUnsafe, "got correct mayInheritPrincipal for " + data.keyword);
     }
     cleanupKeywords();
   }).then(finish);

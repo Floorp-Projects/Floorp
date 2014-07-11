@@ -147,6 +147,7 @@
 
       <method name="loadPanel">
         <parameter name="pageData"/>
+        <parameter name="target"/>
         <body><![CDATA[
         let provider = this.provider;
         let panel = this.panel;
@@ -157,7 +158,13 @@
           panel.appendChild(this.content);
 
         let URLTemplate = provider.markURL;
-        this.pageData = pageData || OpenGraphBuilder.getData(gBrowser);
+        pageData = pageData || OpenGraphBuilder.getData(gBrowser);
+        // if this is a share of a selected item, get any microdata
+        if (!pageData.microdata && target) {
+          pageData.microdata = OpenGraphBuilder.getMicrodata(gBrowser, target);
+        }
+        this.pageData = pageData;
+
         let endpoint = OpenGraphBuilder.generateEndpointURL(URLTemplate, this.pageData);
 
         // setup listeners
@@ -248,6 +255,7 @@
 
       <method name="markLink">
         <parameter name="aUrl"/>
+        <parameter name="aTarget"/>
         <body><![CDATA[
         if (!aUrl) {
           this.markCurrentPage(true);
@@ -259,7 +267,7 @@
         // link, etc. inside the page. We also "update" the iframe to the
         // previous url when it is closed.
         this.content.setAttribute("src", "about:blank");
-        this.loadPanel({ url: aUrl });
+        this.loadPanel({ url: aUrl }, aTarget);
         this.openPanel(true);
         ]]></body>
       </method>

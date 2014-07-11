@@ -36,7 +36,8 @@ let MetricsChecker = {
       showOriginal: day.get("showOriginalContent") || 0,
       detectedLanguageChangedBefore: day.get("detectedLanguageChangedBefore") || 0,
       detectedLanguageChangeAfter: day.get("detectedLanguageChangedAfter") || 0,
-      targetLanguageChanged: day.get("targetLanguageChanged") || 0
+      targetLanguageChanged: day.get("targetLanguageChanged") || 0,
+      autoRejectedOffers: day.get("autoRejectedTranslationOffer") || 0
     };
     this._metricsTime = metricsTime;
   }),
@@ -157,6 +158,19 @@ add_task(function* test_language_change() {
     detectedLanguageChangeAfter: 8,
     targetLanguageChanged: 12
   });
+});
+
+add_task(function* test_never_offer_translation() {
+  Services.prefs.setCharPref("browser.translation.neverForLanguages", "fr");
+
+  let tab = yield offerTranslatationFor("<h1>Hallo Welt!</h1>", "fr");
+
+  yield MetricsChecker.checkAdditions({
+    autoRejectedOffers: 1,
+  });
+
+  gBrowser.removeTab(tab);
+  Services.prefs.clearUserPref("browser.translation.neverForLanguages")
 });
 
 function getInfobarElement(browser, anonid) {
