@@ -7,8 +7,23 @@
 #define GMPMessageUtils_h_
 
 #include "gmp-video-codec.h"
+#include "gmp-video-frame-encoded.h"
 
 namespace IPC {
+
+template <>
+struct ParamTraits<GMPErr>
+: public ContiguousEnumSerializer<GMPErr,
+                                  GMPNoErr,
+                                  GMPLastErr>
+{};
+
+template <>
+struct ParamTraits<GMPVideoFrameType>
+: public ContiguousEnumSerializer<GMPVideoFrameType,
+                                  kGMPKeyFrame,
+                                  kGMPSkipFrame>
+{};
 
 template <>
 struct ParamTraits<GMPVideoCodecComplexity>
@@ -39,57 +54,11 @@ struct ParamTraits<GMPVideoCodecMode>
 {};
 
 template <>
-struct ParamTraits<GMPVideoCodecVP8>
-{
-  typedef GMPVideoCodecVP8 paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, aParam.mPictureLossIndicationOn);
-    WriteParam(aMsg, aParam.mFeedbackModeOn);
-    WriteParam(aMsg, aParam.mComplexity);
-    WriteParam(aMsg, aParam.mResilience);
-    WriteParam(aMsg, aParam.mNumberOfTemporalLayers);
-    WriteParam(aMsg, aParam.mDenoisingOn);
-    WriteParam(aMsg, aParam.mErrorConcealmentOn);
-    WriteParam(aMsg, aParam.mAutomaticResizeOn);
-    WriteParam(aMsg, aParam.mFrameDroppingOn);
-    WriteParam(aMsg, aParam.mKeyFrameInterval);
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    if (ReadParam(aMsg, aIter, &(aResult->mPictureLossIndicationOn)) &&
-        ReadParam(aMsg, aIter, &(aResult->mFeedbackModeOn)) &&
-        ReadParam(aMsg, aIter, &(aResult->mComplexity)) &&
-        ReadParam(aMsg, aIter, &(aResult->mResilience)) &&
-        ReadParam(aMsg, aIter, &(aResult->mNumberOfTemporalLayers)) &&
-        ReadParam(aMsg, aIter, &(aResult->mDenoisingOn)) &&
-        ReadParam(aMsg, aIter, &(aResult->mErrorConcealmentOn)) &&
-        ReadParam(aMsg, aIter, &(aResult->mAutomaticResizeOn)) &&
-        ReadParam(aMsg, aIter, &(aResult->mFrameDroppingOn)) &&
-        ReadParam(aMsg, aIter, &(aResult->mKeyFrameInterval))) {
-      return true;
-    }
-
-    return false;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-    aLog->append(StringPrintf(L"[%d, %d, %d, %d, %u, %d, %d, %d, %d, %d]",
-                              aParam.mPictureLossIndicationOn,
-                              aParam.mFeedbackModeOn,
-                              aParam.mComplexity,
-                              aParam.mResilience,
-                              aParam.mNumberOfTemporalLayers,
-                              aParam.mDenoisingOn,
-                              aParam.mErrorConcealmentOn,
-                              aParam.mAutomaticResizeOn,
-                              aParam.mFrameDroppingOn,
-                              aParam.mKeyFrameInterval));
-  }
-};
+struct ParamTraits<GMPBufferType>
+: public ContiguousEnumSerializer<GMPBufferType,
+                                  GMP_BufferSingle,
+                                  GMP_BufferInvalid>
+{};
 
 template <>
 struct ParamTraits<GMPSimulcastStream>
@@ -136,6 +105,7 @@ struct ParamTraits<GMPVideoCodec>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
+    WriteParam(aMsg, aParam.mGMPApiVersion);
     WriteParam(aMsg, aParam.mCodecType);
     WriteParam(aMsg, nsAutoCString(aParam.mPLName));
     WriteParam(aMsg, aParam.mPLType);
@@ -145,11 +115,8 @@ struct ParamTraits<GMPVideoCodec>
     WriteParam(aMsg, aParam.mMaxBitrate);
     WriteParam(aMsg, aParam.mMinBitrate);
     WriteParam(aMsg, aParam.mMaxFramerate);
-    if (aParam.mCodecType == kGMPVideoCodecVP8) {
-      WriteParam(aMsg, aParam.mCodecSpecific.mVP8);
-    } else {
-      MOZ_ASSERT(false, "Serializing unknown codec type!");
-    }
+    WriteParam(aMsg, aParam.mFrameDroppingOn);
+    WriteParam(aMsg, aParam.mKeyFrameInterval);
     WriteParam(aMsg, aParam.mQPMax);
     WriteParam(aMsg, aParam.mNumberOfSimulcastStreams);
     for (uint32_t i = 0; i < aParam.mNumberOfSimulcastStreams; i++) {
@@ -160,6 +127,11 @@ struct ParamTraits<GMPVideoCodec>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
+    // NOTE: make sure this matches any versions supported
+    if (!ReadParam(aMsg, aIter, &(aResult->mGMPApiVersion)) ||
+      aResult->mGMPApiVersion != kGMPVersion33) {
+        return false;
+    }
     if (!ReadParam(aMsg, aIter, &(aResult->mCodecType))) {
       return false;
     }
@@ -178,16 +150,9 @@ struct ParamTraits<GMPVideoCodec>
         !ReadParam(aMsg, aIter, &(aResult->mStartBitrate)) ||
         !ReadParam(aMsg, aIter, &(aResult->mMaxBitrate)) ||
         !ReadParam(aMsg, aIter, &(aResult->mMinBitrate)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mMaxFramerate))) {
-      return false;
-    }
-
-    if (aResult->mCodecType == kGMPVideoCodecVP8) {
-      if (!ReadParam(aMsg, aIter, &(aResult->mCodecSpecific.mVP8))) {
-        return false;
-      }
-    } else {
-      MOZ_ASSERT(false, "De-serializing unknown codec type!");
+        !ReadParam(aMsg, aIter, &(aResult->mMaxFramerate)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mFrameDroppingOn)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mKeyFrameInterval))) {
       return false;
     }
 
@@ -223,104 +188,6 @@ struct ParamTraits<GMPVideoCodec>
                               codecName,
                               aParam.mWidth,
                               aParam.mHeight));
-  }
-};
-
-template <>
-struct ParamTraits<GMPCodecSpecificInfoVP8>
-{
-  typedef GMPCodecSpecificInfoVP8 paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, aParam.mHasReceivedSLI);
-    WriteParam(aMsg, aParam.mPictureIdSLI);
-    WriteParam(aMsg, aParam.mHasReceivedRPSI);
-    WriteParam(aMsg, aParam.mPictureIdRPSI);
-    WriteParam(aMsg, aParam.mPictureId);
-    WriteParam(aMsg, aParam.mNonReference);
-    WriteParam(aMsg, aParam.mSimulcastIdx);
-    WriteParam(aMsg, aParam.mTemporalIdx);
-    WriteParam(aMsg, aParam.mLayerSync);
-    WriteParam(aMsg, aParam.mTL0PicIdx);
-    WriteParam(aMsg, aParam.mKeyIdx);
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    if (ReadParam(aMsg, aIter, &(aResult->mHasReceivedSLI)) &&
-        ReadParam(aMsg, aIter, &(aResult->mPictureIdSLI)) &&
-        ReadParam(aMsg, aIter, &(aResult->mHasReceivedRPSI)) &&
-        ReadParam(aMsg, aIter, &(aResult->mPictureIdRPSI)) &&
-        ReadParam(aMsg, aIter, &(aResult->mPictureId)) &&
-        ReadParam(aMsg, aIter, &(aResult->mNonReference)) &&
-        ReadParam(aMsg, aIter, &(aResult->mSimulcastIdx)) &&
-        ReadParam(aMsg, aIter, &(aResult->mTemporalIdx)) &&
-        ReadParam(aMsg, aIter, &(aResult->mLayerSync)) &&
-        ReadParam(aMsg, aIter, &(aResult->mTL0PicIdx)) &&
-        ReadParam(aMsg, aIter, &(aResult->mKeyIdx))) {
-      return true;
-    }
-    return false;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-    aLog->append(StringPrintf(L"[%d, %u, %d, %u, %d, %d, %u, %u, %d, %d, %d]",
-                              aParam.mHasReceivedSLI,
-                              aParam.mPictureIdSLI,
-                              aParam.mHasReceivedRPSI,
-                              aParam.mPictureIdRPSI,
-                              aParam.mPictureId,
-                              aParam.mNonReference,
-                              aParam.mSimulcastIdx,
-                              aParam.mTemporalIdx,
-                              aParam.mLayerSync,
-                              aParam.mTL0PicIdx,
-                              aParam.mKeyIdx));
-  }
-};
-
-template <>
-struct ParamTraits<GMPCodecSpecificInfo>
-{
-  typedef GMPCodecSpecificInfo paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, aParam.mCodecType);
-    if (aParam.mCodecType == kGMPVideoCodecVP8) {
-      WriteParam(aMsg, aParam.mCodecSpecific.mVP8);
-    } else {
-      MOZ_ASSERT(false, "Serializing unknown codec type!");
-    }
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    if (!ReadParam(aMsg, aIter, &(aResult->mCodecType))) {
-      return false;
-    }
-
-    if (aResult->mCodecType == kGMPVideoCodecVP8) {
-      if (!ReadParam(aMsg, aIter, &(aResult->mCodecSpecific.mVP8))) {
-        return false;
-      }
-    } else {
-      MOZ_ASSERT(false, "De-serializing unknown codec type!");
-      return false;
-    }
-
-    return true;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-    const char* codecName = nullptr;
-    if (aParam.mCodecType == kGMPVideoCodecVP8) {
-      codecName = "VP8";
-    }
-    aLog->append(StringPrintf(L"[%s]", codecName));
   }
 };
 

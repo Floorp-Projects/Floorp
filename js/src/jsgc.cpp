@@ -1266,7 +1266,7 @@ GCRuntime::initZeal()
 static const int64_t JIT_SCRIPT_RELEASE_TYPES_INTERVAL = 60 * 1000 * 1000;
 
 bool
-GCRuntime::init(uint32_t maxbytes)
+GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
 {
 #ifdef JS_THREADSAFE
     lock = PR_NewLock();
@@ -1295,11 +1295,17 @@ GCRuntime::init(uint32_t maxbytes)
 #endif
 
 #ifdef JSGC_GENERATIONAL
-    if (!nursery.init())
+    if (!nursery.init(maxNurseryBytes))
         return false;
 
-    if (!storeBuffer.enable())
-        return false;
+    if (!nursery.isEnabled()) {
+        JS_ASSERT(nursery.nurserySize() == 0);
+        ++rt->gc.generationalDisabled;
+    } else {
+        JS_ASSERT(nursery.nurserySize() > 0);
+        if (!storeBuffer.enable())
+            return false;
+    }
 #endif
 
 #ifdef JS_GC_ZEAL

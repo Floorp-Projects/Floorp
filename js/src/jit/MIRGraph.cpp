@@ -1076,7 +1076,7 @@ MBasicBlock::getSuccessorIndex(MBasicBlock *block) const
         if (getSuccessor(i) == block)
             return i;
     }
-    MOZ_ASSUME_UNREACHABLE("Invalid successor");
+    MOZ_CRASH("Invalid successor");
 }
 
 void
@@ -1108,7 +1108,7 @@ MBasicBlock::replacePredecessor(MBasicBlock *old, MBasicBlock *split)
         }
     }
 
-    MOZ_ASSUME_UNREACHABLE("predecessor was not found");
+    MOZ_CRASH("predecessor was not found");
 }
 
 void
@@ -1148,7 +1148,7 @@ MBasicBlock::removePredecessor(MBasicBlock *pred)
         return;
     }
 
-    MOZ_ASSUME_UNREACHABLE("predecessor was not found");
+    MOZ_CRASH("predecessor was not found");
 }
 
 void

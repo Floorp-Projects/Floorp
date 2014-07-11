@@ -13,6 +13,7 @@
 #include "Layers.h"
 #include "SharedThreadPool.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/TimeRanges.h"
 
 using mozilla::layers::Image;
 using mozilla::layers::LayerManager;
@@ -548,6 +549,25 @@ MP4Reader::Seek(int64_t aTime,
   if (mDemuxer->HasValidAudio()) {
     mDemuxer->SeekAudio(
       mQueuedVideoSample ? mQueuedVideoSample->composition_timestamp : aTime);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+MP4Reader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
+{
+  nsTArray<MediaByteRange> ranges;
+  if (NS_FAILED(mDecoder->GetResource()->GetCachedRanges(ranges))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsTArray<Interval<Microseconds>> timeRanges;
+  mDemuxer->ConvertByteRangesToTime(ranges, &timeRanges);
+
+  for (size_t i = 0; i < timeRanges.Length(); i++) {
+    aBuffered->Add((timeRanges[i].start - aStartTime) / 1000000.0,
+                   (timeRanges[i].end - aStartTime) / 1000000.0);
   }
 
   return NS_OK;

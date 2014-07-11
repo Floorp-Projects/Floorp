@@ -21,7 +21,6 @@ public:
   NS_DECL_NSIICCLISTENER
 
   IccListener(IccManager* aIccManager, uint32_t aClientId);
-  ~IccListener();
 
   void
   Shutdown();
@@ -31,6 +30,9 @@ public:
   {
     return mIcc;
   }
+
+private:
+  ~IccListener();
 
 private:
   uint32_t mClientId;

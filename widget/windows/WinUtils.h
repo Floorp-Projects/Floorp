@@ -26,6 +26,43 @@
 
 #include "mozilla/Attributes.h"
 
+/**
+ * NS_INLINE_DECL_IUNKNOWN_REFCOUNTING should be used for defining and
+ * implementing AddRef() and Release() of IUnknown interface.
+ * This depends on xpcom/glue/nsISupportsImpl.h.
+ */
+
+#define NS_INLINE_DECL_IUNKNOWN_REFCOUNTING(_class)                           \
+public:                                                                       \
+  STDMETHODIMP_(ULONG) AddRef()                                               \
+  {                                                                           \
+    MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(_class)                                \
+    MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");                      \
+    NS_ASSERT_OWNINGTHREAD(_class);                                           \
+    ++mRefCnt;                                                                \
+    NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));                     \
+    return static_cast<ULONG>(mRefCnt.get());                                 \
+  }                                                                           \
+  STDMETHODIMP_(ULONG) Release()                                              \
+  {                                                                           \
+    MOZ_ASSERT(int32_t(mRefCnt) > 0,                                          \
+      "Release called on object that has already been released!");            \
+    NS_ASSERT_OWNINGTHREAD(_class);                                           \
+    --mRefCnt;                                                                \
+    NS_LOG_RELEASE(this, mRefCnt, #_class);                                   \
+    if (mRefCnt == 0) {                                                       \
+      NS_ASSERT_OWNINGTHREAD(_class);                                         \
+      mRefCnt = 1; /* stabilize */                                            \
+      delete this;                                                            \
+      return 0;                                                               \
+    }                                                                         \
+    return static_cast<ULONG>(mRefCnt.get());                                 \
+  }                                                                           \
+protected:                                                                    \
+  nsAutoRefCnt mRefCnt;                                                       \
+  NS_DECL_OWNINGTHREAD                                                        \
+public:
+
 class nsWindow;
 class nsWindowBase;
 struct KeyPair;

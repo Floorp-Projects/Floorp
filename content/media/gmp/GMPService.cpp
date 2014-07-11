@@ -183,7 +183,7 @@ NS_IMETHODIMP
 GeckoMediaPluginService::GetGMPVideoDecoder(nsTArray<nsCString>* aTags,
                                             const nsAString& aOrigin,
                                             GMPVideoHost** aOutVideoHost,
-                                            GMPVideoDecoder** aGMPVD)
+                                            GMPVideoDecoderProxy** aGMPVD)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
   NS_ENSURE_ARG(aTags && aTags->Length() > 0);
@@ -217,7 +217,7 @@ NS_IMETHODIMP
 GeckoMediaPluginService::GetGMPVideoEncoder(nsTArray<nsCString>* aTags,
                                             const nsAString& aOrigin,
                                             GMPVideoHost** aOutVideoHost,
-                                            GMPVideoEncoder** aGMPVE)
+                                            GMPVideoEncoderProxy** aGMPVE)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
   NS_ENSURE_ARG(aTags && aTags->Length() > 0);
@@ -364,6 +364,19 @@ GeckoMediaPluginService::SelectPluginForAPI(const nsAString& aOrigin,
   return nullptr;
 }
 
+class CreateGMPParentTask : public nsRunnable {
+public:
+  NS_IMETHOD Run() {
+    MOZ_ASSERT(NS_IsMainThread());
+    mParent = new GMPParent();
+    return NS_OK;
+  }
+  already_AddRefed<GMPParent> GetParent() {
+    return mParent.forget();
+  }
+private:
+  nsRefPtr<GMPParent> mParent;
+};
 
 void
 GeckoMediaPluginService::AddOnGMPThread(const nsAString& aDirectory)
@@ -376,9 +389,16 @@ GeckoMediaPluginService::AddOnGMPThread(const nsAString& aDirectory)
     return;
   }
 
-  nsRefPtr<GMPParent> gmp = new GMPParent();
+  // The GMPParent inherits from IToplevelProtocol, which must be created
+  // on the main thread to be threadsafe. See Bug 1035653.
+  nsRefPtr<CreateGMPParentTask> task(new CreateGMPParentTask());
+  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  MOZ_ASSERT(mainThread);
+  mozilla::SyncRunnable::DispatchToThread(mainThread, task);
+  nsRefPtr<GMPParent> gmp = task->GetParent();
   rv = gmp->Init(directory);
   if (NS_FAILED(rv)) {
+    NS_WARNING("Can't Create GMPParent");
     return;
   }
 

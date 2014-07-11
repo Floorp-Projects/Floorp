@@ -13,6 +13,7 @@
 #include "nsWrapperCache.h"
 #include "AccessCheck.h"
 #include "nsJSUtils.h"
+#include "JavaScriptParent.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
@@ -90,7 +91,7 @@ bool xpc_IsReportableErrorCode(nsresult code)
 
 // static
 already_AddRefed<nsXPCWrappedJSClass>
-nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID)
+nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID, bool allowNonScriptable)
 {
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     IID2WrappedJSClassMap* map = rt->GetWrappedJSClassMap();
@@ -101,7 +102,7 @@ nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID)
         nsXPConnect::XPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if (info) {
             bool canScript, isBuiltin;
-            if (NS_SUCCEEDED(info->IsScriptable(&canScript)) && canScript &&
+            if (NS_SUCCEEDED(info->IsScriptable(&canScript)) && (canScript || allowNonScriptable) &&
                 NS_SUCCEEDED(info->IsBuiltinClass(&isBuiltin)) && !isBuiltin &&
                 nsXPConnect::IsISupportsDescendant(info))
             {
@@ -202,12 +203,14 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
     // implement intentionally (for security) unscriptable interfaces.
     // We so often ask for nsISupports that we can short-circuit the test...
     if (!aIID.Equals(NS_GET_IID(nsISupports))) {
+        bool allowNonScriptable = mozilla::jsipc::IsWrappedCPOW(jsobj);
+
         nsCOMPtr<nsIInterfaceInfo> info;
         nsXPConnect::XPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if (!info)
             return nullptr;
         bool canScript, isBuiltin;
-        if (NS_FAILED(info->IsScriptable(&canScript)) || !canScript ||
+        if (NS_FAILED(info->IsScriptable(&canScript)) || (!canScript && !allowNonScriptable) ||
             NS_FAILED(info->IsBuiltinClass(&isBuiltin)) || isBuiltin)
             return nullptr;
     }
@@ -365,13 +368,12 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
         if (!name)
             return NS_ERROR_FAILURE;
 
-        size_t length;
-        const jschar *chars = JS_GetStringCharsAndLength(cx, name, &length);
-        if (!chars)
+        nsAutoJSString autoStr;
+        if (!autoStr.init(cx, name))
             return NS_ERROR_FAILURE;
 
         nsCOMPtr<nsIProperty> property =
-            new xpcProperty(chars, (uint32_t) length, value);
+            new xpcProperty(autoStr.get(), (uint32_t)autoStr.Length(), value);
 
         if (!propertyArray.AppendObject(property))
             return NS_ERROR_FAILURE;

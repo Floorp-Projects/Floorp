@@ -10,18 +10,18 @@
 %{C++
 #include "nsTArray.h"
 #include "nsStringGlue.h"
-class GMPVideoDecoder;
-class GMPVideoEncoder;
+class GMPVideoDecoderProxy;
+class GMPVideoEncoderProxy;
 class GMPVideoHost;
 %}
 
-[ptr] native GMPVideoDecoder(GMPVideoDecoder);
-[ptr] native GMPVideoEncoder(GMPVideoEncoder);
+[ptr] native GMPVideoDecoderProxy(GMPVideoDecoderProxy);
+[ptr] native GMPVideoEncoderProxy(GMPVideoEncoderProxy);
 [ptr] native GMPVideoHost(GMPVideoHost);
 [ptr] native MessageLoop(MessageLoop);
 [ptr] native TagArray(nsTArray<nsCString>);
 
-[scriptable, uuid(63fc797f-9d01-43f4-8b93-5b1fe713c2f8)]
+[scriptable, uuid(7cef50ca-7a0f-41f2-9560-47abf709f0d7)]
 interface mozIGeckoMediaPluginService : nsISupports
 {
   /**
@@ -36,9 +36,9 @@ interface mozIGeckoMediaPluginService : nsISupports
    * Callable only on GMP thread.
    */
   [noscript]
-  GMPVideoDecoder getGMPVideoDecoder(in TagArray tags,
-                                     [optional] in AString origin,
-                                     out GMPVideoHost outVideoHost);
+  GMPVideoDecoderProxy getGMPVideoDecoder(in TagArray tags,
+                                          [optional] in AString origin,
+                                          out GMPVideoHost outVideoHost);
 
   /**
    * Get a video encoder that supports the specified tags.
@@ -47,9 +47,9 @@ interface mozIGeckoMediaPluginService : nsISupports
    * Callable only on GMP thread.
    */
   [noscript]
-  GMPVideoEncoder getGMPVideoEncoder(in TagArray tags,
-                                     [optional] in AString origin,
-                                     out GMPVideoHost outVideoHost);
+  GMPVideoEncoderProxy getGMPVideoEncoder(in TagArray tags,
+		                                      [optional] in AString origin,
+		                                      out GMPVideoHost outVideoHost);
 
   /**
    * Add a directory to scan for gecko media plugins.

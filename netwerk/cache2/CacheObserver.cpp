@@ -53,6 +53,12 @@ int32_t CacheObserver::sAutoMemoryCacheCapacity = -1;
 static uint32_t const kDefaultDiskCacheCapacity = 250 * 1024; // 250 MB
 uint32_t CacheObserver::sDiskCacheCapacity = kDefaultDiskCacheCapacity;
 
+static uint32_t const kDefaultDiskFreeSpaceSoftLimit = 5 * 1024; // 5MB
+uint32_t CacheObserver::sDiskFreeSpaceSoftLimit = kDefaultDiskFreeSpaceSoftLimit;
+
+static uint32_t const kDefaultDiskFreeSpaceHardLimit = 1024; // 1MB
+uint32_t CacheObserver::sDiskFreeSpaceHardLimit = kDefaultDiskFreeSpaceHardLimit;
+
 static bool const kDefaultSmartCacheSizeEnabled = false;
 bool CacheObserver::sSmartCacheSizeEnabled = kDefaultSmartCacheSizeEnabled;
 
@@ -149,6 +155,11 @@ CacheObserver::AttachToPreferences()
     &sSmartCacheSizeEnabled, "browser.cache.disk.smart_size.enabled", kDefaultSmartCacheSizeEnabled);
   mozilla::Preferences::AddIntVarCache(
     &sMemoryCacheCapacity, "browser.cache.memory.capacity", kDefaultMemoryCacheCapacity);
+
+  mozilla::Preferences::AddUintVarCache(
+    &sDiskFreeSpaceSoftLimit, "browser.cache.disk.free_space_soft_limit", kDefaultDiskFreeSpaceSoftLimit);
+  mozilla::Preferences::AddUintVarCache(
+    &sDiskFreeSpaceHardLimit, "browser.cache.disk.free_space_hard_limit", kDefaultDiskFreeSpaceHardLimit);
 
   mozilla::Preferences::AddUintVarCache(
     &sPreloadChunkCount, "browser.cache.disk.preload_chunk_count", kDefaultPreloadChunkCount);

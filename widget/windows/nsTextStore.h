@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsIWidget.h"
 #include "nsWindowBase.h"
+#include "WinUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TextRange.h"
 #include "mozilla/WindowsVersion.h"
@@ -53,9 +54,9 @@ class nsTextStore MOZ_FINAL : public ITextStoreACP,
                               public ITfInputProcessorProfileActivationSink
 {
 public: /*IUnknown*/
-  STDMETHODIMP_(ULONG)  AddRef(void);
   STDMETHODIMP          QueryInterface(REFIID, void**);
-  STDMETHODIMP_(ULONG)  Release(void);
+
+  NS_INLINE_DECL_IUNKNOWN_REFCOUNTING(nsTextStore)
 
 public: /*ITextStoreACP*/
   STDMETHODIMP AdviseSink(REFIID, IUnknown*, DWORD);
@@ -225,6 +226,7 @@ protected:
   ~nsTextStore();
 
   bool Init(ITfThreadMgr* aThreadMgr);
+  void Shutdown();
 
   static void MarkContextAsKeyboardDisabled(ITfContext* aContext);
   static void MarkContextAsEmpty(ITfContext* aContext);
@@ -696,9 +698,6 @@ protected:
   // Message the Tablet Input Panel uses to flush text during blurring.
   // See comments in Destroy
   static UINT           sFlushTIPInputMessage;
-
-private:
-  ULONG                       mRefCnt;
 };
 
 #endif /*NSTEXTSTORE_H_*/

@@ -48,7 +48,7 @@ LZ4::decompress(const char* aSource, char* aDest, size_t aOutputSize)
 
 bool
 LZ4::decompress(const char* aSource, size_t aInputSize, char* aDest,
-                size_t aMaxOutputSize, size_t *aOutputSize)
+                size_t aMaxOutputSize, size_t* aOutputSize)
 {
   CheckedInt<int> maxOutputSizeChecked = aMaxOutputSize;
   MOZ_ASSERT(maxOutputSizeChecked.isValid());

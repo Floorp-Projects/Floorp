@@ -113,7 +113,7 @@ MoveEmitterMIPS::breakCycle(const MoveOperand &from, const MoveOperand &to, Move
         }
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move type");
+        MOZ_CRASH("Unexpected move type");
     }
 }
 
@@ -159,7 +159,7 @@ MoveEmitterMIPS::completeCycle(const MoveOperand &from, const MoveOperand &to, M
         }
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move type");
+        MOZ_CRASH("Unexpected move type");
     }
 }
 
@@ -175,7 +175,7 @@ MoveEmitterMIPS::emitMove(const MoveOperand &from, const MoveOperand &to)
         else if (to.isMemory())
             masm.storePtr(from.reg(), getAdjustedAddress(to));
         else
-            MOZ_ASSUME_UNREACHABLE("Invalid emitMove arguments.");
+            MOZ_CRASH("Invalid emitMove arguments.");
     } else if (from.isMemory()) {
         if (to.isGeneralReg()) {
             masm.loadPtr(getAdjustedAddress(from), to.reg());
@@ -183,7 +183,7 @@ MoveEmitterMIPS::emitMove(const MoveOperand &from, const MoveOperand &to)
             masm.loadPtr(getAdjustedAddress(from), tempReg());
             masm.storePtr(tempReg(), getAdjustedAddress(to));
         } else {
-            MOZ_ASSUME_UNREACHABLE("Invalid emitMove arguments.");
+            MOZ_CRASH("Invalid emitMove arguments.");
         }
     } else if (from.isEffectiveAddress()) {
         if (to.isGeneralReg()) {
@@ -192,10 +192,10 @@ MoveEmitterMIPS::emitMove(const MoveOperand &from, const MoveOperand &to)
             masm.computeEffectiveAddress(getAdjustedAddress(from), tempReg());
             masm.storePtr(tempReg(), getAdjustedAddress(to));
         } else {
-            MOZ_ASSUME_UNREACHABLE("Invalid emitMove arguments.");
+            MOZ_CRASH("Invalid emitMove arguments.");
         }
     } else {
-        MOZ_ASSUME_UNREACHABLE("Invalid emitMove arguments.");
+        MOZ_CRASH("Invalid emitMove arguments.");
     }
 }
 
@@ -252,7 +252,7 @@ MoveEmitterMIPS::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
             else if(to.reg() == a3)
                 masm.moveFromDoubleHi(from.floatReg(), a3);
             else
-                MOZ_ASSUME_UNREACHABLE("Invalid emitDoubleMove arguments.");
+                MOZ_CRASH("Invalid emitDoubleMove arguments.");
         } else {
             MOZ_ASSERT(to.isMemory());
             masm.storeDouble(from.floatReg(), getAdjustedAddress(to));
@@ -270,7 +270,7 @@ MoveEmitterMIPS::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
         else if(to.reg() == a3)
             masm.loadPtr(Address(from.base(), getAdjustedOffset(from) + sizeof(uint32_t)), a3);
         else
-            MOZ_ASSUME_UNREACHABLE("Invalid emitDoubleMove arguments.");
+            MOZ_CRASH("Invalid emitDoubleMove arguments.");
     } else {
         MOZ_ASSERT(from.isMemory());
         MOZ_ASSERT(to.isMemory());
@@ -311,7 +311,7 @@ MoveEmitterMIPS::emit(const MoveOp &move)
         emitMove(from, to);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move type");
+        MOZ_CRASH("Unexpected move type");
     }
 }
 

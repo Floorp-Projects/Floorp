@@ -982,6 +982,11 @@ nsAppShell::Init()
     InitGonkMemoryPressureMonitoring();
 
     if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        printf("*****************************************************************\n");
+        printf("***\n");
+        printf("*** This is stdout. Most of the useful output will be in logcat.\n");
+        printf("***\n");
+        printf("*****************************************************************\n");
 #ifdef MOZ_OMX_DECODER
         android::MediaResourceManagerService::instantiate();
 #endif

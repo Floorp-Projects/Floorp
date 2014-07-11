@@ -20,10 +20,10 @@ namespace mozilla {
  */
 template<typename T>
 std::string
-ToString(const T& t)
+ToString(const T& aValue)
 {
   std::ostringstream stream;
-  stream << t;
+  stream << aValue;
   return stream.str();
 }
 

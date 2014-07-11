@@ -12,13 +12,14 @@
 #include "GMPMessageUtils.h"
 #include "GMPSharedMemManager.h"
 #include "GMPVideoHost.h"
+#include "GMPVideoEncoderProxy.h"
 
 namespace mozilla {
 namespace gmp {
 
 class GMPParent;
 
-class GMPVideoEncoderParent : public GMPVideoEncoder,
+class GMPVideoEncoderParent : public GMPVideoEncoderProxy,
                               public PGMPVideoEncoderParent,
                               public GMPSharedMemManager
 {
@@ -29,24 +30,34 @@ public:
 
   GMPVideoHostImpl& Host();
 
-  // GMPSharedMemManager
-  virtual bool MgrAllocShmem(size_t aSize,
-                             ipc::Shmem::SharedMemory::SharedMemoryType aType,
-                             ipc::Shmem* aMem) MOZ_OVERRIDE;
-  virtual bool MgrDeallocShmem(Shmem& aMem) MOZ_OVERRIDE;
-
-  // GMPVideoEncoder
-  virtual GMPVideoErr InitEncode(const GMPVideoCodec& aCodecSettings,
-                                 GMPEncoderCallback* aCallback,
-                                 int32_t aNumberOfCores,
-                                 uint32_t aMaxPayloadSize) MOZ_OVERRIDE;
-  virtual GMPVideoErr Encode(GMPVideoi420Frame* aInputFrame,
-                             const GMPCodecSpecificInfo& aCodecSpecificInfo,
-                             const std::vector<GMPVideoFrameType>& aFrameTypes) MOZ_OVERRIDE;
-  virtual GMPVideoErr SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT) MOZ_OVERRIDE;
-  virtual GMPVideoErr SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) MOZ_OVERRIDE;
-  virtual GMPVideoErr SetPeriodicKeyFrames(bool aEnable) MOZ_OVERRIDE;
+  // GMPVideoEncoderProxy
+  virtual GMPErr InitEncode(const GMPVideoCodec& aCodecSettings,
+                            const nsTArray<uint8_t>& aCodecSpecific,
+                            GMPVideoEncoderCallbackProxy* aCallback,
+                            int32_t aNumberOfCores,
+                            uint32_t aMaxPayloadSize) MOZ_OVERRIDE;
+  virtual GMPErr Encode(GMPVideoi420Frame* aInputFrame,
+                        const nsTArray<uint8_t>& aCodecSpecificInfo,
+                        const nsTArray<GMPVideoFrameType>& aFrameTypes) MOZ_OVERRIDE;
+  virtual GMPErr SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT) MOZ_OVERRIDE;
+  virtual GMPErr SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) MOZ_OVERRIDE;
+  virtual GMPErr SetPeriodicKeyFrames(bool aEnable) MOZ_OVERRIDE;
   virtual void EncodingComplete() MOZ_OVERRIDE;
+
+  // GMPSharedMemManager
+  virtual void CheckThread();
+  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem)
+  {
+#ifdef GMP_SAFE_SHMEM
+    return AllocShmem(aSize, aType, aMem);
+#else
+    return AllocUnsafeShmem(aSize, aType, aMem);
+#endif
+  }
+  virtual void Dealloc(Shmem& aMem)
+  {
+    DeallocShmem(aMem);
+  }
 
 private:
   virtual ~GMPVideoEncoderParent();
@@ -54,12 +65,15 @@ private:
   // PGMPVideoEncoderParent
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
   virtual bool RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame,
-                           const GMPCodecSpecificInfo& aCodecSpecificInfo) MOZ_OVERRIDE;
+                           const nsTArray<uint8_t>& aCodecSpecificInfo) MOZ_OVERRIDE;
+  virtual bool RecvParentShmemForPool(Shmem& aFrameBuffer) MOZ_OVERRIDE;
+  virtual bool AnswerNeedShmem(const uint32_t& aEncodedBufferSize,
+                               Shmem* aMem) MOZ_OVERRIDE;
   virtual bool Recv__delete__() MOZ_OVERRIDE;
 
   bool mCanSendMessages;
   GMPParent* mPlugin;
-  GMPEncoderCallback* mCallback;
+  GMPVideoEncoderCallbackProxy* mCallback;
   GMPVideoHostImpl mVideoHost;
 };
 

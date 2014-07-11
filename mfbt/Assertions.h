@@ -149,7 +149,8 @@ MOZ_ReportAssertionFailure(const char* aStr, const char* aFilename, int aLine)
 }
 
 static MOZ_ALWAYS_INLINE void
-MOZ_ReportCrash(const char* aStr, const char* aFilename, int aLine) MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
+MOZ_ReportCrash(const char* aStr, const char* aFilename, int aLine)
+  MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
 {
 #ifdef ANDROID
   __android_log_print(ANDROID_LOG_FATAL, "MOZ_CRASH",
@@ -254,7 +255,7 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
      do { \
        MOZ_ReportCrash("" __VA_ARGS__, __FILE__, __LINE__); \
        MOZ_REALLY_CRASH(); \
-     } while(0)
+     } while (0)
 #endif
 
 #ifdef __cplusplus
@@ -384,7 +385,7 @@ void ValidateAssertConditionType()
 #ifdef DEBUG
 #  define MOZ_ASSERT(...) MOZ_RELEASE_ASSERT(__VA_ARGS__)
 #else
-#  define MOZ_ASSERT(...) do { } while(0)
+#  define MOZ_ASSERT(...) do { } while (0)
 #endif /* DEBUG */
 
 /*

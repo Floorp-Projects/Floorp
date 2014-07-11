@@ -4,7 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS allows using a typed enum as bit flags. */
+/*
+ * MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS allows using a typed enum as bit flags.
+ */
 
 #ifndef mozilla_TypedEnumBits_h
 #define mozilla_TypedEnumBits_h
@@ -17,22 +19,22 @@ namespace mozilla {
 #define MOZ_CASTABLETYPEDENUMRESULT_BINOP(Op, OtherType, ReturnType) \
 template<typename E> \
 MOZ_CONSTEXPR ReturnType \
-operator Op(const OtherType& e, const CastableTypedEnumResult<E>& r) \
+operator Op(const OtherType& aE, const CastableTypedEnumResult<E>& aR) \
 { \
-  return ReturnType(e Op OtherType(r)); \
+  return ReturnType(aE Op OtherType(aR)); \
 } \
 template<typename E> \
 MOZ_CONSTEXPR ReturnType \
-operator Op(const CastableTypedEnumResult<E>& r, const OtherType& e) \
+operator Op(const CastableTypedEnumResult<E>& aR, const OtherType& aE) \
 { \
-  return ReturnType(OtherType(r) Op e); \
+  return ReturnType(OtherType(aR) Op aE); \
 } \
 template<typename E> \
 MOZ_CONSTEXPR ReturnType \
-operator Op(const CastableTypedEnumResult<E>& r1, \
-            const CastableTypedEnumResult<E>& r2) \
+operator Op(const CastableTypedEnumResult<E>& aR1, \
+            const CastableTypedEnumResult<E>& aR2) \
 { \
-  return ReturnType(OtherType(r1) Op OtherType(r2)); \
+  return ReturnType(OtherType(aR1) Op OtherType(aR2)); \
 }
 
 MOZ_CASTABLETYPEDENUMRESULT_BINOP(|, E, CastableTypedEnumResult<E>)
@@ -45,18 +47,18 @@ MOZ_CASTABLETYPEDENUMRESULT_BINOP(&&, bool, bool)
 
 template <typename E>
 MOZ_CONSTEXPR CastableTypedEnumResult<E>
-operator ~(const CastableTypedEnumResult<E>& r)
+operator ~(const CastableTypedEnumResult<E>& aR)
 {
-  return CastableTypedEnumResult<E>(~(E(r)));
+  return CastableTypedEnumResult<E>(~(E(aR)));
 }
 
 #define MOZ_CASTABLETYPEDENUMRESULT_COMPOUND_ASSIGN_OP(Op) \
 template<typename E> \
 E& \
-operator Op(E& r1, \
-            const CastableTypedEnumResult<E>& r2) \
+operator Op(E& aR1, \
+            const CastableTypedEnumResult<E>& aR2) \
 { \
-  return r1 Op E(r2); \
+  return aR1 Op E(aR2); \
 }
 
 MOZ_CASTABLETYPEDENUMRESULT_COMPOUND_ASSIGN_OP(&=)
@@ -72,15 +74,15 @@ MOZ_CASTABLETYPEDENUMRESULT_COMPOUND_ASSIGN_OP(^=)
 #define MOZ_CASTABLETYPEDENUMRESULT_BINOP_EXTRA_NON_CXX11(Op, ReturnType) \
 template<typename E> \
 MOZ_CONSTEXPR ReturnType \
-operator Op(typename E::Enum e, const CastableTypedEnumResult<E>& r) \
+operator Op(typename E::Enum aE, const CastableTypedEnumResult<E>& aR) \
 { \
-  return ReturnType(e Op E(r)); \
+  return ReturnType(aE Op E(aR)); \
 } \
 template<typename E> \
 MOZ_CONSTEXPR ReturnType \
-operator Op(const CastableTypedEnumResult<E>& r, typename E::Enum e) \
+operator Op(const CastableTypedEnumResult<E>& aR, typename E::Enum aE) \
 { \
-  return ReturnType(E(r) Op e); \
+  return ReturnType(E(aR) Op aE); \
 }
 
 MOZ_CASTABLETYPEDENUMRESULT_BINOP_EXTRA_NON_CXX11(|, CastableTypedEnumResult<E>)

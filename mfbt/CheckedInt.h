@@ -447,7 +447,7 @@ struct NegateImpl<T, true>
  * (aX+aY)/aZ, that doesn't crash if aZ==0, and that reports on error (divide by
  * zero or integer overflow). You could code it as follows:
    @code
-   bool computeXPlusYOverZ(int aX, int aY, int aZ, int *aResult)
+   bool computeXPlusYOverZ(int aX, int aY, int aZ, int* aResult)
    {
      CheckedInt<int> checkedResult = (CheckedInt<int>(aX) + aY) / aZ;
      if (checkedResult.isValid()) {

@@ -65,9 +65,6 @@ leak:AllocateArrayBufferContents
 # Bug 1022010 - Small leak under _render_glyph_outline. bc1
 leak:_render_glyph_outline
 
-# Bug 1022954 - ScriptSource leaks sourceMapURL_ sometimes. dt
-leak:ScriptSource::setSourceMapURL
-
 # Bug 1023548 - Small leak under SECITEM_AllocItem_Util. bc1, bc3
 leak:SECITEM_AllocItem_Util
 

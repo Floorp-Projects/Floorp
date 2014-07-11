@@ -49,6 +49,14 @@ pref("browser.cache.disk.smart_size.enabled", true);
 pref("browser.cache.disk.smart_size.use_old_max", true);
 // Size (in KB) explicitly set by the user. Used when smart_size.enabled == false
 pref("browser.cache.disk.capacity",         256000);
+// When smartsizing is disabled we could potentially fill all disk space by
+// cache data when the disk capacity is not set correctly. To avoid that we
+// check the free space every time we write some data to the cache. The free
+// space is checked against two limits. Once the soft limit is reached we start
+// evicting the least useful entries, when we reach the hard limit writing to
+// the entry fails.
+pref("browser.cache.disk.free_space_soft_limit", 5120); // 5MB
+pref("browser.cache.disk.free_space_hard_limit", 1024); // 1MB
 // Max-size (in KB) for entries in disk cache. Set to -1 for no limit.
 // (Note: entries bigger than 1/8 of disk-cache are never cached)
 pref("browser.cache.disk.max_entry_size",    51200);  // 50 MB
@@ -2739,8 +2747,11 @@ pref("network.autodial-helper.enabled", true);
 pref("intl.keyboard.per_window_layout", false);
 
 #ifdef NS_ENABLE_TSF
-// Enable/Disable TSF support
+// Enable/Disable TSF support on Vista or later.
 pref("intl.tsf.enable", false);
+// Force enable TSF even on WinXP or WinServer 2003.
+// Be aware, TSF framework on prior to Vista is not enough stable.
+pref("intl.tsf.force_enable", false);
 
 // Support IMEs implemented with IMM in TSF mode.
 pref("intl.tsf.support_imm", true);

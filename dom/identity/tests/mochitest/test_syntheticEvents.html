@@ -81,19 +81,6 @@ let apps = [
     },
   },
   {
-    title: "an installed app, which must may not use firefox accounts",
-    manifest: "https://example.com/manifest.webapp",
-    origin: "https://example.com",
-    uri: "https://example.com/chrome/dom/identity/tests/mochitest/file_syntheticEvents.html",
-    wantIssuer: "firefox-accounts",
-    expected: {
-      success: false,
-      errors: [
-        "ERROR_NOT_AUTHORIZED_FOR_FIREFOX_ACCOUNTS",
-      ],
-    },
-  },
-  {
     title: "a privileged app, which may use synthetic events",
     manifest: "https://example.com/manifest_priv.webapp",
     origin: "https://example.com",
@@ -115,15 +102,20 @@ let apps = [
   },
 ];
 
-let appIndex = 0;
+let eventsReceived = 0;
 let testRunner = runTest();
-let receivedErrors = [];
 
 function receiveMessage(event) {
   dump("** Received response: " + event.data + "\n");
   let result = JSON.parse(event.data);
-  let app = apps[appIndex];
+  let app = apps[result.appIndex];
+  if (app.received) {
+    return;
+  }
+  apps[result.appIndex].received = true;
+
   let expected = app.expected;
+  let receivedErrors = [];
 
   is(result.success, expected.success,
     "Assertion request " + (expected.success ? "succeeds" : "fails"));
@@ -132,39 +124,37 @@ function receiveMessage(event) {
     receivedErrors.push(result.error);
   }
 
-  if (receivedErrors.length === (expected.errors || []).length) {
-    receivedErrors.forEach((error) => {
-      ok(expected.errors.indexOf(error) > -1,
-         "Received " + error + ".  " +
-         "Expected errors are: " + JSON.stringify(expected.errors));
-    });
+  ok(receivedErrors.length === (expected.errors || []).length,
+     "Received errors should be equal to expected errors");
 
-    appIndex += 1;
+  receivedErrors.forEach((error) => {
+    ok(expected.errors.indexOf(error) > -1,
+       "Received " + error + ".  " +
+       "Expected errors are: " + JSON.stringify(expected.errors));
+  });
 
-    if (appIndex === apps.length) {
-      window.removeEventListener("message", receiveMessage);
+  eventsReceived += 1;
 
-      // Remove mock from DOMIdentity
-      DOMIdentity._mockIdentityService = null;
+  if (eventsReceived === apps.length) {
+    window.removeEventListener("message", receiveMessage);
 
-      // Restore original fxa manager
-      FirefoxAccounts.fxAccountsManager = originalManager;
+    FirefoxAccounts.fxAccountsManager = originalManager;
 
-      SimpleTest.finish();
-      return;
-    }
+    SimpleTest.finish();
 
-    testRunner.next();
+    return;
   }
+
+  testRunner.next();
 }
 
 window.addEventListener("message", receiveMessage, false, true);
 
 function runTest() {
-  for (let app of apps) {
+  let index;
+  for (let i = 0; i < apps.length; i++) {
+    let app = apps[i];
     dump("** Testing " + app.title + "\n");
-
-    receivedErrors = [];
 
     let iframe = document.createElement("iframe");
 
@@ -174,15 +164,26 @@ function runTest() {
 
     document.getElementById("content").appendChild(iframe);
 
-    iframe.addEventListener("load", function onLoad() {
-      iframe.removeEventListener("load", onLoad);
+    index = i;
+    (function(_index) {
+      iframe.addEventListener("load", function onLoad() {
+        iframe.removeEventListener("load", onLoad);
 
-      // Because the <iframe mozapp> can't parent its way back to us, we
-      // provide this handle to our window so it can postMessage to us.
-      iframe.contentWindow.wrappedJSObject.realParent = window;
-      iframe.contentWindow.postMessage({wantIssuer: app.wantIssuer}, "*");
-    }, false);
+        SpecialPowers.addPermission(
+          "firefox-accounts",
+          SpecialPowers.Ci.nsIPermissionManager.ALLOW_ACTION,
+          iframe.contentDocument
+        );
 
+        // Because the <iframe mozapp> can't parent its way back to us, we
+        // provide this handle to our window so it can postMessage to us.
+        iframe.contentWindow.wrappedJSObject.realParent = window;
+        iframe.contentWindow.postMessage({
+          wantIssuer: app.wantIssuer,
+          appIndex: _index
+        }, "*");
+      }, false);
+    })(index);
     yield undefined;
   }
 }
@@ -193,9 +194,8 @@ SpecialPowers.pushPrefEnv({"set":
     ["dom.identity.enabled", true],
     ["identity.fxaccounts.enabled", true],
     ["toolkit.identity.debug", true],
-
-    ["security.apps.privileged.CSP.default", ""],
-    ["security.apps.certified.CSP.default", ""],
+    ["security.apps.privileged.CSP.default", "'inline-script';"],
+    ["security.apps.certified.CSP.default", "'inline-script';"],
   ]},
   function() {
     testRunner.next();
