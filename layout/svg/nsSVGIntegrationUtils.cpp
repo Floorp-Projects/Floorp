@@ -711,8 +711,8 @@ nsSVGIntegrationUtils::DrawableFromPaintServer(nsIFrame*         aFrame,
     // pattern size.
     gfxFloat scaleX = overrideBounds.Width() / aRenderSize.width;
     gfxFloat scaleY = overrideBounds.Height() / aRenderSize.height;
-    gfxMatrix scaleMatrix = gfxMatrix().Scale(scaleX, scaleY);
-    pattern->SetMatrix(scaleMatrix.Multiply(pattern->GetMatrix()));
+    gfxMatrix scaleMatrix = gfxMatrix::Scaling(scaleX, scaleY);
+    pattern->SetMatrix(scaleMatrix * pattern->GetMatrix());
     nsRefPtr<gfxDrawable> drawable =
       new gfxPatternDrawable(pattern, aRenderSize);
     return drawable.forget();

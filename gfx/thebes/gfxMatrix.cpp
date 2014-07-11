@@ -45,7 +45,7 @@ gfxMatrix::Rotate(gfxFloat radians)
 }
 
 const gfxMatrix&
-gfxMatrix::Multiply(const gfxMatrix& m)
+gfxMatrix::operator *= (const gfxMatrix& m)
 {
     cairo_matrix_multiply(CAIRO_MATRIX(this), CAIRO_MATRIX(this), CONST_CAIRO_MATRIX(&m));
     return *this;
