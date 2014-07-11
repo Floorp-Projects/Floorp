@@ -28,9 +28,8 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-static const char* kPrefNameTSFEnabled = "intl.tsf.enable";
-
-static const char* kLegacyPrefNameTSFEnabled = "intl.enable_tsf_support";
+static const char* kPrefNameEnableTSF = "intl.tsf.enable";
+static const char* kPrefNameForceEnableTSF = "intl.tsf.force_enable";
 
 #ifdef PR_LOGGING
 /**
@@ -61,27 +60,14 @@ PRLogModuleInfo* sTextStoreLog = nullptr;
 class InputScopeImpl MOZ_FINAL : public ITfInputScope
 {
 public:
-  InputScopeImpl(const nsTArray<InputScope>& aList) :
-    mRefCnt(1),
-    mInputScopes(aList)
+  InputScopeImpl(const nsTArray<InputScope>& aList)
+    : mInputScopes(aList)
   {
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
       ("TSF: 0x%p InputScopeImpl()", this));
   }
 
-  STDMETHODIMP_(ULONG) AddRef(void) { return ++mRefCnt; }
-
-  STDMETHODIMP_(ULONG) Release(void)
-  {
-    --mRefCnt;
-    if (mRefCnt) {
-      return mRefCnt;
-    }
-    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-      ("TSF: 0x%p InputScopeImpl::Release() final", this));
-    delete this;
-    return 0;
-  }
+  NS_INLINE_DECL_IUNKNOWN_REFCOUNTING(InputScopeImpl)
 
   STDMETHODIMP QueryInterface(REFIID riid, void** ppv)
   {
@@ -127,7 +113,6 @@ public:
   STDMETHODIMP GetXML(BSTR *pbstrXML) { return E_NOTIMPL; }
 
 private:
-  DWORD mRefCnt;
   nsTArray<InputScope> mInputScopes;
 };
 
@@ -519,7 +504,6 @@ GetDisplayAttrStr(const TF_DISPLAYATTRIBUTE &aDispAttr)
 nsTextStore::nsTextStore()
  : mContent(mComposition, mSelection)
 {
-  mRefCnt = 1;
   mEditCookie = 0;
   mIPProfileCookie = TF_INVALID_COOKIE;
   mLangProfileCookie = TF_INVALID_COOKIE;
@@ -591,7 +575,14 @@ nsTextStore::Init(ITfThreadMgr* aThreadMgr)
 nsTextStore::~nsTextStore()
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-    ("TSF: 0x%p nsTextStore instance is destroyed, "
+    ("TSF: 0x%p nsTextStore instance is destroyed", this));
+}
+
+void
+nsTextStore::Shutdown()
+{
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+    ("TSF: 0x%p nsTextStore::Shutdown() "
      "mWidget=0x%p, mDocumentMgr=0x%p, mContext=0x%p, mIPProfileCookie=0x%08X, "
      "mLangProfileCookie=0x%08X",
      this, mWidget.get(), mDocumentMgr.get(), mContext.get(),
@@ -603,13 +594,13 @@ nsTextStore::~nsTextStore()
       sTsfThreadMgr->QueryInterface(IID_ITfSource, getter_AddRefs(source));
     if (FAILED(hr)) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-        ("TSF: 0x%p   ~nsTextStore FAILED to get ITfSource instance "
-         "(0x%08X)", this, hr));
+        ("TSF: 0x%p   nsTextStore::Shutdown() FAILED to get "
+         "ITfSource instance (0x%08X)", this, hr));
     } else {
       hr = source->UnadviseSink(mIPProfileCookie);
       if (FAILED(hr)) {
         PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-          ("TSF: 0x%p   ~nsTextStore FAILED to uninstall "
+          ("TSF: 0x%p   nsTextStore::Shutdown() FAILED to uninstall "
            "ITfInputProcessorProfileActivationSink (0x%08X)",
            this, hr));
       }
@@ -622,13 +613,13 @@ nsTextStore::~nsTextStore()
       sTsfThreadMgr->QueryInterface(IID_ITfSource, getter_AddRefs(source));
     if (FAILED(hr)) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-        ("TSF: 0x%p   ~nsTextStore FAILED to get ITfSource instance "
-         "(0x%08X)", this, hr));
+        ("TSF: 0x%p   nsTextStore::Shutdown() FAILED to get "
+         "ITfSource instance (0x%08X)", this, hr));
     } else {
       hr = source->UnadviseSink(mLangProfileCookie);
       if (FAILED(hr)) {
         PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-          ("TSF: 0x%p   ~nsTextStore FAILED to uninstall "
+          ("TSF: 0x%p   nsTextStore::Shutdown() FAILED to uninstall "
            "ITfActiveLanguageProfileNotifySink (0x%08X)",
            this, hr));
       }
@@ -759,20 +750,6 @@ nsTextStore::QueryInterface(REFIID riid,
     ("TSF: 0x%p nsTextStore::QueryInterface() FAILED, riid=%s",
      this, GetRIIDNameStr(riid).get()));
   return E_NOINTERFACE;
-}
-
-STDMETHODIMP_(ULONG) nsTextStore::AddRef()
-{
-  return ++mRefCnt;
-}
-
-STDMETHODIMP_(ULONG) nsTextStore::Release()
-{
-  --mRefCnt;
-  if (0 != mRefCnt)
-    return mRefCnt;
-  delete this;
-  return 0;
 }
 
 STDMETHODIMP
@@ -2252,7 +2229,8 @@ nsTextStore::RetrieveRequestedAttrs(ULONG ulCount,
 
     if (mInputScopeRequested) {
       paAttrVals->varValue.vt = VT_UNKNOWN;
-      paAttrVals->varValue.punkVal = (IUnknown*) new InputScopeImpl(mInputScopes);
+      nsRefPtr<IUnknown> inputScope = new InputScopeImpl(mInputScopes);
+      paAttrVals->varValue.punkVal = inputScope.forget().take();
     }
 
     mInputScopeDetected = mInputScopeRequested = false;
@@ -3731,14 +3709,9 @@ nsTextStore::Initialize()
     return;
   }
 
-  bool enableTsf = Preferences::GetBool(kPrefNameTSFEnabled, false);
-  // Migrate legacy TSF pref to new pref.  This should be removed in next
-  // release cycle or later.
-  if (!enableTsf && Preferences::GetBool(kLegacyPrefNameTSFEnabled, false)) {
-    enableTsf = true;
-    Preferences::SetBool(kPrefNameTSFEnabled, true);
-    Preferences::ClearUser(kLegacyPrefNameTSFEnabled);
-  }
+  bool enableTsf =
+    Preferences::GetBool(kPrefNameForceEnableTSF, false) ||
+    (IsVistaOrLater() && Preferences::GetBool(kPrefNameEnableTSF, false));
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF:   nsTextStore::Initialize(), TSF is %s",
      enableTsf ? "enabled" : "disabled"));
@@ -3890,6 +3863,10 @@ nsTextStore::Terminate(void)
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS, ("TSF: nsTextStore::Terminate()"));
 
+  if (sTsfTextStore) {
+    sTsfTextStore->Shutdown();
+  }
+
   NS_IF_RELEASE(sDisplayAttrMgr);
   NS_IF_RELEASE(sCategoryMgr);
   NS_IF_RELEASE(sTsfTextStore);
@@ -3950,6 +3927,14 @@ nsTextStore::ProcessMessage(nsWindowBase* aWindow, UINT aMessage,
       if (aWParam) {
         aLParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
       }
+      break;
+    case WM_ENTERIDLE:
+      // When an modal dialog such as a file picker is open, composition
+      // should be committed because IME might be used on it.
+      if (!IsComposingOn(aWindow)) {
+        break;
+      }
+      CommitComposition(false);
       break;
   }
 }

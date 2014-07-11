@@ -766,15 +766,71 @@ nsContentUtils::IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput)
 
 nsContentUtils::AutocompleteAttrState
 nsContentUtils::SerializeAutocompleteAttribute(const nsAttrValue* aAttr,
-                                           nsAString& aResult)
+                                               nsAString& aResult,
+                                               AutocompleteAttrState aCachedState)
 {
-  AutocompleteAttrState state = InternalSerializeAutocompleteAttribute(aAttr, aResult);
-  if (state == eAutocompleteAttrState_Valid) {
-    ASCIIToLower(aResult);
-  } else {
-    aResult.Truncate();
+  if (!aAttr ||
+      aCachedState == nsContentUtils::eAutocompleteAttrState_Invalid) {
+    return aCachedState;
   }
+
+  if (aCachedState == nsContentUtils::eAutocompleteAttrState_Valid) {
+    uint32_t atomCount = aAttr->GetAtomCount();
+    for (uint32_t i = 0; i < atomCount; i++) {
+      if (i != 0) {
+        aResult.Append(' ');
+      }
+      aResult.Append(nsDependentAtomString(aAttr->AtomAt(i)));
+    }
+    nsContentUtils::ASCIIToLower(aResult);
+    return aCachedState;
+  }
+
+  aResult.Truncate();
+
+  mozilla::dom::AutocompleteInfo info;
+  AutocompleteAttrState state =
+    InternalSerializeAutocompleteAttribute(aAttr, info);
+  if (state == eAutocompleteAttrState_Valid) {
+    // Concatenate the info fields.
+    aResult = info.mSection;
+
+    if (!info.mAddressType.IsEmpty()) {
+      if (!aResult.IsEmpty()) {
+        aResult += ' ';
+      }
+      aResult += info.mAddressType;
+    }
+
+    if (!info.mContactType.IsEmpty()) {
+      if (!aResult.IsEmpty()) {
+        aResult += ' ';
+      }
+      aResult += info.mContactType;
+    }
+
+    if (!info.mFieldName.IsEmpty()) {
+      if (!aResult.IsEmpty()) {
+        aResult += ' ';
+      }
+      aResult += info.mFieldName;
+    }
+  }
+
   return state;
+}
+
+nsContentUtils::AutocompleteAttrState
+nsContentUtils::SerializeAutocompleteAttribute(const nsAttrValue* aAttr,
+                                               mozilla::dom::AutocompleteInfo& aInfo,
+                                               AutocompleteAttrState aCachedState)
+{
+  if (!aAttr ||
+      aCachedState == nsContentUtils::eAutocompleteAttrState_Invalid) {
+    return aCachedState;
+  }
+
+  return InternalSerializeAutocompleteAttribute(aAttr, aInfo);
 }
 
 /**
@@ -784,7 +840,7 @@ nsContentUtils::SerializeAutocompleteAttribute(const nsAttrValue* aAttr,
  */
 nsContentUtils::AutocompleteAttrState
 nsContentUtils::InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrVal,
-                                                   nsAString& aResult)
+                                                       mozilla::dom::AutocompleteInfo& aInfo)
 {
   // No sandbox attribute so we are done
   if (!aAttrVal) {
@@ -801,6 +857,7 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrV
   AutocompleteCategory category;
   nsAttrValue enumValue;
 
+  nsAutoString str;
   bool result = enumValue.ParseEnumValue(tokenString, kAutocompleteFieldNameTable, false);
   if (result) {
     // Off/Automatic/Normal categories.
@@ -809,7 +866,9 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrV
       if (numTokens > 1) {
         return eAutocompleteAttrState_Invalid;
       }
-      enumValue.ToString(aResult);
+      enumValue.ToString(str);
+      ASCIIToLower(str);
+      aInfo.mFieldName.Assign(str);
       return eAutocompleteAttrState_Valid;
     }
 
@@ -837,7 +896,9 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrV
     category = eAutocompleteCategory_CONTACT;
   }
 
-  enumValue.ToString(aResult);
+  enumValue.ToString(str);
+  ASCIIToLower(str);
+  aInfo.mFieldName.Assign(str);
 
   // We are done if this was the only token.
   if (numTokens == 1) {
@@ -851,10 +912,10 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrV
     nsAttrValue contactFieldHint;
     result = contactFieldHint.ParseEnumValue(tokenString, kAutocompleteContactFieldHintTable, false);
     if (result) {
-      aResult.Insert(' ', 0);
       nsAutoString contactFieldHintString;
       contactFieldHint.ToString(contactFieldHintString);
-      aResult.Insert(contactFieldHintString, 0);
+      ASCIIToLower(contactFieldHintString);
+      aInfo.mContactType.Assign(contactFieldHintString);
       if (index == 0) {
         return eAutocompleteAttrState_Valid;
       }
@@ -866,15 +927,20 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrV
   // Check for billing/shipping tokens
   nsAttrValue fieldHint;
   if (fieldHint.ParseEnumValue(tokenString, kAutocompleteFieldHintTable, false)) {
-    aResult.Insert(' ', 0);
     nsString fieldHintString;
     fieldHint.ToString(fieldHintString);
-    aResult.Insert(fieldHintString, 0);
+    ASCIIToLower(fieldHintString);
+    aInfo.mAddressType.Assign(fieldHintString);
     if (index == 0) {
       return eAutocompleteAttrState_Valid;
     }
     --index;
   }
+
+  // Clear the fields as the autocomplete attribute is invalid.
+  aInfo.mAddressType.Truncate();
+  aInfo.mContactType.Truncate();
+  aInfo.mFieldName.Truncate();
 
   return eAutocompleteAttrState_Invalid;
 }
@@ -6359,11 +6425,9 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
 }
 
 bool
-nsContentUtils::GetContentSecurityPolicy(JSContext* aCx,
-                                         nsIContentSecurityPolicy** aCSP)
+nsContentUtils::GetContentSecurityPolicy(nsIContentSecurityPolicy** aCSP)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  MOZ_ASSERT(aCx == GetCurrentJSContext());
 
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   nsresult rv = SubjectPrincipal()->GetCsp(getter_AddRefs(csp));

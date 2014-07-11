@@ -34,13 +34,13 @@ public:
   bool InitPlaneData(GMPPlaneData& aPlaneData);
 
   // GMPPlane
-  virtual GMPVideoErr CreateEmptyPlane(int32_t aAllocatedSize,
-                                       int32_t aStride,
-                                       int32_t aPlaneSize) MOZ_OVERRIDE;
-  virtual GMPVideoErr Copy(const GMPPlane& aPlane) MOZ_OVERRIDE;
-  virtual GMPVideoErr Copy(int32_t aSize,
-                           int32_t aStride,
-                           const uint8_t* aBuffer) MOZ_OVERRIDE;
+  virtual GMPErr CreateEmptyPlane(int32_t aAllocatedSize,
+                                  int32_t aStride,
+                                  int32_t aPlaneSize) MOZ_OVERRIDE;
+  virtual GMPErr Copy(const GMPPlane& aPlane) MOZ_OVERRIDE;
+  virtual GMPErr Copy(int32_t aSize,
+                      int32_t aStride,
+                      const uint8_t* aBuffer) MOZ_OVERRIDE;
   virtual void Swap(GMPPlane& aPlane) MOZ_OVERRIDE;
   virtual int32_t AllocatedSize() const MOZ_OVERRIDE;
   virtual void ResetSize() MOZ_OVERRIDE;
@@ -51,7 +51,7 @@ public:
   virtual void Destroy() MOZ_OVERRIDE;
 
 private:
-  GMPVideoErr MaybeResize(int32_t aNewSize);
+  GMPErr MaybeResize(int32_t aNewSize);
   void DestroyBuffer();
 
   ipc::Shmem mBuffer;

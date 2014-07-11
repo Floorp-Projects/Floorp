@@ -3925,8 +3925,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
     MOZ_ASSERT(loadInfo.mPrincipal);
     MOZ_ASSERT(isChrome || !loadInfo.mDomain.IsEmpty());
 
-    if (!nsContentUtils::GetContentSecurityPolicy(aCx,
-                                               getter_AddRefs(loadInfo.mCSP))) {
+    if (!nsContentUtils::GetContentSecurityPolicy(getter_AddRefs(loadInfo.mCSP))) {
       NS_WARNING("Failed to get CSP!");
       return NS_ERROR_FAILURE;
     }

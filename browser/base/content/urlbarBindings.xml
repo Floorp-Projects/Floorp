@@ -265,6 +265,7 @@
             return; // Do nothing for right clicks
 
           var url = this.value;
+          var mayInheritPrincipal = false;
           var postData = null;
 
           var action = this._parseActionUrl(url);
@@ -287,7 +288,7 @@
           }
           else {
             this._canonizeURL(aTriggeringEvent, response => {
-              [url, postData] = response;
+              [url, postData, mayInheritPrincipal] = response;
               if (url) {
                 matchLastLocationChange = (lastLocationChange ==
                                            gBrowser.selectedBrowser.lastLocationChange);
@@ -309,10 +310,11 @@
             }
 
             function loadCurrent() {
-              let webnav = Ci.nsIWebNavigation;
-              let flags = webnav.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
-                          webnav.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
-              gBrowser.loadURIWithFlags(url, flags, null, null, postData);
+              openUILinkIn(url, "current", {
+                allowThirdPartyFixup: true,
+                disallowInheritPrincipal: !mayInheritPrincipal,
+                postData: postData
+              });
             }
 
             // Focus the content area before triggering loads, since if the load
@@ -422,7 +424,7 @@
           }
 
           getShortcutOrURIAndPostData(url, data => {
-            aCallback([data.url, data.postData]);
+            aCallback([data.url, data.postData, data.mayInheritPrincipal]);
           });
         ]]></body>
       </method>

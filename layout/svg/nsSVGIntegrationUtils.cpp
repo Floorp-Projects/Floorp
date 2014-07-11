@@ -628,7 +628,11 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   aContext->Rectangle(aFillRect);
   aContext->Clip();
 
-  aContext->Multiply(gfxMatrix(aTransform).Invert());
+  gfxMatrix invmatrix = aTransform;
+  if (!invmatrix.Invert()) {
+    return false;
+  }
+  aContext->Multiply(invmatrix);
 
   // nsLayoutUtils::PaintFrame will anchor its painting at mFrame. But we want
   // to have it anchored at the top left corner of the bounding box of all of
@@ -707,8 +711,8 @@ nsSVGIntegrationUtils::DrawableFromPaintServer(nsIFrame*         aFrame,
     // pattern size.
     gfxFloat scaleX = overrideBounds.Width() / aRenderSize.width;
     gfxFloat scaleY = overrideBounds.Height() / aRenderSize.height;
-    gfxMatrix scaleMatrix = gfxMatrix().Scale(scaleX, scaleY);
-    pattern->SetMatrix(scaleMatrix.Multiply(pattern->GetMatrix()));
+    gfxMatrix scaleMatrix = gfxMatrix::Scaling(scaleX, scaleY);
+    pattern->SetMatrix(scaleMatrix * pattern->GetMatrix());
     nsRefPtr<gfxDrawable> drawable =
       new gfxPatternDrawable(pattern, aRenderSize);
     return drawable.forget();

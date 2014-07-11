@@ -7,7 +7,7 @@
 #include "builtin/TestingFunctions.h"
 
 #include "mozilla/Move.h"
-#include "mozilla/Scoped.h"
+#include "mozilla/UniquePtr.h"
 
 #include "jsapi.h"
 #include "jscntxt.h"
@@ -41,7 +41,7 @@ using namespace JS;
 
 using mozilla::ArrayLength;
 using mozilla::Move;
-using mozilla::ScopedFreePtr;
+using mozilla::UniquePtr;
 
 // If fuzzingSafe is set, remove functionality that could cause problems with
 // fuzzers. Set this via the environment variable MOZ_FUZZING_SAFE.
@@ -1678,20 +1678,22 @@ ReportLargeAllocationFailure(JSContext *cx, unsigned argc, jsval *vp)
 
 namespace heaptools {
 
+typedef UniquePtr<jschar[], JS::FreePolicy> EdgeName;
+
 // An edge to a node from its predecessor in a path through the graph.
 class BackEdge {
     // The node from which this edge starts.
     JS::ubi::Node predecessor_;
 
-    // The name of this edge. We own this storage.
-    ScopedFreePtr<jschar> name_;
+    // The name of this edge.
+    EdgeName name_;
 
   public:
     BackEdge() : name_(nullptr) { }
-    // Construct an initialized back edge. Take ownership of |name|.
-    BackEdge(JS::ubi::Node predecessor, jschar *name)
-        : predecessor_(predecessor), name_(name) { }
-    BackEdge(BackEdge &&rhs) : predecessor_(rhs.predecessor_), name_(rhs.name_.forget()) { }
+    // Construct an initialized back edge, taking ownership of |name|.
+    BackEdge(JS::ubi::Node predecessor, EdgeName name)
+        : predecessor_(predecessor), name_(Move(name)) { }
+    BackEdge(BackEdge &&rhs) : predecessor_(rhs.predecessor_), name_(Move(rhs.name_)) { }
     BackEdge &operator=(BackEdge &&rhs) {
         MOZ_ASSERT(&rhs != this);
         this->~BackEdge();
@@ -1699,7 +1701,7 @@ class BackEdge {
         return *this;
     }
 
-    jschar *forgetName() { return name_.forget(); }
+    EdgeName forgetName() { return Move(name_); }
     JS::ubi::Node predecessor() const { return predecessor_; }
 
   private:
@@ -1714,7 +1716,7 @@ struct FindPathHandler {
     typedef JS::ubi::BreadthFirst<FindPathHandler> Traversal;
 
     FindPathHandler(JS::ubi::Node start, JS::ubi::Node target,
-                    AutoValueVector &nodes, Vector<ScopedFreePtr<jschar> > &edges)
+                    AutoValueVector &nodes, Vector<EdgeName> &edges)
       : start(start), target(target), foundPath(false),
         nodes(nodes), edges(edges) { }
 
@@ -1729,10 +1731,10 @@ struct FindPathHandler {
 
         // Record how we reached this node. This is the last edge on a
         // shortest path to this node.
-        jschar *edgeName = js_strdup(traversal.cx, edge.name);
+        EdgeName edgeName(js_strdup(traversal.cx, edge.name));
         if (!edgeName)
             return false;
-        *backEdge = mozilla::Move(BackEdge(origin, edgeName));
+        *backEdge = mozilla::Move(BackEdge(origin, Move(edgeName)));
 
         // Have we reached our final target node?
         if (edge.referent == target) {
@@ -1782,7 +1784,7 @@ struct FindPathHandler {
     // - edges[0] is the name of the edge from nodes[0] to the target.
     // - The last node, nodes[n-1], is the start node.
     AutoValueVector &nodes;
-    Vector<ScopedFreePtr<jschar> > &edges;
+    Vector<EdgeName> &edges;
 };
 
 } // namespace heaptools
@@ -1816,7 +1818,7 @@ FindPath(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     AutoValueVector nodes(cx);
-    Vector<ScopedFreePtr<jschar> > edges(cx);
+    Vector<heaptools::EdgeName> edges(cx);
 
     {
         // We can't tolerate the GC moving things around while we're searching
@@ -1868,12 +1870,14 @@ FindPath(JSContext *cx, unsigned argc, jsval *vp)
                                JSPROP_ENUMERATE, nullptr, nullptr))
             return false;
 
-        RootedString edge(cx, NewString<CanGC>(cx, edges[i].get(), js_strlen(edges[i])));
-        if (!edge)
+        heaptools::EdgeName edgeName = Move(edges[i]);
+
+        RootedString edgeStr(cx, NewString<CanGC>(cx, edgeName.get(), js_strlen(edgeName.get())));
+        if (!edgeStr)
             return false;
-        edges[i].forget();
-        RootedValue edgeString(cx, StringValue(edge));
-        if (!JS_DefineProperty(cx, obj, "edge", edgeString,
+        edgeName.release(); // edgeStr acquired ownership
+
+        if (!JS_DefineProperty(cx, obj, "edge", edgeStr,
                                JSPROP_ENUMERATE, nullptr, nullptr))
             return false;
 

@@ -160,7 +160,6 @@ class TestEmitterBasic(unittest.TestCase):
             CSRCS=['fans.c', 'tans.c'],
             CPP_UNIT_TESTS=['foo.cpp'],
             DISABLE_STL_WRAPPING=True,
-            EXPORT_LIBRARY=True,
             EXTRA_COMPONENTS=['fans.js', 'tans.js'],
             EXTRA_PP_COMPONENTS=['fans.pp.js', 'tans.pp.js'],
             EXTRA_JS_MODULES=['bar.jsm', 'foo.jsm'],

@@ -11,13 +11,19 @@ XPIDL_SOURCES += [
 ]
 
 EXPORTS += [
+    'gmp-api/gmp-async-shutdown.h',
+    'gmp-api/gmp-audio-codec.h',
+    'gmp-api/gmp-audio-decode.h',
+    'gmp-api/gmp-audio-host.h',
+    'gmp-api/gmp-audio-samples.h',
+    'gmp-api/gmp-decryption.h',
     'gmp-api/gmp-entrypoints.h',
     'gmp-api/gmp-errors.h',
     'gmp-api/gmp-platform.h',
+    'gmp-api/gmp-storage.h',
     'gmp-api/gmp-video-codec.h',
     'gmp-api/gmp-video-decode.h',
     'gmp-api/gmp-video-encode.h',
-    'gmp-api/gmp-video-errors.h',
     'gmp-api/gmp-video-frame-encoded.h',
     'gmp-api/gmp-video-frame-i420.h',
     'gmp-api/gmp-video-frame.h',
@@ -33,9 +39,11 @@ EXPORTS += [
     'GMPSharedMemManager.h',
     'GMPVideoDecoderChild.h',
     'GMPVideoDecoderParent.h',
+    'GMPVideoDecoderProxy.h',
     'GMPVideoEncodedFrameImpl.h',
     'GMPVideoEncoderChild.h',
     'GMPVideoEncoderParent.h',
+    'GMPVideoEncoderProxy.h',
     'GMPVideoHost.h',
     'GMPVideoi420FrameImpl.h',
     'GMPVideoPlaneImpl.h',
@@ -48,6 +56,7 @@ UNIFIED_SOURCES += [
     'GMPProcessChild.cpp',
     'GMPProcessParent.cpp',
     'GMPService.cpp',
+    'GMPSharedMemManager.cpp',
     'GMPVideoDecoderChild.cpp',
     'GMPVideoDecoderParent.cpp',
     'GMPVideoEncodedFrameImpl.cpp',
@@ -69,6 +78,9 @@ LIBRARY_NAME = 'mozgmp'
 
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
+
+# comment this out to use Unsafe Shmem for more performance
+DEFINES['GMP_SAFE_SHMEM'] = True
 
 FAIL_ON_WARNINGS = True
 

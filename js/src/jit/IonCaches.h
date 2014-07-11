@@ -47,7 +47,7 @@ class IonCacheVisitor
   public:
 #define VISIT_INS(op)                                               \
     virtual bool visit##op##IC(CodeGenerator *codegen) {            \
-        MOZ_ASSUME_UNREACHABLE("NYI: " #op "IC");                   \
+        MOZ_CRASH("NYI: " #op "IC");                                \
     }
 
     IONCACHE_KIND_LIST(VISIT_INS)

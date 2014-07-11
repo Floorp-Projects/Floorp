@@ -10,6 +10,12 @@
 
 #include <string.h>  // memcpy
 
+#ifdef WIN32
+#include <winsock2.h>
+#else
+#include <arpa/inet.h>
+#endif
+
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
@@ -55,6 +61,29 @@ int RtpFormatH264::NextPacket(uint8_t* buffer,
   uint8_t header = payload_data_[0];
   uint8_t type   = header & kH264NAL_TypeMask;
   if (payload_size_ <= max_payload_len_) {
+//#define TEST_STAP_A
+#ifdef TEST_STAP_A
+    static uint8_t sps_buffer[256];
+    static uint32_t sps_size;
+    if (type == kH264NALU_SPS) {
+
+      sps_buffer[0] = kH264NALU_STAPA;
+      *(reinterpret_cast<uint16_t*>(&sps_buffer[1])) = htons(payload_size_); // include NAL byte
+      memcpy(&sps_buffer[1 + sizeof(uint16_t)], payload_data_, payload_size_);
+      sps_size = 1 + sizeof(uint16_t) + payload_size_;
+      *bytes_to_send = 0;
+      return -1;
+    } else if (type == kH264NALU_PPS && sps_size != 0) {
+      // Send a STAP-A of SPS/PPS
+      *(reinterpret_cast<uint16_t*>(&sps_buffer[sps_size])) = htons(payload_size_);
+      memcpy(&sps_buffer[sps_size + sizeof(uint16_t)], payload_data_, payload_size_);
+      memcpy(buffer, sps_buffer, sps_size + 2 + payload_size_);
+      *bytes_to_send = sps_size + 2 + payload_size_;
+      sps_size = 0;
+      *last_packet   = false;
+      return 0;
+    }
+#endif
     // single NAL_UNIT
     *bytes_to_send = payload_size_;
     // TODO(jesup) - this doesn't work correctly for Mode 0.
