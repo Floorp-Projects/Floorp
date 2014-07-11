@@ -21,13 +21,11 @@ fennecLogcatFilters = [ "The character encoding of the HTML document was not dec
 class RemoteAutomation(Automation):
     _devicemanager = None
 
-    def __init__(self, deviceManager, appName = '', remoteLog = None,
-                 processArgs=None):
+    def __init__(self, deviceManager, appName = '', remoteLog = None):
         self._devicemanager = deviceManager
         self._appName = appName
         self._remoteProfile = None
         self._remoteLog = remoteLog
-        self._processArgs = processArgs or {};
 
         # Default our product to fennec
         self._product = "fennec"
@@ -186,21 +184,17 @@ class RemoteAutomation(Automation):
         if stdout == None or stdout == -1 or stdout == subprocess.PIPE:
             stdout = self._remoteLog
 
-        return self.RProcess(self._devicemanager, cmd, stdout, stderr, env, cwd, self._appName,
-                             **self._processArgs)
+        return self.RProcess(self._devicemanager, cmd, stdout, stderr, env, cwd, self._appName)
 
     # be careful here as this inner class doesn't have access to outer class members
     class RProcess(object):
         # device manager process
         dm = None
-        def __init__(self, dm, cmd, stdout=None, stderr=None, env=None, cwd=None, app=None,
-                     messageLogger=None):
+        def __init__(self, dm, cmd, stdout = None, stderr = None, env = None, cwd = None, app = None):
             self.dm = dm
             self.stdoutlen = 0
             self.lastTestSeen = "remoteautomation.py"
             self.proc = dm.launchProcess(cmd, stdout, cwd, env, True)
-            self.messageLogger = messageLogger
-
             if (self.proc is None):
                 if cmd[0] == 'am':
                     self.proc = stdout
@@ -216,9 +210,6 @@ class RemoteAutomation(Automation):
             # The benefit of the following sleep is unclear; it was formerly 15 seconds
             time.sleep(1)
 
-            # Used to buffer log messages until we meet a line break
-            self.logBuffer = ""
-
         @property
         def pid(self):
             pid = self.dm.processExist(self.procName)
@@ -230,51 +221,29 @@ class RemoteAutomation(Automation):
                 return 0
             return pid
 
-        def read_stdout(self):
+        @property
+        def stdout(self):
             """ Fetch the full remote log file using devicemanager and return just
-                the new log entries since the last call (as a list of messages or lines).
+                the new log entries since the last call (as a multi-line string).
             """
-            if not self.dm.fileExists(self.proc):
-                return []
-            try:
-                newLogContent = self.dm.pullFile(self.proc, self.stdoutlen)
-            except DMError:
-                # we currently don't retry properly in the pullFile
-                # function in dmSUT, so an error here is not necessarily
-                # the end of the world
-                return []
-            if not newLogContent:
-                return []
-
-            self.stdoutlen += len(newLogContent)
-
-            if self.messageLogger is None:
+            if self.dm.fileExists(self.proc):
+                try:
+                    newLogContent = self.dm.pullFile(self.proc, self.stdoutlen)
+                except DMError:
+                    # we currently don't retry properly in the pullFile
+                    # function in dmSUT, so an error here is not necessarily
+                    # the end of the world
+                    return ''
+                self.stdoutlen += len(newLogContent)
+                # Match the test filepath from the last TEST-START line found in the new
+                # log content. These lines are in the form:
+                # 1234 INFO TEST-START | /filepath/we/wish/to/capture.html\n
                 testStartFilenames = re.findall(r"TEST-START \| ([^\s]*)", newLogContent)
                 if testStartFilenames:
                     self.lastTestSeen = testStartFilenames[-1]
-                print newLogContent
-                return [newLogContent]
-
-            self.logBuffer += newLogContent
-            lines = self.logBuffer.split('\n')
-            if not lines:
-                return
-
-            # We only keep the last (unfinished) line in the buffer
-            self.logBuffer = lines[-1]
-            del lines[-1]
-            messages = []
-            for line in lines:
-                # This passes the line to the logger (to be logged or buffered)
-                # and returns a structured message (dict) or None, depending on the log
-                message = self.messageLogger.write(line)
-                if message is None:
-                    continue
-                messages.append(message)
-                if message['action'] == 'test_start':
-                    self.lastTestSeen = message['test']
-
-            return messages
+                return newLogContent.strip('\n').strip()
+            else:
+                return ''
 
         @property
         def getLastTestSeen(self):
@@ -289,7 +258,7 @@ class RemoteAutomation(Automation):
         def wait(self, timeout = None, noOutputTimeout = None):
             timer = 0
             noOutputTimer = 0
-            interval = 20
+            interval = 20 
 
             if timeout == None:
                 timeout = self.timeout
@@ -297,9 +266,10 @@ class RemoteAutomation(Automation):
             status = 0
             while (self.dm.getTopActivity() == self.procName):
                 # retrieve log updates every 60 seconds
-                if timer % 60 == 0:
-                    messages = self.read_stdout()
-                    if messages:
+                if timer % 60 == 0: 
+                    t = self.stdout
+                    if t != '':
+                        print t
                         noOutputTimer = 0
 
                 time.sleep(interval)
@@ -313,7 +283,7 @@ class RemoteAutomation(Automation):
                     break
 
             # Flush anything added to stdout during the sleep
-            self.read_stdout()
+            print self.stdout
 
             return status
 

@@ -450,7 +450,7 @@ class Marionette(object):
                  emulator_binary=None, emulator_res=None, connect_to_running_emulator=False,
                  gecko_log=None, homedir=None, baseurl=None, no_window=False, logdir=None,
                  busybox=None, symbols_path=None, timeout=None, socket_timeout=360,
-                 device_serial=None, adb_path=None, process_args=None):
+                 device_serial=None, adb_path=None):
         self.host = host
         self.port = self.local_port = port
         self.bin = bin
@@ -507,8 +507,7 @@ class Marionette(object):
                                             userdata=emulator_img,
                                             resolution=emulator_res,
                                             profile=profile,
-                                            adb_path=adb_path,
-                                            process_args=process_args)
+                                            adb_path=adb_path)
             self.emulator = self.runner.device
             self.emulator.start()
             self.port = self.emulator.setup_port_forwarding(self.port)
@@ -516,8 +515,7 @@ class Marionette(object):
 
         if connect_to_running_emulator:
             self.runner = B2GEmulatorRunner(b2g_home=homedir,
-                                            logdir=logdir,
-                                            process_args=process_args)
+                                            logdir=logdir)
             self.emulator = self.runner.device
             self.emulator.connect()
             self.port = self.emulator.setup_port_forwarding(self.port)

@@ -11,7 +11,6 @@
         width="1024">
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/TestRunner.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/manifestLibrary.js" />
   <script type="application/javascript" src="chrome://mochikit/content/chunkifyTests.js"/>
@@ -66,7 +65,7 @@
       var Cc = Components.classes;
       var Ci = Components.interfaces;
     }
-
+    
     var gConfig;
 
     var gDumper = {
@@ -83,12 +82,12 @@
         delete this.fileLogger;
         return this.fileLogger = logger;
       },
-      structuredLogger: new StructuredLogger(),
+
       dump: function (str) {
-        this.structuredLogger.info(str);
+        dump(str);
 
         if (this.fileLogger)
-          this.fileLogger.log(str);
+          this.fileLogger._foStream.write(str, str.length);
       },
 
       done: function () {
@@ -142,18 +141,7 @@
         this.lastOutputTime = Date.now();
         this.results.push(result);
 
-        if (result.info) {
-          if (result.msg) {
-            this.dumper.structuredLogger.info(result.msg);
-          }
-          return;
-        }
-
-        this.dumper.structuredLogger.testStatus(this.path,
-                                                result.msg,
-                                                result.status,
-                                                result.expected,
-                                                result.msg);
+        this.dumper.dump(result.result + " | " + this.path + " | " + result.msg + "\n");
       },
 
       setDuration: function setDuration(duration) {
