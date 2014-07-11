@@ -1084,6 +1084,7 @@ Http2Session::RecvHeaders(Http2Session *self)
   nsresult rv;
 
   if (!isContinuation) {
+    self->mDecompressBuffer.Truncate();
     rv = self->ParsePadding(paddingControlBytes, paddingLength);
     if (NS_FAILED(rv)) {
       return rv;
@@ -1391,6 +1392,7 @@ Http2Session::RecvPushPromise(Http2Session *self)
     promiseLen = 0; // really a continuation frame
     promisedID = self->mContinuedPromiseStream;
   } else {
+    self->mDecompressBuffer.Truncate();
     nsresult rv = self->ParsePadding(paddingControlBytes, paddingLength);
     if (NS_FAILED(rv)) {
       return rv;
