@@ -172,7 +172,7 @@ class Simulator
         // Known bad pc value to ensure that the simulator does not execute
         // without being properly setup.
         bad_lr = -1,
-        // A pc value used to signal the simulator to stop execution.  Generally
+        // A pc value used to signal the simulator to stop execution. Generally
         // the lr is set to this value on transition from native C code to
         // simulated execution, so that the simulator can "return" to the native
         // C code.
