@@ -190,6 +190,11 @@ public:
                                          uint32_t aSize,
                                          const char16_t* aValue);
 
+  // Like SetFromWStringWithSize, but leaves the string uninitialized. It does
+  // does write the null-terminator.
+  static nsresult AllocateWStringWithSize(nsDiscriminatedUnion* aData,
+                                          uint32_t aSize);
+
   static nsresult SetToVoid(nsDiscriminatedUnion* aData);
   static nsresult SetToEmpty(nsDiscriminatedUnion* aData);
   static nsresult SetToEmptyArray(nsDiscriminatedUnion* aData);
