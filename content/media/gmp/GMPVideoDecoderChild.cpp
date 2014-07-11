@@ -80,31 +80,26 @@ GMPVideoDecoderChild::InputDataExhausted()
   SendInputDataExhausted();
 }
 
-void
-GMPVideoDecoderChild::DrainComplete()
+bool
+GMPVideoDecoderChild::MgrAllocShmem(size_t aSize,
+                                    ipc::Shmem::SharedMemory::SharedMemoryType aType,
+                                    ipc::Shmem* aMem)
 {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
-  SendDrainComplete();
+  return AllocShmem(aSize, aType, aMem);
 }
 
-void
-GMPVideoDecoderChild::ResetComplete()
+bool
+GMPVideoDecoderChild::MgrDeallocShmem(Shmem& aMem)
 {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
-  SendResetComplete();
-}
-
-void
-GMPVideoDecoderChild::CheckThread()
-{
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
+  return DeallocShmem(aMem);
 }
 
 bool
 GMPVideoDecoderChild::RecvInitDecode(const GMPVideoCodec& aCodecSettings,
-                                     const nsTArray<uint8_t>& aCodecSpecific,
                                      const int32_t& aCoreCount)
 {
   if (!mVideoDecoder) {
@@ -112,19 +107,15 @@ GMPVideoDecoderChild::RecvInitDecode(const GMPVideoCodec& aCodecSettings,
   }
 
   // Ignore any return code. It is OK for this to fail without killing the process.
-  mVideoDecoder->InitDecode(aCodecSettings,
-                            aCodecSpecific.Elements(),
-                            aCodecSpecific.Length(),
-                            this,
-                            aCoreCount);
+  mVideoDecoder->InitDecode(aCodecSettings, this, aCoreCount);
+
   return true;
 }
 
 bool
 GMPVideoDecoderChild::RecvDecode(const GMPVideoEncodedFrameData& aInputFrame,
                                  const bool& aMissingFrames,
-                                 const GMPBufferType& aBufferType,
-                                 const nsTArray<uint8_t>& aCodecSpecificInfo,
+                                 const GMPCodecSpecificInfo& aCodecSpecificInfo,
                                  const int64_t& aRenderTimeMs)
 {
   if (!mVideoDecoder) {
@@ -134,23 +125,8 @@ GMPVideoDecoderChild::RecvDecode(const GMPVideoEncodedFrameData& aInputFrame,
   auto f = new GMPVideoEncodedFrameImpl(aInputFrame, &mVideoHost);
 
   // Ignore any return code. It is OK for this to fail without killing the process.
-  mVideoDecoder->Decode(f,
-                        aMissingFrames,
-                        aBufferType,
-                        aCodecSpecificInfo.Elements(),
-                        aCodecSpecificInfo.Length(),
-                        aRenderTimeMs);
+  mVideoDecoder->Decode(f, aMissingFrames, aCodecSpecificInfo, aRenderTimeMs);
 
-  return true;
-}
-
-bool
-GMPVideoDecoderChild::RecvChildShmemForPool(Shmem& aFrameBuffer)
-{
-  if (aFrameBuffer.IsWritable()) {
-    mVideoHost.SharedMemMgr()->MgrDeallocShmem(GMPSharedMemManager::kGMPFrameData,
-                                               aFrameBuffer);
-  }
   return true;
 }
 

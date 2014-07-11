@@ -30,15 +30,17 @@
 #include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
 
 #include "gmp-video-host.h"
-#include "GMPVideoDecoderProxy.h"
-#include "GMPVideoEncoderProxy.h"
+#include "gmp-video-encode.h"
+#include "gmp-video-decode.h"
+#include "gmp-video-frame-i420.h"
+#include "gmp-video-frame-encoded.h"
 
 #include "WebrtcGmpVideoCodec.h"
 
 namespace mozilla {
 
 class WebrtcGmpVideoEncoder : public WebrtcVideoEncoder,
-                              public GMPVideoEncoderCallbackProxy
+                              public GMPEncoderCallback
 {
 public:
   WebrtcGmpVideoEncoder();
@@ -64,10 +66,9 @@ public:
   virtual int32_t SetRates(uint32_t aNewBitRate,
                            uint32_t aFrameRate) MOZ_OVERRIDE;
 
-  // GMPVideoEncoderCallback virtual functions.
+  // GMPEncoderCallback virtual functions.
   virtual void Encoded(GMPVideoEncodedFrame* aEncodedFrame,
-                       GMPBufferType aBufferType,
-                       const nsTArray<uint8_t>& aCodecSpecificInfo) MOZ_OVERRIDE;
+                       const GMPCodecSpecificInfo& aCodecSpecificInfo) MOZ_OVERRIDE;
 
 
 private:
@@ -84,14 +85,14 @@ private:
 
   nsCOMPtr<mozIGeckoMediaPluginService> mMPS;
   nsIThread* mGMPThread;
-  GMPVideoEncoderProxy* mGMP;
+  GMPVideoEncoder* mGMP;
   GMPVideoHost* mHost;
   webrtc::EncodedImageCallback* mCallback;
 };
 
 
 class WebrtcGmpVideoDecoder : public WebrtcVideoDecoder,
-                              public GMPVideoDecoderCallback
+                              public GMPDecoderCallback
 {
 public:
   WebrtcGmpVideoDecoder();
@@ -125,14 +126,6 @@ public:
     MOZ_CRASH();
   }
 
-  virtual void DrainComplete() MOZ_OVERRIDE {
-    MOZ_CRASH();
-  }
-
-  virtual void ResetComplete() MOZ_OVERRIDE {
-    MOZ_CRASH();
-  }
-
 private:
   virtual int32_t InitDecode_g(const webrtc::VideoCodec* aCodecSettings,
                                int32_t aNumberOfCores);
@@ -145,7 +138,7 @@ private:
 
   nsCOMPtr<mozIGeckoMediaPluginService> mMPS;
   nsIThread* mGMPThread;
-  GMPVideoDecoderProxy*  mGMP;
+  GMPVideoDecoder* mGMP;
   GMPVideoHost* mHost;
   webrtc::DecodedImageCallback* mCallback;
 };

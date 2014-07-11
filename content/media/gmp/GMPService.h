@@ -6,7 +6,6 @@
 #ifndef GMPService_h_
 #define GMPService_h_
 
-#include "nsString.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"

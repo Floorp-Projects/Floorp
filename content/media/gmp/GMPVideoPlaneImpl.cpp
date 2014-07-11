@@ -73,21 +73,20 @@ GMPPlaneImpl::InitPlaneData(GMPPlaneData& aPlaneData)
   return true;
 }
 
-GMPErr
+GMPVideoErr
 GMPPlaneImpl::MaybeResize(int32_t aNewSize) {
   if (aNewSize <= AllocatedSize()) {
-    return GMPNoErr;
+    return GMPVideoNoErr;
   }
 
   if (!mHost) {
-    return GMPGenericErr;
+    return GMPVideoGenericErr;
   }
 
   ipc::Shmem new_mem;
-  if (!mHost->SharedMemMgr()->MgrAllocShmem(GMPSharedMemManager::kGMPFrameData, aNewSize,
-                                            ipc::SharedMemory::TYPE_BASIC, &new_mem) ||
+  if (!mHost->SharedMemMgr()->MgrAllocShmem(aNewSize, ipc::SharedMemory::TYPE_BASIC, &new_mem) ||
       !new_mem.get<uint8_t>()) {
-    return GMPAllocErr;
+    return GMPVideoAllocErr;
   }
 
   if (mBuffer.IsReadable()) {
@@ -98,43 +97,43 @@ GMPPlaneImpl::MaybeResize(int32_t aNewSize) {
 
   mBuffer = new_mem;
 
-  return GMPNoErr;
+  return GMPVideoNoErr;
 }
 
 void
 GMPPlaneImpl::DestroyBuffer()
 {
   if (mHost && mBuffer.IsWritable()) {
-    mHost->SharedMemMgr()->MgrDeallocShmem(GMPSharedMemManager::kGMPFrameData, mBuffer);
+    mHost->SharedMemMgr()->MgrDeallocShmem(mBuffer);
   }
   mBuffer = ipc::Shmem();
 }
 
-GMPErr
+GMPVideoErr
 GMPPlaneImpl::CreateEmptyPlane(int32_t aAllocatedSize, int32_t aStride, int32_t aPlaneSize)
 {
   if (aAllocatedSize < 1 || aStride < 1 || aPlaneSize < 1) {
-    return GMPGenericErr;
+    return GMPVideoGenericErr;
   }
 
-  GMPErr err = MaybeResize(aAllocatedSize);
-  if (err != GMPNoErr) {
+  GMPVideoErr err = MaybeResize(aAllocatedSize);
+  if (err != GMPVideoNoErr) {
     return err;
   }
 
   mSize = aPlaneSize;
   mStride = aStride;
 
-  return GMPNoErr;
+  return GMPVideoNoErr;
 }
 
-GMPErr
+GMPVideoErr
 GMPPlaneImpl::Copy(const GMPPlane& aPlane)
 {
   auto& planeimpl = static_cast<const GMPPlaneImpl&>(aPlane);
 
-  GMPErr err = MaybeResize(planeimpl.mSize);
-  if (err != GMPNoErr) {
+  GMPVideoErr err = MaybeResize(planeimpl.mSize);
+  if (err != GMPVideoNoErr) {
     return err;
   }
 
@@ -145,14 +144,14 @@ GMPPlaneImpl::Copy(const GMPPlane& aPlane)
   mSize = planeimpl.mSize;
   mStride = planeimpl.mStride;
 
-  return GMPNoErr;
+  return GMPVideoNoErr;
 }
 
-GMPErr
+GMPVideoErr
 GMPPlaneImpl::Copy(int32_t aSize, int32_t aStride, const uint8_t* aBuffer)
 {
-  GMPErr err = MaybeResize(aSize);
-  if (err != GMPNoErr) {
+  GMPVideoErr err = MaybeResize(aSize);
+  if (err != GMPVideoNoErr) {
     return err;
   }
 
@@ -163,7 +162,7 @@ GMPPlaneImpl::Copy(int32_t aSize, int32_t aStride, const uint8_t* aBuffer)
   mSize = aSize;
   mStride = aStride;
 
-  return GMPNoErr;
+  return GMPVideoNoErr;
 }
 
 void

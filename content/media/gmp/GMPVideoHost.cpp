@@ -20,41 +20,41 @@ GMPVideoHostImpl::~GMPVideoHostImpl()
 {
 }
 
-GMPErr
+GMPVideoErr
 GMPVideoHostImpl::CreateFrame(GMPVideoFrameFormat aFormat, GMPVideoFrame** aFrame)
 {
   if (!mSharedMemMgr) {
-    return GMPGenericErr;
+    return GMPVideoGenericErr;
   }
 
   if (!aFrame) {
-    return GMPGenericErr;
+    return GMPVideoGenericErr;
   }
   *aFrame = nullptr;
 
   switch (aFormat) {
     case kGMPI420VideoFrame:
       *aFrame = new GMPVideoi420FrameImpl(this);
-      return GMPNoErr;
+      return GMPVideoNoErr;
     case kGMPEncodedVideoFrame:
       *aFrame = new GMPVideoEncodedFrameImpl(this);
-      return GMPNoErr;
+      return GMPVideoNoErr;
     default:
       NS_NOTREACHED("Unknown frame format!");
   }
 
-  return GMPGenericErr;
+  return GMPVideoGenericErr;
 }
 
-GMPErr
+GMPVideoErr
 GMPVideoHostImpl::CreatePlane(GMPPlane** aPlane)
 {
   if (!mSharedMemMgr) {
-    return GMPGenericErr;
+    return GMPVideoGenericErr;
   }
 
   if (!aPlane) {
-    return GMPGenericErr;
+    return GMPVideoGenericErr;
   }
   *aPlane = nullptr;
 
@@ -62,7 +62,7 @@ GMPVideoHostImpl::CreatePlane(GMPPlane** aPlane)
 
   *aPlane = p;
 
-  return GMPNoErr;
+  return GMPVideoNoErr;
 }
 
 GMPSharedMemManager*
