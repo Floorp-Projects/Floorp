@@ -82,6 +82,26 @@ this.Translation = {
       trUI.showTranslationInfoBar();
   },
 
+  getAttributionString: function() {
+    let locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                   .getService(Ci.nsIXULChromeRegistry)
+                   .getSelectedLocale("browser")
+                   .split("-")[0];
+
+    // Hardcoded translations for the locales that are relevant for Firefox 32.
+    if (locale == "de")
+      return "\xDCbersetzungen von";
+    if (locale == "pl")
+      return "T\u0142umacze\u0144 dostarcza";
+    if (locale == "tr")
+      return "\xC7eviriler:";
+    if (locale == "vi")
+      return "D\u1ECBch b\u1EB1ng";
+
+    // Fallback to the English string if we don't have a suitable translation.
+    return "Translations by";
+  },
+
   openProviderAttribution: function() {
     Cu.import("resource:///modules/RecentWindow.jsm");
     RecentWindow.getMostRecentBrowserWindow().openUILinkIn(
