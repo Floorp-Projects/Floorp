@@ -1350,6 +1350,16 @@ JS_GetClassPrototype(JSContext *cx, JSProtoKey key, MutableHandleObject objp)
     return GetBuiltinPrototype(cx, key, objp);
 }
 
+namespace JS {
+
+JS_PUBLIC_API(void)
+ProtoKeyToId(JSContext *cx, JSProtoKey key, MutableHandleId idp)
+{
+    idp.set(NameToId(ClassName(key, cx)));
+}
+
+} /* namespace JS */
+
 JS_PUBLIC_API(JSProtoKey)
 JS_IdToProtoKey(JSContext *cx, HandleId id)
 {
