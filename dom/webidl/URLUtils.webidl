@@ -17,7 +17,7 @@
 interface URLUtilsNoSearchParams {
   // Bug 824857: no support for stringifier attributes yet.
   //  stringifier attribute DOMString href;
-  [Throws]
+  [Throws, CrossOriginWritable=Location]
            attribute DOMString href;
   [Throws]
   readonly attribute DOMString origin;
