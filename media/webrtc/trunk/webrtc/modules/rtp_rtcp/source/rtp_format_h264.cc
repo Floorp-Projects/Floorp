@@ -12,9 +12,8 @@
 
 #ifdef WIN32
 #include <winsock2.h>
-#endif
-#ifdef WEBRTC_LINUX
-#include <netinet/in.h>
+#else
+#include <arpa/inet.h>
 #endif
 
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
