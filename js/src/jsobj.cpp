@@ -3424,7 +3424,7 @@ JS::IdentifyStandardInstance(JSObject *obj)
 {
     // Note: The prototype shares its JSClass with instances.
     JS_ASSERT(!obj->is<CrossCompartmentWrapperObject>());
-    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(obj->getClass());
+    JSProtoKey key = StandardProtoKeyOrNull(obj);
     if (key != JSProto_Null && !IsStandardPrototype(obj, key))
         return key;
     return JSProto_Null;
@@ -3435,7 +3435,7 @@ JS::IdentifyStandardPrototype(JSObject *obj)
 {
     // Note: The prototype shares its JSClass with instances.
     JS_ASSERT(!obj->is<CrossCompartmentWrapperObject>());
-    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(obj->getClass());
+    JSProtoKey key = StandardProtoKeyOrNull(obj);
     if (key != JSProto_Null && IsStandardPrototype(obj, key))
         return key;
     return JSProto_Null;
@@ -3444,7 +3444,7 @@ JS::IdentifyStandardPrototype(JSObject *obj)
 JSProtoKey
 JS::IdentifyStandardInstanceOrPrototype(JSObject *obj)
 {
-    return JSCLASS_CACHED_PROTO_KEY(obj->getClass());
+    return StandardProtoKeyOrNull(obj);
 }
 
 JSProtoKey
