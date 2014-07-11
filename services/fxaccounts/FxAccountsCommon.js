@@ -60,6 +60,8 @@ XPCOMUtils.defineLazyGetter(this, 'logPII', function() {
   }
 });
 
+this.FXACCOUNTS_PERMISSION = "firefox-accounts";
+
 this.DATA_FORMAT_VERSION = 1;
 this.DEFAULT_STORAGE_FILENAME = "signedInUser.json";
 
@@ -141,6 +143,7 @@ this.ERROR_NO_TOKEN_SESSION               = "NO_TOKEN_SESSION";
 this.ERROR_NO_SILENT_REFRESH_AUTH         = "NO_SILENT_REFRESH_AUTH";
 this.ERROR_NOT_VALID_JSON_BODY            = "NOT_VALID_JSON_BODY";
 this.ERROR_OFFLINE                        = "OFFLINE";
+this.ERROR_PERMISSION_DENIED              = "PERMISSION_DENIED";
 this.ERROR_REQUEST_BODY_TOO_LARGE         = "REQUEST_BODY_TOO_LARGE";
 this.ERROR_SERVER_ERROR                   = "SERVER_ERROR";
 this.ERROR_TOO_MANY_CLIENT_REQUESTS       = "TOO_MANY_CLIENT_REQUESTS";
