@@ -87,6 +87,11 @@ const char* const XPCJSRuntime::mStrings[] = {
     "name",                 // IDX_NAME
     "undefined",            // IDX_UNDEFINED
     "",                     // IDX_EMPTYSTRING
+    "fileName",             // IDX_FILENAME
+    "lineNumber",           // IDX_LINENUMBER
+    "columnNumber",         // IDX_COLUMNNUMBER
+    "stack",                // IDX_STACK
+    "message"               // IDX_MESSAGE
 };
 
 /***************************************************************************/
