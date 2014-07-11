@@ -42,7 +42,7 @@ Address
 MoveEmitterMIPS::cycleSlot() const
 {
     int offset = masm.framePushed() - pushedAtCycle_;
-    MOZ_ASSERT(Imm16::isInSignedRange(offset));
+    MOZ_ASSERT(Imm16::IsInSignedRange(offset));
     return Address(StackPointer, offset);
 }
 

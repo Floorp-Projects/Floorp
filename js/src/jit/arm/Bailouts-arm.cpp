@@ -20,9 +20,9 @@ namespace jit {
 class BailoutStack
 {
     uintptr_t frameClassId_;
-    // This is pushed in the bailout handler.  Both entry points into the handler
+    // This is pushed in the bailout handler. Both entry points into the handler
     // inserts their own value int lr, which is then placed onto the stack along
-    // with frameClassId_ above.  This should be migrated to ip.
+    // with frameClassId_ above. This should be migrated to ip.
   public:
     union {
         uintptr_t frameSize_;
