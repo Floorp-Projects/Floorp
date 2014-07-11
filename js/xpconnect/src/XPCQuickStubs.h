@@ -281,7 +281,7 @@ protected:
  * the string from garbage collection. The caller must leave the jsval alone
  * for the lifetime of the xpc_qsDOMString.
  */
-class xpc_qsDOMString : public xpc_qsBasicString<nsAString, nsDependentString>
+class xpc_qsDOMString : public xpc_qsBasicString<nsAString, nsAutoString>
 {
 public:
     xpc_qsDOMString(JSContext *cx, JS::HandleValue v,
