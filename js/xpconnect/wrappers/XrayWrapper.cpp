@@ -39,26 +39,32 @@ namespace xpc {
 
 using namespace XrayUtils;
 
+constexpr bool Between(JSProtoKey x, JSProtoKey a, JSProtoKey b) { return a <= x && x <= b; }
+
+static_assert(JSProto_URIError - JSProto_Error == 7, "New prototype added in error object range");
+#define AssertErrorObjectKeyInBounds(key) \
+    static_assert(Between(key, JSProto_Error, JSProto_URIError), "We depend on jsprototypes.h ordering here");
+MOZ_FOR_EACH(AssertErrorObjectKeyInBounds, (),
+             (JSProto_Error, JSProto_InternalError, JSProto_EvalError, JSProto_RangeError,
+              JSProto_ReferenceError, JSProto_SyntaxError, JSProto_TypeError, JSProto_URIError));
+
+inline bool
+IsErrorObjectKey(JSProtoKey key)
+{
+    return key >= JSProto_Error && key <= JSProto_URIError;
+}
+
+static_assert(JSProto_Uint8ClampedArray - JSProto_Int8Array == 8, "New prototype added in typed array range");
+#define AssertTypedArrayKeyInBounds(key) \
+    static_assert(Between(key, JSProto_Int8Array, JSProto_Uint8ClampedArray), "We depend on jsprototypes.h ordering here");
+MOZ_FOR_EACH(AssertTypedArrayKeyInBounds, (),
+             (JSProto_Int8Array, JSProto_Uint8Array, JSProto_Int16Array, JSProto_Uint16Array,
+              JSProto_Int32Array, JSProto_Uint32Array, JSProto_Float32Array, JSProto_Float64Array, JSProto_Uint8ClampedArray));
+
 inline bool
 IsTypedArrayKey(JSProtoKey key)
 {
-#ifdef DEBUG
-    bool isTypedArraySlow = key == JSProto_Int8Array ||
-                            key == JSProto_Uint8Array ||
-                            key == JSProto_Int16Array ||
-                            key == JSProto_Uint16Array ||
-                            key == JSProto_Int32Array ||
-                            key == JSProto_Uint32Array ||
-                            key == JSProto_Float32Array ||
-                            key == JSProto_Float64Array ||
-                            key == JSProto_Uint8ClampedArray;
-#endif
-    bool isTypedArray = key >= JSProto_Int8Array &&
-                        key <= JSProto_Uint8ClampedArray;
-    MOZ_ASSERT(isTypedArray == isTypedArraySlow, "Somebody reordered jsprototypes.h!");
-    static_assert(JSProto_Uint8ClampedArray - JSProto_Int8Array == 8,
-                  "New prototype added in typed array range");
-    return isTypedArray;
+    return key >= JSProto_Int8Array && key <= JSProto_Uint8ClampedArray;
 }
 
 // Whitelist for the standard ES classes we can Xray to.
