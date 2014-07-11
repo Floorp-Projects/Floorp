@@ -8,8 +8,7 @@
 #include "SharedSurfaceGralloc.h"
 
 #include "GLContext.h"
-#include "SharedSurfaceGL.h"
-#include "SurfaceFactory.h"
+#include "SharedSurface.h"
 #include "GLLibraryEGL.h"
 #include "mozilla/layers/GrallocTextureClient.h"
 #include "mozilla/layers/ShadowLayers.h"
@@ -32,14 +31,13 @@
 namespace mozilla {
 namespace gl {
 
-using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace android;
 
 SurfaceFactory_Gralloc::SurfaceFactory_Gralloc(GLContext* prodGL,
                                                const SurfaceCaps& caps,
                                                layers::ISurfaceAllocator* allocator)
-    : SurfaceFactory_GL(prodGL, SharedSurfaceType::Gralloc, caps)
+    : SurfaceFactory(prodGL, SharedSurfaceType::Gralloc, caps)
 {
     if (caps.surfaceAllocator) {
         allocator = caps.surfaceAllocator;
@@ -126,11 +124,11 @@ SharedSurface_Gralloc::SharedSurface_Gralloc(GLContext* prodGL,
                                              layers::ISurfaceAllocator* allocator,
                                              layers::GrallocTextureClientOGL* textureClient,
                                              GLuint prodTex)
-    : SharedSurface_GL(SharedSurfaceType::Gralloc,
-                       AttachmentType::GLTexture,
-                       prodGL,
-                       size,
-                       hasAlpha)
+    : SharedSurface(SharedSurfaceType::Gralloc,
+                    AttachmentType::GLTexture,
+                    prodGL,
+                    size,
+                    hasAlpha)
     , mEGL(egl)
     , mSync(0)
     , mAllocator(allocator)

@@ -6,18 +6,18 @@
 #ifndef SHARED_SURFACEIO_H_
 #define SHARED_SURFACEIO_H_
 
-#include "SharedSurfaceGL.h"
 #include "mozilla/RefPtr.h"
+#include "SharedSurface.h"
 
 class MacIOSurface;
 
 namespace mozilla {
 namespace gl {
 
-class SharedSurface_IOSurface : public SharedSurface_GL
+class SharedSurface_IOSurface : public SharedSurface
 {
 public:
-    static SharedSurface_IOSurface* Create(MacIOSurface* surface, GLContext *gl, bool hasAlpha);
+    static SharedSurface_IOSurface* Create(MacIOSurface* surface, GLContext* gl, bool hasAlpha);
 
     ~SharedSurface_IOSurface();
 
@@ -39,7 +39,7 @@ public:
     }
 
     static SharedSurface_IOSurface* Cast(SharedSurface *surf) {
-        MOZ_ASSERT(surf->Type() == SharedSurfaceType::IOSurface);
+        MOZ_ASSERT(surf->mType == SharedSurfaceType::IOSurface);
         return static_cast<SharedSurface_IOSurface*>(surf);
     }
 
@@ -62,12 +62,12 @@ private:
     GLuint mConsTex;
 };
 
-class SurfaceFactory_IOSurface : public SurfaceFactory_GL
+class SurfaceFactory_IOSurface : public SurfaceFactory
 {
 public:
     SurfaceFactory_IOSurface(GLContext* gl,
                              const SurfaceCaps& caps)
-        : SurfaceFactory_GL(gl, SharedSurfaceType::IOSurface, caps)
+        : SurfaceFactory(gl, SharedSurfaceType::IOSurface, caps)
     {
     }
 

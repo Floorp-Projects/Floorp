@@ -30,7 +30,7 @@ class nsGlobalWindow;
 class nsXULElement;
 
 namespace mozilla {
-namespace gfx {
+namespace gl {
 class SourceSurface;
 class SurfaceStream;
 }
@@ -711,7 +711,7 @@ protected:
   // sErrorTarget.
   mozilla::RefPtr<mozilla::gfx::DrawTarget> mTarget;
 
-  RefPtr<gfx::SurfaceStream> mStream;
+  RefPtr<gl::SurfaceStream> mStream;
 
   /**
     * Flag to avoid duplicate calls to InvalidateFrame. Set to true whenever

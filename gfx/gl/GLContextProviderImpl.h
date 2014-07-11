@@ -14,7 +14,6 @@
 class GL_CONTEXT_PROVIDER_NAME
 {
 public:
-    typedef gfx::SurfaceCaps SurfaceCaps;
     /**
      * Create a context that renders to the surface of the widget that is
      * passed in.  The context is always created with an RGB pixel format,

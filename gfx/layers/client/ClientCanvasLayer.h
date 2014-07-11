@@ -20,6 +20,12 @@
 #include "nsRegion.h"                   // for nsIntRegion
 
 namespace mozilla {
+namespace gl {
+class SurfaceStream;
+class SharedSurface;
+class SurfaceFactory;
+}
+
 namespace layers {
 
 class CompositableClient;
@@ -92,8 +98,8 @@ protected:
 
   RefPtr<CanvasClient> mCanvasClient;
 
-  gfx::SharedSurface* mTextureSurface;
-  gfx::SurfaceFactory* mFactory;
+  gl::SharedSurface* mTextureSurface;
+  gl::SurfaceFactory* mFactory;
 
   friend class DeprecatedCanvasClient2D;
   friend class CanvasClient2D;
