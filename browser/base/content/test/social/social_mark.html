@@ -34,6 +34,8 @@
       shareData = JSON.parse(e.detail);
       updateTextNode(document.getElementById("shared"), shareData.url);
       socialMarkUpdate(true);
+      var port = navigator.mozSocial.getWorker().port;
+      port.postMessage({topic: "share-data-message", result: shareData});
     });
     </script>
 </head>

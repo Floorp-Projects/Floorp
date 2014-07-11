@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<!--
+Test getAutocompleteInfo() on <input>
+-->
+<head>
+  <title>Test for getAutocompleteInfo()</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <form>
+    <input id="input"/>
+  </form>
+</div>
+<pre id="test">
+<script>
+"use strict";
+
+var values = [
+  // Missing or empty attribute
+  [undefined, {}],
+  ["", {}],
+
+  // One token
+  ["on", {fieldName: "on" }],
+  ["On", {fieldName: "on" }],
+  ["off", {fieldName: "off" } ],
+  ["username", {fieldName: "username" }],
+  [" username ", {fieldName: "username" }],
+  ["foobar", {}],
+
+  // Two tokens
+  ["on off", {}],
+  ["off on", {}],
+  ["username tel", {}],
+  ["tel username ", {}],
+  [" username tel ", {}],
+  ["tel mobile", {}],
+  ["tel shipping", {}],
+  ["shipping tel", {addressType: "shipping", fieldName: "tel"}],
+  ["shipPING tel", {addressType: "shipping", fieldName: "tel"}],
+  ["mobile tel", {contactType: "mobile", fieldName: "tel"}],
+  ["  MoBiLe  TeL  ", {contactType: "mobile", fieldName: "tel"}],
+  ["XXX tel", {}],
+  ["XXX username", {}],
+
+  // Three tokens
+  ["billing invalid tel", {}],
+  ["___ mobile tel", {}],
+  ["mobile foo tel", {}],
+  ["mobile tel foo", {}],
+  ["tel mobile billing", {}],
+  ["billing mobile tel", {addressType: "billing", contactType: "mobile", fieldName: "tel"}],
+  ["  BILLing   MoBiLE   tEl  ", {addressType: "billing", contactType: "mobile", fieldName: "tel"}],
+  ["billing home tel", {addressType: "billing", contactType: "home", fieldName: "tel"}],
+
+  // Four tokens (invalid)
+  ["billing billing mobile tel", {}],
+
+  // Five tokens (invalid)
+  ["billing billing billing mobile tel", {}],
+];
+
+function start() {
+  const fieldid = "input";
+  var field = document.getElementById(fieldid);
+  for (var test of values) {
+    if (typeof(test[0]) === "undefined")
+      field.removeAttribute("autocomplete");
+    else
+      field.setAttribute("autocomplete", test[0]);
+
+    var info = field.getAutocompleteInfo();
+
+    is(info.section, "section" in test[1] ? test[1].section : "",
+       "Checking autocompleteInfo.section for " + fieldid + ": " + test[0]);
+    is(info.addressType, "addressType" in test[1] ? test[1].addressType : "",
+       "Checking autocompleteInfo.addressType for " + fieldid + ": " + test[0]);
+    is(info.contactType, "contactType" in test[1] ? test[1].contactType : "",
+       "Checking autocompleteInfo.contactType for " + fieldid + ": " + test[0]);
+    is(info.fieldName, "fieldName" in test[1] ? test[1].fieldName : "",
+       "Checking autocompleteInfo.fieldName for " + fieldid + ": " + test[0]);
+
+  }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["dom.forms.autocomplete.experimental", true]]}, start);
+
+</script>
+</pre>
+</body>
+</html>

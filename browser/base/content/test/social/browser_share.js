@@ -170,5 +170,76 @@ var tests = {
     }
     port.postMessage({topic: "test-init"});
     executeSoon(runOneTest);
+  },
+  testShareMicrodata: function(next) {
+    SocialService.addProvider(manifest, function(provider) {
+      let port = provider.getWorkerPort();
+      let target, testTab;
+
+      let expecting = JSON.stringify({
+        "url": "https://example.com/browser/browser/base/content/test/social/microdata.html",
+        "title": "My Blog",
+        "previews": [],
+        "microdata": {
+          "items": [{
+              "types": ["http://schema.org/BlogPosting"],
+              "properties": {
+                "headline": ["Progress report"],
+                "datePublished": ["2013-08-29"],
+                "url": ["https://example.com/browser/browser/base/content/test/social/microdata.html?comments=0"],
+                "comment": [{
+                    "types": ["http://schema.org/UserComments"],
+                    "properties": {
+                      "url": ["https://example.com/browser/browser/base/content/test/social/microdata.html#c1"],
+                      "creator": [{
+                          "types": ["http://schema.org/Person"],
+                          "properties": {
+                            "name": ["Greg"]
+                          }
+                        }
+                      ],
+                      "commentTime": ["2013-08-29"]
+                    }
+                  }, {
+                    "types": ["http://schema.org/UserComments"],
+                    "properties": {
+                      "url": ["https://example.com/browser/browser/base/content/test/social/microdata.html#c2"],
+                      "creator": [{
+                          "types": ["http://schema.org/Person"],
+                          "properties": {
+                            "name": ["Charlotte"]
+                          }
+                        }
+                      ],
+                      "commentTime": ["2013-08-29"]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      });
+
+      port.onmessage = function (e) {
+        let topic = e.data.topic;
+        switch (topic) {
+          case "got-share-data-message":
+            is(JSON.stringify(e.data.result), expecting, "microdata data ok");
+            gBrowser.removeTab(testTab);
+            SocialService.removeProvider(manifest.origin, next);
+            break;
+        }
+      }
+      port.postMessage({topic: "test-init"});
+  
+      let url = "https://example.com/browser/browser/base/content/test/social/microdata.html"
+      addTab(url, function(tab) {
+        testTab = tab;
+        let doc = tab.linkedBrowser.contentDocument;
+        target = doc.getElementById("simple-hcard");
+        SocialShare.sharePage(manifest.origin, null, target);
+      });
+    });
   }
 }

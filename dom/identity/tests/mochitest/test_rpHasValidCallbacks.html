@@ -85,6 +85,8 @@ SpecialPowers.pushPrefEnv({'set': [
     ['dom.identity.syntheticEventsOk', true],     // so we can call request()
     ['toolkit.identity.debug', true],             // verbose identity logging
     ['browser.dom.window.dump.enabled', true],
+    ["security.apps.privileged.CSP.default", "'inline-script';"],
+    ["security.apps.certified.CSP.default", "'inline-script';"],
   ]},
   function () { testRunner.next(); }
 );

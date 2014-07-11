@@ -14,7 +14,7 @@ function peerReadyCb(evt) {
 
   // reset callback.
   nfc.onpeerready = null;
-  emulator.deactivate();
+  NCI.deactivate();
 }
 
 function peerLostCb() {
@@ -71,14 +71,14 @@ function testPeerReady() {
   window.navigator.mozSetMessageHandler(
     "nfc-manager-tech-discovered", handleTechnologyDiscoveredRE0);
 
-  toggleNFC(true).then(() => emulator.activateRE(0));
+  toggleNFC(true).then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0));
 }
 
 function testCheckP2PRegFailure() {
   window.navigator.mozSetMessageHandler(
     "nfc-manager-tech-discovered", handleTechnologyDiscoveredRE0ForP2PRegFailure);
 
-  toggleNFC(true).then(() => emulator.activateRE(0));
+  toggleNFC(true).then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0));
 }
 
 function testCheckNfcPeerObjForInvalidToken() {
