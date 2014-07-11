@@ -26,13 +26,13 @@ try {
   /* Check that we can touch various properties */
   isnot(e.lineNumber, undefined, "Unexpected line number"); //This line number is dependent on the implementation of the SpecialPowers API
   is(e.name, "NS_ERROR_MALFORMED_URI", "Unexpected exception name");
-  isnot(e.message, "", "Should have a message");
+  ise(e.message, "", "Should not have a message for this case");
   isnot(e.result, 0, "Should have a result");
   
   is(e.result, SpecialPowers.Cr.NS_ERROR_MALFORMED_URI);
 }
 
-is(threw, true, "Not enough arguments to a call should throw");
+is(threw, true, "We need a different testcase for XPConnect exceptions?");
 </script>
 </pre>
 </body>
