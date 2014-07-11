@@ -35,8 +35,8 @@ public:
   void EncodedFrameDestroyed(GMPVideoEncodedFrameImpl* aFrame);
 
   // GMPVideoHost
-  virtual GMPVideoErr CreateFrame(GMPVideoFrameFormat aFormat, GMPVideoFrame** aFrame) MOZ_OVERRIDE;
-  virtual GMPVideoErr CreatePlane(GMPPlane** aPlane) MOZ_OVERRIDE;
+  virtual GMPErr CreateFrame(GMPVideoFrameFormat aFormat, GMPVideoFrame** aFrame) MOZ_OVERRIDE;
+  virtual GMPErr CreatePlane(GMPPlane** aPlane) MOZ_OVERRIDE;
 
 private:
   // All shared memory allocations have to be made by an IPDL actor.
