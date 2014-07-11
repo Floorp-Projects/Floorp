@@ -137,7 +137,11 @@ FFmpegH264Decoder<LIBAV_VER>::AllocateBufferCb(AVCodecContext* aCodecContext,
 FFmpegH264Decoder<LIBAV_VER>::ReleaseBufferCb(AVCodecContext* aCodecContext,
                                               AVFrame* aFrame)
 {
-  reinterpret_cast<Image*>(aFrame->opaque)->Release();
+  Image* image = reinterpret_cast<Image*>(aFrame->opaque);
+  avcodec_default_release_buffer(aCodecContext, aFrame);
+  if (image) {
+    image->Release();
+  }
 }
 
 int
