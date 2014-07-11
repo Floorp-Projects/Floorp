@@ -52,7 +52,10 @@ DeviceToImageTransform(gfxContext* aContext,
     nsRefPtr<gfxASurface> currentTarget =
         aContext->CurrentSurface(&deviceX, &deviceY);
     gfxMatrix currentMatrix = aContext->CurrentMatrix();
-    gfxMatrix deviceToUser = gfxMatrix(currentMatrix).Invert();
+    gfxMatrix deviceToUser = currentMatrix;
+    if (!deviceToUser.Invert()) {
+        return gfxMatrix(0, 0, 0, 0, 0, 0); // singular
+    }
     deviceToUser.Translate(-gfxPoint(-deviceX, -deviceY));
     return gfxMatrix(deviceToUser).Multiply(aUserSpaceToImageSpace);
 }

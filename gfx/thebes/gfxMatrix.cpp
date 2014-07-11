@@ -17,11 +17,10 @@ gfxMatrix::Reset()
     return *this;
 }
 
-const gfxMatrix&
+bool
 gfxMatrix::Invert()
 {
-    cairo_matrix_invert(CAIRO_MATRIX(this));
-    return *this;
+    return cairo_matrix_invert(CAIRO_MATRIX(this)) == CAIRO_STATUS_SUCCESS;
 }
 
 const gfxMatrix&

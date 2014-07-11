@@ -539,7 +539,10 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
       if (static_cast<nsSVGContainerFrame*>(aFrame)->
             HasChildrenOnlyTransform(&childrenOnlyTM)) {
         // Undo the children-only transform:
-        tm = ThebesMatrix(childrenOnlyTM).Invert() * tm;
+        if (!childrenOnlyTM.Invert()) {
+          return;
+        }
+        tm = ThebesMatrix(childrenOnlyTM) * tm;
       }
     }
     nsIntRect bounds = TransformFrameRectToOuterSVG(overflowRect,

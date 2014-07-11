@@ -2600,7 +2600,9 @@ RasterImage::DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
   nsIntRect framerect = frame->GetRect();
   gfxMatrix userSpaceToImageSpace = aUserSpaceToImageSpace;
   gfxMatrix imageSpaceToUserSpace = aUserSpaceToImageSpace;
-  imageSpaceToUserSpace.Invert();
+  if (!imageSpaceToUserSpace.Invert()) {
+    return false;
+  }
   gfxSize scale = imageSpaceToUserSpace.ScaleFactors(true);
   nsIntRect subimage = aSubimage;
   RefPtr<SourceSurface> surf;

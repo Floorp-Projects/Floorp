@@ -232,7 +232,9 @@ public:
             return gfxMatrix();
         }
         gfxMatrix deviceToUser = aCTM;
-        deviceToUser.Invert();
+        if (!deviceToUser.Invert()) {
+            return gfxMatrix(0, 0, 0, 0, 0, 0); // singular
+        }
         return deviceToUser * aPattern->GetMatrix();
     }
 

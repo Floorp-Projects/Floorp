@@ -55,8 +55,11 @@ public:
 
       if (state.patternTransformChanged) {
         Matrix mat = mContext->GetDTTransform();
-        mat.Invert();
-
+        if (!mat.Invert()) {
+          mPattern = new (mColorPattern.addr())
+          ColorPattern(Color()); // transparent black to paint nothing
+          return *mPattern;
+        }
         transform = transform * state.patternTransform * mat;
       }
 
@@ -360,10 +363,12 @@ gfxContext::Rectangle(const gfxRect& rect, bool snapToPixels)
     gfxRect newRect(rect);
     if (UserToDevicePixelSnapped(newRect, true)) {
       gfxMatrix mat = ThebesMatrix(mTransform);
-      mat.Invert();
-
-      // We need the user space rect.
-      rec = ToRect(mat.TransformBounds(newRect));
+      if (mat.Invert()) {
+        // We need the user space rect.
+        rec = ToRect(mat.TransformBounds(newRect));
+      } else {
+        rec = Rect();
+      }
     }
   }
 

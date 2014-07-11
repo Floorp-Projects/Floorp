@@ -270,8 +270,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
   maskSurface->Unmap();
 
   // Moz2D transforms in the opposite direction to Thebes
-  maskSurfaceMatrix.Invert();
-  if (maskSurfaceMatrix.IsSingular()) {
+  if (!maskSurfaceMatrix.Invert()) {
     return nullptr;
   }
   nsRefPtr<gfxPattern> retval =
