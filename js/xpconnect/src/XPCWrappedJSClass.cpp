@@ -368,12 +368,13 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
         if (!name)
             return NS_ERROR_FAILURE;
 
-        nsAutoJSString autoStr;
-        if (!autoStr.init(cx, name))
+        size_t length;
+        const jschar *chars = JS_GetStringCharsAndLength(cx, name, &length);
+        if (!chars)
             return NS_ERROR_FAILURE;
 
         nsCOMPtr<nsIProperty> property =
-            new xpcProperty(autoStr.get(), (uint32_t)autoStr.Length(), value);
+            new xpcProperty(chars, (uint32_t) length, value);
 
         if (!propertyArray.AppendObject(property))
             return NS_ERROR_FAILURE;
