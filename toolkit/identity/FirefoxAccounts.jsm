@@ -102,11 +102,16 @@ FxAccountsService.prototype = {
     }
   },
 
+  cleanupRPRequest: function(aRp) {
+    aRp.pendingRequest = false;
+    this._rpFlows.set(aRp.id, aRp);
+  },
+
   /**
    * Register a listener for a given windowID as a result of a call to
    * navigator.id.watch().
    *
-   * @param aCaller
+   * @param aRPCaller
    *        (Object)  an object that represents the caller document, and
    *                  is expected to have properties:
    *                  - id (unique, e.g. uuid)
@@ -128,7 +133,9 @@ FxAccountsService.prototype = {
     // Log the user in, if possible, and then call ready().
     let runnable = {
       run: () => {
-        this.fxAccountsManager.getAssertion(aRpCaller.audience, {silent:true}).then(
+        this.fxAccountsManager.getAssertion(aRpCaller.audience,
+                                            aRpCaller.principal,
+                                            { silent:true }).then(
           data => {
             if (data) {
               this.doLogin(aRpCaller.id, data);
@@ -161,10 +168,10 @@ FxAccountsService.prototype = {
    * navigator.id.request().
    *
    * @param aRPId
-   *        (integer)  the id of the doc object obtained in .watch()
+   *        (integer) the id of the doc object obtained in .watch()
    *
    * @param aOptions
-   *        (Object)  options including privacyPolicy, termsOfService
+   *        (Object) options including privacyPolicy, termsOfService
    */
   request: function request(aRPId, aOptions) {
     aOptions = aOptions || {};
@@ -174,23 +181,47 @@ FxAccountsService.prototype = {
       return;
     }
 
+    // We check if we already have a pending request for this RP and in that
+    // case we just bail out. We don't want duplicated onlogin or oncancel
+    // events.
+    if (rp.pendingRequest) {
+      log.debug("request() already called");
+      return;
+    }
+
+    // Otherwise, we set the RP flow with the pending request flag.
+    rp.pendingRequest = true;
+    this._rpFlows.set(rp.id, rp);
+
     let options = makeMessageObject(rp);
     objectCopy(aOptions, options);
 
     log.debug("get assertion for " + rp.audience);
 
-    this.fxAccountsManager.getAssertion(rp.audience, options).then(
+    this.fxAccountsManager.getAssertion(rp.audience, rp.principal, options)
+    .then(
       data => {
         log.debug("got assertion for " + rp.audience + ": " + data);
         this.doLogin(aRPId, data);
       },
       error => {
-        log.error("get assertion failed: " + JSON.stringify(error));
+        log.debug("get assertion failed: " + JSON.stringify(error));
         // Cancellation is passed through an error channel; here we reroute.
-        if (error.error && (error.error.details == "DIALOG_CLOSED_BY_USER")) {
+        if ((error.error && (error.error.details == "DIALOG_CLOSED_BY_USER")) ||
+            (error.details == "DIALOG_CLOSED_BY_USER")) {
           return this.doCancel(aRPId);
         }
         this.doError(aRPId, error);
+      }
+    )
+    .then(
+      () => {
+        this.cleanupRPRequest(rp);
+      }
+    )
+    .catch(
+      () => {
+        this.cleanupRPRequest(rp);
       }
     );
   },
