@@ -222,12 +222,19 @@ TranslationUI.prototype = {
     // Check if we should never show the infobar for this language.
     let neverForLangs =
       Services.prefs.getCharPref("browser.translation.neverForLanguages");
-    if (neverForLangs.split(",").indexOf(this.detectedLanguage) != -1)
+    if (neverForLangs.split(",").indexOf(this.detectedLanguage) != -1) {
+      TranslationHealthReport.recordAutoRejectedTranslationOffer();
       return false;
+    }
 
     // or if we should never show the infobar for this domain.
     let perms = Services.perms;
-    return perms.testExactPermission(aURI, "translate") != perms.DENY_ACTION;
+    if (perms.testExactPermission(aURI, "translate") ==  perms.DENY_ACTION) {
+      TranslationHealthReport.recordAutoRejectedTranslationOffer();
+      return false;
+    }
+
+    return true;
   },
 
   showTranslationUI: function(aDetectedLanguage) {
