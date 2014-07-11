@@ -641,8 +641,8 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper,
         return ok;
 
     RootedObject target(cx, getTargetObject(wrapper));
+    JSProtoKey key = getProtoKey(holder);
     if (!isPrototype(holder)) {
-        JSProtoKey key = getProtoKey(holder);
         // For Object and Array instances, we expose some properties from the
         // underlying object, but only after filtering them carefully.
         //
@@ -759,6 +759,14 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper,
         desc.setSetter(nullptr);
         desc.value().setObject(*constructor);
         return true;
+    }
+
+    // Handle the 'name' property for error prototypes.
+    if (IsErrorObjectKey(key) && id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_NAME)) {
+        RootedId className(cx);
+        ProtoKeyToId(cx, key, &className);
+        FillPropertyDescriptor(desc, wrapper, 0, UndefinedValue());
+        return JS_IdToValue(cx, className, desc.value());
     }
 
     // Bail out for dependent classes, since all the rest of the properties we'll
@@ -944,8 +952,8 @@ JSXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags
     if (!holder)
         return false;
 
+    JSProtoKey key = getProtoKey(holder);
     if (!isPrototype(holder)) {
-        JSProtoKey key = getProtoKey(holder);
         // For Object and Array instances, we expose some properties from the underlying
         // object, but only after filtering them carefully.
         if (key == JSProto_Object || key == JSProto_Array) {
@@ -1009,6 +1017,10 @@ JSXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags
 
     // Add the 'constructor' property.
     if (!props.append(GetRTIdByIndex(cx, XPCJSRuntime::IDX_CONSTRUCTOR)))
+        return false;
+
+    // For Error protoypes, add the 'name' property.
+    if (IsErrorObjectKey(key) && !props.append(GetRTIdByIndex(cx, XPCJSRuntime::IDX_NAME)))
         return false;
 
     // Bail out for dependent classes, since all the rest of the properties we'll
