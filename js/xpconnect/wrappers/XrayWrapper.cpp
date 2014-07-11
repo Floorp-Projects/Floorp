@@ -39,7 +39,7 @@ namespace xpc {
 
 using namespace XrayUtils;
 
-constexpr bool Between(JSProtoKey x, JSProtoKey a, JSProtoKey b) { return a <= x && x <= b; }
+#define Between(x, a, b) (a <= x && x <= b)
 
 static_assert(JSProto_URIError - JSProto_Error == 7, "New prototype added in error object range");
 #define AssertErrorObjectKeyInBounds(key) \
@@ -48,18 +48,20 @@ MOZ_FOR_EACH(AssertErrorObjectKeyInBounds, (),
              (JSProto_Error, JSProto_InternalError, JSProto_EvalError, JSProto_RangeError,
               JSProto_ReferenceError, JSProto_SyntaxError, JSProto_TypeError, JSProto_URIError));
 
-inline bool
-IsErrorObjectKey(JSProtoKey key)
-{
-    return key >= JSProto_Error && key <= JSProto_URIError;
-}
-
 static_assert(JSProto_Uint8ClampedArray - JSProto_Int8Array == 8, "New prototype added in typed array range");
 #define AssertTypedArrayKeyInBounds(key) \
     static_assert(Between(key, JSProto_Int8Array, JSProto_Uint8ClampedArray), "We depend on jsprototypes.h ordering here");
 MOZ_FOR_EACH(AssertTypedArrayKeyInBounds, (),
              (JSProto_Int8Array, JSProto_Uint8Array, JSProto_Int16Array, JSProto_Uint16Array,
               JSProto_Int32Array, JSProto_Uint32Array, JSProto_Float32Array, JSProto_Float64Array, JSProto_Uint8ClampedArray));
+
+#undef Between
+
+inline bool
+IsErrorObjectKey(JSProtoKey key)
+{
+    return key >= JSProto_Error && key <= JSProto_URIError;
+}
 
 inline bool
 IsTypedArrayKey(JSProtoKey key)
