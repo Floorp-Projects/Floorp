@@ -40,7 +40,9 @@ GMPVideoEncoderChild::Host()
 
 void
 GMPVideoEncoderChild::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
-                              const GMPCodecSpecificInfo& aCodecSpecificInfo)
+                              GMPBufferType aBufferType,
+                              const uint8_t* aCodecSpecificInfo,
+                              uint32_t aCodecSpecificInfoLength)
 {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
@@ -49,7 +51,9 @@ GMPVideoEncoderChild::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
   GMPVideoEncodedFrameData frameData;
   ef->RelinquishFrameData(frameData);
 
-  SendEncoded(frameData, aCodecSpecificInfo);
+  nsTArray<uint8_t> codecSpecific;
+  codecSpecific.AppendElements(aCodecSpecificInfo, aCodecSpecificInfoLength);
+  SendEncoded(frameData, aBufferType, codecSpecific);
 
   aEncodedFrame->Destroy();
 }
@@ -83,7 +87,7 @@ GMPVideoEncoderChild::RecvInitEncode(const GMPVideoCodec& aCodecSettings,
 
 bool
 GMPVideoEncoderChild::RecvEncode(const GMPVideoi420FrameData& aInputFrame,
-                                 const GMPCodecSpecificInfo& aCodecSpecificInfo,
+                                 const nsTArray<uint8_t>& aCodecSpecificInfo,
                                  const nsTArray<GMPVideoFrameType>& aFrameTypes)
 {
   if (!mVideoEncoder) {
@@ -93,7 +97,11 @@ GMPVideoEncoderChild::RecvEncode(const GMPVideoi420FrameData& aInputFrame,
   auto f = new GMPVideoi420FrameImpl(aInputFrame, &mVideoHost);
 
   // Ignore any return code. It is OK for this to fail without killing the process.
-  mVideoEncoder->Encode(f, aCodecSpecificInfo, aFrameTypes.Elements(), aFrameTypes.Length());
+  mVideoEncoder->Encode(f,
+                        aCodecSpecificInfo.Elements(),
+                        aCodecSpecificInfo.Length(),
+                        aFrameTypes.Elements(),
+                        aFrameTypes.Length());
 
   return true;
 }

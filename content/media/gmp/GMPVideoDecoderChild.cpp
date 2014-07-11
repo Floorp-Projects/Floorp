@@ -123,7 +123,8 @@ GMPVideoDecoderChild::RecvInitDecode(const GMPVideoCodec& aCodecSettings,
 bool
 GMPVideoDecoderChild::RecvDecode(const GMPVideoEncodedFrameData& aInputFrame,
                                  const bool& aMissingFrames,
-                                 const GMPCodecSpecificInfo& aCodecSpecificInfo,
+                                 const GMPBufferType& aBufferType,
+                                 const nsTArray<uint8_t>& aCodecSpecificInfo,
                                  const int64_t& aRenderTimeMs)
 {
   if (!mVideoDecoder) {
@@ -133,7 +134,12 @@ GMPVideoDecoderChild::RecvDecode(const GMPVideoEncodedFrameData& aInputFrame,
   auto f = new GMPVideoEncodedFrameImpl(aInputFrame, &mVideoHost);
 
   // Ignore any return code. It is OK for this to fail without killing the process.
-  mVideoDecoder->Decode(f, aMissingFrames, aCodecSpecificInfo, aRenderTimeMs);
+  mVideoDecoder->Decode(f,
+                        aMissingFrames,
+                        aBufferType,
+                        aCodecSpecificInfo.Elements(),
+                        aCodecSpecificInfo.Length(),
+                        aRenderTimeMs);
 
   return true;
 }
