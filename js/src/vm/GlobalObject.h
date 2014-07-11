@@ -208,11 +208,6 @@ class GlobalObject : public JSObject
         return !getConstructor(key).isUndefined();
     }
 
-    bool isStandardClassResolved(const js::Class *clasp) const {
-        JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
-        return isStandardClassResolved(key);
-    }
-
   private:
     bool arrayClassInitialized() const {
         return classIsInitialized(JSProto_Array);
