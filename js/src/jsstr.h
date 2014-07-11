@@ -300,12 +300,6 @@ str_fromCharCode_one_arg(JSContext *cx, HandleValue code, MutableHandleValue rva
 
 } /* namespace js */
 
-inline jschar *
-js_strdup(js::ThreadSafeContext *cx, const jschar *s)
-{
-    return js::DuplicateString(cx, s).release();
-}
-
 extern bool
 js_str_toString(JSContext *cx, unsigned argc, js::Value *vp);
 
