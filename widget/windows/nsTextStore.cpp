@@ -28,9 +28,8 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-static const char* kPrefNameTSFEnabled = "intl.tsf.enable";
-
-static const char* kLegacyPrefNameTSFEnabled = "intl.enable_tsf_support";
+static const char* kPrefNameEnableTSF = "intl.tsf.enable";
+static const char* kPrefNameForceEnableTSF = "intl.tsf.force_enable";
 
 #ifdef PR_LOGGING
 /**
@@ -3710,14 +3709,9 @@ nsTextStore::Initialize()
     return;
   }
 
-  bool enableTsf = Preferences::GetBool(kPrefNameTSFEnabled, false);
-  // Migrate legacy TSF pref to new pref.  This should be removed in next
-  // release cycle or later.
-  if (!enableTsf && Preferences::GetBool(kLegacyPrefNameTSFEnabled, false)) {
-    enableTsf = true;
-    Preferences::SetBool(kPrefNameTSFEnabled, true);
-    Preferences::ClearUser(kLegacyPrefNameTSFEnabled);
-  }
+  bool enableTsf =
+    Preferences::GetBool(kPrefNameForceEnableTSF, false) ||
+    (IsVistaOrLater() && Preferences::GetBool(kPrefNameEnableTSF, false));
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF:   nsTextStore::Initialize(), TSF is %s",
      enableTsf ? "enabled" : "disabled"));
