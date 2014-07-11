@@ -103,13 +103,15 @@ IDPAuthenticationContext.prototype = {
   }
 };
 
-function RPWatchContext(aOptions, aTargetMM) {
+function RPWatchContext(aOptions, aTargetMM, aPrincipal) {
   objectCopy(aOptions, this);
 
   // id and origin are required
   if (! (this.id && this.origin)) {
     throw new Error("id and origin are required for RP watch context");
   }
+
+  this.principal = aPrincipal;
 
   // default for no loggedInUser is undefined, not null
   this.loggedInUser = aOptions.loggedInUser;
@@ -187,8 +189,8 @@ this.DOMIdentity = {
   /*
    * Create a new RPWatchContext, and update the context maps.
    */
-  newContext: function(message, targetMM) {
-    let context = new RPWatchContext(message, targetMM);
+  newContext: function(message, targetMM, principal) {
+    let context = new RPWatchContext(message, targetMM, principal);
     this._serviceContexts.set(message.id, context);
     this._mmContexts.set(targetMM, message.id);
     return context;
@@ -276,16 +278,16 @@ this.DOMIdentity = {
     switch (aMessage.name) {
       // RP
       case "Identity:RP:Watch":
-        this._watch(msg, targetMM);
+        this._watch(msg, targetMM, aMessage.principal);
         break;
       case "Identity:RP:Unwatch":
         this._unwatch(msg, targetMM);
         break;
       case "Identity:RP:Request":
-        this._request(msg, targetMM);
+        this._request(msg);
         break;
       case "Identity:RP:Logout":
-        this._logout(msg, targetMM);
+        this._logout(msg);
         break;
       // IDP
       case "Identity:IDP:BeginProvisioning":
@@ -359,9 +361,9 @@ this.DOMIdentity = {
     ppmm = null;
   },
 
-  _watch: function DOMIdentity__watch(message, targetMM) {
-    log("DOMIdentity__watch: " + message.id);
-    let context = this.newContext(message, targetMM);
+  _watch: function DOMIdentity__watch(message, targetMM, principal) {
+    log("DOMIdentity__watch: " + message.id + " - " + principal);
+    let context = this.newContext(message, targetMM, principal);
     this.getService(message).RP.watch(context);
   },
 
