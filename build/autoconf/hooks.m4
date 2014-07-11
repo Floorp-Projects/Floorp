@@ -52,7 +52,10 @@ for moz_config_dir in $1; do
   else
     mkdir -p "$moz_config_dir"
   fi
+  _save_cache_file="$cache_file"
+  ifelse($2,,cache_file="$moz_config_dir/config.cache",cache_file="$2")
   _MOZ_AC_OUTPUT_SUBDIRS($moz_config_dir)
+  cache_file="$_save_cache_file"
   (cd "$moz_config_dir"; $PYTHON $_topsrcdir/build/subconfigure.py adjust $ac_sub_configure)
 done
 
