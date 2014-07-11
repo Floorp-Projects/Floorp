@@ -576,7 +576,8 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
         break;
     }
 
-    MOZ_CRASH("Bad AsmJSImmKind");
+    MOZ_ASSUME_UNREACHABLE("Bad AsmJSImmKind");
+    return nullptr;
 }
 
 void
@@ -1272,10 +1273,10 @@ AsmJSModule::protectCode(JSRuntime *rt) const
 #if defined(XP_WIN)
     DWORD oldProtect;
     if (!VirtualProtect(codeBase(), functionBytes(), PAGE_NOACCESS, &oldProtect))
-        MOZ_CRASH("PAGE_NOACESS failed");
+        MOZ_CRASH();
 #else  // assume Unix
     if (mprotect(codeBase(), functionBytes(), PROT_NONE))
-        MOZ_CRASH("PROT_NONE");
+        MOZ_CRASH();
 #endif
 }
 
@@ -1293,10 +1294,10 @@ AsmJSModule::unprotectCode(JSRuntime *rt) const
 #if defined(XP_WIN)
     DWORD oldProtect;
     if (!VirtualProtect(codeBase(), functionBytes(), PAGE_EXECUTE_READWRITE, &oldProtect))
-        MOZ_CRASH("PAGE_EXECUTE_READWRITE failed");
+        MOZ_CRASH();
 #else  // assume Unix
     if (mprotect(codeBase(), functionBytes(), PROT_READ | PROT_WRITE | PROT_EXEC))
-        MOZ_CRASH("PROT_READ | PROT_WRITE | PROT_EXEC failed");
+        MOZ_CRASH();
 #endif
 }
 

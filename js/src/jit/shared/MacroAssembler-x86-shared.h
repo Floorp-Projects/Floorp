@@ -404,7 +404,7 @@ class MacroAssemblerX86Shared : public Assembler
             loadDouble(src.toBaseIndex(), dest);
             break;
           default:
-            MOZ_CRASH("unexpected operand kind");
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
     void storeDouble(FloatRegister src, const Address &dest) {
@@ -422,7 +422,7 @@ class MacroAssemblerX86Shared : public Assembler
             storeDouble(src, dest.toBaseIndex());
             break;
           default:
-            MOZ_CRASH("unexpected operand kind");
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
     void moveDouble(FloatRegister src, FloatRegister dest) {
@@ -499,7 +499,7 @@ class MacroAssemblerX86Shared : public Assembler
             loadFloat32(src.toBaseIndex(), dest);
             break;
           default:
-            MOZ_CRASH("unexpected operand kind");
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
     void storeFloat32(FloatRegister src, const Address &dest) {
@@ -517,7 +517,7 @@ class MacroAssemblerX86Shared : public Assembler
             storeFloat32(src, dest.toBaseIndex());
             break;
           default:
-            MOZ_CRASH("unexpected operand kind");
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
     void moveFloat32(FloatRegister src, FloatRegister dest) {

@@ -69,7 +69,7 @@ class StackSlotAllocator
           case LDefinition::PAYLOAD:
 #endif
           case LDefinition::DOUBLE:  return freeDoubleSlot(index);
-          default: MOZ_CRASH("Unknown slot type");
+          default: MOZ_ASSUME_UNREACHABLE("Unknown slot type");
         }
     }
 
@@ -95,7 +95,7 @@ class StackSlotAllocator
           case LDefinition::PAYLOAD:
 #endif
           case LDefinition::DOUBLE:  return allocateDoubleSlot();
-          default: MOZ_CRASH("Unknown slot type");
+          default: MOZ_ASSUME_UNREACHABLE("Unknown slot type");
         }
     }
 
