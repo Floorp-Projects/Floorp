@@ -15,7 +15,7 @@
 interface Location {
   [Throws]
   void assign(DOMString url);
-  [Throws]
+  [Throws, CrossOriginCallable]
   void replace(DOMString url);
   // XXXbz there is no forceget argument in the spec!  See bug 1037721.
   [Throws]
