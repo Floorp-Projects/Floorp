@@ -19,7 +19,7 @@
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 
 namespace mozilla {
-namespace gfx {
+namespace gl {
 class SharedSurface;
 }
 }

@@ -8,7 +8,6 @@
 
 #include "ScopedGLHelpers.h"
 #include "SharedSurface.h"
-#include "SurfaceFactory.h"
 #include "SurfaceTypes.h"
 #include "GLContextTypes.h"
 #include "nsAutoPtr.h"
@@ -30,111 +29,9 @@ namespace mozilla {
 namespace mozilla {
 namespace gl {
 
-class SurfaceFactory_GL;
-
-class SharedSurface_GL
-    : public gfx::SharedSurface
-{
-protected:
-    typedef class gfx::SharedSurface SharedSurface;
-    typedef gfx::SharedSurfaceType SharedSurfaceType;
-    typedef gfx::APITypeT APITypeT;
-    typedef gfx::AttachmentType AttachmentType;
-
-    GLContext* const mGL;
-
-    SharedSurface_GL(SharedSurfaceType type,
-                     AttachmentType attachType,
-                     GLContext* gl,
-                     const gfx::IntSize& size,
-                     bool hasAlpha)
-        : SharedSurface(type, APITypeT::OpenGL, attachType, size, hasAlpha)
-        , mGL(gl)
-    {}
-
-public:
-    static void ProdCopy(SharedSurface_GL* src, SharedSurface_GL* dest,
-                         SurfaceFactory_GL* factory);
-
-    static SharedSurface_GL* Cast(SharedSurface* surf) {
-        MOZ_ASSERT(surf->APIType() == APITypeT::OpenGL);
-
-        return (SharedSurface_GL*)surf;
-    }
-
-    // For use when AttachType is correct.
-    virtual GLuint ProdTexture() {
-        MOZ_ASSERT(AttachType() == AttachmentType::GLTexture);
-        MOZ_CRASH("Did you forget to override this function?");
-    }
-
-    virtual GLenum ProdTextureTarget() const {
-        return LOCAL_GL_TEXTURE_2D;
-    }
-
-    virtual GLuint ProdRenderbuffer() {
-        MOZ_ASSERT(AttachType() == AttachmentType::GLRenderbuffer);
-        MOZ_CRASH("Did you forget to override this function?");
-    }
-
-    virtual bool ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                            GLenum format, GLenum type, GLvoid *pixels) {
-        return false;
-    }
-
-    virtual void LockProd() MOZ_OVERRIDE;
-    virtual void UnlockProd() MOZ_OVERRIDE;
-
-    GLContext* GL() const {
-        return mGL;
-    }
-};
-
-class SurfaceFactory_GL
-    : public gfx::SurfaceFactory
-{
-protected:
-    typedef struct gfx::SurfaceCaps SurfaceCaps;
-    typedef class gfx::SurfaceFactory SurfaceFactory;
-    typedef class gfx::SharedSurface SharedSurface;
-    typedef gfx::SharedSurfaceType SharedSurfaceType;
-
-    GLContext* const mGL;
-    const GLFormats mFormats;
-
-    SurfaceCaps mDrawCaps;
-    SurfaceCaps mReadCaps;
-
-    // This uses ChooseBufferBits to pick drawBits/readBits.
-    SurfaceFactory_GL(GLContext* gl,
-                      SharedSurfaceType type,
-                      const SurfaceCaps& caps);
-
-    virtual void ChooseBufferBits(const SurfaceCaps& caps,
-                                  SurfaceCaps& drawCaps,
-                                  SurfaceCaps& readCaps) const;
-
-public:
-    GLContext* GL() const {
-        return mGL;
-    }
-
-    const GLFormats& Formats() const {
-        return mFormats;
-    }
-
-    const SurfaceCaps& DrawCaps() const {
-        return mDrawCaps;
-    }
-
-    const SurfaceCaps& ReadCaps() const {
-        return mReadCaps;
-    }
-};
-
 // For readback and bootstrapping:
 class SharedSurface_Basic
-    : public SharedSurface_GL
+    : public SharedSurface
 {
 public:
     static SharedSurface_Basic* Create(GLContext* gl,
@@ -143,7 +40,7 @@ public:
                                        bool hasAlpha);
 
     static SharedSurface_Basic* Cast(SharedSurface* surf) {
-        MOZ_ASSERT(surf->Type() == SharedSurfaceType::Basic);
+        MOZ_ASSERT(surf->mType == SharedSurfaceType::Basic);
 
         return (SharedSurface_Basic*)surf;
     }
@@ -185,11 +82,11 @@ public:
 };
 
 class SurfaceFactory_Basic
-    : public SurfaceFactory_GL
+    : public SurfaceFactory
 {
 public:
     SurfaceFactory_Basic(GLContext* gl, const SurfaceCaps& caps)
-        : SurfaceFactory_GL(gl, SharedSurfaceType::Basic, caps)
+        : SurfaceFactory(gl, SharedSurfaceType::Basic, caps)
     {}
 
     virtual SharedSurface* CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE {
@@ -201,7 +98,7 @@ public:
 
 // Using shared GL textures:
 class SharedSurface_GLTexture
-    : public SharedSurface_GL
+    : public SharedSurface
 {
 public:
     static SharedSurface_GLTexture* Create(GLContext* prodGL,
@@ -212,7 +109,7 @@ public:
                                            GLuint texture = 0);
 
     static SharedSurface_GLTexture* Cast(SharedSurface* surf) {
-        MOZ_ASSERT(surf->Type() == SharedSurfaceType::GLTextureShare);
+        MOZ_ASSERT(surf->mType == SharedSurfaceType::GLTextureShare);
 
         return (SharedSurface_GLTexture*)surf;
     }
@@ -230,11 +127,11 @@ protected:
                             bool hasAlpha,
                             GLuint tex,
                             bool ownsTex)
-        : SharedSurface_GL(SharedSurfaceType::GLTextureShare,
-                           AttachmentType::GLTexture,
-                           prodGL,
-                           size,
-                           hasAlpha)
+        : SharedSurface(SharedSurfaceType::GLTextureShare,
+                        AttachmentType::GLTexture,
+                        prodGL,
+                        size,
+                        hasAlpha)
         , mConsGL(consGL)
         , mTex(tex)
         , mOwnsTex(ownsTex)
@@ -268,7 +165,7 @@ public:
 };
 
 class SurfaceFactory_GLTexture
-    : public SurfaceFactory_GL
+    : public SurfaceFactory
 {
 protected:
     GLContext* const mConsGL;
@@ -280,7 +177,7 @@ public:
     SurfaceFactory_GLTexture(GLContext* prodGL,
                              GLContext* consGL,
                              const SurfaceCaps& caps)
-        : SurfaceFactory_GL(prodGL, SharedSurfaceType::GLTextureShare, caps)
+        : SurfaceFactory(prodGL, SharedSurfaceType::GLTextureShare, caps)
         , mConsGL(consGL)
     {
         MOZ_ASSERT(consGL != prodGL);
