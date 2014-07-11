@@ -715,7 +715,6 @@ static const char js_strict_option_str[] = JS_OPTIONS_DOT_STR "strict";
 #ifdef DEBUG
 static const char js_strict_debug_option_str[] = JS_OPTIONS_DOT_STR "strict.debug";
 #endif
-static const char js_werror_option_str[] = JS_OPTIONS_DOT_STR "werror";
 #ifdef JS_GC_ZEAL
 static const char js_zeal_option_str[]        = JS_OPTIONS_DOT_STR "gczeal";
 static const char js_zeal_frequency_str[]     = JS_OPTIONS_DOT_STR "gczeal.frequency";
@@ -752,8 +751,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     JS::ContextOptionsRef(cx).setExtraWarnings(true);
   }
 #endif
-
-  JS::ContextOptionsRef(cx).setWerror(Preferences::GetBool(js_werror_option_str));
 
 #ifdef JS_GC_ZEAL
   int32_t zeal = Preferences::GetInt(js_zeal_option_str, -1);

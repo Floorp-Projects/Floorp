@@ -34,9 +34,9 @@ template<typename> struct RemoveCV;
 template<typename T, T Value>
 struct IntegralConstant
 {
-    static const T value = Value;
-    typedef T ValueType;
-    typedef IntegralConstant<T, Value> Type;
+  static const T value = Value;
+  typedef T ValueType;
+  typedef IntegralConstant<T, Value> Type;
 };
 
 /** Convenient aliases. */
@@ -522,35 +522,35 @@ struct BaseOfTester : IntegralConstant<bool, __is_base_of(Base, Derived)> {};
 template<class Base, class Derived>
 struct BaseOfHelper
 {
-  public:
-    operator Base*() const;
-    operator Derived*();
+public:
+  operator Base*() const;
+  operator Derived*();
 };
 
 template<class Base, class Derived>
 struct BaseOfTester
 {
-  private:
-    template<class T>
-    static char test(Derived*, T);
-    static int test(Base*, int);
+private:
+  template<class T>
+  static char test(Derived*, T);
+  static int test(Base*, int);
 
-  public:
-    static const bool value =
-      sizeof(test(BaseOfHelper<Base, Derived>(), int())) == sizeof(char);
+public:
+  static const bool value =
+    sizeof(test(BaseOfHelper<Base, Derived>(), int())) == sizeof(char);
 };
 
 template<class Base, class Derived>
 struct BaseOfTester<Base, const Derived>
 {
-  private:
-    template<class T>
-    static char test(Derived*, T);
-    static int test(Base*, int);
+private:
+  template<class T>
+  static char test(Derived*, T);
+  static int test(Base*, int);
 
-  public:
-    static const bool value =
-      sizeof(test(BaseOfHelper<Base, Derived>(), int())) == sizeof(char);
+public:
+  static const bool value =
+    sizeof(test(BaseOfHelper<Base, Derived>(), int())) == sizeof(char);
 };
 
 template<class Base, class Derived>
@@ -588,18 +588,18 @@ namespace detail {
 template<typename From, typename To>
 struct ConvertibleTester
 {
-  private:
-    static From create();
+private:
+  static From create();
 
-    template<typename From1, typename To1>
-    static char test(To to);
+  template<typename From1, typename To1>
+  static char test(To to);
 
-    template<typename From1, typename To1>
-    static int test(...);
+  template<typename From1, typename To1>
+  static int test(...);
 
-  public:
-    static const bool value =
-      sizeof(test<From, To>(create())) == sizeof(char);
+public:
+  static const bool value =
+    sizeof(test<From, To>(create())) == sizeof(char);
 };
 
 } // namespace detail
@@ -645,13 +645,13 @@ struct IsConvertible
 template<typename T>
 struct RemoveConst
 {
-    typedef T Type;
+  typedef T Type;
 };
 
 template<typename T>
 struct RemoveConst<const T>
 {
-    typedef T Type;
+  typedef T Type;
 };
 
 /**
@@ -665,13 +665,13 @@ struct RemoveConst<const T>
 template<typename T>
 struct RemoveVolatile
 {
-    typedef T Type;
+  typedef T Type;
 };
 
 template<typename T>
 struct RemoveVolatile<volatile T>
 {
-    typedef T Type;
+  typedef T Type;
 };
 
 /**
@@ -685,7 +685,7 @@ struct RemoveVolatile<volatile T>
 template<typename T>
 struct RemoveCV
 {
-    typedef typename RemoveConst<typename RemoveVolatile<T>::Type>::Type Type;
+  typedef typename RemoveConst<typename RemoveVolatile<T>::Type>::Type Type;
 };
 
 /* 20.9.7.2 Reference modifications [meta.trans.ref] */
@@ -701,19 +701,19 @@ struct RemoveCV
 template<typename T>
 struct RemoveReference
 {
-    typedef T Type;
+  typedef T Type;
 };
 
 template<typename T>
 struct RemoveReference<T&>
 {
-    typedef T Type;
+  typedef T Type;
 };
 
 template<typename T>
 struct RemoveReference<T&&>
 {
-    typedef T Type;
+  typedef T Type;
 };
 
 template<bool Condition, typename A, typename B>
@@ -729,13 +729,13 @@ struct AddLvalueReferenceHelper;
 template<typename T>
 struct AddLvalueReferenceHelper<T, TIsVoid>
 {
-    typedef void Type;
+  typedef void Type;
 };
 
 template<typename T>
 struct AddLvalueReferenceHelper<T, TIsNotVoid>
 {
-    typedef T& Type;
+  typedef T& Type;
 };
 
 } // namespace detail
@@ -804,7 +804,7 @@ struct MakeSigned;
 template<typename T, typename CVRemoved>
 struct MakeSigned<T, CVRemoved, true>
 {
-    typedef T Type;
+  typedef T Type;
 };
 
 template<typename T, typename CVRemoved>
@@ -839,7 +839,8 @@ struct MakeSigned<T, CVRemoved, false>
  */
 template<typename T>
 struct MakeSigned
-  : EnableIf<IsIntegral<T>::value && !IsSame<bool, typename RemoveCV<T>::Type>::value,
+  : EnableIf<IsIntegral<T>::value &&
+             !IsSame<bool, typename RemoveCV<T>::Type>::value,
              typename detail::MakeSigned<T>
             >::Type
 {};
@@ -872,7 +873,7 @@ struct MakeUnsigned;
 template<typename T, typename CVRemoved>
 struct MakeUnsigned<T, CVRemoved, true>
 {
-    typedef T Type;
+  typedef T Type;
 };
 
 template<typename T, typename CVRemoved>
@@ -907,7 +908,8 @@ struct MakeUnsigned<T, CVRemoved, false>
  */
 template<typename T>
 struct MakeUnsigned
-  : EnableIf<IsIntegral<T>::value && !IsSame<bool, typename RemoveCV<T>::Type>::value,
+  : EnableIf<IsIntegral<T>::value &&
+             !IsSame<bool, typename RemoveCV<T>::Type>::value,
              typename detail::MakeUnsigned<T>
             >::Type
 {};
@@ -926,19 +928,19 @@ struct MakeUnsigned
 template<typename T>
 struct RemoveExtent
 {
-    typedef T Type;
+  typedef T Type;
 };
 
 template<typename T>
 struct RemoveExtent<T[]>
 {
-    typedef T Type;
+  typedef T Type;
 };
 
 template<typename T, decltype(sizeof(1)) N>
 struct RemoveExtent<T[N]>
 {
-    typedef T Type;
+  typedef T Type;
 };
 
 /* 20.9.7.5 Pointer modifications [meta.trans.ptr] */
@@ -970,7 +972,7 @@ struct EnableIf
 template<typename T>
 struct EnableIf<true, T>
 {
-    typedef T Type;
+  typedef T Type;
 };
 
 /**
@@ -982,13 +984,13 @@ struct EnableIf<true, T>
 template<bool Condition, typename A, typename B>
 struct Conditional
 {
-    typedef A Type;
+  typedef A Type;
 };
 
 template<class A, class B>
 struct Conditional<false, A, B>
 {
-    typedef B Type;
+  typedef B Type;
 };
 
 } /* namespace mozilla */

@@ -38,10 +38,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   typedArrayClasses = ['Uint8Array', 'Int8Array', 'Uint16Array', 'Int16Array',
                        'Uint32Array', 'Int32Array', 'Float32Array', 'Float64Array',
                        'Uint8ClampedArray'];
+  errorObjectClasses = ['Error', 'InternalError', 'EvalError', 'RangeError', 'ReferenceError',
+                        'SyntaxError', 'TypeError', 'URIError'];
   simpleConstructors = ['Object', 'Function', 'Array', 'Boolean', 'Date', 'Number',
-                        'String', 'RegExp', 'Error', 'InternalError', 'EvalError',
-                        'RangeError', 'ReferenceError', 'SyntaxError', 'TypeError',
-                        'URIError', 'ArrayBuffer', 'WeakMap', 'Map', 'Set'].concat(typedArrayClasses);
+                        'String', 'RegExp', 'ArrayBuffer', 'WeakMap', 'Map', 'Set'].concat(typedArrayClasses)
+                                                                                   .concat(errorObjectClasses);
 
   function go() {
     window.iwin = document.getElementById('ifr').contentWindow;
@@ -139,6 +140,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
     testTypedArrays();
 
+    testErrorObjects();
+
     // We could also test DataView and Iterator here for completeness, but it's
     // more trouble than it's worth.
 
@@ -182,6 +185,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     if (!isReleaseBuild)
       gPrototypeProperties[c].push("move");
   }
+  for (var c of errorObjectClasses) {
+      gPrototypeProperties[c] = ["constructor", "name",
+                                 // We don't actually resolve these empty data properties
+                                 // onto the Xray prototypes, but we list them here to make
+                                 // the test happy.
+                                 "lineNumber", "columnNumber", "fileName", "message", "stack"];
+  }
+  // toString and toSource only live on the parent proto (Error.prototype).
+  gPrototypeProperties['Error'].push('toString');
+  gPrototypeProperties['Error'].push('toSource');
+
+  gPrototypeProperties['Function'] =
+    ["constructor", "toSource", "toString", "apply", "call", "bind",
+     "isGenerator", "length", "name", "arguments", "caller"];
   gPrototypeProperties['Function'] =
     ["constructor", "toSource", "toString", "apply", "call", "bind",
      "isGenerator", "length", "name", "arguments", "caller"];
@@ -423,6 +440,38 @@ function testTrickyObject(trickyObject) {
       is(t.wrappedJSObject.length, 42, "Set tricky expando")
       is(t.length, 10, "Length accessor works over Xrays")
       is(t.byteLength, t.length * window[c].prototype.BYTES_PER_ELEMENT, "byteLength accessor works over Xrays")
+    }
+  }
+
+  function testErrorObjects() {
+    // We only invoke testXray with Error, because that function isn't set up
+    // to deal with dependent classes and fixing it up is more trouble than
+    // it's worth.
+    testXray('Error', new iwin.Error('some error message'), new iwin.Error(),
+             ['fileName', 'lineNumber', 'columnNumber', 'message', 'stack']);
+
+    // Make sure that the dependent classes have their prototypes set up correctly.
+    for (let c of errorObjectClasses.filter(x => x != "Error")) {
+      var e = new iwin[c]('some message');
+      is(Object.getPrototypeOf(e).name, c, "Prototype has correct name");
+      is(Object.getPrototypeOf(Object.getPrototypeOf(e)), iwin.Error.prototype, "Dependent prototype set up correctly");
+      is(e.name, c, "Exception name inherited correctly");
+
+      function testProperty(name, criterion, goodReplacement, faultyReplacement) {
+        ok(criterion(e[name]), name + " property is correct: " + e[name]);
+        e.wrappedJSObject[name] = goodReplacement;
+        is(e[name], goodReplacement, name + " property ok after replacement: " + goodReplacement);
+        e.wrappedJSObject[name] = faultyReplacement;
+        is(e[name], undefined, name + " property censored after suspicious replacement");
+      }
+      testProperty('message', x => x == 'some message', 'some other message', 42);
+      testProperty('fileName', x => /xul/.test(x), 'otherFilename.html', new iwin.Object());
+      // Note - an Exception newed via Xrays is going to have an empty stack given the
+      // current semantics and implementation. This tests the current behavior, but that
+      // may change in bug 1036527 or similar.
+      testProperty('stack', x => /^\s*$/.test(x), 'some other stack', new iwin.WeakMap());
+      testProperty('columnNumber', x => x > 5 && x < 100, 99, 99.5);
+      testProperty('lineNumber', x => x > 100 && x < 10000, 50, 'foo');
     }
   }
 

@@ -1569,6 +1569,13 @@ Preferences::SetInt(const char* aPref, int32_t aValue)
 
 // static
 nsresult
+Preferences::SetFloat(const char* aPref, float aValue)
+{
+  return SetCString(aPref, nsPrintfCString("%f", aValue).get());
+}
+
+// static
+nsresult
 Preferences::SetComplex(const char* aPref, const nsIID &aType,
                         nsISupports* aValue)
 {

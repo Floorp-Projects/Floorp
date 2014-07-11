@@ -5,19 +5,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifdef EXPORT_LIBRARY
-ifeq ($(EXPORT_LIBRARY),1)
-ifdef IS_COMPONENT
-EXPORT_LIBRARY = $(DEPTH)/staticlib/components
-else
-EXPORT_LIBRARY = $(DEPTH)/staticlib
-endif
-else
-# If EXPORT_LIBRARY has a value, we'll be installing there. We also need to cleanup there
-GARBAGE += $(foreach lib,$(LIBRARY),$(EXPORT_LIBRARY)/$(lib))
-endif
-endif # EXPORT_LIBRARY
-
 binaries libs:: $(SUBMAKEFILES) $(TARGETS)
 ifndef NO_DIST_INSTALL
 ifdef SHARED_LIBRARY
@@ -41,12 +28,6 @@ INSTALL_TARGETS += PROGRAMS
 endif
 
 ifdef LIBRARY
-ifdef EXPORT_LIBRARY
-LIBRARY_FILES = $(LIBRARY)
-LIBRARY_DEST ?= $(EXPORT_LIBRARY)
-LIBRARY_TARGET = binaries libs
-INSTALL_TARGETS += LIBRARY
-endif
 ifdef DIST_INSTALL
 ifdef IS_COMPONENT
 $(error Shipping static component libs makes no sense.)

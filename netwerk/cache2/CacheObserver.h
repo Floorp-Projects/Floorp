@@ -38,6 +38,10 @@ class CacheObserver : public nsIObserver
   static uint32_t const DiskCacheCapacity() // result in bytes.
     { return sDiskCacheCapacity << 10; }
   static void SetDiskCacheCapacity(uint32_t); // parameter in bytes.
+  static uint32_t const DiskFreeSpaceSoftLimit() // result in bytes.
+    { return sDiskFreeSpaceSoftLimit << 10; }
+  static uint32_t const DiskFreeSpaceHardLimit() // result in bytes.
+    { return sDiskFreeSpaceHardLimit << 10; }
   static bool const SmartCacheSizeEnabled()
     { return sSmartCacheSizeEnabled; }
   static uint32_t const PreloadChunkCount()
@@ -74,6 +78,8 @@ private:
   static int32_t sMemoryCacheCapacity;
   static int32_t sAutoMemoryCacheCapacity;
   static uint32_t sDiskCacheCapacity;
+  static uint32_t sDiskFreeSpaceSoftLimit;
+  static uint32_t sDiskFreeSpaceHardLimit;
   static bool sSmartCacheSizeEnabled;
   static uint32_t sPreloadChunkCount;
   static uint32_t sMaxMemoryEntrySize;

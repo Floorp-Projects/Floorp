@@ -539,6 +539,10 @@ interface nsIDOMWindowUtils : nsISupports {
   // If this is set, preventDefault() the event before dispatch.
   const unsigned long KEY_FLAG_PREVENT_DEFAULT   = 0x0001;
 
+  // If this is set, the mIsSynthesizedForTests flag is set to false
+  // on the key event. Otherwise it is true.
+  const unsigned long KEY_FLAG_NOT_SYNTHESIZED_FOR_TESTS = 0x0002;
+
   // if one of these flags is set, the KeyboardEvent.location will be the value.
   // Otherwise, it will be computed from aKeyCode.
   const unsigned long KEY_FLAG_LOCATION_STANDARD = 0x0010;

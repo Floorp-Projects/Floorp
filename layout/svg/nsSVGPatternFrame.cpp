@@ -324,8 +324,8 @@ nsSVGPatternFrame::PaintPattern(Matrix* patternMatrix,
 
   // revert the vector effect transform so that the pattern appears unchanged
   if (aFillOrStroke == &nsStyleSVG::mStroke) {
-    Matrix strokeTransform = ToMatrix(nsSVGUtils::GetStrokeTransform(aSource).Invert());
-    if (strokeTransform.IsSingular()) {
+    Matrix strokeTransform = ToMatrix(nsSVGUtils::GetStrokeTransform(aSource));
+    if (!strokeTransform.Invert()) {
       NS_WARNING("Should we get here if the stroke transform is singular?");
       return nullptr;
     }

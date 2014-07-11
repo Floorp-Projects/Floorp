@@ -68,8 +68,6 @@ if CONFIG['ENABLE_TESTS']:
         'mozilla/SanityTest.cpp',
     ]
 
-    EXPORT_LIBRARY = True
-
     LOCAL_INCLUDES += [
         'gmock',
         'gmock/include',

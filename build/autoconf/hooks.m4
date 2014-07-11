@@ -18,33 +18,45 @@ MOZ_CONFIG_LOG_TRAP
 ])
 
 dnl Disable the trap when running sub-configures.
-define([_MOZ_AC_OUTPUT_SUBDIRS], defn([AC_OUTPUT_SUBDIRS]))
-define([MOZ_SUBCONFIGURE_WRAP],
-[ _CONFIG_SHELL=${CONFIG_SHELL-/bin/sh}
-case "$host" in
-*-mingw*)
+define(GEN_MOZ_AC_OUTPUT_SUBDIRS, [
+define([_MOZ_AC_OUTPUT_SUBDIRS], [
+patsubst($@, [$srcdir/$ac_config_dir], [$srcdir/$moz_config_srcdir])
+])
+])
+GEN_MOZ_AC_OUTPUT_SUBDIRS(defn([AC_OUTPUT_SUBDIRS]))
+
+define([AC_OUTPUT_SUBDIRS],
+[trap '' EXIT
+for moz_config_dir in $1; do
+  case "$moz_config_dir" in
+  *:*)
+    moz_config_srcdir=$(echo $moz_config_dir | awk -F: '{print [$]1}')
+    moz_config_dir=$(echo $moz_config_dir | awk -F: '{print [$]2}')
+    ;;
+  *)
+    moz_config_srcdir=$moz_config_dir
+    ;;
+  esac
+  _CONFIG_SHELL=${CONFIG_SHELL-/bin/sh}
+  case "$host" in
+  *-mingw*)
     _CONFIG_SHELL=$(cd $(dirname $_CONFIG_SHELL); pwd -W)/$(basename $_CONFIG_SHELL)
     if test ! -e "$_CONFIG_SHELL" -a -e "${_CONFIG_SHELL}.exe"; then
         _CONFIG_SHELL="${_CONFIG_SHELL}.exe"
     fi
     ;;
-esac
+  esac
 
-if test -d "$1"; then
-    (cd "$1"; $PYTHON $_topsrcdir/build/subconfigure.py dump "$_CONFIG_SHELL")
-else
-    mkdir -p "$1"
-fi
-$2
-(cd "$1"; $PYTHON $_topsrcdir/build/subconfigure.py adjust $ac_sub_configure)
-])
-
-define([AC_OUTPUT_SUBDIRS],
-[trap '' EXIT
-for moz_config_dir in $1; do
-  MOZ_SUBCONFIGURE_WRAP([$moz_config_dir],[
-    _MOZ_AC_OUTPUT_SUBDIRS($moz_config_dir)
-  ])
+  if test -d "$moz_config_dir"; then
+    (cd "$moz_config_dir"; eval $PYTHON $_topsrcdir/build/subconfigure.py dump "$_CONFIG_SHELL" $ac_configure_args)
+  else
+    mkdir -p "$moz_config_dir"
+  fi
+  _save_cache_file="$cache_file"
+  ifelse($2,,cache_file="$moz_config_dir/config.cache",cache_file="$2")
+  _MOZ_AC_OUTPUT_SUBDIRS($moz_config_dir)
+  cache_file="$_save_cache_file"
+  (cd "$moz_config_dir"; $PYTHON $_topsrcdir/build/subconfigure.py adjust $ac_sub_configure)
 done
 
 MOZ_CONFIG_LOG_TRAP

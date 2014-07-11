@@ -34,7 +34,7 @@
 #ifndef GMP_VIDEO_FRAME_I420_h_
 #define GMP_VIDEO_FRAME_I420_h_
 
-#include "gmp-video-errors.h"
+#include "gmp-errors.h"
 #include "gmp-video-frame.h"
 #include "gmp-video-plane.h"
 
@@ -63,22 +63,22 @@ public:
   // on set dimensions - height and plane stride.
   // If required size is bigger than the allocated one, new buffers of adequate
   // size will be allocated.
-  virtual GMPVideoErr CreateEmptyFrame(int32_t aWidth, int32_t aHeight,
-                                       int32_t aStride_y, int32_t aStride_u, int32_t aStride_v) = 0;
+  virtual GMPErr CreateEmptyFrame(int32_t aWidth, int32_t aHeight,
+                                  int32_t aStride_y, int32_t aStride_u, int32_t aStride_v) = 0;
 
   // MAIN THREAD ONLY
   // CreateFrame: Sets the frame's members and buffers. If required size is
   // bigger than allocated one, new buffers of adequate size will be allocated.
-  virtual GMPVideoErr CreateFrame(int32_t aSize_y, const uint8_t* aBuffer_y,
-                                  int32_t aSize_u, const uint8_t* aBuffer_u,
-                                  int32_t aSize_v, const uint8_t* aBuffer_v,
-                                  int32_t aWidth, int32_t aHeight,
-                                  int32_t aStride_y, int32_t aStride_u, int32_t aStride_v) = 0;
+  virtual GMPErr CreateFrame(int32_t aSize_y, const uint8_t* aBuffer_y,
+                             int32_t aSize_u, const uint8_t* aBuffer_u,
+                             int32_t aSize_v, const uint8_t* aBuffer_v,
+                             int32_t aWidth, int32_t aHeight,
+                             int32_t aStride_y, int32_t aStride_u, int32_t aStride_v) = 0;
 
   // MAIN THREAD ONLY
   // Copy frame: If required size is bigger than allocated one, new buffers of
   // adequate size will be allocated.
-  virtual GMPVideoErr CopyFrame(const GMPVideoi420Frame& aVideoFrame) = 0;
+  virtual GMPErr CopyFrame(const GMPVideoi420Frame& aVideoFrame) = 0;
 
   // Swap Frame.
   virtual void SwapFrame(GMPVideoi420Frame* aVideoFrame) = 0;
@@ -96,10 +96,10 @@ public:
   virtual int32_t Stride(GMPPlaneType aType) const = 0;
 
   // Set frame width.
-  virtual GMPVideoErr SetWidth(int32_t aWidth) = 0;
+  virtual GMPErr SetWidth(int32_t aWidth) = 0;
 
   // Set frame height.
-  virtual GMPVideoErr SetHeight(int32_t aHeight) = 0;
+  virtual GMPErr SetHeight(int32_t aHeight) = 0;
 
   // Get frame width.
   virtual int32_t Width() const = 0;
@@ -107,17 +107,20 @@ public:
   // Get frame height.
   virtual int32_t Height() const = 0;
 
-  // Set frame timestamp (90kHz).
-  virtual void SetTimestamp(uint32_t aTimestamp) = 0;
+  // Set frame timestamp (microseconds)
+  virtual void SetTimestamp(uint64_t aTimestamp) = 0;
 
-  // Get frame timestamp (90kHz).
-  virtual uint32_t Timestamp() const = 0;
+  // Get frame timestamp (microseconds)
+  virtual uint64_t Timestamp() const = 0;
 
-  // Set render time in miliseconds.
-  virtual void SetRenderTime_ms(int64_t aRenderTime_ms) = 0;
+  // Set frame duration (microseconds)
+  // NOTE: next-frame's Timestamp() != this-frame's TimeStamp()+Duration()
+  // depending on rounding to avoid having to track roundoff errors
+  // and dropped/missing frames(!) (which may leave a large gap)
+  virtual void SetDuration(uint64_t aDuration) = 0;
 
-  // Get render time in miliseconds.
-  virtual int64_t RenderTime_ms() const = 0;
+  // Get frame duration (microseconds)
+  virtual uint64_t Duration() const = 0;
 
   // Return true if underlying plane buffers are of zero size, false if not.
   virtual bool IsZeroSize() const = 0;

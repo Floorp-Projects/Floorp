@@ -570,7 +570,7 @@ class LDefinition
           case MIRType_ForkJoinContext:
             return LDefinition::GENERAL;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected type");
+            MOZ_CRASH("unexpected type");
         }
     }
 
@@ -750,7 +750,7 @@ class LInstructionVisitor
     {}
 
   public:
-#define VISIT_INS(op) virtual bool visit##op(L##op *) { MOZ_ASSUME_UNREACHABLE("NYI: " #op); }
+#define VISIT_INS(op) virtual bool visit##op(L##op *) { MOZ_CRASH("NYI: " #op); }
     LIR_OPCODE_LIST(VISIT_INS)
 #undef VISIT_INS
 };

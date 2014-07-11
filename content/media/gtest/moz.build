@@ -18,8 +18,6 @@ if CONFIG['MOZ_WEBM_ENCODER']:
                         'TestWebMWriter.cpp',
 ]
 
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [

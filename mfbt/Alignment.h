@@ -64,8 +64,8 @@ template<size_t Align>
 struct AlignedElem;
 
 /*
- * We have to specialize this template because GCC doesn't like __attribute__((aligned(foo))) where
- * foo is a template parameter.
+ * We have to specialize this template because GCC doesn't like
+ * __attribute__((aligned(foo))) where foo is a template parameter.
  */
 
 template<>

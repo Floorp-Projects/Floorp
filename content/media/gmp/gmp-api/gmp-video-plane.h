@@ -34,7 +34,7 @@
 #ifndef GMP_VIDEO_PLANE_h_
 #define GMP_VIDEO_PLANE_h_
 
-#include "gmp-video-errors.h"
+#include "gmp-errors.h"
 #include <stdint.h>
 
 // The implementation backing this interface uses shared memory for the
@@ -52,18 +52,18 @@ public:
   // CreateEmptyPlane - set allocated size, actual plane size and stride:
   // If current size is smaller than current size, then a buffer of sufficient
   // size will be allocated.
-  virtual GMPVideoErr CreateEmptyPlane(int32_t aAllocatedSize,
-                                       int32_t aStride,
-                                       int32_t aPlaneSize) = 0;
+  virtual GMPErr CreateEmptyPlane(int32_t aAllocatedSize,
+                                  int32_t aStride,
+                                  int32_t aPlaneSize) = 0;
 
   // MAIN THREAD ONLY
   // Copy the entire plane data.
-  virtual GMPVideoErr Copy(const GMPPlane& aPlane) = 0;
+  virtual GMPErr Copy(const GMPPlane& aPlane) = 0;
 
   // MAIN THREAD ONLY
   // Copy buffer: If current size is smaller
   // than current size, then a buffer of sufficient size will be allocated.
-  virtual GMPVideoErr Copy(int32_t aSize, int32_t aStride, const uint8_t* aBuffer) = 0;
+  virtual GMPErr Copy(int32_t aSize, int32_t aStride, const uint8_t* aBuffer) = 0;
 
   // Swap plane data.
   virtual void Swap(GMPPlane& aPlane) = 0;

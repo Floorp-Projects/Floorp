@@ -102,7 +102,7 @@ let apps = [
     uri: "https://example.com/chrome/dom/identity/tests/mochitest/file_declareAudience.html",
     expected: {
       success: false,
-      underprivileged: false,
+      underprivileged: true,
     },
   },
   {
@@ -114,6 +114,7 @@ let apps = [
     uri: "https://example.com/chrome/dom/identity/tests/mochitest/file_declareAudience.html",
     expected: {
       success: true,
+      underprivileged: false,
     },
   },
   {
@@ -129,9 +130,7 @@ let apps = [
   },
 ];
 
-let appIndex = 0;
-let expectedErrors = 0;
-let receivedErrors = [];
+let eventsReceived = 0;
 let testRunner = runTest();
 
 // Successful tests will send exactly one message.  But for error tests, we may
@@ -139,8 +138,23 @@ let testRunner = runTest();
 // track of received errors; once they reach the expected count, we are done.
 function receiveMessage(event) {
   let result = JSON.parse(event.data);
-  let app = apps[appIndex];
+  let app = apps[result.appIndex];
+  if (app.received) {
+    return;
+  }
+  apps[result.appIndex].received = true;
+
   let expected = app.expected;
+
+  let expectedErrors = 0;
+  let receivedErrors = [];
+
+  if (expected.underprivileged) {
+    expectedErrors += 1;
+  }
+  if (expected.nopermission) {
+    expectedErrors += 1;
+  }
 
   is(result.success, expected.success,
      "Assertion request succeeds");
@@ -150,51 +164,41 @@ function receiveMessage(event) {
     let components = extractAssertionComponents(result.backedAssertion);
     is(components.payload.aud, app.wantAudience || app.origin,
        "Got desired assertion audience");
-
   } else {
     receivedErrors.push(result.error);
   }
 
-  if (receivedErrors.length === expectedErrors) {
 
-    if (expected.underprivileged) {
-      ok(receivedErrors.indexOf("ERROR_NOT_AUTHORIZED_FOR_FIREFOX_ACCOUNTS") > -1,
-         "Expect a complaint that this app cannot use FxA.");
-    }
-    if (!expected.success) {
-      ok(receivedErrors.indexOf("ERROR_INVALID_ASSERTION_AUDIENCE") > -1,
-         "Expect an error getting an assertion");
-    }
+  ok(receivedErrors.length === expectedErrors,
+     "Received errors should be equal to expected errors");
 
-    appIndex += 1;
-
-    if (appIndex === apps.length) {
-      window.removeEventListener("message", receiveMessage);
-
-      FirefoxAccounts.fxAccountsManager = originalManager;
-
-      SimpleTest.finish();
-      return;
-    }
-
-    testRunner.next();
+  if (!expected.success && expected.underprivileged) {
+    ok(receivedErrors.indexOf("ERROR_INVALID_ASSERTION_AUDIENCE") > -1,
+       "Expect an error getting an assertion");
   }
+
+  eventsReceived += 1;
+
+  if (eventsReceived === apps.length) {
+    window.removeEventListener("message", receiveMessage);
+
+    FirefoxAccounts.fxAccountsManager = originalManager;
+
+    SimpleTest.finish();
+
+    return;
+  }
+
+  testRunner.next();
 }
 
 window.addEventListener("message", receiveMessage, false, true);
 
 function runTest() {
-  for (let app of apps) {
-    dump("** Testing " + app.title + "\n");
-    // Set up state for message handler
-    expectedErrors = 0;
-    receivedErrors = [];
-    if (!app.expected.success) {
-      expectedErrors += 1;
-    }
-    if (app.expected.underprivileged) {
-      expectedErrors += 1;
-    }
+  let index;
+  for (let i = 0; i < apps.length; i++) {
+    let app = apps[i];
+    dump("\n\n** Testing " + app.title + "\n");
 
     let iframe = document.createElement("iframe");
 
@@ -204,24 +208,35 @@ function runTest() {
 
     document.getElementById("content").appendChild(iframe);
 
-    iframe.addEventListener("load", function onLoad() {
-      iframe.removeEventListener("load", onLoad);
+    index = i;
+    (function(_index) {
+      iframe.addEventListener("load", function onLoad() {
+        iframe.removeEventListener("load", onLoad);
 
-      let principal = iframe.contentDocument.nodePrincipal;
-      is(principal.appStatus, app.appStatus,
-         "Iframe's document.nodePrincipal has expected appStatus");
+        SpecialPowers.addPermission(
+          "firefox-accounts",
+          SpecialPowers.Ci.nsIPermissionManager.ALLOW_ACTION,
+          iframe.contentDocument
+        );
 
-      // Because the <iframe mozapp> can't parent its way back to us, we
-      // provide this handle to our window so it can postMessage to us.
-      iframe.contentWindow.wrappedJSObject.realParent = window;
+        let principal = iframe.contentDocument.nodePrincipal;
+        is(principal.appStatus, app.appStatus,
+           "Iframe's document.nodePrincipal has expected appStatus");
 
-      // Test what we want to test, viz. whether or not the app can request
-      // an assertion with an audience the same as or different from its
-      // origin.  The client will post back its success or failure in procuring
-      // an identity assertion from Firefox Accounts.
-      iframe.contentWindow.postMessage({audience: app.wantAudience}, "*");
-    }, false);
+        // Because the <iframe mozapp> can't parent its way back to us, we
+        // provide this handle to our window so it can postMessage to us.
+        iframe.contentWindow.wrappedJSObject.realParent = window;
 
+        // Test what we want to test, viz. whether or not the app can request
+        // an assertion with an audience the same as or different from its
+        // origin.  The client will post back its success or failure in procuring
+        // an identity assertion from Firefox Accounts.
+        iframe.contentWindow.postMessage({
+          audience: app.wantAudience,
+          appIndex: _index
+        }, "*");
+      }, false);
+    })(index);
     yield undefined;
   }
 }
@@ -259,9 +274,8 @@ SpecialPowers.pushPrefEnv({"set":
     ["identity.fxaccounts.enabled", true],
     ["toolkit.identity.debug", true],
     ["dom.identity.syntheticEventsOk", true],
-
-    ["security.apps.privileged.CSP.default", ""],
-    ["security.apps.certified.CSP.default", ""],
+    ["security.apps.privileged.CSP.default", "'inline-script';"],
+    ["security.apps.certified.CSP.default", "'inline-script';"],
   ]},
   function() {
     testRunner.next();

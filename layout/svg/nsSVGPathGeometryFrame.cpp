@@ -302,7 +302,9 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
       // coordinate system in order for non-scaled stroke to be correct.
       // Naturally we also need to transform the point into the same
       // coordinate system in order to hit-test against the path.
-      nonScalingStrokeMatrix.Invert();
+      if (!nonScalingStrokeMatrix.Invert()) {
+        return nullptr;
+      }
       userSpacePoint = ToMatrix(hitTestingTM) * nonScalingStrokeMatrix * userSpacePoint;
       RefPtr<PathBuilder> builder =
         path->TransformedCopyToBuilder(nonScalingStrokeMatrix, fillRule);
