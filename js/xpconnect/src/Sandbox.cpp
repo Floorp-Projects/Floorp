@@ -908,13 +908,6 @@ xpc::CreateSandboxObject(JSContext *cx, MutableHandleValue vp, nsISupports *prin
             if (!ok)
                 return NS_ERROR_XPC_UNEXPECTED;
 
-            if (xpc::WrapperFactory::IsXrayWrapper(options.proto) && !options.wantXrays) {
-                RootedValue v(cx, ObjectValue(*options.proto));
-                if (!xpc::WrapperFactory::WaiveXrayAndWrap(cx, &v))
-                    return NS_ERROR_FAILURE;
-                options.proto = &v.toObject();
-            }
-
             // Now check what sort of thing we've got in |proto|
             JSObject *unwrappedProto = js::UncheckedUnwrap(options.proto, false);
             const js::Class *unwrappedClass = js::GetObjectClass(unwrappedProto);
