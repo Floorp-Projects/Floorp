@@ -194,8 +194,16 @@ MockCredStore.prototype = {
 
   getByOrigin: function() {
     this._spy("getByOrigin", arguments);
-    return Promise.resolve(this._options.getByOriginResult ||
-                           this._getByOriginResult);
+    let result = this._getByOriginResult;
+    if (this._options.getByOriginResult) {
+      if (Array.isArray(this._options.getByOriginResult)) {
+        result = this._options.getByOriginResult.length ?
+                 this._options.getByOriginResult.shift() : null;
+      } else {
+        result = this._options.getByOriginResult;
+      }
+    }
+    return Promise.resolve(result);
   },
 
   getByMsisdn: function() {
@@ -223,6 +231,11 @@ MockCredStore.prototype = {
   removeOrigin: function() {
     this._spy("removeOrigin", arguments);
     return Promise.resolve();
+  },
+
+  delete: function() {
+    this._spy("delete", arguments);
+    return Promise.resolve();
   }
 };
 
@@ -239,15 +252,11 @@ MockClient.prototype = {
   __proto__: Mock.prototype,
 
   _discoverResult: {
-    verificationMethods: ["sms/momt", "sms/mt"],
+    verificationMethods: ["sms/mt"],
     verificationDetails: {
       "sms/mt": {
         mtSender: "123",
         url: "https://msisdn.accounts.firefox.com/v1/msisdn/sms/mt/verify"
-      },
-      "sms/momt": {
-        mtSender: "123",
-        moVerifier: "234"
       }
     }
   },
@@ -298,6 +307,12 @@ MockClient.prototype = {
 
   sign: function() {
     this._spy("sign", arguments);
+    if (this._options.signError) {
+      let error = Array.isArray(this._options.signError) ?
+                  this._options.signError.shift() :
+                  this._options.signError;
+      return Promise.reject(error);
+    }
     return Promise.resolve(this._options.signResult || this._signResult);
   }
 };
@@ -374,17 +389,7 @@ add_test(function() {
   MobileIdentityManager.ui = ui;
   let credStore = new MockCredStore();
   MobileIdentityManager.credStore = credStore;
-  let client = new MockClient({
-    discoverResult: {
-      verificationMethods: ["sms/mt"],
-      verificationDetails: {
-        "sms/mt": {
-          mtSender: "123",
-          url: "https://msisdn.accounts.firefox.com/v1/msisdn/sms/mt/verify"
-        }
-      }
-    }
-  });
+  let client = new MockClient();
   MobileIdentityManager.client = client;
 
   let promiseId = Date.now();
@@ -615,15 +620,6 @@ add_test(function() {
   let credStore = new MockCredStore();
   MobileIdentityManager.credStore = credStore;
   let client = new MockClient({
-    discoverResult: {
-      verificationMethods: ["sms/mt"],
-      verificationDetails: {
-        "sms/mt": {
-          mtSender: "123",
-          url: "https://msisdn.accounts.firefox.com/v1/msisdn/sms/mt/verify"
-        }
-      }
-    },
     signResult: {
       cert: "aInvalidCert"
     },
@@ -813,7 +809,7 @@ add_test(function() {
 });
 
 add_test(function() {
-  do_print("= Existing credentials - No Icc - Permission denied - OK result =");
+  do_print("= Existing credentials - No Icc - Permission denied - KO result =");
 
   do_register_cleanup(cleanup);
 
@@ -977,15 +973,6 @@ add_test(function() {
   MobileIdentityManager.credStore = credStore;
   let client = new MockClient({
     verifyCodeResult: ANOTHER_PHONE_NUMBER,
-    discoverResult: {
-      verificationMethods: ["sms/mt"],
-      verificationDetails: {
-        "sms/mt": {
-          mtSender: "123",
-          url: "https://msisdn.accounts.firefox.com/v1/msisdn/sms/mt/verify"
-        }
-      }
-    },
     registerResult: {
       msisdnSessionToken: _sessionToken
     }
@@ -1161,15 +1148,6 @@ add_test(function() {
   MobileIdentityManager.credStore = credStore;
   let client = new MockClient({
     verifyCodeResult: ANOTHER_PHONE_NUMBER,
-    discoverResult: {
-      verificationMethods: ["sms/mt"],
-      verificationDetails: {
-        "sms/mt": {
-          mtSender: "123",
-          url: "https://msisdn.accounts.firefox.com/v1/msisdn/sms/mt/verify"
-        }
-      }
-    },
     registerResult: {
       msisdnSessionToken: _sessionToken
     }
@@ -1230,6 +1208,99 @@ add_test(function() {
       options: {
         forceSelection: true
       }
+    }
+  });
+});
+
+add_test(function() {
+  do_print("= Existing credentials - No Icc - INVALID_AUTH_TOKEN - OK =");
+
+  do_register_cleanup(cleanup);
+
+  do_test_pending();
+
+  let _sessionToken = Date.now();
+
+  let existingCredentials = {
+    sessionToken: _sessionToken,
+    msisdn: PHONE_NUMBER,
+    origin: ORIGIN,
+    deviceIccIds: null
+  };
+
+  let ui = new MockUi({
+    startFlowResult: {
+      phoneNumber: PHONE_NUMBER
+    }
+  });
+  MobileIdentityManager.ui = ui;
+  let credStore = new MockCredStore({
+    getByOriginResult: [existingCredentials, null]
+  });
+  MobileIdentityManager.credStore = credStore;
+  let client = new MockClient({
+    signError: [ERROR_INVALID_AUTH_TOKEN],
+    verifyCodeResult: PHONE_NUMBER,
+    registerResult: {
+      msisdnSessionToken: SESSION_TOKEN
+    }
+  });
+  MobileIdentityManager.client = client;
+
+  let promiseId = Date.now();
+  let mm = {
+    sendAsyncMessage: function(aMsg, aData) {
+      do_print("sendAsyncMessage " + aMsg + " - " + JSON.stringify(aData));
+
+      // Check result.
+      do_check_eq(aMsg, GET_ASSERTION_RETURN_OK);
+      do_check_eq(typeof aData, "object");
+      do_check_eq(aData.promiseId, promiseId);
+
+      // Check spied calls.
+
+      // MockCredStore.
+      credStore._("getByOrigin").callsLength(2);
+      credStore._("getByOrigin").call(1).arg(1, ORIGIN);
+      credStore._("getByOrigin").call(2).arg(1, ORIGIN);
+      credStore._("getByMsisdn").callsLength(1);
+      credStore._("getByMsisdn").call(1).arg(1, PHONE_NUMBER);
+      credStore._("add").callsLength(1);
+      credStore._("add").call(1).arg(1, undefined);
+      credStore._("add").call(1).arg(2, PHONE_NUMBER);
+      credStore._("add").call(1).arg(3, ORIGIN);
+      credStore._("add").call(1).arg(4, SESSION_TOKEN);
+      credStore._("add").call(1).arg(5, null);
+      credStore._("setDeviceIccIds").callsLength(0);
+      credStore._("delete").callsLength(1);
+      credStore._("delete").call(1).arg(1, PHONE_NUMBER);
+
+      // MockUI.
+      ui._("startFlow").callsLength(1);
+      ui._("verifyCodePrompt").callsLength(1);
+      ui._("verify").callsLength(1);
+
+      // MockClient.
+      client._("discover").callsLength(1);
+      client._("register").callsLength(1);
+      client._("smsMtVerify").callsLength(1);
+      client._("verifyCode").callsLength(1);
+      client._("sign").callsLength(1);
+
+      do_test_finished();
+      run_next_test();
+    }
+  };
+
+  addPermission(ORIGIN, Ci.nsIPermissionManager.ALLOW_ACTION);
+
+  MobileIdentityManager.receiveMessage({
+    name: GET_ASSERTION_IPC_MSG,
+    principal: PRINCIPAL,
+    target: mm,
+    json: {
+      promiseId: promiseId,
+      options: {}
     }
   });
 });
