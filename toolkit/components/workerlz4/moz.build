@@ -17,5 +17,4 @@ SOURCES += [
     'lz4.cpp',
 ]
 
-EXPORT_LIBRARY = True
 FINAL_LIBRARY = 'xul'

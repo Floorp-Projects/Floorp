@@ -463,7 +463,8 @@ public:
 private:
   friend class LinkedListElement<T>;
 
-  void assertContains(const T* aValue) const {
+  void assertContains(const T* aValue) const
+  {
 #ifdef DEBUG
     for (const T* elem = getFirst(); elem; elem = elem->getNext()) {
       if (elem == aValue) {

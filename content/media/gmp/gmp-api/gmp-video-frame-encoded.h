@@ -35,6 +35,9 @@
 #define GMP_VIDEO_FRAME_ENCODED_h_
 
 #include <stdint.h>
+#include "gmp-decryption.h"
+#include "gmp-video-frame.h"
+#include "gmp-video-codec.h"
 
 enum GMPVideoFrameType
 {
@@ -58,17 +61,22 @@ class GMPVideoEncodedFrame : public GMPVideoFrame
 {
 public:
   // MAIN THREAD ONLY
-  virtual GMPVideoErr CreateEmptyFrame(uint32_t aSize) = 0;
+  virtual GMPErr CreateEmptyFrame(uint32_t aSize) = 0;
   // MAIN THREAD ONLY
-  virtual GMPVideoErr CopyFrame(const GMPVideoEncodedFrame& aVideoFrame) = 0;
+  virtual GMPErr CopyFrame(const GMPVideoEncodedFrame& aVideoFrame) = 0;
   virtual void     SetEncodedWidth(uint32_t aEncodedWidth) = 0;
   virtual uint32_t EncodedWidth() = 0;
   virtual void     SetEncodedHeight(uint32_t aEncodedHeight) = 0;
   virtual uint32_t EncodedHeight() = 0;
-  virtual void     SetTimeStamp(uint32_t aTimeStamp) = 0;
-  virtual uint32_t TimeStamp() = 0;
-  virtual void     SetCaptureTime(int64_t aCaptureTime) = 0;
-  virtual int64_t  CaptureTime() = 0;
+  // Microseconds
+  virtual void     SetTimeStamp(uint64_t aTimeStamp) = 0;
+  virtual uint64_t TimeStamp() = 0;
+  // Set frame duration (microseconds)
+  // NOTE: next-frame's Timestamp() != this-frame's TimeStamp()+Duration()
+  // depending on rounding to avoid having to track roundoff errors
+  // and dropped/missing frames(!) (which may leave a large gap)
+  virtual void     SetDuration(uint64_t aDuration) = 0;
+  virtual uint64_t Duration() const = 0;
   virtual void     SetFrameType(GMPVideoFrameType aFrameType) = 0;
   virtual GMPVideoFrameType FrameType() = 0;
   virtual void     SetAllocatedSize(uint32_t aNewSize) = 0;
@@ -79,6 +87,12 @@ public:
   virtual bool     CompleteFrame() = 0;
   virtual const uint8_t* Buffer() const = 0;
   virtual uint8_t*       Buffer() = 0;
+  virtual GMPBufferType  BufferType() const = 0;
+  virtual void     SetBufferType(GMPBufferType aBufferType) = 0;
+
+  // Get data describing how this frame is encrypted, or nullptr if the
+  // frame is not encrypted.
+  virtual const GMPEncryptedBufferData* GetDecryptionData() const = 0;
 };
 
 #endif // GMP_VIDEO_FRAME_ENCODED_h_
