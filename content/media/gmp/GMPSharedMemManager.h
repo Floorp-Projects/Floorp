@@ -28,11 +28,8 @@ public:
   // (perhaps temporarily).
   static const uint32_t kGMPBufLimit = 20;
 
-  GMPSharedMemManager() {}
-
-  virtual ~GMPSharedMemManager() {
-    // XXX free everything in the freelist
-  }
+  GMPSharedMemManager();
+  virtual ~GMPSharedMemManager();
 
   virtual bool MgrAllocShmem(GMPMemoryClasses aClass, size_t aSize,
                              ipc::Shmem::SharedMemory::SharedMemoryType aType,
