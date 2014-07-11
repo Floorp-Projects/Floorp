@@ -2162,6 +2162,9 @@ MediaDecoderStateMachine::SeekCompleted()
   // Try to decode another frame to detect if we're at the end...
   DECODER_LOG(PR_LOG_DEBUG, "Seek completed, mCurrentFrameTime=%lld", mCurrentFrameTime);
 
+  // Prevent changes in playback position before 'seeked' is fired for we
+  // expect currentTime equals seek target in 'seeked' callback.
+  mScheduler->FreezeScheduling();
   {
     ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
     NS_DispatchToMainThread(stopEvent, NS_DISPATCH_SYNC);
@@ -2173,6 +2176,7 @@ MediaDecoderStateMachine::SeekCompleted()
   mQuickBuffering = false;
 
   ScheduleStateMachine();
+  mScheduler->ThawScheduling();
 }
 
 // Runnable to dispose of the decoder and state machine on the main thread.
