@@ -107,9 +107,9 @@ public:
   }
 
   /**
-   * Some Windows API calls accept BYTE* but require that data actually be WCHAR*.
-   * Supporting this requires explicit operators to support the requisite explicit
-   * casts.
+   * Some Windows API calls accept BYTE* but require that data actually be
+   * WCHAR*.  Supporting this requires explicit operators to support the
+   * requisite explicit casts.
    */
   explicit operator const char*() const
   {
@@ -121,7 +121,8 @@ public:
   }
   explicit operator unsigned char*() const
   {
-    return const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(mPtr));
+    return
+      const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(mPtr));
   }
   explicit operator void*() const
   {
@@ -133,7 +134,7 @@ public:
   {
     return mPtr[aIndex];
   }
-  bool operator==(const char16ptr_t &aOther) const
+  bool operator==(const char16ptr_t& aOther) const
   {
     return mPtr == aOther.mPtr;
   }
@@ -141,7 +142,7 @@ public:
   {
     return mPtr == nullptr;
   }
-  bool operator!=(const char16ptr_t &aOther) const
+  bool operator!=(const char16ptr_t& aOther) const
   {
     return mPtr != aOther.mPtr;
   }
@@ -153,7 +154,7 @@ public:
   {
     return char16ptr_t(mPtr + aValue);
   }
-  ptrdiff_t operator-(const char16ptr_t &aOther) const
+  ptrdiff_t operator-(const char16ptr_t& aOther) const
   {
     return mPtr - aOther.mPtr;
   }

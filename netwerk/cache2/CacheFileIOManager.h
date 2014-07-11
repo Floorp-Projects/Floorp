@@ -115,7 +115,7 @@ public:
     HandleHashKey(KeyTypePointer aKey)
     {
       MOZ_COUNT_CTOR(HandleHashKey);
-      mHash = (SHA1Sum::Hash*)new uint8_t[SHA1Sum::HashSize];
+      mHash = (SHA1Sum::Hash*)new uint8_t[SHA1Sum::kHashSize];
       memcpy(mHash, aKey, sizeof(SHA1Sum::Hash));
     }
     HandleHashKey(const HandleHashKey& aOther)

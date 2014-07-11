@@ -63,9 +63,9 @@ void MOZ_EXPORT __asan_unpoison_memory_region(void const volatile *addr, size_t 
   VALGRIND_MAKE_MEM_DEFINED((addr), (size))
 #else
 
-#define MOZ_MAKE_MEM_NOACCESS(addr, size) do {} while(0)
-#define MOZ_MAKE_MEM_UNDEFINED(addr, size) do {} while(0)
-#define MOZ_MAKE_MEM_DEFINED(addr, size) do {} while(0)
+#define MOZ_MAKE_MEM_NOACCESS(addr, size) do {} while (0)
+#define MOZ_MAKE_MEM_UNDEFINED(addr, size) do {} while (0)
+#define MOZ_MAKE_MEM_DEFINED(addr, size) do {} while (0)
 
 #endif
 

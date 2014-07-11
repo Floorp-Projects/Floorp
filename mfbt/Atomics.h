@@ -285,7 +285,8 @@ private:
    * atomic<T*> is not the same as adding X to a T*.  Hence the need
    * for this function to provide the correct addend.
    */
-  static ptrdiff_t fixupAddend(ptrdiff_t aVal) {
+  static ptrdiff_t fixupAddend(ptrdiff_t aVal)
+  {
 #if defined(__clang__) || defined(_MSC_VER)
     return aVal;
 #elif defined(__GNUC__) && MOZ_GCC_VERSION_AT_LEAST(4, 6, 0) && \
