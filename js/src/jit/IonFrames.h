@@ -71,7 +71,7 @@ ScriptFromCalleeToken(CalleeToken token)
       case CalleeToken_Function:
         return CalleeTokenToFunction(token)->nonLazyScript();
     }
-    MOZ_CRASH("invalid callee token tag");
+    MOZ_ASSUME_UNREACHABLE("invalid callee token tag");
 }
 
 // In between every two frames lies a small header describing both frames. This

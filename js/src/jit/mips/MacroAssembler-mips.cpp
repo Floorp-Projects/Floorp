@@ -728,7 +728,8 @@ MacroAssemblerMIPS::ma_load(Register dest, Address address,
         as_lw(dest, base, encodedOffset);
         break;
       default:
-        MOZ_CRASH("Invalid argument for ma_load");
+        MOZ_ASSUME_UNREACHABLE("Invalid argument for ma_load");
+        break;
     }
 }
 
@@ -767,7 +768,8 @@ MacroAssemblerMIPS::ma_store(Register data, Address address, LoadStoreSize size,
         as_sw(data, base, encodedOffset);
         break;
       default:
-        MOZ_CRASH("Invalid argument for ma_store");
+        MOZ_ASSUME_UNREACHABLE("Invalid argument for ma_store");
+        break;
     }
 }
 
@@ -1068,11 +1070,13 @@ MacroAssemblerMIPS::ma_cmp(Register scratch, Register lhs, Register rhs, Conditi
       case Always:
       case Signed:
       case NotSigned:
-        MOZ_CRASH("There is a better way to compare for equality.");
+        MOZ_ASSUME_UNREACHABLE("There is a better way to compare for equality.");
+        break;
       case Overflow:
-        MOZ_CRASH("Overflow condition not supported for MIPS.");
+        MOZ_ASSUME_UNREACHABLE("Overflow condition not supported for MIPS.");
+        break;
       default:
-        MOZ_CRASH("Invalid condition for branch.");
+        MOZ_ASSUME_UNREACHABLE("Invalid condition for branch.");
     }
     return Always;
 }
@@ -1167,7 +1171,8 @@ MacroAssemblerMIPS::ma_cmp_set(Register rd, Register rs, Register rt, Condition 
         as_xori(rd, rd, 1);
         break;
       default:
-        MOZ_CRASH("Invalid condition for ma_cmp_set.");
+        MOZ_ASSUME_UNREACHABLE("Invalid condition for ma_cmp_set.");
+        break;
     }
 }
 
@@ -1234,7 +1239,8 @@ MacroAssemblerMIPS::compareFloatingPoint(FloatFormat fmt, FloatRegister lhs, Flo
         *testKind = TestForTrue;
         break;
       default:
-        MOZ_CRASH("Invalid DoubleCondition.");
+        MOZ_ASSUME_UNREACHABLE("Invalid DoubleCondition.");
+        break;
     }
 }
 
@@ -3184,7 +3190,7 @@ MacroAssemblerMIPSCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
         passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_General;
         break;
       default:
-        MOZ_CRASH("Unexpected argument type");
+        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
     }
 }
 
@@ -3333,7 +3339,7 @@ AssertValidABIFunctionType(uint32_t passedArgTypes)
       case Args_Int_IntDouble:
         break;
       default:
-        MOZ_CRASH("Unexpected type");
+        MOZ_ASSUME_UNREACHABLE("Unexpected type");
     }
 }
 #endif
@@ -3348,7 +3354,7 @@ MacroAssemblerMIPSCompat::callWithABI(void *fun, MoveOp::Type result)
       case MoveOp::GENERAL: passedArgTypes_ |= ArgType_General; break;
       case MoveOp::DOUBLE:  passedArgTypes_ |= ArgType_Double;  break;
       case MoveOp::FLOAT32: passedArgTypes_ |= ArgType_Float32; break;
-      default: MOZ_CRASH("Invalid return type");
+      default: MOZ_ASSUME_UNREACHABLE("Invalid return type");
     }
 #ifdef DEBUG
     AssertValidABIFunctionType(passedArgTypes_);

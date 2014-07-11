@@ -44,8 +44,8 @@
     (void)variable; \
     ASSERT(assertion); \
 } while (0)
-#define ASSERT_NOT_REACHED() MOZ_CRASH("WTF: ASSERT_NOT_REACHED")
-#define CRASH() MOZ_CRASH("WTF: CRASH")
+#define ASSERT_NOT_REACHED() MOZ_ASSUME_UNREACHABLE("wtf/Assertions.h")
+#define CRASH() MOZ_CRASH()
 #define COMPILE_ASSERT(exp, name) static_assert(exp, #name)
 
 #endif /* assembler_wtf_Assertions_h */
