@@ -34,17 +34,17 @@
 #ifndef GMP_VIDEO_DECODE_h_
 #define GMP_VIDEO_DECODE_h_
 
-#include "gmp-video-errors.h"
+#include "gmp-errors.h"
 #include "gmp-video-frame-i420.h"
 #include "gmp-video-frame-encoded.h"
 #include "gmp-video-codec.h"
 #include <stdint.h>
 
 // ALL METHODS MUST BE CALLED ON THE MAIN THREAD
-class GMPDecoderCallback
+class GMPVideoDecoderCallback
 {
 public:
-  virtual ~GMPDecoderCallback() {}
+  virtual ~GMPVideoDecoderCallback() {}
 
   virtual void Decoded(GMPVideoi420Frame* aDecodedFrame) = 0;
 
@@ -53,6 +53,10 @@ public:
   virtual void ReceivedDecodedFrame(const uint64_t aPictureId) = 0;
 
   virtual void InputDataExhausted() = 0;
+
+  virtual void DrainComplete() = 0;
+
+  virtual void ResetComplete() = 0;
 };
 
 // ALL METHODS MUST BE CALLED ON THE MAIN THREAD
@@ -63,9 +67,11 @@ public:
 
   // aCallback: Subclass should retain reference to it until DecodingComplete
   //            is called. Do not attempt to delete it, host retains ownership.
-  virtual GMPVideoErr InitDecode(const GMPVideoCodec& aCodecSettings,
-                                 GMPDecoderCallback* aCallback,
-                                 int32_t aCoreCount) = 0;
+  virtual GMPErr InitDecode(const GMPVideoCodec& aCodecSettings,
+                            const uint8_t* aCodecSpecific,
+                            uint32_t aCodecSpecificLength,
+                            GMPVideoDecoderCallback* aCallback,
+                            int32_t aCoreCount) = 0;
 
   // Decode encoded frame (as a part of a video stream). The decoded frame
   // will be returned to the user through the decode complete callback.
@@ -82,16 +88,22 @@ public:
   //
   // renderTimeMs :     System time to render in milliseconds. Only used by decoders with internal
   //                    rendering.
-  virtual GMPVideoErr Decode(GMPVideoEncodedFrame* aInputFrame,
-                             bool aMissingFrames,
-                             const GMPCodecSpecificInfo& aCodecSpecificInfo,
-                             int64_t aRenderTimeMs = -1) = 0;
+  virtual GMPErr Decode(GMPVideoEncodedFrame* aInputFrame,
+                        bool aMissingFrames,
+                        const GMPCodecSpecificInfo& aCodecSpecificInfo,
+                        int64_t aRenderTimeMs = -1) = 0;
 
-  // Reset decoder state and prepare for a new call to Decode(...). Flushes the decoder pipeline.
-  virtual GMPVideoErr Reset() = 0;
+  // Reset decoder state and prepare for a new call to Decode(...).
+  // Flushes the decoder pipeline.
+  // The decoder should enqueue a task to run ResetComplete() on the main
+  // thread once the reset has finished.
+  virtual GMPErr Reset() = 0;
 
   // Output decoded frames for any data in the pipeline, regardless of ordering.
-  virtual GMPVideoErr Drain() = 0;
+  // All remaining decoded frames should be immediately returned via callback.
+  // The decoder should enqueue a task to run DrainComplete() on the main
+  // thread once the reset has finished.
+  virtual GMPErr Drain() = 0;
 
   // May free decoder memory.
   virtual void DecodingComplete() = 0;

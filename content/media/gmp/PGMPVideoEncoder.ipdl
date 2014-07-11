@@ -8,6 +8,7 @@ include GMPTypes;
 
 using GMPVideoCodec from "gmp-video-codec.h";
 using GMPCodecSpecificInfo from "gmp-video-codec.h";
+using GMPVideoFrameType from "gmp-video-frame-encoded.h";
 
 include "GMPMessageUtils.h";
 
@@ -19,11 +20,12 @@ intr protocol PGMPVideoEncoder
   manager PGMP;
 child:
   async InitEncode(GMPVideoCodec aCodecSettings,
+                   uint8_t[] aCodecSpecific,
                    int32_t aNumberOfCores,
                    uint32_t aMaxPayloadSize);
   async Encode(GMPVideoi420FrameData aInputFrame,
                GMPCodecSpecificInfo aCodecSpecificInfo,
-               int[] aFrameTypes);
+               GMPVideoFrameType[] aFrameTypes);
   async SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT);
   async SetRates(uint32_t aNewBitRate, uint32_t aFrameRate);
   async SetPeriodicKeyFrames(bool aEnable);

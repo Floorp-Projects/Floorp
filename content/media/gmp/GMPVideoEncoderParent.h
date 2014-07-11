@@ -12,13 +12,14 @@
 #include "GMPMessageUtils.h"
 #include "GMPSharedMemManager.h"
 #include "GMPVideoHost.h"
+#include "GMPVideoEncoderProxy.h"
 
 namespace mozilla {
 namespace gmp {
 
 class GMPParent;
 
-class GMPVideoEncoderParent : public GMPVideoEncoder,
+class GMPVideoEncoderParent : public GMPVideoEncoderProxy,
                               public PGMPVideoEncoderParent,
                               public GMPSharedMemManager
 {
@@ -29,17 +30,18 @@ public:
 
   GMPVideoHostImpl& Host();
 
-  // GMPVideoEncoder
-  virtual GMPVideoErr InitEncode(const GMPVideoCodec& aCodecSettings,
-                                 GMPEncoderCallback* aCallback,
-                                 int32_t aNumberOfCores,
-                                 uint32_t aMaxPayloadSize) MOZ_OVERRIDE;
-  virtual GMPVideoErr Encode(GMPVideoi420Frame* aInputFrame,
-                             const GMPCodecSpecificInfo& aCodecSpecificInfo,
-                             const std::vector<GMPVideoFrameType>& aFrameTypes) MOZ_OVERRIDE;
-  virtual GMPVideoErr SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT) MOZ_OVERRIDE;
-  virtual GMPVideoErr SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) MOZ_OVERRIDE;
-  virtual GMPVideoErr SetPeriodicKeyFrames(bool aEnable) MOZ_OVERRIDE;
+  // GMPVideoEncoderProxy
+  virtual GMPErr InitEncode(const GMPVideoCodec& aCodecSettings,
+                            const nsTArray<uint8_t>& aCodecSpecific,
+                            GMPVideoEncoderCallback* aCallback,
+                            int32_t aNumberOfCores,
+                            uint32_t aMaxPayloadSize) MOZ_OVERRIDE;
+  virtual GMPErr Encode(GMPVideoi420Frame* aInputFrame,
+                        const GMPCodecSpecificInfo& aCodecSpecificInfo,
+                        const nsTArray<GMPVideoFrameType>& aFrameTypes) MOZ_OVERRIDE;
+  virtual GMPErr SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT) MOZ_OVERRIDE;
+  virtual GMPErr SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) MOZ_OVERRIDE;
+  virtual GMPErr SetPeriodicKeyFrames(bool aEnable) MOZ_OVERRIDE;
   virtual void EncodingComplete() MOZ_OVERRIDE;
 
   // GMPSharedMemManager
@@ -71,7 +73,7 @@ private:
 
   bool mCanSendMessages;
   GMPParent* mPlugin;
-  GMPEncoderCallback* mCallback;
+  GMPVideoEncoderCallback* mCallback;
   GMPVideoHostImpl mVideoHost;
 };
 

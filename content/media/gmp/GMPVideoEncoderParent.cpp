@@ -43,42 +43,43 @@ GMPVideoEncoderParent::Host()
   return mVideoHost;
 }
 
-GMPVideoErr
+GMPErr
 GMPVideoEncoderParent::InitEncode(const GMPVideoCodec& aCodecSettings,
-                                  GMPEncoderCallback* aCallback,
+                                  const nsTArray<uint8_t>& aCodecSpecific,
+                                  GMPVideoEncoderCallback* aCallback,
                                   int32_t aNumberOfCores,
                                   uint32_t aMaxPayloadSize)
 {
   if (!mCanSendMessages) {
     NS_WARNING("Trying to use an invalid GMP video encoder!");
-    return GMPVideoGenericErr;
+    return GMPGenericErr;
   }
 
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
   if (!aCallback) {
-    return GMPVideoGenericErr;
+    return GMPGenericErr;
   }
   mCallback = aCallback;
 
-  if (!SendInitEncode(aCodecSettings, aNumberOfCores, aMaxPayloadSize)) {
-    return GMPVideoGenericErr;
+  if (!SendInitEncode(aCodecSettings, aCodecSpecific, aNumberOfCores, aMaxPayloadSize)) {
+    return GMPGenericErr;
   }
 
   // Async IPC, we don't have access to a return value.
-  return GMPVideoNoErr;
+  return GMPNoErr;
 }
 
-GMPVideoErr
+GMPErr
 GMPVideoEncoderParent::Encode(GMPVideoi420Frame* aInputFrame,
                               const GMPCodecSpecificInfo& aCodecSpecificInfo,
-                              const std::vector<GMPVideoFrameType>& aFrameTypes)
+                              const nsTArray<GMPVideoFrameType>& aFrameTypes)
 {
   nsAutoRef<GMPVideoi420Frame> frameRef(aInputFrame);
 
   if (!mCanSendMessages) {
     NS_WARNING("Trying to use an invalid GMP video encoder!");
-    return GMPVideoGenericErr;
+    return GMPGenericErr;
   }
 
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
@@ -93,77 +94,71 @@ GMPVideoEncoderParent::Encode(GMPVideoi420Frame* aInputFrame,
   // 3* is because we're using 3 buffers per frame for i420 data for now.
   if (NumInUse(kGMPFrameData) > 3*GMPSharedMemManager::kGMPBufLimit ||
       NumInUse(kGMPEncodedData) > GMPSharedMemManager::kGMPBufLimit) {
-    return GMPVideoGenericErr;
-  }
-
-  InfallibleTArray<int> frameTypes;
-  frameTypes.SetCapacity(aFrameTypes.size());
-  for (std::vector<int>::size_type i = 0; i != aFrameTypes.size(); i++) {
-    frameTypes.AppendElement(static_cast<int>(aFrameTypes[i]));
+    return GMPGenericErr;
   }
 
   if (!SendEncode(frameData,
                   aCodecSpecificInfo,
-                  frameTypes)) {
-    return GMPVideoGenericErr;
+                  aFrameTypes)) {
+    return GMPGenericErr;
   }
 
   // Async IPC, we don't have access to a return value.
-  return GMPVideoNoErr;
+  return GMPNoErr;
 }
 
-GMPVideoErr
+GMPErr
 GMPVideoEncoderParent::SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT)
 {
   if (!mCanSendMessages) {
     NS_WARNING("Trying to use an invalid GMP video encoder!");
-    return GMPVideoGenericErr;
+    return GMPGenericErr;
   }
 
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
   if (!SendSetChannelParameters(aPacketLoss, aRTT)) {
-    return GMPVideoGenericErr;
+    return GMPGenericErr;
   }
 
   // Async IPC, we don't have access to a return value.
-  return GMPVideoNoErr;
+  return GMPNoErr;
 }
 
-GMPVideoErr
+GMPErr
 GMPVideoEncoderParent::SetRates(uint32_t aNewBitRate, uint32_t aFrameRate)
 {
   if (!mCanSendMessages) {
     NS_WARNING("Trying to use an invalid GMP video encoder!");
-    return GMPVideoGenericErr;
+    return GMPGenericErr;
   }
 
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
   if (!SendSetRates(aNewBitRate, aFrameRate)) {
-    return GMPVideoGenericErr;
+    return GMPGenericErr;
   }
 
   // Async IPC, we don't have access to a return value.
-  return GMPVideoNoErr;
+  return GMPNoErr;
 }
 
-GMPVideoErr
+GMPErr
 GMPVideoEncoderParent::SetPeriodicKeyFrames(bool aEnable)
 {
   if (!mCanSendMessages) {
     NS_WARNING("Trying to use an invalid GMP video encoder!");
-    return GMPVideoGenericErr;
+    return GMPGenericErr;
   }
 
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
   if (!SendSetPeriodicKeyFrames(aEnable)) {
-    return GMPVideoGenericErr;
+    return GMPGenericErr;
   }
 
   // Async IPC, we don't have access to a return value.
-  return GMPVideoNoErr;
+  return GMPNoErr;
 }
 
 // Note: Consider keeping ActorDestroy sync'd up when making changes here.
