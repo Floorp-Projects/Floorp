@@ -21,6 +21,10 @@ Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 
+XPCOMUtils.defineLazyServiceGetter(this, "permissionManager",
+                                   "@mozilla.org/permissionmanager;1",
+                                   "nsIPermissionManager");
+
 this.FxAccountsManager = {
 
   init: function() {
@@ -175,7 +179,7 @@ this.FxAccountsManager = {
    *       FxAccountsClient.signCertificate()
    * See the latter method for possible (error code, errno) pairs.
    */
-  _handleGetAssertionError: function(reason, aAudience) {
+  _handleGetAssertionError: function(reason, aAudience, aPrincipal) {
     let errno = (reason ? reason.errno : NaN) || NaN;
     // If the previously valid email/password pair is no longer valid ...
     if (errno == ERRNO_INVALID_AUTH_TOKEN) {
@@ -186,34 +190,42 @@ this.FxAccountsManager = {
           if (exists) {
             return this.getAccount().then(
               (user) => {
-                return this._refreshAuthentication(aAudience, user.email, true);
-              }
-            );
-          // ... otherwise, the account was deleted, so ask for Sign In/Up
-          } else {
-            return this._localSignOut().then(
-              () => {
-                return this._uiRequest(UI_REQUEST_SIGN_IN_FLOW, aAudience);
-              },
-              (reason) => { // reject primary problem, not signout failure
-                log.error("Signing out in response to server error threw: " + reason);
-                return this._error(reason);
+                return this._refreshAuthentication(aAudience, user.email,
+                                                   aPrincipal,
+                                                   true /* logoutOnFailure */);
               }
             );
           }
+        }
+      );
+
+      // Otherwise, the account was deleted, so ask for Sign In/Up
+      return this._localSignOut().then(
+        () => {
+          return this._uiRequest(UI_REQUEST_SIGN_IN_FLOW, aAudience,
+                                 aPrincipal);
+        },
+        (reason) => {
+          // reject primary problem, not signout failure
+          log.error("Signing out in response to server error threw: " +
+                    reason);
+          return this._error(reason);
         }
       );
     }
     return Promise.reject(reason);
   },
 
-  _getAssertion: function(aAudience) {
+  _getAssertion: function(aAudience, aPrincipal) {
     return this._fxAccounts.getAssertion(aAudience).then(
       (result) => {
+        if (aPrincipal) {
+          this._addPermission(aPrincipal);
+        }
         return result;
       },
       (reason) => {
-        return this._handleGetAssertionError(reason, aAudience);
+        return this._handleGetAssertionError(reason, aAudience, aPrincipal);
       }
     );
   },
@@ -228,10 +240,11 @@ this.FxAccountsManager = {
    *   2) The person typing can't prove knowledge of the password used
    *      to log in. Failure should do nothing.
    */
-  _refreshAuthentication: function(aAudience, aEmail, logoutOnFailure=false) {
+  _refreshAuthentication: function(aAudience, aEmail, aPrincipal,
+                                   logoutOnFailure=false) {
     this._refreshing = true;
     return this._uiRequest(UI_REQUEST_REFRESH_AUTH,
-                           aAudience, aEmail).then(
+                           aAudience, aPrincipal, aEmail).then(
       (assertion) => {
         this._refreshing = false;
         return assertion;
@@ -293,7 +306,7 @@ this.FxAccountsManager = {
     );
   },
 
-  _uiRequest: function(aRequest, aAudience, aParams) {
+  _uiRequest: function(aRequest, aAudience, aPrincipal, aParams) {
     let ui = Cc["@mozilla.org/fxaccounts/fxaccounts-ui-glue;1"]
                .createInstance(Ci.nsIFxAccountsUIGlue);
     if (!ui[aRequest]) {
@@ -309,7 +322,7 @@ this.FxAccountsManager = {
         // Even if we get a successful result from the UI, the account will
         // most likely be unverified, so we cannot get an assertion.
         if (result && result.verified) {
-          return this._getAssertion(aAudience);
+          return this._getAssertion(aAudience, aPrincipal);
         }
 
         return this._error(ERROR_UNVERIFIED_ACCOUNT, {
@@ -320,6 +333,17 @@ this.FxAccountsManager = {
         return this._error(ERROR_UI_ERROR, error);
       }
     );
+  },
+
+  _addPermission: function(aPrincipal) {
+    // This will fail from tests cause we are running them in the child
+    // process until we have chrome tests in b2g. Bug 797164.
+    try {
+      permissionManager.addFromPrincipal(aPrincipal, FXACCOUNTS_PERMISSION,
+                                         Ci.nsIPermissionManager.ALLOW_ACTION);
+    } catch (e) {
+      log.warn("Could not add permission " + e);
+    }
   },
 
   // -- API --
@@ -469,22 +493,31 @@ this.FxAccountsManager = {
    *     trigger the sign in flow.
    *   else if we were asked to refresh and the grace period is up:
    *     trigger the refresh flow.
-   *   else ask the core code for an assertion, which might itself
-   *   trigger either the sign in or refresh flows (if our account
-   *   changed on the server).
+   *   else:
+   *      request user permission to share an assertion if we don't have it
+   *      already and ask the core code for an assertion, which might itself
+   *      trigger either the sign in or refresh flows (if our account
+   *      changed on the server).
    *
    * aOptions can include:
    *   refreshAuthentication  - (bool) Force re-auth.
    *   silent                 - (bool) Prevent any UI interaction.
    *                            I.e., try to get an automatic assertion.
    */
-  getAssertion: function(aAudience, aOptions) {
+  getAssertion: function(aAudience, aPrincipal, aOptions) {
     if (!aAudience) {
       return this._error(ERROR_INVALID_AUDIENCE);
     }
     if (Services.io.offline) {
       return this._error(ERROR_OFFLINE);
     }
+
+    let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                   .getService(Ci.nsIScriptSecurityManager);
+    let uri = Services.io.newURI(aPrincipal.origin, null, null);
+    let principal = secMan.getAppCodebasePrincipal(uri,
+      aPrincipal.appId, aPrincipal.isInBrowserElement);
+
     return this.getAccount().then(
       user => {
         if (user) {
@@ -506,21 +539,42 @@ this.FxAccountsManager = {
             if (aOptions.silent) {
               return this._error(ERROR_NO_SILENT_REFRESH_AUTH);
             }
-            let secondsSinceAuth = (Date.now() / 1000) - this._activeSession.authAt;
+            let secondsSinceAuth = (Date.now() / 1000) -
+                                   this._activeSession.authAt;
             if (secondsSinceAuth > gracePeriod) {
-              return this._refreshAuthentication(aAudience, user.email);
+              return this._refreshAuthentication(aAudience, user.email,
+                                                 principal,
+                                                 false /* logoutOnFailure */);
             }
           }
           // Third case: we are all set *locally*. Probably we just return
           // the assertion, but the attempt might lead to the server saying
           // we are deleted or have a new password, which will trigger a flow.
-          return this._getAssertion(aAudience);
+          // Also we need to check if we have permission to get the assertion,
+          // otherwise we need to show the forceAuth UI to let the user know
+          // that the RP with no fxa permissions is trying to obtain an
+          // assertion. Once the user authenticates herself in the forceAuth UI
+          // the permission will be remembered by default.
+          let permission = permissionManager.testPermissionFromPrincipal(
+            principal,
+            FXACCOUNTS_PERMISSION
+          );
+          if (permission == Ci.nsIPermissionManager.PROMPT_ACTION &&
+              !this._refreshing) {
+            return this._refreshAuthentication(aAudience, user.email,
+                                               principal,
+                                               false /* logoutOnFailure */);
+          } else if (permission == Ci.nsIPermissionManager.DENY_ACTION &&
+                     !this._refreshing) {
+            return this._error(ERROR_PERMISSION_DENIED);
+          }
+          return this._getAssertion(aAudience, principal);
         }
         log.debug("No signed in user");
         if (aOptions && aOptions.silent) {
           return Promise.resolve(null);
         }
-        return this._uiRequest(UI_REQUEST_SIGN_IN_FLOW, aAudience);
+        return this._uiRequest(UI_REQUEST_SIGN_IN_FLOW, aAudience, principal);
       }
     );
   }

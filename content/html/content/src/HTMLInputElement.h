@@ -370,6 +370,8 @@ public:
     SetHTMLAttr(nsGkAtoms::autocomplete, aValue, aRv);
   }
 
+  void GetAutocompleteInfo(AutocompleteInfo& aInfo);
+
   bool Autofocus() const
   {
     return GetBoolAttr(nsGkAtoms::autofocus);
