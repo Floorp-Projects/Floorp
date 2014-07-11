@@ -21,6 +21,8 @@
     Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
     let obs = Cc["@mozilla.org/observer-service;1"].
               getService(Ci.nsIObserverService);
+    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"].
+              getService(Ci.nsIMessageBroadcaster);
 
     function DummyHelperSubclass() {
       this.onuninit = null;
@@ -143,7 +145,21 @@
         let cwdDummy = new DummyHelperSubclass();
         cwdDummy.onuninit = function() {
           uninitCalled = true;
+
+          if (!aOptions.messages || !aOptions.messages.length) {
+            return;
+          }
+
+          // If all message listeners are removed, cwdDummy.receiveMessage
+          // should never be called.
+          ppmm.broadcastAsyncMessage(aOptions.messages[0].name);
         };
+
+        // Test if we still receive messages from ppmm.
+        cwdDummy.receiveMessage = function(aMessage) {
+          ok(false, "cwdDummy.receiveMessage should NOT be called: " + aMessage.name);
+        };
+
         cwdDummy.initDOMRequestHelper(frame.contentWindow, aOptions.messages);
         // Make sure to clear our strong ref here so that we can test our
         // weak reference listeners and observer.
