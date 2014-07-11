@@ -7,8 +7,8 @@ include protocol PGMP;
 include GMPTypes;
 
 using GMPVideoCodec from "gmp-video-codec.h";
-using GMPCodecSpecificInfo from "gmp-video-codec.h";
 using GMPVideoFrameType from "gmp-video-frame-encoded.h";
+using GMPBufferType from "gmp-video-codec.h";
 
 include "GMPMessageUtils.h";
 
@@ -24,7 +24,7 @@ child:
                    int32_t aNumberOfCores,
                    uint32_t aMaxPayloadSize);
   async Encode(GMPVideoi420FrameData aInputFrame,
-               GMPCodecSpecificInfo aCodecSpecificInfo,
+               uint8_t[] aCodecSpecificInfo,
                GMPVideoFrameType[] aFrameTypes);
   async SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT);
   async SetRates(uint32_t aNewBitRate, uint32_t aFrameRate);
@@ -35,7 +35,8 @@ child:
 parent:
   async __delete__();
   async Encoded(GMPVideoEncodedFrameData aEncodedFrame,
-                GMPCodecSpecificInfo aCodecSpecificInfo);
+                GMPBufferType aBufferType,
+                uint8_t[] aCodecSpecificInfo);
   async ParentShmemForPool(Shmem aFrameBuffer);
   // MUST be intr - if sync and we create a new Shmem, when the returned
   // Shmem is received in the Child it will fail to Deserialize

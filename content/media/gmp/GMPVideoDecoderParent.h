@@ -34,14 +34,15 @@ public:
   virtual nsresult InitDecode(const GMPVideoCodec& aCodecSettings,
                               const nsTArray<uint8_t>& aCodecSpecific,
                               GMPVideoDecoderCallback* aCallback,
-                              int32_t aCoreCount);
+                              int32_t aCoreCount) MOZ_OVERRIDE;
   virtual nsresult Decode(GMPVideoEncodedFrame* aInputFrame,
                           bool aMissingFrames,
-                          const GMPCodecSpecificInfo& aCodecSpecificInfo,
-                          int64_t aRenderTimeMs = -1);
-  virtual nsresult Reset();
-  virtual nsresult Drain();
-  virtual nsresult DecodingComplete();
+                          GMPBufferType aBufferType,
+                          const nsTArray<uint8_t>& aCodecSpecificInfo,
+                          int64_t aRenderTimeMs = -1) MOZ_OVERRIDE;
+  virtual nsresult Reset() MOZ_OVERRIDE;
+  virtual nsresult Drain() MOZ_OVERRIDE;
+  virtual nsresult DecodingComplete() MOZ_OVERRIDE;
 
   // GMPSharedMemManager
   virtual void CheckThread();

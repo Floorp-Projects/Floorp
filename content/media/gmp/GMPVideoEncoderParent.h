@@ -33,11 +33,11 @@ public:
   // GMPVideoEncoderProxy
   virtual GMPErr InitEncode(const GMPVideoCodec& aCodecSettings,
                             const nsTArray<uint8_t>& aCodecSpecific,
-                            GMPVideoEncoderCallback* aCallback,
+                            GMPVideoEncoderCallbackProxy* aCallback,
                             int32_t aNumberOfCores,
                             uint32_t aMaxPayloadSize) MOZ_OVERRIDE;
   virtual GMPErr Encode(GMPVideoi420Frame* aInputFrame,
-                        const GMPCodecSpecificInfo& aCodecSpecificInfo,
+                        const nsTArray<uint8_t>& aCodecSpecificInfo,
                         const nsTArray<GMPVideoFrameType>& aFrameTypes) MOZ_OVERRIDE;
   virtual GMPErr SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT) MOZ_OVERRIDE;
   virtual GMPErr SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) MOZ_OVERRIDE;
@@ -65,7 +65,8 @@ private:
   // PGMPVideoEncoderParent
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
   virtual bool RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame,
-                           const GMPCodecSpecificInfo& aCodecSpecificInfo) MOZ_OVERRIDE;
+                           const GMPBufferType& aBufferType,
+                           const nsTArray<uint8_t>& aCodecSpecificInfo) MOZ_OVERRIDE;
   virtual bool RecvParentShmemForPool(Shmem& aFrameBuffer) MOZ_OVERRIDE;
   virtual bool AnswerNeedShmem(const uint32_t& aEncodedBufferSize,
                                Shmem* aMem) MOZ_OVERRIDE;
@@ -73,7 +74,7 @@ private:
 
   bool mCanSendMessages;
   GMPParent* mPlugin;
-  GMPVideoEncoderCallback* mCallback;
+  GMPVideoEncoderCallbackProxy* mCallback;
   GMPVideoHostImpl mVideoHost;
 };
 
