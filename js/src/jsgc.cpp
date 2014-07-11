@@ -238,10 +238,16 @@ static const uint64_t GC_IDLE_FULL_SPAN = 20 * 1000 * 1000;
 /* Increase the IGC marking slice time if we are in highFrequencyGC mode. */
 static const int IGC_MARK_SLICE_MULTIPLIER = 2;
 
-#if defined(ANDROID) || defined(MOZ_B2G)
-static const int MAX_EMPTY_CHUNK_COUNT = 2;
+#ifdef JSGC_GENERATIONAL
+static const unsigned MIN_EMPTY_CHUNK_COUNT = 1;
 #else
-static const int MAX_EMPTY_CHUNK_COUNT = 30;
+static const unsigned MIN_EMPTY_CHUNK_COUNT = 0;
+#endif
+
+#if defined(ANDROID) || defined(MOZ_B2G)
+static const unsigned MAX_EMPTY_CHUNK_COUNT = 2;
+#else
+static const unsigned MAX_EMPTY_CHUNK_COUNT = 30;
 #endif
 
 /* This array should be const, but that doesn't link right under GCC. */
@@ -652,7 +658,7 @@ ChunkPool::put(Chunk *chunk)
 
 /* Must be called either during the GC or with the GC lock taken. */
 Chunk *
-ChunkPool::expire(JSRuntime *rt, bool releaseAll)
+ChunkPool::expire(JSRuntime *rt, bool shrinkBuffers, bool releaseAll)
 {
     JS_ASSERT(this == &rt->gc.chunkPool);
 
@@ -663,15 +669,15 @@ ChunkPool::expire(JSRuntime *rt, bool releaseAll)
      * and are more likely to reach the max age.
      */
     Chunk *freeList = nullptr;
-    int freeChunkCount = 0;
+    unsigned freeChunkCount = 0;
     for (Chunk **chunkp = &emptyChunkListHead; *chunkp; ) {
         JS_ASSERT(emptyCount);
         Chunk *chunk = *chunkp;
         JS_ASSERT(chunk->unused());
         JS_ASSERT(!rt->gc.chunkSet.has(chunk));
-        JS_ASSERT(chunk->info.age <= MAX_EMPTY_CHUNK_AGE);
-        if (releaseAll || chunk->info.age == MAX_EMPTY_CHUNK_AGE ||
-            freeChunkCount++ > MAX_EMPTY_CHUNK_COUNT)
+        if (releaseAll || freeChunkCount >= MAX_EMPTY_CHUNK_COUNT ||
+            (freeChunkCount >= MIN_EMPTY_CHUNK_COUNT &&
+             (shrinkBuffers || chunk->info.age == MAX_EMPTY_CHUNK_AGE)))
         {
             *chunkp = chunk->info.next;
             --emptyCount;
@@ -680,10 +686,12 @@ ChunkPool::expire(JSRuntime *rt, bool releaseAll)
             freeList = chunk;
         } else {
             /* Keep the chunk but increase its age. */
+            ++freeChunkCount;
             ++chunk->info.age;
             chunkp = &chunk->info.next;
         }
     }
+    JS_ASSERT_IF(shrinkBuffers, emptyCount <= MIN_EMPTY_CHUNK_COUNT);
     JS_ASSERT_IF(releaseAll, !emptyCount);
     return freeList;
 }
@@ -701,7 +709,7 @@ FreeChunkList(JSRuntime *rt, Chunk *chunkListHead)
 void
 ChunkPool::expireAndFree(JSRuntime *rt, bool releaseAll)
 {
-    FreeChunkList(rt, expire(rt, releaseAll));
+    FreeChunkList(rt, expire(rt, true, releaseAll));
 }
 
 /* static */ Chunk *
@@ -964,7 +972,7 @@ GCRuntime::wantBackgroundAllocation() const
      * of them.
      */
     return helperState.canBackgroundAllocate() &&
-           chunkPool.getEmptyCount() == 0 &&
+           chunkPool.getEmptyCount() < MIN_EMPTY_CHUNK_COUNT &&
            chunkSet.count() >= 4;
 }
 
@@ -2380,7 +2388,7 @@ DecommitArenas(JSRuntime *rt)
 static void
 ExpireChunksAndArenas(JSRuntime *rt, bool shouldShrink)
 {
-    if (Chunk *toFree = rt->gc.chunkPool.expire(rt, shouldShrink)) {
+    if (Chunk *toFree = rt->gc.chunkPool.expire(rt, shouldShrink, false)) {
         AutoUnlockGC unlock(rt);
         FreeChunkList(rt, toFree);
     }

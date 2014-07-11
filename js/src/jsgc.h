@@ -87,7 +87,7 @@ class ChunkPool {
      * Return the list of chunks that can be released outside the GC lock.
      * Must be called either during the GC or with the GC lock taken.
      */
-    Chunk *expire(JSRuntime *rt, bool releaseAll);
+    Chunk *expire(JSRuntime *rt, bool shrinkBuffers, bool releaseAll);
 
     /* Must be called with the GC lock taken. */
     void expireAndFree(JSRuntime *rt, bool releaseAll);
