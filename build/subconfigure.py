@@ -5,6 +5,7 @@
 # This script is used to capture the content of config.status-generated
 # files and subsequently restore their timestamp if they haven't changed.
 
+import argparse
 import os
 import re
 import subprocess
@@ -60,24 +61,54 @@ PRECIOUS_VARS = set([
 # There's no reason not to do the latter automatically instead of failing,
 # doing the cleanup (which, on buildbots means a full clobber), and
 # restarting from scratch.
-def maybe_clear_cache():
+def maybe_clear_cache(args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--target', type=str)
+    parser.add_argument('--host', type=str)
+    parser.add_argument('--build', type=str)
+    args, others = parser.parse_known_args(args)
+    env = dict(os.environ)
+    for kind in ('target', 'host', 'build'):
+        arg = getattr(args, kind)
+        if arg is not None:
+            env['%s_alias' % kind] = arg
+    # configure can take variables assignments in its arguments, and that
+    # overrides whatever is in the environment.
+    for arg in others:
+        if arg[:1] != '-' and '=' in arg:
+            key, value = arg.split('=', 1)
+            env[key] = value
+
     comment = re.compile(r'^\s+#')
     cache = {}
     with open('config.cache') as f:
-        for line in f.readlines():
+        for line in f:
             if not comment.match(line) and '=' in line:
-                key, value = line.split('=', 1)
+                key, value = line.rstrip(os.linesep).split('=', 1)
+                # If the value is quoted, unquote it
+                if value[:1] == "'":
+                    value = value[1:-1].replace("'\\''", "'")
                 cache[key] = value
     for precious in PRECIOUS_VARS:
-        entry = 'ac_cv_env_%s_value' % precious
-        if entry in cache and (not precious in os.environ or os.environ[precious] != cache[entry]):
+        # If there is no entry at all for that precious variable, then
+        # its value is not precious for that particular configure.
+        if 'ac_cv_env_%s_set' % precious not in cache:
+            continue
+        is_set = cache.get('ac_cv_env_%s_set' % precious) == 'set'
+        value = cache.get('ac_cv_env_%s_value' % precious) if is_set else None
+        if value != env.get(precious):
+            print 'Removing config.cache because of %s value change from:' \
+                % precious
+            print '  %s' % (value if value is not None else 'undefined')
+            print 'to:'
+            print '  %s' % env.get(precious, 'undefined')
             os.remove('config.cache')
             return
 
 
-def dump(dump_file, shell):
+def dump(dump_file, shell, args):
     if os.path.exists('config.cache'):
-        maybe_clear_cache()
+        maybe_clear_cache(args)
     if not os.path.exists('config.status'):
         if os.path.exists(dump_file):
             os.remove(dump_file)
@@ -132,6 +163,6 @@ CONFIG_DUMP = 'config_files.pkl'
 
 if __name__ == '__main__':
     if sys.argv[1] == 'dump':
-        dump(CONFIG_DUMP, sys.argv[2])
+        dump(CONFIG_DUMP, sys.argv[2], sys.argv[3:])
     elif sys.argv[1] == 'adjust':
         adjust(CONFIG_DUMP, sys.argv[2] if len(sys.argv) > 2 else None)
