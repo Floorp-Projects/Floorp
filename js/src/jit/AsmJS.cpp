@@ -7,6 +7,7 @@
 #include "jit/AsmJS.h"
 
 #include "mozilla/Move.h"
+#include "mozilla/UniquePtr.h"
 
 #ifdef MOZ_VTUNE
 # include "vtune/VTuneWrapper.h"
@@ -50,6 +51,7 @@ using mozilla::IsNegativeZero;
 using mozilla::Maybe;
 using mozilla::Move;
 using mozilla::PositiveInfinity;
+using mozilla::UniquePtr;
 using JS::GenericNaN;
 
 static const size_t LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
@@ -1047,7 +1049,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     NonAssertingLabel              asyncInterruptLabel_;
     NonAssertingLabel              syncInterruptLabel_;
 
-    char *                         errorString_;
+    UniquePtr<char[], JS::FreePolicy> errorString_;
     uint32_t                       errorOffset_;
     bool                           errorOverRecursed_;
 
@@ -1099,8 +1101,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             JS_ASSERT(errorOffset_ != UINT32_MAX);
             tokenStream().reportAsmJSError(errorOffset_,
                                            JSMSG_USE_ASM_TYPE_FAIL,
-                                           errorString_);
-            js_free(errorString_);
+                                           errorString_.get());
         }
         if (errorOverRecursed_)
             js_ReportOverRecursed(cx_);
@@ -1161,7 +1162,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         JS_ASSERT(errorOffset_ == UINT32_MAX);
         JS_ASSERT(str);
         errorOffset_ = offset;
-        errorString_ = js_strdup(cx_, str);
+        errorString_ = DuplicateString(cx_, str);
         return false;
     }
 
@@ -1182,7 +1183,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         JS_ASSERT(errorOffset_ == UINT32_MAX);
         JS_ASSERT(fmt);
         errorOffset_ = pn ? pn->pn_pos.begin : tokenStream().currentToken().pos.end;
-        errorString_ = JS_vsmprintf(fmt, ap);
+        errorString_.reset(JS_vsmprintf(fmt, ap));
         return false;
     }
 

@@ -1483,7 +1483,7 @@ JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s)
 {
     AssertHeapIsIdle(cx);
-    return js_strdup(cx, s);
+    return DuplicateString(cx, s).release();
 }
 
 JS_PUBLIC_API(char *)
