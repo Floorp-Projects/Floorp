@@ -556,14 +556,6 @@ function promiseRaceValuesArray() {
 }
 
 function promiseRacePromiseArray() {
-  function timeoutPromise(n) {
-    return new Promise(function(resolve) {
-      setTimeout(function() {
-        resolve(n);
-      }, n);
-    });
-  }
-
   var arr = [
     new Promise(function(resolve) {
       resolve("first");
