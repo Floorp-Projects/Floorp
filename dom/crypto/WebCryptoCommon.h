@@ -21,6 +21,7 @@
 #define WEBCRYPTO_ALG_SHA384        "SHA-384"
 #define WEBCRYPTO_ALG_SHA512        "SHA-512"
 #define WEBCRYPTO_ALG_HMAC          "HMAC"
+#define WEBCRYPTO_ALG_PBKDF2        "PBKDF2"
 #define WEBCRYPTO_ALG_RSAES_PKCS1   "RSAES-PKCS1-v1_5"
 #define WEBCRYPTO_ALG_RSASSA_PKCS1  "RSASSA-PKCS1-v1_5"
 
@@ -117,6 +118,37 @@ WriteBuffer(JSStructuredCloneWriter* aWriter, const CryptoBuffer& aBuffer)
     ret = JS_WriteBytes(aWriter, aBuffer.Elements(), aBuffer.Length());
   }
   return ret;
+}
+
+inline CK_MECHANISM_TYPE
+MapAlgorithmNameToMechanism(const nsString& aName)
+{
+  CK_MECHANISM_TYPE mechanism(UNKNOWN_CK_MECHANISM);
+
+  // Set mechanism based on algorithm name
+  if (aName.EqualsLiteral(WEBCRYPTO_ALG_AES_CBC)) {
+    mechanism = CKM_AES_CBC_PAD;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR)) {
+    mechanism = CKM_AES_CTR;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM)) {
+    mechanism = CKM_AES_GCM;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA1)) {
+    mechanism = CKM_SHA_1;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
+    mechanism = CKM_SHA256;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA384)) {
+    mechanism = CKM_SHA384;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA512)) {
+    mechanism = CKM_SHA512;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_PBKDF2)) {
+    mechanism = CKM_PKCS5_PBKD2;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1)) {
+    mechanism = CKM_RSA_PKCS;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
+    mechanism = CKM_RSA_PKCS;
+  }
+
+  return mechanism;
 }
 
 } // namespace dom
