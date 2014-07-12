@@ -291,6 +291,11 @@ inline void SECITEM_FreeItem_true(SECItem * s)
   return SECITEM_FreeItem(s, true);
 }
 
+inline void SECOID_DestroyAlgorithmID_true(SECAlgorithmID * a)
+{
+  return SECOID_DestroyAlgorithmID(a, true);
+}
+
 } // namespace internal
 
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECItem,
@@ -303,6 +308,10 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYPrivateKey,
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYPublicKey,
                                           SECKEYPublicKey,
                                           SECKEY_DestroyPublicKey)
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECAlgorithmID,
+                                          SECAlgorithmID,
+                                          internal::SECOID_DestroyAlgorithmID_true)
+
 
 } // namespace mozilla
 
