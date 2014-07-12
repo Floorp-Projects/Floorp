@@ -180,11 +180,8 @@ SocialUI = {
   },
 
   // This handles "ActivateSocialFeature" events fired against content documents
-  // in this window.  If this activation happens from within Firefox, such as
-  // about:home or the share panel, we bypass the enable prompt. Any website
-  // activation, such as from the activations directory or a providers website
-  // will still get the prompt.
-  _activationEventHandler: function SocialUI_activationHandler(e, aBypassUserEnable=false) {
+  // in this window.
+  _activationEventHandler: function SocialUI_activationHandler(e) {
     let targetDoc;
     let node;
     if (e.target instanceof HTMLDocument) {
@@ -198,7 +195,8 @@ SocialUI = {
     if (!(targetDoc instanceof HTMLDocument))
       return;
 
-    if (!aBypassUserEnable && targetDoc.defaultView != content)
+    // Ignore events fired in background tabs or iframes
+    if (targetDoc.defaultView != content)
       return;
 
     // If we are in PB mode, we silently do nothing (bug 829404 exists to
@@ -238,7 +236,7 @@ SocialUI = {
           openUILinkIn(provider.postActivationURL, "tab");
         }
       });
-    }, aBypassUserEnable);
+    });
   },
 
   showLearnMore: function() {
