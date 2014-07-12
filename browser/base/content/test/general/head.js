@@ -7,26 +7,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 
-function closeAllNotifications () {
-  let notificationBox = document.getElementById("global-notificationbox");
-
-  if (!notificationBox || !notificationBox.currentNotification) {
-    return Promise.resolve();
-  }
-
-  let deferred = Promise.defer();
-  for (let notification of notificationBox.allNotifications) {
-    waitForNotificationClose(notification, function () {
-      if (notificationBox.allNotifications.length === 0) {
-        deferred.resolve();
-      }
-    });
-    notification.close();
-  }
-
-  return deferred.promise;
-}
-
 function whenDelayedStartupFinished(aWindow, aCallback) {
   Services.obs.addObserver(function observer(aSubject, aTopic) {
     if (aWindow == aSubject) {

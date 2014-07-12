@@ -26,27 +26,22 @@ this.MockPolicyListener = function MockPolicyListener() {
 }
 
 MockPolicyListener.prototype = {
-  onRequestDataUpload: function (request) {
+  onRequestDataUpload: function onRequestDataUpload(request) {
     this._log.info("onRequestDataUpload invoked.");
     this.requestDataUploadCount++;
     this.lastDataRequest = request;
   },
 
-  onRequestRemoteDelete: function (request) {
+  onRequestRemoteDelete: function onRequestRemoteDelete(request) {
     this._log.info("onRequestRemoteDelete invoked.");
     this.requestRemoteDeleteCount++;
     this.lastRemoteDeleteRequest = request;
   },
 
-  onNotifyDataPolicy: function (request, rejectMessage=null) {
-    this._log.info("onNotifyDataPolicy invoked.");
+  onNotifyDataPolicy: function onNotifyDataPolicy(request) {
+    this._log.info("onNotifyUser invoked.");
     this.notifyUserCount++;
     this.lastNotifyRequest = request;
-    if (rejectMessage) {
-      request.onUserNotifyFailed(rejectMessage);
-    } else {
-      request.onUserNotifyComplete();
-    }
   },
 };
 
