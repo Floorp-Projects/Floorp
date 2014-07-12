@@ -151,7 +151,17 @@ XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
 });
 
 function getOriginActivationType(origin) {
-  let prefname = SocialServiceInternal.getManifestPrefname(origin);
+  // access from moz-safe-about scheme will throw exception in getManifestPrefname
+  try {
+    var prefname = SocialServiceInternal.getManifestPrefname(origin);
+  } catch(e) {
+    // if this is an about uri, treat it as a directory
+    let originUri = Services.io.newURI(origin, null, null);
+    if (originUri.scheme == "moz-safe-about") {
+      return "internal";
+    }
+    throw e;
+  }
   if (Services.prefs.getDefaultBranch("social.manifest.").getPrefType(prefname) == Services.prefs.PREF_STRING)
     return 'builtin';
 
@@ -504,7 +514,7 @@ this.SocialService = {
     let featureURLs = ['workerURL', 'sidebarURL', 'shareURL', 'statusURL', 'markURL'];
     let resolveURLs = featureURLs.concat(['postActivationURL']);
 
-    if (type == 'directory') {
+    if (type == 'directory' || type == 'internal') {
       // directory provided manifests must have origin in manifest, use that
       if (!data['origin']) {
         Cu.reportError("SocialService.manifestFromData directory service provided manifest without origin.");
@@ -569,7 +579,7 @@ this.SocialService = {
     let productName = brandBundle.GetStringFromName("brandShortName");
 
     let message = browserBundle.formatStringFromName("service.install.description",
-                                                     [requestingURI.host, productName], 2);
+                                                     [aAddonInstaller.addon.manifest.name, productName], 2);
 
     let action = {
       label: browserBundle.GetStringFromName("service.install.ok.label"),
@@ -588,7 +598,7 @@ this.SocialService = {
                                       action, [], options);
   },
 
-  installProvider: function(aDOMDocument, data, installCallback) {
+  installProvider: function(aDOMDocument, data, installCallback, aBypassUserEnable=false) {
     let manifest;
     let installOrigin = aDOMDocument.nodePrincipal.origin;
 
@@ -603,6 +613,10 @@ this.SocialService = {
       if (addon && addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
         throw new Error("installProvider: provider with origin [" +
                         installOrigin + "] is blocklisted");
+      // manifestFromData call above will enforce correct origin. To support
+      // activation from about: uris, we need to be sure to use the updated
+      // origin on the manifest.
+      installOrigin = manifest.origin;
     }
 
     let id = getAddonIDFromOrigin(installOrigin);
@@ -612,7 +626,7 @@ this.SocialService = {
         aAddon.userDisabled = false;
       }
       schedule(function () {
-        this._installProvider(aDOMDocument, manifest, aManifest => {
+        this._installProvider(aDOMDocument, manifest, aBypassUserEnable, aManifest => {
           this._notifyProviderListeners("provider-installed", aManifest.origin);
           installCallback(aManifest);
         });
@@ -620,7 +634,7 @@ this.SocialService = {
     }.bind(this));
   },
 
-  _installProvider: function(aDOMDocument, manifest, installCallback) {
+  _installProvider: function(aDOMDocument, manifest, aBypassUserEnable, installCallback) {
     let sourceURI = aDOMDocument.location.href;
     let installOrigin = aDOMDocument.nodePrincipal.origin;
 
@@ -653,8 +667,18 @@ this.SocialService = {
           if (manifest.builtin)
             delete manifest.builtin;
         }
+      case "internal":
+        // double check here since "builtin" falls through this as well.
+        aBypassUserEnable = installType == "internal" && manifest.oneclick;
       case "directory":
-        // a manifest is requried, and will have been vetted by reviewers
+        // a manifest is requried, and will have been vetted by reviewers. We
+        // also handle in-product installations without the verification step.
+        if (aBypassUserEnable) {
+          installer = new AddonInstaller(sourceURI, manifest, installCallback);
+          installer.install();
+          return;
+        }
+        // otherwise fall through to the install below which presents the panel
       case "whitelist":
         // a manifest is required, we'll catch a missing manifest below.
         if (!manifest)
