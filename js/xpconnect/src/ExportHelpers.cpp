@@ -229,7 +229,7 @@ CloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
                 if (!JS_WrapObject(cx, &argObj))
                     return false;
                 if (!xpc::NewFunctionForwarder(cx, JSID_VOIDHANDLE, argObj, innerOptions, args[i]))
-                    return nullptr;
+                    return false;
             } else if (!StackScopedClone(cx, cloneOptions, args[i])) {
                 return false;
             }
