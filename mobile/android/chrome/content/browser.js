@@ -3164,6 +3164,7 @@ Tab.prototype = {
     this.browser.addEventListener("DOMContentLoaded", this, true);
     this.browser.addEventListener("DOMFormHasPassword", this, true);
     this.browser.addEventListener("DOMLinkAdded", this, true);
+    this.browser.addEventListener("DOMLinkChanged", this, true);
     this.browser.addEventListener("DOMTitleChanged", this, true);
     this.browser.addEventListener("DOMWindowClose", this, true);
     this.browser.addEventListener("DOMWillOpenModalDialog", this, true);
@@ -3336,6 +3337,7 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMContentLoaded", this, true);
     this.browser.removeEventListener("DOMFormHasPassword", this, true);
     this.browser.removeEventListener("DOMLinkAdded", this, true);
+    this.browser.removeEventListener("DOMLinkChanged", this, true);
     this.browser.removeEventListener("DOMTitleChanged", this, true);
     this.browser.removeEventListener("DOMWindowClose", this, true);
     this.browser.removeEventListener("DOMWillOpenModalDialog", this, true);
@@ -3749,7 +3751,8 @@ Tab.prototype = {
         break;
       }
 
-      case "DOMLinkAdded": {
+      case "DOMLinkAdded":
+      case "DOMLinkChanged": {
         let target = aEvent.originalTarget;
         if (!target.href || target.disabled)
           return;
@@ -3798,7 +3801,7 @@ Tab.prototype = {
             size: maxSize
           };
           sendMessageToJava(json);
-        } else if (list.indexOf("[alternate]") != -1) {
+        } else if (list.indexOf("[alternate]") != -1 && aEvent.type == "DOMLinkAdded") {
           let type = target.type.toLowerCase().replace(/^\s+|\s*(?:;.*)?$/g, "");
           let isFeed = (type == "application/rss+xml" || type == "application/atom+xml");
 
@@ -3819,7 +3822,7 @@ Tab.prototype = {
             };
             sendMessageToJava(json);
           } catch (e) {}
-        } else if (list.indexOf("[search]" != -1)) {
+        } else if (list.indexOf("[search]" != -1) && aEvent.type == "DOMLinkAdded") {
           let type = target.type && target.type.toLowerCase();
 
           // Replace all starting or trailing spaces or spaces before "*;" globally w/ "".
