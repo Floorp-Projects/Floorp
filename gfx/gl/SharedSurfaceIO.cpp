@@ -134,25 +134,9 @@ SharedSurface_IOSurface::~SharedSurface_IOSurface()
     }
 }
 
-
-/*static*/ SurfaceFactory_IOSurface*
-SurfaceFactory_IOSurface::Create(GLContext* gl,
-                                 const SurfaceCaps& caps)
-{
-    gfx::IntSize maxDims(MacIOSurface::GetMaxWidth(),
-                         MacIOSurface::GetMaxHeight());
-    return new SurfaceFactory_IOSurface(gl, caps, maxDims);
-}
-
 SharedSurface*
 SurfaceFactory_IOSurface::CreateShared(const gfx::IntSize& size)
 {
-    if (size.width > mMaxDims.width ||
-        size.height > mMaxDims.height)
-    {
-        return nullptr;
-    }
-
     bool hasAlpha = mReadCaps.alpha;
     RefPtr<MacIOSurface> surf =
         MacIOSurface::CreateIOSurface(size.width, size.height, 1.0, hasAlpha);
