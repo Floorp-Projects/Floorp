@@ -92,21 +92,6 @@ function getHealthReportProviderValues(reporter, day=null) {
   });
 }
 
-/*
- * Ensure that the notification has been displayed to the user therefore having
- * reporter._policy.userNotifiedOfCurrentPolicy === true, which will allow for a
- * successful data upload.
- * @param  {HealthReporter} reporter
- * @return {Promise}
- */
-function ensureUserNotified (reporter) {
-  return Task.spawn(function* ensureUserNotified () {
-    reporter._policy.ensureUserNotified();
-    yield reporter._policy._listener.lastNotifyRequest.deferred.promise;
-    do_check_true(reporter._policy.userNotifiedOfCurrentPolicy);
-  });
-}
-
 function run_test() {
   run_next_test();
 }
@@ -688,8 +673,9 @@ add_task(function test_recurring_daily_pings() {
 
     let policy = reporter._policy;
 
+    defineNow(policy, policy._futureDate(-24 * 60 * 68 * 1000));
+    policy.recordUserAcceptance();
     defineNow(policy, policy.nextDataSubmissionDate);
-    yield ensureUserNotified(reporter);
     let promise = policy.checkStateAndTrigger();
     do_check_neq(promise, null);
     yield promise;
@@ -726,8 +712,8 @@ add_task(function test_request_remote_data_deletion() {
   try {
     let policy = reporter._policy;
     defineNow(policy, policy._futureDate(-24 * 60 * 60 * 1000));
+    policy.recordUserAcceptance();
     defineNow(policy, policy.nextDataSubmissionDate);
-    yield ensureUserNotified(reporter);
     yield policy.checkStateAndTrigger();
     let id = reporter.lastSubmitID;
     do_check_neq(id, null);
@@ -814,12 +800,16 @@ add_task(function test_policy_accept_reject() {
   try {
     let policy = reporter._policy;
 
-    do_check_eq(policy.dataSubmissionPolicyNotifiedDate.getTime(), 0);
-    do_check_true(policy.dataSubmissionPolicyAcceptedVersion < DATAREPORTING_POLICY_VERSION);
+    do_check_false(policy.dataSubmissionPolicyAccepted);
     do_check_false(reporter.willUploadData);
 
-    yield ensureUserNotified(reporter);
+    policy.recordUserAcceptance();
+    do_check_true(policy.dataSubmissionPolicyAccepted);
     do_check_true(reporter.willUploadData);
+
+    policy.recordUserRejection();
+    do_check_false(policy.dataSubmissionPolicyAccepted);
+    do_check_false(reporter.willUploadData);
   } finally {
     yield reporter._shutdown();
     yield shutdownServer(server);
@@ -950,9 +940,9 @@ add_task(function test_upload_on_init_failure() {
     },
   });
 
+  reporter._policy.recordUserAcceptance();
   let error = false;
   try {
-    yield ensureUserNotified(reporter);
     yield reporter.init();
   } catch (ex) {
     error = true;

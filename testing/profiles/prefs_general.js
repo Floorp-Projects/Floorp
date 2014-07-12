@@ -117,10 +117,8 @@ user_pref("dom.use_xbl_scopes_for_remote_xul", true);
 // Get network events.
 user_pref("network.activity.blipIntervalMilliseconds", 250);
 
-// We do not wish to display datareporting policy notifications as it might
-// cause other tests to fail. Tests that wish to test the notification functionality
-// should explicitly disable this pref.
-user_pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
+// Don't allow the Data Reporting service to prompt for policy acceptance.
+user_pref("datareporting.policy.dataSubmissionPolicyBypassAcceptance", true);
 
 // Point Firefox Health Report at a local server. We don't care if it actually
 // works. It just can't hit the default production endpoint.

@@ -29,6 +29,7 @@ function test() {
 }
 
 function testBasic(win, doc, policy) {
+  is(policy.dataSubmissionPolicyAccepted, false, "Data submission policy not accepted.");
   is(policy.healthReportUploadEnabled, true, "Health Report upload enabled on app first run.");
 
   let checkbox = doc.getElementById("submitHealthReportBox");
