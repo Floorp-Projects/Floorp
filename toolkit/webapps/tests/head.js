@@ -1,8 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -543,4 +544,45 @@ let writeToFile = Task.async(function*(aPath, aData) {
   } finally {
     yield file.close();
   }
+});
+
+// We need to mock the Alerts service, otherwise the alert that is shown
+// at the end of an installation makes the test leak the app's icon.
+
+const CID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID();
+const ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/alerts-service;1";
+const ALERTS_SERVICE_CID = Components.ID(Cc[ALERTS_SERVICE_CONTRACT_ID].number);
+
+let AlertsService = {
+  classID: Components.ID(CID),
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory,
+                                         Ci.nsIAlertsService]),
+
+  createInstance: function(aOuter, aIID) {
+    if (aOuter) {
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    }
+
+    return this.QueryInterface(aIID);
+  },
+
+  init: function() {
+    Components.manager.nsIComponentRegistrar.registerFactory(this.classID,
+      "", ALERTS_SERVICE_CONTRACT_ID, this);
+  },
+
+  restore: function() {
+    Components.manager.nsIComponentRegistrar.registerFactory(ALERTS_SERVICE_CID,
+      "", ALERTS_SERVICE_CONTRACT_ID, null);
+  },
+
+  showAlertNotification: function() {
+  },
+};
+
+AlertsService.init();
+
+SimpleTest.registerCleanupFunction(() => {
+  AlertsService.restore();
 });
