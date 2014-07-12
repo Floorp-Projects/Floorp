@@ -113,8 +113,8 @@ class SavedStacks {
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
   private:
-    SavedFrame::Set          frames;
-    JSObject                 *savedFrameProto;
+    SavedFrame::Set frames;
+    JSObject        *savedFrameProto;
 
     bool       insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFrame frame,
                             unsigned maxFrameCount = 0);
