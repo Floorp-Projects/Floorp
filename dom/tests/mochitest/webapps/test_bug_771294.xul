@@ -17,9 +17,6 @@
   </body>
 
 <script>
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
 SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.setAllAppsLaunchable(true);
