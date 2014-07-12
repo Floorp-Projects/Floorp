@@ -86,10 +86,13 @@ ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
   MOZ_ASSERT(func);
   JS::Rooted<JSString*> funcName(aCx, JS_GetFunctionDisplayId(func));
   MOZ_ASSERT(funcName);
+  nsAutoJSString funcNameStr;
+  if (!funcNameStr.init(aCx, funcName)) {
+    return false;
+  }
   JS_ReportErrorNumberUC(aCx, GetErrorMessage, nullptr,
                          static_cast<const unsigned>(aErrorNumber),
-                         JS_GetStringCharsZ(aCx, funcName),
-                         ifaceName.get());
+                         funcNameStr.get(), ifaceName.get());
   return false;
 }
 

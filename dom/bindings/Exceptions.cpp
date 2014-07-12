@@ -394,9 +394,7 @@ NS_IMETHODIMP JSStackFrame::GetName(nsAString& aFunction)
   if (!mFunnameInitialized) {
     JS::FrameDescription& desc = mStackDescription->FrameAt(mIndex);
     if (JSFlatString *name = desc.funDisplayName()) {
-      mFunname.Assign(JS_GetFlatStringChars(name),
-                      // XXXbz Can't JS_GetStringLength on JSFlatString!
-                      JS_GetStringLength(JS_FORGET_STRING_FLATNESS(name)));
+      AssignJSFlatString(mFunname, name);
     }
     mFunnameInitialized = true;
   }

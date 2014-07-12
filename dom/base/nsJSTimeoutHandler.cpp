@@ -349,8 +349,8 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
       return error.ErrorCode();
     }
 
-    mExpr.Append(JS_GetFlatStringChars(expr),
-                 JS_GetStringLength(JS_FORGET_STRING_FLATNESS(expr)));
+    MOZ_ASSERT(mExpr.IsEmpty());
+    AssignJSFlatString(mExpr, expr);
 
     // Get the calling location.
     const char *filename;
