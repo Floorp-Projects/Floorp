@@ -450,23 +450,38 @@ function buildAppPackage(aManifest, aIconFile) {
   return zipFile.path;
 }
 
-function wasAppSJSAccessed() {
+function xhrRequest(aQueryString) {
   let deferred = Promise.defer();
 
   var xhr = new XMLHttpRequest();
 
   xhr.addEventListener("load", function() {
-    let ret = (xhr.responseText == "done") ? true : false;
-    deferred.resolve(ret);
+    deferred.resolve(xhr.responseText);
   });
 
   xhr.addEventListener("error", aError => deferred.reject(aError));
   xhr.addEventListener("abort", aError => deferred.reject(aError));
 
-  xhr.open('GET', 'http://test/chrome/toolkit/webapps/tests/app.sjs?testreq', true);
+  xhr.open('GET', 'http://test/chrome/toolkit/webapps/tests/app.sjs' + aQueryString, true);
   xhr.send();
 
   return deferred.promise;
+}
+
+function wasAppSJSAccessed() {
+  return xhrRequest('?testreq').then((aResponseText) => {
+    return (aResponseText == 'done') ? true : false;
+  });
+}
+
+function setState(aVar, aState) {
+  return xhrRequest('?set' + aVar + '=' + aState).then((aResponseText) => {
+    is(aResponseText, "OK", "set" + aVar + " OK");
+  });
+}
+
+function getState(aVar) {
+  return xhrRequest('?get' + aVar);
 }
 
 function generateDataURI(aFile) {
@@ -516,4 +531,16 @@ let setMacRootInstallDir = Task.async(function*(aPath) {
   SimpleTest.registerCleanupFunction(function() {
     NativeApp.prototype._rootInstallDir = oldRootInstallDir;
   });
+});
+
+let writeToFile = Task.async(function*(aPath, aData) {
+  let data = new TextEncoder().encode(aData);
+
+  let file;
+  try {
+    file = yield OS.File.open(aPath, { truncate: true, write: true }, { unixMode: 0o777 });
+    yield file.write(data);
+  } finally {
+    yield file.close();
+  }
 });
