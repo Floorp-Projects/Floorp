@@ -514,7 +514,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
             }
         }
 
-        nsString* ws = *((nsString**)d);
+        nsAString* ws = *((nsAString**)d);
 
         if (!str) {
             ws->AssignLiteral(MOZ_UTF16("undefined"));
@@ -626,11 +626,10 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
             return false;
 
         size_t utf8Length = JS::GetDeflatedUTF8StringLength(flat);
-        nsCString *rs = *((nsCString**)d);
+        nsACString *rs = *((nsACString**)d);
         rs->SetLength(utf8Length);
 
         JS::DeflateStringToUTF8Buffer(flat, mozilla::RangedPtr<char>(rs->BeginWriting(), utf8Length));
-        MOZ_ASSERT(rs->get()[utf8Length] == '\0');
 
         return true;
     }
