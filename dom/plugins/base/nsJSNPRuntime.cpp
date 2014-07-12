@@ -15,6 +15,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h"
+#include "nsJSUtils.h"
 #include "nsCxPusher.h"
 #include "nsIDocument.h"
 #include "nsIJSRuntimeService.h"
@@ -405,13 +406,11 @@ JSValToNPVariant(NPP npp, JSContext *cx, JS::Value val, NPVariant *variant)
       }
     } else if (val.isString()) {
       JSString *jsstr = val.toString();
-      size_t length;
-      const jschar *chars = ::JS_GetStringCharsZAndLength(cx, jsstr, &length);
-      if (!chars) {
-          return false;
-      }
 
-      nsDependentString str(chars, length);
+      nsAutoJSString str;
+      if (!str.init(cx, jsstr)) {
+        return false;
+      }
 
       uint32_t len;
       char *p = ToNewUTF8String(str, &len);
