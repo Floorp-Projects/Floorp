@@ -25,6 +25,7 @@ typedef void* (*IOSurfaceGetBaseAddressFunc) (CFTypeRef io_surface);
 typedef size_t (*IOSurfaceGetWidthFunc) (IOSurfacePtr io_surface);
 typedef size_t (*IOSurfaceGetHeightFunc) (IOSurfacePtr io_surface);
 typedef size_t (*IOSurfaceGetBytesPerRowFunc) (IOSurfacePtr io_surface);
+typedef size_t (*IOSurfaceGetPropertyMaximumFunc) (CFStringRef property);
 typedef CGLError (*CGLTexImageIOSurface2DFunc) (CGLContextObj ctxt,
                              GLenum target, GLenum internalFormat,
                              GLsizei width, GLsizei height,
@@ -36,7 +37,6 @@ typedef CGContextRef (*IOSurfaceContextCreateFunc)(CFTypeRef io_surface,
                              CGColorSpaceRef colorSpace, CGBitmapInfo bitmapInfo);
 typedef CGImageRef (*IOSurfaceContextCreateImageFunc)(CGContextRef ref);
 typedef IOSurfacePtr (*IOSurfaceContextGetSurfaceFunc)(CGContextRef ref);
-
 
 
 #import <OpenGL/OpenGL.h>
@@ -101,6 +101,8 @@ public:
   static mozilla::TemporaryRef<MacIOSurface> IOSurfaceContextGetSurface(CGContextRef aContext,
                                                                         double aContentsScaleFactor = 1.0,
                                                                         bool aHasAlpha = true);
+  static size_t GetMaxWidth();
+  static size_t GetMaxHeight();
 
 private:
   friend class nsCARenderer;
@@ -125,6 +127,7 @@ public:
   static IOSurfaceGetWidthFunc        sWidth;
   static IOSurfaceGetHeightFunc       sHeight;
   static IOSurfaceGetBytesPerRowFunc  sBytesPerRow;
+  static IOSurfaceGetPropertyMaximumFunc  sGetPropertyMaximum;
   static CGLTexImageIOSurface2DFunc   sTexImage;
   static IOSurfaceContextCreateFunc   sIOSurfaceContextCreate;
   static IOSurfaceContextCreateImageFunc  sIOSurfaceContextCreateImage;
@@ -140,10 +143,11 @@ public:
   static IOSurfacePtr IOSurfaceCreate(CFDictionaryRef properties);
   static IOSurfacePtr IOSurfaceLookup(IOSurfaceID aIOSurfaceID);
   static IOSurfaceID  IOSurfaceGetID(IOSurfacePtr aIOSurfacePtr);
-  static void        *IOSurfaceGetBaseAddress(IOSurfacePtr aIOSurfacePtr);
+  static void*        IOSurfaceGetBaseAddress(IOSurfacePtr aIOSurfacePtr);
   static size_t       IOSurfaceGetWidth(IOSurfacePtr aIOSurfacePtr);
   static size_t       IOSurfaceGetHeight(IOSurfacePtr aIOSurfacePtr);
   static size_t       IOSurfaceGetBytesPerRow(IOSurfacePtr aIOSurfacePtr);
+  static size_t       IOSurfaceGetPropertyMaximum(CFStringRef property);
   static IOReturn     IOSurfaceLock(IOSurfacePtr aIOSurfacePtr, 
                                     uint32_t options, uint32_t *seed);
   static IOReturn     IOSurfaceUnlock(IOSurfacePtr aIOSurfacePtr, 
