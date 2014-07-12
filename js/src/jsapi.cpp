@@ -4733,7 +4733,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
     else
         chars = InflateString(cx, bytes, &length);
     if (!chars)
-        return nullptr;
+        return false;
 
     return CompileFunction(cx, obj, options, name, nargs, argnames, chars, length, fun);
 }
