@@ -20,6 +20,11 @@ page {
   -moz-user-select: text;
 }
 
+treecol {
+  /* override the * rule to let the treecol be sortable */
+  -moz-user-select: none;
+}
+
 caption {
   -moz-appearance: none;
   margin: 0;
