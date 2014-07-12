@@ -1,0 +1,12 @@
+{
+  "name" : "Test app",
+  "version" : "VERSION_TOKEN",
+  "package_path": "app.sjs?getPackage=true",
+  "description": "Test app",
+  "launch_path": "/index.html",
+  "developer": {
+    "name": "marco",
+    "url": "http://www.example.com/"
+  },
+  "default_locale": "en-US"
+}

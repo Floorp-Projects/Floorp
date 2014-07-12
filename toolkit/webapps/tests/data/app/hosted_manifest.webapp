@@ -1,0 +1,11 @@
+{
+  "name" : "Test app",
+  "version" : "VERSION_TOKEN",
+  "description": "Test app",
+  "launch_path": "/chrome/toolkit/webapps/tests/app.sjs?appreq",
+  "developer": {
+    "name": "marco",
+    "url": "http://www.example.com/"
+  },
+  "default_locale": "en-US"
+}

@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Check for updates once a day.
+pref("webapprt.app_update_interval", 86400);
+
 pref("browser.chromeURL", "chrome://webapprt/content/webapp.xul");
 pref("browser.download.folderList", 1);
 

@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1036717
+-->
+<window title="Mozilla Bug 1036717"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
+  <script type="application/javascript" src="head.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1036717"
+     target="_blank">Mozilla Bug 1036717</a>
+  </body>
+
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 1036717 **/
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NativeApp.jsm");
+Cu.import("resource://gre/modules/WebappOSUtils.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
+
+let runTest = Task.async(function*() {
+  let manifest = yield readJSON(getTestFilePath("data/app/manifest.webapp"));
+
+  let app = {
+    name: manifest.name,
+    manifestURL: "http://127.0.0.1:8888/chrome/toolkit/webapps/tests/app.sjs?getManifest=true",
+    origin: "app://test.app",
+  };
+
+  let testAppInfo = new TestAppInfo(app, true);
+
+  // Get to a clean state before the test
+  yield testAppInfo.cleanup();
+
+  SimpleTest.registerCleanupFunction(() => testAppInfo.cleanup());
+
+  setDryRunPref();
+
+  // On Mac build servers, we don't have enough privileges to write to /Applications,
+  // so we install apps in a user-owned directory.
+  if (MAC) {
+    yield setMacRootInstallDir(OS.Path.join(OS.Constants.Path.homeDir, "Applications"));
+  }
+
+  confirmNextInstall();
+
+  yield setState("Version", 1);
+
+  let request = navigator.mozApps.installPackage(app.manifestURL);
+
+  let (deferred = Promise.defer()) {
+    request.onerror = function() {
+      deferred.reject(this.error.name);
+    };
+    request.onsuccess = deferred.resolve;
+    yield deferred.promise;
+  }
+
+  let appObject = request.result;
+  ok(appObject, "app is non-null");
+
+  let (deferred = Promise.defer()) {
+    appObject.ondownloaderror = function() {
+      deferred.reject(appObject.downloadError.name);
+    };
+    appObject.ondownloadapplied = deferred.resolve;
+    yield deferred.promise;
+  };
+
+  while (!WebappOSUtils.isLaunchable(app)) {
+    yield wait(1000);
+  }
+  ok(true, "App launchable");
+
+  // Force the update timer to fire in 1 second
+  let prefsFile = OS.Path.join(testAppInfo.profileDir.path, "prefs.js");
+  yield writeToFile(prefsFile, "user_pref(\"webapprt.app_update_interval\", 1);");
+
+  // Update app version
+  yield setState("Version", 2);
+
+  // Launch the webapprt executable that will verify the presence of an update
+  let exeFile = getFile(testAppInfo.exePath);
+
+  let appClosed = false;
+
+  testAppInfo.appProcess.init(exeFile)
+  testAppInfo.appProcess.runAsync([], 0, () => appClosed = true);
+
+  // If there was a second request to get the manifest and the package,
+  // then the webapprt has searched for an update and has started to
+  // download it.
+  while ((Number(yield getState("PackageQueries")) < 2 ||
+          Number(yield getState("ManifestQueries")) < 2) &&
+         !appClosed) {
+    yield wait(1000);
+  }
+  ok(!appClosed, "App was launched and is still running");
+  ok(Number(yield getState("ManifestQueries")) >= 2, "Two manifest requests");
+  ok(Number(yield getState("PackageQueries")) >= 2, "Two package requests");
+
+  SimpleTest.finish();
+});
+
+runTest().catch((e) => {
+  ok(false, "Error during test: " + e);
+  SimpleTest.finish();
+});
+
+]]>
+</script>
+</window>
