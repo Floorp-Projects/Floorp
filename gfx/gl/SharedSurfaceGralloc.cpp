@@ -222,7 +222,7 @@ SharedSurface_Gralloc::Fence()
     // work.  glReadPixels seems to, though.
     if (gfxPrefs::GrallocFenceWithReadPixels()) {
         mGL->MakeCurrent();
-        UniquePtr<char[]> buf = MakeUnique<char>(4);
+        UniquePtr<char[]> buf = MakeUnique<char[]>(4);
         mGL->fReadPixels(0, 0, 1, 1, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, buf);
     }
 }

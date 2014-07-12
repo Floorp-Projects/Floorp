@@ -4832,7 +4832,7 @@ js::DuplicateString(js::ThreadSafeContext *cx, const jschar *s)
     size_t n = js_strlen(s);
     auto ret = cx->make_pod_array<jschar>(n + 1);
     if (!ret)
-        return nullptr;
+        return ret;
     js_strncpy(ret.get(), s, n);
     ret[n] = '\0';
     return Move(ret);
