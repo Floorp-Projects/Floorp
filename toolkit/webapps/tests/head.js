@@ -155,6 +155,8 @@ function TestAppInfo(aApp, aIsPackaged) {
 
     this.iconFile = OS.Path.join(this.installPath, "icon.png");
 
+    this.webappINI = OS.Path.join(this.installPath, "webapp.ini");
+
     let xdg_data_home = Cc["@mozilla.org/process/environment;1"].
                         getService(Ci.nsIEnvironment).
                         get("XDG_DATA_HOME");
@@ -167,7 +169,7 @@ function TestAppInfo(aApp, aIsPackaged) {
 
     this.installedFiles = [
       OS.Path.join(this.installPath, "webapp.json"),
-      OS.Path.join(this.installPath, "webapp.ini"),
+      this.webappINI,
       this.iconFile,
       this.exePath,
       desktopINI,
@@ -179,7 +181,7 @@ function TestAppInfo(aApp, aIsPackaged) {
     ];
     this.updatedFiles = [
       OS.Path.join(this.installPath, "webapp.json"),
-      OS.Path.join(this.installPath, "webapp.ini"),
+      this.webappINI,
       this.iconFile,
       desktopINI,
     ];
@@ -215,6 +217,8 @@ function TestAppInfo(aApp, aIsPackaged) {
 
     this.iconFile = OS.Path.join(this.installPath, "chrome", "icons", "default", "default.ico");
 
+    this.webappINI = OS.Path.join(this.installPath, "webapp.ini");
+
     let desktopShortcut = OS.Path.join(OS.Constants.Path.desktopDir,
                                        aApp.name + ".lnk");
     let startMenuShortcut = OS.Path.join(OS.Constants.Path.winStartMenuProgsDir,
@@ -222,7 +226,7 @@ function TestAppInfo(aApp, aIsPackaged) {
 
     this.installedFiles = [
       OS.Path.join(this.installPath, "webapp.json"),
-      OS.Path.join(this.installPath, "webapp.ini"),
+      this.webappINI,
       OS.Path.join(this.installPath, "uninstall", "shortcuts_log.ini"),
       OS.Path.join(this.installPath, "uninstall", "uninstall.log"),
       OS.Path.join(this.installPath, "uninstall", "webapp-uninstaller.exe"),
@@ -241,7 +245,7 @@ function TestAppInfo(aApp, aIsPackaged) {
     ];
     this.updatedFiles = [
       OS.Path.join(this.installPath, "webapp.json"),
-      OS.Path.join(this.installPath, "webapp.ini"),
+      this.webappINI,
       OS.Path.join(this.installPath, "uninstall", "shortcuts_log.ini"),
       OS.Path.join(this.installPath, "uninstall", "uninstall.log"),
       this.iconFile,
@@ -312,13 +316,15 @@ function TestAppInfo(aApp, aIsPackaged) {
 
     this.iconFile = OS.Path.join(this.installPath, "Contents", "Resources", "appicon.icns");
 
+    this.webappINI = OS.Path.join(this.installPath, "Contents", "MacOS", "webapp.ini");
+
     let appProfileDir = OS.Path.join(OS.Constants.Path.macUserLibDir,
                                      "Application Support",
                                      this.uniqueName);
 
     this.installedFiles = [
       OS.Path.join(this.installPath, "Contents", "Info.plist"),
-      OS.Path.join(this.installPath, "Contents", "MacOS", "webapp.ini"),
+      this.webappINI,
       OS.Path.join(appProfileDir, "webapp.json"),
       this.iconFile,
       this.exePath,
@@ -331,7 +337,7 @@ function TestAppInfo(aApp, aIsPackaged) {
     ];
     this.updatedFiles = [
       OS.Path.join(this.installPath, "Contents", "Info.plist"),
-      OS.Path.join(this.installPath, "Contents", "MacOS", "webapp.ini"),
+      this.webappINI,
       OS.Path.join(appProfileDir, "webapp.json"),
       this.iconFile,
     ];
