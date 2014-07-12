@@ -554,15 +554,14 @@ SocialShare = {
   },
 
   update: function() {
-    let widget = CustomizableUI.getWidget("social-share-button");
-    if (!widget)
+    let shareButton = this.shareButton;
+    if (!shareButton)
       return;
-    let shareButton = widget.forWindow(window).node;
-    // hidden state is based on available share providers and location of
-    // button. It's always visible and disabled in the customization palette.
-    shareButton.hidden = !SocialUI.enabled || (widget.areaType &&
-                         [p for (p of Social.providers) if (p.shareURL)].length == 0);
-    let disabled = !widget.areaType || shareButton.hidden || !this.canSharePage(gBrowser.currentURI);
+    // if we got here, the button is in the window somewhere, update it's hidden
+    // state based on available providers.
+    shareButton.hidden = !SocialUI.enabled ||
+                         [p for (p of Social.providers) if (p.shareURL)].length == 0;
+    let disabled = shareButton.hidden || !this.canSharePage(gBrowser.currentURI);
 
     // 1. update the relevent command's disabled state so the keyboard
     // shortcut only works when available.
