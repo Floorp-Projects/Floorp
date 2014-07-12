@@ -16,6 +16,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/StringBuffer.h"
 
+#include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
 using mozilla::AddToHash;
@@ -399,7 +400,7 @@ bool
 SavedStacks::saveCurrentStack(JSContext *cx, MutableHandleSavedFrame frame, unsigned maxFrameCount)
 {
     JS_ASSERT(initialized());
-    JS_ASSERT(&cx->compartment()->savedStacks() == this);
+    assertSameCompartment(cx, this);
 
     FrameIter iter(cx, FrameIter::ALL_CONTEXTS, FrameIter::GO_THROUGH_SAVED);
     return insertFrames(cx, iter, frame, maxFrameCount);
@@ -504,8 +505,11 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
     if (iter.hasScript()) {
         JSScript *script = iter.script();
         jsbytecode *pc = iter.pc();
-        if (!getLocation(cx, script, pc, &location))
-            return false;
+        {
+            AutoCompartment ac(cx, iter.compartment());
+            if (!cx->compartment()->savedStacks().getLocation(cx, script, pc, &location))
+                return false;
+        }
     } else {
         const char *filename = iter.scriptFilename();
         if (!filename)
@@ -595,13 +599,13 @@ SavedStacks::createFrameFromLookup(JSContext *cx, const SavedFrame::Lookup &look
     if (!proto)
         return nullptr;
 
-    JS_ASSERT(proto->compartment() == cx->compartment());
+    assertSameCompartment(cx, proto);
 
     RootedObject global(cx, cx->compartment()->maybeGlobal());
     if (!global)
         return nullptr;
 
-    JS_ASSERT(global->compartment() == cx->compartment());
+    assertSameCompartment(cx, global);
 
     RootedObject frameObj(cx, NewObjectWithGivenProto(cx, &SavedFrame::class_, proto, global));
     if (!frameObj)
@@ -635,6 +639,12 @@ bool
 SavedStacks::getLocation(JSContext *cx, JSScript *script, jsbytecode *pc,
                          MutableHandleLocationValue locationp)
 {
+    // We should only ever be caching location values for scripts in this
+    // compartment. Otherwise, we would get dead cross-compartment scripts in
+    // the cache because our compartment's sweep method isn't called when their
+    // compartment gets collected.
+    assertSameCompartment(cx, this, script);
+
     PCKey key(script, pc);
     PCLocationMap::AddPtr p = pcLocationMap.lookupForAdd(key);
 
@@ -665,5 +675,17 @@ SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata)
     *pmetadata = frame;
     return true;
 }
+
+#ifdef JS_CRASH_DIAGNOSTICS
+void
+CompartmentChecker::check(SavedStacks *stacks)
+{
+    if (&compartment->savedStacks() != stacks) {
+        printf("*** Compartment SavedStacks mismatch: %p vs. %p\n",
+               (void *) &compartment->savedStacks(), stacks);
+        MOZ_CRASH();
+    }
+}
+#endif /* JS_CRASH_DIAGNOSTICS */
 
 } /* namespace js */
