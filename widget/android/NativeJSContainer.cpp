@@ -507,7 +507,9 @@ struct StringProperty
         if (!CheckJSCall(env, autoStr.init(cx, str))) {
             return nullptr;
         }
-        jstring ret = env->NewString(autoStr.BeginReading(), autoStr.Length());
+        jstring ret = env->NewString(
+            reinterpret_cast<const jchar*>(autoStr.BeginReading()),
+            autoStr.Length());
         MOZ_ASSERT(ret);
         return ret;
     }
