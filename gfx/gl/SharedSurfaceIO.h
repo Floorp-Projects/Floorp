@@ -65,13 +65,20 @@ private:
 class SurfaceFactory_IOSurface : public SurfaceFactory
 {
 public:
+    // Infallible.
+    static SurfaceFactory_IOSurface* Create(GLContext* gl,
+                                            const SurfaceCaps& caps);
+protected:
+    const gfx::IntSize mMaxDims;
+
     SurfaceFactory_IOSurface(GLContext* gl,
-                             const SurfaceCaps& caps)
+                             const SurfaceCaps& caps,
+                             const gfx::IntSize& maxDims)
         : SurfaceFactory(gl, SharedSurfaceType::IOSurface, caps)
+        , mMaxDims(maxDims)
     {
     }
 
-protected:
     virtual SharedSurface* CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE;
 };
 

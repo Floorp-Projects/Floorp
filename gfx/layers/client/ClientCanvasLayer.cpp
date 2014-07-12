@@ -94,7 +94,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
             // [Basic Layers, OMTC] WebGL layer init.
             // Well, this *should* work...
 #ifdef XP_MACOSX
-            factory = new SurfaceFactory_IOSurface(mGLContext, caps);
+            factory = SurfaceFactory_IOSurface::Create(mGLContext, caps);
 #else
             factory = new SurfaceFactory_GLTexture(mGLContext, nullptr, caps);
 #endif

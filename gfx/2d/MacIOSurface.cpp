@@ -43,6 +43,7 @@ IOSurfaceGetBaseAddressFunc   MacIOSurfaceLib::sGetBaseAddress;
 IOSurfaceGetWidthFunc         MacIOSurfaceLib::sWidth;
 IOSurfaceGetHeightFunc        MacIOSurfaceLib::sHeight;
 IOSurfaceGetBytesPerRowFunc   MacIOSurfaceLib::sBytesPerRow;
+IOSurfaceGetPropertyMaximumFunc   MacIOSurfaceLib::sGetPropertyMaximum;
 IOSurfaceLockFunc             MacIOSurfaceLib::sLock;
 IOSurfaceUnlockFunc           MacIOSurfaceLib::sUnlock;
 CGLTexImageIOSurface2DFunc    MacIOSurfaceLib::sTexImage;
@@ -92,6 +93,10 @@ size_t MacIOSurfaceLib::IOSurfaceGetHeight(IOSurfacePtr aIOSurfacePtr) {
 
 size_t MacIOSurfaceLib::IOSurfaceGetBytesPerRow(IOSurfacePtr aIOSurfacePtr) {
   return sBytesPerRow(aIOSurfacePtr);
+}
+
+size_t MacIOSurfaceLib::IOSurfaceGetPropertyMaximum(CFStringRef property) {
+  return sGetPropertyMaximum(property);
 }
 
 IOReturn MacIOSurfaceLib::IOSurfaceLock(IOSurfacePtr aIOSurfacePtr, 
@@ -177,6 +182,7 @@ void MacIOSurfaceLib::LoadLibrary() {
   sWidth = GET_IOSYM(sWidth, "IOSurfaceGetWidth");
   sHeight = GET_IOSYM(sHeight, "IOSurfaceGetHeight");
   sBytesPerRow = GET_IOSYM(sBytesPerRow, "IOSurfaceGetBytesPerRow");
+  sGetPropertyMaximum = GET_IOSYM(sGetPropertyMaximum, "IOSurfaceGetPropertyMaximum");
   sLookup = GET_IOSYM(sLookup, "IOSurfaceLookup");
   sLock = GET_IOSYM(sLock, "IOSurfaceLock");
   sUnlock = GET_IOSYM(sUnlock, "IOSurfaceUnlock");
@@ -192,7 +198,7 @@ void MacIOSurfaceLib::LoadLibrary() {
   if (!sCreate || !sGetID || !sLookup || !sTexImage || !sGetBaseAddress ||
       !kPropWidth || !kPropHeight || !kPropBytesPerElem || !kPropIsGlobal ||
       !sLock || !sUnlock || !sWidth || !sHeight || !kPropBytesPerRow ||
-      !sBytesPerRow) {
+      !sBytesPerRow || !sGetPropertyMaximum) {
     CloseLibrary();
   }
 }
@@ -224,6 +230,9 @@ TemporaryRef<MacIOSurface> MacIOSurface::CreateIOSurface(int aWidth, int aHeight
                       &kCFTypeDictionaryValueCallBacks);
   if (!props)
     return nullptr;
+
+  MOZ_ASSERT((size_t)aWidth <= GetMaxWidth());
+  MOZ_ASSERT((size_t)aHeight <= GetMaxHeight());
 
   int32_t bytesPerElem = 4;
   size_t intScaleFactor = ceil(aContentsScaleFactor);
@@ -293,6 +302,14 @@ size_t MacIOSurface::GetWidth() {
 size_t MacIOSurface::GetHeight() {
   size_t intScaleFactor = ceil(mContentsScaleFactor);
   return GetDevicePixelHeight() / intScaleFactor;
+}
+
+/*static*/ size_t MacIOSurface::GetMaxWidth() {
+  return MacIOSurfaceLib::IOSurfaceGetPropertyMaximum(MacIOSurfaceLib::kPropWidth);
+}
+
+/*static*/ size_t MacIOSurface::GetMaxHeight() {
+  return MacIOSurfaceLib::IOSurfaceGetPropertyMaximum(MacIOSurfaceLib::kPropHeight);
 }
 
 size_t MacIOSurface::GetDevicePixelWidth() {
