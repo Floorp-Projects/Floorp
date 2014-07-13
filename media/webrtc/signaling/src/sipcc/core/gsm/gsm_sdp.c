@@ -1178,6 +1178,8 @@ gsmsdp_set_video_media_attributes (uint32_t media_type, void *cc_sdp_p, uint16_t
                 return;
             }
             added_fmtp = 1;
+            (void) sdp_attr_set_fmtp_payload_type(sdp_p, level, 0, a_inst,
+                                                  payload_number);
             {
                 char buffer[32];
                 uint32_t profile_level_id = vcmGetVideoH264ProfileLevelID();
@@ -1221,10 +1223,10 @@ gsmsdp_set_video_media_attributes (uint32_t media_type, void *cc_sdp_p, uint16_t
                         return;
                     }
                     added_fmtp = 1;
-                }
 
-                (void) sdp_attr_set_fmtp_payload_type(sdp_p, level, 0, a_inst,
-                                                      payload_number);
+                    (void) sdp_attr_set_fmtp_payload_type(sdp_p, level, 0, a_inst,
+                                                          payload_number);
+                }
 
                 if (max_fs) {
                     (void) sdp_attr_set_fmtp_max_fs(sdp_p, level, 0, a_inst,
