@@ -37,17 +37,17 @@ BackCert::Init()
   //         signatureAlgorithm   AlgorithmIdentifier,
   //         signatureValue       BIT STRING  }
 
-  der::Input tbsCertificate;
+  Input tbsCertificate;
 
   // The scope of |input| and |certificate| are limited to this block so we
   // don't accidentally confuse them for tbsCertificate later.
   {
-    der::Input input;
+    Input input;
     rv = input.Init(der.data, der.len);
     if (rv != Success) {
       return rv;
     }
-    der::Input certificate;
+    Input certificate;
     rv = der::ExpectTagAndGetValue(input, der::SEQUENCE, certificate);
     if (rv != Success) {
       return rv;
@@ -163,7 +163,7 @@ BackCert::Init()
 }
 
 Result
-BackCert::RememberExtension(der::Input& extnID, const SECItem& extnValue,
+BackCert::RememberExtension(Input& extnID, const SECItem& extnValue,
                             /*out*/ bool& understood)
 {
   understood = false;
@@ -243,11 +243,11 @@ BackCert::RememberExtension(der::Input& extnID, const SECItem& extnValue,
     // Don't allow an empty value for any extension we understand. This way, we
     // can test out->len to check for duplicates.
     if (extnValue.len == 0) {
-      return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
+      return Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
     }
     if (out->len != 0) {
       // Duplicate extension
-      return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
+      return Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
     }
     *out = extnValue;
     understood = true;
