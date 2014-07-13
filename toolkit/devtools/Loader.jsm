@@ -96,8 +96,6 @@ BuiltinProvider.prototype = {
         "devtools/touch-events": "resource://gre/modules/devtools/touch-events",
         "devtools/client": "resource://gre/modules/devtools/client",
         "devtools/pretty-fast": "resource://gre/modules/devtools/pretty-fast.js",
-        "devtools/jsbeautify/": "resource://gre/modules/devtools/jsbeautify/",
-        "devtools/jsbeautify": "resource://gre/modules/devtools/jsbeautify/beautify.js",
         "devtools/async-utils": "resource://gre/modules/devtools/async-utils",
         "devtools/content-observer": "resource://gre/modules/devtools/content-observer",
         "gcli": "resource://gre/modules/devtools/gcli",
