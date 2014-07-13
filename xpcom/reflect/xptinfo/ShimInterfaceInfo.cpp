@@ -51,7 +51,6 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLAppletElement.h"
 #include "nsIDOMHTMLAreaElement.h"
-#include "nsIDOMHTMLAudioElement.h"
 #include "nsIDOMHTMLBRElement.h"
 #include "nsIDOMHTMLBaseElement.h"
 #include "nsIDOMHTMLBodyElement.h"
@@ -100,7 +99,6 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLTitleElement.h"
 #include "nsIDOMHTMLUListElement.h"
-#include "nsIDOMHTMLVideoElement.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMediaError.h"
 #include "nsIDOMMediaList.h"
@@ -190,7 +188,6 @@
 #include "mozilla/dom/HTMLAnchorElementBinding.h"
 #include "mozilla/dom/HTMLAppletElementBinding.h"
 #include "mozilla/dom/HTMLAreaElementBinding.h"
-#include "mozilla/dom/HTMLAudioElementBinding.h"
 #include "mozilla/dom/HTMLBRElementBinding.h"
 #include "mozilla/dom/HTMLBaseElementBinding.h"
 #include "mozilla/dom/HTMLBodyElementBinding.h"
@@ -239,7 +236,6 @@
 #include "mozilla/dom/HTMLTextAreaElementBinding.h"
 #include "mozilla/dom/HTMLTitleElementBinding.h"
 #include "mozilla/dom/HTMLUListElementBinding.h"
-#include "mozilla/dom/HTMLVideoElementBinding.h"
 #include "mozilla/dom/KeyEventBinding.h"
 #include "mozilla/dom/LocalMediaStreamBinding.h"
 #include "mozilla/dom/MediaErrorBinding.h"
@@ -381,7 +377,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(HTMLAnchorElement),
   DEFINE_SHIM(HTMLAppletElement),
   DEFINE_SHIM(HTMLAreaElement),
-  DEFINE_SHIM(HTMLAudioElement),
   DEFINE_SHIM(HTMLBRElement),
   DEFINE_SHIM(HTMLBaseElement),
   DEFINE_SHIM(HTMLBodyElement),
@@ -430,7 +425,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(HTMLTextAreaElement),
   DEFINE_SHIM(HTMLTitleElement),
   DEFINE_SHIM(HTMLUListElement),
-  DEFINE_SHIM(HTMLVideoElement),
   DEFINE_SHIM(KeyEvent),
   DEFINE_SHIM(LocalMediaStream),
   DEFINE_SHIM(MediaError),
