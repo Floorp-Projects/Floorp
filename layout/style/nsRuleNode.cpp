@@ -8955,7 +8955,7 @@ nsRuleNode::Sweep()
       PLDHashTable *children = ChildrenHash();
       uint32_t oldChildCount = children->entryCount;
       PL_DHashTableEnumerate(children, SweepRuleNodeChildren, nullptr);
-      childrenDestroyed = children->entryCount - oldChildCount;
+      childrenDestroyed = oldChildCount - children->entryCount;
     } else {
       childrenDestroyed = 0;
       for (nsRuleNode **children = ChildrenListPtr(); *children; ) {
