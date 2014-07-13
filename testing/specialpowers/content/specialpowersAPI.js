@@ -709,14 +709,31 @@ SpecialPowersAPI.prototype = {
     return crashDumpFiles;
   },
 
+  _setTimeout: function(callback) {
+    // for mochitest-browser
+    if (typeof window != 'undefined')
+      setTimeout(callback, 0);
+    // for mochitest-plain
+    else
+      content.window.setTimeout(callback, 0);
+  },
+
   _delayCallbackTwice: function(callback) {
-    function delayedCallback() {
-      function delayAgain() {
-	content.window.setTimeout(callback, 0);
-      }
-      content.window.setTimeout(delayAgain, 0);
-    }
-    return delayedCallback;
+     function delayedCallback() {
+       function delayAgain(aCallback) {
+         // Using this._setTimeout doesn't work here
+         // It causes failures in mochtests that use
+         // multiple pushPrefEnv calls
+         // For chrome/browser-chrome mochitests
+         if (typeof window != 'undefined')
+           setTimeout(aCallback, 0);
+         // For mochitest-plain
+         else
+           content.window.setTimeout(aCallback, 0);
+       }
+       delayAgain(delayAgain(callback));
+     }
+     return delayedCallback;
   },
 
   /* apply permissions to the system and when the test case is finished (SimpleTest.finish())
@@ -799,7 +816,7 @@ SpecialPowersAPI.prototype = {
 				     this._delayCallbackTwice(callback)]);
       this._applyPermissions();
     } else {
-      content.window.setTimeout(callback, 0);
+      this._setTimeout(callback);
     }
   },
 
@@ -811,7 +828,7 @@ SpecialPowersAPI.prototype = {
       this._pendingPermissions.push([this._permissionsUndoStack.pop(), cb]);
       this._applyPermissions();
     } else {
-      content.window.setTimeout(callback, 0);
+       this._setTimeout(callback);
     }
   },
 
@@ -824,6 +841,7 @@ SpecialPowersAPI.prototype = {
 
 
   _permissionObserver: {
+    _self: null,
     _lastPermission: {},
     _callBack: null,
     _nextCallback: null,
@@ -834,8 +852,8 @@ SpecialPowersAPI.prototype = {
         var permission = aSubject.QueryInterface(Ci.nsIPermission);
         if (permission.type == this._lastPermission.type) {
           Services.obs.removeObserver(this, "perm-changed");
-          content.window.setTimeout(this._callback, 0);
-          content.window.setTimeout(this._nextCallback, 0);
+          this._self._setTimeout(this._callback);
+          this._self._setTimeout(this._nextCallback);
         }
       }
     }
@@ -858,6 +876,7 @@ SpecialPowersAPI.prototype = {
     var lastPermission = pendingActions[pendingActions.length-1];
 
     var self = this;
+    this._permissionObserver._self = self;
     this._permissionObserver._lastPermission = lastPermission;
     this._permissionObserver._callback = callback;
     this._permissionObserver._nextCallback = function () {
@@ -984,7 +1003,7 @@ SpecialPowersAPI.prototype = {
 			       this._delayCallbackTwice(callback)]);
       this._applyPrefs();
     } else {
-      content.window.setTimeout(callback, 0);
+      this._setTimeout(callback);
     }
   },
 
@@ -996,7 +1015,7 @@ SpecialPowersAPI.prototype = {
       this._pendingPrefs.push([this._prefEnvUndoStack.pop(), cb]);
       this._applyPrefs();
     } else {
-      content.window.setTimeout(callback, 0);
+      this._setTimeout(callback);
     }
   },
 
@@ -1029,12 +1048,12 @@ SpecialPowersAPI.prototype = {
     pb.addObserver(lastPref.name, function prefObs(subject, topic, data) {
       pb.removeObserver(lastPref.name, prefObs);
 
-      content.window.setTimeout(callback, 0);
-      content.window.setTimeout(function () {
+      self._setTimeout(callback);
+      self._setTimeout(function () {
         self._applyingPrefs = false;
         // Now apply any prefs that may have been queued while we were applying
         self._applyPrefs();
-      }, 0);
+      });
     }, false);
 
     for (var idx in pendingActions) {
