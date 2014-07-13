@@ -56,8 +56,7 @@ function doe3() {
   synthesizeKey('VK_TAB', {type: "keypress", shiftKey: true});
 
   is(0, 0, "this is a crash/assertion test, so we're ok if we survived this far");
-  SimpleTest.finish();
-  setTimeout(function() {document.body.style.display = '';}, 400);
+  setTimeout(function() {document.body.style.display = ''; SimpleTest.finish();}, 0);
 }
 
 function do_test() {
