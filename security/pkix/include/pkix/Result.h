@@ -76,6 +76,14 @@ MapSECStatus(SECStatus srv)
   return RecoverableError;
 }
 
+inline Result
+Fail(PRErrorCode errorCode)
+{
+  PR_ASSERT(errorCode != 0);
+  PR_SetError(errorCode, 0);
+  return mozilla::pkix::MapSECStatus(SECFailure);
+}
+
 } } // namespace mozilla::pkix
 
 #endif // mozilla_pkix__Result_h
