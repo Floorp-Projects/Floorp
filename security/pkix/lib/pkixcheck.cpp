@@ -35,7 +35,7 @@ namespace mozilla { namespace pkix {
 Result
 CheckValidity(const SECItem& encodedValidity, PRTime time)
 {
-  der::Input validity;
+  Input validity;
   if (validity.Init(encodedValidity.data, encodedValidity.len) != Success) {
     return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
   }
@@ -87,11 +87,11 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedKeyUsage,
     return Success;
   }
 
-  der::Input input;
+  Input input;
   if (input.Init(encodedKeyUsage->data, encodedKeyUsage->len) != Success) {
     return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
   }
-  der::Input value;
+  Input value;
   if (der::ExpectTagAndGetValue(input, der::BIT_STRING, value) != Success) {
     return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
   }
@@ -203,7 +203,7 @@ bool CertPolicyId::IsAnyPolicy() const
 //         policyQualifiers   SEQUENCE SIZE (1..MAX) OF
 //                                 PolicyQualifierInfo OPTIONAL }
 inline Result
-CheckPolicyInformation(der::Input& input, EndEntityOrCA endEntityOrCA,
+CheckPolicyInformation(Input& input, EndEntityOrCA endEntityOrCA,
                        const CertPolicyId& requiredPolicy,
                        /*in/out*/ bool& found)
 {
@@ -271,7 +271,7 @@ CheckCertificatePolicies(EndEntityOrCA endEntityOrCA,
 
   bool found = false;
 
-  der::Input input;
+  Input input;
   if (input.Init(encodedCertificatePolicies->data,
                  encodedCertificatePolicies->len) != Success) {
     return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
@@ -297,7 +297,7 @@ static const long UNLIMITED_PATH_LEN = -1; // must be less than zero
 //          cA                      BOOLEAN DEFAULT FALSE,
 //          pathLenConstraint       INTEGER (0..MAX) OPTIONAL }
 static Result
-DecodeBasicConstraints(der::Input& input, /*out*/ bool& isCA,
+DecodeBasicConstraints(Input& input, /*out*/ bool& isCA,
                        /*out*/ long& pathLenConstraint)
 {
   // TODO(bug 989518): cA is by default false. According to DER, default
@@ -307,15 +307,15 @@ DecodeBasicConstraints(der::Input& input, /*out*/ bool& isCA,
   // enforce this yet (hence passing true for allowInvalidExplicitEncoding
   // to der::OptionalBoolean).
   if (der::OptionalBoolean(input, true, isCA) != Success) {
-    return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
+    return Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
   }
 
   // TODO(bug 985025): If isCA is false, pathLenConstraint MUST NOT
   // be included (as per RFC 5280 section 4.2.1.9), but for compatibility
   // reasons, we don't check this for now.
-  if (OptionalInteger(input, UNLIMITED_PATH_LEN, pathLenConstraint)
+  if (der::OptionalInteger(input, UNLIMITED_PATH_LEN, pathLenConstraint)
         != Success) {
-    return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
+    return Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
   }
 
   return Success;
@@ -332,7 +332,7 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
   long pathLenConstraint = UNLIMITED_PATH_LEN;
 
   if (encodedBasicConstraints) {
-    der::Input input;
+    Input input;
     if (input.Init(encodedBasicConstraints->data,
                    encodedBasicConstraints->len) != Success) {
       return Fail(RecoverableError, SEC_ERROR_EXTENSION_VALUE_INVALID);
@@ -462,7 +462,7 @@ CheckNameConstraints(const SECItem& encodedNameConstraints,
 // 4.2.1.12. Extended Key Usage (id-ce-extKeyUsage)
 
 static Result
-MatchEKU(der::Input& value, KeyPurposeId requiredEKU,
+MatchEKU(Input& value, KeyPurposeId requiredEKU,
          EndEntityOrCA endEntityOrCA, /*in/out*/ bool& found,
          /*in/out*/ bool& foundOCSPSigning)
 {
@@ -522,11 +522,11 @@ MatchEKU(der::Input& value, KeyPurposeId requiredEKU,
 
       case KeyPurposeId::anyExtendedKeyUsage:
         PR_NOT_REACHED("anyExtendedKeyUsage should start with found==true");
-        return der::Fail(SEC_ERROR_LIBRARY_FAILURE);
+        return Fail(SEC_ERROR_LIBRARY_FAILURE);
 
       default:
         PR_NOT_REACHED("unrecognized EKU");
-        return der::Fail(SEC_ERROR_LIBRARY_FAILURE);
+        return Fail(SEC_ERROR_LIBRARY_FAILURE);
     }
   }
 
@@ -559,7 +559,7 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
   if (encodedExtendedKeyUsage) {
     bool found = requiredEKU == KeyPurposeId::anyExtendedKeyUsage;
 
-    der::Input input;
+    Input input;
     if (input.Init(encodedExtendedKeyUsage->data,
                    encodedExtendedKeyUsage->len) != Success) {
       return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);

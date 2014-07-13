@@ -25,7 +25,6 @@
 #ifndef mozilla_pkix__pkixutil_h
 #define mozilla_pkix__pkixutil_h
 
-#include "pkix/Result.h"
 #include "pkixder.h"
 #include "prerror.h"
 #include "seccomon.h"
@@ -144,7 +143,7 @@ private:
   NonOwningSECItem nameConstraints;
   NonOwningSECItem subjectAltName;
 
-  Result RememberExtension(der::Input& extnID, const SECItem& extnValue,
+  Result RememberExtension(Input& extnID, const SECItem& extnValue,
                                 /*out*/ bool& understood);
 
   BackCert(const BackCert&) /* = delete */;
@@ -171,7 +170,7 @@ public:
   Result Append(const SECItem& der)
   {
     if (numItems >= MAX_LENGTH) {
-      return Fail(RecoverableError, SEC_ERROR_INVALID_ARGS);
+      return Fail(SEC_ERROR_INVALID_ARGS);
     }
     items[numItems] = &der;
     ++numItems;

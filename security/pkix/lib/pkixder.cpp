@@ -28,14 +28,6 @@
 
 namespace mozilla { namespace pkix { namespace der {
 
-// not inline
-Result
-Fail(PRErrorCode errorCode)
-{
-  PR_SetError(errorCode, 0);
-  return MapSECStatus(SECFailure);
-}
-
 namespace internal {
 
 // Too complicated to be inline

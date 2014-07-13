@@ -163,10 +163,10 @@ public:
     PR_ASSERT(item->data);
 
     if (numItems >= MaxSequenceItems) {
-      return der::Fail(SEC_ERROR_INVALID_ARGS);
+      return Fail(SEC_ERROR_INVALID_ARGS);
     }
     if (length + item->len > 65535) {
-      return der::Fail(SEC_ERROR_INVALID_ARGS);
+      return Fail(SEC_ERROR_INVALID_ARGS);
     }
 
     contents[numItems] = item;
