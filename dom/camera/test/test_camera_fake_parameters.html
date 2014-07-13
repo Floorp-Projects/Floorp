@@ -115,6 +115,61 @@ var tests = [
     }
   },
   {
+    key: "fake-high-memory-platform",
+    prep: function setupFakeHighMemoryPlatform(test) {
+      test.setFakeParameters("scene-mode-values=none,snow,beach,hdr,nothdr", function () {
+        run();
+      });
+    },
+    test: function testFakeHighMemoryPlatform(cam, cap) {
+      ok(cap.sceneModes.length == 5, "scene modes length = " + cap.zoomRatios.length);
+
+      // make sure expected values are present and can be set
+      [ "none", "snow", "beach", "hdr", "nothdr" ].forEach(function(mode) {
+        ok(cap.sceneModes.indexOf(mode) != -1, "Scene mode '" + mode + "' is present");
+        cam.sceneMode = mode;
+        ok(cam.sceneMode == mode, "Scene mode '" + cam.sceneMode + "' is set");
+      });
+
+      next();
+    }
+  },
+  {
+    key: "fake-low-memory-platform",
+    prep: function setupFakeLowMemoryPlatform(test) {
+      test.setFakeLowMemoryPlatform(function() {
+        test.setFakeParameters("scene-mode-values=none,hdr,snow,beach,hdr,nothdr", function () {
+          run();
+        });
+      });
+    },
+    test: function testFakeLowMemoryPlatform(cam, cap) {
+      ok(cap.sceneModes.length == 4, "scene modes length = " + cap.zoomRatios.length);
+
+      // make sure expected values are present and can be set
+      [ "none", "snow", "beach", "nothdr" ].forEach(function(mode) {
+        ok(cap.sceneModes.indexOf(mode) != -1, "Scene mode '" + mode + "' is present");
+        cam.sceneMode = mode;
+        ok(cam.sceneMode == mode, "Scene mode '" + cam.sceneMode + "' is set");
+      });
+
+      // make sure unsupported values have been removed, and can't be set
+      var sceneMode = cam.sceneMode;
+      [ "hdr" ].forEach(function(mode) {
+        ok(cap.sceneModes.indexOf(mode) == -1, "Scene mode '" + mode + "' is not present");
+        try {
+          cam.sceneMode = mode;
+        } catch(e) {
+        }
+        ok(cam.sceneMode != mode, "Scene mode '" + cam.sceneMode + "' is still set, '"
+          + mode + "' rejected");
+      });
+      ok(cam.sceneMode == sceneMode, "Scene mode '" + cam.sceneMode + "' is still set");
+
+      next();
+    }
+  },
+  {
     key: "fake-iso",
     prep: function setupFakeIso(test) {
       // we should recognize 'auto', 'hjr', and numeric modes; anything else
@@ -129,20 +184,14 @@ var tests = [
       ok(cap.isoModes.length == 7, "ISO modes length = " + cap.isoModes.length);
 
       // make sure we're not leaking any unexpected values formats
-      ok(cap.isoModes.indexOf("ISO_HJR") == -1, "ISO mode 'ISO_HJR' does not appear");
-      ok(cap.isoModes.indexOf("_HJR") == -1, "ISO mode '_HJR' does not appear");
-      ok(cap.isoModes.indexOf("HJR") == -1, "ISO mode 'HJR' does not appear");
-      ok(cap.isoModes.indexOf("ISO100") == -1, "ISO mode 'ISO100' does not appear");
-      ok(cap.isoModes.indexOf("ISO200") == -1, "ISO mode 'ISO200' does not appear");
-      ok(cap.isoModes.indexOf("ISO800") == -1, "ISO mode 'ISO800' does not appear");
+      [ "ISO_HJR", "_HJR", "HJR", "ISO100", "ISO200", "ISO800" ].forEach(function(iso) {
+        ok(cap.isoModes.indexOf(iso) == -1, "ISO mode '" + iso + "' does not appear");
+      });
 
       // make sure any weird values are dropped entirely
-      ok(cap.isoModes.indexOf("foo") == -1, "Unknown ISO mode 'foo' is ignored");
-      ok(cap.isoModes.indexOf("ISObar") == -1, "Unknown ISO mode 'ISObar' is ignored");
-      ok(cap.isoModes.indexOf("bar") == -1, "Unknown ISO mode 'bar' is ignored");
-      ok(cap.isoModes.indexOf("ISO150moz") == -1, "Unknown ISO mode 'ISO150moz' is ignored");
-      ok(cap.isoModes.indexOf("150moz") == -1, "Unknown ISO mode '150moz' is ignored");
-      ok(cap.isoModes.indexOf("150") == -1, "Unknown ISO mode '150' is ignored");
+      [ "foo", "ISObar", "bar", "ISO150moz", "150moz", "150" ].forEach(function(iso) {
+        ok(cap.isoModes.indexOf(iso) == -1, "Unknown ISO mode '" + iso + "' is ignored");
+      });
 
       // make sure expected values are present
       [ "auto", "hjr", "100", "200", "400", "800", "1600" ].forEach(function(iso) {
