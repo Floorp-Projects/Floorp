@@ -1,0 +1,27 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style id="style">p { color: red; }</style>
+<script>
+<![CDATA[
+
+function boom()
+{
+	var styleText = "p { color: green; }";
+	
+	// Make 2^17 rules
+	for (var i = 0; i < 17; ++i) {
+	  styleText += styleText;
+	}
+
+	document.getElementById("style").firstChild.data = styleText;
+    
+    document.body.appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", "mrow"));
+}
+
+]]>
+</script>
+</head>
+
+<body onload="boom();"><p>This should be green</p></body>
+
+</html>
