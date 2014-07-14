@@ -944,7 +944,7 @@ MipsDebugger::debug()
                             value = getRegisterValue(reg.code());
                             printf("%s: 0x%08x %d \n", arg1, value, value);
                         } else if (fReg.code() != FloatRegisters::Invalid) {
-                            MOZ_CRASH("NYI");
+                            MOZ_ASSUME_UNREACHABLE("NYI");
                         } else {
                             printf("%s unrecognized\n", arg1);
                         }
@@ -1865,7 +1865,7 @@ Simulator::softwareInterrupt(SimInstruction *instr)
     // We first check if we met a call_rt_redirected.
     if (instr->instructionBits() == kCallRedirInstr) {
 #if !defined(USES_O32_ABI)
-        MOZ_CRASH("Only O32 ABI supported.");
+        MOZ_ASSUME_UNREACHABLE("Only O32 ABI supported.");
 #else
         Redirection *redirection = Redirection::FromSwiInstruction(instr);
         int32_t arg0 = getRegister(a0);
@@ -2021,7 +2021,7 @@ Simulator::softwareInterrupt(SimInstruction *instr)
             break;
           }
           default:
-            MOZ_CRASH("call");
+            MOZ_ASSUME_UNREACHABLE("call");
         }
 
         setRegister(ra, saved_ra);
@@ -2146,7 +2146,7 @@ Simulator::signalExceptions()
 {
     for (int i = 1; i < kNumExceptions; i++) {
         if (exceptions[i] != 0)
-            MOZ_CRASH("Error: Exception raised.");
+            MOZ_ASSUME_UNREACHABLE("Error: Exception raised.");
     }
 }
 
@@ -3298,7 +3298,7 @@ Simulator::branchDelayInstructionDecode(SimInstruction *instr)
     }
 
     if (instr->isForbiddenInBranchDelay()) {
-        MOZ_CRASH("Eror:Unexpected opcode in a branch delay slot.");
+        MOZ_ASSUME_UNREACHABLE("Eror:Unexpected opcode in a branch delay slot.");
     }
     instructionDecode(instr);
 }

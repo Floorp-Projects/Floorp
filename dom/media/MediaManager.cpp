@@ -2038,6 +2038,19 @@ GetUserMediaCallbackMediaStreamListener::NotifyFinished(MediaStreamGraph* aGraph
 }
 
 // Called from the MediaStreamGraph thread
+void
+GetUserMediaCallbackMediaStreamListener::NotifyDirectListeners(MediaStreamGraph* aGraph,
+                                                               bool aHasListeners)
+{
+  nsRefPtr<MediaOperationRunnable> runnable;
+  runnable = new MediaOperationRunnable(MEDIA_DIRECT_LISTENERS,
+                                        this, nullptr, nullptr,
+                                        mAudioSource, mVideoSource,
+                                        aHasListeners, mWindowID, nullptr);
+  mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+}
+
+// Called from the MediaStreamGraph thread
 // this can be in response to our own RemoveListener() (via ::Remove()), or
 // because the DOM GC'd the DOMLocalMediaStream/etc we're attached to.
 void

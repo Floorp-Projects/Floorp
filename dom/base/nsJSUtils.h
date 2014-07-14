@@ -157,6 +157,18 @@ AssignJSString(JSContext *cx, T &dest, JSString *s)
   return true;
 }
 
+inline void
+AssignJSFlatString(nsAString &dest, JSFlatString *s)
+{
+  size_t len = js::GetFlatStringLength(s);
+  static_assert(js::MaxStringLength < (1 << 28),
+                "Shouldn't overflow here or in SetCapacity");
+  dest.SetCapacity(len + 1);
+  js::CopyFlatStringChars(dest.BeginWriting(), s, len);
+  dest.BeginWriting()[len] = '\0';
+  dest.SetLength(len);
+}
+
 class nsAutoJSString : public nsAutoString
 {
 public:

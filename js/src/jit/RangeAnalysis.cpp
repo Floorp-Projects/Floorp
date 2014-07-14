@@ -503,7 +503,7 @@ Range::Range(const MDefinition *def)
             wrapAroundToBoolean();
             break;
           case MIRType_None:
-            MOZ_CRASH("Asking for the range of an instruction with no value");
+            MOZ_ASSUME_UNREACHABLE("Asking for the range of an instruction with no value");
           default:
             break;
         }
@@ -519,7 +519,7 @@ Range::Range(const MDefinition *def)
             setInt32(0, 1);
             break;
           case MIRType_None:
-            MOZ_CRASH("Asking for the range of an instruction with no value");
+            MOZ_ASSUME_UNREACHABLE("Asking for the range of an instruction with no value");
           default:
             setUnknown();
             break;

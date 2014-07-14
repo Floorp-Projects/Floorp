@@ -210,6 +210,8 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_PairedDevicePropertiesRequest());
     case Request::TConnectedDevicePropertiesRequest:
       return actor->DoRequest(aRequest.get_ConnectedDevicePropertiesRequest());
+    case Request::TFetchUuidsRequest:
+      return actor->DoRequest(aRequest.get_FetchUuidsRequest());
     case Request::TSetPinCodeRequest:
       return actor->DoRequest(aRequest.get_SetPinCodeRequest());
     case Request::TSetPasskeyRequest:
@@ -432,13 +434,27 @@ BluetoothRequestParent::DoRequest(const PairedDevicePropertiesRequest& aRequest)
 }
 
 bool
-BluetoothRequestParent::DoRequest(const ConnectedDevicePropertiesRequest& aRequest)
+BluetoothRequestParent::DoRequest(
+    const ConnectedDevicePropertiesRequest& aRequest)
 {
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TConnectedDevicePropertiesRequest);
   nsresult rv =
     mService->GetConnectedDevicePropertiesInternal(aRequest.serviceUuid(),
                                                    mReplyRunnable.get());
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const FetchUuidsRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TFetchUuidsRequest);
+  nsresult rv =
+    mService->FetchUuidsInternal(aRequest.address(), mReplyRunnable.get());
+
   NS_ENSURE_SUCCESS(rv, false);
 
   return true;

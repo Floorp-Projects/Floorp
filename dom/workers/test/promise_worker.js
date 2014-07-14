@@ -556,14 +556,6 @@ function promiseRaceValuesArray() {
 }
 
 function promiseRacePromiseArray() {
-  function timeoutPromise(n) {
-    return new Promise(function(resolve) {
-      setTimeout(function() {
-        resolve(n);
-      }, n);
-    });
-  }
-
   var arr = [
     new Promise(function(resolve) {
       resolve("first");
@@ -674,7 +666,7 @@ function promiseResolveThenableCleanStack() {
   var thenable = { then: immed };
   var results = [];
 
-  Promise.resolve(thenable).then(incX);
+  var p = Promise.resolve(thenable).then(incX);
   results.push(x);
 
   // check what happens after all "next cycle" steps
@@ -683,8 +675,11 @@ function promiseResolveThenableCleanStack() {
     results.push(x);
     // Result should be [0, 2] since `thenable` will be called async.
     is(results[0], 0, "Expected thenable to be called asynchronously");
-    is(results[1], 2, "Expected thenable to be called asynchronously");
-    runTest();
+    // See Bug 1023547 comment 13 for why this check has to be gated on p.
+    p.then(function() {
+      is(results[1], 2, "Expected thenable to be called asynchronously");
+      runTest();
+    });
   },1000);
 }
 
