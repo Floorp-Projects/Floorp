@@ -394,7 +394,7 @@ nsMenuPopupFrame* GetPopupToMoveOrResize(nsIFrame* aFrame)
     return nullptr;
 
   // no point moving or resizing hidden popups
-  if (menuPopupFrame->PopupState() != ePopupOpenAndVisible)
+  if (!menuPopupFrame->IsVisible())
     return nullptr;
 
   nsIWidget* widget = menuPopupFrame->GetWidget();
@@ -1390,7 +1390,11 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
     // from hiding.
     if (status == nsEventStatus_eConsumeNoDefault &&
         !popupFrame->IsInContentShell()) {
-      popupFrame->SetPopupState(ePopupOpenAndVisible);
+      // XXXndeakin
+      // If an attempt was made to hide this popup before the popupshown event
+      // fired, then ePopupShown is set here even though it should be
+      // ePopupVisible. This probably isn't worth the hassle of handling.
+      popupFrame->SetPopupState(ePopupShown);
     }
     else {
       // If the popup has an animate attribute and it is not set to false, assume
@@ -1503,10 +1507,9 @@ nsXULPopupManager::GetVisiblePopups(nsTArray<nsIFrame *>& aPopups)
   nsMenuChainItem* item = mPopups;
   for (int32_t list = 0; list < 2; list++) {
     while (item) {
-      // Skip panels which are not open and visible as well as popups that
+      // Skip panels which are not visible as well as popups that
       // are transparent to mouse events.
-      if (item->Frame()->PopupState() == ePopupOpenAndVisible &&
-          !item->Frame()->IsMouseTransparent()) {
+      if (item->Frame()->IsVisible() && !item->Frame()->IsMouseTransparent()) {
         aPopups.AppendElement(item->Frame());
       }
 
