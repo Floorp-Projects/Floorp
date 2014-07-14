@@ -468,6 +468,15 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        "uniform_buffer_object",
+        310, // OpenGL version
+        300, // OpenGL ES version
+        GLContext::ARB_uniform_buffer_object,
+        {
+            GLContext::Extensions_End
+        }
+    },
+    {
         "vertex_array_object",
         300, // OpenGL version
         300, // OpenGL ES version
