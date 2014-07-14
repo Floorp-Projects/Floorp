@@ -442,7 +442,6 @@ public:
       case MEDIA_DIRECT_LISTENERS:
         {
           NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
-          nsresult rv;
           if (mVideoSource) {
             mVideoSource->SetDirectListeners(mBool);
           }
