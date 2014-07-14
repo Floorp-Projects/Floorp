@@ -395,6 +395,12 @@ WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
     if (!tex)
         return ErrorInvalidOperation("%s: no texture is bound to this target");
 
+    if (tex->IsImmutable()) {
+        if (!sub) {
+            return ErrorInvalidOperation("copyTexImage2D: disallowed because the texture bound to this target has already been made immutable by texStorage2D");
+        }
+    }
+
     if (CanvasUtils::CheckSaneSubrectSize(x, y, width, height, framebufferWidth, framebufferHeight)) {
         if (sub)
             gl->fCopyTexSubImage2D(texImageTarget.get(), level, xoffset, yoffset, x, y, width, height);
@@ -3336,10 +3342,17 @@ WebGLContext::CompressedTexImage2D(GLenum rawTexImgTarget,
 
     const TexImageTarget texImageTarget(rawTexImgTarget);
 
-    MakeContextCurrent();
-    gl->fCompressedTexImage2D(texImageTarget.get(), level, internalformat, width, height, border, byteLength, view.Data());
     WebGLTexture* tex = activeBoundTextureForTexImageTarget(texImageTarget);
     MOZ_ASSERT(tex);
+    if (tex->IsImmutable()) {
+        return ErrorInvalidOperation(
+            "compressedTexImage2D: disallowed because the texture bound to "
+            "this target has already been made immutable by texStorage2D");
+    }
+
+    MakeContextCurrent();
+    gl->fCompressedTexImage2D(texImageTarget.get(), level, internalformat, width, height, border, byteLength, view.Data());
+
     tex->SetImageInfo(texImageTarget, level, width, height, internalformat, LOCAL_GL_UNSIGNED_BYTE,
                       WebGLImageDataStatus::InitializedImageData);
 }
@@ -3687,6 +3700,11 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level,
     if (!tex)
         return ErrorInvalidOperation("texImage2D: no texture is bound to this target");
 
+    if (tex->IsImmutable()) {
+        return ErrorInvalidOperation(
+            "texImage2D: disallowed because the texture "
+            "bound to this target has already been made immutable by texStorage2D");
+    }
     MakeContextCurrent();
 
     nsAutoArrayPtr<uint8_t> convertedData;
