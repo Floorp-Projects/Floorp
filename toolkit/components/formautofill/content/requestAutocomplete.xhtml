@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % requestAutocompleteDTD SYSTEM "chrome://formautofill/locale/requestAutocomplete.dtd">
+  %requestAutocompleteDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd" >
+  %globalDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>requestAutocomplete demo window</title>
+    <link rel="stylesheet"
+          href="chrome://mozapps/skin/formautofill/requestAutocomplete.css" />
+    <script type="application/javascript;version=1.7"
+            src="chrome://formautofill/content/requestAutocomplete.js" />
+  </head>
+  <body dir="&locale.dir;" onload="RequestAutocompleteDialog.onLoad();">
+    <h1>requestAutocomplete</h1>
+    <p>This is a demo window.</p>
+    <input id="accept" type="button" value="(OK)"
+           onclick="RequestAutocompleteDialog.onAccept();" />
+    <input id="cancel" type="button" value="(Cancel)"
+           onclick="RequestAutocompleteDialog.onCancel();" />
+  </body>
+</html>

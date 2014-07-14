@@ -10680,13 +10680,9 @@ StkCommandParamsFactoryObject.prototype = {
 
     let ctlv = this.context.StkProactiveCmdHelper.searchForTag(
         COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
-    if (!ctlv) {
-      this.context.RIL.sendStkTerminalResponse({
-        command: cmdDetails,
-        resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
-      throw new Error("Stk Event Notfiy: Required value missing : Alpha ID");
+    if (ctlv) {
+      textMsg.text = ctlv.value.identifier;
     }
-    textMsg.text = ctlv.value.identifier;
 
     return textMsg;
   },
@@ -12267,6 +12263,8 @@ ICCIOHelperObject.prototype[ICC_COMMAND_UPDATE_RECORD] = function ICC_COMMAND_UP
  */
 function ICCRecordHelperObject(aContext) {
   this.context = aContext;
+  // Cache the possible free record id for all files, use fileId as key.
+  this._freeRecordIds = {};
 }
 ICCRecordHelperObject.prototype = {
   context: null,
@@ -12744,6 +12742,11 @@ ICCRecordHelperObject.prototype = {
   },
 
   /**
+   * Cache the possible free record id for all files.
+   */
+  _freeRecordIds: null,
+
+  /**
    * Find free record id.
    *
    * @param fileId      EF id.
@@ -12769,8 +12772,11 @@ ICCRecordHelperObject.prototype = {
         }
       }
 
+      let nextRecord = (options.p1 % options.totalRecords) + 1;
+
       if (readLen == octetLen) {
-        // Find free record.
+        // Find free record, assume next record is probably free.
+        this._freeRecordIds[fileId] = nextRecord;
         if (onsuccess) {
           onsuccess(options.p1);
         }
@@ -12781,10 +12787,12 @@ ICCRecordHelperObject.prototype = {
 
       Buf.readStringDelimiter(strLen);
 
-      if (options.p1 < options.totalRecords) {
-        ICCIOHelper.loadNextRecord(options);
+      if (nextRecord !== recordNumber) {
+        options.p1 = nextRecord;
+        this.context.RIL.iccIO(options);
       } else {
         // No free record found.
+        delete this._freeRecordIds[fileId];
         if (DEBUG) {
           this.context.debug(CONTACT_ERR_NO_FREE_RECORD_FOUND);
         }
@@ -12792,7 +12800,10 @@ ICCRecordHelperObject.prototype = {
       }
     }
 
+    // Start searching free records from the possible one.
+    let recordNumber = this._freeRecordIds[fileId] || 1;
     ICCIOHelper.loadLinearFixedEF({fileId: fileId,
+                                   recordNumber: recordNumber,
                                    callback: callback.bind(this),
                                    onerror: onerror});
   },
@@ -14364,6 +14375,11 @@ ICCContactHelperObject.prototype = {
     }
   },
 
+  /**
+   * Cache the pbr index of the possible free record.
+   */
+  _freePbrIndex: 0,
+
    /**
     * Find free ADN record id in USIM.
     *
@@ -14374,8 +14390,17 @@ ICCContactHelperObject.prototype = {
   findUSimFreeADNRecordId: function(pbrs, onsuccess, onerror) {
     let ICCRecordHelper = this.context.ICCRecordHelper;
 
+    function callback(pbrIndex, recordId) {
+      // Assume other free records are probably in the same phonebook set.
+      this._freePbrIndex = pbrIndex;
+      onsuccess(pbrIndex, recordId);
+    }
+
+    let nextPbrIndex = -1;
     (function findFreeRecordId(pbrIndex) {
-      if (pbrIndex >= pbrs.length) {
+      if (nextPbrIndex === this._freePbrIndex) {
+        // No free record found, reset the pbr index of free record.
+        this._freePbrIndex = 0;
         if (DEBUG) {
           this.context.debug(CONTACT_ERR_NO_FREE_RECORD_FOUND);
         }
@@ -14384,11 +14409,12 @@ ICCContactHelperObject.prototype = {
       }
 
       let pbr = pbrs[pbrIndex];
+      nextPbrIndex = (pbrIndex + 1) % pbrs.length;
       ICCRecordHelper.findFreeRecordId(
         pbr.adn.fileId,
-        onsuccess.bind(this, pbrIndex),
-        findFreeRecordId.bind(null, pbrIndex + 1));
-    })(0);
+        callback.bind(this, pbrIndex),
+        findFreeRecordId.bind(this, nextPbrIndex));
+    }).call(this, this._freePbrIndex);
   },
 
   /**

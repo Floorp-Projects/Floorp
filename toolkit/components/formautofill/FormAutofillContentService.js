@@ -16,6 +16,216 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "FormAutofill",
+                                  "resource://gre/modules/FormAutofill.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
+
+/**
+ * Handles requestAutocomplete for a DOM Form element.
+ */
+function FormHandler(aForm, aWindow) {
+  this.form = aForm;
+  this.window = aWindow;
+
+  this.fieldDetails = [];
+}
+
+FormHandler.prototype = {
+  /**
+   * DOM Form element to which this object is attached.
+   */
+  form: null,
+
+  /**
+   * nsIDOMWindow to which this object is attached.
+   */
+  window: null,
+
+  /**
+   * Array of collected data about relevant form fields.  Each item is an object
+   * storing the identifying details of the field and a reference to the
+   * originally associated element from the form.
+   *
+   * The "section", "addressType", "contactType", and "fieldName" values are
+   * used to identify the exact field when the serializable data is received
+   * from the requestAutocomplete user interface.  There cannot be multiple
+   * fields which have the same exact combination of these values.
+   *
+   * A direct reference to the associated element cannot be sent to the user
+   * interface because processing may be done in the parent process.
+   */
+  fieldDetails: null,
+
+  /**
+   * Handles requestAutocomplete and generates the DOM events when finished.
+   */
+  handleRequestAutocomplete: Task.async(function* () {
+    // Start processing the request asynchronously.  At the end, the "reason"
+    // variable will contain the outcome of the operation, where an empty
+    // string indicates that an unexpected exception occurred.
+    let reason = "";
+    try {
+      reason = yield this.promiseRequestAutocomplete();
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+
+    // The type of event depends on whether this is a success condition.
+    let event = (reason == "success")
+                ? new this.window.Event("autocomplete", { bubbles: true })
+                : new this.window.AutocompleteErrorEvent("autocompleteerror",
+                                                         { bubbles: true,
+                                                           reason: reason });
+    yield this.waitForTick();
+    this.form.dispatchEvent(event);
+  }),
+
+  /**
+   * Handles requestAutocomplete and returns the outcome when finished.
+   *
+   * @return {Promise}
+   * @resolves The "reason" value indicating the outcome of the
+   *           requestAutocomplete operation, including "success" if the
+   *           operation completed successfully.
+   */
+  promiseRequestAutocomplete: Task.async(function* () {
+    let data = this.collectFormFields();
+    if (!data) {
+      return "disabled";
+    }
+
+    let ui = yield FormAutofill.integration.createRequestAutocompleteUI(data);
+    let result = yield ui.show();
+    if (result.canceled) {
+      return "cancel";
+    }
+
+    this.autofillFormFields(result);
+
+    return "success";
+  }),
+
+  /**
+   * Returns information from the form about fields that can be autofilled, and
+   * populates the fieldDetails array on this object accordingly.
+   *
+   * @returns Serializable data structure that can be sent to the user
+   *          interface, or null if the operation failed because the constraints
+   *          on the allowed fields were not honored.
+   */
+  collectFormFields: function () {
+    let autofillData = {
+      sections: [],
+    };
+
+    for (let element of this.form.elements) {
+      // Query the interface and exclude elements that cannot be autocompleted.
+      if (!(element instanceof Ci.nsIDOMHTMLInputElement)) {
+        continue;
+      }
+
+      // Exclude elements to which no autocomplete field has been assigned.
+      let info = element.getAutocompleteInfo();
+      if (!info.fieldName || ["on", "off"].indexOf(info.fieldName) != -1) {
+        continue;
+      }
+
+      // Store the association between the field metadata and the element.
+      if (this.fieldDetails.some(f => f.section == info.section &&
+                                      f.addressType == info.addressType &&
+                                      f.contactType == info.contactType &&
+                                      f.fieldName == info.fieldName)) {
+        // A field with the same identifier already exists.
+        return null;
+      }
+      this.fieldDetails.push({
+        section: info.section,
+        addressType: info.addressType,
+        contactType: info.contactType,
+        fieldName: info.fieldName,
+        element: element,
+      });
+
+      // The first level is the custom section.
+      let section = autofillData.sections
+                                .find(s => s.name == info.section);
+      if (!section) {
+        section = {
+          name: info.section,
+          addressSections: [],
+        };
+        autofillData.sections.push(section);
+      }
+
+      // The second level is the address section.
+      let addressSection = section.addressSections
+                                  .find(s => s.addressType == info.addressType);
+      if (!addressSection) {
+        addressSection = {
+          addressType: info.addressType,
+          fields: [],
+        };
+        section.addressSections.push(addressSection);
+      }
+
+      // The third level contains all the fields within the section.
+      let field = {
+        fieldName: info.fieldName,
+        contactType: info.contactType,
+      };
+      addressSection.fields.push(field);
+    }
+
+    return autofillData;
+  },
+
+  /**
+   * Processes form fields that can be autofilled, and populates them with the
+   * data provided by RequestAutocompleteUI.
+   *
+   * @param aAutofillResult
+   *        Data returned by the user interface.
+   *        {
+   *          fields: [
+   *            section: Value originally provided to the user interface.
+   *            addressType: Value originally provided to the user interface.
+   *            contactType: Value originally provided to the user interface.
+   *            fieldName: Value originally provided to the user interface.
+   *            value: String with which the field should be updated.
+   *          ],
+   *        }
+   */
+  autofillFormFields: function (aAutofillResult) {
+    for (let field of aAutofillResult.fields) {
+      // Get the field details, if it was processed by the user interface.
+      let fieldDetail = this.fieldDetails
+                            .find(f => f.section == field.section &&
+                                       f.addressType == field.addressType &&
+                                       f.contactType == field.contactType &&
+                                       f.fieldName == field.fieldName);
+      if (!fieldDetail) {
+        continue;
+      }
+
+      fieldDetail.element.value = field.value;
+    }
+  },
+
+  /**
+   * Waits for one tick of the event loop before resolving the returned promise.
+   */
+  waitForTick: function () {
+    return new Promise(function (resolve) {
+      Services.tm.currentThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
+    });
+  },
+};
+
+/**
+ * Implements a service used by DOM content to request Form Autofill, in
+ * particular when the requestAutocomplete method of Form objects is invoked.
+ */
 function FormAutofillContentService() {
 }
 
@@ -25,16 +235,8 @@ FormAutofillContentService.prototype = {
 
   // nsIFormAutofillContentService
   requestAutocomplete: function (aForm, aWindow) {
-    Services.console.logStringMessage("requestAutocomplete not implemented.");
-
-    // We will return "disabled" for now.
-    let event = new aWindow.AutocompleteErrorEvent("autocompleteerror",
-                                                   { bubbles: true,
-                                                     reason: "disabled" });
-
-    // Ensure the event is always dispatched on the next tick.
-    Services.tm.currentThread.dispatch(() => aForm.dispatchEvent(event),
-                                       Ci.nsIThread.DISPATCH_NORMAL);
+    new FormHandler(aForm, aWindow).handleRequestAutocomplete()
+                                   .catch(Cu.reportError);
   },
 };
 

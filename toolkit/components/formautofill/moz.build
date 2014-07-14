@@ -29,6 +29,11 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
+    'content/RequestAutocompleteUI.jsm',
     'FormAutofill.jsm',
     'FormAutofillIntegration.jsm',
+]
+
+JAR_MANIFESTS += [
+    'jar.mn',
 ]

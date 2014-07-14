@@ -7,6 +7,7 @@
 
     <style name="TabsList" parent="TabsListBase">
          <item name="android:orientation">horizontal</item>
+         <item name="android:scrollbars">horizontal</item>
     </style>
 
     <style name="TabsItem">

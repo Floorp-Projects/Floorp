@@ -20,10 +20,6 @@
 #define BAND_76000_108000_kHz 2
 #define BAND_76000_90000_kHz  3
 
-#define CHANNEL_WIDTH_200KHZ 200
-#define CHANNEL_WIDTH_100KHZ 100
-#define CHANNEL_WIDTH_50KHZ  50
-
 #define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
 #define SETTING_KEY_AIRPLANEMODE_ENABLED "airplaneMode.enabled"
 
@@ -77,17 +73,28 @@ FMRadioService::FMRadioService()
       break;
   }
 
-  switch (Preferences::GetInt("dom.fmradio.channelWidth",
-                              CHANNEL_WIDTH_100KHZ)) {
-    case CHANNEL_WIDTH_200KHZ:
-      mChannelWidthInKHz = 200;
+  mChannelWidthInKHz = Preferences::GetInt("dom.fmradio.channelWidth", 100);
+  switch (mChannelWidthInKHz) {
+    case 50:
+    case 100:
+    case 200:
       break;
-    case CHANNEL_WIDTH_50KHZ:
-      mChannelWidthInKHz = 50;
-      break;
-    case CHANNEL_WIDTH_100KHZ:
     default:
+      NS_WARNING("Invalid channel width specified in dom.fmradio.channelwidth");
       mChannelWidthInKHz = 100;
+      break;
+  }
+
+  mPreemphasis = Preferences::GetInt("dom.fmradio.preemphasis", 50);
+  switch (mPreemphasis) {
+    // values in microseconds
+    case 0:
+    case 50:
+    case 75:
+      break;
+    default:
+      NS_WARNING("Invalid preemphasis specified in dom.fmradio.preemphasis");
+      mPreemphasis = 50;
       break;
   }
 
@@ -110,10 +117,13 @@ FMRadioService::~FMRadioService()
 class EnableRunnable MOZ_FINAL : public nsRunnable
 {
 public:
-  EnableRunnable(int32_t aUpperLimit, int32_t aLowerLimit, int32_t aSpaceType)
+  EnableRunnable(uint32_t aUpperLimit, uint32_t aLowerLimit, uint32_t aSpaceType, uint32_t aPreemphasis)
     : mUpperLimit(aUpperLimit)
     , mLowerLimit(aLowerLimit)
-    , mSpaceType(aSpaceType) { }
+    , mSpaceType(aSpaceType)
+    , mPreemphasis(aPreemphasis)
+  {
+  }
 
   NS_IMETHOD Run()
   {
@@ -121,6 +131,7 @@ public:
     info.upperLimit() = mUpperLimit;
     info.lowerLimit() = mLowerLimit;
     info.spaceType() = mSpaceType;
+    info.preEmphasis() = mPreemphasis;
 
     EnableFMRadio(info);
 
@@ -128,9 +139,10 @@ public:
   }
 
 private:
-  int32_t mUpperLimit;
-  int32_t mLowerLimit;
-  int32_t mSpaceType;
+  uint32_t mUpperLimit;
+  uint32_t mLowerLimit;
+  uint32_t mSpaceType;
+  uint32_t mPreemphasis;
 };
 
 /**
@@ -165,7 +177,8 @@ public:
       EnableRunnable* runnable =
         new EnableRunnable(fmRadioService->mUpperBoundInKHz,
                            fmRadioService->mLowerBoundInKHz,
-                           fmRadioService->mChannelWidthInKHz);
+                           fmRadioService->mChannelWidthInKHz,
+                           fmRadioService->mPreemphasis);
       NS_DispatchToMainThread(runnable);
     } else {
       // Airplane mode is enabled, set the state back to Disabled.
@@ -457,7 +470,8 @@ FMRadioService::Enable(double aFrequencyInMHz,
 
   NS_DispatchToMainThread(new EnableRunnable(mUpperBoundInKHz,
                                              mLowerBoundInKHz,
-                                             mChannelWidthInKHz));
+                                             mChannelWidthInKHz,
+                                             mPreemphasis));
 }
 
 void
