@@ -55,21 +55,27 @@ for (var i=0; i<gPlayTests.length; i++) {
   }
 }
 
-if (first && second) {
-  s = document.createElement('source');
-  s.type = first.type;
-  s.src = first.name;
-  v.appendChild(s);
-  v.autoplay = true;
-  v.addEventListener("ended", ended, false);
-  document.body.appendChild(v);
-  SimpleTest.waitForExplicitFinish();
-} else {
-  todo(false, "Need at least two media of supported types for this test!");
+function runTest() {
+  if (first && second) {
+    s = document.createElement('source');
+    s.type = first.type;
+    s.src = first.name;
+    v.appendChild(s);
+    v.autoplay = true;
+    v.addEventListener("ended", ended, false);
+    document.body.appendChild(v);
+  } else {
+    todo(false, "Need at least two media of supported types for this test!");
+    SimpleTest.finish();
+  }
 }
 
+function startTest() {
+  setMediaTestsPrefs(runTest);
+}
 
-
+addLoadEvent(startTest);
+SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>
