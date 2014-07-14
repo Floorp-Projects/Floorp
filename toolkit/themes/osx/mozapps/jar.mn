@@ -57,6 +57,7 @@ toolkit.jar:
   skin/classic/mozapps/passwordmgr/key-16.png                     (passwordmgr/key-16.png)
   skin/classic/mozapps/passwordmgr/key-16@2x.png                  (passwordmgr/key-16@2x.png)
   skin/classic/mozapps/passwordmgr/key-64.png                     (passwordmgr/key-64.png)
+  skin/classic/mozapps/formautofill/requestAutocomplete.css       (../../shared/formautofill/requestAutocomplete.css)
   skin/classic/mozapps/plugins/pluginProblem.css                  (../../shared/plugins/pluginProblem.css)
   skin/classic/mozapps/aboutNetworking.css                        (../../shared/aboutNetworking.css)
   skin/classic/mozapps/plugins/contentPluginActivate.png          (../../shared/plugins/contentPluginActivate.png)
