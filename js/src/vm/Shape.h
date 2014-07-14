@@ -130,7 +130,10 @@ static const uint32_t SHAPE_MAXIMUM_SLOT = JS_BIT(24) - 2;
 struct ShapeTable {
     static const uint32_t HASH_BITS     = mozilla::tl::BitSize<HashNumber>::value;
     static const uint32_t MIN_ENTRIES   = 7;
-    static const uint32_t MIN_SIZE_LOG2 = 4;
+
+    // This value is low because it's common for a ShapeTable to be created
+    // with an entryCount of zero.
+    static const uint32_t MIN_SIZE_LOG2 = 2;
     static const uint32_t MIN_SIZE      = JS_BIT(MIN_SIZE_LOG2);
 
     int             hashShift;          /* multiplicative hash shift */
