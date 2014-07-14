@@ -445,6 +445,18 @@ class Descriptor(DescriptorProvider):
                 if permissionsIndex is not None:
                     self.checkPermissionsIndicesForMembers[m.identifier.name] = permissionsIndex
 
+            self.featureDetectibleThings = set()
+            if self.interface.getExtendedAttribute("FeatureDetectible") is not None:
+                if self.interface.getNavigatorProperty():
+                    self.featureDetectibleThings.add("Navigator.%s" % self.interface.getNavigatorProperty())
+                else:
+                    assert(self.interface.ctor() is not None)
+                    self.featureDetectibleThings.add(self.interface.identifier.name)
+
+            for m in self.interface.members:
+                if m.getExtendedAttribute("FeatureDetectible") is not None:
+                    self.featureDetectibleThings.add("%s.%s" % (self.interface.identifier.name, m.identifier.name))
+
         # Build the prototype chain.
         self.prototypeChain = []
         parent = interface
