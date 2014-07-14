@@ -667,7 +667,7 @@ public:
    * -moz-win-exclude-glass style. Used in setting glass margins on
    * Windows.
    */  
-  void AddExcludedGlassRegion(nsRect &bounds) {
+  void AddExcludedGlassRegion(const nsRegion& bounds) {
     mExcludedGlassRegion.Or(mExcludedGlassRegion, bounds);
   }
   const nsRegion& GetExcludedGlassRegion() {
@@ -683,6 +683,10 @@ public:
     } else {
       mGlassDisplayItem = aItem;
     }
+  }
+  // Call this only after we've finished building the display list
+  bool HasGlass() {
+    return mGlassDisplayItem != nullptr;
   }
   bool NeedToForceTransparentSurfaceForItem(nsDisplayItem* aItem) {
     return aItem == mGlassDisplayItem;
