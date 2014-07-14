@@ -122,81 +122,10 @@
     </declare-styleable>
 
     <declare-styleable name="TwoWayView">
-        <!-- Imported from View -->
-        <attr name="android:id"/>
-        <attr name="android:tag"/>
-        <attr name="android:scrollX"/>
-        <attr name="android:scrollY"/>
-        <attr name="android:background"/>
-        <attr name="android:padding"/>
-        <attr name="android:paddingLeft"/>
-        <attr name="android:paddingTop"/>
-        <attr name="android:paddingRight"/>
-        <attr name="android:paddingBottom"/>
-        <attr name="android:paddingStart"/>
-        <attr name="android:paddingEnd"/>
-        <attr name="android:focusable"/>
-        <attr name="android:focusableInTouchMode"/>
-        <attr name="android:visibility"/>
-        <attr name="android:fitsSystemWindows"/>
-        <attr name="android:scrollbars"/>
-        <attr name="android:scrollbarStyle"/>
-        <attr name="android:isScrollContainer"/>
-        <attr name="android:fadeScrollbars"/>
-        <attr name="android:scrollbarFadeDuration"/>
-        <attr name="android:scrollbarDefaultDelayBeforeFade"/>
-        <attr name="android:scrollbarSize"/>
-        <attr name="android:scrollbarThumbHorizontal"/>
-        <attr name="android:scrollbarThumbVertical"/>
-        <attr name="android:scrollbarTrackHorizontal"/>
-        <attr name="android:scrollbarTrackVertical"/>
-        <attr name="android:scrollbarAlwaysDrawHorizontalTrack"/>
-        <attr name="android:scrollbarAlwaysDrawVerticalTrack"/>
-        <attr name="android:fadingEdge"/>
-        <attr name="android:requiresFadingEdge"/>
-        <attr name="android:fadingEdgeLength"/>
-        <attr name="android:nextFocusLeft"/>
-        <attr name="android:nextFocusRight"/>
-        <attr name="android:nextFocusUp"/>
-        <attr name="android:nextFocusDown"/>
-        <attr name="android:nextFocusForward"/>
-        <attr name="android:clickable"/>
-        <attr name="android:longClickable"/>
-        <attr name="android:saveEnabled"/>
-        <attr name="android:filterTouchesWhenObscured"/>
-        <attr name="android:drawingCacheQuality"/>
-        <attr name="android:keepScreenOn"/>
-        <attr name="android:duplicateParentState"/>
-        <attr name="android:minHeight"/>
-        <attr name="android:minWidth"/>
-        <attr name="android:soundEffectsEnabled"/>
-        <attr name="android:hapticFeedbackEnabled"/>
-        <attr name="android:contentDescription"/>
-        <attr name="android:onClick"/>
-        <attr name="android:overScrollMode"/>
-        <attr name="android:alpha"/>
-        <attr name="android:translationX"/>
-        <attr name="android:translationY"/>
-        <attr name="android:transformPivotX"/>
-        <attr name="android:transformPivotY"/>
-        <attr name="android:rotation"/>
-        <attr name="android:rotationX"/>
-        <attr name="android:rotationY"/>
-        <attr name="android:scaleX"/>
-        <attr name="android:scaleY"/>
-        <attr name="android:verticalScrollbarPosition"/>
-        <attr name="android:layerType"/>
-        <attr name="android:layoutDirection"/>
-        <attr name="android:textDirection"/>
-        <attr name="android:textAlignment"/>
-
-        <!-- Imported from Android -->
         <attr name="android:orientation"/>
-
-        <!-- Imported from AbsListView -->
         <attr name="android:choiceMode"/>
-        <attr name="android:drawSelectorOnTop"/>
         <attr name="android:listSelector"/>
+        <attr name="android:drawSelectorOnTop"/>
     </declare-styleable>
 
     <declare-styleable name="HomeListView">

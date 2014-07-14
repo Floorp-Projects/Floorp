@@ -163,7 +163,67 @@ let TestUtils = {
 
     return path;
   }),
-}
+};
+
+/* --- Local helpers --- */
+
+let FormAutofillTest = {
+  /**
+   * Stores the response that the next call to the mock requestAutocomplete UI
+   * will return to the requester, or null to enable displaying the default UI.
+   */
+  requestAutocompleteResponse: null,
+
+  /**
+   * Displays the requestAutocomplete user interface using the specified data.
+   *
+   * @param aFormAutofillData
+   *        Serializable object containing the set of requested fields.
+   *
+   * @return {Promise}
+   * @resolves An object with the following properties:
+   *           {
+   *             uiWindow: Reference to the initialized window.
+   *             promiseResult: Promise resolved by the UI when it closes.
+   *           }
+   */
+  showUI: Task.async(function* (aFormAutofillData) {
+    Output.print("Opening UI with data: " + JSON.stringify(aFormAutofillData));
+
+    // Wait for the initialization event before opening the window.
+    let promiseUIWindow =
+        TestUtils.waitForNotification("formautofill-window-initialized");
+    let ui = yield FormAutofill.integration.createRequestAutocompleteUI(
+                                                         aFormAutofillData);
+    let promiseResult = ui.show();
+
+    // The window is the subject of the observer notification.
+    return {
+      uiWindow: (yield promiseUIWindow)[0],
+      promiseResult: promiseResult,
+    };
+  }),
+};
+
+let TestData = {
+  /**
+   * Autofill UI request for the e-mail field only.
+   */
+  get requestEmailOnly() {
+    return {
+      sections: [{
+        name: "",
+        addressSections: [{
+          addressType: "",
+          fields: [{
+            fieldName: "email",
+            contactType: "",
+          }],
+        }],
+      }],
+    };
+  },
+};
 
 /* --- Initialization and termination functions common to all tests --- */
 
@@ -172,5 +232,29 @@ add_task(function* test_common_initialize() {
   Services.prefs.setBoolPref("dom.forms.requestAutocomplete", true);
   add_termination_task(function* () {
     Services.prefs.clearUserPref("dom.forms.requestAutocomplete");
+  });
+
+  // If required, we return a mock response instead of displaying the UI.
+  let mockIntegrationFn = base => ({
+    createRequestAutocompleteUI: Task.async(function* () {
+      // Call the base method to display the UI if override is not requested.
+      if (FormAutofillTest.requestAutocompleteResponse === null) {
+        return yield base.createRequestAutocompleteUI.apply(this, arguments);
+      }
+
+      // Return a mock RequestAutocompleteUI object.
+      return {
+        show: Task.async(function* () {
+          let response = FormAutofillTest.requestAutocompleteResponse;
+          Output.print("Mock UI response: " + JSON.stringify(response));
+          return response;
+        }),
+      };
+    }),
+  });
+
+  FormAutofill.registerIntegration(mockIntegrationFn);
+  add_termination_task(function* () {
+    FormAutofill.unregisterIntegration(mockIntegrationFn);
   });
 });

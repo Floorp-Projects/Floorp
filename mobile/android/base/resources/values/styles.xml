@@ -435,6 +435,7 @@
 
     <style name="TabsList" parent="TabsListBase">
          <item name="android:orientation">vertical</item>
+         <item name="android:scrollbars">vertical</item>
     </style>
 
     <style name="TabsItem">
