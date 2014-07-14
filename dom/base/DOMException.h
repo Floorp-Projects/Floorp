@@ -32,6 +32,8 @@ NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, nsACString& aName,
                                    uint16_t* aCode = nullptr);
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 
 #define MOZILLA_EXCEPTION_IID \
@@ -80,6 +82,8 @@ public:
   already_AddRefed<nsISupports> GetInner() const;
 
   already_AddRefed<nsISupports> GetData() const;
+
+  void GetStack(nsAString& aStack, ErrorResult& aRv) const;
 
   void Stringify(nsString& retval);
 

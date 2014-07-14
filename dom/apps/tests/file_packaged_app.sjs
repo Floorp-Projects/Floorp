@@ -20,23 +20,12 @@ var gDevUrl = "http://dev.url";
 function handleRequest(request, response) {
   var query = getQuery(request);
 
+  response.setHeader("Access-Control-Allow-Origin", "*", false);
+
   var packageSize = ("packageSize" in query) ? query.packageSize : 0;
   var appName = ("appName" in query) ? query.appName : gAppName;
   var devName = ("devName" in query) ? query.devName : gDevName;
   var devUrl = ("devUrl" in query) ? query.devUrl : gDevUrl;
-  // allowCancel just means deliver the file slowly so we have time to cancel it
-  var allowCancel = "allowCancel" in query;
-  var getPackage = "getPackage" in query;
-  var alreadyDeferred = Number(getState("alreadyDeferred"));
-
-  if (allowCancel && getPackage && !alreadyDeferred) {
-    // Only do this for the actual package delivery.
-    response.processAsync();
-    // And to avoid timer problems, only do this once.
-    setState("alreadyDeferred", "1");
-  }
-
-  response.setHeader("Access-Control-Allow-Origin", "*", false);
 
   // If this is a version update, update state, prepare the manifest,
   // the application package and return.
@@ -47,8 +36,7 @@ function handleRequest(request, response) {
     var packageName = "test_packaged_app_" + packageVersion + ".zip";
 
     setState("packageName", packageName);
-    var packagePath = "/" + gBasePath + "file_packaged_app.sjs?" +
-                      (allowCancel?"allowCancel&": "") + "getPackage=" +
+    var packagePath = "/" + gBasePath + "file_packaged_app.sjs?getPackage=" +
                       packageName;
     setState("packagePath", packagePath);
 
@@ -96,19 +84,11 @@ function handleRequest(request, response) {
   response.setHeader("Etag", etag, false);
 
   // Serve the application package corresponding to the requested app version.
-  if (getPackage) {
+  if ("getPackage" in query) {
     var resource = readFile(packageName, true);
     response.setHeader("Content-Type",
                        "Content-Type: application/java-archive", false);
-    if (allowCancel && !alreadyDeferred) {
-      var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      timer.initWithCallback(function (aTimer) {
-          response.write(resource);
-          response.finish();
-      }, 3000, Ci.nsITimer.TYPE_ONE_SHOT);
-    } else {
-      response.write(resource);
-    }
+    response.write(resource);
     return;
   }
 

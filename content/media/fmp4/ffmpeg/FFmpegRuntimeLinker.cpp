@@ -73,7 +73,7 @@ FFmpegRuntimeLinker::Link()
   Unlink();
 
   sLinkStatus = LinkStatus_FAILED;
-  return nullptr;
+  return false;
 }
 
 /* static */ bool

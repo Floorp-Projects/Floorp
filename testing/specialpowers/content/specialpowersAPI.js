@@ -98,9 +98,16 @@ function isObjectOrArray(obj) {
 //   security in general, but tends to break tests that try to pass object
 //   literals into SpecialPowers. So we waive [[Object]] and [[Array]]
 //   instances before inspecting properties.
+//
+// * When we don't have meaningful Xray semantics, we create an Opaque
+//   XrayWrapper for security reasons. For test code, we generally want to see
+//   through that sort of thing.
 function waiveXraysIfAppropriate(obj, propName) {
-  if (propName == 'toString' || isObjectOrArray(obj))
+  if (propName == 'toString' || isObjectOrArray(obj) ||
+      /Opaque/.test(Object.prototype.toString.call(obj)))
+{
     return XPCNativeWrapper.unwrap(obj);
+}
   return obj;
 }
 

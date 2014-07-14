@@ -63,7 +63,8 @@ function runTests()
     method: "display",
     code: error4,
     result: error4 + openComment + "Exception: Node cannot be inserted " +
-            "at the specified point in the hierarchy\n@1" + closeComment,
+            "at the specified point in the hierarchy\n@" +
+            scratchpad.uniqueName + ":1:0" + closeComment,
     label: "Alternative format error display output"
   },
   {
@@ -100,7 +101,8 @@ function runTests()
     method: "run",
     code: error4,
     result: error4 + openComment + "Exception: Node cannot be inserted " +
-            "at the specified point in the hierarchy\n@1" + closeComment,
+            "at the specified point in the hierarchy\n@" +
+            scratchpad.uniqueName + ":1:0" + closeComment,
     label: "Alternative format error run output"
   }];
 
