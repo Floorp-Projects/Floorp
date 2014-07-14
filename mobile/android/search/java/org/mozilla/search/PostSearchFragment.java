@@ -18,15 +18,15 @@ import org.mozilla.gecko.GeckoViewChrome;
 import org.mozilla.gecko.GeckoViewContent;
 import org.mozilla.gecko.PrefsHelper;
 
-public class DetailActivity extends Fragment {
+public class PostSearchFragment extends Fragment {
 
-    private static final String LOGTAG = "DetailActivity";
+    private static final String LOGTAG = "PostSearchFragment";
     private GeckoView geckoView;
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState) {
+                             Bundle savedInstanceState) {
         View mainView = inflater.inflate(R.layout.search_activity_detail, container, false);
 
 
