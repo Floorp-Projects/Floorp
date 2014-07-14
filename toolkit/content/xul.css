@@ -421,50 +421,48 @@ panel[type="arrow"][animate="open"] {
   opacity: 1.0;
 }
 
-panel[arrowposition="after_start"] {
+panel[animate="cancel"] {
+  transform: none;
+}
+
+panel[arrowposition="after_start"]:-moz-locale-dir(ltr),
+panel[arrowposition="after_end"]:-moz-locale-dir(rtl) {
   transform-origin: 20px top;
 }
 
-panel[arrowposition="after_end"] {
+panel[arrowposition="after_end"]:-moz-locale-dir(ltr),
+panel[arrowposition="after_start"]:-moz-locale-dir(rtl) {
   transform-origin: calc(100% - 20px) top;
 }
 
-panel[arrowposition="before_start"] {
+panel[arrowposition="before_start"]:-moz-locale-dir(ltr),
+panel[arrowposition="before_end"]:-moz-locale-dir(rtl) {
   transform-origin: 20px bottom;
 }
 
-panel[arrowposition="before_end"] {
+panel[arrowposition="before_end"]:-moz-locale-dir(ltr),
+panel[arrowposition="before_start"]:-moz-locale-dir(rtl) {
   transform-origin: calc(100% - 20px) bottom;
 }
 
-panel[arrowposition="start_before"] {
+panel[arrowposition="start_before"]:-moz-locale-dir(ltr),
+panel[arrowposition="end_before"]:-moz-locale-dir(rtl) {
   transform-origin: right 20px;
 }
 
-panel[arrowposition="start_after"] {
+panel[arrowposition="start_after"]:-moz-locale-dir(ltr),
+panel[arrowposition="end_after"]:-moz-locale-dir(rtl) {
   transform-origin: right calc(100% - 20px);
 }
 
-panel[arrowposition="end_before"] {
+panel[arrowposition="end_before"]:-moz-locale-dir(ltr),
+panel[arrowposition="start_before"]:-moz-locale-dir(rtl) {
   transform-origin: left 20px;
 }
 
-panel[arrowposition="end_after"] {
+panel[arrowposition="end_after"]:-moz-locale-dir(ltr),
+panel[arrowposition="start_after"]:-moz-locale-dir(rtl) {
   transform-origin: left calc(100% - 20px);
-}
-
-panel[arrowposition="after_start"][animate="cancel"],
-panel[arrowposition="before_end"][animate="cancel"],
-panel[arrowposition="end_before"][animate="cancel"],
-panel[arrowposition="start_after"][animate="cancel"] {
-  transform: none;
-}
-
-panel[arrowposition="after_end"][animate="cancel"],
-panel[arrowposition="before_start"][animate="cancel"],
-panel[arrowposition="start_before"][animate="cancel"],
-panel[arrowposition="end_after"][animate="cancel"] {
-  transform: none;
 }
 
 %endif
