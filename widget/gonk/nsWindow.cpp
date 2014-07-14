@@ -610,13 +610,6 @@ nsScreenGonk::~nsScreenGonk()
 }
 
 NS_IMETHODIMP
-nsScreenGonk::GetId(uint32_t *outId)
-{
-    *outId = 1;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsScreenGonk::GetRect(int32_t *outLeft,  int32_t *outTop,
                       int32_t *outWidth, int32_t *outHeight)
 {
@@ -759,13 +752,6 @@ nsScreenManagerGonk::GetPrimaryScreen(nsIScreen **outScreen)
 {
     NS_IF_ADDREF(*outScreen = mOneScreen.get());
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScreenManagerGonk::ScreenForId(uint32_t aId,
-                                 nsIScreen **outScreen)
-{
-    return GetPrimaryScreen(outScreen);
 }
 
 NS_IMETHODIMP

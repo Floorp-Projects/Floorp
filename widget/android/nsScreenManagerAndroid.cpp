@@ -20,13 +20,6 @@ nsScreenAndroid::~nsScreenAndroid()
 }
 
 NS_IMETHODIMP
-nsScreenAndroid::GetId(uint32_t *outId)
-{
-    *outId = 1;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsScreenAndroid::GetRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
 {
     gfxIntSize sz = nsWindow::GetAndroidScreenBounds();
@@ -85,13 +78,6 @@ nsScreenManagerAndroid::GetPrimaryScreen(nsIScreen **outScreen)
 {
     NS_IF_ADDREF(*outScreen = mOneScreen.get());
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScreenManagerAndroid::ScreenForId(uint32_t aId,
-                                    nsIScreen **outScreen)
-{
-    return GetPrimaryScreen(outScreen);
 }
 
 NS_IMETHODIMP

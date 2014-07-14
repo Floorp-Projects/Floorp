@@ -36,30 +36,6 @@ nsScreenManagerCocoa::ScreenForCocoaScreen(NSScreen *screen)
 }
 
 NS_IMETHODIMP
-nsScreenManagerCocoa::ScreenForId (uint32_t aId, nsIScreen **outScreen)
-{
-    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
-
-    *outScreen = nullptr;
-
-    for (uint32_t i = 0; i < mScreenList.Length(); ++i) {
-        nsScreenCocoa* sc = mScreenList[i];
-        uint32_t id;
-        nsresult rv = sc->GetId(&id);
-
-        if (NS_SUCCEEDED(rv) && id == aId) {
-            *outScreen = sc;
-            NS_ADDREF(*outScreen);
-            return NS_OK;
-        }
-    }
-
-    return NS_ERROR_FAILURE;
-
-    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-NS_IMETHODIMP
 nsScreenManagerCocoa::ScreenForRect (int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
                                      nsIScreen **outScreen)
 {
