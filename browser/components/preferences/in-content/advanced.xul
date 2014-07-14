@@ -135,7 +135,6 @@
       class="header"
       hidden="true"
       data-category="paneAdvanced">
-  <image class="header-icon"/>
   <label class="header-name">&paneAdvanced.title;</label>
 </hbox>
 

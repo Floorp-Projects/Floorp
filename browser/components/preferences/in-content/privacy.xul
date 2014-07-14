@@ -71,7 +71,6 @@
       class="header"
       hidden="true"
       data-category="panePrivacy">
-  <image class="header-icon"/>
   <label class="header-name">&panePrivacy.title;</label>
 </hbox>
 

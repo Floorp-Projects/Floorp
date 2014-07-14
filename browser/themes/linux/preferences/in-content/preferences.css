@@ -12,6 +12,12 @@ tab[selected] {
   border-bottom-right-radius: 0;
 }
 
+button,
+colorpicker[type="button"],
+menulist {
+  margin: 2px 4px;
+}
+
 button > .button-box,
 menulist > .menulist-label-box {
   -moz-appearance: none;
@@ -23,6 +29,10 @@ button[type="menu"] > .button-box > .button-menu-dropmarker {
 
 .help-button > .button-box > .button-icon {
   -moz-margin-end: 0;
+}
+
+menulist {
+  font-size: inherit;
 }
 
 menulist:not([editable="true"]) > .menulist-dropmarker {
@@ -79,4 +89,18 @@ spinbuttons {
 menulist.actionsMenu > .menulist-dropmarker {
   margin-top: 11px;
   margin-bottom: 11px;
+}
+
+textbox + button,
+filefield + button {
+  -moz-margin-start: -4px;
+}
+
+#dialogTitle {
+  -moz-margin-start: 12px !important;
+}
+
+.actionButtons {
+  margin-right: 8px !important;
+  margin-left: 8px !important;
 }

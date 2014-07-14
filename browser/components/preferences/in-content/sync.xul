@@ -34,7 +34,6 @@
       class="header"
       hidden="true"
       data-category="paneSync">
-  <image class="header-icon"/>
   <label class="header-name">&paneSync.title;</label>
 </hbox>
 
