@@ -222,25 +222,21 @@ public class TestTopSitesCursorWrapper extends BrowserTestCase {
             if (rowType == TopSites.TYPE_BLANK) {
                 assertTrue(c.isNull(c.getColumnIndex(TopSites.URL)));
                 assertTrue(c.isNull(c.getColumnIndex(TopSites.TITLE)));
-                assertTrue(c.isNull(c.getColumnIndex(TopSites.DISPLAY)));
                 assertTrue(c.isNull(c.getColumnIndex(TopSites.BOOKMARK_ID)));
                 assertTrue(c.isNull(c.getColumnIndex(TopSites.HISTORY_ID)));
             } else if (rowType == TopSites.TYPE_PINNED) {
                 assertFalse(c.isNull(c.getColumnIndex(TopSites.URL)));
                 assertFalse(c.isNull(c.getColumnIndex(TopSites.TITLE)));
-                assertTrue(c.isNull(c.getColumnIndex(TopSites.DISPLAY)));
                 assertTrue(c.isNull(c.getColumnIndex(TopSites.BOOKMARK_ID)));
                 assertTrue(c.isNull(c.getColumnIndex(TopSites.HISTORY_ID)));
             } else if (rowType == TopSites.TYPE_TOP) {
                 assertFalse(c.isNull(c.getColumnIndex(TopSites.URL)));
                 assertFalse(c.isNull(c.getColumnIndex(TopSites.TITLE)));
-                assertFalse(c.isNull(c.getColumnIndex(TopSites.DISPLAY)));
                 assertFalse(c.isNull(c.getColumnIndex(TopSites.BOOKMARK_ID)));
                 assertFalse(c.isNull(c.getColumnIndex(TopSites.HISTORY_ID)));
             } else if (rowType == TopSites.TYPE_SUGGESTED) {
                 assertFalse(c.isNull(c.getColumnIndex(TopSites.URL)));
                 assertFalse(c.isNull(c.getColumnIndex(TopSites.TITLE)));
-                assertTrue(c.isNull(c.getColumnIndex(TopSites.DISPLAY)));
                 assertTrue(c.isNull(c.getColumnIndex(TopSites.BOOKMARK_ID)));
                 assertTrue(c.isNull(c.getColumnIndex(TopSites.HISTORY_ID)));
             } else {
@@ -283,7 +279,7 @@ public class TestTopSitesCursorWrapper extends BrowserTestCase {
         Integer[] pinnedPositions = new Integer[] { 0, 1, 4 };
         TopSitesCursorWrapper c = createTopSitesCursorWrapper(2, pinnedPositions, 3);
 
-        assertEquals(7, c.getColumnCount());
+        assertEquals(6, c.getColumnCount());
 
         String[] columnNames = c.getColumnNames();
         assertEquals(columnNames.length, c.getColumnCount());
