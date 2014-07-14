@@ -54,14 +54,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
          "we end up with the appropriate constructor: " + c);
       is(Cu.unwaiveXrays(Cu.waiveXrays(new iwin[c]).constructor), iwin[c],
          "constructor property is set up right: " + c);
-      is(Object.getPrototypeOf(new iwin[c]), iwin[c].prototype,
+      let expectedProto = /Opaque/.test(new iwin[c]) ? iwin['Object'].prototype
+                                                     : iwin[c].prototype;
+      is(Object.getPrototypeOf(new iwin[c]), expectedProto,
          "prototype is correct: " + c);
       is(global(new iwin[c]), iwin, "Got the right global: " + c);
     }
 
     // Test Object in more detail.
     var num = new iwin.Object(4);
-    is(num.valueOf(), 4, "primitive object construction works");
+    is(Cu.waiveXrays(num).valueOf(), 4, "primitive object construction works");
     is(global(num), iwin, "correct global for num");
     var obj = new iwin.Object();
     obj.foo = 2;
@@ -105,26 +107,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     ok(Object.getOwnPropertyNames(foopyFunction).indexOf('prototype') == -1, "Should not list prototype");
     ok(Object.getOwnPropertyNames(iwin.Array).indexOf('prototype') >= 0, "Should list prototype for standard constructor");
 
-    // Test interface objects that don't actually construct things.
-    is(iwin.Math.tan(4.5), Math.tan(4.5), "Math.tan works");
-    is(iwin.Math.E, Math.E, "Math.E works");
-    var json = JSON.stringify({a: 2, b: 'hi', c: {d: 'there'}});
-    is(global(iwin.JSON.parse(json)), iwin, "JSON rehydrated into the right context");
-    is(iwin.JSON.stringify(iwin.JSON.parse(json)), json, "JSON composition identity holds");
-
     // Test proxies.
     var targetObject = new iwin.Object();
     targetObject.foo = 9;
     var forwardingProxy = new iwin.Proxy(targetObject, new iwin.Object());
     is(global(forwardingProxy), iwin, "proxy global correct");
-    is(forwardingProxy.foo, 9, "forwards correctly");
+    is(Cu.waiveXrays(forwardingProxy).foo, 9, "forwards correctly");
     // NB: COW-implemented proxy handlers are super dangerous, and we should not
     // encourage them.
     var handler = {get: function(target, name) { return name * 2; }, __exposedProps__: {get: 'r'}};
     var doublingProxy = new iwin.Proxy(targetObject, handler);
     is(global(doublingProxy), iwin, "doubling proxy global correct");
-    is(doublingProxy[3], 6, "Doubles correctly");
-    is(doublingProxy[20], 40, "Doubles correctly");
+    is(Cu.waiveXrays(doublingProxy)[3], 6, "Doubles correctly");
+    is(Cu.waiveXrays(doublingProxy)[20], 40, "Doubles correctly");
 
     // Test eval.
     var toEval = "({a: 2, b: {foo: 'bar'}, f: function() { return window; }})";
@@ -250,8 +245,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       if (method.length == 0) {
         is(method.call(xray) + "", local.call(xray) + "",
            "Xray and local method results stringify identically");
-         is(method.call(xray) + "", lookupCallable(xray.wrappedJSObject).call(xray.wrappedJSObject) + "",
-            "Xray and waived method results stringify identically");
+
+        // If invoking this method returns something non-Xrayable, the
+        // stringification is going to return [object Opaque]. This happens for
+        // xrayedTypedArray.buffer, for instance, since we don't have Xrays
+        // To ArrayBuffers. Just check for that case.
+        if (!/Opaque/.test(method.call(xray))) {
+          is(method.call(xray) + "",
+             lookupCallable(xray.wrappedJSObject).call(xray.wrappedJSObject) + "",
+             "Xray and waived method results stringify identically");
+        }
       }
     }
     is(Object.getOwnPropertyNames(xrayProto).sort().toSource(),

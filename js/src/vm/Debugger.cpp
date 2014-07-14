@@ -4183,7 +4183,7 @@ static void
 UpdateFrameIterPc(FrameIter &iter)
 {
     if (iter.abstractFramePtr().isRematerializedFrame()) {
-#ifdef DEBUG
+#if defined(DEBUG) && defined(JS_ION)
         // Rematerialized frames don't need their pc updated. The reason we
         // need to update pc is because we might get the same Debugger.Frame
         // object for multiple re-entries into debugger code from debuggee

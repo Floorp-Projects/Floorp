@@ -43,11 +43,15 @@ public:
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize)
   {
+    if (SharedBufferManagerParent::sManagerMonitor) {
+      SharedBufferManagerParent::sManagerMonitor->Lock();
+    }
     map<base::ProcessId, SharedBufferManagerParent*>::iterator it;
     for (it = SharedBufferManagerParent::sManagers.begin(); it != SharedBufferManagerParent::sManagers.end(); it++) {
       base::ProcessId pid = it->first;
       SharedBufferManagerParent *mgr = it->second;
 
+      MutexAutoLock lock(mgr->mBuffersMutex);
       std::map<int64_t, android::sp<android::GraphicBuffer> >::iterator buf_it;
       for (buf_it = mgr->mBuffers.begin(); buf_it != mgr->mBuffers.end(); buf_it++) {
         nsresult rv;
@@ -72,9 +76,15 @@ public:
               "conditions."),
             aData);
         if (rv != NS_OK) {
+          if (SharedBufferManagerParent::sManagerMonitor) {
+            SharedBufferManagerParent::sManagerMonitor->Unlock();
+          }
           return rv;
         }
       }
+    }
+    if (SharedBufferManagerParent::sManagerMonitor) {
+      SharedBufferManagerParent::sManagerMonitor->Unlock();
     }
     return NS_OK;
   }
