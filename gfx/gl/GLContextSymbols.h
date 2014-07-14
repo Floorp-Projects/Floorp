@@ -533,6 +533,24 @@ struct GLContextSymbols
     PFNGLMAPBUFFERRANGEPROC fMapBufferRange;
     typedef void (GLAPIENTRY * PFNGLFLUSHMAPPEDBUFFERRANGEPROC) (GLenum target, GLintptr offset, GLsizeiptr length);
     PFNGLFLUSHMAPPEDBUFFERRANGEPROC fFlushMappedBufferRange;
+
+    // uniform_buffer_object
+    typedef void (GLAPIENTRY * PFNGLGETUNIFORMINDICESPROC) (GLuint program, GLsizei uniformCount,
+                                                            const GLchar* const* uniformNames, GLuint* uniformIndices);
+    PFNGLGETUNIFORMINDICESPROC fGetUniformIndices;
+    typedef void (GLAPIENTRY * PFNGLGETACTIVEUNIFORMSIVPROC) (GLuint program, GLsizei uniformCount, const GLuint* uniformIndices,
+                                                             GLenum pname, GLint* params);
+    PFNGLGETACTIVEUNIFORMSIVPROC fGetActiveUniformsiv;
+    typedef void (GLAPIENTRY * PFNGLGETACTIVEUNIFORMNAMEPROC) (GLuint program, GLuint uniformIdex, GLsizei bufSize, GLsizei* length, GLchar* uniformName);
+    PFNGLGETACTIVEUNIFORMNAMEPROC fGetActiveUniformName;
+    typedef GLuint (GLAPIENTRY * PFNGLGETUNIFORMBLOCKINDEXPROC) (GLuint program, const GLchar* uniformBlockName);
+    PFNGLGETUNIFORMBLOCKINDEXPROC fGetUniformBlockIndex;
+    typedef void (GLAPIENTRY * PFNGLGETACTIVEUNIFORMBLOCKIVPROC) (GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint* params);
+    PFNGLGETACTIVEUNIFORMBLOCKIVPROC fGetActiveUniformBlockiv;
+    typedef void (GLAPIENTRY * PFNGLGETACTIVEUNIFORMBLOCKNAMEPROC) (GLuint program, GLuint uniformBlockIndex, GLsizei bufSize, GLsizei* length, GLchar* uniformBlockName);
+    PFNGLGETACTIVEUNIFORMBLOCKNAMEPROC fGetActiveUniformBlockName;
+    typedef void (GLAPIENTRY * PFNGLUNIFORMBLOCKBINDINGPROC) (GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding);
+    PFNGLUNIFORMBLOCKBINDINGPROC fUniformBlockBinding;
 };
 
 }

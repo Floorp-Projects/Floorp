@@ -114,6 +114,7 @@ MOZ_BEGIN_ENUM_CLASS(GLFeature)
     texture_half_float_linear,
     texture_non_power_of_two,
     transform_feedback,
+    uniform_buffer_object,
     vertex_array_object,
     EnumMax
 MOZ_END_ENUM_CLASS(GLFeature)
@@ -365,6 +366,7 @@ public:
         ARB_texture_float,
         ARB_texture_non_power_of_two,
         ARB_texture_rectangle,
+        ARB_uniform_buffer_object,
         ARB_vertex_array_object,
         EXT_bgra,
         EXT_blend_minmax,
@@ -2698,6 +2700,70 @@ public:
         ASSERT_SYMBOL_PRESENT(fFlushMappedBufferRange);
         BEFORE_GL_CALL;
         mSymbols.fFlushMappedBufferRange(target, offset, length);
+        AFTER_GL_CALL;
+    }
+
+
+// -----------------------------------------------------------------------------
+// Core GL & Extension ARB_uniform_buffer_object
+public:
+    void fGetUniformIndices(GLuint program, GLsizei uniformCount,
+                            const GLchar* const* uniformNames, GLuint* uniformIndices)
+    {
+        ASSERT_SYMBOL_PRESENT(fGetUniformIndices);
+        BEFORE_GL_CALL;
+        mSymbols.fGetUniformIndices(program, uniformCount, uniformNames, uniformIndices);
+        AFTER_GL_CALL;
+    }
+
+    void fGetActiveUniformsiv(GLuint program, GLsizei uniformCount, const GLuint* uniformIndices,
+                              GLenum pname, GLint* params)
+    {
+        ASSERT_SYMBOL_PRESENT(fGetActiveUniformsiv);
+        BEFORE_GL_CALL;
+        mSymbols.fGetActiveUniformsiv(program, uniformCount, uniformIndices, pname, params);
+        AFTER_GL_CALL;
+    }
+
+    void fGetActiveUniformName(GLuint program, GLuint uniformIndex, GLsizei bufSize,
+                               GLsizei* length, GLchar* uniformName)
+    {
+        ASSERT_SYMBOL_PRESENT(fGetActiveUniformName);
+        BEFORE_GL_CALL;
+        mSymbols.fGetActiveUniformName(program, uniformIndex, bufSize, length, uniformName);
+        AFTER_GL_CALL;
+    }
+
+    GLuint fGetUniformBlockIndex(GLuint program, const GLchar* uniformBlockName) {
+        ASSERT_SYMBOL_PRESENT(fGetUniformBlockIndex);
+        BEFORE_GL_CALL;
+        GLuint result = mSymbols.fGetUniformBlockIndex(program, uniformBlockName);
+        AFTER_GL_CALL;
+        return result;
+    }
+
+    void fGetActiveUniformBlockiv(GLuint program, GLuint uniformBlockIndex,
+                                  GLenum pname, GLint* params)
+    {
+        ASSERT_SYMBOL_PRESENT(fGetActiveUniformBlockiv);
+        BEFORE_GL_CALL;
+        mSymbols.fGetActiveUniformBlockiv(program, uniformBlockIndex, pname, params);
+        AFTER_GL_CALL;
+    }
+
+    void fGetActiveUniformBlockName(GLuint program, GLuint uniformBlockIndex, GLsizei bufSize,
+                                    GLsizei* length, GLchar* uniformBlockName)
+    {
+        ASSERT_SYMBOL_PRESENT(fGetActiveUniformBlockName);
+        BEFORE_GL_CALL;
+        mSymbols.fGetActiveUniformBlockName(program, uniformBlockIndex, bufSize, length, uniformBlockName);
+        AFTER_GL_CALL;
+    }
+
+    void fUniformBlockBinding(GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding) {
+        ASSERT_SYMBOL_PRESENT(fUniformBlockBinding);
+        BEFORE_GL_CALL;
+        mSymbols.fUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
         AFTER_GL_CALL;
     }
 
