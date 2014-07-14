@@ -30,13 +30,21 @@ exports.items = [
     name: "csscoverage start",
     hidden: true,
     description: l10n.lookup("csscoverageStartDesc2"),
+    params: [
+      {
+        name: "noreload",
+        type: "boolean",
+        description: l10n.lookup("csscoverageStartNoReloadDesc"),
+        manual: l10n.lookup("csscoverageStartNoReloadManual")
+      }
+    ],
     exec: function*(args, context) {
       let usage = yield csscoverage.getUsage(context.environment.target);
       if (usage == null) {
         throw new Error(l10n.lookup("csscoverageNoRemoteError"));
       }
       yield usage.start(context.environment.chromeWindow,
-                        context.environment.target);
+                        context.environment.target, args.noreload);
     }
   },
   {

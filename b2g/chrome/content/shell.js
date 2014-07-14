@@ -930,7 +930,7 @@ let RemoteDebugger = {
     }
 
     try {
-      DebuggerServer.closeListener();
+      DebuggerServer.closeAllListeners();
     } catch (e) {
       dump('Unable to stop debugger server: ' + e + '\n');
     }

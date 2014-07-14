@@ -20,6 +20,7 @@
 #include "mozilla/LazyIdleThread.h"
 
 #include "BluetoothAdapter.h"
+#include "BluetoothClassOfDevice.h"
 #include "BluetoothDevice.h"
 #include "BluetoothDiscoveryHandle.h"
 #include "BluetoothReplyRunnable.h"
@@ -64,20 +65,23 @@ class StartDiscoveryTask : public BluetoothReplyRunnable
                              NS_LITERAL_STRING("StartDiscovery"))
     , mAdapter(aAdapter)
   {
-    MOZ_ASSERT(aPromise && aAdapter);
+    MOZ_ASSERT(aPromise);
+    MOZ_ASSERT(aAdapter);
   }
 
   bool
   ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue)
   {
-    BT_API2_LOGR();
     aValue.setUndefined();
 
     AutoJSAPI jsapi;
     NS_ENSURE_TRUE(jsapi.Init(mAdapter->GetParentObject()), false);
-
-    // Wrap BluetoothDiscoveryHandle to return
     JSContext* cx = jsapi.cx();
+
+    /**
+     * Create a new discovery handle and wrap it to return. Each
+     * discovery handle is one-time-use only.
+     */
     nsRefPtr<BluetoothDiscoveryHandle> discoveryHandle =
       BluetoothDiscoveryHandle::Create(mAdapter->GetParentObject());
     if (!ToJSValue(cx, discoveryHandle, aValue)) {
@@ -85,6 +89,8 @@ class StartDiscoveryTask : public BluetoothReplyRunnable
       return false;
     }
 
+    // Set the created discovery handle as the one in use.
+    mAdapter->SetDiscoveryHandleInUse(discoveryHandle);
     return true;
   }
 
@@ -205,6 +211,7 @@ BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aWindow,
   : DOMEventTargetHelper(aWindow)
   , mJsUuids(nullptr)
   , mJsDeviceAddresses(nullptr)
+  , mDiscoveryHandleInUse(nullptr)
   , mState(BluetoothAdapterState::Disabled)
   , mDiscoverable(false)
   , mDiscovering(false)
@@ -273,9 +280,8 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
   const nsString& name = aValue.name();
   const BluetoothValue& value = aValue.value();
   if (name.EqualsLiteral("State")) {
-    bool isEnabled = value.get_bool();
-    mState = isEnabled ? BluetoothAdapterState::Enabled
-                       : BluetoothAdapterState::Disabled;
+    mState = value.get_bool() ? BluetoothAdapterState::Enabled
+                              : BluetoothAdapterState::Disabled;
   } else if (name.EqualsLiteral("Name")) {
     mName = value.get_nsString();
   } else if (name.EqualsLiteral("Address")) {
@@ -284,6 +290,10 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
     mDiscoverable = value.get_bool();
   } else if (name.EqualsLiteral("Discovering")) {
     mDiscovering = value.get_bool();
+    if (!mDiscovering) {
+      // Reset discovery handle in use to nullptr
+      SetDiscoveryHandleInUse(nullptr);
+    }
   } else if (name.EqualsLiteral("Pairable")) {
     mPairable = value.get_bool();
   } else if (name.EqualsLiteral("Powered")) {
@@ -390,6 +400,18 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
   }
 }
 
+void
+BluetoothAdapter::SetDiscoveryHandleInUse(
+  BluetoothDiscoveryHandle* aDiscoveryHandle)
+{
+  // Stop discovery handle in use from listening to "DeviceFound" signal
+  if (mDiscoveryHandleInUse) {
+    mDiscoveryHandleInUse->DisconnectFromOwner();
+  }
+
+  mDiscoveryHandleInUse = aDiscoveryHandle;
+}
+
 already_AddRefed<Promise>
 BluetoothAdapter::StartStopDiscovery(bool aStart, ErrorResult& aRv)
 {
@@ -403,10 +425,13 @@ BluetoothAdapter::StartStopDiscovery(bool aStart, ErrorResult& aRv)
   /**
    * Ensure
    * - adapter does not already start/stop discovering,
+   *   (note we reject here to ensure each resolved promise of startDiscovery
+   *    returns a BluetoothDiscoveryHandle)
    * - adapter is already enabled, and
    * - BluetoothService is available
    */
-  BT_ENSURE_TRUE_RESOLVE(mDiscovering != aStart, JS::UndefinedHandleValue);
+  BT_ENSURE_TRUE_REJECT(mDiscovering != aStart,
+                        NS_ERROR_DOM_INVALID_STATE_ERR);
   BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Enabled,
                         NS_ERROR_DOM_INVALID_STATE_ERR);
   BluetoothService* bs = BluetoothService::Get();
@@ -824,12 +849,10 @@ BluetoothAdapter::IsAdapterAttributeChanged(BluetoothAdapterAttribute aType,
                                             const BluetoothValue& aValue)
 {
   switch(aType) {
-    case BluetoothAdapterAttribute::State: {
+    case BluetoothAdapterAttribute::State:
       MOZ_ASSERT(aValue.type() == BluetoothValue::Tbool);
-      bool isEnabled = aValue.get_bool();
-      return isEnabled ? mState != BluetoothAdapterState::Enabled
-                       : mState != BluetoothAdapterState::Disabled;
-    }
+      return aValue.get_bool() ? mState != BluetoothAdapterState::Enabled
+                               : mState != BluetoothAdapterState::Disabled;
     case BluetoothAdapterAttribute::Name:
       MOZ_ASSERT(aValue.type() == BluetoothValue::TnsString);
       return !mName.Equals(aValue.get_nsString());
@@ -928,7 +951,7 @@ BluetoothAdapter::Connect(BluetoothDevice& aDevice,
 
   nsAutoString address;
   aDevice.GetAddress(address);
-  uint32_t deviceClass = aDevice.Class();
+  uint32_t deviceClass = aDevice.Cod()->ToUint32();
   uint16_t serviceUuid = 0;
   if (aServiceUuid.WasPassed()) {
     serviceUuid = aServiceUuid.Value();

@@ -23,7 +23,12 @@ let test = asyncTest(function*() {
   yield navigate(usage, options);
   yield checkPages(usage);
   yield checkEditorReport(usage);
-  yield checkPageReport(usage);
+  // usage.createPageReport is not supported for usage.oneshot data as of
+  // bug 1035300 because the page report assumed we have preload data which
+  // oneshot can't gather. The ideal solution is to have a special no-preload
+  // mode for the page report, but since oneshot isn't needed for the UI to
+  // function, we're currently not supporting page report for oneshot data
+  // yield checkPageReport(usage);
 
   yield helpers.closeToolbar(options);
   yield helpers.closeTab(options);

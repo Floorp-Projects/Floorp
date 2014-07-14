@@ -25,6 +25,7 @@ struct MediaPlayStatus;
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothDevice;
+class BluetoothDiscoveryHandle;
 class BluetoothSignal;
 class BluetoothNamedValue;
 class BluetoothValue;
@@ -92,6 +93,17 @@ public:
                   ErrorResult& aRv);
   void GetUuids(JSContext* aContext, JS::MutableHandle<JS::Value> aUuids,
                 ErrorResult& aRv);
+
+  /**
+   * Update this adapter's discovery handle in use (mDiscoveryHandleInUse).
+   *
+   * |mDiscoveryHandleInUse| is set to the latest discovery handle when adapter
+   * just starts discovery, and is reset to nullptr when discovery is stopped
+   * by some adapter.
+   *
+   * @param aDiscoveryHandle [in] the discovery handle to set.
+   */
+  void SetDiscoveryHandleInUse(BluetoothDiscoveryHandle* aDiscoveryHandle);
 
   already_AddRefed<Promise> SetName(const nsAString& aName, ErrorResult& aRv);
   already_AddRefed<Promise>
@@ -189,6 +201,7 @@ private:
 
   JS::Heap<JSObject*> mJsUuids;
   JS::Heap<JSObject*> mJsDeviceAddresses;
+  nsRefPtr<BluetoothDiscoveryHandle> mDiscoveryHandleInUse;
   BluetoothAdapterState mState;
   nsString mAddress;
   nsString mName;
