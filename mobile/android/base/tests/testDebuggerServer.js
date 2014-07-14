@@ -22,7 +22,7 @@ add_test(function() {
 
   let DebuggerServer = window.DebuggerServer;
   do_check_true(DebuggerServer.initialized);
-  do_check_true(!!DebuggerServer._listener);
+  do_check_eq(DebuggerServer.listeningSockets, 1);
 
   run_next_test();
 });

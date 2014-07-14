@@ -539,6 +539,7 @@ nsBrowserContentHandler.prototype = {
   helpInfo : "  -browser           Open a browser window.\n" +
              "  -new-window  <url> Open <url> in a new window.\n" +
              "  -new-tab     <url> Open <url> in a new tab.\n" +
+             "  -private-window <url> Open <url> in a new private window.\n" +
 #ifdef XP_WIN
              "  -preferences       Open Options dialog.\n" +
 #else
