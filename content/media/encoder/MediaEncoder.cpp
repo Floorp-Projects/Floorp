@@ -64,17 +64,17 @@ MediaEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
 }
 
 void
-MediaEncoder::NotifyRemoved(MediaStreamGraph* aGraph)
+MediaEncoder::NotifyEvent(MediaStreamGraph* aGraph,
+                          MediaStreamListener::MediaStreamGraphEvent event)
 {
   // In case that MediaEncoder does not receive a TRACK_EVENT_ENDED event.
   LOG(PR_LOG_DEBUG, ("NotifyRemoved in [MediaEncoder]."));
   if (mAudioEncoder) {
-    mAudioEncoder->NotifyRemoved(aGraph);
+    mAudioEncoder->NotifyEvent(aGraph, event);
   }
   if (mVideoEncoder) {
-    mVideoEncoder->NotifyRemoved(aGraph);
+    mVideoEncoder->NotifyEvent(aGraph, event);
   }
-
 }
 
 /* static */
