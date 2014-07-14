@@ -1232,53 +1232,6 @@ window.addEventListener('ContentStart', function update_onContentStart() {
 }) ()
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-let SensorsListener = {
-  sensorsListenerDevices: ['crespo'],
-  device: libcutils.property_get("ro.product.device"),
-
-  deviceNeedsWorkaround: function SensorsListener_deviceNeedsWorkaround() {
-    return (this.sensorsListenerDevices.indexOf(this.device) != -1);
-  },
-
-  handleEvent: function SensorsListener_handleEvent(evt) {
-    switch(evt.type) {
-      case 'devicemotion':
-        // Listener that does nothing, we need this to have the sensor being
-        // able to report correct values, as explained in bug 753245, comment 6
-        // and in bug 871916
-        break;
-
-      default:
-        break;
-    }
-  },
-
-  observe: function SensorsListener_observe(subject, topic, data) {
-    // We remove the listener when the screen is off, otherwise sensor will
-    // continue to bother us with data and we won't be able to get the
-    // system into suspend state, thus draining battery.
-    if (data === 'on') {
-      window.addEventListener('devicemotion', this);
-    } else {
-      window.removeEventListener('devicemotion', this);
-    }
-  },
-
-  init: function SensorsListener_init() {
-    if (this.deviceNeedsWorkaround()) {
-      // On boot, enable the listener, screen will be on.
-      window.addEventListener('devicemotion', this);
-
-      // Then listen for further screen state changes
-      Services.obs.addObserver(this, 'screen-state-changed', false);
-    }
-  }
-}
-
-SensorsListener.init();
-#endif
-
 // Calling this observer will cause a shutdown an a profile reset.
 // Use eg. : Services.obs.notifyObservers(null, 'b2g-reset-profile', null);
 Services.obs.addObserver(function resetProfile(subject, topic, data) {
