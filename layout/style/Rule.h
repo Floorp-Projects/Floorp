@@ -33,7 +33,7 @@ virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 
 class Rule : public nsIStyleRule {
 protected:
-  Rule(uint32_t aLineNumber = 0, uint32_t aColumnNumber = 0)
+  Rule(uint32_t aLineNumber, uint32_t aColumnNumber)
     : mSheet(0),
       mParentRule(nullptr),
       mLineNumber(aLineNumber),

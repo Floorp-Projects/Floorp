@@ -303,7 +303,7 @@ class StyleRule MOZ_FINAL : public Rule
  public:
   StyleRule(nsCSSSelectorList* aSelector,
             Declaration *aDeclaration,
-            uint32_t aLineNumber = 0, uint32_t aColumnNumber = 0);
+            uint32_t aLineNumber, uint32_t aColumnNumber);
 private:
   // for |Clone|
   StyleRule(const StyleRule& aCopy);

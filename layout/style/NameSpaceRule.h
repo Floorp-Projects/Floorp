@@ -28,7 +28,8 @@ class NameSpaceRule MOZ_FINAL : public Rule,
                                 public nsIDOMCSSRule
 {
 public:
-  NameSpaceRule(nsIAtom* aPrefix, const nsString& aURLSpec);
+  NameSpaceRule(nsIAtom* aPrefix, const nsString& aURLSpec,
+                uint32_t aLineNumber, uint32_t aColumnNumber);
 private:
   // for |Clone|
   NameSpaceRule(const NameSpaceRule& aCopy);
