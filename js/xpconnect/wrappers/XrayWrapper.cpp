@@ -103,7 +103,14 @@ GetXrayType(JSObject *obj)
     if (IsJSXraySupported(standardProto))
         return XrayForJSObject;
 
-    return NotXray;
+    // Modulo a few exceptions, everything else counts as an XrayWrapper to an
+    // opaque object, which means that more-privileged code sees nothing from
+    // the underlying object. This is very important for security. In some cases
+    // though, we need to make an exception for compatibility.
+    if (IsSandbox(obj))
+        return NotXray;
+
+    return XrayForOpaqueObject;
 }
 
 JSObject *
