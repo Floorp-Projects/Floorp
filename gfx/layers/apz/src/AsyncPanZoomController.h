@@ -800,7 +800,6 @@ public:
   bool TakeOverFling(ScreenPoint aVelocity);
 
 private:
-  friend class OverscrollableAnimation;
   friend class FlingAnimation;
   friend class OverscrollSnapBackAnimation;
   // The initial velocity of the most recent fling.
@@ -1038,9 +1037,6 @@ public:
 
   virtual bool Sample(FrameMetrics& aFrameMetrics,
                       const TimeDuration& aDelta) = 0;
-
-  // Called if the animation is cancelled before it ends.
-  virtual void Cancel() {}
 
   /**
    * Get the deferred tasks in |mDeferredTasks|. See |mDeferredTasks|
