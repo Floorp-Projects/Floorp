@@ -25,6 +25,7 @@ toolbar {
 
 menubar, toolbar[type="menubar"] {
   -moz-appearance: menubar;
+  color: -moz-menubartext;
   min-width: 1px;
   min-height: 20px;
   padding: 1px 0px;
