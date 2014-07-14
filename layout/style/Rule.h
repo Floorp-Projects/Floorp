@@ -33,15 +33,21 @@ virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 
 class Rule : public nsIStyleRule {
 protected:
-  Rule()
+  Rule(uint32_t aLineNumber = 0, uint32_t aColumnNumber = 0)
     : mSheet(0),
-      mParentRule(nullptr)
+      mParentRule(nullptr),
+      mLineNumber(aLineNumber),
+      mColumnNumber(aColumnNumber),
+      mWasMatched(false)
   {
   }
 
   Rule(const Rule& aCopy)
     : mSheet(aCopy.mSheet),
-      mParentRule(aCopy.mParentRule)
+      mParentRule(aCopy.mParentRule),
+      mLineNumber(aCopy.mLineNumber),
+      mColumnNumber(aCopy.mColumnNumber),
+      mWasMatched(false)
   {
   }
 
@@ -95,6 +101,9 @@ public:
     mParentRule = aRule;
   }
 
+  uint32_t GetLineNumber() const { return mLineNumber; }
+  uint32_t GetColumnNumber() const { return mColumnNumber; }
+
   /**
    * Clones |this|. Never returns nullptr.
    */
@@ -126,6 +135,11 @@ protected:
   // if the low bit is 0, the latter if the low bit is 1.
   uintptr_t         mSheet;
   GroupRule*        mParentRule;
+
+  // Keep the same type so that MSVC packs them.
+  uint32_t          mLineNumber;
+  uint32_t          mColumnNumber : 31;
+  uint32_t          mWasMatched : 1;
 };
 
 } // namespace css
