@@ -20,7 +20,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=451958
 /** Test for Bug 451958 **/
 
 function run() {
-  window.open("http://example.org:80/tests/content/media/test/file_access_controls.html", "", "width=500,height=500");
+  setMediaTestsPrefs(function() {
+    window.open("http://example.org:80/tests/content/media/test/file_access_controls.html", "", "width=500,height=500");
+  });
 }
 
 function done() {
