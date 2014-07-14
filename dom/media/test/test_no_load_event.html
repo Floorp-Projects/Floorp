@@ -14,7 +14,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=715469
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=715469">Mozilla Bug 715469</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
 </div>
 <pre id="test">
 
@@ -32,18 +31,14 @@ function start() {
     SimpleTest.waitForExplicitFinish();
     var v = document.createElement("video");
     v.src = resource.name;
-    v.addEventListener("loadeddata", function(){v.play();}, false);
-    v.controls = "true";
-    
-    v.addEventListener("load",
-      function(){
-        gotLoadEvent = true;
-      },
-      false);
-      
+
+    v.addEventListener("load", function() {
+      gotLoadEvent = true;
+    }, false);
+
     v.addEventListener("ended", finished, false);
-    
     document.body.appendChild(v);
+    v.play();
   }
 }
 
@@ -51,7 +46,6 @@ function finished() {
   is(gotLoadEvent, false, "Should not receive a load on the video element");
   SimpleTest.finish();
 }
-
 
 </script>
 </pre>
