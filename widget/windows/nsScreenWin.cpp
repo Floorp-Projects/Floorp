@@ -10,14 +10,14 @@
 
 static uint32_t sScreenId;
 
-nsScreenWin :: nsScreenWin ( HMONITOR inScreen )
+nsScreenWin::nsScreenWin(HMONITOR inScreen)
   : mScreen(inScreen)
   , mId(++sScreenId)
 {
 #ifdef DEBUG
   HDC hDCScreen = ::GetDC(nullptr);
   NS_ASSERTION(hDCScreen,"GetDC Failure");
-  NS_ASSERTION ( ::GetDeviceCaps(hDCScreen, TECHNOLOGY) == DT_RASDISPLAY, "Not a display screen");
+  NS_ASSERTION(::GetDeviceCaps(hDCScreen, TECHNOLOGY) == DT_RASDISPLAY, "Not a display screen");
   ::ReleaseDC(nullptr,hDCScreen);
 #endif
 
@@ -27,7 +27,7 @@ nsScreenWin :: nsScreenWin ( HMONITOR inScreen )
 }
 
 
-nsScreenWin :: ~nsScreenWin()
+nsScreenWin::~nsScreenWin()
 {
   // nothing to see here.
 }
@@ -42,14 +42,14 @@ nsScreenWin::GetId(uint32_t *outId)
 
 
 NS_IMETHODIMP
-nsScreenWin :: GetRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
+nsScreenWin::GetRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
 {
   BOOL success = FALSE;
-  if ( mScreen ) {
+  if (mScreen) {
     MONITORINFO info;
     info.cbSize = sizeof(MONITORINFO);
-    success = ::GetMonitorInfoW( mScreen, &info );
-    if ( success ) {
+    success = ::GetMonitorInfoW(mScreen, &info);
+    if (success) {
       *outLeft = info.rcMonitor.left;
       *outTop = info.rcMonitor.top;
       *outWidth = info.rcMonitor.right - info.rcMonitor.left;
@@ -72,15 +72,15 @@ nsScreenWin :: GetRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int
 
 
 NS_IMETHODIMP
-nsScreenWin :: GetAvailRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
+nsScreenWin::GetAvailRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
 {
   BOOL success = FALSE;
 
-  if ( mScreen ) {
+  if (mScreen) {
     MONITORINFO info;
     info.cbSize = sizeof(MONITORINFO);
-    success = ::GetMonitorInfoW( mScreen, &info );
-    if ( success ) {
+    success = ::GetMonitorInfoW(mScreen, &info);
+    if (success) {
       *outLeft = info.rcWork.left;
       *outTop = info.rcWork.top;
       *outWidth = info.rcWork.right - info.rcWork.left;
@@ -168,7 +168,7 @@ nsScreenWin :: GetPixelDepth(int32_t *aPixelDepth)
 
 
 NS_IMETHODIMP 
-nsScreenWin :: GetColorDepth(int32_t *aColorDepth)
+nsScreenWin::GetColorDepth(int32_t *aColorDepth)
 {
   return GetPixelDepth(aColorDepth);
 
