@@ -135,6 +135,7 @@ class CompartmentChecker
 
     void check(InterpreterFrame *fp);
     void check(AbstractFramePtr frame);
+    void check(SavedStacks *stacks);
 };
 #endif /* JS_CRASH_DIAGNOSTICS */
 

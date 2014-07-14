@@ -9,6 +9,9 @@
 #include "nsFTPChannel.h"
 #include "nsNetUtil.h"
 #include "nsFtpProtocolHandler.h"
+#include "nsIEncodedChannel.h"
+#include "nsIHttpChannelInternal.h"
+#include "nsIForcePendingChannel.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/unused.h"
@@ -57,7 +60,8 @@ NS_IMPL_ISUPPORTS(FTPChannelParent,
                   nsIStreamListener,
                   nsIParentChannel,
                   nsIInterfaceRequestor,
-                  nsIRequestObserver)
+                  nsIRequestObserver,
+                  nsIChannelEventSink)
 
 //-----------------------------------------------------------------------------
 // FTPChannelParent::PFTPChannelParent
@@ -114,13 +118,16 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
 
-  mChannel = static_cast<nsFtpChannel*>(chan.get());
+  mChannel = chan;
+
+  // later on mChannel may become an HTTP channel (we'll be redirected to one
+  // if we're using a proxy), but for now this is safe
+  nsFtpChannel* ftpChan = static_cast<nsFtpChannel*>(mChannel.get());
 
   if (mPBOverride != kPBOverride_Unset) {
-    mChannel->SetPrivate(mPBOverride == kPBOverride_Private ? true : false);
+    ftpChan->SetPrivate(mPBOverride == kPBOverride_Private ? true : false);
   }
-
-  rv = mChannel->SetNotificationCallbacks(this);
+  rv = ftpChan->SetNotificationCallbacks(this);
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
 
@@ -128,16 +135,16 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
   nsCOMPtr<nsIInputStream> upload = DeserializeInputStream(aUploadStream, fds);
   if (upload) {
     // contentType and contentLength are ignored
-    rv = mChannel->SetUploadStream(upload, EmptyCString(), 0);
+    rv = ftpChan->SetUploadStream(upload, EmptyCString(), 0);
     if (NS_FAILED(rv))
       return SendFailedAsyncOpen(rv);
   }
 
-  rv = mChannel->ResumeAt(aStartPos, aEntityID);
+  rv = ftpChan->ResumeAt(aStartPos, aEntityID);
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
 
-  rv = mChannel->AsyncOpen(this, nullptr);
+  rv = ftpChan->AsyncOpen(this, nullptr);
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
   
@@ -154,7 +161,7 @@ FTPChannelParent::ConnectChannel(const uint32_t& channelId)
   nsCOMPtr<nsIChannel> channel;
   rv = NS_LinkRedirectChannels(channelId, this, getter_AddRefs(channel));
   if (NS_SUCCEEDED(rv))
-    mChannel = static_cast<nsFtpChannel*>(channel.get());
+    mChannel = channel;
 
   LOG(("  found channel %p, rv=%08x", mChannel.get(), rv));
 
@@ -240,7 +247,10 @@ FTPChannelParent::RecvDivertOnStopRequest(const nsresult& statusCode)
 
   // Reset fake pending status in case OnStopRequest has already been called.
   if (mChannel) {
-    mChannel->ForcePending(false);
+    nsCOMPtr<nsIForcePendingChannel> forcePendingIChan = do_QueryInterface(mChannel);
+    if (forcePendingIChan) {
+      forcePendingIChan->ForcePending(false);
+    }
   }
 
   OnStopRequest(mChannel, nullptr, status);
@@ -297,14 +307,14 @@ FTPChannelParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     resChan->GetEntityID(entityID);
   }
 
-  nsCOMPtr<nsIFTPChannel> ftpChan = do_QueryInterface(aRequest);
   PRTime lastModified = 0;
+  nsCOMPtr<nsIFTPChannel> ftpChan = do_QueryInterface(aRequest);
   if (ftpChan) {
     ftpChan->GetLastModifiedTime(&lastModified);
-  } else {
-    // Temporary hack: if we were redirected to use an HTTP channel (ie FTP is
-    // using an HTTP proxy), cancel, as we don't support those redirects yet.
-    aRequest->Cancel(NS_ERROR_NOT_IMPLEMENTED);
+  }
+  nsCOMPtr<nsIHttpChannelInternal> httpChan = do_QueryInterface(aRequest);
+  if (httpChan) {
+    httpChan->GetLastModifiedTime(&lastModified);
   }
 
   URIParams uriparam;
@@ -499,7 +509,10 @@ FTPChannelParent::StartDiversion()
 
   // Fake pending status in case OnStopRequest has already been called.
   if (mChannel) {
-    mChannel->ForcePending(true);
+    nsCOMPtr<nsIForcePendingChannel> forcePendingIChan = do_QueryInterface(mChannel);
+    if (forcePendingIChan) {
+      forcePendingIChan->ForcePending(true);
+    }
   }
 
   // Call OnStartRequest for the "DivertTo" listener.
@@ -567,8 +580,10 @@ FTPChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
   MOZ_RELEASE_ASSERT(mChannel);
 
   mChannel->Cancel(aErrorCode);
-
-  mChannel->ForcePending(false);
+  nsCOMPtr<nsIForcePendingChannel> forcePendingIChan = do_QueryInterface(mChannel);
+  if (forcePendingIChan) {
+    forcePendingIChan->ForcePending(false);
+  }
 
   bool isPending = false;
   nsresult rv = mChannel->IsPending(&isPending);
@@ -581,9 +596,15 @@ FTPChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
   // Channel has already sent OnStartRequest to the child, so ensure that we
   // call it here if it hasn't already been called.
   if (!mDivertedOnStartRequest) {
-    mChannel->ForcePending(true);
+    nsCOMPtr<nsIForcePendingChannel> forcePendingIChan = do_QueryInterface(mChannel);
+    if (forcePendingIChan) {
+      forcePendingIChan->ForcePending(true);
+    }
     mDivertToListener->OnStartRequest(mChannel, nullptr);
-    mChannel->ForcePending(false);
+
+    if (forcePendingIChan) {
+      forcePendingIChan->ForcePending(false);
+    }
   }
   // If the channel is pending, it will call OnStopRequest itself; otherwise, do
   // it here.
@@ -596,6 +617,29 @@ FTPChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
   if (!mIPCClosed) {
     unused << SendDeleteSelf();
   }
+}
+
+//-----------------------------------------------------------------------------
+// FTPChannelParent::nsIChannelEventSink
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+FTPChannelParent::AsyncOnChannelRedirect(
+                            nsIChannel *oldChannel,
+                            nsIChannel *newChannel,
+                            uint32_t redirectFlags,
+                            nsIAsyncVerifyRedirectCallback* callback)
+{
+  nsCOMPtr<nsIFTPChannel> ftpChan = do_QueryInterface(newChannel);
+  if (!ftpChan) {
+    // when FTP is set to use HTTP proxying, we wind up getting redirected to an HTTP channel.
+    nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(newChannel);
+    if (!httpChan)
+      return NS_ERROR_UNEXPECTED; 
+  }
+  mChannel = newChannel;
+  callback->OnRedirectVerifyCallback(NS_OK);
+  return NS_OK; 
 }
 
 //---------------------

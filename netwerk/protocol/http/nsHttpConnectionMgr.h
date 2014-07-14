@@ -405,6 +405,12 @@ private:
 
         nsHttpConnection *mConn;
     };
+public:
+    static nsAHttpConnection *MakeConnectionHandle(nsHttpConnection *aWrapped)
+    {
+        return new nsConnectionHandle(aWrapped);
+    }
+private:
 
     // nsHalfOpenSocket is used to hold the state of an opening TCP socket
     // while we wait for it to establish and bind it to a connection
