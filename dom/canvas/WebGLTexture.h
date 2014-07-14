@@ -67,18 +67,18 @@ public:
     {
     public:
         ImageInfo()
-            : mWebGLFormat(LOCAL_GL_NONE)
+            : mWebGLInternalFormat(LOCAL_GL_NONE)
             , mWebGLType(LOCAL_GL_NONE)
             , mImageDataStatus(WebGLImageDataStatus::NoImageData)
         {}
 
         ImageInfo(GLsizei width,
                   GLsizei height,
-                  TexInternalFormat webGLFormat,
+                  TexInternalFormat webGLInternalFormat,
                   TexType webGLType,
                   WebGLImageDataStatus status)
             : WebGLRectangleObject(width, height)
-            , mWebGLFormat(webGLFormat)
+            , mWebGLInternalFormat(webGLInternalFormat)
             , mWebGLType(webGLType)
             , mImageDataStatus(status)
         {
@@ -90,7 +90,7 @@ public:
             return mImageDataStatus == a.mImageDataStatus &&
                    mWidth == a.mWidth &&
                    mHeight == a.mHeight &&
-                   mWebGLFormat == a.mWebGLFormat &&
+                   mWebGLInternalFormat == a.mWebGLInternalFormat &&
                    mWebGLType == a.mWebGLType;
         }
         bool operator!=(const ImageInfo& a) const {
@@ -114,7 +114,8 @@ public:
          * It can be converted to a value to be passed to driver with
          * DriverFormatsFromFormatAndType().
          */
-        TexInternalFormat WebGLFormat() const { return mWebGLFormat; }
+        TexInternalFormat WebGLInternalFormat() const { return mWebGLInternalFormat; }
+
         /*! This is the type passed from JS to WebGL.
          * It can be converted to a value to be passed to driver with
          * DriverTypeFromType().
@@ -122,7 +123,7 @@ public:
         TexType WebGLType() const { return mWebGLType; }
 
     protected:
-        TexInternalFormat mWebGLFormat; //!< This is the WebGL/GLES format
+        TexInternalFormat mWebGLInternalFormat; //!< This is the WebGL/GLES internal format.
         TexType mWebGLType;   //!< This is the WebGL/GLES type
         WebGLImageDataStatus mImageDataStatus;
 
@@ -227,7 +228,8 @@ public:
 
     void SetImageInfo(TexImageTarget aTarget, GLint aLevel,
                       GLsizei aWidth, GLsizei aHeight,
-                      TexInternalFormat aFormat, TexType aType, WebGLImageDataStatus aStatus);
+                      TexInternalFormat aInternalFormat, TexType aType,
+                      WebGLImageDataStatus aStatus);
 
     void SetMinFilter(TexMinFilter aMinFilter) {
         mMinFilter = aMinFilter;
