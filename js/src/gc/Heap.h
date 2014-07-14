@@ -700,12 +700,7 @@ const size_t BytesPerArenaWithHeader = ArenaSize + ArenaBitmapBytes;
 const size_t ChunkDecommitBitmapBytes = ChunkSize / ArenaSize / JS_BITS_PER_BYTE;
 const size_t ChunkBytesAvailable = ChunkSize - sizeof(ChunkInfo) - ChunkDecommitBitmapBytes;
 const size_t ArenasPerChunk = ChunkBytesAvailable / BytesPerArenaWithHeader;
-
-#ifdef JS_GC_CHUNK_SIZE_SMALL
-static_assert(ArenasPerChunk == 62, "Do not accidentally change our heap's density.");
-#else
 static_assert(ArenasPerChunk == 252, "Do not accidentally change our heap's density.");
-#endif
 
 /* A chunk bitmap contains enough mark bits for all the cells in a chunk. */
 struct ChunkBitmap
