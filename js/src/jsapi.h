@@ -4484,7 +4484,14 @@ JS_PUBLIC_API(bool)
 JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, JS::MutableHandleValue vp);
 
 JS_PUBLIC_API(bool)
+JS_ParseJSON(JSContext *cx, JS::HandleString str, JS::MutableHandleValue vp);
+
+JS_PUBLIC_API(bool)
 JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, JS::HandleValue reviver,
+                        JS::MutableHandleValue vp);
+
+JS_PUBLIC_API(bool)
+JS_ParseJSONWithReviver(JSContext *cx, JS::HandleString str, JS::HandleValue reviver,
                         JS::MutableHandleValue vp);
 
 /************************************************************************/
