@@ -14,7 +14,7 @@
 namespace {
 class TimerEvent : public nsITimerCallback, public nsRunnable {
   typedef mozilla::MediaDecoderStateMachineScheduler Scheduler;
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 public:
   TimerEvent(Scheduler* aScheduler, int aTimerId)
     : mScheduler(aScheduler), mTimerId(aTimerId) {}
@@ -32,7 +32,7 @@ private:
   const int mTimerId;
 };
 
-NS_IMPL_ISUPPORTS(TimerEvent, nsITimerCallback, nsIRunnable);
+NS_IMPL_ISUPPORTS_INHERITED(TimerEvent, nsRunnable, nsITimerCallback);
 } // anonymous namespace
 
 static already_AddRefed<nsIEventTarget>
