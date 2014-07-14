@@ -16,6 +16,7 @@ SOURCES += [
     'IMediaResourceManagerClient.cpp',
     'IMediaResourceManagerDeathNotifier.cpp',
     'IMediaResourceManagerService.cpp',
+    'MediaResourceHandler.cpp',
     'MediaResourceManagerClient.cpp',
     'MediaResourceManagerService.cpp',
 ]

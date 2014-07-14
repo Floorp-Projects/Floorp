@@ -145,7 +145,7 @@ public:
             MOZ_ASSERT(m_otherCodeBytes < m_allocation.size);
             break;
           default:
-            MOZ_CRASH("bad code kind");
+            MOZ_ASSUME_UNREACHABLE("bad code kind");
         }
 
         release();
@@ -180,7 +180,7 @@ private:
           case BASELINE_CODE: m_baselineCodeBytes += n;        break;
           case REGEXP_CODE:   m_regexpCodeBytes   += n;        break;
           case OTHER_CODE:    m_otherCodeBytes    += n;        break;
-          default:            MOZ_CRASH("bad code kind");
+          default:            MOZ_ASSUME_UNREACHABLE("bad code kind");
         }
         return result;
     }

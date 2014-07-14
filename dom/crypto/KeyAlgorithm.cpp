@@ -32,27 +32,8 @@ KeyAlgorithm::KeyAlgorithm(nsIGlobalObject* aGlobal, const nsString& aName)
   SetIsDOMBinding();
 
   // Set mechanism based on algorithm name
-  if (mName.EqualsLiteral(WEBCRYPTO_ALG_AES_CBC)) {
-    mMechanism = CKM_AES_CBC_PAD;
-  } else if (mName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR)) {
-    mMechanism = CKM_AES_CTR;
-  } else if (mName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM)) {
-    mMechanism = CKM_AES_GCM;
-  } else if (mName.EqualsLiteral(WEBCRYPTO_ALG_SHA1)) {
-    mMechanism = CKM_SHA_1;
-  } else if (mName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
-    mMechanism = CKM_SHA256;
-  } else if (mName.EqualsLiteral(WEBCRYPTO_ALG_SHA384)) {
-    mMechanism = CKM_SHA384;
-  } else if (mName.EqualsLiteral(WEBCRYPTO_ALG_SHA512)) {
-    mMechanism = CKM_SHA512;
-  } else if (mName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1)) {
-    mMechanism = CKM_RSA_PKCS;
-  } else if (mName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
-    mMechanism = CKM_RSA_PKCS;
-  } else {
-    mMechanism = UNKNOWN_CK_MECHANISM;
-  }
+  mMechanism = MapAlgorithmNameToMechanism(aName);
+
   // HMAC not handled here, since it requires extra info
 }
 

@@ -1653,8 +1653,9 @@ Simulator::conditionallyExecute(SimInstruction *instr)
       case Assembler::GT: return !z_flag_ && (n_flag_ == v_flag_);
       case Assembler::LE: return z_flag_ || (n_flag_ != v_flag_);
       case Assembler::AL: return true;
+      default: MOZ_ASSUME_UNREACHABLE();
     }
-    MOZ_CRASH("unexpected condition field");
+    return false;
 }
 
 // Calculate and set the Negative and Zero flags.
@@ -1767,7 +1768,8 @@ Simulator::getShiftRm(SimInstruction *instr, bool *carry_out)
     if (instr->bit(4) == 0) {
         // By immediate.
         if (shift == ROR && shift_amount == 0) {
-            MOZ_CRASH("NYI");
+            MOZ_ASSUME_UNREACHABLE("NYI");
+            return result;
         }
         if ((shift == LSR || shift == ASR) && shift_amount == 0)
             shift_amount = 32;
@@ -1827,7 +1829,8 @@ Simulator::getShiftRm(SimInstruction *instr, bool *carry_out)
           }
 
           default:
-            MOZ_CRASH("Unexpected shift");
+            MOZ_ASSUME_UNREACHABLE();
+            break;
         }
     } else {
         // By register.
@@ -1904,7 +1907,8 @@ Simulator::getShiftRm(SimInstruction *instr, bool *carry_out)
           }
 
           default:
-            MOZ_CRASH("Unexpected shift");
+            MOZ_ASSUME_UNREACHABLE();
+            break;
         }
     }
     return result;
@@ -1930,7 +1934,8 @@ Simulator::processPU(SimInstruction *instr, int num_regs, int reg_size,
     int32_t rn_val = get_register(rn);
     switch (instr->PUField()) {
       case da_x:
-        MOZ_CRASH("Unexpected PUField: da_x");
+        MOZ_CRASH();
+        break;
       case ia_x:
         *start_address = rn_val;
         *end_address = rn_val + (num_regs * reg_size) - reg_size;
@@ -1947,7 +1952,8 @@ Simulator::processPU(SimInstruction *instr, int num_regs, int reg_size,
         rn_val = *end_address;
         break;
       default:
-        MOZ_CRASH("Unexpected PUField");
+        MOZ_ASSUME_UNREACHABLE();
+        break;
     }
     return rn_val;
 }
@@ -2285,7 +2291,7 @@ Simulator::softwareInterrupt(SimInstruction *instr)
             break;
           }
           default:
-            MOZ_CRASH("call");
+            MOZ_ASSUME_UNREACHABLE("call");
         }
 
         set_register(lr, saved_lr);
@@ -3326,7 +3332,7 @@ Simulator::decodeTypeVFP(SimInstruction *instr)
             const bool is_vmls = (instr->opc3Value() & 0x1);
 
             if (instr->szValue() != 0x1)
-                MOZ_CRASH("Not used by V8.");
+                MOZ_ASSUME_UNREACHABLE();  // Not used by V8.
 
             const double dd_val = get_double_from_d_register(vd);
             const double dn_val = get_double_from_d_register(vn);
@@ -3733,7 +3739,7 @@ Simulator::decodeVCVTBetweenFloatingPointAndIntegerFrac(SimInstruction *instr)
             set_s_register_from_sinteger(dst, temp);
         }
     } else {
-        MOZ_CRASH("Not implemented, fixed to float.");
+        MOZ_ASSUME_UNREACHABLE();  // Not implemented, fixed to float.
     }
 }
 

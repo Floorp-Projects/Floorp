@@ -1018,4 +1018,135 @@ TestArray.addTest(
   }
 );
 
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Import raw PBKDF2 key",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+    var key = new TextEncoder("utf-8").encode("password");
 
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveKey"]).then(
+      complete(that, hasKeyFields),
+      error(that)
+    );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Import raw PBKDF2 key and derive bits using HMAC-SHA-1",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+    var key = tv.pbkdf2_sha1.password;
+
+    function doDerive(x) {
+      console.log("deriving");
+      if (!hasKeyFields(x)) {
+        throw "Invalid key; missing field(s)";
+      }
+
+      var alg = {
+        name: "PBKDF2",
+        hash: "SHA-1",
+        salt: tv.pbkdf2_sha1.salt,
+        iterations: tv.pbkdf2_sha1.iterations
+      };
+      return crypto.subtle.deriveBits(alg, x, tv.pbkdf2_sha1.length);
+    }
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveKey"])
+      .then( doDerive, fail )
+      .then( memcmp_complete(that, tv.pbkdf2_sha1.derived), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Import raw PBKDF2 key and derive a new key using HMAC-SHA-1",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+    var key = tv.pbkdf2_sha1.password;
+
+    function doDerive(x) {
+      console.log("deriving");
+      if (!hasKeyFields(x)) {
+        throw "Invalid key; missing field(s)";
+      }
+
+      var alg = {
+        name: "PBKDF2",
+        hash: "SHA-1",
+        salt: tv.pbkdf2_sha1.salt,
+        iterations: tv.pbkdf2_sha1.iterations
+      };
+
+      var algDerived = {
+        name: "HMAC",
+        hash: {name: "SHA-1"}
+      };
+
+      return crypto.subtle.deriveKey(alg, x, algDerived, false, ["sign", "verify"])
+        .then(function (x) {
+          if (!hasKeyFields(x)) {
+            throw "Invalid key; missing field(s)";
+          }
+
+          if (x.algorithm.length != 512) {
+            throw "Invalid key; incorrect length";
+          }
+
+          return x;
+        });
+    }
+
+    function doSignAndVerify(x) {
+      var data = new Uint8Array(1024);
+
+      return crypto.subtle.sign("HMAC", x, data)
+        .then(function (sig) {
+          return crypto.subtle.verify("HMAC", x, sig, data);
+        });
+    }
+
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveKey"])
+      .then( doDerive, fail )
+      .then( doSignAndVerify, fail )
+      .then( complete(that), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+/*TestArray.addTest(
+  "Import raw PBKDF2 key and derive bits using HMAC-SHA-256",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+    var key = tv.pbkdf2_sha256.password;
+
+    function doDerive(x) {
+      console.log("deriving");
+      if (!hasKeyFields(x)) {
+        throw "Invalid key; missing field(s)";
+      }
+
+      var alg = {
+        name: "PBKDF2",
+        hash: "SHA-256",
+        salt: tv.pbkdf2_sha256.salt,
+        iterations: tv.pbkdf2_sha256.iterations
+      };
+      return crypto.subtle.deriveBits(alg, x, tv.pbkdf2_sha256.length);
+    }
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveKey"])
+      .then( doDerive, fail )
+      .then( memcmp_complete(that, tv.pbkdf2_sha256.derived), fail );
+  }
+);*/

@@ -33,7 +33,7 @@ Requirement::priority() const
         return 2;
 
       default:
-        MOZ_CRASH("Unknown requirement kind.");
+        MOZ_ASSUME_UNREACHABLE("Unknown requirement kind.");
     }
 }
 

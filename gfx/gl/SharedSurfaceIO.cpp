@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SharedSurfaceIO.h"
+
 #include "GLContextCGL.h"
 #include "mozilla/gfx/MacIOSurface.h"
 #include "mozilla/DebugOnly.h"
@@ -12,10 +13,8 @@
 namespace mozilla {
 namespace gl {
 
-using namespace gfx;
-
 /* static */ SharedSurface_IOSurface*
-SharedSurface_IOSurface::Create(MacIOSurface* surface, GLContext *gl, bool hasAlpha)
+SharedSurface_IOSurface::Create(MacIOSurface* surface, GLContext* gl, bool hasAlpha)
 {
     MOZ_ASSERT(surface);
     MOZ_ASSERT(gl);
@@ -33,7 +32,7 @@ SharedSurface_IOSurface::Fence()
 
 bool
 SharedSurface_IOSurface::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                                    GLenum format, GLenum type, GLvoid *pixels)
+                                    GLenum format, GLenum type, GLvoid* pixels)
 {
     // Calling glReadPixels when an IOSurface is bound to the current framebuffer
     // can cause corruption in following glReadPixel calls (even if they aren't
@@ -50,7 +49,7 @@ SharedSurface_IOSurface::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei hei
         ScopedBindFramebuffer bindFB(mGL, srcFB.FB());
         ScopedBindTexture bindTex(mGL, destTex.Texture());
         mGL->fCopyTexImage2D(LOCAL_GL_TEXTURE_2D, 0,
-                             HasAlpha() ? LOCAL_GL_RGBA : LOCAL_GL_RGB,
+                             mHasAlpha ? LOCAL_GL_RGBA : LOCAL_GL_RGB,
                              x, y,
                              width, height, 0);
     }
@@ -92,7 +91,11 @@ SharedSurface_IOSurface::SharedSurface_IOSurface(MacIOSurface* surface,
                                                  GLContext* gl,
                                                  const gfx::IntSize& size,
                                                  bool hasAlpha)
-  : SharedSurface_GL(SharedSurfaceType::IOSurface, AttachmentType::GLTexture, gl, size, hasAlpha)
+  : SharedSurface(SharedSurfaceType::IOSurface,
+                  AttachmentType::GLTexture,
+                  gl,
+                  size,
+                  hasAlpha)
   , mSurface(surface)
   , mCurConsGL(nullptr)
   , mConsTex(0)
@@ -131,9 +134,25 @@ SharedSurface_IOSurface::~SharedSurface_IOSurface()
     }
 }
 
+
+/*static*/ SurfaceFactory_IOSurface*
+SurfaceFactory_IOSurface::Create(GLContext* gl,
+                                 const SurfaceCaps& caps)
+{
+    gfx::IntSize maxDims(MacIOSurface::GetMaxWidth(),
+                         MacIOSurface::GetMaxHeight());
+    return new SurfaceFactory_IOSurface(gl, caps, maxDims);
+}
+
 SharedSurface*
 SurfaceFactory_IOSurface::CreateShared(const gfx::IntSize& size)
 {
+    if (size.width > mMaxDims.width ||
+        size.height > mMaxDims.height)
+    {
+        return nullptr;
+    }
+
     bool hasAlpha = mReadCaps.alpha;
     RefPtr<MacIOSurface> surf =
         MacIOSurface::CreateIOSurface(size.width, size.height, 1.0, hasAlpha);
