@@ -152,6 +152,12 @@ struct AlignedArray
     // We don't create an array of T here, since we don't want ctors to be
     // invoked at the wrong places if we realign below.
     mStorage = new (std::nothrow) uint8_t[storageByteCount.value()];
+    if (!mStorage) {
+      mStorage = nullptr;
+      mPtr = nullptr;
+      mCount = 0;
+      return;
+    }
     if (uintptr_t(mStorage) % alignment) {
       // Our storage does not start at a <alignment>-byte boundary. Make sure mPtr does!
       mPtr = (T*)(uintptr_t(mStorage) + alignment - (uintptr_t(mStorage) % alignment));
