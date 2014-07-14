@@ -212,7 +212,8 @@ void ApzcPan(AsyncPanZoomController* apzc,
              int aTouchEndY,
              bool expectIgnoredPan = false,
              bool hasTouchListeners = false,
-             nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr) {
+             nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
+             bool aKeepFingerDown = false) {
 
   const int TIME_BETWEEN_TOUCH_EVENT = 100;
   const int OVERCOME_TOUCH_TOLERANCE = 100;
@@ -272,11 +273,13 @@ void ApzcPan(AsyncPanZoomController* apzc,
   status = apzc->ReceiveInputEvent(mti);
   EXPECT_EQ(touchMoveStatus, status);
 
-  mti =
-    MultiTouchInput(MultiTouchInput::MULTITOUCH_END, aTime, TimeStamp(), 0);
-  aTime += TIME_BETWEEN_TOUCH_EVENT;
-  mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, aTouchEndY), ScreenSize(0, 0), 0, 0));
-  status = apzc->ReceiveInputEvent(mti);
+  if (!aKeepFingerDown) {
+    mti =
+      MultiTouchInput(MultiTouchInput::MULTITOUCH_END, aTime, TimeStamp(), 0);
+    aTime += TIME_BETWEEN_TOUCH_EVENT;
+    mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, aTouchEndY), ScreenSize(0, 0), 0, 0));
+    status = apzc->ReceiveInputEvent(mti);
+  }
 
   // Since we've explicitly built the overscroll handoff chain before
   // touch-start, we need to explicitly clear it after touch-end.
@@ -959,6 +962,36 @@ TEST_F(AsyncPanZoomControllerTester, OverScrollAbort) {
 
   // At this point, we have an active overscrolling fling animation.
   // Check that cancelling the animation clears the overscroll.
+  apzc->CancelAnimation();
+  EXPECT_FALSE(apzc->IsOverscrolled());
+  apzc->AssertStateIsReset();
+
+  apzc->Destroy();
+}
+
+TEST_F(AsyncPanZoomControllerTester, OverScrollPanningAbort) {
+  TestScopedBoolPref overscrollEnabledPref("apz.overscroll.enabled", true);
+
+  nsRefPtr<MockContentController> mcc = new NiceMock<MockContentController>();
+  nsRefPtr<TestAPZCTreeManager> tm = new TestAPZCTreeManager();
+  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(0, mcc, tm);
+
+  apzc->SetFrameMetrics(TestFrameMetrics());
+  apzc->NotifyLayersUpdated(TestFrameMetrics(), true);
+
+  // Pan sufficiently to hit overscroll behaviour. Keep the finger down so
+  // the pan does not end.
+  int time = 0;
+  int touchStart = 500;
+  int touchEnd = 10;
+  ApzcPan(apzc, tm, time, touchStart, touchEnd,
+          false, false, nullptr,   // filling it defaults, wish we had named arguments
+          true);                   // keep finger down
+  EXPECT_TRUE(apzc->IsOverscrolled());
+
+  // Check that calling CancelAnimation() while the user is still panning
+  // (and thus no fling or snap-back animation has had a chance to start)
+  // clears the overscroll.
   apzc->CancelAnimation();
   EXPECT_FALSE(apzc->IsOverscrolled());
   apzc->AssertStateIsReset();
