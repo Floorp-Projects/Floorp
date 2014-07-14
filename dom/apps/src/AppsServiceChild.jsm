@@ -174,8 +174,8 @@ this.DOMApplicationRegistry = {
         }
         for (let i = 0; i < apps.length; i++) {
           let domApp = apps[i].get();
-          if (!domApp) {
-            apps.splice(i);
+          if (!domApp || domApp._window === null) {
+            apps.splice(i, 1);
             continue;
           }
           domApp._proxy = new Proxy(domApp, {
@@ -233,8 +233,9 @@ this.DOMApplicationRegistry = {
 
     // Get rid of dead weak references.
     for (let i = 0; i < apps.length; i++) {
-      if (!apps[i].get()) {
-        apps.splice(i);
+      let app = apps[i].get();
+      if (!app || app._window === null) {
+        apps.splice(i, 1);
       }
     }
 
