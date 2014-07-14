@@ -240,6 +240,9 @@ this.WifiCommand = function(aControlMessage, aInterface, aSdkVersion) {
     });
   };
 
+  let infoKeys = [{regexp: /RSSI=/i,      prop: 'rssi'},
+                  {regexp: /LINKSPEED=/i, prop: 'linkspeed'}];
+
   command.getConnectionInfoICS = function (callback) {
     doStringCommand("SIGNAL_POLL", function(reply) {
       if (!reply) {
@@ -247,19 +250,21 @@ this.WifiCommand = function(aControlMessage, aInterface, aSdkVersion) {
         return;
       }
 
+      // Find any values matching |infoKeys|. This gets executed frequently
+      // enough that we want to avoid creating intermediate strings as much as
+      // possible.
       let rval = {};
-      var lines = reply.split("\n");
-      for (let i = 0; i < lines.length; ++i) {
-        let [key, value] = lines[i].split("=");
-        switch (key.toUpperCase()) {
-          case "RSSI":
-            rval.rssi = value | 0;
-            break;
-          case "LINKSPEED":
-            rval.linkspeed = value | 0;
-            break;
-          default:
-            // Ignore.
+      for (let i = 0; i < infoKeys.length; i++) {
+        let re = infoKeys[i].regexp;
+        let iKeyStart = reply.search(re);
+        if (iKeyStart !== -1) {
+          let prop = infoKeys[i].prop;
+          let iValueStart = reply.indexOf('=', iKeyStart) + 1;
+          let iNewlineAfterValue = reply.indexOf('\n', iValueStart);
+          let iValueEnd = iNewlineAfterValue !== -1
+                        ? iNewlineAfterValue
+                        : reply.length;
+          rval[prop] = reply.substring(iValueStart, iValueEnd) | 0;
         }
       }
 

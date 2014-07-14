@@ -96,6 +96,11 @@ struct ConnectedDevicePropertiesRequest
   uint16_t serviceUuid;
 };
 
+struct FetchUuidsRequest
+{
+  nsString address;
+};
+
 struct ConnectRequest
 {
   nsString address;
@@ -188,6 +193,7 @@ union Request
   DenyPairingConfirmationRequest;
   ConnectedDevicePropertiesRequest;
   PairedDevicePropertiesRequest;
+  FetchUuidsRequest;
   ConnectRequest;
   DisconnectRequest;
   SendFileRequest;

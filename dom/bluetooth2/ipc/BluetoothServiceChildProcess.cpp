@@ -125,6 +125,7 @@ BluetoothServiceChildProcess::GetConnectedDevicePropertiesInternal(
   SendRequest(aRunnable, ConnectedDevicePropertiesRequest(aServiceUuid));
   return NS_OK;
 }
+
 nsresult
 BluetoothServiceChildProcess::GetPairedDevicePropertiesInternal(
                                      const nsTArray<nsString>& aDeviceAddresses,
@@ -134,6 +135,14 @@ BluetoothServiceChildProcess::GetPairedDevicePropertiesInternal(
   request.addresses().AppendElements(aDeviceAddresses);
 
   SendRequest(aRunnable, request);
+  return NS_OK;
+}
+
+nsresult
+BluetoothServiceChildProcess::FetchUuidsInternal(
+    const nsAString& aDeviceAddress, BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable, FetchUuidsRequest(nsString(aDeviceAddress)));
   return NS_OK;
 }
 
