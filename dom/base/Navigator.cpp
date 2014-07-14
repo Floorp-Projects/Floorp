@@ -106,6 +106,8 @@
 #endif
 #include "mozilla/dom/ContentChild.h"
 
+#include "mozilla/dom/FeatureList.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -1532,6 +1534,18 @@ Navigator::GetFeature(const nsAString& aName)
       p->MaybeResolve(true);
       return p.forget();
     }
+  }
+
+  NS_NAMED_LITERAL_STRING(apiWindowPrefix, "api.window.");
+  if (StringBeginsWith(aName, apiWindowPrefix)) {
+    const nsAString& featureName = Substring(aName, apiWindowPrefix.Length(), aName.Length()-apiWindowPrefix.Length());
+    printf_stderr("apiWindowPrefix.Length(): %d, aName.Length(): %d\n", apiWindowPrefix.Length(), aName.Length());
+    if (IsFeatureDetectible(featureName)) {
+      p->MaybeResolve(true);
+    } else {
+      p->MaybeResolve(JS::UndefinedHandleValue);
+    }
+    return p.forget();
   }
 
   // resolve with <undefined> because the feature name is not supported
