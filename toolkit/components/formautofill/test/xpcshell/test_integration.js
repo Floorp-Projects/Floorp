@@ -8,6 +8,13 @@
 "use strict";
 
 /**
+ * The requestAutocomplete UI will not be displayed during these tests.
+ */
+add_task(function* test_initialize() {
+  FormAutofillTest.requestAutocompleteResponse = { canceled: true };
+});
+
+/**
  * Registers and unregisters an integration override function.
  */
 add_task(function* test_integration_override() {
@@ -15,14 +22,16 @@ add_task(function* test_integration_override() {
 
   let newIntegrationFn = base => ({
     createRequestAutocompleteUI: Task.async(function* () {
-      yield base.createRequestAutocompleteUI.apply(this, arguments);
       overrideCalled = true;
+      return yield base.createRequestAutocompleteUI.apply(this, arguments);
     }),
   });
 
   FormAutofill.registerIntegration(newIntegrationFn);
   try {
-    yield FormAutofill.integration.createRequestAutocompleteUI({});
+    let ui = yield FormAutofill.integration.createRequestAutocompleteUI({});
+    let result = yield ui.show();
+    Assert.ok(result.canceled);
   } finally {
     FormAutofill.unregisterIntegration(newIntegrationFn);
   }
@@ -41,15 +50,17 @@ add_task(function* test_integration_override_error() {
 
   let newIntegrationFn = base => ({
     createRequestAutocompleteUI: Task.async(function* () {
-      yield base.createRequestAutocompleteUI.apply(this, arguments);
       overrideCalled = true;
+      return yield base.createRequestAutocompleteUI.apply(this, arguments);
     }),
   });
 
   FormAutofill.registerIntegration(errorIntegrationFn);
   FormAutofill.registerIntegration(newIntegrationFn);
   try {
-    yield FormAutofill.integration.createRequestAutocompleteUI({});
+    let ui = yield FormAutofill.integration.createRequestAutocompleteUI({});
+    let result = yield ui.show();
+    Assert.ok(result.canceled);
   } finally {
     FormAutofill.unregisterIntegration(errorIntegrationFn);
     FormAutofill.unregisterIntegration(newIntegrationFn);
