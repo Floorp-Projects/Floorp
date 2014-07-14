@@ -115,7 +115,7 @@ ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
     return nullptr;
   }
 
-  aRv = swm->Unregister(mWindow, mScope, getter_AddRefs(promise));
+  aRv = swm->Unregister(mScope, getter_AddRefs(promise));
   if (aRv.Failed()) {
     return nullptr;
   }

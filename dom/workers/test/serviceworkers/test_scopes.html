@@ -15,15 +15,32 @@
 <pre id="test"></pre>
 <script class="testbody" type="text/javascript">
 
+  var scriptsAndScopes = [
+    [ "worker.js", "*" ],
+    [ "worker.js", "sub/dir/*"],
+    [ "worker.js", "sub/dir*" ],
+    [ "worker.js", "sub/dir" ],
+    [ "worker.js", "sub/dir/a*" ],
+    [ "worker.js", "sub*" ],
+  ];
+
   function registerWorkers() {
-    return Promise.all([
-      navigator.serviceWorker.register("worker.js", { scope: "*" }),
-      navigator.serviceWorker.register("worker.js", { scope: "sub/dir/*"}),
-      navigator.serviceWorker.register("worker.js", { scope: "sub/dir*" }),
-      navigator.serviceWorker.register("worker.js", { scope: "sub/dir" }),
-      navigator.serviceWorker.register("worker.js", { scope: "sub/dir/a*" }),
-      navigator.serviceWorker.register("worker.js", { scope: "sub*" }),
-    ]);
+    var registerArray = [];
+    scriptsAndScopes.forEach(function(item) {
+      registerArray.push(navigator.serviceWorker.register(item[0], { scope: item[1] }));
+    });
+    return Promise.all(registerArray);
+  }
+
+  function unregisterWorkers() {
+    var unregisterArray = [];
+    scriptsAndScopes.forEach(function(item) {
+      var p = navigator.serviceWorker.getRegistration(item[1]);
+      unregisterArray.push(p.then(function(reg) {
+        return reg.unregister();
+      }));
+    });
+    return Promise.all(unregisterArray);
   }
 
   function testScopes() {
@@ -49,6 +66,7 @@
   function runTest() {
     registerWorkers()
       .then(testScopes)
+      .then(unregisterWorkers)
       .then(function() {
         SimpleTest.finish();
       }).catch(function(e) {

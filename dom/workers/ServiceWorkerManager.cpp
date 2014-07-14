@@ -169,6 +169,36 @@ UpdatePromise::RejectAllPromises(const ErrorEventInit& aErrorDesc)
   }
 }
 
+void
+ServiceWorkerRegistrationInfo::Clear()
+{
+  if (mInstallingWorker) {
+    // FIXME(nsm): Terminate installing worker.
+    // Bug 1043701 Set state to redundant.
+    // Fire statechange.
+    mInstallingWorker = nullptr;
+    // FIXME(nsm): Abort any inflight requests from installing worker.
+  }
+
+  if (mWaitingWorker) {
+    // FIXME(nsm): Bug 1043701 Set state to redundant.
+    // Fire statechange.
+    mWaitingWorker = nullptr;
+  }
+
+  if (mCurrentWorker) {
+    // FIXME(nsm): Bug 1043701 Set state to redundant.
+    mCurrentWorker = nullptr;
+  }
+
+  nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  MOZ_ASSERT(swm);
+  swm->InvalidateServiceWorkerRegistrationWorker(this,
+                                                 WhichServiceWorker::INSTALLING_WORKER |
+                                                 WhichServiceWorker::WAITING_WORKER |
+                                                 WhichServiceWorker::ACTIVE_WORKER);
+}
+
 class FinishFetchOnMainThreadRunnable : public nsRunnable
 {
   nsMainThreadPtrHandle<ServiceWorkerUpdateInstance> mUpdateInstance;
@@ -444,6 +474,70 @@ public:
     registration->mUpdatePromise->AddPromise(mPromise);
 
     return rv;
+  }
+};
+
+/*
+ * Implements the async aspects of the unregister algorithm.
+ */
+class UnregisterRunnable : public nsRunnable
+{
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+  nsCOMPtr<nsIURI> mScopeURI;
+  nsRefPtr<Promise> mPromise;
+public:
+  UnregisterRunnable(nsIGlobalObject* aGlobal, nsIURI* aScopeURI,
+                     Promise* aPromise)
+    : mGlobal(aGlobal), mScopeURI(aScopeURI), mPromise(aPromise)
+  {
+    AssertIsOnMainThread();
+  }
+
+  NS_IMETHODIMP
+  Run()
+  {
+    AssertIsOnMainThread();
+
+    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+
+    nsRefPtr<ServiceWorkerManager::ServiceWorkerDomainInfo> domainInfo =
+      swm->GetDomainInfo(mScopeURI);
+    MOZ_ASSERT(domainInfo);
+
+    nsCString spec;
+    nsresult rv = mScopeURI->GetSpecIgnoringRef(spec);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      AutoJSAPI api;
+      api.Init(mGlobal);
+      mPromise->MaybeReject(api.cx(), JS::UndefinedHandleValue);
+      return NS_OK;
+    }
+
+    nsRefPtr<ServiceWorkerRegistrationInfo> registration;
+    if (!domainInfo->mServiceWorkerRegistrationInfos.Get(spec,
+                                                         getter_AddRefs(registration))) {
+      mPromise->MaybeResolve(JS::FalseHandleValue);
+      return NS_OK;
+    }
+
+    MOZ_ASSERT(registration);
+
+    registration->mPendingUninstall = true;
+    mPromise->MaybeResolve(JS::TrueHandleValue);
+
+    // The "Wait until no document is using registration" can actually be
+    // handled by [[HandleDocumentUnload]] in Bug 1041340, so we simply check
+    // if the document is currently in use here.
+    if (!registration->IsControllingDocuments()) {
+      if (!registration->mPendingUninstall) {
+        return NS_OK;
+      }
+
+      registration->Clear();
+      domainInfo->RemoveRegistration(registration);
+    }
+
+    return NS_OK;
   }
 };
 
@@ -759,10 +853,7 @@ ServiceWorkerManager::Update(ServiceWorkerRegistrationInfo* aRegistration,
 {
   if (aRegistration->HasUpdatePromise()) {
     NS_WARNING("Already had a UpdatePromise. Aborting that one!");
-    RejectUpdatePromiseObservers(aRegistration, NS_ERROR_DOM_ABORT_ERR);
-    MOZ_ASSERT(aRegistration->mUpdateInstance);
-    aRegistration->mUpdateInstance->Abort();
-    aRegistration->mUpdateInstance = nullptr;
+    AbortCurrentUpdate(aRegistration);
   }
 
   if (aRegistration->mInstallingWorker) {
@@ -789,20 +880,64 @@ ServiceWorkerManager::Update(ServiceWorkerRegistrationInfo* aRegistration,
   return NS_OK;
 }
 
-// If we return an error, ServiceWorkerREgistration will reject the Promise.
+void
+ServiceWorkerManager::AbortCurrentUpdate(ServiceWorkerRegistrationInfo* aRegistration)
+{
+  MOZ_ASSERT(aRegistration->HasUpdatePromise());
+  RejectUpdatePromiseObservers(aRegistration, NS_ERROR_DOM_ABORT_ERR);
+  MOZ_ASSERT(aRegistration->mUpdateInstance);
+  aRegistration->mUpdateInstance->Abort();
+  aRegistration->mUpdateInstance = nullptr;
+}
+
+// If we return an error, ServiceWorkerContainer will reject the Promise.
 NS_IMETHODIMP
-ServiceWorkerManager::Unregister(nsIDOMWindow* aWindow, const nsAString& aScope,
-                                 nsISupports** aPromise)
+ServiceWorkerManager::Unregister(const nsAString& aScope, nsISupports** aPromise)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(aWindow);
 
   // XXXnsm Don't allow chrome callers for now.
   MOZ_ASSERT(!nsContentUtils::IsCallerChrome());
 
-  // FIXME(nsm): Same bug, different patch.
+  nsCOMPtr<nsIGlobalObject> sgo = GetEntryGlobal();
+  if (!sgo) {
+    return NS_ERROR_FAILURE;
+  }
 
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  ErrorResult result;
+  nsRefPtr<Promise> promise = Promise::Create(sgo, result);
+  if (result.Failed()) {
+    return result.ErrorCode();
+  }
+
+  // Although the spec says that the same-origin checks should also be done
+  // asynchronously, we do them in sync because the Promise created by the
+  // WebIDL infrastructure due to a returned error will be resolved
+  // asynchronously. We aren't making any internal state changes in these
+  // checks, so ordering of multiple calls is not affected.
+  nsCOMPtr<nsIDocument> document = GetEntryDocument();
+  if (!document) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIURI> scopeURI;
+  nsCOMPtr<nsIURI> baseURI = document->GetBaseURI();
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, baseURI);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsCOMPtr<nsIPrincipal> documentPrincipal = document->NodePrincipal();
+  rv = documentPrincipal->CheckMayLoad(scopeURI, true /* report */,
+                                       false /* allowIfInheritsPrinciple */);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsRefPtr<nsIRunnable> unregisterRunnable =
+    new UnregisterRunnable(sgo, scopeURI, promise);
+  promise.forget(aPromise);
+  return NS_DispatchToCurrentThread(unregisterRunnable);
 }
 
 /* static */
@@ -1269,6 +1404,10 @@ public:
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
                                                    WhichServiceWorker::ACTIVE_WORKER | WhichServiceWorker::WAITING_WORKER);
+    if (!mRegistration->mCurrentWorker) {
+      // FIXME(nsm): Just got unregistered!
+      return NS_OK;
+    }
 
     // FIXME(nsm): Steps 7 of the algorithm.
 
@@ -1418,6 +1557,9 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(nsIURI* aURI)
   // ordered scopes and registrations better be in sync.
   MOZ_ASSERT(registration);
 
+  if (registration->mPendingUninstall) {
+    return nullptr;
+  }
   return registration.forget();
 }
 

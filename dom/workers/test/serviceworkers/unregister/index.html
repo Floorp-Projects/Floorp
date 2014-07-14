@@ -1,0 +1,46 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 984048 - Test unregister</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  function fail(msg) {
+  info("unregister/index.html: " + msg);
+    opener.postMessage("FAIL", "*");
+  }
+
+  if (!opener) {
+    info("unregister/index.html should not to be launched directly!");
+  }
+
+  window.addEventListener("message", function(e) {
+    if (!e.data) {
+      return fail("Message had no data!");
+    }
+
+    if (e.data.controlled === true && !navigator.serviceWorker.controller) {
+      return fail("Not controlled!");
+    } else if (e.data.controlled === false && navigator.serviceWorker.controller) {
+      return fail("Controlled when it shouldn't be!");
+    }
+
+    opener.postMessage("SUCCESS", "*");
+  }, false);
+
+  window.onload = function() {
+    opener.postMessage("READY", "*");
+  }
+</script>
+</pre>
+</body>
+</html>
