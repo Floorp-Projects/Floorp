@@ -49,6 +49,21 @@ HTMLMetaElement::SetItemValueText(const nsAString& aValue)
 
 
 nsresult
+HTMLMetaElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                              const nsAttrValue* aValue, bool aNotify)
+{
+  if (aNameSpaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::content) {
+      nsIDocument *document = GetCurrentDoc();
+      CreateAndDispatchEvent(document, NS_LITERAL_STRING("DOMMetaChanged"));
+    }
+  }
+
+  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
+                                            aNotify);
+}
+
+nsresult
 HTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                             nsIContent* aBindingParent,
                             bool aCompileEventHandlers)

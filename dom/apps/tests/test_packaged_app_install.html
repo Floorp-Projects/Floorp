@@ -34,7 +34,7 @@ function checkAppInstallError(aMiniManifestURL, aExpectedError) {
   req.onerror = function(evt) {
     var error = evt.target.error.name;
     if (error == aExpectedError) {
-      ok(true, "Got expected " + aExpectedError);
+      info("Got expected " + aExpectedError);
       PackagedTestHelper.next();
     } else {
       ok(false, "Got unexpected " + error);
@@ -46,7 +46,7 @@ function checkAppInstallError(aMiniManifestURL, aExpectedError) {
 function checkUninstallApp(aApp) {
   var req = navigator.mozApps.mgmt.uninstall(aApp);
   req.onsuccess = function() {
-    ok(true, "App uninstalled");
+    info("App uninstalled");
     aApp.ondownloadsuccess = null;
     aApp.ondownloaderror = null;
     aApp.onprogress = null;
@@ -83,11 +83,11 @@ var steps = [
     // Set up
     SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.addPermission("webapps-manage", true, document);
-    ok(true, "Set up");
+    info("Set up");
     PackagedTestHelper.next();
   },
   function() {
-    ok(true, "autoConfirmAppInstall");
+    info("autoConfirmAppInstall");
     SpecialPowers.autoConfirmAppInstall(PackagedTestHelper.next);
   },
   function() {
@@ -96,17 +96,17 @@ var steps = [
   function() {
     // Bug 927699 - navigator.mozApps.install(url) lets NS_ERROR_FAILURE onto
     //              the web.
-    ok(true, "== TEST == INVALID_URL");
+    info("== TEST == INVALID_URL");
     checkAppInstallError("", "INVALID_URL");
   },
   function() {
     // Test network error.
-    ok(true, "== TEST == Network error");
+    info("== TEST == Network error");
     checkAppInstallError("http://notvalidurl", "NETWORK_ERROR");
   },
   function() {
     // Test wrong mini-manifest content type.
-    ok(true, "== TEST == Not valid mini-manifest content type");
+    info("== TEST == Not valid mini-manifest content type");
     var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true" +
                           "&noManifestContentType=true";
@@ -114,7 +114,7 @@ var steps = [
   },
   function() {
     // Test mini-manifest 'size' value is not number. Bug 839435.
-    ok(true, "== TEST == Size value is not a number");
+    info("== TEST == Size value is not a number");
     var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true" +
                           "&packageSize=\"NotANumber\"";
@@ -122,7 +122,7 @@ var steps = [
   },
   function() {
     // Test mini-manifest  negative 'size' value. Bug 839435.
-    ok(true, "== TEST == Negative size value");
+    info("== TEST == Negative size value");
     var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true" +
                           "&packageSize=-1";
@@ -130,7 +130,7 @@ var steps = [
   },
   function() {
     // Test wrong package path
-    ok(true, "== TEST == Installing app with wrong package path");
+    info("== TEST == Installing app with wrong package path");
     var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true" +
                           "&wrongPackagePath=true";
@@ -138,7 +138,7 @@ var steps = [
   },
   function() {
     // Test no manifest in zip file.
-    ok(true, "== TEST == No manifest in the zip file");
+    info("== TEST == No manifest in the zip file");
     var miniManifestURL = PackagedTestHelper.gSJS + "?getManifest=true";
     PackagedTestHelper.checkAppDownloadError(miniManifestURL,
                                             "MISSING_MANIFEST", 0, true, true,
@@ -150,7 +150,7 @@ var steps = [
   function() {
     // Test mini-manifest app name is different from the webapp manifest name.
     // Bug 844243.
-    ok(true, "== TEST == Mini-manifest app name is different from webapp " +
+    info("== TEST == Mini-manifest app name is different from webapp " +
              "manifest name");
     var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true" +
@@ -187,11 +187,11 @@ var steps = [
     PackagedTestHelper.setAppVersion(2, PackagedTestHelper.next);
   },
   function() {
-    ok(true, "== TEST == Install packaged app");
+    info("== TEST == Install packaged app");
     var miniManifestURL = PackagedTestHelper.gSJS +
                           "?getManifest=true";
     navigator.mozApps.mgmt.oninstall = function(evt) {
-      ok(true, "Got oninstall event");
+      info("Got oninstall event");
       PackagedTestHelper.gApp = evt.application;
       PackagedTestHelper.gApp.ondownloaderror = function() {
         ok(false, "Download error " +
@@ -199,7 +199,7 @@ var steps = [
         PackagedTestHelper.finish();
       };
       PackagedTestHelper.gApp.ondownloadsuccess = function() {
-        ok(true, "App downloaded");
+        info("App downloaded");
         var expected = {
           name: PackagedTestHelper.gAppName,
           manifestURL: miniManifestURL,
@@ -220,11 +220,85 @@ var steps = [
     var request = navigator.mozApps.installPackage(miniManifestURL);
     request.onerror = PackagedTestHelper.mozAppsError;
     request.onsuccess = function() {
-      ok(true, "Application installed");
+      info("Application installed");
     };
   },
   function() {
-    ok(true, "all done!\n");
+    PackagedTestHelper.setAppVersion(3, PackagedTestHelper.next, false, true);
+  },
+  function() {
+    info("== TEST == Install packaged app with a cancel/resume");
+    var miniManifestURL = PackagedTestHelper.gSJS +
+                          "?getManifest=true&allowCancel";
+    navigator.mozApps.mgmt.oninstall = function(evt) {
+      info("Got oninstall event");
+      PackagedTestHelper.gApp = evt.application;
+
+      PackagedTestHelper.gApp.onprogress = function() {
+        // Let's try cancelling and resuming the download later on.
+        PackagedTestHelper.gApp.cancelDownload();
+        // And only do this once.
+        PackagedTestHelper.gApp.onprogress = null;
+      };
+
+      var alreadyCancelled = false;
+      PackagedTestHelper.gApp.ondownloaderror = function() {
+        ok(!alreadyCancelled, "The download should be cancelled only once!");
+        is(PackagedTestHelper.gApp.downloadError.name, "DOWNLOAD_CANCELED",
+           "Download error " + PackagedTestHelper.gApp.downloadError.name);
+        if (!alreadyCancelled) {
+          PackagedTestHelper.gApp.download();
+          alreadyCancelled = true;
+        }
+      };
+
+      PackagedTestHelper.gApp.ondownloadsuccess = function() {
+        info("App downloaded");
+        // We could try also applying the download we just made.
+        var expected = {
+          name: PackagedTestHelper.gAppName,
+          manifestURL: miniManifestURL,
+          installOrigin: PackagedTestHelper.gInstallOrigin,
+          progress: 0,
+          installState: "pending",
+          downloadAvailable: false,
+          downloading: false,
+          downloadSize: 0,
+          size: 0,
+          readyToApplyDownload: true
+        };
+        PackagedTestHelper.checkAppState(PackagedTestHelper.gApp, 3, expected,
+                                         true, false, function() {});
+      };
+
+      PackagedTestHelper.gApp.ondownloadapplied = function() {
+        info("App download applied.");
+        var expected = {
+          name: PackagedTestHelper.gAppName,
+          manifestURL: miniManifestURL,
+          installOrigin: PackagedTestHelper.gInstallOrigin,
+          progress: 0,
+          installState: "installed",
+          downloadAvailable: false,
+          downloading: false,
+          downloadSize: 0,
+          size: 0,
+          readyToApplyDownload: false
+        };
+        PackagedTestHelper.checkAppState(PackagedTestHelper.gApp, 3, expected,
+                                         true, false, PackagedTestHelper.next);
+      }
+
+    };
+
+    var request = navigator.mozApps.installPackage(miniManifestURL);
+    request.onerror = PackagedTestHelper.mozAppsError;
+    request.onsuccess = function() {
+      info("Application installed");
+    };
+  },
+  function() {
+    info("all done!\n");
     PackagedTestHelper.finish();
   }
 ];

@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase #2 for bug 485149</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+	
+
+body {padding:20px;}
+
+field {
+  display:block;
+  overflow:hidden;
+  background:yellow;
+
+  box-shadow: inset 0 0 5px 5px #cccccc; 
+  border:1px solid #000000;
+  border-radius:7px;
+  width:200px;
+  height:50px;
+  margin-left:5px;
+  margin-right:2px;
+  padding:10px;
+  border-box;
+}
+
+.with-legend {
+  margin-top:8px;
+  height:42px;
+}
+
+p { height:40px; margin:0; }
+
+#mask1 {
+ position:absolute;
+ left:0;
+ top:0;
+ background:black;
+ z-index:1;
+ width:150px;
+ height:700px;
+}
+
+#mask2 {
+ position:absolute;
+ left:170px;
+ top:330px;
+ background:black;
+ z-index:1;
+ width:150px;
+ height:300px;
+}
+
+#mask3 {
+ position:absolute;
+ left:0;
+ top:380px;
+ background:black;
+ z-index:1;
+ width:300px;
+ height:300px;
+}
+
+</style>
+</head>
+<body>
+
+<field class="with-legend">
+1
+</field>
+
+<p></p>
+<field class="with-legend" style="position:relative">
+2
+</field>
+
+<p></p>
+<field>
+3
+</field>
+
+<p></p>
+<field class="with-legend" style="border-color:transparent">
+4
+</field>
+
+<div id="mask1"></div>
+<div id="mask2"></div>
+<div id="mask3"></div>
+
+</body>
+</html>

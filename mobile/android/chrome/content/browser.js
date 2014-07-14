@@ -4884,14 +4884,14 @@ var BrowserEventHandler = {
    * <video>, <object>, <embed>, <applet>, <canvas>, <img>, <media>, <pre>
    */
   _shouldSuppressReflowOnZoom: function(aElement) {
-    if (aElement instanceof Ci.nsIDOMHTMLVideoElement ||
-        aElement instanceof Ci.nsIDOMHTMLObjectElement ||
-        aElement instanceof Ci.nsIDOMHTMLEmbedElement ||
-        aElement instanceof Ci.nsIDOMHTMLAppletElement ||
-        aElement instanceof Ci.nsIDOMHTMLCanvasElement ||
-        aElement instanceof Ci.nsIDOMHTMLImageElement ||
-        aElement instanceof Ci.nsIDOMHTMLMediaElement ||
-        aElement instanceof Ci.nsIDOMHTMLPreElement) {
+    if (aElement instanceof HTMLVideoElement ||
+        aElement instanceof HTMLObjectElement ||
+        aElement instanceof HTMLEmbedElement ||
+        aElement instanceof HTMLAppletElement ||
+        aElement instanceof HTMLCanvasElement ||
+        aElement instanceof HTMLImageElement ||
+        aElement instanceof HTMLMediaElement ||
+        aElement instanceof HTMLPreElement) {
       return true;
     }
 

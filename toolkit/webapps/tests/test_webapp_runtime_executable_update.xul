@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1036751
+-->
+<window title="Mozilla Bug 1036751"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
+  <script type="application/javascript" src="head.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1036751"
+     target="_blank">Mozilla Bug 1036751</a>
+  </body>
+
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 1036751 **/
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NativeApp.jsm");
+Cu.import("resource://gre/modules/WebappOSUtils.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
+
+let manifest = {
+  name: "test_desktop_hosted_launch",
+  launch_path: "/chrome/toolkit/webapps/tests/app.sjs?appreq",
+};
+
+let app = {
+  name: "test_desktop_hosted_launch",
+  manifestURL: "http://127.0.0.1:8888/sample.manifest",
+  manifest: manifest,
+  origin: "http://127.0.0.1:8888/",
+  categories: [],
+  installOrigin: "http://127.0.0.1:8888/",
+  receipts: [],
+  installTime: Date.now(),
+};
+
+let testAppInfo = new TestAppInfo(app);
+
+function runProcess() {
+    let deferred = Promise.defer();
+
+    testAppInfo.appProcess.runAsync([], 0, (aSubject, aTopic) => {
+      if (aTopic == "process-finished") {
+        deferred.resolve(aSubject.exitValue);
+      } else if (aTopic == "process-failed") {
+        deferred.reject(aSubject.exitValue);
+      }
+    });
+
+    return deferred.promise;
+}
+
+let runTest = Task.async(function*() {
+  // Get to a clean state before the test
+  yield testAppInfo.cleanup();
+
+  SimpleTest.registerCleanupFunction(() => testAppInfo.cleanup());
+
+  setDryRunPref();
+
+  let nativeApp = new NativeApp(app, manifest, app.categories);
+  ok(nativeApp, "NativeApp object created");
+
+  testAppInfo.profileDir = nativeApp.createProfile();
+  ok(testAppInfo.profileDir && testAppInfo.profileDir.exists(), "Profile directory created");
+
+  // On Mac build servers, we don't have enough privileges to write to /Applications,
+  // so we install apps in a user-owned directory.
+  if (MAC) {
+    yield setMacRootInstallDir(OS.Path.join(OS.Constants.Path.homeDir, "Applications"));
+  }
+
+  // Install application
+  info("Test installation");
+  yield nativeApp.install(app, manifest);
+  while (!WebappOSUtils.isLaunchable(app)) {
+    yield wait(1000);
+  }
+  ok(true, "App launchable");
+
+  let fakeInstallDir;
+  if (MAC) {
+    fakeInstallDir = getFile(testAppInfo.installPath, "Contents", "MacOS");
+  } else {
+    fakeInstallDir = getFile(OS.Constants.Path.profileDir, "fakeInstallDir");
+    fakeInstallDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+  }
+
+  let fakeAppIniFile = fakeInstallDir.clone();
+  fakeAppIniFile.append("application.ini");
+
+  let iniFile = getFile(testAppInfo.webappINI);
+
+  let iniWriter = Cc["@mozilla.org/xpcom/ini-processor-factory;1"].
+                  getService(Ci.nsIINIParserFactory).
+                  createINIParser(iniFile).
+                  QueryInterface(Ci.nsIINIParserWriter);
+  iniWriter.setString("WebappRT", "InstallDir", fakeInstallDir.path);
+  iniWriter.writeFile();
+
+  let appIniWriter = Cc["@mozilla.org/xpcom/ini-processor-factory;1"].
+                     getService(Ci.nsIINIParserFactory).
+                     createINIParser(fakeAppIniFile).
+                     QueryInterface(Ci.nsIINIParserWriter);
+  appIniWriter.setString("App", "BuildID", "aBuildID");
+  appIniWriter.writeFile();
+
+  let exeName = "webapprt-stub";
+  if (WIN) {
+    exeName += ".exe";
+  }
+
+  let stubExeName = "TestWebappRT";
+  if (WIN) {
+    stubExeName += ".exe";
+  }
+
+  let exeFile = getFile(testAppInfo.exePath);
+
+  let stubExeFile = getFile(getTestFilePath(stubExeName));
+  stubExeFile.copyTo(fakeInstallDir, exeName);
+
+  if (MAC) {
+    stubExeFile.copyTo(getFile(testAppInfo.installPath, "Contents", "MacOS"), "firefox-bin");
+  }
+
+  testAppInfo.appProcess.init(exeFile);
+
+  if (WIN) {
+    is((yield runProcess()), 0, "Webapp runtime executable has been replaced");
+  }
+  is((yield runProcess()), 42, "Webapp runtime executable has been replaced");
+
+  SimpleTest.finish();
+});
+
+runTest().catch((e) => {
+  ok(false, "Error during test: " + e);
+  SimpleTest.finish();
+});
+
+]]>
+</script>
+</window>

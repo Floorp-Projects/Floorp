@@ -86,7 +86,7 @@ public:
   virtual bool HasDeferredDNSPrefetchRequest();
 
   // WebIDL API
-  void GetHref(nsString& aValue)
+  void GetHref(nsAString& aValue, ErrorResult& rv)
   {
     GetHTMLURIAttr(nsGkAtoms::href, aValue);
   }
@@ -145,11 +145,32 @@ public:
 
   // Link::GetOrigin is OK for us
 
+  using Link::GetProtocol;
+  using Link::SetProtocol;
+
   // Link::GetUsername is OK for us
   // Link::SetUsername is OK for us
 
-  // Link::Getpassword is OK for us
-  // Link::Setpassword is OK for us
+  // Link::GetPassword is OK for us
+  // Link::SetPassword is OK for us
+
+  using Link::GetHost;
+  using Link::SetHost;
+
+  using Link::GetHostname;
+  using Link::SetHostname;
+
+  using Link::GetPort;
+  using Link::SetPort;
+
+  using Link::GetPathname;
+  using Link::SetPathname;
+
+  using Link::GetSearch;
+  using Link::SetSearch;
+
+  using Link::GetHash;
+  using Link::SetHash;
 
   // The XPCOM URI decomposition attributes are fine for us
   void GetCoords(nsString& aValue)
@@ -192,9 +213,9 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::shape, aValue, rv);
   }
-  void Stringify(nsAString& aResult)
+  void Stringify(nsAString& aResult, ErrorResult& aError)
   {
-    GetHref(aResult);
+    GetHref(aResult, aError);
   }
 
 protected:

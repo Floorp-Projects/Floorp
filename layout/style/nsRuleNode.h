@@ -306,6 +306,12 @@ private:
                          const PLDHashEntryHdr *aHdr,
                          const void *aKey);
 
+  static PLDHashOperator
+  SweepHashEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                 uint32_t number, void *arg);
+  void SweepChildren(nsTArray<nsRuleNode*>& aSweepQueue);
+  bool DestroyIfNotMarked();
+
   static const PLDHashTableOps ChildrenHashOps;
 
   static PLDHashOperator
@@ -401,8 +407,7 @@ private:
   uint32_t mRefCnt;
 
 public:
-  // Overloaded new operator. Initializes the memory to 0 and relies on an arena
-  // (which comes from the presShell) to perform the allocation.
+  // Overloaded new operator that allocates from a presShell arena.
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
   void Destroy() { DestroyInternal(nullptr); }
 
@@ -713,6 +718,8 @@ public:
    * ancestors until it reaches a marked one.  Sweep recursively sweeps
    * the children, destroys any that are unmarked, and clears marks,
    * returning true if the node on which it was called was destroyed.
+   * If children are hashed, the mNextSibling field on the children is
+   * temporarily used internally by Sweep.
    */
   void Mark();
   bool Sweep();

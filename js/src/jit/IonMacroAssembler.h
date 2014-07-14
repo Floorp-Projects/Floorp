@@ -139,7 +139,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             } else if (type_.isAnyObject()) {
                 mirType = MIRType_Object;
             } else {
-                MOZ_CRASH("Unknown conversion to mirtype");
+                MOZ_ASSUME_UNREACHABLE("Unknown conversion to mirtype");
             }
 
             if (mirType == MIRType_Double)
@@ -341,7 +341,7 @@ class MacroAssembler : public MacroAssemblerSpecific
           case MIRType_MagicIsConstructing:
           case MIRType_MagicHole: return branchTestMagic(cond, val, label);
           default:
-            MOZ_CRASH("Bad MIRType");
+            MOZ_ASSUME_UNREACHABLE("Bad MIRType");
         }
     }
 
@@ -731,7 +731,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             store32(value, dest);
             break;
           default:
-            MOZ_CRASH("Invalid typed array type");
+            MOZ_ASSUME_UNREACHABLE("Invalid typed array type");
         }
     }
 
@@ -1159,7 +1159,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         switch (executionMode) {
           case SequentialExecution: return &sequentialFailureLabel_;
           case ParallelExecution: return &parallelFailureLabel_;
-          default: MOZ_CRASH("Unexpected execution mode");
+          default: MOZ_ASSUME_UNREACHABLE("Unexpected execution mode");
         }
     }
 
@@ -1446,7 +1446,7 @@ JSOpToDoubleCondition(JSOp op)
       case JSOP_GE:
         return Assembler::DoubleGreaterThanOrEqual;
       default:
-        MOZ_CRASH("Unexpected comparison operation");
+        MOZ_ASSUME_UNREACHABLE("Unexpected comparison operation");
     }
 }
 
@@ -1473,7 +1473,7 @@ JSOpToCondition(JSOp op, bool isSigned)
           case JSOP_GE:
             return Assembler::GreaterThanOrEqual;
           default:
-            MOZ_CRASH("Unrecognized comparison operation");
+            MOZ_ASSUME_UNREACHABLE("Unrecognized comparison operation");
         }
     } else {
         switch (op) {
@@ -1492,7 +1492,7 @@ JSOpToCondition(JSOp op, bool isSigned)
           case JSOP_GE:
             return Assembler::AboveOrEqual;
           default:
-            MOZ_CRASH("Unrecognized comparison operation");
+            MOZ_ASSUME_UNREACHABLE("Unrecognized comparison operation");
         }
     }
 }

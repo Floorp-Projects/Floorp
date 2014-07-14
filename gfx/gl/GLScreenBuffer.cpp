@@ -24,12 +24,12 @@
 namespace mozilla {
 namespace gl {
 
-using namespace mozilla::gfx;
+using gfx::SurfaceFormat;
 
 GLScreenBuffer*
 GLScreenBuffer::Create(GLContext* gl,
-                     const gfx::IntSize& size,
-                     const SurfaceCaps& caps)
+                       const gfx::IntSize& size,
+                       const SurfaceCaps& caps)
 {
     if (caps.antialias &&
         !gl->IsSupported(GLFeature::framebuffer_multisample))
@@ -37,7 +37,7 @@ GLScreenBuffer::Create(GLContext* gl,
         return nullptr;
     }
 
-    SurfaceFactory_GL* factory = nullptr;
+    SurfaceFactory* factory = nullptr;
 
 #ifdef MOZ_WIDGET_GONK
     /* On B2G, we want a Gralloc factory, and we want one right at the start */
@@ -50,9 +50,8 @@ GLScreenBuffer::Create(GLContext* gl,
 #endif
 #ifdef XP_MACOSX
     /* On OSX, we want an IOSurface factory, and we want one right at the start */
-    if (!factory)
-    {
-        factory = new SurfaceFactory_IOSurface(gl, caps);
+    if (!factory) {
+        factory = SurfaceFactory_IOSurface::Create(gl, caps);
     }
 #endif
 
@@ -300,15 +299,17 @@ GLScreenBuffer::BeforeReadCall()
 }
 
 bool
-GLScreenBuffer::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                           GLenum format, GLenum type, GLvoid *pixels)
+GLScreenBuffer::ReadPixels(GLint x, GLint y,
+                           GLsizei width, GLsizei height,
+                           GLenum format, GLenum type,
+                           GLvoid* pixels)
 {
-    // If the currently bound framebuffer is backed by a SharedSurface_GL
+    // If the currently bound framebuffer is backed by a SharedSurface
     // then it might want to override how we read pixel data from it.
     // This is normally only the default framebuffer, but we can also
     // have SharedSurfaces bound to other framebuffers when doing
     // readback for BasicLayers.
-    SharedSurface_GL* surf;
+    SharedSurface* surf;
     if (GetReadFB() == 0) {
         surf = SharedSurf();
     } else {
@@ -340,7 +341,7 @@ GLScreenBuffer::AssureBlitted()
         MOZ_ASSERT(drawFB != 0);
         MOZ_ASSERT(drawFB != readFB);
         MOZ_ASSERT(mGL->IsSupported(GLFeature::framebuffer_blit));
-        MOZ_ASSERT(mDraw->Size() == mRead->Size());
+        MOZ_ASSERT(mDraw->mSize == mRead->Size());
 
         ScopedBindFramebuffer boundFB(mGL);
         ScopedGLState scissor(mGL, LOCAL_GL_SCISSOR_TEST, false);
@@ -348,7 +349,7 @@ GLScreenBuffer::AssureBlitted()
         BindReadFB_Internal(drawFB);
         BindDrawFB_Internal(readFB);
 
-        const gfx::IntSize&  srcSize = mDraw->Size();
+        const gfx::IntSize&  srcSize = mDraw->mSize;
         const gfx::IntSize& destSize = mRead->Size();
 
         mGL->raw_fBlitFramebuffer(0, 0,  srcSize.width,  srcSize.height,
@@ -362,7 +363,7 @@ GLScreenBuffer::AssureBlitted()
 }
 
 void
-GLScreenBuffer::Morph(SurfaceFactory_GL* newFactory, SurfaceStreamType streamType)
+GLScreenBuffer::Morph(SurfaceFactory* newFactory, SurfaceStreamType streamType)
 {
     MOZ_ASSERT(mStream);
 
@@ -381,18 +382,17 @@ GLScreenBuffer::Morph(SurfaceFactory_GL* newFactory, SurfaceStreamType streamTyp
 }
 
 bool
-GLScreenBuffer::Attach(SharedSurface* surface, const gfx::IntSize& size)
+GLScreenBuffer::Attach(SharedSurface* surf, const gfx::IntSize& size)
 {
     ScopedBindFramebuffer autoFB(mGL);
 
-    SharedSurface_GL* surf = SharedSurface_GL::Cast(surface);
     if (mRead && SharedSurf())
         SharedSurf()->UnlockProd();
 
     surf->LockProd();
 
     if (mRead &&
-        surf->AttachType() == SharedSurf()->AttachType() &&
+        surf->mAttachType == SharedSurf()->mAttachType &&
         size == Size())
     {
         // Same size, same type, ready for reuse!
@@ -436,7 +436,7 @@ GLScreenBuffer::Swap(const gfx::IntSize& size)
 {
     SharedSurface* nextSurf = mStream->SwapProducer(mFactory, size);
     if (!nextSurf) {
-        SurfaceFactory_Basic basicFactory(mGL, mFactory->Caps());
+        SurfaceFactory_Basic basicFactory(mGL, mFactory->mCaps);
         nextSurf = mStream->SwapProducer(&basicFactory, size);
         if (!nextSurf)
           return false;
@@ -470,30 +470,30 @@ GLScreenBuffer::Resize(const gfx::IntSize& size)
 bool
 GLScreenBuffer::CreateDraw(const gfx::IntSize& size, DrawBuffer** out_buffer)
 {
-    GLContext* gl = mFactory->GL();
-    const GLFormats& formats = mFactory->Formats();
+    GLContext* gl = mFactory->mGL;
+    const GLFormats& formats = mFactory->mFormats;
     const SurfaceCaps& caps = mFactory->DrawCaps();
 
     return DrawBuffer::Create(gl, caps, formats, size, out_buffer);
 }
 
 ReadBuffer*
-GLScreenBuffer::CreateRead(SharedSurface_GL* surf)
+GLScreenBuffer::CreateRead(SharedSurface* surf)
 {
-    GLContext* gl = mFactory->GL();
-    const GLFormats& formats = mFactory->Formats();
+    GLContext* gl = mFactory->mGL;
+    const GLFormats& formats = mFactory->mFormats;
     const SurfaceCaps& caps = mFactory->ReadCaps();
 
     return ReadBuffer::Create(gl, caps, formats, surf);
 }
 
 void
-GLScreenBuffer::Readback(SharedSurface_GL* src, DataSourceSurface* dest)
+GLScreenBuffer::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
 {
   MOZ_ASSERT(src && dest);
-  MOZ_ASSERT(dest->GetSize() == src->Size());
-  MOZ_ASSERT(dest->GetFormat() == (src->HasAlpha() ? SurfaceFormat::B8G8R8A8
-                                                   : SurfaceFormat::B8G8R8X8));
+  MOZ_ASSERT(dest->GetSize() == src->mSize);
+  MOZ_ASSERT(dest->GetFormat() == (src->mHasAlpha ? SurfaceFormat::B8G8R8A8
+                                                  : SurfaceFormat::B8G8R8X8));
 
   mGL->MakeCurrent();
 
@@ -506,7 +506,7 @@ GLScreenBuffer::Readback(SharedSurface_GL* src, DataSourceSurface* dest)
   ReadBuffer* buffer = CreateRead(src);
   MOZ_ASSERT(buffer);
 
-  ScopedBindFramebuffer autoFB(mGL, buffer->FB());
+  ScopedBindFramebuffer autoFB(mGL, buffer->mFB);
   ReadPixelsIntoDataSurface(mGL, dest);
 
   delete buffer;
@@ -516,6 +516,9 @@ GLScreenBuffer::Readback(SharedSurface_GL* src, DataSourceSurface* dest)
       SharedSurf()->LockProd();
   }
 }
+
+////////////////////////////////////////////////////////////////////////
+// DrawBuffer
 
 bool
 DrawBuffer::Create(GLContext* const gl,
@@ -591,20 +594,18 @@ DrawBuffer::~DrawBuffer()
     mGL->fDeleteRenderbuffers(3, rbs);
 }
 
-
-
-
-
+////////////////////////////////////////////////////////////////////////
+// ReadBuffer
 
 ReadBuffer*
 ReadBuffer::Create(GLContext* gl,
                    const SurfaceCaps& caps,
                    const GLFormats& formats,
-                   SharedSurface_GL* surf)
+                   SharedSurface* surf)
 {
     MOZ_ASSERT(surf);
 
-    if (surf->AttachType() == AttachmentType::Screen) {
+    if (surf->mAttachType == AttachmentType::Screen) {
         // Don't need anything. Our read buffer will be the 'screen'.
 
         return new ReadBuffer(gl,
@@ -618,14 +619,14 @@ ReadBuffer::Create(GLContext* gl,
     GLuint* pDepthRB   = caps.depth   ? &depthRB   : nullptr;
     GLuint* pStencilRB = caps.stencil ? &stencilRB : nullptr;
 
-    CreateRenderbuffersForOffscreen(gl, formats, surf->Size(), caps.antialias,
+    CreateRenderbuffersForOffscreen(gl, formats, surf->mSize, caps.antialias,
                                     nullptr, pDepthRB, pStencilRB);
 
     GLuint colorTex = 0;
     GLuint colorRB = 0;
     GLenum target = 0;
 
-    switch (surf->AttachType()) {
+    switch (surf->mAttachType) {
     case AttachmentType::GLTexture:
         colorTex = surf->ProdTexture();
         target = surf->ProdTextureTarget();
@@ -670,19 +671,19 @@ ReadBuffer::~ReadBuffer()
 }
 
 void
-ReadBuffer::Attach(SharedSurface_GL* surf)
+ReadBuffer::Attach(SharedSurface* surf)
 {
     MOZ_ASSERT(surf && mSurf);
-    MOZ_ASSERT(surf->AttachType() == mSurf->AttachType());
-    MOZ_ASSERT(surf->Size() == mSurf->Size());
+    MOZ_ASSERT(surf->mAttachType == mSurf->mAttachType);
+    MOZ_ASSERT(surf->mSize == mSurf->mSize);
 
     // Nothing else is needed for AttachType Screen.
-    if (surf->AttachType() != AttachmentType::Screen) {
+    if (surf->mAttachType != AttachmentType::Screen) {
         GLuint colorTex = 0;
         GLuint colorRB = 0;
         GLenum target = 0;
 
-        switch (surf->AttachType()) {
+        switch (surf->mAttachType) {
         case AttachmentType::GLTexture:
             colorTex = surf->ProdTexture();
             target = surf->ProdTextureTarget();
@@ -705,7 +706,7 @@ ReadBuffer::Attach(SharedSurface_GL* surf)
 const gfx::IntSize&
 ReadBuffer::Size() const
 {
-    return mSurf->Size();
+    return mSurf->mSize;
 }
 
 } /* namespace gl */
