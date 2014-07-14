@@ -45,7 +45,7 @@ function testTask() {
   result = result.replace(/[\r\n]]*/g, "\n");
   let correct = "function somefunc() {\n" +
             "  if (true) // Some comment\n" +
-            "  doSomething();\n" +
+            "    doSomething();\n" +
             "  for (let n = 0; n < 500; n++) {\n" +
             "    if (n % 2 == 1) {\n" +
             "      console.log(n);\n" +

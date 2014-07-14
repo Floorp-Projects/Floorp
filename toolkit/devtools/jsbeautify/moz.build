@@ -4,22 +4,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PARALLEL_DIRS += [
-    'server',
-    'client',
-    'gcli',
-    'jsbeautify',
-    'sourcemap',
-    'webconsole',
-    'apps',
-    'styleinspector',
-    'acorn',
-    'pretty-fast',
-    'qrcode',
-    'transport',
-    'tern',
-    'discovery'
-]
-
-MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
+
+JS_MODULES_PATH = 'modules/devtools/jsbeautify'
+
+EXTRA_JS_MODULES += [
+    'beautify.js',
+    'lib/sanitytest.js',
+    'lib/urlencode_unpacker.js',
+    'src/beautify-css.js',
+    'src/beautify-html.js',
+    'src/beautify-js.js',
+    'src/beautify-tests.js'
+]
