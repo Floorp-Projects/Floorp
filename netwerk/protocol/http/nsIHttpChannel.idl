@@ -24,8 +24,8 @@ interface nsIHttpChannel : nsIChannel
      */
 
     /**
-     * Set/get the HTTP request method (default is "GET").  Setter is case
-     * insensitive; getter returns an uppercase string.
+     * Set/get the HTTP request method (default is "GET").  Both setter and
+     * getter are case sensitive.
      *
      * This attribute may only be set before the channel is opened.
      *
