@@ -203,7 +203,11 @@ function nextTest() {
   t.create(src, type);
 }
 
-addLoadEvent(nextTest);
+function startTest() {
+  setMediaTestsPrefs(nextTest);
+}
+
+addLoadEvent(startTest);
 SimpleTest.waitForExplicitFinish();
 
 </script>

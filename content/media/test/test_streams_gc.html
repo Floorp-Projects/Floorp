@@ -7,7 +7,7 @@
   <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body onload="doTest()">
-<audio id="a"></audio>
+<audio id="a" preload="metadata"></audio>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
@@ -36,7 +36,7 @@ function doTest() {
   }, false);
 
   a.currentTime = a.duration;
-  
+
   setTimeout(forceGC, 0);
 }
 </script>

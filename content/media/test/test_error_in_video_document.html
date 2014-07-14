@@ -45,10 +45,12 @@ if (!t) {
 } else {
   SimpleTest.waitForExplicitFinish();
 
-  var f = document.createElement("iframe");
-  f.src = t.name;
-  f.addEventListener("load", function() { SimpleTest.executeSoon(check); }, false);
-  document.body.appendChild(f);
+  setMediaTestsPrefs(function() {
+    var f = document.createElement("iframe");
+    f.src = t.name;
+    f.addEventListener("load", function() { SimpleTest.executeSoon(check); }, false);
+    document.body.appendChild(f);
+  });
 }
 
 </script>

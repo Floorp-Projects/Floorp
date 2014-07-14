@@ -35,7 +35,9 @@ window.onload = function() {
 var resource = getPlayableVideo(gSeekTests);
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, beginTest);
+
+setMediaTestsPrefs(beginTest, [["media.cache_size", 40000]]);
+
 function beginTest() {
   if (resource != null) {
     for (var i=0; i<20; ++i) {
