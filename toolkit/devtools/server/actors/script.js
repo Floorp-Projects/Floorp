@@ -3699,18 +3699,21 @@ DebuggerServer.ObjectActorPreviewers = {
 
     let raw = obj.unsafeDereference();
     let entries = aGrip.preview.entries = [];
-    // We don't have Xrays to Iterators, so .entries returns [key, value]
-    // Arrays that live in content. But since we have Array Xrays,
-    // we'll deny access depending on the nature of those values. So we need
-    // to waive Xrays on those tuples (and re-apply them on the underlying
-    // values) until we fix bug 1023984.
+    // Iterating over a Map via .entries goes through various intermediate
+    // objects - an Iterator object, then a 2-element Array object, then the
+    // actual values we care about. We don't have Xrays to Iterator objects,
+    // so we get Opaque wrappers for them. And even though we have Xrays to
+    // Arrays, the semantics often deny access to the entires based on the
+    // nature of the values. So we need waive Xrays for the iterator object
+    // and the tupes, and then re-apply them on the underlying values until
+    // we fix bug 1023984.
     //
     // Even then though, we might want to continue waiving Xrays here for the
     // same reason we do so for Arrays above - this filtering behavior is likely
     // to be more confusing than beneficial in the case of Object previews.
-    for (let keyValuePair of Map.prototype.entries.call(raw)) {
-      let key = Cu.unwaiveXrays(Cu.waiveXrays(keyValuePair)[0]);
-      let value = Cu.unwaiveXrays(Cu.waiveXrays(keyValuePair)[1]);
+    for (let keyValuePair of Cu.waiveXrays(Map.prototype.entries.call(raw))) {
+      let key = Cu.unwaiveXrays(keyValuePair[0]);
+      let value = Cu.unwaiveXrays(keyValuePair[1]);
       key = makeDebuggeeValueIfNeeded(obj, key);
       value = makeDebuggeeValueIfNeeded(obj, value);
       entries.push([threadActor.createValueGrip(key),
