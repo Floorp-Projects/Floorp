@@ -125,7 +125,7 @@ void UIShowDefaultUI();
 // Run the UI for when the app was launched with a dump file
 // Return true if the user sent (or tried to send) the crash report,
 // false if they chose not to, and it should be deleted.
-bool UIShowCrashUI(const std::string& dumpfile,
+bool UIShowCrashUI(const StringTable& files,
                    const StringTable& queryParameters,
                    const std::string& sendURL,
                    const std::vector<std::string>& restartArgs);

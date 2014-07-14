@@ -637,7 +637,10 @@ int main(int argc, char** argv)
        return 0;
      }
 
-    if (!UIShowCrashUI(gReporterDumpFile, queryParameters, sendURL, restartArgs))
+    StringTable files;
+    files["upload_file_minidump"] = gReporterDumpFile;
+
+    if (!UIShowCrashUI(files, queryParameters, sendURL, restartArgs))
       DeleteDump();
   }
 
