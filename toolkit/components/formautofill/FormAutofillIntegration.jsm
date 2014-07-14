@@ -24,6 +24,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RequestAutocompleteUI",
+                                  "resource://gre/modules/RequestAutocompleteUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
@@ -43,6 +45,6 @@ this.FormAutofillIntegration = {
    * @rejects JavaScript exception.
    */
   createRequestAutocompleteUI: Task.async(function* (aProperties) {
-    return {};
+    return new RequestAutocompleteUI(aProperties);
   }),
 };

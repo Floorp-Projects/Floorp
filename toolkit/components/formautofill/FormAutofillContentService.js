@@ -16,6 +16,11 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "FormAutofill",
+                                  "resource://gre/modules/FormAutofill.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
+
 function FormAutofillContentService() {
 }
 
@@ -25,16 +30,33 @@ FormAutofillContentService.prototype = {
 
   // nsIFormAutofillContentService
   requestAutocomplete: function (aForm, aWindow) {
-    Services.console.logStringMessage("requestAutocomplete not implemented.");
+    Task.spawn(function* () {
+      // Start processing the request asynchronously.  At the end, the "reason"
+      // variable will contain the outcome of the operation, where an empty
+      // string indicates that an unexpected exception occurred.
+      let reason = "";
+      try {
+        let ui = yield FormAutofill.integration.createRequestAutocompleteUI({});
+        let result = yield ui.show();
 
-    // We will return "disabled" for now.
-    let event = new aWindow.AutocompleteErrorEvent("autocompleteerror",
-                                                   { bubbles: true,
-                                                     reason: "disabled" });
+        // At present, we only have cancellation and success cases, since we
+        // don't do any validation or precondition check.
+        reason = result.canceled ? "cancel" : "success";
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
 
-    // Ensure the event is always dispatched on the next tick.
-    Services.tm.currentThread.dispatch(() => aForm.dispatchEvent(event),
-                                       Ci.nsIThread.DISPATCH_NORMAL);
+      // The type of event depends on whether this is a success condition.
+      let event = (reason == "success")
+                  ? new aWindow.Event("autocomplete", { bubbles: true })
+                  : new aWindow.AutocompleteErrorEvent("autocompleteerror",
+                                                       { bubbles: true,
+                                                         reason: reason });
+
+      // Ensure the event is always dispatched on the next tick.
+      Services.tm.currentThread.dispatch(() => aForm.dispatchEvent(event),
+                                         Ci.nsIThread.DISPATCH_NORMAL);
+    }.bind(this)).catch(Cu.reportError);
   },
 };
 
