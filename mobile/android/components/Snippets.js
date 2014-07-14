@@ -385,9 +385,6 @@ Snippets.prototype = {
 
   observe: function(subject, topic, data) {
     switch(topic) {
-      case "profile-after-change":
-        Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
-        break;
       case "browser-delayed-startup-finished":
         Services.obs.removeObserver(this, "browser-delayed-startup-finished", false);
         if (Services.prefs.getBoolPref("browser.snippets.syncPromo.enabled")) {

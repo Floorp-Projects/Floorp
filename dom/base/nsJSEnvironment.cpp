@@ -3079,16 +3079,6 @@ mozilla::dom::ShutdownJSEnvironment()
   sDidShutdown = true;
 }
 
-class nsJSArgArray;
-
-namespace mozilla {
-template<>
-struct HasDangerousPublicDestructor<nsJSArgArray>
-{
-  static const bool value = true;
-};
-}
-
 // A fast-array class for JS.  This class supports both nsIJSScriptArray and
 // nsIArray.  If it is JS itself providing and consuming this class, all work
 // can be done via nsIJSScriptArray, and avoid the conversion of elements
@@ -3099,7 +3089,7 @@ class nsJSArgArray MOZ_FINAL : public nsIJSArgArray {
 public:
   nsJSArgArray(JSContext *aContext, uint32_t argc, JS::Value *argv,
                nsresult *prv);
-  ~nsJSArgArray();
+
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsJSArgArray,
@@ -3114,6 +3104,7 @@ public:
   void ReleaseJSObjects();
 
 protected:
+  ~nsJSArgArray();
   JSContext *mContext;
   JS::Heap<JS::Value> *mArgv;
   uint32_t mArgc;
@@ -3243,13 +3234,11 @@ nsresult NS_CreateJSArgv(JSContext *aContext, uint32_t argc, void *argv,
                          nsIJSArgArray **aArray)
 {
   nsresult rv;
-  nsJSArgArray *ret = new nsJSArgArray(aContext, argc,
-                                       static_cast<JS::Value *>(argv), &rv);
-  if (ret == nullptr)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsIJSArgArray> ret = new nsJSArgArray(aContext, argc,
+                                                static_cast<JS::Value *>(argv), &rv);
   if (NS_FAILED(rv)) {
-    delete ret;
     return rv;
   }
-  return ret->QueryInterface(NS_GET_IID(nsIArray), (void **)aArray);
+  ret.forget(aArray);
+  return NS_OK;
 }

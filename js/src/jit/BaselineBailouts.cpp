@@ -1724,7 +1724,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
         // baseline frame.
         return false;
       default:
-        MOZ_CRASH("Unknown bailout kind!");
+        MOZ_ASSUME_UNREACHABLE("Unknown bailout kind!");
     }
 
     if (!CheckFrequentBailouts(cx, outerScript))

@@ -22,10 +22,10 @@ function test() {
   loadTab(URL, function onTabLoad(tab, browser) {
     DebuggerServer.init(function () true);
     DebuggerServer.addBrowserActors();
-    is(DebuggerServer._socketConnections, 0);
+    is(DebuggerServer.listeningSockets, 0);
 
     DebuggerServer.openListener(2929);
-    is(DebuggerServer._socketConnections, 1);
+    is(DebuggerServer.listeningSockets, 1);
 
     let transport = debuggerSocketConnect("127.0.0.1", 2929);
     let client = new DebuggerClient(transport);

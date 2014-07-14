@@ -28,3 +28,4 @@ random-if(d2d) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
 fails-if(Android||B2G) == 611574-1.html 611574-1-ref.html
 fails-if(Android||B2G) == 611574-2.html 611574-2-ref.html
 fuzzy-if(winWidget,5,30) == fieldset.html fieldset-ref.html # minor anti-aliasing problem on Windows
+fuzzy-if(winWidget,5,30) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows

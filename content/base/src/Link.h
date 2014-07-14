@@ -57,27 +57,27 @@ public:
   /**
    * Helper methods for modifying and obtaining parts of the URI of the Link.
    */
-  void SetProtocol(const nsAString &aProtocol);
-  void SetUsername(const nsAString &aUsername);
-  void SetPassword(const nsAString &aPassword);
-  void SetHost(const nsAString &aHost);
-  void SetHostname(const nsAString &aHostname);
-  void SetPathname(const nsAString &aPathname);
-  void SetSearch(const nsAString &aSearch);
+  void SetProtocol(const nsAString &aProtocol, ErrorResult& aError);
+  void SetUsername(const nsAString &aUsername, ErrorResult& aError);
+  void SetPassword(const nsAString &aPassword, ErrorResult& aError);
+  void SetHost(const nsAString &aHost, ErrorResult& aError);
+  void SetHostname(const nsAString &aHostname, ErrorResult& aError);
+  void SetPathname(const nsAString &aPathname, ErrorResult& aError);
+  void SetSearch(const nsAString &aSearch, ErrorResult& aError);
   void SetSearchParams(mozilla::dom::URLSearchParams& aSearchParams);
-  void SetPort(const nsAString &aPort);
-  void SetHash(const nsAString &aHash);
-  void GetOrigin(nsAString &aOrigin);
-  void GetProtocol(nsAString &_protocol);
-  void GetUsername(nsAString &aUsername);
-  void GetPassword(nsAString &aPassword);
-  void GetHost(nsAString &_host);
-  void GetHostname(nsAString &_hostname);
-  void GetPathname(nsAString &_pathname);
-  void GetSearch(nsAString &_search);
+  void SetPort(const nsAString &aPort, ErrorResult& aError);
+  void SetHash(const nsAString &aHash, ErrorResult& aError);
+  void GetOrigin(nsAString &aOrigin, ErrorResult& aError);
+  void GetProtocol(nsAString &_protocol, ErrorResult& aError);
+  void GetUsername(nsAString &aUsername, ErrorResult& aError);
+  void GetPassword(nsAString &aPassword, ErrorResult& aError);
+  void GetHost(nsAString &_host, ErrorResult& aError);
+  void GetHostname(nsAString &_hostname, ErrorResult& aError);
+  void GetPathname(nsAString &_pathname, ErrorResult& aError);
+  void GetSearch(nsAString &_search, ErrorResult& aError);
   URLSearchParams* SearchParams();
-  void GetPort(nsAString &_port);
-  void GetHash(nsAString &_hash);
+  void GetPort(nsAString &_port, ErrorResult& aError);
+  void GetHash(nsAString &_hash, ErrorResult& aError);
 
   /**
    * Invalidates any link caching, and resets the state to the default.

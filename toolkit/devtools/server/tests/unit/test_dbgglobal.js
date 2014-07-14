@@ -11,7 +11,7 @@ function run_test()
   check_except(function() {
     DebuggerServer.openListener(-1);
   });
-  check_except(DebuggerServer.closeListener);
+  check_except(DebuggerServer.closeAllListeners);
   check_except(DebuggerServer.connectPipe);
 
   // Allow incoming connections.
@@ -22,14 +22,14 @@ function run_test()
   check_except(function() {
     DebuggerServer.openListener(-1);
   });
-  check_except(DebuggerServer.closeListener);
+  check_except(DebuggerServer.closeAllListeners);
   check_except(DebuggerServer.connectPipe);
 
   DebuggerServer.registerModule("xpcshell-test/testactors");
 
   // Now they should work.
   DebuggerServer.openListener(-1);
-  DebuggerServer.closeListener();
+  DebuggerServer.closeAllListeners();
 
   // Make sure we got the test's root actor all set up.
   let client1 = DebuggerServer.connectPipe();

@@ -787,13 +787,12 @@ StreamTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
     return false;
   }
 
-  gfx::SurfaceStreamHandle handle = mStream->GetShareHandle();
-  aOutDescriptor = SurfaceStreamDescriptor(handle, false);
+  aOutDescriptor = SurfaceStreamDescriptor((uintptr_t)mStream.get(), false);
   return true;
 }
 
 void
-StreamTextureClient::InitWith(gfx::SurfaceStream* aStream)
+StreamTextureClient::InitWith(gl::SurfaceStream* aStream)
 {
   MOZ_ASSERT(!IsAllocated());
   mStream = aStream;
