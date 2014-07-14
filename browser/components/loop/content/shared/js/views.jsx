@@ -100,7 +100,7 @@ loop.shared.views = (function(_, OT, l10n) {
    * - {Function} action  Function to be executed on click.
    * - {Enabled}  enabled Stream activation status (default: true).
    */
-  var MediaControlButton = React.createClass({displayName: 'MediaControlButton',
+  var MediaControlButton = React.createClass({
     propTypes: {
       scope: React.PropTypes.string.isRequired,
       type: React.PropTypes.string.isRequired,
@@ -138,9 +138,9 @@ loop.shared.views = (function(_, OT, l10n) {
 
     render: function() {
       return (
-        React.DOM.button( {className:this._getClasses(),
-                title:this._getTitle(),
-                onClick:this.handleClick})
+        <button className={this._getClasses()}
+                title={this._getTitle()}
+                onClick={this.handleClick}></button>
       );
     }
   });
@@ -148,7 +148,7 @@ loop.shared.views = (function(_, OT, l10n) {
   /**
    * Conversation controls.
    */
-  var ConversationToolbar = React.createClass({displayName: 'ConversationToolbar',
+  var ConversationToolbar = React.createClass({
     getDefaultProps: function() {
       return {
         video: {enabled: true},
@@ -177,22 +177,22 @@ loop.shared.views = (function(_, OT, l10n) {
 
     render: function() {
       return (
-        React.DOM.ul( {className:"controls"}, 
-          React.DOM.li(null, React.DOM.button( {className:"btn btn-hangup",
-                      onClick:this.handleClickHangup,
-                      title:__("hangup_button_title")})),
-          React.DOM.li(null, MediaControlButton( {action:this.handleToggleVideo,
-                                  enabled:this.props.video.enabled,
-                                  scope:"local", type:"video"} )),
-          React.DOM.li(null, MediaControlButton( {action:this.handleToggleAudio,
-                                  enabled:this.props.audio.enabled,
-                                  scope:"local", type:"audio"} ))
-        )
+        <ul className="controls">
+          <li><button className="btn btn-hangup"
+                      onClick={this.handleClickHangup}
+                      title={__("hangup_button_title")}></button></li>
+          <li><MediaControlButton action={this.handleToggleVideo}
+                                  enabled={this.props.video.enabled}
+                                  scope="local" type="video" /></li>
+          <li><MediaControlButton action={this.handleToggleAudio}
+                                  enabled={this.props.audio.enabled}
+                                  scope="local" type="audio" /></li>
+        </ul>
       );
     }
   });
 
-  var ConversationView = React.createClass({displayName: 'ConversationView',
+  var ConversationView = React.createClass({
     mixins: [Backbone.Events],
 
     propTypes: {
@@ -330,16 +330,16 @@ loop.shared.views = (function(_, OT, l10n) {
 
     render: function() {
       return (
-        React.DOM.div( {className:"conversation"}, 
-          ConversationToolbar( {video:this.state.video,
-                               audio:this.state.audio,
-                               publishStream:this.publishStream,
-                               hangup:this.hangup} ),
-          React.DOM.div( {className:"media nested"}, 
-            React.DOM.div( {className:"remote"}, React.DOM.div( {className:"incoming"})),
-            React.DOM.div( {className:"local"}, React.DOM.div( {className:"outgoing"}))
-          )
-        )
+        <div className="conversation">
+          <ConversationToolbar video={this.state.video}
+                               audio={this.state.audio}
+                               publishStream={this.publishStream}
+                               hangup={this.hangup} />
+          <div className="media nested">
+            <div className="remote"><div className="incoming"></div></div>
+            <div className="local"><div className="outgoing"></div></div>
+          </div>
+        </div>
       );
     }
   });
