@@ -7,7 +7,7 @@
 #include "nsISupports.idl"
 #include "nsIScreen.idl"
 
-[scriptable, uuid(1C195990-FF9E-412B-AFE7-67D1C660BB27)]
+[scriptable, uuid(e8a96e60-6b61-4a14-bacc-53891604b502)]
 interface nsIScreenManager : nsISupports
 {
     //
@@ -17,11 +17,18 @@ interface nsIScreenManager : nsISupports
     // The coordinates are in pixels (not twips) and in screen coordinates.
     //
   nsIScreen screenForRect ( in long left, in long top, in long width, in long height ) ;
-  
+
+    //
+    // Returns the screen corresponding to the id. If no such screen exists,
+    // this will throw NS_ERROR_FAILURE. The id is a unique numeric value
+    // assigned to each screen, and is an attribute available on the nsIScreen
+    // interface.
+  nsIScreen screenForId ( in unsigned long id ) ;
+
     // The screen with the menubar/taskbar. This shouldn't be needed very
     // often.
   readonly attribute nsIScreen primaryScreen;
-  
+
     // Holds the number of screens that are available
   readonly attribute unsigned long numberOfScreens;
 
