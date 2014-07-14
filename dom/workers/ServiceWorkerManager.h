@@ -12,10 +12,10 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Promise.h"
-#include "nsClassHashtable.h"
-#include "nsDataHashtable.h"
+#include "mozilla/dom/ServiceWorkerContainer.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTArrayForwardDeclare.h"
+#include "nsTObserverArray.h"
 #include "nsTWeakRef.h"
 
 class nsIScriptError;
@@ -210,6 +210,12 @@ public:
     // Scope to registration.
     nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerRegistration> mServiceWorkerRegistrations;
 
+    // This array can't be stored in ServiceWorkerRegistration because one may
+    // not exist when a certain window is opened, but we still want that
+    // window's container to be notified if it's in scope.
+    // The containers inform the SWM on creation and destruction.
+    nsTObserverArray<ServiceWorkerContainer*> mServiceWorkerContainers;
+
     ServiceWorkerDomainInfo()
     { }
 
@@ -232,9 +238,15 @@ public:
       ServiceWorkerManager::AddScope(mOrderedScopes, aScope);
       return registration;
     }
+
+    NS_INLINE_DECL_REFCOUNTING(ServiceWorkerDomainInfo)
+
+  private:
+    ~ServiceWorkerDomainInfo()
+    { }
   };
 
-  nsClassHashtable<nsCStringHashKey, ServiceWorkerDomainInfo> mDomainMap;
+  nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerDomainInfo> mDomainMap;
 
   void
   ResolveRegisterPromises(ServiceWorkerRegistration* aRegistration,
@@ -296,6 +308,15 @@ private:
                                   ServiceWorkerDomainInfo* aDomainInfo,
                                   void *aUnused);
 
+  already_AddRefed<ServiceWorkerDomainInfo>
+  GetDomainInfo(nsIDocument* aDoc);
+
+  already_AddRefed<ServiceWorkerDomainInfo>
+  GetDomainInfo(nsIURI* aURI);
+
+  already_AddRefed<ServiceWorkerDomainInfo>
+  GetDomainInfo(const nsCString& aURL);
+
   already_AddRefed<ServiceWorkerRegistration>
   GetServiceWorkerRegistration(nsPIDOMWindow* aWindow);
 
@@ -313,6 +334,10 @@ private:
 
   static void
   RemoveScope(nsTArray<nsCString>& aList, const nsACString& aScope);
+
+  void
+  FireEventOnServiceWorkerContainers(ServiceWorkerRegistration* aRegistration,
+                                     const nsAString& aName);
 
 };
 
