@@ -62,6 +62,10 @@ public:
   GetPairedDevicePropertiesInternal(const nsTArray<nsString>& aDeviceAddresses,
                                     BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
+  virtual nsresult
+  FetchUuidsInternal(const nsAString& aDeviceAddress,
+                     BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
   virtual nsresult StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual nsresult StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;

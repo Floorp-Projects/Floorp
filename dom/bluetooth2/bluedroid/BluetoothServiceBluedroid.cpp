@@ -63,6 +63,7 @@ static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sChangeAdapterStateRunnableAr
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sChangeDiscoveryRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sSetPropertyRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sGetDeviceRunnableArray;
+static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sFetchUuidsRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sBondingRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sUnbondingRunnableArray;
 
@@ -123,10 +124,11 @@ public:
 
     // Bluetooth just enabled, clear profile controllers and runnable arrays.
     sControllerArray.Clear();
-    sBondingRunnableArray.Clear();
     sChangeDiscoveryRunnableArray.Clear();
-    sGetDeviceRunnableArray.Clear();
     sSetPropertyRunnableArray.Clear();
+    sGetDeviceRunnableArray.Clear();
+    sFetchUuidsRunnableArray.Clear();
+    sBondingRunnableArray.Clear();
     sUnbondingRunnableArray.Clear();
 
     // Bluetooth scan mode is NONE by default
@@ -194,97 +196,6 @@ public:
 /**
  *  Static callback functions
  */
-static void
-ClassToIcon(uint32_t aClass, nsAString& aRetIcon)
-{
-  switch ((aClass & 0x1f00) >> 8) {
-    case 0x01:
-      aRetIcon.AssignLiteral("computer");
-      break;
-    case 0x02:
-      switch ((aClass & 0xfc) >> 2) {
-        case 0x01:
-        case 0x02:
-        case 0x03:
-        case 0x05:
-          aRetIcon.AssignLiteral("phone");
-          break;
-        case 0x04:
-          aRetIcon.AssignLiteral("modem");
-          break;
-      }
-      break;
-    case 0x03:
-      aRetIcon.AssignLiteral("network-wireless");
-      break;
-    case 0x04:
-      switch ((aClass & 0xfc) >> 2) {
-        case 0x01:
-        case 0x02:
-        case 0x06:
-          aRetIcon.AssignLiteral("audio-card");
-          break;
-        case 0x0b:
-        case 0x0c:
-        case 0x0d:
-          aRetIcon.AssignLiteral("camera-video");
-          break;
-        default:
-          aRetIcon.AssignLiteral("audio-card");
-          break;
-      }
-      break;
-    case 0x05:
-      switch ((aClass & 0xc0) >> 6) {
-        case 0x00:
-          switch ((aClass && 0x1e) >> 2) {
-            case 0x01:
-            case 0x02:
-              aRetIcon.AssignLiteral("input-gaming");
-              break;
-          }
-          break;
-        case 0x01:
-          aRetIcon.AssignLiteral("input-keyboard");
-          break;
-        case 0x02:
-          switch ((aClass && 0x1e) >> 2) {
-            case 0x05:
-              aRetIcon.AssignLiteral("input-tablet");
-              break;
-            default:
-              aRetIcon.AssignLiteral("input-mouse");
-              break;
-          }
-      }
-      break;
-    case 0x06:
-      if (aClass & 0x80) {
-        aRetIcon.AssignLiteral("printer");
-        break;
-      }
-      if (aClass & 0x20) {
-        aRetIcon.AssignLiteral("camera-photo");
-        break;
-      }
-      break;
-  }
-
-  if (aRetIcon.IsEmpty()) {
-    if (HAS_AUDIO(aClass)) {
-      /**
-       * Property 'Icon' may be missed due to CoD of major class is TOY(0x08).
-       * But we need to assign Icon as audio-card if service class is 'Audio'.
-       * This is for PTS test case TC_AG_COD_BV_02_I. As HFP specification
-       * defines that service class is 'Audio' can be considered as HFP HF.
-       */
-      aRetIcon.AssignLiteral("audio-card");
-    } else {
-      BT_LOGR("No icon to match class: %x", aClass);
-    }
-  }
-}
-
 static ControlPlayStatus
 PlayStatusStringToControlPlayStatus(const nsAString& aPlayStatus)
 {
@@ -476,11 +387,6 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (sRequestedDeviceCountArray.IsEmpty()) {
-      // This is possible because the callback would be called after turning
-      // Bluetooth on.
-      return NS_OK;
-    }
 
     // Update to registered BluetoothDevice objects
     BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
@@ -489,6 +395,24 @@ public:
       t = new DistributeBluetoothSignalTask(signal);
     if (NS_FAILED(NS_DispatchToMainThread(t))) {
       BT_WARNING("Failed to dispatch to main thread!");
+      return NS_OK;
+    }
+
+    // FetchUuids task
+    if (!sFetchUuidsRunnableArray.IsEmpty()) {
+      // mProps contains Address and Uuids only
+      DispatchBluetoothReply(sFetchUuidsRunnableArray[0],
+                             mProps[1].value() /* Uuids */,
+                             EmptyString());
+      sFetchUuidsRunnableArray.RemoveElementAt(0);
+
+      return NS_OK;
+    }
+
+    // GetDevices task
+    if (sRequestedDeviceCountArray.IsEmpty()) {
+      // This is possible because the callback would be called after turning
+      // Bluetooth on.
       return NS_OK;
     }
 
@@ -515,6 +439,7 @@ public:
  * RemoteDevicePropertiesCallback will be called, as the following conditions:
  * 1. When BT is turning on, bluedroid automatically execute this callback
  * 2. When get_remote_device_properties()
+ * 3. When get_remote_services()
  */
 static void
 RemoteDevicePropertiesCallback(bt_status_t aStatus, bt_bdaddr_t *aBdAddress,
@@ -536,11 +461,22 @@ RemoteDevicePropertiesCallback(bt_status_t aStatus, bt_bdaddr_t *aBdAddress,
       BT_APPEND_NAMED_VALUE(props, "Name", propertyValue);
     } else if (p.type == BT_PROPERTY_CLASS_OF_DEVICE) {
       uint32_t cod = *(uint32_t*)p.val;
-      BT_APPEND_NAMED_VALUE(props, "Class", cod);
+      BT_APPEND_NAMED_VALUE(props, "Cod", cod);
+    } else if (p.type == BT_PROPERTY_UUIDS) {
+      nsTArray<nsString> uuids;
 
-      nsString icon;
-      ClassToIcon(cod, icon);
-      BT_APPEND_NAMED_VALUE(props, "Icon", icon);
+      // Construct a sorted uuid set
+      for (uint32_t j = 0; j < p.len / sizeof(bt_uuid_t); j++) {
+        nsAutoString uuid;
+        bt_uuid_t* pUuid = (bt_uuid_t*)p.val + j;
+        UuidToString(pUuid, uuid);
+
+        if (!uuids.Contains(uuid)) { // filter out duplicate uuids
+          uuids.InsertElementSorted(uuid);
+        }
+      }
+
+      BT_APPEND_NAMED_VALUE(props, "UUIDs", uuids);
     } else {
       BT_LOGD("Other non-handled device properties. Type: %d", p.type);
     }
@@ -574,12 +510,7 @@ DeviceFoundCallback(int aNumProperties, bt_property_t *aProperties)
     } else if (p.type == BT_PROPERTY_CLASS_OF_DEVICE) {
       uint32_t cod = *(uint32_t*)p.val;
       propertyValue = cod;
-      BT_APPEND_NAMED_VALUE(propertiesArray, "Class", propertyValue);
-
-      nsString icon;
-      ClassToIcon(cod, icon);
-      propertyValue = icon;
-      BT_APPEND_NAMED_VALUE(propertiesArray, "Icon", propertyValue);
+      BT_APPEND_NAMED_VALUE(propertiesArray, "Cod", cod);
     } else {
       BT_LOGD("Not handled remote device property: %d", p.type);
     }
@@ -1251,6 +1182,51 @@ BluetoothServiceBluedroid::StopDiscoveryInternal(
   return NS_OK;
 }
 
+class GetRemoteServicesResultHandler MOZ_FINAL : public BluetoothResultHandler
+{
+public:
+  GetRemoteServicesResultHandler(BluetoothReplyRunnable* aRunnable)
+  : mRunnable(aRunnable)
+  { }
+
+  void OnError(int aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    sFetchUuidsRunnableArray.RemoveElement(mRunnable);
+    ReplyStatusError(mRunnable, aStatus, NS_LITERAL_STRING("FetchUuids"));
+  }
+
+private:
+  BluetoothReplyRunnable* mRunnable;
+};
+
+nsresult
+BluetoothServiceBluedroid::FetchUuidsInternal(
+  const nsAString& aDeviceAddress, BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY(aRunnable, NS_OK);
+
+  /*
+   * get_remote_services request will not be performed by bluedroid
+   * if it is currently discovering nearby remote devices.
+   */
+  if (sAdapterDiscovering) {
+    sBtInterface->CancelDiscovery(new CancelDiscoveryResultHandler(aRunnable));
+  }
+
+  bt_bdaddr_t addressType;
+  StringToBdAddressType(aDeviceAddress, &addressType);
+
+  sFetchUuidsRunnableArray.AppendElement(aRunnable);
+
+  sBtInterface->GetRemoteServices(&addressType,
+    new GetRemoteServicesResultHandler(aRunnable));
+
+  return NS_OK;
+}
+
 class SetAdapterPropertyResultHandler MOZ_FINAL : public BluetoothResultHandler
 {
 public:
@@ -1766,4 +1742,3 @@ void
 BluetoothServiceBluedroid::ToggleCalls(BluetoothReplyRunnable* aRunnable)
 {
 }
-

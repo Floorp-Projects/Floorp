@@ -91,6 +91,13 @@ BluetoothDiscoveryHandle::Notify(const BluetoothSignal& aData)
   }
 }
 
+void
+BluetoothDiscoveryHandle::DisconnectFromOwner()
+{
+  DOMEventTargetHelper::DisconnectFromOwner();
+  ListenToBluetoothSignal(false);
+}
+
 JSObject*
 BluetoothDiscoveryHandle::WrapObject(JSContext* aCx)
 {

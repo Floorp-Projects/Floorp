@@ -129,18 +129,39 @@ function getNode(nodeOrSelector) {
 }
 
 /**
+ * Highlight a node and set the inspector's current selection to the node or
+ * the first match of the given css selector.
+ * @param {String|DOMNode} nodeOrSelector
+ * @param {InspectorPanel} inspector
+ *        The instance of InspectorPanel currently loaded in the toolbox
+ * @return a promise that resolves when the inspector is updated with the new
+ * node
+ */
+function selectAndHighlightNode(nodeOrSelector, inspector) {
+  info("Highlighting and selecting the node " + nodeOrSelector);
+
+  let node = getNode(nodeOrSelector);
+  let updated = inspector.toolbox.once("highlighter-ready");
+  inspector.selection.setNode(node, "test-highlight");
+  return updated;
+
+}
+
+/**
  * Set the inspector's current selection to a node or to the first match of the
- * given css selector
- * @param {InspectorPanel} inspector The instance of InspectorPanel currently
- * loaded in the toolbox
- * @param {String} reason Defaults to "test" which instructs the inspector not
- * to highlight the node upon selection
- * @param {String} reason Defaults to "test" which instructs the inspector not to highlight the node upon selection
+ * given css selector.
+ * @param {String|DOMNode} nodeOrSelector
+ * @param {InspectorPanel} inspector
+ *        The instance of InspectorPanel currently loaded in the toolbox
+ * @param {String} reason
+ *        Defaults to "test" which instructs the inspector not to highlight the
+ *        node upon selection
  * @return a promise that resolves when the inspector is updated with the new
  * node
  */
 function selectNode(nodeOrSelector, inspector, reason="test") {
   info("Selecting the node " + nodeOrSelector);
+
   let node = getNode(nodeOrSelector);
   let updated = inspector.once("inspector-updated");
   inspector.selection.setNode(node, reason);

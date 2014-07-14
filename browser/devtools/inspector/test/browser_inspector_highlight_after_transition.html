@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <style>
+    div {
+      opacity: 0;
+      height: 0;
+      background: red;
+      border-top: 1px solid #888;
+      transition-property: height, opacity;
+      transition-duration: 3000ms;
+      transition-timing-function: ease-in-out, ease-in-out, linear;
+    }
+
+    div[visible] {
+      opacity: 1;
+      height: 200px;
+    }
+  </style>
+</head>
+<body>
+  <div></div>
+</body>
+</html>

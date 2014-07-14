@@ -22,6 +22,11 @@ StaticAutoPtr<nsCString> CameraPreferences::sPrefGonkParameters;
 nsresult CameraPreferences::sPrefCameraControlMethodErrorOverride = NS_OK;
 nsresult CameraPreferences::sPrefCameraControlAsyncErrorOverride = NS_OK;
 
+uint32_t CameraPreferences::sPrefCameraControlLowMemoryThresholdMB = 0;
+
+bool CameraPreferences::sPrefCameraParametersIsLowMemory = false;
+
+#ifdef CAMERAPREFERENCES_HAVE_SEPARATE_UINT32_AND_NSRESULT
 /* static */
 nsresult
 CameraPreferences::UpdatePref(const char* aPref, nsresult& aVal)
@@ -33,6 +38,19 @@ CameraPreferences::UpdatePref(const char* aPref, nsresult& aVal)
   }
   return rv;
 }
+#endif
+
+/* static */
+nsresult
+CameraPreferences::UpdatePref(const char* aPref, uint32_t& aVal)
+{
+  uint32_t val;
+  nsresult rv = Preferences::GetUint(aPref, &val);
+  if (NS_SUCCEEDED(rv)) {
+    aVal = val;
+  }
+  return rv;
+}
 
 /* static */
 nsresult
@@ -40,6 +58,18 @@ CameraPreferences::UpdatePref(const char* aPref, nsACString& aVal)
 {
   nsCString val;
   nsresult rv = Preferences::GetCString(aPref, &val);
+  if (NS_SUCCEEDED(rv)) {
+    aVal = val;
+  }
+  return rv;
+}
+
+/* static */
+nsresult
+CameraPreferences::UpdatePref(const char* aPref, bool& aVal)
+{
+  bool val;
+  nsresult rv = Preferences::GetBool(aPref, &val);
   if (NS_SUCCEEDED(rv)) {
     aVal = val;
   }
@@ -67,13 +97,23 @@ CameraPreferences::Pref CameraPreferences::sPrefs[] = {
 #endif
   {
     "camera.control.test.method.error",
-    kPrefValueIsNSResult,
+    kPrefValueIsNsResult,
     { &sPrefCameraControlMethodErrorOverride }
   },
   {
     "camera.control.test.async.error",
-    kPrefValueIsNSResult,
+    kPrefValueIsNsResult,
     { &sPrefCameraControlAsyncErrorOverride }
+  },
+  {
+    "camera.control.test.is_low_memory",
+    kPrefValueIsBoolean,
+    { &sPrefCameraParametersIsLowMemory }
+  },
+  {
+    "camera.control.low_memory_thresholdMB",
+    kPrefValueIsUint32,
+    { &sPrefCameraControlLowMemoryThresholdMB }
   },
 };
 
@@ -104,12 +144,24 @@ CameraPreferences::PreferenceChanged(const char* aPref, void* aClosure)
   Pref& p = sPrefs[i];
   nsresult rv;
   switch (p.mValueType) {
-    case kPrefValueIsNSResult:
+    case kPrefValueIsNsResult:
+    #ifdef CAMERAPREFERENCES_HAVE_SEPARATE_UINT32_AND_NSRESULT
       {
         nsresult& v = *p.mValue.mAsNsResult;
         rv = UpdatePref(aPref, v);
         if (NS_SUCCEEDED(rv)) {
           DOM_CAMERA_LOGI("Preference '%s' has changed, 0x%x\n", aPref, v);
+        }
+      }
+      break;
+    #endif
+
+    case kPrefValueIsUint32:
+      {
+        uint32_t& v = *p.mValue.mAsUint32;
+        rv = UpdatePref(aPref, v);
+        if (NS_SUCCEEDED(rv)) {
+          DOM_CAMERA_LOGI("Preference '%s' has changed, %u\n", aPref, v);
         }
       }
       break;
@@ -120,6 +172,17 @@ CameraPreferences::PreferenceChanged(const char* aPref, void* aClosure)
         rv = UpdatePref(aPref, v);
         if (NS_SUCCEEDED(rv)) {
           DOM_CAMERA_LOGI("Preference '%s' has changed, '%s'\n", aPref, v.get());
+        }
+      }
+      break;
+
+    case kPrefValueIsBoolean:
+      {
+        bool& v = *p.mValue.mAsBoolean;
+        rv = UpdatePref(aPref, v);
+        if (NS_SUCCEEDED(rv)) {
+          DOM_CAMERA_LOGI("Preference '%s' has changed, %s\n",
+            aPref, v ? "true" : "false");
         }
       }
       break;
@@ -211,6 +274,7 @@ CameraPreferences::GetPref(const char* aPref, nsACString& aVal)
   return true;
 }
 
+#ifdef CAMERAPREFERENCES_HAVE_SEPARATE_UINT32_AND_NSRESULT
 /* static */
 bool
 CameraPreferences::GetPref(const char* aPref, nsresult& aVal)
@@ -223,18 +287,65 @@ CameraPreferences::GetPref(const char* aPref, nsresult& aVal)
     DOM_CAMERA_LOGW("Preference '%s' is not tracked by CameraPreferences\n", aPref);
     return false;
   }
-  if (sPrefs[i].mValueType != kPrefValueIsNSResult) {
+  if (sPrefs[i].mValueType != kPrefValueIsNsResult) {
     DOM_CAMERA_LOGW("Preference '%s' is not an nsresult type\n", aPref);
     return false;
   }
 
   nsresult v = *sPrefs[i].mValue.mAsNsResult;
   if (v == NS_OK) {
-    DOM_CAMERA_LOGI("Preference '%s' is not set\n", aPref);
+    DOM_CAMERA_LOGW("Preference '%s' is not set\n", aPref);
     return false;
   }
 
   DOM_CAMERA_LOGI("Preference '%s', got 0x%x\n", aPref, v);
+  aVal = v;
+  return true;
+}
+#endif
+
+/* static */
+bool
+CameraPreferences::GetPref(const char* aPref, uint32_t& aVal)
+{
+  MOZ_ASSERT(sPrefMonitor, "sPrefMonitor missing in CameraPreferences::GetPref()");
+  MonitorAutoLock mon(*sPrefMonitor);
+
+  uint32_t i = PrefToIndex(aPref);
+  if (i == kPrefNotFound || i >= ArrayLength(sPrefs)) {
+    DOM_CAMERA_LOGW("Preference '%s' is not tracked by CameraPreferences\n", aPref);
+    return false;
+  }
+  if (sPrefs[i].mValueType != kPrefValueIsUint32) {
+    DOM_CAMERA_LOGW("Preference '%s' is not a uint32_t type\n", aPref);
+    return false;
+  }
+
+  uint32_t v = *sPrefs[i].mValue.mAsUint32;
+  DOM_CAMERA_LOGI("Preference '%s', got %u\n", aPref, v);
+  aVal = v;
+  return true;
+}
+
+/* static */
+bool
+CameraPreferences::GetPref(const char* aPref, bool& aVal)
+{
+  MOZ_ASSERT(sPrefMonitor, "sPrefMonitor missing in CameraPreferences::GetPref()");
+  MonitorAutoLock mon(*sPrefMonitor);
+
+  uint32_t i = PrefToIndex(aPref);
+  if (i == kPrefNotFound || i >= ArrayLength(sPrefs)) {
+    DOM_CAMERA_LOGW("Preference '%s' is not tracked by CameraPreferences\n", aPref);
+    return false;
+  }
+  if (sPrefs[i].mValueType != kPrefValueIsBoolean) {
+    DOM_CAMERA_LOGW("Preference '%s' is not a boolean type\n", aPref);
+    return false;
+  }
+
+  bool v = *sPrefs[i].mValue.mAsBoolean;
+  DOM_CAMERA_LOGI("Preference '%s', got %s\n", aPref, v ? "true" : "false");
   aVal = v;
   return true;
 }
