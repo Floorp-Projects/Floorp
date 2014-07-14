@@ -2711,7 +2711,7 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
         // Unless we were given a specific BailoutKind, pick a default based on
         // the type we expect.
         BailoutKind kind;
-        switch(type){
+        switch (type) {
           case MIRType_Boolean:
             kind = Bailout_NonBooleanInput;
             break;

@@ -1114,6 +1114,8 @@ IonBailoutKindExplanation(ParallelBailoutCause cause, BailoutKind kind)
       case Bailout_NonStringInput:
       case Bailout_NonStringInputInvalidate:
         return "can't unbox: expected string";
+      case Bailout_NonSymbolInput:
+        return "can't unbox: expected symbol";
       case Bailout_GuardThreadExclusive:
         return "tried to write to non-thread local value";
       case Bailout_ParallelUnsafe:
