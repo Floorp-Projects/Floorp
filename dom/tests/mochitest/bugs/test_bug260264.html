@@ -25,117 +25,157 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=260264
 
 SimpleTest.waitForExplicitFinish();
 
-/**
- * These functions can be called without arguments to retrieve the current
- * value of the preference/privilege, or called with a single argument to set
- * the preference/privilege to a new value.
- *
- * In other words, they obey the interface that |hold| expects its |accessor|
- * parameter to obey.
- */
-var popupMax = makePrefAccessor("dom.popup_maximum"),
-    popupEvents = makePrefAccessor("dom.popup_allowed_events"),
-    blockPopups = makePrefAccessor("dom.disable_open_during_load"),
-    ownPopupPriv = makePopupPrivAccessor(location.href);
-
 var a = $("link"),
     checkOpened = function() { ok(window.open("http://example.com"), "not properly opened") },
     checkBlocked = function() { ok(!window.open("http://example.com"), "not properly blocked") };
 
-/**
- * Intentional popups are not limited by dom.popup_maximum.
- */
-function testIntentional(event) {
-  hold(popupMax, 3, function() {
-    send(a, event, checkOpened);
-    send(a, event, checkOpened);
-    send(a, event, checkOpened);
-    send(a, event, checkOpened);
-  });
-  window.open.close();
-}
 
-/**
- * Probably-intentional popups are limited only by dom.popup_maximum, and
- * closing the popup window immediately allows another to open.
- */
-function testProbablyIntentional(event) {
-  var max = 3;
-  hold(popupMax, max, function() {
-    for (var count = 0, n = 0; n < max; n++)
-      send(a, event, function() { if (window.open("http://example.com")) count++ });
-    send(a, event, checkBlocked);
-    window.open.close(1);
-    send(a, event, checkOpened);
-    send(a, event, checkBlocked);
-    send(a, event, checkBlocked);
-    window.open.close();
-    ok(count > 0, "Windows left open by previous tests?");
-    while (count --> 0)
-      send(a, event, checkOpened);
-    send(a, event, checkBlocked);
-  });
-  window.open.close();
-}
-
-/**
- * Probably-unintentional popups are forbidden entirely.
- */
-function testProbablyUnintentional(event) {
-  hold(popupMax, 2, function() {
-    send(a, event, checkBlocked);
-  });
-  window.open.close();
-}
-
-/**
- * Please be patient; run_tests opens/closes a LOT of windows.
- */
 function run_tests() {
-  hold(popupEvents, "click mouseup", function() {
-    // Note: UNKNOWN_ACTION is the same as DENY_ACTION.
-    hold(ownPopupPriv, DENY_ACTION, function() {
-      testIntentional("click");
-      testProbablyIntentional("mouseup");
-      testProbablyUnintentional("mouseover");
-    });
-    hold(ownPopupPriv, ALLOW_ACTION, function() {
-      testIntentional("click");
-      testIntentional("mouseup");
-      testProbablyIntentional("mouseover");
-    });
-  });
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  window.open.close();
 
-  hold(popupEvents, "click", function() {
-    // Note: UNKNOWN_ACTION is the same as DENY_ACTION.
-    hold(ownPopupPriv, DENY_ACTION, function() {
-      testIntentional("click");
-      testProbablyUnintentional("mouseup");
-      testProbablyUnintentional("mouseover");
-    });
-    hold(ownPopupPriv, ALLOW_ACTION, function() {
-      testIntentional("click");
-      testProbablyIntentional("mouseup");
-      testProbablyIntentional("mouseover");
-    });
-  });
+  SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 3]]}, run_tests2);
+}
 
-  window.open.close(); // just in case
+function run_tests2() {
+  for (var count = 0, n = 0; n < 3; n++)
+    send(a, "mouseup", function() { if (window.open("http://example.com")) count++ });
+  send(a, "mouseup", checkBlocked);
+  window.open.close(1);
+  send(a, "mouseup", checkOpened);
+  send(a, "mouseup", checkBlocked);
+  send(a, "mouseup", checkBlocked);
+  window.open.close();
+  ok(count > 0, "Windows left open by previous tests?");
+  while (count --> 0)
+    send(a, "mouseup", checkOpened);
+  send(a, "mouseup", checkBlocked);
+  window.open.close();
+
+  SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 2]]}, run_tests3);
+}
+
+function run_tests3() {
+  send(a, "mouseover", checkBlocked);
+  window.open.close();
+  SpecialPowers.pushPermissions([{'type': 'popup', 'allow': ALLOW_ACTION, 'context': document}], function() {
+    SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 3]]}, run_tests4);
+  });
+}
+
+function run_tests4() {
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  window.open.close();
+
+  send(a, "mouseup", checkOpened);
+  send(a, "mouseup", checkOpened);
+  send(a, "mouseup", checkOpened);
+  send(a, "mouseup", checkOpened);
+  window.open.close();
+
+  for (var count = 0, n = 0; n < 3; n++)
+    send(a, "mouseover", function() { if (window.open("http://example.com")) count++ });
+  send(a, "mouseover", checkBlocked);
+  window.open.close(1);
+  send(a, "mouseover", checkOpened);
+  send(a, "mouseover", checkBlocked);
+  send(a, "mouseover", checkBlocked);
+  window.open.close();
+  ok(count > 0, "Windows left open by previous tests?");
+  while (count --> 0)
+    send(a, "mouseover", checkOpened);
+  send(a, "mouseover", checkBlocked);
+  window.open.close();
+
+  SpecialPowers.pushPrefEnv({"set": [["dom.popup_allowed_events", "click"]]}, run_tests5);
+}
+
+function run_tests5() {
+  SpecialPowers.pushPermissions([{'type': 'popup', 'allow': DENY_ACTION, 'context': document}], run_tests6);
+}
+
+function run_tests6() {
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  window.open.close();
+
+  SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 2]]}, run_tests7);
+}
+
+function run_tests7() {
+  send(a, "mouseup", checkBlocked);
+  window.open.close();
+  send(a, "mouseover", checkBlocked);
+  window.open.close();
+
+  SpecialPowers.pushPermissions([{'type': 'popup', 'allow': ALLOW_ACTION, 'context': document}], function() {
+    SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 3]]}, run_tests8);
+  });
+}
+
+function run_tests8() {
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  send(a, "click", checkOpened);
+  window.open.close();
+
+  for (var count = 0, n = 0; n < 3; n++)
+    send(a, "mouseup", function() { if (window.open("http://example.com")) count++ });
+  send(a, "mouseup", checkBlocked);
+  window.open.close(1);
+  send(a, "mouseup", checkOpened);
+  send(a, "mouseup", checkBlocked);
+  send(a, "mouseup", checkBlocked);
+  window.open.close();
+  ok(count > 0, "Windows left open by previous tests?");
+  while (count --> 0)
+    send(a, "mouseup", checkOpened);
+  send(a, "mouseup", checkBlocked);
+  window.open.close();
+
+  for (var count = 0, n = 0; n < 3; n++)
+    send(a, "mouseover", function() { if (window.open("http://example.com")) count++ });
+  send(a, "mouseover", checkBlocked);
+  window.open.close(1);
+  send(a, "mouseover", checkOpened);
+  send(a, "mouseover", checkBlocked);
+  send(a, "mouseover", checkBlocked);
+  window.open.close();
+  ok(count > 0, "Windows left open by previous tests?");
+  while (count --> 0)
+    send(a, "mouseover", checkOpened);
+  send(a, "mouseover", checkBlocked);
+  window.open.close();
+
+  SimpleTest.finish();
 }
 
 function check_sanity() {
-  hold(ownPopupPriv, UNKNOWN_ACTION, function(unknown) {
-    hold(ownPopupPriv, ALLOW_ACTION, function(allow) {
-      is(ownPopupPriv(), allow, "properly set to allow");
-    });
-    is(ownPopupPriv(), unknown, "properly reset to unknown");
+  ok(SpecialPowers.testPermission('popup', UNKNOWN_ACTION, document), 'popup value should have UNKNOWN permission');
+  SpecialPowers.pushPermissions([{'type': 'popup', 'allow': true, 'context': document}], check_sanity2);
+}
+
+function check_sanity2() {
+  ok(SpecialPowers.testPermission('popup', ALLOW_ACTION, document), 'popup value should have ALLOW permission');
+  SpecialPowers.pushPrefEnv({"set": [["dom.disable_open_during_load", true],
+                                     ["dom.popup_allowed_events", "click mouseup"],
+                                     ["dom.popup_maximum", 3]]}, function() {
+    // Note: UNKNOWN_ACTION is the same as DENY_ACTION.
+    SpecialPowers.pushPermissions([{'type': 'popup', 'allow': DENY_ACTION, 'context': document}], run_tests);
   });
 }
 
 setTimeout(function() {
-  check_sanity();
-  hold(blockPopups, true, run_tests);
-  SimpleTest.finish();
+  SpecialPowers.pushPermissions([{'type': 'popup', 'remove': true, 'context': document}], check_sanity);
 }, 200);
 
 </script>
