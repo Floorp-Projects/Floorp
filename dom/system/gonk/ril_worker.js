@@ -10680,13 +10680,9 @@ StkCommandParamsFactoryObject.prototype = {
 
     let ctlv = this.context.StkProactiveCmdHelper.searchForTag(
         COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
-    if (!ctlv) {
-      this.context.RIL.sendStkTerminalResponse({
-        command: cmdDetails,
-        resultCode: STK_RESULT_REQUIRED_VALUES_MISSING});
-      throw new Error("Stk Event Notfiy: Required value missing : Alpha ID");
+    if (ctlv) {
+      textMsg.text = ctlv.value.identifier;
     }
-    textMsg.text = ctlv.value.identifier;
 
     return textMsg;
   },
