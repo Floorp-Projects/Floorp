@@ -16,11 +16,39 @@
 
 #include "GonkCameraParameters.h"
 #include "camera/CameraParameters.h"
+#include "CameraPreferences.h"
 #include "ICameraControl.h"
 #include "CameraCommon.h"
+#include "mozilla/Hal.h"
 
 using namespace mozilla;
 using namespace android;
+
+/* static */ bool
+GonkCameraParameters::IsLowMemoryPlatform()
+{
+  bool testIsLowMem = false;
+  CameraPreferences::GetPref("camera.control.test.is_low_memory", testIsLowMem);
+  if (testIsLowMem) {
+    NS_WARNING("Forcing low-memory platform camera preferences");
+    return true;
+  }
+
+  uint32_t lowMemoryThresholdBytes = 0;
+  CameraPreferences::GetPref("camera.control.low_memory_thresholdMB",
+                             lowMemoryThresholdBytes);
+  lowMemoryThresholdBytes *= 1024 * 1024;
+  if (lowMemoryThresholdBytes) {
+    uint32_t totalMemoryBytes = hal::GetTotalSystemMemory();
+    if (totalMemoryBytes < lowMemoryThresholdBytes) {
+      DOM_CAMERA_LOGI("Low-memory platform with %d bytes of RAM (threshold: <%d bytes)\n",
+        totalMemoryBytes, lowMemoryThresholdBytes);
+      return true;
+    }
+  }
+
+  return false;
+}
 
 /* static */ const char*
 GonkCameraParameters::Parameters::GetTextKey(uint32_t aKey)
@@ -246,7 +274,7 @@ GonkCameraParameters::Initialize()
   nsString s;
   nsTArray<nsCString> isoModes;
   GetListAsArray(CAMERA_PARAM_SUPPORTED_ISOMODES, isoModes);
-  for (uint32_t i = 0; i < isoModes.Length(); ++i) {
+  for (nsTArray<nsCString>::size_type i = 0; i < isoModes.Length(); ++i) {
     rv = MapIsoFromGonk(isoModes[i].get(), s);
     if (NS_FAILED(rv)) {
       DOM_CAMERA_LOGW("Unrecognized ISO mode value '%s'\n", isoModes[i].get());
@@ -254,6 +282,17 @@ GonkCameraParameters::Initialize()
     }
     *mIsoModes.AppendElement() = s;
     mIsoModeMap.Put(s, new nsCString(isoModes[i]));
+  }
+
+  GetListAsArray(CAMERA_PARAM_SUPPORTED_SCENEMODES, mSceneModes);
+  if (IsLowMemoryPlatform()) {
+    bool hdrRemoved = false;
+    while (mSceneModes.RemoveElement(NS_LITERAL_STRING("hdr"))) {
+      hdrRemoved = true;
+    }
+    if (hdrRemoved) {
+      DOM_CAMERA_LOGI("Disabling HDR support due to low memory\n");
+    }
   }
 
   mInitialized = true;
@@ -264,16 +303,26 @@ GonkCameraParameters::Initialize()
 nsresult
 GonkCameraParameters::SetTranslated(uint32_t aKey, const nsAString& aValue)
 {
-  if (aKey == CAMERA_PARAM_ISOMODE) {
-    nsAutoCString v;
-    nsresult rv = MapIsoToGonk(aValue, v);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    return SetImpl(aKey, v.get());
-  }
+  switch (aKey) {
+    case CAMERA_PARAM_ISOMODE:
+      {
+        nsAutoCString v;
+        nsresult rv = MapIsoToGonk(aValue, v);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        return SetImpl(aKey, v.get());
+      }
 
-  return SetImpl(aKey, NS_ConvertUTF16toUTF8(aValue).get());
+    case CAMERA_PARAM_SCENEMODE:
+      if (mSceneModes.IndexOf(aValue) == nsTArray<nsString>::NoIndex) {
+        return NS_ERROR_INVALID_ARG;
+      }
+      // fallthrough
+
+    default:
+      return SetImpl(aKey, NS_ConvertUTF16toUTF8(aValue).get());
+  }
 }
 
 nsresult
@@ -620,7 +669,7 @@ GonkCameraParameters::SetTranslated(uint32_t aKey, const double& aValue)
 nsresult
 GonkCameraParameters::GetTranslated(uint32_t aKey, double& aValue)
 {
-  double val;
+  double val = 0.0; // initialize to keep the compiler happy [-Wmaybe-uninitialized]
   int index = 0;
   double focusDistance[3];
   const char* s;
@@ -840,12 +889,18 @@ GonkCameraParameters::GetListAsArray(uint32_t aKey, nsTArray<T>& aArray)
 nsresult
 GonkCameraParameters::GetTranslated(uint32_t aKey, nsTArray<nsString>& aValues)
 {
-  if (aKey == CAMERA_PARAM_SUPPORTED_ISOMODES) {
-    aValues = mIsoModes;
-    return NS_OK;
-  }
+  switch (aKey) {
+    case CAMERA_PARAM_SUPPORTED_ISOMODES:
+      aValues = mIsoModes;
+      return NS_OK;
 
-  return GetListAsArray(aKey, aValues);
+    case CAMERA_PARAM_SUPPORTED_SCENEMODES:
+      aValues = mSceneModes;
+      return NS_OK;
+
+    default:
+      return GetListAsArray(aKey, aValues);
+  }
 }
 
 nsresult

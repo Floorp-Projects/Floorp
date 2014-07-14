@@ -15,7 +15,7 @@ let test = asyncTest(function*() {
 
   info("Selecting the simple, non-transformed DIV");
   let div = getNode("#simple-div");
-  yield selectNode(div, inspector, "highlight");
+  yield selectAndHighlightNode(div, inspector);
 
   testSimpleDivHighlighted(div);
   yield zoomTo(2);
@@ -25,7 +25,7 @@ let test = asyncTest(function*() {
   info("Selecting the rotated DIV");
   let rotated = getNode("#rotated-div");
   let onBoxModelUpdate = waitForBoxModelUpdate();
-  yield selectNode(rotated, inspector, "highlight");
+  yield selectAndHighlightNode(rotated, inspector);
   yield onBoxModelUpdate;
 
   testMouseOverRotatedHighlights(rotated);
@@ -33,7 +33,7 @@ let test = asyncTest(function*() {
   info("Selecting the zero width height DIV");
   let zeroWidthHeight = getNode("#widthHeightZero-div");
   let onBoxModelUpdate = waitForBoxModelUpdate();
-  yield selectNode(zeroWidthHeight, inspector, "highlight");
+  yield selectAndHighlightNode(zeroWidthHeight, inspector);
   yield onBoxModelUpdate;
 
   testMouseOverWidthHeightZeroDiv(zeroWidthHeight);
