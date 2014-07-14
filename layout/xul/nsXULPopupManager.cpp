@@ -1407,20 +1407,28 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
       // are currently disabled on Linux due to rendering issues on certain
       // configurations.
 #ifndef MOZ_WIDGET_GTK
-      if (!aNextPopup && aPopup->HasAttr(kNameSpaceID_None, nsGkAtoms::animate) &&
-          popupFrame->StyleDisplay()->mTransitionPropertyCount > 0) {
-        nsAutoString animate;
-        aPopup->GetAttr(kNameSpaceID_None, nsGkAtoms::animate, animate);
-
+      if (!aNextPopup && aPopup->HasAttr(kNameSpaceID_None, nsGkAtoms::animate)) {
         // If animate="false" then don't transition at all. If animate="cancel",
         // only show the transition if cancelling the popup or rolling up.
         // Otherwise, always show the transition.
+        nsAutoString animate;
+        aPopup->GetAttr(kNameSpaceID_None, nsGkAtoms::animate, animate);
+
         if (!animate.EqualsLiteral("false") &&
             (!animate.EqualsLiteral("cancel") || aIsRollup)) {
-          nsRefPtr<TransitionEnder> ender = new TransitionEnder(aPopup, aDeselectMenu);
-          aPopup->AddSystemEventListener(NS_LITERAL_STRING("transitionend"),
-                                         ender, false, false);
-          return;
+          presShell->FlushPendingNotifications(Flush_Layout);
+
+          // Get the frame again in case the flush caused it to go away
+          popupFrame = do_QueryFrame(aPopup->GetPrimaryFrame());
+          if (!popupFrame)
+            return;
+
+          if (nsLayoutUtils::HasCurrentAnimations(aPopup, nsGkAtoms::transitionsProperty, aPresContext)) {
+            nsRefPtr<TransitionEnder> ender = new TransitionEnder(aPopup, aDeselectMenu);
+            aPopup->AddSystemEventListener(NS_LITERAL_STRING("transitionend"),
+                                           ender, false, false);
+            return;
+          }
         }
       }
 #endif
