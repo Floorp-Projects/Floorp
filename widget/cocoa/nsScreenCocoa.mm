@@ -7,11 +7,14 @@
 #include "nsObjCExceptions.h"
 #include "nsCocoaUtils.h"
 
+static uint32_t sScreenId = 0;
+
 nsScreenCocoa::nsScreenCocoa (NSScreen *screen)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   mScreen = [screen retain];
+  mId = ++sScreenId;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -21,6 +24,17 @@ nsScreenCocoa::~nsScreenCocoa ()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [mScreen release];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+NS_IMETHODIMP
+nsScreenCocoa::GetId(uint32_t *outId)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  *outId = mId;
+  return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

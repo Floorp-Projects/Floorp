@@ -30,6 +30,7 @@ public:
   nsScreenGtk();
   ~nsScreenGtk();
 
+  NS_IMETHOD GetId(uint32_t* aId);
   NS_IMETHOD GetRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight);
   NS_IMETHOD GetAvailRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight);
   NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth);
@@ -44,6 +45,7 @@ private:
   uint32_t mScreenNum;
   nsIntRect mRect;
   nsIntRect mAvailRect;
+  uint32_t mId;
 };
 
 #endif  // nsScreenGtk_h___ 
