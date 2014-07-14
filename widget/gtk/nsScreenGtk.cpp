@@ -35,13 +35,6 @@ nsScreenGtk :: GetId(uint32_t *aId)
   return NS_OK;
 } // GetId
 
-NS_IMETHODIMP
-nsScreenGtk :: GetId(uint32_t *aId)
-{
-  *aId = mId;
-  return NS_OK;
-} // GetId
-
 
 NS_IMETHODIMP
 nsScreenGtk :: GetRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
