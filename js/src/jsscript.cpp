@@ -1541,6 +1541,17 @@ ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
     const jschar *chars = this->chars(cx, holder);
     if (!chars)
         return nullptr;
+    return NewStringCopyN<CanGC>(cx, chars + start, stop - start);
+}
+
+JSFlatString *
+ScriptSource::substringDontDeflate(JSContext *cx, uint32_t start, uint32_t stop)
+{
+    JS_ASSERT(start <= stop);
+    UncompressedSourceCache::AutoHoldEntry holder;
+    const jschar *chars = this->chars(cx, holder);
+    if (!chars)
+        return nullptr;
     return NewStringCopyNDontDeflate<CanGC>(cx, chars + start, stop - start);
 }
 
