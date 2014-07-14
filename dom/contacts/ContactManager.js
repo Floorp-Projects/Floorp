@@ -248,10 +248,16 @@ ContactManager.prototype = {
     let permValue =
       Services.perms.testExactPermissionFromPrincipal(principal, type);
     if (permValue == Ci.nsIPermissionManager.ALLOW_ACTION) {
-      aAllowCallback();
+      if (aAllowCallback) {
+        aAllowCallback();
+      }
       return;
-    } else if (permValue == Ci.nsIPermissionManager.DENY_ACTION) {
-      aCancelCallback();
+    } else if (permValue == Ci.nsIPermissionManager.DENY_ACTION ||
+               permValue == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
+      if (aCancelCallback) {
+        aCancelCallback();
+      }
+      return;
     }
 
     // Create an array with a single nsIContentPermissionType element.
@@ -425,7 +431,7 @@ ContactManager.prototype = {
     }.bind(this);
 
     let cancelCallback = function() {
-      Services.DOMRequest.fireError(request);
+      Services.DOMRequest.fireError(request, "");
     };
 
     this.askPermission("revision", request, allowCallback, cancelCallback);
@@ -442,7 +448,7 @@ ContactManager.prototype = {
     }.bind(this);
 
     let cancelCallback = function() {
-      Services.DOMRequest.fireError(request);
+      Services.DOMRequest.fireError(request, "");
     };
 
     this.askPermission("count", request, allowCallback, cancelCallback);
