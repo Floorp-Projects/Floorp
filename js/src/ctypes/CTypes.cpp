@@ -4751,8 +4751,12 @@ AddFieldToArray(JSContext* cx,
 
   *element = OBJECT_TO_JSVAL(fieldObj);
 
+  AutoStableStringChars nameChars(cx);
+  if (!nameChars.initTwoByte(cx, name))
+      return false;
+
   if (!JS_DefineUCProperty(cx, fieldObj,
-         name->chars(), name->length(),
+         nameChars.twoByteChars(), name->length(),
          typeObj,
          JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
