@@ -736,13 +736,13 @@ struct TransportSecurityPreload {
 
 /* Sort hostnames for binary search. */
 static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
-  { "accounts.firefox.com", true, true, false, 4, &kPinset_mozilla_fxa },
+  { "accounts.firefox.com", true, false, false, 4, &kPinset_mozilla_fxa },
   { "accounts.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "addons.mozilla.net", true, false, true, 2, &kPinset_mozilla },
   { "addons.mozilla.org", true, false, true, 1, &kPinset_mozilla },
   { "admin.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "android.com", true, false, false, -1, &kPinset_google_root_pems },
-  { "api.accounts.firefox.com", true, true, false, 5, &kPinset_mozilla_fxa },
+  { "api.accounts.firefox.com", true, false, false, 5, &kPinset_mozilla_fxa },
   { "api.twitter.com", true, false, false, -1, &kPinset_twitterCDN },
   { "apis.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "appengine.google.com", true, false, false, -1, &kPinset_google_root_pems },
@@ -1067,4 +1067,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1413626795593000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1413832295312000);
