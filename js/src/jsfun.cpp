@@ -861,10 +861,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
         return nullptr;
     }
     if (haveSource) {
-        RootedString srcStr(cx, script->sourceData(cx));
-        if (!srcStr)
-            return nullptr;
-        Rooted<JSFlatString *> src(cx, srcStr->ensureFlat(cx));
+        Rooted<JSFlatString *> src(cx, script->sourceData(cx));
         if (!src)
             return nullptr;
 
