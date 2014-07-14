@@ -7798,6 +7798,25 @@ AC_SUBST(PROFILE_GEN_LDFLAGS)
 AC_SUBST(PROFILE_USE_CFLAGS)
 AC_SUBST(PROFILE_USE_LDFLAGS)
 
+dnl =============================================
+dnl Support for -fno-integrated-as (recent clang)
+dnl =============================================
+dnl Under clang 3.4+, use -fno-integrated-as to
+dnl build libvpx's vp8_asm_enc_offsets.c
+
+_SAVE_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -fno-integrated-as"
+
+AC_MSG_CHECKING([whether C compiler supports -fno-integrated-as])
+AC_TRY_COMPILE([], [return 0;],
+               [ NO_INTEGRATED_AS_CFLAGS="-fno-integrated-as"
+                 result="yes" ], result="no")
+AC_MSG_RESULT([$result])
+
+CFLAGS="$_SAVE_CFLAGS"
+
+AC_SUBST(NO_INTEGRATED_AS_CFLAGS)
+
 fi # ! SKIP_COMPILER_CHECKS
 
 AC_DEFINE(CPP_THROW_NEW, [throw()])

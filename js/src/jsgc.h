@@ -383,6 +383,90 @@ GetGCKindSlots(AllocKind thingKind, const Class *clasp)
 // above locks is held.
 class AutoMaybeStartBackgroundAllocation;
 
+// A single segment of a SortedArenaList. Each segment has a head and a tail,
+// which track the start and end of a segment for O(1) append and concatenation.
+struct SortedArenaListSegment
+{
+    ArenaHeader *head;
+    ArenaHeader **tailp;
+
+    void clear() {
+        head = nullptr;
+        tailp = &head;
+    }
+
+    bool isEmpty() const {
+        return tailp == &head;
+    }
+
+    // Appends |aheader| to this segment.
+    void append(ArenaHeader *aheader) {
+        JS_ASSERT(aheader);
+        JS_ASSERT_IF(head, head->getAllocKind() == aheader->getAllocKind());
+        *tailp = aheader;
+        tailp = &aheader->next;
+    }
+
+    // Points the tail of this segment at |aheader|, which may be null.
+    void linkTo(ArenaHeader *aheader) {
+        *tailp = aheader;
+    }
+};
+
+// A class that holds arenas in sorted order by appending arenas to specific
+// segments. SortedArenaLists can be flattened to a regular ArenaList.
+class SortedArenaList
+{
+  public:
+    // The minimum size, in bytes, of a GC thing.
+    static const size_t MinThingSize = 16;
+
+    static_assert(ArenaSize <= 4096, "When increasing the Arena size, please consider how"\
+                                     " this will affect the size of a SortedArenaList.");
+
+    static_assert(MinThingSize >= 16, "When decreasing the minimum thing size, please consider"\
+                                      " how this will affect the size of a SortedArenaList.");
+
+  private:
+    // The maximum number of GC things that an arena can hold.
+    static const size_t MaxThingsPerArena = (ArenaSize - sizeof(ArenaHeader)) / MinThingSize;
+
+    size_t thingsPerArena_;
+    SortedArenaListSegment segments[MaxThingsPerArena + 1];
+
+    // Convenience functions to get the nth head and tail.
+    ArenaHeader *headAt(size_t n) { return segments[n].head; }
+    ArenaHeader **tailAt(size_t n) { return segments[n].tailp; }
+
+  public:
+    explicit SortedArenaList(size_t thingsPerArena = MaxThingsPerArena) {
+        reset(thingsPerArena);
+    }
+
+    void setThingsPerArena(size_t thingsPerArena) {
+        JS_ASSERT(thingsPerArena && thingsPerArena <= MaxThingsPerArena);
+        thingsPerArena_ = thingsPerArena;
+    }
+
+    // Resets the first |thingsPerArena| segments of this list for further use.
+    void reset(size_t thingsPerArena = MaxThingsPerArena) {
+        setThingsPerArena(thingsPerArena);
+        // Initialize the segments.
+        for (size_t i = 0; i <= thingsPerArena; ++i)
+            segments[i].clear();
+    }
+
+    // Inserts a header, which has room for |nfree| more things, in its segment.
+    void insertAt(ArenaHeader *aheader, size_t nfree) {
+        JS_ASSERT(nfree <= thingsPerArena_);
+        segments[nfree].append(aheader);
+    }
+
+    // Flattens the SortedArenaList into a regular ArenaList. Although we don't
+    // expect to do this more than once, note this operation is not destructive.
+    ArenaList toArenaList();
+};
+
 /*
  * Arena lists have a head and a cursor. The cursor conceptually lies on arena
  * boundaries, i.e. before the first arena, between two arenas, or after the
@@ -425,11 +509,33 @@ class ArenaList {
     ArenaHeader     *head_;
     ArenaHeader     **cursorp_;
 
+    void copy(const ArenaList &other) {
+        other.check();
+        head_ = other.head_;
+        cursorp_ = other.isCursorAtHead() ? &head_ : other.cursorp_;
+        check();
+    }
+
   public:
     ArenaList() {
         clear();
     }
 
+    ArenaList(const ArenaList &other) {
+        copy(other);
+    }
+
+    ArenaList &operator=(const ArenaList &other) {
+        copy(other);
+        return *this;
+    }
+    
+    ArenaList(const SortedArenaListSegment &segment) {
+        head_ = segment.head;
+        cursorp_ = segment.isEmpty() ? &head_ : segment.tailp;
+        check();
+    }
+    
     // This does checking just of |head_| and |cursorp_|.
     void check() const {
 #ifdef DEBUG
@@ -439,28 +545,6 @@ class ArenaList {
         // If there's an arena following the cursor, it must not be full.
         ArenaHeader *cursor = *cursorp_;
         JS_ASSERT_IF(cursor, cursor->hasFreeThings());
-#endif
-    }
-
-    // This does checking involving all the arenas in the list.
-    void deepCheck() const {
-#ifdef DEBUG
-        check();
-        // All full arenas must precede all non-full arenas.
-        //
-        // XXX: this is currently commented out because it fails moderately
-        // often. I'm not sure if this is because (a) it's not true that all
-        // full arenas must precede all non-full arenas, or (b) we have some
-        // defective list-handling code.
-        //
-//      bool havePassedFullArenas = false;
-//      for (ArenaHeader *aheader = head_; aheader; aheader = aheader->next) {
-//          if (havePassedFullArenas) {
-//              JS_ASSERT(aheader->hasFreeThings());
-//          } else if (aheader->hasFreeThings()) {
-//              havePassedFullArenas = true;
-//          }
-//      }
 #endif
     }
 
@@ -479,6 +563,11 @@ class ArenaList {
     ArenaHeader *head() const {
         check();
         return head_;
+    }
+
+    bool isCursorAtHead() const {
+        check();
+        return cursorp_ == &head_;
     }
 
     bool isCursorAtEnd() const {
@@ -515,33 +604,19 @@ class ArenaList {
         check();
     }
 
-    // This inserts |a| at the start of the list, and doesn't change the
-    // cursor.
-    void insertAtStart(ArenaHeader *a) {
+    // This inserts |other|, which must be full, at the cursor of |this|.
+    ArenaList &insertListWithCursorAtEnd(const ArenaList &other) {
         check();
-        a->next = head_;
-        if (isEmpty())
-            cursorp_ = &a->next;        // The cursor remains null.
-        head_ = a;
+        other.check();
+        JS_ASSERT(other.isCursorAtEnd());
+        if (other.isCursorAtHead())
+            return *this;
+        // Insert the full arenas of |other| after those of |this|.
+        *other.cursorp_ = *cursorp_;
+        *cursorp_ = other.head_;
+        cursorp_ = other.cursorp_;
         check();
-    }
-
-    // Appends |list|. |this|'s cursor must be at the end.
-    void appendToListWithCursorAtEnd(ArenaList &other) {
-        JS_ASSERT(isCursorAtEnd());
-        deepCheck();
-        other.deepCheck();
-        if (!other.isEmpty()) {
-            // Because |this|'s cursor is at the end, |cursorp_| points to the
-            // list-ending null. So this assignment appends |other| to |this|.
-            *cursorp_ = other.head_;
-
-            // If |other|'s cursor isn't at the start of the list, then update
-            // |this|'s cursor accordingly.
-            if (other.cursorp_ != &other.head_)
-                cursorp_ = other.cursorp_;
-        }
-        deepCheck();
+        return *this;
     }
 };
 
@@ -800,7 +875,8 @@ class ArenaLists
     void queueScriptsForSweep(FreeOp *fop);
     void queueJitCodeForSweep(FreeOp *fop);
 
-    bool foregroundFinalize(FreeOp *fop, AllocKind thingKind, SliceBudget &sliceBudget);
+    bool foregroundFinalize(FreeOp *fop, AllocKind thingKind, SliceBudget &sliceBudget,
+                            SortedArenaList &sweepList);
     static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, bool onBackgroundThread);
 
     void wipeDuringParallelExecution(JSRuntime *rt);

@@ -66,14 +66,14 @@ ClientCanvasLayer::Initialize(const Data& aData)
       // The screen caps are irrelevant if we're using a separate stream
       caps = aData.mHasAlpha ? SurfaceCaps::ForRGBA() : SurfaceCaps::ForRGB();
     } else {
-      caps = screen->Caps();
+      caps = screen->mCaps;
     }
     MOZ_ASSERT(caps.alpha == aData.mHasAlpha);
 
     SurfaceStreamType streamType =
         SurfaceStream::ChooseGLStreamType(SurfaceStream::OffMainThread,
                                           screen->PreserveBuffer());
-    SurfaceFactory_GL* factory = nullptr;
+    SurfaceFactory* factory = nullptr;
     if (!gfxPrefs::WebGLForceLayersReadback()) {
       switch (ClientManager()->AsShadowForwarder()->GetCompositorBackendType()) {
         case mozilla::layers::LayersBackend::LAYERS_OPENGL: {
@@ -94,7 +94,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
             // [Basic Layers, OMTC] WebGL layer init.
             // Well, this *should* work...
 #ifdef XP_MACOSX
-            factory = new SurfaceFactory_IOSurface(mGLContext, caps);
+            factory = SurfaceFactory_IOSurface::Create(mGLContext, caps);
 #else
             factory = new SurfaceFactory_GLTexture(mGLContext, nullptr, caps);
 #endif

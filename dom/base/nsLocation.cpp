@@ -32,6 +32,10 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsNullPrincipal.h"
 #include "ScriptSettings.h"
+#include "mozilla/dom/LocationBinding.h"
+
+using namespace mozilla;
+using namespace mozilla::dom;
 
 static nsresult
 GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
@@ -52,13 +56,14 @@ GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
   return NS_OK;
 }
 
-nsLocation::nsLocation(nsIDocShell *aDocShell)
+nsLocation::nsLocation(nsPIDOMWindow* aWindow, nsIDocShell *aDocShell)
+  : mInnerWindow(aWindow)
 {
   MOZ_ASSERT(aDocShell);
+  MOZ_ASSERT(mInnerWindow->IsInnerWindow());
+  SetIsDOMBinding();
 
   mDocShell = do_GetWeakReference(aDocShell);
-  nsCOMPtr<nsIDOMWindow> outer = aDocShell->GetWindow();
-  mOuter = do_GetWeakReference(outer);
 }
 
 nsLocation::~nsLocation()
@@ -75,7 +80,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsLocation)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Location)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(nsLocation)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsLocation, mInnerWindow)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsLocation)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsLocation)
 
@@ -729,6 +734,102 @@ nsLocation::SetProtocol(const nsAString& aProtocol)
   return SetURI(uri);
 }
 
+void
+nsLocation::GetUsername(nsAString& aUsername, ErrorResult& aError)
+{
+  if (!CallerSubsumes()) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  aUsername.Truncate();
+  nsCOMPtr<nsIURI> uri;
+  nsresult result = GetURI(getter_AddRefs(uri));
+  if (uri) {
+    nsAutoCString username;
+    result = uri->GetUsername(username);
+    if (NS_SUCCEEDED(result)) {
+      CopyUTF8toUTF16(username, aUsername);
+    }
+  }
+}
+
+void
+nsLocation::SetUsername(const nsAString& aUsername, ErrorResult& aError)
+{
+  if (!CallerSubsumes()) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = GetWritableURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aError.Throw(rv);
+    return;
+  }
+
+  if (!uri) {
+    return;
+  }
+
+  rv = uri->SetUsername(NS_ConvertUTF16toUTF8(aUsername));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aError.Throw(rv);
+    return;
+  }
+
+  rv = SetURI(uri);
+}
+
+void
+nsLocation::GetPassword(nsAString& aPassword, ErrorResult& aError)
+{
+  if (!CallerSubsumes()) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  aPassword.Truncate();
+  nsCOMPtr<nsIURI> uri;
+  nsresult result = GetURI(getter_AddRefs(uri));
+  if (uri) {
+    nsAutoCString password;
+    result = uri->GetPassword(password);
+    if (NS_SUCCEEDED(result)) {
+      CopyUTF8toUTF16(password, aPassword);
+    }
+  }
+}
+
+void
+nsLocation::SetPassword(const nsAString& aPassword, ErrorResult& aError)
+{
+  if (!CallerSubsumes()) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = GetWritableURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aError.Throw(rv);
+    return;
+  }
+
+  if (!uri) {
+    return;
+  }
+
+  rv = uri->SetPassword(NS_ConvertUTF16toUTF8(aPassword));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aError.Throw(rv);
+    return;
+  }
+
+  rv = SetURI(uri);
+}
+
 NS_IMETHODIMP
 nsLocation::GetSearch(nsAString& aSearch)
 {
@@ -918,8 +1019,12 @@ nsLocation::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
 bool
 nsLocation::CallerSubsumes()
 {
-  // Get the principal associated with the location object.
-  nsCOMPtr<nsIDOMWindow> outer = do_QueryReferent(mOuter);
+  // Get the principal associated with the location object.  Note that this is
+  // the principal of the page which will actually be navigated, not the
+  // principal of the Location object itself.  This is why we need this check
+  // even though we only allow limited cross-origin access to Location objects
+  // in general.
+  nsCOMPtr<nsIDOMWindow> outer = mInnerWindow->GetOuterWindow();
   if (MOZ_UNLIKELY(!outer))
     return false;
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(outer);
@@ -927,4 +1032,10 @@ nsLocation::CallerSubsumes()
   nsresult rv = nsContentUtils::SubjectPrincipal()->SubsumesConsideringDomain(sop->GetPrincipal(), &subsumes);
   NS_ENSURE_SUCCESS(rv, false);
   return subsumes;
+}
+
+JSObject*
+nsLocation::WrapObject(JSContext* aCx)
+{
+  return LocationBinding::Wrap(aCx, this);
 }

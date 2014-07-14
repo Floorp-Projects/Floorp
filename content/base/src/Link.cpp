@@ -128,7 +128,7 @@ Link::GetURI() const
 }
 
 void
-Link::SetProtocol(const nsAString &aProtocol)
+Link::SetProtocol(const nsAString &aProtocol, ErrorResult& aError)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   if (!uri) {
@@ -147,7 +147,7 @@ Link::SetProtocol(const nsAString &aProtocol)
 }
 
 void
-Link::SetPassword(const nsAString &aPassword)
+Link::SetPassword(const nsAString &aPassword, ErrorResult& aError)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   if (!uri) {
@@ -160,7 +160,7 @@ Link::SetPassword(const nsAString &aPassword)
 }
 
 void
-Link::SetUsername(const nsAString &aUsername)
+Link::SetUsername(const nsAString &aUsername, ErrorResult& aError)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   if (!uri) {
@@ -173,7 +173,7 @@ Link::SetUsername(const nsAString &aUsername)
 }
 
 void
-Link::SetHost(const nsAString &aHost)
+Link::SetHost(const nsAString &aHost, ErrorResult& aError)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   if (!uri) {
@@ -186,7 +186,7 @@ Link::SetHost(const nsAString &aHost)
 }
 
 void
-Link::SetHostname(const nsAString &aHostname)
+Link::SetHostname(const nsAString &aHostname, ErrorResult& aError)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   if (!uri) {
@@ -199,7 +199,7 @@ Link::SetHostname(const nsAString &aHostname)
 }
 
 void
-Link::SetPathname(const nsAString &aPathname)
+Link::SetPathname(const nsAString &aPathname, ErrorResult& aError)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
@@ -213,7 +213,7 @@ Link::SetPathname(const nsAString &aPathname)
 }
 
 void
-Link::SetSearch(const nsAString& aSearch)
+Link::SetSearch(const nsAString& aSearch, ErrorResult& aError)
 {
   SetSearchInternal(aSearch);
   UpdateURLSearchParams();
@@ -234,7 +234,7 @@ Link::SetSearchInternal(const nsAString& aSearch)
 }
 
 void
-Link::SetPort(const nsAString &aPort)
+Link::SetPort(const nsAString &aPort, ErrorResult& aError)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   if (!uri) {
@@ -259,7 +259,7 @@ Link::SetPort(const nsAString &aPort)
 }
 
 void
-Link::SetHash(const nsAString &aHash)
+Link::SetHash(const nsAString &aHash, ErrorResult& aError)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   if (!uri) {
@@ -272,7 +272,7 @@ Link::SetHash(const nsAString &aHash)
 }
 
 void
-Link::GetOrigin(nsAString &aOrigin)
+Link::GetOrigin(nsAString &aOrigin, ErrorResult& aError)
 {
   aOrigin.Truncate();
 
@@ -287,7 +287,7 @@ Link::GetOrigin(nsAString &aOrigin)
 }
 
 void
-Link::GetProtocol(nsAString &_protocol)
+Link::GetProtocol(nsAString &_protocol, ErrorResult& aError)
 {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
@@ -303,7 +303,7 @@ Link::GetProtocol(nsAString &_protocol)
 }
 
 void
-Link::GetUsername(nsAString& aUsername)
+Link::GetUsername(nsAString& aUsername, ErrorResult& aError)
 {
   aUsername.Truncate();
 
@@ -318,7 +318,7 @@ Link::GetUsername(nsAString& aUsername)
 }
 
 void
-Link::GetPassword(nsAString &aPassword)
+Link::GetPassword(nsAString &aPassword, ErrorResult& aError)
 {
   aPassword.Truncate();
 
@@ -333,7 +333,7 @@ Link::GetPassword(nsAString &aPassword)
 }
 
 void
-Link::GetHost(nsAString &_host)
+Link::GetHost(nsAString &_host, ErrorResult& aError)
 {
   _host.Truncate();
 
@@ -351,7 +351,7 @@ Link::GetHost(nsAString &_host)
 }
 
 void
-Link::GetHostname(nsAString &_hostname)
+Link::GetHostname(nsAString &_hostname, ErrorResult& aError)
 {
   _hostname.Truncate();
 
@@ -371,7 +371,7 @@ Link::GetHostname(nsAString &_hostname)
 }
 
 void
-Link::GetPathname(nsAString &_pathname)
+Link::GetPathname(nsAString &_pathname, ErrorResult& aError)
 {
   _pathname.Truncate();
 
@@ -391,7 +391,7 @@ Link::GetPathname(nsAString &_pathname)
 }
 
 void
-Link::GetSearch(nsAString &_search)
+Link::GetSearch(nsAString &_search, ErrorResult& aError)
 {
   _search.Truncate();
 
@@ -411,7 +411,7 @@ Link::GetSearch(nsAString &_search)
 }
 
 void
-Link::GetPort(nsAString &_port)
+Link::GetPort(nsAString &_port, ErrorResult& aError)
 {
   _port.Truncate();
 
@@ -433,7 +433,7 @@ Link::GetPort(nsAString &_port)
 }
 
 void
-Link::GetHash(nsAString &_hash)
+Link::GetHash(nsAString &_hash, ErrorResult& aError)
 {
   _hash.Truncate();
 

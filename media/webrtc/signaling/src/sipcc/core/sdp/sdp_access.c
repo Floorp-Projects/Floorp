@@ -1744,12 +1744,18 @@ u32 sdp_get_media_payload_type (void *sdp_ptr, u16 level, u16 payload_num,
                         return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_OPUS));
                     }
                     if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_H264) == 0) {
-                        sdp_attr_get_fmtp_pack_mode(sdp_p, level, 0, (uint16_t) (i + 1), &pack_mode);
+                      int fmtp_inst = sdp_find_fmtp_inst(sdp_p, level,
+                                                         mca_p->payload_type[payload_num-1]);
+                      if (fmtp_inst < 0) {
+                        return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_H264_P0));
+                      } else {
+                        sdp_attr_get_fmtp_pack_mode(sdp_p, level, 0, (uint16_t) fmtp_inst, &pack_mode);
                         if (pack_mode == SDP_DEFAULT_PACKETIZATION_MODE_VALUE) {
                             return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_H264_P0));
                         } else {
                             return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_H264_P1));
                         }
+                      }
                     }
                     if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_VP8) == 0) {
                         return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_VP8));

@@ -170,6 +170,9 @@ static inline void js_free(void* p)
 #define JS_NEW_BODY(allocator, t, parms)                                       \
     void *memory = allocator(sizeof(t));                                       \
     return memory ? new(memory) t parms : nullptr;
+#define JS_MAKE_BODY(newname, T, parms)                                        \
+    T *ptr = newname<T> parms;                                                 \
+    return mozilla::UniquePtr<T, JS::DeletePolicy<T>>(ptr);
 
 /*
  * Given a class which should provide 'new' methods, add
@@ -310,6 +313,187 @@ static inline void js_free(void* p)
     template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12>\
     QUALIFIERS T *NEWNAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5, P6 &&p6, P7 &&p7, P8 &&p8, P9 &&p9, P10 &&p10, P11 &&p11, P12 &&p12) MOZ_HEAP_ALLOCATOR {\
         JS_NEW_BODY(ALLOCATOR, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5),\
+                     mozilla::Forward<P6>(p6),\
+                     mozilla::Forward<P7>(p7),\
+                     mozilla::Forward<P8>(p8),\
+                     mozilla::Forward<P9>(p9),\
+                     mozilla::Forward<P10>(p10),\
+                     mozilla::Forward<P11>(p11),\
+                     mozilla::Forward<P12>(p12)))\
+    }\
+
+/*
+ * Given a class which should provide 'make' methods, add
+ * JS_DECLARE_MAKE_METHODS (see JSContext for a usage example).  This method
+ * is functionally the same as JS_DECLARE_NEW_METHODS: it just declares methods
+ * that return mozilla::UniquePtr instances that will singly-manage ownership
+ * of the created object.  This adds makes with up to 12 parameters.  Add more
+ * versions below if you need more than 12 parameters.
+ *
+ * Note: Do not add a ; at the end of a use of JS_DECLARE_MAKE_METHODS,
+ * or the build will break.
+ */
+#define JS_DECLARE_MAKE_METHODS(MAKENAME, NEWNAME, QUALIFIERS)\
+    template <class T> \
+    QUALIFIERS \
+    mozilla::UniquePtr<T, JS::DeletePolicy<T>> \
+    MAKENAME() MOZ_HEAP_ALLOCATOR {\
+        JS_MAKE_BODY(NEWNAME, T, ())\
+    }\
+\
+    template <class T, class P1> \
+    QUALIFIERS \
+    mozilla::UniquePtr<T, JS::DeletePolicy<T>> \
+    MAKENAME(P1 &&p1) MOZ_HEAP_ALLOCATOR {\
+        JS_MAKE_BODY(NEWNAME, T,\
+                    (mozilla::Forward<P1>(p1)))\
+    }\
+\
+    template <class T, class P1, class P2> \
+    QUALIFIERS \
+mozilla::UniquePtr<T, JS::DeletePolicy<T>> \
+    MAKENAME(P1 &&p1, P2 &&p2) MOZ_HEAP_ALLOCATOR {\
+        JS_MAKE_BODY(NEWNAME, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2)))\
+    }\
+\
+    template <class T, class P1, class P2, class P3> \
+    QUALIFIERS \
+    mozilla::UniquePtr<T, JS::DeletePolicy<T>> \
+    MAKENAME(P1 &&p1, P2 &&p2, P3 &&p3) MOZ_HEAP_ALLOCATOR {\
+        JS_MAKE_BODY(NEWNAME, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3)))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4> \
+    QUALIFIERS \
+    mozilla::UniquePtr<T, JS::DeletePolicy<T>> \
+    MAKENAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4) MOZ_HEAP_ALLOCATOR {\
+        JS_MAKE_BODY(NEWNAME, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4)))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5> \
+    QUALIFIERS \
+    mozilla::UniquePtr<T, JS::DeletePolicy<T>> \
+    MAKENAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5) MOZ_HEAP_ALLOCATOR {\
+        JS_MAKE_BODY(NEWNAME, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5)))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5, class P6> \
+    QUALIFIERS \
+    mozilla::UniquePtr<T, JS::DeletePolicy<T>> \
+    MAKENAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5, P6 &&p6) MOZ_HEAP_ALLOCATOR {\
+        JS_MAKE_BODY(NEWNAME, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5),\
+                     mozilla::Forward<P6>(p6)))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7> \
+    QUALIFIERS \
+    mozilla::UniquePtr<T, JS::DeletePolicy<T>> \
+    MAKENAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5, P6 &&p6, P7 &&p7) MOZ_HEAP_ALLOCATOR {\
+        JS_MAKE_BODY(NEWNAME, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5),\
+                     mozilla::Forward<P6>(p6),\
+                     mozilla::Forward<P7>(p7)))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8> \
+    QUALIFIERS \
+    mozilla::UniquePtr<T, JS::DeletePolicy<T>> \
+    MAKENAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5, P6 &&p6, P7 &&p7, P8 &&p8) MOZ_HEAP_ALLOCATOR {\
+        JS_MAKE_BODY(NEWNAME, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5),\
+                     mozilla::Forward<P6>(p6),\
+                     mozilla::Forward<P7>(p7),\
+                     mozilla::Forward<P8>(p8)))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9> \
+    QUALIFIERS \
+    mozilla::UniquePtr<T, JS::DeletePolicy<T>> \
+    MAKENAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5, P6 &&p6, P7 &&p7, P8 &&p8, P9 &&p9) MOZ_HEAP_ALLOCATOR {\
+        JS_MAKE_BODY(NEWNAME, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5),\
+                     mozilla::Forward<P6>(p6),\
+                     mozilla::Forward<P7>(p7),\
+                     mozilla::Forward<P8>(p8),\
+                     mozilla::Forward<P9>(p9)))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10> \
+    QUALIFIERS \
+    mozilla::UniquePtr<T, JS::DeletePolicy<T>> \
+    MAKENAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5, P6 &&p6, P7 &&p7, P8 &&p8, P9 &&p9, P10 &&p10) MOZ_HEAP_ALLOCATOR {\
+        JS_MAKE_BODY(NEWNAME, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5),\
+                     mozilla::Forward<P6>(p6),\
+                     mozilla::Forward<P7>(p7),\
+                     mozilla::Forward<P8>(p8),\
+                     mozilla::Forward<P9>(p9),\
+                     mozilla::Forward<P10>(p10)))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11> \
+    QUALIFIERS \
+    mozilla::UniquePtr<T, JS::DeletePolicy<T>> \
+    MAKENAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5, P6 &&p6, P7 &&p7, P8 &&p8, P9 &&p9, P10 &&p10, P11 &&p11) MOZ_HEAP_ALLOCATOR {\
+        JS_MAKE_BODY(NEWNAME, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5),\
+                     mozilla::Forward<P6>(p6),\
+                     mozilla::Forward<P7>(p7),\
+                     mozilla::Forward<P8>(p8),\
+                     mozilla::Forward<P9>(p9),\
+                     mozilla::Forward<P10>(p10),\
+                     mozilla::Forward<P11>(p11)))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12> \
+    QUALIFIERS \
+    mozilla::UniquePtr<T, JS::DeletePolicy<T>> \
+    MAKENAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5, P6 &&p6, P7 &&p7, P8 &&p8, P9 &&p9, P10 &&p10, P11 &&p11, P12 &&p12) MOZ_HEAP_ALLOCATOR {\
+        JS_MAKE_BODY(NEWNAME, T,\
                     (mozilla::Forward<P1>(p1),\
                      mozilla::Forward<P2>(p2),\
                      mozilla::Forward<P3>(p3),\

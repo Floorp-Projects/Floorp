@@ -827,7 +827,7 @@ public:
   }
   void GetName(nsAString& aName, mozilla::ErrorResult& aError);
   void SetName(const nsAString& aName, mozilla::ErrorResult& aError);
-  nsIDOMLocation* GetLocation(mozilla::ErrorResult& aError);
+  nsLocation* GetLocation(mozilla::ErrorResult& aError);
   nsHistory* GetHistory(mozilla::ErrorResult& aError);
   mozilla::dom::BarProp* GetLocationbar(mozilla::ErrorResult& aError);
   mozilla::dom::BarProp* GetMenubar(mozilla::ErrorResult& aError);

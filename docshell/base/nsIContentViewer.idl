@@ -27,7 +27,7 @@ class nsDOMNavigationTiming;
 [ptr] native nsViewPtr(nsView);
 [ptr] native nsDOMNavigationTimingPtr(nsDOMNavigationTiming);
 
-[scriptable, builtinclass, uuid(0cb321bd-5b38-4586-8fcd-d43b366886fb)]
+[scriptable, builtinclass, uuid(f92298b8-4fe3-40d1-aad7-44e704fffd0d)]
 interface nsIContentViewer : nsISupports
 {
 
@@ -176,8 +176,10 @@ interface nsIContentViewer : nsISupports
 
   /**
    * Returns whether this content viewer is in a hidden state.
+   *
+   * @note Only Gecko internal code should set the attribute!
    */
-  readonly attribute boolean isHidden;
+  attribute boolean isHidden;
 
   [noscript] readonly attribute nsIPresShellPtr presShell;
   [noscript] readonly attribute nsPresContextPtr presContext;
