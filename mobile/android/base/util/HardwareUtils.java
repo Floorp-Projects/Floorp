@@ -30,6 +30,10 @@ public final class HardwareUtils {
     // Number of bytes of /proc/meminfo to read in one go.
     private static final int MEMINFO_BUFFER_SIZE_BYTES = 256;
 
+    private static final boolean IS_AMAZON_DEVICE = Build.MANUFACTURER.equalsIgnoreCase("Amazon");
+    public static final boolean IS_KINDLE_DEVICE = IS_AMAZON_DEVICE &&
+                                                   (Build.MODEL.equals("Kindle Fire") ||
+                                                    Build.MODEL.startsWith("KF"));
     private static volatile int sTotalRAM = -1;
 
     private static volatile boolean sInited;
