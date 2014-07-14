@@ -230,6 +230,12 @@ public:
         return PContentParent::RecvPNeckoConstructor(aActor);
     }
 
+    virtual PScreenManagerParent*
+    AllocPScreenManagerParent(uint32_t* aNumberOfScreens,
+                              float* aSystemDefaultScale,
+                              bool* aSuccess) MOZ_OVERRIDE;
+    virtual bool DeallocPScreenManagerParent(PScreenManagerParent* aActor) MOZ_OVERRIDE;
+
     virtual PHalParent* AllocPHalParent() MOZ_OVERRIDE;
     virtual bool RecvPHalConstructor(PHalParent* aActor) MOZ_OVERRIDE {
         return PContentParent::RecvPHalConstructor(aActor);
