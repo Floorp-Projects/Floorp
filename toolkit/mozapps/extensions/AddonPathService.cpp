@@ -18,6 +18,7 @@
 #include "nsIResProtocolHandler.h"
 #include "nsIChromeRegistry.h"
 #include "nsIJARURI.h"
+#include "nsJSUtils.h"
 #include "mozilla/AddonPathService.h"
 #include "mozilla/Omnijar.h"
 
@@ -85,7 +86,8 @@ NS_IMETHODIMP
 AddonPathService::FindAddonId(const nsAString& path, nsAString& addonIdString)
 {
   if (JSAddonId* id = Find(path)) {
-    addonIdString = JS::CharsZOfAddonId(id);
+    JSFlatString* flat = JS_ASSERT_STRING_IS_FLAT(JS::StringOfAddonId(id));
+    AssignJSFlatString(addonIdString, flat);
   }
   return NS_OK;
 }
