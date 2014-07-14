@@ -175,10 +175,28 @@ public:
   }
 
   virtual void
-  NotifyFinished(MediaStreamGraph* aGraph) MOZ_OVERRIDE;
+  NotifyEvent(MediaStreamGraph* aGraph,
+              MediaStreamListener::MediaStreamGraphEvent event) MOZ_OVERRIDE
+  {
+    switch (event) {
+      case EVENT_FINISHED:
+        NotifyFinished(aGraph);
+        break;
+      case EVENT_REMOVED:
+        NotifyRemoved(aGraph);
+        break;
+      case EVENT_HAS_DIRECT_LISTENERS:
+      case EVENT_HAS_NO_DIRECT_LISTENERS:
+        //NotifyListenerEvent(aGraph, event);
+        break;
+    }
+  }
 
   virtual void
-  NotifyRemoved(MediaStreamGraph* aGraph) MOZ_OVERRIDE;
+  NotifyFinished(MediaStreamGraph* aGraph);
+
+  virtual void
+  NotifyRemoved(MediaStreamGraph* aGraph);
 
 private:
   // Set at construction
