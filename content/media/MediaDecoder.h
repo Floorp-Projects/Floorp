@@ -435,7 +435,8 @@ public:
   public:
     DecodedStreamGraphListener(MediaStream* aStream, DecodedStreamData* aData);
     virtual void NotifyOutput(MediaStreamGraph* aGraph, GraphTime aCurrentTime) MOZ_OVERRIDE;
-    virtual void NotifyFinished(MediaStreamGraph* aGraph) MOZ_OVERRIDE;
+    virtual void NotifyEvent(MediaStreamGraph* aGraph,
+                             MediaStreamListener::MediaStreamGraphEvent event) MOZ_OVERRIDE;
 
     void DoNotifyFinished();
 
