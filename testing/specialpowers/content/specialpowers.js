@@ -149,3 +149,11 @@ var specialpowersmanager = new SpecialPowersManager();
 
 this.SpecialPowers = SpecialPowers;
 this.attachSpecialPowersToWindow = attachSpecialPowersToWindow;
+
+// In the case of Chrome mochitests that inject specialpowers.js as
+// a regular content script
+if (typeof window != 'undefined') {
+  window.addMessageListener = function() {}
+  window.removeMessageListener = function() {}
+  window.wrappedJSObject.SpecialPowers = new SpecialPowers(window);
+}
