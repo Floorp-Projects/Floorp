@@ -1809,7 +1809,8 @@ bool WebGLContext::TexImageFromVideoElement(const TexImageTarget texImageTarget,
     }
     bool ok = gl->BlitHelper()->BlitImageToTexture(srcImage.get(), srcImage->GetSize(), tex->GLName(), texImageTarget.get(), mPixelStoreFlipY);
     if (ok) {
-        tex->SetImageInfo(texImageTarget, level, srcImage->GetSize().width, srcImage->GetSize().height, format, type, WebGLImageDataStatus::InitializedImageData);
+        tex->SetImageInfo(texImageTarget, level, srcImage->GetSize().width, srcImage->GetSize().height, internalformat, type,
+                          WebGLImageDataStatus::InitializedImageData);
         tex->Bind(TexImageTargetToTexTarget(texImageTarget));
     }
     srcImage = nullptr;
