@@ -5,7 +5,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 const kSearchEngineID = "browser_urifixup_search_engine";
-const kTest
 const kSearchEngineURL = "http://example.com/?search={searchTerms}";
 Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get",
                                      kSearchEngineURL);
