@@ -57,7 +57,7 @@ function loadStart(evt) {
 // Create all video objects.
 for (var i=0; i<g404Tests.length; ++i) {
   var v = document.createElement("video");
-  v.preload = "auto";
+  v.preload = "metadata";
   var test = g404Tests[i];
   if (!v.canPlayType(test.type)) {
     continue;
