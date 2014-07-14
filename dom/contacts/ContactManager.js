@@ -258,7 +258,7 @@ ContactManager.prototype = {
     let type = {
       type: "contacts",
       access: access,
-      options: [],
+      options: null,
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionType])
     };
     let typeArray = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
@@ -269,16 +269,8 @@ ContactManager.prototype = {
       types: typeArray,
       principal: principal,
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionRequest]),
-      allow: aAllowCallback ||
-             function() {
-               if (DEBUG)
-                 debug("Default allow contacts callback. " + access +"\n");
-             },
-      cancel: aCancelCallback ||
-              function() {
-                if (DEBUG)
-                  debug("Default cancel contacts callback. " + access +"\n");
-              },
+      allow: aAllowCallback,
+      cancel: aCancelCallback,
       window: this._window
     };
 
