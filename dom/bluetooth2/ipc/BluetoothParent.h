@@ -154,8 +154,12 @@ protected:
 
   bool
   DoRequest(const PairedDevicePropertiesRequest& aRequest);
+
   bool
   DoRequest(const ConnectedDevicePropertiesRequest& aRequest);
+
+  bool
+  DoRequest(const FetchUuidsRequest& aRequest);
 
   bool
   DoRequest(const SetPinCodeRequest& aRequest);
