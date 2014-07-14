@@ -207,7 +207,8 @@ loop.shared.views = (function(_, OT, l10n) {
       height: "auto",
       style: {
         bugDisplayMode: "off",
-        buttonDisplayMode: "off"
+        buttonDisplayMode: "off",
+        nameDisplayMode: "off"
       }
     },
 
