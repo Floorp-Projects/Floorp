@@ -1310,6 +1310,12 @@ public class BrowserApp extends GeckoApp
             GeckoPreferences.setResourceToOpen(settingsIntent, resource);
             startActivityForResult(settingsIntent, ACTIVITY_REQUEST_PREFERENCES);
 
+            // Don't use a transition to settings if we're on a device where that
+            // would look bad.
+            if (HardwareUtils.IS_KINDLE_DEVICE) {
+                overridePendingTransition(0, 0);
+            }
+
         } else if ("Telemetry:Gather".equals(event)) {
             Telemetry.HistogramAdd("PLACES_PAGES_COUNT",
                     BrowserDB.getCount(getContentResolver(), "history"));
