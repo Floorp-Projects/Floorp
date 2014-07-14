@@ -41,6 +41,7 @@ using namespace js;
 using namespace js::types;
 
 using mozilla::Abs;
+using mozilla::ArrayLength;
 using mozilla::MinNumberValue;
 using mozilla::NegativeInfinity;
 using mozilla::PodCopy;
@@ -647,16 +648,14 @@ js::Int32ToString(ThreadSafeContext *cx, int32_t si)
     if (JSFlatString *str = LookupInt32ToString(cx, si))
         return str;
 
-    JSFatInlineString *str = NewGCFatInlineString<allowGC>(cx);
+    Latin1Char buffer[JSFatInlineString::MAX_LENGTH_LATIN1 + 1];
+    size_t length;
+    Latin1Char *start = BackfillInt32InBuffer(si, buffer, ArrayLength(buffer), &length);
+
+    mozilla::Range<const Latin1Char> chars(start, length);
+    JSInlineString *str = NewFatInlineString<allowGC>(cx, chars);
     if (!str)
         return nullptr;
-
-    jschar buffer[JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1];
-    size_t length;
-    jschar *start = BackfillInt32InBuffer(si, buffer,
-                                          JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1, &length);
-
-    PodCopy(str->initTwoByte(length), start, length + 1);
 
     CacheNumber(cx, si, str);
     return str;
@@ -1428,18 +1427,16 @@ js::IndexToString(JSContext *cx, uint32_t index)
     if (JSFlatString *str = c->dtoaCache.lookup(10, index))
         return str;
 
-    JSFatInlineString *str = NewGCFatInlineString<CanGC>(cx);
+    Latin1Char buffer[JSFatInlineString::MAX_LENGTH_LATIN1 + 1];
+    RangedPtr<Latin1Char> end(buffer + JSFatInlineString::MAX_LENGTH_LATIN1,
+                              buffer, JSFatInlineString::MAX_LENGTH_LATIN1 + 1);
+    *end = '\0';
+    RangedPtr<Latin1Char> start = BackfillIndexInCharBuffer(index, end);
+
+    mozilla::Range<const Latin1Char> chars(start.get(), end - start);
+    JSInlineString *str = NewFatInlineString<CanGC>(cx, chars);
     if (!str)
         return nullptr;
-
-    jschar buffer[JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1];
-    RangedPtr<jschar> end(buffer + JSFatInlineString::MAX_LENGTH_TWO_BYTE,
-                          buffer, JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1);
-    *end = '\0';
-    RangedPtr<jschar> start = BackfillIndexInCharBuffer(index, end);
-
-    jschar *dst = str->initTwoByte(end - start);
-    PodCopy(dst, start.get(), end - start + 1);
 
     c->dtoaCache.cache(10, index, str);
     return str;
