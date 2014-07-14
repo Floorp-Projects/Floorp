@@ -39,7 +39,7 @@ class nsJARChannel : public nsIJARChannel
                    , public nsHashPropertyBag
 {
 public:
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSIJARCHANNEL
