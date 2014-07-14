@@ -59,6 +59,23 @@ nsScreenManagerWin :: CreateNewScreenObject ( HMONITOR inScreen )
   return retScreen;
 }
 
+NS_IMETHODIMP
+nsScreenManagerWin::ScreenForId(uint32_t aId, nsIScreen **outScreen)
+{
+  *outScreen = nullptr;
+
+  for (unsigned i = 0; i < mScreenList.Length(); ++i) {
+    ScreenListItem& curr = mScreenList[i];
+    uint32_t id;
+    nsresult rv = curr.mScreen->GetId(&id);
+    if (NS_SUCCEEDED(rv) && id == aId) {
+      NS_IF_ADDREF(*outScreen = curr.mScreen.get());
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
 
 //
 // ScreenForRect 

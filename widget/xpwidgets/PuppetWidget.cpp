@@ -804,6 +804,13 @@ ScreenConfig()
 }
 
 NS_IMETHODIMP
+PuppetScreen::GetId(uint32_t *outId)
+{
+  *outId = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PuppetScreen::GetRect(int32_t *outLeft,  int32_t *outTop,
                       int32_t *outWidth, int32_t *outHeight)
 {
@@ -821,7 +828,6 @@ PuppetScreen::GetAvailRect(int32_t *outLeft,  int32_t *outTop,
 {
   return GetRect(outLeft, outTop, outWidth, outHeight);
 }
-
 
 NS_IMETHODIMP
 PuppetScreen::GetPixelDepth(int32_t *aPixelDepth)
@@ -860,6 +866,14 @@ PuppetScreenManager::PuppetScreenManager()
 
 PuppetScreenManager::~PuppetScreenManager()
 {
+}
+
+NS_IMETHODIMP
+PuppetScreenManager::ScreenForId(uint32_t aId,
+                                 nsIScreen** outScreen)
+{
+  NS_IF_ADDREF(*outScreen = mOneScreen.get());
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -193,6 +193,12 @@ public:
     virtual PNeckoChild* AllocPNeckoChild() MOZ_OVERRIDE;
     virtual bool DeallocPNeckoChild(PNeckoChild*) MOZ_OVERRIDE;
 
+    virtual PScreenManagerChild*
+    AllocPScreenManagerChild(uint32_t* aNumberOfScreens,
+                             float* aSystemDefaultScale,
+                             bool* aSuccess) MOZ_OVERRIDE;
+    virtual bool DeallocPScreenManagerChild(PScreenManagerChild*) MOZ_OVERRIDE;
+
     virtual PExternalHelperAppChild *AllocPExternalHelperAppChild(
             const OptionalURIParams& uri,
             const nsCString& aMimeContentType,
