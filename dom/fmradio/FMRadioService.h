@@ -197,9 +197,10 @@ private:
   bool mHasReadAirplaneModeSetting;
   bool mAirplaneModeEnabled;
 
-  double mUpperBoundInKHz;
-  double mLowerBoundInKHz;
-  double mChannelWidthInKHz;
+  uint32_t mUpperBoundInKHz;
+  uint32_t mLowerBoundInKHz;
+  uint32_t mChannelWidthInKHz;
+  uint32_t mPreemphasis;
 
   nsRefPtr<FMRadioReplyRunnable> mPendingRequest;
 

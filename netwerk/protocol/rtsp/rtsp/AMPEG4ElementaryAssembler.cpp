@@ -359,12 +359,52 @@ void AMPEG4ElementaryAssembler::submitAccessUnit() {
 
     LOGV("Access unit complete (%d nal units)", mPackets.size());
 
-    for (List<sp<ABuffer> >::iterator it = mPackets.begin();
-         it != mPackets.end(); ++it) {
-        sp<ABuffer> accessUnit = new ABuffer((*it)->size());
-        sp<ABuffer> nal = *it;
-        memcpy(accessUnit->data(), nal->data(), nal->size());
-        CopyTimes(accessUnit, nal);
+    if (mIsGeneric) {
+        /*
+         * Bug 877116.
+         * In order to remedy a latency problem caused by hardware decoder for
+         * mpeg4-generic audios, we artificially divide AUs into more smaller
+         * AUs before feeding them to decoder.
+         *
+         * TODO: However, we are not sure this solution is appropriate to video
+         * or not. Need more investigation on this. Refer to RFC 3640.
+         */
+        for (List<sp<ABuffer> >::iterator it = mPackets.begin();
+             it != mPackets.end(); ++it) {
+            sp<ABuffer> accessUnit = new ABuffer((*it)->size());
+            sp<ABuffer> nal = *it;
+            memcpy(accessUnit->data(), nal->data(), nal->size());
+            CopyTimes(accessUnit, nal);
+
+            if (mAccessUnitDamaged) {
+                accessUnit->meta()->setInt32("damaged", true);
+            }
+
+            sp<AMessage> msg = mNotifyMsg->dup();
+            msg->setObject("access-unit", accessUnit);
+            msg->post();
+        }
+    } else {
+        /*
+         * For MP4V-ES (MPEG-4 Visual Elementary Streams), NAL units with the
+         * same RTP timestamp are assembled into an AU, which results in one
+         * decoded picture (RFC 6416).
+         */
+        size_t totalSize = 0;
+
+        for (List<sp<ABuffer> >::iterator it = mPackets.begin();
+             it != mPackets.end(); ++it) {
+            totalSize += (*it)->size();
+        }
+        sp<ABuffer> accessUnit = new ABuffer(totalSize);
+        size_t offset = 0;
+        for (List<sp<ABuffer> >::iterator it = mPackets.begin();
+             it != mPackets.end(); ++it) {
+            sp<ABuffer> nal = *it;
+            memcpy(accessUnit->data() + offset, nal->data(), nal->size());
+            offset += nal->size();
+        }
+        CopyTimes(accessUnit, *mPackets.begin());
 
         if (mAccessUnitDamaged) {
             accessUnit->meta()->setInt32("damaged", true);
