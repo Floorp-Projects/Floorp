@@ -445,20 +445,6 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
         wrapper = &ChromeObjectWrapper::singleton;
     }
 
-    // Normally, a non-xrayable non-waived content object that finds itself in
-    // a privileged scope is wrapped with a CrossCompartmentWrapper, even though
-    // the lack of a waiver _really_ should give it an opaque wrapper. This is
-    // a bit too entrenched to change for content-chrome, but we can at least fix
-    // it for XBL scopes.
-    //
-    // See bug 843829.
-    else if (targetSubsumesOrigin && !originSubsumesTarget &&
-             !waiveXrayFlag && xrayType == NotXray &&
-             IsContentXBLScope(target))
-    {
-        wrapper = &PermissiveXrayOpaque::singleton;
-    }
-
     //
     // Now, handle the regular cases.
     //
