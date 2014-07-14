@@ -8,11 +8,9 @@
 #include "gfxWindowsPlatform.h"
 #include "nsIWidget.h"
 
-static uint32_t sScreenId;
 
 nsScreenWin :: nsScreenWin ( HMONITOR inScreen )
   : mScreen(inScreen)
-  , mId(++sScreenId)
 {
 #ifdef DEBUG
   HDC hDCScreen = ::GetDC(nullptr);
@@ -30,14 +28,6 @@ nsScreenWin :: nsScreenWin ( HMONITOR inScreen )
 nsScreenWin :: ~nsScreenWin()
 {
   // nothing to see here.
-}
-
-
-NS_IMETHODIMP
-nsScreenWin::GetId(uint32_t *outId)
-{
-  *outId = mId;
-  return NS_OK;
 }
 
 

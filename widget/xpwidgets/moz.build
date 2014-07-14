@@ -34,11 +34,9 @@ UNIFIED_SOURCES += [
     'nsPrintOptionsImpl.cpp',
     'nsPrintSession.cpp',
     'nsPrintSettingsImpl.cpp',
-    'nsScreenManagerProxy.cpp',
     'nsTransferable.cpp',
     'nsXPLookAndFeel.cpp',
     'PuppetWidget.cpp',
-    'ScreenProxy.cpp',
     'WidgetUtils.cpp',
 ]
 

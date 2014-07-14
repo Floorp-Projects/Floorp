@@ -214,8 +214,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
 #endif
     { &kNS_HTMLFORMATCONVERTER_CID, false, nullptr, nsHTMLFormatConverterConstructor },
     { &kNS_BIDIKEYBOARD_CID, false, nullptr, nsBidiKeyboardConstructor },
-    { &kNS_SCREENMANAGER_CID, false, nullptr, nsScreenManagerGtkConstructor,
-      Module::MAIN_PROCESS_ONLY },
+    { &kNS_SCREENMANAGER_CID, false, nullptr, nsScreenManagerGtkConstructor },
     { &kNS_THEMERENDERER_CID, false, nullptr, nsNativeThemeGTKConstructor },
 #ifdef NS_PRINTING
     { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintOptionsGTKConstructor },
@@ -251,8 +250,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
 #endif
     { "@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID },
     { "@mozilla.org/widget/bidikeyboard;1", &kNS_BIDIKEYBOARD_CID },
-    { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID,
-      Module::MAIN_PROCESS_ONLY },
+    { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID },
     { "@mozilla.org/chrome/chrome-native-theme;1", &kNS_THEMERENDERER_CID },
 #ifdef NS_PRINTING
     { "@mozilla.org/gfx/printsettings-service;1", &kNS_PRINTSETTINGSSERVICE_CID },

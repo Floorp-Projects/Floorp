@@ -631,17 +631,11 @@ nsDeviceContext::ComputeFullAreaUsingScreen(nsRect* outRect)
 void
 nsDeviceContext::FindScreen(nsIScreen** outScreen)
 {
-    if (mWidget && mWidget->GetOwningTabChild()) {
-        mScreenManager->ScreenForNativeWidget((void *)mWidget->GetOwningTabChild(),
-                                              outScreen);
-    }
-    else if (mWidget && mWidget->GetNativeData(NS_NATIVE_WINDOW)) {
+    if (mWidget && mWidget->GetNativeData(NS_NATIVE_WINDOW))
         mScreenManager->ScreenForNativeWidget(mWidget->GetNativeData(NS_NATIVE_WINDOW),
                                               outScreen);
-    }
-    else {
+    else
         mScreenManager->GetPrimaryScreen(outScreen);
-    }
 }
 
 void
