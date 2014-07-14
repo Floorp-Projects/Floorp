@@ -29,14 +29,6 @@ using ::testing::InSequence;
 
 class Task;
 
-class AsyncPanZoomControllerTester : public ::testing::Test {
-protected:
-  virtual void SetUp() {
-    gfxPrefs::GetSingleton();
-    AsyncPanZoomController::SetThreadAssertionsEnabled(false);
-  }
-};
-
 class APZCTreeManagerTester : public ::testing::Test {
 protected:
   virtual void SetUp() {
@@ -181,7 +173,7 @@ TestFrameMetrics()
   return fm;
 }
 
-class APZCBasicTester : public AsyncPanZoomControllerTester {
+class APZCBasicTester : public ::testing::Test {
 public:
   APZCBasicTester(AsyncPanZoomController::GestureBehavior aGestureBehavior = AsyncPanZoomController::DEFAULT_GESTURES)
     : mGestureBehavior(aGestureBehavior)
@@ -191,6 +183,9 @@ public:
 protected:
   virtual void SetUp()
   {
+    gfxPrefs::GetSingleton();
+    AsyncPanZoomController::SetThreadAssertionsEnabled(false);
+
     testStartTime = TimeStamp::Now();
     AsyncPanZoomController::SetFrameTime(testStartTime);
 
@@ -576,13 +571,6 @@ public:
   {
   }
 };
-
-TEST_F(AsyncPanZoomControllerTester, Constructor) {
-  // RefCounted class can't live in the stack
-  nsRefPtr<MockContentController> mcc = new NiceMock<MockContentController>();
-  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(0, mcc);
-  apzc->SetFrameMetrics(TestFrameMetrics());
-}
 
 TEST_F(APZCPinchTester, Pinch_DefaultGestures_NoTouchAction) {
   DoPinchTest(true);
