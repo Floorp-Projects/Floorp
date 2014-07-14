@@ -431,8 +431,6 @@ public class BrowserContract {
 
         public static final String BOOKMARK_ID = "bookmark_id";
         public static final String HISTORY_ID = "history_id";
-        public static final String DISPLAY = "display";
-
         public static final String TYPE = "type";
     }
 
