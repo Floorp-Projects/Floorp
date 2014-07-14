@@ -5,7 +5,7 @@
 
 #include "nsIDOMCSSRule.idl"
 
-[scriptable, uuid(aa4ea11f-791b-4671-b192-b931e6539669)]
+[scriptable, uuid(400f4b70-ad0a-4047-aba4-ee8019f6b907)]
 interface nsIDOMMozCSSKeyframesRule : nsIDOMCSSRule
 {
            attribute DOMString         name;

@@ -117,6 +117,12 @@ Rule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
   return NS_OK;
 }
 
+css::Rule*
+Rule::GetCSSRule()
+{
+  return this;
+}
+
 size_t
 Rule::SizeOfCOMArrayElementIncludingThis(css::Rule* aElement,
                                          MallocSizeOf aMallocSizeOf,
@@ -310,6 +316,12 @@ CharsetRule::GetParentRule(nsIDOMCSSRule** aParentRule)
   return Rule::GetParentRule(aParentRule);
 }
 
+css::Rule*
+CharsetRule::GetCSSRule()
+{
+  return Rule::GetCSSRule();
+}
+
 /* virtual */ size_t
 CharsetRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
@@ -456,6 +468,12 @@ NS_IMETHODIMP
 ImportRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   return Rule::GetParentRule(aParentRule);
+}
+
+css::Rule*
+ImportRule::GetCSSRule()
+{
+  return Rule::GetCSSRule();
 }
 
 NS_IMETHODIMP
@@ -876,6 +894,12 @@ MediaRule::GetParentRule(nsIDOMCSSRule** aParentRule)
   return GroupRule::GetParentRule(aParentRule);
 }
 
+css::Rule*
+MediaRule::GetCSSRule()
+{
+  return Rule::GetCSSRule();
+}
+
 // nsIDOMCSSGroupingRule methods
 NS_IMETHODIMP
 MediaRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
@@ -1082,6 +1106,12 @@ NS_IMETHODIMP
 DocumentRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   return GroupRule::GetParentRule(aParentRule);
+}
+
+css::Rule*
+DocumentRule::GetCSSRule()
+{
+  return Rule::GetCSSRule();
 }
 
 // nsIDOMCSSGroupingRule methods
@@ -1330,6 +1360,12 @@ NS_IMETHODIMP
 NameSpaceRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   return Rule::GetParentRule(aParentRule);
+}
+
+css::Rule*
+NameSpaceRule::GetCSSRule()
+{
+  return Rule::GetCSSRule();
 }
 
 /* virtual */ size_t
@@ -1811,6 +1847,12 @@ nsCSSFontFaceRule::GetParentRule(nsIDOMCSSRule** aParentRule)
   return Rule::GetParentRule(aParentRule);
 }
 
+css::Rule*
+nsCSSFontFaceRule::GetCSSRule()
+{
+  return Rule::GetCSSRule();
+}
+
 NS_IMETHODIMP
 nsCSSFontFaceRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 {
@@ -1995,6 +2037,12 @@ NS_IMETHODIMP
 nsCSSFontFeatureValuesRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   return Rule::GetParentRule(aParentRule);
+}
+
+css::Rule*
+nsCSSFontFeatureValuesRule::GetCSSRule()
+{
+  return Rule::GetCSSRule();
 }
 
 NS_IMETHODIMP
@@ -2280,6 +2328,12 @@ nsCSSKeyframeRule::GetParentRule(nsIDOMCSSRule** aParentRule)
   return Rule::GetParentRule(aParentRule);
 }
 
+css::Rule*
+nsCSSKeyframeRule::GetCSSRule()
+{
+  return Rule::GetCSSRule();
+}
+
 NS_IMETHODIMP
 nsCSSKeyframeRule::GetKeyText(nsAString& aKeyText)
 {
@@ -2475,6 +2529,12 @@ NS_IMETHODIMP
 nsCSSKeyframesRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   return GroupRule::GetParentRule(aParentRule);
+}
+
+css::Rule*
+nsCSSKeyframesRule::GetCSSRule()
+{
+  return GroupRule::GetCSSRule();
 }
 
 NS_IMETHODIMP
@@ -2802,6 +2862,12 @@ nsCSSPageRule::GetParentRule(nsIDOMCSSRule** aParentRule)
   return Rule::GetParentRule(aParentRule);
 }
 
+css::Rule*
+nsCSSPageRule::GetCSSRule()
+{
+  return Rule::GetCSSRule();
+}
+
 css::ImportantRule*
 nsCSSPageRule::GetImportantRule()
 {
@@ -2951,6 +3017,12 @@ NS_IMETHODIMP
 CSSSupportsRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   return css::GroupRule::GetParentRule(aParentRule);
+}
+
+css::Rule*
+CSSSupportsRule::GetCSSRule()
+{
+  return css::GroupRule::GetCSSRule();
 }
 
 // nsIDOMCSSGroupingRule methods
@@ -3116,6 +3188,12 @@ NS_IMETHODIMP
 nsCSSCounterStyleRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   return Rule::GetParentRule(aParentRule);
+}
+
+css::Rule*
+nsCSSCounterStyleRule::GetCSSRule()
+{
+  return Rule::GetCSSRule();
 }
 
 // nsIDOMCSSCounterStyleRule methods

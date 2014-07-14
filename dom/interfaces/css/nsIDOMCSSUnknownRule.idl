@@ -5,7 +5,7 @@
 
 #include "nsIDOMCSSRule.idl"
 
-[scriptable, uuid(a6cf90d0-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(98f4c27b-fb35-4355-8fd9-546c4697d71a)]
 interface nsIDOMCSSUnknownRule : nsIDOMCSSRule
 {
 };
