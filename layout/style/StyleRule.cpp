@@ -1258,6 +1258,12 @@ DOMCSSStyleRule::GetParentRule(nsIDOMCSSRule** aParentRule)
   return Rule()->GetParentRule(aParentRule);
 }
 
+css::Rule*
+DOMCSSStyleRule::GetCSSRule()
+{
+  return Rule();
+}
+
 NS_IMETHODIMP
 DOMCSSStyleRule::GetSelectorText(nsAString& aSelectorText)
 {
