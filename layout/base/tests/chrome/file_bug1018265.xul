@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1018265
+-->
+<window title="Mozilla Bug 1018265"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="setTimeout(run, 0);">
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 1018265 **/
+
+  var testcontent = null;
+
+  function run() {
+    testcontent = document.getElementById("testcontent");
+    shouldHaveTwoNonHiddenContentViewers();
+    testcontent.setAttribute("src", "foobarpage");
+    setTimeout(errorPageLoaded, 2500)
+  }
+
+  function errorPageLoaded() {
+    testcontent.addEventListener("pageshow", didGoBack, true);
+    setTimeout("testcontent.contentWindow.history.back();", 0);
+  }
+
+  function didGoBack(e) {
+    testcontent.removeEventListener("pageshow", didGoBack, true);
+    shouldHaveTwoNonHiddenContentViewers();
+    opener.done();
+    window.close();
+  }
+
+  function getContentViewer(win) {
+    return win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+              .getInterface(Components.interfaces.nsIDocShell).contentViewer;
+  }
+
+  function shouldHaveTwoNonHiddenContentViewers() {
+    opener.is(getContentViewer(testcontent.contentWindow).isHidden, false, "Top level ContentViewer should not be hidden.");
+    opener.is(getContentViewer(testcontent.contentWindow.frames[0]).isHidden, false, " Iframe's ContentViewer should not be hidden.");
+  }
+  ]]>
+  </script>
+
+  <browser type="content" id="testcontent" flex="1" src="data:text/html,&lt;iframe&gt;&lt;/iframe&gt;"/>
+</window>

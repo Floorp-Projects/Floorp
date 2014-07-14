@@ -583,7 +583,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
             NS_WARNING("Got bad IOSurfaceDescriptor in RecvShow");
             return false;
         }
-      
+
         if (mFrontIOSurface)
             *prevSurface = IOSurfaceDescriptor(mFrontIOSurface->GetIOSurfaceID(),
                                                mFrontIOSurface->GetContentsScaleFactor());
@@ -624,7 +624,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
             // scribbling on it again, or worse, destroys it.
             mFrontSurface->Finish();
             FinishX(DefaultXDisplay());
-        } else 
+        } else
 #endif
         {
             mFrontSurface->Flush();
@@ -697,7 +697,7 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 {
 #ifdef XP_MACOSX
     MacIOSurface* ioSurface = nullptr;
-  
+
     if (mFrontIOSurface) {
       ioSurface = mFrontIOSurface;
     } else if (mIOSurface) {
@@ -1001,7 +1001,7 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
     window.contentsScaleFactor = floatScaleFactor;
 
     if (mShWidth != window.width * scaleFactor || mShHeight != window.height * scaleFactor) {
-        if (mDrawingModel == NPDrawingModelCoreAnimation || 
+        if (mDrawingModel == NPDrawingModelCoreAnimation ||
             mDrawingModel == NPDrawingModelInvalidatingCoreAnimation) {
             mIOSurface = MacIOSurface::CreateIOSurface(window.width, window.height,
                                                        floatScaleFactor);
@@ -1018,7 +1018,7 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
                                 SharedMemory::TYPE_BASIC, &mShSurface)) {
                     PLUGIN_LOG_DEBUG(("Shared memory could not be allocated."));
                     return NPERR_GENERIC_ERROR;
-                } 
+                }
             }
         }
         mShWidth = window.width * scaleFactor;
@@ -1280,9 +1280,9 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
                 NS_ERROR("No IOSurface allocated.");
                 return false;
             }
-            if (!CallNPP_HandleEvent_IOSurface(npremoteevent, 
-                                               mIOSurface->GetIOSurfaceID(), 
-                                               &handled)) 
+            if (!CallNPP_HandleEvent_IOSurface(npremoteevent,
+                                               mIOSurface->GetIOSurfaceID(),
+                                               &handled))
                 return false; // no good way to handle errors here...
 
             CGContextRef cgContext = npevent->data.draw.context;
@@ -1294,7 +1294,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
                 return false;
             }
             if (cgContext) {
-                nsCARenderer::DrawSurfaceToCGContext(cgContext, mIOSurface, 
+                nsCARenderer::DrawSurfaceToCGContext(cgContext, mIOSurface,
                                                      mShColorSpace,
                                                      npevent->data.draw.x,
                                                      npevent->data.draw.y,
@@ -1312,7 +1312,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
                 return false;
             }
             if (cgContext) {
-                nsCARenderer::DrawSurfaceToCGContext(cgContext, mFrontIOSurface, 
+                nsCARenderer::DrawSurfaceToCGContext(cgContext, mFrontIOSurface,
                                                      mShColorSpace,
                                                      npevent->data.draw.x,
                                                      npevent->data.draw.y,
@@ -1330,8 +1330,8 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
                 return false;
             }
 
-            if (!CallNPP_HandleEvent_Shmem(npremoteevent, mShSurface, 
-                                           &handled, &mShSurface)) 
+            if (!CallNPP_HandleEvent_Shmem(npremoteevent, mShSurface,
+                                           &handled, &mShSurface))
                 return false; // no good way to handle errors here...
 
             if (!mShSurface.IsReadable()) {
@@ -1348,11 +1348,11 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
             if (!mShColorSpace) {
                 PLUGIN_LOG_DEBUG(("Could not allocate ColorSpace."));
                 return false;
-            } 
-            CGContextRef shContext = ::CGBitmapContextCreate(shContextByte, 
-                                    mShWidth, mShHeight, 8, 
-                                    mShWidth*4, mShColorSpace, 
-                                    kCGImageAlphaPremultipliedFirst | 
+            }
+            CGContextRef shContext = ::CGBitmapContextCreate(shContextByte,
+                                    mShWidth, mShHeight, 8,
+                                    mShWidth*4, mShColorSpace,
+                                    kCGImageAlphaPremultipliedFirst |
                                     kCGBitmapByteOrder32Host);
             if (!shContext) {
                 PLUGIN_LOG_DEBUG(("Could not allocate CGBitmapContext."));
@@ -1362,9 +1362,9 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
             CGImageRef shImage = ::CGBitmapContextCreateImage(shContext);
             if (shImage) {
                 CGContextRef cgContext = npevent->data.draw.context;
-     
-                ::CGContextDrawImage(cgContext, 
-                                     CGRectMake(0,0,mShWidth,mShHeight), 
+
+                ::CGContextDrawImage(cgContext,
+                                     CGRectMake(0,0,mShWidth,mShHeight),
                                      shImage);
                 ::CGImageRelease(shImage);
             } else {
@@ -1723,7 +1723,7 @@ PluginInstanceParent::AnswerNPN_InitAsyncSurface(const gfxIntSize& size,
             ID3D10Device1 *device = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
 
             nsRefPtr<ID3D10Texture2D> texture;
-            
+
             CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, size.width, size.height, 1, 1);
             desc.MiscFlags = D3D10_RESOURCE_MISC_SHARED_KEYEDMUTEX;
             desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
@@ -1744,7 +1744,7 @@ PluginInstanceParent::AnswerNPN_InitAsyncSurface(const gfxIntSize& size,
                 *result = false;
                 return true;
             }
-            
+
             surfData->size() = size;
             surfData->data() = sharedHandle;
             surfData->format() = format;
@@ -1798,7 +1798,7 @@ PluginInstanceParent::RecvReleaseDXGISharedSurface(const DXGISharedSurfaceHandle
   focus from dom -> child:
     Focus manager calls on widget to set the focus on the window.
     We pick up the resulting wm_setfocus event here, and forward
-    that over ipc to the child which calls set focus on itself. 
+    that over ipc to the child which calls set focus on itself.
 
   focus from child -> focus manager:
     Child picks up the local wm_setfocus and sends it via ipc over
@@ -1854,7 +1854,7 @@ PluginInstanceParent::SubclassPluginWindow(HWND aWnd)
 
     if (!mPluginHWND) {
         mPluginHWND = aWnd;
-        mPluginWndProc = 
+        mPluginWndProc =
             (WNDPROC)::SetWindowLongPtrA(mPluginHWND, GWLP_WNDPROC,
                          reinterpret_cast<LONG_PTR>(PluginWindowHookProc));
         DebugOnly<bool> bRes = ::SetPropW(mPluginHWND, kPluginInstanceParentProperty, this);
@@ -1886,13 +1886,13 @@ PluginInstanceParent::UnsubclassPluginWindow()
  *
  * windowless, offscreen:
  *
- * WM_WINDOWPOSCHANGED: origin is relative to container 
+ * WM_WINDOWPOSCHANGED: origin is relative to container
  * setwindow: origin is 0,0
  * WM_PAINT: origin is 0,0
  *
  * windowless, native:
  *
- * WM_WINDOWPOSCHANGED: origin is relative to container 
+ * WM_WINDOWPOSCHANGED: origin is relative to container
  * setwindow: origin is relative to container
  * WM_PAINT: origin is relative to container
  *

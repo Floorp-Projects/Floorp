@@ -198,6 +198,15 @@ public:
    */
   struct ServiceWorkerDomainInfo
   {
+    // Ordered list of scopes for glob matching.
+    // Each entry is an absolute URL representing the scope.
+    //
+    // An array is used for now since the number of controlled scopes per
+    // domain is expected to be relatively low. If that assumption was proved
+    // wrong this should be replaced with a better structure to avoid the
+    // memmoves associated with inserting stuff in the middle of the array.
+    nsTArray<nsCString> mOrderedScopes;
+
     // Scope to registration.
     nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerRegistration> mServiceWorkerRegistrations;
 
@@ -220,6 +229,7 @@ public:
       // From now on ownership of registration is with
       // mServiceWorkerRegistrations.
       mServiceWorkerRegistrations.Put(aScope, registration);
+      ServiceWorkerManager::AddScope(mOrderedScopes, aScope);
       return registration;
     }
   };
@@ -285,6 +295,25 @@ private:
   CleanupServiceWorkerInformation(const nsACString& aDomain,
                                   ServiceWorkerDomainInfo* aDomainInfo,
                                   void *aUnused);
+
+  already_AddRefed<ServiceWorkerRegistration>
+  GetServiceWorkerRegistration(nsPIDOMWindow* aWindow);
+
+  already_AddRefed<ServiceWorkerRegistration>
+  GetServiceWorkerRegistration(nsIDocument* aDoc);
+
+  already_AddRefed<ServiceWorkerRegistration>
+  GetServiceWorkerRegistration(nsIURI* aURI);
+
+  static void
+  AddScope(nsTArray<nsCString>& aList, const nsACString& aScope);
+
+  static nsCString
+  FindScopeForPath(nsTArray<nsCString>& aList, const nsACString& aPath);
+
+  static void
+  RemoveScope(nsTArray<nsCString>& aList, const nsACString& aScope);
+
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ServiceWorkerManager,

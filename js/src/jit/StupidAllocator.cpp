@@ -34,7 +34,7 @@ StupidAllocator::registerIndex(AnyRegister reg)
         if (reg == registers[i].reg)
             return i;
     }
-    MOZ_CRASH("Bad register");
+    MOZ_ASSUME_UNREACHABLE("Bad register");
 }
 
 bool
