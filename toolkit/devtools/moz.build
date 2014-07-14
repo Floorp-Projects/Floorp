@@ -8,7 +8,6 @@ PARALLEL_DIRS += [
     'server',
     'client',
     'gcli',
-    'jsbeautify',
     'sourcemap',
     'webconsole',
     'apps',
