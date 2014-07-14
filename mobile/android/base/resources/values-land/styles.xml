@@ -33,7 +33,7 @@
     </style>
 
     <style name="TabsPanelSection.PrivateTabs.Header">
-        <item name="android:paddingTop">18dp</item>
+        <item name="android:paddingTop">10dp</item>
     </style>
 
     <style name="TabsPanelItem">

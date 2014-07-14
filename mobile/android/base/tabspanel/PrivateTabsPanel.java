@@ -17,6 +17,7 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ScrollView;
 
 /**
  * A container that wraps the private tabs {@link android.widget.AdapterView} and empty
@@ -24,7 +25,7 @@ import android.widget.FrameLayout;
  * this container as calling {@link android.widget.AdapterView#setVisibility} does not affect the
  * empty View's visibility.
  */
-class PrivateTabsPanel extends FrameLayout implements CloseAllPanelView {
+class PrivateTabsPanel extends ScrollView implements CloseAllPanelView {
     private TabsPanel tabsPanel;
     private TabsTray tabsTray;
 
