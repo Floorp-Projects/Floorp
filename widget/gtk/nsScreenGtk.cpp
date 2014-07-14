@@ -12,14 +12,10 @@
 #endif
 #include <gtk/gtk.h>
 
-static uint32_t sScreenId = 0;
-
-
 nsScreenGtk :: nsScreenGtk (  )
   : mScreenNum(0),
     mRect(0, 0, 0, 0),
-    mAvailRect(0, 0, 0, 0),
-    mId(++sScreenId)
+    mAvailRect(0, 0, 0, 0)
 {
 }
 
@@ -27,20 +23,6 @@ nsScreenGtk :: nsScreenGtk (  )
 nsScreenGtk :: ~nsScreenGtk()
 {
 }
-
-
-nsScreenGtk :: GetId(uint32_t *aId)
-{
-  *aId = mId;
-  return NS_OK;
-} // GetId
-
-NS_IMETHODIMP
-nsScreenGtk :: GetId(uint32_t *aId)
-{
-  *aId = mId;
-  return NS_OK;
-} // GetId
 
 
 NS_IMETHODIMP

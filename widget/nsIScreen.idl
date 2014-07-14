@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(826e80c8-d70f-42e2-8aa9-82c05f2a370a)]
+[scriptable, uuid(D6F13AF4-8ACA-4A10-8687-3F99C3692AC0)]
 interface nsIScreen : nsISupports
 {
   /**
@@ -28,12 +28,6 @@ interface nsIScreen : nsISupports
   const unsigned long  ROTATION_90_DEG = 1;
   const unsigned long ROTATION_180_DEG = 2;
   const unsigned long ROTATION_270_DEG = 3;
-
-  /**
-   * A unique identifier for this device, useful for requerying
-   * for it via nsIScreenManager.
-   */
-  readonly attribute unsigned long id;
 
   /**
    * These report screen dimensions in (screen-specific) device pixels
