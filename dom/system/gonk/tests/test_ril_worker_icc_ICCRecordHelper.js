@@ -593,8 +593,9 @@ add_test(function test_find_free_record_id() {
   let recordHelper = context.ICCRecordHelper;
   let buf = context.Buf;
   let io  = context.ICCIOHelper;
+  let ril = context.RIL;
 
-  function writeRecord (record) {
+  function writeRecord(record) {
     // Write data size
     buf.writeInt32(record.length * 2);
 
@@ -617,10 +618,9 @@ add_test(function test_find_free_record_id() {
     }
   };
 
-  io.loadNextRecord = function fakeLoadNextRecord(options) {
+  ril.iccIO = function fakeIccIO(options) {
     // Unused bytes.
     let record = [0xff, 0xff, 0xff, 0xff, 0xff];
-    options.p1++;
     writeRecord(record);
     if (options.callback) {
       options.callback(options);
