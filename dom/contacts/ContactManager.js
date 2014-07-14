@@ -250,17 +250,15 @@ ContactManager.prototype = {
     if (permValue == Ci.nsIPermissionManager.ALLOW_ACTION) {
       aAllowCallback();
       return;
-    } else if (permValue == Ci.nsIPermissionManager.DENY_ACTION ||
-               permValue == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
-       aCancelCallback();
-      return;
+    } else if (permValue == Ci.nsIPermissionManager.DENY_ACTION) {
+      aCancelCallback();
     }
 
     // Create an array with a single nsIContentPermissionType element.
     let type = {
       type: "contacts",
       access: access,
-      options: [],
+      options: null,
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionType])
     };
     let typeArray = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
@@ -271,16 +269,8 @@ ContactManager.prototype = {
       types: typeArray,
       principal: principal,
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionRequest]),
-      allow: aAllowCallback ||
-             function() {
-               if (DEBUG)
-                 debug("Default allow contacts callback. " + access +"\n");
-             },
-      cancel: aCancelCallback ||
-              function() {
-                if (DEBUG)
-                  debug("Default cancel contacts callback. " + access +"\n");
-              },
+      allow: aAllowCallback,
+      cancel: aCancelCallback,
       window: this._window
     };
 
