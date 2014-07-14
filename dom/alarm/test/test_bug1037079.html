@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test time alert is fired for Bug 1037079</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+  <script type="application/javascript">
+
+  "use strict";
+
+  function testFireTimeAlert() {
+    var secondsLater = new Date();
+    secondsLater.setSeconds(secondsLater.getSeconds() + 10);
+
+    var domRequest;
+    try {
+      // Set system message handler.
+      navigator.mozSetMessageHandler('alarm', function(message){
+        ok(true, "Time alert has been fired.");
+        SimpleTest.finish();
+      });
+
+      domRequest = navigator.mozAlarms.add(secondsLater, "honorTimezone",
+    		                               {type: "timer"});
+    } catch (e) {
+      ok(false, "Unexpected exception trying to set time alert.");
+
+      return SimpleTest.finish();
+    }
+    domRequest.onsuccess = function(e) {
+      ok(true, "Set time alert. Waiting to be fired.");
+    };
+    domRequest.onerror = function(e) {
+      ok(false, "Unable to set time alert.");
+
+      SimpleTest.finish();
+    };
+  }
+
+  function startTests() {
+    SpecialPowers.pushPrefEnv({
+      "set": [["dom.mozAlarms.enabled", true]]
+    }, function() {
+      var isAllowedToTest = true;
+
+      if (navigator.appVersion.indexOf("Android") !== -1) {
+        ok(true, "mozAlarms is not allowed on Android for now. " +
+                 "TODO Bug 863557.");
+        isAllowedToTest = false;
+      } else if (SpecialPowers.wrap(document).nodePrincipal.appStatus ==
+                 SpecialPowers.Ci.nsIPrincipal.APP_STATUS_NOT_INSTALLED) {
+        ok(true, "mozAlarms is not allowed for non-installed apps. " +
+                 "TODO Bug 876981.");
+        isAllowedToTest = false;
+      }
+
+      if (isAllowedToTest) {
+        ok(true, "Start to test...");
+        testFireTimeAlert();
+      } else {
+        // A sanity check to make sure we must run tests on Firefox OS (B2G).
+        if (navigator.userAgent.indexOf("Mobile") != -1 &&
+            navigator.appVersion.indexOf("Android") == -1) {
+          ok(false, "Should run the test on Firefox OS (B2G)!");
+        }
+
+        SimpleTest.finish();
+      }
+    });
+  }
+
+  SimpleTest.expectAssertions(0, 9);
+  SimpleTest.waitForExplicitFinish();
+  if (SpecialPowers.hasPermission("alarms", document)) {
+    startTests();
+  } else {
+    // Add the permissions and reload so they propogate
+    SpecialPowers.addPermission("alarms", true, document);
+    window.location.reload();
+  }
+
+  </script>
+</pre>
+</body>
+</html>
