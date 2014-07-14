@@ -62,7 +62,7 @@ var gMedia = null;
 
 function createMedia(tag) {
   gMedia = document.createElement(tag);
-  gMedia.preload = "auto";
+  gMedia.preload = "metadata";
   for (var i=0; i<gEventTypes.length; i++) {
     gMedia.addEventListener(gEventTypes[i], listener, false);
   }
