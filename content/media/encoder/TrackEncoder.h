@@ -13,10 +13,9 @@
 #include "StreamBuffer.h"
 #include "TrackMetadataBase.h"
 #include "VideoSegment.h"
+#include "MediaStreamGraph.h"
 
 namespace mozilla {
-
-class MediaStreamGraph;
 
 /**
  * Base class of AudioTrackEncoder and VideoTrackEncoder. Lifetimes managed by
@@ -49,7 +48,13 @@ public:
    * Notified by the same callback of MediaEncoder when it has been removed from
    * MediaStreamGraph. Called on the MediaStreamGraph thread.
    */
-  void NotifyRemoved(MediaStreamGraph* aGraph) { NotifyEndOfStream(); }
+  void NotifyEvent(MediaStreamGraph* aGraph,
+                   MediaStreamListener::MediaStreamGraphEvent event)
+  {
+    if (event == MediaStreamListener::MediaStreamGraphEvent::EVENT_REMOVED) {
+      NotifyEndOfStream();
+    }
+  }
 
   /**
    * Creates and sets up meta data for a specific codec, called on the worker

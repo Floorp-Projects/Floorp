@@ -1864,26 +1864,14 @@ class Mochitest(MochitestUtilsMixin):
     """
         Make the list of directories by parsing manifests
     """
-    info = {}
-    for k, v in mozinfo.info.items():
-      if isinstance(k, unicode):
-        k = k.encode('ascii')
-      info[k] = v
-
+    tests = self.getActiveTests(options, False)
     dirlist = []
 
-    manifest = self.getTestManifest(options)
-    tests = manifest.active_tests(disabled=False, options=options, **info)
     for test in tests:
-      pathAbs = os.path.abspath(test['path'])
-      assert pathAbs.startswith(self.testRootAbs)
-      tp = pathAbs[len(self.testRootAbs):].replace('\\', '/').strip('/')
-
-      rootdir = '/'.join(tp.split('/')[:-1])
+      rootdir = '/'.join(test['path'].split('/')[:-1])
       if rootdir not in dirlist:
         dirlist.append(rootdir)
 
-    dirlist.sort()
     return dirlist
 
 def main():

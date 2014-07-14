@@ -71,9 +71,9 @@ public:
       return;
     }
 
-    nsRefPtr<gl::GLContext> gl = gl::GLContextProvider::CreateOffscreen(
-      gfxIntSize(16, 16),
-      gfx::SurfaceCaps::ForRGB());
+    nsRefPtr<gl::GLContext> gl;
+    gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(16, 16),
+                                                gl::SurfaceCaps::ForRGB());
 
     if (!gl) {
       // Setting mReady to true here means that we won't retry. Everything will

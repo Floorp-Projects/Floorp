@@ -13,7 +13,6 @@ using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
 using mozilla::gl::SharedTextureHandle from "GLContextTypes.h";
 using mozilla::gl::SharedTextureShareType from "GLContextTypes.h";
-using mozilla::gfx::SurfaceStreamHandle from "SurfaceTypes.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using gfxImageFormat from "gfxTypes.h";
@@ -67,7 +66,7 @@ struct NewSurfaceDescriptorGralloc {
 };
 
 struct SurfaceStreamDescriptor {
-  SurfaceStreamHandle handle;
+  uintptr_t surfStream;
   bool yflip;
 };
 

@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMHTMLVideoElement.h"
 #include "nsIDOMHTMLSourceElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/HTMLVideoElementBinding.h"
@@ -40,31 +39,9 @@ namespace dom {
 
 static bool sVideoStatsEnabled;
 
-NS_IMPL_ISUPPORTS_INHERITED(HTMLVideoElement, HTMLMediaElement,
-                            nsIDOMHTMLMediaElement, nsIDOMHTMLVideoElement)
-
 NS_IMPL_ELEMENT_CLONE(HTMLVideoElement)
 
-// nsIDOMHTMLVideoElement
-NS_IMPL_INT_ATTR(HTMLVideoElement, Width, width)
-NS_IMPL_INT_ATTR(HTMLVideoElement, Height, height)
-
-// nsIDOMHTMLVideoElement
-/* readonly attribute unsigned long videoWidth; */
-NS_IMETHODIMP HTMLVideoElement::GetVideoWidth(uint32_t *aVideoWidth)
-{
-  *aVideoWidth = VideoWidth();
-  return NS_OK;
-}
-
-/* readonly attribute unsigned long videoHeight; */
-NS_IMETHODIMP HTMLVideoElement::GetVideoHeight(uint32_t *aVideoHeight)
-{
-  *aVideoHeight = VideoHeight();
-  return NS_OK;
-}
-
-HTMLVideoElement::HTMLVideoElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+HTMLVideoElement::HTMLVideoElement(already_AddRefed<NodeInfo>& aNodeInfo)
   : HTMLMediaElement(aNodeInfo)
 {
 }
@@ -149,8 +126,6 @@ nsresult HTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel)
                                     false);
 }
 
-NS_IMPL_URI_ATTR(HTMLVideoElement, Poster, poster)
-
 uint32_t HTMLVideoElement::MozParsedFrames() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
@@ -158,12 +133,6 @@ uint32_t HTMLVideoElement::MozParsedFrames() const
     return 0;
   }
   return mDecoder ? mDecoder->GetFrameStatistics().GetParsedFrames() : 0;
-}
-
-NS_IMETHODIMP HTMLVideoElement::GetMozParsedFrames(uint32_t *aMozParsedFrames)
-{
-  *aMozParsedFrames = MozParsedFrames();
-  return NS_OK;
 }
 
 uint32_t HTMLVideoElement::MozDecodedFrames() const
@@ -175,12 +144,6 @@ uint32_t HTMLVideoElement::MozDecodedFrames() const
   return mDecoder ? mDecoder->GetFrameStatistics().GetDecodedFrames() : 0;
 }
 
-NS_IMETHODIMP HTMLVideoElement::GetMozDecodedFrames(uint32_t *aMozDecodedFrames)
-{
-  *aMozDecodedFrames = MozDecodedFrames();
-  return NS_OK;
-}
-
 uint32_t HTMLVideoElement::MozPresentedFrames() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
@@ -188,12 +151,6 @@ uint32_t HTMLVideoElement::MozPresentedFrames() const
     return 0;
   }
   return mDecoder ? mDecoder->GetFrameStatistics().GetPresentedFrames() : 0;
-}
-
-NS_IMETHODIMP HTMLVideoElement::GetMozPresentedFrames(uint32_t *aMozPresentedFrames)
-{
-  *aMozPresentedFrames = MozPresentedFrames();
-  return NS_OK;
 }
 
 uint32_t HTMLVideoElement::MozPaintedFrames()
@@ -206,12 +163,6 @@ uint32_t HTMLVideoElement::MozPaintedFrames()
   return container ? container->GetPaintCount() : 0;
 }
 
-NS_IMETHODIMP HTMLVideoElement::GetMozPaintedFrames(uint32_t *aMozPaintedFrames)
-{
-  *aMozPaintedFrames = MozPaintedFrames();
-  return NS_OK;
-}
-
 double HTMLVideoElement::MozFrameDelay()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
@@ -219,21 +170,10 @@ double HTMLVideoElement::MozFrameDelay()
   return container ?  container->GetFrameDelay() : 0;
 }
 
-NS_IMETHODIMP HTMLVideoElement::GetMozFrameDelay(double *aMozFrameDelay) {
-  *aMozFrameDelay = MozFrameDelay();
-  return NS_OK;
-}
-
-/* readonly attribute bool mozHasAudio */
 bool HTMLVideoElement::MozHasAudio() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
   return mHasAudio;
-}
-
-NS_IMETHODIMP HTMLVideoElement::GetMozHasAudio(bool *aHasAudio) {
-  *aHasAudio = MozHasAudio();
-  return NS_OK;
 }
 
 JSObject*
@@ -324,5 +264,6 @@ HTMLVideoElement::Init()
 {
   Preferences::AddBoolVarCache(&sVideoStatsEnabled, "media.video_stats.enabled");
 }
+
 } // namespace dom
 } // namespace mozilla

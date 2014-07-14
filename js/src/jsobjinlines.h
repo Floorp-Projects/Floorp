@@ -9,6 +9,7 @@
 
 #include "jsobj.h"
 
+#include "builtin/TypedObject.h"
 #include "vm/ArrayObject.h"
 #include "vm/DateObject.h"
 #include "vm/NumberObject.h"

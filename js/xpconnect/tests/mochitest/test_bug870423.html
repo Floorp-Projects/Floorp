@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=870423
     check(window, sowin, 'Location', function(win) { return win.location; });
 
     ok(xowin instanceof Window, "Cross-origin instanceof should work");
-    todo(xowin.location instanceof Location, "Cross-origin instanceof should work");
+    ok(xowin.location instanceof Location, "Cross-origin instanceof should work");
 
     SimpleTest.finish();
   }

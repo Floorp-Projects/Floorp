@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[uuid(d9539ecb-6665-452c-bae7-4e42f25d23aa)]
+[uuid(44ef0b7e-92c0-48a7-a092-5a49f2533792)]
 interface nsIServiceWorkerManager : nsISupports
 {
   // Returns a Promise
@@ -14,6 +14,8 @@ interface nsIServiceWorkerManager : nsISupports
   // Returns a Promise
   nsISupports unregister(in nsIDOMWindow aWindow, in DOMString aScope);
 
+  // Testing
+  DOMString getScopeForUrl(in DOMString path);
 };
 
 %{ C++

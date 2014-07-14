@@ -168,7 +168,7 @@ class DtlsRecordParser {
   DtlsRecordParser(const unsigned char *data, size_t len)
       : buffer_(data, len), offset_(0) {}
 
-  bool NextRecord(uint8_t* ct, RefPtr<DataBuffer>* buffer) {
+  bool NextRecord(uint8_t* ct, nsAutoPtr<DataBuffer>* buffer) {
     if (!remaining())
       return false;
 
@@ -210,7 +210,7 @@ class DtlsRecordInspector : public Inspector {
     DtlsRecordParser parser(data, len);
 
     uint8_t ct;
-    RefPtr<DataBuffer> buf;
+    nsAutoPtr<DataBuffer> buf;
     while(parser.NextRecord(&ct, &buf)) {
       OnRecord(layer, ct, buf->data(), buf->len());
     }

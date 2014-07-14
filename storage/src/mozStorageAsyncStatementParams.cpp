@@ -7,6 +7,7 @@
 #include "nsMemory.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsJSUtils.h"
 
 #include "jsapi.h"
 
@@ -65,9 +66,12 @@ AsyncStatementParams::SetProperty(
   }
   else if (JSID_IS_STRING(aId)) {
     JSString *str = JSID_TO_STRING(aId);
-    size_t length;
-    const jschar *chars = JS_GetInternedStringCharsAndLength(str, &length);
-    NS_ConvertUTF16toUTF8 name(chars, length);
+    nsAutoJSString autoStr;
+    if (!autoStr.init(aCtx, str)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    NS_ConvertUTF16toUTF8 name(autoStr);
 
     nsCOMPtr<nsIVariant> variant(convertJSValToVariant(aCtx, *_vp));
     NS_ENSURE_TRUE(variant, NS_ERROR_UNEXPECTED);
