@@ -31,9 +31,16 @@
     });
   }
 
+  function unregister() {
+    return navigator.serviceWorker.getRegistration("./*").then(function(reg) {
+      return reg.unregister();
+    });
+  }
+
   function runTest() {
     simpleRegister()
       .then(nextRegister)
+      .then(unregister)
       .then(function() {
         SimpleTest.finish();
       }).catch(function(e) {
