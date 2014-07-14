@@ -216,8 +216,9 @@ DOMCI_DATA(CSSCharsetRule, css::CharsetRule)
 namespace mozilla {
 namespace css {
 
-CharsetRule::CharsetRule(const nsAString& aEncoding)
-  : Rule(),
+CharsetRule::CharsetRule(const nsAString& aEncoding,
+                         uint32_t aLineNumber, uint32_t aColumnNumber)
+  : Rule(aLineNumber, aColumnNumber),
     mEncoding(aEncoding)
 {
 }
@@ -336,8 +337,9 @@ CharsetRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 // ImportRule
 //
 
-ImportRule::ImportRule(nsMediaList* aMedia, const nsString& aURLSpec)
-  : Rule()
+ImportRule::ImportRule(nsMediaList* aMedia, const nsString& aURLSpec,
+                       uint32_t aLineNumber, uint32_t aColumnNumber)
+  : Rule(aLineNumber, aColumnNumber)
   , mURLSpec(aURLSpec)
   , mMedia(aMedia)
 {
@@ -524,8 +526,8 @@ DOMCI_DATA(CSSImportRule, css::ImportRule)
 namespace mozilla {
 namespace css {
 
-GroupRule::GroupRule()
-  : Rule()
+GroupRule::GroupRule(uint32_t aLineNumber, uint32_t aColumnNumber)
+  : Rule(aLineNumber, aColumnNumber)
 {
 }
 
@@ -770,7 +772,8 @@ GroupRule::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 // -------------------------------------------
 // nsICSSMediaRule
 //
-MediaRule::MediaRule()
+MediaRule::MediaRule(uint32_t aLineNumber, uint32_t aColumnNumber)
+  : GroupRule(aLineNumber, aColumnNumber)
 {
 }
 
@@ -996,7 +999,8 @@ DOMCI_DATA(CSSMediaRule, css::MediaRule)
 namespace mozilla {
 namespace css {
 
-DocumentRule::DocumentRule()
+DocumentRule::DocumentRule(uint32_t aLineNumber, uint32_t aColumnNumber)
+  : GroupRule(aLineNumber, aColumnNumber)
 {
 }
 
@@ -1252,8 +1256,9 @@ DOMCI_DATA(CSSMozDocumentRule, css::DocumentRule)
 namespace mozilla {
 namespace css {
 
-NameSpaceRule::NameSpaceRule(nsIAtom* aPrefix, const nsString& aURLSpec)
-  : Rule(),
+NameSpaceRule::NameSpaceRule(nsIAtom* aPrefix, const nsString& aURLSpec,
+                             uint32_t aLineNumber, uint32_t aColumnNumber)
+  : Rule(aLineNumber, aColumnNumber),
     mPrefix(aPrefix),
     mURLSpec(aURLSpec)
 {
@@ -2921,9 +2926,11 @@ nsCSSPageRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 namespace mozilla {
 
 CSSSupportsRule::CSSSupportsRule(bool aConditionMet,
-                                 const nsString& aCondition)
-  : mUseGroup(aConditionMet),
-    mCondition(aCondition)
+                                 const nsString& aCondition,
+                                 uint32_t aLineNumber, uint32_t aColumnNumber)
+  : css::GroupRule(aLineNumber, aColumnNumber)
+  , mUseGroup(aConditionMet)
+  , mCondition(aCondition)
 {
 }
 

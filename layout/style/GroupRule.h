@@ -34,7 +34,7 @@ class GroupRuleRuleList;
 class GroupRule : public Rule
 {
 protected:
-  GroupRule();
+  GroupRule(uint32_t aLineNumber, uint32_t aColumnNumber);
   GroupRule(const GroupRule& aCopy);
   virtual ~GroupRule();
 public:
