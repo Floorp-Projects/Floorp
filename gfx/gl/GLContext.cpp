@@ -126,6 +126,7 @@ static const char *sExtensionNames[] = {
     "GL_EXT_texture_filter_anisotropic",
     "GL_EXT_texture_format_BGRA8888",
     "GL_EXT_texture_sRGB",
+    "GL_EXT_texture_storage",
     "GL_EXT_transform_feedback",
     "GL_EXT_unpack_subimage",
     "GL_IMG_read_format",
@@ -905,6 +906,29 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 NS_ERROR("GL supports array instanced without supplying it function.");
 
                 MarkUnsupported(GLFeature::instanced_arrays);
+                ClearSymbols(coreSymbols);
+            }
+        }
+
+        if (IsSupported(GLFeature::texture_storage)) {
+            SymLoadStruct coreSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fTexStorage2D, { "TexStorage2D", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fTexStorage3D, { "TexStorage3D", nullptr } },
+                END_SYMBOLS
+            };
+
+            SymLoadStruct extSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fTexStorage2D, { "TexStorage2DEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fTexStorage3D, { "TexStorage3DEXT", nullptr } },
+                END_SYMBOLS
+            };
+
+            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::texture_storage);
+            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
+                NS_ERROR("GL supports texture storage without supplying its functions.");
+
+                MarkUnsupported(GLFeature::texture_storage);
+                MarkExtensionSupported(useCore ? ARB_texture_storage : EXT_texture_storage);
                 ClearSymbols(coreSymbols);
             }
         }
