@@ -5,7 +5,7 @@
 
 #include "nsIDOMCSSRule.idl"
 
-[scriptable, uuid(a6cf90bb-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(db971017-fe0c-4529-972c-8217f2fee217)]
 interface nsIDOMCSSFontFaceRule : nsIDOMCSSRule
 {
   readonly attribute nsIDOMCSSStyleDeclaration  style;

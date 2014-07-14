@@ -5,7 +5,7 @@
 
 #include "nsIDOMCSSRule.idl"
 
-[scriptable, uuid(a6cf90cf-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(d3b2b914-01ef-4663-beda-a6475a26f491)]
 interface nsIDOMCSSImportRule : nsIDOMCSSRule
 {
   readonly attribute DOMString           href;

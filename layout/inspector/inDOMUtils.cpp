@@ -259,12 +259,13 @@ GetRuleFromDOMRule(nsIDOMCSSStyleRule *aRule, ErrorResult& rv)
 }
 
 NS_IMETHODIMP
-inDOMUtils::GetRuleLine(nsIDOMCSSStyleRule *aRule, uint32_t *_retval)
+inDOMUtils::GetRuleLine(nsIDOMCSSRule* aRule, uint32_t* _retval)
 {
-  ErrorResult rv;
-  nsRefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
-  if (rv.Failed()) {
-    return rv.ErrorCode();
+  NS_ENSURE_ARG_POINTER(aRule);
+
+  Rule* rule = aRule->GetCSSRule();
+  if (!rule) {
+    return NS_ERROR_FAILURE;
   }
 
   *_retval = rule->GetLineNumber();
@@ -272,13 +273,15 @@ inDOMUtils::GetRuleLine(nsIDOMCSSStyleRule *aRule, uint32_t *_retval)
 }
 
 NS_IMETHODIMP
-inDOMUtils::GetRuleColumn(nsIDOMCSSStyleRule *aRule, uint32_t *_retval)
+inDOMUtils::GetRuleColumn(nsIDOMCSSRule* aRule, uint32_t* _retval)
 {
-  ErrorResult rv;
-  nsRefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
-  if (rv.Failed()) {
-    return rv.ErrorCode();
+  NS_ENSURE_ARG_POINTER(aRule);
+
+  Rule* rule = aRule->GetCSSRule();
+  if (!rule) {
+    return NS_ERROR_FAILURE;
   }
+
   *_retval = rule->GetColumnNumber();
   return NS_OK;
 }

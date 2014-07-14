@@ -8,7 +8,7 @@
 /**
  * Interface for at-rules that have child rules in the CSS OM.
  */
-[scriptable, uuid(ab013eed-fa21-4c6a-bba3-79e8780f583e)]
+[scriptable, uuid(a0e3324a-f911-4baf-9591-5322c76cbb0d)]
 interface nsIDOMCSSGroupingRule : nsIDOMCSSRule
 {
   readonly attribute nsIDOMCSSRuleList cssRules;

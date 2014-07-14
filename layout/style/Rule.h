@@ -119,6 +119,7 @@ public:
   // to implement methods on nsIDOMCSSRule
   nsresult GetParentRule(nsIDOMCSSRule** aParentRule);
   nsresult GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet);
+  Rule* GetCSSRule();
 
   // This is pure virtual because all of Rule's data members are non-owning and
   // thus measured elsewhere.
