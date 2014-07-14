@@ -548,27 +548,6 @@ TEST_F(AsyncPanZoomControllerTester, Pinch_DefaultGestures_NoTouchAction) {
   DoPinchTest(false, true);
 }
 
-TEST_F(TouchActionEnabledTester, Pinch_DefaultGestures_TouchActionNone) {
-  nsTArray<uint32_t> behaviors;
-  behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::NONE);
-  behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::NONE);
-  DoPinchTest(false, false, &behaviors);
-}
-
-TEST_F(TouchActionEnabledTester, Pinch_DefaultGestures_TouchActionZoom) {
-  nsTArray<uint32_t> behaviors;
-  behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::PINCH_ZOOM);
-  behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::PINCH_ZOOM);
-  DoPinchTest(false, true, &behaviors);
-}
-
-TEST_F(TouchActionEnabledTester, Pinch_DefaultGestures_TouchActionNotAllowZoom) {
-  nsTArray<uint32_t> behaviors;
-  behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN);
-  behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::PINCH_ZOOM);
-  DoPinchTest(false, false, &behaviors);
-}
-
 TEST_F(AsyncPanZoomControllerTester, Pinch_UseGestureDetector_NoTouchAction) {
   DoPinchTest(true, true);
 }
