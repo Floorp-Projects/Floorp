@@ -6,20 +6,18 @@
 #ifndef SHARED_SURFACE_ANGLE_H_
 #define SHARED_SURFACE_ANGLE_H_
 
-#include "SharedSurfaceGL.h"
-#include "SurfaceFactory.h"
-#include "GLLibraryEGL.h"
-#include "SurfaceTypes.h"
-
 #include <windows.h>
+
+#include "SharedSurface.h"
 
 namespace mozilla {
 namespace gl {
 
 class GLContext;
+class GLLibraryEGL;
 
 class SharedSurface_ANGLEShareHandle
-    : public SharedSurface_GL
+    : public SharedSurface
 {
 public:
     static SharedSurface_ANGLEShareHandle* Create(GLContext* gl,
@@ -28,7 +26,7 @@ public:
                                                   bool hasAlpha);
 
     static SharedSurface_ANGLEShareHandle* Cast(SharedSurface* surf) {
-        MOZ_ASSERT(surf->Type() == SharedSurfaceType::EGLSurfaceANGLE);
+        MOZ_ASSERT(surf->mType == SharedSurfaceType::EGLSurfaceANGLE);
 
         return (SharedSurface_ANGLEShareHandle*)surf;
     }
@@ -46,11 +44,11 @@ protected:
                                    EGLContext context,
                                    EGLSurface pbuffer,
                                    HANDLE shareHandle)
-        : SharedSurface_GL(SharedSurfaceType::EGLSurfaceANGLE,
-                           AttachmentType::Screen,
-                           gl,
-                           size,
-                           hasAlpha)
+        : SharedSurface(SharedSurfaceType::EGLSurfaceANGLE,
+                        AttachmentType::Screen,
+                        gl,
+                        size,
+                        hasAlpha)
         , mEGL(egl)
         , mContext(context)
         , mPBuffer(pbuffer)
@@ -77,7 +75,7 @@ public:
 
 
 class SurfaceFactory_ANGLEShareHandle
-    : public SurfaceFactory_GL
+    : public SurfaceFactory
 {
 protected:
     GLContext* const mProdGL;

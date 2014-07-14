@@ -18,7 +18,6 @@
 
 <script type="application/javascript;version=1.8">
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Webapps.jsm");
 
 // We use a different origin than other webapps test files because we compare

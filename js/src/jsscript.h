@@ -11,6 +11,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/UniquePtr.h"
 
 #include "jsatom.h"
 #ifdef JS_THREADSAFE
@@ -417,8 +418,8 @@ class ScriptSource
 
     uint32_t length_;
     char *filename_;
-    jschar *displayURL_;
-    jschar *sourceMapURL_;
+    mozilla::UniquePtr<jschar[], JS::FreePolicy> displayURL_;
+    mozilla::UniquePtr<jschar[], JS::FreePolicy> sourceMapURL_;
     JSPrincipals *originPrincipals_;
 
     // bytecode offset in caller script that generated this code.
@@ -560,13 +561,19 @@ class ScriptSource
 
     // Display URLs
     bool setDisplayURL(ExclusiveContext *cx, const jschar *displayURL);
-    const jschar *displayURL();
     bool hasDisplayURL() const { return displayURL_ != nullptr; }
+    const jschar * displayURL() {
+        MOZ_ASSERT(hasDisplayURL());
+        return displayURL_.get();
+    }
 
     // Source maps
     bool setSourceMapURL(ExclusiveContext *cx, const jschar *sourceMapURL);
-    const jschar *sourceMapURL();
     bool hasSourceMapURL() const { return sourceMapURL_ != nullptr; }
+    const jschar * sourceMapURL() {
+        MOZ_ASSERT(hasSourceMapURL());
+        return sourceMapURL_.get();
+    }
 
     JSPrincipals *originPrincipals() const { return originPrincipals_; }
 

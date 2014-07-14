@@ -367,7 +367,7 @@ public:
                                          mCtx->CurrentState().op);
   }
 
-  operator DrawTarget*() 
+  operator DrawTarget*()
   {
     return mTarget;
   }
@@ -944,7 +944,8 @@ CanvasRenderingContext2D::EnsureTarget()
         if (glue && glue->GetGrContext() && glue->GetGLContext()) {
           mTarget = Factory::CreateDrawTargetSkiaWithGrContext(glue->GetGrContext(), size, format);
           if (mTarget) {
-            mStream = gfx::SurfaceStream::CreateForType(SurfaceStreamType::TripleBuffer, glue->GetGLContext());
+            mStream = gl::SurfaceStream::CreateForType(gl::SurfaceStreamType::TripleBuffer,
+                                                       glue->GetGLContext());
             AddDemotableContext(this);
           } else {
             printf_stderr("Failed to create a SkiaGL DrawTarget, falling back to software\n");
@@ -2526,7 +2527,7 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorRes
                                 nsINode::DeleteProperty<bool>);
 #endif
   }
-  
+
   // finally, add the region to the list
   RegionInfo info;
   info.mId = options.mId;
@@ -3468,7 +3469,7 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
 
   nsRefPtr<gfxContext> context = new gfxContext(tempTarget);
   context->SetMatrix(contextMatrix);
-  
+
   // FLAG_CLAMP is added for increased performance
   uint32_t modifiedFlags = image.mDrawingFlags | imgIContainer::FLAG_CLAMP;
 

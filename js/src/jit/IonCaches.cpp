@@ -1242,7 +1242,7 @@ GetPropertyIC::tryAttachNative(JSContext *cx, HandleScript outerScript, IonScrip
         attachKind = "array length";
         break;
       default:
-        MOZ_CRASH("Bad NativeGetPropCacheability");
+        MOZ_ASSUME_UNREACHABLE("Bad NativeGetPropCacheability");
     }
     return linkAndAttachStub(cx, masm, attacher, ion, attachKind);
 }
@@ -4159,7 +4159,7 @@ IsCacheableNonGlobalScopeChain(JSObject *scopeChain, JSObject *holder)
         }
     }
 
-    MOZ_CRASH("Invalid scope chain");
+    MOZ_ASSUME_UNREACHABLE("Invalid scope chain");
 }
 
 JSObject *

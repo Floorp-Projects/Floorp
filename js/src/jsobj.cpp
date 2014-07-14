@@ -169,6 +169,13 @@ FinishObjectClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject pro
     }
 
     /*
+     * Define self-hosted functions after setting the intrinsics holder
+     * (which is needed to define self-hosted functions)
+     */
+    if (!JS_DefineFunctions(cx, ctor, object_static_selfhosted_methods))
+        return false;
+
+    /*
      * The global object should have |Object.prototype| as its [[Prototype]].
      * Eventually we'd like to have standard classes be there from the start,
      * and thus we would know we were always setting what had previously been a

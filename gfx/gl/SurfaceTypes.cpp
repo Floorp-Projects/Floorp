@@ -4,10 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SurfaceTypes.h"
+
 #include "mozilla/layers/ISurfaceAllocator.h"
 
 namespace mozilla {
-namespace gfx {
+namespace gl {
 
 SurfaceCaps::SurfaceCaps()
 {
@@ -53,5 +54,5 @@ SurfaceCaps::~SurfaceCaps()
 {
 }
 
-}
-}
+} // namespace gl
+} // namespace mozilla

@@ -15,16 +15,6 @@
 
 namespace mozilla {
 
-class DataBuffer;
-
-// Temporary whitelist for refcounted class dangerously exposing its destructor.
-// Filed bug 1028139 to address this class.
-template<>
-struct HasDangerousPublicDestructor<DataBuffer>
-{
-  static const bool value = true;
-};
-
 class DataBuffer {
  public:
   DataBuffer() : data_(nullptr), len_(0) {}
@@ -42,8 +32,6 @@ class DataBuffer {
   const uint8_t *data() const { return data_; }
   size_t len() const { return len_; }
   const bool empty() const { return len_ != 0; }
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataBuffer)
 
 private:
   ScopedDeleteArray<uint8_t> data_;

@@ -397,6 +397,7 @@ nsUrlClassifierDBServiceWorker::GetTables(nsIUrlClassifierCallback* c)
 
   nsAutoCString response;
   mClassifier->TableRequest(response);
+  LOG(("GetTables: %s", response.get()));
   c->HandleEvent(response);
 
   return rv;

@@ -27,7 +27,7 @@ interface nsIDOMMediaStream;
 #endif
 %}
 
-[uuid(1f9393e8-2df0-4072-87b9-c26999b09acc)]
+[uuid(0e14e6ad-2074-48b7-a247-e545a3a15131)]
 interface nsIDOMHTMLMediaElement : nsISupports
 {
   // error state
@@ -133,4 +133,6 @@ interface nsIDOMHTMLMediaElement : nsISupports
   // * onmozinterruptbegin - called when the media element is interrupted
   //   because of the audiochannel manager.
   // * onmozinterruptend - called when the interruption is concluded
+
+  [notxpcom] boolean isVideo();
 };

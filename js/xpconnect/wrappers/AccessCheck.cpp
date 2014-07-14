@@ -14,6 +14,7 @@
 
 #include "jsfriendapi.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/LocationBinding.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsJSUtils.h"
@@ -90,13 +91,6 @@ AccessCheck::getPrincipal(JSCompartment *compartment)
     return GetCompartmentPrincipal(compartment);
 }
 
-#define NAME(ch, str, cases)                                                  \
-    case ch: if (!strcmp(name, str)) switch (propChar0) { cases }; break;
-#define PROP(ch, actions) case ch: { actions }; break;
-#define RW(str) if (JS_FlatStringEqualsAscii(prop, str)) return true;
-#define R(str) if (!set && JS_FlatStringEqualsAscii(prop, str)) return true;
-#define W(str) if (set && JS_FlatStringEqualsAscii(prop, str)) return true;
-
 // Hardcoded policy for cross origin property access. This was culled from the
 // preferences file (all.js). We don't want users to overwrite highly sensitive
 // security policies.
@@ -109,9 +103,9 @@ IsPermitted(const char *name, JSFlatString *prop, bool set)
 
     jschar propChar0 = JS_GetFlatStringCharAt(prop, 0);
     switch (name[0]) {
-        NAME('L', "Location",
-             PROP('h', W("href"))
-             PROP('r', R("replace")))
+        case 'L':
+            if (!strcmp(name, "Location"))
+                return dom::LocationBinding::IsPermitted(prop, propChar0, set);
         case 'W':
             if (!strcmp(name, "Window"))
                 return dom::WindowBinding::IsPermitted(prop, propChar0, set);
@@ -119,11 +113,6 @@ IsPermitted(const char *name, JSFlatString *prop, bool set)
     }
     return false;
 }
-
-#undef NAME
-#undef RW
-#undef R
-#undef W
 
 static bool
 IsFrameId(JSContext *cx, JSObject *objArg, jsid idArg)

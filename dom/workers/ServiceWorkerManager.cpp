@@ -367,8 +367,7 @@ public:
     }
 
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    ServiceWorkerManager::ServiceWorkerDomainInfo* domainInfo =
-      swm->mDomainMap.Get(domain);
+    ServiceWorkerManager::ServiceWorkerDomainInfo* domainInfo;
     // XXXnsm: This pattern can be refactored if we end up using it
     // often enough.
     if (!swm->mDomainMap.Get(domain, &domainInfo)) {
@@ -987,6 +986,163 @@ ServiceWorkerManager::CreateServiceWorkerForWindow(nsPIDOMWindow* aWindow,
   return rv;
 }
 
+already_AddRefed<ServiceWorkerRegistration>
+ServiceWorkerManager::GetServiceWorkerRegistration(nsPIDOMWindow* aWindow)
+{
+  nsCOMPtr<nsIURI> documentURI = aWindow->GetDocumentURI();
+  return GetServiceWorkerRegistration(documentURI);
+}
+
+already_AddRefed<ServiceWorkerRegistration>
+ServiceWorkerManager::GetServiceWorkerRegistration(nsIDocument* aDoc)
+{
+  nsCOMPtr<nsIURI> documentURI = aDoc->GetDocumentURI();
+  return GetServiceWorkerRegistration(documentURI);
+}
+
+already_AddRefed<ServiceWorkerRegistration>
+ServiceWorkerManager::GetServiceWorkerRegistration(nsIURI* aURI)
+{
+  if (!aURI) {
+    return nullptr;
+  }
+
+  nsCString domain;
+  nsresult rv = aURI->GetHost(domain);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  ServiceWorkerDomainInfo* domainInfo = mDomainMap.Get(domain);
+
+  // XXXnsm: This pattern can be refactored if we end up using it
+  // often enough.
+  if (!domainInfo) {
+    return nullptr;
+  }
+
+  nsCString spec;
+  rv = aURI->GetSpec(spec);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  nsCString scope = FindScopeForPath(domainInfo->mOrderedScopes, spec);
+  if (scope.IsEmpty()) {
+    return nullptr;
+  }
+
+  ServiceWorkerRegistration* registration;
+  domainInfo->mServiceWorkerRegistrations.Get(scope, &registration);
+  // ordered scopes and registrations better be in sync.
+  MOZ_ASSERT(registration);
+
+  return registration;
+}
+
+namespace {
+/*
+ * Returns string without trailing '*'.
+ */
+void ScopeWithoutStar(const nsACString& aScope, nsACString& out)
+{
+  if (aScope.Last() == '*') {
+    out.Assign(StringHead(aScope, aScope.Length() - 1));
+    return;
+  }
+
+  out.Assign(aScope);
+}
+}; // anonymous namespace
+
+/* static */ void
+ServiceWorkerManager::AddScope(nsTArray<nsCString>& aList, const nsACString& aScope)
+{
+  for (uint32_t i = 0; i < aList.Length(); ++i) {
+    const nsCString& current = aList[i];
+
+    // Perfect match!
+    if (aScope.Equals(current)) {
+      return;
+    }
+
+    nsCString withoutStar;
+    ScopeWithoutStar(current, withoutStar);
+    // Edge case of match without '*'.
+    // /foo should be sorted before /foo*.
+    if (aScope.Equals(withoutStar)) {
+      aList.InsertElementAt(i, aScope);
+      return;
+    }
+
+    // /foo/bar* should be before /foo/*
+    // Similarly /foo/b* is between the two.
+    // But is /foo* categorically different?
+    if (StringBeginsWith(aScope, withoutStar)) {
+      // If the new scope is a pattern and the old one is a path, the new one
+      // goes after.  This way Add(/foo) followed by Add(/foo*) ends up with
+      // [/foo, /foo*].
+      if (aScope.Last() == '*' &&
+          withoutStar.Equals(current)) {
+        aList.InsertElementAt(i+1, aScope);
+      } else {
+        aList.InsertElementAt(i, aScope);
+      }
+      return;
+    }
+  }
+
+  aList.AppendElement(aScope);
+}
+
+// aPath can have a '*' at the end, but it is treated literally.
+/* static */ nsCString
+ServiceWorkerManager::FindScopeForPath(nsTArray<nsCString>& aList, const nsACString& aPath)
+{
+  MOZ_ASSERT(aPath.FindChar('*') == -1);
+
+  nsCString match;
+
+  for (uint32_t i = 0; i < aList.Length(); ++i) {
+    const nsCString& current = aList[i];
+    nsCString withoutStar;
+    ScopeWithoutStar(current, withoutStar);
+    if (StringBeginsWith(aPath, withoutStar)) {
+      // If non-pattern match, then check equality.
+      if (current.Last() == '*' ||
+          aPath.Equals(current)) {
+        match = current;
+        break;
+      }
+    }
+  }
+
+  return match;
+}
+
+/* static */ void
+ServiceWorkerManager::RemoveScope(nsTArray<nsCString>& aList, const nsACString& aScope)
+{
+  aList.RemoveElement(aScope);
+}
+
+NS_IMETHODIMP
+ServiceWorkerManager::GetScopeForUrl(const nsAString& aUrl, nsAString& aScope)
+{
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aUrl, nullptr, nullptr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<ServiceWorkerRegistration> r = GetServiceWorkerRegistration(uri);
+  if (!r) {
+      return NS_ERROR_FAILURE;
+  }
+
+  aScope = NS_ConvertUTF8toUTF16(r->mScope);
+  return NS_OK;
+}
 NS_IMETHODIMP
 ServiceWorkerManager::CreateServiceWorker(const nsACString& aScriptSpec,
                                           const nsACString& aScope,

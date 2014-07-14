@@ -250,24 +250,13 @@ function writeTestTempFile(aFileName, aContent) {
   }
 }
 
-function try_open_listener() {
-  if (DebuggerServer._listener) {
-    return DebuggerServer._listener.port;
-  }
-  try {
-    // Pick a random one between 2000 and 65000.
-    let port = Math.floor(Math.random() * (65000 - 2000 + 1)) + 2000;
-    do_check_true(DebuggerServer.openListener(port));
-    return port;
-  } catch (e) {
-    return try_open_listener();
-  }
-}
-
 /*** Transport Factories ***/
 
 function socket_transport() {
-  let port = try_open_listener();
+  if (!DebuggerServer.listeningSockets) {
+    DebuggerServer.openListener(-1);
+  }
+  let port = DebuggerServer._listeners[0].port;
   do_print("Debugger server port is " + port);
   return debuggerSocketConnect("127.0.0.1", port);
 }
