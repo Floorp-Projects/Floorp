@@ -9,7 +9,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
 #include "mozilla/layers/AsyncPanZoomController.h"
-#include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/APZCTreeManager.h"
@@ -138,18 +137,6 @@ public:
 
 private:
   nsTArray<Task*> mTaskQueue;
-};
-
-
-class TestAPZCContainerLayer : public ContainerLayer {
-  public:
-    TestAPZCContainerLayer()
-      : ContainerLayer(nullptr, nullptr)
-    {}
-  bool RemoveChild(Layer* aChild) { return true; }
-  bool InsertAfter(Layer* aChild, Layer* aAfter) { return true; }
-  void ComputeEffectiveTransforms(const Matrix4x4& aTransformToSurface) {}
-  bool RepositionChild(Layer* aChild, Layer* aAfter) { return true; }
 };
 
 class TestAsyncPanZoomController : public AsyncPanZoomController {
