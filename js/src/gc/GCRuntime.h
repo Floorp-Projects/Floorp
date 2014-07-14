@@ -55,9 +55,6 @@ class ChunkPool
     /* Must be called either during the GC or with the GC lock taken. */
     inline void put(Chunk *chunk);
 
-    /* Must be called with the GC lock taken. */
-    void expireAndFree(JSRuntime *rt, bool releaseAll);
-
     class Enum {
       public:
         Enum(ChunkPool &pool) : pool(pool), chunkp(&pool.emptyChunkListHead) {}
@@ -358,7 +355,7 @@ class GCRuntime
      * Return the list of chunks that can be released outside the GC lock.
      * Must be called either during the GC or with the GC lock taken.
      */
-    Chunk *expireChunkPool(bool releaseAll);
+    Chunk *expireChunkPool(bool shrinkBuffers, bool releaseAll);
     void expireAndFreeChunkPool(bool releaseAll);
     void freeChunkList(Chunk *chunkListHead);
     void prepareToFreeChunk(ChunkInfo &info);
