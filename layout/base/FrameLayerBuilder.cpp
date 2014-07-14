@@ -2600,6 +2600,12 @@ ContainerState::ComputeOpaqueRect(nsDisplayItem* aItem,
         opaqueClipped.Contains(mContainerBounds)) {
       aList->SetIsOpaque();
     }
+    // Add opaque areas to the "exclude glass" region. Only do this for
+    // ThebesLayers which are direct children of the root layer; this means
+    // they can't have transforms or opacity wrapping them.
+    if (!mContainerLayer->GetParent() && mBuilder->HasGlass()) {
+      mBuilder->AddExcludedGlassRegion(opaqueClipped);
+    }
     opaquePixels = ScaleRegionToInsidePixels(opaqueClipped, snapOpaque);
     if (aFixedPosFrame && ItemCoversScrollableArea(aItem, opaque)) {
       *aHideAllLayersBelow = true;
