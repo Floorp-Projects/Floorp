@@ -1238,9 +1238,9 @@ SourceScripts.prototype = {
     const item = DebuggerView.Sources.getItemByValue(url);
     if (item) {
       if (isBlackBoxed) {
-        item.target.classList.add("black-boxed");
+        item.prebuiltNode.classList.add("black-boxed");
       } else {
-        item.target.classList.remove("black-boxed");
+        item.prebuiltNode.classList.remove("black-boxed");
       }
     }
     DebuggerView.Sources.updateToolbarButtonsState();
