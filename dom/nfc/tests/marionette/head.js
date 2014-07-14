@@ -228,6 +228,10 @@ const NDEF = {
       fields.forEach(function(value) {
         let field1 = Cu.waiveXrays(record1)[value];
         let field2 = Cu.waiveXrays(record2)[value];
+        if (!field1 || !field2) {
+          return;
+        }
+
         is(field1.length, field2.length,
            value + " fields have the same length");
         let eq = true;
