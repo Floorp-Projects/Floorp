@@ -35,7 +35,7 @@ interface nsISpeculativeConnect : nsISupports
  * inline) to determine whether or not to actually make a speculative
  * connection.
  */
-[builtinclass, uuid(2b6d6fb6-ab28-4f4c-af84-bfdbb7866d72)]
+[builtinclass, uuid(a9cdd875-2ef8-4d53-95d6-e4e18f65e0db)]
 interface nsISpeculativeConnectionOverrider : nsISupports
 {
     /**
@@ -57,4 +57,10 @@ interface nsISpeculativeConnectionOverrider : nsISupports
      * connection.
      */
     [infallible] readonly attribute boolean ignoreIdle;
+
+    /*
+     * Used by the Predictor to gather telemetry data on speculative connection
+     * usage.
+     */
+    [infallible] readonly attribute boolean isFromPredictor;
 };
