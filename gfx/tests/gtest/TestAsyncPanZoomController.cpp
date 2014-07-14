@@ -167,8 +167,9 @@ public:
   }
 };
 
-static
-FrameMetrics TestFrameMetrics() {
+static FrameMetrics
+TestFrameMetrics()
+{
   FrameMetrics fm;
 
   fm.mDisplayPort = CSSRect(0, 0, 10, 10);
@@ -180,21 +181,55 @@ FrameMetrics TestFrameMetrics() {
   return fm;
 }
 
+static nsEventStatus
+ApzcDown(AsyncPanZoomController* apzc, int aX, int aY, int& aTime)
+{
+  MultiTouchInput mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, aTime, TimeStamp(), 0);
+  mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(aX, aY), ScreenSize(0, 0), 0, 0));
+  return apzc->ReceiveInputEvent(mti);
+}
+
+static nsEventStatus
+ApzcUp(AsyncPanZoomController* apzc, int aX, int aY, int& aTime)
+{
+  MultiTouchInput mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, aTime, TimeStamp(), 0);
+  mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(aX, aY), ScreenSize(0, 0), 0, 0));
+  return apzc->ReceiveInputEvent(mti);
+}
+
+static nsEventStatus
+ApzcTap(AsyncPanZoomController* apzc, int aX, int aY, int& aTime,
+        int aTapLength, MockContentControllerDelayed* mcc = nullptr)
+{
+  nsEventStatus status = ApzcDown(apzc, aX, aY, aTime);
+  if (mcc != nullptr) {
+    // There will be delayed tasks posted for the long-tap and MAX_TAP timeouts, but
+    // if we were provided a non-null mcc we want to clear them.
+    mcc->CheckHasDelayedTask();
+    mcc->ClearDelayedTask();
+    mcc->CheckHasDelayedTask();
+    mcc->ClearDelayedTask();
+  }
+  EXPECT_EQ(nsEventStatus_eConsumeNoDefault, status);
+  aTime += aTapLength;
+  return ApzcUp(apzc, aX, aY, aTime);
+}
+
 /*
  * Dispatches mock touch events to the apzc and checks whether apzc properly
  * consumed them and triggered scrolling behavior.
  */
-static
-void ApzcPan(AsyncPanZoomController* apzc,
-             TestAPZCTreeManager* aTreeManager,
-             int& aTime,
-             int aTouchStartY,
-             int aTouchEndY,
-             bool expectIgnoredPan = false,
-             bool hasTouchListeners = false,
-             nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
-             bool aKeepFingerDown = false) {
-
+static void
+ApzcPan(AsyncPanZoomController* apzc,
+        TestAPZCTreeManager* aTreeManager,
+        int& aTime,
+        int aTouchStartY,
+        int aTouchEndY,
+        bool expectIgnoredPan = false,
+        bool hasTouchListeners = false,
+        nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
+        bool aKeepFingerDown = false)
+{
   const int TIME_BETWEEN_TOUCH_EVENT = 100;
   const int OVERCOME_TOUCH_TOLERANCE = 100;
   MultiTouchInput mti;
@@ -215,17 +250,14 @@ void ApzcPan(AsyncPanZoomController* apzc,
     touchStartStatus = nsEventStatus_eConsumeNoDefault;
   }
 
-  mti =
-    MultiTouchInput(MultiTouchInput::MULTITOUCH_START, aTime, TimeStamp(), 0);
-  aTime += TIME_BETWEEN_TOUCH_EVENT;
   // Make sure the move is large enough to not be handled as a tap
-  mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, aTouchStartY+OVERCOME_TOUCH_TOLERANCE), ScreenSize(0, 0), 0, 0));
-  status = apzc->ReceiveInputEvent(mti);
+  status = ApzcDown(apzc, 10, aTouchStartY + OVERCOME_TOUCH_TOLERANCE, aTime);
+  aTime += TIME_BETWEEN_TOUCH_EVENT;
   EXPECT_EQ(touchStartStatus, status);
   // APZC should be in TOUCHING state
 
   // Allowed touch behaviours must be set after sending touch-start.
-  if (aAllowedTouchBehaviors) {
+  if (gfxPrefs::TouchActionEnabled() && aAllowedTouchBehaviors) {
     apzc->SetAllowedTouchBehavior(*aAllowedTouchBehaviors);
   }
 
@@ -239,27 +271,22 @@ void ApzcPan(AsyncPanZoomController* apzc,
     touchMoveStatus = nsEventStatus_eConsumeNoDefault;
   }
 
-  mti =
-    MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, aTime, TimeStamp(), 0);
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, aTime, TimeStamp(), 0);
   aTime += TIME_BETWEEN_TOUCH_EVENT;
   mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, aTouchStartY), ScreenSize(0, 0), 0, 0));
   status = apzc->ReceiveInputEvent(mti);
   EXPECT_EQ(touchMoveStatus, status);
 
-  mti =
-    MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, aTime, TimeStamp(), 0);
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, aTime, TimeStamp(), 0);
   aTime += TIME_BETWEEN_TOUCH_EVENT;
   mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, aTouchEndY), ScreenSize(0, 0), 0, 0));
   status = apzc->ReceiveInputEvent(mti);
   EXPECT_EQ(touchMoveStatus, status);
 
   if (!aKeepFingerDown) {
-    mti =
-      MultiTouchInput(MultiTouchInput::MULTITOUCH_END, aTime, TimeStamp(), 0);
-    aTime += TIME_BETWEEN_TOUCH_EVENT;
-    mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, aTouchEndY), ScreenSize(0, 0), 0, 0));
-    status = apzc->ReceiveInputEvent(mti);
+    status = ApzcUp(apzc, 10, aTouchEndY, aTime);
   }
+  aTime += TIME_BETWEEN_TOUCH_EVENT;
 
   // Since we've explicitly built the overscroll handoff chain before
   // touch-start, we need to explicitly clear it after touch-end.
@@ -486,38 +513,6 @@ void DoPinchTest(bool aUseGestureRecognizer, bool aShouldTriggerPinch,
   }
 
   apzc->Destroy();
-}
-
-static nsEventStatus
-ApzcDown(AsyncPanZoomController* apzc, int aX, int aY, int& aTime) {
-  MultiTouchInput mti =
-    MultiTouchInput(MultiTouchInput::MULTITOUCH_START, aTime, TimeStamp(), 0);
-  mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(aX, aY), ScreenSize(0, 0), 0, 0));
-  return apzc->ReceiveInputEvent(mti);
-}
-
-static nsEventStatus
-ApzcUp(AsyncPanZoomController* apzc, int aX, int aY, int& aTime) {
-  MultiTouchInput mti =
-    MultiTouchInput(MultiTouchInput::MULTITOUCH_END, aTime, TimeStamp(), 0);
-  mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(aX, aY), ScreenSize(0, 0), 0, 0));
-  return apzc->ReceiveInputEvent(mti);
-}
-
-static nsEventStatus
-ApzcTap(AsyncPanZoomController* apzc, int aX, int aY, int& aTime, int aTapLength, MockContentControllerDelayed* mcc = nullptr) {
-  nsEventStatus status = ApzcDown(apzc, aX, aY, aTime);
-  if (mcc != nullptr) {
-    // There will be delayed tasks posted for the long-tap and MAX_TAP timeouts, but
-    // if we were provided a non-null mcc we want to clear them.
-    mcc->CheckHasDelayedTask();
-    mcc->ClearDelayedTask();
-    mcc->CheckHasDelayedTask();
-    mcc->ClearDelayedTask();
-  }
-  EXPECT_EQ(nsEventStatus_eConsumeNoDefault, status);
-  aTime += aTapLength;
-  return ApzcUp(apzc, aX, aY, aTime);
 }
 
 TEST_F(AsyncPanZoomControllerTester, Constructor) {
