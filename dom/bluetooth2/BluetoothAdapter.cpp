@@ -20,6 +20,7 @@
 #include "mozilla/LazyIdleThread.h"
 
 #include "BluetoothAdapter.h"
+#include "BluetoothClassOfDevice.h"
 #include "BluetoothDevice.h"
 #include "BluetoothDiscoveryHandle.h"
 #include "BluetoothReplyRunnable.h"
@@ -928,7 +929,7 @@ BluetoothAdapter::Connect(BluetoothDevice& aDevice,
 
   nsAutoString address;
   aDevice.GetAddress(address);
-  uint32_t deviceClass = aDevice.Class();
+  uint32_t deviceClass = aDevice.Cod()->ToUint32();
   uint16_t serviceUuid = 0;
   if (aServiceUuid.WasPassed()) {
     serviceUuid = aServiceUuid.Value();
