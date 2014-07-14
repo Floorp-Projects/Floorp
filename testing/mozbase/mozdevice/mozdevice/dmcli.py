@@ -153,7 +153,7 @@ class DMCli(object):
     def add_options(self, parser):
         parser.add_argument("-v", "--verbose", action="store_true",
                             help="Verbose output from DeviceManager",
-                            default=False)
+                            default=bool(os.environ.get('VERBOSE')))
         parser.add_argument("--host", action="store",
                             help="Device hostname (only if using TCP/IP, " \
                                 "defaults to TEST_DEVICE environment " \
