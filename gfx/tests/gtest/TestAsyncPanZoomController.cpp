@@ -322,58 +322,6 @@ ApzcPanAndCheckStatus(AsyncPanZoomController* aApzc,
 }
 
 static void
-DoPanTest(bool aShouldTriggerScroll, uint32_t aBehavior)
-{
-  TimeStamp testStartTime = TimeStamp::Now();
-  AsyncPanZoomController::SetFrameTime(testStartTime);
-
-  nsRefPtr<MockContentController> mcc = new NiceMock<MockContentController>();
-  nsRefPtr<TestAPZCTreeManager> tm = new TestAPZCTreeManager();
-  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(0, mcc, tm);
-
-  apzc->SetFrameMetrics(TestFrameMetrics());
-  apzc->NotifyLayersUpdated(TestFrameMetrics(), true);
-
-  if (aShouldTriggerScroll) {
-    EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(AtLeast(1));
-    EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
-  } else {
-    EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(0);
-    EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(0);
-  }
-
-  int time = 0;
-  int touchStart = 50;
-  int touchEnd = 10;
-  ScreenPoint pointOut;
-  ViewTransform viewTransformOut;
-
-  nsTArray<uint32_t> allowedTouchBehaviors;
-  allowedTouchBehaviors.AppendElement(aBehavior);
-
-  // Pan down
-  ApzcPanAndCheckStatus(apzc, tm, time, touchStart, touchEnd, !aShouldTriggerScroll, false, &allowedTouchBehaviors);
-  apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-
-  if (aShouldTriggerScroll) {
-    EXPECT_EQ(ScreenPoint(0, -(touchEnd-touchStart)), pointOut);
-    EXPECT_NE(ViewTransform(), viewTransformOut);
-  } else {
-    EXPECT_EQ(ScreenPoint(), pointOut);
-    EXPECT_EQ(ViewTransform(), viewTransformOut);
-  }
-
-  // Pan back
-  ApzcPanAndCheckStatus(apzc, tm, time, touchEnd, touchStart, !aShouldTriggerScroll, false, &allowedTouchBehaviors);
-  apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-
-  EXPECT_EQ(ScreenPoint(), pointOut);
-  EXPECT_EQ(ViewTransform(), viewTransformOut);
-
-  apzc->Destroy();
-}
-
-static void
 ApzcPinchWithPinchInput(AsyncPanZoomController* aApzc,
                         int aFocusX, int aFocusY, float aScale,
                         nsEventStatus (*aOutEventStatuses)[3] = nullptr)
@@ -748,6 +696,58 @@ TEST_F(AsyncPanZoomControllerTester, ComplexTransform) {
   childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
   EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), ParentLayerToScreenScale(3)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(135, 90), pointOut);
+}
+
+static void
+DoPanTest(bool aShouldTriggerScroll, uint32_t aBehavior)
+{
+  TimeStamp testStartTime = TimeStamp::Now();
+  AsyncPanZoomController::SetFrameTime(testStartTime);
+
+  nsRefPtr<MockContentController> mcc = new NiceMock<MockContentController>();
+  nsRefPtr<TestAPZCTreeManager> tm = new TestAPZCTreeManager();
+  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(0, mcc, tm);
+
+  apzc->SetFrameMetrics(TestFrameMetrics());
+  apzc->NotifyLayersUpdated(TestFrameMetrics(), true);
+
+  if (aShouldTriggerScroll) {
+    EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(AtLeast(1));
+    EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
+  } else {
+    EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(0);
+    EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(0);
+  }
+
+  int time = 0;
+  int touchStart = 50;
+  int touchEnd = 10;
+  ScreenPoint pointOut;
+  ViewTransform viewTransformOut;
+
+  nsTArray<uint32_t> allowedTouchBehaviors;
+  allowedTouchBehaviors.AppendElement(aBehavior);
+
+  // Pan down
+  ApzcPanAndCheckStatus(apzc, tm, time, touchStart, touchEnd, !aShouldTriggerScroll, false, &allowedTouchBehaviors);
+  apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
+
+  if (aShouldTriggerScroll) {
+    EXPECT_EQ(ScreenPoint(0, -(touchEnd-touchStart)), pointOut);
+    EXPECT_NE(ViewTransform(), viewTransformOut);
+  } else {
+    EXPECT_EQ(ScreenPoint(), pointOut);
+    EXPECT_EQ(ViewTransform(), viewTransformOut);
+  }
+
+  // Pan back
+  ApzcPanAndCheckStatus(apzc, tm, time, touchEnd, touchStart, !aShouldTriggerScroll, false, &allowedTouchBehaviors);
+  apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
+
+  EXPECT_EQ(ScreenPoint(), pointOut);
+  EXPECT_EQ(ViewTransform(), viewTransformOut);
+
+  apzc->Destroy();
 }
 
 TEST_F(AsyncPanZoomControllerTester, Pan) {
