@@ -103,7 +103,7 @@ this.startup = function(window) {
       appUpdated = yield WebappRT.applyUpdate();
     }
 
-    yield WebappRT.loadConfig();
+    yield WebappRT.configPromise;
 
     let appData = WebappRT.config.app;
 
