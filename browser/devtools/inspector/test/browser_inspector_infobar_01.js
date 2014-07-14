@@ -5,8 +5,7 @@
 "use strict";
 
 const TEST_URI = "http://example.com/browser/browser/devtools/inspector/" +
-                 "test/doc_inspector_infobar.html";
-const DOORHANGER_ARROW_HEIGHT = 5;
+                 "test/browser_inspector_infobar_01.html";
 
 // Test that hovering over nodes in the markup-view shows the highlighter over
 // those nodes
@@ -51,22 +50,11 @@ let test = asyncTest(function*() {
       classes: ""
       // No dims as they will vary between computers
     },
-    {
-      node: doc.querySelector("#farbottom"),
-      position: "top",
-      tag: "DIV",
-      id: "#farbottom",
-      classes: "",
-      dims: "500 x 100"
-    },
   ];
 
   for (let currTest of testData) {
     yield testPosition(currTest, inspector);
   }
-
-  yield checkInfoBarAboveTop(inspector);
-  yield checkInfoBarBelowFindbar(inspector);
 
   gBrowser.removeCurrentTab();
 });
@@ -77,7 +65,7 @@ function* testPosition(currTest, inspector) {
 
   info("Testing " + currTest.id);
 
-  yield selectNode(currTest.node, inspector, "highlight");
+  yield selectAndHighlightNode(currTest.node, inspector);
 
   let container = stack.querySelector(".highlighter-nodeinfobar-positioner");
   is(container.getAttribute("position"),
@@ -100,51 +88,4 @@ function* testPosition(currTest, inspector) {
     let dimBox = stack.querySelector(".highlighter-nodeinfobar-dimensions");
     is(dimBox.textContent, currTest.dims, "node " + currTest.id  + ": dims match.");
   }
-}
-
-function* checkInfoBarAboveTop(inspector) {
-  yield selectNode("#abovetop", inspector);
-
-  let positioner = getPositioner();
-  let insideContent = parseInt(positioner.style.top, 10) >= -DOORHANGER_ARROW_HEIGHT;
-
-  ok(insideContent, "Infobar is inside the content window (top = " +
-                    parseInt(positioner.style.top, 10) + ", content = '" +
-                    positioner.textContent +"')");
-}
-
-function* checkInfoBarBelowFindbar(inspector) {
-  gFindBar.open();
-
-  let body = content.document.body;
-  let farBottom = body.querySelector("#farbottom");
-  farBottom.scrollIntoView();
-
-  // Wait for scrollIntoView
-  yield waitForTick();
-
-  body.scrollTop -= 130;
-  yield selectNode(farBottom, inspector);
-
-  let positioner = getPositioner();
-  let insideContent = parseInt(positioner.style.top, 10) >= -DOORHANGER_ARROW_HEIGHT;
-
-  ok(insideContent, "Infobar does not overlap the findbar (top = " +
-                    parseInt(positioner.style.top, 10) + ", content = '" +
-                    positioner.textContent +"')");
-
-  gFindBar.close();
-}
-
-function getPositioner() {
-  let browser = gBrowser.selectedBrowser;
-  let stack = browser.parentNode;
-
-  return stack.querySelector(".highlighter-nodeinfobar-positioner");
-}
-
-function waitForTick() {
-  let deferred = promise.defer();
-  executeSoon(deferred.resolve);
-  return deferred.promise;
 }
