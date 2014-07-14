@@ -453,7 +453,7 @@ inline void
 JSExternalString::finalize(js::FreeOp *fop)
 {
     const JSStringFinalizer *fin = externalFinalizer();
-    fin->finalize(fin, const_cast<jschar *>(nonInlineChars()));
+    fin->finalize(fin, const_cast<jschar *>(rawTwoByteChars()));
 }
 
 #endif /* vm_String_inl_h */
