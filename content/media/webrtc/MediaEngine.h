@@ -86,6 +86,9 @@ public:
    * immediately after. */
   virtual nsresult Start(SourceMediaStream*, TrackID) = 0;
 
+  /* tell the source if there are any direct listeners attached */
+  virtual void SetDirectListeners(bool) = 0;
+
   /* Take a snapshot from this source. In the case of video this is a single
    * image, and for audio, it is a snippet lasting aDuration milliseconds. The
    * duration argument is ignored for a MediaEngineVideoSource.
