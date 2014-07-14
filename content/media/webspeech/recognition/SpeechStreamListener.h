@@ -30,7 +30,8 @@ public:
                                 uint32_t aTrackEvents,
                                 const MediaSegment& aQueuedMedia) MOZ_OVERRIDE;
 
-  void NotifyFinished(MediaStreamGraph* aGraph) MOZ_OVERRIDE;
+  void NotifyEvent(MediaStreamGraph* aGraph,
+                   MediaStreamListener::MediaStreamGraphEvent event) MOZ_OVERRIDE;
 
 private:
   template<typename SampleFormatType>

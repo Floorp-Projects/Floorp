@@ -468,7 +468,7 @@ jit::RequestInterruptForIonCode(JSRuntime *rt, JSRuntime::InterruptMode mode)
         break;
 
       default:
-        MOZ_CRASH("Bad interrupt mode");
+        MOZ_ASSUME_UNREACHABLE("Bad interrupt mode");
     }
 }
 
@@ -1031,15 +1031,21 @@ IonScript::copyCallTargetEntries(JSScript **callTargets)
 
 void
 IonScript::copyPatchableBackedges(JSContext *cx, JitCode *code,
-                                  PatchableBackedgeInfo *backedges)
+                                  PatchableBackedgeInfo *backedges,
+                                  MacroAssembler &masm)
 {
     for (size_t i = 0; i < backedgeEntries_; i++) {
-        const PatchableBackedgeInfo &info = backedges[i];
+        PatchableBackedgeInfo &info = backedges[i];
         PatchableBackedge *patchableBackedge = &backedgeList()[i];
 
+        // Convert to actual offsets for the benefit of the ARM backend.
+        info.backedge.fixup(&masm);
+        uint32_t loopHeaderOffset = masm.actualOffset(info.loopHeader->offset());
+        uint32_t interruptCheckOffset = masm.actualOffset(info.interruptCheck->offset());
+
         CodeLocationJump backedge(code, info.backedge);
-        CodeLocationLabel loopHeader(code, CodeOffsetLabel(info.loopHeader->offset()));
-        CodeLocationLabel interruptCheck(code, CodeOffsetLabel(info.interruptCheck->offset()));
+        CodeLocationLabel loopHeader(code, CodeOffsetLabel(loopHeaderOffset));
+        CodeLocationLabel interruptCheck(code, CodeOffsetLabel(interruptCheckOffset));
         new(patchableBackedge) PatchableBackedge(backedge, loopHeader, interruptCheck);
 
         // Point the backedge to either of its possible targets, according to
@@ -1136,7 +1142,7 @@ IonScript::getSafepointIndex(uint32_t disp) const
         }
     }
 
-    MOZ_CRASH("displacement not found.");
+    MOZ_ASSUME_UNREACHABLE("displacement not found.");
 }
 
 const OsiIndex *
@@ -1150,7 +1156,7 @@ IonScript::getOsiIndex(uint32_t disp) const
             return it;
     }
 
-    MOZ_CRASH("Failed to find OSI point return address");
+    MOZ_ASSUME_UNREACHABLE("Failed to find OSI point return address");
 }
 
 const OsiIndex *
@@ -1650,7 +1656,7 @@ GenerateLIR(MIRGenerator *mir)
           }
 
           default:
-            MOZ_CRASH("Bad regalloc");
+            MOZ_ASSUME_UNREACHABLE("Bad regalloc");
         }
 
         if (mir->shouldCancel("Allocate Registers"))
@@ -2541,7 +2547,7 @@ InvalidateActivation(FreeOp *fop, uint8_t *jitTop, bool invalidateAll)
             break;
           case JitFrame_Unwound_IonJS:
           case JitFrame_Unwound_BaselineStub:
-            MOZ_CRASH("invalid");
+            MOZ_ASSUME_UNREACHABLE("invalid");
           case JitFrame_Unwound_Rectifier:
             IonSpew(IonSpew_Invalidate, "#%d unwound rectifier frame @ %p", frameno, it.fp());
             break;
@@ -2785,7 +2791,7 @@ jit::Invalidate(JSContext *cx, JSScript *script, ExecutionMode mode, bool resetU
             return false;
         break;
       default:
-        MOZ_CRASH("No such execution mode");
+        MOZ_ASSUME_UNREACHABLE("No such execution mode");
     }
 
     Invalidate(cx, scripts, resetUses, cancelOffThread);
@@ -2838,7 +2844,7 @@ jit::FinishInvalidation(FreeOp *fop, JSScript *script)
         return;
 
       default:
-        MOZ_CRASH("bad execution mode");
+        MOZ_ASSUME_UNREACHABLE("bad execution mode");
     }
 }
 
@@ -2899,10 +2905,10 @@ jit::ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode)
         return;
 
       default:
-        MOZ_CRASH("No such execution mode");
+        MOZ_ASSUME_UNREACHABLE("No such execution mode");
     }
 
-    MOZ_CRASH("No such execution mode");
+    MOZ_ASSUME_UNREACHABLE("No such execution mode");
 }
 
 AutoFlushICache *

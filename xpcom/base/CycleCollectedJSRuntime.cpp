@@ -66,6 +66,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollector.h"
 #include "nsDOMJSUtils.h"
+#include "nsJSUtils.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -565,7 +566,10 @@ CycleCollectedJSRuntime::DescribeGCThing(bool aIsMarked, void* aThing,
       JSFunction* fun = JS_GetObjectFunction(obj);
       JSString* str = JS_GetFunctionDisplayId(fun);
       if (str) {
-        NS_ConvertUTF16toUTF8 fname(JS_GetInternedStringChars(str));
+        JSFlatString* flat = JS_ASSERT_STRING_IS_FLAT(str);
+        nsAutoString chars;
+        AssignJSFlatString(chars, flat);
+        NS_ConvertUTF16toUTF8 fname(chars);
         JS_snprintf(name, sizeof(name),
                     "JS Object (Function - %s)", fname.get());
       } else {

@@ -1,8 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -155,6 +156,8 @@ function TestAppInfo(aApp, aIsPackaged) {
 
     this.iconFile = OS.Path.join(this.installPath, "icon.png");
 
+    this.webappINI = OS.Path.join(this.installPath, "webapp.ini");
+
     let xdg_data_home = Cc["@mozilla.org/process/environment;1"].
                         getService(Ci.nsIEnvironment).
                         get("XDG_DATA_HOME");
@@ -167,7 +170,7 @@ function TestAppInfo(aApp, aIsPackaged) {
 
     this.installedFiles = [
       OS.Path.join(this.installPath, "webapp.json"),
-      OS.Path.join(this.installPath, "webapp.ini"),
+      this.webappINI,
       this.iconFile,
       this.exePath,
       desktopINI,
@@ -179,7 +182,7 @@ function TestAppInfo(aApp, aIsPackaged) {
     ];
     this.updatedFiles = [
       OS.Path.join(this.installPath, "webapp.json"),
-      OS.Path.join(this.installPath, "webapp.ini"),
+      this.webappINI,
       this.iconFile,
       desktopINI,
     ];
@@ -215,6 +218,8 @@ function TestAppInfo(aApp, aIsPackaged) {
 
     this.iconFile = OS.Path.join(this.installPath, "chrome", "icons", "default", "default.ico");
 
+    this.webappINI = OS.Path.join(this.installPath, "webapp.ini");
+
     let desktopShortcut = OS.Path.join(OS.Constants.Path.desktopDir,
                                        aApp.name + ".lnk");
     let startMenuShortcut = OS.Path.join(OS.Constants.Path.winStartMenuProgsDir,
@@ -222,7 +227,7 @@ function TestAppInfo(aApp, aIsPackaged) {
 
     this.installedFiles = [
       OS.Path.join(this.installPath, "webapp.json"),
-      OS.Path.join(this.installPath, "webapp.ini"),
+      this.webappINI,
       OS.Path.join(this.installPath, "uninstall", "shortcuts_log.ini"),
       OS.Path.join(this.installPath, "uninstall", "uninstall.log"),
       OS.Path.join(this.installPath, "uninstall", "webapp-uninstaller.exe"),
@@ -241,7 +246,7 @@ function TestAppInfo(aApp, aIsPackaged) {
     ];
     this.updatedFiles = [
       OS.Path.join(this.installPath, "webapp.json"),
-      OS.Path.join(this.installPath, "webapp.ini"),
+      this.webappINI,
       OS.Path.join(this.installPath, "uninstall", "shortcuts_log.ini"),
       OS.Path.join(this.installPath, "uninstall", "uninstall.log"),
       this.iconFile,
@@ -312,13 +317,15 @@ function TestAppInfo(aApp, aIsPackaged) {
 
     this.iconFile = OS.Path.join(this.installPath, "Contents", "Resources", "appicon.icns");
 
+    this.webappINI = OS.Path.join(this.installPath, "Contents", "MacOS", "webapp.ini");
+
     let appProfileDir = OS.Path.join(OS.Constants.Path.macUserLibDir,
                                      "Application Support",
                                      this.uniqueName);
 
     this.installedFiles = [
       OS.Path.join(this.installPath, "Contents", "Info.plist"),
-      OS.Path.join(this.installPath, "Contents", "MacOS", "webapp.ini"),
+      this.webappINI,
       OS.Path.join(appProfileDir, "webapp.json"),
       this.iconFile,
       this.exePath,
@@ -331,7 +338,7 @@ function TestAppInfo(aApp, aIsPackaged) {
     ];
     this.updatedFiles = [
       OS.Path.join(this.installPath, "Contents", "Info.plist"),
-      OS.Path.join(this.installPath, "Contents", "MacOS", "webapp.ini"),
+      this.webappINI,
       OS.Path.join(appProfileDir, "webapp.json"),
       this.iconFile,
     ];
@@ -444,23 +451,38 @@ function buildAppPackage(aManifest, aIconFile) {
   return zipFile.path;
 }
 
-function wasAppSJSAccessed() {
+function xhrRequest(aQueryString) {
   let deferred = Promise.defer();
 
   var xhr = new XMLHttpRequest();
 
   xhr.addEventListener("load", function() {
-    let ret = (xhr.responseText == "done") ? true : false;
-    deferred.resolve(ret);
+    deferred.resolve(xhr.responseText);
   });
 
   xhr.addEventListener("error", aError => deferred.reject(aError));
   xhr.addEventListener("abort", aError => deferred.reject(aError));
 
-  xhr.open('GET', 'http://test/chrome/toolkit/webapps/tests/app.sjs?testreq', true);
+  xhr.open('GET', 'http://test/chrome/toolkit/webapps/tests/app.sjs' + aQueryString, true);
   xhr.send();
 
   return deferred.promise;
+}
+
+function wasAppSJSAccessed() {
+  return xhrRequest('?testreq').then((aResponseText) => {
+    return (aResponseText == 'done') ? true : false;
+  });
+}
+
+function setState(aVar, aState) {
+  return xhrRequest('?set' + aVar + '=' + aState).then((aResponseText) => {
+    is(aResponseText, "OK", "set" + aVar + " OK");
+  });
+}
+
+function getState(aVar) {
+  return xhrRequest('?get' + aVar);
 }
 
 function generateDataURI(aFile) {
@@ -510,4 +532,57 @@ let setMacRootInstallDir = Task.async(function*(aPath) {
   SimpleTest.registerCleanupFunction(function() {
     NativeApp.prototype._rootInstallDir = oldRootInstallDir;
   });
+});
+
+let writeToFile = Task.async(function*(aPath, aData) {
+  let data = new TextEncoder().encode(aData);
+
+  let file;
+  try {
+    file = yield OS.File.open(aPath, { truncate: true, write: true }, { unixMode: 0o777 });
+    yield file.write(data);
+  } finally {
+    yield file.close();
+  }
+});
+
+// We need to mock the Alerts service, otherwise the alert that is shown
+// at the end of an installation makes the test leak the app's icon.
+
+const CID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID();
+const ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/alerts-service;1";
+const ALERTS_SERVICE_CID = Components.ID(Cc[ALERTS_SERVICE_CONTRACT_ID].number);
+
+let AlertsService = {
+  classID: Components.ID(CID),
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory,
+                                         Ci.nsIAlertsService]),
+
+  createInstance: function(aOuter, aIID) {
+    if (aOuter) {
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    }
+
+    return this.QueryInterface(aIID);
+  },
+
+  init: function() {
+    Components.manager.nsIComponentRegistrar.registerFactory(this.classID,
+      "", ALERTS_SERVICE_CONTRACT_ID, this);
+  },
+
+  restore: function() {
+    Components.manager.nsIComponentRegistrar.registerFactory(ALERTS_SERVICE_CID,
+      "", ALERTS_SERVICE_CONTRACT_ID, null);
+  },
+
+  showAlertNotification: function() {
+  },
+};
+
+AlertsService.init();
+
+SimpleTest.registerCleanupFunction(() => {
+  AlertsService.restore();
 });

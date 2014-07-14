@@ -61,6 +61,51 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
 {
 }
 
+// E=igca@sgdn.pm.gouv.fr,CN=IGC/A,OU=DCSSI,O=PM/SGDN,L=Paris,ST=France,C=FR
+static const uint8_t ANSSI_SUBJECT_DATA[] =
+                       "\x30\x81\x85\x31\x0B\x30\x09\x06\x03\x55\x04"
+                       "\x06\x13\x02\x46\x52\x31\x0F\x30\x0D\x06\x03"
+                       "\x55\x04\x08\x13\x06\x46\x72\x61\x6E\x63\x65"
+                       "\x31\x0E\x30\x0C\x06\x03\x55\x04\x07\x13\x05"
+                       "\x50\x61\x72\x69\x73\x31\x10\x30\x0E\x06\x03"
+                       "\x55\x04\x0A\x13\x07\x50\x4D\x2F\x53\x47\x44"
+                       "\x4E\x31\x0E\x30\x0C\x06\x03\x55\x04\x0B\x13"
+                       "\x05\x44\x43\x53\x53\x49\x31\x0E\x30\x0C\x06"
+                       "\x03\x55\x04\x03\x13\x05\x49\x47\x43\x2F\x41"
+                       "\x31\x23\x30\x21\x06\x09\x2A\x86\x48\x86\xF7"
+                       "\x0D\x01\x09\x01\x16\x14\x69\x67\x63\x61\x40"
+                       "\x73\x67\x64\x6E\x2E\x70\x6D\x2E\x67\x6F\x75"
+                       "\x76\x2E\x66\x72";
+
+static const SECItem ANSSI_SUBJECT = {
+  siBuffer,
+  const_cast<uint8_t*>(ANSSI_SUBJECT_DATA),
+  sizeof(ANSSI_SUBJECT_DATA) - 1
+};
+
+static const uint8_t PERMIT_FRANCE_GOV_NAME_CONSTRAINTS_DATA[] =
+                       "\x30\x5D" // SEQUENCE (length=93)
+                       "\xA0\x5B" // permittedSubtrees (length=91)
+                       "\x30\x05\x82\x03" ".fr"
+                       "\x30\x05\x82\x03" ".gp"
+                       "\x30\x05\x82\x03" ".gf"
+                       "\x30\x05\x82\x03" ".mq"
+                       "\x30\x05\x82\x03" ".re"
+                       "\x30\x05\x82\x03" ".yt"
+                       "\x30\x05\x82\x03" ".pm"
+                       "\x30\x05\x82\x03" ".bl"
+                       "\x30\x05\x82\x03" ".mf"
+                       "\x30\x05\x82\x03" ".wf"
+                       "\x30\x05\x82\x03" ".pf"
+                       "\x30\x05\x82\x03" ".nc"
+                       "\x30\x05\x82\x03" ".tf";
+
+static const SECItem PERMIT_FRANCE_GOV_NAME_CONSTRAINTS = {
+  siBuffer,
+  const_cast<uint8_t*>(PERMIT_FRANCE_GOV_NAME_CONSTRAINTS_DATA),
+  sizeof(PERMIT_FRANCE_GOV_NAME_CONSTRAINTS_DATA) - 1
+};
+
 SECStatus
 NSSCertDBTrustDomain::FindIssuer(const SECItem& encodedIssuerName,
                                  IssuerChecker& checker, PRTime time)
@@ -73,8 +118,14 @@ NSSCertDBTrustDomain::FindIssuer(const SECItem& encodedIssuerName,
   if (candidates) {
     for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
          !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
+      const SECItem* additionalNameConstraints = nullptr;
+      // TODO: Use CERT_CompareName or equivalent
+      if (SECITEM_ItemsAreEqual(&encodedIssuerName, &ANSSI_SUBJECT)) {
+        additionalNameConstraints = &PERMIT_FRANCE_GOV_NAME_CONSTRAINTS;
+      }
       bool keepGoing;
-      SECStatus srv = checker.Check(n->cert->derCert, keepGoing);
+      SECStatus srv = checker.Check(n->cert->derCert,
+                                    additionalNameConstraints, keepGoing);
       if (srv != SECSuccess) {
         return SECFailure;
       }

@@ -39,6 +39,7 @@ namespace gc {
 
 struct Arena;
 class ArenaList;
+class SortedArenaList;
 struct ArenaHeader;
 struct Chunk;
 
@@ -597,7 +598,7 @@ struct Arena
     void setAsFullyUnused(AllocKind thingKind);
 
     template <typename T>
-    bool finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize);
+    size_t finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize);
 };
 
 static_assert(sizeof(Arena) == ArenaSize, "The hardcoded arena size must match the struct size.");
@@ -828,7 +829,8 @@ struct Chunk
     ArenaHeader *allocateArena(JS::Zone *zone, AllocKind kind);
 
     void releaseArena(ArenaHeader *aheader);
-    void recycleArena(ArenaHeader *aheader, ArenaList &dest, AllocKind thingKind);
+    void recycleArena(ArenaHeader *aheader, SortedArenaList &dest, AllocKind thingKind,
+                      size_t thingsPerArena);
 
     static Chunk *allocate(JSRuntime *rt);
 

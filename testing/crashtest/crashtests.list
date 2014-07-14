@@ -60,6 +60,7 @@ include ../../gfx/tests/crashtests/crashtests.list
 include ../../image/test/crashtests/crashtests.list
 include ../../dom/plugins/test/crashtests/crashtests.list
 
+include ../../netwerk/test/crashtests/crashtests.list
 include ../../parser/htmlparser/tests/crashtests/crashtests.list
 
 include ../../security/manager/ssl/crashtests/crashtests.list

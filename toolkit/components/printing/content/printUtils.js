@@ -1,3 +1,4 @@
+
 // -*- tab-width: 2; indent-tabs-mode: nil; js-indent-level: 2 -*-
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -9,9 +10,23 @@ var gSavePrintSettings = false;
 var gFocusedElement = null;
 
 var PrintUtils = {
+  bailOut: function () {
+    let remote = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+            .getInterface(Components.interfaces.nsIWebNavigation)
+            .QueryInterface(Components.interfaces.nsILoadContext)
+            .useRemoteTabs;
+    if (remote) {
+      alert("e10s printing is not implemented yet. Bug 927188.");
+      return true;
+    }
+    return false;
+  },
 
   showPageSetup: function ()
   {
+    if (this.bailOut()) {
+      return;
+    }
     try {
       var printSettings = this.getPrintSettings();
       var PRINTPROMPTSVC = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
@@ -32,6 +47,9 @@ var PrintUtils = {
 
   print: function (aWindow)
   {
+    if (this.bailOut()) {
+      return;
+    }
     var webBrowserPrint = this.getWebBrowserPrint(aWindow);
     var printSettings = this.getPrintSettings();
     try {
@@ -59,6 +77,9 @@ var PrintUtils = {
   // non-null aCallback and that object will be reused.
   printPreview: function (aCallback)
   {
+    if (this.bailOut()) {
+      return;
+    }
     // if we're already in PP mode, don't set the callback; chances
     // are it is null because someone is calling printPreview() to
     // get us to refresh the display.

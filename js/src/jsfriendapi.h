@@ -813,6 +813,12 @@ GetStringLength(JSString *s)
     return reinterpret_cast<shadow::String*>(s)->length;
 }
 
+MOZ_ALWAYS_INLINE size_t
+GetFlatStringLength(JSFlatString *s)
+{
+    return reinterpret_cast<shadow::String*>(s)->length;
+}
+
 MOZ_ALWAYS_INLINE bool
 LinearStringHasLatin1Chars(JSLinearString *s)
 {
@@ -861,6 +867,12 @@ AtomToLinearString(JSAtom *atom)
     return reinterpret_cast<JSLinearString *>(atom);
 }
 
+MOZ_ALWAYS_INLINE JSLinearString *
+FlatStringToLinearString(JSFlatString *s)
+{
+    return reinterpret_cast<JSLinearString *>(s);
+}
+
 MOZ_ALWAYS_INLINE const JS::Latin1Char *
 GetLatin1AtomChars(const JS::AutoCheckCannotGC &nogc, JSAtom *atom)
 {
@@ -886,6 +898,20 @@ StringToLinearString(JSContext *cx, JSString *str)
     return reinterpret_cast<JSLinearString *>(str);
 }
 
+MOZ_ALWAYS_INLINE void
+CopyLinearStringChars(jschar *dest, JSLinearString *s, size_t len)
+{
+    JS::AutoCheckCannotGC nogc;
+    if (LinearStringHasLatin1Chars(s)) {
+        const JS::Latin1Char *src = GetLatin1LinearStringChars(nogc, s);
+        for (size_t i = 0; i < len; i++)
+            dest[i] = src[i];
+    } else {
+        const jschar *src = GetTwoByteLinearStringChars(nogc, s);
+        mozilla::PodCopy(dest, src, len);
+    }
+}
+
 inline bool
 CopyStringChars(JSContext *cx, jschar *dest, JSString *s, size_t len)
 {
@@ -893,17 +919,14 @@ CopyStringChars(JSContext *cx, jschar *dest, JSString *s, size_t len)
     if (!linear)
         return false;
 
-    JS::AutoCheckCannotGC nogc;
-    if (LinearStringHasLatin1Chars(linear)) {
-        const JS::Latin1Char *src = GetLatin1LinearStringChars(nogc, linear);
-        for (size_t i = 0; i < len; i++)
-            dest[i] = src[i];
-    } else {
-        const jschar *src = GetTwoByteLinearStringChars(nogc, linear);
-        mozilla::PodCopy(dest, src, len);
-    }
-
+    CopyLinearStringChars(dest, linear, len);
     return true;
+}
+
+inline void
+CopyFlatStringChars(jschar *dest, JSFlatString *s, size_t len)
+{
+    CopyLinearStringChars(dest, FlatStringToLinearString(s), len);
 }
 
 JS_FRIEND_API(bool)
