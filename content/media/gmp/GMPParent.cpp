@@ -142,7 +142,7 @@ GMPParent::VideoEncoderDestroyed(GMPVideoEncoderParent* aEncoder)
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
 
   // If the constructor fails, we'll get called before it's added
-  NS_WARN_IF(!mVideoEncoders.RemoveElement(aEncoder));
+  unused << NS_WARN_IF(!mVideoEncoders.RemoveElement(aEncoder));
 
   // Recv__delete__ is on the stack, don't potentially destroy the top-level actor
   // until after this has completed.
