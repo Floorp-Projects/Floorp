@@ -75,6 +75,7 @@ describe("loop.webapp", function() {
         notifier: notifier
       });
       sandbox.stub(router, "loadView");
+      sandbox.stub(router, "loadReactComponent");
       sandbox.stub(router, "navigate");
     });
 
@@ -162,14 +163,16 @@ describe("loop.webapp", function() {
 
       describe("#loadConversation", function() {
         it("should load the ConversationView if session is set", function() {
-          sandbox.stub(sharedViews.ConversationView.prototype, "initialize");
           conversation.set("sessionId", "fakeSessionId");
 
           router.loadConversation();
 
-          sinon.assert.calledOnce(router.loadView);
-          sinon.assert.calledWith(router.loadView,
-            sinon.match.instanceOf(sharedViews.ConversationView));
+          sinon.assert.calledOnce(router.loadReactComponent);
+          sinon.assert.calledWith(router.loadReactComponent,
+            sinon.match(function(value) {
+              return React.addons.TestUtils.isComponentOfType(
+                value, loop.shared.views.ConversationView);
+            }));
         });
 
         it("should navigate to #call/{token} if session isn't ready",
