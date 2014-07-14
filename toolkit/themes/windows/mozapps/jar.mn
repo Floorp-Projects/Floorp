@@ -61,6 +61,7 @@ toolkit.jar:
 #ifdef MOZ_PLACES
         skin/classic/mozapps/places/defaultFavicon.png             (places/defaultFavicon.png)
 #endif
+        skin/classic/mozapps/formautofill/requestAutocomplete.css  (../../shared/formautofill/requestAutocomplete.css)
         skin/classic/mozapps/plugins/pluginProblem.css             (../../shared/plugins/pluginProblem.css)
         skin/classic/mozapps/aboutNetworking.css                   (../../shared/aboutNetworking.css)
         skin/classic/mozapps/plugins/contentPluginActivate.png     (../../shared/plugins/contentPluginActivate.png)
@@ -144,6 +145,7 @@ toolkit.jar:
 #ifdef MOZ_PLACES
         skin/classic/aero/mozapps/places/defaultFavicon.png                (places/defaultFavicon.png)
 #endif
+        skin/classic/aero/mozapps/formautofill/requestAutocomplete.css     (../../shared/formautofill/requestAutocomplete.css)
         skin/classic/aero/mozapps/plugins/pluginProblem.css                (../../shared/plugins/pluginProblem.css)
         skin/classic/aero/mozapps/aboutNetworking.css                           (../../shared/aboutNetworking.css)
         skin/classic/aero/mozapps/plugins/contentPluginActivate.png        (../../shared/plugins/contentPluginActivate.png)
