@@ -176,7 +176,9 @@ GetBEndMarginClone(nsIFrame* aFrame,
   if (aFrame->StyleBorder()->mBoxDecorationBreak ==
         NS_STYLE_BOX_DECORATION_BREAK_CLONE) {
     nsCSSOffsetState os(aFrame, aRenderingContext, aContentArea.Width(aWritingMode));
-    return os.ComputedLogicalMargin().BEnd(aWritingMode);
+    return os.ComputedLogicalMargin().
+                ConvertTo(aWritingMode,
+                          aFrame->GetWritingMode()).BEnd(aWritingMode);
   }
   return 0;
 }
