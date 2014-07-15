@@ -85,15 +85,19 @@ public class TestSuggestedSites extends BrowserTestCase {
     private TestResources resources;
 
     private String generateSites(int n) {
+        return generateSites(n, "");
+    }
+
+    private String generateSites(int n, String prefix) {
         JSONArray sites = new JSONArray();
 
         try {
             for (int i = 0; i < n; i++) {
                 JSONObject site = new JSONObject();
-                site.put("url", "url" + i);
-                site.put("title", "title" + i);
-                site.put("imageurl", "imageUrl" + i);
-                site.put("bgcolor", "bgColor" + i);
+                site.put("url", prefix + "url" + i);
+                site.put("title", prefix + "title" + i);
+                site.put("imageurl", prefix + "imageUrl" + i);
+                site.put("bgcolor", prefix + "bgColor" + i);
 
                 sites.put(site);
             }
