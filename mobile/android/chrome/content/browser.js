@@ -1020,9 +1020,6 @@ var BrowserApp = {
     evt.initUIEvent("TabClose", true, false, window, tabIndex);
     aTab.browser.dispatchEvent(evt);
 
-    aTab.destroy();
-    this._tabs.splice(tabIndex, 1);
-
     if (aShowUndoToast) {
       // Get a title for the undo close toast. Fall back to the URL if there is no title.
       let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
@@ -1043,11 +1040,14 @@ var BrowserApp = {
           label: Strings.browser.GetStringFromName("undoCloseToast.action2"),
           callback: function() {
             UITelemetry.addEvent("undo.1", "toast", null, "closetab");
-            ss.undoCloseTab(window, 0);
+            ss.undoCloseTab(window, closedTabData);
           }
         }
       });
     }
+
+    aTab.destroy();
+    this._tabs.splice(tabIndex, 1);
   },
 
   // Use this method to select a tab from JS. This method sends a message
