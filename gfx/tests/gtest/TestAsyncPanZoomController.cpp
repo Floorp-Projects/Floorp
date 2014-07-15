@@ -13,6 +13,7 @@
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/Preferences.h"
 #include "base/task.h"
 #include "Layers.h"
 #include "TestLayers.h"
@@ -62,6 +63,24 @@ public:
   MOCK_METHOD3(HandleLongTapUp, void(const CSSPoint&, int32_t, const ScrollableLayerGuid&));
   MOCK_METHOD3(SendAsyncScrollDOMEvent, void(bool aIsRoot, const CSSRect &aContentRect, const CSSSize &aScrollableSize));
   MOCK_METHOD2(PostDelayedTask, void(Task* aTask, int aDelayMs));
+};
+
+class TestScopedBoolPref {
+public:
+  TestScopedBoolPref(const char* aPref, bool aVal)
+    : mPref(aPref)
+  {
+    mOldVal = Preferences::GetBool(aPref);
+    Preferences::SetBool(aPref, aVal);
+  }
+
+  ~TestScopedBoolPref() {
+    Preferences::SetBool(mPref, mOldVal);
+  }
+
+private:
+  const char* mPref;
+  bool mOldVal;
 };
 
 class MockContentControllerDelayed : public MockContentController {
