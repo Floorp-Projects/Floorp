@@ -818,13 +818,18 @@ BluetoothHandsfreeInterface::ClccResponse(
 
 /* Phone State */
 
-bt_status_t
+void
 BluetoothHandsfreeInterface::PhoneStateChange(int aNumActive, int aNumHeld,
   bthf_call_state_t aCallSetupState, const char* aNumber,
-  bthf_call_addrtype_t aType)
+  bthf_call_addrtype_t aType, BluetoothHandsfreeResultHandler* aRes)
 {
-  return mInterface->phone_state_change(aNumActive, aNumHeld, aCallSetupState,
-                                        aNumber, aType);
+  bt_status_t status = mInterface->phone_state_change(aNumActive, aNumHeld,
+                                                      aCallSetupState,
+                                                      aNumber, aType);
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(
+      aRes, &BluetoothHandsfreeResultHandler::PhoneStateChange, status);
+  }
 }
 
 //
