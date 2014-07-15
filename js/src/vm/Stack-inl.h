@@ -350,7 +350,7 @@ FrameIter::unaliasedForEachActual(JSContext *cx, Op op)
         break;
 #endif
     }
-    MOZ_ASSUME_UNREACHABLE("Unexpected state");
+    MOZ_CRASH("Unexpected state");
 }
 
 inline void *
@@ -361,7 +361,7 @@ AbstractFramePtr::maybeHookData() const
 #ifdef JS_ION
     return asBaselineFrame()->maybeHookData();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -375,7 +375,7 @@ AbstractFramePtr::setHookData(void *data) const
 #ifdef JS_ION
     asBaselineFrame()->setHookData(data);
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -387,7 +387,7 @@ AbstractFramePtr::returnValue() const
 #ifdef JS_ION
     return asBaselineFrame()->returnValue();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -401,7 +401,7 @@ AbstractFramePtr::setReturnValue(const Value &rval) const
 #ifdef JS_ION
     asBaselineFrame()->setReturnValue(rval);
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -415,7 +415,7 @@ AbstractFramePtr::scopeChain() const
         return asBaselineFrame()->scopeChain();
     return asRematerializedFrame()->scopeChain();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -429,7 +429,7 @@ AbstractFramePtr::pushOnScopeChain(ScopeObject &scope)
 #ifdef JS_ION
     asBaselineFrame()->pushOnScopeChain(scope);
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -443,7 +443,7 @@ AbstractFramePtr::callObj() const
         return asBaselineFrame()->callObj();
     return asRematerializedFrame()->callObj();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -455,7 +455,7 @@ AbstractFramePtr::initFunctionScopeObjects(JSContext *cx)
 #ifdef JS_ION
     return asBaselineFrame()->initFunctionScopeObjects(cx);
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -475,9 +475,10 @@ AbstractFramePtr::numActualArgs() const
         return asBaselineFrame()->numActualArgs();
     return asRematerializedFrame()->numActualArgs();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline unsigned
 AbstractFramePtr::numFormalArgs() const
 {
@@ -488,7 +489,7 @@ AbstractFramePtr::numFormalArgs() const
         return asBaselineFrame()->numFormalArgs();
     return asRematerializedFrame()->numActualArgs();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -502,7 +503,7 @@ AbstractFramePtr::unaliasedVar(uint32_t i, MaybeCheckAliasing checkAliasing)
         return asBaselineFrame()->unaliasedVar(i, checkAliasing);
     return asRematerializedFrame()->unaliasedVar(i, checkAliasing);
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -516,7 +517,7 @@ AbstractFramePtr::unaliasedLocal(uint32_t i, MaybeCheckAliasing checkAliasing)
         return asBaselineFrame()->unaliasedLocal(i, checkAliasing);
     return asRematerializedFrame()->unaliasedLocal(i, checkAliasing);
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -530,7 +531,7 @@ AbstractFramePtr::unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing)
         return asBaselineFrame()->unaliasedFormal(i, checkAliasing);
     return asRematerializedFrame()->unaliasedFormal(i, checkAliasing);
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -544,7 +545,7 @@ AbstractFramePtr::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing)
         return asBaselineFrame()->unaliasedActual(i, checkAliasing);
     return asRematerializedFrame()->unaliasedActual(i, checkAliasing);
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -558,9 +559,10 @@ AbstractFramePtr::hasCallObj() const
         return asBaselineFrame()->hasCallObj();
     return asRematerializedFrame()->hasCallObj();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline bool
 AbstractFramePtr::useNewType() const
 {
@@ -568,6 +570,7 @@ AbstractFramePtr::useNewType() const
         return asInterpreterFrame()->useNewType();
     return false;
 }
+
 inline bool
 AbstractFramePtr::isGeneratorFrame() const
 {
@@ -575,6 +578,7 @@ AbstractFramePtr::isGeneratorFrame() const
         return asInterpreterFrame()->isGeneratorFrame();
     return false;
 }
+
 inline bool
 AbstractFramePtr::isYielding() const
 {
@@ -582,6 +586,7 @@ AbstractFramePtr::isYielding() const
         return asInterpreterFrame()->isYielding();
     return false;
 }
+
 inline bool
 AbstractFramePtr::isFunctionFrame() const
 {
@@ -592,9 +597,10 @@ AbstractFramePtr::isFunctionFrame() const
         return asBaselineFrame()->isFunctionFrame();
     return asRematerializedFrame()->isFunctionFrame();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline bool
 AbstractFramePtr::isGlobalFrame() const
 {
@@ -605,9 +611,10 @@ AbstractFramePtr::isGlobalFrame() const
         return asBaselineFrame()->isGlobalFrame();
     return asRematerializedFrame()->isGlobalFrame();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline bool
 AbstractFramePtr::isEvalFrame() const
 {
@@ -619,14 +626,16 @@ AbstractFramePtr::isEvalFrame() const
     MOZ_ASSERT(isRematerializedFrame());
     return false;
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline bool
 AbstractFramePtr::isFramePushedByExecute() const
 {
     return isGlobalFrame() || isEvalFrame();
 }
+
 inline bool
 AbstractFramePtr::isDebuggerFrame() const
 {
@@ -638,13 +647,15 @@ AbstractFramePtr::isDebuggerFrame() const
     MOZ_ASSERT(isRematerializedFrame());
     return false;
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline bool
 AbstractFramePtr::hasArgs() const {
     return isNonEvalFunctionFrame();
 }
+
 inline JSScript *
 AbstractFramePtr::script() const
 {
@@ -655,9 +666,10 @@ AbstractFramePtr::script() const
         return asBaselineFrame()->script();
     return asRematerializedFrame()->script();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline JSFunction *
 AbstractFramePtr::fun() const
 {
@@ -668,9 +680,10 @@ AbstractFramePtr::fun() const
         return asBaselineFrame()->fun();
     return asRematerializedFrame()->fun();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline JSFunction *
 AbstractFramePtr::maybeFun() const
 {
@@ -681,9 +694,10 @@ AbstractFramePtr::maybeFun() const
         return asBaselineFrame()->maybeFun();
     return asRematerializedFrame()->maybeFun();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline JSFunction *
 AbstractFramePtr::callee() const
 {
@@ -694,9 +708,10 @@ AbstractFramePtr::callee() const
         return asBaselineFrame()->callee();
     return asRematerializedFrame()->callee();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline Value
 AbstractFramePtr::calleev() const
 {
@@ -707,9 +722,10 @@ AbstractFramePtr::calleev() const
         return asBaselineFrame()->calleev();
     return asRematerializedFrame()->calleev();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline bool
 AbstractFramePtr::isNonEvalFunctionFrame() const
 {
@@ -720,9 +736,10 @@ AbstractFramePtr::isNonEvalFunctionFrame() const
         return asBaselineFrame()->isNonEvalFunctionFrame();
     return asRematerializedFrame()->isNonEvalFunctionFrame();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline bool
 AbstractFramePtr::isNonStrictDirectEvalFrame() const
 {
@@ -734,9 +751,10 @@ AbstractFramePtr::isNonStrictDirectEvalFrame() const
     MOZ_ASSERT(isRematerializedFrame());
     return false;
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline bool
 AbstractFramePtr::isStrictEvalFrame() const
 {
@@ -748,7 +766,7 @@ AbstractFramePtr::isStrictEvalFrame() const
     MOZ_ASSERT(isRematerializedFrame());
     return false;
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -762,7 +780,7 @@ AbstractFramePtr::argv() const
         return asBaselineFrame()->argv();
     return asRematerializedFrame()->argv();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -776,9 +794,10 @@ AbstractFramePtr::hasArgsObj() const
         return asBaselineFrame()->hasArgsObj();
     return asRematerializedFrame()->hasArgsObj();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline ArgumentsObject &
 AbstractFramePtr::argsObj() const
 {
@@ -789,9 +808,10 @@ AbstractFramePtr::argsObj() const
         return asBaselineFrame()->argsObj();
     return asRematerializedFrame()->argsObj();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline void
 AbstractFramePtr::initArgsObj(ArgumentsObject &argsobj) const
 {
@@ -802,9 +822,10 @@ AbstractFramePtr::initArgsObj(ArgumentsObject &argsobj) const
 #ifdef JS_ION
     asBaselineFrame()->initArgsObj(argsobj);
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline bool
 AbstractFramePtr::copyRawFrameSlots(AutoValueVector *vec) const
 {
@@ -813,7 +834,7 @@ AbstractFramePtr::copyRawFrameSlots(AutoValueVector *vec) const
 #ifdef JS_ION
     return asBaselineFrame()->copyRawFrameSlots(vec);
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -827,9 +848,10 @@ AbstractFramePtr::prevUpToDate() const
         return asBaselineFrame()->prevUpToDate();
     return asRematerializedFrame()->prevUpToDate();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
+
 inline void
 AbstractFramePtr::setPrevUpToDate() const
 {
@@ -844,7 +866,7 @@ AbstractFramePtr::setPrevUpToDate() const
     }
     asRematerializedFrame()->setPrevUpToDate();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -858,7 +880,7 @@ AbstractFramePtr::thisValue() const
         return asBaselineFrame()->thisValue();
     return asRematerializedFrame()->thisValue();
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -872,7 +894,7 @@ AbstractFramePtr::popBlock(JSContext *cx) const
 #ifdef JS_ION
     asBaselineFrame()->popBlock(cx);
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 
@@ -886,7 +908,7 @@ AbstractFramePtr::popWith(JSContext *cx) const
 #ifdef JS_ION
     asBaselineFrame()->popWith(cx);
 #else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+    MOZ_CRASH("Invalid frame");
 #endif
 }
 

@@ -203,7 +203,7 @@ TypedArrayShift(Scalar::Type viewType)
         return 3;
       default:;
     }
-    MOZ_ASSUME_UNREACHABLE("Unexpected array type");
+    MOZ_CRASH("Unexpected array type");
 }
 
 class DataViewObject : public ArrayBufferViewObject

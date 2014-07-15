@@ -2164,7 +2164,7 @@ js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleObject obj)
                 else if (JSID_IS_ATOM(id))
                     idType = JSID_TYPE_STRING;
                 else
-                    MOZ_ASSUME_UNREACHABLE("Object property is not yet supported by XDR.");
+                    MOZ_CRASH("Object property is not yet supported by XDR.");
 
                 tmpValue = obj->getSlot(i);
             }

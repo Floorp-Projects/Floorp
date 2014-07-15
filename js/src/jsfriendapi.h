@@ -1300,7 +1300,7 @@ byteSize(Type atype)
       case Float64:
         return 8;
       default:
-        MOZ_ASSUME_UNREACHABLE("invalid type");
+        MOZ_CRASH("invalid scalar type");
     }
 }
 

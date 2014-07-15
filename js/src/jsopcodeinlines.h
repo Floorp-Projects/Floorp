@@ -69,7 +69,7 @@ ReverseCompareOp(JSOp op)
       case JSOP_STRICTNE:
         return op;
       default:
-        MOZ_ASSUME_UNREACHABLE("unrecognized op");
+        MOZ_CRASH("unrecognized op");
     }
 }
 
@@ -94,7 +94,7 @@ NegateCompareOp(JSOp op)
       case JSOP_STRICTEQ:
         return JSOP_STRICTNE;
       default:
-        MOZ_ASSUME_UNREACHABLE("unrecognized op");
+        MOZ_CRASH("unrecognized op");
     }
 }
 

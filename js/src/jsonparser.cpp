@@ -209,7 +209,7 @@ JSONParser<CharT>::readString()
                 else if (current + 3 == end || !JS7_ISHEX(current[3]))
                     current += 3;
                 else
-                    MOZ_ASSUME_UNREACHABLE("logic error determining first erroneous character");
+                    MOZ_CRASH("logic error determining first erroneous character");
 
                 error("bad Unicode escape");
                 return token(Error);

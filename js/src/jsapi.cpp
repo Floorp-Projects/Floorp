@@ -4593,7 +4593,7 @@ JS::FinishOffThreadScript(JSContext *maybecx, JSRuntime *rt, void *token)
         return HelperThreadState().finishParseTask(maybecx, rt, token);
     }
 #else
-    MOZ_ASSUME_UNREACHABLE("Off thread compilation is not available.");
+    MOZ_CRASH("Off thread compilation is not available.");
 #endif
 }
 
