@@ -18,6 +18,7 @@ import org.mozilla.gecko.widget.GeckoPopupMenu;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -58,6 +59,8 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
     }
 
     private void setNumberShown(int count) {
+        ThreadUtils.assertOnUiThread();
+
         mMaxVisiblePageActions = count;
 
         for(int index = 0; index < count; index++) {
@@ -74,12 +77,26 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
     }
 
     @Override
-    public void handleMessage(String event, NativeJSObject message, EventCallback callback) {
+    public void handleMessage(final String event, final NativeJSObject message, final EventCallback callback) {
+        // NativeJSObject cannot be used off of the Gecko thread, so convert it to a Bundle.
+        final Bundle bundle = message.toBundle();
+
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                handleUiMessage(event, bundle);
+            }
+        });
+    }
+
+    private void handleUiMessage(final String event, final Bundle message) {
+        ThreadUtils.assertOnUiThread();
+
         if (event.equals("PageActions:Add")) {
             final String id = message.getString("id");
             final String title = message.getString("title");
-            final String imageURL = message.optString("icon", null);
-            final boolean mImportant = message.getBoolean("important");
+            final String imageURL = message.getString("icon");
+            final boolean important = message.getBoolean("important");
 
             addPageAction(id, title, imageURL, new OnPageActionClickListeners() {
                 @Override
@@ -92,7 +109,7 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("PageActions:LongClicked", id));
                     return true;
                 }
-            }, mImportant);
+            }, important);
         } else if (event.equals("PageActions:Remove")) {
             final String id = message.getString("id");
 
@@ -101,6 +118,8 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
     }
 
     private void addPageAction(final String id, final String title, final String imageData, final OnPageActionClickListeners mOnPageActionClickListeners, boolean mImportant) {
+        ThreadUtils.assertOnUiThread();
+
         final PageAction pageAction = new PageAction(id, title, null, mOnPageActionClickListeners, mImportant);
 
         int insertAt = mPageActionList.size();
@@ -121,6 +140,8 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
     }
 
     private void removePageAction(String id) {
+        ThreadUtils.assertOnUiThread();
+
         for(int i = 0; i < mPageActionList.size(); i++) {
             if (mPageActionList.get(i).getID().equals(id)) {
                 mPageActionList.remove(i);
@@ -131,6 +152,8 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
     }
 
     private ImageButton createImageButton() {
+        ThreadUtils.assertOnUiThread();
+
         ImageButton imageButton = new ImageButton(mContext, null, R.style.UrlBar_ImageButton_Icon);
         imageButton.setLayoutParams(new LayoutParams(mContext.getResources().getDimensionPixelSize(R.dimen.page_action_button_width), LayoutParams.MATCH_PARENT));
         imageButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
@@ -165,29 +188,21 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
     private void setActionForView(final ImageButton view, final PageAction pageAction) {
         if (pageAction == null) {
             view.setTag(null);
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run () {
-                    view.setImageDrawable(null);
-                    view.setVisibility(View.GONE);
-                    view.setContentDescription(null);
-                }
-            });
+            view.setImageDrawable(null);
+            view.setVisibility(View.GONE);
+            view.setContentDescription(null);
             return;
         }
 
         view.setTag(pageAction.getID());
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run () {
-                view.setImageDrawable(pageAction.getDrawable());
-                view.setVisibility(View.VISIBLE);
-                view.setContentDescription(pageAction.getTitle());
-            }
-        });
+        view.setImageDrawable(pageAction.getDrawable());
+        view.setVisibility(View.VISIBLE);
+        view.setContentDescription(pageAction.getTitle());
     }
 
     private void refreshPageActionIcons() {
+        ThreadUtils.assertOnUiThread();
+
         final Resources resources = mContext.getResources();
         for(int index = 0; index < this.getChildCount(); index++) {
             final ImageButton v = (ImageButton)this.getChildAt(index);
@@ -196,14 +211,9 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
             // If there are more pageactions then buttons, set the menu icon. Otherwise set the page action's icon if there is a page action.
             if (index == (this.getChildCount() - 1) && mPageActionList.size() > mMaxVisiblePageActions) {
                 v.setTag(MENU_BUTTON_KEY);
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run () {
-                        v.setImageDrawable(resources.getDrawable(R.drawable.icon_pageaction));
-                        v.setVisibility((pageAction != null) ? View.VISIBLE : View.GONE);
-                        v.setContentDescription(resources.getString(R.string.page_action_dropmarker_description));
-                    }
-                });
+                v.setImageDrawable(resources.getDrawable(R.drawable.icon_pageaction));
+                v.setVisibility((pageAction != null) ? View.VISIBLE : View.GONE);
+                v.setContentDescription(resources.getString(R.string.page_action_dropmarker_description));
             } else {
                 setActionForView(v, pageAction);
             }
@@ -211,6 +221,8 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
     }
 
     private PageAction getPageActionForViewAt(int index) {
+        ThreadUtils.assertOnUiThread();
+
         /**
          * We show the user the most recent pageaction added since this keeps the user aware of any new page actions being added
          * Also, the order of the pageAction is important i.e. if a page action is added, instead of shifting the pagactions to the
@@ -232,6 +244,8 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
     }
 
     private PageAction getPageActionWithId(String id) {
+        ThreadUtils.assertOnUiThread();
+
         for(int i = 0; i < mPageActionList.size(); i++) {
             PageAction pageAction = mPageActionList.get(i);
             if (pageAction.getID().equals(id)) {
@@ -242,6 +256,8 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
     }
 
     private void showMenu(View mPageActionButton, int toShow) {
+        ThreadUtils.assertOnUiThread();
+
         if (mPageActionsMenu == null) {
             mPageActionsMenu = new GeckoPopupMenu(mPageActionButton.getContext(), mPageActionButton);
             mPageActionsMenu.inflate(0);
