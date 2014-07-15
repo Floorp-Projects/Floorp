@@ -1096,6 +1096,7 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
                "bad aListVisibleBounds");
 #endif
 
+  mVisibleRect = aListVisibleBounds;
   bool anyVisible = false;
 
   nsAutoTArray<nsDisplayItem*, 512> elements;
@@ -1120,7 +1121,7 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
     AppendToBottom(item);
   }
 
-  mIsOpaque = !aVisibleRegion->Intersects(aListVisibleBounds);
+  mIsOpaque = !aVisibleRegion->Intersects(mVisibleRect);
   return anyVisible;
 }
 
