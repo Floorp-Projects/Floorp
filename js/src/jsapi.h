@@ -2838,10 +2838,6 @@ JS_DefinePropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id, doub
                       JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
-JS_DefineOwnProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                     JS::HandleValue descriptor, bool *bp);
-
-extern JS_PUBLIC_API(bool)
 JS_AlreadyHasOwnProperty(JSContext *cx, JS::HandleObject obj, const char *name,
                          bool *foundp);
 
@@ -2959,6 +2955,17 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
     void setSetter(JSStrictPropertyOp op) { desc()->setter = op; }
     void setGetterObject(JSObject *obj) { desc()->getter = reinterpret_cast<JSPropertyOp>(obj); }
     void setSetterObject(JSObject *obj) { desc()->setter = reinterpret_cast<JSStrictPropertyOp>(obj); }
+
+    JS::MutableHandleObject getterObject() {
+        MOZ_ASSERT(this->hasGetterObject());
+        return JS::MutableHandleObject::fromMarkedLocation(
+                reinterpret_cast<JSObject **>(&desc()->getter));
+    }
+    JS::MutableHandleObject setterObject() {
+        MOZ_ASSERT(this->hasSetterObject());
+        return JS::MutableHandleObject::fromMarkedLocation(
+                reinterpret_cast<JSObject **>(&desc()->setter));
+    }
 };
 
 } /* namespace JS */
@@ -3015,6 +3022,16 @@ class MutableHandleBase<JSPropertyDescriptor>
 };
 
 } /* namespace js */
+
+namespace JS {
+
+extern JS_PUBLIC_API(bool)
+ParsePropertyDescriptorObject(JSContext *cx,
+                              JS::HandleObject obj,
+                              JS::HandleValue descriptor,
+                              JS::MutableHandle<JSPropertyDescriptor> desc);
+
+} // namespace JS
 
 extern JS_PUBLIC_API(bool)
 JS_GetOwnPropertyDescriptorById(JSContext *cx, JS::HandleObject obj, JS::HandleId id,

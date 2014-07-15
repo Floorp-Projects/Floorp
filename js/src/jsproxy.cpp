@@ -680,19 +680,6 @@ Trap2(JSContext *cx, HandleObject handler, HandleValue fval, HandleId id, Value 
 }
 
 static bool
-ParsePropertyDescriptorObject(JSContext *cx, HandleObject obj, const Value &v,
-                              MutableHandle<PropertyDescriptor> desc, bool complete = false)
-{
-    Rooted<PropDesc> d(cx);
-    if (!d.initialize(cx, v))
-        return false;
-    if (complete)
-        d.complete();
-    d.populatePropertyDescriptor(obj, desc);
-    return true;
-}
-
-static bool
 IndicatePropertyNotFound(MutableHandle<PropertyDescriptor> desc)
 {
     desc.object().set(nullptr);
