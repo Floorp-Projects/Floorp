@@ -78,6 +78,10 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS.mozilla += [
         'WindowsVersion.h',
     ]
+elif CONFIG['OS_ARCH'] == 'Linux':
+    EXPORTS.mozilla += [
+        'LinuxSignal.h',
+    ]
 
 UNIFIED_SOURCES = [
     'double-conversion/bignum-dtoa.cc',
