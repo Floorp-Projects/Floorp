@@ -2436,6 +2436,11 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     bool addScrollBars = mIsRoot &&
       nsLayoutUtils::GetDisplayPort(mOuter->GetContent()) &&
       !aBuilder->IsForEventDelivery();
+    // For now, don't add them for display root documents, cause we've never
+    // had them there.
+    if (aBuilder->RootReferenceFrame()->PresContext() == mOuter->PresContext()) {
+      addScrollBars = false;
+    }
 
     if (addScrollBars) {
       // Add classic scrollbars.
