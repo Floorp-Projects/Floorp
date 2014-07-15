@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "sendMessageToJava", "resource://gre/modules/Messaging.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 function dump(a) {
   Services.console.logStringMessage(a);
@@ -373,6 +374,13 @@ SessionStore.prototype = {
 
     this.saveStateDelayed();
     this._updateCrashReportURL(aWindow);
+
+    // If the selected tab has changed while listening for closed tab
+    // notifications, we may have switched between different private browsing
+    // modes.
+    if (this._notifyClosedTabs) {
+      this._sendClosedTabsToJava(aWindow);
+    }
   },
 
   saveStateDelayed: function ss_saveStateDelayed() {
@@ -923,9 +931,10 @@ SessionStore.prototype = {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
 
     let closedTabs = this._windows[aWindow.__SSID].closedTabs;
+    let isPrivate = PrivateBrowsingUtils.isWindowPrivate(aWindow.BrowserApp.selectedBrowser.contentWindow);
 
     let tabs = closedTabs
-      .filter(tab => !tab.isPrivate)
+      .filter(tab => tab.isPrivate == isPrivate)
       .map(function (tab) {
         // Get the url and title for the last entry in the session history.
         let lastEntry = tab.entries[tab.entries.length - 1];
