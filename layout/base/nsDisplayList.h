@@ -1083,7 +1083,7 @@ public:
    * @param aSnap set to true if the edges of the rectangles of the opaque
    * region would be snapped to device pixels when drawing
    * @return a region of the item that is opaque --- that is, every pixel
-   * that is visible (according to ComputeVisibility) is painted with an opaque
+   * that is visible is painted with an opaque
    * color. This is useful for determining when one piece
    * of content completely obscures another so that we can do occlusion
    * culling.
@@ -1270,10 +1270,17 @@ public:
   virtual nsDisplayList* GetChildren() { return nullptr; }
 
   /**
-   * Returns the visible rect. Should only be called after ComputeVisibility
-   * has happened.
+   * Returns the visible rect.
    */
-  const nsRect& GetVisibleRect() { return mVisibleRect; }
+  const nsRect& GetVisibleRect() const { return mVisibleRect; }
+
+  /**
+   * Returns the visible rect for the children, relative to their
+   * reference frame. Can be different from mVisibleRect for nsDisplayTransform,
+   * since the reference frame for the children is different from the reference
+   * frame for the item itself.
+   */
+  virtual const nsRect& GetVisibleRectForChildren() const { return mVisibleRect; }
 
   /**
    * Stores the given opacity value to be applied when drawing. Returns
@@ -1685,6 +1692,11 @@ public:
   void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                nsDisplayItem::HitTestState* aState,
                nsTArray<nsIFrame*> *aOutFrames) const;
+  /**
+   * Compute the union of the visible rects of the items in the list. The
+   * result is not cached.
+   */
+  nsRect GetVisibleRect() const;
 
 #if defined(DEBUG) || defined(MOZ_DUMP_PAINTING)
   bool DidComputeVisibility() const { return mDidComputeVisibility; }
@@ -1704,8 +1716,6 @@ public:
   {
     mForceTransparentSurface = true;
   }
-
-  nsRect GetVisibleRect() const { return mVisibleRect; }
 
 private:
   // This class is only used on stack, so we don't have to worry about leaking
@@ -2985,7 +2995,7 @@ public:
 /**
  * This potentially creates a layer for the given list of items, whose
  * visibility is determined by the displayport for the given frame instead of
- * what is passed in to ComputeVisibility.
+ * normal visibility computation.
  *
  * Here in content, we can use this to render more content than is actually
  * visible. Then, the compositing process can manipulate the generated layer
@@ -3245,11 +3255,14 @@ public:
    * ferries the underlying frame to the nsDisplayItem constructor.
    */
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
-                     nsDisplayList *aList, uint32_t aIndex = 0);
+                     nsDisplayList *aList, const nsRect& aChildrenVisibleRect,
+                     uint32_t aIndex = 0);
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
-                     nsDisplayItem *aItem, uint32_t aIndex = 0);
+                     nsDisplayItem *aItem, const nsRect& aChildrenVisibleRect,
+                     uint32_t aIndex = 0);
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
-                     nsDisplayList *aList, ComputeTransformFunction aTransformGetter, uint32_t aIndex = 0);
+                     nsDisplayList *aList, const nsRect& aChildrenVisibleRect,
+                     ComputeTransformFunction aTransformGetter, uint32_t aIndex = 0);
 
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayTransform()
@@ -3305,6 +3318,11 @@ public:
       return mFrame;
     }
     return nsDisplayItem::ReferenceFrameForChildren(); 
+  }
+
+  virtual const nsRect& GetVisibleRectForChildren() const MOZ_OVERRIDE
+  {
+    return mChildrenVisibleRect;
   }
 
   enum {
@@ -3454,6 +3472,7 @@ private:
   nsDisplayWrapList mStoredList;
   gfx3DMatrix mTransform;
   ComputeTransformFunction mTransformGetter;
+  nsRect mChildrenVisibleRect;
   uint32_t mIndex;
 };
 
