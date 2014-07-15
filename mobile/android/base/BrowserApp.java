@@ -476,10 +476,6 @@ public class BrowserApp extends GeckoApp
 
         final Context appContext = getApplicationContext();
 
-        // Init suggested sites engine in BrowserDB.
-        final SuggestedSites suggestedSites = new SuggestedSites(appContext);
-        BrowserDB.setSuggestedSites(suggestedSites);
-
         mViewFlipper = (ViewFlipper) findViewById(R.id.browser_actionbar);
         mActionBar = (ActionModeCompatView) findViewById(R.id.actionbar);
 
@@ -552,7 +548,11 @@ public class BrowserApp extends GeckoApp
             "Telemetry:Gather",
             "Updater:Launch");
 
-        Distribution.init(this);
+        Distribution distribution = Distribution.init(this);
+
+        // Init suggested sites engine in BrowserDB.
+        final SuggestedSites suggestedSites = new SuggestedSites(appContext, distribution);
+        BrowserDB.setSuggestedSites(suggestedSites);
 
         // Shipping Native casting is optional and dependent on whether you've downloaded the support
         // and google play libraries
