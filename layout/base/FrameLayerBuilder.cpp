@@ -3714,8 +3714,11 @@ FrameLayerBuilder::RecomputeVisibilityForItems(nsTArray<ClippedDisplayItem>& aIt
                                                float aYScale)
 {
   uint32_t i;
-  // Update visible regions. We perform visibility analysis to take account
-  // of occlusion culling.
+  // Update visible regions. We need perform visibility analysis again
+  // because we may be asked to draw into part of a ThebesLayer that
+  // isn't actually visible in the window (e.g., because a ThebesLayer
+  // expanded its visible region to a rectangle internally), in which
+  // case the mVisibleRect stored in the display item may be wrong.
   nsRegion visible = aRegionToDraw.ToAppUnits(aAppUnitsPerDevPixel);
   visible.MoveBy(NSIntPixelsToAppUnits(aOffset.x, aAppUnitsPerDevPixel),
                  NSIntPixelsToAppUnits(aOffset.y, aAppUnitsPerDevPixel));

@@ -1244,6 +1244,9 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
                                   nsRenderingContext* aCtx,
                                   nsIFrame* aForFrame,
                                   uint32_t aFlags) {
+  NS_ASSERTION(mDidComputeVisibility,
+               "Must call ComputeVisibility before calling Paint");
+
   nsRefPtr<LayerManager> layerManager;
   bool widgetTransaction = false;
   bool allowRetaining = false;
