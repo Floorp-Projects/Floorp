@@ -10,7 +10,7 @@ using namespace js;
 using namespace js::jit;
 
 MoveEmitterARM::MoveEmitterARM(MacroAssemblerARMCompat &masm)
-  : inCycle_(false),
+  : inCycle_(0),
     masm(masm),
     pushedAtCycle_(-1),
     pushedAtSpill_(-1),
@@ -23,9 +23,9 @@ MoveEmitterARM::MoveEmitterARM(MacroAssemblerARMCompat &masm)
 void
 MoveEmitterARM::emit(const MoveResolver &moves)
 {
-    if (moves.hasCycles()) {
+    if (moves.numCycles()) {
         // Reserve stack for cycle resolution
-        masm.reserveStack(sizeof(double));
+        masm.reserveStack(moves.numCycles() * sizeof(double));
         pushedAtCycle_ = masm.framePushed();
     }
 
@@ -39,18 +39,18 @@ MoveEmitterARM::~MoveEmitterARM()
 }
 
 Operand
-MoveEmitterARM::cycleSlot() const
+MoveEmitterARM::cycleSlot(uint32_t slot, uint32_t subslot) const
 {
-    int offset =  masm.framePushed() - pushedAtCycle_;
+    int32_t offset =  masm.framePushed() - pushedAtCycle_;
     JS_ASSERT(offset < 4096 && offset > -4096);
-    return Operand(StackPointer, offset);
+    return Operand(StackPointer, offset + slot * sizeof(double) + subslot);
 }
 
 // THIS IS ALWAYS AN LDRAddr. It should not be wrapped in an operand, methinks.
 Operand
 MoveEmitterARM::spillSlot() const
 {
-    int offset =  masm.framePushed() - pushedAtSpill_;
+    int32_t offset =  masm.framePushed() - pushedAtSpill_;
     JS_ASSERT(offset < 4096 && offset > -4096);
     return Operand(StackPointer, offset);
 }
@@ -100,7 +100,8 @@ MoveEmitterARM::tempReg()
 }
 
 void
-MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type)
+MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to,
+                           MoveOp::Type type, uint32_t slotId)
 {
     // There is some pattern:
     //   (A -> B)
@@ -110,13 +111,28 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, MoveO
     // the original move to continue.
     switch (type) {
       case MoveOp::FLOAT32:
+        if (to.isMemory()) {
+            VFPRegister temp = ScratchFloat32Reg;
+            masm.ma_vldr(toOperand(to, true), temp);
+            // Since it is uncertain if the load will be aligned or not
+            // just fill both of them with the same value.
+            masm.ma_vstr(temp, cycleSlot(slotId, 0));
+            masm.ma_vstr(temp, cycleSlot(slotId, 4));
+        } else {
+            FloatRegister src = to.floatReg();
+            // Just always store the largest possible size. Currently, this is
+            // a double. When SIMD is added, two doubles will need to be stored.
+            FloatRegister src2 = src.doubleOverlay();
+            masm.ma_vstr(src.doubleOverlay(), cycleSlot(slotId, 0));
+        }
+        break;
       case MoveOp::DOUBLE:
         if (to.isMemory()) {
             FloatRegister temp = ScratchDoubleReg;
             masm.ma_vldr(toOperand(to, true), temp);
-            masm.ma_vstr(temp, cycleSlot());
+            masm.ma_vstr(temp, cycleSlot(slotId, 0));
         } else {
-            masm.ma_vstr(to.floatReg(), cycleSlot());
+            masm.ma_vstr(to.floatReg().doubleOverlay(), cycleSlot(slotId, 0));
         }
         break;
       case MoveOp::INT32:
@@ -125,14 +141,14 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, MoveO
         if (to.isMemory()) {
             Register temp = tempReg();
             masm.ma_ldr(toOperand(to, false), temp);
-            masm.ma_str(temp, cycleSlot());
+            masm.ma_str(temp, cycleSlot(0,0));
         } else {
             if (to.reg() == spilledReg_) {
                 // If the destination was spilled, restore it first.
                 masm.ma_ldr(spillSlot(), spilledReg_);
                 spilledReg_ = InvalidReg;
             }
-            masm.ma_str(to.reg(), cycleSlot());
+            masm.ma_str(to.reg(), cycleSlot(0,0));
         }
         break;
       default:
@@ -141,7 +157,7 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, MoveO
 }
 
 void
-MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type)
+MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type, uint32_t slotId)
 {
     // There is some pattern:
     //   (A -> B)
@@ -154,24 +170,28 @@ MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
       case MoveOp::DOUBLE:
         if (to.isMemory()) {
             FloatRegister temp = ScratchDoubleReg;
-            masm.ma_vldr(cycleSlot(), temp);
+            masm.ma_vldr(cycleSlot(slotId, 0), temp);
             masm.ma_vstr(temp, toOperand(to, true));
         } else {
-            masm.ma_vldr(cycleSlot(), to.floatReg());
+            uint32_t offset = 0;
+            if ((!from.isMemory()) && from.floatReg().numAlignedAliased() == 1)
+                offset = sizeof(float);
+            masm.ma_vldr(cycleSlot(slotId, offset), to.floatReg());
         }
         break;
       case MoveOp::INT32:
       case MoveOp::GENERAL:
+        JS_ASSERT(slotId == 0);
         if (to.isMemory()) {
             Register temp = tempReg();
-            masm.ma_ldr(cycleSlot(), temp);
+            masm.ma_ldr(cycleSlot(slotId, 0), temp);
             masm.ma_str(temp, toOperand(to, false));
         } else {
             if (to.reg() == spilledReg_) {
                 // Make sure we don't re-clobber the spilled register later.
                 spilledReg_ = InvalidReg;
             }
-            masm.ma_ldr(cycleSlot(), to.reg());
+            masm.ma_ldr(cycleSlot(slotId, 0), to.reg());
         }
         break;
       default:
@@ -274,17 +294,25 @@ MoveEmitterARM::emit(const MoveOp &move)
     const MoveOperand &from = move.from();
     const MoveOperand &to = move.to();
 
+    if (move.isCycleEnd() && move.isCycleBegin()) {
+        // A fun consequence of aliased registers is you can have multiple
+        // cycles at once, and one can end exactly where another begins.
+        breakCycle(from, to, move.endCycleType(), move.cycleBeginSlot());
+        completeCycle(from, to, move.type(), move.cycleEndSlot());
+        return;
+    }
+
     if (move.isCycleEnd()) {
         JS_ASSERT(inCycle_);
-        completeCycle(from, to, move.type());
-        inCycle_ = false;
+        completeCycle(from, to, move.type(), move.cycleEndSlot());
+        JS_ASSERT(inCycle_ > 0);
+        inCycle_--;
         return;
     }
 
     if (move.isCycleBegin()) {
-        JS_ASSERT(!inCycle_);
-        breakCycle(from, to, move.endCycleType());
-        inCycle_ = true;
+        breakCycle(from, to, move.endCycleType(), move.cycleBeginSlot());
+        inCycle_++;
     }
 
     switch (move.type()) {
@@ -306,7 +334,7 @@ MoveEmitterARM::emit(const MoveOp &move)
 void
 MoveEmitterARM::assertDone()
 {
-    JS_ASSERT(!inCycle_);
+    JS_ASSERT(inCycle_ == 0);
 }
 
 void

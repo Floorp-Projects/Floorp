@@ -210,6 +210,9 @@ struct FloatRegister {
     uint32_t numAliased() const {
         return 1;
     }
+
+    // N.B. FloatRegister is an explicit outparam here because msvc-2010
+    // miscompiled it on win64 when the value was simply returned
     void aliased(uint32_t aliasIdx, FloatRegister *ret) {
         JS_ASSERT(aliasIdx == 0);
         *ret = *this;

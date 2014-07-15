@@ -5,19 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/MoveResolver.h"
+#include "jit/RegisterSets.h"
 
 using namespace js;
 using namespace js::jit;
 
 MoveResolver::MoveResolver()
-  : hasCycles_(false)
+  : numCycles_(0), curCycles_(0)
 {
 }
 
 void
 MoveResolver::resetState()
 {
-    hasCycles_ = false;
+    numCycles_ = 0;
+    curCycles_ = 0;
 }
 
 bool
@@ -48,6 +50,27 @@ MoveResolver::findBlockingMove(const PendingMove *last)
         }
     }
 
+    // No blocking moves found.
+    return nullptr;
+}
+
+// Given move (A -> B), this function attempts to find any move (B -> *) in the
+// move list iterator, and returns the first one.
+// N.B. It is unclear if a single move can complete more than one cycle, so to be
+// conservative, this function operates on iterators, so the caller can process all
+// instructions that start a cycle.
+MoveResolver::PendingMove *
+MoveResolver::findCycledMove(PendingMoveIterator *iter, PendingMoveIterator end, const PendingMove *last)
+{
+    for (; *iter != end; (*iter)++) {
+        PendingMove *other = **iter;
+        if (other->from().aliases(last->to())) {
+            // We now have pairs in the form (A -> X) (X -> y). The second pair
+            // blocks the move in the first pair, so return it.
+            (*iter)++;
+            return other;
+        }
+    }
     // No blocking moves found.
     return nullptr;
 }
@@ -108,14 +131,22 @@ MoveResolver::resolve()
             PendingMove *blocking = findBlockingMove(stack.peekBack());
 
             if (blocking) {
-                if (blocking->to() == pm->from()) {
+                PendingMoveIterator stackiter = stack.begin();
+                PendingMove *cycled = findCycledMove(&stackiter, stack.end(), blocking);
+                if (cycled) {
+                    // Find the cycle's start.
                     // We annotate cycles at each move in the cycle, and
                     // assert that we do not find two cycles in one move chain
                     // traversal (which would indicate two moves to the same
                     // destination).
-                    pm->setCycleEnd();
-                    blocking->setCycleBegin(pm->type());
-                    hasCycles_ = true;
+                    // Since there can be more than one cycle, find them all.
+                    do {
+                        cycled->setCycleEnd(curCycles_);
+                        cycled = findCycledMove(&stackiter, stack.end(), blocking);
+                    } while (cycled);
+
+                    blocking->setCycleBegin(pm->type(), curCycles_);
+                    curCycles_++;
                     pending_.remove(blocking);
                     stack.pushBack(blocking);
                 } else {
@@ -134,6 +165,12 @@ MoveResolver::resolve()
                 movePool_.free(done);
             }
         }
+        // If the current queue is empty, it is certain that there are
+        // all previous cycles cannot conflict with future cycles,
+        // so re-set the counter of pending cycles, while keeping a high-water mark.
+        if (numCycles_ < curCycles_)
+            numCycles_ = curCycles_;
+        curCycles_ = 0;
     }
 
     return true;

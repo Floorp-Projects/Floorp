@@ -323,10 +323,12 @@ struct Int32Key {
 template <typename T>
 class TypedRegisterSet
 {
-    uint32_t bits_;
+    typedef typename T::SetType SetType;
+    SetType bits_;
+
 
   public:
-    explicit MOZ_CONSTEXPR TypedRegisterSet(uint32_t bits)
+    explicit MOZ_CONSTEXPR TypedRegisterSet(SetType bits)
       : bits_(bits)
     { }
 
@@ -350,7 +352,7 @@ class TypedRegisterSet
         return TypedRegisterSet(~in.bits_ & T::Codes::AllocatableMask);
     }
     static inline TypedRegisterSet VolatileNot(const TypedRegisterSet &in) {
-        const uint32_t allocatableVolatile =
+        const SetType allocatableVolatile =
             T::Codes::AllocatableMask & T::Codes::VolatileMask;
         return TypedRegisterSet(~in.bits_ & allocatableVolatile);
     }
@@ -361,11 +363,12 @@ class TypedRegisterSet
         return TypedRegisterSet(T::Codes::AllocatableMask & T::Codes::NonVolatileMask);
     }
     bool has(T reg) const {
-        return !!(bits_ & (1 << reg.code()));
+        return !!(bits_ & (SetType(1) << reg.code()));
     }
     void addUnchecked(T reg) {
-        bits_ |= (1 << reg.code());
+        bits_ |= (SetType(1) << reg.code());
     }
+
     void add(T reg) {
         JS_ASSERT(!has(reg));
         addUnchecked(reg);
@@ -394,7 +397,7 @@ class TypedRegisterSet
         takeUnchecked(reg);
     }
     void takeUnchecked(T reg) {
-        bits_ &= ~(1 << reg.code());
+        bits_ &= ~(SetType(1) << reg.code());
     }
     void take(ValueOperand value) {
 #if defined(JS_NUNBOX32)
@@ -491,7 +494,7 @@ class TypedRegisterSet
     void clear() {
         bits_ = 0;
     }
-    uint32_t bits() const {
+    SetType bits() const {
         return bits_;
     }
     uint32_t size() const {
@@ -600,6 +603,8 @@ class RegisterSet {
         else
             addUnchecked(any.gpr());
     }
+
+
     bool empty(bool floats) const {
         return floats ? fpu_.empty() : gpr_.empty();
     }

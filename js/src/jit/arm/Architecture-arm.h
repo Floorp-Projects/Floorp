@@ -364,6 +364,9 @@ class VFPRegister
         return 2;
 #endif
     }
+
+    // N.B. FloatRegister is an explicit outparam here because msvc-2010
+    // miscompiled it on win64 when the value was simply returned
     void aliased(uint32_t aliasIdx, VFPRegister *ret) {
         if (aliasIdx == 0) {
             *ret = *this;
