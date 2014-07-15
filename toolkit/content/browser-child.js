@@ -8,7 +8,6 @@ let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-Cu.import("resource://gre/modules/RemoteAddonsChild.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
 #ifdef MOZ_CRASHREPORTER
@@ -352,8 +351,6 @@ addEventListener("TextZoomChange", function (aEvent) {
     sendAsyncMessage("TextZoomChange", { value:  ZoomManager.textZoom});
   }
 }, false);
-
-RemoteAddonsChild.init(this);
 
 addMessageListener("NetworkPrioritizer:AdjustPriority", (msg) => {
   let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
