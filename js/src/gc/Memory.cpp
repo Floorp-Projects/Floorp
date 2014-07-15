@@ -682,7 +682,6 @@ AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
     size_t pa_start; // Page aligned starting
     size_t pa_end; // Page aligned ending
     size_t pa_size; // Total page aligned size
-    size_t page_size = sysconf(_SC_PAGESIZE); // Page size
     struct stat st;
     uint8_t *buf;
 
@@ -693,16 +692,16 @@ AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
 
     // Check for minimal alignment requirement.
 #if NEED_PAGE_ALIGNED
-    alignment = std::max(alignment, page_size);
+    alignment = std::max(alignment, pageSize);
 #endif
     if (offset & (alignment - 1))
         return nullptr;
 
     // Page aligned starting of the offset.
-    pa_start = offset & ~(page_size - 1);
+    pa_start = offset & ~(pageSize - 1);
     // Calculate page aligned ending by adding one page to the page aligned
     // starting of data end position(offset + length - 1).
-    pa_end = ((offset + length - 1) & ~(page_size - 1)) + page_size;
+    pa_end = ((offset + length - 1) & ~(pageSize - 1)) + pageSize;
     pa_size = pa_end - pa_start;
 
     // Ask for a continuous memory location.
@@ -728,11 +727,10 @@ void
 DeallocateMappedContent(void *p, size_t length)
 {
     void *pa_start; // Page aligned starting
-    size_t page_size = sysconf(_SC_PAGESIZE); // Page size
     size_t total_size; // Total allocated size
 
-    pa_start = (void *)(uintptr_t(p) & ~(page_size - 1));
-    total_size = ((uintptr_t(p) + length) & ~(page_size - 1)) + page_size - uintptr_t(pa_start);
+    pa_start = (void *)(uintptr_t(p) & ~(pageSize - 1));
+    total_size = ((uintptr_t(p) + length) & ~(pageSize - 1)) + pageSize - uintptr_t(pa_start);
     if (munmap(pa_start, total_size))
         MOZ_ASSERT(errno == ENOMEM);
 }
