@@ -531,7 +531,8 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       *aBuilder, content, child, backgroundRect, NS_RGBA(0,0,0,0));
   }
 
-  content.AppendNewToTop(new (aBuilder) nsDisplayTransform(aBuilder, child, &content, ::ComputePageTransform));
+  content.AppendNewToTop(new (aBuilder) nsDisplayTransform(aBuilder, child,
+      &content, content.GetVisibleRect(), ::ComputePageTransform));
 
   set.Content()->AppendToTop(&content);
 
