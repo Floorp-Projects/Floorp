@@ -84,6 +84,7 @@ SessionStore.prototype = {
         observerService.addObserver(this, "application-background", true);
         observerService.addObserver(this, "ClosedTabs:StartNotifications", true);
         observerService.addObserver(this, "ClosedTabs:StopNotifications", true);
+        observerService.addObserver(this, "last-pb-context-exited", true);
         break;
       case "final-ui-startup":
         observerService.removeObserver(this, "final-ui-startup");
@@ -168,6 +169,13 @@ SessionStore.prototype = {
         break;
       case "ClosedTabs:StopNotifications":
         this._notifyClosedTabs = false;
+        break;
+      case "last-pb-context-exited":
+        // Clear private closed tab data when we leave private browsing.
+        for (let [, window] in Iterator(this._windows)) {
+          window.closedTabs = window.closedTabs.filter(tab => !tab.isPrivate);
+        }
+        this._lastClosedTabIndex = -1;
         break;
     }
   },
