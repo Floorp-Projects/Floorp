@@ -2619,12 +2619,6 @@ public:
     return &mList;
   }
   virtual nsDisplayList* GetChildren() MOZ_OVERRIDE { return &mList; }
-  /**
-   * All our subclasses BuildLayers call
-   * FrameLayerBuilder::BuildContainerLayerFor, which
-   * sets the visible region of the layer correctly.
-   */
-  virtual bool SetVisibleRegionOnLayer() { return false; }
 
   virtual int32_t ZIndex() const MOZ_OVERRIDE
   {
@@ -2893,6 +2887,8 @@ public:
                                  nsRegion* aVisibleRegion,
                                  const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
 
+  virtual bool SetVisibleRegionOnLayer() MOZ_OVERRIDE { return !(mFlags & GENERATE_SCROLLABLE_LAYER); }
+
   virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
 
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE;
@@ -3027,6 +3023,8 @@ public:
 
   virtual nsIFrame* GetScrollFrame() { return mScrollFrame; }
   virtual nsIFrame* GetScrolledFrame() { return mScrolledFrame; }
+
+  virtual bool SetVisibleRegionOnLayer() MOZ_OVERRIDE { return false; }
 
 #ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(nsACString& aTo) MOZ_OVERRIDE;
@@ -3398,6 +3396,8 @@ public:
                                                 nsIFrame* aFrame,
                                                 bool aLogAnimations = false);
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
+
+  virtual bool SetVisibleRegionOnLayer() MOZ_OVERRIDE { return false; }
 
 #ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(nsACString& aTo) MOZ_OVERRIDE;
