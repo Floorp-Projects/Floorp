@@ -363,16 +363,33 @@ class TypedRegisterSet
         return TypedRegisterSet(T::Codes::AllocatableMask & T::Codes::NonVolatileMask);
     }
     bool has(T reg) const {
+        // When checking to see if a set has a register, we only want that exact
+        // register, not worrying about aliasing.
         return !!(bits_ & (SetType(1) << reg.code()));
     }
     void addUnchecked(T reg) {
         bits_ |= (SetType(1) << reg.code());
     }
+    void addAllAliasedUnchecked(T reg) {
+        for (int a = 0; a < reg.numAliased(); a++) {
+            T tmp;
+            reg.aliased(a, &tmp);
+            bits_ |= (SetType(1) << tmp.code());
+        }
+    }
 
     void add(T reg) {
-        JS_ASSERT(!has(reg));
+        // Make sure we don't add two overlapping registers.
+#ifdef DEBUG
+        for (uint32_t a = 0; a < reg.numAliased(); a++) {
+            T tmp;
+            reg.aliased(a, &tmp);
+            JS_ASSERT(!has(tmp));
+        }
+#endif
         addUnchecked(reg);
     }
+
     void add(ValueOperand value) {
 #if defined(JS_NUNBOX32)
         add(value.payloadReg());
@@ -398,6 +415,13 @@ class TypedRegisterSet
     }
     void takeUnchecked(T reg) {
         bits_ &= ~(SetType(1) << reg.code());
+    }
+    void takeAllAliasedUnchecked(T reg) {
+        for (int a = 0; a < reg.numAliased(); a++) {
+            T tmp;
+            reg.aliased(a, &tmp);
+            bits_ &= ~(SetType(1) << tmp.code());
+        }
     }
     void take(ValueOperand value) {
 #if defined(JS_NUNBOX32)
@@ -449,11 +473,11 @@ class TypedRegisterSet
     }
     T getFirst() const {
         JS_ASSERT(!empty());
-        return T::FromCode(mozilla::CountTrailingZeroes32(bits_));
+        return T::FromCode(T::FirstBit(bits_));
     }
     T getLast() const {
         JS_ASSERT(!empty());
-        int ireg = 31 - mozilla::CountLeadingZeroes32(bits_);
+        int ireg = T::LastBit(bits_);
         return T::FromCode(ireg);
     }
     T takeAny() {
@@ -603,6 +627,12 @@ class RegisterSet {
         else
             addUnchecked(any.gpr());
     }
+    void addAllAliasedUnchecked(const AnyRegister &reg) {
+        if (reg.isFloat())
+            fpu_.addAllAliasedUnchecked(reg.fpu());
+        else
+            gpr_.addAllAliasedUnchecked(reg.gpr());
+    }
 
 
     bool empty(bool floats) const {
@@ -628,6 +658,12 @@ class RegisterSet {
             fpu_.take(reg.fpu());
         else
             gpr_.take(reg.gpr());
+    }
+    void takeAllAliasedUnchecked(AnyRegister reg) {
+        if (reg.isFloat())
+            fpu_.takeAllAliasedUnchecked(reg.fpu());
+        else
+            gpr_.takeAllAliasedUnchecked(reg.gpr());
     }
     AnyRegister takeAny(bool isFloat) {
         if (isFloat)

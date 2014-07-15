@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if defined(JS_ARM_SIMULATOR) && defined(EVERYONE_KNOWS_ABOUT_ALIASING)
+#if defined(JS_ARM_SIMULATOR)
 #include "jit/arm/Assembler-arm.h"
 #include "jit/arm/MoveEmitter-arm.h"
 #include "jit/arm/Simulator-arm.h"

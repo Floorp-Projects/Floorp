@@ -70,20 +70,29 @@ struct Register {
         JS_ASSERT(aliasIdx == 0);
         *ret = *this;
     }
+    static uint32_t SetSize(SetType x) {
+        return Codes::SetSize(x);
+    }
+    static uint32_t FirstBit(SetType x) {
+        return Codes::FirstBit(x);
+    }
+    static uint32_t LastBit(SetType x) {
+        return Codes::LastBit(x);
+    }
 };
 
 class RegisterDump
 {
   protected: // Silence Clang warning.
     mozilla::Array<uintptr_t, Registers::Total> regs_;
-    mozilla::Array<double, FloatRegisters::Total> fpregs_;
+    mozilla::Array<double, FloatRegisters::TotalPhys> fpregs_;
 
   public:
     static size_t offsetOfRegister(Register reg) {
         return offsetof(RegisterDump, regs_) + reg.code() * sizeof(uintptr_t);
     }
     static size_t offsetOfRegister(FloatRegister reg) {
-        return offsetof(RegisterDump, fpregs_) + reg.code() * sizeof(double);
+        return offsetof(RegisterDump, fpregs_) + reg.getRegisterDumpOffsetInBytes();
     }
 };
 
@@ -95,7 +104,7 @@ class MachineState
 
   public:
     static MachineState FromBailout(mozilla::Array<uintptr_t, Registers::Total> &regs,
-                                    mozilla::Array<double, FloatRegisters::Total> &fpregs);
+                                    mozilla::Array<double, FloatRegisters::TotalPhys> &fpregs);
 
     void setRegisterLocation(Register reg, uintptr_t *up) {
         regs_[reg.code()] = up;

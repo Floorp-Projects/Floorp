@@ -759,7 +759,7 @@ ArmDebugger::debug()
                                 printf("\n");
                             }
                         }
-                        for (uint32_t i = 0; i < FloatRegisters::Total; i++) {
+                        for (uint32_t i = 0; i < FloatRegisters::TotalPhys; i++) {
                             dvalue = getVFPDoubleRegisterValue(i);
                             uint64_t as_words = mozilla::BitwiseCast<uint64_t>(dvalue);
                             printf("%3s: %f 0x%08x %08x\n",
@@ -1321,28 +1321,28 @@ Simulator::set_dw_register(int dreg, const int *dbl)
 void
 Simulator::get_d_register(int dreg, uint64_t *value)
 {
-    MOZ_ASSERT(dreg >= 0 && dreg < int(FloatRegisters::Total));
+    MOZ_ASSERT(dreg >= 0 && dreg < int(FloatRegisters::TotalPhys));
     memcpy(value, vfp_registers_ + dreg * 2, sizeof(*value));
 }
 
 void
 Simulator::set_d_register(int dreg, const uint64_t *value)
 {
-    MOZ_ASSERT(dreg >= 0 && dreg < int(FloatRegisters::Total));
+    MOZ_ASSERT(dreg >= 0 && dreg < int(FloatRegisters::TotalPhys));
     memcpy(vfp_registers_ + dreg * 2, value, sizeof(*value));
 }
 
 void
 Simulator::get_d_register(int dreg, uint32_t *value)
 {
-    MOZ_ASSERT(dreg >= 0 && dreg < int(FloatRegisters::Total));
+    MOZ_ASSERT(dreg >= 0 && dreg < int(FloatRegisters::TotalPhys));
     memcpy(value, vfp_registers_ + dreg * 2, sizeof(*value) * 2);
 }
 
 void
 Simulator::set_d_register(int dreg, const uint32_t *value)
 {
-    MOZ_ASSERT(dreg >= 0 && dreg < int(FloatRegisters::Total));
+    MOZ_ASSERT(dreg >= 0 && dreg < int(FloatRegisters::TotalPhys));
     memcpy(vfp_registers_ + dreg * 2, value, sizeof(*value) * 2);
 }
 
@@ -1414,7 +1414,7 @@ Simulator::setVFPRegister(int reg_index, const InputType &value)
 {
     MOZ_ASSERT(reg_index >= 0);
     MOZ_ASSERT_IF(register_size == 1, reg_index < num_s_registers);
-    MOZ_ASSERT_IF(register_size == 2, reg_index < int(FloatRegisters::Total));
+    MOZ_ASSERT_IF(register_size == 2, reg_index < int(FloatRegisters::TotalPhys));
 
     char buffer[register_size * sizeof(vfp_registers_[0])];
     memcpy(buffer, &value, register_size * sizeof(vfp_registers_[0]));
@@ -1427,7 +1427,7 @@ ReturnType Simulator::getFromVFPRegister(int reg_index)
 {
     MOZ_ASSERT(reg_index >= 0);
     MOZ_ASSERT_IF(register_size == 1, reg_index < num_s_registers);
-    MOZ_ASSERT_IF(register_size == 2, reg_index < int(FloatRegisters::Total));
+    MOZ_ASSERT_IF(register_size == 2, reg_index < int(FloatRegisters::TotalPhys));
 
     ReturnType value = 0;
     char buffer[register_size * sizeof(vfp_registers_[0])];
@@ -2102,7 +2102,7 @@ Simulator::scratchVolatileRegisters(bool scratchFloat)
         uint64_t scratch_value_d = 0x5a5a5a5a5a5a5a5aLU ^ uint64_t(icount_) ^ (uint64_t(icount_) << 30);
         for (uint32_t i = d0; i < d8; i++)
             set_d_register(i, &scratch_value_d);
-        for (uint32_t i = d16; i < FloatRegisters::Total; i++)
+        for (uint32_t i = d16; i < FloatRegisters::TotalPhys; i++)
             set_d_register(i, &scratch_value_d);
     }
 }
