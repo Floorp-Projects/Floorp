@@ -32,7 +32,6 @@ class ThebesLayer;
 class FrameLayerBuilder;
 class LayerManagerData;
 class ThebesLayerData;
-class ContainerState;
 
 enum LayerState {
   LAYER_NONE,
@@ -58,44 +57,34 @@ public:
   bool mIsInfinite;
 };
 
-struct NewLayerEntry;
-
 struct ContainerLayerParameters {
-  ContainerLayerParameters()
-    : mXScale(1)
-    , mYScale(1)
-    , mLayerContentsVisibleRect(nullptr)
-    , mInTransformedSubtree(false)
-    , mInActiveTransformedSubtree(false)
-    , mDisableSubpixelAntialiasingInDescendants(false)
+  ContainerLayerParameters() :
+    mXScale(1), mYScale(1), mAncestorClipRect(nullptr),
+    mInTransformedSubtree(false), mInActiveTransformedSubtree(false),
+    mDisableSubpixelAntialiasingInDescendants(false)
   {}
-  ContainerLayerParameters(float aXScale, float aYScale)
-    : mXScale(aXScale)
-    , mYScale(aYScale)
-    , mLayerContentsVisibleRect(nullptr)
-    , mInTransformedSubtree(false)
-    , mInActiveTransformedSubtree(false)
-    , mDisableSubpixelAntialiasingInDescendants(false)
+  ContainerLayerParameters(float aXScale, float aYScale) :
+    mXScale(aXScale), mYScale(aYScale), mAncestorClipRect(nullptr),
+    mInTransformedSubtree(false), mInActiveTransformedSubtree(false),
+    mDisableSubpixelAntialiasingInDescendants(false)
   {}
   ContainerLayerParameters(float aXScale, float aYScale,
                            const nsIntPoint& aOffset,
-                           const ContainerLayerParameters& aParent)
-    : mXScale(aXScale)
-    , mYScale(aYScale)
-    , mLayerContentsVisibleRect(nullptr)
-    , mOffset(aOffset)
-    , mInTransformedSubtree(aParent.mInTransformedSubtree)
-    , mInActiveTransformedSubtree(aParent.mInActiveTransformedSubtree)
-    , mDisableSubpixelAntialiasingInDescendants(aParent.mDisableSubpixelAntialiasingInDescendants)
+                           const ContainerLayerParameters& aParent) :
+    mXScale(aXScale), mYScale(aYScale), mAncestorClipRect(nullptr),
+    mOffset(aOffset),
+    mInTransformedSubtree(aParent.mInTransformedSubtree),
+    mInActiveTransformedSubtree(aParent.mInActiveTransformedSubtree),
+    mDisableSubpixelAntialiasingInDescendants(aParent.mDisableSubpixelAntialiasingInDescendants)
   {}
   float mXScale, mYScale;
   /**
-   * If non-null, the rectangle in which BuildContainerLayerFor stores the
-   * visible rect of the layer, in the coordinate system of the created layer.
+   * An ancestor clip rect that can be applied to restrict the visibility
+   * of this container. Null if none available.
    */
-  nsIntRect* mLayerContentsVisibleRect;
+  const nsIntRect* mAncestorClipRect;
   /**
-   * An offset to apply to all child layers created.
+   * An offset to append to the transform set on all child layers created.
    */
   nsIntPoint mOffset;
 
@@ -219,8 +208,6 @@ public:
    * The container layer is transformed by aTransform (if non-null), and
    * the result is transformed by the scale factors in aContainerParameters.
    * aChildren is modified due to display item merging and flattening.
-   * The visible region of the returned layer is set only if aContainerItem
-   * is null.
    */
   already_AddRefed<ContainerLayer>
   BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
@@ -313,8 +300,7 @@ public:
   void AddThebesDisplayItem(ThebesLayerData* aLayer,
                             nsDisplayItem* aItem,
                             const DisplayItemClip& aClip,
-                            const nsIntRect& aItemVisibleRect,
-                            const ContainerState& aContainerState,
+                            nsIFrame* aContainerLayerFrame,
                             LayerState aLayerState,
                             const nsPoint& aTopLeft,
                             nsAutoPtr<nsDisplayItemGeometry> aGeometry);
@@ -609,11 +595,6 @@ public:
   ThebesLayerData* GetContainingThebesLayerData()
   {
     return mContainingThebesLayer;
-  }
-
-  bool IsBuildingRetainedLayers()
-  {
-    return !mContainingThebesLayer && mRetainingManager;
   }
 
   /**
