@@ -678,7 +678,7 @@ GetBytecodeInteger(jsbytecode *pc)
       case JSOP_INT8:   return GET_INT8(pc);
       case JSOP_INT32:  return GET_INT32(pc);
       default:
-        MOZ_ASSUME_UNREACHABLE("Bad op");
+        MOZ_CRASH("Bad op");
     }
 }
 

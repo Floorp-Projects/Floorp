@@ -1492,7 +1492,6 @@ JSStructuredCloneReader::startRead(Value *vp)
         if (!in.read(&arrayType))
             return false;
         return readTypedArray(arrayType, data, vp);
-        break;
 
       default: {
         if (tag <= SCTAG_FLOAT_MAX) {

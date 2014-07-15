@@ -78,7 +78,7 @@ using icu::NumberingSystem;
 static int32_t
 u_strlen(const UChar *s)
 {
-    MOZ_ASSUME_UNREACHABLE("u_strlen: Intl API disabled");
+    MOZ_CRASH("u_strlen: Intl API disabled");
 }
 
 struct UEnumeration;
@@ -86,19 +86,19 @@ struct UEnumeration;
 static int32_t
 uenum_count(UEnumeration *en, UErrorCode *status)
 {
-    MOZ_ASSUME_UNREACHABLE("uenum_count: Intl API disabled");
+    MOZ_CRASH("uenum_count: Intl API disabled");
 }
 
 static const char *
 uenum_next(UEnumeration *en, int32_t *resultLength, UErrorCode *status)
 {
-    MOZ_ASSUME_UNREACHABLE("uenum_next: Intl API disabled");
+    MOZ_CRASH("uenum_next: Intl API disabled");
 }
 
 static void
 uenum_close(UEnumeration *en)
 {
-    MOZ_ASSUME_UNREACHABLE("uenum_close: Intl API disabled");
+    MOZ_CRASH("uenum_close: Intl API disabled");
 }
 
 struct UCollator;
@@ -133,45 +133,45 @@ enum UCollationResult {
 static int32_t
 ucol_countAvailable(void)
 {
-    MOZ_ASSUME_UNREACHABLE("ucol_countAvailable: Intl API disabled");
+    MOZ_CRASH("ucol_countAvailable: Intl API disabled");
 }
 
 static const char *
 ucol_getAvailable(int32_t localeIndex)
 {
-    MOZ_ASSUME_UNREACHABLE("ucol_getAvailable: Intl API disabled");
+    MOZ_CRASH("ucol_getAvailable: Intl API disabled");
 }
 
 static UCollator *
 ucol_open(const char *loc, UErrorCode *status)
 {
-    MOZ_ASSUME_UNREACHABLE("ucol_open: Intl API disabled");
+    MOZ_CRASH("ucol_open: Intl API disabled");
 }
 
 static void
 ucol_setAttribute(UCollator *coll, UColAttribute attr, UColAttributeValue value, UErrorCode *status)
 {
-    MOZ_ASSUME_UNREACHABLE("ucol_setAttribute: Intl API disabled");
+    MOZ_CRASH("ucol_setAttribute: Intl API disabled");
 }
 
 static UCollationResult
 ucol_strcoll(const UCollator *coll, const UChar *source, int32_t sourceLength,
              const UChar *target, int32_t targetLength)
 {
-    MOZ_ASSUME_UNREACHABLE("ucol_strcoll: Intl API disabled");
+    MOZ_CRASH("ucol_strcoll: Intl API disabled");
 }
 
 static void
 ucol_close(UCollator *coll)
 {
-    MOZ_ASSUME_UNREACHABLE("ucol_close: Intl API disabled");
+    MOZ_CRASH("ucol_close: Intl API disabled");
 }
 
 static UEnumeration *
 ucol_getKeywordValuesForLocale(const char *key, const char *locale, UBool commonlyUsed,
                                UErrorCode *status)
 {
-    MOZ_ASSUME_UNREACHABLE("ucol_getKeywordValuesForLocale: Intl API disabled");
+    MOZ_CRASH("ucol_getKeywordValuesForLocale: Intl API disabled");
 }
 
 struct UParseError;
@@ -208,46 +208,46 @@ enum UNumberFormatTextAttribute {
 static int32_t
 unum_countAvailable(void)
 {
-    MOZ_ASSUME_UNREACHABLE("unum_countAvailable: Intl API disabled");
+    MOZ_CRASH("unum_countAvailable: Intl API disabled");
 }
 
 static const char *
 unum_getAvailable(int32_t localeIndex)
 {
-    MOZ_ASSUME_UNREACHABLE("unum_getAvailable: Intl API disabled");
+    MOZ_CRASH("unum_getAvailable: Intl API disabled");
 }
 
 static UNumberFormat *
 unum_open(UNumberFormatStyle style, const UChar *pattern, int32_t patternLength,
           const char *locale, UParseError *parseErr, UErrorCode *status)
 {
-    MOZ_ASSUME_UNREACHABLE("unum_open: Intl API disabled");
+    MOZ_CRASH("unum_open: Intl API disabled");
 }
 
 static void
 unum_setAttribute(UNumberFormat *fmt, UNumberFormatAttribute  attr, int32_t newValue)
 {
-    MOZ_ASSUME_UNREACHABLE("unum_setAttribute: Intl API disabled");
+    MOZ_CRASH("unum_setAttribute: Intl API disabled");
 }
 
 static int32_t
 unum_formatDouble(const UNumberFormat *fmt, double number, UChar *result,
                   int32_t resultLength, UFieldPosition *pos, UErrorCode *status)
 {
-    MOZ_ASSUME_UNREACHABLE("unum_formatDouble: Intl API disabled");
+    MOZ_CRASH("unum_formatDouble: Intl API disabled");
 }
 
 static void
 unum_close(UNumberFormat *fmt)
 {
-    MOZ_ASSUME_UNREACHABLE("unum_close: Intl API disabled");
+    MOZ_CRASH("unum_close: Intl API disabled");
 }
 
 static void
 unum_setTextAttribute(UNumberFormat *fmt, UNumberFormatTextAttribute tag, const UChar *newValue,
                       int32_t newValueLength, UErrorCode *status)
 {
-    MOZ_ASSUME_UNREACHABLE("unum_setTextAttribute: Intl API disabled");
+    MOZ_CRASH("unum_setTextAttribute: Intl API disabled");
 }
 
 class Locale {
@@ -259,7 +259,7 @@ class Locale {
 Locale::Locale(const char *language, const char *country, const char *variant,
                const char *keywordsAndValues)
 {
-    MOZ_ASSUME_UNREACHABLE("Locale::Locale: Intl API disabled");
+    MOZ_CRASH("Locale::Locale: Intl API disabled");
 }
 
 class NumberingSystem {
@@ -271,13 +271,13 @@ class NumberingSystem {
 NumberingSystem *
 NumberingSystem::createInstance(const Locale &inLocale, UErrorCode &status)
 {
-    MOZ_ASSUME_UNREACHABLE("NumberingSystem::createInstance: Intl API disabled");
+    MOZ_CRASH("NumberingSystem::createInstance: Intl API disabled");
 }
 
 const char *
 NumberingSystem::getName()
 {
-    MOZ_ASSUME_UNREACHABLE("NumberingSystem::getName: Intl API disabled");
+    MOZ_CRASH("NumberingSystem::getName: Intl API disabled");
 }
 
 typedef void *UCalendar;
@@ -292,26 +292,26 @@ static UCalendar *
 ucal_open(const UChar *zoneID, int32_t len, const char *locale,
           UCalendarType type, UErrorCode *status)
 {
-    MOZ_ASSUME_UNREACHABLE("ucal_open: Intl API disabled");
+    MOZ_CRASH("ucal_open: Intl API disabled");
 }
 
 static const char *
 ucal_getType(const UCalendar *cal, UErrorCode *status)
 {
-    MOZ_ASSUME_UNREACHABLE("ucal_getType: Intl API disabled");
+    MOZ_CRASH("ucal_getType: Intl API disabled");
 }
 
 static UEnumeration *
 ucal_getKeywordValuesForLocale(const char *key, const char *locale,
                                UBool commonlyUsed, UErrorCode *status)
 {
-    MOZ_ASSUME_UNREACHABLE("ucal_getKeywordValuesForLocale: Intl API disabled");
+    MOZ_CRASH("ucal_getKeywordValuesForLocale: Intl API disabled");
 }
 
 static void
 ucal_close(UCalendar *cal)
 {
-    MOZ_ASSUME_UNREACHABLE("ucal_close: Intl API disabled");
+    MOZ_CRASH("ucal_close: Intl API disabled");
 }
 
 typedef void *UDateTimePatternGenerator;
@@ -319,7 +319,7 @@ typedef void *UDateTimePatternGenerator;
 static UDateTimePatternGenerator *
 udatpg_open(const char *locale, UErrorCode *pErrorCode)
 {
-    MOZ_ASSUME_UNREACHABLE("udatpg_open: Intl API disabled");
+    MOZ_CRASH("udatpg_open: Intl API disabled");
 }
 
 static int32_t
@@ -327,13 +327,13 @@ udatpg_getBestPattern(UDateTimePatternGenerator *dtpg, const UChar *skeleton,
                       int32_t length, UChar *bestPattern, int32_t capacity,
                       UErrorCode *pErrorCode)
 {
-    MOZ_ASSUME_UNREACHABLE("udatpg_getBestPattern: Intl API disabled");
+    MOZ_CRASH("udatpg_getBestPattern: Intl API disabled");
 }
 
 static void
 udatpg_close(UDateTimePatternGenerator *dtpg)
 {
-    MOZ_ASSUME_UNREACHABLE("udatpg_close: Intl API disabled");
+    MOZ_CRASH("udatpg_close: Intl API disabled");
 }
 
 typedef void *UCalendar;
@@ -347,13 +347,13 @@ enum UDateFormatStyle {
 static int32_t
 udat_countAvailable(void)
 {
-    MOZ_ASSUME_UNREACHABLE("udat_countAvailable: Intl API disabled");
+    MOZ_CRASH("udat_countAvailable: Intl API disabled");
 }
 
 static const char *
 udat_getAvailable(int32_t localeIndex)
 {
-    MOZ_ASSUME_UNREACHABLE("udat_getAvailable: Intl API disabled");
+    MOZ_CRASH("udat_getAvailable: Intl API disabled");
 }
 
 static UDateFormat *
@@ -361,32 +361,32 @@ udat_open(UDateFormatStyle timeStyle, UDateFormatStyle dateStyle, const char *lo
           const UChar *tzID, int32_t tzIDLength, const UChar *pattern,
           int32_t patternLength, UErrorCode *status)
 {
-    MOZ_ASSUME_UNREACHABLE("udat_open: Intl API disabled");
+    MOZ_CRASH("udat_open: Intl API disabled");
 }
 
 static const UCalendar *
 udat_getCalendar(const UDateFormat *fmt)
 {
-    MOZ_ASSUME_UNREACHABLE("udat_getCalendar: Intl API disabled");
+    MOZ_CRASH("udat_getCalendar: Intl API disabled");
 }
 
 static void
 ucal_setGregorianChange(UCalendar *cal, UDate date, UErrorCode *pErrorCode)
 {
-    MOZ_ASSUME_UNREACHABLE("ucal_setGregorianChange: Intl API disabled");
+    MOZ_CRASH("ucal_setGregorianChange: Intl API disabled");
 }
 
 static int32_t
 udat_format(const UDateFormat *format, UDate dateToFormat, UChar *result,
             int32_t resultLength, UFieldPosition *position, UErrorCode *status)
 {
-    MOZ_ASSUME_UNREACHABLE("udat_format: Intl API disabled");
+    MOZ_CRASH("udat_format: Intl API disabled");
 }
 
 static void
 udat_close(UDateFormat *format)
 {
-    MOZ_ASSUME_UNREACHABLE("udat_close: Intl API disabled");
+    MOZ_CRASH("udat_close: Intl API disabled");
 }
 
 #endif
@@ -984,7 +984,7 @@ intl_CompareStrings(JSContext *cx, UCollator *coll, HandleString str1, HandleStr
         case UCOL_LESS: res = -1; break;
         case UCOL_EQUAL: res = 0; break;
         case UCOL_GREATER: res = 1; break;
-        default: MOZ_ASSUME_UNREACHABLE("ucol_strcoll returned bad UCollationResult");
+        default: MOZ_CRASH("ucol_strcoll returned bad UCollationResult");
     }
     result.setInt32(res);
     return true;

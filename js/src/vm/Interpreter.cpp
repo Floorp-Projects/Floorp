@@ -983,7 +983,7 @@ HandleError(JSContext *cx, InterpreterRegs &regs)
                 return SuccessfulReturnContinuation;
 
               default:
-                MOZ_ASSUME_UNREACHABLE("Invalid trap status");
+                MOZ_CRASH("Invalid trap status");
             }
         }
 
@@ -1496,7 +1496,7 @@ Interpret(JSContext *cx, RunState &state)
           case JSTRAP_ERROR:
             goto error;
           default:
-            MOZ_ASSUME_UNREACHABLE("bad ScriptDebugPrologue status");
+            MOZ_CRASH("bad ScriptDebugPrologue status");
         }
     }
 
@@ -2629,7 +2629,7 @@ CASE(JSOP_FUNCALL)
           case JSTRAP_ERROR:
             goto error;
           default:
-            MOZ_ASSUME_UNREACHABLE("bad ScriptDebugPrologue status");
+            MOZ_CRASH("bad ScriptDebugPrologue status");
         }
     }
 
@@ -3379,7 +3379,7 @@ DEFAULT()
 
 } /* interpreter loop */
 
-    MOZ_ASSUME_UNREACHABLE("Interpreter loop exited via fallthrough");
+    MOZ_CRASH("Interpreter loop exited via fallthrough");
 
   error:
     switch (HandleError(cx, REGS)) {
@@ -3408,7 +3408,8 @@ DEFAULT()
         cx->clearPendingException();
         ADVANCE_AND_DISPATCH(0);
     }
-    MOZ_ASSUME_UNREACHABLE("Invalid HandleError continuation");
+
+    MOZ_CRASH("Invalid HandleError continuation");
 
   exit:
     if (MOZ_UNLIKELY(cx->compartment()->debugMode()))
@@ -3937,7 +3938,7 @@ js::SpreadCallOperation(JSContext *cx, HandleScript script, jsbytecode *pc, Hand
         }
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("bad spread opcode");
+        MOZ_CRASH("bad spread opcode");
     }
 
     res.set(args.rval());

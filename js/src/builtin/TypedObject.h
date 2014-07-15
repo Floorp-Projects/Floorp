@@ -704,7 +704,7 @@ class TypedObject : public ArrayBufferViewObject
             return elementType.size() * length();
           }
         }
-        MOZ_ASSUME_UNREACHABLE("unhandled typerepresentation kind");
+        MOZ_CRASH("unhandled typerepresentation kind");
     }
 
     uint8_t *typedMem(size_t offset) const {
