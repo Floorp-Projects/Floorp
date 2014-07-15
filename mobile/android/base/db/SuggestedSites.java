@@ -84,6 +84,8 @@ public class SuggestedSites {
             this.title = json.getString(JSON_KEY_TITLE);
             this.imageUrl = json.getString(JSON_KEY_IMAGE_URL);
             this.bgColor = json.getString(JSON_KEY_BG_COLOR);
+
+            validate();
         }
 
         public Site(String url, String title, String imageUrl, String bgColor) {
@@ -91,6 +93,19 @@ public class SuggestedSites {
             this.title = title;
             this.imageUrl = imageUrl;
             this.bgColor = bgColor;
+
+            validate();
+        }
+
+        private void validate() {
+            // Site instances must have non-empty values for all properties.
+            if (TextUtils.isEmpty(url) ||
+                TextUtils.isEmpty(title) ||
+                TextUtils.isEmpty(imageUrl) ||
+                TextUtils.isEmpty(bgColor)) {
+                throw new IllegalStateException("Suggested sites must have a URL, title, " +
+                                                "image URL, and background color.");
+            }
         }
 
         @Override
@@ -122,14 +137,38 @@ public class SuggestedSites {
         context = appContext;
     }
 
-    private String loadFromFile() {
+    private Map<String, Site> loadSites(String jsonString) {
+        if (TextUtils.isEmpty(jsonString)) {
+            return null;
+        }
+
+        Map<String, Site> sites = null;
+
+        try {
+            final JSONArray jsonSites = new JSONArray(jsonString);
+            sites = new LinkedHashMap<String, Site>(jsonSites.length());
+
+            final int count = jsonSites.length();
+            for (int i = 0; i < count; i++) {
+                final Site site = new Site((JSONObject) jsonSites.get(i));
+                sites.put(site.url, site);
+            }
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Failed to refresh suggested sites", e);
+            return null;
+        }
+
+        return sites;
+    }
+
+    private Map<String, Site> loadFromFile() {
         // Do nothing for now
         return null;
     }
 
-    private String loadFromResource() {
+    private Map<String, Site> loadFromResource() {
         try {
-            return RawResource.getAsString(context, R.raw.suggestedsites);
+            return loadSites(RawResource.getAsString(context, R.raw.suggestedsites));
         } catch (IOException e) {
             return null;
         }
@@ -143,38 +182,17 @@ public class SuggestedSites {
     private void refresh() {
         Log.d(LOGTAG, "Refreshing tiles from file");
 
-        String jsonString = loadFromFile();
-        if (TextUtils.isEmpty(jsonString)) {
-            Log.d(LOGTAG, "No suggested sites file, loading from resource.");
-            jsonString = loadFromResource();
+        Map<String, Site> sites = loadFromFile();
+        if (sites == null) {
+            sites = loadFromResource();
         }
 
-        Map<String, Site> sites = null;
-
-        try {
-            final JSONArray jsonSites = new JSONArray(jsonString);
-            sites = new LinkedHashMap<String, Site>(jsonSites.length());
-
-            final int count = jsonSites.length();
-            for (int i = 0; i < count; i++) {
-                final JSONObject jsonSite = (JSONObject) jsonSites.get(i);
-                final String url = jsonSite.getString(JSON_KEY_URL);
-
-                final Site site = new Site(url,
-                                           jsonSite.getString(JSON_KEY_TITLE),
-                                           jsonSite.getString(JSON_KEY_IMAGE_URL),
-                                           jsonSite.getString(JSON_KEY_BG_COLOR));
-
-                sites.put(url, site);
-            }
-
-            Log.d(LOGTAG, "Successfully parsed suggested sites.");
-        } catch (Exception e) {
-            Log.e(LOGTAG, "Failed to refresh suggested sites", e);
+        // Nothing to cache, bail.
+        if (sites == null) {
             return;
         }
 
-        // Update cached list of sites
+        // Update cached list of sites.
         cachedSites = Collections.unmodifiableMap(sites);
         cachedLocale = Locale.getDefault();
     }
