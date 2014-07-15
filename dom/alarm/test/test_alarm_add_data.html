@@ -199,31 +199,35 @@
   }
 
   function startTests() {
-    var isAllowedToTest = true;
+    SpecialPowers.pushPrefEnv({
+      "set": [["dom.mozAlarms.enabled", true]]
+    }, function() {
+      var isAllowedToTest = true;
 
-    if (navigator.appVersion.indexOf("Android") !== -1) {
-      ok(true, "mozAlarms is not allowed on Android for now. " +
-               "TODO Bug 863557.");
-      isAllowedToTest = false;
-    } else if (SpecialPowers.wrap(document).nodePrincipal.appStatus ==
-               SpecialPowers.Ci.nsIPrincipal.APP_STATUS_NOT_INSTALLED) {
-      ok(true, "mozAlarms is not allowed for non-installed apps. " +
-               "TODO Bug 876981.");
-      isAllowedToTest = false;
-    }
-
-    if (isAllowedToTest) {
-      ok(true, "Start to test...");
-      testEmptyObject();
-    } else {
-      // A sanity check to make sure we must run tests on Firefox OS (B2G).
-      if (navigator.userAgent.indexOf("Mobile") != -1 &&
-          navigator.appVersion.indexOf("Android") == -1) {
-        ok(false, "Should run the test on Firefox OS (B2G)!");
+      if (navigator.appVersion.indexOf("Android") !== -1) {
+        ok(true, "mozAlarms is not allowed on Android for now. " +
+                 "TODO Bug 863557.");
+        isAllowedToTest = false;
+      } else if (SpecialPowers.wrap(document).nodePrincipal.appStatus ==
+                 SpecialPowers.Ci.nsIPrincipal.APP_STATUS_NOT_INSTALLED) {
+        ok(true, "mozAlarms is not allowed for non-installed apps. " +
+                 "TODO Bug 876981.");
+        isAllowedToTest = false;
       }
 
-      SimpleTest.finish();
-    }
+      if (isAllowedToTest) {
+        ok(true, "Start to test...");
+        testEmptyObject();
+      } else {
+        // A sanity check to make sure we must run tests on Firefox OS (B2G).
+        if (navigator.userAgent.indexOf("Mobile") != -1 &&
+            navigator.appVersion.indexOf("Android") == -1) {
+          ok(false, "Should run the test on Firefox OS (B2G)!");
+        }
+
+        SimpleTest.finish();
+      }
+    });
   }
 
   SimpleTest.expectAssertions(0, 9);

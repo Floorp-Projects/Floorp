@@ -13,24 +13,30 @@
 
 "use strict";
 
-SpecialPowers.addPermission("alarms", true, document);
+SimpleTest.waitForExplicitFinish();
 
-// mozAlarms is installed on all platforms except Android for the moment.
-if (navigator.appVersion.indexOf("Android") != -1) {
-  ok('AlarmsManager' in window, "Interface AlarmsManager should exist");
-  try {
-    todo('mozAlarms' in navigator,
-         "mozAlarms is not allowed on Android for now. TODO Bug 863557.");
-  } catch (e) {
-    todo(!e, "('mozAlarms' in navigator) should not throw exceptions once " +
-             "mozAlarms is installed on Android. TODO Bug 863557. " +
-             "Caught exception: " + e);
+SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function() {
+  SpecialPowers.addPermission("alarms", true, document);
+
+  // mozAlarms is installed on all platforms except Android for the moment.
+  if (navigator.appVersion.indexOf("Android") != -1) {
+    ok('AlarmsManager' in window, "Interface AlarmsManager should exist");
+    try {
+      todo('mozAlarms' in navigator,
+           "mozAlarms is not allowed on Android for now. TODO Bug 863557.");
+    } catch (e) {
+      todo(!e, "('mozAlarms' in navigator) should not throw exceptions once " +
+               "mozAlarms is installed on Android. TODO Bug 863557. " +
+               "Caught exception: " + e);
+    }
+  } else {
+    ok('mozAlarms' in navigator, "navigator.mozAlarms should exist");
+    ok(navigator.mozAlarms instanceof AlarmsManager,
+       "navigator.mozAlarms should be an instance of AlarmsManager");
   }
-} else {
-  ok('mozAlarms' in navigator, "navigator.mozAlarms should exist");
-  ok(navigator.mozAlarms instanceof AlarmsManager,
-     "navigator.mozAlarms should be an instance of AlarmsManager");
-}
+
+  SimpleTest.finish();
+});
 
 </script>
 </pre>
