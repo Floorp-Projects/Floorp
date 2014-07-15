@@ -270,21 +270,27 @@ js::ecmaAtan2(double y, double x)
 }
 
 bool
+js::math_atan2_handle(JSContext *cx, HandleValue y, HandleValue x, MutableHandleValue res)
+{
+    double dy;
+    if (!ToNumber(cx, y, &dy))
+        return false;
+
+    double dx;
+    if (!ToNumber(cx, x, &dx))
+        return false;
+
+    double z = ecmaAtan2(dy, dx);
+    res.setDouble(z);
+    return true;
+}
+
+bool
 js::math_atan2(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    double y;
-    if (!ToNumber(cx, args.get(0), &y))
-        return false;
-
-    double x;
-    if (!ToNumber(cx, args.get(1), &x))
-        return false;
-
-    double z = ecmaAtan2(y, x);
-    args.rval().setDouble(z);
-    return true;
+    return math_atan2_handle(cx, args.get(0), args.get(1), args.rval());
 }
 
 double

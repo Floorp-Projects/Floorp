@@ -537,6 +537,25 @@ function rsqrt_object(i) {
     return i;
 }
 
+var uceFault_atan2_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_atan2_number'));
+function ratan2_number(i) {
+    var x = Math.atan2(i, i+1);
+    if (uceFault_atan2_number(i) || uceFault_atan2_number(i))
+        assertEq(x, Math.atan2(99, 100));
+    return i;
+}
+
+var uceFault_atan2_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_atan2_object'));
+function ratan2_object(i) {
+    var t = i;
+    var o = { valueOf: function () { return t; } };
+    var x = Math.atan2(o, o+1);
+    t = 1000;
+    if (uceFault_atan2_object(i) || uceFault_atan2_object(i))
+        assertEq(x, Math.atan2(i, i+1));
+    return i;
+}
+
 var uceFault_str_split = eval(uneval(uceFault).replace('uceFault', 'uceFault_str_split'))
 function rstr_split(i) {
     var x = "str01234567899876543210rts".split("" + i);
@@ -604,6 +623,8 @@ for (i = 0; i < 100; i++) {
     rsqrt_number(i);
     rsqrt_float(i);
     rsqrt_object(i);
+    ratan2_number(i);
+    ratan2_object(i);
     rstr_split(i);
 }
 

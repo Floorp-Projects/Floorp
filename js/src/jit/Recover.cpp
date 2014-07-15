@@ -817,6 +817,31 @@ RSqrt::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MAtan2::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_Atan2));
+    return true;
+}
+
+RAtan2::RAtan2(CompactBufferReader &reader)
+{ }
+
+bool
+RAtan2::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue y(cx, iter.read());
+    RootedValue x(cx, iter.read());
+    RootedValue result(cx);
+
+    if(!math_atan2_handle(cx, y, x, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MMathFunction::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
