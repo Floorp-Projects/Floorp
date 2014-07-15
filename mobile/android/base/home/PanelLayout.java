@@ -460,10 +460,10 @@ abstract class PanelLayout extends FrameLayout {
             if (TextUtils.isEmpty(imageUrl)) {
                 imageView.setImageResource(R.drawable.icon_home_empty_firefox);
             } else {
-                Picasso.with(getContext())
-                       .load(imageUrl)
-                       .error(R.drawable.icon_home_empty_firefox)
-                       .into(imageView);
+                ImageLoader.with(getContext())
+                           .load(imageUrl)
+                           .error(R.drawable.icon_home_empty_firefox)
+                           .into(imageView);
             }
 
             viewState.setEmptyView(view);

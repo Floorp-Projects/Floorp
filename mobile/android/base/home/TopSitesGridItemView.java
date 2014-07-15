@@ -149,7 +149,7 @@ public class TopSitesGridItemView extends RelativeLayout {
         updateType(TopSites.TYPE_BLANK);
         updateTitleView();
         setLoadId(Favicons.NOT_LOADING);
-        Picasso.with(getContext()).cancelRequest(mThumbnailView);
+        ImageLoader.with(getContext()).cancelRequest(mThumbnailView);
         displayThumbnail(R.drawable.top_site_add);
 
     }
@@ -192,7 +192,7 @@ public class TopSitesGridItemView extends RelativeLayout {
         if (changed) {
             updateTitleView();
             setLoadId(Favicons.NOT_LOADING);
-            Picasso.with(getContext()).cancelRequest(mThumbnailView);
+            ImageLoader.with(getContext()).cancelRequest(mThumbnailView);
         }
 
         if (updateType(type)) {
@@ -233,7 +233,7 @@ public class TopSitesGridItemView extends RelativeLayout {
         }
         mThumbnailSet = true;
         Favicons.cancelFaviconLoad(mLoadId);
-        Picasso.with(getContext()).cancelRequest(mThumbnailView);
+        ImageLoader.with(getContext()).cancelRequest(mThumbnailView);
 
         mThumbnailView.setScaleType(SCALE_TYPE_THUMBNAIL);
         mThumbnailView.setImageBitmap(thumbnail);
@@ -251,11 +251,11 @@ public class TopSitesGridItemView extends RelativeLayout {
         mThumbnailView.setBackgroundColor(bgColor);
         mThumbnailSet = true;
 
-        Picasso.with(getContext())
-               .load(imageUrl)
-               .noFade()
-               .error(R.drawable.favicon)
-               .into(mThumbnailView);
+        ImageLoader.with(getContext())
+                   .load(imageUrl)
+                   .noFade()
+                   .error(R.drawable.favicon)
+                   .into(mThumbnailView);
     }
 
     public void displayFavicon(Bitmap favicon, String faviconURL, int expectedLoadId) {
