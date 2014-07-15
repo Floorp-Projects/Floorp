@@ -36,12 +36,11 @@ Result
 CheckValidity(const SECItem& encodedValidity, PRTime time)
 {
   der::Input validity;
-  if (validity.Init(encodedValidity.data, encodedValidity.len)
-        != der::Success) {
+  if (validity.Init(encodedValidity.data, encodedValidity.len) != Success) {
     return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
   }
   PRTime notBefore;
-  if (der::TimeChoice(validity, notBefore) != der::Success) {
+  if (der::TimeChoice(validity, notBefore) != Success) {
     return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
   }
   if (time < notBefore) {
@@ -49,18 +48,14 @@ CheckValidity(const SECItem& encodedValidity, PRTime time)
   }
 
   PRTime notAfter;
-  if (der::TimeChoice(validity, notAfter) != der::Success) {
+  if (der::TimeChoice(validity, notAfter) != Success) {
     return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
   }
   if (time > notAfter) {
     return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
   }
 
-  if (der::End(validity) != der::Success) {
-    return MapSECStatus(SECFailure);
-  }
-
-  return Success;
+  return der::End(validity);
 }
 
 // 4.2.1.3. Key Usage (id-ce-keyUsage)
@@ -93,16 +88,16 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedKeyUsage,
   }
 
   der::Input input;
-  if (input.Init(encodedKeyUsage->data, encodedKeyUsage->len) != der::Success) {
+  if (input.Init(encodedKeyUsage->data, encodedKeyUsage->len) != Success) {
     return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
   }
   der::Input value;
-  if (der::ExpectTagAndGetValue(input, der::BIT_STRING, value) != der::Success) {
+  if (der::ExpectTagAndGetValue(input, der::BIT_STRING, value) != Success) {
     return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
   }
 
   uint8_t numberOfPaddingBits;
-  if (value.Read(numberOfPaddingBits) != der::Success) {
+  if (value.Read(numberOfPaddingBits) != Success) {
     return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
   }
   if (numberOfPaddingBits > 7) {
@@ -110,7 +105,7 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedKeyUsage,
   }
 
   uint8_t bits;
-  if (value.Read(bits) != der::Success) {
+  if (value.Read(bits) != Success) {
     // Reject empty bit masks.
     return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
   }
@@ -169,7 +164,7 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedKeyUsage,
 
   // The padding applies to the last byte, so skip to the last byte.
   while (!value.AtEnd()) {
-    if (value.Read(bits) != der::Success) {
+    if (value.Read(bits) != Success) {
       return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
     }
   }
@@ -207,7 +202,7 @@ bool CertPolicyId::IsAnyPolicy() const
 //         policyIdentifier   CertPolicyId,
 //         policyQualifiers   SEQUENCE SIZE (1..MAX) OF
 //                                 PolicyQualifierInfo OPTIONAL }
-inline der::Result
+inline Result
 CheckPolicyInformation(der::Input& input, EndEntityOrCA endEntityOrCA,
                        const CertPolicyId& requiredPolicy,
                        /*in/out*/ bool& found)
@@ -231,7 +226,7 @@ CheckPolicyInformation(der::Input& input, EndEntityOrCA endEntityOrCA,
   // Skip unmatched OID and/or policyQualifiers
   input.SkipToEnd();
 
-  return der::Success;
+  return Success;
 }
 
 // certificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
@@ -278,15 +273,15 @@ CheckCertificatePolicies(EndEntityOrCA endEntityOrCA,
 
   der::Input input;
   if (input.Init(encodedCertificatePolicies->data,
-                 encodedCertificatePolicies->len) != der::Success) {
+                 encodedCertificatePolicies->len) != Success) {
     return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
   }
   if (der::NestedOf(input, der::SEQUENCE, der::SEQUENCE, der::EmptyAllowed::No,
                     bind(CheckPolicyInformation, _1, endEntityOrCA,
-                         requiredPolicy, ref(found))) != der::Success) {
+                         requiredPolicy, ref(found))) != Success) {
     return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
   }
-  if (der::End(input) != der::Success) {
+  if (der::End(input) != Success) {
     return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
   }
   if (!found) {
@@ -301,7 +296,7 @@ static const long UNLIMITED_PATH_LEN = -1; // must be less than zero
 //  BasicConstraints ::= SEQUENCE {
 //          cA                      BOOLEAN DEFAULT FALSE,
 //          pathLenConstraint       INTEGER (0..MAX) OPTIONAL }
-static der::Result
+static Result
 DecodeBasicConstraints(der::Input& input, /*out*/ bool& isCA,
                        /*out*/ long& pathLenConstraint)
 {
@@ -311,7 +306,7 @@ DecodeBasicConstraints(der::Input& input, /*out*/ bool& isCA,
   // has issued many certificates with this improper encoding, so we can't
   // enforce this yet (hence passing true for allowInvalidExplicitEncoding
   // to der::OptionalBoolean).
-  if (der::OptionalBoolean(input, true, isCA) != der::Success) {
+  if (der::OptionalBoolean(input, true, isCA) != Success) {
     return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
   }
 
@@ -319,11 +314,11 @@ DecodeBasicConstraints(der::Input& input, /*out*/ bool& isCA,
   // be included (as per RFC 5280 section 4.2.1.9), but for compatibility
   // reasons, we don't check this for now.
   if (OptionalInteger(input, UNLIMITED_PATH_LEN, pathLenConstraint)
-        != der::Success) {
+        != Success) {
     return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
   }
 
-  return der::Success;
+  return Success;
 }
 
 // RFC5280 4.2.1.9. Basic Constraints (id-ce-basicConstraints)
@@ -339,15 +334,15 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
   if (encodedBasicConstraints) {
     der::Input input;
     if (input.Init(encodedBasicConstraints->data,
-                   encodedBasicConstraints->len) != der::Success) {
+                   encodedBasicConstraints->len) != Success) {
       return Fail(RecoverableError, SEC_ERROR_EXTENSION_VALUE_INVALID);
     }
     if (der::Nested(input, der::SEQUENCE,
                     bind(DecodeBasicConstraints, _1, ref(isCA),
-                         ref(pathLenConstraint))) != der::Success) {
+                         ref(pathLenConstraint))) != Success) {
       return Fail(RecoverableError, SEC_ERROR_EXTENSION_VALUE_INVALID);
     }
-    if (der::End(input) != der::Success) {
+    if (der::End(input) != Success) {
       return Fail(RecoverableError, SEC_ERROR_EXTENSION_VALUE_INVALID);
     }
   } else {
@@ -466,7 +461,7 @@ CheckNameConstraints(const SECItem& encodedNameConstraints,
 
 // 4.2.1.12. Extended Key Usage (id-ce-extKeyUsage)
 
-static der::Result
+static Result
 MatchEKU(der::Input& value, KeyPurposeId requiredEKU,
          EndEntityOrCA endEntityOrCA, /*in/out*/ bool& found,
          /*in/out*/ bool& foundOCSPSigning)
@@ -546,7 +541,7 @@ MatchEKU(der::Input& value, KeyPurposeId requiredEKU,
 
   value.SkipToEnd(); // ignore unmatched OIDs.
 
-  return der::Success;
+  return Success;
 }
 
 Result
@@ -566,16 +561,16 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
 
     der::Input input;
     if (input.Init(encodedExtendedKeyUsage->data,
-                   encodedExtendedKeyUsage->len) != der::Success) {
+                   encodedExtendedKeyUsage->len) != Success) {
       return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
     }
     if (der::NestedOf(input, der::SEQUENCE, der::OIDTag, der::EmptyAllowed::No,
                       bind(MatchEKU, _1, requiredEKU, endEntityOrCA,
                            ref(found), ref(foundOCSPSigning)))
-          != der::Success) {
+          != Success) {
       return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
     }
-    if (der::End(input) != der::Success) {
+    if (der::End(input) != Success) {
       return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
     }
 
