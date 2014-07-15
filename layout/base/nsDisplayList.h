@@ -1102,6 +1102,16 @@ public:
    */
   virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) { return false; }
   /**
+   * @return false if the painting performed by the item is invariant
+   * when the item's underlying frame is moved relative to aFrame.
+   * In other words, if you render the item at locations P and P', the rendering
+   * only differs by the translation.
+   * It return true for all wrapped lists.
+   */
+  virtual bool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
+                                                nsIFrame* aFrame)
+  { return false; }
+  /**
    * @return true if the contents of this item are rendered fixed relative
    * to the nearest viewport.
    */
@@ -2169,6 +2179,8 @@ public:
                                    const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) MOZ_OVERRIDE;
+  virtual bool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
+                                                nsIFrame* aFrame) MOZ_OVERRIDE;
   virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) MOZ_OVERRIDE;
   /**
    * GetBounds() returns the background painting area.
@@ -2583,6 +2595,8 @@ public:
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) MOZ_OVERRIDE;
   virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) MOZ_OVERRIDE;
+  virtual bool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
+                                                nsIFrame* aFrame) MOZ_OVERRIDE;
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) MOZ_OVERRIDE;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion,
