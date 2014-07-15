@@ -28,6 +28,18 @@
 BEGIN_BLUETOOTH_NAMESPACE
 class BluetoothProfileController;
 
+class BluetoothProfileResultHandler
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothProfileResultHandler);
+
+  virtual ~BluetoothProfileResultHandler() { }
+
+  virtual void OnError(nsresult aResult) { }
+  virtual void Init() { }
+  virtual void Deinit() { }
+};
+
 class BluetoothProfileManagerBase : public nsIObserver
 {
 public:
