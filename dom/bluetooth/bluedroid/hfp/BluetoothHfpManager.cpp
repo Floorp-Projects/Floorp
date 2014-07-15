@@ -1412,6 +1412,17 @@ BluetoothHfpManager::ToggleCalls()
                              nsITelephonyService::CALL_STATE_CONNECTED;
 }
 
+class ConnectAudioResultHandler MOZ_FINAL
+: public BluetoothHandsfreeResultHandler
+{
+public:
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    BT_WARNING("BluetoothHandsfreeInterface::ConnectAudio failed: %d",
+               (int)aStatus);
+  }
+};
+
 bool
 BluetoothHfpManager::ConnectSco()
 {
@@ -1423,11 +1434,22 @@ BluetoothHfpManager::ConnectSco()
 
   bt_bdaddr_t deviceBdAddress;
   StringToBdAddressType(mDeviceAddress, &deviceBdAddress);
-  NS_ENSURE_TRUE(BT_STATUS_SUCCESS ==
-    sBluetoothHfpInterface->ConnectAudio(&deviceBdAddress), false);
+  sBluetoothHfpInterface->ConnectAudio(&deviceBdAddress,
+                                       new ConnectAudioResultHandler());
 
   return true;
 }
+
+class DisconnectAudioResultHandler MOZ_FINAL
+: public BluetoothHandsfreeResultHandler
+{
+public:
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    BT_WARNING("BluetoothHandsfreeInterface::DisconnectAudio failed: %d",
+               (int)aStatus);
+  }
+};
 
 bool
 BluetoothHfpManager::DisconnectSco()
@@ -1437,8 +1459,8 @@ BluetoothHfpManager::DisconnectSco()
 
   bt_bdaddr_t deviceBdAddress;
   StringToBdAddressType(mDeviceAddress, &deviceBdAddress);
-  NS_ENSURE_TRUE(BT_STATUS_SUCCESS ==
-    sBluetoothHfpInterface->DisconnectAudio(&deviceBdAddress), false);
+  sBluetoothHfpInterface->DisconnectAudio(&deviceBdAddress,
+                                          new DisconnectAudioResultHandler());
 
   return true;
 }
@@ -1454,6 +1476,37 @@ BluetoothHfpManager::IsConnected()
 {
   return (mConnectionState == BTHF_CONNECTION_STATE_SLC_CONNECTED);
 }
+
+void
+BluetoothHfpManager::OnConnectError()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mController->NotifyCompletion(NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
+
+  mController = nullptr;
+  mDeviceAddress.Truncate();
+}
+
+class ConnectResultHandler MOZ_FINAL : public BluetoothHandsfreeResultHandler
+{
+public:
+  ConnectResultHandler(BluetoothHfpManager* aHfpManager)
+  : mHfpManager(aHfpManager)
+  {
+    MOZ_ASSERT(mHfpManager);
+  }
+
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    BT_WARNING("BluetoothHandsfreeInterface::Connect failed: %d",
+               (int)aStatus);
+    mHfpManager->OnConnectError();
+  }
+
+private:
+  BluetoothHfpManager* mHfpManager;
+};
 
 void
 BluetoothHfpManager::Connect(const nsAString& aDeviceAddress,
@@ -1476,16 +1529,41 @@ BluetoothHfpManager::Connect(const nsAString& aDeviceAddress,
   bt_bdaddr_t deviceBdAddress;
   StringToBdAddressType(aDeviceAddress, &deviceBdAddress);
 
-  bt_status_t result = sBluetoothHfpInterface->Connect(&deviceBdAddress);
-  if (BT_STATUS_SUCCESS != result) {
-    BT_LOGR("Failed to connect: %x", result);
-    aController->NotifyCompletion(NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
-    return;
-  }
-
   mDeviceAddress = aDeviceAddress;
   mController = aController;
+
+  sBluetoothHfpInterface->Connect(&deviceBdAddress,
+                                  new ConnectResultHandler(this));
 }
+
+void
+BluetoothHfpManager::OnDisconnectError()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mController->NotifyCompletion(NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
+}
+
+class DisconnectResultHandler MOZ_FINAL : public BluetoothHandsfreeResultHandler
+{
+public:
+  DisconnectResultHandler(BluetoothHfpManager* aHfpManager)
+  : mHfpManager(aHfpManager)
+  {
+    MOZ_ASSERT(mHfpManager);
+  }
+
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    BT_WARNING("BluetoothHandsfreeInterface::Disconnect failed: %d",
+               (int)aStatus);
+    mHfpManager->OnDisconnectError();
+  }
+
+private:
+  BluetoothHfpManager* mHfpManager;
+};
+
 
 void
 BluetoothHfpManager::Disconnect(BluetoothProfileController* aController)
@@ -1502,14 +1580,10 @@ BluetoothHfpManager::Disconnect(BluetoothProfileController* aController)
   bt_bdaddr_t deviceBdAddress;
   StringToBdAddressType(mDeviceAddress, &deviceBdAddress);
 
-  bt_status_t result = sBluetoothHfpInterface->Disconnect(&deviceBdAddress);
-  if (BT_STATUS_SUCCESS != result) {
-    BT_LOGR("Failed to disconnect: %x", result);
-    aController->NotifyCompletion(NS_LITERAL_STRING(ERR_DISCONNECTION_FAILED));
-    return;
-  }
-
   mController = aController;
+
+  sBluetoothHfpInterface->Disconnect(&deviceBdAddress,
+                                     new DisconnectResultHandler(this));
 }
 
 void
