@@ -2735,6 +2735,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
   }
 
   aList->AppendToTop(&savedItems);
+  aList->SetDidComputeVisibility();
 }
 
 void
