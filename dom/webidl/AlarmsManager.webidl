@@ -8,7 +8,8 @@
 
 [NavigatorProperty="mozAlarms",
  JSImplementation="@mozilla.org/alarmsManager;1",
- CheckPermissions="alarms"]
+ CheckPermissions="alarms",
+ Pref="dom.mozAlarms.enabled"]
 interface AlarmsManager {
   DOMRequest getAll();
   DOMRequest add(any date, DOMString respectTimezone, optional any data);
