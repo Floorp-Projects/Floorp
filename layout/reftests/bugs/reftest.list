@@ -1813,5 +1813,4 @@ pref(layout.css.overflow-clip-box.enabled,true) == 992447.html 992447-ref.html
 pref(layout.css.sticky.enabled,true) == 1005405-1.html 1005405-1-ref.html
 pref(layout.css.will-change.enabled,true) == 1018522-1.html 1018522-1-ref.html
 pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1-ref.html
-== 1022612-1.html 1022612-1-ref.html
 == 1024473-1.html 1024473-1-ref.html
