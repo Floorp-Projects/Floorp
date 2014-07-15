@@ -839,12 +839,6 @@ nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsRenderingContext* aCtx,
   static_cast<nsObjectFrame*>(aFrame)->PrintPlugin(*aCtx, aDirtyRect);
 }
 
-/**
- * nsDisplayPluginReadback creates an active ReadbackLayer. The ReadbackLayer
- * obtains from the compositor the contents of the window underneath
- * the ReadbackLayer, which we then use as an opaque buffer for plugins to
- * asynchronously draw onto.
- */
 class nsDisplayPluginReadback : public nsDisplayItem {
 public:
   nsDisplayPluginReadback(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
@@ -860,6 +854,9 @@ public:
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) MOZ_OVERRIDE;
+  virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                   nsRegion* aVisibleRegion,
+                                   const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
 
   NS_DISPLAY_DECL_NAME("PluginReadback", TYPE_PLUGIN_READBACK)
 
@@ -892,6 +889,25 @@ nsDisplayPluginReadback::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
   return GetDisplayItemBounds(aBuilder, this, mFrame);
 }
 
+bool
+nsDisplayPluginReadback::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                           nsRegion* aVisibleRegion,
+                                           const nsRect& aAllowVisibleRegionExpansion)
+{
+  if (!nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
+                                        aAllowVisibleRegionExpansion))
+    return false;
+
+  nsRect expand;
+  bool snap;
+  expand.IntersectRect(aAllowVisibleRegionExpansion, GetBounds(aBuilder, &snap));
+  // *Add* our bounds to the visible region so that stuff underneath us is
+  // likely to be made visible, so we can use it for a background! This is
+  // a bit crazy since we normally only subtract from the visible region.
+  aVisibleRegion->Or(*aVisibleRegion, expand);
+  return true;
+}
+
 #ifdef MOZ_WIDGET_ANDROID
 
 class nsDisplayPluginVideo : public nsDisplayItem {
@@ -909,6 +925,9 @@ public:
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) MOZ_OVERRIDE;
+  virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                   nsRegion* aVisibleRegion,
+                                   const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
 
   NS_DISPLAY_DECL_NAME("PluginVideo", TYPE_PLUGIN_VIDEO)
 
@@ -937,6 +956,15 @@ nsDisplayPluginVideo::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
   *aSnap = false;
   return GetDisplayItemBounds(aBuilder, this, mFrame);
+}
+
+bool
+nsDisplayPluginVideo::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                           nsRegion* aVisibleRegion,
+                                           const nsRect& aAllowVisibleRegionExpansion)
+{
+  return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
+                                          aAllowVisibleRegionExpansion);
 }
 
 #endif
