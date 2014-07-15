@@ -40,8 +40,10 @@ class B2GTestCaseMixin(object):
         self._device_manager = None
 
     def get_device_manager(self, *args, **kwargs):
-        capabilities = self.marionette.session_capabilities
-        if not self._device_manager and capabilities['device'] != 'desktop':
+        capabilities = self.marionette.session and \
+            self.marionette.session_capabilities or {}
+        if not self._device_manager and \
+                capabilities.get('device') != 'desktop':
             self._device_manager = get_dm(self.marionette, **kwargs)
         return self._device_manager
 
