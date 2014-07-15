@@ -119,11 +119,7 @@ public class SearchFragment extends Fragment implements AdapterView.OnItemClickL
                 new AutoCompleteAgentManager(getActivity(), new MainUiHandler(autoCompleteAdapter));
 
         // This will hide the autocomplete box and background frame.
-        // Is there a case where we *shouldn't* hide this upfront?
-
-        // Uncomment show card stream first.
-        // transitionToWaiting();
-        transitionToRunning();
+        transitionToWaiting();
 
         // Attach listener for tapping on a suggestion.
         suggestionDropdown.setOnItemClickListener(new AdapterView.OnItemClickListener() {
