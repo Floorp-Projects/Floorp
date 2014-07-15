@@ -164,10 +164,10 @@ public:
 
   /* Phone State */
 
-  bt_status_t PhoneStateChange(int aNumActive, int aNumHeld,
-                               bthf_call_state_t aCallSetupState,
-                               const char* aNumber,
-                               bthf_call_addrtype_t aType);
+  void PhoneStateChange(int aNumActive, int aNumHeld,
+                        bthf_call_state_t aCallSetupState,
+                        const char* aNumber, bthf_call_addrtype_t aType,
+                        BluetoothHandsfreeResultHandler* aRes);
 
 protected:
   BluetoothHandsfreeInterface(const bthf_interface_t* aInterface);
