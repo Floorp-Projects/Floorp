@@ -43,6 +43,7 @@ namespace jit {
     _(MinMax)                                   \
     _(Abs)                                      \
     _(Sqrt)                                     \
+    _(Atan2)                                    \
     _(StringSplit)                              \
     _(NewObject)                                \
     _(NewDerivedTypedObject)
@@ -427,6 +428,18 @@ class RSqrt MOZ_FINAL : public RInstruction
 
     virtual uint32_t numOperands() const {
         return 1;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RAtan2 MOZ_FINAL : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_(Atan2)
+
+    virtual uint32_t numOperands() const {
+        return 2;
     }
 
     bool recover(JSContext *cx, SnapshotIterator &iter) const;

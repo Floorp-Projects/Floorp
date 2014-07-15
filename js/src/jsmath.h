@@ -241,6 +241,9 @@ extern bool
 math_atan(JSContext *cx, unsigned argc, Value *vp);
 
 extern bool
+math_atan2_handle(JSContext *cx, HandleValue y, HandleValue x, MutableHandleValue res);
+
+extern bool
 math_atan2(JSContext *cx, unsigned argc, Value *vp);
 
 extern double
