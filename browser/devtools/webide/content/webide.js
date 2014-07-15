@@ -573,14 +573,12 @@ let UI = {
       permissionsCmd.removeAttribute("disabled");
       disconnectCmd.removeAttribute("disabled");
       detailsCmd.removeAttribute("disabled");
-      box.removeAttribute("hidden");
       runtimePanelButton.setAttribute("active", "true");
     } else {
       screenshotCmd.setAttribute("disabled", "true");
       permissionsCmd.setAttribute("disabled", "true");
       disconnectCmd.setAttribute("disabled", "true");
       detailsCmd.setAttribute("disabled", "true");
-      box.setAttribute("hidden", "true");
       runtimePanelButton.removeAttribute("active");
     }
 
