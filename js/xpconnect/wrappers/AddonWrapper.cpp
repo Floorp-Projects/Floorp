@@ -10,6 +10,9 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "nsIAddonInterposition.h"
+#include "xpcprivate.h"
+
+#include "nsID.h"
 
 using namespace js;
 using namespace JS;

@@ -6,6 +6,7 @@
 
 #include "WaiveXrayWrapper.h"
 #include "FilteringWrapper.h"
+#include "AddonWrapper.h"
 #include "XrayWrapper.h"
 #include "AccessCheck.h"
 #include "XPCWrapper.h"
