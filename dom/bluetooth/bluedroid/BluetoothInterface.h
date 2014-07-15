@@ -118,10 +118,14 @@ public:
 
   /* Connect / Disconnect */
 
-  bt_status_t Connect(bt_bdaddr_t* aBdAddr);
-  bt_status_t Disconnect(bt_bdaddr_t* aBdAddr);
-  bt_status_t ConnectAudio(bt_bdaddr_t* aBdAddr);
-  bt_status_t DisconnectAudio(bt_bdaddr_t* aBdAddr);
+  void Connect(bt_bdaddr_t* aBdAddr,
+               BluetoothHandsfreeResultHandler* aRes);
+  void Disconnect(bt_bdaddr_t* aBdAddr,
+                  BluetoothHandsfreeResultHandler* aRes);
+  void ConnectAudio(bt_bdaddr_t* aBdAddr,
+                    BluetoothHandsfreeResultHandler* aRes);
+  void DisconnectAudio(bt_bdaddr_t* aBdAddr,
+                       BluetoothHandsfreeResultHandler* aRes);
 
   /* Voice Recognition */
 
