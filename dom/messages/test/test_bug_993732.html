@@ -46,18 +46,15 @@
   }
 
   function startTests() {
-
-    SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function() {
-      // Currently applicable only on FxOS
-      if (navigator.userAgent.indexOf("Mobile") != -1 &&
-          navigator.appVersion.indexOf("Android") == -1)
-      {
-        testAlarm(10000);
-      } else {
-        ok(true, "mozAlarms on Firefox OS only.");
-        SimpleTest.finish();
-      }
-    });
+    // Currently applicable only on FxOS
+    if (navigator.userAgent.indexOf("Mobile") != -1 &&
+        navigator.appVersion.indexOf("Android") == -1)
+    {
+      testAlarm(10000);
+    } else {
+      ok(true, "mozAlarms on Firefox OS only.");
+      SimpleTest.finish();
+    }
   }
 
   SimpleTest.expectAssertions(0, 9);
