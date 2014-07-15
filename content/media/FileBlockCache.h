@@ -56,8 +56,10 @@ public:
 
   FileBlockCache();
 
+protected:
   ~FileBlockCache();
 
+public:
   // Assumes ownership of aFD.
   nsresult Open(PRFileDesc* aFD);
 
