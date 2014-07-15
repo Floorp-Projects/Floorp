@@ -204,8 +204,8 @@ StupidAllocator::evictRegister(LInstruction *ins, RegisterIndex index)
 void
 StupidAllocator::evictAliasedRegister(LInstruction *ins, RegisterIndex index)
 {
-    for (int i = 0; i < registers[index].reg.numAliased(); i++) {
-        int aindex = registerIndex(registers[index].reg.aliased(i));
+    for (size_t i = 0; i < registers[index].reg.numAliased(); i++) {
+        uint32_t aindex = registerIndex(registers[index].reg.aliased(i));
         syncRegister(ins, aindex);
         registers[aindex].set(MISSING_ALLOCATION);
     }
