@@ -3541,6 +3541,19 @@ nsXPCComponents_Utils::GetObjectPrincipal(HandleValue val, JSContext *cx,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPCComponents_Utils::SetAddonInterposition(const nsACString &addonIdStr,
+                                             nsIAddonInterposition *interposition,
+                                             JSContext *cx)
+{
+    JSAddonId *addonId = xpc::NewAddonId(cx, addonIdStr);
+    if (!addonId)
+        return NS_ERROR_FAILURE;
+    if (!XPCWrappedNativeScope::SetAddonInterposition(addonId, interposition))
+        return NS_ERROR_FAILURE;
+    return NS_OK;
+}
+
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/

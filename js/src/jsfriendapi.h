@@ -2328,6 +2328,9 @@ CheckDefineProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::Ha
                     unsigned attrs,
                     JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
 
+JS_FRIEND_API(void)
+ReportErrorWithId(JSContext *cx, const char *msg, JS::HandleId id);
+
 } /* namespace js */
 
 extern JS_FRIEND_API(bool)
