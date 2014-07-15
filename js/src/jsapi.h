@@ -1506,8 +1506,7 @@ class JS_PUBLIC_API(ContextOptions) {
         privateIsNSISupports_(false),
         dontReportUncaught_(false),
         noDefaultCompartmentObject_(false),
-        noScriptRval_(false),
-        cloneSingletons_(false)
+        noScriptRval_(false)
     {
     }
 
@@ -1571,16 +1570,6 @@ class JS_PUBLIC_API(ContextOptions) {
         return *this;
     }
 
-    bool cloneSingletons() const { return cloneSingletons_; }
-    ContextOptions &setCloneSingletons(bool flag) {
-        cloneSingletons_ = flag;
-        return *this;
-    }
-    ContextOptions &toggleCloneSingletons() {
-        cloneSingletons_ = !cloneSingletons_;
-        return *this;
-    }
-
   private:
     bool extraWarnings_ : 1;
     bool varObjFix_ : 1;
@@ -1588,7 +1577,6 @@ class JS_PUBLIC_API(ContextOptions) {
     bool dontReportUncaught_ : 1;
     bool noDefaultCompartmentObject_ : 1;
     bool noScriptRval_ : 1;
-    bool cloneSingletons_ : 1;
 };
 
 JS_PUBLIC_API(ContextOptions &)
@@ -2571,6 +2559,7 @@ class JS_PUBLIC_API(CompartmentOptions)
       , invisibleToDebugger_(false)
       , mergeable_(false)
       , discardSource_(false)
+      , cloneSingletons_(false)
       , traceGlobal_(nullptr)
       , singletonsAsTemplates_(true)
       , addonId_(nullptr)
@@ -2614,8 +2603,11 @@ class JS_PUBLIC_API(CompartmentOptions)
     }
 
 
-    bool cloneSingletons(JSContext *cx) const;
-    Override &cloneSingletonsOverride() { return cloneSingletonsOverride_; }
+    bool cloneSingletons() const { return cloneSingletons_; }
+    CompartmentOptions &setCloneSingletons(bool flag) {
+        cloneSingletons_ = flag;
+        return *this;
+    }
 
     void *zonePointer() const {
         JS_ASSERT(uintptr_t(zone_.pointer) > uintptr_t(JS::SystemZone));
@@ -2653,7 +2645,7 @@ class JS_PUBLIC_API(CompartmentOptions)
     bool invisibleToDebugger_;
     bool mergeable_;
     bool discardSource_;
-    Override cloneSingletonsOverride_;
+    bool cloneSingletons_;
     union {
         ZoneSpecifier spec;
         void *pointer; // js::Zone* is not exposed in the API.
