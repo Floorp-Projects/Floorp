@@ -37,15 +37,15 @@ public:
    mItemType(type)
   {}
 
-  virtual ~JumpListItem() 
-  {}
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIJUMPLISTITEM
 
   static const char kJumpListCacheDir[];
 
 protected:
+  virtual ~JumpListItem()
+  {}
+
   short Type() { return mItemType; }
   short mItemType;
 
