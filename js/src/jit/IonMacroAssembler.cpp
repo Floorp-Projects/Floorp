@@ -1578,9 +1578,14 @@ MacroAssembler::convertValueToFloatingPoint(ValueOperand value, FloatRegister ou
     jump(&done);
 
     bind(&isDouble);
-    unboxDouble(value, output);
+    FloatRegister tmp = output;
+    if (outputType == MIRType_Float32 && hasMultiAlias())
+        tmp = ScratchDoubleReg;
+
+    unboxDouble(value, tmp);
     if (outputType == MIRType_Float32)
-        convertDoubleToFloat32(output, output);
+        convertDoubleToFloat32(tmp, output);
+
     bind(&done);
 }
 

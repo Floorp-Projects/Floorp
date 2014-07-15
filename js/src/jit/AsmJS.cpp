@@ -5906,7 +5906,7 @@ StackDecrementForCall(MacroAssembler &masm, const VectorT &argTypes, unsigned ex
 static const RegisterSet NonVolatileRegs =
     RegisterSet(GeneralRegisterSet(Registers::NonVolatileMask &
                                    ~(uint32_t(1) << Registers::lr)),
-                FloatRegisterSet(FloatRegisters::NonVolatileMask | (1 << FloatRegisters::d15)));
+                FloatRegisterSet(FloatRegisters::NonVolatileMask | (1ULL << FloatRegisters::d15)));
 #else
 static const RegisterSet NonVolatileRegs =
     RegisterSet(GeneralRegisterSet(Registers::NonVolatileMask),
@@ -5921,7 +5921,7 @@ static const unsigned FramePushedAfterSave = NonVolatileRegs.gprs().size() * siz
                                              sizeof(double);
 #else
 static const unsigned FramePushedAfterSave = NonVolatileRegs.gprs().size() * sizeof(intptr_t) +
-                                             NonVolatileRegs.fpus().size() * sizeof(double);
+                                             NonVolatileRegs.fpus().getPushSizeInBytes();
 #endif
 
 static bool
@@ -6653,7 +6653,7 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
 static const RegisterSet AllRegsExceptSP =
     RegisterSet(GeneralRegisterSet(Registers::AllMask &
                                    ~(uint32_t(1) << Registers::StackPointer)),
-                FloatRegisterSet(FloatRegisters::AllMask));
+                FloatRegisterSet(FloatRegisters::AllDoubleMask));
 
 // The operation-callback exit is called from arbitrarily-interrupted asm.js
 // code. That means we must first save *all* registers and restore *all*
@@ -6776,12 +6776,12 @@ GenerateInterruptExit(ModuleCompiler &m, Label *throwLabel)
     // argument 0: cx
     masm.loadPtr(Address(IntArgReg0, AsmJSActivation::offsetOfContext()), IntArgReg0);
 
-    masm.PushRegsInMask(RegisterSet(GeneralRegisterSet(0), FloatRegisterSet(FloatRegisters::AllMask)));   // save all FP registers
+    masm.PushRegsInMask(RegisterSet(GeneralRegisterSet(0), FloatRegisterSet(FloatRegisters::AllDoubleMask)));   // save all FP registers
     masm.call(AsmJSImm_HandleExecutionInterrupt);
     masm.branchIfFalseBool(ReturnReg, throwLabel);
 
     // Restore the machine state to before the interrupt. this will set the pc!
-    masm.PopRegsInMask(RegisterSet(GeneralRegisterSet(0), FloatRegisterSet(FloatRegisters::AllMask)));   // restore all FP registers
+    masm.PopRegsInMask(RegisterSet(GeneralRegisterSet(0), FloatRegisterSet(FloatRegisters::AllDoubleMask)));   // restore all FP registers
     masm.mov(r6,sp);
     masm.as_vmsr(r5);
     masm.as_msr(r4);

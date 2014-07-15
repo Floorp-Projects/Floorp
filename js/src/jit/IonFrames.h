@@ -831,7 +831,7 @@ class IonBaselineStubFrameLayout : public IonCommonFrameLayout
 // An invalidation bailout stack is at the stack pointer for the callee frame.
 class InvalidationBailoutStack
 {
-    mozilla::Array<double, FloatRegisters::Total> fpregs_;
+    mozilla::Array<double, FloatRegisters::TotalPhys> fpregs_;
     mozilla::Array<uintptr_t, Registers::Total> regs_;
     IonScript   *ionScript_;
     uint8_t       *osiPointReturnAddress_;

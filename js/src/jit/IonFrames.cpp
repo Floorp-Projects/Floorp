@@ -353,9 +353,19 @@ JitFrameIterator::machineState() const
 
     uint8_t *spillAlign = alignDoubleSpillWithOffset(reinterpret_cast<uint8_t *>(spill), 0);
 
-    double *floatSpill = reinterpret_cast<double *>(spillAlign);
-    for (FloatRegisterBackwardIterator iter(reader.allFloatSpills()); iter.more(); iter++)
-        machine.setRegisterLocation(*iter, --floatSpill);
+    char *floatSpill = reinterpret_cast<char *>(spillAlign);
+    FloatRegisterSet fregs = reader.allFloatSpills();
+    fregs = fregs.reduceSetForPush();
+    for (FloatRegisterBackwardIterator iter(fregs); iter.more(); iter++) {
+        floatSpill -= (*iter).size();
+        for (uint32_t a = 0; a < (*iter).numAlignedAliased(); a++) {
+            // Only say that registers that actually start here start here.
+            // e.g. d0 should not start at s1, only at s0.
+            FloatRegister ftmp;
+            (*iter).alignedAliased(a, &ftmp);
+            machine.setRegisterLocation(ftmp, (double*)floatSpill);
+        }
+    }
 
     return machine;
 }
@@ -1962,15 +1972,22 @@ InlineFrameIterator::isFunctionFrame() const
 
 MachineState
 MachineState::FromBailout(mozilla::Array<uintptr_t, Registers::Total> &regs,
-                          mozilla::Array<double, FloatRegisters::Total> &fpregs)
+                          mozilla::Array<double, FloatRegisters::TotalPhys> &fpregs)
 {
     MachineState machine;
 
     for (unsigned i = 0; i < Registers::Total; i++)
         machine.setRegisterLocation(Register::FromCode(i), &regs[i]);
+#ifdef JS_CODEGEN_ARM
+    float *fbase = (float*)&fpregs[0];
+    for (unsigned i = 0; i < FloatRegisters::TotalDouble; i++)
+        machine.setRegisterLocation(FloatRegister(i, FloatRegister::Double), &fpregs[i]);
+    for (unsigned i = 0; i < FloatRegisters::TotalSingle; i++)
+        machine.setRegisterLocation(FloatRegister(i, FloatRegister::Single), (double*)&fbase[i]);
+#else
     for (unsigned i = 0; i < FloatRegisters::Total; i++)
         machine.setRegisterLocation(FloatRegister::FromCode(i), &fpregs[i]);
-
+#endif
     return machine;
 }
 
