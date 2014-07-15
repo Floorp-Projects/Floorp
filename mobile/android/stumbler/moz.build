@@ -10,3 +10,9 @@ stumbler_jar = add_java_jar('stumbler')
 stumbler_jar.sources += stumbler_sources
 stumbler_jar.extra_jars += [CONFIG['ANDROID_COMPAT_LIB']]
 stumbler_jar.javac_flags += ['-Xlint:all']
+
+stumbler_eclipse = add_android_eclipse_library_project('FennecStumbler')
+stumbler_eclipse.package_name = 'org.mozilla.fennec.stumbler'
+stumbler_eclipse.res = None
+stumbler_eclipse.extra_jars += [CONFIG['ANDROID_COMPAT_LIB']]
+stumbler_eclipse.add_classpathentry('java', SRCDIR + '/java', dstdir='java')
