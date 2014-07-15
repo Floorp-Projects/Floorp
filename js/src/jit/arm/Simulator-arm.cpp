@@ -1140,6 +1140,7 @@ Simulator::Simulator(SimulatorRuntime *srt)
     resume_pc_ = 0;
     break_pc_ = nullptr;
     break_instr_ = 0;
+    skipCalleeSavedRegsCheck = true;
 
     // Set up architecture state.
     // All registers are initialized to zero to start with.
@@ -1435,6 +1436,11 @@ ReturnType Simulator::getFromVFPRegister(int reg_index)
     memcpy(&value, buffer, register_size * sizeof(vfp_registers_[0]));
     return value;
 }
+
+// These forced-instantiations are for jsapi-tests. Evidently, nothing
+// requires these to be instantiated.
+template double Simulator::getFromVFPRegister<double, 2>(int reg_index);
+template float Simulator::getFromVFPRegister<float, 1>(int reg_index);
 
 void
 Simulator::getFpArgs(double *x, double *y, int32_t *z)
@@ -4127,77 +4133,82 @@ Simulator::callInternal(uint8_t *entry)
     // Set up the callee-saved registers with a known value. To be able to check
     // that they are preserved properly across JS execution.
     int32_t callee_saved_value = uint32_t(icount_);
-    set_register(r4, callee_saved_value);
-    set_register(r5, callee_saved_value);
-    set_register(r6, callee_saved_value);
-    set_register(r7, callee_saved_value);
-    set_register(r8, callee_saved_value);
-    set_register(r9, callee_saved_value);
-    set_register(r10, callee_saved_value);
-    set_register(r11, callee_saved_value);
-
     uint64_t callee_saved_value_d = uint64_t(icount_);
-    set_d_register(d8, &callee_saved_value_d);
-    set_d_register(d9, &callee_saved_value_d);
-    set_d_register(d10, &callee_saved_value_d);
-    set_d_register(d11, &callee_saved_value_d);
-    set_d_register(d12, &callee_saved_value_d);
-    set_d_register(d13, &callee_saved_value_d);
-    set_d_register(d14, &callee_saved_value_d);
-    set_d_register(d15, &callee_saved_value_d);
 
+    if (!skipCalleeSavedRegsCheck) {
+        set_register(r4, callee_saved_value);
+        set_register(r5, callee_saved_value);
+        set_register(r6, callee_saved_value);
+        set_register(r7, callee_saved_value);
+        set_register(r8, callee_saved_value);
+        set_register(r9, callee_saved_value);
+        set_register(r10, callee_saved_value);
+        set_register(r11, callee_saved_value);
+
+        set_d_register(d8, &callee_saved_value_d);
+        set_d_register(d9, &callee_saved_value_d);
+        set_d_register(d10, &callee_saved_value_d);
+        set_d_register(d11, &callee_saved_value_d);
+        set_d_register(d12, &callee_saved_value_d);
+        set_d_register(d13, &callee_saved_value_d);
+        set_d_register(d14, &callee_saved_value_d);
+        set_d_register(d15, &callee_saved_value_d);
+
+    }
     // Start the simulation.
     if (Simulator::StopSimAt != -1L)
         execute<true>();
     else
         execute<false>();
 
-    // Check that the callee-saved registers have been preserved.
-    MOZ_ASSERT(callee_saved_value == get_register(r4));
-    MOZ_ASSERT(callee_saved_value == get_register(r5));
-    MOZ_ASSERT(callee_saved_value == get_register(r6));
-    MOZ_ASSERT(callee_saved_value == get_register(r7));
-    MOZ_ASSERT(callee_saved_value == get_register(r8));
-    MOZ_ASSERT(callee_saved_value == get_register(r9));
-    MOZ_ASSERT(callee_saved_value == get_register(r10));
-    MOZ_ASSERT(callee_saved_value == get_register(r11));
+    if (!skipCalleeSavedRegsCheck) {
+        // Check that the callee-saved registers have been preserved.
+        MOZ_ASSERT(callee_saved_value == get_register(r4));
+        MOZ_ASSERT(callee_saved_value == get_register(r5));
+        MOZ_ASSERT(callee_saved_value == get_register(r6));
+        MOZ_ASSERT(callee_saved_value == get_register(r7));
+        MOZ_ASSERT(callee_saved_value == get_register(r8));
+        MOZ_ASSERT(callee_saved_value == get_register(r9));
+        MOZ_ASSERT(callee_saved_value == get_register(r10));
+        MOZ_ASSERT(callee_saved_value == get_register(r11));
 
-    uint64_t value;
-    get_d_register(d8, &value);
-    MOZ_ASSERT(callee_saved_value_d == value);
-    get_d_register(d9, &value);
-    MOZ_ASSERT(callee_saved_value_d == value);
-    get_d_register(d10, &value);
-    MOZ_ASSERT(callee_saved_value_d == value);
-    get_d_register(d11, &value);
-    MOZ_ASSERT(callee_saved_value_d == value);
-    get_d_register(d12, &value);
-    MOZ_ASSERT(callee_saved_value_d == value);
-    get_d_register(d13, &value);
-    MOZ_ASSERT(callee_saved_value_d == value);
-    get_d_register(d14, &value);
-    MOZ_ASSERT(callee_saved_value_d == value);
-    get_d_register(d15, &value);
-    MOZ_ASSERT(callee_saved_value_d == value);
+        uint64_t value;
+        get_d_register(d8, &value);
+        MOZ_ASSERT(callee_saved_value_d == value);
+        get_d_register(d9, &value);
+        MOZ_ASSERT(callee_saved_value_d == value);
+        get_d_register(d10, &value);
+        MOZ_ASSERT(callee_saved_value_d == value);
+        get_d_register(d11, &value);
+        MOZ_ASSERT(callee_saved_value_d == value);
+        get_d_register(d12, &value);
+        MOZ_ASSERT(callee_saved_value_d == value);
+        get_d_register(d13, &value);
+        MOZ_ASSERT(callee_saved_value_d == value);
+        get_d_register(d14, &value);
+        MOZ_ASSERT(callee_saved_value_d == value);
+        get_d_register(d15, &value);
+        MOZ_ASSERT(callee_saved_value_d == value);
 
-    // Restore callee-saved registers with the original value.
-    set_register(r4, r4_val);
-    set_register(r5, r5_val);
-    set_register(r6, r6_val);
-    set_register(r7, r7_val);
-    set_register(r8, r8_val);
-    set_register(r9, r9_val);
-    set_register(r10, r10_val);
-    set_register(r11, r11_val);
+        // Restore callee-saved registers with the original value.
+        set_register(r4, r4_val);
+        set_register(r5, r5_val);
+        set_register(r6, r6_val);
+        set_register(r7, r7_val);
+        set_register(r8, r8_val);
+        set_register(r9, r9_val);
+        set_register(r10, r10_val);
+        set_register(r11, r11_val);
 
-    set_d_register(d8, &d8_val);
-    set_d_register(d9, &d9_val);
-    set_d_register(d10, &d10_val);
-    set_d_register(d11, &d11_val);
-    set_d_register(d12, &d12_val);
-    set_d_register(d13, &d13_val);
-    set_d_register(d14, &d14_val);
-    set_d_register(d15, &d15_val);
+        set_d_register(d8, &d8_val);
+        set_d_register(d9, &d9_val);
+        set_d_register(d10, &d10_val);
+        set_d_register(d11, &d11_val);
+        set_d_register(d12, &d12_val);
+        set_d_register(d13, &d13_val);
+        set_d_register(d14, &d14_val);
+        set_d_register(d15, &d15_val);
+    }
 }
 
 int64_t
