@@ -2246,6 +2246,23 @@ nsDisplayBackgroundImage::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aCo
   return false;
 }
 
+bool
+nsDisplayBackgroundImage::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
+                                                         nsIFrame* aFrame)
+{
+  if (!mBackgroundStyle)
+    return false;
+  if (!mBackgroundStyle->HasFixedBackground())
+    return false;
+
+  // If aFrame is mFrame or an ancestor in this document, and aFrame is
+  // not the viewport frame, then moving aFrame will move mFrame
+  // relative to the viewport, so our fixed-pos background will change.
+  return aFrame->GetParent() &&
+    (aFrame == mFrame ||
+     nsLayoutUtils::IsProperAncestorFrame(aFrame, mFrame));
+}
+
 nsRect
 nsDisplayBackgroundImage::GetPositioningArea()
 {
@@ -3100,6 +3117,13 @@ nsDisplayWrapList::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 bool nsDisplayWrapList::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) {
   // We could try to do something but let's conservatively just return false.
   return false;
+}
+
+bool nsDisplayWrapList::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
+                                                         nsIFrame* aFrame) {
+  NS_WARNING("nsDisplayWrapList::IsVaryingRelativeToMovingFrame called unexpectedly");
+  // We could try to do something but let's conservatively just return true.
+  return true;
 }
 
 void nsDisplayWrapList::Paint(nsDisplayListBuilder* aBuilder,
