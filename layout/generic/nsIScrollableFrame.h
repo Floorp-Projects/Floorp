@@ -243,7 +243,9 @@ public:
    * values are in device pixels.
    */
   virtual void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
-                        nsIntPoint* aOverflow = nullptr, nsIAtom *aOrigin = nullptr) = 0;
+                        nsIntPoint* aOverflow = nullptr,
+                        nsIAtom* aOrigin = nullptr,
+                        bool aIsMomentum = false) = 0;
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * This tells the scroll frame to try scrolling to the scroll
