@@ -21,6 +21,8 @@ namespace a11y {
 class XULTreeGridAccessibleWrap : public XULTreeGridAccessible,
                                   public ia2AccessibleTable
 {
+  ~XULTreeGridAccessibleWrap() {}
+
 public:
   XULTreeGridAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc,
                             nsTreeBodyFrame* aTree) :
@@ -42,6 +44,8 @@ public:
 class XULTreeGridCellAccessibleWrap : public XULTreeGridCellAccessible,
                                       public ia2AccessibleTableCell
 {
+  ~XULTreeGridCellAccessibleWrap() {}
+
 public:
   XULTreeGridCellAccessibleWrap(nsIContent* aContent,
                                 DocAccessible* aDoc,

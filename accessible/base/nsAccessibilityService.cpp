@@ -223,6 +223,8 @@ static StaticAutoPtr<nsTArray<nsCOMPtr<nsITimer> > > sPluginTimers;
 
 class PluginTimerCallBack MOZ_FINAL : public nsITimerCallback
 {
+  ~PluginTimerCallBack() {}
+
 public:
   PluginTimerCallBack(nsIContent* aContent) : mContent(aContent) {}
 
