@@ -912,7 +912,7 @@ Chunk::fetchNextFreeArena(JSRuntime *rt)
     return aheader;
 }
 
-void
+inline void
 GCRuntime::updateBytesAllocated(ptrdiff_t size)
 {
     JS_ASSERT_IF(size < 0, bytes >= size_t(-size));
