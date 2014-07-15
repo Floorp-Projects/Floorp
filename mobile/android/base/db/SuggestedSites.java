@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.mozilla.gecko.GeckoSharedPrefs;
@@ -78,6 +79,13 @@ public class SuggestedSites {
         public final String imageUrl;
         public final String bgColor;
 
+        public Site(JSONObject json) throws JSONException {
+            this.url = json.getString(JSON_KEY_URL);
+            this.title = json.getString(JSON_KEY_TITLE);
+            this.imageUrl = json.getString(JSON_KEY_IMAGE_URL);
+            this.bgColor = json.getString(JSON_KEY_BG_COLOR);
+        }
+
         public Site(String url, String title, String imageUrl, String bgColor) {
             this.url = url;
             this.title = title;
@@ -91,6 +99,17 @@ public class SuggestedSites {
                      "title = " + title + "\n" +
                      "imageUrl = " + imageUrl + "\n" +
                      "bgColor = " + bgColor + " }";
+        }
+
+        public JSONObject toJSON() throws JSONException {
+            final JSONObject json = new JSONObject();
+
+            json.put(JSON_KEY_URL, url);
+            json.put(JSON_KEY_TITLE, title);
+            json.put(JSON_KEY_IMAGE_URL, imageUrl);
+            json.put(JSON_KEY_BG_COLOR, bgColor);
+
+            return json;
         }
     }
 
