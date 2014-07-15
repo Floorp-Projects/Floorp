@@ -56,9 +56,9 @@ class PanelAuthLayout extends LinearLayout {
             // Use a default image if an image URL isn't specified.
             imageView.setImageResource(R.drawable.icon_home_empty_firefox);
         } else {
-            Picasso.with(getContext())
-                   .load(imageUrl)
-                   .into(imageView);
+            ImageLoader.with(getContext())
+                       .load(imageUrl)
+                       .into(imageView);
         }
     }
 }
