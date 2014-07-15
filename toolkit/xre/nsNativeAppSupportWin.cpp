@@ -283,6 +283,7 @@ public:
     void CheckConsole();
 
 private:
+    ~nsNativeAppSupportWin() {}
     static void HandleCommandLine(const char* aCmdLineString, nsIFile* aWorkingDir, uint32_t aState);
     static HDDEDATA CALLBACK HandleDDENotification( UINT     uType,
                                                     UINT     uFmt,
