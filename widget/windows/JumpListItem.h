@@ -53,6 +53,8 @@ protected:
 
 class JumpListSeparator : public JumpListItem, public nsIJumpListSeparator
 {
+  ~JumpListSeparator() {}
+
 public:
   JumpListSeparator() :
    JumpListItem(nsIJumpListItem::JUMPLIST_ITEM_SEPARATOR)
