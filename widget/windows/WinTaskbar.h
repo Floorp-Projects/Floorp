@@ -19,9 +19,10 @@ namespace widget {
 
 class WinTaskbar MOZ_FINAL : public nsIWinTaskbar
 {
+  ~WinTaskbar();
+
 public: 
   WinTaskbar();
-  ~WinTaskbar();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWINTASKBAR
