@@ -1242,7 +1242,7 @@ typedef enum JSErrNum {
 } JSErrNum;
 
 extern JS_FRIEND_API(const JSErrorFormatString *)
-js_GetErrorMessage(void *userRef, const char *locale, const unsigned errorNumber);
+js_GetErrorMessage(void *userRef, const unsigned errorNumber);
 
 namespace js {
 

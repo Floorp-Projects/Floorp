@@ -881,7 +881,7 @@ static const JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
 };
 
 static const JSErrorFormatString *
-my_GetErrorMessage(void *userRef, const char *locale, const unsigned errorNumber)
+my_GetErrorMessage(void *userRef, const unsigned errorNumber)
 {
     if (errorNumber == 0 || errorNumber >= JSShellErr_Limit)
         return nullptr;

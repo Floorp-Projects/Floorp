@@ -54,8 +54,7 @@ JSErrorFormatString ErrorFormatString[] = {
 };
 
 const JSErrorFormatString*
-GetErrorMessage(void* aUserRef, const char* aLocale,
-                const unsigned aErrorNumber)
+GetErrorMessage(void* aUserRef, const unsigned aErrorNumber)
 {
   MOZ_ASSERT(aErrorNumber < ArrayLength(ErrorFormatString));
   return &ErrorFormatString[aErrorNumber];
@@ -139,8 +138,7 @@ ErrorResult::ThrowTypeError(const dom::ErrNum errorNumber, ...)
   mResult = NS_ERROR_TYPE_ERR;
   Message* message = new Message();
   message->mErrorNumber = errorNumber;
-  uint16_t argCount =
-    dom::GetErrorMessage(nullptr, nullptr, errorNumber)->argCount;
+  uint16_t argCount = dom::GetErrorMessage(nullptr, errorNumber)->argCount;
   MOZ_ASSERT(argCount <= 10);
   argCount = std::min<uint16_t>(argCount, 10);
   while (argCount--) {
