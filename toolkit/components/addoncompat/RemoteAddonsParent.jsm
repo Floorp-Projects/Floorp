@@ -172,6 +172,80 @@ CategoryManagerInterposition.methods.deleteCategoryEntry =
     target.deleteCategoryEntry(category, entry, persist);
   };
 
+// This object manages add-on observers that might fire in the child
+// process. Rather than managing the observers itself, it uses the
+// parent's observer service. When an add-on listens on topic T,
+// ObserverParent asks the child process to listen on T. It also adds
+// an observer in the parent for the topic e10s-T. When the T observer
+// fires in the child, the parent fires all the e10s-T observers,
+// passing them CPOWs for the subject and data. We don't want to use T
+// in the parent because there might be non-add-on T observers that
+// won't expect to get notified in this case.
+let ObserverParent = {
+  init: function() {
+    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+               .getService(Ci.nsIMessageBroadcaster);
+    ppmm.addMessageListener("Addons:Observer:Run", this);
+  },
+
+  addObserver: function(observer, topic, ownsWeak) {
+    Services.obs.addObserver(observer, "e10s-" + topic, ownsWeak);
+    NotificationTracker.add(["observer", topic]);
+  },
+
+  removeObserver: function(observer, topic) {
+    Services.obs.removeObserver(observer, "e10s-" + topic);
+    NotificationTracker.remove(["observer", topic]);
+  },
+
+  receiveMessage: function(msg) {
+    switch (msg.name) {
+      case "Addons:Observer:Run":
+        this.notify(msg.objects.subject, msg.objects.topic, msg.objects.data);
+        break;
+    }
+  },
+
+  notify: function(subject, topic, data) {
+    let e = Services.obs.enumerateObservers("e10s-" + topic);
+    while (e.hasMoreElements()) {
+      let obs = e.getNext().QueryInterface(Ci.nsIObserver);
+      try {
+        obs.observe(subject, topic, data);
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    }
+  }
+};
+ObserverParent.init();
+
+// We only forward observers for these topics.
+let TOPIC_WHITELIST = ["content-document-global-created",
+                       "document-element-inserted",];
+
+// This interposition listens for
+// nsIObserverService.{add,remove}Observer.
+let ObserverInterposition = new Interposition();
+
+ObserverInterposition.methods.addObserver =
+  function(addon, target, observer, topic, ownsWeak) {
+    if (TOPIC_WHITELIST.indexOf(topic) >= 0) {
+      ObserverParent.addObserver(observer, topic);
+    }
+
+    target.addObserver(observer, topic, ownsWeak);
+  };
+
+ObserverInterposition.methods.removeObserver =
+  function(addon, target, observer, topic) {
+    if (TOPIC_WHITELIST.indexOf(topic) >= 0) {
+      ObserverParent.removeObserver(observer, topic);
+    }
+
+    target.removeObserver(observer, topic);
+  };
+
 let RemoteAddonsParent = {
   init: function() {
   },
@@ -184,6 +258,7 @@ let RemoteAddonsParent = {
     }
 
     register(Ci.nsICategoryManager, CategoryManagerInterposition);
+    register(Ci.nsIObserverService, ObserverInterposition);
 
     return result;
   },
