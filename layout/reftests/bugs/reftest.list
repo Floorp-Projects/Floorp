@@ -1592,7 +1592,7 @@ random-if(Android) == 594333-1.html 594333-1-ref.html
 == 594624-1.html 594624-1-ref.html
 == 594737-1.html 594737-1-ref.html
 == 597721-1.html 597721-1-ref.html
-random-if(winWidget) fuzzy-if(B2G,1,35) fuzzy-if(Android,38,539) needs-focus == 598726-1.html 598726-1-ref.html # Fails on Windows, bug 782196
+random-if(winWidget) fuzzy-if(B2G,1,40) fuzzy-if(Android,38,539) needs-focus == 598726-1.html 598726-1-ref.html # Fails on Windows, bug 782196
 == 599113-1.html 599113-1-ref.html
 fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
 == 599882-1a.html 599882-1-ref.html
