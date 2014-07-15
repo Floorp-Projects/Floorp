@@ -23,7 +23,6 @@
 #include "ImageContainer.h"
 #include "ActiveLayerTracker.h"
 #include "gfx2DGlue.h"
-#include "mozilla/LookAndFeel.h"
 
 #include "GeckoProfiler.h"
 #include "mozilla/gfx/Tools.h"
@@ -522,7 +521,7 @@ public:
    * This is the method that actually walks a display list and builds
    * the child layers.
    */
-  void ProcessDisplayItems(nsDisplayList* aList, uint32_t aFlags);
+  void ProcessDisplayItems(const nsDisplayList& aList, uint32_t aFlags);
   /**
    * This finalizes all the open ThebesLayers by popping every element off
    * mThebesLayerDataStack, then sets the children of the container layer
@@ -2411,31 +2410,6 @@ ContainerState::ChooseAnimatedGeometryRoot(const nsDisplayList& aList,
   return false;
 }
 
-/* Checks if aPotentialScrollItem is a scroll layer item and aPotentialScrollbarItem
- * is an overlay scrollbar item for the same scroll frame.
- */
-static bool
-IsScrollLayerItemAndOverlayScrollbarForScrollFrame(
-  nsDisplayItem* aPotentialScrollItem, nsDisplayItem* aPotentialScrollbarItem)
-{
-  if (aPotentialScrollItem->GetType() == nsDisplayItem::TYPE_SCROLL_LAYER &&
-      aPotentialScrollbarItem &&
-      aPotentialScrollbarItem->GetType() == nsDisplayItem::TYPE_OWN_LAYER &&
-      LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
-    nsDisplayScrollLayer* scrollItem =
-      static_cast<nsDisplayScrollLayer*>(aPotentialScrollItem);
-    nsDisplayOwnLayer* layerItem =
-      static_cast<nsDisplayOwnLayer*>(aPotentialScrollbarItem);
-    if ((layerItem->GetFlags() &
-         (nsDisplayOwnLayer::VERTICAL_SCROLLBAR |
-          nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR)) &&
-        layerItem->Frame()->GetParent() == scrollItem->GetScrollFrame()) {
-      return true;
-    }
-  }
-  return false;
-}
-
 /*
  * Iterate through the non-clip items in aList and its descendants.
  * For each item we compute the effective clip rect. Each item is assigned
@@ -2451,7 +2425,7 @@ IsScrollLayerItemAndOverlayScrollbarForScrollFrame(
  * of ContainerState::Finish.
  */
 void
-ContainerState::ProcessDisplayItems(nsDisplayList* aList,
+ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
                                     uint32_t aFlags)
 {
   PROFILER_LABEL("ContainerState", "ProcessDisplayItems",
@@ -2464,7 +2438,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
   // layer, so we need to choose which active scrolled root to use for all
   // items.
   if (aFlags & NO_COMPONENT_ALPHA) {
-    if (ChooseAnimatedGeometryRoot(*aList, &lastAnimatedGeometryRoot)) {
+    if (ChooseAnimatedGeometryRoot(aList, &lastAnimatedGeometryRoot)) {
       topLeft = lastAnimatedGeometryRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
     }
   }
@@ -2472,42 +2446,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
   int32_t maxLayers = nsDisplayItem::MaxActiveLayers();
   int layerCount = 0;
 
-  nsDisplayList savedItems;
-  nsDisplayItem* item;
-  while ((item = aList->RemoveBottom()) != nullptr) {
-    // Peek ahead to the next item and try merging with it or swapping with it
-    // if necessary.
-    nsDisplayItem* aboveItem;
-    while ((aboveItem = aList->GetBottom()) != nullptr) {
-      if (aboveItem->TryMerge(mBuilder, item)) {
-        aList->RemoveBottom();
-        item->~nsDisplayItem();
-        item = aboveItem;
-      } else if (IsScrollLayerItemAndOverlayScrollbarForScrollFrame(aboveItem, item)) {
-        // If an overlay scrollbar item is between a scroll layer item and the
-        // other scroll layer items that we need to merge with just move the
-        // scrollbar item up, that way it will be on top of the scrolled content
-        // and we can try to merge all the scroll layer items.
-        aList->RemoveBottom();
-        aList->AppendToBottom(item);
-        item = aboveItem;
-      } else {
-        break;
-      }
-    }
-
-    nsDisplayList* itemSameCoordinateSystemChildren
-      = item->GetSameCoordinateSystemChildren();
-    if (itemSameCoordinateSystemChildren) {
-      if (item->ShouldFlattenAway(mBuilder)) {
-        aList->AppendToBottom(itemSameCoordinateSystemChildren);
-        item->~nsDisplayItem();
-        continue;
-      }
-    }
-
-    savedItems.AppendToTop(item);
-
+  for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
     NS_ASSERTION(mAppUnitsPerDevPixel == AppUnitsPerDevPixel(item),
       "items in a container layer should all have the same app units per dev pixel");
 
@@ -2728,8 +2667,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
       }
     }
   }
-
-  aList->AppendToTop(&savedItems);
 }
 
 void
@@ -3376,7 +3313,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
                                           LayerManager* aManager,
                                           nsIFrame* aContainerFrame,
                                           nsDisplayItem* aContainerItem,
-                                          nsDisplayList* aChildren,
+                                          const nsDisplayList& aChildren,
                                           const ContainerLayerParameters& aParameters,
                                           const gfx3DMatrix* aTransform,
                                           uint32_t aFlags)
@@ -3440,7 +3377,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
     // early exit because later, invalidation will walk up the frame tree to
     // determine which thebes layer gets invalidated. Since an empty layer
     // should never have anything to paint, it should never be invalidated.
-    NS_ASSERTION(aChildren->IsEmpty(), "Should have no children");
+    NS_ASSERTION(aChildren.IsEmpty(), "Should have no children");
     return containerLayer.forget();
   }
 
@@ -3508,7 +3445,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
     break;
   }
 
-  NS_ASSERTION(bounds.IsEqualInterior(aChildren->GetBounds(aBuilder)), "Wrong bounds");
+  NS_ASSERTION(bounds.IsEqualInterior(aChildren.GetBounds(aBuilder)), "Wrong bounds");
   pixBounds.MoveBy(nsIntPoint(scaleParameters.mOffset.x, scaleParameters.mOffset.y));
   if (aParameters.mAncestorClipRect && !(aFlags & CONTAINER_NOT_CLIPPED_BY_ANCESTORS)) {
     SetVisibleRegionForLayer(containerLayer, nsIntRegion(pixBounds),
@@ -3518,7 +3455,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   }
   // Make sure that rounding the visible region out didn't add any area
   // we won't paint
-  if (aChildren->IsOpaque() && !aChildren->NeedsTransparentSurface()) {
+  if (aChildren.IsOpaque() && !aChildren.NeedsTransparentSurface()) {
     bounds.ScaleRoundIn(scaleParameters.mXScale, scaleParameters.mYScale);
     if (bounds.Contains(pixBounds.ToAppUnits(appUnitsPerDevPixel))) {
       // Clear CONTENT_COMPONENT_ALPHA

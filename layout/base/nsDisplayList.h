@@ -1681,13 +1681,13 @@ public:
     PAINT_COMPRESSED = 0x10
   };
   void PaintRoot(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx,
-                 uint32_t aFlags);
+                 uint32_t aFlags) const;
   /**
    * Like PaintRoot, but used for internal display sublists.
    * aForFrame is the frame that the list is associated with.
    */
   void PaintForFrame(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx,
-                     nsIFrame* aForFrame, uint32_t aFlags);
+                     nsIFrame* aForFrame, uint32_t aFlags) const;
   /**
    * Get the bounds. Takes the union of the bounds of all children.
    */
