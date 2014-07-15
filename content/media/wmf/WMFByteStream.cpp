@@ -117,6 +117,8 @@ NS_IMPL_RELEASE(WMFByteStream)
 
 // Stores data regarding an async read opreation.
 class ReadRequest MOZ_FINAL : public IUnknown {
+  ~ReadRequest() {}
+
 public:
   ReadRequest(int64_t aOffset, BYTE* aBuffer, ULONG aLength)
     : mOffset(aOffset),
@@ -394,17 +396,17 @@ STDMETHODIMP
 WMFByteStream::Read(BYTE* aBuffer, ULONG aBufferLength, ULONG* aOutBytesRead)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  ReadRequest request(mOffset, aBuffer, aBufferLength);
-  if (NS_FAILED(Read(&request))) {
+  nsRefPtr<ReadRequest> request = new ReadRequest(mOffset, aBuffer, aBufferLength);
+  if (NS_FAILED(Read(request))) {
     WMF_BS_LOG("[%p] WMFByteStream::Read() offset=%lld failed!", this, mOffset);
     return E_FAIL;
   }
   if (aOutBytesRead) {
-    *aOutBytesRead = request.mBytesRead;
+    *aOutBytesRead = request->mBytesRead;
   }
   WMF_BS_LOG("[%p] WMFByteStream::Read() offset=%lld length=%u bytesRead=%u",
-             this, mOffset, aBufferLength, request.mBytesRead);
-  mOffset += request.mBytesRead;
+             this, mOffset, aBufferLength, request->mBytesRead);
+  mOffset += request->mBytesRead;
   return S_OK;
 }
 
