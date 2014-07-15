@@ -207,14 +207,13 @@ public:
    * is set based on what's in the layer.
    * The container layer is transformed by aTransform (if non-null), and
    * the result is transformed by the scale factors in aContainerParameters.
-   * aChildren is modified due to display item merging and flattening.
    */
   already_AddRefed<ContainerLayer>
   BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
                          LayerManager* aManager,
                          nsIFrame* aContainerFrame,
                          nsDisplayItem* aContainerItem,
-                         nsDisplayList* aChildren,
+                         const nsDisplayList& aChildren,
                          const ContainerLayerParameters& aContainerParameters,
                          const gfx3DMatrix* aTransform,
                          uint32_t aFlags = 0);

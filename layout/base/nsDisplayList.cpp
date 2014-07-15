@@ -1235,9 +1235,10 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
 
 void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder,
                               nsRenderingContext* aCtx,
-                              uint32_t aFlags) {
+                              uint32_t aFlags) const {
   PROFILER_LABEL("nsDisplayList", "PaintRoot",
     js::ProfileEntry::Category::GRAPHICS);
+
   PaintForFrame(aBuilder, aCtx, aBuilder->RootReferenceFrame(), aFlags);
 }
 
@@ -1249,7 +1250,7 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder,
 void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
                                   nsRenderingContext* aCtx,
                                   nsIFrame* aForFrame,
-                                  uint32_t aFlags) {
+                                  uint32_t aFlags) const {
   NS_ASSERTION(mDidComputeVisibility,
                "Must call ComputeVisibility before calling Paint");
 
@@ -1321,7 +1322,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   ContainerLayerParameters containerParameters
     (presShell->GetXResolution(), presShell->GetYResolution());
   nsRefPtr<ContainerLayer> root = layerBuilder->
-    BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nullptr, this,
+    BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nullptr, *this,
                            containerParameters, nullptr);
 
   nsIDocument* document = nullptr;
@@ -3290,7 +3291,7 @@ nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
   nsRefPtr<Layer> container = aManager->GetLayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nullptr);
   if (!container)
     return nullptr;
@@ -3453,7 +3454,7 @@ nsDisplayMixBlendMode::BuildLayer(nsDisplayListBuilder* aBuilder,
   newContainerParameters.mDisableSubpixelAntialiasingInDescendants = true;
 
   nsRefPtr<Layer> container = aManager->GetLayerBuilder()->
-  BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
+  BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                          newContainerParameters, nullptr);
   if (!container) {
     return nullptr;
@@ -3530,7 +3531,7 @@ nsDisplayBlendContainer::BuildLayer(nsDisplayListBuilder* aBuilder,
   newContainerParameters.mDisableSubpixelAntialiasingInDescendants = true;
 
   nsRefPtr<Layer> container = aManager->GetLayerBuilder()->
-  BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
+  BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                          newContainerParameters, nullptr);
   if (!container) {
     return nullptr;
@@ -3575,7 +3576,7 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
                               const ContainerLayerParameters& aContainerParameters) {
   nsRefPtr<ContainerLayer> layer = aManager->GetLayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nullptr);
   if (mFlags & VERTICAL_SCROLLBAR) {
     layer->SetScrollbarData(mScrollTarget, Layer::ScrollDirection::VERTICAL);
@@ -3898,7 +3899,7 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                                  LayerManager* aManager,
                                  const ContainerLayerParameters& aContainerParameters) {
   nsRefPtr<ContainerLayer> layer = aManager->GetLayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nullptr);
 
   nsRect viewport = mScrollFrame->GetRect() -
@@ -4802,7 +4803,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
   uint32_t flags = ShouldPrerenderTransformedContent(aBuilder, mFrame, false) ?
     FrameLayerBuilder::CONTAINER_NOT_CLIPPED_BY_ANCESTORS : 0;
   nsRefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mStoredList.GetChildren(),
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetChildren(),
                            aContainerParameters, &newTransformMatrix, flags);
 
   if (!container) {
@@ -5326,7 +5327,7 @@ nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
   }
 
   nsRefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            newContainerParameters, nullptr);
 
   return container.forget();
