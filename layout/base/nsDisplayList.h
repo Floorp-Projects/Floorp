@@ -314,14 +314,6 @@ public:
   bool GetDescendIntoSubdocuments() { return mDescendIntoSubdocuments; }
 
   /**
-   * Get dirty rect relative to current frame (the frame that we're calling
-   * BuildDisplayList on right now).
-   */
-  const nsRect& GetDirtyRect() { return mDirtyRect; }
-  const nsIFrame* GetCurrentFrame() { return mCurrentFrame; }
-  const nsIFrame* GetCurrentReferenceFrame() { return mCurrentReferenceFrame; }
-
-  /**
    * Returns true if merging and flattening of display lists should be
    * performed while computing visibility.
    */
@@ -536,22 +528,20 @@ public:
   /**
    * A helper class to temporarily set the value of
    * mIsAtRootOfPseudoStackingContext, and temporarily
-   * set mCurrentFrame and related state. Also temporarily sets mDirtyRect.
-   * aDirtyRect is relative to aForChild.
+   * update mCachedOffsetFrame/mCachedOffset from a frame to its child.
+   * Also saves and restores mClipState.
    */
   class AutoBuildingDisplayList;
   friend class AutoBuildingDisplayList;
   class AutoBuildingDisplayList {
   public:
     AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder,
-                            nsIFrame* aForChild,
-                            const nsRect& aDirtyRect, bool aIsRoot)
+                            nsIFrame* aForChild, bool aIsRoot)
       : mBuilder(aBuilder),
         mPrevFrame(aBuilder->mCurrentFrame),
         mPrevReferenceFrame(aBuilder->mCurrentReferenceFrame),
         mPrevLayerEventRegions(aBuilder->mLayerEventRegions),
         mPrevOffset(aBuilder->mCurrentOffsetToReferenceFrame),
-        mPrevDirtyRect(aBuilder->mDirtyRect),
         mPrevIsAtRootOfPseudoStackingContext(aBuilder->mIsAtRootOfPseudoStackingContext),
         mPrevAncestorHasTouchEventHandler(aBuilder->mAncestorHasTouchEventHandler)
     {
@@ -566,18 +556,13 @@ public:
               &aBuilder->mCurrentOffsetToReferenceFrame);
       }
       aBuilder->mCurrentFrame = aForChild;
-      aBuilder->mDirtyRect = aDirtyRect;
       aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
-    }
-    void SetDirtyRect(const nsRect& aRect) {
-      mBuilder->mDirtyRect = aRect;
     }
     ~AutoBuildingDisplayList() {
       mBuilder->mCurrentFrame = mPrevFrame;
       mBuilder->mCurrentReferenceFrame = mPrevReferenceFrame;
       mBuilder->mLayerEventRegions = mPrevLayerEventRegions;
       mBuilder->mCurrentOffsetToReferenceFrame = mPrevOffset;
-      mBuilder->mDirtyRect = mPrevDirtyRect;
       mBuilder->mIsAtRootOfPseudoStackingContext = mPrevIsAtRootOfPseudoStackingContext;
       mBuilder->mAncestorHasTouchEventHandler = mPrevAncestorHasTouchEventHandler;
     }
@@ -587,7 +572,6 @@ public:
     const nsIFrame*       mPrevReferenceFrame;
     nsDisplayLayerEventRegions* mPrevLayerEventRegions;
     nsPoint               mPrevOffset;
-    nsRect                mPrevDirtyRect;
     bool                  mPrevIsAtRootOfPseudoStackingContext;
     bool                  mPrevAncestorHasTouchEventHandler;
   };
@@ -752,7 +736,6 @@ private:
   struct PresShellState {
     nsIPresShell* mPresShell;
     nsIFrame*     mCaretFrame;
-    nsRect        mPrevDirtyRect;
     uint32_t      mFirstFrameMarkedForDisplay;
     bool          mIsBackgroundOnly;
   };
@@ -780,8 +763,6 @@ private:
   const nsIFrame*                mCurrentReferenceFrame;
   // The offset from mCurrentFrame to mCurrentReferenceFrame.
   nsPoint                        mCurrentOffsetToReferenceFrame;
-  // Relative to mCurrentFrame.
-  nsRect                         mDirtyRect;
   nsRegion                       mExcludedGlassRegion;
   // The display item for the Windows window glass background, if any
   nsDisplayItem*                 mGlassDisplayItem;
