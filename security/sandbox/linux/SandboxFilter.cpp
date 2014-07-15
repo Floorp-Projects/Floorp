@@ -125,12 +125,9 @@ SandboxFilterImpl::Build() {
   Allow(SYSCALL(mmap));
 #endif
 
-  /* B2G specific high-frequency syscalls */
-#ifdef MOZ_WIDGET_GONK
   Allow(SYSCALL(clock_gettime));
   Allow(SYSCALL(epoll_wait));
   Allow(SYSCALL(gettimeofday));
-#endif
   Allow(SYSCALL(read));
   Allow(SYSCALL(write));
   // 32-bit lseek is used, at least on Android, to implement ANSI fseek.
@@ -221,8 +218,6 @@ SandboxFilterImpl::Build() {
   // with Android KitKat abort(); see bug 1004832.
   Allow(SYSCALL_WITH_ARG(tgkill, 0, uint32_t(getpid())));
 
-  /* B2G specific low-frequency syscalls */
-#ifdef MOZ_WIDGET_GONK
   Allow(SOCKETCALL(sendto, SENDTO));
   Allow(SOCKETCALL(recvfrom, RECVFROM));
   Allow(SYSCALL_LARGEFILE(getdents, getdents64));
@@ -231,7 +226,6 @@ SandboxFilterImpl::Build() {
   Allow(SYSCALL(sched_getscheduler));
   Allow(SYSCALL(sched_setscheduler));
   Allow(SYSCALL(sigaltstack));
-#endif
 
   /* Always last and always OK calls */
   /* Architecture-specific very infrequently used syscalls */
@@ -250,9 +244,9 @@ SandboxFilterImpl::Build() {
   /* restart_syscall is called internally, generally when debugging */
   Allow(SYSCALL(restart_syscall));
 
-  /* linux desktop is not as performance critical as B2G */
+  /* linux desktop is not as performance critical as mobile */
   /* we can place desktop syscalls at the end */
-#ifndef MOZ_WIDGET_GONK
+#ifndef ANDROID
   Allow(SYSCALL(stat));
   Allow(SYSCALL(getdents));
   Allow(SYSCALL(lstat));
