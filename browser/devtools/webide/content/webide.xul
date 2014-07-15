@@ -45,6 +45,7 @@
       <command id="cmd_takeScreenshot" oncommand="Cmds.takeScreenshot()" label="&runtimeMenu_takeScreenshot_label;"/>
       <command id="cmd_toggleEditor" oncommand="Cmds.toggleEditors()" label="&viewMenu_toggleEditor_label;"/>
       <command id="cmd_showAddons" oncommand="Cmds.showAddons()"/>
+      <command id="cmd_showPrefs" oncommand="Cmds.showPrefs()"/>
       <command id="cmd_showTroubleShooting" oncommand="Cmds.showTroubleShooting()"/>
       <command id="cmd_play" oncommand="Cmds.play()"/>
       <command id="cmd_stop" oncommand="Cmds.stop()" label="&projectMenu_stop_label;"/>
@@ -65,6 +66,8 @@
         <menuitem command="cmd_toggleToolbox" key="key_toggleToolbox" label="&projectMenu_debug_label;" accesskey="&projectMenu_debug_accesskey;"/>
         <menuseparator/>
         <menuitem command="cmd_removeProject" accesskey="&projectMenu_remove_accesskey;"/>
+        <menuseparator/>
+        <menuitem command="cmd_showPrefs" label="&projectMenu_showPrefs_label;" accesskey="&projectMenu_showPrefs_accesskey;"/>
       </menupopup>
     </menu>
 
@@ -94,6 +97,8 @@
     <key key="&key_toggleEditor;" id="key_toggleEditor" command="cmd_toggleEditor" modifiers="accel"/>
     <key keycode="&key_toggleToolbox;" id="key_toggleToolbox" command="cmd_toggleToolbox"/>
   </keyset>
+
+  <tooltip id="aHTMLTooltip" page="true"/>
 
   <toolbar id="main-toolbar">
 
@@ -170,6 +175,7 @@
       <iframe id="deck-panel-details" flex="1" src="details.xhtml"/>
       <iframe id="deck-panel-projecteditor" flex="1"/>
       <iframe id="deck-panel-addons" flex="1" src="addons.xhtml"/>
+      <iframe id="deck-panel-prefs" flex="1" src="prefs.xhtml"/>
       <iframe id="deck-panel-permissionstable" flex="1" src="permissionstable.xhtml"/>
       <iframe id="deck-panel-runtimedetails" flex="1" src="runtimedetails.xhtml"/>
     </deck>
