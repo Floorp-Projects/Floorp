@@ -38,12 +38,13 @@ class gfxBaseSharedMemorySurface : public Base {
     typedef mozilla::ipc::Shmem Shmem;
     friend class gfxReusableSharedImageSurfaceWrapper;
 
-public:
+protected:
     virtual ~gfxBaseSharedMemorySurface()
     {
         MOZ_COUNT_DTOR(gfxBaseSharedMemorySurface);
     }
 
+public:
     /**
      * Return a new gfxSharedImageSurface around a shmem segment newly
      * allocated by this function.  |aAllocator| is the object used to

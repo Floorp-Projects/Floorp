@@ -20,6 +20,7 @@
 #include "nsString.h"
 #include "nsCOMArray.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 
@@ -364,14 +365,15 @@ private:
 };
 
 
-class CacheOutputCloseListener : public nsRunnable
+class CacheOutputCloseListener MOZ_FINAL : public nsRunnable
 {
 public:
   void OnOutputClosed();
-  virtual ~CacheOutputCloseListener();
 
 private:
   friend class CacheEntry;
+
+  virtual ~CacheOutputCloseListener();
 
   NS_DECL_NSIRUNNABLE
   CacheOutputCloseListener(CacheEntry* aEntry);

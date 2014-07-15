@@ -29,8 +29,11 @@ class SharedPlanarYCbCrImage : public PlanarYCbCrImage
 {
 public:
   SharedPlanarYCbCrImage(ImageClient* aCompositable);
+
+protected:
   ~SharedPlanarYCbCrImage();
 
+public:
   virtual ISharedImage* AsSharedImage() MOZ_OVERRIDE { return this; }
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE;

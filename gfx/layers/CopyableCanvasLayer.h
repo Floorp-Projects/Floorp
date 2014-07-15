@@ -37,8 +37,11 @@ class CopyableCanvasLayer : public CanvasLayer
 {
 public:
   CopyableCanvasLayer(LayerManager* aLayerManager, void *aImplData);
+
+protected:
   virtual ~CopyableCanvasLayer();
 
+public:
   virtual void Initialize(const Data& aData);
 
   virtual bool IsDataValid(const Data& aData);

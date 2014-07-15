@@ -33,8 +33,10 @@ class ImageLayerComposite : public ImageLayer,
 public:
   ImageLayerComposite(LayerManagerComposite* aManager);
 
+protected:
   virtual ~ImageLayerComposite();
 
+public:
   virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
 
   virtual void Disconnect() MOZ_OVERRIDE;
