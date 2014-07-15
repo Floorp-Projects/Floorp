@@ -13,6 +13,7 @@
 #include "nsPrincipal.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
+#include "nsIAddonInterposition.h"
 
 #include "mozilla/dom/BindingUtils.h"
 
