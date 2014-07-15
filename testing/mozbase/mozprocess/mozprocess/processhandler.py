@@ -821,7 +821,8 @@ falling back to not using job objects for managing child processes"""
                 if timeout and count > timeout:
                     return None
 
-        return self.proc.wait()
+        self.returncode = self.proc.wait()
+        return self.returncode
 
     # TODO Remove this method when consumers have been fixed
     def waitForFinish(self, timeout=None):
@@ -951,7 +952,7 @@ class ProcessHandler(ProcessHandlerMixin):
     appended to the given file.
     """
 
-    def __init__(self, cmd, logfile=None, stream=None,  storeOutput=True, **kwargs):
+    def __init__(self, cmd, logfile=None, stream=None, storeOutput=True, **kwargs):
         kwargs.setdefault('processOutputLine', [])
         if callable(kwargs['processOutputLine']):
             kwargs['processOutputLine'] = [kwargs['processOutputLine']]

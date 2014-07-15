@@ -521,6 +521,10 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
       password = &hmac_key;
     }
 
+    if (ctx->response) {
+      nr_stun_message_destroy(&ctx->response);
+    }
+
     if ((r=nr_stun_message_create2(&ctx->response, msg, len)))
         ABORT(r);
 

@@ -12,7 +12,7 @@ class Push2TestCase(DeviceManagerTestCase):
     def runTest(self):
         """This tests copying a directory structure with files to the device.
         """
-        testroot = posixpath.join(self.dm.getDeviceRoot(), 'infratest')
+        testroot = posixpath.join(self.dm.deviceRoot, 'infratest')
         self.dm.removeDir(testroot)
         self.dm.mkDir(testroot)
         path = posixpath.join(testroot, 'push2')

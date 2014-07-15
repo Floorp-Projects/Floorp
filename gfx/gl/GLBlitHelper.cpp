@@ -247,6 +247,16 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
         }                                                   \n\
     ";
 #endif
+    /* From Rec601:
+    [R] [1.1643835616438356, 0.0, 1.5960267857142858] [ Y - 16]
+    [G] = [1.1643835616438358, -0.3917622900949137, -0.8129676472377708] x [Cb - 128]
+    [B] [1.1643835616438356, 2.017232142857143, 8.862867620416422e-17] [Cr - 128]
+
+    For [0,1] instead of [0,255], and to 5 places:
+    [R] [1.16438, 0.00000, 1.59603] [ Y - 0.06275]
+    [G] = [1.16438, -0.39176, -0.81297] x [Cb - 0.50196]
+    [B] [1.16438, 2.01723, 0.00000] [Cr - 0.50196]
+    */
     const char kTexYUVPlanarBlit_FragShaderSource[] = "\
         varying vec2 vTexCoord;                                             \n\
         uniform sampler2D uYTexture;                                        \n\
@@ -259,12 +269,12 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
             float y = texture2D(uYTexture, vTexCoord * uYTexScale).r;       \n\
             float cb = texture2D(uCbTexture, vTexCoord * uCbCrTexScale).r;  \n\
             float cr = texture2D(uCrTexture, vTexCoord * uCbCrTexScale).r;  \n\
-            y = (y - 0.0625) * 1.164;                                       \n\
-            cb = cb - 0.504;                                                  \n\
-            cr = cr - 0.5;                                                  \n\
-            gl_FragColor.r = floor((y + cr * 1.596) * 256.0)/256.0;         \n\
-            gl_FragColor.g = floor((y - 0.813 * cr - 0.391 * cb) * 256.0)/256.0;                   \n\
-            gl_FragColor.b = floor((y + cb * 2.018) * 256.0) /256.0;                                \n\
+            y = (y - 0.06275) * 1.16438;                                    \n\
+            cb = cb - 0.50196;                                              \n\
+            cr = cr - 0.50196;                                              \n\
+            gl_FragColor.r = y + cr * 1.59603;                              \n\
+            gl_FragColor.g = y - 0.81297 * cr - 0.39176 * cb;               \n\
+            gl_FragColor.b = y + cb * 2.01723;                              \n\
             gl_FragColor.a = 1.0;                                           \n\
         }                                                                   \n\
     ";

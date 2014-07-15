@@ -3215,6 +3215,19 @@ if test -n "$JSGC_USE_EXACT_ROOTING"; then
 fi
 
 dnl ========================================================
+dnl = Use a smaller chunk size for GC chunks
+dnl ========================================================
+dnl Use large (1MB) chunks by default.  For B2G this option is used to give
+dnl smaller (currently 256K) chunks.
+MOZ_ARG_ENABLE_BOOL(small-chunk-size,
+[  --enable-small-chunk-size  Allocate memory for JS GC things in smaller chunks],
+    JS_GC_SMALL_CHUNK_SIZE=1,
+    JS_GC_SMALL_CHUNK_SIZE= )
+if test -n "$JS_GC_SMALL_CHUNK_SIZE"; then
+    AC_DEFINE(JS_GC_SMALL_CHUNK_SIZE)
+fi
+
+dnl ========================================================
 dnl = Use GC tracing
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(gc-trace,
