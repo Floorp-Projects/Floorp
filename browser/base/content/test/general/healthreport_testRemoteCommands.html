@@ -5,8 +5,19 @@
 <script>
 
 function init() {
-  window.addEventListener("message", function process(e) {doTest(e)}, false);
-  doTest();
+  window.addEventListener("message", function process(e) {
+    // The init function of abouthealth.js schedules an initial payload event,
+    // which will be sent after the payload data has been collected. This extra
+    // event can cause unexpected successes/failures in this test, so we wait
+    // for the extra event to arrive here before progressing with the actual
+    // test.
+    if (e.data.type == "payload") {
+      window.removeEventListener("message", process, false);
+
+      window.addEventListener("message", doTest, false);
+      doTest();
+    }
+  }, false);
 }
 
 function checkSubmissionValue(payload, expectedValue) {

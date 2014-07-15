@@ -1018,12 +1018,12 @@ template <typename T> class MaybeRooted<T, NoGC>
     typedef FakeRooted<T> RootType;
     typedef FakeMutableHandle<T> MutableHandleType;
 
-    static inline JS::Handle<T> toHandle(HandleType v) {
-        MOZ_ASSUME_UNREACHABLE("Bad conversion");
+    static JS::Handle<T> toHandle(HandleType v) {
+        MOZ_CRASH("Bad conversion");
     }
 
-    static inline JS::MutableHandle<T> toMutableHandle(MutableHandleType v) {
-        MOZ_ASSUME_UNREACHABLE("Bad conversion");
+    static JS::MutableHandle<T> toMutableHandle(MutableHandleType v) {
+        MOZ_CRASH("Bad conversion");
     }
 };
 

@@ -264,6 +264,13 @@ class Simulator
 
     static int64_t StopSimAt;
 
+    // For testing the MoveResolver code, a MoveResolver is set up, and
+    // the VFP registers are loaded with pre-determined values,
+    // then the sequence of code is simulated.  In order to test this with the
+    // simulator, the callee-saved registers can't be trashed. This flag
+    // disables that feature.
+    bool skipCalleeSavedRegsCheck;
+
     // Runtime call support.
     static void *RedirectNativeFunction(void *nativeFunction, ABIFunctionType type);
 

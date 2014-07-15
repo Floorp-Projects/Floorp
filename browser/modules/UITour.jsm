@@ -842,7 +842,7 @@ this.UITour = {
       highlighter.style.width = highlightWidth + "px";
 
       // Close a previous highlight so we can relocate the panel.
-      if (highlighter.parentElement.state == "open") {
+      if (highlighter.parentElement.state == "showing" || highlighter.parentElement.state == "open") {
         highlighter.parentElement.hidePopup();
       }
       /* The "overlap" position anchors from the top-left but we want to centre highlights at their
@@ -909,7 +909,7 @@ this.UITour = {
       let tooltipIcon = document.getElementById("UITourTooltipIcon");
       let tooltipButtons = document.getElementById("UITourTooltipButtons");
 
-      if (tooltip.state == "open") {
+      if (tooltip.state == "showing" || tooltip.state == "open") {
         tooltip.hidePopup();
       }
 

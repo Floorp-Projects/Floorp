@@ -17,7 +17,7 @@ class CodeGenerator;
 
 class MoveEmitterARM
 {
-    bool inCycle_;
+    uint32_t inCycle_;
     MacroAssemblerARMCompat &masm;
 
     // Original stack push value.
@@ -38,15 +38,17 @@ class MoveEmitterARM
     void assertDone();
     Register tempReg();
     FloatRegister tempFloatReg();
-    Operand cycleSlot() const;
+    Operand cycleSlot(uint32_t slot, uint32_t subslot) const;
     Operand spillSlot() const;
     Operand toOperand(const MoveOperand &operand, bool isFloat) const;
 
     void emitMove(const MoveOperand &from, const MoveOperand &to);
     void emitFloat32Move(const MoveOperand &from, const MoveOperand &to);
     void emitDoubleMove(const MoveOperand &from, const MoveOperand &to);
-    void breakCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type);
-    void completeCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type);
+    void breakCycle(const MoveOperand &from, const MoveOperand &to,
+                    MoveOp::Type type, uint32_t slot);
+    void completeCycle(const MoveOperand &from, const MoveOperand &to,
+                       MoveOp::Type type, uint32_t slot);
     void emit(const MoveOp &move);
 
   public:

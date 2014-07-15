@@ -3113,8 +3113,8 @@ LIRGenerator::visitAssertRange(MAssertRange *ins)
         break;
 
       case MIRType_Float32: {
-        LDefinition armtemp = hasMultiAlias() ? tempFloat32() : LDefinition::BogusTemp();
-        lir = new(alloc()) LAssertRangeF(useRegister(input), tempFloat32(), armtemp);
+        LDefinition armtemp = hasMultiAlias() ? tempDouble() : LDefinition::BogusTemp();
+        lir = new(alloc()) LAssertRangeF(useRegister(input), tempDouble(), armtemp);
         break;
       }
       case MIRType_Value:

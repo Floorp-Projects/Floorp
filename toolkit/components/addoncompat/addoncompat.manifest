@@ -1,0 +1,2 @@
+component {1363d5f0-d95e-11e3-9c1a-0800200c9a66} multiprocessShims.js
+contract @mozilla.org/addons/multiprocess-shims;1 {1363d5f0-d95e-11e3-9c1a-0800200c9a66}

@@ -10,6 +10,7 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'AccessCheck.cpp',
+    'AddonWrapper.cpp',
     'ChromeObjectWrapper.cpp',
     'FilteringWrapper.cpp',
     'WaiveXrayWrapper.cpp',

@@ -71,7 +71,7 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "location", "version", "type",
                           "skinnable", "size", "sourceURI", "releaseNotesURI",
                           "softDisabled", "foreignInstall", "hasBinaryComponents",
                           "strictCompatibility", "locales", "targetApplications",
-                          "targetPlatforms"];
+                          "targetPlatforms", "multiprocessCompatible"];
 
 // Time to wait before async save of XPI JSON database, in milliseconds
 const ASYNC_SAVE_DELAY_MS = 20;
@@ -1466,6 +1466,15 @@ this.XPIDatabase = {
                            encodeURIComponent(row.version));
       }
       fullCount += count;
+    }
+
+    text += "\r\n[MultiprocessIncompatibleExtensions]\r\n";
+
+    count = 0;
+    for (let row of activeAddons) {
+      if (!row.multiprocessCompatible) {
+        text += "Extension" + (count++) + "=" + row.id + "\r\n";
+      }
     }
 
     if (fullCount > 0) {
