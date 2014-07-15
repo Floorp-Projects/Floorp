@@ -4478,7 +4478,7 @@ JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
 
     compileAndGo = false;
     noScriptRval = cx->options().noScriptRval();
-    strictOption = cx->options().strictMode();
+    strictOption = cx->runtime()->options().strictMode();
     extraWarningsOption = cx->options().extraWarnings();
     werrorOption = cx->runtime()->options().werror();
     asmJSOption = cx->runtime()->options().asmJS();
