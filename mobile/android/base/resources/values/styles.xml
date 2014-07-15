@@ -474,8 +474,8 @@
 
     <style name="TabsPanelSectionBase">
         <item name="android:orientation">vertical</item>
-        <item name="android:layout_marginLeft">16dp</item>
-        <item name="android:layout_marginRight">16dp</item>
+        <item name="android:layout_marginLeft">40dp</item>
+        <item name="android:layout_marginRight">40dp</item>
     </style>
 
     <style name="TabsPanelSection" parent="TabsPanelSectionBase">
@@ -503,7 +503,7 @@
     <style name="TabsPanelItem.ButtonBase">
         <item name="android:background">@drawable/remote_tabs_setup_button_background</item>
         <item name="android:textColor">#FFFEFF</item>
-        <item name="android:textSize">20sp</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:gravity">center</item>
     </style>
 
@@ -512,17 +512,17 @@
         <item name="android:paddingBottom">18dp</item>
         <item name="android:paddingLeft">9dp</item>
         <item name="android:paddingRight">9dp</item>
-        <item name="android:layout_marginLeft">24dp</item>
-        <item name="android:layout_marginRight">24dp</item>
     </style>
 
     <style name="TabsPanelItem.TextAppearance">
         <item name="android:textColor">#C0C9D0</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineSpacingMultiplier">1.35</item>
     </style>
 
     <style name="TabsPanelItem.TextAppearance.Header">
-        <item name="android:textSize">20sp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:layout_marginBottom">16dp</item>
     </style>
 
     <style name="TabsPanelItem.TextAppearance.Header.FXAccounts">
