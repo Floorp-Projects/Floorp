@@ -4,18 +4,30 @@
 package org.mozilla.gecko.browser.tests;
 
 import android.content.Context;
+import android.content.ContentResolver;
 import android.content.res.Resources;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.ContentObserver;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.SystemClock;
 import android.test.mock.MockResources;
 import android.test.RenamingDelegatingContext;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.jar.JarInputStream;
+import java.util.Map;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -23,9 +35,11 @@ import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.SuggestedSites;
+import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 
@@ -79,10 +93,64 @@ public class TestSuggestedSites extends BrowserTestCase {
         }
     }
 
+    private static class TestDistribution extends Distribution {
+        private final Context context;
+        private final Map<Locale, File> filesPerLocale;
+
+        public TestDistribution(Context context) {
+            super(context);
+            this.context = context;
+            this.filesPerLocale = new HashMap<Locale, File>();
+        }
+
+        @Override
+        public File getDistributionFile(String name) {
+            for (Locale locale : filesPerLocale.keySet()) {
+                if (name.startsWith("suggestedsites/locales/" + BrowserLocaleManager.getLanguageTag(locale))) {
+                    return filesPerLocale.get(locale);
+                }
+            }
+
+            return null;
+        }
+
+        @Override
+        public boolean exists() {
+            return true;
+        }
+
+        public void setFileForLocale(Locale locale, File file) {
+            filesPerLocale.put(locale, file);
+        }
+
+        public void start() {
+            doInit();
+        }
+    }
+
+    class TestObserver extends ContentObserver {
+        private final Object changeLock;
+
+        public TestObserver(Object changeLock) {
+            super(null);
+            this.changeLock = changeLock;
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            synchronized(changeLock) {
+                changeLock.notifyAll();
+            }
+        }
+    }
+
     private static final int DEFAULT_LIMIT = 6;
+
+    private static final String DIST_PREFIX = "dist";
 
     private TestContext context;
     private TestResources resources;
+    private List<File> tempFiles;
 
     private String generateSites(int n) {
         return generateSites(n, "");
@@ -108,6 +176,32 @@ public class TestSuggestedSites extends BrowserTestCase {
         return sites.toString();
     }
 
+    private File createDistSuggestedSitesFile(int n) {
+        FileOutputStream fos = null;
+
+        try {
+            File distFile = File.createTempFile("distrosites", ".json",
+                                                context.getCacheDir());
+
+            fos = new FileOutputStream(distFile);
+            fos.write(generateSites(n, DIST_PREFIX).getBytes());
+
+            return distFile;
+        } catch (IOException e) {
+            fail("Failed to create temp suggested sites file");
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    // Ignore.
+                }
+            }
+        }
+
+        return null;
+    }
+
     private void checkCursorCount(String content, int expectedCount) {
         checkCursorCount(content, expectedCount, DEFAULT_LIMIT);
     }
@@ -122,10 +216,14 @@ public class TestSuggestedSites extends BrowserTestCase {
     protected void setUp() {
         context = new TestContext(getApplicationContext());
         resources = (TestResources) context.getResources();
+        tempFiles = new ArrayList<File>();
     }
 
     protected void tearDown() {
         context.clearUsedPrefs();
+        for (File f : tempFiles) {
+            f.delete();
+        }
     }
 
     public void testCount() {
@@ -307,5 +405,96 @@ public class TestSuggestedSites extends BrowserTestCase {
         c = suggestedSites.get(DEFAULT_LIMIT, Locale.US);
         assertEquals(5, c.getCount());
         c.close();
+    }
+
+    public void testDistribution() {
+        final int DIST_COUNT = 2;
+        final int DEFAULT_COUNT = 3;
+
+        File sitesFile = new File(context.getCacheDir(),
+                                  "suggestedsites-" + SystemClock.uptimeMillis() + ".json");
+        tempFiles.add(sitesFile);
+        assertFalse(sitesFile.exists());
+
+        File distFile = createDistSuggestedSitesFile(DIST_COUNT);
+        tempFiles.add(distFile);
+        assertTrue(distFile.exists());
+
+        // Init distribution with the mock file.
+        TestDistribution distribution = new TestDistribution(context);
+        distribution.setFileForLocale(Locale.getDefault(), distFile);
+        distribution.start();
+
+        // Init suggested sites with default values.
+        resources.setSuggestedSitesResource(generateSites(DEFAULT_COUNT));
+        SuggestedSites suggestedSites =
+                new SuggestedSites(context, distribution, sitesFile);
+
+        Object changeLock = new Object();
+
+        // Watch for change notifications on suggested sites.
+        ContentResolver cr = context.getContentResolver();
+        ContentObserver observer = new TestObserver(changeLock);
+        cr.registerContentObserver(BrowserContract.SuggestedSites.CONTENT_URI,
+                                   false, observer);
+
+        // The initial query will not contain the distribution sites
+        // yet. This will happen asynchronously once the distribution
+        // is installed.
+        Cursor c1 = null;
+        try {
+            c1 = suggestedSites.get(DEFAULT_LIMIT);
+            assertEquals(DEFAULT_COUNT, c1.getCount());
+        } finally {
+            if (c1 != null) {
+                c1.close();
+            }
+        }
+
+        synchronized(changeLock) {
+            try {
+                changeLock.wait(5000);
+            } catch (InterruptedException ie) {
+                fail("No change notification after fetching distribution file");
+            }
+        }
+
+        // Target file should exist after distribution is deployed.
+        assertTrue(sitesFile.exists());
+        cr.unregisterContentObserver(observer);
+
+        Cursor c2 = null;
+        try {
+            c2 = suggestedSites.get(DEFAULT_LIMIT);
+
+            // The next query should contain the distribution contents.
+            assertEquals(DIST_COUNT + DEFAULT_COUNT, c2.getCount());
+
+            // The first items should be from the distribution
+            for (int i = 0; i < DIST_COUNT; i++) {
+                c2.moveToPosition(i);
+
+                String url = c2.getString(c2.getColumnIndexOrThrow(BrowserContract.SuggestedSites.URL));
+                assertEquals(DIST_PREFIX +  "url" + i, url);
+
+                String title = c2.getString(c2.getColumnIndexOrThrow(BrowserContract.SuggestedSites.TITLE));
+                assertEquals(DIST_PREFIX +  "title" + i, title);
+            }
+
+            // The remaining items should be the default ones
+            for (int i = 0; i < c2.getCount() - DIST_COUNT; i++) {
+                c2.moveToPosition(i + DIST_COUNT);
+
+                String url = c2.getString(c2.getColumnIndexOrThrow(BrowserContract.SuggestedSites.URL));
+                assertEquals("url" + i, url);
+
+                String title = c2.getString(c2.getColumnIndexOrThrow(BrowserContract.SuggestedSites.TITLE));
+                assertEquals("title" + i, title);
+            }
+        } finally {
+            if (c2 != null) {
+                c2.close();
+            }
+        }
     }
 }
