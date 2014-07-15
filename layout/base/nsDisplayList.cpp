@@ -3068,6 +3068,17 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
   }
 }
 
+nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
+                                     nsIFrame* aFrame, nsDisplayItem* aItem,
+                                     const nsIFrame* aReferenceFrame,
+                                     const nsPoint& aToReferenceFrame)
+  : nsDisplayItem(aBuilder, aFrame, aReferenceFrame, aToReferenceFrame)
+  , mOverrideZIndex(0)
+{
+  mList.AppendToTop(aItem);
+  mBounds = mList.GetBounds(aBuilder);
+}
+
 nsDisplayWrapList::~nsDisplayWrapList() {
   mList.DeleteAll();
 }
