@@ -1538,7 +1538,7 @@ Navigator::GetFeature(const nsAString& aName)
 
   NS_NAMED_LITERAL_STRING(apiWindowPrefix, "api.window.");
   if (StringBeginsWith(aName, apiWindowPrefix)) {
-    const nsAString& featureName = Substring(aName, apiWindowPrefix.Length(), aName.Length()-apiWindowPrefix.Length());
+    const nsAString& featureName = Substring(aName, apiWindowPrefix.Length());
     if (IsFeatureDetectible(featureName)) {
       p->MaybeResolve(true);
     } else {
