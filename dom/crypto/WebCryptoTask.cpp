@@ -303,7 +303,7 @@ class AesTask : public ReturnArrayBufferViewTask
 {
 public:
   AesTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-          mozilla::dom::CryptoKey& aKey, const CryptoOperationData& aData,
+          CryptoKey& aKey, const CryptoOperationData& aData,
           bool aEncrypt)
     : mSymKey(aKey.GetSymKey())
     , mEncrypt(aEncrypt)
@@ -480,7 +480,7 @@ class RsaesPkcs1Task : public ReturnArrayBufferViewTask
 {
 public:
   RsaesPkcs1Task(JSContext* aCx, const ObjectOrString& aAlgorithm,
-                 mozilla::dom::CryptoKey& aKey, const CryptoOperationData& aData,
+                 CryptoKey& aKey, const CryptoOperationData& aData,
                  bool aEncrypt)
     : mPrivKey(aKey.GetPrivateKey())
     , mPubKey(aKey.GetPublicKey())
@@ -549,11 +549,134 @@ private:
   }
 };
 
+class RsaOaepTask : public ReturnArrayBufferViewTask
+{
+public:
+  RsaOaepTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+              CryptoKey& aKey, const CryptoOperationData& aData,
+              bool aEncrypt)
+    : mPrivKey(aKey.GetPrivateKey())
+    , mPubKey(aKey.GetPublicKey())
+    , mEncrypt(aEncrypt)
+  {
+    Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_RSA_OAEP);
+
+    ATTEMPT_BUFFER_INIT(mData, aData);
+
+    if (mEncrypt) {
+      if (!mPubKey) {
+        mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
+        return;
+      }
+      mStrength = SECKEY_PublicKeyStrength(mPubKey);
+    } else {
+      if (!mPrivKey) {
+        mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
+        return;
+      }
+      mStrength = PK11_GetPrivateModulusLen(mPrivKey);
+    }
+
+    RootedDictionary<RsaOaepParams> params(aCx);
+    mEarlyRv = Coerce(aCx, params, aAlgorithm);
+    if (NS_FAILED(mEarlyRv)) {
+      mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+      return;
+    }
+
+    if (params.mLabel.WasPassed() && !params.mLabel.Value().IsNull()) {
+      ATTEMPT_BUFFER_INIT(mLabel, params.mLabel.Value().Value());
+    }
+    // Otherwise mLabel remains the empty octet string, as intended
+
+    // Look up the MGF based on the KeyAlgorithm.
+    // static_cast is safe because we only get here if the algorithm name
+    // is RSA-OAEP, and that only happens if we've constructed
+    // an RsaHashedKeyAlgorithm.
+    // TODO: Add As* methods to KeyAlgorithm (Bug 1036734)
+    nsRefPtr<RsaHashedKeyAlgorithm> rsaAlg =
+      static_cast<RsaHashedKeyAlgorithm*>(aKey.Algorithm());
+    mHashMechanism = rsaAlg->Hash()->Mechanism();
+
+    switch (mHashMechanism) {
+      case CKM_SHA_1:
+        mMgfMechanism = CKG_MGF1_SHA1; break;
+      case CKM_SHA256:
+        mMgfMechanism = CKG_MGF1_SHA256; break;
+      case CKM_SHA384:
+        mMgfMechanism = CKG_MGF1_SHA384; break;
+      case CKM_SHA512:
+        mMgfMechanism = CKG_MGF1_SHA512; break;
+      default: {
+        mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+        return;
+      }
+    }
+  }
+
+private:
+  CK_MECHANISM_TYPE mHashMechanism;
+  CK_MECHANISM_TYPE mMgfMechanism;
+  ScopedSECKEYPrivateKey mPrivKey;
+  ScopedSECKEYPublicKey mPubKey;
+  CryptoBuffer mLabel;
+  CryptoBuffer mData;
+  uint32_t mStrength;
+  bool mEncrypt;
+
+  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  {
+    nsresult rv;
+
+    // Ciphertext is an integer mod the modulus, so it will be
+    // no longer than mStrength octets
+    if (!mResult.SetLength(mStrength)) {
+      return NS_ERROR_DOM_UNKNOWN_ERR;
+    }
+
+    CK_RSA_PKCS_OAEP_PARAMS oaepParams;
+    oaepParams.source = CKZ_DATA_SPECIFIED;
+
+    oaepParams.pSourceData = mLabel.Length() ? mLabel.Elements() : nullptr;
+    oaepParams.ulSourceDataLen = mLabel.Length();
+
+    oaepParams.mgf = mMgfMechanism;
+    oaepParams.hashAlg = mHashMechanism;
+
+    SECItem param;
+    param.type = siBuffer;
+    param.data = (unsigned char*) &oaepParams;
+    param.len = sizeof(oaepParams);
+
+    uint32_t outLen;
+    if (mEncrypt) {
+      // PK11_PubEncrypt() checks the plaintext's length and fails if it is too
+      // long to encrypt, i.e. if it is longer than (k - 2hLen - 2) with 'k'
+      // being the length in octets of the RSA modulus n and 'hLen' being the
+      // output length in octets of the chosen hash function.
+      // <https://tools.ietf.org/html/rfc3447#section-7.1>
+      rv = MapSECStatus(PK11_PubEncrypt(
+             mPubKey.get(), CKM_RSA_PKCS_OAEP, &param,
+             mResult.Elements(), &outLen, mResult.Length(),
+             mData.Elements(), mData.Length(), nullptr));
+    } else {
+      rv = MapSECStatus(PK11_PrivDecrypt(
+             mPrivKey.get(), CKM_RSA_PKCS_OAEP, &param,
+             mResult.Elements(), &outLen, mResult.Length(),
+             mData.Elements(), mData.Length()));
+    }
+    mResult.SetLength(outLen);
+
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
+    return NS_OK;
+  }
+};
+
 class HmacTask : public WebCryptoTask
 {
 public:
   HmacTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-           mozilla::dom::CryptoKey& aKey,
+           CryptoKey& aKey,
            const CryptoOperationData& aSignature,
            const CryptoOperationData& aData,
            bool aSign)
@@ -656,7 +779,7 @@ class RsassaPkcs1Task : public WebCryptoTask
 {
 public:
   RsassaPkcs1Task(JSContext* aCx, const ObjectOrString& aAlgorithm,
-                  mozilla::dom::CryptoKey& aKey,
+                  CryptoKey& aKey,
                   const CryptoOperationData& aSignature,
                   const CryptoOperationData& aData,
                   bool aSign)
@@ -1017,7 +1140,8 @@ public:
     }
 
     // If this is RSA with a hash, cache the hash name
-    if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
+    if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
+        mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
       RootedDictionary<RsaHashedImportParams> params(aCx);
       mEarlyRv = Coerce(aCx, params, aAlgorithm);
       if (NS_FAILED(mEarlyRv) || !params.mHash.WasPassed()) {
@@ -1088,15 +1212,14 @@ private:
   {
     // Construct an appropriate KeyAlgorithm
     nsIGlobalObject* global = mKey->GetParentObject();
-    if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1)) {
+    if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1) ||
+        mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
       if ((mKey->GetKeyType() == CryptoKey::PUBLIC &&
            mKey->HasUsageOtherThan(CryptoKey::ENCRYPT)) ||
           (mKey->GetKeyType() == CryptoKey::PRIVATE &&
            mKey->HasUsageOtherThan(CryptoKey::DECRYPT))) {
         return NS_ERROR_DOM_DATA_ERR;
       }
-
-      mKey->SetAlgorithm(new RsaKeyAlgorithm(global, mAlgName, mModulusLength, mPublicExponent));
     } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
       if ((mKey->GetKeyType() == CryptoKey::PUBLIC &&
            mKey->HasUsageOtherThan(CryptoKey::VERIFY)) ||
@@ -1104,15 +1227,22 @@ private:
            mKey->HasUsageOtherThan(CryptoKey::SIGN))) {
         return NS_ERROR_DOM_DATA_ERR;
       }
+    }
 
-      nsRefPtr<RsaHashedKeyAlgorithm> algorithm = new RsaHashedKeyAlgorithm(
-                                                          global,
-                                                          mAlgName,
-                                                          mModulusLength,
-                                                          mPublicExponent,
-                                                          mHashName);
+    // Construct an appropriate KeyAlgorithm
+    if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1)) {
+      mKey->SetAlgorithm(new RsaKeyAlgorithm(global, mAlgName, mModulusLength, mPublicExponent));
+    } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
+               mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
+      nsRefPtr<RsaHashedKeyAlgorithm> algorithm =
+        new RsaHashedKeyAlgorithm(global, mAlgName,
+                                  mModulusLength, mPublicExponent, mHashName);
       if (algorithm->Mechanism() == UNKNOWN_CK_MECHANISM) {
         return NS_ERROR_DOM_SYNTAX_ERR;
+      }
+
+      if (algorithm->Hash()->Mechanism() == UNKNOWN_CK_MECHANISM) {
+        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       }
       mKey->SetAlgorithm(algorithm);
     }
@@ -1345,7 +1475,8 @@ public:
     // Construct an appropriate KeyAlorithm
     KeyAlgorithm* algorithm;
     uint32_t privateAllowedUsages = 0, publicAllowedUsages = 0;
-    if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
+    if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
+        algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
       RootedDictionary<RsaHashedKeyGenParams> params(aCx);
       mEarlyRv = Coerce(aCx, params, aAlgorithm);
       if (NS_FAILED(mEarlyRv) || !params.mModulusLength.WasPassed() ||
@@ -1380,9 +1511,6 @@ public:
         mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
         return;
       }
-
-      privateAllowedUsages = CryptoKey::SIGN;
-      publicAllowedUsages = CryptoKey::VERIFY;
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1)) {
       RootedDictionary<RsaKeyGenParams> params(aCx);
       mEarlyRv = Coerce(aCx, params, aAlgorithm);
@@ -1411,12 +1539,19 @@ public:
         mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
         return;
       }
-
-      privateAllowedUsages = CryptoKey::DECRYPT | CryptoKey::UNWRAPKEY;
-      publicAllowedUsages = CryptoKey::ENCRYPT | CryptoKey::WRAPKEY;
     } else {
       mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       return;
+    }
+
+    // Set key usages.
+    if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
+      privateAllowedUsages = CryptoKey::SIGN;
+      publicAllowedUsages = CryptoKey::VERIFY;
+    } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1) ||
+               algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
+      privateAllowedUsages = CryptoKey::DECRYPT | CryptoKey::UNWRAPKEY;
+      publicAllowedUsages = CryptoKey::ENCRYPT | CryptoKey::WRAPKEY;
     }
 
     mKeyPair->PrivateKey()->SetExtractable(aExtractable);
@@ -1676,6 +1811,8 @@ WebCryptoTask::EncryptDecryptTask(JSContext* aCx,
     return new AesTask(aCx, aAlgorithm, aKey, aData, aEncrypt);
   } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1)) {
     return new RsaesPkcs1Task(aCx, aAlgorithm, aKey, aData, aEncrypt);
+  } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
+    return new RsaOaepTask(aCx, aAlgorithm, aKey, aData, aEncrypt);
   }
 
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
@@ -1748,7 +1885,8 @@ WebCryptoTask::ImportKeyTask(JSContext* aCx,
     return new ImportSymmetricKeyTask(aCx, aFormat, aKeyData, aAlgorithm,
                                       aExtractable, aKeyUsages);
   } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1) ||
-             algName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
+             algName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
+             algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
     return new ImportRsaKeyTask(aCx, aFormat, aKeyData, aAlgorithm,
                                 aExtractable, aKeyUsages);
   } else {
@@ -1790,7 +1928,8 @@ WebCryptoTask::GenerateKeyTask(JSContext* aCx,
       algName.EqualsASCII(WEBCRYPTO_ALG_HMAC)) {
     return new GenerateSymmetricKeyTask(aCx, aAlgorithm, aExtractable, aKeyUsages);
   } else if (algName.EqualsASCII(WEBCRYPTO_ALG_RSAES_PKCS1) ||
-             algName.EqualsASCII(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
+             algName.EqualsASCII(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
+             algName.EqualsASCII(WEBCRYPTO_ALG_RSA_OAEP)) {
     return new GenerateAsymmetricKeyTask(aCx, aAlgorithm, aExtractable, aKeyUsages);
   } else {
     return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
