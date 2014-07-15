@@ -75,19 +75,20 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                         self.device.pushFile(os.path.join(tmpdir, info.filename), remote_file)
             return
 
-        for file in os.listdir(self.options.local_lib):
-            if file.endswith(".so"):
-                print >> sys.stderr, "Pushing %s.." % file
-                remote_file = posixpath.join(self.remote_bin_dir, file)
-                self.device.pushFile(os.path.join(self.options.local_lib, file), remote_file)
-        # Additional libraries may be found in a sub-directory such as "lib/armeabi-v7a"
-        local_arm_lib = os.path.join(self.options.local_lib, "lib")
-        if os.path.isdir(local_arm_lib):
-            for root, dirs, files in os.walk(local_arm_lib):
-                for file in files:
-                    if (file.endswith(".so")):
-                        remote_file = posixpath.join(self.remote_bin_dir, file)
-                        self.device.pushFile(os.path.join(root, file), remote_file)
+        elif self.options.local_lib:
+            for file in os.listdir(self.options.local_lib):
+                if file.endswith(".so"):
+                    print >> sys.stderr, "Pushing %s.." % file
+                    remote_file = posixpath.join(self.remote_bin_dir, file)
+                    self.device.pushFile(os.path.join(self.options.local_lib, file), remote_file)
+            # Additional libraries may be found in a sub-directory such as "lib/armeabi-v7a"
+            local_arm_lib = os.path.join(self.options.local_lib, "lib")
+            if os.path.isdir(local_arm_lib):
+                for root, dirs, files in os.walk(local_arm_lib):
+                    for file in files:
+                        if (file.endswith(".so")):
+                            remote_file = posixpath.join(self.remote_bin_dir, file)
+                            self.device.pushFile(os.path.join(root, file), remote_file)
 
     def push_progs(self, progs):
         for local_file in progs:
@@ -187,6 +188,9 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
         self.add_option("--remoteTestRoot", action = "store",
                     type = "string", dest = "remote_test_root",
                     help = "remote directory to use as test root (eg. /data/local/tests)")
+        self.add_option("--with-b2g-emulator", action = "store",
+                    type = "string", dest = "with_b2g_emulator",
+                    help = "Start B2G Emulator (specify path to b2g home)")
         # /data/local/tests is used because it is usually not possible to set +x permissions
         # on binaries on /mnt/sdcard
         defaults["remote_test_root"] = "/data/local/tests"
@@ -204,9 +208,6 @@ def main():
     if not args:
         print >>sys.stderr, """Usage: %s <test binary> [<test binary>...]""" % sys.argv[0]
         sys.exit(1)
-    if options.local_lib is None and options.local_apk is None:
-        print >>sys.stderr, """Error: --localLib or --apk is required"""
-        sys.exit(1)
     if options.local_lib is not None and not os.path.isdir(options.local_lib):
         print >>sys.stderr, """Error: --localLib directory %s not found""" % options.local_lib
         sys.exit(1)
@@ -216,11 +217,27 @@ def main():
     if not options.xre_path:
         print >>sys.stderr, """Error: --xre-path is required"""
         sys.exit(1)
+    if options.with_b2g_emulator:
+        from mozrunner import B2GEmulatorRunner
+        runner = B2GEmulatorRunner(b2g_home=options.with_b2g_emulator)
+        runner.start()
     if options.dm_trans == "adb":
-        if options.device_ip:
-            dm = devicemanagerADB.DeviceManagerADB(options.device_ip, options.device_port, packageName=None, deviceRoot=options.remote_test_root)
+        if options.with_b2g_emulator:
+            # because we just started the emulator, we need more than the
+            # default number of retries here.
+            retryLimit = 50
         else:
-            dm = devicemanagerADB.DeviceManagerADB(packageName=None, deviceRoot=options.remote_test_root)
+            retryLimit = 5
+        try:
+            if options.device_ip:
+                dm = devicemanagerADB.DeviceManagerADB(options.device_ip, options.device_port, packageName=None, deviceRoot=options.remote_test_root, retryLimit=retryLimit)
+            else:
+                dm = devicemanagerADB.DeviceManagerADB(packageName=None, deviceRoot=options.remote_test_root, retryLimit=retryLimit)
+        except:
+            if options.with_b2g_emulator:
+                runner.cleanup()
+                runner.wait()
+            raise
     else:
         dm = devicemanagerSUT.DeviceManagerSUT(options.device_ip, options.device_port, deviceRoot=options.remote_test_root)
         if not options.device_ip:
@@ -234,6 +251,9 @@ def main():
     except Exception, e:
         log.error(str(e))
         result = False
+    if options.with_b2g_emulator:
+        runner.cleanup()
+        runner.wait()
     sys.exit(0 if result else 1)
 
 if __name__ == '__main__':

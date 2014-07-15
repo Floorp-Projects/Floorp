@@ -504,6 +504,9 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 	$(NSINSTALL) $(topsrcdir)/testing/android_cppunittest_manifest.txt $(PKG_STAGE)/cppunittests
 endif
+ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
+	$(NSINSTALL) $(topsrcdir)/testing/b2g_cppunittest_manifest.txt $(PKG_STAGE)/cppunittests
+endif
 ifeq ($(MOZ_DISABLE_STARTUPCACHE),)
 	$(NSINSTALL) $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.js $(PKG_STAGE)/cppunittests
 	$(NSINSTALL) $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.manifest $(PKG_STAGE)/cppunittests
