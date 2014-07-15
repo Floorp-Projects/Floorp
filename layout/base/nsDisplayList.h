@@ -1680,6 +1680,8 @@ public:
     mForceTransparentSurface = true;
   }
 
+  nsRect GetVisibleRect() const { return mVisibleRect; }
+
 private:
   // This class is only used on stack, so we don't have to worry about leaking
   // it.  Don't let us be heap-allocated!
@@ -1688,6 +1690,8 @@ private:
   nsDisplayItemLink  mSentinel;
   nsDisplayItemLink* mTop;
 
+  // This is set by ComputeVisibility
+  nsRect mVisibleRect;
   // This is set to true by ComputeVisibility if the final visible region
   // is empty (i.e. everything that was visible is covered by some
   // opaque content in this list).
