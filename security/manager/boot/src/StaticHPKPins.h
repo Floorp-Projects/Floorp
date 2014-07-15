@@ -89,7 +89,7 @@ static const char kDigiCert_High_Assurance_EV_Root_CAFingerprint[] =
 
 /* End Entity Test Cert */
 static const char kEnd_Entity_Test_CertFingerprint[] =
-  "a08RrXscTn7kKTSPR8uZVrmc0o3ryPd+o3menqJHJBw=";
+  "w3a2zMuMdmP9ed7H9HLExM+i+/0UxqHlKszZ5GQpHYM=";
 
 /* Entrust Root Certification Authority */
 static const char kEntrust_Root_Certification_AuthorityFingerprint[] =
@@ -1067,4 +1067,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1413832295312000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1413940883162000);
