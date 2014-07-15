@@ -2367,12 +2367,6 @@ class AutoCompartmentRooter : private JS::CustomAutoRooter
 
 } /* anonymous namespace */
 
-bool
-JS::CompartmentOptions::cloneSingletons(JSContext *cx) const
-{
-    return cloneSingletonsOverride_.get(cx->options().cloneSingletons());
-}
-
 JS::CompartmentOptions &
 JS::CompartmentOptions::setZone(ZoneSpecifier spec)
 {
