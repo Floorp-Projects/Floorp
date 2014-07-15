@@ -420,6 +420,9 @@
 #ifdef MOZ_ANDROID_SEARCH_ACTIVITY
 #include ../search/manifests/SearchAndroidManifest_services.xml.in
 #endif
+#ifdef MOZ_ANDROID_MLS_STUMBLER
+#include ../stumbler/manifests/StumblerManifest_services.xml.in
+#endif
 
     </application>
 
