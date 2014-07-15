@@ -150,6 +150,34 @@ let ContentPolicyChild = {
 };
 ContentPolicyChild.init();
 
+// This code registers observers in the child whenever an add-on in
+// the parent asks for notifications on the given topic.
+let ObserverChild = {
+  init: function() {
+    NotificationTracker.watch("observer", (path, count) => this.track(path, count));
+  },
+
+  track: function(path, count) {
+    let topic = path[1];
+    if (count) {
+      Services.obs.addObserver(this, topic, false);
+    } else {
+      Services.obs.removeObserver(this, topic);
+    }
+  },
+
+  observe: function(subject, topic, data) {
+    let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
+               .getService(Ci.nsISyncMessageSender);
+    cpmm.sendRpcMessage("Addons:Observer:Run", {}, {
+      topic: topic,
+      subject: subject,
+      data: data
+    });
+  }
+};
+ObserverChild.init();
+
 let RemoteAddonsChild = {
   init: function(global) {
   },
