@@ -92,6 +92,8 @@ protected:
 
 class JumpListShortcut : public JumpListItem, public nsIJumpListShortcut
 {
+  ~JumpListShortcut() {}
+
 public:
   JumpListShortcut() :
    JumpListItem(nsIJumpListItem::JUMPLIST_ITEM_SHORTCUT)
