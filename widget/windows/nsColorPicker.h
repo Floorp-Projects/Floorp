@@ -36,9 +36,10 @@ private:
 class nsColorPicker :
   public nsIColorPicker
 {
+  virtual ~nsColorPicker();
+
 public:
   nsColorPicker();
-  virtual ~nsColorPicker();
 
   NS_DECL_ISUPPORTS
 

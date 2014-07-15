@@ -31,12 +31,12 @@ class nsScreenManagerWin MOZ_FINAL : public nsIScreenManager
 {
 public:
   nsScreenManagerWin ( );
-  ~nsScreenManagerWin();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCREENMANAGER
 
 private:
+  ~nsScreenManagerWin();
 
   nsIScreen* CreateNewScreenObject ( HMONITOR inScreen ) ;
 
