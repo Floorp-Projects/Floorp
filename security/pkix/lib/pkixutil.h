@@ -25,58 +25,13 @@
 #ifndef mozilla_pkix__pkixutil_h
 #define mozilla_pkix__pkixutil_h
 
-#include "pkix/enumclass.h"
-#include "pkix/pkixtypes.h"
+#include "pkix/Result.h"
 #include "pkixder.h"
 #include "prerror.h"
 #include "seccomon.h"
 #include "secerr.h"
 
 namespace mozilla { namespace pkix {
-
-enum Result
-{
-  Success = 0,
-  FatalError = -1,      // An error was encountered that caused path building
-                        // to stop immediately. example: out-of-memory.
-  RecoverableError = -2 // an error that will cause path building to continue
-                        // searching for alternative paths. example: expired
-                        // certificate.
-};
-
-// When returning errors, use this function instead of calling PR_SetError
-// directly. This helps ensure that we always call PR_SetError when we return
-// an error code. This is a useful place to set a breakpoint when a debugging
-// a certificate verification failure.
-inline Result
-Fail(Result result, PRErrorCode errorCode)
-{
-  PR_ASSERT(result != Success);
-  PR_SetError(errorCode, 0);
-  return result;
-}
-
-inline Result
-MapSECStatus(SECStatus srv)
-{
-  if (srv == SECSuccess) {
-    return Success;
-  }
-
-  PRErrorCode error = PORT_GetError();
-  switch (error) {
-    case SEC_ERROR_EXTENSION_NOT_FOUND:
-      return RecoverableError;
-
-    case PR_INVALID_STATE_ERROR:
-    case SEC_ERROR_LIBRARY_FAILURE:
-    case SEC_ERROR_NO_MEMORY:
-      return FatalError;
-  }
-
-  // TODO: PORT_Assert(false); // we haven't classified the error yet
-  return RecoverableError;
-}
 
 // During path building and verification, we build a linked list of BackCerts
 // from the current cert toward the end-entity certificate. The linked list
@@ -189,7 +144,7 @@ private:
   NonOwningSECItem nameConstraints;
   NonOwningSECItem subjectAltName;
 
-  der::Result RememberExtension(der::Input& extnID, const SECItem& extnValue,
+  Result RememberExtension(der::Input& extnID, const SECItem& extnValue,
                                 /*out*/ bool& understood);
 
   BackCert(const BackCert&) /* = delete */;

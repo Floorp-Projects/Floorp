@@ -30,6 +30,8 @@ namespace mozilla { namespace pkix {
 Result
 BackCert::Init()
 {
+  Result rv;
+
   // Certificate  ::=  SEQUENCE  {
   //         tbsCertificate       TBSCertificate,
   //         signatureAlgorithm   AlgorithmIdentifier,
@@ -41,23 +43,26 @@ BackCert::Init()
   // don't accidentally confuse them for tbsCertificate later.
   {
     der::Input input;
-    if (input.Init(der.data, der.len) != der::Success) {
-      return MapSECStatus(SECFailure);
+    rv = input.Init(der.data, der.len);
+    if (rv != Success) {
+      return rv;
     }
     der::Input certificate;
-    if (der::ExpectTagAndGetValue(input, der::SEQUENCE, certificate)
-          != der::Success) {
-      return MapSECStatus(SECFailure);
+    rv = der::ExpectTagAndGetValue(input, der::SEQUENCE, certificate);
+    if (rv != Success) {
+      return rv;
     }
-    if (der::End(input) != der::Success) {
-      return MapSECStatus(SECFailure);
+    rv = der::End(input);
+    if (rv != Success) {
+      return rv;
     }
-    if (der::SignedData(certificate, tbsCertificate, signedData)
-          != der::Success) {
-      return MapSECStatus(SECFailure);
+    rv = der::SignedData(certificate, tbsCertificate, signedData);
+    if (rv != Success) {
+      return rv;
     }
-    if (der::End(certificate) != der::Success) {
-      return MapSECStatus(SECFailure);
+    rv = der::End(certificate);
+    if (rv != Success) {
+      return rv;
     }
   }
 
@@ -76,36 +81,37 @@ BackCert::Init()
   //      extensions      [3]  EXPLICIT Extensions OPTIONAL
   //                           -- If present, version MUST be v3
   //      }
-  if (der::OptionalVersion(tbsCertificate, version) != der::Success) {
-    return MapSECStatus(SECFailure);
+  rv = der::OptionalVersion(tbsCertificate, version);
+  if (rv != Success) {
+    return rv;
   }
-  if (der::CertificateSerialNumber(tbsCertificate, serialNumber)
-        != der::Success) {
-    return MapSECStatus(SECFailure);
+  rv = der::CertificateSerialNumber(tbsCertificate, serialNumber);
+  if (rv != Success) {
+    return rv;
   }
   // XXX: Ignored. What are we supposed to check? This seems totally redundant
   // with Certificate.signatureAlgorithm. Is it important to check that they
   // are consistent with each other? It doesn't seem to matter!
   SignatureAlgorithm signature;
-  if (der::SignatureAlgorithmIdentifier(tbsCertificate, signature)
-        != der::Success) {
-    return MapSECStatus(SECFailure);
+  rv = der::SignatureAlgorithmIdentifier(tbsCertificate, signature);
+  if (rv != Success) {
+    return rv;
   }
-  if (der::ExpectTagAndGetTLV(tbsCertificate, der::SEQUENCE, issuer)
-        != der::Success) {
-    return MapSECStatus(SECFailure);
+  rv = der::ExpectTagAndGetTLV(tbsCertificate, der::SEQUENCE, issuer);
+  if (rv != Success) {
+    return rv;
   }
-  if (der::ExpectTagAndGetValue(tbsCertificate, der::SEQUENCE, validity)
-        != der::Success) {
-    return MapSECStatus(SECFailure);
+  rv = der::ExpectTagAndGetValue(tbsCertificate, der::SEQUENCE, validity);
+  if (rv != Success) {
+    return rv;
   }
   // TODO(bug XXXXXXX): We rely on the the caller of mozilla::pkix to validate
   // that the name is syntactically valid, if they care. In Gecko we do this
   // implicitly by parsing the certificate into a CERTCertificate object.
   // Instead of relying on the caller to do this, we should do it ourselves.
-  if (der::ExpectTagAndGetTLV(tbsCertificate, der::SEQUENCE, subject)
-        != der::Success) {
-    return MapSECStatus(SECFailure);
+  rv = der::ExpectTagAndGetTLV(tbsCertificate, der::SEQUENCE, subject);
+  if (rv != Success) {
+    return rv;
   }
   // TODO(bug XXXXXXX): We defer parsing/validating subjectPublicKeyInfo to
   // the point where the public key is needed. For end-entity certificates, we
@@ -114,9 +120,10 @@ BackCert::Init()
   // the other hand, if the caller never uses the key then in some ways it
   // doesn't matter. Regardless, we should parse and validate
   // subjectPublicKeyKeyInfo internally.
-  if (der::ExpectTagAndGetTLV(tbsCertificate, der::SEQUENCE,
-                              subjectPublicKeyInfo) != der::Success) {
-    return MapSECStatus(SECFailure);
+  rv = der::ExpectTagAndGetTLV(tbsCertificate, der::SEQUENCE,
+                               subjectPublicKeyInfo);
+  if (rv != Success) {
+    return rv;
   }
 
   static const uint8_t CSC = der::CONTEXT_SPECIFIC | der::CONSTRUCTED;
@@ -127,36 +134,35 @@ BackCert::Init()
 
     // Ignore issuerUniqueID if present.
     if (tbsCertificate.Peek(CSC | 1)) {
-      if (der::ExpectTagAndSkipValue(tbsCertificate, CSC | 1) != der::Success) {
-        return MapSECStatus(SECFailure);
+      rv = der::ExpectTagAndSkipValue(tbsCertificate, CSC | 1);
+      if (rv != Success) {
+        return rv;
       }
     }
 
     // Ignore subjectUniqueID if present.
     if (tbsCertificate.Peek(CSC | 2)) {
-      if (der::ExpectTagAndSkipValue(tbsCertificate, CSC | 2) != der::Success) {
-        return MapSECStatus(SECFailure);
+      rv = der::ExpectTagAndSkipValue(tbsCertificate, CSC | 2);
+      if (rv != Success) {
+        return rv;
       }
     }
   }
 
   // Extensions were added in v3, so only accept extensions in v3 certificates.
   if (version == der::Version::v3) {
-    if (der::OptionalExtensions(tbsCertificate, CSC | 3,
-                                bind(&BackCert::RememberExtension, this, _1, _2,
-                                     _3)) != der::Success) {
-      return MapSECStatus(SECFailure);
+    rv = der::OptionalExtensions(tbsCertificate, CSC | 3,
+                                 bind(&BackCert::RememberExtension, this, _1,
+                                      _2, _3));
+    if (rv != Success) {
+      return rv;
     }
   }
 
-  if (der::End(tbsCertificate) != der::Success) {
-    return MapSECStatus(SECFailure);
-  }
-
-  return Success;
+  return der::End(tbsCertificate);
 }
 
-der::Result
+Result
 BackCert::RememberExtension(der::Input& extnID, const SECItem& extnValue,
                             /*out*/ bool& understood)
 {
@@ -247,7 +253,7 @@ BackCert::RememberExtension(der::Input& extnID, const SECItem& extnValue,
     understood = true;
   }
 
-  return der::Success;
+  return Success;
 }
 
 } } // namespace mozilla::pkix
