@@ -34,6 +34,7 @@ nsSVGFilterInstance::nsSVGFilterInstance(const nsStyleFilter& aFilter,
   mTargetBBox(aTargetBBox),
   mUserSpaceToFilterSpaceScale(aUserSpaceToFilterSpaceScale),
   mFilterSpaceToUserSpaceScale(aFilterSpaceToUserSpaceScale),
+  mSourceAlphaAvailable(false),
   mInitialized(false) {
 
   // Get the filter frame.
@@ -288,9 +289,46 @@ GetLastResultIndex(const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs)
     numPrimitiveDescrs - 1;
 }
 
+int32_t
+nsSVGFilterInstance::GetOrCreateSourceAlphaIndex(nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs)
+{
+  // If the SourceAlpha index has already been determined or created for this
+  // SVG filter, just return it.
+  if (mSourceAlphaAvailable)
+    return mSourceAlphaIndex;
+
+  // If this is the first filter in the chain, we can just use the
+  // kPrimitiveIndexSourceAlpha keyword to refer to the SourceAlpha of the
+  // original image.
+  if (mSourceGraphicIndex < 0) {
+    mSourceAlphaIndex = FilterPrimitiveDescription::kPrimitiveIndexSourceAlpha;
+    mSourceAlphaAvailable = true;
+    return mSourceAlphaIndex;
+  }
+
+  // Otherwise, create a primitive description to turn the previous filter's
+  // output into a SourceAlpha input.
+  FilterPrimitiveDescription descr(PrimitiveType::ToAlpha);
+  descr.SetInputPrimitive(0, mSourceGraphicIndex);
+
+  const FilterPrimitiveDescription& sourcePrimitiveDescr =
+    aPrimitiveDescrs[mSourceGraphicIndex];
+  descr.SetPrimitiveSubregion(sourcePrimitiveDescr.PrimitiveSubregion());
+  descr.SetIsTainted(sourcePrimitiveDescr.IsTainted());
+
+  ColorSpace colorSpace = sourcePrimitiveDescr.OutputColorSpace();
+  descr.SetInputColorSpace(0, colorSpace);
+  descr.SetOutputColorSpace(colorSpace);
+
+  aPrimitiveDescrs.AppendElement(descr);
+  mSourceAlphaIndex = aPrimitiveDescrs.Length() - 1;
+  mSourceAlphaAvailable = true;
+  return mSourceAlphaIndex;
+}
+
 nsresult
 nsSVGFilterInstance::GetSourceIndices(nsSVGFE* aPrimitiveElement,
-                                      const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
+                                      nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
                                       const nsDataHashtable<nsStringHashKey, int32_t>& aImageTable,
                                       nsTArray<int32_t>& aSourceIndices)
 {
@@ -305,7 +343,7 @@ nsSVGFilterInstance::GetSourceIndices(nsSVGFE* aPrimitiveElement,
     if (str.EqualsLiteral("SourceGraphic")) {
       sourceIndex = mSourceGraphicIndex;
     } else if (str.EqualsLiteral("SourceAlpha")) {
-      sourceIndex = FilterPrimitiveDescription::kPrimitiveIndexSourceAlpha;
+      sourceIndex = GetOrCreateSourceAlphaIndex(aPrimitiveDescrs);
     } else if (str.EqualsLiteral("FillPaint")) {
       sourceIndex = FilterPrimitiveDescription::kPrimitiveIndexFillPaint;
     } else if (str.EqualsLiteral("StrokePaint")) {

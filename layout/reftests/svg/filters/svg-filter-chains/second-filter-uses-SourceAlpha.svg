@@ -1,0 +1,49 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg id="svg-root"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+
+  <g id="testmeta">
+    <title>SVG Filter Chains: Second Filter Uses SourceAlpha</title>
+    <link rel="copyright"
+          href="http://www.w3.org/Graphics/SVG/Test/Copyright"/>
+    <link rel="license"
+          href="http://www.w3.org/Consortium/Legal/2008/03-bsd-license.html"/>
+    <link rel="author"
+          title="Max Vujovic"
+          href="mailto:mvujovic@adobe.com"/>
+    <link rel="help"
+          href="http://dev.w3.org/fxtf/filters/#FilterPrimitiveSubRegion"/>
+    <link rel="match"
+          href="second-filter-uses-SourceAlpha.svg" />
+    <metadata class="flags">namespace svg</metadata>
+    <desc class="assert">
+      In an SVG filter chain, this test verifies that a filter receives the
+      correct SourceAlpha input from the previous filter in the chain. If the
+      test passes, you should see a blurred green square.
+    </desc>
+  </g>
+
+  <g id="test-body-content">
+    <filter id="blur">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+    <filter id="add-green">
+      <!--
+        This filter receives transparent black and the alpha channel of the
+        previous blur filter. Then, it adds to the green channel where the alpha
+        channel is set, resulting in a blurred green square.
+      -->
+      <feComponentTransfer in="SourceAlpha">
+        <feFuncR type="identity"/>
+        <feFuncG type="table" tableValues="1 1"/>
+        <feFuncB type="identity"/>
+        <feFuncA type="identity"/>
+      </feComponentTransfer>
+    </filter>
+    <rect x="100" y="100" width="100" height="100" filter="url(#blur) url(#add-green)" fill="red"/>
+  </g>
+</svg>
