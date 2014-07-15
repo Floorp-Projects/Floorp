@@ -1166,7 +1166,7 @@ Parser<FullParseHandler>::makeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *
     }
 
     /*
-     * If dn is arg, or in [var, const, let] and has an initializer, then we
+     * If dn is in [var, const, let] and has an initializer, then we
      * must rewrite it to be an assignment node, whose freshly allocated
      * left-hand side becomes a use of pn.
      */
@@ -1753,8 +1753,22 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
              * the function's binding (which is mutable), so turn any existing
              * declaration into a use.
              */
-            if (bodyLevel && !makeDefIntoUse(dn, pn, funName))
-                return false;
+            if (bodyLevel) {
+                if (dn->kind() == Definition::ARG) {
+                    // The exception to the above comment is when the function
+                    // has the same name as an argument. Then the argument node
+                    // remains a definition. But change the function node pn so
+                    // that it knows where the argument is located.
+                    pn->setOp(JSOP_GETARG);
+                    pn->setDefn(true);
+                    pn->pn_cookie = dn->pn_cookie;
+                    pn->pn_dflags |= PND_BOUND;
+                    dn->markAsAssigned();
+                } else {
+                    if (!makeDefIntoUse(dn, pn, funName))
+                        return false;
+                }
+            }
         } else if (bodyLevel) {
             /*
              * If this function was used before it was defined, claim the

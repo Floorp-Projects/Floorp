@@ -3205,7 +3205,7 @@ ASTSerializer::functionArgs(ParseNode *pn, ParseNode *pnargs, ParseNode *pndestr
             else if (!args.append(node))
                 return false;
             if (arg->pn_dflags & PND_DEFAULT) {
-                ParseNode *expr = arg->isDefn() ? arg->expr() : arg->pn_kid->pn_right;
+                ParseNode *expr = arg->expr();
                 RootedValue def(cx);
                 if (!expression(expr, &def) || !defaults.append(def))
                     return false;
