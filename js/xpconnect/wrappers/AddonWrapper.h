@@ -9,13 +9,15 @@
 
 #include "mozilla/Attributes.h"
 
+#include "nsID.h"
+
 #include "jswrapper.h"
 
 namespace xpc {
 
 bool
-Interpose(JSContext *cx, HandleObject target, const nsIID *iid, HandleId id,
-          MutableHandle<JSPropertyDescriptor> descriptor);
+Interpose(JSContext *cx, JS::HandleObject target, const nsIID *iid, JS::HandleId id,
+          JS::MutableHandle<JSPropertyDescriptor> descriptor);
 
 template<typename Base>
 class AddonWrapper : public Base {
@@ -35,9 +37,9 @@ class AddonWrapper : public Base {
     virtual bool set(JSContext *cx, JS::HandleObject wrapper, JS::HandleObject receiver,
                      JS::HandleId id, bool strict, JS::MutableHandleValue vp) const MOZ_OVERRIDE;
 
-    virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
-    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const MOZ_OVERRIDE;
+    virtual bool defineProperty(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
+                                JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+    virtual bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp) const MOZ_OVERRIDE;
 
     static AddonWrapper singleton;
 };
