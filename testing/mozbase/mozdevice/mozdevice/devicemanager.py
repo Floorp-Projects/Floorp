@@ -47,12 +47,25 @@ class DeviceManager(object):
     _logcatNeedsRoot = True
 
     def __init__(self, logLevel=mozlog.ERROR, deviceRoot=None):
-        self._logger = mozlog.getLogger("DeviceManager")
+        try:
+            self._logger = mozlog.structured.structuredlog.get_default_logger(component="DeviceManager")
+            if not self._logger: # no global structured logger, fall back to reg logging
+                self._logger = mozlog.getLogger("DeviceManager")
+                self._logger.setLevel(logLevel)
+        except AttributeError:
+            # Structured logging doesn't work on Python 2.6
+            self._logger = None
         self._logLevel = logLevel
-        self._logger.setLevel(logLevel)
         self._remoteIsWin = None
         self._isDeviceRootSetup = False
         self._deviceRoot = deviceRoot
+
+    def _log(self, data):
+        """
+        This helper function is called by ProcessHandler to log
+        the output produced by processes
+        """
+        self._logger.debug(data)
 
     @property
     def remoteIsWin(self):
