@@ -13,7 +13,6 @@
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/APZCTreeManager.h"
-#include "mozilla/Preferences.h"
 #include "base/task.h"
 #include "Layers.h"
 #include "TestLayers.h"
@@ -63,24 +62,6 @@ public:
   MOCK_METHOD3(HandleLongTapUp, void(const CSSPoint&, int32_t, const ScrollableLayerGuid&));
   MOCK_METHOD3(SendAsyncScrollDOMEvent, void(bool aIsRoot, const CSSRect &aContentRect, const CSSSize &aScrollableSize));
   MOCK_METHOD2(PostDelayedTask, void(Task* aTask, int aDelayMs));
-};
-
-class TestScopedBoolPref {
-public:
-  TestScopedBoolPref(const char* aPref, bool aVal)
-    : mPref(aPref)
-  {
-    mOldVal = Preferences::GetBool(aPref);
-    Preferences::SetBool(aPref, aVal);
-  }
-
-  ~TestScopedBoolPref() {
-    Preferences::SetBool(mPref, mOldVal);
-  }
-
-private:
-  const char* mPref;
-  bool mOldVal;
 };
 
 class MockContentControllerDelayed : public MockContentController {
@@ -936,36 +917,6 @@ TEST_F(AsyncPanZoomControllerTester, OverScrollPanning) {
   ApzcPan(apzc, tm, time, touchStart, touchEnd);
   apzc->SampleContentTransformForFrame(testStartTime+TimeDuration::FromMilliseconds(1000), &viewTransformOut, pointOut);
   EXPECT_EQ(ScreenPoint(0, 90), pointOut);
-
-  apzc->Destroy();
-}
-
-TEST_F(AsyncPanZoomControllerTester, OverScrollPanningAbort) {
-  TestScopedBoolPref overscrollEnabledPref("apz.overscroll.enabled", true);
-
-  nsRefPtr<MockContentController> mcc = new NiceMock<MockContentController>();
-  nsRefPtr<TestAPZCTreeManager> tm = new TestAPZCTreeManager();
-  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(0, mcc, tm);
-
-  apzc->SetFrameMetrics(TestFrameMetrics());
-  apzc->NotifyLayersUpdated(TestFrameMetrics(), true);
-
-  // Pan sufficiently to hit overscroll behaviour. Keep the finger down so
-  // the pan does not end.
-  int time = 0;
-  int touchStart = 500;
-  int touchEnd = 10;
-  ApzcPan(apzc, tm, time, touchStart, touchEnd,
-          false, false, nullptr,   // filling it defaults, wish we had named arguments
-          true);                   // keep finger down
-  EXPECT_TRUE(apzc->IsOverscrolled());
-
-  // Check that calling CancelAnimation() while the user is still panning
-  // (and thus no fling or snap-back animation has had a chance to start)
-  // clears the overscroll.
-  apzc->CancelAnimation();
-  EXPECT_FALSE(apzc->IsOverscrolled());
-  apzc->AssertStateIsReset();
 
   apzc->Destroy();
 }
