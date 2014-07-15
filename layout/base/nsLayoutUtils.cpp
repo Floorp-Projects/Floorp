@@ -1483,7 +1483,7 @@ nsLayoutUtils::GetScrollableFrameFor(const nsIFrame *aScrolledFrame)
 {
   nsIFrame *frame = aScrolledFrame->GetParent();
   nsIScrollableFrame *sf = do_QueryFrame(frame);
-  return (sf && sf->GetScrolledFrame() == aScrolledFrame) ? sf : nullptr;
+  return sf && sf->GetScrolledFrame() == aScrolledFrame ? sf : nullptr;
 }
 
 /* static */ void
@@ -1605,9 +1605,9 @@ IsScrollbarThumbLayerized(nsIFrame* aThumbFrame)
   return reinterpret_cast<intptr_t>(aThumbFrame->Properties().Get(ScrollbarThumbLayerized()));
 }
 
-nsIFrame*
-nsLayoutUtils::GetAnimatedGeometryRootForFrame(nsIFrame* aFrame,
-                                               const nsIFrame* aStopAtAncestor)
+static nsIFrame*
+GetAnimatedGeometryRootForFrame(nsIFrame* aFrame,
+                                const nsIFrame* aStopAtAncestor)
 {
   nsIFrame* f = aFrame;
   nsIFrame* stickyFrame = nullptr;
