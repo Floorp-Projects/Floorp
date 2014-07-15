@@ -35,6 +35,7 @@ var CameraTest = (function() {
   const PREF_TEST_ENABLED = "camera.control.test.enabled";
   const PREF_TEST_HARDWARE = "camera.control.test.hardware";
   const PREF_TEST_EXTRA_PARAMETERS = "camera.control.test.hardware.gonk.parameters";
+  const PREF_TEST_FAKE_LOW_MEMORY = "camera.control.test.is_low_memory";
   var oldTestEnabled;
   var oldTestHw;
   var testMode;
@@ -51,6 +52,20 @@ var CameraTest = (function() {
 
   function testHardwareClearFakeParameters(callback) {
     SpecialPowers.pushPrefEnv({'clear': [[PREF_TEST_EXTRA_PARAMETERS]]}, callback);
+  }
+
+  function testHardwareSetFakeLowMemoryPlatform(callback) {
+    SpecialPowers.pushPrefEnv({'set': [[PREF_TEST_FAKE_LOW_MEMORY, true]]}, function() {
+      var setParams = SpecialPowers.getBoolPref(PREF_TEST_FAKE_LOW_MEMORY);
+      ise(setParams, true, "Fake low memory platform");
+      if (callback) {
+        callback(setParams);
+      }
+    });
+  }
+
+  function testHardwareClearFakeLowMemoryPlatform(callback) {
+    SpecialPowers.pushPrefEnv({'clear': [[PREF_TEST_FAKE_LOW_MEMORY]]}, callback);
   }
 
   function testHardwareSet(test, callback) {
@@ -88,6 +103,8 @@ var CameraTest = (function() {
           set: testHardwareSet,
           setFakeParameters: testHardwareSetFakeParameters,
           clearFakeParameters: testHardwareClearFakeParameters,
+          setFakeLowMemoryPlatform: testHardwareSetFakeLowMemoryPlatform,
+          clearFakeLowMemoryPlatform: testHardwareClearFakeLowMemoryPlatform,
           done: testHardwareDone
         };
         if (callback) {
@@ -122,8 +139,16 @@ var CameraTest = (function() {
         next();
       }
     }
-    function cleanUpExtraParameters() {
+    function cleanUpLowMemoryPlatform() {
       var next = cleanUpTest;
+      if (testMode) {
+        testMode.clearFakeLowMemoryPlatform(next);
+      } else {
+        next();
+      }
+    }
+    function cleanUpExtraParameters() {
+      var next = cleanUpLowMemoryPlatform;
       if (testMode) {
         testMode.clearFakeParameters(next);
       } else {
