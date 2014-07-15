@@ -3926,6 +3926,7 @@ MOZ_WEBSMS_BACKEND=
 MOZ_ANDROID_BEAM=
 MOZ_LOCALE_SWITCHER=
 MOZ_ANDROID_SEARCH_ACTIVITY=
+MOZ_ANDROID_MLS_STUMBLER=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
 MOZ_PAY=
@@ -4954,6 +4955,13 @@ dnl = Include Search Activity on Android
 dnl ========================================================
 if test -n "$MOZ_ANDROID_SEARCH_ACTIVITY"; then
     AC_DEFINE(MOZ_ANDROID_SEARCH_ACTIVITY)
+fi
+
+dnl ========================================================
+dnl = Include Mozilla Location Service Stumbler on Android
+dnl ========================================================
+if test -n "$MOZ_ANDROID_MLS_STUMBLER"; then
+    AC_DEFINE(MOZ_ANDROID_MLS_STUMBLER)
 fi
 
 dnl ========================================================
@@ -8501,6 +8509,7 @@ AC_SUBST(MOZ_ANDROID_BEAM)
 AC_SUBST(MOZ_LOCALE_SWITCHER)
 AC_SUBST(MOZ_DISABLE_GECKOVIEW)
 AC_SUBST(MOZ_ANDROID_SEARCH_ACTIVITY)
+AC_SUBST(MOZ_ANDROID_MLS_STUMBLER)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(STRIP_FLAGS)
