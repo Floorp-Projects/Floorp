@@ -1608,9 +1608,9 @@ AppUnitsPerDevPixel(nsDisplayItem* aItem)
  * Because we only reduce the visible region here, we don't need to worry
  * about whether CONTENT_OPAQUE is set; if layer was opaque in the old
  * visible region, it will still be opaque in the new one.
- * @param aLayerVisibleRect if non-null, the visible rect of the layer, in
- * the layer's coordinate space
- * @param aOuterVisibleRect the rect to restrict the visible region to, in the
+ * @param aLayerVisibleRegion the visible region of the layer, in the layer's
+ * coordinate space
+ * @param aRestrictToRect the rect to restrict the visible region to, in the
  * parent's coordinate system
  */
 static void
