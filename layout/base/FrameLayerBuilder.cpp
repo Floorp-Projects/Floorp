@@ -3453,8 +3453,14 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   }
 
   ContainerLayerParameters scaleParameters;
-  if (!ChooseScaleAndSetTransform(this, aBuilder, aContainerFrame, aChildren.GetVisibleRect(),
-                                  aTransform, aParameters, containerLayer, state, scaleParameters)) {
+  nsRect bounds = aChildren->GetBounds(aBuilder);
+  nsRect childrenVisible =
+      aContainerItem ? aContainerItem->GetVisibleRectForChildren() :
+          aContainerFrame->GetVisualOverflowRectRelativeToSelf();
+  if (!ChooseScaleAndSetTransform(this, aBuilder, aContainerFrame,
+                                  bounds.Intersect(childrenVisible),
+                                  aTransform, aParameters,
+                                  containerLayer, state, scaleParameters)) {
     return nullptr;
   }
 
@@ -3473,7 +3479,6 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   LayerManagerData* data = static_cast<LayerManagerData*>
     (aManager->GetUserData(&gLayerManagerUserData));
 
-  nsRect bounds = aChildren->GetBounds(aBuilder);
   nsIntRect pixBounds;
   int32_t appUnitsPerDevPixel;
   uint32_t stateFlags = 0;
