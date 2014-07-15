@@ -3244,7 +3244,7 @@ nsXPCComponents_Utils::Dispatch(HandleValue runnableArg, HandleValue scope,
 
 GENERATE_JSCONTEXTOPTION_GETTER_SETTER(Strict, extraWarnings, setExtraWarnings)
 GENERATE_JSRUNTIMEOPTION_GETTER_SETTER(Werror, werror, setWerror)
-GENERATE_JSCONTEXTOPTION_GETTER_SETTER(Strict_mode, strictMode, setStrictMode)
+GENERATE_JSRUNTIMEOPTION_GETTER_SETTER(Strict_mode, strictMode, setStrictMode)
 GENERATE_JSRUNTIMEOPTION_GETTER_SETTER(Ion, ion, setIon)
 
 #undef GENERATE_JSCONTEXTOPTION_GETTER_SETTER
