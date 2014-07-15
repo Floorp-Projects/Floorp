@@ -99,8 +99,6 @@ namespace widget {
 
 class myDownloadObserver MOZ_FINAL : public nsIDownloadObserver
 {
-  ~myDownloadObserver() {}
-
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOWNLOADOBSERVER
