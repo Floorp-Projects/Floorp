@@ -88,7 +88,7 @@
         <item name="android:paddingRight">6dp</item>
         <item name="android:layout_marginLeft">12dp</item>
         <item name="android:layout_marginRight">12dp</item>
-        <item name="android:textSize">16dp</item>
+        <item name="android:textSize">16sp</item>
     </style>
 
     <style name="TabsPanelItem.TextAppearance.Header.FXAccounts">

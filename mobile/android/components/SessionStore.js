@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "sendMessageToJava", "resource://gre/modules/Messaging.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 function dump(a) {
   Services.console.logStringMessage(a);
@@ -84,6 +85,7 @@ SessionStore.prototype = {
         observerService.addObserver(this, "application-background", true);
         observerService.addObserver(this, "ClosedTabs:StartNotifications", true);
         observerService.addObserver(this, "ClosedTabs:StopNotifications", true);
+        observerService.addObserver(this, "last-pb-context-exited", true);
         break;
       case "final-ui-startup":
         observerService.removeObserver(this, "final-ui-startup");
@@ -168,6 +170,13 @@ SessionStore.prototype = {
         break;
       case "ClosedTabs:StopNotifications":
         this._notifyClosedTabs = false;
+        break;
+      case "last-pb-context-exited":
+        // Clear private closed tab data when we leave private browsing.
+        for (let [, window] in Iterator(this._windows)) {
+          window.closedTabs = window.closedTabs.filter(tab => !tab.isPrivate);
+        }
+        this._lastClosedTabIndex = -1;
         break;
     }
   },
@@ -365,6 +374,13 @@ SessionStore.prototype = {
 
     this.saveStateDelayed();
     this._updateCrashReportURL(aWindow);
+
+    // If the selected tab has changed while listening for closed tab
+    // notifications, we may have switched between different private browsing
+    // modes.
+    if (this._notifyClosedTabs) {
+      this._sendClosedTabsToJava(aWindow);
+    }
   },
 
   saveStateDelayed: function ss_saveStateDelayed() {
@@ -849,7 +865,7 @@ SessionStore.prototype = {
     return this._windows[aWindow.__SSID].closedTabs;
   },
 
-  undoCloseTab: function ss_undoCloseTab(aWindow, aIndex) {
+  undoCloseTab: function ss_undoCloseTab(aWindow, aCloseTabData) {
     if (!aWindow.__SSID)
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
 
@@ -857,28 +873,28 @@ SessionStore.prototype = {
     if (!closedTabs)
       return null;
 
-    // default to the most-recently closed tab
-    aIndex = aIndex || 0;
-    if (!(aIndex in closedTabs))
-      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
-
-    // fetch the data of closed tab, while removing it from the array
-    let closedTab = closedTabs.splice(aIndex, 1).shift();
+    // If the tab data is in the closedTabs array, remove it.
+    closedTabs.find(function (tabData, i) {
+      if (tabData == aCloseTabData) {
+        closedTabs.splice(i, 1);
+        return true;
+      }
+    });
 
     // create a new tab and bring to front
     let params = {
       selected: true,
-      isPrivate: closedTab.isPrivate,
-      desktopMode: closedTab.desktopMode,
+      isPrivate: aCloseTabData.isPrivate,
+      desktopMode: aCloseTabData.desktopMode,
       tabIndex: this._lastClosedTabIndex
     };
-    let tab = aWindow.BrowserApp.addTab(closedTab.entries[closedTab.index - 1].url, params);
-    this._restoreHistory(closedTab, tab.browser.sessionHistory);
+    let tab = aWindow.BrowserApp.addTab(aCloseTabData.entries[aCloseTabData.index - 1].url, params);
+    this._restoreHistory(aCloseTabData, tab.browser.sessionHistory);
 
     this._lastClosedTabIndex = -1;
 
     // Put back the extra data
-    tab.browser.__SS_extdata = closedTab.extData;
+    tab.browser.__SS_extdata = aCloseTabData.extData;
 
     if (this._notifyClosedTabs) {
       this._sendClosedTabsToJava(aWindow);
@@ -915,9 +931,10 @@ SessionStore.prototype = {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
 
     let closedTabs = this._windows[aWindow.__SSID].closedTabs;
+    let isPrivate = PrivateBrowsingUtils.isWindowPrivate(aWindow.BrowserApp.selectedBrowser.contentWindow);
 
     let tabs = closedTabs
-      .filter(tab => !tab.isPrivate)
+      .filter(tab => tab.isPrivate == isPrivate)
       .map(function (tab) {
         // Get the url and title for the last entry in the session history.
         let lastEntry = tab.entries[tab.entries.length - 1];

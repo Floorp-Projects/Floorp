@@ -17,6 +17,12 @@
 #include "nsTArray.h"
 #include "mozISpellI18NUtil.h"
 #include "nsCycleCollectionParticipant.h"
+#include "RemoteSpellCheckEngineChild.h"
+
+namespace mozilla {
+class PRemoteSpellcheckEngineChild;
+class RemoteSpellcheckEngineChild;
+}
 
 class mozSpellChecker : public nsISpellChecker
 {
@@ -43,6 +49,7 @@ public:
   NS_IMETHOD GetCurrentDictionary(nsAString &aDictionary);
   NS_IMETHOD SetCurrentDictionary(const nsAString &aDictionary);
   NS_IMETHOD CheckCurrentDictionary();
+  void DeleteRemoteEngine();
 
 protected:
   virtual ~mozSpellChecker();
@@ -59,5 +66,7 @@ protected:
   nsresult GetCurrentBlockIndex(nsITextServicesDocument *aDoc, int32_t *outBlockIndex);
 
   nsresult GetEngineList(nsCOMArray<mozISpellCheckingEngine> *aDictionaryList);
+
+  mozilla::PRemoteSpellcheckEngineChild *mEngine;
 };
 #endif // mozSpellChecker_h__

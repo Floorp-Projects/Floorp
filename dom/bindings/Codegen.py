@@ -13667,6 +13667,36 @@ class GlobalGenRoots():
         # Done.
         return curr
 
+    @staticmethod
+    def FeatureList(config):
+        things = set()
+        for d in config.getDescriptors():
+            if not d.interface.isExternal() and d.featureDetectibleThings is not None:
+                things.update(d.featureDetectibleThings)
+        things = CGList((CGGeneric(declare='"%s",' % t) for t in sorted(things)), joiner="\n")
+        things.append(CGGeneric(declare="nullptr"))
+        things = CGWrapper(CGIndenter(things), pre="static const char* const FeatureList[] = {\n",
+                                               post="\n};\n")
+
+        helper = CGWrapper(CGIndenter(things), pre="bool IsFeatureDetectible(const nsAString& aFeature) {\n",
+                                               post=dedent("""
+              const char* const* feature = FeatureList;
+              while (*feature) {
+                if (aFeature.EqualsASCII(*feature)) {
+                  return true;
+                }
+                ++feature;
+              }
+
+              return false;
+            }
+        """))
+
+        curr = CGNamespace.build(['mozilla', 'dom'], helper)
+        curr = CGHeaders([], [], [], [], ["nsString.h"], [], 'FeatureList', curr)
+        curr = CGIncludeGuard('FeatureList', curr)
+
+        return curr
 
 # Code generator for simple events
 class CGEventGetter(CGNativeMember):
