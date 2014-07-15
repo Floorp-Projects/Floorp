@@ -6,6 +6,7 @@
 package org.mozilla.gecko.db;
 
 import android.content.Context;
+import android.content.ContentResolver;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.MatrixCursor;
@@ -14,7 +15,11 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -22,14 +27,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.preferences.GeckoPreferences;
@@ -61,6 +70,9 @@ public class SuggestedSites {
 
     // SharedPreference key for suggested sites that should be hidden.
     public static final String PREF_SUGGESTED_SITES_HIDDEN = "suggestedSites.hidden";
+
+    // File in profile dir with the list of suggested sites.
+    private static final String FILENAME = "suggestedsites.json";
 
     private static final String[] COLUMNS = new String[] {
         BrowserContract.SuggestedSites._ID,
@@ -129,15 +141,57 @@ public class SuggestedSites {
     }
 
     private final Context context;
+    private final Distribution distribution;
+    private final File file;
     private Map<String, Site> cachedSites;
     private Locale cachedLocale;
     private Set<String> cachedBlacklist;
 
     public SuggestedSites(Context appContext) {
-        context = appContext;
+        this(appContext, null);
     }
 
-    private Map<String, Site> loadSites(String jsonString) {
+    public SuggestedSites(Context appContext, Distribution distribution) {
+        this(appContext, distribution,
+             GeckoProfile.get(appContext).getFile(FILENAME));
+    }
+
+    public SuggestedSites(Context appContext, Distribution distribution, File file) {
+        this.context = appContext;
+        this.distribution = distribution;
+        this.file = file;
+    }
+
+    /**
+     * Return the current locale and its fallback (en_US) in order.
+     */
+    private static List<Locale> getAcceptableLocales() {
+        final List<Locale> locales = new ArrayList<Locale>();
+
+        final Locale defaultLocale = Locale.getDefault();
+        locales.add(defaultLocale);
+
+        if (!defaultLocale.equals(Locale.US)) {
+            locales.add(Locale.US);
+        }
+
+        return locales;
+    }
+
+    private static Map<String, Site> loadSites(File f) throws IOException {
+        Scanner scanner = null;
+
+        try {
+            scanner = new Scanner(f, "UTF-8");
+            return loadSites(scanner.useDelimiter("\\A").next());
+        } finally {
+            if (scanner != null) {
+                scanner.close();
+            }
+        }
+    }
+
+    private static Map<String, Site> loadSites(String jsonString) {
         if (TextUtils.isEmpty(jsonString)) {
             return null;
         }
@@ -150,7 +204,7 @@ public class SuggestedSites {
 
             final int count = jsonSites.length();
             for (int i = 0; i < count; i++) {
-                final Site site = new Site((JSONObject) jsonSites.get(i));
+                final Site site = new Site(jsonSites.getJSONObject(i));
                 sites.put(site.url, site);
             }
         } catch (Exception e) {
@@ -161,8 +215,122 @@ public class SuggestedSites {
         return sites;
     }
 
-    private Map<String, Site> loadFromFile() {
-        // Do nothing for now
+    /**
+     * Saves suggested sites file to disk. Access to this method should
+     * be synchronized on 'file'.
+     */
+    private static void saveSites(File f, Map<String, Site> sites) {
+        ThreadUtils.assertNotOnUiThread();
+
+        if (sites == null || sites.isEmpty()) {
+            return;
+        }
+
+        OutputStreamWriter osw = null;
+
+        try {
+            final JSONArray jsonSites = new JSONArray();
+            for (Site site : sites.values()) {
+                jsonSites.put(site.toJSON());
+            }
+
+            osw = new OutputStreamWriter(new FileOutputStream(f), "UTF-8");
+
+            final String jsonString = jsonSites.toString();
+            osw.write(jsonString, 0, jsonString.length());
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Failed to save suggested sites", e);
+        } finally {
+            if (osw != null) {
+                try {
+                    osw.close();
+                } catch (IOException e) {
+                    // Ignore.
+                }
+            }
+        }
+    }
+
+    private void maybeWaitForDistribution() {
+        if (distribution == null) {
+            return;
+        }
+
+        distribution.addOnDistributionReadyCallback(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(LOGTAG, "Running post-distribution task: suggested sites.");
+
+                // If distribution doesn't exist, simply continue to load
+                // suggested sites directly from resources. See refresh().
+                if (!distribution.exists()) {
+                    return;
+                }
+
+                // Merge suggested sites from distribution with the
+                // default ones. Distribution takes precedence.
+                Map<String, Site> sites = loadFromDistribution(distribution);
+                if (sites == null) {
+                    sites = new LinkedHashMap<String, Site>();
+                }
+                sites.putAll(loadFromResource());
+
+                // Update cached list of sites.
+                setCachedSites(sites);
+
+                // Save the result to disk.
+                synchronized (file) {
+                    saveSites(file, sites);
+                }
+
+                // Then notify any active loaders about the changes.
+                final ContentResolver cr = context.getContentResolver();
+                cr.notifyChange(BrowserContract.SuggestedSites.CONTENT_URI, null);
+            }
+        });
+    }
+
+    /**
+     * Loads suggested sites from a distribution file either matching the
+     * current locale or with the fallback locale (en-US).
+     *
+     * It's assumed that the given distribution instance is ready to be
+     * used and exists.
+     */
+    private static Map<String, Site> loadFromDistribution(Distribution dist) {
+        for (Locale locale : getAcceptableLocales()) {
+            try {
+                final String languageTag = BrowserLocaleManager.getLanguageTag(locale);
+                final String path = String.format("suggestedsites/locales/%s/%s",
+                                                  languageTag, FILENAME);
+
+                final File f = dist.getDistributionFile(path);
+                if (f == null) {
+                    Log.d(LOGTAG, "No suggested sites for locale: " + languageTag);
+                    continue;
+                }
+
+                return loadSites(f);
+            } catch (Exception e) {
+                Log.e(LOGTAG, "Failed to open suggested sites for locale " +
+                              locale + " in distribution.", e);
+            }
+        }
+
+        return null;
+    }
+
+    private Map<String, Site> loadFromProfile() {
+        try {
+            synchronized (file) {
+                return loadSites(file);
+            }
+        } catch (FileNotFoundException e) {
+            maybeWaitForDistribution();
+        } catch (IOException e) {
+            // Fall through, return null.
+        }
+
         return null;
     }
 
@@ -174,27 +342,28 @@ public class SuggestedSites {
         }
     }
 
+    private synchronized void setCachedSites(Map<String, Site> sites) {
+        cachedSites = Collections.unmodifiableMap(sites);
+        cachedLocale = Locale.getDefault();
+    }
+
     /**
      * Refreshes the cached list of sites either from the default raw
      * source or standard file location. This will be called on every
      * cache miss during a {@code get()} call.
      */
     private void refresh() {
-        Log.d(LOGTAG, "Refreshing tiles from file");
+        Log.d(LOGTAG, "Refreshing suggested sites from file");
 
-        Map<String, Site> sites = loadFromFile();
+        Map<String, Site> sites = loadFromProfile();
         if (sites == null) {
             sites = loadFromResource();
         }
 
-        // Nothing to cache, bail.
-        if (sites == null) {
-            return;
-        }
-
         // Update cached list of sites.
-        cachedSites = Collections.unmodifiableMap(sites);
-        cachedLocale = Locale.getDefault();
+        if (sites != null) {
+            setCachedSites(sites);
+        }
     }
 
     private boolean isEnabled() {
