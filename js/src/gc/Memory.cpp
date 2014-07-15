@@ -11,11 +11,63 @@
 #include "js/HeapAPI.h"
 #include "vm/Runtime.h"
 
-using namespace js;
-using namespace js::gc;
+#if defined(XP_WIN)
 
-bool
-SystemPageAllocator::decommitEnabled()
+#include "jswin.h"
+#include <psapi.h>
+
+#elif defined(SOLARIS)
+
+#include <sys/mman.h>
+#include <unistd.h>
+
+#elif defined(XP_UNIX)
+
+#include <algorithm>
+#include <errno.h>
+#include <sys/mman.h>
+#include <sys/resource.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#endif
+
+namespace js {
+namespace gc {
+
+// The GC can only safely decommit memory when the page size of the
+// running process matches the compiled arena size.
+static size_t pageSize = 0;
+
+// The OS allocation granularity may not match the page size.
+static size_t allocGranularity = 0;
+
+#if defined(XP_UNIX)
+// The addresses handed out by mmap may grow up or down.
+static int growthDirection = 0;
+#endif
+
+// The maximum number of unalignable chunks to temporarily keep alive in
+// the last ditch allocation pass. OOM crash reports generally show <= 7
+// unaligned chunks available (bug 1005844 comment #16).
+static const int MaxLastDitchAttempts = 8;
+
+static void GetNewChunk(void **aAddress, void **aRetainedAddr, size_t *aRetainedSize, size_t size,
+                        size_t alignment);
+static bool GetNewChunkInner(void **aAddress, void **aRetainedAddr, size_t *aRetainedSize,
+                             size_t size, size_t alignment, bool addrsGrowDown);
+static void *MapAlignedPagesSlow(size_t size, size_t alignment);
+static void *MapAlignedPagesLastDitch(size_t size, size_t alignment);
+
+size_t
+SystemPageSize()
+{
+    return pageSize;
+}
+
+static bool
+DecommitEnabled()
 {
     return pageSize == ArenaSize;
 }
@@ -32,16 +84,24 @@ OffsetFromAligned(void *p, size_t alignment)
     return uintptr_t(p) % alignment;
 }
 
-#if defined(XP_WIN)
-#include "jswin.h"
-#include <psapi.h>
-
-SystemPageAllocator::SystemPageAllocator()
+void *
+TestMapAlignedPagesLastDitch(size_t size, size_t alignment)
 {
-    SYSTEM_INFO sysinfo;
-    GetSystemInfo(&sysinfo);
-    pageSize = sysinfo.dwPageSize;
-    allocGranularity = sysinfo.dwAllocationGranularity;
+    return MapAlignedPagesLastDitch(size, alignment);
+}
+
+
+#if defined(XP_WIN)
+
+void
+InitMemorySubsystem()
+{
+    if (pageSize == 0) {
+        SYSTEM_INFO sysinfo;
+        GetSystemInfo(&sysinfo);
+        pageSize = sysinfo.dwPageSize;
+        allocGranularity = sysinfo.dwAllocationGranularity;
+    }
 }
 
 static inline void *
@@ -57,7 +117,7 @@ MapMemory(size_t length, int flags, int prot = PAGE_READWRITE)
 }
 
 void *
-SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
+MapAlignedPages(size_t size, size_t alignment)
 {
     MOZ_ASSERT(size >= alignment);
     MOZ_ASSERT(size % alignment == 0);
@@ -75,25 +135,25 @@ SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
 
     void *retainedAddr;
     size_t retainedSize;
-    getNewChunk(&p, &retainedAddr, &retainedSize, size, alignment);
+    GetNewChunk(&p, &retainedAddr, &retainedSize, size, alignment);
     if (retainedAddr)
-        unmapPages(retainedAddr, retainedSize);
+        UnmapPages(retainedAddr, retainedSize);
     if (p) {
         if (OffsetFromAligned(p, alignment) == 0)
             return p;
-        unmapPages(p, size);
+        UnmapPages(p, size);
     }
 
-    p = mapAlignedPagesSlow(size, alignment);
+    p = MapAlignedPagesSlow(size, alignment);
     if (!p)
-        return mapAlignedPagesLastDitch(size, alignment);
+        return MapAlignedPagesLastDitch(size, alignment);
 
     MOZ_ASSERT(OffsetFromAligned(p, alignment) == 0);
     return p;
 }
 
-void *
-SystemPageAllocator::mapAlignedPagesSlow(size_t size, size_t alignment)
+static void *
+MapAlignedPagesSlow(size_t size, size_t alignment)
 {
     /*
      * Windows requires that there be a 1:1 mapping between VM allocation
@@ -116,7 +176,7 @@ SystemPageAllocator::mapAlignedPagesSlow(size_t size, size_t alignment)
         if (!p)
             return nullptr;
         void *chunkStart = (void *)AlignBytes(uintptr_t(p), alignment);
-        unmapPages(p, reserveSize);
+        UnmapPages(p, reserveSize);
         p = MapMemoryAt(chunkStart, size, MEM_COMMIT | MEM_RESERVE);
 
         /* Failure here indicates a race with another thread, so try again. */
@@ -133,32 +193,32 @@ SystemPageAllocator::mapAlignedPagesSlow(size_t size, size_t alignment)
  * address each time, we temporarily hold onto the unaligned part of each chunk
  * until the allocator gives us a chunk that either is, or can be aligned.
  */
-void *
-SystemPageAllocator::mapAlignedPagesLastDitch(size_t size, size_t alignment)
+static void *
+MapAlignedPagesLastDitch(size_t size, size_t alignment)
 {
     void *p = nullptr;
     void *tempMaps[MaxLastDitchAttempts];
     int attempt = 0;
     for (; attempt < MaxLastDitchAttempts; ++attempt) {
         size_t retainedSize;
-        getNewChunk(&p, tempMaps + attempt, &retainedSize, size, alignment);
+        GetNewChunk(&p, tempMaps + attempt, &retainedSize, size, alignment);
         if (OffsetFromAligned(p, alignment) == 0) {
             if (tempMaps[attempt])
-                unmapPages(tempMaps[attempt], retainedSize);
+                UnmapPages(tempMaps[attempt], retainedSize);
             break;
         }
         if (!tempMaps[attempt]) {
-            /* getNewChunk failed, but we can still try the simpler method. */
+            /* GetNewChunk failed, but we can still try the simpler method. */
             tempMaps[attempt] = p;
             p = nullptr;
         }
     }
     if (OffsetFromAligned(p, alignment)) {
-        unmapPages(p, size);
+        UnmapPages(p, size);
         p = nullptr;
     }
     while (--attempt >= 0)
-        unmapPages(tempMaps[attempt], 0);
+        UnmapPages(tempMaps[attempt], 0);
     return p;
 }
 
@@ -167,9 +227,9 @@ SystemPageAllocator::mapAlignedPagesLastDitch(size_t size, size_t alignment)
  * unaligned chunk, then reallocate the unaligned part to block off the
  * old address and force the allocator to give us a new one.
  */
-void
-SystemPageAllocator::getNewChunk(void **aAddress, void **aRetainedAddr, size_t *aRetainedSize,
-                                 size_t size, size_t alignment)
+static void
+GetNewChunk(void **aAddress, void **aRetainedAddr, size_t *aRetainedSize, size_t size,
+            size_t alignment)
 {
     void *address = *aAddress;
     void *retainedAddr = nullptr;
@@ -180,7 +240,7 @@ SystemPageAllocator::getNewChunk(void **aAddress, void **aRetainedAddr, size_t *
         size_t offset = OffsetFromAligned(address, alignment);
         if (!offset)
             break;
-        unmapPages(address, size);
+        UnmapPages(address, size);
         retainedSize = alignment - offset;
         retainedAddr = MapMemoryAt(address, retainedSize, MEM_RESERVE);
         address = MapMemory(size, MEM_COMMIT | MEM_RESERVE);
@@ -192,15 +252,15 @@ SystemPageAllocator::getNewChunk(void **aAddress, void **aRetainedAddr, size_t *
 }
 
 void
-SystemPageAllocator::unmapPages(void *p, size_t size)
+UnmapPages(void *p, size_t size)
 {
     MOZ_ALWAYS_TRUE(VirtualFree(p, 0, MEM_RELEASE));
 }
 
 bool
-SystemPageAllocator::markPagesUnused(void *p, size_t size)
+MarkPagesUnused(void *p, size_t size)
 {
-    if (!decommitEnabled())
+    if (!DecommitEnabled())
         return true;
 
     MOZ_ASSERT(OffsetFromAligned(p, pageSize) == 0);
@@ -209,14 +269,14 @@ SystemPageAllocator::markPagesUnused(void *p, size_t size)
 }
 
 bool
-SystemPageAllocator::markPagesInUse(void *p, size_t size)
+MarkPagesInUse(void *p, size_t size)
 {
     MOZ_ASSERT(OffsetFromAligned(p, pageSize) == 0);
     return true;
 }
 
 size_t
-SystemPageAllocator::GetPageFaultCount()
+GetPageFaultCount()
 {
     PROCESS_MEMORY_COUNTERS pmc;
     if (!GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
@@ -225,7 +285,7 @@ SystemPageAllocator::GetPageFaultCount()
 }
 
 void *
-SystemPageAllocator::AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
+AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
 {
     // TODO: Bug 988813 - Support memory mapped array buffer for Windows platform.
     return nullptr;
@@ -233,27 +293,26 @@ SystemPageAllocator::AllocateMappedContent(int fd, size_t offset, size_t length,
 
 // Deallocate mapped memory for object.
 void
-SystemPageAllocator::DeallocateMappedContent(void *p, size_t length)
+DeallocateMappedContent(void *p, size_t length)
 {
     // TODO: Bug 988813 - Support memory mapped array buffer for Windows platform.
 }
 
 #elif defined(SOLARIS)
 
-#include <sys/mman.h>
-#include <unistd.h>
-
 #ifndef MAP_NOSYNC
 # define MAP_NOSYNC 0
 #endif
 
-SystemPageAllocator::SystemPageAllocator()
+void
+InitMemorySubsystem()
 {
-    pageSize = allocGranularity = size_t(sysconf(_SC_PAGESIZE));
+    if (pageSize == 0)
+        pageSize = allocGranularity = size_t(sysconf(_SC_PAGESIZE));
 }
 
 void *
-SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
+MapAlignedPages(size_t size, size_t alignment)
 {
     MOZ_ASSERT(size >= alignment);
     MOZ_ASSERT(size % alignment == 0);
@@ -270,33 +329,33 @@ SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
 }
 
 void
-SystemPageAllocator::unmapPages(void *p, size_t size)
+UnmapPages(void *p, size_t size)
 {
     MOZ_ALWAYS_TRUE(0 == munmap((caddr_t)p, size));
 }
 
 bool
-SystemPageAllocator::markPagesUnused(void *p, size_t size)
+MarkPagesUnused(void *p, size_t size)
 {
     MOZ_ASSERT(OffsetFromAligned(p, pageSize) == 0);
     return true;
 }
 
 bool
-SystemPageAllocator::markPagesInUse(void *p, size_t size)
+MarkPagesInUse(void *p, size_t size)
 {
     MOZ_ASSERT(OffsetFromAligned(p, pageSize) == 0);
     return true;
 }
 
 size_t
-SystemPageAllocator::GetPageFaultCount()
+GetPageFaultCount()
 {
     return 0;
 }
 
 void *
-SystemPageAllocator::AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
+AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
 {
     // Not implemented.
     return nullptr;
@@ -304,25 +363,20 @@ SystemPageAllocator::AllocateMappedContent(int fd, size_t offset, size_t length,
 
 // Deallocate mapped memory for object.
 void
-SystemPageAllocator::DeallocateMappedContent(void *p, size_t length)
+DeallocateMappedContent(void *p, size_t length)
 {
     // Not implemented.
 }
 
 #elif defined(XP_UNIX)
 
-#include <algorithm>
-#include <errno.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-SystemPageAllocator::SystemPageAllocator()
+void
+InitMemorySubsystem()
 {
-    pageSize = allocGranularity = size_t(sysconf(_SC_PAGESIZE));
-    growthDirection = 0;
+    if (pageSize == 0) {
+        pageSize = allocGranularity = size_t(sysconf(_SC_PAGESIZE));
+        growthDirection = 0;
+    }
 }
 
 static inline void *
@@ -388,7 +442,7 @@ MapMemory(size_t length, int prot = PROT_READ | PROT_WRITE,
 }
 
 void *
-SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
+MapAlignedPages(size_t size, size_t alignment)
 {
     MOZ_ASSERT(size >= alignment);
     MOZ_ASSERT(size % alignment == 0);
@@ -406,25 +460,25 @@ SystemPageAllocator::mapAlignedPages(size_t size, size_t alignment)
 
     void *retainedAddr;
     size_t retainedSize;
-    getNewChunk(&p, &retainedAddr, &retainedSize, size, alignment);
+    GetNewChunk(&p, &retainedAddr, &retainedSize, size, alignment);
     if (retainedAddr)
-        unmapPages(retainedAddr, retainedSize);
+        UnmapPages(retainedAddr, retainedSize);
     if (p) {
         if (OffsetFromAligned(p, alignment) == 0)
             return p;
-        unmapPages(p, size);
+        UnmapPages(p, size);
     }
 
-    p = mapAlignedPagesSlow(size, alignment);
+    p = MapAlignedPagesSlow(size, alignment);
     if (!p)
-        return mapAlignedPagesLastDitch(size, alignment);
+        return MapAlignedPagesLastDitch(size, alignment);
 
     MOZ_ASSERT(OffsetFromAligned(p, alignment) == 0);
     return p;
 }
 
-void *
-SystemPageAllocator::mapAlignedPagesSlow(size_t size, size_t alignment)
+static void *
+MapAlignedPagesSlow(size_t size, size_t alignment)
 {
     /* Overallocate and unmap the region's edges. */
     size_t reqSize = size + alignment - pageSize;
@@ -446,9 +500,9 @@ SystemPageAllocator::mapAlignedPagesSlow(size_t size, size_t alignment)
     }
 
     if (front != region)
-        unmapPages(region, uintptr_t(front) - uintptr_t(region));
+        UnmapPages(region, uintptr_t(front) - uintptr_t(region));
     if (end != regionEnd)
-        unmapPages(end, uintptr_t(regionEnd) - uintptr_t(end));
+        UnmapPages(end, uintptr_t(regionEnd) - uintptr_t(end));
 
     return front;
 }
@@ -461,33 +515,33 @@ SystemPageAllocator::mapAlignedPagesSlow(size_t size, size_t alignment)
  * address each time, we temporarily hold onto the unaligned part of each chunk
  * until the allocator gives us a chunk that either is, or can be aligned.
  */
-void *
-SystemPageAllocator::mapAlignedPagesLastDitch(size_t size, size_t alignment)
+static void *
+MapAlignedPagesLastDitch(size_t size, size_t alignment)
 {
     void *p = nullptr;
     void *tempMaps[MaxLastDitchAttempts];
     size_t tempSizes[MaxLastDitchAttempts];
     int attempt = 0;
     for (; attempt < MaxLastDitchAttempts; ++attempt) {
-        getNewChunk(&p, tempMaps + attempt, tempSizes + attempt, size, alignment);
+        GetNewChunk(&p, tempMaps + attempt, tempSizes + attempt, size, alignment);
         if (OffsetFromAligned(p, alignment) == 0) {
             if (tempMaps[attempt])
-                unmapPages(tempMaps[attempt], tempSizes[attempt]);
+                UnmapPages(tempMaps[attempt], tempSizes[attempt]);
             break;
         }
         if (!tempMaps[attempt]) {
-            /* getNewChunk failed, but we can still try the simpler method. */
+            /* GetNewChunk failed, but we can still try the simpler method. */
             tempMaps[attempt] = p;
             tempSizes[attempt] = size;
             p = nullptr;
         }
     }
     if (OffsetFromAligned(p, alignment)) {
-        unmapPages(p, size);
+        UnmapPages(p, size);
         p = nullptr;
     }
     while (--attempt >= 0)
-        unmapPages(tempMaps[attempt], tempSizes[attempt]);
+        UnmapPages(tempMaps[attempt], tempSizes[attempt]);
     return p;
 }
 
@@ -497,9 +551,9 @@ SystemPageAllocator::mapAlignedPagesLastDitch(size_t size, size_t alignment)
  * are handed out in increasing or decreasing order, we have to try both
  * directions (depending on the environment, one will always fail).
  */
-void
-SystemPageAllocator::getNewChunk(void **aAddress, void **aRetainedAddr, size_t *aRetainedSize,
-                                 size_t size, size_t alignment)
+static void
+GetNewChunk(void **aAddress, void **aRetainedAddr, size_t *aRetainedSize, size_t size,
+            size_t alignment)
 {
     void *address = *aAddress;
     void *retainedAddr = nullptr;
@@ -507,12 +561,12 @@ SystemPageAllocator::getNewChunk(void **aAddress, void **aRetainedAddr, size_t *
     do {
         bool addrsGrowDown = growthDirection <= 0;
         /* Try the direction indicated by growthDirection. */
-        if (getNewChunkInner(&address, &retainedAddr, &retainedSize, size,
+        if (GetNewChunkInner(&address, &retainedAddr, &retainedSize, size,
                              alignment, addrsGrowDown)) {
             break;
         }
         /* If that failed, try the opposite direction. */
-        if (getNewChunkInner(&address, &retainedAddr, &retainedSize, size,
+        if (GetNewChunkInner(&address, &retainedAddr, &retainedSize, size,
                              alignment, !addrsGrowDown)) {
             break;
         }
@@ -529,9 +583,9 @@ SystemPageAllocator::getNewChunk(void **aAddress, void **aRetainedAddr, size_t *
         *aRetainedSize = retainedSize_; return toReturn_;                           \
     } while(false)
 
-bool
-SystemPageAllocator::getNewChunkInner(void **aAddress, void **aRetainedAddr, size_t *aRetainedSize,
-                                      size_t size, size_t alignment, bool addrsGrowDown)
+static bool
+GetNewChunkInner(void **aAddress, void **aRetainedAddr, size_t *aRetainedSize, size_t size,
+                 size_t alignment, bool addrsGrowDown)
 {
     void *initial = *aAddress;
     if (!initial)
@@ -555,13 +609,13 @@ SystemPageAllocator::getNewChunkInner(void **aAddress, void **aRetainedAddr, siz
         delta = 1;
     }
     /* Keep only the |offset| unaligned bytes. */
-    unmapPages(discardedAddr, size - offset);
+    UnmapPages(discardedAddr, size - offset);
     void *address = MapMemory(size);
     if (!address) {
         /* Map the rest of the original chunk again in case we can recover. */
         address = MapMemoryAt(initial, size - offset);
         if (!address)
-            unmapPages(retainedAddr, offset);
+            UnmapPages(retainedAddr, offset);
         SET_OUT_PARAMS_AND_RETURN(address, nullptr, 0, false);
     }
     if ((addrsGrowDown && address < retainedAddr) || (!addrsGrowDown && address > retainedAddr)) {
@@ -573,12 +627,12 @@ SystemPageAllocator::getNewChunkInner(void **aAddress, void **aRetainedAddr, siz
     /* Accept an aligned address if growthDirection didn't just flip. */
     if (OffsetFromAligned(address, alignment) == 0 && growthDirection + delta != 0)
         SET_OUT_PARAMS_AND_RETURN(address, retainedAddr, offset, true);
-    unmapPages(address, size);
+    UnmapPages(address, size);
     /* Map the original chunk again since we chose the wrong direction. */
     address = MapMemoryAt(initial, size - offset);
     if (!address) {
         /* Return non-null retainedAddr to indicate thread-related failure. */
-        unmapPages(retainedAddr, offset);
+        UnmapPages(retainedAddr, offset);
         SET_OUT_PARAMS_AND_RETURN(nullptr, retainedAddr, 0, false);
     }
     SET_OUT_PARAMS_AND_RETURN(address, nullptr, 0, false);
@@ -587,16 +641,16 @@ SystemPageAllocator::getNewChunkInner(void **aAddress, void **aRetainedAddr, siz
 #undef SET_OUT_PARAMS_AND_RETURN
 
 void
-SystemPageAllocator::unmapPages(void *p, size_t size)
+UnmapPages(void *p, size_t size)
 {
     if (munmap(p, size))
         MOZ_ASSERT(errno == ENOMEM);
 }
 
 bool
-SystemPageAllocator::markPagesUnused(void *p, size_t size)
+MarkPagesUnused(void *p, size_t size)
 {
-    if (!decommitEnabled())
+    if (!DecommitEnabled())
         return false;
 
     MOZ_ASSERT(OffsetFromAligned(p, pageSize) == 0);
@@ -605,14 +659,14 @@ SystemPageAllocator::markPagesUnused(void *p, size_t size)
 }
 
 bool
-SystemPageAllocator::markPagesInUse(void *p, size_t size)
+MarkPagesInUse(void *p, size_t size)
 {
     MOZ_ASSERT(OffsetFromAligned(p, pageSize) == 0);
     return true;
 }
 
 size_t
-SystemPageAllocator::GetPageFaultCount()
+GetPageFaultCount()
 {
     struct rusage usage;
     int err = getrusage(RUSAGE_SELF, &usage);
@@ -622,13 +676,12 @@ SystemPageAllocator::GetPageFaultCount()
 }
 
 void *
-SystemPageAllocator::AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
+AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
 {
 #define NEED_PAGE_ALIGNED 0
     size_t pa_start; // Page aligned starting
     size_t pa_end; // Page aligned ending
     size_t pa_size; // Total page aligned size
-    size_t page_size = sysconf(_SC_PAGESIZE); // Page size
     struct stat st;
     uint8_t *buf;
 
@@ -639,16 +692,16 @@ SystemPageAllocator::AllocateMappedContent(int fd, size_t offset, size_t length,
 
     // Check for minimal alignment requirement.
 #if NEED_PAGE_ALIGNED
-    alignment = std::max(alignment, page_size);
+    alignment = std::max(alignment, pageSize);
 #endif
     if (offset & (alignment - 1))
         return nullptr;
 
     // Page aligned starting of the offset.
-    pa_start = offset & ~(page_size - 1);
+    pa_start = offset & ~(pageSize - 1);
     // Calculate page aligned ending by adding one page to the page aligned
     // starting of data end position(offset + length - 1).
-    pa_end = ((offset + length - 1) & ~(page_size - 1)) + page_size;
+    pa_end = ((offset + length - 1) & ~(pageSize - 1)) + pageSize;
     pa_size = pa_end - pa_start;
 
     // Ask for a continuous memory location.
@@ -671,14 +724,13 @@ SystemPageAllocator::AllocateMappedContent(int fd, size_t offset, size_t length,
 }
 
 void
-SystemPageAllocator::DeallocateMappedContent(void *p, size_t length)
+DeallocateMappedContent(void *p, size_t length)
 {
     void *pa_start; // Page aligned starting
-    size_t page_size = sysconf(_SC_PAGESIZE); // Page size
     size_t total_size; // Total allocated size
 
-    pa_start = (void *)(uintptr_t(p) & ~(page_size - 1));
-    total_size = ((uintptr_t(p) + length) & ~(page_size - 1)) + page_size - uintptr_t(pa_start);
+    pa_start = (void *)(uintptr_t(p) & ~(pageSize - 1));
+    total_size = ((uintptr_t(p) + length) & ~(pageSize - 1)) + pageSize - uintptr_t(pa_start);
     if (munmap(pa_start, total_size))
         MOZ_ASSERT(errno == ENOMEM);
 }
@@ -686,3 +738,6 @@ SystemPageAllocator::DeallocateMappedContent(void *p, size_t length)
 #else
 #error "Memory mapping functions are not defined for your OS."
 #endif
+
+} // namespace gc
+} // namespace js

@@ -733,8 +733,7 @@ typedef struct JSErrorFormatString {
 } JSErrorFormatString;
 
 typedef const JSErrorFormatString *
-(* JSErrorCallback)(void *userRef, const char *locale,
-                    const unsigned errorNumber);
+(* JSErrorCallback)(void *userRef, const unsigned errorNumber);
 
 typedef bool
 (* JSLocaleToUpperCase)(JSContext *cx, JS::HandleString src, JS::MutableHandleValue rval);
@@ -1423,7 +1422,9 @@ class JS_PUBLIC_API(RuntimeOptions) {
         ion_(false),
         asmJS_(false),
         nativeRegExp_(false),
-        werror_(false)
+        werror_(false),
+        strictMode_(false),
+        varObjFix_(false)
     {
     }
 
@@ -1473,12 +1474,34 @@ class JS_PUBLIC_API(RuntimeOptions) {
         return *this;
     }
 
+    bool strictMode() const { return strictMode_; }
+    RuntimeOptions &setStrictMode(bool flag) {
+        strictMode_ = flag;
+        return *this;
+    }
+    RuntimeOptions &toggleStrictMode() {
+        strictMode_ = !strictMode_;
+        return *this;
+    }
+
+    bool varObjFix() const { return varObjFix_; }
+    RuntimeOptions &setVarObjFix(bool flag) {
+        varObjFix_ = flag;
+        return *this;
+    }
+    RuntimeOptions &toggleVarObjFix() {
+        varObjFix_ = !varObjFix_;
+        return *this;
+    }
+
   private:
     bool baseline_ : 1;
     bool ion_ : 1;
     bool asmJS_ : 1;
     bool nativeRegExp_ : 1;
     bool werror_ : 1;
+    bool strictMode_ : 1;
+    bool varObjFix_ : 1;
 };
 
 JS_PUBLIC_API(RuntimeOptions &)
@@ -1491,13 +1514,10 @@ class JS_PUBLIC_API(ContextOptions) {
   public:
     ContextOptions()
       : extraWarnings_(false),
-        varObjFix_(false),
         privateIsNSISupports_(false),
         dontReportUncaught_(false),
         noDefaultCompartmentObject_(false),
-        noScriptRval_(false),
-        strictMode_(false),
-        cloneSingletons_(false)
+        noScriptRval_(false)
     {
     }
 
@@ -1508,16 +1528,6 @@ class JS_PUBLIC_API(ContextOptions) {
     }
     ContextOptions &toggleExtraWarnings() {
         extraWarnings_ = !extraWarnings_;
-        return *this;
-    }
-
-    bool varObjFix() const { return varObjFix_; }
-    ContextOptions &setVarObjFix(bool flag) {
-        varObjFix_ = flag;
-        return *this;
-    }
-    ContextOptions &toggleVarObjFix() {
-        varObjFix_ = !varObjFix_;
         return *this;
     }
 
@@ -1561,35 +1571,12 @@ class JS_PUBLIC_API(ContextOptions) {
         return *this;
     }
 
-    bool strictMode() const { return strictMode_; }
-    ContextOptions &setStrictMode(bool flag) {
-        strictMode_ = flag;
-        return *this;
-    }
-    ContextOptions &toggleStrictMode() {
-        strictMode_ = !strictMode_;
-        return *this;
-    }
-
-    bool cloneSingletons() const { return cloneSingletons_; }
-    ContextOptions &setCloneSingletons(bool flag) {
-        cloneSingletons_ = flag;
-        return *this;
-    }
-    ContextOptions &toggleCloneSingletons() {
-        cloneSingletons_ = !cloneSingletons_;
-        return *this;
-    }
-
   private:
     bool extraWarnings_ : 1;
-    bool varObjFix_ : 1;
     bool privateIsNSISupports_ : 1;
     bool dontReportUncaught_ : 1;
     bool noDefaultCompartmentObject_ : 1;
     bool noScriptRval_ : 1;
-    bool strictMode_ : 1;
-    bool cloneSingletons_ : 1;
 };
 
 JS_PUBLIC_API(ContextOptions &)
@@ -2572,6 +2559,7 @@ class JS_PUBLIC_API(CompartmentOptions)
       , invisibleToDebugger_(false)
       , mergeable_(false)
       , discardSource_(false)
+      , cloneSingletons_(false)
       , traceGlobal_(nullptr)
       , singletonsAsTemplates_(true)
       , addonId_(nullptr)
@@ -2615,8 +2603,11 @@ class JS_PUBLIC_API(CompartmentOptions)
     }
 
 
-    bool cloneSingletons(JSContext *cx) const;
-    Override &cloneSingletonsOverride() { return cloneSingletonsOverride_; }
+    bool cloneSingletons() const { return cloneSingletons_; }
+    CompartmentOptions &setCloneSingletons(bool flag) {
+        cloneSingletons_ = flag;
+        return *this;
+    }
 
     void *zonePointer() const {
         JS_ASSERT(uintptr_t(zone_.pointer) > uintptr_t(JS::SystemZone));
@@ -2654,7 +2645,7 @@ class JS_PUBLIC_API(CompartmentOptions)
     bool invisibleToDebugger_;
     bool mergeable_;
     bool discardSource_;
-    Override cloneSingletonsOverride_;
+    bool cloneSingletons_;
     union {
         ZoneSpecifier spec;
         void *pointer; // js::Zone* is not exposed in the API.
@@ -4536,7 +4527,6 @@ struct JSLocaleCallbacks {
     JSLocaleToLowerCase     localeToLowerCase;
     JSLocaleCompare         localeCompare; // not used #if EXPOSE_INTL_API
     JSLocaleToUnicode       localeToUnicode;
-    JSErrorCallback         localeGetErrorMessage;
 };
 
 /*

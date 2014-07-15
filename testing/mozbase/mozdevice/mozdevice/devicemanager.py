@@ -46,11 +46,26 @@ class DeviceManager(object):
 
     _logcatNeedsRoot = True
 
-    def __init__(self, logLevel=mozlog.ERROR):
-        self._logger = mozlog.getLogger("DeviceManager")
+    def __init__(self, logLevel=mozlog.ERROR, deviceRoot=None):
+        try:
+            self._logger = mozlog.structured.structuredlog.get_default_logger(component="DeviceManager")
+            if not self._logger: # no global structured logger, fall back to reg logging
+                self._logger = mozlog.getLogger("DeviceManager")
+                self._logger.setLevel(logLevel)
+        except AttributeError:
+            # Structured logging doesn't work on Python 2.6
+            self._logger = None
         self._logLevel = logLevel
-        self._logger.setLevel(logLevel)
         self._remoteIsWin = None
+        self._isDeviceRootSetup = False
+        self._deviceRoot = deviceRoot
+
+    def _log(self, data):
+        """
+        This helper function is called by ProcessHandler to log
+        the output produced by processes
+        """
+        self._logger.debug(data)
 
     @property
     def remoteIsWin(self):
@@ -162,7 +177,7 @@ class DeviceManager(object):
         with open(filename, 'w') as pngfile:
             # newer versions of screencap can write directly to a png, but some
             # older versions can't
-            tempScreenshotFile = self.getDeviceRoot() + "/ss-dm.tmp"
+            tempScreenshotFile = self.deviceRoot + "/ss-dm.tmp"
             self.shellCheckOutput(["sh", "-c", "%s > %s" %
                                    (screencap, tempScreenshotFile)],
                                   root=True)
@@ -311,55 +326,34 @@ class DeviceManager(object):
         Recursively changes file permissions in a directory.
         """
 
+    @property
+    def deviceRoot(self):
+        """
+        The device root on the device filesystem for putting temporary
+        testing files.
+        """
+        # derive deviceroot value if not set
+        if not self._deviceRoot or not self._isDeviceRootSetup:
+            self._deviceRoot = self._setupDeviceRoot(self._deviceRoot)
+            self._isDeviceRootSetup = True
+
+        return self._deviceRoot
+
     @abstractmethod
+    def _setupDeviceRoot(self):
+        """
+        Sets up and returns a device root location that can be written to by tests.
+        """
+
     def getDeviceRoot(self):
         """
-        Gets the device root for the testing area on the device.
+        Get the device root on the device filesystem for putting temporary
+        testing files.
 
-        For all devices we will use / type slashes and depend on the device-agent
-        to sort those out.  The agent will return us the device location where we
-        should store things, we will then create our /tests structure relative to
-        that returned path.
-
-        Structure on the device is as follows:
-
-        ::
-
-          /tests
-              /<fennec>|<firefox>  --> approot
-              /profile
-              /xpcshell
-              /reftest
-              /mochitest
+        .. deprecated:: 0.38
+          Use the :py:attr:`deviceRoot` property instead.
         """
-
-    @abstractmethod
-    def getAppRoot(self, packageName=None):
-        """
-        Returns the app root directory.
-
-        E.g /tests/fennec or /tests/firefox
-        """
-        # TODO Support org.mozilla.firefox and B2G
-
-    def getTestRoot(self, harnessName):
-        """
-        Gets the directory location on the device for a specific test type.
-
-        :param harnessName: one of: "xpcshell", "reftest", "mochitest"
-        """
-
-        devroot = self.getDeviceRoot()
-        if (devroot == None):
-            return None
-
-        if (re.search('xpcshell', harnessName, re.I)):
-            self.testRoot = devroot + '/xpcshell'
-        elif (re.search('?(i)reftest', harnessName)):
-            self.testRoot = devroot + '/reftest'
-        elif (re.search('?(i)mochitest', harnessName)):
-            self.testRoot = devroot + '/mochitest'
-        return self.testRoot
+        return self.deviceRoot
 
     @abstractmethod
     def getTempDir(self):

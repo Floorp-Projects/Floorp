@@ -198,7 +198,7 @@ NewGlobalObject(JSContext *cx, JS::CompartmentOptions &options,
                 JSPrincipals *principals);
 
 static const JSErrorFormatString *
-my_GetErrorMessage(void *userRef, const char *locale, const unsigned errorNumber);
+my_GetErrorMessage(void *userRef, const unsigned errorNumber);
 
 
 /*
@@ -790,7 +790,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
         else if (strcmp(opt.ptr(), "werror") == 0)
             JS::RuntimeOptionsRef(cx).toggleWerror();
         else if (strcmp(opt.ptr(), "strict_mode") == 0)
-            JS::ContextOptionsRef(cx).toggleStrictMode();
+            JS::RuntimeOptionsRef(cx).toggleStrictMode();
         else {
             JS_ReportError(cx,
                            "unknown option name '%s'."
@@ -811,7 +811,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
         names = JS_sprintf_append(names, "%s%s", found ? "," : "", "werror");
         found = true;
     }
-    if (names && oldContextOptions.strictMode()) {
+    if (names && oldRuntimeOptions.strictMode()) {
         names = JS_sprintf_append(names, "%s%s", found ? "," : "", "strict_mode");
         found = true;
     }
@@ -1261,7 +1261,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
                                          JSSMSG_CACHE_SINGLETON_FAILED);
                     return false;
                 }
-                JS::CompartmentOptionsRef(cx).cloneSingletonsOverride().set(true);
+                JS::CompartmentOptionsRef(cx).setCloneSingletons(true);
             }
 
             if (loadBytecode) {
@@ -5115,7 +5115,7 @@ static const JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
 };
 
 static const JSErrorFormatString *
-my_GetErrorMessage(void *userRef, const char *locale, const unsigned errorNumber)
+my_GetErrorMessage(void *userRef, const unsigned errorNumber)
 {
     if (errorNumber == 0 || errorNumber >= JSShellErr_Limit)
         return nullptr;

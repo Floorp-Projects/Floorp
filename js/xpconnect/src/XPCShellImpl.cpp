@@ -495,7 +495,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
         else if (strcmp(opt.ptr(), "werror") == 0)
             RuntimeOptionsRef(cx).toggleWerror();
         else if (strcmp(opt.ptr(), "strict_mode") == 0)
-            ContextOptionsRef(cx).toggleStrictMode();
+            RuntimeOptionsRef(cx).toggleStrictMode();
         else {
             JS_ReportError(cx, "unknown option name '%s'. The valid names are "
                            "strict, werror, and strict_mode.", opt.ptr());
@@ -518,7 +518,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
             return false;
         }
     }
-    if (names && oldContextOptions.strictMode()) {
+    if (names && oldRuntimeOptions.strictMode()) {
         names = JS_sprintf_append(names, "%s%s", names ? "," : "", "strict_mode");
         if (!names) {
             JS_ReportOutOfMemory(cx);
@@ -881,7 +881,7 @@ static const JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
 };
 
 static const JSErrorFormatString *
-my_GetErrorMessage(void *userRef, const char *locale, const unsigned errorNumber)
+my_GetErrorMessage(void *userRef, const unsigned errorNumber)
 {
     if (errorNumber == 0 || errorNumber >= JSShellErr_Limit)
         return nullptr;
