@@ -1,3 +1,7 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
 <svg xmlns="http://www.w3.org/2000/svg">
   <filter id="flood-with-yellow">
     <!-- Turn the black rect into a yellow rect. -->
