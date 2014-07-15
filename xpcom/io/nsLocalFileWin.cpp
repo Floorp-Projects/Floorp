@@ -289,11 +289,12 @@ class nsDriveEnumerator : public nsISimpleEnumerator
 {
 public:
   nsDriveEnumerator();
-  virtual ~nsDriveEnumerator();
   NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATOR
   nsresult Init();
 private:
+  virtual ~nsDriveEnumerator();
+
   /* mDrives stores the null-separated drive names.
    * Init sets them.
    * HasMoreElements checks mStartOfCurrentDrive.
