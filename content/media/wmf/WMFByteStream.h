@@ -36,9 +36,10 @@ class SharedThreadPool;
 class WMFByteStream MOZ_FINAL : public IMFByteStream
                               , public IMFAttributes
 {
+  ~WMFByteStream();
+
 public:
   WMFByteStream(MediaResource* aResource, WMFSourceReaderCallback* aCallback);
-  ~WMFByteStream();
 
   nsresult Init();
   nsresult Shutdown();
