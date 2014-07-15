@@ -2742,11 +2742,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
       accumulateIntoThebesLayerData->Accumulate(this, item,
           opaquePixels, itemVisibleRect, itemDrawRect, itemClip);
     }
-
-    if (itemSameCoordinateSystemChildren &&
-        itemSameCoordinateSystemChildren->NeedsTransparentSurface()) {
-      aList->SetNeedsTransparentSurface();
-    }
   }
 
   aList->AppendToTop(&savedItems);
