@@ -26,11 +26,12 @@ class TaskbarPreview : public nsITaskbarPreview
 {
 public:
   TaskbarPreview(ITaskbarList4 *aTaskbar, nsITaskbarPreviewController *aController, HWND aHWND, nsIDocShell *aShell);
-  virtual ~TaskbarPreview();
 
   NS_DECL_NSITASKBARPREVIEW
 
 protected:
+  virtual ~TaskbarPreview();
+
   // Called to update ITaskbarList4 dependent properties
   virtual nsresult UpdateTaskbarProperties();
 

@@ -17,9 +17,10 @@ namespace widget {
 class TaskbarTabPreview : public nsITaskbarTabPreview,
                           public TaskbarPreview
 {
+  virtual ~TaskbarTabPreview();
+
 public:
   TaskbarTabPreview(ITaskbarList4 *aTaskbar, nsITaskbarPreviewController *aController, HWND aHWND, nsIDocShell *aShell);
-  virtual ~TaskbarTabPreview();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITASKBARTABPREVIEW
