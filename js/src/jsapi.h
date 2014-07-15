@@ -1423,7 +1423,8 @@ class JS_PUBLIC_API(RuntimeOptions) {
         asmJS_(false),
         nativeRegExp_(false),
         werror_(false),
-        strictMode_(false)
+        strictMode_(false),
+        varObjFix_(false)
     {
     }
 
@@ -1483,6 +1484,16 @@ class JS_PUBLIC_API(RuntimeOptions) {
         return *this;
     }
 
+    bool varObjFix() const { return varObjFix_; }
+    RuntimeOptions &setVarObjFix(bool flag) {
+        varObjFix_ = flag;
+        return *this;
+    }
+    RuntimeOptions &toggleVarObjFix() {
+        varObjFix_ = !varObjFix_;
+        return *this;
+    }
+
   private:
     bool baseline_ : 1;
     bool ion_ : 1;
@@ -1490,6 +1501,7 @@ class JS_PUBLIC_API(RuntimeOptions) {
     bool nativeRegExp_ : 1;
     bool werror_ : 1;
     bool strictMode_ : 1;
+    bool varObjFix_ : 1;
 };
 
 JS_PUBLIC_API(RuntimeOptions &)
@@ -1502,7 +1514,6 @@ class JS_PUBLIC_API(ContextOptions) {
   public:
     ContextOptions()
       : extraWarnings_(false),
-        varObjFix_(false),
         privateIsNSISupports_(false),
         dontReportUncaught_(false),
         noDefaultCompartmentObject_(false),
@@ -1517,16 +1528,6 @@ class JS_PUBLIC_API(ContextOptions) {
     }
     ContextOptions &toggleExtraWarnings() {
         extraWarnings_ = !extraWarnings_;
-        return *this;
-    }
-
-    bool varObjFix() const { return varObjFix_; }
-    ContextOptions &setVarObjFix(bool flag) {
-        varObjFix_ = flag;
-        return *this;
-    }
-    ContextOptions &toggleVarObjFix() {
-        varObjFix_ = !varObjFix_;
         return *this;
     }
 
@@ -1572,7 +1573,6 @@ class JS_PUBLIC_API(ContextOptions) {
 
   private:
     bool extraWarnings_ : 1;
-    bool varObjFix_ : 1;
     bool privateIsNSISupports_ : 1;
     bool dontReportUncaught_ : 1;
     bool noDefaultCompartmentObject_ : 1;

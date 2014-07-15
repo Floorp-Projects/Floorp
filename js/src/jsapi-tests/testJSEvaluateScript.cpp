@@ -9,7 +9,7 @@ BEGIN_TEST(testJSEvaluateScript)
     JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), global));
     CHECK(obj);
 
-    CHECK(JS::ContextOptionsRef(cx).varObjFix());
+    CHECK(JS::RuntimeOptionsRef(cx).varObjFix());
 
     static const char src[] = "var x = 5;";
 
@@ -25,7 +25,7 @@ BEGIN_TEST(testJSEvaluateScript)
     CHECK(hasProp);
 
     // Now do the same thing, but without JSOPTION_VAROBJFIX
-    JS::ContextOptionsRef(cx).setVarObjFix(false);
+    JS::RuntimeOptionsRef(cx).setVarObjFix(false);
 
     static const char src2[] = "var y = 5;";
 
