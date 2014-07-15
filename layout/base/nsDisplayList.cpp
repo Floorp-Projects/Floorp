@@ -1020,11 +1020,16 @@ void nsDisplayListSet::MoveTo(const nsDisplayListSet& aDestination) const
   aDestination.Outlines()->AppendToTop(Outlines());
 }
 
-static void
-MoveListTo(nsDisplayList* aList, nsTArray<nsDisplayItem*>* aElements) {
+void
+nsDisplayList::FlattenTo(nsTArray<nsDisplayItem*>* aElements) {
   nsDisplayItem* item;
-  while ((item = aList->RemoveBottom()) != nullptr) {
-    aElements->AppendElement(item);
+  while ((item = RemoveBottom()) != nullptr) {
+    if (item->GetType() == nsDisplayItem::TYPE_WRAP_LIST) {
+      item->GetSameCoordinateSystemChildren()->FlattenTo(aElements);
+      item->~nsDisplayItem();
+    } else {
+      aElements->AppendElement(item);
+    }
   }
 }
 
@@ -1083,6 +1088,31 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
   return opaqueClipped;
 }
 
+/* Checks if aPotentialScrollItem is a scroll layer item and aPotentialScrollbarItem
+ * is an overlay scrollbar item for the same scroll frame.
+ */
+static bool
+IsScrollLayerItemAndOverlayScrollbarForScrollFrame(
+  nsDisplayItem* aPotentialScrollItem, nsDisplayItem* aPotentialScrollbarItem)
+{
+  if (aPotentialScrollItem->GetType() == nsDisplayItem::TYPE_SCROLL_LAYER &&
+      aPotentialScrollbarItem &&
+      aPotentialScrollbarItem->GetType() == nsDisplayItem::TYPE_OWN_LAYER &&
+      LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
+    nsDisplayScrollLayer* scrollItem =
+      static_cast<nsDisplayScrollLayer*>(aPotentialScrollItem);
+    nsDisplayOwnLayer* layerItem =
+      static_cast<nsDisplayOwnLayer*>(aPotentialScrollbarItem);
+    if ((layerItem->GetFlags() &
+         (nsDisplayOwnLayer::VERTICAL_SCROLLBAR |
+          nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR)) &&
+        layerItem->Frame()->GetParent() == scrollItem->GetScrollFrame()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool
 nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
                                            nsRegion* aVisibleRegion,
@@ -1100,10 +1130,43 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
   bool anyVisible = false;
 
   nsAutoTArray<nsDisplayItem*, 512> elements;
-  MoveListTo(this, &elements);
+  FlattenTo(&elements);
+
+  bool forceTransparentSurface = false;
 
   for (int32_t i = elements.Length() - 1; i >= 0; --i) {
     nsDisplayItem* item = elements[i];
+    nsDisplayItem* belowItem = i < 1 ? nullptr : elements[i - 1];
+
+    nsDisplayList* list = item->GetSameCoordinateSystemChildren();
+    if (aBuilder->AllowMergingAndFlattening()) {
+      if (belowItem && item->TryMerge(aBuilder, belowItem)) {
+        belowItem->~nsDisplayItem();
+        elements.ReplaceElementsAt(i - 1, 1, item);
+        continue;
+      }
+
+      // If an overlay scrollbar item is between a scroll layer item and the
+      // other scroll layer items that we need to merge with just move the
+      // scrollbar item up, that way it will be on top of the scrolled content
+      // and we can try to merge all the scroll layer items.
+      if (IsScrollLayerItemAndOverlayScrollbarForScrollFrame(item, belowItem)) {
+        elements[i] = belowItem;
+        elements[i-1] = item;
+        i++;
+        continue;
+      }
+
+      if (list && item->ShouldFlattenAway(aBuilder)) {
+        // The elements on the list >= i no longer serve any use.
+        elements.SetLength(i);
+        list->FlattenTo(&elements);
+        i = elements.Length();
+        item->~nsDisplayItem();
+        continue;
+      }
+    }
+
     nsRect bounds = item->GetClippedBounds(aBuilder);
 
     nsRegion itemVisible;
@@ -1147,11 +1210,17 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
           aVisibleRegion->SetEmpty();
         }
       }
+
+      if (aBuilder->NeedToForceTransparentSurfaceForItem(item) ||
+          (list && list->NeedsTransparentSurface())) {
+        forceTransparentSurface = true;
+      }
     }
     AppendToBottom(item);
   }
 
   mIsOpaque = !aVisibleRegion->Intersects(mVisibleRect);
+  mForceTransparentSurface = forceTransparentSurface;
   return anyVisible;
 }
 
