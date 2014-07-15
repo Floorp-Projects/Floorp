@@ -694,16 +694,28 @@ BluetoothHandsfreeInterface::DisconnectAudio(
 
 /* Voice Recognition */
 
-bt_status_t
-BluetoothHandsfreeInterface::StartVoiceRecognition()
+void
+BluetoothHandsfreeInterface::StartVoiceRecognition(
+  BluetoothHandsfreeResultHandler* aRes)
 {
-  return mInterface->start_voice_recognition();
+  bt_status_t status = mInterface->start_voice_recognition();
+
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(
+      aRes, &BluetoothHandsfreeResultHandler::StartVoiceRecognition, status);
+  }
 }
 
-bt_status_t
-BluetoothHandsfreeInterface::StopVoiceRecognition()
+void
+BluetoothHandsfreeInterface::StopVoiceRecognition(
+  BluetoothHandsfreeResultHandler* aRes)
 {
-  return mInterface->stop_voice_recognition();
+  bt_status_t status = mInterface->stop_voice_recognition();
+
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(
+      aRes, &BluetoothHandsfreeResultHandler::StopVoiceRecognition, status);
+  }
 }
 
 /* Volume */
