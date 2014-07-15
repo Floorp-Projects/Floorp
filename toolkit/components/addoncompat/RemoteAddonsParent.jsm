@@ -246,6 +246,164 @@ ObserverInterposition.methods.removeObserver =
     target.removeObserver(observer, topic);
   };
 
+// This object is responsible for forwarding events from the child to
+// the parent.
+let EventTargetParent = {
+  init: function() {
+    // The _listeners map goes from targets (either <browser> elements
+    // or windows) to a dictionary from event types to listeners.
+    this._listeners = new WeakMap();
+
+    let mm = Cc["@mozilla.org/globalmessagemanager;1"].
+      getService(Ci.nsIMessageListenerManager);
+    mm.addMessageListener("Addons:Event:Run", this);
+  },
+
+  // If target is not on the path from a <browser> element to the
+  // window root, then we return null here to ignore the
+  // target. Otherwise, if the target is a browser-specific element
+  // (the <browser> or <tab> elements), then we return the
+  // <browser>. If it's some generic element, then we return the
+  // window itself.
+  redirectEventTarget: function(target) {
+    if (Cu.isCrossProcessWrapper(target)) {
+      return null;
+    }
+
+    if (target instanceof Ci.nsIDOMChromeWindow) {
+      return target;
+    }
+
+    const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    if (target instanceof Ci.nsIDOMXULElement) {
+      if (target.localName == "browser") {
+        return target;
+      } else if (target.localName == "tab") {
+        return target.linkedBrowser;
+      }
+
+      // Check if |target| is somewhere on the patch from the
+      // <tabbrowser> up to the root element.
+      let window = target.ownerDocument.defaultView;
+      if (target.contains(window.gBrowser)) {
+        return window;
+      }
+    }
+
+    return null;
+  },
+
+  // When a given event fires in the child, we fire it on the
+  // <browser> element and the window since those are the two possible
+  // results of redirectEventTarget.
+  getTargets: function(browser) {
+    let window = browser.ownerDocument.defaultView;
+    return [browser, window];
+  },
+
+  addEventListener: function(target, type, listener, useCapture, wantsUntrusted) {
+    let newTarget = this.redirectEventTarget(target);
+    if (!newTarget) {
+      return;
+    }
+
+    useCapture = useCapture || false;
+    wantsUntrusted = wantsUntrusted || false;
+
+    NotificationTracker.add(["event", type, useCapture]);
+
+    let listeners = this._listeners.get(newTarget);
+    if (!listeners) {
+      listeners = {};
+      this._listeners.set(newTarget, listeners);
+    }
+    let forType = setDefault(listeners, type, []);
+
+    // If there's already an identical listener, don't do anything.
+    for (let i = 0; i < forType.length; i++) {
+      if (forType[i].listener === listener &&
+          forType[i].useCapture === useCapture &&
+          forType[i].wantsUntrusted === wantsUntrusted) {
+        return;
+      }
+    }
+
+    forType.push({listener: listener, wantsUntrusted: wantsUntrusted, useCapture: useCapture});
+  },
+
+  removeEventListener: function(target, type, listener, useCapture) {
+    let newTarget = this.redirectEventTarget(target);
+    if (!newTarget) {
+      return;
+    }
+
+    useCapture = useCapture || false;
+
+    let listeners = this._listeners.get(newTarget);
+    if (!listeners) {
+      return;
+    }
+    let forType = setDefault(listeners, type, []);
+
+    for (let i = 0; i < forType.length; i++) {
+      if (forType[i].listener === listener && forType[i].useCapture === useCapture) {
+        forType.splice(i, 1);
+        NotificationTracker.remove(["event", type, useCapture]);
+        break;
+      }
+    }
+  },
+
+  receiveMessage: function(msg) {
+    switch (msg.name) {
+      case "Addons:Event:Run":
+        this.dispatch(msg.target, msg.data.type, msg.data.isTrusted, msg.objects.event);
+        break;
+    }
+  },
+
+  dispatch: function(browser, type, isTrusted, event) {
+    let targets = this.getTargets(browser);
+    for (target of targets) {
+      let listeners = this._listeners.get(target);
+      if (!listeners) {
+        continue;
+      }
+      let forType = setDefault(listeners, type, []);
+      for (let {listener, wantsUntrusted} of forType) {
+        if (wantsUntrusted || isTrusted) {
+          try {
+            if ("handleEvent" in listener) {
+              listener.handleEvent(event);
+            } else {
+              listener.call(event.target, event);
+            }
+          } catch (e) {
+            Cu.reportError(e);
+          }
+        }
+      }
+    }
+  }
+};
+EventTargetParent.init();
+
+// This interposition redirects addEventListener and
+// removeEventListener to EventTargetParent.
+let EventTargetInterposition = new Interposition();
+
+EventTargetInterposition.methods.addEventListener =
+  function(addon, target, type, listener, useCapture, wantsUntrusted) {
+    EventTargetParent.addEventListener(target, type, listener, useCapture, wantsUntrusted);
+    target.addEventListener(type, listener, useCapture, wantsUntrusted);
+  };
+
+EventTargetInterposition.methods.removeEventListener =
+  function(addon, target, type, listener, useCapture) {
+    EventTargetParent.removeEventListener(target, type, listener, useCapture);
+    target.removeEventListener(type, listener, useCapture);
+  };
+
 let RemoteAddonsParent = {
   init: function() {
   },
@@ -264,6 +422,14 @@ let RemoteAddonsParent = {
   },
 
   getTaggedInterpositions: function() {
-    return {};
+    let result = {};
+
+    function register(tag, interp) {
+      result[tag] = interp;
+    }
+
+    register("EventTarget", EventTargetInterposition);
+
+    return result;
   },
 };

@@ -178,7 +178,36 @@ let ObserverChild = {
 };
 ObserverChild.init();
 
+// There is one of these objects per browser tab in the child. When an
+// add-on in the parent listens for an event, this child object
+// listens for that event in the child.
+function EventTargetChild(childGlobal)
+{
+  this._childGlobal = childGlobal;
+  NotificationTracker.watch("event", (path, count) => this.track(path, count));
+}
+
+EventTargetChild.prototype = {
+  track: function(path, count) {
+    let eventType = path[1];
+    let useCapture = path[2];
+    if (count) {
+      this._childGlobal.addEventListener(eventType, this, useCapture, true);
+    } else {
+      this._childGlobal.removeEventListener(eventType, this, useCapture);
+    }
+  },
+
+  handleEvent: function(event) {
+    this._childGlobal.sendRpcMessage("Addons:Event:Run",
+                                     {type: event.type, isTrusted: event.isTrusted},
+                                     {event: event});
+  }
+};
+
 let RemoteAddonsChild = {
   init: function(global) {
+    // Return this so it gets rooted in the content script.
+    return [new EventTargetChild(global)];
   },
 };
