@@ -2820,7 +2820,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
         // (async animations or an empty transaction), so we need to put items
         // that the transform item can potentially move under into a layer
         // above this item.
-        if (itemType == nsDisplayItem::TYPE_TRANSFORM &&
+        if (item->GetType() == nsDisplayItem::TYPE_TRANSFORM &&
             nsDisplayTransform::ShouldPrerenderTransformedContent(mBuilder,
                                                                   item->Frame(),
                                                                   false)) {
