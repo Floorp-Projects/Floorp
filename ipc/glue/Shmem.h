@@ -76,8 +76,8 @@ public:
   struct IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead {};
 
   Shmem() :
-    mSegment(0),
-    mData(0),
+    mSegment(nullptr),
+    mData(nullptr),
     mSize(0),
     mId(0)
   {
@@ -195,8 +195,8 @@ public:
 
   void forget(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead)
   {
-    mSegment = 0;
-    mData = 0;
+    mSegment = nullptr;
+    mData = nullptr;
     mSize = 0;
     mId = 0;
   }
