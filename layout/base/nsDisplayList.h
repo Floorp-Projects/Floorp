@@ -845,6 +845,19 @@ public:
     mReferenceFrame = aBuilder->FindReferenceFrameFor(aFrame);
     mToReferenceFrame = aBuilder->ToReferenceFrame(aFrame);
   }
+  nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                const nsIFrame* aReferenceFrame,
+                const nsPoint& aToReferenceFrame)
+    : mFrame(aFrame)
+    , mClip(aBuilder->ClipState().GetCurrentCombinedClip(aBuilder))
+    , mReferenceFrame(aReferenceFrame)
+    , mToReferenceFrame(aToReferenceFrame)
+    , mInFixedPos(aBuilder->IsInFixedPos())
+#ifdef MOZ_DUMP_PAINTING
+    , mPainted(false)
+#endif
+  {
+  }
   /**
    * This constructor is only used in rare cases when we need to construct
    * temporary items.
@@ -2569,6 +2582,8 @@ public:
                     nsDisplayList* aList);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayItem* aItem);
+  nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                    nsDisplayItem* aItem, const nsIFrame* aReferenceFrame, const nsPoint& aToReferenceFrame);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame), mOverrideZIndex(0) {}
   virtual ~nsDisplayWrapList();
