@@ -926,10 +926,6 @@
   cursor: grabbing;
 }
 
-.graph-widget-canvas ~ * {
-  pointer-events: none;
-}
-
 /* Line graph widget */
 
 .line-graph-widget-canvas {
@@ -944,6 +940,7 @@
   top: 0;
   left: 0;
   border-right: 1px solid rgba(255,255,255,0.25);
+  pointer-events: none;
 }
 
 .line-graph-widget-gutter-line {
@@ -976,6 +973,7 @@
   transform: translateY(-50%);
   font-size: 80%;
   z-index: 1;
+  pointer-events: none;
 }
 
 .line-graph-widget-tooltip::before {
@@ -1053,6 +1051,7 @@
   left: 8px;
   color: #292e33;
   font-size: 80%;
+  pointer-events: none;
 }
 
 .bar-graph-widget-legend-item {
@@ -1072,6 +1071,8 @@
   border: 1px solid #fff;
   border-radius: 1px;
   -moz-margin-end: 4px;
+  pointer-events: all;
+  cursor: pointer;
 }
 
 .bar-graph-widget-legend-item > [view="label"] {
