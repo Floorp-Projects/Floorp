@@ -201,27 +201,23 @@ public:
    * @return the root of given frame's (sub)tree, whose origin
    * establishes the coordinate system for the child display items.
    */
-  const nsIFrame* FindReferenceFrameFor(const nsIFrame *aFrame,
-                                        nsPoint* aOffset = nullptr)
+  const nsIFrame* FindReferenceFrameFor(const nsIFrame *aFrame)
   {
-    if (aFrame == mCurrentFrame) {
-      if (aOffset) {
-        *aOffset = mCurrentOffsetToReferenceFrame;
-      }
-      return mCurrentReferenceFrame;
+    if (aFrame == mCachedOffsetFrame) {
+      return mCachedReferenceFrame;
     }
     for (const nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f))
     {
       if (f == mReferenceFrame || f->IsTransformed()) {
-        if (aOffset) {
-          *aOffset = aFrame->GetOffsetToCrossDoc(f);
-        }
+        mCachedOffsetFrame = aFrame;
+        mCachedReferenceFrame = f;
+        mCachedOffset = aFrame->GetOffsetToCrossDoc(f);
         return f;
       }
     }
-    if (aOffset) {
-      *aOffset = aFrame->GetOffsetToCrossDoc(mReferenceFrame);
-    }
+    mCachedOffsetFrame = aFrame;
+    mCachedReferenceFrame = mReferenceFrame;
+    mCachedOffset = aFrame->GetOffsetToCrossDoc(mReferenceFrame);
     return mReferenceFrame;
   }
   
@@ -238,12 +234,14 @@ public:
    * @return a point pt such that adding pt to a coordinate relative to aFrame
    * makes it relative to ReferenceFrame(), i.e., returns 
    * aFrame->GetOffsetToCrossDoc(ReferenceFrame()). The returned point is in
-   * the appunits of aFrame.
+   * the appunits of aFrame. It may be optimized to be faster than
+   * aFrame->GetOffsetToCrossDoc(ReferenceFrame()) (but currently isn't).
    */
-  const nsPoint ToReferenceFrame(const nsIFrame* aFrame) {
-    nsPoint result;
-    FindReferenceFrameFor(aFrame, &result);
-    return result;
+  const nsPoint& ToReferenceFrame(const nsIFrame* aFrame) {
+    if (aFrame != mCachedOffsetFrame) {
+      FindReferenceFrameFor(aFrame);
+    }
+    return mCachedOffset;
   }
   /**
    * When building the display list, the scrollframe aFrame will be "ignored"
@@ -538,40 +536,38 @@ public:
     AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder,
                             nsIFrame* aForChild, bool aIsRoot)
       : mBuilder(aBuilder),
-        mPrevFrame(aBuilder->mCurrentFrame),
-        mPrevReferenceFrame(aBuilder->mCurrentReferenceFrame),
+        mPrevCachedOffsetFrame(aBuilder->mCachedOffsetFrame),
+        mPrevCachedReferenceFrame(aBuilder->mCachedReferenceFrame),
         mPrevLayerEventRegions(aBuilder->mLayerEventRegions),
-        mPrevOffset(aBuilder->mCurrentOffsetToReferenceFrame),
+        mPrevCachedOffset(aBuilder->mCachedOffset),
         mPrevIsAtRootOfPseudoStackingContext(aBuilder->mIsAtRootOfPseudoStackingContext),
         mPrevAncestorHasTouchEventHandler(aBuilder->mAncestorHasTouchEventHandler)
     {
       if (aForChild->IsTransformed()) {
-        aBuilder->mCurrentOffsetToReferenceFrame = nsPoint();
-        aBuilder->mCurrentReferenceFrame = aForChild;
-      } else if (aBuilder->mCurrentFrame == aForChild->GetParent()) {
-        aBuilder->mCurrentOffsetToReferenceFrame += aForChild->GetPosition();
+        aBuilder->mCachedOffset = nsPoint();
+        aBuilder->mCachedReferenceFrame = aForChild;
+      } else if (mPrevCachedOffsetFrame == aForChild->GetParent()) {
+        aBuilder->mCachedOffset += aForChild->GetPosition();
       } else {
-        aBuilder->mCurrentReferenceFrame =
-          aBuilder->FindReferenceFrameFor(aForChild,
-              &aBuilder->mCurrentOffsetToReferenceFrame);
+        aBuilder->mCachedOffset = aBuilder->ToReferenceFrame(aForChild);
       }
-      aBuilder->mCurrentFrame = aForChild;
+      aBuilder->mCachedOffsetFrame = aForChild;
       aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
     }
     ~AutoBuildingDisplayList() {
-      mBuilder->mCurrentFrame = mPrevFrame;
-      mBuilder->mCurrentReferenceFrame = mPrevReferenceFrame;
+      mBuilder->mCachedOffsetFrame = mPrevCachedOffsetFrame;
+      mBuilder->mCachedReferenceFrame = mPrevCachedReferenceFrame;
       mBuilder->mLayerEventRegions = mPrevLayerEventRegions;
-      mBuilder->mCurrentOffsetToReferenceFrame = mPrevOffset;
+      mBuilder->mCachedOffset = mPrevCachedOffset;
       mBuilder->mIsAtRootOfPseudoStackingContext = mPrevIsAtRootOfPseudoStackingContext;
       mBuilder->mAncestorHasTouchEventHandler = mPrevAncestorHasTouchEventHandler;
     }
   private:
     nsDisplayListBuilder* mBuilder;
-    const nsIFrame*       mPrevFrame;
-    const nsIFrame*       mPrevReferenceFrame;
+    const nsIFrame*       mPrevCachedOffsetFrame;
+    const nsIFrame*       mPrevCachedReferenceFrame;
     nsDisplayLayerEventRegions* mPrevLayerEventRegions;
-    nsPoint               mPrevOffset;
+    nsPoint               mPrevCachedOffset;
     bool                  mPrevIsAtRootOfPseudoStackingContext;
     bool                  mPrevAncestorHasTouchEventHandler;
   };
@@ -756,13 +752,11 @@ private:
   nsDisplayTableItem*            mCurrentTableItem;
   DisplayListClipState           mClipState;
   const nsRegion*                mFinalTransparentRegion;
-  // mCurrentFrame is the frame that we're currently calling (or about to call)
-  // BuildDisplayList on.
-  const nsIFrame*                mCurrentFrame;
-  // The reference frame for mCurrentFrame.
-  const nsIFrame*                mCurrentReferenceFrame;
-  // The offset from mCurrentFrame to mCurrentReferenceFrame.
-  nsPoint                        mCurrentOffsetToReferenceFrame;
+  // When mCachedOffsetFrame is non-null, mCachedOffset is the offset from
+  // mCachedOffsetFrame to mReferenceFrame.
+  const nsIFrame*                mCachedOffsetFrame;
+  const nsIFrame*                mCachedReferenceFrame;
+  nsPoint                        mCachedOffset;
   nsRegion                       mExcludedGlassRegion;
   // The display item for the Windows window glass background, if any
   nsDisplayItem*                 mGlassDisplayItem;
