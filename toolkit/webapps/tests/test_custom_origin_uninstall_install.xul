@@ -2,9 +2,9 @@
 <?xml-stylesheet type="text/css" href="chrome://global/skin"?>
 <?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=1029674
+https://bugzilla.mozilla.org/show_bug.cgi?id=1035282
 -->
-<window title="Mozilla Bug 1029674"
+<window title="Mozilla Bug 1035282"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
@@ -14,14 +14,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1029674
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
-  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1029674"
-     target="_blank">Mozilla Bug 1029674</a>
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1035282"
+     target="_blank">Mozilla Bug 1035282</a>
   </body>
 
 <script type="application/javascript">
 <![CDATA[
 
-/** Test for Bug 1029674 **/
+/** Test for Bug 1035282 **/
 
 "use strict";
 
@@ -80,25 +80,57 @@ let runTest = Task.async(function*() {
 
   confirmNextInstall();
 
-  let request = navigator.mozApps.installPackage(app.manifestURL);
+  let (request = navigator.mozApps.installPackage(app.manifestURL)) {
+    let (deferred = Promise.defer()) {
+      request.onerror = function() {
+        deferred.reject(this.error.name);
+      };
+      request.onsuccess = deferred.resolve;
+      yield deferred.promise;
+    }
 
-  let (deferred = Promise.defer()) {
-    request.onerror = function() {
-      deferred.reject(this.error.name);
+    let appObject = request.result;
+    ok(appObject, "app is non-null");
+
+    let (deferred = Promise.defer()) {
+      appObject.ondownloaderror = function() {
+        deferred.reject(appObject.downloadError.name);
+      };
+      appObject.ondownloadapplied = deferred.resolve;
+      yield deferred.promise;
     };
-    request.onsuccess = deferred.resolve;
-    yield deferred.promise;
+  };
+
+  while (!WebappOSUtils.isLaunchable(app)) {
+    yield wait(1000);
   }
+  ok(true, "App launchable");
 
-  let appObject = request.result;
-  ok(appObject, "app is non-null");
+  yield WebappOSUtils.uninstall(app)
 
-  let (deferred = Promise.defer()) {
-    appObject.ondownloaderror = function() {
-      deferred.reject(appObject.downloadError.name);
+  is(WebappOSUtils.launch(app), false, "Launch fails");
+
+  confirmNextInstall();
+
+  let (request = navigator.mozApps.installPackage(app.manifestURL)) {
+    let (deferred = Promise.defer()) {
+      request.onerror = function() {
+        deferred.reject(this.error.name);
+      };
+      request.onsuccess = deferred.resolve;
+      yield deferred.promise;
+    }
+
+    let appObject = request.result;
+    ok(appObject, "app is non-null");
+
+    let (deferred = Promise.defer()) {
+      appObject.ondownloaderror = function() {
+        deferred.reject(appObject.downloadError.name);
+      };
+      appObject.ondownloadapplied = deferred.resolve;
+      yield deferred.promise;
     };
-    appObject.ondownloadapplied = deferred.resolve;
-    yield deferred.promise;
   };
 
   while (!WebappOSUtils.isLaunchable(app)) {
