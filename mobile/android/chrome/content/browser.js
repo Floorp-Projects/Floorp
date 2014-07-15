@@ -6875,7 +6875,7 @@ var SearchEngines = {
     };
     SelectionHandler.addAction({
       id: "search_add_action",
-      label: Strings.browser.GetStringFromName("contextmenu.addSearchEngine"),
+      label: Strings.browser.GetStringFromName("contextmenu.addSearchEngine2"),
       icon: "drawable://ab_add_search_engine",
       selector: filter,
       action: function(aElement) {
@@ -7080,7 +7080,7 @@ var SearchEngines = {
     }
 
     // prompt user for name of search engine
-    let promptTitle = Strings.browser.GetStringFromName("contextmenu.addSearchEngine");
+    let promptTitle = Strings.browser.GetStringFromName("contextmenu.addSearchEngine2");
     let title = { value: (aElement.ownerDocument.title || docURI.host) };
     if (!Services.prompt.prompt(null, promptTitle, null, title, null, {}))
       return;
