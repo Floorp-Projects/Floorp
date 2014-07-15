@@ -8,6 +8,7 @@ package org.mozilla.gecko.db;
 import android.content.Context;
 import android.content.ContentResolver;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.database.MatrixCursor.RowBuilder;
@@ -70,6 +71,9 @@ public class SuggestedSites {
 
     // SharedPreference key for suggested sites that should be hidden.
     public static final String PREF_SUGGESTED_SITES_HIDDEN = "suggestedSites.hidden";
+
+    // Locale used to generate the current suggested sites.
+    public static final String PREF_SUGGESTED_SITES_LOCALE = "suggestedSites.locale";
 
     // File in profile dir with the list of suggested sites.
     private static final String FILENAME = "suggestedsites.json";
@@ -144,7 +148,6 @@ public class SuggestedSites {
     private final Distribution distribution;
     private final File file;
     private Map<String, Site> cachedSites;
-    private Locale cachedLocale;
     private Set<String> cachedBlacklist;
 
     public SuggestedSites(Context appContext) {
@@ -160,6 +163,19 @@ public class SuggestedSites {
         this.context = appContext;
         this.distribution = distribution;
         this.file = file;
+    }
+
+    private static boolean isNewLocale(Context context, Locale requestedLocale) {
+        final SharedPreferences prefs = GeckoSharedPrefs.forProfile(context);
+
+        String locale = prefs.getString(PREF_SUGGESTED_SITES_LOCALE, null);
+        if (locale == null) {
+            // Initialize config with the current locale
+            updateSuggestedSitesLocale(context);
+            return true;
+        }
+
+        return !TextUtils.equals(requestedLocale.toString(), locale);
     }
 
     /**
@@ -344,7 +360,7 @@ public class SuggestedSites {
 
     private synchronized void setCachedSites(Map<String, Site> sites) {
         cachedSites = Collections.unmodifiableMap(sites);
-        cachedLocale = Locale.getDefault();
+        updateSuggestedSitesLocale(context);
     }
 
     /**
@@ -364,6 +380,12 @@ public class SuggestedSites {
         if (sites != null) {
             setCachedSites(sites);
         }
+    }
+
+    private static void updateSuggestedSitesLocale(Context context) {
+        final Editor editor = GeckoSharedPrefs.forProfile(context).edit();
+        editor.putString(PREF_SUGGESTED_SITES_LOCALE, Locale.getDefault().toString());
+        editor.commit();
     }
 
     private boolean isEnabled() {
@@ -424,7 +446,15 @@ public class SuggestedSites {
             return cursor;
         }
 
-        if (cachedSites == null || !locale.equals(cachedLocale)) {
+        final boolean isNewLocale = isNewLocale(context, locale);
+
+        // Force the suggested sites file in profile dir to be re-generated
+        // if the locale has changed.
+        if (isNewLocale) {
+            file.delete();
+        }
+
+        if (cachedSites == null || isNewLocale) {
             Log.d(LOGTAG, "No cached sites, refreshing.");
             refresh();
         }
