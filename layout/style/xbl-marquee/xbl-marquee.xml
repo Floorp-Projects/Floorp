@@ -259,14 +259,8 @@
             case "string":
               if (!aIgnoreNextCall) {
                 try {
-                  // Things to watch out for here:
-                  // * Weird |new| precedence.
-                  // * Getting the correct constructor (via Xrays).
-                  // * Waiving the constructor before invoking it, so that we can
-                  //   call it (since XBL gets opaque non-callable wrappers to content).
-                  // * The fact that contentFn is transitively waived, which we need
-                  //   in order to be able to invoke it.
-                  this["_on" + aName] = new (XPCNativeWrapper.unwrap(window.Function))("event", aValue);
+                  // Function Xrays make this simple and safe. \o/
+                  this["_on" + aName] = new window.Function("event", aValue);
                 }
                 catch(e) {
                   return false;
