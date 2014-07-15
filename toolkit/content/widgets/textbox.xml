@@ -541,7 +541,7 @@
         <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll"/>
         <xul:menuseparator anonid="spell-check-separator"/>
         <xul:menuitem label="&spellCheckToggle.label;" type="checkbox" accesskey="&spellCheckToggle.accesskey;" anonid="spell-check-enabled"
-                      oncommand="this.parentNode.parentNode.spellCheckerUI.toggleEnabled();"/>
+                      oncommand="this.parentNode.parentNode.spellCheckerUI.toggleEnabled(window);"/>
         <xul:menu label="&spellDictionaries.label;" accesskey="&spellDictionaries.accesskey;" anonid="spell-dictionaries">
           <xul:menupopup anonid="spell-dictionaries-menu"
                          onpopupshowing="event.stopPropagation();"
