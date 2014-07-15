@@ -1114,9 +1114,39 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
                                 aAllowVisibleRegionExpansion.Intersect(bounds))) {
       anyVisible = true;
 
+      // If we're in a displayport, we need to make sure that fixed position
+      // items do not subtract from the visible region, as async scrolling
+      // may expose these occluded areas.
+      // If the item is fixed pos in the same document as the displayport
+      // then don't let it occlude this list. The only other case possible
+      // is that the fixed pos content is in a child document, in which it
+      // would scroll with the rest of the content.
+      bool occlude = true;
+      nsIPresShell* presShell = nullptr;
+      if (aDisplayPortFrame && item->IsInFixedPos()) {
+        if (item->Frame()->PresContext() == aDisplayPortFrame->PresContext()) {
+          occlude = false;
+          presShell = aDisplayPortFrame->PresContext()->PresShell();
+        }
+      }
+
       nsRegion opaque = TreatAsOpaque(item, aBuilder);
-      // Subtract opaque item from the visible region
-      aBuilder->SubtractFromVisibleRegion(aVisibleRegion, opaque);
+      if (occlude) {
+        // Subtract opaque item from the visible region
+        aBuilder->SubtractFromVisibleRegion(aVisibleRegion, opaque);
+      } else if (presShell &&
+                 presShell->IsScrollPositionClampingScrollPortSizeSet() &&
+                 !opaque.IsEmpty()) {
+        // We make an exception if the fixed position item would fully occlude
+        // the scroll position clamping scroll-port. In that case, it's very
+        // unlikely that it will become visible via async scrolling, so we let
+        // it occlude.
+        nsRect scrollClampingScrollPort(nsPoint(0, 0),
+          presShell->GetScrollPositionClampingScrollPortSize());
+        if (opaque.Contains(scrollClampingScrollPort)) {
+          aVisibleRegion->SetEmpty();
+        }
+      }
     }
     AppendToBottom(item);
   }
