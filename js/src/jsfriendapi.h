@@ -1097,8 +1097,8 @@ CastToJSFreeOp(FreeOp *fop)
  * Get an error type name from a JSExnType constant.
  * Returns nullptr for invalid arguments and JSEXN_INTERNALERR
  */
-extern JS_FRIEND_API(const jschar*)
-GetErrorTypeName(JSRuntime* rt, int16_t exnType);
+extern JS_FRIEND_API(JSFlatString *)
+GetErrorTypeName(JSRuntime *rt, int16_t exnType);
 
 #ifdef JS_DEBUG
 extern JS_FRIEND_API(unsigned)
@@ -1300,7 +1300,7 @@ byteSize(Type atype)
       case Float64:
         return 8;
       default:
-        MOZ_ASSUME_UNREACHABLE("invalid type");
+        MOZ_CRASH("invalid scalar type");
     }
 }
 
@@ -2327,6 +2327,9 @@ extern JS_FRIEND_API(bool)
 CheckDefineProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
                     unsigned attrs,
                     JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+
+JS_FRIEND_API(void)
+ReportErrorWithId(JSContext *cx, const char *msg, JS::HandleId id);
 
 } /* namespace js */
 

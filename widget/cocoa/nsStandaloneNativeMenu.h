@@ -15,7 +15,7 @@ class nsStandaloneNativeMenu : public nsMenuGroupOwnerX, public nsIStandaloneNat
 public:
   nsStandaloneNativeMenu();
 
-  NS_DECL_ISUPPORTS  
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISTANDALONENATIVEMENU
 
   // nsMenuObjectX

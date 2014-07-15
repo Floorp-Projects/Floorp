@@ -278,13 +278,13 @@ BaseProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags,
 bool
 BaseProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args) const
 {
-    MOZ_ASSUME_UNREACHABLE("callable proxies should implement call trap");
+    MOZ_CRASH("callable proxies should implement call trap");
 }
 
 bool
 BaseProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const
 {
-    MOZ_ASSUME_UNREACHABLE("callable proxies should implement construct trap");
+    MOZ_CRASH("callable proxies should implement construct trap");
 }
 
 const char *
@@ -307,7 +307,7 @@ bool
 BaseProxyHandler::regexp_toShared(JSContext *cx, HandleObject proxy,
                                   RegExpGuard *g) const
 {
-    MOZ_ASSUME_UNREACHABLE("This should have been a wrapped regexp");
+    MOZ_CRASH("This should have been a wrapped regexp");
 }
 
 bool
@@ -356,7 +356,7 @@ BaseProxyHandler::weakmapKeyDelegate(JSObject *proxy) const
 bool
 BaseProxyHandler::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const
 {
-    MOZ_ASSUME_UNREACHABLE("Must override getPrototypeOf with lazy prototype.");
+    MOZ_CRASH("Must override getPrototypeOf with lazy prototype.");
 }
 
 bool
@@ -677,19 +677,6 @@ Trap2(JSContext *cx, HandleObject handler, HandleValue fval, HandleId id, Value 
     argv[0].set(rval);
     argv[1].set(v);
     return Trap(cx, handler, fval, 2, argv.begin(), rval);
-}
-
-static bool
-ParsePropertyDescriptorObject(JSContext *cx, HandleObject obj, const Value &v,
-                              MutableHandle<PropertyDescriptor> desc, bool complete = false)
-{
-    Rooted<PropDesc> d(cx);
-    if (!d.initialize(cx, v))
-        return false;
-    if (complete)
-        d.complete();
-    d.populatePropertyDescriptor(obj, desc);
-    return true;
 }
 
 static bool

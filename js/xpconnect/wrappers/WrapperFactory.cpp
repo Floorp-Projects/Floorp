@@ -6,6 +6,7 @@
 
 #include "WaiveXrayWrapper.h"
 #include "FilteringWrapper.h"
+#include "AddonWrapper.h"
 #include "XrayWrapper.h"
 #include "AccessCheck.h"
 #include "XPCWrapper.h"
@@ -397,6 +398,31 @@ SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
     return &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
 }
 
+static const Wrapper *
+SelectAddonWrapper(JSContext *cx, HandleObject obj, const Wrapper *wrapper)
+{
+    JSAddonId *originAddon = JS::AddonIdOfObject(obj);
+    JSAddonId *targetAddon = JS::AddonIdOfObject(JS::CurrentGlobalOrNull(cx));
+
+    MOZ_ASSERT(AccessCheck::isChrome(JS::CurrentGlobalOrNull(cx)));
+    MOZ_ASSERT(targetAddon);
+
+    if (targetAddon == originAddon)
+        return wrapper;
+
+    // Add-on interposition only supports certain wrapper types, so we check if
+    // we would have used one of the supported ones.
+    if (wrapper == &CrossCompartmentWrapper::singleton)
+        return &AddonWrapper<CrossCompartmentWrapper>::singleton;
+    else if (wrapper == &PermissiveXrayXPCWN::singleton)
+        return &AddonWrapper<PermissiveXrayXPCWN>::singleton;
+    else if (wrapper == &PermissiveXrayDOM::singleton)
+        return &AddonWrapper<PermissiveXrayDOM>::singleton;
+
+    // |wrapper| is not supported for interposition, so we don't do it.
+    return wrapper;
+}
+
 JSObject *
 WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
                        HandleObject parent, unsigned flags)
@@ -477,6 +503,11 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
 
         wrapper = SelectWrapper(securityWrapper, wantXrays, xrayType, waiveXrays,
                                 originIsContentXBLScope);
+
+        // If we want to apply add-on interposition in the target compartment,
+        // then we try to "upgrade" the wrapper to an interposing one.
+        if (CompartmentPrivate::Get(target)->scope->HasInterposition())
+            wrapper = SelectAddonWrapper(cx, obj, wrapper);
     }
 
     if (!targetSubsumesOrigin) {

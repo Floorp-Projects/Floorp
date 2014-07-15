@@ -470,7 +470,7 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
 
     uint32_t begin = module.srcBodyStart();  // starts right after 'use asm'
     uint32_t end = module.srcEndBeforeCurly();
-    Rooted<JSFlatString*> src(cx, module.scriptSource()->substring(cx, begin, end));
+    Rooted<JSFlatString*> src(cx, module.scriptSource()->substringDontDeflate(cx, begin, end));
     if (!src)
         return false;
 

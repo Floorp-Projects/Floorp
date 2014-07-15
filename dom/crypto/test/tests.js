@@ -154,7 +154,7 @@ TestArray.addTest(
   "Import / export round-trip with 'pkcs8'",
   function() {
     var that = this;
-    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA1" };
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-1" };
 
     function doExport(x) {
       if (!hasKeyFields(x)) {
@@ -186,7 +186,7 @@ TestArray.addTest(
   "Import failure with format 'pkcs8'",
   function() {
     var that = this;
-    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA1" };
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-1" };
 
     crypto.subtle.importKey("pkcs8", tv.negative_pkcs8, alg, true, ["encrypt"])
       .then(error(that), complete(that));
@@ -1150,3 +1150,127 @@ TestArray.addTest(
       .then( memcmp_complete(that, tv.pbkdf2_sha256.derived), fail );
   }
 );*/
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-OAEP encrypt/decrypt round-trip",
+  function () {
+    var that = this;
+    var privKey, pubKey;
+    var alg = {name: "RSA-OAEP", hash: "SHA-1"};
+
+    var privKey, pubKey;
+    function setPriv(x) { privKey = x; }
+    function setPub(x) { pubKey = x; }
+    function doEncrypt() {
+      return crypto.subtle.encrypt(alg, pubKey, tv.rsaoaep.data);
+    }
+    function doDecrypt(x) {
+      return crypto.subtle.decrypt(alg, privKey, x);
+    }
+
+    Promise.all([
+      crypto.subtle.importKey("pkcs8", tv.rsaoaep.pkcs8, alg, false, ['decrypt'])
+          .then(setPriv, error(that)),
+      crypto.subtle.importKey("spki", tv.rsaoaep.spki, alg, false, ['encrypt'])
+          .then(setPub, error(that))
+    ]).then(doEncrypt, error(that))
+      .then(doDecrypt, error(that))
+      .then(
+        memcmp_complete(that, tv.rsaoaep.data),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-OAEP key generation and encrypt/decrypt round-trip (SHA-256)",
+  function () {
+    var that = this;
+    var alg = {
+      name: "RSA-OAEP",
+      hash: "SHA-256",
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+    };
+
+    var privKey, pubKey, data = crypto.getRandomValues(new Uint8Array(128));
+    function setKey(x) { pubKey = x.publicKey; privKey = x.privateKey; }
+    function doEncrypt() {
+      return crypto.subtle.encrypt(alg, pubKey, data);
+    }
+    function doDecrypt(x) {
+      return crypto.subtle.decrypt(alg, privKey, x);
+    }
+
+    crypto.subtle.generateKey(alg, false, ['encrypt', 'decrypt'])
+      .then(setKey, error(that))
+      .then(doEncrypt, error(that))
+      .then(doDecrypt, error(that))
+      .then(
+        memcmp_complete(that, data),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-OAEP decryption known answer",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-OAEP", hash: "SHA-1"};
+
+    function doDecrypt(x) {
+      return crypto.subtle.decrypt(alg, x, tv.rsaoaep.result);
+    }
+    function fail() { error(that); }
+
+    crypto.subtle.importKey("pkcs8", tv.rsaoaep.pkcs8, alg, false, ['decrypt'])
+      .then( doDecrypt, fail )
+      .then( memcmp_complete(that, tv.rsaoaep.data), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-OAEP input data length checks (2048-bit key)",
+  function () {
+    var that = this;
+    var privKey, pubKey;
+    var alg = {
+      name: "RSA-OAEP",
+      hash: "SHA-1",
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+    };
+
+    var privKey, pubKey;
+    function setKey(x) { pubKey = x.publicKey; privKey = x.privateKey; }
+    function doEncrypt(n) {
+      return function () {
+        return crypto.subtle.encrypt(alg, pubKey, new Uint8Array(n));
+      }
+    }
+
+    crypto.subtle.generateKey(alg, false, ['encrypt'])
+      .then(setKey, error(that))
+      .then(doEncrypt(214), error(that))
+      .then(doEncrypt(215), error(that))
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-OAEP key import with invalid hash",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-OAEP", hash: "SHA-123"};
+
+    crypto.subtle.importKey("pkcs8", tv.rsaoaep.pkcs8, alg, false, ['decrypt'])
+      .then(error(that), complete(that));
+  }
+);
+

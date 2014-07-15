@@ -963,6 +963,7 @@ static inline bool IS_PROTO_CLASS(const js::Class *clazz)
 /***************************************************************************/
 // XPCWrappedNativeScope is one-to-one with a JS global object.
 
+class nsIAddonInterposition;
 class nsXPCComponentsBase;
 class XPCWrappedNativeScope : public PRCList
 {
@@ -1097,6 +1098,14 @@ public:
             mDOMExpandoSet->remove(expando);
     }
 
+    typedef js::HashMap<JSAddonId *,
+                        nsCOMPtr<nsIAddonInterposition>,
+                        js::PointerHasher<JSAddonId *, 3>,
+                        js::SystemAllocPolicy> InterpositionMap;
+
+    static bool SetAddonInterposition(JSAddonId *addonId,
+                                      nsIAddonInterposition *interp);
+
     // Gets the appropriate scope object for XBL in this scope. The context
     // must be same-compartment with the global upon entering, and the scope
     // object is wrapped into the compartment of the global.
@@ -1114,6 +1123,9 @@ public:
 
     bool IsAddonScope() { return mIsAddonScope; }
 
+    bool HasInterposition() { return mInterposition; }
+    nsCOMPtr<nsIAddonInterposition> GetInterposition();
+
 protected:
     virtual ~XPCWrappedNativeScope();
 
@@ -1124,6 +1136,8 @@ protected:
 private:
     static XPCWrappedNativeScope* gScopes;
     static XPCWrappedNativeScope* gDyingScopes;
+
+    static InterpositionMap*         gInterpositionMap;
 
     XPCJSRuntime*                    mRuntime;
     Native2WrappedNativeMap*         mWrappedNativeMap;
@@ -1143,6 +1157,10 @@ private:
 
     // Lazily created sandboxes for addon code.
     nsTArray<JS::ObjectPtr>          mAddonScopes;
+
+    // This is a service that will be use to interpose on all calls out of this
+    // scope. If it's null, no interposition is done.
+    nsCOMPtr<nsIAddonInterposition>  mInterposition;
 
     nsAutoPtr<DOMExpandoSet> mDOMExpandoSet;
 
@@ -2855,7 +2873,7 @@ class nsXPCComponents : public nsXPCComponentsBase,
                         public nsIXPCComponents
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
     NS_FORWARD_NSIXPCCOMPONENTSBASE(nsXPCComponentsBase::)
     NS_DECL_NSIXPCCOMPONENTS
 
@@ -3279,6 +3297,9 @@ xpc_GetSafeJSContext()
 }
 
 namespace xpc {
+
+JSAddonId *
+NewAddonId(JSContext *cx, const nsACString &id);
 
 // JSNatives to expose atob and btoa in various non-DOM XPConnect scopes.
 bool

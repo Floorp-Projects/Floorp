@@ -90,6 +90,28 @@ class MoveOperand
         return disp_;
     }
 
+    bool aliases(MoveOperand other) const {
+
+        // These are not handled presently, but MEMORY and EFFECTIVE_ADDRESS
+        // only appear in controlled circumstances in the trampoline code
+        // which ensures these cases never come up.
+
+        JS_ASSERT_IF(isMemoryOrEffectiveAddress() && other.isGeneralReg(),
+                     base() != other.reg());
+        JS_ASSERT_IF(other.isMemoryOrEffectiveAddress() && isGeneralReg(),
+                     other.base() != reg());
+
+        if (kind_ != other.kind_)
+            return false;
+        if (kind_ == FLOAT_REG)
+            return floatReg().aliases(other.floatReg());
+        if (code_ != other.code_)
+            return false;
+        if (isMemoryOrEffectiveAddress())
+            return disp_ == other.disp_;
+        return true;
+    }
+
     bool operator ==(const MoveOperand &other) const {
         if (kind_ != other.kind_)
             return false;
@@ -112,7 +134,8 @@ class MoveOp
     MoveOperand to_;
     bool cycleBegin_;
     bool cycleEnd_;
-
+    int cycleBeginSlot_;
+    int cycleEndSlot_;
   public:
     enum Type {
         GENERAL,
@@ -140,6 +163,8 @@ class MoveOp
         to_(to),
         cycleBegin_(false),
         cycleEnd_(false),
+        cycleBeginSlot_(-1),
+        cycleEndSlot_(-1),
         type_(type)
     { }
 
@@ -148,6 +173,14 @@ class MoveOp
     }
     bool isCycleEnd() const {
         return cycleEnd_;
+    }
+    uint32_t cycleBeginSlot() const {
+        MOZ_ASSERT(cycleBeginSlot_ != -1);
+        return cycleBeginSlot_;
+    }
+    uint32_t cycleEndSlot() const {
+        MOZ_ASSERT(cycleEndSlot_ != -1);
+        return cycleEndSlot_;
     }
     const MoveOperand &from() const {
         return from_;
@@ -178,14 +211,16 @@ class MoveResolver
           : MoveOp(from, to, type)
         { }
 
-        void setCycleBegin(Type endCycleType) {
-            JS_ASSERT(!isCycleBegin() && !isCycleEnd());
+        void setCycleBegin(Type endCycleType, int cycleSlot) {
+            JS_ASSERT(!cycleBegin_);
             cycleBegin_ = true;
+            cycleBeginSlot_ = cycleSlot;
             endCycleType_ = endCycleType;
         }
-        void setCycleEnd() {
-            JS_ASSERT(!isCycleBegin() && !isCycleEnd());
+        void setCycleEnd(int cycleSlot) {
+            JS_ASSERT(!cycleEnd_);
             cycleEnd_ = true;
+            cycleEndSlot_ = cycleSlot;
         }
     };
 
@@ -195,14 +230,14 @@ class MoveResolver
     // Moves that are definitely unblocked (constants to registers). These are
     // emitted last.
     js::Vector<MoveOp, 16, SystemAllocPolicy> orderedMoves_;
-    bool hasCycles_;
-
+    int numCycles_;
+    int curCycles_;
     TempObjectPool<PendingMove> movePool_;
 
     InlineList<PendingMove> pending_;
 
     PendingMove *findBlockingMove(const PendingMove *last);
-
+    PendingMove *findCycledMove(PendingMoveIterator *stack, PendingMoveIterator end, const PendingMove *first);
     // Internal reset function. Does not clear lists.
     void resetState();
 
@@ -225,8 +260,8 @@ class MoveResolver
     const MoveOp &getMove(size_t i) const {
         return orderedMoves_[i];
     }
-    bool hasCycles() const {
-        return hasCycles_;
+    uint32_t numCycles() const {
+        return numCycles_;
     }
     void clearTempObjectPool() {
         movePool_.clear();

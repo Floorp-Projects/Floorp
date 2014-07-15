@@ -23,7 +23,7 @@ class nsPagePrintTimer MOZ_FINAL : public nsRunnable,
 {
 public:
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   nsPagePrintTimer(nsPrintEngine* aPrintEngine,
                    nsIDocumentViewerPrint* aDocViewerPrint,

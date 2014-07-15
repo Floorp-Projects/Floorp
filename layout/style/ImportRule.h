@@ -27,7 +27,8 @@ class ImportRule MOZ_FINAL : public Rule,
                              public nsIDOMCSSImportRule
 {
 public:
-  ImportRule(nsMediaList* aMedia, const nsString& aURLSpec);
+  ImportRule(nsMediaList* aMedia, const nsString& aURLSpec,
+             uint32_t aLineNumber, uint32_t aColumnNumber);
 private:
   // for |Clone|
   ImportRule(const ImportRule& aCopy);

@@ -204,7 +204,7 @@ struct TextureFactoryIdentifier
 
   TextureFactoryIdentifier(LayersBackend aLayersBackend = LayersBackend::LAYERS_NONE,
                            GeckoProcessType aParentProcessId = GeckoProcessType_Default,
-                           int32_t aMaxTextureSize = 0,
+                           int32_t aMaxTextureSize = 4096,
                            bool aSupportsTextureBlitting = false,
                            bool aSupportsPartialUploads = false)
     : mParentBackend(aLayersBackend)

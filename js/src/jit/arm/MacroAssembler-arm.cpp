@@ -164,6 +164,8 @@ MacroAssemblerARM::convertFloat32ToInt32(FloatRegister src, Register dest,
 
 void
 MacroAssemblerARM::convertFloat32ToDouble(FloatRegister src, FloatRegister dest) {
+    JS_ASSERT(dest.isDouble());
+    JS_ASSERT(src.isSingle());
     as_vcvt(VFPRegister(dest), VFPRegister(src).singleOverlay());
 }
 
@@ -1608,21 +1610,29 @@ MacroAssemblerARM::ma_vcvt_U32_F64(FloatRegister src, FloatRegister dest, Condit
 void
 MacroAssemblerARM::ma_vcvt_F32_I32(FloatRegister src, FloatRegister dest, Condition cc)
 {
+    JS_ASSERT(src.isSingle());
+    JS_ASSERT(dest.isSInt());
     as_vcvt(VFPRegister(dest).sintOverlay(), VFPRegister(src).singleOverlay(), false, cc);
 }
 void
 MacroAssemblerARM::ma_vcvt_F32_U32(FloatRegister src, FloatRegister dest, Condition cc)
 {
+    JS_ASSERT(src.isSingle());
+    JS_ASSERT(dest.isUInt());
     as_vcvt(VFPRegister(dest).uintOverlay(), VFPRegister(src).singleOverlay(), false, cc);
 }
 void
 MacroAssemblerARM::ma_vcvt_I32_F32(FloatRegister src, FloatRegister dest, Condition cc)
 {
+    JS_ASSERT(src.isSInt());
+    JS_ASSERT(dest.isSingle());
     as_vcvt(VFPRegister(dest).singleOverlay(), VFPRegister(src).sintOverlay(), false, cc);
 }
 void
 MacroAssemblerARM::ma_vcvt_U32_F32(FloatRegister src, FloatRegister dest, Condition cc)
 {
+    JS_ASSERT(src.isUInt());
+    JS_ASSERT(dest.isSingle());
     as_vcvt(VFPRegister(dest).singleOverlay(), VFPRegister(src).uintOverlay(), false, cc);
 }
 
@@ -1869,7 +1879,7 @@ MacroAssemblerARMCompat::freeStack(Register amount)
 void
 MacroAssembler::PushRegsInMask(RegisterSet set)
 {
-    int32_t diffF = set.fpus().size() * sizeof(double);
+    int32_t diffF = set.fpus().getPushSizeInBytes();
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
 
     if (set.gprs().size() > 1) {
@@ -1898,7 +1908,7 @@ void
 MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
 {
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
-    int32_t diffF = set.fpus().size() * sizeof(double);
+    int32_t diffF = set.fpus().getPushSizeInBytes();
     const int32_t reservedG = diffG;
     const int32_t reservedF = diffF;
 
@@ -2671,7 +2681,7 @@ void
 MacroAssemblerARMCompat::compareDouble(FloatRegister lhs, FloatRegister rhs)
 {
     // Compare the doubles, setting vector status flags.
-    if (rhs == InvalidFloatReg)
+    if (rhs.isMissing())
         ma_vcmpz(lhs);
     else
         ma_vcmp(lhs, rhs);
@@ -2708,7 +2718,7 @@ void
 MacroAssemblerARMCompat::compareFloat(FloatRegister lhs, FloatRegister rhs)
 {
     // Compare the doubles, setting vector status flags.
-    if (rhs == InvalidFloatReg)
+    if (rhs.isMissing())
         as_vcmpz(VFPRegister(lhs).singleOverlay());
     else
         as_vcmp(VFPRegister(lhs).singleOverlay(), VFPRegister(rhs).singleOverlay());
@@ -3153,6 +3163,7 @@ MacroAssemblerARMCompat::unboxNonDouble(const Address &src, Register dest)
 void
 MacroAssemblerARMCompat::unboxDouble(const ValueOperand &operand, FloatRegister dest)
 {
+    MOZ_ASSERT(dest.isDouble());
     as_vxfer(operand.payloadReg(), operand.typeReg(),
              VFPRegister(dest), CoreToFloat);
 }
@@ -3160,6 +3171,7 @@ MacroAssemblerARMCompat::unboxDouble(const ValueOperand &operand, FloatRegister 
 void
 MacroAssemblerARMCompat::unboxDouble(const Address &src, FloatRegister dest)
 {
+    MOZ_ASSERT(dest.isDouble());
     ma_vldr(Operand(src), dest);
 }
 
@@ -3729,8 +3741,12 @@ MacroAssemblerARMCompat::setupABICall(uint32_t args)
 #endif
     floatArgsInGPR[0] = MoveOperand();
     floatArgsInGPR[1] = MoveOperand();
+    floatArgsInGPR[2] = MoveOperand();
+    floatArgsInGPR[3] = MoveOperand();
     floatArgsInGPRValid[0] = false;
     floatArgsInGPRValid[1] = false;
+    floatArgsInGPRValid[2] = false;
+    floatArgsInGPRValid[3] = false;
 }
 
 void
@@ -3763,52 +3779,54 @@ MacroAssemblerARMCompat::passHardFpABIArg(const MoveOperand &from, MoveOp::Type 
     if (!enoughMemory_)
         return;
     switch (type) {
-      case MoveOp::FLOAT32:
-      case MoveOp::DOUBLE: {
-        // N.B. This isn't a limitation of the ABI, it is a limitation of the
-        // compiler right now. There isn't a good way to handle odd numbered
-        // single registers, so everything goes to hell when we try. Current fix
-        // is to never use more than one float in a function call. Fix coming
-        // along with complete float32 support in bug 957504.
-        JS_ASSERT(!usedFloat32_);
-        if (type == MoveOp::FLOAT32)
-            usedFloat32_ = true;
+      case MoveOp::FLOAT32: {
         FloatRegister fr;
-        if (GetFloatArgReg(usedIntSlots_, usedFloatSlots_, &fr)) {
+        passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Float32;
+        if (GetFloat32ArgReg(usedIntSlots_, usedFloatSlots_, &fr)) {
             if (from.isFloatReg() && from.floatReg() == fr) {
                 // Nothing to do; the value is in the right register already.
                 usedFloatSlots_++;
-                if (type == MoveOp::FLOAT32)
-                    passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Float32;
-                else
-                    passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Double;
+                passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Float32;
                 return;
             }
             to = MoveOperand(fr);
         } else {
             // If (and only if) the integer registers have started spilling, do
             // we need to take the register's alignment into account.
-            uint32_t disp = INT_MAX;
-            if (type == MoveOp::FLOAT32)
-                disp = GetFloat32ArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
-            else
-                disp = GetDoubleArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
+            uint32_t disp = GetFloat32ArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
             to = MoveOperand(sp, disp);
         }
         usedFloatSlots_++;
-        if (type == MoveOp::FLOAT32)
-            passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Float32;
-        else
-            passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Double;
         break;
+      }
+
+      case MoveOp::DOUBLE: {
+          FloatRegister fr;
+          passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Double;
+          usedFloatSlots_ = (usedFloatSlots_ + 1) & -2;
+          if (GetDoubleArgReg(usedIntSlots_, usedFloatSlots_, &fr)) {
+              if (from.isFloatReg() && from.floatReg() == fr) {
+                  // Nothing to do; the value is in the right register already.
+                  usedFloatSlots_ += 2;
+                  return;
+              }
+              to = MoveOperand(fr);
+          } else {
+              // If (and only if) the integer registers have started spilling, do we
+              // need to take the register's alignment into account
+              uint32_t disp = GetDoubleArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
+              to = MoveOperand(sp, disp);
+          }
+          usedFloatSlots_+=2;
+          break;
       }
       case MoveOp::GENERAL: {
         Register r;
+        passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_General;
         if (GetIntArgReg(usedIntSlots_, usedFloatSlots_, &r)) {
             if (from.isGeneralReg() && from.reg() == r) {
                 // Nothing to do; the value is in the right register already.
                 usedIntSlots_++;
-                passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_General;
                 return;
             }
             to = MoveOperand(r);
@@ -3817,7 +3835,6 @@ MacroAssemblerARMCompat::passHardFpABIArg(const MoveOperand &from, MoveOp::Type 
             to = MoveOperand(sp, disp);
         }
         usedIntSlots_++;
-        passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_General;
         break;
       }
       default:
@@ -3858,8 +3875,8 @@ MacroAssemblerARMCompat::passSoftFpABIArg(const MoveOperand &from, MoveOp::Type 
     MoveOperand dest;
     if (GetIntArgReg(usedIntSlots_, 0, &destReg)) {
         if (type == MoveOp::DOUBLE || type == MoveOp::FLOAT32) {
-            floatArgsInGPR[destReg.code() >> 1] = from;
-            floatArgsInGPRValid[destReg.code() >> 1] = true;
+            floatArgsInGPR[destReg.code()] = from;
+            floatArgsInGPRValid[destReg.code()] = true;
             useResolver = false;
         } else if (from.isGeneralReg() && from.reg() == destReg) {
             // No need to move anything.
@@ -3946,13 +3963,24 @@ MacroAssemblerARMCompat::callWithABIPre(uint32_t *stackAdjust, bool callFromAsmJ
         emitter.emit(moveResolver_);
         emitter.finish();
     }
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 4; i++) {
         if (floatArgsInGPRValid[i]) {
             MoveOperand from = floatArgsInGPR[i];
-            Register to0 = Register::FromCode(i * 2), to1 = Register::FromCode(i * 2 + 1);
+            Register to0 = Register::FromCode(i);
+            Register to1;
+
+            if (!from.isFloatReg() || from.floatReg().isDouble()) {
+                // Doubles need to be moved into a pair of aligned registers
+                // whether they come from the stack, or VFP registers.
+                to1 = Register::FromCode(i + 1);
+                MOZ_ASSERT(i % 2 == 0);
+            }
 
             if (from.isFloatReg()) {
-                ma_vxfer(VFPRegister(from.floatReg()), to0, to1);
+                if (from.floatReg().isDouble())
+                    ma_vxfer(from.floatReg(), to0, to1);
+                else
+                    ma_vxfer(from.floatReg(), to0);
             } else {
                 JS_ASSERT(from.isMemory());
                 // Note: We can safely use the MoveOperand's displacement here,
@@ -4095,6 +4123,7 @@ MacroAssemblerARMCompat::handleFailureWithHandler(void *handler)
 {
     // Reserve space for exception information.
     int size = (sizeof(ResumeFromException) + 7) & ~7;
+
     ma_sub(Imm32(size), sp);
     ma_mov(sp, r0);
 
@@ -4191,7 +4220,7 @@ MacroAssemblerARMCompat::floor(FloatRegister input, Register output, Label *bail
     Label handleZero;
     Label handleNeg;
     Label fin;
-    compareDouble(input, InvalidFloatReg);
+    compareDouble(input, NoVFPRegister);
     ma_b(&handleZero, Assembler::Equal);
     ma_b(&handleNeg, Assembler::Signed);
     // NaN is always a bail condition, just bail directly.
@@ -4242,7 +4271,7 @@ MacroAssemblerARMCompat::floorf(FloatRegister input, Register output, Label *bai
     Label handleZero;
     Label handleNeg;
     Label fin;
-    compareFloat(input, InvalidFloatReg);
+    compareFloat(input, NoVFPRegister);
     ma_b(&handleZero, Assembler::Equal);
     ma_b(&handleNeg, Assembler::Signed);
     // NaN is always a bail condition, just bail directly.
@@ -4294,7 +4323,7 @@ MacroAssemblerARMCompat::ceil(FloatRegister input, Register output, Label *bail)
     Label handlePos;
     Label fin;
 
-    compareDouble(input, InvalidFloatReg);
+    compareDouble(input, NoVFPRegister);
     // NaN is always a bail condition, just bail directly.
     ma_b(bail, Assembler::Overflow);
     ma_b(&handleZero, Assembler::Equal);
@@ -4347,7 +4376,7 @@ MacroAssemblerARMCompat::ceilf(FloatRegister input, Register output, Label *bail
     Label handlePos;
     Label fin;
 
-    compareFloat(input, InvalidFloatReg);
+    compareFloat(input, NoVFPRegister);
     // NaN is always a bail condition, just bail directly.
     ma_b(bail, Assembler::Overflow);
     ma_b(&handleZero, Assembler::Equal);

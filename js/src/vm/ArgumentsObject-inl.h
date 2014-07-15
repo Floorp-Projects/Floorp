@@ -43,7 +43,7 @@ ArgumentsObject::setElement(JSContext *cx, uint32_t i, const Value &v)
                 return;
             }
         }
-        MOZ_ASSUME_UNREACHABLE("Bad Arguments::setElement");
+        MOZ_CRASH("Bad Arguments::setElement");
     }
     lhs = v;
 }

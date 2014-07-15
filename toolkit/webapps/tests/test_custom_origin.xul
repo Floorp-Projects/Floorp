@@ -80,7 +80,7 @@ let runTest = Task.async(function*() {
 
   confirmNextInstall();
 
-  let request = navigator.mozApps.installPackage("http://test/chrome/toolkit/webapps/tests/data/custom_origin.webapp");
+  let request = navigator.mozApps.installPackage(app.manifestURL);
 
   let (deferred = Promise.defer()) {
     request.onerror = function() {
@@ -95,7 +95,7 @@ let runTest = Task.async(function*() {
 
   let (deferred = Promise.defer()) {
     appObject.ondownloaderror = function() {
-      deferred.reject(this.error.name);
+      deferred.reject(appObject.downloadError.name);
     };
     appObject.ondownloadapplied = deferred.resolve;
     yield deferred.promise;

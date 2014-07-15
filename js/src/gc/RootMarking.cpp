@@ -755,7 +755,7 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc, bool useSavedRoots)
             else if (type == JS_GC_ROOT_SCRIPT_PTR)
                 MarkScriptRoot(trc, reinterpret_cast<JSScript **>(key), name);
             else
-                MOZ_ASSUME_UNREACHABLE("unexpected js::RootInfo::type value");
+                MOZ_CRASH("unexpected js::RootInfo::type value");
         }
     }
 

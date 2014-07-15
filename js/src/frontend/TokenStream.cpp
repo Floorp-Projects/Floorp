@@ -1628,7 +1628,7 @@ TokenStream::getTokenInternal(Modifier modifier)
         goto error;
     }
 
-    MOZ_ASSUME_UNREACHABLE("should have jumped to |out| or |error|");
+    MOZ_CRASH("should have jumped to |out| or |error|");
 
   out:
     flags.isDirtyLine = true;

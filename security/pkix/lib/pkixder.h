@@ -39,7 +39,7 @@
 
 #include "pkix/enumclass.h"
 #include "pkix/nullptr.h"
-
+#include "pkix/pkixtypes.h"
 #include "prerror.h"
 #include "prtime.h"
 #include "secerr.h"
@@ -600,29 +600,6 @@ OID(Input& input, const uint8_t (&expectedOid)[Len])
 
 // PKI-specific types
 
-// AlgorithmIdentifier  ::=  SEQUENCE  {
-//         algorithm               OBJECT IDENTIFIER,
-//         parameters              ANY DEFINED BY algorithm OPTIONAL  }
-inline Result
-AlgorithmIdentifier(Input& input, SECAlgorithmID& algorithmID)
-{
-  Input value;
-  if (ExpectTagAndGetValue(input, der::SEQUENCE, value) != Success) {
-    return Failure;
-  }
-  if (ExpectTagAndGetValue(value, OIDTag, algorithmID.algorithm) != Success) {
-    return Failure;
-  }
-  algorithmID.parameters.data = nullptr;
-  algorithmID.parameters.len = 0;
-  if (!value.AtEnd()) {
-    if (Null(value) != Success) {
-      return Failure;
-    }
-  }
-  return End(value);
-}
-
 inline Result
 CertificateSerialNumber(Input& input, /*out*/ SECItem& value)
 {
@@ -766,6 +743,12 @@ OptionalExtensions(Input& input, uint8_t tag, ExtensionHandler extensionHandler)
   return Success;
 }
 
+Result DigestAlgorithmIdentifier(Input& input,
+                                 /*out*/ DigestAlgorithm& algorithm);
+
+Result SignatureAlgorithmIdentifier(Input& input,
+                                    /*out*/ SignatureAlgorithm& algorithm);
+
 // Parses a SEQUENCE into tbs and then parses an AlgorithmIdentifier followed
 // by a BIT STRING into signedData. This handles the commonality between
 // parsing the signed/signature fields of certificates and OCSP responses. In
@@ -782,8 +765,8 @@ OptionalExtensions(Input& input, uint8_t tag, ExtensionHandler extensionHandler)
 //    signatureAlgorithm   AlgorithmIdentifier,
 //    signature            BIT STRING,
 //    certs            [0] EXPLICIT SEQUENCE OF Certificate OPTIONAL }
-Result
-SignedData(Input& input, /*out*/ Input& tbs, /*out*/ CERTSignedData& signedData);
+Result SignedData(Input& input, /*out*/ Input& tbs,
+                  /*out*/ SignedDataWithSignature& signedDataWithSignature);
 
 } } } // namespace mozilla::pkix::der
 
