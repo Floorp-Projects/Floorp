@@ -522,7 +522,6 @@ this.DownloadIntegration = {
       referrerURI: aReferrer,
       fileSize: aDownload.currentBytes,
       sha256Hash: hash,
-      suggestedFileName: OS.Path.basename(aDownload.target.path),
       signatureInfo: sigInfo,
       redirects: channelRedirects },
       function onComplete(aShouldBlock, aRv) {
