@@ -436,7 +436,7 @@ BluetoothHfpManager::Init()
 
 // static
 void
-BluetoothHfpManager::InitHfpInterface()
+BluetoothHfpManager::InitHfpInterface(BluetoothProfileResultHandler* aRes)
 {
   BluetoothInterface* btInf = BluetoothInterface::GetInstance();
   NS_ENSURE_TRUE_VOID(btInf);
@@ -450,9 +450,16 @@ BluetoothHfpManager::InitHfpInterface()
     btInf->GetBluetoothHandsfreeInterface();
   NS_ENSURE_TRUE_VOID(interface);
 
-  NS_ENSURE_TRUE_VOID(BT_STATUS_SUCCESS ==
-    interface->Init(&sBluetoothHfpCallbacks));
+  if (interface->Init(&sBluetoothHfpCallbacks) != BT_STATUS_SUCCESS) {
+    aRes->OnError(NS_ERROR_FAILURE);
+    return;
+  }
+
   sBluetoothHfpInterface = interface;
+
+  if (aRes) {
+    aRes->Init();
+  }
 }
 
 BluetoothHfpManager::~BluetoothHfpManager()
@@ -475,11 +482,14 @@ BluetoothHfpManager::~BluetoothHfpManager()
 
 // static
 void
-BluetoothHfpManager::DeinitHfpInterface()
+BluetoothHfpManager::DeinitHfpInterface(BluetoothProfileResultHandler* aRes)
 {
   if (sBluetoothHfpInterface) {
     sBluetoothHfpInterface->Cleanup();
     sBluetoothHfpInterface = nullptr;
+  }
+  if (aRes) {
+    aRes->Deinit();
   }
 }
 
