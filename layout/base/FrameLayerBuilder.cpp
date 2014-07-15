@@ -2078,10 +2078,15 @@ ContainerState::PopThebesLayerData()
 
 static bool
 SuppressComponentAlpha(nsDisplayListBuilder* aBuilder,
-                       nsDisplayItem* aItem)
+                       nsDisplayItem* aItem,
+                       const nsRect& aComponentAlphaBounds)
 {
-  // Suppress component alpha for items in the toplevel window chrome that
-  // aren't transformed.
+  const nsRegion* windowTransparentRegion = aBuilder->GetFinalTransparentRegion();
+  if (!windowTransparentRegion || windowTransparentRegion->IsEmpty())
+    return false;
+
+  // Suppress component alpha for items in the toplevel window that are over
+  // the window translucent area
   nsIFrame* f = aItem->Frame();
   nsIFrame* ref = aBuilder->RootReferenceFrame();
   if (f->PresContext() != ref->PresContext())
@@ -2091,7 +2096,15 @@ SuppressComponentAlpha(nsDisplayListBuilder* aBuilder,
     if (t->IsTransformed())
       return false;
   }
-  return true;
+
+  return windowTransparentRegion->Intersects(aComponentAlphaBounds);
+}
+
+static bool
+WindowHasTransparency(nsDisplayListBuilder* aBuilder)
+{
+  const nsRegion* windowTransparentRegion = aBuilder->GetFinalTransparentRegion();
+  return windowTransparentRegion && !windowTransparentRegion->IsEmpty();
 }
 
 void
@@ -2191,7 +2204,9 @@ ThebesLayerData::Accumulate(ContainerState* aState,
        // Opaque display items in chrome documents whose window is partially
        // transparent are always added to the opaque region. This helps ensure
        // that we get as much subpixel-AA as possible in the chrome.
-       if (tmp.GetNumRects() <= 4 || aItem->Frame()->PresContext()->IsChrome()) {
+       if (tmp.GetNumRects() <= 4 ||
+           (WindowHasTransparency(aState->mBuilder) &&
+            aItem->Frame()->PresContext()->IsChrome())) {
         mOpaqueRegion = tmp;
       }
     }
@@ -2203,7 +2218,7 @@ ThebesLayerData::Accumulate(ContainerState* aState,
       nsIntRect componentAlphaRect =
         aState->ScaleToOutsidePixels(componentAlpha, false).Intersect(aVisibleRect);
       if (!mOpaqueRegion.Contains(componentAlphaRect)) {
-        if (SuppressComponentAlpha(aState->mBuilder, aItem)) {
+        if (SuppressComponentAlpha(aState->mBuilder, aItem, componentAlpha)) {
           aItem->DisableComponentAlpha();
         } else {
           mNeedComponentAlpha = true;
