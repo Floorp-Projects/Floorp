@@ -72,6 +72,41 @@ private:
 // Handsfree Interface
 //
 
+class BluetoothHandsfreeResultHandler
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothHandsfreeResultHandler)
+
+  virtual ~BluetoothHandsfreeResultHandler() { }
+
+  virtual void OnError(bt_status_t aStatus)
+  {
+    BT_WARNING("Received error code %d", (int)aStatus);
+  }
+
+  virtual void Init() { }
+  virtual void Cleanup() { }
+
+  virtual void Connect() { }
+  virtual void Disconnect() { }
+  virtual void ConnectAudio() { }
+  virtual void DisconnectAudio() { }
+
+  virtual void StartVoiceRecognition() { }
+  virtual void StopVoiceRecognition() { }
+
+  virtual void VolumeControl() { }
+
+  virtual void DeviceStatusNotification() { }
+
+  virtual void CopsResponse() { }
+  virtual void CindResponse() { }
+  virtual void FormattedAtResponse() { }
+  virtual void AtResponse() { }
+  virtual void ClccResponse() { }
+  virtual void PhoneStateChange() { }
+};
+
 class BluetoothHandsfreeInterface
 {
 public:
