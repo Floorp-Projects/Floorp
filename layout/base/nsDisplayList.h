@@ -1360,6 +1360,11 @@ public:
     }
   }
 
+  // If we return false here it means that if this item creates a layer then
+  // ProcessDisplayItems will not set the visible region on the layer. The item
+  // should set the visible region, usually in BuildContainerLayer.
+  virtual bool SetVisibleRegionOnLayer() { return true; }
+
   bool IsInFixedPos() { return mInFixedPos; }
 
 protected:
@@ -2614,6 +2619,12 @@ public:
     return &mList;
   }
   virtual nsDisplayList* GetChildren() MOZ_OVERRIDE { return &mList; }
+  /**
+   * All our subclasses BuildLayers call
+   * FrameLayerBuilder::BuildContainerLayerFor, which
+   * sets the visible region of the layer correctly.
+   */
+  virtual bool SetVisibleRegionOnLayer() { return false; }
 
   virtual int32_t ZIndex() const MOZ_OVERRIDE
   {
