@@ -720,11 +720,16 @@ BluetoothHandsfreeInterface::StopVoiceRecognition(
 
 /* Volume */
 
-bt_status_t
-BluetoothHandsfreeInterface::VolumeControl(bthf_volume_type_t aType,
-                                           int aVolume)
+void
+BluetoothHandsfreeInterface::VolumeControl(
+  bthf_volume_type_t aType, int aVolume, BluetoothHandsfreeResultHandler* aRes)
 {
-  return mInterface->volume_control(aType, aVolume);
+  bt_status_t status = mInterface->volume_control(aType, aVolume);
+
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(
+      aRes, &BluetoothHandsfreeResultHandler::VolumeControl, status);
+  }
 }
 
 /* Device status */
