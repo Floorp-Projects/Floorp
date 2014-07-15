@@ -92,6 +92,11 @@ public:
     return ::mozilla::pkix::DigestBuf(item, digestBuf, digestBufLen);
   }
 
+  virtual SECStatus CheckPublicKey(const SECItem& subjectPublicKeyInfo)
+  {
+    return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
+  }
+
 private:
   OCSPTestTrustDomain(const OCSPTestTrustDomain&) /*delete*/;
   void operator=(const OCSPTestTrustDomain&) /*delete*/;

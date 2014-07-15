@@ -115,6 +115,11 @@ private:
     PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
     return SECFailure;
   }
+
+  SECStatus CheckPublicKey(const SECItem& subjectPublicKeyInfo)
+  {
+    return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
+  }
 };
 
 class pkixcert_extension: public NSSTest

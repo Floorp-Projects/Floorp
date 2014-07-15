@@ -177,6 +177,11 @@ private:
     return SECFailure;
   }
 
+  SECStatus CheckPublicKey(const SECItem& subjectPublicKeyInfo)
+  {
+    return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
+  }
+
   // We hold references to CERTCertificates in the cert chain tail so that we
   // CERT_CreateSubjectCertList can find them.
   ScopedCERTCertificate certChainTail[7];
