@@ -434,6 +434,71 @@ ContentDocShellTreeItemInterposition.getters.rootTreeItem =
       .QueryInterface(Ci.nsIDocShellTreeItem);
   };
 
+// This object manages sandboxes created with content principals in
+// the parent. We actually create these sandboxes in the child process
+// so that the code loaded into them runs there. The resulting sandbox
+// object is a CPOW. This is primarly useful for Greasemonkey.
+let SandboxParent = {
+  componentsMap: new WeakMap(),
+
+  makeContentSandbox: function(principal, ...rest) {
+    // The chrome global in the content process.
+    let chromeGlobal = principal
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebNavigation)
+      .QueryInterface(Ci.nsIDocShellTreeItem)
+      .rootTreeItem
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIContentFrameMessageManager);
+
+    // Make a sandbox in the child.
+    let cu = chromeGlobal.Components.utils;
+    let sandbox = cu.Sandbox(principal, ...rest);
+
+    // We need to save the sandbox in the child so it won't get
+    // GCed. The child will drop this reference at the next
+    // navigation.
+    chromeGlobal.addSandbox(sandbox);
+
+    // The sandbox CPOW will be kept alive by whomever we return it
+    // to. Its lifetime is unrelated to that of the sandbox object in
+    // the child.
+    this.componentsMap.set(sandbox, cu);
+    return sandbox;
+  },
+
+  evalInSandbox: function(code, sandbox, ...rest) {
+    let cu = this.componentsMap.get(sandbox);
+    return cu.evalInSandbox(code, sandbox, ...rest);
+  }
+};
+
+// This interposition redirects calls to Cu.Sandbox and
+// Cu.evalInSandbox to SandboxParent if the principals are content
+// principals.
+let ComponentsUtilsInterposition = new Interposition();
+
+ComponentsUtilsInterposition.methods.Sandbox =
+  function(addon, target, principal, ...rest) {
+    if (principal &&
+        typeof(principal) == "object" &&
+        Cu.isCrossProcessWrapper(principal) &&
+        principal instanceof Ci.nsIDOMWindow) {
+      return SandboxParent.makeContentSandbox(principal, ...rest);
+    } else {
+      return Components.utils.Sandbox(principal, ...rest);
+    }
+  };
+
+ComponentsUtilsInterposition.methods.evalInSandbox =
+  function(addon, target, code, sandbox, ...rest) {
+    if (sandbox && Cu.isCrossProcessWrapper(sandbox)) {
+      return SandboxParent.evalInSandbox(code, sandbox, ...rest);
+    } else {
+      return Components.utils.evalInSandbox(code, sandbox, ...rest);
+    }
+  };
+
 let RemoteAddonsParent = {
   init: function() {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
@@ -452,6 +517,7 @@ let RemoteAddonsParent = {
 
     register(Ci.nsICategoryManager, CategoryManagerInterposition);
     register(Ci.nsIObserverService, ObserverInterposition);
+    register(Ci.nsIXPCComponents_Utils, ComponentsUtilsInterposition);
 
     return result;
   },
