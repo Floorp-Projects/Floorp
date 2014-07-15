@@ -74,11 +74,14 @@ let UI = {
       }, console.error);
     }
     Services.prefs.setBoolPref("devtools.webide.autoinstallADBHelper", false);
+
+    this.setupDeck();
   },
 
   openLastProject: function() {
     let lastProjectLocation = Services.prefs.getCharPref("devtools.webide.lastprojectlocation");
-    if (lastProjectLocation) {
+    let shouldRestore = Services.prefs.getBoolPref("devtools.webide.restoreLastProject");
+    if (lastProjectLocation && shouldRestore) {
       let lastProject = AppProjects.get(lastProjectLocation);
       if (lastProject) {
         AppManager.selectedProject = lastProject;
@@ -468,6 +471,13 @@ let UI = {
   },
 
   /********** DECK **********/
+
+  setupDeck: function() {
+    let iframes = document.querySelectorAll("#deck > iframe");
+    for (let iframe of iframes) {
+      iframe.tooltip = "aHTMLTooltip";
+    }
+  },
 
   resetFocus: function() {
     document.commandDispatcher.focusedElement = document.documentElement;
@@ -907,5 +917,9 @@ let Cmds = {
 
   showAddons: function() {
     UI.selectDeckPanel("addons");
+  },
+
+  showPrefs: function() {
+    UI.selectDeckPanel("prefs");
   },
 }
