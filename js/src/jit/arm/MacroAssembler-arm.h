@@ -433,20 +433,25 @@ private:
     {
         JS_ASSERT(sign == 1 || sign == -1);
 
-        int32_t delta = sign * sizeof(double);
+        int32_t delta = sign * sizeof(float);
         int32_t offset = 0;
-        RegisterIterator iter(set);
+        // Build up a new set, which is the sum of all of the single and double
+        // registers. This set can have up to 48 registers in it total
+        // s0-s31 and d16-d31
+        FloatRegisterSet mod = set.reduceSetForPush();
+
+        RegisterIterator iter(mod);
         while (iter.more()) {
             startFloatTransferM(ls, rm, mode, WriteBack);
-            int32_t reg = (*iter).code_;
+            int32_t reg = (*iter).code();
             do {
                 offset += delta;
+                if ((*iter).isDouble())
+                    offset += delta;
                 transferFloatReg(*iter);
-            } while ((++iter).more() && (*iter).code_ == (reg += sign));
+            } while ((++iter).more() && (*iter).code() == (reg += sign));
             finishFloatTransfer();
         }
-
-        JS_ASSERT(offset == static_cast<int32_t>(set.size() * sizeof(double)) * sign);
         return offset;
     }
 };
@@ -478,8 +483,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     // Used to work around the move resolver's lack of support for moving into
     // register pairs, which the softfp ABI needs.
-    mozilla::Array<MoveOperand, 2> floatArgsInGPR;
-    mozilla::Array<bool, 2> floatArgsInGPRValid;
+    mozilla::Array<MoveOperand, 4> floatArgsInGPR;
+    mozilla::Array<bool, 4> floatArgsInGPRValid;
 
     // Compute space needed for the function call and set the properties of the
     // callee. It returns the space which has to be allocated for calling the
