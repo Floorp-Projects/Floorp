@@ -2619,14 +2619,12 @@ public:
                                  nsRegion* aVisibleRegion,
                                  const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) MOZ_OVERRIDE {
+    NS_WARNING("This list should already have been flattened!!!");
     return false;
   }
   virtual void GetMergedFrames(nsTArray<nsIFrame*>* aFrames) MOZ_OVERRIDE
   {
     aFrames->AppendElements(mMergedFrames);
-  }
-  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
-    return true;
   }
   virtual bool IsInvalid(nsRect& aRect) MOZ_OVERRIDE
   {
@@ -2800,9 +2798,6 @@ public:
                                  nsRegion* aVisibleRegion,
                                  const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) MOZ_OVERRIDE;
-  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE {
-    return false;
-  }
   NS_DISPLAY_DECL_NAME("MixBlendMode", TYPE_MIX_BLEND_MODE)
 };
 
@@ -2830,9 +2825,6 @@ public:
       return mozilla::LAYER_INACTIVE;
     }
     virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) MOZ_OVERRIDE;
-    virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE {
-      return false;
-    }
     NS_DISPLAY_DECL_NAME("BlendContainer", TYPE_BLEND_CONTAINER)
 
 private:
@@ -2890,9 +2882,6 @@ public:
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) MOZ_OVERRIDE
   {
     // Don't allow merging, each sublist must have its own layer
-    return false;
-  }
-  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE {
     return false;
   }
   uint32_t GetFlags() { return mFlags; }
@@ -3182,9 +3171,6 @@ public:
                                    const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;  
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder,
                         nsDisplayItem* aItem) MOZ_OVERRIDE;
-  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE {
-    return false;
-  }
   NS_DISPLAY_DECL_NAME("SVGEffects", TYPE_SVG_EFFECTS)
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
