@@ -938,7 +938,7 @@ js::TraceLoggerForCurrentThread()
     PRThread *thread = PR_GetCurrentThread();
     return traceLoggers.forThread(thread);
 #else
-    MOZ_ASSUME_UNREACHABLE("No threads supported. Use TraceLoggerForMainThread for the main thread.");
+    MOZ_CRASH("No threads supported. Use TraceLoggerForMainThread for the main thread.");
 #endif // JS_THREADSAFE
 }
 

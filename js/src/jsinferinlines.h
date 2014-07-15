@@ -43,8 +43,9 @@ CompilerOutput::ion() const
     jit::IonScript *ion = jit::GetIonScript(script(), mode());
     JS_ASSERT(ion != ION_COMPILING_SCRIPT);
     return ion;
+#else
+    MOZ_CRASH("Invalid kind of CompilerOutput");
 #endif
-    MOZ_ASSUME_UNREACHABLE("Invalid kind of CompilerOutput");
 }
 
 inline CompilerOutput*
