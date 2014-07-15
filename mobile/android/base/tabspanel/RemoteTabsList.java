@@ -42,7 +42,7 @@ class RemoteTabsList extends ExpandableListView
     private ArrayList <ArrayList <HashMap <String, String>>> tabsList;
 
     // A list of the clients that are currently expanded.
-    private List<String> expandedClientList = new ArrayList<String>();
+    private List<String> expandedClientList;
 
     // The client that previously had an item selected is used to restore the scroll position.
     private String clientScrollPosition;
@@ -143,17 +143,26 @@ class RemoteTabsList extends ExpandableListView
                                                    TAB_KEY,
                                                    TAB_RESOURCE));
 
-        // Expand the client groups, and restore the previous scroll position.
+        // Either set the initial UI state, or restore it.
         List<String> newExpandedClientList = new ArrayList<String>();
         for (int i = 0; i < clients.size(); i++) {
             final String clientGuid = clients.get(i).get("guid");
-            if (expandedClientList.contains(clientGuid)) {
+
+            if (expandedClientList == null) {
+                // On initial entry we expand all clients by default.
                 newExpandedClientList.add(clientGuid);
                 expandGroup(i);
-            }
+            } else {
+                // On subsequent entries, we expand clients based on their previous UI state.
+                if (expandedClientList.contains(clientGuid)) {
+                    newExpandedClientList.add(clientGuid);
+                    expandGroup(i);
+                }
 
-            if (clientGuid.equals(clientScrollPosition)) {
-                setSelectedGroup(i);
+                // Additionally we reset the UI scroll position.
+                if (clientGuid.equals(clientScrollPosition)) {
+                    setSelectedGroup(i);
+                }
             }
         }
         expandedClientList = newExpandedClientList;

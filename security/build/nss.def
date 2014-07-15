@@ -395,9 +395,11 @@ PK11_PBEKeyGen
 PK11_PQG_DestroyParams
 PK11_PQG_DestroyVerify
 PK11_PQG_ParamGen
+PK11_PrivDecrypt
 PK11_PrivDecryptPKCS1
 PK11_ProtectedAuthenticationPath
 PK11_PubDeriveWithKDF
+PK11_PubEncrypt
 PK11_PubEncryptPKCS1
 PK11_PubUnwrapSymKey
 PK11_PubWrapSymKey
@@ -652,4 +654,5 @@ VFY_CreateContext
 VFY_DestroyContext
 VFY_End
 VFY_Update
+VFY_VerifyDataDirect
 VFY_VerifyDataWithAlgorithmID

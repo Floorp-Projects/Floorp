@@ -22,6 +22,8 @@ using namespace js::jit;
 
 using mozilla::CountLeadingZeroes32;
 
+void dbg_break() {}
+
 // Note this is used for inter-AsmJS calls and may pass arguments and results in
 // floating point registers even if the system ABI does not.
 ABIArgGenerator::ABIArgGenerator() :
@@ -46,7 +48,6 @@ ABIArgGenerator::next(MIRType type)
         intRegIndex_++;
         break;
       case MIRType_Float32:
-      case MIRType_Double:
         if (floatRegIndex_ == NumFloatArgRegs) {
             static const int align = sizeof(double) - 1;
             stackOffset_ = (stackOffset_ + align) & ~align;
@@ -54,8 +55,21 @@ ABIArgGenerator::next(MIRType type)
             stackOffset_ += sizeof(uint64_t);
             break;
         }
-        current_ = ABIArg(FloatRegister::FromCode(floatRegIndex_));
+        current_ = ABIArg(VFPRegister(floatRegIndex_, VFPRegister::Single));
         floatRegIndex_++;
+        break;
+      case MIRType_Double:
+        // Bump the number of used registers up to the next multiple of two.
+        floatRegIndex_ = (floatRegIndex_ + 1) & ~1;
+        if (floatRegIndex_ == NumFloatArgRegs) {
+            static const int align = sizeof(double) - 1;
+            stackOffset_ = (stackOffset_ + align) & ~align;
+            current_ = ABIArg(stackOffset_);
+            stackOffset_ += sizeof(uint64_t);
+            break;
+        }
+        current_ = ABIArg(VFPRegister(floatRegIndex_ >> 1, VFPRegister::Double));
+        floatRegIndex_+=2;
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
@@ -1189,6 +1203,7 @@ VFPRegister
 VFPRegister::doubleOverlay(unsigned int which) const
 {
     JS_ASSERT(!_isInvalid);
+    JS_ASSERT(which == 0);
     if (kind != Double)
         return VFPRegister(code_ >> 1, Double);
     return *this;
@@ -1586,7 +1601,7 @@ class PoolHintData {
         JS_ASSERT(cond_ == cond >> 28);
         loadType_ = lt;
         ONES = ExpectedOnes;
-        destReg_ = destReg.isDouble() ? destReg.code() : destReg.doubleOverlay().code();
+        destReg_ = destReg.id();
         destType_ = destReg.isDouble();
     }
     Assembler::Condition getCond() {
@@ -1597,8 +1612,8 @@ class PoolHintData {
         return Register::FromCode(destReg_);
     }
     VFPRegister getVFPReg() {
-        VFPRegister r = VFPRegister(FloatRegister::FromCode(destReg_));
-        return destType_ ? r : r.singleOverlay();
+        VFPRegister r = VFPRegister(destReg_, destType_ ? VFPRegister::Double : VFPRegister::Single);
+        return r;
     }
 
     int32_t getIndex() {
@@ -2319,7 +2334,6 @@ Assembler::retarget(Label *label, Label *target)
 }
 
 
-void dbg_break() {}
 static int stopBKPT = -1;
 void
 Assembler::as_bkpt()

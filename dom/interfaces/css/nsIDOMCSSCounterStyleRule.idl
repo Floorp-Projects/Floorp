@@ -6,7 +6,7 @@
 
 #include "nsIDOMCSSRule.idl"
 
-[scriptable, uuid(5f9f2068-743b-42e3-becb-10ffa994d1e3)]
+[scriptable, uuid(9b5e48ce-d84c-4e31-aff5-34e9f4141313)]
 interface nsIDOMCSSCounterStyleRule : nsIDOMCSSRule
 {
   attribute DOMString name;

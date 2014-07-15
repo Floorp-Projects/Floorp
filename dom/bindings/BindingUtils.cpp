@@ -365,9 +365,12 @@ InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
   const JSClass* clasp = static_cast<const JSClass*>(v.toPrivate());
 
   v = js::GetFunctionNativeReserved(callee, TOSTRING_NAME_RESERVED_SLOT);
-  JSString* jsname = static_cast<JSString*>(v.toString());
-  size_t length;
-  const jschar* name = JS_GetInternedStringCharsAndLength(jsname, &length);
+  JSString* jsname = v.toString();
+
+  nsAutoJSString name;
+  if (!name.init(cx, jsname)) {
+    return false;
+  }
 
   if (js::GetObjectJSClass(&args.thisv().toObject()) != clasp) {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
@@ -379,7 +382,7 @@ InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
 
   nsString str;
   str.AppendLiteral("function ");
-  str.Append(name, length);
+  str.Append(name);
   str.AppendLiteral("() {");
   str.Append('\n');
   str.AppendLiteral("    [native code]");

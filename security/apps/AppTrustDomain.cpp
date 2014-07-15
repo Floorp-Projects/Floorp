@@ -189,11 +189,18 @@ AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
 }
 
 SECStatus
-AppTrustDomain::VerifySignedData(const CERTSignedData& signedData,
+AppTrustDomain::VerifySignedData(const SignedDataWithSignature& signedData,
                                  const SECItem& subjectPublicKeyInfo)
 {
   return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
                                            mPinArg);
+}
+
+SECStatus
+AppTrustDomain::DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
+                          size_t digestBufLen)
+{
+  return ::mozilla::pkix::DigestBuf(item, digestBuf, digestBufLen);
 }
 
 SECStatus

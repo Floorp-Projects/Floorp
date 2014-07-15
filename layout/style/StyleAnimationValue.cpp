@@ -2462,7 +2462,9 @@ BuildStyleRule(nsCSSProperty aProperty,
     return nullptr;
   }
 
-  nsRefPtr<css::StyleRule> rule = new css::StyleRule(nullptr, declaration.forget());
+  nsRefPtr<css::StyleRule> rule = new css::StyleRule(nullptr,
+                                                     declaration.forget(),
+                                                     0, 0);
   return rule.forget();
 }
 

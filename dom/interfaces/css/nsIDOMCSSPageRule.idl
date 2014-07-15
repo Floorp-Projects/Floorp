@@ -5,7 +5,7 @@
 
 #include "nsIDOMCSSRule.idl"
 
-[scriptable, uuid(6126024d-d716-4ad8-bc53-24dd6d5846b1)]
+[scriptable, uuid(c119072b-7d2f-4aeb-a90d-e2d6b606c32a)]
 interface nsIDOMCSSPageRule : nsIDOMCSSRule
 {
            //attribute DOMString        selectorText;
