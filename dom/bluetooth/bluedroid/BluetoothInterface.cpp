@@ -734,13 +734,19 @@ BluetoothHandsfreeInterface::VolumeControl(
 
 /* Device status */
 
-bt_status_t
+void
 BluetoothHandsfreeInterface::DeviceStatusNotification(
   bthf_network_state_t aNtkState, bthf_service_type_t aSvcType, int aSignal,
-  int aBattChg)
+  int aBattChg, BluetoothHandsfreeResultHandler* aRes)
 {
-  return mInterface->device_status_notification(aNtkState, aSvcType, aSignal,
-                                                aBattChg);
+  bt_status_t status = mInterface->device_status_notification(
+    aNtkState, aSvcType, aSignal, aBattChg);
+
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(
+      aRes, &BluetoothHandsfreeResultHandler::DeviceStatusNotification,
+      status);
+  }
 }
 
 /* Responses */
