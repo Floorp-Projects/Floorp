@@ -383,7 +383,7 @@ GrallocTextureHostOGL::DeallocateSharedData()
       owner = handle.get_MagicGrallocBufferHandle().mRef.mOwner;
     }
 
-    SharedBufferManagerParent::DropGrallocBuffer(owner, mGrallocHandle);
+    SharedBufferManagerParent::GetInstance(owner)->DropGrallocBuffer(mGrallocHandle);
   }
 }
 
