@@ -499,6 +499,26 @@ ComponentsUtilsInterposition.methods.evalInSandbox =
     }
   };
 
+// This interposition handles cases where an add-on tries to import a
+// chrome XUL node into a content document. It doesn't actually do the
+// import, which we can't support. It just avoids throwing an
+// exception.
+let ContentDocumentInterposition = new Interposition();
+
+ContentDocumentInterposition.methods.importNode =
+  function(addon, target, node, deep) {
+    if (!Cu.isCrossProcessWrapper(node)) {
+      // Trying to import a node from the parent process into the
+      // child process. We don't support this now. Video Download
+      // Helper does this in domhook-service.js to add a XUL
+      // popupmenu to content.
+      Cu.reportError("Calling contentDocument.importNode on a XUL node is not allowed.");
+      return node;
+    }
+
+    return target.importNode(node, deep);
+  };
+
 let RemoteAddonsParent = {
   init: function() {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
@@ -531,6 +551,7 @@ let RemoteAddonsParent = {
 
     register("EventTarget", EventTargetInterposition);
     register("ContentDocShellTreeItem", ContentDocShellTreeItemInterposition);
+    register("ContentDocument", ContentDocumentInterposition);
 
     return result;
   },
