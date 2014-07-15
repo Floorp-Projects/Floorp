@@ -1687,6 +1687,9 @@ private:
   // it.  Don't let us be heap-allocated!
   void* operator new(size_t sz) CPP_THROW_NEW;
   
+  // Utility function used to massage the list during ComputeVisibility.
+  void FlattenTo(nsTArray<nsDisplayItem*>* aElements);
+  
   nsDisplayItemLink  mSentinel;
   nsDisplayItemLink* mTop;
 
