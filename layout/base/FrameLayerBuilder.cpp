@@ -1703,8 +1703,6 @@ AppUnitsPerDevPixel(nsDisplayItem* aItem)
 /**
  * Set the visible region for aLayer.
  * aOuterVisibleRegion is the visible region relative to the parent layer.
- * aLayerContentsVisibleRect, if non-null, is a rectangle in the layer's
- * own coordinate system to which the layer's visible region is restricted.
  * Consumes *aOuterVisibleRegion.
  */
 static void
@@ -1716,27 +1714,12 @@ SetOuterVisibleRegion(Layer* aLayer, nsIntRegion* aOuterVisibleRegion,
   gfxMatrix transform2D;
   if (transform.Is2D(&transform2D) && !transform2D.HasNonIntegerTranslation()) {
     aOuterVisibleRegion->MoveBy(-int(transform2D._31), -int(transform2D._32));
-    if (aLayerContentsVisibleRect) {
-      aOuterVisibleRegion->And(*aOuterVisibleRegion, *aLayerContentsVisibleRect);
-    }
   } else {
     nsIntRect outerRect = aOuterVisibleRegion->GetBounds();
     // if 'transform' is not invertible, then nothing will be displayed
     // for the layer, so it doesn't really matter what we do here
     gfxRect outerVisible(outerRect.x, outerRect.y, outerRect.width, outerRect.height);
     gfxRect layerVisible = transform.Inverse().ProjectRectBounds(outerVisible);
-    if (aLayerContentsVisibleRect) {
-      NS_ASSERTION(aLayerContentsVisibleRect->width >= 0 &&
-                   aLayerContentsVisibleRect->height >= 0,
-                   "Bad layer contents rectangle");
-      // restrict to aLayerContentsVisibleRect before call GfxRectToIntRect,
-      // in case layerVisible is extremely large (as it can be when
-      // projecting through the inverse of a 3D transform)
-      gfxRect layerContentsVisible(
-          aLayerContentsVisibleRect->x, aLayerContentsVisibleRect->y,
-          aLayerContentsVisibleRect->width, aLayerContentsVisibleRect->height);
-      layerVisible.IntersectRect(layerVisible, layerContentsVisible);
-    }
     layerVisible.RoundOut();
     nsIntRect visRect;
     if (gfxUtils::GfxRectToIntRect(layerVisible, &visRect)) {
@@ -1744,6 +1727,10 @@ SetOuterVisibleRegion(Layer* aLayer, nsIntRegion* aOuterVisibleRegion,
     } else  {
       aOuterVisibleRegion->SetEmpty();
     }
+  }
+
+  if (aLayerContentsVisibleRect && aLayerContentsVisibleRect->width >= 0) {
+    aOuterVisibleRegion->And(*aOuterVisibleRegion, *aLayerContentsVisibleRect);
   }
 
   aLayer->SetVisibleRegion(*aOuterVisibleRegion);
@@ -2766,9 +2753,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
       }
 
       // Just use its layer.
-      // Set layerContentsVisibleRect.width/height to -1 to indicate we
-      // currently don't know. If BuildContainerLayerFor gets called by
-      // item->BuildLayer, this will be set to a proper rect.
       nsIntRect layerContentsVisibleRect(0, 0, -1, -1);
       mParameters.mLayerContentsVisibleRect = &layerContentsVisibleRect;
       nsRefPtr<Layer> ownLayer = item->BuildLayer(mBuilder, mManager, mParameters);
@@ -2863,12 +2847,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
       newLayerEntry->mLayer = ownLayer;
       newLayerEntry->mAnimatedGeometryRoot = animatedGeometryRoot;
       newLayerEntry->mFixedPosFrameForLayerData = fixedPosFrame;
-      // nsDisplayTransform::BuildLayer must set layerContentsVisibleRect.
-      // We rely on this to ensure 3D transforms compute a reasonable
-      // layer visible region.
-      NS_ASSERTION(itemType != nsDisplayItem::TYPE_TRANSFORM ||
-                   layerContentsVisibleRect.width >= 0,
-                   "Transform items must set layerContentsVisibleRect!");
       if (mLayerBuilder->IsBuildingRetainedLayers()) {
         newLayerEntry->mLayerContentsVisibleRect = layerContentsVisibleRect;
         newLayerEntry->mVisibleRegion = itemVisibleRect;
@@ -2877,7 +2855,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
           &newLayerEntry->mHideAllLayersBelow);
       } else {
         SetOuterVisibleRegionForLayer(ownLayer, itemVisibleRect,
-            layerContentsVisibleRect.width >= 0 ? &layerContentsVisibleRect : nullptr);
+                                      &layerContentsVisibleRect);
       }
       if (itemType == nsDisplayItem::TYPE_SCROLL_LAYER) {
         nsDisplayScrollLayer* scrollItem = static_cast<nsDisplayScrollLayer*>(item);
