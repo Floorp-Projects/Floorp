@@ -139,9 +139,13 @@ NS_IsMainThread()
 }
 #endif
 
+// It is common to call NS_DispatchToCurrentThread with a newly
+// allocated runnable with a refcount of zero. To keep us from leaking
+// the runnable if the dispatch method fails, we take a death grip.
 NS_METHOD
 NS_DispatchToCurrentThread(nsIRunnable* aEvent)
 {
+  nsCOMPtr<nsIRunnable> deathGrip = aEvent;
 #ifdef MOZILLA_INTERNAL_API
   nsIThread* thread = NS_GetCurrentThread();
   if (!thread) {
@@ -157,6 +161,11 @@ NS_DispatchToCurrentThread(nsIRunnable* aEvent)
   return thread->Dispatch(aEvent, NS_DISPATCH_NORMAL);
 }
 
+// In the case of failure with a newly allocated runnable with a
+// refcount of zero, we intentionally leak the runnable, because it is
+// likely that the runnable is being dispatched to the main thread
+// because it owns main thread only objects, so it is not safe to
+// release them here.
 NS_METHOD
 NS_DispatchToMainThread(nsIRunnable* aEvent, uint32_t aDispatchFlags)
 {
