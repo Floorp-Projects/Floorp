@@ -1422,7 +1422,8 @@ class JS_PUBLIC_API(RuntimeOptions) {
         ion_(false),
         asmJS_(false),
         nativeRegExp_(false),
-        werror_(false)
+        werror_(false),
+        strictMode_(false)
     {
     }
 
@@ -1472,12 +1473,23 @@ class JS_PUBLIC_API(RuntimeOptions) {
         return *this;
     }
 
+    bool strictMode() const { return strictMode_; }
+    RuntimeOptions &setStrictMode(bool flag) {
+        strictMode_ = flag;
+        return *this;
+    }
+    RuntimeOptions &toggleStrictMode() {
+        strictMode_ = !strictMode_;
+        return *this;
+    }
+
   private:
     bool baseline_ : 1;
     bool ion_ : 1;
     bool asmJS_ : 1;
     bool nativeRegExp_ : 1;
     bool werror_ : 1;
+    bool strictMode_ : 1;
 };
 
 JS_PUBLIC_API(RuntimeOptions &)
@@ -1495,7 +1507,6 @@ class JS_PUBLIC_API(ContextOptions) {
         dontReportUncaught_(false),
         noDefaultCompartmentObject_(false),
         noScriptRval_(false),
-        strictMode_(false),
         cloneSingletons_(false)
     {
     }
@@ -1560,16 +1571,6 @@ class JS_PUBLIC_API(ContextOptions) {
         return *this;
     }
 
-    bool strictMode() const { return strictMode_; }
-    ContextOptions &setStrictMode(bool flag) {
-        strictMode_ = flag;
-        return *this;
-    }
-    ContextOptions &toggleStrictMode() {
-        strictMode_ = !strictMode_;
-        return *this;
-    }
-
     bool cloneSingletons() const { return cloneSingletons_; }
     ContextOptions &setCloneSingletons(bool flag) {
         cloneSingletons_ = flag;
@@ -1587,7 +1588,6 @@ class JS_PUBLIC_API(ContextOptions) {
     bool dontReportUncaught_ : 1;
     bool noDefaultCompartmentObject_ : 1;
     bool noScriptRval_ : 1;
-    bool strictMode_ : 1;
     bool cloneSingletons_ : 1;
 };
 
