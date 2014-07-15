@@ -83,9 +83,23 @@ add_task(function test_initialializeWithCurrentIdentity() {
   }
 );
 
+add_task(function test_initialializeWithNoKeys() {
+    _("Verify start after initializeWithCurrentIdentity without kA, kB or keyFetchToken");
+    let identityConfig = makeIdentityConfig();
+    delete identityConfig.fxaccount.user.kA;
+    delete identityConfig.fxaccount.user.kB;
+    // there's no keyFetchToken by default, so the initialize should fail.
+    configureFxAccountIdentity(browseridManager, identityConfig);
+
+    yield browseridManager.initializeWithCurrentIdentity();
+    yield browseridManager.whenReadyToAuthenticate.promise;
+    do_check_eq(Status.login, LOGIN_SUCCEEDED, "login succeeded even without keys");
+    do_check_false(browseridManager._canFetchKeys(), "_canFetchKeys reflects lack of keys");
+});
 
 add_test(function test_getResourceAuthenticator() {
     _("BrowserIDManager supplies a Resource Authenticator callback which returns a Hawk header.");
+    configureFxAccountIdentity(browseridManager);
     let authenticator = browseridManager.getResourceAuthenticator();
     do_check_true(!!authenticator);
     let req = {uri: CommonUtils.makeURI(
@@ -240,6 +254,7 @@ add_test(function test_RESTResourceAuthenticatorSkew() {
 add_task(function test_ensureLoggedIn() {
   configureFxAccountIdentity(browseridManager);
   yield browseridManager.initializeWithCurrentIdentity();
+  yield browseridManager.whenReadyToAuthenticate.promise;
   Assert.equal(Status.login, LOGIN_SUCCEEDED, "original initialize worked");
   yield browseridManager.ensureLoggedIn();
   Assert.equal(Status.login, LOGIN_SUCCEEDED, "original ensureLoggedIn worked");

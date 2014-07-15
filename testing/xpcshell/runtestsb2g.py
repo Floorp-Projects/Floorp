@@ -193,7 +193,7 @@ def run_remote_xpcshell(parser, options, args):
         dm = devicemanagerADB.DeviceManagerADB(**kwargs)
 
     if not options.remoteTestRoot:
-        options.remoteTestRoot = dm.getDeviceRoot()
+        options.remoteTestRoot = dm.deviceRoot
     xpcsh = B2GXPCShellRemote(dm, options, args)
 
     # we don't run concurrent tests on mobile

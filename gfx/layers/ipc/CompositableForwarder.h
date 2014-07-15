@@ -198,8 +198,6 @@ public:
 
   bool IsOnCompositorSide() const MOZ_OVERRIDE { return false; }
 
-  virtual bool IsImageBridgeChild() const { return false; }
-
   /**
    * Returns the type of backend that is used off the main thread.
    * We only don't allow changing the backend type at runtime so this value can
