@@ -3702,7 +3702,6 @@ nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
   , mScrollFrame(aScrollFrame)
   , mScrolledFrame(aScrolledFrame)
   , mScrollParentId(aBuilder->GetCurrentScrollParentId())
-  , mDisplayPortContentsOpaque(false)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_CTOR(nsDisplayScrollLayer);
@@ -3721,7 +3720,6 @@ nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
   , mScrollFrame(aScrollFrame)
   , mScrolledFrame(aScrolledFrame)
   , mScrollParentId(aBuilder->GetCurrentScrollParentId())
-  , mDisplayPortContentsOpaque(false)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_CTOR(nsDisplayScrollLayer);
@@ -3739,7 +3737,6 @@ nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
   , mScrollFrame(aScrollFrame)
   , mScrolledFrame(aScrolledFrame)
   , mScrollParentId(aBuilder->GetCurrentScrollParentId())
-  , mDisplayPortContentsOpaque(false)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_CTOR(nsDisplayScrollLayer);
@@ -3767,22 +3764,6 @@ nsDisplayScrollLayer::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
   return nsDisplayWrapList::GetBounds(aBuilder, aSnap);
 }
 
-nsRect
-nsDisplayScrollLayer::GetScrolledContentRectToDraw(nsDisplayListBuilder* aBuilder,
-                                                   nsRect* aDisplayPort)
-{
-  if (aDisplayPort) {
-    // The visible region for the children may be much bigger than the hole we
-    // are viewing the children from, so that the compositor process has enough
-    // content to asynchronously pan while content is being refreshed.
-    // XXX mScrollFrame seems wrong here; we should add the offset of the
-    // scrollport
-    return *aDisplayPort + mScrollFrame->GetOffsetToCrossDoc(ReferenceFrame());
-  }
-  bool snap;
-  return GetBounds(aBuilder, &snap);
-}
-
 already_AddRefed<Layer>
 nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                                  LayerManager* aManager,
@@ -3799,24 +3780,7 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
   RecordFrameMetrics(mScrolledFrame, mScrollFrame, ReferenceFrame(), layer,
                      viewport, false, false, aContainerParameters);
 
-  if (mList.IsOpaque()) {
-    nsRect displayport;
-    bool usingDisplayport =
-      nsLayoutUtils::GetDisplayPort(mScrolledFrame->GetContent(), &displayport);
-    mDisplayPortContentsOpaque = mList.GetBounds(aBuilder).Contains(
-        GetScrolledContentRectToDraw(aBuilder, usingDisplayport ? &displayport : nullptr));
-  } else {
-    mDisplayPortContentsOpaque = false;
-  }
-
   return layer.forget();
-}
-
-bool
-nsDisplayScrollLayer::IsConstructingScrollLayerForScrolledFrame(const nsIFrame* aScrolledFrame)
-{
-  FrameProperties props = aScrolledFrame->Properties();
-  return reinterpret_cast<intptr_t>(props.Get(nsIFrame::ScrollLayerCount())) != 0;
 }
 
 bool
@@ -3837,12 +3801,20 @@ nsDisplayScrollLayer::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   nsRect displayport;
   bool usingDisplayPort =
     nsLayoutUtils::GetDisplayPort(mScrolledFrame->GetContent(), &displayport);
-  nsRect scrolledContentRect = GetScrolledContentRectToDraw(aBuilder,
-      usingDisplayPort ? &displayport : nullptr);
+  nsRegion childVisibleRegion;
+  if (usingDisplayPort) {
+    // The visible region for the children may be much bigger than the hole we
+    // are viewing the children from, so that the compositor process has enough
+    // content to asynchronously pan while content is being refreshed.
+    childVisibleRegion = displayport + mScrollFrame->GetOffsetToCrossDoc(ReferenceFrame());
+  } else {
+    bool snap;
+    childVisibleRegion = GetBounds(aBuilder, &snap);
+  }
 
-  nsRect boundedRect = scrolledContentRect.Intersect(mList.GetBounds(aBuilder));
+  nsRect boundedRect =
+    childVisibleRegion.GetBounds().Intersect(mList.GetBounds(aBuilder));
   nsRect allowExpansion = boundedRect.Intersect(aAllowVisibleRegionExpansion);
-  nsRegion childVisibleRegion = scrolledContentRect;
   bool visible = mList.ComputeVisibilityForSublist(
     aBuilder, &childVisibleRegion, boundedRect, allowExpansion,
     usingDisplayPort ? mScrollFrame : nullptr);
