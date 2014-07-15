@@ -17,7 +17,7 @@ interface nsIPrincipal;
  * one of these per document/principal.
  */
 
-[scriptable, uuid(15c409c5-ebf8-457c-a8dd-5b169ca0b218)]
+[scriptable, uuid(3e923bf6-a974-4f3b-91c4-b4fd48b37732)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
 
