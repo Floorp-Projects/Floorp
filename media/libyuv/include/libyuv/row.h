@@ -38,7 +38,8 @@ extern "C" {
   var = 0
 
 #if defined(__pnacl__) || defined(__CLR_VER) || defined(COVERAGE_ENABLED) || \
-    defined(TARGET_IPHONE_SIMULATOR)
+    defined(TARGET_IPHONE_SIMULATOR) || \
+    (defined(_MSC_VER) && defined(__clang__))
 #define LIBYUV_DISABLE_X86
 #endif
 // True if compiling for SSSE3 as a requirement.
