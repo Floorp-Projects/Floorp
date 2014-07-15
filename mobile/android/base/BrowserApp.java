@@ -474,8 +474,10 @@ public class BrowserApp extends GeckoApp
         ((GeckoApplication) getApplication()).prepareLightweightTheme();
         super.onCreate(savedInstanceState);
 
+        final Context appContext = getApplicationContext();
+
         // Init suggested sites engine in BrowserDB.
-        final SuggestedSites suggestedSites = new SuggestedSites(getApplicationContext());
+        final SuggestedSites suggestedSites = new SuggestedSites(appContext);
         BrowserDB.setSuggestedSites(suggestedSites);
 
         mViewFlipper = (ViewFlipper) findViewById(R.id.browser_actionbar);
@@ -565,9 +567,9 @@ public class BrowserApp extends GeckoApp
             }
         }
 
-        JavaAddonManager.getInstance().init(getApplicationContext());
-        mSharedPreferencesHelper = new SharedPreferencesHelper(getApplicationContext());
-        mOrderedBroadcastHelper = new OrderedBroadcastHelper(getApplicationContext());
+        JavaAddonManager.getInstance().init(appContext);
+        mSharedPreferencesHelper = new SharedPreferencesHelper(appContext);
+        mOrderedBroadcastHelper = new OrderedBroadcastHelper(appContext);
         mBrowserHealthReporter = new BrowserHealthReporter();
 
         if (AppConstants.MOZ_ANDROID_BEAM && Build.VERSION.SDK_INT >= 14) {
