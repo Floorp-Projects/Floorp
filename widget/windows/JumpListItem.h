@@ -67,6 +67,8 @@ public:
 
 class JumpListLink : public JumpListItem, public nsIJumpListLink
 {
+  ~JumpListLink() {}
+
 public:
   JumpListLink() :
    JumpListItem(nsIJumpListItem::JUMPLIST_ITEM_LINK)
