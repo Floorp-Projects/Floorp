@@ -154,10 +154,11 @@
         <vbox id="runtime-panel-simulators"></vbox>
         <label class="panel-header">&runtimePanel_custom;</label>
         <vbox id="runtime-panel-custom"></vbox>
-        <vbox flex="1" id="runtime-actions" hidden="true">
+        <vbox flex="1" id="runtime-actions">
           <toolbarbutton class="panel-item" id="runtime-details" command="cmd_showRuntimeDetails"/>
           <toolbarbutton class="panel-item" id="runtime-permissions" command="cmd_showPermissionsTable"/>
           <toolbarbutton class="panel-item" id="runtime-screenshot"  command="cmd_takeScreenshot"/>
+          <toolbarbutton class="panel-item" id="runtime-disconnect"  command="cmd_disconnectRuntime"/>
         </vbox>
       </vbox>
     </panel>

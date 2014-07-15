@@ -201,8 +201,9 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 }
 
 #runtime-details,
-#runtime-permissions,
 #runtime-screenshot,
+#runtime-permissions,
+#runtime-disconnect,
 #runtime-panel-nousbdevice,
 #runtime-panel-noadbhelper,
 #runtime-panel-nosimulator,
@@ -216,6 +217,7 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 #runtime-details                { -moz-image-region: rect(156px,338px,182px,312px) }
 #runtime-screenshot             { -moz-image-region: rect(130px,338px,156px,312px) }
 #runtime-permissions            { -moz-image-region: rect(104px,338px,130px,312px) }
+#runtime-disconnect             { -moz-image-region: rect(52px,338px,78px,312px) }
 #runtime-panel-nousbdevice      { -moz-image-region: rect(156px,338px,182px,312px) }
 #runtime-panel-noadbhelper      { -moz-image-region: rect(234px,338px,260px,312px) }
 #runtime-panel-nosimulator      { -moz-image-region: rect(0px,338px,26px,312px) }
@@ -237,7 +239,11 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
   padding-bottom: 8px;
 }
 
-#runtime-actions > toolbarbutton:hover {
+#runtime-actions > toolbarbutton[disabled="true"] {
+  opacity: 0.4;
+}
+
+#runtime-actions > toolbarbutton:not([disabled="true"]):hover {
   background-color: #CBF0FE;
 }
 
