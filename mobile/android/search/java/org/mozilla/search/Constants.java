@@ -21,4 +21,7 @@ public class Constants {
     public static final String SEARCH_FRAGMENT = "org.mozilla.search.SEARCH_FRAGMENT";
 
     public static final String AUTOCOMPLETE_ROW_LIMIT = "5";
+
+    public static final String YAHOO_WEB_SEARCH_BASE_URL = "https://search.yahoo.com/search?p=";
+    public static final String YAHOO_WEB_SEARCH_RESULTS_FILTER = "//search.yahoo.com";
 }
