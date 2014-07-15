@@ -45,6 +45,7 @@ public class TopSitesGridItemView extends RelativeLayout {
     private static final ScaleType SCALE_TYPE_FAVICON   = ScaleType.CENTER;
     private static final ScaleType SCALE_TYPE_RESOURCE  = ScaleType.CENTER;
     private static final ScaleType SCALE_TYPE_THUMBNAIL = ScaleType.CENTER_CROP;
+    private static final ScaleType SCALE_TYPE_URL       = ScaleType.CENTER_INSIDE;
 
     // Child views.
     private final TextView mTitleView;
@@ -246,7 +247,7 @@ public class TopSitesGridItemView extends RelativeLayout {
      * @param bgColor background color to use in the view.
      */
     public void displayThumbnail(final String imageUrl, final int bgColor) {
-        mThumbnailView.setScaleType(SCALE_TYPE_RESOURCE);
+        mThumbnailView.setScaleType(SCALE_TYPE_URL);
         mThumbnailView.setBackgroundColor(bgColor);
         mThumbnailSet = true;
 
