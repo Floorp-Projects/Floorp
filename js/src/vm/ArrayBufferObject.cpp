@@ -536,7 +536,7 @@ ArrayBufferObject::canNeuterAsmJSArrayBuffer(JSContext *cx, ArrayBufferObject &b
 void *
 ArrayBufferObject::createMappedContents(int fd, size_t offset, size_t length)
 {
-    return SystemPageAllocator::AllocateMappedContent(fd, offset, length, ARRAY_BUFFER_ALIGNMENT);
+    return AllocateMappedContent(fd, offset, length, ARRAY_BUFFER_ALIGNMENT);
 }
 
 void
@@ -545,7 +545,7 @@ ArrayBufferObject::releaseMappedArray()
     if(!isMappedArrayBuffer() || isNeutered())
         return;
 
-    SystemPageAllocator::DeallocateMappedContent(dataPointer(), byteLength());
+    DeallocateMappedContent(dataPointer(), byteLength());
 }
 
 void
@@ -1147,7 +1147,7 @@ JS_CreateMappedArrayBufferContents(int fd, size_t offset, size_t length)
 JS_PUBLIC_API(void)
 JS_ReleaseMappedArrayBufferContents(void *contents, size_t length)
 {
-    SystemPageAllocator::DeallocateMappedContent(contents, length);
+    DeallocateMappedContent(contents, length);
 }
 
 JS_FRIEND_API(bool)

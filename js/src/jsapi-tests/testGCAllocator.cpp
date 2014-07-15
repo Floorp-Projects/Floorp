@@ -92,20 +92,18 @@ testGCAllocatorUp(const size_t PageSize)
         return false;
     // Unmap the staging area so we can set it up for testing.
     unmapPages(stagingArea, StagingSize);
-    // Reuse the same allocator so it learns the address growth direction.
-    js::gc::SystemPageAllocator GCAlloc;
     // Check that the first chunk is used if it is aligned.
-    CHECK(positionIsCorrect("xxooxxx---------", stagingArea, chunkPool, tempChunks, GCAlloc));
+    CHECK(positionIsCorrect("xxooxxx---------", stagingArea, chunkPool, tempChunks));
     // Check that the first chunk is used if it can be aligned.
-    CHECK(positionIsCorrect("x-ooxxx---------", stagingArea, chunkPool, tempChunks, GCAlloc));
+    CHECK(positionIsCorrect("x-ooxxx---------", stagingArea, chunkPool, tempChunks));
     // Check that an aligned chunk after a single unalignable chunk is used.
-    CHECK(positionIsCorrect("x--xooxxx-------", stagingArea, chunkPool, tempChunks, GCAlloc));
+    CHECK(positionIsCorrect("x--xooxxx-------", stagingArea, chunkPool, tempChunks));
     // Check that we fall back to the slow path after two unalignable chunks.
-    CHECK(positionIsCorrect("x--xx--xoo--xxx-", stagingArea, chunkPool, tempChunks, GCAlloc));
+    CHECK(positionIsCorrect("x--xx--xoo--xxx-", stagingArea, chunkPool, tempChunks));
     // Check that we also fall back after an unalignable and an alignable chunk.
-    CHECK(positionIsCorrect("x--xx---x-oo--x-", stagingArea, chunkPool, tempChunks, GCAlloc));
+    CHECK(positionIsCorrect("x--xx---x-oo--x-", stagingArea, chunkPool, tempChunks));
     // Check that the last ditch allocator works as expected.
-    CHECK(positionIsCorrect("x--xx--xx-oox---", stagingArea, chunkPool, tempChunks, GCAlloc,
+    CHECK(positionIsCorrect("x--xx--xx-oox---", stagingArea, chunkPool, tempChunks,
                             UseLastDitchAllocator));
 
     // Clean up.
@@ -138,20 +136,18 @@ testGCAllocatorDown(const size_t PageSize)
         return false;
     // Unmap the staging area so we can set it up for testing.
     unmapPages(stagingArea, StagingSize);
-    // Reuse the same allocator so it learns the address growth direction.
-    js::gc::SystemPageAllocator GCAlloc;
     // Check that the first chunk is used if it is aligned.
-    CHECK(positionIsCorrect("---------xxxooxx", stagingArea, chunkPool, tempChunks, GCAlloc));
+    CHECK(positionIsCorrect("---------xxxooxx", stagingArea, chunkPool, tempChunks));
     // Check that the first chunk is used if it can be aligned.
-    CHECK(positionIsCorrect("---------xxxoo-x", stagingArea, chunkPool, tempChunks, GCAlloc));
+    CHECK(positionIsCorrect("---------xxxoo-x", stagingArea, chunkPool, tempChunks));
     // Check that an aligned chunk after a single unalignable chunk is used.
-    CHECK(positionIsCorrect("-------xxxoox--x", stagingArea, chunkPool, tempChunks, GCAlloc));
+    CHECK(positionIsCorrect("-------xxxoox--x", stagingArea, chunkPool, tempChunks));
     // Check that we fall back to the slow path after two unalignable chunks.
-    CHECK(positionIsCorrect("-xxx--oox--xx--x", stagingArea, chunkPool, tempChunks, GCAlloc));
+    CHECK(positionIsCorrect("-xxx--oox--xx--x", stagingArea, chunkPool, tempChunks));
     // Check that we also fall back after an unalignable and an alignable chunk.
-    CHECK(positionIsCorrect("-x--oo-x---xx--x", stagingArea, chunkPool, tempChunks, GCAlloc));
+    CHECK(positionIsCorrect("-x--oo-x---xx--x", stagingArea, chunkPool, tempChunks));
     // Check that the last ditch allocator works as expected.
-    CHECK(positionIsCorrect("---xoo-xx--xx--x", stagingArea, chunkPool, tempChunks, GCAlloc,
+    CHECK(positionIsCorrect("---xoo-xx--xx--x", stagingArea, chunkPool, tempChunks,
                             UseLastDitchAllocator));
 
     // Clean up.
@@ -194,7 +190,7 @@ fillSpaceBeforeStagingArea(int &tempChunks, void *stagingArea,
 
 bool
 positionIsCorrect(const char *str, void *base, void **chunkPool, int tempChunks,
-                  js::gc::SystemPageAllocator& GCAlloc, AllocType allocator = UseNormalAllocator)
+                  AllocType allocator = UseNormalAllocator)
 {
     // str represents a region of memory, with each character representing a
     // region of Chunk bytes. str should contain only x, o and -, where
@@ -216,20 +212,20 @@ positionIsCorrect(const char *str, void *base, void **chunkPool, int tempChunks,
     // Allocate using the GC's allocator.
     void *result;
     if (allocator == UseNormalAllocator)
-        result = GCAlloc.mapAlignedPages(2 * Chunk, Alignment);
+        result = js::gc::MapAlignedPages(2 * Chunk, Alignment);
     else
-        result = GCAlloc.testMapAlignedPagesLastDitch(2 * Chunk, Alignment);
+        result = js::gc::TestMapAlignedPagesLastDitch(2 * Chunk, Alignment);
     // Clean up the mapped regions.
     if (result)
-        GCAlloc.unmapPages(result, 2 * Chunk);
+        js::gc::UnmapPages(result, 2 * Chunk);
     for (--i; i >= 0; --i) {
         if (str[i] == 'x')
-            unmapPages((void *)(uintptr_t(base) +  i * Chunk), Chunk);
+            js::gc::UnmapPages((void *)(uintptr_t(base) +  i * Chunk), Chunk);
     }
     // CHECK returns, so clean up on failure.
     if (result != desired) {
         while (--tempChunks >= 0)
-            unmapPages(chunkPool[tempChunks], 2 * Chunk);
+            js::gc::UnmapPages(chunkPool[tempChunks], 2 * Chunk);
     }
     return result == desired;
 }

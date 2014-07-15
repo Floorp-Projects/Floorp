@@ -419,8 +419,6 @@ class GCRuntime
     /* List of compartments and zones (protected by the GC lock). */
     js::gc::ZoneVector    zones;
 
-    js::gc::SystemPageAllocator pageAllocator;
-
 #ifdef JSGC_GENERATIONAL
     js::Nursery           nursery;
     js::gc::StoreBuffer   storeBuffer;
