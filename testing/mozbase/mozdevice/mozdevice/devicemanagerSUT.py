@@ -200,10 +200,13 @@ class DeviceManagerSUT(DeviceManager):
                     raise DMError("Remote Device Error: our cmd was %s bytes and we "
                                   "only sent %s" % (len(cmdline), sent))
                 if cmd.get('data'):
-                    sent = self._sock.send(cmd['data'])
-                    if sent != len(cmd['data']):
-                        raise DMError("Remote Device Error: we had %s bytes of data to send, but "
-                                      "only sent %s" % (len(cmd['data']), sent))
+                    totalsent = 0
+                    while totalsent < len(cmd['data']):
+                        sent = self._sock.send(cmd['data'][totalsent:])
+                        self._logger.debug("sent %s bytes of data payload" % sent)
+                        if sent == 0:
+                            raise DMError("Socket connection broken when sending data")
+                        totalsent += sent
 
                 self._logger.debug("sent cmd: %s" % cmd['cmd'])
             except socket.error, msg:
