@@ -137,11 +137,11 @@ MapAlignedPages(size_t size, size_t alignment)
     size_t retainedSize;
     GetNewChunk(&p, &retainedAddr, &retainedSize, size, alignment);
     if (retainedAddr)
-        unmapPages(retainedAddr, retainedSize);
+        UnmapPages(retainedAddr, retainedSize);
     if (p) {
         if (OffsetFromAligned(p, alignment) == 0)
             return p;
-        unmapPages(p, size);
+        UnmapPages(p, size);
     }
 
     p = MapAlignedPagesSlow(size, alignment);
@@ -176,7 +176,7 @@ MapAlignedPagesSlow(size_t size, size_t alignment)
         if (!p)
             return nullptr;
         void *chunkStart = (void *)AlignBytes(uintptr_t(p), alignment);
-        unmapPages(p, reserveSize);
+        UnmapPages(p, reserveSize);
         p = MapMemoryAt(chunkStart, size, MEM_COMMIT | MEM_RESERVE);
 
         /* Failure here indicates a race with another thread, so try again. */
@@ -204,7 +204,7 @@ MapAlignedPagesLastDitch(size_t size, size_t alignment)
         GetNewChunk(&p, tempMaps + attempt, &retainedSize, size, alignment);
         if (OffsetFromAligned(p, alignment) == 0) {
             if (tempMaps[attempt])
-                unmapPages(tempMaps[attempt], retainedSize);
+                UnmapPages(tempMaps[attempt], retainedSize);
             break;
         }
         if (!tempMaps[attempt]) {
@@ -214,11 +214,11 @@ MapAlignedPagesLastDitch(size_t size, size_t alignment)
         }
     }
     if (OffsetFromAligned(p, alignment)) {
-        unmapPages(p, size);
+        UnmapPages(p, size);
         p = nullptr;
     }
     while (--attempt >= 0)
-        unmapPages(tempMaps[attempt], 0);
+        UnmapPages(tempMaps[attempt], 0);
     return p;
 }
 
@@ -240,7 +240,7 @@ GetNewChunk(void **aAddress, void **aRetainedAddr, size_t *aRetainedSize, size_t
         size_t offset = OffsetFromAligned(address, alignment);
         if (!offset)
             break;
-        unmapPages(address, size);
+        UnmapPages(address, size);
         retainedSize = alignment - offset;
         retainedAddr = MapMemoryAt(address, retainedSize, MEM_RESERVE);
         address = MapMemory(size, MEM_COMMIT | MEM_RESERVE);
@@ -260,7 +260,7 @@ UnmapPages(void *p, size_t size)
 bool
 MarkPagesUnused(void *p, size_t size)
 {
-    if (!decommitEnabled())
+    if (!DecommitEnabled())
         return true;
 
     MOZ_ASSERT(OffsetFromAligned(p, pageSize) == 0);
