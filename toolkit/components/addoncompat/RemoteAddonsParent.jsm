@@ -404,8 +404,43 @@ EventTargetInterposition.methods.removeEventListener =
     target.removeEventListener(type, listener, useCapture);
   };
 
+// This interposition intercepts accesses to |rootTreeItem| on a child
+// process docshell. In the child, each docshell is its own
+// root. However, add-ons expect the root to be the chrome docshell,
+// so we make that happen here.
+let ContentDocShellTreeItemInterposition = new Interposition();
+
+ContentDocShellTreeItemInterposition.getters.rootTreeItem =
+  function(addon, target) {
+    // The chrome global in the child.
+    let chromeGlobal = target.rootTreeItem
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIContentFrameMessageManager);
+
+    // Map it to a <browser> element and window.
+    let browser = RemoteAddonsParent.globalToBrowser.get(chromeGlobal);
+    if (!browser) {
+      // Somehow we have a CPOW from the child, but it hasn't sent us
+      // its global yet. That shouldn't happen, but return null just
+      // in case.
+      return null;
+    }
+
+    let chromeWin = browser.ownerDocument.defaultView;
+
+    // Return that window's docshell.
+    return chromeWin.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebNavigation)
+      .QueryInterface(Ci.nsIDocShellTreeItem);
+  };
+
 let RemoteAddonsParent = {
   init: function() {
+    let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
+    mm.addMessageListener("Addons:RegisterGlobal", this);
+
+    this.globalToBrowser = new WeakMap();
+    this.browserToGlobal = new WeakMap();
   },
 
   getInterfaceInterpositions: function() {
@@ -429,7 +464,17 @@ let RemoteAddonsParent = {
     }
 
     register("EventTarget", EventTargetInterposition);
+    register("ContentDocShellTreeItem", ContentDocShellTreeItemInterposition);
 
     return result;
   },
+
+  receiveMessage: function(msg) {
+    switch (msg.name) {
+    case "Addons:RegisterGlobal":
+      this.browserToGlobal.set(msg.target, msg.objects.global);
+      this.globalToBrowser.set(msg.objects.global, msg.target);
+      break;
+    }
+  }
 };
