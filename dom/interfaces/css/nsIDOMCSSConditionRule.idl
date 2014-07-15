@@ -9,7 +9,7 @@
  * Interface in the CSS OM for at-rules that conditionally apply their
  * child rules.
  */
-[scriptable, uuid(942754f2-2c0e-461b-9c10-c0e929504fe1)]
+[scriptable, uuid(44da41b2-5660-415d-8692-eae805776103)]
 interface nsIDOMCSSConditionRule : nsIDOMCSSGroupingRule
 {
   attribute DOMString conditionText;

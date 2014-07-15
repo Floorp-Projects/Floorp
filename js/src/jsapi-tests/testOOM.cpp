@@ -10,8 +10,10 @@ BEGIN_TEST(testOOM)
 {
     JS::RootedValue v(cx, JS::Int32Value(9));
     JS::RootedString jsstr(cx, JS::ToString(cx, v));
-    mozilla::DebugOnly<const jschar *> s = JS_GetStringCharsZ(cx, jsstr);
-    JS_ASSERT(s[0] == '9' && s[1] == '\0');
+    jschar ch;
+    if (!JS_GetStringCharAt(cx, jsstr, 0, &ch))
+        return false;
+    JS_ASSERT(ch == '9');
     return true;
 }
 

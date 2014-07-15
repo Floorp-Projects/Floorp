@@ -8,7 +8,7 @@
 /**
  * Interface for @-moz-document rules in the CSS OM.
  */
-[scriptable, uuid(f118a5a8-ac36-464f-b993-18cf6fe76fda)]
+[scriptable, uuid(2d0cef9d-c1b2-4c6c-9003-fa83040626d1)]
 interface nsIDOMCSSMozDocumentRule : nsIDOMCSSConditionRule
 {
   // XXX Add access to the URL list.

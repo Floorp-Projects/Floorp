@@ -9,6 +9,7 @@ interface nsISupportsArray;
 interface nsIDOMCharacterData;
 interface nsIDOMElement;
 interface nsIDOMDocument;
+interface nsIDOMCSSRule;
 interface nsIDOMCSSStyleRule;
 interface nsIDOMNode;
 interface nsIDOMNodeList;
@@ -16,7 +17,7 @@ interface nsIDOMFontFaceList;
 interface nsIDOMRange;
 interface nsIDOMCSSStyleSheet;
 
-[scriptable, uuid(5d8a1458-4b76-4aee-bf46-4eca223a01b2)]
+[scriptable, uuid(fd529e53-f734-4d15-83ce-d545a631d668)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
@@ -24,8 +25,8 @@ interface inIDOMUtils : nsISupports
                           [optional] out unsigned long aLength,
                           [array, size_is (aLength), retval] out nsISupports aSheets);
   nsISupportsArray getCSSStyleRules(in nsIDOMElement aElement, [optional] in DOMString aPseudo);
-  unsigned long getRuleLine(in nsIDOMCSSStyleRule aRule);
-  unsigned long getRuleColumn(in nsIDOMCSSStyleRule aRule);
+  unsigned long getRuleLine(in nsIDOMCSSRule aRule);
+  unsigned long getRuleColumn(in nsIDOMCSSRule aRule);
 
   // Utilities for working with selectors.  We don't have a JS OM representation
   // of a single selector or a selector list yet, but given a rule we can index

@@ -620,7 +620,7 @@ FinalizeArenas(FreeOp *fop,
       }
 #endif
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid alloc kind");
+        MOZ_CRASH("Invalid alloc kind");
     }
 }
 
@@ -869,7 +869,7 @@ Chunk::findDecommittedArenaOffset()
     for (unsigned i = 0; i < info.lastDecommittedArenaOffset; i++)
         if (decommittedArenas.get(i))
             return i;
-    MOZ_ASSUME_UNREACHABLE("No decommitted arenas found.");
+    MOZ_CRASH("No decommitted arenas found.");
 }
 
 ArenaHeader *
@@ -2735,7 +2735,7 @@ GCHelperState::work()
     switch (state()) {
 
       case IDLE:
-        MOZ_ASSUME_UNREACHABLE("GC helper triggered on idle state");
+        MOZ_CRASH("GC helper triggered on idle state");
         break;
 
       case SWEEPING: {
@@ -4034,7 +4034,7 @@ RemoveFromGrayList(JSObject *wrapper)
         obj = next;
     }
 
-    MOZ_ASSUME_UNREACHABLE("object not found in gray link list");
+    MOZ_CRASH("object not found in gray link list");
 }
 
 static void
@@ -4685,7 +4685,7 @@ GCRuntime::resetIncrementalGC(const char *reason)
         break;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid incremental GC state");
+        MOZ_CRASH("Invalid incremental GC state");
     }
 
     stats.reset(reason);

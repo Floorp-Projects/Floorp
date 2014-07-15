@@ -333,6 +333,12 @@ nsMenuPopupFrame::GetShadowStyle()
 
 NS_IMETHODIMP nsXULPopupShownEvent::Run()
 {
+  nsMenuPopupFrame* popup = do_QueryFrame(mPopup->GetPrimaryFrame());
+  // Set the state to visible if the popup is still open.
+  if (popup && popup->IsOpen()) {
+    popup->SetPopupState(ePopupShown);
+  }
+
   WidgetMouseEvent event(true, NS_XUL_POPUP_SHOWN, nullptr,
                          WidgetMouseEvent::eReal);
   return EventDispatcher::Dispatch(mPopup, mPresContext, &event);                 
@@ -486,8 +492,11 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
     rect.x = rect.y = 0;
     viewManager->ResizeView(view, rect);
 
+    if (mPopupState == ePopupOpening) {
+      mPopupState = ePopupVisible;
+    }
+
     viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
-    mPopupState = ePopupOpenAndVisible;
     nsContainerFrame::SyncFrameViewProperties(pc, this, nullptr, view, 0);
   }
 
@@ -774,7 +783,7 @@ nsMenuPopupFrame::ShowPopup(bool aIsContextMenu, bool aSelectFirstItem)
   InvalidateFrameSubtree();
 
   if (mPopupState == ePopupShowing) {
-    mPopupState = ePopupOpen;
+    mPopupState = ePopupOpening;
     mIsOpenChanged = true;
 
     nsMenuFrame* menuFrame = do_QueryFrame(GetParent());
@@ -1980,12 +1989,13 @@ nsMenuPopupFrame::MoveToAnchor(nsIContent* aAnchorContent,
                                int32_t aXPos, int32_t aYPos,
                                bool aAttributesOverride)
 {
-  NS_ASSERTION(mPopupState == ePopupOpenAndVisible, "popup must be open to move it");
+  NS_ASSERTION(IsVisible(), "popup must be visible to move it");
 
+  nsPopupState oldstate = mPopupState;
   InitializePopup(aAnchorContent, mTriggerContent, aPosition,
                   aXPos, aYPos, aAttributesOverride);
   // InitializePopup changed the state so reset it.
-  mPopupState = ePopupOpenAndVisible;
+  mPopupState = oldstate;
 
   // Pass false here so that flipping and adjusting to fit on the screen happen.
   SetPopupPosition(nullptr, false, false);

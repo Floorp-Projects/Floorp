@@ -571,7 +571,7 @@ IonBuilderHasHigherPriority(jit::IonBuilder *first, jit::IonBuilder *second)
     // A higher useCount indicates a higher priority.
     return first->script()->getUseCount() > second->script()->getUseCount();
 #else
-    MOZ_ASSUME_UNREACHABLE("Cannot infer priority without Ion");
+    MOZ_CRASH("Cannot infer priority without Ion");
 #endif
 }
 
@@ -1271,7 +1271,7 @@ HelperThread::threadLoop()
         else if (HelperThreadState().canStartGCHelperTask())
             handleGCHelperWorkload();
         else
-            MOZ_ASSUME_UNREACHABLE("No task to perform");
+            MOZ_CRASH("No task to perform");
     }
 }
 
@@ -1284,13 +1284,13 @@ using namespace js;
 bool
 js::StartOffThreadAsmJSCompile(ExclusiveContext *cx, AsmJSParallelTask *asmData)
 {
-    MOZ_ASSUME_UNREACHABLE("Off thread compilation not available in non-THREADSAFE builds");
+    MOZ_CRASH("Off thread compilation not available in non-THREADSAFE builds");
 }
 
 bool
 js::StartOffThreadIonCompile(JSContext *cx, jit::IonBuilder *builder)
 {
-    MOZ_ASSUME_UNREACHABLE("Off thread compilation not available in non-THREADSAFE builds");
+    MOZ_CRASH("Off thread compilation not available in non-THREADSAFE builds");
 }
 
 #endif // JS_ION
@@ -1310,13 +1310,13 @@ js::StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &optio
                               const jschar *chars, size_t length,
                               JS::OffThreadCompileCallback callback, void *callbackData)
 {
-    MOZ_ASSUME_UNREACHABLE("Off thread compilation not available in non-THREADSAFE builds");
+    MOZ_CRASH("Off thread compilation not available in non-THREADSAFE builds");
 }
 
 bool
 js::StartOffThreadCompression(ExclusiveContext *cx, SourceCompressionTask *task)
 {
-    MOZ_ASSUME_UNREACHABLE("Off thread compression not available");
+    MOZ_CRASH("Off thread compression not available");
 }
 
 bool
@@ -1329,19 +1329,19 @@ SourceCompressionTask::complete()
 frontend::CompileError &
 ExclusiveContext::addPendingCompileError()
 {
-    MOZ_ASSUME_UNREACHABLE("Off thread compilation not available.");
+    MOZ_CRASH("Off thread compilation not available.");
 }
 
 void
 ExclusiveContext::addPendingOverRecursed()
 {
-    MOZ_ASSUME_UNREACHABLE("Off thread compilation not available.");
+    MOZ_CRASH("Off thread compilation not available.");
 }
 
 void
 js::PauseCurrentHelperThread()
 {
-    MOZ_ASSUME_UNREACHABLE("Off thread compilation not available.");
+    MOZ_CRASH("Off thread compilation not available.");
 }
 
 #endif /* JS_THREADSAFE */

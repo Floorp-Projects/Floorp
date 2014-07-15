@@ -7,6 +7,7 @@
 #define nsClipboard_h__
 
 #include "nsBaseClipboard.h"
+#include "nsIObserver.h"
 #include "nsIURI.h"
 #include <windows.h>
 

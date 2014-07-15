@@ -216,7 +216,7 @@ bool GetHiddenState(bool aIsRedirect,
 class PlacesEvent : public nsRunnable
 {
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
 
   PlacesEvent(const char* aTopic);

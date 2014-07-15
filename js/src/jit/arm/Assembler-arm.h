@@ -82,19 +82,21 @@ class ABIArgGenerator
 static MOZ_CONSTEXPR_VAR Register PreBarrierReg = r1;
 
 static MOZ_CONSTEXPR_VAR Register InvalidReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg(FloatRegisters::invalid_freg);
+static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg;
 
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = r3;
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = r2;
 static MOZ_CONSTEXPR_VAR Register StackPointer = sp;
 static MOZ_CONSTEXPR_VAR Register FramePointer = InvalidReg;
 static MOZ_CONSTEXPR_VAR Register ReturnReg = r0;
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg(FloatRegisters::d0);
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg(FloatRegisters::d0);
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg(FloatRegisters::d15);
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg(FloatRegisters::d15);
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = { FloatRegisters::d0, VFPRegister::Single };
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = { FloatRegisters::d0, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = { FloatRegisters::d30, VFPRegister::Single };
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = { FloatRegisters::d15, VFPRegister::Double };
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchUIntReg = { FloatRegisters::d15, VFPRegister::UInt };
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchIntReg = { FloatRegisters::d15, VFPRegister::Int };
 
-static MOZ_CONSTEXPR_VAR FloatRegister NANReg(FloatRegisters::d14);
+static MOZ_CONSTEXPR_VAR FloatRegister NANReg = { FloatRegisters::d14, VFPRegister::Double };
 
 // Registers used in the GenerateFFIIonExit Enable Activation block.
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = r4;
@@ -112,22 +114,23 @@ static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = r1;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = r4;
 
 
-static MOZ_CONSTEXPR_VAR FloatRegister d0(FloatRegisters::d0);
-static MOZ_CONSTEXPR_VAR FloatRegister d1(FloatRegisters::d1);
-static MOZ_CONSTEXPR_VAR FloatRegister d2(FloatRegisters::d2);
-static MOZ_CONSTEXPR_VAR FloatRegister d3(FloatRegisters::d3);
-static MOZ_CONSTEXPR_VAR FloatRegister d4(FloatRegisters::d4);
-static MOZ_CONSTEXPR_VAR FloatRegister d5(FloatRegisters::d5);
-static MOZ_CONSTEXPR_VAR FloatRegister d6(FloatRegisters::d6);
-static MOZ_CONSTEXPR_VAR FloatRegister d7(FloatRegisters::d7);
-static MOZ_CONSTEXPR_VAR FloatRegister d8(FloatRegisters::d8);
-static MOZ_CONSTEXPR_VAR FloatRegister d9(FloatRegisters::d9);
-static MOZ_CONSTEXPR_VAR FloatRegister d10(FloatRegisters::d10);
-static MOZ_CONSTEXPR_VAR FloatRegister d11(FloatRegisters::d11);
-static MOZ_CONSTEXPR_VAR FloatRegister d12(FloatRegisters::d12);
-static MOZ_CONSTEXPR_VAR FloatRegister d13(FloatRegisters::d13);
-static MOZ_CONSTEXPR_VAR FloatRegister d14(FloatRegisters::d14);
-static MOZ_CONSTEXPR_VAR FloatRegister d15(FloatRegisters::d15);
+static MOZ_CONSTEXPR_VAR FloatRegister d0  = {FloatRegisters::d0, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister d1  = {FloatRegisters::d1, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister d2  = {FloatRegisters::d2, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister d3  = {FloatRegisters::d3, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister d4  = {FloatRegisters::d4, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister d5  = {FloatRegisters::d5, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister d6  = {FloatRegisters::d6, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister d7  = {FloatRegisters::d7, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister d8  = {FloatRegisters::d8, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister d9  = {FloatRegisters::d9, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister d10 = {FloatRegisters::d10, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister d11 = {FloatRegisters::d11, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister d12 = {FloatRegisters::d12, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister d13 = {FloatRegisters::d13, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister d14 = {FloatRegisters::d14, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister d15 = {FloatRegisters::d15, VFPRegister::Double};
+
 
 // For maximal awesomeness, 8 should be sufficent. ldrd/strd (dual-register
 // load/store) operate in a single cycle when the address they are dealing with
@@ -1618,6 +1621,7 @@ class Assembler : public AssemblerShared
             JS_ASSERT(dtmLastReg >= 0);
             JS_ASSERT(rn.code() == unsigned(dtmLastReg) + dtmDelta);
         }
+
         dtmLastReg = rn.code();
     }
     void finishFloatTransfer() {
@@ -1625,11 +1629,32 @@ class Assembler : public AssemblerShared
         dtmActive = false;
         JS_ASSERT(dtmLastReg != -1);
         dtmDelta = dtmDelta ? dtmDelta : 1;
+        // The operand for the vstr/vldr instruction is the lowest register in the range.
+        int low = Min(dtmLastReg, vdtmFirstReg);
+        int high = Max(dtmLastReg, vdtmFirstReg);
         // Fencepost problem.
-        int len = dtmDelta * (dtmLastReg - vdtmFirstReg) + 1;
-        as_vdtm(dtmLoadStore, dtmBase,
-                VFPRegister(FloatRegister::FromCode(Min(vdtmFirstReg, dtmLastReg))),
-                len, dtmCond);
+        int len = high - low + 1;
+        // vdtm can only transfer 16 registers at once.  If we need to transfer more,
+        // then either hoops are necessary, or we need to be updating the register.
+        JS_ASSERT_IF(len > 16, dtmUpdate == WriteBack);
+
+        int adjustLow = dtmLoadStore == IsStore ? 0 : 1;
+        int adjustHigh = dtmLoadStore == IsStore ? -1 : 0;
+        while (len > 0) {
+            // Limit the instruction to 16 registers.
+            int curLen = Min(len, 16);
+            // If it is a store, we want to start at the high end and move down
+            // (e.g. vpush d16-d31; vpush d0-d15).
+            int curStart = (dtmLoadStore == IsStore) ? high - curLen + 1 : low;
+            as_vdtm(dtmLoadStore, dtmBase,
+                    VFPRegister(FloatRegister::FromCode(curStart)),
+                    curLen, dtmCond);
+            // Update the bounds.
+            low += adjustLow * curLen;
+            high += adjustHigh * curLen;
+            // Update the length parameter.
+            len -= curLen;
+        }
     }
 
   private:
@@ -2000,7 +2025,9 @@ class InstructionIterator {
 };
 
 static const uint32_t NumIntArgRegs = 4;
-static const uint32_t NumFloatArgRegs = 8;
+// There are 16 *float* registers available for arguments
+// If doubles are used, only half the number of registers are available.
+static const uint32_t NumFloatArgRegs = 16;
 
 static inline bool
 GetIntArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register *out)
@@ -2048,12 +2075,22 @@ GetArgStackDisp(uint32_t arg)
 #if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_ARM_SIMULATOR)
 
 static inline bool
-GetFloatArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, FloatRegister *out)
+GetFloat32ArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, FloatRegister *out)
 {
     JS_ASSERT(UseHardFpABI());
     if (usedFloatArgs >= NumFloatArgRegs)
         return false;
-    *out = FloatRegister::FromCode(usedFloatArgs);
+    *out = VFPRegister(usedFloatArgs, VFPRegister::Single);
+    return true;
+}
+static inline bool
+GetDoubleArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, FloatRegister *out)
+{
+    JS_ASSERT(UseHardFpABI());
+    JS_ASSERT((usedFloatArgs % 2) == 0);
+    if (usedFloatArgs >= NumFloatArgRegs)
+        return false;
+    *out = VFPRegister(usedFloatArgs>>1, VFPRegister::Double);
     return true;
 }
 

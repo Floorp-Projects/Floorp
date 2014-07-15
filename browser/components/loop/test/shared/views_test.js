@@ -2,16 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global loop, sinon */
+/*global loop, sinon, React */
+/* jshint newcap:false */
 
 var expect = chai.expect;
 var l10n = document.webL10n || document.mozL10n;
+var TestUtils = React.addons.TestUtils;
 
 describe("loop.shared.views", function() {
   "use strict";
 
   var sharedModels = loop.shared.models,
       sharedViews = loop.shared.views,
+      getReactElementByClass = TestUtils.findRenderedDOMComponentWithClass,
       sandbox;
 
   beforeEach(function() {
@@ -40,8 +43,142 @@ describe("loop.shared.views", function() {
     });
   });
 
+  describe("MediaControlButton", function() {
+    it("should render an enabled local audio button", function() {
+      var comp = TestUtils.renderIntoDocument(sharedViews.MediaControlButton({
+        scope: "local",
+        type: "audio",
+        action: function(){},
+        enabled: true
+      }));
+
+      expect(comp.getDOMNode().classList.contains("muted")).eql(false);
+    });
+
+    it("should render a muted local audio button", function() {
+      var comp = TestUtils.renderIntoDocument(sharedViews.MediaControlButton({
+        scope: "local",
+        type: "audio",
+        action: function(){},
+        enabled: false
+      }));
+
+      expect(comp.getDOMNode().classList.contains("muted")).eql(true);
+    });
+
+    it("should render an enabled local video button", function() {
+      var comp = TestUtils.renderIntoDocument(sharedViews.MediaControlButton({
+        scope: "local",
+        type: "video",
+        action: function(){},
+        enabled: true
+      }));
+
+      expect(comp.getDOMNode().classList.contains("muted")).eql(false);
+    });
+
+    it("should render a muted local video button", function() {
+      var comp = TestUtils.renderIntoDocument(sharedViews.MediaControlButton({
+        scope: "local",
+        type: "video",
+        action: function(){},
+        enabled: false
+      }));
+
+      expect(comp.getDOMNode().classList.contains("muted")).eql(true);
+    });
+  });
+
+  describe("ConversationToolbar", function() {
+    var hangup, publishStream;
+
+    function mountTestComponent(props) {
+      return TestUtils.renderIntoDocument(
+        sharedViews.ConversationToolbar(props));
+    }
+
+    beforeEach(function() {
+      hangup = sandbox.stub();
+      publishStream = sandbox.stub();
+    });
+
+    it("should hangup when hangup button is clicked", function() {
+      var comp = mountTestComponent({
+        hangup: hangup,
+        publishStream: publishStream,
+        audio: {enabled: true}
+      });
+
+      TestUtils.Simulate.click(
+        comp.getDOMNode().querySelector(".btn-hangup"));
+
+      sinon.assert.calledOnce(hangup);
+      sinon.assert.calledWithExactly(hangup);
+    });
+
+    it("should unpublish audio when audio mute btn is clicked", function() {
+      var comp = mountTestComponent({
+        hangup: hangup,
+        publishStream: publishStream,
+        audio: {enabled: true}
+      });
+
+      TestUtils.Simulate.click(
+        comp.getDOMNode().querySelector(".btn-mute-audio"));
+
+      sinon.assert.calledOnce(publishStream);
+      sinon.assert.calledWithExactly(publishStream, "audio", false);
+    });
+
+    it("should publish audio when audio mute btn is clicked", function() {
+      var comp = mountTestComponent({
+        hangup: hangup,
+        publishStream: publishStream,
+        audio: {enabled: false}
+      });
+
+      TestUtils.Simulate.click(
+        comp.getDOMNode().querySelector(".btn-mute-audio"));
+
+      sinon.assert.calledOnce(publishStream);
+      sinon.assert.calledWithExactly(publishStream, "audio", true);
+    });
+
+    it("should unpublish video when video mute btn is clicked", function() {
+      var comp = mountTestComponent({
+        hangup: hangup,
+        publishStream: publishStream,
+        video: {enabled: true}
+      });
+
+      TestUtils.Simulate.click(
+        comp.getDOMNode().querySelector(".btn-mute-video"));
+
+      sinon.assert.calledOnce(publishStream);
+      sinon.assert.calledWithExactly(publishStream, "video", false);
+    });
+
+    it("should publish video when video mute btn is clicked", function() {
+      var comp = mountTestComponent({
+        hangup: hangup,
+        publishStream: publishStream,
+        video: {enabled: false}
+      });
+
+      TestUtils.Simulate.click(
+        comp.getDOMNode().querySelector(".btn-mute-video"));
+
+      sinon.assert.calledOnce(publishStream);
+      sinon.assert.calledWithExactly(publishStream, "video", true);
+    });
+  });
+
   describe("ConversationView", function() {
     var fakeSDK, fakeSessionData, fakeSession, fakePublisher, model;
+
+    function mountTestComponent(props) {
+      return TestUtils.renderIntoDocument(sharedViews.ConversationView(props));
+    }
 
     beforeEach(function() {
       fakeSessionData = {
@@ -72,50 +209,46 @@ describe("loop.shared.views", function() {
       });
     });
 
-    describe("#initialize", function() {
-      it("should require a sdk object", function() {
-        expect(function() {
-          new sharedViews.ConversationView();
-        }).to.Throw(Error, /sdk/);
-      });
-
+    describe("#componentDidMount", function() {
       it("should start a session", function() {
         sandbox.stub(model, "startSession");
 
-        new sharedViews.ConversationView({sdk: fakeSDK, model: model});
+        mountTestComponent({sdk: fakeSDK, model: model});
 
         sinon.assert.calledOnce(model.startSession);
       });
     });
 
     describe("constructed", function() {
-      describe("#hangup", function() {
-        it("should disconnect the session", function() {
-          var view = new sharedViews.ConversationView({
-            sdk: fakeSDK,
-            model: model
-          });
-          sandbox.stub(model, "endSession");
-          view.publish();
+      var comp;
 
-          view.hangup({preventDefault: function() {}});
+      beforeEach(function() {
+        comp = mountTestComponent({sdk: fakeSDK, model: model});
+      });
+
+      describe("#hangup", function() {
+        beforeEach(function() {
+          comp.startPublishing();
+        });
+
+        it("should disconnect the session", function() {
+          sandbox.stub(model, "endSession");
+
+          comp.hangup();
 
           sinon.assert.calledOnce(model.endSession);
         });
+
+        it("should stop publishing local streams", function() {
+          comp.hangup();
+
+          sinon.assert.calledOnce(fakeSession.unpublish);
+        });
       });
 
-      describe("#publish", function() {
-        var view;
-
-        beforeEach(function() {
-          view = new sharedViews.ConversationView({
-            sdk: fakeSDK,
-            model: model
-          });
-        });
-
+      describe("#startPublishing", function() {
         it("should publish local stream", function() {
-          view.publish();
+          comp.startPublishing();
 
           sinon.assert.calledOnce(fakeSDK.initPublisher);
           sinon.assert.calledOnce(fakeSession.publish);
@@ -124,7 +257,7 @@ describe("loop.shared.views", function() {
         it("should start listening to OT publisher accessDialogOpened and " +
           " accessDenied events",
           function() {
-            view.publish();
+            comp.startPublishing();
 
             sinon.assert.called(fakePublisher.on);
             sinon.assert.calledWith(fakePublisher.on, "accessDialogOpened");
@@ -132,26 +265,20 @@ describe("loop.shared.views", function() {
           });
       });
 
-      describe("#unpublish", function() {
-        var view;
-
+      describe("#stopPublishing", function() {
         beforeEach(function() {
-          view = new sharedViews.ConversationView({
-            sdk: fakeSDK,
-            model: model
-          });
-          view.publish();
+          comp.startPublishing();
         });
 
-        it("should unpublish local stream", function() {
-          view.unpublish();
+        it("should stop publish local stream", function() {
+          comp.stopPublishing();
 
           sinon.assert.calledOnce(fakeSession.unpublish);
         });
 
         it("should unsubscribe from accessDialogOpened and accessDenied events",
           function() {
-            view.unpublish();
+            comp.stopPublishing();
 
             sinon.assert.calledTwice(fakePublisher.off);
             sinon.assert.calledWith(fakePublisher.off, "accessDialogOpened");
@@ -159,79 +286,48 @@ describe("loop.shared.views", function() {
           });
       });
 
-      describe("#toggleMuteAudio", function() {
-        var view;
+      describe("#publishStream", function() {
+        var comp;
 
         beforeEach(function() {
-          view = new sharedViews.ConversationView({
-            sdk: fakeSDK,
-            model: model
-          });
-          view.publish();
+          comp = mountTestComponent({sdk: fakeSDK, model: model});
+          comp.startPublishing();
         });
 
-        it("should unpublish local audio when enabled", function() {
-          view.localStream = {hasAudio: true};
+        it("should start streaming local audio", function() {
+          comp.publishStream("audio", true);
 
-          view.toggleMuteAudio({preventDefault: sandbox.spy()});
+          sinon.assert.calledOnce(fakePublisher.publishAudio);
+          sinon.assert.calledWithExactly(fakePublisher.publishAudio, true);
+        });
+
+        it("should stop streaming local audio", function() {
+          comp.publishStream("audio", false);
 
           sinon.assert.calledOnce(fakePublisher.publishAudio);
           sinon.assert.calledWithExactly(fakePublisher.publishAudio, false);
         });
 
-        it("should publish local audio when disabled", function() {
-          view.localStream = {hasAudio: false};
-
-          view.toggleMuteAudio({preventDefault: sandbox.spy()});
-
-          sinon.assert.calledOnce(fakePublisher.publishAudio);
-          sinon.assert.calledWithExactly(fakePublisher.publishAudio, true);
-        });
-      });
-
-      describe("#toggleMuteVideo", function() {
-        var view;
-
-        beforeEach(function() {
-          view = new sharedViews.ConversationView({
-            sdk: fakeSDK,
-            model: model
-          });
-          view.publish();
-        });
-
-        it("should unpublish local video when enabled", function() {
-          view.localStream = {hasVideo: true};
-
-          view.toggleMuteVideo({preventDefault: sandbox.spy()});
-
-          sinon.assert.calledOnce(fakePublisher.publishVideo);
-          sinon.assert.calledWithExactly(fakePublisher.publishVideo, false);
-        });
-
-        it("should publish local video when disabled", function() {
-          view.localStream = {hasVideo: false};
-
-          view.toggleMuteVideo({preventDefault: sandbox.spy()});
+        it("should start streaming local video", function() {
+          comp.publishStream("video", true);
 
           sinon.assert.calledOnce(fakePublisher.publishVideo);
           sinon.assert.calledWithExactly(fakePublisher.publishVideo, true);
         });
+
+        it("should stop streaming local video", function() {
+          comp.publishStream("video", false);
+
+          sinon.assert.calledOnce(fakePublisher.publishVideo);
+          sinon.assert.calledWithExactly(fakePublisher.publishVideo, false);
+        });
       });
 
       describe("Model events", function() {
-        var view;
-
-        beforeEach(function() {
-          sandbox.stub(sharedViews.ConversationView.prototype, "publish");
-          sandbox.stub(sharedViews.ConversationView.prototype, "unpublish");
-          view = new sharedViews.ConversationView({sdk: fakeSDK, model: model});
-        });
-
-        it("should publish local stream on session:connected", function() {
+        it("should start streaming on session:connected", function() {
           model.trigger("session:connected");
 
-          sinon.assert.calledOnce(view.publish);
+          sinon.assert.calledOnce(fakeSDK.initPublisher);
         });
 
         it("should publish remote streams on session:stream-created",
@@ -246,22 +342,28 @@ describe("loop.shared.views", function() {
           });
 
         it("should unpublish local stream on session:ended", function() {
+          comp.startPublishing();
+
           model.trigger("session:ended");
 
-          sinon.assert.calledOnce(view.unpublish);
+          sinon.assert.calledOnce(fakeSession.unpublish);
         });
 
         it("should unpublish local stream on session:peer-hungup", function() {
+          comp.startPublishing();
+
           model.trigger("session:peer-hungup");
 
-          sinon.assert.calledOnce(view.unpublish);
+          sinon.assert.calledOnce(fakeSession.unpublish);
         });
 
         it("should unpublish local stream on session:network-disconnected",
           function() {
+            comp.startPublishing();
+
             model.trigger("session:network-disconnected");
 
-            sinon.assert.calledOnce(view.unpublish);
+            sinon.assert.calledOnce(fakeSession.unpublish);
           });
       });
     });

@@ -41,6 +41,12 @@ class Registers {
         static_assert(sizeof(SetType) == 1, "SetType must be 8 bits");
         return mozilla::CountPopulation32(x);
     }
+    static uint32_t FirstBit(SetType x) {
+        return mozilla::CountTrailingZeroes32(x);
+    }
+    static uint32_t LastBit(SetType x) {
+        return 31 - mozilla::CountLeadingZeroes32(x);
+    }
     static const char *GetName(Code code) {
         static const char * const Names[] = { "eax", "ecx", "edx", "ebx",
                                               "esp", "ebp", "esi", "edi" };
@@ -156,7 +162,12 @@ struct FloatRegister {
         static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");
         return mozilla::CountPopulation32(x);
     }
-
+    static uint32_t FirstBit(SetType x) {
+        return mozilla::CountTrailingZeroes32(x);
+    }
+    static uint32_t LastBit(SetType x) {
+        return 31 - mozilla::CountLeadingZeroes32(x);
+    }
     Code code_;
 
     static FloatRegister FromCode(uint32_t i) {
@@ -186,6 +197,8 @@ struct FloatRegister {
     uint32_t numAliased() const {
         return 1;
     }
+    // N.B. FloatRegister is an explicit outparam here because msvc-2010
+    // miscompiled it on win64 when the value was simply returned
     void aliased(uint32_t aliasIdx, FloatRegister *ret) {
         JS_ASSERT(aliasIdx == 0);
         *ret = *this;

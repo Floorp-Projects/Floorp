@@ -11339,7 +11339,7 @@ public:
     mDocument(do_GetWeakReference(aElement->OwnerDoc())),
     mUserInputOrChromeCaller(aUserInputOrChromeCaller) {}
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICONTENTPERMISSIONREQUEST
 
   NS_IMETHOD Run()

@@ -28,6 +28,7 @@
 #include "cert.h"
 #include "cryptohi.h"
 #include "keyhi.h"
+#include "pk11pub.h"
 #include "pkix/pkix.h"
 #include "pkix/ScopedPtr.h"
 #include "prerror.h"
@@ -36,11 +37,10 @@
 namespace mozilla { namespace pkix {
 
 SECStatus
-VerifySignedData(const CERTSignedData& sd, const SECItem& subjectPublicKeyInfo,
-                 void* pkcs11PinArg)
+VerifySignedData(const SignedDataWithSignature& sd,
+                 const SECItem& subjectPublicKeyInfo, void* pkcs11PinArg)
 {
-  if (!sd.data.data || !sd.signatureAlgorithm.algorithm.data ||
-      !sd.signature.data) {
+  if (!sd.data.data || !sd.signature.data) {
     PR_NOT_REACHED("invalid args to VerifySignedData");
     PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;
@@ -52,9 +52,54 @@ VerifySignedData(const CERTSignedData& sd, const SECItem& subjectPublicKeyInfo,
     return SECFailure;
   }
 
-  // convert sig->len from bit counts to byte count.
-  SECItem sig = sd.signature;
-  DER_ConvertBitString(&sig);
+  SECOidTag pubKeyAlg;
+  SECOidTag digestAlg;
+  switch (sd.algorithm) {
+    case SignatureAlgorithm::ecdsa_with_sha512:
+      pubKeyAlg = SEC_OID_ANSIX962_EC_PUBLIC_KEY;
+      digestAlg = SEC_OID_SHA512;
+      break;
+    case SignatureAlgorithm::ecdsa_with_sha384:
+      pubKeyAlg = SEC_OID_ANSIX962_EC_PUBLIC_KEY;
+      digestAlg = SEC_OID_SHA384;
+      break;
+    case SignatureAlgorithm::ecdsa_with_sha256:
+      pubKeyAlg = SEC_OID_ANSIX962_EC_PUBLIC_KEY;
+      digestAlg = SEC_OID_SHA256;
+      break;
+    case SignatureAlgorithm::ecdsa_with_sha1:
+      pubKeyAlg = SEC_OID_ANSIX962_EC_PUBLIC_KEY;
+      digestAlg = SEC_OID_SHA1;
+      break;
+    case SignatureAlgorithm::rsa_pkcs1_with_sha512:
+      pubKeyAlg = SEC_OID_PKCS1_RSA_ENCRYPTION;
+      digestAlg = SEC_OID_SHA512;
+      break;
+    case SignatureAlgorithm::rsa_pkcs1_with_sha384:
+      pubKeyAlg = SEC_OID_PKCS1_RSA_ENCRYPTION;
+      digestAlg = SEC_OID_SHA384;
+      break;
+    case SignatureAlgorithm::rsa_pkcs1_with_sha256:
+      pubKeyAlg = SEC_OID_PKCS1_RSA_ENCRYPTION;
+      digestAlg = SEC_OID_SHA256;
+      break;
+    case SignatureAlgorithm::rsa_pkcs1_with_sha1:
+      pubKeyAlg = SEC_OID_PKCS1_RSA_ENCRYPTION;
+      digestAlg = SEC_OID_SHA1;
+      break;
+    case SignatureAlgorithm::dsa_with_sha256:
+      pubKeyAlg = SEC_OID_ANSIX9_DSA_SIGNATURE;
+      digestAlg = SEC_OID_SHA256;
+      break;
+    case SignatureAlgorithm::dsa_with_sha1:
+      pubKeyAlg = SEC_OID_ANSIX9_DSA_SIGNATURE;
+      digestAlg = SEC_OID_SHA1;
+      break;
+    default:
+      PR_NOT_REACHED("unknown signature algorithm");
+      PR_SetError(SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED, 0);
+      return SECFailure;
+  }
 
   ScopedPtr<CERTSubjectPublicKeyInfo, SECKEY_DestroySubjectPublicKeyInfo>
     spki(SECKEY_DecodeDERSubjectPublicKeyInfo(&subjectPublicKeyInfo));
@@ -67,32 +112,31 @@ VerifySignedData(const CERTSignedData& sd, const SECItem& subjectPublicKeyInfo,
     return SECFailure;
   }
 
-  SECOidTag hashAlg;
-  if (VFY_VerifyDataWithAlgorithmID(sd.data.data, static_cast<int>(sd.data.len),
-                                    pubKey.get(), &sig, &sd.signatureAlgorithm,
-                                    &hashAlg, pkcs11PinArg) != SECSuccess) {
+  // The static_cast is safe according to the check above that references
+  // bug 921585.
+  return VFY_VerifyDataDirect(sd.data.data, static_cast<int>(sd.data.len),
+                              pubKey.get(), &sd.signature, pubKeyAlg,
+                              digestAlg, nullptr, pkcs11PinArg);
+}
+
+SECStatus
+DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
+{
+  static_assert(TrustDomain::DIGEST_LENGTH == SHA1_LENGTH,
+                "TrustDomain::DIGEST_LENGTH must be 20 (SHA-1 digest length)");
+  if (digestBufLen != TrustDomain::DIGEST_LENGTH) {
+    PR_NOT_REACHED("invalid hash length");
+    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;
   }
-
-  // TODO: Ideally, we would do this check before we call
-  // VFY_VerifyDataWithAlgorithmID. But, VFY_VerifyDataWithAlgorithmID gives us
-  // the hash algorithm so it is more convenient to do things in this order.
-  uint32_t policy;
-  if (NSS_GetAlgorithmPolicy(hashAlg, &policy) != SECSuccess) {
+  if (item.len >
+      static_cast<decltype(item.len)>(std::numeric_limits<int32_t>::max())) {
+    PR_NOT_REACHED("large OCSP responses should have already been rejected");
+    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;
   }
-
-  // XXX: I'm not sure why there isn't NSS_USE_ALG_IN_SSL_SIGNATURE, but there
-  // isn't. Since we don't know the context in which we're being called, be as
-  // strict as we can be given the NSS API that is available.
-  static const uint32_t requiredPolicy = NSS_USE_ALG_IN_CERT_SIGNATURE |
-                                         NSS_USE_ALG_IN_CMS_SIGNATURE;
-  if ((policy & requiredPolicy) != requiredPolicy) {
-    PR_SetError(SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED, 0);
-    return SECFailure;
-  }
-
-  return SECSuccess;
+  return PK11_HashBuf(SEC_OID_SHA1, digestBuf, item.data,
+                      static_cast<int32_t>(item.len));
 }
 
 } } // namespace mozilla::pkix
