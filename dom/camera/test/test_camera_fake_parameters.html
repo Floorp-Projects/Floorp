@@ -115,6 +115,61 @@ var tests = [
     }
   },
   {
+    key: "fake-high-memory-platform",
+    prep: function setupFakeHighMemoryPlatform(test) {
+      test.setFakeParameters("scene-mode-values=none,snow,beach,hdr,nothdr", function () {
+        run();
+      });
+    },
+    test: function testFakeHighMemoryPlatform(cam, cap) {
+      ok(cap.sceneModes.length == 5, "scene modes length = " + cap.zoomRatios.length);
+
+      // make sure expected values are present and can be set
+      [ "none", "snow", "beach", "hdr", "nothdr" ].forEach(function(mode) {
+        ok(cap.sceneModes.indexOf(mode) != -1, "Scene mode '" + mode + "' is present");
+        cam.sceneMode = mode;
+        ok(cam.sceneMode == mode, "Scene mode '" + cam.sceneMode + "' is set");
+      });
+
+      next();
+    }
+  },
+  {
+    key: "fake-low-memory-platform",
+    prep: function setupFakeLowMemoryPlatform(test) {
+      test.setFakeLowMemoryPlatform(function() {
+        test.setFakeParameters("scene-mode-values=none,hdr,snow,beach,hdr,nothdr", function () {
+          run();
+        });
+      });
+    },
+    test: function testFakeLowMemoryPlatform(cam, cap) {
+      ok(cap.sceneModes.length == 4, "scene modes length = " + cap.zoomRatios.length);
+
+      // make sure expected values are present and can be set
+      [ "none", "snow", "beach", "nothdr" ].forEach(function(mode) {
+        ok(cap.sceneModes.indexOf(mode) != -1, "Scene mode '" + mode + "' is present");
+        cam.sceneMode = mode;
+        ok(cam.sceneMode == mode, "Scene mode '" + cam.sceneMode + "' is set");
+      });
+
+      // make sure unsupported values have been removed, and can't be set
+      var sceneMode = cam.sceneMode;
+      [ "hdr" ].forEach(function(mode) {
+        ok(cap.sceneModes.indexOf(mode) == -1, "Scene mode '" + mode + "' is not present");
+        try {
+          cam.sceneMode = mode;
+        } catch(e) {
+        }
+        ok(cam.sceneMode != mode, "Scene mode '" + cam.sceneMode + "' is still set, '"
+          + mode + "' rejected");
+      });
+      ok(cam.sceneMode == sceneMode, "Scene mode '" + cam.sceneMode + "' is still set");
+
+      next();
+    }
+  },
+  {
     key: "fake-iso",
     prep: function setupFakeIso(test) {
       // we should recognize 'auto', 'hjr', and numeric modes; anything else
