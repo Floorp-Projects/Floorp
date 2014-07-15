@@ -3019,8 +3019,17 @@ ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
                                 nsIScrollableFrame::ScrollUnit aUnit,
                                 nsIScrollableFrame::ScrollMode aMode,
                                 nsIntPoint* aOverflow,
-                                nsIAtom *aOrigin)
+                                nsIAtom *aOrigin,
+                                bool aIsMomentum)
 {
+  // When a smooth scroll is being processed on a frame, mouse wheel and trackpad
+  // momentum scroll event updates must notcancel the SMOOTH or SMOOTH_MSD
+  // scroll animations, enabling Javascript that depends on them to be responsive
+  // without forcing the user to wait for the fling animations to completely stop.
+  if (aIsMomentum && IsProcessingAsyncScroll()) {
+    return;
+  }
+
   if (mAsyncSmoothMSDScroll != nullptr) {
     // When CSSOM-View scroll-behavior smooth scrolling is interrupted,
     // the scroll is not completed to avoid non-smooth snapping to the
