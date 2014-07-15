@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ListView;
@@ -30,7 +31,6 @@ import org.mozilla.search.R;
  * A fragment to handle autocomplete. Its interface with the outside
  * world should be very very limited.
  * <p/>
- * TODO: Add clear button to search input
  * TODO: Add more search providers (other than the dictionary)
  */
 public class SearchFragment extends Fragment implements AdapterView.OnItemClickListener,
@@ -92,6 +92,14 @@ public class SearchFragment extends Fragment implements AdapterView.OnItemClickL
                     return;
                 }
                 transitionToRunning();
+            }
+        });
+
+        final Button clearButton = (Button) mainView.findViewById(R.id.clear_button);
+        clearButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                searchBar.setText("");
             }
         });
 
