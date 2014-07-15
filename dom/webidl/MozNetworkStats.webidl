@@ -26,8 +26,8 @@ dictionary NetworkStatsAlarmOptions
 
 [JSImplementation="@mozilla.org/networkstats;1",
  ChromeOnly,
- Pref="dom.mozNetworkStats.enabled",
- Func="Navigator::HasNetworkStatsSupport"]
+ CheckPermissions="networkstats-manage",
+ Pref="dom.mozNetworkStats.enabled"]
 interface MozNetworkStats {
   /**
    * App manifest URL of an application for specifying the per-app stats of the

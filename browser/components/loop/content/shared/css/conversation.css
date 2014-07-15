@@ -58,7 +58,7 @@
 /* Common media control buttons behavior */
 .conversation .controls .media-control {
   background-color: transparent;
-  opacity: .7; /* reduce the opacity for a non-streaming media */
+  opacity: 1;
 }
 .conversation .controls .media-control:hover {
   background-color: rgba(255, 255, 255, .35);
@@ -68,58 +68,35 @@
   background-color: #0096DD;
   opacity: 1;
 }
-.conversation .controls .media-control.streaming {
-  opacity: 1;
-}
-.conversation .controls .media-control:not(.streaming):hover {
-  background-color: transparent;
-  opacity: 1;
-}
 
 /* Audio mute button */
-.conversation .controls .btn-mute-audio {
+.conversation .controls .local-media.btn-mute-audio {
   background-image: url(../img/audio-inverse-14x14.png);
 }
-.conversation .controls .btn-mute-audio.streaming {
-  background-image: url(../img/audio-highlight-14x14.png);
-}
-.conversation .controls .btn-mute-audio.muted,
-.conversation .controls .btn-mute-audio.streaming:hover {
+.conversation .controls .local-media.btn-mute-audio.muted {
   background-image: url(../img/mute-inverse-14x14.png);
 }
 @media (min-resolution: 2dppx) {
-  .conversation .controls .btn-mute-audio {
+  .conversation .controls .local-media.btn-mute-audio {
     background-image: url(../img/audio-inverse-14x14@2x.png);
   }
-  .conversation .controls .btn-mute-audio.streaming {
-    background-image: url(../img/audio-highlight-14x14@2x.png);
-  }
-  .conversation .controls .btn-mute-audio.muted,
-  .conversation .controls .btn-mute-audio.streaming:hover {
+  .conversation .controls .local-media.btn-mute-audio.muted {
     background-image: url(../img/mute-inverse-14x14@2x.png);
   }
 }
 
 /* Video mute button */
-.conversation .controls .btn-mute-video {
+.conversation .controls .local-media.btn-mute-video {
   background-image: url(../img/video-inverse-14x14.png);
 }
-.conversation .controls .btn-mute-video.streaming {
-  background-image: url(../img/video-highlight-14x14.png);
-}
-.conversation .controls .btn-mute-video.muted,
-.conversation .controls .btn-mute-video.streaming:hover {
+.conversation .controls .local-media.btn-mute-video.muted {
   background-image: url(../img/facemute-14x14.png);
 }
 @media (min-resolution: 2dppx) {
-  .conversation .controls .btn-mute-video {
+  .conversation .controls .local-media.btn-mute-video {
     background-image: url(../img/video-inverse-14x14@2x.png);
   }
-  .conversation .controls .btn-mute-video.streaming {
-    background-image: url(../img/video-highlight-14x14@2x.png);
-  }
-  .conversation .controls .btn-mute-video.muted,
-  .conversation .controls .btn-mute-video.streaming:hover {
+  .conversation .controls .local-media.btn-mute-video.muted {
     background-image: url(../img/facemute-14x14@2x.png);
   }
 }

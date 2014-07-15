@@ -25,13 +25,73 @@
 #ifndef mozilla_pkix__pkixtypes_h
 #define mozilla_pkix__pkixtypes_h
 
-#include "cert.h"
 #include "pkix/enumclass.h"
+#include "pkix/nullptr.h"
+#include "prtime.h"
 #include "seccomon.h"
-#include "secport.h"
 #include "stdint.h"
 
 namespace mozilla { namespace pkix {
+
+MOZILLA_PKIX_ENUM_CLASS DigestAlgorithm
+{
+  sha512 = 1,
+  sha384 = 2,
+  sha256 = 3,
+  sha1 = 4,
+};
+
+// Named ECC Curves:
+//   * secp521r1 (OID 1.3.132.0.35, RFC 5480)
+//   * secp384r1 (OID 1.3.132.0.34, RFC 5480)
+//   * secp256r1 (OID 1.2.840.10045.3.17, RFC 5480)
+MOZILLA_PKIX_ENUM_CLASS SignatureAlgorithm
+{
+  // ecdsa-with-SHA512 (OID 1.2.840.10045.4.3.4, RFC 5758 Section 3.2)
+  ecdsa_with_sha512 = 1,
+
+  // ecdsa-with-SHA384 (OID 1.2.840.10045.4.3.3, RFC 5758 Section 3.2)
+  ecdsa_with_sha384 = 4,
+
+  // ecdsa-with-SHA256 (OID 1.2.840.10045.4.3.2, RFC 5758 Section 3.2)
+  ecdsa_with_sha256 = 7,
+
+  // ecdsa-with-SHA1 (OID 1.2.840.10045.4.1, RFC 3279 Section 2.2.3)
+  ecdsa_with_sha1 = 10,
+
+  // sha512WithRSAEncryption (OID 1.2.840.113549.1.1.13, RFC 4055 Section 5)
+  rsa_pkcs1_with_sha512 = 13,
+
+  // sha384WithRSAEncryption (OID 1.2.840.113549.1.1.12, RFC 4055 Section 5)
+  rsa_pkcs1_with_sha384 = 14,
+
+  // sha256WithRSAEncryption (OID 1.2.840.113549.1.1.11, RFC 4055 Section 5)
+  rsa_pkcs1_with_sha256 = 15,
+
+  // sha-1WithRSAEncryption (OID 1.2.840.113549.1.1.5, RFC 3279 Section 2.2.1)
+  rsa_pkcs1_with_sha1 = 16,
+
+  // id-dsa-with-sha256 (OID 2.16.840.1.101.3.4.3.2, RFC 5758 Section 3.1)
+  dsa_with_sha256 = 17,
+
+  // id-dsa-with-sha1 (OID 1.2.840.10040.4.3, RFC 3279 Section 2.2.2)
+  dsa_with_sha1 = 18,
+};
+
+struct SignedDataWithSignature
+{
+public:
+  SignedDataWithSignature()
+  {
+    data.data = nullptr;
+    data.len = 0;
+    signature.data = nullptr;
+    signature.len = 0;
+  }
+  SECItem data; // non-owning
+  SignatureAlgorithm algorithm;
+  SECItem signature; // non-owning
+};
 
 MOZILLA_PKIX_ENUM_CLASS EndEntityOrCA { MustBeEndEntity = 0, MustBeCA = 1 };
 
@@ -208,13 +268,6 @@ public:
   virtual SECStatus FindIssuer(const SECItem& encodedIssuerName,
                                IssuerChecker& checker, PRTime time) = 0;
 
-  // Verify the given signature using the given public key.
-  //
-  // Most implementations of this function should probably forward the call
-  // directly to mozilla::pkix::VerifySignedData.
-  virtual SECStatus VerifySignedData(const CERTSignedData& signedData,
-                                     const SECItem& subjectPublicKeyInfo) = 0;
-
   // Called as soon as we think we have a valid chain but before revocation
   // checks are done. This function can be used to compute additional checks,
   // especilaly checks that require the entire certificate chain. This callback
@@ -244,6 +297,27 @@ public:
                                     const CertID& certID, PRTime time,
                        /*optional*/ const SECItem* stapledOCSPresponse,
                        /*optional*/ const SECItem* aiaExtension) = 0;
+
+  // Verify the given signature using the given public key.
+  //
+  // Most implementations of this function should probably forward the call
+  // directly to mozilla::pkix::VerifySignedData.
+  virtual SECStatus VerifySignedData(const SignedDataWithSignature& signedData,
+                                     const SECItem& subjectPublicKeyInfo) = 0;
+
+  // Compute the SHA-1 hash of the data in the current item.
+  //
+  // item contains the data to hash.
+  // digestBuf must point to a buffer to where the SHA-1 hash will be written.
+  // digestBufLen must be DIGEST_LENGTH (20, the length of a SHA-1 hash).
+  //
+  // TODO(bug 966856): Add SHA-2 support
+  // TODO: Taking the output buffer as (uint8_t*, size_t) is counter to our
+  // other, extensive, memory safety efforts in mozilla::pkix, and we should
+  // find a way to provide a more-obviously-safe interface.
+  static const size_t DIGEST_LENGTH = 20; // length of SHA-1 digest
+  virtual SECStatus DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
+                              size_t digestBufLen) = 0;
 
 protected:
   TrustDomain() { }

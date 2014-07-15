@@ -1383,7 +1383,7 @@ class DebugScopeProxy : public BaseProxyHandler
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_OPTIMIZED_OUT);
             return false;
           default:
-            MOZ_ASSUME_UNREACHABLE("bad AccessResult");
+            MOZ_CRASH("bad AccessResult");
         }
     }
 
@@ -1421,7 +1421,7 @@ class DebugScopeProxy : public BaseProxyHandler
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_OPTIMIZED_OUT);
             return false;
           default:
-            MOZ_ASSUME_UNREACHABLE("bad AccessResult");
+            MOZ_CRASH("bad AccessResult");
         }
     }
 
@@ -1455,7 +1455,7 @@ class DebugScopeProxy : public BaseProxyHandler
             vp.setMagic(JS_OPTIMIZED_OUT);
             return true;
           default:
-            MOZ_ASSUME_UNREACHABLE("bad AccessResult");
+            MOZ_CRASH("bad AccessResult");
         }
     }
 
@@ -1475,7 +1475,7 @@ class DebugScopeProxy : public BaseProxyHandler
           case ACCESS_GENERIC:
             return JSObject::setGeneric(cx, scope, scope, id, vp, strict);
           default:
-            MOZ_ASSUME_UNREACHABLE("bad AccessResult");
+            MOZ_CRASH("bad AccessResult");
         }
     }
 
@@ -2238,7 +2238,7 @@ GetDebugScopeForMissing(JSContext *cx, const ScopeIter &si)
       }
       case ScopeIter::With:
       case ScopeIter::StrictEvalScope:
-        MOZ_ASSUME_UNREACHABLE("should already have a scope");
+        MOZ_CRASH("should already have a scope");
     }
     if (!debugScope)
         return nullptr;

@@ -129,12 +129,14 @@ SourceBufferResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCo
 bool
 SourceBufferResource::EvictData(uint32_t aThreshold)
 {
+  ReentrantMonitorAutoEnter mon(mMonitor);
   return mInputBuffer.Evict(mOffset, aThreshold);
 }
 
 void
 SourceBufferResource::EvictBefore(uint64_t aOffset)
 {
+  ReentrantMonitorAutoEnter mon(mMonitor);
   // If aOffset is past the current playback offset we don't evict.
   if (aOffset < mOffset) {
     mInputBuffer.Evict(aOffset, 0);

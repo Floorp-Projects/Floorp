@@ -23,6 +23,7 @@ include protocol PImageBridge;
 include protocol PIndexedDB;
 include protocol PMemoryReportRequest;
 include protocol PNecko;
+include protocol PScreenManager;
 include protocol PSharedBufferManager;
 include protocol PSms;
 include protocol PSpeechSynthesis;
@@ -303,6 +304,7 @@ intr protocol PContent
     manages PIndexedDB;
     manages PMemoryReportRequest;
     manages PNecko;
+    manages PScreenManager;
     manages PSms;
     manages PSpeechSynthesis;
     manages PStorage;
@@ -478,6 +480,11 @@ parent:
     PIndexedDB();
 
     PNecko();
+
+    sync PScreenManager()
+        returns (uint32_t numberOfScreens,
+                 float systemDefaultScale,
+                 bool success);
 
     PSms();
 

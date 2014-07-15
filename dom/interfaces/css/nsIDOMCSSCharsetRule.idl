@@ -5,7 +5,7 @@
 
 #include "nsIDOMCSSRule.idl"
 
-[scriptable, uuid(19fe78cc-65ff-4b1d-a5d7-9ea89692cec6)]
+[scriptable, uuid(756c326c-eb38-4342-95e5-5eabea809174)]
 interface nsIDOMCSSCharsetRule : nsIDOMCSSRule
 {
   attribute DOMString        encoding;

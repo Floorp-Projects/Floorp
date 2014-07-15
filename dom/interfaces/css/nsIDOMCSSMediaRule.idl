@@ -8,7 +8,7 @@
 /**
  * Interface for @media rules in the CSS OM.
  */
-[scriptable, uuid(1f491b05-932b-4aa1-a1f1-466505d70898)]
+[scriptable, uuid(6cf9c5b2-fa0f-43c0-aa50-ef85b4756e3a)]
 interface nsIDOMCSSMediaRule : nsIDOMCSSConditionRule
 {
   readonly attribute nsIDOMMediaList   media;

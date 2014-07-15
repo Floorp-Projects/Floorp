@@ -6,6 +6,7 @@
 
 XPIDL_SOURCES += [
     'mozIJSSubScriptLoader.idl',
+    'nsIAddonInterposition.idl',
     'nsIJSRuntimeService.idl',
     'nsIScriptError.idl',
     'nsIXPConnect.idl',

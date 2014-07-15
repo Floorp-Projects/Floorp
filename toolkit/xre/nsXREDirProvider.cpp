@@ -8,8 +8,10 @@
 #include "nsXREDirProvider.h"
 
 #include "jsapi.h"
+#include "xpcpublic.h"
 
 #include "nsIJSRuntimeService.h"
+#include "nsIAddonInterposition.h"
 #include "nsIAppStartup.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsIFile.h"
@@ -539,6 +541,32 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
 }
 
 static void
+RegisterExtensionInterpositions(nsINIParser &parser)
+{
+  if (!mozilla::Preferences::GetBool("browser.tabs.remote.autostart", false))
+    return;
+
+  nsCOMPtr<nsIAddonInterposition> interposition =
+    do_GetService("@mozilla.org/addons/multiprocess-shims;1");
+
+  nsresult rv;
+  int32_t i = 0;
+  do {
+    nsAutoCString buf("Extension");
+    buf.AppendInt(i++);
+
+    nsAutoCString addonId;
+    rv = parser.GetString("MultiprocessIncompatibleExtensions", buf.get(), addonId);
+    if (NS_FAILED(rv))
+      return;
+
+    if (!xpc::SetAddonInterposition(addonId, interposition))
+      continue;
+  }
+  while (true);
+}
+
+static void
 LoadExtensionDirectories(nsINIParser &parser,
                          const char *aSection,
                          nsCOMArray<nsIFile> &aDirectories,
@@ -600,6 +628,7 @@ nsXREDirProvider::LoadExtensionBundleDirectories()
     if (NS_FAILED(rv))
       return;
 
+    RegisterExtensionInterpositions(parser);
     LoadExtensionDirectories(parser, "ExtensionDirs", mExtensionDirectories,
                              NS_COMPONENT_LOCATION);
     LoadExtensionDirectories(parser, "ThemeDirs", mThemeDirectories,

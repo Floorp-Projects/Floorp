@@ -55,7 +55,7 @@ namespace mozilla {
 #define LOG_ERROR(args...) __android_log_print(ANDROID_LOG_ERROR, "Sandbox", ## args)
 #elif defined(PR_LOGGING)
 static PRLogModuleInfo* gSeccompSandboxLog;
-#define LOG_ERROR(args...) PR_LOG(gSeccompSandboxLog, PR_LOG_ERROR, (args))
+#define LOG_ERROR(args...) PR_LOG(mozilla::gSeccompSandboxLog, PR_LOG_ERROR, (args))
 #else
 #define LOG_ERROR(args...)
 #endif
@@ -441,7 +441,7 @@ Die::SandboxDie(const char* msg, const char* file, int line)
 namespace logging {
 
 LogMessage::LogMessage(const char *file, int line, int)
-  : line_(line), file_(file)
+  : file_(file), line_(line)
 {
   MOZ_CRASH("Unexpected call to logging::LogMessage::LogMessage");
 }

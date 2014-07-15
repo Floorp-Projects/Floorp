@@ -10,6 +10,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
@@ -29,6 +30,21 @@ XPCOMUtils.defineLazyServiceGetter(this, "appsService",
                                   "nsIAppsService");
 
 this.WebappRT = {
+  _configPromise: null,
+
+  get configPromise() {
+    if (!this._configPromise) {
+      this._configPromise = Task.spawn(function*() {
+        let webappJson = OS.Path.join(Services.dirsvc.get("AppRegD", Ci.nsIFile).path,
+                                      "webapp.json");
+
+        WebappRT.config = yield AppsUtils.loadJSONAsync(webappJson);
+      });
+    }
+
+    return this._configPromise;
+  },
+
   get launchURI() {
     return this.localeManifest.fullLaunchPath();
   },
@@ -39,22 +55,12 @@ this.WebappRT = {
   },
 
   get appID() {
-    let manifestURL = WebappRT.config.app.manifestURL;
+    let manifestURL = this.config.app.manifestURL;
     if (!manifestURL) {
       return Ci.nsIScriptSecurityManager.NO_APP_ID;
     }
 
     return appsService.getAppLocalIdByManifestURL(manifestURL);
-  },
-
-  loadConfig: function() {
-    if (this.config) {
-      return;
-    }
-
-    let webappJson = OS.Path.join(Services.dirsvc.get("AppRegD", Ci.nsIFile).path,
-                                  "webapp.json");
-    this.config = yield AppsUtils.loadJSONAsync(webappJson);
   },
 
   isUpdatePending: Task.async(function*() {
@@ -85,12 +91,13 @@ this.WebappRT = {
     // The update has been applied successfully, the new config file
     // is the config file that was in the update directory.
     this.config = config;
+    this._configPromise = Promise.resolve();
 
     return true;
   }),
 
   startUpdateService: function() {
-    let manifestURL = WebappRT.config.app.manifestURL;
+    let manifestURL = this.config.app.manifestURL;
     // We used to install apps without storing their manifest URL.
     // Now we can't update them.
     if (!manifestURL) {

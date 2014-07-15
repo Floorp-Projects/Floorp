@@ -211,10 +211,6 @@
           let RemoteController = Components.utils.import(jsm, {}).RemoteController;
           this._controller = new RemoteController(this);
           this.controllers.appendController(this._controller);
-
-          jsm = "resource://gre/modules/RemoteAddonsParent.jsm";
-          let RemoteAddonsParent = Components.utils.import(jsm, {}).RemoteAddonsParent;
-          RemoteAddonsParent.init();
         ]]>
       </constructor>
 
