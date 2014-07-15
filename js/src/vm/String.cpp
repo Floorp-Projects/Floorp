@@ -881,7 +881,7 @@ AutoStableStringChars::initTwoByte(JSContext *cx, JSString *s)
     return true;
 }
 
-bool js::EnableLatin1Strings = false;
+bool js::EnableLatin1Strings = true;
 
 #ifdef DEBUG
 void
