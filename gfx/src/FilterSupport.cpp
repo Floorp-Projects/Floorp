@@ -986,7 +986,6 @@ ElementForIndex(int32_t aIndex,
 {
   switch (aIndex) {
     case FilterPrimitiveDescription::kPrimitiveIndexSourceGraphic:
-    case FilterPrimitiveDescription::kPrimitiveIndexSourceAlpha:
       return aSourceGraphicElement;
     case FilterPrimitiveDescription::kPrimitiveIndexFillPaint:
       return aFillPaintElement;
@@ -1103,10 +1102,6 @@ FilterNodeGraphFromDescription(DrawTarget* aDT,
           if (surf) {
             IntPoint offset = surfaceRect.TopLeft();
             sourceFilterNode = FilterWrappers::ForSurface(aDT, surf, offset);
-
-            if (inputIndex == FilterPrimitiveDescription::kPrimitiveIndexSourceAlpha) {
-              sourceFilterNode = FilterWrappers::ToAlpha(aDT, sourceFilterNode);
-            }
           }
 
           inputFilter = new FilterCachedColorModels(aDT, sourceFilterNode,
