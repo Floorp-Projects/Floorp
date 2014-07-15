@@ -1610,6 +1610,9 @@ public class BrowserApp extends GeckoApp
         int flags = Tabs.LOADURL_NONE;
         if (newTab) {
             flags |= Tabs.LOADURL_NEW_TAB;
+            if (Tabs.getInstance().getSelectedTab().isPrivate()) {
+                flags |= Tabs.LOADURL_PRIVATE;
+            }
         }
 
         Tabs.getInstance().loadUrl(url, searchEngine, -1, flags);
