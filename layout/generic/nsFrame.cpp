@@ -2290,6 +2290,13 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   NS_ASSERTION(!isStackingContext || pseudoStackingContext,
                "Stacking contexts must also be pseudo-stacking-contexts");
 
+  bool isInFixedPos = aBuilder->IsInFixedPos() ||
+                        (isPositioned &&
+                         disp->mPosition == NS_STYLE_POSITION_FIXED &&
+                         nsLayoutUtils::IsReallyFixedPos(child));
+  nsDisplayListBuilder::AutoInFixedPosSetter
+    buildingInFixedPos(aBuilder, isInFixedPos);
+
   nsDisplayListBuilder::AutoBuildingDisplayList
     buildingForChild(aBuilder, child, dirty, pseudoStackingContext);
   DisplayListClipState::AutoClipMultiple clipState(aBuilder);
