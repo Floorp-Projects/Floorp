@@ -650,7 +650,7 @@ for d in ['app', 'chrome', 'components', 'locales', 'modules', 'themes']:
 
 # The omnijar is included in the Fennec APK (although it's empty,
 # having no resources, assets, or Java code).
-main.included_projects += [omnijar.name]
+main.included_projects += ['../' + omnijar.name]
 
 if CONFIG['MOZ_CRASHREPORTER']:
     crashreporter = add_android_eclipse_library_project('FennecResourcesCrashReporter')
@@ -659,3 +659,7 @@ if CONFIG['MOZ_CRASHREPORTER']:
     crashreporter.included_projects += ['../' + resources.name]
 
     main.included_projects += ['../' + crashreporter.name]
+
+if CONFIG['MOZ_ANDROID_MLS_STUMBLER']:
+    main.included_projects += ['../FennecStumbler']
+    main.referenced_projects += ['../FennecStumbler']
