@@ -411,6 +411,8 @@
 #endif
 @BINPATH@/components/nsUpdateTimerManager.manifest
 @BINPATH@/components/nsUpdateTimerManager.js
+@BINPATH@/components/addoncompat.manifest
+@BINPATH@/components/multiprocessShims.js
 @BINPATH@/components/pluginGlue.manifest
 @BINPATH@/browser/components/nsSessionStore.manifest
 @BINPATH@/browser/components/nsSessionStartup.js
