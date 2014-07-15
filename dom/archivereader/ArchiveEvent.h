@@ -56,8 +56,10 @@ public:
 
   ArchiveReaderEvent(ArchiveReader* aArchiveReader);
 
+protected:
   virtual ~ArchiveReaderEvent();
 
+public:
   // This must be implemented
   virtual nsresult Exec() = 0;
 

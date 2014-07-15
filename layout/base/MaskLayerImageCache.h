@@ -131,23 +131,10 @@ public:
    */
   struct MaskLayerImageKey
   {
-    MaskLayerImageKey()
-      : mLayerCount(0)
-      , mRoundedClipRects()
-    {
-      MOZ_COUNT_CTOR(MaskLayerImageKey);
-    }
-    MaskLayerImageKey(const MaskLayerImageKey& aKey)
-      : mLayerCount(aKey.mLayerCount)
-      , mRoundedClipRects(aKey.mRoundedClipRects)
-    {
-      MOZ_COUNT_CTOR(MaskLayerImageKey);
-    }
+    MaskLayerImageKey();
+    MaskLayerImageKey(const MaskLayerImageKey& aKey);
 
-    ~MaskLayerImageKey()
-    {
-      MOZ_COUNT_DTOR(MaskLayerImageKey);
-    }
+    ~MaskLayerImageKey();
 
     void AddRef() const { ++mLayerCount; }
     void Release() const
@@ -199,7 +186,8 @@ protected:
     typedef const MaskLayerImageKey& KeyType;
     typedef const MaskLayerImageKey* KeyTypePointer;
 
-    MaskLayerImageEntry(KeyTypePointer aKey) : mKey(aKey)
+    MaskLayerImageEntry(KeyTypePointer aKey)
+      : mKey(aKey)
     {
       MOZ_COUNT_CTOR(MaskLayerImageEntry);
     }
@@ -246,6 +234,7 @@ protected:
   // helper funtion for Sweep(), called for each entry in the hashtable
   static PLDHashOperator SweepFunc(MaskLayerImageEntry* aEntry, void* aUserArg);
 };
+
 
 }
 

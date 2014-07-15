@@ -27,8 +27,10 @@ class gfxReusableSharedImageSurfaceWrapper : public gfxReusableSurfaceWrapper {
 public:
   gfxReusableSharedImageSurfaceWrapper(mozilla::layers::ISurfaceAllocator* aAllocator,
                                        gfxSharedImageSurface* aSurface);
+protected:
   ~gfxReusableSharedImageSurfaceWrapper();
 
+public:
   const unsigned char* GetReadOnlyData() const MOZ_OVERRIDE;
   gfxImageFormat Format() MOZ_OVERRIDE;
   gfxReusableSurfaceWrapper* GetWritable(gfxImageSurface** aSurface) MOZ_OVERRIDE;

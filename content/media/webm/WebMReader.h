@@ -105,8 +105,11 @@ class WebMReader : public MediaDecoderReader
 {
 public:
   WebMReader(AbstractMediaDecoder* aDecoder);
+
+protected:
   ~WebMReader();
 
+public:
   virtual nsresult Init(MediaDecoderReader* aCloneDonor);
   virtual nsresult ResetDecode();
   virtual bool DecodeAudioData();

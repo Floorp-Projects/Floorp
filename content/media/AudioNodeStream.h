@@ -65,8 +65,11 @@ public:
     mHasCurrentData = true;
     MOZ_COUNT_CTOR(AudioNodeStream);
   }
+
+protected:
   ~AudioNodeStream();
 
+public:
   // Control API
   /**
    * Sets a parameter that's a time relative to some stream's played time.

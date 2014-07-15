@@ -104,10 +104,12 @@ private:
     {
       MOZ_COUNT_CTOR(DeliverAudioTask);
     }
+  protected:
     ~DeliverAudioTask()
     {
       MOZ_COUNT_DTOR(DeliverAudioTask);
     }
+  public:
     NS_METHOD Run() {
       mTarget->OnAudioDecoded(mSample.forget());
       return NS_OK;
@@ -125,10 +127,12 @@ private:
     {
       MOZ_COUNT_CTOR(DeliverVideoTask);
     }
+  protected:
     ~DeliverVideoTask()
     {
       MOZ_COUNT_DTOR(DeliverVideoTask);
     }
+  public:
     NS_METHOD Run() {
       mTarget->OnVideoDecoded(mSample.forget());
       return NS_OK;

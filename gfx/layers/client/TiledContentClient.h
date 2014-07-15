@@ -72,8 +72,10 @@ class gfxMemorySharedReadLock : public gfxSharedReadLock {
 public:
   gfxMemorySharedReadLock();
 
+protected:
   ~gfxMemorySharedReadLock();
 
+public:
   virtual int32_t ReadLock() MOZ_OVERRIDE;
 
   virtual int32_t ReadUnlock() MOZ_OVERRIDE;
@@ -97,8 +99,10 @@ private:
 public:
   gfxShmSharedReadLock(ISurfaceAllocator* aAllocator);
 
+protected:
   ~gfxShmSharedReadLock();
 
+public:
   virtual int32_t ReadLock() MOZ_OVERRIDE;
 
   virtual int32_t ReadUnlock() MOZ_OVERRIDE;
@@ -465,6 +469,7 @@ public:
   TiledContentClient(ClientTiledThebesLayer* aThebesLayer,
                      ClientLayerManager* aManager);
 
+protected:
   ~TiledContentClient()
   {
     MOZ_COUNT_DTOR(TiledContentClient);
@@ -473,6 +478,7 @@ public:
     mLowPrecisionTiledBuffer.Release();
   }
 
+public:
   virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE
   {
     return TextureInfo(CompositableType::BUFFER_TILED);
