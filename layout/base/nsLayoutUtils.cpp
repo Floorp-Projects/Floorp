@@ -2323,7 +2323,7 @@ nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
                                false/*don't build caret*/);
   nsDisplayList list;  
   nsDisplayTransform* item =
-    new (&builder) nsDisplayTransform(&builder, aFrame, &list);
+    new (&builder) nsDisplayTransform(&builder, aFrame, &list, nsRect());
 
   *aTransform =
     item->GetTransform();
