@@ -407,6 +407,12 @@ public:
   void SetInTransform(bool aInTransform) { mInTransform = aInTransform; }
 
   /**
+   * Returns true if we're currently building display items that are in
+   * true fixed position subtree.
+   */
+  bool IsInFixedPos() const { return mInFixedPos; }
+
+  /**
    * @return true if images have been set to decode synchronously.
    */
   bool ShouldSyncDecodeImages() { return mSyncDecodeImages; }
@@ -593,6 +599,25 @@ public:
   };
 
   /**
+   * A helper class to temporarily set the value of mInFixedPos.
+   */
+  class AutoInFixedPosSetter;
+  friend class AutoInFixedPosSetter;
+  class AutoInFixedPosSetter {
+  public:
+    AutoInFixedPosSetter(nsDisplayListBuilder* aBuilder, bool aInFixedPos)
+      : mBuilder(aBuilder), mOldValue(aBuilder->mInFixedPos) {
+      aBuilder->mInFixedPos = aInFixedPos;
+    }
+    ~AutoInFixedPosSetter() {
+      mBuilder->mInFixedPos = mOldValue;
+    }
+  private:
+    nsDisplayListBuilder* mBuilder;
+    bool                  mOldValue;
+  };
+
+  /**
    * A helper class to temporarily set the value of mCurrentScrollParentId.
    */
   class AutoCurrentScrollParentIdSetter;
@@ -765,6 +790,7 @@ private:
   // True when we're building a display list that's directly or indirectly
   // under an nsDisplayTransform
   bool                           mInTransform;
+  bool                           mInFixedPos;
   bool                           mSyncDecodeImages;
   bool                           mIsPaintingToWindow;
   bool                           mIsCompositingCheap;
@@ -822,6 +848,7 @@ public:
   nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : mFrame(aFrame)
     , mClip(aBuilder->ClipState().GetCurrentCombinedClip(aBuilder))
+    , mInFixedPos(aBuilder->IsInFixedPos())
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
 #endif
@@ -839,6 +866,7 @@ public:
     : mFrame(aFrame)
     , mClip(nullptr)
     , mReferenceFrame(nullptr)
+    , mInFixedPos(false)
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
 #endif
@@ -1332,6 +1360,8 @@ public:
     }
   }
 
+  bool IsInFixedPos() { return mInFixedPos; }
+
 protected:
   friend class nsDisplayList;
 
@@ -1349,6 +1379,7 @@ protected:
   // of the item. Paint implementations can use this to limit their drawing.
   // Guaranteed to be contained in GetBounds().
   nsRect    mVisibleRect;
+  bool      mInFixedPos;
 #ifdef MOZ_DUMP_PAINTING
   // True if this frame has been painted.
   bool      mPainted;
