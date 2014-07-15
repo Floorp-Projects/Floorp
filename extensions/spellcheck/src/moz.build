@@ -4,7 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-UNIFIED_SOURCES += [
+include('/ipc/chromium/chromium-config.mozbuild')
+SOURCES += [
     'mozEnglishWordUtils.cpp',
     'mozGenericWordUtils.cpp',
     'mozInlineSpellChecker.cpp',
@@ -23,6 +24,9 @@ LOCAL_INCLUDES += [
     '../hunspell/src',
     '/content/base/src',
     '/editor/libeditor/base',
+]
+EXPORTS.mozilla += [
+     'mozSpellChecker.h',
 ]
 
 FAIL_ON_WARNINGS = True
