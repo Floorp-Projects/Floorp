@@ -10,7 +10,6 @@ webide.jar:
     content/newapp.js                 (newapp.js)
     content/details.xhtml             (details.xhtml)
     content/details.js                (details.js)
-    content/cli.js                    (cli.js)
     content/addons.js                 (addons.js)
     content/addons.xhtml              (addons.xhtml)
     content/permissionstable.js       (permissionstable.js)
