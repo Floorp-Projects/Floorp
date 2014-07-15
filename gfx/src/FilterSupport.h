@@ -284,9 +284,8 @@ class FilterPrimitiveDescription MOZ_FINAL {
 public:
   enum {
     kPrimitiveIndexSourceGraphic = -1,
-    kPrimitiveIndexSourceAlpha = -2,
-    kPrimitiveIndexFillPaint = -3,
-    kPrimitiveIndexStrokePaint = -4
+    kPrimitiveIndexFillPaint = -2,
+    kPrimitiveIndexStrokePaint = -3
   };
 
   FilterPrimitiveDescription();
