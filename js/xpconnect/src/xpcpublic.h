@@ -287,6 +287,8 @@ private:
     XPCStringConvert();         // not implemented
 };
 
+class nsIAddonInterposition;
+
 namespace xpc {
 
 // If these functions return false, then an exception will be set on cx.
@@ -499,6 +501,9 @@ RecordDonatedNode(JSCompartment *c);
 // racey.
 bool
 ShouldDiscardSystemSource();
+
+bool
+SetAddonInterposition(const nsACString &addonId, nsIAddonInterposition *interposition);
 
 } // namespace xpc
 

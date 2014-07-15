@@ -10,6 +10,7 @@
 %}
 
 interface xpcIJSWeakReference;
+interface nsIAddonInterposition;
 interface nsIClassInfo;
 interface nsIComponentManager;
 interface nsIJSCID;
@@ -640,6 +641,9 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     nsIPrincipal getObjectPrincipal(in jsval obj);
+
+    [implicit_jscontext]
+    void setAddonInterposition(in ACString addonId, in nsIAddonInterposition interposition);
 };
 
 /**

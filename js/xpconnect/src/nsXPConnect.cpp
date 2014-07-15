@@ -1453,6 +1453,32 @@ IsXrayWrapper(JSObject *obj)
     return WrapperFactory::IsXrayWrapper(obj);
 }
 
+JSAddonId *
+NewAddonId(JSContext *cx, const nsACString &id)
+{
+    JS::RootedString str(cx, JS_NewStringCopyN(cx, id.BeginReading(), id.Length()));
+    if (!str)
+        return nullptr;
+    return JS::NewAddonId(cx, str);
+}
+
+bool
+SetAddonInterposition(const nsACString &addonIdStr, nsIAddonInterposition *interposition)
+{
+    JSAddonId *addonId;
+    {
+        // We enter the junk scope just to allocate a string, which actually will go
+        // in the system zone.
+        AutoJSAPI jsapi;
+        jsapi.Init(xpc::GetJunkScopeGlobal());
+        addonId = NewAddonId(jsapi.cx(), addonIdStr);
+        if (!addonId)
+            return nullptr;
+    }
+
+    return XPCWrappedNativeScope::SetAddonInterposition(addonId, interposition);
+}
+
 } // namespace xpc
 
 namespace mozilla {
