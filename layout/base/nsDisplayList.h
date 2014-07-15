@@ -667,15 +667,11 @@ public:
    * -moz-win-exclude-glass style. Used in setting glass margins on
    * Windows.
    */  
-  void AddWindowOpaqueRegion(const nsRegion& bounds) {
-    mWindowOpaqueRegion.Or(mWindowOpaqueRegion, bounds);
+  void AddExcludedGlassRegion(const nsRegion& bounds) {
+    mExcludedGlassRegion.Or(mExcludedGlassRegion, bounds);
   }
-  /**
-   * Returns the window opaque region built so far. This may be incomplete
-   * since the opaque region is built during layer construction.
-   */
-  const nsRegion& GetWindowOpaqueRegion() {
-    return mWindowOpaqueRegion;
+  const nsRegion& GetExcludedGlassRegion() {
+    return mExcludedGlassRegion;
   }
   void SetGlassDisplayItem(nsDisplayItem* aItem) {
     if (mGlassDisplayItem) {
@@ -687,6 +683,10 @@ public:
     } else {
       mGlassDisplayItem = aItem;
     }
+  }
+  // Call this only after we've finished building the display list
+  bool HasGlass() {
+    return mGlassDisplayItem != nullptr;
   }
   bool NeedToForceTransparentSurfaceForItem(nsDisplayItem* aItem) {
     return aItem == mGlassDisplayItem;
@@ -747,7 +747,7 @@ private:
   nsPoint                        mCurrentOffsetToReferenceFrame;
   // Relative to mCurrentFrame.
   nsRect                         mDirtyRect;
-  nsRegion                       mWindowOpaqueRegion;
+  nsRegion                       mExcludedGlassRegion;
   // The display item for the Windows window glass background, if any
   nsDisplayItem*                 mGlassDisplayItem;
   nsTArray<DisplayItemClip*>     mDisplayItemClipsToDestroy;
