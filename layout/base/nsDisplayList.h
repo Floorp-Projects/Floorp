@@ -533,6 +533,17 @@ public:
   friend class AutoBuildingDisplayList;
   class AutoBuildingDisplayList {
   public:
+    AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder, bool aIsRoot)
+      : mBuilder(aBuilder),
+        mPrevCachedOffsetFrame(aBuilder->mCachedOffsetFrame),
+        mPrevCachedReferenceFrame(aBuilder->mCachedReferenceFrame),
+        mPrevLayerEventRegions(aBuilder->mLayerEventRegions),
+        mPrevCachedOffset(aBuilder->mCachedOffset),
+        mPrevIsAtRootOfPseudoStackingContext(aBuilder->mIsAtRootOfPseudoStackingContext),
+        mPrevAncestorHasTouchEventHandler(aBuilder->mAncestorHasTouchEventHandler)
+    {
+      aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
+    }
     AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder,
                             nsIFrame* aForChild, bool aIsRoot)
       : mBuilder(aBuilder),
