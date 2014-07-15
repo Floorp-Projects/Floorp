@@ -851,9 +851,10 @@ function loadManifestFromRDF(aUri, aStream) {
   addon.strictCompatibility = !(addon.type in COMPATIBLE_BY_DEFAULT_TYPES) ||
                               getRDFProperty(ds, root, "strictCompatibility") == "true";
 
-  // Only read the bootstrap property for extensions.
+  // Only read these properties for extensions.
   if (addon.type == "extension") {
     addon.bootstrap = getRDFProperty(ds, root, "bootstrap") == "true";
+    addon.multiprocessCompatible = getRDFProperty(ds, root, "multiprocessCompatible") == "true";
     if (addon.optionsType &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_DIALOG &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE &&
@@ -2941,7 +2942,8 @@ this.XPIProvider = {
         XPIProvider.bootstrappedAddons[aOldAddon.id] = {
           version: aOldAddon.version,
           type: aOldAddon.type,
-          descriptor: aAddonState.descriptor
+          descriptor: aAddonState.descriptor,
+          multiprocessCompatible: aOldAddon.multiprocessCompatible
         };
       }
 
@@ -4121,14 +4123,18 @@ this.XPIProvider = {
    *         The add-on's version
    * @param  aType
    *         The type for the add-on
+   * @param  aMultiprocessCompatible
+   *         Boolean indicating whether the add-on is compatible with electrolysis.
    * @return a JavaScript scope
    */
-  loadBootstrapScope: function XPI_loadBootstrapScope(aId, aFile, aVersion, aType) {
+  loadBootstrapScope: function XPI_loadBootstrapScope(aId, aFile, aVersion, aType,
+                                                      aMultiprocessCompatible) {
     // Mark the add-on as active for the crash reporter before loading
     this.bootstrappedAddons[aId] = {
       version: aVersion,
       type: aType,
-      descriptor: aFile.persistentDescriptor
+      descriptor: aFile.persistentDescriptor,
+      multiprocessCompatible: aMultiprocessCompatible
     };
     this.persistBootstrappedAddons();
     this.addAddonsToCrashReporter();
@@ -4143,6 +4149,12 @@ this.XPIProvider = {
 
     let principal = Cc["@mozilla.org/systemprincipal;1"].
                     createInstance(Ci.nsIPrincipal);
+
+    if (!aMultiprocessCompatible && Prefs.getBoolPref("browser.tabs.remote.autostart", false)) {
+      let interposition = Cc["@mozilla.org/addons/multiprocess-shims;1"].
+        getService(Ci.nsIAddonInterposition);
+      Cu.setAddonInterposition(aId, interposition);
+    }
 
     if (!aFile.exists()) {
       this.bootstrapScopes[aId] =
@@ -4210,6 +4222,10 @@ this.XPIProvider = {
    *         The add-on's ID
    */
   unloadBootstrapScope: function XPI_unloadBootstrapScope(aId) {
+    // In case the add-on was not multiprocess-compatible, deregister
+    // any interpositions for it.
+    Cu.setAddonInterposition(aId, null);
+
     delete this.bootstrapScopes[aId];
     delete this.bootstrappedAddons[aId];
     this.persistBootstrappedAddons();
@@ -4256,7 +4272,8 @@ this.XPIProvider = {
     try {
       // Load the scope if it hasn't already been loaded
       if (!(aAddon.id in this.bootstrapScopes))
-        this.loadBootstrapScope(aAddon.id, aFile, aAddon.version, aAddon.type);
+        this.loadBootstrapScope(aAddon.id, aFile, aAddon.version, aAddon.type,
+                                aAddon.multiprocessCompatible);
 
       // Nothing to call for locales
       if (aAddon.type == "locale")

@@ -346,7 +346,6 @@ public:
   // on requests.
   nsRefPtr<MediaResourceServer> mServer;
 
-public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISERVERSOCKETLISTENER
 
@@ -355,6 +354,7 @@ public:
   {
   }
 
+private:
   virtual ~ResourceSocketListener() { }
 };
 

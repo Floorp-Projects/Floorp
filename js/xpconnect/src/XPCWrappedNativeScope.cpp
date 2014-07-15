@@ -13,6 +13,7 @@
 #include "nsPrincipal.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
+#include "nsIAddonInterposition.h"
 
 #include "mozilla/dom/BindingUtils.h"
 
@@ -24,6 +25,7 @@ using namespace JS;
 
 XPCWrappedNativeScope* XPCWrappedNativeScope::gScopes = nullptr;
 XPCWrappedNativeScope* XPCWrappedNativeScope::gDyingScopes = nullptr;
+XPCWrappedNativeScope::InterpositionMap* XPCWrappedNativeScope::gInterpositionMap = nullptr;
 
 static bool
 RemoteXULForbidsXBLScope(nsIPrincipal *aPrincipal, HandleObject aGlobal)
@@ -106,6 +108,14 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
     }
     if (mUseContentXBLScope) {
       mUseContentXBLScope = principal && !nsContentUtils::IsSystemPrincipal(principal);
+    }
+
+    JSAddonId *addonId = JS::AddonIdOfObject(aGlobal);
+    if (gInterpositionMap) {
+        if (InterpositionMap::Ptr p = gInterpositionMap->lookup(addonId)) {
+            MOZ_RELEASE_ASSERT(nsContentUtils::IsSystemPrincipal(principal));
+            mInterposition = p->value();
+        }
     }
 }
 
@@ -666,6 +676,9 @@ XPCWrappedNativeScope::SystemIsBeingShutDown()
 
     // Now it is safe to kill all the scopes.
     KillDyingScopes();
+
+    if (gInterpositionMap)
+        delete gInterpositionMap;
 }
 
 
@@ -690,6 +703,28 @@ XPCWrappedNativeScope::SetExpandoChain(JSContext *cx, HandleObject target,
     if (!mXrayExpandos.initialized() && !mXrayExpandos.init(cx))
         return false;
     return mXrayExpandos.put(cx, target, chain);
+}
+
+/* static */ bool
+XPCWrappedNativeScope::SetAddonInterposition(JSAddonId *addonId,
+                                             nsIAddonInterposition *interp)
+{
+    if (!gInterpositionMap) {
+        gInterpositionMap = new InterpositionMap();
+        gInterpositionMap->init();
+    }
+    if (interp) {
+        return gInterpositionMap->put(addonId, interp);
+    } else {
+        gInterpositionMap->remove(addonId);
+        return true;
+    }
+}
+
+nsCOMPtr<nsIAddonInterposition>
+XPCWrappedNativeScope::GetInterposition()
+{
+    return mInterposition;
 }
 
 /***************************************************************************/

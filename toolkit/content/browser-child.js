@@ -353,7 +353,8 @@ addEventListener("TextZoomChange", function (aEvent) {
   }
 }, false);
 
-RemoteAddonsChild.init(this);
+// This needs to be rooted so that it stays alive as long as the tab.
+let AddonsChild = RemoteAddonsChild.init(this);
 
 addMessageListener("NetworkPrioritizer:AdjustPriority", (msg) => {
   let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);

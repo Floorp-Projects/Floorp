@@ -24,6 +24,7 @@
 #define WEBCRYPTO_ALG_PBKDF2        "PBKDF2"
 #define WEBCRYPTO_ALG_RSAES_PKCS1   "RSAES-PKCS1-v1_5"
 #define WEBCRYPTO_ALG_RSASSA_PKCS1  "RSASSA-PKCS1-v1_5"
+#define WEBCRYPTO_ALG_RSA_OAEP      "RSA-OAEP"
 
 // WebCrypto key formats
 #define WEBCRYPTO_KEY_FORMAT_RAW    "raw"
@@ -146,6 +147,8 @@ MapAlgorithmNameToMechanism(const nsString& aName)
     mechanism = CKM_RSA_PKCS;
   } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
     mechanism = CKM_RSA_PKCS;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
+    mechanism = CKM_RSA_PKCS_OAEP;
   }
 
   return mechanism;

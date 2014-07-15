@@ -22,7 +22,7 @@ class DummyChannel : public nsIJARChannel
                           , nsRunnable
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
   NS_DECL_NSIJARCHANNEL
@@ -43,7 +43,7 @@ private:
   nsCOMPtr<nsILoadInfo>       mLoadInfo;
 };
 
-NS_IMPL_ISUPPORTS(DummyChannel, nsIRequest, nsIChannel, nsIJARChannel)
+NS_IMPL_ISUPPORTS_INHERITED(DummyChannel, nsRunnable, nsIRequest, nsIChannel, nsIJARChannel)
 
 DummyChannel::DummyChannel() : mPending(false)
                              , mSuspendCount(0)

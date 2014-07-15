@@ -186,10 +186,12 @@ function nextTest()
       transitions++;
       // Two properties transition so continue on the second one finishing.
       if (!(transitions % 2)) {
+        is($("animatepanel").state, "open", "state is open after transitionend");
         ok(animatedPopupShown, "popupshown now fired")
         SimpleTest.executeSoon(() => runNextTest.next());
       }
       else {
+        is($("animatepanel").state, "showing", "state is showing during transitionend");
         ok(!animatedPopupShown, "popupshown not fired yet")
       }
     }
@@ -197,6 +199,7 @@ function nextTest()
     // Check that the transition occurs for an arrow panel with animate="true"
     window.addEventListener("transitionend", transitionEnded, false);
     $("animatepanel").openPopup($("topleft"), "after_start", 0, 0, false, false, null, "start");
+    is($("animatepanel").state, "showing", "state is showing");
     yield;
     window.removeEventListener("transitionend", transitionEnded, false);
 

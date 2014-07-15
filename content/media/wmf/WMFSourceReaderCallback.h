@@ -21,6 +21,8 @@ namespace mozilla {
 // when the MediaResource is unexpectedly shutdown.
 class WMFSourceReaderCallback MOZ_FINAL : public IMFSourceReaderCallback
 {
+  ~WMFSourceReaderCallback() {}
+
 public:
   WMFSourceReaderCallback();
 

@@ -5,7 +5,7 @@
 
 #include "nsIDOMCSSRule.idl"
 
-[scriptable, uuid(f4cb1776-389d-4f52-a4d8-68bea5bd00c1)]
+[scriptable, uuid(a343d27f-1da6-4fc3-9355-d4ca434f958e)]
 interface nsIDOMCSSFontFeatureValuesRule : nsIDOMCSSRule
 {
   attribute DOMString fontFamily;

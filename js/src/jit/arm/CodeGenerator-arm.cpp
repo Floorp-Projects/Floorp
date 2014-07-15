@@ -284,7 +284,7 @@ CodeGeneratorARM::visitMinMaxD(LMinMaxD *ins)
 
     // Check for zero.
     masm.bind(&equal);
-    masm.compareDouble(first, InvalidFloatReg);
+    masm.compareDouble(first, NoVFPRegister);
     // First wasn't 0 or -0, so just return it.
     masm.ma_b(&done, Assembler::VFP_NotEqualOrUnordered);
     // So now both operands are either -0 or 0.

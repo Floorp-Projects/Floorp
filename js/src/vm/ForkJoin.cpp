@@ -89,44 +89,43 @@ ForkJoinContext::isMainThread() const
 JSRuntime *
 ForkJoinContext::runtime()
 {
-    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
+    MOZ_CRASH("Not THREADSAFE build");
 }
 
 bool
 ForkJoinContext::check()
 {
-    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
+    MOZ_CRASH("Not THREADSAFE build");
 }
 
 void
 ForkJoinContext::requestGC(JS::gcreason::Reason reason)
 {
-    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
+    MOZ_CRASH("Not THREADSAFE build");
 }
 
 void
 ForkJoinContext::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
 {
-    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
+    MOZ_CRASH("Not THREADSAFE build");
 }
 
 bool
 ForkJoinContext::setPendingAbortFatal(ParallelBailoutCause cause)
 {
-    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
-    return false;
+    MOZ_CRASH("Not THREADSAFE build");
 }
 
 void
 ParallelBailoutRecord::rematerializeFrames(ForkJoinContext *cx, JitFrameIterator &frameIter)
 {
-    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
+    MOZ_CRASH("Not THREADSAFE build");
 }
 
 void
 ParallelBailoutRecord::rematerializeFrames(ForkJoinContext *cx, IonBailoutIterator &frameIter)
 {
-    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
+    MOZ_CRASH("Not THREADSAFE build");
 }
 
 bool
@@ -653,7 +652,7 @@ ForkJoinOperation::apply()
         break;
 
       case NumForkJoinModes:
-        MOZ_ASSUME_UNREACHABLE("Invalid mode");
+        MOZ_CRASH("Invalid mode");
     }
 
     while (bailouts < MAX_BAILOUTS) {
@@ -1060,7 +1059,7 @@ BailoutExplanation(ParallelBailoutCause cause)
       case ParallelBailoutRequestedZoneGC:
         return "requested zone GC of common heap";
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid ParallelBailoutCause");
+        MOZ_CRASH("Invalid ParallelBailoutCause");
     }
 }
 
@@ -1114,6 +1113,8 @@ IonBailoutKindExplanation(ParallelBailoutCause cause, BailoutKind kind)
       case Bailout_NonStringInput:
       case Bailout_NonStringInputInvalidate:
         return "can't unbox: expected string";
+      case Bailout_NonSymbolInput:
+        return "can't unbox: expected symbol";
       case Bailout_GuardThreadExclusive:
         return "tried to write to non-thread local value";
       case Bailout_ParallelUnsafe:
@@ -1133,7 +1134,7 @@ IonBailoutKindExplanation(ParallelBailoutCause cause, BailoutKind kind)
       case Bailout_IonExceptionDebugMode:
         // Fallthrough. This case cannot occur in parallel execution.
       default:
-        MOZ_ASSUME_UNREACHABLE("Invalid BailoutKind");
+        MOZ_CRASH("Invalid BailoutKind");
     }
 }
 

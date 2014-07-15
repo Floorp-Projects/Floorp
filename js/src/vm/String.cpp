@@ -140,18 +140,13 @@ JSString::dump()
 bool
 JSString::equals(const char *s)
 {
-    const jschar *c = getChars(nullptr);
-    if (!c) {
+    JSLinearString *linear = ensureLinear(nullptr);
+    if (!linear) {
         fprintf(stderr, "OOM in JSString::equals!\n");
         return false;
     }
-    while (*c && *s) {
-        if (*c != *s)
-            return false;
-        c++;
-        s++;
-    }
-    return *c == *s;
+
+    return StringEqualsAscii(linear, s);
 }
 #endif /* DEBUG */
 
@@ -164,12 +159,12 @@ JSLinearString::debugUnsafeConvertToLatin1()
     MOZ_ASSERT(!hasBase());
 
     size_t len = length();
-    const jschar *twoByteChars = chars();
-    char *latin1Chars = (char *)twoByteChars;
+    const jschar *twoByteChars = rawTwoByteChars();
+    Latin1Char *latin1Chars = (Latin1Char *)twoByteChars;
 
     for (size_t i = 0; i < len; i++) {
         MOZ_ASSERT((twoByteChars[i] & 0xff00) == 0);
-        latin1Chars[i] = char(twoByteChars[i]);
+        latin1Chars[i] = Latin1Char(twoByteChars[i]);
     }
 
     latin1Chars[len] = '\0';
@@ -886,7 +881,7 @@ AutoStableStringChars::initTwoByte(JSContext *cx, JSString *s)
     return true;
 }
 
-bool js::EnableLatin1Strings = false;
+bool js::EnableLatin1Strings = true;
 
 #ifdef DEBUG
 void
