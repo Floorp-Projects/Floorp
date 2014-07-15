@@ -26,21 +26,20 @@
 #define mozilla_pkix__pkixder_h
 
 // Expect* functions advance the input mark and return Success if the input
-// matches the given criteria; they return Failure with the input mark in an
-// undefined state if the input does not match the criteria.
+// matches the given criteria; they fail with the input mark in an undefined
+// state if the input does not match the criteria.
 //
 // Match* functions advance the input mark and return true if the input matches
 // the given criteria; they return false without changing the input mark if the
 // input does not match the criteria.
 //
 // Skip* functions unconditionally advance the input mark and return Success if
-// they are able to do so; otherwise they return Failure with the input mark in
-// an undefined state.
+// they are able to do so; otherwise they fail with the input mark in an
+// undefined state.
 
 #include "pkix/enumclass.h"
-#include "pkix/nullptr.h"
 #include "pkix/pkixtypes.h"
-#include "prerror.h"
+#include "pkix/Result.h"
 #include "prtime.h"
 #include "secerr.h"
 #include "secoidt.h"
@@ -77,12 +76,6 @@ enum Tag
   GENERALIZED_TIME = UNIVERSAL | 0x18,
 };
 
-enum Result
-{
-  Failure = -1,
-  Success = 0
-};
-
 MOZILLA_PKIX_ENUM_CLASS EmptyAllowed { No = 0, Yes = 1 };
 
 Result Fail(PRErrorCode errorCode);
@@ -117,8 +110,9 @@ public:
 
   Result Expect(const uint8_t* expected, uint16_t expectedLen)
   {
-    if (EnsureLength(expectedLen) != Success) {
-      return Failure;
+    Result rv = EnsureLength(expectedLen);
+    if (rv != Success) {
+      return rv;
     }
     if (memcmp(input, expected, expectedLen)) {
       return Fail(SEC_ERROR_BAD_DER);
@@ -134,8 +128,9 @@ public:
 
   Result Read(uint8_t& out)
   {
-    if (EnsureLength(1) != Success) {
-      return Failure;
+    Result rv = EnsureLength(1);
+    if (rv != Success) {
+      return rv;
     }
     out = *input++;
     return Success;
@@ -143,8 +138,9 @@ public:
 
   Result Read(uint16_t& out)
   {
-    if (EnsureLength(2) != Success) {
-      return Failure;
+    Result rv = EnsureLength(2);
+    if (rv != Success) {
+      return rv;
     }
     out = *input++;
     out <<= 8u;
@@ -195,8 +191,9 @@ public:
 
   Result Skip(uint16_t len)
   {
-    if (EnsureLength(len) != Success) {
-      return Failure;
+    Result rv = EnsureLength(len);
+    if (rv != Success) {
+      return rv;
     }
     input += len;
     return Success;
@@ -204,11 +201,13 @@ public:
 
   Result Skip(uint16_t len, Input& skippedInput)
   {
-    if (EnsureLength(len) != Success) {
-      return Failure;
+    Result rv = EnsureLength(len);
+    if (rv != Success) {
+      return rv;
     }
-    if (skippedInput.Init(input, len) != Success) {
-      return Failure;
+    rv = skippedInput.Init(input, len);
+    if (rv != Success) {
+      return rv;
     }
     input += len;
     return Success;
@@ -216,8 +215,9 @@ public:
 
   Result Skip(uint16_t len, SECItem& skippedItem)
   {
-    if (EnsureLength(len) != Success) {
-      return Failure;
+    Result rv = EnsureLength(len);
+    if (rv != Success) {
+      return rv;
     }
     skippedItem.type = siBuffer;
     skippedItem.data = const_cast<uint8_t*>(input);
@@ -280,8 +280,9 @@ ExpectTagAndLength(Input& input, uint8_t expectedTag, uint8_t expectedLength)
   PR_ASSERT(expectedLength < 128); // must be a single-byte length
 
   uint16_t tagAndLength;
-  if (input.Read(tagAndLength) != Success) {
-    return Failure;
+  Result rv = input.Read(tagAndLength);
+  if (rv != Success) {
+    return rv;
   }
 
   uint16_t expectedTagAndLength = static_cast<uint16_t>(expectedTag << 8);
@@ -312,8 +313,9 @@ inline Result
 ExpectTagAndSkipValue(Input& input, uint8_t tag)
 {
   uint16_t length;
-  if (internal::ExpectTagAndGetLength(input, tag, length) != Success) {
-    return Failure;
+  Result rv = internal::ExpectTagAndGetLength(input, tag, length);
+  if (rv != Success) {
+    return rv;
   }
   return input.Skip(length);
 }
@@ -322,8 +324,9 @@ inline Result
 ExpectTagAndGetValue(Input& input, uint8_t tag, /*out*/ SECItem& value)
 {
   uint16_t length;
-  if (internal::ExpectTagAndGetLength(input, tag, length) != Success) {
-    return Failure;
+  Result rv = internal::ExpectTagAndGetLength(input, tag, length);
+  if (rv != Success) {
+    return rv;
   }
   return input.Skip(length, value);
 }
@@ -332,8 +335,9 @@ inline Result
 ExpectTagAndGetValue(Input& input, uint8_t tag, /*out*/ Input& value)
 {
   uint16_t length;
-  if (internal::ExpectTagAndGetLength(input, tag, length) != Success) {
-    return Failure;
+  Result rv = internal::ExpectTagAndGetLength(input, tag, length);
+  if (rv != Success) {
+    return rv;
   }
   return input.Skip(length, value);
 }
@@ -345,11 +349,13 @@ ExpectTagAndGetTLV(Input& input, uint8_t tag, /*out*/ SECItem& tlv)
 {
   Input::Mark mark(input.GetMark());
   uint16_t length;
-  if (internal::ExpectTagAndGetLength(input, tag, length) != Success) {
-    return Failure;
+  Result rv = internal::ExpectTagAndGetLength(input, tag, length);
+  if (rv != Success) {
+    return rv;
   }
-  if (input.Skip(length) != Success) {
-    return Failure;
+  rv = input.Skip(length);
+  if (rv != Success) {
+    return rv;
   }
   return input.GetSECItem(siBuffer, mark, tlv);
 }
@@ -369,11 +375,13 @@ inline Result
 Nested(Input& input, uint8_t tag, Decoder decoder)
 {
   Input nested;
-  if (ExpectTagAndGetValue(input, tag, nested) != Success) {
-    return Failure;
+  Result rv = ExpectTagAndGetValue(input, tag, nested);
+  if (rv != Success) {
+    return rv;
   }
-  if (decoder(nested) != Success) {
-    return Failure;
+  rv = decoder(nested);
+  if (rv != Success) {
+    return rv;
   }
   return End(nested);
 }
@@ -386,11 +394,13 @@ Nested(Input& input, uint8_t outerTag, uint8_t innerTag, Decoder decoder)
   // return Nested(input, outerTag, bind(Nested, _1, innerTag, decoder));
 
   Input nestedInput;
-  if (ExpectTagAndGetValue(input, outerTag, nestedInput) != Success) {
-    return Failure;
+  Result rv = ExpectTagAndGetValue(input, outerTag, nestedInput);
+  if (rv != Success) {
+    return rv;
   }
-  if (Nested(nestedInput, innerTag, decoder) != Success) {
-    return Failure;
+  rv = Nested(nestedInput, innerTag, decoder);
+  if (rv != Success) {
+    return rv;
   }
   return End(nestedInput);
 }
@@ -418,8 +428,9 @@ NestedOf(Input& input, uint8_t outerTag, uint8_t innerTag,
          EmptyAllowed mayBeEmpty, Decoder decoder)
 {
   Input inner;
-  if (ExpectTagAndGetValue(input, outerTag, inner) != Success) {
-    return Failure;
+  Result rv = ExpectTagAndGetValue(input, outerTag, inner);
+  if (rv != Success) {
+    return rv;
   }
 
   if (inner.AtEnd()) {
@@ -430,8 +441,9 @@ NestedOf(Input& input, uint8_t outerTag, uint8_t innerTag,
   }
 
   do {
-    if (Nested(inner, innerTag, decoder) != Success) {
-      return Failure;
+    rv = Nested(inner, innerTag, decoder);
+    if (rv != Success) {
+      return rv;
     }
   } while (!inner.AtEnd());
 
@@ -450,12 +462,14 @@ IntegralValue(Input& input, uint8_t tag, T& value)
   // Conveniently, all the Integers that we actually have to be able to parse
   // are positive and very small. Consequently, this parser is *much* simpler
   // than a general Integer parser would need to be.
-  if (ExpectTagAndLength(input, tag, 1) != Success) {
-    return Failure;
+  Result rv = ExpectTagAndLength(input, tag, 1);
+  if (rv != Success) {
+    return rv;
   }
   uint8_t valueByte;
-  if (input.Read(valueByte) != Success) {
-    return Failure;
+  rv = input.Read(valueByte);
+  if (rv != Success) {
+    return rv;
   }
   if (valueByte & 0x80) { // negative
     return Fail(SEC_ERROR_BAD_DER);
@@ -469,13 +483,15 @@ IntegralValue(Input& input, uint8_t tag, T& value)
 inline Result
 Boolean(Input& input, /*out*/ bool& value)
 {
-  if (ExpectTagAndLength(input, BOOLEAN, 1) != Success) {
-    return Failure;
+  Result rv = ExpectTagAndLength(input, BOOLEAN, 1);
+  if (rv != Success) {
+    return rv;
   }
 
   uint8_t intValue;
-  if (input.Read(intValue) != Success) {
-    return Failure;
+  rv = input.Read(intValue);
+  if (rv != Success) {
+    return rv;
   }
   switch (intValue) {
     case 0: value = false; return Success;
@@ -495,8 +511,9 @@ OptionalBoolean(Input& input, bool allowInvalidExplicitEncoding,
 {
   value = false;
   if (input.Peek(BOOLEAN)) {
-    if (Boolean(input, value) != Success) {
-      return Failure;
+    Result rv = Boolean(input, value);
+    if (rv != Success) {
+      return rv;
     }
     if (!allowInvalidExplicitEncoding && !value) {
       return Fail(SEC_ERROR_BAD_DER);
@@ -549,10 +566,7 @@ TimeChoice(Input& input, /*out*/ PRTime& time)
 inline Result
 Integer(Input& input, /*out*/ uint8_t& value)
 {
-  if (internal::IntegralValue(input, INTEGER, value) != Success) {
-    return Failure;
-  }
-  return Success;
+  return internal::IntegralValue(input, INTEGER, value);
 }
 
 // This parser will only parse values between 0..127. If this range is
@@ -574,8 +588,9 @@ OptionalInteger(Input& input, long defaultValue, /*out*/ long& value)
   }
 
   uint8_t parsedValue;
-  if (Integer(input, parsedValue) != Success) {
-    return Failure;
+  Result rv = Integer(input, parsedValue);
+  if (rv != Success) {
+    return rv;
   }
   value = parsedValue;
   return Success;
@@ -591,8 +606,9 @@ template <uint8_t Len>
 Result
 OID(Input& input, const uint8_t (&expectedOid)[Len])
 {
-  if (ExpectTagAndLength(input, OIDTag, Len) != Success) {
-    return Failure;
+  Result rv = ExpectTagAndLength(input, OIDTag, Len);
+  if (rv != Success) {
+    return rv;
   }
 
   return input.Expect(expectedOid, Len);
@@ -614,8 +630,9 @@ CertificateSerialNumber(Input& input, /*out*/ SECItem& value)
   //   that are negative or zero.  Certificate users SHOULD be prepared to
   //   gracefully handle such certificates."
 
-  if (ExpectTagAndGetValue(input, INTEGER, value) != Success) {
-    return Failure;
+  Result rv = ExpectTagAndGetValue(input, INTEGER, value);
+  if (rv != Success) {
+    return rv;
   }
 
   if (value.len == 0) {
@@ -653,15 +670,18 @@ OptionalVersion(Input& input, /*out*/ Version& version)
     return Success;
   }
   Input value;
-  if (ExpectTagAndGetValue(input, TAG, value) != Success) {
-    return Failure;
+  Result rv = ExpectTagAndGetValue(input, TAG, value);
+  if (rv != Success) {
+    return rv;
   }
   uint8_t integerValue;
-  if (Integer(value, integerValue) != Success) {
-    return Failure;
+  rv = Integer(value, integerValue);
+  if (rv != Success) {
+    return rv;
   }
-  if (End(value) != Success) {
-    return Failure;
+  rv = End(value);
+  if (rv != Success) {
+    return rv;
   }
   switch (integerValue) {
     case static_cast<uint8_t>(Version::v3): version = Version::v3; break;
@@ -683,17 +703,22 @@ OptionalExtensions(Input& input, uint8_t tag, ExtensionHandler extensionHandler)
     return Success;
   }
 
+  Result rv;
+
   Input extensions;
   {
     Input tagged;
-    if (ExpectTagAndGetValue(input, tag, tagged) != Success) {
-      return Failure;
+    rv = ExpectTagAndGetValue(input, tag, tagged);
+    if (rv != Success) {
+      return rv;
     }
-    if (ExpectTagAndGetValue(tagged, SEQUENCE, extensions) != Success) {
-      return Failure;
+    rv = ExpectTagAndGetValue(tagged, SEQUENCE, extensions);
+    if (rv != Success) {
+      return rv;
     }
-    if (End(tagged) != Success) {
-      return Failure;
+    rv = End(tagged);
+    if (rv != Success) {
+      return rv;
     }
   }
 
@@ -704,9 +729,9 @@ OptionalExtensions(Input& input, uint8_t tag, ExtensionHandler extensionHandler)
   // that (see bug 991898).
   while (!extensions.AtEnd()) {
     Input extension;
-    if (ExpectTagAndGetValue(extensions, SEQUENCE, extension)
-          != Success) {
-      return Failure;
+    rv = ExpectTagAndGetValue(extensions, SEQUENCE, extension);
+    if (rv != Success) {
+      return rv;
     }
 
     // Extension  ::=  SEQUENCE  {
@@ -715,25 +740,29 @@ OptionalExtensions(Input& input, uint8_t tag, ExtensionHandler extensionHandler)
     //      extnValue   OCTET STRING
     //      }
     Input extnID;
-    if (ExpectTagAndGetValue(extension, OIDTag, extnID) != Success) {
-      return Failure;
+    rv = ExpectTagAndGetValue(extension, OIDTag, extnID);
+    if (rv != Success) {
+      return rv;
     }
     bool critical;
-    if (OptionalBoolean(extension, false, critical) != Success) {
-      return Failure;
+    rv = OptionalBoolean(extension, false, critical);
+    if (rv != Success) {
+      return rv;
     }
     SECItem extnValue;
-    if (ExpectTagAndGetValue(extension, OCTET_STRING, extnValue)
-          != Success) {
-      return Failure;
+    rv = ExpectTagAndGetValue(extension, OCTET_STRING, extnValue);
+    if (rv != Success) {
+      return rv;
     }
-    if (End(extension) != Success) {
-      return Failure;
+    rv = End(extension);
+    if (rv != Success) {
+      return rv;
     }
 
     bool understood = false;
-    if (extensionHandler(extnID, extnValue, understood) != Success) {
-      return Failure;
+    rv = extensionHandler(extnID, extnValue, understood);
+    if (rv != Success) {
+      return rv;
     }
     if (critical && !understood) {
       return Fail(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION);
