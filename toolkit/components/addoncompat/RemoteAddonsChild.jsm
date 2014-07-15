@@ -205,11 +205,59 @@ EventTargetChild.prototype = {
   }
 };
 
+// The parent can create a sandbox to run code in the child
+// process. We actually create the sandbox in the child so that the
+// code runs there. However, managing the lifetime of these sandboxes
+// can be tricky. The parent references these sandboxes using CPOWs,
+// which only keep weak references. So we need to create a strong
+// reference in the child. For simplicity, we kill off these strong
+// references whenever we navigate away from the page for which the
+// sandbox was created.
+function SandboxChild(chromeGlobal)
+{
+  this.chromeGlobal = chromeGlobal;
+  this.sandboxes = [];
+}
+
+SandboxChild.prototype = {
+  addListener: function() {
+    let webProgress = this.chromeGlobal.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
+    webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
+  },
+
+  removeListener: function() {
+    let webProgress = this.chromeGlobal.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
+    webProgress.removeProgressListener(this);
+  },
+
+  onLocationChange: function(webProgress, request, location, flags) {
+    if (this.sandboxes.length) {
+      this.removeListener();
+    }
+    this.sandboxes = [];
+  },
+
+  addSandbox: function(sandbox) {
+    if (this.sandboxes.length == 0) {
+      this.addListener();
+    }
+    this.sandboxes.push(sandbox);
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                         Ci.nsISupportsWeakReference])
+};
+
 let RemoteAddonsChild = {
   init: function(global) {
     global.sendAsyncMessage("Addons:RegisterGlobal", {}, {global: global});
 
+    let sandboxChild = new SandboxChild(global);
+    global.addSandbox = sandboxChild.addSandbox.bind(sandboxChild);
+
     // Return this so it gets rooted in the content script.
-    return [new EventTargetChild(global)];
+    return [new EventTargetChild(global), sandboxChild];
   },
 };
