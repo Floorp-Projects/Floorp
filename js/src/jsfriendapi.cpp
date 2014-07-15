@@ -845,6 +845,18 @@ JS::SetGCSliceCallback(JSRuntime *rt, GCSliceCallback callback)
     return rt->gc.setSliceCallback(callback);
 }
 
+JS_FRIEND_API(int64_t)
+GetMaxGCPauseSinceClear(JSRuntime *rt)
+{
+    return rt->gc.stats.getMaxGCPauseSinceClear();
+}
+
+JS_FRIEND_API(int64_t)
+ClearMaxGCPauseAccumulator(JSRuntime *rt)
+{
+    return rt->gc.stats.clearMaxGCPauseAccumulator();
+}
+
 JS_FRIEND_API(bool)
 JS::WasIncrementalGC(JSRuntime *rt)
 {
