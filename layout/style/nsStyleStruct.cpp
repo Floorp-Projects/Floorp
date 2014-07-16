@@ -156,14 +156,6 @@ nsStyleFont::Init(nsPresContext* aPresContext)
   }
 }
 
-void* 
-nsStyleFont::operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
-  void* result = aContext->AllocateFromShell(sz);
-  if (result)
-    memset(result, 0, sz);
-  return result;
-}
-  
 void 
 nsStyleFont::Destroy(nsPresContext* aContext) {
   this->~nsStyleFont();
@@ -292,14 +284,6 @@ nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc)
   MOZ_COUNT_CTOR(nsStyleMargin);
 }
 
-void* 
-nsStyleMargin::operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
-  void* result = aContext->AllocateFromShell(sz);
-  if (result)
-    memset(result, 0, sz);
-  return result;
-}
-  
 void 
 nsStyleMargin::Destroy(nsPresContext* aContext) {
   this->~nsStyleMargin();
@@ -349,14 +333,6 @@ nsStylePadding::nsStylePadding(const nsStylePadding& aSrc)
   MOZ_COUNT_CTOR(nsStylePadding);
 }
 
-void* 
-nsStylePadding::operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
-  void* result = aContext->AllocateFromShell(sz);
-  if (result)
-    memset(result, 0, sz);
-  return result;
-}
-  
 void 
 nsStylePadding::Destroy(nsPresContext* aContext) {
   this->~nsStylePadding();
@@ -478,14 +454,6 @@ nsStyleBorder::~nsStyleBorder()
       delete mBorderColors[i];
     delete [] mBorderColors;
   }
-}
-
-void*
-nsStyleBorder::operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
-  void* result = aContext->AllocateFromShell(sz);
-  if (result)
-    memset(result, 0, sz);
-  return result;
 }
 
 nsMargin

@@ -88,7 +88,9 @@ public:
   static nscoord ZoomText(nsPresContext* aPresContext, nscoord aSize);
   static nscoord UnZoomText(nsPresContext* aPresContext, nscoord aSize);
 
-  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
+    return aContext->AllocateFromShell(sz);
+  }
   void Destroy(nsPresContext* aContext);
 
   void EnableZoom(nsPresContext* aContext, bool aEnable);
@@ -567,7 +569,9 @@ struct nsStyleMargin {
     MOZ_COUNT_DTOR(nsStyleMargin);
   }
 
-  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
+    return aContext->AllocateFromShell(sz);
+  }
   void Destroy(nsPresContext* aContext);
 
   void RecalcData();
@@ -608,7 +612,9 @@ struct nsStylePadding {
     MOZ_COUNT_DTOR(nsStylePadding);
   }
 
-  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
+    return aContext->AllocateFromShell(sz);
+  }
   void Destroy(nsPresContext* aContext);
 
   void RecalcData();
@@ -795,7 +801,9 @@ struct nsStyleBorder {
   nsStyleBorder(const nsStyleBorder& aBorder);
   ~nsStyleBorder();
 
-  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
+    return aContext->AllocateFromShell(sz);
+  }
   void Destroy(nsPresContext* aContext);
 
   nsChangeHint CalcDifference(const nsStyleBorder& aOther) const;
