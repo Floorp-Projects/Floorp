@@ -378,6 +378,25 @@ IdentityManager.prototype = {
   },
 
   /**
+   * Verify the current auth state, unlocking the master-password if necessary.
+   *
+   * Returns a promise that resolves with the current auth state after
+   * attempting to unlock.
+   */
+  unlockAndVerifyAuthState: function() {
+    // Try to fetch the passphrase - this will prompt for MP unlock as a
+    // side-effect...
+    try {
+      this.syncKey;
+    } catch (ex) {
+      this._log.debug("Fetching passphrase threw " + ex +
+                      "; assuming master password locked.");
+      return Promise.resolve(MASTER_PASSWORD_LOCKED);
+    }
+    return Promise.resolve(STATUS_OK);
+  },
+
+  /**
    * Persist credentials to password store.
    *
    * When credentials are updated, they are changed in memory only. This will

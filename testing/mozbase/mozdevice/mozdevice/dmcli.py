@@ -153,7 +153,7 @@ class DMCli(object):
     def add_options(self, parser):
         parser.add_argument("-v", "--verbose", action="store_true",
                             help="Verbose output from DeviceManager",
-                            default=False)
+                            default=bool(os.environ.get('VERBOSE')))
         parser.add_argument("--host", action="store",
                             help="Device hostname (only if using TCP/IP, " \
                                 "defaults to TEST_DEVICE environment " \
@@ -244,7 +244,7 @@ class DMCli(object):
 
     def install(self, args):
         basename = os.path.basename(args.file)
-        app_path_on_device = posixpath.join(self.dm.getDeviceRoot(),
+        app_path_on_device = posixpath.join(self.dm.deviceRoot,
                                             basename)
         self.dm.pushFile(args.file, app_path_on_device)
         self.dm.installApp(app_path_on_device)

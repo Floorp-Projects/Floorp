@@ -877,7 +877,7 @@ static const JSErrorFormatString ErrorFormatString[CTYPESERR_LIMIT] = {
 };
 
 static const JSErrorFormatString*
-GetErrorMessage(void* userRef, const char* locale, const unsigned errorNumber)
+GetErrorMessage(void* userRef, const unsigned errorNumber)
 {
   if (0 < errorNumber && errorNumber < CTYPESERR_LIMIT)
     return &ErrorFormatString[errorNumber];

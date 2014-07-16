@@ -581,7 +581,7 @@ Statistics::beginSlice(int collectedCount, int zoneCount, int compartmentCount,
     if (first)
         beginGC();
 
-    SliceData data(reason, PRMJ_Now(), SystemPageAllocator::GetPageFaultCount());
+    SliceData data(reason, PRMJ_Now(), GetPageFaultCount());
     (void) slices.append(data); /* Ignore any OOMs here. */
 
     if (JSAccumulateTelemetryDataCallback cb = runtime->telemetryCallback)
@@ -600,7 +600,7 @@ void
 Statistics::endSlice()
 {
     slices.back().end = PRMJ_Now();
-    slices.back().endFaults = SystemPageAllocator::GetPageFaultCount();
+    slices.back().endFaults = GetPageFaultCount();
 
     if (JSAccumulateTelemetryDataCallback cb = runtime->telemetryCallback) {
         (*cb)(JS_TELEMETRY_GC_SLICE_MS, t(slices.back().end - slices.back().start));

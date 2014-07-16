@@ -18,9 +18,7 @@ class MockAgent(object):
         if start_commands:
             self.commands = start_commands
         else:
-            self.commands = [("testroot", "/mnt/sdcard"),
-                             ("isdir /mnt/sdcard/tests", "TRUE"),
-                             ("ver", "SUTAgentAndroid Version 1.14")]
+            self.commands = [("ver", "SUTAgentAndroid Version 1.14")]
         self.commands = self.commands + commands
 
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
