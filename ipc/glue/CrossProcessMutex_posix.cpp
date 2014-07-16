@@ -38,8 +38,7 @@ InitMutex(pthread_mutex_t* mMutex)
 }
 
 CrossProcessMutex::CrossProcessMutex(const char*)
-    : mSharedBuffer(nullptr)
-    , mMutex(nullptr)
+    : mMutex(nullptr)
     , mCount(nullptr)
 {
   mSharedBuffer = new ipc::SharedMemoryBasic;
@@ -67,8 +66,7 @@ CrossProcessMutex::CrossProcessMutex(const char*)
 }
 
 CrossProcessMutex::CrossProcessMutex(CrossProcessMutexHandle aHandle)
-    : mSharedBuffer(nullptr)
-    , mMutex(nullptr)
+    : mMutex(nullptr)
     , mCount(nullptr)
 {
   if (!ipc::SharedMemoryBasic::IsHandleValid(aHandle)) {
@@ -109,7 +107,6 @@ CrossProcessMutex::~CrossProcessMutex()
     unused << pthread_mutex_destroy(mMutex);
   }
 
-  delete mSharedBuffer;
   MOZ_COUNT_DTOR(CrossProcessMutex);
 }
 
