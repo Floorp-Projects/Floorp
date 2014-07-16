@@ -968,11 +968,9 @@ ssl_CopySecurityInfo(sslSocket *ss, sslSocket *os)
 	ss->sec.hashcx 		= NULL;
     }
 
-    SECITEM_CopyItem(0, &ss->sec.sendSecret, &os->sec.sendSecret);
-    if (os->sec.sendSecret.data && !ss->sec.sendSecret.data)
+    if (SECITEM_CopyItem(0, &ss->sec.sendSecret, &os->sec.sendSecret))
     	goto loser;
-    SECITEM_CopyItem(0, &ss->sec.rcvSecret,  &os->sec.rcvSecret);
-    if (os->sec.rcvSecret.data && !ss->sec.rcvSecret.data)
+    if (SECITEM_CopyItem(0, &ss->sec.rcvSecret,  &os->sec.rcvSecret))
     	goto loser;
 
     /* XXX following code is wrong if either cx != 0 */
