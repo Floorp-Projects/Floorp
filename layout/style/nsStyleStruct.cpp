@@ -273,19 +273,23 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
   return nsRuleNode::ComputeCoordPercentCalc(aCoord, 0);
 }
 
-nsStyleMargin::nsStyleMargin() {
+nsStyleMargin::nsStyleMargin()
+  : mHasCachedMargin(false)
+  , mCachedMargin(0, 0, 0, 0)
+{
   MOZ_COUNT_CTOR(nsStyleMargin);
   nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
   NS_FOR_CSS_SIDES(side) {
     mMargin.Set(side, zero);
   }
-  mHasCachedMargin = false;
 }
 
-nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc) {
+nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc)
+  : mMargin(aSrc.mMargin)
+  , mHasCachedMargin(false)
+  , mCachedMargin(0, 0, 0, 0)
+{
   MOZ_COUNT_CTOR(nsStyleMargin);
-  mMargin = aSrc.mMargin;
-  mHasCachedMargin = false;
 }
 
 void* 
@@ -326,19 +330,23 @@ nsChangeHint nsStyleMargin::CalcDifference(const nsStyleMargin& aOther) const
                         nsChangeHint_ClearAncestorIntrinsics);
 }
 
-nsStylePadding::nsStylePadding() {
+nsStylePadding::nsStylePadding()
+  : mHasCachedPadding(false)
+  , mCachedPadding(0, 0, 0, 0)
+{
   MOZ_COUNT_CTOR(nsStylePadding);
   nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
   NS_FOR_CSS_SIDES(side) {
     mPadding.Set(side, zero);
   }
-  mHasCachedPadding = false;
 }
 
-nsStylePadding::nsStylePadding(const nsStylePadding& aSrc) {
+nsStylePadding::nsStylePadding(const nsStylePadding& aSrc)
+  : mPadding(aSrc.mPadding)
+  , mHasCachedPadding(false)
+  , mCachedPadding(0, 0, 0, 0)
+{
   MOZ_COUNT_CTOR(nsStylePadding);
-  mPadding = aSrc.mPadding;
-  mHasCachedPadding = false;
 }
 
 void* 
