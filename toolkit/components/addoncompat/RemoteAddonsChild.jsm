@@ -89,7 +89,6 @@ let NotificationTracker = {
     enumerate(this._paths[component1] || {}, [component1]);
   }
 };
-NotificationTracker.init();
 
 // This code registers an nsIContentPolicy in the child process. When
 // it runs, it notifies the parent that it needs to run its own
@@ -148,7 +147,6 @@ let ContentPolicyChild = {
     return this.QueryInterface(iid);
   },
 };
-ContentPolicyChild.init();
 
 // This code registers observers in the child whenever an add-on in
 // the parent asks for notifications on the given topic.
@@ -176,7 +174,6 @@ let ObserverChild = {
     });
   }
 };
-ObserverChild.init();
 
 // There is one of these objects per browser tab in the child. When an
 // add-on in the parent listens for an event, this child object
@@ -251,7 +248,20 @@ SandboxChild.prototype = {
 };
 
 let RemoteAddonsChild = {
+  _ready: false,
+
+  makeReady: function() {
+    NotificationTracker.init();
+    ContentPolicyChild.init();
+    ObserverChild.init();
+  },
+
   init: function(global) {
+    if (!this._ready) {
+      this.makeReady();
+      this._ready = true;
+    }
+
     global.sendAsyncMessage("Addons:RegisterGlobal", {}, {global: global});
 
     let sandboxChild = new SandboxChild(global);
