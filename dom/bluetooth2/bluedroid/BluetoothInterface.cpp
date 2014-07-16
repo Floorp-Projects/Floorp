@@ -131,13 +131,21 @@ BluetoothSocketInterface::Listen(btsock_type_t aType,
   }
 }
 
-bt_status_t
+void
 BluetoothSocketInterface::Connect(const bt_bdaddr_t* aBdAddr,
                                   btsock_type_t aType, const uint8_t* aUuid,
-                                  int aChannel, int& aSockFd, int aFlags)
+                                  int aChannel, int aFlags,
+                                  BluetoothSocketResultHandler* aRes)
 {
-  return mInterface->connect(aBdAddr, aType, aUuid, aChannel, &aSockFd,
-                             aFlags);
+  int fd;
+
+  bt_status_t status = mInterface->connect(aBdAddr, aType, aUuid, aChannel,
+                                           &fd, aFlags);
+  if (aRes) {
+    DispatchBluetoothSocketResult(aRes,
+                                  &BluetoothSocketResultHandler::Connect,
+                                  fd, status);
+  }
 }
 
 BluetoothSocketInterface::BluetoothSocketInterface(
