@@ -37,6 +37,7 @@ class IMEStateManager
   typedef widget::InputContextAction InputContextAction;
 
 public:
+  static void Init();
   static void Shutdown();
 
   static nsresult OnDestroyPresContext(nsPresContext* aPresContext);
@@ -135,7 +136,7 @@ protected:
 
   static void EnsureTextCompositionArray();
   static void CreateIMEContentObserver();
-  static void DestroyTextStateManager();
+  static void DestroyIMEContentObserver();
 
   static bool IsEditable(nsINode* node);
 
