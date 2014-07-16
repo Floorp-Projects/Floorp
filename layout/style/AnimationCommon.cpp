@@ -421,16 +421,14 @@ ElementAnimation::IsRunningAt(TimeStamp aTime) const
 bool
 ElementAnimation::IsCurrentAt(TimeStamp aTime) const
 {
-  if (!IsFinishedTransition()) {
-    ComputedTiming computedTiming =
-      GetComputedTimingAt(GetLocalTimeAt(aTime), mTiming);
-    if (computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
-        computedTiming.mPhase == ComputedTiming::AnimationPhase_Active) {
-      return true;
-    }
+  if (IsFinishedTransition()) {
+    return false;
   }
 
-  return false;
+  ComputedTiming computedTiming =
+    GetComputedTimingAt(GetLocalTimeAt(aTime), mTiming);
+  return computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
+         computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
 }
 
 bool

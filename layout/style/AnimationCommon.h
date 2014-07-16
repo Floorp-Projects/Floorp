@@ -313,6 +313,7 @@ protected:
 public:
   ElementAnimation()
     : mIsRunningOnCompositor(false)
+    , mIsFinishedTransition(false)
     , mLastNotification(LAST_NOTIFICATION_NONE)
   {
   }
@@ -333,12 +334,12 @@ public:
   // cycle (for reasons see explanation in nsTransitionManager.cpp). In the
   // meantime, however, they should be ignored.
   bool IsFinishedTransition() const {
-    return mStartTime.IsNull();
+    return mIsFinishedTransition;
   }
   void SetFinishedTransition() {
     MOZ_ASSERT(AsTransition(),
                "Calling SetFinishedTransition but it's not a transition");
-    mStartTime = mozilla::TimeStamp();
+    mIsFinishedTransition = true;
   }
 
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
@@ -377,13 +378,14 @@ public:
 
   nsString mName;
   AnimationTiming mTiming;
-  // The beginning of the delay period.  This is also set to a null
-  // timestamp to mark transitions that have finished and are due to
-  // be removed on the next throttle-able cycle.
+  // The beginning of the delay period.
   mozilla::TimeStamp mStartTime;
   mozilla::TimeStamp mPauseStart;
   uint8_t mPlayState;
   bool mIsRunningOnCompositor;
+  // A flag to mark transitions that have finished and are due to
+  // be removed on the next throttle-able cycle.
+  bool mIsFinishedTransition;
 
   enum {
     LAST_NOTIFICATION_NONE = uint64_t(-1),
