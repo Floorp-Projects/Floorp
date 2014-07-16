@@ -10,6 +10,10 @@ JS_MODULES_PATH = 'modules/loop'
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
 
+BROWSER_CHROME_MANIFESTS += [
+    'test/mochitest/browser.ini',
+]
+
 EXTRA_JS_MODULES += [
     'MozLoopAPI.jsm',
     'MozLoopPushHandler.jsm',

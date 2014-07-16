@@ -165,6 +165,8 @@ public:
   virtual bool IPCOpen() const { return true; }
   virtual bool IsSameProcess() const = 0;
 
+  virtual bool IsImageBridgeChild() const { return false; }
+
   virtual MessageLoop * GetMessageLoop() const
   {
     return mDefaultMessageLoop;
