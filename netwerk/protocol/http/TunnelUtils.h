@@ -175,12 +175,15 @@ public:
   SpdyConnectTransaction(nsHttpConnectionInfo *ci,
                          nsIInterfaceRequestor *callbacks,
                          uint32_t caps,
-                         nsAHttpTransaction *trans,
+                         nsHttpTransaction *trans,
                          nsAHttpConnection *session);
   ~SpdyConnectTransaction();
 
   SpdyConnectTransaction *QuerySpdyConnectTransaction() { return this; }
 
+  // A transaction is forced into plaintext when it is intended to be used as a CONNECT
+  // tunnel but the setup fails. The plaintext only carries the CONNECT error.
+  void ForcePlainText();
   void MapStreamToHttpConnection(nsISocketTransport *aTransport,
                                  nsHttpConnectionInfo *aConnInfo);
 
@@ -215,6 +218,7 @@ private:
   uint32_t             mOutputDataUsed;
   uint32_t             mOutputDataOffset;
 
+  bool                           mForcePlainText;
   TimeStamp                      mTimestampSyn;
   nsRefPtr<nsHttpConnectionInfo> mConnInfo;
 
@@ -226,6 +230,7 @@ private:
   nsRefPtr<SocketTransportShim>  mTunnelTransport;
   nsRefPtr<InputStreamShim>      mTunnelStreamIn;
   nsRefPtr<OutputStreamShim>     mTunnelStreamOut;
+  nsRefPtr<nsHttpTransaction>    mDrivingTransaction;
 };
 
 }} // namespace mozilla::net
