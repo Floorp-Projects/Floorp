@@ -159,7 +159,8 @@ nsStyleFont::Init(nsPresContext* aPresContext)
 void 
 nsStyleFont::Destroy(nsPresContext* aContext) {
   this->~nsStyleFont();
-  aContext->FreeToShell(sizeof(nsStyleFont), this);
+  aContext->PresShell()->
+    FreeByObjectID(nsPresArena::nsStyleFont_id, this);
 }
 
 void
@@ -287,7 +288,8 @@ nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc)
 void 
 nsStyleMargin::Destroy(nsPresContext* aContext) {
   this->~nsStyleMargin();
-  aContext->FreeToShell(sizeof(nsStyleMargin), this);
+  aContext->PresShell()->
+    FreeByObjectID(nsPresArena::nsStyleMargin_id, this);
 }
 
 
@@ -336,7 +338,8 @@ nsStylePadding::nsStylePadding(const nsStylePadding& aSrc)
 void 
 nsStylePadding::Destroy(nsPresContext* aContext) {
   this->~nsStylePadding();
-  aContext->FreeToShell(sizeof(nsStylePadding), this);
+  aContext->PresShell()->
+    FreeByObjectID(nsPresArena::nsStylePadding_id, this);
 }
 
 void nsStylePadding::RecalcData()
@@ -487,7 +490,8 @@ void
 nsStyleBorder::Destroy(nsPresContext* aContext) {
   UntrackImage(aContext);
   this->~nsStyleBorder();
-  aContext->FreeToShell(sizeof(nsStyleBorder), this);
+  aContext->PresShell()->
+    FreeByObjectID(nsPresArena::nsStyleBorder_id, this);
 }
 
 nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
@@ -2027,7 +2031,8 @@ nsStyleBackground::Destroy(nsPresContext* aContext)
     mLayers[i].UntrackImages(aContext);
 
   this->~nsStyleBackground();
-  aContext->FreeToShell(sizeof(nsStyleBackground), this);
+  aContext->PresShell()->
+    FreeByObjectID(nsPresArena::nsStyleBackground_id, this);
 }
 
 nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) const
@@ -2789,7 +2794,8 @@ nsStyleContent::Destroy(nsPresContext* aContext)
   }
 
   this->~nsStyleContent();
-  aContext->FreeToShell(sizeof(nsStyleContent), this);
+  aContext->PresShell()->
+    FreeByObjectID(nsPresArena::nsStyleContent_id, this);
 }
 
 nsStyleContent::nsStyleContent(const nsStyleContent& aSource)

@@ -32,6 +32,17 @@ public:
     nsStyleContext_id,
     nsFrameList_id,
 
+    First_nsStyleStruct_id,
+    DummyBeforeStyleStructs_id = First_nsStyleStruct_id - 1,
+
+    #define STYLE_STRUCT(name_, checkdata_cb_) \
+      nsStyle##name_##_id,
+    #include "nsStyleStructList.h"
+    #undef STYLE_STRUCT
+
+    DummyAfterStyleStructs_id,
+    Last_nsStyleStruct_id = DummyAfterStyleStructs_id - 1,
+
     /**
      * The PresArena implementation uses this bit to distinguish objects
      * allocated by size from objects allocated by type ID (that is, frames
