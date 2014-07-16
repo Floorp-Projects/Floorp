@@ -328,10 +328,11 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ElementAnimation)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(ElementAnimation)
 
-  mozilla::dom::AnimationTimeline* GetParentObject() const { return mTimeline; }
+  dom::AnimationTimeline* GetParentObject() const { return mTimeline; }
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   // AnimationPlayer methods
+  dom::AnimationTimeline* Timeline() const { return mTimeline; }
   double StartTime() const;
   double CurrentTime() const;
 
