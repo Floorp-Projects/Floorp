@@ -360,6 +360,8 @@ class MDefinition : public MNode
         block_ = block;
     }
 
+    static HashNumber addU32ToHash(HashNumber hash, uint32_t data);
+
   public:
     MDefinition()
       : id_(0),
@@ -8111,6 +8113,7 @@ class MLoadSlot
         return slot_;
     }
 
+    HashNumber valueHash() const;
     bool congruentTo(const MDefinition *ins) const {
         if (!ins->isLoadSlot())
             return false;
@@ -10402,6 +10405,7 @@ class MAsmJSLoadGlobalVar : public MNullaryInstruction
 
     unsigned globalDataOffset() const { return globalDataOffset_; }
 
+    HashNumber valueHash() const;
     bool congruentTo(const MDefinition *ins) const;
 
     AliasSet getAliasSet() const {
@@ -10455,6 +10459,9 @@ class MAsmJSLoadFuncPtr : public MUnaryInstruction
 
     unsigned globalDataOffset() const { return globalDataOffset_; }
     MDefinition *index() const { return getOperand(0); }
+
+    HashNumber valueHash() const;
+    bool congruentTo(const MDefinition *ins) const;
 };
 
 class MAsmJSLoadFFIFunc : public MNullaryInstruction
@@ -10476,6 +10483,9 @@ class MAsmJSLoadFFIFunc : public MNullaryInstruction
     }
 
     unsigned globalDataOffset() const { return globalDataOffset_; }
+
+    HashNumber valueHash() const;
+    bool congruentTo(const MDefinition *ins) const;
 };
 
 class MAsmJSParameter : public MNullaryInstruction
