@@ -15,6 +15,7 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/AnimationTimeline.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Nullable.h"
 #include "nsSMILKeySpline.h"
 #include "nsStyleStruct.h"
 #include "mozilla/Attributes.h"
@@ -379,13 +380,27 @@ public:
   }
 
   // This function takes as input the timing parameters of an animation and
-  // returns the computed timing at the specified moment.
+  // returns the computed timing at the specified local time.
+  //
+  // The local time may be null in which case only static parameters such as the
+  // active duration are calculated. All other members of the returned object
+  // are given a null/initial value.
   //
   // This function returns ComputedTiming::kNullTimeFraction for the
   // mTimeFraction member of the return value if the animation should not be
   // run (because it is not currently active and is not filling at this time).
-  static ComputedTiming GetComputedTimingAt(TimeDuration aLocalTime,
-                                            const AnimationTiming& aTiming);
+  static ComputedTiming
+  GetComputedTimingAt(const Nullable<mozilla::TimeDuration>& aLocalTime,
+                      const AnimationTiming& aTiming);
+
+  // Convenience wrapper method to save changing all call sites. Removed in
+  // a subsequent patch.
+  static ComputedTiming
+  GetComputedTimingAt(mozilla::TimeDuration aLocalTime,
+                      const AnimationTiming& aTiming) {
+    return GetComputedTimingAt(Nullable<mozilla::TimeDuration>(aLocalTime),
+                               aTiming);
+  }
 
   // Return the duration of the active interval for the given timing parameters.
   static mozilla::TimeDuration ActiveDuration(const AnimationTiming& aTiming);
