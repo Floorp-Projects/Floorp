@@ -68,6 +68,7 @@ nsHttpConnection::nsHttpConnection()
     , mProxyConnectInProgress(false)
     , mExperienced(false)
     , mInSpdyTunnel(false)
+    , mForcePlainText(false)
     , mHttp1xTransactionCount(0)
     , mRemainingConnectionUses(0xffffffff)
     , mClassification(nsAHttpTransaction::CLASS_GENERAL)
@@ -460,7 +461,7 @@ nsHttpConnection::SetupSSL()
     // of this function
     mNPNComplete = true;
 
-    if (!mConnInfo->FirstHopSSL()) {
+    if (!mConnInfo->FirstHopSSL() || mForcePlainText) {
         return;
     }
 
