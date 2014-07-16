@@ -119,6 +119,16 @@ ValueNumberer::VisibleValues::clear()
     set_.clear();
 }
 
+#ifdef DEBUG
+// Test whether a given value is in the set.
+bool
+ValueNumberer::VisibleValues::has(const MDefinition *def) const
+{
+    Ptr p = set_.lookup(def);
+    return p && *p == def;
+}
+#endif
+
 // Test whether the value would be needed if it had no uses.
 static bool
 DeadIfUnused(const MDefinition *def)
@@ -215,8 +225,7 @@ IsDominatorRefined(MBasicBlock *block)
 bool
 ValueNumberer::deleteDefsRecursively(MDefinition *def)
 {
-    def->setInWorklist();
-    return deadDefs_.append(def) && processDeadDefs();
+    return deleteDef(def) && processDeadDefs();
 }
 
 // Assuming phi is dead, push each dead operand of phi not dominated by the phi
@@ -256,31 +265,40 @@ ValueNumberer::pushDeadInsOperands(MInstruction *ins)
     return true;
 }
 
+bool
+ValueNumberer::deleteDef(MDefinition *def)
+{
+    IonSpew(IonSpew_GVN, "    Deleting %s%u", def->opName(), def->id());
+    MOZ_ASSERT(IsDead(def), "Deleting non-dead definition");
+    MOZ_ASSERT(!values_.has(def), "Deleting an instruction still in the set");
+
+    if (def->isPhi()) {
+        MPhi *phi = def->toPhi();
+        MBasicBlock *phiBlock = phi->block();
+        if (!pushDeadPhiOperands(phi, phiBlock))
+             return false;
+        MPhiIterator at(phiBlock->phisBegin(phi));
+        phiBlock->discardPhiAt(at);
+    } else {
+        MInstruction *ins = def->toInstruction();
+        if (!pushDeadInsOperands(ins))
+             return false;
+        ins->block()->discard(ins);
+    }
+    return true;
+}
+
 // Recursively delete all the defs on the deadDefs_ worklist.
 bool
 ValueNumberer::processDeadDefs()
 {
     while (!deadDefs_.empty()) {
         MDefinition *def = deadDefs_.popCopy();
-        IonSpew(IonSpew_GVN, "    Deleting %s%u", def->opName(), def->id());
         MOZ_ASSERT(def->isInWorklist(), "Deleting value not on the worklist");
-        MOZ_ASSERT(IsDead(def), "Deleting non-dead definition");
 
         values_.forget(def);
-
-        if (def->isPhi()) {
-            MPhi *phi = def->toPhi();
-            MBasicBlock *phiBlock = phi->block();
-            if (!pushDeadPhiOperands(phi, phiBlock))
-                 return false;
-            MPhiIterator at(phiBlock->phisBegin(phi));
-            phiBlock->discardPhiAt(at);
-        } else {
-            MInstruction *ins = def->toInstruction();
-            if (!pushDeadInsOperands(ins))
-                 return false;
-            ins->block()->discard(ins);
-        }
+        if (!deleteDef(def))
+            return false;
     }
     return true;
 }
