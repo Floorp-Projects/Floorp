@@ -281,6 +281,10 @@ let AllPages = {
     }
   },
 
+  get updateScheduledForHiddenPages() {
+    return !!this._scheduleUpdateTimeout;
+  },
+
   /**
    * Implements the nsIObserver interface to get notified when the preference
    * value changes or when a new copy of a page thumbnail is available.

@@ -5,12 +5,6 @@
 #endif
 
 /**
- * Define various fixed dimensions
- */
-const GRID_BOTTOM_EXTRA = 4; // title's line-height extends 4px past the margin
-const GRID_WIDTH_EXTRA = 1; // provide 1px buffer to allow for rounding error
-
-/**
  * This singleton represents the grid that contains all sites.
  */
 let gGrid = {
@@ -37,7 +31,7 @@ let gGrid = {
   get sites() [cell.site for each (cell in this.cells)],
 
   // Tells whether the grid has already been initialized.
-  get ready() !!this._ready,
+  get ready() !!this._node,
 
   /**
    * Initializes the grid.
@@ -46,18 +40,7 @@ let gGrid = {
   init: function Grid_init() {
     this._node = document.getElementById("newtab-grid");
     this._createSiteFragment();
-    this._renderGrid();
-    gLinks.populateCache(() => {
-      this._renderSites();
-      this._ready = true;
-    });
-    addEventListener("load", this);
-    addEventListener("resize", this);
-
-    // The document may already be loaded if the user is toggling the page
-    if (document.readyState == "complete") {
-      this.handleEvent({type: "load"});
-    }
+    this._render();
   },
 
   /**
@@ -70,18 +53,6 @@ let gGrid = {
     let node = aCell.node;
     node.appendChild(this._siteFragment.cloneNode(true));
     return new Site(node.firstElementChild, aLink);
-  },
-
-  /**
-   * Handles all grid events.
-   */
-  handleEvent: function Grid_handleEvent(aEvent) {
-    switch (aEvent.type) {
-      case "load":
-      case "resize":
-        this._resizeGrid();
-        break;
-    }
   },
 
   /**
@@ -98,11 +69,7 @@ let gGrid = {
     }, this);
 
     // Render the grid again.
-    if (this._shouldRenderGrid()) {
-      this._renderGrid();
-      this._resizeGrid();
-    }
-    this._renderSites();
+    this._render();
   },
 
   /**
@@ -123,30 +90,26 @@ let gGrid = {
    * Creates the newtab grid.
    */
   _renderGrid: function Grid_renderGrid() {
+    let row = document.createElementNS(HTML_NAMESPACE, "div");
     let cell = document.createElementNS(HTML_NAMESPACE, "div");
+    row.classList.add("newtab-row");
     cell.classList.add("newtab-cell");
 
     // Clear the grid
     this._node.innerHTML = "";
 
-    // Creates all the cells up to the maximum
-    for (let i = 0; i < gGridPrefs.gridColumns * gGridPrefs.gridRows; i++) {
-      this._node.appendChild(cell.cloneNode(true));
+    // Creates the structure of one row
+    for (let i = 0; i < gGridPrefs.gridColumns; i++) {
+      row.appendChild(cell.cloneNode(true));
+    }
+    // Creates the grid
+    for (let j = 0; j < gGridPrefs.gridRows; j++) {
+      this._node.appendChild(row.cloneNode(true));
     }
 
     // (Re-)initialize all cells.
     let cellElements = this.node.querySelectorAll(".newtab-cell");
     this._cells = [new Cell(this, cell) for (cell of cellElements)];
-  },
-
-  /**
-   * Calculate the height for a number of rows up to the maximum rows
-   * @param rows Number of rows defaulting to the max
-   */
-  _computeHeight: function Grid_computeHeight(aRows) {
-    let {gridRows} = gGridPrefs;
-    aRows = aRows === undefined ? gridRows : Math.min(gridRows, aRows);
-    return aRows * this._cellHeight + GRID_BOTTOM_EXTRA;
   },
 
   /**
@@ -190,34 +153,21 @@ let gGrid = {
   },
 
   /**
-   * Make sure the correct number of rows and columns are visible
+   * Renders the grid.
    */
-  _resizeGrid: function Grid_resizeGrid() {
-    // Save the cell's computed height/width including margin and border
-    if (this._cellMargin === undefined) {
-      let refCell = document.querySelector(".newtab-cell");
-      this._cellMargin = parseFloat(getComputedStyle(refCell).marginTop) * 2;
-      this._cellHeight = refCell.offsetHeight + this._cellMargin;
-      this._cellWidth = refCell.offsetWidth + this._cellMargin;
+  _render: function Grid_render() {
+    if (this._shouldRenderGrid()) {
+      this._renderGrid();
     }
 
-    let availSpace = document.documentElement.clientHeight - this._cellMargin -
-                     document.querySelector("#newtab-margin-undo-container").offsetHeight -
-                     document.querySelector("#newtab-search-container").offsetHeight;
-    let visibleRows = Math.floor(availSpace / this._cellHeight);
-    this._node.style.height = this._computeHeight() + "px";
-    this._node.style.maxHeight = this._computeHeight(visibleRows) + "px";
-    this._node.style.maxWidth = gGridPrefs.gridColumns * this._cellWidth +
-                                GRID_WIDTH_EXTRA + "px";
-
-    // Resize the search bar.
-    let width = parseFloat(window.getComputedStyle(this._node).width);
-    let visibleCols = Math.floor(width / this._cellWidth);
-    gSearch.setWidth(visibleCols * this._cellWidth - this._cellMargin);
+    this._renderSites();
   },
 
   _shouldRenderGrid : function Grid_shouldRenderGrid() {
+    let rowsLength = this._node.querySelectorAll(".newtab-row").length;
     let cellsLength = this._node.querySelectorAll(".newtab-cell").length;
-    return cellsLength != (gGridPrefs.gridRows * gGridPrefs.gridColumns);
+
+    return (rowsLength != gGridPrefs.gridRows ||
+            cellsLength != (gGridPrefs.gridRows * gGridPrefs.gridColumns));
   }
 };
