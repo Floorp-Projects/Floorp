@@ -131,8 +131,7 @@ Touch::Equals(Touch* aTouch)
          mForce == aTouch->Force() &&
          mRotationAngle == aTouch->RotationAngle() &&
          mRadius.x == aTouch->RadiusX() &&
-         mRadius.y == aTouch->RadiusY() &&
-         mMessage == aTouch->mMessage;
+         mRadius.y == aTouch->RadiusY();
 }
 
 JSObject*
