@@ -58,7 +58,7 @@ public:
 
   nsresult CreateAnonymousContent(
     nsTArray<nsIAnonymousContentCreator::ContentInfo>& aElements);
-  void AppendAnonymousContentTo(nsBaseContentList& aElements, uint32_t aFilter);
+  void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements, uint32_t aFilter);
   nsresult FireScrollPortEvent();
   void PostOverflowEvent();
   void Destroy();
@@ -544,7 +544,7 @@ public:
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) MOZ_OVERRIDE;
-  virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
+  virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                         uint32_t aFilter) MOZ_OVERRIDE;
 
   // nsIScrollbarOwner
@@ -833,7 +833,7 @@ public:
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) MOZ_OVERRIDE;
-  virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
+  virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                         uint32_t aFilter) MOZ_OVERRIDE;
 
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
