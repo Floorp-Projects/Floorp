@@ -1254,6 +1254,118 @@ TEST_F(APZCLongPressTester, LongPressPreventDefaultWithTouchAction) {
                                 | mozilla::layers::AllowedTouchBehavior::PINCH_ZOOM);
 }
 
+static void
+ApzcDoubleTap(AsyncPanZoomController* aApzc, int aX, int aY, int& aTime,
+              nsEventStatus (*aOutEventStatuses)[4] = nullptr)
+{
+  nsEventStatus status = ApzcDown(aApzc, aX, aY, aTime);
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[0] = status;
+  }
+  aTime += 10;
+  status = ApzcUp(aApzc, aX, aY, aTime);
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[1] = status;
+  }
+  aTime += 10;
+  status = ApzcDown(aApzc, aX, aY, aTime);
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[2] = status;
+  }
+  aTime += 10;
+  status = ApzcUp(aApzc, aX, aY, aTime);
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[3] = status;
+  }
+}
+
+static void
+ApzcDoubleTapAndCheckStatus(AsyncPanZoomController* aApzc, int aX, int aY, int& aTime)
+{
+  nsEventStatus statuses[4];
+  ApzcDoubleTap(aApzc, aX, aY, aTime, &statuses);
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[0]);
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[1]);
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[2]);
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[3]);
+}
+
+TEST_F(APZCGestureDetectorTester, DoubleTap) {
+  SetMayHaveTouchListeners();
+  MakeApzcZoomable();
+
+  EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(0);
+  EXPECT_CALL(*mcc, HandleDoubleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
+
+  int time = 0;
+  ApzcDoubleTapAndCheckStatus(apzc, 10, 10, time);
+
+  // responses to the two touchstarts
+  apzc->ContentReceivedTouch(false);
+  apzc->ContentReceivedTouch(false);
+
+  while (mcc->RunThroughDelayedTasks());
+
+  apzc->AssertStateIsReset();
+}
+
+TEST_F(APZCGestureDetectorTester, DoubleTapNotZoomable) {
+  SetMayHaveTouchListeners();
+  MakeApzcUnzoomable();
+
+  EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(2);
+  EXPECT_CALL(*mcc, HandleDoubleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(0);
+
+  int time = 0;
+  ApzcDoubleTapAndCheckStatus(apzc, 10, 10, time);
+
+  // responses to the two touchstarts
+  apzc->ContentReceivedTouch(false);
+  apzc->ContentReceivedTouch(false);
+
+  while (mcc->RunThroughDelayedTasks());
+
+  apzc->AssertStateIsReset();
+}
+
+TEST_F(APZCGestureDetectorTester, DoubleTapPreventDefaultFirstOnly) {
+  SetMayHaveTouchListeners();
+  MakeApzcZoomable();
+
+  EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
+  EXPECT_CALL(*mcc, HandleDoubleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(0);
+
+  int time = 0;
+  ApzcDoubleTapAndCheckStatus(apzc, 10, 10, time);
+
+  // responses to the two touchstarts
+  apzc->ContentReceivedTouch(true);
+  apzc->ContentReceivedTouch(false);
+
+  while (mcc->RunThroughDelayedTasks());
+
+  apzc->AssertStateIsReset();
+}
+
+TEST_F(APZCGestureDetectorTester, DoubleTapPreventDefaultBoth) {
+  SetMayHaveTouchListeners();
+  MakeApzcZoomable();
+
+  EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(0);
+  EXPECT_CALL(*mcc, HandleDoubleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(0);
+
+  int time = 0;
+  ApzcDoubleTapAndCheckStatus(apzc, 10, 10, time);
+
+  // responses to the two touchstarts
+  apzc->ContentReceivedTouch(true);
+  apzc->ContentReceivedTouch(true);
+
+  while (mcc->RunThroughDelayedTasks());
+
+  apzc->AssertStateIsReset();
+}
+
 // Layer tree for HitTesting1
 static already_AddRefed<mozilla::layers::Layer>
 CreateTestLayerTree1(nsRefPtr<LayerManager>& aLayerManager, nsTArray<nsRefPtr<Layer> >& aLayers) {
