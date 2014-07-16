@@ -115,6 +115,8 @@ private:
   void BlockScripts();
   void UnblockScripts();
 
+  nsIPrincipal* Principal();
+
   nsCOMPtr<nsIDocument> mDocument;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIStreamListener> mParserStreamListener;
