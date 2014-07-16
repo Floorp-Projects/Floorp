@@ -68,7 +68,7 @@ public:
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) MOZ_OVERRIDE;
-  virtual void AppendAnonymousContentTo(nsBaseContentList& aElements, uint32_t aFilter) MOZ_OVERRIDE;
+  virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements, uint32_t aFilter) MOZ_OVERRIDE;
 
   // Touch caret handle function
   mozilla::dom::Element* GetTouchCaretElement() const

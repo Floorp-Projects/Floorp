@@ -114,11 +114,19 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 }
 
 void
-nsCanvasFrame::AppendAnonymousContentTo(nsBaseContentList& aElements, uint32_t aFilter)
+nsCanvasFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements, uint32_t aFilter)
 {
-  aElements.MaybeAppendElement(mTouchCaretElement);
-  aElements.MaybeAppendElement(mSelectionCaretsStartElement);
-  aElements.MaybeAppendElement(mSelectionCaretsEndElement);
+  if (mTouchCaretElement) {
+    aElements.AppendElement(mTouchCaretElement);
+  }
+
+  if (mSelectionCaretsStartElement) {
+    aElements.AppendElement(mSelectionCaretsStartElement);
+  }
+
+  if (mSelectionCaretsEndElement) {
+    aElements.AppendElement(mSelectionCaretsEndElement);
+  }
 }
 
 void

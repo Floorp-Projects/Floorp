@@ -10,6 +10,8 @@
 #include "mozilla/dom/HTMLContentElement.h"
 #include "mozilla/dom/HTMLShadowElement.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "nsIAnonymousContentCreator.h"
+#include "nsIFrame.h"
 
 namespace mozilla {
 namespace dom {
@@ -154,11 +156,15 @@ ExplicitChildIterator::GetNextChild()
   return mChild;
 }
 
-FlattenedChildIterator::FlattenedChildIterator(nsIContent* aParent)
-  : ExplicitChildIterator(aParent), mXBLInvolved(false)
+void
+FlattenedChildIterator::Init(bool aIgnoreXBL)
 {
+  if (aIgnoreXBL) {
+    return;
+  }
+
   nsXBLBinding* binding =
-    aParent->OwnerDoc()->BindingManager()->GetBindingWithContent(aParent);
+    mParent->OwnerDoc()->BindingManager()->GetBindingWithContent(mParent);
 
   if (binding) {
     nsIContent* anon = binding->GetAnonymousContent();
@@ -171,8 +177,8 @@ FlattenedChildIterator::FlattenedChildIterator(nsIContent* aParent)
   // We set mXBLInvolved to true if either:
   // - The node we're iterating has a binding with content attached to it.
   // - The node is generated XBL content and has an <xbl:children> child.
-  if (!mXBLInvolved && aParent->GetBindingParent()) {
-    for (nsIContent* child = aParent->GetFirstChild();
+  if (!mXBLInvolved && mParent->GetBindingParent()) {
+    for (nsIContent* child = mParent->GetFirstChild();
          child;
          child = child->GetNextSibling()) {
       if (child->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
@@ -281,5 +287,63 @@ ExplicitChildIterator::GetPreviousChild()
   return mChild;
 }
 
+nsIContent*
+AllChildrenIterator::GetNextChild()
+{
+  if (mPhase == eNeedBeforeKid) {
+    mPhase = eNeedExplicitKids;
+    nsIFrame* frame = mOriginalContent->GetPrimaryFrame();
+    if (frame) {
+      nsIFrame* beforeFrame = nsLayoutUtils::GetBeforeFrame(frame);
+      if (beforeFrame) {
+        return beforeFrame->GetContent();
+      }
+    }
+  }
+
+  if (mPhase == eNeedExplicitKids) {
+    nsIContent* kid = ExplicitChildIterator::GetNextChild();
+    if (kid) {
+      return kid;
+    }
+
+    mPhase = eNeedAnonKids;
+  }
+
+  if (mPhase == eNeedAnonKids) {
+    if (mAnonKids.IsEmpty()) {
+      nsIAnonymousContentCreator* ac =
+        do_QueryFrame(mOriginalContent->GetPrimaryFrame());
+      if (ac) {
+        ac->AppendAnonymousContentTo(mAnonKids, mFlags);
+      }
+    }
+
+    if (!mAnonKids.IsEmpty()) {
+      nsIContent* nextKid = mAnonKids[0];
+      mAnonKids.RemoveElementAt(0);
+      if (mAnonKids.IsEmpty()) {
+        mPhase = eNeedAfterKid;
+      }
+
+      return nextKid;
+    }
+
+    mPhase = eNeedAfterKid;
+  }
+
+  if (mPhase == eNeedAfterKid) {
+    mPhase = eDone;
+    nsIFrame* frame = mOriginalContent->GetPrimaryFrame();
+    if (frame) {
+      nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(frame);
+      if (afterFrame) {
+        return afterFrame->GetContent();
+      }
+    }
+  }
+
+  return nullptr;
+}
 } // namespace dom
 } // namespace mozilla
