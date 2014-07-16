@@ -57,10 +57,6 @@ private:
   nsString mDeviceAddress;
   bool mAuth;
   bool mEncrypt;
-  bool mIsServer;
-  int mReceivedSocketInfoLength;
-
-  bool ReceiveSocketInfo(nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage);
 };
 
 END_BLUETOOTH_NAMESPACE
