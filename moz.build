@@ -24,6 +24,9 @@ if not CONFIG['JS_STANDALONE']:
 if not CONFIG['LIBXUL_SDK']:
     add_tier_dir('base', ['mfbt'])
 
+    if not CONFIG['MOZ_NATIVE_ZLIB']:
+        add_tier_dir('base', ['modules/zlib'])
+
     if not CONFIG['JS_STANDALONE']:
         if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
             add_tier_dir('base', ['other-licenses/android'])
@@ -31,10 +34,8 @@ if not CONFIG['LIBXUL_SDK']:
         if CONFIG['MOZ_MEMORY']:
             add_tier_dir('base', ['memory'])
 
-        if not CONFIG['MOZ_NATIVE_ZLIB']:
-            add_tier_dir('base', ['modules/zlib'])
-
         add_tier_dir('base', ['mozglue', 'memory/mozalloc'])
+
 
 if not CONFIG['JS_STANDALONE']:
     add_tier_dir('precompile', 'xpcom/xpidl')
