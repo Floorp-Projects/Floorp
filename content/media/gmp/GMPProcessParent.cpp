@@ -51,6 +51,7 @@ GMPProcessParent::Delete()
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
 
   if (currentLoop == ioLoop) {
+    Join();
     delete this;
     return;
   }
