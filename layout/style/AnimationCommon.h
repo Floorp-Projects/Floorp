@@ -363,17 +363,23 @@ public:
   bool IsRunningAt(mozilla::TimeStamp aTime) const;
   bool IsCurrentAt(mozilla::TimeStamp aTime) const;
 
-  // Return the duration at aTime (or, if paused, mPauseStart) since
-  // the start of the delay period.  May be negative.
-  // Returns a null value if and only if the passed-in TimeStamp IsNull().
-  Nullable<mozilla::TimeDuration>
-  GetLocalTimeAt(mozilla::TimeStamp aTime) const {
-    MOZ_ASSERT(aTime.IsNull() || !IsPaused() || aTime >= mPauseStart,
+  // Return the duration since the start of the delay period, taking into
+  // account the pause state.  May be negative.
+  // Returns a null value if the timeline associated with this object has a
+  // current timestamp that is null or if the start time of this object is
+  // null.
+  Nullable<mozilla::TimeDuration> GetLocalTime() const {
+    const mozilla::TimeStamp& timelineTime = mTimeline->GetCurrentTimeStamp();
+    // FIXME: In order to support arbitrary timelines we will need to fix
+    // the pause logic to handle the timeline time going backwards.
+    MOZ_ASSERT(timelineTime.IsNull() || !IsPaused() ||
+               timelineTime >= mPauseStart,
                "if paused, any non-null value of aTime must be at least"
                " mPauseStart");
+
     Nullable<mozilla::TimeDuration> result; // Initializes to null
-    if (!aTime.IsNull()) {
-      result.SetValue((IsPaused() ? mPauseStart : aTime) - mStartTime);
+    if (!timelineTime.IsNull() && !mStartTime.IsNull()) {
+      result.SetValue((IsPaused() ? mPauseStart : timelineTime) - mStartTime);
     }
     return result;
   }

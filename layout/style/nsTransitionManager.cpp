@@ -37,7 +37,7 @@ using namespace mozilla::layers;
 using namespace mozilla::css;
 
 double
-ElementPropertyTransition::ValuePortionFor(TimeStamp aRefreshTime) const
+ElementPropertyTransition::CurrentValuePortion() const
 {
   // It would be easy enough to handle finished transitions by using a time
   // fraction of 1 but currently we should not be called for finished
@@ -45,7 +45,7 @@ ElementPropertyTransition::ValuePortionFor(TimeStamp aRefreshTime) const
   MOZ_ASSERT(!IsFinishedTransition(),
              "Getting the value portion of a finished transition");
 
-  Nullable<TimeDuration> localTime = GetLocalTimeAt(aRefreshTime);
+  Nullable<TimeDuration> localTime = GetLocalTime();
   MOZ_ASSERT(!localTime.IsNull(),
              "Getting the value portion of an animation that's not being "
              "sampled");
@@ -491,9 +491,6 @@ nsTransitionManager::ConsiderStartingTransition(
     return;
   }
 
-  TimeStamp mostRecentRefresh =
-    presContext->RefreshDriver()->MostRecentRefresh();
-
   const nsTimingFunction &tf = aTransition.GetTimingFunction();
   float delay = aTransition.GetDelay();
   float duration = aTransition.GetDuration();
@@ -512,7 +509,7 @@ nsTransitionManager::ConsiderStartingTransition(
     // Compute the appropriate negative transition-delay such that right
     // now we'd end up at the current position.
     double valuePortion =
-      oldPT->ValuePortionFor(mostRecentRefresh) * oldPT->mReversePortion +
+      oldPT->CurrentValuePortion() * oldPT->mReversePortion +
       (1.0 - oldPT->mReversePortion);
     // A timing function with negative y1 (or y2!) might make
     // valuePortion negative.  In this case, we still want to apply our
@@ -553,7 +550,7 @@ nsTransitionManager::ConsiderStartingTransition(
   segment.mToKey = 1;
   segment.mTimingFunction.Init(tf);
 
-  pt->mStartTime = mostRecentRefresh;
+  pt->mStartTime = timeline->GetCurrentTimeStamp();
   pt->mTiming.mIterationDuration = TimeDuration::FromMilliseconds(duration);
   pt->mTiming.mDelay = TimeDuration::FromMilliseconds(delay);
   pt->mTiming.mIterationCount = 1;
@@ -823,7 +820,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
             collection->mAnimations.RemoveElementAt(i);
           }
         } else {
-          Nullable<TimeDuration> localTime = anim->GetLocalTimeAt(now);
+          Nullable<TimeDuration> localTime = anim->GetLocalTime();
           ComputedTiming computedTiming =
             ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
           if (computedTiming.mPhase == ComputedTiming::AnimationPhase_After) {
