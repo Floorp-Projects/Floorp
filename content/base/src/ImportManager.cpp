@@ -133,8 +133,8 @@ public:
                                                 mNode,
                                                 mSuccess ? NS_LITERAL_STRING("load")
                                                          : NS_LITERAL_STRING("error"),
-                                                /* aCanBubble = */ true,
-                                                /* aCancelable = */ true);
+                                                /* aCanBubble = */ false,
+                                                /* aCancelable = */ false);
   }
 
 private:
