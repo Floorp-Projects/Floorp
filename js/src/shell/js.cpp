@@ -6419,7 +6419,7 @@ main(int argc, char **argv, char **envp)
 #endif
 
     /* Use the same parameters as the browser in xpcjsruntime.cpp. */
-    rt = JS_NewRuntime(32L * 1024L * 1024L, nurseryBytes);
+    rt = JS_NewRuntime(JS::UnlimitedHeapMaxBytes, nurseryBytes);
     if (!rt)
         return 1;
 
@@ -6429,7 +6429,6 @@ main(int argc, char **argv, char **envp)
 
     gInterruptFunc.construct(rt, NullValue());
 
-    JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
 #ifdef JSGC_GENERATIONAL
     Maybe<JS::AutoDisableGenerationalGC> noggc;
     if (op.getBoolOption("no-ggc"))
