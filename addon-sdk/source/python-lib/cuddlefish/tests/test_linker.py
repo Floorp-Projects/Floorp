@@ -48,6 +48,7 @@ class Basic(unittest.TestCase):
         def assertReqIs(modname, reqname, path):
             reqs = m["one/%s" % modname]["requirements"]
             self.failUnlessEqual(reqs[reqname], path)
+
         assertReqIs("main", "sdk/panel", "sdk/panel")
         assertReqIs("main", "two.js", "one/two")
         assertReqIs("main", "./two", "one/two")
@@ -57,11 +58,26 @@ class Basic(unittest.TestCase):
         assertReqIs("subdir/three", "../main", "one/main")
 
         target_cfg.dependencies = []
+
+        try:
+            # this should now work, as we ignore missing modules by default
+            m = manifest.build_manifest(target_cfg, pkg_cfg, deps, scan_tests=False)
+            m = m.get_harness_options_manifest(False)
+
+            assertReqIs("main", "sdk/panel", "sdk/panel")
+            # note that with "addon-sdk" dependency present,
+            # "sdk/tabs.js" mapped to "sdk/tabs", but without,
+            # we just get the default (identity) mapping
+            assertReqIs("main", "sdk/tabs.js", "sdk/tabs.js")
+        except Exception, e:
+            self.fail("Must not throw from build_manifest() if modules are missing")
+
         # now, because .dependencies *is* provided, we won't search 'deps',
-        # so we'll get a link error
+        # and stop_on_missing is True, we'll get a link error
         self.assertRaises(manifest.ModuleNotFoundError,
                           manifest.build_manifest,
-                          target_cfg, pkg_cfg, deps, scan_tests=False)
+                          target_cfg, pkg_cfg, deps, scan_tests=False,
+                          abort_on_missing=True)
 
     def test_main_in_deps(self):
         target_cfg = self.get_pkg("three")
