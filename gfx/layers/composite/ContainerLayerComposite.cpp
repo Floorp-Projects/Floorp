@@ -299,6 +299,7 @@ ContainerRender(ContainerT* aContainer,
   bool surfaceCopyNeeded;
   aContainer->DefaultComputeSupportsComponentAlphaChildren(&surfaceCopyNeeded);
   if (needsSurface) {
+    MOZ_PERFORMANCE_WARNING("gfx", "[%p] Container layer requires intermediate surface\n", aContainer);
     SurfaceInitMode mode = INIT_MODE_CLEAR;
     gfx::IntRect surfaceRect = gfx::IntRect(visibleRect.x, visibleRect.y,
                                             visibleRect.width, visibleRect.height);

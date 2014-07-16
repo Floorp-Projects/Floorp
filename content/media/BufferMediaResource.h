@@ -33,11 +33,13 @@ public:
     MOZ_COUNT_CTOR(BufferMediaResource);
   }
 
+protected:
   virtual ~BufferMediaResource()
   {
     MOZ_COUNT_DTOR(BufferMediaResource);
   }
 
+private:
   virtual nsresult Close() { return NS_OK; }
   virtual void Suspend(bool aCloseImmediately) {}
   virtual void Resume() {}

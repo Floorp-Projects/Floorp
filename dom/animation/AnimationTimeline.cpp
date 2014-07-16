@@ -5,6 +5,7 @@
 
 #include "AnimationTimeline.h"
 #include "mozilla/dom/AnimationTimelineBinding.h"
+#include "mozilla/TimeStamp.h"
 #include "nsContentUtils.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -28,23 +29,43 @@ AnimationTimeline::WrapObject(JSContext* aCx)
 Nullable<double>
 AnimationTimeline::GetCurrentTime() const
 {
-  Nullable<double> result; // Default ctor initializes to null
+  return ToTimelineTime(GetCurrentTimeStamp());
+}
+
+TimeStamp
+AnimationTimeline::GetCurrentTimeStamp() const
+{
+  // Always return the same object to benefit from return-value optimization.
+  TimeStamp result; // Initializes to null timestamp
 
   nsIPresShell* presShell = mDocument->GetShell();
-  if (!presShell)
+  if (MOZ_UNLIKELY(!presShell)) {
     return result;
+  }
 
   nsPresContext* presContext = presShell->GetPresContext();
-  if (!presContext)
+  if (MOZ_UNLIKELY(!presContext)) {
     return result;
+  }
+
+  result = presContext->RefreshDriver()->MostRecentRefresh();
+  return result;
+}
+
+Nullable<double>
+AnimationTimeline::ToTimelineTime(const mozilla::TimeStamp& aTimeStamp) const
+{
+  Nullable<double> result; // Initializes to null
+  if (aTimeStamp.IsNull()) {
+    return result;
+  }
 
   nsRefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
-  if (!timing)
+  if (MOZ_UNLIKELY(!timing)) {
     return result;
+  }
 
-  TimeStamp now = presContext->RefreshDriver()->MostRecentRefresh();
-  result.SetValue(timing->TimeStampToDOMHighRes(now));
-
+  result.SetValue(timing->TimeStampToDOMHighRes(aTimeStamp));
   return result;
 }
 

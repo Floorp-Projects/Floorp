@@ -72,9 +72,10 @@ protected:
 //-------------------------------------------------------------------------
 class nsPrinterEnumeratorWin MOZ_FINAL : public nsIPrinterEnumerator
 {
+  ~nsPrinterEnumeratorWin();
+
 public:
   nsPrinterEnumeratorWin();
-  ~nsPrinterEnumeratorWin();
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRINTERENUMERATOR
 };

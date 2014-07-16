@@ -429,6 +429,10 @@ pref("gfx.hidpi.enabled", 2);
 pref("gfx.layerscope.enabled", false);
 pref("gfx.layerscope.port", 23456);
 
+// Log severe performance warnings to the error console and profiles.
+// This should be use to quickly find which slow paths are used by test cases.
+pref("gfx.perf-warnings.enabled", false);
+
 // 0 = Off, 1 = Full, 2 = Tagged Images Only.
 // See eCMSMode in gfx/thebes/gfxPlatform.h
 pref("gfx.color_management.mode", 2);

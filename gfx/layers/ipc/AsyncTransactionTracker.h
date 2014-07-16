@@ -196,11 +196,13 @@ public:
     MOZ_COUNT_CTOR(FenceDeliveryTracker);
   }
 
+protected:
   ~FenceDeliveryTracker()
   {
     MOZ_COUNT_DTOR(FenceDeliveryTracker);
   }
 
+public:
   virtual void Complete() MOZ_OVERRIDE
   {
     mFenceHandle = FenceHandle();

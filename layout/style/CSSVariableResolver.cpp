@@ -231,7 +231,9 @@ CSSVariableResolver::Resolve(const CSSVariableValues* aInherited,
     }
   }
 
+#ifdef DEBUG
   mResolved = true;
+#endif
 }
 
 void

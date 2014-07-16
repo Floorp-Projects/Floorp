@@ -27,11 +27,14 @@ public:
   {
     MOZ_COUNT_CTOR(ClientColorLayer);
   }
+
+protected:
   virtual ~ClientColorLayer()
   {
     MOZ_COUNT_DTOR(ClientColorLayer);
   }
 
+public:
   virtual void SetVisibleRegion(const nsIntRegion& aRegion)
   {
     NS_ASSERTION(ClientManager()->InConstruction(),
