@@ -714,7 +714,8 @@ const Loader = iced(function Loader(options) {
       console: console
     },
     resolve: options.isNative ?
-      exports.nodeResolve :
+      // Make the returned resolve function have the same signature
+      (id, requirer) => exports.nodeResolve(id, requirer, { rootURI: rootURI }) :
       exports.resolve,
     sharedGlobalBlacklist: ["sdk/indexed-db"]
   }, options);

@@ -390,6 +390,10 @@
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.readinglist"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 
+        <provider android:name="org.mozilla.gecko.db.SearchHistoryProvider"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.db.searchhistory"
+                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
+
         <service
             android:exported="false"
             android:name="org.mozilla.gecko.updater.UpdateService"
