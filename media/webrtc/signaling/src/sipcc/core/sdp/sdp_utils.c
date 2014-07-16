@@ -60,7 +60,7 @@ static sdp_result_e next_token(const char **string_of_tokens, char *token, unsig
 {
   int flag2moveon = 0;
   const char *str = *string_of_tokens;
-  char *token_start = token;
+  const char *token_end = token + token_max_len - 1;
   const char *next_delim;
 
   if (!string_of_tokens || !*string_of_tokens || !token || !delim) {
@@ -89,7 +89,7 @@ static sdp_result_e next_token(const char **string_of_tokens, char *token, unsig
   /* Now locate end of token */
   flag2moveon = 0;
 
-  while (((token-token_start) < token_max_len - 1) &&
+  while ((token < token_end) &&
          (*str != '\0') && (*str != '\n') && (*str != '\r')) {
       for (next_delim=delim; *next_delim; next_delim++) {
           if (*str == *next_delim) {
