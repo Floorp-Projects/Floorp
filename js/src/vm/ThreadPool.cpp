@@ -502,10 +502,10 @@ ThreadPool::abortJob()
 // that a small number of chunks will be used intensively for a short
 // while and then be abandoned at the next GC.
 //
-// It's an open question whether it's best to go directly to the
-// pageAllocator, as now, or go via the GC's chunk pool.  Either way
-// there's a need to manage a predictable chunk cache here as we don't
-// want chunks to be deallocated during a parallel section.
+// It's an open question whether it's best to map the chunk directly,
+// as now, or go via the GC's chunk pool.  Either way there's a need
+// to manage a predictable chunk cache here as we don't want chunks to
+// be deallocated during a parallel section.
 
 gc::ForkJoinNurseryChunk *
 ThreadPool::getChunk()
@@ -524,7 +524,7 @@ ThreadPool::getChunk()
     }
     gc::ForkJoinNurseryChunk *c =
         reinterpret_cast<gc::ForkJoinNurseryChunk *>(
-            runtime_->gc.pageAllocator.mapAlignedPages(gc::ChunkSize, gc::ChunkSize));
+            gc::MapAlignedPages(gc::ChunkSize, gc::ChunkSize));
     if (!c)
         return c;
     poisonChunk(c);
@@ -580,7 +580,7 @@ ThreadPool::clearChunkCache()
     while (p) {
         ChunkFreeList *victim = p;
         p = p->next;
-        runtime_->gc.pageAllocator.unmapPages(victim, gc::ChunkSize);
+        gc::UnmapPages(victim, gc::ChunkSize);
     }
 #endif
 }

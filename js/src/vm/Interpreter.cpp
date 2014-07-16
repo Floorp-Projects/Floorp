@@ -638,7 +638,7 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
 #endif
 
     /* The VAROBJFIX option makes varObj == globalObj in global code. */
-    if (!cx->options().varObjFix()) {
+    if (!cx->runtime()->options().varObjFix()) {
         if (!scopeChain->setVarObj(cx))
             return false;
     }
@@ -2733,7 +2733,7 @@ CASE(JSOP_OBJECT)
 {
     RootedObject &ref = rootObject0;
     ref = script->getObject(REGS.pc);
-    if (JS::CompartmentOptionsRef(cx).cloneSingletons(cx)) {
+    if (JS::CompartmentOptionsRef(cx).cloneSingletons()) {
         JSObject *obj = js::DeepCloneObjectLiteral(cx, ref, js::MaybeSingletonObject);
         if (!obj)
             goto error;

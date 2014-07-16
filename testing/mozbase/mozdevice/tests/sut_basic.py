@@ -15,13 +15,11 @@ class BasicTest(unittest.TestCase):
 
     def test_init_err(self):
         """Tests error handling during initialization."""
-        cmds = [("testroot", "/mnt/sdcard"),
-                ("isdir /mnt/sdcard/tests", "/mnt/sdcard/tests: No such file or directory\n"),
-                ("isdir /mnt/sdcard/tests", "/mnt/sdcard/tests: No such file or directory\n"),
-                ("mkdr /mnt/sdcard/tests", "/mnt/sdcard/tests successfully created"),
-                ("ver", "SUTAgentAndroid Version 1.14")]
-        a = MockAgent(self, start_commands = cmds)
-        mozdevice.DroidSUT("127.0.0.1", port=a.port, logLevel=mozlog.DEBUG)
+        a = MockAgent(self, start_commands=[("ver", "##AGENT-WARNING## No version")])
+        self.assertRaises(mozdevice.DMError,
+                          lambda: mozdevice.DroidSUT("127.0.0.1",
+                                                     port=a.port,
+                                                     logLevel=mozlog.DEBUG))
         a.wait()
 
     def test_timeout_normal(self):

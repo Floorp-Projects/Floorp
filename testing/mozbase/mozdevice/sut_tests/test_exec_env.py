@@ -14,7 +14,7 @@ class ExecEnvTestCase(DeviceManagerTestCase):
         """Exec test with env vars."""
         # Push the file
         localfile = os.path.join('test-files', 'test_script.sh')
-        remotefile = posixpath.join(self.dm.getDeviceRoot(), 'test_script.sh')
+        remotefile = posixpath.join(self.dm.deviceRoot, 'test_script.sh')
         self.dm.pushFile(localfile, remotefile)
 
         # Run the cmd

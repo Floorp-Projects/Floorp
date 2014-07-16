@@ -12,6 +12,9 @@ Cu.import("resource://gre/modules/FxAccounts.jsm");
 let fxAccountsCommon = {};
 Cu.import("resource://gre/modules/FxAccountsCommon.js", fxAccountsCommon);
 
+// for master-password utilities
+Cu.import("resource://services-sync/util.js");
+
 const PREF_LAST_FXA_USER = "identity.fxaccounts.lastSignedInUserHash";
 const PREF_SYNC_SHOW_CUSTOMIZATION = "services.sync.ui.showCustomizationDialog";
 
@@ -103,6 +106,12 @@ let wrapper = {
       document.body.remove();
       return;
     }
+
+    // If a master-password is enabled, we want to encourage the user to
+    // unlock it.  Things still work if not, but the user will probably need
+    // to re-auth next startup (in which case we will get here again and
+    // re-prompt)
+    Utils.ensureMPUnlocked();
 
     let iframe = document.getElementById("remote");
     this.iframe = iframe;

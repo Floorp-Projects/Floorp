@@ -31,8 +31,16 @@
 
 using namespace mozilla;
 
-#define TOUCHCARET_LOG(...)
-// #define TOUCHCARET_LOG(...) printf_stderr("TouchCaret: " __VA_ARGS__)
+// To enable all the TOUCHCARET_LOG print statements, change the 0 to 1 in the
+// following #define.
+#define ENABLE_TOUCHCARET_LOG 0
+
+#if ENABLE_TOUCHCARET_LOG
+  #define TOUCHCARET_LOG(message, ...) \
+    printf_stderr("TouchCaret (%p): %s:%d : " message "\n", this, __func__, __LINE__, ##__VA_ARGS__);
+#else
+  #define TOUCHCARET_LOG(message, ...)
+#endif
 
 // Click on the boundary of input/textarea will place the caret at the
 // front/end of the content. To advoid this, we need to deflate the content
@@ -50,6 +58,7 @@ TouchCaret::TouchCaret(nsIPresShell* aPresShell)
     mCaretCenterToDownPointOffsetY(0),
     mVisible(false)
 {
+  TOUCHCARET_LOG("Constructor");
   MOZ_ASSERT(NS_IsMainThread());
 
   static bool addedTouchCaretPref = false;
@@ -68,6 +77,7 @@ TouchCaret::TouchCaret(nsIPresShell* aPresShell)
 
 TouchCaret::~TouchCaret()
 {
+  TOUCHCARET_LOG("Destructor");
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mTouchCaretExpirationTimer) {
@@ -90,8 +100,10 @@ void
 TouchCaret::SetVisibility(bool aVisible)
 {
   if (mVisible == aVisible) {
+    TOUCHCARET_LOG("Visibility not changed");
     return;
   }
+
   mVisible = aVisible;
 
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
@@ -108,6 +120,8 @@ TouchCaret::SetVisibility(bool aVisible)
   touchCaretElement->ClassList()->Toggle(NS_LITERAL_STRING("hidden"),
                                          dom::Optional<bool>(!mVisible),
                                          err);
+  TOUCHCARET_LOG("Visibility %s", (mVisible ? "shown" : "hidden"));
+
   // Set touch caret expiration time.
   mVisible ? LaunchExpirationTimer() : CancelExpirationTimer();
 
@@ -229,6 +243,8 @@ TouchCaret::SetTouchFramePos(const nsPoint& aOrigin)
   styleStr.AppendLiteral("px; top: ");
   styleStr.AppendInt(y);
   styleStr.AppendLiteral("px;");
+
+  TOUCHCARET_LOG("Set style: %s", NS_ConvertUTF16toUTF8(styleStr).get());
 
   touchCaretElement->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
                              styleStr, true);
@@ -367,6 +383,7 @@ TouchCaret::UpdateTouchCaret(bool aVisible)
   bool caretVisible = false;
   caret->GetCaretVisible(&caretVisible);
   if (!caretVisible) {
+    TOUCHCARET_LOG("Caret is not visible");
     SetVisibility(false);
     return;
   }
@@ -376,6 +393,7 @@ TouchCaret::UpdateTouchCaret(bool aVisible)
   nsRect focusRect;
   nsIFrame* focusFrame = caret->GetGeometry(caretSelection, &focusRect);
   if (!focusFrame || focusRect.IsEmpty()) {
+    TOUCHCARET_LOG("Focus frame not valid");
     SetVisibility(false);
     return;
   }
@@ -492,6 +510,7 @@ TouchCaret::HandleEvent(WidgetEvent* aEvent)
     case NS_KEY_PRESS:
     case NS_WHEEL_EVENT_START:
       // Disable touch caret while key/wheel event is received.
+      TOUCHCARET_LOG("Receive key/wheel event");
       SetVisibility(false);
       break;
     default:
@@ -532,7 +551,7 @@ TouchCaret::GetEventPosition(WidgetMouseEvent* aEvent)
 nsEventStatus
 TouchCaret::HandleMouseMoveEvent(WidgetMouseEvent* aEvent)
 {
-  TOUCHCARET_LOG("%p got a mouse-move in state %d\n", this, mState);
+  TOUCHCARET_LOG("Got a mouse-move in state %d", mState);
   nsEventStatus status = nsEventStatus_eIgnore;
 
   switch (mState) {
@@ -564,7 +583,7 @@ TouchCaret::HandleMouseMoveEvent(WidgetMouseEvent* aEvent)
 nsEventStatus
 TouchCaret::HandleTouchMoveEvent(WidgetTouchEvent* aEvent)
 {
-  TOUCHCARET_LOG("%p got a touch-move in state %d\n", this, mState);
+  TOUCHCARET_LOG("Got a touch-move in state %d", mState);
   nsEventStatus status = nsEventStatus_eIgnore;
 
   switch (mState) {
@@ -600,7 +619,7 @@ TouchCaret::HandleTouchMoveEvent(WidgetTouchEvent* aEvent)
 nsEventStatus
 TouchCaret::HandleMouseUpEvent(WidgetMouseEvent* aEvent)
 {
-  TOUCHCARET_LOG("%p got a mouse-up in state %d\n", this, mState);
+  TOUCHCARET_LOG("Got a mouse-up in state %d", mState);
   nsEventStatus status = nsEventStatus_eIgnore;
 
   switch (mState) {
@@ -628,7 +647,7 @@ TouchCaret::HandleMouseUpEvent(WidgetMouseEvent* aEvent)
 nsEventStatus
 TouchCaret::HandleTouchUpEvent(WidgetTouchEvent* aEvent)
 {
-  TOUCHCARET_LOG("%p got a touch-end in state %d\n", this, mState);
+  TOUCHCARET_LOG("Got a touch-end in state %d", mState);
   // Remove touches from cache if the stroke is gone in TOUCHDRAG states.
   if (mState == TOUCHCARET_TOUCHDRAG_ACTIVE ||
       mState == TOUCHCARET_TOUCHDRAG_INACTIVE) {
@@ -685,7 +704,7 @@ TouchCaret::HandleTouchUpEvent(WidgetTouchEvent* aEvent)
 nsEventStatus
 TouchCaret::HandleMouseDownEvent(WidgetMouseEvent* aEvent)
 {
-  TOUCHCARET_LOG("%p got a mouse-down in state %d\n", this, mState);
+  TOUCHCARET_LOG("Got a mouse-down in state %d", mState);
   if (!GetVisibility()) {
     // If touch caret is invisible, bypass event.
     return nsEventStatus_eIgnore;
@@ -734,7 +753,7 @@ TouchCaret::HandleMouseDownEvent(WidgetMouseEvent* aEvent)
 nsEventStatus
 TouchCaret::HandleTouchDownEvent(WidgetTouchEvent* aEvent)
 {
-  TOUCHCARET_LOG("%p got a touch-start in state %d\n", this, mState);
+  TOUCHCARET_LOG("Got a touch-start in state %d", mState);
 
   nsEventStatus status = nsEventStatus_eIgnore;
 
@@ -793,7 +812,7 @@ TouchCaret::HandleTouchDownEvent(WidgetTouchEvent* aEvent)
 void
 TouchCaret::SetState(TouchCaretState aState)
 {
-  TOUCHCARET_LOG("%p state changed from %d to %d\n", this, mState, aState);
+  TOUCHCARET_LOG("state changed from %d to %d", mState, aState);
   if (mState == TOUCHCARET_NONE) {
     MOZ_ASSERT(aState != TOUCHCARET_TOUCHDRAG_INACTIVE,
                "mState: NONE => TOUCHDRAG_INACTIVE isn't allowed!");

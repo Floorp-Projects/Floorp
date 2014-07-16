@@ -76,10 +76,6 @@ js_ReportUncaughtException(JSContext *cx);
 extern JSErrorReport *
 js_ErrorFromException(JSContext *cx, js::HandleObject obj);
 
-extern const JSErrorFormatString *
-js_GetLocalizedErrorMessage(js::ExclusiveContext *cx, void *userRef, const char *locale,
-                            const unsigned errorNumber);
-
 /*
  * Make a copy of errobj parented to cx's compartment's global.
  *

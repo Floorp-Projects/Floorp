@@ -20,6 +20,7 @@ SOURCES += [
     'pkixder_universal_types_tests.cpp',
     'pkixgtest.cpp',
     'pkixocsp_CreateEncodedOCSPRequest_tests.cpp',
+    'pkixocsp_VerifyEncodedOCSPResponse.cpp',
 ]
 
 LOCAL_INCLUDES += [

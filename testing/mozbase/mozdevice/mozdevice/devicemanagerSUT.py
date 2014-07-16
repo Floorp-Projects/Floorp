@@ -37,16 +37,13 @@ class DeviceManagerSUT(DeviceManager):
 
     def __init__(self, host, port = 20701, retryLimit = 5,
             deviceRoot = None, logLevel = mozlog.ERROR, **kwargs):
-        DeviceManager.__init__(self, logLevel)
+        DeviceManager.__init__(self, logLevel = logLevel,
+                               deviceRoot = deviceRoot)
         self.host = host
         self.port = port
         self.retryLimit = retryLimit
         self._sock = None
         self._everConnected = False
-        self.deviceRoot = deviceRoot
-
-        # Initialize device root
-        self.getDeviceRoot()
 
         # Get version
         verstring = self._runCmds([{ 'cmd': 'ver' }])
@@ -298,6 +295,14 @@ class DeviceManagerSUT(DeviceManager):
                 self._sock = None
                 raise DMError("Automation Error: Error closing socket")
 
+    def _setupDeviceRoot(self, deviceRoot):
+        if not deviceRoot:
+            deviceRoot = "%s/tests" % self._runCmds(
+                [{ 'cmd': 'testroot' }]).strip()
+        self.mkDir(deviceRoot)
+
+        return deviceRoot
+
     def shell(self, cmd, outputfile, env=None, cwd=None, timeout=None, root=False):
         cmdline = self._escapedCommandLine(cmd)
         if env:
@@ -513,14 +518,11 @@ class DeviceManagerSUT(DeviceManager):
             return None
 
         if cmd[0] == 'am' and hasattr(self, '_getExtraAmStartArgs'):
-            cmd = cmd[:2] + self._getExtraAmStartArgs() + cmd[2:] 
+            cmd = cmd[:2] + self._getExtraAmStartArgs() + cmd[2:]
 
         cmdline = subprocess.list2cmdline(cmd)
-        if (outputFile == "process.txt" or outputFile == None):
-            outputFile = self.getDeviceRoot();
-            if outputFile is None:
-                return None
-            outputFile += "/process.txt"
+        if outputFile == "process.txt" or outputFile is None:
+            outputFile += "%s/process.txt" % self.deviceRoot
             cmdline += " > " + outputFile
 
         # Prepend our env to the command
@@ -715,31 +717,12 @@ class DeviceManagerSUT(DeviceManager):
         self._logger.debug("remote hash returned: '%s'" % data)
         return data
 
-    def getDeviceRoot(self):
-        if not self.deviceRoot:
-            data = self._runCmds([{ 'cmd': 'testroot' }])
-            self.deviceRoot = data.strip() + '/tests'
-
-        if not self.dirExists(self.deviceRoot):
-            self.mkDir(self.deviceRoot)
-
-        return self.deviceRoot
-
-    def getAppRoot(self, packageName):
-        data = self._runCmds([{ 'cmd': 'getapproot ' + packageName }])
-
-        return data.strip()
-
     def unpackFile(self, filePath, destDir=None):
         """
         Unzips a bundle to a location on the device
 
         If destDir is not specified, the bundle is extracted in the same directory
         """
-        devroot = self.getDeviceRoot()
-        if (devroot == None):
-            return None
-
         # if no destDir is passed in just set it to filePath's folder
         if not destDir:
             destDir = posixpath.dirname(filePath)
