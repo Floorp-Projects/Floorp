@@ -5267,7 +5267,9 @@ AddCanvasBackgroundColor(const nsDisplayList& aList, nsIFrame* aCanvasFrame,
       return true;
     }
     nsDisplayList* sublist = i->GetSameCoordinateSystemChildren();
-    if (sublist && AddCanvasBackgroundColor(*sublist, aCanvasFrame, aColor))
+    if (sublist &&
+        i->GetType() != nsDisplayItem::TYPE_BLEND_CONTAINER &&
+        AddCanvasBackgroundColor(*sublist, aCanvasFrame, aColor))
       return true;
   }
   return false;
