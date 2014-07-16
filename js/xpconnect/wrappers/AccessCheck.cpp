@@ -91,9 +91,7 @@ AccessCheck::getPrincipal(JSCompartment *compartment)
     return GetCompartmentPrincipal(compartment);
 }
 
-// Hardcoded policy for cross origin property access. This was culled from the
-// preferences file (all.js). We don't want users to overwrite highly sensitive
-// security policies.
+// Hardcoded policy for cross origin property access. See the HTML5 Spec.
 static bool
 IsPermitted(const char *name, JSFlatString *prop, bool set)
 {
@@ -102,15 +100,11 @@ IsPermitted(const char *name, JSFlatString *prop, bool set)
         return false;
 
     jschar propChar0 = JS_GetFlatStringCharAt(prop, 0);
-    switch (name[0]) {
-        case 'L':
-            if (!strcmp(name, "Location"))
-                return dom::LocationBinding::IsPermitted(prop, propChar0, set);
-        case 'W':
-            if (!strcmp(name, "Window"))
-                return dom::WindowBinding::IsPermitted(prop, propChar0, set);
-            break;
-    }
+    if (name[0] == 'L' && !strcmp(name, "Location"))
+        return dom::LocationBinding::IsPermitted(prop, propChar0, set);
+    if (name[0] == 'W' && !strcmp(name, "Window"))
+        return dom::WindowBinding::IsPermitted(prop, propChar0, set);
+
     return false;
 }
 

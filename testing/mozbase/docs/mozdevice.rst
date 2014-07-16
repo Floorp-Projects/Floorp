@@ -47,6 +47,8 @@ Informational methods
 
 File management methods
 ```````````````````````
+.. autoattribute:: DeviceManager.deviceRoot
+.. automethod:: DeviceManager.getDeviceRoot(self)
 .. automethod:: DeviceManager.pushFile(self, localFilename, remoteFilename, retryLimit=1)
 .. automethod:: DeviceManager.pushDir(self, localDirname, remoteDirname, retryLimit=1)
 .. automethod:: DeviceManager.pullFile(self, remoteFilename)
@@ -61,9 +63,6 @@ File management methods
 .. automethod:: DeviceManager.removeFile(self, filename)
 .. automethod:: DeviceManager.removeDir(self, remoteDirname)
 .. automethod:: DeviceManager.chmodDir(self, remoteDirname, mask="777")
-.. automethod:: DeviceManager.getDeviceRoot(self)
-.. automethod:: DeviceManager.getAppRoot(self, packageName=None)
-.. automethod:: DeviceManager.getTestRoot(self, harnessName)
 .. automethod:: DeviceManager.getTempDir(self)
 
 Process management methods
@@ -125,6 +124,7 @@ and DeviceManagerSUT. Here is the interface for DroidADB:
 .. automethod:: mozdevice.DroidADB.launchApplication
 .. automethod:: mozdevice.DroidADB.launchFennec
 .. automethod:: mozdevice.DroidADB.getInstalledApps
+.. automethod:: mozdevice.DroidADB.getAppRoot
 
 These methods are also found in the DroidSUT class.
 

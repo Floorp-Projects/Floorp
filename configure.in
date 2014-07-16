@@ -7238,6 +7238,17 @@ if test -n "$JSGC_GENERATIONAL"; then
 fi
 
 dnl ========================================================
+dnl = Use a smaller chunk size for GC chunks
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(small-chunk-size,
+[  --enable-small-chunk-size  Allocate memory for JS GC things in smaller chunks],
+    JS_GC_SMALL_CHUNK_SIZE=1,
+    JS_GC_SMALL_CHUNK_SIZE= )
+if test -n "$JS_GC_SMALL_CHUNK_SIZE"; then
+    AC_DEFINE(JS_GC_SMALL_CHUNK_SIZE)
+fi
+
+dnl ========================================================
 dnl Zealous JavaScript GC
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(gczeal,
@@ -9260,6 +9271,9 @@ if test -z "$JSGC_USE_EXACT_ROOTING" ; then
 fi
 if test -z "$JSGC_GENERATIONAL" ; then
     ac_configure_args="$ac_configure_args --disable-gcgenerational"
+fi
+if test -n "$JS_GC_SMALL_CHUNK_SIZE" ; then
+    ac_configure_args="$ac_configure_args --enable-small-chunk-size"
 fi
 if test -z "$MOZ_NATIVE_NSPR"; then
     ac_configure_args="$ac_configure_args --with-nspr-cflags='$NSPR_CFLAGS'"

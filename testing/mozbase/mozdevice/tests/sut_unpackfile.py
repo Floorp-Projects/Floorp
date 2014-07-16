@@ -10,8 +10,7 @@ class TestUnpack(unittest.TestCase):
 
     def test_unpackFile(self):
 
-        commands = [("isdir /mnt/sdcard/tests", "TRUE"),
-                    ("unzp /data/test/sample.zip /data/test/",
+        commands = [("unzp /data/test/sample.zip /data/test/",
                      "Checksum:          653400271\n"
                      "1 of 1 successfully extracted\n")]
         m = MockAgent(self, commands=commands)

@@ -140,7 +140,7 @@ class B2GOptions(ReftestOptions):
             self.error("Cannot run parallel tests here")
 
         if not options.remoteTestRoot:
-            options.remoteTestRoot = auto._devicemanager.getDeviceRoot() + "/reftest"
+            options.remoteTestRoot = auto._devicemanager.deviceRoot + "/reftest"
 
         options.remoteProfile = options.remoteTestRoot + "/profile"
 
