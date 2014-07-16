@@ -56,11 +56,11 @@
   }
 
   function realWorker() {
-    var p = navigator.serviceWorker.register("worker.js");
+    var p = navigator.serviceWorker.register("worker.js", { scope: "realworker*" });
     return p.then(function(w) {
       ok(w instanceof ServiceWorker, "Register a ServiceWorker");
       info(w.scope);
-      ok(w.scope == (new URL("/*", document.baseURI)).href, "Scope should match");
+      ok(w.scope == (new URL("realworker*", document.baseURI)).href, "Scope should match");
       ok(w.url == (new URL("worker.js", document.baseURI)).href, "URL should be of the worker");
     }, function(e) {
       info("Error: " + e.name);
@@ -107,6 +107,18 @@
 
   // FIXME(nsm): test for parse error when Update step doesn't happen (directly from register).
 
+  function updatefound() {
+    var p = navigator.serviceWorker.register("worker.js");
+
+    return new Promise(function(resolve, reject) {
+      navigator.serviceWorker.onupdatefound = function(e) {
+        ok(true, "Got updatefound event");
+        navigator.serviceWorker.onupdatefound = null;
+        resolve();
+      }
+    });
+  }
+
   function runTest() {
     simpleRegister()
       .then(sameOriginWorker)
@@ -116,6 +128,7 @@
       .then(abortPrevious)
       .then(networkError404)
       .then(parseError)
+      .then(updatefound)
       // put more tests here.
       .then(function() {
         SimpleTest.finish();

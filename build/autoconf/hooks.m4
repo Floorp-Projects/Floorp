@@ -54,6 +54,7 @@ for moz_config_dir in $1; do
   fi
   _save_cache_file="$cache_file"
   ifelse($2,,cache_file="$moz_config_dir/config.cache",cache_file="$2")
+  cache_file="$(cd $(dirname "$cache_file"); pwd -W 2>/dev/null || pwd)/$(basename "$cache_file")"
   _MOZ_AC_OUTPUT_SUBDIRS($moz_config_dir)
   cache_file="$_save_cache_file"
   (cd "$moz_config_dir"; $PYTHON $_topsrcdir/build/subconfigure.py adjust $ac_sub_configure)

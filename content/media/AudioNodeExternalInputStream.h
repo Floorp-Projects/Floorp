@@ -24,8 +24,10 @@ namespace mozilla {
 class AudioNodeExternalInputStream : public AudioNodeStream {
 public:
   AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate);
+protected:
   ~AudioNodeExternalInputStream();
 
+public:
   virtual void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) MOZ_OVERRIDE;
 
 private:

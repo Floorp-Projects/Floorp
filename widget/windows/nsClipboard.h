@@ -24,10 +24,10 @@ struct IDataObject;
 class nsClipboard : public nsBaseClipboard,
                     public nsIObserver
 {
+  virtual ~nsClipboard();
 
 public:
   nsClipboard();
-  virtual ~nsClipboard();
 
   NS_DECL_ISUPPORTS_INHERITED
 

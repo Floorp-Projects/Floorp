@@ -162,15 +162,7 @@ class nsAnonTempFileRemover MOZ_FINAL : public nsIObserver
 public:
   NS_DECL_ISUPPORTS
 
-  nsAnonTempFileRemover()
-  {
-    MOZ_COUNT_CTOR(nsAnonTempFileRemover);
-  }
-
-  ~nsAnonTempFileRemover()
-  {
-    MOZ_COUNT_DTOR(nsAnonTempFileRemover);
-  }
+  nsAnonTempFileRemover() {}
 
   nsresult Init()
   {
@@ -264,6 +256,8 @@ public:
   }
 
 private:
+  ~nsAnonTempFileRemover() {}
+
   nsCOMPtr<nsITimer> mTimer;
 };
 

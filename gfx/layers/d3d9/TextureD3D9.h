@@ -230,51 +230,6 @@ private:
 };
 
 /**
- * Can only be drawn into through Cairo.
- * Prefer CairoTextureClientD3D9 when possible.
- * The coresponding TextureHost is DIBTextureHostD3D9.
- */
-class DIBTextureClientD3D9 : public TextureClient
-{
-public:
-  DIBTextureClientD3D9(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
-
-  virtual ~DIBTextureClientD3D9();
-
-  // TextureClient
-
-  virtual bool IsAllocated() const MOZ_OVERRIDE { return !!mSurface; }
-
-  virtual bool Lock(OpenMode aOpenMode) MOZ_OVERRIDE;
-
-  virtual void Unlock() MOZ_OVERRIDE;
-
-  virtual bool IsLocked() const MOZ_OVERRIDE { return mIsLocked; }
-
-  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
-
-  virtual gfx::IntSize GetSize() const { return mSize; }
-
-  virtual gfx::SurfaceFormat GetFormat() const { return mFormat; }
-
-  virtual bool CanExposeDrawTarget() const MOZ_OVERRIDE { return true; }
-
-  virtual gfx::DrawTarget* BorrowDrawTarget() MOZ_OVERRIDE;
-
-  virtual bool AllocateForSurface(gfx::IntSize aSize,
-                                  TextureAllocationFlags aFlags = ALLOC_DEFAULT) MOZ_OVERRIDE;
-
-  virtual bool HasInternalBuffer() const MOZ_OVERRIDE { return true; }
-
-protected:
-  nsRefPtr<gfxWindowsSurface> mSurface;
-  RefPtr<gfx::DrawTarget> mDrawTarget;
-  gfx::IntSize mSize;
-  gfx::SurfaceFormat mFormat;
-  bool mIsLocked;
-};
-
-/**
  * Wraps a D3D9 texture, shared with the compositor though DXGI.
  * At the moment it is only used with D3D11 compositing, and the corresponding
  * TextureHost is DXGITextureHostD3D11.
@@ -359,42 +314,6 @@ protected:
   RefPtr<CompositorD3D9> mCompositor;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
-  bool mIsLocked;
-};
-
-class DIBTextureHostD3D9 : public TextureHost
-{
-public:
-  DIBTextureHostD3D9(TextureFlags aFlags,
-                     const SurfaceDescriptorDIB& aDescriptor);
-
-  virtual NewTextureSource* GetTextureSources() MOZ_OVERRIDE;
-
-  virtual void DeallocateDeviceData() MOZ_OVERRIDE;
-
-  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
-
-  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
-
-  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
-
-  virtual bool Lock() MOZ_OVERRIDE;
-
-  virtual void Unlock() MOZ_OVERRIDE;
-
-  virtual void Updated(const nsIntRegion* aRegion = nullptr);
-
-  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE
-  {
-    return nullptr; // TODO: cf bug 872568
-  }
-
-protected:
-  nsRefPtr<gfxWindowsSurface> mSurface;
-  RefPtr<DataTextureSourceD3D9> mTextureSource;
-  RefPtr<CompositorD3D9> mCompositor;
-  gfx::SurfaceFormat mFormat;
-  gfx::IntSize mSize;
   bool mIsLocked;
 };
 

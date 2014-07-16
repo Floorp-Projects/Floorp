@@ -37,15 +37,15 @@ public:
    mItemType(type)
   {}
 
-  virtual ~JumpListItem() 
-  {}
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIJUMPLISTITEM
 
   static const char kJumpListCacheDir[];
 
 protected:
+  virtual ~JumpListItem()
+  {}
+
   short Type() { return mItemType; }
   short mItemType;
 
@@ -53,6 +53,8 @@ protected:
 
 class JumpListSeparator : public JumpListItem, public nsIJumpListSeparator
 {
+  ~JumpListSeparator() {}
+
 public:
   JumpListSeparator() :
    JumpListItem(nsIJumpListItem::JUMPLIST_ITEM_SEPARATOR)
@@ -67,6 +69,8 @@ public:
 
 class JumpListLink : public JumpListItem, public nsIJumpListLink
 {
+  ~JumpListLink() {}
+
 public:
   JumpListLink() :
    JumpListItem(nsIJumpListItem::JUMPLIST_ITEM_LINK)
@@ -88,6 +92,8 @@ protected:
 
 class JumpListShortcut : public JumpListItem, public nsIJumpListShortcut
 {
+  ~JumpListShortcut() {}
+
 public:
   JumpListShortcut() :
    JumpListItem(nsIJumpListItem::JUMPLIST_ITEM_SHORTCUT)
