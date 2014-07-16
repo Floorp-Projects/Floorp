@@ -48,6 +48,7 @@ nsAnimationManager::GetEventsAt(ElementAnimationCollection* aCollection,
       ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
 
     switch (computedTiming.mPhase) {
+      case ComputedTiming::AnimationPhase_Null:
       case ComputedTiming::AnimationPhase_Before:
         // Do nothing
         break;
