@@ -46,7 +46,7 @@ function testEscapeCancels(inspector) {
   let def = promise.defer();
   let node = getNode(SELECTOR);
 
-  selectNode(node, inspector).then(() => {
+  selectNode(SELECTOR, inspector).then(() => {
     inspector.markup.htmlEditor.on("popupshown", function onPopupShown() {
       inspector.markup.htmlEditor.off("popupshown", onPopupShown);
 
@@ -101,80 +101,82 @@ function testF2Commits(inspector) {
   return def.promise;
 }
 
-function testBody(inspector) {
+function* testBody(inspector) {
   let body = getNode("body");
   let bodyHTML = '<body id="updated"><p></p></body>';
-  let bodyFront = inspector.markup.walker.frontForRawNode(body);
+  let bodyFront = yield getNodeFront("body", inspector);
   let doc = content.document;
 
   let mutated = inspector.once("markupmutation");
   inspector.markup.updateNodeOuterHTML(bodyFront, bodyHTML, body.outerHTML);
 
-  return mutated.then(mutations => {
-    is(getNode("body").outerHTML, bodyHTML, "<body> HTML has been updated");
-    is(doc.querySelectorAll("head").length, 1, "no extra <head>s have been added");
-    return inspector.once("inspector-updated");
-  });
+  let mutations = yield mutated;
+
+  is(getNode("body").outerHTML, bodyHTML, "<body> HTML has been updated");
+  is(doc.querySelectorAll("head").length, 1, "no extra <head>s have been added");
+
+  yield inspector.once("inspector-updated");
 }
 
-function testHead(inspector) {
+function* testHead(inspector) {
   let head = getNode("head");
   let headHTML = '<head id="updated"><title>New Title</title><script>window.foo="bar";</script></head>';
-  let headFront = inspector.markup.walker.frontForRawNode(head);
+  let headFront = yield getNodeFront("head", inspector);
   let doc = content.document;
 
   let mutated = inspector.once("markupmutation");
   inspector.markup.updateNodeOuterHTML(headFront, headHTML, head.outerHTML);
 
-  return mutated.then(mutations => {
-    is(doc.title, "New Title", "New title has been added");
-    is(doc.defaultView.foo, undefined, "Script has not been executed");
-    is(doc.querySelector("head").outerHTML, headHTML, "<head> HTML has been updated");
-    is(doc.querySelectorAll("body").length, 1, "no extra <body>s have been added");
-    return inspector.once("inspector-updated");
-  });
+  let mutations = yield mutated;
+
+  is(doc.title, "New Title", "New title has been added");
+  is(doc.defaultView.foo, undefined, "Script has not been executed");
+  is(doc.querySelector("head").outerHTML, headHTML, "<head> HTML has been updated");
+  is(doc.querySelectorAll("body").length, 1, "no extra <body>s have been added");
+
+  yield inspector.once("inspector-updated");
 }
 
-function testDocumentElement(inspector) {
+function* testDocumentElement(inspector) {
   let doc = content.document;
   let docElement = doc.documentElement;
   let docElementHTML = '<html id="updated" foo="bar"><head><title>Updated from document element</title><script>window.foo="bar";</script></head><body><p>Hello</p></body></html>';
-  let docElementFront = inspector.markup.walker.frontForRawNode(docElement);
+  let docElementFront = yield inspector.markup.walker.documentElement();
 
   let mutated = inspector.once("markupmutation");
   inspector.markup.updateNodeOuterHTML(docElementFront, docElementHTML, docElement.outerHTML);
 
-  return mutated.then(mutations => {
-    is(doc.title, "Updated from document element", "New title has been added");
-    is(doc.defaultView.foo, undefined, "Script has not been executed");
-    is(doc.documentElement.id, "updated", "<html> ID has been updated");
-    is(doc.documentElement.className, "", "<html> class has been updated");
-    is(doc.documentElement.getAttribute("foo"), "bar", "<html> attribute has been updated");
-    is(doc.documentElement.outerHTML, docElementHTML, "<html> HTML has been updated");
-    is(doc.querySelectorAll("head").length, 1, "no extra <head>s have been added");
-    is(doc.querySelectorAll("body").length, 1, "no extra <body>s have been added");
-    is(doc.body.textContent, "Hello", "document.body.textContent has been updated");
-  });
+  let mutations = yield mutated;
+
+  is(doc.title, "Updated from document element", "New title has been added");
+  is(doc.defaultView.foo, undefined, "Script has not been executed");
+  is(doc.documentElement.id, "updated", "<html> ID has been updated");
+  is(doc.documentElement.className, "", "<html> class has been updated");
+  is(doc.documentElement.getAttribute("foo"), "bar", "<html> attribute has been updated");
+  is(doc.documentElement.outerHTML, docElementHTML, "<html> HTML has been updated");
+  is(doc.querySelectorAll("head").length, 1, "no extra <head>s have been added");
+  is(doc.querySelectorAll("body").length, 1, "no extra <body>s have been added");
+  is(doc.body.textContent, "Hello", "document.body.textContent has been updated");
 }
 
-function testDocumentElement2(inspector) {
+function* testDocumentElement2(inspector) {
   let doc = content.document;
   let docElement = doc.documentElement;
   let docElementHTML = '<html class="updated" id="somethingelse"><head><title>Updated again from document element</title><script>window.foo="bar";</script></head><body><p>Hello again</p></body></html>';
-  let docElementFront = inspector.markup.walker.frontForRawNode(docElement);
+  let docElementFront = yield inspector.markup.walker.documentElement();
 
   let mutated = inspector.once("markupmutation");
   inspector.markup.updateNodeOuterHTML(docElementFront, docElementHTML, docElement.outerHTML);
 
-  return mutated.then(mutations => {
-    is(doc.title, "Updated again from document element", "New title has been added");
-    is(doc.defaultView.foo, undefined, "Script has not been executed");
-    is(doc.documentElement.id, "somethingelse", "<html> ID has been updated");
-    is(doc.documentElement.className, "updated", "<html> class has been updated");
-    is(doc.documentElement.getAttribute("foo"), null, "<html> attribute has been removed");
-    is(doc.documentElement.outerHTML, docElementHTML, "<html> HTML has been updated");
-    is(doc.querySelectorAll("head").length, 1, "no extra <head>s have been added");
-    is(doc.querySelectorAll("body").length, 1, "no extra <body>s have been added");
-    is(doc.body.textContent, "Hello again", "document.body.textContent has been updated");
-  });
+  let mutations = yield mutated;
+
+  is(doc.title, "Updated again from document element", "New title has been added");
+  is(doc.defaultView.foo, undefined, "Script has not been executed");
+  is(doc.documentElement.id, "somethingelse", "<html> ID has been updated");
+  is(doc.documentElement.className, "updated", "<html> class has been updated");
+  is(doc.documentElement.getAttribute("foo"), null, "<html> attribute has been removed");
+  is(doc.documentElement.outerHTML, docElementHTML, "<html> HTML has been updated");
+  is(doc.querySelectorAll("head").length, 1, "no extra <head>s have been added");
+  is(doc.querySelectorAll("body").length, 1, "no extra <body>s have been added");
+  is(doc.body.textContent, "Hello again", "document.body.textContent has been updated");
 }

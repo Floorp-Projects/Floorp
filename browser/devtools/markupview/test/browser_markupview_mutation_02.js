@@ -8,11 +8,14 @@
 // corresponding DOM nodes mutate
 
 const TEST_URL = TEST_URL_ROOT + "doc_markup_flashing.html";
+
 // The test data contains a list of mutations to test.
 // Each item is an object:
 // - desc: a description of the test step, for better logging
 // - mutate: a function that should make changes to the content DOM
-// - shouldFlash: a function that returns the element that should be the one flashing
+// - flashedNode: [optional] the css selector of the node that is expected to
+//   flash in the markup-view as a result of the mutation.
+//   If missing, the rootNode (".list") will be expected to flash
 const TEST_DATA = [{
   desc: "Adding a new node should flash the new node",
   mutate: (doc, rootNode) => {
@@ -20,37 +23,33 @@ const TEST_DATA = [{
     newLi.textContent = "new list item";
     rootNode.appendChild(newLi);
   },
-  shouldFlash: rootNode => rootNode.lastElementChild
+  flashedNode: ".list li:nth-child(3)"
 }, {
   desc: "Removing a node should flash its parent",
   mutate: (doc, rootNode) => {
     rootNode.removeChild(rootNode.lastElementChild);
-  },
-  shouldFlash: rootNode => rootNode
+  }
 }, {
   desc: "Re-appending an existing node should only flash this node",
   mutate: (doc, rootNode) => {
     rootNode.appendChild(rootNode.firstElementChild);
   },
-  shouldFlash: rootNode => rootNode.lastElementChild
+  flashedNode: ".list .item:last-child"
 }, {
   desc: "Adding an attribute should flash the node",
   mutate: (doc, rootNode) => {
     rootNode.setAttribute("name-" + Date.now(), "value-" + Date.now());
-  },
-  shouldFlash: rootNode => rootNode
+  }
 }, {
   desc: "Editing an attribute should flash the node",
   mutate: (doc, rootNode) => {
     rootNode.setAttribute("class", "list value-" + Date.now());
-  },
-  shouldFlash: rootNode => rootNode
+  }
 }, {
   desc: "Removing an attribute should flash the node",
   mutate: (doc, rootNode) => {
     rootNode.removeAttribute("class");
-  },
-  shouldFlash: rootNode => rootNode
+  }
 }];
 
 let test = asyncTest(function*() {
@@ -58,11 +57,12 @@ let test = asyncTest(function*() {
 
   info("Getting the <ul.list> root node to test mutations on");
   let rootNode = getNode(".list");
+  let rootNodeFront = yield getNodeFront(".list", inspector);
 
   info("Selecting the last element of the root node before starting");
-  yield selectNode(rootNode.lastElementChild, inspector);
+  yield selectNode(".list .item:nth-child(2)", inspector);
 
-  for (let {mutate, shouldFlash, desc} of TEST_DATA) {
+  for (let {mutate, flashedNode, desc} of TEST_DATA) {
     info("Starting test: " + desc);
 
     info("Mutating the DOM and listening for markupmutation event");
@@ -72,20 +72,20 @@ let test = asyncTest(function*() {
     yield mutated;
 
     info("Asserting that the correct markup-container is flashing");
-    assertNodeFlashing(shouldFlash(rootNode), inspector);
+    let flashingNodeFront = rootNodeFront;
+    if (flashedNode) {
+      flashingNodeFront = yield getNodeFront(flashedNode, inspector);
+    }
+    yield assertNodeFlashing(flashingNodeFront, inspector);
 
     // Making sure the inspector has finished updating before moving on
     yield updated;
   }
 });
 
-function assertNodeFlashing(node, inspector) {
-  let container = getContainerForRawNode(node, inspector);
-
-  if (!container) {
-    ok(false, "Node not found");
-  } else {
-    ok(container.tagState.classList.contains("theme-bg-contrast"),
-      "Node is flashing");
-  }
+function* assertNodeFlashing(nodeFront, inspector) {
+  let container = getContainerForNodeFront(nodeFront, inspector);
+  ok(container, "Markup container for node found");
+  ok(container.tagState.classList.contains("theme-bg-contrast"),
+    "Markup container for node is flashing");
 }
