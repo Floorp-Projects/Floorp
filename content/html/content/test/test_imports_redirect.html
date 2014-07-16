@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1016875
+-->
+<head>
+  <title>Test for Bug 1016875</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1016875">Mozilla Bug 1016875</a>
+
+  <script type="text/javascript">
+    SimpleTest.waitForExplicitFinish();
+    var loadEventFired = false;
+    var errorEventFired = false;
+    var counter = 0;
+    function loaded() {
+      loadEventFired = true;
+    }
+    function failed() {
+      errorEventFired = true;
+    }
+  </script>
+
+  <link rel="import" href="http://mochi.test:8888/tests/content/html/content/test/file_imports_redirect.html" id="import" onload="loaded()" onerror="failed()"></link>
+
+  <script type="text/javascript">
+    ok(loadEventFired, "Load event was fired");
+    ok(!errorEventFired, "Error event was not fired, redirection worked");
+    ok(redirected, "Script of the target of redirection was executed");
+
+    SimpleTest.finish();
+  </script>
+
+</body>
+</html>
