@@ -27,6 +27,7 @@
 #include "nsWrapperCacheInlines.h"
 #include "js/HashTable.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 
 #define NPRUNTIME_JSCLASS_NAME "NPObject JS wrapper class"
@@ -291,8 +292,8 @@ namespace mozilla {
 namespace plugins {
 namespace parent {
 
-JSContext *
-GetJSContext(NPP npp)
+static nsIGlobalObject*
+GetGlobalObject(NPP npp)
 {
   NS_ENSURE_TRUE(npp, nullptr);
 
@@ -306,8 +307,13 @@ GetJSContext(NPP npp)
   owner->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_TRUE(doc, nullptr);
 
-  nsCOMPtr<nsISupports> documentContainer = doc->GetContainer();
-  nsCOMPtr<nsIScriptGlobalObject> sgo(do_GetInterface(documentContainer));
+  return doc->GetScopeObject();
+}
+
+JSContext *
+GetJSContext(NPP npp)
+{
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(GetGlobalObject(npp));
   NS_ENSURE_TRUE(sgo, nullptr);
 
   nsIScriptContext *scx = sgo->GetContext();
@@ -571,11 +577,11 @@ bool
 nsJSObjWrapper::NP_HasMethod(NPObject *npobj, NPIdentifier id)
 {
   NPP npp = NPPStack::Peek();
-  JSContext *cx = GetJSContext(npp);
-
-  if (!cx) {
+  dom::AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(GetGlobalObject(npp)))) {
     return false;
   }
+  JSContext *cx = jsapi.cx();
 
   if (!npobj) {
     ThrowJSException(cx,
@@ -586,8 +592,6 @@ nsJSObjWrapper::NP_HasMethod(NPObject *npobj, NPIdentifier id)
 
   nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
 
-  nsCxPusher pusher;
-  pusher.Push(cx);
   JSAutoCompartment ac(cx, npjsobj->mJSObj);
 
   AutoJSExceptionReporter reporter(cx);
