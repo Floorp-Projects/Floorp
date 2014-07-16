@@ -91,10 +91,6 @@ class LIRGeneratorMIPS : public LIRGeneratorShared
     bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
     bool visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
     bool visitForkJoinGetSlice(MForkJoinGetSlice *ins);
-
-    static bool allowFloat32Optimizations() {
-        return true;
-    }
 };
 
 typedef LIRGeneratorMIPS LIRGeneratorSpecific;
