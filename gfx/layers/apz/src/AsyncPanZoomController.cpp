@@ -723,7 +723,6 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mTreeManager(aTreeManager),
      mScrollParentId(FrameMetrics::NULL_SCROLL_ID),
      mAPZCId(sAsyncPanZoomControllerCount++),
-     mSharedFrameMetricsBuffer(nullptr),
      mSharedLock(nullptr)
 {
   MOZ_COUNT_CTOR(AsyncPanZoomController);
@@ -791,7 +790,6 @@ AsyncPanZoomController::Destroy()
 
   { // scope the lock
     ReentrantMonitorAutoEnter lock(mMonitor);
-    delete mSharedFrameMetricsBuffer;
     mSharedFrameMetricsBuffer = nullptr;
     delete mSharedLock;
     mSharedLock = nullptr;
