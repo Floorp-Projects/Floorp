@@ -360,11 +360,15 @@ ImportLoader::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   nsCOMPtr<nsIDocument> master = mImportParent->MasterDocument();
   mDocument->SetMasterDocument(master);
 
-  // We have to connect the blank document we created with the channel we opened.
+  // We have to connect the blank document we created with the channel we opened,
+  // and create its own LoadGroup for it.
   nsCOMPtr<nsIStreamListener> listener;
   nsCOMPtr<nsILoadGroup> loadGroup;
   channel->GetLoadGroup(getter_AddRefs(loadGroup));
-  rv = mDocument->StartDocumentLoad("import", channel, loadGroup,
+  nsCOMPtr<nsILoadGroup> newLoadGroup = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
+  NS_ENSURE_TRUE(newLoadGroup, NS_ERROR_OUT_OF_MEMORY);
+  newLoadGroup->SetLoadGroup(loadGroup);
+  rv = mDocument->StartDocumentLoad("import", channel, newLoadGroup,
                                     nullptr, getter_AddRefs(listener),
                                     true);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_ABORT_ERR);
