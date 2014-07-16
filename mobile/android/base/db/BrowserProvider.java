@@ -115,8 +115,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final Map<String, String> SEARCH_SUGGEST_PROJECTION_MAP;
     static final Map<String, String> FAVICONS_PROJECTION_MAP;
     static final Map<String, String> THUMBNAILS_PROJECTION_MAP;
+    static final Table[] sTables;
 
     static {
+        sTables = new Table[] {
+            new URLMetadataTable()
+        };
         // We will reuse this.
         HashMap<String, String> map;
 
@@ -228,6 +232,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         map.put(SearchManager.SUGGEST_COLUMN_INTENT_DATA,
                 Combined.URL + " AS " + SearchManager.SUGGEST_COLUMN_INTENT_DATA);
         SEARCH_SUGGEST_PROJECTION_MAP = Collections.unmodifiableMap(map);
+
+        for (Table table : sTables) {
+            for (Table.ContentProviderInfo type : table.getContentProviderInfo()) {
+                URI_MATCHER.addURI(BrowserContract.AUTHORITY, type.name, type.id);
+            }
+        }
     }
 
     private static boolean hasFaviconsInProjection(String[] projection) {
@@ -351,11 +361,16 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             case FLAGS:
                 trace("URI is FLAGS.");
                 return Bookmarks.CONTENT_ITEM_TYPE;
+            default:
+                String type = getContentItemType(match);
+                if (type != null) {
+                    trace("URI is " + type);
+                    return type;
+                }
+
+                debug("URI has unrecognized type: " + uri);
+                return null;
         }
-
-        debug("URI has unrecognized type: " + uri);
-
-        return null;
     }
 
     @SuppressWarnings("fallthrough")
@@ -440,8 +455,15 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 break;
             }
 
-            default:
-                throw new UnsupportedOperationException("Unknown delete URI " + uri);
+            default: {
+                Table table = findTableFor(match);
+                if (table == null) {
+                    throw new UnsupportedOperationException("Unknown delete URI " + uri);
+                }
+                trace("Deleting TABLE: " + uri);
+                beginWrite(db);
+                deleted = table.delete(db, uri, match, selection, selectionArgs);
+            }
         }
 
         debug("Deleted " + deleted + " rows for URI: " + uri);
@@ -481,8 +503,17 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 break;
             }
 
-            default:
-                throw new UnsupportedOperationException("Unknown insert URI " + uri);
+            default: {
+                Table table = findTableFor(match);
+                if (table == null) {
+                    throw new UnsupportedOperationException("Unknown insert URI " + uri);
+                }
+
+                trace("Insert on TABLE: " + uri);
+                final SQLiteDatabase db = getWritableDatabase(uri);
+                beginWrite(db);
+                id = table.insert(db, uri, match, values);
+            }
         }
 
         debug("Inserted ID in database: " + id);
@@ -600,8 +631,21 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 break;
             }
 
-            default:
-                throw new UnsupportedOperationException("Unknown update URI " + uri);
+            default: {
+                Table table = findTableFor(match);
+                if (table == null) {
+                    throw new UnsupportedOperationException("Unknown update URI " + uri);
+                }
+                trace("Update TABLE: " + uri);
+
+                beginWrite(db);
+                updated = table.update(db, uri, match, values, selection, selectionArgs);
+                if (shouldUpdateOrInsert(uri) && updated == 0) {
+                    trace("No update, inserting for URL: " + uri);
+                    table.insert(db, uri, match, values);
+                    updated = 1;
+                }
+            }
         }
 
         debug("Updated " + updated + " rows for URI: " + uri);
@@ -793,8 +837,14 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 break;
             }
 
-            default:
-                throw new UnsupportedOperationException("Unknown query URI " + uri);
+            default: {
+                Table table = findTableFor(match);
+                if (table == null) {
+                    throw new UnsupportedOperationException("Unknown query URI " + uri);
+                }
+                trace("Update TABLE: " + uri);
+                return table.query(db, uri, match, projection, selection, selectionArgs, sortOrder, groupBy, limit);
+            }
         }
 
         trace("Running built query.");
@@ -886,13 +936,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             b.append(" WHEN ? THEN " + i);
         }
 
-        // TODO: use computeSQLInClause
-        b.append(" END WHERE " + Bookmarks.GUID + " IN (");
-        i = 1;
-        while (i++ < processCount) {
-            b.append("?, ");
-        }
-        b.append("?)");
+        b.append(" END WHERE " + DBUtils.computeSQLInClause(processCount, Bookmarks.GUID));
         db.execSQL(b.toString(), args);
 
         // We can't easily get a modified count without calling something like changes().
@@ -982,7 +1026,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         // Now that we're done reading, open a transaction.
         final String inClause;
         try {
-            inClause = computeSQLInClauseFromLongs(cursor, Bookmarks._ID);
+            inClause = DBUtils.computeSQLInClauseFromLongs(cursor, Bookmarks._ID);
         } finally {
             cursor.close();
         }
@@ -1434,5 +1478,31 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         }
 
         return results;
+    }
+
+    private static Table findTableFor(int id) {
+        for (Table table : sTables) {
+            for (Table.ContentProviderInfo type : table.getContentProviderInfo()) {
+                if (type.id == id) {
+                    return table;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static void addTablesToMatcher(Table[] tables, final UriMatcher matcher) {
+    }
+
+    private static String getContentItemType(final int match) {
+        for (Table table : sTables) {
+            for (Table.ContentProviderInfo type : table.getContentProviderInfo()) {
+                if (type.id == match) {
+                    return "vnd.android.cursor.item/" + type.name;
+                }
+            }
+        }
+
+        return null;
     }
 }

@@ -26,6 +26,7 @@ var Downloads = {
   _privateDownloads: [],
   _showingPrompt: false,
   _downloadsIdMap: {},
+  _notificationKey: "downloads",
 
   _getLocalFile: function dl__getLocalFile(aFileURI) {
     // if this is a URL, get the file from that
@@ -44,6 +45,30 @@ var Downloads = {
     this._progressAlert = new AlertDownloadProgressListener();
     this._dlmgr.addPrivacyAwareListener(this._progressAlert);
     Services.obs.addObserver(this, "last-pb-context-exited", true);
+
+    // All click, cancel, and button presses will be handled by this handler as part of the Notifications callback API.
+    Notifications.registerHandler(this._notificationKey, this);
+  },
+
+  onClick: function(aCookie) {
+    Services.console.logStringMessage("Onclick " + aCookie);
+    Downloads.clickCallback(aCookie);
+  },
+
+  onCancel: function(aCookie) {
+    Services.console.logStringMessage("onCancel " + aCookie);
+    Downloads.notificationCanceledCallback(aCookie);
+  },
+
+  onButtonClick: function(aButtonId, aCookie) {
+    Services.console.logStringMessage("onButtonClick " + aCookie);
+    if (aButtonId === PAUSE_BUTTON.buttonId) {
+      Downloads.pauseClickCallback(aCookie);
+    } else if (aButtonId === RESUME_BUTTON.buttonId) {
+      Downloads.resumeClickCallback(aCookie);
+    } else if (aButtonId === CANCEL_BUTTON.buttonId) {
+      Downloads.cancelClickCallback(aCookie);
+    }
   },
 
   openDownload: function dl_openDownload(aDownload) {
@@ -120,10 +145,8 @@ var Downloads = {
         }).bind(this));
   },
 
-  notificationCanceledCallback: function dl_notifCancelCallback(aId, aDownloadId) {
-    let notificationId = this._downloadsIdMap[aDownloadId];
-    if (notificationId && notificationId == aId)
-      delete this._downloadsIdMap[aDownloadId];
+  notificationCanceledCallback: function dl_notifCancelCallback(aDownloadId) {
+    delete this._downloadsIdMap[aDownloadId];
   },
 
   createNotification: function dl_createNotif(aDownload, aOptions) {
@@ -169,42 +192,28 @@ const PAUSE_BUTTON = {
   buttonId: "pause",
   title : Strings.browser.GetStringFromName("alertDownloadsPause"),
   icon : URI_PAUSE_ICON,
-  onClicked: function (aId, aCookie) {
-    Downloads.pauseClickCallback(aCookie);
-  }
 };
 
 const CANCEL_BUTTON = {
   buttonId: "cancel",
   title : Strings.browser.GetStringFromName("alertDownloadsCancel"),
   icon : URI_CANCEL_ICON,
-  onClicked: function (aId, aCookie) {
-    Downloads.cancelClickCallback(aCookie);
-  }
 };
 
 const RESUME_BUTTON = {
   buttonId: "resume",
   title : Strings.browser.GetStringFromName("alertDownloadsResume"),
   icon: URI_RESUME_ICON,
-  onClicked: function (aId, aCookie) {
-    Downloads.resumeClickCallback(aCookie);
-  }
 };
 
 function DownloadNotifOptions (aDownload, aTitle, aMessage) {
   this.icon = URI_GENERIC_ICON_DOWNLOAD;
-  this.onCancel = function (aId, aCookie) {
-    Downloads.notificationCanceledCallback(aId, aCookie);
-  }
-  this.onClick = function (aId, aCookie) {
-    Downloads.clickCallback(aCookie);
-  }
   this.title = aTitle;
   this.message = aMessage;
   this.buttons = null;
   this.cookie = aDownload.guid;
   this.persistent = true;
+  this.handlerKey = Downloads._notificationKey;
 }
 
 function DownloadProgressNotifOptions (aDownload, aButtons) {

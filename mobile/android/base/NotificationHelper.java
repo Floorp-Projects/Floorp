@@ -24,14 +24,14 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import java.util.Iterator;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.HashMap;
 
 public final class NotificationHelper implements GeckoEventListener {
+    public static final String HELPER_BROADCAST_ACTION = AppConstants.ANDROID_PACKAGE_NAME + ".helperBroadcastAction";
+
     public static final String NOTIFICATION_ID = "NotificationHelper_ID";
-    private static final String LOGTAG = "GeckoNotificationManager";
+    private static final String LOGTAG = "GeckoNotificationHelper";
     private static final String HELPER_NOTIFICATION = "helperNotif";
-    private static final String HELPER_BROADCAST_ACTION = AppConstants.ANDROID_PACKAGE_NAME + ".helperBroadcastAction";
 
     // Attributes mandatory to be used while sending a notification from js.
     private static final String TITLE_ATTR = "title";
@@ -54,6 +54,8 @@ public final class NotificationHelper implements GeckoEventListener {
     private static final String ACTION_TITLE_ATTR = "title";
     private static final String ACTION_ICON_ATTR = "icon";
     private static final String PERSISTENT_ATTR = "persistent";
+    private static final String HANDLER_ATTR = "handlerKey";
+    private static final String COOKIE_ATTR = "cookie";
 
     private static final String NOTIFICATION_SCHEME = "moz-notification";
 
@@ -62,26 +64,37 @@ public final class NotificationHelper implements GeckoEventListener {
     private static final String CLEARED_EVENT = "notification-cleared";
     private static final String CLOSED_EVENT = "notification-closed";
 
-    private static Context mContext;
-    private static Set<String> mClearableNotifications;
-    private static BroadcastReceiver mReceiver;
-    private static NotificationHelper mInstance;
+    private Context mContext;
 
-    private NotificationHelper() {
+    // Holds a list of notifications that should be cleared if the Fennec Activity is shut down.
+    // Will not include ongoing or persistent notifications that are tied to Gecko's lifecycle.
+    private HashMap<String, String> mClearableNotifications;
+
+    private boolean mInitialized = false;
+    private static NotificationHelper sInstance;
+
+    private NotificationHelper(Context context) {
+        mContext = context;
     }
 
-    public static void init(Context context) {
-        if (mInstance != null) {
-            Log.w(LOGTAG, "NotificationHelper.init() called twice!");
-            return;
-        }
-        mInstance = new NotificationHelper();
-        mContext = context;
-        mClearableNotifications = new HashSet<String>();
-        EventDispatcher.getInstance().registerGeckoThreadListener(mInstance,
+    public void init() {
+        mClearableNotifications = new HashMap<String, String>();
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "Notification:Show",
             "Notification:Hide");
-        registerReceiver(context);
+        mInitialized = true;
+    }
+
+    public static NotificationHelper getInstance(Context context) {
+        // If someone else created this singleton, but didn't initialize it, something has gone wrong.
+        if (sInstance != null && !sInstance.mInitialized) {
+            throw new IllegalStateException("NotificationHelper was created by someone else but not initialized");
+        }
+
+        if (sInstance == null) {
+            sInstance = new NotificationHelper(context.getApplicationContext());
+        }
+        return sInstance;
     }
 
     @Override
@@ -97,60 +110,57 @@ public final class NotificationHelper implements GeckoEventListener {
         return i.getBooleanExtra(HELPER_NOTIFICATION, false);
     }
 
-    private static void registerReceiver(Context context) {
-        IntentFilter filter = new IntentFilter(HELPER_BROADCAST_ACTION);
-        // Scheme is needed, otherwise only broadcast with no data will be catched.
-        filter.addDataScheme(NOTIFICATION_SCHEME);
-        mReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                mInstance.handleNotificationIntent(intent);
-            }
-        };
-        context.registerReceiver(mReceiver, filter);
-    }
-
-
-    private void handleNotificationIntent(Intent i) {
+    public void handleNotificationIntent(Intent i) {
         final Uri data = i.getData();
         if (data == null) {
-            Log.w(LOGTAG, "handleNotificationEvent: empty data");
+            Log.e(LOGTAG, "handleNotificationEvent: empty data");
             return;
         }
         final String id = data.getQueryParameter(ID_ATTR);
         final String notificationType = data.getQueryParameter(EVENT_TYPE_ATTR);
         if (id == null || notificationType == null) {
-            Log.w(LOGTAG, "handleNotificationEvent: invalid intent parameters");
+            Log.e(LOGTAG, "handleNotificationEvent: invalid intent parameters");
             return;
         }
 
-        // In case the user swiped out the notification, we empty the id
-        // set.
+        // In case the user swiped out the notification, we empty the id set.
         if (CLEARED_EVENT.equals(notificationType)) {
             mClearableNotifications.remove(id);
-        }
-
-        if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
-            JSONObject args = new JSONObject();
-            try {
-                args.put(ID_ATTR, id);
-                args.put(EVENT_TYPE_ATTR, notificationType);
-
-                if (BUTTON_EVENT.equals(notificationType)) {
-                    final String actionName = data.getQueryParameter(ACTION_ID_ATTR);
-                    args.put(ACTION_ID_ATTR, actionName);
-                }
-
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Notification:Event", args.toString()));
-            } catch (JSONException e) {
-                Log.w(LOGTAG, "Error building JSON notification arguments.", e);
+            // If Gecko isn't running, we throw away events where the notification was cancelled.
+            // i.e. Don't bug the user if they're just closing a bunch of notifications.
+            if (!GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
+                return;
             }
         }
+
+        JSONObject args = new JSONObject();
+
+        // The handler and cookie parameters are optional
+        final String handler = data.getQueryParameter(HANDLER_ATTR);
+        final String cookie = i.getStringExtra(COOKIE_ATTR);
+
+        try {
+            args.put(ID_ATTR, id);
+            args.put(EVENT_TYPE_ATTR, notificationType);
+            args.put(HANDLER_ATTR, handler);
+            args.put(COOKIE_ATTR, cookie);
+
+            if (BUTTON_EVENT.equals(notificationType)) {
+                final String actionName = data.getQueryParameter(ACTION_ID_ATTR);
+                args.put(ACTION_ID_ATTR, actionName);
+            }
+
+            Log.i(LOGTAG, "Send " + args.toString());
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Notification:Event", args.toString()));
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Error building JSON notification arguments.", e);
+        }
+
         // If the notification was clicked, we are closing it. This must be executed after
         // sending the event to js side because when the notification is canceled no event can be
         // handled.
         if (CLICK_EVENT.equals(notificationType) && !i.getBooleanExtra(ONGOING_ATTR, false)) {
-            hideNotification(id);
+            hideNotification(id, handler, cookie);
         }
 
     }
@@ -165,6 +175,14 @@ public final class NotificationHelper implements GeckoEventListener {
         } catch (JSONException ex) {
             Log.i(LOGTAG, "buildNotificationPendingIntent, error parsing", ex);
         }
+
+        try {
+            final String id = message.getString(HANDLER_ATTR);
+            b.appendQueryParameter(HANDLER_ATTR, id);
+        } catch (JSONException ex) {
+            Log.i(LOGTAG, "Notification doesn't have a handler");
+        }
+
         return b;
     }
 
@@ -176,13 +194,14 @@ public final class NotificationHelper implements GeckoEventListener {
         final Uri dataUri = builder.build();
         notificationIntent.setData(dataUri);
         notificationIntent.putExtra(HELPER_NOTIFICATION, true);
+        notificationIntent.putExtra(COOKIE_ATTR, message.optString(COOKIE_ATTR));
         return notificationIntent;
     }
 
     private PendingIntent buildNotificationPendingIntent(JSONObject message, String type) {
         Uri.Builder builder = getNotificationBuilder(message, type);
         final Intent notificationIntent = buildNotificationIntent(message, builder);
-        PendingIntent pi = PendingIntent.getBroadcast(mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pi = PendingIntent.getActivity(mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         return pi;
     }
 
@@ -200,7 +219,7 @@ public final class NotificationHelper implements GeckoEventListener {
             Log.i(LOGTAG, "buildNotificationPendingIntent, error parsing", ex);
         }
         final Intent notificationIntent = buildNotificationIntent(message, builder);
-        PendingIntent res = PendingIntent.getBroadcast(mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent res = PendingIntent.getActivity(mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         return res;
     }
 
@@ -290,58 +309,71 @@ public final class NotificationHelper implements GeckoEventListener {
         boolean persistent = message.optBoolean(PERSISTENT_ATTR);
         // We add only not persistent notifications to the list since we want to purge only
         // them when geckoapp is destroyed.
-        if (!persistent && !mClearableNotifications.contains(id)) {
-            mClearableNotifications.add(id);
+        if (!persistent && !mClearableNotifications.containsKey(id)) {
+            mClearableNotifications.put(id, message.toString());
         }
     }
 
     private void hideNotification(JSONObject message) {
-        String id;
+        final String id;
+        final String handler;
+        final String cookie;
         try {
             id = message.getString("id");
+            handler = message.optString("handlerKey");
+            cookie  = message.optString("cookie");
         } catch (JSONException ex) {
             Log.i(LOGTAG, "Error parsing", ex);
             return;
         }
 
-        hideNotification(id);
+        hideNotification(id, handler, cookie);
     }
 
-    private void sendNotificationWasClosed(String id) {
-        if (!GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
-            return;
-        }
-        JSONObject args = new JSONObject();
+    private void sendNotificationWasClosed(String id, String handlerKey, String cookie) {
+        final JSONObject args = new JSONObject();
         try {
             args.put(ID_ATTR, id);
+            args.put(HANDLER_ATTR, handlerKey);
+            args.put(COOKIE_ATTR, cookie);
             args.put(EVENT_TYPE_ATTR, CLOSED_EVENT);
+            Log.i(LOGTAG, "Send " + args.toString());
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Notification:Event", args.toString()));
         } catch (JSONException ex) {
-            Log.w(LOGTAG, "sendNotificationWasClosed: error building JSON notification arguments.", ex);
+            Log.e(LOGTAG, "sendNotificationWasClosed: error building JSON notification arguments.", ex);
         }
     }
 
-    private void closeNotification(String id) {
+    private void closeNotification(String id, String handlerKey, String cookie) {
         GeckoAppShell.notificationClient.remove(id.hashCode());
-        sendNotificationWasClosed(id);
+        sendNotificationWasClosed(id, handlerKey, cookie);
     }
 
-    public void hideNotification(String id) {
+    public void hideNotification(String id, String handlerKey, String cookie) {
         mClearableNotifications.remove(id);
-        closeNotification(id);
+        closeNotification(id, handlerKey, cookie);
     }
 
     private void clearAll() {
-        for (Iterator<String> i = mClearableNotifications.iterator(); i.hasNext();) {
+        for (Iterator<String> i = mClearableNotifications.keySet().iterator(); i.hasNext();) {
             final String id = i.next();
+            final String json = mClearableNotifications.get(id);
             i.remove();
-            closeNotification(id);
+
+            JSONObject obj;
+            try {
+                obj = new JSONObject(json);
+            } catch(JSONException ex) {
+                obj = new JSONObject();
+            }
+
+            closeNotification(id, obj.optString(HANDLER_ATTR), obj.optString(COOKIE_ATTR));
         }
     }
 
     public static void destroy() {
-        if (mInstance != null) {
-            mInstance.clearAll();
+        if (sInstance != null) {
+            sInstance.clearAll();
         }
     }
 }

@@ -1197,29 +1197,19 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
             return null;
         }
 
-        int urlCount = urls.size();
+        final int urlCount = urls.size();
         if (urlCount == 0) {
             return null;
         }
 
         // Don't match against null thumbnails.
-        StringBuilder selection = new StringBuilder(
-                Thumbnails.DATA + " IS NOT NULL AND " +
-                Thumbnails.URL + " IN ("
-        );
-
-        // Compute a (?, ?, ?) sequence to match the provided URLs.
-        int i = 1;
-        while (i++ < urlCount) {
-            selection.append("?, ");
-        }
-        selection.append("?)");
-
-        String[] selectionArgs = urls.toArray(new String[urlCount]);
+        final String selection = Thumbnails.DATA + " IS NOT NULL AND " +
+                           DBUtils.computeSQLInClause(urlCount, Thumbnails.URL);
+        final String[] selectionArgs = urls.toArray(new String[urlCount]);
 
         return cr.query(mThumbnailsUriWithProfile,
                         new String[] { Thumbnails.URL, Thumbnails.DATA },
-                        selection.toString(),
+                        selection,
                         selectionArgs,
                         null);
     }
