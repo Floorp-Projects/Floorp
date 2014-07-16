@@ -451,7 +451,7 @@ TestRunner.prototype = {
     function tiredOfWaiting() {
       self._logTestFailed("timed out");
       if ("testMessage" in self.console) {
-        self.console.testMessage(false, false, self.test.name, "Timed out");
+        self.console.testMessage(false, false, self.test.name, "Test timed out");
       }
       else {
         self.console.error("fail:", "Timed out")

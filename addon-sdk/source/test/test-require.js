@@ -51,9 +51,13 @@ function checkError (assert, name, e) {
   // we'd also like to assert that the right filename
   // and linenumber is in the stacktrace
   let tb = traceback.fromException(e);
-  // Get the second to last frame, as the last frame is inside
-  // toolkit/loader
-  let lastFrame = tb[tb.length-2];
+
+  // The last frame may be inside a loader
+  let lastFrame = tb[tb.length - 1];
+  if (lastFrame.fileName.indexOf("toolkit/loader.js") !== -1 ||
+      lastFrame.fileName.indexOf("sdk/loader/cuddlefish.js") !== -1)
+    lastFrame = tb[tb.length - 2];
+
   assert.ok(lastFrame.fileName.indexOf("test-require.js") !== -1,
                           'Filename found in stacktrace');
   assert.equal(lastFrame.lineNumber, REQUIRE_LINE_NO,
