@@ -29,20 +29,7 @@ AnimationTimeline::WrapObject(JSContext* aCx)
 Nullable<double>
 AnimationTimeline::GetCurrentTime() const
 {
-  Nullable<double> result; // Default ctor initializes to null
-
-  nsRefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
-  if (!timing) {
-    return result;
-  }
-
-  TimeStamp now = GetCurrentTimeStamp();
-  if (now.IsNull()) {
-    return result;
-  }
-
-  result.SetValue(timing->TimeStampToDOMHighRes(now));
-  return result;
+  return ToTimelineTime(GetCurrentTimeStamp());
 }
 
 TimeStamp
@@ -62,6 +49,23 @@ AnimationTimeline::GetCurrentTimeStamp() const
   }
 
   result = presContext->RefreshDriver()->MostRecentRefresh();
+  return result;
+}
+
+Nullable<double>
+AnimationTimeline::ToTimelineTime(const mozilla::TimeStamp& aTimeStamp) const
+{
+  Nullable<double> result; // Initializes to null
+  if (aTimeStamp.IsNull()) {
+    return result;
+  }
+
+  nsRefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
+  if (MOZ_UNLIKELY(!timing)) {
+    return result;
+  }
+
+  result.SetValue(timing->TimeStampToDOMHighRes(aTimeStamp));
   return result;
 }
 
