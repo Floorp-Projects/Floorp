@@ -241,8 +241,9 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     }
 
     // build the animations list
+    dom::AnimationTimeline* timeline = aElement->OwnerDoc()->Timeline();
     ElementAnimationPtrArray newAnimations;
-    BuildAnimations(aStyleContext, newAnimations);
+    BuildAnimations(aStyleContext, timeline, newAnimations);
 
     if (newAnimations.IsEmpty()) {
       if (collection) {
@@ -383,6 +384,7 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
 
 void
 nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
+                                    dom::AnimationTimeline* aTimeline,
                                     ElementAnimationPtrArray& aAnimations)
 {
   NS_ABORT_IF_FALSE(aAnimations.IsEmpty(), "expect empty array");
@@ -410,7 +412,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     }
 
     nsRefPtr<ElementAnimation> dest =
-      *aAnimations.AppendElement(new ElementAnimation());
+      *aAnimations.AppendElement(new ElementAnimation(aTimeline));
 
     dest->mName = src.GetName();
 

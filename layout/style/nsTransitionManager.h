@@ -30,6 +30,9 @@ namespace mozilla {
 
 struct ElementPropertyTransition : public mozilla::ElementAnimation
 {
+  explicit ElementPropertyTransition(mozilla::dom::AnimationTimeline* aTimeline)
+    : mozilla::ElementAnimation(aTimeline) { }
+
   virtual ElementPropertyTransition* AsTransition() { return this; }
   virtual const ElementPropertyTransition* AsTransition() const { return this; }
 

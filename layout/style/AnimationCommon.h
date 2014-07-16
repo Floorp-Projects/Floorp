@@ -13,12 +13,14 @@
 #include "nsCSSProperty.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleAnimationValue.h"
+#include "mozilla/dom/AnimationTimeline.h"
 #include "mozilla/dom/Element.h"
 #include "nsSMILKeySpline.h"
 #include "nsStyleStruct.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 #include "nsCSSPseudoElements.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIFrame;
 class nsPresContext;
@@ -311,12 +313,16 @@ protected:
   virtual ~ElementAnimation() { }
 
 public:
-  ElementAnimation()
+  explicit ElementAnimation(dom::AnimationTimeline* aTimeline)
     : mIsRunningOnCompositor(false)
     , mIsFinishedTransition(false)
     , mLastNotification(LAST_NOTIFICATION_NONE)
+    , mTimeline(aTimeline)
   {
   }
+
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ElementAnimation)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ElementAnimation)
 
   // FIXME: If we succeed in moving transition-specific code to a type of
   // AnimationEffect (as per the Web Animations API) we should remove these
@@ -397,7 +403,7 @@ public:
 
   InfallibleTArray<AnimationProperty> mProperties;
 
-  NS_INLINE_DECL_REFCOUNTING(ElementAnimation)
+  nsRefPtr<dom::AnimationTimeline> mTimeline;
 };
 
 typedef InfallibleTArray<nsRefPtr<ElementAnimation> > ElementAnimationPtrArray;
