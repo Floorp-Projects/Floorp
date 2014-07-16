@@ -10,6 +10,7 @@
 #include "HTMLLinkElement.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
+#include "nsCrossSiteListenerProxy.h"
 #include "nsIChannel.h"
 #include "nsIChannelPolicy.h"
 #include "nsIContentPolicy.h"
@@ -197,6 +198,7 @@ ImportLoader::Open()
   nsCOMPtr<nsIDocument> master = mImportParent->MasterDocument();
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(master);
   nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
+
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT,
                                           mURI,
@@ -211,6 +213,11 @@ ImportLoader::Open()
     NS_WARN_IF_FALSE(NS_CP_ACCEPTED(shouldLoad), "ImportLoader rejected by CSP");
     return;
   }
+
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  rv = secMan->CheckLoadURIWithPrincipal(principal, mURI,
+                                         nsIScriptSecurityManager::STANDARD);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   nsCOMPtr<nsILoadGroup> loadGroup = mImportParent->GetDocumentLoadGroup();
   nsCOMPtr<nsIChannelPolicy> channelPolicy;
@@ -233,7 +240,14 @@ ImportLoader::Open()
                      channelPolicy);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  rv = channel->AsyncOpen(this, nullptr);
+  // Init CORSListenerProxy and omit credentials.
+  nsRefPtr<nsCORSListenerProxy> corsListener =
+    new nsCORSListenerProxy(this, principal,
+                            /* aWithCredentials */ false);
+  rv = corsListener->Init(channel, true);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  rv = channel->AsyncOpen(corsListener, nullptr);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   BlockScripts();
