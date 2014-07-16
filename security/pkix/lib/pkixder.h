@@ -106,13 +106,6 @@ ExpectTagAndGetLength(Input& input, uint8_t expectedTag, uint16_t& length);
 } // namespace internal
 
 inline Result
-ExpectTagAndSkipLength(Input& input, uint8_t expectedTag)
-{
-  uint16_t ignored;
-  return internal::ExpectTagAndGetLength(input, expectedTag, ignored);
-}
-
-inline Result
 ExpectTagAndSkipValue(Input& input, uint8_t tag)
 {
   uint16_t length;

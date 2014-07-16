@@ -154,7 +154,7 @@ static inline Result ResponseData(
                        Input& tbsResponseData,
                        Context& context,
                        const SignedDataWithSignature& signedResponseData,
-                       /*const*/ SECItem* certs, size_t numCerts);
+                       const DERArray& certs);
 static inline Result SingleResponse(Input& input, Context& context);
 static Result ExtensionNotUnderstood(Input& extnID,
                                      const SECItem& extnValue,
@@ -228,8 +228,7 @@ VerifyOCSPSignedData(TrustDomain& trustDomain,
 // *directly* to issuerCert.
 static Result
 VerifySignature(Context& context, ResponderIDType responderIDType,
-                const SECItem& responderID, const SECItem* certs,
-                size_t numCerts,
+                const SECItem& responderID, const DERArray& certs,
                 const SignedDataWithSignature& signedResponseData)
 {
   bool match;
@@ -245,8 +244,9 @@ VerifySignature(Context& context, ResponderIDType responderIDType,
                                 context.certID.issuerSubjectPublicKeyInfo);
   }
 
+  size_t numCerts = certs.GetLength();
   for (size_t i = 0; i < numCerts; ++i) {
-    BackCert cert(certs[i], EndEntityOrCA::MustBeEndEntity, nullptr);
+    BackCert cert(*certs.GetDER(i), EndEntityOrCA::MustBeEndEntity, nullptr);
     rv = cert.Init();
     if (rv != Success) {
       return rv;
@@ -413,42 +413,50 @@ BasicResponse(Input& input, Context& context)
 
   // Parse certificates, if any
 
-  SECItem certs[8];
-  size_t numCerts = 0;
-
+  NonOwningDERArray certs;
   if (!input.AtEnd()) {
     // We ignore the lengths of the wrappers because we'll detect bad lengths
     // during parsing--too short and we'll run out of input for parsing a cert,
     // and too long and we'll have leftover data that won't parse as a cert.
 
     // [0] wrapper
-    rv = der::ExpectTagAndSkipLength(
-          input, der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0);
+    Input wrapped;
+    rv = der::ExpectTagAndGetValue(
+          input, der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0, wrapped);
+    if (rv != Success) {
+      return rv;
+    }
+    rv = der::End(input);
     if (rv != Success) {
       return rv;
     }
 
     // SEQUENCE wrapper
-    rv = der::ExpectTagAndSkipLength(input, der::SEQUENCE);
+    Input certsSequence;
+    rv = der::ExpectTagAndGetValue(wrapped, der::SEQUENCE, certsSequence);
+    if (rv != Success) {
+      return rv;
+    }
+    rv = der::End(wrapped);
     if (rv != Success) {
       return rv;
     }
 
     // sequence of certificates
-    while (!input.AtEnd()) {
-      if (numCerts == PR_ARRAY_SIZE(certs)) {
-        return Result::ERROR_BAD_DER;
-      }
-
-      rv = der::ExpectTagAndGetTLV(input, der::SEQUENCE, certs[numCerts]);
+    while (!certsSequence.AtEnd()) {
+      SECItem cert;
+      rv = der::ExpectTagAndGetTLV(certsSequence, der::SEQUENCE, cert);
       if (rv != Success) {
         return rv;
       }
-      ++numCerts;
+      rv = certs.Append(cert);
+      if (rv != Success) {
+        return rv;
+      }
     }
   }
 
-  return ResponseData(tbsResponseData, context, signedData, certs, numCerts);
+  return ResponseData(tbsResponseData, context, signedData, certs);
 }
 
 // ResponseData ::= SEQUENCE {
@@ -460,7 +468,7 @@ BasicResponse(Input& input, Context& context)
 static inline Result
 ResponseData(Input& input, Context& context,
              const SignedDataWithSignature& signedResponseData,
-             /*const*/ SECItem* certs, size_t numCerts)
+             const DERArray& certs)
 {
   der::Version version;
   Result rv = der::OptionalVersion(input, version);
@@ -489,7 +497,7 @@ ResponseData(Input& input, Context& context,
   // This is the soonest we can verify the signature. We verify the signature
   // right away to follow the principal of minimizing the processing of data
   // before verifying its signature.
-  rv = VerifySignature(context, responderIDType, responderID, certs, numCerts,
+  rv = VerifySignature(context, responderIDType, responderID, certs,
                        signedResponseData);
   if (rv != Success) {
     return rv;
