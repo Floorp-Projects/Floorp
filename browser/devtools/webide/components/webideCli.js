@@ -11,8 +11,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Serv
 
 /**
  * Handles -webide command line option.
- *
- * See webide/content/cli.js for a complete description of the command line.
  */
 
 function webideCli() { }
@@ -21,16 +19,8 @@ webideCli.prototype = {
   handle: function(cmdLine) {
     let param;
 
-    try {
-      // Returns null if -webide is not present
-      // Throws if -webide is present with no params
-      param = cmdLine.handleFlagWithParam("webide", false);
-      if (!param) {
-        return;
-      }
-    } catch(e) {
-      // -webide is present with no params
-      cmdLine.handleFlag("webide", false);
+    if (!cmdLine.handleFlag("webide", false)) {
+      return;
     }
 
     // If -webide is used remotely, we don't want to open
@@ -43,24 +33,12 @@ webideCli.prototype = {
     let win = Services.wm.getMostRecentWindow("devtools:webide");
     if (win) {
       win.focus();
-      if (param) {
-        win.handleCommandline(param);
-      }
-      return;
-    }
-
-    win = Services.ww.openWindow(null,
-                                 "chrome://webide/content/",
-                                 "webide",
-                                 "chrome,centerscreen,resizable,dialog=no",
-                                 null);
-
-    if (param) {
-      win.addEventListener("load", function onLoad() {
-        win.removeEventListener("load", onLoad, true);
-        // next tick
-        win.setTimeout(() => win.handleCommandline(param), 0);
-      }, true);
+    } else {
+      win = Services.ww.openWindow(null,
+                                   "chrome://webide/content/",
+                                   "webide",
+                                   "chrome,centerscreen,resizable,dialog=no",
+                                   null);
     }
 
     if (cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
