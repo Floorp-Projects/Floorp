@@ -5,6 +5,7 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
+interface nsICacheEntry;
 interface nsICacheEntryOpenCallback;
 interface nsICacheEntryDoomCallback;
 interface nsICacheStorageVisitor;
@@ -14,7 +15,7 @@ interface nsICacheStorageVisitor;
  * in-mem+on-disk, in-mem+on-disk+app-cache or just a specific
  * app-cache storage.
  */
-[scriptable, uuid(d9006881-a536-4ce3-bc48-e7f94b40a690)]
+[scriptable, uuid(35d104a6-d252-4fd4-8a56-3c14657cad3b)]
 interface nsICacheStorage : nsISupports
 {
   /**
@@ -76,6 +77,21 @@ interface nsICacheStorage : nsISupports
   void asyncOpenURI(in nsIURI aURI, in ACString aIdExtension,
                     in uint32_t aFlags,
                     in nsICacheEntryOpenCallback aCallback);
+
+  /**
+   * Immediately opens a new and empty cache entry in the storage, any existing
+   * entries are immediately doomed.  This is similar to the recreate() method
+   * on nsICacheEntry.
+   *
+   * Storage may not implement this method and throw NS_ERROR_NOT_IMPLEMENTED.
+   * In that case consumer must use asyncOpen with OPEN_TRUNCATE flag and get
+   * the new entry via a callback.
+   *
+   * @param aURI @see asyncOpenURI
+   * @param aIdExtension @see asyncOpenURI
+   */
+  nsICacheEntry openTruncate(in nsIURI aURI,
+                             in ACString aIdExtension);
 
   /**
    * Synchronously check on existance of an entry.  In case of disk entries
