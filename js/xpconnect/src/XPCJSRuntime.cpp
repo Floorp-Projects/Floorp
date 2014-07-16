@@ -3069,7 +3069,7 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
 };
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
-   : CycleCollectedJSRuntime(nullptr, JS::UnlimitedHeapMaxBytes),
+   : CycleCollectedJSRuntime(nullptr, 32L * 1024L * 1024L),
    mJSContextStack(new XPCJSContextStack(MOZ_THIS_IN_INITIALIZER_LIST())),
    mCallContext(nullptr),
    mAutoRoots(nullptr),
@@ -3107,6 +3107,14 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     auto rtPrivate = new PerThreadAtomCache();
     memset(rtPrivate, 0, sizeof(PerThreadAtomCache));
     JS_SetRuntimePrivate(runtime, rtPrivate);
+
+    // Unconstrain the runtime's threshold on nominal heap size, to avoid
+    // triggering GC too often if operating continuously near an arbitrary
+    // finite threshold (0xffffffff is infinity for uint32_t parameters).
+    // This leaves the maximum-JS_malloc-bytes threshold still in effect
+    // to cause period, and we hope hygienic, last-ditch GCs from within
+    // the GC's allocator.
+    JS_SetGCParameter(runtime, JSGC_MAX_BYTES, 0xffffffff);
 
     // The JS engine permits us to set different stack limits for system code,
     // trusted script, and untrusted script. We have tests that ensure that

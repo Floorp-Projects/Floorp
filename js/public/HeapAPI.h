@@ -100,12 +100,6 @@ struct Zone;
 /* Default size for the generational nursery in bytes. */
 const uint32_t DefaultNurseryBytes = 16 * 1024 * 1024;
 
-/* Default maximum heap size in bytes to pass to JS_NewRuntime(). */
-const uint32_t DefaultHeapMaxBytes = 32 * 1024 * 1024;
-
-/* Value indicating no maximum heap size to pass to JS_NewRuntime(). */
-const uint32_t UnlimitedHeapMaxBytes = 0xffffffff;
-
 /*
  * We cannot expose the class hierarchy: the implementation is hidden. Instead
  * we provide cast functions with strong debug-mode assertions.
