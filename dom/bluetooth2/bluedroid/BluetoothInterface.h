@@ -37,7 +37,8 @@ public:
   }
 
   virtual void Listen(int aSockFd) { }
-  virtual void Connect(int aSockFd) { }
+  virtual void Connect(int aSockFd, const nsAString& aBdAddress,
+                       int aConnectionState) { }
 };
 
 class BluetoothSocketInterface
