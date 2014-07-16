@@ -4,18 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if not CONFIG['LIBXUL_SDK']:
-    if CONFIG['OS_TARGET'] != 'Android':
-        PROGRAM = CONFIG['MOZ_APP_NAME']
-        DEFINES['XPCOM_GLUE'] = True
-        GENERATED_INCLUDES += ['/build']
-        LOCAL_INCLUDES += [
-            '/toolkit/xre',
-            '/xpcom/base',
-            '/xpcom/build',
-        ]
-        DISABLE_STL_WRAPPING = True
-
 for var in ('APP_NAME', 'APP_VERSION'):
     DEFINES[var] = CONFIG['MOZ_%s' % var]
 
