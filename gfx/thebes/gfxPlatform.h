@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 
+#include "gfxPrefs.h"
 #include "gfxTypes.h"
 #include "gfxFontFamilyList.h"
 #include "gfxBlur.h"
@@ -57,6 +58,13 @@ BackendTypeBit(BackendType b)
 }
 }
 }
+
+#define MOZ_PERFORMANCE_WARNING(module, ...) \
+  do { \
+    if (gfxPrefs::PerfWarnings()) { \
+      printf_stderr("[" module "] " __VA_ARGS__); \
+    } \
+  } while (0)
 
 extern cairo_user_data_key_t kDrawTarget;
 

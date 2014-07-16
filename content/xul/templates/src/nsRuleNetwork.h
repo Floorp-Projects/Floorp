@@ -86,11 +86,13 @@ protected:
     public:
         List() { MOZ_COUNT_CTOR(MemoryElementSet::List); }
 
+    protected:
         ~List() {
             MOZ_COUNT_DTOR(MemoryElementSet::List);
             delete mElement;
             NS_IF_RELEASE(mNext); }
 
+    public:
         int32_t AddRef() { return ++mRefCnt; }
 
         int32_t Release() {
@@ -231,9 +233,12 @@ protected:
         List(const nsAssignment &aAssignment) : mAssignment(aAssignment) {
             MOZ_COUNT_CTOR(nsAssignmentSet::List); }
 
+    protected:
         ~List() {
             MOZ_COUNT_DTOR(nsAssignmentSet::List);
             NS_IF_RELEASE(mNext); }
+
+    public:
 
         int32_t AddRef() { return ++mRefCnt; }
 

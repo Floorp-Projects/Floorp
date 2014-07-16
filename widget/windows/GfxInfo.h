@@ -15,6 +15,7 @@ namespace widget {
 
 class GfxInfo : public GfxInfoBase
 {
+  ~GfxInfo() {}
 public:
   GfxInfo();
 

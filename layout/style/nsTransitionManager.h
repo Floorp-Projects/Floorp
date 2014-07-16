@@ -30,6 +30,9 @@ namespace mozilla {
 
 struct ElementPropertyTransition : public mozilla::ElementAnimation
 {
+  explicit ElementPropertyTransition(mozilla::dom::AnimationTimeline* aTimeline)
+    : mozilla::ElementAnimation(aTimeline) { }
+
   virtual ElementPropertyTransition* AsTransition() { return this; }
   virtual const ElementPropertyTransition* AsTransition() const { return this; }
 
@@ -51,9 +54,9 @@ struct ElementPropertyTransition : public mozilla::ElementAnimation
   double mReversePortion;
 
   // Compute the portion of the *value* space that we should be through
-  // at the given time.  (The input to the transition timing function
+  // at the current time.  (The input to the transition timing function
   // has time units, the output has value units.)
-  double ValuePortionFor(mozilla::TimeStamp aRefreshTime) const;
+  double CurrentValuePortion() const;
 };
 
 } // namespace mozilla

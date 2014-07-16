@@ -44,8 +44,11 @@ class ClientLayerManager : public LayerManager
 
 public:
   ClientLayerManager(nsIWidget* aWidget);
+
+protected:
   virtual ~ClientLayerManager();
 
+public:
   virtual ShadowLayerForwarder* AsShadowForwarder()
   {
     return mForwarder;

@@ -4,6 +4,7 @@
 
 #include "ServiceWorkerManager.h"
 
+#include "nsIDOMEventTarget.h"
 #include "nsIDocument.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsPIDOMWindow.h"
@@ -367,10 +368,10 @@ public:
     }
 
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    ServiceWorkerManager::ServiceWorkerDomainInfo* domainInfo;
+    nsRefPtr<ServiceWorkerManager::ServiceWorkerDomainInfo> domainInfo;
     // XXXnsm: This pattern can be refactored if we end up using it
     // often enough.
-    if (!swm->mDomainMap.Get(domain, &domainInfo)) {
+    if (!swm->mDomainMap.Get(domain, getter_AddRefs(domainInfo))) {
       domainInfo = new ServiceWorkerManager::ServiceWorkerDomainInfo;
       swm->mDomainMap.Put(domain, domainInfo);
     }
@@ -681,8 +682,8 @@ ServiceWorkerManager::HandleError(JSContext* aCx,
     return;
   }
 
-  ServiceWorkerDomainInfo* domainInfo;
-  if (!mDomainMap.Get(domain, &domainInfo)) {
+  nsRefPtr<ServiceWorkerDomainInfo> domainInfo;
+  if (!mDomainMap.Get(domain, getter_AddRefs(domainInfo))) {
     return;
   }
 
@@ -915,7 +916,8 @@ ServiceWorkerManager::Install(ServiceWorkerRegistration* aRegistration,
   // a wait is likely to be required only when performing networking or storage
   // transactions in the first place.
 
-  // FIXME(nsm): Bug 983497. Fire "updatefound" on ServiceWorkerContainers.
+  FireEventOnServiceWorkerContainers(aRegistration,
+                                     NS_LITERAL_STRING("updatefound"));
 }
 
 class ActivationRunnable : public nsRunnable
@@ -1003,26 +1005,13 @@ ServiceWorkerManager::GetServiceWorkerRegistration(nsIDocument* aDoc)
 already_AddRefed<ServiceWorkerRegistration>
 ServiceWorkerManager::GetServiceWorkerRegistration(nsIURI* aURI)
 {
-  if (!aURI) {
-    return nullptr;
-  }
-
-  nsCString domain;
-  nsresult rv = aURI->GetHost(domain);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  ServiceWorkerDomainInfo* domainInfo = mDomainMap.Get(domain);
-
-  // XXXnsm: This pattern can be refactored if we end up using it
-  // often enough.
+  nsRefPtr<ServiceWorkerDomainInfo> domainInfo = GetDomainInfo(aURI);
   if (!domainInfo) {
     return nullptr;
   }
 
   nsCString spec;
-  rv = aURI->GetSpec(spec);
+  nsresult rv = aURI->GetSpec(spec);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
@@ -1126,6 +1115,45 @@ ServiceWorkerManager::RemoveScope(nsTArray<nsCString>& aList, const nsACString& 
   aList.RemoveElement(aScope);
 }
 
+already_AddRefed<ServiceWorkerManager::ServiceWorkerDomainInfo>
+ServiceWorkerManager::GetDomainInfo(nsIDocument* aDoc)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aDoc);
+  nsCOMPtr<nsIURI> documentURI = aDoc->GetDocumentURI();
+  return GetDomainInfo(documentURI);
+}
+
+already_AddRefed<ServiceWorkerManager::ServiceWorkerDomainInfo>
+ServiceWorkerManager::GetDomainInfo(nsIURI* aURI)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aURI);
+
+  nsCString domain;
+  nsresult rv = aURI->GetHost(domain);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  nsRefPtr<ServiceWorkerDomainInfo> domainInfo;
+  mDomainMap.Get(domain, getter_AddRefs(domainInfo));
+  return domainInfo.forget();
+}
+
+already_AddRefed<ServiceWorkerManager::ServiceWorkerDomainInfo>
+ServiceWorkerManager::GetDomainInfo(const nsCString& aURL)
+{
+  AssertIsOnMainThread();
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr, nullptr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  return GetDomainInfo(uri);
+}
+
 NS_IMETHODIMP
 ServiceWorkerManager::GetScopeForUrl(const nsAString& aUrl, nsAString& aScope)
 {
@@ -1143,6 +1171,79 @@ ServiceWorkerManager::GetScopeForUrl(const nsAString& aUrl, nsAString& aScope)
   aScope = NS_ConvertUTF8toUTF16(r->mScope);
   return NS_OK;
 }
+NS_IMETHODIMP
+ServiceWorkerManager::AddContainerEventListener(nsIURI* aDocumentURI, nsIDOMEventTarget* aListener)
+{
+  MOZ_ASSERT(aDocumentURI);
+  nsRefPtr<ServiceWorkerDomainInfo> domainInfo = GetDomainInfo(aDocumentURI);
+  if (!domainInfo) {
+    nsCString domain;
+    nsresult rv = aDocumentURI->GetHost(domain);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    domainInfo = new ServiceWorkerDomainInfo;
+    mDomainMap.Put(domain, domainInfo);
+  }
+
+  MOZ_ASSERT(domainInfo);
+
+  ServiceWorkerContainer* container = static_cast<ServiceWorkerContainer*>(aListener);
+  domainInfo->mServiceWorkerContainers.AppendElement(container);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerManager::RemoveContainerEventListener(nsIURI* aDocumentURI, nsIDOMEventTarget* aListener)
+{
+  MOZ_ASSERT(aDocumentURI);
+  nsRefPtr<ServiceWorkerDomainInfo> domainInfo = GetDomainInfo(aDocumentURI);
+  if (!domainInfo) {
+    return NS_OK;
+  }
+
+  ServiceWorkerContainer* container = static_cast<ServiceWorkerContainer*>(aListener);
+  domainInfo->mServiceWorkerContainers.RemoveElement(container);
+  return NS_OK;
+}
+
+void
+ServiceWorkerManager::FireEventOnServiceWorkerContainers(
+  ServiceWorkerRegistration* aRegistration,
+  const nsAString& aName)
+{
+  AssertIsOnMainThread();
+  nsRefPtr<ServiceWorkerDomainInfo> domainInfo =
+    GetDomainInfo(aRegistration->mScriptSpec);
+
+  if (domainInfo) {
+    nsTObserverArray<ServiceWorkerContainer*>::ForwardIterator it(domainInfo->mServiceWorkerContainers);
+    while (it.HasMore()) {
+      nsRefPtr<ServiceWorkerContainer> target = it.GetNext();
+      nsIURI* targetURI = target->GetDocumentURI();
+      if (!targetURI) {
+        NS_WARNING("Controlled domain cannot have page with null URI!");
+        continue;
+      }
+
+      nsCString path;
+      nsresult rv = targetURI->GetSpec(path);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        continue;
+      }
+
+      nsCString scope = FindScopeForPath(domainInfo->mOrderedScopes, path);
+      if (scope.IsEmpty() ||
+          !scope.Equals(aRegistration->mScope)) {
+        continue;
+      }
+
+      target->DispatchTrustedEvent(aName);
+    }
+  }
+}
+
 NS_IMETHODIMP
 ServiceWorkerManager::CreateServiceWorker(const nsACString& aScriptSpec,
                                           const nsACString& aScope,

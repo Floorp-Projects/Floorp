@@ -1592,7 +1592,7 @@ random-if(Android) == 594333-1.html 594333-1-ref.html
 == 594624-1.html 594624-1-ref.html
 == 594737-1.html 594737-1-ref.html
 == 597721-1.html 597721-1-ref.html
-random-if(winWidget) fuzzy-if(B2G,1,35) fuzzy-if(Android,38,539) needs-focus == 598726-1.html 598726-1-ref.html # Fails on Windows, bug 782196
+random-if(winWidget) fuzzy-if(B2G,1,40) fuzzy-if(Android,38,539) needs-focus == 598726-1.html 598726-1-ref.html # Fails on Windows, bug 782196
 == 599113-1.html 599113-1-ref.html
 fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
 == 599882-1a.html 599882-1-ref.html
@@ -1644,7 +1644,7 @@ fuzzy-if(Android&&AndroidVersion>=15,8,300) == 625409-1.html 625409-1-ref.html
 == 627393-1.html about:blank
 == 630835-1.html about:blank
 == 631352-1.html 631352-1-ref.html
-skip-if(B2G) fails-if(Android) == 632423-1.html 632423-1-ref.html
+skip-if(B2G) fails-if(Android) fuzzy-if(winWidget&&!layersGPUAccelerated,102,535)  == 632423-1.html 632423-1-ref.html
 skip-if(Android||B2G) random-if(winWidget) == 632781-verybig.html 632781-ref.html
 == 632781-normalsize.html 632781-ref.html
 == 633344-1.html 633344-1-ref.html
@@ -1663,7 +1663,7 @@ skip-if(B2G) == 641770-1.html 641770-1-ref.html
 == 641856-1.html 641856-1-ref.html
 == 645491-1.html 645491-1-ref.html
 == 645768-1.html 645768-1-ref.html
-fails-if(layersGPUAccelerated&&cocoaWidget) fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) == 650228-1.html 650228-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
+fails-if(winWidget&&!layersGPUAccelerated) fails-if(layersGPUAccelerated&&cocoaWidget) fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) == 650228-1.html 650228-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
 needs-focus == 652301-1a.html 652301-1-ref.html
 needs-focus == 652301-1b.html 652301-1-ref.html
 == 652775-1.html 652775-1-ref.html

@@ -36,8 +36,8 @@ public:
   explicit ServiceWorkerContainer(nsPIDOMWindow* aWindow)
     : mWindow(aWindow)
   {
-    // FIXME(nsm): Bug 983497. Here the NSW should hook into SWM to be notified of events.
     SetIsDOMBinding();
+    StartListeningForEvents();
   }
 
   nsPIDOMWindow*
@@ -75,6 +75,12 @@ public:
   already_AddRefed<Promise>
   Ready();
 
+  nsIURI*
+  GetDocumentURI() const
+  {
+    return mWindow->GetDocumentURI();
+  }
+
   // Testing only.
   already_AddRefed<Promise>
   ClearAllServiceWorkerData(ErrorResult& aRv);
@@ -91,8 +97,14 @@ public:
 private:
   ~ServiceWorkerContainer()
   {
-    // FIXME(nsm): Bug 983497. Unhook from events.
+    StopListeningForEvents();
   }
+
+  void
+  StartListeningForEvents();
+
+  void
+  StopListeningForEvents();
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
 };

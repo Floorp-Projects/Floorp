@@ -15,6 +15,9 @@
 struct JSContext;
 
 namespace mozilla {
+
+class TimeStamp;
+
 namespace dom {
 
 class AnimationTimeline MOZ_FINAL : public nsWrapperCache
@@ -33,6 +36,9 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   Nullable<double> GetCurrentTime() const;
+  mozilla::TimeStamp GetCurrentTimeStamp() const;
+
+  Nullable<double> ToTimelineTime(const mozilla::TimeStamp& aTimeStamp) const;
 
 protected:
   virtual ~AnimationTimeline() { }

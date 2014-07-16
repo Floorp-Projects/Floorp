@@ -1116,6 +1116,7 @@ public:
     MOZ_COUNT_CTOR(SingleProcessRunnable);
   }
 
+protected:
   ~SingleProcessRunnable()
   {
     MOZ_COUNT_DTOR(SingleProcessRunnable);
@@ -1370,6 +1371,7 @@ public:
     MOZ_COUNT_CTOR(ChildProcessRunnable);
   }
 
+protected:
   ~ChildProcessRunnable()
   {
     MOZ_ASSERT(mState == eFinished);

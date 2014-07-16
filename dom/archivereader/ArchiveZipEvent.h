@@ -24,8 +24,10 @@ public:
   ArchiveZipItem(const char* aFilename,
                  const ZipCentral& aCentralStruct,
                  const nsACString& aEncoding);
+protected:
   virtual ~ArchiveZipItem();
 
+public:
   nsresult GetFilename(nsString& aFilename) MOZ_OVERRIDE;
 
   // From zipItem to DOMFile:
