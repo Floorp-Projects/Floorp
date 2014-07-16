@@ -4235,6 +4235,9 @@ pref("dom.voicemail.defaultServiceId", 0);
 // DOM Inter-App Communication API.
 pref("dom.inter-app-communication-api.enabled", false);
 
+// Disable mapped array buffer by default.
+pref("dom.mapped_arraybuffer.enabled", false);
+
 // The tables used for Safebrowsing phishing and malware checks.
 pref("urlclassifier.malwareTable", "goog-malware-shavar,test-malware-simple");
 pref("urlclassifier.phishTable", "goog-phish-shavar,test-phish-simple");
