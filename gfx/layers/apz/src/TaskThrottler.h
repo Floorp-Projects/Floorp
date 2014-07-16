@@ -12,7 +12,7 @@
 #include "mozilla/TimeStamp.h"          // for TimeDuration, TimeStamp
 #include "mozilla/RollingMean.h"        // for RollingMean
 #include "mozilla/mozalloc.h"           // for operator delete
-#include "nsAutoPtr.h"                  // for nsAutoPtr
+#include "mozilla/UniquePtr.h"          // for UniquePtr
 #include "nsTArray.h"                   // for nsTArray
 
 namespace tracked_objects {
@@ -47,7 +47,7 @@ public:
    *                  obsolete or the TaskThrottler is destructed.
    */
   void PostTask(const tracked_objects::Location& aLocation,
-                CancelableTask* aTask, const TimeStamp& aTimeStamp);
+                UniquePtr<CancelableTask> aTask, const TimeStamp& aTimeStamp);
   /**
    * Mark the task as complete and process the next queued task.
    */
@@ -90,7 +90,7 @@ public:
 
 private:
   bool mOutstanding;
-  nsAutoPtr<CancelableTask> mQueuedTask;
+  UniquePtr<CancelableTask> mQueuedTask;
   TimeStamp mStartTime;
   RollingMean<TimeDuration, TimeDuration> mMean;
 };

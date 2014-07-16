@@ -192,8 +192,10 @@ private:
 public:
   SourceBufferResource(nsIPrincipal* aPrincipal,
                        const nsACString& aType);
+protected:
   ~SourceBufferResource();
 
+public:
   virtual nsresult Close() MOZ_OVERRIDE;
   virtual void Suspend(bool aCloseImmediately) MOZ_OVERRIDE {}
   virtual void Resume() MOZ_OVERRIDE {}

@@ -577,7 +577,7 @@ class ExprLiteral(Node):
         return ('%'+ self.type)% (self.value)
 ExprLiteral.ZERO = ExprLiteral.Int(0)
 ExprLiteral.ONE = ExprLiteral.Int(1)
-ExprLiteral.NULL = ExprLiteral.ZERO
+ExprLiteral.NULL = ExprVar('nullptr')
 ExprLiteral.TRUE = ExprVar('true')
 ExprLiteral.FALSE = ExprVar('false')
 

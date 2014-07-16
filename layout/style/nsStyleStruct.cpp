@@ -156,18 +156,11 @@ nsStyleFont::Init(nsPresContext* aPresContext)
   }
 }
 
-void* 
-nsStyleFont::operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
-  void* result = aContext->AllocateFromShell(sz);
-  if (result)
-    memset(result, 0, sz);
-  return result;
-}
-  
 void 
 nsStyleFont::Destroy(nsPresContext* aContext) {
   this->~nsStyleFont();
-  aContext->FreeToShell(sizeof(nsStyleFont), this);
+  aContext->PresShell()->
+    FreeByObjectID(nsPresArena::nsStyleFont_id, this);
 }
 
 void
@@ -273,33 +266,30 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
   return nsRuleNode::ComputeCoordPercentCalc(aCoord, 0);
 }
 
-nsStyleMargin::nsStyleMargin() {
+nsStyleMargin::nsStyleMargin()
+  : mHasCachedMargin(false)
+  , mCachedMargin(0, 0, 0, 0)
+{
   MOZ_COUNT_CTOR(nsStyleMargin);
   nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
   NS_FOR_CSS_SIDES(side) {
     mMargin.Set(side, zero);
   }
-  mHasCachedMargin = false;
 }
 
-nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc) {
+nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc)
+  : mMargin(aSrc.mMargin)
+  , mHasCachedMargin(false)
+  , mCachedMargin(0, 0, 0, 0)
+{
   MOZ_COUNT_CTOR(nsStyleMargin);
-  mMargin = aSrc.mMargin;
-  mHasCachedMargin = false;
 }
 
-void* 
-nsStyleMargin::operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
-  void* result = aContext->AllocateFromShell(sz);
-  if (result)
-    memset(result, 0, sz);
-  return result;
-}
-  
 void 
 nsStyleMargin::Destroy(nsPresContext* aContext) {
   this->~nsStyleMargin();
-  aContext->FreeToShell(sizeof(nsStyleMargin), this);
+  aContext->PresShell()->
+    FreeByObjectID(nsPresArena::nsStyleMargin_id, this);
 }
 
 
@@ -326,33 +316,30 @@ nsChangeHint nsStyleMargin::CalcDifference(const nsStyleMargin& aOther) const
                         nsChangeHint_ClearAncestorIntrinsics);
 }
 
-nsStylePadding::nsStylePadding() {
+nsStylePadding::nsStylePadding()
+  : mHasCachedPadding(false)
+  , mCachedPadding(0, 0, 0, 0)
+{
   MOZ_COUNT_CTOR(nsStylePadding);
   nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
   NS_FOR_CSS_SIDES(side) {
     mPadding.Set(side, zero);
   }
-  mHasCachedPadding = false;
 }
 
-nsStylePadding::nsStylePadding(const nsStylePadding& aSrc) {
+nsStylePadding::nsStylePadding(const nsStylePadding& aSrc)
+  : mPadding(aSrc.mPadding)
+  , mHasCachedPadding(false)
+  , mCachedPadding(0, 0, 0, 0)
+{
   MOZ_COUNT_CTOR(nsStylePadding);
-  mPadding = aSrc.mPadding;
-  mHasCachedPadding = false;
 }
 
-void* 
-nsStylePadding::operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
-  void* result = aContext->AllocateFromShell(sz);
-  if (result)
-    memset(result, 0, sz);
-  return result;
-}
-  
 void 
 nsStylePadding::Destroy(nsPresContext* aContext) {
   this->~nsStylePadding();
-  aContext->FreeToShell(sizeof(nsStylePadding), this);
+  aContext->PresShell()->
+    FreeByObjectID(nsPresArena::nsStylePadding_id, this);
 }
 
 void nsStylePadding::RecalcData()
@@ -472,14 +459,6 @@ nsStyleBorder::~nsStyleBorder()
   }
 }
 
-void*
-nsStyleBorder::operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
-  void* result = aContext->AllocateFromShell(sz);
-  if (result)
-    memset(result, 0, sz);
-  return result;
-}
-
 nsMargin
 nsStyleBorder::GetImageOutset() const
 {
@@ -511,7 +490,8 @@ void
 nsStyleBorder::Destroy(nsPresContext* aContext) {
   UntrackImage(aContext);
   this->~nsStyleBorder();
-  aContext->FreeToShell(sizeof(nsStyleBorder), this);
+  aContext->PresShell()->
+    FreeByObjectID(nsPresArena::nsStyleBorder_id, this);
 }
 
 nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
@@ -1154,17 +1134,16 @@ nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) cons
 {
   nsChangeHint hint = nsChangeHint(0);
 
-  bool equalFilters = (mFilters == aOther.mFilters);
-
-  if (!equalFilters) {
-    NS_UpdateHint(hint, nsChangeHint_UpdateOverflow);
-  }
-
   if (!EqualURIs(mClipPath, aOther.mClipPath) ||
       !EqualURIs(mMask, aOther.mMask) ||
-      !equalFilters) {
+      mFilters != aOther.mFilters) {
     NS_UpdateHint(hint, nsChangeHint_UpdateEffects);
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+    // We only actually need to update the overflow area for filter
+    // changes.  However, mask and clip-path changes require that we
+    // update the PreEffectsBBoxProperty, which is done during overflow
+    // computation.
+    NS_UpdateHint(hint, nsChangeHint_UpdateOverflow);
   }
 
   if (mDominantBaseline != aOther.mDominantBaseline) {
@@ -2052,7 +2031,8 @@ nsStyleBackground::Destroy(nsPresContext* aContext)
     mLayers[i].UntrackImages(aContext);
 
   this->~nsStyleBackground();
-  aContext->FreeToShell(sizeof(nsStyleBackground), this);
+  aContext->PresShell()->
+    FreeByObjectID(nsPresArena::nsStyleBackground_id, this);
 }
 
 nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) const
@@ -2814,7 +2794,8 @@ nsStyleContent::Destroy(nsPresContext* aContext)
   }
 
   this->~nsStyleContent();
-  aContext->FreeToShell(sizeof(nsStyleContent), this);
+  aContext->PresShell()->
+    FreeByObjectID(nsPresArena::nsStyleContent_id, this);
 }
 
 nsStyleContent::nsStyleContent(const nsStyleContent& aSource)

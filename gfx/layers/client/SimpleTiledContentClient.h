@@ -140,6 +140,7 @@ public:
   SimpleTiledContentClient(SimpleClientTiledThebesLayer* aThebesLayer,
                            ClientLayerManager* aManager);
 
+private:
   ~SimpleTiledContentClient();
 
   virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE
@@ -161,8 +162,10 @@ class SimpleClientTiledThebesLayer : public ThebesLayer,
 public:
   SimpleClientTiledThebesLayer(ClientLayerManager* const aManager,
                                ClientLayerManager::ThebesLayerCreationHint aCreationHint = LayerManager::NONE);
+protected:
   ~SimpleClientTiledThebesLayer();
 
+public:
   // Thebes Layer
   virtual Layer* AsLayer() { return this; }
   virtual void InvalidateRegion(const nsIntRegion& aRegion) {

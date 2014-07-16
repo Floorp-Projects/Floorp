@@ -31,23 +31,22 @@ nsAnimationManager::UpdateStyleAndEvents(ElementAnimationCollection*
                                          EnsureStyleRuleFlags aFlags)
 {
   aCollection->EnsureStyleRuleFor(aRefreshTime, aFlags);
-  GetEventsAt(aCollection, aRefreshTime, mPendingEvents);
+  GetEventsForCurrentTime(aCollection, mPendingEvents);
   CheckNeedsRefresh();
 }
 
 void
-nsAnimationManager::GetEventsAt(ElementAnimationCollection* aCollection,
-                                TimeStamp aRefreshTime,
-                                EventArray& aEventsToDispatch)
+nsAnimationManager::GetEventsForCurrentTime(ElementAnimationCollection*
+                                              aCollection,
+                                            EventArray& aEventsToDispatch)
 {
   for (uint32_t animIdx = aCollection->mAnimations.Length(); animIdx-- != 0; ) {
     ElementAnimation* anim = aCollection->mAnimations[animIdx];
 
-    TimeDuration localTime = anim->GetLocalTimeAt(aRefreshTime);
-    ComputedTiming computedTiming =
-      ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
+    ComputedTiming computedTiming = anim->GetComputedTiming(anim->mTiming);
 
     switch (computedTiming.mPhase) {
+      case ComputedTiming::AnimationPhase_Null:
       case ComputedTiming::AnimationPhase_Before:
         // Do nothing
         break;
@@ -241,8 +240,9 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     }
 
     // build the animations list
+    dom::AnimationTimeline* timeline = aElement->OwnerDoc()->Timeline();
     ElementAnimationPtrArray newAnimations;
-    BuildAnimations(aStyleContext, newAnimations);
+    BuildAnimations(aStyleContext, timeline, newAnimations);
 
     if (newAnimations.IsEmpty()) {
       if (collection) {
@@ -250,8 +250,6 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
       }
       return nullptr;
     }
-
-    TimeStamp refreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
 
     if (collection) {
       collection->mStyleRule = nullptr;
@@ -304,7 +302,13 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
             } else {
               // Handle change in pause state by adjusting start
               // time to unpause.
-              newAnim->mStartTime += refreshTime - oldAnim->mPauseStart;
+              const TimeStamp& now = timeline->GetCurrentTimeStamp();
+              if (!now.IsNull()) {
+                // FIXME: Once we store the start time and pause start as
+                // offsets (not timestamps) we should be able to update the
+                // start time to something more appropriate when now IsNull.
+                newAnim->mStartTime += now - oldAnim->mPauseStart;
+              }
             }
           }
         }
@@ -316,6 +320,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     collection->mAnimations.SwapElements(newAnimations);
     collection->mNeedsRefreshes = true;
 
+    TimeStamp refreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
     UpdateStyleAndEvents(collection, refreshTime,
                          EnsureStyleRule_IsNotThrottled);
     // We don't actually dispatch the mPendingEvents now.  We'll either
@@ -383,6 +388,7 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
 
 void
 nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
+                                    dom::AnimationTimeline* aTimeline,
                                     ElementAnimationPtrArray& aAnimations)
 {
   NS_ABORT_IF_FALSE(aAnimations.IsEmpty(), "expect empty array");
@@ -390,7 +396,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
   ResolvedStyleCache resolvedStyles;
 
   const nsStyleDisplay *disp = aStyleContext->StyleDisplay();
-  TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
+  TimeStamp now = aTimeline->GetCurrentTimeStamp();
+
   for (uint32_t animIdx = 0, animEnd = disp->mAnimationNameCount;
        animIdx != animEnd; ++animIdx) {
     const StyleAnimation& src = disp->mAnimations[animIdx];
@@ -410,7 +417,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     }
 
     nsRefPtr<ElementAnimation> dest =
-      *aAnimations.AppendElement(new ElementAnimation());
+      *aAnimations.AppendElement(new ElementAnimation(aTimeline));
 
     dest->mName = src.GetName();
 

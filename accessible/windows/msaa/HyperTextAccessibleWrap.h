@@ -37,6 +37,8 @@ public:
   virtual nsresult HandleAccEvent(AccEvent* aEvent);
 
 protected:
+  ~HyperTextAccessibleWrap() {}
+
   virtual nsresult GetModifiedText(bool aGetInsertedText, nsAString& aText,
                                    uint32_t *aStartOffset,
                                    uint32_t *aEndOffset);

@@ -23,6 +23,8 @@ namespace crashreporter {
 
 class LSPAnnotationGatherer : public nsRunnable
 {
+  ~LSPAnnotationGatherer() {}
+
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
