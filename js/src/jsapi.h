@@ -2145,7 +2145,16 @@ typedef enum JSGCParamKey {
      * available to be decommitted, then JS_MaybeGC will trigger a shrinking GC
      * to decommit it.
      */
-    JSGC_DECOMMIT_THRESHOLD = 20
+    JSGC_DECOMMIT_THRESHOLD = 20,
+
+    /*
+     * We try to keep at least this many unused chunks in the free chunk pool at
+     * all times, even after a shrinking GC.
+     */
+    JSGC_MIN_EMPTY_CHUNK_COUNT = 21,
+
+    /* We never keep more than this many unused chunks in the free chunk pool. */
+    JSGC_MAX_EMPTY_CHUNK_COUNT = 22
 } JSGCParamKey;
 
 extern JS_PUBLIC_API(void)
