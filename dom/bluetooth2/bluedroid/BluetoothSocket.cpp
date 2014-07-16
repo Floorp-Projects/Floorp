@@ -83,6 +83,13 @@ ReadBdAddress(const uint8_t* aData, size_t* aOffset, nsAString& aDeviceAddress)
 class mozilla::dom::bluetooth::DroidSocketImpl : public ipc::UnixFdWatcher
 {
 public:
+  enum ConnectionStatus {
+    SOCKET_IS_DISCONNECTED = 0,
+    SOCKET_IS_LISTENING,
+    SOCKET_IS_CONNECTING,
+    SOCKET_IS_CONNECTED
+  };
+
   DroidSocketImpl(MessageLoop* aIOLoop, BluetoothSocket* aConsumer, int aFd)
     : ipc::UnixFdWatcher(aIOLoop, aFd)
     , mConsumer(aConsumer)
@@ -91,8 +98,8 @@ public:
     , mChannel(0)
     , mAuth(false)
     , mEncrypt(false)
-  {
-  }
+    , mConnectionStatus(SOCKET_IS_DISCONNECTED)
+  { }
 
   DroidSocketImpl(MessageLoop* aIOLoop, BluetoothSocket* aConsumer,
                   int aChannel, bool aAuth, bool aEncrypt)
@@ -103,6 +110,7 @@ public:
     , mChannel(aChannel)
     , mAuth(aAuth)
     , mEncrypt(aEncrypt)
+    , mConnectionStatus(SOCKET_IS_DISCONNECTED)
   { }
 
   DroidSocketImpl(MessageLoop* aIOLoop, BluetoothSocket* aConsumer,
@@ -116,6 +124,7 @@ public:
     , mChannel(aChannel)
     , mAuth(aAuth)
     , mEncrypt(aEncrypt)
+    , mConnectionStatus(SOCKET_IS_DISCONNECTED)
   {
     MOZ_ASSERT(!mDeviceAddress.IsEmpty());
   }
@@ -162,21 +171,16 @@ public:
   void Connect(int aFd);
   void Listen(int aFd);
 
-  void SetUpIO(bool aWrite)
-  {
-    AddWatchers(READ_WATCHER, true);
-    if (aWrite) {
-        AddWatchers(WRITE_WATCHER, false);
-    }
-  }
-
   void ConnectClientFd()
   {
     // Stop current read watch
     RemoveWatchers(READ_WATCHER);
 
+    mConnectionStatus = SOCKET_IS_CONNECTED;
+
     // Restart read & write watch on client fd
-    SetUpIO(true);
+    AddWatchers(READ_WATCHER, true);
+    AddWatchers(WRITE_WATCHER, false);
   }
 
   /**
@@ -208,6 +212,11 @@ private:
    */
   virtual void OnFileCanWriteWithoutBlocking(int aFd);
 
+  void OnSocketCanReceiveWithoutBlocking(int aFd);
+  void OnSocketCanAcceptWithoutBlocking(int aFd);
+  void OnSocketCanSendWithoutBlocking(int aFd);
+  void OnSocketCanConnectWithoutBlocking(int aFd);
+
   /**
    * Read message to get data and client fd wrapped in message header
    *
@@ -232,6 +241,7 @@ private:
   int mChannel;
   bool mAuth;
   bool mEncrypt;
+  ConnectionStatus mConnectionStatus;
 };
 
 template<class T>
@@ -455,6 +465,7 @@ DroidSocketImpl::Connect(int aFd)
   }
 
   SetFd(aFd);
+  mConnectionStatus = SOCKET_IS_CONNECTING;
 
   AddWatchers(READ_WATCHER, true);
 }
@@ -473,6 +484,8 @@ DroidSocketImpl::Listen(int aFd)
   }
 
   SetFd(aFd);
+  mConnectionStatus = SOCKET_IS_LISTENING;
+
   AddWatchers(READ_WATCHER, true);
 }
 
@@ -533,6 +546,69 @@ DroidSocketImpl::ReadMsg(int aFd, void *aBuffer, size_t aLength)
 void
 DroidSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
 {
+  if (mConnectionStatus == SOCKET_IS_CONNECTED) {
+    OnSocketCanReceiveWithoutBlocking(aFd);
+  } else if (mConnectionStatus == SOCKET_IS_LISTENING) {
+    OnSocketCanAcceptWithoutBlocking(aFd);
+  } else if (mConnectionStatus == SOCKET_IS_CONNECTING) {
+    /* TODO: remove this branch when connect is handled by BluetoothInterface */
+    OnSocketCanConnectWithoutBlocking(aFd);
+  } else {
+    NS_NOTREACHED("invalid connection state for reading");
+  }
+}
+
+void
+DroidSocketImpl::OnSocketCanReceiveWithoutBlocking(int aFd)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!mShuttingDownOnIOThread);
+
+  // Read all of the incoming data.
+  while (true) {
+    nsAutoPtr<UnixSocketRawData> incoming(new UnixSocketRawData(MAX_READ_SIZE));
+
+    ssize_t ret = read(aFd, incoming->mData, incoming->mSize);
+
+    if (ret <= 0) {
+      if (ret == -1) {
+        if (errno == EINTR) {
+          continue; // retry system call when interrupted
+        }
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          return; // no data available: return and re-poll
+        }
+
+        BT_WARNING("Cannot read from network");
+        // else fall through to error handling on other errno's
+      }
+
+      // We're done with our descriptors. Ensure that spurious events don't
+      // cause us to end up back here.
+      RemoveWatchers(READ_WATCHER | WRITE_WATCHER);
+      nsRefPtr<RequestClosingSocketTask> t = new RequestClosingSocketTask(this);
+      NS_DispatchToMainThread(t);
+      return;
+    }
+
+    incoming->mSize = ret;
+    nsRefPtr<SocketReceiveTask> t =
+      new SocketReceiveTask(this, incoming.forget());
+    NS_DispatchToMainThread(t);
+
+    // If ret is less than MAX_READ_SIZE, there's no
+    // more data in the socket for us to read now.
+    if (ret < ssize_t(MAX_READ_SIZE)) {
+      return;
+    }
+  }
+
+  MOZ_CRASH("We returned early");
+}
+
+void
+DroidSocketImpl::OnSocketCanAcceptWithoutBlocking(int aFd)
+{
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!mShuttingDownOnIOThread);
 
@@ -586,6 +662,18 @@ DroidSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
 void
 DroidSocketImpl::OnFileCanWriteWithoutBlocking(int aFd)
 {
+  if (mConnectionStatus == SOCKET_IS_CONNECTED) {
+    OnSocketCanSendWithoutBlocking(aFd);
+  } else if (mConnectionStatus == SOCKET_IS_CONNECTING) {
+    OnSocketCanConnectWithoutBlocking(aFd);
+  } else {
+    NS_NOTREACHED("invalid connection state for writing");
+  }
+}
+
+void
+DroidSocketImpl::OnSocketCanSendWithoutBlocking(int aFd)
+{
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!mShuttingDownOnIOThread);
   MOZ_ASSERT(aFd >= 0);
@@ -626,6 +714,59 @@ DroidSocketImpl::OnFileCanWriteWithoutBlocking(int aFd)
   }
 }
 
+void
+DroidSocketImpl::OnSocketCanConnectWithoutBlocking(int aFd)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!mShuttingDownOnIOThread);
+
+  // Read all of the incoming data.
+  while (true) {
+    nsAutoPtr<UnixSocketRawData> incoming(new UnixSocketRawData(MAX_READ_SIZE));
+
+    ssize_t ret;
+    if (!mReadMsgForClientFd) {
+      ret = read(aFd, incoming->mData, incoming->mSize);
+    } else {
+      ret = ReadMsg(aFd, incoming->mData, incoming->mSize);
+    }
+
+    if (ret <= 0) {
+      if (ret == -1) {
+        if (errno == EINTR) {
+          continue; // retry system call when interrupted
+        }
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          return; // no data available: return and re-poll
+        }
+
+        BT_WARNING("Cannot read from network");
+        // else fall through to error handling on other errno's
+      }
+
+      // We're done with our descriptors. Ensure that spurious events don't
+      // cause us to end up back here.
+      RemoveWatchers(READ_WATCHER | WRITE_WATCHER);
+      nsRefPtr<RequestClosingSocketTask> t = new RequestClosingSocketTask(this);
+      NS_DispatchToMainThread(t);
+      return;
+    }
+
+    incoming->mSize = ret;
+    nsRefPtr<SocketReceiveTask> t =
+      new SocketReceiveTask(this, incoming.forget());
+    NS_DispatchToMainThread(t);
+
+    // If ret is less than MAX_READ_SIZE, there's no
+    // more data in the socket for us to read now.
+    if (ret < ssize_t(MAX_READ_SIZE)) {
+      return;
+    }
+  }
+
+  MOZ_CRASH("We returned early");
+}
+
 BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver,
                                  BluetoothSocketType aType,
                                  bool aAuth,
@@ -658,7 +799,7 @@ BluetoothSocket::CloseDroidSocket()
                                    new ShutdownSocketTask(mImpl));
   mImpl = nullptr;
 
-  OnDisconnect();
+  NotifyDisconnect();
 }
 
 class ConnectResultHandler MOZ_FINAL : public BluetoothSocketResultHandler
@@ -806,17 +947,15 @@ BluetoothSocket::ReceiveSocketInfo(nsAutoPtr<UnixSocketRawData>& aMessage)
       size, channel, NS_ConvertUTF16toUTF8(mDeviceAddress).get(), connectionStatus);
 
     if (connectionStatus != 0) {
-      OnConnectError();
+      NotifyError();
       return true;
     }
 
-    if (mIsServer) {
-      mImpl->mReadMsgForClientFd = false;
-      // Connect client fd on IO thread
-      XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                       new SocketConnectClientFdTask(mImpl));
-    }
-    OnConnectSuccess();
+    mImpl->mReadMsgForClientFd = false;
+    // Connect client fd on IO thread
+    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+                                     new SocketConnectClientFdTask(mImpl));
+    NotifySuccess();
   }
 
   return true;
