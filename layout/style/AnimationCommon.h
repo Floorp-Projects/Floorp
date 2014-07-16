@@ -406,6 +406,12 @@ public:
   GetComputedTimingAt(const Nullable<mozilla::TimeDuration>& aLocalTime,
                       const AnimationTiming& aTiming);
 
+  // Shortcut for that gets the computed timing using the current local time as
+  // calculated from the timeline time.
+  ComputedTiming GetComputedTiming(const AnimationTiming& aTiming) const {
+    return GetComputedTimingAt(GetLocalTime(), aTiming);
+  }
+
   // Return the duration of the active interval for the given timing parameters.
   static mozilla::TimeDuration ActiveDuration(const AnimationTiming& aTiming);
 

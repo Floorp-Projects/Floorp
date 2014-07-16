@@ -43,9 +43,7 @@ nsAnimationManager::GetEventsForCurrentTime(ElementAnimationCollection*
   for (uint32_t animIdx = aCollection->mAnimations.Length(); animIdx-- != 0; ) {
     ElementAnimation* anim = aCollection->mAnimations[animIdx];
 
-    ComputedTiming computedTiming =
-      ElementAnimation::GetComputedTimingAt(anim->GetLocalTime(),
-                                            anim->mTiming);
+    ComputedTiming computedTiming = anim->GetComputedTiming(anim->mTiming);
 
     switch (computedTiming.mPhase) {
       case ComputedTiming::AnimationPhase_Null:
