@@ -78,10 +78,6 @@
 !define MOZ_METRO
 #endif
 
-#ifdef MOZ_CONTENT_SANDBOX
-!define MOZ_CONTENT_SANDBOX
-#endif
-
 # File details shared by both the installer and uninstaller
 VIProductVersion "1.0.0.0"
 VIAddVersionKey "ProductName"     "${BrandShortName}"
