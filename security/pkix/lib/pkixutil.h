@@ -161,7 +161,7 @@ public:
 
   virtual const SECItem* GetDER(size_t i) const
   {
-    return i < numItems ? items[i] : nullptr;
+    return i < numItems ? &items[i] : nullptr;
   }
 
   Result Append(const SECItem& der)
@@ -169,7 +169,7 @@ public:
     if (numItems >= MAX_LENGTH) {
       return Result::FATAL_ERROR_INVALID_ARGS;
     }
-    items[numItems] = &der;
+    items[numItems] = der; // structure assignment
     ++numItems;
     return Success;
   }
@@ -177,8 +177,11 @@ public:
   // Public so we can static_assert on this. Keep in sync with MAX_SUBCA_COUNT.
   static const size_t MAX_LENGTH = 8;
 private:
-  const SECItem* items[MAX_LENGTH]; // avoids any heap allocations
+  SECItem items[MAX_LENGTH]; // avoids any heap allocations
   size_t numItems;
+
+  NonOwningDERArray(const NonOwningDERArray&) /* = delete*/;
+  void operator=(const NonOwningDERArray&) /* = delete*/;
 };
 
 } } // namespace mozilla::pkix

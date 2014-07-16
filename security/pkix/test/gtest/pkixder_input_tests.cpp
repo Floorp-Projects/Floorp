@@ -727,22 +727,6 @@ TEST_F(pkixder_input_tests, ExpectTagAndGetTLV_SECItem_InvalidWrongTag)
   ASSERT_EQ(Result::ERROR_BAD_DER, ExpectTagAndGetTLV(input, INTEGER, tlv));
 }
 
-TEST_F(pkixder_input_tests, ExpectTagAndSkipLength)
-{
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_INT16, sizeof DER_INT16));
-  ASSERT_EQ(Success, ExpectTagAndSkipLength(input, INTEGER));
-}
-
-TEST_F(pkixder_input_tests, ExpectTagAndSkipLengthWithWrongTag)
-{
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_INT16, sizeof DER_INT16));
-
-  ASSERT_EQ(Result::ERROR_BAD_DER,
-            ExpectTagAndSkipLength(input, OCTET_STRING));
-}
-
 TEST_F(pkixder_input_tests, EndAtEnd)
 {
   Input input;
