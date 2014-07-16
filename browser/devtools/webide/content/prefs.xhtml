@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+  <!ENTITY % webideDTD SYSTEM "chrome://webide/content/webide.dtd" >
+  %webideDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf8"/>
+    <link rel="stylesheet" href="chrome://webide/skin/prefs.css" type="text/css"/>
+    <script type="application/javascript;version=1.8" src="chrome://webide/content/prefs.js"></script>
+  </head>
+  <body>
+
+    <div id="controls">
+      <a id="close">&deck_close;</a>
+    </div>
+
+    <h1>&prefs_title;</h1>
+
+    <h2>&prefs_general_title;</h2>
+
+    <ul>
+      <li>
+        <label title="&prefs_options_enablelocalruntime_tooltip;">
+          <input type="checkbox" data-pref="devtools.webide.enableLocalRuntime"/>
+          <span>&prefs_options_enablelocalruntime;</span>
+        </label>
+      </li>
+      <li>
+        <label title="&prefs_options_rememberlastproject_tooltip;">
+          <input type="checkbox" data-pref="devtools.webide.restoreLastProject"/>
+          <span>&prefs_options_rememberlastproject;</span>
+        </label>
+      </li>
+      <li>
+        <label title="&prefs_options_templatesurl_tooltip;">
+          <span>&prefs_options_templatesurl;</span>
+          <input data-pref="devtools.webide.templatesURL"/>
+        </label>
+      </li>
+    </ul>
+
+    <h2>&prefs_editor_title;</h2>
+
+    <ul>
+      <li>
+        <label title="&prefs_options_showeditor_tooltip;">
+          <input type="checkbox" data-pref="devtools.webide.showProjectEditor"/>
+          <span>&prefs_options_showeditor;</span>
+        </label>
+      </li>
+      <li>
+        <label title="&prefs_options_autoclosebrackets_tooltip;">
+          <input type="checkbox" data-pref="devtools.editor.autoclosebrackets"/>
+          <span>&prefs_options_autoclosebrackets;</span>
+        </label>
+      </li>
+      <li>
+        <label title="&prefs_options_autocomplete_tooltip;">
+          <input type="checkbox" data-pref="devtools.editor.autocomplete"/>
+          <span>&prefs_options_autocomplete;</span>
+        </label>
+      </li>
+      <li>
+        <label title="&prefs_options_detectindentation_tooltip;">
+          <input type="checkbox" data-pref="devtools.editor.detectindentation"/>
+          <span>&prefs_options_detectindentation;</span>
+        </label>
+      </li>
+      <li>
+        <label title="&prefs_options_expandtab_tooltip;">
+          <input type="checkbox" data-pref="devtools.editor.expandtab"/>
+          <span>&prefs_options_expandtab;</span>
+        </label>
+      </li>
+      <li>
+        <label><span>&prefs_options_tabsize;</span>
+          <select data-pref="devtools.editor.tabsize">
+            <option value="2">2</option>
+            <option value="4">4</option>
+            <option value="8">8</option>
+          </select>
+        </label>
+      </li>
+    </ul>
+
+    <button id="manageSimulators">&prefs_simulators;</button>
+    <button id="restoreButton">&prefs_restore;</button>
+
+  </body>
+</html>

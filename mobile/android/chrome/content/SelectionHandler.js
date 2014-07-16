@@ -387,6 +387,8 @@ var SelectionHandler = {
    */
   _performSelection: function sh_performSelection(aOptions) {
     if (aOptions.mode == this.SELECT_AT_POINT) {
+      // Clear any ranges selected outside SelectionHandler, by code such as Find-In-Page.
+      this._contentWindow.getSelection().removeAllRanges();
       return this._domWinUtils.selectAtPoint(aOptions.x, aOptions.y, Ci.nsIDOMWindowUtils.SELECT_WORDNOSPACE);
     }
 

@@ -22,6 +22,8 @@
 <!ENTITY projectMenu_debug_accesskey "D">
 <!ENTITY projectMenu_remove_label "Remove Project">
 <!ENTITY projectMenu_remove_accesskey "R">
+<!ENTITY projectMenu_showPrefs_label "Preferences">
+<!ENTITY projectMenu_showPrefs_accesskey "e">
 
 <!ENTITY runtimeMenu_label "Runtime">
 <!ENTITY runtimeMenu_accesskey "R">
@@ -89,6 +91,30 @@
 <!-- Addons -->
 <!ENTITY addons_title "Extra Components:">
 <!ENTITY addons_aboutaddons "Open Addons Manager">
+
+<!-- Prefs -->
+<!ENTITY prefs_title "Preferences">
+<!ENTITY prefs_editor_title "Editor">
+<!ENTITY prefs_general_title "General">
+<!ENTITY prefs_restore "Restore defaults">
+<!ENTITY prefs_simulators "Manage simulators">
+<!ENTITY prefs_options_enablelocalruntime "Enable local runtime">
+<!ENTITY prefs_options_enablelocalruntime_tooltip "Allow WebIDE to connect to its own runtime (running browser instance)">
+<!ENTITY prefs_options_rememberlastproject "Remember last project">
+<!ENTITY prefs_options_rememberlastproject_tooltip "Restore previous project when WebIDE starts">
+<!ENTITY prefs_options_templatesurl "Templates URL">
+<!ENTITY prefs_options_templatesurl_tooltip "Index of available templates">
+<!ENTITY prefs_options_showeditor "Show editor">
+<!ENTITY prefs_options_showeditor_tooltip "Show internal editor">
+<!ENTITY prefs_options_detectindentation "Detect indentation">
+<!ENTITY prefs_options_detectindentation_tooltip "Guess indentation based on source content">
+<!ENTITY prefs_options_autoclosebrackets "Autoclose brackets">
+<!ENTITY prefs_options_autoclosebrackets_tooltip "Automatically insert closing brackets">
+<!ENTITY prefs_options_expandtab "Indent using spaces">
+<!ENTITY prefs_options_expandtab_tooltip "Use spaces instead of the tab character">
+<!ENTITY prefs_options_autocomplete "Autocompletion">
+<!ENTITY prefs_options_autocomplete_tooltip "Enable code autocompletion">
+<!ENTITY prefs_options_tabsize "Tab size">
 
 <!-- Permissions Table -->
 <!ENTITY permissionstable_title "Permissions Table">

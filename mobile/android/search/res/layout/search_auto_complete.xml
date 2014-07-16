@@ -25,9 +25,23 @@
         android:orientation="vertical"
         >
 
-        <EditText
-            android:id="@+id/auto_complete_search_bar"
-            style="@style/AutoCompleteEditText"/>
+        <FrameLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/auto_complete_search_bar"
+                style="@style/AutoCompleteEditText"/>
+
+            <Button
+                android:id="@+id/clear_button"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="right|center_vertical"
+                android:layout_marginRight="3dp"
+                android:background="@drawable/search_clear" />
+
+        </FrameLayout>
 
         <ListView
             android:id="@+id/auto_complete_dropdown"
