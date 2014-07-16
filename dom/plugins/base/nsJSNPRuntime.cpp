@@ -700,11 +700,11 @@ bool
 nsJSObjWrapper::NP_HasProperty(NPObject *npobj, NPIdentifier npid)
 {
   NPP npp = NPPStack::Peek();
-  JSContext *cx = GetJSContext(npp);
-
-  if (!cx) {
+  dom::AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(GetGlobalObject(npp)))) {
     return false;
   }
+  JSContext *cx = jsapi.cx();
 
   if (!npobj) {
     ThrowJSException(cx,
@@ -716,8 +716,6 @@ nsJSObjWrapper::NP_HasProperty(NPObject *npobj, NPIdentifier npid)
   nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
   bool found, ok = false;
 
-  nsCxPusher pusher;
-  pusher.Push(cx);
   AutoJSExceptionReporter reporter(cx);
   JS::Rooted<JSObject*> jsobj(cx, npjsobj->mJSObj);
   JSAutoCompartment ac(cx, jsobj);
