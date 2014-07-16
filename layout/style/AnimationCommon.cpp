@@ -454,7 +454,7 @@ ElementAnimation::CurrentTime() const
 }
 
 bool
-ElementAnimation::IsRunningAt(TimeStamp aTime) const
+ElementAnimation::IsRunning() const
 {
   if (IsPaused() || IsFinishedTransition()) {
     return false;
@@ -465,7 +465,7 @@ ElementAnimation::IsRunningAt(TimeStamp aTime) const
 }
 
 bool
-ElementAnimation::IsCurrentAt(TimeStamp aTime) const
+ElementAnimation::IsCurrent() const
 {
   if (IsFinishedTransition()) {
     return false;
@@ -728,11 +728,9 @@ ElementAnimationCollection::CanPerformOnCompositorThread(
     return false;
   }
 
-  TimeStamp now = frame->PresContext()->RefreshDriver()->MostRecentRefresh();
-
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
     const ElementAnimation* anim = mAnimations[animIdx];
-    bool isRunning = anim->IsRunningAt(now);
+    bool isRunning = anim->IsRunning();
     for (uint32_t propIdx = 0, propEnd = anim->mProperties.Length();
          propIdx != propEnd; ++propIdx) {
       if (IsGeometricProperty(anim->mProperties[propIdx].mProperty) &&
@@ -746,7 +744,7 @@ ElementAnimationCollection::CanPerformOnCompositorThread(
   bool existsProperty = false;
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
     const ElementAnimation* anim = mAnimations[animIdx];
-    if (!anim->IsRunningAt(now)) {
+    if (!anim->IsRunning()) {
       continue;
     }
 
@@ -1061,10 +1059,10 @@ ElementAnimationCollection::UpdateAnimationGeneration(
 }
 
 bool
-ElementAnimationCollection::HasCurrentAnimationsAt(TimeStamp aTime)
+ElementAnimationCollection::HasCurrentAnimations()
 {
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    if (mAnimations[animIdx]->IsCurrentAt(aTime)) {
+    if (mAnimations[animIdx]->IsCurrent()) {
       return true;
     }
   }

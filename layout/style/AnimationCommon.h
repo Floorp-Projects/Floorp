@@ -360,8 +360,8 @@ public:
   }
 
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
-  bool IsRunningAt(mozilla::TimeStamp aTime) const;
-  bool IsCurrentAt(mozilla::TimeStamp aTime) const;
+  bool IsRunning() const;
+  bool IsCurrent() const;
 
   // Return the duration since the start of the delay period, taking into
   // account the pause state.  May be negative.
@@ -571,9 +571,9 @@ struct ElementAnimationCollection : public PRCList
   // Update mAnimationGeneration to nsCSSFrameConstructor's count
   void UpdateAnimationGeneration(nsPresContext* aPresContext);
 
-  // Returns true if there is an animation in the before or active phase at
-  // the given time.
-  bool HasCurrentAnimationsAt(mozilla::TimeStamp aTime);
+  // Returns true if there is an animation in the before or active phase
+  // at the current time.
+  bool HasCurrentAnimations();
 
   // The refresh time associated with mStyleRule.
   TimeStamp mStyleRuleRefreshTime;
