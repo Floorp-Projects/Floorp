@@ -45,7 +45,10 @@ ElementPropertyTransition::ValuePortionFor(TimeStamp aRefreshTime) const
   MOZ_ASSERT(!IsFinishedTransition(),
              "Getting the value portion of a finished transition");
 
-  TimeDuration localTime = GetLocalTimeAt(aRefreshTime);
+  Nullable<TimeDuration> localTime = GetLocalTimeAt(aRefreshTime);
+  MOZ_ASSERT(!localTime.IsNull(),
+             "Getting the value portion of an animation that's not being "
+             "sampled");
 
   // Transitions use a fill mode of 'backwards' so GetComputedTimingAt will
   // never return a null time fraction due to being *before* the animation
@@ -820,7 +823,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
             collection->mAnimations.RemoveElementAt(i);
           }
         } else {
-          TimeDuration localTime = anim->GetLocalTimeAt(now);
+          Nullable<TimeDuration> localTime = anim->GetLocalTimeAt(now);
           ComputedTiming computedTiming =
             ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
           if (computedTiming.mPhase == ComputedTiming::AnimationPhase_After) {
