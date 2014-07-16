@@ -3088,10 +3088,6 @@ var gDetailView = {
         errorLink.value = gStrings.ext.GetStringFromName("details.notification.vulnerableNoUpdate.link");
         errorLink.href = this._addon.blocklistURL;
         errorLink.hidden = false;
-      } else if (this._addon.id == "openh264-plugin@cisco.com" && !this._addon.isInstalled) {
-        this.node.setAttribute("notification", "warning");
-        let warning = document.getElementById("detail-warning");
-        warning.textContent = gStrings.ext.GetStringFromName("details.notification.openH264Pending");
       } else {
         this.node.removeAttribute("notification");
       }
