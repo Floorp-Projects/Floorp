@@ -349,10 +349,10 @@ ApzcPanAndCheckStatus(AsyncPanZoomController* aApzc,
   ApzcPan(aApzc, aTreeManager, aTime, aTouchStartY, aTouchEndY, false, aAllowedTouchBehaviors, &statuses);
 
   nsEventStatus touchStartStatus;
-  if (hasTouchListeners) {
+  if (hasTouchListeners || gfxPrefs::TouchActionEnabled()) {
     // APZC shouldn't consume the start event now, instead queueing it up
-    // waiting for content's response.
-    touchStartStatus = nsEventStatus_eIgnore;
+    // waiting for content's response and/or allowed behavior.
+    touchStartStatus = nsEventStatus_eConsumeDoDefault;
   } else {
     // APZC should go into the touching state and therefore consume the event.
     touchStartStatus = nsEventStatus_eConsumeNoDefault;
@@ -360,7 +360,10 @@ ApzcPanAndCheckStatus(AsyncPanZoomController* aApzc,
   EXPECT_EQ(touchStartStatus, statuses[0]);
 
   nsEventStatus touchMoveStatus;
-  if (expectIgnoredPan) {
+  if (hasTouchListeners) {
+    // APZC will queue up this event while waiting for content's response.
+    touchMoveStatus = nsEventStatus_eConsumeDoDefault;
+  } else if (expectIgnoredPan) {
     // APZC should ignore panning, be in TOUCHING state and therefore return eIgnore.
     // The same applies to all consequent touch move events.
     touchMoveStatus = nsEventStatus_eIgnore;
@@ -1036,12 +1039,23 @@ protected:
     int time = 0;
 
     nsEventStatus status = ApzcDown(apzc, 10, 10, time);
-    EXPECT_EQ(nsEventStatus_eConsumeNoDefault, status);
+    if (gfxPrefs::TouchActionEnabled()) {
+      // If touch-action is enabled, then the event is queued until the
+      // allowed touch behavior is set.
+      EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
+    } else {
+      // Otherwise, it is processed immediately.
+      EXPECT_EQ(nsEventStatus_eConsumeNoDefault, status);
+    }
 
-    // SetAllowedTouchBehavior() must be called after sending touch-start.
-    nsTArray<uint32_t> allowedTouchBehaviors;
-    allowedTouchBehaviors.AppendElement(aBehavior);
-    apzc->SetAllowedTouchBehavior(allowedTouchBehaviors);
+    if (gfxPrefs::TouchActionEnabled()) {
+      // SetAllowedTouchBehavior() must be called after sending touch-start.
+      nsTArray<uint32_t> allowedTouchBehaviors;
+      allowedTouchBehaviors.AppendElement(aBehavior);
+      apzc->SetAllowedTouchBehavior(allowedTouchBehaviors);
+    }
+    // Have content "respond" to the touchstart
+    apzc->ContentReceivedTouch(false);
 
     MockFunction<void(std::string checkPointName)> check;
 
@@ -1057,6 +1071,7 @@ protected:
       EXPECT_CALL(check, Call("postHandleLongTapUp"));
     }
 
+    // There is a longpress event scheduled on a timeout
     mcc->CheckHasDelayedTask();
 
     // Manually invoke the longpress while the touch is currently down.
@@ -1066,24 +1081,23 @@ protected:
 
     // Destroy pending MAX_TAP timeout task
     mcc->DestroyOldestTask();
-    // There should be a TimeoutContentResponse task in the queue still
-    // Clear the waiting-for-content timeout task, then send the signal that
-    // content has handled this long tap. This takes the place of the
-    // "contextmenu" event.
+
+    // Dispatching the longpress event starts a new touch block, which
+    // needs a new content response and also has a pending timeout task
+    // in the queue. Deal with those here. We do the content response first
+    // with preventDefault=false, and then we run the timeout task which
+    // "loses the race" and does nothing.
+    apzc->ContentReceivedTouch(false);
     mcc->CheckHasDelayedTask();
-    mcc->ClearDelayedTask();
-    apzc->ContentReceivedTouch(true);
+    mcc->RunDelayedTask();
 
     time += 1000;
 
+    // Finally, simulate lifting the finger. Since the long-press wasn't
+    // prevent-defaulted, we should get a long-tap-up event.
+    check.Call("preHandleLongTapUp");
     status = ApzcUp(apzc, 10, 10, time);
     EXPECT_EQ(nsEventStatus_eIgnore, status);
-
-    // To get a LongTapUp event, we must kick APZC to flush its event queue. This
-    // would normally happen if we had a (Tab|RenderFrame)(Parent|Child)
-    // mechanism.
-    check.Call("preHandleLongTapUp");
-    apzc->ContentReceivedTouch(false);
     check.Call("postHandleLongTapUp");
 
     apzc->AssertStateIsReset();
@@ -1101,12 +1115,23 @@ protected:
 
     int time = 0;
     nsEventStatus status = ApzcDown(apzc, touchX, touchStartY, time);
-    EXPECT_EQ(nsEventStatus_eConsumeNoDefault, status);
+    if (gfxPrefs::TouchActionEnabled()) {
+      // If touch-action is enabled, then the event is queued until the
+      // allowed touch behavior is set.
+      EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
+    } else {
+      // Otherwise, it is processed immediately.
+      EXPECT_EQ(nsEventStatus_eConsumeNoDefault, status);
+    }
 
-    // SetAllowedTouchBehavior() must be called after sending touch-start.
-    nsTArray<uint32_t> allowedTouchBehaviors;
-    allowedTouchBehaviors.AppendElement(aBehavior);
-    apzc->SetAllowedTouchBehavior(allowedTouchBehaviors);
+    if (gfxPrefs::TouchActionEnabled()) {
+      // SetAllowedTouchBehavior() must be called after sending touch-start.
+      nsTArray<uint32_t> allowedTouchBehaviors;
+      allowedTouchBehaviors.AppendElement(aBehavior);
+      apzc->SetAllowedTouchBehavior(allowedTouchBehaviors);
+    }
+    // Have content "respond" to the touchstart
+    apzc->ContentReceivedTouch(false);
 
     MockFunction<void(std::string checkPointName)> check;
 
@@ -1127,11 +1152,15 @@ protected:
 
     // Destroy pending MAX_TAP timeout task
     mcc->DestroyOldestTask();
-    // Clear the waiting-for-content timeout task, then send the signal that
-    // content has handled this long tap. This takes the place of the
-    // "contextmenu" event.
-    mcc->ClearDelayedTask();
+
+    // There should be a TimeoutContentResponse task in the queue still,
+    // waiting for the response from the longtap event dispatched above.
+    // Send the signal that content has handled the long-tap, and then run
+    // the timeout task (it will be a no-op because the content "wins" the
+    // race. This takes the place of the "contextmenu" event.
     apzc->ContentReceivedTouch(true);
+    mcc->CheckHasDelayedTask();
+    mcc->RunDelayedTask();
 
     time += 1000;
 
@@ -1143,11 +1172,6 @@ protected:
     EXPECT_CALL(*mcc, HandleLongTapUp(CSSPoint(touchX, touchEndY), 0, apzc->GetGuid())).Times(0);
     status = ApzcUp(apzc, touchX, touchEndY, time);
     EXPECT_EQ(nsEventStatus_eIgnore, status);
-
-    // Flush the event queue. Once the "contextmenu" event is handled, any touch
-    // events that come from the same series of start->n*move->end events should
-    // be discarded, even if only the "contextmenu" event is preventDefaulted.
-    apzc->ContentReceivedTouch(false);
 
     ScreenPoint pointOut;
     ViewTransform viewTransformOut;
