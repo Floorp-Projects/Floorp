@@ -4021,7 +4021,25 @@ JSTerm.prototype = {
         break;
 
       case Ci.nsIDOMKeyEvent.DOM_VK_HOME:
+        if (this.autocompletePopup.isOpen) {
+          this.autocompletePopup.selectedIndex = 0;
+          aEvent.preventDefault();
+        } else if (this.inputNode.value.length <= 0) {
+          this.hud.outputNode.parentNode.scrollTop = 0;
+          aEvent.preventDefault();
+        }
+        break;
+
       case Ci.nsIDOMKeyEvent.DOM_VK_END:
+        if (this.autocompletePopup.isOpen) {
+          this.autocompletePopup.selectedIndex = this.autocompletePopup.itemCount - 1;
+          aEvent.preventDefault();
+        } else if (this.inputNode.value.length <= 0) {
+          this.hud.outputNode.parentNode.scrollTop = this.hud.outputNode.parentNode.scrollHeight;
+          aEvent.preventDefault();
+        }
+        break;
+
       case Ci.nsIDOMKeyEvent.DOM_VK_LEFT:
         if (this.autocompletePopup.isOpen || this.lastCompletion.value) {
           this.clearCompletion();
