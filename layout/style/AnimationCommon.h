@@ -270,17 +270,13 @@ struct AnimationTiming
 /**
  * Stores the results of calculating the timing properties of an animation
  * at a given sample time.
- *
- * The members of a default-constructed object of this type are not meaningful.
- * Rather, this object is intended to be used as the return value of
- * ElementAnimation::GetComputedTimingAt which ensures all members are set
- * correctly.
  */
 struct ComputedTiming
 {
   ComputedTiming()
-  : mTimeFraction(kNullTimeFraction),
-    mCurrentIteration(0)
+  : mTimeFraction(kNullTimeFraction)
+  , mCurrentIteration(0)
+  , mPhase(AnimationPhase_Null)
   { }
 
   static const double kNullTimeFraction;
@@ -298,6 +294,8 @@ struct ComputedTiming
   uint64_t mCurrentIteration;
 
   enum {
+    // Not sampled (null sample time)
+    AnimationPhase_Null,
     // Sampled prior to the start of the active interval
     AnimationPhase_Before,
     // Sampled within the active interval
