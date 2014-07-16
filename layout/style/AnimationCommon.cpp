@@ -429,23 +429,29 @@ ElementAnimation::StartTime() const
 double
 ElementAnimation::CurrentTime() const
 {
-  TimeStamp now = mTimeline->GetCurrentTimeStamp();
-  // |now| should only be null when we don't have a refresh driver.
+  // In Web Animations, AnimationPlayers have a *current* time and Animations
+  // have a *local* time. However, since we have a 1:1 correspondence between
+  // AnimationPlayers and Animations, and since the startTime of *Animations*
+  // (but not AnimationPlayers) is always 0, these are currently identical.
+  Nullable<TimeDuration> currentTime =
+    GetLocalTimeAt(mTimeline->GetCurrentTimeStamp());
+
+  // The current time is currently only going to be null when don't have a
+  // refresh driver (e.g. because we are in a display:none iframe).
   //
-  // If we previously had a refresh driver, the correct thing would be to store
-  // the last refresh time in the AnimationTimeline, return that from
-  // GetCurrentTimeStamp and use that here.
+  // Web Animations says that in this case we should use a timeline time of
+  // 0 (the "effective timeline time") and calculate the current time from that.
+  // Doing that, however, requires storing the start time as an offset rather
+  // than a timestamp so for now we just return 0.
   //
-  // If we never had a refresh driver then any start times would be null we can
-  // do here is return 0 (that is, until we allow returning a null start time).
-  //
-  // Since we don't yet record the last refresh time we just return 0 in both
-  // cases.
-  if (now.IsNull()) {
+  // FIXME: Store player start time and pause start as offsets rather than
+  // timestamps and return the appropriate current time when the timeline time
+  // is null.
+  if (currentTime.IsNull()) {
     return 0.0;
   }
 
-  return GetLocalTimeAt(now).ToMilliseconds();
+  return currentTime.Value().ToMilliseconds();
 }
 
 bool
@@ -843,7 +849,7 @@ ElementAnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
 
       // The GetLocalTimeAt() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      TimeDuration localTime = anim->GetLocalTimeAt(aRefreshTime);
+      Nullable<TimeDuration> localTime = anim->GetLocalTimeAt(aRefreshTime);
       ComputedTiming computedTiming =
         ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
 
@@ -887,7 +893,7 @@ ElementAnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
 
       // The GetLocalTimeAt() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      TimeDuration localTime = anim->GetLocalTimeAt(aRefreshTime);
+      Nullable<TimeDuration> localTime = anim->GetLocalTimeAt(aRefreshTime);
       ComputedTiming computedTiming =
         ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
 

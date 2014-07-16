@@ -365,10 +365,17 @@ public:
 
   // Return the duration at aTime (or, if paused, mPauseStart) since
   // the start of the delay period.  May be negative.
-  mozilla::TimeDuration GetLocalTimeAt(mozilla::TimeStamp aTime) const {
-    MOZ_ASSERT(!IsPaused() || aTime >= mPauseStart,
-               "if paused, aTime must be at least mPauseStart");
-    return (IsPaused() ? mPauseStart : aTime) - mStartTime;
+  // Returns a null value if and only if the passed-in TimeStamp IsNull().
+  Nullable<mozilla::TimeDuration>
+  GetLocalTimeAt(mozilla::TimeStamp aTime) const {
+    MOZ_ASSERT(aTime.IsNull() || !IsPaused() || aTime >= mPauseStart,
+               "if paused, any non-null value of aTime must be at least"
+               " mPauseStart");
+    Nullable<mozilla::TimeDuration> result; // Initializes to null
+    if (!aTime.IsNull()) {
+      result.SetValue((IsPaused() ? mPauseStart : aTime) - mStartTime);
+    }
+    return result;
   }
 
   // Return the duration from the start the active interval to the point where
@@ -392,15 +399,6 @@ public:
   static ComputedTiming
   GetComputedTimingAt(const Nullable<mozilla::TimeDuration>& aLocalTime,
                       const AnimationTiming& aTiming);
-
-  // Convenience wrapper method to save changing all call sites. Removed in
-  // a subsequent patch.
-  static ComputedTiming
-  GetComputedTimingAt(mozilla::TimeDuration aLocalTime,
-                      const AnimationTiming& aTiming) {
-    return GetComputedTimingAt(Nullable<mozilla::TimeDuration>(aLocalTime),
-                               aTiming);
-  }
 
   // Return the duration of the active interval for the given timing parameters.
   static mozilla::TimeDuration ActiveDuration(const AnimationTiming& aTiming);

@@ -43,7 +43,7 @@ nsAnimationManager::GetEventsAt(ElementAnimationCollection* aCollection,
   for (uint32_t animIdx = aCollection->mAnimations.Length(); animIdx-- != 0; ) {
     ElementAnimation* anim = aCollection->mAnimations[animIdx];
 
-    TimeDuration localTime = anim->GetLocalTimeAt(aRefreshTime);
+    Nullable<TimeDuration> localTime = anim->GetLocalTimeAt(aRefreshTime);
     ComputedTiming computedTiming =
       ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
 
