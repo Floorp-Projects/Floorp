@@ -137,7 +137,12 @@ public:
     mFrameMetrics = metrics;
   }
 
-  FrameMetrics GetFrameMetrics() {
+  FrameMetrics& GetFrameMetrics() {
+    ReentrantMonitorAutoEnter lock(mMonitor);
+    return mFrameMetrics;
+  }
+
+  const FrameMetrics& GetFrameMetrics() const {
     ReentrantMonitorAutoEnter lock(mMonitor);
     return mFrameMetrics;
   }
@@ -200,11 +205,9 @@ protected:
     apzc->Destroy();
   }
 
-  void UseTouchListenerMetrics()
+  void SetMayHaveTouchListeners()
   {
-    FrameMetrics frameMetrics(TestFrameMetrics());
-    frameMetrics.mMayHaveTouchListeners = true;
-    apzc->SetFrameMetrics(frameMetrics);
+    apzc->GetFrameMetrics().mMayHaveTouchListeners = true;
   }
 
   void MakeApzcZoomable()
@@ -495,8 +498,7 @@ public:
   }
 
 protected:
-  void DoPinchTest(bool aShouldTriggerPinch,
-                   nsTArray<uint32_t> *aAllowedTouchBehaviors = nullptr)
+  FrameMetrics GetPinchableFrameMetrics()
   {
     FrameMetrics fm;
     fm.mViewport = CSSRect(0, 0, 980, 480);
@@ -504,9 +506,14 @@ protected:
     fm.mScrollableRect = CSSRect(0, 0, 980, 1000);
     fm.SetScrollOffset(CSSPoint(300, 300));
     fm.SetZoom(CSSToScreenScale(2.0));
-    apzc->SetFrameMetrics(fm);
     // the visible area of the document in CSS pixels is x=300 y=300 w=50 h=100
+    return fm;
+  }
 
+  void DoPinchTest(bool aShouldTriggerPinch,
+                   nsTArray<uint32_t> *aAllowedTouchBehaviors = nullptr)
+  {
+    apzc->SetFrameMetrics(GetPinchableFrameMetrics());
     MakeApzcZoomable();
 
     if (aShouldTriggerPinch) {
@@ -524,7 +531,7 @@ protected:
       ApzcPinchWithPinchInputAndCheckStatus(apzc, 250, 300, 1.25, aShouldTriggerPinch);
     }
 
-    fm = apzc->GetFrameMetrics();
+    FrameMetrics fm = apzc->GetFrameMetrics();
 
     if (aShouldTriggerPinch) {
       // the visible area of the document in CSS pixels is now x=305 y=310 w=40 h=80
@@ -605,6 +612,32 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_UseGestureDetector_TouchActionNotAl
   behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN);
   behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::PINCH_ZOOM);
   DoPinchTest(false, &behaviors);
+}
+
+TEST_F(APZCPinchGestureDetectorTester, Pinch_PreventDefault) {
+  FrameMetrics originalMetrics = GetPinchableFrameMetrics();
+  apzc->SetFrameMetrics(originalMetrics);
+
+  SetMayHaveTouchListeners();
+  MakeApzcZoomable();
+
+  int touchInputId = 0;
+  ApzcPinchWithTouchInput(apzc, 250, 300, 1.25, touchInputId);
+
+  // Send the prevent-default notification for the touch block
+  apzc->ContentReceivedTouch(true);
+
+  // Run all pending tasks (this should include at least the
+  // prevent-default timer).
+  EXPECT_LE(1, mcc->RunThroughDelayedTasks());
+
+  // verify the metrics didn't change (i.e. the pinch was ignored)
+  FrameMetrics fm = apzc->GetFrameMetrics();
+  EXPECT_EQ(originalMetrics.GetZoom().scale, fm.GetZoom().scale);
+  EXPECT_EQ(originalMetrics.GetScrollOffset().x, fm.GetScrollOffset().x);
+  EXPECT_EQ(originalMetrics.GetScrollOffset().y, fm.GetScrollOffset().y);
+
+  apzc->AssertStateIsReset();
 }
 
 TEST_F(APZCBasicTester, Overzoom) {
@@ -781,6 +814,35 @@ protected:
     EXPECT_EQ(ScreenPoint(), pointOut);
     EXPECT_EQ(ViewTransform(), viewTransformOut);
   }
+
+  void DoPanWithPreventDefaultTest()
+  {
+    SetMayHaveTouchListeners();
+
+    int time = 0;
+    int touchStart = 50;
+    int touchEnd = 10;
+    ScreenPoint pointOut;
+    ViewTransform viewTransformOut;
+
+    // Pan down
+    nsTArray<uint32_t> allowedTouchBehaviors;
+    allowedTouchBehaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN);
+    ApzcPanAndCheckStatus(apzc, tm, time, touchStart, touchEnd, true, true, &allowedTouchBehaviors);
+
+    // Send the signal that content has handled and preventDefaulted the touch
+    // events. This flushes the event queue.
+    apzc->ContentReceivedTouch(true);
+    // Run all pending tasks (this should include at least the
+    // prevent-default timer).
+    EXPECT_LE(1, mcc->RunThroughDelayedTasks());
+
+    apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
+    EXPECT_EQ(ScreenPoint(), pointOut);
+    EXPECT_EQ(ViewTransform(), viewTransformOut);
+
+    apzc->AssertStateIsReset();
+  }
 };
 
 TEST_F(APZCPanningTester, Pan) {
@@ -813,28 +875,14 @@ TEST_F(APZCPanningTester, PanWithTouchActionPanY) {
   DoPanTest(true, mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN);
 }
 
-TEST_F(APZCBasicTester, PanWithPreventDefault) {
+TEST_F(APZCPanningTester, PanWithPreventDefaultAndTouchAction) {
   SCOPED_GFX_PREF(TouchActionEnabled, bool, true);
-  UseTouchListenerMetrics();
+  DoPanWithPreventDefaultTest();
+}
 
-  int time = 0;
-  int touchStart = 50;
-  int touchEnd = 10;
-  ScreenPoint pointOut;
-  ViewTransform viewTransformOut;
-
-  // Pan down
-  nsTArray<uint32_t> allowedTouchBehaviors;
-  allowedTouchBehaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN);
-  ApzcPanAndCheckStatus(apzc, tm, time, touchStart, touchEnd, true, true, &allowedTouchBehaviors);
-
-  // Send the signal that content has handled and preventDefaulted the touch
-  // events. This flushes the event queue.
-  apzc->ContentReceivedTouch(true);
-
-  apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ScreenPoint(), pointOut);
-  EXPECT_EQ(ViewTransform(), viewTransformOut);
+TEST_F(APZCPanningTester, PanWithPreventDefault) {
+  SCOPED_GFX_PREF(TouchActionEnabled, bool, false);
+  DoPanWithPreventDefaultTest();
 }
 
 TEST_F(APZCBasicTester, Fling) {
