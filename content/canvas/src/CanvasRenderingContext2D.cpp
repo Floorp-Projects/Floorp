@@ -1061,10 +1061,6 @@ CanvasRenderingContext2D::SetIsOpaque(bool isOpaque)
     ClearTarget();
   }
 
-  if (mOpaque) {
-    EnsureTarget();
-  }
-
   return NS_OK;
 }
 
@@ -4227,6 +4223,12 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                          CanvasLayer *aOldLayer,
                                          LayerManager *aManager)
 {
+  if (mOpaque) {
+    // If we're opaque then make sure we have a surface so we paint black
+    // instead of transparent.
+    EnsureTarget();
+  }
+
   // Don't call EnsureTarget() ... if there isn't already a surface, then
   // we have nothing to paint and there is no need to create a surface just
   // to paint nothing. Also, EnsureTarget() can cause creation of a persistent
