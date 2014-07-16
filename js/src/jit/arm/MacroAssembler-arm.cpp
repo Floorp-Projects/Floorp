@@ -1290,8 +1290,6 @@ void
 MacroAssemblerARM::ma_pop(Register r)
 {
     ma_dtr(IsLoad, sp, Imm32(4), r, PostIndex);
-    if (r == pc)
-        m_buffer.markGuard();
 }
 void
 MacroAssemblerARM::ma_push(Register r)
@@ -1321,9 +1319,9 @@ MacroAssemblerARM::ma_vpush(VFPRegister r)
 
 // Branches when done from within arm-specific code.
 BufferOffset
-MacroAssemblerARM::ma_b(Label *dest, Assembler::Condition c, bool isPatchable)
+MacroAssemblerARM::ma_b(Label *dest, Assembler::Condition c)
 {
-    return as_b(dest, c, isPatchable);
+    return as_b(dest, c);
 }
 
 void
@@ -1357,8 +1355,6 @@ MacroAssemblerARM::ma_b(void *target, Relocation::Kind reloc, Assembler::Conditi
         break;
       case Assembler::B_LDR:
         as_Imm32Pool(pc, trg, c);
-        if (c == Always)
-            m_buffer.markGuard();
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("Other methods of generating tracable jumps NYI");
@@ -1748,7 +1744,7 @@ MacroAssemblerARMCompat::buildFakeExitFrame(Register scratch, uint32_t *offset)
 
     Push(Imm32(descriptor)); // descriptor_
 
-    enterNoPool();
+    enterNoPool(2);
     DebugOnly<uint32_t> offsetBeforePush = currentOffset();
     Push(pc); // actually pushes $pc + 8.
 
@@ -2084,7 +2080,7 @@ MacroAssemblerARMCompat::movePtr(AsmJSImmPtr imm, Register dest)
     else
         rs = L_LDR;
 
-    enoughMemory_ &= append(AsmJSAbsoluteLink(CodeOffsetLabel(nextOffset().getOffset()), imm.kind()));
+    enoughMemory_ &= append(AsmJSAbsoluteLink(CodeOffsetLabel(currentOffset()), imm.kind()));
     ma_movPatchable(Imm32(-1), dest, Always, rs);
 }
 void
@@ -3623,7 +3619,7 @@ MacroAssemblerARM::ma_callIon(const Register r)
     // When the stack is 8 byte aligned, we want to decrement sp by 8, and write
     // pc + 8 into the new sp. When we return from this call, sp will be its
     // present value minus 4.
-    AutoForbidPools afp(this);
+    AutoForbidPools afp(this, 2);
     as_dtr(IsStore, 32, PreIndex, pc, DTRAddr(sp, DtrOffImm(-8)));
     as_blx(r);
 }
@@ -3632,7 +3628,7 @@ MacroAssemblerARM::ma_callIonNoPush(const Register r)
 {
     // Since we just write the return address into the stack, which is popped on
     // return, the net effect is removing 4 bytes from the stack.
-    AutoForbidPools afp(this);
+    AutoForbidPools afp(this, 2);
     as_dtr(IsStore, 32, Offset, pc, DTRAddr(sp, DtrOffImm(0)));
     as_blx(r);
 }
@@ -3643,7 +3639,7 @@ MacroAssemblerARM::ma_callIonHalfPush(const Register r)
     // The stack is unaligned by 4 bytes. We push the pc to the stack to align
     // the stack before the call, when we return the pc is poped and the stack
     // is restored to its unaligned state.
-    AutoForbidPools afp(this);
+    AutoForbidPools afp(this, 2);
     ma_push(pc);
     as_blx(r);
 }
@@ -3669,7 +3665,7 @@ MacroAssemblerARM::ma_callAndStoreRet(const Register r, uint32_t stackArgBytes)
     // not provide space for a return address so this function may only be
     // called if no argument are passed.
     JS_ASSERT(stackArgBytes == 0);
-    AutoForbidPools afp(this);
+    AutoForbidPools afp(this, 2);
     as_dtr(IsStore, 32, Offset, pc, DTRAddr(sp, DtrOffImm(0)));
     as_blx(r);
 }
@@ -4384,7 +4380,7 @@ CodeOffsetLabel
 MacroAssemblerARMCompat::toggledJump(Label *label)
 {
     // Emit a B that can be toggled to a CMP. See ToggleToJmp(), ToggleToCmp().
-    BufferOffset b = ma_b(label, Always, true);
+    BufferOffset b = ma_b(label, Always);
     CodeOffsetLabel ret(b.getOffset());
     return ret;
 }
@@ -4543,7 +4539,7 @@ MacroAssemblerARMCompat::jumpWithPatch(RepatchLabel *label, Condition cond)
     BufferOffset bo = as_BranchPool(0xdeadbeef, label, &pe, cond);
     // Fill in a new CodeOffset with both the load and the pool entry that the
     // instruction loads from.
-    CodeOffsetJump ret(bo.getOffset(), pe.encode());
+    CodeOffsetJump ret(bo.getOffset(), pe.index());
     return ret;
 }
 
