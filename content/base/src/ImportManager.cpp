@@ -292,6 +292,12 @@ ImportLoader::OnStopRequest(nsIRequest* aRequest,
     mParserStreamListener->OnStopRequest(aRequest, aContext, aStatus);
   }
 
+  if (!mDocument) {
+    // If at this point we don't have a document, then the error was
+    // already reported.
+    return NS_ERROR_DOM_ABORT_ERR;
+  }
+
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(mDocument);
   EventListenerManager* manager = eventTarget->GetOrCreateListenerManager();
   manager->AddEventListenerByType(this,
