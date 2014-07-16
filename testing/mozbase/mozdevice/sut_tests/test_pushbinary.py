@@ -12,7 +12,7 @@ class PushBinaryTestCase(DeviceManagerTestCase):
     def runTest(self):
         """This tests copying a binary file.
         """
-        testroot = self.dm.getDeviceRoot()
+        testroot = self.dm.deviceRoot
         self.dm.removeFile(posixpath.join(testroot, 'mybinary.zip'))
         self.dm.pushFile(os.path.join('test-files', 'mybinary.zip'),
                          posixpath.join(testroot, 'mybinary.zip'))

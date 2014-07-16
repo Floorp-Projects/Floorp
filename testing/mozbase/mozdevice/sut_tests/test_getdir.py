@@ -29,7 +29,7 @@ class GetDirectoryTestCase(DeviceManagerTestCase):
     def runTest(self):
         """This tests the getDirectory() function.
         """
-        testroot = posixpath.join(self.dm.getDeviceRoot(), 'infratest')
+        testroot = posixpath.join(self.dm.deviceRoot, 'infratest')
         self.dm.removeDir(testroot)
         self.dm.mkDir(testroot)
         self.dm.pushDir(

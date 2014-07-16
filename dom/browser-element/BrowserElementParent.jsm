@@ -626,6 +626,26 @@ BrowserElementParent.prototype = {
           getService(Ci.nsIExternalHelperAppService);
         let channel = aRequest.QueryInterface(Ci.nsIChannel);
 
+        // First, we'll ensure the filename doesn't have any leading
+        // periods. We have to do it here to avoid ending up with a filename
+        // that's only an extension with no extension (e.g. Sending in
+        // '.jpeg' without stripping the '.' would result in a filename of
+        // 'jpeg' where we want 'jpeg.jpeg'.
+        _options.filename = _options.filename.replace(/^\.+/, "");
+
+        let ext = null;
+        let mimeSvc = extHelperAppSvc.QueryInterface(Ci.nsIMIMEService);
+        try {
+          ext = '.' + mimeSvc.getPrimaryExtension(channel.contentType, '');
+        } catch (e) { ext = null; }
+
+        // Check if we need to add an extension to the filename.
+        if (ext && !_options.filename.endsWith(ext)) {
+          _options.filename += ext;
+        }
+        // Set the filename to use when saving to disk.
+        channel.contentDispositionFilename = _options.filename;
+
         this.extListener =
           extHelperAppSvc.doContent(
               channel.contentType,

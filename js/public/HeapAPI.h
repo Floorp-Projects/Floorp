@@ -32,7 +32,11 @@ const size_t ArenaShift = 12;
 const size_t ArenaSize = size_t(1) << ArenaShift;
 const size_t ArenaMask = ArenaSize - 1;
 
+#ifdef JS_GC_SMALL_CHUNK_SIZE
+const size_t ChunkShift = 18;
+#else
 const size_t ChunkShift = 20;
+#endif
 const size_t ChunkSize = size_t(1) << ChunkShift;
 const size_t ChunkMask = ChunkSize - 1;
 
@@ -41,8 +45,13 @@ const size_t CellSize = size_t(1) << CellShift;
 const size_t CellMask = CellSize - 1;
 
 /* These are magic constants derived from actual offsets in gc/Heap.h. */
+#ifdef JS_GC_SMALL_CHUNK_SIZE
+const size_t ChunkMarkBitmapOffset = 258104;
+const size_t ChunkMarkBitmapBits = 31744;
+#else
 const size_t ChunkMarkBitmapOffset = 1032352;
 const size_t ChunkMarkBitmapBits = 129024;
+#endif
 const size_t ChunkRuntimeOffset = ChunkSize - sizeof(void*);
 const size_t ChunkLocationOffset = ChunkSize - 2 * sizeof(void*) - sizeof(uint64_t);
 

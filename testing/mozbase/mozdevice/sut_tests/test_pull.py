@@ -19,7 +19,7 @@ class PullTestCase(DeviceManagerTestCase):
         local_test_file = os.path.join('test-files', 'mybinary.zip')
         orig.update(file(local_test_file, 'r').read())
 
-        testroot = self.dm.getDeviceRoot()
+        testroot = self.dm.deviceRoot
         remote_test_file = posixpath.join(testroot, 'mybinary.zip')
         self.dm.removeFile(remote_test_file)
         self.dm.pushFile(local_test_file, remote_test_file)

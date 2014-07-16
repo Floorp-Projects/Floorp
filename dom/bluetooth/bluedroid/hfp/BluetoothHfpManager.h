@@ -75,6 +75,10 @@ class BluetoothHfpManager : public BluetoothHfpManagerBase
 {
 public:
   BT_DECL_HFP_MGR_BASE
+
+  void OnConnectError();
+  void OnDisconnectError();
+
   virtual void GetName(nsACString& aName)
   {
     aName.AssignLiteral("HFP/HSP");
@@ -82,8 +86,8 @@ public:
 
   static BluetoothHfpManager* Get();
   virtual ~BluetoothHfpManager();
-  static void InitHfpInterface();
-  static void DeinitHfpInterface();
+  static void InitHfpInterface(BluetoothProfileResultHandler* aRes);
+  static void DeinitHfpInterface(BluetoothProfileResultHandler* aRes);
 
   bool ConnectSco();
   bool DisconnectSco();

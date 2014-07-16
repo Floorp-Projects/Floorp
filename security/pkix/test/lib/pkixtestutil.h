@@ -75,6 +75,16 @@ SECStatus GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
 // The result will be owned by the arena
 const SECItem* ASCIIToDERName(PLArenaPool* arena, const char* cn);
 
+// Replace one substring in item with another of the same length, but only if
+// the substring was found exactly once. The "only once" restriction is helpful
+// for avoiding making multiple changes at once.
+//
+// The string to search for must be 8 or more bytes long so that it is
+// extremely unlikely that there will ever be any false positive matches
+// in digital signatures, keys, hashes, etc.
+SECStatus TamperOnce(SECItem& item, const uint8_t* from, size_t fromLen,
+                     const uint8_t* to, size_t toLen);
+
 ///////////////////////////////////////////////////////////////////////////////
 // Encode Certificates
 
