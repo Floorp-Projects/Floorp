@@ -1991,13 +1991,15 @@ HasRegExpMetaChars(const CharT *chars, size_t length)
 }
 
 bool
-js::StringHasRegExpMetaChars(JSLinearString *str)
+js::StringHasRegExpMetaChars(JSLinearString *str, size_t beginOffset, size_t endOffset)
 {
+    JS_ASSERT(beginOffset + endOffset <= str->length());
+
     AutoCheckCannotGC nogc;
     if (str->hasLatin1Chars())
-        return HasRegExpMetaChars(str->latin1Chars(nogc), str->length());
+        return HasRegExpMetaChars(str->latin1Chars(nogc) + beginOffset, str->length() - beginOffset - endOffset);
 
-    return HasRegExpMetaChars(str->twoByteChars(nogc), str->length());
+    return HasRegExpMetaChars(str->twoByteChars(nogc) + beginOffset, str->length() - beginOffset - endOffset);
 }
 
 namespace {
