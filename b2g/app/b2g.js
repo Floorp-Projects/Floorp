@@ -1001,7 +1001,7 @@ pref("identity.fxaccounts.enabled", true);
 #endif
 
 // Mobile Identity API.
-pref("services.mobileid.server.uri", "https://msisdn-dev.stage.mozaws.net");
+pref("services.mobileid.server.uri", "https://msisdn.services.mozilla.com");
 
 // Enable mapped array buffer
 pref("dom.mapped_arraybuffer.enabled", true);
