@@ -16,11 +16,15 @@ Configuration
 
 You will need to generate a configuration file, you can do so with:
 
-	$ make config
+    $ make config
 
-It will read the configuration from the `LOOP_SERVER_URL` env variable and
-generate the appropriate configuration file. This setting defines the root url
-of the loop server, without trailing slash.
+It will read the configuration from the following env variables and generate the
+appropriate configuration file:
+
+- `LOOP_SERVER_URL` defines the root url of the loop server, without trailing
+  slash (default: `http://localhost:5000`).
+- `LOOP_PENDING_CALL_TIMEOUT` defines the amount of time a pending outgoing call
+  should be considered timed out, in milliseconds (default: `20000`).
 
 Usage
 -----
