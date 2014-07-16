@@ -357,10 +357,6 @@ pref("media.navigator.enabled", true);
 #endif
 #endif
 
-pref("media.tabstreaming.width", 320);
-pref("media.tabstreaming.height", 240);
-pref("media.tabstreaming.time_per_frame", 40);
-
 // TextTrack support
 pref("media.webvtt.enabled", true);
 pref("media.webvtt.regions.enabled", false);

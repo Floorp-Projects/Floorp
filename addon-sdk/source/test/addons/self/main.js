@@ -17,4 +17,8 @@ exports["test self.data.load"] = assert => {
                "relative paths work");
 };
 
+exports["test self.id"] = assert => {
+  assert.equal(self.id, "test-self@jetpack", "self.id should be correct.");
+};
+
 require("sdk/test/runner").runTestsFromModule(module);
