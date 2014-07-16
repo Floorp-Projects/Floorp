@@ -217,7 +217,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         // 8, so we add the size of 2 instructions to skip the instructions
         // emitted by storePtr and jump(&skipJump).
         {
-            AutoForbidPools afp(&masm);
+            AutoForbidPools afp(&masm, 5);
             Label skipJump;
             masm.mov(pc, scratch);
             masm.addPtr(Imm32(2 * sizeof(uint32_t)), scratch);
@@ -674,7 +674,7 @@ JitRuntime::generateBailoutTable(JSContext *cx, uint32_t frameClass)
     {
         // Emit the table without any pools being inserted.
         Label bailout;
-        AutoForbidPools afp(&masm);
+        AutoForbidPools afp(&masm, BAILOUT_TABLE_SIZE);
         for (size_t i = 0; i < BAILOUT_TABLE_SIZE; i++)
             masm.ma_bl(&bailout);
         masm.bind(&bailout);

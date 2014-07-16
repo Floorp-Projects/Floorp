@@ -204,7 +204,7 @@ jit::VFPRegister::encode()
 
     switch (kind) {
       case Double:
-        return VFPRegIndexSplit(code_ & 0xf , code_ >> 4);
+        return VFPRegIndexSplit(code_ & 0xf, code_ >> 4);
       case Single:
         return VFPRegIndexSplit(code_ >> 1, code_ & 1);
       default:
@@ -515,7 +515,7 @@ Imm16::Imm16(Instruction &inst)
 
 Imm16::Imm16(uint32_t imm)
   : lower(imm & 0xfff), pad(0),
-    upper((imm>>12) & 0xf),
+    upper((imm >> 12) & 0xf),
     invalid(0)
 {
     JS_ASSERT(decode() == imm);
@@ -581,12 +581,6 @@ Assembler::executableCopy(uint8_t *buffer)
     JS_ASSERT(isFinished);
     m_buffer.executableCopy(buffer);
     AutoFlushICache::setRange(uintptr_t(buffer), m_buffer.size());
-}
-
-void
-Assembler::resetCounter()
-{
-    m_buffer.resetCounter();
 }
 
 uint32_t
@@ -1337,27 +1331,10 @@ Assembler::WriteInstStatic(uint32_t x, uint32_t *dest)
     *dest = x;
 }
 
-BufferOffset
+void
 Assembler::align(int alignment)
 {
-    BufferOffset ret;
-    if (alignment == 8) {
-        while (!m_buffer.isAligned(alignment)) {
-            BufferOffset tmp = as_nop();
-            if (!ret.assigned())
-                ret = tmp;
-        }
-    } else {
-        flush();
-        JS_ASSERT((alignment & (alignment - 1)) == 0);
-        while (size() & (alignment-1)) {
-            BufferOffset tmp = as_nop();
-            if (!ret.assigned())
-                ret = tmp;
-        }
-    }
-    return ret;
-
+    m_buffer.align(alignment);
 }
 
 BufferOffset
@@ -1698,7 +1675,7 @@ Assembler::as_Imm32Pool(Register dest, uint32_t value, Condition c)
 {
     PoolHintPun php;
     php.phd.init(0, c, PoolHintData::PoolDTR, dest);
-    return m_buffer.insertEntry(4, (uint8_t*)&php.raw, int32Pool, (uint8_t*)&value);
+    return m_buffer.allocEntry(1, 1, (uint8_t*)&php.raw, (uint8_t*)&value);
 }
 
 void
@@ -1721,8 +1698,8 @@ Assembler::as_BranchPool(uint32_t value, RepatchLabel *label, ARMBuffer::PoolEnt
 {
     PoolHintPun php;
     php.phd.init(0, c, PoolHintData::PoolBranch, pc);
-    BufferOffset ret = m_buffer.insertEntry(4, (uint8_t*)&php.raw, int32Pool, (uint8_t*)&value, pe,
-                                            /* markAsBranch = */ true);
+    BufferOffset ret = m_buffer.allocEntry(1, 1, (uint8_t*)&php.raw, (uint8_t*)&value, pe,
+                                           /* markAsBranch = */ true);
     // If this label is already bound, then immediately replace the stub load
     // with a correct branch.
     if (label->bound()) {
@@ -1740,15 +1717,8 @@ Assembler::as_FImm64Pool(VFPRegister dest, double value, Condition c)
     JS_ASSERT(dest.isDouble());
     PoolHintPun php;
     php.phd.init(0, c, PoolHintData::PoolVDTR, dest);
-    return m_buffer.insertEntry(4, (uint8_t*)&php.raw, doublePool, (uint8_t*)&value);
+    return m_buffer.allocEntry(1, 2, (uint8_t*)&php.raw, (uint8_t*)&value);
 }
-
-struct PaddedFloat32
-{
-    float value;
-    uint32_t padding;
-};
-JS_STATIC_ASSERT(sizeof(PaddedFloat32) == sizeof(double));
 
 BufferOffset
 Assembler::as_FImm32Pool(VFPRegister dest, float value, Condition c)
@@ -1759,18 +1729,17 @@ Assembler::as_FImm32Pool(VFPRegister dest, float value, Condition c)
     JS_ASSERT(dest.isSingle());
     PoolHintPun php;
     php.phd.init(0, c, PoolHintData::PoolVDTR, dest);
-    PaddedFloat32 pf = { value, 0 };
-    return m_buffer.insertEntry(4, (uint8_t*)&php.raw, doublePool, (uint8_t*)&pf);
+    return m_buffer.allocEntry(1, 1, (uint8_t*)&php.raw, (uint8_t*)&value);
 }
 
 // Pool callbacks stuff:
 void
-Assembler::InsertTokenIntoTag(uint32_t instSize, uint8_t *load_, int32_t token)
+Assembler::InsertIndexIntoTag(uint8_t *load_, uint32_t index)
 {
-    uint32_t *load = (uint32_t*) load_;
+    uint32_t *load = (uint32_t*)load_;
     PoolHintPun php;
     php.raw = *load;
-    php.phd.setIndex(token);
+    php.phd.setIndex(index);
     *load = php.raw;
 }
 
@@ -1806,9 +1775,8 @@ Assembler::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
         break;
       case PoolHintData::PoolVDTR: {
         VFPRegister dest = data.getVFPReg();
-        int32_t imm = offset + (8 * data.getIndex()) - 8;
-        if (imm < -1023 || imm  > 1023)
-            return false;
+        int32_t imm = offset + (data.getIndex() * 4) - 8;
+        JS_ASSERT(-1024 < imm && imm < 1024);
         Dummy->as_vdtr(IsLoad, dest, VFPAddr(pc, VFPOffImm(imm)), data.getCond(), instAddr);
         break;
       }
@@ -1820,11 +1788,9 @@ Assembler::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
 
 // bx can *only* branch to a register, never to an immediate.
 BufferOffset
-Assembler::as_bx(Register r, Condition c, bool isPatchable)
+Assembler::as_bx(Register r, Condition c)
 {
     BufferOffset ret = writeInst(((int) c) | OpBx | r.code());
-    if (c == Always && !isPatchable)
-        m_buffer.markGuard();
     return ret;
 }
 void
@@ -1836,16 +1802,14 @@ Assembler::WritePoolGuard(BufferOffset branch, Instruction *dest, BufferOffset a
 // Branch can branch to an immediate *or* to a register.
 // Branches to immediates are pc relative, branches to registers are absolute.
 BufferOffset
-Assembler::as_b(BOffImm off, Condition c, bool isPatchable)
+Assembler::as_b(BOffImm off, Condition c)
 {
     BufferOffset ret = writeBranchInst(((int)c) | OpB | off.encode());
-    if (c == Always && !isPatchable)
-        m_buffer.markGuard();
     return ret;
 }
 
 BufferOffset
-Assembler::as_b(Label *l, Condition c, bool isPatchable)
+Assembler::as_b(Label *l, Condition c)
 {
     if (m_buffer.oom()) {
         BufferOffset ret;
@@ -1869,11 +1833,11 @@ Assembler::as_b(Label *l, Condition c, bool isPatchable)
             m_buffer.fail_bail();
             return ret;
         }
-        ret = as_b(BOffImm(old), c, isPatchable);
+        ret = as_b(BOffImm(old), c);
     } else {
         old = LabelBase::INVALID_OFFSET;
         BOffImm inv;
-        ret = as_b(inv, c, isPatchable);
+        ret = as_b(inv, c);
     }
     DebugOnly<int32_t> check = l->use(ret.getOffset());
     JS_ASSERT(check == old);
@@ -2368,9 +2332,9 @@ Assembler::flushBuffer()
 }
 
 void
-Assembler::enterNoPool()
+Assembler::enterNoPool(size_t maxInst)
 {
-    m_buffer.enterNoPool();
+    m_buffer.enterNoPool(maxInst);
 }
 
 void
@@ -2380,11 +2344,9 @@ Assembler::leaveNoPool()
 }
 
 ptrdiff_t
-Assembler::getBranchOffset(const Instruction *i_)
+Assembler::GetBranchOffset(const Instruction *i_)
 {
-    if (!i_->is<InstBranchImm>())
-        return 0;
-
+    JS_ASSERT(i_->is<InstBranchImm>());
     InstBranchImm *i = i_->as<InstBranchImm>();
     BOffImm dest;
     i->extractImm(&dest);
@@ -2481,12 +2443,9 @@ void
 Assembler::WritePoolHeader(uint8_t *start, Pool *p, bool isNatural)
 {
     STATIC_ASSERT(sizeof(PoolHeader) == 4);
-    uint8_t *pool = start+4;
+    uint8_t *pool = start + 4;
     // Go through the usual rigmarole to get the size of the pool.
-    pool = p[0].addPoolSize(pool);
-    pool = p[1].addPoolSize(pool);
-    pool = p[1].other->addPoolSize(pool);
-    pool = p[0].other->addPoolSize(pool);
+    pool += p->getPoolSize();
     uint32_t size = pool - start;
     JS_ASSERT((size & 3) == 0);
     size = size >> 2;
@@ -2495,12 +2454,6 @@ Assembler::WritePoolHeader(uint8_t *start, Pool *p, bool isNatural)
     *(PoolHeader*)start = header;
 }
 
-
-void
-Assembler::WritePoolFooter(uint8_t *start, Pool *p, bool isNatural)
-{
-    return;
-}
 
 // The size of an arbitrary 32-bit call in the instruction stream. On ARM this
 // sequence is |pc = ldr pc - 4; imm32| given that we never reach the imm32.
@@ -2814,4 +2767,20 @@ Assembler::GetNopFill()
         isSet = true;
     }
     return NopFill;
+}
+
+uint32_t Assembler::AsmPoolMaxOffset = 1024;
+
+uint32_t
+Assembler::GetPoolMaxOffset()
+{
+    static bool isSet = false;
+    if (!isSet) {
+        char *poolMaxOffsetStr = getenv("ASM_POOL_MAX_OFFSET");
+        uint32_t poolMaxOffset;
+        if (poolMaxOffsetStr && sscanf(poolMaxOffsetStr, "%u", &poolMaxOffset) == 1)
+            AsmPoolMaxOffset = poolMaxOffset;
+        isSet = true;
+    }
+    return AsmPoolMaxOffset;
 }
