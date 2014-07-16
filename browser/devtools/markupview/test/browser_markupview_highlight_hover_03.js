@@ -29,13 +29,14 @@ let test = asyncTest(function*() {
     return promise.resolve();
   };
 
-  function isHighlighting(node, desc) {
-    is(highlightedNode, getContainerForRawNode(node, inspector).node, desc);
+  function* isHighlighting(selector, desc) {
+    let nodeFront = yield getNodeFront(selector, inspector);
+    is(highlightedNode, nodeFront, desc);
   }
 
   info("Hover over <p#one> line in the markup-view");
   yield hoverContainer("#one", inspector);
-  isHighlighting(getNode("#one"), "<p#one> is highlighted");
+  yield isHighlighting("#one", "<p#one> is highlighted");
 
   info("Navigate to <p#two> with the keyboard");
   let onUpdated = inspector.once("inspector-updated");
@@ -44,11 +45,11 @@ let test = asyncTest(function*() {
   let onUpdated = inspector.once("inspector-updated");
   EventUtils.synthesizeKey("VK_DOWN", {});
   yield onUpdated;
-  isHighlighting(getNode("#two"), "<p#two> is highlighted");
+  yield isHighlighting("#two", "<p#two> is highlighted");
 
   info("Navigate back to <p#one> with the keyboard");
   let onUpdated = inspector.once("inspector-updated");
   EventUtils.synthesizeKey("VK_UP", {});
   yield onUpdated;
-  isHighlighting(getNode("#one"), "<p#one> is highlighted again");
+  yield isHighlighting("#one", "<p#one> is highlighted again");
 });
