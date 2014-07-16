@@ -52,6 +52,7 @@ if int(CONFIG['ANDROID_VERSION']) >= 16:
         'MediaCodecProxy.h',
     ]
     SOURCES += [
+        'I420ColorConverterHelper.cpp',
         'MediaCodecProxy.cpp',
     ]
 
