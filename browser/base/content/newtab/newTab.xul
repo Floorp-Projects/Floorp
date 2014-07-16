@@ -57,6 +57,8 @@
       </div>
 
       <div id="newtab-search-container">
+        <div class="newtab-side-margin"/>
+
         <form id="newtab-search-form" name="searchForm">
           <div id="newtab-search-logo"/>
           <input type="text" name="q" value="" id="newtab-search-text"
@@ -64,6 +66,8 @@
           <input id="newtab-search-submit" type="submit"
                  value="&searchEndCap.label;"/>
         </form>
+
+        <div class="newtab-side-margin"/>
       </div>
 
       <div id="newtab-horizontal-margin">
