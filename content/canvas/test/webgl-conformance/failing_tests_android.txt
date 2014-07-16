@@ -1,4 +1,3 @@
-conformance/extensions/oes-texture-float.html
 conformance/extensions/oes-vertex-array-object.html
 conformance/glsl/functions/glsl-function-abs.html
 conformance/glsl/functions/glsl-function-faceforward.html
