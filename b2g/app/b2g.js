@@ -473,17 +473,6 @@ pref("services.push.adaptive.gap", 60000); // 1 minute
 pref("services.push.adaptive.upperLimit", 1740000); // 29 min
 // enable udp wakeup support
 pref("services.push.udp.wakeupEnabled", true);
-// This value should be the prefix to be added to the current PDP context[1]
-// domain or a full-qualified domain name.
-// If finished with a dot, it will be added as a prefix to the PDP context
-// domain. If not, will be used as the DNS query.
-// If the DNS query is unsuccessful, the push agent will send a null netid and
-// is a server decision what to do with the device. If the MCC-MNC identifies a
-// unique network the server will change to UDP mode. Otherwise, a websocket
-// connection will be maintained.
-// [1] Packet Data Protocol
-//     http://en.wikipedia.org/wiki/GPRS_core_network#PDP_context
-pref("services.push.udp.well-known_netidAddress", "_wakeup_.");
 
 // NetworkStats
 #ifdef MOZ_WIDGET_GONK
