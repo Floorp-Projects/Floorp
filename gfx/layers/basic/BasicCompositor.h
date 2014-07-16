@@ -42,9 +42,10 @@ class BasicCompositor : public Compositor
 public:
   BasicCompositor(nsIWidget *aWidget);
 
+protected:
   virtual ~BasicCompositor();
 
-
+public:
   virtual bool Initialize() MOZ_OVERRIDE { return true; };
 
   virtual void Destroy() MOZ_OVERRIDE;

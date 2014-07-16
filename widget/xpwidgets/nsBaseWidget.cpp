@@ -905,7 +905,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   mCompositorParent = NewCompositorParent(aWidth, aHeight);
   MessageChannel *parentChannel = mCompositorParent->GetIPCChannel();
-  ClientLayerManager* lm = new ClientLayerManager(this);
+  nsRefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
   MessageLoop *childMessageLoop = CompositorParent::CompositorLoop();
   mCompositorChild = new CompositorChild(lm);
   mCompositorChild->Open(parentChannel, childMessageLoop, ipc::ChildSide);
@@ -928,7 +928,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   if (success) {
     ShadowLayerForwarder* lf = lm->AsShadowForwarder();
     if (!lf) {
-      delete lm;
+      lm = nullptr;
       mCompositorChild = nullptr;
       return;
     }
@@ -937,7 +937,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
     WindowUsesOMTC();
 
-    mLayerManager = lm;
+    mLayerManager = lm.forget();
     return;
   }
 

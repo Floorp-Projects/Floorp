@@ -403,7 +403,10 @@ else:
         'perf/pm_stub.cpp'
     ]
 
-MSVC_ENABLE_PGO = True
+# Disable PGO for MSVC 2010 due to unpredictable performance, see
+# bug 1030706.
+if CONFIG['_MSC_VER'] != '1600':
+    MSVC_ENABLE_PGO = True
 
 HOST_SOURCES += [
     'jskwgen.cpp',

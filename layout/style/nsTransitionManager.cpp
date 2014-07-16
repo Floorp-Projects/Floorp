@@ -37,17 +37,18 @@ using namespace mozilla::layers;
 using namespace mozilla::css;
 
 double
-ElementPropertyTransition::ValuePortionFor(TimeStamp aRefreshTime) const
+ElementPropertyTransition::CurrentValuePortion() const
 {
   // It would be easy enough to handle finished transitions by using a time
   // fraction of 1 but currently we should not be called for finished
   // transitions.
   MOZ_ASSERT(!IsFinishedTransition(),
              "Getting the value portion of a finished transition");
+  MOZ_ASSERT(!GetLocalTime().IsNull(),
+             "Getting the value portion of an animation that's not being "
+             "sampled");
 
-  TimeDuration localTime = GetLocalTimeAt(aRefreshTime);
-
-  // Transitions use a fill mode of 'backwards' so GetComputedTimingAt will
+  // Transitions use a fill mode of 'backwards' so GetComputedTiming will
   // never return a null time fraction due to being *before* the animation
   // interval. However, it might be possible that we're behind on flushing
   // causing us to get called *after* the animation interval. So, just in
@@ -55,7 +56,7 @@ ElementPropertyTransition::ValuePortionFor(TimeStamp aRefreshTime) const
   // is never null.
   AnimationTiming timingToUse = mTiming;
   timingToUse.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BOTH;
-  ComputedTiming computedTiming = GetComputedTimingAt(localTime, timingToUse);
+  ComputedTiming computedTiming = GetComputedTiming(timingToUse);
 
   MOZ_ASSERT(computedTiming.mTimeFraction != ComputedTiming::kNullTimeFraction,
              "Got a null time fraction for a fill mode of 'both'");
@@ -407,7 +408,9 @@ nsTransitionManager::ConsiderStartingTransition(
     return;
   }
 
-  nsRefPtr<ElementPropertyTransition> pt = new ElementPropertyTransition();
+  dom::AnimationTimeline* timeline = aElement->OwnerDoc()->Timeline();
+  nsRefPtr<ElementPropertyTransition> pt =
+    new ElementPropertyTransition(timeline);
 
   StyleAnimationValue startValue, endValue, dummyValue;
   bool haveValues =
@@ -486,9 +489,6 @@ nsTransitionManager::ConsiderStartingTransition(
     return;
   }
 
-  TimeStamp mostRecentRefresh =
-    presContext->RefreshDriver()->MostRecentRefresh();
-
   const nsTimingFunction &tf = aTransition.GetTimingFunction();
   float delay = aTransition.GetDelay();
   float duration = aTransition.GetDuration();
@@ -507,7 +507,7 @@ nsTransitionManager::ConsiderStartingTransition(
     // Compute the appropriate negative transition-delay such that right
     // now we'd end up at the current position.
     double valuePortion =
-      oldPT->ValuePortionFor(mostRecentRefresh) * oldPT->mReversePortion +
+      oldPT->CurrentValuePortion() * oldPT->mReversePortion +
       (1.0 - oldPT->mReversePortion);
     // A timing function with negative y1 (or y2!) might make
     // valuePortion negative.  In this case, we still want to apply our
@@ -548,7 +548,7 @@ nsTransitionManager::ConsiderStartingTransition(
   segment.mToKey = 1;
   segment.mTimingFunction.Init(tf);
 
-  pt->mStartTime = mostRecentRefresh;
+  pt->mStartTime = timeline->GetCurrentTimeStamp();
   pt->mTiming.mIterationDuration = TimeDuration::FromMilliseconds(duration);
   pt->mTiming.mDelay = TimeDuration::FromMilliseconds(delay);
   pt->mTiming.mIterationCount = 1;
@@ -818,9 +818,8 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
             collection->mAnimations.RemoveElementAt(i);
           }
         } else {
-          TimeDuration localTime = anim->GetLocalTimeAt(now);
           ComputedTiming computedTiming =
-            ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
+            anim->GetComputedTiming(anim->mTiming);
           if (computedTiming.mPhase == ComputedTiming::AnimationPhase_After) {
             MOZ_ASSERT(anim->mProperties.Length() == 1,
                        "Should have one animation property for a transition");

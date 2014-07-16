@@ -219,7 +219,7 @@ assertDecl("function foo(a, b=4, ...rest) { }",
            funDecl(ident("foo"), [ident("a"), ident("b")], blockStmt([]), [lit(4)], ident("rest")));
 assertDecl("function foo(a=(function () {})) { function a() {} }",
            funDecl(ident("foo"), [ident("a")], blockStmt([funDecl(ident("a"), [], blockStmt([]))]),
-                   [funExpr(ident("a"), [], blockStmt([]))]));
+                   [funExpr(null, [], blockStmt([]))]));
 
 
 // Bug 591437: rebound args have their defs turned into uses

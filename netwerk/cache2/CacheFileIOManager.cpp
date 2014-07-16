@@ -538,11 +538,13 @@ public:
     MOZ_COUNT_CTOR(ShutdownEvent);
   }
 
+protected:
   ~ShutdownEvent()
   {
     MOZ_COUNT_DTOR(ShutdownEvent);
   }
 
+public:
   NS_IMETHOD Run()
   {
     MutexAutoLock lock(*mLock);
@@ -582,11 +584,13 @@ public:
     MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::open-background");
   }
 
+protected:
   ~OpenFileEvent()
   {
     MOZ_COUNT_DTOR(OpenFileEvent);
   }
 
+public:
   NS_IMETHOD Run()
   {
     if (mResultOnAnyThread || mTarget) {
@@ -674,11 +678,13 @@ public:
     MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::read-background");
   }
 
+protected:
   ~ReadEvent()
   {
     MOZ_COUNT_DTOR(ReadEvent);
   }
 
+public:
   NS_IMETHOD Run()
   {
     if (mResultOnAnyThread || mTarget) {
@@ -739,6 +745,7 @@ public:
     MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::write-background");
   }
 
+protected:
   ~WriteEvent()
   {
     MOZ_COUNT_DTOR(WriteEvent);
@@ -748,6 +755,7 @@ public:
     }
   }
 
+public:
   NS_IMETHOD Run()
   {
     if (mTarget) {
@@ -803,11 +811,13 @@ public:
     MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::doom-background");
   }
 
+protected:
   ~DoomFileEvent()
   {
     MOZ_COUNT_DTOR(DoomFileEvent);
   }
 
+public:
   NS_IMETHOD Run()
   {
     if (mTarget) {
@@ -858,11 +868,13 @@ public:
     MOZ_ASSERT(mTarget);
   }
 
+protected:
   ~DoomFileByKeyEvent()
   {
     MOZ_COUNT_DTOR(DoomFileByKeyEvent);
   }
 
+public:
   NS_IMETHOD Run()
   {
     if (mTarget) {
@@ -900,11 +912,13 @@ public:
     MOZ_COUNT_CTOR(ReleaseNSPRHandleEvent);
   }
 
+protected:
   ~ReleaseNSPRHandleEvent()
   {
     MOZ_COUNT_DTOR(ReleaseNSPRHandleEvent);
   }
 
+public:
   NS_IMETHOD Run()
   {
     if (mHandle->mFD && !mHandle->IsClosed()) {
@@ -932,11 +946,13 @@ public:
     mTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
   }
 
+protected:
   ~TruncateSeekSetEOFEvent()
   {
     MOZ_COUNT_DTOR(TruncateSeekSetEOFEvent);
   }
 
+public:
   NS_IMETHOD Run()
   {
     if (mTarget) {
@@ -980,11 +996,13 @@ public:
     mTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
   }
 
+protected:
   ~RenameFileEvent()
   {
     MOZ_COUNT_DTOR(RenameFileEvent);
   }
 
+public:
   NS_IMETHOD Run()
   {
     if (mTarget) {
@@ -1026,11 +1044,13 @@ public:
     MOZ_COUNT_CTOR(InitIndexEntryEvent);
   }
 
+protected:
   ~InitIndexEntryEvent()
   {
     MOZ_COUNT_DTOR(InitIndexEntryEvent);
   }
 
+public:
   NS_IMETHOD Run()
   {
     if (mHandle->IsClosed() || mHandle->IsDoomed()) {
@@ -1075,11 +1095,13 @@ public:
     }
   }
 
+protected:
   ~UpdateIndexEntryEvent()
   {
     MOZ_COUNT_DTOR(UpdateIndexEntryEvent);
   }
 
+public:
   NS_IMETHOD Run()
   {
     if (mHandle->IsClosed() || mHandle->IsDoomed()) {

@@ -24,11 +24,13 @@ class nsHtml5OwningUTF16Buffer : public nsHtml5UTF16Buffer
      */
     nsHtml5OwningUTF16Buffer(void* aKey);
 
+protected:
     /**
      * Takes care of releasing the owned buffer.
      */
     ~nsHtml5OwningUTF16Buffer();
 
+public:
     /**
      * The next buffer in a queue.
      */

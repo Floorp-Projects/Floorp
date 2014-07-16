@@ -73,8 +73,11 @@ public:
    * ClearWidget before the widget dies.
    */
   BasicLayerManager(nsIWidget* aWidget);
+
+protected:
   virtual ~BasicLayerManager();
 
+public:
   /**
    * Set the default target context that will be used when BeginTransaction
    * is called. This can only be called outside a transaction.
