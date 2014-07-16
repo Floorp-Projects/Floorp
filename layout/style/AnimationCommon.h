@@ -26,6 +26,10 @@ class nsIFrame;
 class nsPresContext;
 class nsStyleChangeList;
 
+// X11 has a #define for CurrentTime.
+#ifdef CurrentTime
+#undef CurrentTime
+#endif
 
 namespace mozilla {
 
@@ -307,7 +311,7 @@ struct ComputedTiming
  * Data about one animation (i.e., one of the values of
  * 'animation-name') running on an element.
  */
-struct ElementAnimation
+class ElementAnimation : public nsWrapperCache
 {
 protected:
   virtual ~ElementAnimation() { }
@@ -319,10 +323,18 @@ public:
     , mLastNotification(LAST_NOTIFICATION_NONE)
     , mTimeline(aTimeline)
   {
+    SetIsDOMBinding();
   }
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ElementAnimation)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ElementAnimation)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(ElementAnimation)
+
+  mozilla::dom::AnimationTimeline* GetParentObject() const { return mTimeline; }
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+
+  // AnimationPlayer methods
+  double StartTime() const;
+  double CurrentTime() const;
 
   // FIXME: If we succeed in moving transition-specific code to a type of
   // AnimationEffect (as per the Web Animations API) we should remove these
@@ -357,8 +369,6 @@ public:
   mozilla::TimeDuration GetLocalTimeAt(mozilla::TimeStamp aTime) const {
     MOZ_ASSERT(!IsPaused() || aTime >= mPauseStart,
                "if paused, aTime must be at least mPauseStart");
-    MOZ_ASSERT(!IsFinishedTransition(),
-               "GetLocalTimeAt should not be called on a finished transition");
     return (IsPaused() ? mPauseStart : aTime) - mStartTime;
   }
 
