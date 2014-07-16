@@ -16,10 +16,8 @@ MOZ_PKG_MANIFEST_P += $(topsrcdir)/b2g/installer/package-manifest.in
 endif
 
 # Some files have been already bundled with xulrunner
-ifndef SYSTEM_LIBXUL
 ifndef MOZ_MULET
 MOZ_PKG_FATAL_WARNINGS = 1
-endif
 endif
 
 DEFINES += -DAB_CD=$(AB_CD) -DMOZ_APP_NAME=$(MOZ_APP_NAME) -DPREF_DIR=$(PREF_DIR)

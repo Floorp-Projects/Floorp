@@ -3422,32 +3422,10 @@ MOZ_ARG_HEADER(External Packages)
 
 MOZ_ARG_WITH_STRING(libxul-sdk,
 [  --with-libxul-sdk=PFX   Use the libXUL SDK at <PFX>],
-  LIBXUL_SDK_DIR=$withval)
+  AC_MSG_ERROR([--with-libxul-sdk is not supported anymore.]))
 
-if test "$LIBXUL_SDK_DIR" = "yes"; then
-    AC_MSG_ERROR([--with-libxul-sdk must specify a path])
-elif test -n "$LIBXUL_SDK_DIR" -a "$LIBXUL_SDK_DIR" != "no"; then
-    LIBXUL_SDK=`cd "$LIBXUL_SDK_DIR" && pwd`
-
-    if test ! -f "$LIBXUL_SDK/include/xpcom-config.h"; then
-        AC_MSG_ERROR([$LIBXUL_SDK/include/xpcom-config.h doesn't exist])
-    fi
-
-fi
-AC_SUBST(LIBXUL_SDK)
-
-if test -n "$LIBXUL_SDK"; then
-    LIBXUL_DIST="$LIBXUL_SDK"
-else
-    LIBXUL_DIST="$MOZ_BUILD_ROOT/dist"
-fi
+LIBXUL_DIST="$MOZ_BUILD_ROOT/dist"
 AC_SUBST(LIBXUL_DIST)
-
-SYSTEM_LIBXUL=
-
-MOZ_ARG_WITH_BOOL(system-libxul,
-[  --with-system-libxul    Use system installed libxul SDK],
-    SYSTEM_LIBXUL=1)
 
 dnl ========================================================
 dnl = If NSPR was not detected in the system,
@@ -8730,7 +8708,6 @@ HOST_CXXFLAGS=`echo \
     $HOST_CXXFLAGS \
     $_DEPEND_CFLAGS`
 
-AC_SUBST(SYSTEM_LIBXUL)
 AC_SUBST(MOZ_NATIVE_JPEG)
 AC_SUBST(MOZ_NATIVE_PNG)
 AC_SUBST(MOZ_NATIVE_BZ2)
