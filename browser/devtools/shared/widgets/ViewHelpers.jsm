@@ -504,6 +504,7 @@ function Item(aOwnerView, aElement, aValue, aAttachment) {
 Item.prototype = {
   get value() { return this._value; },
   get target() { return this._target; },
+  get prebuiltNode() { return this._prebuiltNode; },
 
   /**
    * Immediately appends a child item to this item.
