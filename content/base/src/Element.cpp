@@ -12,6 +12,7 @@
 
 #include "mozilla/dom/ElementInlines.h"
 
+#include "AnimationCommon.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Attr.h"
 #include "nsDOMAttributeMap.h"
@@ -2862,6 +2863,36 @@ void
 Element::MozRequestPointerLock()
 {
   OwnerDoc()->RequestPointerLock(this);
+}
+
+void
+Element::GetAnimationPlayers(nsTArray<nsRefPtr<ElementAnimation> >& aPlayers)
+{
+  mozilla::TimeStamp now = OwnerDoc()->Timeline()->GetCurrentTimeStamp();
+  if (now.IsNull()) {
+    // If the timeline doesn't have a current time, return an empty list.
+    return;
+  }
+
+  nsIAtom* properties[] = { nsGkAtoms::transitionsProperty,
+                            nsGkAtoms::animationsProperty };
+  for (size_t propIdx = 0; propIdx < MOZ_ARRAY_LENGTH(properties);
+       propIdx++) {
+    ElementAnimationCollection* collection =
+      static_cast<ElementAnimationCollection*>(
+        GetProperty(properties[propIdx]));
+    if (!collection) {
+      continue;
+    }
+    for (size_t animIdx = 0;
+         animIdx < collection->mAnimations.Length();
+         animIdx++) {
+      ElementAnimation* anim = collection->mAnimations[animIdx];
+      if (anim->IsCurrentAt(now)) {
+        aPlayers.AppendElement(anim);
+      }
+    }
+  }
 }
 
 NS_IMETHODIMP
