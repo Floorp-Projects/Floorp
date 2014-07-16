@@ -26,6 +26,7 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for TextureImage::AddRef, etc
+#include "GfxTexturesReporter.h"
 
 class gfxReusableSurfaceWrapper;
 class gfxImageSurface;
@@ -351,6 +352,14 @@ public:
    */
   virtual void WaitForBufferOwnership() {}
 
+  /**
+   * Track how much of this texture is wasted.
+   * For example we might allocate a 256x256 tile but only use 10x10.
+   */
+   void SetWaste(int aWasteArea) {
+     mWasteTracker.Update(aWasteArea, BytesPerPixel(GetFormat()));
+   }
+
 private:
   /**
    * Called once, just before the destructor.
@@ -393,10 +402,11 @@ protected:
   RefPtr<TextureChild> mActor;
   RefPtr<ISurfaceAllocator> mAllocator;
   TextureFlags mFlags;
-  bool mShared;
-  bool mValid;
   FenceHandle mReleaseFenceHandle;
   FenceHandle mAcquireFenceHandle;
+  gl::GfxTextureWasteTracker mWasteTracker;
+  bool mShared;
+  bool mValid;
 
   friend class TextureChild;
   friend class RemoveTextureFromCompositableTracker;
