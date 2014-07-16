@@ -299,6 +299,7 @@ WEBIDL_FILES = [
     'Promise.webidl',
     'PromiseDebugging.webidl',
     'PushManager.webidl',
+    'RadioNodeList.webidl',
     'Range.webidl',
     'Rect.webidl',
     'ResourceStats.webidl',
