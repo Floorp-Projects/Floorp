@@ -3656,16 +3656,10 @@ JSScript::makeTypes(JSContext *cx)
     if (!typeScript)
         return false;
 
-    new(typeScript) TypeScript();
-
-    TypeSet *typeArray = typeScript->typeArray();
-
-    for (unsigned i = 0; i < count; i++)
-        new (&typeArray[i]) StackTypeSet();
-
     types = typeScript;
 
 #ifdef DEBUG
+    StackTypeSet *typeArray = typeScript->typeArray();
     for (unsigned i = 0; i < nTypeSets(); i++) {
         InferSpew(ISpewOps, "typeSet: %sT%p%s bytecode%u #%u",
                   InferSpewColor(&typeArray[i]), &typeArray[i], InferSpewColorReset(),
