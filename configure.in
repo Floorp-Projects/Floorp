@@ -3867,6 +3867,7 @@ MOZ_GSTREAMER=
 MOZ_DIRECTSHOW=
 MOZ_WMF=
 MOZ_FMP4=
+MOZ_EME=1
 MOZ_FFMPEG=
 MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
@@ -5246,6 +5247,18 @@ if test -n "$MOZ_FMP4"; then
     AC_DEFINE(MOZ_FMP4)
 fi;
 
+dnl ========================================================
+dnl = EME support
+dnl ========================================================
+
+MOZ_ARG_DISABLE_BOOL(eme,
+[  --disable-eme  Disable support for Encrypted Media Extensions],
+    MOZ_EME=,
+    MOZ_EME=1)
+
+if test -n "$MOZ_EME"; then
+    AC_DEFINE(MOZ_EME)
+fi;
 
 dnl ========================================================
 dnl = Enable media plugin support
@@ -8825,6 +8838,7 @@ AC_SUBST(MOZ_WEBM)
 AC_SUBST(MOZ_WMF)
 AC_SUBST(MOZ_FFMPEG)
 AC_SUBST(MOZ_FMP4)
+AC_SUBST(MOZ_EME)
 AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_MEDIA_PLUGINS)
 AC_SUBST(MOZ_APPLEMEDIA)
