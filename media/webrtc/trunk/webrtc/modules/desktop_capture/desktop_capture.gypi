@@ -7,6 +7,9 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 {
+  'variables': {
+    'multi_monitor_screenshare%' : 0,
+  },
   'targets': [
     {
       'target_name': 'desktop_capture',
@@ -54,6 +57,11 @@
         "app_capturer.cc",
       ],
       'conditions': [
+        ['multi_monitor_screenshare != 0', {
+          'defines': [
+            'MULTI_MONITOR_SCREENSHARE'
+          ],
+        }],
         ['OS!="ios" and (target_arch=="ia32" or target_arch=="x64")', {
           'dependencies': [
             'desktop_capture_differ_sse2',
