@@ -51,10 +51,12 @@ if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
 if int(CONFIG['ANDROID_VERSION']) >= 16:
     EXPORTS += [
         'MediaCodecProxy.h',
+        'MediaCodecReader.h',
     ]
     SOURCES += [
         'I420ColorConverterHelper.cpp',
         'MediaCodecProxy.cpp',
+        'MediaCodecReader.cpp',
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
