@@ -433,8 +433,7 @@ ElementAnimation::CurrentTime() const
   // have a *local* time. However, since we have a 1:1 correspondence between
   // AnimationPlayers and Animations, and since the startTime of *Animations*
   // (but not AnimationPlayers) is always 0, these are currently identical.
-  Nullable<TimeDuration> currentTime =
-    GetLocalTimeAt(mTimeline->GetCurrentTimeStamp());
+  Nullable<TimeDuration> currentTime = GetLocalTime();
 
   // The current time is currently only going to be null when don't have a
   // refresh driver (e.g. because we are in a display:none iframe).
@@ -461,8 +460,7 @@ ElementAnimation::IsRunningAt(TimeStamp aTime) const
     return false;
   }
 
-  ComputedTiming computedTiming =
-    GetComputedTimingAt(GetLocalTimeAt(aTime), mTiming);
+  ComputedTiming computedTiming = GetComputedTimingAt(GetLocalTime(), mTiming);
   return computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
 }
 
@@ -473,8 +471,7 @@ ElementAnimation::IsCurrentAt(TimeStamp aTime) const
     return false;
   }
 
-  ComputedTiming computedTiming =
-    GetComputedTimingAt(GetLocalTimeAt(aTime), mTiming);
+  ComputedTiming computedTiming = GetComputedTimingAt(GetLocalTime(), mTiming);
   return computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
          computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
 }
@@ -847,9 +844,9 @@ ElementAnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
         continue;
       }
 
-      // The GetLocalTimeAt() call here handles pausing.  But:
+      // The GetLocalTime() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      Nullable<TimeDuration> localTime = anim->GetLocalTimeAt(aRefreshTime);
+      Nullable<TimeDuration> localTime = anim->GetLocalTime();
       ComputedTiming computedTiming =
         ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
 
@@ -891,9 +888,9 @@ ElementAnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
         continue;
       }
 
-      // The GetLocalTimeAt() call here handles pausing.  But:
+      // The GetLocalTime() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      Nullable<TimeDuration> localTime = anim->GetLocalTimeAt(aRefreshTime);
+      Nullable<TimeDuration> localTime = anim->GetLocalTime();
       ComputedTiming computedTiming =
         ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
 

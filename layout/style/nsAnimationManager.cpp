@@ -31,21 +31,21 @@ nsAnimationManager::UpdateStyleAndEvents(ElementAnimationCollection*
                                          EnsureStyleRuleFlags aFlags)
 {
   aCollection->EnsureStyleRuleFor(aRefreshTime, aFlags);
-  GetEventsAt(aCollection, aRefreshTime, mPendingEvents);
+  GetEventsForCurrentTime(aCollection, mPendingEvents);
   CheckNeedsRefresh();
 }
 
 void
-nsAnimationManager::GetEventsAt(ElementAnimationCollection* aCollection,
-                                TimeStamp aRefreshTime,
-                                EventArray& aEventsToDispatch)
+nsAnimationManager::GetEventsForCurrentTime(ElementAnimationCollection*
+                                              aCollection,
+                                            EventArray& aEventsToDispatch)
 {
   for (uint32_t animIdx = aCollection->mAnimations.Length(); animIdx-- != 0; ) {
     ElementAnimation* anim = aCollection->mAnimations[animIdx];
 
-    Nullable<TimeDuration> localTime = anim->GetLocalTimeAt(aRefreshTime);
     ComputedTiming computedTiming =
-      ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
+      ElementAnimation::GetComputedTimingAt(anim->GetLocalTime(),
+                                            anim->mTiming);
 
     switch (computedTiming.mPhase) {
       case ComputedTiming::AnimationPhase_Null:
@@ -253,8 +253,6 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
       return nullptr;
     }
 
-    TimeStamp refreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
-
     if (collection) {
       collection->mStyleRule = nullptr;
       collection->mStyleRuleRefreshTime = TimeStamp();
@@ -306,7 +304,13 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
             } else {
               // Handle change in pause state by adjusting start
               // time to unpause.
-              newAnim->mStartTime += refreshTime - oldAnim->mPauseStart;
+              const TimeStamp& now = timeline->GetCurrentTimeStamp();
+              if (!now.IsNull()) {
+                // FIXME: Once we store the start time and pause start as
+                // offsets (not timestamps) we should be able to update the
+                // start time to something more appropriate when now IsNull.
+                newAnim->mStartTime += now - oldAnim->mPauseStart;
+              }
             }
           }
         }
@@ -318,6 +322,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     collection->mAnimations.SwapElements(newAnimations);
     collection->mNeedsRefreshes = true;
 
+    TimeStamp refreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
     UpdateStyleAndEvents(collection, refreshTime,
                          EnsureStyleRule_IsNotThrottled);
     // We don't actually dispatch the mPendingEvents now.  We'll either
@@ -393,7 +398,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
   ResolvedStyleCache resolvedStyles;
 
   const nsStyleDisplay *disp = aStyleContext->StyleDisplay();
-  TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
+  TimeStamp now = aTimeline->GetCurrentTimeStamp();
+
   for (uint32_t animIdx = 0, animEnd = disp->mAnimationNameCount;
        animIdx != animEnd; ++animIdx) {
     const StyleAnimation& src = disp->mAnimations[animIdx];
