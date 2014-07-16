@@ -895,7 +895,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         // be unset if the code never needed to push its JitCode*.
         if (hasEnteredExitFrame()) {
             exitCodePatch_.fixup(this);
-            PatchDataWithValueCheck(CodeLocationLabel(code, exitCodePatch_),
+            patchDataWithValueCheck(CodeLocationLabel(code, exitCodePatch_),
                                     ImmPtr(code),
                                     ImmPtr((void*)-1));
         }
