@@ -18,9 +18,12 @@
 #include "nsIAudioChannelAgent.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/AudioChannelBinding.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TextTrackManager.h"
 #include "MediaDecoder.h"
+#ifdef MOZ_EME
 #include "mozilla/dom/MediaKeys.h"
+#endif
 
 // Something on Linux #defines None, which is an entry in the
 // MediaWaitingFor enum, so undef it here before including the binfing,
@@ -521,6 +524,7 @@ public:
 
   // XPCOM MozPreservesPitch() is OK
 
+#ifdef MOZ_EME
   MediaKeys* GetMediaKeys() const;
 
   already_AddRefed<Promise> SetMediaKeys(MediaKeys* mediaKeys,
@@ -536,6 +540,7 @@ public:
 
 
   bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
+#endif // MOZ_EME
 
   bool MozAutoplayEnabled() const
   {
@@ -1076,8 +1081,10 @@ protected:
   // Range of time played.
   nsRefPtr<TimeRanges> mPlayed;
 
+#ifdef MOZ_EME
   // Encrypted Media Extension media keys.
   nsRefPtr<MediaKeys> mMediaKeys;
+#endif
 
   // Stores the time at the start of the current 'played' range.
   double mCurrentPlayRangeStart;
