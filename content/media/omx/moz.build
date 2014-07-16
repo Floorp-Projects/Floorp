@@ -13,6 +13,7 @@ EXPORTS += [
 SOURCES += [
     'MediaOmxDecoder.cpp',
     'MediaOmxReader.cpp',
+    'MediaStreamSource.cpp',
     'OMXCodecProxy.cpp',
     'OmxDecoder.cpp',
 ]
