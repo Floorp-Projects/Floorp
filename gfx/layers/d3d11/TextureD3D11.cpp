@@ -310,12 +310,19 @@ DXGITextureHostD3D11::DXGITextureHostD3D11(TextureFlags aFlags,
   , mHandle(aDescriptor.handle())
   , mFormat(aDescriptor.format())
   , mIsLocked(false)
-{}
+{
+  HRESULT hr = GetDevice()->OpenSharedResource((HANDLE)mHandle,
+                                               __uuidof(ID3D11Texture2D),
+                                               (void**)(ID3D11Texture2D**)byRef(mTexture));
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to open shared texture");
+  }
+}
 
 ID3D11Device*
 DXGITextureHostD3D11::GetDevice()
 {
-  return mCompositor ? mCompositor->GetDevice() : nullptr;
+  return gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
 }
 
 void
@@ -332,16 +339,11 @@ DXGITextureHostD3D11::Lock()
     return false;
   }
   if (!mTextureSource) {
-    RefPtr<ID3D11Texture2D> tex;
-    HRESULT hr = GetDevice()->OpenSharedResource((HANDLE)mHandle,
-                                                 __uuidof(ID3D11Texture2D),
-                                                 (void**)(ID3D11Texture2D**)byRef(tex));
-    if (FAILED(hr)) {
-      NS_WARNING("Failed to open shared texture");
+    if (!mTexture) {
       return false;
     }
 
-    mTextureSource = new DataTextureSourceD3D11(mFormat, mCompositor, tex);
+    mTextureSource = new DataTextureSourceD3D11(mFormat, mCompositor, mTexture);
     D3D11_TEXTURE2D_DESC desc;
     tex->GetDesc(&desc);
     mSize = IntSize(desc.Width, desc.Height);
