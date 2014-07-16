@@ -35,7 +35,7 @@ import android.util.Log;
 final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
     private static final String LOGTAG = "GeckoBrowserDBHelper";
-    public static final int DATABASE_VERSION = 20;
+    public static final int DATABASE_VERSION = 21;
     public static final String DATABASE_NAME = "browser.db";
 
     final protected Context mContext;
@@ -744,6 +744,10 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         debug("Creating browser.db: " + db.getPath());
+
+        for (Table table : BrowserProvider.sTables) {
+            table.onCreate(db);
+        }
 
         createBookmarksTableOn13(db);
         createHistoryTableOn13(db);
@@ -1511,6 +1515,10 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                     upgradeDatabaseFrom19to20(db);
                     break;
             }
+        }
+
+        for (Table table : BrowserProvider.sTables) {
+            table.onUpgrade(db, oldVersion, newVersion);
         }
 
         // If an upgrade after 12->13 fails, the entire upgrade is rolled

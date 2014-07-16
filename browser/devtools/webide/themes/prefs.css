@@ -1,0 +1,54 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html {
+  font: message-box;
+  font-size: 15px;
+  font-weight: normal;
+  margin: 0;
+  color: #737980;
+  background-image: linear-gradient(#fff, #ededed 100px);
+  height: 100%;
+}
+
+body {
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.5em;
+  font-weight: lighter;
+  line-height: 1.2;
+  margin: 0;
+  margin-bottom: .5em;
+}
+
+#controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+#controls > a {
+  color: #4C9ED9;
+  font-size: small;
+  cursor: pointer;
+  border-bottom: 1px dotted;
+}
+
+#close {
+  margin-left: 10px;
+}
+
+li {
+  list-style: none;
+}
+
+li > label:hover {
+  background-color: rgba(0,0,0,0.02);
+}
+
+li > label > span {
+  display: inline-block;
+}

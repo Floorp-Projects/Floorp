@@ -13,6 +13,7 @@ jar.sources += [
     'src/tests/BrowserTestCase.java',
     'src/tests/TestDistribution.java',
     'src/tests/TestGeckoSharedPrefs.java',
+    'src/tests/TestImageDownloader.java',
     'src/tests/TestJarReader.java',
     'src/tests/TestRawResource.java',
     'src/tests/TestSuggestedSites.java',

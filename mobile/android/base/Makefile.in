@@ -97,6 +97,12 @@ ALL_JARS += search-activity.jar
 generated/org/mozilla/search/R.java: .aapt.deps ;
 endif
 
+ifdef MOZ_ANDROID_MLS_STUMBLER
+extra_packages += org.mozilla.mozstumbler
+ALL_JARS += ../stumbler/stumbler.jar
+generated/org/mozilla/mozstumbler/R.java: .aapt.deps ;
+endif
+
 include $(topsrcdir)/config/config.mk
 
 # Note that we're going to set up a dependency directly between embed_android.dex and the java files
