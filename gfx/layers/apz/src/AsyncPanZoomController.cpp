@@ -405,26 +405,6 @@ GetFrameTime() {
   return sFrameTime;
 }
 
-static pthread_t sControllerThread;
-
-static void
-AssertOnControllerThread() {
-  if (!AsyncPanZoomController::GetThreadAssertionsEnabled()) {
-    return;
-  }
-
-  static bool sControllerThreadDetermined = false;
-  if (!sControllerThreadDetermined) {
-    // Technically this may not actually pick up the correct controller thread,
-    // if the first call to this method happens from a non-controller thread.
-    // If the assertion below fires, it is possible that it is because
-    // sControllerThread is not actually the controller thread.
-    sControllerThread = pthread_self();
-    sControllerThreadDetermined = true;
-  }
-  MOZ_ASSERT(pthread_equal(sControllerThread, pthread_self()) != 0);
-}
-
 class FlingAnimation: public AsyncPanZoomAnimation {
 public:
   FlingAnimation(AsyncPanZoomController& aApzc,
@@ -816,8 +796,6 @@ AsyncPanZoomController::GetTouchStartTolerance()
 }
 
 nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent) {
-  AssertOnControllerThread();
-
   if (aEvent.mInputType != MULTITOUCH_INPUT) {
     return HandleInputEvent(aEvent);
   }
@@ -865,8 +843,6 @@ nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent)
 }
 
 nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) {
-  AssertOnControllerThread();
-
   nsEventStatus rv = nsEventStatus_eIgnore;
 
   switch (aEvent.mInputType) {
@@ -913,8 +889,6 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) 
 
 nsEventStatus AsyncPanZoomController::HandleGestureEvent(const InputData& aEvent)
 {
-  AssertOnControllerThread();
-
   nsEventStatus rv = nsEventStatus_eIgnore;
 
   switch (aEvent.mInputType) {
@@ -2496,8 +2470,6 @@ AsyncPanZoomController::ScheduleContentResponseTimeout() {
 
 void
 AsyncPanZoomController::ContentResponseTimeout() {
-  AssertOnControllerThread();
-
   mTouchBlockBalance++;
   APZC_LOG("%p got a content response timeout; balance %d\n", this, mTouchBlockBalance);
   if (mTouchBlockBalance > 0) {
@@ -2520,8 +2492,6 @@ AsyncPanZoomController::ContentResponseTimeout() {
 
 void
 AsyncPanZoomController::ContentReceivedTouch(bool aPreventDefault) {
-  AssertOnControllerThread();
-
   mTouchBlockBalance--;
   APZC_LOG("%p got a content response; balance %d\n", this, mTouchBlockBalance);
   if (mTouchBlockBalance < 0) {
@@ -2544,8 +2514,6 @@ AsyncPanZoomController::ContentReceivedTouch(bool aPreventDefault) {
 
 void
 AsyncPanZoomController::SetAllowedTouchBehavior(const nsTArray<TouchBehaviorFlags>& aBehaviors) {
-  AssertOnControllerThread();
-
   bool found = false;
   for (size_t i = 0; i < mTouchBlockQueue.Length(); i++) {
     if (mTouchBlockQueue[i]->SetAllowedTouchBehaviors(aBehaviors)) {
@@ -2562,8 +2530,6 @@ AsyncPanZoomController::SetAllowedTouchBehavior(const nsTArray<TouchBehaviorFlag
 
 void
 AsyncPanZoomController::ProcessPendingInputBlocks() {
-  AssertOnControllerThread();
-
   while (true) {
     TouchBlockState* curBlock = CurrentTouchBlock();
     if (!curBlock->IsReadyForHandling()) {
@@ -2624,8 +2590,6 @@ AsyncPanZoomController::StartNewTouchBlock(bool aCopyAllowedTouchBehaviorFromCur
 TouchBlockState*
 AsyncPanZoomController::CurrentTouchBlock()
 {
-  AssertOnControllerThread();
-
   MOZ_ASSERT(!mTouchBlockQueue.IsEmpty());
   return mTouchBlockQueue[0].get();
 }
