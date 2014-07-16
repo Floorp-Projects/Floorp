@@ -139,10 +139,9 @@ uint32_t GetARMFlags()
                 flags = aux.a_un.a_val;
                 isSet = true;
 #if defined(__ARM_ARCH_7__) || defined (__ARM_ARCH_7A__)
-                // this should really be detected at runtime, but
-                // /proc/*/auxv doesn't seem to carry the ISA
-                // I could look in /proc/cpuinfo as well, but
-                // the chances that it will be different from this
+                // This should really be detected at runtime, but /proc/*/auxv
+                // doesn't seem to carry the ISA. We could look in /proc/cpuinfo
+                // as well, but the chances that it will be different from this
                 // are low.
                 flags |= HWCAP_ARMv7;
 #endif
@@ -201,8 +200,8 @@ uint32_t GetARMFlags()
     if (strstr(buf, " neon "))
         flags |= HWCAP_NEON;
 
-    // not part of the HWCAP flag, but I need to know this, and we're not using
-    //  that bit, so... I'm using it
+    // Not part of the HWCAP flag, but we need to know this, and we're not using
+    // that bit, so... we are using it.
     if (strstr(buf, "ARMv7"))
         flags |= HWCAP_ARMv7;
 
@@ -218,29 +217,29 @@ uint32_t GetARMFlags()
 #endif // JS_ARM_SIMULATOR
 }
 
-bool hasMOVWT()
+bool HasMOVWT()
 {
     return GetARMFlags() & HWCAP_ARMv7;
 }
-bool hasVFPv3()
+bool HasVFPv3()
 {
     return GetARMFlags() & HWCAP_VFPv3;
 }
-bool hasVFP()
+bool HasVFP()
 {
     return GetARMFlags() & HWCAP_VFP;
 }
 
-bool has32DP()
+bool Has32DP()
 {
     return !(GetARMFlags() & HWCAP_VFPv3D16 && !(GetARMFlags() & HWCAP_NEON));
 }
-bool useConvReg()
+bool UseConvReg()
 {
-    return has32DP();
+    return Has32DP();
 }
 
-bool hasIDIV()
+bool HasIDIV()
 {
 #if defined HWCAP_IDIVA
     return GetARMFlags() & HWCAP_IDIVA;
@@ -251,7 +250,7 @@ bool hasIDIV()
 
 // This is defined in the header and inlined when not using the simulator.
 #if defined(JS_ARM_SIMULATOR)
-bool useHardFpABI()
+bool UseHardFpABI()
 {
     return GetARMFlags() & HWCAP_USE_HARDFP_ABI;
 }

@@ -1576,7 +1576,7 @@ class MOZ_STACK_CLASS ModuleCompiler
                 if (!module_->addRelativeLink(link))
                     return false;
 
-                labelOffset = Assembler::extractCodeLabelOffset(module_->codeBase() +
+                labelOffset = Assembler::ExtractCodeLabelOffset(module_->codeBase() +
                                                                 patchAtOffset);
             }
         }
@@ -6933,7 +6933,7 @@ GenerateInterruptExit(ModuleCompiler &m, Label *throwLabel)
 
     // Pop resumePC into PC. Clobber HeapReg to make the jump and restore it
     // during jump delay slot.
-    JS_ASSERT(Imm16::isInSignedRange(m.module().heapOffset()));
+    JS_ASSERT(Imm16::IsInSignedRange(m.module().heapOffset()));
     masm.pop(HeapReg);
     masm.as_jr(HeapReg);
     masm.loadPtr(Address(GlobalReg, m.module().heapOffset()), HeapReg);

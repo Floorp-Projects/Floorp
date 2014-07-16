@@ -46,7 +46,7 @@ MoveEmitterARM::cycleSlot() const
     return Operand(StackPointer, offset);
 }
 
-// THIS IS ALWAYS AN LDRAddr.  It should not be wrapped in an operand, methinks
+// THIS IS ALWAYS AN LDRAddr. It should not be wrapped in an operand, methinks.
 Operand
 MoveEmitterARM::spillSlot() const
 {
@@ -83,12 +83,12 @@ MoveEmitterARM::tempReg()
     if (spilledReg_ != InvalidReg)
         return spilledReg_;
 
-    // For now, just pick r12/ip as the eviction point. This is totally
-    // random, and if it ends up being bad, we can use actual heuristics later.
-    // r12 is actually a bad choice.  it is the scratch register, which is frequently
-    // used for address computations, such as those found when we attempt to access
-    // values more than 4096 off of the stack pointer.
-    // instead, use lr, the LinkRegister.
+    // For now, just pick r12/ip as the eviction point. This is totally random,
+    // and if it ends up being bad, we can use actual heuristics later. r12 is
+    // actually a bad choice. It is the scratch register, which is frequently
+    // used for address computations, such as those found when we attempt to
+    // access values more than 4096 off of the stack pointer. Instead, use lr,
+    // the LinkRegister.
     spilledReg_ = r14;
     if (pushedAtSpill_ == -1) {
         masm.Push(spilledReg_);
