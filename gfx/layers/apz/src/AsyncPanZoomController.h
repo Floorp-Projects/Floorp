@@ -719,6 +719,7 @@ private:
 
 private:
   // The queue of touch blocks that have not yet been processed by this APZC.
+  // This member must only be accessed on the controller/UI thread.
   nsTArray<UniquePtr<TouchBlockState>> mTouchBlockQueue;
 
   // This variable requires some explanation. Strap yourself in.
@@ -767,6 +768,8 @@ private:
   // Therefore the information in that block is lost. An alternative approach would
   // be to keep around those blocks until they have received both the content response
   // and timeout expiration, but that involves a higher level of memory usage.
+  //
+  // This member must only be accessed on the controller/UI thread.
   int32_t mTouchBlockBalance;
 
 
