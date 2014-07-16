@@ -44,13 +44,11 @@ ElementPropertyTransition::CurrentValuePortion() const
   // transitions.
   MOZ_ASSERT(!IsFinishedTransition(),
              "Getting the value portion of a finished transition");
-
-  Nullable<TimeDuration> localTime = GetLocalTime();
-  MOZ_ASSERT(!localTime.IsNull(),
+  MOZ_ASSERT(!GetLocalTime().IsNull(),
              "Getting the value portion of an animation that's not being "
              "sampled");
 
-  // Transitions use a fill mode of 'backwards' so GetComputedTimingAt will
+  // Transitions use a fill mode of 'backwards' so GetComputedTiming will
   // never return a null time fraction due to being *before* the animation
   // interval. However, it might be possible that we're behind on flushing
   // causing us to get called *after* the animation interval. So, just in
@@ -58,7 +56,7 @@ ElementPropertyTransition::CurrentValuePortion() const
   // is never null.
   AnimationTiming timingToUse = mTiming;
   timingToUse.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BOTH;
-  ComputedTiming computedTiming = GetComputedTimingAt(localTime, timingToUse);
+  ComputedTiming computedTiming = GetComputedTiming(timingToUse);
 
   MOZ_ASSERT(computedTiming.mTimeFraction != ComputedTiming::kNullTimeFraction,
              "Got a null time fraction for a fill mode of 'both'");
@@ -820,9 +818,8 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
             collection->mAnimations.RemoveElementAt(i);
           }
         } else {
-          Nullable<TimeDuration> localTime = anim->GetLocalTime();
           ComputedTiming computedTiming =
-            ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
+            anim->GetComputedTiming(anim->mTiming);
           if (computedTiming.mPhase == ComputedTiming::AnimationPhase_After) {
             MOZ_ASSERT(anim->mProperties.Length() == 1,
                        "Should have one animation property for a transition");
