@@ -218,7 +218,7 @@ BaselineCompiler::compile()
         label.fixup(&masm);
         size_t icEntry = icLoadLabels_[i].icEntry;
         ICEntry *entryAddr = &(baselineScript->icEntry(icEntry));
-        Assembler::patchDataWithValueCheck(CodeLocationLabel(code, label),
+        Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, label),
                                            ImmPtr(entryAddr),
                                            ImmPtr((void*)-1));
     }

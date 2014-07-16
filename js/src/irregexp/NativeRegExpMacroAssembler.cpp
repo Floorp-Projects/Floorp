@@ -455,7 +455,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
         JS_ASSERT(!v.label);
         v.patchOffset.fixup(&masm);
         uintptr_t offset = masm.actualOffset(v.labelOffset);
-        Assembler::patchDataWithValueCheck(CodeLocationLabel(code, v.patchOffset),
+        Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, v.patchOffset),
                                            ImmPtr(code->raw() + offset),
                                            ImmPtr(0));
     }

@@ -12,7 +12,8 @@
 
 #include "js/Utility.h"
 
-// gcc appears to use __ARM_PCS_VFP to denote that the target is a hard-float target.
+// Gcc appears to use __ARM_PCS_VFP to denote that the target is a hard-float
+// target.
 #if defined(__ARM_PCS_VFP)
 #define JS_CODEGEN_ARM_HARDFP
 #endif
@@ -36,11 +37,11 @@ static const uint32_t ShadowStackSpace = 0;
 // These offsets are related to bailouts.
 ////
 
-// Size of each bailout table entry. On arm, this is presently
-// a single call (which is wrong!). the call clobbers lr.
-// For now, I've dealt with this by ensuring that we never allocate to lr.
-// it should probably be 8 bytes, a mov of an immediate into r12 (not
-// allocated presently, or ever) followed by a branch to the apropriate code.
+// Size of each bailout table entry. On arm, this is presently a single call
+// (which is wrong!). The call clobbers lr.
+// For now, I've dealt with this by ensuring that we never allocate to lr. It
+// should probably be 8 bytes, a mov of an immediate into r12 (not allocated
+// presently, or ever) followed by a branch to the apropriate code.
 static const uint32_t BAILOUT_TABLE_ENTRY_SIZE    = 4;
 
 class Registers
@@ -137,7 +138,7 @@ class Registers
     // Registers returned from a JS -> C call.
     static const uint32_t CallMask =
         (1 << Registers::r0) |
-        (1 << Registers::r1);  // used for double-size returns
+        (1 << Registers::r1);  // Used for double-size returns.
 
     static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
 };
@@ -227,18 +228,19 @@ class FloatRegisters
 };
 
 uint32_t GetARMFlags();
-bool hasMOVWT();
-bool hasVFPv3();
-bool hasVFP();
-bool has16DP();
-bool hasIDIV();
+bool HasMOVWT();
+bool HasVFPv3();
+bool HasVFP();
+bool Has16DP();
+bool HasIDIV();
 
-// If the simulator is used then the ABI choice is dynamic.  Otherwise the ABI is static
-// and useHardFpABI is inlined so that unused branches can be optimized away.
+// If the simulator is used then the ABI choice is dynamic. Otherwise the ABI is
+// static and useHardFpABI is inlined so that unused branches can be optimized
+// away.
 #if defined(JS_ARM_SIMULATOR)
-bool useHardFpABI();
+bool UseHardFpABI();
 #else
-static inline bool useHardFpABI()
+static inline bool UseHardFpABI()
 {
 #if defined(JS_CODEGEN_ARM_HARDFP)
     return true;

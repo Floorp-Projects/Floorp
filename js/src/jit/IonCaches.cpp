@@ -246,7 +246,7 @@ class IonCache::StubAttacher
     void patchStubCodePointer(MacroAssembler &masm, JitCode *code) {
         if (hasStubCodePatchOffset_) {
             stubCodePatchOffset_.fixup(&masm);
-            Assembler::patchDataWithValueCheck(CodeLocationLabel(code, stubCodePatchOffset_),
+            Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, stubCodePatchOffset_),
                                                ImmPtr(code), STUB_ADDR);
         }
     }
@@ -373,7 +373,7 @@ DispatchIonCache::updateBaseAddress(JitCode *code, MacroAssembler &masm)
 
     IonCache::updateBaseAddress(code, masm);
     dispatchLabel_.fixup(&masm);
-    Assembler::patchDataWithValueCheck(CodeLocationLabel(code, dispatchLabel_),
+    Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, dispatchLabel_),
                                        ImmPtr(&firstStub_),
                                        ImmPtr((void*)-1));
     firstStub_ = fallbackLabel_.raw();

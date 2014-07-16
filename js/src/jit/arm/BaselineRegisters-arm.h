@@ -23,16 +23,14 @@ static MOZ_CONSTEXPR_VAR Register BaselineFrameReg = r11;
 static MOZ_CONSTEXPR_VAR Register BaselineStackReg = sp;
 
 // ValueOperands R0, R1, and R2.
-// R0 == JSReturnReg, and R2 uses registers not
-// preserved across calls.  R1 value should be
-// preserved across calls.
+// R0 == JSReturnReg, and R2 uses registers not preserved across calls. R1 value
+// should be preserved across calls.
 static MOZ_CONSTEXPR_VAR ValueOperand R0(r3, r2);
 static MOZ_CONSTEXPR_VAR ValueOperand R1(r5, r4);
 static MOZ_CONSTEXPR_VAR ValueOperand R2(r1, r0);
 
 // BaselineTailCallReg and BaselineStubReg
-// These use registers that are not preserved across
-// calls.
+// These use registers that are not preserved across calls.
 static MOZ_CONSTEXPR_VAR Register BaselineTailCallReg = r14;
 static MOZ_CONSTEXPR_VAR Register BaselineStubReg     = r9;
 
@@ -44,9 +42,9 @@ static MOZ_CONSTEXPR_VAR Register BaselineSecondScratchReg = r6;
 
 // R7 - R9 are generally available for use within stubcode.
 
-// Note that BaselineTailCallReg is actually just the link
-// register.  In ARM code emission, we do not clobber BaselineTailCallReg
-// since we keep the return address for calls there.
+// Note that BaselineTailCallReg is actually just the link register. In ARM code
+// emission, we do not clobber BaselineTailCallReg since we keep the return
+// address for calls there.
 
 // FloatReg0 must be equal to ReturnFloatReg.
 static MOZ_CONSTEXPR_VAR FloatRegister FloatReg0      = d0;
