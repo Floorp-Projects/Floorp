@@ -1511,11 +1511,16 @@ pref("shumway.disabled", true);
 // (This is intentionally on the high side; see bug 746055.)
 pref("image.mem.max_decoded_image_kb", 256000);
 
-#ifdef MOZ_LOOP
+// Enable by default on nightly and aurora.
+#ifndef RELEASE_BUILD
+pref("loop.enabled", true);
+#else
+pref("loop.enabled", false);
+#endif
+
 pref("loop.server", "https://loop.services.mozilla.com");
 pref("loop.do_not_disturb", false);
 pref("loop.ringtone", "chrome://browser/content/loop/shared/sounds/Firefox-Long.ogg");
-#endif
 
 // serverURL to be assigned by services team
 pref("services.push.serverURL", "wss://push.services.mozilla.com/");
