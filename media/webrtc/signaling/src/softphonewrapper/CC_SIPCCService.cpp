@@ -560,7 +560,7 @@ void CC_SIPCCService::endAllActiveCalls()
 	{
 		CC_DeviceInfoPtr deviceInfo = device->getDeviceInfo();
 		vector<CC_CallPtr> calls = deviceInfo->getCalls();
-		CSFLogInfo( logTag, "endAllActiveCalls(): %lu calls to be ended.", calls.size());
+		CSFLogInfo( logTag, "endAllActiveCalls(): %zu calls to be ended.", calls.size());
 		for(vector<CC_CallPtr>::iterator it = calls.begin(); it != calls.end(); it++)
 		{
 			// For each active call, if it can be ended, do so.
