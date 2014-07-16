@@ -2868,12 +2868,6 @@ Element::MozRequestPointerLock()
 void
 Element::GetAnimationPlayers(nsTArray<nsRefPtr<ElementAnimation> >& aPlayers)
 {
-  mozilla::TimeStamp now = OwnerDoc()->Timeline()->GetCurrentTimeStamp();
-  if (now.IsNull()) {
-    // If the timeline doesn't have a current time, return an empty list.
-    return;
-  }
-
   nsIAtom* properties[] = { nsGkAtoms::transitionsProperty,
                             nsGkAtoms::animationsProperty };
   for (size_t propIdx = 0; propIdx < MOZ_ARRAY_LENGTH(properties);
@@ -2888,7 +2882,7 @@ Element::GetAnimationPlayers(nsTArray<nsRefPtr<ElementAnimation> >& aPlayers)
          animIdx < collection->mAnimations.Length();
          animIdx++) {
       ElementAnimation* anim = collection->mAnimations[animIdx];
-      if (anim->IsCurrentAt(now)) {
+      if (anim->IsCurrent()) {
         aPlayers.AppendElement(anim);
       }
     }
