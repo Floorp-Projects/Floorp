@@ -137,6 +137,13 @@
                 <action android:name="org.mozilla.gecko.ACTION_ALERT_CALLBACK" />
             </intent-filter>
 
+            <!-- Notification API V2 -->
+            <intent-filter>
+                <action android:name="@ANDROID_PACKAGE_NAME@.helperBroadcastAction" />
+                <data android:scheme="moz-notification" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
             <intent-filter>
                 <action android:name="org.mozilla.gecko.UPDATE"/>
                 <category android:name="android.intent.category.DEFAULT" />
@@ -412,6 +419,9 @@
 #include ../services/manifests/SyncAndroidManifest_services.xml.in
 #ifdef MOZ_ANDROID_SEARCH_ACTIVITY
 #include ../search/manifests/SearchAndroidManifest_services.xml.in
+#endif
+#ifdef MOZ_ANDROID_MLS_STUMBLER
+#include ../stumbler/manifests/StumblerManifest_services.xml.in
 #endif
 
     </application>

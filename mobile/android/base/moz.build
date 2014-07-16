@@ -138,6 +138,7 @@ gbjar.sources += [
     'DataReportingNotification.java',
     'db/AbstractPerProfileDatabaseProvider.java',
     'db/AbstractTransactionalProvider.java',
+    'db/BaseTable.java',
     'db/BrowserContract.java',
     'db/BrowserDatabaseHelper.java',
     'db/BrowserDB.java',
@@ -154,8 +155,11 @@ gbjar.sources += [
     'db/SharedBrowserDatabaseProvider.java',
     'db/SQLiteBridgeContentProvider.java',
     'db/SuggestedSites.java',
+    'db/Table.java',
     'db/TabsProvider.java',
     'db/TopSitesCursorWrapper.java',
+    'db/URLMetadata.java',
+    'db/URLMetadataTable.java',
     'distribution/Distribution.java',
     'distribution/ReferrerDescriptor.java',
     'distribution/ReferrerReceiver.java',
@@ -274,6 +278,7 @@ gbjar.sources += [
     'home/HomePagerTabStrip.java',
     'home/HomePanelPicker.java',
     'home/HomePanelsManager.java',
+    'home/ImageLoader.java',
     'home/MultiTypeCursorAdapter.java',
     'home/PanelAuthCache.java',
     'home/PanelAuthLayout.java',
@@ -531,7 +536,7 @@ ANDROID_GENERATED_RESFILES += [
 ]
 
 for var in ('MOZ_ANDROID_ANR_REPORTER', 'MOZ_LINKER_EXTRACT', 'MOZILLA_OFFICIAL', 'MOZ_DEBUG',
-            'MOZ_ANDROID_SEARCH_ACTIVITY', 'MOZ_NATIVE_DEVICES'):
+            'MOZ_ANDROID_SEARCH_ACTIVITY', 'MOZ_NATIVE_DEVICES', 'MOZ_ANDROID_MLS_STUMBLER'):
     if CONFIG[var]:
         DEFINES[var] = 1
 
@@ -645,7 +650,7 @@ for d in ['app', 'chrome', 'components', 'locales', 'modules', 'themes']:
 
 # The omnijar is included in the Fennec APK (although it's empty,
 # having no resources, assets, or Java code).
-main.included_projects += [omnijar.name]
+main.included_projects += ['../' + omnijar.name]
 
 if CONFIG['MOZ_CRASHREPORTER']:
     crashreporter = add_android_eclipse_library_project('FennecResourcesCrashReporter')
@@ -654,3 +659,7 @@ if CONFIG['MOZ_CRASHREPORTER']:
     crashreporter.included_projects += ['../' + resources.name]
 
     main.included_projects += ['../' + crashreporter.name]
+
+if CONFIG['MOZ_ANDROID_MLS_STUMBLER']:
+    main.included_projects += ['../FennecStumbler']
+    main.referenced_projects += ['../FennecStumbler']
