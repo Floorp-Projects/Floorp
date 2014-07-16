@@ -298,6 +298,8 @@ nsLayoutStatics::Initialize()
 
   CameraPreferences::Initialize();
 
+  IMEStateManager::Init();
+
   return NS_OK;
 }
 
