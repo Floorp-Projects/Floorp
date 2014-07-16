@@ -27,8 +27,6 @@
   "magazineluiza.com.br": "\\(Mobile#(Android; Mobile",
   // bug 827628, groupon.com.br
   "groupon.com.br": "\\(Mobile#(Android; Mobile",
-  // bug 827632, tecmundo.com.br
-  "tecmundo.com.br": "\\(Mobile#(Android; Mobile",
   // bug 827633, hao123.com
   "hao123.com": "\\(Mobile#(Android; Mobile",
   // bug 827573, webmotors.com.br
@@ -91,8 +89,6 @@
   "livescore.com": "\\(Mobile#(Android; Mobile",
   // bug 878277, naslovi.net
   "naslovi.net": "\\(Mobile#(Android; Mobile",
-  // bug 878632, banorte.com
-  "banorte.com": "\\(Mobile#(Android; Mobile",
   // bug 878649, univision.com
   "univision.com": "\\(Mobile#(Android; Mobile",
   // bug 878653, redstarbelgrade.info

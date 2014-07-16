@@ -292,6 +292,10 @@ NS_IMETHODIMP
 nsWindowDataSource::GetWindowForResource(const char *aResourceString,
                                          nsIDOMWindow** aResult)
 {
+    if (NS_WARN_IF(!aResourceString)) {
+        return NS_ERROR_INVALID_ARG;
+    }
+
     nsCOMPtr<nsIRDFResource> windowResource;
     gRDFService->GetResource(nsDependentCString(aResourceString),
                              getter_AddRefs(windowResource));

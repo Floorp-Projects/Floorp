@@ -22,10 +22,12 @@
 #include "VideoUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIPrefService.h"
+#include "MediaTrackConstraints.h"
 
 namespace mozilla {
 
 using namespace mozilla::gfx;
+using dom::ConstrainLongRange;
 
 NS_IMPL_ISUPPORTS(MediaEngineTabVideoSource, nsIDOMEventListener, nsITimerCallback)
 
@@ -38,13 +40,8 @@ nsresult
 MediaEngineTabVideoSource::StartRunnable::Run()
 {
   mVideoSource->Draw();
-  nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(mVideoSource->mWindow);
-  if (privateDOMWindow) {
-    privateDOMWindow->GetChromeEventHandler()->AddEventListener(NS_LITERAL_STRING("MozAfterPaint"), mVideoSource, false);
-  } else {
-    mVideoSource->mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    mVideoSource->mTimer->InitWithCallback(mVideoSource, mVideoSource->mTimePerFrame, nsITimer:: TYPE_REPEATING_SLACK);
-  }
+  mVideoSource->mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  mVideoSource->mTimer->InitWithCallback(mVideoSource, mVideoSource->mTimePerFrame, nsITimer:: TYPE_REPEATING_SLACK);
   mVideoSource->mTabSource->NotifyStreamStart(mVideoSource->mWindow);
   return NS_OK;
 }
@@ -53,9 +50,6 @@ nsresult
 MediaEngineTabVideoSource::StopRunnable::Run()
 {
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(mVideoSource->mWindow);
-  if (privateDOMWindow && privateDOMWindow->GetChromeEventHandler()) {
-    privateDOMWindow->GetChromeEventHandler()->RemoveEventListener(NS_LITERAL_STRING("MozAfterPaint"), mVideoSource, false);
-  }
 
   if (mVideoSource->mTimer) {
     mVideoSource->mTimer->Cancel();
@@ -76,21 +70,14 @@ MediaEngineTabVideoSource::Notify(nsITimer*) {
   Draw();
   return NS_OK;
 }
+#define LOGTAG "TabVideo"
 
 nsresult
 MediaEngineTabVideoSource::InitRunnable::Run()
 {
-  nsresult rv;
-  nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
-  if (!branch)
-    return NS_OK;
-  branch->GetIntPref("media.tabstreaming.width", &mVideoSource->mBufW);
-  branch->GetIntPref("media.tabstreaming.height", &mVideoSource->mBufH);
-  branch->GetIntPref("media.tabstreaming.time_per_frame", &mVideoSource->mTimePerFrame);
   mVideoSource->mData = (unsigned char*)malloc(mVideoSource->mBufW * mVideoSource->mBufH * 4);
 
+  nsresult rv;
   mVideoSource->mTabSource = do_GetService(NS_TABSOURCESERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -119,9 +106,41 @@ MediaEngineTabVideoSource::GetUUID(nsAString_internal& aUuid)
 }
 
 nsresult
-MediaEngineTabVideoSource::Allocate(const VideoTrackConstraintsN&,
-                                    const MediaEnginePrefs&)
+MediaEngineTabVideoSource::Allocate(const VideoTrackConstraintsN& aConstraints,
+                                    const MediaEnginePrefs& aPrefs)
 {
+
+  ConstrainLongRange cWidth(aConstraints.mRequired.mWidth);
+  ConstrainLongRange cHeight(aConstraints.mRequired.mHeight);
+
+  if (aConstraints.mAdvanced.WasPassed()) {
+    const auto& advanced = aConstraints.mAdvanced.Value();
+    for (uint32_t i = 0; i < advanced.Length(); i++) {
+      if (cWidth.mMax >= advanced[i].mWidth.mMin && cWidth.mMin <= advanced[i].mWidth.mMax &&
+	  cHeight.mMax >= advanced[i].mHeight.mMin && cHeight.mMin <= advanced[i].mHeight.mMax) {
+	cWidth.mMin = std::max(cWidth.mMin, advanced[i].mWidth.mMin);
+	cHeight.mMin = std::max(cHeight.mMin, advanced[i].mHeight.mMin);
+      }
+    }
+  }
+
+  mBufW = aPrefs.GetWidth(false);
+  mBufH = aPrefs.GetHeight(false);
+
+  if (cWidth.mMin > mBufW) {
+    mBufW = cWidth.mMin;
+  } else if (cWidth.mMax < mBufW) {
+    mBufW = cWidth.mMax;
+  }
+
+  if (cHeight.mMin > mBufH) {
+    mBufH = cHeight.mMin;
+  } else if (cHeight.mMax < mBufH) {
+    mBufH = cHeight.mMax;
+  }
+
+  mTimePerFrame = aPrefs.mFPS ? 1000 / aPrefs.mFPS : aPrefs.mFPS;
+
   return NS_OK;
 }
 

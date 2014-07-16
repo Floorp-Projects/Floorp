@@ -234,6 +234,8 @@ exports.testConsoleInnerID = function(assert) {
   let Console = require("sdk/console/plain-text").PlainTextConsole;
   let { log, info, warn, error, debug, exception, trace } = new Console(function() {}, "test ID");
 
+  prefs.set(SDK_LOG_LEVEL_PREF, "all");
+
   let messages = [];
   function onMessage({ subject }) {
     let message = subject.wrappedJSObject;
@@ -253,6 +255,8 @@ exports.testConsoleInnerID = function(assert) {
   assert.deepEqual(messages[2], { msg: "Test error", type: "error", innerID: "test ID" }, "Should see the right event");
 
   system.off("console-api-log-event", onMessage);
+
+  restorePrefs();
 };
 
 function restorePrefs() {

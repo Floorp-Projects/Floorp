@@ -176,6 +176,13 @@ class DroidADB(DeviceManagerADB, DroidMixin):
             raise DMError("unable to find focused app")
         return package
 
+    def getAppRoot(self, packageName):
+        """
+        Returns the root directory for the specified android application
+        """
+        # relying on convention
+        return '/data/data/%s' % packageName
+
 class DroidSUT(DeviceManagerSUT, DroidMixin):
 
     def _getExtraAmStartArgs(self):
@@ -204,6 +211,9 @@ class DroidSUT(DeviceManagerSUT, DroidMixin):
 
     def getTopActivity(self):
         return self._runCmds([{ 'cmd': "activity" }]).strip()
+
+    def getAppRoot(self, packageName):
+        return self._runCmds([{ 'cmd': 'getapproot %s' % packageName }]).strip()
 
 def DroidConnectByHWID(hwid, timeout=30, **kwargs):
     """Try to connect to the given device by waiting for it to show up using mDNS with the given timeout."""

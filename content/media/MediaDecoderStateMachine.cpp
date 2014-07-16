@@ -1429,15 +1429,15 @@ void MediaDecoderStateMachine::NotifyDataArrived(const char* aBuffer,
   // faster than played, mEndTime won't reflect the end of playable data
   // since we haven't played the frame at the end of buffered data. So update
   // mEndTime here as new data is downloaded to prevent such a lag.
-  dom::TimeRanges buffered;
+  nsRefPtr<dom::TimeRanges> buffered = new dom::TimeRanges();
   if (mDecoder->IsInfinite() &&
-      NS_SUCCEEDED(mDecoder->GetBuffered(&buffered)))
+      NS_SUCCEEDED(mDecoder->GetBuffered(buffered)))
   {
     uint32_t length = 0;
-    buffered.GetLength(&length);
+    buffered->GetLength(&length);
     if (length) {
       double end = 0;
-      buffered.End(length - 1, &end);
+      buffered->End(length - 1, &end);
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
       mEndTime = std::max<int64_t>(mEndTime, end * USECS_PER_S);
     }

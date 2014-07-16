@@ -20,5 +20,7 @@ try:
 except ImportError:
     # Structured logging doesn't work on python 2.6 which is still used on some
     # legacy test machines; https://bugzilla.mozilla.org/show_bug.cgi?id=864866
+    # Once we move away from Python 2.6, please cleanup devicemanager.py's
+    # exception block
     pass
 

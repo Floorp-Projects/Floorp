@@ -399,7 +399,10 @@ this.BrowserIDManager.prototype = {
    * The current state of the auth credentials.
    *
    * This essentially validates that enough credentials are available to use
-   * Sync.
+   * Sync, although it effectively ignores the state of the master-password -
+   * if that's locked and that's the only problem we can see, say everything
+   * is OK - unlockAndVerifyAuthState will be used to perform the unlock
+   * and re-verification if necessary.
    */
   get currentAuthState() {
     if (this._authFailureReason) {
@@ -416,12 +419,51 @@ this.BrowserIDManager.prototype = {
 
     // No need to check this.syncKey as our getter for that attribute
     // uses this.syncKeyBundle
-    // If bundle creation started, but failed.
-    if (this._shouldHaveSyncKeyBundle && !this.syncKeyBundle) {
-      return LOGIN_FAILED_NO_PASSPHRASE;
+    // If bundle creation started, but failed due to any reason other than
+    // the MP being locked...
+    if (this._shouldHaveSyncKeyBundle && !this.syncKeyBundle && !Utils.mpLocked()) {
+      // Return a state that says a re-auth is necessary so we can get keys.
+      return LOGIN_FAILED_LOGIN_REJECTED;
     }
 
     return STATUS_OK;
+  },
+
+  // Do we currently have keys, or do we have enough that we should be able
+  // to successfully fetch them?
+  _canFetchKeys: function() {
+    let userData = this._signedInUser;
+    // a keyFetchToken means we can almost certainly grab them.
+    // kA and kB means we already have them.
+    return userData && (userData.keyFetchToken || (userData.kA && userData.kB));
+  },
+
+  /**
+   * Verify the current auth state, unlocking the master-password if necessary.
+   *
+   * Returns a promise that resolves with the current auth state after
+   * attempting to unlock.
+   */
+  unlockAndVerifyAuthState: function() {
+    if (this._canFetchKeys()) {
+      return Promise.resolve(STATUS_OK);
+    }
+    // so no keys - ensure MP unlocked.
+    if (!Utils.ensureMPUnlocked()) {
+      // user declined to unlock, so we don't know if they are stored there.
+      return Promise.resolve(MASTER_PASSWORD_LOCKED);
+    }
+    // now we are unlocked we must re-fetch the user data as we may now have
+    // the details that were previously locked away.
+    return this._fxaService.getSignedInUser().then(
+      accountData => {
+        this._updateSignedInUser(accountData);
+        // If we still can't get keys it probably means the user authenticated
+        // without unlocking the MP or cleared the saved logins, so we've now
+        // lost them - the user will need to reauth before continuing.
+        return this._canFetchKeys() ? STATUS_OK : LOGIN_FAILED_LOGIN_REJECTED;
+      }
+    );
   },
 
   /**
@@ -448,6 +490,14 @@ this.BrowserIDManager.prototype = {
     let client = this._tokenServerClient;
     let fxa = this._fxaService;
     let userData = this._signedInUser;
+
+    // We need kA and kB for things to work.  If we don't have them, just
+    // return null for the token - sync calling unlockAndVerifyAuthState()
+    // before actually syncing will setup the error states if necessary.
+    if (!this._canFetchKeys()) {
+      log.info("_fetchTokenForUser has no keys to use.");
+      return null;
+    }
 
     log.info("Fetching assertion and token from: " + tokenServerURI);
 
@@ -524,7 +574,8 @@ this.BrowserIDManager.prototype = {
           // set it to the "fatal" LOGIN_FAILED_LOGIN_REJECTED reason.
           this._authFailureReason = LOGIN_FAILED_LOGIN_REJECTED;
         } else {
-          this._log.error("Non-authentication error in _fetchTokenForUser: " + err.message);
+          this._log.error("Non-authentication error in _fetchTokenForUser: "
+                          + (err.message || err));
           // for now assume it is just a transient network related problem.
           this._authFailureReason = LOGIN_FAILED_NETWORK_ERROR;
         }
