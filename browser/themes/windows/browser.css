@@ -1540,13 +1540,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
-
-%ifdef MOZ_LOOP
 /* Loop */
 #loop-call-button {
   list-style-image: url("chrome://global/skin/loop/loop-call.png");
 }
-%endif
 
 /* social share panel */
 

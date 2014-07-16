@@ -1479,20 +1479,17 @@ MediaManager::GetUserMedia(bool aPrivileged,
   }
 #endif
   nsIURI* docURI = aWindow->GetDocumentURI();
-#ifdef MOZ_LOOP
-  {
-    bool isLoop = false;
-    nsCOMPtr<nsIURI> loopURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(loopURI), "about:loopconversation");
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = docURI->EqualsExceptRef(loopURI, &isLoop);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (isLoop) {
-      aPrivileged = true;
-    }
+  bool isLoop = false;
+  nsCOMPtr<nsIURI> loopURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(loopURI), "about:loopconversation");
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = docURI->EqualsExceptRef(loopURI, &isLoop);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (isLoop) {
+    aPrivileged = true;
   }
-#endif
 
   // XXX No full support for picture in Desktop yet (needs proper UI)
   if (aPrivileged ||
