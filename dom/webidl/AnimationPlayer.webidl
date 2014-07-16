@@ -12,6 +12,7 @@
 
 [Pref="dom.animations-api.core.enabled"]
 interface AnimationPlayer {
+  readonly attribute AnimationTimeline timeline;
   [Pure] readonly attribute double startTime;
   readonly attribute double currentTime;
 };
