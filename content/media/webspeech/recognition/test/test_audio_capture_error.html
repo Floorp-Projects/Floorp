@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
   SimpleTest.waitForExplicitFinish();
 
   performTest({
-    eventsToRequest: ['EVENT_START', 'EVENT_AUDIO_ERROR'],
+    eventsToRequest: ['EVENT_AUDIO_ERROR'],
     expectedEvents: {
       'error': buildErrorCallback(errorCodes.AUDIO_CAPTURE),
       'end': null
