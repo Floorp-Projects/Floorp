@@ -17,6 +17,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIFormControl.h"
+#include "RadioNodeList.h"
 #include "jsfriendapi.h"
 
 namespace mozilla {
@@ -347,18 +348,18 @@ HTMLFormControlsCollection::GetParentObject()
 /* virtual */ Element*
 HTMLFormControlsCollection::GetFirstNamedElement(const nsAString& aName, bool& aFound)
 {
-  Nullable<OwningNodeListOrElement> maybeResult;
+  Nullable<OwningRadioNodeListOrElement> maybeResult;
   NamedGetter(aName, aFound, maybeResult);
   if (!aFound) {
     return nullptr;
   }
   MOZ_ASSERT(!maybeResult.IsNull());
-  const OwningNodeListOrElement& result = maybeResult.Value();
+  const OwningRadioNodeListOrElement& result = maybeResult.Value();
   if (result.IsElement()) {
     return result.GetAsElement().get();
   }
-  if (result.IsNodeList()) {
-    nsINodeList& nodelist = result.GetAsNodeList();
+  if (result.IsRadioNodeList()) {
+    RadioNodeList& nodelist = result.GetAsRadioNodeList();
     return nodelist.Item(0)->AsElement();
   }
   MOZ_ASSERT_UNREACHABLE("Should only have Elements and NodeLists here.");
@@ -368,7 +369,7 @@ HTMLFormControlsCollection::GetFirstNamedElement(const nsAString& aName, bool& a
 void
 HTMLFormControlsCollection::NamedGetter(const nsAString& aName,
                                         bool& aFound,
-                                        Nullable<OwningNodeListOrElement>& aResult)
+                                        Nullable<OwningRadioNodeListOrElement>& aResult)
 {
   nsISupports* item = NamedItemInternal(aName, true);
   if (!item) {
@@ -380,8 +381,8 @@ HTMLFormControlsCollection::NamedGetter(const nsAString& aName,
     aResult.SetValue().SetAsElement() = element;
     return;
   }
-  if (nsCOMPtr<nsINodeList> nodelist = do_QueryInterface(item)) {
-    aResult.SetValue().SetAsNodeList() = nodelist;
+  if (nsCOMPtr<RadioNodeList> nodelist = do_QueryInterface(item)) {
+    aResult.SetValue().SetAsRadioNodeList() = nodelist;
     return;
   }
   MOZ_ASSERT_UNREACHABLE("Should only have Elements and NodeLists here.");
