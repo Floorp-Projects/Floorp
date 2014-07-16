@@ -330,6 +330,6 @@ add_task(function* test_telemetryBasics() {
 
   // Cleanup.
 
-  yield promiseRestartManager();
+  yield experiments.uninit();
   yield removeCacheFile();
 });

@@ -184,6 +184,6 @@ add_task(function* test_disableExperiments() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
-  yield promiseRestartManager();
+  yield experiments.uninit();
   yield removeCacheFile();
 });
