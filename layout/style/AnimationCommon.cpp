@@ -7,6 +7,7 @@
 #include "nsTransitionManager.h"
 #include "nsAnimationManager.h"
 
+#include "mozilla/dom/AnimationPlayerBinding.h"
 #include "ActiveLayerTracker.h"
 #include "gfxPlatform.h"
 #include "nsRuleData.h"
@@ -407,9 +408,45 @@ ComputedTimingFunction::GetValue(double aPortion) const
 const double ComputedTiming::kNullTimeFraction =
   mozilla::PositiveInfinity<double>();
 
-NS_IMPL_CYCLE_COLLECTION(ElementAnimation, mTimeline)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ElementAnimation, mTimeline)
+
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ElementAnimation, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ElementAnimation, Release)
+
+JSObject*
+ElementAnimation::WrapObject(JSContext* aCx)
+{
+  return dom::AnimationPlayerBinding::Wrap(aCx, this);
+}
+
+double
+ElementAnimation::StartTime() const
+{
+  Nullable<double> startTime = mTimeline->ToTimelineTime(mStartTime);
+  return startTime.IsNull() ? 0.0 : startTime.Value();
+}
+
+double
+ElementAnimation::CurrentTime() const
+{
+  TimeStamp now = mTimeline->GetCurrentTimeStamp();
+  // |now| should only be null when we don't have a refresh driver.
+  //
+  // If we previously had a refresh driver, the correct thing would be to store
+  // the last refresh time in the AnimationTimeline, return that from
+  // GetCurrentTimeStamp and use that here.
+  //
+  // If we never had a refresh driver then any start times would be null we can
+  // do here is return 0 (that is, until we allow returning a null start time).
+  //
+  // Since we don't yet record the last refresh time we just return 0 in both
+  // cases.
+  if (now.IsNull()) {
+    return 0.0;
+  }
+
+  return GetLocalTimeAt(now).ToMilliseconds();
+}
 
 bool
 ElementAnimation::IsRunningAt(TimeStamp aTime) const
