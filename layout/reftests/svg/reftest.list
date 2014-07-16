@@ -89,6 +89,7 @@ skip-if(B2G) == dynamic-marker-02.svg dynamic-marker-02-ref.svg
 skip-if(B2G) == dynamic-marker-03.svg pass.svg
 == dynamic-mask-01.svg pass.svg
 skip-if(B2G) == dynamic-mask-contents-01.svg pass.svg
+== dynamic-mask-pre-effects-bbox.html dynamic-mask-pre-effects-bbox-ref.html
 == dynamic-opacity-property-01.svg pass.svg
 skip-if(B2G) == dynamic-pattern-01.svg pass.svg
 skip-if(B2G) == dynamic-pattern-02.svg pass.svg
