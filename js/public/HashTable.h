@@ -207,7 +207,7 @@ class HashMap
 
     // If |generation()| is the same before and after a HashMap operation,
     // pointers into the table remain valid.
-    unsigned generation() const                       { return impl.generation(); }
+    uint32_t generation() const                       { return impl.generation(); }
 
     /************************************************** Shorthand operations */
 
@@ -435,7 +435,7 @@ class HashSet
 
     // If |generation()| is the same before and after a HashSet operation,
     // pointers into the table remain valid.
-    unsigned generation() const                       { return impl.generation(); }
+    uint32_t generation() const                       { return impl.generation(); }
 
     /************************************************** Shorthand operations */
 
@@ -742,6 +742,8 @@ class HashTableEntry
 template <class T, class HashPolicy, class AllocPolicy>
 class HashTable : private AllocPolicy
 {
+    friend class mozilla::ReentrancyGuard;
+
     typedef typename mozilla::RemoveConst<T>::Type NonConstT;
     typedef typename HashPolicy::KeyType Key;
     typedef typename HashPolicy::Lookup Lookup;
@@ -817,10 +819,16 @@ class HashTable : private AllocPolicy
     {
         friend class HashTable;
         HashNumber keyHash;
-        mozilla::DebugOnly<uint64_t> mutationCount;
+#ifdef DEBUG
+        uint64_t mutationCount;
+#endif
 
         AddPtr(Entry &entry, const HashTable &tableArg, HashNumber hn)
-          : Ptr(entry, tableArg), keyHash(hn), mutationCount(tableArg.mutationCount)
+          : Ptr(entry, tableArg)
+          , keyHash(hn)
+#ifdef DEBUG
+          , mutationCount(tableArg.mutationCount)
+#endif
         {}
 
       public:
@@ -984,18 +992,18 @@ class HashTable : private AllocPolicy
     void operator=(const HashTable &) MOZ_DELETE;
 
   private:
-    uint32_t    hashShift;      // multiplicative hash shift
-    uint32_t    entryCount;     // number of entries in table
-    uint32_t    gen;            // entry storage generation number
-    uint32_t    removedCount;   // removed entry sentinels in table
-    Entry       *table;         // entry storage
+    static const size_t CAP_BITS = 24;
 
-    void setTableSizeLog2(unsigned sizeLog2)
-    {
-        hashShift = sHashBits - sizeLog2;
-    }
+  public:
+    Entry       *table;                 // entry storage
+    uint32_t    gen;                    // entry storage generation number
+    uint32_t    entryCount;             // number of entries in table
+    uint32_t    removedCount:CAP_BITS;  // removed entry sentinels in table
+    uint32_t    hashShift:8;            // multiplicative hash shift
 
 #ifdef JS_DEBUG
+    mozilla::DebugOnly<uint64_t>     mutationCount;
+    mutable mozilla::DebugOnly<bool> mEntered;
     mutable struct Stats
     {
         uint32_t        searches;       // total number of table searches
@@ -1015,16 +1023,12 @@ class HashTable : private AllocPolicy
 #   define METER(x)
 #endif
 
-    friend class mozilla::ReentrancyGuard;
-    mutable mozilla::DebugOnly<bool> mEntered;
-    mozilla::DebugOnly<uint64_t>     mutationCount;
-
     // The default initial capacity is 32 (enough to hold 16 elements), but it
     // can be as low as 4.
     static const unsigned sMinCapacityLog2 = 2;
     static const unsigned sMinCapacity  = 1 << sMinCapacityLog2;
-    static const unsigned sMaxInit      = JS_BIT(23);
-    static const unsigned sMaxCapacity  = JS_BIT(24);
+    static const unsigned sMaxInit      = JS_BIT(CAP_BITS - 1);
+    static const unsigned sMaxCapacity  = JS_BIT(CAP_BITS);
     static const unsigned sHashBits     = mozilla::tl::BitSize<HashNumber>::value;
 
     // Hash-table alpha is conceptually a fraction, but to avoid floating-point
@@ -1036,6 +1040,11 @@ class HashTable : private AllocPolicy
     static const HashNumber sFreeKey = Entry::sFreeKey;
     static const HashNumber sRemovedKey = Entry::sRemovedKey;
     static const HashNumber sCollisionBit = Entry::sCollisionBit;
+
+    void setTableSizeLog2(unsigned sizeLog2)
+    {
+        hashShift = sHashBits - sizeLog2;
+    }
 
     static bool isLiveHash(HashNumber hash)
     {
@@ -1070,14 +1079,16 @@ class HashTable : private AllocPolicy
 
   public:
     explicit HashTable(AllocPolicy ap)
-      : AllocPolicy(ap),
-        hashShift(sHashBits),
-        entryCount(0),
-        gen(0),
-        removedCount(0),
-        table(nullptr),
-        mEntered(false),
-        mutationCount(0)
+      : AllocPolicy(ap)
+      , table(nullptr)
+      , gen(0)
+      , entryCount(0)
+      , removedCount(0)
+      , hashShift(sHashBits)
+#ifdef DEBUG
+      , mutationCount(0)
+      , mEntered(false)
+#endif
     {}
 
     MOZ_WARN_UNUSED_RESULT bool init(uint32_t length)
@@ -1364,7 +1375,9 @@ class HashTable : private AllocPolicy
             e.clearLive();
         }
         entryCount--;
+#ifdef DEBUG
         mutationCount++;
+#endif
     }
 
     void checkUnderloaded()
@@ -1447,7 +1460,9 @@ class HashTable : private AllocPolicy
         }
         removedCount = 0;
         entryCount = 0;
+#ifdef DEBUG
         mutationCount++;
+#endif
     }
 
     void finish()
@@ -1462,7 +1477,9 @@ class HashTable : private AllocPolicy
         gen++;
         entryCount = 0;
         removedCount = 0;
+#ifdef DEBUG
         mutationCount++;
+#endif
     }
 
     Range all() const
@@ -1552,8 +1569,8 @@ class HashTable : private AllocPolicy
 
         p.entry_->setLive(p.keyHash, mozilla::Forward<U>(u));
         entryCount++;
-        mutationCount++;
 #ifdef DEBUG
+        mutationCount++;
         p.generation = generation();
         p.mutationCount = mutationCount;
 #endif
@@ -1578,7 +1595,9 @@ class HashTable : private AllocPolicy
 
         entry->setLive(keyHash, mozilla::Forward<U>(u));
         entryCount++;
+#ifdef DEBUG
         mutationCount++;
+#endif
     }
 
     // Note: |l| may be a reference to a piece of |u|, so this function
