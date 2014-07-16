@@ -850,14 +850,14 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **idarray,
                              uint32_t *count)
 {
   NPP npp = NPPStack::Peek();
-  JSContext *cx = GetJSContext(npp);
+  dom::AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(GetGlobalObject(npp)))) {
+    return false;
+  }
+  JSContext *cx = jsapi.cx();
 
   *idarray = 0;
   *count = 0;
-
-  if (!cx) {
-    return false;
-  }
 
   if (!npobj) {
     ThrowJSException(cx,
@@ -868,8 +868,6 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **idarray,
 
   nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
 
-  nsCxPusher pusher;
-  pusher.Push(cx);
   AutoJSExceptionReporter reporter(cx);
   JS::Rooted<JSObject*> jsobj(cx, npjsobj->mJSObj);
   JSAutoCompartment ac(cx, jsobj);
