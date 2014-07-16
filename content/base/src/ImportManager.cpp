@@ -334,6 +334,16 @@ ImportLoader::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   if (!channel) {
     return NS_ERROR_DOM_ABORT_ERR;
   }
+
+  if (nsContentUtils::IsSystemPrincipal(principal)) {
+    // We should never import non-system documents and run their scripts with system principal!
+    nsCOMPtr<nsIPrincipal> channelPrincipal;
+    nsContentUtils::GetSecurityManager()->GetChannelPrincipal(channel,
+                                                              getter_AddRefs(channelPrincipal));
+    if (!nsContentUtils::IsSystemPrincipal(channelPrincipal)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
   channel->SetOwner(principal);
 
   nsAutoCString type;
