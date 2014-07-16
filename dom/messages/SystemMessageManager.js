@@ -108,8 +108,10 @@ SystemMessageManager.prototype = {
       this._dispatchMessage(aType, aDispatcher, aDispatcher.messages.shift());
     } else {
       // No more messages that need to be handled, we can notify the
-      // ContentChild to propogate the event, so that the ContentParent can
-      // reset the process's priority.
+      // ContentChild to release the CPU wake lock grabbed by the ContentParent
+      // (i.e. NewWakeLockOnBehalfOfProcess()) and reset the process's priority.
+      //
+      // TODO: Bug 874353 - Remove SystemMessageHandledListener in ContentParent
       Services.obs.notifyObservers(/* aSubject */ null,
                                    "handle-system-messages-done",
                                    /* aData */ null);
@@ -247,8 +249,11 @@ SystemMessageManager.prototype = {
                               pageURL: this._pageURL,
                               handledCount: messages.length });
 
-      // We also need to notify the ContentChild to propogate the event, so that
-      // the ContentParent can reset the process's priority.
+      // We also need to notify the ContentChild to release the CPU wake lock
+      // grabbed by the ContentParent (i.e. NewWakeLockOnBehalfOfProcess()) and
+      // reset the process's priority.
+      //
+      // TODO: Bug 874353 - Remove SystemMessageHandledListener in ContentParent
       Services.obs.notifyObservers(/* aSubject */ null,
                                    "handle-system-messages-done",
                                    /* aData */ null);
