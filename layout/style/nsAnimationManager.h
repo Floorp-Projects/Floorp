@@ -151,6 +151,7 @@ protected:
 
 private:
   void BuildAnimations(nsStyleContext* aStyleContext,
+                       mozilla::dom::AnimationTimeline* aTimeline,
                        mozilla::ElementAnimationPtrArray& aAnimations);
   bool BuildSegment(InfallibleTArray<mozilla::AnimationPropertySegment>&
                       aSegments,

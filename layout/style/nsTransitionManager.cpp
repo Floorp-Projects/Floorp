@@ -407,7 +407,9 @@ nsTransitionManager::ConsiderStartingTransition(
     return;
   }
 
-  nsRefPtr<ElementPropertyTransition> pt = new ElementPropertyTransition();
+  dom::AnimationTimeline* timeline = aElement->OwnerDoc()->Timeline();
+  nsRefPtr<ElementPropertyTransition> pt =
+    new ElementPropertyTransition(timeline);
 
   StyleAnimationValue startValue, endValue, dummyValue;
   bool haveValues =
