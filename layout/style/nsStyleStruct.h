@@ -2720,6 +2720,9 @@ struct nsStyleFilter {
   nsStyleFilter& operator=(const nsStyleFilter& aOther);
 
   bool operator==(const nsStyleFilter& aOther) const;
+  bool operator!=(const nsStyleFilter& aOther) const {
+    return !(*this == aOther);
+  }
 
   int32_t GetType() const {
     return mType;
