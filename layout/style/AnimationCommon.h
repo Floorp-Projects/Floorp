@@ -13,17 +13,24 @@
 #include "nsCSSProperty.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleAnimationValue.h"
+#include "mozilla/dom/AnimationTimeline.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Nullable.h"
 #include "nsSMILKeySpline.h"
 #include "nsStyleStruct.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 #include "nsCSSPseudoElements.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIFrame;
 class nsPresContext;
 class nsStyleChangeList;
 
+// X11 has a #define for CurrentTime.
+#ifdef CurrentTime
+#undef CurrentTime
+#endif
 
 namespace mozilla {
 
@@ -264,17 +271,13 @@ struct AnimationTiming
 /**
  * Stores the results of calculating the timing properties of an animation
  * at a given sample time.
- *
- * The members of a default-constructed object of this type are not meaningful.
- * Rather, this object is intended to be used as the return value of
- * ElementAnimation::GetComputedTimingAt which ensures all members are set
- * correctly.
  */
 struct ComputedTiming
 {
   ComputedTiming()
-  : mTimeFraction(kNullTimeFraction),
-    mCurrentIteration(0)
+  : mTimeFraction(kNullTimeFraction)
+  , mCurrentIteration(0)
+  , mPhase(AnimationPhase_Null)
   { }
 
   static const double kNullTimeFraction;
@@ -292,6 +295,8 @@ struct ComputedTiming
   uint64_t mCurrentIteration;
 
   enum {
+    // Not sampled (null sample time)
+    AnimationPhase_Null,
     // Sampled prior to the start of the active interval
     AnimationPhase_Before,
     // Sampled within the active interval
@@ -305,17 +310,31 @@ struct ComputedTiming
  * Data about one animation (i.e., one of the values of
  * 'animation-name') running on an element.
  */
-struct ElementAnimation
+class ElementAnimation : public nsWrapperCache
 {
 protected:
   virtual ~ElementAnimation() { }
 
 public:
-  ElementAnimation()
+  explicit ElementAnimation(dom::AnimationTimeline* aTimeline)
     : mIsRunningOnCompositor(false)
+    , mIsFinishedTransition(false)
     , mLastNotification(LAST_NOTIFICATION_NONE)
+    , mTimeline(aTimeline)
   {
+    SetIsDOMBinding();
   }
+
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ElementAnimation)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(ElementAnimation)
+
+  dom::AnimationTimeline* GetParentObject() const { return mTimeline; }
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+
+  // AnimationPlayer methods
+  dom::AnimationTimeline* Timeline() const { return mTimeline; }
+  double StartTime() const;
+  double CurrentTime() const;
 
   // FIXME: If we succeed in moving transition-specific code to a type of
   // AnimationEffect (as per the Web Animations API) we should remove these
@@ -333,26 +352,37 @@ public:
   // cycle (for reasons see explanation in nsTransitionManager.cpp). In the
   // meantime, however, they should be ignored.
   bool IsFinishedTransition() const {
-    return mStartTime.IsNull();
+    return mIsFinishedTransition;
   }
   void SetFinishedTransition() {
     MOZ_ASSERT(AsTransition(),
                "Calling SetFinishedTransition but it's not a transition");
-    mStartTime = mozilla::TimeStamp();
+    mIsFinishedTransition = true;
   }
 
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
-  bool IsRunningAt(mozilla::TimeStamp aTime) const;
-  bool IsCurrentAt(mozilla::TimeStamp aTime) const;
+  bool IsRunning() const;
+  bool IsCurrent() const;
 
-  // Return the duration at aTime (or, if paused, mPauseStart) since
-  // the start of the delay period.  May be negative.
-  mozilla::TimeDuration GetLocalTimeAt(mozilla::TimeStamp aTime) const {
-    MOZ_ASSERT(!IsPaused() || aTime >= mPauseStart,
-               "if paused, aTime must be at least mPauseStart");
-    MOZ_ASSERT(!IsFinishedTransition(),
-               "GetLocalTimeAt should not be called on a finished transition");
-    return (IsPaused() ? mPauseStart : aTime) - mStartTime;
+  // Return the duration since the start of the delay period, taking into
+  // account the pause state.  May be negative.
+  // Returns a null value if the timeline associated with this object has a
+  // current timestamp that is null or if the start time of this object is
+  // null.
+  Nullable<mozilla::TimeDuration> GetLocalTime() const {
+    const mozilla::TimeStamp& timelineTime = mTimeline->GetCurrentTimeStamp();
+    // FIXME: In order to support arbitrary timelines we will need to fix
+    // the pause logic to handle the timeline time going backwards.
+    MOZ_ASSERT(timelineTime.IsNull() || !IsPaused() ||
+               timelineTime >= mPauseStart,
+               "if paused, any non-null value of aTime must be at least"
+               " mPauseStart");
+
+    Nullable<mozilla::TimeDuration> result; // Initializes to null
+    if (!timelineTime.IsNull() && !mStartTime.IsNull()) {
+      result.SetValue((IsPaused() ? mPauseStart : timelineTime) - mStartTime);
+    }
+    return result;
   }
 
   // Return the duration from the start the active interval to the point where
@@ -364,26 +394,38 @@ public:
   }
 
   // This function takes as input the timing parameters of an animation and
-  // returns the computed timing at the specified moment.
+  // returns the computed timing at the specified local time.
+  //
+  // The local time may be null in which case only static parameters such as the
+  // active duration are calculated. All other members of the returned object
+  // are given a null/initial value.
   //
   // This function returns ComputedTiming::kNullTimeFraction for the
   // mTimeFraction member of the return value if the animation should not be
   // run (because it is not currently active and is not filling at this time).
-  static ComputedTiming GetComputedTimingAt(TimeDuration aLocalTime,
-                                            const AnimationTiming& aTiming);
+  static ComputedTiming
+  GetComputedTimingAt(const Nullable<mozilla::TimeDuration>& aLocalTime,
+                      const AnimationTiming& aTiming);
+
+  // Shortcut for that gets the computed timing using the current local time as
+  // calculated from the timeline time.
+  ComputedTiming GetComputedTiming(const AnimationTiming& aTiming) const {
+    return GetComputedTimingAt(GetLocalTime(), aTiming);
+  }
 
   // Return the duration of the active interval for the given timing parameters.
   static mozilla::TimeDuration ActiveDuration(const AnimationTiming& aTiming);
 
   nsString mName;
   AnimationTiming mTiming;
-  // The beginning of the delay period.  This is also set to a null
-  // timestamp to mark transitions that have finished and are due to
-  // be removed on the next throttle-able cycle.
+  // The beginning of the delay period.
   mozilla::TimeStamp mStartTime;
   mozilla::TimeStamp mPauseStart;
   uint8_t mPlayState;
   bool mIsRunningOnCompositor;
+  // A flag to mark transitions that have finished and are due to
+  // be removed on the next throttle-able cycle.
+  bool mIsFinishedTransition;
 
   enum {
     LAST_NOTIFICATION_NONE = uint64_t(-1),
@@ -395,7 +437,7 @@ public:
 
   InfallibleTArray<AnimationProperty> mProperties;
 
-  NS_INLINE_DECL_REFCOUNTING(ElementAnimation)
+  nsRefPtr<dom::AnimationTimeline> mTimeline;
 };
 
 typedef InfallibleTArray<nsRefPtr<ElementAnimation> > ElementAnimationPtrArray;
@@ -536,9 +578,9 @@ struct ElementAnimationCollection : public PRCList
   // Update mAnimationGeneration to nsCSSFrameConstructor's count
   void UpdateAnimationGeneration(nsPresContext* aPresContext);
 
-  // Returns true if there is an animation in the before or active phase at
-  // the given time.
-  bool HasCurrentAnimationsAt(mozilla::TimeStamp aTime);
+  // Returns true if there is an animation in the before or active phase
+  // at the current time.
+  bool HasCurrentAnimations();
 
   // The refresh time associated with mStyleRule.
   TimeStamp mStyleRuleRefreshTime;

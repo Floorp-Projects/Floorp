@@ -37,14 +37,10 @@ using mozilla::RotateLeft;
 bool
 ShapeTable::init(ThreadSafeContext *cx, Shape *lastProp)
 {
-    /*
-     * Either we're creating a table for a large scope that was populated
-     * via property cache hit logic under JSOP_INITPROP, JSOP_SETNAME, or
-     * JSOP_SETPROP; or else calloc failed at least once already. In any
-     * event, let's try to grow, overallocating to hold at least twice the
-     * current population.
-     */
-    uint32_t sizeLog2 = CeilingLog2Size(2 * entryCount);
+    uint32_t sizeLog2 = CeilingLog2Size(entryCount);
+    uint32_t size = JS_BIT(sizeLog2);
+    if (entryCount >= size - (size >> 2))
+        sizeLog2++;
     if (sizeLog2 < MIN_SIZE_LOG2)
         sizeLog2 = MIN_SIZE_LOG2;
 

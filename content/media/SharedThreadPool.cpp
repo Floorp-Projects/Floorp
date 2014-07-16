@@ -193,6 +193,8 @@ SharedThreadPool::~SharedThreadPool()
 // deinitialized on the thread pool thread. We may call into WMF or
 // DirectShow on this thread, so we need MSCOM working.
 class MSCOMInitThreadPoolListener MOZ_FINAL : public nsIThreadPoolListener {
+  ~MSCOMInitThreadPoolListener() {}
+
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITHREADPOOLLISTENER

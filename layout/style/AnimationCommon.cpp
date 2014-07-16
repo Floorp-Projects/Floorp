@@ -7,11 +7,13 @@
 #include "nsTransitionManager.h"
 #include "nsAnimationManager.h"
 
+#include "mozilla/dom/AnimationPlayerBinding.h"
 #include "ActiveLayerTracker.h"
 #include "gfxPlatform.h"
 #include "nsRuleData.h"
 #include "nsCSSPropertySet.h"
 #include "nsCSSValue.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsStyleContext.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
@@ -406,31 +408,72 @@ ComputedTimingFunction::GetValue(double aPortion) const
 const double ComputedTiming::kNullTimeFraction =
   mozilla::PositiveInfinity<double>();
 
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ElementAnimation, mTimeline)
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ElementAnimation, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ElementAnimation, Release)
+
+JSObject*
+ElementAnimation::WrapObject(JSContext* aCx)
+{
+  return dom::AnimationPlayerBinding::Wrap(aCx, this);
+}
+
+double
+ElementAnimation::StartTime() const
+{
+  Nullable<double> startTime = mTimeline->ToTimelineTime(mStartTime);
+  return startTime.IsNull() ? 0.0 : startTime.Value();
+}
+
+double
+ElementAnimation::CurrentTime() const
+{
+  // In Web Animations, AnimationPlayers have a *current* time and Animations
+  // have a *local* time. However, since we have a 1:1 correspondence between
+  // AnimationPlayers and Animations, and since the startTime of *Animations*
+  // (but not AnimationPlayers) is always 0, these are currently identical.
+  Nullable<TimeDuration> currentTime = GetLocalTime();
+
+  // The current time is currently only going to be null when don't have a
+  // refresh driver (e.g. because we are in a display:none iframe).
+  //
+  // Web Animations says that in this case we should use a timeline time of
+  // 0 (the "effective timeline time") and calculate the current time from that.
+  // Doing that, however, requires storing the start time as an offset rather
+  // than a timestamp so for now we just return 0.
+  //
+  // FIXME: Store player start time and pause start as offsets rather than
+  // timestamps and return the appropriate current time when the timeline time
+  // is null.
+  if (currentTime.IsNull()) {
+    return 0.0;
+  }
+
+  return currentTime.Value().ToMilliseconds();
+}
+
 bool
-ElementAnimation::IsRunningAt(TimeStamp aTime) const
+ElementAnimation::IsRunning() const
 {
   if (IsPaused() || IsFinishedTransition()) {
     return false;
   }
 
-  ComputedTiming computedTiming =
-    GetComputedTimingAt(GetLocalTimeAt(aTime), mTiming);
+  ComputedTiming computedTiming = GetComputedTiming(mTiming);
   return computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
 }
 
 bool
-ElementAnimation::IsCurrentAt(TimeStamp aTime) const
+ElementAnimation::IsCurrent() const
 {
-  if (!IsFinishedTransition()) {
-    ComputedTiming computedTiming =
-      GetComputedTimingAt(GetLocalTimeAt(aTime), mTiming);
-    if (computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
-        computedTiming.mPhase == ComputedTiming::AnimationPhase_Active) {
-      return true;
-    }
+  if (IsFinishedTransition()) {
+    return false;
   }
 
-  return false;
+  ComputedTiming computedTiming = GetComputedTiming(mTiming);
+  return computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
+         computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
 }
 
 bool
@@ -446,7 +489,7 @@ ElementAnimation::HasAnimationOfProperty(nsCSSProperty aProperty) const
 }
 
 ComputedTiming
-ElementAnimation::GetComputedTimingAt(TimeDuration aLocalTime,
+ElementAnimation::GetComputedTimingAt(const Nullable<TimeDuration>& aLocalTime,
                                       const AnimationTiming& aTiming)
 {
   const TimeDuration zeroDuration;
@@ -454,7 +497,7 @@ ElementAnimation::GetComputedTimingAt(TimeDuration aLocalTime,
   // Currently we expect negative durations to be picked up during CSS
   // parsing but when we start receiving timing parameters from other sources
   // we will need to clamp negative durations here.
-  // For now, if we're hitting this it probably means we've overflowing
+  // For now, if we're hitting this it probably means we're overflowing
   // integer arithmetic in mozilla::TimeStamp.
   MOZ_ASSERT(aTiming.mIterationDuration >= zeroDuration,
              "Expecting iteration duration >= 0");
@@ -464,6 +507,13 @@ ElementAnimation::GetComputedTimingAt(TimeDuration aLocalTime,
 
   result.mActiveDuration = ActiveDuration(aTiming);
 
+  // The default constructor for ComputedTiming sets all other members to
+  // values consistent with an animation that has not been sampled.
+  if (aLocalTime.IsNull()) {
+    return result;
+  }
+  const TimeDuration& localTime = aLocalTime.Value();
+
   // When we finish exactly at the end of an iteration we need to report
   // the end of the final iteration and not the start of the next iteration
   // so we set up a flag for that case.
@@ -471,7 +521,7 @@ ElementAnimation::GetComputedTimingAt(TimeDuration aLocalTime,
 
   // Get the normalized time within the active interval.
   TimeDuration activeTime;
-  if (aLocalTime >= aTiming.mDelay + result.mActiveDuration) {
+  if (localTime >= aTiming.mDelay + result.mActiveDuration) {
     result.mPhase = ComputedTiming::AnimationPhase_After;
     if (!aTiming.FillsForwards()) {
       // The animation isn't active or filling at this time.
@@ -484,7 +534,7 @@ ElementAnimation::GetComputedTimingAt(TimeDuration aLocalTime,
     isEndOfFinalIteration =
       aTiming.mIterationCount != 0.0 &&
       aTiming.mIterationCount == floor(aTiming.mIterationCount);
-  } else if (aLocalTime < aTiming.mDelay) {
+  } else if (localTime < aTiming.mDelay) {
     result.mPhase = ComputedTiming::AnimationPhase_Before;
     if (!aTiming.FillsBackwards()) {
       // The animation isn't active or filling at this time.
@@ -496,7 +546,7 @@ ElementAnimation::GetComputedTimingAt(TimeDuration aLocalTime,
     MOZ_ASSERT(result.mActiveDuration != zeroDuration,
                "How can we be in the middle of a zero-duration interval?");
     result.mPhase = ComputedTiming::AnimationPhase_Active;
-    activeTime = aLocalTime - aTiming.mDelay;
+    activeTime = localTime - aTiming.mDelay;
   }
 
   // Get the position within the current iteration.
@@ -678,11 +728,9 @@ ElementAnimationCollection::CanPerformOnCompositorThread(
     return false;
   }
 
-  TimeStamp now = frame->PresContext()->RefreshDriver()->MostRecentRefresh();
-
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
     const ElementAnimation* anim = mAnimations[animIdx];
-    bool isRunning = anim->IsRunningAt(now);
+    bool isRunning = anim->IsRunning();
     for (uint32_t propIdx = 0, propEnd = anim->mProperties.Length();
          propIdx != propEnd; ++propIdx) {
       if (IsGeometricProperty(anim->mProperties[propIdx].mProperty) &&
@@ -696,7 +744,7 @@ ElementAnimationCollection::CanPerformOnCompositorThread(
   bool existsProperty = false;
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
     const ElementAnimation* anim = mAnimations[animIdx];
-    if (!anim->IsRunningAt(now)) {
+    if (!anim->IsRunning()) {
       continue;
     }
 
@@ -794,11 +842,9 @@ ElementAnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
         continue;
       }
 
-      // The GetLocalTimeAt() call here handles pausing.  But:
+      // The GetLocalTime() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      TimeDuration localTime = anim->GetLocalTimeAt(aRefreshTime);
-      ComputedTiming computedTiming =
-        ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
+      ComputedTiming computedTiming = anim->GetComputedTiming(anim->mTiming);
 
       // XXX We shouldn't really be using mLastNotification as a general
       // indicator that the animation has finished, it should be reserved for
@@ -838,11 +884,9 @@ ElementAnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
         continue;
       }
 
-      // The GetLocalTimeAt() call here handles pausing.  But:
+      // The GetLocalTime() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      TimeDuration localTime = anim->GetLocalTimeAt(aRefreshTime);
-      ComputedTiming computedTiming =
-        ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
+      ComputedTiming computedTiming = anim->GetComputedTiming(anim->mTiming);
 
       if ((computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
            computedTiming.mPhase == ComputedTiming::AnimationPhase_Active) &&
@@ -1011,10 +1055,10 @@ ElementAnimationCollection::UpdateAnimationGeneration(
 }
 
 bool
-ElementAnimationCollection::HasCurrentAnimationsAt(TimeStamp aTime)
+ElementAnimationCollection::HasCurrentAnimations()
 {
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    if (mAnimations[animIdx]->IsCurrentAt(aTime)) {
+    if (mAnimations[animIdx]->IsCurrent()) {
       return true;
     }
   }

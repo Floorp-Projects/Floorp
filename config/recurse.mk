@@ -91,7 +91,7 @@ GARBAGE_DIRS += subtiers
 # root.mk defines subtier_of_* variables, that map a normalized subdir path to
 # a subtier name (e.g. subtier_of_memory_jemalloc = base)
 $(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS)): %/$(CURRENT_TIER):
-	+@$(MAKE) -C $* $(if $(filter $*,$(tier_$(subtier_of_$(subst /,_,$*))_staticdirs)),,$(CURRENT_TIER))
+	$(call SUBMAKE,$(if $(filter $*,$(tier_$(subtier_of_$(subst /,_,$*))_staticdirs)),,$(CURRENT_TIER)),$*)
 # Ensure existing stamps are up-to-date, but don't create one if submake didn't create one.
 	$(if $(wildcard $@),@$(STAMP_TOUCH))
 
