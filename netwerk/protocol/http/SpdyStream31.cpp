@@ -70,6 +70,7 @@ SpdyStream31::SpdyStream31(nsAHttpTransaction *httpTransaction,
   , mTotalRead(0)
   , mPushSource(nullptr)
   , mIsTunnel(false)
+  , mPlainTextTunnel(false)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -199,7 +200,7 @@ SpdyStream31::ReadSegments(nsAHttpSegmentReader *reader,
 }
 
 // WriteSegments() is used to read data off the socket. Generally this is
-// just a call through to the associate nsHttpTransaciton for this stream
+// just a call through to the associated nsHttpTransaction for this stream
 // for the remaining data bytes indicated by the current DATA frame.
 
 nsresult
@@ -1293,6 +1294,8 @@ SpdyStream31::ConvertHeaders(nsACString &aHeadersOut)
     nvpair += 4;
   } while (lastHeaderByte >= nvpair);
 
+  // The decoding went ok. Now we can customize and clean up.
+
   aHeadersOut.AppendLiteral("X-Firefox-Spdy: 3.1\r\n\r\n");
   LOG (("decoded response headers are:\n%s",
         aHeadersOut.BeginReading()));
@@ -1302,7 +1305,7 @@ SpdyStream31::ConvertHeaders(nsACString &aHeadersOut)
   mDecompressBufferSize = 0;
   mDecompressBufferUsed = 0;
 
-  if (mIsTunnel) {
+  if (mIsTunnel && !mPlainTextTunnel) {
     aHeadersOut.Truncate();
     LOG(("SpdyStream31::ConvertHeaders %p 0x%X headers removed for tunnel\n",
          this, mStreamID));
@@ -1385,18 +1388,18 @@ SpdyStream31::SetFullyOpen()
   MOZ_ASSERT(!mFullyOpen);
   mFullyOpen = 1;
   if (mIsTunnel) {
+    int32_t code = 0;
     nsDependentCSubstring statusSubstring;
-    nsresult rv = FindHeader(NS_LITERAL_CSTRING(":status"),
-                             statusSubstring);
+    nsresult rv = FindHeader(NS_LITERAL_CSTRING(":status"), statusSubstring);
     if (NS_SUCCEEDED(rv)) {
       nsCString status(statusSubstring);
       nsresult errcode;
+      code = status.ToInteger(&errcode);
+    }
 
-      if (status.ToInteger(&errcode) != 200) {
-        LOG3(("SpdyStream31::SetFullyOpen %p Tunnel not 200", this));
-        return NS_ERROR_FAILURE;
-      }
-      LOG3(("SpdyStream31::SetFullyOpen %p Tunnel 200 OK", this));
+    LOG3(("SpdyStream31::SetFullyOpen %p Tunnel Response code %d", this, code));
+    if ((code / 100) != 2) {
+      MapStreamToPlainText();
     }
 
     MapStreamToHttpConnection();
@@ -1583,6 +1586,15 @@ SpdyStream31::ClearTransactionsBlockedOnTunnel()
     return;
   }
   gHttpHandler->ConnMgr()->ProcessPendingQ(mTransaction->ConnectionInfo());
+}
+
+void
+SpdyStream31::MapStreamToPlainText()
+{
+  nsRefPtr<SpdyConnectTransaction> qiTrans(mTransaction->QuerySpdyConnectTransaction());
+  MOZ_ASSERT(qiTrans);
+  mPlainTextTunnel = true;
+  qiTrans->ForcePlainText();
 }
 
 void
