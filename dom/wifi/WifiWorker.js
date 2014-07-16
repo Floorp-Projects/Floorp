@@ -1201,7 +1201,7 @@ var WifiManager = (function() {
     function hasValidProperty(name) {
       return ((name in config) &&
                config[name] != null &&
-               (["password", "wep_key0", "psk"].indexOf(name) !== -1 ||
+               (["password", "wep_key0", "psk"].indexOf(name) === -1 ||
                 config[name] !== '*'));
     }
 
