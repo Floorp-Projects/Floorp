@@ -47,9 +47,9 @@ public:
 
   // Init and Cleanup is handled by BluetoothInterface
 
-  bt_status_t Listen(btsock_type_t aType,
-                     const char* aServiceName, const uint8_t* aServiceUuid,
-                     int aChannel, int& aSockFd, int aFlags);
+  void Listen(btsock_type_t aType,
+              const char* aServiceName, const uint8_t* aServiceUuid,
+              int aChannel, int aFlags, BluetoothSocketResultHandler* aRes);
 
   bt_status_t Connect(const bt_bdaddr_t* aBdAddr, btsock_type_t aType,
                       const uint8_t* aUuid, int aChannel, int& aSockFd,

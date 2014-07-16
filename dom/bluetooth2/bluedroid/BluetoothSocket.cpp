@@ -160,7 +160,7 @@ public:
   }
 
   void Connect();
-  void Listen();
+  void Listen(int aFd);
 
   void SetUpIO(bool aWrite)
   {
@@ -407,17 +407,21 @@ public:
 class SocketListenTask : public DroidSocketImplTask
 {
 public:
-  SocketListenTask(DroidSocketImpl* aDroidSocketImpl)
+  SocketListenTask(DroidSocketImpl* aDroidSocketImpl, int aFd)
   : DroidSocketImplTask(aDroidSocketImpl)
+  , mFd(aFd)
   { }
 
   void Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(!NS_IsMainThread());
     if (!IsCanceled()) {
-      GetDroidSocketImpl()->Listen();
+      GetDroidSocketImpl()->Listen(mFd);
     }
   }
+
+private:
+  int mFd;
 };
 
 class SocketConnectClientFdTask : public Task
@@ -469,33 +473,19 @@ DroidSocketImpl::Connect()
 }
 
 void
-DroidSocketImpl::Listen()
+DroidSocketImpl::Listen(int aFd)
 {
-  MOZ_ASSERT(sBluetoothSocketInterface);
+  MOZ_ASSERT(aFd >= 0);
 
-  // TODO: uuid and service name as arguments
-
-  int fd = -1;
-  bt_status_t status =
-    sBluetoothSocketInterface->Listen(BTSOCK_RFCOMM,
-                                      "OBEX Object Push",
-                                      UUID_OBEX_OBJECT_PUSH,
-                                      mChannel,
-                                      fd,
-                                      (BTSOCK_FLAG_ENCRYPT * mEncrypt) |
-                                      (BTSOCK_FLAG_AUTH * mAuth));
-  NS_ENSURE_TRUE_VOID(status == BT_STATUS_SUCCESS);
-  NS_ENSURE_TRUE_VOID(fd >= 0);
-
-  int flags = TEMP_FAILURE_RETRY(fcntl(fd, F_GETFL));
+  int flags = TEMP_FAILURE_RETRY(fcntl(aFd, F_GETFL));
   NS_ENSURE_TRUE_VOID(flags >= 0);
 
   if (!(flags & O_NONBLOCK)) {
-    int res = TEMP_FAILURE_RETRY(fcntl(fd, F_SETFL, flags | O_NONBLOCK));
+    int res = TEMP_FAILURE_RETRY(fcntl(aFd, F_SETFL, flags | O_NONBLOCK));
     NS_ENSURE_TRUE_VOID(!res);
   }
 
-  SetFd(fd);
+  SetFd(aFd);
   AddWatchers(READ_WATCHER, true);
 }
 
@@ -699,6 +689,34 @@ BluetoothSocket::Connect(const nsAString& aDeviceAddress, int aChannel)
   return true;
 }
 
+class ListenResultHandler MOZ_FINAL : public BluetoothSocketResultHandler
+{
+public:
+  ListenResultHandler(DroidSocketImpl* aImpl)
+  : mImpl(aImpl)
+  {
+    MOZ_ASSERT(mImpl);
+  }
+
+  void Listen(int aFd) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+                                     new SocketListenTask(mImpl, aFd));
+  }
+
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    BT_WARNING("Listen failed: %d", (int)aStatus);
+  }
+
+private:
+  DroidSocketImpl* mImpl;
+};
+
 bool
 BluetoothSocket::Listen(int aChannel)
 {
@@ -708,8 +726,14 @@ BluetoothSocket::Listen(int aChannel)
   mIsServer = true;
   mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this, aChannel, mAuth,
                               mEncrypt);
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                   new SocketListenTask(mImpl));
+
+  sBluetoothSocketInterface->Listen(BTSOCK_RFCOMM,
+                                    "OBEX Object Push",
+                                    UUID_OBEX_OBJECT_PUSH,
+                                    aChannel,
+                                    (BTSOCK_FLAG_ENCRYPT * mEncrypt) |
+                                    (BTSOCK_FLAG_AUTH * mAuth),
+                                    new ListenResultHandler(mImpl));
   return true;
 }
 
