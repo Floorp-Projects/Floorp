@@ -59,6 +59,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(ImportLoader)
 
 NS_IMPL_CYCLE_COLLECTION(ImportLoader,
                          mDocument,
+                         mImportParent,
                          mLinks)
 
 ImportLoader::ImportLoader(nsIURI* aURI, nsIDocument* aImportParent)
@@ -233,7 +234,9 @@ ImportLoader::Open()
                      channelPolicy);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  mChannel->AsyncOpen(this, nullptr);
+  rv = mChannel->AsyncOpen(this, nullptr);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
   BlockScripts();
   ae.Pass();
 }
