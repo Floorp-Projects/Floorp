@@ -105,6 +105,33 @@ NS_IMETHODIMP CacheStorage::AsyncOpenURI(nsIURI *aURI,
 }
 
 
+NS_IMETHODIMP CacheStorage::OpenTruncate(nsIURI *aURI, const nsACString & aIdExtension,
+                                         nsICacheEntry **aCacheEntry)
+{
+  if (!CacheStorageService::Self())
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsresult rv;
+
+  nsCOMPtr<nsIURI> noRefURI;
+  rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<CacheEntryHandle> entry;
+  rv = CacheStorageService::Self()->AddStorageEntry(
+    this, noRefURI, aIdExtension,
+    true, // create always
+    true, // replace any existing one
+    getter_AddRefs(entry));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Just open w/o callback, similar to nsICacheEntry.recreate().
+  entry->Entry()->AsyncOpen(nullptr, OPEN_TRUNCATE);
+  entry.forget(aCacheEntry);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP CacheStorage::Exists(nsIURI *aURI, const nsACString & aIdExtension,
                                    bool *aResult)
 {
