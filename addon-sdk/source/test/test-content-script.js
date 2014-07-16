@@ -136,6 +136,7 @@ exports["test Create Proxy Test With Events"] = createProxyTest("", function (he
 
 });
 
+/* Disabled due to bug 1038432
 // Bug 714778: There was some issue around `toString` functions
 //             that ended up being shared between content scripts
 exports["test Shared To String Proxies"] = createProxyTest("", function(helper) {
@@ -165,7 +166,7 @@ exports["test Shared To String Proxies"] = createProxyTest("", function(helper) 
     );
   });
 });
-
+*/
 
 // Ensure that postMessage is working correctly across documents with an iframe
 let html = '<iframe id="iframe" name="test" src="data:text/html;charset=utf-8," />';

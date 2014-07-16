@@ -95,7 +95,7 @@ let TAG = (function() {
   function setData(re, flag, tnf, type, payload) {
     let deferred = Promise.defer();
     let cmd = "nfc tag set " + re +
-              " [" + flag + "," + tnf + "," + type + "," + payload + ",]";
+              " [" + flag + "," + tnf + "," + type + ",," + payload + "]";
 
     emulator.run(cmd, function(result) {
       is(result.pop(), "OK", "set NDEF data of tag" + re);
@@ -122,13 +122,13 @@ let TAG = (function() {
 }());
 
 let SNEP = (function() {
-  function put(dsap, ssap, flags, tnf, type, payload, id) {
+  function put(dsap, ssap, flags, tnf, type, id, payload) {
     let deferred = Promise.defer();
     let cmd = "nfc snep put " + dsap + " " + ssap + " [" + flags + "," +
                                                            tnf + "," +
                                                            type + "," +
-                                                           payload + "," +
-                                                           id + "]";
+                                                           id + "," +
+                                                           payload + "]";
     emulator.run(cmd, function(result) {
       is(result.pop(), "OK", "send SNEP PUT");
       deferred.resolve();

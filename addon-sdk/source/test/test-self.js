@@ -40,27 +40,6 @@ exports.testSelf = function(assert) {
                'usePrivateBrowsing property is false by default');
 };
 
-exports.testSelfID = function(assert, done) {
-  var self = require("sdk/self");
-  // We can't assert anything about the ID inside the unit test right now,
-  // because the ID we get depends upon how the test was invoked. The idea
-  // is that it is supposed to come from the main top-level package's
-  // package.json file, from the "id" key.
-  assert.equal(typeof(self.id), "string", "self.id is a string");
-  assert.ok(self.id.length > 0);
-
-  AddonManager.getAddonByID(self.id, function(addon) {
-    if (!addon) {
-      assert.fail("did not find addon with self.id");
-    }
-    else {
-      assert.pass("found addon with self.id");
-    }
-
-    done();
-  });
-}
-
 exports.testSelfHandlesLackingLoaderOptions = function (assert) {
   let root = module.uri.substr(0, module.uri.lastIndexOf('/'));
   let uri = root + '/fixtures/loader/self/';

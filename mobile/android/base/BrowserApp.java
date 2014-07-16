@@ -25,6 +25,7 @@ import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
+import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.distribution.Distribution;
@@ -529,6 +530,7 @@ public class BrowserApp extends GeckoApp
             "Menu:Update",
             "Reader:Added",
             "Reader:FaviconRequest",
+            "Search:Keyword",
             "Prompt:ShowTop",
             "Accounts:Exist");
 
@@ -936,6 +938,7 @@ public class BrowserApp extends GeckoApp
             "Menu:Update",
             "Reader:Added",
             "Reader:FaviconRequest",
+            "Search:Keyword",
             "Prompt:ShowTop",
             "Accounts:Exist");
 
@@ -1383,6 +1386,8 @@ public class BrowserApp extends GeckoApp
             } else if (event.equals("Reader:FaviconRequest")) {
                 final String url = message.getString("url");
                 handleReaderFaviconRequest(url);
+            } else if (event.equals("Search:Keyword")) {
+                storeSearchQuery(message.getString("query"));
             } else if (event.equals("Prompt:ShowTop")) {
                 // Bring this activity to front so the prompt is visible..
                 Intent bringToFrontIntent = new Intent();
@@ -1804,6 +1809,27 @@ public class BrowserApp extends GeckoApp
         } catch (Exception e) {
             Log.w(LOGTAG, "Error recording search.", e);
         }
+    }
+
+    /**
+     * Store search query in SearchHistoryProvider.
+     *
+     * @param query
+     *        a search query to store. We won't store empty queries.
+     */
+    private void storeSearchQuery(String query) {
+        if (TextUtils.isEmpty(query)) {
+            return;
+        }
+
+        final ContentValues values = new ContentValues();
+        values.put(SearchHistory.QUERY, query);
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                getContentResolver().insert(SearchHistory.CONTENT_URI, values);
+            }
+        });
     }
 
     void filterEditingMode(String searchTerm, AutocompleteHandler handler) {
@@ -2849,6 +2875,7 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onSearch(SearchEngine engine, String text) {
         recordSearch(engine, "barsuggest");
+        storeSearchQuery(text);
         openUrlAndStopEditing(text, engine.name);
     }
 

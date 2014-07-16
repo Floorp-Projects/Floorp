@@ -709,7 +709,12 @@ void GonkCameraSource::dataCallbackTimestamp(int64_t timestampUs,
         }
 
         if (mNumFramesReceived > 0) {
-            CHECK(timestampUs > mLastFrameTimestampUs);
+            if (timestampUs <= mLastFrameTimestampUs) {
+                CS_LOGE("Drop frame at %lld us, before last at %lld us",
+                    timestampUs, mLastFrameTimestampUs);
+                releaseOneRecordingFrame(data);
+                return;
+            }
             if (timestampUs - mLastFrameTimestampUs > mGlitchDurationThresholdUs) {
                 ++mNumGlitches;
             }

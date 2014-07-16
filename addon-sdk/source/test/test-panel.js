@@ -12,7 +12,7 @@ module.metadata = {
 const { Cc, Ci } = require("chrome");
 const { Loader } = require('sdk/test/loader');
 const { LoaderWithHookedConsole } = require("sdk/test/loader");
-const timer = require("sdk/timers");
+const { setTimeout } = require("sdk/timers");
 const self = require('sdk/self');
 const { open, close, focus, ready } = require('sdk/window/helpers');
 const { isPrivate } = require('sdk/private-browsing');
@@ -22,6 +22,8 @@ const { getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { getWindow } = require('sdk/panel/window');
 const { pb } = require('./private-browsing/helper');
 const { URL } = require('sdk/url');
+const { wait } = require('./event/helpers');
+
 const fixtures = require('./fixtures')
 
 const SVG_URL = fixtures.url('mofo_logo.SVG');
@@ -544,7 +546,7 @@ function makeEventOrderTest(options) {
       panel.on(event, function() {
         assert.equal(event, expectedEvents.shift());
         if (cb)
-          timer.setTimeout(cb, 1);
+          setTimeout(cb, 1);
       });
       return {then: expect};
     }
@@ -1056,6 +1058,136 @@ exports['test panel CSS list'] = function(assert, done) {
   panel.show();
 };
 
+exports['test panel contextmenu validation'] = function(assert) {
+  const loader = Loader(module);
+  const { Panel } = loader.require('sdk/panel');
+
+  let panel = Panel({});
+
+  assert.equal(panel.contextMenu, false,
+    'contextMenu option is `false` by default');
+
+  panel.destroy();
+
+  panel = Panel({
+    contextMenu: false
+  });
+
+  assert.equal(panel.contextMenu, false,
+    'contextMenu option is `false`');
+
+  panel.contextMenu = true;
+
+  assert.equal(panel.contextMenu, true,
+    'contextMenu option accepts boolean values');
+
+  panel.destroy();
+
+  panel = Panel({
+    contextMenu: true
+  });
+
+  assert.equal(panel.contextMenu, true,
+    'contextMenu option is `true`');
+
+  panel.contextMenu = false;
+
+  assert.equal(panel.contextMenu, false,
+    'contextMenu option accepts boolean values');
+  
+  assert.throws(() =>
+    Panel({contextMenu: 1}),
+    /The option "contextMenu" must be one of the following types: boolean, undefined, null/,
+    'contextMenu only accepts boolean or nil values');
+
+  panel = Panel();
+
+  assert.throws(() =>
+    panel.contextMenu = 1,
+    /The option "contextMenu" must be one of the following types: boolean, undefined, null/,
+    'contextMenu only accepts boolean or nil values');
+
+  loader.unload();
+}
+
+exports['test panel contextmenu enabled'] = function*(assert) {
+  const loader = Loader(module);
+  const { Panel } = loader.require('sdk/panel');
+  const { getActiveView } = loader.require('sdk/view/core');
+  const { getContentDocument } = loader.require('sdk/panel/utils');
+
+  let contextmenu = getMostRecentBrowserWindow().
+                      document.getElementById("contentAreaContextMenu");
+
+  let panel = Panel({contextMenu: true});
+
+  panel.show();
+
+  yield wait(panel, 'show');
+
+  let view = getActiveView(panel);
+  let window = getContentDocument(view).defaultView;
+
+  let { sendMouseEvent } = window.QueryInterface(Ci.nsIInterfaceRequestor).
+                                    getInterface(Ci.nsIDOMWindowUtils);
+
+  yield ready(window);
+
+  assert.equal(contextmenu.state, 'closed',
+    'contextmenu must be closed');
+
+  sendMouseEvent('contextmenu', 20, 20, 2, 1, 0);
+
+  yield wait(contextmenu, 'popupshown');
+
+  assert.equal(contextmenu.state, 'open',
+    'contextmenu is opened');
+
+  contextmenu.hidePopup();
+
+  loader.unload();
+}
+
+exports['test panel contextmenu disabled'] = function*(assert) {
+  const loader = Loader(module);
+  const { Panel } = loader.require('sdk/panel');
+  const { getActiveView } = loader.require('sdk/view/core');
+  const { getContentDocument } = loader.require('sdk/panel/utils');
+
+  let contextmenu = getMostRecentBrowserWindow().
+                      document.getElementById("contentAreaContextMenu");
+  let listener = () => assert.fail('popupshown should never be called');
+
+  let panel = Panel();
+
+  panel.show();
+
+  yield wait(panel, 'show');
+
+  let view = getActiveView(panel);
+  let window = getContentDocument(view).defaultView;
+
+  let { sendMouseEvent } = window.QueryInterface(Ci.nsIInterfaceRequestor).
+                                    getInterface(Ci.nsIDOMWindowUtils);
+
+  yield ready(window);
+
+  assert.equal(contextmenu.state, 'closed',
+    'contextmenu must be closed');
+  
+  sendMouseEvent('contextmenu', 20, 20, 2, 1, 0);
+
+  contextmenu.addEventListener('popupshown', listener);
+
+  yield wait(1000);
+
+  contextmenu.removeEventListener('popupshown', listener);
+
+  assert.equal(contextmenu.state, 'closed',
+    'contextmenu was never open');
+
+  loader.unload();
+}
 
 if (isWindowPBSupported) {
   exports.testGetWindow = function(assert, done) {
