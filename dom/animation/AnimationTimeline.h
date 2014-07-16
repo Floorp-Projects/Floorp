@@ -38,6 +38,8 @@ public:
   Nullable<double> GetCurrentTime() const;
   mozilla::TimeStamp GetCurrentTimeStamp() const;
 
+  Nullable<double> ToTimelineTime(const mozilla::TimeStamp& aTimeStamp) const;
+
 protected:
   virtual ~AnimationTimeline() { }
 
