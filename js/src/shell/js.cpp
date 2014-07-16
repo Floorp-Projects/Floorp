@@ -6039,6 +6039,10 @@ SetRuntimeOptions(JSRuntime *rt, const OptionParser &op)
     int32_t fill = op.getIntOption("arm-asm-nop-fill");
     if (fill >= 0)
         jit::Assembler::NopFill = fill;
+
+    int32_t poolMaxOffset = op.getIntOption("asm-pool-max-offset");
+    if (poolMaxOffset >= 5 && poolMaxOffset <= 1024)
+        jit::Assembler::AsmPoolMaxOffset = poolMaxOffset;
 #endif
 
 #if defined(JS_ARM_SIMULATOR)
@@ -6264,6 +6268,8 @@ main(int argc, char **argv, char **envp)
 #if defined(JS_CODEGEN_ARM)
         || !op.addIntOption('\0', "arm-asm-nop-fill", "SIZE",
                             "Insert the given number of NOP instructions at all possible pool locations.", 0)
+        || !op.addIntOption('\0', "asm-pool-max-offset", "OFFSET",
+                            "The maximum pc relative OFFSET permitted in pool reference instructions.", 1024)
 #endif
 #if defined(JS_ARM_SIMULATOR)
         || !op.addBoolOption('\0', "arm-sim-icache-checks", "Enable icache flush checks in the ARM "
