@@ -39,6 +39,7 @@ namespace mozilla {
 // Uncomment to enable verbose per-sample logging.
 //#define LOG_SAMPLE_DECODE 1
 
+#ifdef PR_LOGGING
 static const char*
 TrackTypeToStr(TrackType aTrack)
 {
@@ -52,6 +53,7 @@ TrackTypeToStr(TrackType aTrack)
     return "Unknown";
   }
 }
+#endif
 
 class MP4Stream : public Stream {
 public:
