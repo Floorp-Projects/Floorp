@@ -463,7 +463,6 @@ var gCheckUpdateSecurity = gCheckUpdateSecurityDefault;
 var gUpdateEnabled = true;
 var gAutoUpdateDefault = true;
 var gHotfixID = null;
-var gShutdownBarrier = null;
 
 /**
  * This is the real manager, kept here rather than in AddonManager to keep its
@@ -742,9 +741,8 @@ var AddonManagerInternal = {
       }
 
       // Register our shutdown handler with the AsyncShutdown manager
-      gShutdownBarrier = new AsyncShutdown.Barrier("AddonManager: Waiting for clients to shut down.");
       AsyncShutdown.profileBeforeChange.addBlocker("AddonManager: shutting down providers",
-                                                   this.shutdownManager.bind(this));
+                                                   this.shutdown.bind(this));
 
       // Once we start calling providers we must allow all normal methods to work.
       gStarted = true;
@@ -932,7 +930,7 @@ var AddonManagerInternal = {
    * @return Promise{null} that resolves when all providers and dependent modules
    *                       have finished shutting down
    */
-  shutdownManager: function() {
+  shutdown: function AMI_shutdown() {
     logger.debug("shutdown");
     // Clean up listeners
     Services.prefs.removeObserver(PREF_EM_CHECK_COMPATIBILITY, this);
@@ -946,9 +944,7 @@ var AddonManagerInternal = {
     // AddonRepository after providers (if any).
     let shuttingDown = null;
     if (gStarted) {
-      shuttingDown = gShutdownBarrier.wait()
-        .then(null, err => logger.error("Failure during wait for shutdown barrier", err))
-        .then(() => this.callProvidersAsync("shutdown"))
+      shuttingDown = this.callProvidersAsync("shutdown")
         .then(null,
               err => logger.error("Failure during async provider shutdown", err))
         .then(() => AddonRepository.shutdown());
@@ -957,8 +953,8 @@ var AddonManagerInternal = {
       shuttingDown = AddonRepository.shutdown();
     }
 
-    shuttingDown.then(val => logger.debug("Async provider shutdown done"),
-                      err => logger.error("Failure during AddonRepository shutdown", err))
+      shuttingDown.then(val => logger.debug("Async provider shutdown done"),
+                        err => logger.error("Failure during AddonRepository shutdown", err))
       .then(() => {
         this.managerListeners.splice(0, this.managerListeners.length);
         this.installListeners.splice(0, this.installListeners.length);
@@ -968,9 +964,7 @@ var AddonManagerInternal = {
           delete this.startupChanges[type];
         gStarted = false;
         gStartupComplete = false;
-        gShutdownBarrier = null;
       });
-
     return shuttingDown;
   },
 
@@ -2805,11 +2799,7 @@ this.AddonManager = {
 
   escapeAddonURI: function AM_escapeAddonURI(aAddon, aUri, aAppVersion) {
     return AddonManagerInternal.escapeAddonURI(aAddon, aUri, aAppVersion);
-  },
-
-  get shutdown() {
-    return gShutdownBarrier.client;
-  },
+  }
 };
 
 // load the timestamps module into AddonManagerInternal
