@@ -73,13 +73,28 @@ map<base::ProcessId, SharedBufferManagerParent* > SharedBufferManagerParent::sMa
 StaticAutoPtr<Monitor> SharedBufferManagerParent::sManagerMonitor;
 uint64_t SharedBufferManagerParent::sBufferKey = 0;
 
+/**
+ * Task that deletes SharedBufferManagerParent on a specified thread.
+ */
+class DeleteSharedBufferManagerParentTask : public Task
+{
+public:
+    DeleteSharedBufferManagerParentTask(SharedBufferManagerParent* aSharedBufferManager)
+        : mSharedBufferManager(aSharedBufferManager) {
+    }
+    virtual void Run() MOZ_OVERRIDE {}
+private:
+    nsAutoPtr<SharedBufferManagerParent> mSharedBufferManager;
+};
+
 SharedBufferManagerParent::SharedBufferManagerParent(Transport* aTransport, base::ProcessId aOwner, base::Thread* aThread)
   : mTransport(aTransport)
   , mThread(aThread)
-#ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  , mBuffersMutex("BuffersMonitor")
-#endif
+  , mMainMessageLoop(MessageLoop::current())
+  , mDestroyed(false)
+  , mLock("SharedBufferManagerParent.mLock")
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (!sManagerMonitor) {
     sManagerMonitor = new Monitor("Manager Monitor");
   }
@@ -111,10 +126,13 @@ SharedBufferManagerParent::~SharedBufferManagerParent()
 void
 SharedBufferManagerParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  MutexAutoLock lock(mLock);
+  mDestroyed = true;
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  MutexAutoLock lock(mBuffersMutex);
   mBuffers.clear();
 #endif
+  DeleteSharedBufferManagerParentTask* task = new DeleteSharedBufferManagerParentTask(this);
+  mMainMessageLoop->PostTask(FROM_HERE, task);
 }
 
 static void
@@ -190,7 +208,7 @@ bool SharedBufferManagerParent::RecvAllocateGrallocBuffer(const IntSize& aSize, 
     GrallocReporter::sAmount += outgoingBuffer->getStride() * outgoingBuffer->getHeight() * 3 / 2;
 
   {
-    MutexAutoLock lock(mBuffersMutex);
+    MutexAutoLock lock(mLock);
     mBuffers[bufferKey] = outgoingBuffer;
   }
 #endif
@@ -204,7 +222,7 @@ bool SharedBufferManagerParent::RecvDropGrallocBuffer(const mozilla::layers::May
   int64_t bufferKey = handle.get_GrallocBufferRef().mKey;
   sp<GraphicBuffer> buf = GetGraphicBuffer(bufferKey);
   MOZ_ASSERT(buf.get());
-  MutexAutoLock lock(mBuffersMutex);
+  MutexAutoLock lock(mLock);
   NS_ASSERTION(mBuffers.count(bufferKey) == 1, "How can you drop others buffer");
   mBuffers.erase(bufferKey);
 
@@ -224,30 +242,46 @@ bool SharedBufferManagerParent::RecvDropGrallocBuffer(const mozilla::layers::May
   return true;
 }
 
+/*static*/
 void SharedBufferManagerParent::DropGrallocBufferSync(SharedBufferManagerParent* mgr, mozilla::layers::SurfaceDescriptor aDesc)
 {
   mgr->DropGrallocBufferImpl(aDesc);
 }
 
-void SharedBufferManagerParent::DropGrallocBuffer(mozilla::layers::SurfaceDescriptor aDesc)
+/*static*/
+void SharedBufferManagerParent::DropGrallocBuffer(ProcessId id, mozilla::layers::SurfaceDescriptor aDesc)
 {
   if (aDesc.type() != SurfaceDescriptor::TNewSurfaceDescriptorGralloc) {
     return;
   }
 
-  if (PlatformThread::CurrentId() == mThread->thread_id()) {
-    DropGrallocBufferImpl(aDesc);
+  MonitorAutoLock lock(*sManagerMonitor.get());
+  SharedBufferManagerParent* mgr = SharedBufferManagerParent::GetInstance(id);
+  if (!mgr) {
+    return;
+  }
+
+  MutexAutoLock mgrlock(mgr->mLock);
+  if (mgr->mDestroyed) {
+    return;
+  }
+
+  if (PlatformThread::CurrentId() == mgr->mThread->thread_id()) {
+    MOZ_CRASH("SharedBufferManagerParent::DropGrallocBuffer should not be called on SharedBufferManagerParent thread");
   } else {
-    mThread->message_loop()->PostTask(FROM_HERE,
-                                      NewRunnableFunction(&DropGrallocBufferSync, this, aDesc));
+    mgr->mThread->message_loop()->PostTask(FROM_HERE,
+                                      NewRunnableFunction(&DropGrallocBufferSync, mgr, aDesc));
   }
   return;
 }
 
 void SharedBufferManagerParent::DropGrallocBufferImpl(mozilla::layers::SurfaceDescriptor aDesc)
 {
+  MutexAutoLock lock(mLock);
+  if (mDestroyed) {
+    return;
+  }
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  MutexAutoLock lock(mBuffersMutex);
   int64_t key = -1;
   MaybeMagicGrallocBufferHandle handle;
   if (aDesc.type() == SurfaceDescriptor::TNewSurfaceDescriptorGralloc) {
@@ -276,7 +310,6 @@ MessageLoop* SharedBufferManagerParent::GetMessageLoop()
 
 SharedBufferManagerParent* SharedBufferManagerParent::GetInstance(ProcessId id)
 {
-  MonitorAutoLock lock(*sManagerMonitor.get());
   NS_ASSERTION(sManagers.count(id) == 1, "No BufferManager for the process");
   return sManagers[id];
 }
@@ -285,7 +318,7 @@ SharedBufferManagerParent* SharedBufferManagerParent::GetInstance(ProcessId id)
 android::sp<android::GraphicBuffer>
 SharedBufferManagerParent::GetGraphicBuffer(int64_t key)
 {
-  MutexAutoLock lock(mBuffersMutex);
+  MutexAutoLock lock(mLock);
   if (mBuffers.count(key) == 1) {
     return mBuffers[key];
   } else {
@@ -298,6 +331,7 @@ SharedBufferManagerParent::GetGraphicBuffer(int64_t key)
 android::sp<android::GraphicBuffer>
 SharedBufferManagerParent::GetGraphicBuffer(GrallocBufferRef aRef)
 {
+  MonitorAutoLock lock(*sManagerMonitor.get());
   return GetInstance(aRef.mOwner)->GetGraphicBuffer(aRef.mKey);
 }
 #endif
