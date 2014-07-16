@@ -13,6 +13,7 @@ EXTRA_JS_MODULES += [
     'AddonUpdateChecker.jsm',
     'Content.js',
     'LightweightThemeImageOptimizer.jsm',
+    'OpenH264Provider.jsm',
     'PluginProvider.jsm',
     'SpellCheckDictionaryBootstrap.js',
 ]
