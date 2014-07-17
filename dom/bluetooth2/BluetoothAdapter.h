@@ -188,7 +188,6 @@ private:
 
   void Root();
 
-  already_AddRefed<Promise> StartStopDiscovery(bool aStart, ErrorResult& aRv);
   already_AddRefed<mozilla::dom::DOMRequest>
     PairUnpair(bool aPair, const nsAString& aDeviceAddress, ErrorResult& aRv);
 

@@ -2299,10 +2299,7 @@ chatbox {
 %include ../shared/contextmenu.inc.css
 
 #context-navigation {
-  background-color: -moz-dialog;
-  padding-bottom: 2px;
-  margin-bottom: 2px;
-  -moz-appearance: menuitem;
+  padding-top: 4px;
 }
 
 #context-navigation > .menuitem-iconic > .menu-iconic-left {
@@ -2310,8 +2307,4 @@ chatbox {
   /* override toolkit/themes/linux/global/menu.css */
   -moz-padding-end: 0 !important;
   -moz-margin-end: 0 !important;
-}
-
-#context-sep-navigation {
-  margin-top: -4px;
 }

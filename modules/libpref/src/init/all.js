@@ -654,6 +654,10 @@ pref("devtools.dump.emit", false);
 pref("devtools.discovery.log", false);
 // Disable scanning for DevTools devices via WiFi
 pref("devtools.remote.wifi.scan", false);
+// Hide UI options for controlling device visibility over WiFi
+// N.B.: This does not set whether the device can be discovered via WiFi, only
+// whether the UI control to make such a choice is shown to the user
+pref("devtools.remote.wifi.visible", false);
 
 // view source
 pref("view_source.syntax_highlight", true);
@@ -4230,6 +4234,9 @@ pref("dom.voicemail.defaultServiceId", 0);
 
 // DOM Inter-App Communication API.
 pref("dom.inter-app-communication-api.enabled", false);
+
+// Disable mapped array buffer by default.
+pref("dom.mapped_arraybuffer.enabled", false);
 
 // The tables used for Safebrowsing phishing and malware checks.
 pref("urlclassifier.malwareTable", "goog-malware-shavar,test-malware-simple");

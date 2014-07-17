@@ -34,7 +34,7 @@ registerCleanupFunction(() => {
   }
 });
 
-// Uncomment to log events
+// Uncomment this pref to dump all devtools emitted events to the console.
 // Services.prefs.setBoolPref("devtools.dump.emit", true);
 
 // Set the testing flag on gDevTools and reset it when the test ends
