@@ -945,3 +945,34 @@ RNewDerivedTypedObject::recover(JSContext *cx, SnapshotIterator &iter) const
     iter.storeInstructionResult(result);
     return true;
 }
+
+bool
+MObjectState::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_ObjectState));
+    writer.writeUnsigned(numSlots());
+    return true;
+}
+
+RObjectState::RObjectState(CompactBufferReader &reader)
+{
+    numSlots_ = reader.readUnsigned();
+}
+
+bool
+RObjectState::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedObject object(cx, &iter.read().toObject());
+    MOZ_ASSERT(object->slotSpan() == numSlots());
+
+    RootedValue val(cx);
+    for (size_t i = 0; i < numSlots(); i++) {
+        val = iter.read();
+        object->nativeSetSlot(i, val);
+    }
+
+    val.setObject(*object);
+    iter.storeInstructionResult(val);
+    return true;
+}

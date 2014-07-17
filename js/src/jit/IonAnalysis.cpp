@@ -187,9 +187,12 @@ jit::EliminateDeadCode(MIRGenerator *mir, MIRGraph &graph)
         for (MInstructionReverseIterator inst = block->rbegin(); inst != block->rend(); ) {
             if (!inst->isEffectful() && !inst->resumePoint() &&
                 !inst->hasUses() && !inst->isGuard() &&
-                !inst->isControlInstruction()) {
+                !inst->isControlInstruction())
+            {
                 inst = block->discardAt(inst);
-            } else if (!inst->hasLiveDefUses() && inst->canRecoverOnBailout()) {
+            } else if (!inst->isRecoveredOnBailout() && !inst->hasLiveDefUses() &&
+                       inst->canRecoverOnBailout())
+            {
                 inst->setRecoveredOnBailout();
                 inst++;
             } else {

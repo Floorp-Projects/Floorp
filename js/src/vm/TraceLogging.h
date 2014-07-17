@@ -133,6 +133,7 @@ namespace jit {
     /* Specific passes during ion compilation */      \
     _(SplitCriticalEdges)                             \
     _(RenumberBlocks)                                 \
+    _(ScalarReplacement)                              \
     _(DominatorTree)                                  \
     _(PhiAnalysis)                                    \
     _(MakeLoopsContiguous)                            \
