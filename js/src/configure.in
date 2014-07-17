@@ -112,7 +112,7 @@ if test "$_conflict_files"; then
   exit 1
   break
 fi
-MOZ_BUILD_ROOT=`pwd`
+MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd`
 
 dnl Choose where to put the 'dist' directory.
 dnl ==============================================================
@@ -171,6 +171,7 @@ if test "$JS_STANDALONE" = no; then
   JS_STANDALONE=
 else
   JS_STANDALONE=1
+  LIBXUL_DIST="$MOZ_BUILD_ROOT/dist"
   AC_DEFINE(JS_STANDALONE)
 fi
 AC_SUBST(JS_STANDALONE)
@@ -1725,12 +1726,6 @@ ia64*-hpux*)
 
     case "$host" in
     *-mingw*)
-        MOZ_BUILD_ROOT=`cd $MOZ_BUILD_ROOT && pwd -W`
-        ;;
-    esac
-
-    case "$host" in
-    *-mingw*)
         if test -z "$MOZ_TOOLS"; then
             AC_MSG_ERROR([MOZ_TOOLS is not set])
         fi
@@ -2760,34 +2755,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(External Packages)
 
-dnl ========================================================
-dnl = Find the right NSPR to use.
-dnl ========================================================
-MOZ_ARG_WITH_BOOL(system-nspr,
-[  --with-system-nspr      Use an NSPR that is already built and installed.
-                          Use the 'nspr-config' script in the current path,
-                          or look for the script in the directories given with
-                          --with-nspr-exec-prefix or --with-nspr-prefix.
-                          (Those flags are only checked if you specify
-                          --with-system-nspr.)],
-    _USE_SYSTEM_NSPR=1 )
-
-MOZ_ARG_WITH_STRING(nspr-cflags,
-[  --with-nspr-cflags=FLAGS
-                          Pass FLAGS to CC when building code that uses NSPR.
-                          Use this when there's no accurate nspr-config
-                          script available.  This is the case when building
-                          SpiderMonkey as part of the Mozilla tree: the
-                          top-level configure script computes NSPR flags
-                          that accomodate the quirks of that environment.],
-    NSPR_CFLAGS=$withval)
-MOZ_ARG_WITH_STRING(nspr-libs,
-[  --with-nspr-libs=LIBS   Pass LIBS to LD when linking code that uses NSPR.
-                          See --with-nspr-cflags for more details.],
-    NSPR_LIBS=$withval)
-AC_SUBST(NSPR_CFLAGS)
-AC_SUBST(NSPR_LIBS)
-
 JS_THREADSAFE=1
 MOZ_ARG_DISABLE_BOOL(threadsafe,
 [  --disable-threadsafe    Disable support for multiple threads.],
@@ -2799,64 +2766,7 @@ fi
 JS_THREADSAFE_CONFIGURED=$JS_THREADSAFE
 AC_SUBST(JS_THREADSAFE_CONFIGURED)
 
-if test "$_USE_SYSTEM_NSPR" || (test "$NSPR_CFLAGS" -o "$NSPR_LIBS"); then
-  _HAS_NSPR=1
-fi
-
-case "$target" in
-  *linux*|*darwin*|*dragonfly*|*freebsd*|*netbsd*|*openbsd*)
-    if test -z "$_HAS_NSPR" && test "$JS_THREADSAFE"; then
-      JS_POSIX_NSPR_DEFAULT=1
-    fi
-    ;;
-esac
-
-MOZ_ARG_ENABLE_BOOL(posix-nspr-emulation,
-[  --enable-posix-nspr-emulation
-                          Enable emulation of NSPR for POSIX systems],
-    JS_POSIX_NSPR=1,
-    JS_POSIX_NSPR=,
-    JS_POSIX_NSPR="$JS_POSIX_NSPR_DEFAULT" )
-if test -n "$JS_POSIX_NSPR"; then
-    AC_DEFINE(JS_POSIX_NSPR)
-fi
-
-AC_SUBST(JS_POSIX_NSPR)
-
-dnl Pass either --with-system-nspr or (--with-nspr-cflags and
-dnl --with-nspr-libs), but not both.
-if test "$_USE_SYSTEM_NSPR" && (test "$NSPR_CFLAGS" -o "$NSPR_LIBS"); then
-    AC_MSG_ERROR([--with-system-nspr and --with-nspr-libs/cflags are mutually exclusive.
-See 'configure --help'.])
-fi
-
-dnl Can't use --enable-posix-nspr-emulation if compiling with NSPR.
-if test "$_HAS_NSPR" && test "$JS_POSIX_NSPR"; then
-    AC_MSG_ERROR([--enable-posix-nspr-emulation is mututally exclusive with --with-system-nspr
-and --with-nspr-libs/cflags. See 'configure --help'.])
-fi
-
-if test -n "$_USE_SYSTEM_NSPR"; then
-    MOZ_NATIVE_NSPR=
-    AM_PATH_NSPR($NSPR_MINVER, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
-fi
-
-NSPR_PKGCONF_CHECK="nspr"
-if test -n "$MOZ_NATIVE_NSPR"; then
-    # piggy back on $MOZ_NATIVE_NSPR to set a variable for the nspr check for js.pc
-    NSPR_PKGCONF_CHECK="nspr >= $NSPR_MINVER"
-
-    _SAVE_CFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $NSPR_CFLAGS"
-    AC_TRY_COMPILE([#include "prlog.h"],
-                [#ifndef PR_STATIC_ASSERT
-                 #error PR_STATIC_ASSERT not defined
-                 #endif],
-                [MOZ_NATIVE_NSPR=1],
-                AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT]))
-    CFLAGS=$_SAVE_CFLAGS
-fi
-AC_SUBST(NSPR_PKGCONF_CHECK)
+MOZ_CONFIG_NSPR(js)
 
 dnl ========================================================
 dnl system zlib Support
@@ -4030,7 +3940,6 @@ AC_SUBST(ac_configure_args)
 
 AC_SUBST(TOOLCHAIN_PREFIX)
 
-
 if test -n "$JS_STANDALONE"; then
 MOZ_APP_NAME="mozjs"
 MOZ_APP_VERSION="$MOZILLA_SYMBOLVERSION"
@@ -4048,6 +3957,9 @@ AC_SUBST(JS_LIBRARY_NAME)
 AC_SUBST(JS_CONFIG_MOZ_JS_LIBS)
 AC_SUBST(JS_CONFIG_LIBS)
 
+if test -n "$MOZ_BUILD_NSPR"; then
+    MOZ_SUBCONFIGURE_NSPR()
+fi
 MOZ_SUBCONFIGURE_FFI()
 
 dnl Spit out some output

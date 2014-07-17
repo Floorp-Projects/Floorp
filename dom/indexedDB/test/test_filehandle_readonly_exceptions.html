@@ -1,0 +1,82 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>File Handle Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    const name = window.location.pathname;
+
+    let request = indexedDB.open(name, 1);
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    let event = yield undefined;
+
+    let db = event.target.result;
+    db.onerror = errorHandler;
+
+    request = db.createMutableFile("test.txt");
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    let mutableFile = event.target.result;
+    mutableFile.onerror = errorHandler;
+
+    request = mutableFile.open("readwrite").write({});
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    is(event.target.fileHandle.mode, "readwrite", "Correct mode");
+
+    try {
+      mutableFile.open().write({});
+      ok(false, "Writing to a readonly file handle should fail!");
+    }
+    catch (e) {
+      ok(true, "Writing to a readonly file handle failed");
+    }
+
+    try {
+      mutableFile.open().append({});
+      ok(false, "Appending to a readonly file handle should fail!");
+    }
+    catch (e) {
+      ok(true, "Appending to a readonly file handle failed");
+    }
+
+    try {
+      mutableFile.open().truncate({});
+      ok(false, "Truncating a readonly file handle should fail!");
+    }
+    catch (e) {
+      ok(true, "Truncating a readonly file handle failed");
+    }
+
+    try {
+      mutableFile.open().flush({});
+      ok(false, "Flushing a readonly file handle should fail!");
+    }
+    catch (e) {
+      ok(true, "Flushing a readonly file handle failed");
+    }
+
+    finishTest();
+    yield undefined;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="file.js"></script> <!-- This is included just to skip this test in test_ipc.html -->
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

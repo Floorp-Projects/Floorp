@@ -15,11 +15,11 @@
 namespace mozilla {
 namespace dom {
 
-class FileHandle;
+class FileHandleBase;
 class FileHelper;
-class FileRequest;
+class FileRequestBase;
 class FileOutputStreamWrapper;
-class MutableFile;
+class MutableFileBase;
 
 class FileHelperListener
 {
@@ -41,7 +41,6 @@ public:
  */
 class FileHelper : public nsIRequestObserver
 {
-  friend class FileRequest;
   friend class FileOutputStreamWrapper;
 
 public:
@@ -49,10 +48,19 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
 
   nsresult
+  ResultCode() const
+  {
+    return mResultCode;
+  }
+
+  nsresult
   Enqueue();
 
   nsresult
   AsyncRun(FileHelperListener* aListener);
+
+  virtual nsresult
+  GetSuccessResult(JSContext* aCx, JS::MutableHandle<JS::Value> aVal);
 
   void
   OnStreamProgress(uint64_t aProgress, uint64_t aProgressMax);
@@ -63,19 +71,16 @@ public:
   void
   OnStreamDestroy();
 
-  static FileHandle*
+  static FileHandleBase*
   GetCurrentFileHandle();
 
 protected:
-  FileHelper(FileHandle* aFileHandle, FileRequest* aRequest);
+  FileHelper(FileHandleBase* aFileHandle, FileRequestBase* aRequest);
 
   virtual ~FileHelper();
 
   virtual nsresult
   DoAsyncRun(nsISupports* aStream) = 0;
-
-  virtual nsresult
-  GetSuccessResult(JSContext* aCx, JS::MutableHandle<JS::Value> aVal);
 
   virtual void
   ReleaseObjects();
@@ -83,9 +88,9 @@ protected:
   void
   Finish();
 
-  nsRefPtr<MutableFile> mMutableFile;
-  nsRefPtr<FileHandle> mFileHandle;
-  nsRefPtr<FileRequest> mFileRequest;
+  nsRefPtr<MutableFileBase> mMutableFile;
+  nsRefPtr<FileHandleBase> mFileHandle;
+  nsRefPtr<FileRequestBase> mFileRequest;
 
   nsRefPtr<FileHelperListener> mListener;
   nsCOMPtr<nsIRequest> mRequest;

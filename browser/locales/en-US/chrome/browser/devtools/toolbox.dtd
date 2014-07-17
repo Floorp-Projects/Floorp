@@ -83,11 +83,11 @@
 <!ENTITY options.disableJavaScript.label     "Disable JavaScript *">
 <!ENTITY options.disableJavaScript.tooltip   "Turning this option on will disable JavaScript for the current tab. If the tab or the toolbox is closed then this setting will be forgotten.">
 
-<!-- LOCALIZATION NOTE (options.disableCache.label,
-  -  options.disableCache.tooltip): This is the options panel label and
+<!-- LOCALIZATION NOTE (options.disableCache.label2,
+  -  options.disableCache.tooltip2): This is the options panel label and
   -  tooltip for the checkbox that toggles the cache on or off. -->
-<!ENTITY options.disableCache.label     "Disable Cache *">
-<!ENTITY options.disableCache.tooltip   "Turning this option on will disable the cache for the current tab. If the tab or the toolbox is closed then this setting will be forgotten.">
+<!ENTITY options.disableCache.label2     "Disable Cache (when toolbox is open)">
+<!ENTITY options.disableCache.tooltip2   "Turning this option on will disable the cache for all tabs that have the toolbox open.">
 
 <!-- LOCALIZATION NOTE (options.selectDefaultTools.label): This is the label for
   -  the heading of group of checkboxes corresponding to the default developer
