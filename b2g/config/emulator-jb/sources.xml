@@ -17,7 +17,7 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="1246714f168d23d624244e352f8ba5d151a6da9a"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="09961a72e6651786d56876113673847b2f85015e"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="7f792d756385bb894fba7645da59c67fe2c804bf"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="dc5ca96695cab87b4c2fcd7c9f046ae3415a70a5"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="777194d772c831b5dab40cf919523d5665f2a46c"/>
@@ -126,11 +126,11 @@
   <!-- Emulator specific things -->
   <project name="android-development" path="development" remote="b2g" revision="dab55669da8f48b6e57df95d5af9f16b4a87b0b1"/>
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="3a9a17613cc685aa232432566ad6cc607eab4ec1"/>
-  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="0e31f35a2a77301e91baa8a237aa9e9fa4076084"/>
+  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="197cd9492b9fadaa915c5daf36ff557f8f4a8d1c"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="7d33aaf740bbf6c7c6e9c34a92b371eda311b66b"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="749880f1942620ee1caac7c248f7cfe33f56203d"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="421d09bea0feda3934813f0f411d898f08108770"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="0e56e450367cd802241b27164a2979188242b95f"/>
-  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="832f4acaf481a19031e479a40b03d9ce5370ddee"/>
+  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="9f28c4faea3b2f01db227b2467b08aeba96d9bec"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="8400a1a850d19f28137880b31582efa3416223c3"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="8b1365af38c9a653df97349ee53a3f5d64fd590a"/>
   <project name="darwinstreamingserver" path="system/darwinstreamingserver" remote="b2g" revision="cf85968c7f85e0ec36e72c87ceb4837a943b8af6"/>
