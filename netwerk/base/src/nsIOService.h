@@ -18,6 +18,7 @@
 #include "nsCategoryCache.h"
 #include "nsISpeculativeConnect.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/net/DNS.h"
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
 
@@ -73,6 +74,15 @@ public:
     bool IsComingOnline() const {
       return mOffline && mSettingOffline && !mSetOfflineValue;
     }
+
+    // Returns the NetworkLinkID.
+    uint64_t GetNetworkLinkID() const;
+
+    // XXX Remove this once Bug 939319 and associated bugs for
+    // NS_NETWORK_LINK_DATA_CHANGED are complete on all supported
+    // platforms.
+    // Primes the network link ID with the current self address of this host.
+    void UpdateNetworkLinkID(const mozilla::net::NetAddr aCurrentSelfAddr);
 
 private:
     // These shouldn't be called directly:
@@ -133,6 +143,16 @@ public:
     // Used for all default buffer sizes that necko allocates.
     static uint32_t   gDefaultSegmentSize;
     static uint32_t   gDefaultSegmentCount;
+
+private:
+    // XXX Maybe remove these once Bug 939319 and associated bugs for
+    // NS_NETWORK_LINK_DATA_CHANGED are complete on all supported platforms.
+    // Right now, the network link ID is just 64bits of pseudo-randonmess.
+    //
+    // ID of the current network link.
+    uint64_t                             mNetworkLinkID;
+    // IP address of this host for the current network link.
+    mozilla::net::NetAddr                mNetworkLinkSelfAddr;
 };
 
 /**
