@@ -1087,11 +1087,11 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(36px, 1152px, 72px, 1116px);
   }
 
-  #webrtc-status-button[cui-areatype="toolbar"] {
+  #webrtc-status-button {
     -moz-image-region: rect(0, 1188px, 36px, 1152px);
   }
 
-  #webrtc-status-button[cui-areatype="toolbar"]:hover:active:not([disabled="true"]) {
+  #webrtc-status-button:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 1188px, 72px, 1152px);
   }
 
@@ -1340,7 +1340,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 /* Help 16px icons fit: */
-.toolbarbutton-1[cui-areatype="toolbar"]:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon {
+toolbar .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon {
   margin: 2px;
 }
 

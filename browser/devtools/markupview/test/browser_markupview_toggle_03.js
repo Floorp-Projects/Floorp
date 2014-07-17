@@ -13,7 +13,7 @@ let test = asyncTest(function*() {
   let {inspector} = yield addTab(TEST_URL).then(openInspector);
 
   info("Getting the container for the UL parent element");
-  let container = getContainerForRawNode("ul", inspector);
+  let container = yield getContainerForSelector("ul", inspector);
 
   info("Alt-clicking on the UL parent expander, and waiting for children");
   let onUpdated = inspector.once("inspector-updated");
@@ -23,11 +23,14 @@ let test = asyncTest(function*() {
   yield waitForMultipleChildrenUpdates(inspector);
 
   info("Checking that all nodes exist and are expanded");
-  for (let node of content.document.querySelectorAll("ul, li, span, em")) {
-    let nodeContainer = getContainerForRawNode(node, inspector);
-    ok(nodeContainer, "Container for node " + node.tagName + " exists");
+  let nodeList = yield inspector.walker.querySelectorAll(
+    inspector.walker.rootNode, "ul, li, span, em");
+  let nodeFronts = yield nodeList.items();
+  for (let nodeFront of nodeFronts) {
+    let nodeContainer = getContainerForNodeFront(nodeFront, inspector);
+    ok(nodeContainer, "Container for node " + nodeFront.tagName + " exists");
     ok(nodeContainer.expanded,
-      "Container for node " + node.tagName + " is expanded");
+      "Container for node " + nodeFront.tagName + " is expanded");
   }
 });
 

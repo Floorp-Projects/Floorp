@@ -76,7 +76,7 @@ function initializeAutoCompletion(ctx, options = {}) {
       });
     };
 
-    keyMap[Editor.keyFor("showInformation", { noaccel: true })] = (cm) => {
+    keyMap[Editor.keyFor("showInformation2", { noaccel: true })] = (cm) => {
       cm.tern.showType(cm, null, () => {
         ed.emit("show-information");
       });
