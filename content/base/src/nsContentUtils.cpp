@@ -6440,37 +6440,14 @@ nsContentUtils::URIInheritsSecurityContext(nsIURI *aURI, bool *aResult)
 
 // static
 bool
-nsContentUtils::SetUpChannelOwner(nsIPrincipal* aLoadingPrincipal,
-                                  nsIChannel* aChannel,
-                                  nsIURI* aURI,
-                                  bool aInheritForAboutBlank,
-                                  bool aIsSandboxed,
-                                  bool aForceInherit)
+nsContentUtils::ChannelShouldInheritPrincipal(nsIPrincipal* aLoadingPrincipal,
+                                              nsIURI* aURI,
+                                              bool aInheritForAboutBlank,
+                                              bool aForceInherit)
 {
-  nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadingPrincipal;
-  if (!loadingPrincipal) {
-    if (!aIsSandboxed) {
-      // Nothing to do here
-      return false;
-    }
+  MOZ_ASSERT(aLoadingPrincipal, "Can not check inheritance without a principal");
 
-    // Go ahead and create a nullprincipal to use as our loading principal,
-    // since we need to make sure to sandbox the load but we have no clue who's
-    // loading us.
-    loadingPrincipal = do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID);
-    if (!loadingPrincipal) {
-      NS_RUNTIMEABORT("Failed to create a principal?");
-    }
-  }
-
-  // If we're sandboxed, make sure to clear any owner the channel
-  // might already have.
-  if (aIsSandboxed) {
-    aChannel->SetOwner(nullptr);
-  }
-
-  // Set the loadInfo of the channel, but only tell the channel to
-  // inherit if it can't provide its own security context.
+  // Only tell the channel to inherit if it can't provide its own security context.
   //
   // XXX: If this is ever changed, check all callers for what owners
   //      they're passing in.  In particular, see the code and
@@ -6500,19 +6477,12 @@ nsContentUtils::SetUpChannelOwner(nsIPrincipal* aLoadingPrincipal,
       // based on its own codebase later.
       //
       (URIIsLocalFile(aURI) &&
-       NS_SUCCEEDED(loadingPrincipal->CheckMayLoad(aURI, false, false)) &&
+       NS_SUCCEEDED(aLoadingPrincipal->CheckMayLoad(aURI, false, false)) &&
        // One more check here.  CheckMayLoad will always return true for the
        // system principal, but we do NOT want to inherit in that case.
-       !IsSystemPrincipal(loadingPrincipal));
+       !IsSystemPrincipal(aLoadingPrincipal));
   }
-
-  nsCOMPtr<nsILoadInfo> loadInfo =
-    new LoadInfo(loadingPrincipal,
-                 inherit ?
-                   nsILoadInfo::eInheritPrincipal : nsILoadInfo::eDontInheritPrincipal,
-                 aIsSandboxed ? nsILoadInfo::eSandboxed : nsILoadInfo::eNotSandboxed);
-  aChannel->SetLoadInfo(loadInfo);
-  return inherit && !aIsSandboxed;
+  return inherit;
 }
 
 /* static */

@@ -2504,10 +2504,23 @@ nsObjectLoadingContent::OpenChannel()
   nsRefPtr<ObjectInterfaceRequestorShim> shim =
     new ObjectInterfaceRequestorShim(this);
 
+  bool isSandBoxed = doc->GetSandboxFlags() & SANDBOXED_ORIGIN;
+  bool inherit = nsContentUtils::ChannelShouldInheritPrincipal(thisContent->NodePrincipal(),
+                                                               mURI,
+                                                               true,   // aInheritForAboutBlank
+                                                               false); // aForceInherit
+  nsSecurityFlags securityFlags = nsILoadInfo::SEC_NORMAL;
+  if (inherit) {
+    securityFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
+  }
+  if (isSandBoxed) {
+    securityFlags |= nsILoadInfo::SEC_SANDBOXED;
+  }
+
   rv = NS_NewChannel(getter_AddRefs(chan),
                      mURI,
                      thisContent,
-                     nsILoadInfo::SEC_NORMAL,
+                     securityFlags,
                      nsIContentPolicy::TYPE_OBJECT,
                      channelPolicy,
                      group, // aLoadGroup
@@ -2528,14 +2541,6 @@ nsObjectLoadingContent::OpenChannel()
       timedChannel->SetInitiatorType(thisContent->LocalName());
     }
   }
-
-  // Set up the channel's principal and such, like nsDocShell::DoURILoad does.
-  // If the content being loaded should be sandboxed with respect to origin we
-  // tell SetUpChannelOwner that.
-  nsContentUtils::SetUpChannelOwner(thisContent->NodePrincipal(), chan, mURI,
-                                    true,
-                                    doc->GetSandboxFlags() & SANDBOXED_ORIGIN,
-                                    false);
 
   nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(chan);
   if (scriptChannel) {
