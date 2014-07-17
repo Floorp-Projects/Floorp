@@ -7,7 +7,7 @@
 // Tests the computed-view keyboard navigation
 
 let test = asyncTest(function*() {
-  yield addTab("data:text/html,computed view keyboard nav test");
+  yield addTab("data:text/html;charset=utf-8,computed view keyboard nav test");
 
   content.document.body.innerHTML = '<style type="text/css"> ' +
     'span { font-variant: small-caps; color: #000000; } ' +

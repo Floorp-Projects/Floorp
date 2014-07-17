@@ -22,7 +22,7 @@ let test = asyncTest(function* () {
   let PAGE_CONTENT = "<style>" + TEST_STYLE + "</style>" +
     "<h1>browser_styleinspector_tooltip-multiple-background-images.js</h1>";
 
-  yield addTab("data:text/html,background image tooltip test");
+  yield addTab("data:text/html;charset=utf-8,background image tooltip test");
   content.document.body.innerHTML = PAGE_CONTENT;
 
   yield testRuleViewUrls();

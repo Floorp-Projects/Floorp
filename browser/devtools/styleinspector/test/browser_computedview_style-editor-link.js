@@ -11,7 +11,7 @@ const STYLESHEET_URL = "data:text/css,"+encodeURIComponent(
    "color: blue",
    "}"].join("\n"));
 
-const DOCUMENT_URL = "data:text/html,"+encodeURIComponent(
+const DOCUMENT_URL = "data:text/html;charset=utf-8,"+encodeURIComponent(
   ['<html>' +
    '<head>' +
    '<title>Computed view style editor link test</title>',

@@ -17,7 +17,7 @@ const PAGE_CONTENT = [
 ].join("\n");
 
 let test = asyncTest(function*() {
-  yield addTab("data:text/html,rule view color picker tooltip test");
+  yield addTab("data:text/html;charset=utf-8,rule view color picker tooltip test");
 
   info("Creating the test document");
   content.document.body.innerHTML = PAGE_CONTENT;

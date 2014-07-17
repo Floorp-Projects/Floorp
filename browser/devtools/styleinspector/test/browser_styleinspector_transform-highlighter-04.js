@@ -28,7 +28,7 @@ const PAGE_CONTENT = [
 const TYPE = "CssTransformHighlighter";
 
 let test = asyncTest(function*() {
-  yield addTab("data:text/html," + PAGE_CONTENT);
+  yield addTab("data:text/html;charset=utf-8," + PAGE_CONTENT);
 
   let {view: rView, inspector} = yield openRuleView();
   yield selectNode(".test", inspector);
