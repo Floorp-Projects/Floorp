@@ -380,6 +380,16 @@ ApzcPanAndCheckStatus(AsyncPanZoomController* aApzc,
 }
 
 static void
+ApzcPanNoFling(AsyncPanZoomController* aApzc,
+               int& aTime,
+               int aTouchStartY,
+               int aTouchEndY)
+{
+  ApzcPan(aApzc, aTime, aTouchStartY, aTouchEndY);
+  aApzc->CancelAnimation();
+}
+
+static void
 ApzcPinchWithPinchInput(AsyncPanZoomController* aApzc,
                         int aFocusX, int aFocusY, float aScale,
                         nsEventStatus (*aOutEventStatuses)[3] = nullptr)
@@ -807,6 +817,10 @@ protected:
       EXPECT_EQ(ScreenPoint(), pointOut);
       EXPECT_EQ(ViewTransform(), viewTransformOut);
     }
+
+    // Clear the fling from the previous pan, or stopping it will
+    // consume the next touchstart
+    apzc->CancelAnimation();
 
     // Pan back
     ApzcPanAndCheckStatus(apzc, time, touchEnd, touchStart, !aShouldTriggerScroll, false, &allowedTouchBehaviors);
@@ -1660,7 +1674,7 @@ TEST_F(APZCTreeManagerTester, HitTesting2) {
   // Since this paint request is in the queue to Gecko, transformToGecko will
   // take it into account.
   manager->BuildOverscrollHandoffChain(apzcroot);
-  ApzcPan(apzcroot, time, 100, 50);
+  ApzcPanNoFling(apzcroot, time, 100, 50);
   manager->ClearOverscrollHandoffChain();
 
   // Hit where layers[3] used to be. It should now hit the root.
@@ -1688,7 +1702,7 @@ TEST_F(APZCTreeManagerTester, HitTesting2) {
   // one yet. Now we have an async transform on top of the pending paint request
   // transform.
   manager->BuildOverscrollHandoffChain(apzcroot);
-  ApzcPan(apzcroot, time, 100, 50);
+  ApzcPanNoFling(apzcroot, time, 100, 50);
   manager->ClearOverscrollHandoffChain();
 
   // Hit where layers[3] used to be. It should now hit the root.
