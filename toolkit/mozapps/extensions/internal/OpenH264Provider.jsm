@@ -161,6 +161,11 @@ let OpenH264Provider = {
     Services.obs.addObserver(this, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED, false);
     prefs.observe(OPENH264_PREF_ENABLED, this.onPrefEnabledChanged, this);
     prefs.observe(OPENH264_PREF_PATH, this.onPrefPathChanged, this);
+
+    this.gmpPath = prefs.get(OPENH264_PREF_PATH, null);
+    if (this.gmpPath) {
+      gmpService.addPluginDirectory(this.gmpPath);
+    }
   },
 
   shutdown: function() {
