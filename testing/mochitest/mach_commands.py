@@ -194,7 +194,7 @@ class MochitestRunner(MozbuildObject):
     def run_desktop_test(self, context, suite=None, test_paths=None, debugger=None,
         debugger_args=None, slowscript=False, screenshot_on_fail = False, shuffle=False, keep_open=False,
         rerun_failures=False, no_autorun=False, repeat=0, run_until_failure=False,
-        slow=False, chunk_by_dir=0, total_chunks=None, this_chunk=None,
+        slow=False, chunk_by_dir=0, total_chunks=None, this_chunk=None, extraPrefs=[],
         jsdebugger=False, debug_on_failure=False, start_at=None, end_at=None,
         e10s=False, dmd=False, dump_output_directory=None,
         dump_about_memory_after_test=False, dump_dmd_after_test=False,
@@ -324,6 +324,7 @@ class MochitestRunner(MozbuildObject):
         options.dumpOutputDirectory = dump_output_directory
         options.quiet = quiet
         options.environment = environment
+        options.extraPrefs = extraPrefs
         options.bisectChunk = bisectChunk
         options.runByDir = runByDir
         options.useTestMediaDevices = useTestMediaDevices
@@ -489,6 +490,11 @@ def MochitestCommand(func):
         help='Breaks execution and enters the JS debugger on a test failure. ' \
              'Should be used together with --jsdebugger.')
     func = debug_on_failure(func)
+
+    setpref = CommandArgument('--setpref', default=[], action='append',
+					 metavar='PREF=VALUE', dest='extraPrefs',
+					 help='defines an extra user preference')
+    func = setpref(func)
 
     jsdebugger = CommandArgument('--jsdebugger', action='store_true',
         help='Start the browser JS debugger before running the test. Implies --no-autorun.')

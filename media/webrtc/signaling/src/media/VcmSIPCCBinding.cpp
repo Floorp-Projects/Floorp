@@ -89,6 +89,7 @@ using namespace mozilla;
 using namespace CSF;
 
 VcmSIPCCBinding * VcmSIPCCBinding::gSelf = nullptr;
+bool VcmSIPCCBinding::gInitGmpCodecs = false;
 int VcmSIPCCBinding::gAudioCodecMask = 0;
 int VcmSIPCCBinding::gVideoCodecMask = 0;
 int VcmSIPCCBinding::gVideoCodecGmpMask = 0;
@@ -228,12 +229,6 @@ void VcmSIPCCBinding::setVideoCodecs(int codecMask)
   VcmSIPCCBinding::gVideoCodecMask = codecMask;
 }
 
-void VcmSIPCCBinding::addVideoCodecsGmp(int codecMask)
-{
-  CSFLogDebug(logTag, "ADDING VIDEO: %d", codecMask);
-  VcmSIPCCBinding::gVideoCodecGmpMask |= codecMask;
-}
-
 int VcmSIPCCBinding::getAudioCodecs()
 {
   return VcmSIPCCBinding::gAudioCodecMask;
@@ -244,9 +239,75 @@ int VcmSIPCCBinding::getVideoCodecs()
   return VcmSIPCCBinding::gVideoCodecMask;
 }
 
+static void GMPDummy() {};
+
+bool VcmSIPCCBinding::scanForGmpCodecs()
+{
+  if (!gSelf) {
+    return false;
+  }
+  if (!gSelf->mGMPService) {
+    gSelf->mGMPService = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+    if (!gSelf->mGMPService) {
+      return false;
+    }
+  }
+
+  // XXX find a way to a) do this earlier, b) not block mainthread
+  // Perhaps fire on first RTCPeerconnection creation, and block
+  // processing (async) CreateOffer or CreateAnswer's until it has returned.
+  // Since they're already async, it's easy to avoid starting them there.
+  // However, we might like to do it even earlier, perhaps.
+
+  // XXX We shouldn't be blocking MainThread on the GMP thread!
+  // This initiates the scan for codecs
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = gSelf->mGMPService->GetThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  // presumes that all GMP dir scans have been queued for the GMPThread
+  mozilla::SyncRunnable::DispatchToThread(thread,
+                                          WrapRunnableNM(&GMPDummy));
+  return true;
+}
+
 int VcmSIPCCBinding::getVideoCodecsGmp()
 {
-  return VcmSIPCCBinding::gVideoCodecGmpMask;
+  if (!gInitGmpCodecs) {
+    if (scanForGmpCodecs()) {
+      gInitGmpCodecs = true;
+    }
+  }
+  if (gInitGmpCodecs) {
+    if (!gSelf->mGMPService) {
+     gSelf->mGMPService = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+    }
+    if (gSelf->mGMPService) {
+      // XXX I'd prefer if this was all known ahead of time...
+
+      nsTArray<nsCString> tags;
+      tags.AppendElement(NS_LITERAL_CSTRING("h264"));
+
+      // H.264 only for now
+      bool has_gmp;
+      nsresult rv;
+      rv = gSelf->mGMPService->HasPluginForAPI(NS_LITERAL_STRING(""),
+                                               NS_LITERAL_CSTRING("encode-video"),
+                                               &tags,
+                                               &has_gmp);
+      if (NS_SUCCEEDED(rv) && has_gmp) {
+        rv = gSelf->mGMPService->HasPluginForAPI(NS_LITERAL_STRING(""),
+                                                 NS_LITERAL_CSTRING("decode-video"),
+                                                 &tags,
+                                                 &has_gmp);
+        if (NS_SUCCEEDED(rv) && has_gmp) {
+          return VCM_CODEC_RESOURCE_H264;
+        }
+      }
+    }
+  }
+  return 0;
 }
 
 int VcmSIPCCBinding::getVideoCodecsHw()

@@ -79,3 +79,6 @@ pref(layout.css.background-blend-mode.enabled,true) == background-blending-backg
 # Test plan 5.3.11 background-blend-mode for an element with background-attachement
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-background-attachement-fixed.html background-blending-background-attachement-fixed-ref.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-background-attachement-fixed-scroll.html background-blending-background-attachement-fixed-scroll-ref.html
+
+pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-image.html background-blend-mode-body-image-ref.html
+pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image-ref.html

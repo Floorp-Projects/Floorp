@@ -96,7 +96,7 @@ public:
 
   void SetServiceURI(const nsAString& aArg, ErrorResult& aRv);
 
-  void Start(ErrorResult& aRv);
+  void Start(const Optional<NonNull<DOMMediaStream>>& aStream, ErrorResult& aRv);
 
   void Stop();
 

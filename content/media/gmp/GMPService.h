@@ -69,8 +69,8 @@ private:
     bool mAdd;
   };
 
+  Mutex mMutex; // Protects mGMPThread and mShuttingDown and mPlugins
   nsTArray<nsRefPtr<GMPParent>> mPlugins;
-  Mutex mMutex; // Protects mGMPThread and mShuttingDown
   nsCOMPtr<nsIThread> mGMPThread;
   bool mShuttingDown;
   bool mShuttingDownOnGMPThread;

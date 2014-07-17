@@ -57,7 +57,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
     nextEventIdx++;
 
     performTest({
-      eventsToRequest: ["EVENT_START", "EVENT_AUDIO_DATA"],
+      eventsToRequest: [],
       expectedEvents: expectedEvents,
       doneFunc: (nextEventIdx < eventsToAbortOn.length) ? doNextTest : SimpleTest.finish,
       prefs: [["media.webspeech.test.fake_fsm_events", true], ["media.webspeech.test.fake_recognition_service", true]]

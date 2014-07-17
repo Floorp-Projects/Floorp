@@ -763,9 +763,10 @@ class BaseMarionetteTestRunner(object):
                     self.manifest_skipped_tests.append(test)
 
             for test in self.manifest_skipped_tests:
-                self.logger.info('TEST-SKIP | %s | %s' % (
-                    os.path.basename(test['path']),
-                    test['disabled']))
+                self.logger.test_start(os.path.basename(test['path']))
+                self.logger.test_end(os.path.basename(test['path']),
+                                     'SKIP',
+                                     message=test['disabled'])
                 self.todo += 1
 
             for i in target_tests:

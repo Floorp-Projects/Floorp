@@ -5,18 +5,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'MediaPluginDecoder.h',
-    'MediaPluginHost.h',
-    'MediaPluginReader.h',
-    'MediaResourceServer.h',
+    'AndroidMediaDecoder.h',
+    'AndroidMediaPluginHost.h',
+    'AndroidMediaReader.h',
+    'AndroidMediaResourceServer.h',
     'MPAPI.h',
 ]
 
 UNIFIED_SOURCES += [
-    'MediaPluginDecoder.cpp',
-    'MediaPluginHost.cpp',
-    'MediaPluginReader.cpp',
-    'MediaResourceServer.cpp',
+    'AndroidMediaDecoder.cpp',
+    'AndroidMediaPluginHost.cpp',
+    'AndroidMediaReader.cpp',
+    'AndroidMediaResourceServer.cpp',
 ]
 
 LOCAL_INCLUDES += [

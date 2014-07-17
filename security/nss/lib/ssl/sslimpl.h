@@ -326,6 +326,7 @@ typedef struct sslOptionsStr {
     unsigned int enableOCSPStapling     : 1;  /* 25 */
     unsigned int enableNPN              : 1;  /* 26 */
     unsigned int enableALPN             : 1;  /* 27 */
+    unsigned int reuseServerECDHEKey    : 1;  /* 28 */
 } sslOptions;
 
 typedef enum { sslHandshakingUndetermined = 0,

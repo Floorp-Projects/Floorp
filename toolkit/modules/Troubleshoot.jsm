@@ -145,6 +145,22 @@ let dataProviders = {
       data.supportURL = urlFormatter.formatURLPref("app.support.baseURL");
     }
     catch (e) {}
+
+    data.numTotalWindows = 0;
+    data.numRemoteWindows = 0;
+    let winEnumer = Services.ww.getWindowEnumerator("navigator:browser");
+    while (winEnumer.hasMoreElements()) {
+      data.numTotalWindows++;
+      let remote = winEnumer.getNext().
+                   QueryInterface(Ci.nsIInterfaceRequestor).
+                   getInterface(Ci.nsIWebNavigation).
+                   QueryInterface(Ci.nsILoadContext).
+                   useRemoteTabs;
+      if (remote) {
+        data.numRemoteWindows++;
+      }
+    }
+
     done(data);
   },
 

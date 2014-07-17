@@ -1,5 +1,4 @@
 # Failures for our android x86 and arm emulator test environments.
 
-conformance/extensions/oes-texture-float.html
 conformance/programs/get-active-test.html
 conformance/textures/texture-npot.html

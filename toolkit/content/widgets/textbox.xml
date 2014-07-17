@@ -171,9 +171,6 @@
 
       <destructor>
         <![CDATA[
-          // Touch a non-existent property on our anonymous input field. This
-          // serves as test coverage for bug 1034682.
-          this.inputField.foo;
           if (this.inputField.value)
             this.boxObject.setProperty('value', this.inputField.value);
           this.mInputField = null;

@@ -2,35 +2,4 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-dist_dest = $(DIST)/$(APP_NAME).app
-
 PREF_JS_EXPORTS = $(srcdir)/mobile.js
-
-ifndef LIBXUL_SDK
-ifneq (Android,$(OS_TARGET))
-LIBS += \
-  $(XPCOM_STANDALONE_GLUE_LDOPTS) \
-  $(NULL)
-
-endif
-endif #LIBXUL_SDK
-
-# Make sure the standalone glue doesn't try to get libxpcom.so from mobile/app.
-NSDISTMODE = copy
-
-include $(topsrcdir)/config/rules.mk
-
-APP_BINARY = $(MOZ_APP_NAME)$(BIN_SUFFIX)
-
-libs::
-ifdef LIBXUL_SDK
-	cp $(LIBXUL_DIST)/bin/xulrunner-stub$(BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY)
-endif
-ifndef SKIP_COPY_XULRUNNER #{
-ifdef LIBXUL_SDK
-	$(NSINSTALL) -D $(DIST)/bin/xulrunner
-	(cd $(LIBXUL_SDK)/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DIST)/bin/xulrunner && tar -xf -)
-endif
-endif #} SKIP_COPY_XULRUNNER
-
-	$(NSINSTALL) -D $(DIST)/bin/chrome/icons/default

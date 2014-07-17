@@ -2118,6 +2118,11 @@ ia64*-hpux*)
         _DEFINES_CXXFLAGS='-FI $(DEPTH)/dist/include/mozilla-config.h -DMOZILLA_CLIENT'
         CFLAGS="$CFLAGS -W3 -Gy"
         CXXFLAGS="$CXXFLAGS -W3 -Gy"
+        if test "$_CC_SUITE" -ge "11"; then
+            dnl VS2012+ defaults to -arch:SSE2.
+            CFLAGS="$CFLAGS -arch:IA32"
+            CXXFLAGS="$CXXFLAGS -arch:IA32"
+        fi
         if test "$_CC_SUITE" -ge "12"; then
             dnl VS2013+ requires -FS when parallel building by make -jN.
             dnl If nothing, compiler sometimes causes C1041 error.
@@ -3422,32 +3427,10 @@ MOZ_ARG_HEADER(External Packages)
 
 MOZ_ARG_WITH_STRING(libxul-sdk,
 [  --with-libxul-sdk=PFX   Use the libXUL SDK at <PFX>],
-  LIBXUL_SDK_DIR=$withval)
+  AC_MSG_ERROR([--with-libxul-sdk is not supported anymore.]))
 
-if test "$LIBXUL_SDK_DIR" = "yes"; then
-    AC_MSG_ERROR([--with-libxul-sdk must specify a path])
-elif test -n "$LIBXUL_SDK_DIR" -a "$LIBXUL_SDK_DIR" != "no"; then
-    LIBXUL_SDK=`cd "$LIBXUL_SDK_DIR" && pwd`
-
-    if test ! -f "$LIBXUL_SDK/include/xpcom-config.h"; then
-        AC_MSG_ERROR([$LIBXUL_SDK/include/xpcom-config.h doesn't exist])
-    fi
-
-fi
-AC_SUBST(LIBXUL_SDK)
-
-if test -n "$LIBXUL_SDK"; then
-    LIBXUL_DIST="$LIBXUL_SDK"
-else
-    LIBXUL_DIST="$MOZ_BUILD_ROOT/dist"
-fi
+LIBXUL_DIST="$MOZ_BUILD_ROOT/dist"
 AC_SUBST(LIBXUL_DIST)
-
-SYSTEM_LIBXUL=
-
-MOZ_ARG_WITH_BOOL(system-libxul,
-[  --with-system-libxul    Use system installed libxul SDK],
-    SYSTEM_LIBXUL=1)
 
 dnl ========================================================
 dnl = If NSPR was not detected in the system,
@@ -3867,6 +3850,7 @@ MOZ_GSTREAMER=
 MOZ_DIRECTSHOW=
 MOZ_WMF=
 MOZ_FMP4=
+MOZ_EME=1
 MOZ_FFMPEG=
 MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
@@ -3874,7 +3858,7 @@ MOZ_SRTP=
 MOZ_WEBRTC_SIGNALING=
 MOZ_WEBRTC_ASSERT_ALWAYS=1
 MOZ_SCTP=
-MOZ_MEDIA_PLUGINS=
+MOZ_ANDROID_OMX=
 MOZ_MEDIA_NAVIGATOR=
 MOZ_OMX_PLUGIN=
 MOZ_VPX=
@@ -5246,22 +5230,34 @@ if test -n "$MOZ_FMP4"; then
     AC_DEFINE(MOZ_FMP4)
 fi;
 
+dnl ========================================================
+dnl = EME support
+dnl ========================================================
+
+MOZ_ARG_DISABLE_BOOL(eme,
+[  --disable-eme  Disable support for Encrypted Media Extensions],
+    MOZ_EME=,
+    MOZ_EME=1)
+
+if test -n "$MOZ_EME"; then
+    AC_DEFINE(MOZ_EME)
+fi;
 
 dnl ========================================================
 dnl = Enable media plugin support
 dnl ========================================================
 if test "$OS_TARGET" = Android -a x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
   dnl Enable support on android by default
-  MOZ_MEDIA_PLUGINS=1
+  MOZ_ANDROID_OMX=1
 fi
 
-MOZ_ARG_ENABLE_BOOL(media-plugins,
-[  --enable-media-plugins  Enable support for media plugins],
-    MOZ_MEDIA_PLUGINS=1,
-    MOZ_MEDIA_PLUGINS=)
+MOZ_ARG_ENABLE_BOOL(android-omx,
+[  --enable-android-omx  Enable support for Android OMX media backend],
+    MOZ_ANDROID_OMX=1,
+    MOZ_ANDROID_OMX=)
 
-if test -n "$MOZ_MEDIA_PLUGINS"; then
-  AC_DEFINE(MOZ_MEDIA_PLUGINS)
+if test -n "$MOZ_ANDROID_OMX"; then
+  AC_DEFINE(MOZ_ANDROID_OMX)
 fi
 
 dnl ========================================================
@@ -8717,7 +8713,6 @@ HOST_CXXFLAGS=`echo \
     $HOST_CXXFLAGS \
     $_DEPEND_CFLAGS`
 
-AC_SUBST(SYSTEM_LIBXUL)
 AC_SUBST(MOZ_NATIVE_JPEG)
 AC_SUBST(MOZ_NATIVE_PNG)
 AC_SUBST(MOZ_NATIVE_BZ2)
@@ -8825,8 +8820,9 @@ AC_SUBST(MOZ_WEBM)
 AC_SUBST(MOZ_WMF)
 AC_SUBST(MOZ_FFMPEG)
 AC_SUBST(MOZ_FMP4)
+AC_SUBST(MOZ_EME)
 AC_SUBST(MOZ_DIRECTSHOW)
-AC_SUBST(MOZ_MEDIA_PLUGINS)
+AC_SUBST(MOZ_ANDROID_OMX)
 AC_SUBST(MOZ_APPLEMEDIA)
 AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(MOZ_VPX_ERROR_CONCEALMENT)

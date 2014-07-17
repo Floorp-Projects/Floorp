@@ -380,6 +380,13 @@ class MochiRemote(Mochitest):
         options.logFile = self.localLog
         return retVal
 
+    def getTestsToRun(self, options):
+        if options.robocopIni != "":
+            # Skip over tests filtering if we run robocop tests.
+            return None
+        else:
+            return super(MochiRemote, self).getTestsToRun(options)
+
     def buildTestPath(self, options, testsToFilter=None):
         if options.robocopIni != "":
             # Skip over manifest building if we just want to run

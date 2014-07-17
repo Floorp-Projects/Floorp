@@ -125,6 +125,7 @@ AppendToString(std::stringstream& aStream, const FrameMetrics& m,
   AppendToString(aStream, m.mDisplayPort, " dp=");
   AppendToString(aStream, m.mCriticalDisplayPort, " cdp=");
   if (!detailed) {
+    AppendToString(aStream, m.GetScrollId(), " scrollId=");
     aStream << nsPrintfCString(" z=%.3f }", m.GetZoom().scale).get();
   } else {
     AppendToString(aStream, m.GetDisplayPortMargins(), " dpm=");
