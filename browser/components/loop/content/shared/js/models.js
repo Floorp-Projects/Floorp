@@ -14,6 +14,7 @@ loop.shared.models = (function() {
    */
   var ConversationModel = Backbone.Model.extend({
     defaults: {
+      connected:    false,     // Session connected flag
       ongoing:      false,     // Ongoing call flag
       callerId:     undefined, // Loop caller id
       loopToken:    undefined, // Loop conversation token
@@ -39,10 +40,28 @@ loop.shared.models = (function() {
     session: undefined,
 
     /**
+     * Pending call timeout value.
+     * @type {Number}
+     */
+    pendingCallTimeout: undefined,
+
+    /**
+     * Pending call timer.
+     * @type {Number}
+     */
+    _pendingCallTimer: undefined,
+
+    /**
      * Constructor.
      *
-     * Required options:
-     * - {OT} sdk: SDK object.
+     * Options:
+     *
+     * Required:
+     * - {OT} sdk: OT SDK object.
+     *
+     * Optional:
+     * - {Number} pendingCallTimeout: Pending call timeout in milliseconds
+     *                                (default: 20000).
      *
      * @param  {Object} attributes Attributes object.
      * @param  {Object} options    Options object.
@@ -53,6 +72,10 @@ loop.shared.models = (function() {
         throw new Error("missing required sdk");
       }
       this.sdk = options.sdk;
+      this.pendingCallTimeout = options.pendingCallTimeout || 20000;
+
+      // Ensure that any pending call timer is cleared on disconnect/error
+      this.on("session:ended session:error", this._clearPendingCallTimer, this);
     },
 
     /**
@@ -79,21 +102,38 @@ loop.shared.models = (function() {
      * @param {Object} options Options object
      */
     initiate: function(options) {
+      options = options || {};
+
+      // Outgoing call has never reached destination, closing - see bug 1020448
+      function handleOutgoingCallTimeout() {
+        /*jshint validthis:true */
+        if (!this.get("ongoing")) {
+          this.trigger("timeout").endSession();
+        }
+      }
+
       function handleResult(err, sessionData) {
         /*jshint validthis:true */
+        this._clearPendingCallTimer();
+
         if (err) {
           this.trigger("session:error", new Error(
             "Retrieval of session information failed: HTTP " + err));
           return;
         }
 
-        // XXX For incoming calls we might have more than one call queued.
-        // For now, we'll just assume the first call is the right information.
-        // We'll probably really want to be getting this data from the
-        // background worker on the desktop client.
-        // Bug 990714 should fix this.
-        if (!options.outgoing)
+        if (options.outgoing) {
+          // Setup pending call timeout.
+          this._pendingCallTimer = setTimeout(
+            handleOutgoingCallTimeout.bind(this), this.pendingCallTimeout);
+        } else {
+          // XXX For incoming calls we might have more than one call queued.
+          // For now, we'll just assume the first call is the right information.
+          // We'll probably really want to be getting this data from the
+          // background worker on the desktop client.
+          // Bug 990714 should fix this.
           sessionData = sessionData[0];
+        }
 
         this.setReady(sessionData);
       }
@@ -156,8 +196,17 @@ loop.shared.models = (function() {
      */
     endSession: function() {
       this.session.disconnect();
-      this.once("session:ended", this.stopListening, this);
-      this.set("ongoing", false);
+      this.set("ongoing", false)
+          .once("session:ended", this.stopListening, this);
+    },
+
+    /**
+     * Clears current pending call timer, if any.
+     */
+    _clearPendingCallTimer: function() {
+      if (this._pendingCallTimer) {
+        clearTimeout(this._pendingCallTimer);
+      }
     },
 
     /**
@@ -175,7 +224,7 @@ loop.shared.models = (function() {
         this.endSession();
       } else {
         this.trigger("session:connected");
-        this.set("ongoing", true);
+        this.set("connected", true);
       }
     },
 
@@ -186,7 +235,8 @@ loop.shared.models = (function() {
      * @param  {StreamEvent} event
      */
     _streamCreated: function(event) {
-      this.trigger("session:stream-created", event);
+      this.set("ongoing", true)
+          .trigger("session:stream-created", event);
     },
 
     /**
@@ -196,8 +246,9 @@ loop.shared.models = (function() {
      * @param  {SessionDisconnectEvent} event
      */
     _sessionDisconnected: function(event) {
-      this.trigger("session:ended");
-      this.set("ongoing", false);
+      this.set("connected", false)
+          .set("ongoing", false)
+          .trigger("session:ended");
     },
 
     /**
@@ -207,9 +258,11 @@ loop.shared.models = (function() {
      * @param  {ConnectionEvent} event
      */
     _connectionDestroyed: function(event) {
-      this.trigger("session:peer-hungup", {
-        connectionId: event.connection.connectionId
-      });
+      this.set("connected", false)
+          .set("ongoing", false)
+          .trigger("session:peer-hungup", {
+            connectionId: event.connection.connectionId
+          });
       this.endSession();
     },
 
@@ -220,7 +273,9 @@ loop.shared.models = (function() {
      * @param {ConnectionEvent} event
      */
     _networkDisconnected: function(event) {
-      this.trigger("session:network-disconnected");
+      this.set("connected", false)
+          .set("ongoing", false)
+          .trigger("session:network-disconnected");
       this.endSession();
     },
   });

@@ -517,13 +517,12 @@ this.DownloadIntegration = {
     if (aDownload.source.referrer) {
       aReferrer: NetUtil.newURI(aDownload.source.referrer);
     }
-    let aSuggestedFileName = OS.Path.basename(aDownload.target.path);
     gApplicationReputationService.queryReputation({
       sourceURI: NetUtil.newURI(aDownload.source.url),
       referrerURI: aReferrer,
       fileSize: aDownload.currentBytes,
       sha256Hash: hash,
-      suggestedFileName: aSuggestedFileName,
+      suggestedFileName: OS.Path.basename(aDownload.target.path),
       signatureInfo: sigInfo,
       redirects: channelRedirects },
       function onComplete(aShouldBlock, aRv) {

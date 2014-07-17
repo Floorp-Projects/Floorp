@@ -358,14 +358,16 @@ RTCPeerConnection.prototype = {
 
   callCB: function(callback, arg) {
     if (callback) {
-      try {
-        callback(arg);
-      } catch(e) {
-        // A content script (user-provided) callback threw an error. We don't
-        // want this to take down peerconnection, but we still want the user
-        // to see it, so we catch it, report it, and move on.
-        this.logErrorAndCallOnError(e.message, e.fileName, e.lineNumber);
-      }
+      this._win.setTimeout(() => {
+        try {
+          callback(arg);
+        } catch(e) {
+          // A content script (user-provided) callback threw an error. We don't
+          // want this to take down peerconnection, but we still want the user
+          // to see it, so we catch it, report it, and move on.
+          this.logErrorAndCallOnError(e.message, e.fileName, e.lineNumber);
+        }
+      }, 0);
     }
   },
 

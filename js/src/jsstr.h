@@ -262,8 +262,10 @@ StringHasPattern(JSLinearString *text, const jschar *pat, uint32_t patlen);
 extern int
 StringFindPattern(JSLinearString *text, JSLinearString *pat, size_t start);
 
+// Whether the string contains any RegExp meta characters (., *, and so forth).
+// Searches the range [beginOffset, length - endOffset>.
 extern bool
-StringHasRegExpMetaChars(JSLinearString *str);
+StringHasRegExpMetaChars(JSLinearString *str, size_t beginOffset = 0, size_t endOffset = 0);
 
 template <typename Char1, typename Char2>
 inline bool

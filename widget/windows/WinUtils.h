@@ -97,12 +97,16 @@ namespace widget {
 #define LogException(e) mozilla::widget::WinUtils::Log("%s Exception:%s", __FUNCTION__, e->ToString()->Data())
 #define LogHRESULT(hr) mozilla::widget::WinUtils::Log("%s hr=%X", __FUNCTION__, hr)
 
+#ifdef MOZ_PLACES
 class myDownloadObserver MOZ_FINAL : public nsIDownloadObserver
 {
+  ~myDownloadObserver() {}
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOWNLOADOBSERVER
 };
+#endif
 
 class WinUtils {
 public:
