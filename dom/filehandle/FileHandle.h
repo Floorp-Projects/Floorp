@@ -7,55 +7,38 @@
 #ifndef mozilla_dom_FileHandle_h
 #define mozilla_dom_FileHandle_h
 
-#include "js/TypeDecls.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/FileModeBinding.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/ErrorResult.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsIInputStream.h"
 #include "nsIRunnable.h"
 #include "nsTArray.h"
 
 class nsAString;
 class nsIDOMBlob;
-class nsPIDOMWindow;
 
 namespace mozilla {
-
-class EventChainPreVisitor;
-
 namespace dom {
 
-struct DOMFileMetadataParameters;
 class FileHelper;
-class FileRequest;
+class FileRequestBase;
 class FileService;
 class FinishHelper;
 class MetadataHelper;
-class MutableFile;
+class MutableFileBase;
 
-class FileHandle : public DOMEventTargetHelper,
-                   public nsIRunnable
+/**
+ * This class provides a base for FileHandle implementations.
+ */
+class FileHandleBase
 {
-  friend class FileHelper;
-  friend class FileService;
-  friend class FinishHelper;
-  friend class MetadataHelper;
-
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIRUNNABLE
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileHandle, DOMEventTargetHelper)
-
   enum RequestMode
   {
     NORMAL = 0, // Sequential
@@ -70,14 +53,30 @@ public:
     DONE
   };
 
-  static already_AddRefed<FileHandle>
-  Create(MutableFile* aMutableFile,
-         FileMode aMode,
-         RequestMode aRequestMode = NORMAL);
+private:
+  friend class FileHelper;
+  friend class FileService;
+  friend class FinishHelper;
+  friend class MetadataHelper;
 
-  // nsIDOMEventTarget
-  virtual nsresult
-  PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  ReadyState mReadyState;
+  FileMode mMode;
+  RequestMode mRequestMode;
+  uint64_t mLocation;
+  uint32_t mPendingRequests;
+
+  nsTArray<nsCOMPtr<nsISupports>> mParallelStreams;
+  nsCOMPtr<nsISupports> mStream;
+
+  bool mAborted;
+  bool mCreating;
+
+public:
+  NS_IMETHOD_(MozExternalRefCountType)
+  AddRef() = 0;
+
+  NS_IMETHOD_(MozExternalRefCountType)
+  Release() = 0;
 
   nsresult
   CreateParallelStream(nsISupports** aStream);
@@ -94,41 +93,20 @@ public:
     return mAborted;
   }
 
-  MutableFile*
-  File() const
+  void
+  SetCreating()
   {
-    return mMutableFile;
+    mCreating = true;
   }
+
+  virtual MutableFileBase*
+  MutableFile() const = 0;
 
   nsresult
   OpenInputStream(bool aWholeFile, uint64_t aStart, uint64_t aLength,
                   nsIInputStream** aResult);
 
-  // WrapperCache
-  virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
-
-  // WebIDL
-  nsPIDOMWindow*
-  GetParentObject() const
-  {
-    return GetOwner();
-  }
-
-  MutableFile*
-  GetMutableFile() const
-  {
-    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-
-    return File();
-  }
-
-  MutableFile*
-  GetFileHandle() const
-  {
-    return GetMutableFile();
-  }
-
+  // Shared WebIDL (IndexedDB FileHandle and FileSystem FileHandle)
   FileMode
   Mode() const
   {
@@ -170,55 +148,35 @@ public:
     }
   }
 
-  already_AddRefed<FileRequest>
-  GetMetadata(const DOMFileMetadataParameters& aParameters, ErrorResult& aRv);
+  already_AddRefed<FileRequestBase>
+  Read(uint64_t aSize, bool aHasEncoding, const nsAString& aEncoding,
+       ErrorResult& aRv);
 
-  already_AddRefed<FileRequest>
-  ReadAsArrayBuffer(uint64_t aSize, ErrorResult& aRv);
-
-  already_AddRefed<FileRequest>
-  ReadAsText(uint64_t aSize, const nsAString& aEncoding, ErrorResult& aRv);
-
-  template<class T>
-  already_AddRefed<FileRequest>
-  Write(const T& aValue, ErrorResult& aRv)
-  {
-    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-
-    return WriteOrAppend(aValue, false, aRv);
-  }
-
-  template<class T>
-  already_AddRefed<FileRequest>
-  Append(const T& aValue, ErrorResult& aRv)
-  {
-    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-
-    return WriteOrAppend(aValue, true, aRv);
-  }
-
-  already_AddRefed<FileRequest>
+  already_AddRefed<FileRequestBase>
   Truncate(const Optional<uint64_t>& aSize, ErrorResult& aRv);
 
-  already_AddRefed<FileRequest>
+  already_AddRefed<FileRequestBase>
   Flush(ErrorResult& aRv);
 
   void
   Abort(ErrorResult& aRv);
 
-  IMPL_EVENT_HANDLER(complete)
-  IMPL_EVENT_HANDLER(abort)
-  IMPL_EVENT_HANDLER(error)
-
-private:
-  FileHandle();
-  ~FileHandle();
+protected:
+  FileHandleBase(FileMode aMode,
+                 RequestMode aRequestMode);
+  ~FileHandleBase();
 
   void
   OnNewRequest();
 
   void
   OnRequestFinished();
+
+  void
+  OnReturnToEventLoop();
+
+  virtual nsresult
+  OnCompleteOrAbort(bool aAborted) = 0;
 
   bool
   CheckState(ErrorResult& aRv);
@@ -229,11 +187,14 @@ private:
   bool
   CheckStateForWrite(ErrorResult& aRv);
 
-  already_AddRefed<FileRequest>
-  GenerateFileRequest();
+  virtual bool
+  CheckWindow() = 0;
+
+  virtual already_AddRefed<FileRequestBase>
+  GenerateFileRequest() = 0;
 
   template<class T>
-  already_AddRefed<FileRequest>
+  already_AddRefed<FileRequestBase>
   WriteOrAppend(const T& aValue, bool aAppend, ErrorResult& aRv)
   {
     MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
@@ -260,14 +221,14 @@ private:
     }
 
     // Do nothing if the window is closed
-    if (!GetOwner()) {
+    if (!CheckWindow()) {
       return nullptr;
     }
 
     return WriteInternal(stream, length, aAppend, aRv);
   }
 
-  already_AddRefed<FileRequest>
+  already_AddRefed<FileRequestBase>
   WriteInternal(nsIInputStream* aInputStream, uint64_t aInputLength,
                 bool aAppend, ErrorResult& aRv);
 
@@ -284,35 +245,22 @@ private:
   static already_AddRefed<nsIInputStream>
   GetInputStream(const nsAString& aValue, uint64_t* aInputLength,
                  ErrorResult& aRv);
-
-  nsRefPtr<MutableFile> mMutableFile;
-  ReadyState mReadyState;
-  FileMode mMode;
-  RequestMode mRequestMode;
-  uint64_t mLocation;
-  uint32_t mPendingRequests;
-
-  nsTArray<nsCOMPtr<nsISupports>> mParallelStreams;
-  nsCOMPtr<nsISupports> mStream;
-
-  bool mAborted;
-  bool mCreating;
 };
 
 class FinishHelper MOZ_FINAL : public nsIRunnable
 {
-  friend class FileHandle;
+  friend class FileHandleBase;
 
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
 private:
-  FinishHelper(FileHandle* aFileHandle);
+  FinishHelper(FileHandleBase* aFileHandle);
   ~FinishHelper()
   { }
 
-  nsRefPtr<FileHandle> mFileHandle;
+  nsRefPtr<FileHandleBase> mFileHandle;
   nsTArray<nsCOMPtr<nsISupports>> mParallelStreams;
   nsCOMPtr<nsISupports> mStream;
 

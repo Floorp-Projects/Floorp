@@ -68,9 +68,9 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
+#include "mozilla/dom/IDBMutableFileBinding.h"
+#include "mozilla/dom/indexedDB/IDBMutableFile.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
-#include "mozilla/dom/MutableFile.h"
-#include "mozilla/dom/MutableFileBinding.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaManager.h"
@@ -3030,8 +3030,8 @@ nsDOMWindowUtils::GetFileId(JS::Handle<JS::Value> aFile, JSContext* aCx,
   if (!aFile.isPrimitive()) {
     JSObject* obj = aFile.toObjectOrNull();
 
-    MutableFile* mutableFile = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(MutableFile, obj, mutableFile))) {
+    indexedDB::IDBMutableFile* mutableFile = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(IDBMutableFile, obj, mutableFile))) {
       *aResult = mutableFile->GetFileId();
       return NS_OK;
     }
