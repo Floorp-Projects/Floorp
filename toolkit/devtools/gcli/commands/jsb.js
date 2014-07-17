@@ -7,9 +7,11 @@
 const { Cc, Ci, Cu } = require("chrome");
 const gcli = require("gcli/index");
 const XMLHttpRequest = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"];
+const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
 loader.lazyImporter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
-loader.lazyImporter(this, "js_beautify", "resource:///modules/devtools/Jsbeautify.jsm");
+
+devtools.lazyRequireGetter(this, "beautify", "devtools/jsbeautify");
 
 exports.items = [
   {
@@ -116,7 +118,7 @@ exports.items = [
             let browserDoc = context.environment.chromeDocument;
             let browserWindow = browserDoc.defaultView;
             let gBrowser = browserWindow.gBrowser;
-            let result = js_beautify(xhr.responseText, opts);
+            let result = beautify.js(xhr.responseText, opts);
 
             browserWindow.Scratchpad.ScratchpadManager.openScratchpad({text: result});
 

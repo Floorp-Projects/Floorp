@@ -9,14 +9,12 @@ temp = null;
 let toolbox = null;
 
 function test() {
-  waitForExplicitFinish();
-
   const URL = "data:text/plain;charset=UTF-8,Nothing to see here, move along";
 
   const TOOL_ID_1 = "jsdebugger";
   const TOOL_ID_2 = "webconsole";
 
-  addTab(URL, () => {
+  addTab(URL).then(() => {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     gDevTools.showToolbox(target, TOOL_ID_1, Toolbox.HostType.BOTTOM)
              .then(aToolbox => {

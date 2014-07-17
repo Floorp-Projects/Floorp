@@ -3,7 +3,7 @@
 
 "use strict";
 
-const Ci = Components.interfaces;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 const OPENH264_PLUGIN_ID       = "openh264-plugin@cisco.com";
 const OPENH264_PREF_BRANCH     = "media.openh264.";
@@ -145,4 +145,50 @@ add_task(function* test_autoUpdatePrefPersistance() {
 
   addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
   Assert.ok(!prefs.prefHasUserValue(OPENH264_PREF_AUTOUPDATE));
+});
+
+add_task(function* test_pluginRegistration() {
+  let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  file.append("openh264");
+  file.append("testDir");
+
+  let addedPath = null
+  let removedPath = null;
+  let clearPaths = () => addedPath = removedPath = null;
+
+  let MockGMPService = {
+    addPluginDirectory: path => addedPath = path,
+    removePluginDirectory: path => removedPath = path,
+  };
+
+  let OpenH264Scope = Cu.import("resource://gre/modules/addons/OpenH264Provider.jsm");
+  OpenH264Scope.gmpService = MockGMPService;
+
+  // Check that the OpenH264 plugin gets registered after startup.
+  Services.prefs.setCharPref(OPENH264_PREF_PATH, file.path);
+  clearPaths();
+  yield promiseRestartManager();
+  Assert.equal(addedPath, file.path);
+  Assert.equal(removedPath, null);
+
+  // Check that clearing the path doesn't trigger registration.
+  clearPaths();
+  Services.prefs.clearUserPref(OPENH264_PREF_PATH);
+  Assert.equal(addedPath, null);
+  Assert.equal(removedPath, file.path);
+
+  // Restarting with no path set should not trigger registration.
+  clearPaths();
+  yield promiseRestartManager();
+  Assert.equal(addedPath, null);
+  Assert.equal(removedPath, null);
+
+  // Changing the pref mid-session should cause unregistration and registration.
+  Services.prefs.setCharPref(OPENH264_PREF_PATH, file.path);
+  clearPaths();
+  let file2 = file.clone();
+  file2.append("foo");
+  Services.prefs.setCharPref(OPENH264_PREF_PATH, file2.path);
+  Assert.equal(addedPath, file2.path);
+  Assert.equal(removedPath, file.path);
 });

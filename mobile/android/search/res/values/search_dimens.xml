@@ -3,7 +3,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <resources>
-    <!-- Default screen margins, per the Android Design guidelines. -->
-    <dimen name="activity_horizontal_margin">16dp</dimen>
-    <dimen name="activity_vertical_margin">16dp</dimen>
+    <!--This is used to offset the webview so that it is not covered-->
+    <!--by the search bar. If we change the height of the search bar-->
+    <!--then this will need to be updated.-->
+    <dimen name="webview_height_offset">55dp</dimen>
 </resources>
