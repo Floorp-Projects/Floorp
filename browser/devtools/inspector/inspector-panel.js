@@ -367,7 +367,7 @@ InspectorPanel.prototype = {
    * Will store the current target url along with it to allow pre-selection at
    * reload
    */
-  set selectionCssSelector(cssSelector) {
+  set selectionCssSelector(cssSelector = null) {
     this._selectionCssSelector = {
       selector: cssSelector,
       url: this._target.url
