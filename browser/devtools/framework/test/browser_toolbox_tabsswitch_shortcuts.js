@@ -7,9 +7,7 @@ let toolbox, toolIDs, idIndex, secondTime = false,
     reverse = false, nextKey = null, prevKey = null;
 
 function test() {
-  waitForExplicitFinish();
-
-  addTab("about:blank", function() {
+  addTab("about:blank").then(function() {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     idIndex = 0;
 
