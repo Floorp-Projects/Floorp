@@ -788,10 +788,15 @@ nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     clipState.Clear();
 
     nsIFrame* child = GetFirstPrincipalChild();
+    nsRect dirty = aDirtyRect;
+    dirty.ScaleInverseRoundOut(PresContext()->GetPrintPreviewScale());
+
     while (child) {
-      child->BuildDisplayListForStackingContext(aBuilder,
-          child->GetVisualOverflowRectRelativeToSelf(), &content);
-      aBuilder->ResetMarkedFramesForDisplayList();
+      if (child->GetVisualOverflowRectRelativeToParent().Intersects(dirty)) {
+        child->BuildDisplayListForStackingContext(aBuilder,
+            dirty - child->GetPosition(), &content);
+        aBuilder->ResetMarkedFramesForDisplayList();
+      }
       child = child->GetNextSibling();
     }
   }
