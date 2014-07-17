@@ -54,6 +54,8 @@ Windows/Mac use the term "Folder" instead of "Directory" -->
 <!ENTITY aboutSupport.appBasicsUserAgent "User Agent">
 <!ENTITY aboutSupport.appBasicsMemoryUse "Memory Use">
 
+<!ENTITY aboutSupport.appBasicsMultiProcessSupport "Multiprocess Windows">
+
 <!ENTITY aboutSupport.showDir.label "Open Directory">
 <!-- LOCALIZATION NOTE (aboutSupport.showMac.label): This is the Mac-specific
 variant of aboutSupport.showDir.label.  This allows us to use the preferred

@@ -45,23 +45,23 @@ let test = asyncTest(function*() {
     info("Start test: " + step.desc);
 
     if (step.forceReload) {
-      forceReload(inspector);
+      yield forceReload(inspector);
     }
     info("Selecting the node that corresponds to " + step.selector);
     yield selectNode(step.selector, inspector);
 
     info("Checking that the right nodes are shwon");
-    assertChildren(step.expected, inspector);
+    yield assertChildren(step.expected, inspector);
   }
 
   info("Checking that clicking the more button loads everything");
-  clickShowMoreNodes(inspector);
+  yield clickShowMoreNodes(inspector);
   yield inspector.markup._waitForChildren();
-  assertChildren("abcdefghijklmnopqrstuvwxyz", inspector);
+  yield assertChildren("abcdefghijklmnopqrstuvwxyz", inspector);
 });
 
-function assertChildren(expected, inspector) {
-  let container = getContainerForRawNode("body", inspector);
+function* assertChildren(expected, inspector) {
+  let container = yield getContainerForSelector("body", inspector);
   let found = "";
   for (let child of container.children.children) {
     if (child.classList.contains("more-nodes")) {
@@ -73,13 +73,13 @@ function assertChildren(expected, inspector) {
   is(found, expected, "Got the expected children.");
 }
 
-function forceReload(inspector) {
-  let container = getContainerForRawNode("body", inspector);
+function* forceReload(inspector) {
+  let container = yield getContainerForSelector("body", inspector);
   container.childrenDirty = true;
 }
 
-function clickShowMoreNodes(inspector) {
-  let container = getContainerForRawNode("body", inspector);
+function* clickShowMoreNodes(inspector) {
+  let container = yield getContainerForSelector("body", inspector);
   let button = container.elt.querySelector("button");
   let win = button.ownerDocument.defaultView;
   EventUtils.sendMouseEvent({type: "click"}, button, win);

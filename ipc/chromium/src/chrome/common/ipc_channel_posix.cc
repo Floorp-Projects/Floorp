@@ -283,6 +283,8 @@ Channel::ChannelImpl::ChannelImpl(int fd, Mode mode, Listener* listener)
 }
 
 void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
+  DCHECK(kControlBufferSlopBytes >= CMSG_SPACE(0));
+
   mode_ = mode;
   is_blocked_on_write_ = false;
   message_send_bytes_written_ = 0;

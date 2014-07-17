@@ -31,7 +31,8 @@
 == insertmultiplemultiple-2.html insertmultiplemultiple-ref.html
 
 # testing bindings that have multiple insertion points
-random-if(B2G&&browserIsRemote) == multipleinsertionpoints-ref2.xhtml multipleinsertionpoints-ref.xhtml # Bug 988759
+# skip XBL test case on B2G
+skip-if(B2G) == multipleinsertionpoints-ref2.xhtml multipleinsertionpoints-ref.xhtml
 # append a single element
 skip-if(B2G) == multipleinsertionpoints-appendsingle-1.xhtml multipleinsertionpoints-ref.xhtml # bug 773482
 skip-if(B2G) == multipleinsertionpoints-appendsingle-2.xhtml multipleinsertionpoints-ref.xhtml # bug 773482

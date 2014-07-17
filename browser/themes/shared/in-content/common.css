@@ -40,7 +40,6 @@ button {
 
 button:enabled:hover {
   background-image: linear-gradient(#fff, rgba(255,255,255,.6));
-  cursor: pointer;
 }
 
 button:enabled:hover:active {

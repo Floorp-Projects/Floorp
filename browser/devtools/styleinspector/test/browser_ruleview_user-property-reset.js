@@ -8,7 +8,7 @@
 // don't survive page reload
 
 let TEST_PAGE = [
-  "data:text/html,",
+  "data:text/html;charset=utf-8,",
   "<p id='id1' style='width:200px;'>element 1</p>",
   "<p id='id2' style='width:100px;'>element 2</p>"
 ].join("");

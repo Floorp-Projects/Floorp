@@ -196,6 +196,54 @@ test(function() {
 
 test(function() {
   var div = addDiv();
+  div.style.animation = 'missing 100s';
+  window.getComputedStyle(div).animationName;
+
+  var players = div.getAnimationPlayers();
+  assert_equals(players.length, 0,
+    'getAnimationPlayers returns an empty sequence for an element'
+    + ' with animation-name: missing');
+
+  div.style.animation = 'anim1 100s, missing 100s';
+  window.getComputedStyle(div).animationName;
+  players = div.getAnimationPlayers();
+  assert_equals(players.length, 1,
+    'getAnimationPlayers returns players only for those CSS Animations whose'
+    + ' animation-name is found');
+
+  div.remove();
+}, 'getAnimationPlayers for CSS Animations with animation-name: missing');
+
+async_test(function(t) {
+  var div = addDiv();
+  div.style.animation = 'anim1 100s, notyet 100s';
+  window.getComputedStyle(div).animationName;
+
+  var players = div.getAnimationPlayers();
+  assert_equals(players.length, 1,
+    'getAnimationPlayers initally only returns players for CSS Animations whose'
+    + ' animation-name is found');
+
+  window.requestAnimationFrame(t.step_func(function() {
+    var keyframes = '@keyframes notyet { to { left: 100px; } }';
+    document.styleSheets[0].insertRule(keyframes, 0);
+    window.getComputedStyle(div).animationName;
+
+    players = div.getAnimationPlayers();
+    assert_equals(players.length, 2,
+      'getAnimationPlayers includes player when @keyframes rule is added'
+      + ' later');
+    assert_true(players[0].startTime < players[1].startTime,
+      'Newly added player has a later start time');
+    document.styleSheets[0].deleteRule(0);
+    div.remove();
+    t.done();
+  }));
+}, 'getAnimationPlayers for CSS Animations where the @keyframes rule is added'
+   + ' later');
+
+test(function() {
+  var div = addDiv();
   div.style.animation = 'anim1 100s, anim1 100s';
   window.getComputedStyle(div).animationName;
 

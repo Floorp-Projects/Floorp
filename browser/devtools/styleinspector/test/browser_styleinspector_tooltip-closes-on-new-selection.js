@@ -7,7 +7,7 @@
 // Test that if a tooltip is visible when a new selection is made, it closes
 
 let test = asyncTest(function*() {
-  yield addTab("data:text/html,<div class='one'>el 1</div><div class='two'>el 2</div>");
+  yield addTab("data:text/html;charset=utf-8,<div class='one'>el 1</div><div class='two'>el 2</div>");
 
   let {toolbox, inspector, view} = yield openRuleView();
   yield selectNode(".one", inspector);
