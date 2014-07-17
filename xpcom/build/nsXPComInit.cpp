@@ -270,6 +270,7 @@ nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = nullptr;
 bool gXPCOMShuttingDown = false;
 bool gXPCOMThreadsShutDown = false;
+char16_t* gGREPath = nullptr;
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kINIParserFactoryCID, NS_INIPARSERFACTORY_CID);
@@ -564,15 +565,18 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     }
 
     nsCOMPtr<nsIFile> xpcomLib;
-
     nsDirectoryService::gService->Get(NS_GRE_DIR,
                                       NS_GET_IID(nsIFile),
                                       getter_AddRefs(xpcomLib));
+    MOZ_ASSERT(xpcomLib);
 
-    if (xpcomLib) {
-        xpcomLib->AppendNative(nsDependentCString(XPCOM_DLL));
-        nsDirectoryService::gService->Set(NS_XPCOM_LIBRARY_FILE, xpcomLib);
-    }
+    // set gGREPath
+    nsAutoString path;
+    xpcomLib->GetPath(path);
+    gGREPath = ToNewUnicode(path);
+
+    xpcomLib->AppendNative(nsDependentCString(XPCOM_DLL));
+    nsDirectoryService::gService->Set(NS_XPCOM_LIBRARY_FILE, xpcomLib);
 
     if (!mozilla::Omnijar::IsInitialized()) {
         mozilla::Omnijar::Init();
@@ -718,10 +722,6 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 #ifdef MOZ_VISUAL_EVENT_TRACER
     mozilla::eventtracer::Init();
 #endif
-
-    // TODO: Cache the GRE dir here instead of telling GeckoChildProcessHost to do it.
-    //       Then have GeckoChildProcessHost get the dir from XPCOM::GetGREPath().
-    mozilla::ipc::GeckoChildProcessHost::CacheGreDir();
 
     return NS_OK;
 }
@@ -880,6 +880,9 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
 
     // Release the directory service
     NS_IF_RELEASE(nsDirectoryService::gService);
+
+    NS_Free(gGREPath);
+    gGREPath = nullptr;
 
     if (moduleLoaders) {
         bool more;
