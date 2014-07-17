@@ -12,13 +12,13 @@ exports['test:contentURL'] = function(assert) {
   let loader = Loader(),
       value, emitted = 0, changes = 0;
 
-  assert.throws(
-    function() loader.contentURL = 4,
+  assert.throws(() =>
+    loader.contentURL = 4,
     /The `contentURL` option must be a valid URL./,
     'Must throw an exception if `contentURL` is not URL.'
   );
- assert.throws(
-    function() loader.contentURL = { toString: function() 'Oops' },
+ assert.throws(() =>
+    loader.contentURL = { toString: function() 'Oops' },
     /The `contentURL` option must be a valid URL./,
     'Must throw an exception if `contentURL` is not URL.'
   );
@@ -61,6 +61,24 @@ exports['test:contentURL'] = function(assert) {
   );
 
   loader.contentURL = value = 'http://google.com/';
+  assert.equal(
+    value,
+    '' + loader.contentURL,
+    'value must be set'
+  );
+  assert.equal(
+    ++ changes,
+    emitted,
+    'had to emit `propertyChange`'
+  );
+  loader.contentURL = value;
+  assert.equal(
+    changes,
+    emitted,
+    'must not emit `propertyChange` if same value is set'
+  );
+
+  loader.contentURL = value = './index.html';
   assert.equal(
     value,
     '' + loader.contentURL,
@@ -133,39 +151,37 @@ exports['test:contentScriptWhen'] = function(assert) {
 
 exports['test:contentScript'] = function(assert) {
   let loader = Loader(), value;
+
   assert.equal(
     null,
     loader.contentScript,
     '`contentScript` defaults to `null`'
   );
+
   loader.contentScript = value = 'let test = {};';
   assert.equal(
     value,
     loader.contentScript
   );
-  try {
-    loader.contentScript = { 1: value }
-    test.fail('must throw when wrong value is set');
-  } catch(e) {
-    assert.equal(
-      'The `contentScript` option must be a string or an array of strings.',
-      e.message
-    );
-  }
-  try {
-    loader.contentScript = ['oue', 2]
-    test.fail('must throw when wrong value is set');
-  } catch(e) {
-    assert.equal(
-      'The `contentScript` option must be a string or an array of strings.',
-      e.message
-    );
-  }
+
+  assert.throws(() =>
+    loader.contentScript = { 1: value },
+    /The `contentScript` option must be a string or an array of strings/,
+    'must throw when wrong value is set'
+  );
+
+  assert.throws(() =>
+    loader.contentScript = ['oue', 2],
+    /The `contentScript` option must be a string or an array of strings/,
+    'must throw when wrong value is set'
+  );
+
   loader.contentScript = undefined;
   assert.equal(
     null,
     loader.contentScript
   );
+
   loader.contentScript = value = ["1;", "2;"];
   assert.equal(
     value,
@@ -185,36 +201,25 @@ exports['test:contentScriptFile'] = function(assert) {
     value,
     loader.contentScriptFile
   );
-  try {
-    loader.contentScriptFile = { 1: uri }
-    test.fail('must throw when wrong value is set');
-  } catch(e) {
-    assert.equal(
-      'The `contentScriptFile` option must be a local URL or an array of URLs.',
-      e.message
-    );
-  }
 
-  try {
-    loader.contentScriptFile = [ 'oue', uri ]
-    test.fail('must throw when wrong value is set');
-  } catch(e) {
-    assert.equal(
-      'The `contentScriptFile` option must be a local URL or an array of URLs.',
-      e.message
-    );
-  }
+  assert.throws(() =>
+    loader.contentScriptFile = { 1: uri },
+    /The `contentScriptFile` option must be a local URL or an array of URLs/,
+    'must throw when wrong value is set'
+  );
+
+  assert.throws(() =>
+    loader.contentScriptFile = [ 'oue', uri ],
+    /The `contentScriptFile` option must be a local URL or an array of URLs/,
+    'must throw when wrong value is set'
+  );
 
   let data = 'data:text/html,test';
-  try {
-    loader.contentScriptFile = [ { toString: () => data } ];
-    test.fail('must throw when non-URL object is set');
-  } catch(e) {
-    assert.equal(
-      'The `contentScriptFile` option must be a local URL or an array of URLs.',
-      e.message
-    );
-  }
+  assert.throws(() =>
+    loader.contentScriptFile = [ { toString: () => data } ],
+    /The `contentScriptFile` option must be a local URL or an array of URLs/,
+    'must throw when wrong value is set'
+  );
 
   loader.contentScriptFile = new URL(data);
   assert.ok(
@@ -222,9 +227,16 @@ exports['test:contentScriptFile'] = function(assert) {
     'must be able to set `contentScriptFile` to an instance of URL'
   );
   assert.equal(
-    data, 
+    data,
     loader.contentScriptFile.toString(),
     'setting `contentScriptFile` to an instance of URL should preserve the url'
+  );
+
+  loader.contentScriptFile = './index.html';
+  assert.equal(
+    './index.html',
+    loader.contentScriptFile,
+    'setting `contentScriptFile` to relative path is allowed'
   );
 
   loader.contentScriptFile = undefined;

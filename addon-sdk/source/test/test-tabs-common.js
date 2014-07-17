@@ -40,6 +40,38 @@ exports.testTabCounts = function(assert, done) {
   });
 };
 
+exports.testTabRelativePath = function(assert, done) {
+  const { merge } = require("sdk/util/object");
+  const self = require("sdk/self");
+
+  let loader = Loader(module, null, null, {
+    modules: {
+      "sdk/self": merge({}, self, {
+        data: merge({}, self.data, require("./fixtures"))
+      })
+    }
+  });
+
+  let tabs = loader.require("sdk/tabs");
+
+  tabs.open({
+    url: "./test.html",
+    onReady: (tab) => {
+      assert.equal(tab.title, "foo",
+        "tab opened a document with relative path");
+
+      tab.attach({
+        contentScriptFile: "./test-contentScriptFile.js",
+        onMessage: (message) => {
+          assert.equal(message, "msg from contentScriptFile",
+            "Tab attach a contentScriptFile with relative path worked");
+
+          tab.close(done);
+        }
+      });
+    }
+  });
+};
 
 // TEST: tabs.activeTab getter
 exports.testActiveTab_getter = function(assert, done) {

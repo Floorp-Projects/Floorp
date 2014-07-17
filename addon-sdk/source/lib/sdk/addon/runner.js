@@ -7,6 +7,7 @@ module.metadata = {
 };
 
 const { Cc, Ci } = require('chrome');
+const { isNative } = require('@loader/options');
 const { descriptor, Sandbox, evaluate, main, resolveURI } = require('toolkit/loader');
 const { once } = require('../system/events');
 const { exit, env, staticArgs } = require('../system');
@@ -104,7 +105,8 @@ function startup(reason, options) {
   require('../l10n/loader').
     load(rootURI).
     then(null, function failure(error) {
-      console.info("Error while loading localization: " + error.message);
+      if (!isNative)
+        console.info("Error while loading localization: " + error.message);
     }).
     then(function onLocalizationReady(data) {
       // Exports data to a pseudo module so that api-utils/l10n/core
