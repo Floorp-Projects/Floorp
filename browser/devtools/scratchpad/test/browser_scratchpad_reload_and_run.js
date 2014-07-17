@@ -54,6 +54,7 @@ function runTests()
 
   let browser = gBrowser.selectedBrowser;
 
+  let deferred = promise.defer();
   browser.addEventListener("DOMWindowCreated", function onWindowCreated() {
     browser.removeEventListener("DOMWindowCreated", onWindowCreated, true);
 
@@ -64,12 +65,12 @@ function runTests()
         "After reloading, HTML is different.");
 
       Services.prefs.clearUserPref(DEVTOOLS_CHROME_ENABLED);
-      finish();
+      deferred.resolve();
     }, true);
   }, true);
 
   ok(browser.contentWindow.document.body.innerHTML !== "Modified text",
       "Before reloading, HTML is intact.");
-  sp.reloadAndRun();
+  sp.reloadAndRun().then(deferred.promise).then(finish);
 }
 
