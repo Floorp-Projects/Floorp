@@ -39,7 +39,7 @@ let testData = [
   ["VK_ESCAPE", {}, null, -1, 0]
 ];
 
-let TEST_URL = "data:text/html,<style>h1{border: 1px solid red}</style>" +
+let TEST_URL = "data:text/html;charset=utf-8,<style>h1{border: 1px solid red}</style>" +
   "<h1>Test element</h1>";
 
 let test = asyncTest(function*() {

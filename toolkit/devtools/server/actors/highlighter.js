@@ -94,8 +94,10 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
   destroy: function() {
     protocol.Actor.prototype.destroy.call(this);
     if (this._boxModelHighlighter) {
-      this._boxModelHighlighter.off("ready", this._highlighterReady);
-      this._boxModelHighlighter.off("hide", this._highlighterHidden);
+      if (supportXULBasedHighlighter(this._tabActor)) {
+        this._boxModelHighlighter.off("ready", this._highlighterReady);
+        this._boxModelHighlighter.off("hide", this._highlighterHidden);
+      }
       this._boxModelHighlighter.destroy();
       this._boxModelHighlighter = null;
     }

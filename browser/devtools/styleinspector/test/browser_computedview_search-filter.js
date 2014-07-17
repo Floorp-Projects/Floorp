@@ -7,7 +7,7 @@
 // Tests that the search filter works properly.
 
 let test = asyncTest(function*() {
-  yield addTab("data:text/html,default styles test");
+  yield addTab("data:text/html;charset=utf-8,default styles test");
 
   info("Creating the test document");
   content.document.body.innerHTML = '<style type="text/css"> ' +

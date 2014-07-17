@@ -573,7 +573,7 @@ function waitForAdapterAttributeChanged(aAdapter, aAttrName, aExpectedValue) {
  *        A BluetoothDiscoveryHandle which is used to notify application of
  *        discovered remote bluetooth devices.
  * @param aExpectedNumberOfDevices
- *        The number of remote devices we expect to discovery.
+ *        The number of remote devices we expect to discover.
  *
  * @return A deferred promise.
  */
@@ -596,6 +596,33 @@ function waitForDevicesFound(aDiscoveryHandle, aExpectedNumberOfDevices) {
   };
 
   return deferred.promise;
+}
+
+/**
+ * Compare two uuid arrays to see if them are the same.
+ *
+ * @param aUuidArray1
+ *        An array which contains uuid strings.
+ * @param aUuidArray2
+ *        Another array which contains uuid strings.
+ *
+ * @return A boolean value.
+ */
+function isUuidsEqual(aUuidArray1, aUuidArray2) {
+  if (!Array.isArray(aUuidArray1) || !Array.isArray(aUuidArray2)) {
+    return false;
+  }
+
+  if (aUuidArray1.length != aUuidArray2.length) {
+    return false;
+  }
+
+  for (let i = 0, l = aUuidArray1.length; i < l; i++) {
+    if (aUuidArray1[i] != aUuidArray2[i]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**

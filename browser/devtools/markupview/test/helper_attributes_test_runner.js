@@ -21,11 +21,10 @@ function runAddAttributesTests(tests, nodeOrSelector, inspector) {
   info("Running " + tests.length + " add-attributes tests");
   return Task.spawn(function*() {
     info("Selecting the test node");
-    let div = getNode("div");
-    yield selectNode(div, inspector);
+    yield selectNode("div", inspector);
 
     for (let test of tests) {
-      yield runAddAttributesTest(test, div, inspector);
+      yield runAddAttributesTest(test, "div", inspector);
     }
 
     yield inspector.once("inspector-updated");
@@ -48,22 +47,22 @@ function runAddAttributesTests(tests, nodeOrSelector, inspector) {
  *          - {DOMNode} The element being tested
  *          - {MarkupContainer} The corresponding container in the markup-view
  *          - {InspectorPanel} The instance of the InspectorPanel opened
- * @param {DOMNode|String} nodeOrSelector The node or node selector
- * corresponding to the test element
+ * @param {String} selector The node selector corresponding to the test element
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * opened
  */
-function* runAddAttributesTest(test, nodeOrSelector, inspector) {
-  let element = getNode(nodeOrSelector);
+function* runAddAttributesTest(test, selector, inspector) {
+  let element = getNode(selector);
 
   info("Starting add-attribute test: " + test.desc);
-  yield addNewAttributes(element, test.text, inspector);
+  yield addNewAttributes(selector, test.text, inspector);
 
   info("Assert that the attribute(s) has/have been applied correctly");
   assertAttributes(element, test.expectedAttributes);
 
   if (test.validate) {
-    test.validate(element, getContainerForRawNode(element, inspector), inspector);
+    let container = yield getContainerForSelector(selector, inspector);
+    test.validate(element, container, inspector);
   }
 
   info("Undo the change");
@@ -128,7 +127,7 @@ function* runEditAttributesTest(test, inspector) {
 
   info("Editing attribute " + test.name + " with value " + test.value);
 
-  let container = getContainerForRawNode(test.node, inspector);
+  let container = yield getContainerForSelector(test.node, inspector);
   ok(container && container.editor, "The markup-container for " + test.node +
     " was found");
 

@@ -42,6 +42,8 @@ function* runEditOuterHTMLTest(test, inspector) {
   yield selectNode(test.selector, inspector);
   let oldNodeFront = inspector.selection.nodeFront;
 
+  let onUpdated = inspector.once("inspector-updated");
+
   info("Listening for the markupmutation event");
   // This event fires once the outerHTML is set, with a target as the parent node and a type of "childList".
   let mutated = inspector.once("markupmutation");
@@ -60,22 +62,22 @@ function* runEditOuterHTMLTest(test, inspector) {
   is(mutation.target, nodeFront, "Parent node is selected immediately after setting outerHTML");
 
   // Wait for node to be reselected after outerHTML has been set
-  yield inspector.selection.once("new-node");
+  yield inspector.selection.once("new-node-front");
 
   // Typically selectedNode will === pageNode, but if a new element has been injected in front
   // of it, this will not be the case.  If this happens.
-  let selectedNode = inspector.selection.node;
-  let nodeFront = inspector.selection.nodeFront;
+  let selectedNodeFront = inspector.selection.nodeFront;
+  let pageNodeFront = yield inspector.walker.querySelector(inspector.walker.rootNode, test.selector);
   let pageNode = getNode(test.selector);
 
   if (test.validate) {
-    test.validate(pageNode, selectedNode);
+    yield test.validate(pageNode, pageNodeFront, selectedNodeFront, inspector);
   } else {
-    is(pageNode, selectedNode, "Original node (grabbed by selector) is selected");
+    is(pageNodeFront, selectedNodeFront, "Original node (grabbed by selector) is selected");
     is(pageNode.outerHTML, test.newHTML, "Outer HTML has been updated");
   }
 
   // Wait for the inspector to be fully updated to avoid causing errors by
   // abruptly closing hanging requests when the test ends
-  yield inspector.once("inspector-updated");
+  yield onUpdated;
 }

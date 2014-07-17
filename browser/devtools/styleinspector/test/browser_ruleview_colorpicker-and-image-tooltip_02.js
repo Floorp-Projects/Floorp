@@ -20,7 +20,7 @@ const PAGE_CONTENT = [
 ].join("\n");
 
 let test = asyncTest(function*() {
-  yield addTab("data:text/html,rule view color picker tooltip test");
+  yield addTab("data:text/html;charset=utf-8,rule view color picker tooltip test");
   content.document.body.innerHTML = PAGE_CONTENT;
   let {toolbox, inspector, view} = yield openRuleView();
   yield testColorChangeIsntRevertedWhenOtherTooltipIsShown(view);

@@ -7,7 +7,7 @@
 // Tests that the rule-view displays correctly on MathML elements
 
 const TEST_URL = [
-  "data:text/html,",
+  "data:text/html;charset=utf-8,",
   "<div>",
   "  <math xmlns=\"http://www.w3.org/1998/Math/MathML\">",
   "    <mfrac>",

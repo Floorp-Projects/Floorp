@@ -114,7 +114,7 @@ function pressKey(key) {
 }
 
 function checkSelectedNode(key, className, inspector) {
-  let node = inspector.selection.node;
+  let node = inspector.selection.nodeFront;
 
   if (className == "*comment*") {
     is(node.nodeType, Node.COMMENT_NODE, "Found a comment after pressing " + key);

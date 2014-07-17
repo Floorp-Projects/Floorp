@@ -235,6 +235,7 @@
         setTimeout(() => {
           panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
         }, 0);
+        Services.telemetry.getHistogramById("SOCIAL_TOOLBAR_BUTTONS").add(2);
         ]]></body>
        </method>
 
@@ -330,6 +331,9 @@
             this.setAttribute("image", uri.spec);
             }
             break;
+          case "click":
+            Services.telemetry.getHistogramById("SOCIAL_PANEL_CLICKS").add(2);
+            break;
         }
         ]]></body>
       </method>
@@ -338,6 +342,7 @@
     <handlers>
       <handler event="popupshowing"><![CDATA[
         this._anchor.setAttribute("open", "true");
+        this.content.addEventListener("click", this);
       ]]></handler>
       <handler event="popupshown"><![CDATA[
         this.onShown();
@@ -346,6 +351,7 @@
         this.dispatchPanelEvent("socialFrameHide");
         this._anchor.removeAttribute("open");
         this.update();
+        this.content.removeEventListener("click", this);
       ]]></handler>
       <handler event="command"><![CDATA[
         this.markCurrentPage();

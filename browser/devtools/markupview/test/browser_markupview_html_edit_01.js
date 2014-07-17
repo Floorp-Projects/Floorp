@@ -13,7 +13,7 @@ const TEST_DATA = [
     selector: "#one",
     oldHTML: '<div id="one">First <em>Div</em></div>',
     newHTML: '<div id="one">First Div</div>',
-    validate: function(pageNode, selectedNode) {
+    validate: function*(pageNode, pageNodeFront, selectedNodeFront) {
       is(pageNode.textContent, "First Div", "New div has expected text content");
       ok(!getNode("#one em"), "No em remaining")
     }
@@ -32,8 +32,8 @@ const TEST_DATA = [
     selector: "#addedAttribute",
     oldHTML: '<div id="addedAttribute">addedAttribute</div>',
     newHTML: '<div id="addedAttribute" class="important" disabled checked>addedAttribute</div>',
-    validate: function(pageNode, selectedNode) {
-      is(pageNode, selectedNode, "Original element is selected");
+    validate: function*(pageNode, pageNodeFront, selectedNodeFront) {
+      is(pageNodeFront, selectedNodeFront, "Original element is selected");
       is(pageNode.outerHTML, '<div id="addedAttribute" class="important" disabled="" checked="">addedAttribute</div>',
             "Attributes have been added");
     }
@@ -49,14 +49,15 @@ const TEST_DATA = [
     newHTML: '<div id="siblings-before-sibling">before sibling</div>' +
              '<div id="siblings">siblings (updated)</div>' +
              '<div id="siblings-after-sibling">after sibling</div>',
-    validate: function(pageNode, selectedNode) {
-      let beforeSiblingNode = getNode("#siblings-before-sibling");
-      let afterSiblingNode = getNode("#siblings-after-sibling");
+    validate: function*(pageNode, pageNodeFront, selectedNodeFront, inspector) {
+      let beforeSibling = getNode("#siblings-before-sibling");
+      let beforeSiblingFront = yield getNodeFront("#siblings-before-sibling", inspector);
+      let afterSibling = getNode("#siblings-after-sibling");
 
-      is(beforeSiblingNode, selectedNode, "Sibling has been selected");
+      is(beforeSiblingFront, selectedNodeFront, "Sibling has been selected");
       is(pageNode.textContent, "siblings (updated)", "New div has expected text content");
-      is(beforeSiblingNode.textContent, "before sibling", "Sibling has been inserted");
-      is(afterSiblingNode.textContent, "after sibling", "Sibling has been inserted");
+      is(beforeSibling.textContent, "before sibling", "Sibling has been inserted");
+      is(afterSibling.textContent, "after sibling", "Sibling has been inserted");
     }
   }
 ];
