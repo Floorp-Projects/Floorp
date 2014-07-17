@@ -10,8 +10,6 @@ let doc;
 let toolbox;
 
 function test() {
-  waitForExplicitFinish();
-
   gBrowser.selectedTab = gBrowser.addTab();
   let target = TargetFactory.forTab(gBrowser.selectedTab);
 
