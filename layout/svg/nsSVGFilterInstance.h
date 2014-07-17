@@ -174,16 +174,6 @@ private:
   gfxMatrix GetUserSpaceToFrameSpaceInCSSPxTransform() const;
 
   /**
-   * Appends a new FilterPrimitiveDescription to aPrimitiveDescrs that
-   * converts the FilterPrimitiveDescription at mSourceGraphicIndex into
-   * a SourceAlpha input for the next FilterPrimitiveDescription.
-   *
-   * The new FilterPrimitiveDescription zeros out the SourceGraphic's RGB
-   * channels and keeps the alpha channel intact.
-   */
-  int32_t GetOrCreateSourceAlphaIndex(nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs);
-
-  /**
    * Finds the index in aPrimitiveDescrs of each input to aPrimitiveElement.
    * For example, if aPrimitiveElement is:
    *   <feGaussianBlur in="another-primitive" .../>
@@ -191,7 +181,7 @@ private:
    * FilterPrimitiveDescription representing "another-primitive".
    */
   nsresult GetSourceIndices(nsSVGFE* aPrimitiveElement,
-                            nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
+                            const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
                             const nsDataHashtable<nsStringHashKey, int32_t>& aImageTable,
                             nsTArray<int32_t>& aSourceIndices);
 
@@ -249,18 +239,6 @@ private:
    * first filter in a chain.
    */
   int32_t mSourceGraphicIndex;
-
-  /**
-   * The index of the FilterPrimitiveDescription that this SVG filter should use
-   * as its SourceAlpha, or the SourceAlpha keyword index if this is the first
-   * filter in a chain.
-   */
-  int32_t mSourceAlphaIndex;
-
-  /**
-   * SourceAlpha is available if GetOrCreateSourceAlphaIndex has been called.
-   */
-  int32_t mSourceAlphaAvailable;
 
   bool                    mInitialized;
 };
