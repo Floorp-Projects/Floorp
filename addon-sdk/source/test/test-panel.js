@@ -27,7 +27,6 @@ const { wait } = require('./event/helpers');
 const fixtures = require('./fixtures')
 
 const SVG_URL = fixtures.url('mofo_logo.SVG');
-const CSS_URL = fixtures.url('css-include-file.css');
 
 const Isolate = fn => '(' + fn + ')()';
 
@@ -979,7 +978,16 @@ exports['test panel can be constructed without any arguments'] = function (asser
 };
 
 exports['test panel CSS'] = function(assert, done) {
-  const loader = Loader(module);
+  const { merge } = require("sdk/util/object");
+
+  let loader = Loader(module, null, null, {
+    modules: {
+      "sdk/self": merge({}, self, {
+        data: merge({}, self.data, fixtures)
+      })
+    }
+  });
+
   const { Panel } = loader.require('sdk/panel');
 
   const { getActiveView } = loader.require('sdk/view/core');
@@ -991,13 +999,19 @@ exports['test panel CSS'] = function(assert, done) {
     contentURL: 'data:text/html;charset=utf-8,' +
                 '<div style="background: silver">css test</div>',
     contentStyle: 'div { height: 100px; }',
-    contentStyleFile: CSS_URL,
+    contentStyleFile: [fixtures.url("include-file.css"), "./border-style.css"],
     onShow: () => {
-      ready(getContentWindow(panel)).then(({ document }) => {
+      ready(getContentWindow(panel)).then(({ window, document }) => {
         let div = document.querySelector('div');
 
-        assert.equal(div.clientHeight, 100, 'Panel contentStyle worked');
-        assert.equal(div.offsetHeight, 120, 'Panel contentStyleFile worked');
+      assert.equal(div.clientHeight, 100,
+        "Panel contentStyle worked");
+   
+      assert.equal(div.offsetHeight, 120,
+        "Panel contentStyleFile worked");
+
+      assert.equal(window.getComputedStyle(div).borderTopStyle, "dashed",
+        "Panel contentStyleFile with relative path worked");
 
         loader.unload();
         done();
@@ -1007,6 +1021,53 @@ exports['test panel CSS'] = function(assert, done) {
 
   panel.show();
 };
+
+exports['test panel contentScriptFile'] = function(assert, done) {
+  const { merge } = require("sdk/util/object");
+
+  let loader = Loader(module, null, null, {
+    modules: {
+      "sdk/self": merge({}, self, {
+        data: merge({}, self.data, {url: fixtures.url})
+      })
+    }
+  });
+
+  const { Panel } = loader.require('sdk/panel');
+  const { getActiveView } = loader.require('sdk/view/core');
+
+  const getContentWindow = panel =>
+    getActiveView(panel).querySelector('iframe').contentWindow;
+
+  let whenMessage = defer();
+  let whenShown = defer();
+
+  let panel = Panel({
+    contentURL: './test.html',
+    contentScriptFile: "./test-contentScriptFile.js", 
+    onMessage: (message) => {
+      assert.equal(message, "msg from contentScriptFile",
+        "Panel contentScriptFile with relative path worked");
+
+      whenMessage.resolve();
+    },
+    onShow: () => {
+      ready(getContentWindow(panel)).then(({ document }) => {
+        assert.equal(document.title, 'foo',
+          "Panel contentURL with relative path worked");
+
+        whenShown.resolve();
+      });
+    }
+  });
+
+  all([whenMessage.promise, whenShown.promise]).
+    then(loader.unload).
+    then(done, assert.fail);
+
+  panel.show();
+};
+
 
 exports['test panel CSS list'] = function(assert, done) {
   const loader = Loader(module);
@@ -1185,6 +1246,36 @@ exports['test panel contextmenu disabled'] = function*(assert) {
 
   assert.equal(contextmenu.state, 'closed',
     'contextmenu was never open');
+
+  loader.unload();  
+}
+
+exports["test panel addon global object"] = function*(assert) {
+  const { merge } = require("sdk/util/object");
+
+  let loader = Loader(module, null, null, {
+    modules: {
+      "sdk/self": merge({}, self, {
+        data: merge({}, self.data, {url: fixtures.url})
+      })
+    }
+  });
+
+  const { Panel } = loader.require('sdk/panel');
+
+  let panel = Panel({
+    contentURL: "./test-trusted-document.html"
+  });
+
+  panel.show();
+
+  yield wait(panel, "show");
+
+  panel.port.emit('addon-to-document', 'ok');
+
+  yield wait(panel.port, "document-to-addon");
+ 
+  assert.pass("Received an event from the document");
 
   loader.unload();
 }
