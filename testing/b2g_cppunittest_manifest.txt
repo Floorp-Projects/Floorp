@@ -1,0 +1,9 @@
+# This is just a list of tests to skip, one test per line
+TestPLDHash                         # Bug 1038197
+TestTXMgr                           # Bug 919595
+TestPlainTextSerializer             # Bug 919599
+TestNativeXMLHttpRequest            # Bug 919642
+mediapipeline_unittest              # Bug 919646
+TestStartupCache                    # Bug 929655
+TestStartupCacheTelemetry.manifest  # Bug 929655
+TestStartupCacheTelemetry.js        # Bug 929655

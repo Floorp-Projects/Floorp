@@ -2226,13 +2226,11 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
   }
 }
 
-%ifdef MOZ_LOOP
 /* Loop */
 /* XXX - probably need retina images here */
 #loop-call-button {
   list-style-image: url("chrome://global/skin/loop/loop-call.png");
 }
-%endif
 
 /* social share panel */
 .social-share-frame {

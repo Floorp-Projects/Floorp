@@ -267,7 +267,6 @@
            noautofocus="true"
            position="topcenter topright"/>
 
-#ifdef MOZ_LOOP
     <panel id="loop-notification-panel"
            class="loop-panel social-panel"
            type="arrow"
@@ -279,7 +278,6 @@
            type="arrow"
            orient="horizontal"
            hidden="true"/>
-#endif
 
     <menupopup id="toolbar-context-menu"
                onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator'));">
@@ -673,11 +671,7 @@
              aria-label="&navbarCmd.label;"
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="small"
-#ifdef MOZ_LOOP
              defaultset="urlbar-container,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,loop-call-button,social-share-button,social-toolbar-item"
-#else
-             defaultset="urlbar-container,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,social-share-button,social-toolbar-item"
-#endif
              customizationtarget="nav-bar-customization-target"
              overflowable="true"
              overflowbutton="nav-bar-overflow-button"
@@ -811,23 +805,6 @@
                      oncommand="WebrtcIndicator.menuCommand(event.target);"/>
         </toolbarbutton>
 
-#ifdef MOZ_LOOP
-        <!-- XXX Bug 1013989 will provide a label for the button -->
-        <!-- This uses badged to be compatible with the social api code it shares.
-             We may also want it to be badged in the future, for notification
-             purposes. -->
-        <toolbarbutton id="loop-call-button"
-                       class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       persist="class"
-                       type="badged"
-                       removable="true"
-                       tooltiptext="&loopCallButton.tooltip;"
-                       oncommand="LoopUI.openCallPanel(event);"
-                       cui-areatype="toolbar"
-                       >
-        </toolbarbutton>
-#endif
-
         <toolbarbutton id="bookmarks-menu-button"
                        class="toolbarbutton-1 chromeclass-toolbar-additional"
                        persist="class"
@@ -956,6 +933,21 @@
                        onclick="BrowserGoHome(event);"
                        cui-areatype="toolbar"
                        aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
+
+        <!-- XXX Bug 1013989 will provide a label for the button -->
+        <!-- This uses badged to be compatible with the social api code it shares.
+             We may also want it to be badged in the future, for notification
+             purposes. -->
+        <toolbarbutton id="loop-call-button"
+                       class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       persist="class"
+                       type="badged"
+                       removable="true"
+                       tooltiptext="&loopCallButton.tooltip;"
+                       oncommand="LoopUI.openCallPanel(event);"
+                       cui-areatype="toolbar"
+                       >
+        </toolbarbutton>
 
 
         <toolbarbutton id="social-share-button"

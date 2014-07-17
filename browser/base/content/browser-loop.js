@@ -36,6 +36,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
      * delayedStartup.
      */
     initialize: function() {
+      if (!Services.prefs.getBoolPref("loop.enabled")) {
+        CustomizableUI.getWidget("loop-call-button").forWindow(window).node.hidden = true;
+        return;
+      }
+
       MozLoopService.initialize();
     },
   };

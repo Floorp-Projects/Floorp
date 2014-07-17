@@ -2201,6 +2201,30 @@
     "extended_statistics_ok": true,
     "description": "How many actual preconnects happen"
   },
+  "PREDICTOR_TOTAL_PRECONNECTS_CREATED": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "1000 * 1000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "How many preconnects actually created a speculative socket"
+  },
+  "PREDICTOR_TOTAL_PRECONNECTS_USED": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "1000 * 1000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "How many preconnects actually created a used speculative socket"
+  },
+  "PREDICTOR_TOTAL_PRECONNECTS_UNUSED": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "1000 * 1000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "How many preconnects needlessly created a speculative socket"
+  },
   "PREDICTOR_TOTAL_PRERESOLVES": {
     "expires_in_version": "never",
     "kind": "exponential",

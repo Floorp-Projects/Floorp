@@ -388,6 +388,13 @@ Predictor::GetParallelSpeculativeConnectLimit(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+Predictor::GetIsFromPredictor(bool *isFromPredictor)
+{
+  *isFromPredictor = true;
+  return NS_OK;
+}
+
 // Predictor::nsIInterfaceRequestor
 
 NS_IMETHODIMP

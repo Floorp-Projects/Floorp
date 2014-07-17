@@ -278,16 +278,7 @@ StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, cons
 {
     switch (arrayType) {
       case Scalar::Float32:
-        if (LIRGenerator::allowFloat32Optimizations()) {
-            masm.storeFloat32(value, dest);
-        } else {
-#ifdef JS_MORE_DETERMINISTIC
-            // See the comment in TypedArrayObjectTemplate::doubleToNative.
-            masm.canonicalizeDouble(value);
-#endif
-            masm.convertDoubleToFloat32(value, ScratchFloat32Reg);
-            masm.storeFloat32(ScratchFloat32Reg, dest);
-        }
+        masm.storeFloat32(value, dest);
         break;
       case Scalar::Float64:
 #ifdef JS_MORE_DETERMINISTIC
@@ -350,13 +341,8 @@ MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T &src, AnyRegi
         }
         break;
       case Scalar::Float32:
-        if (LIRGenerator::allowFloat32Optimizations()) {
-            loadFloat32(src, dest.fpu());
-            canonicalizeFloat(dest.fpu());
-        } else {
-            loadFloatAsDouble(src, dest.fpu());
-            canonicalizeDouble(dest.fpu());
-        }
+        loadFloat32(src, dest.fpu());
+        canonicalizeFloat(dest.fpu());
         break;
       case Scalar::Float64:
         loadDouble(src, dest.fpu());
@@ -414,8 +400,7 @@ MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T &src, const V
       case Scalar::Float32:
         loadFromTypedArray(arrayType, src, AnyRegister(ScratchFloat32Reg), dest.scratchReg(),
                            nullptr);
-        if (LIRGenerator::allowFloat32Optimizations())
-            convertFloat32ToDouble(ScratchFloat32Reg, ScratchDoubleReg);
+        convertFloat32ToDouble(ScratchFloat32Reg, ScratchDoubleReg);
         boxDouble(ScratchDoubleReg, dest);
         break;
       case Scalar::Float64:

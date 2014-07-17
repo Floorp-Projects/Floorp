@@ -251,7 +251,7 @@ gc::GCRuntime::startVerifyPreBarriers()
     rt->setNeedsBarrier(true);
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         PurgeJITCaches(zone);
-        zone->setNeedsBarrier(true, Zone::UpdateIon);
+        zone->setNeedsBarrier(true, Zone::UpdateJit);
         zone->allocator.arenas.purge();
     }
 
@@ -336,7 +336,7 @@ gc::GCRuntime::endVerifyPreBarriers()
         if (!zone->needsBarrier())
             compartmentCreated = true;
 
-        zone->setNeedsBarrier(false, Zone::UpdateIon);
+        zone->setNeedsBarrier(false, Zone::UpdateJit);
         PurgeJITCaches(zone);
     }
     rt->setNeedsBarrier(false);

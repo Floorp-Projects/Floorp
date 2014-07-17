@@ -14,6 +14,12 @@ enum VideoFacingModeEnum {
     "right"
 };
 
+enum MediaSourceEnum {
+    "camera",
+    "screen",
+    "application"
+};
+
 dictionary ConstrainLongRange {
     long min = -2147483647; // +1 works around windows compiler bug
     long max = 2147483647;

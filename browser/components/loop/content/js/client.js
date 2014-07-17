@@ -35,13 +35,6 @@ loop.Client = (function($) {
 
   Client.prototype = {
     /**
-     * Converts from hours to seconds
-     */
-    _hoursToSeconds: function(value) {
-      return value * 60 * 60;
-    },
-
-    /**
      * Validates a data object to confirm it has the specified properties.
      *
      * @param  {Object} The data object to verify
@@ -124,8 +117,7 @@ loop.Client = (function($) {
 
           cb(null, this._validate(urlData, expectedCallUrlProperties));
 
-          var expiresHours = this._hoursToSeconds(urlData.expiresAt);
-          this.mozLoop.noteCallUrlExpiry(expiresHours);
+          this.mozLoop.noteCallUrlExpiry(urlData.expiresAt);
         } catch (err) {
           console.log("Error requesting call info", err);
           cb(err);

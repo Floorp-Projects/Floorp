@@ -17,7 +17,7 @@ interface nsIPrincipal;
  * one of these per document/principal.
  */
 
-[scriptable, uuid(15c409c5-ebf8-457c-a8dd-5b169ca0b218)]
+[scriptable, uuid(3e923bf6-a974-4f3b-91c4-b4fd48b37732)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
 
@@ -220,18 +220,6 @@ interface nsIContentSecurityPolicy : nsISerializable
                    in nsISupports     aContext,
                    in ACString        aMimeTypeGuess,
                    in nsISupports     aExtra);
-
-  /**
-   * Delegate method called by the service when sub-elements of the protected
-   * document are being processed.  Given a bit of information about the request,
-   * decides whether or not the policy is satisfied.
-   */
-  short shouldProcess(in nsContentPolicyType   aContentType,
-                      in nsIURI          aContentLocation,
-                      in nsIURI          aRequestOrigin,
-                      in nsISupports     aContext,
-                      in ACString        aMimeType,
-                      in nsISupports     aExtra);
 
 %{ C++
 // nsIObserver topic to fire when the policy encounters a violation.

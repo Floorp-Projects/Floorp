@@ -480,6 +480,8 @@ class GCRuntime
     bool                  dynamicHeapGrowth;
     bool                  dynamicMarkSlice;
     uint64_t              decommitThreshold;
+    unsigned              minEmptyChunkCount;
+    unsigned              maxEmptyChunkCount;
 
     /* During shutdown, the GC needs to clean up every possible object. */
     bool                  cleanUpEverything;

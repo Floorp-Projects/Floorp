@@ -50,6 +50,7 @@ NS_IMPL_ISUPPORTS(OfflineCacheUpdateGlue,
 //-----------------------------------------------------------------------------
 
 OfflineCacheUpdateGlue::OfflineCacheUpdateGlue()
+: mCoalesced(false)
 {
     LOG(("OfflineCacheUpdateGlue::OfflineCacheUpdateGlue [%p]", this));
 }
@@ -89,6 +90,9 @@ OfflineCacheUpdateGlue::Schedule()
     // Do not use weak reference, we must survive!
     mUpdate->AddObserver(this, false);
 
+    if (mCoalesced) // already scheduled
+        return NS_OK;
+
     return mUpdate->Schedule();
 }
 
@@ -100,6 +104,14 @@ OfflineCacheUpdateGlue::Init(nsIURI *aManifestURI,
                              uint32_t aAppID,
                              bool aInBrowser)
 {
+    nsOfflineCacheUpdateService* service =
+        nsOfflineCacheUpdateService::EnsureService();
+    if (service) {
+        service->FindUpdate(aManifestURI, aAppID, aInBrowser, aCustomProfileDir,
+                            getter_AddRefs(mUpdate));
+        mCoalesced = !!mUpdate;
+    }
+
     if (!EnsureUpdate())
         return NS_ERROR_NULL_POINTER;
 
@@ -107,6 +119,11 @@ OfflineCacheUpdateGlue::Init(nsIURI *aManifestURI,
 
     if (aDocument)
         SetDocument(aDocument);
+
+    if (mCoalesced) { // already initialized
+        LOG(("OfflineCacheUpdateGlue %p coalesced with update %p", this, mUpdate.get()));
+        return NS_OK;
+    }
 
     return mUpdate->Init(aManifestURI, aDocumentURI, nullptr, aCustomProfileDir, aAppID, aInBrowser);
 }

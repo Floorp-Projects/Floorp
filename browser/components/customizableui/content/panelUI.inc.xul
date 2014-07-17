@@ -141,9 +141,7 @@
 
     <panelview id="PanelUI-socialapi" flex="1"/>
 
-#ifdef MOZ_LOOP
     <panelview id="PanelUI-loopapi" flex="1"/>
-#endif
 
     <panelview id="PanelUI-feeds" flex="1" oncommand="FeedHandler.subscribeToFeed(null, event);">
       <label value="&feedsMenu.label;" class="panel-subview-header"/>

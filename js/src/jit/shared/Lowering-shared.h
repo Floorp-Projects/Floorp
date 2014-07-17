@@ -206,11 +206,6 @@ class LIRGeneratorShared : public MInstructionVisitorWithDefaults
         return false;
     }
 
-     // Whether we can emit Float32 specific optimizations.
-    static bool allowFloat32Optimizations() {
-       return false;
-    }
-
     // Whether we can inline ForkJoinGetSlice.
     static bool allowInlineForkJoinGetSlice() {
         return false;
