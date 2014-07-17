@@ -453,7 +453,6 @@ WifiGeoPositionProvider.prototype = {
       }
     }
 
-    let l = this.listener;
     let useCached = isCachedRequestMoreAccurateThanServerRequest(data.cellTowers,
                                                                  data.wifiAccessPoints);
 
@@ -461,40 +460,38 @@ WifiGeoPositionProvider.prototype = {
 
     if (useCached) {
       gCachedRequest.location.timestamp = Date.now();
-      this.notifyListener(l.update, [gCachedRequest.location]);
+      this.listener.update(gCachedRequest.location);
       return;
     }
 
     // From here on, do a network geolocation request //
     let url = Services.urlFormatter.formatURLPref("geo.wifi.uri");
+    let listener = this.listener;
     LOG("Sending request: " + url + "\n");
 
     let xhr = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                         .createInstance(Ci.nsIXMLHttpRequest);
 
-    this.notifyListener(l.locationUpdatePending);
+    listener.locationUpdatePending();
 
     try {
       xhr.open("POST", url, true);
     } catch (e) {
-      this.notifyListener(l.notifyError,
-                          [POSITION_UNAVAILABLE]);
+      listener.notifyError(POSITION_UNAVAILABLE);
       return;
     }
     xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
     xhr.responseType = "json";
     xhr.mozBackgroundRequest = true;
     xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS;
-    xhr.onerror = (function() {
-      this.notifyListener(l.notifyError,
-                          [POSITION_UNAVAILABLE]);
-    }).bind(this);
-    xhr.onload = (function() {
+    xhr.onerror = function() {
+      listener.notifyError(POSITION_UNAVAILABLE);
+    };
+    xhr.onload = function() {
       LOG("gls returned status: " + xhr.status + " --> " +  JSON.stringify(xhr.response));
       if ((xhr.channel instanceof Ci.nsIHttpChannel && xhr.status != 200) ||
           !xhr.response || !xhr.response.location) {
-        this.notifyListener(l.notifyError,
-                            [POSITION_UNAVAILABLE]);
+        listener.notifyError(POSITION_UNAVAILABLE);
         return;
       }
 
@@ -502,23 +499,14 @@ WifiGeoPositionProvider.prototype = {
                                                   xhr.response.location.lng,
                                                   xhr.response.accuracy);
 
-      this.notifyListener(l.update, [newLocation]);
+      listener.update(newLocation);
       gCachedRequest = new CachedRequest(newLocation, data.cellTowers, data.wifiAccessPoints);
-    }).bind(this);
+    };
 
     var requestData = JSON.stringify(data);
     LOG("sending " + requestData);
     xhr.send(requestData);
   },
-
-  notifyListener: function(listenerFunc, args) {
-    args = args || [];
-    try {
-      this.listener[listenerFunc].apply(this.listener, args);
-    } catch(e) {
-      Cu.reportError(e);
-    }
-  }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WifiGeoPositionProvider]);
