@@ -603,7 +603,7 @@ parent:
     async AudioChannelChangedNotification();
     async AudioChannelChangeDefVolChannel(int32_t aChannel, bool aHidden);
 
-    sync DataStoreGetStores(nsString aName, Principal aPrincipal)
+    sync DataStoreGetStores(nsString aName, nsString aOwner, Principal aPrincipal)
         returns (DataStoreSetting[] dataStores);
 
     async FilePathUpdateNotify(nsString aType,
