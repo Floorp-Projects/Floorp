@@ -107,14 +107,7 @@ this.XPCOMUtils = {
    */
   generateQI: function XPCU_generateQI(interfaces) {
     /* Note that Ci[Ci.x] == Ci.x for all x */
-    let a = [];
-    for (let i = 0; i < interfaces.length; i++) {
-      let iface = interfaces[i];
-      if (Ci[iface]) {
-        a.push(Ci[iface].name);
-      }
-    }
-    return makeQI(a);
+    return makeQI([Ci[i].name for each (i in interfaces) if (Ci[i])]);
   },
 
   /**
@@ -130,13 +123,7 @@ this.XPCOMUtils = {
     if (QueryInterface in classInfo)
       throw Error("In generateCI, don't use a component for generating classInfo");
     /* Note that Ci[Ci.x] == Ci.x for all x */
-    let _interfaces = [];
-    for (let i = 0; i < classInfo.interfaces.length; i++) {
-      let iface = classInfo.interfaces[i];
-      if (Ci[iface]) {
-        _interfaces.push(Ci[iface]);
-      }
-    }
+    var _interfaces = [Ci[i] for each (i in classInfo.interfaces) if (Ci[i])];
     return {
       getInterfaces: function XPCU_getInterfaces(countRef) {
         countRef.value = _interfaces.length;
@@ -157,8 +144,7 @@ this.XPCOMUtils = {
    */
   generateNSGetFactory: function XPCU_generateNSGetFactory(componentsArray) {
     let classes = {};
-    for (let i = 0; i < componentsArray.length; i++) {
-        let component = componentsArray[i];
+    for each (let component in componentsArray) {
         if (!(component.prototype.classID instanceof Components.ID))
           throw Error("In generateNSGetFactory, classID missing or incorrect for component " + component);
 
@@ -343,8 +329,8 @@ function makeQI(interfaceNames) {
       return this;
     if (iid.equals(Ci.nsIClassInfo) && "classInfo" in this)
       return this.classInfo;
-    for (let i = 0; i < interfaceNames.length; i++) {
-      if (Ci[interfaceNames[i]].equals(iid))
+    for each(let interfaceName in interfaceNames) {
+      if (Ci[interfaceName].equals(iid))
         return this;
     }
 
