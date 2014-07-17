@@ -9,13 +9,11 @@
 #include "mozilla/Attributes.h"
 #include "nsRect.h"
 #include "nsColor.h"
-#include "gfxRect.h"
 
 class nsDisplayItem;
 class nsDisplayListBuilder;
 class nsDisplayBackgroundImage;
 class nsDisplayThemedBackground;
-class nsDisplaySVGEffects;
 
 /**
  * This stores the geometry of an nsDisplayItem, and the area
@@ -130,18 +128,6 @@ public:
   { }
 
   nscolor mColor;
-};
-
-class nsDisplaySVGEffectsGeometry : public nsDisplayItemGeometry
-{
-public:
-  nsDisplaySVGEffectsGeometry(nsDisplaySVGEffects* aItem, nsDisplayListBuilder* aBuilder);
-
-  virtual void MoveBy(const nsPoint& aOffset) MOZ_OVERRIDE;
-
-  gfxRect mBBox;
-  gfxPoint mUserSpaceOffset;
-  nsPoint mFrameOffsetToReferenceFrame;
 };
 
 #endif /*NSDISPLAYLISTINVALIDATION_H_*/
