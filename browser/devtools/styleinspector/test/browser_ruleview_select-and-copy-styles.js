@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyGetter(this, "osString", function() {
 });
 
 let test = asyncTest(function*() {
-  yield addTab("data:text/html,<p>rule view context menu test</p>");
+  yield addTab("data:text/html;charset=utf-8,<p>rule view context menu test</p>");
 
   info("Creating the test document");
   content.document.body.innerHTML = '<style type="text/css"> ' +

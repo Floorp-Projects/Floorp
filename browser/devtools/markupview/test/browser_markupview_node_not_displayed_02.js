@@ -98,35 +98,33 @@ let test = asyncTest(function*() {
   }
 });
 
-function runTestData(inspector, {selector, before, changeStyle, after}) {
-  let def = promise.defer();
-
+function* runTestData(inspector, {selector, before, changeStyle, after}) {
   info("Getting the " + selector + " test node");
-  let container = getContainerForRawNode(selector, inspector);
+  let nodeFront = yield getNodeFront(selector, inspector);
+  let container = getContainerForNodeFront(nodeFront, inspector);
   is(!container.elt.classList.contains("not-displayed"), before,
     "The container is marked as " + (before ? "shown" : "hidden"));
 
   info("Listening for the display-change event");
-  inspector.markup.walker.once("display-change", nodes => {
-    info("Verifying that the list of changed nodes include our container");
-
-    ok(nodes.length, "The display-change event was received with a nodes");
-    let foundContainer = false;
-    for (let node of nodes) {
-      if (inspector.markup.getContainer(node) === container) {
-        foundContainer = true;
-        break;
-      }
-    }
-    ok(foundContainer, "Container is part of the list of changed nodes");
-
-    is(!container.elt.classList.contains("not-displayed"), after,
-      "The container is marked as " + (after ? "shown" : "hidden"));
-    def.resolve();
-  });
+  let onDisplayChanged = promise.defer();
+  inspector.markup.walker.once("display-change", onDisplayChanged.resolve);
 
   info("Making style changes");
   changeStyle(content.document, getNode(selector));
+  let nodes = yield onDisplayChanged.promise;
 
-  return def.promise;
+  info("Verifying that the list of changed nodes include our container");
+
+  ok(nodes.length, "The display-change event was received with a nodes");
+  let foundContainer = false;
+  for (let node of nodes) {
+    if (getContainerForNodeFront(node, inspector) === container) {
+      foundContainer = true;
+      break;
+    }
+  }
+  ok(foundContainer, "Container is part of the list of changed nodes");
+
+  is(!container.elt.classList.contains("not-displayed"), after,
+    "The container is marked as " + (after ? "shown" : "hidden"));
 }

@@ -7,7 +7,6 @@
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/@AB_CD@/browser/
   locale/@AB_CD@/browser/region.properties        (%chrome/region.properties)
-  locale/@AB_CD@/browser/bookmarks.json           (bookmarks.json)
   locale/@AB_CD@/browser/searchplugins/list.txt   (%searchplugins/list.txt)
 
 # Fennec-specific overrides of generic strings

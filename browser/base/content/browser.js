@@ -5133,14 +5133,14 @@ function handleLinkClick(event, href, linkNode) {
   // if the mixedContentChannel is present and the referring URI passes
   // a same origin check with the target URI, we can preserve the users
   // decision of disabling MCB on a page for it's child tabs.
-  var persistDisableMCBInChildTab = false;
+  var persistAllowMixedContentInChildTab = false;
 
   if (where == "tab" && gBrowser.docShell.mixedContentChannel) {
     const sm = Services.scriptSecurityManager;
     try {
       var targetURI = makeURI(href);
       sm.checkSameOriginURI(referrerURI, targetURI, false);
-      persistDisableMCBInChildTab = true;
+      persistAllowMixedContentInChildTab = true;
     }
     catch (e) { }
   }
@@ -5148,7 +5148,7 @@ function handleLinkClick(event, href, linkNode) {
   urlSecurityCheck(href, doc.nodePrincipal);
   openLinkIn(href, where, { referrerURI: referrerURI,
                             charset: doc.characterSet,
-                            disableMCB: persistDisableMCBInChildTab});
+                            allowMixedContent: persistAllowMixedContentInChildTab });
   event.preventDefault();
   return true;
 }

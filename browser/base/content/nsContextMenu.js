@@ -857,14 +857,14 @@ nsContextMenu.prototype = {
     // if the mixedContentChannel is present and the referring URI passes
     // a same origin check with the target URI, we can preserve the users
     // decision of disabling MCB on a page for it's child tabs.
-    var persistDisableMCBInChildTab = false;
+    var persistAllowMixedContentInChildTab = false;
 
     if (this.browser.docShell && this.browser.docShell.mixedContentChannel) {
       const sm = Services.scriptSecurityManager;
       try {
         var targetURI = this.linkURI;
         sm.checkSameOriginURI(referrerURI, targetURI, false);
-        persistDisableMCBInChildTab = true;
+        persistAllowMixedContentInChildTab = true;
       }
       catch (e) { }
     }
@@ -872,7 +872,7 @@ nsContextMenu.prototype = {
     openLinkIn(this.linkURL, "tab",
                { charset: doc.characterSet,
                  referrerURI: referrerURI,
-                 disableMCB:  persistDisableMCBInChildTab});
+                 allowMixedContent: persistAllowMixedContentInChildTab });
   },
 
   // open URL in current tab
