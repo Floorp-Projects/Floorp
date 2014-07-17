@@ -4,50 +4,49 @@
 
 let TargetFactory = gDevTools.TargetFactory;
 
-let tempScope = {};
-Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);
-let console = tempScope.console;
-Components.utils.import("resource://gre/modules/Promise.jsm", tempScope);
-let promise = tempScope.Promise;
+const { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
+const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
-let {devtools} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
 let TargetFactory = devtools.TargetFactory;
+
+// All test are asynchronous
+waitForExplicitFinish();
+
+// Uncomment this pref to dump all devtools emitted events to the console.
+// Services.prefs.setBoolPref("devtools.dump.emit", true);
 
 gDevTools.testing = true;
 SimpleTest.registerCleanupFunction(() => {
   gDevTools.testing = false;
+  Services.prefs.clearUserPref("devtools.dump.emit");
 });
 
 /**
- * Open a new tab at a URL and call a callback on load
+ * Define an async test based on a generator function
  */
-function addTab(aURL, aCallback)
-{
-  waitForExplicitFinish();
+function asyncTest(generator) {
+  return () => Task.spawn(generator).then(null, ok.bind(null, false)).then(finish);
+}
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  if (aURL != null) {
-    content.location = aURL;
-  }
+/**
+ * Add a new test tab in the browser and load the given url.
+ * @param {String} url The url to be loaded in the new tab
+ * @return a promise that resolves to the tab object when the url is loaded
+ */
+function addTab(url) {
+  info("Adding a new tab with URL: '" + url + "'");
+  let def = promise.defer();
 
-  let deferred = promise.defer();
+  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedBrowser.addEventListener("load", function onload() {
+    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
+    info("URL '" + url + "' loading complete");
+    def.resolve(tab);
+  }, true);
+  content.location = url;
 
-  let tab = gBrowser.selectedTab;
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let browser = gBrowser.getBrowserForTab(tab);
-
-  function onTabLoad() {
-    browser.removeEventListener("load", onTabLoad, true);
-
-    if (aCallback != null) {
-      aCallback(browser, tab, browser.contentDocument);
-    }
-
-    deferred.resolve({ browser: browser, tab: tab, target: target });
-  }
-
-  browser.addEventListener("load", onTabLoad, true);
-  return deferred.promise;
+  return def.promise;
 }
 
 registerCleanupFunction(function tearDown() {
@@ -77,7 +76,44 @@ function synthesizeKeyFromKeyTag(aKeyId, document) {
     altKey: modifiersAttr.match("alt"),
     metaKey: modifiersAttr.match("meta"),
     accelKey: modifiersAttr.match("accel")
-  }
+  };
 
   EventUtils.synthesizeKey(name, modifiers);
+}
+
+/**
+ * Wait for eventName on target.
+ * @param {Object} target An observable object that either supports on/off or
+ * addEventListener/removeEventListener
+ * @param {String} eventName
+ * @param {Boolean} useCapture Optional, for addEventListener/removeEventListener
+ * @return A promise that resolves when the event has been handled
+ */
+function once(target, eventName, useCapture=false) {
+  info("Waiting for event: '" + eventName + "' on " + target + ".");
+
+  let deferred = promise.defer();
+
+  for (let [add, remove] of [
+    ["addEventListener", "removeEventListener"],
+    ["addListener", "removeListener"],
+    ["on", "off"]
+  ]) {
+    if ((add in target) && (remove in target)) {
+      target[add](eventName, function onEvent(...aArgs) {
+        info("Got event: '" + eventName + "' on " + target + ".");
+        target[remove](eventName, onEvent, useCapture);
+        deferred.resolve.apply(deferred, aArgs);
+      }, useCapture);
+      break;
+    }
+  }
+
+  return deferred.promise;
+}
+
+function waitForTick() {
+  let deferred = promise.defer();
+  executeSoon(deferred.resolve);
+  return deferred.promise;
 }

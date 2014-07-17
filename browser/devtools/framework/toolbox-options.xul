@@ -88,8 +88,9 @@
         <label value="&options.context.advancedSettings;"/>
         <vbox id="context-options" class="options-groupbox">
           <checkbox id="devtools-disable-cache"
-                    label="&options.disableCache.label;"
-                    tooltiptext="&options.disableCache.tooltip;"/>
+                    label="&options.disableCache.label2;"
+                    tooltiptext="&options.disableCache.tooltip2;"
+                    data-pref="devtools.cache.disabled"/>
           <checkbox id="devtools-disable-javascript"
                     label="&options.disableJavaScript.label;"
                     tooltiptext="&options.disableJavaScript.tooltip;"/>
