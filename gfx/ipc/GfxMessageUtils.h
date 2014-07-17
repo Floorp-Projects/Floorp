@@ -802,6 +802,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     // a pointer to the string in its internal buffer.
     strncpy(aResult->mContentDescription, contentDescription,
             sizeof(aResult->mContentDescription));
+    aResult->mContentDescription[sizeof(aResult->mContentDescription) - 1] = '\0';
     return true;
   }
 };

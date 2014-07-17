@@ -94,6 +94,7 @@ namespace jit {
     _(NewCallObject)                                                        \
     _(NewRunOnceCallObject)                                                 \
     _(NewStringObject)                                                      \
+    _(ObjectState)                                                          \
     _(InitElem)                                                             \
     _(InitElemGetterSetter)                                                 \
     _(MutateProto)                                                          \
