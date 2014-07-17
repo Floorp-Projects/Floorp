@@ -8,7 +8,7 @@ const MAP_PREF = "devtools.styleeditor.source-maps-enabled";
 
 const LABELS = ["screen and (max-width: 320px)",
                 "screen and (min-width: 1200px)"];
-const LINE_NOS = [4, 4];
+const LINE_NOS = [5, 8];
 
 waitForExplicitFinish();
 
