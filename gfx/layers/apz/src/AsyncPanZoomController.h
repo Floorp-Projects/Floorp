@@ -537,6 +537,12 @@ protected:
 
 private:
   /**
+   * Cancel animations all the way up the overscroll handoff chain if possible,
+   * or just the local APZC if not.
+   */
+  void CancelAnimationForHandoffChain();
+
+  /**
    * Helper to set the current state. Holds the monitor before actually setting
    * it and fires content controller events based on state changes. Always set
    * the state using this call, do not set it directly.
