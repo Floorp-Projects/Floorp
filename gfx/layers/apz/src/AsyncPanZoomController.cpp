@@ -828,6 +828,9 @@ nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent)
       // Content may intercept the touch events and prevent-default them. So we schedule
       // a timeout to give content time to do that.
       ScheduleContentResponseTimeout();
+      // However, we still want to cancel animations here because a finger has gone down
+      // and we don't want to keep moving the content under the finger.
+      CancelAnimation();
     } else {
       // Content won't prevent-default this, so we can just pretend like we scheduled
       // a timeout and it expired. Note that we will still receive a ContentReceivedTouch
