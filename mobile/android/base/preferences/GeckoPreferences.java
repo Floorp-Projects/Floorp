@@ -6,10 +6,8 @@
 package org.mozilla.gecko.preferences;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
@@ -94,7 +92,7 @@ OnSharedPreferenceChangeListener
     // devices.
     private static final boolean NO_TRANSITIONS = HardwareUtils.IS_KINDLE_DEVICE;
 
-    public static final String NON_PREF_PREFIX = "android.not_a_preference.";
+    private static final String NON_PREF_PREFIX = "android.not_a_preference.";
     public static final String INTENT_EXTRA_RESOURCES = "resource";
     public static String PREFS_HEALTHREPORT_UPLOAD_ENABLED = NON_PREF_PREFIX + "healthreport.uploadEnabled";
 
@@ -729,9 +727,6 @@ OnSharedPreferenceChangeListener
                             return true;
                         }
                     });
-                } else if (handlers.containsKey(key)) {
-                    PrefHandler handler = handlers.get(key);
-                    handler.setupPref(this, pref);
                 }
 
                 // Some Preference UI elements are not actually preferences,
@@ -1001,20 +996,9 @@ OnSharedPreferenceChangeListener
         }
     }
 
-    public interface PrefHandler {
-        public void setupPref(Context context, Preference pref);
-        public void onChange(Context context, Preference pref, Object newValue);
-    }
-
-    @SuppressWarnings("serial")
-    private Map<String, PrefHandler> handlers = new HashMap<String, PrefHandler>() {{
-        put(ClearOnShutdownPref.PREF, new ClearOnShutdownPref());
-    }};
-
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         final String prefName = preference.getKey();
-        Log.i(LOGTAG, "Changed " + prefName + " = " + newValue);
         if (PREFS_MP_ENABLED.equals(prefName)) {
             showDialog((Boolean) newValue ? DIALOG_CREATE_MASTER_PASSWORD : DIALOG_REMOVE_MASTER_PASSWORD);
 
@@ -1046,9 +1030,6 @@ OnSharedPreferenceChangeListener
         } else if (PREFS_GEO_REPORTING.equals(prefName)) {
             // Translate boolean value to int for geo reporting pref.
             newValue = ((Boolean) newValue) ? 1 : 0;
-        } else if (handlers.containsKey(prefName)) {
-            PrefHandler handler = handlers.get(prefName);
-            handler.onChange(this, preference, newValue);
         }
 
         // Send Gecko-side pref changes to Gecko

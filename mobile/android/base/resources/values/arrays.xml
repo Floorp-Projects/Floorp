@@ -69,13 +69,9 @@
         <item>@string/bookmarks_title</item>
         <item>@string/history_title</item>
     </string-array>
-    <string-array name="pref_import_android_defaults">
-        <item>true</item>
-        <item>true</item>
-    </string-array>
     <string-array name="pref_import_android_values">
-        <item>android_import.data.bookmarks</item>
-        <item>android_import.data.history</item>
+        <item>true</item>
+        <item>true</item>
     </string-array>
     <string-array name="pref_import_android_keys">
         <item>android_import.data.bookmarks</item>
@@ -91,25 +87,15 @@
         <item>@string/pref_private_data_offlineApps</item>
         <item>@string/pref_private_data_siteSettings</item>
     </string-array>
-    <string-array name="pref_private_data_defaults">
-        <item>true</item>
-        <item>true</item>
-        <item>true</item>
-        <item>true</item>
-        <item>true</item>
-        <item>true</item>
-        <item>true</item>
-        <item>true</item>
-    </string-array>
     <string-array name="pref_private_data_values">
-        <item>private.data.history</item>
-        <item>private.data.downloadFiles</item>
-        <item>private.data.formdata</item>
-        <item>private.data.cookies_sessions</item>
-        <item>private.data.passwords</item>
-        <item>private.data.cache</item>
-        <item>private.data.offlineApps</item>
-        <item>private.data.siteSettings</item>
+        <item>true</item>
+        <item>true</item>
+        <item>true</item>
+        <item>true</item>
+        <item>true</item>
+        <item>true</item>
+        <item>true</item>
+        <item>true</item>
     </string-array>
     <string-array name="pref_private_data_keys">
         <item>private.data.history</item>
@@ -120,16 +106,6 @@
         <item>private.data.cache</item>
         <item>private.data.offlineApps</item>
         <item>private.data.siteSettings</item>
-    </string-array>
-    <string-array name="pref_clear_on_exit_defaults">
-        <item>false</item>
-        <item>false</item>
-        <item>false</item>
-        <item>false</item>
-        <item>false</item>
-        <item>false</item>
-        <item>false</item>
-        <item>false</item>
     </string-array>
     <string-array name="pref_restore_entries">
         <item>@string/pref_restore_always</item>

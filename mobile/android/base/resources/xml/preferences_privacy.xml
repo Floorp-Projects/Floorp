@@ -31,32 +31,14 @@
                         android:persistent="false" />
 
     <!-- keys prefixed with "android.not_a_preference." are not synced with Gecko -->
-    <PreferenceCategory android:title="@string/pref_clear_private_data_category">
-
-        <org.mozilla.gecko.preferences.PrivateDataPreference
-                            android:key="android.not_a_preference.privacy.clear"
-                            android:title="@string/pref_clear_private_data"
-                            android:persistent="true"
-                            android:positiveButtonText="@string/button_clear_data"
-                            gecko:entries="@array/pref_private_data_entries"
-                            gecko:entryValues="@array/pref_private_data_values"
-                            gecko:entryKeys="@array/pref_private_data_keys"
-                            gecko:initialValues="@array/pref_private_data_defaults" />
-
-        <!-- This pref is persisted in both Gecko and Java -->
-        <org.mozilla.gecko.preferences.ListCheckboxPreference
-                            android:key="android.not_a_preference.history.clear_on_exit"
-                            gecko:entries="@array/pref_private_data_entries"
-                            gecko:entryValues="@array/pref_private_data_values"
-                            gecko:initialValues="@array/pref_clear_on_exit_defaults"
-
-                            android:title="@string/pref_clear_on_exit_title"
-                            android:summary="@string/pref_clear_on_exit_summary"
-
-                            android:dialogTitle="@string/pref_clear_on_exit_dialog_title"
-                            android:positiveButtonText="@string/button_set"/>
-
-    </PreferenceCategory>
+    <org.mozilla.gecko.preferences.PrivateDataPreference
+                        android:key="android.not_a_preference.privacy.clear"
+                        android:title="@string/pref_clear_private_data"
+                        android:persistent="true"
+                        android:positiveButtonText="@string/button_clear_data"
+                        gecko:entries="@array/pref_private_data_entries"
+                        gecko:entryKeys="@array/pref_private_data_keys"
+                        gecko:initialValues="@array/pref_private_data_values" />
 
 </PreferenceScreen>
 

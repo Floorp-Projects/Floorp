@@ -1113,7 +1113,7 @@ var BrowserApp = {
     aTab.browser.dispatchEvent(evt);
   },
 
-  quit: function quit(aClear = {}) {
+  quit: function quit() {
     // Figure out if there's at least one other browser window around.
     let lastBrowser = true;
     let e = Services.wm.getEnumerator("navigator:browser");
@@ -1133,10 +1133,8 @@ var BrowserApp = {
       Services.obs.notifyObservers(null, "browser-lastwindow-close-granted", null);
     }
 
-    BrowserApp.sanitize(aClear, function() {
-      window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
-      window.close();
-    });
+    window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
+    window.close();
   },
 
   saveAsPDF: function saveAsPDF(aBrowser) {
@@ -1390,50 +1388,33 @@ var BrowserApp = {
     }
   },
 
-  sanitize: function (aItems, callback) {
-    if (!aItems) {
-      return;
-    }
-
+  sanitize: function (aItems) {
+    let json = JSON.parse(aItems);
     let success = true;
 
-    for (let key in aItems) {
-      if (!aItems[key])
+    for (let key in json) {
+      if (!json[key])
         continue;
 
-      key = key.replace("private.data.", "");
-
-      var promises = [];
-      switch (key) {
-        case "cookies_sessions":
-          promises.push(Sanitizer.clearItem("cookies"));
-          promises.push(Sanitizer.clearItem("sessions"));
-          break;
-        default:
-          promises.push(Sanitizer.clearItem(key));
+      try {
+        switch (key) {
+          case "cookies_sessions":
+            Sanitizer.clearItem("cookies");
+            Sanitizer.clearItem("sessions");
+            break;
+          default:
+            Sanitizer.clearItem(key);
+        }
+      } catch (e) {
+        dump("sanitize error: " + e);
+        success = false;
       }
     }
 
-    Promise.all(promises).then(function() {
-      sendMessageToJava({
-        type: "Sanitize:Finished",
-        success: true
-      });
-
-      if (callback) {
-        callback();
-      }
-    }).catch(function(err) {
-      sendMessageToJava({
-        type: "Sanitize:Finished",
-        error: err,
-        success: false
-      });
-
-      if (callback) {
-        callback();
-      }
-    })
+    sendMessageToJava({
+      type: "Sanitize:Finished",
+      success: success
+    });
   },
 
   getFocusedInput: function(aBrowser, aOnlyInputElements = false) {
@@ -1620,8 +1601,7 @@ var BrowserApp = {
         break;
 
       case "Browser:Quit":
-        Services.console.logStringMessage(aData);
-        this.quit(JSON.parse(aData));
+        this.quit();
         break;
 
       case "SaveAs:PDF":
@@ -1639,7 +1619,7 @@ var BrowserApp = {
         break;
 
       case "Sanitize:ClearData":
-        this.sanitize(JSON.parse(aData));
+        this.sanitize(aData);
         break;
 
       case "FullScreen:Exit":

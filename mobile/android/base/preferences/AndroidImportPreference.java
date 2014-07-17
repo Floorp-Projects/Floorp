@@ -8,14 +8,12 @@ package org.mozilla.gecko.preferences;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.ThreadUtils;
 
-import java.util.Set;
-
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
 
-class AndroidImportPreference extends MultiPrefMultiChoicePreference {
+class AndroidImportPreference extends MultiChoicePreference {
     static final private String LOGTAG = "AndroidImport";
     private static final String PREF_KEY_PREFIX = "import_android.data.";
     private Context mContext;
@@ -35,15 +33,19 @@ class AndroidImportPreference extends MultiPrefMultiChoicePreference {
         boolean bookmarksChecked = false;
         boolean historyChecked = false;
 
-        Set<String> values = getValues();
+        CharSequence keys[] = getEntryKeys();
+        boolean values[] = getValues();
 
-        for (String value : values) {
-            // Import checkbox values are stored in Android prefs to
+        for (int i = 0; i < keys.length; i++) {
+            // Privacy pref checkbox values are stored in Android prefs to
             // remember their check states. The key names are import_android.data.X
-            String key = value.substring(PREF_KEY_PREFIX.length());
-            if ("bookmarks".equals(key)) {
+            String key = keys[i].toString().substring(PREF_KEY_PREFIX.length());
+            boolean value = values[i];
+
+            if (key.equals("bookmarks") && value) {
                 bookmarksChecked = true;
-            } else if ("history".equals(key)) {
+            }
+            if (key.equals("history") && value) {
                 historyChecked = true;
             }
         }
