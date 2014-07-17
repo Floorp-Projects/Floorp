@@ -128,6 +128,8 @@ void Message::set_received_time(int64_t time) const {
 bool Message::WriteFileDescriptor(const base::FileDescriptor& descriptor) {
   // We write the index of the descriptor so that we don't have to
   // keep the current descriptor as extra decoding state when deserialising.
+  // Also, we rely on each file descriptor being accompanied by sizeof(int)
+  // bytes of data in the message. See the comment for input_cmsg_buf_.
   WriteInt(file_descriptor_set()->size());
   if (descriptor.auto_close) {
     return file_descriptor_set()->AddAndAutoClose(descriptor.fd);
