@@ -639,7 +639,7 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
 
     /* The VAROBJFIX option makes varObj == globalObj in global code. */
     if (!cx->runtime()->options().varObjFix()) {
-        if (!scopeChain->setVarObj(cx))
+        if (!scopeChain->setQualifiedVarObj(cx))
             return false;
     }
 
@@ -2024,7 +2024,7 @@ CASE(JSOP_BINDNAME)
 
     /* Assigning to an undeclared name adds a property to the global object. */
     RootedObject &scope = rootObject1;
-    if (!LookupNameWithGlobalDefault(cx, name, scopeChain, &scope))
+    if (!LookupNameUnqualified(cx, name, scopeChain, &scope))
         goto error;
 
     PUSH_OBJECT(*scope);
@@ -3577,7 +3577,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
      * and functions defined by eval inside let or with blocks.
      */
     RootedObject parent(cx, scopeChain);
-    while (!parent->isVarObj())
+    while (!parent->isQualifiedVarObj())
         parent = parent->enclosingScope();
 
     /* ES5 10.5 (NB: with subsequent errata). */

@@ -52,6 +52,9 @@ class ValueNumberer
         void overwrite(AddPtr p, MDefinition *def);
         void forget(const MDefinition *def);
         void clear();
+#ifdef DEBUG
+        bool has(const MDefinition *def) const;
+#endif
     };
 
     typedef Vector<MBasicBlock *, 4, IonAllocPolicy> BlockWorklist;
@@ -72,6 +75,7 @@ class ValueNumberer
     bool deleteDefsRecursively(MDefinition *def);
     bool pushDeadPhiOperands(MPhi *phi, const MBasicBlock *phiBlock);
     bool pushDeadInsOperands(MInstruction *ins);
+    bool deleteDef(MDefinition *def);
     bool processDeadDefs();
 
     bool removePredecessor(MBasicBlock *block, MBasicBlock *pred);

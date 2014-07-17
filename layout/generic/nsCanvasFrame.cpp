@@ -385,13 +385,23 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       return;
     }
 
+    bool needBlendContainer = false;
+
     // Create separate items for each background layer.
     NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
       if (bg->mLayers[i].mImage.IsEmpty()) {
         continue;
       }
+      if (bg->mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
+        needBlendContainer = true;
+      }
       aLists.BorderBackground()->AppendNewToTop(
         new (aBuilder) nsDisplayCanvasBackgroundImage(aBuilder, this, i, bg));
+    }
+
+    if (needBlendContainer) {
+      aLists.BorderBackground()->AppendNewToTop(
+        new (aBuilder) nsDisplayBlendContainer(aBuilder, this, aLists.BorderBackground()));
     }
   }
 

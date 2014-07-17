@@ -30,10 +30,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
                                    "@mozilla.org/network/dns-service;1",
                                    "nsIDNSService");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
-                                   "@mozilla.org/settingsService;1",
-                                   "nsISettingsService");
-
 XPCOMUtils.defineLazyModuleGetter(this, "AlarmService",
                                   "resource://gre/modules/AlarmService.jsm");
 
@@ -833,34 +829,11 @@ this.PushService = {
       return;
     }
 
-    // Read the APN data from the settings DB.
-    let lock = gSettingsService.createLock();
-    lock.get("ril.data.apnSettings", this);
-
     debug("serverURL: " + uri.spec);
     this._wsListener = new PushWebSocketListener(this);
     this._ws.protocol = "push-notification";
     this._ws.asyncOpen(uri, serverURL, this._wsListener, null);
     this._currentState = STATE_WAITING_FOR_WS_START;
-  },
-
-  /**
-   * nsISettingsServiceCallback
-   */
-  handle: function(name, result) {
-    if (name !== "ril.data.apnSettings" || !result) {
-      return;
-    }
-    let apn = result[0].filter(function(e) {
-      return e.types[0] === "default";
-    });
-    if (apn.length === 0 || !apn[0].apn) {
-      this._apnDomain = null;
-      debug("No APN Domain found. No netid support");
-      return;
-    }
-    this._apnDomain = apn[0].apn;
-    debug("APN Domain: " + this._apnDomain);
   },
 
   _startListeningIfChannelsPresent: function() {
@@ -1761,7 +1734,7 @@ this.PushService = {
     var networkInfo = this._getNetworkInformation();
 
     if (networkInfo.ip) {
-      this._getMobileNetworkId(function(netid) {
+      this._getMobileNetworkId(networkInfo, function(netid) {
         debug("Recovered netID = " + netid);
         callback({
           mcc: networkInfo.mcc,
@@ -1785,8 +1758,15 @@ this.PushService = {
     }
   },
 
-  // Get the mobile network ID (netid)
-  _getMobileNetworkId: function(callback) {
+  /*
+   * Get the mobile network ID (netid)
+   *
+   * @param networkInfo
+   *        Network information object { mcc, mnc, ip, port }
+   * @param callback
+   *        Callback function to invoke with the netid or null if not found
+   */
+  _getMobileNetworkId: function(networkInfo, callback) {
     if (typeof callback !== 'function') {
       return;
     }
@@ -1812,18 +1792,10 @@ this.PushService = {
       return [];
     }
 
-    debug("[_getMobileNetworkId:queryDNSForDomain] Getting mobile network ID (I'm " +
-       gDNSService.myHostName + ")");
+    debug("[_getMobileNetworkId:queryDNSForDomain] Getting mobile network ID");
 
-    let netidAddress = prefs.get("udp.well-known_netidAddress");
-    if (netidAddress.endsWith(".")) {
-      if (this._apnDomain) {
-        queryDNSForDomain(netidAddress + this._apnDomain, callback);
-      } else {
-        callback(null);   // No netid could be recovered
-      }
-    } else if(netidAddress) {
-      queryDNSForDomain(netidAddress, callback);
-    }
+    let netidAddress = "wakeup.mnc" + ("00" + networkInfo.mnc).slice(-3) +
+      ".mcc" + ("00" + networkInfo.mcc).slice(-3) + ".3gppnetwork.org";
+    queryDNSForDomain(netidAddress, callback);
   }
 }

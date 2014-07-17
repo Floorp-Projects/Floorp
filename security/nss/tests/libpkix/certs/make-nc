@@ -456,7 +456,7 @@ y
 n
 CERTSCRIPT
 
-#the following cert MUST not pass
+#the following cert MUST pass
 certutil -S -z noise -g 2048 -d . -n dcissallowed -s "CN=foo.example.fr,O=Foo,ST=CA,C=US" -t ,, -c dcisscopy -m 998901 -v 120 -1 -2 -5 <<CERTSCRIPT
 0
 2

@@ -33,7 +33,7 @@ MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [
     '../../content/src',
-    '/caps/include',
+    '/caps',
     '/content/base/src',
     '/docshell/base',
     '/dom/base',

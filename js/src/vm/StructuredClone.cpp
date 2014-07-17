@@ -1283,7 +1283,7 @@ JSStructuredCloneReader::readTypedArray(uint32_t arrayType, uint32_t nelems, Val
         obj = JS_NewUint8ClampedArrayWithBuffer(context(), buffer, byteOffset, nelems);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("unknown TypedArrayObject type");
+        MOZ_CRASH("Can't happen: arrayType range checked above");
     }
 
     if (!obj)
@@ -1307,28 +1307,6 @@ JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes, Value *vp)
     return in.readArray(buffer.dataPointer(), nbytes);
 }
 
-static size_t
-bytesPerTypedArrayElement(uint32_t arrayType)
-{
-    switch (arrayType) {
-      case Scalar::Int8:
-      case Scalar::Uint8:
-      case Scalar::Uint8Clamped:
-        return sizeof(uint8_t);
-      case Scalar::Int16:
-      case Scalar::Uint16:
-        return sizeof(uint16_t);
-      case Scalar::Int32:
-      case Scalar::Uint32:
-      case Scalar::Float32:
-        return sizeof(uint32_t);
-      case Scalar::Float64:
-        return sizeof(uint64_t);
-      default:
-        MOZ_ASSUME_UNREACHABLE("unknown TypedArrayObject type");
-    }
-}
-
 /*
  * Read in the data for a structured clone version 1 ArrayBuffer, performing
  * endianness-conversion while reading.
@@ -1338,7 +1316,7 @@ JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, 
 {
     JS_ASSERT(arrayType <= Scalar::Uint8Clamped);
 
-    uint32_t nbytes = nelems * bytesPerTypedArrayElement(arrayType);
+    uint32_t nbytes = nelems << TypedArrayShift(static_cast<Scalar::Type>(arrayType));
     JSObject *obj = ArrayBufferObject::create(context(), nbytes);
     if (!obj)
         return false;
@@ -1361,7 +1339,7 @@ JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, 
       case Scalar::Float64:
         return in.readArray((uint64_t*) buffer.dataPointer(), nelems);
       default:
-        MOZ_ASSUME_UNREACHABLE("unknown TypedArrayObject type");
+        MOZ_CRASH("Can't happen: arrayType range checked by caller");
     }
 }
 

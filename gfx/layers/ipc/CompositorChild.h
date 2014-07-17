@@ -100,7 +100,7 @@ private:
   private:
     // Pointer to the class that allows access to the shared memory that contains
     // the shared FrameMetrics
-    mozilla::ipc::SharedMemoryBasic* mBuffer;
+    nsRefPtr<mozilla::ipc::SharedMemoryBasic> mBuffer;
     CrossProcessMutex* mMutex;
     // Unique ID of the APZC that is sharing the FrameMetrics
     uint32_t mAPZCId;

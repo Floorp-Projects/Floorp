@@ -146,7 +146,7 @@ WebrtcGmpVideoEncoder::InitEncode_g(const webrtc::VideoCodec* aCodecSettings,
   GMPVideoEncoderProxy* gmp = nullptr;
 
   nsTArray<nsCString> tags;
-  tags.AppendElement(NS_LITERAL_CSTRING("vp8"));
+  tags.AppendElement(NS_LITERAL_CSTRING("h264"));
   nsresult rv = mMPS->GetGMPVideoEncoder(&tags,
                                          NS_LITERAL_STRING(""),
                                          &host,
@@ -178,7 +178,7 @@ WebrtcGmpVideoEncoder::InitEncode_g(const webrtc::VideoCodec* aCodecSettings,
   nsTArray<uint8_t> codecSpecific;
  
   // H.264 mode 1 only supported so far
-  GMPErr err = mGMP->InitEncode(codec, codecSpecific, this, 1, 256000 /*aMaxPayloadSize*/);
+  GMPErr err = mGMP->InitEncode(codec, codecSpecific, this, 1, 1024*1024 /*aMaxPayloadSize*/);
   if (err != GMPNoErr) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
@@ -418,7 +418,7 @@ WebrtcGmpVideoDecoder::InitDecode_g(const webrtc::VideoCodec* aCodecSettings,
   GMPVideoDecoderProxy* gmp = nullptr;
 
   nsTArray<nsCString> tags;
-  tags.AppendElement(NS_LITERAL_CSTRING("vp8"));
+  tags.AppendElement(NS_LITERAL_CSTRING("h264"));
   if (NS_WARN_IF(NS_FAILED(mMPS->GetGMPVideoDecoder(&tags,
                                                     NS_LITERAL_STRING(""),
                                                     &host,

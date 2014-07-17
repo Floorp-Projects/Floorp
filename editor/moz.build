@@ -5,12 +5,37 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 PARALLEL_DIRS += [
-    'public',
-    'idl',
     'txtsvc',
     'libeditor',
     'txmgr',
     'composer',
+]
+
+XPIDL_SOURCES += [
+    'nsIContentFilter.idl',
+    'nsIDocumentStateListener.idl',
+    'nsIEditActionListener.idl',
+    'nsIEditor.idl',
+    'nsIEditorIMESupport.idl',
+    'nsIEditorMailSupport.idl',
+    'nsIEditorObserver.idl',
+    'nsIEditorSpellCheck.idl',
+    'nsIEditorStyleSheets.idl',
+    'nsIHTMLAbsPosEditor.idl',
+    'nsIHTMLEditor.idl',
+    'nsIHTMLInlineTableEditor.idl',
+    'nsIHTMLObjectResizeListener.idl',
+    'nsIHTMLObjectResizer.idl',
+    'nsIPlaintextEditor.idl',
+    'nsITableEditor.idl',
+    'nsIURIRefObject.idl',
+    'nsPIEditorTransaction.idl',
+]
+
+XPIDL_MODULE = 'editor'
+
+EXPORTS += [
+    'nsEditorCID.h',
 ]
 
 EXTRA_JS_MODULES += [

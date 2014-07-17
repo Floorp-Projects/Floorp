@@ -50,11 +50,6 @@ ValueNumberer::VisibleValues::ValueHasher::hash(Lookup ins)
 bool
 ValueNumberer::VisibleValues::ValueHasher::match(Key k, Lookup l)
 {
-    // If one of the instructions depends on a store, and the other instruction
-    // does not depend on the same store, the instructions are not congruent.
-    if (k->dependency() != l->dependency())
-        return false;
-
     return k->congruentTo(l); // Ask the values themselves what they think.
 }
 
@@ -118,6 +113,16 @@ ValueNumberer::VisibleValues::clear()
 {
     set_.clear();
 }
+
+#ifdef DEBUG
+// Test whether a given value is in the set.
+bool
+ValueNumberer::VisibleValues::has(const MDefinition *def) const
+{
+    Ptr p = set_.lookup(def);
+    return p && *p == def;
+}
+#endif
 
 // Test whether the value would be needed if it had no uses.
 static bool
@@ -215,8 +220,7 @@ IsDominatorRefined(MBasicBlock *block)
 bool
 ValueNumberer::deleteDefsRecursively(MDefinition *def)
 {
-    def->setInWorklist();
-    return deadDefs_.append(def) && processDeadDefs();
+    return deleteDef(def) && processDeadDefs();
 }
 
 // Assuming phi is dead, push each dead operand of phi not dominated by the phi
@@ -256,31 +260,40 @@ ValueNumberer::pushDeadInsOperands(MInstruction *ins)
     return true;
 }
 
+bool
+ValueNumberer::deleteDef(MDefinition *def)
+{
+    IonSpew(IonSpew_GVN, "    Deleting %s%u", def->opName(), def->id());
+    MOZ_ASSERT(IsDead(def), "Deleting non-dead definition");
+    MOZ_ASSERT(!values_.has(def), "Deleting an instruction still in the set");
+
+    if (def->isPhi()) {
+        MPhi *phi = def->toPhi();
+        MBasicBlock *phiBlock = phi->block();
+        if (!pushDeadPhiOperands(phi, phiBlock))
+             return false;
+        MPhiIterator at(phiBlock->phisBegin(phi));
+        phiBlock->discardPhiAt(at);
+    } else {
+        MInstruction *ins = def->toInstruction();
+        if (!pushDeadInsOperands(ins))
+             return false;
+        ins->block()->discard(ins);
+    }
+    return true;
+}
+
 // Recursively delete all the defs on the deadDefs_ worklist.
 bool
 ValueNumberer::processDeadDefs()
 {
     while (!deadDefs_.empty()) {
         MDefinition *def = deadDefs_.popCopy();
-        IonSpew(IonSpew_GVN, "    Deleting %s%u", def->opName(), def->id());
         MOZ_ASSERT(def->isInWorklist(), "Deleting value not on the worklist");
-        MOZ_ASSERT(IsDead(def), "Deleting non-dead definition");
 
         values_.forget(def);
-
-        if (def->isPhi()) {
-            MPhi *phi = def->toPhi();
-            MBasicBlock *phiBlock = phi->block();
-            if (!pushDeadPhiOperands(phi, phiBlock))
-                 return false;
-            MPhiIterator at(phiBlock->phisBegin(phi));
-            phiBlock->discardPhiAt(at);
-        } else {
-            MInstruction *ins = def->toInstruction();
-            if (!pushDeadInsOperands(ins))
-                 return false;
-            ins->block()->discard(ins);
-        }
+        if (!deleteDef(def))
+            return false;
     }
     return true;
 }
@@ -393,15 +406,19 @@ ValueNumberer::leader(MDefinition *def)
         // Look for a match.
         VisibleValues::AddPtr p = values_.findLeaderForAdd(def);
         if (p) {
+            // We found a congruent value.
             MDefinition *rep = *p;
-            if (rep->block()->dominates(def->block())) {
-                // We found a dominating congruent value.
+            if (rep->block()->dominates(def->block()) &&
+                rep->dependency() == def->dependency())
+            {
+                // It dominates and has the same dependency. Use it!
                 MOZ_ASSERT(!rep->isInWorklist(), "Dead value in set");
                 return rep;
             }
 
-            // The congruent value doesn't dominate. It never will again in this
-            // dominator tree, so overwrite it.
+            // The congruent value doesn't dominate or it has a different
+            // dependency. It won't be suitable for replacing anything else
+            // we'll see in this dominator tree walk, so overwrite it.
             values_.overwrite(p, def);
         } else {
             // No match. Add a new entry.

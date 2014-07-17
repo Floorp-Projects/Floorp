@@ -90,6 +90,24 @@ function EventManager(sr) {
     }
   }
 
+  self.start = function EventManager_start() {
+    isSendingAudioData = true;
+    var audioTag = document.createElement("audio");
+    audioTag.src = self.audioSampleFile;
+
+    var stream = audioTag.mozCaptureStreamUntilEnded();
+    audioTag.addEventListener("ended", function() {
+      info("Sample stream ended, requesting queued events");
+      isSendingAudioData = false;
+      while (queuedEventRequests.length) {
+        self.requestFSMEvent(queuedEventRequests.shift());
+      }
+    });
+
+    audioTag.play();
+    sr.start(stream);
+  }
+
   self.requestFSMEvent = function EventManager_requestFSMEvent(eventName) {
     if (isSendingAudioData) {
       info("Queuing event " + eventName + " until we're done sending audio data");
@@ -97,27 +115,8 @@ function EventManager(sr) {
       return;
     }
 
-    var subject = null;
-
-    if (eventName === "EVENT_AUDIO_DATA") {
-      isSendingAudioData = true;
-      var audioTag = document.createElement("audio");
-      audioTag.src = self.audioSampleFile;
-
-      subject = audioTag.mozCaptureStreamUntilEnded();
-      audioTag.addEventListener("ended", function() {
-        info("Sample stream ended, requesting queued events");
-        isSendingAudioData = false;
-        while (queuedEventRequests.length) {
-          self.requestFSMEvent(queuedEventRequests.shift());
-        }
-      });
-
-      audioTag.play();
-    }
-
     info("requesting " + eventName);
-    Services.obs.notifyObservers(subject,
+    Services.obs.notifyObservers(null,
                                  SPEECH_RECOGNITION_TEST_REQUEST_EVENT_TOPIC,
                                  eventName);
   }
@@ -167,6 +166,8 @@ function performTest(options) {
     if (options.audioSampleFile) {
       em.audioSampleFile = options.audioSampleFile;
     }
+
+    em.start();
 
     for (var i = 0; i < options.eventsToRequest.length; i++) {
       em.requestFSMEvent(options.eventsToRequest[i]);

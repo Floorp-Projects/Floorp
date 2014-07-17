@@ -308,14 +308,24 @@ class BaseShape : public gc::BarrieredCell<BaseShape>
         NOT_EXTENSIBLE      =   0x10,
         INDEXED             =   0x20,
         BOUND_FUNCTION      =   0x40,
-        VAROBJ              =   0x80,
+        HAD_ELEMENTS_ACCESS =   0x80,
         WATCHED             =  0x100,
         ITERATED_SINGLETON  =  0x200,
         NEW_TYPE_UNKNOWN    =  0x400,
         UNCACHEABLE_PROTO   =  0x800,
-        HAD_ELEMENTS_ACCESS = 0x1000,
 
-        OBJECT_FLAG_MASK    = 0x1ff8
+        // These two flags control which scope a new variables ends up on in the
+        // scope chain. If the variable is "qualified" (i.e., if it was defined
+        // using var, let, or const) then it ends up on the lowest scope in the
+        // chain that has the QUALIFIED_VAROBJ flag set. If it's "unqualified"
+        // (i.e., if it was introduced without any var, let, or const, which
+        // incidentally is an error in strict mode) then it goes on the lowest
+        // scope in the chain with the UNQUALIFIED_VAROBJ flag set (which is
+        // typically the global).
+        QUALIFIED_VAROBJ    = 0x1000,
+        UNQUALIFIED_VAROBJ  = 0x2000,
+
+        OBJECT_FLAG_MASK    = 0x3ff8
     };
 
   private:
