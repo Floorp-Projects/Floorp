@@ -813,7 +813,7 @@
                        oncommand="LoopUI.openCallPanel(event);"
                        cui-areatype="toolbar">
         </toolbarbutton>
-#endifhttps://hg.mozilla.org/mozilla-central/rev/cd712c340dd7
+#endif
 
         <toolbarbutton id="bookmarks-menu-button"
                        class="toolbarbutton-1 chromeclass-toolbar-additional"
