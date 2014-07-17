@@ -7355,6 +7355,7 @@ class MGetPropertyPolymorphic
         shapes_(alloc),
         name_(name)
     {
+        setGuard();
         setMovable();
         setResultType(MIRType_Value);
     }
