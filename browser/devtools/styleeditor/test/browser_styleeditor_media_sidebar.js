@@ -8,7 +8,7 @@ const MEDIA_PREF = "devtools.styleeditor.showMediaSidebar";
 
 const RESIZE = 300;
 const LABELS = ["not all", "all", "(max-width: 400px)", "(max-width: 600px)"];
-const LINE_NOS = [2, 8, 20, 25];
+const LINE_NOS = [1, 7, 19, 25];
 const NEW_RULE = "\n@media (max-width: 600px) { div { color: blue; } }";
 
 waitForExplicitFinish();
