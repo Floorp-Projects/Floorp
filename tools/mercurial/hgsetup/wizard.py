@@ -157,9 +157,10 @@ class MercurialSetupWizard(object):
         try:
             c = MercurialConfig(config_paths)
         except ConfigObjError as e:
-            print('Error importing existing Mercurial config!\n'
-                  '%s\n'
-                  'If using quotes, they must wrap the entire string.' % e)
+            print('Error importing existing Mercurial config!\n')
+            for error in e.errors:
+                print(error.message)
+
             return 1
 
         print(INITIAL_MESSAGE)
