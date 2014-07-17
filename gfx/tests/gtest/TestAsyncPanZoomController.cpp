@@ -944,6 +944,50 @@ protected:
 
     apzc->AssertStateIsReset();
   }
+
+  void DoFlingStopWithSlowListener(bool aPreventDefault) {
+    SetMayHaveTouchListeners();
+
+    int time = 0;
+    int touchStart = 50;
+    int touchEnd = 10;
+
+    // Start the fling down.
+    ApzcPan(apzc, time, touchStart, touchEnd);
+    apzc->ContentReceivedTouch(false);
+    while (mcc->RunThroughDelayedTasks());
+
+    // Sample the fling a couple of times to ensure it's going.
+    ScreenPoint point, finalPoint;
+    ViewTransform viewTransform;
+    apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(10), &viewTransform, point);
+    apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(20), &viewTransform, finalPoint);
+    EXPECT_GT(finalPoint.y, point.y);
+
+    // Now we put our finger down to stop the fling
+    ApzcDown(apzc, 10, 10, time);
+
+    // Re-sample to make sure it hasn't moved
+    apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(30), &viewTransform, point);
+    EXPECT_EQ(finalPoint.x, point.x);
+    EXPECT_EQ(finalPoint.y, point.y);
+
+    // respond to the touchdown that stopped the fling.
+    // even if we do a prevent-default on it, the animation should remain stopped.
+    apzc->ContentReceivedTouch(aPreventDefault);
+    while (mcc->RunThroughDelayedTasks());
+
+    // Verify the page hasn't moved
+    apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(100), &viewTransform, point);
+    EXPECT_EQ(finalPoint.x, point.x);
+    EXPECT_EQ(finalPoint.y, point.y);
+
+    // clean up
+    ApzcUp(apzc, 10, 10, time);
+    while (mcc->RunThroughDelayedTasks());
+
+    apzc->AssertStateIsReset();
+  }
 };
 
 TEST_F(APZCFlingStopTester, FlingStop) {
@@ -952,6 +996,14 @@ TEST_F(APZCFlingStopTester, FlingStop) {
 
 TEST_F(APZCFlingStopTester, FlingStopTap) {
   DoFlingStopTest(true);
+}
+
+TEST_F(APZCFlingStopTester, FlingStopSlowListener) {
+  DoFlingStopWithSlowListener(false);
+}
+
+TEST_F(APZCFlingStopTester, FlingStopPreventDefault) {
+  DoFlingStopWithSlowListener(true);
 }
 
 TEST_F(APZCBasicTester, OverScrollPanning) {
