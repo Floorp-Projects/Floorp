@@ -21,13 +21,22 @@ class GMPVideoHost;
 [ptr] native MessageLoop(MessageLoop);
 [ptr] native TagArray(nsTArray<nsCString>);
 
-[scriptable, uuid(7cef50ca-7a0f-41f2-9560-47abf709f0d7)]
+[scriptable, uuid(a9b826da-725a-4b81-814f-b715445188f2)]
 interface mozIGeckoMediaPluginService : nsISupports
 {
   /**
    * The GMP thread. Callable from any thread.
    */
   readonly attribute nsIThread thread;
+
+  /**
+   * Get a plugin that supports the specified tags.
+   * Callable on any thread
+   */
+  [noscript]
+  boolean hasPluginForAPI([optional] in AString origin,
+                          in ACString api,
+                          in TagArray tags);
 
   /**
    * Get a video decoder that supports the specified tags.
