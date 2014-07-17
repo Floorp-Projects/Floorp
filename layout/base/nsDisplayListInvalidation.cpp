@@ -95,3 +95,16 @@ nsDisplayBoxShadowInnerGeometry::MoveBy(const nsPoint& aOffset)
   mPaddingRect.MoveBy(aOffset);
 }
 
+nsDisplaySVGEffectsGeometry::nsDisplaySVGEffectsGeometry(nsDisplaySVGEffects* aItem, nsDisplayListBuilder* aBuilder)
+  : nsDisplayItemGeometry(aItem, aBuilder)
+  , mBBox(aItem->BBoxInUserSpace())
+  , mUserSpaceOffset(aItem->UserSpaceOffset())
+  , mFrameOffsetToReferenceFrame(aItem->ToReferenceFrame())
+{}
+
+void
+nsDisplaySVGEffectsGeometry::MoveBy(const nsPoint& aOffset)
+{
+  mBounds.MoveBy(aOffset);
+  mFrameOffsetToReferenceFrame += aOffset;
+}
