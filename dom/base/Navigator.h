@@ -161,13 +161,15 @@ public:
 
   static already_AddRefed<Promise> GetDataStores(nsPIDOMWindow* aWindow,
                                                  const nsAString& aName,
+                                                 const nsAString& aOwner,
                                                  ErrorResult& aRv);
 
-  already_AddRefed<Promise> GetDataStores(const nsAString &aName,
+  already_AddRefed<Promise> GetDataStores(const nsAString& aName,
+                                          const nsAString& aOwner,
                                           ErrorResult& aRv);
 
   // Feature Detection API
-  already_AddRefed<Promise> GetFeature(const nsAString &aName,
+  already_AddRefed<Promise> GetFeature(const nsAString& aName,
                                        ErrorResult& aRv);
 
   bool Vibrate(uint32_t aDuration);

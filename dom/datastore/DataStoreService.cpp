@@ -322,16 +322,18 @@ class MOZ_STACK_CLASS GetDataStoreInfosData
 {
 public:
   GetDataStoreInfosData(nsClassHashtable<nsStringHashKey, HashApp>& aAccessStores,
-                        const nsAString& aName, uint32_t aAppId,
-                        nsTArray<DataStoreInfo>& aStores)
+                        const nsAString& aName, const nsAString& aManifestURL,
+                        uint32_t aAppId, nsTArray<DataStoreInfo>& aStores)
     : mAccessStores(aAccessStores)
     , mName(aName)
+    , mManifestURL(aManifestURL)
     , mAppId(aAppId)
     , mStores(aStores)
   {}
 
   nsClassHashtable<nsStringHashKey, HashApp>& mAccessStores;
   nsString mName;
+  nsString mManifestURL;
   uint32_t mAppId;
   nsTArray<DataStoreInfo>& mStores;
 };
@@ -351,6 +353,11 @@ GetDataStoreInfosEnumerator(const uint32_t& aAppId,
 
   HashApp* apps;
   if (!data->mAccessStores.Get(data->mName, &apps)) {
+    return PL_DHASH_NEXT;
+  }
+
+  if (!data->mManifestURL.IsEmpty() &&
+      !data->mManifestURL.Equals(aInfo->mManifestURL)) {
     return PL_DHASH_NEXT;
   }
 
@@ -873,6 +880,7 @@ DataStoreService::InstallAccessDataStore(uint32_t aAppId,
 NS_IMETHODIMP
 DataStoreService::GetDataStores(nsIDOMWindow* aWindow,
                                 const nsAString& aName,
+                                const nsAString& aOwner,
                                 nsISupports** aDataStores)
 {
   // FIXME This will be a thread-safe method.
@@ -909,7 +917,7 @@ DataStoreService::GetDataStores(nsIDOMWindow* aWindow,
       return NS_OK;
     }
 
-    rv = GetDataStoreInfos(aName, appId, principal, stores);
+    rv = GetDataStoreInfos(aName, aOwner, appId, principal, stores);
     if (NS_FAILED(rv)) {
       RejectPromise(window, promise, rv);
       promise.forget(aDataStores);
@@ -924,6 +932,7 @@ DataStoreService::GetDataStores(nsIDOMWindow* aWindow,
 
     nsTArray<DataStoreSetting> array;
     if (!contentChild->SendDataStoreGetStores(nsAutoString(aName),
+                                              nsAutoString(aOwner),
                                               IPC::Principal(principal),
                                               &array)) {
       RejectPromise(window, promise, NS_ERROR_FAILURE);
@@ -1048,6 +1057,7 @@ DataStoreService::GetDataStoresResolve(nsPIDOMWindow* aWindow,
 // name and available for this 'aAppId'.
 nsresult
 DataStoreService::GetDataStoreInfos(const nsAString& aName,
+                                    const nsAString& aOwner,
                                     uint32_t aAppId,
                                     nsIPrincipal* aPrincipal,
                                     nsTArray<DataStoreInfo>& aStores)
@@ -1083,13 +1093,14 @@ DataStoreService::GetDataStoreInfos(const nsAString& aName,
   }
 
   DataStoreInfo* info = nullptr;
-  if (apps->Get(aAppId, &info)) {
+  if (apps->Get(aAppId, &info) &&
+      (aOwner.IsEmpty() || aOwner.Equals(info->mManifestURL))) {
     DataStoreInfo* owned = aStores.AppendElement();
     owned->Init(info->mName, info->mOriginURL, info->mManifestURL, false,
                 info->mEnabled);
   }
 
-  GetDataStoreInfosData data(mAccessStores, aName, aAppId, aStores);
+  GetDataStoreInfosData data(mAccessStores, aName, aOwner, aAppId, aStores);
   apps->EnumerateRead(GetDataStoreInfosEnumerator, &data);
   return NS_OK;
 }
@@ -1336,6 +1347,7 @@ DataStoreService::RemoveCounter(uint32_t aId)
 
 nsresult
 DataStoreService::GetDataStoresFromIPC(const nsAString& aName,
+                                       const nsAString& aOwner,
                                        nsIPrincipal* aPrincipal,
                                        nsTArray<DataStoreSetting>* aValue)
 {
@@ -1349,7 +1361,7 @@ DataStoreService::GetDataStoresFromIPC(const nsAString& aName,
   }
 
   nsTArray<DataStoreInfo> stores;
-  rv = GetDataStoreInfos(aName, appId, aPrincipal, stores);
+  rv = GetDataStoreInfos(aName, aOwner, appId, aPrincipal, stores);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
