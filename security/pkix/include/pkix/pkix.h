@@ -139,6 +139,9 @@ SECStatus VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
 SECStatus DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
                     size_t digestBufLen);
 
+// Checks, for RSA keys and DSA keys, that the modulus is at least 1024 bits.
+SECStatus CheckPublicKey(const SECItem& subjectPublicKeyInfo);
+
 } } // namespace mozilla::pkix
 
 #endif // mozilla_pkix__pkix_h

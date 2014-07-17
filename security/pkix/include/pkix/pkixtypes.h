@@ -302,6 +302,9 @@ public:
   //
   // Most implementations of this function should probably forward the call
   // directly to mozilla::pkix::VerifySignedData.
+  //
+  // In any case, the implementation must perform checks on the public key
+  // similar to how mozilla::pkix::CheckPublicKey() does.
   virtual SECStatus VerifySignedData(const SignedDataWithSignature& signedData,
                                      const SECItem& subjectPublicKeyInfo) = 0;
 
@@ -318,6 +321,14 @@ public:
   static const size_t DIGEST_LENGTH = 20; // length of SHA-1 digest
   virtual SECStatus DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
                               size_t digestBufLen) = 0;
+
+  // Check that the key size, algorithm, and parameters of the given public key
+  // are acceptable.
+  //
+  // VerifySignedData() should do the same checks that this function does, but
+  // mainly for efficiency, some keys are not passed to VerifySignedData().
+  // This function is called instead for those keys.
+  virtual SECStatus CheckPublicKey(const SECItem& subjectPublicKeyInfo) = 0;
 
 protected:
   TrustDomain() { }

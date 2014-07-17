@@ -10,7 +10,7 @@ import pexpect
 import time
 import sys
 
-def init_dsa(db_dir):
+def init_dsa(db_dir, param_filename = 'dsa_param.pem', key_size = '2048'):
     """
     Initialize dsa parameters
 
@@ -18,15 +18,19 @@ def init_dsa(db_dir):
 
     Arguments:
       db_dir     -- location of the temporary params for the certificate
+      param_filename -- the file name for the param file
+      key_size   -- public key size
     """
-    dsa_key_params = db_dir + "/dsa_param.pem"
-    os.system("openssl dsaparam -out " + dsa_key_params + " 2048")
+    dsa_key_params = db_dir + '/' + param_filename
+    os.system("openssl dsaparam -out " + dsa_key_params + ' ' + key_size)
 
 
 def generate_cert_generic(db_dir, dest_dir, serial_num,  key_type, name,
                           ext_text, signer_key_filename = "",
                           signer_cert_filename = "",
-                          subject_string = ""):
+                          subject_string = "",
+                          dsa_param_filename = 'dsa_param.pem',
+                          key_size = '2048'):
     """
     Generate an x509 certificate with a sha256 signature
 
@@ -50,6 +54,8 @@ def generate_cert_generic(db_dir, dest_dir, serial_num,  key_type, name,
                     roots).
       signer_cert_filename -- the certificate that will sign the certificate
                     (used to extract signer info) it must be in DER format.
+      dsa_param_filename -- the filename for the DSA param file
+      key_size   -- public key size for RSA certs
 
     output:
       key_name   -- the filename of the key file (PEM format)
@@ -58,9 +64,9 @@ def generate_cert_generic(db_dir, dest_dir, serial_num,  key_type, name,
     key_name = db_dir + "/"+ name + ".key"
     if key_type == 'rsa':
       os.system ("openssl genpkey -algorithm RSA -out " + key_name +
-                 " -pkeyopt rsa_keygen_bits:2048")
+                 " -pkeyopt rsa_keygen_bits:" + key_size)
     elif key_type == 'dsa':
-      dsa_key_params = db_dir + "/dsa_param.pem"
+      dsa_key_params = db_dir + '/' + dsa_param_filename
       os.system("openssl gendsa -out " + key_name + "  " + dsa_key_params)
     else:
       #assume is ec

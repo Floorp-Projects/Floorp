@@ -510,6 +510,7 @@ SECKEY_ECParamsToKeySize
 SECKEY_EncodeDERSubjectPublicKeyInfo
 SECKEY_ExtractPublicKey
 SECKEY_PublicKeyStrength
+SECKEY_PublicKeyStrengthInBits
 SECKEY_RSAPSSParamsTemplate DATA
 SECMIME_DecryptionAllowed
 SECMOD_AddNewModule

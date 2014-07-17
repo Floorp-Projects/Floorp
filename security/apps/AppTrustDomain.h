@@ -38,6 +38,7 @@ public:
               const SECItem& subjectPublicKeyInfo) MOZ_OVERRIDE;
   SECStatus DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
                       size_t digestBufLen) MOZ_OVERRIDE;
+  SECStatus CheckPublicKey(const SECItem& subjectPublicKeyInfo) MOZ_OVERRIDE;
 
 private:
   /*out*/ ScopedCERTCertList& mCertChain;

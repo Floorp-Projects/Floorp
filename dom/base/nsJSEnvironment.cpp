@@ -3017,6 +3017,14 @@ nsJSContext::EnsureStatics()
   Preferences::RegisterCallbackAndCall(SetIncrementalCCPrefChangedCallback,
                                        "dom.cycle_collector.incremental");
 
+  Preferences::RegisterCallbackAndCall(SetMemoryGCPrefChangedCallback,
+                                       "javascript.options.mem.gc_min_empty_chunk_count",
+                                       (void *)JSGC_MIN_EMPTY_CHUNK_COUNT);
+
+  Preferences::RegisterCallbackAndCall(SetMemoryGCPrefChangedCallback,
+                                       "javascript.options.mem.gc_max_empty_chunk_count",
+                                       (void *)JSGC_MAX_EMPTY_CHUNK_COUNT);
+
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs) {
     MOZ_CRASH();
