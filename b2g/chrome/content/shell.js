@@ -217,11 +217,6 @@ var shell = {
     }, "network-connection-state-changed", false);
   },
 
-  get contentBrowser() {
-    delete this.contentBrowser;
-    return this.contentBrowser = document.getElementById('systemapp');
-  },
-
   get homeURL() {
     try {
       let homeSrc = Services.env.get('B2G_HOMESCREEN');
@@ -321,7 +316,7 @@ var shell = {
       container.removeChild(hotfix);
     }
 #endif
-    container.appendChild(systemAppFrame);
+    this.contentBrowser = container.appendChild(systemAppFrame);
 
     systemAppFrame.contentWindow
                   .QueryInterface(Ci.nsIInterfaceRequestor)
