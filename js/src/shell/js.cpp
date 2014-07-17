@@ -5980,6 +5980,15 @@ SetRuntimeOptions(JSRuntime *rt, const OptionParser &op)
                              .setAsmJS(enableAsmJS)
                              .setNativeRegExp(enableNativeRegExp);
 
+    if (const char *str = op.getStringOption("ion-scalar-replacement")) {
+        if (strcmp(str, "on") == 0)
+            jit::js_JitOptions.disableScalarReplacement = false;
+        else if (strcmp(str, "off") == 0)
+            jit::js_JitOptions.disableScalarReplacement = true;
+        else
+            return OptionFailure("ion-scalar-replacement", str);
+    }
+
     if (const char *str = op.getStringOption("ion-gvn")) {
         if (strcmp(str, "off") == 0) {
             jit::js_JitOptions.disableGvn = true;
@@ -6276,6 +6285,8 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('\0', "no-ion", "Disable IonMonkey")
         || !op.addBoolOption('\0', "no-asmjs", "Disable asm.js compilation")
         || !op.addBoolOption('\0', "no-native-regexp", "Disable native regexp compilation")
+        || !op.addStringOption('\0', "ion-scalar-replacement", "on/off",
+                               "Scalar Replacement (default: off, on to enable)")
         || !op.addStringOption('\0', "ion-gvn", "[mode]",
                                "Specify Ion global value numbering:\n"
                                "  off: disable GVN\n"
