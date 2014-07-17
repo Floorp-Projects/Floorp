@@ -165,11 +165,7 @@
   <string name="pref_char_encoding">&pref_char_encoding;</string>
   <string name="pref_char_encoding_on">&pref_char_encoding_on;</string>
   <string name="pref_char_encoding_off">&pref_char_encoding_off;</string>
-  <string name="pref_clear_private_data">&pref_clear_private_data2;</string>
-  <string name="pref_clear_private_data_category">&pref_clear_private_data_category;</string>
-  <string name="pref_clear_on_exit_title">&pref_clear_on_exit_title;</string>
-  <string name="pref_clear_on_exit_summary">&pref_clear_on_exit_summary;</string>
-  <string name="pref_clear_on_exit_dialog_title">&pref_clear_on_exit_dialog_title;</string>
+  <string name="pref_clear_private_data">&pref_clear_private_data;</string>
   <string name="pref_plugins">&pref_plugins;</string>
   <string name="pref_plugins_enabled">&pref_plugins_enabled;</string>
   <string name="pref_plugins_tap_to_play">&pref_plugins_tap_to_play;</string>

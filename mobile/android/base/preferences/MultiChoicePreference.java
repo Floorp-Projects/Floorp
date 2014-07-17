@@ -7,26 +7,23 @@ package org.mozilla.gecko.preferences;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.GeckoSharedPrefs;
-import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.TypedArray;
-import android.content.SharedPreferences;
 import android.preference.DialogPreference;
 import android.util.AttributeSet;
+import android.widget.Button;
 
-import java.util.HashSet;
-import java.util.Set;
-
-class MultiChoicePreference extends DialogPreference implements DialogInterface.OnMultiChoiceClickListener {
+class MultiChoicePreference extends DialogPreference {
     private static final String LOGTAG = "GeckoMultiChoicePreference";
 
     private boolean mValues[];
     private boolean mPrevValues[];
-    private CharSequence mEntryValues[];
+    private CharSequence mEntryKeys[];
     private CharSequence mEntries[];
     private CharSequence mInitialValues[];
 
@@ -35,7 +32,7 @@ class MultiChoicePreference extends DialogPreference implements DialogInterface.
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.MultiChoicePreference);
         mEntries = a.getTextArray(R.styleable.MultiChoicePreference_entries);
-        mEntryValues = a.getTextArray(R.styleable.MultiChoicePreference_entryValues);
+        mEntryKeys = a.getTextArray(R.styleable.MultiChoicePreference_entryKeys);
         mInitialValues = a.getTextArray(R.styleable.MultiChoicePreference_initialValues);
         a.recycle();
 
@@ -51,9 +48,9 @@ class MultiChoicePreference extends DialogPreference implements DialogInterface.
      * shown in subsequent dialogs.
      * <p>
      * Each entry must have a corresponding index in
-     * {@link #setEntryValues(CharSequence[])} and
+     * {@link #setEntryKeys(CharSequence[])} and
      * {@link #setInitialValues(CharSequence[])}.
-     *
+     * 
      * @param entries The entries.
      */
     public void setEntries(CharSequence[] entries) {
@@ -68,22 +65,20 @@ class MultiChoicePreference extends DialogPreference implements DialogInterface.
     }
 
     /**
-     * Sets the preference values for preferences shown in the list.
+     * Sets the preference keys for preferences shown in the list.
      *
-     * @param entryValues The entry values.
+     * @param entryKeys The entry keys.
      */
-    public void setEntryValues(CharSequence[] entryValues) {
-        mEntryValues = entryValues.clone();
+    public void setEntryKeys(CharSequence[] entryKeys) {
+        mEntryKeys = entryKeys.clone();
         loadPersistedValues();
     }
 
     /**
-     * Entry values define a separate pref for each row in the dialog.
-     *
-     * @param entryValuesResId The entryValues array as a resource.
+     * @param entryKeysResId The entryKeys array as a resource.
      */
-    public void setEntryValues(int entryValuesResId) {
-        setEntryValues(getContext().getResources().getTextArray(entryValuesResId));
+    public void setEntryKeys(int entryKeysResId) {
+        setEntryKeys(getContext().getResources().getTextArray(entryKeysResId));
     }
 
     /**
@@ -116,12 +111,12 @@ class MultiChoicePreference extends DialogPreference implements DialogInterface.
     }
 
     /**
-     * The list of values corresponding to each preference.
+     * The list of keys corresponding to each preference.
      * 
-     * @return The array of values.
+     * @return The array of keys.
      */
-    public CharSequence[] getEntryValues() {
-        return mEntryValues.clone();
+    public CharSequence[] getEntryKeys() {
+        return mEntryKeys.clone();
     }
 
     /**
@@ -134,50 +129,46 @@ class MultiChoicePreference extends DialogPreference implements DialogInterface.
         return mInitialValues.clone();
     }
 
-    public void setValue(final int i, final boolean value) {
-        mValues[i] = value;
-        mPrevValues = mValues.clone();
-    }
-
     /**
      * The list of values for each preference. These values are updated after
      * the dialog has been displayed.
      * 
      * @return The array of values.
      */
-    public Set<String> getValues() {
-        final Set<String> values = new HashSet<String>();
-
-        if (mValues == null) {
-            return values;
-        }
-
-        for (int i = 0; i < mValues.length; i++) {
-            if (mValues[i]) {
-                values.add(mEntryValues[i].toString());
-            }
-        }
-
-        return values;
-    }
-
-    @Override
-    public void onClick(DialogInterface dialog, int which, boolean val) {
+    public boolean[] getValues() {
+        return mValues.clone();
     }
 
     @Override
     protected void onPrepareDialogBuilder(Builder builder) {
-        if (mEntries == null || mInitialValues == null || mEntryValues == null) {
+        if (mEntries == null || mEntryKeys == null || mInitialValues == null) {
             throw new IllegalStateException(
-                    "MultiChoicePreference requires entries, entryValues, and initialValues arrays.");
+                    "MultiChoicePreference requires entries, entryKeys, and initialValues arrays.");
         }
 
-        if (mEntries.length != mEntryValues.length || mEntries.length != mInitialValues.length) {
+        if (mEntries.length != mEntryKeys.length || mEntryKeys.length != mInitialValues.length) {
             throw new IllegalStateException(
-                    "MultiChoicePreference entries, entryValues, and initialValues arrays must be the same length");
+                    "MultiChoicePreference entries, entryKeys, and initialValues arrays must be the same length");
         }
 
-        builder.setMultiChoiceItems(mEntries, mValues, this);
+        builder.setMultiChoiceItems(mEntries, mValues, new DialogInterface.OnMultiChoiceClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which, boolean val) {
+                // mValues is automatically updated when checkboxes are clicked
+
+                // enable positive button only if at least one item is checked
+                boolean enabled = false;
+                for (int i = 0; i < mValues.length; i++) {
+                    if (mValues[i]) {
+                        enabled = true;
+                        break;
+                    }
+                }
+                Button button = ((AlertDialog) dialog).getButton(DialogInterface.BUTTON_POSITIVE);
+                if (button.isEnabled() != enabled)
+                    button.setEnabled(enabled);
+            }
+        });
     }
 
     @Override
@@ -196,44 +187,37 @@ class MultiChoicePreference extends DialogPreference implements DialogInterface.
             mPrevValues = mValues.clone();
         }
 
-        if (!callChangeListener(getValues())) {
-            return;
-        }
-
-        persist();
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < mEntryKeys.length; i++) {
+                    String key = mEntryKeys[i].toString();
+                    persistBoolean(key, mValues[i]);
+                }
+            }
+        });
     }
 
-    /* Persists the current data stored by this pref to SharedPreferences. */
-    public boolean persist() {
+    protected boolean persistBoolean(String key, boolean value) {
         if (isPersistent()) {
-            final SharedPreferences.Editor edit = GeckoSharedPrefs.forProfile(getContext()).edit();
-            final boolean res = persist(edit);
-            edit.commit();
-            return res;
-        }
-
-        return false;
-    }
-
-    /* Internal persist method. Take an edit so that multiple prefs can be persisted in a single commit. */
-    protected boolean persist(SharedPreferences.Editor edit) {
-        if (isPersistent()) {
-            Set<String> vals = getValues();
-            PrefUtils.putStringSet(edit, getKey(), vals);
+            if (value == getPersistedBoolean(!value)) {
+                // It's already there, so the same as persisting
+                return true;
+            }
+            
+            GeckoSharedPrefs.forApp(getContext())
+                            .edit().putBoolean(key, value).commit();
             return true;
         }
-
         return false;
     }
 
-    /* Returns a list of EntryValues that are currently enabled. */
-    public Set<String> getPersistedStrings(Set<String> defaultVal) {
-        if (!isPersistent()) {
-            return defaultVal;
-        }
-
-        final SharedPreferences prefs = GeckoSharedPrefs.forProfile(getContext());
-        return PrefUtils.getStringSet(prefs, getKey(), defaultVal);
+    protected boolean getPersistedBoolean(String key, boolean defaultReturnValue) {
+        if (!isPersistent())
+            return defaultReturnValue;
+        
+        return GeckoSharedPrefs.forApp(getContext())
+                               .getBoolean(key, defaultReturnValue);
     }
 
     /**
@@ -241,29 +225,25 @@ class MultiChoicePreference extends DialogPreference implements DialogInterface.
      * aren't persistent or haven't yet been stored, they will be set to their
      * initial values.
      */
-    protected void loadPersistedValues() {
-        final int entryCount = mInitialValues.length;
-        mValues = new boolean[entryCount];
+    private void loadPersistedValues() {
+        if (mEntryKeys == null || mInitialValues == null)
+            return;
 
-        if (entryCount != mEntries.length || entryCount != mEntryValues.length) {
+        final int entryCount = mEntryKeys.length;
+        if (entryCount != mEntries.length || entryCount != mInitialValues.length) {
             throw new IllegalStateException(
-                    "MultiChoicePreference entryValues and initialValues arrays must be the same length");
+                    "MultiChoicePreference entryKeys and initialValues arrays must be the same length");
         }
 
+        mValues = new boolean[entryCount];
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                final Set<String> stringVals = getPersistedStrings(null);
-
                 for (int i = 0; i < entryCount; i++) {
-                    if (stringVals != null) {
-                        mValues[i] = stringVals.contains(mEntryValues[i]);
-                    } else {
-                        final boolean defaultVal = mInitialValues[i].equals("true");
-                        mValues[i] = defaultVal;
-                    }
+                    String key = mEntryKeys[i].toString();
+                    boolean initialValue = mInitialValues[i].equals("true");
+                    mValues[i] = getPersistedBoolean(key, initialValue);
                 }
-
                 mPrevValues = mValues.clone();
             }
         });
