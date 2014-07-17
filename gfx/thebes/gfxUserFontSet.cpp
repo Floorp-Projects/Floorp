@@ -736,7 +736,7 @@ gfxUserFontSet::OnLoadComplete(gfxMixedFontFamily *aFamily,
     }
 
     if (aFontData) {
-        NS_Free((void*)aFontData);
+        moz_free((void*)aFontData);
     }
 
     // error occurred, load next src
