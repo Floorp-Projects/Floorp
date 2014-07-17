@@ -177,8 +177,7 @@ public:
   bool ParseColorString(const nsSubstring& aBuffer,
                         nsIURI* aURL, // for error reporting
                         uint32_t aLineNumber, // for error reporting
-                        nsCSSValue& aValue,
-                        bool aSuppressErrors /* false */);
+                        nsCSSValue& aValue);
 
   nsresult ParseSelectorString(const nsSubstring& aSelectorString,
                                nsIURI* aURL, // for error reporting
@@ -217,8 +216,6 @@ public:
                               nsIPrincipal* aSheetPrincipal,
                               nsCSSValue& aValue);
 
-  bool IsValueValidForProperty(const nsCSSProperty aPropID,
-                               const nsAString& aPropValue);
 
   typedef nsCSSParser::VariableEnumFunc VariableEnumFunc;
 
@@ -1710,24 +1707,15 @@ bool
 CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
                                 nsIURI* aURI, // for error reporting
                                 uint32_t aLineNumber, // for error reporting
-                                nsCSSValue& aValue,
-                                bool aSuppressErrors /* false */)
+                                nsCSSValue& aValue)
 {
   nsCSSScanner scanner(aBuffer, aLineNumber);
   css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aURI);
   InitScanner(scanner, reporter, aURI, aURI, nullptr);
 
-  nsAutoSuppressErrors suppressErrors(this, aSuppressErrors);
-
   // Parse a color, and check that there's nothing else after it.
   bool colorParsed = ParseColor(aValue) && !GetToken(true);
-
-  if (aSuppressErrors) {
-    CLEAR_ERROR();
-  } else {
-    OUTPUT_ERROR();
-  }
-
+  OUTPUT_ERROR();
   ReleaseScanner();
   return colorParsed;
 }
@@ -14678,47 +14666,6 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
   return true;
 }
 
-bool
-CSSParserImpl::IsValueValidForProperty(const nsCSSProperty aPropID,
-                                       const nsAString& aPropValue)
-{
-  mData.AssertInitialState();
-  mTempData.AssertInitialState();
-
-  nsCSSScanner scanner(aPropValue, 0);
-  css::ErrorReporter reporter(scanner, mSheet, mChildLoader, nullptr);
-  InitScanner(scanner, reporter, nullptr, nullptr, nullptr);
-
-  nsAutoSuppressErrors suppressErrors(this);
-
-  mSection = eCSSSection_General;
-  scanner.SetSVGMode(false);
-
-  // Check for unknown properties
-  if (eCSSProperty_UNKNOWN == aPropID) {
-    ReleaseScanner();
-    return false;
-  }
-
-  // Check that the property and value parse successfully
-  bool parsedOK = ParseProperty(aPropID);
-
-  // Check for priority
-  parsedOK = parsedOK && ParsePriority() != ePriority_Error;
-
-  // We should now be at EOF
-  parsedOK = parsedOK && !GetToken(true);
-
-  mTempData.ClearProperty(aPropID);
-  mTempData.AssertInitialState();
-  mData.AssertInitialState();
-
-  CLEAR_ERROR();
-  ReleaseScanner();
-
-  return parsedOK;
-}
-
 } // anonymous namespace
 
 // Recycling of parser implementation objects
@@ -14911,11 +14858,10 @@ bool
 nsCSSParser::ParseColorString(const nsSubstring& aBuffer,
                               nsIURI*            aURI,
                               uint32_t           aLineNumber,
-                              nsCSSValue&        aValue,
-                              bool               aSuppressErrors /* false */)
+                              nsCSSValue&        aValue)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
-    ParseColorString(aBuffer, aURI, aLineNumber, aValue, aSuppressErrors);
+    ParseColorString(aBuffer, aURI, aLineNumber, aValue);
 }
 
 nsresult
@@ -15033,12 +14979,3 @@ nsCSSParser::ParseCounterDescriptor(nsCSSCounterDesc aDescID,
     ParseCounterDescriptor(aDescID, aBuffer,
                            aSheetURL, aBaseURL, aSheetPrincipal, aValue);
 }
-
-bool
-nsCSSParser::IsValueValidForProperty(const nsCSSProperty aPropID,
-                                     const nsAString&    aPropValue)
-{
-  return static_cast<CSSParserImpl*>(mImpl)->
-    IsValueValidForProperty(aPropID, aPropValue);
-}
-
