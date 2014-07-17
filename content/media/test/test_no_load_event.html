@@ -10,10 +10,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=715469
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="text/javascript" src="manifest.js"></script>
 </head>
-<body>
+<body onload="start();">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=715469">Mozilla Bug 715469</a>
 <p id="display"></p>
-<div id="content" style="display: none"></div>
+<div id="content" style="display: none">
+  
+</div>
 <pre id="test">
 
 <script type="application/javascript">
@@ -26,31 +28,24 @@ function start() {
   var resource = getPlayableVideo(gSmallTests);
   if (resource == null) {
     todo(false, "No types supported");
-    SimpleTest.finish();
   } else {
+    SimpleTest.waitForExplicitFinish();
     var v = document.createElement("video");
     v.src = resource.name;
     v.addEventListener("loadeddata", function(){v.play();}, false);
     v.controls = "true";
-
+    
     v.addEventListener("load",
       function(){
         gotLoadEvent = true;
       },
       false);
-
+      
     v.addEventListener("ended", finished, false);
-
+    
     document.body.appendChild(v);
   }
 }
-
-function startTest() {
-  setMediaTestsPrefs(start);
-}
-
-addLoadEvent(startTest);
-SimpleTest.waitForExplicitFinish();
 
 function finished() {
   is(gotLoadEvent, false, "Should not receive a load on the video element");

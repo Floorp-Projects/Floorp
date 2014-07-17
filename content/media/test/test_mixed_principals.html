@@ -14,8 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=489415
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=489415">Mozilla Bug 489415</a>
 <p id="display"></p>
 
-<video id="v1" preload="metadata" autoplay onended="loaded('v1')"></video>
-<video id="v2" preload="metadata" autoplay onended="loaded('v2')"></video>
+<video id="v1" autoplay onended="loaded('v1')"></video>
+<video id="v2" autoplay onended="loaded('v2')"></video>
 
 <pre id="test">
 <script type="text/javascript">
@@ -25,7 +25,6 @@ var v1 = document.getElementById("v1");
 var v2 = document.getElementById("v2");
 
 var resource = getPlayableVideo(gSeekTests);
-
 
 if (resource != null) {
   var count = 0;
@@ -65,11 +64,10 @@ if (resource != null) {
   // our origin.
   v2.src = "http://example.org/tests/content/media/test/dynamic_redirect.sjs?key=v2_" + key + "&res=" + resource.name;
   v2.load();
+  
 } else {
   todo(false, "No types supported");
-  SimpleTest.finish();
 }
-
 </script>
 </pre>
 
