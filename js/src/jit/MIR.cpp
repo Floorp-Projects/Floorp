@@ -186,6 +186,8 @@ MDefinition::valueHash() const
     HashNumber out = op();
     for (size_t i = 0, e = numOperands(); i < e; i++)
         out = addU32ToHash(out, getOperand(i)->id());
+    if (MDefinition *dep = dependency())
+        out = addU32ToHash(out, dep->id());
     return out;
 }
 
@@ -2812,6 +2814,47 @@ MNewObject::shouldUseVM() const
 {
     JSObject *obj = templateObject();
     return obj->hasSingletonType() || obj->hasDynamicSlots();
+}
+
+MObjectState::MObjectState(MDefinition *obj)
+{
+    // This instruction is only used as a summary for bailout paths.
+    setRecoveredOnBailout();
+    JSObject *templateObject = obj->toNewObject()->templateObject();
+    numSlots_ = templateObject->slotSpan();
+    numFixedSlots_ = templateObject->numFixedSlots();
+}
+
+bool
+MObjectState::init(TempAllocator &alloc, MDefinition *obj)
+{
+    if (!MVariadicInstruction::init(alloc, numSlots() + 1))
+        return false;
+    initOperand(0, obj);
+    return true;
+}
+
+MObjectState *
+MObjectState::New(TempAllocator &alloc, MDefinition *obj, MDefinition *undefinedVal)
+{
+    MObjectState *res = new(alloc) MObjectState(obj);
+    if (!res || !res->init(alloc, obj))
+        return nullptr;
+    for (size_t i = 0; i < res->numSlots(); i++)
+        res->initSlot(i, undefinedVal);
+    return res;
+}
+
+MObjectState *
+MObjectState::Copy(TempAllocator &alloc, MObjectState *state)
+{
+    MDefinition *obj = state->object();
+    MObjectState *res = new(alloc) MObjectState(obj);
+    if (!res || !res->init(alloc, obj))
+        return nullptr;
+    for (size_t i = 0; i < res->numSlots(); i++)
+        res->initSlot(i, state->getSlot(i));
+    return res;
 }
 
 bool

@@ -50,6 +50,7 @@ if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
 
 if int(CONFIG['ANDROID_VERSION']) >= 16:
     EXPORTS += [
+        'I420ColorConverterHelper.h',
         'MediaCodecDecoder.h',
         'MediaCodecProxy.h',
         'MediaCodecReader.h',

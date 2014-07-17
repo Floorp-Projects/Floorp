@@ -296,6 +296,7 @@ if CONFIG['ENABLE_ION']:
         'jit/RegisterAllocator.cpp',
         'jit/RematerializedFrame.cpp',
         'jit/Safepoints.cpp',
+        'jit/ScalarReplacement.cpp',
         'jit/shared/BaselineCompiler-shared.cpp',
         'jit/shared/CodeGenerator-shared.cpp',
         'jit/shared/Lowering-shared.cpp',

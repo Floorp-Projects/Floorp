@@ -12,6 +12,27 @@ API Usage
 .. automodule:: mozversion
     :members: get_version
 
+Examples
+````````
+
+Firefox::
+
+    import mozversion
+
+    version = mozversion.get_version(binary='/path/to/firefox-bin')
+    for (key, value) in sorted(version.items()):
+        if value:
+            print '%s: %s' % (key, value)
+
+Firefox for Android::
+
+    version = mozversion.get_version(binary='path/to/firefox.apk')
+    print version['application_changeset'] # gets hg revision of build
+
+FirefoxOS::
+
+    version = mozversion.get_version(sources='path/to/sources.xml', dm_type='adb')
+    print version['gaia_changeset'] # gets gaia git revision
 
 Command Line Usage
 ------------------

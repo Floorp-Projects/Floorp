@@ -7,73 +7,35 @@
 #ifndef mozilla_dom_FileRequest_h
 #define mozilla_dom_FileRequest_h
 
-#include "DOMRequest.h"
-#include "js/TypeDecls.h"
-#include "mozilla/Attributes.h"
-#include "nsAutoPtr.h"
-#include "nsCycleCollectionParticipant.h"
-
-class nsPIDOMWindow;
+#include "nscore.h"
 
 namespace mozilla {
-
-class EventChainPreVisitor;
-
 namespace dom {
 
-class FileHandle;
 class FileHelper;
 
-class FileRequest : public DOMRequest
+/**
+ * This class provides a base for FileRequest implementations.
+ */
+class FileRequestBase
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_IMETHOD_(MozExternalRefCountType)
+  AddRef() = 0;
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileRequest, DOMRequest)
+  NS_IMETHOD_(MozExternalRefCountType)
+  Release() = 0;
 
-  static already_AddRefed<FileRequest>
-  Create(nsPIDOMWindow* aOwner, FileHandle* aFileHandle,
-         bool aWrapAsDOMRequest);
+  virtual void
+  OnProgress(uint64_t aProgress, uint64_t aProgressMax) = 0;
 
-  // nsIDOMEventTarget
   virtual nsresult
-  PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
-
-  void
-  OnProgress(uint64_t aProgress, uint64_t aProgressMax)
-  {
-    FireProgressEvent(aProgress, aProgressMax);
-  }
-
-  nsresult
-  NotifyHelperCompleted(FileHelper* aFileHelper);
-
-  // nsWrapperCache
-  virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
-
-  // WebIDL
-  FileHandle*
-  GetFileHandle() const;
-
-  FileHandle*
-  GetLockedFile() const
-  {
-    return GetFileHandle();
-  }
-
-  IMPL_EVENT_HANDLER(progress)
+  NotifyHelperCompleted(FileHelper* aFileHelper) = 0;
 
 protected:
-  FileRequest(nsPIDOMWindow* aWindow);
-  ~FileRequest();
+  FileRequestBase();
 
-  void
-  FireProgressEvent(uint64_t aLoaded, uint64_t aTotal);
-
-  nsRefPtr<FileHandle> mFileHandle;
-
-  bool mWrapAsDOMRequest;
+  virtual ~FileRequestBase();
 };
 
 } // namespace dom
