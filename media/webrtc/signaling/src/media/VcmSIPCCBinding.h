@@ -11,7 +11,6 @@ extern "C"
 }
 
 #include "sigslot.h"
-#include "mozIGeckoMediaPluginService.h"
 
 class nsIThread;
 class nsIEventTarget;
@@ -33,12 +32,11 @@ namespace CSF
     class StreamObserver
     {
     public:
-    	  virtual void registerStream(cc_call_handle_t call, int streamId, bool isVideo) = 0;
-    	  virtual void deregisterStream(cc_call_handle_t call, int streamId) = 0;
-    	  virtual void dtmfBurst(int digit, int direction, int duration) = 0;
-    	  virtual void sendIFrame(cc_call_handle_t call) = 0;
+    	virtual void registerStream(cc_call_handle_t call, int streamId, bool isVideo) = 0;
+    	virtual void deregisterStream(cc_call_handle_t call, int streamId) = 0;
+    	virtual void dtmfBurst(int digit, int direction, int duration) = 0;
+    	virtual void sendIFrame(cc_call_handle_t call) = 0;
     };
-
     class VcmSIPCCBinding : public sigslot::has_slots<>
     {
     public:
@@ -60,37 +58,35 @@ namespace CSF
 
         static void setAudioCodecs(int codecMask);
         static void setVideoCodecs(int codecMask);
+        static void addVideoCodecsGmp(int codecMask);
 
         static int getAudioCodecs();
         static int getVideoCodecs();
         static int getVideoCodecsGmp();
         static int getVideoCodecsHw();
 
-        static void setMainThread(nsIThread *thread);
-        static nsIThread *getMainThread();
-        static nsIEventTarget *getSTSThread();
+	static void setMainThread(nsIThread *thread);
+	static nsIThread *getMainThread();
+	static nsIEventTarget *getSTSThread();
 
-        static void setSTSThread(nsIEventTarget *thread);
+	static void setSTSThread(nsIEventTarget *thread);
 
-        static void connectCandidateSignal(mozilla::NrIceMediaStream* stream);
+	static void connectCandidateSignal(mozilla::NrIceMediaStream* stream);
 
         static nsCOMPtr<nsIPrefBranch> getPrefBranch();
 
-        static int gVideoCodecGmpMask;
     private:
-        static bool scanForGmpCodecs();
-        void CandidateReady(mozilla::NrIceMediaStream* stream,
-                            const std::string& candidate);
+	void CandidateReady(mozilla::NrIceMediaStream* stream,
+			    const std::string& candidate);
 
-        nsCOMPtr<mozIGeckoMediaPluginService> mGMPService;
         static VcmSIPCCBinding * gSelf;
         StreamObserver* streamObserver;
         MediaProviderObserver *mediaProviderObserver;
-        static bool gInitGmpCodecs;
         static int gAudioCodecMask;
         static int gVideoCodecMask;
-        static nsIThread *gMainThread;
-        static nsIEventTarget *gSTSThread;
+        static int gVideoCodecGmpMask;
+	static nsIThread *gMainThread;
+	static nsIEventTarget *gSTSThread;
         static nsCOMPtr<nsIPrefBranch> gBranch;
     };
 }
