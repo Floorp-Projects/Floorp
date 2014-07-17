@@ -135,8 +135,6 @@ public:
   // For bug 943174: Skip the EnsureProcessTerminated call in the destructor.
   void SetAlreadyDead();
 
-  static void CacheGreDir();
-
 protected:
   GeckoProcessType mProcessType;
   ChildPrivileges mPrivileges;
@@ -203,9 +201,6 @@ private:
   //
   // FIXME/cjones: this strongly indicates bad design.  Shame on us.
   std::queue<IPC::Message> mQueue;
-
-  static StaticRefPtr<nsIFile> sGreDir;
-  static DebugOnly<bool> sGreDirCached;
 };
 
 #ifdef MOZ_NUWA_PROCESS
