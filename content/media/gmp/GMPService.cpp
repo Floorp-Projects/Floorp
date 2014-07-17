@@ -14,7 +14,6 @@
 #include "mozilla/Services.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsIConsoleService.h"
-#include "mozilla/unused.h"
 
 namespace mozilla {
 namespace gmp {
@@ -114,10 +113,6 @@ GeckoMediaPluginService::Init()
   MOZ_ASSERT(obsService);
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false)));
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false)));
-
-  // Kick off scanning for plugins
-  nsCOMPtr<nsIThread> thread;
-  unused << GetThread(getter_AddRefs(thread));
 }
 
 NS_IMETHODIMP
@@ -260,7 +255,6 @@ GeckoMediaPluginService::UnloadPlugins()
   MOZ_ASSERT(!mShuttingDownOnGMPThread);
   mShuttingDownOnGMPThread = true;
 
-  MutexAutoLock lock(mMutex);
   for (uint32_t i = 0; i < mPlugins.Length(); i++) {
     mPlugins[i]->UnloadProcess();
   }
@@ -336,28 +330,13 @@ GeckoMediaPluginService::RemovePluginDirectory(const nsAString& aDirectory)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-GeckoMediaPluginService::HasPluginForAPI(const nsAString& aOrigin,
-                                         const nsACString& aAPI,
-                                         nsTArray<nsCString>* aTags,
-                                         bool* aResult)
-{
-  NS_ENSURE_ARG(aTags && aTags->Length() > 0);
-  NS_ENSURE_ARG(aResult);
-
-  nsCString temp(aAPI);
-  GMPParent *parent = SelectPluginForAPI(aOrigin, temp, *aTags);
-  *aResult = !!parent;
-
-  return NS_OK;
-}
-
 GMPParent*
 GeckoMediaPluginService::SelectPluginForAPI(const nsAString& aOrigin,
                                             const nsCString& aAPI,
                                             const nsTArray<nsCString>& aTags)
 {
-  MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+
   for (uint32_t i = 0; i < mPlugins.Length(); i++) {
     GMPParent* gmp = mPlugins[i];
     bool supportsAllTags = true;
@@ -423,7 +402,6 @@ GeckoMediaPluginService::AddOnGMPThread(const nsAString& aDirectory)
     return;
   }
 
-  MutexAutoLock lock(mMutex);
   mPlugins.AppendElement(gmp);
 }
 
@@ -438,7 +416,6 @@ GeckoMediaPluginService::RemoveOnGMPThread(const nsAString& aDirectory)
     return;
   }
 
-  MutexAutoLock lock(mMutex);
   for (uint32_t i = 0; i < mPlugins.Length(); ++i) {
     nsCOMPtr<nsIFile> pluginpath = mPlugins[i]->GetDirectory();
     bool equals;
