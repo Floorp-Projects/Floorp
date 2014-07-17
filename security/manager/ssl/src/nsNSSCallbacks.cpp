@@ -614,7 +614,7 @@ nsHTTPListener::~nsHTTPListener()
     send_done_signal();
 
   if (mResultData) {
-    NS_Free(const_cast<uint8_t *>(mResultData));
+    moz_free(const_cast<uint8_t *>(mResultData));
   }
 
   if (mLoader) {

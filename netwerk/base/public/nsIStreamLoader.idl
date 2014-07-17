@@ -27,8 +27,8 @@ interface nsIStreamLoaderObserver : nsISupports
      * If the observer wants to take over responsibility for the
      * data buffer (result), it returns NS_SUCCESS_ADOPTED_DATA
      * in place of NS_OK as its success code. The loader will then
-     * "forget" about the data and not NS_Free() it after
-     * onStreamComplete() returns; observer must call NS_Free()
+     * "forget" about the data and not moz_free() it after
+     * onStreamComplete() returns; observer must call moz_free()
      * when the data is no longer required.
      */
     void onStreamComplete(in nsIStreamLoader loader,
