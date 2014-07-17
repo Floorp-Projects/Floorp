@@ -6,7 +6,6 @@ import time
 
 import base
 
-
 def format_seconds(total):
     """Format number of seconds to MM:SS.DD form."""
     minutes, seconds = divmod(total, 60)
