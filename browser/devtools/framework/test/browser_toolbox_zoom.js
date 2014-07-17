@@ -8,11 +8,7 @@ let modifiers = {
 let toolbox;
 
 function test() {
-  waitForExplicitFinish();
-
-  addTab("about:blank", function() {
-    openToolbox();
-  });
+  addTab("about:blank").then(openToolbox);
 }
 
 function openToolbox() {

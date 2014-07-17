@@ -18,7 +18,8 @@ let TEMP_PATH;
 // All test are asynchronous
 waitForExplicitFinish();
 
-//Services.prefs.setBoolPref("devtools.dump.emit", true);
+// Uncomment this pref to dump all devtools emitted events to the console.
+// Services.prefs.setBoolPref("devtools.dump.emit", true);
 
 // Set the testing flag on gDevTools and reset it when the test ends
 gDevTools.testing = true;

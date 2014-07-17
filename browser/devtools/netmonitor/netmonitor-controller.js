@@ -362,20 +362,20 @@ let NetMonitorController = {
     if (aType == ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED) {
       this._currentActivity = ACTIVITY_TYPE.ENABLE_CACHE;
       this._target.once("will-navigate", () => this._currentActivity = aType);
-      return reconfigureTabAndWaitForNavigation({ cacheEnabled: true }).then(standBy);
+      return reconfigureTabAndWaitForNavigation({ cacheDisabled: false, performReload: true }).then(standBy);
     }
     if (aType == ACTIVITY_TYPE.RELOAD.WITH_CACHE_DISABLED) {
       this._currentActivity = ACTIVITY_TYPE.DISABLE_CACHE;
       this._target.once("will-navigate", () => this._currentActivity = aType);
-      return reconfigureTabAndWaitForNavigation({ cacheEnabled: false }).then(standBy);
+      return reconfigureTabAndWaitForNavigation({ cacheDisabled: true, performReload: true }).then(standBy);
     }
     if (aType == ACTIVITY_TYPE.ENABLE_CACHE) {
       this._currentActivity = aType;
-      return reconfigureTab({ cacheEnabled: true, performReload: false }).then(standBy);
+      return reconfigureTab({ cacheDisabled: false, performReload: false }).then(standBy);
     }
     if (aType == ACTIVITY_TYPE.DISABLE_CACHE) {
       this._currentActivity = aType;
-      return reconfigureTab({ cacheEnabled: false, performReload: false }).then(standBy);
+      return reconfigureTab({ cacheDisabled: true, performReload: false }).then(standBy);
     }
     this._currentActivity = ACTIVITY_TYPE.NONE;
     return promise.reject(new Error("Invalid activity type"));
