@@ -36,6 +36,9 @@ JitOptions::JitOptions()
     // Whether Ion should compile try-catch statements.
     compileTryCatch = true;
 
+    // Toggle whether eager scalar replacement is globally disabled.
+    disableScalarReplacement = true; // experimental
+
     // Toggle whether global value numbering is globally disabled.
     disableGvn = false;
 

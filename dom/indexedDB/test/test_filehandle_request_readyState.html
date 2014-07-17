@@ -1,0 +1,70 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>File Handle Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    const name = window.location.pathname;
+
+    let request = indexedDB.open(name, 1);
+    is(request.readyState, "pending", "Correct readyState");
+
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    let event = yield undefined;
+
+    is(request.readyState, "done", "Correct readyState");
+
+    let db = event.target.result;
+    db.onerror = errorHandler;
+
+    request = db.createMutableFile("test.txt");
+    is(request.readyState, "pending", "Correct readyState");
+
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    is(request.readyState, "done", "Correct readyState");
+
+    let mutableFile = event.target.result;
+    mutableFile.onerror = errorHandler;
+
+    let fileHandle = mutableFile.open("readwrite");
+    request = fileHandle.write("string");
+    is(request.readyState, "pending", "Correct readyState");
+
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    is(request.readyState, "done", "Correct readyState");
+
+    fileHandle.location = 0;
+    request = fileHandle.readAsText(6);
+    request.onsuccess = grabEventAndContinueHandler;
+    is(request.readyState, "pending", "Correct readyState");
+    event = yield undefined;
+
+    ok(event.target.result, "Got something");
+    is(request.readyState, "done", "Correct readyState");
+
+    finishTest();
+    yield undefined;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="file.js"></script> <!-- This is included just to skip this test in test_ipc.html -->
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

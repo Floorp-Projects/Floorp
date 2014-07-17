@@ -46,7 +46,8 @@ namespace jit {
     _(Atan2)                                    \
     _(StringSplit)                              \
     _(NewObject)                                \
-    _(NewDerivedTypedObject)
+    _(NewDerivedTypedObject)                    \
+    _(ObjectState)
 
 class RResumePoint;
 class SnapshotIterator;
@@ -479,6 +480,25 @@ class RNewDerivedTypedObject MOZ_FINAL : public RInstruction
 
     virtual uint32_t numOperands() const {
         return 3;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RObjectState MOZ_FINAL : public RInstruction
+{
+  private:
+    uint32_t numSlots_;        // Number of slots.
+
+  public:
+    RINSTRUCTION_HEADER_(ObjectState)
+
+    uint32_t numSlots() const {
+        return numSlots_;
+    }
+    virtual uint32_t numOperands() const {
+        // +1 for the object.
+        return numSlots() + 1;
     }
 
     bool recover(JSContext *cx, SnapshotIterator &iter) const;

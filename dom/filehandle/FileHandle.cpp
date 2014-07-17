@@ -12,25 +12,19 @@
 #include "FileService.h"
 #include "FileStreamWrappers.h"
 #include "MemoryStreams.h"
-#include "MetadataHelper.h"
 #include "mozilla/dom/EncodingUtils.h"
-#include "mozilla/dom/FileHandleBinding.h"
-#include "mozilla/EventDispatcher.h"
 #include "MutableFile.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsIAppShell.h"
-#include "nsIDOMEvent.h"
 #include "nsIDOMFile.h"
 #include "nsIEventTarget.h"
 #include "nsISeekableStream.h"
 #include "nsNetUtil.h"
-#include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsStringStream.h"
 #include "nsThreadUtils.h"
-#include "nsWidgetsCID.h"
+#include "xpcpublic.h"
 
 #define STREAM_COPY_BLOCK_SIZE 32768
 
@@ -39,13 +33,11 @@ namespace dom {
 
 namespace {
 
-NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-
 class ReadHelper : public FileHelper
 {
 public:
-  ReadHelper(FileHandle* aFileHandle,
-             FileRequest* aFileRequest,
+  ReadHelper(FileHandleBase* aFileHandle,
+             FileRequestBase* aFileRequest,
              uint64_t aLocation,
              uint64_t aSize)
   : FileHelper(aFileHandle, aFileRequest),
@@ -74,8 +66,8 @@ protected:
 class ReadTextHelper : public ReadHelper
 {
 public:
-  ReadTextHelper(FileHandle* aFileHandle,
-                 FileRequest* aFileRequest,
+  ReadTextHelper(FileHandleBase* aFileHandle,
+                 FileRequestBase* aFileRequest,
                  uint64_t aLocation,
                  uint64_t aSize,
                  const nsAString& aEncoding)
@@ -94,8 +86,8 @@ private:
 class WriteHelper : public FileHelper
 {
 public:
-  WriteHelper(FileHandle* aFileHandle,
-              FileRequest* aFileRequest,
+  WriteHelper(FileHandleBase* aFileHandle,
+              FileRequestBase* aFileRequest,
               uint64_t aLocation,
               nsIInputStream* aStream,
               uint64_t aLength)
@@ -117,8 +109,8 @@ private:
 class TruncateHelper : public FileHelper
 {
 public:
-  TruncateHelper(FileHandle* aFileHandle,
-                 FileRequest* aFileRequest,
+  TruncateHelper(FileHandleBase* aFileHandle,
+                 FileRequestBase* aFileRequest,
                  uint64_t aOffset)
   : FileHelper(aFileHandle, aFileRequest),
     mOffset(aOffset)
@@ -148,8 +140,8 @@ private:
 class FlushHelper : public FileHelper
 {
 public:
-  FlushHelper(FileHandle* aFileHandle,
-              FileRequest* aFileRequest)
+  FlushHelper(FileHandleBase* aFileHandle,
+              FileRequestBase* aFileRequest)
   : FileHelper(aFileHandle, aFileRequest)
   { }
 
@@ -172,7 +164,7 @@ private:
 class OpenStreamHelper : public FileHelper
 {
 public:
-  OpenStreamHelper(FileHandle* aFileHandle,
+  OpenStreamHelper(FileHandleBase* aFileHandle,
                    bool aWholeFile,
                    uint64_t aStart,
                    uint64_t aLength)
@@ -197,95 +189,28 @@ private:
   nsCOMPtr<nsIInputStream> mStream;
 };
 
-already_AddRefed<nsIDOMEvent>
-CreateGenericEvent(EventTarget* aEventOwner,
-                   const nsAString& aType, bool aBubbles, bool aCancelable)
-{
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMEvent(getter_AddRefs(event), aEventOwner, nullptr, nullptr);
-  nsresult rv = event->InitEvent(aType, aBubbles, aCancelable);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  event->SetTrusted(true);
-
-  return event.forget();
-}
-
 } // anonymous namespace
 
-// static
-already_AddRefed<FileHandle>
-FileHandle::Create(MutableFile* aMutableFile,
-                   FileMode aMode,
-                   RequestMode aRequestMode)
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-
-  nsRefPtr<FileHandle> fileHandle = new FileHandle();
-
-  fileHandle->BindToOwner(aMutableFile);
-
-  fileHandle->mMutableFile = aMutableFile;
-  fileHandle->mMode = aMode;
-  fileHandle->mRequestMode = aRequestMode;
-
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  NS_ENSURE_TRUE(appShell, nullptr);
-
-  nsresult rv = appShell->RunBeforeNextEvent(fileHandle);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  fileHandle->mCreating = true;
-
-  FileService* service = FileService::GetOrCreate();
-  NS_ENSURE_TRUE(service, nullptr);
-
-  rv = service->Enqueue(fileHandle, nullptr);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  return fileHandle.forget();
-}
-
-FileHandle::FileHandle()
+FileHandleBase::FileHandleBase(FileMode aMode,
+                               RequestMode aRequestMode)
 : mReadyState(INITIAL),
-  mMode(FileMode::Readonly),
-  mRequestMode(NORMAL),
+  mMode(aMode),
+  mRequestMode(aRequestMode),
   mLocation(0),
   mPendingRequests(0),
   mAborted(false),
   mCreating(false)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-  SetIsDOMBinding();
 }
 
-FileHandle::~FileHandle()
+FileHandleBase::~FileHandleBase()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-}
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(FileHandle, DOMEventTargetHelper,
-                                   mMutableFile)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileHandle)
-  NS_INTERFACE_MAP_ENTRY(nsIRunnable)
-NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
-
-NS_IMPL_ADDREF_INHERITED(FileHandle, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(FileHandle, DOMEventTargetHelper)
-
-nsresult
-FileHandle::PreHandleEvent(EventChainPreVisitor& aVisitor)
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-
-  aVisitor.mCanHandle = true;
-  aVisitor.mParentTarget = mMutableFile;
-  return NS_OK;
 }
 
 void
-FileHandle::OnNewRequest()
+FileHandleBase::OnNewRequest()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
   if (!mPendingRequests) {
@@ -296,30 +221,31 @@ FileHandle::OnNewRequest()
 }
 
 void
-FileHandle::OnRequestFinished()
+FileHandleBase::OnRequestFinished()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
   MOZ_ASSERT(mPendingRequests, "Mismatched calls!");
   --mPendingRequests;
   if (!mPendingRequests) {
     MOZ_ASSERT(mAborted || mReadyState == LOADING, "Bad state!");
-    mReadyState = FileHandle::FINISHING;
+    mReadyState = FileHandleBase::FINISHING;
     Finish();
   }
 }
 
 nsresult
-FileHandle::CreateParallelStream(nsISupports** aStream)
+FileHandleBase::CreateParallelStream(nsISupports** aStream)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
-  if (mMutableFile->IsInvalid()) {
+  MutableFileBase* mutableFile = MutableFile();
+
+  if (mutableFile->IsInvalid()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsCOMPtr<nsISupports> stream =
-    mMutableFile->CreateStream(mMutableFile->mFile,
-                               mMode == FileMode::Readonly);
+    mutableFile->CreateStream(mMode == FileMode::Readonly);
   NS_ENSURE_TRUE(stream, NS_ERROR_FAILURE);
 
   mParallelStreams.AppendElement(stream);
@@ -329,18 +255,19 @@ FileHandle::CreateParallelStream(nsISupports** aStream)
 }
 
 nsresult
-FileHandle::GetOrCreateStream(nsISupports** aStream)
+FileHandleBase::GetOrCreateStream(nsISupports** aStream)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
-  if (mMutableFile->IsInvalid()) {
+  MutableFileBase* mutableFile = MutableFile();
+
+  if (mutableFile->IsInvalid()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   if (!mStream) {
     nsCOMPtr<nsISupports> stream =
-      mMutableFile->CreateStream(mMutableFile->mFile,
-                                 mMode == FileMode::Readonly);
+      mutableFile->CreateStream(mMode == FileMode::Readonly);
     NS_ENSURE_TRUE(stream, NS_ERROR_FAILURE);
 
     stream.swap(mStream);
@@ -352,15 +279,8 @@ FileHandle::GetOrCreateStream(nsISupports** aStream)
   return NS_OK;
 }
 
-already_AddRefed<FileRequest>
-FileHandle::GenerateFileRequest()
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-  return FileRequest::Create(GetOwner(), this, /* aWrapAsDOMRequest */ false);
-}
-
 bool
-FileHandle::IsOpen() const
+FileHandleBase::IsOpen() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
@@ -389,51 +309,9 @@ FileHandle::IsOpen() const
   return false;
 }
 
-// virtual
-JSObject*
-FileHandle::WrapObject(JSContext* aCx)
-{
-  return FileHandleBinding::Wrap(aCx, this);
-}
-
-already_AddRefed<FileRequest>
-FileHandle::GetMetadata(const DOMFileMetadataParameters& aParameters,
-                        ErrorResult& aRv)
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-
-  // Common state checking
-  if (!CheckState(aRv)) {
-    return nullptr;
-  }
-
-  // Do nothing if the window is closed
-  if (!GetOwner()) {
-    return nullptr;
-  }
-
-  nsRefPtr<MetadataParameters> params =
-    new MetadataParameters(aParameters.mSize, aParameters.mLastModified);
-  if (!params->IsConfigured()) {
-    aRv.ThrowTypeError(MSG_METADATA_NOT_CONFIGURED);
-    return nullptr;
-  }
-
-  nsRefPtr<FileRequest> fileRequest = GenerateFileRequest();
-
-  nsRefPtr<MetadataHelper> helper =
-    new MetadataHelper(this, fileRequest, params);
-
-  if (NS_WARN_IF(NS_FAILED(helper->Enqueue()))) {
-    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
-    return nullptr;
-  }
-
-  return fileRequest.forget();
-}
-
-already_AddRefed<FileRequest>
-FileHandle::ReadAsArrayBuffer(uint64_t aSize, ErrorResult& aRv)
+already_AddRefed<FileRequestBase>
+FileHandleBase::Read(uint64_t aSize, bool aHasEncoding,
+                     const nsAString& aEncoding, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
@@ -443,14 +321,18 @@ FileHandle::ReadAsArrayBuffer(uint64_t aSize, ErrorResult& aRv)
   }
 
   // Do nothing if the window is closed
-  if (!GetOwner()) {
+  if (!CheckWindow()) {
     return nullptr;
   }
 
-  nsRefPtr<FileRequest> fileRequest = GenerateFileRequest();
+  nsRefPtr<FileRequestBase> fileRequest = GenerateFileRequest();
 
-  nsRefPtr<ReadHelper> helper =
-    new ReadHelper(this, fileRequest, mLocation, aSize);
+  nsRefPtr<ReadHelper> helper;
+  if (aHasEncoding) {
+    helper = new ReadTextHelper(this, fileRequest, mLocation, aSize, aEncoding);
+  } else {
+    helper = new ReadHelper(this, fileRequest, mLocation, aSize);
+  }
 
   if (NS_WARN_IF(NS_FAILED(helper->Init())) ||
       NS_WARN_IF(NS_FAILED(helper->Enqueue()))) {
@@ -463,40 +345,8 @@ FileHandle::ReadAsArrayBuffer(uint64_t aSize, ErrorResult& aRv)
   return fileRequest.forget();
 }
 
-already_AddRefed<FileRequest>
-FileHandle::ReadAsText(uint64_t aSize, const nsAString& aEncoding,
-                       ErrorResult& aRv)
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-
-  // State and argument checking for read
-  if (!CheckStateAndArgumentsForRead(aSize, aRv)) {
-    return nullptr;
-  }
-
-  // Do nothing if the window is closed
-  if (!GetOwner()) {
-    return nullptr;
-  }
-
-  nsRefPtr<FileRequest> fileRequest = GenerateFileRequest();
-
-  nsRefPtr<ReadTextHelper> helper =
-    new ReadTextHelper(this, fileRequest, mLocation, aSize, aEncoding);
-
-  if (NS_WARN_IF(NS_FAILED(helper->Init())) ||
-      NS_WARN_IF(NS_FAILED(helper->Enqueue()))) {
-    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
-    return nullptr;
-  }
-
-  mLocation += aSize;
-
-  return fileRequest.forget();
-}
-
-already_AddRefed<FileRequest>
-FileHandle::Truncate(const Optional<uint64_t>& aSize, ErrorResult& aRv)
+already_AddRefed<FileRequestBase>
+FileHandleBase::Truncate(const Optional<uint64_t>& aSize, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
@@ -520,11 +370,11 @@ FileHandle::Truncate(const Optional<uint64_t>& aSize, ErrorResult& aRv)
   }
 
   // Do nothing if the window is closed
-  if (!GetOwner()) {
+  if (!CheckWindow()) {
     return nullptr;
   }
 
-  nsRefPtr<FileRequest> fileRequest = GenerateFileRequest();
+  nsRefPtr<FileRequestBase> fileRequest = GenerateFileRequest();
 
   nsRefPtr<TruncateHelper> helper =
     new TruncateHelper(this, fileRequest, location);
@@ -541,8 +391,8 @@ FileHandle::Truncate(const Optional<uint64_t>& aSize, ErrorResult& aRv)
   return fileRequest.forget();
 }
 
-already_AddRefed<FileRequest>
-FileHandle::Flush(ErrorResult& aRv)
+already_AddRefed<FileRequestBase>
+FileHandleBase::Flush(ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
@@ -552,11 +402,11 @@ FileHandle::Flush(ErrorResult& aRv)
   }
 
   // Do nothing if the window is closed
-  if (!GetOwner()) {
+  if (!CheckWindow()) {
     return nullptr;
   }
 
-  nsRefPtr<FileRequest> fileRequest = GenerateFileRequest();
+  nsRefPtr<FileRequestBase> fileRequest = GenerateFileRequest();
 
   nsRefPtr<FlushHelper> helper = new FlushHelper(this, fileRequest);
 
@@ -569,7 +419,7 @@ FileHandle::Flush(ErrorResult& aRv)
 }
 
 void
-FileHandle::Abort(ErrorResult& aRv)
+FileHandleBase::Abort(ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
@@ -577,8 +427,8 @@ FileHandle::Abort(ErrorResult& aRv)
 
   // We can't use IsOpen here since we need it to be possible to call Abort()
   // even from outside of transaction callbacks.
-  if (mReadyState != FileHandle::INITIAL &&
-      mReadyState != FileHandle::LOADING) {
+  if (mReadyState != FileHandleBase::INITIAL &&
+      mReadyState != FileHandleBase::LOADING) {
     aRv.Throw(NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR);
     return;
   }
@@ -595,8 +445,8 @@ FileHandle::Abort(ErrorResult& aRv)
   }
 }
 
-NS_IMETHODIMP
-FileHandle::Run()
+void
+FileHandleBase::OnReturnToEventLoop()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
@@ -611,13 +461,11 @@ FileHandle::Run()
       NS_WARNING("Failed to finish!");
     }
   }
-
-  return NS_OK;
 }
 
 nsresult
-FileHandle::OpenInputStream(bool aWholeFile, uint64_t aStart, uint64_t aLength,
-                            nsIInputStream** aResult)
+FileHandleBase::OpenInputStream(bool aWholeFile, uint64_t aStart,
+                                uint64_t aLength, nsIInputStream** aResult)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
   MOZ_ASSERT(mRequestMode == PARALLEL,
@@ -630,7 +478,7 @@ FileHandle::OpenInputStream(bool aWholeFile, uint64_t aStart, uint64_t aLength,
   }
 
   // Do nothing if the window is closed
-  if (!GetOwner()) {
+  if (!CheckWindow()) {
     return NS_OK;
   }
 
@@ -648,7 +496,7 @@ FileHandle::OpenInputStream(bool aWholeFile, uint64_t aStart, uint64_t aLength,
 }
 
 bool
-FileHandle::CheckState(ErrorResult& aRv)
+FileHandleBase::CheckState(ErrorResult& aRv)
 {
   if (!IsOpen()) {
     aRv.Throw(NS_ERROR_DOM_FILEHANDLE_INACTIVE_ERR);
@@ -659,7 +507,7 @@ FileHandle::CheckState(ErrorResult& aRv)
 }
 
 bool
-FileHandle::CheckStateAndArgumentsForRead(uint64_t aSize, ErrorResult& aRv)
+FileHandleBase::CheckStateAndArgumentsForRead(uint64_t aSize, ErrorResult& aRv)
 {
   // Common state checking
   if (!CheckState(aRv)) {
@@ -682,7 +530,7 @@ FileHandle::CheckStateAndArgumentsForRead(uint64_t aSize, ErrorResult& aRv)
 }
 
 bool
-FileHandle::CheckStateForWrite(ErrorResult& aRv)
+FileHandleBase::CheckStateForWrite(ErrorResult& aRv)
 {
   // Common state checking
   if (!CheckState(aRv)) {
@@ -698,9 +546,10 @@ FileHandle::CheckStateForWrite(ErrorResult& aRv)
   return true;
 }
 
-already_AddRefed<FileRequest>
-FileHandle::WriteInternal(nsIInputStream* aInputStream, uint64_t aInputLength,
-                          bool aAppend, ErrorResult& aRv)
+already_AddRefed<FileRequestBase>
+FileHandleBase::WriteInternal(nsIInputStream* aInputStream,
+                              uint64_t aInputLength, bool aAppend,
+                              ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
@@ -709,9 +558,9 @@ FileHandle::WriteInternal(nsIInputStream* aInputStream, uint64_t aInputLength,
   MOZ_ASSERT_IF(!aAppend, mLocation != UINT64_MAX);
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aInputLength);
-  MOZ_ASSERT(GetOwner());
+  MOZ_ASSERT(CheckWindow());
 
-  nsRefPtr<FileRequest> fileRequest = GenerateFileRequest();
+  nsRefPtr<FileRequestBase> fileRequest = GenerateFileRequest();
 
   uint64_t location = aAppend ? UINT64_MAX : mLocation;
 
@@ -734,7 +583,7 @@ FileHandle::WriteInternal(nsIInputStream* aInputStream, uint64_t aInputLength,
 }
 
 nsresult
-FileHandle::Finish()
+FileHandleBase::Finish()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
@@ -753,8 +602,8 @@ FileHandle::Finish()
 
 // static
 already_AddRefed<nsIInputStream>
-FileHandle::GetInputStream(const ArrayBuffer& aValue, uint64_t* aInputLength,
-                           ErrorResult& aRv)
+FileHandleBase::GetInputStream(const ArrayBuffer& aValue,
+                               uint64_t* aInputLength, ErrorResult& aRv)
 {
   aValue.ComputeLengthAndData();
   const char* data = reinterpret_cast<const char*>(aValue.Data());
@@ -773,8 +622,8 @@ FileHandle::GetInputStream(const ArrayBuffer& aValue, uint64_t* aInputLength,
 
 // static
 already_AddRefed<nsIInputStream>
-FileHandle::GetInputStream(nsIDOMBlob* aValue, uint64_t* aInputLength,
-                           ErrorResult& aRv)
+FileHandleBase::GetInputStream(nsIDOMBlob* aValue, uint64_t* aInputLength,
+                               ErrorResult& aRv)
 {
   uint64_t length;
   aRv = aValue->GetSize(&length);
@@ -794,8 +643,8 @@ FileHandle::GetInputStream(nsIDOMBlob* aValue, uint64_t* aInputLength,
 
 // static
 already_AddRefed<nsIInputStream>
-FileHandle::GetInputStream(const nsAString& aValue, uint64_t* aInputLength,
-                           ErrorResult& aRv)
+FileHandleBase::GetInputStream(const nsAString& aValue, uint64_t* aInputLength,
+                               ErrorResult& aRv)
 {
   NS_ConvertUTF16toUTF8 cstr(aValue);
 
@@ -809,7 +658,7 @@ FileHandle::GetInputStream(const nsAString& aValue, uint64_t* aInputLength,
   return stream.forget();
 }
 
-FinishHelper::FinishHelper(FileHandle* aFileHandle)
+FinishHelper::FinishHelper(FileHandleBase* aFileHandle)
 : mFileHandle(aFileHandle),
   mAborted(aFileHandle->mAborted)
 {
@@ -823,27 +672,16 @@ NS_IMETHODIMP
 FinishHelper::Run()
 {
   if (NS_IsMainThread()) {
-    mFileHandle->mReadyState = FileHandle::DONE;
+    mFileHandle->mReadyState = FileHandleBase::DONE;
 
     FileService* service = FileService::Get();
     if (service) {
       service->NotifyFileHandleCompleted(mFileHandle);
     }
 
-    nsCOMPtr<nsIDOMEvent> event;
-    if (mAborted) {
-      event = CreateGenericEvent(mFileHandle, NS_LITERAL_STRING("abort"),
-                                 true, false);
-    }
-    else {
-      event = CreateGenericEvent(mFileHandle, NS_LITERAL_STRING("complete"),
-                                 false, false);
-    }
-    NS_ENSURE_TRUE(event, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
-
-    bool dummy;
-    if (NS_FAILED(mFileHandle->DispatchEvent(event, &dummy))) {
-      NS_WARNING("Dispatch failed!");
+    nsresult rv = mFileHandle->OnCompleteOrAbort(mAborted);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
 
     mFileHandle = nullptr;
@@ -851,7 +689,7 @@ FinishHelper::Run()
     return NS_OK;
   }
 
-  if (mFileHandle->mMutableFile->IsInvalid()) {
+  if (mFileHandle->MutableFile()->IsInvalid()) {
     mAborted = true;
   }
 

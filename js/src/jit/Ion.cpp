@@ -36,6 +36,7 @@
 #include "jit/ParallelSafetyAnalysis.h"
 #include "jit/PerfSpewer.h"
 #include "jit/RangeAnalysis.h"
+#include "jit/ScalarReplacement.h"
 #include "jit/StupidAllocator.h"
 #include "jit/UnreachableCodeElimination.h"
 #include "jit/ValueNumbering.h"
@@ -1328,6 +1329,17 @@ OptimizeMIR(MIRGenerator *mir)
         // No spew: graph not changed.
 
         if (mir->shouldCancel("Dominator Tree"))
+            return false;
+    }
+
+    if (mir->optimizationInfo().scalarReplacementEnabled()) {
+        AutoTraceLog log(logger, TraceLogger::ScalarReplacement);
+        if (!ScalarReplacement(mir, graph))
+            return false;
+        IonSpewPass("Scalar Replacement");
+        AssertGraphCoherency(graph);
+
+        if (mir->shouldCancel("Scalar Replacement"))
             return false;
     }
 
