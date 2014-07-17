@@ -14,3 +14,16 @@ dictionary InspectorRGBTriple {
   octet g = 0;
   octet b = 0;
 };
+
+dictionary InspectorRGBATuple {
+  /*
+   * NOTE: This tuple is in the normal 0-255-sized RGB space but can be
+   * fractional and may extend outside the 0-255 range.
+   *
+   * a is in the range 0 - 1.
+   */
+  double r = 0;
+  double g = 0;
+  double b = 0;
+  double a = 1;
+};
