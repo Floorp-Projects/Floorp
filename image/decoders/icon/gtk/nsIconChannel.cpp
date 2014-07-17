@@ -122,9 +122,19 @@ moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI *aURI,
   nsresult rv;
   nsCOMPtr<nsIStringInputStream> stream =
     do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
 
+  // Prevent the leaking of buf
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    NS_Free(buf);
+    return rv;
+  }
+
+  // stream takes ownership of buf and will free it on destruction.
+  // This function cannot fail.
   rv = stream->AdoptData((char*)buf, buf_size);
+
+  // If this no longer holds then re-examine buf's lifetime.
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_NewInputStreamChannel(aChannel, aURI, stream,
