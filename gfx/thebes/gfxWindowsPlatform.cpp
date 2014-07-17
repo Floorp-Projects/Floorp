@@ -83,6 +83,8 @@ static const int kSupportedFeatureLevels[] =
 
 class GfxD2DSurfaceReporter MOZ_FINAL : public nsIMemoryReporter
 {
+    ~GfxD2DSurfaceReporter() {}
+
 public:
     NS_DECL_ISUPPORTS
 
