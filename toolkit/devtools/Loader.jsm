@@ -96,6 +96,7 @@ BuiltinProvider.prototype = {
         "devtools/touch-events": "resource://gre/modules/devtools/touch-events",
         "devtools/client": "resource://gre/modules/devtools/client",
         "devtools/pretty-fast": "resource://gre/modules/devtools/pretty-fast.js",
+        "devtools/jsbeautify": "resource://gre/modules/devtools/jsbeautify/beautify.js",
         "devtools/async-utils": "resource://gre/modules/devtools/async-utils",
         "devtools/content-observer": "resource://gre/modules/devtools/content-observer",
         "gcli": "resource://gre/modules/devtools/gcli",
@@ -151,6 +152,7 @@ SrcdirProvider.prototype = {
     let touchEventsURI = this.fileURI(OS.Path.join(toolkitDir, "touch-events"));
     let clientURI = this.fileURI(OS.Path.join(toolkitDir, "client"));
     let prettyFastURI = this.fileURI(OS.Path.join(toolkitDir), "pretty-fast.js");
+    let jsBeautifyURI = this.fileURI(OS.Path.join(toolkitDir, "jsbeautify", "beautify.js"));
     let asyncUtilsURI = this.fileURI(OS.Path.join(toolkitDir), "async-utils.js");
     let contentObserverURI = this.fileURI(OS.Path.join(toolkitDir), "content-observer.js");
     let gcliURI = this.fileURI(OS.Path.join(toolkitDir, "gcli", "source", "lib", "gcli"));
@@ -176,6 +178,7 @@ SrcdirProvider.prototype = {
         "devtools/touch-events": touchEventsURI,
         "devtools/client": clientURI,
         "devtools/pretty-fast": prettyFastURI,
+        "devtools/jsbeautify": jsBeautifyURI,
         "devtools/async-utils": asyncUtilsURI,
         "devtools/content-observer": contentObserverURI,
         "gcli": gcliURI,

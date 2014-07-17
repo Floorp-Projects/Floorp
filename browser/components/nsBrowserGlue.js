@@ -321,12 +321,14 @@ BrowserGlue.prototype = {
          // the UI has gone should be finalized in _onQuitApplicationGranted.
         this._dispose();
         break;
-#ifdef MOZ_SERVICES_HEALTHREPORT
       case "keyword-search":
         // This is very similar to code in
         // browser.js:BrowserSearch.recordSearchInHealthReport(). The code could
         // be consolidated if there is will. We need the observer in
         // nsBrowserGlue to prevent double counting.
+        let win = this.getMostRecentBrowserWindow();
+        BrowserUITelemetry.countSearchEvent("urlbar", win.gURLBar.value);
+#ifdef MOZ_SERVICES_HEALTHREPORT
         let reporter = Cc["@mozilla.org/datareporting/service;1"]
                          .getService()
                          .wrappedJSObject
@@ -344,8 +346,8 @@ BrowserGlue.prototype = {
             Cu.reportError(ex);
           }
         });
-        break;
 #endif
+        break;
       case "browser-search-engine-modified":
         if (data != "engine-default" && data != "engine-current") {
           break;
