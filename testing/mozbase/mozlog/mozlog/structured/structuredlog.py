@@ -113,13 +113,23 @@ class StructuredLogger(object):
         message is logged from this logger"""
         return self._handlers[self.name]
 
+    def log_raw(self, data):
+        if "action" not in data:
+            raise ValueError
+        data = self._make_log_data(data['action'], data)
+        self._handle_log(data)
+
     def _log_data(self, action, data=None):
         if data is None:
             data = {}
+
+        log_data = self._make_log_data(action, data)
+        self._handle_log(log_data)
+
+    def _handle_log(self, data):
         with self._lock:
-            log_data = self._make_log_data(action, data)
             for handler in self.handlers:
-                handler(log_data)
+                handler(data)
 
     def _make_log_data(self, action, data):
         all_data = {"action": action,

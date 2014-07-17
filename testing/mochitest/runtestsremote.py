@@ -2,33 +2,36 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys
-import os
-import time
-import tempfile
-import re
-import traceback
-import shutil
-import math
 import base64
+import json
+import math
+import os
+import re
+import shutil
+import sys
+import tempfile
+import traceback
 
 sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(__file__))))
 
 from automation import Automation
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
-from runtests import Mochitest
-from runtests import MochitestServer
+from runtests import Mochitest, MessageLogger, MochitestFormatter
 from mochitest_options import MochitestOptions
 
 import devicemanager
 import droid
 import manifestparser
 import mozinfo
-import mozlog
 import moznetwork
+from mozlog.structured.handlers import StreamHandler
+from mozlog.structured.structuredlog import StructuredLogger
+
+log = StructuredLogger('Mochi-Remote')
+stream_handler = StreamHandler(stream=sys.stdout, formatter=MochitestFormatter())
+log.add_handler(stream_handler)
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
-log = mozlog.getLogger('Mochi-Remote')
 
 class RemoteOptions(MochitestOptions):
 
@@ -182,19 +185,19 @@ class RemoteOptions(MochitestOptions):
         # Robocop specific options
         if options.robocopIni != "":
             if not os.path.exists(options.robocopIni):
-                log.error("Unable to find specified robocop .ini manifest '%s'", options.robocopIni)
+                log.error("Unable to find specified robocop .ini manifest '%s'" % options.robocopIni)
                 return None
             options.robocopIni = os.path.abspath(options.robocopIni)
 
         if options.robocopApk != "":
             if not os.path.exists(options.robocopApk):
-                log.error("Unable to find robocop APK '%s'", options.robocopApk)
+                log.error("Unable to find robocop APK '%s'" % options.robocopApk)
                 return None
             options.robocopApk = os.path.abspath(options.robocopApk)
 
         if options.robocopIds != "":
             if not os.path.exists(options.robocopIds):
-                log.error("Unable to find specified robocop IDs file '%s'", options.robocopIds)
+                log.error("Unable to find specified robocop IDs file '%s'" % options.robocopIds)
                 return None
             options.robocopIds = os.path.abspath(options.robocopIds)
 
@@ -225,9 +228,9 @@ class MochiRemote(Mochitest):
     _automation = None
     _dm = None
     localProfile = None
-    logLines = []
+    logMessages = []
 
-    def __init__(self, automation, devmgr, options):
+    def __init__(self, automation, devmgr, options, message_logger=None):
         self._automation = automation
         Mochitest.__init__(self)
         self._dm = devmgr
@@ -239,13 +242,15 @@ class MochiRemote(Mochitest):
         self._automation.deleteANRs()
         self.certdbNew = True
 
+        # structured logging
+        self.message_logger = message_logger or MessageLogger(logger=log)
+
     def cleanup(self, options):
         if self._dm.fileExists(self.remoteLog):
             self._dm.getFile(self.remoteLog, self.localLog)
             self._dm.removeFile(self.remoteLog)
         else:
-            log.warn("Unable to retrieve log file (%s) from remote device",
-                self.remoteLog)
+            log.warning("Unable to retrieve log file (%s) from remote device" % self.remoteLog)
         self._dm.removeDir(self.remoteProfile)
         Mochitest.cleanup(self, options)
 
@@ -295,7 +300,7 @@ class MochiRemote(Mochitest):
         ]
         options.xrePath = self.findPath(paths)
         if options.xrePath == None:
-            log.error("unable to find xulrunner path for %s, please specify with --xre-path", os.name)
+            log.error("unable to find xulrunner path for %s, please specify with --xre-path" % os.name)
             sys.exit(1)
 
         xpcshell = "xpcshell"
@@ -309,7 +314,7 @@ class MochiRemote(Mochitest):
         options.utilityPath = self.findPath(paths, xpcshell)
 
         if options.utilityPath == None:
-            log.error("unable to find utility path for %s, please specify with --utility-path", os.name)
+            log.error("unable to find utility path for %s, please specify with --utility-path" % os.name)
             sys.exit(1)
 
         xpcshell_path = os.path.join(options.utilityPath, xpcshell)
@@ -416,26 +421,28 @@ class MochiRemote(Mochitest):
     def addLogData(self):
         with open(self.localLog) as currentLog:
             data = currentLog.readlines()
-
-        restart = re.compile('0 INFO SimpleTest START.*')
-        reend = re.compile('([0-9]+) INFO TEST-START . Shutdown.*')
-        refail = re.compile('([0-9]+) INFO TEST-UNEXPECTED-FAIL.*')
         start_found = False
         end_found = False
         fail_found = False
         for line in data:
-            if reend.match(line):
+            try:
+                message = json.loads(line)
+                if not isinstance(message, dict) or not 'action' in message:
+                    continue
+            except ValueError:
+                continue
+
+            if message['action'] == 'test_end':
                 end_found = True
                 start_found = False
                 break
 
             if start_found and not end_found:
-                # Append the line without the number to increment
-                self.logLines.append(' '.join(line.split(' ')[1:]))
+                self.logMessages.append(message)
 
-            if restart.match(line):
+            if message['action'] == 'test_start':
                 start_found = True
-            if refail.match(line):
+            if 'expected' in message:
                 fail_found = True
         result = 0
         if fail_found:
@@ -452,12 +459,15 @@ class MochiRemote(Mochitest):
         incr = 1
         logFile = []
         logFile.append("0 INFO SimpleTest START")
-        for line in self.logLines:
-            if line.startswith("INFO TEST-PASS"):
-                passed += 1
-            elif line.startswith("INFO TEST-UNEXPECTED"):
+        for message in self.logMessages:
+            if 'status' not in message:
+                continue
+
+            if 'expected' in message:
                 failed += 1
-            elif line.startswith("INFO TEST-KNOWN"):
+            elif message['status'] == 'PASS':
+                passed += 1
+            elif message['status'] == 'FAIL':
                 todo += 1
             incr += 1
 
@@ -489,25 +499,25 @@ class MochiRemote(Mochitest):
         printed = 0
         for name in self._dm.listFiles(screenShotDir):
             fullName = screenShotDir + "/" + name
-            log.info("SCREENSHOT: FOUND: [%s]", fullName)
+            log.info("SCREENSHOT: FOUND: [%s]" % fullName)
             try:
                 image = self._dm.pullFile(fullName)
                 encoded = base64.b64encode(image)
-                log.info("SCREENSHOT: data:image/jpg;base64,%s", encoded)
+                log.info("SCREENSHOT: data:image/jpg;base64,%s" % encoded)
                 printed += 1
             except:
                 log.info("SCREENSHOT: Could not be parsed")
                 pass
 
-        log.info("SCREENSHOT: TOTAL PRINTED: [%s]", printed)
+        log.info("SCREENSHOT: TOTAL PRINTED: [%s]" % printed)
 
     def printDeviceInfo(self, printLogcat=False):
         try:
             if printLogcat:
                 logcat = self._dm.getLogcat(filterOutRegexps=fennecLogcatFilters)
-                log.info('\n'+(''.join(logcat)))
-            log.info("Device info: %s", self._dm.getInfo())
-            log.info("Test root: %s", self._dm.deviceRoot)
+                log.info('\n' + ''.join(logcat).decode('utf-8', 'replace'))
+            log.info("Device info: %s" % self._dm.getInfo())
+            log.info("Test root: %s" % self._dm.deviceRoot)
         except devicemanager.DMError:
             log.warn("Error getting device information")
 
@@ -528,9 +538,9 @@ class MochiRemote(Mochitest):
             for key, value in browserEnv.items():
                 try:
                     value.index(',')
-                    log.error("buildRobotiumConfig: browserEnv - Found a ',' in our value, unable to process value. key=%s,value=%s", key, value)
-                    log.error("browserEnv=%s", browserEnv)
-                except ValueError, e:
+                    log.error("buildRobotiumConfig: browserEnv - Found a ',' in our value, unable to process value. key=%s,value=%s" % (key, value))
+                    log.error("browserEnv=%s" % browserEnv)
+                except ValueError:
                     envstr += "%s%s=%s" % (delim, key, value)
                     delim = ","
 
@@ -558,10 +568,85 @@ class MochiRemote(Mochitest):
         # it trying to set up ssltunnel as well
         kwargs['runSSLTunnel'] = False
 
+        if 'quiet' in kwargs:
+            kwargs.pop('quiet')
+
         return self._automation.runApp(*args, **kwargs)
 
+class RobocopMochiRemote(MochiRemote):
+    """This class maintains compatibility with the robocop logging system
+    that is still unstructured."""
+
+    def addLogData(self):
+        with open(self.localLog) as currentLog:
+            data = currentLog.readlines()
+
+        restart = re.compile('SimpleTest START.*')
+        reend = re.compile('TEST-START . Shutdown.*')
+        refail = re.compile('TEST-UNEXPECTED-FAIL.*')
+        start_found = False
+        end_found = False
+        fail_found = False
+        for line in data:
+            if reend.match(line):
+                end_found = True
+                start_found = False
+                break
+
+            if start_found and not end_found:
+                self.logMessages.append(line)
+
+            if restart.match(line):
+                start_found = True
+            if refail.match(line):
+                fail_found = True
+        result = 0
+        if fail_found:
+            result = 1
+        if not end_found:
+            log.error("Automation Error: Missing end of test marker (process crashed?)")
+            result = 1
+        return result
+
+    def printLog(self):
+        passed = 0
+        failed = 0
+        todo = 0
+        incr = 1
+        logFile = []
+        logFile.append("0 INFO SimpleTest START")
+        for line in self.logMessages:
+            if line.startswith("TEST-PASS"):
+                passed += 1
+            elif line.startswith("TEST-UNEXPECTED"):
+                failed += 1
+            elif line.startswith("TEST-KNOWN"):
+                todo += 1
+            incr += 1
+
+        logFile.append("%s INFO TEST-START | Shutdown" % incr)
+        incr += 1
+        logFile.append("%s INFO Passed: %s" % (incr, passed))
+        incr += 1
+        logFile.append("%s INFO Failed: %s" % (incr, failed))
+        incr += 1
+        logFile.append("%s INFO Todo: %s" % (incr, todo))
+        incr += 1
+        logFile.append("%s INFO SimpleTest FINISHED" % incr)
+
+        # TODO: Consider not printing to stdout because we might be duplicating output
+        print '\n'.join(logFile)
+        with open(self.localLog, 'w') as localLog:
+            localLog.write('\n'.join(logFile))
+
+        if failed > 0:
+            return 1
+        return 0
+
 def main():
-    auto = RemoteAutomation(None, "fennec")
+    message_logger = MessageLogger(logger=log)
+    process_args = {'messageLogger': message_logger}
+    auto = RemoteAutomation(None, "fennec", processArgs=process_args)
     parser = RemoteOptions(auto)
     options, args = parser.parse_args()
 
@@ -585,7 +670,8 @@ def main():
         auto.setProduct(options.remoteProductName)
     auto.setAppName(options.remoteappname)
 
-    mochitest = MochiRemote(auto, dm, options)
+    mochitest_cls = RobocopMochiRemote if options.robocopIni != "" else MochiRemote
+    mochitest = mochitest_cls(auto, dm, options, message_logger)
 
     options = parser.verifyOptions(options, mochitest)
     if (options == None):
@@ -628,6 +714,8 @@ def main():
         my_tests = tests
         for test in robocop_tests:
             tests.append(test['name'])
+        # suite_start message when running robocop tests
+        log.suite_start(tests)
 
         if options.totalChunks:
             tests_per_chunk = math.ceil(len(tests) / (options.totalChunks * 1.0))
@@ -636,7 +724,7 @@ def main():
             if end > len(tests):
                 end = len(tests)
             my_tests = tests[start:end]
-            log.info("Running tests %d-%d/%d", start+1, end, len(tests))
+            log.info("Running tests %d-%d/%d" % (start+1, end, len(tests)))
 
         dm.removeFile(os.path.join(deviceRoot, "fennec_ids.txt"))
         fennec_ids = os.path.abspath(os.path.join(SCRIPT_DIR, "fennec_ids.txt"))
@@ -705,7 +793,7 @@ def main():
                 dm.recordLogcat()
                 result = mochitest.runTests(options)
                 if result != 0:
-                    log.error("runTests() exited with code %s", result)
+                    log.error("runTests() exited with code %s" % result)
                 log_result = mochitest.addLogData()
                 if result != 0 or log_result != 0:
                     mochitest.printDeviceInfo(printLogcat=True)
@@ -734,7 +822,7 @@ def main():
                     if (options.dm_trans == "sut"):
                         dm._runCmds([{"cmd": " ".join(cmd_del)}])
         if retVal is None:
-            log.warn("No tests run. Did you pass an invalid TEST_PATH?")
+            log.warning("No tests run. Did you pass an invalid TEST_PATH?")
             retVal = 1
         else:
             # if we didn't have some kind of error running the tests, make

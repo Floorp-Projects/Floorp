@@ -10,7 +10,7 @@ TestRunner.logger = LogController;
 /* Helper function */
 parseQueryString = function(encodedString, useArrays) {
   // strip a leading '?' from the encoded string
-  var qstr = (encodedString[0] == "?") ? encodedString.substring(1) : 
+  var qstr = (encodedString[0] == "?") ? encodedString.substring(1) :
                                          encodedString;
   var pairs = qstr.replace(/\+/g, "%20").split(/(\&amp\;|\&\#38\;|\&#x26;|\&)/);
   var o = {};
@@ -92,7 +92,7 @@ var consoleLevel = params.consoleLevel || null;
 // repeat tells us how many times to repeat the tests
 if (params.repeat) {
   TestRunner.repeat = params.repeat;
-} 
+}
 
 if (params.runUntilFailure) {
   TestRunner.runUntilFailure = true;
@@ -135,17 +135,14 @@ if (params.dumpDMDAfterTest) {
   TestRunner.dumpDMDAfterTest = true;
 }
 
-if (params.quiet) {
-  TestRunner.quiet = true;
-}
-
 // Log things to the console if appropriate.
 TestRunner.logger.addListener("dumpListener", consoleLevel + "", function(msg) {
-  dump(msg.num + " " + msg.level + " " + msg.info.join(' ') + "\n");
+  var data = formatLogMessage(msg);
+  dump(data);
 });
 
 var gTestList = [];
-var RunSet = {}
+var RunSet = {};
 RunSet.runall = function(e) {
   // Filter tests to include|exclude tests based on data in params.filter.
   // This allows for including or excluding tests from the gTestList
@@ -190,7 +187,7 @@ RunSet.reloadAndRunAll = function(e) {
     window.location.href += "&autorun=1";
   } else {
     window.location.href += "?autorun=1";
-  }  
+  }
 };
 
 // UI Stuff
@@ -245,7 +242,7 @@ function hookupTests(testList) {
   }
 
   document.getElementById('runtests').onclick = RunSet.reloadAndRunAll;
-  document.getElementById('toggleNonTests').onclick = toggleNonTests; 
+  document.getElementById('toggleNonTests').onclick = toggleNonTests;
   // run automatically if autorun specified
   if (params.autorun) {
     RunSet.runall();
