@@ -83,7 +83,7 @@ struct HashSymbolsByDescription
  * This must be a typedef for the benefit of GCC 4.4.6 (used to build B2G for Ice
  * Cream Sandwich).
  */
-typedef HashSet<JS::Symbol *, HashSymbolsByDescription, SystemAllocPolicy> SymbolHashSet;
+typedef HashSet<ReadBarrieredSymbol, HashSymbolsByDescription, SystemAllocPolicy> SymbolHashSet;
 
 /*
  * The runtime-wide symbol registry, used to implement Symbol.for().

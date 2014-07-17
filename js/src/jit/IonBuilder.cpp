@@ -7559,7 +7559,7 @@ MIRTypeForTypedArrayRead(Scalar::Type arrayType, bool observedDouble)
       case Scalar::Uint32:
         return observedDouble ? MIRType_Double : MIRType_Int32;
       case Scalar::Float32:
-        return (LIRGenerator::allowFloat32Optimizations()) ? MIRType_Float32 : MIRType_Double;
+        return MIRType_Float32;
       case Scalar::Float64:
         return MIRType_Double;
       default:

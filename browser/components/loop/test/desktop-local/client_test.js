@@ -91,7 +91,7 @@ describe("loop.Client", function() {
       it("should note the call url expiry when the request succeeds", function() {
         var callUrlData = {
           "callUrl": "fakeCallUrl",
-          "expiresAt": 60
+          "expiresAt": 6000
         };
 
         // Sets up the hawkRequest stub to trigger the callback with no error
@@ -101,10 +101,9 @@ describe("loop.Client", function() {
 
         client.requestCallUrl("foo", callback);
 
-        // expiresAt is in hours, and noteCallUrlExpiry wants seconds.
         sinon.assert.calledOnce(mozLoop.noteCallUrlExpiry);
         sinon.assert.calledWithExactly(mozLoop.noteCallUrlExpiry,
-          60 * 60 * 60);
+          6000);
       });
 
       it("should send an error when the request fails", function() {

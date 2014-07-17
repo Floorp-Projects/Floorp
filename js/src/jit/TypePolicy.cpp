@@ -777,15 +777,11 @@ StoreTypedArrayPolicy::adjustValueInput(TempAllocator &alloc, MInstruction *ins,
         JS_ASSERT(value->type() == MIRType_Int32);
         break;
       case Scalar::Float32:
-        if (LIRGenerator::allowFloat32Optimizations()) {
-            if (value->type() != MIRType_Float32) {
-                value = MToFloat32::New(alloc, value);
-                ins->block()->insertBefore(ins, value->toInstruction());
-            }
-            break;
+        if (value->type() != MIRType_Float32) {
+            value = MToFloat32::New(alloc, value);
+            ins->block()->insertBefore(ins, value->toInstruction());
         }
-        // Fallthrough: if the LIRGenerator cannot directly store Float32, it will expect the
-        // stored value to be a double.
+        break;
       case Scalar::Float64:
         if (value->type() != MIRType_Double) {
             value = MToDouble::New(alloc, value);

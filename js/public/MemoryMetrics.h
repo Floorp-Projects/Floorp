@@ -212,8 +212,10 @@ struct GCSizes
 struct StringInfo
 {
 #define FOR_EACH_SIZE(macro) \
-    macro(Strings, IsLiveGCThing,  gcHeap) \
-    macro(Strings, NotLiveGCThing, mallocHeap) \
+    macro(Strings, IsLiveGCThing,  gcHeapLatin1) \
+    macro(Strings, IsLiveGCThing,  gcHeapTwoByte) \
+    macro(Strings, NotLiveGCThing, mallocHeapLatin1) \
+    macro(Strings, NotLiveGCThing, mallocHeapTwoByte)
 
     StringInfo()
       : FOR_EACH_SIZE(ZERO_SIZE)

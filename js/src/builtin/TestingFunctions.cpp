@@ -291,7 +291,9 @@ static const struct ParamPair {
     {"gcBytes",             JSGC_BYTES},
     {"gcNumber",            JSGC_NUMBER},
     {"sliceTimeBudget",     JSGC_SLICE_TIME_BUDGET},
-    {"markStackLimit",      JSGC_MARK_STACK_LIMIT}
+    {"markStackLimit",      JSGC_MARK_STACK_LIMIT},
+    {"minEmptyChunkCount",  JSGC_MIN_EMPTY_CHUNK_COUNT},
+    {"maxEmptyChunkCount",  JSGC_MAX_EMPTY_CHUNK_COUNT}
 };
 
 // Keep this in sync with above params.
