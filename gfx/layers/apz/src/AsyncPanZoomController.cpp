@@ -2607,7 +2607,7 @@ AsyncPanZoomController::StartNewTouchBlock(bool aCopyAllowedTouchBehaviorFromCur
   // See corresponding comment in ProcessPendingInputBlocks.
   while (!mTouchBlockQueue.IsEmpty()) {
     if (mTouchBlockQueue[0]->IsReadyForHandling() && !mTouchBlockQueue[0]->HasEvents()) {
-      APZC_LOG("%p discarding depleted touch block %p\n", this, mTouchBlockQueue[0]);
+      APZC_LOG("%p discarding depleted touch block %p\n", this, mTouchBlockQueue[0].get());
       mTouchBlockQueue.RemoveElementAt(0);
     } else {
       break;
