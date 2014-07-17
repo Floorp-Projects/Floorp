@@ -304,16 +304,8 @@ let MediaRuleActor = protocol.ActorClass({
 
     this._matchesChange = this._matchesChange.bind(this);
 
-    this.line = 0;
-    this.column = 0;
-
-    // We can't get the line of the @media rule itself, so get the line of
-    // the first rule in the media block. See bug 591303.
-    let firstRule = this.rawRule.cssRules[0];
-    if (firstRule && firstRule instanceof Ci.nsIDOMCSSStyleRule) {
-      this.line = DOMUtils.getRuleLine(firstRule);
-      this.column = DOMUtils.getRuleColumn(firstRule);
-    }
+    this.line = DOMUtils.getRuleLine(aMediaRule);
+    this.column = DOMUtils.getRuleColumn(aMediaRule);
 
     try {
       this.mql = this.window.matchMedia(aMediaRule.media.mediaText);
