@@ -249,8 +249,12 @@ public class RecentTabsPanel extends HomeFragment
             public void run() {
                 mClosedTabs = closedTabs;
 
-                // Reload the cursor to show recently closed tabs.
-                getLoaderManager().restartLoader(LOADER_ID_RECENT_TABS, null, mCursorLoaderCallbacks);
+                // The fragment might have been detached before this code
+                // runs in the UI thread.
+                if (getActivity() != null) {
+                    // Reload the cursor to show recently closed tabs.
+                    getLoaderManager().restartLoader(LOADER_ID_RECENT_TABS, null, mCursorLoaderCallbacks);
+                }
             }
         });
     }
