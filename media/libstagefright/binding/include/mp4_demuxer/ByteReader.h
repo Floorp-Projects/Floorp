@@ -6,6 +6,7 @@
 #define BYTE_READER_H_
 
 #include "mozilla/Vector.h"
+#include "nsTArray.h"
 
 namespace mp4_demuxer
 {
@@ -13,7 +14,7 @@ namespace mp4_demuxer
 class ByteReader
 {
 public:
-  ByteReader(mozilla::Vector<uint8_t>& aData)
+  ByteReader(const mozilla::Vector<uint8_t>& aData)
     : mPtr(&aData[0]), mRemaining(aData.length())
   {
   }
@@ -70,6 +71,31 @@ public:
     mPtr += aCount;
 
     return result;
+  }
+
+  template <typename T> bool CanReadType() { return mRemaining >= sizeof(T); }
+
+  template <typename T> T ReadType()
+  {
+    auto ptr = Read(sizeof(T));
+    if (!ptr) {
+      MOZ_ASSERT(false);
+      return 0;
+    }
+    return *reinterpret_cast<const T*>(ptr);
+  }
+
+  template <typename T>
+  bool ReadArray(nsTArray<T>& aDest, size_t aLength)
+  {
+    auto ptr = Read(aLength * sizeof(T));
+    if (!ptr) {
+      return false;
+    }
+
+    aDest.Clear();
+    aDest.AppendElements(reinterpret_cast<const T*>(ptr), aLength);
+    return true;
   }
 
 private:
