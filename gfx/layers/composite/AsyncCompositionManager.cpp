@@ -141,8 +141,13 @@ static void
 TranslateShadowLayer2D(Layer* aLayer,
                        const gfxPoint& aTranslation)
 {
+  // This layer might also be a scrollable layer and have an async transform.
+  // To make sure we don't clobber that, we start with the shadow transform.
+  // Any adjustments to the shadow transform made in this function in previous
+  // frames have been cleared in ClearAsyncTransforms(), so such adjustments
+  // will not compound over successive frames.
   Matrix layerTransform;
-  if (!GetBaseTransform2D(aLayer, &layerTransform)) {
+  if (!aLayer->GetLocalTransform().Is2D(&layerTransform)) {
     return;
   }
 
@@ -894,6 +899,18 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
                             aLayer->GetLocalTransform(), fixedLayerMargins);
 }
 
+void
+ClearAsyncTransforms(Layer* aLayer)
+{
+  if (!aLayer->AsLayerComposite()->GetShadowTransformSetByAnimation()) {
+    aLayer->AsLayerComposite()->SetShadowTransform(aLayer->GetBaseTransform());
+  }
+  for (Layer* child = aLayer->GetFirstChild();
+      child; child = child->GetNextSibling()) {
+    ClearAsyncTransforms(child);
+  }
+}
+
 bool
 AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
 {
@@ -908,6 +925,12 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
   // NB: we must sample animations *before* sampling pan/zoom
   // transforms.
   bool wantNextFrame = SampleAnimations(root, aCurrentFrame);
+
+  // Clear any async transforms (not due to animations) set in previous frames.
+  // This is necessary because some things called by
+  // ApplyAsyncContentTransformToTree (in particular, TranslateShadowLayer2D),
+  // add to the shadow transform rather than overwriting it.
+  ClearAsyncTransforms(root);
 
   // FIXME/bug 775437: unify this interface with the ~native-fennec
   // derived code
