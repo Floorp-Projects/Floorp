@@ -50,6 +50,11 @@ ValueNumberer::VisibleValues::ValueHasher::hash(Lookup ins)
 bool
 ValueNumberer::VisibleValues::ValueHasher::match(Key k, Lookup l)
 {
+    // If one of the instructions depends on a store, and the other instruction
+    // does not depend on the same store, the instructions are not congruent.
+    if (k->dependency() != l->dependency())
+        return false;
+
     return k->congruentTo(l); // Ask the values themselves what they think.
 }
 
@@ -406,19 +411,15 @@ ValueNumberer::leader(MDefinition *def)
         // Look for a match.
         VisibleValues::AddPtr p = values_.findLeaderForAdd(def);
         if (p) {
-            // We found a congruent value.
             MDefinition *rep = *p;
-            if (rep->block()->dominates(def->block()) &&
-                rep->dependency() == def->dependency())
-            {
-                // It dominates and has the same dependency. Use it!
+            if (rep->block()->dominates(def->block())) {
+                // We found a dominating congruent value.
                 MOZ_ASSERT(!rep->isInWorklist(), "Dead value in set");
                 return rep;
             }
 
-            // The congruent value doesn't dominate or it has a different
-            // dependency. It won't be suitable for replacing anything else
-            // we'll see in this dominator tree walk, so overwrite it.
+            // The congruent value doesn't dominate. It never will again in this
+            // dominator tree, so overwrite it.
             values_.overwrite(p, def);
         } else {
             // No match. Add a new entry.
