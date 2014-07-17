@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_File_h
-#define mozilla_dom_File_h
+#ifndef mozilla_dom_indexeddb_filesnapshot_h__
+#define mozilla_dom_indexeddb_filesnapshot_h__
 
 #include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
@@ -15,45 +15,45 @@
 
 namespace mozilla {
 namespace dom {
+namespace indexedDB {
 
-class FileHandle;
-class File;
+class IDBFileHandle;
 
-class FileImpl : public DOMFileImplBase
+class FileImplSnapshot : public DOMFileImplBase
 {
-  friend class File;
-
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  // Create as a file
-  FileImpl(const nsAString& aName, const nsAString& aContentType,
-           uint64_t aLength, nsIFile* aFile, FileHandle* aFileHandle);
-
   // Create as a stored file
-  FileImpl(const nsAString& aName, const nsAString& aContentType,
-           uint64_t aLength, nsIFile* aFile, FileHandle* aFileHandle,
-           indexedDB::FileInfo* aFileInfo);
+  FileImplSnapshot(const nsAString& aName, const nsAString& aContentType,
+                   uint64_t aLength, nsIFile* aFile, IDBFileHandle* aFileHandle,
+                   FileInfo* aFileInfo);
 
   // Overrides
-  virtual nsresult GetMozFullPathInternal(nsAString& aFullPath) MOZ_OVERRIDE;
+  virtual nsresult
+  GetMozFullPathInternal(nsAString& aFullPath) MOZ_OVERRIDE;
 
-  virtual nsresult GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
+  virtual nsresult
+  GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
 
-  virtual void Unlink() MOZ_OVERRIDE;
-  virtual void Traverse(nsCycleCollectionTraversalCallback &aCb) MOZ_OVERRIDE;
+  virtual void
+  Unlink() MOZ_OVERRIDE;
 
-  virtual bool IsCCed() const MOZ_OVERRIDE
+  virtual void
+  Traverse(nsCycleCollectionTraversalCallback &aCb) MOZ_OVERRIDE;
+
+  virtual bool
+  IsCCed() const MOZ_OVERRIDE
   {
     return true;
   }
 
 protected:
   // Create slice
-  FileImpl(const FileImpl* aOther, uint64_t aStart, uint64_t aLength,
-           const nsAString& aContentType);
+  FileImplSnapshot(const FileImplSnapshot* aOther, uint64_t aStart,
+                   uint64_t aLength, const nsAString& aContentType);
 
-  virtual ~FileImpl();
+  virtual ~FileImplSnapshot();
 
   virtual already_AddRefed<nsIDOMBlob>
   CreateSlice(uint64_t aStart, uint64_t aLength,
@@ -62,7 +62,7 @@ protected:
   virtual bool
   IsStoredFile() const MOZ_OVERRIDE
   {
-    return mStoredFile;
+    return true;
   }
 
   virtual bool
@@ -79,13 +79,13 @@ protected:
 
 private:
   nsCOMPtr<nsIFile> mFile;
-  nsRefPtr<FileHandle> mFileHandle;
+  nsRefPtr<IDBFileHandle> mFileHandle;
 
   bool mWholeFile;
-  bool mStoredFile;
 };
 
+} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_File_h
+#endif // mozilla_dom_indexeddb_filesnapshot_h__

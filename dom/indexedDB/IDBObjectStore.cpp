@@ -14,8 +14,8 @@
 #include <algorithm>
 #include "jsfriendapi.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/IDBMutableFileBinding.h"
 #include "mozilla/dom/nsIContentParent.h"
-#include "mozilla/dom/MutableFileBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ipc/Blob.h"
@@ -1573,13 +1573,13 @@ IDBObjectStore::StructuredCloneWriteCallback(JSContext* aCx,
   IDBTransaction* transaction = cloneWriteInfo->mTransaction;
   FileManager* fileManager = transaction->Database()->Manager();
 
-  MutableFile* mutableFile = nullptr;
-  if (NS_SUCCEEDED(UNWRAP_OBJECT(MutableFile, aObj, mutableFile))) {
+  IDBMutableFile* mutableFile = nullptr;
+  if (NS_SUCCEEDED(UNWRAP_OBJECT(IDBMutableFile, aObj, mutableFile))) {
     nsRefPtr<FileInfo> fileInfo = mutableFile->GetFileInfo();
+    MOZ_ASSERT(fileInfo);
 
-    // Throw when trying to store non IDB mutable files or IDB mutable files
-    // across databases.
-    if (!fileInfo || fileInfo->Manager() != fileManager) {
+    // Throw when trying to store mutable files across databases.
+    if (fileInfo->Manager() != fileManager) {
       return false;
     }
 
