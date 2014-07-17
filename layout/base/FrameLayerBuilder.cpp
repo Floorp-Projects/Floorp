@@ -293,7 +293,7 @@ public:
   {
     if (!mAllDrawingAbove) {
       mDrawAboveRegion.Or(mDrawAboveRegion, aAbove);
-      mDrawAboveRegion.SimplifyOutward(4);
+      mDrawAboveRegion.SimplifyOutward(8);
     }
   }
 
@@ -301,7 +301,7 @@ public:
   {
     if (!mAllDrawingAbove) {
       mVisibleAboveRegion.Or(mVisibleAboveRegion, aAbove);
-      mVisibleAboveRegion.SimplifyOutward(4);
+      mVisibleAboveRegion.SimplifyOutward(8);
     }
   }
 
@@ -312,11 +312,11 @@ public:
     } else {
       mVisibleAboveRegion.Or(mVisibleAboveRegion, aOther->mVisibleAboveRegion);
       mVisibleAboveRegion.Or(mVisibleAboveRegion, aOther->mVisibleRegion);
-      mVisibleAboveRegion.SimplifyOutward(4);
+      mVisibleAboveRegion.SimplifyOutward(8);
       mDrawAboveRegion.Or(mDrawAboveRegion, aOther->mDrawAboveRegion);
       mDrawAboveRegion.Or(mDrawAboveRegion, aOther->mDrawRegion);
-      mDrawAboveRegion.SimplifyOutward(4);
-   }
+      mDrawAboveRegion.SimplifyOutward(8);
+    }
   }
 
   void SetAllDrawingAbove()
