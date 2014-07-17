@@ -59,6 +59,8 @@ PRLogModuleInfo* sTextStoreLog = nullptr;
 
 class InputScopeImpl MOZ_FINAL : public ITfInputScope
 {
+  ~InputScopeImpl() {}
+
 public:
   InputScopeImpl(const nsTArray<InputScope>& aList)
     : mInputScopes(aList)
