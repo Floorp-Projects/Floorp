@@ -788,22 +788,16 @@ nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     clipState.Clear();
 
     nsIFrame* child = GetFirstPrincipalChild();
-    nsRect dirty = aDirtyRect;
-    dirty.ScaleInverseRoundOut(PresContext()->GetPrintPreviewScale());
-
     while (child) {
-      if (child->GetVisualOverflowRectRelativeToParent().Intersects(dirty)) {
-        child->BuildDisplayListForStackingContext(aBuilder,
-            dirty - child->GetPosition(), &content);
-        aBuilder->ResetMarkedFramesForDisplayList();
-      }
+      child->BuildDisplayListForStackingContext(aBuilder,
+          child->GetVisualOverflowRectRelativeToSelf(), &content);
+      aBuilder->ResetMarkedFramesForDisplayList();
       child = child->GetNextSibling();
     }
   }
 
   content.AppendNewToTop(new (aBuilder)
-      nsDisplayTransform(aBuilder, this, &content, content.GetVisibleRect(),
-                         ::ComputePageSequenceTransform));
+      nsDisplayTransform(aBuilder, this, &content, ::ComputePageSequenceTransform));
 
   aLists.Content()->AppendToTop(&content);
 }
