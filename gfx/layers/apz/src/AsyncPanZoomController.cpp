@@ -813,6 +813,18 @@ AsyncPanZoomController::GetTouchStartTolerance()
   return static_cast<AxisLockMode>(gfxPrefs::APZAxisLockMode());
 }
 
+void
+AsyncPanZoomController::CancelAnimationForHandoffChain()
+{
+  APZCTreeManager* treeManagerLocal = mTreeManager;
+  if (treeManagerLocal && treeManagerLocal->CancelAnimationsForOverscrollHandoffChain()) {
+    return;
+  }
+  NS_WARNING("Overscroll handoff chain was empty in CancelAnimationForHandoffChain! This should not be the case.");
+  // Graceful handling of error condition
+  CancelAnimation();
+}
+
 nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent) {
   AssertOnControllerThread();
 
@@ -830,7 +842,7 @@ nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent)
       ScheduleContentResponseTimeout();
       // However, we still want to cancel animations here because a finger has gone down
       // and we don't want to keep moving the content under the finger.
-      CancelAnimation();
+      CancelAnimationForHandoffChain();
     } else {
       // Content won't prevent-default this, so we can just pretend like we scheduled
       // a timeout and it expired. Note that we will still receive a ContentReceivedTouch
@@ -967,7 +979,7 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
       }
       // Fall through.
     case ANIMATING_ZOOM:
-      CancelAnimation();
+      CancelAnimationForHandoffChain();
       // Fall through.
     case NOTHING: {
       mX.StartTouch(point.x, aEvent.mTime);
@@ -1293,7 +1305,7 @@ nsEventStatus AsyncPanZoomController::OnPanMayBegin(const PanGestureInput& aEven
 
   mX.StartTouch(aEvent.mPanStartPoint.x, aEvent.mTime);
   mY.StartTouch(aEvent.mPanStartPoint.y, aEvent.mTime);
-  CancelAnimation();
+  CancelAnimationForHandoffChain();
 
   return nsEventStatus_eConsumeNoDefault;
 }
