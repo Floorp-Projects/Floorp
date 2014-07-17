@@ -317,7 +317,7 @@ class MacroAssemblerARM : public Assembler
     void ma_vpush(VFPRegister r);
 
     // Branches when done from within arm-specific code.
-    BufferOffset ma_b(Label *dest, Condition c = Always, bool isPatchable = false);
+    BufferOffset ma_b(Label *dest, Condition c = Always);
     void ma_bx(Register dest, Condition c = Always);
 
     void ma_b(void *target, Relocation::Kind reloc, Condition c = Always);
@@ -601,12 +601,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void ret() {
         ma_pop(pc);
-        m_buffer.markGuard();
     }
     void retn(Imm32 n) {
         // pc <- [sp]; sp += n
         ma_dtr(IsLoad, sp, n, pc, PostIndex);
-        m_buffer.markGuard();
     }
     void push(Imm32 imm) {
         ma_mov(imm, ScratchRegister);

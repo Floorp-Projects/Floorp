@@ -7,15 +7,15 @@
 #include "mozilla/dom/TimeRanges.h"
 #include "MediaResource.h"
 #include "mozilla/dom/HTMLMediaElement.h"
-#include "MediaPluginHost.h"
+#include "AndroidMediaPluginHost.h"
 #include "nsXPCOMStrings.h"
 #include "nsISeekableStream.h"
-#include "MediaPluginReader.h"
+#include "AndroidMediaReader.h"
 #include "nsIGfxInfo.h"
 #include "gfxCrashReporterUtils.h"
 #include "prmem.h"
 #include "prlink.h"
-#include "MediaResourceServer.h"
+#include "AndroidMediaResourceServer.h"
 #include "nsServiceManagerUtils.h"
 
 #include "MPAPI.h"
@@ -24,7 +24,7 @@
 
 #if defined(ANDROID) || defined(MOZ_WIDGET_GONK)
 #include "android/log.h"
-#define ALOG(args...)  __android_log_print(ANDROID_LOG_INFO, "MediaPluginHost" , ## args)
+#define ALOG(args...)  __android_log_print(ANDROID_LOG_INFO, "AndroidMediaPluginHost" , ## args)
 #else
 #define ALOG(args...) /* do nothing */
 #endif
@@ -213,10 +213,10 @@ static const char* GetOmxLibraryName()
 #endif
 }
 
-MediaPluginHost::MediaPluginHost() {
-  MOZ_COUNT_CTOR(MediaPluginHost);
+AndroidMediaPluginHost::AndroidMediaPluginHost() {
+  MOZ_COUNT_CTOR(AndroidMediaPluginHost);
 
-  mResourceServer = MediaResourceServer::Start();
+  mResourceServer = AndroidMediaResourceServer::Start();
 
   const char* name = GetOmxLibraryName();
   ALOG("Loading OMX Plugin: %s", name ? name : "nullptr");
@@ -246,12 +246,12 @@ MediaPluginHost::MediaPluginHost() {
   }
 }
 
-MediaPluginHost::~MediaPluginHost() {
+AndroidMediaPluginHost::~AndroidMediaPluginHost() {
   mResourceServer->Stop();
-  MOZ_COUNT_DTOR(MediaPluginHost);
+  MOZ_COUNT_DTOR(AndroidMediaPluginHost);
 }
 
-bool MediaPluginHost::FindDecoder(const nsACString& aMimeType, const char* const** aCodecs)
+bool AndroidMediaPluginHost::FindDecoder(const nsACString& aMimeType, const char* const** aCodecs)
 {
   const char *chars;
   size_t len = NS_CStringGetData(aMimeType, &chars, nullptr);
@@ -267,7 +267,7 @@ bool MediaPluginHost::FindDecoder(const nsACString& aMimeType, const char* const
   return false;
 }
 
-MPAPI::Decoder *MediaPluginHost::CreateDecoder(MediaResource *aResource, const nsACString& aMimeType)
+MPAPI::Decoder *AndroidMediaPluginHost::CreateDecoder(MediaResource *aResource, const nsACString& aMimeType)
 {
   NS_ENSURE_TRUE(aResource, nullptr);
 
@@ -299,7 +299,7 @@ MPAPI::Decoder *MediaPluginHost::CreateDecoder(MediaResource *aResource, const n
   return nullptr;
 }
 
-void MediaPluginHost::DestroyDecoder(Decoder *aDecoder)
+void AndroidMediaPluginHost::DestroyDecoder(Decoder *aDecoder)
 {
   aDecoder->DestroyDecoder(aDecoder);
   char* resource = GetResource(aDecoder);
@@ -312,19 +312,19 @@ void MediaPluginHost::DestroyDecoder(Decoder *aDecoder)
   delete aDecoder;
 }
 
-MediaPluginHost *sMediaPluginHost = nullptr;
-MediaPluginHost *GetMediaPluginHost()
+AndroidMediaPluginHost *sAndroidMediaPluginHost = nullptr;
+AndroidMediaPluginHost *GetAndroidMediaPluginHost()
 {
-  if (!sMediaPluginHost) {
-    sMediaPluginHost = new MediaPluginHost();
+  if (!sAndroidMediaPluginHost) {
+    sAndroidMediaPluginHost = new AndroidMediaPluginHost();
   }
-  return sMediaPluginHost;
+  return sAndroidMediaPluginHost;
 }
 
-void MediaPluginHost::Shutdown()
+void AndroidMediaPluginHost::Shutdown()
 {
-  delete sMediaPluginHost;
-  sMediaPluginHost = nullptr;
+  delete sAndroidMediaPluginHost;
+  sAndroidMediaPluginHost = nullptr;
 }
 
 } // namespace mozilla

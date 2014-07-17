@@ -165,8 +165,9 @@ class TabChildBase : public nsISupports,
 {
 public:
     TabChildBase();
+
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(TabChildBase)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TabChildBase)
 
     virtual nsIWebNavigation* WebNavigation() = 0;
     virtual nsIWidget* WebWidget() = 0;
@@ -188,7 +189,7 @@ public:
                                                 nsIWidget* aWidget);
 
 protected:
-    ~TabChildBase() {}
+    virtual ~TabChildBase();
     CSSSize GetPageSize(nsCOMPtr<nsIDocument> aDocument, const CSSSize& aViewport);
 
     // Get the DOMWindowUtils for the top-level window in this tab.

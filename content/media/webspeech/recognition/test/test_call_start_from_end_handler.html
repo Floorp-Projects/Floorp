@@ -20,9 +20,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
 <script type="text/javascript">
   SimpleTest.waitForExplicitFinish();
 
+  function createAudioStream() {
+    var audioTag = document.createElement("audio");
+    audioTag.src = DEFAULT_AUDIO_SAMPLE_FILE;
+
+    var stream = audioTag.mozCaptureStreamUntilEnded();
+    audioTag.play();
+
+    return stream;
+  }
+
   function endHandler(evt, sr) {
     try {
-      sr.start(); // shouldn't fail
+      sr.start(createAudioStream()); // shouldn't fail
     } catch (err) {
       ok(false, "Failed to start() from end() callback");
     }
@@ -32,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
 
   function expectExceptionHandler(evt, sr) {
     try {
-      sr.start();
+      sr.start(createAudioStream());
     } catch (err) {
       is(err.name, "InvalidStateError");
       return;
@@ -43,8 +53,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
 
   performTest({
     eventsToRequest: [
-      'EVENT_START',
-      'EVENT_AUDIO_DATA',
       'EVENT_RECOGNITIONSERVICE_FINAL_RESULT'
     ],
     expectedEvents: {

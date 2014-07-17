@@ -103,20 +103,27 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // We read from the pipe into this buffer
   char input_buf_[Channel::kReadBufferSize];
 
+  // We want input_cmsg_buf_ to be big enough to hold
+  // CMSG_SPACE(Channel::kReadBufferSize) bytes (see the comment below for an
+  // explanation of where Channel::kReadBufferSize comes from). However,
+  // CMSG_SPACE is apparently not a constant on Macs, so we can't use it in the
+  // array size. Consequently, we pick a number here that is at least
+  // CMSG_SPACE(0) on all platforms. And we assert at runtime, in
+  // Channel::ChannelImpl::Init, that it's big enough.
   enum {
-    // We assume a worst case: kReadBufferSize bytes of messages, where each
-    // message has no payload and a full complement of descriptors.
-    MAX_READ_FDS = (Channel::kReadBufferSize / sizeof(IPC::Message::Header)) *
-                   FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE
+    kControlBufferSlopBytes = 32
   };
 
-  // This is a control message buffer large enough to hold kMaxReadFDs
-#if defined(OS_MACOSX) || defined(OS_NETBSD)
-  // TODO(agl): OSX appears to have non-constant CMSG macros!
-  char input_cmsg_buf_[1024];
-#else
-  char input_cmsg_buf_[CMSG_SPACE(sizeof(int) * MAX_READ_FDS)];
-#endif
+  // This is a control message buffer large enough to hold all the file
+  // descriptors that will be read in when reading Channel::kReadBufferSize
+  // bytes of data. Message::WriteFileDescriptor always writes one word of
+  // data for every file descriptor added to the message, so kReadBufferSize
+  // bytes of data can never be accompanied by more than
+  // kReadBufferSize / sizeof(int) file descriptors. Since a file descriptor
+  // takes sizeof(int) bytes, the control buffer must be
+  // Channel::kReadBufferSize bytes. We add kControlBufferSlopBytes bytes
+  // for the control header.
+  char input_cmsg_buf_[Channel::kReadBufferSize + kControlBufferSlopBytes];
 
   // Large messages that span multiple pipe buffers, get built-up using
   // this buffer.

@@ -205,7 +205,7 @@ WMFVideoMFTManager::ConfigureVideoFrameGeometry()
   mVideoHeight = height;
   mPictureRegion = pictureRegion;
 
-  LOG("WMFReader frame geometry frame=(%u,%u) stride=%u picture=(%d, %d, %d, %d) display=(%d,%d) PAR=%d:%d",
+  LOG("WMFVideoMFTManager frame geometry frame=(%u,%u) stride=%u picture=(%d, %d, %d, %d) display=(%d,%d) PAR=%d:%d",
       width, height,
       mVideoStride,
       mPictureRegion.x, mPictureRegion.y, mPictureRegion.width, mPictureRegion.height,

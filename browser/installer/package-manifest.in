@@ -746,8 +746,8 @@
 @BINPATH@/components/pipnss.xpt
 @BINPATH@/components/pippki.xpt
 
-; For content sandboxing
-#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+; For process sandboxing
+#if defined(XP_WIN)
 @BINPATH@/@DLL_PREFIX@sandboxbroker@DLL_SUFFIX@
 #endif
 

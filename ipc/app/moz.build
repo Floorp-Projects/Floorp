@@ -22,7 +22,7 @@ LOCAL_INCLUDES += [
     '/xpcom/base',
 ]
 
-if CONFIG['MOZ_CONTENT_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG['OS_ARCH'] == 'WINNT':
     # For sandbox includes and the include dependencies those have
     LOCAL_INCLUDES += [
         '/security',

@@ -345,6 +345,9 @@ function testTouchChanged() {
 
   window.addEventListener("touchmove", onMove, false);
 
+  // the first touchmove should always fire an event
+  sendTouchEvent(cwu, "touchmove", event, 0);
+
   // changing nothing should not fire a touchmove event
   sendTouchEvent(cwu, "touchmove", event, 0);
 
@@ -375,7 +378,7 @@ function testTouchChanged() {
   // changing nothing again
   sendTouchEvent(cwu, "touchmove", event, 0);
   
-  is(moveEvents, 6, "Six move events fired");
+  is(moveEvents, 7, "Six move events fired");
 
   window.removeEventListener("touchmove", onMove, false);
   sendTouchEvent(cwu, "touchend", event, 0);
