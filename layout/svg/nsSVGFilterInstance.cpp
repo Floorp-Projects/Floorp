@@ -292,31 +292,33 @@ GetLastResultIndex(const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs)
 int32_t
 nsSVGFilterInstance::GetOrCreateSourceAlphaIndex(nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs)
 {
-  // If the SourceAlpha index has already been created for this SVG filter,
-  // return it.
+  // If the SourceAlpha index has already been determined or created for this
+  // SVG filter, just return it.
   if (mSourceAlphaAvailable)
     return mSourceAlphaIndex;
+
+  // If this is the first filter in the chain, we can just use the
+  // kPrimitiveIndexSourceAlpha keyword to refer to the SourceAlpha of the
+  // original image.
+  if (mSourceGraphicIndex < 0) {
+    mSourceAlphaIndex = FilterPrimitiveDescription::kPrimitiveIndexSourceAlpha;
+    mSourceAlphaAvailable = true;
+    return mSourceAlphaIndex;
+  }
 
   // Otherwise, create a primitive description to turn the previous filter's
   // output into a SourceAlpha input.
   FilterPrimitiveDescription descr(PrimitiveType::ToAlpha);
   descr.SetInputPrimitive(0, mSourceGraphicIndex);
 
-  if (mSourceGraphicIndex >= 0) {
-    const FilterPrimitiveDescription& sourcePrimitiveDescr =
-      aPrimitiveDescrs[mSourceGraphicIndex];
-    descr.SetPrimitiveSubregion(sourcePrimitiveDescr.PrimitiveSubregion());
-    descr.SetIsTainted(sourcePrimitiveDescr.IsTainted());
+  const FilterPrimitiveDescription& sourcePrimitiveDescr =
+    aPrimitiveDescrs[mSourceGraphicIndex];
+  descr.SetPrimitiveSubregion(sourcePrimitiveDescr.PrimitiveSubregion());
+  descr.SetIsTainted(sourcePrimitiveDescr.IsTainted());
 
-    ColorSpace colorSpace = sourcePrimitiveDescr.OutputColorSpace();
-    descr.SetInputColorSpace(0, colorSpace);
-    descr.SetOutputColorSpace(colorSpace);
-  } else {
-    descr.SetPrimitiveSubregion(ToIntRect(mFilterSpaceBounds));
-    descr.SetIsTainted(true);
-    descr.SetInputColorSpace(0, ColorSpace::SRGB);
-    descr.SetOutputColorSpace(ColorSpace::SRGB);
-  }
+  ColorSpace colorSpace = sourcePrimitiveDescr.OutputColorSpace();
+  descr.SetInputColorSpace(0, colorSpace);
+  descr.SetOutputColorSpace(colorSpace);
 
   aPrimitiveDescrs.AppendElement(descr);
   mSourceAlphaIndex = aPrimitiveDescrs.Length() - 1;
