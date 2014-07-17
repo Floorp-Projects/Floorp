@@ -155,7 +155,8 @@ public:
   }
 
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                 nsRegion* aVisibleRegion) MOZ_OVERRIDE
+                                 nsRegion* aVisibleRegion,
+                                 const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE
   {
     return NS_GET_A(mColor) > 0;
   }
