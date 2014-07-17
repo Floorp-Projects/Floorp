@@ -246,6 +246,12 @@ NS_NewChannelInternal(nsIChannel**           outChannel,
 
   channel->SetLoadInfo(aLoadInfo);
 
+  // If we're sandboxed, make sure to clear any owner the channel
+  // might already have.
+  if (aLoadInfo->GetLoadingSandboxed()) {
+    channel->SetOwner(nullptr);
+  }
+
   channel.forget(outChannel);
   return NS_OK;
 }
