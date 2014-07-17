@@ -4,6 +4,8 @@
 
 "use strict";
 
+let {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+
 /**
  * This frame script is only loaded for sessionstore mochitests. It contains
  * a bunch of utility functions used to test form data collection and

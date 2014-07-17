@@ -5,20 +5,25 @@
 "use strict";
 
 // Tests that various mutations to the dom update the markup view correctly.
-// The test for comparing the markup view to the real dom is a bit weird:
-// - Select the text in the markup view
-// - Parse that as innerHTML in a document we've created for the purpose.
-// - Remove extraneous whitespace in that tree
-// - Compare it to the real dom with isEqualNode.
 
 const TEST_URL = TEST_URL_ROOT + "doc_markup_mutation.html";
-// All the mutation types we want to test.
+
+// Mutation tests. Each entry in the array has the following properties:
+// - desc: for logging only
+// - test: a function supposed to mutate the DOM
+// - check: a function supposed to test that the mutation was handled
 const TEST_DATA = [
   {
     desc: "Adding an attribute",
     test: () => {
       let node1 = getNode("#node1");
       node1.setAttribute("newattr", "newattrval");
+    },
+    check: function*(inspector) {
+      let {editor} = yield getContainerForSelector("#node1", inspector);
+      ok([...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
+        return attr.textContent.trim() === "newattr=\"newattrval\"";
+      }), "newattr attribute found");
     }
   },
   {
@@ -26,6 +31,15 @@ const TEST_DATA = [
     test: () => {
       let node1 = getNode("#node1");
       node1.removeAttribute("newattr");
+    },
+    check: function*(inspector) {
+      // The markup-view is a little weird in that it doesn't remove the
+      // attribute but only hides it with display:none
+      let {editor} = yield getContainerForSelector("#node1", inspector);
+      ok([...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
+        return attr.textContent.trim() === "newattr=\"newattrval\"" &&
+               attr.style.display === "none";
+      }), "newattr attribute removed");
     }
   },
   {
@@ -33,6 +47,11 @@ const TEST_DATA = [
     test: () => {
       let node1 = getNode("#node1");
       node1.textContent = "newtext";
+    },
+    check: function*(inspector) {
+      let {children} = yield getContainerForSelector("#node1", inspector);
+      is(children.querySelector(".text").textContent.trim(), "newtext",
+        "The new textcontent was updated");
     }
   },
   {
@@ -40,6 +59,17 @@ const TEST_DATA = [
     test: () => {
       let node2 = getNode("#node2");
       node2.innerHTML = "<div><span>foo</span></div>";
+    },
+    check: function*(inspector) {
+      let container = yield getContainerForSelector("#node2", inspector);
+
+      let openTags = container.children.querySelectorAll(".open .tag");
+      is(openTags.length, 2, "There are 2 tags in node2");
+      is(openTags[0].textContent.trim(), "div", "The first tag is a div");
+      is(openTags[1].textContent.trim(), "span", "The second tag is a span");
+
+      is(container.children.querySelector(".text").textContent.trim(), "foo",
+        "The span's textcontent is correct");
     }
   },
   {
@@ -49,14 +79,27 @@ const TEST_DATA = [
       while (node4.firstChild) {
         node4.removeChild(node4.firstChild);
       }
+    },
+    check: function*(inspector) {
+      let {children} = yield getContainerForSelector("#node4", inspector);
+      is(children.innerHTML, "", "Children have been removed");
     }
   },
   {
     desc: "Appending a child to a different parent",
     test: () => {
       let node17 = getNode("#node17");
-      let node1 = getNode("#node2");
-      node1.appendChild(node17);
+      let node2 = getNode("#node2");
+      node2.appendChild(node17);
+    },
+    check: function*(inspector) {
+      let {children} = yield getContainerForSelector("#node16", inspector);
+      is(children.innerHTML, "", "Node17 has been removed from its node16 parent");
+
+      let container = yield getContainerForSelector("#node2", inspector);
+      let openTags = container.children.querySelectorAll(".open .tag");
+      is(openTags.length, 3, "There are now 3 tags in node2");
+      is(openTags[2].textContent.trim(), "p", "The third tag is node17");
     }
   },
   {
@@ -82,73 +125,46 @@ const TEST_DATA = [
 
       node1.appendChild(node20);
       node20.appendChild(node18);
+    },
+    check: function*(inspector) {
+      let {children} = yield getContainerForSelector("#node1", inspector);
+      is(children.childNodes.length, 2,
+        "Node1 now has 2 children (textnode and node20)");
+
+      let node20 = children.childNodes[1];
+      let node20Children = node20.querySelector(".children")
+      is(node20Children.childNodes.length, 2, "Node20 has 2 children (21 and 18)");
+
+      let node21 = node20Children.childNodes[0];
+      is(node21.querySelector(".children").textContent.trim(), "line21",
+        "Node21 only has a text node child");
+
+      let node18 = node20Children.childNodes[1];
+      is(node18.querySelector(".open .attreditor .attr-value").textContent.trim(),
+        "node18", "Node20's second child is indeed node18");
     }
   }
 ];
 
 let test = asyncTest(function*() {
-  info("Creating the helper tab for parsing");
-  let parseTab = yield addTab("data:text/html,<html></html>");
-  let parseDoc = content.document;
-
-  info("Creating the test tab");
-  let contentTab = yield addTab(TEST_URL);
-  let doc = content.document;
-  // Strip whitespace in the document for easier comparison
-  stripWhitespace(doc.documentElement);
-
-  let {inspector} = yield openInspector();
-  let markup = inspector.markup;
+  let {toolbox, inspector} = yield addTab(TEST_URL).then(openInspector);
 
   info("Expanding all markup-view nodes");
-  yield markup.expandAll();
+  yield inspector.markup.expandAll();
 
-  for (let step of TEST_DATA) {
-    info("Starting test: " + step.desc);
+  for (let {desc, test, check} of TEST_DATA) {
+    info("Starting test: " + desc);
 
-    info("Executing the test markup mutation, listening for inspector-updated before moving on");
-    let updated = inspector.once("inspector-updated");
-    step.test();
-    yield updated;
+    info("Executing the test markup mutation");
+    let onUpdated = inspector.once("inspector-updated");
+    let onMutation = inspector.once("markupmutation");
+    test();
+    yield onUpdated.then(onMutation);
 
     info("Expanding all markup-view nodes to make sure new nodes are imported");
-    yield markup.expandAll();
+    yield inspector.markup.expandAll();
 
-    info("Comparing the markup-view markup with the content document");
-    compareMarkup(parseDoc, inspector);
+    info("Checking the markup-view content");
+    yield check(inspector);
   }
 });
-
-function stripWhitespace(node) {
-  node.normalize();
-  let iter = node.ownerDocument.createNodeIterator(node,
-    NodeFilter.SHOW_TEXT + NodeFilter.SHOW_COMMENT, null);
-
-  while ((node = iter.nextNode())) {
-    node.nodeValue = node.nodeValue.replace(/\s+/g, '');
-    if (node.nodeType == Node.TEXT_NODE &&
-      !/[^\s]/.exec(node.nodeValue)) {
-      node.parentNode.removeChild(node);
-    }
-  }
-}
-
-function compareMarkup(parseDoc, inspector) {
-  // Grab the text from the markup panel...
-  let markupContainerEl = getContainerForRawNode("body", inspector).elt;
-  let sel = markupContainerEl.ownerDocument.defaultView.getSelection();
-  sel.selectAllChildren(markupContainerEl);
-
-  // Parse it
-  let parseNode = parseDoc.querySelector("body");
-  parseNode.outerHTML = sel;
-  parseNode = parseDoc.querySelector("body");
-
-  // Pull whitespace out of text and comment nodes, there will
-  // be minor unimportant differences.
-  stripWhitespace(parseNode);
-
-  // console.log(contentNode.innerHTML, parseNode.innerHTML);
-  ok(getNode("body").isEqualNode(parseNode),
-    "Markup panel matches what's in the content document.");
-}

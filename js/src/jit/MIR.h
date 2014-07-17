@@ -322,10 +322,10 @@ class MDefinition : public MNode
     InlineList<MUse> uses_;        // Use chain.
     uint32_t id_;                  // Instruction ID, which after block re-ordering
                                    // is sorted within a basic block.
+    uint32_t flags_;               // Bit flags.
     Range *range_;                 // Any computed range for this def.
     MIRType resultType_;           // Representation of result type.
     types::TemporaryTypeSet *resultTypeSet_; // Optional refinement of the result type.
-    uint32_t flags_;                 // Bit flags.
     union {
         MDefinition *dependency_;  // Implicit dependency (store, call, etc.) of this instruction.
                                    // Used by alias analysis, GVN and LICM.
@@ -360,13 +360,15 @@ class MDefinition : public MNode
         block_ = block;
     }
 
+    static HashNumber addU32ToHash(HashNumber hash, uint32_t data);
+
   public:
     MDefinition()
       : id_(0),
+        flags_(0),
         range_(nullptr),
         resultType_(MIRType_None),
         resultTypeSet_(nullptr),
-        flags_(0),
         dependency_(nullptr),
         trackedSite_()
     { }
@@ -2040,19 +2042,21 @@ class MCall
     static const size_t NumNonArgumentOperands = 1;
 
   protected:
-    // True if the call is for JSOP_NEW.
-    bool construct_;
     // Monomorphic cache of single target from TI, or nullptr.
     CompilerRootFunction target_;
+
     // Original value of argc from the bytecode.
     uint32_t numActualArgs_;
+
+    // True if the call is for JSOP_NEW.
+    bool construct_;
 
     bool needsArgCheck_;
 
     MCall(JSFunction *target, uint32_t numActualArgs, bool construct)
-      : construct_(construct),
-        target_(target),
+      : target_(target),
         numActualArgs_(numActualArgs),
+        construct_(construct),
         needsArgCheck_(true)
     {
         setResultType(MIRType_Value);
@@ -4078,6 +4082,11 @@ class MAtan2
     }
 
     bool possiblyCalls() const {
+        return true;
+    }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
         return true;
     }
 };
@@ -6502,14 +6511,14 @@ class MLoadElementHole
 
 class MStoreElementCommon
 {
-    bool needsBarrier_;
     MIRType elementType_;
+    bool needsBarrier_;
     bool racy_; // if true, exempted from normal data race req. during par. exec.
 
   protected:
     MStoreElementCommon()
-      : needsBarrier_(false),
-        elementType_(MIRType_Value),
+      : elementType_(MIRType_Value),
+        needsBarrier_(false),
         racy_(false)
     { }
 
@@ -8111,6 +8120,7 @@ class MLoadSlot
         return slot_;
     }
 
+    HashNumber valueHash() const;
     bool congruentTo(const MDefinition *ins) const {
         if (!ins->isLoadSlot())
             return false;
@@ -10402,6 +10412,7 @@ class MAsmJSLoadGlobalVar : public MNullaryInstruction
 
     unsigned globalDataOffset() const { return globalDataOffset_; }
 
+    HashNumber valueHash() const;
     bool congruentTo(const MDefinition *ins) const;
 
     AliasSet getAliasSet() const {
@@ -10455,6 +10466,9 @@ class MAsmJSLoadFuncPtr : public MUnaryInstruction
 
     unsigned globalDataOffset() const { return globalDataOffset_; }
     MDefinition *index() const { return getOperand(0); }
+
+    HashNumber valueHash() const;
+    bool congruentTo(const MDefinition *ins) const;
 };
 
 class MAsmJSLoadFFIFunc : public MNullaryInstruction
@@ -10476,6 +10490,9 @@ class MAsmJSLoadFFIFunc : public MNullaryInstruction
     }
 
     unsigned globalDataOffset() const { return globalDataOffset_; }
+
+    HashNumber valueHash() const;
+    bool congruentTo(const MDefinition *ins) const;
 };
 
 class MAsmJSParameter : public MNullaryInstruction

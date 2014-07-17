@@ -1480,7 +1480,7 @@ SpecialPowersAPI.prototype = {
     var res = { __exposedProps__: {} };
     var props = ["createRequest", "createCursor", "fireError", "fireSuccess",
                  "fireDone", "fireDetailedError"];
-    for (i in props) {
+    for (var i in props) {
       let prop = props[i];
       res[prop] = function() { return serv[prop].apply(serv, arguments) };
       res.__exposedProps__[prop] = "r";

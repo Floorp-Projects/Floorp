@@ -43,11 +43,6 @@ endif
 
 EXEC			= exec
 
-# Don't copy xulrunner files at install time, when using system xulrunner
-ifdef SYSTEM_LIBXUL
-  SKIP_COPY_XULRUNNER=1
-endif
-
 # ELOG prints out failed command when building silently (gmake -s). Pymake
 # prints out failed commands anyway, so ELOG just makes things worse by
 # forcing shell invocations.

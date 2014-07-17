@@ -49,7 +49,7 @@ function* runTests([win, sp]) {
 
   // Check that the information tooltips work.
   sp.setText("5");
-  yield keyOnce("show-information", " ", { shiftKey: true });
+  yield keyOnce("show-information", " ", { ctrlKey: true, shiftKey: true });
 
   // Get the information container.
   const info = editorWin.document.querySelector(".CodeMirror-Tern-information");

@@ -220,10 +220,6 @@ loop.shared.views = (function(_, OT, l10n) {
     },
 
     componentDidMount: function() {
-      this.props.model.startSession();
-    },
-
-    componentWillMount: function() {
       this.listenTo(this.props.model, "session:connected",
                                       this.startPublishing);
       this.listenTo(this.props.model, "session:stream-created",
@@ -232,9 +228,13 @@ loop.shared.views = (function(_, OT, l10n) {
                                        "session:network-disconnected",
                                        "session:ended"].join(" "),
                                        this.stopPublishing);
+
+      this.props.model.startSession();
     },
 
     componentWillUnmount: function() {
+      // Unregister all local event listeners
+      this.stopListening();
       this.hangup();
     },
 
@@ -279,20 +279,19 @@ loop.shared.views = (function(_, OT, l10n) {
         outgoing, this.publisherConfig);
 
       // Suppress OT GuM custom dialog, see bug 1018875
-      function preventOpeningAccessDialog(event) {
-        event.preventDefault();
-      }
-      this.publisher.on("accessDialogOpened", preventOpeningAccessDialog);
-      this.publisher.on("accessDenied", preventOpeningAccessDialog);
+      this.listenTo(this.publisher, "accessDialogOpened accessDenied",
+                    function(event) {
+                      event.preventDefault();
+                    });
 
-      this.publisher.on("streamCreated", function(event) {
+      this.listenTo(this.publisher, "streamCreated", function(event) {
         this.setState({
           audio: {enabled: event.stream.hasAudio},
           video: {enabled: event.stream.hasVideo}
         });
       }.bind(this));
 
-      this.publisher.on("streamDestroyed", function() {
+      this.listenTo(this.publisher, "streamDestroyed", function() {
         this.setState({
           audio: {enabled: false},
           video: {enabled: false}
@@ -322,9 +321,8 @@ loop.shared.views = (function(_, OT, l10n) {
      * Unpublishes local stream.
      */
     stopPublishing: function() {
-      // Unregister access OT GuM custom dialog listeners, see bug 1018875
-      this.publisher.off("accessDialogOpened");
-      this.publisher.off("accessDenied");
+      // Unregister listeners for publisher events
+      this.stopListening(this.publisher);
 
       this.props.model.session.unpublish(this.publisher);
     },

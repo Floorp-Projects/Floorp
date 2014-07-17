@@ -7,7 +7,7 @@
 // Test that inherited properties are treated correctly.
 
 let test = asyncTest(function*() {
-  yield addTab("data:text/html,selector text test, bug 692400");
+  yield addTab("data:text/html;charset=utf-8,selector text test, bug 692400");
 
   content.document.body.innerHTML = '<div style="margin-left:10px; font-size: 5px"><div id="innerdiv">Inner div</div></div>';
   content.document.title = "Style Inspector Inheritance Test";
