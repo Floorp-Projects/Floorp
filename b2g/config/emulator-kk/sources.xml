@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="276ce45e78b09c4a4ee643646f691d22804754c1">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="1246714f168d23d624244e352f8ba5d151a6da9a"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="09961a72e6651786d56876113673847b2f85015e"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="7f792d756385bb894fba7645da59c67fe2c804bf"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -125,10 +125,10 @@
   <default remote="caf" revision="refs/tags/android-4.4.2_r1" sync-j="4"/>
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
-  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="cf3f83a8ef13597b62fb6de7aa0cfaf5dc5de2b5"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="870b4f52ba480da34651c172141d62e7fccd113e"/>
+  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="c0e0019a6ec1a6199a9c7bc4ace041259f3b8512"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="5f184e4aa6ad784e20b4c5e6be24db4b9a848087"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="694cecf256122d0cb3b6a1a4efb4b5c7401db223"/>
-  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="effff9b06977ffaf46b45e5737f83a608b2df620"/>
+  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="97d63c256a047b491565d624aea1dd5f1f8593ea"/>
   <project name="platform/development" path="development" revision="5968ff4e13e0d696ad8d972281fc27ae5a12829b"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="0951179277915335251c5e11d242e4e1a8c2236f"/>
   <project name="darwinstreamingserver" path="system/darwinstreamingserver" remote="b2g" revision="cf85968c7f85e0ec36e72c87ceb4837a943b8af6"/>
