@@ -540,7 +540,7 @@ var gPopupBlockerObserver = {
         // xxxdz this should make the option say "Show file picker" and do it (Bug 590306)
         if (!blockedPopup.popupWindowURI)
           continue;
-        var popupURIspec = blockedPopup.popupWindowURI;
+        var popupURIspec = blockedPopup.popupWindowURI.spec;
 
         // Sometimes the popup URI that we get back from the blockedPopup
         // isn't useful (for instance, netscape.com's popup URI ends up
