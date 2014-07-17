@@ -172,6 +172,9 @@ exports.boolean = boolean;
 let object = { is: ['object', 'undefined', 'null'] };
 exports.object = object;
 
+let array = { is: ['array', 'undefined', 'null'] };
+exports.array = array;
+
 let isTruthyType = type => !(type === 'undefined' || type === 'null');
 let findTypes = v => { while (!isArray(v) && v.is) v = v.is; return v };
 

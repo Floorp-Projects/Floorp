@@ -260,7 +260,7 @@ exports.Reactor = Reactor;
  * Takes an object used as options with potential keys like 'onMessage',
  * used to be called `require('sdk/event/core').setListeners` on.
  * This strips all keys that would trigger a listener to be set.
- * 
+ *
  * @params {Object} object
  * @return {Object}
  */
@@ -273,3 +273,8 @@ function stripListeners (object) {
   }, {});
 }
 exports.stripListeners = stripListeners;
+
+const when = (target, type) => new Promise(resolve => {
+  once(target, type, resolve);
+});
+exports.when = when;
