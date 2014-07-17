@@ -33,11 +33,11 @@ function runTest() {
   // Let parent process sent message.
   // Wait for onLoad event from 'inner' iframe.
   yield;
-  
+
   postPos();
-  
+
   inner.onload = null;
-  dump("hi");
+  dump("hi\n");
   inner.contentWindow.location = "bug583889_inner2.html#id2"
   waitAsync();
   // Let parent process sent message.
