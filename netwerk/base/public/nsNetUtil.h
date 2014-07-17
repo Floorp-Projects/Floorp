@@ -83,6 +83,8 @@
 #include "nsCategoryCache.h"
 #include "nsStringStream.h"
 #include "nsIViewSourceChannel.h"
+#include "mozilla/LoadInfo.h"
+#include "nsINode.h"
 
 #include <limits>
 
@@ -186,54 +188,150 @@ NS_NewFileURI(nsIURI* *result,
     return rv;
 }
 
+/*
+ * How to create a new Channel using NS_NewChannel:
+ *  1) Please try to call NS_NewChannel providing a requesting *nsINode*
+ *  2) If no requesting nsINode is available,
+ *     call NS_NewChannel providing a requesting *nsIPrincipal*.
+ *  3) Call NS_NewChannelInternal *only* if requesting Principal and
+ *     the Node's Principal have to be different.
+ *     >> Most likely this is not the case! <<
+ *     Needs special approval!
+ */
 inline nsresult
-NS_NewChannel(nsIChannel           **result,
-              nsIURI                *uri,
-              nsIIOService          *ioService = nullptr,    // pass in nsIIOService to optimize callers
-              nsILoadGroup          *loadGroup = nullptr,
-              nsIInterfaceRequestor *callbacks = nullptr,
-              uint32_t               loadFlags = nsIRequest::LOAD_NORMAL,
-              nsIChannelPolicy      *channelPolicy = nullptr)
+NS_NewChannelInternal(nsIChannel**           outChannel,
+                      nsIURI*                aUri,
+                      nsILoadInfo*           aLoadInfo,
+                      nsIChannelPolicy*      aChannelPolicy = nullptr,
+                      nsILoadGroup*          aLoadGroup = nullptr,
+                      nsIInterfaceRequestor* aCallbacks = nullptr,
+                      nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
+                      nsIIOService*          aIoService = nullptr)
 {
-    nsresult rv;
-    nsCOMPtr<nsIIOService> grip;
-    rv = net_EnsureIOService(&ioService, grip);
-    if (ioService) {
-        nsCOMPtr<nsIChannel> chan;
-        rv = ioService->NewChannelFromURI(uri, getter_AddRefs(chan));
-        if (NS_SUCCEEDED(rv)) {
-            if (loadGroup) {
-                rv = chan->SetLoadGroup(loadGroup);
-            }
-            if (callbacks) {
-                nsresult tmp = chan->SetNotificationCallbacks(callbacks);
-                if (NS_FAILED(tmp)) {
-                    rv = tmp;
-                }
-            }
-            if (loadFlags != nsIRequest::LOAD_NORMAL) {
-                // Retain the LOAD_REPLACE load flag if set.
-                nsLoadFlags normalLoadFlags = 0;
-                chan->GetLoadFlags(&normalLoadFlags);
-                nsresult tmp = chan->SetLoadFlags(loadFlags |
-                                                  (normalLoadFlags &
-                                                   nsIChannel::LOAD_REPLACE));
-                if (NS_FAILED(tmp)) {
-                    rv = tmp;
-                }
-            }
-            if (channelPolicy) {
-                nsCOMPtr<nsIWritablePropertyBag2> props = do_QueryInterface(chan);
-                if (props) {
-                    props->SetPropertyAsInterface(NS_CHANNEL_PROP_CHANNEL_POLICY,
-                                                  channelPolicy);
-                }
-            }
-            if (NS_SUCCEEDED(rv))
-                chan.forget(result);
-        }
+  NS_ASSERTION(aLoadInfo, "Can not create channel without aLoadInfo!");
+  NS_ENSURE_ARG_POINTER(outChannel);
+
+  nsCOMPtr<nsIIOService> grip;
+  nsresult rv = net_EnsureIOService(&aIoService, grip);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIChannel> channel;
+  rv = aIoService->NewChannelFromURI(aUri, getter_AddRefs(channel));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aLoadGroup) {
+    rv = channel->SetLoadGroup(aLoadGroup);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (aCallbacks) {
+    rv = channel->SetNotificationCallbacks(aCallbacks);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (aLoadFlags != nsIRequest::LOAD_NORMAL) {
+    // Retain the LOAD_REPLACE load flag if set.
+    nsLoadFlags normalLoadFlags = 0;
+    channel->GetLoadFlags(&normalLoadFlags);
+    rv = channel->SetLoadFlags(aLoadFlags | (normalLoadFlags & nsIChannel::LOAD_REPLACE));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (aChannelPolicy) {
+    nsCOMPtr<nsIWritablePropertyBag2> props = do_QueryInterface(channel);
+    if (props) {
+      props->SetPropertyAsInterface(NS_CHANNEL_PROP_CHANNEL_POLICY, aChannelPolicy);
     }
-    return rv;
+  }
+
+  channel->SetLoadInfo(aLoadInfo);
+
+  channel.forget(outChannel);
+  return NS_OK;
+}
+
+inline nsresult
+NS_NewChannelInternal(nsIChannel**           outChannel,
+                      nsIURI*                aUri,
+                      nsINode*               aRequestingNode,
+                      nsIPrincipal*          aRequestingPrincipal,
+                      nsSecurityFlags        aSecurityFlags,
+                      nsContentPolicyType    aContentPolicyType,
+                      nsIChannelPolicy*      aChannelPolicy = nullptr,
+                      nsILoadGroup*          aLoadGroup = nullptr,
+                      nsIInterfaceRequestor* aCallbacks = nullptr,
+                      nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
+                      nsIIOService*          aIoService = nullptr)
+{
+  NS_ASSERTION(aRequestingPrincipal, "Can not create channel without a requesting Principal!");
+
+  nsCOMPtr<nsILoadInfo> loadInfo =
+    new mozilla::LoadInfo(aRequestingPrincipal,
+                          aRequestingNode,
+                          aSecurityFlags,
+                          aContentPolicyType);
+  if (!loadInfo) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  return NS_NewChannelInternal(outChannel,
+                               aUri,
+                               loadInfo,
+                               aChannelPolicy,
+                               aLoadGroup,
+                               aCallbacks,
+                               aLoadFlags,
+                               aIoService);
+}
+
+inline nsresult /* NS_NewChannelNode */
+NS_NewChannel(nsIChannel**           outChannel,
+              nsIURI*                aUri,
+              nsINode*               aRequestingNode,
+              nsSecurityFlags        aSecurityFlags,
+              nsContentPolicyType    aContentPolicyType,
+              nsIChannelPolicy*      aChannelPolicy = nullptr,
+              nsILoadGroup*          aLoadGroup = nullptr,
+              nsIInterfaceRequestor* aCallbacks = nullptr,
+              nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
+              nsIIOService*          aIoService = nullptr)
+{
+  NS_ASSERTION(aRequestingNode, "Can not create channel without a requesting Node!");
+  return NS_NewChannelInternal(outChannel,
+                               aUri,
+                               aRequestingNode,
+                               aRequestingNode->NodePrincipal(),
+                               aSecurityFlags,
+                               aContentPolicyType,
+                               aChannelPolicy,
+                               aLoadGroup,
+                               aCallbacks,
+                               aLoadFlags,
+                               aIoService);
+}
+
+inline nsresult /* NS_NewChannelPrincipal */
+NS_NewChannel(nsIChannel**           outChannel,
+              nsIURI*                aUri,
+              nsIPrincipal*          aRequestingPrincipal,
+              nsSecurityFlags        aSecurityFlags,
+              nsContentPolicyType    aContentPolicyType,
+              nsIChannelPolicy*      aChannelPolicy = nullptr,
+              nsILoadGroup*          aLoadGroup = nullptr,
+              nsIInterfaceRequestor* aCallbacks = nullptr,
+              nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
+              nsIIOService*          aIoService = nullptr)
+{
+  return NS_NewChannelInternal(outChannel,
+                               aUri,
+                               nullptr, // aRequestingNode,
+                               aRequestingPrincipal,
+                               aSecurityFlags,
+                               aContentPolicyType,
+                               aChannelPolicy,
+                               aLoadGroup,
+                               aCallbacks,
+                               aLoadFlags,
+                               aIoService);
 }
 
 // Use this function with CAUTION. It creates a stream that blocks when you
@@ -241,48 +339,149 @@ NS_NewChannel(nsIChannel           **result,
 // to implement a full blown asynchronous consumer (via nsIStreamListener) look
 // at nsIStreamLoader instead.
 inline nsresult
-NS_OpenURI(nsIInputStream       **result,
-           nsIURI                *uri,
-           nsIIOService          *ioService = nullptr,     // pass in nsIIOService to optimize callers
-           nsILoadGroup          *loadGroup = nullptr,
-           nsIInterfaceRequestor *callbacks = nullptr,
-           uint32_t               loadFlags = nsIRequest::LOAD_NORMAL,
-           nsIChannel           **channelOut = nullptr)
+NS_OpenURIInternal(nsIInputStream**       outStream,
+                   nsIURI*                aUri,
+                   nsINode*               aRequestingNode,
+                   nsIPrincipal*          aRequestingPrincipal,
+                   nsSecurityFlags        aSecurityFlags,
+                   nsContentPolicyType    aContentPolicyType,
+                   nsILoadGroup*          aLoadGroup = nullptr,
+                   nsIInterfaceRequestor* aCallbacks = nullptr,
+                   nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
+                   nsIIOService*          aIoService = nullptr,  // pass in nsIIOService to optimize callers
+                   nsIChannel**           outChannel = nullptr)
 {
-    nsresult rv;
-    nsCOMPtr<nsIChannel> channel;
-    rv = NS_NewChannel(getter_AddRefs(channel), uri, ioService,
-                       loadGroup, callbacks, loadFlags);
-    if (NS_SUCCEEDED(rv)) {
-        nsIInputStream *stream;
-        rv = channel->Open(&stream);
-        if (NS_SUCCEEDED(rv)) {
-            *result = stream;
-            if (channelOut) {
-                *channelOut = nullptr;
-                channel.swap(*channelOut);
-            }
-        }
-    }
-    return rv;
+  NS_ASSERTION(aRequestingPrincipal, "Can not create channel without a requesting Principal!");
+
+  nsCOMPtr<nsIChannel> channel;
+  nsresult rv = NS_NewChannelInternal(getter_AddRefs(channel),
+                                      aUri,
+                                      aRequestingNode,
+                                      aRequestingPrincipal,
+                                      aSecurityFlags,
+                                      aContentPolicyType,
+                                      nullptr,   // aChannelPolicy,
+                                      aLoadGroup,
+                                      aCallbacks,
+                                      aLoadFlags,
+                                      aIoService);
+
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsIInputStream *stream;
+  rv = channel->Open(&stream);
+  NS_ENSURE_SUCCESS(rv, rv);
+  *outStream = stream;
+  if (outChannel) {
+    *outChannel = nullptr;
+     channel.swap(*outChannel);
+  }
+  return NS_OK;
+}
+
+inline nsresult /* NS_OpenURIprincipal */
+NS_OpenURI(nsIInputStream**       outStream,
+           nsIURI*                aUri,
+           nsIPrincipal*          aRequestingPrincipal,
+           nsSecurityFlags        aSecurityFlags,
+           nsContentPolicyType    aContentPolicyType,
+           nsILoadGroup*          aLoadGroup = nullptr,
+           nsIInterfaceRequestor* aCallbacks = nullptr,
+           nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
+           nsIIOService*          aIoService = nullptr,
+           nsIChannel**           outChannel = nullptr)
+{
+  return NS_OpenURIInternal(outStream,
+                            aUri,
+                            nullptr, // aRequestingNode
+                            aRequestingPrincipal,
+                            aSecurityFlags,
+                            aContentPolicyType,
+                            aLoadGroup,
+                            aCallbacks,
+                            aLoadFlags,
+                            aIoService,
+                            outChannel);
 }
 
 inline nsresult
-NS_OpenURI(nsIStreamListener     *listener, 
-           nsISupports           *context, 
-           nsIURI                *uri,
-           nsIIOService          *ioService = nullptr,     // pass in nsIIOService to optimize callers
-           nsILoadGroup          *loadGroup = nullptr,
-           nsIInterfaceRequestor *callbacks = nullptr,
-           uint32_t               loadFlags = nsIRequest::LOAD_NORMAL)
+NS_OpenURIInternal(nsIStreamListener*     aListener,
+                   nsISupports*           aContext,
+                   nsIURI*                aUri,
+                   nsILoadInfo*           aLoadInfo,
+                   nsILoadGroup*          aLoadGroup = nullptr,
+                   nsIInterfaceRequestor* aCallbacks = nullptr,
+                   nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
+                   nsIIOService*          aIoService = nullptr)
 {
-    nsresult rv;
-    nsCOMPtr<nsIChannel> channel;
-    rv = NS_NewChannel(getter_AddRefs(channel), uri, ioService,
-                       loadGroup, callbacks, loadFlags);
-    if (NS_SUCCEEDED(rv))
-        rv = channel->AsyncOpen(listener, context);
-    return rv;
+  nsCOMPtr<nsIChannel> channel;
+  nsresult rv = NS_NewChannelInternal(getter_AddRefs(channel),
+                                      aUri,
+                                      aLoadInfo,
+                                      nullptr,    // aChannelPolicy
+                                      aLoadGroup,
+                                      aCallbacks,
+                                      aLoadFlags,
+                                      aIoService);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return channel->AsyncOpen(aListener, aContext);
+}
+
+inline nsresult
+NS_OpenURIInternal(nsIStreamListener*     aListener,
+                   nsISupports*           aContext,
+                   nsIURI*                aUri,
+                   nsINode*               aRequestingNode,
+                   nsIPrincipal*          aRequestingPrincipal,
+                   nsSecurityFlags        aSecurityFlags,
+                   nsContentPolicyType    aContentPolicyType,
+                   nsILoadGroup*          aLoadGroup = nullptr,
+                   nsIInterfaceRequestor* aCallbacks = nullptr,
+                   nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
+                   nsIIOService*          aIoService = nullptr)
+{
+  NS_ASSERTION(aRequestingPrincipal, "Can not create channel without a requesting Principal!");
+
+  nsCOMPtr<nsILoadInfo> loadInfo =
+    new mozilla::LoadInfo(aRequestingPrincipal,
+                          aRequestingNode,
+                          aSecurityFlags,
+                          aContentPolicyType);
+  if (!loadInfo) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  return NS_OpenURIInternal(aListener,
+                            aContext,
+                            aUri,
+                            loadInfo,
+                            aLoadGroup,
+                            aCallbacks,
+                            aLoadFlags,
+                            aIoService);
+}
+
+inline nsresult
+NS_OpenURI(nsIStreamListener*     aListener,
+           nsISupports*           aContext,
+           nsIURI*                aUri,
+           nsIPrincipal*          aRequestingPrincipal,
+           nsSecurityFlags        aSecurityFlags,
+           nsContentPolicyType    aContentPolicyType,
+           nsILoadGroup*          aLoadGroup = nullptr,
+           nsIInterfaceRequestor* aCallbacks = nullptr,
+           nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
+           nsIIOService*          aIoService = nullptr)
+{
+  return NS_OpenURIInternal(aListener,
+                            aContext,
+                            aUri,
+                            nullptr, // aRequestingNode
+                            aRequestingPrincipal,
+                            aSecurityFlags,
+                            aContentPolicyType,
+                            aLoadGroup,
+                            aCallbacks,
+                            aLoadFlags,
+                            aIoService);
 }
 
 inline nsresult
@@ -609,32 +808,95 @@ NS_NewStreamLoader(nsIStreamLoader        **result,
 }
 
 inline nsresult
-NS_NewStreamLoader(nsIStreamLoader        **result,
-                   nsIURI                  *uri,
-                   nsIStreamLoaderObserver *observer,
-                   nsISupports             *context   = nullptr,
-                   nsILoadGroup            *loadGroup = nullptr,
-                   nsIInterfaceRequestor   *callbacks = nullptr,
-                   uint32_t                 loadFlags = nsIRequest::LOAD_NORMAL,
-                   nsIURI                  *referrer  = nullptr)
+NS_NewStreamLoaderInternal(nsIStreamLoader**        outStream,
+                           nsIURI*                  aUri,
+                           nsIStreamLoaderObserver* aObserver,
+                           nsINode*                 aRequestingNode,
+                           nsIPrincipal*            aRequestingPrincipal,
+                           nsSecurityFlags          aSecurityFlags,
+                           nsContentPolicyType      aContentPolicyType,
+                           nsISupports*             aContext = nullptr,
+                           nsILoadGroup*            aLoadGroup = nullptr,
+                           nsIInterfaceRequestor*   aCallbacks = nullptr,
+                           nsLoadFlags              aLoadFlags = nsIRequest::LOAD_NORMAL,
+                           nsIURI*                  aReferrer = nullptr)
 {
-    nsresult rv;
-    nsCOMPtr<nsIChannel> channel;
-    rv = NS_NewChannel(getter_AddRefs(channel),
-                       uri,
-                       nullptr,
-                       loadGroup,
-                       callbacks,
-                       loadFlags);
-    if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-        if (httpChannel)
-            httpChannel->SetReferrer(referrer);
-        rv = NS_NewStreamLoader(result, observer);
-        if (NS_SUCCEEDED(rv))
-          rv = channel->AsyncOpen(*result, context);
-    }
-    return rv;
+   nsCOMPtr<nsIChannel> channel;
+   nsresult rv = NS_NewChannelInternal(getter_AddRefs(channel),
+                                       aUri,
+                                       aRequestingNode,
+                                       aRequestingPrincipal,
+                                       aSecurityFlags,
+                                       aContentPolicyType,
+                                       nullptr,  // aChannelPolicy
+                                       aLoadGroup,
+                                       aCallbacks,
+                                       aLoadFlags);
+
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+  if (httpChannel) {
+    httpChannel->SetReferrer(aReferrer);
+  }
+  rv = NS_NewStreamLoader(outStream, aObserver);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return channel->AsyncOpen(*outStream, aContext);
+}
+
+
+inline nsresult /* NS_NewStreamLoaderNode */
+NS_NewStreamLoader(nsIStreamLoader**        outStream,
+                   nsIURI*                  aUri,
+                   nsIStreamLoaderObserver* aObserver,
+                   nsINode*                 aRequestingNode,
+                   nsSecurityFlags          aSecurityFlags,
+                   nsContentPolicyType      aContentPolicyType,
+                   nsISupports*             aContext = nullptr,
+                   nsILoadGroup*            aLoadGroup = nullptr,
+                   nsIInterfaceRequestor*   aCallbacks = nullptr,
+                   nsLoadFlags              aLoadFlags = nsIRequest::LOAD_NORMAL,
+                   nsIURI*                  aReferrer = nullptr)
+{
+  NS_ASSERTION(aRequestingNode, "Can not create stream loader without a requesting Node!");
+  return NS_NewStreamLoaderInternal(outStream,
+                                    aUri,
+                                    aObserver,
+                                    aRequestingNode,
+                                    aRequestingNode->NodePrincipal(),
+                                    aSecurityFlags,
+                                    aContentPolicyType,
+                                    aContext,
+                                    aLoadGroup,
+                                    aCallbacks,
+                                    aLoadFlags,
+                                    aReferrer);
+}
+
+inline nsresult /* NS_NewStreamLoaderPrincipal */
+NS_NewStreamLoader(nsIStreamLoader**        outStream,
+                   nsIURI*                  aUri,
+                   nsIStreamLoaderObserver* aObserver,
+                   nsIPrincipal*            aRequestingPrincipal,
+                   nsSecurityFlags          aSecurityFlags,
+                   nsContentPolicyType      aContentPolicyType,
+                   nsISupports*             aContext = nullptr,
+                   nsILoadGroup*            aLoadGroup = nullptr,
+                   nsIInterfaceRequestor*   aCallbacks = nullptr,
+                   nsLoadFlags              aLoadFlags = nsIRequest::LOAD_NORMAL,
+                   nsIURI*                  aReferrer = nullptr)
+{
+  return NS_NewStreamLoaderInternal(outStream,
+                                    aUri,
+                                    aObserver,
+                                    nullptr, // aRequestingNode
+                                    aRequestingPrincipal,
+                                    aSecurityFlags,
+                                    aContentPolicyType,
+                                    aContext,
+                                    aLoadGroup,
+                                    aCallbacks,
+                                    aLoadFlags,
+                                    aReferrer);
 }
 
 inline nsresult
@@ -1241,41 +1503,57 @@ NS_ReadInputStreamToString(nsIInputStream *aInputStream,
 #endif
 
 inline nsresult
-NS_LoadPersistentPropertiesFromURI(nsIPersistentProperties **result,
-                                   nsIURI                   *uri,
-                                   nsIIOService             *ioService = nullptr)
+NS_LoadPersistentPropertiesFromURI(nsIPersistentProperties** outResult,
+                                   nsIURI*                   aUri,
+                                   nsIPrincipal*             aRequestingPrincipal,
+                                   nsContentPolicyType       aContentPolicyType,
+                                   nsIIOService*             aIoService = nullptr)
 {
     nsCOMPtr<nsIInputStream> in;
-    nsresult rv = NS_OpenURI(getter_AddRefs(in), uri, ioService);
+    nsresult rv = NS_OpenURI(getter_AddRefs(in),
+                             aUri,
+                             aRequestingPrincipal,
+                             nsILoadInfo::SEC_NORMAL,
+                             aContentPolicyType,
+                             nullptr,     // aLoadGroup
+                             nullptr,     // aCallbacks
+                             nsIRequest::LOAD_NORMAL, //aLoadFlags
+                             aIoService);
+
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIPersistentProperties> properties =
+      do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = properties->Load(in);
     if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIPersistentProperties> properties = 
-            do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            rv = properties->Load(in);
-            if (NS_SUCCEEDED(rv)) {
-                *result = nullptr;
-                properties.swap(*result);
-            }
-        }
+      *outResult = nullptr;
+      properties.swap(*outResult);
     }
     return rv;
-}
+ }
 
 inline nsresult
-NS_LoadPersistentPropertiesFromURISpec(nsIPersistentProperties **result,
-                                       const nsACString        &spec,
-                                       const char              *charset = nullptr,
-                                       nsIURI                  *baseURI = nullptr,
-                                       nsIIOService            *ioService = nullptr)     
+NS_LoadPersistentPropertiesFromURISpec(nsIPersistentProperties** outResult,
+                                       const nsACString&         aSpec,
+                                       nsIPrincipal*             aRequestingPrincipal,
+                                       nsContentPolicyType       aContentPolicyType,
+                                       const char*               aCharset = nullptr,
+                                       nsIURI*                   aBaseURI = nullptr,
+                                       nsIIOService*             aIoService = nullptr)
 {
     nsCOMPtr<nsIURI> uri;
-    nsresult rv = 
-        NS_NewURI(getter_AddRefs(uri), spec, charset, baseURI, ioService);
+    nsresult rv = NS_NewURI(getter_AddRefs(uri),
+                            aSpec,
+                            aCharset,
+                            aBaseURI,
+                            aIoService);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (NS_SUCCEEDED(rv))
-        rv = NS_LoadPersistentPropertiesFromURI(result, uri, ioService);
-
-    return rv;
+    return NS_LoadPersistentPropertiesFromURI(outResult,
+                                              uri,
+                                              aRequestingPrincipal,
+                                              aContentPolicyType,
+                                              aIoService);
 }
 
 /**
