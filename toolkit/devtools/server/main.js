@@ -438,12 +438,6 @@ var DebuggerServer = {
     return this._listeners.length;
   },
 
-  // TODO: Bug 1033079: Remove after cleaning up Gaia test:
-  // https://github.com/mozilla-b2g/gaia/blob/1ba15ce1ae7254badd25fd276556c1b4f36c0a45/tests/integration/devtools/server_test.js#L31
-  get _listener() {
-    return this.listeningSockets;
-  },
-
   /**
    * Listens on the given port or socket file for remote debugger connections.
    *

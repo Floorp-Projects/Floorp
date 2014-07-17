@@ -290,45 +290,28 @@ function _getBestToFocus(nodes, key, currentlyFocused) {
 
     // Initialize best to the first viable value:
     if (!best) {
-      best = nodes[i];
-      bestDist = _spatialDistance(best, currentlyFocused);
+      bestDist = _spatialDistanceOfCorner(currentlyFocused, nodes[i], key);
+      if (bestDist >= 0) {
+        best = nodes[i];
+      }
       continue;
     }
 
     // Of the remaining nodes, pick the one closest to the currently focused
     // node.
-    let curDist = _spatialDistance(nodes[i], currentlyFocused);
-    if (curDist > bestDist) {
+    let curDist = _spatialDistanceOfCorner(currentlyFocused, nodes[i], key);
+    if ((curDist > bestDist) || curDist === -1) {
       continue;
     }
-
-    bestMid = _getMidpoint(best);
-    switch (key) {
-      case PrefObserver['keyCodeLeft']:
-        if (nodeMid.x > bestMid.x) {
-          best = nodes[i];
-          bestDist = curDist;
-        }
-        break;
-      case PrefObserver['keyCodeRight']:
-        if (nodeMid.x < bestMid.x) {
-          best = nodes[i];
-          bestDist = curDist;
-        }
-        break;
-      case PrefObserver['keyCodeUp']:
-        if (nodeMid.y > bestMid.y) {
-          best = nodes[i];
-          bestDist = curDist;
-        }
-        break;
-      case PrefObserver['keyCodeDown']:
-        if (nodeMid.y < bestMid.y) {
-          best = nodes[i];
-          bestDist = curDist;
-        }
-        break;
+    else if (curDist === bestDist) {
+      let midCurDist = _spatialDistance(currentlyFocused, nodes[i]);
+      let midBestDist = _spatialDistance(currentlyFocused, best);
+      if (midCurDist > midBestDist)
+        continue;
     }
+
+    best = nodes[i];
+    bestDist = curDist;
   }
   return best;
 }
@@ -376,23 +359,43 @@ function _getSearchRect(currentlyFocused, key, cssPageRect) {
 
   switch (key) {
     case PrefObserver['keyCodeLeft']:
+      newRect.right = newRect.left;
       newRect.left = cssPageRect.left;
       newRect.width = newRect.right - newRect.left;
-      break;
 
-    case PrefObserver['keyCodeRight']:
-      newRect.right = cssPageRect.right;
-      newRect.width = newRect.right - newRect.left;
-      break;
-
-    case PrefObserver['keyCodeUp']:
+      newRect.bottom = cssPageRect.bottom;
       newRect.top = cssPageRect.top;
       newRect.height = newRect.bottom - newRect.top;
       break;
 
+    case PrefObserver['keyCodeRight']:
+      newRect.left = newRect.right;
+      newRect.right = cssPageRect.right;
+      newRect.width = newRect.right - newRect.left;
+
+      newRect.bottom = cssPageRect.bottom;
+      newRect.top = cssPageRect.top;
+      newRect.height = newRect.bottom - newRect.top;
+      break;
+
+    case PrefObserver['keyCodeUp']:
+      newRect.bottom = newRect.top;
+      newRect.top = cssPageRect.top;
+      newRect.height = newRect.bottom - newRect.top;
+
+      newRect.right = cssPageRect.right;
+      newRect.left = cssPageRect.left;
+      newRect.width = newRect.right - newRect.left;
+      break;
+
     case PrefObserver['keyCodeDown']:
+      newRect.top = newRect.bottom;
       newRect.bottom = cssPageRect.bottom;
       newRect.height = newRect.bottom - newRect.top;
+
+      newRect.right = cssPageRect.right;
+      newRect.left = cssPageRect.left;
+      newRect.width = newRect.right - newRect.left;
       break;
   }
   return newRect;
@@ -405,6 +408,83 @@ function _spatialDistance(a, b) {
 
   return Math.round(Math.pow(mida.x - midb.x, 2) +
                     Math.pow(mida.y - midb.y, 2));
+}
+
+// Get the distance between the corner of two nodes
+function _spatialDistanceOfCorner(from, to, key) {
+  let fromRect = from.getBoundingClientRect();
+  let toRect = to.getBoundingClientRect();
+  let fromMid = _getMidpoint(from);
+  let toMid = _getMidpoint(to);
+  let hDistance = 0;
+  let vDistance = 0;
+
+  switch (key) {
+    case PrefObserver['keyCodeLeft']:
+      // Make sure the "to" node is really at the left side of "from" node by
+      //  1. Check the mid point
+      //  2. The right border of "to" node must be less than the "from" node
+      if ((fromMid.x - toMid.x) < 0 || toRect.right >= fromRect.right)
+        return -1;
+      hDistance = Math.abs(fromRect.left - toRect.right);
+      if (toRect.bottom <= fromRect.top) {
+        vDistance = fromRect.top - toRect.bottom;
+      }
+      else if (fromRect.bottom <= toRect.top) {
+        vDistance = toRect.top - fromRect.bottom;
+      }
+      else {
+        vDistance = 0;
+      }
+      break;
+
+    case PrefObserver['keyCodeRight']:
+      if ((toMid.x - fromMid.x) < 0 || toRect.left <= fromRect.left)
+        return -1;
+      hDistance = Math.abs(toRect.left - fromRect.right);
+      if (toRect.bottom <= fromRect.top) {
+        vDistance = fromRect.top - toRect.bottom;
+      }
+      else if (fromRect.bottom <= toRect.top) {
+        vDistance = toRect.top - fromRect.bottom;
+      }
+      else {
+        vDistance = 0;
+      }
+      break;
+
+    case PrefObserver['keyCodeUp']:
+      if ((fromMid.y - toMid.y) < 0 || toRect.bottom >= fromRect.bottom)
+        return -1;
+      vDistance = Math.abs(fromRect.top - toRect.bottom);
+      if (fromRect.right <= toRect.left) {
+        hDistance = toRect.left - fromRect.right;
+      }
+      else if (toRect.right <= fromRect.left) {
+        hDistance = fromRect.left - toRect.right;
+      }
+      else {
+        hDistance = 0;
+      }
+      break;
+
+    case PrefObserver['keyCodeDown']:
+      if ((toMid.y - fromMid.y) < 0 || toRect.top <= fromRect.top)
+        return -1;
+      vDistance = Math.abs(toRect.top - fromRect.bottom);
+      if (fromRect.right <= toRect.left) {
+        hDistance = toRect.left - fromRect.right;
+      }
+      else if (toRect.right <= fromRect.left) {
+        hDistance = fromRect.left - toRect.right;
+      }
+      else {
+        hDistance = 0;
+      }
+      break;
+  }
+  return Math.round(Math.pow(hDistance, 2) +
+                    Math.pow(vDistance, 2));
 }
 
 // Snav preference observer

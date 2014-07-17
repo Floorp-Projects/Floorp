@@ -278,13 +278,19 @@ let gSyncPane = {
                                               [data.email], 1);
         let description = sb.GetStringFromName("firefoxAccountVerificationSentDescription");
 
-        Services.prompt.alert(window, title, heading + "\n\n" + description);
+        let factory = Cc["@mozilla.org/prompter;1"]
+                        .getService(Ci.nsIPromptFactory);
+        let prompt = factory.getPrompt(window, Ci.nsIPrompt);
+        let bag = prompt.QueryInterface(Ci.nsIWritablePropertyBag2);
+        bag.setPropertyAsBool("allowTabModal", true);
+
+        prompt.alert(title, heading + "\n\n" + description);
       });
     });
   },
 
   openOldSyncSupportPage: function() {
-    let url = Services.urlFormatter.formatURLPref('app.support.baseURL') + "old-sync"
+    let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "old-sync";
     this.openContentInBrowser(url);
   },
 
@@ -304,13 +310,21 @@ let gSyncPane = {
       let buttonFlags = (ps.BUTTON_POS_0 * ps.BUTTON_TITLE_IS_STRING) +
                         (ps.BUTTON_POS_1 * ps.BUTTON_TITLE_CANCEL) +
                         ps.BUTTON_POS_1_DEFAULT;
-      let pressed = Services.prompt.confirmEx(window, title, body, buttonFlags,
-                                              continueLabel, null, null, null, {});
+
+      let factory = Cc["@mozilla.org/prompter;1"]
+                      .getService(Ci.nsIPromptFactory);
+      let prompt = factory.getPrompt(window, Ci.nsIPrompt);
+      let bag = prompt.QueryInterface(Ci.nsIWritablePropertyBag2);
+      bag.setPropertyAsBool("allowTabModal", true);
+
+      let pressed = prompt.confirmEx(title, body, buttonFlags,
+                                     continueLabel, null, null, null, {});
+
       if (pressed != 0) { // 0 is the "continue" button
         return;
       }
     }
-    Components.utils.import('resource://gre/modules/FxAccounts.jsm');
+    Cu.import("resource://gre/modules/FxAccounts.jsm");
     fxAccounts.signOut().then(() => {
       this.updateWeavePrefs();
     });
