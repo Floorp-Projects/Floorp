@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>When the filtered element's BBox relative to the page changes, the filtered element needs to be invalidated</title>
+
+<style>
+
+#spacer {
+  height: 50px;
+}
+
+#filtered {
+  width: 100px;
+  height: 100px;
+  background-color: lime;
+}
+
+</style>
+
+<svg height="0"></svg>
+
+<div id="spacer"></div>
+
+<div id="filtered"></div>
