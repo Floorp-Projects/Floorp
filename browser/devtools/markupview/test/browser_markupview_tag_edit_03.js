@@ -14,11 +14,11 @@ let test = asyncTest(function*() {
   yield inspector.markup.expandAll();
 
   info("Selecting the test node");
-  let node = content.document.getElementById("retag-me");
+  let node = content.document.querySelector("#retag-me");
   let child = content.document.querySelector("#retag-me-2");
-  yield selectNode(node, inspector);
+  yield selectNode("#retag-me", inspector);
 
-  let container = getContainerForRawNode(node, inspector);
+  let container = yield getContainerForSelector("#retag-me", inspector);
   is(node.tagName, "DIV", "We've got #retag-me element, it's a DIV");
   ok(container.expanded, "It is expanded");
   is(child.parentNode, node, "Child #retag-me-2 is inside #retag-me");
@@ -30,8 +30,8 @@ let test = asyncTest(function*() {
   yield mutated;
 
   info("Checking that the tagname change was done");
-  let node = content.document.getElementById("retag-me");
-  let container = getContainerForRawNode(node, inspector);
+  let node = content.document.querySelector("#retag-me");
+  let container = yield getContainerForSelector("#retag-me", inspector);
   is(node.tagName, "P", "We've got #retag-me, it should now be a P");
   ok(container.expanded, "It is still expanded");
   ok(container.selected, "It is still selected");

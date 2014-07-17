@@ -472,6 +472,10 @@
         <!-- We set values on tablet. -->
     </style>
 
+    <style name="TabsPanelFrame.RemoteTabs">
+        <!-- We set values on tablet. -->
+    </style>
+
     <style name="TabsPanelSectionBase">
         <item name="android:orientation">vertical</item>
         <item name="android:layout_marginLeft">40dp</item>

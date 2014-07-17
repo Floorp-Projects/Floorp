@@ -596,8 +596,8 @@ HTMLBreadcrumbs.prototype = {
     if (this.currentIndex == this.nodeHierarchy.length - 1) {
       let node = this.nodeHierarchy[this.currentIndex].node;
       return this.getInterestingFirstNode(node).then(child => {
-        // If the node has a child
-        if (child) {
+        // If the node has a child and we've not been destroyed in the meantime
+        if (child && !this.isDestroyed) {
           // Show this child
           this.expand(child);
         }

@@ -17,7 +17,7 @@ let PAGE_CONTENT = [
 ].join("\n");
 
 let test = asyncTest(function*() {
-  yield addTab("data:text/html,test rule view user changes");
+  yield addTab("data:text/html;charset=utf-8,test rule view user changes");
 
   info("Creating the test document");
   content.document.body.innerHTML = PAGE_CONTENT;

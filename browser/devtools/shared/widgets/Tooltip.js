@@ -9,6 +9,7 @@ const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const IOService = Cc["@mozilla.org/network/io-service;1"]
   .getService(Ci.nsIIOService);
 const {Spectrum} = require("devtools/shared/widgets/Spectrum");
+const {CubicBezierWidget} = require("devtools/shared/widgets/CubicBezierWidget");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const {colorUtils} = require("devtools/css-color");
 const Heritage = require("sdk/core/heritage");
@@ -33,6 +34,7 @@ const BORDERCOLOR_RE = /^border-[-a-z]*color$/ig;
 const BORDER_RE = /^border(-(top|bottom|left|right))?$/ig;
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const SPECTRUM_FRAME = "chrome://browser/content/devtools/spectrum-frame.xhtml";
+const CUBIC_BEZIER_FRAME = "chrome://browser/content/devtools/cubic-bezier-frame.xhtml";
 const ESCAPE_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE;
 const RETURN_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_RETURN;
 const POPUP_EVENTS = ["shown", "hidden", "showing", "hiding"];
@@ -741,6 +743,52 @@ Tooltip.prototype = {
   },
 
   /**
+   * Fill the tooltip with a new instance of the cubic-bezier widget
+   * initialized with the given value, and return a promise that resolves to
+   * the instance of the widget
+   */
+  setCubicBezierContent: function(bezier) {
+    let def = promise.defer();
+
+    // Create an iframe to host the cubic-bezier widget
+    let iframe = this.doc.createElementNS(XHTML_NS, "iframe");
+    iframe.setAttribute("transparent", true);
+    iframe.setAttribute("width", "200");
+    iframe.setAttribute("height", "415");
+    iframe.setAttribute("flex", "1");
+    iframe.setAttribute("class", "devtools-tooltip-iframe");
+
+    let panel = this.panel;
+    let xulWin = this.doc.ownerGlobal;
+
+    // Wait for the load to initialize the widget
+    function onLoad() {
+      iframe.removeEventListener("load", onLoad, true);
+      let win = iframe.contentWindow.wrappedJSObject;
+
+      let container = win.document.getElementById("container");
+      let widget = new CubicBezierWidget(container, bezier);
+
+      // Resolve to the widget instance whenever the popup becomes visible
+      if (panel.state == "open") {
+        def.resolve(widget);
+      } else {
+        panel.addEventListener("popupshown", function shown() {
+          panel.removeEventListener("popupshown", shown, true);
+          def.resolve(widget);
+        }, true);
+      }
+    }
+    iframe.addEventListener("load", onLoad, true);
+    iframe.setAttribute("src", CUBIC_BEZIER_FRAME);
+
+    // Put the iframe in the tooltip
+    this.content = iframe;
+
+    return def.promise;
+  },
+
+  /**
    * Set the content of the tooltip to display a font family preview.
    * This is based on Lea Verou's Dablet. See https://github.com/LeaVerou/dabblet
    * for more info.
@@ -1022,21 +1070,63 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
 });
 
 /**
- * Internal util, checks whether a css declaration is a gradient
+ * The swatch cubic-bezier tooltip class is a specific class meant to be used
+ * along with rule-view's generated cubic-bezier swatches.
+ * It extends the parent SwatchBasedEditorTooltip class.
+ * It just wraps a standard Tooltip and sets its content with an instance of a
+ * CubicBezierWidget.
+ *
+ * @param {XULDocument} doc
  */
-function isGradientRule(property, value) {
-  return (property === "background" || property === "background-image") &&
-    value.match(GRADIENT_RE);
+function SwatchCubicBezierTooltip(doc) {
+  SwatchBasedEditorTooltip.call(this, doc);
+
+  // Creating a cubic-bezier instance.
+  // this.widget will always be a promise that resolves to the widget instance
+  this.widget = this.tooltip.setCubicBezierContent([0, 0, 1, 1]);
+  this._onUpdate = this._onUpdate.bind(this);
 }
 
-/**
- * Internal util, checks whether a css declaration is a color
- */
-function isColorOnly(property, value) {
-  return property === "background-color" ||
-         property === "color" ||
-         property.match(BORDERCOLOR_RE);
-}
+module.exports.SwatchCubicBezierTooltip = SwatchCubicBezierTooltip;
+
+SwatchCubicBezierTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototype, {
+  /**
+   * Overriding the SwatchBasedEditorTooltip.show function to set the cubic
+   * bezier curve in the widget
+   */
+  show: function() {
+    // Call then parent class' show function
+    SwatchBasedEditorTooltip.prototype.show.call(this);
+    // Then set the curve and listen to changes to preview them
+    if (this.activeSwatch) {
+      this.currentBezierValue = this.activeSwatch.nextSibling;
+      let swatch = this.swatches.get(this.activeSwatch);
+      this.widget.then(widget => {
+        widget.off("updated", this._onUpdate);
+        widget.cssCubicBezierValue = this.currentBezierValue.textContent;
+        widget.on("updated", this._onUpdate);
+      });
+    }
+  },
+
+  _onUpdate: function(event, bezier) {
+    if (!this.activeSwatch) {
+      return;
+    }
+
+    this.currentBezierValue.textContent = bezier + "";
+    this.preview(bezier + "");
+  },
+
+  destroy: function() {
+    SwatchBasedEditorTooltip.prototype.destroy.call(this);
+    this.currentBezierValue = null;
+    this.widget.then(widget => {
+      widget.off("updated", this._onUpdate);
+      widget.destroy();
+    });
+  }
+});
 
 /**
  * L10N utility class

@@ -7,7 +7,7 @@
 // Tests that the no results placeholder works properly.
 
 let test = asyncTest(function*() {
-  yield addTab("data:text/html,no results placeholder test");
+  yield addTab("data:text/html;charset=utf-8,no results placeholder test");
 
   info("Creating the test document");
   content.document.body.innerHTML = '<style type="text/css"> ' +
