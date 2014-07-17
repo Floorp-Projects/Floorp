@@ -8,6 +8,7 @@
 #include "nsNetUtil.h"
 #include "nsAboutProtocolUtils.h"
 #include "mozilla/ArrayUtils.h"
+#include "nsDOMString.h"
 
 NS_IMPL_ISUPPORTS(nsAboutRedirector, nsIAboutModule)
 
@@ -134,6 +135,13 @@ nsAboutRedirector::GetURIFlags(nsIURI *aURI, uint32_t *result)
 
     NS_ERROR("nsAboutRedirector called for unknown case");
     return NS_ERROR_ILLEGAL_VALUE;
+}
+
+NS_IMETHODIMP
+nsAboutRedirector::GetIndexedDBOriginPostfix(nsIURI *aURI, nsAString &result)
+{
+    SetDOMStringToNull(result);
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult

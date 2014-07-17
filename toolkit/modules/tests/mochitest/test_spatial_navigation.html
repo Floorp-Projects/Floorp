@@ -39,22 +39,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=698437
                                              " not become the active element?");
 
     synthesizeKey("VK_UP", { });
-    is(top.id, document.activeElement.id,
+    is(document.activeElement.id, top.id,
        "Spatial navigation up key is not handled correctly.");
 
     center.focus();
     synthesizeKey("VK_DOWN", { });
-    is(bottom.id, document.activeElement.id,
+    is(document.activeElement.id, bottom.id,
        "Spatial navigation down key is not handled correctly.");
 
     center.focus();
     synthesizeKey("VK_RIGHT", { });
-    is(right.id, document.activeElement.id,
+    is(document.activeElement.id, right.id,
        "Spatial navigation right key is not handled correctly.");
 
     center.focus();
     synthesizeKey("VK_LEFT", { });
-    is(left.id, document.activeElement.id,
+    is(document.activeElement.id, left.id,
        "Spatial navigation left key is not handled correctly.");
 
     SimpleTest.finish();
@@ -66,11 +66,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=698437
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=698437">Mozilla Bug 698437</a>
 <p id="display"></p>
 <div id="content">
-  <p> This is a <a id="top" href="#">really</a> long sentence </p>
-  <p> <a id="left" href="#">This</a> is a
-      <a id="center" href="#">really</a> long
-      <a id="right" href="#">sentence</a> </p>
-  <p> This is a <a id="bottom" href="#">really</a> long sentence </p>
+  <button id="lefttop">1</button><button id="top">2</button><button id="righttop">3</button><br>
+  <button id="left">4</button><button id="center">5</button><button id="right">6</button><br>
+  <button id="leftbottom">7</button><button id="bottom">8</button><button id="rightbottom">9</button><br>
 </div>
 <pre id="test">
 </pre>
