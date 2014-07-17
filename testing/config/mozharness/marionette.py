@@ -5,20 +5,17 @@
 config = {
     "marionette_desktop_options": [
         "--type=%(type)s",
-        "--log-raw=%(raw_log_file)s",
         "--binary=%(binary)s",
         "--address=%(address)s",
     ],
     "marionette_emulator_options": [
         "--type=%(type)s",
-        "--log-raw=%(raw_log_file)s",
         "--logcat-dir=%(logcat_dir)s",
         "--emulator=%(emulator)s",
         "--homedir=%(homedir)s",
     ],
     "webapi_emulator_options": [
         "--type=%(type)s",
-        "--log-raw=%(raw_log_file)s",
         "--symbols-path=%(symbols_path)s",
         "--logcat-dir=%(logcat_dir)s",
         "--emulator=%(emulator)s",
@@ -36,7 +33,6 @@ config = {
         "--symbols-path=%(symbols_path)s",
         "--xml-output=%(xml_output)s",
         "--html-output=%(html_output)s",
-        "--log-raw=%(raw_log_file)s",
         "--logcat-dir=%(logcat_dir)s",
         "--emulator=%(emulator)s",
         "--homedir=%(homedir)s",
@@ -50,7 +46,6 @@ config = {
         "--symbols-path=%(symbols_path)s",
         "--xml-output=%(xml_output)s",
         "--html-output=%(html_output)s",
-        "--log-raw=%(raw_log_file)s",
         "--binary=%(binary)s",
         "--address=%(address)s",
     ],
