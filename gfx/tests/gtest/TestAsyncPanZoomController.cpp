@@ -198,10 +198,16 @@ protected:
     tm = new TestAPZCTreeManager();
     apzc = new TestAsyncPanZoomController(0, mcc, tm, mGestureBehavior);
     apzc->SetFrameMetrics(TestFrameMetrics());
+
+    // Since most tests pass inputs directly to the APZC instead of going through
+    // the tree manager, we need to build the overscroll handoff chain explicitly
+    // for panning and animation-cancelling to work correctly.
+    tm->BuildOverscrollHandoffChain(apzc);
   }
 
   virtual void TearDown()
   {
+    tm->ClearOverscrollHandoffChain();
     apzc->Destroy();
   }
 
@@ -271,7 +277,6 @@ ApzcTap(AsyncPanZoomController* apzc, int aX, int aY, int& aTime,
 
 static void
 ApzcPan(AsyncPanZoomController* aApzc,
-        TestAPZCTreeManager* aTreeManager,
         int& aTime,
         int aTouchStartY,
         int aTouchEndY,
@@ -281,11 +286,6 @@ ApzcPan(AsyncPanZoomController* aApzc,
 {
   const int TIME_BETWEEN_TOUCH_EVENT = 100;
   const int OVERCOME_TOUCH_TOLERANCE = 100;
-
-  // Since we're passing inputs directly to the APZC instead of going through
-  // the tree manager, we need to build the overscroll handoff chain explicitly
-  // for panning to work correctly.
-  aTreeManager->BuildOverscrollHandoffChain(aApzc);
 
   // Make sure the move is large enough to not be handled as a tap
   nsEventStatus status = ApzcDown(aApzc, 10, aTouchStartY + OVERCOME_TOUCH_TOLERANCE, aTime);
@@ -328,10 +328,6 @@ ApzcPan(AsyncPanZoomController* aApzc,
   }
 
   aTime += TIME_BETWEEN_TOUCH_EVENT;
-
-  // Since we've explicitly built the overscroll handoff chain before
-  // touch-start, we need to explicitly clear it after touch-end.
-  aTreeManager->ClearOverscrollHandoffChain();
 }
 
 /*
@@ -340,7 +336,6 @@ ApzcPan(AsyncPanZoomController* aApzc,
  */
 static void
 ApzcPanAndCheckStatus(AsyncPanZoomController* aApzc,
-                      TestAPZCTreeManager* aTreeManager,
                       int& aTime,
                       int aTouchStartY,
                       int aTouchEndY,
@@ -349,7 +344,7 @@ ApzcPanAndCheckStatus(AsyncPanZoomController* aApzc,
                       nsTArray<uint32_t>* aAllowedTouchBehaviors)
 {
   nsEventStatus statuses[4]; // down, move, move, up
-  ApzcPan(aApzc, aTreeManager, aTime, aTouchStartY, aTouchEndY, false, aAllowedTouchBehaviors, &statuses);
+  ApzcPan(aApzc, aTime, aTouchStartY, aTouchEndY, false, aAllowedTouchBehaviors, &statuses);
 
   nsEventStatus touchStartStatus;
   if (hasTouchListeners || gfxPrefs::TouchActionEnabled()) {
@@ -796,7 +791,7 @@ protected:
     allowedTouchBehaviors.AppendElement(aBehavior);
 
     // Pan down
-    ApzcPanAndCheckStatus(apzc, tm, time, touchStart, touchEnd, !aShouldTriggerScroll, false, &allowedTouchBehaviors);
+    ApzcPanAndCheckStatus(apzc, time, touchStart, touchEnd, !aShouldTriggerScroll, false, &allowedTouchBehaviors);
     apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
 
     if (aShouldTriggerScroll) {
@@ -808,7 +803,7 @@ protected:
     }
 
     // Pan back
-    ApzcPanAndCheckStatus(apzc, tm, time, touchEnd, touchStart, !aShouldTriggerScroll, false, &allowedTouchBehaviors);
+    ApzcPanAndCheckStatus(apzc, time, touchEnd, touchStart, !aShouldTriggerScroll, false, &allowedTouchBehaviors);
     apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
 
     EXPECT_EQ(ScreenPoint(), pointOut);
@@ -828,7 +823,7 @@ protected:
     // Pan down
     nsTArray<uint32_t> allowedTouchBehaviors;
     allowedTouchBehaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN);
-    ApzcPanAndCheckStatus(apzc, tm, time, touchStart, touchEnd, true, true, &allowedTouchBehaviors);
+    ApzcPanAndCheckStatus(apzc, time, touchStart, touchEnd, true, true, &allowedTouchBehaviors);
 
     // Send the signal that content has handled and preventDefaulted the touch
     // events. This flushes the event queue.
@@ -896,7 +891,7 @@ TEST_F(APZCBasicTester, Fling) {
   ViewTransform viewTransformOut;
 
   // Fling down. Each step scroll further down
-  ApzcPan(apzc, tm, time, touchStart, touchEnd);
+  ApzcPan(apzc, time, touchStart, touchEnd);
   ScreenPoint lastPoint;
   for (int i = 1; i < 50; i+=1) {
     apzc->SampleContentTransformForFrame(testStartTime+TimeDuration::FromMilliseconds(i), &viewTransformOut, pointOut);
@@ -919,7 +914,7 @@ protected:
     int touchEnd = 10;
 
     // Start the fling down.
-    ApzcPan(apzc, tm, time, touchStart, touchEnd);
+    ApzcPan(apzc, time, touchStart, touchEnd);
     // The touchstart from the pan will leave some cancelled tasks in the queue, clear them out
     EXPECT_EQ(2, mcc->RunThroughDelayedTasks());
 
@@ -966,7 +961,7 @@ TEST_F(APZCBasicTester, OverScrollPanning) {
   int time = 0;
   int touchStart = 500;
   int touchEnd = 10;
-  ApzcPan(apzc, tm, time, touchStart, touchEnd);
+  ApzcPan(apzc, time, touchStart, touchEnd);
   EXPECT_TRUE(apzc->IsOverscrolled());
 
   // Note that in the calls to SampleContentTransformForFrame below, the time
@@ -1006,7 +1001,7 @@ TEST_F(APZCBasicTester, OverScrollAbort) {
   int time = 0;
   int touchStart = 500;
   int touchEnd = 10;
-  ApzcPan(apzc, tm, time, touchStart, touchEnd);
+  ApzcPan(apzc, time, touchStart, touchEnd);
   EXPECT_TRUE(apzc->IsOverscrolled());
 
   ScreenPoint pointOut;
@@ -1033,7 +1028,7 @@ TEST_F(APZCBasicTester, OverScrollPanningAbort) {
   int time = 0;
   int touchStart = 500;
   int touchEnd = 10;
-  ApzcPan(apzc, tm, time, touchStart, touchEnd,
+  ApzcPan(apzc, time, touchStart, touchEnd,
           true);                   // keep finger down
   EXPECT_TRUE(apzc->IsOverscrolled());
 
@@ -1601,7 +1596,9 @@ TEST_F(APZCTreeManagerTester, HitTesting2) {
   // This first pan will move the APZC by 50 pixels, and dispatch a paint request.
   // Since this paint request is in the queue to Gecko, transformToGecko will
   // take it into account.
-  ApzcPan(apzcroot, manager, time, 100, 50);
+  manager->BuildOverscrollHandoffChain(apzcroot);
+  ApzcPan(apzcroot, time, 100, 50);
+  manager->ClearOverscrollHandoffChain();
 
   // Hit where layers[3] used to be. It should now hit the root.
   hit = GetTargetAPZC(manager, ScreenPoint(75, 75), transformToApzc, transformToGecko);
@@ -1627,7 +1624,9 @@ TEST_F(APZCTreeManagerTester, HitTesting2) {
   // request dispatched above has not "completed", we will not dispatch another
   // one yet. Now we have an async transform on top of the pending paint request
   // transform.
-  ApzcPan(apzcroot, manager, time, 100, 50);
+  manager->BuildOverscrollHandoffChain(apzcroot);
+  ApzcPan(apzcroot, time, 100, 50);
+  manager->ClearOverscrollHandoffChain();
 
   // Hit where layers[3] used to be. It should now hit the root.
   hit = GetTargetAPZC(manager, ScreenPoint(75, 75), transformToApzc, transformToGecko);
