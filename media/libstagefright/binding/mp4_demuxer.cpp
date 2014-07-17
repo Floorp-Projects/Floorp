@@ -111,6 +111,8 @@ MP4Demuxer::Init()
       mPrivate->mVideoIndex.Init(index);
     }
   }
+  sp<MetaData> metaData = e->getMetaData();
+  mCrypto.Update(metaData);
 
   return mPrivate->mAudio.get() || mPrivate->mVideo.get();
 }
