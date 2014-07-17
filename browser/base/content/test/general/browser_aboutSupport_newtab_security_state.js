@@ -8,7 +8,7 @@ add_task(function* checkIdentityOfAboutSupport() {
     allowThirdPartyFixup: false,
     relatedToCurrent: false,
     skipAnimation: true,
-    disableMCB: false
+    allowMixedContent: false
   });
 
   yield promiseTabLoaded(tab);

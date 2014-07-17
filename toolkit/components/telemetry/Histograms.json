@@ -4517,11 +4517,6 @@
     "kind": "flag",
     "description": "Social has been enabled at least once on the current session"
   },
-  "SOCIAL_TOGGLED": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Social has been toggled to on or off"
-  },
   "ENABLE_PRIVILEGE_EVER_CALLED": {
     "expires_in_version": "never",
     "kind": "flag",
@@ -6564,5 +6559,29 @@
     "n_buckets": "100",
     "description": "Scaling percentage for the display where the first window is opened (Linux only)",
     "cpp_guard": "XP_LINUX"
+  },
+  "SOCIAL_SIDEBAR_STATE": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Social Sidebar state 0: closed, 1: opened.  Toggling between providers will result in a higher opened rate."
+  },
+  "SOCIAL_TOOLBAR_BUTTONS": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "Social toolbar button has been used (0:share, 1:status, 2:bookmark)"
+  },
+  "SOCIAL_PANEL_CLICKS": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "Social content has been interacted with (0:share, 1:status, 2:bookmark, 3: sidebar)"
+  },
+  "SOCIAL_SIDEBAR_OPEN_DURATION": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 10,
+    "description": "Sidebar showing: seconds that the sidebar has been opened"
   }
 }

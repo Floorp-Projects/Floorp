@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include "SharedMemoryBasic.h"
 #include "mozilla/Atomics.h"
+#include "nsAutoPtr.h"
 #endif
 
 namespace IPC {
@@ -100,7 +101,7 @@ private:
 #ifdef XP_WIN
   HANDLE mMutex;
 #elif defined(OS_LINUX)
-  mozilla::ipc::SharedMemoryBasic* mSharedBuffer;
+  nsRefPtr<mozilla::ipc::SharedMemoryBasic> mSharedBuffer;
   pthread_mutex_t* mMutex;
   mozilla::Atomic<int32_t>* mCount;
 #endif

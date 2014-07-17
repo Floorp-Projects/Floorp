@@ -5267,7 +5267,9 @@ AddCanvasBackgroundColor(const nsDisplayList& aList, nsIFrame* aCanvasFrame,
       return true;
     }
     nsDisplayList* sublist = i->GetSameCoordinateSystemChildren();
-    if (sublist && AddCanvasBackgroundColor(*sublist, aCanvasFrame, aColor))
+    if (sublist &&
+        i->GetType() != nsDisplayItem::TYPE_BLEND_CONTAINER &&
+        AddCanvasBackgroundColor(*sublist, aCanvasFrame, aColor))
       return true;
   }
   return false;
@@ -7672,10 +7674,25 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
         }
         // is nothing has changed, we should just return
         if (!haveChanged) {
-          if (gPreventMouseEvents) {
+          if (touchIsNew) {
+            // however, if this is the first touchmove after a touchstart,
+            // it is special in that preventDefault is allowed on it, so
+            // we must dispatch it to content even if nothing changed. we
+            // arbitrarily pick the first touch point to be the "changed"
+            // touch because firing an event with no changed events doesn't
+            // work.
+            for (uint32_t i = 0; i < touchEvent->touches.Length(); ++i) {
+              if (touchEvent->touches[i]) {
+                touchEvent->touches[i]->mChanged = true;
+                break;
+              }
+            }
+          } else {
+            if (gPreventMouseEvents) {
               *aStatus = nsEventStatus_eConsumeNoDefault;
+            }
+            return NS_OK;
           }
-          return NS_OK;
         }
         break;
       }

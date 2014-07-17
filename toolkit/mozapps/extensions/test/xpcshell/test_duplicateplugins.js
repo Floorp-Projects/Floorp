@@ -102,6 +102,7 @@ var gPluginIDs = [null, null, null, null, null];
 function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  Services.prefs.setBoolPref("media.openh264.providerEnabled", false);
 
   startupManager();
 

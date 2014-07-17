@@ -182,6 +182,12 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
  */
 #define SSL_ENABLE_ALPN 26
 
+/* SSL_REUSE_SERVER_ECDHE_KEY controls whether the ECDHE server key is
+ * reused for multiple handshakes or generated each time.
+ * SSL_REUSE_SERVER_ECDHE_KEY is currently enabled by default.
+ */
+#define SSL_REUSE_SERVER_ECDHE_KEY 27
+
 #ifdef SSL_DEPRECATED_FUNCTION 
 /* Old deprecated function names */
 SSL_IMPORT SECStatus SSL_Enable(PRFileDesc *fd, int option, PRBool on);

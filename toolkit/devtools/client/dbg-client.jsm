@@ -1002,6 +1002,11 @@ DebuggerClient.prototype = {
                       "a client instance with an `events` attribute " +
                       "that is an array.");
     }
+    if (client.events.length > 0 && typeof(client.emit) != "function") {
+      throw new Error("DebuggerServer.registerClient expects " +
+                      "client instances with non-empty `events` array to" +
+                      "have an `emit` function.");
+    }
     if (typeof(client.detach) != "function") {
       throw new Error("DebuggerServer.registerClient expects " +
                       "a client instance with a `detach` function.");

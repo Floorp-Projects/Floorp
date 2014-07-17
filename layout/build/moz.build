@@ -38,7 +38,7 @@ LOCAL_INCLUDES += [
     '../style',
     '../tables',
     '../xul',
-    '/caps/include',
+    '/caps',
     '/content/base/src',
     '/content/canvas/src',
     '/content/html/content/src',

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <script type="text/javascript">
+    var result = null;
+
+    function handlePosition(position) {
+      result.innerHTML = position.coords.latitude + " " + position.coords.longitude;
+    }
+
+    function handleError(error) {
+      result.innerHTML = error.message;
+    }
+
+    function init() {
+      result = document.getElementById("result");
+
+      if (navigator.geolocation)
+        navigator.geolocation.getCurrentPosition(handlePosition, handleError);
+      else
+        result.innerHTML = "not available";
+    }
+
+  </script>
+</head>
+<body onload="init()">
+  <p id="result">location...</p>
+</body>
+</html>

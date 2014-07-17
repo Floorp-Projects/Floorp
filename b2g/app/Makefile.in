@@ -124,14 +124,9 @@ else # MOZ_WIDGET_TOOLKIT != cocoa
 libs::
 ifdef LIBXUL_SDK
 	cp $(LIBXUL_DIST)/bin/xulrunner-stub$(BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY)
-endif
-ifndef SKIP_COPY_XULRUNNER
-ifdef LIBXUL_SDK
 	$(NSINSTALL) -D $(DIST)/bin/xulrunner
 	(cd $(LIBXUL_SDK)/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DIST)/bin/xulrunner && tar -xf -)
 endif
-endif # SKIP_COPY_XULRUNNER
-
 	$(NSINSTALL) -D $(DIST)/bin/chrome/icons/default
 
 # Copy the app icon for b2g-desktop
