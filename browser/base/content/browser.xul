@@ -563,8 +563,7 @@
 #endif
 #endif
              context="toolbar-context-menu">
-      <toolbaritem id="menubar-items" align="center"
-                   cui-areatype="toolbar">
+      <toolbaritem id="menubar-items" align="center">
 # The entire main menubar is placed into browser-menubar.inc, so that it can be shared by
 # hiddenWindow.xul.
 #include browser-menubar.inc
@@ -601,7 +600,6 @@
             flex="1"
             setfocus="false"
             tooltip="tabbrowser-tab-tooltip"
-            cui-areatype="toolbar"
             stopwatchid="FX_TAB_CLICK_MS">
         <tab class="tabbrowser-tab" selected="true" fadein="true"/>
       </tabs>
@@ -682,12 +680,10 @@
       <hbox id="nav-bar-customization-target" flex="1">
         <toolbaritem id="urlbar-container" flex="400" persist="width"
                      title="&locationItem.title;" removable="false"
-                     cui-areatype="toolbar"
                      class="chromeclass-location" overflows="false">
           <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                          label="&backCmd.label;"
                          command="Browser:BackOrBackDuplicate"
-                         cui-areatype="toolbar"
                          onclick="checkForMiddleClick(this, event);"
                          tooltip="back-button-tooltip"
                          context="backForwardMenu"/>
@@ -695,7 +691,6 @@
             <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                            label="&forwardCmd.label;"
                            command="Browser:ForwardOrForwardDuplicate"
-                           cui-areatype="toolbar"
                            onclick="checkForMiddleClick(this, event);"
                            tooltip="forward-button-tooltip"
                            context="backForwardMenu"/>
@@ -798,7 +793,6 @@
                        orient="horizontal"
                        label="&webrtcIndicatorButton.label;"
                        tooltiptext="&webrtcIndicatorButton.tooltip;"
-                       cui-areatype="toolbar"
                        overflows="false">
           <menupopup onpopupshowing="WebrtcIndicator.fillPopup(this);"
                      onpopuphiding="WebrtcIndicator.clearPopup(this);"
@@ -962,17 +956,14 @@
 
       <toolbarbutton id="nav-bar-overflow-button"
                      class="toolbarbutton-1 chromeclass-toolbar-additional overflow-button"
-                     cui-areatype="toolbar"
                      skipintoolbarset="true"
                      tooltiptext="&navbarOverflow.label;"/>
 
       <toolbaritem id="PanelUI-button"
                    class="chromeclass-toolbar-additional"
-                   cui-areatype="toolbar"
                    removable="false">
         <toolbarbutton id="PanelUI-menu-button"
                        class="toolbarbutton-1"
-                       cui-areatype="toolbar"
                        consumeanchor="PanelUI-button"
                        label="&brandShortName;"
                        tooltiptext="&appmenu.tooltip;"/>
@@ -989,7 +980,6 @@
 # Prior to 10.7 there wasn't a native fullscreen button so we use #restore-button
 # to exit fullscreen and want it to behave like other toolbar buttons.
                        class="toolbarbutton-1"
-                       cui-areatype="toolbar"
 #endif
                        tooltiptext="&fullScreenRestore.tooltip;"
                        oncommand="BrowserFullScreen();"/>

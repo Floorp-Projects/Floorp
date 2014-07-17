@@ -8,7 +8,7 @@
 // (bug 719916)
 
 let test = asyncTest(function*() {
-  yield addTab("data:text/html,<h1>Some header text</h1>");
+  yield addTab("data:text/html;charset=utf-8,<h1>Some header text</h1>");
   let {toolbox, inspector, view} = yield openRuleView();
 
   info("Selecting the test node");

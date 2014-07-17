@@ -13,11 +13,11 @@ let test = asyncTest(function*() {
   let p = getNode("p");
 
   info("hovering over the <p> line in the markup-view");
-  yield hoverContainer(p, inspector);
+  yield hoverContainer("p", inspector);
   ok(isHighlighterVisible(), "the highlighter is still visible");
 
   info("selecting the <p> line by clicking in the markup-view");
-  yield clickContainer(p, inspector);
+  yield clickContainer("p", inspector);
 
   p.textContent = "wait for it ....";
   info("wait and see if the highlighter stays visible even after the node was selected");
