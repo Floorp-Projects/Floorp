@@ -146,6 +146,23 @@ protected:
   static nsPresContext* sPresContext;
   static bool           sInstalledMenuKeyboardListener;
   static bool           sIsTestingIME;
+  static bool           sIsGettingNewIMEState;
+
+  class MOZ_STACK_CLASS GettingNewIMEStateBlocker MOZ_FINAL
+  {
+  public:
+    GettingNewIMEStateBlocker()
+      : mOldValue(IMEStateManager::sIsGettingNewIMEState)
+    {
+      IMEStateManager::sIsGettingNewIMEState = true;
+    }
+    ~GettingNewIMEStateBlocker()
+    {
+      IMEStateManager::sIsGettingNewIMEState = mOldValue;
+    }
+  private:
+    bool mOldValue;
+  };
 
   static IMEContentObserver* sActiveIMEContentObserver;
 

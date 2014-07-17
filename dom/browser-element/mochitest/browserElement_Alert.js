@@ -47,9 +47,9 @@ function test1() {
   // Do window.alert within the iframe, then modify the global |testState|
   // after the alert.
   var script = 'data:,\
-    testState = 0; \
+    this.testState = 0; \
     content.alert("Hello, world!"); \
-    testState = 1; \
+    this.testState = 1; \
   ';
 
   mm.loadFrameScript(script, /* allowDelayedLoad = */ false);
@@ -71,11 +71,11 @@ function test2a(e) {
   // The iframe should be blocked on the alert call at the moment, so testState
   // should still be 0.
   var script = 'data:,\
-    if (testState === 0) { \
+    if (this.testState === 0) { \
       sendAsyncMessage("test-success", "1: Correct testState"); \
     } \
     else { \
-      sendAsyncMessage("test-fail", "1: Wrong testState: " + testState); \
+      sendAsyncMessage("test-fail", "1: Wrong testState: " + this.testState); \
     }';
 
   mm.loadFrameScript(script, /* allowDelayedLoad = */ false);
@@ -89,11 +89,11 @@ function test3(e) {
   e.detail.unblock();
 
   var script2 = 'data:,\
-    if (testState === 1) { \
+    if (this.testState === 1) { \
       sendAsyncMessage("test-success", "2: Correct testState"); \
     } \
     else { \
-      sendAsyncMessage("test-try-again", "2: Wrong testState (for now): " + testState); \
+      sendAsyncMessage("test-try-again", "2: Wrong testState (for now): " + this.testState); \
     }';
 
   // Urgh.  e.unblock() didn't necessarily unblock us immediately, so we have

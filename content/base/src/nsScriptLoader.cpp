@@ -1417,7 +1417,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     }
     rv = NS_OK;
   } else {
-    NS_Free(const_cast<uint8_t *>(aString));
+    moz_free(const_cast<uint8_t *>(aString));
     rv = NS_SUCCESS_ADOPTED_DATA;
   }
 

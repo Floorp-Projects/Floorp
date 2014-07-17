@@ -186,7 +186,7 @@ DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleObject
 {
     // Given the ScopeChain, extract the VarObj.
     RootedObject obj(cx, scopeChain);
-    while (!obj->isVarObj())
+    while (!obj->isQualifiedVarObj())
         obj = obj->enclosingScope();
 
     return DefVarOrConstOperation(cx, obj, dn, attrs);
@@ -197,7 +197,7 @@ SetConst(JSContext *cx, HandlePropertyName name, HandleObject scopeChain, Handle
 {
     // Given the ScopeChain, extract the VarObj.
     RootedObject obj(cx, scopeChain);
-    while (!obj->isVarObj())
+    while (!obj->isQualifiedVarObj())
         obj = obj->enclosingScope();
 
     return SetConstOperation(cx, obj, name, rval);

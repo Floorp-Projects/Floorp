@@ -516,22 +516,22 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     InlineForwardList<MResumePoint> resumePoints_;
     FixedList<MDefinition *> slots_;
     uint32_t stackPosition_;
-    jsbytecode *pc_;
     uint32_t id_;
     uint32_t domIndex_; // Index in the dominator tree.
+    uint32_t numDominated_;
+    jsbytecode *pc_;
     LBlock *lir_;
     MResumePoint *entryResumePoint_;
     MBasicBlock *successorWithPhis_;
     uint32_t positionInPhiSuccessor_;
-    Kind kind_;
     uint32_t loopDepth_;
+    Kind kind_ : 8;
 
     // Utility mark for traversal algorithms.
     bool mark_;
 
     Vector<MBasicBlock *, 1, IonAllocPolicy> immediatelyDominated_;
     MBasicBlock *immediateDominator_;
-    size_t numDominated_;
 
     BytecodeSite trackedSite_;
 

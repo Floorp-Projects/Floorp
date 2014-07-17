@@ -479,3 +479,44 @@ js::IsAnyBuiltinEval(JSFunction *fun)
 {
     return fun->maybeNative() == IndirectEval;
 }
+
+JS_FRIEND_API(bool)
+js::ExecuteInGlobalAndReturnScope(JSContext *cx, HandleObject global, HandleScript scriptArg,
+                                  MutableHandleObject scopeArg)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, global);
+    MOZ_ASSERT(global->is<GlobalObject>());
+
+    RootedScript script(cx, scriptArg);
+    if (script->compartment() != cx->compartment()) {
+        script = CloneScript(cx, NullPtr(), NullPtr(), script);
+        if (!script)
+            return false;
+    }
+
+    RootedObject scope(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    if (!scope)
+        return false;
+
+    if (!scope->setQualifiedVarObj(cx))
+        return false;
+
+    if (!scope->setUnqualifiedVarObj(cx))
+        return false;
+
+    JSObject *thisobj = JSObject::thisObject(cx, global);
+    if (!thisobj)
+        return false;
+
+    RootedValue thisv(cx, ObjectValue(*thisobj));
+    RootedValue rval(cx);
+    if (!ExecuteKernel(cx, script, *scope, thisv, EXECUTE_GLOBAL,
+                       NullFramePtr() /* evalInFrame */, rval.address()))
+    {
+        return false;
+    }
+
+    scopeArg.set(scope);
+    return true;
+}

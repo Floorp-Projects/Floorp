@@ -842,7 +842,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
     case eCSSProperty_animation: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(eCSSProperty_animation);
-      static const size_t numProps = 7;
+      static const size_t numProps = 8;
       NS_ABORT_IF_FALSE(subprops[numProps] == eCSSProperty_UNKNOWN,
                         "unexpected number of subproperties");
       const nsCSSValue* values[numProps];

@@ -7,8 +7,6 @@
 #ifndef vm_Compression_h
 #define vm_Compression_h
 
-#ifdef USE_ZLIB
-
 #include <zlib.h>
 
 #include "jstypes.h"
@@ -51,5 +49,4 @@ bool DecompressString(const unsigned char *inp, size_t inplen,
 
 } /* namespace js */
 
-#endif /* USE_ZLIB */
 #endif /* vm_Compression_h */

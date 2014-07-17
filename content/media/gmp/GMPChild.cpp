@@ -19,6 +19,11 @@
 #include <unistd.h> // for _exit()
 #endif
 
+#if defined(XP_WIN)
+#define TARGET_SANDBOX_EXPORTS
+#include "mozilla/sandboxTarget.h"
+#endif
+
 namespace mozilla {
 namespace gmp {
 
@@ -39,6 +44,9 @@ GMPChild::Init(const std::string& aPluginPath,
                MessageLoop* aIOLoop,
                IPC::Channel* aChannel)
 {
+#if defined(XP_WIN)
+  mozilla::SandboxTarget::Instance()->StartSandbox();
+#endif
   return LoadPluginLibrary(aPluginPath) &&
          Open(aChannel, aParentProcessHandle, aIOLoop);
 }

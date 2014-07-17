@@ -2331,6 +2331,11 @@ CheckDefineProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::Ha
 JS_FRIEND_API(void)
 ReportErrorWithId(JSContext *cx, const char *msg, JS::HandleId id);
 
+// This function is for one specific use case, please don't use this for anything else!
+extern JS_FRIEND_API(bool)
+ExecuteInGlobalAndReturnScope(JSContext *cx, JS::HandleObject obj, JS::HandleScript script,
+                              JS::MutableHandleObject scope);
+
 } /* namespace js */
 
 extern JS_FRIEND_API(bool)

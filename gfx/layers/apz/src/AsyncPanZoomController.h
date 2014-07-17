@@ -968,7 +968,7 @@ private:
    * shared FrameMeterics used in progressive tile painting. */
   const uint32_t mAPZCId;
 
-  ipc::SharedMemoryBasic* mSharedFrameMetricsBuffer;
+  nsRefPtr<ipc::SharedMemoryBasic> mSharedFrameMetricsBuffer;
   CrossProcessMutex* mSharedLock;
   /**
    * Called when ever mFrameMetrics is updated so that if it is being

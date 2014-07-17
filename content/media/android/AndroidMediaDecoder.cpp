@@ -5,18 +5,18 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaDecoderStateMachine.h"
-#include "MediaPluginDecoder.h"
-#include "MediaPluginReader.h"
+#include "AndroidMediaDecoder.h"
+#include "AndroidMediaReader.h"
 
 namespace mozilla {
 
-MediaPluginDecoder::MediaPluginDecoder(const nsACString& aType) : mType(aType)
+AndroidMediaDecoder::AndroidMediaDecoder(const nsACString& aType) : mType(aType)
 {
 }
 
-MediaDecoderStateMachine* MediaPluginDecoder::CreateStateMachine()
+MediaDecoderStateMachine* AndroidMediaDecoder::CreateStateMachine()
 {
-  return new MediaDecoderStateMachine(this, new MediaPluginReader(this, mType));
+  return new MediaDecoderStateMachine(this, new AndroidMediaReader(this, mType));
 }
 
 } // namespace mozilla

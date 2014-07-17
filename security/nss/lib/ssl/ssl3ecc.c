@@ -505,28 +505,21 @@ ssl3_ECRegister(void)
     return (PRStatus)rv;
 }
 
-/* CallOnce function, called once for each named curve. */
-static PRStatus
-ssl3_CreateECDHEphemeralKeyPair(void * arg)
+/* Create an ECDHE key pair for a given curve */
+static SECStatus
+ssl3_CreateECDHEphemeralKeyPair(ECName ec_curve, ssl3KeyPair** keyPair)
 {
     SECKEYPrivateKey *    privKey  = NULL;
     SECKEYPublicKey *     pubKey   = NULL;
-    ssl3KeyPair *         keyPair  = NULL;
-    ECName                ec_curve = (ECName)arg;
     SECKEYECParams        ecParams = { siBuffer, NULL, 0 };
 
-    PORT_Assert(gECDHEKeyPairs[ec_curve].pair == NULL);
-
-    /* ok, no one has generated a global key for this curve yet, do so */
     if (ssl3_ECName2Params(NULL, ec_curve, &ecParams) != SECSuccess) {
-        gECDHEKeyPairs[ec_curve].error = PORT_GetError();
-        return PR_FAILURE;
+        return SECFailure;
     }
-
     privKey = SECKEY_CreateECPrivateKey(&ecParams, &pubKey, NULL);
     SECITEM_FreeItem(&ecParams, PR_FALSE);
 
-    if (!privKey || !pubKey || !(keyPair = ssl3_NewKeyPair(privKey, pubKey))) {
+    if (!privKey || !pubKey || !(*keyPair = ssl3_NewKeyPair(privKey, pubKey))) {
         if (privKey) {
             SECKEY_DestroyPrivateKey(privKey);
         }
@@ -534,6 +527,23 @@ ssl3_CreateECDHEphemeralKeyPair(void * arg)
             SECKEY_DestroyPublicKey(pubKey);
         }
         ssl_MapLowLevelError(SEC_ERROR_KEYGEN_FAIL);
+        return SECFailure;
+    }
+
+    return SECSuccess;
+}
+
+/* CallOnce function, called once for each named curve. */
+static PRStatus
+ssl3_CreateECDHEphemeralKeyPairOnce(void * arg)
+{
+    ECName                ec_curve = (ECName)arg;
+    ssl3KeyPair *         keyPair  = NULL;
+
+    PORT_Assert(gECDHEKeyPairs[ec_curve].pair == NULL);
+
+    /* ok, no one has generated a global key for this curve yet, do so */
+    if (ssl3_CreateECDHEphemeralKeyPair(ec_curve, &keyPair) != SECSuccess) {
         gECDHEKeyPairs[ec_curve].error = PORT_GetError();
         return PR_FAILURE;
     }
@@ -566,7 +576,7 @@ ssl3_CreateECDHEphemeralKeys(sslSocket *ss, ECName ec_curve)
             return SECFailure;
         }
         status = PR_CallOnceWithArg(&gECDHEKeyPairs[ec_curve].once,
-                                    ssl3_CreateECDHEphemeralKeyPair,
+                                    ssl3_CreateECDHEphemeralKeyPairOnce,
                                     (void *)ec_curve);
         if (status != PR_SUCCESS) {
             PORT_SetError(gECDHEKeyPairs[ec_curve].error);
@@ -759,10 +769,16 @@ ssl3_SendECDHServerKeyExchange(
     if (curve == ec_noName) {
         goto loser;
     }
-    rv = ssl3_CreateECDHEphemeralKeys(ss, curve);
-    if (rv != SECSuccess) {
-        goto loser;     /* err set by AppendHandshake. */
+
+    if (ss->opt.reuseServerECDHEKey) {
+        rv = ssl3_CreateECDHEphemeralKeys(ss, curve);
+    } else {
+        rv = ssl3_CreateECDHEphemeralKeyPair(curve, &ss->ephemeralECDHKeyPair);
     }
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+
     ecdhePub = ss->ephemeralECDHKeyPair->pubKey;
     PORT_Assert(ecdhePub != NULL);
     if (!ecdhePub) {

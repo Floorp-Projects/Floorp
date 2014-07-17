@@ -21,10 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
   SimpleTest.waitForExplicitFinish();
 
   performTest({
-    eventsToRequest: [
-      "EVENT_START",
-      "EVENT_AUDIO_DATA"
-    ],
+    eventsToRequest: [],
     expectedEvents: {
       "start": null,
       "audiostart": null,

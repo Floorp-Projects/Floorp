@@ -30,8 +30,8 @@ if CONFIG['MOZ_GSTREAMER']:
 if CONFIG['MOZ_DIRECTSHOW']:
     PARALLEL_DIRS += ['directshow']
 
-if CONFIG['MOZ_MEDIA_PLUGINS']:
-    PARALLEL_DIRS += ['plugins']
+if CONFIG['MOZ_ANDROID_OMX']:
+    PARALLEL_DIRS += ['android']
 
 if CONFIG['MOZ_WMF']:
     PARALLEL_DIRS += ['wmf']
@@ -50,7 +50,8 @@ if CONFIG['MOZ_OMX_DECODER']:
 
 PARALLEL_DIRS += ['webspeech']
 
-PARALLEL_DIRS += ['eme']
+if CONFIG['MOZ_EME']:
+    PARALLEL_DIRS += ['eme']
 
 TEST_DIRS += [
     'test',
