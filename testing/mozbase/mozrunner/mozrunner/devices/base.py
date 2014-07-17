@@ -78,16 +78,6 @@ class Device(object):
 
         self.dm.pushDir(profile.profile, self.app_ctx.remote_profile)
 
-        extension_dir = os.path.join(profile.profile, 'extensions', 'staged')
-        if os.path.isdir(extension_dir):
-            # Copy the extensions to the B2G bundles dir.
-            # need to write to read-only dir
-            for filename in os.listdir(extension_dir):
-                path = posixpath.join(self.app_ctx.remote_bundles_dir, filename)
-                if self.dm.fileExists(path):
-                    self.dm.shellCheckOutput(['rm', '-rf', path])
-            self.dm.pushDir(extension_dir, self.app_ctx.remote_bundles_dir)
-
         timeout = 5 # seconds
         starttime = datetime.datetime.now()
         while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
@@ -112,6 +102,13 @@ class Device(object):
 
         self.backup_file(self.app_ctx.remote_profiles_ini)
         self.dm.pushFile(new_profiles_ini.name, self.app_ctx.remote_profiles_ini)
+
+        # Ideally all applications would read the profile the same way, but in practice
+        # this isn't true. Perform application specific profile-related setup if necessary.
+        if hasattr(self.app_ctx, 'setup_profile'):
+            for remote_path in self.app_ctx.remote_backup_files:
+                self.backup_file(remote_path)
+            self.app_ctx.setup_profile(profile)
 
     def _get_online_devices(self):
         return [d[0] for d in self.dm.devices() if d[1] != 'offline' if not d[0].startswith('emulator')]
@@ -213,7 +210,7 @@ class Device(object):
         if not self.restore:
             return
 
-        if self.dm.fileExists(remote_path):
+        if self.dm.fileExists(remote_path) or self.dm.dirExists(remote_path):
             self.dm.copyTree(remote_path, '%s.orig' % remote_path)
             self.backup_files.add(remote_path)
         else:
@@ -237,17 +234,13 @@ class Device(object):
             self.dm.removeFile(added_file)
 
         for backup_file in self.backup_files:
-            if self.dm.fileExists('%s.orig' % backup_file):
+            if self.dm.fileExists('%s.orig' % backup_file) or self.dm.dirExists('%s.orig' % backup_file):
                 self.dm.moveTree('%s.orig' % backup_file, backup_file)
 
-        # Delete any bundled extensions
-        extension_dir = posixpath.join(self.app_ctx.remote_profile, 'extensions', 'staged')
-        if self.dm.dirExists(extension_dir):
-            for filename in self.dm.listFiles(extension_dir):
-                try:
-                    self.dm.removeDir(posixpath.join(self.app_ctx.remote_bundles_dir, filename))
-                except DMError:
-                    pass
+        # Perform application specific profile cleanup if necessary
+        if hasattr(self.app_ctx, 'cleanup_profile'):
+            self.app_ctx.cleanup_profile()
+
         # Remove the test profile
         self.dm.removeDir(self.app_ctx.remote_profile)
 
