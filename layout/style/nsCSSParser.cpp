@@ -13860,7 +13860,7 @@ CSSParserImpl::ParseAnimationOrTransitionShorthand(
     return eParseAnimationOrTransitionShorthand_Inherit;
   }
 
-  static const size_t maxNumProperties = 7;
+  static const size_t maxNumProperties = 8;
   NS_ABORT_IF_FALSE(aNumProperties <= maxNumProperties,
                     "can't handle this many properties");
   nsCSSValueList *cur[maxNumProperties];
@@ -14024,6 +14024,7 @@ CSSParserImpl::ParseAnimation()
     eCSSProperty_animation_direction,
     eCSSProperty_animation_fill_mode,
     eCSSProperty_animation_iteration_count,
+    eCSSProperty_animation_play_state,
     // Must check 'animation-name' after 'animation-timing-function',
     // 'animation-direction', 'animation-fill-mode',
     // 'animation-iteration-count', and 'animation-play-state' since
@@ -14043,7 +14044,8 @@ CSSParserImpl::ParseAnimation()
   initialValues[3].SetIntValue(NS_STYLE_ANIMATION_DIRECTION_NORMAL, eCSSUnit_Enumerated);
   initialValues[4].SetIntValue(NS_STYLE_ANIMATION_FILL_MODE_NONE, eCSSUnit_Enumerated);
   initialValues[5].SetFloatValue(1.0f, eCSSUnit_Number);
-  initialValues[6].SetNoneValue();
+  initialValues[6].SetIntValue(NS_STYLE_ANIMATION_PLAY_STATE_RUNNING, eCSSUnit_Enumerated);
+  initialValues[7].SetNoneValue();
 
   nsCSSValue values[numProps];
 

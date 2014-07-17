@@ -1025,7 +1025,7 @@ void
 PatchJump(CodeLocationJump &jump_, CodeLocationLabel label);
 class InstructionIterator;
 class Assembler;
-typedef js::jit::AssemblerBufferWithConstantPool<1024, 4, Instruction, Assembler, 1> ARMBuffer;
+typedef js::jit::AssemblerBufferWithConstantPools<1024, 4, Instruction, Assembler> ARMBuffer;
 
 class Assembler : public AssemblerShared
 {
@@ -1137,6 +1137,8 @@ class Assembler : public AssemblerShared
     BufferOffset actualOffset(BufferOffset) const;
     static uint32_t NopFill;
     static uint32_t GetNopFill();
+    static uint32_t AsmPoolMaxOffset;
+    static uint32_t GetPoolMaxOffset();
   protected:
 
     // Structure for fixing up pc-relative loads/jumps when a the machine code
@@ -1175,16 +1177,12 @@ class Assembler : public AssemblerShared
     // needed. Dummy always happens to be null, but we shouldn't be looking at
     // it in any case.
     static Assembler *Dummy;
-    mozilla::Array<Pool, 4> pools_;
-    Pool *int32Pool;
-    Pool *doublePool;
 
   public:
+    // For the alignment fill use NOP: 0x0320f000 or (Always | InstNOP::NopInst).
     // For the nopFill use a branch to the next instruction: 0xeaffffff.
     Assembler()
-      : m_buffer(4, 4, 0, &pools_[0], 8, 0xeaffffff, GetNopFill()),
-        int32Pool(m_buffer.getPool(1)),
-        doublePool(m_buffer.getPool(0)),
+      : m_buffer(1, 1, 8, GetPoolMaxOffset(), 8, 0xe320f000, 0xeaffffff, GetNopFill()),
         isFinished(false),
         dtmActive(false),
         dtmCond(Always)
@@ -1195,21 +1193,6 @@ class Assembler : public AssemblerShared
     // IonMacroAssembler, before allocating any space.
     void initWithAllocator() {
         m_buffer.initWithAllocator();
-
-        // Set up the backwards double region.
-        new (&pools_[2]) Pool (1024, 8, 4, 8, 8, m_buffer.LifoAlloc_, true);
-        // Set up the backwards 32 bit region.
-        new (&pools_[3]) Pool (4096, 4, 4, 8, 4, m_buffer.LifoAlloc_, true, true);
-        // Set up the forwards double region.
-        new (doublePool) Pool (1024, 8, 4, 8, 8, m_buffer.LifoAlloc_, false, false, &pools_[2]);
-        // Set up the forwards 32 bit region.
-        new (int32Pool) Pool (4096, 4, 4, 8, 4, m_buffer.LifoAlloc_, false, true, &pools_[3]);
-        for (int i = 0; i < 4; i++) {
-            if (pools_[i].poolData == nullptr) {
-                m_buffer.fail_oom();
-                return;
-            }
-        }
     }
 
     static Condition InvertCondition(Condition cond);
@@ -1275,7 +1258,7 @@ class Assembler : public AssemblerShared
         return codeLabels_[i];
     }
 
-    // Size of the instruction stream, in bytes.
+    // Size of the instruction stream, in bytes, after pools are flushed.
     size_t size() const;
     // Size of the jump relocation table, in bytes.
     size_t jumpRelocationTableBytes() const;
@@ -1302,7 +1285,7 @@ class Assembler : public AssemblerShared
   public:
     void writeCodePointer(AbsoluteLabel *label);
 
-    BufferOffset align(int alignment);
+    void align(int alignment);
     BufferOffset as_nop();
     BufferOffset as_alu(Register dest, Register src1, Operand2 op2,
                 ALUOp op, SetCond_ sc = NoSetCond, Condition c = Always, Instruction *instdest = nullptr);
@@ -1397,13 +1380,13 @@ class Assembler : public AssemblerShared
     // Control flow stuff:
 
     // bx can *only* branch to a register never to an immediate.
-    BufferOffset as_bx(Register r, Condition c = Always, bool isPatchable = false);
+    BufferOffset as_bx(Register r, Condition c = Always);
 
     // Branch can branch to an immediate *or* to a register. Branches to
     // immediates are pc relative, branches to registers are absolute.
-    BufferOffset as_b(BOffImm off, Condition c, bool isPatchable = false);
+    BufferOffset as_b(BOffImm off, Condition c);
 
-    BufferOffset as_b(Label *l, Condition c = Always, bool isPatchable = false);
+    BufferOffset as_b(Label *l, Condition c = Always);
     BufferOffset as_b(BOffImm off, Condition c, BufferOffset inst);
 
     // blx can go to either an immediate or a register. When blx'ing to a
@@ -1678,7 +1661,7 @@ class Assembler : public AssemblerShared
 
     // API for speaking with the IonAssemblerBufferWithConstantPools generate an
     // initial placeholder instruction that we want to later fix up.
-    static void InsertTokenIntoTag(uint32_t size, uint8_t *load, int32_t token);
+    static void InsertIndexIntoTag(uint8_t *load, uint32_t index);
     // Take the stub value that was written in before, and write in an actual
     // load using the index we'd computed previously as well as the address of
     // the pool start.
@@ -1688,19 +1671,17 @@ class Assembler : public AssemblerShared
     // Move our entire pool into the instruction stream. This is to force an
     // opportunistic dump of the pool, prefferably when it is more convenient to
     // do a dump.
-    void dumpPool();
     void flushBuffer();
-    void enterNoPool();
+    void enterNoPool(size_t maxInst);
     void leaveNoPool();
     // This should return a BOffImm, but we didn't want to require everyplace
     // that used the AssemblerBuffer to make that class.
-    static ptrdiff_t getBranchOffset(const Instruction *i);
+    static ptrdiff_t GetBranchOffset(const Instruction *i);
     static void RetargetNearBranch(Instruction *i, int offset, Condition cond, bool final = true);
     static void RetargetNearBranch(Instruction *i, int offset, bool final = true);
     static void RetargetFarBranch(Instruction *i, uint8_t **slot, uint8_t *dest, Condition cond);
 
     static void WritePoolHeader(uint8_t *start, Pool *p, bool isNatural);
-    static void WritePoolFooter(uint8_t *start, Pool *p, bool isNatural);
     static void WritePoolGuard(BufferOffset branch, Instruction *inst, BufferOffset dest);
 
 
@@ -2196,8 +2177,15 @@ class DoubleEncoder {
 class AutoForbidPools {
     Assembler *masm_;
   public:
-    AutoForbidPools(Assembler *masm) : masm_(masm) {
-        masm_->enterNoPool();
+    // The maxInst argument is the maximum number of word sized instructions
+    // that will be allocated within this context. It is used to determine if
+    // the pool needs to be dumped before entering this content. The debug code
+    // checks that no more than maxInst instructions are actually allocated.
+    //
+    // Allocation of pool entries is not supported within this content so the
+    // code can not use large integers or float constants etc.
+    AutoForbidPools(Assembler *masm, size_t maxInst) : masm_(masm) {
+        masm_->enterNoPool(maxInst);
     }
     ~AutoForbidPools() {
         masm_->leaveNoPool();

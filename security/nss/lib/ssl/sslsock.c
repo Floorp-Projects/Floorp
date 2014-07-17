@@ -80,7 +80,8 @@ static sslOptions ssl_defaults = {
     PR_TRUE,    /* cbcRandomIV        */
     PR_FALSE,   /* enableOCSPStapling */
     PR_TRUE,    /* enableNPN          */
-    PR_FALSE    /* enableALPN         */
+    PR_FALSE,   /* enableALPN         */
+    PR_TRUE     /* reuseServerECDHEKey */
 };
 
 /*
@@ -784,6 +785,10 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
         ss->opt.enableALPN = on;
         break;
 
+      case SSL_REUSE_SERVER_ECDHE_KEY:
+        ss->opt.reuseServerECDHEKey = on;
+        break;
+
       default:
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         rv = SECFailure;
@@ -856,6 +861,8 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRBool *pOn)
     case SSL_ENABLE_OCSP_STAPLING: on = ss->opt.enableOCSPStapling; break;
     case SSL_ENABLE_NPN:          on = ss->opt.enableNPN;          break;
     case SSL_ENABLE_ALPN:         on = ss->opt.enableALPN;         break;
+    case SSL_REUSE_SERVER_ECDHE_KEY:
+                                  on = ss->opt.reuseServerECDHEKey; break;
 
     default:
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -919,6 +926,9 @@ SSL_OptionGetDefault(PRInt32 which, PRBool *pOn)
        break;
     case SSL_ENABLE_NPN:          on = ssl_defaults.enableNPN;          break;
     case SSL_ENABLE_ALPN:         on = ssl_defaults.enableALPN;         break;
+    case SSL_REUSE_SERVER_ECDHE_KEY:
+       on = ssl_defaults.reuseServerECDHEKey;
+       break;
 
     default:
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -1092,6 +1102,10 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
 
       case SSL_ENABLE_ALPN:
         ssl_defaults.enableALPN = on;
+        break;
+
+      case SSL_REUSE_SERVER_ECDHE_KEY:
+        ssl_defaults.reuseServerECDHEKey = on;
         break;
 
       default:

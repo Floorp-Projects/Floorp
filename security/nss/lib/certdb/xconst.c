@@ -226,7 +226,7 @@ CERT_DecodeNameConstraintsExtension(PLArenaPool          *arena,
 
 CERTAuthInfoAccess **
 CERT_DecodeAuthInfoAccessExtension(PLArenaPool *reqArena,
-				   SECItem     *encodedExtension)
+				   const SECItem *encodedExtension)
 {
     CERTAuthInfoAccess **info = NULL;
     SECStatus rv;

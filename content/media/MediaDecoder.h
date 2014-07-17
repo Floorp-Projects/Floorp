@@ -875,8 +875,8 @@ public:
   static bool IsOmxEnabled();
 #endif
 
-#ifdef MOZ_MEDIA_PLUGINS
-  static bool IsMediaPluginsEnabled();
+#ifdef MOZ_ANDROID_OMX
+  static bool IsAndroidMediaEnabled();
 #endif
 
 #ifdef MOZ_WMF

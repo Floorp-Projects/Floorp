@@ -81,7 +81,7 @@ class HTMLElement(object):
 
         :param x: X-coordinate of tap event. If not given, default to the
          center of the element.
-        :param x: X-coordinate of tap event. If not given, default to the
+        :param y: Y-coordinate of tap event. If not given, default to the
          center of the element.
         '''
         return self.marionette._send_message('singleTap', 'ok', id=self.id, x=x, y=y)
@@ -161,6 +161,18 @@ class HTMLElement(object):
         """
 
         return self.marionette._send_message("getElementLocation", "value", id=self.id)
+
+    @property
+    def rect(self):
+        """
+            this will return a dictionary with the following:
+
+            * x and y represent the top left coordinates of the WebElement relative to top left corner of the document.
+            * height and the width will contain the height and the width of the DOMRect of the WebElement.
+
+        """
+
+        return self.marionette._send_message("getElementRect", "value", id=self.id)
 
     def value_of_css_property(self, property_name):
         '''
