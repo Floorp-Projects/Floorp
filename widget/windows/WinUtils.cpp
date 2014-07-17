@@ -60,8 +60,8 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace widget {
 
-NS_IMPL_ISUPPORTS(myDownloadObserver, nsIDownloadObserver)
 #ifdef MOZ_PLACES
+NS_IMPL_ISUPPORTS(myDownloadObserver, nsIDownloadObserver)
 NS_IMPL_ISUPPORTS(AsyncFaviconDataReady, nsIFaviconDataCallback)
 #endif
 NS_IMPL_ISUPPORTS(AsyncEncodeAndWriteIcon, nsIRunnable)

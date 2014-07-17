@@ -428,7 +428,7 @@
         }],
 
         # Flags to use X11 on non-Mac POSIX platforms
-        ['OS=="win" or OS=="mac" or OS=="ios" or OS=="android"', {
+        ['OS=="win" or OS=="mac" or OS=="ios" or OS=="android" or moz_widget_toolkit_gonk==1', {
           'use_glib%': 0,
           'use_x11%': 0,
         }, {

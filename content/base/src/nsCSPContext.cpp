@@ -209,19 +209,6 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCSPContext::ShouldProcess(nsContentPolicyType aContentType,
-                            nsIURI*             aContentLocation,
-                            nsIURI*             aRequestOrigin,
-                            nsISupports*        aRequestContext,
-                            const nsACString&   aMimeType,
-                            nsISupports*        aExtra,
-                            int16_t*            outDecision)
-{
-  *outDecision = nsIContentPolicy::ACCEPT;
-  return NS_OK;
-}
-
 /* ===== nsISupports implementation ========== */
 
 NS_IMPL_CLASSINFO(nsCSPContext,

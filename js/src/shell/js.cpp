@@ -6419,7 +6419,7 @@ main(int argc, char **argv, char **envp)
 #endif
 
     /* Use the same parameters as the browser in xpcjsruntime.cpp. */
-    rt = JS_NewRuntime(32L * 1024L * 1024L, nurseryBytes);
+    rt = JS_NewRuntime(JS::DefaultHeapMaxBytes, nurseryBytes);
     if (!rt)
         return 1;
 

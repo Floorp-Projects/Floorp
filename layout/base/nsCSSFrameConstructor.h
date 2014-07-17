@@ -1768,10 +1768,11 @@ private:
    * contexts and also handles unbinding undisplayed generated content
    * as needed.
    */
-  static void SetAsUndisplayedContent(FrameConstructionItemList& aList,
-                                      nsIContent* aContent,
-                                      nsStyleContext* aStyleContext,
-                                      bool aIsGeneratedContent);
+  void SetAsUndisplayedContent(nsFrameConstructorState& aState,
+                               FrameConstructionItemList& aList,
+                               nsIContent* aContent,
+                               nsStyleContext* aStyleContext,
+                               bool aIsGeneratedContent);
   // Create touch caret frame.
   void ConstructAnonymousContentForCanvas(nsFrameConstructorState& aState,
                                           nsIFrame* aFrame,

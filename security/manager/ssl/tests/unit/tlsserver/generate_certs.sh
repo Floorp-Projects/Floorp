@@ -184,4 +184,6 @@ make_delegated invalidDelegatedSignerWrongExtKeyUsage 'CN=Test Invalid Delegated
 
 make_INT self-signed-EE-with-cA-true 'CN=Test Self-signed End-entity with CA true' unused "-x -8 self-signed-end-entity-with-cA-true.example.com"
 
+make_delegated badKeysizeDelegatedSigner 'CN=Bad Keysize Delegated Responder' testCA "--extKeyUsage ocspResponder -g 1008"
+
 cleanup

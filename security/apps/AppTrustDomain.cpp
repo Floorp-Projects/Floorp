@@ -219,4 +219,10 @@ AppTrustDomain::IsChainValid(const DERArray& certChain)
   return ConstructCERTCertListFromReversedDERArray(certChain, mCertChain);
 }
 
+SECStatus
+AppTrustDomain::CheckPublicKey(const SECItem& subjectPublicKeyInfo)
+{
+  return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
+}
+
 } } // namespace mozilla::psm

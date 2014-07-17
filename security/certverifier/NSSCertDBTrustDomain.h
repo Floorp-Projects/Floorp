@@ -77,6 +77,8 @@ public:
 
   virtual SECStatus IsChainValid(const mozilla::pkix::DERArray& certChain);
 
+  virtual SECStatus CheckPublicKey(const SECItem& subjectPublicKeyInfo);
+
 private:
   enum EncodedResponseSource {
     ResponseIsFromNetwork = 1,

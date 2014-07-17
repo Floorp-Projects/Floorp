@@ -15,6 +15,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Atomics.h"
 #include "InputData.h"
 #include "Axis.h"
@@ -41,6 +42,7 @@ class PCompositorParent;
 struct ViewTransform;
 class AsyncPanZoomAnimation;
 class FlingAnimation;
+class TouchBlockState;
 
 /**
  * Controller for all panning and zooming logic. Any time a user input is
@@ -111,6 +113,9 @@ public:
    * based on what type of input it is. For example, a PinchGestureEvent will
    * cause scaling. This should only be called externally to this class.
    * HandleInputEvent() should be used internally.
+   * This function returns nsEventStatus_eIgnore for events that are ignored,
+   * and nsEventStatus_eConsumeDoDefault for events that are queued for
+   * processing pending a content response.
    */
   nsEventStatus ReceiveInputEvent(const InputData& aEvent);
 
@@ -120,14 +125,6 @@ public:
    * up.
    */
   void ZoomToRect(CSSRect aRect);
-
-  /**
-   * If we have touch listeners, this should always be called when we know
-   * definitively whether or not content has preventDefaulted any touch events
-   * that have come in. If |aPreventDefault| is true, any touch events in the
-   * queue will be discarded.
-   */
-  void ContentReceivedTouch(bool aPreventDefault);
 
   /**
    * Updates any zoom constraints contained in the <meta name="viewport"> tag.
@@ -304,15 +301,6 @@ public:
   TouchBehaviorFlags GetAllowedTouchBehavior(ScreenIntPoint& aPoint);
 
   /**
-   * Sets allowed touch behavior for current touch session.
-   * This method is invoked by the APZCTreeManager which in its turn invoked by
-   * the widget after performing touch-action values retrieving.
-   * Must be called after receiving the TOUCH_START even that started the
-   * touch session.
-   */
-  void SetAllowedTouchBehavior(const nsTArray<TouchBehaviorFlags>& aBehaviors);
-
-  /**
    * Returns whether this APZC is for an element marked with the 'scrollgrab'
    * attribute.
    */
@@ -347,10 +335,6 @@ protected:
 
     PINCHING,                 /* nth touch-start, where n > 1. this mode allows pan and zoom */
     ANIMATING_ZOOM,           /* animated zoom to a new rect */
-    WAITING_CONTENT_RESPONSE, /* a state halfway between NOTHING and TOUCHING - the user has
-                                 put a finger down, but we don't yet know if a touch listener has
-                                 prevented the default actions yet and the allowed touch behavior
-                                 was not set yet. we still need to abort animations. */
     SNAP_BACK,                /* snap-back animation to relieve overscroll */
   };
 
@@ -487,7 +471,7 @@ protected:
   /**
    * Sets the panning state basing on the pan direction angle and current touch-action value.
    */
-  void HandlePanningWithTouchAction(double angle, TouchBehaviorFlags value);
+  void HandlePanningWithTouchAction(double angle);
 
   /**
    * Sets the panning state ignoring the touch action value.
@@ -544,24 +528,6 @@ protected:
   const FrameMetrics& GetFrameMetrics() const;
 
   /**
-   * Sets the timer for content response to a series of touch events, if it
-   * hasn't been already. This is to prevent us from batching up touch events
-   * indefinitely in the case that content doesn't respond with whether or not
-   * it wants to preventDefault. When the timer is fired, the touch event queue
-   * will be flushed.
-   */
-  void SetContentResponseTimer();
-
-  /**
-   * Timeout function for content response. This should be called on a timer
-   * after we get our first touch event in a batch, under the condition that we
-   * waiting for response from content. If a notification comes indicating whether or not
-   * content preventDefaulted a series of touch events and touch behavior values are
-   * set before the timeout, the timeout should be cancelled.
-   */
-  void TimeoutContentResponse();
-
-  /**
    * Timeout function for mozbrowserasyncscroll event. Because we throttle
    * mozbrowserasyncscroll events in some conditions, this function ensures
    * that the last mozbrowserasyncscroll event will be fired after a period of
@@ -570,62 +536,6 @@ protected:
   void FireAsyncScrollOnTimeout();
 
 private:
-  // State related to a single touch block. Does not persist across touch blocks.
-  struct TouchBlockState {
-
-    TouchBlockState()
-      :  mAllowedTouchBehaviorSet(false),
-         mPreventDefault(false),
-         mPreventDefaultSet(false),
-         mSingleTapOccurred(false)
-    {}
-
-    // Values of allowed touch behavior for touch points of this touch block.
-    // Since there are maybe a few current active touch points per time (multitouch case)
-    // and each touch point should have its own value of allowed touch behavior- we're
-    // keeping an array of allowed touch behavior values, not the single value.
-    nsTArray<TouchBehaviorFlags> mAllowedTouchBehaviors;
-
-    // Specifies whether mAllowedTouchBehaviors is set for this touch events block.
-    bool mAllowedTouchBehaviorSet;
-
-    // Flag used to specify that content prevented the default behavior of this
-    // touch events block.
-    bool mPreventDefault;
-
-    // Specifies whether mPreventDefault property is set for this touch events block.
-    bool mPreventDefaultSet;
-
-    // Specifies whether a single tap event was generated during this touch block.
-    bool mSingleTapOccurred;
-  };
-
-  /*
-   * Returns whether current touch behavior values allow pinch-zooming.
-   */
-  bool TouchActionAllowPinchZoom();
-
-  /*
-   * Returns whether current touch behavior values allow double-tap-zooming.
-   */
-  bool TouchActionAllowDoubleTapZoom();
-
-  /*
-   * Returns allowed touch behavior from the mAllowedTouchBehavior array.
-   * In case apzc didn't receive touch behavior values within the timeout
-   * it returns default value.
-   */
-  TouchBehaviorFlags GetTouchBehavior(uint32_t touchIndex);
-
-  /**
-   * To move from the WAITING_CONTENT_RESPONSE state to TOUCHING one we need two
-   * conditions set: get content listeners response (whether they called preventDefault)
-   * and get allowed touch behaviors.
-   * This method checks both conditions and changes (or not changes) state
-   * appropriately.
-   */
-  void CheckContentResponse();
-
   /**
    * Helper to set the current state. Holds the monitor before actually setting
    * it and fires content controller events based on state changes. Always set
@@ -734,10 +644,6 @@ private:
   // in a FIFO manner.
   FrameMetrics mLastDispatchedPaintMetrics;
 
-  nsTArray<MultiTouchInput> mTouchQueue;
-
-  CancelableTask* mContentResponseTimeoutTask;
-
   AxisX mX;
   AxisY mY;
 
@@ -771,18 +677,100 @@ private:
   // ensures the last mozbrowserasyncscroll event is always been fired.
   CancelableTask* mAsyncScrollTimeoutTask;
 
-  // Flag used to determine whether or not we should try to enter the
-  // WAITING_LISTENERS state. This is used in the case that we are processing a
-  // queued up event block. If set, this means that we are handling this queue
-  // and we don't want to queue the events back up again.
-  bool mHandlingTouchQueue;
-
-  // Stores information about the current touch block.
-  TouchBlockState mTouchBlockState;
-
   nsRefPtr<AsyncPanZoomAnimation> mAnimation;
 
   friend class Axis;
+
+  /* ===================================================================
+   * The functions and members in this section are used to manage
+   * blocks of touch events and the state needed to deal with content
+   * listeners.
+   */
+public:
+  /**
+   * This function is invoked by the APZCTreeManager which in turn is invoked
+   * by the widget when web content decides whether or not it wants to
+   * cancel a block of events. This automatically gets applied to the next
+   * block of events that has not yet been responded to. This function MUST
+   * be invoked exactly once for each touch block.
+   */
+  void ContentReceivedTouch(bool aPreventDefault);
+
+  /**
+   * Sets allowed touch behavior for current touch session.
+   * This method is invoked by the APZCTreeManager which in its turn invoked by
+   * the widget after performing touch-action values retrieving.
+   * Must be called after receiving the TOUCH_START even that started the
+   * touch session.
+   */
+  void SetAllowedTouchBehavior(const nsTArray<TouchBehaviorFlags>& aBehaviors);
+
+private:
+  void ScheduleContentResponseTimeout();
+  void ContentResponseTimeout();
+  /**
+   * Processes any pending input blocks that are ready for processing. There
+   * must be at least one input block in the queue when this function is called.
+   */
+  void ProcessPendingInputBlocks();
+  TouchBlockState* StartNewTouchBlock(bool aCopyAllowedTouchBehaviorFromCurrent);
+  TouchBlockState* CurrentTouchBlock();
+  bool HasReadyTouchBlock();
+
+private:
+  // The queue of touch blocks that have not yet been processed by this APZC.
+  // This member must only be accessed on the controller/UI thread.
+  nsTArray<UniquePtr<TouchBlockState>> mTouchBlockQueue;
+
+  // This variable requires some explanation. Strap yourself in.
+  //
+  // For each block of events, we do two things: (1) send the events to gecko and expect
+  // exactly one call to ContentReceivedTouch in return, and (2) kick off a timeout
+  // that triggers in case we don't hear from web content in a timely fashion.
+  // Since events are constantly coming in, we need to be able to handle more than one
+  // block of input events sitting in the queue.
+  //
+  // There are ordering restrictions on events that we can take advantage of, and that
+  // we need to abide by. Blocks of events in the queue will always be in the order that
+  // the user generated them. Responses we get from content will be in the same order as
+  // as the blocks of events in the queue. The timeout callbacks that have been posted
+  // will also fire in the same order as the blocks of events in the queue.
+  // HOWEVER, we may get multiple responses from content interleaved with multiple
+  // timeout expirations, and that interleaving is not predictable.
+  //
+  // Therefore, we need to make sure that for each block of events, we process the queued
+  // events exactly once, either when we get the response from content, or when the
+  // timeout expires (whichever happens first). There is no way to associate the timeout
+  // or response from content with a particular block of events other than via ordering.
+  //
+  // So, what we do to accomplish this is to track a "touch block balance", which is the
+  // number of timeout expirations that have fired, minus the number of content responses
+  // that have been received. (Think "balance" as in teeter-totter balance). This
+  // value is:
+  // - zero when we are in a state where the next content response we expect to receive
+  //   and the next timeout expiration we expect to fire both correspond to the next
+  //   unprocessed block of events in the queue.
+  // - negative when we are in a state where we have received more content responses than
+  //   timeout expirations. This means that the next content repsonse we receive will
+  //   correspond to the first unprocessed block, but the next n timeout expirations need
+  //   to be ignored as they are for blocks we have already processed. (n is the absolute
+  //   value of the balance.)
+  // - positive when we are in a state where we have received more timeout expirations
+  //   than content responses. This means that the next timeout expiration that we will
+  //   receive will correspond to the first unprocessed block, but the next n content
+  //   responses need to be ignored as they are for blocks we have already processed.
+  //   (n is the absolute value of the balance.)
+  //
+  // Note that each touch block internally carries flags that indicate whether or not it
+  // has received a content response and/or timeout expiration. However, we cannot rely
+  // on that alone to deliver these notifications to the right input block, because
+  // once an input block has been processed, it can potentially be removed from the queue.
+  // Therefore the information in that block is lost. An alternative approach would
+  // be to keep around those blocks until they have received both the content response
+  // and timeout expiration, but that involves a higher level of memory usage.
+  //
+  // This member must only be accessed on the controller/UI thread.
+  int32_t mTouchBlockBalance;
 
 
   /* ===================================================================

@@ -702,9 +702,7 @@ TabChild::TabChild(nsIContentChild* aManager, const TabContext& aContext, uint32
   , mTriedBrowserInit(false)
   , mOrientation(eScreenOrientation_PortraitPrimary)
   , mUpdateHitRegion(false)
-  , mContextMenuHandled(false)
-  , mLongTapEventHandled(false)
-  , mWaitingTouchListeners(false)
+  , mPendingTouchPreventedResponse(false)
   , mIgnoreKeyPressEvent(false)
   , mActiveElementManager(new ActiveElementManager())
   , mHasValidInnerSize(false)
@@ -1805,23 +1803,23 @@ TabChild::RecvHandleLongTap(const CSSPoint& aPoint, const ScrollableLayerGuid& a
     return true;
   }
 
-  mContextMenuHandled =
+  bool eventHandled =
       DispatchMouseEvent(NS_LITERAL_STRING("contextmenu"),
                          APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid),
                          2, 1, 0, false,
                          nsIDOMMouseEvent::MOZ_SOURCE_TOUCH);
 
   // If no one handle context menu, fire MOZLONGTAP event
-  if (!mContextMenuHandled) {
+  if (!eventHandled) {
     LayoutDevicePoint currentPoint =
       APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid) * mWidget->GetDefaultScale();
     int time = 0;
     nsEventStatus status =
       DispatchSynthesizedMouseEvent(NS_MOUSE_MOZLONGTAP, time, currentPoint, mWidget);
-    mLongTapEventHandled = (status == nsEventStatus_eConsumeNoDefault);
+    eventHandled = (status == nsEventStatus_eConsumeNoDefault);
   }
 
-  SendContentReceivedTouch(aGuid, mContextMenuHandled || mLongTapEventHandled);
+  SendContentReceivedTouch(aGuid, eventHandled);
 
   return true;
 }
@@ -1829,16 +1827,6 @@ TabChild::RecvHandleLongTap(const CSSPoint& aPoint, const ScrollableLayerGuid& a
 bool
 TabChild::RecvHandleLongTapUp(const CSSPoint& aPoint, const ScrollableLayerGuid& aGuid)
 {
-  if (mContextMenuHandled) {
-    mContextMenuHandled = false;
-    return true;
-  }
-
-  if (mLongTapEventHandled) {
-    mLongTapEventHandled = false;
-    return true;
-  }
-
   RecvHandleSingleTap(aPoint, aGuid);
   return true;
 }
@@ -2095,23 +2083,21 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
     mActiveElementManager->SetTargetElement(localEvent.touches[0]->GetTarget());
   }
 
-  nsCOMPtr<nsPIDOMWindow> outerWindow = do_GetInterface(WebNavigation());
-  nsCOMPtr<nsPIDOMWindow> innerWindow = outerWindow ? outerWindow->GetCurrentInnerWindow() : nullptr;
-
-  if (!innerWindow || (!innerWindow->HasTouchEventListeners() &&
-                       !innerWindow->MayHaveTouchCaret())) {
-    SendContentReceivedTouch(aGuid, false);
-    return true;
-  }
-
   bool isTouchPrevented = nsIPresShell::gPreventMouseEvents ||
                           localEvent.mFlags.mMultipleActionsPrevented;
   switch (aEvent.message) {
   case NS_TOUCH_START: {
+    if (mPendingTouchPreventedResponse) {
+      // We can enter here if we get two TOUCH_STARTs in a row and didn't
+      // respond to the first one. Respond to it now.
+      SendContentReceivedTouch(mPendingTouchPreventedGuid, false);
+      mPendingTouchPreventedResponse = false;
+    }
     if (isTouchPrevented) {
       SendContentReceivedTouch(aGuid, isTouchPrevented);
     } else {
-      mWaitingTouchListeners = true;
+      mPendingTouchPreventedResponse = true;
+      mPendingTouchPreventedGuid = aGuid;
     }
     break;
   }
@@ -2119,9 +2105,10 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
   case NS_TOUCH_MOVE:
   case NS_TOUCH_END:
   case NS_TOUCH_CANCEL: {
-    if (mWaitingTouchListeners) {
-      SendContentReceivedTouch(aGuid, isTouchPrevented);
-      mWaitingTouchListeners = false;
+    if (mPendingTouchPreventedResponse) {
+      MOZ_ASSERT(aGuid == mPendingTouchPreventedGuid);
+      SendContentReceivedTouch(mPendingTouchPreventedGuid, isTouchPrevented);
+      mPendingTouchPreventedResponse = false;
     }
     break;
   }

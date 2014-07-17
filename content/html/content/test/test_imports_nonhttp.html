@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1016875
+-->
+<head>
+  <title>Test for Bug 1016875</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1016875">Mozilla Bug 1016875</a>
+
+  <script type="text/javascript">
+    //<![CDATA[
+    SimpleTest.waitForExplicitFinish();
+    var counter = 0;
+    function loaded() {
+      if ( counter++ == 1 ) {
+        ok(document.getElementById("import1").import.getElementById("div1"),
+           "import document was loaded");
+        ok(document.getElementById("import2").import.getElementById("div1"),
+           "import document was loaded");
+        SimpleTest.finish();
+      }
+    }
+    function failed() {
+      ok(false, "Import should not have failed")
+      SimpleTest.finish();
+    }
+    var link = document.createElement("link");
+    link.setAttribute("id", "import1");
+    link.setAttribute("rel", "import");
+    var stringDoc = "<!DOCTYPE html><html><body><div id='div1'></div></body></html>";
+    var encoded = btoa(stringDoc);
+    var dataurl = "data:text/html;base64," + encoded;
+    link.setAttribute("href", dataurl);
+    link.onload = loaded;
+    link.onerror = failed;
+    document.body.appendChild(link);
+
+    var link = document.createElement("link");
+    link.setAttribute("id", "import2");
+    link.setAttribute("rel", "import");
+    var blob = new Blob([stringDoc], {type : 'text/html'});
+    var objectURL = URL.createObjectURL(blob);
+    link.setAttribute("href", objectURL);
+    link.onload = loaded;
+    link.onerror = failed;
+    document.body.appendChild(link);
+    //]]>
+  </script>
+
+</body>
+</html>
