@@ -13,29 +13,44 @@ menugroup > .menuitem-iconic[disabled="true"] > .menu-iconic-left {
   -moz-appearance: none;
 }
 
-#context-navigation > #context-back > .menu-iconic-left {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(0, 36px, 18px, 18px);
+#context-back > .menu-iconic-left {
+  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#back");
 }
 
-#context-navigation > #context-forward > .menu-iconic-left {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(0, 72px, 18px, 54px);
+#context-back[_moz-menuactive=true]:not([disabled]) > .menu-iconic-left {
+  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#back-active");
 }
 
-#context-navigation > #context-reload > .menu-iconic-left {
-  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
-  -moz-image-region: rect(0, 14px, 14px, 0);
+#context-forward > .menu-iconic-left {
+  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#forward");
 }
 
-#context-navigation > #context-stop > .menu-iconic-left {
-  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
-  -moz-image-region: rect(0, 28px, 14px, 14px);
+#context-forward[_moz-menuactive=true]:not([disabled]) > .menu-iconic-left {
+  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#forward-active");
 }
 
-#context-navigation > #context-bookmarkpage > .menu-iconic-left {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(0, 144px, 18px, 126px);
+#context-reload > .menu-iconic-left {
+  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#reload");
+}
+
+#context-reload[_moz-menuactive=true]:not([disabled]) > .menu-iconic-left {
+  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#reload-active");
+}
+
+#context-stop > .menu-iconic-left {
+  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#stop");
+}
+
+#context-stop[_moz-menuactive=true]:not([disabled]) > .menu-iconic-left {
+  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#stop-active");
+}
+
+#context-bookmarkpage > .menu-iconic-left {
+  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#bookmark");
+}
+
+#context-bookmarkpage[_moz-menuactive=true]:not([disabled]) > .menu-iconic-left {
+  list-style-image: url("chrome://browser/skin/content-contextmenu.svg#bookmark-active");
 }
 
 #context-back:-moz-locale-dir(rtl),
@@ -45,7 +60,7 @@ menugroup > .menuitem-iconic[disabled="true"] > .menu-iconic-left {
 }
 
 #context-navigation > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   margin: 7px;
 }
