@@ -190,14 +190,23 @@ void ImportLoader::ReleaseResources()
   mImportParent = nullptr;
 }
 
+nsIPrincipal*
+ImportLoader::Principal()
+{
+  MOZ_ASSERT(mImportParent);
+  nsCOMPtr<nsIDocument> master = mImportParent->MasterDocument();
+  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(master);
+  MOZ_ASSERT(sop);
+  return sop->GetPrincipal();
+}
+
 void
 ImportLoader::Open()
 {
   AutoError ae(this, false);
   // Imports should obey to the master documents CSP.
   nsCOMPtr<nsIDocument> master = mImportParent->MasterDocument();
-  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(master);
-  nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
+  nsIPrincipal* principal = Principal();
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT,
@@ -324,11 +333,7 @@ NS_IMETHODIMP
 ImportLoader::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
   AutoError ae(this);
-  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(mImportParent);
-  nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
-  if (!sop) {
-    return NS_ERROR_DOM_ABORT_ERR;
-  }
+  nsIPrincipal* principal = Principal();
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   if (!channel) {

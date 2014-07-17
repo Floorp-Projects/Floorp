@@ -2693,10 +2693,8 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   if (!mouseEvent->IsAlt()) {
     for (nsIContent* content = mContent; content;
          content = content->GetParent()) {
-      // Prevent selection of draggable content with the exception of links
       if (nsContentUtils::ContentIsDraggable(content) &&
-          !content->IsEditable() &&
-          !nsContentUtils::IsDraggableLink(content)) {
+          !content->IsEditable()) {
         // coordinate stuff is the fix for bug #55921
         if ((mRect - GetPosition()).Contains(
               nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent, this))) {
