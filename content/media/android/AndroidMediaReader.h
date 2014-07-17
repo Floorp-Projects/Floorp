@@ -3,8 +3,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-#if !defined(MediaPluginReader_h_)
-#define MediaPluginReader_h_
+#if !defined(AndroidMediaReader_h_)
+#define AndroidMediaReader_h_
 
 #include "mozilla/Attributes.h"
 #include "MediaResource.h"
@@ -29,7 +29,7 @@ namespace dom {
 class TimeRanges;
 }
  
-class MediaPluginReader : public MediaDecoderReader
+class AndroidMediaReader : public MediaDecoderReader
 {
   nsCString mType;
   MPAPI::Decoder *mPlugin;
@@ -41,8 +41,8 @@ class MediaPluginReader : public MediaDecoderReader
   int64_t mAudioSeekTimeUs;
   nsAutoPtr<VideoData> mLastVideoFrame;
 public:
-  MediaPluginReader(AbstractMediaDecoder* aDecoder,
-                    const nsACString& aContentType);
+  AndroidMediaReader(AbstractMediaDecoder* aDecoder,
+                     const nsACString& aContentType);
 
   virtual nsresult Init(MediaDecoderReader* aCloneDonor);
   virtual nsresult ResetDecode();
