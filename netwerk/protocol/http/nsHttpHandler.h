@@ -109,6 +109,7 @@ public:
     bool           AllowPush()   { return mAllowPush; }
     uint32_t       ConnectTimeout()  { return mConnectTimeout; }
     uint32_t       ParallelSpeculativeConnectLimit() { return mParallelSpeculativeConnectLimit; }
+    bool           AllowSpeculativeConnectOnLoopback() { return mAllowSpeculativeConnectOnLoopback; }
     bool           CriticalRequestPrioritization() { return mCriticalRequestPrioritization; }
     double         BypassCacheLockThreshold() { return mBypassCacheLockThreshold; }
 
@@ -227,9 +228,6 @@ public:
     nsresult GetIOService(nsIIOService** service);
     nsICookieService * GetCookieService(); // not addrefed
     nsISiteSecurityService * GetSSService();
-
-    // callable from socket thread only
-    uint32_t Get32BitsOfPseudoRandom();
 
     // Called by the channel synchronously during asyncOpen
     void OnOpeningRequest(nsIHttpChannel *chan)
@@ -481,6 +479,9 @@ private:
     // The maximum number of current global half open sockets allowable
     // when starting a new speculative connection.
     uint32_t       mParallelSpeculativeConnectLimit;
+
+    // Allow speculative connections on loopback. Primarily for testing.
+    bool           mAllowSpeculativeConnectOnLoopback;
 
     // For Rate Pacing of HTTP/1 requests through a netwerk/base/src/EventTokenBucket
     // Active requests <= *MinParallelism are not subject to the rate pacing
