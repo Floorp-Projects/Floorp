@@ -5236,6 +5236,12 @@ nsIFrame::GetScrollableOverflowRectRelativeToParent() const
 }
 
 nsRect
+nsIFrame::GetVisualOverflowRectRelativeToParent() const
+{
+  return GetVisualOverflowRect() + mRect.TopLeft();
+}
+
+nsRect
 nsIFrame::GetScrollableOverflowRectRelativeToSelf() const
 {
   if (IsTransformed()) {
