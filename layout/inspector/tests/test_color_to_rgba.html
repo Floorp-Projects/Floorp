@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test inDOMUtils::ColorToRGBA</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.8">
+  let utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
+                           .getService(SpecialPowers.Ci.inIDOMUtils);
+
+  testColor("red", {r:255, g:0, b:0, a:1});
+  testColor("#f00", {r:255, g:0, b:0, a:1});
+  testColor("#ff0000", {r:255, g:0, b:0, a:1});
+  testColor("ff0000", null);
+  testColor("rgb(255,0,0)", {r:255, g:0, b:0, a:1});
+  testColor("rgba(255,0,0,0.7)", {r:255, g:0, b:0, a:0.7});
+  testColor("rgb(255,0,0,0.7)", null);
+  testColor("rgb(50%,75%,60%)", {r:128, g:191, b:153, a:1});
+  testColor("rgba(100%,50%,25%,0.7)", {r:255, g:128, b:64, a:0.7});
+  testColor("hsl(320,30%,10%)", {r:33, g:17, b:28, a:1});
+  testColor("hsla(170,60%,40%,0.9)", {r:40, g:163, b:142, a:0.9});
+
+  function testColor(color, expected) {
+    let rgb = utils.colorToRGBA(color);
+
+    if (rgb === null) {
+      ok(expected === null, "color: " + color + " returns null");
+      return;
+    }
+
+    let {r, g, b, a} = rgb;
+
+    is(r, expected.r, "color: " + color + ", red component is converted correctly");
+    is(g, expected.g, "color: " + color + ", green component is converted correctly");
+    is(b, expected.b, "color: " + color + ", blue component is converted correctly");
+    is(Math.round(a * 10) / 10, expected.a, "color: " + color + ", alpha component is a converted correctly");
+  }
+  </script>
+</head>
+<body>
+<h1>Test inDOMUtils::ColorToRGBA</h1>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
