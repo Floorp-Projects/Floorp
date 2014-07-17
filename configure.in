@@ -3853,7 +3853,7 @@ MOZ_SRTP=
 MOZ_WEBRTC_SIGNALING=
 MOZ_WEBRTC_ASSERT_ALWAYS=1
 MOZ_SCTP=
-MOZ_MEDIA_PLUGINS=
+MOZ_ANDROID_OMX=
 MOZ_MEDIA_NAVIGATOR=
 MOZ_OMX_PLUGIN=
 MOZ_VPX=
@@ -5243,16 +5243,16 @@ dnl = Enable media plugin support
 dnl ========================================================
 if test "$OS_TARGET" = Android -a x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
   dnl Enable support on android by default
-  MOZ_MEDIA_PLUGINS=1
+  MOZ_ANDROID_OMX=1
 fi
 
-MOZ_ARG_ENABLE_BOOL(media-plugins,
-[  --enable-media-plugins  Enable support for media plugins],
-    MOZ_MEDIA_PLUGINS=1,
-    MOZ_MEDIA_PLUGINS=)
+MOZ_ARG_ENABLE_BOOL(android-omx,
+[  --enable-android-omx  Enable support for Android OMX media backend],
+    MOZ_ANDROID_OMX=1,
+    MOZ_ANDROID_OMX=)
 
-if test -n "$MOZ_MEDIA_PLUGINS"; then
-  AC_DEFINE(MOZ_MEDIA_PLUGINS)
+if test -n "$MOZ_ANDROID_OMX"; then
+  AC_DEFINE(MOZ_ANDROID_OMX)
 fi
 
 dnl ========================================================
@@ -8817,7 +8817,7 @@ AC_SUBST(MOZ_FFMPEG)
 AC_SUBST(MOZ_FMP4)
 AC_SUBST(MOZ_EME)
 AC_SUBST(MOZ_DIRECTSHOW)
-AC_SUBST(MOZ_MEDIA_PLUGINS)
+AC_SUBST(MOZ_ANDROID_OMX)
 AC_SUBST(MOZ_APPLEMEDIA)
 AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(MOZ_VPX_ERROR_CONCEALMENT)

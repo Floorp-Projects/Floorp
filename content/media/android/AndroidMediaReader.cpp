@@ -3,14 +3,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "MediaPluginReader.h"
+#include "AndroidMediaReader.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "mozilla/gfx/Point.h"
 #include "MediaResource.h"
 #include "VideoUtils.h"
-#include "MediaPluginDecoder.h"
-#include "MediaPluginHost.h"
+#include "AndroidMediaDecoder.h"
+#include "AndroidMediaPluginHost.h"
 #include "MediaDecoderStateMachine.h"
 #include "ImageContainer.h"
 #include "AbstractMediaDecoder.h"
@@ -23,8 +23,8 @@ using namespace mozilla::gfx;
 typedef mozilla::layers::Image Image;
 typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 
-MediaPluginReader::MediaPluginReader(AbstractMediaDecoder *aDecoder,
-                                     const nsACString& aContentType) :
+AndroidMediaReader::AndroidMediaReader(AbstractMediaDecoder *aDecoder,
+                                       const nsACString& aContentType) :
   MediaDecoderReader(aDecoder),
   mType(aContentType),
   mPlugin(nullptr),
@@ -35,18 +35,18 @@ MediaPluginReader::MediaPluginReader(AbstractMediaDecoder *aDecoder,
 {
 }
 
-nsresult MediaPluginReader::Init(MediaDecoderReader* aCloneDonor)
+nsresult AndroidMediaReader::Init(MediaDecoderReader* aCloneDonor)
 {
   return NS_OK;
 }
 
-nsresult MediaPluginReader::ReadMetadata(MediaInfo* aInfo,
-                                         MetadataTags** aTags)
+nsresult AndroidMediaReader::ReadMetadata(MediaInfo* aInfo,
+                                          MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
   if (!mPlugin) {
-    mPlugin = GetMediaPluginHost()->CreateDecoder(mDecoder->GetResource(), mType);
+    mPlugin = GetAndroidMediaPluginHost()->CreateDecoder(mDecoder->GetResource(), mType);
     if (!mPlugin) {
       return NS_ERROR_FAILURE;
     }
@@ -99,17 +99,17 @@ nsresult MediaPluginReader::ReadMetadata(MediaInfo* aInfo,
   return NS_OK;
 }
 
-void MediaPluginReader::Shutdown()
+void AndroidMediaReader::Shutdown()
 {
   ResetDecode();
   if (mPlugin) {
-    GetMediaPluginHost()->DestroyDecoder(mPlugin);
+    GetAndroidMediaPluginHost()->DestroyDecoder(mPlugin);
     mPlugin = nullptr;
   }
 }
 
 // Resets all state related to decoding, emptying all buffers etc.
-nsresult MediaPluginReader::ResetDecode()
+nsresult AndroidMediaReader::ResetDecode()
 {
   if (mLastVideoFrame) {
     mLastVideoFrame = nullptr;
@@ -117,8 +117,8 @@ nsresult MediaPluginReader::ResetDecode()
   return MediaDecoderReader::ResetDecode();
 }
 
-bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
-                                         int64_t aTimeThreshold)
+bool AndroidMediaReader::DecodeVideoFrame(bool &aKeyframeSkip,
+                                          int64_t aTimeThreshold)
 {
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
@@ -248,10 +248,10 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
     }
     parsed++;
     decoded++;
-    NS_ASSERTION(decoded <= parsed, "Expect to decode fewer frames than parsed in MediaPlugin...");
+    NS_ASSERTION(decoded <= parsed, "Expect to decode fewer frames than parsed in AndroidMedia...");
 
     // Since MPAPI doesn't give us the end time of frames, we keep one frame
-    // buffered in MediaPluginReader and push it into the queue as soon
+    // buffered in AndroidMediaReader and push it into the queue as soon
     // we read the following frame so we can use that frame's start time as
     // the end time of the buffered frame.
     if (!mLastVideoFrame) {
@@ -284,7 +284,7 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
   return true;
 }
 
-bool MediaPluginReader::DecodeAudioData()
+bool AndroidMediaReader::DecodeAudioData()
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
@@ -316,7 +316,7 @@ bool MediaPluginReader::DecodeAudioData()
                                      source.mAudioChannels));
 }
 
-nsresult MediaPluginReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime)
+nsresult AndroidMediaReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
@@ -339,14 +339,14 @@ nsresult MediaPluginReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aE
   return NS_OK;
 }
 
-MediaPluginReader::ImageBufferCallback::ImageBufferCallback(mozilla::layers::ImageContainer *aImageContainer) :
+AndroidMediaReader::ImageBufferCallback::ImageBufferCallback(mozilla::layers::ImageContainer *aImageContainer) :
   mImageContainer(aImageContainer)
 {
 }
 
 void *
-MediaPluginReader::ImageBufferCallback::operator()(size_t aWidth, size_t aHeight,
-                                                   MPAPI::ColorFormat aColorFormat)
+AndroidMediaReader::ImageBufferCallback::operator()(size_t aWidth, size_t aHeight,
+                                                    MPAPI::ColorFormat aColorFormat)
 {
   if (!mImageContainer) {
     NS_WARNING("No image container to construct an image");
@@ -375,8 +375,8 @@ MediaPluginReader::ImageBufferCallback::operator()(size_t aWidth, size_t aHeight
 }
 
 uint8_t *
-MediaPluginReader::ImageBufferCallback::CreateI420Image(size_t aWidth,
-                                                        size_t aHeight)
+AndroidMediaReader::ImageBufferCallback::CreateI420Image(size_t aWidth,
+                                                         size_t aHeight)
 {
   mImage = mImageContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
   PlanarYCbCrImage *yuvImage = static_cast<PlanarYCbCrImage *>(mImage.get());
@@ -418,7 +418,7 @@ MediaPluginReader::ImageBufferCallback::CreateI420Image(size_t aWidth,
 }
 
 already_AddRefed<Image>
-MediaPluginReader::ImageBufferCallback::GetImage()
+AndroidMediaReader::ImageBufferCallback::GetImage()
 {
   return mImage.forget();
 }
