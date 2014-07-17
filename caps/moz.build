@@ -4,6 +4,37 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['idl', 'include', 'src']
 TEST_DIRS += ['tests/mochitest']
+
+XPIDL_SOURCES += [
+    'nsIDomainPolicy.idl',
+    'nsIPrincipal.idl',
+    'nsIScriptSecurityManager.idl',
+]
+
+XPIDL_MODULE = 'caps'
+
+EXPORTS += [
+    'nsJSPrincipals.h',
+    'nsNullPrincipal.h',
+]
+
+UNIFIED_SOURCES += [
+    'DomainPolicy.cpp',
+    'nsJSPrincipals.cpp',
+    'nsNullPrincipal.cpp',
+    'nsNullPrincipalURI.cpp',
+    'nsPrincipal.cpp',
+    'nsScriptSecurityManager.cpp',
+    'nsSystemPrincipal.cpp',
+]
+
+MSVC_ENABLE_PGO = True
+
+LOCAL_INCLUDES += [
+    '/dom/base',
+    '/js/xpconnect/src',
+]
+
+FINAL_LIBRARY = 'gklayout'
 

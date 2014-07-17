@@ -9,7 +9,7 @@ class TestElementSize(MarionetteTestCase):
         test_html = self.marionette.absolute_url("testSize.html")
         self.marionette.navigate(test_html)
         shrinko = self.marionette.find_element('id', 'linkId')
-        size = shrinko.size
+        size = shrinko.rect
         self.assertTrue(size['width'] > 0)
         self.assertTrue(size['height'] > 0)
 
@@ -34,7 +34,7 @@ class TestElementSizeChrome(MarionetteTestCase):
         newWin = wins.pop()
         self.marionette.switch_to_window(newWin)
         shrinko = self.marionette.find_element('id', 'textInput')
-        size = shrinko.size
+        size = shrinko.rect
         self.assertTrue(size['width'] > 0)
         self.assertTrue(size['height'] > 0)
 

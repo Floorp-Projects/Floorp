@@ -135,7 +135,6 @@ tools repackage:: $(PROGRAM)
 endif
 
 ifdef LIBXUL_SDK #{
-ifndef SKIP_COPY_XULRUNNER #{
 libs::
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT)) #{
 	rsync -a --copy-unsafe-links $(LIBXUL_DIST)/XUL.framework $(dist_dest)/Contents/Frameworks
@@ -143,5 +142,4 @@ else
 	$(NSINSTALL) -D $(DIST)/bin/xulrunner
 	(cd $(LIBXUL_SDK)/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DIST)/bin/xulrunner && tar -xf -)
 endif #} cocoa
-endif #} SKIP_COPY_XULRUNNER
 endif #} LIBXUL_SDK

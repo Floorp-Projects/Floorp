@@ -66,10 +66,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
    */
 
   performTest({
-    eventsToRequest: [
-      "EVENT_START",
-      "EVENT_AUDIO_DATA",
-    ],
+    eventsToRequest: [],
     expectedEvents: {
       "audiostart": abortAndSpinEventLoop,
       "audioend": abortAndSpinEventLoop,

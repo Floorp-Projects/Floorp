@@ -140,15 +140,15 @@ addMessageListener(
     addMessageListener('AccessFu:Scroll', scroll);
     addMessageListener('AccessFu:AdjustRange', adjustRange);
 
-    if (!eventManager) {
-      eventManager = new EventManager(this);
-    }
-    eventManager.start();
-
     if (!contentControl) {
       contentControl = new ContentControl(this);
     }
     contentControl.start();
+
+    if (!eventManager) {
+      eventManager = new EventManager(this, contentControl);
+    }
+    eventManager.start();
 
     sendAsyncMessage('AccessFu:ContentStarted');
   });

@@ -98,8 +98,8 @@ def long_press_on_xy_action(marionette, wait_for_condition, expected):
     action = Actions(marionette)
 
     # Press the center of the button with respect to html.
-    x = button.location['x'] + button.size['width'] / 2.0
-    y = button.location['y'] + button.size['height'] / 2.0
+    x = button.rect['x'] + button.rect['width'] / 2.0
+    y = button.rect['y'] + button.rect['height'] / 2.0
     action.long_press(html, 5, x, y).perform()
     wait_for_condition(lambda m: expected in m.execute_script("return document.getElementById('button1').innerHTML;"))
 

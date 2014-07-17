@@ -137,12 +137,14 @@ GCRuntime::poke()
 class ArenaIter
 {
     ArenaHeader *aheader;
-    ArenaHeader *remainingHeader;
+    ArenaHeader *unsweptHeader;
+    ArenaHeader *sweptHeader;
 
   public:
     ArenaIter() {
         aheader = nullptr;
-        remainingHeader = nullptr;
+        unsweptHeader = nullptr;
+        sweptHeader = nullptr;
     }
 
     ArenaIter(JS::Zone *zone, AllocKind kind) {
@@ -151,10 +153,16 @@ class ArenaIter
 
     void init(Allocator *allocator, AllocKind kind) {
         aheader = allocator->arenas.getFirstArena(kind);
-        remainingHeader = allocator->arenas.getFirstArenaToSweep(kind);
+        unsweptHeader = allocator->arenas.getFirstArenaToSweep(kind);
+        sweptHeader = allocator->arenas.getFirstSweptArena(kind);
+        if (!unsweptHeader) {
+            unsweptHeader = sweptHeader;
+            sweptHeader = nullptr;
+        }
         if (!aheader) {
-            aheader = remainingHeader;
-            remainingHeader = nullptr;
+            aheader = unsweptHeader;
+            unsweptHeader = sweptHeader;
+            sweptHeader = nullptr;
         }
     }
 
@@ -174,8 +182,9 @@ class ArenaIter
         JS_ASSERT(!done());
         aheader = aheader->next;
         if (!aheader) {
-            aheader = remainingHeader;
-            remainingHeader = nullptr;
+            aheader = unsweptHeader;
+            unsweptHeader = sweptHeader;
+            sweptHeader = nullptr;
         }
     }
 };

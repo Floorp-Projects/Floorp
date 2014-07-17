@@ -73,6 +73,9 @@ case $cmd in
 	${MKDIR} -p ${tgtpath}/testing
 	cp -t ${tgtpath}/testing -dRp \
 		${SRCDIR}/../../testing/mozbase
+	${MKDIR} -p ${tgtpath}/modules/zlib
+	cp -t ${tgtpath}/modules/zlib -dRp \
+		${SRCDIR}/../../modules/zlib/src
 
 	# remove *.pyc and *.pyo files if any
 	find ${tgtpath} -type f -name "*.pyc" -o -name "*.pyo" |xargs rm -f

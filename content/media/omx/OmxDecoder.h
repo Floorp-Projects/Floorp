@@ -1,9 +1,6 @@
 #include <stagefright/foundation/ABase.h>
 #include <stagefright/foundation/AHandlerReflector.h>
 #include <stagefright/foundation/ALooper.h>
-#include <stagefright/MediaSource.h>
-#include <stagefright/DataSource.h>
-#include <stagefright/MediaSource.h>
 #include <utils/RefBase.h>
 #include <stagefright/MediaExtractor.h>
 
@@ -21,41 +18,6 @@ class OmxDecoder;
 };
 
 namespace android {
-
-// MediaStreamSource is a DataSource that reads from a MPAPI media stream.
-class MediaStreamSource : public DataSource {
-  typedef mozilla::MediaResource MediaResource;
-  typedef mozilla::AbstractMediaDecoder AbstractMediaDecoder;
-
-  Mutex mLock;
-  nsRefPtr<MediaResource> mResource;
-  AbstractMediaDecoder *mDecoder;
-public:
-  MediaStreamSource(MediaResource* aResource,
-                    AbstractMediaDecoder *aDecoder);
-
-  virtual status_t initCheck() const;
-  virtual ssize_t readAt(off64_t offset, void *data, size_t size);
-  virtual ssize_t readAt(off_t offset, void *data, size_t size) {
-    return readAt(static_cast<off64_t>(offset), data, size);
-  }
-  virtual status_t getSize(off_t *size) {
-    off64_t size64;
-    status_t status = getSize(&size64);
-    *size = size64;
-    return status;
-  }
-  virtual status_t getSize(off64_t *size);
-  virtual uint32_t flags() {
-    return kWantsPrefetching;
-  }
-
-  virtual ~MediaStreamSource();
-
-private:
-  MediaStreamSource(const MediaStreamSource &);
-  MediaStreamSource &operator=(const MediaStreamSource &);
-};
 
 class OmxDecoder : public OMXCodecProxy::EventListener {
   typedef MPAPI::AudioFrame AudioFrame;

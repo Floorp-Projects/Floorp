@@ -1,3 +1,10 @@
+# OES-texture-float is failing on Android 2.3, but not Android 4.0 when
+# there is a way to differentiate these two slaves this should be removed
+# and updated as appropriately. The Android 2.3 slave is returning red
+# when it should be green. This is believed to be a driver bug and not
+# FF bug at the moment.
+conformance/extensions/oes-texture-float.html
+
 conformance/extensions/oes-vertex-array-object.html
 conformance/glsl/functions/glsl-function-abs.html
 conformance/glsl/functions/glsl-function-faceforward.html

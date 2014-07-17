@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=779723
+-->
+<head>
+  <title>Test for Bug 779723</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=779723">Mozilla Bug 779723</a>
+<p id="display"></p>
+<form>
+  <input type="checkbox" name="rdo" value="0" id="r0" checked="checked">
+  <input type="radio" name="rdo" id="r1">
+  <input type="radio" name="rdo" id="r2" value="2">
+</form>
+<script class="testbody" type="text/javascript">
+/** Test for Bug 779723 **/
+
+var rdoList = document.forms[0].elements.namedItem('rdo');
+ise(rdoList.value, "", "The value attribute should be empty");
+
+document.getElementById('r2').checked = true;
+ok(rdoList.value, "2", "The value attribute should be 2");
+
+document.getElementById('r1').checked = true;
+ok(rdoList.value, "on", "The value attribute should be on");
+
+document.getElementById('r1').value = 1;
+ok(rdoList.value, "1", "The value attribute should be 1");
+
+ise(rdoList.value, document.getElementById('r1').value,
+   "The value attribute should be equal to the first checked radio input element's value");
+ok(!document.getElementById('r2').checked,
+   "The second radio input element should not be checked");
+
+rdoList.value = '2';
+ise(rdoList.value, document.getElementById('r2').value,
+   "The value attribute should be equal to the second radio input element's value");
+ok(document.getElementById('r2').checked,
+   "The second radio input element should be checked");
+
+rdoList.value = '3';
+ise(rdoList.value, document.getElementById('r2').value,
+   "The value attribute should be the second radio input element's value");
+ok(document.getElementById('r2').checked,
+   "The second radio input element should be checked");
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -113,7 +113,7 @@ loop.panel = (function(_, mozL10n) {
         "privacy_notice_url": "www.mozilla.org/privacy/"
       });
 
-      if (!this.state.seenToS) {
+      if (this.state.seenToS == "unseen") {
         navigator.mozLoop.setLoopCharPref('seenToS', 'seen');
         return React.DOM.p( {className:"terms-service",
                   dangerouslySetInnerHTML:{__html: tosHTML}});

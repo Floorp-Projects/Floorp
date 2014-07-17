@@ -21,16 +21,10 @@ class FileDescriptorSet : public base::RefCountedThreadSafe<FileDescriptorSet> {
   FileDescriptorSet();
   ~FileDescriptorSet();
 
-  // This is the maximum number of descriptors per message. We need to know this
-  // because the control message kernel interface has to be given a buffer which
-  // is large enough to store all the descriptor numbers. Otherwise the kernel
-  // tells us that it truncated the control data and the extra descriptors are
-  // lost.
-  //
-  // In debugging mode, it's a fatal error to try and add more than this number
-  // of descriptors to a FileDescriptorSet.
+  // Mac and Linux both limit the number of file descriptors per message to
+  // slightly more than 250.
   enum {
-    MAX_DESCRIPTORS_PER_MESSAGE = 7
+    MAX_DESCRIPTORS_PER_MESSAGE = 250
   };
 
   // ---------------------------------------------------------------------------

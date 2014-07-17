@@ -3,8 +3,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-#if !defined(MediaResourceServer_h_)
-#define MediaResourceServer_h_
+#if !defined(AndroidMediaResourceServer_h_)
+#define AndroidMediaResourceServer_h_
 
 #include <map>
 #include "nsIServerSocket.h"
@@ -15,7 +15,7 @@ namespace mozilla {
 class MediaResource;
 
 /*
-  MediaResourceServer instantiates a socket server that understands
+  AndroidMediaResourceServer instantiates a socket server that understands
   HTTP requests for MediaResource instances. The server runs on an
   automatically selected port and MediaResource instances are registered.
   The registration returns a string URL than can be used to fetch the
@@ -31,16 +31,16 @@ class MediaResource;
   requests are made against this server which then uses standard
   Gecko network requests and media cache usage.
 
-  The MediaResourceServer can be instantiated on any thread and
+  The AndroidMediaResourceServer can be instantiated on any thread and
   its methods are threadsafe - they can be called on any thread.
   The server socket itself is always run on the main thread and
   this is done by the Start() static method by synchronously
   dispatching to the main thread.
 */
-class MediaResourceServer : public nsRunnable
+class AndroidMediaResourceServer : public nsRunnable
 {
 private:
-  // Mutex protecting private members of MediaResourceServer.
+  // Mutex protecting private members of AndroidMediaResourceServer.
   // All member variables below this point in the class definition
   // must acquire the mutex before access.
   mozilla::Mutex mMutex;
@@ -54,10 +54,10 @@ private:
                   nsRefPtr<mozilla::MediaResource> > ResourceMap;
   ResourceMap mResources;
 
-  // Create a MediaResourceServer that will listen on an automatically
+  // Create a AndroidMediaResourceServer that will listen on an automatically
   // selected port when started. This is private as it should only be
   // called internally from the public 'Start' method.
-  MediaResourceServer();
+  AndroidMediaResourceServer();
   NS_IMETHOD Run();
 
   // Append a random URL path to a string. This is used for creating a
@@ -67,9 +67,9 @@ private:
   nsresult AppendRandomPath(nsCString& aURL);
 
 public:
-  // Create a MediaResourceServer and start it listening. This call will
+  // Create a AndroidMediaResourceServer and start it listening. This call will
   // perform a synchronous request on the main thread.
-  static already_AddRefed<MediaResourceServer> Start();
+  static already_AddRefed<AndroidMediaResourceServer> Start();
 
   // Stops the server from listening and accepting further connections.
   void Stop();
