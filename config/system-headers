@@ -1244,6 +1244,7 @@ X11/extensions/shape.h
 X11/extensions/scrnsaver.h
 X11/extensions/XShm.h
 X11/extensions/Xrender.h
+X11/extensions/Xfixes.h
 X11/extensions/Xdamage.h
 X11/extensions/Xcomposite.h
 X11/Intrinsic.h

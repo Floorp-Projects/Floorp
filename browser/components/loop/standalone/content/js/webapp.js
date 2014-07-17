@@ -119,6 +119,8 @@ loop.webapp = (function($, _, OT) {
     initialize: function() {
       // Load default view
       this.loadView(new HomeView());
+
+      this.listenTo(this._conversation, "timeout", this._onTimeout);
     },
 
     /**
@@ -144,6 +146,10 @@ loop.webapp = (function($, _, OT) {
         route = "call/" + this._conversation.get("loopToken");
       }
       this.navigate(route, {trigger: true});
+    },
+
+    _onTimeout: function() {
+      this._notifier.errorL10n("call_timeout_notification_text");
     },
 
     /**
@@ -213,8 +219,11 @@ loop.webapp = (function($, _, OT) {
   function init() {
     var helper = new WebappHelper();
     router = new WebappRouter({
-      conversation: new sharedModels.ConversationModel({}, {sdk: OT}),
-      notifier: new sharedViews.NotificationListView({el: "#messages"})
+      notifier: new sharedViews.NotificationListView({el: "#messages"}),
+      conversation: new sharedModels.ConversationModel({}, {
+        sdk: OT,
+        pendingCallTimeout: loop.config.pendingCallTimeout
+      })
     });
     Backbone.history.start();
     if (helper.isIOS(navigator.platform)) {

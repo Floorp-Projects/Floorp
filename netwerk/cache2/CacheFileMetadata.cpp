@@ -272,7 +272,7 @@ CacheFileMetadata::WriteMetadata(uint32_t aOffset,
     // result from some reason fails during shutdown, we would unnecessarily leak
     // both this object and the buffer.
     writeBuffer = static_cast<char *>(moz_xmalloc(p - mWriteBuf));
-    memcpy(mWriteBuf, writeBuffer, p - mWriteBuf);
+    memcpy(writeBuffer, mWriteBuf, p - mWriteBuf);
   }
 
   rv = CacheFileIOManager::Write(mHandle, aOffset, writeBuffer, p - mWriteBuf,

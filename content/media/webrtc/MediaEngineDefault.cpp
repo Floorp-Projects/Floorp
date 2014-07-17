@@ -478,8 +478,14 @@ MediaEngineDefaultAudioSource::Notify(nsITimer* aTimer)
 }
 
 void
-MediaEngineDefault::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSource> >* aVSources) {
+MediaEngineDefault::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
+                                          nsTArray<nsRefPtr<MediaEngineVideoSource> >* aVSources) {
   MutexAutoLock lock(mMutex);
+
+  // only supports camera sources (for now).  See Bug 1038241
+  if (aMediaSource != dom::MediaSourceEnum::Camera) {
+    return;
+  }
 
   // We once had code here to find a VideoSource with the same settings and re-use that.
   // This no longer is possible since the resolution is being set in Allocate().
@@ -492,9 +498,12 @@ MediaEngineDefault::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSour
 }
 
 void
-MediaEngineDefault::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSource> >* aASources) {
+MediaEngineDefault::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
+                                          nsTArray<nsRefPtr<MediaEngineAudioSource> >* aASources) {
   MutexAutoLock lock(mMutex);
   int32_t len = mASources.Length();
+
+  // aMediaSource is ignored for audio devices (for now).
 
   for (int32_t i = 0; i < len; i++) {
     nsRefPtr<MediaEngineAudioSource> source = mASources.ElementAt(i);

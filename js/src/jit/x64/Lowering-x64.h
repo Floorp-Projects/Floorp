@@ -54,10 +54,6 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
     bool visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
 
-    static bool allowFloat32Optimizations() {
-        return true;
-    }
-
     static bool allowInlineForkJoinGetSlice() {
         return true;
     }

@@ -310,6 +310,9 @@ VideoDevice::VideoDevice(MediaEngineVideoSource* aSource)
     mHasFacingMode = true;
     mFacingMode = dom::VideoFacingModeEnum::User;
   }
+
+  // dom::MediaSourceEnum::Camera;
+  mMediaSource = aSource->GetMediaSource();
 }
 
 AudioDevice::AudioDevice(MediaEngineAudioSource* aSource)
@@ -358,6 +361,15 @@ MediaDevice::GetFacingMode(nsAString& aFacingMode)
   } else {
     aFacingMode.Truncate(0);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MediaDevice::GetMediaSource(nsAString& aMediaSource)
+{
+
+  aMediaSource.Assign(NS_ConvertUTF8toUTF16(
+    dom::MediaSourceEnumValues::strings[uint32_t(mMediaSource)].value));
   return NS_OK;
 }
 
@@ -714,13 +726,18 @@ static bool SatisfyConstraintSet(const MediaEngineVideoSource *,
                                  const MediaTrackConstraintSet &aConstraints,
                                  nsIMediaDevice &aCandidate)
 {
+  nsString s;
   if (aConstraints.mFacingMode.WasPassed()) {
-    nsString s;
     aCandidate.GetFacingMode(s);
     if (!s.EqualsASCII(dom::VideoFacingModeEnumValues::strings[
         uint32_t(aConstraints.mFacingMode.Value())].value)) {
       return false;
     }
+  }
+  aCandidate.GetMediaSource(s);
+  if (!s.EqualsASCII(dom::MediaSourceEnumValues::strings[
+      uint32_t(aConstraints.mMediaSource)].value)) {
+    return false;
   }
   // TODO: Add more video-specific constraints
   return true;
@@ -742,7 +759,7 @@ template<class SourceType, class ConstraintsType>
 static SourceSet *
   GetSources(MediaEngine *engine,
              ConstraintsType &aConstraints,
-             void (MediaEngine::* aEnumerate)(nsTArray<nsRefPtr<SourceType> >*),
+             void (MediaEngine::* aEnumerate)(dom::MediaSourceEnum, nsTArray<nsRefPtr<SourceType> >*),
              const char* media_device_name = nullptr)
 {
   ScopedDeletePtr<SourceSet> result(new SourceSet);
@@ -753,7 +770,7 @@ static SourceSet *
   SourceSet candidateSet;
   {
     nsTArray<nsRefPtr<SourceType> > sources;
-    (engine->*aEnumerate)(&sources);
+    (engine->*aEnumerate)(aConstraints.mMediaSource, &sources);
     /**
       * We're allowing multiple tabs to access the same camera for parity
       * with Chrome.  See bug 811757 for some of the issues surrounding
@@ -1018,8 +1035,8 @@ public:
     MOZ_ASSERT(mError);
     if (mConstraints.mPicture || IsOn(mConstraints.mVideo)) {
       VideoTrackConstraintsN constraints(GetInvariant(mConstraints.mVideo));
-      ScopedDeletePtr<SourceSet> sources (GetSources(backend, constraints,
-          &MediaEngine::EnumerateVideoDevices));
+      ScopedDeletePtr<SourceSet> sources(GetSources(backend, constraints,
+                               &MediaEngine::EnumerateVideoDevices));
 
       if (!sources->Length()) {
         Fail(NS_LITERAL_STRING("NO_DEVICES_FOUND"));
@@ -1180,8 +1197,8 @@ public:
     if (IsOn(mConstraints.mVideo)) {
       VideoTrackConstraintsN constraints(GetInvariant(mConstraints.mVideo));
       ScopedDeletePtr<SourceSet> s(GetSources(backend, constraints,
-          &MediaEngine::EnumerateVideoDevices,
-          mLoopbackVideoDevice.get()));
+              &MediaEngine::EnumerateVideoDevices,
+              mLoopbackVideoDevice.get()));
       final->MoveElementsFrom(*s);
     }
     if (IsOn(mConstraints.mAudio)) {
@@ -1191,6 +1208,7 @@ public:
           mLoopbackAudioDevice.get()));
       final->MoveElementsFrom(*s);
     }
+
     NS_DispatchToMainThread(new DeviceSuccessCallbackRunnable(mWindowId,
                                                               mSuccess, mError,
                                                               final.forget()));
@@ -1465,6 +1483,15 @@ MediaManager::GetUserMedia(bool aPrivileged,
       onError.forget(), windowID, listener, mPrefs);
   }
 
+  // deny screensharing request if support is disabled
+  if (c.mVideo.IsMediaTrackConstraints() &&
+      !Preferences::GetBool("media.getusermedia.screensharing.enabled", false)) {
+    auto& tc = c.mVideo.GetAsMediaTrackConstraints();
+    if (tc.mMediaSource != dom::MediaSourceEnum::Camera) {
+      return runnable->Denied(NS_LITERAL_STRING("PERMISSION_DENIED"));
+    }
+  }
+
 #ifdef MOZ_B2G_CAMERA
   if (mCameraManager == nullptr) {
     mCameraManager = nsDOMCameraManager::CreateInstance(aWindow);
@@ -1479,20 +1506,17 @@ MediaManager::GetUserMedia(bool aPrivileged,
   }
 #endif
   nsIURI* docURI = aWindow->GetDocumentURI();
-#ifdef MOZ_LOOP
-  {
-    bool isLoop = false;
-    nsCOMPtr<nsIURI> loopURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(loopURI), "about:loopconversation");
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = docURI->EqualsExceptRef(loopURI, &isLoop);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (isLoop) {
-      aPrivileged = true;
-    }
+  bool isLoop = false;
+  nsCOMPtr<nsIURI> loopURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(loopURI), "about:loopconversation");
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = docURI->EqualsExceptRef(loopURI, &isLoop);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (isLoop) {
+    aPrivileged = true;
   }
-#endif
 
   // XXX No full support for picture in Desktop yet (needs proper UI)
   if (aPrivileged ||

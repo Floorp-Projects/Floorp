@@ -667,6 +667,12 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray)
   return SECSuccess;
 }
 
+SECStatus
+NSSCertDBTrustDomain::CheckPublicKey(const SECItem& subjectPublicKeyInfo)
+{
+  return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
+}
+
 namespace {
 
 static char*

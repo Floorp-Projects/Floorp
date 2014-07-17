@@ -222,6 +222,7 @@ public:
     void SetOwner(nsOfflineCacheUpdateOwner *aOwner);
 
     bool IsForGroupID(const nsCSubstring &groupID);
+    bool IsForProfile(nsIFile* aCustomProfileDir);
 
     virtual nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate);
 
@@ -337,6 +338,7 @@ public:
     nsresult FindUpdate(nsIURI *aManifestURI,
                         uint32_t aAppID,
                         bool aInBrowser,
+                        nsIFile *aCustomProfileDir,
                         nsOfflineCacheUpdate **aUpdate);
 
     nsresult Schedule(nsIURI *aManifestURI,

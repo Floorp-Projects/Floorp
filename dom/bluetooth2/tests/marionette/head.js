@@ -562,6 +562,43 @@ function waitForAdapterAttributeChanged(aAdapter, aAttrName, aExpectedValue) {
 }
 
 /**
+ * Wait for specified number of 'devicefound' events.
+ *
+ * Resolve if specified number of devices has been found. Never reject.
+ *
+ * Fulfill params: an array which contains BluetoothDeviceEvents that we
+ *                 received from the BluetoothDiscoveryHandle.
+ *
+ * @param aDiscoveryHandle
+ *        A BluetoothDiscoveryHandle which is used to notify application of
+ *        discovered remote bluetooth devices.
+ * @param aExpectedNumberOfDevices
+ *        The number of remote devices we expect to discovery.
+ *
+ * @return A deferred promise.
+ */
+function waitForDevicesFound(aDiscoveryHandle, aExpectedNumberOfDevices) {
+  let deferred = Promise.defer();
+
+  ok(aDiscoveryHandle instanceof BluetoothDiscoveryHandle,
+    "discoveryHandle should be a BluetoothDiscoveryHandle");
+
+  let devicesArray = [];
+  aDiscoveryHandle.ondevicefound = function onDeviceFound(aEvent) {
+    ok(aEvent instanceof BluetoothDeviceEvent,
+      "aEvent should be a BluetoothDeviceEvent");
+
+    devicesArray.push(aEvent);
+    if (devicesArray.length >= aExpectedNumberOfDevices) {
+      aDiscoveryHandle.ondevicefound = null;
+      deferred.resolve(devicesArray);
+    }
+  };
+
+  return deferred.promise;
+}
+
+/**
  * Flush permission settings and call |finish()|.
  */
 function cleanUp() {
