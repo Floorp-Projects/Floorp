@@ -257,22 +257,28 @@ ApzcUp(AsyncPanZoomController* apzc, int aX, int aY, int& aTime)
   return apzc->ReceiveInputEvent(mti);
 }
 
-static nsEventStatus
-ApzcTap(AsyncPanZoomController* apzc, int aX, int aY, int& aTime,
-        int aTapLength, MockContentControllerDelayed* mcc = nullptr)
+static void
+ApzcTap(AsyncPanZoomController* aApzc, int aX, int aY, int& aTime, int aTapLength,
+        nsEventStatus (*aOutEventStatuses)[2] = nullptr)
 {
-  nsEventStatus status = ApzcDown(apzc, aX, aY, aTime);
-  if (mcc != nullptr) {
-    // There will be delayed tasks posted for the long-tap and MAX_TAP timeouts, but
-    // if we were provided a non-null mcc we want to clear them.
-    mcc->CheckHasDelayedTask();
-    mcc->ClearDelayedTask();
-    mcc->CheckHasDelayedTask();
-    mcc->ClearDelayedTask();
+  nsEventStatus status = ApzcDown(aApzc, aX, aY, aTime);
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[0] = status;
   }
-  EXPECT_EQ(nsEventStatus_eConsumeNoDefault, status);
   aTime += aTapLength;
-  return ApzcUp(apzc, aX, aY, aTime);
+  status = ApzcUp(aApzc, aX, aY, aTime);
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[1] = status;
+  }
+}
+
+static void
+ApzcTapAndCheckStatus(AsyncPanZoomController* aApzc, int aX, int aY, int& aTime, int aTapLength)
+{
+  nsEventStatus statuses[2];
+  ApzcTap(aApzc, aX, aY, aTime, aTapLength, &statuses);
+  EXPECT_EQ(nsEventStatus_eConsumeNoDefault, statuses[0]);
+  EXPECT_EQ(nsEventStatus_eIgnore, statuses[1]);
 }
 
 static void
@@ -916,14 +922,13 @@ protected:
     // Start the fling down.
     ApzcPan(apzc, time, touchStart, touchEnd);
     // The touchstart from the pan will leave some cancelled tasks in the queue, clear them out
-    EXPECT_EQ(2, mcc->RunThroughDelayedTasks());
+    while (mcc->RunThroughDelayedTasks());
 
     // If we want to tap while the fling is fast, let the fling advance for 10ms only. If we want
     // the fling to slow down more, advance to 2000ms. These numbers may need adjusting if our
     // friction and threshold values change, but they should be deterministic at least.
     int timeDelta = aSlow ? 2000 : 10;
     int tapCallsExpected = aSlow ? 1 : 0;
-    int delayedTasksExpected = aSlow ? 3 : 2;
 
     // Advance the fling animation by timeDelta milliseconds.
     ScreenPoint pointOut;
@@ -933,8 +938,8 @@ protected:
     // Deliver a tap to abort the fling. Ensure that we get a HandleSingleTap
     // call out of it if and only if the fling is slow.
     EXPECT_CALL(*mcc, HandleSingleTap(_, 0, apzc->GetGuid())).Times(tapCallsExpected);
-    ApzcTap(apzc, 10, 10, time, 0, nullptr);
-    EXPECT_EQ(delayedTasksExpected, mcc->RunThroughDelayedTasks());
+    ApzcTap(apzc, 10, 10, time, 0);
+    while (mcc->RunThroughDelayedTasks());
 
     // Verify that we didn't advance any further after the fling was aborted, in either case.
     ScreenPoint finalPointOut;
@@ -1096,8 +1101,11 @@ TEST_F(APZCGestureDetectorTester, ShortPress) {
   MakeApzcUnzoomable();
 
   int time = 0;
-  nsEventStatus status = ApzcTap(apzc, 10, 10, time, 100, mcc.get());
-  EXPECT_EQ(nsEventStatus_eIgnore, status);
+  ApzcTapAndCheckStatus(apzc, 10, 10, time, 100);
+  // There will be delayed tasks posted for the long-tap and MAX_TAP timeouts, but
+  // we want to clear those.
+  mcc->ClearDelayedTask();
+  mcc->ClearDelayedTask();
 
   // This verifies that the single tap notification is sent after the
   // touchdown is fully processed. The ordering here is important.
@@ -1113,8 +1121,11 @@ TEST_F(APZCGestureDetectorTester, MediumPress) {
   MakeApzcUnzoomable();
 
   int time = 0;
-  nsEventStatus status = ApzcTap(apzc, 10, 10, time, 400, mcc.get());
-  EXPECT_EQ(nsEventStatus_eIgnore, status);
+  ApzcTapAndCheckStatus(apzc, 10, 10, time, 400);
+  // There will be delayed tasks posted for the long-tap and MAX_TAP timeouts, but
+  // we want to clear those.
+  mcc->ClearDelayedTask();
+  mcc->ClearDelayedTask();
 
   // This verifies that the single tap notification is sent after the
   // touchdown is fully processed. The ordering here is important.
