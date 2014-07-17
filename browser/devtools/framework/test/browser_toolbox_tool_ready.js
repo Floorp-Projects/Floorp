@@ -2,20 +2,21 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function test() {
-  addTab().then(function(data) {
-    data.target.makeRemote().then(performChecks.bind(null, data));
+  addTab("about:blank").then(function(tab) {
+    let target = TargetFactory.forTab(tab);
+    target.makeRemote().then(performChecks.bind(null, target));
   }).then(null, console.error);
 
-  function performChecks(data) {
+  function performChecks(target) {
     let toolIds = gDevTools.getToolDefinitionArray()
-                    .filter(def => def.isTargetSupported(data.target))
+                    .filter(def => def.isTargetSupported(target))
                     .map(def => def.id);
 
     let open = function(index) {
       let toolId = toolIds[index];
 
       info("About to open " + index + "/" + toolId);
-      gDevTools.showToolbox(data.target, toolId).then(function(toolbox) {
+      gDevTools.showToolbox(target, toolId).then(function(toolbox) {
         ok(toolbox, "toolbox exists for " + toolId);
         is(toolbox.currentToolId, toolId, "currentToolId should be " + toolId);
 

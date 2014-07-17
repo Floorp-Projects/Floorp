@@ -4,7 +4,7 @@
 let toolbox;
 
 function test() {
-  addTab("about:blank", function() {
+  addTab("about:blank").then(function() {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     gDevTools.showToolbox(target, "webconsole").then(testSelect);
   });

@@ -59,6 +59,9 @@ const gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 // To enable logging for try runs, just set the pref to true.
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
+// Uncomment this pref to dump all devtools emitted events to the console.
+// Services.prefs.setBoolPref("devtools.dump.emit", true);
+
 // Always reset some prefs to their original values after the test finishes.
 const gDefaultFilters = Services.prefs.getCharPref("devtools.netmonitor.filters");
 
@@ -67,6 +70,8 @@ registerCleanupFunction(() => {
 
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setCharPref("devtools.netmonitor.filters", gDefaultFilters);
+  Services.prefs.clearUserPref("devtools.cache.disabled");
+  Services.prefs.clearUserPref("devtools.dump.emit");
 });
 
 function addTab(aUrl, aWindow) {
@@ -113,9 +118,13 @@ function reconfigureTab(aTarget, aOptions) {
   return deferred.promise;
 };
 
-function toggleCache(aTarget, aEnabled) {
-  let options = { cacheEnabled: aEnabled, performReload: true };
+function toggleCache(aTarget, aDisabled) {
+  let options = { cacheDisabled: aDisabled, performReload: true };
   let navigationFinished = waitForNavigation(aTarget);
+
+  // Disable the cache for any toolbox that it is opened from this point on.
+  Services.prefs.setBoolPref("devtools.cache.disabled", aDisabled);
+
   return reconfigureTab(aTarget, options).then(() => navigationFinished);
 }
 
@@ -132,8 +141,8 @@ function initNetMonitor(aUrl, aWindow) {
     yield target.makeRemote();
     info("Target remoted.");
 
-    yield toggleCache(target, false);
-    info("Network cache disabled");
+    yield toggleCache(target, true);
+    info("Cache disabled when the current and all future toolboxes are open.");
 
     let toolbox = yield gDevTools.showToolbox(target, "netmonitor");
     info("Netork monitor pane shown successfully.");

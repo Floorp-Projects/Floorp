@@ -11,9 +11,7 @@ Cu.import("resource://gre/modules/devtools/event-emitter.js", tempScope);
 let EventEmitter = tempScope.EventEmitter;
 
 function test() {
-  addTab("about:blank", function(aBrowser, aTab) {
-    runTests(aTab);
-  });
+  addTab("about:blank").then(runTests);
 }
 
 function runTests(aTab) {
