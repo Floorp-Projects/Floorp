@@ -52,6 +52,8 @@ svg|line.box-model-guide-left {
   /* Avoid cases where the infobar is smaller than the arrow, when the text is
   short */
   min-width: 75px;
+   /* Avoid a shadow with lightweight themes - Bug 1037908 */
+  text-shadow: none;
 }
 
 /* Highlighter - Node Infobar - text */
