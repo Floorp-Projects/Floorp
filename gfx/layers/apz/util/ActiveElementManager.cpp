@@ -147,7 +147,7 @@ ActiveElementManager::ResetActive()
   if (mTarget) {
     dom::Element* root = mTarget->OwnerDoc()->GetDocumentElement();
     if (root) {
-      AEM_LOG("Found root %p, making active\n", root.get());
+      AEM_LOG("Found root %p, making active\n", root);
       SetActive(root);
     }
   }

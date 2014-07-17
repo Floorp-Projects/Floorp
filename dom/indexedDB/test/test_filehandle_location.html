@@ -1,0 +1,105 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>File Handle Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    const name = window.location.pathname;
+
+    let request = indexedDB.open(name, 1);
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    let event = yield undefined;
+
+    let db = event.target.result;
+    db.onerror = errorHandler;
+
+    request = db.createMutableFile("test.txt");
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    let mutableFile = event.target.result;
+    mutableFile.onerror = errorHandler;
+
+    let fileHandle = mutableFile.open("readwrite");
+    is(fileHandle.location, 0, "Correct location");
+
+    fileHandle.location = 100000;
+    is(fileHandle.location, 100000, "Correct location");
+
+    fileHandle.location = null;
+    ok(fileHandle.location === null, "Correct location");
+
+    try {
+      fileHandle.readAsArrayBuffer(1);
+      ok(false, "Should have thrown!");
+    }
+    catch (e) {
+      ok(e instanceof DOMException, "Got exception.");
+      is(e.name, "InvalidStateError", "Good error.");
+      is(e.code, DOMException.INVALID_STATE_ERR, "Good error code.");
+    }
+
+    try {
+      fileHandle.readAsText(1);
+      ok(false, "Should have thrown!");
+    }
+    catch (e) {
+      ok(e instanceof DOMException, "Got exception.");
+      is(e.name, "InvalidStateError", "Good error.");
+      is(e.code, DOMException.INVALID_STATE_ERR, "Good error code.");
+    }
+
+    try {
+      fileHandle.write({});
+      ok(false, "Should have thrown!");
+    }
+    catch (e) {
+      ok(e instanceof DOMException, "Got exception.");
+      is(e.name, "InvalidStateError", "Good error.");
+      is(e.code, DOMException.INVALID_STATE_ERR, "Good error code.");
+    }
+
+    request = fileHandle.append("foo");
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    ok(fileHandle.location === null, "Correct location");
+
+    try {
+      fileHandle.truncate();
+      ok(false, "Should have thrown!");
+    }
+    catch (e) {
+      ok(e instanceof DOMException, "Got exception.");
+      is(e.name, "InvalidStateError", "Good error.");
+      is(e.code, DOMException.INVALID_STATE_ERR, "Good error code.");
+    }
+
+    request = fileHandle.truncate(0);
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    is(fileHandle.location, 0, "Correct location");
+
+    finishTest();
+    yield undefined;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="file.js"></script> <!-- This is included just to skip this test in test_ipc.html -->
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

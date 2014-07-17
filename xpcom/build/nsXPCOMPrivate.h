@@ -275,11 +275,12 @@ void LogTerm();
 
 extern bool gXPCOMShuttingDown;
 extern bool gXPCOMThreadsShutDown;
+extern char16_t* gGREPath; // Needed by the IPC layer from off the main thread
 
 namespace mozilla {
 namespace services {
 
-/** 
+/**
  * Clears service cache, sets gXPCOMShuttingDown
  */
 void Shutdown();

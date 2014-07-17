@@ -2991,9 +2991,8 @@ chatbox {
 %include ../shared/contextmenu.inc.css
 
 #context-navigation {
-  background-color: -moz-dialog;
-  padding-bottom: 2px;
-  margin-bottom: 2px;
+  background-color: menu;
+  padding-bottom: 4px;
 }
 
 #context-sep-navigation {
