@@ -37,7 +37,7 @@ let testData = [
   ["VK_ESCAPE", null, -1, 0],
 ];
 
-let TEST_URL = "data:text/html,<h1 style='border: 1px solid red'>Filename:" +
+let TEST_URL = "data:text/html;charset=utf-8,<h1 style='border: 1px solid red'>Filename:" +
                "browser_bug893965_css_property_completion_new_property.js</h1>";
 
 let test = asyncTest(function*() {

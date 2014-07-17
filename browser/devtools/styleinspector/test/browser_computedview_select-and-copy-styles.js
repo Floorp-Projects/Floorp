@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyGetter(this, "osString", function() {
 });
 
 let test = asyncTest(function*() {
-  yield addTab("data:text/html,computed view copy test");
+  yield addTab("data:text/html;charset=utf-8,computed view copy test");
 
   info("Creating the test document");
   content.document.body.innerHTML = '<style type="text/css"> ' +

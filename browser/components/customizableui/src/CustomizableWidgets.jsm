@@ -70,7 +70,6 @@ function updateCombinedWidgetStyle(aNode, aArea, aModifyCloseMenu) {
   if (aModifyCloseMenu) {
     attrs.closemenu = inPanel ? "none" : null;
   }
-  attrs["cui-areatype"] = aArea ? CustomizableUI.getAreaType(aArea) : null;
   for (let i = 0, l = aNode.childNodes.length; i < l; ++i) {
     if (aNode.childNodes[i].localName == "separator")
       continue;

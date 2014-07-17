@@ -28,7 +28,7 @@ const TEST_DATA = [
 ];
 
 let test = asyncTest(function*() {
-  yield addTab("data:text/html,Computed view specificity test");
+  yield addTab("data:text/html;charset=utf-8,Computed view specificity test");
   createDocument();
 
   info("Creating a CssLogic instance");

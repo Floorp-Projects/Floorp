@@ -62,7 +62,7 @@ function* testCreateNew(inspector, ruleView) {
 
   editor.input.value = "purple";
   let onBlur = once(editor.input, "blur");
-  editor.input.blur();
+  EventUtils.sendKey("return", ruleView.doc.defaultView);
   yield onBlur;
   yield elementRuleEditor.rule._applyingModifications;
 
