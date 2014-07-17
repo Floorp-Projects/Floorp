@@ -267,9 +267,8 @@ bool VcmSIPCCBinding::scanForGmpCodecs()
     return false;
   }
   // presumes that all GMP dir scans have been queued for the GMPThread
-  RUN_ON_THREAD(thread,
-                WrapRunnableNM(&GMPDummy),
-                NS_DISPATCH_SYNC);
+  mozilla::SyncRunnable::DispatchToThread(thread,
+                                          WrapRunnableNM(&GMPDummy));
   return true;
 }
 
