@@ -30,11 +30,6 @@ public:
     return mDelay;
   }
 
-  virtual const DelayNode* AsDelayNode() const MOZ_OVERRIDE
-  {
-    return this;
-  }
-
   virtual const char* NodeType() const
   {
     return "DelayNode";

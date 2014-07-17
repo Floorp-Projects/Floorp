@@ -312,19 +312,6 @@ AudioNodeStream::ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex)
       continue;
     }
 
-    // It is possible for mLastChunks to be empty here, because `a` might be a
-    // AudioNodeStream that has not been scheduled yet, because it is further
-    // down the graph _but_ as a connection to this node. Because we enforce the
-    // presence of at least one DelayNode, with at least one block of delay, and
-    // because the output of a DelayNode when it has been fed less that
-    // `delayTime` amount of audio is silence, we can simply continue here,
-    // because this input would not influence the output of this node. Next
-    // iteration, a->mLastChunks.IsEmpty() will be false, and everthing will
-    // work as usual.
-    if (a->mLastChunks.IsEmpty()) {
-      continue;
-    }
-
     AudioChunk* chunk = &a->mLastChunks[mInputs[i]->OutputNumber()];
     MOZ_ASSERT(chunk);
     if (chunk->IsNull() || chunk->mChannelData.IsEmpty()) {
@@ -453,7 +440,7 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
   // appear to extend slightly beyond aFrom, so we might not be blocked yet.
   bool blocked = mFinished || mBlocked.GetAt(aFrom);
   // If the stream has finished at this time, it will be blocked.
-  if (mMuted || blocked) {
+  if (blocked || InMutedCycle()) {
     for (uint16_t i = 0; i < outputCount; ++i) {
       mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
     }
@@ -494,6 +481,32 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
       // of the depending streams have finished their output as well, so now
       // it's time to mark this stream as finished.
       FinishOutput();
+    }
+  }
+}
+
+void
+AudioNodeStream::ProduceOutputBeforeInput(GraphTime aFrom)
+{
+  MOZ_ASSERT(mEngine->AsDelayNodeEngine());
+  MOZ_ASSERT(mEngine->OutputCount() == 1,
+             "DelayNodeEngine output count should be 1");
+  MOZ_ASSERT(!InMutedCycle(), "DelayNodes should break cycles");
+  mLastChunks.SetLength(1);
+
+  // Consider this stream blocked if it has already finished output. Normally
+  // mBlocked would reflect this, but due to rounding errors our audio track may
+  // appear to extend slightly beyond aFrom, so we might not be blocked yet.
+  bool blocked = mFinished || mBlocked.GetAt(aFrom);
+  // If the stream has finished at this time, it will be blocked.
+  if (blocked) {
+    mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
+  } else {
+    mEngine->ProduceBlockBeforeInput(&mLastChunks[0]);
+    NS_ASSERTION(mLastChunks[0].GetDuration() == WEBAUDIO_BLOCK_SIZE,
+                 "Invalid WebAudio chunk size");
+    if (mDisabledTrackIDs.Contains(static_cast<TrackID>(AUDIO_TRACK))) {
+      mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
     }
   }
 }

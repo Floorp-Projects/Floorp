@@ -660,9 +660,6 @@ protected:
    */
   bool mNotifiedHasCurrentData;
 
-  // Temporary data for ordering streams by dependency graph
-  bool mHasBeenOrdered;
-  bool mIsOnOrderingStack;
   // True if the stream is being consumed (i.e. has track data being played,
   // or is feeding into some stream that is being consumed).
   bool mIsConsumed;
@@ -1019,7 +1016,7 @@ private:
 class ProcessedMediaStream : public MediaStream {
 public:
   ProcessedMediaStream(DOMMediaStream* aWrapper)
-    : MediaStream(aWrapper), mAutofinish(false), mInCycle(false)
+    : MediaStream(aWrapper), mAutofinish(false)
   {}
 
   // Control API.
@@ -1088,7 +1085,10 @@ public:
    */
   virtual void ForwardTrackEnabled(TrackID aOutputID, bool aEnabled) {};
 
-  bool InCycle() const { return mInCycle; }
+  // Only valid after MediaStreamGraphImpl::UpdateStreamOrder() has run.
+  // A DelayNode is considered to break a cycle and so this will not return
+  // true for echo loops, only for muted cycles.
+  bool InMutedCycle() const { return mCycleMarker; }
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
   {
@@ -1110,9 +1110,10 @@ protected:
   // The list of all inputs that are currently enabled or waiting to be enabled.
   nsTArray<MediaInputPort*> mInputs;
   bool mAutofinish;
-  // True if and only if this stream is in a cycle.
-  // Updated by MediaStreamGraphImpl::UpdateStreamOrder.
-  bool mInCycle;
+  // After UpdateStreamOrder(), mCycleMarker is either 0 or 1 to indicate
+  // whether this stream is in a muted cycle.  During ordering it can contain
+  // other marker values - see MediaStreamGraphImpl::UpdateStreamOrder().
+  uint32_t mCycleMarker;
 };
 
 /**
