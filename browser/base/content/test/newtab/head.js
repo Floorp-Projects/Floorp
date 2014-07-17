@@ -13,8 +13,7 @@ Cu.import("resource://gre/modules/DirectoryLinksProvider.jsm", tmp);
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
   .loadSubScript("chrome://browser/content/sanitize.js", tmp);
-Cu.import("resource://gre/modules/Timer.jsm", tmp);
-let {Promise, NewTabUtils, Sanitizer, clearTimeout, DirectoryLinksProvider} = tmp;
+let {Promise, NewTabUtils, Sanitizer, DirectoryLinksProvider} = tmp;
 
 let uri = Services.io.newURI("about:newtab", null, null);
 let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
@@ -58,13 +57,6 @@ registerCleanupFunction(function () {
 
   if (oldInnerHeight)
     gBrowser.contentWindow.innerHeight = oldInnerHeight;
-
-  // Stop any update timers to prevent unexpected updates in later tests
-  let timer = NewTabUtils.allPages._scheduleUpdateTimeout;
-  if (timer) {
-    clearTimeout(timer);
-    delete NewTabUtils.allPages._scheduleUpdateTimeout;
-  }
 
   Services.prefs.clearUserPref(PREF_NEWTAB_ENABLED);
   Services.prefs.clearUserPref(PREF_NEWTAB_DIRECTORYSOURCE);
