@@ -270,7 +270,6 @@ MOZ_BEGIN_ENUM_CLASS(PrimitiveType)
   DropShadow,
   DiffuseLighting,
   SpecularLighting,
-  ToAlpha,
   Max
 MOZ_END_ENUM_CLASS(PrimitiveType)
 
