@@ -966,11 +966,6 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return transform;
     }
 
-    case PrimitiveType::ToAlpha:
-    {
-      return FilterWrappers::ToAlpha(aDT, aSources[0]);
-    }
-
     default:
       return nullptr;
   }
@@ -1006,7 +1001,6 @@ InputAlphaModelForPrimitive(const FilterPrimitiveDescription& aDescr,
   switch (aDescr.Type()) {
     case PrimitiveType::Tile:
     case PrimitiveType::Offset:
-    case PrimitiveType::ToAlpha:
       return aOriginalAlphaModel;
 
     case PrimitiveType::ColorMatrix:
@@ -1202,7 +1196,6 @@ ResultChangeRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
 
     case PrimitiveType::ColorMatrix:
     case PrimitiveType::ComponentTransfer:
-    case PrimitiveType::ToAlpha:
       return aInputChangeRegions[0];
 
     case PrimitiveType::Morphology:
@@ -1432,7 +1425,6 @@ SourceNeededRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
     case PrimitiveType::Merge:
     case PrimitiveType::ColorMatrix:
     case PrimitiveType::ComponentTransfer:
-    case PrimitiveType::ToAlpha:
       return aResultNeededRegion;
 
     case PrimitiveType::Morphology:
