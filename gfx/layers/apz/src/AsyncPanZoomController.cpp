@@ -836,13 +836,26 @@ nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent)
   if (aEvent.AsMultiTouchInput().mType == MultiTouchInput::MULTITOUCH_START) {
     block = StartNewTouchBlock(false);
     APZC_LOG("%p started new touch block %p\n", this, block);
+
+    // We want to cancel animations here as soon as possible (i.e. without waiting for
+    // content responses) because a finger has gone down and we don't want to keep moving
+    // the content under the finger. However, to prevent "future" touchstart events from
+    // interfering with "past" animations (i.e. from a previous touch block that is still
+    // being processed) we only do this animation-cancellation if there are no older
+    // touch blocks still in the queue.
+    if (block == CurrentTouchBlock()) {
+      if (GetVelocityVector().Length() > gfxPrefs::APZFlingStopOnTapThreshold()) {
+        // If we're already in a fast fling, then we want the touch event to stop the fling
+        // and to disallow the touch event from being used as part of a fling.
+        block->DisallowSingleTap();
+      }
+      CancelAnimationForHandoffChain();
+    }
+
     if (mFrameMetrics.mMayHaveTouchListeners || mFrameMetrics.mMayHaveTouchCaret) {
       // Content may intercept the touch events and prevent-default them. So we schedule
       // a timeout to give content time to do that.
       ScheduleContentResponseTimeout();
-      // However, we still want to cancel animations here because a finger has gone down
-      // and we don't want to keep moving the content under the finger.
-      CancelAnimationForHandoffChain();
     } else {
       // Content won't prevent-default this, so we can just pretend like we scheduled
       // a timeout and it expired. Note that we will still receive a ContentReceivedTouch
@@ -967,17 +980,6 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
 
   switch (mState) {
     case FLING:
-      if (GetVelocityVector().Length() > gfxPrefs::APZFlingStopOnTapThreshold()) {
-        // This is ugly. Hopefully bug 1009733 can reorganize how events
-        // flow through APZC and change it so that events are handed to the
-        // gesture listener *after* we deal with them here. This should allow
-        // removal of this ugly code.
-        nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
-        if (listener) {
-          listener->CancelSingleTouchDown();
-        }
-      }
-      // Fall through.
     case ANIMATING_ZOOM:
       CancelAnimationForHandoffChain();
       // Fall through.
@@ -1422,7 +1424,9 @@ nsEventStatus AsyncPanZoomController::GenerateSingleTap(const ScreenIntPoint& aP
   if (controller) {
     CSSPoint geckoScreenPoint;
     if (ConvertToGecko(aPoint, &geckoScreenPoint)) {
-      int32_t modifiers = WidgetModifiersToDOMModifiers(aModifiers);
+      if (!CurrentTouchBlock()->SetSingleTapOccurred()) {
+        return nsEventStatus_eIgnore;
+      }
       // Because this may be being running as part of APZCTreeManager::ReceiveInputEvent,
       // calling controller->HandleSingleTap directly might mean that content receives
       // the single tap message before the corresponding touch-up. To avoid that we
@@ -1430,9 +1434,9 @@ nsEventStatus AsyncPanZoomController::GenerateSingleTap(const ScreenIntPoint& aP
       // See bug 965381 for the issue this was causing.
       controller->PostDelayedTask(
         NewRunnableMethod(controller.get(), &GeckoContentController::HandleSingleTap,
-                          geckoScreenPoint, modifiers, GetGuid()),
+                          geckoScreenPoint, WidgetModifiersToDOMModifiers(aModifiers),
+                          GetGuid()),
         0);
-      CurrentTouchBlock()->SetSingleTapOccurred();
       return nsEventStatus_eConsumeNoDefault;
     }
   }
@@ -1795,6 +1799,10 @@ void AsyncPanZoomController::CancelAnimation() {
   APZC_LOG("%p running CancelAnimation in state %d\n", this, mState);
   SetState(NOTHING);
   mAnimation = nullptr;
+  // Since there is no animation in progress now the axes should
+  // have no velocity either.
+  mX.SetVelocity(0);
+  mY.SetVelocity(0);
   // Setting the state to nothing and cancelling the animation can
   // preempt normal mechanisms for relieving overscroll, so we need to clear
   // overscroll here.
