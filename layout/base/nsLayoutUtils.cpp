@@ -4909,6 +4909,14 @@ struct SnappedImageDrawingParameters {
   {}
 };
 
+static nsRect
+TileNearRect(const nsRect& aAnyTile, const nsRect& aTargetRect)
+{
+  nsPoint distance = aTargetRect.TopLeft() - aAnyTile.TopLeft();
+  return aAnyTile + nsPoint(distance.x / aAnyTile.width * aAnyTile.width,
+                            distance.y / aAnyTile.height * aAnyTile.height);
+}
+
 /**
  * Given a set of input parameters, compute certain output parameters
  * for drawing an image with the image snapping algorithm.
@@ -4929,8 +4937,13 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
   if (aDest.IsEmpty() || aFill.IsEmpty() || !aImageSize.width || !aImageSize.height)
     return SnappedImageDrawingParameters();
 
+  // Avoid unnecessarily large offsets.
+  bool doTile = !aDest.Contains(aFill);
+  nsRect dest = doTile ? TileNearRect(aDest, aFill.Intersect(aDirty)) : aDest;
+  nsPoint anchor = aAnchor + (dest.TopLeft() - aDest.TopLeft());
+
   gfxRect devPixelDest =
-    nsLayoutUtils::RectToGfxRect(aDest, aAppUnitsPerDevPixel);
+    nsLayoutUtils::RectToGfxRect(dest, aAppUnitsPerDevPixel);
   gfxRect devPixelFill =
     nsLayoutUtils::RectToGfxRect(aFill, aAppUnitsPerDevPixel);
   gfxRect devPixelDirty =
@@ -4970,8 +4983,8 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
   // Compute the anchor point and compute final fill rect.
   // This code assumes that pixel-based devices have one pixel per
   // device unit!
-  gfxPoint anchorPoint(gfxFloat(aAnchor.x)/aAppUnitsPerDevPixel,
-                       gfxFloat(aAnchor.y)/aAppUnitsPerDevPixel);
+  gfxPoint anchorPoint(gfxFloat(anchor.x)/aAppUnitsPerDevPixel,
+                       gfxFloat(anchor.y)/aAppUnitsPerDevPixel);
   gfxPoint imageSpaceAnchorPoint =
     MapToFloatImagePixels(imageSize, devPixelDest, anchorPoint);
 
