@@ -278,8 +278,8 @@ int cubeb_stream_set_panning(cubeb_stream * stream, float panning)
   return stream->context->ops->stream_set_panning(stream, panning);
 }
 
-int cubeb_stream_get_current_output_device(cubeb_stream * stream,
-                                           cubeb_output_device ** const device)
+int cubeb_stream_get_current_device(cubeb_stream * stream,
+                                    cubeb_device ** const device)
 {
   if (!stream || !device) {
     return CUBEB_ERROR_INVALID_PARAMETER;
@@ -287,16 +287,16 @@ int cubeb_stream_get_current_output_device(cubeb_stream * stream,
 
   // If we find an implementation, call the function, it might not be available
   // on some platforms.
-  if (stream->context->ops->stream_get_current_output_device) {
-    return stream->context->ops->stream_get_current_output_device(stream,
-                                                                  device);
+  if (stream->context->ops->stream_get_current_device) {
+    return stream->context->ops->stream_get_current_device(stream,
+                                                           device);
   }
 
   return CUBEB_ERROR;
 }
 
-int cubeb_stream_output_device_destroy(cubeb_stream * stream,
-                                       cubeb_output_device * device)
+int cubeb_stream_device_destroy(cubeb_stream * stream,
+                                cubeb_device * device)
 {
   if (!stream || !device) {
     return CUBEB_ERROR_INVALID_PARAMETER;
@@ -304,8 +304,8 @@ int cubeb_stream_output_device_destroy(cubeb_stream * stream,
 
   // If we find an implementation, call the function, it might not be available
   // on some platforms.
-  if (stream->context->ops->stream_output_device_destroy) {
-    return stream->context->ops->stream_output_device_destroy(stream, device);
+  if (stream->context->ops->stream_device_destroy) {
+    return stream->context->ops->stream_device_destroy(stream, device);
   }
 
   return CUBEB_ERROR;
