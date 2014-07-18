@@ -1,0 +1,42 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Make sure that repeated background images are painted even at extreme scroll positions</title>
+<!-- See https://bugzilla.mozilla.org/show_bug.cgi?id=671302 -->
+
+<style>
+
+html {
+  background-image: url(green-8x20-blue-8x20-vertical.png);
+  overflow: hidden;
+}
+
+html, body {
+  margin: 0;
+}
+
+body {
+  height: 100000px;
+}
+
+div {
+  height: 1000px;
+  background-color: red;
+}
+
+</style>
+
+<div></div>
+
+<script>
+
+window.addEventListener("MozReftestInvalidate", function () {
+  document.documentElement.scrollTop = 16 * 3000; // = 48000 > 32768
+  document.documentElement.removeAttribute("class");
+});
+
+</script>

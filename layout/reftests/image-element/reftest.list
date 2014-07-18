@@ -24,7 +24,7 @@ fuzzy-if(B2G,1,5) fuzzy-if(gtk2Widget,1,32) fuzzy-if(cocoaWidget,1,106) == eleme
 == element-paint-sharpness-01b.html element-paint-sharpness-01c.html
 == element-paint-sharpness-01c.html element-paint-sharpness-01d.html
 == element-paint-sharpness-02a.html element-paint-sharpness-02b.html
-== element-paint-sharpness-02b.html element-paint-sharpness-02c.html
+fuzzy-if(B2G,11,4) == element-paint-sharpness-02b.html element-paint-sharpness-02c.html
 == element-paint-paintserversize-rounding-01.html element-paint-paintserversize-rounding-01-ref.html
 == element-paint-paintserversize-rounding-02.html element-paint-paintserversize-rounding-02-ref.html
 == element-paint-multiple-backgrounds-01a.html element-paint-multiple-backgrounds-01-ref.html
