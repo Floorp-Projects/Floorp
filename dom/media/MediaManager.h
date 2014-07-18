@@ -105,6 +105,7 @@ public:
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
     return mVideoSource && !mStopped &&
+           mVideoSource->GetMediaSource() == MediaSourceType::Camera &&
            (!mVideoSource->IsFake() ||
             Preferences::GetBool("media.navigator.permission.fake"));
   }
@@ -114,6 +115,18 @@ public:
     return mAudioSource && !mStopped &&
            (!mAudioSource->IsFake() ||
             Preferences::GetBool("media.navigator.permission.fake"));
+  }
+  bool CapturingScreen()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    return mVideoSource && !mStopped &&
+           mVideoSource->GetMediaSource() == MediaSourceType::Screen;
+  }
+  bool CapturingWindow()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    return mVideoSource && !mStopped &&
+           mVideoSource->GetMediaSource() == MediaSourceType::Window;
   }
 
   void SetStopped()
@@ -486,7 +499,7 @@ protected:
   nsString mID;
   bool mHasFacingMode;
   dom::VideoFacingModeEnum mFacingMode;
-  dom::MediaSourceEnum mMediaSource;
+  MediaSourceType mMediaSource;
   nsRefPtr<MediaEngineSource> mSource;
 };
 
@@ -579,7 +592,8 @@ private:
   ~MediaManager() {}
 
   nsresult MediaCaptureWindowStateInternal(nsIDOMWindow* aWindow, bool* aVideo,
-                                           bool* aAudio);
+                                           bool* aAudio, bool *aScreenShare,
+                                           bool* aWindowShare);
 
   void StopMediaStreams();
 
