@@ -999,8 +999,12 @@ nsSocketTransport::ResolveHost()
 #endif
             // When not resolving mHost locally, we still want to ensure that
             // it only contains valid characters.  See bug 304904 for details.
-            if (!net_IsValidHostName(mHost))
+            // Sometimes the end host is not yet known and mHost is *
+            if (!net_IsValidHostName(mHost) &&
+                !mHost.Equals(NS_LITERAL_CSTRING("*"))) {
+                SOCKET_LOG(("  invalid hostname %s\n", mHost.get()));
                 return NS_ERROR_UNKNOWN_HOST;
+            }
         }
         if (mProxyTransparentResolvesHost) {
             // Name resolution is done on the server side.  Just pretend
