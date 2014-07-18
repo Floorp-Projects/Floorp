@@ -52,6 +52,22 @@ this.webrtcUI = {
       });
     }
     return activeStreams;
+  },
+
+  updateMainActionLabel: function(aMenuList) {
+    let type = aMenuList.selectedItem.getAttribute("devicetype");
+    let document = aMenuList.ownerDocument;
+    document.getElementById("webRTC-all-windows-shared").hidden = type != "Screen";
+
+    // If we are also requesting audio in addition to screen sharing,
+    // always use a generic label.
+    if (!document.getElementById("webRTC-selectMicrophone").hidden)
+      type = "";
+
+    let bundle = document.defaultView.gNavigatorBundle;
+    let stringId = "getUserMedia.share" + (type || "SelectedItems") + ".label";
+    let popupnotification = aMenuList.parentNode.parentNode;
+    popupnotification.setAttribute("buttonlabel", bundle.getString(stringId));
   }
 }
 
@@ -136,9 +152,16 @@ function prompt(aContentWindow, aCallID, aAudio, aVideo, aDevices, aSecure) {
   let stringId = "getUserMedia.share" + requestTypes.join("And") + ".message";
   let message = stringBundle.getFormattedString(stringId, [uri.host]);
 
+  let mainLabel;
+  if (sharingScreen) {
+    mainLabel = stringBundle.getString("getUserMedia.shareSelectedItems.label");
+  }
+  else {
+    let string = stringBundle.getString("getUserMedia.shareSelectedDevices.label");
+    mainLabel = PluralForm.get(requestTypes.length, string);
+  }
   let mainAction = {
-    label: PluralForm.get(requestTypes.length,
-                          stringBundle.getString("getUserMedia.shareSelectedDevices.label")),
+    label: mainLabel,
     accessKey: stringBundle.getString("getUserMedia.shareSelectedDevices.accesskey"),
     // The real callback will be set during the "showing" event. The
     // empty function here is so that PopupNotifications.show doesn't
@@ -267,7 +290,7 @@ function prompt(aContentWindow, aCallID, aAudio, aVideo, aDevices, aSecure) {
             menupopup.appendChild(chromeDoc.createElement("menuseparator"));
             addDeviceToList(menupopup,
                             stringBundle.getString("getUserMedia.shareEntireScreen.label"),
-                            i);
+                            i, "Screen");
             break;
           }
         }
@@ -280,16 +303,22 @@ function prompt(aContentWindow, aCallID, aAudio, aVideo, aDevices, aSecure) {
               menupopup.appendChild(chromeDoc.createElement("menuseparator"));
               separatorNeeded = false;
             }
-            addDeviceToList(menupopup, devices[i].name, i);
+            addDeviceToList(menupopup, devices[i].name, i, "Window");
           }
         }
+
+        // Always re-select the "No Window or Screen" item.
+        chromeDoc.getElementById("webRTC-selectWindow-menulist").removeAttribute("value");
+        chromeDoc.getElementById("webRTC-all-windows-shared").hidden = true;
       }
 
-      function addDeviceToList(menupopup, deviceName, deviceIndex) {
+      function addDeviceToList(menupopup, deviceName, deviceIndex, type) {
         let menuitem = chromeDoc.createElement("menuitem");
         menuitem.setAttribute("value", deviceIndex);
         menuitem.setAttribute("label", deviceName);
         menuitem.setAttribute("tooltiptext", deviceName);
+        if (type)
+          menuitem.setAttribute("devicetype", type);
         menupopup.appendChild(menuitem);
       }
 
