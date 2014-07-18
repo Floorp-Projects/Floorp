@@ -18,6 +18,10 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+// Allow stuff from this scope to be accessed from non-privileged scopes. This
+// would crash if used outside of automation.
+Cu.forcePermissiveCOWs();
+
 function SpecialPowersAPI() {
   this._consoleListeners = [];
   this._encounteredCrashDumpFiles = [];
@@ -223,27 +227,6 @@ function crawlProtoChain(obj, fn) {
   return undefined;
 };
 
-/*
- * We want to waive the __exposedProps__ security check for SpecialPowers-wrapped
- * objects. We do this by creating a proxy singleton that just always returns 'rw'
- * for any property name.
- */
-function ExposedPropsWaiverHandler() {
-  // NB: XPConnect denies access if the relevant member of __exposedProps__ is not
-  // enumerable.
-  var _permit = { value: 'rw', writable: false, configurable: false, enumerable: true };
-  return {
-    getOwnPropertyDescriptor: function(name) { return _permit; },
-    getPropertyDescriptor: function(name) { return _permit; },
-    getOwnPropertyNames: function() { throw Error("Can't enumerate ExposedPropsWaiver"); },
-    getPropertyNames: function() { throw Error("Can't enumerate ExposedPropsWaiver"); },
-    enumerate: function() { throw Error("Can't enumerate ExposedPropsWaiver"); },
-    defineProperty: function(name) { throw Error("Can't define props on ExposedPropsWaiver"); },
-    delete: function(name) { throw Error("Can't delete props from ExposedPropsWaiver"); }
-  };
-};
-var ExposedPropsWaiver = Proxy.create(ExposedPropsWaiverHandler());
-
 function SpecialPowersHandler(obj) {
   this.wrappedObject = obj;
 };
@@ -255,10 +238,6 @@ SpecialPowersHandler.prototype.doGetPropertyDescriptor = function(name, own) {
   // Handle our special API.
   if (name == "SpecialPowers_wrappedObject")
     return { value: this.wrappedObject, writeable: false, configurable: false, enumerable: false };
-
-  // Handle __exposedProps__.
-  if (name == "__exposedProps__")
-    return { value: ExposedPropsWaiver, writable: false, configurable: false, enumerable: false };
 
   //
   // Call through to the wrapped object.
@@ -445,11 +424,6 @@ SPConsoleListener.prototype = {
       m.isStrict      = ((msg.flags & Ci.nsIScriptError.strictFlag) === 1);
     }
 
-    // expose all props of 'm' as read-only
-    let expose = {};
-    for (let prop in m)
-      expose[prop] = 'r';
-    m.__exposedProps__ = expose;
     Object.freeze(m);
 
     this.callback.call(undefined, m);
@@ -470,7 +444,7 @@ function wrapCallback(cb) {
 
 function wrapCallbackObject(obj) {
   obj = Cu.waiveXrays(obj);
-  var wrapper = { __exposedProps__: ExposedPropsWaiver };
+  var wrapper = {};
   for (var i in obj) {
     if (typeof obj[i] == 'function')
       wrapper[i] = wrapCallback(obj[i]);
@@ -528,9 +502,7 @@ SpecialPowersAPI.prototype = {
    * Create blank privileged objects to use as out-params for privileged functions.
    */
   createBlankObject: function () {
-    var obj = new Object;
-    obj.__exposedProps__ = ExposedPropsWaiver;
-    return obj;
+    return new Object;
   },
 
   /*
@@ -737,14 +709,31 @@ SpecialPowersAPI.prototype = {
     return crashDumpFiles;
   },
 
+  _setTimeout: function(callback) {
+    // for mochitest-browser
+    if (typeof window != 'undefined')
+      setTimeout(callback, 0);
+    // for mochitest-plain
+    else
+      content.window.setTimeout(callback, 0);
+  },
+
   _delayCallbackTwice: function(callback) {
-    function delayedCallback() {
-      function delayAgain() {
-	content.window.setTimeout(callback, 0);
-      }
-      content.window.setTimeout(delayAgain, 0);
-    }
-    return delayedCallback;
+     function delayedCallback() {
+       function delayAgain(aCallback) {
+         // Using this._setTimeout doesn't work here
+         // It causes failures in mochtests that use
+         // multiple pushPrefEnv calls
+         // For chrome/browser-chrome mochitests
+         if (typeof window != 'undefined')
+           setTimeout(aCallback, 0);
+         // For mochitest-plain
+         else
+           content.window.setTimeout(aCallback, 0);
+       }
+       delayAgain(delayAgain(callback));
+     }
+     return delayedCallback;
   },
 
   /* apply permissions to the system and when the test case is finished (SimpleTest.finish())
@@ -827,7 +816,7 @@ SpecialPowersAPI.prototype = {
 				     this._delayCallbackTwice(callback)]);
       this._applyPermissions();
     } else {
-      content.window.setTimeout(callback, 0);
+      this._setTimeout(callback);
     }
   },
 
@@ -839,7 +828,7 @@ SpecialPowersAPI.prototype = {
       this._pendingPermissions.push([this._permissionsUndoStack.pop(), cb]);
       this._applyPermissions();
     } else {
-      content.window.setTimeout(callback, 0);
+       this._setTimeout(callback);
     }
   },
 
@@ -852,6 +841,7 @@ SpecialPowersAPI.prototype = {
 
 
   _permissionObserver: {
+    _self: null,
     _lastPermission: {},
     _callBack: null,
     _nextCallback: null,
@@ -862,8 +852,8 @@ SpecialPowersAPI.prototype = {
         var permission = aSubject.QueryInterface(Ci.nsIPermission);
         if (permission.type == this._lastPermission.type) {
           Services.obs.removeObserver(this, "perm-changed");
-          content.window.setTimeout(this._callback, 0);
-          content.window.setTimeout(this._nextCallback, 0);
+          this._self._setTimeout(this._callback);
+          this._self._setTimeout(this._nextCallback);
         }
       }
     }
@@ -886,6 +876,7 @@ SpecialPowersAPI.prototype = {
     var lastPermission = pendingActions[pendingActions.length-1];
 
     var self = this;
+    this._permissionObserver._self = self;
     this._permissionObserver._lastPermission = lastPermission;
     this._permissionObserver._callback = callback;
     this._permissionObserver._nextCallback = function () {
@@ -1012,7 +1003,7 @@ SpecialPowersAPI.prototype = {
 			       this._delayCallbackTwice(callback)]);
       this._applyPrefs();
     } else {
-      content.window.setTimeout(callback, 0);
+      this._setTimeout(callback);
     }
   },
 
@@ -1024,7 +1015,7 @@ SpecialPowersAPI.prototype = {
       this._pendingPrefs.push([this._prefEnvUndoStack.pop(), cb]);
       this._applyPrefs();
     } else {
-      content.window.setTimeout(callback, 0);
+      this._setTimeout(callback);
     }
   },
 
@@ -1057,12 +1048,12 @@ SpecialPowersAPI.prototype = {
     pb.addObserver(lastPref.name, function prefObs(subject, topic, data) {
       pb.removeObserver(lastPref.name, prefObs);
 
-      content.window.setTimeout(callback, 0);
-      content.window.setTimeout(function () {
+      self._setTimeout(callback);
+      self._setTimeout(function () {
         self._applyingPrefs = false;
         // Now apply any prefs that may have been queued while we were applying
         self._applyPrefs();
-      }, 0);
+      });
     }, false);
 
     for (var idx in pendingActions) {
@@ -1477,13 +1468,12 @@ SpecialPowersAPI.prototype = {
 
   getDOMRequestService: function() {
     var serv = Services.DOMRequest;
-    var res = { __exposedProps__: {} };
+    var res = {};
     var props = ["createRequest", "createCursor", "fireError", "fireSuccess",
                  "fireDone", "fireDetailedError"];
     for (var i in props) {
       let prop = props[i];
       res[prop] = function() { return serv[prop].apply(serv, arguments) };
-      res.__exposedProps__[prop] = "r";
     }
     return res;
   },

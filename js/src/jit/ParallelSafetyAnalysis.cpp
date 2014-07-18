@@ -277,6 +277,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(Round)
     UNSAFE_OP(InstanceOf)
     CUSTOM_OP(InterruptCheck)
+    UNSAFE_OP(AsmJSInterruptCheck)
     SAFE_OP(ForkJoinContext)
     SAFE_OP(ForkJoinGetSlice)
     SAFE_OP(NewPar)

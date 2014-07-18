@@ -28,6 +28,7 @@ TouchBlockState::TouchBlockState()
   , mPreventDefault(false)
   , mContentResponded(false)
   , mContentResponseTimerExpired(false)
+  , mSingleTapDisallowed(false)
   , mSingleTapOccurred(false)
 {
   TBS_LOG("Creating %p\n", this);
@@ -104,10 +105,21 @@ TouchBlockState::IsDefaultPrevented() const
 }
 
 void
+TouchBlockState::DisallowSingleTap()
+{
+  TBS_LOG("%p disallowing single-tap\n", this);
+  mSingleTapDisallowed = true;
+}
+
+bool
 TouchBlockState::SetSingleTapOccurred()
 {
-  TBS_LOG("%p setting single-tap occurred\n", this);
-  mSingleTapOccurred = true;
+  TBS_LOG("%p attempting to set single-tap occurred; disallowed=%d\n", this, mSingleTapDisallowed);
+  if (!mSingleTapDisallowed) {
+    mSingleTapOccurred = true;
+    return true;
+  }
+  return false;
 }
 
 bool

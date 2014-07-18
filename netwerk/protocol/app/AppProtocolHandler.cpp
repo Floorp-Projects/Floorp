@@ -127,6 +127,11 @@ NS_IMETHODIMP DummyChannel::GetJarFile(nsIFile* *aFile)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP DummyChannel::EnsureChildFd()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP DummyChannel::Run()
 {
   nsresult rv = mListener->OnStartRequest(this, mListenerContext);

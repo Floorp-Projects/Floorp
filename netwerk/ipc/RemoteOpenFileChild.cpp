@@ -72,10 +72,20 @@ NS_IMPL_ISUPPORTS(RemoteOpenFileChild,
 
 RemoteOpenFileChild::RemoteOpenFileChild(const RemoteOpenFileChild& other)
   : mTabChild(other.mTabChild)
-  , mNSPRFileDesc(other.mNSPRFileDesc)
+  , mNSPRFileDesc(nullptr)
   , mAsyncOpenCalled(other.mAsyncOpenCalled)
-  , mNSPROpenCalled(other.mNSPROpenCalled)
 {
+#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
+  // Windows/OSX desktop builds skip remoting, so the file descriptor should
+  // be nullptr here.
+  MOZ_ASSERT(!other.mNSPRFileDesc);
+#else
+  if (other.mNSPRFileDesc) {
+    PROsfd osfd = dup(PR_FileDesc2NativeHandle(other.mNSPRFileDesc));
+    mNSPRFileDesc = PR_ImportFile(osfd);
+  }
+#endif
+
   // Note: don't clone mListener or we'll have a refcount leak.
   other.mURI->Clone(getter_AddRefs(mURI));
   if (other.mAppURI) {
@@ -123,8 +133,6 @@ RemoteOpenFileChild::~RemoteOpenFileChild()
   }
 
   if (mNSPRFileDesc) {
-    // If we handed out fd we shouldn't have pointer to it any more.
-    MOZ_ASSERT(!mNSPROpenCalled);
     // PR_Close both closes the file and deallocates the PRFileDesc
     PR_Close(mNSPRFileDesc);
   }
@@ -241,6 +249,18 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
 #endif
 }
 
+nsresult
+RemoteOpenFileChild::SetNSPRFileDesc(PRFileDesc* aNSPRFileDesc)
+{
+  MOZ_ASSERT(!mNSPRFileDesc);
+  if (mNSPRFileDesc) {
+    return NS_ERROR_ALREADY_OPENED;
+  }
+
+  mNSPRFileDesc = aNSPRFileDesc;
+  return NS_OK;
+}
+
 void
 RemoteOpenFileChild::OnCachedFileDescriptor(const nsAString& aPath,
                                             const FileDescriptor& aFD)
@@ -347,11 +367,6 @@ RemoteOpenFileChild::Clone(nsIFile **file)
   *file = new RemoteOpenFileChild(*this);
   NS_ADDREF(*file);
 
-  // if we transferred ownership of file to clone, forget our pointer.
-  if (mNSPRFileDesc) {
-    mNSPRFileDesc = nullptr;
-  }
-
   return NS_OK;
 }
 
@@ -370,21 +385,13 @@ RemoteOpenFileChild::OpenNSPRFileDesc(int32_t aFlags, int32_t aMode,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // Unlike regular nsIFile we can't (easily) support multiple open()s.
-  if (mNSPROpenCalled) {
-    return NS_ERROR_ALREADY_OPENED;
-  }
-
   if (!mNSPRFileDesc) {
-    // client skipped AsyncRemoteFileOpen() or didn't wait for result, or this
-    // object has been cloned
+    // Client skipped AsyncRemoteFileOpen() or didn't wait for result.
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // hand off ownership (i.e responsibility to PR_Close() file handle) to caller
-  *aRetval = mNSPRFileDesc;
-  mNSPRFileDesc = nullptr;
-  mNSPROpenCalled = true;
+  PROsfd osfd = dup(PR_FileDesc2NativeHandle(mNSPRFileDesc));
+  *aRetval = PR_ImportFile(osfd);
 
   return NS_OK;
 #endif

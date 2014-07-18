@@ -93,6 +93,7 @@ private:
     bool                            mIsPending;
     bool                            mIsUnsafe;
     bool                            mOpeningRemote;
+    bool                            mEnsureChildFd;
 
     nsCOMPtr<nsIStreamListener>     mDownloader;
     nsCOMPtr<nsIInputStreamPump>    mPump;

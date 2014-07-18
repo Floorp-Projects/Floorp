@@ -23,7 +23,7 @@ function test() {
   waitForExplicitFinish();
 
   let cbPostTest = function(cb) {
-    SocialService.removeProvider(TEST_PROVIDER_ORIGIN, function() {cb()});
+    SocialService.disableProvider(TEST_PROVIDER_ORIGIN, function() {cb()});
   };
   replaceAlertsService();
   registerCleanupFunction(restoreAlertsService);

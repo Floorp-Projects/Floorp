@@ -91,8 +91,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=945152
     };
     yield undefined;
 
-    // Launch app.
-    launchApp(app, continueTest);
+    // Launch app non-OOP.
+    info("Launch app with non-OOP");
+    launchApp(app, continueTest, false);
+    yield undefined;
+
+    // Launch app OOP.
+    info("Launch app with OOP");
+    launchApp(app, continueTest, true);
     yield undefined;
 
     // Uninstall app.
@@ -116,9 +122,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=945152
     xhr.send();
   }
 
-  function launchApp(app, cb) {
+  function launchApp(app, cb, oop) {
     // Set up the app.
     var ifr = document.createElement('iframe');
+    ifr.setAttribute('remote', oop ? 'true' : 'false');
     ifr.setAttribute('mozbrowser', 'true');
     ifr.setAttribute('mozapp', app.manifestURL);
     ifr.setAttribute('src', app.origin + app.manifest.launch_path);

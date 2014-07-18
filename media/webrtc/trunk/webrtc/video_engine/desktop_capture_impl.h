@@ -25,6 +25,7 @@
 #include "webrtc/modules/desktop_capture/mouse_cursor_shape.h"
 #include "webrtc/modules/desktop_capture/desktop_device_info.h"
 #include "webrtc/modules/desktop_capture/desktop_and_cursor_composer.h"
+#include "webrtc/video_engine/include/vie_capture.h"
 
 using namespace webrtc::videocapturemodule;
 
@@ -109,6 +110,43 @@ protected:
   scoped_ptr<DesktopDeviceInfo> desktop_device_info_;
 };
 
+class WindowDeviceInfoImpl : public VideoCaptureModule::DeviceInfo {
+public:
+  WindowDeviceInfoImpl(const int32_t id) : _id(id) {};
+  virtual ~WindowDeviceInfoImpl(void) {};
+
+  int32_t Init();
+
+  virtual uint32_t NumberOfDevices();
+  virtual int32_t GetDeviceName(uint32_t deviceNumber,
+                                char* deviceNameUTF8,
+                                uint32_t deviceNameLength,
+                                char* deviceUniqueIdUTF8,
+                                uint32_t deviceUniqueIdUTF8Length,
+                                char* productUniqueIdUTF8,
+                                uint32_t productUniqueIdUTF8Length);
+
+  virtual int32_t DisplayCaptureSettingsDialogBox(const char* deviceUniqueIdUTF8,
+                                                  const char* dialogTitleUTF8,
+                                                  void* parentWindow,
+                                                  uint32_t positionX,
+                                                  uint32_t positionY);
+  virtual int32_t NumberOfCapabilities(const char* deviceUniqueIdUTF8);
+  virtual int32_t GetCapability(const char* deviceUniqueIdUTF8,
+                                const uint32_t deviceCapabilityNumber,
+                                VideoCaptureCapability& capability);
+
+  virtual int32_t GetBestMatchedCapability(const char* deviceUniqueIdUTF8,
+                                           const VideoCaptureCapability& requested,
+                                           VideoCaptureCapability& resulting);
+  virtual int32_t GetOrientation(const char* deviceUniqueIdUTF8,
+                                 VideoCaptureRotation& orientation);
+protected:
+  int32_t _id;
+  scoped_ptr<DesktopDeviceInfo> desktop_device_info_;
+
+};
+
 // Reuses the video engine pipeline for screen sharing.
 // As with video, DesktopCaptureImpl is a proxy for screen sharing
 // and follows the video pipeline design
@@ -120,10 +158,10 @@ class DesktopCaptureImpl: public VideoCaptureModule,
 public:
   /* Create a screen capture modules object
    */
-  static VideoCaptureModule* Create(const int32_t id, const char* uniqueId, const bool bIsApp);
-  static VideoCaptureModule::DeviceInfo* CreateDeviceInfo(const int32_t id, const bool bIsApp);
+  static VideoCaptureModule* Create(const int32_t id, const char* uniqueId, const CaptureDeviceType type);
+  static VideoCaptureModule::DeviceInfo* CreateDeviceInfo(const int32_t id, const CaptureDeviceType type);
 
-  int32_t Init(const char* uniqueId,const bool bIsApp);
+  int32_t Init(const char* uniqueId, const CaptureDeviceType type);
   // Implements Module declared functions.
   virtual int32_t ChangeUniqueId(const int32_t id) OVERRIDE;
 

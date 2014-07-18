@@ -458,21 +458,38 @@ SelectionCarets::UpdateSelectionCarets()
 
   // If range select only one character, append tilt class name to it.
   bool isTilt = false;
-  if (startFrame) {
-    nsPeekOffsetStruct pos(eSelectCluster,
-                           eDirNext,
-                           startOffset,
-                           0,
-                           false,
-                           true,  //limit on scrolled views
-                           false,
-                           false);
-    startFrame->PeekOffset(&pos);
-    nsCOMPtr<nsIContent> endContent = do_QueryInterface(range->GetEndParent());
-    if ((pos.mResultContent &&
-         nsLayoutUtils::CompareTreePosition(pos.mResultContent, endContent) > 0) ||
-        (pos.mResultContent == endContent &&
-         pos.mContentOffset >= range->EndOffset())) {
+  if (startFrame && endFrame) {
+    // In this case <textarea>abc</textarea> and we select 'c' character,
+    // EndContent would be HTMLDivElement and mResultContent which get by
+    // calling startFrame->PeekOffset() with selecting next cluster would be
+    // TextNode. Although the position is same, nsContentUtils::ComparePoints
+    // still shows HTMLDivElement is after TextNode. So that we cannot use
+    // EndContent or StartContent to compare with result of PeekOffset().
+    // So we compare between next charater of startFrame and previous character
+    // of endFrame.
+    nsPeekOffsetStruct posNext(eSelectCluster,
+                               eDirNext,
+                               startOffset,
+                               0,
+                               false,
+                               true,  //limit on scrolled views
+                               false,
+                               false);
+
+    nsPeekOffsetStruct posPrev(eSelectCluster,
+                               eDirPrevious,
+                               endOffset,
+                               0,
+                               false,
+                               true,  //limit on scrolled views
+                               false,
+                               false);
+    startFrame->PeekOffset(&posNext);
+    endFrame->PeekOffset(&posPrev);
+
+    if (posNext.mResultContent && posPrev.mResultContent &&
+        nsContentUtils::ComparePoints(posNext.mResultContent, posNext.mContentOffset,
+                                      posPrev.mResultContent, posPrev.mContentOffset) > 0) {
       isTilt = true;
     }
   }

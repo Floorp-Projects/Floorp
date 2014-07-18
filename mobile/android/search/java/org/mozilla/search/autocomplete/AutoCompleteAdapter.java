@@ -9,10 +9,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
+import java.util.List;
+
 /**
  * The adapter that is used to populate the autocomplete rows.
  */
-class AutoCompleteAdapter extends ArrayAdapter<AutoCompleteModel> {
+class AutoCompleteAdapter extends ArrayAdapter<String> {
 
     private final AcceptsJumpTaps acceptsJumpTaps;
 
@@ -21,6 +23,9 @@ class AutoCompleteAdapter extends ArrayAdapter<AutoCompleteModel> {
         // and supplying our own view.
         super(context, 0);
         this.acceptsJumpTaps = acceptsJumpTaps;
+
+        // Disable notifying on change. We will notify ourselves in update.
+        setNotifyOnChange(false);
     }
 
     @Override
@@ -34,12 +39,23 @@ class AutoCompleteAdapter extends ArrayAdapter<AutoCompleteModel> {
         }
 
         view.setOnJumpListener(acceptsJumpTaps);
-
-
-        AutoCompleteModel model = getItem(position);
-
-        view.setMainText(model.getMainText());
+        view.setMainText(getItem(position));
 
         return view;
+    }
+
+    /**
+     * Updates adapter content with new list of search suggestions.
+     *
+     * @param suggestions List of search suggestions.
+     */
+    public void update(List<String> suggestions) {
+        clear();
+        if (suggestions != null) {
+            for (String s : suggestions) {
+                add(s);
+            }
+        }
+        notifyDataSetChanged();
     }
 }
