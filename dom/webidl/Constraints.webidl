@@ -17,7 +17,8 @@ enum VideoFacingModeEnum {
 enum MediaSourceEnum {
     "camera",
     "screen",
-    "application"
+    "application",
+    "window"
 };
 
 dictionary ConstrainLongRange {

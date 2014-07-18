@@ -47,6 +47,7 @@ namespace mozilla {
 MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
     : mMutex("mozilla::MediaEngineWebRTC")
     , mScreenEngine(nullptr)
+    , mWinEngine(nullptr)
     , mAppEngine(nullptr)
     , mVideoEngine(nullptr)
     , mVoiceEngine(nullptr)
@@ -137,6 +138,17 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
 #endif
 
   switch (aMediaSource) {
+    case dom::MediaSourceEnum::Window:
+      mWinEngineConfig.Set<webrtc::CaptureDeviceInfo>(
+          new webrtc::CaptureDeviceInfo(webrtc::CaptureDeviceType::Window));
+      if (!mWinEngine) {
+        if (!(mWinEngine = webrtc::VideoEngine::Create(mWinEngineConfig))) {
+          return;
+        }
+      }
+      videoEngine = mWinEngine;
+      videoEngineInit = &mWinEngineInit;
+      break;
     case dom::MediaSourceEnum::Application:
       mAppEngineConfig.Set<webrtc::CaptureDeviceInfo>(
           new webrtc::CaptureDeviceInfo(webrtc::CaptureDeviceType::Application));
