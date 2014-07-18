@@ -285,9 +285,7 @@ public class BrowserApp extends GeckoApp
             return false;
         }
 
-        // Gamepad support only exists in API-level >= 9
-        if (Build.VERSION.SDK_INT >= 9 &&
-            (event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
+        if ((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
             switch (keyCode) {
                 case KeyEvent.KEYCODE_BUTTON_Y:
                     // Toggle/focus the address bar on gamepad-y button.
