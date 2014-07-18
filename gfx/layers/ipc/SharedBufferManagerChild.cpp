@@ -317,29 +317,18 @@ SharedBufferManagerChild::DeallocGrallocBufferNow(const mozilla::layers::MaybeMa
 #endif
 }
 
-void
-SharedBufferManagerChild::DropGrallocBuffer(const mozilla::layers::MaybeMagicGrallocBufferHandle& aHandle)
+bool SharedBufferManagerChild::RecvDropGrallocBuffer(const mozilla::layers::MaybeMagicGrallocBufferHandle& handle)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  int64_t bufferKey = -1;
-  if (aHandle.type() == mozilla::layers::MaybeMagicGrallocBufferHandle::TMagicGrallocBufferHandle) {
-    bufferKey = aHandle.get_MagicGrallocBufferHandle().mRef.mKey;
-  } else if (aHandle.type() == mozilla::layers::MaybeMagicGrallocBufferHandle::TGrallocBufferRef) {
-    bufferKey = aHandle.get_GrallocBufferRef().mKey;
-  } else {
-    return;
-  }
+  NS_ASSERTION(handle.type() == mozilla::layers::MaybeMagicGrallocBufferHandle::TGrallocBufferRef, "shouldn't go this way");
+  int64_t bufferKey = handle.get_GrallocBufferRef().mKey;
 
   {
     MutexAutoLock lock(mBufferMutex);
+    NS_ASSERTION(mBuffers.count(bufferKey) != 0, "No such buffer");
     mBuffers.erase(bufferKey);
   }
 #endif
-}
-
-bool SharedBufferManagerChild::RecvDropGrallocBuffer(const mozilla::layers::MaybeMagicGrallocBufferHandle& aHandle)
-{
-  DropGrallocBuffer(aHandle);
   return true;
 }
 

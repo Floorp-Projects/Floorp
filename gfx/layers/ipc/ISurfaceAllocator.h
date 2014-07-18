@@ -162,8 +162,6 @@ public:
 
   void DeallocGrallocBuffer(MaybeMagicGrallocBufferHandle* aHandle);
 
-  void DropGrallocBuffer(MaybeMagicGrallocBufferHandle* aHandle);
-
   virtual bool IPCOpen() const { return true; }
   virtual bool IsSameProcess() const = 0;
 
