@@ -2807,11 +2807,20 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     bool doValidation = false;
     bool canAddImsHeader = true;
 
+    bool isForcedValid = false;
+    entry->GetIsForcedValid(&isForcedValid);
+
     // Cached entry is not the entity we request (see bug #633743)
     if (ResponseWouldVary(entry)) {
         LOG(("Validating based on Vary headers returning TRUE\n"));
         canAddImsHeader = false;
         doValidation = true;
+    }
+    // Check isForcedValid to see if it is possible to skip validation
+    // See netwerk/cache2/nsICacheEntry.idl for details
+    else if (isForcedValid) {
+        LOG(("NOT validating based on isForcedValid being true.\n"));
+        doValidation = false;
     }
     // If the LOAD_FROM_CACHE flag is set, any cached data can simply be used
     else if (mLoadFlags & nsIRequest::LOAD_FROM_CACHE) {
