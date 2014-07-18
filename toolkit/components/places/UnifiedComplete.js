@@ -19,7 +19,7 @@ const TOPIC_PREFCHANGED = "nsPref:changed";
 
 const DEFAULT_BEHAVIOR = 0;
 
-const PREF_BRANCH = "browser.urlbar";
+const PREF_BRANCH = "browser.urlbar.";
 
 // Prefs are defined as [pref name, default value].
 const PREF_ENABLED =            [ "autocomplete.enabled", true ];
@@ -187,7 +187,7 @@ const SQL_KEYWORD_QUERY = sql(
 
 const SQL_HOST_QUERY = sql(
   "/* do not warn (bug NA): not worth to index on (typed, frecency) */",
-  "SELECT :query_type, host || '/', prefix || host || '/',",
+  "SELECT :query_type, host || '/', IFNULL(prefix, '') || host || '/',",
          "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, frecency",
   "FROM moz_hosts",
   "WHERE host BETWEEN :searchString AND :searchString || X'FFFF'",
@@ -200,7 +200,7 @@ const SQL_TYPED_HOST_QUERY = SQL_HOST_QUERY.replace("/*CONDITIONS*/",
                                                     "AND typed = 1");
 const SQL_URL_QUERY = sql(
   "/* do not warn (bug no): cannot use an index */",
-  "SELECT :query_type, h.url,",
+  "SELECT :query_type, h.url, NULL,",
          "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, h.frecency",
   "FROM moz_places h",
   "WHERE h.frecency <> 0",
@@ -440,24 +440,24 @@ function stripPrefix(spec)
 
 function Search(searchString, searchParam, autocompleteListener,
                 resultListener, autocompleteSearch) {
-  // We want to store the original string with no leading or trailing
-  // whitespace for case sensitive searches.
-  this._originalSearchString = searchString.trim();
-  this._searchString = fixupSearchText(this._originalSearchString.toLowerCase());
+  // We want to store the original string for case sensitive searches.
+  this._originalSearchString = searchString;
+  this._trimmedOriginalSearchString = searchString.trim();
+  this._searchString = fixupSearchText(this._trimmedOriginalSearchString.toLowerCase());
   this._searchTokens =
     this.filterTokens(getUnfilteredSearchTokens(this._searchString));
   // The protocol and the host are lowercased by nsIURI, so it's fine to
   // lowercase the typed prefix, to add it back to the results later.
-  this._strippedPrefix = this._originalSearchString.slice(
-    0, this._originalSearchString.length - this._searchString.length
+  this._strippedPrefix = this._trimmedOriginalSearchString.slice(
+    0, this._trimmedOriginalSearchString.length - this._searchString.length
   ).toLowerCase();
   // The URIs in the database are fixed-up, so we can match on a lowercased
   // host, but the path must be matched in a case sensitive way.
   let pathIndex =
-    this._originalSearchString.indexOf("/", this._strippedPrefix.length);
+    this._trimmedOriginalSearchString.indexOf("/", this._strippedPrefix.length);
   this._autofillUrlSearchString = fixupSearchText(
-    this._originalSearchString.slice(0, pathIndex).toLowerCase() +
-    this._originalSearchString.slice(pathIndex)
+    this._trimmedOriginalSearchString.slice(0, pathIndex).toLowerCase() +
+    this._trimmedOriginalSearchString.slice(pathIndex)
   );
 
   this._enableActions = searchParam.split(" ").indexOf("enable-actions") != -1;
@@ -756,7 +756,7 @@ Search.prototype = {
     // If the untrimmed value doesn't preserve the user's input just
     // ignore it and complete to the found host.
     if (untrimmedHost &&
-        !untrimmedHost.toLowerCase().contains(this._originalSearchString.toLowerCase())) {
+        !untrimmedHost.toLowerCase().contains(this._trimmedOriginalSearchString.toLowerCase())) {
       // THIS CAUSES null TO BE SHOWN AS TITLE.
       untrimmedHost = null;
     }
@@ -791,7 +791,7 @@ Search.prototype = {
     // ignore it and complete to the found url.
     let untrimmedURL = prefix + url;
     if (untrimmedURL &&
-        !untrimmedURL.toLowerCase().contains(this._originalSearchString.toLowerCase())) {
+        !untrimmedURL.toLowerCase().contains(this._trimmedOriginalSearchString.toLowerCase())) {
       // THIS CAUSES null TO BE SHOWN AS TITLE.
       untrimmedURL = null;
      }
@@ -927,7 +927,7 @@ Search.prototype = {
   get _keywordQuery() {
     // The keyword is the first word in the search string, with the parameters
     // following it.
-    let searchString = this._originalSearchString;
+    let searchString = this._trimmedOriginalSearchString;
     let queryString = "";
     let queryIndex = searchString.indexOf(" ");
     if (queryIndex != -1) {
@@ -999,20 +999,20 @@ Search.prototype = {
     if (Prefs.defaultBehavior != DEFAULT_BEHAVIOR)
       return false;
 
+    // Don't try to autofill if the search term includes any whitespace.
+    // This may confuse completeDefaultIndex cause the AUTOCOMPLETE_MATCH
+    // tokenizer ends up trimming the search string and returning a value
+    // that doesn't match it, or is even shorter.
+    if (/\s/.test(this._originalSearchString)) {
+      return false;
+    }
+
     // Don't autoFill if the search term is recognized as a keyword, otherwise
     // it will override default keywords behavior.  Note that keywords are
     // hashed on first use, so while the first query may delay a little bit,
     // next ones will just hit the memory hash.
     if (this._searchString.length == 0 ||
         PlacesUtils.bookmarks.getURIForKeyword(this._searchString)) {
-      return false;
-    }
-
-    // Don't try to autofill if the search term includes any whitespace.
-    // This may confuse completeDefaultIndex cause the AUTOCOMPLETE_MATCH
-    // tokenizer ends up trimming the search string and returning a value
-    // that doesn't match it, or is even shorter.
-    if (/\s/.test(this._searchString)) {
       return false;
     }
 
@@ -1026,7 +1026,7 @@ Search.prototype = {
    *         database with and an object containing the params to bound.
    */
   get _hostQuery() [
-    Prefs.autofillTyped ? SQL_TYPED_HOST_QUERY : SQL_TYPED_QUERY,
+    Prefs.autofillTyped ? SQL_TYPED_HOST_QUERY : SQL_HOST_QUERY,
     {
       query_type: QUERYTYPE_AUTOFILL_HOST,
       searchString: this._searchString.toLowerCase()
@@ -1040,7 +1040,7 @@ Search.prototype = {
    *         database with and an object containing the params to bound.
    */
   get _urlQuery() [
-    Prefs.autofillTyped ? SQL_TYPED_HOST_QUERY : SQL_TYPED_QUERY,
+    Prefs.autofillTyped ? SQL_TYPED_URL_QUERY : SQL_URL_QUERY,
     {
       query_type: QUERYTYPE_AUTOFILL_URL,
       searchString: this._autofillUrlSearchString,
@@ -1117,7 +1117,8 @@ UnifiedComplete.prototype = {
         yield SwitchToTabStorage.initDatabase(conn);
 
         return conn;
-      }.bind(this)).then(null, Cu.reportError);
+      }.bind(this)).then(null, ex => { dump("Couldn't get database handle: " + ex + "\n");
+                                       Cu.reportError(ex); });
     }
     return this._promiseDatabase;
   },
@@ -1175,7 +1176,8 @@ UnifiedComplete.prototype = {
                               if (search == this._currentSearch) {
                                 this.finishSearch(true);
                               }
-                            }, Cu.reportError);
+                            }, ex => { dump("Query failed: " + ex + "\n");
+                                       Cu.reportError(ex); });
   },
 
   stopSearch: function () {
