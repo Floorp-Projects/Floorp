@@ -22,7 +22,6 @@ CPPSRCS += $(EXTRACPPSRCS)
 include $(topsrcdir)/config/config.mk
 
 LIBS		+= \
-		$(LIBS_DIR) \
 		tmreader.$(OBJ_SUFFIX) \
 		adreader.$(OBJ_SUFFIX) \
 		$(XPCOM_GLUE_LDOPTS) \
