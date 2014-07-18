@@ -377,9 +377,6 @@ class ICEntry
     _(Call_ScriptedApplyArguments) \
     _(Call_ScriptedFunCall)     \
                                 \
-    _(ArrayPush_Fallback)       \
-    _(ArrayPush_Native)         \
-                                \
     _(GetElem_Fallback)         \
     _(GetElem_NativeSlot)       \
     _(GetElem_NativePrototypeSlot) \
@@ -2898,69 +2895,6 @@ class ICUnaryArith_Double : public ICStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICUnaryArith_Double::New(space, getStubCode());
-        }
-    };
-};
-
-// ArrayPush
-//      JSOP_ARRAYPUSH
-
-class ICArrayPush_Fallback : public ICFallbackStub
-{
-    friend class ICStubSpace;
-
-    explicit ICArrayPush_Fallback(JitCode *stubCode)
-      : ICFallbackStub(ArrayPush_Fallback, stubCode)
-    {}
-
-  public:
-    static inline ICArrayPush_Fallback *New(ICStubSpace *space, JitCode *code) {
-        if (!code)
-            return nullptr;
-        return space->allocate<ICArrayPush_Fallback>(code);
-    }
-
-    class Compiler : public ICStubCompiler {
-      protected:
-        bool generateStubCode(MacroAssembler &masm);
-
-      public:
-        Compiler(JSContext *cx)
-          : ICStubCompiler(cx, ICStub::ArrayPush_Fallback)
-        {}
-
-        ICStub *getStub(ICStubSpace *space) {
-            return ICArrayPush_Fallback::New(space, getStubCode());
-        }
-    };
-};
-
-class ICArrayPush_Native : public ICStub
-{
-    friend class ICStubSpace;
-
-    explicit ICArrayPush_Native(JitCode *stubCode)
-      : ICStub(ArrayPush_Native, stubCode)
-    {}
-
-  public:
-    static inline ICArrayPush_Native *New(ICStubSpace *space, JitCode *code) {
-        if (!code)
-            return nullptr;
-        return space->allocate<ICArrayPush_Native>(code);
-    }
-
-    class Compiler : public ICStubCompiler {
-      protected:
-        bool generateStubCode(MacroAssembler &masm);
-
-      public:
-        Compiler(JSContext *cx)
-          : ICStubCompiler(cx, ICStub::ArrayPush_Native)
-        {}
-
-        ICStub *getStub(ICStubSpace *space) {
-            return ICArrayPush_Native::New(space, getStubCode());
         }
     };
 };
