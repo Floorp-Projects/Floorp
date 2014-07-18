@@ -106,7 +106,13 @@
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
                   android:launchMode="singleTask"
+                  android:exported="true"
                   android:theme="@style/Gecko.App">
+          <!-- We export this activity so that it can be launched by explicit
+               intents, in particular homescreen shortcuts.  See Bug 1032217.
+               In future we would prefer to move all intent filters off the .App
+               alias and onto BrowserApp so that we can deprecate activities
+               that refer to pre-processed class names. -->
         </activity>
 
         <!-- Fennec is shipped as the Android package named
@@ -255,10 +261,16 @@
                   android:taskAffinity="org.mozilla.gecko.WEBAPP"
                   android:process=":@ANDROID_PACKAGE_NAME@.Webapp"
                   android:excludeFromRecents="true"
+                  android:exported="true"
                   android:theme="@style/Gecko.App">
+          <!-- We export this activity so that it can be launched by explicit
+               intents, in particular old-style WebApp launching homescreen
+               shortcuts. Such shortcuts were made before the new "synthetic
+               APK" WebApps were deployed. See Bug 1032217. -->
         </activity>
 
-        <!-- Alias Webapp so we can launch it from the package namespace. -->
+        <!-- Alias Webapp so we can launch it from the package namespace. Prefer
+             to launch with the fully qualified name "org.mozilla.gecko.Webapp". -->
         <activity-alias android:name=".Webapp"
                         android:label="@string/webapp_generic_name"
                         android:targetActivity="org.mozilla.gecko.Webapp">

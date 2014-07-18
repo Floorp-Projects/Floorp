@@ -110,8 +110,8 @@ let tests = {
               checkSocialUI(w1);
 
               // disable social and re-check
-              SocialService.removeProvider(manifest.origin, function() {
-                SocialService.removeProvider(manifest2.origin, function() {
+              SocialService.disableProvider(manifest.origin, function() {
+                SocialService.disableProvider(manifest2.origin, function() {
                   ok(!Social.enabled, "social is disabled");
                   is(Social.providers.length, 0, "no providers");
                   ok(!w1.SocialSidebar.opened, "w1 sidebar is closed");
@@ -161,7 +161,7 @@ let tests = {
                   ok(!Services.prefs.prefHasUserValue("social.sidebar.provider"), "4. global state unset");
                   ok(!SocialSidebar.opened, "4. main sidebar is still closed");
                   ok(!w1.SocialSidebar.opened, "4. window sidebar is closed");
-                  SocialService.removeProvider(manifest.origin, function() {
+                  SocialService.disableProvider(manifest.origin, function() {
                     Services.prefs.clearUserPref("social.manifest.test");
                     cbnext();
                   });
@@ -180,8 +180,8 @@ let tests = {
   testPerWindowSidebar: function(cbnext) {
     function finishCheck() {
       // disable social and re-check
-      SocialService.removeProvider(manifest.origin, function() {
-        SocialService.removeProvider(manifest2.origin, function() {
+      SocialService.disableProvider(manifest.origin, function() {
+        SocialService.disableProvider(manifest2.origin, function() {
           ok(!Social.enabled, "social is disabled");
           is(Social.providers.length, 0, "no providers");
           Services.prefs.clearUserPref("social.manifest.test");

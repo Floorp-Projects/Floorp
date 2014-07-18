@@ -128,6 +128,39 @@ functionality will not be enabled or you will be prompted for your
 Bugzilla credentials when they are needed.
 '''.lstrip()
 
+BZPOST_MINIMUM_VERSION = StrictVersion('3.0')
+
+BZPOST_INFO = '''
+The bzpost extension automatically records the URLs of pushed commits to
+referenced Bugzilla bugs after push.
+
+Would you like to activate bzpost
+'''.strip()
+
+FIREFOXTREE_MINIMUM_VERSION = StrictVersion('3.0')
+
+FIREFOXTREE_INFO = '''
+The firefoxtree extension makes interacting with the multiple Firefox
+repositories easier:
+
+* Aliases for common trees are pre-defined. e.g. `hg pull central`
+* Pulling from known Firefox trees will create "remote refs" appearing as
+  tags. e.g. pulling from fx-team will produce a "fx-team" tag.
+* The `hg fxheads` command will list the heads of all pulled Firefox repos
+  for easy reference.
+* `hg push` will limit itself to pushing a single head when pushing to
+  Firefox repos.
+* A pre-push hook will prevent you from pushing multiple heads to known
+  Firefox repos. This acts quicker than a server-side hook.
+
+The firefoxtree extension is *strongly* recommended if you:
+
+a) aggregate multiple Firefox repositories into a single local repo
+b) perform head/bookmark-based development (as opposed to mq)
+
+Would you like to activate firefoxtree
+'''.strip()
+
 class MercurialSetupWizard(object):
     """Command-line wizard to help users configure Mercurial."""
 
@@ -233,6 +266,12 @@ class MercurialSetupWizard(object):
                     'projects',
                     path=p)
 
+        if hg_version >= BZPOST_MINIMUM_VERSION:
+            self.prompt_external_extension(c, 'bzpost', BZPOST_INFO)
+
+        if hg_version >= FIREFOXTREE_MINIMUM_VERSION:
+            self.prompt_external_extension(c, 'firefoxtree', FIREFOXTREE_INFO)
+
         if 'mq' in c.extensions:
             self.prompt_external_extension(c, 'mqext', MQEXT_INFO,
                                            os.path.join(self.ext_dir, 'mqext'))
@@ -261,7 +300,7 @@ class MercurialSetupWizard(object):
                     print('Configured qnew to set patch author by default.')
                     print('')
 
-        if 'reviewboard' in c.extensions:
+        if 'reviewboard' in c.extensions or 'bzpost' in c.extensions:
             bzuser, bzpass = c.get_bugzilla_credentials()
 
             if not bzuser or not bzpass:
@@ -346,7 +385,11 @@ class MercurialSetupWizard(object):
         # in a directory with the same name as the extension and thus also
         # flagging the version-control-tools repo as needing an update.
         if name not in c.extensions:
+            print(name)
+            print('=' * len(name))
+            print('')
             if not self._prompt_yn(prompt_text):
+                print('')
                 return
             print('Activated %s extension.\n' % name)
         if not path:
