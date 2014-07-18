@@ -434,6 +434,26 @@ function stripPrefix(spec)
   return spec;
 }
 
+/**
+ * Strip http and trailing separators from a spec.
+ *
+ * @param spec
+ *        The text to modify.
+ * @return the modified spec.
+ */
+function stripHttpAndTrim(spec) {
+  if (spec.startsWith("http://")) {
+    spec = spec.slice(7);
+  }
+  if (spec.endsWith("?")) {
+    spec = spec.slice(0, -1);
+  }
+  if (spec.endsWith("/")) {
+    spec = spec.slice(0, -1);
+  }
+  return spec;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Search Class
 //// Manages a single instance of an autocomplete search.
@@ -716,8 +736,9 @@ Search.prototype = {
     }
 
     // Must check both id and url, cause keywords dinamically modify the url.
+    let urlMapKey = stripHttpAndTrim(match.value);
     if ((!match.placeId || !this._usedPlaceIds.has(match.placeId)) &&
-        !this._usedURLs.has(match.value)) {
+        !this._usedURLs.has(urlMapKey)) {
       // Add this to our internal tracker to ensure duplicates do not end up in
       // the result.
       // Not all entries have a place id, thus we fallback to the url for them.
@@ -726,7 +747,7 @@ Search.prototype = {
       // are faster too.
       if (match.placeId)
         this._usedPlaceIds.add(match.placeId);
-      this._usedURLs.add(match.value);
+      this._usedURLs.add(urlMapKey);
 
       this._result.appendMatch(match.value,
                                match.comment,
@@ -759,7 +780,6 @@ Search.prototype = {
     // ignore it and complete to the found host.
     if (untrimmedHost &&
         !untrimmedHost.toLowerCase().contains(this._trimmedOriginalSearchString.toLowerCase())) {
-      // THIS CAUSES null TO BE SHOWN AS TITLE.
       untrimmedHost = null;
     }
 
@@ -794,7 +814,6 @@ Search.prototype = {
     let untrimmedURL = prefix + url;
     if (untrimmedURL &&
         !untrimmedURL.toLowerCase().contains(this._trimmedOriginalSearchString.toLowerCase())) {
-      // THIS CAUSES null TO BE SHOWN AS TITLE.
       untrimmedURL = null;
      }
 
@@ -871,6 +890,9 @@ Search.prototype = {
         match.style = "bookmark";
       }
     }
+
+    if (action)
+      match.style = "action " + match.style;
 
     match.value = url;
     match.comment = title;
