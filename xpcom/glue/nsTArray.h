@@ -11,6 +11,7 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
 
 #include <string.h>
@@ -468,14 +469,14 @@ public:
   }
   // Invoke the copy-constructor in place.
   template<class A>
-  static inline void Construct(E* aE, const A& aArg)
+  static inline void Construct(E* aE, A &&aArg)
   {
     typedef typename mozilla::RemoveCV<E>::Type E_NoCV;
     typedef typename mozilla::RemoveCV<A>::Type A_NoCV;
     static_assert(!mozilla::IsSame<E_NoCV*, A_NoCV>::value,
                   "For safety, we disallow constructing nsTArray<E> elements "
                   "from E* pointers. See bug 960591.");
-    new (static_cast<void*>(aE)) E(aArg);
+    new (static_cast<void*>(aE)) E(mozilla::Forward<A>(aArg));
   }
   // Invoke the destructor in place.
   static inline void Destruct(E* aE) { aE->~E(); }
@@ -1253,6 +1254,20 @@ public:
   {
     return AppendElements(&aItem, 1);
   }
+
+  // A variation of AppendElement that takes an r-value reference
+  elem_type* AppendElement(elem_type&& aItem)
+  {
+    if (!Alloc::Successful(this->EnsureCapacity(Length() + 1,
+                                                sizeof(elem_type))))
+      return nullptr;
+    index_type len = Length();
+    elem_type* iter = Elements() + len;
+    nsTArrayElementTraits<elem_type>::Construct(iter, mozilla::Forward<elem_type>(aItem));
+    this->IncrementLength(1);
+    return iter;
+  }
+
 
   // Append new elements without copy-constructing. This is useful to avoid
   // temporaries.
