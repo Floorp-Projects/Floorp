@@ -4,8 +4,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMMozVoicemailStatus;
-
 [scriptable, uuid(214b0963-da48-4859-a56c-f065a90e0403)]
 interface nsIVoicemailListener : nsISupports
 {
@@ -15,7 +13,7 @@ interface nsIVoicemailListener : nsISupports
    * @param status
    *        The new voicemail status
    */
-  void notifyStatusChanged(in nsIDOMMozVoicemailStatus status);
+  void notifyStatusChanged(in jsval status);
 };
 
 /**
@@ -35,7 +33,7 @@ interface nsIVoicemailProvider : nsISupports
   void registerVoicemailMsg(in nsIVoicemailListener listener);
   void unregisterVoicemailMsg(in nsIVoicemailListener listener);
 
-  nsIDOMMozVoicemailStatus getVoicemailStatus(in unsigned long clientId);
+  jsval getVoicemailStatus(in unsigned long clientId);
   DOMString getVoicemailNumber(in unsigned long clientId);
   DOMString getVoicemailDisplayName(in unsigned long clientId);
 };
