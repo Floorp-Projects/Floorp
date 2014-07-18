@@ -243,11 +243,11 @@ BackCert::RememberExtension(Input& extnID, const SECItem& extnValue,
     // Don't allow an empty value for any extension we understand. This way, we
     // can test out->len to check for duplicates.
     if (extnValue.len == 0) {
-      return Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
+      return Result::ERROR_EXTENSION_VALUE_INVALID;
     }
     if (out->len != 0) {
       // Duplicate extension
-      return Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
+      return Result::ERROR_EXTENSION_VALUE_INVALID;
     }
     *out = extnValue;
     understood = true;

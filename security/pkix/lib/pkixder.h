@@ -92,7 +92,7 @@ ExpectTagAndLength(Input& input, uint8_t expectedTag, uint8_t expectedLength)
   expectedTagAndLength |= expectedLength;
 
   if (tagAndLength != expectedTagAndLength) {
-    return Fail(SEC_ERROR_BAD_DER);
+    return Result::ERROR_BAD_DER;
   }
 
   return Success;
@@ -167,7 +167,7 @@ inline Result
 End(Input& input)
 {
   if (!input.AtEnd()) {
-    return Fail(SEC_ERROR_BAD_DER);
+    return Result::ERROR_BAD_DER;
   }
 
   return Success;
@@ -238,7 +238,7 @@ NestedOf(Input& input, uint8_t outerTag, uint8_t innerTag,
 
   if (inner.AtEnd()) {
     if (mayBeEmpty != EmptyAllowed::Yes) {
-      return Fail(SEC_ERROR_BAD_DER);
+      return Result::ERROR_BAD_DER;
     }
     return Success;
   }
@@ -275,7 +275,7 @@ IntegralValue(Input& input, uint8_t tag, T& value)
     return rv;
   }
   if (valueByte & 0x80) { // negative
-    return Fail(SEC_ERROR_BAD_DER);
+    return Result::ERROR_BAD_DER;
   }
   value = valueByte;
   return Success;
@@ -300,7 +300,7 @@ Boolean(Input& input, /*out*/ bool& value)
     case 0: value = false; return Success;
     case 0xFF: value = true; return Success;
     default:
-      return Fail(SEC_ERROR_BAD_DER);
+      return Result::ERROR_BAD_DER;
   }
 }
 
@@ -319,7 +319,7 @@ OptionalBoolean(Input& input, bool allowInvalidExplicitEncoding,
       return rv;
     }
     if (!allowInvalidExplicitEncoding && !value) {
-      return Fail(SEC_ERROR_BAD_DER);
+      return Result::ERROR_BAD_DER;
     }
   }
   return Success;
@@ -382,7 +382,7 @@ OptionalInteger(Input& input, long defaultValue, /*out*/ long& value)
   // If we need to support a different default value in the future, we need to
   // test that parsedValue != defaultValue.
   if (defaultValue != -1) {
-    return Fail(SEC_ERROR_INVALID_ARGS);
+    return Result::FATAL_ERROR_INVALID_ARGS;
   }
 
   if (!input.Peek(INTEGER)) {
@@ -439,7 +439,7 @@ CertificateSerialNumber(Input& input, /*out*/ SECItem& value)
   }
 
   if (value.len == 0) {
-    return Fail(SEC_ERROR_BAD_DER);
+    return Result::ERROR_BAD_DER;
   }
 
   // Check for overly-long encodings. If the first byte is 0x00 then the high
@@ -450,7 +450,7 @@ CertificateSerialNumber(Input& input, /*out*/ SECItem& value)
   if (value.len > 1) {
     if ((value.data[0] == 0x00 && (value.data[1] & 0x80) == 0) ||
         (value.data[0] == 0xff && (value.data[1] & 0x80) != 0)) {
-      return Fail(SEC_ERROR_BAD_DER);
+      return Result::ERROR_BAD_DER;
     }
   }
 
@@ -493,7 +493,7 @@ OptionalVersion(Input& input, /*out*/ Version& version)
     // do here for compatibility reasons.
     case static_cast<uint8_t>(Version::v1): version = Version::v1; break;
     default:
-      return Fail(SEC_ERROR_BAD_DER);
+      return Result::ERROR_BAD_DER;
   }
   return Success;
 }
@@ -568,7 +568,7 @@ OptionalExtensions(Input& input, uint8_t tag, ExtensionHandler extensionHandler)
       return rv;
     }
     if (critical && !understood) {
-      return Fail(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION);
+      return Result::ERROR_UNKNOWN_CRITICAL_EXTENSION;
     }
   }
 

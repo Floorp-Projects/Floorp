@@ -33,9 +33,11 @@
 #include "pk11pub.h"
 #include "pkixcheck.h"
 #include "pkixder.h"
+#include "prerror.h"
 #include "prinit.h"
 #include "prprf.h"
 #include "secder.h"
+#include "secerr.h"
 
 using namespace std;
 
@@ -163,10 +165,10 @@ public:
     PR_ASSERT(item->data);
 
     if (numItems >= MaxSequenceItems) {
-      return Fail(SEC_ERROR_INVALID_ARGS);
+      return Result::FATAL_ERROR_INVALID_ARGS;
     }
     if (length + item->len > 65535) {
-      return Fail(SEC_ERROR_INVALID_ARGS);
+      return Result::FATAL_ERROR_INVALID_ARGS;
     }
 
     contents[numItems] = item;

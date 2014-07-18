@@ -27,6 +27,7 @@
 
 #include "pkix/nullptr.h"
 #include "pkix/Result.h"
+#include "seccomon.h"
 #include "stdint.h"
 
 namespace mozilla { namespace pkix {
@@ -55,11 +56,11 @@ public:
   {
     if (input) {
       // already initialized
-      return Fail(SEC_ERROR_INVALID_ARGS);
+      return Result::FATAL_ERROR_INVALID_ARGS;
     }
     if (!data || len > 0xffffu) {
       // input too large
-      return Fail(SEC_ERROR_BAD_DER);
+      return Result::ERROR_BAD_DER;
     }
 
     // XXX: this->input = input bug was not caught by tests! Why not?
@@ -77,7 +78,7 @@ public:
       return rv;
     }
     if (memcmp(input, expected, expectedLen)) {
-      return Fail(SEC_ERROR_BAD_DER);
+      return Result::ERROR_BAD_DER;
     }
     input += expectedLen;
     return Success;
@@ -196,7 +197,7 @@ public:
   Result EnsureLength(uint16_t len)
   {
     if (static_cast<size_t>(end - input) < len) {
-      return Fail(SEC_ERROR_BAD_DER);
+      return Result::ERROR_BAD_DER;
     }
     return Success;
   }
@@ -219,7 +220,7 @@ public:
   {
     if (&mark.input != this || mark.mark > input) {
       PR_NOT_REACHED("invalid mark");
-      return Fail(SEC_ERROR_INVALID_ARGS);
+      return Result::FATAL_ERROR_INVALID_ARGS;
     }
     item.type = type;
     item.data = const_cast<uint8_t*>(mark.mark);
