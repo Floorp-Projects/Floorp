@@ -21,6 +21,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
                                   "resource://gre/modules/CharsetMenu.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
                                   "resource://gre/modules/ShortcutUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
+                                  "resource://gre/modules/GMPInstallManager.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
                                    "@mozilla.org/network/dns-service;1",
@@ -1316,6 +1318,14 @@ var gBrowserInit = {
       WindowsPrefSync.init();
     }
 
+    // Delay this a minute because there's no rush
+    setTimeout(() => {
+      this.gmpInstallManager = new GMPInstallManager();
+      // We don't really care about the results, if somenoe is interested they
+      // can check the log.
+      this.gmpInstallManager.simpleCheckAndInstall();
+    }, 1000 * 60);
+
     SessionStore.promiseInitialized.then(() => {
       // Bail out if the window has been closed in the meantime.
       if (window.closed) {
@@ -1464,6 +1474,9 @@ var gBrowserInit = {
 
       if (typeof WindowsPrefSync !== 'undefined') {
         WindowsPrefSync.uninit();
+      }
+      if (this.gmpInstallManager) {
+        this.gmpInstallManager.uninit();
       }
 
       BrowserOffline.uninit();
