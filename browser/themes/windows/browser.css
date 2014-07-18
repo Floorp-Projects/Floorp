@@ -2213,6 +2213,11 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   list-style-image: url(chrome://browser/skin/webRTC-shareMicrophone-64.png);
 }
 
+.popup-notification-icon[popupid="webRTC-sharingScreen"],
+.popup-notification-icon[popupid="webRTC-shareScreen"] {
+  list-style-image: url(chrome://browser/skin/webRTC-shareScreen-64.png);
+}
+
 .popup-notification-icon[popupid="pointerLock"] {
   list-style-image: url(chrome://browser/skin/pointerLock-64.png);
 }
@@ -2351,6 +2356,16 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 .webRTC-sharingMicrophone-notification-icon,
 #webRTC-sharingMicrophone-notification-icon {
   list-style-image: url(chrome://browser/skin/webRTC-sharingMicrophone-16.png);
+}
+
+.webRTC-shareScreen-notification-icon,
+#webRTC-shareScreen-notification-icon {
+  list-style-image: url(chrome://browser/skin/webRTC-shareScreen-16.png);
+}
+
+.webRTC-sharingScreen-notification-icon,
+#webRTC-sharingScreen-notification-icon {
+  list-style-image: url(chrome://browser/skin/webRTC-sharingScreen-16.png);
 }
 
 .web-notifications-notification-icon,
