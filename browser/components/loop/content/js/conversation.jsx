@@ -21,7 +21,7 @@ loop.conversation = (function(OT, mozL10n) {
    */
   var router;
 
-  var IncomingCallView = React.createClass({displayName: 'IncomingCallView',
+  var IncomingCallView = React.createClass({
 
     propTypes: {
       model: React.PropTypes.func.isRequired
@@ -61,17 +61,17 @@ loop.conversation = (function(OT, mozL10n) {
       var btnClassDecline = "btn btn-success btn-accept";
       var conversationPanelClass = "incoming-call " + this._getTargetPlatform();
       return (
-        React.DOM.div( {className:conversationPanelClass}, 
-          React.DOM.h2(null, __("incoming_call")),
-          React.DOM.div( {className:"button-group"}, 
-            React.DOM.button( {className:btnClassAccept, onClick:this._handleDecline}, 
-              __("incoming_call_decline_button")
-            ),
-            React.DOM.button( {className:btnClassDecline, onClick:this._handleAccept}, 
-              __("incoming_call_answer_button")
-            )
-          )
-        )
+        <div className={conversationPanelClass}>
+          <h2>{__("incoming_call")}</h2>
+          <div className="button-group">
+            <button className={btnClassAccept} onClick={this._handleDecline}>
+              {__("incoming_call_decline_button")}
+            </button>
+            <button className={btnClassDecline} onClick={this._handleAccept}>
+              {__("incoming_call_answer_button")}
+            </button>
+          </div>
+        </div>
       );
       /* jshint ignore:end */
     }
