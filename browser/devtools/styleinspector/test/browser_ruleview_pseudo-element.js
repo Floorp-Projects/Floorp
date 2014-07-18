@@ -38,24 +38,22 @@ function* testTopLeft(inspector, view) {
 
   // Make sure that clicking on the twisty hides pseudo elements
   let expander = gutters[0].querySelector(".ruleview-expander");
-  ok (view.element.classList.contains("show-pseudo-elements"), "Pseudo Elements are expanded");
+  ok (view.element.firstChild.classList.contains("show-expandable-container"), "Pseudo Elements are expanded");
   expander.click();
-  ok (!view.element.classList.contains("show-pseudo-elements"), "Pseudo Elements are collapsed by twisty");
+  ok (!view.element.firstChild.classList.contains("show-expandable-container"), "Pseudo Elements are collapsed by twisty");
   expander.click();
-  ok (view.element.classList.contains("show-pseudo-elements"), "Pseudo Elements are expanded again");
+  ok (view.element.firstChild.classList.contains("show-expandable-container"), "Pseudo Elements are expanded again");
 
   // Make sure that dblclicking on the header container also toggles the pseudo elements
   EventUtils.synthesizeMouseAtCenter(gutters[0], {clickCount: 2}, inspector.sidebar.getWindowForTab("ruleview"));
-  ok (!view.element.classList.contains("show-pseudo-elements"), "Pseudo Elements are collapsed by dblclicking");
+  ok (!view.element.firstChild.classList.contains("show-expandable-container"), "Pseudo Elements are collapsed by dblclicking");
 
   let defaultView = element.ownerDocument.defaultView;
   let elementRule = rules.elementRules[0];
-  let elementRuleView = [].filter.call(view.element.children, e => {
-    return e._ruleEditor && e._ruleEditor.rule === elementRule;
-  })[0]._ruleEditor;
+  let elementRuleView = getRuleViewRuleEditor(view, 3);
 
   let elementAfterRule = rules.afterRules[0];
-  let elementAfterRuleView = [].filter.call(view.element.children, (e) => {
+  let elementAfterRuleView = [].filter.call(view.element.children[1].children, (e) => {
     return e._ruleEditor && e._ruleEditor.rule === elementAfterRule;
   })[0]._ruleEditor;
 
@@ -68,7 +66,7 @@ function* testTopLeft(inspector, view) {
   );
 
   let elementBeforeRule = rules.beforeRules[0];
-  let elementBeforeRuleView = [].filter.call(view.element.children, (e) => {
+  let elementBeforeRuleView = [].filter.call(view.element.children[1].children, (e) => {
     return e._ruleEditor && e._ruleEditor.rule === elementBeforeRule;
   })[0]._ruleEditor;
 
@@ -138,10 +136,10 @@ function* testTopRight(inspector, view) {
   let gutters = assertGutters(view);
 
   let expander = gutters[0].querySelector(".ruleview-expander");
-  ok (!view.element.classList.contains("show-pseudo-elements"), "Pseudo Elements remain collapsed after switching element");
+  ok (!view.element.firstChild.classList.contains("show-expandable-container"), "Pseudo Elements remain collapsed after switching element");
   expander.scrollIntoView();
   expander.click();
-  ok (view.element.classList.contains("show-pseudo-elements"), "Pseudo Elements are shown again after clicking twisty");
+  ok (view.element.firstChild.classList.contains("show-expandable-container"), "Pseudo Elements are shown again after clicking twisty");
 }
 
 function* testBottomRight(inspector, view) {
@@ -183,7 +181,7 @@ function* testParagraph(inspector, view) {
   let gutters = assertGutters(view);
 
   let elementFirstLineRule = rules.firstLineRules[0];
-  let elementFirstLineRuleView = [].filter.call(view.element.children, (e) => {
+  let elementFirstLineRuleView = [].filter.call(view.element.children[1].children, (e) => {
     return e._ruleEditor && e._ruleEditor.rule === elementFirstLineRule;
   })[0]._ruleEditor;
 
@@ -195,7 +193,7 @@ function* testParagraph(inspector, view) {
   );
 
   let elementFirstLetterRule = rules.firstLetterRules[0];
-  let elementFirstLetterRuleView = [].filter.call(view.element.children, (e) => {
+  let elementFirstLetterRuleView = [].filter.call(view.element.children[1].children, (e) => {
     return e._ruleEditor && e._ruleEditor.rule === elementFirstLetterRule;
   })[0]._ruleEditor;
 
@@ -207,7 +205,7 @@ function* testParagraph(inspector, view) {
   );
 
   let elementSelectionRule = rules.selectionRules[0];
-  let elementSelectionRuleView = [].filter.call(view.element.children, (e) => {
+  let elementSelectionRuleView = [].filter.call(view.element.children[1].children, (e) => {
     return e._ruleEditor && e._ruleEditor.rule === elementSelectionRule;
   })[0]._ruleEditor;
 
