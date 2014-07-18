@@ -88,6 +88,8 @@ function MarkupView(aInspector, aFrame, aControllerWindow) {
   this._boundOnDisplayChange = this._onDisplayChange.bind(this);
   this.walker.on("display-change", this._boundOnDisplayChange);
 
+  this._onMouseClick = this._onMouseClick.bind(this);
+
   this._boundOnNewSelection = this._onNewSelection.bind(this);
   this._inspector.selection.on("new-node-front", this._boundOnNewSelection);
   this._onNewSelection();
@@ -97,6 +99,8 @@ function MarkupView(aInspector, aFrame, aControllerWindow) {
 
   this._boundFocus = this._onFocus.bind(this);
   this._frame.addEventListener("focus", this._boundFocus, false);
+
+  this._makeTooltipPersistent = this._makeTooltipPersistent.bind(this);
 
   this._initPreview();
   this._initTooltips();
@@ -112,8 +116,9 @@ MarkupView.prototype = {
 
   _initTooltips: function() {
     this.tooltip = new Tooltip(this._inspector.panelDoc);
-    this.tooltip.startTogglingOnHover(this._elt,
-      this._isImagePreviewTarget.bind(this));
+    this._makeTooltipPersistent(false);
+
+    this._elt.addEventListener("click", this._onMouseClick, false);
   },
 
   _initHighlighter: function() {
@@ -129,8 +134,17 @@ MarkupView.prototype = {
       this.showNode(nodeFront, true).then(() => {
         this._showContainerAsHovered(nodeFront);
       });
-    }
+    };
     this._inspector.toolbox.on("picker-node-hovered", this._onToolboxPickerHover);
+  },
+
+  _makeTooltipPersistent: function(state) {
+    if (state) {
+      this.tooltip.stopTogglingOnHover();
+    } else {
+      this.tooltip.startTogglingOnHover(this._elt,
+        this._isImagePreviewTarget.bind(this));
+    }
   },
 
   _onMouseMove: function(event) {
@@ -153,6 +167,26 @@ MarkupView.prototype = {
       }
     }
     this._showContainerAsHovered(container.node);
+  },
+
+  _onMouseClick: function(event) {
+    // From the target passed here, let's find the parent MarkupContainer
+    // and ask it if the tooltip should be shown
+    let parentNode = event.target;
+    let container;
+    while (parentNode !== this.doc.body) {
+      if (parentNode.container) {
+        container = parentNode.container;
+        break;
+      }
+      parentNode = parentNode.parentNode;
+    }
+
+    if (container) {
+      // With the newly found container, delegate the tooltip content creation
+      // and decision to show or not the tooltip
+      container._buildEventTooltipContent(event.target, this.tooltip);
+    }
   },
 
   _hoveredNode: null,
@@ -1116,6 +1150,8 @@ MarkupView.prototype = {
     // in case the browser is closed and will trigger a noSuchActor message.
     this._destroyer = this._hideBoxModel();
 
+    this._elt.removeEventListener("click", this._onMouseClick, false);
+
     this._hoveredNode = null;
     this._inspector.toolbox.off("picker-node-hovered", this._onToolboxPickerHover);
 
@@ -1413,6 +1449,27 @@ MarkupContainer.prototype = {
         clipboardHelper.copyString(str, this.markup.doc);
       });
     });
+  },
+
+  _buildEventTooltipContent: function(target, tooltip) {
+    if (target.hasAttribute("data-event")) {
+      tooltip.hide(target);
+
+      this.node.getEventListenerInfo().then(listenerInfo => {
+        tooltip.setEventContent({
+          eventListenerInfos: listenerInfo,
+          toolbox: this._inspector.toolbox
+        });
+
+        this.markup._makeTooltipPersistent(true);
+        tooltip.once("hidden", () => {
+          this.markup._makeTooltipPersistent(false);
+        });
+
+        tooltip.show(target);
+      });
+      return true;
+    }
   },
 
   /**
@@ -1860,6 +1917,7 @@ function ElementEditor(aContainer, aNode) {
   let tagName = this.node.nodeName.toLowerCase();
   this.tag.textContent = tagName;
   this.closeTag.textContent = tagName;
+  this.eventNode.style.display = this.node.hasEventListeners ? "inline-block" : "none";
 
   this.update();
 }
