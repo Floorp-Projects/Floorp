@@ -351,7 +351,7 @@ let AdbController = {
 
     // Check if we have a remote debugging session going on. If so, we won't
     // disable adb even if the screen is locked.
-    let isDebugging = USBRemoteDebugger.isDebugging;
+    let isDebugging = RemoteDebugger.isDebugging;
     if (this.DEBUG) {
       this.debug("isDebugging=" + isDebugging);
     }
@@ -432,78 +432,45 @@ SettingsListener.observe("lockscreen.enabled", false,
                          AdbController.setLockscreenEnabled.bind(AdbController));
 #endif
 
-(function() {
-  // Track these separately here so we can determine the correct value for the
-  // pref "devtools.debugger.remote-enabled", which is true when either mode of
-  // using DevTools is enabled.
-  let devtoolsUSB = false;
-  let devtoolsWiFi = false;
-
-  // Keep the old setting to not break people that won't have updated
-  // gaia and gecko.
-  SettingsListener.observe('devtools.debugger.remote-enabled', false,
-                           function(value) {
-    devtoolsUSB = value;
-    Services.prefs.setBoolPref('devtools.debugger.remote-enabled',
-                               devtoolsUSB || devtoolsWiFi);
-    // This preference is consulted during startup
-    Services.prefs.savePrefFile(null);
-    try {
-      value ? USBRemoteDebugger.start() : USBRemoteDebugger.stop();
-    } catch(e) {
-      dump("Error while initializing USB devtools: "
-           + e + "\n" + e.stack + "\n");
-    }
+// Keep the old setting to not break people that won't have updated
+// gaia and gecko.
+SettingsListener.observe('devtools.debugger.remote-enabled', false, function(value) {
+  Services.prefs.setBoolPref('devtools.debugger.remote-enabled', value);
+  // This preference is consulted during startup
+  Services.prefs.savePrefFile(null);
+  try {
+    value ? RemoteDebugger.start() : RemoteDebugger.stop();
+  } catch(e) {
+    dump("Error while initializing devtools: " + e + "\n" + e.stack + "\n");
+  }
 
 #ifdef MOZ_WIDGET_GONK
-    AdbController.setRemoteDebuggerState(value);
+  AdbController.setRemoteDebuggerState(value);
 #endif
-  });
+});
 
-  SettingsListener.observe('debugger.remote-mode', false, function(value) {
-    if (['disabled', 'adb-only', 'adb-devtools'].indexOf(value) == -1) {
-      dump('Illegal value for debugger.remote-mode: ' + value + '\n');
-      return;
-    }
+SettingsListener.observe('debugger.remote-mode', false, function(value) {
+  if (['disabled', 'adb-only', 'adb-devtools'].indexOf(value) == -1) {
+    dump('Illegal value for debugger.remote-mode: ' + value + '\n');
+    return;
+  }
 
-    devtoolsUSB = value == 'adb-devtools';
-    Services.prefs.setBoolPref('devtools.debugger.remote-enabled',
-                               devtoolsUSB || devtoolsWiFi);
-    // This preference is consulted during startup
-    Services.prefs.savePrefFile(null);
+  Services.prefs.setBoolPref('devtools.debugger.remote-enabled',
+                             value == 'adb-devtools');
+  // This preference is consulted during startup
+  Services.prefs.savePrefFile(null);
 
-    try {
-      (value == 'adb-devtools') ? USBRemoteDebugger.start()
-                                : USBRemoteDebugger.stop();
-    } catch(e) {
-      dump("Error while initializing USB devtools: "
-           + e + "\n" + e.stack + "\n");
-    }
+  try {
+    (value == 'adb-devtools') ? RemoteDebugger.start()
+                              : RemoteDebugger.stop();
+  } catch(e) {
+    dump("Error while initializing devtools: " + e + "\n" + e.stack + "\n");
+  }
 
 #ifdef MOZ_WIDGET_GONK
-    AdbController.setRemoteDebuggerState(value != 'disabled');
+  AdbController.setRemoteDebuggerState(value != 'disabled');
 #endif
-  });
-
-  SettingsListener.observe('devtools.remote.wifi.enabled', false,
-                           function(value) {
-    devtoolsWiFi = value;
-    Services.prefs.setBoolPref('devtools.debugger.remote-enabled',
-                               devtoolsUSB || devtoolsWiFi);
-    // Allow remote debugging on non-local interfaces when WiFi debug is enabled
-    // TODO: Bug 1034411: Lock down to WiFi interface, instead of all interfaces
-    Services.prefs.setBoolPref('devtools.debugger.force-local', !value);
-    // This preference is consulted during startup
-    Services.prefs.savePrefFile(null);
-
-    try {
-      value ? WiFiRemoteDebugger.start() : WiFiRemoteDebugger.stop();
-    } catch(e) {
-      dump("Error while initializing WiFi devtools: "
-           + e + "\n" + e.stack + "\n");
-    }
-  });
-})();
+});
 
 // =================== Device Storage ====================
 SettingsListener.observe('device.storage.writable.name', 'sdcard', function(value) {
