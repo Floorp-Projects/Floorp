@@ -985,6 +985,16 @@ js::NewStringDontDeflate(ThreadSafeContext *cx, CharT *chars, size_t length)
         }
     }
 
+    if (JSFatInlineString::lengthFits<CharT>(length)) {
+        JSInlineString *str =
+            NewFatInlineString<allowGC>(cx, mozilla::Range<const CharT>(chars, length));
+        if (!str)
+            return nullptr;
+
+        js_free(chars);
+        return str;
+    }
+
     return JSFlatString::new_<allowGC>(cx, chars, length);
 }
 
