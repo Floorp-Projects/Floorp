@@ -105,7 +105,7 @@ public:
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
-  virtual bool ShouldAvoidComponentAlphaLayers() { return IsWidgetLayerManager(); }
+  virtual bool AreComponentAlphaLayersEnabled() { return !IsWidgetLayerManager(); }
 
   void AbortTransaction();
 
