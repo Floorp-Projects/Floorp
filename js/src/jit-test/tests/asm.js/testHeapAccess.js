@@ -22,6 +22,33 @@ assertEq(f(0x7f),0x7f);
 assertEq(f(0xff),-1);
 assertEq(f(0x100),0);
 
+// Test signal handlers deactivation
+(function() {
+    var jco = getJitCompilerOptions();
+    var signalHandlersBefore = jco["signals.enable"];
+    if (signalHandlersBefore == 1) {
+        setJitCompilerOption("signals.enable", 0);
+
+        if (isCachingEnabled()) {
+            // Cloned modules should fail on linking if the initial module has
+            // been compiled with signals but signals are deactivated.
+            var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return i8[0]|0}; return f');
+            assertAsmLinkFail(code, this, null, new ArrayBuffer(4096));
+        }
+
+        var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + '/* not a clone */ function f(i) {i=i|0; i32[0] = i; return i8[0]|0}; return f');
+        var f = asmLink(code, this, null, new ArrayBuffer(4096));
+        assertEq(f(0),0);
+        assertEq(f(0x7f),0x7f);
+        assertEq(f(0xff),-1);
+        assertEq(f(0x100),0);
+        setJitCompilerOption("signals.enable", 1);
+    }
+    jco = getJitCompilerOptions();
+    var signalHandlersAfter = jco["signals.enable"];
+    assertEq(signalHandlersBefore, signalHandlersAfter);
+})();
+
 var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return u8[0]|0}; return f');
 var f = asmLink(code, this, null, new ArrayBuffer(4096));
 assertEq(f(0),0);
