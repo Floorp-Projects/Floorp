@@ -70,7 +70,7 @@ function doTest() {
       checkShown(true);
 
       // disable social.
-      SocialService.removeProvider(SocialSidebar.provider.origin, function() {
+      SocialService.disableProvider(SocialSidebar.provider.origin, function() {
         checkShown(false);
         is(Social.providers.length, 0, "no providers left");
         defaultFinishChecks();
