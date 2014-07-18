@@ -53,6 +53,8 @@ nsStandaloneNativeMenu::Init(nsIDOMElement * aDOMElement)
     return rv;
   }
 
+  mMenu->SetupIcon();
+
   return NS_OK;
 }
 
