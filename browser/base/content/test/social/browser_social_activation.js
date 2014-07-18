@@ -6,6 +6,29 @@ let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).So
 
 let tabsToRemove = [];
 
+
+function removeAllProviders(callback) {
+  // all the providers may have been added.
+  function removeProviders() {
+    if (Social.providers.length < 1) {
+      executeSoon(function() {
+        is(Social.providers.length, 0, "all providers removed");
+        executeSoon(callback);
+      });
+      return;
+    }
+
+    // a full install sets the manifest into a pref, addProvider alone doesn't,
+    // make sure we uninstall if the manifest was added.
+    if (Social.providers[0].manifest) {
+      SocialService.uninstallProvider(Social.providers[0].origin, removeProviders);
+    } else {
+      SocialService.disableProvider(Social.providers[0].origin, removeProviders);
+    }
+  }
+  removeProviders();
+}
+
 function postTestCleanup(callback) {
   // any tabs opened by the test.
   for (let tab of tabsToRemove)
@@ -15,37 +38,8 @@ function postTestCleanup(callback) {
   // to fully open - the end result is that the panel might stay open
   //SocialUI.activationPanel.hidePopup();
 
-  Services.prefs.clearUserPref("social.whitelist");
-
-  // all providers may have had their manifests added.
-  for (let manifest of gProviders)
-    Services.prefs.clearUserPref("social.manifest." + manifest.origin);
-
   // all the providers may have been added.
-  let providers = gProviders.slice(0)
-  function removeProviders() {
-    if (providers.length < 1) {
-      executeSoon(function() {
-        is(Social.providers.length, 0, "all providers removed");
-        callback();
-      });
-      return;
-    }
-
-    let provider = providers.pop();
-    try {
-      SocialService.removeProvider(provider.origin, removeProviders);
-    } catch(ex) {
-      removeProviders();
-    }
-  }
-  removeProviders();
-}
-
-function addBuiltinManifest(manifest) {
-  let prefname = getManifestPrefname(manifest);
-  setBuiltinManifestPref(prefname, manifest);
-  return prefname;
+  removeAllProviders(callback);
 }
 
 function addTab(url, callback) {
@@ -210,74 +204,52 @@ var tests = {
       ok(panel.hidden, "activation panel still hidden");
       checkSocialUI();
       Services.prefs.clearUserPref("social.remote-install.enabled");
-      next();
+      removeAllProviders(next);
     });
   },
-
+  
   testIFrameActivation: function(next) {
-    Services.prefs.setCharPref("social.whitelist", gTestDomains.join(","));
     activateIFrameProvider(gTestDomains[0], function() {
       is(SocialUI.enabled, false, "SocialUI is not enabled");
       ok(!SocialSidebar.provider, "provider is not installed");
       let panel = document.getElementById("servicesInstall-notification");
       ok(panel.hidden, "activation panel still hidden");
       checkSocialUI();
-      Services.prefs.clearUserPref("social.whitelist");
-      next();
+      removeAllProviders(next);
     });
   },
-
+  
   testActivationFirstProvider: function(next) {
-    Services.prefs.setCharPref("social.whitelist", gTestDomains.join(","));
     // first up we add a manifest entry for a single provider.
     activateOneProvider(gProviders[0], false, function() {
       // we deactivated leaving no providers left, so Social is disabled.
       ok(!SocialSidebar.provider, "should be no provider left after disabling");
       checkSocialUI();
-      Services.prefs.clearUserPref("social.whitelist");
-      next();
+      removeAllProviders(next);
     });
   },
-
-  testActivationBuiltin: function(next) {
-    let prefname = addBuiltinManifest(gProviders[0]);
-    is(SocialService.getOriginActivationType(gTestDomains[0]), "builtin", "manifest is builtin");
-    // first up we add a manifest entry for a single provider.
-    activateOneProvider(gProviders[0], false, function() {
-      // we deactivated leaving no providers left, so Social is disabled.
-      ok(!SocialSidebar.provider, "should be no provider left after disabling");
-      checkSocialUI();
-      resetBuiltinManifestPref(prefname);
-      next();
-    });
-  },
-
+  
   testActivationMultipleProvider: function(next) {
     // The trick with this test is to make sure that Social.providers[1] is
     // the current provider when doing the undo - this makes sure that the
     // Social code doesn't fallback to Social.providers[0], which it will
     // do in some cases (but those cases do not include what this test does)
     // first enable the 2 providers
-    Services.prefs.setCharPref("social.whitelist", gTestDomains.join(","));
     SocialService.addProvider(gProviders[0], function() {
       SocialService.addProvider(gProviders[1], function() {
         checkSocialUI();
         // activate the last provider.
-        let prefname = addBuiltinManifest(gProviders[2]);
         activateOneProvider(gProviders[2], false, function() {
           // we deactivated - the first provider should be enabled.
           is(SocialSidebar.provider.origin, Social.providers[1].origin, "original provider should have been reactivated");
           checkSocialUI();
-          Services.prefs.clearUserPref("social.whitelist");
-          resetBuiltinManifestPref(prefname);
-          next();
+          removeAllProviders(next);
         });
       });
     });
   },
 
   testAddonManagerDoubleInstall: function(next) {
-    Services.prefs.setCharPref("social.whitelist", gTestDomains.join(","));
     // Create a new tab and load about:addons
     let blanktab = gBrowser.addTab();
     gBrowser.selectedTab = blanktab;
@@ -290,12 +262,11 @@ var tests = {
       let browser = blanktab.linkedBrowser;
       is(browser.currentURI.spec, "about:addons", "about:addons should load into blank tab.");
 
-      let prefname = addBuiltinManifest(gProviders[0]);
       activateOneProvider(gProviders[0], true, function() {
         info("first activation completed");
-        is(gBrowser.contentDocument.location.href, gProviders[0].origin + "/browser/browser/base/content/test/social/social_postActivation.html");
+        is(gBrowser.contentDocument.location.href, gProviders[0].origin + "/browser/browser/base/content/test/social/social_postActivation.html", "postActivationURL loaded");
         gBrowser.removeTab(gBrowser.selectedTab);
-        is(gBrowser.contentDocument.location.href, gProviders[0].origin + "/browser/browser/base/content/test/social/social_activate.html");
+        is(gBrowser.contentDocument.location.href, gProviders[0].origin + "/browser/browser/base/content/test/social/social_activate.html", "activation page selected");
         gBrowser.removeTab(gBrowser.selectedTab);
         tabsToRemove.pop();
         // uninstall the provider
@@ -303,7 +274,7 @@ var tests = {
           checkSocialUI();
           activateOneProvider(gProviders[0], true, function() {
             info("second activation completed");
-            is(gBrowser.contentDocument.location.href, gProviders[0].origin + "/browser/browser/base/content/test/social/social_postActivation.html");
+            is(gBrowser.contentDocument.location.href, gProviders[0].origin + "/browser/browser/base/content/test/social/social_postActivation.html", "postActivationURL loaded");
             gBrowser.removeTab(gBrowser.selectedTab);
 
             // after closing the addons tab, verify provider is still installed
@@ -311,9 +282,7 @@ var tests = {
               gBrowser.tabContainer.removeEventListener("TabClose", onTabClose);
               AddonManager.getAddonsByTypes(["service"], function(aAddons) {
                 is(aAddons.length, 1, "there can be only one");
-                Services.prefs.clearUserPref("social.whitelist");
-                resetBuiltinManifestPref(prefname);
-                next();
+                removeAllProviders(next);
               });
             });
 

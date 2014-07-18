@@ -24,8 +24,8 @@ let isLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);
 let isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 let gWindow = window;
 
-// Default to empty directory links
-let gDirectorySource = "data:application/json,{}";
+// Default to dummy/empty directory links
+let gDirectorySource = 'data:application/json,{"test":1}';
 
 // The tests assume all three rows of sites are shown, but the window may be too
 // short to actually show three rows.  Resize it if necessary.
