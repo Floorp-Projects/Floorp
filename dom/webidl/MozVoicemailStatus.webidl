@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
+[JSImplementation="@mozilla.org/voicemailstatus;1",
+Pref="dom.voicemail.enabled"]
 
-[scriptable, uuid(efd352af-9eee-48dc-8e92-4d4fdbc89ecb)]
-interface nsIDOMMozVoicemailStatus : nsISupports
+interface MozVoicemailStatus 
 {
   readonly attribute unsigned long serviceId;
 

@@ -1049,6 +1049,7 @@ var WifiManager = (function() {
         manager.stopSupplicantCallback = (function () {
           wifiCommand.stopSupplicant(function (status) {
             wifiCommand.closeSupplicantConnection(function() {
+              manager.connectToSupplicant = false;
               manager.state = "UNINITIALIZED";
               netUtil.disableInterface(manager.ifname, function (ok) {
                 unloadDriver(WIFI_FIRMWARE_STATION, callback);
@@ -1061,6 +1062,11 @@ var WifiManager = (function() {
           handleEvent("CTRL-EVENT-TERMINATING");
         }).bind(this);
         createWaitForTerminateEventTimer(terminateEventCallback);
+
+        // We are going to terminate the connection between wpa_supplicant.
+        // Stop the polling timer immediately to prevent connection info update
+        // command blocking in control thread until socket timeout.
+        notify("stopconnectioninfotimer");
 
         wifiCommand.terminateSupplicant(function (ok) {
           manager.connectionDropped(function () {
@@ -1195,7 +1201,7 @@ var WifiManager = (function() {
     function hasValidProperty(name) {
       return ((name in config) &&
                config[name] != null &&
-               (["password", "wep_key0", "psk"].indexOf(name) !== -1 ||
+               (["password", "wep_key0", "psk"].indexOf(name) === -1 ||
                 config[name] !== '*'));
     }
 
@@ -2327,6 +2333,10 @@ function WifiWorker() {
 
   WifiManager.onstationinfoupdate = function() {
     self._fireEvent("stationinfoupdate", { station: this.station });
+  };
+
+  WifiManager.onstopconnectioninfotimer = function() {
+    self._stopConnectionInfoTimer();
   };
 
   // Read the 'wifi.enabled' setting in order to start with a known
