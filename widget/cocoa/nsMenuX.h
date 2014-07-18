@@ -52,6 +52,7 @@ public:
   // nsMenuObjectX
   void*             NativeData()     {return (void*)mNativeMenu;}
   nsMenuObjectTypeX MenuObjectType() {return eSubmenuObjectType;}
+  void              IconUpdated() MOZ_OVERRIDE { mParent->IconUpdated(); }
 
   // nsMenuX
   nsresult       Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode);
