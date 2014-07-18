@@ -5020,6 +5020,9 @@ dnl enable once PeerConnection lands
     MOZ_SRTP=1
     AC_DEFINE(MOZ_SCTP)
     AC_DEFINE(MOZ_SRTP)
+    if test -n "$MOZ_X11"; then
+      MOZ_WEBRTC_X11_LIBS="-lXext -lXdamage -lXfixes -lXcomposite"
+    fi
 else
     MOZ_SYNTH_PICO=
 fi
@@ -5031,6 +5034,7 @@ AC_SUBST(MOZ_PEERCONNECTION)
 AC_SUBST(MOZ_WEBRTC_ASSERT_ALWAYS)
 AC_SUBST(MOZ_SCTP)
 AC_SUBST(MOZ_SRTP)
+AC_SUBST(MOZ_WEBRTC_X11_LIBS)
 
 dnl Use integers over floats for audio on B2G and Android, because audio
 dnl backends for those platforms don't support floats.
@@ -8132,7 +8136,7 @@ if test "$MOZ_TREE_CAIRO"; then
     MOZ_CAIRO_OSLIBS='${CAIRO_FT_OSLIBS}'
 
     if test "$MOZ_X11"; then
-        MOZ_CAIRO_OSLIBS="$MOZ_CAIRO_OSLIBS $XLDFLAGS -lXext -lXdamage -lXfixes -lXcomposite -lXrender"
+        MOZ_CAIRO_OSLIBS="$MOZ_CAIRO_OSLIBS $XLDFLAGS -lXrender"
     fi
 
     CAIRO_FEATURES_H=gfx/cairo/cairo/src/cairo-features.h
