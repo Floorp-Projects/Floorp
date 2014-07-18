@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1037519
+-->
+<head>
+  <title>Test for nsIDOMUtils::selectorMatchesElement</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+    #foo,
+    #bar,
+    #foo::before {
+      color: red;
+    }
+    #foo::before,
+    #bar::before {
+      content: 'foo-before';
+      color: green;
+    }
+    #foo::after,
+    #bar::after {
+      content: 'foo-after';
+      color: blue;
+    }
+    #foo::first-line,
+    #bar::first-line {
+      text-decoration: underline;
+    }
+    #foo::first-letter,
+    #bar::first-letter {
+      font-variant: small-caps;
+    }
+  </style>
+</head>
+<body>
+<div id="foo">foo content</div>
+<pre id="test">
+<script type="application/javascript">
+
+function do_test() {
+  var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
+    .getService(SpecialPowers.Ci.inIDOMUtils);
+
+  var element = document.querySelector("#foo");
+
+  var elementRules = utils.getCSSStyleRules(element);
+  var elementRule = elementRules.GetElementAt(elementRules.Count() - 1);
+
+  is (utils.selectorMatchesElement(element, elementRule, 0), true,
+    "Matches #foo");
+  is (utils.selectorMatchesElement(element, elementRule, 1), false,
+    "Doesn't match #bar");
+  is (utils.selectorMatchesElement(element, elementRule, 0, ":bogus"), false,
+    "Doesn't match #foo with a bogus pseudo");
+  is (utils.selectorMatchesElement(element, elementRule, 2, ":bogus"), false,
+    "Doesn't match #foo::before with bogus pseudo");
+  is (utils.selectorMatchesElement(element, elementRule, 0, ":after"), false,
+    "Does match #foo::before with the :after pseudo");
+
+  checkPseudo(":before");
+  checkPseudo(":after");
+  checkPseudo(":first-letter");
+  checkPseudo(":first-line");
+
+  SimpleTest.finish();
+
+  function checkPseudo(pseudo) {
+    var rules = utils.getCSSStyleRules(element, pseudo);
+    var rule = rules.GetElementAt(rules.Count() - 1);
+
+    is (utils.selectorMatchesElement(element, rule, 0), false,
+      "Doesn't match without " + pseudo);
+    is (utils.selectorMatchesElement(element, rule, 1), false,
+      "Doesn't match without " + pseudo);
+
+    is (utils.selectorMatchesElement(element, rule, 0, pseudo), true,
+      "Matches on #foo" + pseudo);
+    is (utils.selectorMatchesElement(element, rule, 1, pseudo), false,
+      "Doesn't match on #bar" + pseudo);
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(do_test);
+
+</script>
+</pre>
+</body>
+</html>
