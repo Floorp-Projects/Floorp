@@ -155,6 +155,15 @@
       <property name="commandManager"
                 readonly="true"
                 onget="return this.webNavigation.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsICommandManager);"/>
+      <property name="fullZoom"
+                onget="return this.markupDocumentViewer.fullZoom;"
+                onset="this.markupDocumentViewer.fullZoom = val;"/>
+      <property name="textZoom"
+                onget="return this.markupDocumentViewer.textZoom;"
+                onset="this.markupDocumentViewer.textZoom = val;"/>
+      <property name="isSyntheticDocument"
+                onget="return this.contentDocument.isSyntheticDocument;"
+                readonly="true"/>
     </implementation>
   </binding>
 
