@@ -25,63 +25,82 @@
 #ifndef mozilla_pkix__Result_h
 #define mozilla_pkix__Result_h
 
-#include "prerror.h"
-#include "seccomon.h"
-#include "secerr.h"
+#include "pkix/enumclass.h"
 
 namespace mozilla { namespace pkix {
 
-enum Result
+static const unsigned int FATAL_ERROR_FLAG = 0x800;
+
+MOZILLA_PKIX_ENUM_CLASS Result
 {
   Success = 0,
-  FatalError = -1,      // An error was encountered that caused path building
-                        // to stop immediately. example: out-of-memory.
-  RecoverableError = -2 // an error that will cause path building to continue
-                        // searching for alternative paths. example: expired
-                        // certificate.
+
+  ERROR_BAD_DER = 1,
+  ERROR_CA_CERT_INVALID = 2,
+  ERROR_BAD_SIGNATURE = 3,
+  ERROR_CERT_BAD_ACCESS_LOCATION = 4,
+  ERROR_CERT_NOT_IN_NAME_SPACE = 5,
+  ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED = 6,
+  ERROR_CONNECT_REFUSED = 7,
+  ERROR_EXPIRED_CERTIFICATE = 8,
+  ERROR_EXTENSION_VALUE_INVALID = 9,
+  ERROR_INADEQUATE_CERT_TYPE = 10,
+  ERROR_INADEQUATE_KEY_USAGE = 11,
+  ERROR_INVALID_ALGORITHM = 12,
+  ERROR_INVALID_TIME = 13,
+  ERROR_KEY_PINNING_FAILURE = 14,
+  ERROR_PATH_LEN_CONSTRAINT_INVALID = 15,
+  ERROR_POLICY_VALIDATION_FAILED = 16,
+  ERROR_REVOKED_CERTIFICATE = 17,
+  ERROR_UNKNOWN_CRITICAL_EXTENSION = 18,
+  ERROR_UNKNOWN_ISSUER = 19,
+  ERROR_UNTRUSTED_CERT = 20,
+  ERROR_UNTRUSTED_ISSUER = 21,
+
+  ERROR_OCSP_BAD_SIGNATURE = 22,
+  ERROR_OCSP_INVALID_SIGNING_CERT = 23,
+  ERROR_OCSP_MALFORMED_REQUEST = 24,
+  ERROR_OCSP_MALFORMED_RESPONSE = 25,
+  ERROR_OCSP_OLD_RESPONSE = 26,
+  ERROR_OCSP_REQUEST_NEEDS_SIG = 27,
+  ERROR_OCSP_RESPONDER_CERT_INVALID = 28,
+  ERROR_OCSP_SERVER_ERROR = 29,
+  ERROR_OCSP_TRY_SERVER_LATER = 30,
+  ERROR_OCSP_UNAUTHORIZED_REQUEST = 31,
+  ERROR_OCSP_UNKNOWN_RESPONSE_STATUS = 32,
+  ERROR_OCSP_UNKNOWN_CERT = 33,
+  ERROR_OCSP_FUTURE_RESPONSE = 34,
+
+  ERROR_UNKNOWN_ERROR = 35,
+
+  ERROR_INVALID_KEY = 36,
+  ERROR_UNSUPPORTED_KEYALG = 37,
+
+  // Keep this in sync with MAP_LIST in pkixnss.cpp
+
+  FATAL_ERROR_INVALID_ARGS = FATAL_ERROR_FLAG | 1,
+  FATAL_ERROR_INVALID_STATE = FATAL_ERROR_FLAG | 2,
+  FATAL_ERROR_LIBRARY_FAILURE = FATAL_ERROR_FLAG | 3,
+  FATAL_ERROR_NO_MEMORY = FATAL_ERROR_FLAG | 4,
+
+  // Keep this in sync with MAP_LIST in pkixnss.cpp
 };
 
-// When returning errors, use this function instead of calling PR_SetError
-// directly. This helps ensure that we always call PR_SetError when we return
-// an error code. This is a useful place to set a breakpoint when a debugging
-// a certificate verification failure.
-inline Result
-Fail(Result result, PRErrorCode errorCode)
+// We write many comparisons as (x != Success), and this shortened name makes
+// those comparisons clearer, especially because the shortened name often
+// results in less line wrapping.
+//
+// Visual Studio before VS2013 does not support "enum class," so
+// Result::Success will already be visible in this scope, and compilation will
+// fail if we try to define a variable with that name here.
+#if !defined(_MSC_VER) || (_MSC_VER >= 1700)
+static const Result Success = Result::Success;
+#endif
+
+inline bool
+IsFatalError(Result rv)
 {
-  PR_ASSERT(result != Success);
-  PR_SetError(errorCode, 0);
-  return result;
-}
-
-inline Result
-MapSECStatus(SECStatus srv)
-{
-  if (srv == SECSuccess) {
-    return Success;
-  }
-
-  PRErrorCode error = PORT_GetError();
-  switch (error) {
-    case SEC_ERROR_EXTENSION_NOT_FOUND:
-      return RecoverableError;
-
-    case PR_INVALID_STATE_ERROR:
-    case SEC_ERROR_INVALID_ARGS:
-    case SEC_ERROR_LIBRARY_FAILURE:
-    case SEC_ERROR_NO_MEMORY:
-      return FatalError;
-  }
-
-  // TODO: PORT_Assert(false); // we haven't classified the error yet
-  return RecoverableError;
-}
-
-inline Result
-Fail(PRErrorCode errorCode)
-{
-  PR_ASSERT(errorCode != 0);
-  PR_SetError(errorCode, 0);
-  return mozilla::pkix::MapSECStatus(SECFailure);
+  return static_cast<unsigned int>(rv) & FATAL_ERROR_FLAG;
 }
 
 } } // namespace mozilla::pkix
