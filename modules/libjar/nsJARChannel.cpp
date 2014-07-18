@@ -199,6 +199,7 @@ nsJARChannel::nsJARChannel()
     , mIsPending(false)
     , mIsUnsafe(true)
     , mOpeningRemote(false)
+    , mEnsureChildFd(false)
 {
 #if defined(PR_LOGGING)
     if (!gJarProtocolLog)
@@ -356,7 +357,7 @@ nsJARChannel::LookupFile()
             mJarFile = remoteFile;
 
             nsIZipReaderCache *jarCache = gJarHandler->JarCache();
-            if (jarCache) {
+            if (jarCache && !mEnsureChildFd) {
                 bool cached = false;
                 rv = jarCache->IsCached(mJarFile, &cached);
                 if (NS_SUCCEEDED(rv) && cached) {
@@ -368,7 +369,8 @@ nsJARChannel::LookupFile()
 
             mOpeningRemote = true;
 
-            if (gJarHandler->RemoteOpenFileInProgress(remoteFile, this)) {
+            if (gJarHandler->RemoteOpenFileInProgress(remoteFile, this) &&
+                !mEnsureChildFd) {
                 // JarHandler will trigger OnRemoteFileOpen() after the first
                 // request for this file completes and we'll get a JAR cache
                 // hit.
@@ -865,6 +867,13 @@ nsJARChannel::GetJarFile(nsIFile **aFile)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsJARChannel::EnsureChildFd()
+{
+    mEnsureChildFd = true;
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsIDownloadObserver
 //-----------------------------------------------------------------------------
@@ -1034,6 +1043,11 @@ nsJARChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
     // Drop notification callbacks to prevent cycles.
     mCallbacks = 0;
     mProgressSink = 0;
+
+    if (mOpeningRemote) {
+      // To deallocate file descriptor by RemoteOpenFileChild destructor.
+      mJarFile = nullptr;
+    }
 
     return NS_OK;
 }

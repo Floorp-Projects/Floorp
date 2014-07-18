@@ -2991,6 +2991,14 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
         if (scheme.LowerCaseEqualsLiteral("app") ||
             scheme.LowerCaseEqualsLiteral("jar")) {
           mIsMappedArrayBuffer = true;
+          if (XRE_GetProcessType() != GeckoProcessType_Default) {
+            nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(mChannel);
+            // For memory mapping from child process, we need to get file
+            // descriptor of the JAR file opened remotely on the parent proess.
+            // Set this to make sure that file descriptor can be obtained by
+            // child process.
+            jarChannel->EnsureChildFd();
+          }
         }
       }
     }
