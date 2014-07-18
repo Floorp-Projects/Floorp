@@ -145,6 +145,9 @@ public:
 
   CompositorChild* GetCompositorChild();
 
+  // Disable component alpha layers with the software compositor.
+  virtual bool AreComponentAlphaLayersEnabled() MOZ_OVERRIDE { return IsCompositingCheap(); }
+
   /**
    * Called for each iteration of a progressive tile update. Updates
    * aMetrics with the current scroll offset and scale being used to composite
