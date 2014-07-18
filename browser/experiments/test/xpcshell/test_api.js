@@ -1539,6 +1539,66 @@ add_task(function* testEnabledAfterRestart() {
   yield testCleanup(experiments);
 });
 
+// If experiment add-ons were ever started, maxStartTime shouldn't be evaluated
+// anymore. Ensure that if maxStartTime is passed but experiment has started
+// already, maxStartTime does not cause deactivation.
+
+add_task(function* testMaxStartTimeEvaluation() {
+
+  // Dates the following tests are based on.
+
+  let startDate    = new Date(2014, 5, 1, 12);
+  let now          = futureDate(startDate, 10   * MS_IN_ONE_DAY);
+  let maxStartDate = futureDate(startDate, 100  * MS_IN_ONE_DAY);
+  let endDate      = futureDate(startDate, 1000 * MS_IN_ONE_DAY);
+
+  defineNow(gPolicy, now);
+
+  // The manifest data we test with.
+  // We set a value for maxStartTime.
+
+  gManifestObject = {
+    "version": 1,
+    experiments: [
+      {
+        id:               EXPERIMENT1_ID,
+        xpiURL:           gDataRoot + EXPERIMENT1_XPI_NAME,
+        xpiHash:          EXPERIMENT1_XPI_SHA1,
+        startTime:        dateToSeconds(startDate),
+        endTime:          dateToSeconds(endDate),
+        maxActiveSeconds: 1000 * SEC_IN_ONE_DAY,
+        maxStartTime:     dateToSeconds(maxStartDate),
+        appName:          ["XPCShell"],
+        channel:          ["nightly"],
+      },
+    ],
+  };
+
+  let experiments = new Experiments.Experiments(gPolicy);
+
+  let addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 0, "Precondition: No experiment add-ons installed.");
+
+  yield experiments.updateManifest();
+  let fromManifest = yield experiments.getExperiments();
+  Assert.equal(fromManifest.length, 1, "A single experiment is known.");
+
+  addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 1, "A single experiment add-on is installed.");
+  Assert.ok(addons[0].isActive, "That experiment is active.");
+
+  dump("Setting current time to maxStartTime + 100 days and reloading manifest\n");
+  now = futureDate(maxStartDate, 100 * MS_IN_ONE_DAY);
+  defineNow(gPolicy, now);
+  yield experiments.updateManifest();
+
+  addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 1, "The experiment is still there.");
+  Assert.ok(addons[0].isActive, "It is still active.");
+
+  yield testCleanup(experiments);
+});
+
 // Test coverage for an add-on uninstall disabling the experiment and that it stays
 // disabled over restarts.
 add_task(function* test_foreignUninstallAndRestart() {
