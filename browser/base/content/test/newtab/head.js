@@ -89,7 +89,8 @@ function test() {
   watchLinksChangeOnce().then(() => {
     TestRunner.run();
   });
-  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, "data:application/json,{}");
+  // set directory source to dummy/empty links
+  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, 'data:application/json,{"test":1}');
 }
 
 /**
