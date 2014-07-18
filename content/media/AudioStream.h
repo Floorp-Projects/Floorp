@@ -158,6 +158,14 @@ public:
     return amount;
   }
 
+  void Reset()
+  {
+    mBuffer = nullptr;
+    mCapacity = 0;
+    mStart = 0;
+    mCount = 0;
+  }
+
 private:
   nsAutoArrayPtr<uint8_t> mBuffer;
   uint32_t mCapacity;
@@ -211,6 +219,8 @@ public:
 
   // Closes the stream. All future use of the stream is an error.
   void Shutdown();
+
+  void Reset();
 
   // Write audio data to the audio hardware.  aBuf is an array of AudioDataValues
   // AudioDataValue of length aFrames*mChannels.  If aFrames is larger
@@ -342,6 +352,9 @@ private:
   int mOutRate;
   int mChannels;
   int mOutChannels;
+#if defined(__ANDROID__)
+  dom::AudioChannel mAudioChannel;
+#endif
   // Number of frames written to the buffers.
   int64_t mWritten;
   AudioClock mAudioClock;
