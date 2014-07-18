@@ -3429,7 +3429,6 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
     if ((flags & Layer::CONTENT_COMPONENT_ALPHA) &&
         mRetainingManager &&
         !mRetainingManager->AreComponentAlphaLayersEnabled() &&
-        containerLayer->HasMultipleChildren() &&
         !stateFlags) {
       // Since we don't want any component alpha layers on BasicLayers, we repeat
       // the layer building process with this explicitely forced off.
