@@ -107,8 +107,8 @@ function test() {
   });
 
   Services.prefs.setBoolPref(PREF_PRELOAD, false);
-  // set directory source to dummy/empty links
-  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, 'data:application/json,{"test":1}');
+  // set directory source to empty links
+  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, "data:application/json,{}");
 }
 
 let observer = {
