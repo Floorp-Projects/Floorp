@@ -1958,6 +1958,17 @@ check_events([{ type: 'animationstart', target: div,
              "events for animation-name: non_existent, always_fifty");
 done_div();
 
+/*
+ * Bug 1038032 - Infinite repetition and delay causes overflow
+ */
+new_div("animation: always_fifty 10s 1s infinite");
+advance_clock(0);
+advance_clock(2000);
+is(cs.marginLeft, "50px",
+   "infinitely repeating animation with positive delay takes effect"
+   + " (does not overflow)");
+done_div();
+
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 
 </script>
