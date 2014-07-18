@@ -10389,8 +10389,8 @@ class MAsmJSHeapAccess
     bool skipBoundsCheck_;
 
   public:
-    MAsmJSHeapAccess(Scalar::Type vt, bool s)
-      : viewType_(vt), skipBoundsCheck_(s)
+    MAsmJSHeapAccess(Scalar::Type vt)
+      : viewType_(vt), skipBoundsCheck_(false)
     {}
 
     Scalar::Type viewType() const { return viewType_; }
@@ -10401,7 +10401,7 @@ class MAsmJSHeapAccess
 class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
 {
     MAsmJSLoadHeap(Scalar::Type vt, MDefinition *ptr)
-      : MUnaryInstruction(ptr), MAsmJSHeapAccess(vt, false)
+      : MUnaryInstruction(ptr), MAsmJSHeapAccess(vt)
     {
         setMovable();
         if (vt == Scalar::Float32)
@@ -10431,7 +10431,7 @@ class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
 class MAsmJSStoreHeap : public MBinaryInstruction, public MAsmJSHeapAccess
 {
     MAsmJSStoreHeap(Scalar::Type vt, MDefinition *ptr, MDefinition *v)
-      : MBinaryInstruction(ptr, v) , MAsmJSHeapAccess(vt, false)
+      : MBinaryInstruction(ptr, v) , MAsmJSHeapAccess(vt)
     {}
 
   public:

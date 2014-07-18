@@ -1145,7 +1145,15 @@ class MOZ_STACK_CLASS ModuleCompiler
         // js::FunctionToString.
         bool strict = parser_.pc->sc->strict && !parser_.pc->sc->hasExplicitUseStrict();
 
-        module_ = cx_->new_<AsmJSModule>(parser_.ss, srcStart, srcBodyStart, strict);
+#ifdef JS_CODEGEN_X64
+        // Only x64 will effectively use signal handlers for out of bounds checks.
+        bool canUseSignalHandlers = cx_->canUseSignalHandlers();
+#else
+        bool canUseSignalHandlers = false;
+#endif // JS_CODEGEN_X64
+
+        module_ = cx_->new_<AsmJSModule>(parser_.ss, srcStart, srcBodyStart, strict,
+                                         canUseSignalHandlers);
         if (!module_)
             return false;
 
@@ -1227,6 +1235,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     bool hasError() const { return errorString_ != nullptr; }
     const AsmJSModule &module() const { return *module_.get(); }
     uint32_t srcStart() const { return module_->srcStart(); }
+    bool usesSignalHandlers() const { return module_->usesSignalHandlers(); }
 
     ParseNode *moduleFunctionNode() const { return moduleFunctionNode_; }
     PropertyName *moduleFunctionName() const { return moduleFunctionName_; }
@@ -2125,7 +2134,7 @@ class FunctionCompiler
             return nullptr;
         MAsmJSLoadHeap *load = MAsmJSLoadHeap::New(alloc(), vt, ptr);
         curBlock_->add(load);
-        if (chk == NO_BOUNDS_CHECK)
+        if (chk == NO_BOUNDS_CHECK || m().usesSignalHandlers())
             load->setSkipBoundsCheck(true);
         return load;
     }
@@ -2136,7 +2145,7 @@ class FunctionCompiler
             return;
         MAsmJSStoreHeap *store = MAsmJSStoreHeap::New(alloc(), vt, ptr, v);
         curBlock_->add(store);
-        if (chk == NO_BOUNDS_CHECK)
+        if (chk == NO_BOUNDS_CHECK || m().usesSignalHandlers())
             store->setSkipBoundsCheck(true);
     }
 
@@ -6971,7 +6980,7 @@ EstablishPreconditions(ExclusiveContext *cx, AsmJSParser &parser)
     if (!cx->jitSupportsFloatingPoint())
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of floating point support");
 
-    if (!cx->canUseSignalHandlers())
+    if (!cx->signalHandlersInstalled())
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Platform missing signal handler support");
 
     if (cx->gcSystemPageSize() != AsmJSPageSize)
@@ -7043,7 +7052,7 @@ js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
 
     // See EstablishPreconditions.
     bool available = cx->jitSupportsFloatingPoint() &&
-                     cx->canUseSignalHandlers() &&
+                     cx->signalHandlersInstalled() &&
                      cx->gcSystemPageSize() == AsmJSPageSize &&
                      !cx->compartment()->debugMode() &&
                      cx->runtime()->options().asmJS();
