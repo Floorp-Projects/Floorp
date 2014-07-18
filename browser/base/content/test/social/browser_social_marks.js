@@ -89,7 +89,7 @@ var tests = {
       is(button.hidden, false, "mark button is visible");
 
       checkSocialUI(window);
-      SocialService.removeProvider(manifest2.origin, next);
+      SocialService.disableProvider(manifest2.origin, next);
     });
   },
   testNoButtonOnEnable: function(next) {
@@ -107,7 +107,7 @@ var tests = {
       let doc = tab.linkedBrowser.contentDocument;
       Social.installProvider(doc, manifest3, function(addonManifest) {
         // enable the provider so we know the button would have appeared
-        SocialService.addBuiltinProvider(manifest3.origin, function(provider) {
+        SocialService.enableProvider(manifest3.origin, function(provider) {
           is(provider.origin, manifest3.origin, "provider is installed");
           let id = SocialMarks._toolbarHelper.idFromOrigin(provider.origin);
           let widget = CustomizableUI.getWidget(id);
@@ -134,7 +134,7 @@ var tests = {
     addTab(activationURL, function(tab) {
       let doc = tab.linkedBrowser.contentDocument;
       Social.installProvider(doc, manifest2, function(addonManifest) {
-        SocialService.addBuiltinProvider(manifest2.origin, function(provider) {
+        SocialService.enableProvider(manifest2.origin, function(provider) {
           is(provider.origin, manifest2.origin, "provider is installed");
           let id = SocialMarks._toolbarHelper.idFromOrigin(manifest2.origin);
           let widget = CustomizableUI.getWidget(id).forWindow(window)
@@ -334,7 +334,7 @@ var tests = {
     // enable the provider now
     let provider = Social._getProviderFromOrigin(manifest2.origin);
     ok(provider, "provider is installed");
-    SocialService.removeProvider(manifest2.origin, function() {
+    SocialService.disableProvider(manifest2.origin, function() {
       let id = SocialMarks._toolbarHelper.idFromOrigin(manifest2.origin);
       waitForCondition(function() {
                         // getWidget now returns null since we've destroyed the widget
@@ -381,7 +381,7 @@ var tests = {
         let doc = tab.linkedBrowser.contentDocument;
         Social.installProvider(doc, manifest, function(addonManifest) {
           // enable the provider so we know the button would have appeared
-          SocialService.addBuiltinProvider(manifest.origin, function(provider) {
+          SocialService.enableProvider(manifest.origin, function(provider) {
             waitForCondition(function() { return CustomizableUI.getWidget(id) },
                              function() {
               gBrowser.removeTab(tab);

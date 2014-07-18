@@ -22,7 +22,7 @@ function test() {
     p.enabled = true;
     provider = p;
     runTests(tests, undefined, undefined, function () {
-      SocialService.removeProvider(provider.origin, finish);
+      SocialService.disableProvider(provider.origin, finish);
     });
   });
 }

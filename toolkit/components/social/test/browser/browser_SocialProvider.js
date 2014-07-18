@@ -16,7 +16,7 @@ function test() {
   SocialService.addProvider(manifest, function (p) {
     provider = p;
     runTests(tests, undefined, undefined, function () {
-      SocialService.removeProvider(p.origin, function() {
+      SocialService.disableProvider(p.origin, function() {
         ok(!provider.enabled, "removing an enabled provider should have disabled the provider");
         let port = provider.getWorkerPort();
         ok(!port, "should not be able to get a port after removing the provider");
@@ -74,7 +74,7 @@ let tests = {
       port2.onmessage = function(e) {
         if (e.data.topic == "test-initialization-complete") {
           ok(true, "second provider initialized");
-          SocialService.removeProvider(provider2.origin, function() {
+          SocialService.disableProvider(provider2.origin, function() {
             next();
           });
         }

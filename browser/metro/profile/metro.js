@@ -252,6 +252,7 @@ pref("privacy.donottrackheader.value", -1);
 pref("dom.disable_window_open_dialog_feature", true);
 
 pref("keyword.enabled", true);
+pref("browser.fixup.domainwhitelist.localhost", true);
 
 pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.timeout", 5000);

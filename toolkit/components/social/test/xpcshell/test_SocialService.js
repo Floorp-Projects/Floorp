@@ -51,8 +51,8 @@ function testAddProviders(manifests, next) {
 
 function testRemoveProviders(manifests, next) {
   do_check_true(SocialService.enabled);
-  yield SocialService.removeProvider(manifests[0].origin, next);
-  yield SocialService.removeProvider(manifests[1].origin, next);
+  yield SocialService.disableProvider(manifests[0].origin, next);
+  yield SocialService.disableProvider(manifests[1].origin, next);
   do_check_false(SocialService.enabled);
 }
 
@@ -106,7 +106,7 @@ function testAddRemoveProvider(manifests, next) {
   do_check_neq(providersAfter.indexOf(newProvider), -1);
 
   // Now remove the provider
-  yield SocialService.removeProvider(newProvider.origin, next);
+  yield SocialService.disableProvider(newProvider.origin, next);
   providersAfter = yield SocialService.getProviderList(next);
   do_check_eq(providersAfter.length, originalProviders.length);
   do_check_eq(providersAfter.indexOf(newProvider), -1);
