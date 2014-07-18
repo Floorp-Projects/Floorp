@@ -27,7 +27,7 @@ let sessionTokens = [];
 function testNfcNotEnabledError() {
   log('testNfcNotEnabledError');
   toggleNFC(true)
-  .then(() => emulator.activateRE(emulator.P2P_RE_INDEX_0))
+  .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0))
   .then(registerAndFireOnpeerready)
   .then(() => toggleNFC(false))
   .then(() => sendNDEFExpectError(nfcPeers[0], 'NfcNotEnabledError'))
@@ -45,10 +45,10 @@ function testNfcNotEnabledError() {
 function testNfcBadSessionIdError() {
   log('testNfcBadSessionIdError');
   toggleNFC(true)
-  .then(() => emulator.activateRE(emulator.P2P_RE_INDEX_0))
+  .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0))
   .then(registerAndFireOnpeerready)
-  .then(() => emulator.deactivate())
-  .then(() => emulator.activateRE(emulator.P2P_RE_INDEX_0))
+  .then(() => NCI.deactivate())
+  .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0))
   .then(registerAndFireOnpeerready)
   // we have 2 peers in nfcPeers array, peer0 has old/invalid session token
   .then(() => sendNDEFExpectError(nfcPeers[0], 'NfcBadSessionIdError'))
@@ -65,7 +65,7 @@ function testNfcBadSessionIdError() {
 function testNfcConnectError() {
   log('testNfcConnectError');
   toggleNFC(true)
-  .then(() => emulator.activateRE(emulator.P2P_RE_INDEX_0))
+  .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0))
   .then(registerAndFireOnpeerready)
   .then(() => connectToNFCTagExpectError(sessionTokens[0],
                                          'NDEF',
@@ -83,7 +83,7 @@ function testNfcConnectError() {
 function testNoErrorInTechMsg() {
   log('testNoErrorInTechMsg');
   toggleNFC(true)
-  .then(() => emulator.activateRE(emulator.P2P_RE_INDEX_0))
+  .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0))
   .then(setTechDiscoveredHandler)
   .then(setAndFireTechLostHandler)
   .then(() => toggleNFC(false))
@@ -203,7 +203,7 @@ function setAndFireTechLostHandler() {
                                         techLostHandler);
 
   // triggers tech-lost
-  emulator.deactivate();
+  NCI.deactivate();
   return deferred.promise;
 }
 
