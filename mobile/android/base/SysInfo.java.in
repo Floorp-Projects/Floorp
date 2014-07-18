@@ -47,11 +47,7 @@ public final class SysInfo {
             return cpuCount;
         }
 
-        if (android.os.Build.VERSION.SDK_INT < 9) {
-            return readCPUCount();
-        }
-
-        // Avoid a strict mode warning... but only on devices that have StrictMode.
+        // Avoid a strict mode warning.
         StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
         try {
             return readCPUCount();
