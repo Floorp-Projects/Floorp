@@ -249,6 +249,18 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
 #endif
 }
 
+nsresult
+RemoteOpenFileChild::SetNSPRFileDesc(PRFileDesc* aNSPRFileDesc)
+{
+  MOZ_ASSERT(!mNSPRFileDesc);
+  if (mNSPRFileDesc) {
+    return NS_ERROR_ALREADY_OPENED;
+  }
+
+  mNSPRFileDesc = aNSPRFileDesc;
+  return NS_OK;
+}
+
 void
 RemoteOpenFileChild::OnCachedFileDescriptor(const nsAString& aPath,
                                             const FileDescriptor& aFD)
