@@ -8805,6 +8805,24 @@ CodeGenerator::visitInterruptCheck(LInterruptCheck *lir)
     return true;
 }
 
+bool
+CodeGenerator::visitAsmJSInterruptCheck(LAsmJSInterruptCheck *lir)
+{
+    Label rejoin;
+    Register scratch = ToRegister(lir->scratch());
+    masm.movePtr(AsmJSImmPtr(AsmJSImm_RuntimeInterrupt), scratch);
+    masm.branchIfFalseBool(scratch, &rejoin);
+    {
+        uint32_t stackFixup = ComputeByteAlignment(masm.framePushed() + AsmJSFrameSize,
+                                                   StackAlignment);
+        masm.reserveStack(stackFixup);
+        masm.call(lir->funcDesc(), lir->interruptExit());
+        masm.freeStack(stackFixup);
+    }
+    masm.bind(&rejoin);
+    return true;
+}
+
 typedef bool (*RecompileFn)(JSContext *);
 static const VMFunction RecompileFnInfo = FunctionInfo<RecompileFn>(Recompile);
 

@@ -24,6 +24,7 @@ import re
 import shutil
 import signal
 import subprocess
+import sys
 import tempfile
 import time
 import traceback
@@ -38,21 +39,13 @@ from mochitest_options import MochitestOptions
 from mozprofile import Profile, Preferences
 from mozprofile.permissions import ServerLocations
 from urllib import quote_plus as encodeURIComponent
+from mozlog.structured.formatters import TbplFormatter
+from mozlog.structured.handlers import StreamHandler
+from mozlog.structured.structuredlog import StructuredLogger
 
 # This should use the `which` module already in tree, but it is
 # not yet present in the mozharness environment
 from mozrunner.utils import findInPath as which
-
-# set up logging handler a la automation.py.in for compatability
-import logging
-log = logging.getLogger()
-def resetGlobalLog():
-  while log.handlers:
-    log.removeHandler(log.handlers[0])
-  handler = logging.StreamHandler(sys.stdout)
-  log.setLevel(logging.INFO)
-  log.addHandler(handler)
-resetGlobalLog()
 
 ###########################
 # Option for NSPR logging #
@@ -63,6 +56,142 @@ resetGlobalLog()
 # on tbpl.mozilla.org.
 
 NSPR_LOG_MODULES = ""
+
+####################
+# LOG HANDLING     #
+####################
+
+### output processing
+class MochitestFormatter(TbplFormatter):
+    log_num = 0
+
+    def __init__(self):
+        super(MochitestFormatter, self).__init__()
+
+    def __call__(self, data):
+        tbpl_output = super(MochitestFormatter, self).__call__(data)
+        output = '%d INFO %s' % (MochitestFormatter.log_num, tbpl_output)
+        MochitestFormatter.log_num += 1
+        return output
+
+### output processing
+class MessageLogger(object):
+    """File-like object for logging messages (structured logs)"""
+    BUFFERING_THRESHOLD = 100
+    # This is a delimiter used by the JS side to avoid logs interleaving
+    DELIMITER = u'\ue175\uee31\u2c32\uacbf'
+    BUFFERED_ACTIONS = set(['test_status', 'log'])
+    VALID_ACTIONS = set(['suite_start', 'suite_end', 'test_start', 'test_end',
+                         'test_status', 'log',
+                         'buffering_on', 'buffering_off'])
+
+    def __init__(self, logger, buffering=True, name='mochitest'):
+        self.logger = logger
+        self.buffering = buffering
+        self.tests_started = False
+
+        # Message buffering
+        self.buffered_messages = []
+
+    def valid_message(self, obj):
+        """True if the given object is a valid structured message (only does a superficial validation)"""
+        return isinstance(obj, dict) and 'action' in obj and obj['action'] in MessageLogger.VALID_ACTIONS
+
+    def parse_line(self, line):
+        """Takes a given line of input (structured or not) and returns a list of structured messages"""
+        line = line.rstrip().decode("UTF-8", "replace")
+
+        messages = []
+        for fragment in line.split(MessageLogger.DELIMITER):
+            if not fragment:
+                continue
+            try:
+                message = json.loads(fragment)
+                if not self.valid_message(message):
+                    message = dict(action='log', level='info', message=fragment, unstructured=True)
+            except ValueError:
+                message = dict(action='log', level='info', message=fragment, unstructured=True)
+            messages.append(message)
+
+        return messages
+
+    def process_message(self, message):
+        """Processes a structured message. Takes into account buffering, errors, ..."""
+        if not self.tests_started and message['action'] == 'test_start':
+            self.tests_started = True
+
+        # Activation/deactivating message buffering from the JS side
+        if message['action'] == 'buffering_on':
+            self.buffering = True
+            return
+        if message['action'] == 'buffering_off':
+            self.buffering = False
+            return
+
+        unstructured = False
+        if 'unstructured' in message:
+            unstructured = True
+            message.pop('unstructured')
+
+        # If we don't do any buffering, or the tests haven't started, or the message was unstructured, it is directly logged
+        if not self.buffering or unstructured or not self.tests_started:
+            self.logger.log_raw(message)
+            return
+
+        # If a test ended, we clean the buffer
+        if message['action'] == 'test_end':
+            self.buffered_messages = []
+
+        # Buffering logic; Also supports "raw" errors (in log messages) because some tests manually dump 'TEST-UNEXPECTED-FAIL'
+        is_error = 'expected' in message or (message['action'] == 'log' and message['message'].startswith('TEST-UNEXPECTED'))
+        if not is_error and message['action'] not in self.BUFFERED_ACTIONS:
+            self.logger.log_raw(message)
+            return
+
+        # test_status messages buffering
+        if is_error:
+            if self.buffered_messages:
+                number_messages = min(self.BUFFERING_THRESHOLD, len(self.buffered_messages))
+                self.logger.info("dumping last {0} message(s)".format(number_messages))
+                self.logger.info("if you need more context, please use SimpleTest.requestCompleteLog() in your test")
+                # Dumping previously buffered messages
+                self.dump_buffered(limit=True)
+
+            # Logging the error message
+            self.logger.log_raw(message)
+        else:
+            # Buffering the message
+            self.buffered_messages.append(message)
+
+    def write(self, line):
+        messages = self.parse_line(line)
+        for message in messages:
+            self.process_message(message)
+        return messages
+
+    def flush(self):
+        sys.stdout.flush()
+
+    def dump_buffered(self, limit=False):
+        if limit:
+            dumped_messages = self.buffered_messages[-self.BUFFERING_THRESHOLD:]
+        else:
+            dumped_messages = self.buffered_messages
+
+        for buf_msg in dumped_messages:
+            self.logger.log_raw(buf_msg)
+        # Cleaning the list of buffered messages
+        self.buffered_messages = []
+
+    def finish(self):
+        self.dump_buffered()
+        self.buffering = False
+        self.logger.suite_end()
+
+# Global logger
+log = StructuredLogger('mochitest')
+stream_handler = StreamHandler(stream=sys.stdout, formatter=MochitestFormatter())
+log.add_handler(stream_handler)
 
 ####################
 # PROCESS HANDLING #
@@ -81,7 +210,7 @@ def killPid(pid):
   try:
     os.kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
   except Exception, e:
-    log.info("Failed to kill process %d: %s", pid, str(e))
+    log.info("Failed to kill process %d: %s" % (pid, str(e)))
 
 if mozinfo.isWin:
   import ctypes, ctypes.wintypes, time, msvcrt
@@ -173,9 +302,9 @@ class MochitestServer(object):
     command = [xpcshell] + args
     self._process = mozprocess.ProcessHandler(command, cwd=SCRIPT_DIR, env=env)
     self._process.run()
-    log.info("%s : launching %s", self.__class__.__name__, command)
+    log.info("%s : launching %s" % (self.__class__.__name__, command))
     pid = self._process.pid
-    log.info("runtests.py | Server pid: %d", pid)
+    log.info("runtests.py | Server pid: %d" % pid)
 
   def ensureReady(self, timeout):
     assert timeout >= 0
@@ -239,7 +368,7 @@ class WebSocketServer(object):
     self._process = mozprocess.ProcessHandler(cmd, cwd=SCRIPT_DIR)
     self._process.run()
     pid = self._process.pid
-    log.info("runtests.py | Websocket server pid: %d", pid)
+    log.info("runtests.py | Websocket server pid: %d" % pid)
 
   def stop(self):
     self._process.kill()
@@ -378,8 +507,6 @@ class MochitestUtilsMixin(object):
         self.urlOpts.append("dumpAboutMemoryAfterTest=true")
       if options.dumpDMDAfterTest:
         self.urlOpts.append("dumpDMDAfterTest=true")
-      if options.quiet:
-        self.urlOpts.append("quiet=true")
 
   def getTestFlavor(self, options):
     if options.browserChrome:
@@ -471,6 +598,10 @@ class MochitestUtilsMixin(object):
         continue
       paths.append(test)
 
+    # suite_start message
+    flat_paths = [p['path'] for p in paths]
+    self.message_logger.logger.suite_start(flat_paths)
+
     # Bug 883865 - add this functionality into manifestparser
     with open(os.path.join(SCRIPT_DIR, 'tests.json'), 'w') as manifestFile:
       manifestFile.write(json.dumps({'tests': paths}))
@@ -530,21 +661,21 @@ class MochitestUtilsMixin(object):
         log.info('Stopping web server')
         self.server.stop()
       except Exception:
-        log.exception('Exception when stopping web server')
+        log.critical('Exception when stopping web server')
 
     if self.wsserver is not None:
       try:
         log.info('Stopping web socket server')
         self.wsserver.stop()
       except Exception:
-        log.exception('Exception when stopping web socket server');
+        log.critical('Exception when stopping web socket server');
 
     if self.sslTunnel is not None:
       try:
         log.info('Stopping ssltunnel')
         self.sslTunnel.stop()
       except Exception:
-        log.exception('Exception stopping ssltunnel');
+        log.critical('Exception stopping ssltunnel');
 
   def copyExtraFilesToProfile(self, options):
     "Copy extra files or dirs specified on the command line to the testing profile."
@@ -556,7 +687,7 @@ class MochitestUtilsMixin(object):
         dest = os.path.join(options.profilePath, os.path.basename(abspath))
         shutil.copytree(abspath, dest)
       else:
-        log.warning("runtests.py | Failed to copy %s to profile", abspath)
+        log.warning("runtests.py | Failed to copy %s to profile" % abspath)
 
   def installChromeJar(self, chrome, options):
     """
@@ -601,7 +732,7 @@ toolbar#nav-bar {
 
     # Call installChromeJar().
     if not os.path.isdir(os.path.join(SCRIPT_DIR, self.jarDir)):
-      log.testFail("invalid setup: missing mochikit extension")
+      log.error(message="TEST-UNEXPECTED-FAIL | invalid setup: missing mochikit extension")
       return None
 
     # Support Firefox (browser), B2G (shell), SeaMonkey (navigator), and Webapp
@@ -707,7 +838,7 @@ class SSLTunnel:
     self.process = mozprocess.ProcessHandler([ssltunnel, self.configFile],
                                                env=env)
     self.process.run()
-    log.info("INFO | runtests.py | SSL tunnel pid: %d", self.process.pid)
+    log.info("runtests.py | SSL tunnel pid: %d" % self.process.pid)
 
   def stop(self):
     """ Stops the SSL Tunnel and cleans up """
@@ -840,6 +971,9 @@ class Mochitest(MochitestUtilsMixin):
 
   def __init__(self):
     super(Mochitest, self).__init__()
+
+    # Structured logs parser
+    self.message_logger = MessageLogger(logger=log)
 
     # environment function for browserEnv
     self.environment = environment
@@ -984,7 +1118,7 @@ class Mochitest(MochitestUtilsMixin):
     # TODO: this should really be upstreamed somewhere, maybe mozprofile
     certificateStatus = self.fillCertificateDB(options)
     if certificateStatus:
-      log.info("TEST-UNEXPECTED-FAIL | runtests.py | Certificate integration failed")
+      log.error("TEST-UNEXPECTED-FAIL | runtests.py | Certificate integration failed")
       return None
 
     return manifest
@@ -1040,7 +1174,7 @@ class Mochitest(MochitestUtilsMixin):
         if os.path.exists(options.pidFile + ".xpcshell.pid"):
           os.remove(options.pidFile + ".xpcshell.pid")
       except:
-        log.warn("cleaning up pidfile '%s' was unsuccessful from the test harness", options.pidFile)
+        log.warning("cleaning up pidfile '%s' was unsuccessful from the test harness" % options.pidFile)
     options.manifestFile = None
 
   def dumpScreen(self, utilityPath):
@@ -1083,12 +1217,12 @@ class Mochitest(MochitestUtilsMixin):
     """Look for hung processes"""
 
     if not os.path.exists(processLog):
-      log.info('Automation Error: PID log not found: %s', processLog)
+      log.info('Automation Error: PID log not found: %s' % processLog)
       # Whilst no hung process was found, the run should still display as a failure
       return True
 
     # scan processLog for zombies
-    log.info('INFO | zombiecheck | Reading PID log: %s', processLog)
+    log.info('zombiecheck | Reading PID log: %s' % processLog)
     processList = []
     pidRE = re.compile(r'launched child process (\d+)$')
     with open(processLog) as processLogFD:
@@ -1101,10 +1235,10 @@ class Mochitest(MochitestUtilsMixin):
     # kill zombies
     foundZombie = False
     for processPID in processList:
-      log.info("INFO | zombiecheck | Checking for orphan process with PID: %d", processPID)
+      log.info("zombiecheck | Checking for orphan process with PID: %d" % processPID)
       if isPidAlive(processPID):
         foundZombie = True
-        log.info("TEST-UNEXPECTED-FAIL | zombiecheck | child process %d still alive after shutdown", processPID)
+        log.error("TEST-UNEXPECTED-FAIL | zombiecheck | child process %d still alive after shutdown" % processPID)
         self.killAndGetStack(processPID, utilityPath, debuggerInfo, dump_screen=not debuggerInfo)
 
     return foundZombie
@@ -1154,11 +1288,15 @@ class Mochitest(MochitestUtilsMixin):
              webapprtChrome=False,
              screenshotOnFail=False,
              testPath=None,
-             bisectChunk=None):
+             bisectChunk=None,
+             quiet=False):
     """
     Run the app, log the duration it took to execute, return the status code.
     Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing for |timeout| seconds.
     """
+
+    # configure the message logger buffering
+    self.message_logger.buffering = quiet
 
     # debugger information
     interactive = False
@@ -1253,7 +1391,7 @@ class Mochitest(MochitestUtilsMixin):
                    interactive=interactive,
                    outputTimeout=timeout)
       proc = runner.process_handler
-      log.info("INFO | runtests.py | Application pid: %d", proc.pid)
+      log.info("runtests.py | Application pid: %d" % proc.pid)
 
       if onLaunch is not None:
         # Allow callers to specify an onLaunch callback to be fired after the
@@ -1281,11 +1419,12 @@ class Mochitest(MochitestUtilsMixin):
 
       # record post-test information
       if status:
-        log.info("TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s", self.lastTestSeen, status)
+        self.message_logger.dump_buffered()
+        log.error("TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s" % (self.lastTestSeen, status))
       else:
         self.lastTestSeen = 'Main app process exited normally'
 
-      log.info("INFO | runtests.py | Application ran for: %s", str(datetime.now() - startTime))
+      log.info("runtests.py | Application ran for: %s" % str(datetime.now() - startTime))
 
       # Do a final check for zombie child processes.
       zombieProcesses = self.checkForZombies(processLog, utilityPath, debuggerInfo)
@@ -1567,7 +1706,8 @@ class Mochitest(MochitestUtilsMixin):
                              webapprtChrome=options.webapprtChrome,
                              screenshotOnFail=options.screenshotOnFail,
                              testPath=options.testPath,
-                             bisectChunk=options.bisectChunk
+                             bisectChunk=options.bisectChunk,
+                             quiet=options.quiet
         )
       except KeyboardInterrupt:
         log.info("runtests.py | Received keyboard interrupt.\n");
@@ -1592,6 +1732,8 @@ class Mochitest(MochitestUtilsMixin):
 
     log.info("runtests.py | Running tests: end.")
 
+    self.message_logger.finish()
+
     if self.manifest is not None:
       self.cleanup(options)
 
@@ -1601,13 +1743,18 @@ class Mochitest(MochitestUtilsMixin):
     """handle process output timeout"""
     # TODO: bug 913975 : _processOutput should call self.processOutputLine one more time one timeout (I think)
     if testPath:
-      log.info("TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with no output on %s", self.lastTestSeen, int(timeout), testPath)
+      error_message = "TEST-UNEXPECTED-TIMEOUT | %s | application timed out after %d seconds with no output on %s" % (self.lastTestSeen, int(timeout), testPath)
     else:
-      log.info("TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with no output", self.lastTestSeen, int(timeout))
+      error_message = "TEST-UNEXPECTED-TIMEOUT | %s | application timed out after %d seconds with no output" % (self.lastTestSeen, int(timeout))
+
+    self.message_logger.dump_buffered()
+    self.message_logger.buffering = False
+    log.error(error_message)
+
     browserProcessId = browserProcessId or proc.pid
     self.killAndGetStack(browserProcessId, utilityPath, debuggerInfo, dump_screen=not debuggerInfo)
 
-  ### output processing
+
 
   class OutputHandler(object):
     """line output handler for mozrunner"""
@@ -1638,26 +1785,34 @@ class Mochitest(MochitestUtilsMixin):
 
     def processOutputLine(self, line):
       """per line handler of output for mozprocess"""
-      for handler in self.outputHandlers():
-        line = handler(line)
-      if self.bisectChunk:
-        self.record_result(line)
-        self.first_error(line)
+      # Parsing the line (by the structured messages logger).
+      messages = self.harness.message_logger.parse_line(line)
+
+      for message in messages:
+          # Passing the message to the handlers
+          for handler in self.outputHandlers():
+            message = handler(message)
+
+          # Processing the message by the logger
+          self.harness.message_logger.process_message(message)
+
     __call__ = processOutputLine
 
     def outputHandlers(self):
       """returns ordered list of output handlers"""
-      return [self.fix_stack,
-              self.format,
-              self.record_last_test,
-              self.dumpScreenOnTimeout,
-              self.dumpScreenOnFail,
-              self.metro_subprocess_id,
-              self.trackShutdownLeaks,
-              self.trackLSANLeaks,
-              self.log,
-              self.countline,
-              ]
+      handlers = [self.fix_stack,
+                  self.record_last_test,
+                  self.dumpScreenOnTimeout,
+                  self.dumpScreenOnFail,
+                  self.trackShutdownLeaks,
+                  self.trackLSANLeaks,
+                  self.countline,
+                  ]
+      if self.bisectChunk:
+        handlers.append(self.record_result)
+        handlers.append(self.first_error)
+
+      return handlers
 
     def stackFixer(self):
       """
@@ -1701,7 +1856,7 @@ class Mochitest(MochitestUtilsMixin):
         self.stackFixerProcess.communicate()
         status = self.stackFixerProcess.returncode
         if status and not didTimeout:
-          log.info("TEST-UNEXPECTED-FAIL | runtests.py | Stack fixer process exited with code %d during test run", status)
+          log.info("TEST-UNEXPECTED-FAIL | runtests.py | Stack fixer process exited with code %d during test run" % status)
 
       if self.shutdownLeaks:
         self.shutdownLeaks.process()
@@ -1709,34 +1864,38 @@ class Mochitest(MochitestUtilsMixin):
       if self.lsanLeaks:
         self.lsanLeaks.process()
 
+    # output message handlers:
+    # these take a message and return a message
 
-    # output line handlers:
-    # these take a line and return a line
-    def record_result(self, line):
-      if "TEST-START" in line: #by default make the result key equal to pass.
-        key = line.split('|')[-1].split('/')[-1].strip()
+    def record_result(self, message):
+      if message['action'] == 'test_start': #by default make the result key equal to pass.
+        key = message['test'].split('/')[-1].strip()
         self.harness.result[key] = "PASS"
-      elif "TEST-UNEXPECTED" in line:
-        key = line.split('|')[-2].split('/')[-1].strip()
-        self.harness.result[key] = "FAIL"
-      elif "TEST-KNOWN-FAIL" in line:
-        key = line.split('|')[-2].split('/')[-1].strip()
-        self.harness.result[key] = "TODO"
-      return line
+      elif message['action'] in ['test_end', 'test_status']:
+        if 'expected' in message:
+          key = message['test'].split('/')[-1].strip()
+          self.harness.result[key] = "FAIL"
+        elif message['status'] == 'FAIL':
+          key = message['test'].split('/')[-1].strip()
+          self.harness.result[key] = "TODO"
+      return message
 
-    def first_error(self, line):
-      if "TEST-UNEXPECTED-FAIL" in line:
-        key = line.split('|')[-2].split('/')[-1].strip()
+    def first_error(self, message):
+      if 'expected' in message and message['status'] == 'FAIL':
+        key = message['test'].split('/')[-1].strip()
         if key not in self.harness.expectedError:
-          self.harness.expectedError[key] = line.split('|')[-1].strip()
-      return line
+          self.harness.expectedError[key] = message['message'].strip()
+      return message
 
-    def countline(self, line):
+    def countline(self, message):
+      if message['action'] != 'log':
+        return message
+      line = message['message']
       val = 0
       try:
         val = int(line.split(':')[-1].strip())
-      except ValueError, e:
-        return line
+      except ValueError:
+        return message
 
       if "Passed:" in line:
         self.harness.countpass += val
@@ -1744,56 +1903,42 @@ class Mochitest(MochitestUtilsMixin):
         self.harness.countfail += val
       elif "Todo:" in line:
         self.harness.counttodo += val
-      return line
+      return message
 
-    def fix_stack(self, line):
-      if self.stackFixerFunction:
-        return self.stackFixerFunction(line)
-      return line
+    def fix_stack(self, message):
+      if message['action'] == 'log' and self.stackFixerFunction:
+        message['message'] = self.stackFixerFunction(message['message'])
+      return message
 
-    def format(self, line):
-      """format the line"""
-      return line.rstrip().decode("UTF-8", "ignore")
-
-    def record_last_test(self, line):
+    def record_last_test(self, message):
       """record last test on harness"""
-      if "TEST-START" in line and "|" in line:
-        self.harness.lastTestSeen = line.split("|")[1].strip()
-      return line
+      if message['action'] == 'test_start':
+        self.harness.lastTestSeen = message['test']
+      return message
 
-    def dumpScreenOnTimeout(self, line):
-      if not self.dump_screen_on_fail and self.dump_screen_on_timeout and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
+    def dumpScreenOnTimeout(self, message):
+      if (not self.dump_screen_on_fail
+          and self.dump_screen_on_timeout
+          and 'expected' in message and message['status'] == 'FAIL'
+          and 'message' in message
+          and "Test timed out" in message['message']):
         self.harness.dumpScreen(self.utilityPath)
-      return line
+      return message
 
-    def dumpScreenOnFail(self, line):
-      if self.dump_screen_on_fail and "TEST-UNEXPECTED-FAIL" in line:
+    def dumpScreenOnFail(self, message):
+      if self.dump_screen_on_fail and 'expected' in message and message['status'] == 'FAIL':
         self.harness.dumpScreen(self.utilityPath)
-      return line
+      return message
 
-    def metro_subprocess_id(self, line):
-      """look for metro browser subprocess id"""
-      if "METRO_BROWSER_PROCESS" in line:
-        index = line.find("=")
-        if index != -1:
-          self.browserProcessId = line[index+1:].rstrip()
-          log.info("INFO | runtests.py | metro browser sub process id detected: %s", self.browserProcessId)
-      return line
+    def trackLSANLeaks(self, message):
+      if self.lsanLeaks and message['action'] == 'log':
+        self.lsanLeaks.log(message['message'])
+      return message
 
-    def trackShutdownLeaks(self, line):
+    def trackShutdownLeaks(self, message):
       if self.shutdownLeaks:
-        self.shutdownLeaks.log(line)
-      return line
-
-    def trackLSANLeaks(self, line):
-      if self.lsanLeaks:
-        self.lsanLeaks.log(line)
-      return line
-
-    def log(self, line):
-      log.info(line)
-      return line
-
+        self.shutdownLeaks.log(message)
+      return message
 
   def makeTestConfig(self, options):
     "Creates a test configuration file for customizing test execution."

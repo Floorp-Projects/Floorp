@@ -163,11 +163,6 @@ XPCWrappedNativeScope::GetComponentsJSObject(JS::MutableHandleObject obj)
 void
 XPCWrappedNativeScope::ForcePrivilegedComponents()
 {
-    // This may only be called on unprivileged scopes during automation where
-    // we allow insecure things.
-    MOZ_RELEASE_ASSERT(Preferences::GetBool("security.turn_off_all_security_so_"
-                                            "that_viruses_can_take_over_this_"
-                                            "computer"));
     nsCOMPtr<nsIXPCComponents> c = do_QueryInterface(mComponents);
     if (!c)
         mComponents = new nsXPCComponents(this);

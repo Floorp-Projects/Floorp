@@ -708,6 +708,37 @@ class LCheckOverRecursedPar : public LInstructionHelper<0, 1, 1>
     }
 };
 
+class LAsmJSInterruptCheck : public LInstructionHelper<0, 0, 1>
+{
+    Label *interruptExit_;
+    const CallSiteDesc &funcDesc_;
+
+  public:
+    LIR_HEADER(AsmJSInterruptCheck);
+
+    LAsmJSInterruptCheck(const LDefinition &scratch, Label *interruptExit,
+                         const CallSiteDesc &funcDesc)
+      : interruptExit_(interruptExit), funcDesc_(funcDesc)
+    {
+        setTemp(0, scratch);
+    }
+
+    const LDefinition *scratch() {
+        return getTemp(0);
+    }
+
+    bool isCall() const {
+        return true;
+    }
+
+    Label *interruptExit() const {
+        return interruptExit_;
+    }
+    const CallSiteDesc &funcDesc() const {
+        return funcDesc_;
+    }
+};
+
 // Alternative to LInterruptCheck which does not emit an explicit check of the
 // interrupt flag but relies on the loop backedge being patched via a signal
 // handler.

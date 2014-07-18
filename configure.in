@@ -504,6 +504,8 @@ case "$target" in
         # Disable SEH on clang-cl because it doesn't implement them yet.
         if test -z "$CLANG_CL"; then
             AC_DEFINE(HAVE_SEH_EXCEPTIONS)
+        else
+            AC_DEFINE_UNQUOTED(GTEST_HAS_SEH, 0)
         fi
 
         if test -n "$WIN32_REDIST_DIR"; then
@@ -3876,7 +3878,6 @@ MOZ_PAY=
 MOZ_AUDIO_CHANNEL_MANAGER=
 NSS_NO_LIBPKIX=
 MOZ_CONTENT_SANDBOX=
-MOZ_CONTENT_SANDBOX_REPORTER=1
 JSGC_USE_EXACT_ROOTING=
 JSGC_GENERATIONAL=
 
@@ -6441,17 +6442,6 @@ if test -n "$MOZ_CONTENT_SANDBOX"; then
 fi
 
 AC_SUBST(MOZ_CONTENT_SANDBOX)
-
-MOZ_ARG_ENABLE_BOOL(content-sandbox-reporter,
-[ --enable-content-sandbox-reporter        Enable syscall reporter to troubleshoot syscalls denied by the content-processes sandbox],
-    MOZ_CONTENT_SANDBOX_REPORTER=1,
-    MOZ_CONTENT_SANDBOX_REPORTER=)
-
-if test -n "$MOZ_CONTENT_SANDBOX_REPORTER"; then
-    AC_DEFINE(MOZ_CONTENT_SANDBOX_REPORTER)
-fi
-
-AC_SUBST(MOZ_CONTENT_SANDBOX_REPORTER)
 
 dnl ========================================================
 dnl =

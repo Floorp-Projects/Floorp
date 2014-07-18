@@ -478,12 +478,12 @@ MediaEngineDefaultAudioSource::Notify(nsITimer* aTimer)
 }
 
 void
-MediaEngineDefault::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
+MediaEngineDefault::EnumerateVideoDevices(MediaSourceType aMediaSource,
                                           nsTArray<nsRefPtr<MediaEngineVideoSource> >* aVSources) {
   MutexAutoLock lock(mMutex);
 
   // only supports camera sources (for now).  See Bug 1038241
-  if (aMediaSource != dom::MediaSourceEnum::Camera) {
+  if (aMediaSource != MediaSourceType::Camera) {
     return;
   }
 
@@ -498,7 +498,7 @@ MediaEngineDefault::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
 }
 
 void
-MediaEngineDefault::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
+MediaEngineDefault::EnumerateAudioDevices(MediaSourceType aMediaSource,
                                           nsTArray<nsRefPtr<MediaEngineAudioSource> >* aASources) {
   MutexAutoLock lock(mMutex);
   int32_t len = mASources.Length();

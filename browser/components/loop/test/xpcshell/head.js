@@ -18,6 +18,8 @@ const kMockWebSocketChannelName = "Mock WebSocket Channel";
 const kWebSocketChannelContractID = "@mozilla.org/network/protocol;1?name=wss";
 
 const kServerPushUrl = "http://localhost:3456";
+const kEndPointUrl = "http://example.com/fake";
+const kUAID = "f47ac11b-58ca-4372-9567-0e02b2c3d479";
 
 // Fake loop server
 var loopServer;
@@ -67,7 +69,8 @@ let mockPushHandler = {
  * enables us to check parameters and return messages similar to the push
  * server.
  */
-let MockWebSocketChannel = function() {
+let MockWebSocketChannel = function(initRegStatus) {
+  this.initRegStatus = initRegStatus;
 };
 
 MockWebSocketChannel.prototype = {
@@ -86,28 +89,46 @@ MockWebSocketChannel.prototype = {
     this.listener.onStart(this.context);
   },
 
-  notify: function(version) {
-    this.listener.onMessageAvailable(this.context,
-      JSON.stringify({
-        messageType: "notification", updates: [{
-          channelID: "8b1081ce-9b35-42b5-b8f5-3ff8cb813a50",
-          version: version
-        }]
-    }));
-  },
-
   sendMsg: function(aMsg) {
     var message = JSON.parse(aMsg);
 
     switch(message.messageType) {
       case "hello":
         this.listener.onMessageAvailable(this.context,
-          JSON.stringify({messageType: "hello"}));
+          JSON.stringify({messageType: "hello",
+                          uaid: kUAID}));
         break;
       case "register":
+        this.channelID = message.channelID;
+        let statusCode = 200;
+        if (this.initRegStatus) {
+          statusCode = this.initRegStatus;
+          this.initRegStatus = 0;
+        }
         this.listener.onMessageAvailable(this.context,
-          JSON.stringify({messageType: "register", pushEndpoint: "http://example.com/fake"}));
+          JSON.stringify({messageType: "register",
+                          status: statusCode,
+                          channelID: this.channelID,
+                          pushEndpoint: kEndPointUrl}));
         break;
     }
-  }
+  },
+
+  notify: function(version) {
+    this.listener.onMessageAvailable(this.context,
+      JSON.stringify({
+        messageType: "notification", updates: [{
+          channelID: this.channelID,
+          version: version
+        }]
+    }));
+  },
+
+  stop: function (err) {
+    this.listener.onStop(this.context, err || -1);
+  },
+
+  serverClose: function (err) {
+    this.listener.onServerClose(this.context, err || -1);
+  },
 };

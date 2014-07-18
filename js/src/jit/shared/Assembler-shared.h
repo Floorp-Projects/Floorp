@@ -614,7 +614,7 @@ struct CallSite : public CallSiteDesc
     // The stackDepth measures the amount of stack space pushed since the
     // function was called. In particular, this includes the pushed return
     // address on all archs (whether or not the call instruction pushes the
-    // return address (x86/x64) or the prologue does (ARM/MIPS).
+    // return address (x86/x64) or the prologue does (ARM/MIPS)).
     uint32_t stackDepth() const { return stackDepth_; }
 };
 
@@ -635,10 +635,8 @@ static const uint32_t AsmJSFrameSize = sizeof(void*);
 class AsmJSHeapAccess
 {
     uint32_t offset_;
-#if defined(JS_CODEGEN_X86)
-    uint8_t cmpDelta_;  // the number of bytes from the cmp to the load/store instruction
-#endif
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    uint8_t cmpDelta_;  // the number of bytes from the cmp to the load/store instruction
     uint8_t opLength_;  // the length of the load/store instruction
     uint8_t isFloat32Load_;
     AnyRegister::Code loadedReg_ : 8;
@@ -649,23 +647,21 @@ class AsmJSHeapAccess
   public:
     AsmJSHeapAccess() {}
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    static const uint32_t NoLengthCheck = UINT32_MAX;
+
     // If 'cmp' equals 'offset' or if it is not supplied then the
     // cmpDelta_ is zero indicating that there is no length to patch.
     AsmJSHeapAccess(uint32_t offset, uint32_t after, Scalar::Type vt,
-                    AnyRegister loadedReg, uint32_t cmp = UINT32_MAX)
+                    AnyRegister loadedReg, uint32_t cmp = NoLengthCheck)
       : offset_(offset),
-# if defined(JS_CODEGEN_X86)
-        cmpDelta_(cmp == UINT32_MAX ? 0 : offset - cmp),
-# endif
+        cmpDelta_(cmp == NoLengthCheck ? 0 : offset - cmp),
         opLength_(after - offset),
         isFloat32Load_(vt == Scalar::Float32),
         loadedReg_(loadedReg.code())
     {}
-    AsmJSHeapAccess(uint32_t offset, uint8_t after, uint32_t cmp = UINT32_MAX)
+    AsmJSHeapAccess(uint32_t offset, uint8_t after, uint32_t cmp = NoLengthCheck)
       : offset_(offset),
-# if defined(JS_CODEGEN_X86)
-        cmpDelta_(cmp == UINT32_MAX ? 0 : offset - cmp),
-# endif
+        cmpDelta_(cmp == NoLengthCheck ? 0 : offset - cmp),
         opLength_(after - offset),
         isFloat32Load_(false),
         loadedReg_(UINT8_MAX)
@@ -679,11 +675,11 @@ class AsmJSHeapAccess
     uint32_t offset() const { return offset_; }
     void setOffset(uint32_t offset) { offset_ = offset; }
 #if defined(JS_CODEGEN_X86)
-    bool hasLengthCheck() const { return cmpDelta_ > 0; }
-    void *patchLengthAt(uint8_t *code) const { return code + (offset_ - cmpDelta_); }
     void *patchOffsetAt(uint8_t *code) const { return code + (offset_ + opLength_); }
 #endif
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    bool hasLengthCheck() const { return cmpDelta_ > 0; }
+    void *patchLengthAt(uint8_t *code) const { return code + (offset_ - cmpDelta_); }
     unsigned opLength() const { return opLength_; }
     bool isLoad() const { return loadedReg_ != UINT8_MAX; }
     bool isFloat32Load() const { return isFloat32Load_; }
@@ -709,6 +705,7 @@ struct AsmJSGlobalAccess
 enum AsmJSImmKind
 {
     AsmJSImm_Runtime,
+    AsmJSImm_RuntimeInterrupt,
     AsmJSImm_StackLimit,
     AsmJSImm_ReportOverRecursed,
     AsmJSImm_HandleExecutionInterrupt,

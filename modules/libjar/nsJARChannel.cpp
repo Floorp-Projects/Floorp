@@ -22,6 +22,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/net/RemoteOpenFileChild.h"
 #include "nsITabChild.h"
+#include "private/pprio.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -199,6 +200,7 @@ nsJARChannel::nsJARChannel()
     , mIsPending(false)
     , mIsUnsafe(true)
     , mOpeningRemote(false)
+    , mEnsureChildFd(false)
 {
 #if defined(PR_LOGGING)
     if (!gJarProtocolLog)
@@ -361,18 +363,44 @@ nsJARChannel::LookupFile()
                 rv = jarCache->IsCached(mJarFile, &cached);
                 if (NS_SUCCEEDED(rv) && cached) {
                     // zipcache already has file mmapped: don't open on parent,
-                    // just return and proceed to cache hit in CreateJarInput()
+                    // just return and proceed to cache hit in CreateJarInput().
+                    // When the file descriptor is needed, get it from JAR cache
+                    // if available, otherwise do the remote open to get a new
+                    // one.
+                    #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
+                    // Windows/OSX desktop builds skip remoting, we don't need
+                    // file descriptor here.
                     return NS_OK;
+                    #else
+                    if (!mEnsureChildFd) {
+                        return NS_OK;
+                    }
+                    PRFileDesc *fd = nullptr;
+                    jarCache->GetFd(mJarFile, &fd);
+                    if (fd) {
+                        PROsfd osfd = dup(PR_FileDesc2NativeHandle(fd));
+                        if (osfd == -1) {
+                            return NS_ERROR_FAILURE;
+                        }
+                        remoteFile->SetNSPRFileDesc(PR_ImportFile(osfd));
+                        return NS_OK;
+                    }
+                    #endif
                 }
             }
 
             mOpeningRemote = true;
 
-            if (gJarHandler->RemoteOpenFileInProgress(remoteFile, this)) {
+            if (gJarHandler->RemoteOpenFileInProgress(remoteFile, this) &&
+                !mEnsureChildFd) {
                 // JarHandler will trigger OnRemoteFileOpen() after the first
                 // request for this file completes and we'll get a JAR cache
                 // hit.
                 return NS_OK;
+            }
+
+            if (mEnsureChildFd && jarCache) {
+                jarCache->SetMustCacheFd(remoteFile, true);
             }
 
             // Open file on parent: OnRemoteFileOpenComplete called when done
@@ -865,6 +893,13 @@ nsJARChannel::GetJarFile(nsIFile **aFile)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsJARChannel::EnsureChildFd()
+{
+    mEnsureChildFd = true;
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsIDownloadObserver
 //-----------------------------------------------------------------------------
@@ -1034,6 +1069,15 @@ nsJARChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
     // Drop notification callbacks to prevent cycles.
     mCallbacks = 0;
     mProgressSink = 0;
+
+    if (mEnsureChildFd) {
+      nsIZipReaderCache *jarCache = gJarHandler->JarCache();
+      if (jarCache) {
+          jarCache->SetMustCacheFd(mJarFile, false);
+      }
+      // To deallocate file descriptor by RemoteOpenFileChild destructor.
+      mJarFile = nullptr;
+    }
 
     return NS_OK;
 }
