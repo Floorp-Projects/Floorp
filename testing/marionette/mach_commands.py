@@ -6,8 +6,9 @@ from __future__ import unicode_literals
 
 import os
 import sys
+import argparse
 
-from mozlog import structured
+from mozlog.structured import commandline
 
 from mozbuild.base import (
     MachCommandBase,
@@ -29,8 +30,12 @@ this by ommitting the VARIANT variable when building, or using:
 VARIANT=eng ./build.sh
 '''
 
+# A parser that will accept structured logging commandline arguments.
+_parser = argparse.ArgumentParser()
+commandline.add_logging_group(_parser)
+
 def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
-    address=None, binary=None, topsrcdir=None):
+    address=None, binary=None, topsrcdir=None, **kwargs):
     from marionette.runtests import (
         MarionetteTestRunner,
         BaseMarionetteOptions,
@@ -38,6 +43,7 @@ def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
     )
 
     parser = BaseMarionetteOptions()
+    commandline.add_logging_group(parser)
     options, args = parser.parse_args()
 
     if not tests:
@@ -57,9 +63,9 @@ def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
 
     parser.verify_usage(options, tests)
 
-    options.logger = structured.commandline.setup_logging("Marionette Unit Tests",
-                                                          options,
-                                                          {"mach": sys.stdout})
+    options.logger = commandline.setup_logging("Marionette Unit Tests",
+                                               options,
+                                               {"mach": sys.stdout})
 
     runner = startTestRunner(MarionetteTestRunner, options, tests)
     if runner.failed > 0:
@@ -97,12 +103,13 @@ class B2GCommands(MachCommandBase):
         return run_marionette(tests, b2g_path=self.b2g_home, emulator=emulator,
             testtype=testtype, topsrcdir=self.topsrcdir, address=None)
 
-
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command('marionette-test', category='testing',
         description='Run a Marionette test.',
-        conditions=[conditions.is_firefox])
+        conditions=[conditions.is_firefox],
+        parser=_parser,
+    )
     @CommandArgument('--address',
         help='host:port of running Gecko instance to connect to.')
     @CommandArgument('--type', dest='testtype',
@@ -110,7 +117,8 @@ class MachCommands(MachCommandBase):
         default='browser')
     @CommandArgument('tests', nargs='*', metavar='TESTS',
         help='Path to test(s) to run.')
-    def run_marionette_test(self, tests, address=None, testtype=None):
+    def run_marionette_test(self, tests, address=None, testtype=None,
+                            **kwargs):
         binary = self.get_binary_path('app')
         return run_marionette(tests, binary=binary, testtype=testtype,
             topsrcdir=self.topsrcdir, address=address)
