@@ -206,11 +206,6 @@ class ObjectElements
     /* 'length' property of array objects, unused for other objects. */
     uint32_t length;
 
-    void staticAsserts() {
-        static_assert(sizeof(ObjectElements) == VALUES_PER_HEADER * sizeof(Value),
-                      "Elements size and values-per-Elements mismatch");
-    }
-
     bool shouldConvertDoubleElements() const {
         return flags & CONVERT_DOUBLE_ELEMENTS;
     }
@@ -254,8 +249,13 @@ class ObjectElements
 
     static bool ConvertElementsToDoubles(JSContext *cx, uintptr_t elements);
 
+    // This is enough slots to store an object of this class. See the static
+    // assertion below.
     static const size_t VALUES_PER_HEADER = 2;
 };
+
+static_assert(ObjectElements::VALUES_PER_HEADER * sizeof(HeapSlot) == sizeof(ObjectElements),
+              "ObjectElements doesn't fit in the given number of slots");
 
 /* Shared singleton for objects with no elements. */
 extern HeapSlot *const emptyObjectElements;
