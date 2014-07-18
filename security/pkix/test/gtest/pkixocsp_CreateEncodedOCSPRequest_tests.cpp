@@ -24,8 +24,9 @@
 
 #include "nssgtest.h"
 #include "pkix/pkix.h"
+#include "pkix/pkixnss.h"
 #include "pkixder.h"
-#include "prerror.h"
+#include "pkixtestutil.h"
 #include "secerr.h"
 
 using namespace mozilla::pkix;
@@ -34,51 +35,46 @@ using namespace mozilla::pkix::test;
 class CreateEncodedOCSPRequestTrustDomain : public TrustDomain
 {
 private:
-  virtual SECStatus GetCertTrust(EndEntityOrCA, const CertPolicyId&,
-                                 const SECItem&, /*out*/ TrustLevel*)
+  virtual Result GetCertTrust(EndEntityOrCA, const CertPolicyId&,
+                              const SECItem&, /*out*/ TrustLevel*)
   {
     ADD_FAILURE();
-    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
-    return SECFailure;
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  virtual SECStatus FindIssuer(const SECItem&, IssuerChecker&, PRTime)
+  virtual Result FindIssuer(const SECItem&, IssuerChecker&, PRTime)
   {
     ADD_FAILURE();
-    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
-    return SECFailure;
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  virtual SECStatus CheckRevocation(EndEntityOrCA, const CertID&, PRTime,
-                                    const SECItem*, const SECItem*)
+  virtual Result CheckRevocation(EndEntityOrCA, const CertID&, PRTime,
+                                 const SECItem*, const SECItem*)
   {
     ADD_FAILURE();
-    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
-    return SECFailure;
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  virtual SECStatus IsChainValid(const DERArray&)
+  virtual Result IsChainValid(const DERArray&)
   {
     ADD_FAILURE();
-    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
-    return SECFailure;
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  virtual SECStatus VerifySignedData(const SignedDataWithSignature&,
-                                     const SECItem&)
+  virtual Result VerifySignedData(const SignedDataWithSignature&,
+                                  const SECItem&)
   {
     ADD_FAILURE();
-    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
-    return SECFailure;
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  virtual SECStatus DigestBuf(const SECItem& item, /*out*/ uint8_t *digestBuf,
-                              size_t digestBufLen)
+  virtual Result DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
+                           size_t digestBufLen)
   {
     return ::mozilla::pkix::DigestBuf(item, digestBuf, digestBufLen);
   }
 
-  virtual SECStatus CheckPublicKey(const SECItem& subjectPublicKeyInfo)
+  virtual Result CheckPublicKey(const SECItem& subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
   }
@@ -150,10 +146,13 @@ TEST_F(pkixocsp_CreateEncodedOCSPRequest, ChildCertLongSerialNumberTest)
   ScopedSECItem issuerSPKI;
   ASSERT_EQ(SECSuccess,
             MakeIssuerCertIDComponents("CN=CA", issuerDER, issuerSPKI));
-  ASSERT_FALSE(CreateEncodedOCSPRequest(trustDomain, arena.get(),
-                                        CertID(*issuerDER, *issuerSPKI,
-                                               *unsupportedLongSerialNumber)));
-  ASSERT_EQ(SEC_ERROR_BAD_DATA, PR_GetError());
+  uint8_t ocspRequest[OCSP_REQUEST_MAX_LENGTH];
+  size_t ocspRequestLength;
+  ASSERT_EQ(Result::ERROR_BAD_DER,
+            CreateEncodedOCSPRequest(trustDomain,
+                                     CertID(*issuerDER, *issuerSPKI,
+                                            *unsupportedLongSerialNumber),
+                                     ocspRequest, ocspRequestLength));
 }
 
 // Test that CreateEncodedOCSPRequest handles the longest serial number that
@@ -164,7 +163,11 @@ TEST_F(pkixocsp_CreateEncodedOCSPRequest, LongestSupportedSerialNumberTest)
   ScopedSECItem issuerSPKI;
   ASSERT_EQ(SECSuccess,
             MakeIssuerCertIDComponents("CN=CA", issuerDER, issuerSPKI));
-  ASSERT_TRUE(CreateEncodedOCSPRequest(trustDomain, arena.get(),
-                                        CertID(*issuerDER, *issuerSPKI,
-                                               *longestRequiredSerialNumber)));
+  uint8_t ocspRequest[OCSP_REQUEST_MAX_LENGTH];
+  size_t ocspRequestLength;
+  ASSERT_EQ(Success,
+            CreateEncodedOCSPRequest(trustDomain,
+                                     CertID(*issuerDER, *issuerSPKI,
+                                            *longestRequiredSerialNumber),
+                                     ocspRequest, ocspRequestLength));
 }

@@ -25,6 +25,8 @@
 #include "nss.h"
 #include "nssgtest.h"
 #include "pkix/pkix.h"
+#include "pkix/pkixnss.h"
+#include "pkixgtest.h"
 #include "pkixtestutil.h"
 #include "prinit.h"
 #include "secerr.h"
@@ -41,58 +43,53 @@ public:
   {
   }
 
-  virtual SECStatus GetCertTrust(EndEntityOrCA endEntityOrCA,
-                                 const CertPolicyId&,
-                                 const SECItem& candidateCert,
-                         /*out*/ TrustLevel* trustLevel)
+  virtual Result GetCertTrust(EndEntityOrCA endEntityOrCA, const CertPolicyId&,
+                              const SECItem& candidateCert,
+                              /*out*/ TrustLevel* trustLevel)
   {
     EXPECT_EQ(endEntityOrCA, EndEntityOrCA::MustBeEndEntity);
     EXPECT_TRUE(trustLevel);
     *trustLevel = TrustLevel::InheritsTrust;
-    return SECSuccess;
+    return Success;
   }
 
-  virtual SECStatus FindIssuer(const SECItem&, IssuerChecker&, PRTime)
+  virtual Result FindIssuer(const SECItem&, IssuerChecker&, PRTime)
   {
     ADD_FAILURE();
-    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
-    return SECFailure;
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  virtual SECStatus CheckRevocation(EndEntityOrCA endEntityOrCA, const CertID&,
-                                    PRTime time,
-                                    /*optional*/ const SECItem*,
-                                    /*optional*/ const SECItem*)
+  virtual Result CheckRevocation(EndEntityOrCA endEntityOrCA, const CertID&,
+                                 PRTime time, /*optional*/ const SECItem*,
+                                 /*optional*/ const SECItem*)
   {
     // TODO: I guess mozilla::pkix should support revocation of designated
     // OCSP responder eventually, but we don't now, so this function should
     // never get called.
     ADD_FAILURE();
-    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
-    return SECFailure;
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  virtual SECStatus IsChainValid(const DERArray&)
+  virtual Result IsChainValid(const DERArray&)
   {
     ADD_FAILURE();
-    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
-    return SECFailure;
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  virtual SECStatus VerifySignedData(const SignedDataWithSignature& signedData,
-                                     const SECItem& subjectPublicKeyInfo)
+  virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
+                                  const SECItem& subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
                                              nullptr);
   }
 
-  virtual SECStatus DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
-                              size_t digestBufLen)
+  virtual Result DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
+                           size_t digestBufLen)
   {
     return ::mozilla::pkix::DigestBuf(item, digestBuf, digestBufLen);
   }
 
-  virtual SECStatus CheckPublicKey(const SECItem& subjectPublicKeyInfo)
+  virtual Result CheckPublicKey(const SECItem& subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
   }
@@ -173,19 +170,19 @@ public:
 struct WithoutResponseBytes
 {
   uint8_t responseStatus;
-  PRErrorCode expectedError;
+  Result expectedError;
 };
 
 static const WithoutResponseBytes WITHOUT_RESPONSEBYTES[] = {
-  { OCSPResponseContext::successful, SEC_ERROR_OCSP_MALFORMED_RESPONSE },
-  { OCSPResponseContext::malformedRequest, SEC_ERROR_OCSP_MALFORMED_REQUEST },
-  { OCSPResponseContext::internalError, SEC_ERROR_OCSP_SERVER_ERROR },
-  { OCSPResponseContext::tryLater, SEC_ERROR_OCSP_TRY_SERVER_LATER },
-  { 4/*unused*/, SEC_ERROR_OCSP_UNKNOWN_RESPONSE_STATUS },
-  { OCSPResponseContext::sigRequired, SEC_ERROR_OCSP_REQUEST_NEEDS_SIG },
-  { OCSPResponseContext::unauthorized, SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST },
+  { OCSPResponseContext::successful, Result::ERROR_OCSP_MALFORMED_RESPONSE },
+  { OCSPResponseContext::malformedRequest, Result::ERROR_OCSP_MALFORMED_REQUEST },
+  { OCSPResponseContext::internalError, Result::ERROR_OCSP_SERVER_ERROR },
+  { OCSPResponseContext::tryLater, Result::ERROR_OCSP_TRY_SERVER_LATER },
+  { 4/*unused*/, Result::ERROR_OCSP_UNKNOWN_RESPONSE_STATUS },
+  { OCSPResponseContext::sigRequired, Result::ERROR_OCSP_REQUEST_NEEDS_SIG },
+  { OCSPResponseContext::unauthorized, Result::ERROR_OCSP_UNAUTHORIZED_REQUEST },
   { OCSPResponseContext::unauthorized + 1,
-    SEC_ERROR_OCSP_UNKNOWN_RESPONSE_STATUS
+    Result::ERROR_OCSP_UNKNOWN_RESPONSE_STATUS
   },
 };
 
@@ -212,10 +209,10 @@ TEST_P(pkixocsp_VerifyEncodedResponse_WithoutResponseBytes, CorrectErrorCode)
                       GetParam().responseStatus));
   ASSERT_TRUE(response);
   bool expired;
-  ASSERT_SECFailure(GetParam().expectedError,
-                    VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(GetParam().expectedError,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
 }
 
 INSTANTIATE_TEST_CASE_P(pkixocsp_VerifyEncodedResponse_WithoutResponseBytes,
@@ -288,9 +285,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_successful, good_byKey)
                       &oneDayAfterNow));
   ASSERT_TRUE(response);
   bool expired;
-  ASSERT_SECSuccess(VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Success,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID,
+                                      now, END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -302,9 +300,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_successful, good_byName)
                       &oneDayAfterNow));
   ASSERT_TRUE(response);
   bool expired;
-  ASSERT_SECSuccess(VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Success,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -316,9 +315,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_successful, good_byKey_without_nextUpdate)
                       nullptr));
   ASSERT_TRUE(response);
   bool expired;
-  ASSERT_SECSuccess(VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Success,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -330,10 +330,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_successful, revoked)
                       &oneDayAfterNow));
   ASSERT_TRUE(response);
   bool expired;
-  ASSERT_SECFailure(SEC_ERROR_REVOKED_CERTIFICATE,
-                    VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Result::ERROR_REVOKED_CERTIFICATE,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -345,10 +345,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_successful, unknown)
                       &oneDayAfterNow));
   ASSERT_TRUE(response);
   bool expired;
-  ASSERT_SECFailure(SEC_ERROR_OCSP_UNKNOWN_CERT,
-                    VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Result::ERROR_OCSP_UNKNOWN_CERT,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -458,9 +458,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_byKey)
                       byKey));
   ASSERT_TRUE(response);
   bool expired;
-  ASSERT_SECSuccess(VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Success,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -471,9 +472,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_byName)
                       "CN=good_indirect_byName"));
   ASSERT_TRUE(response);
   bool expired;
-  ASSERT_SECSuccess(VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Success,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -490,10 +492,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
                       oneDayBeforeNow, nullptr));
   ASSERT_TRUE(response);
   bool expired;
-  ASSERT_SECFailure(SEC_ERROR_OCSP_INVALID_SIGNING_CERT,
-                    VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -510,10 +512,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
                       oneDayBeforeNow, nullptr));
   ASSERT_TRUE(response);
   bool expired;
-  ASSERT_SECFailure(SEC_ERROR_OCSP_INVALID_SIGNING_CERT,
-                    VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -546,10 +548,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_expired)
   ASSERT_TRUE(response);
 
   bool expired;
-  ASSERT_SECFailure(SEC_ERROR_OCSP_INVALID_SIGNING_CERT,
-                    VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
 }
 
 TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_future)
@@ -580,10 +582,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_future)
   ASSERT_TRUE(response);
 
   bool expired;
-  ASSERT_SECFailure(SEC_ERROR_OCSP_INVALID_SIGNING_CERT,
-                    VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -594,10 +596,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_no_eku)
                       byKey, SEC_OID_UNKNOWN));
   ASSERT_TRUE(response);
   bool expired;
-  ASSERT_SECFailure(SEC_ERROR_OCSP_INVALID_SIGNING_CERT,
-                    VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -609,10 +611,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
                       byKey, SEC_OID_EXT_KEY_USAGE_SERVER_AUTH));
   ASSERT_TRUE(response);
   bool expired;
-  ASSERT_SECFailure(SEC_ERROR_OCSP_INVALID_SIGNING_CERT,
-                    VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -637,10 +639,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_tampered_eku)
                                EKU_OCSP_SIGNER, PR_ARRAY_SIZE(EKU_OCSP_SIGNER)));
 
   bool expired;
-  ASSERT_SECFailure(SEC_ERROR_OCSP_INVALID_SIGNING_CERT,
-                    VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -677,10 +679,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_unknown_issuer)
   ASSERT_TRUE(response);
 
   bool expired;
-  ASSERT_SECFailure(SEC_ERROR_OCSP_INVALID_SIGNING_CERT,
-                    VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -734,10 +736,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
   ASSERT_TRUE(response);
 
   bool expired;
-  ASSERT_SECFailure(SEC_ERROR_OCSP_INVALID_SIGNING_CERT,
-                    VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -790,10 +792,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
   ASSERT_TRUE(response);
 
   bool expired;
-  ASSERT_SECFailure(SEC_ERROR_OCSP_INVALID_SIGNING_CERT,
-                    VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -833,17 +835,17 @@ public:
       return true;
     }
   private:
-    virtual SECStatus GetCertTrust(EndEntityOrCA endEntityOrCA,
-                                   const CertPolicyId&,
-                                   const SECItem& candidateCert,
-                           /*out*/ TrustLevel* trustLevel)
+    virtual Result GetCertTrust(EndEntityOrCA endEntityOrCA,
+                                const CertPolicyId&,
+                                const SECItem& candidateCert,
+                                /*out*/ TrustLevel* trustLevel)
     {
       EXPECT_EQ(endEntityOrCA, EndEntityOrCA::MustBeEndEntity);
       EXPECT_TRUE(trustLevel);
       EXPECT_TRUE(certDER);
       EXPECT_TRUE(SECITEM_ItemsAreEqual(certDER, &candidateCert));
       *trustLevel = certTrustLevel;
-      return SECSuccess;
+      return Success;
     }
 
     const SECItem* certDER; // weak pointer
@@ -860,9 +862,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_GetCertTrust, InheritTrust)
   ASSERT_TRUE(trustDomain.SetCertTrust(signerCertDER,
                                        TrustLevel::InheritsTrust));
   bool expired;
-  ASSERT_SECSuccess(VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Success,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -871,9 +874,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_GetCertTrust, TrustAnchor)
   ASSERT_TRUE(trustDomain.SetCertTrust(signerCertDER,
                                        TrustLevel::TrustAnchor));
   bool expired;
-  ASSERT_SECSuccess(VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Success,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
 
@@ -882,9 +886,9 @@ TEST_F(pkixocsp_VerifyEncodedResponse_GetCertTrust, ActivelyDistrusted)
   ASSERT_TRUE(trustDomain.SetCertTrust(signerCertDER,
                                        TrustLevel::ActivelyDistrusted));
   bool expired;
-  ASSERT_SECFailure(SEC_ERROR_OCSP_INVALID_SIGNING_CERT,
-                    VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
-                                              END_ENTITY_MAX_LIFETIME_IN_DAYS,
-                                              *response, expired));
+  ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
   ASSERT_FALSE(expired);
 }
