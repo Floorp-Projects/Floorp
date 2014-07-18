@@ -1271,6 +1271,12 @@
     "n_values": 48,
     "description": "SPDY: Protocol Version Used"
   },
+  "HTTP_RESPONSE_VERSION": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 48,
+    "description": "HTTP: Protocol Version Used on Response from nsHttp.h"
+  },
   "SPDY_PARALLEL_STREAMS": {
     "expires_in_version": "never",
     "kind": "exponential",
