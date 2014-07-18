@@ -1020,6 +1020,14 @@ RilObject.prototype = {
   },
 
   /**
+   * Retrieve ICC's GID1 field.
+   */
+  getGID1: function(options) {
+    options.gid1 = this.iccInfoPrivate.gid1;
+    this.sendChromeMessage(options);
+  },
+
+  /**
    * Read UICC Phonebook contacts.
    *
    * @param contactType
@@ -11862,6 +11870,7 @@ ICCFileHelperObject.prototype = {
       case ICC_EF_CBMIR:
       case ICC_EF_OPL:
       case ICC_EF_PNN:
+      case ICC_EF_GID1:
         return EF_PATH_MF_SIM + EF_PATH_DF_GSM;
       default:
         return null;
@@ -11887,6 +11896,7 @@ ICCFileHelperObject.prototype = {
       case ICC_EF_OPL:
       case ICC_EF_PNN:
       case ICC_EF_SMS:
+      case ICC_EF_GID1:
         return EF_PATH_MF_SIM + EF_PATH_ADF_USIM;
       default:
         // The file ids in USIM phone book entries are decided by the
@@ -13031,6 +13041,13 @@ SimRecordHelperObject.prototype = {
         if (DEBUG) this.context.debug("OPL: OPL is not available");
       }
 
+      if (ICCUtilsHelper.isICCServiceAvailable("GID1")) {
+        if (DEBUG) this.context.debug("GID1: GID1 is available");
+        this.readGID1();
+      } else {
+        if (DEBUG) this.context.debug("GID1: GID1 is not available");
+      }
+
       if (ICCUtilsHelper.isICCServiceAvailable("CBMI")) {
         this.readCBMI();
       } else {
@@ -13620,6 +13637,23 @@ SimRecordHelperObject.prototype = {
       recordNumber: recordNumber,
       callback: callback.bind(this),
       onerror: onerror
+    });
+  },
+
+  readGID1: function() {
+    function callback() {
+      let Buf = this.context.Buf;
+      let RIL = this.context.RIL;
+
+      RIL.iccInfoPrivate.gid1 = Buf.readString();
+      if (DEBUG) {
+        this.context.debug("GID1: " + RIL.iccInfoPrivate.gid1);
+      }
+    }
+
+    this.context.ICCIOHelper.loadTransparentEF({
+      fileId: ICC_EF_GID1,
+      callback: callback.bind(this)
     });
   },
 };

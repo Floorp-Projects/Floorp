@@ -6,6 +6,7 @@ LIBS = \
   $(XPCOM_LIBS) \
   $(NSPR_LIBS) \
   $(NSS_LIBS) \
+  $(MOZ_WEBRTC_X11_LIBS) \
   $(REALTIME_LIBS) \
   $(DEPTH)/xpcom/glue/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
   $(DEPTH)/media/mtransport/standalone/$(LIB_PREFIX)mtransport_s.$(LIB_SUFFIX) \

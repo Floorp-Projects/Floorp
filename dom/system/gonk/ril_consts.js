@@ -502,6 +502,7 @@ this.ICC_EF_UST    = 0x6f38; // For USIM
 this.ICC_EF_ADN    = 0x6f3a;
 this.ICC_EF_FDN    = 0x6f3b;
 this.ICC_EF_SMS    = 0x6f3c;
+this.ICC_EF_GID1   = 0x6f3e;
 this.ICC_EF_MSISDN = 0x6f40;
 this.ICC_EF_CBMI   = 0x6f45;
 this.ICC_EF_SPN    = 0x6f46;
@@ -1232,6 +1233,7 @@ this.GECKO_ICC_SERVICES = {
     PLMNSEL: 7,
     MSISDN: 9,
     CBMI: 14,
+    GID1: 15,
     SPN: 17,
     SDN: 18,
     DATA_DOWNLOAD_SMS_CB: 25,
@@ -1250,6 +1252,7 @@ this.GECKO_ICC_SERVICES = {
     BDN: 6,
     CBMI: 15,
     CBMIR: 16,
+    GID1: 17,
     SPN: 19,
     MSISDN: 21,
     DATA_DOWNLOAD_SMS_PP: 28,
