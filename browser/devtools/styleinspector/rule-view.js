@@ -302,13 +302,10 @@ ElementStyle.prototype = {
    */
   markOverridden: function(pseudo="") {
     // Gather all the text properties applied by these rules, ordered
-    // from more- to less-specific. Text properties from keyframes rule are
-    // excluded from being marked as overridden since a number of criteria such
-    // as time, and animation overlay are required to be check in order to
-    // determine if the property is overridden.
+    // from more- to less-specific.
     let textProps = [];
     for (let rule of this.rules) {
-      if (rule.pseudoElement == pseudo && !rule.keyframes) {
+      if (rule.pseudoElement == pseudo) {
         textProps = textProps.concat(rule.textProps.slice(0).reverse());
       }
     }
@@ -422,7 +419,6 @@ function Rule(aElementStyle, aOptions) {
 
   this.isSystem = aOptions.isSystem;
   this.inherited = aOptions.inherited || null;
-  this.keyframes = aOptions.keyframes || null;
   this._modificationDepth = 0;
 
   if (this.domRule) {
@@ -468,18 +464,6 @@ Rule.prototype = {
         CssLogic._strings.formatStringFromName("rule.inheritedFrom", [eltText], 1);
     }
     return this._inheritedSource;
-  },
-
-  get keyframesName() {
-    if (this._keyframesName) {
-      return this._keyframesName;
-    }
-    this._keyframesName = "";
-    if (this.keyframes) {
-      this._keyframesName =
-        CssLogic._strings.formatStringFromName("rule.keyframe", [this.keyframes.name], 1);
-    }
-    return this._keyframesName;
   },
 
   get selectorText() {
@@ -1643,74 +1627,31 @@ CssRuleView.prototype = {
     return this._pseudoElementLabel;
   },
 
+  togglePseudoElementVisibility: function(value) {
+    this._showPseudoElements = !!value;
+    let isOpen = this.showPseudoElements;
+
+    Services.prefs.setBoolPref("devtools.inspector.show_pseudo_elements",
+      isOpen);
+
+    this.element.classList.toggle("show-pseudo-elements", isOpen);
+
+    if (this.pseudoElementTwisty) {
+      if (isOpen) {
+        this.pseudoElementTwisty.setAttribute("open", "true");
+      }
+      else {
+        this.pseudoElementTwisty.removeAttribute("open");
+      }
+    }
+  },
+
   get showPseudoElements() {
     if (this._showPseudoElements === undefined) {
       this._showPseudoElements =
         Services.prefs.getBoolPref("devtools.inspector.show_pseudo_elements");
     }
     return this._showPseudoElements;
-  },
-
-  /**
-   * Creates an expandable container in the rule view
-   * @param  {String}  aLabel The label for the container header
-   * @param  {Boolean} isPseudo Whether or not the container will hold
-   *                            pseudo element rules
-   * @return {DOMNode} The container element
-   */
-  createExpandableContainer: function(aLabel, isPseudo = false) {
-    let header = this.doc.createElementNS(HTML_NS, "div");
-    header.className = this._getRuleViewHeaderClassName(true);
-    header.classList.add("show-expandable-container");
-    header.textContent = aLabel;
-
-    let twisty = this.doc.createElementNS(HTML_NS, "span");
-    twisty.className = "ruleview-expander theme-twisty";
-    twisty.setAttribute("open", "true");
-
-    header.insertBefore(twisty, header.firstChild);
-    this.element.appendChild(header);
-
-    let container = this.doc.createElementNS(HTML_NS, "div");
-    container.classList.add("ruleview-expandable-container");
-    this.element.appendChild(container);
-
-    let toggleContainerVisibility = (isPseudo, showPseudo) => {
-      let isOpen = twisty.getAttribute("open");
-
-      if (isPseudo) {
-        this._showPseudoElements = !!showPseudo;
-
-        Services.prefs.setBoolPref("devtools.inspector.show_pseudo_elements",
-          this.showPseudoElements);
-
-        header.classList.toggle("show-expandable-container",
-          this.showPseudoElements);
-
-        isOpen = !this.showPseudoElements;
-      } else {
-        header.classList.toggle("show-expandable-container");
-      }
-
-      if (isOpen) {
-        twisty.removeAttribute("open");
-      } else {
-        twisty.setAttribute("open", "true");
-      }
-    };
-
-    header.addEventListener("dblclick", () => {
-      toggleContainerVisibility(isPseudo, !this.showPseudoElements);
-    }, false);
-    twisty.addEventListener("click", () => {
-      toggleContainerVisibility(isPseudo, !this.showPseudoElements);
-    }, false);
-
-    if (isPseudo) {
-      toggleContainerVisibility(isPseudo, this.showPseudoElements);
-    }
-
-    return container;
   },
 
   _getRuleViewHeaderClassName: function(isPseudo) {
@@ -1725,10 +1666,8 @@ CssRuleView.prototype = {
     // Run through the current list of rules, attaching
     // their editors in order.  Create editors if needed.
     let lastInheritedSource = "";
-    let lastKeyframes = null;
     let seenPseudoElement = false;
     let seenNormalElement = false;
-    let container = null;
 
     if (!this._elementStyle.rules) {
       return;
@@ -1749,7 +1688,7 @@ CssRuleView.prototype = {
       }
 
       let inheritedSource = rule.inheritedSource;
-      if (inheritedSource && inheritedSource != lastInheritedSource) {
+      if (inheritedSource != lastInheritedSource) {
         let div = this.doc.createElementNS(HTML_NS, "div");
         div.className = this._getRuleViewHeaderClassName();
         div.textContent = inheritedSource;
@@ -1759,25 +1698,33 @@ CssRuleView.prototype = {
 
       if (!seenPseudoElement && rule.pseudoElement) {
         seenPseudoElement = true;
-        container = this.createExpandableContainer(this.pseudoElementLabel, true);
-      }
 
-      let keyframes = rule.keyframes;
-      if (keyframes && keyframes != lastKeyframes) {
-        lastKeyframes = keyframes;
-        container = this.createExpandableContainer(rule.keyframesName);
+        let div = this.doc.createElementNS(HTML_NS, "div");
+        div.className = this._getRuleViewHeaderClassName(true);
+        div.textContent = this.pseudoElementLabel;
+        div.addEventListener("dblclick", () => {
+          this.togglePseudoElementVisibility(!this.showPseudoElements);
+        }, false);
+
+        let twisty = this.pseudoElementTwisty =
+          this.doc.createElementNS(HTML_NS, "span");
+        twisty.className = "ruleview-expander theme-twisty";
+        twisty.addEventListener("click", () => {
+          this.togglePseudoElementVisibility(!this.showPseudoElements);
+        }, false);
+
+        div.insertBefore(twisty, div.firstChild);
+        this.element.appendChild(div);
       }
 
       if (!rule.editor) {
         rule.editor = new RuleEditor(this, rule);
       }
 
-      if (container && (rule.pseudoElement || keyframes)) {
-        container.appendChild(rule.editor.element);
-      } else {
-        this.element.appendChild(rule.editor.element);
-      }
+      this.element.appendChild(rule.editor.element);
     }
+
+    this.togglePseudoElementVisibility(this.showPseudoElements);
   }
 };
 
@@ -1809,10 +1756,7 @@ function RuleEditor(aRuleView, aRule) {
 RuleEditor.prototype = {
   get isSelectorEditable() {
     let toolbox = this.ruleView.inspector.toolbox;
-    return this.isEditable &&
-      toolbox.target.client.traits.selectorEditable &&
-      this.rule.domRule.type !== ELEMENT_STYLE &&
-      this.rule.domRule.type !== Ci.nsIDOMCSSRule.KEYFRAME_RULE
+    return toolbox.target.client.traits.selectorEditable;
   },
 
   _create: function() {
@@ -1820,6 +1764,9 @@ RuleEditor.prototype = {
     this.element.className = "ruleview-rule theme-separator";
     this.element.setAttribute("uneditable", !this.isEditable);
     this.element._ruleEditor = this;
+    if (this.rule.pseudoElement) {
+      this.element.classList.add("ruleview-rule-pseudo-element");
+    }
 
     // Give a relative position for the inplace editor's measurement
     // span to be placed absolutely against.
@@ -1861,7 +1808,8 @@ RuleEditor.prototype = {
       class: "ruleview-selector theme-fg-color3"
     });
 
-    if (this.isSelectorEditable) {
+    if (this.isEditable && this.rule.domRule.type !== ELEMENT_STYLE &&
+        this.isSelectorEditable) {
       this.selectorContainer.addEventListener("click", aEvent => {
         // Clicks within the selector shouldn't propagate any further.
         aEvent.stopPropagation();
@@ -1977,8 +1925,6 @@ RuleEditor.prototype = {
     // style, just show the text directly.
     if (this.rule.domRule.type === ELEMENT_STYLE) {
       this.selectorText.textContent = this.rule.selectorText;
-    } else if (this.rule.domRule.type === Ci.nsIDOMCSSRule.KEYFRAME_RULE) {
-      this.selectorText.textContent = this.rule.domRule.keyText;
     } else {
       this.rule.domRule.selectors.forEach((selector, i) => {
         if (i != 0) {
