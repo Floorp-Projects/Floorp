@@ -6,13 +6,9 @@
 #include "nsIVolume.idl"
 #include "nsIVolumeMountLock.idl"
 
-%{C++
-#include "nsTArray.h"
-#include "nsString.h"
-%}
-[ref] native nsStringTArrayRef(nsTArray<nsString>);
+interface nsIArray;
 
-[scriptable, uuid(a3b110cd-74f2-43cb-84c6-2a87713f2774)]
+[scriptable, uuid(cab99ab4-542e-4387-bd40-db6ef30e4f5f)]
 interface nsIVolumeService : nsISupports
 {
     nsIVolume getVolumeByName(in DOMString volName);
@@ -23,7 +19,7 @@ interface nsIVolumeService : nsISupports
 
     nsIVolumeMountLock createMountLock(in DOMString volName);
 
-    [noscript] void getVolumeNames(in nsStringTArrayRef aVolNames);
+    nsIArray getVolumeNames();
 
     /* for test case only to simulate sdcard insertion/removal */
     void createFakeVolume(in DOMString name, in DOMString path);

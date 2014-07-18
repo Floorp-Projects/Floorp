@@ -33,11 +33,65 @@ function log(msg) {
   //dump('ProcessGlobal: ' + msg + '\n');
 }
 
+const gFactoryResetFile = "/persist/__post_reset_cmd__";
+
 function ProcessGlobal() {}
 ProcessGlobal.prototype = {
   classID: Components.ID('{1a94c87a-5ece-4d11-91e1-d29c29f21b28}'),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
+
+  wipeDir: function(path) {
+    log("wipeDir " + path);
+    let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    dir.initWithPath(path);
+    if (!dir.exists() || !dir.isDirectory()) {
+      return;
+    }
+    let entries = dir.directoryEntries;
+    while (entries.hasMoreElements()) {
+      let file = entries.getNext().QueryInterface(Ci.nsIFile);
+      log("Deleting " + file.path);
+      try {
+        file.remove(true);
+      } catch(e) {}
+    }
+  },
+
+  processWipeFile: function(text) {
+    log("processWipeFile " + text);
+    let lines = text.split("\n");
+    lines.forEach((line) => {
+      log(line);
+      let params = line.split(" ");
+      if (params[0] == "wipe") {
+        this.wipeDir(params[1]);
+      }
+    });
+  },
+
+  cleanupAfterFactoryReset: function() {
+    log("cleanupAfterWipe start");
+
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    file.initWithPath(gFactoryResetFile);
+    if (!file.exists()) {
+      debug("Nothing to wipe.")
+      return;
+    }
+
+    Cu.import("resource://gre/modules/osfile.jsm");
+    let promise = OS.File.read(gFactoryResetFile);
+    promise.then(
+      (array) => {
+        file.remove(false);
+        let decoder = new TextDecoder();
+        this.processWipeFile(decoder.decode(array));
+      }
+    );
+
+    log("cleanupAfterWipe end.");
+  },
 
   observe: function pg_observe(subject, topic, data) {
     switch (topic) {
@@ -52,6 +106,8 @@ ProcessGlobal.prototype = {
         ppmm.addMessageListener("getProfD", function(message) {
           return Services.dirsvc.get("ProfD", Ci.nsIFile).path;
         });
+
+        this.cleanupAfterFactoryReset();
       }
       break;
     }
