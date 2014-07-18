@@ -253,6 +253,7 @@ AudioStream::AudioStream()
   , mBytesPerFrame(0)
   , mState(INITIALIZED)
   , mNeedsStart(false)
+  , mShouldDropFrames(false)
 {
   // keep a ref in case we shut down later than nsLayoutStatics
   mLatencyLog = AsyncLatencyLogger::Get(true);
@@ -591,6 +592,7 @@ void AudioStream::PanOutputIfNeeded(bool aMicrophoneActive)
 void AudioStream::DeviceChangedCallback() {
   MonitorAutoLock mon(mMonitor);
   PanOutputIfNeeded(mMicrophoneActive);
+  mShouldDropFrames = true;
 }
 
 // This code used to live inside AudioStream::Init(), but on Mac (others?)
@@ -712,6 +714,10 @@ nsresult
 AudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames, TimeStamp *aTime)
 {
   MonitorAutoLock mon(mMonitor);
+  if (mShouldDropFrames) {
+    mBuffer.ContractTo(0);
+    return NS_OK;
+  }
   if (mState == ERRORED) {
     return NS_ERROR_FAILURE;
   }
@@ -1112,6 +1118,8 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
   uint32_t underrunFrames = 0;
   uint32_t servicedFrames = 0;
   int64_t insertTime;
+
+  mShouldDropFrames = false;
 
   // NOTE: wasapi (others?) can call us back *after* stop()/Shutdown() (mState == SHUTDOWN)
   // Bug 996162
