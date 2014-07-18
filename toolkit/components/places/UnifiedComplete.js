@@ -91,7 +91,7 @@ const SQL_BOOKMARK_TAGS_FRAGMENT = sql(
   "( SELECT title FROM moz_bookmarks WHERE fk = h.id AND title NOTNULL",
     "ORDER BY lastModified DESC LIMIT 1",
   ") AS btitle,",
-  "( SELECT GROUP_CONCAT(t.title, ',')",
+  "( SELECT GROUP_CONCAT(t.title, ', ')",
     "FROM moz_bookmarks b",
     "JOIN moz_bookmarks t ON t.id = +b.parent AND t.parent = :parent",
     "WHERE b.fk = h.id",
@@ -444,6 +444,13 @@ function Search(searchString, searchParam, autocompleteListener,
   this._originalSearchString = searchString;
   this._trimmedOriginalSearchString = searchString.trim();
   this._searchString = fixupSearchText(this._trimmedOriginalSearchString.toLowerCase());
+
+  this._matchBehavior = Prefs.matchBehavior;
+  // Set the default behavior for this search.
+  this._behavior = this._searchString ? Prefs.defaultBehavior
+                                      : Prefs.emptySearchDefaultBehavior;
+  this._enableActions = searchParam.split(" ").indexOf("enable-actions") != -1;
+
   this._searchTokens =
     this.filterTokens(getUnfilteredSearchTokens(this._searchString));
   // The protocol and the host are lowercased by nsIURI, so it's fine to
@@ -460,15 +467,9 @@ function Search(searchString, searchParam, autocompleteListener,
     this._trimmedOriginalSearchString.slice(pathIndex)
   );
 
-  this._enableActions = searchParam.split(" ").indexOf("enable-actions") != -1;
-
   this._listener = autocompleteListener;
   this._autocompleteSearch = autocompleteSearch;
 
-  this._matchBehavior = Prefs.matchBehavior;
-  // Set the default behavior for this search.
-  this._behavior = this._searchString ? Prefs.defaultBehavior
-                                      : Prefs.emptySearchDefaultBehavior;
   // Create a new result to add eventual matches.  Note we need a result
   // regardless having matches.
   let result = Cc["@mozilla.org/autocomplete/simple-result;1"]
@@ -597,10 +598,11 @@ Search.prototype = {
                     this._switchToTabQuery,
                     this._searchQuery ];
 
-    if (this._searchTokens.length == 1) {
-      yield this._matchPriorityUrl();
-    } else if (this._searchTokens.length > 1) {
+    if (this._searchTokens.length > 0 &&
+        PlacesUtils.bookmarks.getURIForKeyword(this._searchTokens[0])) {
       queries.unshift(this._keywordQuery);
+    } else if (this._searchTokens.length == 1) {
+      yield this._matchPriorityUrl();
     }
 
     if (this._shouldAutofill) {
@@ -638,7 +640,7 @@ Search.prototype = {
       this._matchBehavior = MATCH_ANYWHERE;
       for (let [query, params] of [ this._adaptiveQuery,
                                     this._searchQuery ]) {
-        yield conn.executeCached(query, params, this._onResultRow);
+        yield conn.executeCached(query, params, this._onResultRow.bind(this));
         if (!this.pending)
           return;
       }
@@ -715,7 +717,7 @@ Search.prototype = {
 
     // Must check both id and url, cause keywords dinamically modify the url.
     if ((!match.placeId || !this._usedPlaceIds.has(match.placeId)) &&
-        !this._usedURLs.has(stripPrefix(match.value))) {
+        !this._usedURLs.has(match.value)) {
       // Add this to our internal tracker to ensure duplicates do not end up in
       // the result.
       // Not all entries have a place id, thus we fallback to the url for them.
@@ -724,7 +726,7 @@ Search.prototype = {
       // are faster too.
       if (match.placeId)
         this._usedPlaceIds.add(match.placeId);
-      this._usedURLs.add(stripPrefix(match.value));
+      this._usedURLs.add(match.value);
 
       this._result.appendMatch(match.value,
                                match.comment,

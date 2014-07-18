@@ -101,6 +101,9 @@ function* check_autocomplete(test) {
   let input = new AutoCompleteInput(["unifiedcomplete"]);
   input.textValue = test.search;
 
+  if (test.searchParam)
+    input.searchParam = test.searchParam;
+
   // Caret must be at the end for autoFill to happen.
   let strLen = test.search.length;
   input.selectTextRange(strLen, strLen);
@@ -129,28 +132,113 @@ function* check_autocomplete(test) {
   // We should be running only one query.
   Assert.equal(numSearchesStarted, 1, "Only one search started");
 
-  // Check the autoFilled result.
-  Assert.equal(input.textValue, test.autofilled,
-               "Autofilled value is correct");
+  // Check to see the expected uris and titles match up (in any order)
+  if (test.matches) {
+    for (let i = 0; i < controller.matchCount; i++) {
+      let value = controller.getValueAt(i);
+      let comment = controller.getCommentAt(i);
+      do_log_info("Looking for '" + value + "', '" + comment + "' in expected results...");
+      let j;
+      for (j = 0; j < test.matches.length; j++) {
+        // Skip processed expected results
+        if (test.matches[j] == undefined)
+          continue;
 
-  // Now force completion and check correct casing of the result.
-  // This ensures the controller is able to do its magic case-preserving
-  // stuff and correct replacement of the user's casing with result's one.
-  controller.handleEnter(false);
-  Assert.equal(input.textValue, test.completed,
-               "Completed value is correct");
+        let { uri, title, tags } = test.matches[j];
+        if (tags)
+          title += " \u2013 " + tags.sort().join(", ");
+
+        do_log_info("Checking against expected '" + uri.spec + "', '" + title + "'...");
+        // Got a match on both uri and title?
+        if (uri.spec == value && title == comment) {
+          do_log_info("Got a match at index " + j + "!");
+          // Make it undefined so we don't process it again
+          test.matches[j] = undefined;
+          break;
+        }
+      }
+
+      // We didn't hit the break, so we must have not found it
+      if (j == test.matches.length)
+        do_throw("Didn't find the current result ('" + value + "', '" + comment + "') in matches");
+    }
+
+    Assert.equal(controller.matchCount, test.matches.length,
+                 "Got as many results as expected");
+
+    // If we expect results, make sure we got matches.
+    do_check_eq(controller.searchStatus, test.matches.length ?
+                Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH :
+                Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
+  }
+
+  if (test.autofilled) {
+    // Check the autoFilled result.
+    Assert.equal(input.textValue, test.autofilled,
+                 "Autofilled value is correct");
+
+    // Now force completion and check correct casing of the result.
+    // This ensures the controller is able to do its magic case-preserving
+    // stuff and correct replacement of the user's casing with result's one.
+    controller.handleEnter(false);
+    Assert.equal(input.textValue, test.completed,
+                 "Completed value is correct");
+  }
 }
 
 function addBookmark(aBookmarkObj) {
-  Assert.ok(!!aBookmarkObj.url, "Bookmark object contains an url");
+  Assert.ok(!!aBookmarkObj.uri, "Bookmark object contains an uri");
   let parentId = aBookmarkObj.parentId ? aBookmarkObj.parentId
                                        : PlacesUtils.unfiledBookmarksFolderId;
   let itemId = PlacesUtils.bookmarks
                           .insertBookmark(parentId,
-                                          NetUtil.newURI(aBookmarkObj.url),
+                                          aBookmarkObj.uri,
                                           PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                          "A bookmark");
+                                          aBookmarkObj.title || "A bookmark");
   if (aBookmarkObj.keyword) {
     PlacesUtils.bookmarks.setKeywordForBookmark(itemId, aBookmarkObj.keyword);
   }
+
+  if (aBookmarkObj.tags) {
+    PlacesUtils.tagging.tagURI(aBookmarkObj.uri, aBookmarkObj.tags);
+  }
+}
+
+function addOpenPages(aUri, aCount=1) {
+  let ac = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
+             .getService(Ci.mozIPlacesAutoComplete);
+  for (let i = 0; i < aCount; i++) {
+    ac.registerOpenPage(aUri);
+  }
+}
+
+function removeOpenPages(aUri, aCount=1) {
+  let ac = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
+             .getService(Ci.mozIPlacesAutoComplete);
+  for (let i = 0; i < aCount; i++) {
+    ac.unregisterOpenPage(aUri);
+  }
+}
+
+function changeRestrict(aType, aChar) {
+  let branch = "browser.urlbar.";
+  // "title" and "url" are different from everything else, so special case them.
+  if (aType == "title" || aType == "url")
+    branch += "match.";
+  else
+    branch += "restrict.";
+
+  do_log_info("changing restrict for " + aType + " to '" + aChar + "'");
+  Services.prefs.setCharPref(branch + aType, aChar);
+}
+
+function resetRestrict(aType) {
+  let branch = "browser.urlbar.";
+  // "title" and "url" are different from everything else, so special case them.
+  if (aType == "title" || aType == "url")
+    branch += "match.";
+  else
+    branch += "restrict.";
+
+  Services.prefs.clearUserPref(branch + aType);
 }
