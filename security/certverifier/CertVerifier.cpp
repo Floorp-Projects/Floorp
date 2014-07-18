@@ -15,6 +15,7 @@
 #include "cert.h"
 #include "pk11pub.h"
 #include "pkix/pkix.h"
+#include "pkix/pkixnss.h"
 #include "prerror.h"
 #include "secerr.h"
 #include "sslerr.h"
@@ -154,26 +155,26 @@ SECStatus chainValidationCallback(void* state, const CERTCertList* certList,
   return SECSuccess;
 }
 
-static SECStatus
+static Result
 BuildCertChainForOneKeyUsage(TrustDomain& trustDomain, CERTCertificate* cert,
                              PRTime time, KeyUsage ku1, KeyUsage ku2,
                              KeyUsage ku3, KeyPurposeId eku,
                              const CertPolicyId& requiredPolicy,
                              const SECItem* stapledOCSPResponse)
 {
-  SECStatus rv = BuildCertChain(trustDomain, cert->derCert, time,
-                                EndEntityOrCA::MustBeEndEntity, ku1,
-                                eku, requiredPolicy, stapledOCSPResponse);
-  if (rv != SECSuccess && PR_GetError() == SEC_ERROR_INADEQUATE_KEY_USAGE) {
+  Result rv = BuildCertChain(trustDomain, cert->derCert, time,
+                             EndEntityOrCA::MustBeEndEntity, ku1,
+                             eku, requiredPolicy, stapledOCSPResponse);
+  if (rv == Result::ERROR_INADEQUATE_KEY_USAGE) {
     rv = BuildCertChain(trustDomain, cert->derCert, time,
                         EndEntityOrCA::MustBeEndEntity, ku2,
                         eku, requiredPolicy, stapledOCSPResponse);
-    if (rv != SECSuccess && PR_GetError() == SEC_ERROR_INADEQUATE_KEY_USAGE) {
+    if (rv == Result::ERROR_INADEQUATE_KEY_USAGE) {
       rv = BuildCertChain(trustDomain, cert->derCert, time,
                           EndEntityOrCA::MustBeEndEntity, ku3,
                           eku, requiredPolicy, stapledOCSPResponse);
-      if (rv != SECSuccess) {
-        PR_SetError(SEC_ERROR_INADEQUATE_KEY_USAGE, 0);
+      if (rv != Success) {
+        rv = Result::ERROR_INADEQUATE_KEY_USAGE;
       }
     }
   }
@@ -222,7 +223,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
   ocsp_get_config ocspGETConfig = mOCSPGETEnabled ? ocsp_get_enabled
                                                   : ocsp_get_disabled;
 
-  SECStatus rv;
+  Result rv;
 
   switch (usage) {
     case certificateUsageSSLClient: {
@@ -248,8 +249,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       // Try to validate for EV first.
       CertPolicyId evPolicy;
       SECOidTag evPolicyOidTag;
-      rv = GetFirstEVPolicy(cert, evPolicy, evPolicyOidTag);
-      if (rv == SECSuccess) {
+      SECStatus srv = GetFirstEVPolicy(cert, evPolicy, evPolicyOidTag);
+      if (srv == SECSuccess) {
         NSSCertDBTrustDomain
           trustDomain(trustSSL,
                       ocspFetching == NSSCertDBTrustDomain::NeverFetchOCSP
@@ -263,7 +264,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                           KeyUsage::keyAgreement,    // (EC)DH
                                           KeyPurposeId::id_kp_serverAuth,
                                           evPolicy, stapledOCSPResponse);
-        if (rv == SECSuccess) {
+        if (rv == Success) {
           if (evOidPolicy) {
             *evOidPolicy = evPolicyOidTag;
           }
@@ -273,8 +274,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
 #endif
 
       if (flags & FLAG_MUST_BE_EV) {
-        PR_SetError(SEC_ERROR_POLICY_VALIDATION_FAILED, 0);
-        rv = SECFailure;
+        rv = Result::ERROR_POLICY_VALIDATION_FAILED;
         break;
       }
 
@@ -327,7 +327,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                           KeyUsage::keyEncipherment, // RSA
                           KeyPurposeId::id_kp_emailProtection,
                           CertPolicyId::anyPolicy, stapledOCSPResponse);
-      if (rv != SECSuccess && PR_GetError() == SEC_ERROR_INADEQUATE_KEY_USAGE) {
+      if (rv == Result::ERROR_INADEQUATE_KEY_USAGE) {
         rv = BuildCertChain(trustDomain, cert->derCert, time,
                             EndEntityOrCA::MustBeEndEntity,
                             KeyUsage::keyAgreement, // ECDH/DH
@@ -373,14 +373,14 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       rv = BuildCertChain(sslTrust, cert->derCert, time, endEntityOrCA,
                           keyUsage, eku, CertPolicyId::anyPolicy,
                           stapledOCSPResponse);
-      if (rv == SECFailure && PR_GetError() == SEC_ERROR_UNKNOWN_ISSUER) {
+      if (rv == Result::ERROR_UNKNOWN_ISSUER) {
         NSSCertDBTrustDomain emailTrust(trustEmail, ocspFetching, mOCSPCache,
                                         pinArg, ocspGETConfig, nullptr,
                                         builtChain);
         rv = BuildCertChain(emailTrust, cert->derCert, time, endEntityOrCA,
                             keyUsage, eku, CertPolicyId::anyPolicy,
                             stapledOCSPResponse);
-        if (rv == SECFailure && PR_GetError() == SEC_ERROR_UNKNOWN_ISSUER) {
+        if (rv == Result::ERROR_UNKNOWN_ISSUER) {
           NSSCertDBTrustDomain objectSigningTrust(trustObjectSigning,
                                                   ocspFetching, mOCSPCache,
                                                   pinArg, ocspGETConfig,
@@ -395,11 +395,15 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
     }
 
     default:
-      PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
-      return SECFailure;
+      rv = Result::FATAL_ERROR_INVALID_ARGS;
   }
 
-  return rv;
+  if (rv != Success) {
+    PR_SetError(MapResultToPRErrorCode(rv), 0);
+    return SECFailure;
+  }
+
+  return SECSuccess;
 }
 
 SECStatus

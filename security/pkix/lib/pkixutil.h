@@ -26,9 +26,6 @@
 #define mozilla_pkix__pkixutil_h
 
 #include "pkixder.h"
-#include "prerror.h"
-#include "seccomon.h"
-#include "secerr.h"
 
 namespace mozilla { namespace pkix {
 
@@ -170,7 +167,7 @@ public:
   Result Append(const SECItem& der)
   {
     if (numItems >= MAX_LENGTH) {
-      return Fail(SEC_ERROR_INVALID_ARGS);
+      return Result::FATAL_ERROR_INVALID_ARGS;
     }
     items[numItems] = &der;
     ++numItems;

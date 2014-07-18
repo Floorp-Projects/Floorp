@@ -20,7 +20,7 @@ const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"]
 
 const SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
 const SSL_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SSL_ERROR_BASE;
-const PSM_ERROR_BASE = Ci.nsINSSErrorsService.PSM_ERROR_BASE;
+const MOZILLA_PKIX_ERROR_BASE = Ci.nsINSSErrorsService.MOZILLA_PKIX_ERROR_BASE;
 
 // Sort in numerical order
 const SEC_ERROR_INVALID_ARGS                            = SEC_ERROR_BASE +   5; // -8187
@@ -58,7 +58,7 @@ const SEC_ERROR_APPLICATION_CALLBACK_ERROR              = SEC_ERROR_BASE + 178;
 
 const SSL_ERROR_BAD_CERT_DOMAIN                         = SSL_ERROR_BASE +  12;
 
-const PSM_ERROR_KEY_PINNING_FAILURE                     = PSM_ERROR_BASE +   0;
+const MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE            = MOZILLA_PKIX_ERROR_BASE +   0;
 
 // Supported Certificate Usages
 const certificateUsageSSLClient              = 0x0001;
