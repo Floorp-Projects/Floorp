@@ -3081,9 +3081,7 @@ ContainerState::Finish(uint32_t* aTextContentFlags, LayerManagerData* aData)
     layer = mNewChildLayers[i];
 
     if (!layer->GetVisibleRegion().IsEmpty()) {
-      textContentFlags |=
-        layer->GetContentFlags() & (Layer::CONTENT_COMPONENT_ALPHA |
-                                    Layer::CONTENT_COMPONENT_ALPHA_DESCENDANT);
+      textContentFlags |= layer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA;
     }
 
     if (!layer->GetParent()) {
@@ -3456,24 +3454,13 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   } else {
     containerLayer->SetVisibleRegion(pixBounds);
   }
-
-  // CONTENT_COMPONENT_ALPHA is propogated up to the nearest CONTENT_OPAQUE
-  // ancestor so that BasicLayerManager knows when to copy the background into
-  // pushed groups. Accelerated layers managers can't necessarily do this (only
-  // when the visible region is a simple rect), so we propogate
-  // CONTENT_COMPONENT_ALPHA_DESCENDANT all the way to the root.
-  if (flags & Layer::CONTENT_COMPONENT_ALPHA) {
-    flags |= Layer::CONTENT_COMPONENT_ALPHA_DESCENDANT;
-  }
-
   // Make sure that rounding the visible region out didn't add any area
   // we won't paint
   if (aChildren.IsOpaque() && !aChildren.NeedsTransparentSurface()) {
     bounds.ScaleRoundIn(scaleParameters.mXScale, scaleParameters.mYScale);
     if (bounds.Contains(pixBounds.ToAppUnits(appUnitsPerDevPixel))) {
-      // Clear CONTENT_COMPONENT_ALPHA and add CONTENT_OPAQUE instead.
-      flags &= ~Layer::CONTENT_COMPONENT_ALPHA;
-      flags |= Layer::CONTENT_OPAQUE;
+      // Clear CONTENT_COMPONENT_ALPHA
+      flags = Layer::CONTENT_OPAQUE;
     }
   }
   containerLayer->SetContentFlags(flags);
