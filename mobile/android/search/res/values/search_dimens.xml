@@ -6,5 +6,5 @@
     <!--This is used to offset the webview so that it is not covered-->
     <!--by the search bar. If we change the height of the search bar-->
     <!--then this will need to be updated.-->
-    <dimen name="webview_height_offset">55dp</dimen>
+    <dimen name="search_bar_height">55dp</dimen>
 </resources>
