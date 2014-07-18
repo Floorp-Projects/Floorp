@@ -12,6 +12,7 @@
 #include "nsWeakReference.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
+#include "mozilla/dom/MozPowerManagerBinding.h"
 
 class nsPIDOMWindow;
 
@@ -45,7 +46,7 @@ public:
   }
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
   void Reboot(ErrorResult& aRv);
-  void FactoryReset();
+  void FactoryReset(mozilla::dom::FactoryResetReason& aReason);
   void PowerOff(ErrorResult& aRv);
   void AddWakeLockListener(nsIDOMMozWakeLockListener* aListener);
   void RemoveWakeLockListener(nsIDOMMozWakeLockListener* aListener);
