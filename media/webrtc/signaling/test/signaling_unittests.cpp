@@ -85,13 +85,13 @@ namespace sipcc {
 
   class OfferOptions : public mozilla::SipccOfferOptions {
 public:
-  void setBooleanOption(const char *namePtr, bool value) {
-    cc_boolean_option_t &member (getMember(namePtr));
+  void setInt32Option(const char *namePtr, int32_t value) {
+    auto &member = getMember(namePtr);
     member.was_passed = true;
     member.value = value;
   }
 private:
-  cc_boolean_option_t &getMember(const char *namePtr) {
+  cc_int32_option_t &getMember(const char *namePtr) {
     if (strcmp(namePtr, "OfferToReceiveAudio") == 0) {
         return mOptions.offer_to_receive_audio;
     }
@@ -99,7 +99,7 @@ private:
         return mOptions.offer_to_receive_video;
     }
     MOZ_ASSERT(false);
-    return mOptions.moz_dont_offer_datachannel;
+    return mOptions.offer_to_receive_video;
   }
 };
 }
@@ -1730,8 +1730,8 @@ public:
                                uint32_t hints, uint32_t sdpCheck) {
     EnsureInit();
     sipcc::OfferOptions aoptions;
-    aoptions.setBooleanOption("OfferToReceiveAudio", true);
-    aoptions.setBooleanOption("OfferToReceiveVideo", true);
+    aoptions.setInt32Option("OfferToReceiveAudio", true);
+    aoptions.setInt32Option("OfferToReceiveVideo", true);
     a1_->CreateOffer(aoptions, OFFER_AV, SHOULD_SENDRECV_AV );
     a1_->CreateOfferRemoveStream(options, hints, sdpCheck);
   }
@@ -1965,8 +1965,8 @@ TEST_F(SignalingTest, CreateOfferAudioVideoOptionUndefined)
 TEST_F(SignalingTest, CreateOfferNoVideoStreamRecvVideo)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", true);
   CreateOffer(options, OFFER_AUDIO,
               SHOULD_SENDRECV_AUDIO | SHOULD_RECV_VIDEO);
 }
@@ -1974,8 +1974,8 @@ TEST_F(SignalingTest, CreateOfferNoVideoStreamRecvVideo)
 TEST_F(SignalingTest, CreateOfferNoAudioStreamRecvAudio)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", true);
   CreateOffer(options, OFFER_VIDEO,
               SHOULD_RECV_AUDIO | SHOULD_SENDRECV_VIDEO);
 }
@@ -1983,8 +1983,8 @@ TEST_F(SignalingTest, CreateOfferNoAudioStreamRecvAudio)
 TEST_F(SignalingTest, CreateOfferNoVideoStream)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", false);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", false);
   CreateOffer(options, OFFER_AUDIO,
               SHOULD_SENDRECV_AUDIO | SHOULD_OMIT_VIDEO);
 }
@@ -1992,8 +1992,8 @@ TEST_F(SignalingTest, CreateOfferNoVideoStream)
 TEST_F(SignalingTest, CreateOfferNoAudioStream)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", false);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", false);
+  options.setInt32Option("OfferToReceiveVideo", true);
   CreateOffer(options, OFFER_VIDEO,
               SHOULD_OMIT_AUDIO | SHOULD_SENDRECV_VIDEO);
 }
@@ -2001,8 +2001,8 @@ TEST_F(SignalingTest, CreateOfferNoAudioStream)
 TEST_F(SignalingTest, CreateOfferDontReceiveAudio)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", false);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", false);
+  options.setInt32Option("OfferToReceiveVideo", true);
   CreateOffer(options, OFFER_AV,
               SHOULD_SEND_AUDIO | SHOULD_SENDRECV_VIDEO);
 }
@@ -2010,8 +2010,8 @@ TEST_F(SignalingTest, CreateOfferDontReceiveAudio)
 TEST_F(SignalingTest, CreateOfferDontReceiveVideo)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", false);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", false);
   CreateOffer(options, OFFER_AV,
               SHOULD_SENDRECV_AUDIO | SHOULD_SEND_VIDEO);
 }
@@ -2020,8 +2020,8 @@ TEST_F(SignalingTest, CreateOfferDontReceiveVideo)
 TEST_F(SignalingTest, DISABLED_CreateOfferRemoveAudioStream)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", true);
   CreateOfferRemoveStream(options, DOMMediaStream::HINT_CONTENTS_AUDIO,
               SHOULD_RECV_AUDIO | SHOULD_SENDRECV_VIDEO);
 }
@@ -2030,8 +2030,8 @@ TEST_F(SignalingTest, DISABLED_CreateOfferRemoveAudioStream)
 TEST_F(SignalingTest, DISABLED_CreateOfferDontReceiveAudioRemoveAudioStream)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", false);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", false);
+  options.setInt32Option("OfferToReceiveVideo", true);
   CreateOfferRemoveStream(options, DOMMediaStream::HINT_CONTENTS_AUDIO,
               SHOULD_SENDRECV_VIDEO);
 }
@@ -2040,8 +2040,8 @@ TEST_F(SignalingTest, DISABLED_CreateOfferDontReceiveAudioRemoveAudioStream)
 TEST_F(SignalingTest, DISABLED_CreateOfferDontReceiveVideoRemoveVideoStream)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", false);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", false);
   CreateOfferRemoveStream(options, DOMMediaStream::HINT_CONTENTS_VIDEO,
               SHOULD_SENDRECV_AUDIO);
 }
@@ -2057,8 +2057,8 @@ TEST_F(SignalingTest, OfferAnswerNothingDisabled)
 TEST_F(SignalingTest, DISABLED_OfferAnswerDontReceiveAudioOnOffer)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", false);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", false);
+  options.setInt32Option("OfferToReceiveVideo", true);
   OfferAnswer(options, OFFER_AV | ANSWER_AV,
               false, SHOULD_SEND_AUDIO | SHOULD_SENDRECV_VIDEO,
               SHOULD_RECV_AUDIO | SHOULD_SENDRECV_VIDEO);
@@ -2068,8 +2068,8 @@ TEST_F(SignalingTest, DISABLED_OfferAnswerDontReceiveAudioOnOffer)
 TEST_F(SignalingTest, DISABLED_OfferAnswerDontReceiveVideoOnOffer)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", false);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", false);
   OfferAnswer(options, OFFER_AV | ANSWER_AV,
               false, SHOULD_SENDRECV_AUDIO | SHOULD_SEND_VIDEO,
               SHOULD_SENDRECV_AUDIO | SHOULD_RECV_VIDEO);
@@ -2079,8 +2079,8 @@ TEST_F(SignalingTest, DISABLED_OfferAnswerDontReceiveVideoOnOffer)
 TEST_F(SignalingTest, DISABLED_OfferAnswerDontReceiveAudioOnAnswer)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", true);
   OfferAnswer(options, OFFER_AV | ANSWER_AV,
               false, SHOULD_SENDRECV_AV,
               SHOULD_SEND_AUDIO | SHOULD_SENDRECV_VIDEO);
@@ -2090,8 +2090,8 @@ TEST_F(SignalingTest, DISABLED_OfferAnswerDontReceiveAudioOnAnswer)
 TEST_F(SignalingTest, DISABLED_OfferAnswerDontReceiveVideoOnAnswer)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", true);
   OfferAnswer(options, OFFER_AV | ANSWER_AV,
               false, SHOULD_SENDRECV_AV,
               SHOULD_SENDRECV_AUDIO | SHOULD_SEND_VIDEO);
@@ -2101,8 +2101,8 @@ TEST_F(SignalingTest, DISABLED_OfferAnswerDontReceiveVideoOnAnswer)
 TEST_F(SignalingTest, DISABLED_OfferAnswerDontAddAudioStreamOnOfferRecvAudio)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", true);
   OfferAnswer(options, OFFER_VIDEO | ANSWER_AV,
               false, SHOULD_RECV_AUDIO | SHOULD_SENDRECV_VIDEO,
               SHOULD_SEND_AUDIO | SHOULD_SENDRECV_VIDEO);
@@ -2112,8 +2112,8 @@ TEST_F(SignalingTest, DISABLED_OfferAnswerDontAddAudioStreamOnOfferRecvAudio)
 TEST_F(SignalingTest, DISABLED_OfferAnswerDontAddAudioStreamOnOffer)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", false);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", false);
+  options.setInt32Option("OfferToReceiveVideo", true);
   OfferAnswer(options, OFFER_VIDEO | ANSWER_AV,
               false, SHOULD_OMIT_AUDIO | SHOULD_SENDRECV_VIDEO,
               SHOULD_OMIT_AUDIO | SHOULD_SENDRECV_VIDEO);
@@ -2123,8 +2123,8 @@ TEST_F(SignalingTest, DISABLED_OfferAnswerDontAddAudioStreamOnOffer)
 TEST_F(SignalingTest, DISABLED_OfferAnswerDontAddVideoStreamOnOfferRecvVideo)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", true);
   OfferAnswer(options, OFFER_AUDIO | ANSWER_AV,
               false, SHOULD_SENDRECV_AUDIO | SHOULD_RECV_VIDEO,
               SHOULD_SENDRECV_AUDIO | SHOULD_SEND_VIDEO);
@@ -2134,8 +2134,8 @@ TEST_F(SignalingTest, DISABLED_OfferAnswerDontAddVideoStreamOnOfferRecvVideo)
 TEST_F(SignalingTest, DISABLED_OfferAnswerDontAddVideoStreamOnOffer)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", false);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", false);
   OfferAnswer(options, OFFER_AUDIO | ANSWER_AV,
               false, SHOULD_SENDRECV_AUDIO | SHOULD_OMIT_VIDEO,
               SHOULD_SENDRECV_AUDIO | SHOULD_OMIT_VIDEO);
@@ -2145,8 +2145,8 @@ TEST_F(SignalingTest, DISABLED_OfferAnswerDontAddVideoStreamOnOffer)
 TEST_F(SignalingTest, DISABLED_OfferAnswerDontAddAudioStreamOnAnswer)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", true);
   OfferAnswer(options, OFFER_AV | ANSWER_VIDEO,
               false, SHOULD_SENDRECV_AV,
               SHOULD_RECV_AUDIO | SHOULD_SENDRECV_VIDEO);
@@ -2156,8 +2156,8 @@ TEST_F(SignalingTest, DISABLED_OfferAnswerDontAddAudioStreamOnAnswer)
 TEST_F(SignalingTest, DISABLED_OfferAnswerDontAddVideoStreamOnAnswer)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", true);
   OfferAnswer(options, OFFER_AV | ANSWER_AUDIO,
               false, SHOULD_SENDRECV_AV,
               SHOULD_SENDRECV_AUDIO | SHOULD_RECV_VIDEO);
@@ -2168,8 +2168,8 @@ TEST_F(SignalingTest,
        DISABLED_OfferAnswerDontAddVideoStreamOnAnswerDontReceiveVideoOnAnswer)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", true);
   OfferAnswer(options, OFFER_AV | ANSWER_AUDIO,
               false, SHOULD_SENDRECV_AV, SHOULD_SENDRECV_AUDIO );
 }
@@ -2179,8 +2179,8 @@ TEST_F(SignalingTest,
        DISABLED_OfferAnswerDontAddAudioStreamOnAnswerDontReceiveAudioOnAnswer)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", true);
   OfferAnswer(options, OFFER_AV | ANSWER_VIDEO,
               false, SHOULD_SENDRECV_AV,
               SHOULD_REJECT_AUDIO | SHOULD_SENDRECV_VIDEO);
@@ -2191,8 +2191,8 @@ TEST_F(SignalingTest,
        DISABLED_OfferAnswerDontAddAudioStreamOnOfferDontReceiveAudioOnOffer)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", false);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", false);
+  options.setInt32Option("OfferToReceiveVideo", true);
   OfferAnswer(options, OFFER_VIDEO | ANSWER_AV,
               false, SHOULD_SENDRECV_VIDEO, SHOULD_SENDRECV_VIDEO);
 }
@@ -2202,8 +2202,8 @@ TEST_F(SignalingTest,
        DISABLED_OfferAnswerDontAddVideoStreamOnOfferDontReceiveVideoOnOffer)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", false);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", false);
   OfferAnswer(options, OFFER_AUDIO | ANSWER_AV,
               false, SHOULD_SENDRECV_AUDIO | SHOULD_OMIT_VIDEO,
               SHOULD_SENDRECV_AUDIO | SHOULD_OMIT_VIDEO);
@@ -2214,8 +2214,8 @@ TEST_F(SignalingTest,
   DISABLED_OfferAnswerDontReceiveAudioNoAudioStreamOnOfferDontReceiveVideoOnAnswer)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", false);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", false);
+  options.setInt32Option("OfferToReceiveVideo", true);
   OfferAnswer(options, OFFER_VIDEO | ANSWER_AV,
               false, SHOULD_SENDRECV_VIDEO, SHOULD_SEND_VIDEO);
 }
@@ -2240,12 +2240,12 @@ TEST_F(SignalingTest, AddIceCandidateEarly)
 TEST_F(SignalingTest, DISABLED_OfferAnswerReNegotiateOfferAnswerDontReceiveVideoNoVideoStream)
 {
   sipcc::OfferOptions aoptions;
-  aoptions.setBooleanOption("OfferToReceiveAudio", true);
-  aoptions.setBooleanOption("OfferToReceiveVideo", true);
+  aoptions.setInt32Option("OfferToReceiveAudio", true);
+  aoptions.setInt32Option("OfferToReceiveVideo", true);
 
   sipcc::OfferOptions boptions;
-  boptions.setBooleanOption("OfferToReceiveAudio", true);
-  boptions.setBooleanOption("OfferToReceiveVideo", false);
+  boptions.setInt32Option("OfferToReceiveAudio", true);
+  boptions.setInt32Option("OfferToReceiveVideo", false);
 
   OfferAnswer(aoptions, OFFER_AV | ANSWER_AV,
               false, SHOULD_SENDRECV_AV, SHOULD_SENDRECV_AV);
@@ -2257,8 +2257,8 @@ TEST_F(SignalingTest, DISABLED_OfferAnswerReNegotiateOfferAnswerDontReceiveVideo
 TEST_F(SignalingTest, OfferAnswerDontAddAudioStreamOnAnswerNoOptions)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", true);
   OfferAnswer(options, OFFER_AV | ANSWER_VIDEO,
               false, SHOULD_SENDRECV_AV,
               SHOULD_RECV_AUDIO | SHOULD_SENDRECV_VIDEO);
@@ -2267,8 +2267,8 @@ TEST_F(SignalingTest, OfferAnswerDontAddAudioStreamOnAnswerNoOptions)
 TEST_F(SignalingTest, OfferAnswerDontAddVideoStreamOnAnswerNoOptions)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", true);
   OfferAnswer(options, OFFER_AV | ANSWER_AUDIO,
               false, SHOULD_SENDRECV_AV,
               SHOULD_SENDRECV_AUDIO | SHOULD_RECV_VIDEO);
@@ -2277,8 +2277,8 @@ TEST_F(SignalingTest, OfferAnswerDontAddVideoStreamOnAnswerNoOptions)
 TEST_F(SignalingTest, OfferAnswerDontAddAudioVideoStreamsOnAnswerNoOptions)
 {
   sipcc::OfferOptions options;
-  options.setBooleanOption("OfferToReceiveAudio", true);
-  options.setBooleanOption("OfferToReceiveVideo", true);
+  options.setInt32Option("OfferToReceiveAudio", true);
+  options.setInt32Option("OfferToReceiveVideo", true);
   OfferAnswer(options, OFFER_AV | ANSWER_NONE,
               false, SHOULD_SENDRECV_AV,
               SHOULD_RECV_AUDIO | SHOULD_RECV_VIDEO);
@@ -2338,8 +2338,8 @@ TEST_F(SignalingTest, DISABLED_FullCallAnswererRejectsVideo)
 {
   sipcc::OfferOptions offeroptions;
   sipcc::OfferOptions answeroptions;
-  answeroptions.setBooleanOption("offerToReceiveAudio", true);
-  answeroptions.setBooleanOption("offerToReceiveVideo", false);
+  answeroptions.setInt32Option("offerToReceiveAudio", true);
+  answeroptions.setInt32Option("offerToReceiveVideo", false);
   OfferAnswer(offeroptions, OFFER_AV | ANSWER_AUDIO,
               true, SHOULD_SENDRECV_AV, SHOULD_SENDRECV_AUDIO);
 
