@@ -554,7 +554,7 @@ AudioStream::Init(int32_t aNumChannels, int32_t aRate,
 void AudioStream::PanOutputIfNeeded(bool aMicrophoneActive)
 {
 #ifdef XP_MACOSX
-  cubeb_output_device* out;
+  cubeb_device* device;
   int rv;
   char name[128];
   size_t length = sizeof(name);
@@ -565,9 +565,9 @@ void AudioStream::PanOutputIfNeeded(bool aMicrophoneActive)
   }
 
   if (!strncmp(name, "MacBookPro", 10)) {
-    if (cubeb_stream_get_current_output_device(mCubebStream, &out) == CUBEB_OK) {
+    if (cubeb_stream_get_current_evice(mCubebStream, &device) == CUBEB_OK) {
       // Check if we are currently outputing sound on external speakers.
-      if (!strcmp(out->name, "ispk")) {
+      if (!strcmp(device->name, "ispk")) {
         // Pan everything to the right speaker.
         if (aMicrophoneActive) {
           if (cubeb_stream_set_panning(mCubebStream, 1.0) != CUBEB_OK) {
@@ -583,7 +583,7 @@ void AudioStream::PanOutputIfNeeded(bool aMicrophoneActive)
           NS_WARNING("Could not pan audio output to the center.");
         }
       }
-      cubeb_stream_output_device_destroy(mCubebStream, out);
+      cubeb_stream_device_destroy(mCubebStream, device);
     }
   }
 #endif

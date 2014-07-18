@@ -182,6 +182,32 @@ audiounit_get_output_device_id(AudioDeviceID * device_id)
   return CUBEB_OK;
 }
 
+static int
+audiounit_get_input_device_id(AudioDeviceID * device_id)
+{
+  UInt32 size;
+  OSStatus r;
+  AudioObjectPropertyAddress input_device_address = {
+    kAudioHardwarePropertyDefaultInputDevice,
+    kAudioObjectPropertyScopeGlobal,
+    kAudioObjectPropertyElementMaster
+  };
+
+  size = sizeof(*device_id);
+
+  r = AudioObjectGetPropertyData(kAudioObjectSystemObject,
+                                 &input_device_address,
+                                 0,
+                                 NULL,
+                                 &size,
+                                 device_id);
+  if (r != noErr) {
+    return CUBEB_ERROR;
+  }
+
+  return CUBEB_OK;
+}
+
 static int audiounit_install_device_changed_callback(cubeb_stream * stm);
 static int audiounit_uninstall_device_changed_callback();
 
@@ -794,14 +820,15 @@ int audiounit_stream_set_panning(cubeb_stream * stm, float panning)
   return CUBEB_OK;
 }
 
-int audiounit_stream_get_current_output_device(cubeb_stream * stm,
-                                               cubeb_output_device ** const  device)
+int audiounit_stream_get_current_device(cubeb_stream * stm,
+                                        cubeb_device ** const  device)
 {
   OSStatus r;
   UInt32 size;
   UInt32 data;
   char strdata[4];
   AudioDeviceID output_device_id;
+  AudioDeviceID input_device_id;
 
   AudioObjectPropertyAddress datasource_address = {
     kAudioDevicePropertyDataSource,
@@ -809,9 +836,20 @@ int audiounit_stream_get_current_output_device(cubeb_stream * stm,
     kAudioObjectPropertyElementMaster
   };
 
+  AudioObjectPropertyAddress datasource_address_input = {
+    kAudioDevicePropertyDataSource,
+    kAudioDevicePropertyScopeInput,
+    kAudioObjectPropertyElementMaster
+  };
+
   *device = NULL;
 
   if (audiounit_get_output_device_id(&output_device_id) != CUBEB_OK) {
+    return CUBEB_ERROR;
+  }
+
+  *device = malloc(sizeof(cubeb_device));
+  if (!*device) {
     return CUBEB_ERROR;
   }
 
@@ -825,13 +863,13 @@ int audiounit_stream_get_current_output_device(cubeb_stream * stm,
     data = 0;
   }
 
-  *device = malloc(sizeof(cubeb_output_device));
-  if (!*device) {
+  (*device)->output_name = malloc(size + 1);
+  if (!(*device)->output_name) {
     return CUBEB_ERROR;
   }
 
-  (*device)->name = malloc(size + 1);
-  if (!(*device)->name) {
+  (*device)->output_name = malloc(size + 1);
+  if (!(*device)->output_name) {
     return CUBEB_ERROR;
   }
 
@@ -841,16 +879,43 @@ int audiounit_stream_get_current_output_device(cubeb_stream * stm,
   strdata[2] = (char)(data >> 8);
   strdata[3] = (char)(data);
 
-  memcpy((*device)->name, strdata, size);
-  (*device)->name[size] = '\0';
+  memcpy((*device)->output_name, strdata, size);
+  (*device)->output_name[size] = '\0';
+
+  if (audiounit_get_input_device_id(&input_device_id) != CUBEB_OK) {
+    return CUBEB_ERROR;
+  }
+
+  size = sizeof(UInt32);
+  r = AudioObjectGetPropertyData(input_device_id, &datasource_address_input, 0, NULL, &size, &data);
+  if (r != noErr) {
+    printf("Error when getting device !\n");
+    size = 0;
+    data = 0;
+  }
+
+  (*device)->input_name = malloc(size + 1);
+  if (!(*device)->input_name) {
+    return CUBEB_ERROR;
+  }
+
+  // Turn the four chars packed into a uint32 into a string
+  strdata[0] = (char)(data >> 24);
+  strdata[1] = (char)(data >> 16);
+  strdata[2] = (char)(data >> 8);
+  strdata[3] = (char)(data);
+
+  memcpy((*device)->input_name, strdata, size);
+  (*device)->input_name[size] = '\0';
 
   return CUBEB_OK;
 }
 
-int audiounit_stream_output_device_destroy(cubeb_stream * stream,
-                                           cubeb_output_device * device)
+int audiounit_stream_device_destroy(cubeb_stream * stream,
+                                    cubeb_device * device)
 {
-  free(device->name);
+  free(device->output_name);
+  free(device->input_name);
   free(device);
   return CUBEB_OK;
 }
@@ -880,7 +945,7 @@ static struct cubeb_ops const audiounit_ops = {
   .stream_get_latency = audiounit_stream_get_latency,
   .stream_set_volume = audiounit_stream_set_volume,
   .stream_set_panning = audiounit_stream_set_panning,
-  .stream_get_current_output_device = audiounit_stream_get_current_output_device,
-  .stream_output_device_destroy = audiounit_stream_output_device_destroy,
+  .stream_get_current_device = audiounit_stream_get_current_device,
+  .stream_device_destroy = audiounit_stream_device_destroy,
   .stream_register_device_changed_callback = audiounit_stream_register_device_changed_callback
 };
