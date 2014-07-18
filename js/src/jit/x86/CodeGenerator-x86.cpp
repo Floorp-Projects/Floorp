@@ -265,22 +265,6 @@ CodeGeneratorX86::visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32 *lir)
     return true;
 }
 
-// Load a NaN or zero into a register for an out of bounds AsmJS or static
-// typed array load.
-class jit::OutOfLineLoadTypedArrayOutOfBounds : public OutOfLineCodeBase<CodeGeneratorX86>
-{
-    AnyRegister dest_;
-    bool isFloat32Load_;
-  public:
-    OutOfLineLoadTypedArrayOutOfBounds(AnyRegister dest, bool isFloat32Load)
-      : dest_(dest), isFloat32Load_(isFloat32Load)
-    {}
-
-    AnyRegister dest() const { return dest_; }
-    bool isFloat32Load() const { return isFloat32Load_; }
-    bool accept(CodeGeneratorX86 *codegen) { return codegen->visitOutOfLineLoadTypedArrayOutOfBounds(this); }
-};
-
 template<typename T>
 void
 CodeGeneratorX86::loadViewTypeElement(Scalar::Type vt, const T &srcAddr,
@@ -383,22 +367,6 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     uint32_t after = masm.size();
     masm.bind(ool->rejoin());
     masm.append(AsmJSHeapAccess(before, after, vt, ToAnyRegister(out), cmp.offset()));
-    return true;
-}
-
-bool
-CodeGeneratorX86::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool)
-{
-    if (ool->dest().isFloat()) {
-        if (ool->isFloat32Load())
-            masm.loadConstantFloat32(float(GenericNaN()), ool->dest().fpu());
-        else
-            masm.loadConstantDouble(GenericNaN(), ool->dest().fpu());
-    } else {
-        Register destReg = ool->dest().gpr();
-        masm.mov(ImmWord(0), destReg);
-    }
-    masm.jmp(ool->rejoin());
     return true;
 }
 
