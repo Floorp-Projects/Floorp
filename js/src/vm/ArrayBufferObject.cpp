@@ -414,10 +414,38 @@ ArrayBufferObject::changeContents(JSContext *cx, void *newData)
 JS_STATIC_ASSERT(AsmJSAllocationGranularity == AsmJSPageSize);
 #endif
 
+/* static */ bool
+ArrayBufferObject::prepareForAsmJSNoSignals(JSContext *cx, Handle<ArrayBufferObject*> buffer)
+{
+    if (buffer->isAsmJSArrayBuffer())
+        return true;
+
+    if (buffer->isSharedArrayBuffer())
+        return true;
+
+    if (!ensureNonInline(cx, buffer))
+        return false;
+
+    buffer->setIsAsmJSArrayBuffer();
+    return true;
+}
+
+void
+ArrayBufferObject::releaseAsmJSArrayNoSignals(FreeOp *fop)
+{
+    JS_ASSERT(!isAsmJSMappedArrayBuffer());
+    fop->free_(dataPointer());
+}
+
 #if defined(JS_ION) && defined(JS_CPU_X64)
 /* static */ bool
-ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer)
+ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer,
+                                   bool usesSignalHandlers)
 {
+    // If we can't use signal handlers, just do it like on other platforms.
+    if (!usesSignalHandlers)
+        return prepareForAsmJSNoSignals(cx, buffer);
+
     if (buffer->isAsmJSArrayBuffer())
         return true;
 
@@ -467,6 +495,7 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
     // Mark the ArrayBufferObject so (1) we don't do this again, (2) we know not
     // to js_free the data in the normal way.
     buffer->setIsAsmJSArrayBuffer();
+    buffer->setIsAsmJSMappedArrayBuffer();
 
     return true;
 }
@@ -474,6 +503,11 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
 void
 ArrayBufferObject::releaseAsmJSArray(FreeOp *fop)
 {
+    if (!isAsmJSMappedArrayBuffer()) {
+        releaseAsmJSArrayNoSignals(fop);
+        return;
+    }
+
     void *data = dataPointer();
 
     JS_ASSERT(uintptr_t(data) % AsmJSPageSize == 0);
@@ -492,25 +526,20 @@ ArrayBufferObject::releaseAsmJSArray(FreeOp *fop)
 }
 #else  /* defined(JS_ION) && defined(JS_CPU_X64) */
 bool
-ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer)
+ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer,
+                                   bool usesSignalHandlers)
 {
-    if (buffer->isAsmJSArrayBuffer())
-        return true;
-
-    if (buffer->isSharedArrayBuffer())
-        return true;
-
-    if (!ensureNonInline(cx, buffer))
-        return false;
-
-    buffer->setIsAsmJSArrayBuffer();
-    return true;
+    // Platforms other than x64 don't use signalling for bounds checking, so
+    // just use the variant with no signals.
+    JS_ASSERT(!usesSignalHandlers);
+    return prepareForAsmJSNoSignals(cx, buffer);
 }
 
 void
 ArrayBufferObject::releaseAsmJSArray(FreeOp *fop)
 {
-    fop->free_(dataPointer());
+    // See comment above.
+    releaseAsmJSArrayNoSignals(fop);
 }
 #endif
 
@@ -774,13 +803,12 @@ ArrayBufferObject::addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSizeOf m
         return;
 
     if (MOZ_UNLIKELY(buffer.isAsmJSArrayBuffer())) {
-#if defined (JS_CPU_X64)
         // On x64, ArrayBufferObject::prepareForAsmJS switches the
         // ArrayBufferObject to use mmap'd storage.
-        sizes->nonHeapElementsAsmJS += buffer.byteLength();
-#else
-        sizes->mallocHeapElementsAsmJS += mallocSizeOf(buffer.dataPointer());
-#endif
+        if (buffer.isAsmJSMappedArrayBuffer())
+            sizes->nonHeapElementsAsmJS += buffer.byteLength();
+        else
+            sizes->mallocHeapElementsAsmJS += mallocSizeOf(buffer.dataPointer());
     } else if (MOZ_UNLIKELY(buffer.isMappedArrayBuffer())) {
         sizes->nonHeapElementsMapped += buffer.byteLength();
     } else if (buffer.dataPointer()) {

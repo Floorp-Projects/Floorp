@@ -169,6 +169,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitForkJoinContext(MForkJoinContext *ins);
     bool visitGuardThreadExclusive(MGuardThreadExclusive *ins);
     bool visitInterruptCheck(MInterruptCheck *ins);
+    bool visitAsmJSInterruptCheck(MAsmJSInterruptCheck *ins);
     bool visitInterruptCheckPar(MInterruptCheckPar *ins);
     bool visitStoreSlot(MStoreSlot *ins);
     bool visitFilterTypeSet(MFilterTypeSet *ins);

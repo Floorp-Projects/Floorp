@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=983504
+-->
+<head>
+  <meta charset="utf-8">
+  <title>mozGetUserMedia Basic Screenshare Test</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=983504">mozGetUserMedia Basic Screenshare Test</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <video id="testVideo"></video>
+</div>
+<pre id="test">
+<script type="application/javascript">
+  /**
+   * Run a test to verify that we can complete a start and stop media playback
+   * cycle for an screenshare LocalMediaStream on a video HTMLMediaElement.
+   */
+  runTest(function () {
+    var testVideo = document.getElementById('testVideo');
+    var constraints = {
+      video: {
+        mandatory:{
+          chromeMediaSource:'screen',
+          maxWidth:screen.availWidth,
+          maxHeight:screen.availHeight
+        },
+        optional:[]
+      }
+    };
+
+    getUserMedia(constraints, function (aStream) {
+      checkMediaStreamTracks(constraints, aStream);
+
+      var playback = new LocalMediaStreamPlayback(testVideo, aStream);
+      playback.playMediaWithStreamStop(false, function () {
+        aStream.stop();
+        SimpleTest.finish();
+      }, generateErrorCallback());
+
+    }, generateErrorCallback());
+
+  });
+
+</script>
+</pre>
+</body>
+</html>

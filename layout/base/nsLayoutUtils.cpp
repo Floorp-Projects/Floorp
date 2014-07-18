@@ -3665,6 +3665,8 @@ GetIntrinsicCoord(const nsStyleCoord& aStyle,
 static int32_t gNoiseIndent = 0;
 #endif
 
+#define MULDIV(a,b,c) (nscoord(int64_t(a) * int64_t(b) / int64_t(c)))
+
 /* static */ nscoord
 nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
                                      nsIFrame *aFrame,
@@ -3786,15 +3788,13 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
         if (GetAbsoluteCoord(styleHeight, h) ||
             GetPercentHeight(styleHeight, aFrame, h)) {
           h = std::max(0, h - heightTakenByBoxSizing);
-          result =
-            NSToCoordRound(h * (float(ratio.width) / float(ratio.height)));
+          result = MULDIV(h, ratio.width, ratio.height);
         }
 
         if (GetAbsoluteCoord(styleMaxHeight, h) ||
             GetPercentHeight(styleMaxHeight, aFrame, h)) {
           h = std::max(0, h - heightTakenByBoxSizing);
-          nscoord maxWidth =
-            NSToCoordRound(h * (float(ratio.width) / float(ratio.height)));
+          nscoord maxWidth = MULDIV(h, ratio.width, ratio.height);
           if (maxWidth < result)
             result = maxWidth;
         }
@@ -3802,8 +3802,7 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
         if (GetAbsoluteCoord(styleMinHeight, h) ||
             GetPercentHeight(styleMinHeight, aFrame, h)) {
           h = std::max(0, h - heightTakenByBoxSizing);
-          nscoord minWidth =
-            NSToCoordRound(h * (float(ratio.width) / float(ratio.height)));
+          nscoord minWidth = MULDIV(h, ratio.width, ratio.height);
           if (minWidth > result)
             result = minWidth;
         }
@@ -4082,8 +4081,6 @@ nsLayoutUtils::MarkDescendantsDirty(nsIFrame *aSubtreeRoot)
     } while (stack.Length() != 0);
   } while (subtrees.Length() != 0);
 }
-
-#define MULDIV(a,b,c) (nscoord(int64_t(a) * int64_t(b) / int64_t(c)))
 
 /* static */ nsSize
 nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
@@ -4912,6 +4909,14 @@ struct SnappedImageDrawingParameters {
   {}
 };
 
+static nsRect
+TileNearRect(const nsRect& aAnyTile, const nsRect& aTargetRect)
+{
+  nsPoint distance = aTargetRect.TopLeft() - aAnyTile.TopLeft();
+  return aAnyTile + nsPoint(distance.x / aAnyTile.width * aAnyTile.width,
+                            distance.y / aAnyTile.height * aAnyTile.height);
+}
+
 /**
  * Given a set of input parameters, compute certain output parameters
  * for drawing an image with the image snapping algorithm.
@@ -4932,8 +4937,13 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
   if (aDest.IsEmpty() || aFill.IsEmpty() || !aImageSize.width || !aImageSize.height)
     return SnappedImageDrawingParameters();
 
+  // Avoid unnecessarily large offsets.
+  bool doTile = !aDest.Contains(aFill);
+  nsRect dest = doTile ? TileNearRect(aDest, aFill.Intersect(aDirty)) : aDest;
+  nsPoint anchor = aAnchor + (dest.TopLeft() - aDest.TopLeft());
+
   gfxRect devPixelDest =
-    nsLayoutUtils::RectToGfxRect(aDest, aAppUnitsPerDevPixel);
+    nsLayoutUtils::RectToGfxRect(dest, aAppUnitsPerDevPixel);
   gfxRect devPixelFill =
     nsLayoutUtils::RectToGfxRect(aFill, aAppUnitsPerDevPixel);
   gfxRect devPixelDirty =
@@ -4973,8 +4983,8 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
   // Compute the anchor point and compute final fill rect.
   // This code assumes that pixel-based devices have one pixel per
   // device unit!
-  gfxPoint anchorPoint(gfxFloat(aAnchor.x)/aAppUnitsPerDevPixel,
-                       gfxFloat(aAnchor.y)/aAppUnitsPerDevPixel);
+  gfxPoint anchorPoint(gfxFloat(anchor.x)/aAppUnitsPerDevPixel,
+                       gfxFloat(anchor.y)/aAppUnitsPerDevPixel);
   gfxPoint imageSpaceAnchorPoint =
     MapToFloatImagePixels(imageSize, devPixelDest, anchorPoint);
 

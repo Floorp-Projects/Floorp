@@ -28,6 +28,8 @@ using mozilla::FloorLog2;
 using mozilla::NegativeInfinity;
 using mozilla::SpecificNaN;
 
+using JS::GenericNaN;
+
 namespace js {
 namespace jit {
 
@@ -340,6 +342,22 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg *ins)
         else
             masm.storeDouble(ToFloatRegister(ins->arg()), dst);
     }
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool)
+{
+    if (ool->dest().isFloat()) {
+        if (ool->isFloat32Load())
+            masm.loadConstantFloat32(float(GenericNaN()), ool->dest().fpu());
+        else
+            masm.loadConstantDouble(GenericNaN(), ool->dest().fpu());
+    } else {
+        Register destReg = ool->dest().gpr();
+        masm.mov(ImmWord(0), destReg);
+    }
+    masm.jmp(ool->rejoin());
     return true;
 }
 

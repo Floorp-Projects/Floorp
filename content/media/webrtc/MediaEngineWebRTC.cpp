@@ -47,6 +47,7 @@ namespace mozilla {
 MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
     : mMutex("mozilla::MediaEngineWebRTC")
     , mScreenEngine(nullptr)
+    , mWinEngine(nullptr)
     , mAppEngine(nullptr)
     , mVideoEngine(nullptr)
     , mVoiceEngine(nullptr)
@@ -72,14 +73,14 @@ MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
 }
 
 void
-MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
+MediaEngineWebRTC::EnumerateVideoDevices(MediaSourceType aMediaSource,
                                          nsTArray<nsRefPtr<MediaEngineVideoSource> >* aVSources)
 {
   // We spawn threads to handle gUM runnables, so we must protect the member vars
   MutexAutoLock lock(mMutex);
 
  #ifdef MOZ_B2G_CAMERA
-  if (aMediaSource != dom::MediaSourceEnum::Camera) {
+  if (aMediaSource != MediaSourceType::Camera) {
     // only supports camera sources
     return;
   }
@@ -137,7 +138,18 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
 #endif
 
   switch (aMediaSource) {
-    case dom::MediaSourceEnum::Application:
+    case MediaSourceType::Window:
+      mWinEngineConfig.Set<webrtc::CaptureDeviceInfo>(
+          new webrtc::CaptureDeviceInfo(webrtc::CaptureDeviceType::Window));
+      if (!mWinEngine) {
+        if (!(mWinEngine = webrtc::VideoEngine::Create(mWinEngineConfig))) {
+          return;
+        }
+      }
+      videoEngine = mWinEngine;
+      videoEngineInit = &mWinEngineInit;
+      break;
+    case MediaSourceType::Application:
       mAppEngineConfig.Set<webrtc::CaptureDeviceInfo>(
           new webrtc::CaptureDeviceInfo(webrtc::CaptureDeviceType::Application));
       if (!mAppEngine) {
@@ -148,7 +160,7 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
       videoEngine = mAppEngine;
       videoEngineInit = &mAppEngineInit;
       break;
-    case dom::MediaSourceEnum::Screen:
+    case MediaSourceType::Screen:
       mScreenEngineConfig.Set<webrtc::CaptureDeviceInfo>(
           new webrtc::CaptureDeviceInfo(webrtc::CaptureDeviceType::Screen));
       if (!mScreenEngine) {
@@ -159,7 +171,7 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
       videoEngine = mScreenEngine;
       videoEngineInit = &mScreenEngineInit;
       break;
-    case dom::MediaSourceEnum::Camera:
+    case MediaSourceType::Camera:
       // fall through
     default:
       if (!mVideoEngine) {
@@ -259,7 +271,7 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
 }
 
 void
-MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
+MediaEngineWebRTC::EnumerateAudioDevices(MediaSourceType aMediaSource,
                                          nsTArray<nsRefPtr<MediaEngineAudioSource> >* aASources)
 {
   ScopedCustomReleasePtr<webrtc::VoEBase> ptrVoEBase;

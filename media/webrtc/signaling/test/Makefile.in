@@ -65,7 +65,7 @@ ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
 LIBS += \
   $(XLIBS) \
   $(MOZ_GTK2_LIBS) \
-  -lgthread-2.0 \
+  -lgmodule-2.0 -lgthread-2.0 \
   $(NULL)
 endif
 

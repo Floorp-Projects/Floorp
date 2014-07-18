@@ -861,6 +861,10 @@ class AssemblerX86Shared : public AssemblerShared
     void cmpl(const Operand &op, ImmPtr imm) {
         cmpl(op, ImmWord(uintptr_t(imm.value)));
     }
+    CodeOffsetLabel cmplWithPatch(Register lhs, Imm32 rhs) {
+        masm.cmpl_ir_force32(rhs.value, lhs.code());
+        return CodeOffsetLabel(masm.currentOffset());
+    }
     void cmpw(Register lhs, Register rhs) {
         masm.cmpw_rr(lhs.code(), rhs.code());
     }

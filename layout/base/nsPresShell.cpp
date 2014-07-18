@@ -7831,9 +7831,11 @@ PresShell::DispatchTouchEvent(WidgetEvent* aEvent,
                               bool aTouchIsNew)
 {
   // calling preventDefault on touchstart or the first touchmove for a
-  // point prevents mouse events
-  bool canPrevent = aEvent->message == NS_TOUCH_START ||
-              (aEvent->message == NS_TOUCH_MOVE && aTouchIsNew);
+  // point prevents mouse events. calling it on the touchend should
+  // prevent click dispatching.
+  bool canPrevent = (aEvent->message == NS_TOUCH_START) ||
+              (aEvent->message == NS_TOUCH_MOVE && aTouchIsNew) ||
+              (aEvent->message == NS_TOUCH_END);
   bool preventDefault = false;
   nsEventStatus tmpStatus = nsEventStatus_eIgnore;
   WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();

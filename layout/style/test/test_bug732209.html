@@ -74,7 +74,7 @@ addLoadEvent(function() {
 
   try {
     var sheet = $("cross-origin-sheet").sheet;
-    dump('aaa');
+    dump('aaa\n');
     is(sheet.cssRules.length, 2,
        "Should be able to get length of list of rules");
     is(sheet.cssRules[0].style.color, "green",

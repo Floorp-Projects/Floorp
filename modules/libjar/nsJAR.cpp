@@ -141,7 +141,7 @@ nsJAR::Open(nsIFile* zipFile)
     mZip = zip;
     return NS_OK;
   }
-  return mZip->OpenArchive(zipFile);
+  return mZip->OpenArchive(zipFile, mCache ? mCache->IsMustCacheFdEnabled() : false);
 }
 
 NS_IMETHODIMP
@@ -389,6 +389,26 @@ nsJAR::GetJarPath(nsACString& aResult)
   NS_ENSURE_ARG_POINTER(mZipFile);
 
   return mZipFile->GetNativePath(aResult);
+}
+
+nsresult
+nsJAR::GetNSPRFileDesc(PRFileDesc** aNSPRFileDesc)
+{
+  if (!aNSPRFileDesc) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  *aNSPRFileDesc = nullptr;
+
+  if (!mZip) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<nsZipHandle> handle = mZip->GetFD();
+  if (!handle) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return handle->GetNSPRFileDesc(aNSPRFileDesc);
 }
 
 //----------------------------------------------
@@ -1009,6 +1029,7 @@ NS_IMPL_ISUPPORTS(nsZipReaderCache, nsIZipReaderCache, nsIObserver, nsISupportsW
 nsZipReaderCache::nsZipReaderCache()
   : mLock("nsZipReaderCache.mLock")
   , mZips(16)
+  , mMustCacheFd(false)
 #ifdef ZIP_CACHE_HIT_RATE
     ,
     mZipCacheLookups(0),
@@ -1104,7 +1125,6 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   } else {
     zip = new nsJAR();
     zip->SetZipReaderCache(this);
-
     rv = zip->Open(zipFile);
     if (NS_FAILED(rv)) {
       return rv;
@@ -1160,6 +1180,87 @@ nsZipReaderCache::GetInnerZip(nsIFile* zipFile, const nsACString &entry,
   }
   zip.forget(result);
   return rv;
+}
+
+NS_IMETHODIMP
+nsZipReaderCache::SetMustCacheFd(nsIFile* zipFile, bool aMustCacheFd)
+{
+#if defined(XP_WIN)
+  MOZ_CRASH("Not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  mMustCacheFd = aMustCacheFd;
+
+  if (!aMustCacheFd) {
+    return NS_OK;
+  }
+
+  if (!zipFile) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv;
+  nsAutoCString uri;
+  rv = zipFile->GetNativePath(uri);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  uri.Insert(NS_LITERAL_CSTRING("file:"), 0);
+
+  MutexAutoLock lock(mLock);
+  nsRefPtr<nsJAR> zip;
+  mZips.Get(uri, getter_AddRefs(zip));
+  if (!zip) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Flush the file from the cache if its file descriptor was not cached.
+  PRFileDesc* fd = nullptr;
+  zip->GetNSPRFileDesc(&fd);
+  if (!fd) {
+#ifdef ZIP_CACHE_HIT_RATE
+    mZipCacheFlushes++;
+#endif
+    zip->SetZipReaderCache(nullptr);
+    mZips.Remove(uri);
+  }
+  return NS_OK;
+#endif /* XP_WIN */
+}
+
+NS_IMETHODIMP
+nsZipReaderCache::GetFd(nsIFile* zipFile, PRFileDesc** aRetVal)
+{
+#if defined(XP_WIN)
+  MOZ_CRASH("Not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  if (!zipFile) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv;
+  nsAutoCString uri;
+  rv = zipFile->GetNativePath(uri);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  uri.Insert(NS_LITERAL_CSTRING("file:"), 0);
+
+  MutexAutoLock lock(mLock);
+  nsRefPtr<nsJAR> zip;
+  mZips.Get(uri, getter_AddRefs(zip));
+  if (!zip) {
+    return NS_ERROR_FAILURE;
+  }
+
+  zip->ClearReleaseTime();
+  rv = zip->GetNSPRFileDesc(aRetVal);
+  // Do this to avoid possible deadlock on mLock with ReleaseZip().
+  MutexAutoUnlock unlock(mLock);
+  nsRefPtr<nsJAR> zipTemp = zip.forget();
+  return rv;
+#endif /* XP_WIN */
 }
 
 static PLDHashOperator

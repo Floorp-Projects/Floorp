@@ -76,7 +76,7 @@ DeallocateExecutableMemory(uint8_t *code, size_t totalBytes)
 }
 
 AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t srcStart, uint32_t srcBodyStart,
-                         bool strict)
+                         bool strict, bool canUseSignalHandlers)
   : srcStart_(srcStart),
     srcBodyStart_(srcBodyStart),
     scriptSource_(scriptSource),
@@ -94,6 +94,7 @@ AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t srcStart, uint32_t
     pod.functionBytes_ = UINT32_MAX;
     pod.minHeapLength_ = AsmJSAllocationGranularity;
     pod.strict_ = strict;
+    pod.usesSignalHandlers_ = canUseSignalHandlers;
 
     scriptSource_->incref();
 }
@@ -518,6 +519,8 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
     switch (kind) {
       case AsmJSImm_Runtime:
         return cx->runtimeAddressForJit();
+      case AsmJSImm_RuntimeInterrupt:
+        return cx->runtimeAddressOfInterrupt();
       case AsmJSImm_StackLimit:
         return cx->stackLimitAddressForJitCode(StackForUntrustedScript);
       case AsmJSImm_ReportOverRecursed:
@@ -638,6 +641,19 @@ AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
         uint32_t disp = reinterpret_cast<uint32_t>(JSC::X86Assembler::getPointer(addr));
         JS_ASSERT(disp <= INT32_MAX);
         JSC::X86Assembler::setPointer(addr, (void *)(heapOffset + disp));
+    }
+#elif defined(JS_CODEGEN_X64)
+    int32_t heapLength = int32_t(intptr_t(heap->byteLength()));
+    if (usesSignalHandlersForOOB())
+        return;
+    // If we cannot use the signal handlers, we need to patch the heap length
+    // checks at the right places. All accesses that have been recorded are the
+    // only ones that need bound checks (see also
+    // CodeGeneratorX64::visitAsmJS{Load,Store}Heap)
+    for (size_t i = 0; i < heapAccesses_.length(); i++) {
+        const jit::AsmJSHeapAccess &access = heapAccesses_[i];
+        if (access.hasLengthCheck())
+            JSC::X86Assembler::setInt32(access.patchLengthAt(code_), heapLength);
     }
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     uint32_t heapLength = heap->byteLength();
@@ -1214,7 +1230,8 @@ AsmJSModule::clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) con
 {
     AutoUnprotectCodeForClone cloneGuard(cx, *this);
 
-    *moduleOut = cx->new_<AsmJSModule>(scriptSource_, srcStart_, srcBodyStart_, pod.strict_);
+    *moduleOut = cx->new_<AsmJSModule>(scriptSource_, srcStart_, srcBodyStart_, pod.strict_,
+                                       pod.usesSignalHandlers_);
     if (!*moduleOut)
         return false;
 
@@ -1674,8 +1691,10 @@ js::LookupAsmJSModuleInCache(ExclusiveContext *cx,
     uint32_t srcStart = parser.pc->maybeFunction->pn_body->pn_pos.begin;
     uint32_t srcBodyStart = parser.tokenStream.currentToken().pos.end;
     bool strict = parser.pc->sc->strict && !parser.pc->sc->hasExplicitUseStrict();
+    // usesSignalHandlers will be clobbered when deserializing
     ScopedJSDeletePtr<AsmJSModule> module(
-        cx->new_<AsmJSModule>(parser.ss, srcStart, srcBodyStart, strict));
+        cx->new_<AsmJSModule>(parser.ss, srcStart, srcBodyStart, strict,
+                              /* usesSignalHandlers = */ false));
     if (!module)
         return false;
     cursor = module->deserialize(cx, cursor);

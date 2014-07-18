@@ -232,12 +232,6 @@ public:
    * Update "have enough data" flags in aStream.
    */
   void UpdateBufferSufficiencyState(SourceMediaStream* aStream);
-  /*
-   * If aStream hasn't already been ordered, push it onto aStack and order
-   * its children.
-   */
-  void UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream>* aStack,
-                                  already_AddRefed<MediaStream> aStream);
   /**
    * Mark aStream and all its inputs (recursively) as consumed.
    */
@@ -426,12 +420,18 @@ public:
   // mLifecycleState > LIFECYCLE_RUNNING in which case the graph thread
   // is not running and this state can be used from the main thread.
 
-  nsTArray<nsRefPtr<MediaStream> > mStreams;
   /**
-   * mOldStreams is used as temporary storage for streams when computing the
-   * order in which we compute them.
+   * The graph keeps a reference to each stream.
+   * References are maintained manually to simplify reordering without
+   * unnecessary thread-safe refcount changes.
    */
-  nsTArray<nsRefPtr<MediaStream> > mOldStreams;
+  nsTArray<MediaStream*> mStreams;
+  /**
+   * Streams from mFirstCycleBreaker to the end of mStreams produce output
+   * before they receive input.  They correspond to DelayNodes that are in
+   * cycles.
+   */
+  uint32_t mFirstCycleBreaker;
   /**
    * The current graph time for the current iteration of the RunThread control
    * loop.

@@ -131,16 +131,23 @@ LIRGeneratorX64::visitAsmJSLoadHeap(MAsmJSLoadHeap *ins)
 {
     MDefinition *ptr = ins->ptr();
     JS_ASSERT(ptr->type() == MIRType_Int32);
+    LAllocation ptrAlloc;
 
-    // The X64 does not inline an explicit bounds check so has no need to keep the
-    // index in a register, however only a positive index is accepted because a
-    // negative offset encoded as an offset in the addressing mode would not wrap
-    // back into the protected area reserved for the heap.
-    if (ptr->isConstant() && ptr->toConstant()->value().toInt32() >= 0) {
-        LAsmJSLoadHeap *lir = new(alloc()) LAsmJSLoadHeap(LAllocation(ptr->toConstant()->vp()));
-        return define(lir, ins);
+    bool useConstant = false;
+    if (ptr->isConstant()) {
+        int32_t ptrValue = ptr->toConstant()->value().toInt32();
+        if (ins->skipBoundsCheck() && ptrValue >= 0) {
+            // Only a positive index is accepted because a negative offset
+            // encoded as an offset in the addressing mode would not wrap back
+            // into the protected area reserved for the heap.
+            useConstant = true;
+        }
+        // In other cases, still keep the pointer in a register.
     }
-    return define(new(alloc()) LAsmJSLoadHeap(useRegisterAtStart(ptr)), ins);
+
+    ptrAlloc = (useConstant) ? LAllocation(ptr->toConstant()->vp()) : useRegisterAtStart(ptr);
+    LAsmJSLoadHeap *lir = new(alloc()) LAsmJSLoadHeap(ptrAlloc);
+    return define(lir, ins);
 }
 
 bool

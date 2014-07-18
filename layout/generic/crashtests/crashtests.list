@@ -504,12 +504,14 @@ load 827168-1.html
 load 836895.html
 load 840787.html
 load 842132-1.html
+load 842166.html
 load 844529-1.html
 load 847130.xhtml
 load 847208.html
 asserts-if(Android,2) asserts-if(!Android,4) load 847209.html # bug 847368
 load 847211-1.html
 load 849603.html
+asserts(0-12) load 850931.html # bug 569193
 load 851396-1.html
 load 854263-1.html
 load 862947-1.html
@@ -533,6 +535,7 @@ load 1001258-1.html
 pref(layout.css.grid.enabled,true) load 1015562.html
 asserts(1-2) load 1015563-1.html
 asserts(1-2) load 1015563-2.html
+asserts(0-300) load 1015844.html # bug 574889
 load outline-on-frameset.xhtml
 pref(font.size.inflation.minTwips,200) load 1032450.html
 load 1037903.html

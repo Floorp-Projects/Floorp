@@ -258,7 +258,8 @@ AudioStream::AudioStream()
 AudioStream::~AudioStream()
 {
   LOG(("AudioStream: delete %p, state %d", this, mState));
-  Shutdown();
+  MOZ_ASSERT(mState == SHUTDOWN && !mCubebStream,
+             "Should've called Shutdown() before deleting an AudioStream");
   if (mDumpFile) {
     fclose(mDumpFile);
   }
@@ -317,6 +318,10 @@ nsresult AudioStream::EnsureTimeStretcherInitializedUnlocked()
 
 nsresult AudioStream::SetPlaybackRate(double aPlaybackRate)
 {
+  // MUST lock since the rate transposer is used from the cubeb callback,
+  // and rate changes can cause the buffer to be reallocated
+  MonitorAutoLock mon(mMonitor);
+
   NS_ASSERTION(aPlaybackRate > 0.0,
                "Can't handle negative or null playbackrate in the AudioStream.");
   // Avoid instantiating the resampler if we are not changing the playback rate.
@@ -325,9 +330,6 @@ nsresult AudioStream::SetPlaybackRate(double aPlaybackRate)
     return NS_OK;
   }
 
-  // MUST lock since the rate transposer is used from the cubeb callback,
-  // and rate changes can cause the buffer to be reallocated
-  MonitorAutoLock mon(mMonitor);
   if (EnsureTimeStretcherInitializedUnlocked() != NS_OK) {
     return NS_ERROR_FAILURE;
   }
@@ -347,14 +349,15 @@ nsresult AudioStream::SetPlaybackRate(double aPlaybackRate)
 
 nsresult AudioStream::SetPreservesPitch(bool aPreservesPitch)
 {
+  // MUST lock since the rate transposer is used from the cubeb callback,
+  // and rate changes can cause the buffer to be reallocated
+  MonitorAutoLock mon(mMonitor);
+
   // Avoid instantiating the timestretcher instance if not needed.
   if (aPreservesPitch == mAudioClock.GetPreservesPitch()) {
     return NS_OK;
   }
 
-  // MUST lock since the rate transposer is used from the cubeb callback,
-  // and rate changes can cause the buffer to be reallocated
-  MonitorAutoLock mon(mMonitor);
   if (EnsureTimeStretcherInitializedUnlocked() != NS_OK) {
     return NS_ERROR_FAILURE;
   }
@@ -374,6 +377,7 @@ nsresult AudioStream::SetPreservesPitch(bool aPreservesPitch)
 
 int64_t AudioStream::GetWritten()
 {
+  MonitorAutoLock mon(mMonitor);
   return mWritten;
 }
 
@@ -533,7 +537,10 @@ AudioStream::Init(int32_t aNumChannels, int32_t aRate,
   nsresult rv = OpenCubeb(params, aLatencyRequest);
   // See if we need to start() the stream, since we must do that from this
   // thread for now (cubeb API issue)
-  CheckForStart();
+  {
+    MonitorAutoLock mon(mMonitor);
+    CheckForStart();
+  }
   return rv;
 }
 
@@ -600,6 +607,7 @@ AudioStream::OpenCubeb(cubeb_stream_params &aParams,
 void
 AudioStream::CheckForStart()
 {
+  mMonitor.AssertCurrentThreadOwns();
   if (mState == INITIALIZED) {
     // Start the stream right away when low latency has been requested. This means
     // that the DataCallback will feed silence to cubeb, until the first frames
@@ -779,9 +787,12 @@ AudioStream::StartUnlocked()
     mNeedsStart = true;
     return;
   }
-  MonitorAutoUnlock mon(mMonitor);
   if (mState == INITIALIZED) {
-    int r = cubeb_stream_start(mCubebStream);
+    int r;
+    {
+      MonitorAutoUnlock mon(mMonitor);
+      r = cubeb_stream_start(mCubebStream);
+    }
     mState = r == CUBEB_OK ? STARTED : ERRORED;
     LOG(("AudioStream: started %p, state %s", this, mState == STARTED ? "STARTED" : "ERRORED"));
   }
@@ -828,21 +839,19 @@ AudioStream::Resume()
 void
 AudioStream::Shutdown()
 {
+  MonitorAutoLock mon(mMonitor);
   LOG(("AudioStream: Shutdown %p, state %d", this, mState));
-  {
-    MonitorAutoLock mon(mMonitor);
-    if (mState == STARTED || mState == RUNNING) {
-      MonitorAutoUnlock mon(mMonitor);
-      Pause();
-    }
-    MOZ_ASSERT(mState != STARTED && mState != RUNNING); // paranoia
-    mState = SHUTDOWN;
-  }
-  // Must not try to shut down cubeb from within the lock!  wasapi may still
-  // call our callback after Pause()/stop()!?! Bug 996162
+
   if (mCubebStream) {
+    MonitorAutoUnlock mon(mMonitor);
+    // Force stop to put the cubeb stream in a stable state before deletion.
+    cubeb_stream_stop(mCubebStream);
+    // Must not try to shut down cubeb from within the lock!  wasapi may still
+    // call our callback after Pause()/stop()!?! Bug 996162
     mCubebStream.reset();
   }
+
+  mState = SHUTDOWN;
 }
 
 int64_t
@@ -907,6 +916,7 @@ AudioStream::IsPaused()
 void
 AudioStream::GetBufferInsertTime(int64_t &aTimeMs)
 {
+  mMonitor.AssertCurrentThreadOwns();
   if (mInserts.Length() > 0) {
     // Find the right block, but don't leave the array empty
     while (mInserts.Length() > 1 && mReadPoint >= mInserts[0].mFrames) {
@@ -924,6 +934,7 @@ AudioStream::GetBufferInsertTime(int64_t &aTimeMs)
 long
 AudioStream::GetUnprocessed(void* aBuffer, long aFrames, int64_t &aTimeMs)
 {
+  mMonitor.AssertCurrentThreadOwns();
   uint8_t* wpos = reinterpret_cast<uint8_t*>(aBuffer);
 
   // Flush the timestretcher pipeline, if we were playing using a playback rate
@@ -955,6 +966,7 @@ AudioStream::GetUnprocessed(void* aBuffer, long aFrames, int64_t &aTimeMs)
 long
 AudioStream::GetUnprocessedWithSilencePadding(void* aBuffer, long aFrames, int64_t& aTimeMs)
 {
+  mMonitor.AssertCurrentThreadOwns();
   uint32_t toPopBytes = FramesToBytes(aFrames);
   uint32_t available = std::min(toPopBytes, mBuffer.Length());
   uint32_t silenceOffset = toPopBytes - available;
@@ -979,6 +991,7 @@ AudioStream::GetUnprocessedWithSilencePadding(void* aBuffer, long aFrames, int64
 long
 AudioStream::GetTimeStretched(void* aBuffer, long aFrames, int64_t &aTimeMs)
 {
+  mMonitor.AssertCurrentThreadOwns();
   long processedFrames = 0;
 
   // We need to call the non-locking version, because we already have the lock.
@@ -1021,6 +1034,7 @@ long
 AudioStream::DataCallback(void* aBuffer, long aFrames)
 {
   MonitorAutoLock mon(mMonitor);
+  MOZ_ASSERT(mState != SHUTDOWN, "No data callback after shutdown");
   uint32_t available = std::min(static_cast<uint32_t>(FramesToBytes(aFrames)), mBuffer.Length());
   NS_ABORT_IF_FALSE(available % mBytesPerFrame == 0, "Must copy complete frames");
   AudioDataValue* output = reinterpret_cast<AudioDataValue*>(aBuffer);
@@ -1131,6 +1145,8 @@ void
 AudioStream::StateCallback(cubeb_state aState)
 {
   MonitorAutoLock mon(mMonitor);
+  MOZ_ASSERT(mState != SHUTDOWN, "No state callback after shutdown");
+  LOG(("AudioStream: StateCallback %p, mState=%d cubeb_state=%d", this, mState, aState));
   if (aState == CUBEB_STATE_DRAINED) {
     mState = DRAINED;
   } else if (aState == CUBEB_STATE_ERROR) {

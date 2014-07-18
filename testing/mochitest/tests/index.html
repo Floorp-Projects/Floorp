@@ -33,15 +33,7 @@ if (params.logFile) {
   TestRunner.logger.addListener("mozLogger", fileLevel + "", spl.getLogCallback());
 }
 
-// if we get a quiet param, don't log to the console
-if (!params.quiet) {
-  function dumpListener(msg) {
-    dump("*** " + msg.num + " " + msg.level + " " + msg.info.join(' ') + "\n");
-  }
-  TestRunner.logger.addListener("dumpListener", consoleLevel + "", dumpListener);
-}
-
-var RunSet = {}
+var RunSet = {};
 RunSet.runall = function() {
   TestRunner.runTests(
       'test_bug362788.xhtml'
@@ -57,7 +49,7 @@ RunSet.reloadAndRunAll = function() {
   }
 };
 
-// run automatically if 
+// run automatically if
 if (params.autorun) {
   RunSet.runall();
 }

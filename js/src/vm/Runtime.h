@@ -1036,6 +1036,8 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     mozilla::UniquePtr<js::SourceHook> sourceHook;
 
+    js::AssertOnScriptEntryHook assertOnScriptEntryHook_;
+
     /* Per runtime debug hooks -- see js/OldDebugAPI.h. */
     JSDebugHooks        debugHooks;
 
@@ -1070,13 +1072,19 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::AsmJSMachExceptionHandler asmJSMachExceptionHandler;
 #endif
 
+  private:
     // Whether asm.js signal handlers have been installed and can be used for
     // performing interrupt checks in loops.
-  private:
     bool signalHandlersInstalled_;
+    // Whether we should use them or they have been disabled for making
+    // debugging easier. If signal handlers aren't installed, it is set to false.
+    bool canUseSignalHandlers_;
   public:
     bool signalHandlersInstalled() const {
         return signalHandlersInstalled_;
+    }
+    bool canUseSignalHandlers() const {
+        return canUseSignalHandlers_;
     }
 
   private:
