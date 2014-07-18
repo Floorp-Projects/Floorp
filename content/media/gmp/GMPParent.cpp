@@ -15,10 +15,10 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/unused.h"
 
-#ifdef MOZ_CRASHREPORTER
 #include "mozilla/dom/CrashReporterParent.h"
-
 using mozilla::dom::CrashReporterParent;
+
+#ifdef MOZ_CRASHREPORTER
 using CrashReporter::AnnotationTable;
 using CrashReporter::GetIDFromMinidump;
 #endif
