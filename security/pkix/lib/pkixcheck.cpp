@@ -28,6 +28,7 @@
 #include "pkix/ScopedPtr.h"
 #include "pkixcheck.h"
 #include "pkixder.h"
+#include "pkix/pkixnss.h"
 #include "pkixutil.h"
 
 namespace mozilla { namespace pkix {
@@ -37,22 +38,22 @@ CheckValidity(const SECItem& encodedValidity, PRTime time)
 {
   Input validity;
   if (validity.Init(encodedValidity.data, encodedValidity.len) != Success) {
-    return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
+    return Result::ERROR_EXPIRED_CERTIFICATE;
   }
   PRTime notBefore;
   if (der::TimeChoice(validity, notBefore) != Success) {
-    return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
+    return Result::ERROR_EXPIRED_CERTIFICATE;
   }
   if (time < notBefore) {
-    return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
+    return Result::ERROR_EXPIRED_CERTIFICATE;
   }
 
   PRTime notAfter;
   if (der::TimeChoice(validity, notAfter) != Success) {
-    return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
+    return Result::ERROR_EXPIRED_CERTIFICATE;
   }
   if (time > notAfter) {
-    return Fail(RecoverableError, SEC_ERROR_EXPIRED_CERTIFICATE);
+    return Result::ERROR_EXPIRED_CERTIFICATE;
   }
 
   return der::End(validity);
@@ -78,7 +79,7 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedKeyUsage,
     // reduce the chances of an end-entity certificate being abused as a CA
     // certificate.
     // if (endEntityOrCA == EndEntityOrCA::MustBeCA && !isTrustAnchor) {
-    //   return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
+    //   return Result::ERROR_INADEQUATE_KEY_USAGE;
     // }
     //
     // TODO: Users may configure arbitrary certificates as trust anchors, not
@@ -89,25 +90,25 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedKeyUsage,
 
   Input input;
   if (input.Init(encodedKeyUsage->data, encodedKeyUsage->len) != Success) {
-    return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
+    return Result::ERROR_INADEQUATE_KEY_USAGE;
   }
   Input value;
   if (der::ExpectTagAndGetValue(input, der::BIT_STRING, value) != Success) {
-    return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
+    return Result::ERROR_INADEQUATE_KEY_USAGE;
   }
 
   uint8_t numberOfPaddingBits;
   if (value.Read(numberOfPaddingBits) != Success) {
-    return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
+    return Result::ERROR_INADEQUATE_KEY_USAGE;
   }
   if (numberOfPaddingBits > 7) {
-    return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
+    return Result::ERROR_INADEQUATE_KEY_USAGE;
   }
 
   uint8_t bits;
   if (value.Read(bits) != Success) {
     // Reject empty bit masks.
-    return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
+    return Result::ERROR_INADEQUATE_KEY_USAGE;
   }
 
   // The most significant bit is numbered 0 (digitalSignature) and the least
@@ -148,7 +149,7 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedKeyUsage,
   if (requiredKeyUsageIfPresent != KeyUsage::noParticularKeyUsageRequired) {
     // Check that the required key usage bit is set.
     if ((bits & KeyUsageToBitMask(requiredKeyUsageIfPresent)) == 0) {
-      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
+      return Result::ERROR_INADEQUATE_KEY_USAGE;
     }
   }
 
@@ -158,21 +159,21 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedKeyUsage,
     // keyCertSign bit is asserted, then the cA bit in the basic constraints
     // extension (Section 4.2.1.9) MUST also be asserted."
     if ((bits & KeyUsageToBitMask(KeyUsage::keyCertSign)) != 0) {
-      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
+      return Result::ERROR_INADEQUATE_KEY_USAGE;
     }
   }
 
   // The padding applies to the last byte, so skip to the last byte.
   while (!value.AtEnd()) {
     if (value.Read(bits) != Success) {
-      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
+      return Result::ERROR_INADEQUATE_KEY_USAGE;
     }
   }
 
   // All of the padding bits must be zero, according to DER rules.
   uint8_t paddingMask = static_cast<uint8_t>((1 << numberOfPaddingBits) - 1);
   if ((bits & paddingMask) != 0) {
-    return Fail(RecoverableError, SEC_ERROR_INADEQUATE_KEY_USAGE);
+    return Result::ERROR_INADEQUATE_KEY_USAGE;
   }
 
   return Success;
@@ -239,7 +240,7 @@ CheckCertificatePolicies(EndEntityOrCA endEntityOrCA,
 {
   if (requiredPolicy.numBytes == 0 ||
       requiredPolicy.numBytes > sizeof requiredPolicy.bytes) {
-    return Fail(FatalError, SEC_ERROR_INVALID_ARGS);
+    return Result::FATAL_ERROR_INVALID_ARGS;
   }
 
   // Ignore all policy information if the caller indicates any policy is
@@ -253,7 +254,7 @@ CheckCertificatePolicies(EndEntityOrCA endEntityOrCA,
   // inhibitAnyPolicy extension is present and we need to evaluate certificate
   // policies.
   if (encodedInhibitAnyPolicy) {
-    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
+    return Result::ERROR_POLICY_VALIDATION_FAILED;
   }
 
   // The root CA certificate may omit the policies that it has been
@@ -266,7 +267,7 @@ CheckCertificatePolicies(EndEntityOrCA endEntityOrCA,
   }
 
   if (!encodedCertificatePolicies) {
-    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
+    return Result::ERROR_POLICY_VALIDATION_FAILED;
   }
 
   bool found = false;
@@ -274,18 +275,18 @@ CheckCertificatePolicies(EndEntityOrCA endEntityOrCA,
   Input input;
   if (input.Init(encodedCertificatePolicies->data,
                  encodedCertificatePolicies->len) != Success) {
-    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
+    return Result::ERROR_POLICY_VALIDATION_FAILED;
   }
   if (der::NestedOf(input, der::SEQUENCE, der::SEQUENCE, der::EmptyAllowed::No,
                     bind(CheckPolicyInformation, _1, endEntityOrCA,
                          requiredPolicy, ref(found))) != Success) {
-    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
+    return Result::ERROR_POLICY_VALIDATION_FAILED;
   }
   if (der::End(input) != Success) {
-    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
+    return Result::ERROR_POLICY_VALIDATION_FAILED;
   }
   if (!found) {
-    return Fail(RecoverableError, SEC_ERROR_POLICY_VALIDATION_FAILED);
+    return Result::ERROR_POLICY_VALIDATION_FAILED;
   }
 
   return Success;
@@ -307,7 +308,7 @@ DecodeBasicConstraints(Input& input, /*out*/ bool& isCA,
   // enforce this yet (hence passing true for allowInvalidExplicitEncoding
   // to der::OptionalBoolean).
   if (der::OptionalBoolean(input, true, isCA) != Success) {
-    return Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
+    return Result::ERROR_EXTENSION_VALUE_INVALID;
   }
 
   // TODO(bug 985025): If isCA is false, pathLenConstraint MUST NOT
@@ -315,7 +316,7 @@ DecodeBasicConstraints(Input& input, /*out*/ bool& isCA,
   // reasons, we don't check this for now.
   if (der::OptionalInteger(input, UNLIMITED_PATH_LEN, pathLenConstraint)
         != Success) {
-    return Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
+    return Result::ERROR_EXTENSION_VALUE_INVALID;
   }
 
   return Success;
@@ -335,15 +336,15 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
     Input input;
     if (input.Init(encodedBasicConstraints->data,
                    encodedBasicConstraints->len) != Success) {
-      return Fail(RecoverableError, SEC_ERROR_EXTENSION_VALUE_INVALID);
+      return Result::ERROR_EXTENSION_VALUE_INVALID;
     }
     if (der::Nested(input, der::SEQUENCE,
                     bind(DecodeBasicConstraints, _1, ref(isCA),
                          ref(pathLenConstraint))) != Success) {
-      return Fail(RecoverableError, SEC_ERROR_EXTENSION_VALUE_INVALID);
+      return Result::ERROR_EXTENSION_VALUE_INVALID;
     }
     if (der::End(input) != Success) {
-      return Fail(RecoverableError, SEC_ERROR_EXTENSION_VALUE_INVALID);
+      return Result::ERROR_EXTENSION_VALUE_INVALID;
     }
   } else {
     // "If the basic constraints extension is not present in a version 3
@@ -365,17 +366,17 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
     // CA certificates are not trusted as EE certs.
 
     if (isCA) {
-      // XXX: We use SEC_ERROR_CA_CERT_INVALID here so we can distinguish
-      // this error from other errors, given that NSS does not have a "CA cert
-      // used as end-entity" error code since it doesn't have such a
+      // TODO(bug 1040446): We use Result::ERROR_CA_CERT_INVALID here so we can
+      // distinguish this error from other errors, given that NSS does not have
+      // a "CA cert used as end-entity" error code since it doesn't have such a
       // prohibition. We should add such an error code and stop abusing
-      // SEC_ERROR_CA_CERT_INVALID this way.
+      // Result::ERROR_CA_CERT_INVALID this way.
       //
       // Note, in particular, that this check prevents a delegated OCSP
       // response signing certificate with the CA bit from successfully
       // validating when we check it from pkixocsp.cpp, which is a good thing.
       //
-      return Fail(RecoverableError, SEC_ERROR_CA_CERT_INVALID);
+      return Result::ERROR_CA_CERT_INVALID;
     }
 
     return Success;
@@ -385,12 +386,12 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
 
   // End-entity certificates are not allowed to act as CA certs.
   if (!isCA) {
-    return Fail(RecoverableError, SEC_ERROR_CA_CERT_INVALID);
+    return Result::ERROR_CA_CERT_INVALID;
   }
 
   if (pathLenConstraint >= 0 &&
       static_cast<long>(subCACount) > pathLenConstraint) {
-    return Fail(RecoverableError, SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID);
+    return Result::ERROR_PATH_LEN_CONSTRAINT_INVALID;
   }
 
   return Success;
@@ -405,6 +406,8 @@ PORT_FreeArena_false(PLArenaPool* arena) {
   return PORT_FreeArena(arena, PR_FALSE);
 }
 
+// TODO: remove #include "pkix/pkixnss.h" when this is rewritten to be
+// independent of NSS.
 Result
 CheckNameConstraints(const SECItem& encodedNameConstraints,
                      const BackCert& firstChild,
@@ -413,14 +416,14 @@ CheckNameConstraints(const SECItem& encodedNameConstraints,
   ScopedPtr<PLArenaPool, PORT_FreeArena_false>
     arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
   if (!arena) {
-    return MapSECStatus(SECFailure);
+    return Result::FATAL_ERROR_NO_MEMORY;
   }
 
   // Owned by arena
   const CERTNameConstraints* constraints =
     CERT_DecodeNameConstraintsExtension(arena.get(), &encodedNameConstraints);
   if (!constraints) {
-    return MapSECStatus(SECFailure);
+    return MapPRErrorCodeToResult(PR_GetError());
   }
 
   for (const BackCert* child = &firstChild; child; child = child->childCert) {
@@ -429,7 +432,7 @@ CheckNameConstraints(const SECItem& encodedNameConstraints,
                                       const_cast<SECItem*>(&child->GetDER()),
                                       nullptr, false, true));
     if (!nssCert) {
-      return MapSECStatus(SECFailure);
+      return MapPRErrorCodeToResult(PR_GetError());
     }
 
     bool includeCN = child->endEntityOrCA == EndEntityOrCA::MustBeEndEntity &&
@@ -439,7 +442,7 @@ CheckNameConstraints(const SECItem& encodedNameConstraints,
       names(CERT_GetConstrainedCertificateNames(nssCert.get(), arena.get(),
                                                 includeCN));
     if (!names) {
-      return MapSECStatus(SECFailure);
+      return MapPRErrorCodeToResult(PR_GetError());
     }
 
     CERTGeneralName* currentName = const_cast<CERTGeneralName*>(names);
@@ -447,10 +450,9 @@ CheckNameConstraints(const SECItem& encodedNameConstraints,
       if (CERT_CheckNameSpace(arena.get(), constraints, currentName)
             != SECSuccess) {
         // XXX: It seems like CERT_CheckNameSpace doesn't always call
-        // PR_SetError when it fails. We set the error code here, though this
-        // may be papering over some fatal errors. NSS's
-        // cert_VerifyCertChainOld does something similar.
-        return Fail(RecoverableError, SEC_ERROR_CERT_NOT_IN_NAME_SPACE);
+        // PR_SetError when it fails, so we ignore what PR_GetError would
+        // return. NSS's cert_VerifyCertChainOld does something similar.
+        return Result::ERROR_CERT_NOT_IN_NAME_SPACE;
       }
       currentName = CERT_GetNextGeneralName(currentName);
     } while (currentName != names);
@@ -522,11 +524,11 @@ MatchEKU(Input& value, KeyPurposeId requiredEKU,
 
       case KeyPurposeId::anyExtendedKeyUsage:
         PR_NOT_REACHED("anyExtendedKeyUsage should start with found==true");
-        return Fail(SEC_ERROR_LIBRARY_FAILURE);
+        return Result::FATAL_ERROR_LIBRARY_FAILURE;
 
       default:
         PR_NOT_REACHED("unrecognized EKU");
-        return Fail(SEC_ERROR_LIBRARY_FAILURE);
+        return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
   }
 
@@ -549,10 +551,10 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
                       const SECItem* encodedExtendedKeyUsage,
                       KeyPurposeId requiredEKU)
 {
-  // XXX: We're using SEC_ERROR_INADEQUATE_CERT_TYPE here so that callers can
-  // distinguish EKU mismatch from KU mismatch from basic constraints mismatch.
-  // We should probably add a new error code that is more clear for this type
-  // of problem.
+  // XXX: We're using Result::ERROR_INADEQUATE_CERT_TYPE here so that callers
+  // can distinguish EKU mismatch from KU mismatch from basic constraints
+  // mismatch. We should probably add a new error code that is more clear for
+  // this type of problem.
 
   bool foundOCSPSigning = false;
 
@@ -562,22 +564,22 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
     Input input;
     if (input.Init(encodedExtendedKeyUsage->data,
                    encodedExtendedKeyUsage->len) != Success) {
-      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
+      return Result::ERROR_INADEQUATE_CERT_TYPE;
     }
     if (der::NestedOf(input, der::SEQUENCE, der::OIDTag, der::EmptyAllowed::No,
                       bind(MatchEKU, _1, requiredEKU, endEntityOrCA,
                            ref(found), ref(foundOCSPSigning)))
           != Success) {
-      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
+      return Result::ERROR_INADEQUATE_CERT_TYPE;
     }
     if (der::End(input) != Success) {
-      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
+      return Result::ERROR_INADEQUATE_CERT_TYPE;
     }
 
     // If the EKU extension was included, then the required EKU must be in the
     // list.
     if (!found) {
-      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
+      return Result::ERROR_INADEQUATE_CERT_TYPE;
     }
   }
 
@@ -597,7 +599,7 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
     // require delegated OCSP response signing certificates to be end-entity
     // certificates.
     if (foundOCSPSigning && requiredEKU != KeyPurposeId::id_kp_OCSPSigning) {
-      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
+      return Result::ERROR_INADEQUATE_CERT_TYPE;
     }
     // http://tools.ietf.org/html/rfc6960#section-4.2.2.2:
     // "OCSP signing delegation SHALL be designated by the inclusion of
@@ -609,7 +611,7 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
     // certificate can issue a delegated OCSP response signing certificate, so
     // we can't require the EKU be explicitly included for CA certificates.
     if (!foundOCSPSigning && requiredEKU == KeyPurposeId::id_kp_OCSPSigning) {
-      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
+      return Result::ERROR_INADEQUATE_CERT_TYPE;
     }
   }
 
@@ -631,19 +633,18 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
   const EndEntityOrCA endEntityOrCA = cert.endEntityOrCA;
 
   TrustLevel trustLevel;
-  rv = MapSECStatus(trustDomain.GetCertTrust(endEntityOrCA, requiredPolicy,
-                                             cert.GetDER(), &trustLevel));
+  rv = trustDomain.GetCertTrust(endEntityOrCA, requiredPolicy, cert.GetDER(),
+                                &trustLevel);
   if (rv != Success) {
     return rv;
   }
   if (trustLevel == TrustLevel::ActivelyDistrusted) {
-    return Fail(RecoverableError, SEC_ERROR_UNTRUSTED_CERT);
+    return Result::ERROR_UNTRUSTED_CERT;
   }
   if (trustLevel != TrustLevel::TrustAnchor &&
       trustLevel != TrustLevel::InheritsTrust) {
     // The TrustDomain returned a trust level that we weren't expecting.
-    PORT_SetError(PR_INVALID_STATE_ERROR);
-    return FatalError;
+    return Result::FATAL_ERROR_INVALID_STATE;
   }
   if (trustLevelOut) {
     *trustLevelOut = trustLevel;

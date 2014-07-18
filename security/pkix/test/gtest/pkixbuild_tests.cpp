@@ -24,6 +24,9 @@
 
 #include "nssgtest.h"
 #include "pkix/pkix.h"
+#include "pkix/pkixnss.h"
+#include "pkixgtest.h"
+#include "pkixtestutil.h"
 #include "prinit.h"
 #include "secerr.h"
 
@@ -112,21 +115,20 @@ public:
   }
 
 private:
-  SECStatus GetCertTrust(EndEntityOrCA,
-                         const CertPolicyId&,
-                         const SECItem& candidateCert,
-                         /*out*/ TrustLevel* trustLevel)
+  virtual Result GetCertTrust(EndEntityOrCA, const CertPolicyId&,
+                              const SECItem& candidateCert,
+                              /*out*/ TrustLevel* trustLevel)
   {
     if (SECITEM_ItemsAreEqual(&candidateCert, &certChainTail[0]->derCert)) {
       *trustLevel = TrustLevel::TrustAnchor;
     } else {
       *trustLevel = TrustLevel::InheritsTrust;
     }
-    return SECSuccess;
+    return Success;
   }
 
-  SECStatus FindIssuer(const SECItem& encodedIssuerName,
-                       IssuerChecker& checker, PRTime time)
+  virtual Result FindIssuer(const SECItem& encodedIssuerName,
+                            IssuerChecker& checker, PRTime time)
   {
     ScopedCERTCertList
       candidates(CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
@@ -135,11 +137,11 @@ private:
       for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
            !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
         bool keepGoing;
-        SECStatus srv = checker.Check(n->cert->derCert,
-                                      nullptr/*additionalNameConstraints*/,
-                                      keepGoing);
-        if (srv != SECSuccess) {
-          return SECFailure;
+        Result rv = checker.Check(n->cert->derCert,
+                                  nullptr/*additionalNameConstraints*/,
+                                  keepGoing);
+        if (rv != Success) {
+          return rv;
         }
         if (!keepGoing) {
           break;
@@ -147,37 +149,36 @@ private:
       }
     }
 
-    return SECSuccess;
+    return Success;
   }
 
-  SECStatus CheckRevocation(EndEntityOrCA, const CertID&, PRTime,
-                            /*optional*/ const SECItem*,
-                            /*optional*/ const SECItem*)
+  virtual Result CheckRevocation(EndEntityOrCA, const CertID&, PRTime,
+                                 /*optional*/ const SECItem*,
+                                 /*optional*/ const SECItem*)
   {
-    return SECSuccess;
+    return Success;
   }
 
-  virtual SECStatus IsChainValid(const DERArray&)
+  virtual Result IsChainValid(const DERArray&)
   {
-    return SECSuccess;
+    return Success;
   }
 
-  SECStatus VerifySignedData(const SignedDataWithSignature& signedData,
-                             const SECItem& subjectPublicKeyInfo)
+  virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
+                                  const SECItem& subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
                                              nullptr);
   }
 
-  virtual SECStatus DigestBuf(const SECItem& item, /*out*/ uint8_t *digestBuf,
-                              size_t digestBufLen)
+  virtual Result DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
+                           size_t digestBufLen)
   {
     ADD_FAILURE();
-    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
-    return SECFailure;
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  SECStatus CheckPublicKey(const SECItem& subjectPublicKeyInfo)
+  virtual Result CheckPublicKey(const SECItem& subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
   }
@@ -215,13 +216,13 @@ protected:
 
 TEST_F(pkixbuild, MaxAcceptableCertChainLength)
 {
-  ASSERT_SECSuccess(BuildCertChain(trustDomain,
-                                   trustDomain.GetLeafCACert()->derCert,
-                                   now, EndEntityOrCA::MustBeCA,
-                                   KeyUsage::noParticularKeyUsageRequired,
-                                   KeyPurposeId::id_kp_serverAuth,
-                                   CertPolicyId::anyPolicy,
-                                   nullptr/*stapledOCSPResponse*/));
+  ASSERT_EQ(Success,
+            BuildCertChain(trustDomain, trustDomain.GetLeafCACert()->derCert,
+                           now, EndEntityOrCA::MustBeCA,
+                           KeyUsage::noParticularKeyUsageRequired,
+                           KeyPurposeId::id_kp_serverAuth,
+                           CertPolicyId::anyPolicy,
+                           nullptr/*stapledOCSPResponse*/));
 
   ScopedSECKEYPrivateKey privateKey;
   ScopedCERTCertificate cert;
@@ -230,12 +231,13 @@ TEST_F(pkixbuild, MaxAcceptableCertChainLength)
                          "CN=Direct End-Entity",
                          EndEntityOrCA::MustBeEndEntity,
                          trustDomain.leafCAKey.get(), privateKey, cert));
-  ASSERT_SECSuccess(BuildCertChain(trustDomain, cert->derCert, now,
-                                   EndEntityOrCA::MustBeEndEntity,
-                                   KeyUsage::noParticularKeyUsageRequired,
-                                   KeyPurposeId::id_kp_serverAuth,
-                                   CertPolicyId::anyPolicy,
-                                   nullptr/*stapledOCSPResponse*/));
+  ASSERT_EQ(Success,
+            BuildCertChain(trustDomain, cert->derCert, now,
+                           EndEntityOrCA::MustBeEndEntity,
+                           KeyUsage::noParticularKeyUsageRequired,
+                           KeyPurposeId::id_kp_serverAuth,
+                           CertPolicyId::anyPolicy,
+                           nullptr/*stapledOCSPResponse*/));
 }
 
 TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
@@ -247,14 +249,13 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
                          "CN=CA Too Far", EndEntityOrCA::MustBeCA,
                          trustDomain.leafCAKey.get(),
                          caPrivateKey, caCert));
-  PR_SetError(0, 0);
-  ASSERT_SECFailure(SEC_ERROR_UNKNOWN_ISSUER,
-                    BuildCertChain(trustDomain, caCert->derCert, now,
-                                   EndEntityOrCA::MustBeCA,
-                                   KeyUsage::noParticularKeyUsageRequired,
-                                   KeyPurposeId::id_kp_serverAuth,
-                                   CertPolicyId::anyPolicy,
-                                   nullptr/*stapledOCSPResponse*/));
+  ASSERT_EQ(Result::ERROR_UNKNOWN_ISSUER,
+            BuildCertChain(trustDomain, caCert->derCert, now,
+                           EndEntityOrCA::MustBeCA,
+                           KeyUsage::noParticularKeyUsageRequired,
+                           KeyPurposeId::id_kp_serverAuth,
+                           CertPolicyId::anyPolicy,
+                           nullptr/*stapledOCSPResponse*/));
 
   ScopedSECKEYPrivateKey privateKey;
   ScopedCERTCertificate cert;
@@ -262,12 +263,11 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
                          "CN=End-Entity Too Far",
                          EndEntityOrCA::MustBeEndEntity,
                          caPrivateKey.get(), privateKey, cert));
-  PR_SetError(0, 0);
-  ASSERT_SECFailure(SEC_ERROR_UNKNOWN_ISSUER,
-                    BuildCertChain(trustDomain, cert->derCert, now,
-                                   EndEntityOrCA::MustBeEndEntity,
-                                   KeyUsage::noParticularKeyUsageRequired,
-                                   KeyPurposeId::id_kp_serverAuth,
-                                   CertPolicyId::anyPolicy,
-                                   nullptr/*stapledOCSPResponse*/));
+  ASSERT_EQ(Result::ERROR_UNKNOWN_ISSUER,
+            BuildCertChain(trustDomain, cert->derCert, now,
+                           EndEntityOrCA::MustBeEndEntity,
+                           KeyUsage::noParticularKeyUsageRequired,
+                           KeyPurposeId::id_kp_serverAuth,
+                           CertPolicyId::anyPolicy,
+                           nullptr/*stapledOCSPResponse*/));
 }
