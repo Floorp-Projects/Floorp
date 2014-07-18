@@ -197,6 +197,8 @@ class RefTest(object):
     # release engineering and landing on multiple branches at once.
     if special_powers and (manifest.endswith('crashtests.list') or manifest.endswith('jstests.list')):
       addons.append(os.path.join(SCRIPT_DIRECTORY, 'specialpowers'))
+      # SpecialPowers requires insecure automation-only features that we put behind a pref.
+      prefs['security.turn_off_all_security_so_that_viruses_can_take_over_this_computer'] = True
 
     # Install distributed extensions, if application has any.
     distExtDir = os.path.join(options.app[ : options.app.rfind(os.sep)], "distribution", "extensions")
