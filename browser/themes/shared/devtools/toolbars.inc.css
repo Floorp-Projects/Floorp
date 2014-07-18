@@ -827,7 +827,8 @@
 .theme-light #black-boxed-message-button .button-icon,
 .theme-light #canvas-debugging-empty-notice-button .button-icon,
 .theme-light #requests-menu-perf-notice-button .button-icon,
-.theme-light #requests-menu-network-summary-button .button-icon {
+.theme-light #requests-menu-network-summary-button .button-icon,
+.theme-light .event-tooltip-debugger-icon {
   filter: url(filters.svg#invert);
 }
 

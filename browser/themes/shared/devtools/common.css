@@ -163,7 +163,14 @@
   min-width: 100px;
   max-width: 400px;
 }
-.devtools-tooltip[clamped-dimensions] .panel-arrowcontent {
+.devtools-tooltip[clamped-dimensions-no-min-height] {
+  min-height: 0;
+  max-height: 400px;
+  min-width: 100px;
+  max-width: 400px;
+}
+.devtools-tooltip[clamped-dimensions] .panel-arrowcontent,
+.devtools-tooltip[clamped-dimensions-no-min-height] .panel-arrowcontent {
   overflow: hidden;
 }
 
