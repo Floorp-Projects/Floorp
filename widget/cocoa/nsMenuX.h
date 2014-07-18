@@ -63,6 +63,7 @@ public:
   void           MenuClosed();
   void           SetRebuild(bool aMenuEvent);
   NSMenuItem*    NativeMenuItem();
+  nsresult       SetupIcon();
 
   static bool    IsXULHelpMenu(nsIContent* aMenuContent);
 
@@ -71,7 +72,6 @@ protected:
   nsresult       RemoveAll();
   nsresult       SetEnabled(bool aIsEnabled);
   nsresult       GetEnabled(bool* aIsEnabled);
-  nsresult       SetupIcon();
   void           GetMenuPopupContent(nsIContent** aResult);
   bool           OnOpen();
   bool           OnClose();
