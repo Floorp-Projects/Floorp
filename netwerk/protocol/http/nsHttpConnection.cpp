@@ -976,12 +976,15 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
         MOZ_ASSERT(!mUsingSpdyVersion,
                    "SPDY NPN Complete while using proxy connect stream");
         mProxyConnectStream = nullptr;
+        bool isHttps =
+            mTransaction ? mTransaction->ConnectionInfo()->EndToEndSSL() :
+            mConnInfo->EndToEndSSL();
+
         if (responseStatus == 200) {
-            LOG(("proxy CONNECT succeeded! endtoendssl=%s\n",
-                 mConnInfo->EndToEndSSL() ? "true" :"false"));
+            LOG(("proxy CONNECT succeeded! endtoendssl=%d\n", isHttps));
             *reset = true;
             nsresult rv;
-            if (mConnInfo->EndToEndSSL()) {
+            if (isHttps) {
                 if (mConnInfo->UsingHttpsProxy()) {
                     LOG(("%p new TLSFilterTransaction %s %d\n",
                          this, mConnInfo->Host(), mConnInfo->Port()));
@@ -998,8 +1001,7 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
             MOZ_ASSERT(NS_SUCCEEDED(rv), "mSocketOut->AsyncWait failed");
         }
         else {
-            LOG(("proxy CONNECT failed! endtoendssl=%s\n",
-                 mConnInfo->EndToEndSSL() ? "true" :"false"));
+            LOG(("proxy CONNECT failed! endtoendssl=%d\n", isHttps));
             mTransaction->SetProxyConnectFailed();
         }
     }
