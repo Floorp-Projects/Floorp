@@ -25,7 +25,7 @@
 #ifndef mozilla_pkix__pkixtypes_h
 #define mozilla_pkix__pkixtypes_h
 
-#include "pkix/enumclass.h"
+#include "pkix/Result.h"
 #include "pkix/nullptr.h"
 #include "prtime.h"
 #include "seccomon.h"
@@ -198,10 +198,10 @@ public:
   // list of EV roots, then GetCertTrust must result in
   // *trustLevel == InheritsTrust instead of *trustLevel == TrustAnchor
   // (assuming the candidate cert is not actively distrusted).
-  virtual SECStatus GetCertTrust(EndEntityOrCA endEntityOrCA,
-                                 const CertPolicyId& policy,
-                                 const SECItem& candidateCertDER,
-                         /*out*/ TrustLevel* trustLevel) = 0;
+  virtual Result GetCertTrust(EndEntityOrCA endEntityOrCA,
+                              const CertPolicyId& policy,
+                              const SECItem& candidateCertDER,
+                              /*out*/ TrustLevel* trustLevel) = 0;
 
   class IssuerChecker
   {
@@ -213,9 +213,9 @@ public:
     // encoded NameConstraints extension value; in that case, those name
     // constraints will be checked in addition to any any name constraints
     // contained in potentialIssuerDER.
-    virtual SECStatus Check(const SECItem& potentialIssuerDER,
-               /*optional*/ const SECItem* additionalNameConstraints,
-                    /*out*/ bool& keepGoing) = 0;
+    virtual Result Check(const SECItem& potentialIssuerDER,
+                         /*optional*/ const SECItem* additionalNameConstraints,
+                         /*out*/ bool& keepGoing) = 0;
   protected:
     IssuerChecker();
     virtual ~IssuerChecker();
@@ -265,8 +265,8 @@ public:
   //
   // checker.Check is responsible for limiting the recursion to a reasonable
   // limit.
-  virtual SECStatus FindIssuer(const SECItem& encodedIssuerName,
-                               IssuerChecker& checker, PRTime time) = 0;
+  virtual Result FindIssuer(const SECItem& encodedIssuerName,
+                            IssuerChecker& checker, PRTime time) = 0;
 
   // Called as soon as we think we have a valid chain but before revocation
   // checks are done. This function can be used to compute additional checks,
@@ -289,14 +289,22 @@ public:
   // very wrong to assume that the certificate chain is valid.
   //
   // certChain.GetDER(0) is the trust anchor.
-  virtual SECStatus IsChainValid(const DERArray& certChain) = 0;
+  virtual Result IsChainValid(const DERArray& certChain) = 0;
 
   // issuerCertToDup is only non-const so CERT_DupCertificate can be called on
   // it.
-  virtual SECStatus CheckRevocation(EndEntityOrCA endEntityOrCA,
-                                    const CertID& certID, PRTime time,
-                       /*optional*/ const SECItem* stapledOCSPresponse,
-                       /*optional*/ const SECItem* aiaExtension) = 0;
+  virtual Result CheckRevocation(EndEntityOrCA endEntityOrCA,
+                                 const CertID& certID, PRTime time,
+                    /*optional*/ const SECItem* stapledOCSPresponse,
+                    /*optional*/ const SECItem* aiaExtension) = 0;
+
+  // Check that the key size, algorithm, and parameters of the given public key
+  // are acceptable.
+  //
+  // VerifySignedData() should do the same checks that this function does, but
+  // mainly for efficiency, some keys are not passed to VerifySignedData().
+  // This function is called instead for those keys.
+  virtual Result CheckPublicKey(const SECItem& subjectPublicKeyInfo) = 0;
 
   // Verify the given signature using the given public key.
   //
@@ -305,8 +313,8 @@ public:
   //
   // In any case, the implementation must perform checks on the public key
   // similar to how mozilla::pkix::CheckPublicKey() does.
-  virtual SECStatus VerifySignedData(const SignedDataWithSignature& signedData,
-                                     const SECItem& subjectPublicKeyInfo) = 0;
+  virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
+                                  const SECItem& subjectPublicKeyInfo) = 0;
 
   // Compute the SHA-1 hash of the data in the current item.
   //
@@ -319,17 +327,8 @@ public:
   // other, extensive, memory safety efforts in mozilla::pkix, and we should
   // find a way to provide a more-obviously-safe interface.
   static const size_t DIGEST_LENGTH = 20; // length of SHA-1 digest
-  virtual SECStatus DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
-                              size_t digestBufLen) = 0;
-
-  // Check that the key size, algorithm, and parameters of the given public key
-  // are acceptable.
-  //
-  // VerifySignedData() should do the same checks that this function does, but
-  // mainly for efficiency, some keys are not passed to VerifySignedData().
-  // This function is called instead for those keys.
-  virtual SECStatus CheckPublicKey(const SECItem& subjectPublicKeyInfo) = 0;
-
+  virtual Result DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
+                           size_t digestBufLen) = 0;
 protected:
   TrustDomain() { }
 

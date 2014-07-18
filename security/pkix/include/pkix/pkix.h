@@ -25,9 +25,7 @@
 #ifndef mozilla_pkix__pkix_h
 #define mozilla_pkix__pkix_h
 
-#include "pkix/nullptr.h"
 #include "pkixtypes.h"
-#include "prtime.h"
 
 namespace mozilla { namespace pkix {
 
@@ -60,15 +58,15 @@ namespace mozilla { namespace pkix {
 //
 // The ranking is:
 //
-//    1. Active distrust (SEC_ERROR_UNTRUSTED_CERT).
+//    1. Active distrust (Result::ERROR_UNTRUSTED_CERT).
 //    2. Problems with issuer-independent properties for CA certificates.
-//    3. Unknown issuer (SEC_ERROR_UNKNOWN_ISSUER).
+//    3. Unknown issuer (Result::ERROR_UNKNOWN_ISSUER).
 //    4. Problems with issuer-independent properties for EE certificates.
 //    5. Revocation.
 //
-// In particular, if BuildCertChain returns SEC_ERROR_UNKNOWN_ISSUER then the
-// caller can call CERT_CheckCertValidTimes to determine if the certificate is
-// ALSO expired.
+// In particular, if BuildCertChain returns Result::ERROR_UNKNOWN_ISSUER then
+// the caller can call CERT_CheckCertValidTimes to determine if the certificate
+// is ALSO expired.
 //
 // It would be better if revocation were prioritized above expiration and
 // unknown issuer. However, it is impossible to do revocation checking without
@@ -77,39 +75,37 @@ namespace mozilla { namespace pkix {
 // during the validity period of the certificate.
 //
 // In general, when path building fails, BuildCertChain will return
-// SEC_ERROR_UNKNOWN_ISSUER. However, if all attempted paths resulted in the
-// same error (which is trivially true when there is only one potential path),
-// more specific errors will be returned.
+// Result::ERROR_UNKNOWN_ISSUER. However, if all attempted paths resulted in
+// the same error (which is trivially true when there is only one potential
+// path), more specific errors will be returned.
 //
 // ----------------------------------------------------------------------------
 // Meaning of specific error codes
 //
-// SEC_ERROR_UNTRUSTED_CERT means that the end-entity certificate was actively
-//                          distrusted.
-// SEC_ERROR_UNTRUSTED_ISSUER means that path building failed because of active
-//                            distrust.
+// Result::ERROR_UNTRUSTED_CERT means that the end-entity certificate was
+//                              actively distrusted.
+// Result::SEC_ERROR_UNTRUSTED_ISSUER means that path building failed because
+//                                    of active distrust.
 // TODO(bug 968451): Document more of these.
 
-SECStatus BuildCertChain(TrustDomain& trustDomain, const SECItem& cert,
-                         PRTime time, EndEntityOrCA endEntityOrCA,
-                         KeyUsage requiredKeyUsageIfPresent,
-                         KeyPurposeId requiredEKUIfPresent,
-                         const CertPolicyId& requiredPolicy,
-            /*optional*/ const SECItem* stapledOCSPResponse);
+Result BuildCertChain(TrustDomain& trustDomain, const SECItem& cert,
+                      PRTime time, EndEntityOrCA endEntityOrCA,
+                      KeyUsage requiredKeyUsageIfPresent,
+                      KeyPurposeId requiredEKUIfPresent,
+                      const CertPolicyId& requiredPolicy,
+                      /*optional*/ const SECItem* stapledOCSPResponse);
 
-// Verify the given signed data using the given public key.
-SECStatus VerifySignedData(const SignedDataWithSignature& sd,
-                           const SECItem& subjectPublicKeyInfo,
-                           void* pkcs11PinArg);
-
-// The return value, if non-null, is owned by the arena and MUST NOT be freed.
-SECItem* CreateEncodedOCSPRequest(TrustDomain& trustDomain, PLArenaPool* arena,
-                                  const CertID& certID);
+static const size_t OCSP_REQUEST_MAX_LENGTH = 127;
+Result CreateEncodedOCSPRequest(TrustDomain& trustDomain,
+                                const struct CertID& certID,
+                                /*out*/ uint8_t (&out)[OCSP_REQUEST_MAX_LENGTH],
+                                /*out*/ size_t& outLen);
 
 // The out parameter expired will be true if the response has expired. If the
 // response also indicates a revoked or unknown certificate, that error
-// will be returned by PR_GetError(). Otherwise, SEC_ERROR_OCSP_OLD_RESPONSE
-// will be returned by PR_GetError() for an expired response.
+// will be returned. Otherwise, REsult::ERROR_OCSP_OLD_RESPONSE will be
+// returned for an expired response.
+//
 // The optional parameter thisUpdate will be the thisUpdate value of
 // the encoded response if it is considered trustworthy. Only
 // good, unknown, or revoked responses that verify correctly are considered
@@ -117,30 +113,13 @@ SECItem* CreateEncodedOCSPRequest(TrustDomain& trustDomain, PLArenaPool* arena,
 // Similarly, the optional parameter validThrough will be the time through
 // which the encoded response is considered trustworthy (that is, if a response had a
 // thisUpdate time of validThrough, it would be considered trustworthy).
-SECStatus VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
-                                    const CertID& certID, PRTime time,
-                                    uint16_t maxLifetimeInDays,
-                                    const SECItem& encodedResponse,
-                          /* out */ bool& expired,
-                 /* optional out */ PRTime* thisUpdate = nullptr,
-                 /* optional out */ PRTime* validThrough = nullptr);
-
-// Computes the SHA-1 hash of the data in the current item.
-//
-// item contains the data to hash.
-// digestBuf must point to a buffer to where the SHA-1 hash will be written.
-// digestBufLen must be 20 (the length of a SHA-1 hash,
-//              TrustDomain::DIGEST_LENGTH).
-//
-// TODO(bug 966856): Add SHA-2 support
-// TODO: Taking the output buffer as (uint8_t*, size_t) is counter to our
-// other, extensive, memory safety efforts in mozilla::pkix, and we should find
-// a way to provide a more-obviously-safe interface.
-SECStatus DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
-                    size_t digestBufLen);
-
-// Checks, for RSA keys and DSA keys, that the modulus is at least 1024 bits.
-SECStatus CheckPublicKey(const SECItem& subjectPublicKeyInfo);
+Result VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
+                                 const CertID& certID, PRTime time,
+                                 uint16_t maxLifetimeInDays,
+                                 const SECItem& encodedResponse,
+                       /* out */ bool& expired,
+              /* optional out */ PRTime* thisUpdate = nullptr,
+              /* optional out */ PRTime* validThrough = nullptr);
 
 } } // namespace mozilla::pkix
 
