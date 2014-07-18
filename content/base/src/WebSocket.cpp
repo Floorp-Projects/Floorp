@@ -679,17 +679,28 @@ WebSocket::Init(JSContext* aCx,
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocument> originDoc = nsContentUtils::GetDocumentFromScriptContext(sc);
-
   // Don't allow https:// to open ws://
   if (!mSecure &&
       !Preferences::GetBool("network.websocket.allowInsecureFromHTTPS",
                             false)) {
     // Confirmed we are opening plain ws:// and want to prevent this from a
-    // secure context (e.g. https). Check the security context of the document
-    // associated with this script, which is the same as associated with mOwner.
-    if (originDoc && originDoc->GetSecurityInfo()) {
-      return NS_ERROR_DOM_SECURITY_ERR;
+    // secure context (e.g. https). Check the principal's uri to determine if
+    // we were loaded from https.
+    nsCOMPtr<nsIGlobalObject> globalObject(BrokenGetEntryGlobal());
+    if (globalObject) {
+      nsCOMPtr<nsIPrincipal> principal(globalObject->PrincipalOrNull());
+      if (principal) {
+        nsCOMPtr<nsIURI> uri;
+        principal->GetURI(getter_AddRefs(uri));
+        if (uri) {
+          bool originIsHttps = false;
+          rv = uri->SchemeIs("https", &originIsHttps);
+          NS_ENSURE_SUCCESS(rv,rv);
+          if (originIsHttps) {
+            return NS_ERROR_DOM_SECURITY_ERR;
+          }
+        }
+      }
     }
   }
 
@@ -710,6 +721,7 @@ WebSocket::Init(JSContext* aCx,
 
   // Check content policy.
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
+  nsCOMPtr<nsIDocument> originDoc = nsContentUtils::GetDocumentFromScriptContext(sc);
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_WEBSOCKET,
                                  mURI,
                                  mPrincipal,
