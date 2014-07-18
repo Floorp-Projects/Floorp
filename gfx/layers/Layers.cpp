@@ -155,6 +155,12 @@ LayerManager::CreateAsynchronousImageContainer()
   return container.forget();
 }
 
+bool
+LayerManager::AreComponentAlphaLayersEnabled()
+{
+  return gfxPrefs::ComponentAlphaEnabled();
+}
+
 //--------------------------------------------------
 // Layer
 
@@ -1023,7 +1029,8 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
 void
 ContainerLayer::DefaultComputeSupportsComponentAlphaChildren(bool* aNeedsSurfaceCopy)
 {
-  if (!(GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA_DESCENDANT)) {
+  if (!(GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA_DESCENDANT) ||
+      !Manager()->AreComponentAlphaLayersEnabled()) {
     mSupportsComponentAlphaChildren = false;
     if (aNeedsSurfaceCopy) {
       *aNeedsSurfaceCopy = false;
@@ -1031,32 +1038,30 @@ ContainerLayer::DefaultComputeSupportsComponentAlphaChildren(bool* aNeedsSurface
     return;
   }
 
-  bool supportsComponentAlphaChildren = false;
+  mSupportsComponentAlphaChildren = false;
   bool needsSurfaceCopy = false;
   CompositionOp blendMode = GetEffectiveMixBlendMode();
   if (UseIntermediateSurface()) {
     if (GetEffectiveVisibleRegion().GetNumRects() == 1 &&
         (GetContentFlags() & Layer::CONTENT_OPAQUE))
     {
-      supportsComponentAlphaChildren = true;
+      mSupportsComponentAlphaChildren = true;
     } else {
       gfx::Matrix transform;
       if (HasOpaqueAncestorLayer(this) &&
           GetEffectiveTransform().Is2D(&transform) &&
           !gfx::ThebesMatrix(transform).HasNonIntegerTranslation() &&
           blendMode == gfx::CompositionOp::OP_OVER) {
-        supportsComponentAlphaChildren = true;
+        mSupportsComponentAlphaChildren = true;
         needsSurfaceCopy = true;
       }
     }
   } else if (blendMode == gfx::CompositionOp::OP_OVER) {
-    supportsComponentAlphaChildren =
+    mSupportsComponentAlphaChildren =
       (GetContentFlags() & Layer::CONTENT_OPAQUE) ||
       (GetParent() && GetParent()->SupportsComponentAlphaChildren());
   }
 
-  mSupportsComponentAlphaChildren = supportsComponentAlphaChildren &&
-                                    gfxPrefs::ComponentAlphaEnabled();
   if (aNeedsSurfaceCopy) {
     *aNeedsSurfaceCopy = mSupportsComponentAlphaChildren && needsSurfaceCopy;
   }
