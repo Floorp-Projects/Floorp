@@ -301,10 +301,6 @@ public class AndroidGamepadManager {
     }
 
     private static void scanForGamepads() {
-        if (Build.VERSION.SDK_INT < 9) {
-            return;
-        }
-
         int[] deviceIds = InputDevice.getDeviceIds();
         if (deviceIds == null) {
             return;
