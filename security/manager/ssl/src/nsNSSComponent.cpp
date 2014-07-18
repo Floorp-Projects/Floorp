@@ -51,6 +51,7 @@
 #include "NSSErrorsService.h"
 
 #include "nss.h"
+#include "pkix/pkixnss.h"
 #include "ssl.h"
 #include "sslproto.h"
 #include "secmod.h"
@@ -1209,7 +1210,7 @@ nsNSSComponent::InitializeNSS()
   LaunchSmartCardThreads();
 #endif
 
-  RegisterPSMErrorTable();
+  mozilla::pkix::RegisterErrorTable();
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
   return NS_OK;
