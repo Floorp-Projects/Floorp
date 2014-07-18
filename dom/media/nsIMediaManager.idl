@@ -12,12 +12,13 @@ interface nsIDOMWindow;
 #define MEDIAMANAGERSERVICE_CONTRACTID "@mozilla.org/mediaManagerService;1"
 %}
 
-[scriptable, builtinclass, uuid(2efff6ab-0e3e-4cc4-8f9b-4aaca59a1140)]
+[scriptable, builtinclass, uuid(f431b523-4536-4ba7-a2c1-7e1bf670d32a)]
 interface nsIMediaManagerService : nsISupports
 {
   /* return a array of inner windows that have active captures */
   readonly attribute nsISupportsArray activeMediaCaptureWindows;
 
   /* Get the capture state for the given window and all descendant windows (iframes, etc) */
-  void mediaCaptureWindowState(in nsIDOMWindow aWindow, out boolean aVideo, out boolean aAudio);
+  void mediaCaptureWindowState(in nsIDOMWindow aWindow, out boolean aVideo, out boolean aAudio,
+                               [optional] out boolean aScreenShare, [optional] out boolean aWindowShare);
 };
