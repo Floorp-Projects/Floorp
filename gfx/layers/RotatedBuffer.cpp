@@ -465,8 +465,10 @@ RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer,
 #else
       if (!aLayer->GetParent() ||
           !aLayer->GetParent()->SupportsComponentAlphaChildren() ||
+          !aLayer->Manager()->IsCompositingCheap() ||
           !aLayer->AsShadowableLayer() ||
-          !aLayer->AsShadowableLayer()->HasShadow()) {
+          !aLayer->AsShadowableLayer()->HasShadow() ||
+          !gfxPrefs::ComponentAlphaEnabled()) {
         mode = SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
       } else {
         result.mContentType = gfxContentType::COLOR;
