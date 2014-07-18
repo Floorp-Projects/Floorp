@@ -21,6 +21,17 @@
 class nsILineInputStream;
 class nsIThread;
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+
+namespace mozilla {
+namespace dom {
+class PCrashReporterParent;
+class CrashReporterParent;
+}
+}
+#endif
+
 namespace mozilla {
 namespace gmp {
 
@@ -86,7 +97,14 @@ private:
   ~GMPParent();
   bool EnsureProcessLoaded();
   nsresult ReadGMPMetaData();
+#ifdef MOZ_CRASHREPORTER
+  void WriteExtraDataForMinidump(CrashReporter::AnnotationTable& notes);
+  void GetCrashID(nsString& aResult);
+#endif
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
+  virtual PCrashReporterParent* AllocPCrashReporterParent(const NativeThreadId& aThread) MOZ_OVERRIDE;
+  virtual bool DeallocPCrashReporterParent(PCrashReporterParent* aCrashReporter) MOZ_OVERRIDE;
   virtual PGMPVideoDecoderParent* AllocPGMPVideoDecoderParent() MOZ_OVERRIDE;
   virtual bool DeallocPGMPVideoDecoderParent(PGMPVideoDecoderParent* aActor) MOZ_OVERRIDE;
   virtual PGMPVideoEncoderParent* AllocPGMPVideoEncoderParent() MOZ_OVERRIDE;
