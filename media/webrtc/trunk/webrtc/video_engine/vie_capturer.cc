@@ -172,19 +172,8 @@ int32_t ViECapturer::Init(const char* device_unique_idUTF8,
 
   if(type != CaptureDeviceType::Camera) {
 #if !defined(ANDROID)
-    switch (type) {
-      case CaptureDeviceType::Screen:
-        capture_module_ = DesktopCaptureImpl::Create(
-            ViEModuleId(engine_id_, capture_id_), device_unique_idUTF8, false);
-        break;
-      case CaptureDeviceType::Application:
-        capture_module_ = DesktopCaptureImpl::Create(
-            ViEModuleId(engine_id_, capture_id_), device_unique_idUTF8, true);
-        break;
-      default:
-        // all other non-camera types are not supported
-        return -1;
-    }
+    capture_module_ = DesktopCaptureImpl::Create(
+      ViEModuleId(engine_id_, capture_id_), device_unique_idUTF8, type);
 #endif
   } else if (device_unique_idUTF8 == NULL) {
     capture_module_  = VideoCaptureFactory::Create(

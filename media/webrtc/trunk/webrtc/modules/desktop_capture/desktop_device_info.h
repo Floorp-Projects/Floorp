@@ -67,6 +67,9 @@ public:
   virtual int32_t getDisplayDeviceCount() = 0;
   virtual int32_t getDesktopDisplayDeviceInfo(int32_t nIndex,
                                               DesktopDisplayDevice & desktopDisplayDevice) = 0;
+  virtual int32_t getWindowCount() = 0;
+  virtual int32_t getWindowInfo(int32_t nindex,
+                                DesktopDisplayDevice &windowDevice) = 0;
   virtual int32_t getApplicationCount() = 0;
   virtual int32_t getApplicationInfo(int32_t nIndex,
                                      DesktopApplication & desktopApplication) = 0;
@@ -80,6 +83,9 @@ public:
   virtual int32_t getDisplayDeviceCount();
   virtual int32_t getDesktopDisplayDeviceInfo(int32_t nIndex,
                                               DesktopDisplayDevice & desktopDisplayDevice);
+  virtual int32_t getWindowCount();
+  virtual int32_t getWindowInfo(int32_t nindex,
+                                DesktopDisplayDevice &windowDevice);
   virtual int32_t getApplicationCount();
   virtual int32_t getApplicationInfo(int32_t nIndex,
                                      DesktopApplication & desktopApplication);
@@ -88,7 +94,10 @@ public:
 
 protected:
   DesktopDisplayDeviceList desktop_display_list_;
+  DesktopDisplayDeviceList desktop_window_list_;
   DesktopApplicationList desktop_application_list_;
+
+  int32_t initializeWindowList();
 };
 };
 
