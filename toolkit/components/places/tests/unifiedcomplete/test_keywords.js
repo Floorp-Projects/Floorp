@@ -6,7 +6,7 @@ add_task(function* test_non_keyword() {
   do_log_info("Searching for non-keyworded entry should autoFill it");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/test/"),
                            transition: TRANSITION_TYPED });
-  addBookmark({ url: "http://mozilla.org/test/" });
+  addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/") });
   yield check_autocomplete({
     search: "moz",
     autofilled: "mozilla.org/",
@@ -19,7 +19,7 @@ add_task(function* test_keyword() {
   do_log_info("Searching for keyworded entry should not autoFill it");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/test/"),
                            transition: TRANSITION_TYPED });
-  addBookmark({ url: "http://mozilla.org/test/", keyword: "moz" });
+  addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
   yield check_autocomplete({
     search: "moz",
     autofilled: "moz",
@@ -32,7 +32,7 @@ add_task(function* test_more_than_keyword() {
   do_log_info("Searching for more than keyworded entry should autoFill it");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/test/"),
                            transition: TRANSITION_TYPED });
-  addBookmark({ url: "http://mozilla.org/test/", keyword: "moz" });
+  addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
   yield check_autocomplete({
     search: "mozi",
     autofilled: "mozilla.org/",
@@ -45,7 +45,7 @@ add_task(function* test_less_than_keyword() {
   do_log_info("Searching for less than keyworded entry should autoFill it");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/test/"),
                            transition: TRANSITION_TYPED });
-  addBookmark({ url: "http://mozilla.org/test/", keyword: "moz" });
+  addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
   yield check_autocomplete({
     search: "mo",
     autofilled: "mozilla.org/",
@@ -58,7 +58,7 @@ add_task(function* test_keyword_casing() {
   do_log_info("Searching for keyworded entry is case-insensitive");
   yield promiseAddVisits({ uri: NetUtil.newURI("http://mozilla.org/test/"),
                            transition: TRANSITION_TYPED });
-  addBookmark({ url: "http://mozilla.org/test/", keyword: "moz" });
+  addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
   yield check_autocomplete({
     search: "MoZ",
     autofilled: "MoZ",
