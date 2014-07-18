@@ -4,9 +4,9 @@
 MARIONETTE_TIMEOUT = 30000;
 MARIONETTE_HEAD_JS = "icc_header.js";
 
-// Emulator's hard coded IMSI: 310260000000000
 let testCases = [
   // mvno type, mvno data, request success, expected result
+  // Emulator's hard coded IMSI: 310260000000000
   ["imsi", "3102600",            true, true               ],
   // x and X means skip the comparison.
   ["imsi", "31026xx0",           true, true               ],
@@ -17,11 +17,18 @@ let testCases = [
   ["imsi", "310260000000000",    true, true               ],
   ["imsi", "310260000000000123", true, false              ],
   ["imsi", "",                   false, "InvalidParameter"],
+  // Emulator's hard coded SPN:  Android
   ["spn",  "Android",            true, true               ],
   ["spn",  "",                   false, "InvalidParameter"],
   ["spn",  "OneTwoThree",        true, false              ],
-  // mvno type gid is not supported yet.
-  ["gid",  "A1",                 false, "ModeNotSupported"]
+  // Emulator's hard coded GID1: 5a4d
+  ["gid",  "",                   false, "InvalidParameter"],
+  ["gid",  "A1",                 true, false              ],
+  ["gid",  "5A",                 true, true               ],
+  ["gid",  "5a",                 true, true               ],
+  ["gid",  "5a4d",               true, true               ],
+  ["gid",  "5A4D",               true, true               ],
+  ["gid",  "5a4d6c",             true, false              ]
 ];
 
 function matchMvno(mvnoType, mvnoData, success, expectedResult) {
