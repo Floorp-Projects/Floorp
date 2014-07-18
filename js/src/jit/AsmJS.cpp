@@ -6971,7 +6971,7 @@ EstablishPreconditions(ExclusiveContext *cx, AsmJSParser &parser)
     if (!cx->jitSupportsFloatingPoint())
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of floating point support");
 
-    if (!cx->signalHandlersInstalled())
+    if (!cx->canUseSignalHandlers())
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Platform missing signal handler support");
 
     if (cx->gcSystemPageSize() != AsmJSPageSize)
@@ -7043,7 +7043,7 @@ js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
 
     // See EstablishPreconditions.
     bool available = cx->jitSupportsFloatingPoint() &&
-                     cx->signalHandlersInstalled() &&
+                     cx->canUseSignalHandlers() &&
                      cx->gcSystemPageSize() == AsmJSPageSize &&
                      !cx->compartment()->debugMode() &&
                      cx->runtime()->options().asmJS();
