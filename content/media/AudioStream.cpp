@@ -502,8 +502,10 @@ AudioStream::Init(int32_t aNumChannels, int32_t aRate,
   params.channels = mOutChannels;
 #if defined(__ANDROID__)
 #if defined(MOZ_B2G)
+  mAudioChannel = aAudioChannel;
   params.stream_type = ConvertChannelToCubebType(aAudioChannel);
 #else
+  mAudioChannel = dom::AudioChannel::Content;
   params.stream_type = CUBEB_STREAM_TYPE_MUSIC;
 #endif
 
@@ -558,6 +560,7 @@ void AudioStream::PanOutputIfNeeded(bool aMicrophoneActive)
   int rv;
   char name[128];
   size_t length = sizeof(name);
+  bool panCenter = false;
 
   rv = sysctlbyname("hw.model", name, &length, NULL, 0);
   if (rv) {
@@ -565,22 +568,29 @@ void AudioStream::PanOutputIfNeeded(bool aMicrophoneActive)
   }
 
   if (!strncmp(name, "MacBookPro", 10)) {
-    if (cubeb_stream_get_current_evice(mCubebStream, &device) == CUBEB_OK) {
+    if (cubeb_stream_get_current_device(mCubebStream, &device) == CUBEB_OK) {
       // Check if we are currently outputing sound on external speakers.
-      if (!strcmp(device->name, "ispk")) {
+      if (!strcmp(device->output_name, "ispk")) {
         // Pan everything to the right speaker.
         if (aMicrophoneActive) {
           if (cubeb_stream_set_panning(mCubebStream, 1.0) != CUBEB_OK) {
             NS_WARNING("Could not pan audio output to the right.");
           }
         } else {
-          if (cubeb_stream_set_panning(mCubebStream, 0.0) != CUBEB_OK) {
-            NS_WARNING("Could not pan audio output to the center.");
-          }
+          panCenter = true;
         }
       } else {
+        panCenter = true;
+      }
+      if (panCenter) {
+        LOG(("%p Panning audio output to the center.", this));
         if (cubeb_stream_set_panning(mCubebStream, 0.0) != CUBEB_OK) {
           NS_WARNING("Could not pan audio output to the center.");
+        }
+        // This a microphone that goes through the headphone plug, reset the
+        // output to prevent echo building up.
+        if (strcmp(device->input_name, "emic") == 0) {
+          Reset();
         }
       }
       cubeb_stream_device_destroy(mCubebStream, device);
@@ -654,6 +664,8 @@ AudioStream::OpenCubeb(cubeb_stream_params &aParams,
   cubeb_stream_register_device_changed_callback(mCubebStream,
                                                 AudioStream::DeviceChangedCallback_s);
 
+  mState = INITIALIZED;
+
   if (!mStartTime.IsNull()) {
     TimeDuration timeDelta = TimeStamp::Now() - mStartTime;
     LOG(("AudioStream creation time %sfirst: %u ms", mIsFirst ? "" : "not ",
@@ -714,6 +726,10 @@ nsresult
 AudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames, TimeStamp *aTime)
 {
   MonitorAutoLock mon(mMonitor);
+
+  // See if we need to start() the stream, since we must do that from this thread
+  CheckForStart();
+
   if (mShouldDropFrames) {
     mBuffer.ContractTo(0);
     return NS_OK;
@@ -723,9 +739,6 @@ AudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames, TimeStamp *aTim
   }
   NS_ASSERTION(mState == INITIALIZED || mState == STARTED || mState == RUNNING,
     "Stream write in unexpected state.");
-
-  // See if we need to start() the stream, since we must do that from this thread
-  CheckForStart();
 
   // Downmix to Stereo.
   if (mChannels > 2 && mChannels <= 8) {
@@ -1105,6 +1118,59 @@ AudioStream::GetTimeStretched(void* aBuffer, long aFrames, int64_t &aTimeMs)
   GetBufferInsertTime(aTimeMs);
 
   return processedFrames;
+}
+
+void
+AudioStream::Reset()
+{
+  mShouldDropFrames = true;
+  mNeedsStart = true;
+
+  cubeb_stream_params params;
+  params.rate = mInRate;
+  params.channels = mOutChannels;
+#if defined(__ANDROID__)
+#if defined(MOZ_B2G)
+  params.stream_type = ConvertChannelToCubebType(mAudioChannel);
+#else
+  params.stream_type = CUBEB_STREAM_TYPE_MUSIC;
+#endif
+
+  if (params.stream_type == CUBEB_STREAM_TYPE_MAX) {
+    return;
+  }
+#endif
+
+  if (AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16) {
+    params.format = CUBEB_SAMPLE_S16NE;
+  } else {
+    params.format = CUBEB_SAMPLE_FLOAT32NE;
+  }
+  mBytesPerFrame = sizeof(AudioDataValue) * mOutChannels;
+
+  // Size mBuffer for one second of audio.  This value is arbitrary, and was
+  // selected based on the observed behaviour of the existing AudioStream
+  // implementations.
+  uint32_t bufferLimit = FramesToBytes(mInRate);
+  NS_ABORT_IF_FALSE(bufferLimit % mBytesPerFrame == 0, "Must buffer complete frames");
+  mBuffer.Reset();
+  mBuffer.SetCapacity(bufferLimit);
+
+
+  if (mLatencyRequest == LowLatency) {
+    // Don't block this thread to initialize a cubeb stream.
+    // When this is done, it will start callbacks from Cubeb.  Those will
+    // cause us to move from INITIALIZED to RUNNING.  Until then, we
+    // can't access any cubeb functions.
+    // Use a RefPtr to avoid leaks if Dispatch fails
+    RefPtr<AudioInitTask> init = new AudioInitTask(this, mLatencyRequest, params);
+    init->Dispatch();
+    return;
+  }
+  // High latency - open synchronously
+  OpenCubeb(params, mLatencyRequest);
+
+  CheckForStart();
 }
 
 long
