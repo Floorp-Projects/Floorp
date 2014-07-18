@@ -122,7 +122,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(76ef3a80-f24d-11e3-ac10-0800200c9a66)]
+[scriptable, uuid(1a6c4db7-4b90-4919-9cd8-161ac14a7189)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -465,6 +465,14 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     void setWantXrays(in jsval vscope);
+
+    /*
+     * For gecko internal automation use only. Calling this in production code
+     * would result in security vulnerabilities, so it will crash if used outside
+     * of automation.
+     */
+    [implicit_jscontext]
+    void forcePermissiveCOWs();
 
     /*
      * Forces the usage of a privileged |Components| object for a potentially-
