@@ -11,7 +11,7 @@ namespace mozilla {
 namespace hal_impl {
 
 void
-FactoryReset()
+FactoryReset(mozilla::dom::FactoryResetReason&)
 {}
 
 } // namespace hal_impl

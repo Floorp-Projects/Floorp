@@ -1224,7 +1224,7 @@ window.addEventListener('ContentStart', function update_onContentStart() {
   // We must set the size in KB, and keep a bit of free space.
   let size = Math.floor(stats.totalBytes / 1024) - 1024;
   Services.prefs.setIntPref("browser.cache.disk.capacity", size);
-}) ()
+})();
 #endif
 
 // Calling this observer will cause a shutdown an a profile reset.
