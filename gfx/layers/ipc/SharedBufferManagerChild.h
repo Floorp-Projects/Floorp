@@ -104,10 +104,7 @@ public:
   void
   DeallocGrallocBuffer(const mozilla::layers::MaybeMagicGrallocBufferHandle& aBuffer);
 
-  void
-  DropGrallocBuffer(const mozilla::layers::MaybeMagicGrallocBufferHandle& aHandle);
-
-  virtual bool RecvDropGrallocBuffer(const mozilla::layers::MaybeMagicGrallocBufferHandle& aHandle);
+  virtual bool RecvDropGrallocBuffer(const mozilla::layers::MaybeMagicGrallocBufferHandle& handle);
 
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   android::sp<android::GraphicBuffer> GetGraphicBuffer(int64_t key);

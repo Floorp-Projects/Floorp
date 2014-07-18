@@ -47,7 +47,6 @@ ClientTiledThebesLayer::ClearCachedResources()
   if (mContentClient) {
     mContentClient->ClearCachedResources();
   }
-  mValidRegion.SetEmpty();
 }
 
 void
