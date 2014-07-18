@@ -233,19 +233,6 @@ TiledContentHost::Attach(Layer* aLayer,
 }
 
 void
-TiledContentHost::Detach(Layer* aLayer,
-                         AttachFlags aFlags /* = NO_FLAGS */)
-{
-  if (!mKeepAttached || aLayer == mLayer || aFlags & FORCE_DETACH) {
-    mTiledBuffer = TiledLayerBufferComposite();
-    mLowPrecisionTiledBuffer = TiledLayerBufferComposite();
-    mOldTiledBuffer = TiledLayerBufferComposite();
-    mOldLowPrecisionTiledBuffer = TiledLayerBufferComposite();
-  }
-  CompositableHost::Detach(aLayer,aFlags);
-}
-
-void
 TiledContentHost::UseTiledLayerBuffer(ISurfaceAllocator* aAllocator,
                                       const SurfaceDescriptorTiles& aTiledDescriptor)
 {
