@@ -137,12 +137,12 @@ private:
 
     struct Sample {
         off64_t offset;
-        size_t size;
+        uint32_t size;
         uint32_t duration;
         uint32_t ctsOffset;
         uint8_t iv[16];
-        Vector<size_t> clearsizes;
-        Vector<size_t> encryptedsizes;
+        Vector<uint16_t> clearsizes;
+        Vector<uint32_t> encryptedsizes;
     };
     Vector<Sample> mCurrentSamples;
 
@@ -1522,7 +1522,8 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                     kKeyESDS, kTypeESDS, &buffer[4], chunk_data_size - 4);
 
             if (mPath.size() >= 2
-                    && mPath[mPath.size() - 2] == FOURCC('m', 'p', '4', 'a')) {
+                    && (mPath[mPath.size() - 2] == FOURCC('m', 'p', '4', 'a') ||
+                       (mPath[mPath.size() - 2] == FOURCC('e', 'n', 'c', 'a')))) {
                 // Information from the ESDS must be relied on for proper
                 // setup of sample rate and channel count for MPEG4 Audio.
                 // The generic header appears to only contain generic
