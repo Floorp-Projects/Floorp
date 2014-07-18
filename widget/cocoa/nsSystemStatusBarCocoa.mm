@@ -53,10 +53,17 @@ nsSystemStatusBarCocoa::StatusItem::StatusItem(nsStandaloneNativeMenu* aMenu)
   mStatusItem = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength] retain];
   [mStatusItem setMenu:nativeMenu];
   [mStatusItem setHighlightMode:YES];
+
+  // We want the status item to get its image from menu item that mMenu was
+  // initialized with. Icon loads are asynchronous, so we need to let the menu
+  // know about the item so that it can update its icon as soon as it has
+  // loaded.
+  mMenu->SetContainerStatusBarItem(mStatusItem);
 }
 
 nsSystemStatusBarCocoa::StatusItem::~StatusItem()
 {
+  mMenu->SetContainerStatusBarItem(nil);
   [[NSStatusBar systemStatusBar] removeStatusItem:mStatusItem];
   [mStatusItem release];
   mStatusItem = nil;
