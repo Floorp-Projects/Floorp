@@ -6,6 +6,7 @@
 
 #include "nsNSSComponent.h"
 #include "nsServiceManagerUtils.h"
+#include "pkix/pkixnss.h"
 #include "secerr.h"
 #include "sslerr.h"
 
@@ -15,31 +16,20 @@
 namespace mozilla {
 namespace psm {
 
-static const struct PRErrorMessage PSMErrorTableText[] = {
-  { "PSM_ERROR_KEY_PINNING_FAILURE",
-    "The server uses key pinning (HPKP) but no trusted certificate chain "
-    "could be constructed that matches the pinset. Key pinning violations "
-    "cannot be overridden." }
-};
-
-static const struct PRErrorTable PSMErrorTable = {
-  PSMErrorTableText,
-  "psmerrors",
-  nsINSSErrorsService::PSM_ERROR_BASE,
-  PR_ARRAY_SIZE(PSMErrorTableText)
-};
-
-void
-RegisterPSMErrorTable()
-{
-  PR_ErrorInstallTable(&PSMErrorTable);
-}
+static_assert(mozilla::pkix::ERROR_BASE ==
+                nsINSSErrorsService::MOZILLA_PKIX_ERROR_BASE,
+              "MOZILLA_PKIX_ERROR_BASE and "
+                "nsINSSErrorsService::MOZILLA_PKIX_ERROR_BASE do not match.");
+static_assert(mozilla::pkix::ERROR_LIMIT ==
+                nsINSSErrorsService::MOZILLA_PKIX_ERROR_LIMIT,
+              "MOZILLA_PKIX_ERROR_LIMIT and "
+                "nsINSSErrorsService::MOZILLA_PKIX_ERROR_LIMIT do not match.");
 
 static bool
 IsPSMError(PRErrorCode error)
 {
-  return (error >= nsINSSErrorsService::PSM_ERROR_BASE &&
-          error < nsINSSErrorsService::PSM_ERROR_LIMIT);
+  return (error >= mozilla::pkix::ERROR_BASE &&
+          error < mozilla::pkix::ERROR_LIMIT);
 }
 
 NS_IMPL_ISUPPORTS(NSSErrorsService, nsINSSErrorsService)
