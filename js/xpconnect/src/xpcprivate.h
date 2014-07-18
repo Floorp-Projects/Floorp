@@ -82,6 +82,7 @@
 #include "mozilla/GuardObjects.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
 
 #include <math.h>
@@ -3640,6 +3641,7 @@ public:
         , writeToGlobalPrototype(false)
         , skipWriteToGlobalPrototype(false)
         , universalXPConnectEnabled(false)
+        , forcePermissiveCOWs(false)
         , adoptedNode(false)
         , donatedNode(false)
         , scriptability(c)
@@ -3680,8 +3682,18 @@ public:
     // This is only ever set during mochitest runs when enablePrivilege is called.
     // It's intended as a temporary stopgap measure until we can finish ripping out
     // enablePrivilege. Once set, this value is never unset (i.e., it doesn't follow
-    // the old scoping rules of enablePrivilege). Using it is inherently unsafe.
+    // the old scoping rules of enablePrivilege).
+    //
+    // Using it in production is inherently unsafe.
     bool universalXPConnectEnabled;
+
+    // This is only ever set during mochitest runs when enablePrivilege is called.
+    // It allows the SpecialPowers scope to waive the normal chrome security
+    // wrappers and expose properties directly to content. This lets us avoid a
+    // bunch of overhead and complexity in our SpecialPowers automation glue.
+    //
+    // Using it in production is inherently unsafe.
+    bool forcePermissiveCOWs;
 
     // for telemetry. See bug 928476.
     bool adoptedNode;
@@ -3737,6 +3749,14 @@ private:
 bool IsUniversalXPConnectEnabled(JSCompartment *compartment);
 bool IsUniversalXPConnectEnabled(JSContext *cx);
 bool EnableUniversalXPConnect(JSContext *cx);
+
+inline void
+CrashIfNotInAutomation()
+{
+    const char *prefName =
+      "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
+    MOZ_RELEASE_ASSERT(mozilla::Preferences::GetBool(prefName));
+}
 
 inline XPCWrappedNativeScope*
 ObjectScope(JSObject *obj)
