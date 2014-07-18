@@ -1473,7 +1473,7 @@ SetAddonInterposition(const nsACString &addonIdStr, nsIAddonInterposition *inter
         jsapi.Init(xpc::GetJunkScopeGlobal());
         addonId = NewAddonId(jsapi.cx(), addonIdStr);
         if (!addonId)
-            return nullptr;
+            return false;
     }
 
     return XPCWrappedNativeScope::SetAddonInterposition(addonId, interposition);
