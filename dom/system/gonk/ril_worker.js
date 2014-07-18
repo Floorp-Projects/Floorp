@@ -1020,6 +1020,14 @@ RilObject.prototype = {
   },
 
   /**
+   * Retrieve ICC's GID1 field.
+   */
+  getGID1: function(options) {
+    options.gid1 = this.iccInfoPrivate.gid1;
+    this.sendChromeMessage(options);
+  },
+
+  /**
    * Read UICC Phonebook contacts.
    *
    * @param contactType
