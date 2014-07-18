@@ -60,6 +60,7 @@ EXTRA_JS_MODULES += [
 
 EXTRA_PP_JS_MODULES += [
     'CertUtils.jsm',
+    'GMPInstallManager.jsm',
     'ResetProfile.jsm',
     'Services.jsm',
     'Troubleshoot.jsm',
