@@ -1524,8 +1524,8 @@ var BrowserApp = {
         let url = data.url;
         let flags;
 
-        if (!data.engine && /^[0-9]+$/.test(url)) {
-          // If the query is a number and we're not using a search engine,
+        if (!data.engine && /^\w+$/.test(url.trim())) {
+          // If the query is a single word and we're not using a search engine,
           // force a search (see bug 993705; workaround for bug 693808).
           url = URIFixup.keywordToURI(url).spec;
         } else {
