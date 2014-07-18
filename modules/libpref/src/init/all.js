@@ -654,10 +654,6 @@ pref("devtools.dump.emit", false);
 pref("devtools.discovery.log", false);
 // Disable scanning for DevTools devices via WiFi
 pref("devtools.remote.wifi.scan", false);
-// Hide UI options for controlling device visibility over WiFi
-// N.B.: This does not set whether the device can be discovered via WiFi, only
-// whether the UI control to make such a choice is shown to the user
-pref("devtools.remote.wifi.visible", false);
 
 // view source
 pref("view_source.syntax_highlight", true);
