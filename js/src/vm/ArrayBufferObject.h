@@ -152,11 +152,14 @@ class ArrayBufferObject : public JSObject
     }
 
     bool isAsmJSArrayBuffer() const { return flags() & ASMJS_BUFFER; }
+    bool isAsmJSMappedArrayBuffer() const { return flags() & ASMJS_MAPPED_BUFFER; }
     bool isSharedArrayBuffer() const { return flags() & SHARED_BUFFER; }
     bool isMappedArrayBuffer() const { return flags() & MAPPED_BUFFER; }
     bool isNeutered() const { return flags() & NEUTERED_BUFFER; }
 
-    static bool prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer);
+    static bool prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer,
+                                bool usesSignalHandlers);
+    static bool prepareForAsmJSNoSignals(JSContext *cx, Handle<ArrayBufferObject*> buffer);
     static bool canNeuterAsmJSArrayBuffer(JSContext *cx, ArrayBufferObject &buffer);
 
     static void finalize(FreeOp *fop, JSObject *obj);
@@ -184,18 +187,19 @@ class ArrayBufferObject : public JSObject
 
     enum ArrayBufferFlags {
         // In the gcLiveArrayBuffers list.
-        IN_LIVE_LIST       =  0x1,
+        IN_LIVE_LIST        =  0x1,
 
         // The dataPointer() is owned by this buffer and should be released
         // when no longer in use. Releasing the pointer may be done by either
         // freeing or unmapping it, and how to do this is determined by the
         // buffer's other flags.
-        OWNS_DATA          =  0x2,
+        OWNS_DATA           =  0x2,
 
-        ASMJS_BUFFER       =  0x4,
-        SHARED_BUFFER      =  0x8,
-        MAPPED_BUFFER      = 0x10,
-        NEUTERED_BUFFER    = 0x20
+        ASMJS_BUFFER        =  0x4,
+        ASMJS_MAPPED_BUFFER =  0x8,
+        SHARED_BUFFER       = 0x10,
+        MAPPED_BUFFER       = 0x20,
+        NEUTERED_BUFFER     = 0x40,
     };
 
     uint32_t flags() const;
@@ -212,6 +216,7 @@ class ArrayBufferObject : public JSObject
     }
 
     void setIsAsmJSArrayBuffer() { setFlags(flags() | ASMJS_BUFFER); }
+    void setIsAsmJSMappedArrayBuffer() { setFlags(flags() | ASMJS_MAPPED_BUFFER); }
     void setIsSharedArrayBuffer() { setFlags(flags() | SHARED_BUFFER); }
     void setIsMappedArrayBuffer() { setFlags(flags() | MAPPED_BUFFER); }
     void setIsNeutered() { setFlags(flags() | NEUTERED_BUFFER); }
@@ -224,6 +229,7 @@ class ArrayBufferObject : public JSObject
     }
 
     void releaseAsmJSArray(FreeOp *fop);
+    void releaseAsmJSArrayNoSignals(FreeOp *fop);
     void releaseMappedArray();
 };
 

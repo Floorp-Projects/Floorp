@@ -6,6 +6,12 @@
 
 #include "nsISupports.idl"
 
+%{C++
+struct PRFileDesc;
+%}
+
+[ptr] native PRFileDescStar(PRFileDesc);
+
 interface nsIUTF8StringEnumerator;
 interface nsIInputStream;
 interface nsIFile;
@@ -192,7 +198,7 @@ interface nsIZipReader : nsISupports
 ////////////////////////////////////////////////////////////////////////////////
 // nsIZipReaderCache
 
-[scriptable, uuid(748050ac-3ab6-4472-bc2a-cb1564ac6a81)]
+[scriptable, uuid(94ecd586-d405-4801-93d3-8ac7bef81bde)]
 interface nsIZipReaderCache : nsISupports
 {
     /**
@@ -228,6 +234,20 @@ interface nsIZipReaderCache : nsISupports
      * See getZip
      */
     nsIZipReader getInnerZip(in nsIFile zipFile, in AUTF8String zipEntry);
+
+    /**
+     * Whether to keep NSPR file descriptor for newly opened files in the cache.
+     * When aMustCacheFd is enabled and a file is given, the file will be flushed
+     * from the cache if its file descriptor was not cached.
+     * Note: currently not supported on Windows platform.
+     */
+    void setMustCacheFd(in nsIFile zipFile, in bool aMustCacheFd);
+
+    /**
+     * Returns the cached NSPR file descriptor of the file.
+     * Note: currently not supported on Windows platform.
+     */
+    PRFileDescStar getFd(in nsIFile zipFile);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

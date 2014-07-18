@@ -16,17 +16,18 @@ sys.path.insert(0, here)
 
 from runtests import Mochitest
 from runtests import MochitestUtilsMixin
-from runtests import MochitestServer
+from runtests import MessageLogger
+from runtests import MochitestFormatter
 from mochitest_options import B2GOptions, MochitestOptions
-
 from marionette import Marionette
-
-from mozdevice import DeviceManagerADB
 from mozprofile import Profile, Preferences
-import mozlog
 import mozinfo
+from mozlog.structured.handlers import StreamHandler
+from mozlog.structured.structuredlog import StructuredLogger
 
-log = mozlog.getLogger('Mochitest')
+log = StructuredLogger('Mochitest')
+stream_handler = StreamHandler(stream=sys.stdout, formatter=MochitestFormatter())
+log.add_handler(stream_handler)
 
 class B2GMochitest(MochitestUtilsMixin):
     marionette = None
@@ -44,6 +45,9 @@ class B2GMochitest(MochitestUtilsMixin):
         self.test_script = os.path.join(here, 'b2g_start_script.js')
         self.test_script_args = [self.out_of_process]
         self.product = 'b2g'
+
+        # structured logging
+        self.message_logger = MessageLogger(logger=log)
 
         if profile_data_dir:
             self.preferences = [os.path.join(profile_data_dir, f)
@@ -119,6 +123,9 @@ class B2GMochitest(MochitestUtilsMixin):
         manifest = self.build_profile(options)
         self.leak_report_file = os.path.join(options.profilePath, "runtests_leaks.log")
 
+        # configuring the message logger's buffering
+        self.message_logger.buffering = options.quiet
+
         if options.debugger or not options.autorun:
             timeout = None
         else:
@@ -132,7 +139,18 @@ class B2GMochitest(MochitestUtilsMixin):
         log.info("runtestsb2g.py | Running tests: start.")
         status = 0
         try:
+            def on_output(line):
+                messages = self.message_logger.write(line)
+                for message in messages:
+                    if message['action'] == 'test_start':
+                        self.runner.last_test = message['test']
+
+            # The logging will be handled by on_output, so we set the stream to None
+            process_args = {'processOutputLine': on_output,
+                            'stream': None}
+            self.marionette_args['process_args'] = process_args
             self.marionette_args['profile'] = self.profile
+
             self.marionette = Marionette(**self.marionette_args)
             self.runner = self.marionette.runner
             self.app_ctx = self.runner.app_ctx
@@ -171,6 +189,7 @@ class B2GMochitest(MochitestUtilsMixin):
                 self.marionette.execute_script(self.test_script,
                                                script_args=self.test_script_args)
             status = self.runner.wait()
+
             if status is None:
                 # the runner has timed out
                 status = 124
@@ -187,6 +206,7 @@ class B2GMochitest(MochitestUtilsMixin):
         self.stopServers()
 
         log.info("runtestsb2g.py | Running tests: end.")
+        self.message_logger.finish()
 
         if manifest is not None:
             self.cleanup(manifest, options)

@@ -59,7 +59,7 @@ function testInit() {
       messageManager.removeMessageListener("chromeEvent", messageHandler);
       var url = m.json.data;
 
-      // Window is the [ChromeWindow] for messageManager, so we need content.window 
+      // Window is the [ChromeWindow] for messageManager, so we need content.window
       // Currently chrome tests are run in a content window instead of a ChromeWindow
       var webNav = content.window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                          .getInterface(Components.interfaces.nsIWebNavigation);
@@ -158,7 +158,7 @@ Tester.prototype = {
     if (gConfig.repeat)
       this.repeat = gConfig.repeat;
 
-    this.dumper.dump("*** Start BrowserChrome Test Results ***\n");
+    this.dumper.structuredLogger.info("*** Start BrowserChrome Test Results ***");
     Services.console.registerListener(this);
     Services.obs.addObserver(this, "chrome-document-global-created", false);
     Services.obs.addObserver(this, "content-document-global-created", false);
@@ -204,7 +204,7 @@ Tester.prototype = {
     }
 
     // Remove stale windows
-    this.dumper.dump("TEST-INFO | checking window state\n");
+    this.dumper.structuredLogger.info("checking window state");
     let windowsEnum = Services.wm.getEnumerator(null);
     while (windowsEnum.hasMoreElements()) {
       let win = windowsEnum.getNext();
@@ -223,7 +223,10 @@ Tester.prototype = {
         if (this.currentTest)
           this.currentTest.addResult(new testResult(false, msg, "", false));
         else
-          this.dumper.dump("TEST-UNEXPECTED-FAIL | (browser-test.js) | " + msg + "\n");
+          this.dumper.structuredLogger.testEnd("browser-test.js",
+                                               "FAIL",
+                                               "PASS",
+                                               msg);
 
         win.close();
       }
@@ -250,22 +253,23 @@ Tester.prototype = {
       Services.obs.removeObserver(this, "chrome-document-global-created");
       Services.obs.removeObserver(this, "content-document-global-created");
       this.Promise.Debugging.clearUncaughtErrorObservers();
-      this.dumper.dump("\nINFO TEST-START | Shutdown\n");
+      this.dumper.structuredLogger.info("TEST-START | Shutdown");
 
       if (this.tests.length) {
-        this.dumper.dump("Browser Chrome Test Summary\n");
-  
-        this.dumper.dump("\tPassed: " + passCount + "\n" +
-                         "\tFailed: " + failCount + "\n" +
-                         "\tTodo: " + todoCount + "\n");
+        this.dumper.structuredLogger.info("Browser Chrome Test Summary");
+        this.dumper.structuredLogger.info("Passed:  " + passCount);
+        this.dumper.structuredLogger.info("Failed:  " + failCount);
+        this.dumper.structuredLogger.info("Todo:    " + todoCount);
       } else {
-        this.dumper.dump("TEST-UNEXPECTED-FAIL | (browser-test.js) | " +
-                         "No tests to run. Did you pass an invalid --test-path?\n");
+        this.dumper.structuredLogger.testEnd("browser-test.js",
+                                             "FAIL",
+                                             "PASS",
+                                             "No tests to run. Did you pass an invalid --test-path?");
       }
-      this.dumper.dump("\n*** End BrowserChrome Test Results ***\n");
-  
+      this.dumper.structuredLogger.info("*** End BrowserChrome Test Results ***");
+
       this.dumper.done();
-  
+
       // Tests complete, notify the callback and return
       this.callback(this.tests);
       this.callback = null;
@@ -414,7 +418,7 @@ Tester.prototype = {
           .getService(Ci.nsIXULRuntime)
           .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)
       {
-        this.MemoryStats.dump((l) => { this.dumper.dump(l + "\n"); },
+        this.MemoryStats.dump(this.dumper.structuredLogger,
                               this.currentTestIndex,
                               this.currentTest.path,
                               gConfig.dumpOutputDirectory,
@@ -424,7 +428,10 @@ Tester.prototype = {
 
       // Note the test run time
       let time = Date.now() - this.lastStartTime;
-      this.dumper.dump("INFO TEST-END | " + this.currentTest.path + " | finished in " + time + "ms\n");
+      this.dumper.structuredLogger.testEnd(this.currentTest.path,
+                                           "OK",
+                                           undefined,
+                                           "finished in " + time + "ms");
       this.currentTest.setDuration(time);
 
       if (this.runUntilFailure && this.currentTest.failCount > 0) {
@@ -530,7 +537,7 @@ Tester.prototype = {
   }),
 
   execTest: function Tester_execTest() {
-    this.dumper.dump("TEST-START | " + this.currentTest.path + "\n");
+    this.dumper.structuredLogger.testStart(this.currentTest.path);
 
     this.SimpleTest.reset();
 
@@ -699,10 +706,14 @@ function testResult(aCondition, aName, aDiag, aIsTodo, aStack) {
   this.todo = aIsTodo;
 
   if (this.pass) {
-    if (aIsTodo)
-      this.result = "TEST-KNOWN-FAIL";
-    else
-      this.result = "TEST-PASS";
+    if (aIsTodo) {
+      this.status = "FAIL";
+      this.expected = "FAIL";
+    } else {
+      this.status = "PASS";
+      this.expected = "PASS";
+    }
+
   } else {
     if (aDiag) {
       if (typeof aDiag == "object" && "fileName" in aDiag) {
@@ -725,10 +736,13 @@ function testResult(aCondition, aName, aDiag, aIsTodo, aStack) {
       }
       this.msg += Task.Debugging.generateReadableStack(normalized, "    ");
     }
-    if (aIsTodo)
-      this.result = "TEST-UNEXPECTED-PASS";
-    else
-      this.result = "TEST-UNEXPECTED-FAIL";
+    if (aIsTodo) {
+      this.status = "PASS";
+      this.expected = "FAIL";
+    } else {
+      this.status = "FAIL";
+      this.expected = "PASS";
+    }
 
     if (gConfig.debugOnFailure) {
       // You've hit this line because you requested to break into the
@@ -741,7 +755,6 @@ function testResult(aCondition, aName, aDiag, aIsTodo, aStack) {
 function testMessage(aName) {
   this.msg = aName || "";
   this.info = true;
-  this.result = "TEST-INFO";
 }
 
 // Need to be careful adding properties to this object, since its properties

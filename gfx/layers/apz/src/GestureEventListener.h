@@ -54,12 +54,6 @@ public:
   nsEventStatus HandleInputEvent(const MultiTouchInput& aEvent);
 
   /**
-   * Cancels any tap-related timeouts and clears any state that was set because
-   * we recently processed a touch-start.
-   */
-  void CancelSingleTouchDown();
-
-  /**
    * Returns the identifier of the touch in the last touch event processed by
    * this GestureEventListener. This should only be called when the last touch
    * event contained only one touch.

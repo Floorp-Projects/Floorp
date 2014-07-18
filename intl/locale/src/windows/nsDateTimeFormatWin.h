@@ -15,6 +15,7 @@
 // Locale sensitive date and time format interface
 // 
 class nsDateTimeFormatWin : public nsIDateTimeFormat {
+  virtual ~nsDateTimeFormatWin() {}
 
 public: 
   NS_DECL_THREADSAFE_ISUPPORTS 
@@ -49,8 +50,6 @@ public:
 
   nsDateTimeFormatWin() {mLocale.SetLength(0);mAppLocale.SetLength(0);}
 
-
-  virtual ~nsDateTimeFormatWin() {}
 
 private:
   // init this interface to a specified locale

@@ -413,21 +413,26 @@ load 806056-1.html
 load 806056-2.html
 load 813372-1.html
 asserts-if(gtk2Widget,0-1) load 822865.html # bug 540078
+load 824862.html
 load 826163.html
 load 833604-1.html
 load 835056.html
 load 836990-1.html
+load 840480.html
 load 847242.html
 load 852293.html
 load 860579-1.html
 pref(layers.force-active,true) load 859526-1.html
 pref(layers.force-active,true) load 859630-1.html
 load 866588.html
+load 876092.html
 load 897852.html
 asserts-if(Android,2) asserts-if(!Android,4-6) load 898913.html # bug 847368
+pref(layers.acceleration.disabled,true) pref(layers.force-active,true) load 919434.html
 pref(layout.css.sticky.enabled,true) load 926728.html
 load 931464.html
 load 936988-1.html
+load 931450.html
 load 931460-1.html
 load 935765-1.html
 load 942690.html

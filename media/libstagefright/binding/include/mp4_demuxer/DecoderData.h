@@ -7,6 +7,7 @@
 
 #include "mozilla/Types.h"
 #include "mozilla/Vector.h"
+#include "nsTArray.h"
 #include "nsAutoPtr.h"
 
 namespace stagefright
@@ -20,6 +21,51 @@ namespace mp4_demuxer
 {
 
 class MP4Demuxer;
+
+struct PsshInfo
+{
+  PsshInfo() {}
+  PsshInfo(const PsshInfo& aOther) : uuid(aOther.uuid), data(aOther.data) {}
+  nsTArray<uint8_t> uuid;
+  nsTArray<uint8_t> data;
+};
+
+class CryptoFile
+{
+public:
+  void Update(stagefright::sp<stagefright::MetaData>& aMetaData)
+  {
+    valid = DoUpdate(aMetaData);
+  }
+
+  bool valid;
+  nsTArray<PsshInfo> pssh;
+
+private:
+  bool DoUpdate(stagefright::sp<stagefright::MetaData>& aMetaData);
+};
+
+class CryptoTrack
+{
+public:
+  CryptoTrack() : valid(false) {}
+  void Update(stagefright::sp<stagefright::MetaData>& aMetaData);
+
+  bool valid;
+  int32_t mode;
+  int32_t iv_size;
+  nsTArray<uint8_t> key;
+};
+
+class CryptoSample : public CryptoTrack
+{
+public:
+  void Update(stagefright::sp<stagefright::MetaData>& aMetaData);
+
+  nsTArray<uint16_t> plain_sizes;
+  nsTArray<uint32_t> encrypted_sizes;
+  nsTArray<uint8_t> iv;
+};
 
 class AudioDecoderConfig
 {
@@ -42,6 +88,7 @@ public:
   int8_t frequency_index;
   mozilla::Vector<uint8_t> extra_data;
   mozilla::Vector<uint8_t> audio_specific_config;
+  CryptoTrack crypto;
 
   void Update(stagefright::sp<stagefright::MetaData>& aMetaData, const char* aMimeType);
   bool IsValid();
@@ -69,6 +116,7 @@ public:
 
   mozilla::Vector<uint8_t> extra_data; // Unparsed AVCDecoderConfig payload.
   mozilla::Vector<uint8_t> annex_b;    // Parsed version for sample prepend.
+  CryptoTrack crypto;
 
   void Update(stagefright::sp<stagefright::MetaData>& aMetaData, const char* aMimeType);
   bool IsValid();
@@ -93,6 +141,8 @@ public:
 
   uint8_t* data;
   size_t size;
+
+  CryptoSample crypto;
 
   void Prepend(const uint8_t* aData, size_t aSize);
 

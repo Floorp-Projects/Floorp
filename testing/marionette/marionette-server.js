@@ -23,6 +23,9 @@ loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/atoms.js", utils);
 
+// SpecialPowers requires insecure automation-only features that we put behind a pref.
+Services.prefs.setBoolPref('security.turn_off_all_security_so_that_viruses_can_take_over_this_computer',
+                           true);
 let specialpowers = {};
 loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js",
                      specialpowers);

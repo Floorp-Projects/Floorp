@@ -33,6 +33,9 @@ int32_t DesktopDeviceInfoX11::Init() {
     desktop_display_list_[pDesktopDeviceInfo->getScreenId()] = pDesktopDeviceInfo;
   }
 #endif
+
+  initializeWindowList();
+
   return 0;
 }
 
