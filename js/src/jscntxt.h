@@ -274,6 +274,7 @@ struct ThreadSafeContext : ContextFriendFields,
     PropertyName *emptyString() { return runtime_->emptyString; }
     FreeOp *defaultFreeOp() { return runtime_->defaultFreeOp(); }
     void *runtimeAddressForJit() { return runtime_; }
+    void *runtimeAddressOfInterrupt() { return &runtime_->interrupt; }
     void *stackLimitAddress(StackKind kind) { return &runtime_->mainThread.nativeStackLimit[kind]; }
     void *stackLimitAddressForJitCode(StackKind kind);
     size_t gcSystemPageSize() { return gc::SystemPageSize(); }

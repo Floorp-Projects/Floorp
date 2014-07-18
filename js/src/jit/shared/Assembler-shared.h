@@ -614,7 +614,7 @@ struct CallSite : public CallSiteDesc
     // The stackDepth measures the amount of stack space pushed since the
     // function was called. In particular, this includes the pushed return
     // address on all archs (whether or not the call instruction pushes the
-    // return address (x86/x64) or the prologue does (ARM/MIPS).
+    // return address (x86/x64) or the prologue does (ARM/MIPS)).
     uint32_t stackDepth() const { return stackDepth_; }
 };
 
@@ -705,6 +705,7 @@ struct AsmJSGlobalAccess
 enum AsmJSImmKind
 {
     AsmJSImm_Runtime,
+    AsmJSImm_RuntimeInterrupt,
     AsmJSImm_StackLimit,
     AsmJSImm_ReportOverRecursed,
     AsmJSImm_HandleExecutionInterrupt,

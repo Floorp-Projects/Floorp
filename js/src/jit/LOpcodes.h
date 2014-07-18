@@ -275,6 +275,7 @@
     _(InstanceOfV)                  \
     _(CallInstanceOf)               \
     _(InterruptCheck)               \
+    _(AsmJSInterruptCheck)          \
     _(InterruptCheckImplicit)       \
     _(ProfilerStackOp)              \
     _(GetDOMProperty)               \
