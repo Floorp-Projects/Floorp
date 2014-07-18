@@ -178,9 +178,9 @@ this.Social = {
 
   // Activation functionality
   activateFromOrigin: function (origin, callback) {
-    // For now only "builtin" providers can be activated.  It's OK if the
-    // provider has already been activated - we still get called back with it.
-    SocialService.addBuiltinProvider(origin, callback);
+    // It's OK if the provider has already been activated - we still get called
+    // back with it.
+    SocialService.enableProvider(origin, callback);
   },
 
   // Page Marking functionality

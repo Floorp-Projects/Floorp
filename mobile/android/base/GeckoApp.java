@@ -5,18 +5,13 @@
 
 package org.mozilla.gecko;
 
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -81,8 +76,6 @@ import android.hardware.SensorEventListener;
 import android.location.Location;
 import android.location.LocationListener;
 import android.net.Uri;
-import android.net.wifi.ScanResult;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -90,12 +83,6 @@ import android.os.PowerManager;
 import android.os.StrictMode;
 import android.provider.ContactsContract;
 import android.provider.MediaStore.Images.Media;
-import android.telephony.CellLocation;
-import android.telephony.NeighboringCellInfo;
-import android.telephony.PhoneStateListener;
-import android.telephony.SignalStrength;
-import android.telephony.TelephonyManager;
-import android.telephony.gsm.GsmCellLocation;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Base64;
@@ -165,8 +152,6 @@ public abstract class GeckoApp
     public static final String SAVED_STATE_IN_BACKGROUND   = "inBackground";
     public static final String SAVED_STATE_PRIVATE_SESSION = "privateSession";
 
-    static private final String LOCATION_URL = "https://location.services.mozilla.com/v1/submit";
-
     // Delay before running one-time "cleanup" tasks that may be needed
     // after a version upgrade.
     private static final int CLEANUP_DEFERRAL_SECONDS = 15;
@@ -207,9 +192,6 @@ public abstract class GeckoApp
     private volatile HealthRecorder mHealthRecorder = null;
     private volatile Locale mLastLocale = null;
 
-    private int mSignalStrenth;
-    private PhoneStateListener mPhoneStateListener = null;
-    private boolean mShouldReportGeoData;
     private EventListener mWebappEventListener;
 
     abstract public int getLayout();
@@ -249,15 +231,6 @@ public abstract class GeckoApp
     }
 
     public LocationListener getLocationListener() {
-        if (mShouldReportGeoData && mPhoneStateListener == null) {
-            mPhoneStateListener = new PhoneStateListener() {
-                public void onSignalStrengthsChanged(SignalStrength signalStrength) {
-                    setCurrentSignalStrenth(signalStrength);
-                }
-            };
-            TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-            tm.listen(mPhoneStateListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
-        }
         return this;
     }
 
@@ -1578,10 +1551,7 @@ public abstract class GeckoApp
 
         PrefsHelper.getPref("app.geo.reportdata", new PrefsHelper.PrefHandlerBase() {
             @Override public void prefValue(String pref, int value) {
-                if (value == 1)
-                    mShouldReportGeoData = true;
-                else
-                    mShouldReportGeoData = false;
+                // Acting on this pref is Bug 1036508; for now, do nothing.
             }
         });
 
@@ -2373,197 +2343,6 @@ public abstract class GeckoApp
     public void onLocationChanged(Location location) {
         // No logging here: user-identifying information.
         GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(location));
-        if (mShouldReportGeoData)
-            collectAndReportLocInfo(location);
-    }
-
-    public void setCurrentSignalStrenth(SignalStrength ss) {
-        if (ss.isGsm())
-            mSignalStrenth = ss.getGsmSignalStrength();
-    }
-
-    private int getCellInfo(JSONArray cellInfo) {
-        TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-        if (tm == null)
-            return TelephonyManager.PHONE_TYPE_NONE;
-        List<NeighboringCellInfo> cells = tm.getNeighboringCellInfo();
-        CellLocation cl = tm.getCellLocation();
-        String mcc = "", mnc = "";
-        if (cl instanceof GsmCellLocation) {
-            JSONObject obj = new JSONObject();
-            GsmCellLocation gcl = (GsmCellLocation)cl;
-            try {
-                obj.put("lac", gcl.getLac());
-                obj.put("cid", gcl.getCid());
-
-                int psc = (Build.VERSION.SDK_INT >= 9) ? gcl.getPsc() : -1;
-                obj.put("psc", psc);
-
-                switch(tm.getNetworkType()) {
-                case TelephonyManager.NETWORK_TYPE_GPRS:
-                case TelephonyManager.NETWORK_TYPE_EDGE:
-                    obj.put("radio", "gsm");
-                    break;
-                case TelephonyManager.NETWORK_TYPE_UMTS:
-                case TelephonyManager.NETWORK_TYPE_HSDPA:
-                case TelephonyManager.NETWORK_TYPE_HSUPA:
-                case TelephonyManager.NETWORK_TYPE_HSPA:
-                case TelephonyManager.NETWORK_TYPE_HSPAP:
-                    obj.put("radio", "umts");
-                    break;
-                }
-                String mcc_mnc = tm.getNetworkOperator();
-                if (mcc_mnc.length() > 3) {
-                    mcc = mcc_mnc.substring(0, 3);
-                    mnc = mcc_mnc.substring(3);
-                    obj.put("mcc", mcc);
-                    obj.put("mnc", mnc);
-                }
-                obj.put("asu", mSignalStrenth);
-            } catch(JSONException jsonex) {}
-            cellInfo.put(obj);
-        }
-        if (cells != null) {
-            for (NeighboringCellInfo nci : cells) {
-                try {
-                    JSONObject obj = new JSONObject();
-                    obj.put("lac", nci.getLac());
-                    obj.put("cid", nci.getCid());
-                    obj.put("psc", nci.getPsc());
-                    obj.put("mcc", mcc);
-                    obj.put("mnc", mnc);
-
-                    int dbm;
-                    switch(nci.getNetworkType()) {
-                    case TelephonyManager.NETWORK_TYPE_GPRS:
-                    case TelephonyManager.NETWORK_TYPE_EDGE:
-                        obj.put("radio", "gsm");
-                        break;
-                    case TelephonyManager.NETWORK_TYPE_UMTS:
-                    case TelephonyManager.NETWORK_TYPE_HSDPA:
-                    case TelephonyManager.NETWORK_TYPE_HSUPA:
-                    case TelephonyManager.NETWORK_TYPE_HSPA:
-                    case TelephonyManager.NETWORK_TYPE_HSPAP:
-                        obj.put("radio", "umts");
-                        break;
-                    }
-
-                    obj.put("asu", nci.getRssi());
-                    cellInfo.put(obj);
-                } catch(JSONException jsonex) {}
-            }
-        }
-        return tm.getPhoneType();
-    }
-
-    private static boolean shouldLog(final ScanResult sr) {
-        return sr.SSID == null || !sr.SSID.endsWith("_nomap");
-    }
-
-    private void collectAndReportLocInfo(Location location) {
-        final JSONObject locInfo = new JSONObject();
-        WifiManager wm = (WifiManager)getSystemService(Context.WIFI_SERVICE);
-        wm.startScan();
-        try {
-            JSONArray cellInfo = new JSONArray();
-
-            String radioType = getRadioTypeName(getCellInfo(cellInfo));
-            if (radioType != null) {
-                locInfo.put("radio", radioType);
-            }
-
-            locInfo.put("lon", location.getLongitude());
-            locInfo.put("lat", location.getLatitude());
-
-            // If we have an accuracy, round it up to the next meter.
-            if (location.hasAccuracy()) {
-                locInfo.put("accuracy", (int) Math.ceil(location.getAccuracy()));
-            }
-
-            // If we have an altitude, round it to the nearest meter.
-            if (location.hasAltitude()) {
-                locInfo.put("altitude", Math.round(location.getAltitude()));
-            }
-
-            // Reduce timestamp precision so as to expose less PII.
-            DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-            locInfo.put("time", df.format(new Date(location.getTime())));
-            locInfo.put("cell", cellInfo);
-
-            JSONArray wifiInfo = new JSONArray();
-            List<ScanResult> aps = wm.getScanResults();
-            if (aps != null) {
-                for (ScanResult ap : aps) {
-                    if (!shouldLog(ap))
-                        continue;
-
-                    JSONObject obj = new JSONObject();
-                    obj.put("key", ap.BSSID);
-                    obj.put("frequency", ap.frequency);
-                    obj.put("signal", ap.level);
-                    wifiInfo.put(obj);
-                }
-            }
-            locInfo.put("wifi", wifiInfo);
-        } catch (JSONException jsonex) {
-            Log.w(LOGTAG, "json exception", jsonex);
-            return;
-        }
-
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            public void run() {
-                try {
-                    URL url = new URL(LOCATION_URL);
-                    HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                    try {
-                        urlConnection.setDoOutput(true);
-
-                        // Workaround for a bug in Android HttpURLConnection. When the library
-                        // reuses a stale connection, the connection may fail with an EOFException.
-                        if (Build.VERSION.SDK_INT >= 14 && Build.VERSION.SDK_INT <= 18) {
-                            urlConnection.setRequestProperty("Connection", "Close");
-                        }
-
-                        JSONArray batch = new JSONArray();
-                        batch.put(locInfo);
-                        JSONObject wrapper = new JSONObject();
-                        wrapper.put("items", batch);
-                        byte[] bytes = wrapper.toString().getBytes();
-                        urlConnection.setFixedLengthStreamingMode(bytes.length);
-                        OutputStream out = new BufferedOutputStream(urlConnection.getOutputStream());
-                        out.write(bytes);
-                        out.flush();
-                    } catch (JSONException jsonex) {
-                        Log.e(LOGTAG, "error wrapping data as a batch", jsonex);
-                    } catch (IOException ioex) {
-                        Log.e(LOGTAG, "error submitting data", ioex);
-                    } finally {
-                        urlConnection.disconnect();
-                    }
-                } catch (IOException ioex) {
-                    Log.e(LOGTAG, "error submitting data", ioex);
-                }
-            }
-        });
-    }
-
-    private static String getRadioTypeName(int phoneType) {
-        switch (phoneType) {
-            case TelephonyManager.PHONE_TYPE_CDMA:
-                return "cdma";
-
-            case TelephonyManager.PHONE_TYPE_GSM:
-                return "gsm";
-
-            case TelephonyManager.PHONE_TYPE_NONE:
-            case TelephonyManager.PHONE_TYPE_SIP:
-                // These devices have no radio.
-                return null;
-
-            default:
-                Log.e(LOGTAG, "", new IllegalArgumentException("Unexpected PHONE_TYPE: " + phoneType));
-                return null;
-        }
     }
 
     @Override

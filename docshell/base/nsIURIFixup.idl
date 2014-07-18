@@ -10,9 +10,60 @@ interface nsIURI;
 interface nsIInputStream;
 
 /**
+ * Interface indicating what we found/corrected when fixing up a URI
+ */
+[scriptable, uuid(c9b6cc32-c24e-4283-adaa-9290577fd609)]
+interface nsIURIFixupInfo : nsISupports
+{
+  /**
+   * Consumer that asked for fixed up URI.
+   */
+  attribute nsISupports consumer;
+
+  /**
+   * Our best guess as to what URI the consumer will want. Might
+   * be null if we couldn't salvage anything (for instance, because
+   * the input was invalid as a URI and FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
+   * was not passed)
+   */
+  readonly attribute nsIURI preferredURI;
+
+  /**
+   * The fixed-up original input, *never* using a keyword search.
+   * (might be null if the original input was not recoverable as
+   * a URL, e.g. "foo bar"!)
+   */
+  readonly attribute nsIURI fixedURI;
+
+  /**
+   * Whether the preferred option ended up using a keyword search.
+   */
+  readonly attribute boolean fixupUsedKeyword;
+
+  /**
+   * Whether we think there was a protocol specified in some way,
+   * even if we corrected it (e.g. "ttp://foo.com/bar")
+   */
+  readonly attribute boolean inputHasProtocol;
+
+  /**
+   * Whether the input included a dot in the hostname, e.g. "mozilla.org"
+   * rather than just "mozilla". This makes a difference in terms of when we
+   * decide to do a keyword search or not.
+   */
+  readonly attribute boolean inputHostHasDot;
+
+  /**
+   * The original input
+   */
+  readonly attribute AUTF8String originalInput;
+};
+
+
+/**
  * Interface implemented by objects capable of fixing up strings into URIs
  */
-[scriptable, uuid(731877f8-973b-414c-b772-9ca1f3fffb7e)]
+[scriptable, uuid(80d4932e-bb2e-4afb-98e0-de9cc9ea7d82)]
 interface nsIURIFixup : nsISupports
 {
     /** No fixup flags. */
@@ -62,6 +113,20 @@ interface nsIURIFixup : nsISupports
      */
     nsIURI createFixupURI(in AUTF8String aURIText, in unsigned long aFixupFlags,
                           [optional] out nsIInputStream aPostData);
+
+    /**
+     * Same as createFixupURI, but returns information about what it corrected
+     * (e.g. whether we could rescue the URI or "just" generated a keyword
+     * search URI instead).
+     *
+     * @param aURIText    Candidate URI.
+     * @param aFixupFlags Flags that govern ways the URI may be fixed up.
+     * @param aPostData   The POST data to submit with the returned
+     *                    URI (see nsISearchSubmission).
+     */
+    nsIURIFixupInfo getFixupURIInfo(in AUTF8String aURIText,
+                                    in unsigned long aFixupFlags,
+                                    [optional] out nsIInputStream aPostData);
 
     /**
      * Converts the specified keyword string into a URI.  Note that it's the

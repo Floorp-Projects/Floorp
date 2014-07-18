@@ -22,6 +22,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
 XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
                                   "resource://gre/modules/ShortcutUtils.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
+                                   "@mozilla.org/network/dns-service;1",
+                                   "nsIDNSService");
+
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
 var gLastBrowserCharset = null;
@@ -745,6 +749,101 @@ const gFormSubmitObserver = {
   }
 };
 
+function gKeywordURIFixup(fixupInfo, topic, data) {
+  fixupInfo.QueryInterface(Ci.nsIURIFixupInfo);
+
+  // We get called irrespective of whether we did a keyword search, or
+  // whether the original input would be vaguely interpretable as a URL,
+  // so figure that out first.
+  let alternativeURI = fixupInfo.fixedURI;
+  if (!fixupInfo.fixupUsedKeyword || !alternativeURI) {
+    return;
+  }
+
+  // We should have a document loader...
+  let docshellRef = fixupInfo.consumer;
+  try {
+    docshellRef.QueryInterface(Ci.nsIDocumentLoader);
+  } catch (ex) {
+    return;
+  }
+
+  // ... from which we can deduce the browser
+  let browser = gBrowser.getBrowserForDocument(docshellRef.document);
+  if (!browser)
+    return;
+
+  // At this point we're still only just about to load this URI.
+  // When the async DNS lookup comes back, we may be in any of these states:
+  // 1) still on the previous URI, waiting for the preferredURI (keyword
+  //    search) to respond;
+  // 2) at the keyword search URI (preferredURI)
+  // 3) at some other page because the user stopped navigation.
+  // We keep track of the currentURI to detect case (1) in the DNS lookup
+  // callback.
+  let previousURI = browser.currentURI;
+
+  // now swap for a weak ref so we don't hang on to browser needlessly
+  // even if the DNS query takes forever
+  let weakBrowser = Cu.getWeakReference(browser);
+  browser = null;
+
+  // Additionally, we need the host of the parsed url
+  let hostName = alternativeURI.host;
+  // and the ascii-only host for the pref:
+  let asciiHost = alternativeURI.asciiHost;
+
+  let onLookupComplete = (request, record, status) => {
+    let browser = weakBrowser.get();
+    if (!Components.isSuccessCode(status) || !browser)
+      return;
+
+    let currentURI = browser.currentURI;
+    // If we're in case (3) (see above), don't show an info bar.
+    if (!currentURI.equals(previousURI) &&
+        !currentURI.equals(fixupInfo.preferredURI)) {
+      return;
+    }
+
+    // show infobar offering to visit the host
+    let notificationBox = gBrowser.getNotificationBox(browser);
+    if (notificationBox.getNotificationWithValue("keyword-uri-fixup"))
+      return;
+
+    let message = gNavigatorBundle.getFormattedString(
+      "keywordURIFixup.message", [hostName]);
+    let yesMessage = gNavigatorBundle.getFormattedString(
+      "keywordURIFixup.goTo", [hostName])
+
+    let buttons = [
+      {
+        label: yesMessage,
+        accessKey: gNavigatorBundle.getString("keywordURIFixup.goTo.accesskey"),
+        callback: function() {
+          let pref = "browser.fixup.domainwhitelist." + asciiHost;
+          Services.prefs.setBoolPref(pref, true);
+          openUILinkIn(alternativeURI.spec, "current");
+        }
+      },
+      {
+        label: gNavigatorBundle.getString("keywordURIFixup.dismiss"),
+        accessKey: gNavigatorBundle.getString("keywordURIFixup.dismiss.accesskey"),
+        callback: function() {
+          let notification = notificationBox.getNotificationWithValue("keyword-uri-fixup");
+          notificationBox.removeNotification(notification, true);
+        }
+      }
+    ];
+    let notification =
+      notificationBox.appendNotification(message,"keyword-uri-fixup", null,
+                                         notificationBox.PRIORITY_INFO_HIGH,
+                                         buttons);
+    notification.persistence = 1;
+  };
+
+  gDNSService.asyncResolve(hostName, 0, onLookupComplete, Services.tm.mainThread);
+}
+
 var gBrowserInit = {
   delayedStartupFinished: false,
 
@@ -1051,6 +1150,7 @@ var gBrowserInit = {
     Services.obs.addObserver(gXPInstallObserver, "addon-install-failed", false);
     Services.obs.addObserver(gXPInstallObserver, "addon-install-complete", false);
     Services.obs.addObserver(gFormSubmitObserver, "invalidformsubmit", false);
+    Services.obs.addObserver(gKeywordURIFixup, "keyword-uri-fixup", false);
 
     BrowserOffline.init();
     OfflineApps.init();
@@ -1354,6 +1454,7 @@ var gBrowserInit = {
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-failed");
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-complete");
       Services.obs.removeObserver(gFormSubmitObserver, "invalidformsubmit");
+      Services.obs.removeObserver(gKeywordURIFixup, "keyword-uri-fixup");
 
       try {
         gPrefService.removeObserver(gHomeButton.prefDomain, gHomeButton);

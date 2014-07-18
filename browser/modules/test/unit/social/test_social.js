@@ -20,13 +20,13 @@ function testStartupEnabled() {
 
 function testDisableAfterStartup() {
   let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
-  SocialService.removeProvider(Social.providers[0].origin, function() {
+  SocialService.disableProvider(Social.providers[0].origin, function() {
     do_wait_observer("social:providers-changed", function() {
       do_check_eq(Social.enabled, false, "Social is disabled");
       do_check_eq(Social.providers.length, 0, "no social providers available");
       do_test_finished();
       run_next_test();
     });
-    SocialService.removeProvider(Social.providers[0].origin)
+    SocialService.disableProvider(Social.providers[0].origin)
   });
 }

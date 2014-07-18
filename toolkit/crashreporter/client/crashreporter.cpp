@@ -205,7 +205,7 @@ static void WriteSubmissionEvent(SubmissionResult result,
 
   string localId = GetDumpLocalID();
   string fpath = gEventsPath + UI_DIR_SEPARATOR + localId + "-submission";
-  ofstream* f = UIOpenWrite(fpath.c_str());
+  ofstream* f = UIOpenWrite(fpath.c_str(), false, true);
   time_t tm;
   time(&tm);
 
