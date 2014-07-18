@@ -64,10 +64,10 @@ Apply(const Optional<bool> &aSrc, cc_boolean_option_t *aDst) {
 }
 
 static void
-Apply(const Optional<int32_t> &aSrc, cc_boolean_option_t *aDst) {
+Apply(const Optional<int32_t> &aSrc, cc_int32_option_t *aDst) {
   if (aSrc.WasPassed()) {
     aDst->was_passed = true;
-    aDst->value = !!aSrc.Value();
+    aDst->value = aSrc.Value();
   }
 }
 #endif
