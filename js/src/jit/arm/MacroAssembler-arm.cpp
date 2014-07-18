@@ -1914,9 +1914,11 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
         diffF -= transferMultipleByRuns(set.fpus(), IsLoad, StackPointer, IA);
         adjustFrame(-reservedF);
     } else {
-        for (FloatRegisterBackwardIterator iter(set.fpus()); iter.more(); iter++) {
-            diffF -= sizeof(double);
-            if (!ignore.has(*iter))
+        TypedRegisterSet<VFPRegister> fpset = set.fpus().reduceSetForPush();
+        TypedRegisterSet<VFPRegister> fpignore = ignore.fpus().reduceSetForPush();
+        for (FloatRegisterBackwardIterator iter(fpset); iter.more(); iter++) {
+            diffF -= (*iter).size();
+            if (!fpignore.has(*iter))
                 loadDouble(Address(StackPointer, diffF), *iter);
         }
         freeStack(reservedF);

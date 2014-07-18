@@ -494,6 +494,7 @@ class AsmJSModule
         uint32_t                          srcLengthWithRightBrace_;
         bool                              strict_;
         bool                              hasArrayView_;
+        bool                              usesSignalHandlers_;
     } pod;
 
     // These two fields need to be kept out pod as they depend on the position
@@ -534,7 +535,7 @@ class AsmJSModule
 
   public:
     explicit AsmJSModule(ScriptSource *scriptSource, uint32_t srcStart, uint32_t srcBodyStart,
-                         bool strict);
+                         bool strict, bool canUseSignalHandlers);
     void trace(JSTracer *trc);
     ~AsmJSModule();
 
@@ -554,6 +555,16 @@ class AsmJSModule
     }
     bool strict() const {
         return pod.strict_;
+    }
+    bool usesSignalHandlersForInterrupt() const {
+        return pod.usesSignalHandlers_;
+    }
+    bool usesSignalHandlersForOOB() const {
+#ifdef JS_CODEGEN_X64
+        return usesSignalHandlersForInterrupt();
+#else
+        return false;
+#endif
     }
     bool loadedFromCache() const {
         return loadedFromCache_;

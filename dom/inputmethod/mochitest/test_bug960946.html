@@ -30,7 +30,7 @@ inputmethod_setup(function() {
 function appFrameScript() {
   let input = content.document.getElementById('test-input');
   input.onkeydown = input.onkeypress = input.onkeyup = function(event) {
-    dump('key event was fired in file_test_backspace_event.html.');
+    dump('key event was fired in file_test_backspace_event.html.\n');
     sendAsyncMessage('test:KeyBoard:keyEvent', {'type':event.type});
   };
 }

@@ -4,6 +4,7 @@
 
 #include "mp4_demuxer/Adts.h"
 #include "mp4_demuxer/AnnexB.h"
+#include "mp4_demuxer/ByteReader.h"
 #include "mp4_demuxer/DecoderData.h"
 #include "media/stagefright/MetaData.h"
 #include "media/stagefright/MediaBuffer.h"
@@ -34,6 +35,94 @@ FindInt64(sp<MetaData>& mMetaData, uint32_t mKey)
   return value;
 }
 
+template <typename T, size_t N>
+static bool
+FindData(sp<MetaData>& aMetaData, uint32_t aKey, mozilla::Vector<T, N>* aDest)
+{
+  const void* data;
+  size_t size;
+  uint32_t type;
+
+  aDest->clear();
+  // There's no point in checking that the type matches anything because it
+  // isn't set consistently in the MPEG4Extractor.
+  if (!aMetaData->findData(aKey, &type, &data, &size) || size % sizeof(T)) {
+    return false;
+  }
+
+  aDest->append(reinterpret_cast<const T*>(data), size / sizeof(T));
+  return true;
+}
+
+template <typename T>
+static bool
+FindData(sp<MetaData>& aMetaData, uint32_t aKey, nsTArray<T>* aDest)
+{
+  const void* data;
+  size_t size;
+  uint32_t type;
+
+  aDest->Clear();
+  // There's no point in checking that the type matches anything because it
+  // isn't set consistently in the MPEG4Extractor.
+  if (!aMetaData->findData(aKey, &type, &data, &size) || size % sizeof(T)) {
+    return false;
+  }
+
+  aDest->AppendElements(reinterpret_cast<const T*>(data), size / sizeof(T));
+  return true;
+}
+
+bool
+CryptoFile::DoUpdate(sp<MetaData>& aMetaData)
+{
+  const void* data;
+  size_t size;
+  uint32_t type;
+
+  // There's no point in checking that the type matches anything because it
+  // isn't set consistently in the MPEG4Extractor.
+  if (!aMetaData->findData(kKeyPssh, &type, &data, &size)) {
+    return false;
+  }
+
+  ByteReader reader(reinterpret_cast<const uint8_t*>(data), size);
+  while (reader.Remaining()) {
+    PsshInfo psshInfo;
+    if (!reader.ReadArray(psshInfo.uuid, 16)) {
+      return false;
+    }
+
+    if (!reader.CanReadType<uint32_t>()) {
+      return false;
+    }
+    auto length = reader.ReadType<uint32_t>();
+
+    if (!reader.ReadArray(psshInfo.data, length)) {
+      return false;
+    }
+    pssh.AppendElement(psshInfo);
+  }
+  return true;
+}
+
+void
+CryptoTrack::Update(sp<MetaData>& aMetaData)
+{
+  valid = aMetaData->findInt32(kKeyCryptoMode, &mode) &&
+          aMetaData->findInt32(kKeyCryptoDefaultIVSize, &iv_size) &&
+          FindData(aMetaData, kKeyCryptoKey, &key);
+}
+
+void
+CryptoSample::Update(sp<MetaData>& aMetaData)
+{
+  CryptoTrack::Update(aMetaData);
+  valid = valid && FindData(aMetaData, kKeyPlainSizes, &plain_sizes) &&
+          FindData(aMetaData, kKeyEncryptedSizes, &encrypted_sizes) &&
+          FindData(aMetaData, kKeyCryptoIV, &iv);
+}
+
 void
 AudioDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
 {
@@ -46,20 +135,18 @@ AudioDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
   frequency_index = Adts::GetFrequencyIndex(samples_per_second);
   aac_profile = FindInt32(aMetaData, kKeyAACProfile);
 
-  const void* data;
-  size_t size;
-  uint32_t type;
-
-  if (aMetaData->findData(kKeyESDS, &type, &data, &size)) {
-    extra_data.clear();
-    extra_data.append(reinterpret_cast<const uint8_t*>(data), size);
-
+  if (FindData(aMetaData, kKeyESDS, &extra_data)) {
     ESDS esds(&extra_data[0], extra_data.length());
+
+    const void* data;
+    size_t size;
     if (esds.getCodecSpecificInfo(&data, &size) == OK) {
       audio_specific_config.append(reinterpret_cast<const uint8_t*>(data),
                                    size);
     }
   }
+
+  crypto.Update(aMetaData);
 }
 
 bool
@@ -78,18 +165,14 @@ VideoDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
   display_width = FindInt32(aMetaData, kKeyDisplayWidth);
   display_height = FindInt32(aMetaData, kKeyDisplayHeight);
 
-  const void* data;
-  size_t size;
-  uint32_t type;
-
-  if (aMetaData->findData(kKeyAVCC, &type, &data, &size) && size >= 7) {
-    extra_data.clear();
-    extra_data.append(reinterpret_cast<const uint8_t*>(data), size);
+  if (FindData(aMetaData, kKeyAVCC, &extra_data) && extra_data.length() >= 7) {
     // Set size of the NAL length to 4. The demuxer formats its output with
     // this NAL length size.
     extra_data[4] |= 3;
     annex_b = AnnexB::ConvertExtraDataToAnnexB(extra_data);
   }
+
+  crypto.Update(aMetaData);
 }
 
 bool
@@ -126,6 +209,8 @@ MP4Sample::Update()
   is_sync_point = FindInt32(m, kKeyIsSyncFrame);
   data = reinterpret_cast<uint8_t*>(mMediaBuffer->data());
   size = mMediaBuffer->range_length();
+
+  crypto.Update(m);
 }
 
 void

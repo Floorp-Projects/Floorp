@@ -11,6 +11,7 @@
 #include "webrtc/modules/video_capture/video_capture_impl.h"
 
 #include <stdlib.h>
+#include <string>
 
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/interface/module_common_types.h"
@@ -25,6 +26,7 @@
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_device_info.h"
 #include "webrtc/modules/desktop_capture/app_capturer.h"
+#include "webrtc/modules/desktop_capture/window_capturer.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 
 namespace webrtc {
@@ -209,11 +211,11 @@ int32_t AppDeviceInfoImpl::GetOrientation(const char* deviceUniqueIdUTF8,
 
 VideoCaptureModule* DesktopCaptureImpl::Create(const int32_t id,
                                                const char* uniqueId,
-                                               const bool bIsApp) {
+                                               const CaptureDeviceType type) {
   RefCountImpl<DesktopCaptureImpl>* capture = new RefCountImpl<DesktopCaptureImpl>(id);
 
   //create real screen capturer.
-  if (capture->Init(uniqueId, bIsApp) != 0) {
+  if (capture->Init(uniqueId, type)) {
     delete capture;
     return NULL;
   }
@@ -221,23 +223,116 @@ VideoCaptureModule* DesktopCaptureImpl::Create(const int32_t id,
   return capture;
 }
 
+int32_t WindowDeviceInfoImpl::Init() {
+  desktop_device_info_.reset(DesktopDeviceInfoImpl::Create());
+  return 0;
+}
+
+uint32_t WindowDeviceInfoImpl::NumberOfDevices() {
+  return desktop_device_info_->getWindowCount();
+}
+
+int32_t WindowDeviceInfoImpl::GetDeviceName(uint32_t deviceNumber,
+                                            char* deviceNameUTF8,
+                                            uint32_t deviceNameUTF8Length,
+                                            char* deviceUniqueIdUTF8,
+                                            uint32_t deviceUniqueIdUTF8Length,
+                                            char* productUniqueIdUTF8,
+                                            uint32_t productUniqueIdUTF8Length) {
+
+  DesktopDisplayDevice desktopDisplayDevice;
+
+  // always initialize output
+  if (deviceNameUTF8 && deviceNameUTF8Length > 0) {
+    memset(deviceNameUTF8, 0, deviceNameUTF8Length);
+  }
+  if (deviceUniqueIdUTF8 && deviceUniqueIdUTF8Length > 0) {
+    memset(deviceUniqueIdUTF8, 0, deviceUniqueIdUTF8Length);
+  }
+  if (productUniqueIdUTF8 && productUniqueIdUTF8Length > 0) {
+    memset(productUniqueIdUTF8, 0, productUniqueIdUTF8Length);
+  }
+
+  if (desktop_device_info_->getWindowInfo(deviceNumber,
+                                          desktopDisplayDevice) == 0) {
+
+    size_t len;
+
+    const char *deviceName = desktopDisplayDevice.getDeviceName();
+    len = deviceName ? strlen(deviceName) : 0;
+    if (len && deviceNameUTF8 && len <= deviceNameUTF8Length) {
+      memcpy(deviceNameUTF8,
+             deviceName,
+             len);
+    }
+
+    const char *deviceUniqueId = desktopDisplayDevice.getUniqueIdName();
+    len = deviceUniqueId ? strlen(deviceUniqueId) : 0;
+    if (len && deviceUniqueIdUTF8 && len <= deviceUniqueIdUTF8Length) {
+      memcpy(deviceUniqueIdUTF8,
+             deviceUniqueId,
+             len);
+    }
+  }
+
+  return 0;
+}
+
+int32_t WindowDeviceInfoImpl::DisplayCaptureSettingsDialogBox(const char* deviceUniqueIdUTF8,
+                                                              const char* dialogTitleUTF8,
+                                                              void* parentWindow,
+                                                              uint32_t positionX,
+                                                              uint32_t positionY) {
+  // no device properties to change
+  return 0;
+}
+
+int32_t WindowDeviceInfoImpl::NumberOfCapabilities(const char* deviceUniqueIdUTF8) {
+  return 0;
+}
+
+int32_t WindowDeviceInfoImpl::GetCapability(const char* deviceUniqueIdUTF8,
+                                            const uint32_t deviceCapabilityNumber,
+                                            VideoCaptureCapability& capability) {
+  return 0;
+}
+
+int32_t WindowDeviceInfoImpl::GetBestMatchedCapability(const char* deviceUniqueIdUTF8,
+                                                       const VideoCaptureCapability& requested,
+                                                       VideoCaptureCapability& resulting) {
+  return 0;
+}
+
+int32_t WindowDeviceInfoImpl::GetOrientation(const char* deviceUniqueIdUTF8,
+                                             VideoCaptureRotation& orientation) {
+  return 0;
+}
+
 VideoCaptureModule::DeviceInfo* DesktopCaptureImpl::CreateDeviceInfo(const int32_t id,
-                                                                     const bool bIsApp) {
-  if (bIsApp) {
+                                                                     const CaptureDeviceType type) {
+  if (type == Application) {
     AppDeviceInfoImpl * pAppDeviceInfoImpl = new AppDeviceInfoImpl(id);
     if (!pAppDeviceInfoImpl || pAppDeviceInfoImpl->Init()) {
       delete pAppDeviceInfoImpl;
       pAppDeviceInfoImpl = NULL;
     }
     return pAppDeviceInfoImpl;
-  } else {
+  } else if (type == Screen) {
     ScreenDeviceInfoImpl * pScreenDeviceInfoImpl = new ScreenDeviceInfoImpl(id);
     if (!pScreenDeviceInfoImpl || pScreenDeviceInfoImpl->Init()) {
       delete pScreenDeviceInfoImpl;
       pScreenDeviceInfoImpl = NULL;
     }
     return pScreenDeviceInfoImpl;
+  } else if (type == Window) {
+    WindowDeviceInfoImpl * pWindowDeviceInfoImpl = new WindowDeviceInfoImpl(id);
+    if (!pWindowDeviceInfoImpl || pWindowDeviceInfoImpl->Init()) {
+      delete pWindowDeviceInfoImpl;
+      pWindowDeviceInfoImpl = NULL;
+    }
+    return pWindowDeviceInfoImpl;
   }
+  return NULL;
 }
 
 const char* DesktopCaptureImpl::CurrentDeviceName() const {
@@ -250,8 +345,8 @@ int32_t DesktopCaptureImpl::ChangeUniqueId(const int32_t id) {
 }
 
 int32_t DesktopCaptureImpl::Init(const char* uniqueId,
-                                 const bool bIsApp) {
-  if (bIsApp) {
+                                 const CaptureDeviceType type) {
+  if (type == Application) {
     AppCapturer *pAppCapturer = AppCapturer::Create();
     if (!pAppCapturer) {
       return -1;
@@ -263,7 +358,7 @@ int32_t DesktopCaptureImpl::Init(const char* uniqueId,
 
     MouseCursorMonitor * pMouseCursorMonitor = MouseCursorMonitor::CreateForScreen(webrtc::DesktopCaptureOptions::CreateDefault(), webrtc::kFullDesktopScreenId);
     desktop_capturer_cursor_composer_.reset(new DesktopAndCursorComposer(pAppCapturer, pMouseCursorMonitor));
-  } else {
+  } else if (type == Screen) {
     ScreenCapturer *pScreenCapturer = ScreenCapturer::Create();
     if (!pScreenCapturer) {
       return -1;
@@ -275,6 +370,24 @@ int32_t DesktopCaptureImpl::Init(const char* uniqueId,
 
     MouseCursorMonitor * pMouseCursorMonitor = MouseCursorMonitor::CreateForScreen(webrtc::DesktopCaptureOptions::CreateDefault(), screenid);
     desktop_capturer_cursor_composer_.reset(new DesktopAndCursorComposer(pScreenCapturer, pMouseCursorMonitor));
+  } else if (type == Window) {
+    WindowCapturer *pWindowCapturer = WindowCapturer::Create();
+    if (!pWindowCapturer) {
+      return -1;
+    }
+
+    std::string idStr(uniqueId);
+    const std::string prefix("\\win\\");
+    if (idStr.substr(0, prefix.size()) != prefix) {
+      // invalid id
+      return -1;
+    }
+    WindowId winId;
+    winId = atoi(idStr.substr(prefix.size()).c_str());
+    pWindowCapturer->SelectWindow(winId);
+
+    MouseCursorMonitor * pMouseCursorMonitor = MouseCursorMonitor::CreateForWindow(webrtc::DesktopCaptureOptions::CreateDefault(), winId);
+    desktop_capturer_cursor_composer_.reset(new DesktopAndCursorComposer(pWindowCapturer,pMouseCursorMonitor));
   }
   return 0;
 }

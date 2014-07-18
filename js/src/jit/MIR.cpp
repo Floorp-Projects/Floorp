@@ -3225,8 +3225,12 @@ MBoundsCheck::foldsTo(TempAllocator &alloc)
     if (index()->isConstant() && length()->isConstant()) {
        uint32_t len = length()->toConstant()->value().toInt32();
        uint32_t idx = index()->toConstant()->value().toInt32();
-       if (idx + uint32_t(minimum()) < len && idx + uint32_t(maximum()) < len)
+       if (idx + uint32_t(minimum()) < len && idx + uint32_t(maximum()) < len) {
+           // This bounds check will never fail, so we can clear the Guard flag
+           // and allow it to be deleted.
+           setNotGuard();
            return index();
+       }
     }
 
     return this;

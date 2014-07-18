@@ -371,7 +371,7 @@ class TypedRegisterSet
         bits_ |= (SetType(1) << reg.code());
     }
     void addAllAliasedUnchecked(T reg) {
-        for (int a = 0; a < reg.numAliased(); a++) {
+        for (uint32_t a = 0; a < reg.numAliased(); a++) {
             T tmp;
             reg.aliased(a, &tmp);
             bits_ |= (SetType(1) << tmp.code());
@@ -417,7 +417,7 @@ class TypedRegisterSet
         bits_ &= ~(SetType(1) << reg.code());
     }
     void takeAllAliasedUnchecked(T reg) {
-        for (int a = 0; a < reg.numAliased(); a++) {
+        for (uint32_t a = 0; a < reg.numAliased(); a++) {
             T tmp;
             reg.aliased(a, &tmp);
             bits_ &= ~(SetType(1) << tmp.code());

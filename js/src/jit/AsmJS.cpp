@@ -1041,7 +1041,8 @@ class MOZ_STACK_CLASS ModuleCompiler
     ExitMap                        exits_;
     MathNameMap                    standardLibraryMathNames_;
     NonAssertingLabel              stackOverflowLabel_;
-    NonAssertingLabel              interruptLabel_;
+    NonAssertingLabel              asyncInterruptLabel_;
+    NonAssertingLabel              syncInterruptLabel_;
 
     char *                         errorString_;
     uint32_t                       errorOffset_;
@@ -1144,8 +1145,8 @@ class MOZ_STACK_CLASS ModuleCompiler
         // strict context, see also comment above addUseStrict in
         // js::FunctionToString.
         bool strict = parser_.pc->sc->strict && !parser_.pc->sc->hasExplicitUseStrict();
-
-        module_ = cx_->new_<AsmJSModule>(parser_.ss, srcStart, srcBodyStart, strict);
+        module_ = cx_->new_<AsmJSModule>(parser_.ss, srcStart, srcBodyStart, strict,
+                                         cx_->canUseSignalHandlers());
         if (!module_)
             return false;
 
@@ -1223,10 +1224,13 @@ class MOZ_STACK_CLASS ModuleCompiler
     TokenStream &tokenStream() const { return parser_.tokenStream; }
     MacroAssembler &masm() { return masm_; }
     Label &stackOverflowLabel() { return stackOverflowLabel_; }
-    Label &interruptLabel() { return interruptLabel_; }
+    Label &asyncInterruptLabel() { return asyncInterruptLabel_; }
+    Label &syncInterruptLabel() { return syncInterruptLabel_; }
     bool hasError() const { return errorString_ != nullptr; }
     const AsmJSModule &module() const { return *module_.get(); }
     uint32_t srcStart() const { return module_->srcStart(); }
+    bool usesSignalHandlersForInterrupt() const { return module_->usesSignalHandlersForInterrupt(); }
+    bool usesSignalHandlersForOOB() const { return module_->usesSignalHandlersForOOB(); }
 
     ParseNode *moduleFunctionNode() const { return moduleFunctionNode_; }
     PropertyName *moduleFunctionName() const { return moduleFunctionName_; }
@@ -1526,7 +1530,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         if (masm_.oom())
             return false;
 
-        if (!module_->finish(cx_, tokenStream(), masm_, interruptLabel_))
+        if (!module_->finish(cx_, tokenStream(), masm_, asyncInterruptLabel_))
             return false;
 
         // Finally, convert all the function-pointer table elements into
@@ -1953,6 +1957,7 @@ class FunctionCompiler
             if (!mirGen_->ensureBallast())
                 return false;
         }
+        maybeAddInterruptCheck(fn_);
         return true;
     }
 
@@ -2125,7 +2130,7 @@ class FunctionCompiler
             return nullptr;
         MAsmJSLoadHeap *load = MAsmJSLoadHeap::New(alloc(), vt, ptr);
         curBlock_->add(load);
-        if (chk == NO_BOUNDS_CHECK)
+        if (chk == NO_BOUNDS_CHECK || m().usesSignalHandlersForOOB())
             load->setSkipBoundsCheck(true);
         return load;
     }
@@ -2136,7 +2141,7 @@ class FunctionCompiler
             return;
         MAsmJSStoreHeap *store = MAsmJSStoreHeap::New(alloc(), vt, ptr, v);
         curBlock_->add(store);
-        if (chk == NO_BOUNDS_CHECK)
+        if (chk == NO_BOUNDS_CHECK || m().usesSignalHandlersForOOB())
             store->setSkipBoundsCheck(true);
     }
 
@@ -2161,6 +2166,20 @@ class FunctionCompiler
         JS_ASSERT(!global.isConst());
         unsigned globalDataOffset = module().globalVarIndexToGlobalDataOffset(global.varOrConstIndex());
         curBlock_->add(MAsmJSStoreGlobalVar::New(alloc(), globalDataOffset, v));
+    }
+
+    void maybeAddInterruptCheck(ParseNode *pn)
+    {
+        if (inDeadCode())
+            return;
+
+        if (m().usesSignalHandlersForInterrupt())
+            return;
+
+        unsigned lineno = 0, column = 0;
+        m().tokenStream().srcCoords.lineNumAndColumnIndex(pn->pn_pos.begin, &lineno, &column);
+        CallSiteDesc callDesc(lineno, column);
+        curBlock_->add(MAsmJSInterruptCheck::New(alloc(), &m().syncInterruptLabel(), callDesc));
     }
 
     /***************************************************************** Calls */
@@ -2476,6 +2495,7 @@ class FunctionCompiler
         (*loopEntry)->setLoopDepth(loopStack_.length());
         curBlock_->end(MGoto::New(alloc(), *loopEntry));
         curBlock_ = *loopEntry;
+        maybeAddInterruptCheck(pn);
         return true;
     }
 
@@ -6655,7 +6675,7 @@ static const RegisterSet AllRegsExceptSP =
                                    ~(uint32_t(1) << Registers::StackPointer)),
                 FloatRegisterSet(FloatRegisters::AllDoubleMask));
 
-// The operation-callback exit is called from arbitrarily-interrupted asm.js
+// The async interrupt-callback exit is called from arbitrarily-interrupted asm.js
 // code. That means we must first save *all* registers and restore *all*
 // registers (except the stack pointer) when we resume. The address to resume to
 // (assuming that js::HandleExecutionInterrupt doesn't indicate that the
@@ -6664,11 +6684,11 @@ static const RegisterSet AllRegsExceptSP =
 // after restoring all registers. To hack around this, push the resumePC on the
 // stack so that it can be popped directly into PC.
 static bool
-GenerateInterruptExit(ModuleCompiler &m, Label *throwLabel)
+GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
 {
     MacroAssembler &masm = m.masm();
     masm.align(CodeAlignment);
-    masm.bind(&m.interruptLabel());
+    masm.bind(&m.asyncInterruptLabel());
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     // Be very careful here not to perturb the machine state before saving it
@@ -6811,6 +6831,68 @@ GenerateInterruptExit(ModuleCompiler &m, Label *throwLabel)
     return !masm.oom();
 }
 
+static const RegisterSet VolatileRegs =
+    RegisterSet(GeneralRegisterSet(Registers::ArgRegMask),
+                FloatRegisterSet(FloatRegisters::VolatileMask));
+
+static bool
+GenerateSyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
+{
+    MacroAssembler &masm = m.masm();
+
+    masm.setFramePushed(0);
+    masm.align(CodeAlignment);
+    masm.bind(&m.syncInterruptLabel());
+
+    MIRTypeVector argTypes(m.cx());
+    argTypes.infallibleAppend(MIRType_Pointer); // cx
+
+    // See AsmJSFrameSize comment in Assembler-shared.h.
+#if defined(JS_CODEGEN_ARM)
+    masm.push(lr);
+#elif defined(JS_CODEGEN_MIPS)
+    masm.push(ra);
+#endif
+
+    // Record sp in the AsmJSActivation for stack unwinding.
+    Register activation = ABIArgGenerator::NonArgReturnVolatileReg0;
+    LoadAsmJSActivationIntoRegister(masm, activation);
+    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfExitFP()));
+
+    masm.PushRegsInMask(VolatileRegs);
+
+    unsigned stackDec = StackDecrementForCall(masm, argTypes);
+    masm.reserveStack(stackDec);
+
+    ABIArgMIRTypeIter i(argTypes);
+
+    // argument 0: cx
+    if (i->kind() == ABIArg::GPR) {
+        LoadJSContextFromActivation(masm, activation, i->gpr());
+    } else {
+        LoadJSContextFromActivation(masm, activation, activation);
+        masm.storePtr(activation, Address(StackPointer, i->offsetFromArgBase()));
+    }
+    i++;
+
+    JS_ASSERT(i.done());
+
+    AssertStackAlignment(masm);
+    masm.call(AsmJSImmPtr(AsmJSImm_HandleExecutionInterrupt));
+    masm.branchIfFalseBool(ReturnReg, throwLabel);
+
+    masm.freeStack(stackDec);
+    masm.PopRegsInMask(VolatileRegs);
+
+    // Clear exitFP before the frame is destroyed.
+    LoadAsmJSActivationIntoRegister(masm, activation);
+    masm.storePtr(ImmWord(0), Address(activation, AsmJSActivation::offsetOfExitFP()));
+
+    JS_ASSERT(masm.framePushed() == 0);
+    masm.ret();
+    return !masm.oom();
+}
+
 // If an exception is thrown, simply pop all frames (since asm.js does not
 // contain try/catch). To do this:
 //  1. Restore 'sp' to it's value right after the PushRegsInMask in GenerateEntry.
@@ -6859,12 +6941,12 @@ GenerateStubs(ModuleCompiler &m)
             return false;
     }
 
-    if (m.stackOverflowLabel().used()) {
-        if (!GenerateStackOverflowExit(m, &throwLabel))
-            return false;
-    }
+    if (m.stackOverflowLabel().used() && !GenerateStackOverflowExit(m, &throwLabel))
+        return false;
 
-    if (!GenerateInterruptExit(m, &throwLabel))
+    if (!GenerateAsyncInterruptExit(m, &throwLabel))
+        return false;
+    if (m.syncInterruptLabel().used() && !GenerateSyncInterruptExit(m, &throwLabel))
         return false;
 
     if (!GenerateThrowExit(m, &throwLabel))
@@ -6971,9 +7053,6 @@ EstablishPreconditions(ExclusiveContext *cx, AsmJSParser &parser)
     if (!cx->jitSupportsFloatingPoint())
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of floating point support");
 
-    if (!cx->signalHandlersInstalled())
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Platform missing signal handler support");
-
     if (cx->gcSystemPageSize() != AsmJSPageSize)
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by non 4KiB system page size");
 
@@ -7043,7 +7122,6 @@ js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
 
     // See EstablishPreconditions.
     bool available = cx->jitSupportsFloatingPoint() &&
-                     cx->signalHandlersInstalled() &&
                      cx->gcSystemPageSize() == AsmJSPageSize &&
                      !cx->compartment()->debugMode() &&
                      cx->runtime()->options().asmJS();

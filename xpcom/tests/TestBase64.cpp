@@ -145,6 +145,8 @@ static Test kTests[] =
 
 class FakeInputStream MOZ_FINAL : public nsIInputStream
 {
+  ~FakeInputStream() {}
+
 public:
 
   FakeInputStream()

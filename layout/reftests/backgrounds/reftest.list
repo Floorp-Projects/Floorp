@@ -160,3 +160,4 @@ fails-if(Android&&AndroidVersion==15) == attachment-local-clipping-image-5.html 
 fails-if(Android&&AndroidVersion==15) fuzzy-if(!Android||(Android&&AndroidVersion!=15),80,500) == attachment-local-clipping-image-6.html attachment-local-clipping-image-6-ref.html #Bug 959165
 
 == background-multiple-with-border-radius.html background-multiple-with-border-radius-ref.html
+== background-repeat-large-area.html background-repeat-large-area-ref.html

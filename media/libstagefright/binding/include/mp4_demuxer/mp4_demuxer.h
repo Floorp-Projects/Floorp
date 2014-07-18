@@ -52,6 +52,7 @@ public:
   MP4Sample* DemuxAudioSample();
   MP4Sample* DemuxVideoSample();
 
+  const CryptoFile& Crypto() { return mCrypto; }
   const AudioDecoderConfig& AudioConfig() { return mAudioConfig; }
   const VideoDecoderConfig& VideoConfig() { return mVideoConfig; }
 
@@ -62,6 +63,7 @@ public:
 private:
   AudioDecoderConfig mAudioConfig;
   VideoDecoderConfig mVideoConfig;
+  CryptoFile mCrypto;
 
   nsAutoPtr<StageFrightPrivate> mPrivate;
 };

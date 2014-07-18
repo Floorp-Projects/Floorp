@@ -149,7 +149,6 @@ is(r.result, null,
 
 // Test loading an empty file works (and doesn't crash!)
 var emptyFile = createFileWithData("");
-dump("hello nurse");
 r = new FileReader();
 r.onload = getLoadHandler("", 0, "empty no encoding reading");
 r.readAsText(emptyFile, "");
@@ -427,8 +426,8 @@ function testHasRun() {
  //alert(testRanCounter);
  ++testRanCounter;
  if (testRanCounter == expectedTestCount) {
-    is(onloadHasRunText, true, "onload text should have fired by now"); 
-    is(onloadHasRunBinary, true, "onload binary should have fired by now"); 
+    is(onloadHasRunText, true, "onload text should have fired by now");
+    is(onloadHasRunBinary, true, "onload binary should have fired by now");
     SimpleTest.finish();
   }
 }

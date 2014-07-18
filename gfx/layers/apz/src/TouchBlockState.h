@@ -85,9 +85,14 @@ public:
   bool IsDefaultPrevented() const;
 
   /**
-   * Set a flag that indicates that this touch block triggered a single tap event.
+   * Set a flag that disables setting the single-tap flag on this block.
    */
-  void SetSingleTapOccurred();
+  void DisallowSingleTap();
+  /**
+   * Set a flag that indicates that this touch block triggered a single tap event.
+   * @return true iff DisallowSingleTap was not previously called.
+   */
+  bool SetSingleTapOccurred();
   /**
    * @return true iff SetSingleTapOccurred was previously called on this block.
    */
@@ -135,6 +140,7 @@ private:
   bool mPreventDefault;
   bool mContentResponded;
   bool mContentResponseTimerExpired;
+  bool mSingleTapDisallowed;
   bool mSingleTapOccurred;
   nsTArray<MultiTouchInput> mEvents;
 };
