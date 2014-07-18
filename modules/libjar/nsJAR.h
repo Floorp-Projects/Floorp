@@ -95,6 +95,8 @@ class nsJAR : public nsIZipReader
       mCache = cache;
     }
 
+    nsresult GetNSPRFileDesc(PRFileDesc** aNSPRFileDesc);
+
   protected:
     typedef nsClassHashtable<nsCStringHashKey, nsJARManifestItem> ManifestDataHashtable;
 
@@ -195,6 +197,10 @@ public:
 
   nsresult ReleaseZip(nsJAR* reader);
 
+  bool IsMustCacheFdEnabled() {
+    return mMustCacheFd;
+  }
+
   typedef nsRefPtrHashtable<nsCStringHashKey, nsJAR> ZipsHashtable;
 
 protected:
@@ -204,6 +210,7 @@ protected:
   mozilla::Mutex        mLock;
   uint32_t              mCacheSize;
   ZipsHashtable         mZips;
+  bool                  mMustCacheFd;
 
 #ifdef ZIP_CACHE_HIT_RATE
   uint32_t              mZipCacheLookups;
