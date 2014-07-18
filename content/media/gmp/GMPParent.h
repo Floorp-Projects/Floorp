@@ -44,7 +44,8 @@ public:
 
 enum GMPState {
   GMPStateNotLoaded,
-  GMPStateLoaded
+  GMPStateLoaded,
+  GMPStateClosing
 };
 
 class GMPParent MOZ_FINAL : public PGMPParent
@@ -56,8 +57,20 @@ public:
 
   nsresult Init(nsIFile* aPluginDir);
   nsresult LoadProcess();
-  void MaybeUnloadProcess();
-  void UnloadProcess();
+
+  // Called internally to close this if we don't need it
+  void CloseIfUnused();
+
+  // Notify all active de/encoders that we are closing, either because of
+  // normal shutdown or unexpected shutdown/crash.
+  void CloseActive();
+
+  // Called by the GMPService to forcibly close active de/encoders at shutdown
+  void Shutdown();
+
+  // This must not be called while we're in the middle of abnormal ActorDestroy
+  void DeleteProcess();
+
   bool SupportsAPI(const nsCString& aAPI, const nsCString& aTag);
   nsresult GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD);
   void VideoDecoderDestroyed(GMPVideoDecoderParent* aDecoder);

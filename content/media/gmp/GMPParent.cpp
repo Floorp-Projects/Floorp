@@ -61,10 +61,7 @@ GMPParent::LoadProcess()
 {
   MOZ_ASSERT(mDirectory, "Plugin directory cannot be NULL!");
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
-
-  if (mState == GMPStateLoaded) {
-    return NS_OK;
-  }
+  MOZ_ASSERT(mState == GMPStateNotLoaded);
 
   nsAutoCString path;
   if (NS_FAILED(mDirectory->GetNativePath(path))) {
@@ -91,28 +88,20 @@ GMPParent::LoadProcess()
 }
 
 void
-GMPParent::MaybeUnloadProcess()
+GMPParent::CloseIfUnused()
 {
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
 
-  if (mVideoDecoders.Length() == 0 &&
+  if (mState == GMPStateLoaded &&
+      mVideoDecoders.Length() == 0 &&
       mVideoEncoders.Length() == 0) {
-    UnloadProcess();
+    Shutdown();
   }
 }
 
 void
-GMPParent::UnloadProcess()
+GMPParent::CloseActive()
 {
-  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
-
-  if (mState == GMPStateNotLoaded) {
-    MOZ_ASSERT(mVideoDecoders.IsEmpty() && mVideoEncoders.IsEmpty());
-    return;
-  }
-
-  mState = GMPStateNotLoaded;
-
   // Invalidate and remove any remaining API objects.
   for (uint32_t i = mVideoDecoders.Length(); i > 0; i--) {
     mVideoDecoders[i - 1]->DecodingComplete();
@@ -122,12 +111,31 @@ GMPParent::UnloadProcess()
   for (uint32_t i = mVideoEncoders.Length(); i > 0; i--) {
     mVideoEncoders[i - 1]->EncodingComplete();
   }
+}
 
-  Close();
-  if (mProcess) {
-    mProcess->Delete();
-    mProcess = nullptr;
+void
+GMPParent::Shutdown()
+{
+  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
+
+  if (mState == GMPStateNotLoaded || mState == GMPStateClosing) {
+    MOZ_ASSERT(mVideoDecoders.IsEmpty() && mVideoEncoders.IsEmpty());
+    return;
   }
+
+  CloseActive();
+  Close();
+  DeleteProcess();
+  MOZ_ASSERT(mState == GMPStateNotLoaded);
+}
+
+void
+GMPParent::DeleteProcess()
+{
+  MOZ_ASSERT(mState == GMPStateClosing);
+  mProcess->Delete();
+  mProcess = nullptr;
+  mState = GMPStateNotLoaded;
 }
 
 void
@@ -140,7 +148,7 @@ GMPParent::VideoDecoderDestroyed(GMPVideoDecoderParent* aDecoder)
 
   // Recv__delete__ is on the stack, don't potentially destroy the top-level actor
   // until after this has completed.
-  nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &GMPParent::MaybeUnloadProcess);
+  nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &GMPParent::CloseIfUnused);
   NS_DispatchToCurrentThread(event);
 }
 
@@ -154,7 +162,7 @@ GMPParent::VideoEncoderDestroyed(GMPVideoEncoderParent* aEncoder)
 
   // Recv__delete__ is on the stack, don't potentially destroy the top-level actor
   // until after this has completed.
-  nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &GMPParent::MaybeUnloadProcess);
+  nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &GMPParent::CloseIfUnused);
   NS_DispatchToCurrentThread(event);
 }
 
@@ -204,6 +212,9 @@ GMPParent::EnsureProcessLoaded()
 {
   if (mState == GMPStateLoaded) {
     return true;
+  }
+  if (mState == GMPStateClosing) {
+    return false;
   }
 
   nsresult rv = LoadProcess();
@@ -289,6 +300,7 @@ GMPParent::GetCrashID(nsString& aResult)
 void
 GMPParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  mState = GMPStateClosing;
   if (AbnormalShutdown == aWhy) {
     nsString dumpID;
 #ifdef MOZ_CRASHREPORTER
@@ -296,7 +308,13 @@ GMPParent::ActorDestroy(ActorDestroyReason aWhy)
 #endif
     // now do something with the crash ID, bug 1038961
   }
-  UnloadProcess();
+
+  CloseActive();
+
+  // Normal Shutdown() will delete the process on unwind.
+  if (AbnormalShutdown == aWhy) {
+    NS_DispatchToCurrentThread(NS_NewRunnableMethod(this, &GMPParent::DeleteProcess));
+  }
 }
 
 mozilla::dom::PCrashReporterParent*
