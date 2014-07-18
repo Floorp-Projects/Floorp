@@ -106,14 +106,14 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
       // If we're "cleaning up", don't call finish when done.
       let callback = cleanup ? function () {} : finishIfDone;
       // Similarly, if we're cleaning up, catch exceptions from removeProvider
-      let removeProvider = SocialService.removeProvider.bind(SocialService);
+      let removeProvider = SocialService.disableProvider.bind(SocialService);
       if (cleanup) {
         removeProvider = function (origin, cb) {
           try {
-            SocialService.removeProvider(origin, cb);
+            SocialService.disableProvider(origin, cb);
           } catch (ex) {
             // Ignore "provider doesn't exist" errors.
-            if (ex.message.indexOf("SocialService.removeProvider: no provider with origin") == 0)
+            if (ex.message.indexOf("SocialService.disableProvider: no provider with origin") == 0)
               return;
             info("Failed to clean up provider " + origin + ": " + ex);
           }

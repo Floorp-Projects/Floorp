@@ -2676,7 +2676,7 @@ subsmanager_handle_ev_sip_subscribe (sipMessage_t *pSipMessage,
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"\n Mismatched Content length and \
                              Actual message body length:content length=%u \
                              \n and message as %s \
-                             \n and strlenof messagebody = %lu", fname,
+                             \n and strlenof messagebody = %zu", fname,
                              content_length, pSipMessage->raw_body,
                              strlen(pSipMessage->raw_body));
             if (sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_BAD_REQ,

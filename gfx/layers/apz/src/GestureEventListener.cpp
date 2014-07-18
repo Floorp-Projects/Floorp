@@ -109,23 +109,6 @@ nsEventStatus GestureEventListener::HandleInputEvent(const MultiTouchInput& aEve
   return rv;
 }
 
-void GestureEventListener::CancelSingleTouchDown()
-{
-  GEL_LOG("Cancelling touch-down while in state %d\n", mState);
-
-  switch (mState) {
-  case GESTURE_FIRST_SINGLE_TOUCH_DOWN:
-    CancelLongTapTimeoutTask();
-    CancelMaxTapTimeoutTask();
-    SetState(GESTURE_NONE);
-    break;
-  default:
-    NS_WARNING("IgnoreLastTouchStart() called while in unexpected state");
-    SetState(GESTURE_NONE);
-    break;
-  }
-}
-
 int32_t GestureEventListener::GetLastTouchIdentifier() const
 {
   if (mTouches.Length() != 1) {

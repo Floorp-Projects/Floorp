@@ -271,6 +271,12 @@ cprCreateMessageQueue (const char *name, uint16_t depth)
 {
     cpr_msg_queue_t *msgq;
 
+#ifndef SIP_OS_WINDOWS
+    static int key_id = 100; /* arbitrary starting number */
+    pthread_cond_t _cond = PTHREAD_COND_INITIALIZER;
+    pthread_mutex_t _lock = PTHREAD_MUTEX_INITIALIZER;
+#endif
+
     msgq = cpr_calloc(1, sizeof(cpr_msg_queue_t));
     if (msgq == NULL) {
         printf("%s: Malloc failed: %s\n", __FUNCTION__,
@@ -282,10 +288,6 @@ cprCreateMessageQueue (const char *name, uint16_t depth)
     msgq->name = name ? name : "unnamed";
 
 #ifndef SIP_OS_WINDOWS
-    static int key_id = 100; /* arbitrary starting number */
-    pthread_cond_t _cond = PTHREAD_COND_INITIALIZER;
-    pthread_mutex_t _lock = PTHREAD_MUTEX_INITIALIZER;
-
     msgq->queueId = key_id++;
     msgq->cond = _cond;
     msgq->mutex = _lock;
@@ -365,6 +367,12 @@ cprGetMessage (cprMsgQueue_t msgQueue, boolean waitForever, void **ppUserData)
     cpr_msg_queue_t *pCprMsgQueue;
     MSG msg;
     cpr_thread_t *pThreadPtr;
+#else
+    cpr_msg_queue_t *msgq = (cpr_msg_queue_t *) msgQueue;
+    cpr_msgq_node_t *node;
+    struct timespec timeout;
+    struct timeval tv;
+    struct timezone tz;
 #endif
 
     if (!msgQueue) {
@@ -444,14 +452,6 @@ cprGetMessage (cprMsgQueue_t msgQueue, boolean waitForever, void **ppUserData)
             break;
     }
 #else
-    cpr_msg_queue_t *msgq;
-    cpr_msgq_node_t *node;
-    struct timespec timeout;
-    struct timeval tv;
-    struct timezone tz;
-
-    msgq = (cpr_msg_queue_t *) msgQueue;
-
     /*
      * If waitForever is set, block on the message queue
      * until a message is received, else return after
@@ -544,6 +544,12 @@ cprSendMessage (cprMsgQueue_t msgQueue, void *msg, void **ppUserData)
     struct msgbuffer *sendMsg;
     cpr_thread_t *pCprThread;
     HANDLE *hThread;
+#else
+    static const char error_str[] = "%s: Msg not sent to %s queue: %s\n";
+    cpr_msgq_post_result_e rc;
+    cpr_msg_queue_t *msgq = (cpr_msg_queue_t *) msgQueue;
+    int16_t attemptsToSend = CPR_ATTEMPTS_TO_SEND;
+    uint16_t numAttempts   = 0;
 #endif
 
     if (!msgQueue) {
@@ -592,14 +598,6 @@ cprSendMessage (cprMsgQueue_t msgQueue, void *msg, void **ppUserData)
     return CPR_SUCCESS;
 
 #else
-    static const char error_str[] = "%s: Msg not sent to %s queue: %s\n";
-    cpr_msgq_post_result_e rc;
-    cpr_msg_queue_t *msgq;
-    int16_t attemptsToSend = CPR_ATTEMPTS_TO_SEND;
-    uint16_t numAttempts   = 0;
-
-    msgq = (cpr_msg_queue_t *) msgQueue;
-
     /*
      * Attempt to send message
      */

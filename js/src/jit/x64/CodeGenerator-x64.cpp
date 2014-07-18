@@ -246,36 +246,46 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     MAsmJSLoadHeap *mir = ins->mir();
     Scalar::Type vt = mir->viewType();
     const LAllocation *ptr = ins->ptr();
-
-    // No need to note the access if it will never fault.
-    bool skipNote = mir->skipBoundsCheck();
+    const LDefinition *out = ins->output();
     Operand srcAddr(HeapReg);
 
     if (ptr->isConstant()) {
         int32_t ptrImm = ptr->toConstant()->toInt32();
-        // Note only a positive index is accepted here because a negative offset would
-        // not wrap back into the protected area reserved for the heap.
         JS_ASSERT(ptrImm >= 0);
         srcAddr = Operand(HeapReg, ptrImm);
     } else {
         srcAddr = Operand(HeapReg, ToRegister(ptr), TimesOne);
     }
 
+    OutOfLineLoadTypedArrayOutOfBounds *ool = nullptr;
+    uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
+    if (!mir->skipBoundsCheck()) {
+        bool isFloat32Load = vt == Scalar::Float32;
+        ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out), isFloat32Load);
+        if (!addOutOfLineCode(ool))
+            return false;
+
+        CodeOffsetLabel cmp = masm.cmplWithPatch(ToRegister(ptr), Imm32(0));
+        masm.j(Assembler::AboveOrEqual, ool->entry());
+        maybeCmpOffset = cmp.offset();
+    }
+
     uint32_t before = masm.size();
     switch (vt) {
-      case Scalar::Int8:    masm.movsbl(srcAddr, ToRegister(ins->output())); break;
-      case Scalar::Uint8:   masm.movzbl(srcAddr, ToRegister(ins->output())); break;
-      case Scalar::Int16:   masm.movswl(srcAddr, ToRegister(ins->output())); break;
-      case Scalar::Uint16:  masm.movzwl(srcAddr, ToRegister(ins->output())); break;
+      case Scalar::Int8:    masm.movsbl(srcAddr, ToRegister(out)); break;
+      case Scalar::Uint8:   masm.movzbl(srcAddr, ToRegister(out)); break;
+      case Scalar::Int16:   masm.movswl(srcAddr, ToRegister(out)); break;
+      case Scalar::Uint16:  masm.movzwl(srcAddr, ToRegister(out)); break;
       case Scalar::Int32:
-      case Scalar::Uint32:  masm.movl(srcAddr, ToRegister(ins->output())); break;
-      case Scalar::Float32: masm.loadFloat32(srcAddr, ToFloatRegister(ins->output())); break;
-      case Scalar::Float64: masm.loadDouble(srcAddr, ToFloatRegister(ins->output())); break;
+      case Scalar::Uint32:  masm.movl(srcAddr, ToRegister(out)); break;
+      case Scalar::Float32: masm.loadFloat32(srcAddr, ToFloatRegister(out)); break;
+      case Scalar::Float64: masm.loadDouble(srcAddr, ToFloatRegister(out)); break;
       default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
     uint32_t after = masm.size();
-    if (!skipNote)
-        masm.append(AsmJSHeapAccess(before, after, vt, ToAnyRegister(ins->output())));
+    if (ool)
+        masm.bind(ool->rejoin());
+    masm.append(AsmJSHeapAccess(before, after, vt, ToAnyRegister(out), maybeCmpOffset));
     return true;
 }
 
@@ -285,18 +295,22 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
     MAsmJSStoreHeap *mir = ins->mir();
     Scalar::Type vt = mir->viewType();
     const LAllocation *ptr = ins->ptr();
-    // No need to note the access if it will never fault.
-    bool skipNote = mir->skipBoundsCheck();
     Operand dstAddr(HeapReg);
 
     if (ptr->isConstant()) {
         int32_t ptrImm = ptr->toConstant()->toInt32();
-        // Note only a positive index is accepted here because a negative offset would
-        // not wrap back into the protected area reserved for the heap.
         JS_ASSERT(ptrImm >= 0);
         dstAddr = Operand(HeapReg, ptrImm);
     } else {
-        dstAddr = Operand(HeapReg, ToRegister(ins->ptr()), TimesOne);
+        dstAddr = Operand(HeapReg, ToRegister(ptr), TimesOne);
+    }
+
+    Label rejoin;
+    uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
+    if (!mir->skipBoundsCheck()) {
+        CodeOffsetLabel cmp = masm.cmplWithPatch(ToRegister(ptr), Imm32(0));
+        masm.j(Assembler::AboveOrEqual, &rejoin);
+        maybeCmpOffset = cmp.offset();
     }
 
     uint32_t before = masm.size();
@@ -324,8 +338,9 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
         }
     }
     uint32_t after = masm.size();
-    if (!skipNote)
-        masm.append(AsmJSHeapAccess(before, after));
+    if (rejoin.used())
+        masm.bind(&rejoin);
+    masm.append(AsmJSHeapAccess(before, after, maybeCmpOffset));
     return true;
 }
 

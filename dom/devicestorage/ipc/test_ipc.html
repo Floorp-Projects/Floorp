@@ -36,34 +36,30 @@
         }
       };
 
-      let oldLog = TestRunner.log;
-      TestRunner.log = function(msg) {
+      TestRunner.structuredLogger._dumpMessage = function(msg) {
         sendAsyncMessage("test:DeviceStorage:ipcTestMessage", { msg: msg });
       }
     }
 
-    let regex = /^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL|TEST-DEBUG-INFO) \| ([^\|]+) \|(.*)/;
-
+    let VALID_ACTIONS = ['suite_start', 'suite_end', 'test_start', 'test_end', 'test_status', 'process_output', 'log'];
+    function validStructuredMessage(message) {
+      return message.action !== undefined && VALID_ACTIONS.indexOf(message.action) >= 0;
+    }
     function onTestMessage(data) {
-      let message = SpecialPowers.wrap(data).json.msg;
-      let match = regex.exec(message);
-      if (match) {
-        let state = match[1];
-        let details = match[2] + " | " + match[3];
+      let message = SpecialPowers.wrap(data).data.msg;
 
-        switch (state) {
-          case "TEST-PASS":
-          case "TEST-KNOWN-FAIL":
-            ok(true, details);
+      if (validStructuredMessage(message)) {
+        if (message.test === undefined || message.message === undefined) {
+          return;
+        }
+
+        switch (message.action) {
+          case "test_status":
+          case "test_end":
+            ok(message.expected === undefined, message.test, message.message);
             break;
-
-          case "TEST-UNEXPECTED-FAIL":
-          case "TEST-UNEXPECTED-PASS":
-            ok(false, details);
-            break;
-
-          case "TEST-DEBUG-INFO":
           default:
+            let details = message.test + " | " + message.message;
             info(details);
         }
       }

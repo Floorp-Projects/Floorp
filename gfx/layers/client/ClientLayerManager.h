@@ -145,6 +145,9 @@ public:
 
   CompositorChild* GetCompositorChild();
 
+  // Disable component alpha layers with the software compositor.
+  virtual bool ShouldAvoidComponentAlphaLayers() { return !IsCompositingCheap(); }
+
   /**
    * Called for each iteration of a progressive tile update. Updates
    * aMetrics with the current scroll offset and scale being used to composite
@@ -184,6 +187,8 @@ public:
   {
    return (GetTextureFactoryIdentifier().mSupportedBlendModes & aMixBlendModes) == aMixBlendModes;
   }
+
+  virtual bool AreComponentAlphaLayersEnabled() MOZ_OVERRIDE;
 
   // Log APZ test data for the current paint. We supply the paint sequence
   // number ourselves, and take care of calling APZTestData::StartNewPaint()

@@ -12,10 +12,10 @@
 #include "FrameSequence.h"
 #include "nsCOMPtr.h"
 
-class imgFrame;
-
 namespace mozilla {
 namespace image {
+
+class imgFrame;
 
 /**
  * FrameBlender stores and gives access to imgFrames. It also knows how to
@@ -78,7 +78,7 @@ public:
   void SetSize(nsIntSize aSize) { mSize = aSize; }
 
   size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocation,
-                                                 mozilla::MallocSizeOf aMallocSizeOf) const;
+                                                 MallocSizeOf aMallocSizeOf) const;
 
   void ResetAnimation();
 

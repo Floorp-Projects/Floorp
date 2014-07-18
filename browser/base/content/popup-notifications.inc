@@ -18,6 +18,19 @@
           <menupopup id="webRTC-selectCamera-menupopup"/>
         </menulist>
       </popupnotificationcontent>
+
+      <popupnotificationcontent id="webRTC-selectWindowOrScreen" orient="vertical">
+        <separator class="thin"/>
+        <label value="&getUserMedia.selectWindowOrScreen.label;"
+               accesskey="&getUserMedia.selectWindowOrScreen.accesskey;"
+               control="webRTC-selectWindow-menulist"/>
+        <menulist id="webRTC-selectWindow-menulist"
+                  oncommand="WebrtcIndicator.UIModule.updateMainActionLabel(this);">
+          <menupopup id="webRTC-selectWindow-menupopup"/>
+        </menulist>
+        <description id="webRTC-all-windows-shared" hidden="true">&getUserMedia.allWindowsShared.message;</description>
+      </popupnotificationcontent>
+
       <popupnotificationcontent id="webRTC-selectMicrophone" orient="vertical">
         <separator class="thin"/>
         <label value="&getUserMedia.selectMicrophone.label;"

@@ -537,6 +537,13 @@ ClientLayerManager::IsCompositingCheap()
          LayerManager::IsCompositingCheap(mForwarder->GetCompositorBackendType());
 }
 
+bool
+ClientLayerManager::AreComponentAlphaLayersEnabled()
+{
+  return GetCompositorBackendType() != LayersBackend::LAYERS_BASIC &&
+         LayerManager::AreComponentAlphaLayersEnabled();
+}
+
 void
 ClientLayerManager::SetIsFirstPaint()
 {

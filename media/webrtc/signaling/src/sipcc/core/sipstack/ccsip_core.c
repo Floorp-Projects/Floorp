@@ -9156,7 +9156,7 @@ sip_sm_request_check_and_store (ccsipCCB_t *ccb, sipMessage_t *request,
             if ((size_t) content_length != strlen(request->raw_body)) {
                 CCSIP_DEBUG_ERROR(SIP_F_PREFIX"\n Mismatched Content length and "
                                   "Actual message body length:content length=%d\n"
-                                  "and message as %s\n and strlen of messagebody = %lu\n",
+                                  "and message as %s\n and strlen of messagebody = %zu\n",
                                   fname, content_length, request->raw_body,
                                   strlen(request->raw_body));
                 *request_check_reason_code = SIP_WARN_MISC;

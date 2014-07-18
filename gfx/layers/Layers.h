@@ -308,12 +308,20 @@ public:
 
   bool IsSnappingEffectiveTransforms() { return mSnapEffectiveTransforms; }
 
+
+  /**
+   * Returns true if the layer manager can't render component alpha
+   * layers, and layer building should do it's best to avoid
+   * creating them.
+   */
+  virtual bool ShouldAvoidComponentAlphaLayers() { return false; }
+
   /**
    * Returns true if this LayerManager can properly support layers with
-   * SurfaceMode::SURFACE_COMPONENT_ALPHA. This can include disabling component
-   * alpha if required.
+   * SurfaceMode::SURFACE_COMPONENT_ALPHA. LayerManagers that can't will use
+   * transparent surfaces (and lose subpixel-AA for text).
    */
-  virtual bool AreComponentAlphaLayersEnabled() { return true; }
+  virtual bool AreComponentAlphaLayersEnabled();
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -748,22 +756,28 @@ public:
     CONTENT_COMPONENT_ALPHA = 0x02,
 
     /**
+     * If this is set then one of the descendant layers of this one has
+     * CONTENT_COMPONENT_ALPHA set.
+     */
+    CONTENT_COMPONENT_ALPHA_DESCENDANT = 0x04,
+
+    /**
      * If this is set then this layer is part of a preserve-3d group, and should
      * be sorted with sibling layers that are also part of the same group.
      */
-    CONTENT_PRESERVE_3D = 0x04,
+    CONTENT_PRESERVE_3D = 0x08,
     /**
      * This indicates that the transform may be changed on during an empty
      * transaction where there is no possibility of redrawing the content, so the
      * implementation should be ready for that.
      */
-    CONTENT_MAY_CHANGE_TRANSFORM = 0x08,
+    CONTENT_MAY_CHANGE_TRANSFORM = 0x10,
 
     /**
      * Disable subpixel AA for this layer. This is used if the display isn't suited
      * for subpixel AA like hidpi or rotated content.
      */
-    CONTENT_DISABLE_SUBPIXEL_AA = 0x10
+    CONTENT_DISABLE_SUBPIXEL_AA = 0x20
   };
   /**
    * CONSTRUCTION PHASE ONLY

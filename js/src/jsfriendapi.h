@@ -417,6 +417,13 @@ SetSourceHook(JSRuntime *rt, mozilla::UniquePtr<SourceHook> hook);
 extern JS_FRIEND_API(mozilla::UniquePtr<SourceHook>)
 ForgetSourceHook(JSRuntime *rt);
 
+#ifdef NIGHTLY_BUILD
+typedef void (*AssertOnScriptEntryHook)(JSContext *cx, JS::HandleScript script);
+
+extern JS_FRIEND_API(void)
+SetAssertOnScriptEntryHook(JSRuntime *rt, AssertOnScriptEntryHook hook);
+#endif
+
 extern JS_FRIEND_API(JS::Zone *)
 GetCompartmentZone(JSCompartment *comp);
 

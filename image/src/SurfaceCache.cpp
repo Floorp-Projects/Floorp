@@ -31,9 +31,11 @@
 
 using std::max;
 using std::min;
-using namespace mozilla::gfx;
 
 namespace mozilla {
+
+using namespace gfx;
+
 namespace image {
 
 class CachedSurface;
@@ -218,7 +220,7 @@ public:
     , mMaxCost(aSurfaceCacheSize)
     , mAvailableCost(aSurfaceCacheSize)
   {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os)
       os->AddObserver(mMemoryPressureObserver, "memory-pressure", false);
   }
@@ -226,7 +228,7 @@ public:
 private:
   virtual ~SurfaceCacheImpl()
   {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os)
       os->RemoveObserver(mMemoryPressureObserver, "memory-pressure");
 

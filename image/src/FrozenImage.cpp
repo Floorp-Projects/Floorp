@@ -5,9 +5,10 @@
 
 #include "FrozenImage.h"
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
+
+using namespace gfx;
+
 namespace image {
 
 NS_IMPL_ISUPPORTS_INHERITED0(FrozenImage, ImageWrapper)
@@ -86,7 +87,7 @@ FrozenImage::Draw(gfxContext* aContext,
 }
 
 NS_IMETHODIMP_(void)
-FrozenImage::RequestRefresh(const mozilla::TimeStamp& aTime)
+FrozenImage::RequestRefresh(const TimeStamp& aTime)
 {
   // Do nothing.
 }

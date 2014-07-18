@@ -276,6 +276,14 @@ var gPluginHandler = {
       return;
     }
 
+    if (eventType == "PluginCrashed" &&
+        !(event.target instanceof Ci.nsIObjectLoadingContent)) {
+      // If the event target is not a plugin object (i.e., an <object> or
+      // <embed> element), this call is for a window-global plugin.
+      this.pluginInstanceCrashed(event.target, event);
+      return;
+    }
+
     let plugin = event.target;
     let doc = plugin.ownerDocument;
 
@@ -1143,7 +1151,7 @@ var gPluginHandler = {
 
   // Crashed-plugin event listener. Called for every instance of a
   // plugin in content.
-  pluginInstanceCrashed: function (plugin, aEvent) {
+  pluginInstanceCrashed: function (target, aEvent) {
     // Ensure the plugin and event are of the right type.
     if (!(aEvent instanceof Ci.nsIDOMCustomEvent))
       return;
@@ -1161,18 +1169,22 @@ var gPluginHandler = {
 
     let messageString = gNavigatorBundle.getFormattedString("crashedpluginsMessage.title", [pluginName]);
 
-    //
-    // Configure the crashed-plugin placeholder.
-    //
+    let plugin = null, doc;
+    if (target instanceof Ci.nsIObjectLoadingContent) {
+      plugin = target;
+      doc = plugin.ownerDocument;
+    } else {
+      doc = target.document;
+      if (!doc) {
+        return;
+      }
+      // doPrompt is specific to the crashed plugin overlay, and
+      // therefore is not applicable for window-global plugins.
+      doPrompt = false;
+    }
 
-    // Force a layout flush so the binding is attached.
-    plugin.clientTop;
-    let overlay = this.getPluginUI(plugin, "main");
-    let statusDiv = this.getPluginUI(plugin, "submitStatus");
-    let doc = plugin.ownerDocument;
-#ifdef MOZ_CRASHREPORTER
     let status;
-
+#ifdef MOZ_CRASHREPORTER
     // Determine which message to show regarding crash reports.
     if (submittedReport) { // submitReports && !doPrompt, handled in observer
       status = "submitted";
@@ -1180,30 +1192,14 @@ var gPluginHandler = {
     else if (!submitReports && !doPrompt) {
       status = "noSubmit";
     }
-    else { // doPrompt
+    else if (!pluginDumpID) {
+      // If we don't have a minidumpID, we can't (or didn't) submit anything.
+      // This can happen if the plugin is killed from the task manager.
+      status = "noReport";
+    }
+    else {
       status = "please";
-      this.getPluginUI(plugin, "submitButton").addEventListener("click",
-        function (event) {
-          if (event.button != 0 || !event.isTrusted)
-            return;
-          this.submitReport(pluginDumpID, browserDumpID, plugin);
-          pref.setBoolPref("", optInCB.checked);
-        }.bind(this));
-      let optInCB = this.getPluginUI(plugin, "submitURLOptIn");
-      let pref = Services.prefs.getBranch("dom.ipc.plugins.reportCrashURL");
-      optInCB.checked = pref.getBoolPref("");
     }
-
-    // If we don't have a minidumpID, we can't (or didn't) submit anything.
-    // This can happen if the plugin is killed from the task manager.
-    if (!pluginDumpID) {
-        status = "noReport";
-    }
-
-    statusDiv.setAttribute("status", status);
-
-    let helpIcon = this.getPluginUI(plugin, "helpIcon");
-    this.addLinkClickCallback(helpIcon, "openHelpPage");
 
     // If we're showing the link to manually trigger report submission, we'll
     // want to be able to update all the instances of the UI for this crash to
@@ -1238,26 +1234,15 @@ var gPluginHandler = {
     }
 #endif
 
-    let crashText = this.getPluginUI(plugin, "crashedText");
-    crashText.textContent = messageString;
-
     let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
-
-    let link = this.getPluginUI(plugin, "reloadLink");
-    this.addLinkClickCallback(link, "reloadPage", browser);
-
     let notificationBox = gBrowser.getNotificationBox(browser);
+    let isShowing = false;
 
-    let isShowing = this.shouldShowOverlay(plugin, overlay);
-
-    // Is the <object>'s size too small to hold what we want to show?
-    if (!isShowing) {
-      // First try hiding the crash report submission UI.
-      statusDiv.removeAttribute("status");
-
-      isShowing = this.shouldShowOverlay(plugin, overlay);
+    if (plugin) {
+      // If there's no plugin (an <object> or <embed> element), this call is
+      // for a window-global plugin. In this case, there's no overlay to show.
+      isShowing = _setUpPluginOverlay.call(this, plugin, doPrompt, browser);
     }
-    this.setVisibility(plugin, overlay, isShowing);
 
     if (isShowing) {
       // If a previous plugin on the page was too small and resulted in adding a
@@ -1330,5 +1315,54 @@ var gPluginHandler = {
       }, false);
     }
 
+    // Configure the crashed-plugin placeholder.
+    // Returns true if the plugin overlay is visible.
+    function _setUpPluginOverlay(plugin, doPromptSubmit, browser) {
+      if (!plugin) {
+        return false;
+      }
+
+      // Force a layout flush so the binding is attached.
+      plugin.clientTop;
+      let overlay = this.getPluginUI(plugin, "main");
+      let statusDiv = this.getPluginUI(plugin, "submitStatus");
+
+      if (doPromptSubmit) {
+        this.getPluginUI(plugin, "submitButton").addEventListener("click",
+        function (event) {
+          if (event.button != 0 || !event.isTrusted)
+            return;
+          this.submitReport(pluginDumpID, browserDumpID, plugin);
+          pref.setBoolPref("", optInCB.checked);
+        }.bind(this));
+        let optInCB = this.getPluginUI(plugin, "submitURLOptIn");
+        let pref = Services.prefs.getBranch("dom.ipc.plugins.reportCrashURL");
+        optInCB.checked = pref.getBoolPref("");
+      }
+
+      statusDiv.setAttribute("status", status);
+
+      let helpIcon = this.getPluginUI(plugin, "helpIcon");
+      this.addLinkClickCallback(helpIcon, "openHelpPage");
+
+      let crashText = this.getPluginUI(plugin, "crashedText");
+      crashText.textContent = messageString;
+
+      let link = this.getPluginUI(plugin, "reloadLink");
+      this.addLinkClickCallback(link, "reloadPage", browser);
+
+      let isShowing = this.shouldShowOverlay(plugin, overlay);
+
+      // Is the <object>'s size too small to hold what we want to show?
+      if (!isShowing) {
+        // First try hiding the crash report submission UI.
+        statusDiv.removeAttribute("status");
+
+        isShowing = this.shouldShowOverlay(plugin, overlay);
+      }
+      this.setVisibility(plugin, overlay, isShowing);
+
+      return isShowing;
+    }
   }
 };

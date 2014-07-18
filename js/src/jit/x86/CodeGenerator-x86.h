@@ -13,7 +13,6 @@
 namespace js {
 namespace jit {
 
-class OutOfLineLoadTypedArrayOutOfBounds;
 class OutOfLineTruncate;
 class OutOfLineTruncateFloat32;
 
@@ -66,7 +65,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins);
     bool visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins);
 
-    bool visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool);
     bool visitOutOfLineTruncate(OutOfLineTruncate *ool);
     bool visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool);
 

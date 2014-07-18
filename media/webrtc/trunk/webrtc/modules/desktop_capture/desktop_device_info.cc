@@ -3,8 +3,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "webrtc/modules/desktop_capture/desktop_device_info.h"
+#include "webrtc/modules/desktop_capture/window_capturer.h"
 
 #include <cstddef>
+#include <cstdlib>
+#include <cstdio>
 #include <cstring>
 
 namespace webrtc {
@@ -138,19 +141,23 @@ DesktopDeviceInfoImpl::~DesktopDeviceInfoImpl() {
   std::map<intptr_t,DesktopDisplayDevice*>::iterator iterDevice;
   for (iterDevice=desktop_display_list_.begin(); iterDevice!=desktop_display_list_.end(); iterDevice++){
     DesktopDisplayDevice * pDesktopDisplayDevice = iterDevice->second;
-    if (pDesktopDisplayDevice) {
-      delete pDesktopDisplayDevice;
-    }
+    delete pDesktopDisplayDevice;
     iterDevice->second = NULL;
   }
   desktop_display_list_.clear();
 
+  std::map<intptr_t, DesktopDisplayDevice *>::iterator itrWindow;
+  for (itrWindow = desktop_window_list_.begin(); itrWindow != desktop_window_list_.end(); itrWindow++) {
+    DesktopDisplayDevice *pWindow = itrWindow->second;
+    delete pWindow;
+    itrWindow->second = NULL;
+  }
+  desktop_window_list_.clear();
+
   std::map<intptr_t,DesktopApplication*>::iterator iterApp;
   for (iterApp=desktop_application_list_.begin(); iterApp!=desktop_application_list_.end(); iterApp++){
     DesktopApplication * pDesktopApplication = iterApp->second;
-    if (pDesktopApplication) {
-      delete pDesktopApplication;
-    }
+    delete pDesktopApplication;
     iterApp->second = NULL;
   }
   desktop_application_list_.clear();
@@ -176,6 +183,26 @@ int32_t DesktopDeviceInfoImpl::getDesktopDisplayDeviceInfo(int32_t nIndex,
   return 0;
 }
 
+int32_t DesktopDeviceInfoImpl::getWindowCount() {
+  return desktop_window_list_.size();
+}
+int32_t DesktopDeviceInfoImpl::getWindowInfo(int32_t nIndex,
+                                             DesktopDisplayDevice &windowDevice) {
+  if (nIndex < 0 || nIndex >= desktop_window_list_.size()) {
+    return -1;
+  }
+
+  std::map<intptr_t, DesktopDisplayDevice *>::iterator itr = desktop_window_list_.begin();
+  std::advance(itr, nIndex);
+  DesktopDisplayDevice *pWindow = itr->second;
+  if (!pWindow) {
+    return -1;
+  }
+
+  windowDevice = (*pWindow);
+  return 0;
+}
+
 int32_t DesktopDeviceInfoImpl::getApplicationCount() {
   return desktop_application_list_.size();
 }
@@ -191,6 +218,34 @@ int32_t DesktopDeviceInfoImpl::getApplicationInfo(int32_t nIndex,
   DesktopApplication * pDesktopApplication = iter->second;
   if (pDesktopApplication) {
     desktopApplication = (*pDesktopApplication);
+  }
+
+  return 0;
+}
+
+int32_t DesktopDeviceInfoImpl::initializeWindowList() {
+  WindowCapturer *pWinCap = WindowCapturer::Create();
+  WindowCapturer::WindowList list;
+  if (pWinCap && pWinCap->GetWindowList(&list)) {
+    WindowCapturer::WindowList::iterator itr;
+    for (itr = list.begin(); itr != list.end(); itr++) {
+      DesktopDisplayDevice *pWinDevice = new DesktopDisplayDevice;
+      if (!pWinDevice) {
+        continue;
+      }
+
+      pWinDevice->setScreenId(itr->id);
+      pWinDevice->setDeviceName(itr->title.c_str());
+
+      char idStr[64];
+#if XP_WIN
+      _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "\\win\\%ld", pWinDevice->getScreenId());
+#else
+      snprintf(idStr, BUFSIZ, "\\win\\%ld", pWinDevice->getScreenId());
+#endif
+      pWinDevice->setUniqueIdName(idStr);
+      desktop_window_list_[pWinDevice->getScreenId()] = pWinDevice;
+    }
   }
 
   return 0;

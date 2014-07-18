@@ -97,23 +97,8 @@ BasicCompositor::CreateRenderTargetFromSource(const IntRect &aRect,
                                               const CompositingRenderTarget *aSource,
                                               const IntPoint &aSourcePoint)
 {
-  RefPtr<DrawTarget> target = mDrawTarget->CreateSimilarDrawTarget(aRect.Size(), SurfaceFormat::B8G8R8A8);
-  RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(target, aRect);
-
-  DrawTarget *source;
-  if (aSource) {
-    const BasicCompositingRenderTarget* sourceSurface =
-      static_cast<const BasicCompositingRenderTarget*>(aSource);
-    source = sourceSurface->mDrawTarget;
-  } else {
-    source = mDrawTarget;
-  }
-
-  RefPtr<SourceSurface> snapshot = source->Snapshot();
-
-  IntRect sourceRect(aSourcePoint, aRect.Size());
-  rt->mDrawTarget->CopySurface(snapshot, sourceRect, IntPoint(0, 0));
-  return rt.forget();
+  MOZ_CRASH("Shouldn't be called!");
+  return nullptr;
 }
 
 TemporaryRef<DataTextureSource>

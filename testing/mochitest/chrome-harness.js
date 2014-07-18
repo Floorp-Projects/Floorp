@@ -9,7 +9,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 /*
  * getChromeURI converts a URL to a URI
- * 
+ *
  * url: string of a URL (http://mochi.test/test.html)
  * returns: a nsiURI object representing the given URL
  *
@@ -22,7 +22,7 @@ function getChromeURI(url) {
 
 /*
  * Convert a URL (string) into a nsIURI or NSIJARURI
- * This is intended for URL's that are on a file system 
+ * This is intended for URL's that are on a file system
  * or in packaged up in an extension .jar file
  *
  * url: a string of a url on the local system(http://localhost/blah.html)
@@ -64,7 +64,7 @@ function getChromeDir(resolvedURI) {
  * aTestPath: passed in testPath value from command line such as: dom/tests/mochitest
  * aDir: the test dir to append to the baseURL after getting a directory interface
  *
- * As a note, this is hardcoded to the .jar structure we use for mochitest.  
+ * As a note, this is hardcoded to the .jar structure we use for mochitest.
  * Please don't assume this works for all jar files.
  */
 function getMochitestJarListing(aBasePath, aTestPath, aDir)
@@ -122,11 +122,11 @@ function zList(base, zReader, baseJarName, recurse) {
   var links = {};
   var count = 0;
   var fileArray = [];
-  
+
   while(dirs.hasMore()) {
     var entryName = dirs.getNext();
     if (entryName.substr(-1) == '/' && entryName.split('/').length == (base.split('/').length + 1) ||
-        (entryName.substr(-1) != '/' && entryName.split('/').length == (base.split('/').length))) { 
+        (entryName.substr(-1) != '/' && entryName.split('/').length == (base.split('/').length))) {
       fileArray.push(entryName);
     }
   }
@@ -178,7 +178,7 @@ function getFileListing(basePath, testPath, dir, srvScope)
 
   if (testPath != undefined) {
     var extraPath = testPath;
-    
+
     var fileNameRegexp = /(browser|test)_.+\.(xul|html|js)$/;
 
     // Invalid testPath...
@@ -341,7 +341,7 @@ function getTestFilePath(path) {
 }
 
 /*
- * Simple utility function to take the directory structure in jarentryname and 
+ * Simple utility function to take the directory structure in jarentryname and
  * translate that to a path of a nsILocalFile.
  */
 function buildRelativePath(jarentryname, destdir, basepath)
