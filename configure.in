@@ -504,6 +504,8 @@ case "$target" in
         # Disable SEH on clang-cl because it doesn't implement them yet.
         if test -z "$CLANG_CL"; then
             AC_DEFINE(HAVE_SEH_EXCEPTIONS)
+        else
+            AC_DEFINE_UNQUOTED(GTEST_HAS_SEH, 0)
         fi
 
         if test -n "$WIN32_REDIST_DIR"; then
