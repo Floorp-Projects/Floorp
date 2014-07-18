@@ -590,6 +590,7 @@ if CONFIG['MOZ_B2G_RIL']:
         'MozMobileConnectionInfo.webidl',
         'MozMobileNetworkInfo.webidl',
         'MozVoicemail.webidl',
+        'MozVoicemailStatus.webidl'
     ]
 
 if CONFIG['MOZ_NFC']:

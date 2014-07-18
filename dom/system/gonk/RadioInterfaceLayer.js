@@ -2321,6 +2321,27 @@ RadioInterface.prototype = {
           }
           message.result = spn == message.mvnoData;
           break;
+        case "gid":
+          this.workerMessenger.send("getGID1", null, (function(response) {
+            let gid = response.gid1;
+            let mvnoDataLength = message.mvnoData.length;
+
+            if (!gid) {
+              message.errorMsg = RIL.GECKO_ERROR_GENERIC_FAILURE;
+            } else if (mvnoDataLength > gid.length) {
+              message.result = false;
+            } else {
+              message.result =
+                gid.substring(0, mvnoDataLength).toLowerCase() ==
+                message.mvnoData.toLowerCase();
+            }
+
+            target.sendAsyncMessage("RIL:MatchMvno", {
+              clientId: this.clientId,
+              data: message
+            });
+          }).bind(this));
+          return;
         default:
           message.errorMsg = RIL.GECKO_ERROR_MODE_NOT_SUPPORTED;
       }
