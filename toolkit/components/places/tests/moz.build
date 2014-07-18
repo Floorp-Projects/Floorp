@@ -15,6 +15,7 @@ XPCSHELL_TESTS_MANIFESTS += [
     'migration/xpcshell.ini',
     'network/xpcshell.ini',
     'queries/xpcshell.ini',
+    'unifiedcomplete/xpcshell.ini',
     'unit/xpcshell.ini',
     'xpcshell.ini',
 ]
