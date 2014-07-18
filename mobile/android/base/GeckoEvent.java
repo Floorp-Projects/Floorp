@@ -470,38 +470,30 @@ public class GeckoEvent {
 
             mPoints[index] = new Point(Math.round(geckoPoint.x), Math.round(geckoPoint.y));
             mPointIndicies[index] = event.getPointerId(eventIndex);
-            // getToolMajor, getToolMinor and getOrientation are API Level 9 features
-            if (Build.VERSION.SDK_INT >= 9) {
-                double radians = event.getOrientation(eventIndex);
-                mOrientations[index] = (float) Math.toDegrees(radians);
-                // w3c touchevents spec does not allow orientations == 90
-                // this shifts it to -90, which will be shifted to zero below
-                if (mOrientations[index] == 90)
-                    mOrientations[index] = -90;
 
-                // w3c touchevent radius are given by an orientation between 0 and 90
-                // the radius is found by removing the orientation and measuring the x and y
-                // radius of the resulting ellipse
-                // for android orientations >= 0 and < 90, the major axis should correspond to
-                // just reporting the y radius as the major one, and x as minor
-                // however, for a radius < 0, we have to shift the orientation by adding 90, and
-                // reverse which radius is major and minor
-                if (mOrientations[index] < 0) {
-                    mOrientations[index] += 90;
-                    mPointRadii[index] = new Point((int)event.getToolMajor(eventIndex)/2,
-                                                   (int)event.getToolMinor(eventIndex)/2);
-                } else {
-                    mPointRadii[index] = new Point((int)event.getToolMinor(eventIndex)/2,
-                                                   (int)event.getToolMajor(eventIndex)/2);
-                }
+            double radians = event.getOrientation(eventIndex);
+            mOrientations[index] = (float) Math.toDegrees(radians);
+            // w3c touchevents spec does not allow orientations == 90
+            // this shifts it to -90, which will be shifted to zero below
+            if (mOrientations[index] == 90)
+                mOrientations[index] = -90;
+
+            // w3c touchevent radius are given by an orientation between 0 and 90
+            // the radius is found by removing the orientation and measuring the x and y
+            // radius of the resulting ellipse
+            // for android orientations >= 0 and < 90, the major axis should correspond to
+            // just reporting the y radius as the major one, and x as minor
+            // however, for a radius < 0, we have to shift the orientation by adding 90, and
+            // reverse which radius is major and minor
+            if (mOrientations[index] < 0) {
+                mOrientations[index] += 90;
+                mPointRadii[index] = new Point((int)event.getToolMajor(eventIndex)/2,
+                                               (int)event.getToolMinor(eventIndex)/2);
             } else {
-                float size = event.getSize(eventIndex);
-                Resources resources = GeckoAppShell.getContext().getResources();
-                DisplayMetrics displaymetrics = resources.getDisplayMetrics();
-                size = size*Math.min(displaymetrics.heightPixels, displaymetrics.widthPixels);
-                mPointRadii[index] = new Point((int)size,(int)size);
-                mOrientations[index] = 0;
+                mPointRadii[index] = new Point((int)event.getToolMinor(eventIndex)/2,
+                                               (int)event.getToolMajor(eventIndex)/2);
             }
+
             if (!keepInViewCoordinates) {
                 // If we are converting to gecko CSS pixels, then we should adjust the
                 // radii as well
