@@ -7,7 +7,7 @@
 
 interface nsIFile;
 
-[scriptable, builtinclass, uuid(063e9698-ec67-4fe2-aa19-d21505beaa61)]
+[scriptable, builtinclass, uuid(5a4f8df0-3bd9-45c2-9db9-67e74c3dd47d)]
 interface nsIJARChannel : nsIChannel
 {
     /**
@@ -27,4 +27,11 @@ interface nsIJARChannel : nsIChannel
      * Returns the JAR file.
      */
     readonly attribute nsIFile jarFile;
+
+    /**
+     * For child process, set this to make sure that a valid file descriptor of
+     * JAR file is always provided when calling NSPRFileDesc().
+     * Must be set before Open() or AsyncOpen() to be effective.
+     */
+    void ensureChildFd();
 };
