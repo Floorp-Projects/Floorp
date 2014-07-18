@@ -398,8 +398,7 @@ Range::intersect(TempAllocator &alloc, const Range *lhs, const Range *rhs, bool 
     int32_t newLower = Max(lhs->lower_, rhs->lower_);
     int32_t newUpper = Min(lhs->upper_, rhs->upper_);
 
-    // :TODO: This information could be used better. If upper < lower, then we
-    // have conflicting constraints. Consider:
+    // If upper < lower, then we have conflicting constraints. Consider:
     //
     // if (x < 0) {
     //   if (x > 0) {
@@ -407,11 +406,7 @@ Range::intersect(TempAllocator &alloc, const Range *lhs, const Range *rhs, bool 
     //   }
     // }
     //
-    // In this case, the block is dead. Right now, we just disregard this fact
-    // and make the range unbounded, rather than empty.
-    //
-    // Instead, we should use it to eliminate the dead block.
-    // (Bug 765127)
+    // In this case, the block is unreachable.
     if (newUpper < newLower) {
         // If both ranges can be NaN, the result can still be NaN.
         if (!lhs->canBeNaN() || !rhs->canBeNaN())
