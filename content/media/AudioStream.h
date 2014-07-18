@@ -407,6 +407,10 @@ private:
   bool mIsFirst;
   // True if a microphone is active.
   bool mMicrophoneActive;
+  // When we are in the process of changing the output device, and the callback
+  // is not going to be called for a little while, simply drop incoming frames.
+  // This is only on OSX for now, because other systems handle this gracefully.
+  bool mShouldDropFrames;
 
   // This mutex protects the static members below.
   static StaticMutex sMutex;
