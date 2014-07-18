@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(acb93ff8-aa6d-4bc8-bedd-2a6a3b802a74)]
+[scriptable, uuid(bc24fb33-a0c1-49ca-aa43-05f167e02fb6)]
 interface nsIRecoveryService : nsISupports
 {
   /**
@@ -21,7 +21,7 @@ interface nsIRecoveryService : nsISupports
    *
    * @throws NS_ERROR_FAILURE when rebooting into recovery fails for some reason.
    */
-  void factoryReset();
+  void factoryReset(in string reason);
 
   /**
    * Use recovery to install an OTA update.zip. If this call is
