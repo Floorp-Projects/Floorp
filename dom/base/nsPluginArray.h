@@ -13,9 +13,9 @@
 #include "nsWrapperCache.h"
 #include "nsPluginTags.h"
 #include "nsPIDOMWindow.h"
+#include "nsMimeTypeArray.h"
 
 class nsPluginElement;
-class nsMimeType;
 
 class nsPluginArray MOZ_FINAL : public nsIObserver,
                                 public nsSupportsWeakReference,

@@ -14,7 +14,7 @@ enum ConnectionStatus {
   "associated",
   "connected",
   "disconnected",
-  "wps-timeout",
+  "wps-timedout",
   "wps-failed",
   "wps-overlapped",
   "connectingfailed"
