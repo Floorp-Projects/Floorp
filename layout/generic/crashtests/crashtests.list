@@ -533,6 +533,7 @@ load 1001258-1.html
 pref(layout.css.grid.enabled,true) load 1015562.html
 asserts(1-2) load 1015563-1.html
 asserts(1-2) load 1015563-2.html
+asserts(0-300) load 1015844.html # bug 574889
 load outline-on-frameset.xhtml
 pref(font.size.inflation.minTwips,200) load 1032450.html
 load 1037903.html
