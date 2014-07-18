@@ -582,7 +582,8 @@ SavedStacks::getOrCreateSavedFramePrototype(JSContext *cx)
                                                    global));
     if (!proto
         || !JS_DefineProperties(cx, proto, SavedFrame::properties)
-        || !JS_DefineFunctions(cx, proto, SavedFrame::methods))
+        || !JS_DefineFunctions(cx, proto, SavedFrame::methods)
+        || !JSObject::freeze(cx, proto))
         return nullptr;
 
     savedFrameProto = proto;
@@ -613,6 +614,9 @@ SavedStacks::createFrameFromLookup(JSContext *cx, const SavedFrame::Lookup &look
 
     SavedFrame &f = frameObj->as<SavedFrame>();
     f.initFromLookup(lookup);
+
+    if (!JSObject::freeze(cx, frameObj))
+        return nullptr;
 
     return &f;
 }
