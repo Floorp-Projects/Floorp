@@ -1524,6 +1524,7 @@ class Mochitest(MochitestUtilsMixin):
     testsToRun = []
     for test in tests:
       if test.has_key('disabled'):
+        log.info('TEST-SKIPPED | %s | %s' % (test['path'], test['disabled']))
         continue
       testsToRun.append(test['path'])
 
