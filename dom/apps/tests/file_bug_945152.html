@@ -23,6 +23,13 @@
       sendMessage("KO: " + msg);
   }
 
+  function is(a, b, msg) {
+    if (a == b)
+      sendMessage("OK: " + a + " == " + b + " - " + msg);
+    else
+      sendMessage("KO: " + a + " != " + b + " - " + msg);
+  }
+
   function testXHR(file, data_head, mapped, cb) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', file);
@@ -41,8 +48,8 @@
         var data = xhr.response;
         ok(data, "Data is non-null");
         var str = String.fromCharCode.apply(null, Uint8Array(data));
-        ok(str.length == data_head.length + gPaddingSize, "Data size is correct");
-        ok(str.slice(0, data_head.length) == data_head, "Data head is correct");
+        is(str.length, data_head.length + gPaddingSize, "Data size is correct");
+        is(str.slice(0, data_head.length), data_head, "Data head is correct");
         ok(str.slice(data_head.length) == gPadding, "Data padding is correct");
         cb();
       } else {
