@@ -1790,34 +1790,22 @@ BaselineCompiler::emit_JSOP_ENDINIT()
     return true;
 }
 
+typedef bool (*NewbornArrayPushFn)(JSContext *, HandleObject, const Value &);
+static const VMFunction NewbornArrayPushInfo = FunctionInfo<NewbornArrayPushFn>(NewbornArrayPush);
+
 bool
 BaselineCompiler::emit_JSOP_ARRAYPUSH()
 {
     // Keep value in R0, object in R1.
     frame.popRegsAndSync(2);
-    #ifdef DEBUG
-    {
-        Label fail;
-        Label ok;
-        // Stub register is unused in mainline code, so we can use it as
-        // scratch
-        Register scratchReg = BaselineStubReg;
-        masm.branchTestObject(Assembler::NotEqual, R1, &fail);
-        Register objReg = masm.extractObject(R1, ExtractTemp0);
-        masm.branchTestObjClass(Assembler::Equal, objReg, scratchReg, &ArrayObject::class_, &ok);
-
-        masm.bind(&fail);
-        masm.assumeUnreachable("JSOP_ARRAYPUSH operand 1 is not an array.");
-
-        masm.bind(&ok);
-    }
-    #endif
-    // R1 is guaranteed to be a boxed Array object
     masm.unboxObject(R1, R1.scratchReg());
 
-    // Call IC.
-    ICArrayPush_Fallback::Compiler stubCompiler(cx);
-    return emitOpIC(stubCompiler.getStub(&stubSpace_));
+    prepareVMCall();
+
+    pushArg(R0);
+    pushArg(R1.scratchReg());
+
+    return callVM(NewbornArrayPushInfo);
 }
 
 bool
