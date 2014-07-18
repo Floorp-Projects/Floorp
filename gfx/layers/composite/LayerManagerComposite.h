@@ -152,8 +152,6 @@ public:
     MOZ_CRASH("Shouldn't be called for composited layer manager");
   }
 
-  virtual bool AreComponentAlphaLayersEnabled() MOZ_OVERRIDE;
-
   virtual TemporaryRef<DrawTarget>
     CreateOptimalMaskDrawTarget(const IntSize &aSize) MOZ_OVERRIDE;
 
