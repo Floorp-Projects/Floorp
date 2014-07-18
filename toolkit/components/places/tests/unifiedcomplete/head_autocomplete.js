@@ -150,10 +150,14 @@ function* check_autocomplete(test) {
 
         do_log_info("Checking against expected '" + uri.spec + "', '" + title + "'...");
         // Got a match on both uri and title?
-        if (uri.spec == value && title == comment) {
+        if (stripPrefix(uri.spec) == stripPrefix(value) && title == comment) {
           do_log_info("Got a match at index " + j + "!");
           // Make it undefined so we don't process it again
           test.matches[j] = undefined;
+          if (uri.spec.startsWith("moz-action:")) {
+            let style = controller.getStyleAt(i);
+            Assert.ok(style.contains("action"));
+          }
           break;
         }
       }
@@ -241,4 +245,27 @@ function resetRestrict(aType) {
     branch += "restrict.";
 
   Services.prefs.clearUserPref(branch + aType);
+}
+
+/**
+ * Strip prefixes from the URI that we don't care about for searching.
+ *
+ * @param spec
+ *        The text to modify.
+ * @return the modified spec.
+ */
+function stripPrefix(spec)
+{
+  ["http://", "https://", "ftp://"].some(scheme => {
+    if (spec.startsWith(scheme)) {
+      spec = spec.slice(scheme.length);
+      return true;
+    }
+    return false;
+  });
+
+  if (spec.startsWith("www.")) {
+    spec = spec.slice(4);
+  }
+  return spec;
 }
