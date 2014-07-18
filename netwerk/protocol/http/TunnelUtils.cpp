@@ -749,6 +749,158 @@ TLSFilterTransaction::QueryHttpTransaction()
   return mTransaction->QueryHttpTransaction();
 }
 
+
+class SocketInWrapper : public nsIAsyncInputStream
+                      , public nsAHttpSegmentWriter
+{
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_FORWARD_NSIASYNCINPUTSTREAM(mStream->)
+
+  SocketInWrapper(nsIAsyncInputStream *aWrapped, TLSFilterTransaction *aFilter)
+    : mStream(aWrapped)
+    , mTLSFilter(aFilter)
+  { }
+
+  NS_IMETHODIMP Close()
+  {
+    mTLSFilter = nullptr;
+    return mStream->Close();
+  }
+
+  NS_IMETHODIMP Available(uint64_t *_retval)
+  {
+    return mStream->Available(_retval);
+  }
+
+  NS_IMETHODIMP IsNonBlocking(bool *_retval)
+  {
+    return mStream->IsNonBlocking(_retval);
+  }
+
+  NS_IMETHODIMP ReadSegments(nsWriteSegmentFun aWriter, void *aClosure, uint32_t aCount, uint32_t *_retval)
+  {
+    return mStream->ReadSegments(aWriter, aClosure, aCount, _retval);
+  }
+
+  // finally, ones that don't get forwarded :)
+  NS_IMETHOD Read(char *aBuf, uint32_t aCount, uint32_t *_retval) MOZ_OVERRIDE;
+  virtual nsresult OnWriteSegment(char *segment, uint32_t count, uint32_t *countWritten) MOZ_OVERRIDE;
+
+private:
+  virtual ~SocketInWrapper() {};
+
+  nsCOMPtr<nsIAsyncInputStream> mStream;
+  nsRefPtr<TLSFilterTransaction> mTLSFilter;
+};
+
+nsresult
+SocketInWrapper::OnWriteSegment(char *segment, uint32_t count, uint32_t *countWritten)
+{
+  LOG(("SocketInWrapper OnWriteSegment %d %p filter=%p\n", count, this, mTLSFilter.get()));
+
+  nsresult rv = mStream->Read(segment, count, countWritten);
+  LOG(("SocketInWrapper OnWriteSegment %p wrapped read %x %d\n",
+       this, rv, *countWritten));
+  return rv;
+}
+
+NS_IMETHODIMP
+SocketInWrapper::Read(char *aBuf, uint32_t aCount, uint32_t *_retval)
+{
+  LOG(("SocketInWrapper Read %d %p filter=%p\n", aCount, this, mTLSFilter.get()));
+
+  if (!mTLSFilter) {
+    return NS_ERROR_UNEXPECTED; // protect potentially dangling mTLSFilter
+  }
+
+  // mTLSFilter->mSegmentWriter MUST be this at ctor time
+  return mTLSFilter->OnWriteSegment(aBuf, aCount, _retval);
+}
+
+class SocketOutWrapper : public nsIAsyncOutputStream
+                       , public nsAHttpSegmentReader
+{
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_FORWARD_NSIASYNCOUTPUTSTREAM(mStream->)
+
+  SocketOutWrapper(nsIAsyncOutputStream *aWrapped, TLSFilterTransaction *aFilter)
+    : mStream(aWrapped)
+    , mTLSFilter(aFilter)
+  { }
+
+  NS_IMETHODIMP Close()
+  {
+    mTLSFilter = nullptr;
+    return mStream->Close();
+  }
+
+  NS_IMETHODIMP Flush()
+  {
+    return mStream->Flush();
+  }
+
+  NS_IMETHODIMP IsNonBlocking(bool *_retval)
+  {
+    return mStream->IsNonBlocking(_retval);
+  }
+
+  NS_IMETHODIMP WriteSegments(nsReadSegmentFun aReader, void *aClosure, uint32_t aCount, uint32_t *_retval)
+  {
+    return mStream->WriteSegments(aReader, aClosure, aCount, _retval);
+  }
+
+  NS_IMETHODIMP WriteFrom(nsIInputStream *aFromStream, uint32_t aCount, uint32_t *_retval)
+  {
+    return mStream->WriteFrom(aFromStream, aCount, _retval);
+  }
+
+  // finally, ones that don't get forwarded :)
+  NS_IMETHOD Write(const char *aBuf, uint32_t aCount, uint32_t *_retval) MOZ_OVERRIDE;
+  virtual nsresult OnReadSegment(const char *segment, uint32_t count, uint32_t *countRead) MOZ_OVERRIDE;
+
+private:
+  virtual ~SocketOutWrapper() {};
+
+  nsCOMPtr<nsIAsyncOutputStream> mStream;
+  nsRefPtr<TLSFilterTransaction> mTLSFilter;
+};
+
+nsresult
+SocketOutWrapper::OnReadSegment(const char *segment, uint32_t count, uint32_t *countWritten)
+{
+  return mStream->Write(segment, count, countWritten);
+}
+
+NS_IMETHODIMP
+SocketOutWrapper::Write(const char *aBuf, uint32_t aCount, uint32_t *_retval)
+{
+  LOG(("SocketOutWrapper Write %d %p filter=%p\n", aCount, this, mTLSFilter.get()));
+
+  // mTLSFilter->mSegmentReader MUST be this at ctor time
+  if (!mTLSFilter) {
+    return NS_ERROR_UNEXPECTED; // protect potentially dangling mTLSFilter
+  }
+
+  return mTLSFilter->OnReadSegment(aBuf, aCount, _retval);
+}
+
+void
+TLSFilterTransaction::newIODriver(nsIAsyncInputStream *aSocketIn,
+                                  nsIAsyncOutputStream *aSocketOut,
+                                  nsIAsyncInputStream **outSocketIn,
+                                  nsIAsyncOutputStream **outSocketOut)
+{
+  SocketInWrapper *inputWrapper = new SocketInWrapper(aSocketIn, this);
+  mSegmentWriter = inputWrapper;
+  nsCOMPtr<nsIAsyncInputStream> newIn(inputWrapper);
+  newIn.forget(outSocketIn);
+
+  SocketOutWrapper *outputWrapper = new SocketOutWrapper(aSocketOut, this);
+  mSegmentReader = outputWrapper;
+  nsCOMPtr<nsIAsyncOutputStream> newOut(outputWrapper);
+  newOut.forget(outSocketOut);
+}
+
 SpdyConnectTransaction *
 TLSFilterTransaction::QuerySpdyConnectTransaction()
 {
@@ -1451,6 +1603,8 @@ NS_IMPL_ISUPPORTS(TLSFilterTransaction, nsITimerCallback)
 NS_IMPL_ISUPPORTS(SocketTransportShim, nsISocketTransport, nsITransport)
 NS_IMPL_ISUPPORTS(InputStreamShim, nsIInputStream, nsIAsyncInputStream)
 NS_IMPL_ISUPPORTS(OutputStreamShim, nsIOutputStream, nsIAsyncOutputStream)
+NS_IMPL_ISUPPORTS(SocketInWrapper, nsIAsyncInputStream)
+NS_IMPL_ISUPPORTS(SocketOutWrapper, nsIAsyncOutputStream)
 
 } // namespace mozilla::net
 } // namespace mozilla

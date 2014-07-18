@@ -118,6 +118,10 @@ public:
   nsresult GetTransactionSecurityInfo(nsISupports **);
   nsresult NudgeTunnel(NudgeTunnelCallback *callback);
   nsresult SetProxiedTransaction(nsAHttpTransaction *aTrans);
+  void     newIODriver(nsIAsyncInputStream *aSocketIn,
+                       nsIAsyncOutputStream *aSocketOut,
+                       nsIAsyncInputStream **outSocketIn,
+                       nsIAsyncOutputStream **outSocketOut);
 
   // nsAHttpTransaction overloads
   nsHttpPipeline *QueryPipeline() MOZ_OVERRIDE;
