@@ -57,6 +57,10 @@ img {
   text-align: center;
 }
 
+.full-width {
+  width: 100%;
+}
+
 /* Buttons */
 
 .btn {
@@ -65,38 +69,76 @@ img {
   border: none;
   color: #fff;
   text-decoration: none;
-  padding: .25em .5em .3em;
-  border-radius: .2em;
+  height: 26px;
+  padding: 0 0.5em;
+  border-radius: 2px;
+  cursor: pointer;
 }
 
 .btn-info {
-  background: #0095dd;
+  background: #0096dd;
+  border: 1px solid #0095dd;
 }
 
-.btn-info:hover {
-  background: #008acb;
-}
+  .btn-info:hover {
+    background: #008acb;
+    border: 1px solid #008acb;
+  }
 
-.btn-info:active {
-  background: #006b9d;
-}
+  .btn-info:active {
+    background: #006b9d;
+    border: 1px solid #006b9d;
+  }
 
 .btn-success {
-  background: #5cb85c;
+  background: #74bf43;
+  border: 1px solid #74bf43;
 }
+
+  .btn-success:hover {
+    background: #6cb23e;
+    border: 1px solid #6cb23e;
+  }
+
+  .btn-success:active {
+    background: #64a43a;
+    border: 1px solid #64a43a;
+  }
 
 .btn-warning {
   background: #f0ad4e;
 }
 
 .btn-error {
-  background: #d9534f;
+  background: #d74345;
+  border: 1px solid #d74345;
 }
 
+  .btn-error:hover {
+    background: #c53436;
+    border: 1px solid #c53436;
+  }
+
+  .btn-error:active {
+    background: #ae2325;
+    border: 1px solid #ae2325;
+  }
+
 .disabled, button[disabled] {
-    cursor: not-allowed;
-    pointer-events: none;
-    opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.65;
+}
+
+.button-group {
+  display: flex;
+  width: 100%;
+  padding: 1em;
+}
+
+.button-group .btn {
+  flex: 1;
+  margin: 0 .3em;
 }
 
 /* Alerts */
@@ -143,7 +185,7 @@ img {
   content: '\2716';
 }
 
-button.close {
+.btn.close {
   background: none;
   border: none;
   cursor: pointer;
@@ -154,3 +196,61 @@ button.close {
   transition: opacity 0.5s ease-in;
   opacity: 0;
 }
+
+/*
+ * Platform specific styles
+ * The UI should match the user OS
+ * Specific font sizes for text paragraphs to match
+ * the interface on that platform.
+ */
+
+.inverse {
+  color: #fff;
+}
+
+.light {
+  color: rgba(51, 51, 51, .5);
+}
+
+.mac p,
+.windows p,
+.linux p {
+  line-height: 16px;
+}
+
+.windows {
+  font-family: 'Segoe';
+}
+
+  .windows p {
+    font-size: 12px;
+  }
+
+  .windows h1 {
+    font-family: 'Segoe Bold';
+  }
+
+.mac {
+  font-family: 'Lucida Grande';
+}
+
+  .mac p {
+    font-size: 11.5px;
+  }
+
+  .mac h1 {
+    font-family: 'Lucida Grande Bold';
+  }
+
+.linux {
+  /* XXX requires fallbacks */
+  font-family: 'Ubuntu', sans-serif;
+}
+
+  .linux p {
+    font-size: 12px;
+  }
+
+  .linux h1 {
+    font-family: 'Ubuntu Bold';
+  }
