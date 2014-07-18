@@ -131,8 +131,9 @@ typedef struct {
 
 /** Output device description */
 typedef struct {
-  char * name; /**< The name of the output device */
-} cubeb_output_device;
+  char * output_name; /**< The name of the output device */
+  char * input_name; /**< The name of the input device */
+} cubeb_device;
 
 /** Stream states signaled via state_callback. */
 typedef enum {
@@ -303,18 +304,18 @@ int cubeb_stream_set_panning(cubeb_stream * stream, float panning);
  * @return CUBEB_ERROR_INVALID_PARAMETER if either stm, device or count are
  *         invalid pointers
  */
-int cubeb_stream_get_current_output_device(cubeb_stream * stm,
-                                           cubeb_output_device ** const device);
+int cubeb_stream_get_current_device(cubeb_stream * stm,
+                                    cubeb_device ** const device);
 
 /**
- * Destroy a cubeb_output_device structure.
- * @param stream the stream passed in cubeb_stream_get_current_output_device
+ * Destroy a cubeb_device structure.
+ * @param stream the stream passed in cubeb_stream_get_current_device
  * @param devices the devices to destroy
  * @return CUBEB_OK in case of success
  * @return CUBEB_ERROR_INVALID_PARAMETER if devices is an invalid pointer
  */
-int cubeb_stream_output_device_destroy(cubeb_stream * stream,
-                                       cubeb_output_device * devices);
+int cubeb_stream_device_destroy(cubeb_stream * stream,
+                                cubeb_device * devices);
 
 /**
  * Set a callback to be notified when the output device changes.
