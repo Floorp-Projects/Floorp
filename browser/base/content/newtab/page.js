@@ -113,19 +113,17 @@ let gPage = {
       this.onPageFirstVisible();
     }
 
-    gLinks.populateCache(function () {
-      // Initialize and render the grid.
-      gGrid.init();
+    // Initialize and render the grid.
+    gGrid.init();
 
-      // Initialize the drop target shim.
-      gDropTargetShim.init();
+    // Initialize the drop target shim.
+    gDropTargetShim.init();
 
 #ifdef XP_MACOSX
-      // Workaround to prevent a delay on MacOSX due to a slow drop animation.
-      document.addEventListener("dragover", this, false);
-      document.addEventListener("drop", this, false);
+    // Workaround to prevent a delay on MacOSX due to a slow drop animation.
+    document.addEventListener("dragover", this, false);
+    document.addEventListener("drop", this, false);
 #endif
-    }.bind(this));
   },
 
   /**

@@ -6,11 +6,6 @@
  */
 
 function runTests() {
-  if (NewTabUtils.allPages.updateScheduledForHiddenPages) {
-    // Wait for dynamic updates triggered by the previous test to finish.
-    yield whenPagesUpdated(null, true);
-  }
-
   // First, start with an empty page.  setLinks will trigger a hidden page
   // update because it calls clearHistory.  We need to wait for that update to
   // happen so that the next time we wait for a page update below, we catch the
