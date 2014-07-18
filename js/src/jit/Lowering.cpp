@@ -2224,6 +2224,17 @@ LIRGenerator::visitInterruptCheck(MInterruptCheck *ins)
 }
 
 bool
+LIRGenerator::visitAsmJSInterruptCheck(MAsmJSInterruptCheck *ins)
+{
+    gen->setPerformsAsmJSCall();
+
+    LAsmJSInterruptCheck *lir = new(alloc()) LAsmJSInterruptCheck(temp(),
+                                                                  ins->interruptExit(),
+                                                                  ins->funcDesc());
+    return add(lir, ins);
+}
+
+bool
 LIRGenerator::visitInterruptCheckPar(MInterruptCheckPar *ins)
 {
     LInterruptCheckPar *lir =
@@ -3556,9 +3567,8 @@ LIRGenerator::visitAsmJSCall(MAsmJSCall *ins)
         args[ins->dynamicCalleeOperandIndex()] = useFixed(ins->callee().dynamic(), CallTempReg0);
 
     LInstruction *lir = new(alloc()) LAsmJSCall(args, ins->numOperands());
-    if (ins->type() == MIRType_None) {
+    if (ins->type() == MIRType_None)
         return add(lir, ins);
-    }
     return defineReturn(lir, ins);
 }
 

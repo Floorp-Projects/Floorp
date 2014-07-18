@@ -556,8 +556,15 @@ class AsmJSModule
     bool strict() const {
         return pod.strict_;
     }
-    bool usesSignalHandlers() const {
+    bool usesSignalHandlersForInterrupt() const {
         return pod.usesSignalHandlers_;
+    }
+    bool usesSignalHandlersForOOB() const {
+#ifdef JS_CODEGEN_X64
+        return usesSignalHandlersForInterrupt();
+#else
+        return false;
+#endif
     }
     bool loadedFromCache() const {
         return loadedFromCache_;
