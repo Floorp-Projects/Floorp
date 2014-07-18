@@ -181,6 +181,7 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     negativeInfinityValue(DoubleValue(NegativeInfinity<double>())),
     positiveInfinityValue(DoubleValue(PositiveInfinity<double>())),
     emptyString(nullptr),
+    assertOnScriptEntryHook_(nullptr),
     debugMode(false),
     spsProfiler(thisFromCtor()),
     profilingScripts(false),
