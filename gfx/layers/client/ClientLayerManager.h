@@ -188,6 +188,8 @@ public:
    return (GetTextureFactoryIdentifier().mSupportedBlendModes & aMixBlendModes) == aMixBlendModes;
   }
 
+  virtual bool AreComponentAlphaLayersEnabled() MOZ_OVERRIDE;
+
   // Log APZ test data for the current paint. We supply the paint sequence
   // number ourselves, and take care of calling APZTestData::StartNewPaint()
   // when a new paint is started.
