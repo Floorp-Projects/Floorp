@@ -129,9 +129,6 @@ CssLogic.prototype = {
   _matchedRules: null,
   _matchedSelectors: null,
 
-  // Cached keyframes rules in all stylesheets
-  _keyframesRules: null,
-
   /**
    * Reset various properties
    */
@@ -144,7 +141,6 @@ CssLogic.prototype = {
     this._sheetsCached = false;
     this._matchedRules = null;
     this._matchedSelectors = null;
-    this._keyframesRules = [];
   },
 
   /**
@@ -181,15 +177,6 @@ CssLogic.prototype = {
     this._matchedSelectors = null;
     let win = this.viewedDocument.defaultView;
     this._computedStyle = win.getComputedStyle(this.viewedElement, "");
-  },
-
-  /**
-   * Get the values of all the computed CSS properties for the highlighted
-   * element.
-   * @returns {object} The computed CSS properties for a selected element
-   */
-  get computedStyle() {
-    return this._computedStyle;
   },
 
   /**
@@ -283,7 +270,7 @@ CssLogic.prototype = {
    * Cache a stylesheet if it falls within the requirements: if it's enabled,
    * and if the @media is allowed. This method also walks through the stylesheet
    * cssRules to find @imported rules, to cache the stylesheets of those rules
-   * as well. In addition, the @keyframes rules in the stylesheet are cached.
+   * as well.
    *
    * @private
    * @param {CSSStyleSheet} aDomSheet the CSSStyleSheet object to cache.
@@ -304,15 +291,13 @@ CssLogic.prototype = {
     if (cssSheet._passId != this._passId) {
       cssSheet._passId = this._passId;
 
-      // Find import and keyframes rules.
-      for (let aDomRule of aDomSheet.cssRules) {
+      // Find import rules.
+      Array.prototype.forEach.call(aDomSheet.cssRules, function(aDomRule) {
         if (aDomRule.type == Ci.nsIDOMCSSRule.IMPORT_RULE && aDomRule.styleSheet &&
             this.mediaMatches(aDomRule)) {
           this._cacheSheet(aDomRule.styleSheet);
-        } else if (aDomRule.type == Ci.nsIDOMCSSRule.KEYFRAMES_RULE) {
-          this._keyframesRules.push(aDomRule);
         }
-      }
+      }, this);
     }
   },
 
@@ -335,19 +320,6 @@ CssLogic.prototype = {
     }, this);
 
     return sheets;
-  },
-
-  /**
-   * Retrieve the list of keyframes rules in the document.
-   *
-   * @ return {array} the list of keyframes rules in the document.
-   */
-  get keyframesRules()
-  {
-    if (!this._sheetsCached) {
-      this._cacheSheets();
-    }
-    return this._keyframesRules;
   },
 
   /**
@@ -648,6 +620,7 @@ CssLogic.prototype = {
         this._matchedRules.push([rule, status]);
       }
 
+
       // Add element.style information.
       if (element.style && element.style.length > 0) {
         let rule = new CssRule(null, { style: element.style }, element);
@@ -671,7 +644,7 @@ CssLogic.prototype = {
     let mediaText = aDomObject.media.mediaText;
     return !mediaText || this.viewedDocument.defaultView.
                          matchMedia(mediaText).matches;
-  },
+   },
 };
 
 /**
@@ -1562,9 +1535,9 @@ CssPropertyInfo.prototype = {
    */
   get value()
   {
-    if (!this._value && this._cssLogic.computedStyle) {
+    if (!this._value && this._cssLogic._computedStyle) {
       try {
-        this._value = this._cssLogic.computedStyle.getPropertyValue(this.property);
+        this._value = this._cssLogic._computedStyle.getPropertyValue(this.property);
       } catch (ex) {
         Services.console.logStringMessage('Error reading computed style for ' +
           this.property);

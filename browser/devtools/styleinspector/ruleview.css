@@ -38,11 +38,11 @@
   display: none;
 }
 
-.ruleview-expandable-container {
+.ruleview-rule-pseudo-element {
   display: none;
 }
 
-.show-expandable-container + .ruleview-expandable-container {
+.show-pseudo-elements .ruleview-rule-pseudo-element {
   display: block;
 }
 

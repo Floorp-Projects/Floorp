@@ -45,8 +45,7 @@ types.addLifetime("walker", "walker");
  */
 types.addDictType("appliedstyle", {
   rule: "domstylerule#actorid",
-  inherited: "nullable:domnode#actorid",
-  keyframes: "nullable:domstylerule#actorid"
+  inherited: "nullable:domnode#actorid"
 });
 
 types.addDictType("matchedselector", {
@@ -155,7 +154,7 @@ var PageStyleActor = protocol.ActorClass({
 
     this.cssLogic.sourceFilter = options.filter || CssLogic.FILTER.UA;
     this.cssLogic.highlight(node.rawNode);
-    let computed = this.cssLogic.computedStyle || [];
+    let computed = this.cssLogic._computedStyle || [];
 
     Array.prototype.forEach.call(computed, name => {
       let matched = undefined;
@@ -325,7 +324,8 @@ var PageStyleActor = protocol.ActorClass({
    * Helper function for getApplied, adds all the rules from a given
    * element.
    */
-  addElementRules: function(element, inherited, options, rules) {
+  addElementRules: function(element, inherited, options, rules)
+  {
     if (!element.style) {
       return;
     }
@@ -379,6 +379,7 @@ var PageStyleActor = protocol.ActorClass({
           isSystem: isSystem
         });
       }
+
     }
   },
 
@@ -425,24 +426,6 @@ var PageStyleActor = protocol.ActorClass({
         for (let i = 0; i < selectors.length; i++) {
           if (DOMUtils.selectorMatchesElement(element, domRule, i)) {
             entry.matchedSelectors.push(selectors[i]);
-          }
-        }
-      }
-    }
-
-    // Add all the keyframes rule associated with the element
-    let animationNames = this.cssLogic.computedStyle.animationName.split(",");
-    animationNames = animationNames.map(name => name.trim())
-    if (animationNames) {
-      // Traverse through all the available keyframes rule and add
-      // the keyframes rule that matches the computed animation name
-      for (let keyframesRule of this.cssLogic.keyframesRules) {
-        if (animationNames.indexOf(keyframesRule.name) > -1) {
-          for (let rule of keyframesRule.cssRules) {
-            entries.push({
-              rule: this._styleRef(rule),
-              keyframes: this._styleRef(keyframesRule)
-            });
           }
         }
       }
@@ -678,9 +661,7 @@ var StyleRuleActor = protocol.ActorClass({
     if (item instanceof (Ci.nsIDOMCSSRule)) {
       this.type = item.type;
       this.rawRule = item;
-      if ((this.rawRule instanceof Ci.nsIDOMCSSStyleRule ||
-           this.rawRule instanceof Ci.nsIDOMMozCSSKeyframeRule) &&
-           this.rawRule.parentStyleSheet) {
+      if (this.rawRule instanceof Ci.nsIDOMCSSStyleRule && this.rawRule.parentStyleSheet) {
         this.line = DOMUtils.getRuleLine(this.rawRule);
         this.column = DOMUtils.getRuleColumn(this.rawRule);
       }
@@ -757,14 +738,6 @@ var StyleRuleActor = protocol.ActorClass({
         for (let i = 0, n = this.rawRule.media.length; i < n; i++) {
           form.media.push(this.rawRule.media.item(i));
         }
-        break;
-      case Ci.nsIDOMCSSRule.KEYFRAMES_RULE:
-        form.cssText = this.rawRule.cssText;
-        form.name = this.rawRule.name;
-        break;
-      case Ci.nsIDOMCSSRule.KEYFRAME_RULE:
-        form.cssText = this.rawStyle.cssText || "";
-        form.keyText = this.rawRule.keyText || "";
         break;
     }
 
@@ -911,7 +884,7 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
    * Return a new RuleModificationList for this node.
    */
   startModifyingProperties: function() {
-    return new RuleModificationList(this);
+  return new RuleModificationList(this);
   },
 
   get type() this._form.type,
@@ -919,12 +892,6 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
   get column() this._form.column || -1,
   get cssText() {
     return this._form.cssText;
-  },
-  get keyText() {
-    return this._form.keyText;
-  },
-  get name() {
-    return this._form.name;
   },
   get selectors() {
     return this._form.selectors;
