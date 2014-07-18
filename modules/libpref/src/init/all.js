@@ -4062,10 +4062,9 @@ pref("memory.dump_reports_on_oom", false);
 // Number of stack frames to capture in createObjectURL for about:memory.
 pref("memory.blob_report.stack_frames", 0);
 
-// comma separated list of domain origins (e.g. https://domain.com) for
-// providers that can install from their own website without user warnings.
-// entries are
-pref("social.whitelist", "https://mozsocial.cliqz.com,https://now.msn.com,https://mixi.jp");
+// comma separated list of domain origins (e.g. https://domain.com) that still
+// need localStorage in the frameworker
+pref("social.whitelist", "https://mozsocial.cliqz.com");
 // comma separated list of domain origins (e.g. https://domain.com) for
 // directory websites (e.g. AMO) that can install providers for other sites
 pref("social.directories", "https://activations.cdn.mozilla.net");
