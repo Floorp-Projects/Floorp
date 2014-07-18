@@ -201,8 +201,8 @@ class DeviceManagerADB(DeviceManager):
                        retryLimit=retryLimit)
 
     def mkDir(self, name):
-        result = str(self._runCmd(["shell", "mkdir", name]).output)
-        if 'read-only file system' in result.lower():
+        result = self._runCmd(["shell", "mkdir", name]).output
+        if len(result) and 'read-only file system' in result[0].lower():
             raise DMError("Error creating directory: read only file system")
 
     def pushDir(self, localDir, remoteDir, retryLimit=None, timeout=None):
@@ -222,7 +222,7 @@ class DeviceManagerADB(DeviceManager):
                 self.pushFile(localZip, remoteZip, retryLimit=retryLimit, createDir=False)
                 mozfile.remove(localZip)
                 data = self._runCmd(["shell", "unzip", "-o", remoteZip,
-                                     "-d", remoteDir]).output
+                                     "-d", remoteDir]).output[0]
                 self._checkCmd(["shell", "rm", remoteZip],
                                retryLimit=retryLimit, timeout=timeout)
                 if re.search("unzip: exiting", data) or re.search("Operation not permitted", data):
@@ -486,9 +486,9 @@ class DeviceManagerADB(DeviceManager):
     def getInfo(self, directive=None):
         ret = {}
         if (directive == "id" or directive == "all"):
-            ret["id"] = self._runCmd(["get-serialno"]).output
+            ret["id"] = self._runCmd(["get-serialno"]).output[0]
         if (directive == "os" or directive == "all"):
-            ret["os"] = self._runCmd(["shell", "getprop", "ro.build.display.id"]).output
+            ret["os"] = self._runCmd(["shell", "getprop", "ro.build.display.id"]).output[0]
         if (directive == "uptime" or directive == "all"):
             utime = self._runCmd(["shell", "uptime"]).output[0]
             if (not utime):
@@ -503,13 +503,12 @@ class DeviceManagerADB(DeviceManager):
         if (directive == "process" or directive == "all"):
             ret["process"] = self._runCmd(["shell", "ps"]).output
         if (directive == "systime" or directive == "all"):
-            ret["systime"] = self._runCmd(["shell", "date"]).output
+            ret["systime"] = self._runCmd(["shell", "date"]).output[0]
         self._logger.info(ret)
         return ret
 
     def uninstallApp(self, appName, installPath=None):
-        data = self._runCmd(["uninstall", appName]).output.strip()
-        status = data.split('\n')[0].strip()
+        status = self._runCmd(["uninstall", appName]).output[0].strip()
         if status != 'Success':
             raise DMError("uninstall failed for %s. Got: %s" % (appName, status))
 
@@ -638,7 +637,7 @@ class DeviceManagerADB(DeviceManager):
         if retcode is None: # still not terminated, kill
             proc.kill()
 
-        data = proc.output
+        data = proc.output[0]
         if data.find('uid=0(root)') >= 0:
             self._haveSu = True
 
