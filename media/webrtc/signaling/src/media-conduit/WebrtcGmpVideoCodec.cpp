@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "mozilla/Scoped.h"
+#include "mozilla/SyncRunnable.h"
 #include "VideoConduit.h"
 #include "AudioConduit.h"
 #include "runnable_utils.h"
@@ -47,8 +48,7 @@ GetGMPLog()
 
 // Encoder.
 WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder()
-  : mGMPThread(nullptr)
-  , mGMP(nullptr)
+  : mGMP(nullptr)
   , mHost(nullptr)
   , mCallback(nullptr)
 {}
@@ -120,13 +120,15 @@ WebrtcGmpVideoEncoder::InitEncode(const webrtc::VideoCodec* aCodecSettings,
   mMPS = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   MOZ_ASSERT(mMPS);
 
-  nsresult rv = mMPS->GetThread(&mGMPThread);
-  if (NS_FAILED(rv)) {
-    return WEBRTC_VIDEO_CODEC_ERROR;
+  if (!mGMPThread) {
+    if (NS_WARN_IF(NS_FAILED(mMPS->GetThread(getter_AddRefs(mGMPThread))))) {
+      mMPS = nullptr;
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
   }
 
   int32_t ret;
-  RUN_ON_THREAD(mGMPThread,
+  mozilla::SyncRunnable::DispatchToThread(mGMPThread,
                 WrapRunnableRet(this,
                                 &WebrtcGmpVideoEncoder::InitEncode_g,
                                 aCodecSettings,
@@ -142,23 +144,21 @@ WebrtcGmpVideoEncoder::InitEncode_g(const webrtc::VideoCodec* aCodecSettings,
                                     int32_t aNumberOfCores,
                                     uint32_t aMaxPayloadSize)
 {
-  GMPVideoHost* host = nullptr;
-  GMPVideoEncoderProxy* gmp = nullptr;
-
   nsTArray<nsCString> tags;
   tags.AppendElement(NS_LITERAL_CSTRING("h264"));
-  nsresult rv = mMPS->GetGMPVideoEncoder(&tags,
-                                         NS_LITERAL_STRING(""),
-                                         &host,
-                                         &gmp);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(mMPS->GetGMPVideoEncoder(&tags,
+                                                    NS_LITERAL_STRING(""),
+                                                    &mHost,
+                                                    &mGMP)))) {
+    mMPS = nullptr;
+    mGMP = nullptr;
+    mGMPThread = nullptr;
+    mHost = nullptr;
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
+  mMPS = nullptr;
 
-  mGMP = gmp;
-  mHost = host;
-
-  if (!gmp || !host) {
+  if (!mGMP || !mHost) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
@@ -194,7 +194,7 @@ WebrtcGmpVideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
 {
   int32_t ret;
   MOZ_ASSERT(mGMPThread);
-  RUN_ON_THREAD(mGMPThread,
+  mozilla::SyncRunnable::DispatchToThread(mGMPThread,
                 WrapRunnableRet(this,
                                 &WebrtcGmpVideoEncoder::Encode_g,
                                 &aInputImage,
@@ -279,6 +279,9 @@ WebrtcGmpVideoEncoder::RegisterEncodeCompleteCallback(webrtc::EncodedImageCallba
 int32_t
 WebrtcGmpVideoEncoder::Release()
 {
+  mMPS = nullptr;
+  mGMP = nullptr;
+  mHost = nullptr;
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -293,13 +296,13 @@ WebrtcGmpVideoEncoder::SetRates(uint32_t aNewBitRate, uint32_t aFrameRate)
 {
   int32_t ret;
   MOZ_ASSERT(mGMPThread);
-  RUN_ON_THREAD(mGMPThread,
+  mozilla::SyncRunnable::DispatchToThread(mGMPThread,
                 WrapRunnableRet(this,
                                 &WebrtcGmpVideoEncoder::SetRates_g,
                                 aNewBitRate, aFrameRate,
                                 &ret));
 
-  return ret;
+  return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t
@@ -382,7 +385,6 @@ WebrtcGmpVideoEncoder::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
 
 // Decoder.
 WebrtcGmpVideoDecoder::WebrtcGmpVideoDecoder() :
-  mGMPThread(nullptr),
   mGMP(nullptr),
   mHost(nullptr),
   mCallback(nullptr) {}
@@ -394,13 +396,14 @@ WebrtcGmpVideoDecoder::InitDecode(const webrtc::VideoCodec* aCodecSettings,
   mMPS = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   MOZ_ASSERT(mMPS);
 
-  if (NS_WARN_IF(NS_FAILED(mMPS->GetThread(&mGMPThread))))
-  {
-    return WEBRTC_VIDEO_CODEC_ERROR;
+  if (!mGMPThread) {
+    if (NS_WARN_IF(NS_FAILED(mMPS->GetThread(getter_AddRefs(mGMPThread))))) {
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
   }
 
   int32_t ret;
-  RUN_ON_THREAD(mGMPThread,
+  mozilla::SyncRunnable::DispatchToThread(mGMPThread,
                 WrapRunnableRet(this,
                                 &WebrtcGmpVideoDecoder::InitDecode_g,
                                 aCodecSettings,
@@ -414,21 +417,21 @@ int32_t
 WebrtcGmpVideoDecoder::InitDecode_g(const webrtc::VideoCodec* aCodecSettings,
                                     int32_t aNumberOfCores)
 {
-  GMPVideoHost* host = nullptr;
-  GMPVideoDecoderProxy* gmp = nullptr;
-
   nsTArray<nsCString> tags;
   tags.AppendElement(NS_LITERAL_CSTRING("h264"));
   if (NS_WARN_IF(NS_FAILED(mMPS->GetGMPVideoDecoder(&tags,
                                                     NS_LITERAL_STRING(""),
-                                                    &host,
-                                                    &gmp)))) {
+                                                    &mHost,
+                                                    &mGMP)))) {
+    mMPS = nullptr;
+    mGMP = nullptr;
+    mGMPThread = nullptr;
+    mHost = nullptr;
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
+  mMPS = nullptr;
 
-  mGMP = gmp;
-  mHost = host;
-  if (!gmp || !host) {
+  if (!mGMP || !mHost) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
@@ -458,7 +461,7 @@ WebrtcGmpVideoDecoder::Decode(const webrtc::EncodedImage& aInputImage,
 {
   int32_t ret;
   MOZ_ASSERT(mGMPThread);
-  RUN_ON_THREAD(mGMPThread,
+  mozilla::SyncRunnable::DispatchToThread(mGMPThread,
                 WrapRunnableRet(this,
                                 &WebrtcGmpVideoDecoder::Decode_g,
                                 aInputImage,
@@ -544,12 +547,17 @@ WebrtcGmpVideoDecoder::RegisterDecodeCompleteCallback( webrtc::DecodedImageCallb
 int32_t
 WebrtcGmpVideoDecoder::Release()
 {
+  mMPS = nullptr;
+  mGMP = nullptr;
+  mGMPThread = nullptr;
+  mHost = nullptr;
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t
 WebrtcGmpVideoDecoder::Reset()
 {
+  // XXX ?
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
