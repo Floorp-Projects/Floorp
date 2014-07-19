@@ -50,6 +50,6 @@ LOCAL_INCLUDES += [
     '../build',
     '../ds',
     '../reflect/xptinfo',
-    '/chrome/src',
+    '/chrome',
     '/modules/libjar',
 ]
