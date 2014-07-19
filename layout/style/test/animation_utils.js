@@ -117,7 +117,7 @@ function runOMTATest(aTestFunction, aOnSkip) {
     // Create keyframes rule
     const animationName = "a6ce3091ed85"; // Random name to avoid clashes
     var ruleText = "@keyframes " + animationName +
-                   " { from { opacity: 0.5 } to { opacity 0.5 } }";
+                   " { from { opacity: 0.5 } to { opacity: 0.5 } }";
     var style = document.createElement("style");
     style.appendChild(document.createTextNode(ruleText));
     document.head.appendChild(style);
