@@ -23,7 +23,7 @@ let WebrtcIndicator = {
 
   fillPopup: function (aPopup) {
     this._menuitemData = new WeakMap;
-    for (let streamData of this.UIModule.activeStreams) {
+    for (let streamData of this.UIModule.getActiveStreams(true, true, true)) {
       let pageURI = Services.io.newURI(streamData.uri, null, null);
       let menuitem = document.createElement("menuitem");
       menuitem.setAttribute("class", "menuitem-iconic");
