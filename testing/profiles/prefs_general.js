@@ -85,6 +85,8 @@ user_pref("urlclassifier.updateinterval", 172800);
 user_pref("browser.safebrowsing.gethashURL", "http://%(server)s/safebrowsing-dummy/gethash");
 user_pref("browser.safebrowsing.updateURL", "http://%(server)s/safebrowsing-dummy/update");
 user_pref("browser.safebrowsing.appRepURL", "http://%(server)s/safebrowsing-dummy/update");
+user_pref("browser.trackingprotection.gethashURL", "http://%(server)s/safebrowsing-dummy/gethash");
+user_pref("browser.trackingprotection.updateURL", "http://%(server)s/safebrowsing-dummy/update");
 // Point update checks to the local testing server for fast failures
 user_pref("extensions.update.url", "http://%(server)s/extensions-dummy/updateURL");
 user_pref("extensions.update.background.url", "http://%(server)s/extensions-dummy/updateBackgroundURL");

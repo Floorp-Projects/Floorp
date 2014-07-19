@@ -1,0 +1,107 @@
+<html>
+<head>
+<title></title>
+
+<script type="text/javascript">
+"use strict";
+
+var scriptItem = "untouched";
+var imageItem = "untouched";
+var frameItem = "untouched";
+
+var badids = [
+  "badscript1",
+  "badscript2",
+  "badimage1",
+  "badimage2",
+  "badframe1",
+  "badframe2"
+];
+
+function checkLoads() {
+  window.parent.is(scriptItem, "untouched", "Should not load tracking javascript");
+
+  window.parent.is(imageItem, "untouched", "Should not load tracking images");
+
+  window.parent.is(frameItem, "untouched", "Should not load tracking iframes");
+
+  window.parent.is(window.document.blockedTrackingNodeCount, badids.length,
+    "Should identify all tracking elements");
+
+  var blockedTrackingNodes = window.document.blockedTrackingNodes;
+
+  // Make sure that every node in blockedTrackingNodes exists in the tree
+  // (that may not always be the case but do not expect any nodes to disappear
+  // from the tree here)
+  var allNodeMatch = true;
+  for (var i = 0; i < blockedTrackingNodes.length; i++) {
+    var nodeMatch = false;
+    for (var j = 0; j < badids.length && !nodeMatch; j++) {
+      nodeMatch |=
+        (blockedTrackingNodes[i] == document.getElementById(badids[j]));
+    }
+
+    allNodeMatch &= nodeMatch;
+  }
+  window.parent.is(allNodeMatch, true,
+    "All annotated nodes are expected in the tree");
+
+  // Make sure that every node with a badid (see badids) is found in the
+  // blockedTrackingNodes. This tells us if we are neglecting to annotate
+  // some nodes
+  allNodeMatch = true;
+  for (var j = 0; j < badids.length; j++) {
+    var nodeMatch = false;
+    for (var i = 0; i < blockedTrackingNodes.length && !nodeMatch; i++) {
+      nodeMatch |=
+        (blockedTrackingNodes[i] == document.getElementById(badids[j]));
+    }
+
+    allNodeMatch &= nodeMatch;
+  }
+  window.parent.is(allNodeMatch, true,
+    "All tracking nodes are expected to be annotated as such");
+
+  // End (parent) test.
+  window.parent.SimpleTest.finish();
+}
+
+</script>
+
+</head>
+
+<body onload="checkLoads()">
+
+<!-- Try loading from a tracking script URI (1) -->
+<script id="badscript1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js" onload="function() {scriptItem='spoiled';}"></script>
+
+<!-- Try loading from a tracking image URI (1) -->
+<img id="badimage1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg" onload="function() {imageItem='spoiled';}"/>
+
+<!-- Try loading from a tracking frame URI (1) -->
+<iframe id="badframe1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/track.html" onload="function() {frameItem='spoiled';}"></iframe>
+
+<script>
+// Try loading from a tracking script URI (2) - The loader may follow a different path depending on whether the resource is loaded from JS or HTML.
+var newScript = document.createElement("script");
+newScript.id = "badscript2";
+newScript.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js";
+newScript.addEventListener("load", function() {scriptItem = 'spoiled';});
+document.body.appendChild(newScript);
+
+/// Try loading from a tracking image URI (2)
+var newImage = document.createElement("img");
+newImage.id = "badimage2";
+newImage.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg";
+newImage.addEventListener("load", function() {imageItem = 'spoiled'});
+document.body.appendChild(newImage);
+
+// Try loading from a tracking iframe URI (2)
+var newFrame = document.createElement("iframe");
+newFrame.id = "badframe2";
+newFrame.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/track.html"
+newFrame.addEventListener("load", function() {frameItem = 'spoiled'});
+document.body.appendChild(newFrame);
+</script>
+</body>
+</html>
