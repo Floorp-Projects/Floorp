@@ -48,6 +48,7 @@ struct ARTSPConnection : public AHandler {
     static bool ParseURL(
             const char *url, AString *host, uint16_t *port, AString *path,
             AString *user, AString *pass);
+    void MakeUserAgent(const char *userAgent);
 
 protected:
     virtual ~ARTSPConnection();
@@ -127,8 +128,6 @@ private:
 
     static bool ParseSingleUnsignedLong(
             const char *from, unsigned long *x);
-
-    static void MakeUserAgent(AString *userAgent);
 
     void closeSocket();
 

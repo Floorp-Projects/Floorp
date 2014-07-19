@@ -38,9 +38,11 @@ namespace android {
 RTSPSource::RTSPSource(
         nsIStreamingProtocolListener *aListener,
         const char *url,
+        const char *userAgent,
         bool uidValid,
         uid_t uid)
     : mURL(url),
+      mUserAgent(userAgent),
       mUIDValid(uidValid),
       mUID(uid),
       mState(DISCONNECTED),
@@ -80,7 +82,8 @@ void RTSPSource::start()
 
     sp<AMessage> notify = new AMessage(kWhatNotify, mReflector->id());
 
-    mHandler = new RtspConnectionHandler(mURL.c_str(), notify, mUIDValid, mUID);
+    mHandler = new RtspConnectionHandler(mURL.c_str(), mUserAgent.c_str(),
+                                         notify, mUIDValid, mUID);
     mLooper->registerHandler(mHandler);
 
     CHECK_EQ(mState, (int)DISCONNECTED);
