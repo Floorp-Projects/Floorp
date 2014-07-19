@@ -91,7 +91,7 @@ LOCAL_INCLUDES += [
     '../io',
     '../reflect/xptinfo',
     '../threads',
-    '/chrome/src',
+    '/chrome',
     '/docshell/base',
 ]
 
