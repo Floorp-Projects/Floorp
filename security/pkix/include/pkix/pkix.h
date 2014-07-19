@@ -88,12 +88,12 @@ namespace mozilla { namespace pkix {
 //                                    of active distrust.
 // TODO(bug 968451): Document more of these.
 
-Result BuildCertChain(TrustDomain& trustDomain, const SECItem& cert,
+Result BuildCertChain(TrustDomain& trustDomain, InputBuffer cert,
                       PRTime time, EndEntityOrCA endEntityOrCA,
                       KeyUsage requiredKeyUsageIfPresent,
                       KeyPurposeId requiredEKUIfPresent,
                       const CertPolicyId& requiredPolicy,
-                      /*optional*/ const SECItem* stapledOCSPResponse);
+                      /*optional*/ const InputBuffer* stapledOCSPResponse);
 
 static const size_t OCSP_REQUEST_MAX_LENGTH = 127;
 Result CreateEncodedOCSPRequest(TrustDomain& trustDomain,
@@ -116,7 +116,7 @@ Result CreateEncodedOCSPRequest(TrustDomain& trustDomain,
 Result VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
                                  const CertID& certID, PRTime time,
                                  uint16_t maxLifetimeInDays,
-                                 const SECItem& encodedResponse,
+                                 InputBuffer encodedResponse,
                        /* out */ bool& expired,
               /* optional out */ PRTime* thisUpdate = nullptr,
               /* optional out */ PRTime* validThrough = nullptr);

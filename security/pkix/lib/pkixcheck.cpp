@@ -22,11 +22,12 @@
  * limitations under the License.
  */
 
+#include "pkixcheck.h"
+
 #include "cert.h"
 #include "pkix/bind.h"
 #include "pkix/pkix.h"
 #include "pkix/ScopedPtr.h"
-#include "pkixcheck.h"
 #include "pkixder.h"
 #include "pkix/pkixnss.h"
 #include "pkixutil.h"
@@ -34,12 +35,9 @@
 namespace mozilla { namespace pkix {
 
 Result
-CheckValidity(const SECItem& encodedValidity, PRTime time)
+CheckValidity(InputBuffer encodedValidity, PRTime time)
 {
-  Input validity;
-  if (validity.Init(encodedValidity.data, encodedValidity.len) != Success) {
-    return Result::ERROR_EXPIRED_CERTIFICATE;
-  }
+  Input validity(encodedValidity);
   PRTime notBefore;
   if (der::TimeChoice(validity, notBefore) != Success) {
     return Result::ERROR_EXPIRED_CERTIFICATE;
@@ -70,7 +68,7 @@ inline uint8_t KeyUsageToBitMask(KeyUsage keyUsage)
 }
 
 Result
-CheckKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedKeyUsage,
+CheckKeyUsage(EndEntityOrCA endEntityOrCA, const InputBuffer* encodedKeyUsage,
               KeyUsage requiredKeyUsageIfPresent)
 {
   if (!encodedKeyUsage) {
@@ -88,10 +86,7 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedKeyUsage,
     return Success;
   }
 
-  Input input;
-  if (input.Init(encodedKeyUsage->data, encodedKeyUsage->len) != Success) {
-    return Result::ERROR_INADEQUATE_KEY_USAGE;
-  }
+  Input input(*encodedKeyUsage);
   Input value;
   if (der::ExpectTagAndGetValue(input, der::BIT_STRING, value) != Success) {
     return Result::ERROR_INADEQUATE_KEY_USAGE;
@@ -233,8 +228,8 @@ CheckPolicyInformation(Input& input, EndEntityOrCA endEntityOrCA,
 // certificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
 Result
 CheckCertificatePolicies(EndEntityOrCA endEntityOrCA,
-                         const SECItem* encodedCertificatePolicies,
-                         const SECItem* encodedInhibitAnyPolicy,
+                         const InputBuffer* encodedCertificatePolicies,
+                         const InputBuffer* encodedInhibitAnyPolicy,
                          TrustLevel trustLevel,
                          const CertPolicyId& requiredPolicy)
 {
@@ -272,11 +267,7 @@ CheckCertificatePolicies(EndEntityOrCA endEntityOrCA,
 
   bool found = false;
 
-  Input input;
-  if (input.Init(encodedCertificatePolicies->data,
-                 encodedCertificatePolicies->len) != Success) {
-    return Result::ERROR_POLICY_VALIDATION_FAILED;
-  }
+  Input input(*encodedCertificatePolicies);
   if (der::NestedOf(input, der::SEQUENCE, der::SEQUENCE, der::EmptyAllowed::No,
                     bind(CheckPolicyInformation, _1, endEntityOrCA,
                          requiredPolicy, ref(found))) != Success) {
@@ -325,7 +316,7 @@ DecodeBasicConstraints(Input& input, /*out*/ bool& isCA,
 // RFC5280 4.2.1.9. Basic Constraints (id-ce-basicConstraints)
 Result
 CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
-                      const SECItem* encodedBasicConstraints,
+                      const InputBuffer* encodedBasicConstraints,
                       const der::Version version, TrustLevel trustLevel,
                       unsigned int subCACount)
 {
@@ -333,11 +324,7 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
   long pathLenConstraint = UNLIMITED_PATH_LEN;
 
   if (encodedBasicConstraints) {
-    Input input;
-    if (input.Init(encodedBasicConstraints->data,
-                   encodedBasicConstraints->len) != Success) {
-      return Result::ERROR_EXTENSION_VALUE_INVALID;
-    }
+    Input input(*encodedBasicConstraints);
     if (der::Nested(input, der::SEQUENCE,
                     bind(DecodeBasicConstraints, _1, ref(isCA),
                          ref(pathLenConstraint))) != Success) {
@@ -406,10 +393,11 @@ PORT_FreeArena_false(PLArenaPool* arena) {
   return PORT_FreeArena(arena, PR_FALSE);
 }
 
-// TODO: remove #include "pkix/pkixnss.h" when this is rewritten to be
-// independent of NSS.
+// TODO: Remove #include "pkix/pkixnss.h", #include "cert.h",
+// #include "ScopedPtr.h", etc. when this is rewritten to be independent of
+// NSS.
 Result
-CheckNameConstraints(const SECItem& encodedNameConstraints,
+CheckNameConstraints(InputBuffer encodedNameConstraints,
                      const BackCert& firstChild,
                      KeyPurposeId requiredEKUIfPresent)
 {
@@ -419,17 +407,21 @@ CheckNameConstraints(const SECItem& encodedNameConstraints,
     return Result::FATAL_ERROR_NO_MEMORY;
   }
 
+  SECItem encodedNameConstraintsSECItem =
+    UnsafeMapInputBufferToSECItem(encodedNameConstraints);
+
   // Owned by arena
   const CERTNameConstraints* constraints =
-    CERT_DecodeNameConstraintsExtension(arena.get(), &encodedNameConstraints);
+    CERT_DecodeNameConstraintsExtension(arena.get(),
+                                        &encodedNameConstraintsSECItem);
   if (!constraints) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
 
   for (const BackCert* child = &firstChild; child; child = child->childCert) {
+    SECItem childCertDER = UnsafeMapInputBufferToSECItem(child->GetDER());
     ScopedPtr<CERTCertificate, CERT_DestroyCertificate>
-      nssCert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
-                                      const_cast<SECItem*>(&child->GetDER()),
+      nssCert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &childCertDER,
                                       nullptr, false, true));
     if (!nssCert) {
       return MapPRErrorCodeToResult(PR_GetError());
@@ -548,7 +540,7 @@ MatchEKU(Input& value, KeyPurposeId requiredEKU,
 
 Result
 CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
-                      const SECItem* encodedExtendedKeyUsage,
+                      const InputBuffer* encodedExtendedKeyUsage,
                       KeyPurposeId requiredEKU)
 {
   // XXX: We're using Result::ERROR_INADEQUATE_CERT_TYPE here so that callers
@@ -561,11 +553,7 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
   if (encodedExtendedKeyUsage) {
     bool found = requiredEKU == KeyPurposeId::anyExtendedKeyUsage;
 
-    Input input;
-    if (input.Init(encodedExtendedKeyUsage->data,
-                   encodedExtendedKeyUsage->len) != Success) {
-      return Result::ERROR_INADEQUATE_CERT_TYPE;
-    }
+    Input input(*encodedExtendedKeyUsage);
     if (der::NestedOf(input, der::SEQUENCE, der::OIDTag, der::EmptyAllowed::No,
                       bind(MatchEKU, _1, requiredEKU, endEntityOrCA,
                            ref(found), ref(foundOCSPSigning)))

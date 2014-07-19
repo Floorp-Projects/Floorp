@@ -31,7 +31,7 @@
 #include "cryptohi.h"
 #include "hasht.h"
 #include "pk11pub.h"
-#include "pkixcheck.h"
+#include "pkix/pkixnss.h"
 #include "pkixder.h"
 #include "prerror.h"
 #include "prinit.h"
@@ -146,6 +146,16 @@ TamperOnce(SECItem& item,
       --remaining;
     }
   }
+}
+
+Result
+InitInputBufferFromSECItem(const SECItem* secItem,
+                           /*out*/ InputBuffer& inputBuffer)
+{
+  if (!secItem) {
+    return Result::FATAL_ERROR_INVALID_ARGS;
+  }
+  return inputBuffer.Init(secItem->data, secItem->len);
 }
 
 class Output
@@ -1327,16 +1337,18 @@ CertID(OCSPResponseContext& context)
   if (!hashAlgorithm) {
     return nullptr;
   }
-  SECItem* issuerNameHash = HashedOctetString(context.arena,
-                                              context.certID.issuer,
+  SECItem issuerSECItem = UnsafeMapInputBufferToSECItem(context.certID.issuer);
+  SECItem* issuerNameHash = HashedOctetString(context.arena, issuerSECItem,
                                               context.certIDHashAlg);
   if (!issuerNameHash) {
     return nullptr;
   }
 
+  SECItem issuerSubjectPublicKeyInfoSECItem =
+    UnsafeMapInputBufferToSECItem(context.certID.issuerSubjectPublicKeyInfo);
   ScopedPtr<CERTSubjectPublicKeyInfo, SECKEY_DestroySubjectPublicKeyInfo>
     spki(SECKEY_DecodeDERSubjectPublicKeyInfo(
-          &context.certID.issuerSubjectPublicKeyInfo));
+           &issuerSubjectPublicKeyInfoSECItem));
   if (!spki) {
     return nullptr;
   }
@@ -1349,8 +1361,10 @@ CertID(OCSPResponseContext& context)
     { SEC_ASN1_INTEGER, 0 },
     { 0 }
   };
+  SECItem serialNumberSECItem =
+    UnsafeMapInputBufferToSECItem(context.certID.serialNumber);
   SECItem* serialNumber = SEC_ASN1EncodeItem(context.arena, nullptr,
-                                             &context.certID.serialNumber,
+                                             &serialNumberSECItem,
                                              serialTemplate);
   if (!serialNumber) {
     return nullptr;

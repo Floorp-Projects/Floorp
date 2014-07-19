@@ -25,10 +25,8 @@
 #ifndef mozilla_pkix__pkixtypes_h
 #define mozilla_pkix__pkixtypes_h
 
-#include "pkix/Result.h"
-#include "pkix/nullptr.h"
+#include "pkix/Input.h"
 #include "prtime.h"
-#include "seccomon.h"
 #include "stdint.h"
 
 namespace mozilla { namespace pkix {
@@ -81,16 +79,12 @@ MOZILLA_PKIX_ENUM_CLASS SignatureAlgorithm
 struct SignedDataWithSignature
 {
 public:
-  SignedDataWithSignature()
-  {
-    data.data = nullptr;
-    data.len = 0;
-    signature.data = nullptr;
-    signature.len = 0;
-  }
-  SECItem data; // non-owning
+  InputBuffer data;
   SignatureAlgorithm algorithm;
-  SECItem signature; // non-owning
+  InputBuffer signature;
+
+private:
+  void operator=(const SignedDataWithSignature&) /*= delete*/;
 };
 
 MOZILLA_PKIX_ENUM_CLASS EndEntityOrCA { MustBeEndEntity = 0, MustBeCA = 1 };
@@ -148,16 +142,16 @@ MOZILLA_PKIX_ENUM_CLASS TrustLevel {
 struct CertID
 {
 public:
-  CertID(const SECItem& issuer, const SECItem& issuerSubjectPublicKeyInfo,
-         const SECItem& serialNumber)
+  CertID(InputBuffer issuer, InputBuffer issuerSubjectPublicKeyInfo,
+         InputBuffer serialNumber)
     : issuer(issuer)
     , issuerSubjectPublicKeyInfo(issuerSubjectPublicKeyInfo)
     , serialNumber(serialNumber)
   {
   }
-  const SECItem& issuer;
-  const SECItem& issuerSubjectPublicKeyInfo;
-  const SECItem& serialNumber;
+  const InputBuffer issuer;
+  const InputBuffer issuerSubjectPublicKeyInfo;
+  const InputBuffer serialNumber;
 private:
   void operator=(const CertID&) /*= delete*/;
 };
@@ -171,7 +165,7 @@ public:
   // Returns a weak (non-owning) pointer the ith DER-encoded item in the array
   // (0-indexed). The result is guaranteed to be non-null if i < GetLength(),
   // and the result is guaranteed to be nullptr if i >= GetLength().
-  virtual const SECItem* GetDER(size_t i) const = 0;
+  virtual const InputBuffer* GetDER(size_t i) const = 0;
 protected:
   DERArray() { }
   virtual ~DERArray() { }
@@ -200,7 +194,7 @@ public:
   // (assuming the candidate cert is not actively distrusted).
   virtual Result GetCertTrust(EndEntityOrCA endEntityOrCA,
                               const CertPolicyId& policy,
-                              const SECItem& candidateCertDER,
+                              InputBuffer candidateCertDER,
                               /*out*/ TrustLevel& trustLevel) = 0;
 
   class IssuerChecker
@@ -213,9 +207,9 @@ public:
     // encoded NameConstraints extension value; in that case, those name
     // constraints will be checked in addition to any any name constraints
     // contained in potentialIssuerDER.
-    virtual Result Check(const SECItem& potentialIssuerDER,
-                         /*optional*/ const SECItem* additionalNameConstraints,
-                         /*out*/ bool& keepGoing) = 0;
+    virtual Result Check(InputBuffer potentialIssuerDER,
+            /*optional*/ const InputBuffer* additionalNameConstraints,
+                 /*out*/ bool& keepGoing) = 0;
   protected:
     IssuerChecker();
     virtual ~IssuerChecker();
@@ -265,7 +259,7 @@ public:
   //
   // checker.Check is responsible for limiting the recursion to a reasonable
   // limit.
-  virtual Result FindIssuer(const SECItem& encodedIssuerName,
+  virtual Result FindIssuer(InputBuffer encodedIssuerName,
                             IssuerChecker& checker, PRTime time) = 0;
 
   // Called as soon as we think we have a valid chain but before revocation
@@ -295,8 +289,8 @@ public:
   // it.
   virtual Result CheckRevocation(EndEntityOrCA endEntityOrCA,
                                  const CertID& certID, PRTime time,
-                    /*optional*/ const SECItem* stapledOCSPresponse,
-                    /*optional*/ const SECItem* aiaExtension) = 0;
+                    /*optional*/ const InputBuffer* stapledOCSPresponse,
+                    /*optional*/ const InputBuffer* aiaExtension) = 0;
 
   // Check that the key size, algorithm, and parameters of the given public key
   // are acceptable.
@@ -304,7 +298,7 @@ public:
   // VerifySignedData() should do the same checks that this function does, but
   // mainly for efficiency, some keys are not passed to VerifySignedData().
   // This function is called instead for those keys.
-  virtual Result CheckPublicKey(const SECItem& subjectPublicKeyInfo) = 0;
+  virtual Result CheckPublicKey(InputBuffer subjectPublicKeyInfo) = 0;
 
   // Verify the given signature using the given public key.
   //
@@ -314,7 +308,7 @@ public:
   // In any case, the implementation must perform checks on the public key
   // similar to how mozilla::pkix::CheckPublicKey() does.
   virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
-                                  const SECItem& subjectPublicKeyInfo) = 0;
+                                  InputBuffer subjectPublicKeyInfo) = 0;
 
   // Compute the SHA-1 hash of the data in the current item.
   //
@@ -327,7 +321,7 @@ public:
   // other, extensive, memory safety efforts in mozilla::pkix, and we should
   // find a way to provide a more-obviously-safe interface.
   static const size_t DIGEST_LENGTH = 20; // length of SHA-1 digest
-  virtual Result DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
+  virtual Result DigestBuf(InputBuffer item, /*out*/ uint8_t* digestBuf,
                            size_t digestBufLen) = 0;
 protected:
   TrustDomain() { }
