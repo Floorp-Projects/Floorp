@@ -28,6 +28,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
                                    "@mozilla.org/network/dns-service;1",
                                    "nsIDNSService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
+                                   "@mozilla.org/network/dns-service;1",
+                                   "nsIDNSService");
+
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
 var gLastBrowserCharset = null;
