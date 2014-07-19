@@ -38,12 +38,22 @@ this.webrtcUI = {
   showMicrophoneIndicator: false,
   showScreenSharingIndicator: "", // either "Screen" or "Window"
 
-  get activeStreams() {
+  // The boolean parameters indicate which streams should be included in the result.
+  getActiveStreams: function(aCamera, aMicrophone, aScreen) {
     let contentWindowSupportsArray = MediaManagerService.activeMediaCaptureWindows;
     let count = contentWindowSupportsArray.Count();
     let activeStreams = [];
     for (let i = 0; i < count; i++) {
       let contentWindow = contentWindowSupportsArray.GetElementAt(i);
+
+      let camera = {}, microphone = {}, screen = {}, window = {};
+      MediaManagerService.mediaCaptureWindowState(contentWindow, camera,
+                                                  microphone, screen, window);
+      if (!(aCamera && camera.value ||
+            aMicrophone && microphone.value ||
+            aScreen && (screen.value || window.value)))
+        continue;
+
       let browser = getBrowserForWindow(contentWindow);
       let browserWindow = browser.ownerDocument.defaultView;
       let tab = browserWindow.gBrowser &&
