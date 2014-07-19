@@ -19,7 +19,7 @@ interface nsIPrincipal;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, builtinclass, uuid(9c709b50-bd1a-476d-b313-d64db874f80a)]
+[scriptable, builtinclass, uuid(078f159c-28ee-4653-9cfe-633132152f47)]
 interface imgIRequest : nsIRequest
 {
   /**
@@ -78,6 +78,12 @@ interface imgIRequest : nsIRequest
    * Status flags of the STATUS_* variety.
    */
   readonly attribute unsigned long imageStatus;
+
+  /*
+   * Actual error code that generated a STATUS_ERROR imageStatus
+   * (see xpcom/base/ErrorList.h)
+   */
+  [noscript] readonly attribute nsresult imageErrorCode;
 
   /**
    * The URI the image load was started with.  Note that this might not be the
