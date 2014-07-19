@@ -875,10 +875,12 @@ GMPDownloader.prototype = {
         // Success, set the prefs
         let now = Math.round(Date.now() / 1000);
         GMPPrefs.set(GMPPrefs.KEY_ADDON_LAST_UPDATE, now, gmpAddon.id);
-        GMPPrefs.set(GMPPrefs.KEY_ADDON_PATH,
-                     installToDirPath.path, gmpAddon.id);
+        // Setting the path pref signals installation completion to consumers,
+        // so set the version and potential other information they use first.
         GMPPrefs.set(GMPPrefs.KEY_ADDON_VERSION, gmpAddon.version,
                      gmpAddon.id);
+        GMPPrefs.set(GMPPrefs.KEY_ADDON_PATH,
+                     installToDirPath.path, gmpAddon.id);
         this._deferred.resolve(extractedPaths);
       }, err => {
         this._deferred.reject(err);
