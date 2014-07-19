@@ -43,6 +43,21 @@
   color: inherit;
 }
 
+.devtools-responsiveui-menulist .menulist-editable-box {
+  -moz-appearance: none;
+  background-color: transparent;
+}
+
+.devtools-responsiveui-menulist html|*.menulist-editable-input {
+  -moz-appearance: none;
+  color: inherit;
+  text-align: center;
+}
+
+.devtools-responsiveui-menulist html|*.menulist-editable-input::-moz-selection {
+  background: hsla(212,7%,57%,.35);
+}
+
 .devtools-responsiveui-toolbarbutton > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
