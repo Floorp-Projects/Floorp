@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Mozilla Importing XUL into Content"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1027299"
+     target="_blank">Mozilla Bug 1027299</a>
+  </body>
+
+  <browser id="browserelt" src="about:blank" type="content"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  Components.utils.import("resource://gre/modules/Services.jsm");
+
+  SimpleTest.waitForExplicitFinish();
+
+  function expectWarning(expected, when, f) {
+    Services.console.reset();
+
+    f();
+
+    var sawWarning = false;
+    var msgs = Services.console.getMessageArray();
+    for (var i = 0; i < msgs.length; i++) {
+      var msg = msgs[i];
+      if (!msg || !(msg instanceof Components.interfaces.nsIScriptError)) {
+        continue;
+      }
+
+      if (msg.category.contains("DOM") && msg.errorMessage.contains("Importing XUL")) {
+        sawWarning = true;
+      }
+    }
+
+    ok(sawWarning == expected, "correct warning condition when " + when);
+  }
+
+  var browser = document.getElementById("browserelt");
+  browser.addEventListener("load", function() {
+    var doc = browser.contentDocument;
+
+    // We add a <video> element, which contains anonymous XUL content. This should not warn.
+    var video = doc.createElement("video");
+    expectWarning(false, "appending video", function() {
+      doc.documentElement.appendChild(video);
+      // Force a layout flush to make sure the anonymous content is added.
+      let dummy = doc.documentElement.offsetLeft;
+    });
+
+    // We add some XUL to a content document. This should generate a warning.
+    var elt = document.createElement("label");
+    var newElt = doc.importNode(elt, false);
+    expectWarning(true, "appending XUL", function() {
+      doc.documentElement.appendChild(newElt);
+    });
+
+    SimpleTest.finish();
+  });
+
+  ]]>
+  </script>
+</window>

@@ -31,16 +31,27 @@
       <source src="/simple.mp4">
     </video>
 
-    <!-- FAIL: source list uses a mp4 extension -->
-    <video id="with-sources-fail">
+    <!-- PASS: source list uses a webm extension -->
+    <video id="with-sources-webm">
       <source src="/simple.ogg">
       <source src="/simple.webm">
     </video>
 
+    <!-- FAIL: source list has no mp4 or webm extension -->
+    <video id="with-sources-fail">
+      <source src="/simple.ogg">
+    </video>
+
     <!-- PASS: source list uses a mp4 mimetype -->
-    <video id="with-sources-mimetype">
+    <video id="with-sources-mimetype-mp4">
       <source src="/simple-video-ogg" type="video/ogg">
       <source src="/simple-video-mp4" type="video/mp4">
+    </video>
+
+    <!-- PASS: source list uses a webm mimetype -->
+    <video id="with-sources-mimetype-webm">
+      <source src="/simple-video-ogg" type="video/ogg">
+      <source src="/simple-video-webm" type="video/webm">
     </video>
 
     <!-- PASS: source list uses a mp4 mimetype and extra data -->

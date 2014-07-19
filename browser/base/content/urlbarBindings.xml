@@ -146,10 +146,13 @@
           this._value = aValue;
           var returnValue = aValue;
           var action = this._parseActionUrl(aValue);
-          // Don't put back the action if we are invoked while override actions
-          // is active.
-          if (action && this._numNoActionsKeys <= 0) {
+
+          if (action) {
             returnValue = action.param;
+          }
+
+          // Set the actiontype only if the user is not overriding actions.
+          if (action && this._noActionsKeys.size == 0) {
             this.setAttribute("actiontype", action.type);
           } else {
             this.removeAttribute("actiontype");
@@ -717,14 +720,14 @@
         ]]></body>
       </method>
 
-      <field name="_numNoActionsKeys"><![CDATA[
-        0
+      <field name="_noActionsKeys"><![CDATA[
+        new Set();
       ]]></field>
 
       <method name="_clearNoActions">
         <parameter name="aURL"/>
         <body><![CDATA[
-          this._numNoActionsKeys = 0;
+          this._noActionsKeys.clear();
           this.popup.removeAttribute("noactions");
           let action = this._parseActionUrl(this._value);
           if (action)
@@ -746,19 +749,22 @@
       <handler event="keydown"><![CDATA[
         if ((event.keyCode === KeyEvent.DOM_VK_ALT ||
              event.keyCode === KeyEvent.DOM_VK_SHIFT) &&
-            this.popup.selectedIndex >= 0) {
-          this._numNoActionsKeys++;
-          this.popup.setAttribute("noactions", "true");
-          this.removeAttribute("actiontype");
+            this.popup.selectedIndex >= 0 &&
+            !this._noActionsKeys.has(event.keyCode)) {
+          if (this._noActionsKeys.size == 0) {
+            this.popup.setAttribute("noactions", "true");
+            this.removeAttribute("actiontype");
+          }
+          this._noActionsKeys.add(event.keyCode);
         }
       ]]></handler>
 
       <handler event="keyup"><![CDATA[
         if ((event.keyCode === KeyEvent.DOM_VK_ALT ||
              event.keyCode === KeyEvent.DOM_VK_SHIFT) &&
-            this._numNoActionsKeys > 0) {
-          this._numNoActionsKeys--;
-          if (this._numNoActionsKeys == 0)
+            this._noActionsKeys.has(event.keyCode)) {
+          this._noActionsKeys.delete(event.keyCode);
+          if (this._noActionsKeys.size == 0)
             this._clearNoActions();
         }
       ]]></handler>

@@ -1712,6 +1712,23 @@ nsHttpConnection::OnSocketReadable()
     return rv;
 }
 
+bool
+nsHttpConnection::PeerHasPrivateIP()
+{
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    if (!mSocketTransport) {
+        return false;
+    }
+
+    NetAddr peerAddr;
+    nsresult rv = mSocketTransport->GetPeerAddr(&peerAddr);
+    if (NS_FAILED(rv)) {
+        return false;
+    }
+
+    return IsIPAddrPrivate(&peerAddr);
+}
+
 void
 nsHttpConnection::SetupSecondaryTLS()
 {

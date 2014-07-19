@@ -262,7 +262,7 @@ GeckoMediaPluginService::UnloadPlugins()
 
   MutexAutoLock lock(mMutex);
   for (uint32_t i = 0; i < mPlugins.Length(); i++) {
-    mPlugins[i]->UnloadProcess();
+    mPlugins[i]->Shutdown();
   }
   mPlugins.Clear();
 }
@@ -443,7 +443,7 @@ GeckoMediaPluginService::RemoveOnGMPThread(const nsAString& aDirectory)
     nsCOMPtr<nsIFile> pluginpath = mPlugins[i]->GetDirectory();
     bool equals;
     if (NS_SUCCEEDED(directory->Equals(pluginpath, &equals)) && equals) {
-      mPlugins[i]->UnloadProcess();
+      mPlugins[i]->Shutdown();
       mPlugins.RemoveElementAt(i);
       return;
     }
