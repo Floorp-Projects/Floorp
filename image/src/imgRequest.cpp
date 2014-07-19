@@ -63,6 +63,7 @@ imgRequest::imgRequest(imgLoader* aLoader)
  , mValidator(nullptr)
  , mInnerWindowId(0)
  , mCORSMode(imgIRequest::CORS_NONE)
+ , mImageErrorCode(NS_OK)
  , mDecodeRequested(false)
  , mIsMultiPartChannel(false)
  , mGotData(false)
@@ -353,6 +354,11 @@ nsresult imgRequest::GetURI(ImageURL **aURI)
   }
 
   return NS_ERROR_FAILURE;
+}
+
+nsresult imgRequest::GetImageErrorCode()
+{
+  return mImageErrorCode;
 }
 
 nsresult imgRequest::GetSecurityInfo(nsISupports **aSecurityInfo)
@@ -741,6 +747,8 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
     this->EvictFromCache();
   }
   else {
+    mImageErrorCode = status;
+
     // if the error isn't "just" a partial transfer
     // stops animations, removes from cache
     this->Cancel(status);
