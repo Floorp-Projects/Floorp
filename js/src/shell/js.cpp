@@ -2592,65 +2592,6 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-GetPDA(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject vobj(cx);
-    bool ok;
-    JSPropertyDescArray pda;
-    JSPropertyDesc *pd;
-
-    if (!JS_ValueToObject(cx, args.get(0), &vobj))
-        return false;
-    if (!vobj) {
-        args.rval().setUndefined();
-        return true;
-    }
-
-    RootedObject aobj(cx, JS_NewArrayObject(cx, 0));
-    if (!aobj)
-        return false;
-    args.rval().setObject(*aobj);
-
-    ok = !!JS_GetPropertyDescArray(cx, vobj, &pda);
-    if (!ok)
-        return false;
-    pd = pda.array;
-
-    RootedObject pdobj(cx);
-    RootedValue id(cx);
-    RootedValue value(cx);
-    RootedValue flags(cx);
-    RootedValue alias(cx);
-
-    for (uint32_t i = 0; i < pda.length; i++, pd++) {
-        pdobj = JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr());
-        if (!pdobj) {
-            ok = false;
-            break;
-        }
-
-        /* Protect pdobj from GC by setting it as an element of aobj now */
-        ok = !!JS_SetElement(cx, aobj, i, pdobj);
-        if (!ok)
-            break;
-
-        id = pd->id;
-        value = pd->value;
-        flags.setInt32(pd->flags);
-        alias = pd->alias;
-        ok = JS_SetProperty(cx, pdobj, "id", id) &&
-             JS_SetProperty(cx, pdobj, "value", value) &&
-             JS_SetProperty(cx, pdobj, "flags", flags) &&
-             JS_SetProperty(cx, pdobj, "alias", alias);
-        if (!ok)
-            break;
-    }
-    JS_PutPropertyDescArray(cx, &pda);
-    return ok;
-}
-
-static bool
 GetSLX(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -4703,10 +4644,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("intern", Intern, 1, 0,
 "intern(str)",
 "  Internalize str in the atom table."),
-
-    JS_FN_HELP("getpda", GetPDA, 1, 0,
-"getpda(obj)",
-"  Get the property descriptors for obj."),
 
     JS_FN_HELP("getslx", GetSLX, 1, 0,
 "getslx(obj)",

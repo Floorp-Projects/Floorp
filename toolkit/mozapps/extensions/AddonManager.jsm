@@ -1821,8 +1821,8 @@ var AddonManagerInternal = {
       throw Components.Exception("aMimetype must be a non-empty string",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (aSource && !(aSource instanceof Ci.nsIDOMWindow))
-      throw Components.Exception("aSource must be a nsIDOMWindow or null",
+    if (aSource && !(aSource instanceof Ci.nsIDOMWindow) && !(aSource instanceof Ci.nsIDOMNode))
+      throw Components.Exception("aSource must be a nsIDOMWindow, a XUL element, or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
     if (aURI && !(aURI instanceof Ci.nsIURI))

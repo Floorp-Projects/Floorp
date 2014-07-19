@@ -32,11 +32,18 @@ const gXPInstallObserver = {
   {
     var brandBundle = document.getElementById("bundle_brand");
     var installInfo = aSubject.QueryInterface(Components.interfaces.amIWebInstallInfo);
-    var win = installInfo.originatingWindow;
-    var shell = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                   .getInterface(Components.interfaces.nsIWebNavigation)
-                   .QueryInterface(Components.interfaces.nsIDocShell);
-    var browser = this._getBrowser(shell);
+    var winOrBrowser = installInfo.originator;
+
+    var browser;
+    try {
+      var shell = winOrBrowser.QueryInterface(Components.interfaces.nsIDOMWindow)
+                              .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                              .getInterface(Components.interfaces.nsIWebNavigation)
+                              .QueryInterface(Components.interfaces.nsIDocShell);
+      browser = this._getBrowser(shell);
+    } catch (e) {
+      browser = winOrBrowser;
+    }
     if (!browser)
       return;
     const anchorID = "addons-notification-icon";

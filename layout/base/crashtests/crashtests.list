@@ -411,6 +411,7 @@ load 795646.html
 skip-if(1) load 802902.html # bug 901752
 load 806056-1.html
 load 806056-2.html
+load 812665.html
 load 813372-1.html
 asserts-if(gtk2Widget,0-1) load 822865.html # bug 540078
 load 824862.html

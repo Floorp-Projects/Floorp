@@ -12,7 +12,8 @@ function test() {
 }
 
 function allow_blocked(installInfo) {
-  is(installInfo.originatingWindow, gBrowser.contentWindow, "Install should have been triggered by the right window");
+  // XXX Check this for e10s.
+  is(installInfo.originator, gBrowser.contentWindow, "Install should have been triggered by the right window");
   is(installInfo.originatingURI.spec, gBrowser.currentURI.spec, "Install should have been triggered by the right uri");
   return false;
 }
