@@ -2399,4 +2399,26 @@ NS_IsSrcdocChannel(nsIChannel *aChannel)
   return false;
 }
 
+/**
+ *  Provides 32 bits of PRNG; workaround for platform variances of RAND_MAX.
+ */
+inline uint32_t
+NS_Get32BitsOfPseudoRandom()
+{
+    // rand() provides different amounts of PRNG on different platforms.
+    // 15 or 31 bits are common amounts.
+
+    PR_STATIC_ASSERT(RAND_MAX >= 0xfff);
+
+#if RAND_MAX < 0xffffU
+    return ((uint16_t) rand() << 20) |
+            (((uint16_t) rand() & 0xfff) << 8) |
+            ((uint16_t) rand() & 0xff);
+#elif RAND_MAX < 0xffffffffU
+    return ((uint16_t) rand() << 16) | ((uint16_t) rand() & 0xffff);
+#else
+    return (uint32_t) rand();
+#endif
+}
+
 #endif // !nsNetUtil_h__

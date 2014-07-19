@@ -13,10 +13,10 @@ interface nsIVariant;
  * amIWebInstallListener to communicate with the running application and allow
  * it to warn the user about blocked installs and start the installs running.
  */
-[scriptable, uuid(8710e692-3989-4dc7-b607-40d57610ae75)]
+[scriptable, uuid(502f206a-c6b4-4e98-b442-e335792e2594)]
 interface amIWebInstallInfo : nsISupports
 {
-  readonly attribute nsIDOMWindow originatingWindow;
+  readonly attribute nsISupports originator;
   readonly attribute nsIURI originatingURI;
   readonly attribute nsIVariant installs;
 
@@ -38,8 +38,8 @@ interface amIWebInstallListener : nsISupports
   /**
    * Called when installation by websites is currently disabled.
    *
-   * @param  aWindow
-   *         The window that triggered the installs
+   * @param  aOriginator
+   *         The window or browser that triggered the installs
    * @param  aUri
    *         The URI of the site that triggered the installs
    * @param  aInstalls
@@ -47,7 +47,7 @@ interface amIWebInstallListener : nsISupports
    * @param  aCount
    *         The number of AddonInstalls
    */
-  void onWebInstallDisabled(in nsIDOMWindow aWindow, in nsIURI aUri,
+  void onWebInstallDisabled(in nsISupports aOriginator, in nsIURI aUri,
                             [array, size_is(aCount)] in nsIVariant aInstalls,
                             [optional] in uint32_t aCount);
 
@@ -56,7 +56,7 @@ interface amIWebInstallListener : nsISupports
    * install add-ons.
    *
    * @param  aWindow
-   *         The window that triggered the installs
+   *         The window or browser that triggered the installs
    * @param  aUri
    *         The URI of the site that triggered the installs
    * @param  aInstalls
@@ -65,7 +65,7 @@ interface amIWebInstallListener : nsISupports
    *         The number of AddonInstalls
    * @return true if the caller should start the installs
    */
-  boolean onWebInstallBlocked(in nsIDOMWindow aWindow, in nsIURI aUri,
+  boolean onWebInstallBlocked(in nsISupports aOriginator, in nsIURI aUri,
                               [array, size_is(aCount)] in nsIVariant aInstalls,
                               [optional] in uint32_t aCount);
 
@@ -73,7 +73,7 @@ interface amIWebInstallListener : nsISupports
    * Called when a website wants to ask the user to install add-ons.
    *
    * @param  aWindow
-   *         The window that triggered the installs
+   *         The window or browser that triggered the installs
    * @param  aUri
    *         The URI of the site that triggered the installs
    * @param  aInstalls
@@ -82,7 +82,7 @@ interface amIWebInstallListener : nsISupports
    *         The number of AddonInstalls
    * @return true if the caller should start the installs
    */
-  boolean onWebInstallRequested(in nsIDOMWindow aWindow, in nsIURI aUri,
+  boolean onWebInstallRequested(in nsISupports aOriginator, in nsIURI aUri,
                                 [array, size_is(aCount)] in nsIVariant aInstalls,
                                 [optional] in uint32_t aCount);
 };

@@ -119,7 +119,9 @@ TestOutputStreamCallback.prototype = {
                 }
             } else {
                 // A refusal to connect speculatively should throw an error.
-                do_check_eq(e.result, Cr.NS_ERROR_CONNECTION_REFUSED);
+                do_check_true(e.result == Cr.NS_ERROR_UNKNOWN_HOST ||
+                              e.result == Cr.NS_ERROR_UNKNOWN_PROXY_HOST ||
+                              e.result == Cr.NS_ERROR_CONNECTION_REFUSED);
             }
             this.transport.close(Cr.NS_BINDING_ABORTED);
             this.next();
@@ -321,6 +323,18 @@ function next_test() {
  * Main entry function for test execution.
  */
 function run_test() {
+    // Enable speculative connects on loopback for testing.
+    {
+        var prefs = Cc["@mozilla.org/preferences-service;1"]
+                    .getService(Ci.nsIPrefBranch);
+        if (!prefs.getBoolPref("network.http.speculative.allowLoopback")) {
+            prefs.setBoolPref("network.http.speculative.allowLoopback", true);
+            do_register_cleanup(function() {
+                prefs.setBoolPref("network.http.speculative.allowLoopback", false);
+            });
+        }
+    }
+
     ios = Cc["@mozilla.org/network/io-service;1"]
         .getService(Ci.nsIIOService);
 

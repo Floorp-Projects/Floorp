@@ -468,6 +468,10 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest)
   mLoadedIcon = true;
   mSetIcon = true;
 
+  if (mMenuObject) {
+    mMenuObject->IconUpdated();
+  }
+
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;

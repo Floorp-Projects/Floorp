@@ -479,7 +479,9 @@ load 769303-1.html
 load 769303-2.html
 load 769120.html
 load 777838.html
+load 783228.html
 skip-if(Android) load 784600.html
+load 785555.html
 load 786740-1.html
 asserts(0-4) test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml # 3 counts of bug 871327, 1 bug 367185
 test-pref(font.size.inflation.minTwips,120) load 794693.html
@@ -492,11 +494,14 @@ load 804089-1.xhtml
 load 807565-1.html
 load 807565-2.html
 load 810726.html
+load 812879.html
+load 812879-2.html
 load 825810-1.html
 load 825810-2.html
 load 827076.html
 load 840818.html
 load 812822-1.html
+load 812893.html
 asserts(1) load 824297-1.html # bug 399262
 load 826483-1.html
 asserts(1) load 826532-1.html # bug 399262

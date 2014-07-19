@@ -1397,15 +1397,13 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
       popupFrame->SetPopupState(ePopupShown);
     }
     else {
-      // If the popup has an animate attribute and it is not set to false, assume
-      // that it has a closing transition and wait for it to finish. The transition
+      // If the popup has an animate attribute and it is not set to false, check
+      // if it has a closing transition and wait for it to finish. The transition
       // may still occur either way, but the view will be hidden and you won't be
       // able to see it. If there is a next popup, indicating that mutliple popups
       // are rolling up, don't wait and hide the popup right away since the effect
-      // would likely be undesirable. This also does a quick check to see if the
-      // popup has a transition defined, and skips the wait if not. Transitions
-      // are currently disabled on Linux due to rendering issues on certain
-      // configurations.
+      // would likely be undesirable. Transitions are currently disabled on Linux
+      // due to rendering issues on certain configurations.
 #ifndef MOZ_WIDGET_GTK
       if (!aNextPopup && aPopup->HasAttr(kNameSpaceID_None, nsGkAtoms::animate)) {
         // If animate="false" then don't transition at all. If animate="cancel",

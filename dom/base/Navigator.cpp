@@ -2229,13 +2229,14 @@ Navigator::HasWifiManagerSupport(JSContext* /* unused */,
 bool
 Navigator::HasNFCSupport(JSContext* /* unused */, JSObject* aGlobal)
 {
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+
   // Do not support NFC if NFC content helper does not exist.
   nsCOMPtr<nsISupports> contentHelper = do_GetService("@mozilla.org/nfc/content-helper;1");
   if (!contentHelper) {
     return false;
   }
 
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
   return win && (CheckPermission(win, "nfc-read") ||
                  CheckPermission(win, "nfc-write"));
 }

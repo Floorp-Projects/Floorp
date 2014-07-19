@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var table = document.createElement("table");
+  var tbody = document.createElement("tbody");
+  var td = document.createElement("td");
+  tbody.appendChild(td);
+  table.appendChild(tbody);
+  document.body.appendChild(table);
+  td.style.marginTop = "126102421%";
+  td.style.marginLeft = "126102421%";
+  td.style.cssFloat = "right";
+  td.style.pageBreakInside = "avoid";
+
+  document.documentElement.offsetHeight;
+
+  tbody.style.overflowX = "hidden";
+
+  document.documentElement.offsetHeight;
+
+  document.body.style.MozColumns = "auto";
+  tbody.style.color = "red";
+
+  document.documentElement.offsetHeight;
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

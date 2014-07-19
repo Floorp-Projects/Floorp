@@ -777,11 +777,11 @@ class InterpreterFrame
     /* Return value */
 
     bool hasReturnValue() const {
-        return !!(flags_ & HAS_RVAL);
+        return flags_ & HAS_RVAL;
     }
 
     MutableHandleValue returnValue() {
-        if (!(flags_ & HAS_RVAL))
+        if (!hasReturnValue())
             rval_.setUndefined();
         return MutableHandleValue::fromMarkedLocation(&rval_);
     }
