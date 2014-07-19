@@ -53,10 +53,31 @@
 #define JWK_TYPE_EC                 "EC"
 
 // JWK algorithms
-#define JWK_ALG_RS1                 "RS1"
+#define JWK_ALG_A128CBC             "A128CBC"  // CBC
+#define JWK_ALG_A192CBC             "A192CBC"
+#define JWK_ALG_A256CBC             "A256CBC"
+#define JWK_ALG_A128CTR             "A128CTR"  // CTR
+#define JWK_ALG_A192CTR             "A192CTR"
+#define JWK_ALG_A256CTR             "A256CTR"
+#define JWK_ALG_A128GCM             "A128GCM"  // GCM
+#define JWK_ALG_A192GCM             "A192GCM"
+#define JWK_ALG_A256GCM             "A256GCM"
+#define JWK_ALG_HS1                 "HS1"      // HMAC
+#define JWK_ALG_HS256               "HS256"
+#define JWK_ALG_HS384               "HS384"
+#define JWK_ALG_HS512               "HS512"
+#define JWK_ALG_RS1                 "RS1"      // RSASSA-PKCS1
 #define JWK_ALG_RS256               "RS256"
 #define JWK_ALG_RS384               "RS384"
 #define JWK_ALG_RS512               "RS512"
+#define JWK_ALG_RSA_OAEP            "RSA-OAEP" // RSA-OAEP
+#define JWK_ALG_RSA_OAEP_256        "RSA-OAEP-256"
+#define JWK_ALG_RSA_OAEP_384        "RSA-OAEP-384"
+#define JWK_ALG_RSA_OAEP_512        "RSA-OAEP-512"
+
+// JWK usages
+#define JWK_USE_ENC                 "enc"
+#define JWK_USE_SIG                 "sig"
 
 // Define an unknown mechanism type
 #define UNKNOWN_CK_MECHANISM        CKM_VENDOR_DEFINED+1

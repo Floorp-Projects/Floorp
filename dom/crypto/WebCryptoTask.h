@@ -140,7 +140,7 @@ public:
 
   static WebCryptoTask* CreateImportKeyTask(JSContext* aCx,
                           const nsAString& aFormat,
-                          const KeyData& aKeyData,
+                          JS::Handle<JSObject*> aKeyData,
                           const ObjectOrString& aAlgorithm,
                           bool aExtractable,
                           const Sequence<nsString>& aKeyUsages);

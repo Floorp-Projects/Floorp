@@ -22,6 +22,18 @@ HmacKeyAlgorithm::WrapObject(JSContext* aCx)
   return HmacKeyAlgorithmBinding::Wrap(aCx, this);
 }
 
+nsString
+HmacKeyAlgorithm::ToJwkAlg() const
+{
+  switch (mMechanism) {
+    case CKM_SHA_1_HMAC:  return NS_LITERAL_STRING(JWK_ALG_HS1);
+    case CKM_SHA256_HMAC: return NS_LITERAL_STRING(JWK_ALG_HS256);
+    case CKM_SHA384_HMAC: return NS_LITERAL_STRING(JWK_ALG_HS384);
+    case CKM_SHA512_HMAC: return NS_LITERAL_STRING(JWK_ALG_HS512);
+  }
+  return nsString();
+}
+
 bool
 HmacKeyAlgorithm::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
 {

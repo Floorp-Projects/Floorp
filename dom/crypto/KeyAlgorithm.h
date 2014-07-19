@@ -52,6 +52,8 @@ public:
 
   void GetName(nsString& aRetVal) const;
 
+  virtual nsString ToJwkAlg() const;
+
   // Structured clone support methods
   virtual bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
   static KeyAlgorithm* Create(nsIGlobalObject* aGlobal,

@@ -20,7 +20,6 @@ namespace dom {
 class Promise;
 
 typedef ArrayBufferViewOrArrayBuffer CryptoOperationData;
-typedef ArrayBufferViewOrArrayBuffer KeyData;
 
 class SubtleCrypto MOZ_FINAL : public nsISupports,
                                public nsWrapperCache
@@ -73,7 +72,7 @@ public:
 
   already_AddRefed<Promise> ImportKey(JSContext* cx,
                                       const nsAString& format,
-                                      const KeyData& keyData,
+                                      JS::Handle<JSObject*> keyData,
                                       const ObjectOrString& algorithm,
                                       bool extractable,
                                       const Sequence<nsString>& keyUsages,
