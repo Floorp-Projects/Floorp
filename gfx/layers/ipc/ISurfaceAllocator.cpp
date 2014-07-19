@@ -324,5 +324,11 @@ ISurfaceAllocator::DeallocGrallocBuffer(MaybeMagicGrallocBufferHandle* aHandle)
   SharedBufferManagerChild::GetSingleton()->DeallocGrallocBuffer(*aHandle);
 }
 
+void
+ISurfaceAllocator::DropGrallocBuffer(MaybeMagicGrallocBufferHandle* aHandle)
+{
+  SharedBufferManagerChild::GetSingleton()->DropGrallocBuffer(*aHandle);
+}
+
 } // namespace
 } // namespace
