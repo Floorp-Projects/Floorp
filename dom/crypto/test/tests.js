@@ -1274,3 +1274,158 @@ TestArray.addTest(
   }
 );
 
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Key wrap known answer, using AES-GCM",
+  function () {
+    var that = this;
+    var alg = {
+      name: "AES-GCM",
+      iv: tv.key_wrap_known_answer.wrapping_iv,
+      tagLength: 128
+    };
+    var key, wrappingKey;
+
+    function doImport(k) {
+      wrappingKey = k;
+      return crypto.subtle.importKey("raw", tv.key_wrap_known_answer.key,
+                                     alg, true, ['encrypt', 'decrypt']);
+    }
+    function doWrap(k) {
+      key = k;
+      return crypto.subtle.wrapKey("raw", key, wrappingKey, alg);
+    }
+
+    crypto.subtle.importKey("raw", tv.key_wrap_known_answer.wrapping_key,
+                            alg, false, ['wrapKey'])
+      .then(doImport, error(that))
+      .then(doWrap, error(that))
+      .then(
+        memcmp_complete(that, tv.key_wrap_known_answer.wrapped_key),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Key wrap failing on non-extractable key",
+  function () {
+    var that = this;
+    var alg = {
+      name: "AES-GCM",
+      iv: tv.key_wrap_known_answer.wrapping_iv,
+      tagLength: 128
+    };
+    var key, wrappingKey;
+
+    function doImport(k) {
+      wrappingKey = k;
+      return crypto.subtle.importKey("raw", tv.key_wrap_known_answer.key,
+                                     alg, false, ['encrypt', 'decrypt']);
+    }
+    function doWrap(k) {
+      key = k;
+      return crypto.subtle.wrapKey("raw", key, wrappingKey, alg);
+    }
+
+    crypto.subtle.importKey("raw", tv.key_wrap_known_answer.wrapping_key,
+                            alg, false, ['wrapKey'])
+      .then(doImport, error(that))
+      .then(doWrap, error(that))
+      .then(
+        error(that),
+        complete(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Key unwrap known answer, using AES-GCM",
+  function () {
+    var that = this;
+    var alg = {
+      name: "AES-GCM",
+      iv: tv.key_wrap_known_answer.wrapping_iv,
+      tagLength: 128
+    };
+    var key, wrappingKey;
+
+    function doUnwrap(k) {
+      wrappingKey = k;
+      return crypto.subtle.unwrapKey(
+                "raw", tv.key_wrap_known_answer.wrapped_key,
+                wrappingKey, alg,
+                "AES-GCM", true, ['encrypt', 'decrypt']
+             );
+    }
+    function doExport(k) {
+      return crypto.subtle.exportKey("raw", k);
+    }
+
+    crypto.subtle.importKey("raw", tv.key_wrap_known_answer.wrapping_key,
+                            alg, false, ['unwrapKey'])
+      .then(doUnwrap, error(that))
+      .then(doExport, error(that))
+      .then(
+        memcmp_complete(that, tv.key_wrap_known_answer.key),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Key wrap/unwrap round-trip, using RSA-OAEP",
+  function () {
+    var that = this;
+    var oaep = {
+      name: "RSA-OAEP",
+      hash: "SHA-256"
+    };
+    var gcm = {
+      name: "AES-GCM",
+      iv: tv.aes_gcm_enc.iv,
+      additionalData: tv.aes_gcm_enc.adata,
+      tagLength: 128
+    };
+    var unwrapKey;
+
+    function doWrap(keys) {
+      var originalKey = keys[0];
+      var wrapKey = keys[1];
+      unwrapKey = keys[2];
+      return crypto.subtle.wrapKey("raw", originalKey, wrapKey, oaep);
+    }
+    function doUnwrap(wrappedKey) {
+      return crypto.subtle.unwrapKey("raw", wrappedKey, unwrapKey, oaep,
+                                     gcm, false, ['encrypt']);
+    }
+    function doEncrypt(aesKey) {
+      return crypto.subtle.encrypt(gcm, aesKey, tv.aes_gcm_enc.data);
+    }
+
+    // 1.Import:
+    //  -> HMAC key
+    //  -> OAEP wrap key (public)
+    //  -> OAEP unwrap key (private)
+    // 2. Wrap the HMAC key
+    // 3. Unwrap it
+    // 4. Compute HMAC
+    // 5. Check HMAC value
+    Promise.all([
+      crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, gcm, true, ['encrypt']),
+      crypto.subtle.importKey("spki", tv.rsaoaep.spki, oaep, true, ['wrapKey']),
+      crypto.subtle.importKey("pkcs8", tv.rsaoaep.pkcs8, oaep, false, ['unwrapKey'])
+    ])
+      .then(doWrap, error(that))
+      .then(doUnwrap, error(that))
+      .then(doEncrypt, error(that))
+      .then(
+        memcmp_complete(that, tv.aes_gcm_enc.result),
+        error(that)
+      );
+  }
+);
+

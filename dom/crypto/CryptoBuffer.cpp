@@ -11,6 +11,14 @@ namespace mozilla {
 namespace dom {
 
 uint8_t*
+CryptoBuffer::Assign(const CryptoBuffer& aData)
+{
+  // Same as in nsTArray_Impl::operator=, but return the value
+  // returned from ReplaceElementsAt to enable OOM detection
+  return ReplaceElementsAt(0, Length(), aData.Elements(), aData.Length());
+}
+
+uint8_t*
 CryptoBuffer::Assign(const uint8_t* aData, uint32_t aLength)
 {
   return ReplaceElementsAt(0, Length(), aData, aLength);

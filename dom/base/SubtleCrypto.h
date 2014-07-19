@@ -102,6 +102,23 @@ public:
                                        uint32_t length,
                                        ErrorResult& aRv);
 
+  already_AddRefed<Promise> WrapKey(JSContext* cx,
+                                    const nsAString& format,
+                                    CryptoKey& key,
+                                    CryptoKey& wrappingKey,
+                                    const ObjectOrString& wrapAlgorithm,
+                                    ErrorResult& aRv);
+
+  already_AddRefed<Promise> UnwrapKey(JSContext* cx,
+                                      const nsAString& format,
+                                      const ArrayBufferViewOrArrayBuffer& wrappedKey,
+                                      CryptoKey& unwrappingKey,
+                                      const ObjectOrString& unwrapAlgorithm,
+                                      const ObjectOrString& unwrappedKeyAlgorithm,
+                                      bool extractable,
+                                      const Sequence<nsString>& keyUsages,
+                                      ErrorResult& aRv);
+
 private:
   nsCOMPtr<nsPIDOMWindow> mWindow;
 };

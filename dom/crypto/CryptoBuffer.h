@@ -20,6 +20,7 @@ class OwningArrayBufferViewOrArrayBuffer;
 class CryptoBuffer : public FallibleTArray<uint8_t>
 {
 public:
+  uint8_t* Assign(const CryptoBuffer& aData);
   uint8_t* Assign(const uint8_t* aData, uint32_t aLength);
   uint8_t* Assign(const SECItem* aItem);
   uint8_t* Assign(const ArrayBuffer& aData);
