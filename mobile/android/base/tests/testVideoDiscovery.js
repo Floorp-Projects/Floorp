@@ -46,8 +46,10 @@ let videoDiscoveryTests = [
   { id: "simple-mp4", source: "http://mochi.test:8888/simple.mp4", poster: "http://mochi.test:8888/simple.png", text: "simple video with mp4 src" },
   { id: "simple-fail", pass: false, text: "simple video with no mp4 src" },
   { id: "with-sources-mp4", source: "http://mochi.test:8888/simple.mp4", text: "video with mp4 extension source child" },
+  { id: "with-sources-webm", source: "http://mochi.test:8888/simple.webm", text: "video with webm extension source child" },
   { id: "with-sources-fail", pass: false, text: "video with no mp4 extension source child" },
-  { id: "with-sources-mimetype", source: "http://mochi.test:8888/simple-video-mp4", text: "video with mp4 mimetype source child" },
+  { id: "with-sources-mimetype-mp4", source: "http://mochi.test:8888/simple-video-mp4", text: "video with mp4 mimetype source child" },
+  { id: "with-sources-mimetype-webm", source: "http://mochi.test:8888/simple-video-webm", text: "video with webm mimetype source child" },
   { id: "video-overlay", source: "http://mochi.test:8888/simple.mp4", text: "div overlay covering a simple video with mp4 src" }
 ];
 

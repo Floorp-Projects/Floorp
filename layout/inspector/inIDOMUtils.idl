@@ -17,7 +17,7 @@ interface nsIDOMFontFaceList;
 interface nsIDOMRange;
 interface nsIDOMCSSStyleSheet;
 
-[scriptable, uuid(fd529e53-f734-4d15-83ce-d545a631d668)]
+[scriptable, uuid(bd6b3dee-b8dd-40c7-a40a-ad8455b49917)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
@@ -69,7 +69,24 @@ interface inIDOMUtils : nsISupports
   jsval colorNameToRGB(in DOMString aColorName);
   AString rgbToColorName(in octet aR, in octet aG, in octet aB);
 
+  // Convert a given CSS color string to rgba. Returns null on failure or an
+  // InspectorRGBATuple on success.
+  //
+  // NOTE: Converting a color to RGBA may be lossy when converting from some
+  // formats e.g. CMYK.
+  [implicit_jscontext]
+  jsval colorToRGBA(in DOMString aColorString);
+
+  // Check whether a given color is a valid CSS color.
+  bool isValidCSSColor(in AString aColorString);
+
   // Utilities for obtaining information about a CSS property.
+
+  // Check whether a CSS property and value are a valid combination. If the
+  // property is pref-disabled it will still be processed.
+  // aPropertyName: A property name e.g. "color"
+  // aPropertyValue: A property value e.g. "red" or "red !important"
+  bool cssPropertyIsValid(in AString aPropertyName, in AString aPropertyValue);
 
   // Get a list of the longhands corresponding to the given CSS property.  If
   // the property is a longhand already, just returns the property itself.
