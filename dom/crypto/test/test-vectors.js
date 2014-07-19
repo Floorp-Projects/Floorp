@@ -355,6 +355,14 @@ tv = {
     ),
   },
 
+  key_wrap_known_answer: {
+    key:          util.hex2abv("0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a"),
+    wrapping_key: util.hex2abv("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"),
+    wrapping_iv:  util.hex2abv("0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c"),
+    wrapped_key:  util.hex2abv("9ed0283a9a2b7e4292ebc5135e6342cc" +
+                               "8a7f65802a1f6fd41bd3251c4da0c138")
+  },
+
   // RFC 6070 <http://tools.ietf.org/html/rfc6070>
   pbkdf2_sha1: {
     password: new TextEncoder("utf-8").encode("passwordPASSWORDpassword"),

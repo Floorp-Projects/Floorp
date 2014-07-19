@@ -299,17 +299,48 @@ private:
   }
 };
 
-class AesTask : public ReturnArrayBufferViewTask
+class DeferredData
 {
 public:
+  template<class T>
+  void SetData(const T& aData) {
+    mDataIsSet = mData.Assign(aData);
+  }
+
+protected:
+  DeferredData()
+    : mDataIsSet(false)
+  {}
+
+  CryptoBuffer mData;
+  bool mDataIsSet;
+};
+
+class AesTask : public ReturnArrayBufferViewTask,
+                public DeferredData
+{
+public:
+  AesTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+          CryptoKey& aKey, bool aEncrypt)
+    : mSymKey(aKey.GetSymKey())
+    , mEncrypt(aEncrypt)
+  {
+    Init(aCx, aAlgorithm, aKey, aEncrypt);
+  }
+
   AesTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
           CryptoKey& aKey, const CryptoOperationData& aData,
           bool aEncrypt)
     : mSymKey(aKey.GetSymKey())
     , mEncrypt(aEncrypt)
   {
-    ATTEMPT_BUFFER_INIT(mData, aData);
+    Init(aCx, aAlgorithm, aKey, aEncrypt);
+    SetData(aData);
+  }
 
+  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm,
+            CryptoKey& aKey, bool aEncrypt)
+  {
     nsString algName;
     mEarlyRv = GetAlgorithmName(aCx, aAlgorithm, algName);
     if (NS_FAILED(mEarlyRv)) {
@@ -398,7 +429,6 @@ private:
   CK_MECHANISM_TYPE mMechanism;
   CryptoBuffer mSymKey;
   CryptoBuffer mIv;   // Initialization vector
-  CryptoBuffer mData;
   CryptoBuffer mAad;  // Additional Authenticated Data
   uint8_t mTagLength;
   uint8_t mCounterLength;
@@ -407,6 +437,10 @@ private:
   virtual nsresult DoCrypto() MOZ_OVERRIDE
   {
     nsresult rv;
+
+    if (!mDataIsSet) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
 
     // Construct the parameters object depending on algorithm
     SECItem param;
@@ -476,9 +510,19 @@ private:
   }
 };
 
-class RsaesPkcs1Task : public ReturnArrayBufferViewTask
+class RsaesPkcs1Task : public ReturnArrayBufferViewTask,
+                       public DeferredData
 {
 public:
+  RsaesPkcs1Task(JSContext* aCx, const ObjectOrString& aAlgorithm,
+                 CryptoKey& aKey, bool aEncrypt)
+    : mPrivKey(aKey.GetPrivateKey())
+    , mPubKey(aKey.GetPublicKey())
+    , mEncrypt(aEncrypt)
+  {
+    Init(aCx, aAlgorithm, aKey, aEncrypt);
+  }
+
   RsaesPkcs1Task(JSContext* aCx, const ObjectOrString& aAlgorithm,
                  CryptoKey& aKey, const CryptoOperationData& aData,
                  bool aEncrypt)
@@ -486,9 +530,15 @@ public:
     , mPubKey(aKey.GetPublicKey())
     , mEncrypt(aEncrypt)
   {
-    Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_RSAES_PKCS1);
+    Init(aCx, aAlgorithm, aKey, aEncrypt);
+    SetData(aData);
+  }
 
-    ATTEMPT_BUFFER_INIT(mData, aData);
+  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm,
+            CryptoKey& aKey, bool aEncrypt)
+  {
+
+    Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_RSAES_PKCS1);
 
     if (mEncrypt) {
       if (!mPubKey) {
@@ -496,14 +546,6 @@ public:
         return;
       }
       mStrength = SECKEY_PublicKeyStrength(mPubKey);
-
-      // Verify that the data input is not too big
-      // (as required by PKCS#1 / RFC 3447, Section 7.2)
-      // http://tools.ietf.org/html/rfc3447#section-7.2
-      if (mData.Length() > mStrength - 11) {
-        mEarlyRv = NS_ERROR_DOM_DATA_ERR;
-        return;
-      }
     } else {
       if (!mPrivKey) {
         mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
@@ -516,9 +558,24 @@ public:
 private:
   ScopedSECKEYPrivateKey mPrivKey;
   ScopedSECKEYPublicKey mPubKey;
-  CryptoBuffer mData;
   uint32_t mStrength;
   bool mEncrypt;
+
+  virtual nsresult BeforeCrypto() MOZ_OVERRIDE
+  {
+    if (!mDataIsSet) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    // Verify that the data input is not too big
+    // (as required by PKCS#1 / RFC 3447, Section 7.2)
+    // http://tools.ietf.org/html/rfc3447#section-7.2
+    if (mEncrypt && mData.Length() > mStrength - 11) {
+      return NS_ERROR_DOM_DATA_ERR;
+    }
+
+    return NS_OK;
+  }
 
   virtual nsresult DoCrypto() MOZ_OVERRIDE
   {
@@ -549,9 +606,19 @@ private:
   }
 };
 
-class RsaOaepTask : public ReturnArrayBufferViewTask
+class RsaOaepTask : public ReturnArrayBufferViewTask,
+                    public DeferredData
 {
 public:
+  RsaOaepTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+              CryptoKey& aKey, bool aEncrypt)
+    : mPrivKey(aKey.GetPrivateKey())
+    , mPubKey(aKey.GetPublicKey())
+    , mEncrypt(aEncrypt)
+  {
+    Init(aCx, aAlgorithm, aKey, aEncrypt);
+  }
+
   RsaOaepTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
               CryptoKey& aKey, const CryptoOperationData& aData,
               bool aEncrypt)
@@ -559,9 +626,14 @@ public:
     , mPubKey(aKey.GetPublicKey())
     , mEncrypt(aEncrypt)
   {
-    Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_RSA_OAEP);
+    Init(aCx, aAlgorithm, aKey, aEncrypt);
+    SetData(aData);
+  }
 
-    ATTEMPT_BUFFER_INIT(mData, aData);
+  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm,
+            CryptoKey& aKey, bool aEncrypt)
+  {
+    Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_RSA_OAEP);
 
     if (mEncrypt) {
       if (!mPubKey) {
@@ -620,13 +692,16 @@ private:
   ScopedSECKEYPrivateKey mPrivKey;
   ScopedSECKEYPublicKey mPubKey;
   CryptoBuffer mLabel;
-  CryptoBuffer mData;
   uint32_t mStrength;
   bool mEncrypt;
 
   virtual nsresult DoCrypto() MOZ_OVERRIDE
   {
     nsresult rv;
+
+    if (!mDataIsSet) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
 
     // Ciphertext is an integer mod the modulus, so it will be
     // no longer than mStrength octets
@@ -895,10 +970,10 @@ private:
   }
 };
 
-class SimpleDigestTask : public ReturnArrayBufferViewTask
+class DigestTask : public ReturnArrayBufferViewTask
 {
 public:
-  SimpleDigestTask(JSContext* aCx,
+  DigestTask(JSContext* aCx,
                    const ObjectOrString& aAlgorithm,
                    const CryptoOperationData& aData)
   {
@@ -987,7 +1062,14 @@ public:
     }
   }
 
+  void SetKeyData(const CryptoBuffer& aKeyData)
+  {
+    // An OOM will just result in an error in BeforeCrypto
+    mKeyData = aKeyData;
+  }
+
 protected:
+  CryptoBuffer mKeyData;
   nsRefPtr<CryptoKey> mKey;
   nsString mAlgName;
 
@@ -1069,7 +1151,8 @@ public:
     if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_CBC) ||
         mAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR) ||
         mAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM)) {
-      if (mKey->HasUsageOtherThan(CryptoKey::ENCRYPT | CryptoKey::DECRYPT)) {
+      if (mKey->HasUsageOtherThan(CryptoKey::ENCRYPT | CryptoKey::DECRYPT |
+                                  CryptoKey::WRAPKEY | CryptoKey::UNWRAPKEY)) {
         return NS_ERROR_DOM_DATA_ERR;
       }
 
@@ -1102,14 +1185,7 @@ public:
     return NS_OK;
   }
 
-  void SetKeyData(const CryptoBuffer& aKeyData)
-  {
-    // An OOM will just result in an error in BeforeCrypto
-    mKeyData = aKeyData;
-  }
-
 private:
-  CryptoBuffer mKeyData;
   nsString mHashName;
 };
 
@@ -1158,7 +1234,6 @@ public:
   }
 
 private:
-  CryptoBuffer mKeyData;
   nsString mFormat;
   nsString mHashName;
   uint32_t mModulusLength;
@@ -1215,9 +1290,9 @@ private:
     if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1) ||
         mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
       if ((mKey->GetKeyType() == CryptoKey::PUBLIC &&
-           mKey->HasUsageOtherThan(CryptoKey::ENCRYPT)) ||
+           mKey->HasUsageOtherThan(CryptoKey::ENCRYPT | CryptoKey::WRAPKEY)) ||
           (mKey->GetKeyType() == CryptoKey::PRIVATE &&
-           mKey->HasUsageOtherThan(CryptoKey::DECRYPT))) {
+           mKey->HasUsageOtherThan(CryptoKey::DECRYPT | CryptoKey::UNWRAPKEY))) {
         return NS_ERROR_DOM_DATA_ERR;
       }
     } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
@@ -1252,10 +1327,10 @@ private:
 };
 
 
-class UnifiedExportKeyTask : public ReturnArrayBufferViewTask
+class ExportKeyTask : public ReturnArrayBufferViewTask
 {
 public:
-  UnifiedExportKeyTask(const nsAString& aFormat, CryptoKey& aKey)
+  ExportKeyTask(const nsAString& aFormat, CryptoKey& aKey)
     : mFormat(aFormat)
     , mSymKey(aKey.GetSymKey())
     , mPrivateKey(aKey.GetPrivateKey())
@@ -1779,11 +1854,69 @@ private:
   }
 };
 
+template<class KeyEncryptTask>
+class WrapKeyTask : public ExportKeyTask
+{
+public:
+  WrapKeyTask(JSContext* aCx,
+              const nsAString& aFormat,
+              CryptoKey& aKey,
+              CryptoKey& aWrappingKey,
+              const ObjectOrString& aWrapAlgorithm)
+    : ExportKeyTask(aFormat, aKey)
+  {
+    if (NS_FAILED(mEarlyRv)) {
+      return;
+    }
+
+    mTask = new KeyEncryptTask(aCx, aWrapAlgorithm, aWrappingKey, true);
+  }
+
+private:
+  nsRefPtr<KeyEncryptTask> mTask;
+
+  virtual void Resolve() MOZ_OVERRIDE {
+    mTask->SetData(mResult);
+    mTask->DispatchWithPromise(mResultPromise);
+  }
+
+  virtual void Cleanup() MOZ_OVERRIDE
+  {
+    mTask = nullptr;
+  }
+};
+
+template<class KeyEncryptTask>
+class UnwrapKeyTask : public KeyEncryptTask
+{
+public:
+  UnwrapKeyTask(JSContext* aCx,
+                const ArrayBufferViewOrArrayBuffer& aWrappedKey,
+                CryptoKey& aUnwrappingKey,
+                const ObjectOrString& aUnwrapAlgorithm,
+                ImportKeyTask* aTask)
+    : KeyEncryptTask(aCx, aUnwrapAlgorithm, aUnwrappingKey, aWrappedKey, false)
+    , mTask(aTask)
+  {}
+
+private:
+  nsRefPtr<ImportKeyTask> mTask;
+
+  virtual void Resolve() MOZ_OVERRIDE {
+    mTask->SetKeyData(KeyEncryptTask::mResult);
+    mTask->DispatchWithPromise(KeyEncryptTask::mResultPromise);
+  }
+
+  virtual void Cleanup() MOZ_OVERRIDE
+  {
+    mTask = nullptr;
+  }
+};
 
 // Task creation methods for WebCryptoTask
 
 WebCryptoTask*
-WebCryptoTask::EncryptDecryptTask(JSContext* aCx,
+WebCryptoTask::CreateEncryptDecryptTask(JSContext* aCx,
                                   const ObjectOrString& aAlgorithm,
                                   CryptoKey& aKey,
                                   const CryptoOperationData& aData,
@@ -1819,7 +1952,7 @@ WebCryptoTask::EncryptDecryptTask(JSContext* aCx,
 }
 
 WebCryptoTask*
-WebCryptoTask::SignVerifyTask(JSContext* aCx,
+WebCryptoTask::CreateSignVerifyTask(JSContext* aCx,
                               const ObjectOrString& aAlgorithm,
                               CryptoKey& aKey,
                               const CryptoOperationData& aSignature,
@@ -1852,16 +1985,16 @@ WebCryptoTask::SignVerifyTask(JSContext* aCx,
 }
 
 WebCryptoTask*
-WebCryptoTask::DigestTask(JSContext* aCx,
+WebCryptoTask::CreateDigestTask(JSContext* aCx,
                           const ObjectOrString& aAlgorithm,
                           const CryptoOperationData& aData)
 {
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, TM_DIGEST);
-  return new SimpleDigestTask(aCx, aAlgorithm, aData);
+  return new DigestTask(aCx, aAlgorithm, aData);
 }
 
 WebCryptoTask*
-WebCryptoTask::ImportKeyTask(JSContext* aCx,
+WebCryptoTask::CreateImportKeyTask(JSContext* aCx,
                              const nsAString& aFormat,
                              const KeyData& aKeyData,
                              const ObjectOrString& aAlgorithm,
@@ -1895,7 +2028,7 @@ WebCryptoTask::ImportKeyTask(JSContext* aCx,
 }
 
 WebCryptoTask*
-WebCryptoTask::ExportKeyTask(const nsAString& aFormat,
+WebCryptoTask::CreateExportKeyTask(const nsAString& aFormat,
                              CryptoKey& aKey)
 {
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, TM_EXPORTKEY);
@@ -1903,12 +2036,12 @@ WebCryptoTask::ExportKeyTask(const nsAString& aFormat,
   if (aFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
     return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
   } else {
-    return new UnifiedExportKeyTask(aFormat, aKey);
+    return new ExportKeyTask(aFormat, aKey);
   }
 }
 
 WebCryptoTask*
-WebCryptoTask::GenerateKeyTask(JSContext* aCx,
+WebCryptoTask::CreateGenerateKeyTask(JSContext* aCx,
                                const ObjectOrString& aAlgorithm,
                                bool aExtractable,
                                const Sequence<nsString>& aKeyUsages)
@@ -1937,7 +2070,7 @@ WebCryptoTask::GenerateKeyTask(JSContext* aCx,
 }
 
 WebCryptoTask*
-WebCryptoTask::DeriveKeyTask(JSContext* aCx,
+WebCryptoTask::CreateDeriveKeyTask(JSContext* aCx,
                              const ObjectOrString& aAlgorithm,
                              CryptoKey& aBaseKey,
                              const ObjectOrString& aDerivedKeyType,
@@ -1961,7 +2094,7 @@ WebCryptoTask::DeriveKeyTask(JSContext* aCx,
 }
 
 WebCryptoTask*
-WebCryptoTask::DeriveBitsTask(JSContext* aCx,
+WebCryptoTask::CreateDeriveBitsTask(JSContext* aCx,
                               const ObjectOrString& aAlgorithm,
                               CryptoKey& aKey,
                               uint32_t aLength)
@@ -1981,6 +2114,108 @@ WebCryptoTask::DeriveBitsTask(JSContext* aCx,
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 }
 
+WebCryptoTask*
+WebCryptoTask::CreateWrapKeyTask(JSContext* aCx,
+                             const nsAString& aFormat,
+                           CryptoKey& aKey,
+                           CryptoKey& aWrappingKey,
+                           const ObjectOrString& aWrapAlgorithm)
+{
+  Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, TM_WRAPKEY);
+
+  // Ensure key is usable for this operation
+  if (!aWrappingKey.HasUsage(CryptoKey::WRAPKEY)) {
+    return new FailureTask(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+  }
+
+  nsString wrapAlgName;
+  nsresult rv = GetAlgorithmName(aCx, aWrapAlgorithm, wrapAlgName);
+  if (NS_FAILED(rv)) {
+    return new FailureTask(rv);
+  }
+
+  if (wrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_CBC) ||
+      wrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR) ||
+      wrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM)) {
+    return new WrapKeyTask<AesTask>(aCx, aFormat, aKey,
+                                    aWrappingKey, aWrapAlgorithm);
+  } else if (wrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1)) {
+    return new WrapKeyTask<RsaesPkcs1Task>(aCx, aFormat, aKey,
+                                           aWrappingKey, aWrapAlgorithm);
+  } else if (wrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
+    return new WrapKeyTask<RsaOaepTask>(aCx, aFormat, aKey,
+                                        aWrappingKey, aWrapAlgorithm);
+  }
+
+  return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+}
+
+WebCryptoTask*
+WebCryptoTask::CreateUnwrapKeyTask(JSContext* aCx,
+                             const nsAString& aFormat,
+                             const ArrayBufferViewOrArrayBuffer& aWrappedKey,
+                             CryptoKey& aUnwrappingKey,
+                             const ObjectOrString& aUnwrapAlgorithm,
+                             const ObjectOrString& aUnwrappedKeyAlgorithm,
+                             bool aExtractable,
+                             const Sequence<nsString>& aKeyUsages)
+{
+  Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD, TM_UNWRAPKEY);
+
+  // Ensure key is usable for this operation
+  if (!aUnwrappingKey.HasUsage(CryptoKey::UNWRAPKEY)) {
+    return new FailureTask(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+  }
+
+  nsString keyAlgName;
+  nsresult rv = GetAlgorithmName(aCx, aUnwrappedKeyAlgorithm, keyAlgName);
+  if (NS_FAILED(rv)) {
+    return new FailureTask(rv);
+  }
+
+  CryptoOperationData dummy;
+  nsRefPtr<ImportKeyTask> importTask;
+  if (keyAlgName.EqualsASCII(WEBCRYPTO_ALG_AES_CBC) ||
+      keyAlgName.EqualsASCII(WEBCRYPTO_ALG_AES_CTR) ||
+      keyAlgName.EqualsASCII(WEBCRYPTO_ALG_AES_GCM) ||
+      keyAlgName.EqualsASCII(WEBCRYPTO_ALG_HMAC)) {
+    importTask = new ImportSymmetricKeyTask(aCx, aFormat, dummy,
+                                            aUnwrappedKeyAlgorithm,
+                                            aExtractable, aKeyUsages);
+  } else if (keyAlgName.EqualsASCII(WEBCRYPTO_ALG_RSAES_PKCS1) ||
+             keyAlgName.EqualsASCII(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
+             keyAlgName.EqualsASCII(WEBCRYPTO_ALG_RSA_OAEP)) {
+    importTask = new ImportRsaKeyTask(aCx, aFormat, dummy,
+                                      aUnwrappedKeyAlgorithm,
+                                      aExtractable, aKeyUsages);
+  } else {
+    return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  }
+
+  nsString unwrapAlgName;
+  rv = GetAlgorithmName(aCx, aUnwrapAlgorithm, unwrapAlgName);
+  if (NS_FAILED(rv)) {
+    return new FailureTask(rv);
+  }
+  if (unwrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_CBC) ||
+      unwrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR) ||
+      unwrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM)) {
+    return new UnwrapKeyTask<AesTask>(aCx, aWrappedKey,
+                                      aUnwrappingKey, aUnwrapAlgorithm,
+                                      importTask);
+  } else if (unwrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1)) {
+    return new UnwrapKeyTask<RsaesPkcs1Task>(aCx, aWrappedKey,
+                                      aUnwrappingKey, aUnwrapAlgorithm,
+                                      importTask);
+  } else if (unwrapAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
+    return new UnwrapKeyTask<RsaOaepTask>(aCx, aWrappedKey,
+                                      aUnwrappingKey, aUnwrapAlgorithm,
+                                      importTask);
+  }
+
+  return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+
+}
 
 } // namespace dom
 } // namespace mozilla

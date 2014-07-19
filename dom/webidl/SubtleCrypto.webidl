@@ -176,5 +176,20 @@ interface SubtleCrypto {
                     sequence<KeyUsage> keyUsages );
   [Throws]
   Promise exportKey(KeyFormat format, CryptoKey key);
+
+  [Throws]
+  Promise wrapKey(KeyFormat format,
+                  CryptoKey key,
+                  CryptoKey wrappingKey,
+                  AlgorithmIdentifier wrapAlgorithm);
+
+  [Throws]
+  Promise unwrapKey(KeyFormat format,
+                    CryptoOperationData wrappedKey,
+                    CryptoKey unwrappingKey,
+                    AlgorithmIdentifier unwrapAlgorithm,
+                    AlgorithmIdentifier unwrappedKeyAlgorithm,
+                    boolean extractable,
+                    sequence<KeyUsage> keyUsages );
 };
 

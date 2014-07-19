@@ -42,7 +42,7 @@ SubtleCrypto::WrapObject(JSContext* aCx)
   if (aRv.Failed()) {                                                   \
     return nullptr;                                                     \
   }                                                                     \
-  nsRefPtr<WebCryptoTask> task = WebCryptoTask::Operation ## Task(__VA_ARGS__); \
+  nsRefPtr<WebCryptoTask> task = WebCryptoTask::Create ## Operation ## Task(__VA_ARGS__); \
   task->DispatchWithPromise(p); \
   return p.forget();
 
@@ -146,6 +146,33 @@ SubtleCrypto::DeriveBits(JSContext* cx,
                          ErrorResult& aRv)
 {
   SUBTLECRYPTO_METHOD_BODY(DeriveBits, aRv, cx, algorithm, baseKey, length)
+}
+
+already_AddRefed<Promise>
+SubtleCrypto::WrapKey(JSContext* cx,
+                      const nsAString& format,
+                      CryptoKey& key,
+                      CryptoKey& wrappingKey,
+                      const ObjectOrString& wrapAlgorithm,
+                      ErrorResult& aRv)
+{
+  SUBTLECRYPTO_METHOD_BODY(WrapKey, aRv, cx, format, key, wrappingKey, wrapAlgorithm)
+}
+
+already_AddRefed<Promise>
+SubtleCrypto::UnwrapKey(JSContext* cx,
+                        const nsAString& format,
+                        const ArrayBufferViewOrArrayBuffer& wrappedKey,
+                        CryptoKey& unwrappingKey,
+                        const ObjectOrString& unwrapAlgorithm,
+                        const ObjectOrString& unwrappedKeyAlgorithm,
+                        bool extractable,
+                        const Sequence<nsString>& keyUsages,
+                        ErrorResult& aRv)
+{
+  SUBTLECRYPTO_METHOD_BODY(UnwrapKey, aRv, cx, format, wrappedKey, unwrappingKey,
+                           unwrapAlgorithm, unwrappedKeyAlgorithm,
+                           extractable, keyUsages)
 }
 
 } // namespace dom
