@@ -25,24 +25,122 @@
 #ifndef mozilla_pkix__Input_h
 #define mozilla_pkix__Input_h
 
+#include <cstring>
+
 #include "pkix/nullptr.h"
 #include "pkix/Result.h"
-#include "seccomon.h"
+#include "prlog.h"
 #include "stdint.h"
 
 namespace mozilla { namespace pkix {
 
-// Expect* functions advance the input mark and return Success if the input
-// matches the given criteria; they fail with the input mark in an undefined
-// state if the input does not match the criteria.
+class Input;
+
+// An InputBuffer is a safety-oriented immutable weak reference to a array of
+// bytes of a known size. The data can only be legally accessed by constructing
+// an Input object, which guarantees all accesses to the data are memory safe.
+// Neither InputBuffer not Input provide any facilities for modifying the data
+// they reference.
 //
-// Match* functions advance the input mark and return true if the input matches
-// the given criteria; they return false without changing the input mark if the
-// input does not match the criteria.
+// InputBuffers are small and should usually be passed by value, not by
+// reference, though for inline functions the distinction doesn't matter.
 //
-// Skip* functions unconditionally advance the input mark and return Success if
-// they are able to do so; otherwise they fail with the input mark in an
-// undefined state.
+//    Result GoodExample(InputBuffer input);
+//    Result BadExample(const InputBuffer& input);
+//    Result WorseExample(const uint8_t* input, size_t len);
+//
+// Note that in the example, GoodExample has the same performance
+// characteristics as WorseExample, but with much better safety guarantees.
+class InputBuffer
+{
+public:
+  // This constructor is useful for input buffers that are statically known to
+  // be of a fixed size, e.g.:
+  //
+  //   static const uint8_t EXPECTED_BYTES[] = { 0x00, 0x01, 0x02 };
+  //   const InputBuffer expected(EXPECTED_BYTES);
+  //
+  // This is equivalent to (and preferred over):
+  //
+  //   static const uint8_t EXPECTED_BYTES[] = { 0x00, 0x01, 0x02 };
+  //   InputBuffer expected;
+  //   Result rv = expected.Init(EXPECTED_BYTES, sizeof EXPECTED_BYTES);
+  template <uint16_t N>
+  explicit InputBuffer(const uint8_t (&data)[N])
+    : data(data)
+    , len(N)
+  {
+  }
+
+  // Construct a valid, empty, Init-able InputBuffer.
+  InputBuffer()
+    : data(nullptr)
+    , len(0u)
+  {
+  }
+
+  // Initialize the input buffer. data must be non-null and len must be less
+  // than 65536. Init may not be called more than once.
+  Result Init(const uint8_t* data, size_t len)
+  {
+    if (this->data) {
+      // already initialized
+      return Result::FATAL_ERROR_INVALID_ARGS;
+    }
+    if (!data || len > 0xffffu) {
+      // input too large
+      return Result::ERROR_BAD_DER;
+    }
+
+    this->data = data;
+    this->len = len;
+
+    return Success;
+  }
+
+  // Initialize the input buffer to be equivalent to the given input buffer.
+  // Init may not be called more than once.
+  //
+  // This is basically operator=, but it wasn't given that name because
+  // normally callers do not check the result of operator=, and normally
+  // operator= can be used multiple times.
+  Result Init(InputBuffer other)
+  {
+    return Init(other.data, other.len);
+  }
+
+  // Returns the length of the buffer.
+  //
+  // Having the return type be uint16_t instead of size_t avoids the need for
+  // callers to ensure that the result is small enough.
+  uint16_t GetLength() const { return static_cast<uint16_t>(len); }
+
+  // Don't use this. It is here because we have some "friend" functions that we
+  // don't want to declare in this header file.
+  const uint8_t* UnsafeGetData() const { return data; }
+
+private:
+  const uint8_t* data;
+  size_t len;
+
+  void operator=(const InputBuffer&) /* = delete */; // Use Init instead.
+};
+
+inline bool
+InputBuffersAreEqual(const InputBuffer& a, const InputBuffer& b)
+{
+  return a.GetLength() == b.GetLength() &&
+         !std::memcmp(a.UnsafeGetData(), b.UnsafeGetData(), a.GetLength());
+}
+
+// An Input is a cursor/iterator through the contents of an InputBuffer,
+// designed to maximize safety during parsing while minimizing the performance
+// cost of that safety. In particular, all methods do strict bounds checking to
+// ensure buffer overflows are impossible, and they are all inline so that the
+// compiler can coalesce as many of those checks together as possible.
+//
+// In general, Input allows for one byte of lookahead and no backtracking.
+// However, the Match* functions internally may have more lookahead.
 class Input
 {
 public:
@@ -52,36 +150,10 @@ public:
   {
   }
 
-  Result Init(const uint8_t* data, size_t len)
+  explicit Input(InputBuffer buffer)
+    : input(buffer.UnsafeGetData())
+    , end(buffer.UnsafeGetData() + buffer.GetLength())
   {
-    if (input) {
-      // already initialized
-      return Result::FATAL_ERROR_INVALID_ARGS;
-    }
-    if (!data || len > 0xffffu) {
-      // input too large
-      return Result::ERROR_BAD_DER;
-    }
-
-    // XXX: this->input = input bug was not caught by tests! Why not?
-    //      this->end = end bug was not caught by tests! Why not?
-    this->input = data;
-    this->end = data + len;
-
-    return Success;
-  }
-
-  Result Expect(const uint8_t* expected, uint16_t expectedLen)
-  {
-    Result rv = EnsureLength(expectedLen);
-    if (rv != Success) {
-      return rv;
-    }
-    if (memcmp(input, expected, expectedLen)) {
-      return Result::ERROR_BAD_DER;
-    }
-    input += expectedLen;
-    return Success;
   }
 
   bool Peek(uint8_t expectedByte) const
@@ -176,15 +248,16 @@ public:
     return Success;
   }
 
-  Result Skip(uint16_t len, SECItem& skippedItem)
+  Result Skip(uint16_t len, InputBuffer& skippedItem)
   {
     Result rv = EnsureLength(len);
     if (rv != Success) {
       return rv;
     }
-    skippedItem.type = siBuffer;
-    skippedItem.data = const_cast<uint8_t*>(input);
-    skippedItem.len = len;
+    rv = skippedItem.Init(input, len);
+    if (rv != Success) {
+      return rv;
+    }
     input += len;
     return Success;
   }
@@ -216,19 +289,27 @@ public:
 
   Mark GetMark() const { return Mark(*this, input); }
 
-  Result GetSECItem(SECItemType type, const Mark& mark, /*out*/ SECItem& item)
+  Result GetInputBuffer(const Mark& mark, /*out*/ InputBuffer& item)
   {
     if (&mark.input != this || mark.mark > input) {
       PR_NOT_REACHED("invalid mark");
       return Result::FATAL_ERROR_INVALID_ARGS;
     }
-    item.type = type;
-    item.data = const_cast<uint8_t*>(mark.mark);
-    item.len = static_cast<decltype(item.len)>(input - mark.mark);
-    return Success;
+    return item.Init(mark.mark, static_cast<uint16_t>(input - mark.mark));
   }
 
 private:
+  Result Init(const uint8_t* data, uint16_t len)
+  {
+    if (input) {
+      // already initialized
+      return Result::FATAL_ERROR_INVALID_ARGS;
+    }
+    input = data;
+    end = data + len;
+    return Success;
+  }
+
   const uint8_t* input;
   const uint8_t* end;
 

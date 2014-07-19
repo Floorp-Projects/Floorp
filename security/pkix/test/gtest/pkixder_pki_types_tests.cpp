@@ -44,16 +44,16 @@ TEST_F(pkixder_pki_types_tests, CertificateSerialNumber)
     8,                          // length
     0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef
   };
+  InputBuffer buf(DER_CERT_SERIAL);
+  Input input(buf);
 
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_CERT_SERIAL, sizeof DER_CERT_SERIAL));
-
-  SECItem item;
+  InputBuffer item;
   ASSERT_EQ(Success, CertificateSerialNumber(input, item));
 
-  ASSERT_EQ(sizeof DER_CERT_SERIAL - 2, item.len);
-  ASSERT_TRUE(memcmp(item.data, DER_CERT_SERIAL + 2,
-                     sizeof DER_CERT_SERIAL - 2) == 0);
+  InputBuffer expected;
+  ASSERT_EQ(Success,
+            expected.Init(DER_CERT_SERIAL + 2, sizeof DER_CERT_SERIAL - 2));
+  ASSERT_TRUE(InputBuffersAreEqual(expected, item));
 }
 
 TEST_F(pkixder_pki_types_tests, CertificateSerialNumberLongest)
@@ -63,17 +63,17 @@ TEST_F(pkixder_pki_types_tests, CertificateSerialNumberLongest)
     20,                         // length
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
   };
+  InputBuffer buf(DER_CERT_SERIAL_LONGEST);
+  Input input(buf);
 
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_CERT_SERIAL_LONGEST,
-                                sizeof DER_CERT_SERIAL_LONGEST));
-
-  SECItem item;
+  InputBuffer item;
   ASSERT_EQ(Success, CertificateSerialNumber(input, item));
 
-  ASSERT_EQ(sizeof DER_CERT_SERIAL_LONGEST - 2, item.len);
-  ASSERT_TRUE(memcmp(item.data, DER_CERT_SERIAL_LONGEST + 2,
-                     sizeof DER_CERT_SERIAL_LONGEST - 2) == 0);
+  InputBuffer expected;
+  ASSERT_EQ(Success,
+            expected.Init(DER_CERT_SERIAL_LONGEST + 2,
+                          sizeof DER_CERT_SERIAL_LONGEST - 2));
+  ASSERT_TRUE(InputBuffersAreEqual(expected, item));
 }
 
 TEST_F(pkixder_pki_types_tests, CertificateSerialNumberCrazyLong)
@@ -84,12 +84,10 @@ TEST_F(pkixder_pki_types_tests, CertificateSerialNumberCrazyLong)
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
     17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
   };
+  InputBuffer buf(DER_CERT_SERIAL_CRAZY_LONG);
+  Input input(buf);
 
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_CERT_SERIAL_CRAZY_LONG,
-                                sizeof DER_CERT_SERIAL_CRAZY_LONG));
-
-  SECItem item;
+  InputBuffer item;
   ASSERT_EQ(Success, CertificateSerialNumber(input, item));
 }
 
@@ -99,12 +97,10 @@ TEST_F(pkixder_pki_types_tests, CertificateSerialNumberZeroLength)
     0x02,                       // INTEGER
     0x00                        // length
   };
+  InputBuffer buf(DER_CERT_SERIAL_ZERO_LENGTH);
+  Input input(buf);
 
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_CERT_SERIAL_ZERO_LENGTH,
-                                sizeof DER_CERT_SERIAL_ZERO_LENGTH));
-
-  SECItem item;
+  InputBuffer item;
   ASSERT_EQ(Result::ERROR_BAD_DER, CertificateSerialNumber(input, item));
 }
 
@@ -114,10 +110,8 @@ TEST_F(pkixder_pki_types_tests, OptionalVersionV1ExplicitEncodingAllowed)
     0xa0, 0x03,                   // context specific 0
     0x02, 0x01, 0x00              // INTEGER(0)
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_OPTIONAL_VERSION_V1,
-                                sizeof DER_OPTIONAL_VERSION_V1));
+  InputBuffer buf(DER_OPTIONAL_VERSION_V1);
+  Input input(buf);
 
   // XXX(bug 1031093): We shouldn't accept an explicit encoding of v1, but we
   // do here for compatibility reasons.
@@ -134,10 +128,8 @@ TEST_F(pkixder_pki_types_tests, OptionalVersionV2)
     0xa0, 0x03,                   // context specific 0
     0x02, 0x01, 0x01              // INTEGER(1)
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_OPTIONAL_VERSION_V2,
-                                sizeof DER_OPTIONAL_VERSION_V2));
+  InputBuffer buf(DER_OPTIONAL_VERSION_V2);
+  Input input(buf);
 
   der::Version version = der::Version::v1;
   ASSERT_EQ(Success, OptionalVersion(input, version));
@@ -150,10 +142,8 @@ TEST_F(pkixder_pki_types_tests, OptionalVersionV3)
     0xa0, 0x03,                   // context specific 0
     0x02, 0x01, 0x02              // INTEGER(2)
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_OPTIONAL_VERSION_V3,
-                                sizeof DER_OPTIONAL_VERSION_V3));
+  InputBuffer buf(DER_OPTIONAL_VERSION_V3);
+  Input input(buf);
 
   der::Version version = der::Version::v1;
   ASSERT_EQ(Success, OptionalVersion(input, version));
@@ -166,10 +156,8 @@ TEST_F(pkixder_pki_types_tests, OptionalVersionUnknown)
     0xa0, 0x03,                   // context specific 0
     0x02, 0x01, 0x42              // INTEGER(0x42)
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_OPTIONAL_VERSION_INVALID,
-                                sizeof DER_OPTIONAL_VERSION_INVALID));
+  InputBuffer buf(DER_OPTIONAL_VERSION_INVALID);
+  Input input(buf);
 
   der::Version version = der::Version::v1;
   ASSERT_EQ(Result::ERROR_BAD_DER, OptionalVersion(input, version));
@@ -181,10 +169,8 @@ TEST_F(pkixder_pki_types_tests, OptionalVersionInvalidTooLong)
     0xa0, 0x03,                   // context specific 0
     0x02, 0x02, 0x12, 0x34        // INTEGER(0x1234)
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_OPTIONAL_VERSION_INVALID_TOO_LONG,
-                                sizeof DER_OPTIONAL_VERSION_INVALID_TOO_LONG));
+  InputBuffer buf(DER_OPTIONAL_VERSION_INVALID_TOO_LONG);
+  Input input(buf);
 
   der::Version version;
   ASSERT_EQ(Result::ERROR_BAD_DER, OptionalVersion(input, version));
@@ -195,10 +181,8 @@ TEST_F(pkixder_pki_types_tests, OptionalVersionMissing)
   const uint8_t DER_OPTIONAL_VERSION_MISSING[] = {
     0x02, 0x11, 0x22              // INTEGER
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_OPTIONAL_VERSION_MISSING,
-                                sizeof DER_OPTIONAL_VERSION_MISSING));
+  InputBuffer buf(DER_OPTIONAL_VERSION_MISSING);
+  Input input(buf);
 
   der::Version version = der::Version::v3;
   ASSERT_EQ(Success, OptionalVersion(input, version));
@@ -251,8 +235,9 @@ TEST_P(pkixder_DigestAlgorithmIdentifier, Valid)
   const AlgorithmIdentifierTestInfo<DigestAlgorithm>& param(GetParam());
 
   {
-    Input input;
-    ASSERT_EQ(Success, input.Init(param.der, param.derLength));
+    InputBuffer buf;
+    ASSERT_EQ(Success, buf.Init(param.der, param.derLength));
+    Input input(buf);
     DigestAlgorithm alg;
     ASSERT_EQ(Success, DigestAlgorithmIdentifier(input, alg));
     ASSERT_EQ(param.algorithm, alg);
@@ -266,8 +251,9 @@ TEST_P(pkixder_DigestAlgorithmIdentifier, Valid)
     derWithNullParam[param.derLength] = 0x05; // NULL tag
     derWithNullParam[param.derLength + 1] = 0x00; // length zero
 
-    Input input;
-    ASSERT_EQ(Success, input.Init(derWithNullParam, param.derLength + 2));
+    InputBuffer buf;
+    ASSERT_EQ(Success, buf.Init(derWithNullParam, param.derLength + 2));
+    Input input(buf);
     DigestAlgorithm alg;
     ASSERT_EQ(Success, DigestAlgorithmIdentifier(input, alg));
     ASSERT_EQ(param.algorithm, alg);
@@ -287,9 +273,9 @@ TEST_F(pkixder_DigestAlgorithmIdentifier, Invalid_MD5)
     0x30, 0x0a, 0x06, 0x08,
     0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x02, 0x05
   };
+  InputBuffer buf(DER);
+  Input input(buf);
 
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER, sizeof(DER)));
   DigestAlgorithm alg;
   ASSERT_EQ(Result::ERROR_INVALID_ALGORITHM,
             DigestAlgorithmIdentifier(input, alg));
@@ -303,9 +289,9 @@ TEST_F(pkixder_DigestAlgorithmIdentifier, Invalid_Digest_ECDSA_WITH_SHA256)
     0x30, 0x0a, 0x06, 0x08,
     0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x02, //
   };
+  InputBuffer buf(DER);
+  Input input(buf);
 
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER, sizeof(DER)));
   DigestAlgorithm alg;
   ASSERT_EQ(Result::ERROR_INVALID_ALGORITHM,
             DigestAlgorithmIdentifier(input, alg));
@@ -382,8 +368,9 @@ TEST_P(pkixder_SignatureAlgorithmIdentifier, Valid)
   const AlgorithmIdentifierTestInfo<SignatureAlgorithm>& param(GetParam());
 
   {
-    Input input;
-    ASSERT_EQ(Success, input.Init(param.der, param.derLength));
+    InputBuffer buf;
+    ASSERT_EQ(Success, buf.Init(param.der, param.derLength));
+    Input input(buf);
     SignatureAlgorithm alg;
     ASSERT_EQ(Success, SignatureAlgorithmIdentifier(input, alg));
     ASSERT_EQ(param.algorithm, alg);
@@ -397,8 +384,9 @@ TEST_P(pkixder_SignatureAlgorithmIdentifier, Valid)
     derWithNullParam[param.derLength] = 0x05; // NULL tag
     derWithNullParam[param.derLength + 1] = 0x00; // length zero
 
-    Input input;
-    ASSERT_EQ(Success, input.Init(derWithNullParam, param.derLength + 2));
+    InputBuffer buf;
+    ASSERT_EQ(Success, buf.Init(derWithNullParam, param.derLength + 2));
+    Input input(buf);
     SignatureAlgorithm alg;
     ASSERT_EQ(Success, SignatureAlgorithmIdentifier(input, alg));
     ASSERT_EQ(param.algorithm, alg);
@@ -418,9 +406,9 @@ TEST_F(pkixder_SignatureAlgorithmIdentifier, Invalid_RSA_With_MD5)
     0x30, 0x0b, 0x06, 0x09,
     0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x04
   };
+  InputBuffer buf(DER);
+  Input input(buf);
 
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER, sizeof(DER)));
   SignatureAlgorithm alg;
   ASSERT_EQ(Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED,
             SignatureAlgorithmIdentifier(input, alg));
@@ -434,9 +422,9 @@ TEST_F(pkixder_SignatureAlgorithmIdentifier, Invalid_SignatureAlgorithm_SHA256)
     0x30, 0x0b, 0x06, 0x09,
     0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01
   };
+  InputBuffer buf(DER);
+  Input input(buf);
 
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER, sizeof(DER)));
   SignatureAlgorithm alg;
   ASSERT_EQ(Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED,
             SignatureAlgorithmIdentifier(input, alg));

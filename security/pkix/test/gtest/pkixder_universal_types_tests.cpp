@@ -47,11 +47,8 @@ TEST_F(pkixder_universal_types_tests, BooleanTrue01)
     0x01,                       // length
     0x01                        // invalid
   };
-
-  Input input;
-  ASSERT_EQ(Success,
-            input.Init(DER_BOOLEAN_TRUE_01, sizeof DER_BOOLEAN_TRUE_01));
-
+  InputBuffer buf(DER_BOOLEAN_TRUE_01);
+  Input input(buf);
   bool value = false;
   ASSERT_EQ(Result::ERROR_BAD_DER, Boolean(input, value));
 }
@@ -63,11 +60,8 @@ TEST_F(pkixder_universal_types_tests, BooleanTrue42)
     0x01,                       // length
     0x42                        // invalid
   };
-
-  Input input;
-  ASSERT_EQ(Success,
-            input.Init(DER_BOOLEAN_TRUE_42, sizeof DER_BOOLEAN_TRUE_42));
-
+  InputBuffer buf(DER_BOOLEAN_TRUE_42);
+  Input input(buf);
   bool value = false;
   ASSERT_EQ(Result::ERROR_BAD_DER, Boolean(input, value));
 }
@@ -80,10 +74,8 @@ static const uint8_t DER_BOOLEAN_TRUE[] = {
 
 TEST_F(pkixder_universal_types_tests, BooleanTrueFF)
 {
-  Input input;
-  ASSERT_EQ(Success,
-            input.Init(DER_BOOLEAN_TRUE, sizeof DER_BOOLEAN_TRUE));
-
+  InputBuffer buf(DER_BOOLEAN_TRUE);
+  Input input(buf);
   bool value = false;
   ASSERT_EQ(Success, Boolean(input, value));
   ASSERT_TRUE(value);
@@ -96,9 +88,8 @@ TEST_F(pkixder_universal_types_tests, BooleanFalse)
     0x01,                       // length
     0x00                        // false
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_BOOLEAN_FALSE, sizeof DER_BOOLEAN_FALSE));
+  InputBuffer buf(DER_BOOLEAN_FALSE);
+  Input input(buf);
 
   bool value = true;
   ASSERT_EQ(Success, Boolean(input, value));
@@ -112,10 +103,8 @@ TEST_F(pkixder_universal_types_tests, BooleanInvalidLength)
     0x02,                       // length
     0x42, 0x42                  // invalid
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_BOOLEAN_INVALID_LENGTH,
-                                sizeof DER_BOOLEAN_INVALID_LENGTH));
+  InputBuffer buf(DER_BOOLEAN_INVALID_LENGTH);
+  Input input(buf);
 
   bool value = true;
   ASSERT_EQ(Result::ERROR_BAD_DER, Boolean(input, value));
@@ -127,10 +116,8 @@ TEST_F(pkixder_universal_types_tests, BooleanInvalidZeroLength)
     0x01,                       // BOOLEAN
     0x00                        // length
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_BOOLEAN_INVALID_ZERO_LENGTH,
-                                sizeof DER_BOOLEAN_INVALID_ZERO_LENGTH));
+  InputBuffer buf(DER_BOOLEAN_INVALID_ZERO_LENGTH);
+  Input input(buf);
 
   bool value = true;
   ASSERT_EQ(Result::ERROR_BAD_DER, Boolean(input, value));
@@ -149,10 +136,8 @@ TEST_F(pkixder_universal_types_tests, OptionalBooleanValidEncodings)
     0x01,                       // length
     0xff                        // true
   };
-
-  Input input1;
-  ASSERT_EQ(Success, input1.Init(DER_OPTIONAL_BOOLEAN_PRESENT_TRUE,
-                                 sizeof DER_OPTIONAL_BOOLEAN_PRESENT_TRUE));
+  InputBuffer buf1(DER_OPTIONAL_BOOLEAN_PRESENT_TRUE);
+  Input input1(buf1);
   bool value = false;
   ASSERT_EQ(Success, OptionalBoolean(input1, false, value)) <<
     "Should accept the only valid encoding of a present OPTIONAL BOOLEAN";
@@ -165,17 +150,17 @@ TEST_F(pkixder_universal_types_tests, OptionalBooleanValidEncodings)
     0x01,                       // length
     0x05
   };
-
-  Input input2;
-  ASSERT_EQ(Success, input2.Init(DER_INTEGER_05, sizeof DER_INTEGER_05));
+  InputBuffer buf2(DER_INTEGER_05);
+  Input input2(buf2);
   value = true;
   ASSERT_EQ(Success, OptionalBoolean(input2, false, value)) <<
     "Should accept a valid encoding of an omitted OPTIONAL BOOLEAN";
   ASSERT_FALSE(value);
   ASSERT_FALSE(input2.AtEnd());
 
-  Input input3;
-  ASSERT_EQ(Success, input3.Init(reinterpret_cast<const uint8_t*>(""), 0));
+  InputBuffer buf3;
+  ASSERT_EQ(Success, buf3.Init(reinterpret_cast<const uint8_t*>(""), 0));
+  Input input3(buf3);
   value = true;
   ASSERT_EQ(Success, OptionalBoolean(input3, false, value)) <<
     "Should accept another valid encoding of an omitted OPTIONAL BOOLEAN";
@@ -191,9 +176,8 @@ TEST_F(pkixder_universal_types_tests, OptionalBooleanInvalidEncodings)
     0x00                        // false
   };
 
-  Input input1;
-  ASSERT_EQ(Success, input1.Init(DER_OPTIONAL_BOOLEAN_PRESENT_FALSE,
-                                 sizeof DER_OPTIONAL_BOOLEAN_PRESENT_FALSE));
+  InputBuffer buf1(DER_OPTIONAL_BOOLEAN_PRESENT_FALSE);
+  Input input1(buf1);
   bool value;
   // If the second parameter to OptionalBoolean is false, invalid encodings
   // that include the field even when it is the DEFAULT FALSE are rejected.
@@ -202,9 +186,8 @@ TEST_F(pkixder_universal_types_tests, OptionalBooleanInvalidEncodings)
             OptionalBoolean(input1, allowInvalidEncodings, value)) <<
     "Should reject an invalid encoding of present OPTIONAL BOOLEAN";
 
-  Input input2;
-  ASSERT_EQ(Success, input2.Init(DER_OPTIONAL_BOOLEAN_PRESENT_FALSE,
-                                 sizeof DER_OPTIONAL_BOOLEAN_PRESENT_FALSE));
+  InputBuffer buf2(DER_OPTIONAL_BOOLEAN_PRESENT_FALSE);
+  Input input2(buf2);
   value = true;
   // If the second parameter to OptionalBoolean is true, invalid encodings
   // that include the field even when it is the DEFAULT FALSE are accepted.
@@ -219,10 +202,8 @@ TEST_F(pkixder_universal_types_tests, OptionalBooleanInvalidEncodings)
     0x01,                       // length
     0x42                        // (invalid value for a BOOLEAN)
   };
-
-  Input input3;
-  ASSERT_EQ(Success, input3.Init(DER_OPTIONAL_BOOLEAN_PRESENT_42,
-                                 sizeof DER_OPTIONAL_BOOLEAN_PRESENT_42));
+  InputBuffer buf3(DER_OPTIONAL_BOOLEAN_PRESENT_42);
+  Input input3(buf3);
   // Even with the second parameter to OptionalBoolean as true, encodings
   // of BOOLEAN that are invalid altogether are rejected.
   ASSERT_EQ(Result::ERROR_BAD_DER,
@@ -237,9 +218,8 @@ TEST_F(pkixder_universal_types_tests, Enumerated)
     0x01,                       // length
     0x42                        // value
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_ENUMERATED, sizeof DER_ENUMERATED));
+  InputBuffer buf(DER_ENUMERATED);
+  Input input(buf);
 
   uint8_t value = 0;
   ASSERT_EQ(Success, Enumerated(input, value));
@@ -253,9 +233,9 @@ TEST_F(pkixder_universal_types_tests, EnumeratedNotShortestPossibleDER)
     0x02,                       // length
     0x00, 0x01                  // value
   };
+  InputBuffer buf(DER_ENUMERATED);
+  Input input(buf);
 
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_ENUMERATED, sizeof DER_ENUMERATED));
   uint8_t value = 0;
   ASSERT_EQ(Result::ERROR_BAD_DER, Enumerated(input, value));
 }
@@ -271,10 +251,8 @@ TEST_F(pkixder_universal_types_tests, EnumeratedOutOfAcceptedRange)
     0x02,                       // length
     0x12, 0x34                  // value
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_ENUMERATED_INVALID_LENGTH,
-                                sizeof DER_ENUMERATED_INVALID_LENGTH));
+  InputBuffer buf(DER_ENUMERATED_INVALID_LENGTH);
+  Input input(buf);
 
   uint8_t value = 0;
   ASSERT_EQ(Result::ERROR_BAD_DER, Enumerated(input, value));
@@ -286,10 +264,8 @@ TEST_F(pkixder_universal_types_tests, EnumeratedInvalidZeroLength)
     0x0a,                       // ENUMERATED
     0x00                        // length
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_ENUMERATED_INVALID_ZERO_LENGTH,
-                                sizeof DER_ENUMERATED_INVALID_ZERO_LENGTH));
+  InputBuffer buf(DER_ENUMERATED_INVALID_ZERO_LENGTH);
+  Input input(buf);
 
   uint8_t value = 0;
   ASSERT_EQ(Result::ERROR_BAD_DER, Enumerated(input, value));
@@ -336,12 +312,8 @@ TimeChoiceForEquivalentUTCTime(const uint8_t (&generalizedTimeDER)[LENGTH],
     utcTimeDER[i] = generalizedTimeDER[i + 2];
   }
 
-  Input input;
-  Result rv = input.Init(utcTimeDER, sizeof utcTimeDER);
-  EXPECT_EQ(Success, rv);
-  if (rv != Success) {
-    return rv;
-  }
+  InputBuffer buf(utcTimeDER);
+  Input input(buf);
   return TimeChoice(input, value);
 }
 
@@ -352,8 +324,8 @@ ExpectGoodTime(PRTime expectedValue,
 {
   // GeneralizedTime
   {
-    Input input;
-    ASSERT_EQ(Success, input.Init(generalizedTimeDER, LENGTH));
+    InputBuffer buf(generalizedTimeDER);
+    Input input(buf);
     PRTime value = 0;
     ASSERT_EQ(Success, GeneralizedTime(input, value));
     EXPECT_EQ(expectedValue, value);
@@ -361,8 +333,8 @@ ExpectGoodTime(PRTime expectedValue,
 
   // TimeChoice: GeneralizedTime
   {
-    Input input;
-    ASSERT_EQ(Success, input.Init(generalizedTimeDER, LENGTH));
+    InputBuffer buf(generalizedTimeDER);
+    Input input(buf);
     PRTime value = 0;
     ASSERT_EQ(Success, TimeChoice(input, value));
     EXPECT_EQ(expectedValue, value);
@@ -383,16 +355,16 @@ ExpectBadTime(const uint8_t (&generalizedTimeDER)[LENGTH])
 {
   // GeneralizedTime
   {
-    Input input;
-    ASSERT_EQ(Success, input.Init(generalizedTimeDER, LENGTH));
+    InputBuffer buf(generalizedTimeDER);
+    Input input(buf);
     PRTime value;
     ASSERT_EQ(Result::ERROR_INVALID_TIME, GeneralizedTime(input, value));
   }
 
   // TimeChoice: GeneralizedTime
   {
-    Input input;
-    ASSERT_EQ(Success, input.Init(generalizedTimeDER, LENGTH));
+    InputBuffer buf(generalizedTimeDER);
+    Input input(buf);
     PRTime value;
     ASSERT_EQ(Result::ERROR_INVALID_TIME, TimeChoice(input, value));
   }
@@ -437,17 +409,13 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidZeroLength)
   PRTime value;
 
   // GeneralizedTime
-  Input gt;
-  ASSERT_EQ(Success,
-            gt.Init(DER_GENERALIZED_TIME_INVALID_ZERO_LENGTH,
-                    sizeof DER_GENERALIZED_TIME_INVALID_ZERO_LENGTH));
+  InputBuffer gtBuf(DER_GENERALIZED_TIME_INVALID_ZERO_LENGTH);
+  Input gt(gtBuf);
   ASSERT_EQ(Result::ERROR_INVALID_TIME, GeneralizedTime(gt, value));
 
   // TimeChoice: GeneralizedTime
-  Input tc_gt;
-  ASSERT_EQ(Success,
-            tc_gt.Init(DER_GENERALIZED_TIME_INVALID_ZERO_LENGTH,
-                       sizeof DER_GENERALIZED_TIME_INVALID_ZERO_LENGTH));
+  InputBuffer tc_gt_buf(DER_GENERALIZED_TIME_INVALID_ZERO_LENGTH);
+  Input tc_gt(tc_gt_buf);
   ASSERT_EQ(Result::ERROR_INVALID_TIME, TimeChoice(tc_gt, value));
 
   // TimeChoice: UTCTime
@@ -455,9 +423,8 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidZeroLength)
     0x17, // UTCTime
     0x00  // Length = 0
   };
-  Input tc_utc;
-  ASSERT_EQ(Success, tc_utc.Init(DER_UTCTIME_INVALID_ZERO_LENGTH,
-                                 sizeof DER_UTCTIME_INVALID_ZERO_LENGTH));
+  InputBuffer tc_utc_buf(DER_UTCTIME_INVALID_ZERO_LENGTH);
+  Input tc_utc(tc_utc_buf);
   ASSERT_EQ(Result::ERROR_INVALID_TIME, TimeChoice(tc_utc, value));
 }
 
@@ -538,8 +505,8 @@ TEST_F(pkixder_universal_types_tests, GeneralizedTimeYearValidRange)
 
     // GeneralizedTime
     {
-      Input input;
-      ASSERT_EQ(Success, input.Init(DER, sizeof(DER)));
+      InputBuffer buf(DER);
+      Input input(buf);
       PRTime value = 0;
       ASSERT_EQ(Success, GeneralizedTime(input, value));
       EXPECT_EQ(expectedValue, value);
@@ -547,8 +514,8 @@ TEST_F(pkixder_universal_types_tests, GeneralizedTimeYearValidRange)
 
     // TimeChoice: GeneralizedTime
     {
-      Input input;
-      ASSERT_EQ(Success, input.Init(DER, sizeof(DER)));
+      InputBuffer buf(DER);
+      Input input(buf);
       PRTime value = 0;
       ASSERT_EQ(Success, TimeChoice(input, value));
       EXPECT_EQ(expectedValue, value);
@@ -556,7 +523,6 @@ TEST_F(pkixder_universal_types_tests, GeneralizedTimeYearValidRange)
 
     // TimeChoice: UTCTime, which is limited to years less than 2049.
     if (i <= 2049) {
-      Input input;
       PRTime value = 0;
       ASSERT_EQ(Success, TimeChoiceForEquivalentUTCTime(DER, value));
       EXPECT_EQ(expectedValue, value);
@@ -694,8 +660,8 @@ TEST_F(pkixder_universal_types_tests, TimeMonthFebLeapYear2400)
 
   // GeneralizedTime
   {
-    Input input;
-    ASSERT_EQ(Success, input.Init(DER, sizeof(DER)));
+    InputBuffer buf(DER);
+    Input input(buf);
     PRTime value = 0;
     ASSERT_EQ(Success, GeneralizedTime(input, value));
     EXPECT_EQ(expectedValue, value);
@@ -703,8 +669,8 @@ TEST_F(pkixder_universal_types_tests, TimeMonthFebLeapYear2400)
 
   // TimeChoice: GeneralizedTime
   {
-    Input input;
-    ASSERT_EQ(Success, input.Init(DER, sizeof(DER)));
+    InputBuffer buf(DER);
+    Input input(buf);
     PRTime value = 0;
     ASSERT_EQ(Success, TimeChoice(input, value));
     EXPECT_EQ(expectedValue, value);
@@ -735,16 +701,16 @@ TEST_F(pkixder_universal_types_tests, TimeMonthFebNotLeapYear2100)
 
   // GeneralizedTime
   {
-    Input input;
-    ASSERT_EQ(Success, input.Init(DER, sizeof(DER)));
+    InputBuffer buf(DER);
+    Input input(buf);
     PRTime value;
     ASSERT_EQ(Result::ERROR_INVALID_TIME, GeneralizedTime(input, value));
   }
 
   // TimeChoice: GeneralizedTime
   {
-    Input input;
-    ASSERT_EQ(Success, input.Init(DER, sizeof(DER)));
+    InputBuffer buf(DER);
+    Input input(buf);
     PRTime value;
     ASSERT_EQ(Result::ERROR_INVALID_TIME, TimeChoice(input, value));
   }
@@ -873,20 +839,16 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidCenturyChar)
 
   // GeneralizedTime
   {
-    Input input;
-    ASSERT_EQ(Success,
-              input.Init(DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR,
-                         sizeof DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR));
+    InputBuffer buf(DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR);
+    Input input(buf);
     PRTime value = 0;
     ASSERT_EQ(Result::ERROR_INVALID_TIME, GeneralizedTime(input, value));
   }
 
   // TimeChoice: GeneralizedTime
   {
-    Input input;
-    ASSERT_EQ(Success,
-              input.Init(DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR,
-                         sizeof DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR));
+    InputBuffer buf(DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR);
+    Input input(buf);
     PRTime value = 0;
     ASSERT_EQ(Result::ERROR_INVALID_TIME, TimeChoice(input, value));
   }
@@ -946,9 +908,8 @@ TEST_F(pkixder_universal_types_tests, Integer_0_127)
       0x01, // length
       i,    // value
     };
-
-    Input input;
-    ASSERT_EQ(Success, input.Init(DER, sizeof DER));
+    InputBuffer buf(DER);
+    Input input(buf);
 
     uint8_t value = i + 1; // initialize with a value that is NOT i.
     ASSERT_EQ(Success, Integer(input, value));
@@ -966,9 +927,8 @@ TEST_F(pkixder_universal_types_tests, Integer_Negative1)
     0x01, // length
     0xff, // -1 (two's complement)
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER, sizeof DER));
+  InputBuffer buf(DER);
+  Input input(buf);
 
   uint8_t value;
   ASSERT_EQ(Result::ERROR_BAD_DER, Integer(input, value));
@@ -984,9 +944,8 @@ TEST_F(pkixder_universal_types_tests, Integer_Negative128)
     0x01, // length
     0x80, // -128 (two's complement)
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER, sizeof DER));
+  InputBuffer buf(DER);
+  Input input(buf);
 
   uint8_t value;
   ASSERT_EQ(Result::ERROR_BAD_DER, Integer(input, value));
@@ -1002,9 +961,8 @@ TEST_F(pkixder_universal_types_tests, Integer_128)
     0x02, // length
     0x00, 0x80 // 128
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER, sizeof DER));
+  InputBuffer buf(DER);
+  Input input(buf);
 
   uint8_t value;
   ASSERT_EQ(Result::ERROR_BAD_DER, Integer(input, value));
@@ -1020,9 +978,8 @@ TEST_F(pkixder_universal_types_tests, Integer11223344)
     0x04,                       // length
     0x11, 0x22, 0x33, 0x44      // 0x11223344
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER, sizeof DER));
+  InputBuffer buf(DER);
+  Input input(buf);
 
   uint8_t value;
   ASSERT_EQ(Result::ERROR_BAD_DER, Integer(input, value));
@@ -1035,10 +992,8 @@ TEST_F(pkixder_universal_types_tests, IntegerTruncatedOneByte)
     0x01,                       // length
     // MISSING DATA HERE
   };
-
-  Input input;
-  ASSERT_EQ(Success,
-            input.Init(DER_INTEGER_TRUNCATED, sizeof DER_INTEGER_TRUNCATED));
+  InputBuffer buf(DER_INTEGER_TRUNCATED);
+  Input input(buf);
 
   uint8_t value;
   ASSERT_EQ(Result::ERROR_BAD_DER, Integer(input, value));
@@ -1052,10 +1007,8 @@ TEST_F(pkixder_universal_types_tests, IntegerTruncatedLarge)
     0x11, 0x22                  // 0x1122
     // MISSING DATA HERE
   };
-
-  Input input;
-  ASSERT_EQ(Success,
-            input.Init(DER_INTEGER_TRUNCATED, sizeof DER_INTEGER_TRUNCATED));
+  InputBuffer buf(DER_INTEGER_TRUNCATED);
+  Input input(buf);
 
   uint8_t value;
   ASSERT_EQ(Result::ERROR_BAD_DER, Integer(input, value));
@@ -1067,10 +1020,9 @@ TEST_F(pkixder_universal_types_tests, IntegerZeroLength)
     0x02,                       // INTEGER
     0x00                        // length
   };
+  InputBuffer buf(DER_INTEGER_ZERO_LENGTH);
+  Input input(buf);
 
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_INTEGER_ZERO_LENGTH,
-                                sizeof DER_INTEGER_ZERO_LENGTH));
   uint8_t value;
   ASSERT_EQ(Result::ERROR_BAD_DER, Integer(input, value));
 }
@@ -1082,10 +1034,9 @@ TEST_F(pkixder_universal_types_tests, IntegerOverlyLong1)
     0x02,                       // length
     0x00, 0x01                  //
   };
+  InputBuffer buf(DER_INTEGER_OVERLY_LONG1);
+  Input input(buf);
 
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_INTEGER_OVERLY_LONG1,
-                                sizeof DER_INTEGER_OVERLY_LONG1));
   uint8_t value;
   ASSERT_EQ(Result::ERROR_BAD_DER, Integer(input, value));
 }
@@ -1097,10 +1048,9 @@ TEST_F(pkixder_universal_types_tests, IntegerOverlyLong2)
     0x02,                       // length
     0xff, 0x80                  //
   };
+  InputBuffer buf(DER_INTEGER_OVERLY_LONG2);
+  Input input(buf);
 
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_INTEGER_OVERLY_LONG2,
-                                sizeof DER_INTEGER_OVERLY_LONG2));
   uint8_t value;
   ASSERT_EQ(Result::ERROR_BAD_DER, Integer(input, value));
 }
@@ -1109,8 +1059,9 @@ TEST_F(pkixder_universal_types_tests, OptionalIntegerSupportedDefault)
 {
   // The input is a BOOLEAN and not INTEGER for the input so we'll not parse
   // anything and instead use the default value.
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_BOOLEAN_TRUE, sizeof DER_BOOLEAN_TRUE));
+  InputBuffer buf(DER_BOOLEAN_TRUE);
+  Input input(buf);
+
   long value = 1;
   ASSERT_EQ(Success, OptionalInteger(input, -1, value));
   ASSERT_EQ(-1, value);
@@ -1122,8 +1073,9 @@ TEST_F(pkixder_universal_types_tests, OptionalIntegerUnsupportedDefault)
 {
   // The same as the previous test, except with an unsupported default value
   // passed in.
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_BOOLEAN_TRUE, sizeof DER_BOOLEAN_TRUE));
+  InputBuffer buf(DER_BOOLEAN_TRUE);
+  Input input(buf);
+
   long value;
   ASSERT_EQ(Result::FATAL_ERROR_INVALID_ARGS, OptionalInteger(input, 0, value));
 }
@@ -1131,9 +1083,10 @@ TEST_F(pkixder_universal_types_tests, OptionalIntegerUnsupportedDefault)
 TEST_F(pkixder_universal_types_tests, OptionalIntegerSupportedDefaultAtEnd)
 {
   static const uint8_t dummy = 1;
+  InputBuffer buf;
+  ASSERT_EQ(Success, buf.Init(&dummy, 0));
+  Input input(buf);
 
-  Input input;
-  ASSERT_EQ(Success, input.Init(&dummy, 0));
   long value = 1;
   ASSERT_EQ(Success, OptionalInteger(input, -1, value));
   ASSERT_EQ(-1, value);
@@ -1146,9 +1099,9 @@ TEST_F(pkixder_universal_types_tests, OptionalIntegerNonDefaultValue)
     0x01, // length
     0x00
   };
+  InputBuffer buf(DER);
+  Input input(buf);
 
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER, sizeof DER));
   long value = 2;
   ASSERT_EQ(Success, OptionalInteger(input, -1, value));
   ASSERT_EQ(0, value);
@@ -1161,9 +1114,9 @@ TEST_F(pkixder_universal_types_tests, Null)
     0x05,
     0x00
   };
+  InputBuffer buf(DER_NUL);
+  Input input(buf);
 
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_NUL, sizeof DER_NUL));
   ASSERT_EQ(Success, Null(input));
 }
 
@@ -1174,10 +1127,8 @@ TEST_F(pkixder_universal_types_tests, NullWithBadLength)
     0x01,
     0x00
   };
-
-  Input input;
-  ASSERT_EQ(Success,
-            input.Init(DER_NULL_BAD_LENGTH, sizeof DER_NULL_BAD_LENGTH));
+  InputBuffer buf(DER_NULL_BAD_LENGTH);
+  Input input(buf);
 
   ASSERT_EQ(Result::ERROR_BAD_DER, Null(input));
 }
@@ -1189,9 +1140,8 @@ TEST_F(pkixder_universal_types_tests, OID)
     0x09,
     0x2B, 0x06, 0x01, 0x05, 0x05, 0x07, 0x30, 0x01, 0x01
   };
-
-  Input input;
-  ASSERT_EQ(Success, input.Init(DER_VALID_OID, sizeof DER_VALID_OID));
+  InputBuffer buf(DER_VALID_OID);
+  Input input(buf);
 
   const uint8_t expectedOID[] = {
     0x2B, 0x06, 0x01, 0x05, 0x05, 0x07, 0x30, 0x01, 0x01
