@@ -191,7 +191,8 @@ public:
   bool ParseColorString(const nsSubstring& aBuffer,
                         nsIURI*            aURL,
                         uint32_t           aLineNumber,
-                        nsCSSValue&        aValue);
+                        nsCSSValue&        aValue,
+                        bool               aSuppressErrors = false);
 
   /**
    * Parse aBuffer into a selector list.  On success, caller must
@@ -295,6 +296,10 @@ public:
                               nsIURI* aBaseURL,
                               nsIPrincipal* aSheetPrincipal,
                               nsCSSValue& aValue);
+
+  // Check whether a given value can be applied to a property.
+  bool IsValueValidForProperty(const nsCSSProperty aPropID,
+                               const nsAString&    aPropValue);
 
 protected:
   // This is a CSSParserImpl*, but if we expose that type name in this
