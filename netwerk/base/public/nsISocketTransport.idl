@@ -183,6 +183,12 @@ interface nsISocketTransport : nsITransport
     const unsigned long DISABLE_RFC1918 = (1 << 5);
 
     /**
+     * If set, indicates that the socket should not connect if the hostname
+     * resolves to a loopback address.
+     */
+    const unsigned long DISABLE_LOOPBACK = (1 << 6);
+
+    /**
      * Socket QoS/ToS markings. Valid values are IPTOS_DSCP_AFxx or
      * IPTOS_CLASS_CSx (or IPTOS_DSCP_EF, but currently no supported
      * services require expedited-forwarding).

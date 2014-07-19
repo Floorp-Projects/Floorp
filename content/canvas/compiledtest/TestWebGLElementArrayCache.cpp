@@ -59,8 +59,25 @@ GLenum GLType()
   }
 }
 
+void CheckValidate(bool expectSuccess,
+                   WebGLElementArrayCache& c,
+                   GLenum type,
+                   uint32_t maxAllowed,
+                   size_t first,
+                   size_t count)
+{
+  uint32_t out_upperBound = 0;
+  const bool success = c.Validate(type, maxAllowed, first, count, &out_upperBound);
+  VERIFY(success == expectSuccess);
+  if (success) {
+    VERIFY(out_upperBound <= maxAllowed);
+  } else {
+    VERIFY(out_upperBound > maxAllowed);
+  }
+}
+
 template<typename T>
-void CheckValidateOneType(WebGLElementArrayCache& c, size_t firstByte, size_t countBytes)
+void CheckValidateOneTypeVariousBounds(WebGLElementArrayCache& c, size_t firstByte, size_t countBytes)
 {
   size_t first = firstByte / sizeof(T);
   size_t count = countBytes / sizeof(T);
@@ -72,20 +89,20 @@ void CheckValidateOneType(WebGLElementArrayCache& c, size_t firstByte, size_t co
     if (c.Element<T>(first + i) > max)
       max = c.Element<T>(first + i);
 
-  VERIFY(c.Validate(type, max, first, count));
-  VERIFY(c.Validate(type, T(-1), first, count));
-  if (T(max + 1)) VERIFY(c.Validate(type, T(max + 1), first, count));
+  CheckValidate(true, c, type, max, first, count);
+  CheckValidate(true, c, type, T(-1), first, count);
+  if (T(max + 1)) CheckValidate(true, c, type, T(max + 1), first, count);
   if (max > 0) {
-    VERIFY(!c.Validate(type, max - 1, first, count));
-    VERIFY(!c.Validate(type, 0, first, count));
+    CheckValidate(false, c, type, max - 1, first, count);
+    CheckValidate(false, c, type, 0, first, count);
   }
 }
 
-void CheckValidate(WebGLElementArrayCache& c, size_t firstByte, size_t countBytes)
+void CheckValidateAllTypes(WebGLElementArrayCache& c, size_t firstByte, size_t countBytes)
 {
-  CheckValidateOneType<uint8_t>(c, firstByte, countBytes);
-  CheckValidateOneType<uint16_t>(c, firstByte, countBytes);
-  CheckValidateOneType<uint32_t>(c, firstByte, countBytes);
+  CheckValidateOneTypeVariousBounds<uint8_t>(c, firstByte, countBytes);
+  CheckValidateOneTypeVariousBounds<uint16_t>(c, firstByte, countBytes);
+  CheckValidateOneTypeVariousBounds<uint32_t>(c, firstByte, countBytes);
 }
 
 template<typename T>
@@ -101,27 +118,27 @@ void CheckSanity()
 
   WebGLElementArrayCache c;
   c.BufferData(data, numBytes);
-  VERIFY( c.Validate(type, 6, 0, 8));
-  VERIFY(!c.Validate(type, 5, 0, 8));
-  VERIFY( c.Validate(type, 3, 0, 3));
-  VERIFY(!c.Validate(type, 2, 0, 3));
-  VERIFY( c.Validate(type, 6, 2, 4));
-  VERIFY(!c.Validate(type, 5, 2, 4));
+  CheckValidate(true,  c, type, 6, 0, 8);
+  CheckValidate(false, c, type, 5, 0, 8);
+  CheckValidate(true,  c, type, 3, 0, 3);
+  CheckValidate(false, c, type, 2, 0, 3);
+  CheckValidate(true,  c, type, 6, 2, 4);
+  CheckValidate(false, c, type, 5, 2, 4);
 
   c.BufferSubData(5*sizeof(T), data, sizeof(T));
-  VERIFY( c.Validate(type, 5, 0, 8));
-  VERIFY(!c.Validate(type, 4, 0, 8));
+  CheckValidate(true,  c, type, 5, 0, 8);
+  CheckValidate(false, c, type, 4, 0, 8);
 
   // now test a somewhat larger size to ensure we exceed the size of a tree leaf
   for(size_t i = 0; i < numElems; i++)
     data[i] = numElems - i;
   c.BufferData(data, numBytes);
-  VERIFY( c.Validate(type, numElems,     0, numElems));
-  VERIFY(!c.Validate(type, numElems - 1, 0, numElems));
+  CheckValidate(true,  c, type, numElems,     0, numElems);
+  CheckValidate(false, c, type, numElems - 1, 0, numElems);
 
   MOZ_ASSERT(numElems > 10);
-  VERIFY( c.Validate(type, numElems - 10, 10, numElems - 10));
-  VERIFY(!c.Validate(type, numElems - 11, 10, numElems - 10));
+  CheckValidate(true,  c, type, numElems - 10, 10, numElems - 10);
+  CheckValidate(false, c, type, numElems - 11, 10, numElems - 10);
 }
 
 template<typename T>
@@ -147,9 +164,9 @@ void CheckUintOverflow()
 
   // bug 825205
   uint32_t bigValWrappingToZero = uint32_t(T(-1)) + 1;
-  VERIFY( c.Validate(type, bigValWrappingToZero,     0, numElems));
-  VERIFY( c.Validate(type, bigValWrappingToZero - 1, 0, numElems));
-  VERIFY(!c.Validate(type,                        0, 0, numElems));
+  CheckValidate(true,  c, type, bigValWrappingToZero,     0, numElems);
+  CheckValidate(true,  c, type, bigValWrappingToZero - 1, 0, numElems);
+  CheckValidate(false, c, type,                        0, 0, numElems);
 }
 
 int main(int argc, char *argv[])
@@ -177,7 +194,7 @@ int main(int argc, char *argv[])
       size_t size = RandomInteger<size_t>(0, maxBufferSize);
       MakeRandomVector(v, size);
       b.BufferData(v.Elements(), size);
-      CheckValidate(b, 0, size);
+      CheckValidateAllTypes(b, 0, size);
 
       for (int j = 0; j < 16; j++) {
         for (int bufferSubDataCalls = 1; bufferSubDataCalls <= 8; bufferSubDataCalls *= 2) {
@@ -195,7 +212,7 @@ int main(int argc, char *argv[])
             for (int k = 0; k < validateCalls; k++) {
               offset = RandomInteger<size_t>(0, size);
               subsize = RandomInteger<size_t>(0, size - offset);
-              CheckValidate(b, offset, subsize);
+              CheckValidateAllTypes(b, offset, subsize);
             }
           } // validateCalls
         } // bufferSubDataCalls
