@@ -143,7 +143,10 @@ BluetoothDevice::FetchUuids(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<Promise> promise = new Promise(global);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);

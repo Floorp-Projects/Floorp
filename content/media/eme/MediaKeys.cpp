@@ -65,10 +65,13 @@ MediaKeys::GetKeySystem(nsString& retval) const
 }
 
 already_AddRefed<Promise>
-MediaKeys::SetServerCertificate(const Uint8Array& aCert)
+MediaKeys::SetServerCertificate(const Uint8Array& aCert, ErrorResult& aRv)
 {
   aCert.ComputeLengthAndData();
-  nsRefPtr<Promise> promise(MakePromise());
+  nsRefPtr<Promise> promise(MakePromise(aRv));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
   mProxy->SetServerCertificate(StorePromise(promise), aCert);
   return promise.forget();
 }
@@ -88,15 +91,15 @@ MediaKeys::IsTypeSupported(const GlobalObject& aGlobal,
 }
 
 already_AddRefed<Promise>
-MediaKeys::MakePromise()
+MediaKeys::MakePromise(ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
   if (!global) {
     NS_WARNING("Passed non-global to MediaKeys ctor!");
+    aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
-  nsRefPtr<Promise> promise = new Promise(global);
-  return promise.forget();
+  return Promise::Create(global, aRv);
 }
 
 PromiseId
@@ -166,9 +169,8 @@ MediaKeys::Create(const GlobalObject& aGlobal,
   }
 
   nsRefPtr<MediaKeys> keys = new MediaKeys(window, aKeySystem);
-  nsRefPtr<Promise> promise(keys->MakePromise());
-  if (!promise) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+  nsRefPtr<Promise> promise(keys->MakePromise(aRv));
+  if (aRv.Failed()) {
     return nullptr;
   }
 
@@ -196,9 +198,12 @@ MediaKeys::OnCDMCreated(PromiseId aId)
 }
 
 already_AddRefed<Promise>
-MediaKeys::LoadSession(const nsAString& aSessionId)
+MediaKeys::LoadSession(const nsAString& aSessionId, ErrorResult& aRv)
 {
-  nsRefPtr<Promise> promise(MakePromise());
+  nsRefPtr<Promise> promise(MakePromise(aRv));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   if (aSessionId.IsEmpty()) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
@@ -214,7 +219,10 @@ MediaKeys::LoadSession(const nsAString& aSessionId)
 
   // Create session.
   nsRefPtr<MediaKeySession> session(
-    new MediaKeySession(GetParentObject(), this, mKeySystem, SessionType::Persistent));
+    new MediaKeySession(GetParentObject(), this, mKeySystem, SessionType::Persistent, aRv));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   // Proxy owns session object until resolving promise.
   mProxy->LoadSession(StorePromise(promise),
@@ -226,14 +234,22 @@ MediaKeys::LoadSession(const nsAString& aSessionId)
 already_AddRefed<Promise>
 MediaKeys::CreateSession(const nsAString& initDataType,
                          const Uint8Array& aInitData,
-                         SessionType aSessionType)
+                         SessionType aSessionType,
+                         ErrorResult& aRv)
 {
   aInitData.ComputeLengthAndData();
-  nsRefPtr<Promise> promise(MakePromise());
+  nsRefPtr<Promise> promise(MakePromise(aRv));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
   nsRefPtr<MediaKeySession> session = new MediaKeySession(GetParentObject(),
                                                           this,
                                                           mKeySystem,
-                                                          aSessionType);
+                                                          aSessionType, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
   auto pid = StorePromise(promise);
   // Hang onto session until the CDM has finished setting it up.
   mPendingSessions.Put(pid, session);
