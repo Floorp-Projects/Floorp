@@ -68,13 +68,23 @@ RemoteMediator.prototype = {
   },
 
   install: function(installs, referer, callback, window) {
+    let messageManager = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShell)
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIContentFrameMessageManager);
+
     let callbackID = this._addCallback(callback, installs.uris);
 
     installs.mimetype = XPINSTALL_MIMETYPE;
     installs.referer = referer;
     installs.callbackID = callbackID;
 
-    return this.mm.sendSyncMessage(MSG_INSTALL_ADDONS, installs, {win: window})[0];
+    let objects = { window: null };
+    if (Services.appinfo.processType === Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)
+      objects.window = window;
+
+    return messageManager.sendSyncMessage(MSG_INSTALL_ADDONS, installs, objects)[0];
   },
 
   _addCallback: function(callback, urls) {

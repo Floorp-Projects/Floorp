@@ -9821,13 +9821,19 @@ static const char* kWarnings[] = {
 };
 #undef DEPRECATED_OPERATION
 
+bool
+nsIDocument::HasWarnedAbout(DeprecatedOperations aOperation)
+{
+  static_assert(eDeprecatedOperationCount <= 64,
+                "Too many deprecated operations");
+  return mWarnedAbout & (1ull << aOperation);
+}
+
 void
 nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation,
                            bool asError /* = false */)
 {
-  static_assert(eDeprecatedOperationCount <= 64,
-                "Too many deprecated operations");
-  if (mWarnedAbout & (1ull << aOperation)) {
+  if (HasWarnedAbout(aOperation)) {
     return;
   }
   mWarnedAbout |= (1ull << aOperation);

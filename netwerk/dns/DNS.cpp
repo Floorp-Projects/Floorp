@@ -204,6 +204,11 @@ bool IsIPAddrLocal(const NetAddr *addr)
   return false;
 }
 
+bool IsIPAddrPrivate(const NetAddr *addr)
+{
+  return IsIPAddrLocal(addr) || IsLoopBackAddress(addr);
+}
+
 bool
 NetAddr::operator == (const NetAddr& other) const
 {
@@ -227,7 +232,19 @@ NetAddr::operator == (const NetAddr& other) const
   return false;
 }
 
-
+bool
+NetAddr::EqualsIP(const NetAddr& other) const
+{
+  if (this->raw.family != other.raw.family) {
+    return false;
+  } else if (this->raw.family == AF_INET) {
+    return (this->inet.ip == other.inet.ip);
+  } else if (this->raw.family == AF_INET6) {
+    return (memcmp(&this->inet6.ip, &other.inet6.ip,
+                   sizeof(this->inet6.ip)) == 0);
+  }
+  return false;
+}
 
 NetAddrElement::NetAddrElement(const PRNetAddr *prNetAddr)
 {

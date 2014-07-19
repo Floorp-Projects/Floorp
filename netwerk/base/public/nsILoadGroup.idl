@@ -15,7 +15,7 @@ typedef unsigned long nsLoadFlags;
 /**
  * A load group maintains a collection of nsIRequest objects. 
  */
-[scriptable, uuid(afb57ac2-bce5-4ee3-bb34-385089a9ba5c)]
+[scriptable, uuid(8531ccd9-f12f-4674-ae07-05b625cebf8b)]
 interface nsILoadGroup : nsIRequest
 {
     /**
@@ -93,6 +93,12 @@ interface nsILoadGroup : nsIRequest
      * the docShell has created the default request.)
      */
     attribute nsLoadFlags defaultLoadFlags;
+
+    /**
+     * Allow/Deny this loadgroup to load resources from private, RFC1918-like
+     * addresses. See nsINetworkZonePolicy for more information.
+     */
+    attribute bool allowLoadsFromPrivateNetworks;
 };
 
 %{C++

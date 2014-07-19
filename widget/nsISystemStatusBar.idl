@@ -1,0 +1,36 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMElement;
+
+/**
+ * Allow applications to interface with the Mac OS X system status bar.
+ */
+
+[scriptable, uuid(24493180-ee81-4b7c-8b17-9e69480b7b8a)]
+interface nsISystemStatusBar : nsISupports
+{
+  /**
+   * Add an item to the system status bar. Each item can only be present once,
+   * subsequent addItem calls with the same element will be ignored.
+   * The system status bar holds a strong reference to the added XUL menu
+   * element and the item will stay in the status bar until it is removed via
+   * a call to removeItem, or until the process shuts down.
+   * @param aDOMMenuElement A XUL menu element that contains a XUL menupopup
+   *                        with regular menu content. The menu's icon is put
+   *                        into the system status bar; clicking it will open
+   *                        a menu with the contents of the menupopup.
+   *                        The menu label is not shown.
+   */
+  void addItem(in nsIDOMElement aDOMMenuElement);
+
+  /**
+   * Remove a previously-added item from the menu bar. Calling this with an
+   * element that has not been added before will be silently ignored.
+   * @param aDOMMenuElement The XUL menu element that you called addItem with.
+   */
+  void removeItem(in nsIDOMElement aDOMMenuElement);
+};

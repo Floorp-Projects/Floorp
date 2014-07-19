@@ -109,7 +109,9 @@ nsresult SetSubmitReports(bool aSubmitReport);
 // Out-of-process crash reporter API.
 
 // Initializes out-of-process crash reporting. This method must be called
-// before the platform-specifi notificationpipe APIs are called.
+// before the platform-specific notification pipe APIs are called. If called
+// from off the main thread, this method will synchronously proxy to the main
+// thread.
 void OOPInit();
 
 // Return true if a dump was found for |childPid|, and return the
