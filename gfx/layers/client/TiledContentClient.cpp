@@ -106,8 +106,8 @@ TiledContentClient::TiledContentClient(ClientTiledThebesLayer* aThebesLayer,
 void
 TiledContentClient::ClearCachedResources()
 {
-  mTiledBuffer.DiscardBackBuffers();
-  mLowPrecisionTiledBuffer.DiscardBackBuffers();
+  mTiledBuffer.DiscardBuffers();
+  mLowPrecisionTiledBuffer.DiscardBuffers();
 }
 
 void
@@ -630,10 +630,11 @@ ClientTiledLayerBuffer::Release()
 }
 
 void
-ClientTiledLayerBuffer::DiscardBackBuffers()
+ClientTiledLayerBuffer::DiscardBuffers()
 {
   for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
     if (mRetainedTiles[i].IsPlaceholderTile()) continue;
+    mRetainedTiles[i].DiscardFrontBuffer();
     mRetainedTiles[i].DiscardBackBuffer();
   }
 }
