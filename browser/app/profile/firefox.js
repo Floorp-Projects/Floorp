@@ -1653,4 +1653,4 @@ pref("experiments.manifest.certs.1.issuerName", "CN=Cybertrust Public SureServer
 pref("experiments.supported", true);
 
 // Enable the OpenH264 plugin support in the addon manager.
-pref("media.gmp-gmpopenh264.providerEnabled", true);
+pref("media.gmp-gmpopenh264.provider.enabled", true);
