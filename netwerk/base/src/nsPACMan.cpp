@@ -287,14 +287,6 @@ nsPACMan::Shutdown()
   CancelExistingLoad();
   mShutdown = true;
   PostCancelPendingQ(NS_ERROR_ABORT);
-
-  // this can't return until pac thread is joined
-  LOG(("nsPACMan::Shutdown Thread shutdown start %p", mPACThread.get()));
-  if (mPACThread) {
-    mPACThread->Shutdown();
-    mPACThread = nullptr;
-  }
-  LOG(("nsPACMan::Shutdown Thread shutdown finish"));
 }
 
 nsresult
@@ -502,12 +494,11 @@ nsPACMan::ProcessPendingQ()
   NS_ABORT_IF_FALSE(!NS_IsMainThread(), "wrong thread");
   while (ProcessPending());
 
-  if (mShutdown) {
+  // do GC while the thread has nothing pending
+  mPAC.GC();
+
+  if (mShutdown)
     mPAC.Shutdown();
-  } else {
-    // do GC while the thread has nothing pending
-    mPAC.GC();
-  }
 }
 
 // returns true if progress was made by shortening the queue
