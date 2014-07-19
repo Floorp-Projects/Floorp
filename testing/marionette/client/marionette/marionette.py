@@ -523,7 +523,7 @@ class Marionette(object):
                                             process_args=process_args)
             self.emulator = self.runner.device
             self.emulator.start()
-            self.port = self.emulator.setup_port_forwarding(self.port)
+            self.port = self.emulator.setup_port_forwarding(remote_port=self.port)
             assert(self.emulator.wait_for_port(self.port)), "Timed out waiting for port!"
 
         if connect_to_running_emulator:
@@ -532,7 +532,7 @@ class Marionette(object):
                                             process_args=process_args)
             self.emulator = self.runner.device
             self.emulator.connect()
-            self.port = self.emulator.setup_port_forwarding(self.port)
+            self.port = self.emulator.setup_port_forwarding(remote_port=self.port)
             assert(self.emulator.wait_for_port(self.port)), "Timed out waiting for port!"
 
         self.client = MarionetteTransport(self.host, self.port, self.socket_timeout)

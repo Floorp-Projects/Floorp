@@ -632,6 +632,15 @@ nsHttpTransaction::ReadSegments(nsAHttpSegmentReader *reader,
         mConnection->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
     }
 
+    // Verify permission to load from private (RFC1918-like) addresses.
+    if (!(mCaps & NS_HTTP_ALLOW_PRIVATE_IP_ADDRESSES) &&
+        mConnection->PeerHasPrivateIP()) {
+        LOG(("nsHttpTransaction::ReadSegments %p private IPs forbidden; "
+             "closing transaction.", this));
+        Close(NS_ERROR_CONNECTION_REFUSED);
+        return NS_ERROR_CONNECTION_REFUSED;
+    }
+
     mReader = reader;
 
     nsresult rv = mRequestStream->ReadSegments(ReadRequestSegment, this, count, countRead);

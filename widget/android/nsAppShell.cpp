@@ -26,6 +26,7 @@
 #include "nsINetworkLinkService.h"
 #include "nsCategoryManagerUtils.h"
 
+#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "mozilla/Preferences.h"
@@ -260,6 +261,8 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 
     if (!curEvent)
         return false;
+
+    mozilla::BackgroundHangMonitor().NotifyActivity();
 
     EVLOG("nsAppShell: event %p %d", (void*)curEvent.get(), curEvent->Type());
 

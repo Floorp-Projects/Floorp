@@ -21,13 +21,20 @@ public:
   // nsMenuObjectX
   nsMenuObjectTypeX MenuObjectType() { return eStandaloneNativeMenuObjectType; }
   void * NativeData() { return mMenu != nullptr ? mMenu->NativeData() : nullptr; }
+  virtual void IconUpdated() MOZ_OVERRIDE;
 
   nsMenuX * GetMenuXObject() { return mMenu; }
+
+  // If this menu is the menu of a system status bar item (NSStatusItem),
+  // let the menu know about the status item so that it can propagate
+  // any icon changes to the status item.
+  void SetContainerStatusBarItem(NSStatusItem* aItem);
 
 protected:
   virtual ~nsStandaloneNativeMenu();
 
   nsMenuX * mMenu;
+  NSStatusItem* mContainerStatusBarItem;
 };
 
 #endif

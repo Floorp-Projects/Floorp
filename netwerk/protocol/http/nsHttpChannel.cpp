@@ -20,6 +20,7 @@
 #include "nsIStreamListenerTee.h"
 #include "nsISeekableStream.h"
 #include "nsILoadGroupChild.h"
+#include "nsINetworkZonePolicy.h"
 #include "nsIProtocolProxyService2.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
@@ -2707,6 +2708,34 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     }
     buf.Adopt(0);
 
+    // If the entry was loaded from a private/RFC1918 network, verify that
+    // private loads are allowed for this loadgroup and that the network
+    // link ID matches.
+    rv = entry->GetMetaDataElement("loaded-from-private-network",
+                                   getter_Copies(buf));
+    if (NS_SUCCEEDED(rv) && !buf.IsEmpty()) {
+        bool privateIPAddrOK = true;
+        nsCString currentNetworkIDString;
+        rv = gIOService->GetNetworkLinkID(currentNetworkIDString);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+        }
+        if (!buf.Equals(currentNetworkIDString)) {
+            LOG(("nsHttpChannel::OnCacheEntryCheck %p private entry "
+                 "does not match network link ID - not wanted.", this));
+            privateIPAddrOK = false;
+        } else {
+            privateIPAddrOK = mCaps & NS_HTTP_ALLOW_PRIVATE_IP_ADDRESSES;
+            LOG(("nsHttpChannel::OnCacheEntryCheck %p private entry %s.",
+                 this, privateIPAddrOK ? "allowed" : "forbidden"));
+        }
+        if (!privateIPAddrOK) {
+            *aResult = ENTRY_NOT_WANTED;
+            return NS_OK;
+        }
+    }
+    buf.Adopt(0);
+
     // We'll need this value in later computations...
     uint32_t lastModifiedTime;
     rv = entry->GetLastModified(&lastModifiedTime);
@@ -3122,6 +3151,30 @@ nsHttpChannel::OnNormalCacheEntryAvailable(nsICacheEntry *aEntry,
         if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
             Telemetry::Accumulate(Telemetry::HTTP_OFFLINE_CACHE_DOCUMENT_LOAD,
                                   false);
+        }
+
+        // For cached doument loads, we must set Private/Public Network load
+        // permissions for the document's sub-resources.
+        // -- Forbid private loads if the doc was loaded on a public network.
+        // -- Allow private loads if the doc was loaded from a private IP.
+        // Note: Private docs should only be loaded from the same network.
+        //       This check should already have been done in OnCacheEntryCheck.
+        if (mNZP && !aNew && mLoadFlags & nsIChannel::LOAD_DOCUMENT_URI) {
+            nsXPIDLCString buf;
+            nsresult rv =
+                mCacheEntry->GetMetaDataElement("loaded-from-private-network",
+                                                getter_Copies(buf));
+            bool privateIPAddrOK = NS_SUCCEEDED(rv) && !buf.IsEmpty();
+
+            LOG(("nsHttpChannel::OnNormalCacheEntryAvailable %p document "
+                 "load: %s sub-resource loads from private networks.",
+                 this, privateIPAddrOK ? "allows" : "forbids"));
+
+            rv = mNZP->SetPrivateNetworkPermission(this, privateIPAddrOK);
+            if (NS_FAILED(rv)) {
+                LOG(("nsHttpChannel::OnNormalCacheEntryAvailable %p failed "
+                     "SetPrivateNetworkPermission rv=0x%x", this, rv));
+            }
         }
     }
 
@@ -3867,6 +3920,23 @@ nsHttpChannel::AddCacheEntryHeaders(nsICacheEntry *entry)
     rv = entry->SetMetaDataElement("response-head", head.get());
     if (NS_FAILED(rv)) return rv;
 
+    // If the response was loaded from a private/RFC1918 network, store
+    // the networkLinkID in a metadata header.
+    if (IsIPAddrPrivate(&mPeerAddr)) {
+        char privateNetworkIDString[21];
+        PR_snprintf(privateNetworkIDString, sizeof(privateNetworkIDString),
+                    "%llu", mPrivateNetworkID);
+        MOZ_ASSERT(strlen(privateNetworkIDString) > 0);
+
+        LOG(("nsHttpChannel::AddCacheEntryHeaders %p setting loaded-from-"
+             "private-network=%s", this, privateNetworkIDString));
+        rv = entry->SetMetaDataElement("loaded-from-private-network",
+                                       privateNetworkIDString);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+    }
+
     // Indicate we have successfully finished setting metadata on the cache entry.
     rv = entry->MetaDataReady();
 
@@ -4473,8 +4543,32 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     // add ourselves to the load group.  from this point forward, we'll report
     // all failures asynchronously.
-    if (mLoadGroup)
+    if (mLoadGroup) {
         mLoadGroup->AddRequest(this, nullptr);
+    }
+
+    // Check if the channel is allowed to load from private addresses.
+    mNZP = do_GetService(NS_NETWORKZONEPOLICY_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && mNZP) {
+        bool privateIPAddrOK = false;
+        rv = mNZP->CheckPrivateNetworkPermission(this, &privateIPAddrOK);
+        if (NS_SUCCEEDED(rv) && privateIPAddrOK) {
+            mCaps |= NS_HTTP_ALLOW_PRIVATE_IP_ADDRESSES;
+        } else if (NS_FAILED(rv)) {
+            LOG(("nsHttpChannel::AsyncOpen %p CheckPrivateNetworkPermission "
+                 "failed with rv=0x%x", this, rv));
+        }
+#ifdef PR_LOGGING
+        nsAutoCString host;
+        rv = mURI->GetAsciiHost(host);
+        LOG(("nsHttpChannel::AsyncOpen %p private addresses %s for "
+             "%s", this, privateIPAddrOK ? "allowed" : "forbidden",
+             host.get()));
+#endif
+    } else {
+        LOG(("nsHttpChannel::AsyncOpen %p No NetworkZonePolicy object rv=0x%x",
+             this, rv));
+    }
 
     // record asyncopen time unconditionally and clear it if we
     // don't want it after OnModifyRequest() weighs in. But waiting for
@@ -5421,8 +5515,45 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
         nsCOMPtr<nsISocketTransport> socketTransport =
             do_QueryInterface(trans);
         if (socketTransport) {
-            socketTransport->GetSelfAddr(&mSelfAddr);
-            socketTransport->GetPeerAddr(&mPeerAddr);
+            nsresult selfRv = socketTransport->GetSelfAddr(&mSelfAddr);
+            nsresult peerRv = socketTransport->GetPeerAddr(&mPeerAddr);
+
+            // XXX Remove this call to UpdateNetworkLinkID once Bug 939319 and
+            // associated bugs for NS_NETWORK_LINK_DATA_CHANGED are complete on
+            // all supported platforms. For now, update the network link ID with
+            // mSelfAddr, assuming we were able to get it successfully.
+            if (NS_SUCCEEDED(selfRv)) {
+                gIOService->UpdateNetworkLinkID(mSelfAddr);
+            }
+
+            // If the peer is private, store the network link ID now to be
+            // saved in the cache headers later. Also check permissions.
+            bool peerHasPrivateAddr = NS_SUCCEEDED(peerRv) &&
+                                      IsIPAddrPrivate(&mPeerAddr);
+            if (peerHasPrivateAddr) {
+                mPrivateNetworkID = gIOService->GetNetworkLinkID();
+
+                if (!(mCaps & NS_HTTP_ALLOW_PRIVATE_IP_ADDRESSES)) {
+                    LOG(("nsHttpChannel::OnTransportStatus %p not permitted "
+                         "to load from private IP address! Canceling.", this));
+                    return Cancel(NS_ERROR_CONNECTION_REFUSED);
+                }
+            }
+
+            // If this is a document load, set permissions for the rest of the
+            // loadgroup's requests.
+            if (mNZP && NS_SUCCEEDED(peerRv) &&
+                mLoadFlags & nsIChannel::LOAD_DOCUMENT_URI) {
+                LOG(("nsHttpChannel::OnTransportStatus %p document load: "
+                     "%s sub-resource loads from private networks.",
+                     this, peerHasPrivateAddr ? "allows" : "forbids"));
+                nsresult rv =
+                    mNZP->SetPrivateNetworkPermission(this, peerHasPrivateAddr);
+                if (NS_FAILED(rv)) {
+                    LOG(("nsHttpChannel::OnTransportStatus %p failed "
+                         "SetPrivateNetworkPermission rv=0x%x", this, rv));
+                }
+            }
         }
     }
 
