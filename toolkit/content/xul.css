@@ -421,7 +421,7 @@ panel[type="arrow"][animate="open"] {
   opacity: 1.0;
 }
 
-panel[animate="cancel"] {
+panel[type="arrow"][animate="cancel"] {
   transform: none;
 }
 

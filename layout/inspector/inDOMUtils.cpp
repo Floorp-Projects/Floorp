@@ -39,9 +39,12 @@
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "nsCSSParser.h"
 #include "nsCSSProps.h"
+#include "nsCSSValue.h"
 #include "nsColor.h"
 #include "nsStyleSet.h"
+#include "nsStyleUtil.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -792,6 +795,66 @@ inDOMUtils::RgbToColorName(uint8_t aR, uint8_t aG, uint8_t aB,
   }
 
   aColorName.AssignASCII(color);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMUtils::ColorToRGBA(const nsAString& aColorString, JSContext* aCx,
+                        JS::MutableHandle<JS::Value> aValue)
+{
+  nscolor color = 0;
+  nsCSSParser cssParser;
+  nsCSSValue cssValue;
+
+  bool isColor = cssParser.ParseColorString(aColorString, nullptr, 0,
+                                            cssValue, true);
+
+  if (!isColor) {
+    aValue.setNull();
+    return NS_OK;
+  }
+
+  nsRuleNode::ComputeColor(cssValue, nullptr, nullptr, color);
+
+  InspectorRGBATuple tuple;
+  tuple.mR = NS_GET_R(color);
+  tuple.mG = NS_GET_G(color);
+  tuple.mB = NS_GET_B(color);
+  tuple.mA = nsStyleUtil::ColorComponentToFloat(NS_GET_A(color));
+
+  if (!ToJSValue(aCx, tuple, aValue)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMUtils::IsValidCSSColor(const nsAString& aColorString, bool *_retval)
+{
+  nsCSSParser cssParser;
+  nsCSSValue cssValue;
+  *_retval = cssParser.ParseColorString(aColorString, nullptr, 0, cssValue, true);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMUtils::CssPropertyIsValid(const nsAString& aPropertyName,
+                               const nsAString& aPropertyValue,
+                               bool *_retval)
+{
+  nsCSSProperty propertyID =
+    nsCSSProps::LookupProperty(aPropertyName, nsCSSProps::eIgnoreEnabledState);
+
+  if (propertyID == eCSSProperty_UNKNOWN) {
+    *_retval = false;
+    return NS_OK;
+  }
+
+  // Get a parser, parse the property.
+  nsCSSParser parser;
+  *_retval = parser.IsValueValidForProperty(propertyID, aPropertyValue);
+
   return NS_OK;
 }
 

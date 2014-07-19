@@ -1993,6 +1993,7 @@ public:
     eDeprecatedOperationCount
   };
 #undef DEPRECATED_OPERATION
+  bool HasWarnedAbout(DeprecatedOperations aOperation);
   void WarnOnceAbout(DeprecatedOperations aOperation, bool asError = false);
 
   virtual void PostVisibilityUpdateEvent() = 0;

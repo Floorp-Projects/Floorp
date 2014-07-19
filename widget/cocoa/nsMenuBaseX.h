@@ -31,6 +31,13 @@ public:
   virtual void*             NativeData()=0;
   nsIContent*               Content() { return mContent; }
 
+  /**
+   * Called when an icon of a menu item somewhere in this menu has updated.
+   * Menu objects with parents need to propagate the notification to their
+   * parent.
+   */
+  virtual void IconUpdated() {}
+
 protected:
   nsCOMPtr<nsIContent> mContent;
 };

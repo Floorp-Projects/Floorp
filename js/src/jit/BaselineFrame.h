@@ -223,11 +223,13 @@ class BaselineFrame
         return flags_ & HAS_RVAL;
     }
     MutableHandleValue returnValue() {
-        return MutableHandleValue::fromMarkedLocation(reinterpret_cast<Value *>(&loReturnValue_));
+        if (!hasReturnValue())
+            addressOfReturnValue()->setUndefined();
+        return MutableHandleValue::fromMarkedLocation(addressOfReturnValue());
     }
     void setReturnValue(const Value &v) {
-        flags_ |= HAS_RVAL;
         returnValue().set(v);
+        flags_ |= HAS_RVAL;
     }
     inline Value *addressOfReturnValue() {
         return reinterpret_cast<Value *>(&loReturnValue_);

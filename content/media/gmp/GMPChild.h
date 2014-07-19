@@ -27,6 +27,8 @@ public:
   MessageLoop* GMPMessageLoop();
 
 private:
+  virtual PCrashReporterChild* AllocPCrashReporterChild(const NativeThreadId& aThread) MOZ_OVERRIDE;
+  virtual bool DeallocPCrashReporterChild(PCrashReporterChild*) MOZ_OVERRIDE;
   virtual PGMPVideoDecoderChild* AllocPGMPVideoDecoderChild() MOZ_OVERRIDE;
   virtual bool DeallocPGMPVideoDecoderChild(PGMPVideoDecoderChild* aActor) MOZ_OVERRIDE;
   virtual PGMPVideoEncoderChild* AllocPGMPVideoEncoderChild() MOZ_OVERRIDE;

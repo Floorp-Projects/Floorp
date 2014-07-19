@@ -304,7 +304,7 @@ WebGLContext::DrawElements(GLenum mode, GLsizei count, GLenum type,
     if (!ValidateDrawModeEnum(mode, "drawElements: mode"))
         return;
 
-    GLuint upperBound = UINT_MAX;
+    GLuint upperBound = 0;
     if (!DrawElements_check(count, type, byteOffset, 1, "drawElements",
                             &upperBound))
     {
