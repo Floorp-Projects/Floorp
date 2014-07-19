@@ -108,10 +108,10 @@ Site.prototype = {
     let control = this._querySelector(".newtab-control-pin");
 
     if (aPinned) {
-      this.node.setAttribute("pinned", true);
+      control.setAttribute("pinned", true);
       control.setAttribute("title", newTabString("unpin"));
     } else {
-      this.node.removeAttribute("pinned");
+      control.removeAttribute("pinned");
       control.setAttribute("title", newTabString("pin"));
     }
   },
