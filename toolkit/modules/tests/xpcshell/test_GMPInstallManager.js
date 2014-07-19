@@ -170,7 +170,7 @@ add_test(function test_checkForAddons_singleAddonNoUpdates() {
     "<?xml version=\"1.0\"?>" +
     "<updates>" +
     "    <addons>" +
-    "        <addon id=\"openh264-plugin@cisco.com\"" +
+    "        <addon id=\"gmp-gmpopenh264\"" +
     "               URL=\"http://127.0.0.1:8011/gmp-gmpopenh264-1.1.zip\"" +
     "               hashFunction=\"sha256\"" +
     "               hashValue=\"1118b90d6f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee\"" +
@@ -183,7 +183,7 @@ add_test(function test_checkForAddons_singleAddonNoUpdates() {
   promise.then(function(gmpAddons) {
     do_check_eq(gmpAddons.length, 1);
     let gmpAddon= gmpAddons[0];
-    do_check_eq(gmpAddon.id, "openh264-plugin@cisco.com");
+    do_check_eq(gmpAddon.id, "gmp-gmpopenh264");
     do_check_eq(gmpAddon.URL, "http://127.0.0.1:8011/gmp-gmpopenh264-1.1.zip");
     do_check_eq(gmpAddon.hashFunction, "sha256");
     do_check_eq(gmpAddon.hashValue, "1118b90d6f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee");
@@ -248,43 +248,43 @@ add_test(function test_checkForAddons_multipleAddonNoUpdatesSomeInvalid() {
     "<updates>" +
     "    <addons>" +
     // valid openh264
-    "        <addon id=\"openh264-plugin@cisco.com\"" +
+    "        <addon id=\"gmp-gmpopenh264\"" +
     "               URL=\"http://127.0.0.1:8011/gmp-gmpopenh264-1.1.zip\"" +
     "               hashFunction=\"sha256\"" +
     "               hashValue=\"1118b90d6f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee\"" +
     "               version=\"1.1\"/>" +
     // valid not openh264
-    "        <addon id=\"NOT-openh264-plugin@cisco.com\"" +
+    "        <addon id=\"NOT-gmp-gmpopenh264\"" +
     "               URL=\"http://127.0.0.1:8011/NOT-gmp-gmpopenh264-1.1.zip\"" +
     "               hashFunction=\"sha512\"" +
     "               hashValue=\"141592656f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee\"" +
     "               version=\"9.1\"/>" +
     // noid
-    "        <addon notid=\"NOT-openh264-plugin@cisco.com\"" +
+    "        <addon notid=\"NOT-gmp-gmpopenh264\"" +
     "               URL=\"http://127.0.0.1:8011/NOT-gmp-gmpopenh264-1.1.zip\"" +
     "               hashFunction=\"sha512\"" +
     "               hashValue=\"141592656f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee\"" +
     "               version=\"9.1\"/>" +
     // no URL
-    "        <addon id=\"NOT-openh264-plugin@cisco.com\"" +
+    "        <addon id=\"NOT-gmp-gmpopenh264\"" +
     "               notURL=\"http://127.0.0.1:8011/NOT-gmp-gmpopenh264-1.1.zip\"" +
     "               hashFunction=\"sha512\"" +
     "               hashValue=\"141592656f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee\"" +
     "               version=\"9.1\"/>" +
     // no hash function
-    "        <addon id=\"NOT-openh264-plugin@cisco.com\"" +
+    "        <addon id=\"NOT-gmp-gmpopenh264\"" +
     "               URL=\"http://127.0.0.1:8011/NOT-gmp-gmpopenh264-1.1.zip\"" +
     "               nothashFunction=\"sha512\"" +
     "               hashValue=\"141592656f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee\"" +
     "               version=\"9.1\"/>" +
     // no hash function
-    "        <addon id=\"NOT-openh264-plugin@cisco.com\"" +
+    "        <addon id=\"NOT-gmp-gmpopenh264\"" +
     "               URL=\"http://127.0.0.1:8011/NOT-gmp-gmpopenh264-1.1.zip\"" +
     "               hashFunction=\"sha512\"" +
     "               nothashValue=\"141592656f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee\"" +
     "               version=\"9.1\"/>" +
     // not version
-    "        <addon id=\"NOT-openh264-plugin@cisco.com\"" +
+    "        <addon id=\"NOT-gmp-gmpopenh264\"" +
     "               URL=\"http://127.0.0.1:8011/NOT-gmp-gmpopenh264-1.1.zip\"" +
     "               hashFunction=\"sha512\"" +
     "               hashValue=\"141592656f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee\"" +
@@ -297,7 +297,7 @@ add_test(function test_checkForAddons_multipleAddonNoUpdatesSomeInvalid() {
   promise.then(function(gmpAddons) {
     do_check_eq(gmpAddons.length, 7);
     let gmpAddon= gmpAddons[0];
-    do_check_eq(gmpAddon.id, "openh264-plugin@cisco.com");
+    do_check_eq(gmpAddon.id, "gmp-gmpopenh264");
     do_check_eq(gmpAddon.URL, "http://127.0.0.1:8011/gmp-gmpopenh264-1.1.zip");
     do_check_eq(gmpAddon.hashFunction, "sha256");
     do_check_eq(gmpAddon.hashValue, "1118b90d6f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee");
@@ -307,7 +307,7 @@ add_test(function test_checkForAddons_multipleAddonNoUpdatesSomeInvalid() {
     do_check_false(gmpAddon.isInstalled);
 
     gmpAddon= gmpAddons[1];
-    do_check_eq(gmpAddon.id, "NOT-openh264-plugin@cisco.com");
+    do_check_eq(gmpAddon.id, "NOT-gmp-gmpopenh264");
     do_check_eq(gmpAddon.URL, "http://127.0.0.1:8011/NOT-gmp-gmpopenh264-1.1.zip");
     do_check_eq(gmpAddon.hashFunction, "sha512");
     do_check_eq(gmpAddon.hashValue, "141592656f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee");
@@ -339,7 +339,7 @@ add_test(function test_checkForAddons_updatesWithAddons() {
     "        <patch type=\"complete\" URL=\"http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/2014/06/2014-06-28-03-02-01-mozilla-central/firefox-33.0a1.en-US.mac.complete.mar\" hashFunction=\"sha512\" hashValue=\"f3f90d71dff03ae81def80e64bba3e4569da99c9e15269f731c2b167c4fc30b3aed9f5fee81c19614120230ca333e73a5e7def1b8e45d03135b2069c26736219\" size=\"85249896\"/>" +
     "    </update>" +
     "    <addons>" +
-    "        <addon id=\"openh264-plugin@cisco.com\"" +
+    "        <addon id=\"gmp-gmpopenh264\"" +
     "               URL=\"http://127.0.0.1:8011/gmp-gmpopenh264-1.1.zip\"" +
     "               hashFunction=\"sha256\"" +
     "               hashValue=\"1118b90d6f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee\"" +
@@ -352,7 +352,7 @@ add_test(function test_checkForAddons_updatesWithAddons() {
   promise.then(function(gmpAddons) {
     do_check_eq(gmpAddons.length, 1);
     let gmpAddon= gmpAddons[0];
-    do_check_eq(gmpAddon.id, "openh264-plugin@cisco.com");
+    do_check_eq(gmpAddon.id, "gmp-gmpopenh264");
     do_check_eq(gmpAddon.URL, "http://127.0.0.1:8011/gmp-gmpopenh264-1.1.zip");
     do_check_eq(gmpAddon.hashFunction, "sha256");
     do_check_eq(gmpAddon.hashValue, "1118b90d6f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee");
@@ -397,7 +397,7 @@ function test_checkForAddons_installAddon(id, includeSize,wantInstallReject) {
     "<?xml version=\"1.0\"?>" +
     "<updates>" +
     "    <addons>" +
-    "        <addon id=\"" + id + "-openh264-plugin@cisco.com\"" +
+    "        <addon id=\"" + id + "-gmp-gmpopenh264\"" +
     "               URL=\"" + zipURL + "\"" +
     "               hashFunction=\"" + hashFunc + "\"" +
     "               hashValue=\"" + expectedDigest + "\"" +
@@ -492,7 +492,7 @@ add_test(function test_installAddon_noServer() {
     "<?xml version=\"1.0\"?>" +
     "<updates>" +
     "    <addons>" +
-    "        <addon id=\"openh264-plugin@cisco.com\"" +
+    "        <addon id=\"gmp-gmpopenh264\"" +
     "               URL=\"" + zipURL + "\"" +
     "               hashFunction=\"sha256\"" +
     "               hashValue=\"11221cbda000347b054028b527a60e578f919cb10f322ef8077d3491c6fcb474\"" +

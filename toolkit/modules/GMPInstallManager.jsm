@@ -14,7 +14,7 @@ const DOWNLOAD_CHUNK_BYTES_SIZE = 300000;
 const DOWNLOAD_INTERVAL  = 0;
 // 1 day default
 const DEFAULT_SECONDS_BETWEEN_CHECKS = 60 * 60 * 24;
-const OPEN_H264_ID = "openh264-plugin@cisco.com";
+const OPEN_H264_ID = "gmp-gmpopenh264";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
