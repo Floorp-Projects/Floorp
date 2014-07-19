@@ -32,7 +32,7 @@ interface amIInstallCallback : nsISupports
 /**
  * This interface is used to allow webpages to start installing add-ons.
  */
-[scriptable, uuid(4fdf4f84-73dc-4857-9bbe-84895e8afd5d)]
+[scriptable, uuid(8565a9c7-daf9-4af5-aae0-b272afcbccaa)]
 interface amIWebInstaller : nsISupports
 {
   /**
@@ -51,8 +51,9 @@ interface amIWebInstaller : nsISupports
    *
    * @param  aMimetype
    *         The mimetype for the add-ons
-   * @param  aWindow
-   *         The window installing the add-ons
+   * @param  aOriginator
+   *         If not e10s, the window installing the add-ons, otherwise the
+   *         browser installing the add-ons.
    * @param  aReferer
    *         The URI for the webpage installing the add-ons
    * @param  aUris
@@ -71,7 +72,7 @@ interface amIWebInstaller : nsISupports
    * @return true if the installation was successfully started
    */
   boolean installAddonsFromWebpage(in AString aMimetype,
-                                   in nsIDOMWindow aWindow,
+                                   in nsISupports aOriginator,
                                    in nsIURI aReferer,
                                    [array, size_is(aInstallCount)] in wstring aUris,
                                    [array, size_is(aInstallCount)] in wstring aHashes,

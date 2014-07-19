@@ -5,6 +5,9 @@
 
 include protocol PGMPVideoDecoder;
 include protocol PGMPVideoEncoder;
+include protocol PCrashReporter;
+
+using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 
 namespace mozilla {
 namespace gmp {
@@ -13,6 +16,11 @@ intr protocol PGMP
 {
   manages PGMPVideoDecoder;
   manages PGMPVideoEncoder;
+  manages PCrashReporter;
+
+parent:
+  async PCrashReporter(NativeThreadId tid);
+
 child:
   async PGMPVideoDecoder();
   async PGMPVideoEncoder();

@@ -200,6 +200,9 @@ public:
     void    SetupSecondaryTLS();
     void    SetInSpdyTunnel(bool arg);
 
+    // Returns true if the socket peer has a private (RFC1918-like) address.
+    bool    PeerHasPrivateIP();
+
 private:
     // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.
     enum TCPKeepaliveConfig {
