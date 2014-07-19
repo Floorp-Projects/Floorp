@@ -1156,6 +1156,62 @@ WriteBarrierPost(JSRuntime *rt, ValueSet *set, const Value &key)
 #endif
 }
 
+bool
+MapObject::entries(JSContext *cx, HandleObject obj, JS::AutoValueVector *entries)
+{
+    ValueMap *map = obj->as<MapObject>().getData();
+    if (!map)
+        return false;
+
+    for (ValueMap::Range r = map->all(); !r.empty(); r.popFront()) {
+        if (!entries->append(r.front().key.get()) ||
+            !entries->append(r.front().value))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool
+MapObject::set(JSContext *cx, HandleObject obj, HandleValue k, HandleValue v)
+{
+    ValueMap *map = obj->as<MapObject>().getData();
+    if (!map)
+        return false;
+
+    AutoHashableValueRooter key(cx);
+    if (!key.setValue(cx, k))
+        return false;
+
+    RelocatableValue rval(v);
+    if (!map->put(key, rval)) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
+    WriteBarrierPost(cx->runtime(), map, key.get());
+    return true;
+}
+
+MapObject*
+MapObject::create(JSContext *cx)
+{
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
+    if (!obj)
+        return nullptr;
+
+    ValueMap *map = cx->new_<ValueMap>(cx->runtime());
+    if (!map || !map->init()) {
+        js_delete(map);
+        js_ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    obj->setPrivate(map);
+    return &obj->as<MapObject>();
+}
+
 void
 MapObject::finalize(FreeOp *fop, JSObject *obj)
 {
@@ -1166,17 +1222,9 @@ MapObject::finalize(FreeOp *fop, JSObject *obj)
 bool
 MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
 {
-    Rooted<JSObject*> obj(cx, NewBuiltinClassInstance(cx, &class_));
+    Rooted<MapObject*> obj(cx, MapObject::create(cx));
     if (!obj)
         return false;
-
-    ValueMap *map = cx->new_<ValueMap>(cx->runtime());
-    if (!map || !map->init()) {
-        js_delete(map);
-        js_ReportOutOfMemory(cx);
-        return false;
-    }
-    obj->setPrivate(map);
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.hasDefined(0)) {
@@ -1185,6 +1233,7 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
             return false;
         RootedValue pairVal(cx);
         RootedObject pairObj(cx);
+        ValueMap *map = obj->getData();
         while (true) {
             bool done;
             if (!iter.next(&pairVal, &done))
@@ -1654,6 +1703,58 @@ SetObject::initClass(JSContext *cx, JSObject *obj)
     return proto;
 }
 
+
+bool
+SetObject::keys(JSContext *cx, HandleObject obj, JS::AutoValueVector *keys)
+{
+    ValueSet *set = obj->as<SetObject>().getData();
+    if (!set)
+        return false;
+
+    for (ValueSet::Range r = set->all(); !r.empty(); r.popFront()) {
+        if (!keys->append(r.front().get()))
+            return false;
+    }
+
+    return true;
+}
+
+bool
+SetObject::add(JSContext *cx, HandleObject obj, HandleValue k)
+{
+    ValueSet *set = obj->as<SetObject>().getData();
+    if (!set)
+        return false;
+
+    AutoHashableValueRooter key(cx);
+    if (!key.setValue(cx, k))
+        return false;
+
+    if (!set->put(key)) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
+    WriteBarrierPost(cx->runtime(), set, key.get());
+    return true;
+}
+
+SetObject*
+SetObject::create(JSContext *cx)
+{
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
+    if (!obj)
+        return nullptr;
+
+    ValueSet *set = cx->new_<ValueSet>(cx->runtime());
+    if (!set || !set->init()) {
+        js_delete(set);
+        js_ReportOutOfMemory(cx);
+        return nullptr;
+    }
+    obj->setPrivate(set);
+    return &obj->as<SetObject>();
+}
+
 void
 SetObject::mark(JSTracer *trc, JSObject *obj)
 {
@@ -1675,17 +1776,9 @@ SetObject::finalize(FreeOp *fop, JSObject *obj)
 bool
 SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
 {
-    Rooted<JSObject*> obj(cx, NewBuiltinClassInstance(cx, &class_));
+    Rooted<SetObject*> obj(cx, SetObject::create(cx));
     if (!obj)
         return false;
-
-    ValueSet *set = cx->new_<ValueSet>(cx->runtime());
-    if (!set || !set->init()) {
-        js_delete(set);
-        js_ReportOutOfMemory(cx);
-        return false;
-    }
-    obj->setPrivate(set);
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.hasDefined(0)) {
@@ -1694,6 +1787,7 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
         if (!iter.init(args[0]))
             return false;
         AutoHashableValueRooter key(cx);
+        ValueSet *set = obj->getData();
         while (true) {
             bool done;
             if (!iter.next(&keyVal, &done))
