@@ -5,8 +5,8 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-const OPENH264_PLUGIN_ID       = "openh264-plugin@cisco.com";
-const OPENH264_PREF_BRANCH     = "media.openh264.";
+const OPENH264_PLUGIN_ID       = "gmp-gmpopenh264";
+const OPENH264_PREF_BRANCH     = "media." + OPENH264_PLUGIN_ID + ".";
 const OPENH264_PREF_ENABLED    = OPENH264_PREF_BRANCH + "enabled";
 const OPENH264_PREF_PATH       = OPENH264_PREF_BRANCH + "path";
 const OPENH264_PREF_VERSION    = OPENH264_PREF_BRANCH + "version";
