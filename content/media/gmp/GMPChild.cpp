@@ -47,8 +47,11 @@ GMPChild::Init(const std::string& aPluginPath,
                MessageLoop* aIOLoop,
                IPC::Channel* aChannel)
 {
+#ifdef GMP_CRASHREPORTER_READY
+// See bug 1041226
 #ifdef MOZ_CRASHREPORTER
   SendPCrashReporterConstructor(CrashReporter::CurrentThreadId());
+#endif
 #endif
 #if defined(XP_WIN)
   mozilla::SandboxTarget::Instance()->StartSandbox();
