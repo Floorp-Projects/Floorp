@@ -52,6 +52,8 @@ ClientTiledThebesLayer::ClearCachedResources()
   if (mContentClient) {
     mContentClient->ClearCachedResources();
   }
+  mValidRegion.SetEmpty();
+  mContentClient = nullptr;
 }
 
 void

@@ -47,9 +47,11 @@ GrallocTextureClientOGL::GrallocTextureClientOGL(ISurfaceAllocator* aAllocator,
 GrallocTextureClientOGL::~GrallocTextureClientOGL()
 {
   MOZ_COUNT_DTOR(GrallocTextureClientOGL);
-    if (ShouldDeallocateInDestructor()) {
-    ISurfaceAllocator* allocator = GetAllocator();
+  ISurfaceAllocator* allocator = GetAllocator();
+  if (ShouldDeallocateInDestructor()) {
     allocator->DeallocGrallocBuffer(&mGrallocHandle);
+  } else {
+    allocator->DropGrallocBuffer(&mGrallocHandle);
   }
 }
 
