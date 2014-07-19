@@ -12,6 +12,9 @@ const OPENH264_PREF_PATH       = OPENH264_PREF_BRANCH + "path";
 const OPENH264_PREF_VERSION    = OPENH264_PREF_BRANCH + "version";
 const OPENH264_PREF_LASTUPDATE = OPENH264_PREF_BRANCH + "lastUpdate";
 const OPENH264_PREF_AUTOUPDATE = OPENH264_PREF_BRANCH + "autoupdate";
+const PREF_LOGGING             = OPENH264_PREF_BRANCH + "provider.logging";
+const PREF_LOGGING_LEVEL       = PREF_LOGGING + ".level";
+const PREF_LOGGING_DUMP        = PREF_LOGGING + ".dump";
 
 XPCOMUtils.defineLazyGetter(this, "pluginsBundle",
   () => Services.strings.createBundle("chrome://global/locale/plugins.properties"));
@@ -27,6 +30,8 @@ function run_test() {
 add_task(function* test_notInstalled() {
   Services.prefs.setCharPref(OPENH264_PREF_PATH, "");
   Services.prefs.setBoolPref(OPENH264_PREF_ENABLED, false);
+  Services.prefs.setBoolPref(PREF_LOGGING_DUMP, true);
+  Services.prefs.setIntPref(PREF_LOGGING_LEVEL, 0);
 
   let addons = yield promiseAddonsByIDs([OPENH264_PLUGIN_ID]);
   Assert.equal(addons.length, 1);
@@ -73,13 +78,14 @@ add_task(function* test_notInstalled() {
 add_task(function* test_installed() {
   const TEST_DATE = new Date(2013, 0, 1, 12);
   const TEST_VERSION = "1.2.3.4";
+  const TEST_TIME_SEC = Math.round(TEST_DATE.getTime() / 1000);
 
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("openh264");
   file.append("testDir");
 
   Services.prefs.setBoolPref(OPENH264_PREF_ENABLED, false);
-  Services.prefs.setCharPref(OPENH264_PREF_LASTUPDATE, "" + TEST_DATE.getTime());
+  Services.prefs.setCharPref(OPENH264_PREF_LASTUPDATE, "" + TEST_TIME_SEC);
   Services.prefs.setCharPref(OPENH264_PREF_VERSION, TEST_VERSION);
   Services.prefs.setCharPref(OPENH264_PREF_PATH, file.path);
 
@@ -100,7 +106,7 @@ add_task(function* test_installed() {
   Assert.equal(addon.permissions, AddonManager.PERM_CAN_UPGRADE |
                                   AddonManager.PERM_CAN_ENABLE);
 
-  Assert.equal(addon.updateDate.getTime(), TEST_DATE.getTime());
+  Assert.equal(addon.updateDate.getTime(), TEST_TIME_SEC * 1000);
 
   let mimetypes = addon.pluginMimeTypes;
   Assert.ok(mimetypes);
@@ -163,6 +169,7 @@ add_task(function* test_pluginRegistration() {
 
   let OpenH264Scope = Cu.import("resource://gre/modules/addons/OpenH264Provider.jsm");
   OpenH264Scope.gmpService = MockGMPService;
+  Services.prefs.setBoolPref(OPENH264_PREF_ENABLED, true);
 
   // Check that the OpenH264 plugin gets registered after startup.
   Services.prefs.setCharPref(OPENH264_PREF_PATH, file.path);
@@ -191,4 +198,23 @@ add_task(function* test_pluginRegistration() {
   Services.prefs.setCharPref(OPENH264_PREF_PATH, file2.path);
   Assert.equal(addedPath, file2.path);
   Assert.equal(removedPath, file.path);
+
+  // Disabling OpenH264 should cause unregistration.
+  Services.prefs.setCharPref(OPENH264_PREF_PATH, file.path);
+  clearPaths();
+  Services.prefs.setBoolPref(OPENH264_PREF_ENABLED, false);
+  Assert.equal(addedPath, null);
+  Assert.equal(removedPath, file.path);
+
+  // Restarting with OpenH264 disabled should not cause registration.
+  clearPaths();
+  yield promiseRestartManager();
+  Assert.equal(addedPath, null);
+  Assert.equal(removedPath, null);
+
+  // Re-enabling OpenH264 should cause registration.
+  clearPaths();
+  Services.prefs.setBoolPref(OPENH264_PREF_ENABLED, true);
+  Assert.equal(addedPath, file.path);
+  Assert.equal(removedPath, null);
 });
