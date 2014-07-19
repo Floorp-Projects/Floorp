@@ -479,7 +479,10 @@ WorkerDataStore::Get(JSContext* aCx,
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
-  nsRefPtr<Promise> promise = new Promise(workerPrivate->GlobalScope());
+  nsRefPtr<Promise> promise = Promise::Create(workerPrivate->GlobalScope(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   nsRefPtr<DataStoreGetRunnable> runnable =
     new DataStoreGetRunnable(workerPrivate,
@@ -503,7 +506,10 @@ WorkerDataStore::Put(JSContext* aCx,
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
-  nsRefPtr<Promise> promise = new Promise(workerPrivate->GlobalScope());
+  nsRefPtr<Promise> promise = Promise::Create(workerPrivate->GlobalScope(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   nsRefPtr<DataStorePutRunnable> runnable =
     new DataStorePutRunnable(workerPrivate,
@@ -530,7 +536,10 @@ WorkerDataStore::Add(JSContext* aCx,
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
-  nsRefPtr<Promise> promise = new Promise(workerPrivate->GlobalScope());
+  nsRefPtr<Promise> promise = Promise::Create(workerPrivate->GlobalScope(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   nsRefPtr<DataStoreAddRunnable> runnable =
     new DataStoreAddRunnable(workerPrivate,
@@ -556,7 +565,10 @@ WorkerDataStore::Remove(JSContext* aCx,
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
-  nsRefPtr<Promise> promise = new Promise(workerPrivate->GlobalScope());
+  nsRefPtr<Promise> promise = Promise::Create(workerPrivate->GlobalScope(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   nsRefPtr<DataStoreRemoveRunnable> runnable =
     new DataStoreRemoveRunnable(workerPrivate,
@@ -579,7 +591,10 @@ WorkerDataStore::Clear(JSContext* aCx,
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
-  nsRefPtr<Promise> promise = new Promise(workerPrivate->GlobalScope());
+  nsRefPtr<Promise> promise = Promise::Create(workerPrivate->GlobalScope(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   nsRefPtr<DataStoreClearRunnable> runnable =
     new DataStoreClearRunnable(workerPrivate,
@@ -650,7 +665,10 @@ WorkerDataStore::GetLength(JSContext* aCx, ErrorResult& aRv)
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
-  nsRefPtr<Promise> promise = new Promise(workerPrivate->GlobalScope());
+  nsRefPtr<Promise> promise = Promise::Create(workerPrivate->GlobalScope(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   nsRefPtr<DataStoreGetLengthRunnable> runnable =
     new DataStoreGetLengthRunnable(workerPrivate,

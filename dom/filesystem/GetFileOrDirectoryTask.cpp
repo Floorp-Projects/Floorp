@@ -21,7 +21,8 @@ namespace dom {
 GetFileOrDirectoryTask::GetFileOrDirectoryTask(
   FileSystemBase* aFileSystem,
   const nsAString& aTargetPath,
-  bool aDirectoryOnly)
+  bool aDirectoryOnly,
+  ErrorResult& aRv)
   : FileSystemTaskBase(aFileSystem)
   , mTargetRealPath(aTargetPath)
   , mIsDirectory(aDirectoryOnly)
@@ -33,7 +34,7 @@ GetFileOrDirectoryTask::GetFileOrDirectoryTask(
   if (!globalObject) {
     return;
   }
-  mPromise = new Promise(globalObject);
+  mPromise = Promise::Create(globalObject, aRv);
 }
 
 GetFileOrDirectoryTask::GetFileOrDirectoryTask(
