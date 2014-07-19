@@ -132,39 +132,49 @@ typedef (object or DOMString) AlgorithmIdentifier;
 
 [Pref="dom.webcrypto.enabled"]
 interface SubtleCrypto {
+  [Throws]
   Promise encrypt(AlgorithmIdentifier algorithm,
                   CryptoKey key,
                   CryptoOperationData data);
+  [Throws]
   Promise decrypt(AlgorithmIdentifier algorithm,
                   CryptoKey key,
                   CryptoOperationData data);
+  [Throws]
   Promise sign(AlgorithmIdentifier algorithm,
                CryptoKey key,
                CryptoOperationData data);
+  [Throws]
   Promise verify(AlgorithmIdentifier algorithm,
                  CryptoKey key,
                  CryptoOperationData signature,
                  CryptoOperationData data);
+  [Throws]
   Promise digest(AlgorithmIdentifier algorithm,
                  CryptoOperationData data);
 
+  [Throws]
   Promise generateKey(AlgorithmIdentifier algorithm,
                       boolean extractable,
                       sequence<KeyUsage> keyUsages );
+  [Throws]
   Promise deriveKey(AlgorithmIdentifier algorithm,
                     CryptoKey baseKey,
                     AlgorithmIdentifier derivedKeyType,
                     boolean extractable,
                     sequence<KeyUsage> keyUsages );
+  [Throws]
   Promise deriveBits(AlgorithmIdentifier algorithm,
                      CryptoKey baseKey,
                      unsigned long length);
 
+  [Throws]
   Promise importKey(KeyFormat format,
                     KeyData keyData,
                     AlgorithmIdentifier algorithm,
                     boolean extractable,
                     sequence<KeyUsage> keyUsages );
+  [Throws]
   Promise exportKey(KeyFormat format, CryptoKey key);
 };
 
