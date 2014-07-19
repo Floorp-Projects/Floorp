@@ -1718,3 +1718,92 @@ TestArray.addTest(
   }
 );
 
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "AES-KW known answer",
+  function () {
+    var that = this;
+
+    function doWrap(keys) {
+      wrapKey = keys[0];
+      originalKey = keys[1];
+      return crypto.subtle.wrapKey("raw", originalKey, wrapKey, "AES-KW");
+    }
+
+    Promise.all([
+      crypto.subtle.importKey("jwk", tv.aes_kw.wrapping_key,
+                              "AES-KW", false, ['wrapKey']),
+      crypto.subtle.importKey("jwk", tv.aes_kw.key,
+                              "AES-GCM", true, ['encrypt'])
+    ])
+      .then(doWrap)
+      .then(
+        memcmp_complete(that, tv.aes_kw.wrapped_key),
+        error(that)
+      );
+
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "AES-KW unwrap failure on tampered key data",
+  function () {
+    var that = this;
+    var tamperedWrappedKey = new Uint8Array(tv.aes_kw.wrapped_key);
+    tamperedWrappedKey[5] ^= 0xFF;
+
+    function doUnwrap(wrapKey) {
+      return crypto.subtle.unwrapKey("raw", tamperedWrappedKey, wrapKey,
+                                     "AES-KW", "AES-GCM",
+                                     true, ['encrypt', 'decrypt']);
+    }
+
+    crypto.subtle.importKey("jwk", tv.aes_kw.wrapping_key,
+                              "AES-KW", false, ['unwrapKey'])
+      .then(doUnwrap)
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "AES-KW wrap/unwrap round-trip",
+  function () {
+    var that = this;
+    var genAlg = { name: "HMAC", hash: "SHA-384", length: 512 };
+    var wrapKey, originalKey, originalKeyJwk;
+
+    function doExport(k) {
+      return crypto.subtle.exportKey("jwk", k);
+    }
+    function doWrap() {
+      return crypto.subtle.wrapKey("raw", originalKey, wrapKey, "AES-KW");
+    }
+    function doUnwrap(wrappedKey) {
+      return crypto.subtle.unwrapKey("raw", wrappedKey, wrapKey,
+                                     "AES-KW", { name: "HMAC", hash: "SHA-384"},
+                                     true, ['sign', 'verify']);
+    }
+
+    Promise.all([
+      crypto.subtle.importKey("jwk", tv.aes_kw.wrapping_key,
+                              "AES-KW", false, ['wrapKey','unwrapKey'])
+        .then(function(x) { console.log("wrapKey"); wrapKey = x; }),
+      crypto.subtle.generateKey(genAlg, true, ['sign'])
+        .then(function(x) { console.log("originalKey"); originalKey = x; return x; })
+        .then(doExport)
+        .then(function(x) { originalKeyJwk = x; })
+    ])
+      .then(doWrap)
+      .then(doUnwrap)
+      .then(doExport)
+      .then(
+        complete(that, function(x) {
+          return exists(x.k) && x.k == originalKeyJwk.k;
+        }),
+        error(that)
+      );
+  }
+);
+

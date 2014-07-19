@@ -16,6 +16,7 @@
 #define WEBCRYPTO_ALG_AES_CBC       "AES-CBC"
 #define WEBCRYPTO_ALG_AES_CTR       "AES-CTR"
 #define WEBCRYPTO_ALG_AES_GCM       "AES-GCM"
+#define WEBCRYPTO_ALG_AES_KW        "AES-KW"
 #define WEBCRYPTO_ALG_SHA1          "SHA-1"
 #define WEBCRYPTO_ALG_SHA256        "SHA-256"
 #define WEBCRYPTO_ALG_SHA384        "SHA-384"
@@ -62,6 +63,9 @@
 #define JWK_ALG_A128GCM             "A128GCM"  // GCM
 #define JWK_ALG_A192GCM             "A192GCM"
 #define JWK_ALG_A256GCM             "A256GCM"
+#define JWK_ALG_A128KW              "A128KW"   // KW
+#define JWK_ALG_A192KW              "A192KW"
+#define JWK_ALG_A256KW              "A256KW"
 #define JWK_ALG_HS1                 "HS1"      // HMAC
 #define JWK_ALG_HS256               "HS256"
 #define JWK_ALG_HS384               "HS384"
@@ -154,6 +158,8 @@ MapAlgorithmNameToMechanism(const nsString& aName)
     mechanism = CKM_AES_CTR;
   } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM)) {
     mechanism = CKM_AES_GCM;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_AES_KW)) {
+    mechanism = CKM_NSS_AES_KEY_WRAP;
   } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA1)) {
     mechanism = CKM_SHA_1;
   } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
