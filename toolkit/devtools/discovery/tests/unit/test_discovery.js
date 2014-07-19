@@ -69,7 +69,13 @@ TestTransport.prototype = {
 
 // Use TestTransport instead of the usual Transport
 discovery._factories.Transport = TestTransport;
-discovery.device.name = "test-device";
+
+// Ignore name generation on b2g and force a fixed value
+Object.defineProperty(discovery.device, "name", {
+  get: function() {
+    return "test-device";
+  }
+});
 
 function run_test() {
   run_next_test();
