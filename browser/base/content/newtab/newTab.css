@@ -83,7 +83,7 @@ input[type=button] {
 }
 
 .newtab-side-margin {
-  min-width: 10px;
+  min-width: 16px;
   -moz-box-flex: 1;
 }
 
@@ -108,9 +108,9 @@ input[type=button] {
 /* CELLS */
 .newtab-cell {
   display: -moz-box;
-  height: 180px;
-  margin: 16px 10px;
-  width: 290px;
+  height: 150px;
+  margin: 16px;
+  width: 243px;
 }
 
 /* SITES */
@@ -141,18 +141,28 @@ input[type=button] {
   bottom: 0;
 }
 
+.newtab-thumbnail {
+  opacity: .8;
+  transition: opacity 100ms ease-out;
+}
+
+.newtab-thumbnail[dragged],
+.newtab-link:-moz-focusring > .newtab-thumbnail,
+.newtab-cell:not([ignorehover]) > .newtab-site:hover > .newtab-link > .newtab-thumbnail {
+  opacity: 1;
+}
+
 /* TITLES */
 .newtab-title {
   bottom: -21px;
-  font-size: 13px;
-  left: 0;
-  overflow: hidden;
-  padding-top: 14px;
   position: absolute;
+  left: 0;
+  line-height: 21px;
   right: 0;
-  text-align: center;
-  text-overflow: ellipsis;
+  text-align: start;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* CONTROLS */
@@ -276,7 +286,7 @@ input[type=button] {
 }
 
 #newtab-search-text {
-  height: 38px;
+  height: 32px;
   -moz-box-flex: 1;
 
   padding: 0 8px;
@@ -300,8 +310,7 @@ input[type=button] {
 }
 
 #newtab-search-submit {
-  height: 38px;
-  font-size: 13px !important;
+  height: 32px;
 
   -moz-margin-start: -1px;
   background: linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1)) padding-box;
