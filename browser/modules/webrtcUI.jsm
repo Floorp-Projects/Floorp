@@ -13,6 +13,8 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+const INDICATOR_CHROME_URI = "chrome://browser/content/webrtcIndicator.xul";
+
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
@@ -65,6 +67,20 @@ this.webrtcUI = {
       });
     }
     return activeStreams;
+  },
+
+  showSharingDoorhanger: function(aActiveStream, aType) {
+    let browserWindow = aActiveStream.browser.ownerDocument.defaultView;
+    if (aActiveStream.tab) {
+      browserWindow.gBrowser.selectedTab = aActiveStream.tab;
+    } else {
+      aActiveStream.browser.focus();
+    }
+    browserWindow.focus();
+    let PopupNotifications = browserWindow.PopupNotifications;
+    let notif = PopupNotifications.getNotification("webRTC-sharing" + aType,
+                                                   aActiveStream.browser);
+    notif.reshow();
   },
 
   updateMainActionLabel: function(aMenuList) {
@@ -402,6 +418,8 @@ function prompt(aContentWindow, aCallID, aAudio, aVideo, aDevices, aSecure) {
                                     anchorId, mainAction, secondaryActions, options);
 }
 
+var gIndicatorWindow = null;
+
 function updateIndicators() {
   let contentWindowSupportsArray = MediaManagerService.activeMediaCaptureWindows;
   let count = contentWindowSupportsArray.Count();
@@ -431,6 +449,19 @@ function updateIndicators() {
       webrtcUI.showScreenSharingIndicator = "Window";
 
     showBrowserSpecificIndicator(getBrowserForWindow(contentWindow));
+  }
+
+  if (webrtcUI.showGlobalIndicator) {
+    if (!gIndicatorWindow) {
+      const features = "chrome,dialog=yes,titlebar=no,popup=yes";
+      gIndicatorWindow = Services.ww.openWindow(null, INDICATOR_CHROME_URI, "_blank",
+                                                features, []);
+    } else {
+      gIndicatorWindow.updateIndicatorState();
+    }
+  } else if (gIndicatorWindow) {
+    gIndicatorWindow.close();
+    gIndicatorWindow = null;
   }
 }
 
