@@ -34,6 +34,9 @@ this.webrtcUI = {
   },
 
   showGlobalIndicator: false,
+  showCameraIndicator: false,
+  showMicrophoneIndicator: false,
+  showScreenSharingIndicator: "", // either "Screen" or "Window"
 
   get activeStreams() {
     let contentWindowSupportsArray = MediaManagerService.activeMediaCaptureWindows;
@@ -390,15 +393,35 @@ function prompt(aContentWindow, aCallID, aAudio, aVideo, aDevices, aSecure) {
 }
 
 function updateIndicators() {
-  webrtcUI.showGlobalIndicator =
-    MediaManagerService.activeMediaCaptureWindows.Count() > 0;
+  let contentWindowSupportsArray = MediaManagerService.activeMediaCaptureWindows;
+  let count = contentWindowSupportsArray.Count();
+
+  webrtcUI.showGlobalIndicator = count > 0;
 
   let e = Services.wm.getEnumerator("navigator:browser");
   while (e.hasMoreElements())
     e.getNext().WebrtcIndicator.updateButton();
 
-  for (let {browser: browser} of webrtcUI.activeStreams)
-    showBrowserSpecificIndicator(browser);
+  webrtcUI.showCameraIndicator = false;
+  webrtcUI.showMicrophoneIndicator = false;
+  webrtcUI.showScreenSharingIndicator = "";
+
+  for (let i = 0; i < count; ++i) {
+    let contentWindow = contentWindowSupportsArray.GetElementAt(i);
+    let camera = {}, microphone = {}, screen = {}, window = {};
+    MediaManagerService.mediaCaptureWindowState(contentWindow, camera,
+                                                microphone, screen, window);
+    if (camera.value)
+      webrtcUI.showCameraIndicator = true;
+    if (microphone.value)
+      webrtcUI.showMicrophoneIndicator = true;
+    if (screen.value)
+      webrtcUI.showScreenSharingIndicator = "Screen";
+    else if (window.value && !webrtcUI.showScreenSharingIndicator)
+      webrtcUI.showScreenSharingIndicator = "Window";
+
+    showBrowserSpecificIndicator(getBrowserForWindow(contentWindow));
+  }
 }
 
 function showBrowserSpecificIndicator(aBrowser) {
