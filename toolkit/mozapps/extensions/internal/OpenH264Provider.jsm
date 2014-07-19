@@ -19,8 +19,8 @@ Cu.import("resource://gre/modules/osfile.jsm");
 const URI_EXTENSION_STRINGS    = "chrome://mozapps/locale/extensions/extensions.properties";
 const STRING_TYPE_NAME         = "type.%ID%.name";
 
-const OPENH264_PLUGIN_ID       = "openh264-plugin@cisco.com";
-const OPENH264_PREF_BRANCH     = "media.openh264.";
+const OPENH264_PLUGIN_ID       = "gmp-gmpopenh264";
+const OPENH264_PREF_BRANCH     = "media." + OPENH264_PLUGIN_ID + ".";
 const OPENH264_PREF_ENABLED    = "enabled";
 const OPENH264_PREF_PATH       = "path";
 const OPENH264_PREF_VERSION    = "version";
