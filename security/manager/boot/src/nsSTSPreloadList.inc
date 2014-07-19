@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1416045990752000);
+const PRTime gPreloadListExpirationTime = INT64_C(1416651005379000);
 
 class nsSTSPreload
 {
@@ -97,6 +97,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "feedbin.com", false },
   { "fiken.no", true },
   { "fj.simple.com", false },
+  { "flynn.io", true },
   { "forum.linode.com", false },
   { "forum.quantifiedself.com", true },
   { "gernert-server.de", true },
@@ -122,6 +123,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "imouto.my", false },
   { "inertianetworks.com", true },
   { "itriskltd.com", true },
+  { "jackyyf.com", false },
   { "keeperapp.com", true },
   { "keepersecurity.com", true },
   { "keyerror.com", true },
@@ -205,7 +207,9 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "securityheaders.com", true },
   { "seifried.org", true },
   { "shodan.io", true },
+  { "silentcircle.com", true },
   { "simbolo.co.uk", false },
+  { "simple.com", false },
   { "sites.google.com", true },
   { "skydrive.live.com", false },
   { "spreadsheets.google.com", true },
@@ -271,6 +275,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.gov.uk", false },
   { "www.grc.com", false },
   { "www.heliosnet.com", true },
+  { "www.intercom.io", false },
   { "www.irccloud.com", false },
   { "www.linode.com", false },
   { "www.lookout.com", false },
