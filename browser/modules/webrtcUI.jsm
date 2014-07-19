@@ -13,8 +13,6 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const INDICATOR_CHROME_URI = "chrome://browser/content/webrtcIndicator.xul";
-
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
@@ -36,26 +34,13 @@ this.webrtcUI = {
   },
 
   showGlobalIndicator: false,
-  showCameraIndicator: false,
-  showMicrophoneIndicator: false,
-  showScreenSharingIndicator: "", // either "Screen" or "Window"
 
-  // The boolean parameters indicate which streams should be included in the result.
-  getActiveStreams: function(aCamera, aMicrophone, aScreen) {
+  get activeStreams() {
     let contentWindowSupportsArray = MediaManagerService.activeMediaCaptureWindows;
     let count = contentWindowSupportsArray.Count();
     let activeStreams = [];
     for (let i = 0; i < count; i++) {
       let contentWindow = contentWindowSupportsArray.GetElementAt(i);
-
-      let camera = {}, microphone = {}, screen = {}, window = {};
-      MediaManagerService.mediaCaptureWindowState(contentWindow, camera,
-                                                  microphone, screen, window);
-      if (!(aCamera && camera.value ||
-            aMicrophone && microphone.value ||
-            aScreen && (screen.value || window.value)))
-        continue;
-
       let browser = getBrowserForWindow(contentWindow);
       let browserWindow = browser.ownerDocument.defaultView;
       let tab = browserWindow.gBrowser &&
@@ -67,20 +52,6 @@ this.webrtcUI = {
       });
     }
     return activeStreams;
-  },
-
-  showSharingDoorhanger: function(aActiveStream, aType) {
-    let browserWindow = aActiveStream.browser.ownerDocument.defaultView;
-    if (aActiveStream.tab) {
-      browserWindow.gBrowser.selectedTab = aActiveStream.tab;
-    } else {
-      aActiveStream.browser.focus();
-    }
-    browserWindow.focus();
-    let PopupNotifications = browserWindow.PopupNotifications;
-    let notif = PopupNotifications.getNotification("webRTC-sharing" + aType,
-                                                   aActiveStream.browser);
-    notif.reshow();
   },
 
   updateMainActionLabel: function(aMenuList) {
@@ -418,51 +389,16 @@ function prompt(aContentWindow, aCallID, aAudio, aVideo, aDevices, aSecure) {
                                     anchorId, mainAction, secondaryActions, options);
 }
 
-var gIndicatorWindow = null;
-
 function updateIndicators() {
-  let contentWindowSupportsArray = MediaManagerService.activeMediaCaptureWindows;
-  let count = contentWindowSupportsArray.Count();
-
-  webrtcUI.showGlobalIndicator = count > 0;
+  webrtcUI.showGlobalIndicator =
+    MediaManagerService.activeMediaCaptureWindows.Count() > 0;
 
   let e = Services.wm.getEnumerator("navigator:browser");
   while (e.hasMoreElements())
     e.getNext().WebrtcIndicator.updateButton();
 
-  webrtcUI.showCameraIndicator = false;
-  webrtcUI.showMicrophoneIndicator = false;
-  webrtcUI.showScreenSharingIndicator = "";
-
-  for (let i = 0; i < count; ++i) {
-    let contentWindow = contentWindowSupportsArray.GetElementAt(i);
-    let camera = {}, microphone = {}, screen = {}, window = {};
-    MediaManagerService.mediaCaptureWindowState(contentWindow, camera,
-                                                microphone, screen, window);
-    if (camera.value)
-      webrtcUI.showCameraIndicator = true;
-    if (microphone.value)
-      webrtcUI.showMicrophoneIndicator = true;
-    if (screen.value)
-      webrtcUI.showScreenSharingIndicator = "Screen";
-    else if (window.value && !webrtcUI.showScreenSharingIndicator)
-      webrtcUI.showScreenSharingIndicator = "Window";
-
-    showBrowserSpecificIndicator(getBrowserForWindow(contentWindow));
-  }
-
-  if (webrtcUI.showGlobalIndicator) {
-    if (!gIndicatorWindow) {
-      const features = "chrome,dialog=yes,titlebar=no,popup=yes";
-      gIndicatorWindow = Services.ww.openWindow(null, INDICATOR_CHROME_URI, "_blank",
-                                                features, []);
-    } else {
-      gIndicatorWindow.updateIndicatorState();
-    }
-  } else if (gIndicatorWindow) {
-    gIndicatorWindow.close();
-    gIndicatorWindow = null;
-  }
+  for (let {browser: browser} of webrtcUI.activeStreams)
+    showBrowserSpecificIndicator(browser);
 }
 
 function showBrowserSpecificIndicator(aBrowser) {
