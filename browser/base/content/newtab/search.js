@@ -46,11 +46,6 @@ let gSearch = {
     this._send("ManageEngines");
   },
 
-  setWidth: function (width) {
-    this._nodes.form.style.width = width + "px";
-    this._nodes.form.style.maxWidth = width + "px";
-  },
-
   handleEvent: function (event) {
     this["on" + event.detail.type](event.detail.data);
   },
