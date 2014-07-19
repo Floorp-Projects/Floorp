@@ -6,13 +6,8 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu, Constructor: CC } =
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
-
-#ifndef MOZ_B2G
-#ifdef XP_MACOSX
 Cu.import("resource://gre/modules/osfile.jsm");
-#endif
-#endif
+Cu.import("resource://gre/modules/Promise.jsm");
 
 this.EXPORTED_SYMBOLS = ["WebappOSUtils"];
 
