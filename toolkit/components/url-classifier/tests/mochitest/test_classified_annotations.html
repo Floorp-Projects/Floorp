@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the URI Classifier</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
+
+// Add some URLs to the tracking database
+var testData = "tracking.example.com/";
+var testUpdate =
+  "n:1000\ni:test-track-simple\nad:1\n" +
+  "a:524:32:" + testData.length + "\n" +
+  testData;
+
+var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
+                .getService(Ci.nsIUrlClassifierDBService);
+
+function doUpdate(update) {
+  var listener = {
+    QueryInterface: function(iid)
+    {
+      if (iid.equals(Ci.nsISupports) ||
+          iid.equals(Ci.nsIUrlClassifierUpdateObserver))
+        return this;
+
+      throw Cr.NS_ERROR_NO_INTERFACE;
+    },
+    updateUrlRequested: function(url) { },
+    streamFinished: function(status) { },
+    updateError: function(errorCode) {
+      ok(false, "Couldn't update classifier.");
+      // Abort test.
+      SimpleTest.finish();
+    },
+    updateSuccess: function(requestedTimeout) {
+      SpecialPowers.pushPrefEnv(
+        {"set" : [["privacy.trackingprotection.enabled", true]]},
+        function loadTestFrame() {
+          document.getElementById("testFrame").src =
+            "classifiedAnnotatedFrame.html";
+        }
+      );
+    }
+  };
+
+  dbService.beginUpdate(listener, "test-track-simple", "");
+  dbService.beginStream("", "");
+  dbService.updateStream(update);
+  dbService.finishStream();
+  dbService.finishUpdate();
+}
+
+SpecialPowers.pushPrefEnv(
+  {"set" : [["urlclassifier.trackingTable", "test-track-simple"]]},
+  function() { doUpdate(testUpdate); });
+
+// Expected finish() call is in "classifiedAnnotatedFrame.html".
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</pre>
+<iframe id="testFrame" width="100%" height="100%" onload=""></iframe>
+</body>
+</html>
