@@ -44,6 +44,14 @@ AesKeyAlgorithm::ToJwkAlg() const
     }
   }
 
+  if (mName.EqualsLiteral(WEBCRYPTO_ALG_AES_KW)) {
+    switch (mLength) {
+      case 128: return NS_LITERAL_STRING(JWK_ALG_A128KW);
+      case 192: return NS_LITERAL_STRING(JWK_ALG_A192KW);
+      case 256: return NS_LITERAL_STRING(JWK_ALG_A256KW);
+    }
+  }
+
   return nsString();
 }
 
