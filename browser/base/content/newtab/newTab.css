@@ -83,7 +83,7 @@ input[type=button] {
 }
 
 .newtab-side-margin {
-  min-width: 16px;
+  min-width: 10px;
   -moz-box-flex: 1;
 }
 
@@ -108,9 +108,9 @@ input[type=button] {
 /* CELLS */
 .newtab-cell {
   display: -moz-box;
-  height: 150px;
-  margin: 16px;
-  width: 243px;
+  height: 180px;
+  margin: 16px 10px;
+  width: 290px;
 }
 
 /* SITES */
@@ -141,28 +141,18 @@ input[type=button] {
   bottom: 0;
 }
 
-.newtab-thumbnail {
-  opacity: .8;
-  transition: opacity 100ms ease-out;
-}
-
-.newtab-thumbnail[dragged],
-.newtab-link:-moz-focusring > .newtab-thumbnail,
-.newtab-cell:not([ignorehover]) > .newtab-site:hover > .newtab-link > .newtab-thumbnail {
-  opacity: 1;
-}
-
 /* TITLES */
 .newtab-title {
   bottom: -21px;
-  position: absolute;
+  font-size: 13px;
   left: 0;
-  line-height: 21px;
-  right: 0;
-  text-align: start;
-  white-space: nowrap;
   overflow: hidden;
+  padding-top: 14px;
+  position: absolute;
+  right: 0;
+  text-align: center;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* CONTROLS */
@@ -286,7 +276,7 @@ input[type=button] {
 }
 
 #newtab-search-text {
-  height: 32px;
+  height: 38px;
   -moz-box-flex: 1;
 
   padding: 0 8px;
@@ -310,7 +300,8 @@ input[type=button] {
 }
 
 #newtab-search-submit {
-  height: 32px;
+  height: 38px;
+  font-size: 13px !important;
 
   -moz-margin-start: -1px;
   background: linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1)) padding-box;
