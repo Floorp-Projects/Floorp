@@ -156,21 +156,21 @@ SECStatus chainValidationCallback(void* state, const CERTCertList* certList,
 }
 
 static Result
-BuildCertChainForOneKeyUsage(TrustDomain& trustDomain, CERTCertificate* cert,
+BuildCertChainForOneKeyUsage(TrustDomain& trustDomain, InputBuffer certDER,
                              PRTime time, KeyUsage ku1, KeyUsage ku2,
                              KeyUsage ku3, KeyPurposeId eku,
                              const CertPolicyId& requiredPolicy,
-                             const SECItem* stapledOCSPResponse)
+                             const InputBuffer* stapledOCSPResponse)
 {
-  Result rv = BuildCertChain(trustDomain, cert->derCert, time,
+  Result rv = BuildCertChain(trustDomain, certDER, time,
                              EndEntityOrCA::MustBeEndEntity, ku1,
                              eku, requiredPolicy, stapledOCSPResponse);
   if (rv == Result::ERROR_INADEQUATE_KEY_USAGE) {
-    rv = BuildCertChain(trustDomain, cert->derCert, time,
+    rv = BuildCertChain(trustDomain, certDER, time,
                         EndEntityOrCA::MustBeEndEntity, ku2,
                         eku, requiredPolicy, stapledOCSPResponse);
     if (rv == Result::ERROR_INADEQUATE_KEY_USAGE) {
-      rv = BuildCertChain(trustDomain, cert->derCert, time,
+      rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity, ku3,
                           eku, requiredPolicy, stapledOCSPResponse);
       if (rv != Success) {
@@ -185,7 +185,7 @@ SECStatus
 CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                          PRTime time, void* pinArg, const char* hostname,
                          const Flags flags,
-            /*optional*/ const SECItem* stapledOCSPResponse,
+            /*optional*/ const SECItem* stapledOCSPResponseSECItem,
         /*optional out*/ ScopedCERTCertList* builtChain,
         /*optional out*/ SECOidTag* evOidPolicy)
 {
@@ -207,6 +207,15 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
     return SECFailure;
   }
 
+  Result rv;
+
+  InputBuffer certDER;
+  rv = certDER.Init(cert->derCert.data, cert->derCert.len);
+  if (rv != Success) {
+    PR_SetError(MapResultToPRErrorCode(rv), 0);
+    return SECFailure;
+  }
+
   ChainValidationCallbackState callbackState = {
     hostname, mPinningEnforcementLevel, usage, time
   };
@@ -223,7 +232,18 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
   ocsp_get_config ocspGETConfig = mOCSPGETEnabled ? ocsp_get_enabled
                                                   : ocsp_get_disabled;
 
-  Result rv;
+  InputBuffer stapledOCSPResponseInputBuffer;
+  const InputBuffer* stapledOCSPResponse = nullptr;
+  if (stapledOCSPResponseSECItem) {
+    rv = stapledOCSPResponseInputBuffer.Init(stapledOCSPResponseSECItem->data,
+                                             stapledOCSPResponseSECItem->len);
+    if (rv != Success) {
+      // The stapled OCSP response was too big.
+      PR_SetError(SEC_ERROR_OCSP_MALFORMED_RESPONSE, 0);
+      return SECFailure;
+    }
+    stapledOCSPResponse = &stapledOCSPResponseInputBuffer;
+  }
 
   switch (usage) {
     case certificateUsageSSLClient: {
@@ -232,7 +252,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       NSSCertDBTrustDomain trustDomain(trustEmail, ocspFetching, mOCSPCache,
                                        pinArg, ocspGETConfig, nullptr,
                                        builtChain);
-      rv = BuildCertChain(trustDomain, cert->derCert, time,
+      rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::digitalSignature,
                           KeyPurposeId::id_kp_clientAuth,
@@ -258,7 +278,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                         : NSSCertDBTrustDomain::FetchOCSPForEV,
                       mOCSPCache, pinArg, ocspGETConfig,
                       &callbackContainer, builtChain);
-        rv = BuildCertChainForOneKeyUsage(trustDomain, cert, time,
+        rv = BuildCertChainForOneKeyUsage(trustDomain, certDER, time,
                                           KeyUsage::digitalSignature,// (EC)DHE
                                           KeyUsage::keyEncipherment, // RSA
                                           KeyUsage::keyAgreement,    // (EC)DH
@@ -282,7 +302,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       NSSCertDBTrustDomain trustDomain(trustSSL, ocspFetching, mOCSPCache,
                                        pinArg, ocspGETConfig, &callbackContainer,
                                        builtChain);
-      rv = BuildCertChainForOneKeyUsage(trustDomain, cert, time,
+      rv = BuildCertChainForOneKeyUsage(trustDomain, certDER, time,
                                         KeyUsage::digitalSignature, // (EC)DHE
                                         KeyUsage::keyEncipherment, // RSA
                                         KeyUsage::keyAgreement, // (EC)DH
@@ -296,7 +316,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       NSSCertDBTrustDomain trustDomain(trustSSL, ocspFetching, mOCSPCache,
                                        pinArg, ocspGETConfig, nullptr,
                                        builtChain);
-      rv = BuildCertChain(trustDomain, cert->derCert, time,
+      rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeCA, KeyUsage::keyCertSign,
                           KeyPurposeId::id_kp_serverAuth,
                           CertPolicyId::anyPolicy, stapledOCSPResponse);
@@ -307,7 +327,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       NSSCertDBTrustDomain trustDomain(trustEmail, ocspFetching, mOCSPCache,
                                        pinArg, ocspGETConfig, nullptr,
                                        builtChain);
-      rv = BuildCertChain(trustDomain, cert->derCert, time,
+      rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::digitalSignature,
                           KeyPurposeId::id_kp_emailProtection,
@@ -322,13 +342,13 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       NSSCertDBTrustDomain trustDomain(trustEmail, ocspFetching, mOCSPCache,
                                        pinArg, ocspGETConfig, nullptr,
                                        builtChain);
-      rv = BuildCertChain(trustDomain, cert->derCert, time,
+      rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::keyEncipherment, // RSA
                           KeyPurposeId::id_kp_emailProtection,
                           CertPolicyId::anyPolicy, stapledOCSPResponse);
       if (rv == Result::ERROR_INADEQUATE_KEY_USAGE) {
-        rv = BuildCertChain(trustDomain, cert->derCert, time,
+        rv = BuildCertChain(trustDomain, certDER, time,
                             EndEntityOrCA::MustBeEndEntity,
                             KeyUsage::keyAgreement, // ECDH/DH
                             KeyPurposeId::id_kp_emailProtection,
@@ -341,7 +361,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       NSSCertDBTrustDomain trustDomain(trustObjectSigning, ocspFetching,
                                        mOCSPCache, pinArg, ocspGETConfig,
                                        nullptr, builtChain);
-      rv = BuildCertChain(trustDomain, cert->derCert, time,
+      rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::digitalSignature,
                           KeyPurposeId::id_kp_codeSigning,
@@ -370,14 +390,14 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
 
       NSSCertDBTrustDomain sslTrust(trustSSL, ocspFetching, mOCSPCache, pinArg,
                                     ocspGETConfig, nullptr, builtChain);
-      rv = BuildCertChain(sslTrust, cert->derCert, time, endEntityOrCA,
+      rv = BuildCertChain(sslTrust, certDER, time, endEntityOrCA,
                           keyUsage, eku, CertPolicyId::anyPolicy,
                           stapledOCSPResponse);
       if (rv == Result::ERROR_UNKNOWN_ISSUER) {
         NSSCertDBTrustDomain emailTrust(trustEmail, ocspFetching, mOCSPCache,
                                         pinArg, ocspGETConfig, nullptr,
                                         builtChain);
-        rv = BuildCertChain(emailTrust, cert->derCert, time, endEntityOrCA,
+        rv = BuildCertChain(emailTrust, certDER, time, endEntityOrCA,
                             keyUsage, eku, CertPolicyId::anyPolicy,
                             stapledOCSPResponse);
         if (rv == Result::ERROR_UNKNOWN_ISSUER) {
@@ -385,7 +405,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                                   ocspFetching, mOCSPCache,
                                                   pinArg, ocspGETConfig,
                                                   nullptr, builtChain);
-          rv = BuildCertChain(objectSigningTrust, cert->derCert, time,
+          rv = BuildCertChain(objectSigningTrust, certDER, time,
                               endEntityOrCA, keyUsage, eku,
                               CertPolicyId::anyPolicy, stapledOCSPResponse);
         }

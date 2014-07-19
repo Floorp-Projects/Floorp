@@ -10,6 +10,7 @@
 #include "prprf.h"
 #include "CertVerifier.h"
 #include "ExtendedValidation.h"
+#include "pkix/pkixnss.h"
 #include "pkix/pkixtypes.h"
 #include "pkix/ScopedPtr.h"
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
@@ -1525,8 +1526,8 @@ ConstructCERTCertListFromReversedDERArray(
 
   size_t numCerts = certArray.GetLength();
   for (size_t i = 0; i < numCerts; ++i) {
-    SECItem* certDER(const_cast<SECItem*>(certArray.GetDER(i)));
-    ScopedCERTCertificate cert(CERT_NewTempCertificate(certDB, certDER,
+    SECItem certDER(UnsafeMapInputBufferToSECItem(*certArray.GetDER(i)));
+    ScopedCERTCertificate cert(CERT_NewTempCertificate(certDB, &certDER,
                                                        nullptr, false, true));
     if (!cert) {
       return SECFailure;

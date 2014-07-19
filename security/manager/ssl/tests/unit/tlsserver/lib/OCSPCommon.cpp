@@ -56,7 +56,21 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
     PrintPRError("CERT_FindCertIssuer failed");
     return nullptr;
   }
-  CertID certID(cert->derIssuer, issuerCert->derPublicKey, cert->serialNumber);
+  InputBuffer issuer;
+  if (issuer.Init(cert->derIssuer.data, cert->derIssuer.len) != Success) {
+    return nullptr;
+  }
+  InputBuffer issuerPublicKey;
+  if (issuerPublicKey.Init(issuerCert->derPublicKey.data,
+                           issuerCert->derPublicKey.len) != Success) {
+    return nullptr;
+  }
+  InputBuffer serialNumber;
+  if (serialNumber.Init(cert->serialNumber.data,
+                        cert->serialNumber.len) != Success) {
+    return nullptr;
+  }
+  CertID certID(issuer, issuerPublicKey, serialNumber);
   OCSPResponseContext context(aArena, certID, now);
 
   mozilla::ScopedCERTCertificate signerCert;

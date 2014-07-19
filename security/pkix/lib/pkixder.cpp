@@ -289,7 +289,7 @@ SignedData(Input& input, /*out*/ Input& tbs,
     return rv;
   }
 
-  rv = input.GetSECItem(siBuffer, mark, signedData.data);
+  rv = input.GetInputBuffer(mark, signedData.data);
   if (rv != Success) {
     return rv;
   }
@@ -299,27 +299,38 @@ SignedData(Input& input, /*out*/ Input& tbs,
     return rv;
   }
 
-  rv = ExpectTagAndGetValue(input, BIT_STRING, signedData.signature);
+  rv = BitStringWithNoUnusedBits(input, signedData.signature);
+  if (rv == Result::ERROR_BAD_DER) {
+    rv = Result::ERROR_BAD_SIGNATURE;
+  }
+  return rv;
+}
+
+Result
+BitStringWithNoUnusedBits(Input& input, /*out*/ InputBuffer& value)
+{
+  Input valueWithUnusedBits;
+  Result rv = ExpectTagAndGetValue(input, BIT_STRING, valueWithUnusedBits);
   if (rv != Success) {
     return rv;
   }
-  if (signedData.signature.len == 0) {
-    return Result::ERROR_BAD_SIGNATURE;
-  }
-  unsigned int unusedBitsAtEnd = signedData.signature.data[0];
-  // XXX: Really the constraint should be that unusedBitsAtEnd must be less
-  // than 7. But, we suspect there are no real-world OCSP responses or X.509
-  // certificates with non-zero unused bits. It seems like NSS assumes this in
-  // various places, so we enforce it too in order to simplify this code. If we
-  // find compatibility issues, we'll know we're wrong and we'll have to figure
-  // out how to shift the bits around.
-  if (unusedBitsAtEnd != 0) {
-    return Result::ERROR_BAD_SIGNATURE;
-  }
-  ++signedData.signature.data;
-  --signedData.signature.len;
 
-  return Success;
+  uint8_t unusedBitsAtEnd;
+  if (valueWithUnusedBits.Read(unusedBitsAtEnd) != Success) {
+    return Result::ERROR_BAD_DER;
+  }
+  // XXX: Really the constraint should be that unusedBitsAtEnd must be less
+  // than 7. But, we suspect there are no real-world values in OCSP responses
+  // or certificates with non-zero unused bits. It seems like NSS assumes this
+  // in various places, so we enforce it too in order to simplify this code. If
+  // we find compatibility issues, we'll know we're wrong and we'll have to
+  // figure out how to shift the bits around.
+  if (unusedBitsAtEnd != 0) {
+    return Result::ERROR_BAD_DER;
+  }
+  Input::Mark mark(valueWithUnusedBits.GetMark());
+  valueWithUnusedBits.SkipToEnd();
+  return valueWithUnusedBits.GetInputBuffer(mark, value);
 }
 
 static inline Result

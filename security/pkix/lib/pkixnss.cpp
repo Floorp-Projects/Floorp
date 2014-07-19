@@ -25,7 +25,6 @@
 #include "pkix/pkixnss.h"
 
 #include <limits>
-#include <stdint.h>
 
 #include "cert.h"
 #include "cryptohi.h"
@@ -40,11 +39,13 @@ namespace mozilla { namespace pkix {
 typedef ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey> ScopedSECKeyPublicKey;
 
 Result
-CheckPublicKeySize(const SECItem& subjectPublicKeyInfo,
+CheckPublicKeySize(InputBuffer subjectPublicKeyInfo,
                    /*out*/ ScopedSECKeyPublicKey& publicKey)
 {
+  SECItem subjectPublicKeyInfoSECItem =
+    UnsafeMapInputBufferToSECItem(subjectPublicKeyInfo);
   ScopedPtr<CERTSubjectPublicKeyInfo, SECKEY_DestroySubjectPublicKeyInfo>
-    spki(SECKEY_DecodeDERSubjectPublicKeyInfo(&subjectPublicKeyInfo));
+    spki(SECKEY_DecodeDERSubjectPublicKeyInfo(&subjectPublicKeyInfoSECItem));
   if (!spki) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
@@ -81,7 +82,7 @@ CheckPublicKeySize(const SECItem& subjectPublicKeyInfo,
 }
 
 Result
-CheckPublicKey(const SECItem& subjectPublicKeyInfo)
+CheckPublicKey(InputBuffer subjectPublicKeyInfo)
 {
   ScopedSECKeyPublicKey unused;
   return CheckPublicKeySize(subjectPublicKeyInfo, unused);
@@ -89,15 +90,11 @@ CheckPublicKey(const SECItem& subjectPublicKeyInfo)
 
 Result
 VerifySignedData(const SignedDataWithSignature& sd,
-                 const SECItem& subjectPublicKeyInfo, void* pkcs11PinArg)
+                 InputBuffer subjectPublicKeyInfo, void* pkcs11PinArg)
 {
-  if (!sd.data.data || !sd.signature.data) {
-    PR_NOT_REACHED("invalid args to VerifySignedData");
-    return Result::FATAL_ERROR_INVALID_ARGS;
-  }
-
   // See bug 921585.
-  if (sd.data.len > static_cast<unsigned int>(std::numeric_limits<int>::max())) {
+  if (sd.data.GetLength() >
+        static_cast<unsigned int>(std::numeric_limits<int>::max())) {
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
 
@@ -158,10 +155,13 @@ VerifySignedData(const SignedDataWithSignature& sd,
 
   // The static_cast is safe according to the check above that references
   // bug 921585.
-  SECStatus srv = VFY_VerifyDataDirect(sd.data.data,
-                                       static_cast<int>(sd.data.len),
-                                       pubKey.get(), &sd.signature, pubKeyAlg,
-                                       digestAlg, nullptr, pkcs11PinArg);
+  SECItem dataSECItem(UnsafeMapInputBufferToSECItem(sd.data));
+  SECItem signatureSECItem(UnsafeMapInputBufferToSECItem(sd.signature));
+  SECStatus srv = VFY_VerifyDataDirect(dataSECItem.data,
+                                       static_cast<int>(dataSECItem.len),
+                                       pubKey.get(), &signatureSECItem,
+                                       pubKeyAlg, digestAlg, nullptr,
+                                       pkcs11PinArg);
   if (srv != SECSuccess) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
@@ -170,7 +170,7 @@ VerifySignedData(const SignedDataWithSignature& sd,
 }
 
 Result
-DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
+DigestBuf(InputBuffer item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
 {
   static_assert(TrustDomain::DIGEST_LENGTH == SHA1_LENGTH,
                 "TrustDomain::DIGEST_LENGTH must be 20 (SHA-1 digest length)");
@@ -178,13 +178,15 @@ DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
     PR_NOT_REACHED("invalid hash length");
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
-  if (item.len >
-      static_cast<decltype(item.len)>(std::numeric_limits<int32_t>::max())) {
-    PR_NOT_REACHED("large OCSP responses should have already been rejected");
+  SECItem itemSECItem = UnsafeMapInputBufferToSECItem(item);
+  if (itemSECItem.len >
+        static_cast<decltype(itemSECItem.len)>(
+          std::numeric_limits<int32_t>::max())) {
+    PR_NOT_REACHED("large items should not be possible here");
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
-  SECStatus srv = PK11_HashBuf(SEC_OID_SHA1, digestBuf, item.data,
-                               static_cast<int32_t>(item.len));
+  SECStatus srv = PK11_HashBuf(SEC_OID_SHA1, digestBuf, itemSECItem.data,
+                               static_cast<int32_t>(itemSECItem.len));
   if (srv != SECSuccess) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
