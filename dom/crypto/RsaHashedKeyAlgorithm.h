@@ -30,6 +30,8 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
+  virtual nsString ToJwkAlg() const MOZ_OVERRIDE;
+
   KeyAlgorithm* Hash() const
   {
     return mHash;

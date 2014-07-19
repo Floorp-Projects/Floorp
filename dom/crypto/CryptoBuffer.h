@@ -37,8 +37,9 @@ public:
     return Assign(aArray.Data(), aArray.Length());
   }
 
-
-  SECItem* ToSECItem();
+  nsresult FromJwkBase64(const nsString& aBase64);
+  nsresult ToJwkBase64(nsString& aBase64);
+  SECItem* ToSECItem() const;
 
   bool GetBigIntValue(unsigned long& aRetVal);
 };

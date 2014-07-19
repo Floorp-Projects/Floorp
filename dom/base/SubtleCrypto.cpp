@@ -100,7 +100,7 @@ SubtleCrypto::Digest(JSContext* cx,
 already_AddRefed<Promise>
 SubtleCrypto::ImportKey(JSContext* cx,
                         const nsAString& format,
-                        const KeyData& keyData,
+                        JS::Handle<JSObject*> keyData,
                         const ObjectOrString& algorithm,
                         bool extractable,
                         const Sequence<nsString>& keyUsages,
