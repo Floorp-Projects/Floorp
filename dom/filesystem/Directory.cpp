@@ -44,10 +44,13 @@ NS_INTERFACE_MAP_END
 
 // static
 already_AddRefed<Promise>
-Directory::GetRoot(FileSystemBase* aFileSystem)
+Directory::GetRoot(FileSystemBase* aFileSystem, ErrorResult& aRv)
 {
   nsRefPtr<GetFileOrDirectoryTask> task = new GetFileOrDirectoryTask(
-    aFileSystem, EmptyString(), true);
+    aFileSystem, EmptyString(), true, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
   FileSystemPermissionRequest::RequestForTask(task);
   return task->GetPromise();
 }
@@ -95,7 +98,8 @@ Directory::GetName(nsString& aRetval) const
 }
 
 already_AddRefed<Promise>
-Directory::CreateFile(const nsAString& aPath, const CreateFileOptions& aOptions)
+Directory::CreateFile(const nsAString& aPath, const CreateFileOptions& aOptions,
+                      ErrorResult& aRv)
 {
   nsresult error = NS_OK;
   nsString realPath;
@@ -128,14 +132,17 @@ Directory::CreateFile(const nsAString& aPath, const CreateFileOptions& aOptions)
   }
 
   nsRefPtr<CreateFileTask> task = new CreateFileTask(mFileSystem, realPath,
-    blobData, arrayData, replace);
+    blobData, arrayData, replace, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
   task->SetError(error);
   FileSystemPermissionRequest::RequestForTask(task);
   return task->GetPromise();
 }
 
 already_AddRefed<Promise>
-Directory::CreateDirectory(const nsAString& aPath)
+Directory::CreateDirectory(const nsAString& aPath, ErrorResult& aRv)
 {
   nsresult error = NS_OK;
   nsString realPath;
@@ -143,14 +150,17 @@ Directory::CreateDirectory(const nsAString& aPath)
     error = NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
   }
   nsRefPtr<CreateDirectoryTask> task = new CreateDirectoryTask(
-    mFileSystem, realPath);
+    mFileSystem, realPath, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
   task->SetError(error);
   FileSystemPermissionRequest::RequestForTask(task);
   return task->GetPromise();
 }
 
 already_AddRefed<Promise>
-Directory::Get(const nsAString& aPath)
+Directory::Get(const nsAString& aPath, ErrorResult& aRv)
 {
   nsresult error = NS_OK;
   nsString realPath;
@@ -158,26 +168,30 @@ Directory::Get(const nsAString& aPath)
     error = NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
   }
   nsRefPtr<GetFileOrDirectoryTask> task = new GetFileOrDirectoryTask(
-    mFileSystem, realPath, false);
+    mFileSystem, realPath, false, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
   task->SetError(error);
   FileSystemPermissionRequest::RequestForTask(task);
   return task->GetPromise();
 }
 
 already_AddRefed<Promise>
-Directory::Remove(const StringOrFileOrDirectory& aPath)
+Directory::Remove(const StringOrFileOrDirectory& aPath, ErrorResult& aRv)
 {
-  return RemoveInternal(aPath, false);
+  return RemoveInternal(aPath, false, aRv);
 }
 
 already_AddRefed<Promise>
-Directory::RemoveDeep(const StringOrFileOrDirectory& aPath)
+Directory::RemoveDeep(const StringOrFileOrDirectory& aPath, ErrorResult& aRv)
 {
-  return RemoveInternal(aPath, true);
+  return RemoveInternal(aPath, true, aRv);
 }
 
 already_AddRefed<Promise>
-Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive)
+Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
+                          ErrorResult& aRv)
 {
   nsresult error = NS_OK;
   nsString realPath;
@@ -211,7 +225,10 @@ Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive)
 parameters_check_done:
 
   nsRefPtr<RemoveTask> task = new RemoveTask(mFileSystem, mPath, file, realPath,
-    aRecursive);
+    aRecursive, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
   task->SetError(error);
   FileSystemPermissionRequest::RequestForTask(task);
   return task->GetPromise();

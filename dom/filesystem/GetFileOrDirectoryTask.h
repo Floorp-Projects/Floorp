@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "nsAutoPtr.h"
+#include "mozilla/ErrorResult.h"
 
 namespace mozilla {
 namespace dom {
@@ -22,7 +23,8 @@ public:
   // If aDirectoryOnly is set, we should ensure that the target is a directory.
   GetFileOrDirectoryTask(FileSystemBase* aFileSystem,
                          const nsAString& aTargetPath,
-                         bool aDirectoryOnly);
+                         bool aDirectoryOnly,
+                         ErrorResult& aRv);
   GetFileOrDirectoryTask(FileSystemBase* aFileSystem,
                          const FileSystemGetFileOrDirectoryParams& aParam,
                          FileSystemRequestParent* aParent);
