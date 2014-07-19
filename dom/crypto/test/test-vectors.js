@@ -394,6 +394,23 @@ tv = {
                                "8a7f65802a1f6fd41bd3251c4da0c138")
   },
 
+  // AES Key Wrap
+  // From RFC 3394, "Wrap 128 bits of Key Data with a 256-bit KEK"
+  // http://tools.ietf.org/html/rfc3394#section-4.3
+  aes_kw: {
+    wrapping_key: {
+      kty: "oct",
+      alg: "A256KW",
+      k:   "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    key: {
+      kty: "oct",
+      k:   "ABEiM0RVZneImaq7zN3u_w"
+    },
+    wrapped_key: util.hex2abv("64e8c3f9ce0f5ba263e9777905818a2a"+
+                              "93c8191e7d6e8ae7")
+  },
+
   // RFC 6070 <http://tools.ietf.org/html/rfc6070>
   pbkdf2_sha1: {
     password: new TextEncoder("utf-8").encode("passwordPASSWORDpassword"),
