@@ -47,6 +47,12 @@ KeyAlgorithm::WrapObject(JSContext* aCx)
   return KeyAlgorithmBinding::Wrap(aCx, this);
 }
 
+nsString
+KeyAlgorithm::ToJwkAlg() const
+{
+  return nsString();
+}
+
 void
 KeyAlgorithm::GetName(nsString& aRetVal) const
 {
