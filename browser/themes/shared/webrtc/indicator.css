@@ -109,3 +109,21 @@ window[sharingscreen][sharingvideo] > #shareSeparator,
 window[sharingscreen][sharingaudio] > #shareSeparator {
   display: -moz-box;
 }
+
+%ifdef XP_MACOSX
+@media (min-resolution: 2dppx) {
+  window[sharingvideo] > #audioVideoButton {
+    background-image: url("webRTC-camera-white-16@2x.png");
+  }
+
+  window[sharingaudio] > #audioVideoButton {
+    background-image: url("webRTC-microphone-white-16@2x.png");
+  }
+
+  /* Multi-icon button: */
+  window[sharingaudio][sharingvideo] > #audioVideoButton {
+    background-image: url("webRTC-camera-white-16@2x.png"),
+                      url("webRTC-microphone-white-16@2x.png");
+  }
+}
+%endif
