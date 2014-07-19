@@ -50,7 +50,8 @@ struct nsInheritedStyleData
                         nsStyleStructID_Inherited_Count> mStyleStructs;
 
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
-    return aContext->AllocateFromShell(sz);
+    return aContext->PresShell()->
+      AllocateByObjectID(nsPresArena::nsInheritedStyleData_id, sz);
   }
 
   void DestroyStructs(uint64_t aBits, nsPresContext* aContext) {
@@ -68,7 +69,8 @@ struct nsInheritedStyleData
 
   void Destroy(uint64_t aBits, nsPresContext* aContext) {
     DestroyStructs(aBits, aContext);
-    aContext->FreeToShell(sizeof(nsInheritedStyleData), this);
+    aContext->PresShell()->
+      FreeByObjectID(nsPresArena::nsInheritedStyleData_id, this);
   }
 
   nsInheritedStyleData() {
@@ -95,7 +97,8 @@ struct nsResetStyleData
   }
 
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
-    return aContext->AllocateFromShell(sz);
+    return aContext->PresShell()->
+      AllocateByObjectID(nsPresArena::nsResetStyleData_id, sz);
   }
 
   void Destroy(uint64_t aBits, nsPresContext* aContext) {
@@ -110,7 +113,8 @@ struct nsResetStyleData
 #undef STYLE_STRUCT_RESET
 #undef STYLE_STRUCT_INHERITED
 
-    aContext->FreeToShell(sizeof(nsResetStyleData), this);
+    aContext->PresShell()->
+      FreeByObjectID(nsPresArena::nsResetStyleData_id, this);
   }
 };
 
