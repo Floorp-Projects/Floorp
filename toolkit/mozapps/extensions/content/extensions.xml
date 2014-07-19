@@ -1294,7 +1294,7 @@
               this._errorLink.value = gStrings.ext.GetStringFromName("notification.vulnerableNoUpdate.link");
               this._errorLink.href = this.mAddon.blocklistURL;
               this._errorLink.hidden = false;
-            } else if (this.mAddon.id == "openh264-plugin@cisco.com" && !this.mAddon.isInstalled) {
+            } else if (this.mAddon.id == "gmp-gmpopenh264" && !this.mAddon.isInstalled) {
               this.setAttribute("notification", "warning");
               this._warning.textContent = gStrings.ext.GetStringFromName("notification.openH264Pending");
             } else {
