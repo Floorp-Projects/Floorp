@@ -209,11 +209,6 @@ let gGrid = {
     this._node.style.maxHeight = this._computeHeight(visibleRows) + "px";
     this._node.style.maxWidth = gGridPrefs.gridColumns * this._cellWidth +
                                 GRID_WIDTH_EXTRA + "px";
-
-    // Resize the search bar.
-    let width = parseFloat(window.getComputedStyle(this._node).width);
-    let visibleCols = Math.floor(width / this._cellWidth);
-    gSearch.setWidth(visibleCols * this._cellWidth - this._cellMargin);
   },
 
   _shouldRenderGrid : function Grid_shouldRenderGrid() {
