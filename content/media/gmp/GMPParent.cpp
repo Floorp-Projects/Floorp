@@ -15,6 +15,14 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/unused.h"
 
+#include "mozilla/dom/CrashReporterParent.h"
+using mozilla::dom::CrashReporterParent;
+
+#ifdef MOZ_CRASHREPORTER
+using CrashReporter::AnnotationTable;
+using CrashReporter::GetIDFromMinidump;
+#endif
+
 namespace mozilla {
 namespace gmp {
 
@@ -53,10 +61,7 @@ GMPParent::LoadProcess()
 {
   MOZ_ASSERT(mDirectory, "Plugin directory cannot be NULL!");
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
-
-  if (mState == GMPStateLoaded) {
-    return NS_OK;
-  }
+  MOZ_ASSERT(mState == GMPStateNotLoaded);
 
   nsAutoCString path;
   if (NS_FAILED(mDirectory->GetNativePath(path))) {
@@ -83,28 +88,20 @@ GMPParent::LoadProcess()
 }
 
 void
-GMPParent::MaybeUnloadProcess()
+GMPParent::CloseIfUnused()
 {
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
 
-  if (mVideoDecoders.Length() == 0 &&
+  if (mState == GMPStateLoaded &&
+      mVideoDecoders.Length() == 0 &&
       mVideoEncoders.Length() == 0) {
-    UnloadProcess();
+    Shutdown();
   }
 }
 
 void
-GMPParent::UnloadProcess()
+GMPParent::CloseActive()
 {
-  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
-
-  if (mState == GMPStateNotLoaded) {
-    MOZ_ASSERT(mVideoDecoders.IsEmpty() && mVideoEncoders.IsEmpty());
-    return;
-  }
-
-  mState = GMPStateNotLoaded;
-
   // Invalidate and remove any remaining API objects.
   for (uint32_t i = mVideoDecoders.Length(); i > 0; i--) {
     mVideoDecoders[i - 1]->DecodingComplete();
@@ -114,12 +111,31 @@ GMPParent::UnloadProcess()
   for (uint32_t i = mVideoEncoders.Length(); i > 0; i--) {
     mVideoEncoders[i - 1]->EncodingComplete();
   }
+}
 
-  Close();
-  if (mProcess) {
-    mProcess->Delete();
-    mProcess = nullptr;
+void
+GMPParent::Shutdown()
+{
+  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
+
+  if (mState == GMPStateNotLoaded || mState == GMPStateClosing) {
+    MOZ_ASSERT(mVideoDecoders.IsEmpty() && mVideoEncoders.IsEmpty());
+    return;
   }
+
+  CloseActive();
+  Close();
+  DeleteProcess();
+  MOZ_ASSERT(mState == GMPStateNotLoaded);
+}
+
+void
+GMPParent::DeleteProcess()
+{
+  MOZ_ASSERT(mState == GMPStateClosing);
+  mProcess->Delete();
+  mProcess = nullptr;
+  mState = GMPStateNotLoaded;
 }
 
 void
@@ -132,7 +148,7 @@ GMPParent::VideoDecoderDestroyed(GMPVideoDecoderParent* aDecoder)
 
   // Recv__delete__ is on the stack, don't potentially destroy the top-level actor
   // until after this has completed.
-  nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &GMPParent::MaybeUnloadProcess);
+  nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &GMPParent::CloseIfUnused);
   NS_DispatchToCurrentThread(event);
 }
 
@@ -146,7 +162,7 @@ GMPParent::VideoEncoderDestroyed(GMPVideoEncoderParent* aEncoder)
 
   // Recv__delete__ is on the stack, don't potentially destroy the top-level actor
   // until after this has completed.
-  nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &GMPParent::MaybeUnloadProcess);
+  nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &GMPParent::CloseIfUnused);
   NS_DispatchToCurrentThread(event);
 }
 
@@ -197,6 +213,9 @@ GMPParent::EnsureProcessLoaded()
   if (mState == GMPStateLoaded) {
     return true;
   }
+  if (mState == GMPStateClosing) {
+    return false;
+  }
 
   nsresult rv = LoadProcess();
 
@@ -243,10 +262,77 @@ GMPParent::GetGMPVideoEncoder(GMPVideoEncoderParent** aGMPVE)
   return NS_OK;
 }
 
+#ifdef MOZ_CRASHREPORTER
+void
+GMPParent::WriteExtraDataForMinidump(CrashReporter::AnnotationTable& notes)
+{
+  notes.Put(NS_LITERAL_CSTRING("GMPPlugin"), NS_LITERAL_CSTRING("1"));
+  notes.Put(NS_LITERAL_CSTRING("PluginFilename"),
+                               NS_ConvertUTF16toUTF8(mName));
+  notes.Put(NS_LITERAL_CSTRING("PluginName"), mDisplayName);
+  notes.Put(NS_LITERAL_CSTRING("PluginVersion"), mVersion);
+}
+
+void
+GMPParent::GetCrashID(nsString& aResult)
+{
+  CrashReporterParent* cr = nullptr;
+  if (ManagedPCrashReporterParent().Length() > 0) {
+    cr = static_cast<CrashReporterParent*>(ManagedPCrashReporterParent()[0]);
+  }
+  if (NS_WARN_IF(!cr)) {
+    return;
+  }
+
+  AnnotationTable notes(4);
+  WriteExtraDataForMinidump(notes);
+  nsCOMPtr<nsIFile> dumpFile;
+  TakeMinidump(getter_AddRefs(dumpFile), nullptr);
+  if (!dumpFile) {
+    NS_WARNING("GMP crash without crash report");
+    return;
+  }
+  GetIDFromMinidump(dumpFile, aResult);
+  cr->GenerateCrashReportForMinidump(dumpFile, &notes);
+}
+#endif
+
 void
 GMPParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  UnloadProcess();
+  mState = GMPStateClosing;
+  if (AbnormalShutdown == aWhy) {
+    nsString dumpID;
+#ifdef MOZ_CRASHREPORTER
+    GetCrashID(dumpID);
+#endif
+    // now do something with the crash ID, bug 1038961
+  }
+
+  CloseActive();
+
+  // Normal Shutdown() will delete the process on unwind.
+  if (AbnormalShutdown == aWhy) {
+    NS_DispatchToCurrentThread(NS_NewRunnableMethod(this, &GMPParent::DeleteProcess));
+  }
+}
+
+mozilla::dom::PCrashReporterParent*
+GMPParent::AllocPCrashReporterParent(const NativeThreadId& aThread)
+{
+#ifndef MOZ_CRASHREPORTER
+  MOZ_ASSERT(false, "Should only be sent if crash reporting is enabled.");
+#endif
+  CrashReporterParent* cr = new CrashReporterParent();
+  cr->SetChildData(aThread, GeckoProcessType_GMPlugin);
+  return cr;
+}
+
+bool
+GMPParent::DeallocPCrashReporterParent(PCrashReporterParent* aCrashReporter)
+{
+  delete aCrashReporter;
+  return true;
 }
 
 PGMPVideoDecoderParent*

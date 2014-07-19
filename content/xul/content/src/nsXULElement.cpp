@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -49,6 +49,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "mozilla/css/StyleRule.h"
@@ -804,12 +805,34 @@ IsInFeedSubscribeLine(nsXULElement* aElement)
 }
 #endif
 
+class XULInContentErrorReporter : public nsRunnable
+{
+public:
+  XULInContentErrorReporter(nsIDocument* aDocument) : mDocument(aDocument) {}
+
+  NS_IMETHOD Run()
+  {
+    mDocument->WarnOnceAbout(nsIDocument::eImportXULIntoContent, false);
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIDocument> mDocument;
+};
+
 nsresult
 nsXULElement::BindToTree(nsIDocument* aDocument,
                          nsIContent* aParent,
                          nsIContent* aBindingParent,
                          bool aCompileEventHandlers)
 {
+  if (!aBindingParent &&
+      aDocument &&
+      !aDocument->AllowXULXBL() &&
+      !aDocument->HasWarnedAbout(nsIDocument::eImportXULIntoContent)) {
+    nsContentUtils::AddScriptRunner(new XULInContentErrorReporter(aDocument));
+  }
+
   nsresult rv = nsStyledElement::BindToTree(aDocument, aParent,
                                             aBindingParent,
                                             aCompileEventHandlers);

@@ -160,26 +160,30 @@ class Device(object):
         adb.wait()
         self.dm._verifyZip()
 
-    def setup_port_forwarding(self, remote_port):
+    def setup_port_forwarding(self, local_port=None, remote_port=2828):
         """
         Set up TCP port forwarding to the specified port on the device,
-        using any availble local port, and return the local port.
+        using any availble local port (if none specified), and return the local port.
 
-        :param remote_port: The remote port to wait on.
+        :param local_port: The local port to forward from, if unspecified a
+                           random port is chosen.
+        :param remote_port: The remote port to forward to, defaults to 2828.
+        :returns: The local_port being forwarded.
         """
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind(("",0))
-        local_port = s.getsockname()[1]
-        s.close()
+        if not local_port:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.bind(("",0))
+            local_port = s.getsockname()[1]
+            s.close()
 
-        self.dm.forward('tcp:%d' % local_port, 'tcp:%d' % remote_port)
+        self.dm.forward('tcp:%d' % int(local_port), 'tcp:%d' % int(remote_port))
         return local_port
 
     def wait_for_net(self):
         active = False
         time_out = 0
         while not active and time_out < 40:
-            proc = subprocess.Popen([self.dm._adbPath, 'shell', '/system/bin/netcfg'], stdout=subprocess.PIPE)
+            proc = subprocess.Popen([self.app_ctx.adb, 'shell', '/system/bin/netcfg'], stdout=subprocess.PIPE)
             proc.stdout.readline() # ignore first line
             line = proc.stdout.readline()
             while line != "":

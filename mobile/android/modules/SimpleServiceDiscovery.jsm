@@ -1,4 +1,4 @@
-// -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+// -*- Mode: js; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -243,6 +243,26 @@ var SimpleServiceDiscovery = {
     }
   },
 
+  getSupportedExtensions: function() {
+    let extensions = [];
+    this._targets.forEach(function(target) {
+        extensions = extensions.concat(target.extensions);
+      }, this);
+    return extensions.filter(function(extension, pos) {
+      return extensions.indexOf(extension) == pos;
+    });
+  },
+
+  getSupportedMimeTypes: function() {
+    let types = [];
+    this._targets.forEach(function(target) {
+        types = types.concat(target.types);
+      }, this);
+    return types.filter(function(type, pos) {
+      return types.indexOf(type) == pos;
+    });
+  },
+
   registerTarget: function registerTarget(aTarget) {
     // We must have "target" and "factory" defined
     if (!("target" in aTarget) || !("factory" in aTarget)) {
@@ -291,6 +311,9 @@ var SimpleServiceDiscovery = {
   get services() {
     let array = [];
     for (let [key, service] of this._services) {
+      let target = this._targets.get(service.target);
+      service.extensions = target.extensions;
+      service.types = target.types;
       array.push(service);
     }
     return array;

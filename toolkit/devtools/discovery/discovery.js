@@ -134,12 +134,111 @@ Transport.prototype = {
 
 };
 
+/**
+ * Manages the local device's name.  The name can be generated in serveral
+ * platform-specific ways (see |_generate|).  The aim is for each device on the
+ * same local network to have a unique name.  If the Settings API is available,
+ * the name is saved there to persist across reboots.
+ */
+function LocalDevice() {
+  this._name = LocalDevice.UNKNOWN;
+  if ("@mozilla.org/settingsService;1" in Cc) {
+    this._settings =
+      Cc["@mozilla.org/settingsService;1"].getService(Ci.nsISettingsService);
+    Services.obs.addObserver(this, "mozsettings-changed", false);
+  }
+  this._get(); // Trigger |_get| to load name eagerly
+}
+
+LocalDevice.SETTING = "devtools.discovery.device";
+LocalDevice.UNKNOWN = "unknown";
+
+LocalDevice.prototype = {
+
+  _get: function() {
+    if (!this._settings) {
+      // Without Settings API, just generate a name and stop, since the value
+      // can't be persisted.
+      this._generate();
+      return;
+    }
+    // Initial read of setting value
+    this._settings.createLock().get(LocalDevice.SETTING, {
+      handle: (_, name) => {
+        if (name && name !== LocalDevice.UNKNOWN) {
+          this._name = name;
+          log("Device: " + this._name);
+          return;
+        }
+        // No existing name saved, so generate one.
+        this._generate();
+      },
+      handleError: () => log("Failed to get device name setting")
+    });
+  },
+
+  /**
+   * Generate a new device name from various platform-specific properties.
+   * Triggers the |name| setter to persist if needed.
+   */
+  _generate: function() {
+    if (Services.appinfo.widgetToolkit == "gonk") {
+      // For Gonk devices, create one from the device name plus a little
+      // randomness.  The goal is just to distinguish devices in an office
+      // environment where many people may have the same device model for
+      // testing purposes (which would otherwise all report the same name).
+      let name = libcutils.property_get("ro.product.device");
+      // Pick a random number from [0, 2^32)
+      let randomID = Math.floor(Math.random() * Math.pow(2, 32));
+      // To hex and zero pad
+      randomID = ("00000000" + randomID.toString(16)).slice(-8);
+      this.name = name + "-" + randomID;
+    } else {
+      this.name = sysInfo.get("host");
+    }
+  },
+
+  /**
+   * Observe any changes that might be made via the Settings app
+   */
+  observe: function(subject, topic, data) {
+    if (topic !== "mozsettings-changed") {
+      return;
+    }
+    let setting = JSON.parse(data);
+    if (setting.key !== LocalDevice.SETTING) {
+      return;
+    }
+    this._name = setting.value;
+    log("Device: " + this._name);
+  },
+
+  get name() {
+    return this._name;
+  },
+
+  set name(name) {
+    if (!this._settings) {
+      this._name = name;
+      log("Device: " + this._name);
+      return;
+    }
+    // Persist to Settings API
+    // The new value will be seen and stored by the observer above
+    this._settings.createLock().set(LocalDevice.SETTING, name, {
+      handle: () => {},
+      handleError: () => log("Failed to set device name setting")
+    });
+  }
+
+};
+
 function Discovery() {
   EventEmitter.decorate(this);
 
   this.localServices = {};
   this.remoteServices = {};
-  this.device = { name: "unknown" };
+  this.device = new LocalDevice();
   this.replyTimeout = REPLY_TIMEOUT;
 
   // Defaulted to Transport, but can be altered by tests
@@ -158,8 +257,6 @@ function Discovery() {
   this._purgeMissingDevices = this._purgeMissingDevices.bind(this);
 
   Services.obs.addObserver(this, "network-active-changed", false);
-
-  this._getSystemInfo();
 }
 
 Discovery.prototype = {
@@ -236,24 +333,6 @@ Discovery.prototype = {
     this._expectingReplies.from = new Set(this.getRemoteDevices());
     this._expectingReplies.timer =
       setTimeout(this._purgeMissingDevices, this.replyTimeout);
-  },
-
-  /**
-   * Determine a unique name to identify the current device.
-   */
-  _getSystemInfo: function() {
-    // TODO Bug 1027787: Uniquify device name somehow?
-    try {
-      if (Services.appinfo.widgetToolkit == "gonk") {
-        this.device.name = libcutils.property_get("ro.product.device");
-      } else {
-        this.device.name = sysInfo.get("host");
-      }
-      log("Device: " + this.device.name);
-    } catch(e) {
-      log("Failed to get system info");
-      this.device.name = "unknown";
-    }
   },
 
   get Transport() {

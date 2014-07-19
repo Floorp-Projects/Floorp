@@ -36,7 +36,7 @@ public:
   bool BufferSubData(size_t pos, const void* ptr, size_t updateByteSize);
 
   bool Validate(GLenum type, uint32_t maxAllowed, size_t first, size_t count,
-                uint32_t* out_upperBound = nullptr);
+                uint32_t* out_upperBound);
 
   template<typename T>
   T Element(size_t i) const { return Elements<T>()[i]; }
@@ -51,6 +51,27 @@ public:
 
 private:
 
+  /*
+   * Returns true if a drawElements call with the given parameters should succeed,
+   * false otherwise.
+   *
+   * In other words, this returns true if all entries in the element array at positions
+   *
+   *    first .. first+count-1
+   *
+   * are less than or equal to maxAllowed.
+   *
+   * Input parameters:
+   *   maxAllowed: maximum value to be allowed in the specificied portion of the element array.
+   *   first: start of the portion of the element array to consume.
+   *   count: number of entries from the element array to consume.
+   *
+   * Output parameter:
+   *   out_upperBound: upon success, is set to the actual maximum value in the specified range,
+   *                   which is then guaranteed to be less than or equal to maxAllowed.
+   *                   upon failure, is set to the first value in the specified range, that
+   *                   is greater than maxAllowed.
+   */
   template<typename T>
   bool Validate(uint32_t maxAllowed, size_t first, size_t count,
                 uint32_t* out_upperBound);

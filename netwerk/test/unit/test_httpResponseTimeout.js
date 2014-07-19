@@ -43,10 +43,6 @@ TimeoutListener.prototype = {
   },
 };
 
-function serverStopListener() {
-  do_test_finished();
-}
-
 function testTimeout(timeoutEnabled, expectResponse) {
   // Set timeout pref.
   if (timeoutEnabled) {
@@ -137,8 +133,11 @@ function setup_tests() {
 function setup_http_server() {
   // Start server; will be stopped at test cleanup time.
   server.start(-1);
-  baseURL = "http://localhost:" + server.identity.primaryPort + "/";
+  baseURL = server.identity.primaryScheme + "://" +
+            server.identity.primaryHost + ":" +
+            server.identity.primaryPort + "/";
   do_print("Using baseURL: " + baseURL);
+
   server.registerPathHandler('/', function(metadata, response) {
     // Wait until the timeout should have passed, then respond.
     response.processAsync();
@@ -150,7 +149,7 @@ function setup_http_server() {
     });
   });
   do_register_cleanup(function() {
-    server.stop(serverStopListener);
+    server.stop(function() {});
   });
 }
 

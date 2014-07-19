@@ -111,6 +111,8 @@ union NetAddr {
 #endif
   // introduced to support nsTArray<NetAddr> (for DNSRequestParent.cpp)
   bool operator == (const NetAddr& other) const;
+  // Compares ip fields only; excludes port and other data; IPv4 and v6 only.
+  bool EqualsIP(const NetAddr& other) const;
 };
 
 // This class wraps a NetAddr union to provide C++ linked list
@@ -163,6 +165,8 @@ bool IsLoopBackAddress(const NetAddr *addr);
 bool IsIPAddrAny(const NetAddr *addr);
 
 bool IsIPAddrV4Mapped(const NetAddr *addr);
+
+bool IsIPAddrPrivate(const NetAddr *addr);
 
 bool IsIPAddrLocal(const NetAddr *addr);
 
