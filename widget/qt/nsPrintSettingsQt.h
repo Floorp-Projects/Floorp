@@ -17,10 +17,9 @@ class nsPrintSettingsQt : public nsPrintSettings
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
-        NS_DECLARE_STATIC_IID_ACCESSOR(NS_PRINTSETTINGSQT_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_PRINTSETTINGSQT_IID)
 
     nsPrintSettingsQt();
-    virtual ~nsPrintSettingsQt();
 
     NS_IMETHOD GetPrintRange(int16_t* aPrintRange);
     NS_IMETHOD SetPrintRange(int16_t aPrintRange);
@@ -71,6 +70,8 @@ public:
     NS_IMETHOD GetEffectivePageSize(double* aWidth, double* aHeight);
 
 protected:
+    virtual ~nsPrintSettingsQt();
+
     nsPrintSettingsQt(const nsPrintSettingsQt& src);
     nsPrintSettingsQt& operator=(const nsPrintSettingsQt& rhs);
 

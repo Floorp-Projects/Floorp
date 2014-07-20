@@ -214,6 +214,10 @@ nsPrinterEnumeratorQt::nsPrinterEnumeratorQt()
 {
 }
 
+nsPrinterEnumeratorQt::~nsPrinterEnumeratorQt()
+{
+}
+
 NS_IMPL_ISUPPORTS(nsPrinterEnumeratorQt, nsIPrinterEnumerator)
 
 NS_IMETHODIMP nsPrinterEnumeratorQt::GetPrinterNameList(
