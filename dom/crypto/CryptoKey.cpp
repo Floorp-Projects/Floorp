@@ -112,6 +112,12 @@ CryptoKey::GetAlgorithm(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal,
     case KeyAlgorithmProxy::EC:
       converted = ToJSValue(cx, mAlgorithm.mEc, &val);
       break;
+    case KeyAlgorithmProxy::DH: {
+      RootedDictionary<DhKeyAlgorithm> dh(cx);
+      mAlgorithm.mDh.ToKeyAlgorithm(cx, dh);
+      converted = ToJSValue(cx, dh, &val);
+      break;
+    }
   }
   if (!converted) {
     aRv.Throw(NS_ERROR_DOM_OPERATION_ERR);
