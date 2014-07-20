@@ -131,3 +131,8 @@
 .tag-line .open, .tag-line .close, .comment {
   cursor: default;
 }
+
+.markupview-events {
+  display: none;
+  cursor: pointer;
+}
