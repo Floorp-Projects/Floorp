@@ -21,9 +21,10 @@ public:
   NS_DECL_NSIREMOTESERVICE  
 
   nsQtRemoteService();
-  virtual ~nsQtRemoteService() { };
 
 private:
+  virtual ~nsQtRemoteService();
+
   virtual void SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
                                               uint32_t aTimestamp);
 
