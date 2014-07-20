@@ -195,32 +195,23 @@ public:
     if (memcmp(input, toMatch, N)) {
       return false;
     }
-    input += N;
+    input = end;
     return true;
   }
 
-  template <uint16_t N>
-  bool MatchTLV(uint8_t tag, uint16_t len, const uint8_t (&value)[N])
+  bool MatchRest(Input toMatch)
   {
-    static_assert(N <= 127, "buffer larger than largest length supported");
-    if (len > N) {
-      PR_NOT_REACHED("overflow prevented dynamically instead of statically");
+    // Normally we use EnsureLength which compares (input + len < end), but
+    // here we want to be sure that there is nothing following the matched
+    // bytes
+    size_t remaining = static_cast<size_t>(end - input);
+    if (toMatch.GetLength() != remaining) {
       return false;
     }
-    uint16_t totalLen = 2u + len;
-    if (EnsureLength(totalLen) != Success) {
+    if (std::memcmp(input, toMatch.UnsafeGetData(), remaining)) {
       return false;
     }
-    if (*input != tag) {
-      return false;
-    }
-    if (*(input + 1) != len) {
-      return false;
-    }
-    if (memcmp(input + 2, value, len)) {
-      return false;
-    }
-    input += totalLen;
+    input = end;
     return true;
   }
 
