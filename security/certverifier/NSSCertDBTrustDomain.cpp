@@ -143,13 +143,8 @@ Result
 NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
                                    const CertPolicyId& policy,
                                    const SECItem& candidateCertDER,
-                                   /*out*/ TrustLevel* trustLevel)
+                                   /*out*/ TrustLevel& trustLevel)
 {
-  PR_ASSERT(trustLevel);
-  if (!trustLevel) {
-    return Result::FATAL_ERROR_INVALID_ARGS;
-  }
-
 #ifdef MOZ_NO_EV_CERTS
   if (!policy.IsAnyPolicy()) {
     return Result::ERROR_POLICY_VALIDATION_FAILED;
@@ -189,7 +184,7 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
                                                : CERTDB_TRUSTED;
     if (((flags & (relevantTrustBit|CERTDB_TERMINAL_RECORD)))
             == CERTDB_TERMINAL_RECORD) {
-      *trustLevel = TrustLevel::ActivelyDistrusted;
+      trustLevel = TrustLevel::ActivelyDistrusted;
       return Success;
     }
 
@@ -198,19 +193,19 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     // Gecko implemented nsICertOverrideService.
     if (flags & CERTDB_TRUSTED_CA) {
       if (policy.IsAnyPolicy()) {
-        *trustLevel = TrustLevel::TrustAnchor;
+        trustLevel = TrustLevel::TrustAnchor;
         return Success;
       }
 #ifndef MOZ_NO_EV_CERTS
       if (CertIsAuthoritativeForEVPolicy(candidateCert.get(), policy)) {
-        *trustLevel = TrustLevel::TrustAnchor;
+        trustLevel = TrustLevel::TrustAnchor;
         return Success;
       }
 #endif
     }
   }
 
-  *trustLevel = TrustLevel::InheritsTrust;
+  trustLevel = TrustLevel::InheritsTrust;
   return Success;
 }
 

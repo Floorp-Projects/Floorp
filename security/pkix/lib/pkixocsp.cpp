@@ -113,10 +113,12 @@ CheckOCSPResponseSignerCert(TrustDomain& trustDomain,
   //
   // TODO(bug 926261): If we're validating for a policy then the policy OID we
   // are validating for should be passed to CheckIssuerIndependentProperties.
+  TrustLevel unusedTrustLevel;
   rv = CheckIssuerIndependentProperties(trustDomain, potentialSigner, time,
                                         KeyUsage::noParticularKeyUsageRequired,
                                         KeyPurposeId::id_kp_OCSPSigning,
-                                        CertPolicyId::anyPolicy, 0);
+                                        CertPolicyId::anyPolicy, 0,
+                                        unusedTrustLevel);
   if (rv != Success) {
     return rv;
   }

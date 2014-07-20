@@ -117,12 +117,12 @@ public:
 private:
   virtual Result GetCertTrust(EndEntityOrCA, const CertPolicyId&,
                               const SECItem& candidateCert,
-                              /*out*/ TrustLevel* trustLevel)
+                              /*out*/ TrustLevel& trustLevel)
   {
     if (SECITEM_ItemsAreEqual(&candidateCert, &certChainTail[0]->derCert)) {
-      *trustLevel = TrustLevel::TrustAnchor;
+      trustLevel = TrustLevel::TrustAnchor;
     } else {
-      *trustLevel = TrustLevel::InheritsTrust;
+      trustLevel = TrustLevel::InheritsTrust;
     }
     return Success;
   }

@@ -626,15 +626,14 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
                                  KeyPurposeId requiredEKUIfPresent,
                                  const CertPolicyId& requiredPolicy,
                                  unsigned int subCACount,
-                /*optional out*/ TrustLevel* trustLevelOut)
+                                 /*out*/ TrustLevel& trustLevel)
 {
   Result rv;
 
   const EndEntityOrCA endEntityOrCA = cert.endEntityOrCA;
 
-  TrustLevel trustLevel;
   rv = trustDomain.GetCertTrust(endEntityOrCA, requiredPolicy, cert.GetDER(),
-                                &trustLevel);
+                                trustLevel);
   if (rv != Success) {
     return rv;
   }
@@ -645,9 +644,6 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
       trustLevel != TrustLevel::InheritsTrust) {
     // The TrustDomain returned a trust level that we weren't expecting.
     return Result::FATAL_ERROR_INVALID_STATE;
-  }
-  if (trustLevelOut) {
-    *trustLevelOut = trustLevel;
   }
 
   // 4.2.1.1. Authority Key Identifier is ignored (see bug 965136).

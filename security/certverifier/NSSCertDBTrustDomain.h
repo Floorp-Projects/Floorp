@@ -63,7 +63,7 @@ public:
   virtual Result GetCertTrust(mozilla::pkix::EndEntityOrCA endEntityOrCA,
                               const mozilla::pkix::CertPolicyId& policy,
                               const SECItem& candidateCertDER,
-                              /*out*/ mozilla::pkix::TrustLevel* trustLevel)
+                              /*out*/ mozilla::pkix::TrustLevel& trustLevel)
                               MOZ_OVERRIDE;
 
   virtual Result CheckPublicKey(const SECItem& subjectPublicKeyInfo)

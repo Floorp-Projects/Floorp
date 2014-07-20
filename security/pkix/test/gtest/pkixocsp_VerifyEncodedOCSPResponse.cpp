@@ -45,11 +45,10 @@ public:
 
   virtual Result GetCertTrust(EndEntityOrCA endEntityOrCA, const CertPolicyId&,
                               const SECItem& candidateCert,
-                              /*out*/ TrustLevel* trustLevel)
+                              /*out*/ TrustLevel& trustLevel)
   {
     EXPECT_EQ(endEntityOrCA, EndEntityOrCA::MustBeEndEntity);
-    EXPECT_TRUE(trustLevel);
-    *trustLevel = TrustLevel::InheritsTrust;
+    trustLevel = TrustLevel::InheritsTrust;
     return Success;
   }
 
@@ -838,13 +837,12 @@ public:
     virtual Result GetCertTrust(EndEntityOrCA endEntityOrCA,
                                 const CertPolicyId&,
                                 const SECItem& candidateCert,
-                                /*out*/ TrustLevel* trustLevel)
+                                /*out*/ TrustLevel& trustLevel)
     {
       EXPECT_EQ(endEntityOrCA, EndEntityOrCA::MustBeEndEntity);
-      EXPECT_TRUE(trustLevel);
       EXPECT_TRUE(certDER);
       EXPECT_TRUE(SECITEM_ItemsAreEqual(certDER, &candidateCert));
-      *trustLevel = certTrustLevel;
+      trustLevel = certTrustLevel;
       return Success;
     }
 
