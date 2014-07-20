@@ -996,15 +996,25 @@ TextProperty.prototype = {
     dummyStyle.setProperty(this.name, this.value, this.priority);
 
     this.computed = [];
-    for (let i = 0, n = dummyStyle.length; i < n; i++) {
-      let prop = dummyStyle.item(i);
-      this.computed.push({
-        textProp: this,
-        name: prop,
-        value: dummyStyle.getPropertyValue(prop),
-        priority: dummyStyle.getPropertyPriority(prop),
-      });
-    }
+
+    try {
+      // Manually get all the properties that are set when setting a value on
+      // this.name and check the computed style on dummyElement for each one.
+      // If we just read dummyStyle, it would skip properties when value == "".
+      let subProps = domUtils.getSubpropertiesForCSSProperty(this.name);
+
+      for (let prop of subProps) {
+        this.computed.push({
+          textProp: this,
+          name: prop,
+          value: dummyStyle.getPropertyValue(prop),
+          priority: dummyStyle.getPropertyPriority(prop),
+        });
+      }
+    } catch(e) {
+      // This is a partial property name, probably from cutting and pasting
+      // text. At this point don't check for computed properties.
+     }
   },
 
   /**
