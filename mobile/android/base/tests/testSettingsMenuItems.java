@@ -76,6 +76,14 @@ public class testSettingsMenuItems extends PixelTest {
         { StringHelper.MY_HEALTH_REPORT_LABEL },
     };
 
+    // Developer menu items.
+    String[] PATH_DEVELOPER = { StringHelper.DEVELOPER_TOOLS_SECTION_LABEL };
+    String[][] OPTIONS_DEVELOPER = {
+        { StringHelper.PAINT_FLASHING_LABEL },
+        { StringHelper.REMOTE_DEBUGGING_LABEL },
+        { StringHelper.LEARN_MORE_LABEL },
+    };
+
     /*
      * This sets up a hierarchy of settings to test.
      *
@@ -94,6 +102,7 @@ public class testSettingsMenuItems extends PixelTest {
         settingsMap.put(PATH_DISPLAY, new ArrayList<String[]>(Arrays.asList(OPTIONS_DISPLAY)));
         settingsMap.put(PATH_PRIVACY, new ArrayList<String[]>(Arrays.asList(OPTIONS_PRIVACY)));
         settingsMap.put(PATH_MOZILLA, new ArrayList<String[]>(Arrays.asList(OPTIONS_MOZILLA)));
+        settingsMap.put(PATH_DEVELOPER, new ArrayList<String[]>(Arrays.asList(OPTIONS_DEVELOPER)));
     }
 
     public void testSettingsMenuItems() {

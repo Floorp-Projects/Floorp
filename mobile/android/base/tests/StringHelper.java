@@ -136,6 +136,7 @@ public class StringHelper {
     public static final String MY_HEALTH_REPORT_LABEL = "View my Health Report";
 
     // Developer tools
+    public static final String PAINT_FLASHING_LABEL = "Paint flashing";
     public static final String REMOTE_DEBUGGING_LABEL = "Remote debugging";
     public static final String LEARN_MORE_LABEL = "Learn more";
 
