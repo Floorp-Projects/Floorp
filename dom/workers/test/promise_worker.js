@@ -672,11 +672,11 @@ function promiseResolveThenableCleanStack() {
   // check what happens after all "next cycle" steps
   // have had a chance to complete
   setTimeout(function(){
+    results.push(x);
     // Result should be [0, 2] since `thenable` will be called async.
     is(results[0], 0, "Expected thenable to be called asynchronously");
     // See Bug 1023547 comment 13 for why this check has to be gated on p.
     p.then(function() {
-      results.push(x);
       is(results[1], 2, "Expected thenable to be called asynchronously");
       runTest();
     });
