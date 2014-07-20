@@ -43,14 +43,6 @@ ScriptSourceObject *
 CreateScriptSourceObject(ExclusiveContext *cx, const ReadOnlyCompileOptions &options);
 
 /*
- * This should be called while still on the main thread if compilation will
- * occur on a worker thread.
- */
-void
-MaybeCallSourceHandler(JSContext *cx, const ReadOnlyCompileOptions &options,
-                       JS::SourceBufferHolder &srcBuf);
-
-/*
  * True if str consists of an IdentifierStart character, followed by one or
  * more IdentifierPart characters, i.e. it matches the IdentifierName production
  * in the language spec.

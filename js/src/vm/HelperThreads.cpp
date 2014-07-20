@@ -298,9 +298,6 @@ js::StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &optio
     // which could require barriers on the atoms compartment.
     gc::AutoSuppressGC suppress(cx);
 
-    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    frontend::MaybeCallSourceHandler(cx, options, srcBuf);
-
     EnsureHelperThreadsInitialized(cx);
 
     JS::CompartmentOptions compartmentOptions(cx->compartment()->options());
@@ -701,33 +698,6 @@ GlobalHelperThreadState::canStartGCHelperTask()
     return !gcHelperWorklist().empty();
 }
 
-static void
-CallNewScriptHookForAllScripts(JSContext *cx, HandleScript script)
-{
-    // We should never hit this, since nested scripts are also constructed via
-    // BytecodeEmitter instances on the stack.
-    JS_CHECK_RECURSION(cx, return);
-
-    // Recurse to any nested scripts.
-    if (script->hasObjects()) {
-        ObjectArray *objects = script->objects();
-        for (size_t i = 0; i < objects->length; i++) {
-            JSObject *obj = objects->vector[i];
-            if (obj->is<JSFunction>()) {
-                JSFunction *fun = &obj->as<JSFunction>();
-                if (fun->hasScript()) {
-                    RootedScript nested(cx, fun->nonLazyScript());
-                    CallNewScriptHookForAllScripts(cx, nested);
-                }
-            }
-        }
-    }
-
-    // The global new script hook is called on every script that was compiled.
-    RootedFunction function(cx, script->functionNonDelazifying());
-    CallNewScriptHook(cx, script, function);
-}
-
 JSScript *
 GlobalHelperThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void *token)
 {
@@ -817,9 +787,6 @@ GlobalHelperThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void
         if (script->compileAndGo())
             compileAndGoGlobal = &script->global();
         Debugger::onNewScript(cx, script, compileAndGoGlobal);
-
-        // The NewScript hook needs to be called for all compiled scripts.
-        CallNewScriptHookForAllScripts(cx, script);
 
         // Update the compressed source table with the result. This is normally
         // called by setCompressedSource when compilation occurs on the main thread.

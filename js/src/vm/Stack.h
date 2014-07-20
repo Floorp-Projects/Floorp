@@ -197,7 +197,6 @@ class AbstractFramePtr
     inline bool isFunctionFrame() const;
     inline bool isGlobalFrame() const;
     inline bool isEvalFrame() const;
-    inline bool isFramePushedByExecute() const;
     inline bool isDebuggerFrame() const;
 
     inline JSScript *script() const;
@@ -235,8 +234,6 @@ class AbstractFramePtr
 
     JSObject *evalPrevScopeChain(JSContext *cx) const;
 
-    inline void *maybeHookData() const;
-    inline void setHookData(void *data) const;
     inline HandleValue returnValue() const;
     inline void setReturnValue(const Value &rval) const;
 
@@ -318,7 +315,6 @@ class InterpreterFrame
         HAS_ARGS_OBJ       =      0x200,  /* ArgumentsObject created for needsArgsObj script */
 
         /* Lazy frame initialization */
-        HAS_HOOK_DATA      =      0x400,  /* frame has hookData_ set */
         HAS_RVAL           =      0x800,  /* frame has rval_ set */
         HAS_SCOPECHAIN     =     0x1000,  /* frame has scopeChain_ set */
 
@@ -361,7 +357,7 @@ class InterpreterFrame
     jsbytecode          *prevpc_;
     Value               *prevsp_;
 
-    void                *hookData_;     /* if HAS_HOOK_DATA, closure returned by call hook */
+    void                *unused;
 
     /*
      * For an eval-in-frame DEBUGGER frame, the frame in whose scope we're
@@ -742,25 +738,7 @@ class InterpreterFrame
 
     inline JSCompartment *compartment() const;
 
-    /* Debugger hook data */
-
-    bool hasHookData() const {
-        return !!(flags_ & HAS_HOOK_DATA);
-    }
-
-    void* hookData() const {
-        JS_ASSERT(hasHookData());
-        return hookData_;
-    }
-
-    void* maybeHookData() const {
-        return hasHookData() ? hookData_ : nullptr;
-    }
-
-    void setHookData(void *v) {
-        hookData_ = v;
-        flags_ |= HAS_HOOK_DATA;
-    }
+    /* Profiler flags */
 
     bool hasPushedSPSFrame() {
         return !!(flags_ & HAS_PUSHED_SPS_FRAME);
@@ -846,17 +824,6 @@ class InterpreterFrame
     template <TriggerPostBarriers doPostBarrier>
     void copyFrameAndValues(JSContext *cx, Value *vp, InterpreterFrame *otherfp,
                             const Value *othervp, Value *othersp);
-
-    /*
-     * js::Execute pushes both global and function frames (since eval() in a
-     * function pushes a frame with isFunctionFrame() && isEvalFrame()). Most
-     * code should not care where a frame was pushed, but if it is necessary to
-     * pick out frames pushed by js::Execute, this is the right query:
-     */
-
-    bool isFramePushedByExecute() const {
-        return !!(flags_ & (GLOBAL | EVAL));
-    }
 
     /*
      * Other flags

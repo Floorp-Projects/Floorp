@@ -100,7 +100,7 @@ class EvalScriptGuard
 
     ~EvalScriptGuard() {
         if (script_) {
-            CallDestroyScriptHook(cx_->runtime()->defaultFreeOp(), script_);
+            script_->clearTraps(cx_->runtime()->defaultFreeOp());
             script_->cacheForEval();
             EvalCacheEntry cacheEntry = {script_, lookup_.callerScript, lookup_.pc};
             lookup_.str = lookupStr_;
@@ -120,7 +120,6 @@ class EvalScriptGuard
         if (p_) {
             script_ = p_->script;
             cx_->runtime()->evalCache.remove(p_);
-            CallNewScriptHook(cx_, script_, NullPtr());
             script_->uncacheForEval();
         }
     }
