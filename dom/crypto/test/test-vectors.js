@@ -657,5 +657,14 @@ tv = {
       "y": "AUNouOdGgHsraPNhXNeNdhpGTd15GPyN9R0iWWL98ePc" +
            "JD4mUQD/DsEzNZ4zLkTdSa/Y5fOP6GEzVzQy0zwC+goD"
     }
-  }
+  },
+
+  // RFC 2409 <http://tools.ietf.org/html/rfc2409#section-6.1>
+  dh: {
+    prime: util.hex2abv(
+      "ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74" +
+      "020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f1437" +
+      "4fe1356d6d51c245e485b576625e7ec6f44c42e9a63a3620ffffffffffffffff"
+    )
+  },
 }
