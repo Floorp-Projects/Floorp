@@ -28,6 +28,7 @@
 #define WEBCRYPTO_ALG_RSA_OAEP      "RSA-OAEP"
 #define WEBCRYPTO_ALG_ECDH          "ECDH"
 #define WEBCRYPTO_ALG_ECDSA         "ECDSA"
+#define WEBCRYPTO_ALG_DH            "DH"
 
 // WebCrypto key formats
 #define WEBCRYPTO_KEY_FORMAT_RAW    "raw"
@@ -191,6 +192,8 @@ MapAlgorithmNameToMechanism(const nsString& aName)
     mechanism = CKM_RSA_PKCS_OAEP;
   } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_ECDH)) {
     mechanism = CKM_ECDH1_DERIVE;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {
+    mechanism = CKM_DH_PKCS_DERIVE;
   }
 
   return mechanism;
@@ -231,6 +234,8 @@ NormalizeToken(const nsString& aName, nsString& aDest)
     aDest.AssignLiteral(WEBCRYPTO_ALG_ECDH);
   } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_ECDSA)) {
     aDest.AssignLiteral(WEBCRYPTO_ALG_ECDSA);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_DH)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_DH);
   // Named curve values
   } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_NAMED_CURVE_P256)) {
     aDest.AssignLiteral(WEBCRYPTO_NAMED_CURVE_P256);
