@@ -4,13 +4,16 @@
 
 let {AddonTestUtils} = Components.utils.import("resource://testing-common/AddonManagerTesting.jsm", {});
 
-const OPENH264_PLUGIN_ID       = "openh264-plugin@cisco.com";
-const OPENH264_PREF_BRANCH     = "media.openh264.";
+const OPENH264_PLUGIN_ID       = "gmp-gmpopenh264";
+const OPENH264_PREF_BRANCH     = "media." + OPENH264_PLUGIN_ID + ".";
 const OPENH264_PREF_ENABLED    = OPENH264_PREF_BRANCH + "enabled";
 const OPENH264_PREF_PATH       = OPENH264_PREF_BRANCH + "path";
 const OPENH264_PREF_VERSION    = OPENH264_PREF_BRANCH + "version";
 const OPENH264_PREF_LASTUPDATE = OPENH264_PREF_BRANCH + "lastUpdate";
 const OPENH264_PREF_AUTOUPDATE = OPENH264_PREF_BRANCH + "autoupdate";
+const PREF_LOGGING             = OPENH264_PREF_BRANCH + "provider.logging";
+const PREF_LOGGING_LEVEL       = PREF_LOGGING + ".level";
+const PREF_LOGGING_DUMP        = PREF_LOGGING + ".dump";
 
 const TEST_DATE = new Date(2013, 0, 1, 12);
 
@@ -56,6 +59,9 @@ function openDetailsView(aId) {
 }
 
 add_task(function* initializeState() {
+  Services.prefs.setBoolPref(PREF_LOGGING_DUMP, true);
+  Services.prefs.setIntPref(PREF_LOGGING_LEVEL, 0);
+
   gManagerWindow = yield open_manager();
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
@@ -67,6 +73,8 @@ add_task(function* initializeState() {
     Services.prefs.clearUserPref(OPENH264_PREF_VERSION);
     Services.prefs.clearUserPref(OPENH264_PREF_LASTUPDATE);
     Services.prefs.clearUserPref(OPENH264_PREF_AUTOUPDATE);
+    Services.prefs.clearUserPref(PREF_LOGGING_DUMP);
+    Services.prefs.clearUserPref(PREF_LOGGING_LEVEL);
   });
 
   let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);

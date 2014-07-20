@@ -15,18 +15,22 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
 
 const URI_EXTENSION_STRINGS    = "chrome://mozapps/locale/extensions/extensions.properties";
 const STRING_TYPE_NAME         = "type.%ID%.name";
 
-const OPENH264_PLUGIN_ID       = "openh264-plugin@cisco.com";
-const OPENH264_PREF_BRANCH     = "media.openh264.";
+const OPENH264_PLUGIN_ID       = "gmp-gmpopenh264";
+const OPENH264_PREF_BRANCH     = "media." + OPENH264_PLUGIN_ID + ".";
 const OPENH264_PREF_ENABLED    = "enabled";
 const OPENH264_PREF_PATH       = "path";
 const OPENH264_PREF_VERSION    = "version";
 const OPENH264_PREF_LASTUPDATE = "lastUpdate";
 const OPENH264_PREF_AUTOUPDATE = "autoupdate";
-const OPENH264_PREF_PROVIDERENABLED = "providerEnabled";
+const OPENH264_PREF_PROVIDERENABLED = "provider.enabled";
+const OPENH264_PREF_LOGGING    = "provider.logging";
+const OPENH264_PREF_LOGGING_LEVEL = OPENH264_PREF_LOGGING + ".level"; // media.gmp-gmpopenh264.provider.logging.level
+const OPENH264_PREF_LOGGING_DUMP = OPENH264_PREF_LOGGING + ".dump"; // media.gmp-gmpopenh264.provider.logging.dump
 const OPENH264_HOMEPAGE_URL    = "http://www.openh264.org/";
 const OPENH264_OPTIONS_URL     = "chrome://mozapps/content/extensions/openH264Prefs.xul";
 
@@ -36,6 +40,30 @@ XPCOMUtils.defineLazyGetter(this, "prefs",
   () => new Preferences(OPENH264_PREF_BRANCH));
 XPCOMUtils.defineLazyGetter(this, "gmpService",
   () => Cc["@mozilla.org/gecko-media-plugin-service;1"].getService(Ci.mozIGeckoMediaPluginService));
+
+let gLogger;
+let gLogDumping = false;
+let gLogAppenderDump = null;
+
+function configureLogging() {
+  if (!gLogger) {
+    gLogger = Log.repository.getLogger("Toolkit.OpenH264Provider");
+    gLogger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
+  }
+  gLogger.level = prefs.get(OPENH264_PREF_LOGGING_LEVEL, Log.Level.Warn);
+
+  let logDumping = prefs.get(OPENH264_PREF_LOGGING_DUMP, false);
+  if (logDumping != gLogDumping) {
+    if (logDumping) {
+      gLogAppenderDump = new Log.DumpAppender(new Log.BasicFormatter());
+      gLogger.addAppender(gLogAppenderDump);
+    } else {
+      gLogger.removeAppender(gLogAppenderDump);
+      gLogAppenderDump = null;
+    }
+    gLogDumping = logDumping;
+  }
+}
 
 /**
  * The OpenH264Wrapper provides the info for the OpenH264 GMP plugin to public callers through the API.
@@ -63,7 +91,7 @@ let OpenH264Wrapper = Object.freeze({
   get isActive() { return !this.userDisabled; },
   get appDisabled() { return false; },
 
-  get userDisabled() { return !prefs.get(OPENH264_PREF_ENABLED, false); },
+  get userDisabled() { return !prefs.get(OPENH264_PREF_ENABLED, true); },
   set userDisabled(aVal) { prefs.set(OPENH264_PREF_ENABLED, aVal === false); },
 
   get blocklistState() { return Ci.nsIBlocklistService.STATE_NOT_BLOCKED; },
@@ -85,7 +113,7 @@ let OpenH264Wrapper = Object.freeze({
   get updateDate() {
     let time = Number(prefs.get(OPENH264_PREF_LASTUPDATE, null));
     if (time !== NaN && this.isInstalled) {
-      return new Date(time)
+      return new Date(time * 1000)
     }
     return null;
   },
@@ -158,20 +186,30 @@ let OpenH264Wrapper = Object.freeze({
 
 let OpenH264Provider = {
   startup: function() {
+    configureLogging();
+    this._log = Log.repository.getLogger("Toolkit.OpenH264Provider");
+    this.gmpPath = prefs.get(OPENH264_PREF_PATH, null);
+    let enabled = prefs.get(OPENH264_PREF_ENABLED, true);
+    this._log.trace("startup() - enabled=" + enabled + ", gmpPath="+this.gmpPath);
+
+
     Services.obs.addObserver(this, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED, false);
     prefs.observe(OPENH264_PREF_ENABLED, this.onPrefEnabledChanged, this);
     prefs.observe(OPENH264_PREF_PATH, this.onPrefPathChanged, this);
+    prefs.observe(OPENH264_PREF_LOGGING, configureLogging);
 
-    this.gmpPath = prefs.get(OPENH264_PREF_PATH, null);
-    if (this.gmpPath) {
+    if (this.gmpPath && enabled) {
+      this._log.info("startup() - adding gmp directory " + this.gmpPath);
       gmpService.addPluginDirectory(this.gmpPath);
     }
   },
 
   shutdown: function() {
+    this._log.trace("shutdown()");
     Services.obs.removeObserver(this, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
     prefs.ignore(OPENH264_PREF_ENABLED, this.onPrefEnabledChanged, this);
     prefs.ignore(OPENH264_PREF_PATH, this.onPrefPathChanged, this);
+    prefs.ignore(OPENH264_PREF_LOGGING, configureLogging);
   },
 
   onPrefEnabledChanged: function() {
@@ -180,6 +218,15 @@ let OpenH264Provider = {
     AddonManagerPrivate.callAddonListeners(wrapper.isActive ?
                                            "onEnabling" : "onDisabling",
                                            wrapper, false);
+    if (this.gmpPath) {
+      if (wrapper.isActive) {
+        this._log.info("onPrefEnabledChanged() - adding gmp directory " + this.gmpPath);
+        gmpService.addPluginDirectory(this.gmpPath);
+      } else {
+        this._log.info("onPrefEnabledChanged() - removing gmp directory " + this.gmpPath);
+        gmpService.removePluginDirectory(this.gmpPath);
+      }
+    }
     AddonManagerPrivate.callAddonListeners(wrapper.isActive ?
                                            "onEnabled" : "onDisabled",
                                            wrapper);
@@ -190,13 +237,15 @@ let OpenH264Provider = {
 
     AddonManagerPrivate.callAddonListeners("onUninstalling", wrapper, false);
     if (this.gmpPath) {
+      this._log.info("onPrefPathChanged() - removing gmp directory " + this.gmpPath);
       gmpService.removePluginDirectory(this.gmpPath);
     }
     AddonManagerPrivate.callAddonListeners("onUninstalled", wrapper);
 
     AddonManagerPrivate.callInstallListeners("onExternalInstall", null, wrapper, null, false);
     this.gmpPath = prefs.get(OPENH264_PREF_PATH, null);
-    if (this.gmpPath) {
+    if (this.gmpPath && wrapper.isActive) {
+      this._log.info("onPrefPathChanged() - adding gmp directory " + this.gmpPath);
       gmpService.addPluginDirectory(this.gmpPath);
     }
     AddonManagerPrivate.callAddonListeners("onInstalled", wrapper);
