@@ -40,6 +40,8 @@ user_pref("media.volume_scale", "0.01");
 user_pref("security.warn_viewing_mixed", false);
 user_pref("app.update.enabled", false);
 user_pref("app.update.staging.enabled", false);
+// Make sure GMPInstallManager won't hit the network.
+user_pref("media.gmp-manager.url", "https://%(server)s/dummy.xml");
 user_pref("browser.panorama.experienced_first_run", true); // Assume experienced
 user_pref("dom.w3c_touch_events.enabled", 1);
 user_pref("dom.undo_manager.enabled", true);
