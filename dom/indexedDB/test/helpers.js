@@ -332,10 +332,6 @@ function workerScript() {
       return "undefined";
     }
 
-    if (_thing_ === null) {
-      return "null";
-    }
-
     let str;
 
     try {
