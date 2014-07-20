@@ -514,8 +514,8 @@ function executeScript(msg, directInject) {
     }
     else {
       try {
-        sandbox.__marionetteParams = elementManager.convertWrappedArguments(
-          msg.json.args, curFrame);
+        sandbox.__marionetteParams = Cu.cloneInto(elementManager.convertWrappedArguments(
+          msg.json.args, curFrame), sandbox, { wrapReflectors: true });
       }
       catch(e) {
         sendError(e.message, e.code, e.stack, asyncTestCommandId);
@@ -646,8 +646,8 @@ function executeWithCallback(msg, useFinish) {
   }
   else {
     try {
-      sandbox.__marionetteParams = elementManager.convertWrappedArguments(
-        msg.json.args, curFrame);
+      sandbox.__marionetteParams = Cu.cloneInto(elementManager.convertWrappedArguments(
+        msg.json.args, curFrame), sandbox, { wrapReflectors: true });
     }
     catch(e) {
       sendError(e.message, e.code, e.stack, asyncTestCommandId);
