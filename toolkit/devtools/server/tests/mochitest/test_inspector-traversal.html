@@ -214,6 +214,14 @@ addTest(function testLongListTraversal() {
   }).then(runNextTest));
 });
 
+addTest(function testObjectNodeChildren() {
+  promiseDone(
+    gWalker.querySelector(gWalker.rootNode, "object")
+    .then(object => gWalker.children(object))
+    .then(nodeArrayChecker(true, true, "1"))
+    .then(runNextTest));
+});
+
 addTest(function testSiblings() {
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#a").then(a => {
     return gWalker.siblings(a, { maxNodes: 5, center: a }).then(nodeArrayChecker(true, false, "abcde"));
