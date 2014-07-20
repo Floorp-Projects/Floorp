@@ -137,12 +137,11 @@ Result
 AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
                              const CertPolicyId& policy,
                              const SECItem& candidateCertDER,
-                     /*out*/ TrustLevel* trustLevel)
+                             /*out*/ TrustLevel& trustLevel)
 {
   MOZ_ASSERT(policy.IsAnyPolicy());
-  MOZ_ASSERT(trustLevel);
   MOZ_ASSERT(mTrustedRoot);
-  if (!trustLevel || !policy.IsAnyPolicy()) {
+  if (!policy.IsAnyPolicy()) {
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
   if (!mTrustedRoot) {
@@ -176,18 +175,18 @@ AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
                               : CERTDB_TRUSTED;
     if (((flags & (relevantTrustBit | CERTDB_TERMINAL_RECORD)))
             == CERTDB_TERMINAL_RECORD) {
-      *trustLevel = TrustLevel::ActivelyDistrusted;
+      trustLevel = TrustLevel::ActivelyDistrusted;
       return Success;
     }
   }
 
   // mTrustedRoot is the only trust anchor for this validation.
   if (CERT_CompareCerts(mTrustedRoot.get(), candidateCert.get())) {
-    *trustLevel = TrustLevel::TrustAnchor;
+    trustLevel = TrustLevel::TrustAnchor;
     return Success;
   }
 
-  *trustLevel = TrustLevel::InheritsTrust;
+  trustLevel = TrustLevel::InheritsTrust;
   return Success;
 }
 

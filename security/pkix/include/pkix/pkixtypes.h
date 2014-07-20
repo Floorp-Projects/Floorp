@@ -192,16 +192,16 @@ public:
   //
   // When policy.IsAnyPolicy(), then no policy-related checking should be done.
   // When !policy.IsAnyPolicy(), then GetCertTrust MUST NOT return with
-  // *trustLevel == TrustAnchor unless the given cert is considered a trust
+  // trustLevel == TrustAnchor unless the given cert is considered a trust
   // anchor *for that policy*. In particular, if the user has marked an
   // intermediate certificate as trusted, but that intermediate isn't in the
   // list of EV roots, then GetCertTrust must result in
-  // *trustLevel == InheritsTrust instead of *trustLevel == TrustAnchor
+  // trustLevel == InheritsTrust instead of trustLevel == TrustAnchor
   // (assuming the candidate cert is not actively distrusted).
   virtual Result GetCertTrust(EndEntityOrCA endEntityOrCA,
                               const CertPolicyId& policy,
                               const SECItem& candidateCertDER,
-                              /*out*/ TrustLevel* trustLevel) = 0;
+                              /*out*/ TrustLevel& trustLevel) = 0;
 
   class IssuerChecker
   {
