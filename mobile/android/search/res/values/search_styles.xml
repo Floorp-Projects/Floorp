@@ -13,19 +13,4 @@
     <style name="BorderLessButton">
     </style>
 
-    <style name="AutoCompleteDropdown">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:background">#fff</item>
-        <item name="android:layout_margin">10dp</item>
-    </style>
-
-    <style name="AutoCompleteEditText">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:imeOptions">actionSearch</item>
-        <item name="android:inputType">textNoSuggestions|textVisiblePassword</item>
-
-    </style>
-
 </resources>

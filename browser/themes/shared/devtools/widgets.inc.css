@@ -1361,13 +1361,23 @@
   box-shadow: inset 0 -1px 0 @smw_itemLightTopBorder@;
 }
 
-.table-widget-cell.flash-out {
-  animation: flash-out 0.5s ease-in;
+.theme-light .table-widget-cell.flash-out {
+  animation: light-flash-out 0.5s ease-in;
 }
 
-@keyframes flash-out {
+@keyframes light-flash-out {
   to {
-    background: #a18650;
+    background: #E8B671;
+  }
+}
+
+.theme-dark .table-widget-cell.flash-out {
+  animation: dark-flash-out 0.5s ease-in;
+}
+
+@keyframes dark-flash-out {
+  to {
+    background: #B28025;
   }
 }
 

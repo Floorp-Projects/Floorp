@@ -49,10 +49,9 @@
                     data-pref="devtools.inspector.showUserAgentStyles"/>
           <hbox align="center">
             <label value="&options.defaultColorUnit.label;"
-              control="defaultColorUnitMenuList"
-              accesskey="&options.defaultColorUnit.accesskey;"/>
+                   control="defaultColorUnitMenuList"
+                   accesskey="&options.defaultColorUnit.accesskey;"/>
             <menulist id="defaultColorUnitMenuList"
-                      label="&options.defaultColorUnit.label;"
                       data-pref="devtools.defaultColorUnit">
               <menupopup>
                 <menuitem label="&options.defaultColorUnit.hex;" value="hex"/>
@@ -85,6 +84,52 @@
                     tooltiptext="&options.showPlatformData.tooltip;"
                     data-pref="devtools.profiler.ui.show-platform-data"/>
         </vbox>
+      </vbox>
+
+      <vbox id="sourceeditor-box" class="options-vertical-pane" flex="1">
+        <label value="&options.sourceeditor.label;"/>
+        <vbox id="sourceeditor-options" class="options-groupbox">
+          <checkbox id="devtools-sourceeditor-detectindentation"
+                    label="&options.sourceeditor.detectindentation.label;"
+                    tooltiptext="&options.sourceeditor.detectindentation.tooltip;"
+                    data-pref="devtools.editor.detectindentation"/>
+          <checkbox id="devtools-sourceeditor-autoclosebrackets"
+                    label="&options.sourceeditor.autoclosebrackets.label;"
+                    tooltiptext="&options.sourceeditor.autoclosebrackets.tooltip;"
+                    data-pref="devtools.editor.autoclosebrackets"/>
+          <checkbox id="devtools-sourceeditor-expandtab"
+                    label="&options.sourceeditor.expandtab.label;"
+                    tooltiptext="&options.sourceeditor.expandtab.tooltip;"
+                    data-pref="devtools.editor.expandtab"/>
+          <hbox align="center">
+            <label value="&options.sourceeditor.tabsize.label;"
+                   control="devtools-sourceeditor-tabsize-menulist"
+                   accesskey="&options.sourceeditor.tabsize.accesskey;"/>
+            <menulist id="devtools-sourceeditor-tabsize-menulist"
+                      data-pref="devtools.editor.tabsize">
+              <menupopup>
+                <menuitem label="2" value="2"/>
+                <menuitem label="4" value="4"/>
+                <menuitem label="8" value="8"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+          <hbox align="center">
+            <label value="&options.sourceeditor.keybinding.label;"
+                   control="devtools-sourceeditor-keybinding-menulist"
+                   accesskey="&options.sourceeditor.keybinding.accesskey;"/>
+            <menulist id="devtools-sourceeditor-keybinding-menulist"
+                      data-pref="devtools.editor.keymap">
+              <menupopup>
+                <menuitem value="default"
+                          label="&options.sourceeditor.keybinding.default.label;"/>
+                <menuitem label="Vim" value="vim"/>
+                <menuitem label="Emacs" value="emacs"/>
+                <menuitem label="Sublime Text" value="sublime"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+        </vbox>
         <label value="&options.context.advancedSettings;"/>
         <vbox id="context-options" class="options-groupbox">
           <checkbox id="devtools-disable-cache"
@@ -104,7 +149,7 @@
                       tooltiptext="&options.enableRemote.tooltip;"
                       data-pref="devtools.debugger.remote-enabled"/>
           </hbox>
-          <label class="options-citation-label"
+          <label class="options-citation-label theme-comment"
                  value="&options.context.triggersPageRefresh;"/>
         </vbox>
       </vbox>
