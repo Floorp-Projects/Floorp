@@ -17,6 +17,9 @@ XPCSHELL_TESTS_MANIFESTS += [
     'test/unit/xpcshell-parent-process.ini'
 ]
 
+if CONFIG['ENABLE_INTL_API']:
+    MOCHITEST_MANIFESTS += ['test/mochitest-intl-api.ini']
+
 EXPORTS.mozilla.dom.indexedDB += [
     'ActorsParent.h',
     'FileInfo.h',
