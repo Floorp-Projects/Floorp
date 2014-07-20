@@ -619,11 +619,14 @@ function getRuleViewLinkByIndex(view, index) {
 /**
  * Get the rule editor from the rule-view given its index
  * @param {CssRuleView} view The instance of the rule-view panel
- * @param {Number} index The index of the link to get
+ * @param {Number} childrenIndex The children index of the element to get
+ * @param {Number} nodeIndex The child node index of the element to get
  * @return {DOMNode} The rule editor if any at this index
  */
-function getRuleViewRuleEditor(view, index) {
-  return view.element.children[index]._ruleEditor;
+function getRuleViewRuleEditor(view, childrenIndex, nodeIndex) {
+  return nodeIndex !== undefined ?
+    view.element.children[childrenIndex].childNodes[nodeIndex]._ruleEditor :
+    view.element.children[childrenIndex]._ruleEditor;
 }
 
 /**
