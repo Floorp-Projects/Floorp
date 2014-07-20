@@ -136,7 +136,7 @@
   <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="484802559ed106bac4811bd01c024ca64f741e60"/>
   <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="83f363a26069e9c188d2aaef5b9ef63e84ad1511"/>
   <project name="platform/hardware/qcom/camera" path="hardware/qcom/camera" revision="5e110615212302c5d798a3c223dcee458817651c"/>
-  <project name="platform/hardware/qcom/display" path="hardware/qcom/display" revision="280d29203b2aa30d713c5a6cc63d626e5a7df822"/>
+  <project name="platform/hardware/qcom/display" path="hardware/qcom/display" revision="fa9ffd47948eb24466de227e48fe9c4a7c5e7711"/>
   <project name="platform/hardware/qcom/gps" path="hardware/qcom/gps" revision="5dc48bd46f9589653f8bf297be5d73676f2e2867"/>
   <project name="platform/hardware/qcom/media" path="hardware/qcom/media" revision="8a0d0b0d9889ef99c4c6317c810db4c09295f15a"/>
   <project name="platform/hardware/qcom/wlan" path="hardware/qcom/wlan" revision="2208fa3537ace873b8f9ec2355055761c79dfd5f"/>
