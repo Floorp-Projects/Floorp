@@ -18,7 +18,10 @@ namespace win {
 
 // TODO(rvargas): remove this with the rest of the verifier.
 #if defined(COMPILER_MSVC)
-#include <intrin.h>
+// MSDN says to #include <intrin.h>, but that breaks the VS2005 build.
+extern "C" {
+  void* _ReturnAddress();
+}
 #define BASE_WIN_GET_CALLER _ReturnAddress()
 #elif defined(COMPILER_GCC)
 #define BASE_WIN_GET_CALLER __builtin_extract_return_addr(\\
