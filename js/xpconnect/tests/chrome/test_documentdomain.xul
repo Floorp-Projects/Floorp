@@ -19,6 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=601277
   <![CDATA[
   /** Tests for document.domain. **/
 
+  const Cu = Components.utils;
   SimpleTest.waitForExplicitFinish();
 
   // Wait for the frames to load.
@@ -50,6 +51,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=601277
     win1A.storeReference(win1B);
     win1B.storeReference(win1A);
     ok(win1A.tryToAccessStored(), "Stored references work when same-origin");
+    win1A.evalFromB = Cu.unwaiveXrays(win1B.eval); // Crashtest for bug 1040181.
+    win1B.functionFromA = Cu.unwaiveXrays(win1A.Function); // Crashtest for bug 1040181.
+    ok(!win1A.invokingFunctionThrowsSecurityException('evalFromB'), "Should allow before document.domain");
+    ok(!win1B.invokingFunctionThrowsSecurityException('functionFromA'), "Should allow before document.domain");
 
     // Set document.domain on test1A. This should grant no access, since nobody
     // else set it.
@@ -60,6 +65,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=601277
     ok(!win1A.tryToAccessStored(), "No longer same-origin");
     ok(!win1B.tryToAccess(win1A), "No longer same-origin");
     ok(!win1B.tryToAccessStored(), "No longer same-origin");
+    ok(win1A.invokingFunctionThrowsSecurityException('evalFromB'), "No longer same-origin");
+    ok(win1B.invokingFunctionThrowsSecurityException('functionFromA'), "No longer same-origin");
 
     // Set document.domain on test1B. Now we're cooking with gas.
     win1B.setDomain('example.org');

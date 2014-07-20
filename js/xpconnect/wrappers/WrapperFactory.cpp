@@ -525,11 +525,10 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
     if (!targetSubsumesOrigin) {
         // Do a belt-and-suspenders check against exposing eval()/Function() to
         // non-subsuming content.
-        JSFunction *fun = JS_GetObjectFunction(obj);
-        if (fun) {
+        if (JSFunction *fun = JS_GetObjectFunction(obj)) {
             if (JS_IsBuiltinEvalFunction(fun) || JS_IsBuiltinFunctionConstructor(fun)) {
-                JS_ReportError(cx, "Permission denied to expose eval or Function to non-subsuming content");
-                return nullptr;
+                NS_WARNING("Trying to expose eval or Function to non-subsuming content!");
+                wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
             }
         }
     }
