@@ -39,7 +39,7 @@ Result CheckIssuerIndependentProperties(
           KeyPurposeId requiredEKUIfPresent,
           const CertPolicyId& requiredPolicy,
           unsigned int subCACount,
-          /*optional out*/ TrustLevel* trustLevel = nullptr);
+          /*out*/ TrustLevel& trustLevel);
 
 Result CheckNameConstraints(const SECItem& encodedNameConstraints,
                             const BackCert& firstChild,

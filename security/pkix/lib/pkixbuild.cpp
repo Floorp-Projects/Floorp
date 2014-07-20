@@ -222,7 +222,7 @@ BuildForward(TrustDomain& trustDomain,
   rv = CheckIssuerIndependentProperties(trustDomain, subject, time,
                                         requiredKeyUsageIfPresent,
                                         requiredEKUIfPresent, requiredPolicy,
-                                        subCACount, &trustLevel);
+                                        subCACount, trustLevel);
   Result deferredEndEntityError = Success;
   if (rv != Success) {
     if (subject.endEntityOrCA == EndEntityOrCA::MustBeEndEntity &&
