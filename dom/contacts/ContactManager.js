@@ -248,17 +248,23 @@ ContactManager.prototype = {
     let permValue =
       Services.perms.testExactPermissionFromPrincipal(principal, type);
     if (permValue == Ci.nsIPermissionManager.ALLOW_ACTION) {
-      aAllowCallback();
+      if (aAllowCallback) {
+        aAllowCallback();
+      }
       return;
-    } else if (permValue == Ci.nsIPermissionManager.DENY_ACTION) {
-      aCancelCallback();
+    } else if (permValue == Ci.nsIPermissionManager.DENY_ACTION ||
+               permValue == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
+      if (aCancelCallback) {
+        aCancelCallback();
+      }
+      return;
     }
 
     // Create an array with a single nsIContentPermissionType element.
     let type = {
       type: "contacts",
       access: access,
-      options: null,
+      options: [],
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionType])
     };
     let typeArray = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
@@ -269,8 +275,16 @@ ContactManager.prototype = {
       types: typeArray,
       principal: principal,
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionRequest]),
-      allow: aAllowCallback,
-      cancel: aCancelCallback,
+      allow: aAllowCallback ||
+             function() {
+               if (DEBUG)
+                 debug("Default allow contacts callback. " + access +"\n");
+             },
+      cancel: aCancelCallback ||
+              function() {
+                if (DEBUG)
+                  debug("Default cancel contacts callback. " + access +"\n");
+              },
       window: this._window
     };
 
@@ -425,7 +439,7 @@ ContactManager.prototype = {
     }.bind(this);
 
     let cancelCallback = function() {
-      Services.DOMRequest.fireError(request);
+      Services.DOMRequest.fireError(request, "");
     };
 
     this.askPermission("revision", request, allowCallback, cancelCallback);
@@ -442,7 +456,7 @@ ContactManager.prototype = {
     }.bind(this);
 
     let cancelCallback = function() {
-      Services.DOMRequest.fireError(request);
+      Services.DOMRequest.fireError(request, "");
     };
 
     this.askPermission("count", request, allowCallback, cancelCallback);
