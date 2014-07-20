@@ -33,7 +33,7 @@
 
 .theme-bg-contrast,
 .variable-or-property:not([overridden])[changed] { /* contrast bg color to attract attention on a container */
-  background: #a18650;
+  background: #B28025; /* Background - Attention */
 }
 
 .theme-link,

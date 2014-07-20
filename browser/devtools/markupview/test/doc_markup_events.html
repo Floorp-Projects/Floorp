@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+    #container {
+      border: 1px solid #000;
+      width: 200px;
+      height: 85px;
+    }
+
+    #container > div {
+      border: 1px solid #000;
+      display: inline-block;
+      margin: 2px;
+    }
+
+    #output,
+    #noevents,
+    #DOM0,
+    #handleevent,
+    #fatarrow,
+    #bound,
+    #boundhe {
+      border: 1px solid #000;
+      width: 200px;
+      min-height: 1em;
+      cursor: pointer;
+    }
+
+    #output,
+    #noevents {
+      cursor: auto;
+    }
+
+    #output {
+      min-height: 1.5em;
+    }
+    </style>
+    <script type="application/javascript;version=1.8">
+      function init() {
+        let container = document.getElementById("container");
+        let multiple = document.getElementById("multiple");
+        let fatarrow = document.getElementById("fatarrow");
+
+        container.addEventListener("mouseover", mouseoverHandler, true);
+        multiple.addEventListener("click", clickHandler, false);
+        multiple.addEventListener("mouseup", mouseupHandler, false);
+
+        new handleEventClick();
+        new boundHandleEventClick();
+
+        let bound = document.getElementById("bound");
+        boundClickHandler = boundClickHandler.bind(this);
+        bound.addEventListener("click", boundClickHandler);
+
+        fatarrow.addEventListener("click", event => {
+          alert("Yay for the fat arrow!");
+        });
+      }
+
+      function mouseoverHandler(event) {
+        if (event.target.id !== "container") {
+          let output = document.getElementById("output");
+          output.textContent = event.target.textContent;
+        }
+      }
+
+      function clickHandler(event) {
+        let output = document.getElementById("output");
+        output.textContent = "click";
+      }
+
+      function boundClickHandler(event) {
+        alert("Bound event clicked");
+      }
+
+      function mouseupHandler(event) {
+        let output = document.getElementById("output");
+        output.textContent = "mouseup";
+      }
+
+      function handleEventClick(hehe) {
+        let handleevent = document.getElementById("handleevent");
+        handleevent.addEventListener("click", this);
+      }
+
+      handleEventClick.prototype = {
+        handleEvent: function(blah) {
+          alert("handleEvent clicked");
+        }
+      };
+
+      function boundHandleEventClick() {
+        let boundhe = document.getElementById("boundhe");
+        this.handleEvent = this.handleEvent.bind(this);
+        boundhe.addEventListener("click", this);
+      }
+
+      boundHandleEventClick.prototype = {
+        handleEvent: function() {
+          alert("boundHandleEvent clicked");
+        }
+      };
+    </script>
+  </head>
+  <body onload="init();">
+    <div id="container">
+      <div>1</div>
+      <div>2</div>
+      <div>3</div>
+      <div>4</div>
+      <div>5</div>
+      <div>6</div>
+      <div>7</div>
+      <div>8</div>
+      <div>9</div>
+      <div>10</div>
+      <div>11</div>
+      <div>12</div>
+      <div>13</div>
+      <div>14</div>
+      <div>15</div>
+      <div>16</div>
+      <div id="multiple">multiple</div>
+    </div>
+    <div id="output"></div>
+    <div id="noevents">No events here</div>
+    <div id="DOM0" onclick="alert('hi')">DOM0 event here</div>
+    <div id="handleevent">handleEvent event here</div>
+    <div id="fatarrow">Fat arrow event</div>
+    <div id="boundhe">Bound handleEvent</div>
+    <div id="bound">Bound event</div>
+  </body>
+</html>

@@ -51,7 +51,8 @@ let test = asyncTest(function*() {
 function* testEditSelector(view, name) {
   info("Test editing existing selector fields");
 
-  let idRuleEditor = getRuleViewRuleEditor(view, 1);
+  let idRuleEditor = getRuleViewRuleEditor(view, 1) ||
+    getRuleViewRuleEditor(view, 1, 0);
 
   info("Focusing an existing selector name in the rule-view");
   let editor = yield focusEditableField(idRuleEditor.selectorText);

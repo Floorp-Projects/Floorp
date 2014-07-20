@@ -43,30 +43,64 @@ function testOptionsShortcut() {
   return deferred.promise;
 }
 
-function testOptions() {
+function* testOptions() {
   let tool = toolbox.getPanel("options");
   panelWin = tool.panelWin;
   let prefNodes = tool.panelDoc.querySelectorAll("checkbox[data-pref]");
 
   // Store modified pref names so that they can be cleared on error.
-  for (let node of prefNodes) {
+  for (let node of tool.panelDoc.querySelectorAll("[data-pref]")) {
     let pref = node.getAttribute("data-pref");
     modifiedPrefs.push(pref);
   }
 
-  // Test each options pref
-  let p = promise.resolve();
   for (let node of prefNodes) {
-    let prefValue = Services.prefs.getBoolPref(node.getAttribute("data-pref"));
-    p = p.then(testMouseClick.bind(null, node, prefValue));
-  }
-  // Do again with opposite values to reset prefs
-  for (let node of prefNodes) {
-    let prefValue = !Services.prefs.getBoolPref(node.getAttribute("data-pref"));
-    p = p.then(testMouseClick.bind(null, node, prefValue));
+    let prefValue = GetPref(node.getAttribute("data-pref"));
+
+    // Test clicking the checkbox for each options pref
+    yield testMouseClick(node, prefValue);
+
+    // Do again with opposite values to reset prefs
+    yield testMouseClick(node, !prefValue);
   }
 
-  return p;
+  let prefDropdowns = tool.panelDoc.querySelectorAll("menulist[data-pref]");
+  for (let node of prefDropdowns) {
+    yield testMenuList(node);
+  }
+}
+
+function* testMenuList(menulist) {
+  let pref = menulist.getAttribute("data-pref");
+  let menuitems = menulist.querySelectorAll("menuitem");
+  info ("Checking menu list for: " + pref);
+
+  is (menulist.selectedItem.value, GetPref(pref), "Menu starts out selected");
+
+  for (let menuitem of menuitems) {
+    if (menuitem === menulist.selectedItem) {
+      continue;
+    }
+
+    let deferred = promise.defer();
+    gDevTools.once("pref-changed", (event, data) => {
+      if (data.pref == pref) {
+        ok(true, "Correct pref was changed");
+        is (GetPref(pref), menuitem.value, "Preference been switched for " + pref);
+      } else {
+        ok(false, "Pref " + pref + " was not changed correctly");
+      }
+      deferred.resolve();
+    });
+
+    menulist.selectedItem = menuitem;
+    let commandEvent = menulist.ownerDocument.createEvent("XULCommandEvent");
+    commandEvent.initCommandEvent("command", true, true, window, 0, false, false,
+                                  false, false, null);
+    menulist.dispatchEvent(commandEvent);
+
+    yield deferred.promise;
+  }
 }
 
 function testMouseClick(node, prefValue) {
@@ -76,8 +110,8 @@ function testMouseClick(node, prefValue) {
   gDevTools.once("pref-changed", (event, data) => {
     if (data.pref == pref) {
       ok(true, "Correct pref was changed");
-      is(data.oldValue, prefValue, "Previous value is correct");
-      is(data.newValue, !prefValue, "New value is correct");
+      is(data.oldValue, prefValue, "Previous value is correct for " + pref);
+      is(data.newValue, !prefValue, "New value is correct for " + pref);
     } else {
       ok(false, "Pref " + pref + " was not changed correctly");
     }
@@ -199,6 +233,34 @@ function checkRegistered(toolId, deferred, event, data) {
     ok(false, "Something went wrong, " + toolId + " was not registered");
   }
   deferred.resolve();
+}
+
+function GetPref(name) {
+  let type = Services.prefs.getPrefType(name);
+  switch (type) {
+    case Services.prefs.PREF_STRING:
+      return Services.prefs.getCharPref(name);
+    case Services.prefs.PREF_INT:
+      return Services.prefs.getIntPref(name);
+    case Services.prefs.PREF_BOOL:
+      return Services.prefs.getBoolPref(name);
+    default:
+      throw new Error("Unknown type");
+  }
+}
+
+function SetPref(name, value) {
+  let type = Services.prefs.getPrefType(name);
+  switch (type) {
+    case Services.prefs.PREF_STRING:
+      return Services.prefs.setCharPref(name, value);
+    case Services.prefs.PREF_INT:
+      return Services.prefs.setIntPref(name, value);
+    case Services.prefs.PREF_BOOL:
+      return Services.prefs.setBoolPref(name, value);
+    default:
+      throw new Error("Unknown type");
+  }
 }
 
 function cleanup() {

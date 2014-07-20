@@ -6,7 +6,7 @@
 
     <color name="transparent">#00FFFFFF</color>
 
-
+    <color name="highlight_orange">#FF9500</color>
 
     <!-- card colors -->
     <color name="card_background">#ffffff</color>

@@ -5,6 +5,7 @@
 package org.mozilla.search.autocomplete;
 
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -22,7 +23,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -48,20 +48,21 @@ public class SearchFragment extends Fragment
     // Maximum number of results returned by the suggestion client
     private static final int SUGGESTION_MAX = 5;
 
-    private View mainView;
-    private FrameLayout backdropFrame;
-    private EditText searchBar;
-    private ListView suggestionDropdown;
-    private InputMethodManager inputMethodManager;
-
-    private AutoCompleteAdapter autoCompleteAdapter;
-
     private SuggestClient suggestClient;
     private SuggestionLoaderCallbacks suggestionLoaderCallbacks;
 
-    private State state;
+    private InputMethodManager inputMethodManager;
+    private AutoCompleteAdapter autoCompleteAdapter;
 
-    private enum State {
+    private View mainView;
+    private View searchBar;
+    private EditText editText;
+    private Button clearButton;
+    private ListView suggestionDropdown;
+
+    private State state = State.WAITING;
+
+    private static enum State {
         WAITING,  // The user is doing something else in the app.
         RUNNING   // The user is in search mode.
     }
@@ -71,19 +72,57 @@ public class SearchFragment extends Fragment
     }
 
     @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+
+        // TODO: Don't hard-code this template string (bug 1039758)
+        final String template = "https://search.yahoo.com/sugg/ff?" +
+                "output=fxjson&appid=ffm&command=__searchTerms__&nresults=" + SUGGESTION_MAX;
+
+        suggestClient = new SuggestClient(activity, template, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
+        suggestionLoaderCallbacks = new SuggestionLoaderCallbacks();
+
+        inputMethodManager = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        autoCompleteAdapter = new AutoCompleteAdapter(activity, this);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+
+        suggestClient = null;
+        suggestionLoaderCallbacks = null;
+        inputMethodManager = null;
+        autoCompleteAdapter = null;
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         mainView = inflater.inflate(R.layout.search_auto_complete, container, false);
-        backdropFrame = (FrameLayout) mainView.findViewById(R.id.auto_complete_backdrop);
-        searchBar = (EditText) mainView.findViewById(R.id.auto_complete_search_bar);
-        suggestionDropdown = (ListView) mainView.findViewById(R.id.auto_complete_dropdown);
 
-        inputMethodManager =
-                (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        // Intercept clicks on the main view to deactivate the search bar.
+        mainView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                transitionToWaiting();
+            }
+        });
+
+        searchBar = mainView.findViewById(R.id.search_bar);
+        editText = (EditText) mainView.findViewById(R.id.search_bar_edit_text);
+
+        final View.OnClickListener transitionToRunningListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                transitionToRunning();
+            }
+        };
+        searchBar.setOnClickListener(transitionToRunningListener);
+        editText.setOnClickListener(transitionToRunningListener);
 
         // Attach a listener for the "search" key on the keyboard.
-        searchBar.addTextChangedListener(new TextWatcher() {
+        editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
@@ -99,48 +138,27 @@ public class SearchFragment extends Fragment
                 getLoaderManager().restartLoader(LOADER_ID_SUGGESTION, args, suggestionLoaderCallbacks);
             }
         });
-        searchBar.setOnEditorActionListener(this);
-        searchBar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (v.hasFocus()) {
-                    return;
-                }
-                transitionToRunning();
-            }
-        });
+        editText.setOnEditorActionListener(this);
 
-        final Button clearButton = (Button) mainView.findViewById(R.id.clear_button);
+        clearButton = (Button) mainView.findViewById(R.id.search_bar_clear_button);
         clearButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                searchBar.setText("");
+                editText.setText("");
             }
         });
 
-        backdropFrame.setOnClickListener(new BackdropClickListener());
-
-        autoCompleteAdapter = new AutoCompleteAdapter(getActivity(), this);
+        suggestionDropdown = (ListView) mainView.findViewById(R.id.auto_complete_dropdown);
         suggestionDropdown.setAdapter(autoCompleteAdapter);
-
-        // This will hide the autocomplete box and background frame.
-        transitionToWaiting();
 
         // Attach listener for tapping on a suggestion.
         suggestionDropdown.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String query = (String) suggestionDropdown.getItemAtPosition(position);
+                final String query = (String) suggestionDropdown.getItemAtPosition(position);
                 startSearch(query);
             }
         });
-
-        // TODO: Don't hard-code this template string (bug 1039758)
-        final String template = "https://search.yahoo.com/sugg/ff?" +
-                "output=fxjson&appid=ffm&command=__searchTerms__&nresults=" + SUGGESTION_MAX;
-
-        suggestClient = new SuggestClient(getActivity(), template, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
-        suggestionLoaderCallbacks = new SuggestionLoaderCallbacks();
 
         return mainView;
     }
@@ -148,17 +166,16 @@ public class SearchFragment extends Fragment
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        inputMethodManager = null;
-        mainView = null;
+
         searchBar = null;
+        editText = null;
+        clearButton = null;
+
         if (null != suggestionDropdown) {
             suggestionDropdown.setOnItemClickListener(null);
             suggestionDropdown.setAdapter(null);
             suggestionDropdown = null;
         }
-        autoCompleteAdapter = null;
-        suggestClient = null;
-        suggestionLoaderCallbacks = null;
     }
 
     /**
@@ -178,8 +195,8 @@ public class SearchFragment extends Fragment
      */
     private void startSearch(String queryString) {
         if (getActivity() instanceof AcceptsSearchQuery) {
-            searchBar.setText(queryString);
-            searchBar.setSelection(queryString.length());
+            editText.setText(queryString);
+            editText.setSelection(queryString.length());
             transitionToWaiting();
             ((AcceptsSearchQuery) getActivity()).onSearch(queryString);
         } else {
@@ -191,12 +208,13 @@ public class SearchFragment extends Fragment
         if (state == State.WAITING) {
             return;
         }
-        searchBar.setFocusable(false);
-        searchBar.setFocusableInTouchMode(false);
-        searchBar.clearFocus();
-        inputMethodManager.hideSoftInputFromWindow(searchBar.getWindowToken(), 0);
+
+        setEditTextFocusable(false);
+        mainView.setClickable(false);
+
         suggestionDropdown.setVisibility(View.GONE);
-        backdropFrame.setVisibility(View.GONE);
+        clearButton.setVisibility(View.GONE);
+
         state = State.WAITING;
     }
 
@@ -204,20 +222,34 @@ public class SearchFragment extends Fragment
         if (state == State.RUNNING) {
             return;
         }
-        searchBar.setFocusable(true);
-        searchBar.setFocusableInTouchMode(true);
-        searchBar.requestFocus();
-        inputMethodManager.showSoftInput(searchBar, InputMethodManager.SHOW_IMPLICIT);
+
+        setEditTextFocusable(true);
+        mainView.setClickable(true);
+
         suggestionDropdown.setVisibility(View.VISIBLE);
-        backdropFrame.setVisibility(View.VISIBLE);
+        clearButton.setVisibility(View.VISIBLE);
+
         state = State.RUNNING;
+    }
+
+    private void setEditTextFocusable(boolean focusable) {
+        editText.setFocusable(focusable);
+        editText.setFocusableInTouchMode(focusable);
+
+        if (focusable) {
+            editText.requestFocus();
+            inputMethodManager.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
+        } else {
+            editText.clearFocus();
+            inputMethodManager.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+        }
     }
 
     @Override
     public void onJumpTap(String suggestion) {
-        searchBar.setText(suggestion);
+        editText.setText(suggestion);
         // Move cursor to end of search input.
-        searchBar.setSelection(suggestion.length());
+        editText.setSelection(suggestion.length());
     }
 
     private class SuggestionLoaderCallbacks implements LoaderManager.LoaderCallbacks<List<String>> {
@@ -290,20 +322,6 @@ public class SearchFragment extends Fragment
 
             onStopLoading();
             suggestions = null;
-        }
-    }
-
-    /**
-     * Click handler for the backdrop. This should:
-     * - Remove focus from the search bar
-     * - Hide the keyboard
-     * - Hide the backdrop
-     * - Hide the suggestion box.
-     */
-    private class BackdropClickListener implements View.OnClickListener {
-        @Override
-        public void onClick(View v) {
-            transitionToWaiting();
         }
     }
 }

@@ -2,51 +2,49 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             tools:context=".autocomplete.AutoCompleteFragment"
-    >
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:clickable="false"
+    tools:context=".autocomplete.AutoCompleteFragment">
 
     <FrameLayout
-        android:id="@+id/auto_complete_backdrop"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:background="#a71f1f1f"
-        android:clickable="true"
-        android:focusable="true"/>
-
-    <LinearLayout
-
-        android:layout_width="fill_parent"
+        android:id="@+id/search_bar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/search_card_background"
-        android:orientation="vertical"
-        >
+        android:padding="10dp">
 
-        <FrameLayout
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content">
+        <EditText
+            android:id="@+id/search_bar_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:imeOptions="actionSearch"
+            android:inputType="textNoSuggestions|textVisiblePassword"
+            android:drawableLeft="@drawable/search_icon"
+            android:drawablePadding="10dp"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:hint="@string/search_bar_hint"/>
 
-            <EditText
-                android:id="@+id/auto_complete_search_bar"
-                style="@style/AutoCompleteEditText"/>
+        <Button
+            android:id="@+id/search_bar_clear_button"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_gravity="right|center_vertical"
+            android:layout_marginRight="10dp"
+            android:background="@drawable/search_clear"
+            android:visibility="gone"/>
 
-            <Button
-                android:id="@+id/clear_button"
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:layout_gravity="right|center_vertical"
-                android:layout_marginRight="3dp"
-                android:background="@drawable/search_clear" />
+    </FrameLayout>
 
-        </FrameLayout>
+    <ListView
+        android:id="@+id/auto_complete_dropdown"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#fff"
+        android:visibility="gone"/>
 
-        <ListView
-            android:id="@+id/auto_complete_dropdown"
-            style="@style/AutoCompleteDropdown"/>
-    </LinearLayout>
-
-
-</FrameLayout>
+</LinearLayout>
