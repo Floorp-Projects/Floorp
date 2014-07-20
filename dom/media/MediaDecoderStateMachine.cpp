@@ -632,6 +632,11 @@ bool
 MediaDecoderStateMachine::NeedToDecodeAudio()
 {
   AssertCurrentThreadInMonitor();
+  SAMPLE_LOG("NeedToDecodeAudio() isDec=%d decToTar=%d minPrl=%d seek=%d enufAud=%d",
+             IsAudioDecoding(), mDecodeToSeekTarget, mMinimizePreroll,
+             mState == DECODER_STATE_SEEKING,
+             HaveEnoughDecodedAudio(mAmpleAudioThresholdUsecs * mPlaybackRate));
+
   return IsAudioDecoding() &&
          ((mState == DECODER_STATE_SEEKING && mDecodeToSeekTarget) ||
           (!mMinimizePreroll &&
@@ -830,6 +835,11 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
       StartBuffering();
     }
 
+    return;
+  }
+
+  if (aReason == RequestSampleCallback::CANCELED) {
+    DispatchDecodeTasksIfNeeded();
     return;
   }
 
@@ -1722,6 +1732,11 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
                   !needToDecodeVideo &&
                   !IsPlaying();
 
+  SAMPLE_LOG("DispatchDecodeTasksIfNeeded needAudio=%d dispAudio=%d needVideo=%d dispVid=%d needIdle=%d",
+             needToDecodeAudio, mAudioRequestPending,
+             needToDecodeVideo, mVideoRequestPending,
+             needIdle);
+
   if (needToDecodeAudio) {
     EnsureAudioDecodeTaskQueued();
   }
@@ -1729,10 +1744,6 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
     EnsureVideoDecodeTaskQueued();
   }
 
-  SAMPLE_LOG("DispatchDecodeTasksIfNeeded needAudio=%d dispAudio=%d needVideo=%d dispVid=%d needIdle=%d",
-             needToDecodeAudio, mAudioRequestPending,
-             needToDecodeVideo, mVideoRequestPending,
-             needIdle);
 
   if (needIdle) {
     RefPtr<nsIRunnable> event = NS_NewRunnableMethod(
@@ -2251,9 +2262,10 @@ void MediaDecoderStateMachine::DecodeSeek()
     return;
   }
 
+  mDecodeToSeekTarget = false;
+
   if (!currentTimeChanged) {
     DECODER_LOG("Seek !currentTimeChanged...");
-    mDecodeToSeekTarget = false;
     nsresult rv = mDecodeTaskQueue->Dispatch(
       NS_NewRunnableMethod(this, &MediaDecoderStateMachine::SeekCompleted));
     if (NS_FAILED(rv)) {
@@ -2387,6 +2399,13 @@ MediaDecoderStateMachine::SeekCompleted()
   // Try to decode another frame to detect if we're at the end...
   DECODER_LOG("Seek completed, mCurrentFrameTime=%lld", mCurrentFrameTime);
 
+  mCurrentSeekTarget = SeekTarget();
+
+  // Reset quick buffering status. This ensures that if we began the
+  // seek while quick-buffering, we won't bypass quick buffering mode
+  // if we need to buffer after the seek.
+  mQuickBuffering = false;
+
   // Prevent changes in playback position before 'seeked' is fired for we
   // expect currentTime equals seek target in 'seeked' callback.
   mScheduler->FreezeScheduling();
@@ -2394,11 +2413,6 @@ MediaDecoderStateMachine::SeekCompleted()
     ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
     NS_DispatchToMainThread(stopEvent, NS_DISPATCH_SYNC);
   }
-
-  // Reset quick buffering status. This ensures that if we began the
-  // seek while quick-buffering, we won't bypass quick buffering mode
-  // if we need to buffer after the seek.
-  mQuickBuffering = false;
 
   ScheduleStateMachine();
   mScheduler->ThawScheduling();
