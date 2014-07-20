@@ -9,7 +9,7 @@ SOURCES += [
         'gmp-fake.cpp'
 ]
 
-LIBRARY_NAME = "gmp-fake"
+LIBRARY_NAME = "fake"
 
 USE_STATIC_LIBS = True
 FORCE_SHARED_LIB = True
