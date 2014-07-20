@@ -87,3 +87,24 @@
   background: rgba(205,205,255,0.2);
   outline: 1px solid transparent;
 }
+
+/* Events */
+.markupview-events {
+  font-size: 8px;
+  font-weight: bold;
+  line-height: 10px;
+  border-radius: 3px;
+  padding: 0px 2px;
+  -moz-margin-start: 5px;
+  -moz-user-select: none;
+}
+
+.theme-dark .markupview-events {
+  background-color: #b6babf;
+  color: #14171a;
+}
+
+.theme-light .markupview-events {
+  background-color: #585959;
+  color: #fcfcfc;
+}
