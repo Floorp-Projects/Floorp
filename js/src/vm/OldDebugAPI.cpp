@@ -59,31 +59,10 @@ JS_SetRuntimeDebugMode(JSRuntime *rt, bool debug)
     rt->debugMode = !!debug;
 }
 
-static bool
-IsTopFrameConstructing(JSContext *cx, AbstractFramePtr frame)
-{
-    ScriptFrameIter iter(cx);
-    JS_ASSERT(iter.abstractFramePtr() == frame);
-    return iter.isConstructing();
-}
-
 JSTrapStatus
 js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
 {
     JS_ASSERT_IF(frame.isInterpreterFrame(), frame.asInterpreterFrame() == cx->interpreterFrame());
-
-    if (!frame.script()->selfHosted()) {
-        JSAbstractFramePtr jsframe(frame.raw(), pc);
-        if (frame.isFramePushedByExecute()) {
-            if (JSInterpreterHook hook = cx->runtime()->debugHooks.executeHook)
-                frame.setHookData(hook(cx, jsframe, IsTopFrameConstructing(cx, frame),
-                                       true, 0, cx->runtime()->debugHooks.executeHookData));
-        } else {
-            if (JSInterpreterHook hook = cx->runtime()->debugHooks.callHook)
-                frame.setHookData(hook(cx, jsframe, IsTopFrameConstructing(cx, frame),
-                                       true, 0, cx->runtime()->debugHooks.callHookData));
-        }
-    }
 
     RootedValue rval(cx);
     JSTrapStatus status = Debugger::onEnterFrame(cx, frame, &rval);
@@ -112,18 +91,6 @@ js::ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc, b
 
     bool ok = okArg;
 
-    // We don't add hook data for self-hosted scripts, so we don't need to check for them, here.
-    if (void *hookData = frame.maybeHookData()) {
-        JSAbstractFramePtr jsframe(frame.raw(), pc);
-        if (frame.isFramePushedByExecute()) {
-            if (JSInterpreterHook hook = cx->runtime()->debugHooks.executeHook)
-                hook(cx, jsframe, IsTopFrameConstructing(cx, frame), false, &ok, hookData);
-        } else {
-            if (JSInterpreterHook hook = cx->runtime()->debugHooks.callHook)
-                hook(cx, jsframe, IsTopFrameConstructing(cx, frame), false, &ok, hookData);
-        }
-    }
-
     return Debugger::onLeaveFrame(cx, frame, ok);
 }
 
@@ -132,18 +99,12 @@ js::DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
 {
     JS_ASSERT(cx->compartment()->debugMode());
 
-    if (!cx->runtime()->debugHooks.throwHook && cx->compartment()->getDebuggees().empty())
+    if (cx->compartment()->getDebuggees().empty())
         return JSTRAP_CONTINUE;
 
     /* Call debugger throw hook if set. */
     RootedValue rval(cx);
     JSTrapStatus status = Debugger::onExceptionUnwind(cx, &rval);
-    if (status == JSTRAP_CONTINUE) {
-        if (JSThrowHook handler = cx->runtime()->debugHooks.throwHook) {
-            RootedScript script(cx, frame.script());
-            status = handler(cx, script, pc, rval.address(), cx->runtime()->debugHooks.throwHookData);
-        }
-    }
 
     switch (status) {
       case JSTRAP_ERROR:
@@ -261,32 +222,6 @@ JS_PUBLIC_API(void)
 JS_ClearAllTrapsForCompartment(JSContext *cx)
 {
     cx->compartment()->clearTraps(cx->runtime()->defaultFreeOp());
-}
-
-JS_PUBLIC_API(bool)
-JS_SetInterrupt(JSRuntime *rt, JSInterruptHook hook, void *closure)
-{
-    rt->debugHooks.interruptHook = hook;
-    rt->debugHooks.interruptHookData = closure;
-
-    for (ActivationIterator iter(rt); !iter.done(); ++iter) {
-        if (iter->isInterpreter())
-            iter->asInterpreter()->enableInterruptsUnconditionally();
-    }
-
-    return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_ClearInterrupt(JSRuntime *rt, JSInterruptHook *hoop, void **closurep)
-{
-    if (hoop)
-        *hoop = rt->debugHooks.interruptHook;
-    if (closurep)
-        *closurep = rt->debugHooks.interruptHookData;
-    rt->debugHooks.interruptHook = 0;
-    rt->debugHooks.interruptHookData = 0;
-    return true;
 }
 
 /************************************************************************/
@@ -564,23 +499,6 @@ JS_GetScriptIsSelfHosted(JSScript *script)
 
 /***************************************************************************/
 
-JS_PUBLIC_API(void)
-JS_SetNewScriptHook(JSRuntime *rt, JSNewScriptHook hook, void *callerdata)
-{
-    rt->debugHooks.newScriptHook = hook;
-    rt->debugHooks.newScriptHookData = callerdata;
-}
-
-JS_PUBLIC_API(void)
-JS_SetDestroyScriptHook(JSRuntime *rt, JSDestroyScriptHook hook,
-                        void *callerdata)
-{
-    rt->debugHooks.destroyScriptHook = hook;
-    rt->debugHooks.destroyScriptHookData = callerdata;
-}
-
-/***************************************************************************/
-
 /* This all should be reworked to avoid requiring JSScopeProperty types. */
 
 static bool
@@ -739,46 +657,6 @@ JS_SetDebuggerHandler(JSRuntime *rt, JSDebuggerHandler handler, void *closure)
 {
     rt->debugHooks.debuggerHandler = handler;
     rt->debugHooks.debuggerHandlerData = closure;
-    return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_SetSourceHandler(JSRuntime *rt, JSSourceHandler handler, void *closure)
-{
-    rt->debugHooks.sourceHandler = handler;
-    rt->debugHooks.sourceHandlerData = closure;
-    return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_SetExecuteHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
-{
-    rt->debugHooks.executeHook = hook;
-    rt->debugHooks.executeHookData = closure;
-    return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
-{
-    rt->debugHooks.callHook = hook;
-    rt->debugHooks.callHookData = closure;
-    return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_SetThrowHook(JSRuntime *rt, JSThrowHook hook, void *closure)
-{
-    rt->debugHooks.throwHook = hook;
-    rt->debugHooks.throwHookData = closure;
-    return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_SetDebugErrorHook(JSRuntime *rt, JSDebugErrorHook hook, void *closure)
-{
-    rt->debugHooks.debugErrorHook = hook;
-    rt->debugHooks.debugErrorHookData = closure;
     return true;
 }
 

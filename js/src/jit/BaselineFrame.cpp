@@ -170,11 +170,6 @@ BaselineFrame::initForOsr(InterpreterFrame *fp, uint32_t numStackValues)
         argsObj_ = &fp->argsObj();
     }
 
-    if (fp->hasHookData()) {
-        flags_ |= BaselineFrame::HAS_HOOK_DATA;
-        hookData_ = fp->hookData();
-    }
-
     if (fp->hasReturnValue())
         setReturnValue(fp->returnValue());
 
