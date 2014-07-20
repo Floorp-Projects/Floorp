@@ -2008,6 +2008,12 @@ public:
       return;
     }
 
+    mArena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (!mArena) {
+      mEarlyRv = NS_ERROR_DOM_UNKNOWN_ERR;
+      return;
+    }
+
     // Create an empty key and set easy attributes
     mKeyPair.mPrivateKey = new CryptoKey(global);
     mKeyPair.mPublicKey  = new CryptoKey(global);
@@ -2078,6 +2084,31 @@ public:
       mKeyPair.mPublicKey.get()->Algorithm().MakeEc(algName, mNamedCurve);
       mKeyPair.mPrivateKey.get()->Algorithm().MakeEc(algName, mNamedCurve);
       mMechanism = CKM_EC_KEY_PAIR_GEN;
+    } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {
+      RootedDictionary<DhKeyGenParams> params(aCx);
+      mEarlyRv = Coerce(aCx, params, aAlgorithm);
+      if (NS_FAILED(mEarlyRv)) {
+        mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+        return;
+      }
+
+      CryptoBuffer prime;
+      ATTEMPT_BUFFER_INIT(prime, params.mPrime);
+
+      CryptoBuffer generator;
+      ATTEMPT_BUFFER_INIT(generator, params.mGenerator);
+
+      // Set up params.
+      if (!prime.ToSECItem(mArena, &mDhParams.prime) ||
+          !generator.ToSECItem(mArena, &mDhParams.base)) {
+        mEarlyRv = NS_ERROR_DOM_UNKNOWN_ERR;
+        return;
+      }
+
+      // Create algorithm.
+      mKeyPair.mPublicKey.get()->Algorithm().MakeDh(algName, prime, generator);
+      mKeyPair.mPrivateKey.get()->Algorithm().MakeDh(algName, prime, generator);
+      mMechanism = CKM_DH_PKCS_KEY_PAIR_GEN;
     } else {
       mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       return;
@@ -2091,7 +2122,8 @@ public:
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
       privateAllowedUsages = CryptoKey::DECRYPT | CryptoKey::UNWRAPKEY;
       publicAllowedUsages = CryptoKey::ENCRYPT | CryptoKey::WRAPKEY;
-    } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_ECDH)) {
+    } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_ECDH) ||
+               algName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {
       privateAllowedUsages = CryptoKey::DERIVEKEY | CryptoKey::DERIVEBITS;
       publicAllowedUsages = 0;
     }
@@ -2127,9 +2159,11 @@ public:
   }
 
 private:
+  ScopedPLArenaPool mArena;
   CryptoKeyPair mKeyPair;
   CK_MECHANISM_TYPE mMechanism;
   PK11RSAGenParams mRsaParams;
+  SECKEYDHParams mDhParams;
   ScopedSECKEYPublicKey mPublicKey;
   ScopedSECKEYPrivateKey mPrivateKey;
   nsString mNamedCurve;
@@ -2146,19 +2180,15 @@ private:
     MOZ_ASSERT(slot.get());
 
     void* param;
-    ScopedPLArenaPool arena;
-
     switch (mMechanism) {
       case CKM_RSA_PKCS_KEY_PAIR_GEN:
         param = &mRsaParams;
         break;
+      case CKM_DH_PKCS_KEY_PAIR_GEN:
+        param = &mDhParams;
+        break;
       case CKM_EC_KEY_PAIR_GEN: {
-        arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-        if (!arena) {
-          return NS_ERROR_DOM_UNKNOWN_ERR;
-        }
-
-        param = CreateECParamsForCurve(mNamedCurve, arena.get());
+        param = CreateECParamsForCurve(mNamedCurve, mArena);
         if (!param) {
           return NS_ERROR_DOM_UNKNOWN_ERR;
         }
@@ -2768,7 +2798,8 @@ WebCryptoTask::CreateGenerateKeyTask(JSContext* aCx,
   } else if (algName.EqualsASCII(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
              algName.EqualsASCII(WEBCRYPTO_ALG_RSA_OAEP) ||
              algName.EqualsASCII(WEBCRYPTO_ALG_ECDH) ||
-             algName.EqualsASCII(WEBCRYPTO_ALG_ECDSA)) {
+             algName.EqualsASCII(WEBCRYPTO_ALG_ECDSA) ||
+             algName.EqualsASCII(WEBCRYPTO_ALG_DH)) {
     return new GenerateAsymmetricKeyTask(aCx, aAlgorithm, aExtractable, aKeyUsages);
   } else {
     return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);

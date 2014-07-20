@@ -161,6 +161,20 @@ CryptoBuffer::ToSECItem() const
   return item;
 }
 
+bool
+CryptoBuffer::ToSECItem(PLArenaPool *aArena, SECItem* aItem) const
+{
+  aItem->type = siBuffer;
+  aItem->data = nullptr;
+
+  if (!::SECITEM_AllocItem(aArena, aItem, Length())) {
+    return false;
+  }
+
+  memcpy(aItem->data, Elements(), Length());
+  return true;
+}
+
 JSObject*
 CryptoBuffer::ToUint8Array(JSContext* aCx) const
 {
