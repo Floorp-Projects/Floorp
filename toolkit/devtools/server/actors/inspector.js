@@ -3012,7 +3012,7 @@ DocumentWalker.prototype = {
       return null;
     if (node.contentDocument) {
       return this._reparentWalker(node.contentDocument);
-    } else if (node.getSVGDocument) {
+    } else if (node.getSVGDocument && node.getSVGDocument()) {
       return this._reparentWalker(node.getSVGDocument());
     }
     return this.walker.firstChild();
@@ -3024,7 +3024,7 @@ DocumentWalker.prototype = {
       return null;
     if (node.contentDocument) {
       return this._reparentWalker(node.contentDocument);
-    } else if (node.getSVGDocument) {
+    } else if (node.getSVGDocument && node.getSVGDocument()) {
       return this._reparentWalker(node.getSVGDocument());
     }
     return this.walker.lastChild();
