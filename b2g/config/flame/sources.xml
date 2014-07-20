@@ -131,7 +131,7 @@
   <project name="platform_external_libnfc-nci" path="external/libnfc-nci" remote="t2m" revision="4186bdecb4dae911b39a8202252cc2310d91b0be"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="320b05a5761eb2a4816f7529c91ea49422979b55"/>
   <project name="platform/frameworks/av" path="frameworks/av" revision="5b934dc57dae25f286b0e7210dc6ff47f3244927"/>
-  <project name="platform/frameworks/base" path="frameworks/base" revision="af3e4fbdc9369643a92015ea2657361f3b1b46fe"/>
+  <project name="platform/frameworks/base" path="frameworks/base" revision="228d9f4189c42a11a65946420e836faa54073291"/>
   <project name="platform/frameworks/native" path="frameworks/native" revision="33a2b51f78416536e1bfba0c0b7776db307f3a4f"/>
   <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="484802559ed106bac4811bd01c024ca64f741e60"/>
   <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="83f363a26069e9c188d2aaef5b9ef63e84ad1511"/>
