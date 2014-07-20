@@ -119,6 +119,20 @@ loader.lazyGetter(this, "DOMParser", function() {
   return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
 });
 
+loader.lazyGetter(this, "Debugger", function() {
+  let JsDebugger = require("resource://gre/modules/jsdebugger.jsm");
+
+  let global = Cu.getGlobalForObject({});
+  JsDebugger.addDebuggerToGlobal(global);
+
+  return global.Debugger;
+});
+
+loader.lazyGetter(this, "eventListenerService", function() {
+  return Cc["@mozilla.org/eventlistenerservice;1"]
+           .getService(Ci.nsIEventListenerService);
+});
+
 exports.register = function(handle) {
   handle.addGlobalActor(InspectorActor, "inspectorActor");
   handle.addTabActor(InspectorActor, "inspectorActor");
@@ -239,6 +253,8 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
       pseudoClassLocks: this.writePseudoClassLocks(),
 
       isDisplayed: this.isDisplayed,
+
+      hasEventListeners: this._hasEventListeners,
     };
 
     if (this.isDocumentElement()) {
@@ -282,6 +298,27 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
     }
   },
 
+  /**
+   * Are event listeners that are listening on this node?
+   */
+  get _hasEventListeners() {
+    let listeners;
+
+    if (this.rawNode.nodeName.toLowerCase() === "html") {
+      listeners = eventListenerService.getListenerInfoFor(this.rawNode.ownerGlobal);
+    } else {
+      listeners = eventListenerService.getListenerInfoFor(this.rawNode) || [];
+    }
+
+    listeners = listeners.filter(listener => {
+      return listener.listenerObject && listener.type && listener.listenerObject;
+    });
+
+    let hasListeners = listeners.length > 0;
+
+    return hasListeners;
+  },
+
   writeAttrs: function() {
     if (!this.rawNode.attributes) {
       return undefined;
@@ -302,6 +339,123 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
       }
     }
     return ret;
+  },
+
+  /**
+   * Get event listeners attached to a node.
+   *
+   * @param  {Node} node
+   *         Node for which we are to get listeners.
+   * @return {Array}
+   *         An array of objects where a typical object looks like this:
+   *           {
+   *             type: "click",
+   *             DOM0: true,
+   *             capturing: true,
+   *             handler: "function() { doSomething() }",
+   *             origin: "http://www.mozilla.com",
+   *             searchString: 'onclick="doSomething()"'
+   *           }
+   */
+  getEventListeners: function(node) {
+    let dbg = new Debugger();
+    let handlers = eventListenerService.getListenerInfoFor(node);
+    let events = [];
+
+    for (let handler of handlers) {
+      let listener = handler.listenerObject;
+
+      // If there is no JS event listener skip this.
+      if (!listener) {
+        continue;
+      }
+
+      let global = Cu.getGlobalForObject(listener);
+      let globalDO = dbg.addDebuggee(global);
+      let listenerDO = globalDO.makeDebuggeeValue(listener);
+
+      // If the listener is an object with a 'handleEvent' method, use that.
+      if (listenerDO.class === "Object" || listenerDO.class === "XULElement") {
+        let desc;
+
+        while (!desc && listenerDO) {
+          desc = listenerDO.getOwnPropertyDescriptor("handleEvent");
+          listenerDO = listenerDO.proto;
+        }
+
+        if (desc && desc.value) {
+          listenerDO = desc.value;
+        }
+      }
+
+      if (listenerDO.isBoundFunction) {
+        listenerDO = listenerDO.boundTargetFunction;
+      }
+
+      let script = listenerDO.script;
+      let scriptSource = script.source.text;
+      let functionSource =
+        scriptSource.substr(script.sourceStart, script.sourceLength);
+
+      /*
+      The script returned is the whole script and
+      scriptSource.substr(script.sourceStart, script.sourceLength) returns
+      something like:
+        () { doSomething(); }
+
+      So we need to work back to the preceeding \n, ; or } so we can get the
+        appropriate function info e.g.:
+        () => { doSomething(); }
+        function doit() { doSomething(); }
+        doit: function() { doSomething(); }
+      */
+      let scriptBeforeFunc = scriptSource.substr(0, script.sourceStart);
+      let lastEnding = Math.max(
+        scriptBeforeFunc.lastIndexOf(";"),
+        scriptBeforeFunc.lastIndexOf("}"),
+        scriptBeforeFunc.lastIndexOf("{"),
+        scriptBeforeFunc.lastIndexOf("("),
+        scriptBeforeFunc.lastIndexOf(","),
+        scriptBeforeFunc.lastIndexOf("!")
+      );
+
+      if (lastEnding !== -1) {
+        let functionPrefix = scriptBeforeFunc.substr(lastEnding + 1);
+        functionSource = functionPrefix + functionSource;
+      }
+
+      let type = handler.type;
+      let dom0 = false;
+
+      if (typeof node.hasAttribute !== "undefined") {
+        dom0 = !!node.hasAttribute("on" + type);
+      } else {
+        dom0 = !!node["on" + type];
+      }
+
+      let line = script.startLine;
+      let url = script.url;
+      let origin = url + (dom0 ? "" : ":" + line);
+      let searchString;
+
+      if (dom0) {
+        searchString = "on" + type + "=\"" + script.source.text + "\"";
+      } else {
+        scriptSource = "    " + scriptSource;
+      }
+
+      events.push({
+        type: type,
+        DOM0: dom0,
+        capturing: handler.capturing,
+        handler: functionSource.trim(),
+        origin: origin,
+        searchString: searchString
+      });
+
+      dbg.removeDebuggee(globalDO);
+    }
+    return events;
   },
 
   /**
@@ -351,6 +505,21 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
   }, {
     request: {maxDim: Arg(0, "nullable:number")},
     response: RetVal("imageData")
+  }),
+
+  /**
+   * Get all event listeners that are listening on this node.
+   */
+  getEventListenerInfo: method(function() {
+    if (this.rawNode.nodeName.toLowerCase() === "html") {
+      return this.getEventListeners(this.rawNode.ownerGlobal);
+    }
+    return this.getEventListeners(this.rawNode);
+  }, {
+    request: {},
+    response: {
+      events: RetVal("json")
+    }
   }),
 
   /**
@@ -550,6 +719,8 @@ let NodeFront = protocol.FrontClass(NodeActor, {
 
   get hasChildren() this._form.numChildren > 0,
   get numChildren() this._form.numChildren,
+
+  get hasEventListeners() this._form.hasEventListeners,
 
   get tagName() this.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ? this.nodeName : null,
   get shortValue() this._form.shortValue,
@@ -2841,7 +3012,7 @@ DocumentWalker.prototype = {
       return null;
     if (node.contentDocument) {
       return this._reparentWalker(node.contentDocument);
-    } else if (node.getSVGDocument) {
+    } else if (node.getSVGDocument && node.getSVGDocument()) {
       return this._reparentWalker(node.getSVGDocument());
     }
     return this.walker.firstChild();
@@ -2853,7 +3024,7 @@ DocumentWalker.prototype = {
       return null;
     if (node.contentDocument) {
       return this._reparentWalker(node.contentDocument);
-    } else if (node.getSVGDocument) {
+    } else if (node.getSVGDocument && node.getSVGDocument()) {
       return this._reparentWalker(node.getSVGDocument());
     }
     return this.walker.lastChild();

@@ -28,6 +28,43 @@ XPCOMUtils.defineLazyGetter(this, "l10n", function() {
   return l10n;
 });
 
+function GetPref(name) {
+  let type = Services.prefs.getPrefType(name);
+  switch (type) {
+    case Services.prefs.PREF_STRING:
+      return Services.prefs.getCharPref(name);
+    case Services.prefs.PREF_INT:
+      return Services.prefs.getIntPref(name);
+    case Services.prefs.PREF_BOOL:
+      return Services.prefs.getBoolPref(name);
+    default:
+      throw new Error("Unknown type");
+  }
+}
+
+function SetPref(name, value) {
+  let type = Services.prefs.getPrefType(name);
+  switch (type) {
+    case Services.prefs.PREF_STRING:
+      return Services.prefs.setCharPref(name, value);
+    case Services.prefs.PREF_INT:
+      return Services.prefs.setIntPref(name, value);
+    case Services.prefs.PREF_BOOL:
+      return Services.prefs.setBoolPref(name, value);
+    default:
+      throw new Error("Unknown type");
+  }
+}
+
+function InfallibleGetBoolPref(key) {
+  try {
+    return Services.prefs.getBoolPref(key);
+  } catch (ex) {
+    return true;
+  }
+}
+
+
 /**
  * Represents the Options Panel in the Toolbox.
  */
@@ -107,7 +144,7 @@ OptionsPanel.prototype = {
 
     let onCheckboxClick = (checkbox) => {
       let toolDefinition = toggleableButtons.filter(tool => tool.id === checkbox.id)[0];
-      Services.prefs.setBoolPref(toolDefinition.visibilityswitch, checkbox.checked);
+      SetPref(toolDefinition.visibilityswitch, checkbox.checked);
       setToolboxButtonsVisibility();
     };
 
@@ -115,22 +152,13 @@ OptionsPanel.prototype = {
       let checkbox = this.panelDoc.createElement("checkbox");
       checkbox.setAttribute("id", tool.id);
       checkbox.setAttribute("label", tool.label);
-      checkbox.setAttribute("checked", this.getBoolPref(tool.visibilityswitch));
+      checkbox.setAttribute("checked", InfallibleGetBoolPref(tool.visibilityswitch));
       checkbox.addEventListener("command", onCheckboxClick.bind(this, checkbox));
       return checkbox;
     };
 
     for (let tool of toggleableButtons) {
       enabledToolbarButtonsBox.appendChild(createCommandCheckbox(tool));
-    }
-  },
-
-  getBoolPref: function(key) {
-    try {
-      return Services.prefs.getBoolPref(key);
-    }
-    catch (ex) {
-      return true;
     }
   },
 
@@ -146,7 +174,7 @@ OptionsPanel.prototype = {
     let onCheckboxClick = function(id) {
       let toolDefinition = gDevTools._tools.get(id);
       // Set the kill switch pref boolean to true
-      Services.prefs.setBoolPref(toolDefinition.visibilityswitch, this.checked);
+      SetPref(toolDefinition.visibilityswitch, this.checked);
       if (this.checked) {
         gDevTools.emit("tool-registered", id);
       }
@@ -168,7 +196,7 @@ OptionsPanel.prototype = {
                               l10n("options.toolNotSupportedMarker", tool.label));
         checkbox.setAttribute("unsupported", "");
       }
-      checkbox.setAttribute("checked", this.getBoolPref(tool.visibilityswitch));
+      checkbox.setAttribute("checked", InfallibleGetBoolPref(tool.visibilityswitch));
       checkbox.addEventListener("command", onCheckboxClick.bind(checkbox, tool.id));
       return checkbox;
     };
@@ -204,20 +232,20 @@ OptionsPanel.prototype = {
   populatePreferences: function() {
     let prefCheckboxes = this.panelDoc.querySelectorAll("checkbox[data-pref]");
     for (let checkbox of prefCheckboxes) {
-      checkbox.checked = Services.prefs.getBoolPref(checkbox.getAttribute("data-pref"));
+      checkbox.checked = GetPref(checkbox.getAttribute("data-pref"));
       checkbox.addEventListener("command", function() {
         let data = {
           pref: this.getAttribute("data-pref"),
           newValue: this.checked
         };
-        data.oldValue = Services.prefs.getBoolPref(data.pref);
-        Services.prefs.setBoolPref(data.pref, data.newValue);
+        data.oldValue = GetPref(data.pref);
+        SetPref(data.pref, data.newValue);
         gDevTools.emit("pref-changed", data);
       }.bind(checkbox));
     }
     let prefRadiogroups = this.panelDoc.querySelectorAll("radiogroup[data-pref]");
     for (let radiogroup of prefRadiogroups) {
-      let selectedValue = Services.prefs.getCharPref(radiogroup.getAttribute("data-pref"));
+      let selectedValue = GetPref(radiogroup.getAttribute("data-pref"));
       for (let radio of radiogroup.childNodes) {
         radiogroup.selectedIndex = -1;
         if (radio.getAttribute("value") == selectedValue) {
@@ -230,18 +258,18 @@ OptionsPanel.prototype = {
           pref: this.getAttribute("data-pref"),
           newValue: this.selectedItem.getAttribute("value")
         };
-        data.oldValue = Services.prefs.getCharPref(data.pref);
-        Services.prefs.setCharPref(data.pref, data.newValue);
+        data.oldValue = GetPref(data.pref);
+        SetPref(data.pref, data.newValue);
         gDevTools.emit("pref-changed", data);
       }.bind(radiogroup));
     }
     let prefMenulists = this.panelDoc.querySelectorAll("menulist[data-pref]");
     for (let menulist of prefMenulists) {
-      let pref = Services.prefs.getCharPref(menulist.getAttribute("data-pref"));
+      let pref = GetPref(menulist.getAttribute("data-pref"));
       let menuitems = menulist.querySelectorAll("menuitem");
       for (let menuitem of menuitems) {
-        let value = menuitem.getAttribute("value");
-        if (value === pref) {
+        let value = menuitem.value;
+        if (value == pref) { // non strict check to allow int values.
           menulist.selectedItem = menuitem;
           break;
         }
@@ -251,8 +279,8 @@ OptionsPanel.prototype = {
           pref: this.getAttribute("data-pref"),
           newValue: this.value
         };
-        data.oldValue = Services.prefs.getCharPref(data.pref);
-        Services.prefs.setCharPref(data.pref, data.newValue);
+        data.oldValue = GetPref(data.pref);
+        SetPref(data.pref, data.newValue);
         gDevTools.emit("pref-changed", data);
       }.bind(menulist));
     }

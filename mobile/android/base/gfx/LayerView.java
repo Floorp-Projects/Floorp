@@ -5,19 +5,21 @@
 
 package org.mozilla.gecko.gfx;
 
+import java.nio.IntBuffer;
+import java.util.ArrayList;
+
 import org.mozilla.gecko.AndroidGamepadManager;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.PrefsHelper;
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.TouchEventInterceptor;
 import org.mozilla.gecko.ZoomConstraints;
-import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.mozglue.RobocopTarget;
-import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -31,7 +33,6 @@ import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -43,9 +44,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.widget.FrameLayout;
-
-import java.nio.IntBuffer;
-import java.util.ArrayList;
 
 /**
  * A view rendered by the layer compositor.
@@ -142,16 +140,9 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         GeckoAccessibility.setDelegate(this);
     }
 
-    private Point getEventRadius(MotionEvent event) {
-        if (Build.VERSION.SDK_INT >= 9) {
-            return new Point((int)event.getToolMajor()/2,
-                             (int)event.getToolMinor()/2);
-        }
-
-        float size = event.getSize();
-        DisplayMetrics displaymetrics = getContext().getResources().getDisplayMetrics();
-        size = size * Math.min(displaymetrics.heightPixels, displaymetrics.widthPixels);
-        return new Point((int)size, (int)size);
+    private static Point getEventRadius(MotionEvent event) {
+        return new Point((int)event.getToolMajor() / 2,
+                         (int)event.getToolMinor() / 2);
     }
 
     public void geckoConnected() {
@@ -667,9 +658,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
 
     @Override
     public void setOverScrollMode(int overscrollMode) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-            super.setOverScrollMode(overscrollMode);
-        }
+        super.setOverScrollMode(overscrollMode);
         if (mPanZoomController != null) {
             mPanZoomController.setOverScrollMode(overscrollMode);
         }
@@ -681,10 +670,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
             return mPanZoomController.getOverScrollMode();
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-            return super.getOverScrollMode();
-        }
-        return View.OVER_SCROLL_ALWAYS;
+        return super.getOverScrollMode();
     }
 
     @Override

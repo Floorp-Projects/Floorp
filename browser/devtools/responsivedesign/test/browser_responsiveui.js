@@ -98,10 +98,16 @@ function test() {
     info("initial height: " + initialHeight);
     is(content.innerWidth, expectedWidth, "Size correcty updated (width).");
     is(content.innerHeight, expectedHeight, "Size correcty updated (height).");
-    is(instance.menulist.selectedIndex, 0, "Custom menuitem selected");
-    let [width, height] = extractSizeFromString(instance.menulist.firstChild.firstChild.getAttribute("label"));
+    is(instance.menulist.selectedIndex, -1, "Custom menuitem cannot be selected");
+    let label = instance.menulist.firstChild.firstChild.getAttribute("label");
+    let value = instance.menulist.value;
+    isnot(label, value, "Label from the menulist item is different than the value of the menulist")
+    let [width, height] = extractSizeFromString(label);
     is(width, expectedWidth, "Label updated (width).");
     is(height, expectedHeight, "Label updated (height).");
+    [width, height] = extractSizeFromString(value);
+    is(width, expectedWidth, "Value updated (width).");
+    is(height, expectedHeight, "Value updated (height).");
     testCustom2();
   }
 
@@ -119,10 +125,16 @@ function test() {
     let expectedHeight = initialHeight + 10;
     is(content.innerWidth, expectedWidth, "with shift: Size correcty updated (width).");
     is(content.innerHeight, expectedHeight, "with shift: Size correcty updated (height).");
-    is(instance.menulist.selectedIndex, 0, "with shift: Custom menuitem selected");
-    let [width, height] = extractSizeFromString(instance.menulist.firstChild.firstChild.getAttribute("label"));
+    is(instance.menulist.selectedIndex, -1, "with shift: Custom menuitem cannot be selected");
+    let label = instance.menulist.firstChild.firstChild.getAttribute("label");
+    let value = instance.menulist.value;
+    isnot(label, value, "Label from the menulist item is different than the value of the menulist")
+    let [width, height] = extractSizeFromString(label);
     is(width, expectedWidth, "Label updated (width).");
     is(height, expectedHeight, "Label updated (height).");
+    [width, height] = extractSizeFromString(value);
+    is(width, expectedWidth, "Value updated (width).");
+    is(height, expectedHeight, "Value updated (height).");
     testCustom3();
   }
 
@@ -140,14 +152,80 @@ function test() {
     let expectedHeight = initialHeight + 5;
     is(content.innerWidth, expectedWidth, "with ctrl: Size correcty updated (width).");
     is(content.innerHeight, expectedHeight, "with ctrl: Size correcty updated (height).");
-    is(instance.menulist.selectedIndex, 0, "with ctrl: Custom menuitem selected");
-    let [width, height] = extractSizeFromString(instance.menulist.firstChild.firstChild.getAttribute("label"));
+    is(instance.menulist.selectedIndex, -1, "with ctrl: Custom menuitem cannot be selected");
+    let label = instance.menulist.firstChild.firstChild.getAttribute("label");
+    let value = instance.menulist.value;
+    isnot(label, value, "Label from the menulist item is different than the value of the menulist")
+    let [width, height] = extractSizeFromString(label);
     is(width, expectedWidth, "Label updated (width).");
     is(height, expectedHeight, "Label updated (height).");
+    [width, height] = extractSizeFromString(value);
+    is(width, expectedWidth, "Value updated (width).");
+    is(height, expectedHeight, "Value updated (height).");
+
+    testCustomInput();
+  }
+
+  function testCustomInput() {
+    let initialWidth = content.innerWidth;
+    let initialHeight = content.innerHeight;
+    let expectedWidth = initialWidth - 20;
+    let expectedHeight = initialHeight - 10;
+    let index = instance.menulist.selectedIndex;
+    let label, value, width, height;
+
+    let userInput = expectedWidth + " x " + expectedHeight;
+
+    instance.menulist.inputField.value = "";
+    instance.menulist.focus();
+    processStringAsKey(userInput);
+
+    // While typing, the size should not change
+    is(content.innerWidth, initialWidth, "Size hasn't changed (width).");
+    is(content.innerHeight, initialHeight, "Size hasn't changed (height).");
+
+    // Only the `change` event must change the size
+    EventUtils.synthesizeKey("VK_RETURN", {});
+
+    is(content.innerWidth, expectedWidth, "Size correctly updated (width).");
+    is(content.innerHeight, expectedHeight, "Size correctly updated (height).");
+    is(instance.menulist.selectedIndex, -1, "Custom menuitem cannot be selected");
+    let label = instance.menulist.firstChild.firstChild.getAttribute("label");
+    let value = instance.menulist.value;
+    isnot(label, value, "Label from the menulist item is different than the value of the menulist")
+    let [width, height] = extractSizeFromString(label);
+    is(width, expectedWidth, "Label updated (width).");
+    is(height, expectedHeight, "Label updated (height).");
+    [width, height] = extractSizeFromString(value);
+    is(width, expectedWidth, "Value updated (width).");
+    is(height, expectedHeight, "Value updated (height).");
+
+    testCustomInput2();
+  }
+
+  function testCustomInput2() {
+    let initialWidth = content.innerWidth;
+    let initialHeight = content.innerHeight;
+    let index = instance.menulist.selectedIndex;
+    let expectedValue = initialWidth + "x" + initialHeight;
+    let expectedLabel = instance.menulist.firstChild.firstChild.getAttribute("label");
+
+    let userInput = "I'm wrong";
+
+    instance.menulist.inputField.value = "";
+    instance.menulist.focus();
+    processStringAsKey(userInput);
+    EventUtils.synthesizeKey("VK_RETURN", {});
+
+    is(content.innerWidth, initialWidth, "Size hasn't changed (width).");
+    is(content.innerHeight, initialHeight, "Size hasn't changed (height).");
+    is(instance.menulist.selectedIndex, index, "Selected item hasn't changed.");
+    is(instance.menulist.value, expectedValue, "Value has been reset")
+    let label = instance.menulist.firstChild.firstChild.getAttribute("label");
+    is(label, expectedLabel, "Custom menuitem's label hasn't changed");
 
     rotate();
   }
-
 
   function rotate() {
     let initialWidth = content.innerWidth;
@@ -265,5 +343,11 @@ function test() {
     info("XXX BUG 851296: key name: " + name);
     info("XXX BUG 851296: key modifiers: " + JSON.stringify(modifiers));
     EventUtils.synthesizeKey(name, modifiers);
+  }
+
+  function processStringAsKey(str) {
+    for (let i = 0, l = str.length; i < l; i++) {
+      EventUtils.synthesizeKey(str.charAt(i), {});
+    }
   }
 }

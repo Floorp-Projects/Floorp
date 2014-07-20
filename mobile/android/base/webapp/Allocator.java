@@ -70,19 +70,6 @@ public class Allocator {
         return PREFIX_OLD_ICON + index;
     }
 
-    private static void save(Editor editor) {
-        // Use SharedPreferences.Editor.apply() where available and commit()
-        // where it isn't.  We could also use a background thread with commit(),
-        // but our callers might expect the changes we make to be available
-        // immediately, so we instead take the commit() performance hit
-        // on the small percentage of extant devices that don't support apply().
-        if (android.os.Build.VERSION.SDK_INT > 8) {
-            editor.apply();
-        } else {
-            editor.commit();
-        }
-    }
-
     public ArrayList<String> getInstalledPackageNames() {
         ArrayList<String> installedPackages = new ArrayList<String>();
 
@@ -112,11 +99,11 @@ public class Allocator {
     }
 
     public synchronized void putPackageName(final int index, final String packageName) {
-        save(mPrefs.edit().putString(appKey(index), packageName));
+        mPrefs.edit().putString(appKey(index), packageName).apply();
     }
 
     public void updateColor(int index, int color) {
-        save(mPrefs.edit().putInt(iconKey(index), color));
+        mPrefs.edit().putInt(iconKey(index), color).apply();
     }
 
     public synchronized int getIndexForApp(String packageName) {
@@ -150,11 +137,11 @@ public class Allocator {
     }
 
     public synchronized void releaseIndex(final int index) {
-        save(mPrefs.edit().remove(appKey(index)).remove(iconKey(index)).remove(originKey(index)));
+        mPrefs.edit().remove(appKey(index)).remove(iconKey(index)).remove(originKey(index)).apply();
     }
 
     public void putOrigin(int index, String origin) {
-        save(mPrefs.edit().putString(originKey(index), origin));
+        mPrefs.edit().putString(originKey(index), origin).apply();
     }
 
     public String getOrigin(int index) {
@@ -185,6 +172,6 @@ public class Allocator {
         updateColor(index, mPrefs.getInt(oldIconKey(index), -1));
 
         // Remove the old prefs so we don't migrate them the next time around.
-        save(mPrefs.edit().remove(oldAppKey(index)).remove(oldIconKey(index)));
+        mPrefs.edit().remove(oldAppKey(index)).remove(oldIconKey(index)).apply();
     }
 }

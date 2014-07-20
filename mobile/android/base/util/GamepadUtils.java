@@ -5,14 +5,13 @@
 
 package org.mozilla.gecko.util;
 
+import android.annotation.TargetApi;
 import android.os.Build;
 import android.view.InputDevice;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
 
 public final class GamepadUtils {
     private static final int SONY_XPERIA_GAMEPAD_DEVICE_ID = 196611;
@@ -23,11 +22,12 @@ public final class GamepadUtils {
     private GamepadUtils() {
     }
 
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
     private static boolean isGamepadKey(KeyEvent event) {
-        if (Build.VERSION.SDK_INT >= 9) {
-            return (event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD;
+        if (Build.VERSION.SDK_INT < 12) {
+            return false;
         }
-        return false;
+        return (event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD;
     }
 
     public static boolean isActionKey(KeyEvent event) {
@@ -47,10 +47,6 @@ public final class GamepadUtils {
     }
 
     public static boolean isValueInDeadZone(MotionEvent event, int axis) {
-        if (Build.VERSION.SDK_INT < 9) {
-            return false;
-        }
-
         float threshold;
         if (sDeadZoneThresholdOverride >= 0) {
             threshold = sDeadZoneThresholdOverride;
