@@ -1636,6 +1636,16 @@ PeerConnectionImpl::Close()
   return res;
 }
 
+bool
+PeerConnectionImpl::PluginCrash(uint64_t aPluginID)
+{
+  // fire an event to the DOM window if this is "ours"
+  bool result = mMedia ? mMedia->AnyCodecHasPluginID(aPluginID) : false;
+  if (result) {
+    CSFLogError(logTag, "%s: Our plugin %llu crashed", __FUNCTION__, static_cast<unsigned long long>(aPluginID));
+  }
+  return result;
+}
 
 nsresult
 PeerConnectionImpl::CloseInt()

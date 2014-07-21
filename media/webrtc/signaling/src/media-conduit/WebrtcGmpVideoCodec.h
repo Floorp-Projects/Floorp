@@ -35,23 +35,19 @@
 
 namespace mozilla {
 
-class WebrtcGmpCrashReporter {
-public:
-  virtual const uint64_t CrashID() = 0;
-};
-
 class WebrtcGmpVideoEncoder : public WebrtcVideoEncoder,
-                              public GMPVideoEncoderCallbackProxy,
-                              public WebrtcGmpCrashReporter
+                              public GMPVideoEncoderCallbackProxy
 {
 public:
   WebrtcGmpVideoEncoder();
   virtual ~WebrtcGmpVideoEncoder() {}
 
-  // Implement CrashReporter
-  virtual const uint64_t CrashID() { return mGMP ? mGMP->ParentID() : 0; }
-
   // Implement VideoEncoder interface.
+  virtual const uint64_t PluginID() MOZ_OVERRIDE
+  {
+    return mGMP ? mGMP->ParentID() : 0;
+  }
+
   virtual int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
                              int32_t aNumberOfCores,
                              uint32_t aMaxPayloadSize);
@@ -97,17 +93,18 @@ private:
 
 
 class WebrtcGmpVideoDecoder : public WebrtcVideoDecoder,
-                              public GMPVideoDecoderCallback,
-                              public WebrtcGmpCrashReporter
+                              public GMPVideoDecoderCallback
 {
 public:
   WebrtcGmpVideoDecoder();
   virtual ~WebrtcGmpVideoDecoder() {}
 
-  // Implement CrashReporter
-  virtual const uint64_t CrashID() { return mGMP ? mGMP->ParentID() : 0; }
-
   // Implement VideoDecoder interface.
+  virtual const uint64_t PluginID() MOZ_OVERRIDE
+  {
+    return mGMP ? mGMP->ParentID() : 0;
+  }
+
   virtual int32_t InitDecode(const webrtc::VideoCodec* aCodecSettings,
                              int32_t aNumberOfCores);
   virtual int32_t Decode(const webrtc::EncodedImage& aInputImage,

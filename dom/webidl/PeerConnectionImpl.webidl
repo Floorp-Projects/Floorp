@@ -60,6 +60,9 @@ interface PeerConnectionImpl  {
   /* Puts the SIPCC engine back to 'kIdle', shuts down threads, deletes state */
   void close();
 
+  /* Notify DOM window if this plugin crash is ours */
+  boolean pluginCrash(unsigned long pluginId);
+
   /* Attributes */
   readonly attribute DOMString fingerprint;
   readonly attribute DOMString localDescription;
