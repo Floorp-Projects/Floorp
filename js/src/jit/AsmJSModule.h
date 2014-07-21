@@ -925,6 +925,7 @@ class AsmJSModule
                pod.funcPtrTableAndExitBytes_;
     }
     static unsigned activationGlobalDataOffset() {
+        JS_STATIC_ASSERT(jit::AsmJSActivationGlobalDataOffset == 0);
         return 0;
     }
     AsmJSActivation *&activation() const {
