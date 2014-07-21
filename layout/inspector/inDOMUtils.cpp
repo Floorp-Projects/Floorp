@@ -363,6 +363,7 @@ NS_IMETHODIMP
 inDOMUtils::SelectorMatchesElement(nsIDOMElement* aElement,
                                    nsIDOMCSSStyleRule* aRule,
                                    uint32_t aSelectorIndex,
+                                   const nsAString& aPseudo,
                                    bool* aMatches)
 {
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
@@ -377,13 +378,27 @@ inDOMUtils::SelectorMatchesElement(nsIDOMElement* aElement,
   // We want just the one list item, not the whole list tail
   nsAutoPtr<nsCSSSelectorList> sel(tail->Clone(false));
 
-  // SelectorListMatches does not handle selectors that begin with a
-  // pseudo-element, which you can get from selectors like
-  // |input::-moz-placeholder:hover|.  This function doesn't take
-  // a pseudo-element nsIAtom*, so we know we can't match.
-  if (sel->mSelectors->IsPseudoElement()) {
+  // Do not attempt to match if a pseudo element is requested and this is not
+  // a pseudo element selector, or vice versa.
+  if (aPseudo.IsEmpty() == sel->mSelectors->IsPseudoElement()) {
     *aMatches = false;
     return NS_OK;
+  }
+
+  if (!aPseudo.IsEmpty()) {
+    // We need to make sure that the requested pseudo element type
+    // matches the selector pseudo element type before proceeding.
+    nsCOMPtr<nsIAtom> pseudoElt = do_GetAtom(aPseudo);
+    if (sel->mSelectors->PseudoType() !=
+        nsCSSPseudoElements::GetPseudoType(pseudoElt)) {
+      *aMatches = false;
+      return NS_OK;
+    }
+
+    // We have a matching pseudo element, now remove it so we can compare
+    // directly against |element| when proceeding into SelectorListMatches.
+    // It's OK to do this - we just cloned sel and nothing else is using it.
+    sel->RemoveRightmostSelector();
   }
 
   element->OwnerDoc()->FlushPendingLinkUpdates();

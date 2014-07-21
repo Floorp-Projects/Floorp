@@ -82,12 +82,6 @@ CheckFrame(InterpreterFrame *fp)
     return true;
 }
 
-static bool
-IsJSDEnabled(JSContext *cx)
-{
-    return cx->compartment()->debugMode() && cx->runtime()->debugHooks.callHook;
-}
-
 static IonExecStatus
 EnterBaseline(JSContext *cx, EnterJitData &data)
 {
@@ -116,8 +110,6 @@ EnterBaseline(JSContext *cx, EnterJitData &data)
 
         if (data.osrFrame)
             data.osrFrame->setRunningInJit();
-
-        JS_ASSERT_IF(data.osrFrame, !IsJSDEnabled(cx));
 
         // Single transition point from Interpreter to Baseline.
         CALL_GENERATED_CODE(enter, data.jitcode, data.maxArgc, data.maxArgv, data.osrFrame, data.calleeToken,
@@ -266,16 +258,14 @@ CanEnterBaselineJIT(JSContext *cx, HandleScript script, bool osr)
     if (script->hasBaselineScript())
         return Method_Compiled;
 
-    // Check script use count. However, always eagerly compile scripts if JSD
-    // is enabled, so that we don't have to OSR and don't have to update the
-    // frame pointer stored in JSD's frames list.
+    // Check script use count.
     //
     // Also eagerly compile if we are in parallel warmup, the point of which
     // is to gather type information so that the script may be compiled for
     // parallel execution. We want to avoid the situation of OSRing during
     // warmup and only gathering type information for the loop, and not the
     // rest of the function.
-    if (IsJSDEnabled(cx) || cx->runtime()->forkJoinWarmup > 0) {
+    if (cx->runtime()->forkJoinWarmup > 0) {
         if (osr)
             return Method_Skipped;
     } else if (script->incUseCount() <= js_JitOptions.baselineUsesBeforeCompile) {

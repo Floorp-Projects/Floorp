@@ -517,6 +517,17 @@ NS_IMETHODIMP imgRequestProxy::GetImageStatus(uint32_t *aStatus)
   return NS_OK;
 }
 
+/* readonly attribute nresult imageErrorCode; */
+NS_IMETHODIMP imgRequestProxy::GetImageErrorCode(nsresult *aStatus)
+{
+  if (!GetOwner())
+    return NS_ERROR_FAILURE;
+
+  *aStatus = GetOwner()->GetImageErrorCode();
+
+  return NS_OK;
+}
+
 /* readonly attribute nsIURI URI; */
 NS_IMETHODIMP imgRequestProxy::GetURI(nsIURI **aURI)
 {

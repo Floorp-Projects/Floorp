@@ -1,0 +1,12 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+INSTALL_TARGETS += FAKE_GMP_PLUGIN
+FAKE_GMP_PLUGIN_DEST = $(DEPTH)/dist/bin/gmp-fake
+FAKE_GMP_PLUGIN_FILES = \
+  $(SHARED_LIBRARY) \
+  $(srcdir)/fake.info
+
+include $(topsrcdir)/config/rules.mk

@@ -36,7 +36,7 @@ int BlockDifference(const uint8_t* image1, const uint8_t* image2, int stride) {
   static int (*diff_proc)(const uint8_t*, const uint8_t*, int) = NULL;
 
   if (!diff_proc) {
-#if defined(ARCH_CPU_ARM_FAMILY) || defined(ARCH_CPU_MIPS_FAMILY)
+#if !defined(WEBRTC_ARCH_X86_FAMILY)
     // For ARM and MIPS processors, always use C version.
     // TODO(hclam): Implement a NEON version.
     diff_proc = &BlockDifference_C;

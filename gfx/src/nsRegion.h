@@ -212,7 +212,13 @@ public:
   {
     return pixman_region32_equal(Impl(), aRegion.Impl());
   }
-  uint32_t GetNumRects () const { return pixman_region32_n_rects(Impl()); }
+  uint32_t GetNumRects () const
+  {
+    // Work around pixman bug. Sometimes pixman creates regions with 1 rect
+    // that's empty.
+    uint32_t result = pixman_region32_n_rects(Impl());
+    return (result == 1 && GetBounds().IsEmpty()) ? 0 : result;
+  }
   const nsRect GetBounds () const { return BoxToRect(mImpl.extents); }
   uint64_t Area () const;
   // Converts this region from aFromAPP, an appunits per pixel ratio, to
@@ -338,6 +344,11 @@ public:
     mRegion = &aRegion;
     i = 0;
     boxes = pixman_region32_rectangles(aRegion.Impl(), &n);
+    // Work around pixman bug. Sometimes pixman creates regions with 1 rect
+    // that's empty.
+    if (n == 1 && nsRegion::BoxToRect(boxes[0]).IsEmpty()) {
+      n = 0;
+    }
   }
 
   const nsRect* Next ()
@@ -345,6 +356,7 @@ public:
     if (i == n)
       return nullptr;
     rect = nsRegion::BoxToRect(boxes[i]);
+    NS_ASSERTION(!rect.IsEmpty(), "Shouldn't return empty rect");
     i++;
     return &rect;
   }
@@ -354,6 +366,7 @@ public:
     if (i == -1)
       return nullptr;
     rect = nsRegion::BoxToRect(boxes[i]);
+    NS_ASSERTION(!rect.IsEmpty(), "Shouldn't return empty rect");
     i--;
     return &rect;
   }

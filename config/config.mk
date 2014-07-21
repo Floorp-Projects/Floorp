@@ -593,17 +593,6 @@ endif
 #
 # Override defaults
 
-# We need to know where to find the libraries we
-# put on the link line for binaries, and should
-# we link statically or dynamic?  Assuming dynamic for now.
-
-ifneq (WINNT_,$(OS_ARCH)_$(GNU_CC))
-LIBS_DIR	= -L$(DIST)/bin -L$(DIST)/lib
-ifdef LIBXUL_SDK
-LIBS_DIR	+= -L$(LIBXUL_SDK)/bin -L$(LIBXUL_SDK)/lib
-endif
-endif
-
 # Default location of include files
 ifndef LIBXUL_SDK
 IDL_PARSER_DIR = $(topsrcdir)/xpcom/idl-parser

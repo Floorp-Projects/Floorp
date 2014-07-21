@@ -1012,6 +1012,7 @@ WebrtcVideoConduit::SetExternalSendCodec(VideoCodecConfig* config,
                                               config->mType,
                                               static_cast<WebrtcVideoEncoder*>(encoder),
                                               false)) {
+    mExternalSendCodecHandle = encoder;
     mExternalSendCodec = new VideoCodecConfig(*config);
     return kMediaConduitNoError;
   }
@@ -1024,6 +1025,7 @@ WebrtcVideoConduit::SetExternalRecvCodec(VideoCodecConfig* config,
   if (!mPtrExtCodec->RegisterExternalReceiveCodec(mChannel,
                                                   config->mType,
                                                   static_cast<WebrtcVideoDecoder*>(decoder))) {
+    mExternalRecvCodecHandle = decoder;
     mExternalRecvCodec = new VideoCodecConfig(*config);
     return kMediaConduitNoError;
   }

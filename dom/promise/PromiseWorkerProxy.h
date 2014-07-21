@@ -26,7 +26,10 @@ class WorkerPrivate;
 //   1. Create a Promise on the worker thread and return it to the content
 //      script:
 //
-//        nsRefPtr<Promise> promise = new Promise(workerPrivate->GlobalScope());
+//        nsRefPtr<Promise> promise = Promise::Create(workerPrivate->GlobalScope(), aRv);
+//        if (aRv.Failed()) {
+//          return nullptr;
+//        }
 //        // Pass |promise| around to the WorkerMainThreadRunnable
 //        return promise.forget();
 //

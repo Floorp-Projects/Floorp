@@ -135,6 +135,10 @@ browser.jar:
 *       content/browser/softwareUpdateOverlay.xul  (content/softwareUpdateOverlay.xul)
 #endif
 *       content/browser/viewSourceOverlay.xul         (content/viewSourceOverlay.xul)
+#ifndef XP_MACOSX
+*       content/browser/webrtcIndicator.xul           (content/webrtcIndicator.xul)
+        content/browser/webrtcIndicator.js            (content/webrtcIndicator.js)
+#endif
 #ifdef XP_WIN
         content/browser/win6BrowserOverlay.xul        (content/win6BrowserOverlay.xul)
 #endif

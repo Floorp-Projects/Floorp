@@ -352,6 +352,206 @@ CryptoKey::PublicKeyToSpki(SECKEYPublicKey* aPubKey,
   return NS_OK;
 }
 
+SECKEYPrivateKey*
+CryptoKey::PrivateKeyFromJwk(const JsonWebKey& aJwk,
+                             const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+{
+  if (!aJwk.mKty.WasPassed() || !aJwk.mKty.Value().EqualsLiteral(JWK_TYPE_RSA)) {
+    return nullptr;
+  }
+
+  // Verify that all of the required parameters are present
+  CryptoBuffer n, e, d, p, q, dp, dq, qi;
+  if (!aJwk.mN.WasPassed() || NS_FAILED(n.FromJwkBase64(aJwk.mN.Value())) ||
+      !aJwk.mE.WasPassed() || NS_FAILED(e.FromJwkBase64(aJwk.mE.Value())) ||
+      !aJwk.mD.WasPassed() || NS_FAILED(d.FromJwkBase64(aJwk.mD.Value())) ||
+      !aJwk.mP.WasPassed() || NS_FAILED(p.FromJwkBase64(aJwk.mP.Value())) ||
+      !aJwk.mQ.WasPassed() || NS_FAILED(q.FromJwkBase64(aJwk.mQ.Value())) ||
+      !aJwk.mDp.WasPassed() || NS_FAILED(dp.FromJwkBase64(aJwk.mDp.Value())) ||
+      !aJwk.mDq.WasPassed() || NS_FAILED(dq.FromJwkBase64(aJwk.mDq.Value())) ||
+      !aJwk.mQi.WasPassed() || NS_FAILED(qi.FromJwkBase64(aJwk.mQi.Value()))) {
+    return nullptr;
+  }
+
+  // Compute the ID for this key
+  // This is generated with a SHA-1 hash, so unlikely to collide
+  ScopedSECItem nItem(n.ToSECItem());
+  ScopedSECItem objID(PK11_MakeIDFromPubKey(nItem.get()));
+  if (!nItem.get() || !objID.get()) {
+    return nullptr;
+  }
+
+  // Populate template from parameters
+  CK_OBJECT_CLASS privateKeyValue = CKO_PRIVATE_KEY;
+  CK_KEY_TYPE rsaValue = CKK_RSA;
+  CK_BBOOL falseValue = CK_FALSE;
+  CK_ATTRIBUTE keyTemplate[14] = {
+    { CKA_CLASS,            &privateKeyValue,      sizeof(privateKeyValue) },
+    { CKA_KEY_TYPE,         &rsaValue,             sizeof(rsaValue) },
+    { CKA_TOKEN,            &falseValue,           sizeof(falseValue) },
+    { CKA_SENSITIVE,        &falseValue,           sizeof(falseValue) },
+    { CKA_PRIVATE,          &falseValue,           sizeof(falseValue) },
+    { CKA_ID,               objID->data,           objID->len },
+    { CKA_MODULUS,          (void*) n.Elements(),  n.Length() },
+    { CKA_PUBLIC_EXPONENT,  (void*) e.Elements(),  e.Length() },
+    { CKA_PRIVATE_EXPONENT, (void*) d.Elements(),  d.Length() },
+    { CKA_PRIME_1,          (void*) p.Elements(),  p.Length() },
+    { CKA_PRIME_2,          (void*) q.Elements(),  q.Length() },
+    { CKA_EXPONENT_1,       (void*) dp.Elements(), dp.Length() },
+    { CKA_EXPONENT_2,       (void*) dq.Elements(), dq.Length() },
+    { CKA_COEFFICIENT,      (void*) qi.Elements(), qi.Length() },
+  };
+
+
+  // Create a generic object with the contents of the key
+  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  if (!slot.get()) {
+    return nullptr;
+  }
+
+  ScopedPK11GenericObject obj(PK11_CreateGenericObject(slot.get(),
+                                                       keyTemplate,
+                                                       PR_ARRAY_SIZE(keyTemplate),
+                                                       PR_FALSE));
+  if (!obj.get()) {
+    return nullptr;
+  }
+
+  // Have NSS translate the object to a private key by inspection
+  // and make a copy we can own
+  ScopedSECKEYPrivateKey privKey(PK11_FindKeyByKeyID(slot.get(), objID.get(),
+                                                     nullptr));
+  if (!privKey.get()) {
+    return nullptr;
+  }
+  return SECKEY_CopyPrivateKey(privKey.get());
+}
+
+bool ReadAndEncodeAttribute(SECKEYPrivateKey* aKey,
+                            CK_ATTRIBUTE_TYPE aAttribute,
+                            Optional<nsString>& aDst)
+{
+  ScopedSECItem item(new SECItem());
+  if (PK11_ReadRawAttribute(PK11_TypePrivKey, aKey, aAttribute, item)
+        != SECSuccess) {
+    return false;
+  }
+
+  CryptoBuffer buffer;
+  if (!buffer.Assign(item)) {
+    return false;
+  }
+
+  if (NS_FAILED(buffer.ToJwkBase64(aDst.Value()))) {
+    return false;
+  }
+
+  return true;
+}
+
+nsresult
+CryptoKey::PrivateKeyToJwk(SECKEYPrivateKey* aPrivKey,
+                           JsonWebKey& aRetVal,
+                           const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+{
+  switch (aPrivKey->keyType) {
+    case rsaKey: {
+      aRetVal.mN.Construct();
+      aRetVal.mE.Construct();
+      aRetVal.mD.Construct();
+      aRetVal.mP.Construct();
+      aRetVal.mQ.Construct();
+      aRetVal.mDp.Construct();
+      aRetVal.mDq.Construct();
+      aRetVal.mQi.Construct();
+
+      if (!ReadAndEncodeAttribute(aPrivKey, CKA_MODULUS, aRetVal.mN) ||
+          !ReadAndEncodeAttribute(aPrivKey, CKA_PUBLIC_EXPONENT, aRetVal.mE) ||
+          !ReadAndEncodeAttribute(aPrivKey, CKA_PRIVATE_EXPONENT, aRetVal.mD) ||
+          !ReadAndEncodeAttribute(aPrivKey, CKA_PRIME_1, aRetVal.mP) ||
+          !ReadAndEncodeAttribute(aPrivKey, CKA_PRIME_2, aRetVal.mQ) ||
+          !ReadAndEncodeAttribute(aPrivKey, CKA_EXPONENT_1, aRetVal.mDp) ||
+          !ReadAndEncodeAttribute(aPrivKey, CKA_EXPONENT_2, aRetVal.mDq) ||
+          !ReadAndEncodeAttribute(aPrivKey, CKA_COEFFICIENT, aRetVal.mQi)) {
+        return NS_ERROR_DOM_OPERATION_ERR;
+      }
+
+      aRetVal.mKty.Construct(NS_LITERAL_STRING(JWK_TYPE_RSA));
+      return NS_OK;
+    }
+    case ecKey: // TODO: Bug 1034855
+    default:
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+}
+
+SECKEYPublicKey*
+CryptoKey::PublicKeyFromJwk(const JsonWebKey& aJwk,
+                            const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+{
+  if (!aJwk.mKty.WasPassed() || !aJwk.mKty.Value().EqualsLiteral(JWK_TYPE_RSA)) {
+    return nullptr;
+  }
+
+  // Verify that all of the required parameters are present
+  CryptoBuffer n, e;
+  if (!aJwk.mN.WasPassed() || NS_FAILED(n.FromJwkBase64(aJwk.mN.Value())) ||
+      !aJwk.mE.WasPassed() || NS_FAILED(e.FromJwkBase64(aJwk.mE.Value()))) {
+    return nullptr;
+  }
+
+  // Transcode to a DER RSAPublicKey structure
+  struct RSAPublicKeyData {
+    SECItem n;
+    SECItem e;
+  };
+  const RSAPublicKeyData input = {
+    { siUnsignedInteger, n.Elements(), (unsigned int) n.Length() },
+    { siUnsignedInteger, e.Elements(), (unsigned int) e.Length() }
+  };
+  const SEC_ASN1Template rsaPublicKeyTemplate[] = {
+    {SEC_ASN1_SEQUENCE, 0, nullptr, sizeof(RSAPublicKeyData)},
+    {SEC_ASN1_INTEGER, offsetof(RSAPublicKeyData, n),},
+    {SEC_ASN1_INTEGER, offsetof(RSAPublicKeyData, e),},
+    {0,}
+  };
+
+  ScopedSECItem pkDer(SEC_ASN1EncodeItem(nullptr, nullptr, &input,
+                                         rsaPublicKeyTemplate));
+  if (!pkDer.get()) {
+    return nullptr;
+  }
+
+  return SECKEY_ImportDERPublicKey(pkDer.get(), CKK_RSA);
+}
+
+nsresult
+CryptoKey::PublicKeyToJwk(SECKEYPublicKey* aPubKey,
+                          JsonWebKey& aRetVal,
+                          const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+{
+  switch (aPubKey->keyType) {
+    case rsaKey: {
+      CryptoBuffer n, e;
+      aRetVal.mN.Construct();
+      aRetVal.mE.Construct();
+
+      if (!n.Assign(&aPubKey->u.rsa.modulus) ||
+          !e.Assign(&aPubKey->u.rsa.publicExponent) ||
+          NS_FAILED(n.ToJwkBase64(aRetVal.mN.Value())) ||
+          NS_FAILED(e.ToJwkBase64(aRetVal.mE.Value()))) {
+        return NS_ERROR_DOM_OPERATION_ERR;
+      }
+
+      aRetVal.mKty.Construct(NS_LITERAL_STRING(JWK_TYPE_RSA));
+      return NS_OK;
+    }
+    case ecKey: // TODO
+    default:
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+}
+
 bool
 CryptoKey::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
 {

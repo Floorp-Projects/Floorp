@@ -414,22 +414,22 @@ PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
   aList->AppendToTop(&newList);
 }
 
-static nsresult
+static void
 BuildDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
                              nsPageFrame* aPage, nsIFrame* aExtraPage,
-                             nsDisplayList* aList)
+                             const nsRect& aDirtyRect, nsDisplayList* aList)
 {
+  // The only content in aExtraPage we care about is out-of-flow content whose
+  // placeholders have occurred in aPage. If
+  // NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO is not set, then aExtraPage has
+  // no such content.
+  if (!aExtraPage->HasAnyStateBits(NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)) {
+    return;
+  }
   nsDisplayList list;
-  // Pass an empty dirty rect since we're only interested in finding
-  // placeholders whose out-of-flows are in the page
-  // aBuilder->GetReferenceFrame(), and the paths to those placeholders
-  // have already been marked as NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO.
-  // Note that we should still do a prune step since we don't want to
-  // rely on dirty-rect checking for correctness.
-  aExtraPage->BuildDisplayListForStackingContext(aBuilder, nsRect(), &list);
+  aExtraPage->BuildDisplayListForStackingContext(aBuilder, aDirtyRect, &list);
   PruneDisplayListForExtraPage(aBuilder, aPage, aExtraPage, &list);
   aList->AppendToTop(&list);
-  return NS_OK;
 }
 
 static nsIFrame*
@@ -506,8 +506,8 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     clipState.Clear();
     clipState.ClipContainingBlockDescendants(clipRect, nullptr);
 
-    child->BuildDisplayListForStackingContext(aBuilder,
-      child->GetVisualOverflowRectRelativeToSelf(), &content);
+    nsRect dirtyRect = child->GetVisualOverflowRectRelativeToSelf();
+    child->BuildDisplayListForStackingContext(aBuilder, dirtyRect, &content);
 
     // We may need to paint out-of-flow frames whose placeholders are
     // on other pages. Add those pages to our display list. Note that
@@ -518,8 +518,15 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // following placeholders to their out-of-flows) end up on the list.
     nsIFrame* page = child;
     while ((page = GetNextPage(page)) != nullptr) {
-      BuildDisplayListForExtraPage(aBuilder, this, page, &content);
+      BuildDisplayListForExtraPage(aBuilder, this, page,
+          dirtyRect + child->GetOffsetTo(page), &content);
     }
+
+    // Invoke AutoBuildingDisplayList to ensure that the correct dirtyRect
+    // is used to compute the visible rect if AddCanvasBackgroundColorItem
+    // creates a display item.
+    nsDisplayListBuilder::AutoBuildingDisplayList
+      building(aBuilder, child, dirtyRect, true);
 
     // Add the canvas background color to the bottom of the list. This
     // happens after we've built the list so that AddCanvasBackgroundColorItem
@@ -530,7 +537,8 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       *aBuilder, content, child, backgroundRect, NS_RGBA(0,0,0,0));
   }
 
-  content.AppendNewToTop(new (aBuilder) nsDisplayTransform(aBuilder, child, &content, ::ComputePageTransform));
+  content.AppendNewToTop(new (aBuilder) nsDisplayTransform(aBuilder, child,
+      &content, content.GetVisibleRect(), ::ComputePageTransform));
 
   set.Content()->AppendToTop(&content);
 

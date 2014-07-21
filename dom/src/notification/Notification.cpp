@@ -744,7 +744,10 @@ Notification::Get(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsRefPtr<Promise> promise = new Promise(global);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
   nsCOMPtr<nsINotificationStorageCallback> callback =
     new NotificationStorageCallback(aGlobal, window, promise);
   nsString tag = aFilter.mTag.WasPassed() ?

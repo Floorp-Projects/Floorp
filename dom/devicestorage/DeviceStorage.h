@@ -284,7 +284,7 @@ public:
   // Uses XPCOM GetStorageName
 
   already_AddRefed<Promise>
-  GetRoot();
+  GetRoot(ErrorResult& aRv);
 
   static void
   CreateDeviceStorageFor(nsPIDOMWindow* aWin,

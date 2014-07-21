@@ -1146,6 +1146,32 @@ public:
   virtual nsIDocument* GetFullscreenRoot() MOZ_OVERRIDE;
   virtual void SetFullscreenRoot(nsIDocument* aRoot) MOZ_OVERRIDE;
 
+  // Returns the size of the mBlockedTrackingNodes array. (nsIDocument.h)
+  //
+  // This array contains nodes that have been blocked to prevent
+  // user tracking. They most likely have had their nsIChannel
+  // canceled by the URL classifier (Safebrowsing).
+  //
+  // A script can subsequently use GetBlockedTrackingNodes()
+  // to get a list of references to these nodes.
+  //
+  // Note:
+  // This expresses how many tracking nodes have been blocked for this
+  // document since its beginning, not how many of them are still around
+  // in the DOM tree. Weak references to blocked nodes are added in the
+  // mBlockedTrackingNodesArray but they are not removed when those nodes
+  // are removed from the tree or even garbage collected.
+  long BlockedTrackingNodeCount() const;
+
+  //
+  // Returns strong references to mBlockedTrackingNodes. (nsIDocument.h)
+  //
+  // This array contains nodes that have been blocked to prevent
+  // user tracking. They most likely have had their nsIChannel
+  // canceled by the URL classifier (Safebrowsing).
+  //
+  already_AddRefed<nsSimpleContentList> BlockedTrackingNodes() const;
+
   static void ExitFullscreen(nsIDocument* aDoc);
 
   // This is called asynchronously by nsIDocument::AsyncRequestFullScreen()

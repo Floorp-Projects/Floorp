@@ -54,19 +54,6 @@ static int64_t kDefaultKeepAliveTimeoutUs = 60000000ll;
 
 namespace android {
 
-static void MakeUserAgentString(AString *s) {
-    s->setTo("stagefright/1.1 (Linux;Android ");
-
-#if (PROPERTY_VALUE_MAX < 8)
-#error "PROPERTY_VALUE_MAX must be at least 8"
-#endif
-
-    char value[PROPERTY_VALUE_MAX];
-    property_get("ro.build.version.release", value, "Unknown");
-    s->append(value);
-    s->append(")");
-}
-
 static bool GetAttribute(const char *s, const char *key, AString *value) {
     value->clear();
 
@@ -110,9 +97,11 @@ struct RtspConnectionHandler : public AHandler {
 
     RtspConnectionHandler(
             const char *url,
+            const char *userAgent,
             const sp<AMessage> &notify,
             bool uidValid = false, uid_t uid = 0)
-        : mNotify(notify),
+        : mUserAgent(userAgent),
+          mNotify(notify),
           mUIDValid(uidValid),
           mUID(uid),
           mNetLooper(new ALooper),
@@ -161,6 +150,7 @@ struct RtspConnectionHandler : public AHandler {
         }
 
         mSessionHost = host;
+        mConn->MakeUserAgent(mUserAgent.c_str());
     }
 
     void connect() {
@@ -272,7 +262,8 @@ struct RtspConnectionHandler : public AHandler {
         buf->setRange(0, buf->size() + 8);
     }
 
-    static void addSDES(PRFileDesc *s, const sp<ABuffer> &buffer) {
+    static void addSDES(PRFileDesc *s, const sp<ABuffer> &buffer,
+                        const char *userAgent) {
         PRNetAddr addr;
         CHECK_EQ(PR_GetSockName(s, &addr), PR_SUCCESS);
 
@@ -300,7 +291,7 @@ struct RtspConnectionHandler : public AHandler {
         data[offset++] = 6;  // TOOL
 
         AString tool;
-        MakeUserAgentString(&tool);
+        tool.setTo(userAgent);
 
         data[offset++] = tool.size();
 
@@ -400,7 +391,7 @@ struct RtspConnectionHandler : public AHandler {
         sp<ABuffer> buf = new ABuffer(65536);
         buf->setRange(0, 0);
         addRR(buf);
-        addSDES(rtpSocket, buf);
+        addSDES(rtpSocket, buf, mUserAgent.c_str());
 
         addr.inet.port = PR_htons(rtpPort);
 
@@ -1381,6 +1372,7 @@ private:
         bool mCheckPendings;
     };
 
+    AString mUserAgent;
     sp<AMessage> mNotify;
     bool mUIDValid;
     uid_t mUID;

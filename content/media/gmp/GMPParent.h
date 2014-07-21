@@ -45,6 +45,7 @@ public:
 enum GMPState {
   GMPStateNotLoaded,
   GMPStateLoaded,
+  GMPStateUnloading,
   GMPStateClosing
 };
 

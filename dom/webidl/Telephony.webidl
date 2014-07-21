@@ -17,9 +17,11 @@ interface Telephony : EventTarget {
    */
 
   // Promise<TelephonyCall>
+  [Throws]
   Promise dial(DOMString number, optional unsigned long serviceId);
 
   // Promise<TelephonyCall>
+  [Throws]
   Promise dialEmergency(DOMString number, optional unsigned long serviceId);
 
   [Throws]

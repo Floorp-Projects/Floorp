@@ -61,7 +61,6 @@ ARTSPConnection::ARTSPConnection(bool uidValid, uid_t uid)
       mReceiveResponseEventPending(false),
       mSocket(nullptr),
       mNumSocketPollTimeoutRetries(0) {
-    MakeUserAgent(&mUserAgent);
 }
 
 ARTSPConnection::~ARTSPConnection() {
@@ -198,6 +197,13 @@ bool ARTSPConnection::ParseURL(
     }
 
     return true;
+}
+
+void ARTSPConnection::MakeUserAgent(const char *userAgent) {
+    mUserAgent.clear();
+    mUserAgent.setTo("User-Agent: ");
+    mUserAgent.append(userAgent);
+    mUserAgent.append("\r\n");
 }
 
 static status_t MakeSocketBlocking(PRFileDesc *fd, bool blocking) {
@@ -1060,21 +1066,6 @@ void ARTSPConnection::addAuthentication(AString *request) {
     fragment.append("\r\n");
 
     request->insert(fragment, i + 2);
-}
-
-// static
-void ARTSPConnection::MakeUserAgent(AString *userAgent) {
-    userAgent->clear();
-    userAgent->setTo("User-Agent: stagefright/1.1 (Linux;Android ");
-
-#if (PROPERTY_VALUE_MAX < 8)
-#error "PROPERTY_VALUE_MAX must be at least 8"
-#endif
-
-    char value[PROPERTY_VALUE_MAX];
-    property_get("ro.build.version.release", value, "Unknown");
-    userAgent->append(value);
-    userAgent->append(")\r\n");
 }
 
 void ARTSPConnection::addUserAgent(AString *request) const {

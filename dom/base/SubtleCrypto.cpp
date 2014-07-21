@@ -35,11 +35,14 @@ SubtleCrypto::WrapObject(JSContext* aCx)
   return SubtleCryptoBinding::Wrap(aCx, this);
 }
 
-#define SUBTLECRYPTO_METHOD_BODY(Operation, ...) \
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow); \
-  MOZ_ASSERT(global); \
-  nsRefPtr<Promise> p = new Promise(global); \
-  nsRefPtr<WebCryptoTask> task = WebCryptoTask::Operation ## Task(__VA_ARGS__); \
+#define SUBTLECRYPTO_METHOD_BODY(Operation, aRv, ...)                   \
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);        \
+  MOZ_ASSERT(global);                                                   \
+  nsRefPtr<Promise> p = Promise::Create(global, aRv);                   \
+  if (aRv.Failed()) {                                                   \
+    return nullptr;                                                     \
+  }                                                                     \
+  nsRefPtr<WebCryptoTask> task = WebCryptoTask::Create ## Operation ## Task(__VA_ARGS__); \
   task->DispatchWithPromise(p); \
   return p.forget();
 
@@ -47,27 +50,30 @@ already_AddRefed<Promise>
 SubtleCrypto::Encrypt(JSContext* cx,
                       const ObjectOrString& algorithm,
                       CryptoKey& key,
-                      const CryptoOperationData& data)
+                      const CryptoOperationData& data,
+                      ErrorResult& aRv)
 {
-  SUBTLECRYPTO_METHOD_BODY(Encrypt, cx, algorithm, key, data)
+  SUBTLECRYPTO_METHOD_BODY(Encrypt, aRv, cx, algorithm, key, data)
 }
 
 already_AddRefed<Promise>
 SubtleCrypto::Decrypt(JSContext* cx,
                       const ObjectOrString& algorithm,
                       CryptoKey& key,
-                      const CryptoOperationData& data)
+                      const CryptoOperationData& data,
+                      ErrorResult& aRv)
 {
-  SUBTLECRYPTO_METHOD_BODY(Decrypt, cx, algorithm, key, data)
+  SUBTLECRYPTO_METHOD_BODY(Decrypt, aRv, cx, algorithm, key, data)
 }
 
 already_AddRefed<Promise>
 SubtleCrypto::Sign(JSContext* cx,
                    const ObjectOrString& algorithm,
                    CryptoKey& key,
-                   const CryptoOperationData& data)
+                   const CryptoOperationData& data,
+                   ErrorResult& aRv)
 {
-  SUBTLECRYPTO_METHOD_BODY(Sign, cx, algorithm, key, data)
+  SUBTLECRYPTO_METHOD_BODY(Sign, aRv, cx, algorithm, key, data)
 }
 
 already_AddRefed<Promise>
@@ -75,44 +81,49 @@ SubtleCrypto::Verify(JSContext* cx,
                      const ObjectOrString& algorithm,
                      CryptoKey& key,
                      const CryptoOperationData& signature,
-                     const CryptoOperationData& data)
+                     const CryptoOperationData& data,
+                     ErrorResult& aRv)
 {
-  SUBTLECRYPTO_METHOD_BODY(Verify, cx, algorithm, key, signature, data)
+  SUBTLECRYPTO_METHOD_BODY(Verify, aRv, cx, algorithm, key, signature, data)
 }
 
 already_AddRefed<Promise>
 SubtleCrypto::Digest(JSContext* cx,
                      const ObjectOrString& algorithm,
-                     const CryptoOperationData& data)
+                     const CryptoOperationData& data,
+                     ErrorResult& aRv)
 {
-  SUBTLECRYPTO_METHOD_BODY(Digest, cx, algorithm, data)
+  SUBTLECRYPTO_METHOD_BODY(Digest, aRv, cx, algorithm, data)
 }
 
 
 already_AddRefed<Promise>
 SubtleCrypto::ImportKey(JSContext* cx,
                         const nsAString& format,
-                        const KeyData& keyData,
+                        JS::Handle<JSObject*> keyData,
                         const ObjectOrString& algorithm,
                         bool extractable,
-                        const Sequence<nsString>& keyUsages)
+                        const Sequence<nsString>& keyUsages,
+                        ErrorResult& aRv)
 {
-  SUBTLECRYPTO_METHOD_BODY(ImportKey, cx, format, keyData, algorithm,
-                                      extractable, keyUsages)
+  SUBTLECRYPTO_METHOD_BODY(ImportKey, aRv, cx, format, keyData, algorithm,
+                           extractable, keyUsages)
 }
 
 already_AddRefed<Promise>
 SubtleCrypto::ExportKey(const nsAString& format,
-                        CryptoKey& key)
+                        CryptoKey& key,
+                        ErrorResult& aRv)
 {
-  SUBTLECRYPTO_METHOD_BODY(ExportKey, format, key)
+  SUBTLECRYPTO_METHOD_BODY(ExportKey, aRv, format, key)
 }
 
 already_AddRefed<Promise>
 SubtleCrypto::GenerateKey(JSContext* cx, const ObjectOrString& algorithm,
-                          bool extractable, const Sequence<nsString>& keyUsages)
+                          bool extractable, const Sequence<nsString>& keyUsages,
+                          ErrorResult& aRv)
 {
-  SUBTLECRYPTO_METHOD_BODY(GenerateKey, cx, algorithm, extractable, keyUsages)
+  SUBTLECRYPTO_METHOD_BODY(GenerateKey, aRv, cx, algorithm, extractable, keyUsages)
 }
 
 already_AddRefed<Promise>
@@ -120,19 +131,48 @@ SubtleCrypto::DeriveKey(JSContext* cx,
                         const ObjectOrString& algorithm,
                         CryptoKey& baseKey,
                         const ObjectOrString& derivedKeyType,
-                        bool extractable, const Sequence<nsString>& keyUsages)
+                        bool extractable, const Sequence<nsString>& keyUsages,
+                        ErrorResult& aRv)
 {
-  SUBTLECRYPTO_METHOD_BODY(DeriveKey, cx, algorithm, baseKey, derivedKeyType,
-                                      extractable, keyUsages)
+  SUBTLECRYPTO_METHOD_BODY(DeriveKey, aRv, cx, algorithm, baseKey,
+                           derivedKeyType, extractable, keyUsages)
 }
 
 already_AddRefed<Promise>
 SubtleCrypto::DeriveBits(JSContext* cx,
                          const ObjectOrString& algorithm,
                          CryptoKey& baseKey,
-                         uint32_t length)
+                         uint32_t length,
+                         ErrorResult& aRv)
 {
-  SUBTLECRYPTO_METHOD_BODY(DeriveBits, cx, algorithm, baseKey, length)
+  SUBTLECRYPTO_METHOD_BODY(DeriveBits, aRv, cx, algorithm, baseKey, length)
+}
+
+already_AddRefed<Promise>
+SubtleCrypto::WrapKey(JSContext* cx,
+                      const nsAString& format,
+                      CryptoKey& key,
+                      CryptoKey& wrappingKey,
+                      const ObjectOrString& wrapAlgorithm,
+                      ErrorResult& aRv)
+{
+  SUBTLECRYPTO_METHOD_BODY(WrapKey, aRv, cx, format, key, wrappingKey, wrapAlgorithm)
+}
+
+already_AddRefed<Promise>
+SubtleCrypto::UnwrapKey(JSContext* cx,
+                        const nsAString& format,
+                        const ArrayBufferViewOrArrayBuffer& wrappedKey,
+                        CryptoKey& unwrappingKey,
+                        const ObjectOrString& unwrapAlgorithm,
+                        const ObjectOrString& unwrappedKeyAlgorithm,
+                        bool extractable,
+                        const Sequence<nsString>& keyUsages,
+                        ErrorResult& aRv)
+{
+  SUBTLECRYPTO_METHOD_BODY(UnwrapKey, aRv, cx, format, wrappedKey, unwrappingKey,
+                           unwrapAlgorithm, unwrappedKeyAlgorithm,
+                           extractable, keyUsages)
 }
 
 } // namespace dom

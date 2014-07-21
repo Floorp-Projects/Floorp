@@ -15,7 +15,6 @@ class nsPrintDialogServiceQt : public nsIPrintDialogService
 {
 public:
     nsPrintDialogServiceQt();
-    virtual ~nsPrintDialogServiceQt();
 
     NS_DECL_ISUPPORTS
 
@@ -25,6 +24,9 @@ public:
                        nsIWebBrowserPrint* aWebBrowserPrint);
     NS_IMETHODIMP ShowPageSetup(nsIDOMWindow* aParent,
                                 nsIPrintSettings* aSettings);
+
+protected:
+    virtual ~nsPrintDialogServiceQt();
 };
 
 #endif

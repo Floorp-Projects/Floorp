@@ -91,6 +91,12 @@ class MapObject : public JSObject {
 
     static JSObject *initClass(JSContext *cx, JSObject *obj);
     static const Class class_;
+
+    // Entries is every key followed by value.
+    static bool entries(JSContext *cx, HandleObject obj, JS::AutoValueVector *entries);
+    static bool set(JSContext *cx, HandleObject obj, HandleValue key, HandleValue value);
+    static MapObject* create(JSContext *cx);
+
   private:
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
@@ -129,6 +135,11 @@ class SetObject : public JSObject {
     enum IteratorKind { Values, Entries };
     static JSObject *initClass(JSContext *cx, JSObject *obj);
     static const Class class_;
+
+    static bool keys(JSContext *cx, HandleObject obj, JS::AutoValueVector *keys);
+    static bool add(JSContext *cx, HandleObject obj, HandleValue key);
+    static SetObject* create(JSContext *cx);
+
   private:
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];

@@ -2326,6 +2326,24 @@ public:
   virtual bool IsMasterDocument() = 0;
   virtual already_AddRefed<mozilla::dom::ImportManager> ImportManager() = 0;
 
+  /*
+   * Given a node, get a weak reference to it and append that reference to
+   * mBlockedTrackingNodes. Can be used later on to look up a node in it.
+   * (e.g., by the UI)
+   */
+  void AddBlockedTrackingNode(nsINode *node)
+  {
+    if (!node) {
+      return;
+    }
+
+    nsWeakPtr weakNode = do_GetWeakReference(node);
+
+    if (weakNode) {
+      mBlockedTrackingNodes.AppendElement(weakNode);
+    }
+  }
+
 private:
   uint64_t mWarnedAbout;
   SelectorCache mSelectorCache;
@@ -2627,6 +2645,13 @@ protected:
    * The current frame request callback handle
    */
   int32_t mFrameRequestCallbackCounter;
+
+  // Array of nodes that have been blocked to prevent user tracking.
+  // They most likely have had their nsIChannel canceled by the URL
+  // classifier. (Safebrowsing)
+  //
+  // Weak nsINode pointers are used to allow nodes to disappear.
+  nsTArray<nsWeakPtr> mBlockedTrackingNodes;
 
   // Weak reference to mScriptGlobalObject QI:d to nsPIDOMWindow,
   // updated on every set of mSecriptGlobalObject.

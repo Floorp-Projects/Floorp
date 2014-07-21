@@ -1481,7 +1481,7 @@ nsLayoutUtils::GetScrollableFrameFor(const nsIFrame *aScrolledFrame)
 {
   nsIFrame *frame = aScrolledFrame->GetParent();
   nsIScrollableFrame *sf = do_QueryFrame(frame);
-  return sf;
+  return (sf && sf->GetScrolledFrame() == aScrolledFrame) ? sf : nullptr;
 }
 
 /* static */ void
@@ -1603,9 +1603,9 @@ IsScrollbarThumbLayerized(nsIFrame* aThumbFrame)
   return reinterpret_cast<intptr_t>(aThumbFrame->Properties().Get(ScrollbarThumbLayerized()));
 }
 
-static nsIFrame*
-GetAnimatedGeometryRootForFrame(nsIFrame* aFrame,
-                                const nsIFrame* aStopAtAncestor)
+nsIFrame*
+nsLayoutUtils::GetAnimatedGeometryRootForFrame(nsIFrame* aFrame,
+                                               const nsIFrame* aStopAtAncestor)
 {
   nsIFrame* f = aFrame;
   nsIFrame* stickyFrame = nullptr;
@@ -2323,7 +2323,7 @@ nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
                                false/*don't build caret*/);
   nsDisplayList list;  
   nsDisplayTransform* item =
-    new (&builder) nsDisplayTransform(&builder, aFrame, &list);
+    new (&builder) nsDisplayTransform(&builder, aFrame, &list, nsRect());
 
   *aTransform =
     item->GetTransform();
@@ -2937,9 +2937,6 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 #endif
 
-  list.ComputeVisibilityForRoot(&builder, &visibleRegion,
-                                usingDisplayPort ? rootScrollFrame : nullptr);
-
   uint32_t flags = nsDisplayList::PAINT_DEFAULT;
   if (aFlags & PAINT_WIDGET_LAYERS) {
     flags |= nsDisplayList::PAINT_USE_WIDGET_LAYERS;
@@ -2955,7 +2952,6 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     } else if (!(aFlags & PAINT_DOCUMENT_RELATIVE)) {
       nsIWidget *widget = aFrame->GetNearestWidget();
       if (widget) {
-        builder.SetFinalTransparentRegion(visibleRegion);
         // If we're finished building display list items for painting of the outermost
         // pres shell, notify the widget about any toolbars we've encountered.
         widget->UpdateThemeGeometries(builder.GetThemeGeometries());
@@ -3023,8 +3019,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
       !(aFlags & PAINT_DOCUMENT_RELATIVE)) {
     nsIWidget *widget = aFrame->GetNearestWidget();
     if (widget) {
-      nsRegion excludedRegion = builder.GetExcludedGlassRegion();
-      excludedRegion.Sub(excludedRegion, visibleRegion);
+      nsRegion excludedRegion = builder.GetWindowOpaqueRegion();
       nsIntRegion windowRegion(excludedRegion.ToNearestPixels(presContext->AppUnitsPerDevPixel()));
       widget->UpdateOpaqueRegion(windowRegion);
     }

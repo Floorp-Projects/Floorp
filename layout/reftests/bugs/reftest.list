@@ -1790,7 +1790,7 @@ fuzzy-if(OSX==10.6,2,30) skip-if(B2G&&browserIsRemote) == 933264-1.html 933264-1
 == 936670-1.svg 936670-1-ref.svg
 == 941940-1.html 941940-1-ref.html
 fails == 942017.html 942017-ref.html # bug 942017
-== 942672-1.html 942672-1-ref.html
+fuzzy-if(B2G,1,7) == 942672-1.html 942672-1-ref.html
 == 953334-win32-clipping.html 953334-win32-clipping-ref.html
 == 956513-1.svg 956513-1-ref.svg
 == 944291-1.html 944291-1-ref.html
@@ -1813,4 +1813,5 @@ pref(layout.css.overflow-clip-box.enabled,true) == 992447.html 992447-ref.html
 pref(layout.css.sticky.enabled,true) == 1005405-1.html 1005405-1-ref.html
 pref(layout.css.will-change.enabled,true) == 1018522-1.html 1018522-1-ref.html
 pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1-ref.html
+== 1022612-1.html 1022612-1-ref.html
 == 1024473-1.html 1024473-1-ref.html
