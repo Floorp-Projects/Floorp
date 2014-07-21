@@ -960,6 +960,38 @@ NS_IMETHODIMP CacheEntry::GetExpirationTime(uint32_t *aExpirationTime)
   return mFile->GetExpirationTime(aExpirationTime);
 }
 
+NS_IMETHODIMP CacheEntry::GetIsForcedValid(bool *aIsForcedValid)
+{
+  NS_ENSURE_ARG(aIsForcedValid);
+
+  nsAutoCString key;
+
+  nsresult rv = HashingKeyWithStorage(key);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  *aIsForcedValid = CacheStorageService::Self()->IsForcedValidEntry(key);
+  LOG(("CacheEntry::GetIsForcedValid [this=%p, IsForcedValid=%d]", this, *aIsForcedValid));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP CacheEntry::ForceValidFor(uint32_t aSecondsToTheFuture)
+{
+  LOG(("CacheEntry::ForceValidFor [this=%p, aSecondsToTheFuture=%d]", this, aSecondsToTheFuture));
+
+  nsAutoCString key;
+  nsresult rv = HashingKeyWithStorage(key);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  CacheStorageService::Self()->ForceEntryValidFor(key, aSecondsToTheFuture);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP CacheEntry::SetExpirationTime(uint32_t aExpirationTime)
 {
   NS_ENSURE_SUCCESS(mFileStatus, NS_ERROR_NOT_AVAILABLE);
