@@ -4569,7 +4569,7 @@ js::DuplicateString(js::ThreadSafeContext *cx, const char *s)
     size_t n = strlen(s) + 1;
     auto ret = cx->make_pod_array<char>(n);
     if (!ret)
-        return nullptr;
+        return ret;
     PodCopy(ret.get(), s, n);
     return ret;
 }
