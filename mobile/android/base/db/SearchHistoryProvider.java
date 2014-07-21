@@ -112,9 +112,10 @@ public class SearchHistoryProvider extends SharedBrowserDatabaseProvider {
             String[] selectionArgs, String sortOrder) {
         String groupBy = null;
         String having = null;
-        return getReadableDatabase(uri).query(SearchHistory.TABLE_NAME, projection,
-                                              selection, selectionArgs,
-                                              groupBy, having, sortOrder);
+        final Cursor cursor = getReadableDatabase(uri).query(SearchHistory.TABLE_NAME, projection,
+                selection, selectionArgs, groupBy, having, sortOrder);
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+        return cursor;
     }
 
     @Override
