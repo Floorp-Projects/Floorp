@@ -347,7 +347,7 @@ InstBLImm::IsTHIS(const Instruction &i)
 
 }
 InstBLImm *
-InstBLImm::AsTHIS(Instruction &i)
+InstBLImm::AsTHIS(const Instruction &i)
 {
     if (IsTHIS(i))
         return (InstBLImm*)&i;

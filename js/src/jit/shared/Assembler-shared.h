@@ -584,17 +584,30 @@ class CodeLocationLabel
 class CallSiteDesc
 {
     uint32_t line_;
-    uint32_t column_;
+    uint32_t column_ : 31;
+    uint32_t kind_ : 1;
   public:
+    enum Kind {
+        Relative,  // pc-relative call
+        Register   // call *register
+    };
     CallSiteDesc() {}
-    CallSiteDesc(uint32_t line, uint32_t column) : line_(line), column_(column) {}
+    explicit CallSiteDesc(Kind kind)
+      : line_(0), column_(0), kind_(kind)
+    {}
+    CallSiteDesc(uint32_t line, uint32_t column, Kind kind)
+      : line_(line), column_(column), kind_(kind)
+    {
+        JS_ASSERT(column <= INT32_MAX);
+    }
     uint32_t line() const { return line_; }
     uint32_t column() const { return column_; }
+    Kind kind() const { return Kind(kind_); }
 };
 
 // Adds to CallSiteDesc the metadata necessary to walk the stack given an
 // initial stack-pointer.
-struct CallSite : public CallSiteDesc
+class CallSite : public CallSiteDesc
 {
     uint32_t returnAddressOffset_;
     uint32_t stackDepth_;

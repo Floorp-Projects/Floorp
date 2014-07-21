@@ -1907,7 +1907,7 @@ class InstBLImm : public InstBranchImm
     { }
 
     static bool IsTHIS (const Instruction &i);
-    static InstBLImm *AsTHIS (Instruction &i);
+    static InstBLImm *AsTHIS (const Instruction &i);
 };
 
 // Both movw and movt. The layout of both the immediate and the destination

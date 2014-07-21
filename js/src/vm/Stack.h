@@ -1480,6 +1480,7 @@ class AsmJSActivation : public Activation
     SPSProfiler *profiler_;
     void *resumePC_;
     uint8_t *fp_;
+    uint32_t exitReason_;
 
   public:
     AsmJSActivation(JSContext *cx, AsmJSModule &module);
@@ -1493,6 +1494,9 @@ class AsmJSActivation : public Activation
     // in this activation.
     uint8_t *fp() const { return fp_; }
 
+    // Returns the reason why asm.js code called out of asm.js code.
+    AsmJSExitReason exitReason() const { return AsmJSExitReason(exitReason_); }
+
     // Read by JIT code:
     static unsigned offsetOfContext() { return offsetof(AsmJSActivation, cx_); }
     static unsigned offsetOfResumePC() { return offsetof(AsmJSActivation, resumePC_); }
@@ -1500,6 +1504,7 @@ class AsmJSActivation : public Activation
     // Written by JIT code:
     static unsigned offsetOfErrorRejoinSP() { return offsetof(AsmJSActivation, errorRejoinSP_); }
     static unsigned offsetOfFP() { return offsetof(AsmJSActivation, fp_); }
+    static unsigned offsetOfExitReason() { return offsetof(AsmJSActivation, exitReason_); }
 
     // Set from SIGSEGV handler:
     void setResumePC(void *pc) { resumePC_ = pc; }
