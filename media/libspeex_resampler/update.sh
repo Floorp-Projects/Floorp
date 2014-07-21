@@ -22,3 +22,4 @@ cp $1/COPYING .
 patch -p3 < outside-speex.patch
 patch -p3 < sse-detect-runtime.patch
 patch -p3 < set-skip-frac.patch
+patch -p3 < hugemem.patch
