@@ -140,6 +140,19 @@ describe("loop.webapp", function() {
         });
       });
 
+      describe("#expired", function() {
+        it("should load the CallUrlExpiredView view", function() {
+          router.expired();
+
+          sinon.assert.calledOnce(router.loadReactComponent);
+          sinon.assert.calledWith(router.loadReactComponent,
+            sinon.match(function(value) {
+              return React.addons.TestUtils.isComponentOfType(
+                value, loop.webapp.CallUrlExpiredView);
+            }));
+        });
+      });
+
       describe("#initiate", function() {
         it("should set the token on the conversation model", function() {
           router.initiate("fakeToken");
@@ -251,6 +264,14 @@ describe("loop.webapp", function() {
           sinon.assert.calledOnce(router.navigate);
           sinon.assert.calledWithMatch(router.navigate, "call/fakeToken");
         });
+
+      it("should navigate to call/expired when a session:expired event is " +
+         "received", function() {
+        conversation.trigger("session:expired");
+
+        sinon.assert.calledOnce(router.navigate);
+        sinon.assert.calledWith(router.navigate, "/call/expired");
+      });
     });
   });
 
