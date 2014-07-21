@@ -98,8 +98,6 @@ private:
 
     bool mStarted;
 
-    MediaBufferGroup *mGroup;
-
     MediaBuffer *mBuffer;
 
     bool mWantsNALFragments;
@@ -2392,7 +2390,6 @@ MPEG4Source::MPEG4Source(
       mIsAVC(false),
       mNALLengthSize(0),
       mStarted(false),
-      mGroup(NULL),
       mBuffer(NULL),
       mWantsNALFragments(false),
       mSrcBuffer(NULL) {
@@ -2459,12 +2456,8 @@ status_t MPEG4Source::start(MetaData *params) {
         mWantsNALFragments = false;
     }
 
-    mGroup = new MediaBufferGroup;
-
     int32_t max_size;
     CHECK(mFormat->findInt32(kKeyMaxInputSize, &max_size));
-
-    mGroup->add_buffer(new MediaBuffer(max_size));
 
     mSrcBuffer = new uint8_t[max_size];
 
@@ -2485,9 +2478,6 @@ status_t MPEG4Source::stop() {
 
     delete[] mSrcBuffer;
     mSrcBuffer = NULL;
-
-    delete mGroup;
-    mGroup = NULL;
 
     mStarted = false;
     mCurrentSampleIndex = 0;
@@ -3169,12 +3159,10 @@ status_t MPEG4Source::read(
             return err;
         }
 
-        err = mGroup->acquire_buffer(&mBuffer);
-
-        if (err != OK) {
-            CHECK(mBuffer == NULL);
-            return err;
-        }
+        int32_t max_size;
+        CHECK(mFormat->findInt32(kKeyMaxInputSize, &max_size));
+        mBuffer = new MediaBuffer(max_size);
+        assert(mBuffer);
     }
 
     if (!mIsAVC || mWantsNALFragments) {
@@ -3439,13 +3427,10 @@ status_t MPEG4Source::fragmentedRead(
         mCurrentTime += smpl->duration;
         isSyncSample = (mCurrentSampleIndex == 0); // XXX
 
-        status_t err = mGroup->acquire_buffer(&mBuffer);
-
-        if (err != OK) {
-            CHECK(mBuffer == NULL);
-            ALOGV("acquire_buffer returned %d", err);
-            return err;
-        }
+        int32_t max_size;
+        CHECK(mFormat->findInt32(kKeyMaxInputSize, &max_size));
+        mBuffer = new MediaBuffer(max_size);
+        assert(mBuffer);
     }
 
     const Sample *smpl = &mCurrentSamples[mCurrentSampleIndex];
