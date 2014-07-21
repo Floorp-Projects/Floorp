@@ -12,7 +12,7 @@
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="cc67f31dc638c0b7edba3cf7e3d87cadf0ed52bf">
+  <project name="platform_build" path="build" remote="b2g" revision="3aa6abd313f965a84aa86c6b213dc154e4875139">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
