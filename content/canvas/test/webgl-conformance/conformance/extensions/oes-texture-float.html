@@ -156,10 +156,14 @@ function runRenderTargetTest(testProgram)
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
     gl.bindTexture(gl.TEXTURE_2D, null);
-    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
-        debug("floating-point " + formatString + " render target not supported -- this is legal");
+    shouldBe("gl.checkFramebufferStatus(gl.FRAMEBUFFER)", "gl.FRAMEBUFFER_COMPLETE");
+    // While strictly speaking it is probably legal for a WebGL implementation to support
+    // floating-point textures but not as attachments to framebuffer objects, any such
+    // implementation is so poor that it arguably should not advertise support for the
+    // OES_texture_float extension. For this reason the conformance test requires that the
+    // framebuffer is complete here.
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE)
         return;
-    }
 
     var renderProgram =
         wtu.setupProgram(gl,
