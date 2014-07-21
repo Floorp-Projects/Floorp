@@ -346,12 +346,10 @@ AsmJSModule::finish(ExclusiveContext *cx, TokenStream &tokenStream, MacroAssembl
 
     // Absolute link metadata: absolute addresses that refer to some fixed
     // address in the address space.
+    AbsoluteLinkArray &absoluteLinks = staticLinkData_.absoluteLinks;
     for (size_t i = 0; i < masm.numAsmJSAbsoluteLinks(); i++) {
         AsmJSAbsoluteLink src = masm.asmJSAbsoluteLink(i);
-        AbsoluteLink link;
-        link.patchAt = CodeOffsetLabel(masm.actualOffset(src.patchAt.offset()));
-        link.target = src.target;
-        if (!staticLinkData_.absoluteLinks.append(link))
+        if (!absoluteLinks[src.target].append(masm.actualOffset(src.patchAt.offset())))
             return false;
     }
 
@@ -683,7 +681,7 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
         return RedirectCall(FuncCast(ecmaPow), Args_Double_DoubleDouble);
       case AsmJSImm_ATan2D:
         return RedirectCall(FuncCast(ecmaAtan2), Args_Double_DoubleDouble);
-      case AsmJSImm_Invalid:
+      case AsmJSImm_Limit:
         break;
     }
 
@@ -711,11 +709,14 @@ AsmJSModule::staticallyLink(ExclusiveContext *cx)
             Assembler::PatchInstructionImmediate(patchAt, PatchedImmPtr(target));
     }
 
-    for (size_t i = 0; i < staticLinkData_.absoluteLinks.length(); i++) {
-        AbsoluteLink link = staticLinkData_.absoluteLinks[i];
-        Assembler::PatchDataWithValueCheck(CodeLocationLabel(code_ + link.patchAt.offset()),
-                                           PatchedImmPtr(AddressOf(link.target, cx)),
-                                           PatchedImmPtr((void*)-1));
+    for (size_t imm = 0; imm < AsmJSImm_Limit; imm++) {
+        const AsmJSModule::OffsetVector &offsets = staticLinkData_.absoluteLinks[imm];
+        void *target = AddressOf(AsmJSImmKind(imm), cx);
+        for (size_t i = 0; i < offsets.length(); i++) {
+            Assembler::PatchDataWithValueCheck(CodeLocationLabel(code_ + offsets[i]),
+                                               PatchedImmPtr(target),
+                                               PatchedImmPtr((void*)-1));
+        }
     }
 
     // Initialize global data segment
@@ -778,11 +779,14 @@ AsmJSModule::restoreToInitialState(ArrayBufferObject *maybePrevBuffer, Exclusive
 #ifdef DEBUG
     // Put the absolute links back to -1 so PatchDataWithValueCheck assertions
     // in staticallyLink are valid.
-    for (size_t i = 0; i < staticLinkData_.absoluteLinks.length(); i++) {
-        AbsoluteLink link = staticLinkData_.absoluteLinks[i];
-        Assembler::PatchDataWithValueCheck(CodeLocationLabel(code_ + link.patchAt.offset()),
-                                           PatchedImmPtr((void*)-1),
-                                           PatchedImmPtr(AddressOf(link.target, cx)));
+    for (size_t imm = 0; imm < AsmJSImm_Limit; imm++) {
+        const AsmJSModule::OffsetVector &offsets = staticLinkData_.absoluteLinks[imm];
+        void *target = AddressOf(AsmJSImmKind(imm), cx);
+        for (size_t i = 0; i < offsets.length(); i++) {
+            Assembler::PatchDataWithValueCheck(CodeLocationLabel(code_ + offsets[i]),
+                                               PatchedImmPtr((void*)-1),
+                                               PatchedImmPtr(target));
+        }
     }
 #endif
 
@@ -1234,32 +1238,6 @@ AsmJSModule::CodeRange::updateOffsets(jit::MacroAssembler &masm)
     }
 }
 
-size_t
-AsmJSModule::StaticLinkData::serializedSize() const
-{
-    return sizeof(uint32_t) +
-           SerializedPodVectorSize(relativeLinks) +
-           SerializedPodVectorSize(absoluteLinks);
-}
-
-uint8_t *
-AsmJSModule::StaticLinkData::serialize(uint8_t *cursor) const
-{
-    cursor = WriteScalar<uint32_t>(cursor, interruptExitOffset);
-    cursor = SerializePodVector(cursor, relativeLinks);
-    cursor = SerializePodVector(cursor, absoluteLinks);
-    return cursor;
-}
-
-const uint8_t *
-AsmJSModule::StaticLinkData::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
-{
-    (cursor = ReadScalar<uint32_t>(cursor, &interruptExitOffset)) &&
-    (cursor = DeserializePodVector(cx, cursor, &relativeLinks)) &&
-    (cursor = DeserializePodVector(cx, cursor, &absoluteLinks));
-    return cursor;
-}
-
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
 size_t
 AsmJSModule::ProfiledFunction::serializedSize() const
@@ -1285,12 +1263,82 @@ AsmJSModule::ProfiledFunction::deserialize(ExclusiveContext *cx, const uint8_t *
 }
 #endif
 
+size_t
+AsmJSModule::AbsoluteLinkArray::serializedSize() const
+{
+    size_t size = 0;
+    for (size_t i = 0; i < AsmJSImm_Limit; i++)
+        size += SerializedPodVectorSize(array_[i]);
+    return size;
+}
+
+uint8_t *
+AsmJSModule::AbsoluteLinkArray::serialize(uint8_t *cursor) const
+{
+    for (size_t i = 0; i < AsmJSImm_Limit; i++)
+        cursor = SerializePodVector(cursor, array_[i]);
+    return cursor;
+}
+
+const uint8_t *
+AsmJSModule::AbsoluteLinkArray::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
+{
+    for (size_t i = 0; i < AsmJSImm_Limit; i++)
+        cursor = DeserializePodVector(cx, cursor, &array_[i]);
+    return cursor;
+}
+
+bool
+AsmJSModule::AbsoluteLinkArray::clone(ExclusiveContext *cx, AbsoluteLinkArray *out) const
+{
+    for (size_t i = 0; i < AsmJSImm_Limit; i++) {
+        if (!ClonePodVector(cx, array_[i], &out->array_[i]))
+            return false;
+    }
+    return true;
+}
+
+size_t
+AsmJSModule::AbsoluteLinkArray::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    size_t size = 0;
+    for (size_t i = 0; i < AsmJSImm_Limit; i++)
+        size += array_[i].sizeOfExcludingThis(mallocSizeOf);
+    return size;
+}
+
+size_t
+AsmJSModule::StaticLinkData::serializedSize() const
+{
+    return sizeof(uint32_t) +
+           SerializedPodVectorSize(relativeLinks) +
+           absoluteLinks.serializedSize();
+}
+
+uint8_t *
+AsmJSModule::StaticLinkData::serialize(uint8_t *cursor) const
+{
+    cursor = WriteScalar<uint32_t>(cursor, interruptExitOffset);
+    cursor = SerializePodVector(cursor, relativeLinks);
+    cursor = absoluteLinks.serialize(cursor);
+    return cursor;
+}
+
+const uint8_t *
+AsmJSModule::StaticLinkData::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
+{
+    (cursor = ReadScalar<uint32_t>(cursor, &interruptExitOffset)) &&
+    (cursor = DeserializePodVector(cx, cursor, &relativeLinks)) &&
+    (cursor = absoluteLinks.deserialize(cx, cursor));
+    return cursor;
+}
+
 bool
 AsmJSModule::StaticLinkData::clone(ExclusiveContext *cx, StaticLinkData *out) const
 {
     out->interruptExitOffset = interruptExitOffset;
     return ClonePodVector(cx, relativeLinks, &out->relativeLinks) &&
-           ClonePodVector(cx, absoluteLinks, &out->absoluteLinks);
+           absoluteLinks.clone(cx, &out->absoluteLinks);
 }
 
 size_t
