@@ -5881,12 +5881,6 @@ LoadAsmJSActivationIntoRegister(MacroAssembler &masm, Register reg)
 }
 
 static void
-LoadJSContextFromActivation(MacroAssembler &masm, Register activation, Register dest)
-{
-    masm.loadPtr(Address(activation, AsmJSActivation::offsetOfContext()), dest);
-}
-
-static void
 AssertStackAlignment(MacroAssembler &masm)
 {
     JS_ASSERT((AsmJSFrameSize + masm.framePushed()) % StackAlignment == 0);
@@ -6070,102 +6064,6 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     return true;
 }
 
-// This function and InvokeFromAsmJS* functions all return int32_t rather than
-// bool to prevent the compiler from optimizing bits higher than what's
-// actually needed for a bool (as the result is tested in asm.js generated code
-// which the compiler isn't aware of).
-static inline int32_t
-TryEnablingIon(JSContext *cx, AsmJSModule &module, HandleFunction fun, uint32_t exitIndex,
-               int32_t argc, Value *argv)
-{
-    if (!fun->hasScript())
-        return true;
-
-    // Test if the function is Ion compiled
-    JSScript *script = fun->nonLazyScript();
-    if (!script->hasIonScript())
-        return true;
-
-    // Currently we can't rectify arguments. Therefore disabling if argc is too low.
-    if (fun->nargs() > size_t(argc))
-        return true;
-
-    // Normally the types should corresond, since we just ran with those types,
-    // but there are reports this is asserting. Therefore doing it as a check, instead of DEBUG only.
-    if (!types::TypeScript::ThisTypes(script)->hasType(types::Type::UndefinedType()))
-        return true;
-    for(uint32_t i = 0; i < fun->nargs(); i++) {
-        types::StackTypeSet *typeset = types::TypeScript::ArgTypes(script, i);
-        types::Type type = types::Type::DoubleType();
-        if (!argv[i].isDouble())
-            type = types::Type::PrimitiveType(argv[i].extractNonDoubleType());
-        if (!typeset->hasType(type))
-            return true;
-    }
-
-    // Enable
-    IonScript *ionScript = script->ionScript();
-    if (!ionScript->addDependentAsmJSModule(cx, DependentAsmJSModuleExit(&module, exitIndex)))
-        return false;
-
-    module.exitIndexToGlobalDatum(exitIndex).exit = module.ionExitTrampoline(module.exit(exitIndex));
-    return true;
-}
-
-namespace js {
-
-// See comment above TryEnablingIon.
-int32_t
-InvokeFromAsmJS(JSContext *cx, int32_t exitIndex, int32_t argc, Value *argv,
-                MutableHandleValue rval)
-{
-    AsmJSModule &module = cx->mainThread().asmJSActivationStackFromOwnerThread()->module();
-
-    RootedFunction fun(cx, module.exitIndexToGlobalDatum(exitIndex).fun);
-    RootedValue fval(cx, ObjectValue(*fun));
-    if (!Invoke(cx, UndefinedValue(), fval, argc, argv, rval))
-        return false;
-
-    return TryEnablingIon(cx, module, fun, exitIndex, argc, argv);
-}
-
-int32_t
-InvokeFromAsmJS_Ignore(JSContext *cx, int32_t exitIndex, int32_t argc, Value *argv)
-{
-    RootedValue rval(cx);
-    return InvokeFromAsmJS(cx, exitIndex, argc, argv, &rval);
-}
-
-int32_t
-InvokeFromAsmJS_ToInt32(JSContext *cx, int32_t exitIndex, int32_t argc, Value *argv)
-{
-    RootedValue rval(cx);
-    if (!InvokeFromAsmJS(cx, exitIndex, argc, argv, &rval))
-        return false;
-
-    int32_t i32;
-    if (!ToInt32(cx, rval, &i32))
-        return false;
-    argv[0] = Int32Value(i32);
-    return true;
-}
-
-int32_t
-InvokeFromAsmJS_ToNumber(JSContext *cx, int32_t exitIndex, int32_t argc, Value *argv)
-{
-    RootedValue rval(cx);
-    if (!InvokeFromAsmJS(cx, exitIndex, argc, argv, &rval))
-        return false;
-
-    double dbl;
-    if (!ToNumber(cx, rval, &dbl))
-        return false;
-    argv[0] = DoubleValue(dbl);
-    return true;
-}
-
-}  // namespace js
-
 static void
 FillArgumentArray(ModuleCompiler &m, const VarTypeVector &argTypes,
                   unsigned offsetToArgs, unsigned offsetToCallerStackArgs,
@@ -6226,8 +6124,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     LoadAsmJSActivationIntoRegister(masm, activation);
     masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfExitFP()));
 
-    MIRType typeArray[] = { MIRType_Pointer,   // cx
-                            MIRType_Pointer,   // exitDatum
+    MIRType typeArray[] = { MIRType_Pointer,   // exitDatum
                             MIRType_Int32,     // argc
                             MIRType_Pointer }; // argv
     MIRTypeVector invokeArgTypes(m.cx());
@@ -6235,9 +6132,9 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
 
     // At the point of the call, the stack layout shall be (sp grows to the left):
     //   | stack args | padding | Value argv[] | padding | retaddr | caller stack args |
-    // The padding between stack args and argv ensures that sp is aligned. The
-    // padding between argv and retaddr ensures that argv is aligned.
-    unsigned offsetToArgv = AlignBytes(StackArgBytes(invokeArgTypes), StackAlignment);
+    // The padding between stack args and argv ensures that argv is aligned. The
+    // padding between argv and retaddr ensures that sp is aligned.
+    unsigned offsetToArgv = AlignBytes(StackArgBytes(invokeArgTypes), sizeof(double));
     unsigned argvBytes = Max<size_t>(1, exit.sig().args().length()) * sizeof(Value);
     unsigned stackDec = StackDecrementForCall(masm, offsetToArgv + argvBytes);
     masm.reserveStack(stackDec);
@@ -6250,23 +6147,14 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     // Prepare the arguments for the call to InvokeFromAsmJS_*.
     ABIArgMIRTypeIter i(invokeArgTypes);
 
-    // argument 0: cx
-    if (i->kind() == ABIArg::GPR) {
-        LoadJSContextFromActivation(masm, activation, i->gpr());
-    } else {
-        LoadJSContextFromActivation(masm, activation, scratch);
-        masm.storePtr(scratch, Address(StackPointer, i->offsetFromArgBase()));
-    }
-    i++;
-
-    // argument 1: exitIndex
+    // argument 0: exitIndex
     if (i->kind() == ABIArg::GPR)
         masm.mov(ImmWord(exitIndex), i->gpr());
     else
         masm.store32(Imm32(exitIndex), Address(StackPointer, i->offsetFromArgBase()));
     i++;
 
-    // argument 2: argc
+    // argument 1: argc
     unsigned argc = exit.sig().args().length();
     if (i->kind() == ABIArg::GPR)
         masm.mov(ImmWord(argc), i->gpr());
@@ -6274,7 +6162,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
         masm.store32(Imm32(argc), Address(StackPointer, i->offsetFromArgBase()));
     i++;
 
-    // argument 3: argv
+    // argument 2: argv
     Address argv(StackPointer, offsetToArgv);
     if (i->kind() == ABIArg::GPR) {
         masm.computeEffectiveAddress(argv, i->gpr());
@@ -6371,25 +6259,26 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
 
     // Ion calls use the following stack layout (sp grows to the left):
     //   | return address | descriptor | callee | argc | this | arg1 | arg2 | ...
-    unsigned offsetToArgs = MaybeRetAddr;
-    unsigned argBytes = 3 * sizeof(size_t) + (1 + exit.sig().args().length()) * sizeof(Value);
-    unsigned totalIonBytes = offsetToArgs + argBytes + savedRegBytes;
+    unsigned offsetToIonArgs = MaybeRetAddr;
+    unsigned ionArgBytes = 3 * sizeof(size_t) + (1 + exit.sig().args().length()) * sizeof(Value);
+    unsigned totalIonBytes = offsetToIonArgs + ionArgBytes + savedRegBytes;
     unsigned ionFrameSize = StackDecrementForCall(masm, totalIonBytes);
 
     // Coercion calls use the following stack layout (sp grows to the left):
-    //   | stack args | Value argv[1] | ...
+    //   | stack args | padding | Value argv[1] | ...
+    // The padding between args and argv ensures that argv is aligned.
     MIRTypeVector coerceArgTypes(m.cx());
-    coerceArgTypes.infallibleAppend(MIRType_Pointer); // cx
     coerceArgTypes.infallibleAppend(MIRType_Pointer); // argv
-    unsigned bytesAfterArgs = sizeof(Value) + savedRegBytes;
-    unsigned coerceFrameSize = StackDecrementForCall(masm, coerceArgTypes, bytesAfterArgs);
+    unsigned offsetToCoerceArgv = AlignBytes(StackArgBytes(coerceArgTypes), sizeof(double));
+    unsigned totalCoerceBytes = offsetToCoerceArgv + sizeof(Value) + savedRegBytes;
+    unsigned coerceFrameSize = StackDecrementForCall(masm, totalCoerceBytes);
 
     // Allocate a frame large enough for both of the above calls.
     unsigned framePushed = Max(ionFrameSize, coerceFrameSize);
     masm.reserveStack(framePushed);
 
     // 1. Descriptor
-    size_t argOffset = offsetToArgs;
+    size_t argOffset = offsetToIonArgs;
     uint32_t descriptor = MakeFrameDescriptor(framePushed, JitFrame_Entry);
     masm.storePtr(ImmWord(uintptr_t(descriptor)), Address(StackPointer, argOffset));
     argOffset += sizeof(size_t);
@@ -6430,7 +6319,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     unsigned offsetToCallerStackArgs = framePushed + AsmJSFrameSize;
     FillArgumentArray(m, exit.sig().args(), argOffset, offsetToCallerStackArgs, scratch);
     argOffset += exit.sig().args().length() * sizeof(Value);
-    JS_ASSERT(argOffset == offsetToArgs + argBytes);
+    JS_ASSERT(argOffset == offsetToIonArgs + ionArgBytes);
 
     // 6. Store asm.js pinned registers
 #if defined(JS_CODEGEN_X64)
@@ -6556,24 +6445,11 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
         masm.setFramePushed(framePushed);
 
         // Store return value into argv[0]
-        unsigned offsetToArgv = StackArgBytes(coerceArgTypes);
-        JS_ASSERT(offsetToArgv % sizeof(Value) == 0);
-        masm.storeValue(JSReturnOperand, Address(StackPointer, offsetToArgv));
+        masm.storeValue(JSReturnOperand, Address(StackPointer, offsetToCoerceArgv));
 
+        // argument 0: argv
         ABIArgMIRTypeIter i(coerceArgTypes);
-
-        // argument 0: cx
-        LoadAsmJSActivationIntoRegister(masm, scratch);
-        if (i->kind() == ABIArg::GPR) {
-            LoadJSContextFromActivation(masm, scratch, i->gpr());
-        } else {
-            LoadJSContextFromActivation(masm, scratch, scratch);
-            masm.storePtr(scratch, Address(StackPointer, i->offsetFromArgBase()));
-        }
-        i++;
-
-        // argument 1: argv
-        Address argv(StackPointer, offsetToArgv);
+        Address argv(StackPointer, offsetToCoerceArgv);
         if (i->kind() == ABIArg::GPR) {
             masm.computeEffectiveAddress(argv, i->gpr());
         } else {
@@ -6589,12 +6465,12 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
           case RetType::Signed:
             masm.call(AsmJSImmPtr(AsmJSImm_CoerceInPlace_ToInt32));
             masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
-            masm.unboxInt32(Address(StackPointer, offsetToArgv), ReturnReg);
+            masm.unboxInt32(Address(StackPointer, offsetToCoerceArgv), ReturnReg);
             break;
           case RetType::Double:
             masm.call(AsmJSImmPtr(AsmJSImm_CoerceInPlace_ToNumber));
             masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
-            masm.loadDouble(Address(StackPointer, offsetToArgv), ReturnDoubleReg);
+            masm.loadDouble(Address(StackPointer, offsetToCoerceArgv), ReturnDoubleReg);
             break;
           default:
             MOZ_ASSUME_UNREACHABLE("Unsupported convert type");
@@ -6629,7 +6505,7 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
     masm.align(CodeAlignment);
     masm.bind(&m.stackOverflowLabel());
 
-    // The stack-overflow is checked before bumping the stack.
+    // For the benefit of AssertStackAlignment.
     masm.setFramePushed(0);
 
     // Store the frame pointer in AsmJSActivation::exitFP for stack unwinding.
@@ -6637,24 +6513,8 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
     LoadAsmJSActivationIntoRegister(masm, activation);
     masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfExitFP()));
 
-    MIRTypeVector argTypes(m.cx());
-    argTypes.infallibleAppend(MIRType_Pointer); // cx
-
-    unsigned stackDec = StackDecrementForCall(masm, argTypes);
-    masm.reserveStack(stackDec);
-
-    ABIArgMIRTypeIter i(argTypes);
-
-    // argument 0: cx
-    if (i->kind() == ABIArg::GPR) {
-        LoadJSContextFromActivation(masm, activation, i->gpr());
-    } else {
-        LoadJSContextFromActivation(masm, activation, activation);
-        masm.storePtr(activation, Address(StackPointer, i->offsetFromArgBase()));
-    }
-    i++;
-
-    JS_ASSERT(i.done());
+    // Even without arguments, various platforms require stack adjustment.
+    masm.reserveStack(ComputeByteAlignment(AsmJSFrameSize + ShadowStackSpace, StackAlignment));
 
     AssertStackAlignment(masm);
     masm.call(AsmJSImmPtr(AsmJSImm_ReportOverRecursed));
@@ -6697,34 +6557,23 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
     masm.setFramePushed(0);         // set to zero so we can use masm.framePushed() below
     masm.PushRegsInMask(AllRegsExceptSP); // save all GP/FP registers (except SP)
 
-    Register activation = ABIArgGenerator::NonArgReturnVolatileReg0;
-    Register scratch = ABIArgGenerator::NonArgReturnVolatileReg1;
+    Register scratch = ABIArgGenerator::NonArgReturnVolatileReg0;
 
     // Store resumePC into the reserved space.
-    LoadAsmJSActivationIntoRegister(masm, activation);
-    masm.loadPtr(Address(activation, AsmJSActivation::offsetOfResumePC()), scratch);
+    LoadAsmJSActivationIntoRegister(masm, scratch);
+    masm.loadPtr(Address(scratch, AsmJSActivation::offsetOfResumePC()), scratch);
     masm.storePtr(scratch, Address(StackPointer, masm.framePushed() + sizeof(void*)));
 
     // We know that StackPointer is word-aligned, but not necessarily
     // stack-aligned, so we need to align it dynamically.
     masm.mov(StackPointer, ABIArgGenerator::NonVolatileReg);
-#if defined(JS_CODEGEN_X86)
-    // Ensure that at least one slot is pushed for passing 'cx' below.
-    masm.push(Imm32(0));
-#endif
     masm.andPtr(Imm32(~(StackAlignment - 1)), StackPointer);
     if (ShadowStackSpace)
         masm.subPtr(Imm32(ShadowStackSpace), StackPointer);
 
-    // argument 0: cx
-#if defined(JS_CODEGEN_X86)
-    LoadJSContextFromActivation(masm, activation, scratch);
-    masm.storePtr(scratch, Address(StackPointer, 0));
-#elif defined(JS_CODEGEN_X64)
-    LoadJSContextFromActivation(masm, activation, IntArgReg0);
-#endif
-
+    AssertStackAlignment(masm);
     masm.call(AsmJSImmPtr(AsmJSImm_HandleExecutionInterrupt));
+
     masm.branchIfFalseBool(ReturnReg, throwLabel);
 
     // Restore the StackPointer to it's position before the call.
@@ -6751,9 +6600,6 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
     LoadAsmJSActivationIntoRegister(masm, IntArgReg0);
     masm.loadPtr(Address(IntArgReg0, AsmJSActivation::offsetOfResumePC()), IntArgReg1);
     masm.storePtr(IntArgReg1, Address(s0, masm.framePushed()));
-
-    // argument 0: cx
-    masm.loadPtr(Address(IntArgReg0, AsmJSActivation::offsetOfContext()), IntArgReg0);
 
     // MIPS ABI requires rewserving stack for registes $a0 to $a3.
     masm.subPtr(Imm32(4 * sizeof(intptr_t)), StackPointer);
@@ -6790,9 +6636,6 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
     LoadAsmJSActivationIntoRegister(masm, IntArgReg0);
     masm.loadPtr(Address(IntArgReg0, AsmJSActivation::offsetOfResumePC()), IntArgReg1);
     masm.storePtr(IntArgReg1, Address(r6, 14 * sizeof(uint32_t*)));
-
-    // argument 0: cx
-    masm.loadPtr(Address(IntArgReg0, AsmJSActivation::offsetOfContext()), IntArgReg0);
 
     masm.PushRegsInMask(RegisterSet(GeneralRegisterSet(0), FloatRegisterSet(FloatRegisters::AllDoubleMask)));   // save all FP registers
     masm.call(AsmJSImm_HandleExecutionInterrupt);
@@ -6842,9 +6685,6 @@ GenerateSyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
     masm.align(CodeAlignment);
     masm.bind(&m.syncInterruptLabel());
 
-    MIRTypeVector argTypes(m.cx());
-    argTypes.infallibleAppend(MIRType_Pointer); // cx
-
     // See AsmJSFrameSize comment in Assembler-shared.h.
 #if defined(JS_CODEGEN_ARM)
     masm.push(lr);
@@ -6859,21 +6699,8 @@ GenerateSyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
 
     masm.PushRegsInMask(VolatileRegs);
 
-    unsigned stackDec = StackDecrementForCall(masm, argTypes);
+    unsigned stackDec = StackDecrementForCall(masm, ShadowStackSpace);
     masm.reserveStack(stackDec);
-
-    ABIArgMIRTypeIter i(argTypes);
-
-    // argument 0: cx
-    if (i->kind() == ABIArg::GPR) {
-        LoadJSContextFromActivation(masm, activation, i->gpr());
-    } else {
-        LoadJSContextFromActivation(masm, activation, activation);
-        masm.storePtr(activation, Address(StackPointer, i->offsetFromArgBase()));
-    }
-    i++;
-
-    JS_ASSERT(i.done());
 
     AssertStackAlignment(masm);
     masm.call(AsmJSImmPtr(AsmJSImm_HandleExecutionInterrupt));

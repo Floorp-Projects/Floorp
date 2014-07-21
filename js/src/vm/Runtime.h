@@ -591,11 +591,12 @@ class PerThreadData : public PerThreadDataFriendFields
         return offsetof(PerThreadData, activation_);
     }
 
-    js::AsmJSActivation *asmJSActivationStackFromAnyThread() const {
+    js::AsmJSActivation *asmJSActivationStack() const {
         return asmJSActivationStack_;
     }
-    js::AsmJSActivation *asmJSActivationStackFromOwnerThread() const {
-        return asmJSActivationStack_;
+    static js::AsmJSActivation *innermostAsmJSActivation() {
+        PerThreadData *ptd = TlsPerThreadData.get();
+        return ptd ? ptd->asmJSActivationStack_ : nullptr;
     }
 
     js::Activation *activation() const {
