@@ -516,13 +516,29 @@ class AsmJSModule
 
     typedef Vector<RelativeLink, 0, SystemAllocPolicy> RelativeLinkVector;
 
-    struct AbsoluteLink
-    {
-        jit::CodeOffsetLabel patchAt;
-        jit::AsmJSImmKind target;
-    };
+    typedef Vector<uint32_t, 0, SystemAllocPolicy> OffsetVector;
 
-    typedef Vector<AbsoluteLink, 0, SystemAllocPolicy> AbsoluteLinkVector;
+    class AbsoluteLinkArray
+    {
+        OffsetVector array_[jit::AsmJSImm_Limit];
+
+      public:
+        OffsetVector &operator[](size_t i) {
+            JS_ASSERT(i < jit::AsmJSImm_Limit);
+            return array_[i];
+        }
+        const OffsetVector &operator[](size_t i) const {
+            JS_ASSERT(i < jit::AsmJSImm_Limit);
+            return array_[i];
+        }
+
+        size_t serializedSize() const;
+        uint8_t *serialize(uint8_t *cursor) const;
+        const uint8_t *deserialize(ExclusiveContext *cx, const uint8_t *cursor);
+        bool clone(ExclusiveContext *cx, AbsoluteLinkArray *out) const;
+
+        size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+    };
 
     // Static-link data is used to patch a module either after it has been
     // compiled or deserialized with various absolute addresses (of code or
@@ -532,7 +548,7 @@ class AsmJSModule
     {
         uint32_t interruptExitOffset;
         RelativeLinkVector relativeLinks;
-        AbsoluteLinkVector absoluteLinks;
+        AbsoluteLinkArray absoluteLinks;
 
         size_t serializedSize() const;
         uint8_t *serialize(uint8_t *cursor) const;
