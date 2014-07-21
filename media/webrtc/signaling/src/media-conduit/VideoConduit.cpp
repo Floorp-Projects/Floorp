@@ -1438,4 +1438,15 @@ WebrtcVideoConduit::MozVideoLatencyAvg()
   return mVideoLatencyAvg / sRoundingPadding;
 }
 
+uint64_t
+WebrtcVideoConduit::CodecPluginID()
+{
+  if (mExternalSendCodecHandle) {
+    return mExternalSendCodecHandle->PluginID();
+  } else if (mExternalRecvCodecHandle) {
+    return mExternalRecvCodecHandle->PluginID();
+  }
+  return 0;
+}
+
 }// end namespace

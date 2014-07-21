@@ -8808,10 +8808,11 @@ CodeGenerator::visitInterruptCheck(LInterruptCheck *lir)
 bool
 CodeGenerator::visitAsmJSInterruptCheck(LAsmJSInterruptCheck *lir)
 {
-    Label rejoin;
     Register scratch = ToRegister(lir->scratch());
     masm.movePtr(AsmJSImmPtr(AsmJSImm_RuntimeInterrupt), scratch);
-    masm.branchIfFalseBool(scratch, &rejoin);
+    masm.load8ZeroExtend(Address(scratch, 0), scratch);
+    Label rejoin;
+    masm.branch32(Assembler::Equal, scratch, Imm32(0), &rejoin);
     {
         uint32_t stackFixup = ComputeByteAlignment(masm.framePushed() + AsmJSFrameSize,
                                                    StackAlignment);
