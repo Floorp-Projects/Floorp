@@ -1690,7 +1690,7 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
     profiler_(nullptr),
     resumePC_(nullptr),
     fp_(nullptr),
-    exitReason_(AsmJSNoExit)
+    exitReason_(AsmJSExit::None)
 {
     if (cx->runtime()->spsProfiler.enabled()) {
         // Use a profiler string that matches jsMatch regex in

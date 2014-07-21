@@ -1480,7 +1480,7 @@ class AsmJSActivation : public Activation
     SPSProfiler *profiler_;
     void *resumePC_;
     uint8_t *fp_;
-    uint32_t exitReason_;
+    AsmJSExit::Reason exitReason_;
 
   public:
     AsmJSActivation(JSContext *cx, AsmJSModule &module);
@@ -1495,7 +1495,7 @@ class AsmJSActivation : public Activation
     uint8_t *fp() const { return fp_; }
 
     // Returns the reason why asm.js code called out of asm.js code.
-    AsmJSExitReason exitReason() const { return AsmJSExitReason(exitReason_); }
+    AsmJSExit::Reason exitReason() const { return exitReason_; }
 
     // Read by JIT code:
     static unsigned offsetOfContext() { return offsetof(AsmJSActivation, cx_); }

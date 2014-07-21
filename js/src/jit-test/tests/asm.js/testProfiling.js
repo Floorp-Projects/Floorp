@@ -48,12 +48,33 @@ assertEq(f(1), 2);
 var stacks = disableSingleStepProfiling();
 assertEq(String(stacks), ",*,f*,g1f*,f*,*,,*,f*,g2f*,f*,*,");
 
-//TODO: next patch
-//var f = asmLink(asmCompile('g', USE_ASM + "var sin=g.Math.sin; function f(d) { d=+d; return +sin(d) } return f"), this);
-//enableSingleStepProfiling();
-//assertEq(f(.5), Math.sin(.5));
-//var stacks = disableSingleStepProfiling();
-//assertEq(String(stacks), ",*,f*,Math.sinf*,f*,*,");
+function testBuiltinD2D(name) {
+    var f = asmLink(asmCompile('g', USE_ASM + "var fun=g.Math." + name + "; function f(d) { d=+d; return +fun(d) } return f"), this);
+    enableSingleStepProfiling();
+    assertEq(f(.1), eval("Math." + name + "(.1)"));
+    var stacks = disableSingleStepProfiling();
+    assertEq(String(stacks), ",*,f*,Math." + name + "f*,f*,*,");
+}
+for (name of ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'ceil', 'floor', 'exp', 'log'])
+    testBuiltinD2D(name);
+function testBuiltinF2F(name) {
+    var f = asmLink(asmCompile('g', USE_ASM + "var tof=g.Math.fround; var fun=g.Math." + name + "; function f(d) { d=tof(d); return tof(fun(d)) } return f"), this);
+    enableSingleStepProfiling();
+    assertEq(f(.1), eval("Math.fround(Math." + name + "(Math.fround(.1)))"));
+    var stacks = disableSingleStepProfiling();
+    assertEq(String(stacks), ",*,f*,Math." + name + "f*,f*,*,");
+}
+for (name of ['ceil', 'floor'])
+    testBuiltinF2F(name);
+function testBuiltinDD2D(name) {
+    var f = asmLink(asmCompile('g', USE_ASM + "var fun=g.Math." + name + "; function f(d, e) { d=+d; e=+e; return +fun(d,e) } return f"), this);
+    enableSingleStepProfiling();
+    assertEq(f(.1, .2), eval("Math." + name + "(.1, .2)"));
+    var stacks = disableSingleStepProfiling();
+    assertEq(String(stacks), ",*,f*,Math." + name + "f*,f*,*,");
+}
+for (name of ['atan2', 'pow'])
+    testBuiltinDD2D(name);
 
 // FFI tests:
 setJitCompilerOption("ion.usecount.trigger", 10);

@@ -11,6 +11,7 @@
 
 #include <limits.h>
 
+#include "jit/AsmJSFrameIterator.h"
 #include "jit/IonAllocPolicy.h"
 #include "jit/Label.h"
 #include "jit/Registers.h"
@@ -734,6 +735,26 @@ struct AsmJSGlobalAccess
 // patched after deserialization when the address of global things has changed.
 enum AsmJSImmKind
 {
+    AsmJSImm_ToInt32         = AsmJSExit::Builtin_ToInt32,
+#if defined(JS_CODEGEN_ARM)
+    AsmJSImm_aeabi_idivmod   = AsmJSExit::Builtin_IDivMod,
+    AsmJSImm_aeabi_uidivmod  = AsmJSExit::Builtin_UDivMod,
+#endif
+    AsmJSImm_ModD            = AsmJSExit::Builtin_ModD,
+    AsmJSImm_SinD            = AsmJSExit::Builtin_SinD,
+    AsmJSImm_CosD            = AsmJSExit::Builtin_CosD,
+    AsmJSImm_TanD            = AsmJSExit::Builtin_TanD,
+    AsmJSImm_ASinD           = AsmJSExit::Builtin_ASinD,
+    AsmJSImm_ACosD           = AsmJSExit::Builtin_ACosD,
+    AsmJSImm_ATanD           = AsmJSExit::Builtin_ATanD,
+    AsmJSImm_CeilD           = AsmJSExit::Builtin_CeilD,
+    AsmJSImm_CeilF           = AsmJSExit::Builtin_CeilF,
+    AsmJSImm_FloorD          = AsmJSExit::Builtin_FloorD,
+    AsmJSImm_FloorF          = AsmJSExit::Builtin_FloorF,
+    AsmJSImm_ExpD            = AsmJSExit::Builtin_ExpD,
+    AsmJSImm_LogD            = AsmJSExit::Builtin_LogD,
+    AsmJSImm_PowD            = AsmJSExit::Builtin_PowD,
+    AsmJSImm_ATan2D          = AsmJSExit::Builtin_ATan2D,
     AsmJSImm_Runtime,
     AsmJSImm_RuntimeInterrupt,
     AsmJSImm_StackLimit,
@@ -744,28 +765,14 @@ enum AsmJSImmKind
     AsmJSImm_InvokeFromAsmJS_ToNumber,
     AsmJSImm_CoerceInPlace_ToInt32,
     AsmJSImm_CoerceInPlace_ToNumber,
-    AsmJSImm_ToInt32,
-#if defined(JS_CODEGEN_ARM)
-    AsmJSImm_aeabi_idivmod,
-    AsmJSImm_aeabi_uidivmod,
-#endif
-    AsmJSImm_ModD,
-    AsmJSImm_SinD,
-    AsmJSImm_CosD,
-    AsmJSImm_TanD,
-    AsmJSImm_ASinD,
-    AsmJSImm_ACosD,
-    AsmJSImm_ATanD,
-    AsmJSImm_CeilD,
-    AsmJSImm_CeilF,
-    AsmJSImm_FloorD,
-    AsmJSImm_FloorF,
-    AsmJSImm_ExpD,
-    AsmJSImm_LogD,
-    AsmJSImm_PowD,
-    AsmJSImm_ATan2D,
     AsmJSImm_Limit
 };
+
+static inline AsmJSImmKind
+BuiltinToImmKind(AsmJSExit::BuiltinKind builtin)
+{
+    return AsmJSImmKind(builtin);
+}
 
 // Pointer to be embedded as an immediate in asm.js code.
 class AsmJSImmPtr

@@ -41,6 +41,7 @@ using mozilla::BinarySearch;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
 using mozilla::Compression::LZ4;
+using mozilla::Swap;
 
 static uint8_t *
 AllocateExecutableMemory(ExclusiveContext *cx, size_t totalBytes)
@@ -172,6 +173,7 @@ AsmJSModule::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModu
                         callSites_.sizeOfExcludingThis(mallocSizeOf) +
                         codeRanges_.sizeOfExcludingThis(mallocSizeOf) +
                         funcPtrTables_.sizeOfExcludingThis(mallocSizeOf) +
+                        builtinThunkOffsets_.sizeOfExcludingThis(mallocSizeOf) +
                         names_.sizeOfExcludingThis(mallocSizeOf) +
                         heapAccesses_.sizeOfExcludingThis(mallocSizeOf) +
                         functionCounts_.sizeOfExcludingThis(mallocSizeOf) +
@@ -341,6 +343,8 @@ AsmJSModule::finish(ExclusiveContext *cx, TokenStream &tokenStream, MacroAssembl
         codeRanges_[i].updateOffsets(masm);
         JS_ASSERT_IF(i > 0, codeRanges_[i - 1].end() <= codeRanges_[i].begin());
     }
+    for (size_t i = 0; i < builtinThunkOffsets_.length(); i++)
+        builtinThunkOffsets_[i] = masm.actualOffset(builtinThunkOffsets_[i]);
 #endif
     JS_ASSERT(pod.functionBytes_ % AsmJSPageSize == 0);
 
@@ -1173,46 +1177,61 @@ AsmJSModule::CodeRange::CodeRange(uint32_t nameIndex, const AsmJSFunctionLabels 
   : nameIndex_(nameIndex),
     begin_(l.begin.offset()),
     profilingReturn_(l.profilingReturn.offset()),
-    end_(l.end.offset()),
-    kind_(Function)
+    end_(l.end.offset())
 {
+    u.kind_ = Function;
+    setDeltas(l.entry.offset(), l.profilingJump.offset(), l.profilingEpilogue.offset());
+
     JS_ASSERT(l.begin.offset() < l.entry.offset());
     JS_ASSERT(l.entry.offset() < l.profilingJump.offset());
     JS_ASSERT(l.profilingJump.offset() < l.profilingEpilogue.offset());
     JS_ASSERT(l.profilingEpilogue.offset() < l.profilingReturn.offset());
     JS_ASSERT(l.profilingReturn.offset() < l.end.offset());
-
-    setDeltas(l.entry.offset(), l.profilingJump.offset(), l.profilingEpilogue.offset());
 }
 
 void
 AsmJSModule::CodeRange::setDeltas(uint32_t entry, uint32_t profilingJump, uint32_t profilingEpilogue)
 {
     JS_ASSERT(entry - begin_ <= UINT8_MAX);
-    beginToEntry_ = entry - begin_;
+    u.func.beginToEntry_ = entry - begin_;
 
     JS_ASSERT(profilingReturn_ - profilingJump <= UINT8_MAX);
-    profilingJumpToProfilingReturn_ = profilingReturn_ - profilingJump;
+    u.func.profilingJumpToProfilingReturn_ = profilingReturn_ - profilingJump;
 
     JS_ASSERT(profilingReturn_ - profilingEpilogue <= UINT8_MAX);
-    profilingEpilogueToProfilingReturn_ = profilingReturn_ - profilingEpilogue;
+    u.func.profilingEpilogueToProfilingReturn_ = profilingReturn_ - profilingEpilogue;
 }
 
 AsmJSModule::CodeRange::CodeRange(Kind kind, uint32_t begin, uint32_t end)
   : begin_(begin),
-    end_(end),
-    kind_(kind)
+    end_(end)
 {
+    u.kind_ = kind;
+
     JS_ASSERT(begin_ <= end_);
-    JS_ASSERT(kind_ == Entry || kind_ == Inline);
+    JS_ASSERT(u.kind_ == Entry || u.kind_ == Inline);
 }
 
 AsmJSModule::CodeRange::CodeRange(Kind kind, uint32_t begin, uint32_t profilingReturn, uint32_t end)
   : begin_(begin),
     profilingReturn_(profilingReturn),
-    end_(end),
-    kind_(kind)
+    end_(end)
 {
+    u.kind_ = kind;
+
+    JS_ASSERT(begin_ < profilingReturn_);
+    JS_ASSERT(profilingReturn_ < end_);
+}
+
+AsmJSModule::CodeRange::CodeRange(AsmJSExit::BuiltinKind builtin, uint32_t begin,
+                                  uint32_t profilingReturn, uint32_t end)
+  : begin_(begin),
+    profilingReturn_(profilingReturn),
+    end_(end)
+{
+    u.kind_ = Thunk;
+    u.thunk.target_ = builtin;
+
     JS_ASSERT(begin_ < profilingReturn_);
     JS_ASSERT(profilingReturn_ < end_);
 }
@@ -1362,6 +1381,7 @@ AsmJSModule::serializedSize() const
            SerializedPodVectorSize(callSites_) +
            SerializedPodVectorSize(codeRanges_) +
            SerializedPodVectorSize(funcPtrTables_) +
+           SerializedPodVectorSize(builtinThunkOffsets_) +
            SerializedVectorSize(names_) +
            SerializedPodVectorSize(heapAccesses_) +
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
@@ -1384,6 +1404,7 @@ AsmJSModule::serialize(uint8_t *cursor) const
     cursor = SerializePodVector(cursor, callSites_);
     cursor = SerializePodVector(cursor, codeRanges_);
     cursor = SerializePodVector(cursor, funcPtrTables_);
+    cursor = SerializePodVector(cursor, builtinThunkOffsets_);
     cursor = SerializeVector(cursor, names_);
     cursor = SerializePodVector(cursor, heapAccesses_);
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
@@ -1412,6 +1433,7 @@ AsmJSModule::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
     (cursor = DeserializePodVector(cx, cursor, &callSites_)) &&
     (cursor = DeserializePodVector(cx, cursor, &codeRanges_)) &&
     (cursor = DeserializePodVector(cx, cursor, &funcPtrTables_)) &&
+    (cursor = DeserializePodVector(cx, cursor, &builtinThunkOffsets_)) &&
     (cursor = DeserializeVector(cx, cursor, &names_)) &&
     (cursor = DeserializePodVector(cx, cursor, &heapAccesses_)) &&
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
@@ -1485,6 +1507,7 @@ AsmJSModule::clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) con
         !ClonePodVector(cx, callSites_, &out.callSites_) ||
         !ClonePodVector(cx, codeRanges_, &out.codeRanges_) ||
         !ClonePodVector(cx, funcPtrTables_, &out.funcPtrTables_) ||
+        !ClonePodVector(cx, builtinThunkOffsets_, &out.builtinThunkOffsets_) ||
         !CloneVector(cx, names_, &out.names_) ||
         !ClonePodVector(cx, heapAccesses_, &out.heapAccesses_) ||
         !staticLinkData_.clone(cx, &out.staticLinkData_))
@@ -1611,6 +1634,28 @@ AsmJSModule::setProfilingEnabled(bool enabled)
 #else
 # error "Missing architecture"
 #endif
+    }
+
+    // Replace all calls to builtins with calls to profiling thunks that push a
+    // frame pointer. Since exit unwinding always starts at the caller of fp,
+    // this avoids losing the innermost asm.js function.
+    for (unsigned builtin = 0; builtin < AsmJSExit::Builtin_Limit; builtin++) {
+        AsmJSImmKind imm = BuiltinToImmKind(AsmJSExit::BuiltinKind(builtin));
+        const AsmJSModule::OffsetVector &offsets = staticLinkData_.absoluteLinks[imm];
+        void *from = AddressOf(AsmJSImmKind(imm), nullptr);
+        void *to = code_ + builtinThunkOffsets_[builtin];
+        if (!enabled)
+            Swap(from, to);
+        for (size_t j = 0; j < offsets.length(); j++) {
+            uint8_t *caller = code_ + offsets[j];
+            const AsmJSModule::CodeRange *codeRange = lookupCodeRange(caller);
+            if (codeRange->isThunk())
+                continue;
+            JS_ASSERT(codeRange->isFunction());
+            Assembler::PatchDataWithValueCheck(CodeLocationLabel(caller),
+                                               PatchedImmPtr(to),
+                                               PatchedImmPtr(from));
+        }
     }
 
     profilingEnabled_ = enabled;
