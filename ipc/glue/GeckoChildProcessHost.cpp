@@ -241,13 +241,10 @@ uint32_t GeckoChildProcessHost::GetSupportedArchitecturesForProcessType(GeckoPro
 void
 GeckoChildProcessHost::PrepareLaunch()
 {
-#ifdef GMP_CRASHREPORTER_READY
-// See bug 1041525
 #ifdef MOZ_CRASHREPORTER
   if (CrashReporter::GetEnabled()) {
     CrashReporter::OOPInit();
   }
-#endif
 #endif
 
 #ifdef XP_WIN
