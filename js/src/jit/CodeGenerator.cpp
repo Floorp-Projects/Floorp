@@ -21,6 +21,7 @@
 #ifdef JSGC_GENERATIONAL
 # include "gc/Nursery.h"
 #endif
+#include "jit/AsmJSModule.h"
 #include "jit/IonCaches.h"
 #include "jit/IonLinker.h"
 #include "jit/IonOptimizationLevels.h"
@@ -6482,23 +6483,23 @@ CodeGenerator::visitRestPar(LRestPar *lir)
 }
 
 bool
-CodeGenerator::generateAsmJS(Label *stackOverflowLabel)
+CodeGenerator::generateAsmJS(AsmJSFunctionLabels *labels)
 {
     IonSpew(IonSpew_Codegen, "# Emitting asm.js code");
 
     // AsmJS doesn't do SPS instrumentation.
     sps_.disable();
 
-    Label overflowThunk;
-    Label *maybeOverflowThunk = omitOverRecursedCheck() ? nullptr : &overflowThunk;
+    if (!omitOverRecursedCheck())
+        labels->overflowThunk.construct();
 
-    GenerateAsmJSFunctionPrologue(masm, frameSize(), maybeOverflowThunk, stackOverflowLabel);
+    GenerateAsmJSFunctionPrologue(masm, frameSize(), labels);
 
     if (!generateBody())
         return false;
 
     masm.bind(&returnLabel_);
-    GenerateAsmJSFunctionEpilogue(masm, frameSize(), maybeOverflowThunk, stackOverflowLabel);
+    GenerateAsmJSFunctionEpilogue(masm, frameSize(), labels);
 
 #if defined(JS_ION_PERF)
     // Note the end of the inline code and start of the OOL code.
@@ -6507,6 +6508,8 @@ CodeGenerator::generateAsmJS(Label *stackOverflowLabel)
 
     if (!generateOutOfLineCode())
         return false;
+
+    masm.bind(&labels->end);
 
     // The only remaining work needed to compile this function is to patch the
     // switch-statement jump tables (the entries of the table need the absolute

@@ -599,6 +599,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void nop() {
         ma_nop();
     }
+    void shortJumpSizedNop() {
+        ma_nop();
+    }
     void ret() {
         ma_pop(pc);
     }

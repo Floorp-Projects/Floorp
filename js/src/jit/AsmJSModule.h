@@ -9,6 +9,7 @@
 
 #ifdef JS_ION
 
+#include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 #include "mozilla/PodOperations.h"
 
@@ -16,6 +17,7 @@
 
 #include "gc/Marking.h"
 #include "jit/AsmJS.h"
+#include "jit/AsmJSFrameIterator.h"
 #include "jit/IonMacroAssembler.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
@@ -44,6 +46,23 @@ enum AsmJSMathBuiltinFunction
     AsmJSMathBuiltin_log, AsmJSMathBuiltin_pow, AsmJSMathBuiltin_sqrt,
     AsmJSMathBuiltin_abs, AsmJSMathBuiltin_atan2, AsmJSMathBuiltin_imul,
     AsmJSMathBuiltin_fround, AsmJSMathBuiltin_min, AsmJSMathBuiltin_max
+};
+
+// These labels describe positions in the prologue/epilogue of functions while
+// compiling an AsmJSModule.
+struct AsmJSFunctionLabels
+{
+    AsmJSFunctionLabels(jit::Label &entry, jit::Label &overflowExit)
+      : entry(entry), overflowExit(overflowExit) {}
+
+    jit::Label begin;
+    jit::Label &entry;
+    jit::Label profilingJump;
+    jit::Label profilingEpilogue;
+    jit::Label profilingReturn;
+    jit::Label end;
+    mozilla::Maybe<jit::Label> overflowThunk;
+    jit::Label &overflowExit;
 };
 
 // An asm.js module represents the collection of functions nested inside a
@@ -315,29 +334,71 @@ class AsmJSModule
 
     class CodeRange
     {
-      public:
-        enum Kind { Entry, Function };
-
-      private:
-        Kind kind_;
+        uint32_t nameIndex_;
         uint32_t begin_;
+        uint32_t profilingReturn_;
         uint32_t end_;
-        uint32_t functionNameIndex_;
+        uint8_t beginToEntry_;
+        uint8_t profilingJumpToProfilingReturn_;
+        uint8_t profilingEpilogueToProfilingReturn_;
+        uint8_t kind_;
 
-        friend class AsmJSModule;
-        CodeRange(Kind k, uint32_t begin, uint32_t end, uint32_t functionNameIndex)
-          : kind_(k), begin_(begin), end_(end), functionNameIndex_(functionNameIndex)
-        {}
+        void setDeltas(uint32_t entry, uint32_t profilingJump, uint32_t profilingEpilogue);
 
       public:
+        enum Kind { Function, Entry, FFI, Interrupt, Inline };
+
         CodeRange() {}
-        Kind kind() const { return kind_; }
-        uint32_t begin() const { return begin_; }
-        uint32_t end() const { return end_; }
-        PropertyName *functionName(const AsmJSModule &module) const {
-            JS_ASSERT(kind_ == Function);
-            return module.functionNames_[functionNameIndex_].name();
+        CodeRange(uint32_t nameIndex, const AsmJSFunctionLabels &l);
+        CodeRange(Kind kind, uint32_t begin, uint32_t end);
+        CodeRange(Kind kind, uint32_t begin, uint32_t profilingReturn, uint32_t end);
+        void updateOffsets(jit::MacroAssembler &masm);
+
+        Kind kind() const { return Kind(kind_); }
+        bool isFunction() const { return kind() == Function; }
+        bool isEntry() const { return kind() == Entry; }
+        bool isFFI() const { return kind() == FFI; }
+        bool isInterrupt() const { return kind() == Interrupt; }
+
+        uint32_t begin() const {
+            return begin_;
         }
+        uint32_t entry() const {
+            JS_ASSERT(isFunction());
+            return begin_ + beginToEntry_;
+        }
+        uint32_t end() const {
+            return end_;
+        }
+        uint32_t profilingJump() const {
+            JS_ASSERT(isFunction());
+            return profilingReturn_ - profilingJumpToProfilingReturn_;
+        }
+        uint32_t profilingEpilogue() const {
+            JS_ASSERT(isFunction());
+            return profilingReturn_ - profilingEpilogueToProfilingReturn_;
+        }
+        uint32_t profilingReturn() const {
+            JS_ASSERT(isFunction() || isFFI() || isInterrupt());
+            return profilingReturn_;
+        }
+        PropertyName *functionName(const AsmJSModule &module) const {
+            JS_ASSERT(kind() == Function);
+            return module.names_[nameIndex_].name();
+        }
+    };
+
+    class FuncPtrTable
+    {
+        uint32_t globalDataOffset_;
+        uint32_t numElems_;
+      public:
+        FuncPtrTable() {}
+        FuncPtrTable(uint32_t globalDataOffset, uint32_t numElems)
+          : globalDataOffset_(globalDataOffset), numElems_(numElems)
+        {}
+        uint32_t globalDataOffset() const { return globalDataOffset_; }
+        uint32_t numElems() const { return numElems_; }
     };
 
     class Name
@@ -508,7 +569,8 @@ class AsmJSModule
     Vector<ExportedFunction,       0, SystemAllocPolicy> exports_;
     Vector<jit::CallSite,          0, SystemAllocPolicy> callSites_;
     Vector<CodeRange,              0, SystemAllocPolicy> codeRanges_;
-    Vector<Name,                   0, SystemAllocPolicy> functionNames_;
+    Vector<FuncPtrTable,           0, SystemAllocPolicy> funcPtrTables_;
+    Vector<Name,                   0, SystemAllocPolicy> names_;
     Vector<jit::AsmJSHeapAccess,   0, SystemAllocPolicy> heapAccesses_;
     Vector<jit::IonScriptCounts*,  0, SystemAllocPolicy> functionCounts_;
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
@@ -528,6 +590,7 @@ class AsmJSModule
     HeapPtrArrayBufferObject              maybeHeap_;
     bool                                  dynamicallyLinked_;
     bool                                  loadedFromCache_;
+    bool                                  profilingEnabled_;
 
     // This field is accessed concurrently when requesting an interrupt.
     // Access must be synchronized via the runtime's interrupt lock.
@@ -706,18 +769,25 @@ class AsmJSModule
         if (len > pod.minHeapLength_)
             pod.minHeapLength_ = len;
     }
-    bool addFunctionCodeRange(PropertyName *name, uint32_t begin, uint32_t end) {
-        JS_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
+    bool addFunctionCodeRange(PropertyName *name, const AsmJSFunctionLabels &labels) {
+        JS_ASSERT(!isFinished());
         JS_ASSERT(name->isTenured());
-        if (functionNames_.length() >= UINT32_MAX)
+        if (names_.length() >= UINT32_MAX)
             return false;
-        CodeRange codeRange(CodeRange::Function, begin, end, functionNames_.length());
-        return functionNames_.append(name) && codeRanges_.append(codeRange);
+        uint32_t nameIndex = names_.length();
+        return names_.append(name) && codeRanges_.append(CodeRange(nameIndex, labels));
     }
-    bool addEntryCodeRange(unsigned exportIndex, uint32_t end) {
-        uint32_t begin = exports_[exportIndex].pod.codeOffset_;
-        CodeRange codeRange(CodeRange::Entry, begin, end, UINT32_MAX);
-        return codeRanges_.append(codeRange);
+    bool addEntryCodeRange(uint32_t begin, uint32_t end) {
+        return codeRanges_.append(CodeRange(CodeRange::Entry, begin, end));
+    }
+    bool addFFICodeRange(uint32_t begin, uint32_t pret, uint32_t end) {
+        return codeRanges_.append(CodeRange(CodeRange::FFI, begin, pret, end));
+    }
+    bool addInterruptCodeRange(uint32_t begin, uint32_t pret, uint32_t end) {
+        return codeRanges_.append(CodeRange(CodeRange::Interrupt, begin, pret, end));
+    }
+    bool addInlineCodeRange(uint32_t begin, uint32_t end) {
+        return codeRanges_.append(CodeRange(CodeRange::Inline, begin, end));
     }
     bool addExit(unsigned ffiIndex, unsigned *exitIndex) {
         JS_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
@@ -747,6 +817,8 @@ class AsmJSModule
         if (SIZE_MAX - pod.funcPtrTableAndExitBytes_ < numElems * sizeof(void*))
             return false;
         *globalDataOffset = globalDataBytes();
+        if (!funcPtrTables_.append(FuncPtrTable(*globalDataOffset, numElems)))
+            return false;
         pod.funcPtrTableAndExitBytes_ += numElems * sizeof(void*);
         return true;
     }
@@ -874,9 +946,13 @@ class AsmJSModule
         JS_ASSERT(isFinished());
         return pod.codeBytes_;
     }
-    bool containsPC(void *pc) const {
+    bool containsFunctionPC(void *pc) const {
         JS_ASSERT(isFinished());
         return pc >= code_ && pc < (code_ + functionBytes());
+    }
+    bool containsCodePC(void *pc) const {
+        JS_ASSERT(isFinished());
+        return pc >= code_ && pc < (code_ + codeBytes());
     }
     uint8_t *interpExitTrampoline(const Exit &exit) const {
         JS_ASSERT(isFinished());
@@ -930,6 +1006,9 @@ class AsmJSModule
     }
     AsmJSActivation *&activation() const {
         return *(AsmJSActivation**)(globalData() + activationGlobalDataOffset());
+    }
+    bool active() const {
+        return activation() != nullptr;
     }
     static unsigned heapGlobalDataOffset() {
         return sizeof(void*);
@@ -1034,6 +1113,11 @@ class AsmJSModule
         JS_ASSERT(isDynamicallyLinked());
         return maybeHeap_ ? maybeHeap_->byteLength() : 0;
     }
+    bool profilingEnabled() const {
+        JS_ASSERT(isDynamicallyLinked());
+        return profilingEnabled_;
+    }
+    void setProfilingEnabled(bool enabled);
 
     // Additionally, these functions may only be called while holding the
     // runtime's interrupt lock.
