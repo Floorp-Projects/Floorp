@@ -356,6 +356,30 @@ class NewObjectCache
     }
 };
 
+class RegExpObject;
+
+// One slot cache for speeding up RegExp.test() executions, by stripping
+// unnecessary leading or trailing .* from the RegExp.
+struct RegExpTestCache
+{
+    RegExpObject *key;
+    RegExpObject *value;
+
+    RegExpTestCache()
+      : key(nullptr), value(nullptr)
+    {}
+
+    void purge() {
+        key = nullptr;
+        value = nullptr;
+    }
+
+    void fill(RegExpObject *key, RegExpObject *value) {
+        this->key = key;
+        this->value = value;
+    }
+};
+
 /*
  * A FreeOp can do one thing: free memory. For convenience, it has delete_
  * convenience methods that also call destructors.
@@ -1108,6 +1132,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::SourceDataCache sourceDataCache;
     js::EvalCache       evalCache;
     js::LazyScriptCache lazyScriptCache;
+    js::RegExpTestCache regExpTestCache;
 
     js::DateTimeInfo    dateTimeInfo;
 
