@@ -469,6 +469,19 @@ js::AtomizeChars(ExclusiveContext *cx, const jschar *chars, size_t length, Inter
     return AtomizeAndCopyChars(cx, chars, length, ib);
 }
 
+JSAtom *
+js::AtomizeSubstring(ExclusiveContext *cx, JSString *str, size_t start, size_t length,
+                     InternBehavior ib /* = DoNotInternAtom */)
+{
+    JS_ASSERT(start + length <= str->length());
+
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
+        return nullptr;
+
+    return AtomizeAndCopyChars(cx, linear->chars() + start, length, ib);
+}
+
 bool
 js::IndexToIdSlow(ExclusiveContext *cx, uint32_t index, MutableHandleId idp)
 {
