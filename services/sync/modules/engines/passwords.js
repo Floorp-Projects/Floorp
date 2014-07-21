@@ -36,6 +36,28 @@ PasswordEngine.prototype = {
   _recordObj: LoginRec,
   applyIncomingBatchSize: PASSWORDS_STORE_BATCH_SIZE,
 
+  get isAllowed() {
+    return Cc["@mozilla.org/weave/service;1"]
+             .getService(Ci.nsISupports)
+             .wrappedJSObject
+             .allowPasswordsEngine;
+  },
+
+  get enabled() {
+    // If we are disabled due to !isAllowed(), we must take care to ensure the
+    // engine has actually had the enabled setter called which reflects this state.
+    let prefVal = SyncEngine.prototype.__lookupGetter__("enabled").call(this);
+    let newVal = this.isAllowed && prefVal;
+    if (newVal != prefVal) {
+      this.enabled = newVal;
+    }
+    return newVal;
+  },
+
+  set enabled(val) {
+    SyncEngine.prototype.__lookupSetter__("enabled").call(this, this.isAllowed && val);
+  },
+
   _syncFinish: function _syncFinish() {
     SyncEngine.prototype._syncFinish.call(this);
 

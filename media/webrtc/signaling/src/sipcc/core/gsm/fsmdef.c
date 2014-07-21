@@ -1100,17 +1100,17 @@ fsmdef_set_per_media_local_hold_sdp (fsmdef_dcb_t *dcb)
 }
 
 /**
- * This function deallocates a constraints structure
+ * This function deallocates an options structure
  *
- * @param[in]constraints - pointer to cc_media_constraints_t
+ * @param[in]options - pointer to cc_media_options_t
  * @return None
  */
 void
-fsmdef_free_constraints(cc_media_constraints_t *constraints) {
-    if (!constraints) {
+fsmdef_free_options(cc_media_options_t *options) {
+    if (!options) {
        return;
     }
-    cpr_free(constraints);
+    cpr_free(options);
 }
 
 void
@@ -3205,10 +3205,10 @@ fsmdef_ev_createoffer (sm_event_t *event) {
 
     dcb->inbound = FALSE;
 
-    if (msg->data.session.constraints) {
-       gsmsdp_process_cap_constraints(dcb, msg->data.session.constraints);
-       fsmdef_free_constraints(msg->data.session.constraints);
-       msg->data.session.constraints = 0;
+    if (msg->data.session.options) {
+       gsmsdp_process_cap_options(dcb, msg->data.session.options);
+       fsmdef_free_options(msg->data.session.options);
+       msg->data.session.options = 0;
     }
 
     if (dcb->media_cap_tbl->cap[CC_VIDEO_1].enabled ||
@@ -3368,12 +3368,6 @@ fsmdef_ev_createanswer (sm_event_t *event) {
     gsmsdp_clean_candidate_list(dcb);
 
     dcb->inbound = TRUE;
-
-    if (msg->data.session.constraints) {
-       gsmsdp_process_cap_constraints(dcb, msg->data.session.constraints);
-       fsmdef_free_constraints(msg->data.session.constraints);
-       msg->data.session.constraints = 0;
-    }
 
     vcm_res = vcmGetIceParams(dcb->peerconnection, &ufrag, &ice_pwd);
     if (vcm_res) {
@@ -4023,20 +4017,7 @@ fsmdef_ev_addstream(sm_event_t *event) {
         dcb->media_cap_tbl->cap[cap_index].support_direction = SDP_DIRECTION_SENDRECV;
         dcb->media_cap_tbl->cap[cap_index].pc_stream = msg->data.track.stream_id;
         dcb->media_cap_tbl->cap[cap_index].pc_track = msg->data.track.track_id;
-
-        if (msg->data.track.constraints &&
-            msg->data.track.constraints->moz_bundle_only.was_passed) {
-          dcb->media_cap_tbl->cap[cap_index].bundle_only =
-            msg->data.track.constraints->moz_bundle_only.value;
-        }
     }
-
-    /* Free the constraints structure */
-    if (msg->data.track.constraints) {
-       fsmdef_free_constraints(msg->data.track.constraints);
-       msg->data.track.constraints = 0;
-    }
-
     return (SM_RC_END);
 }
 

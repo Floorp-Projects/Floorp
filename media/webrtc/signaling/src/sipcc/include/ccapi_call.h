@@ -55,11 +55,10 @@ cc_return_t CCAPI_Call_originateCall(cc_call_handle_t handle, cc_sdp_direction_t
 
 
 cc_return_t CCAPI_CreateOffer(cc_call_handle_t handle,
-                              cc_media_constraints_t *constraints,
+                              cc_media_options_t *options,
                               Timecard *tc);
 
 cc_return_t CCAPI_CreateAnswer(cc_call_handle_t handle,
-                               cc_media_constraints_t *constraints,
                                Timecard *tc);
 
 cc_return_t CCAPI_SetLocalDescription(cc_call_handle_t handle,
@@ -77,8 +76,7 @@ cc_return_t CCAPI_SetPeerConnection(cc_call_handle_t handle, cc_peerconnection_t
 cc_return_t CCAPI_AddStream(cc_call_handle_t handle,
                             cc_media_stream_id_t stream_id,
                             cc_media_track_id_t track_id,
-                            cc_media_type_t media_type,
-                            cc_media_constraints_t *constraints);
+                            cc_media_type_t media_type);
 
 cc_return_t CCAPI_RemoveStream(cc_call_handle_t handle, cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type);
 

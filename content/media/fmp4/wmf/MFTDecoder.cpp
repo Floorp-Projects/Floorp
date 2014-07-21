@@ -133,7 +133,7 @@ MFTDecoder::CreateInputSample(const uint8_t* aData,
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   RefPtr<IMFMediaBuffer> buffer;
-  int32_t bufferSize = std::max(uint32_t(mInputStreamInfo.cbSize), aDataSize);
+  int32_t bufferSize = std::max<uint32_t>(uint32_t(mInputStreamInfo.cbSize), aDataSize);
   UINT32 alignment = (mInputStreamInfo.cbAlignment > 1) ? mInputStreamInfo.cbAlignment - 1 : 0;
   hr = wmf::MFCreateAlignedMemoryBuffer(bufferSize, alignment, byRef(buffer));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
