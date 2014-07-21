@@ -267,6 +267,19 @@ let Buf = {
            this.readUint8() << 16 | this.readUint8() << 24;
   },
 
+  readInt64: function() {
+    // Avoid using bitwise operators as the operands of all bitwise operators
+    // are converted to signed 32-bit integers.
+    return this.readUint8()                   +
+           this.readUint8() * Math.pow(2, 8)  +
+           this.readUint8() * Math.pow(2, 16) +
+           this.readUint8() * Math.pow(2, 24) +
+           this.readUint8() * Math.pow(2, 32) +
+           this.readUint8() * Math.pow(2, 40) +
+           this.readUint8() * Math.pow(2, 48) +
+           this.readUint8() * Math.pow(2, 56);
+  },
+
   readInt32List: function() {
     let length = this.readInt32();
     let ints = [];
