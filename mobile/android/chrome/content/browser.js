@@ -6005,7 +6005,7 @@ var XPInstallObserver = {
         break;
       case "addon-install-blocked":
         let installInfo = aSubject.QueryInterface(Ci.amIWebInstallInfo);
-        let win = installInfo.originatingWindow;
+        let win = installInfo.originator;
         let tab = BrowserApp.getTabForWindow(win.top);
         if (!tab)
           return;
