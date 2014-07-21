@@ -1388,6 +1388,17 @@ TabChild::HasValidInnerSize()
   return mHasValidInnerSize;
 }
 
+void
+TabChild::SendPendingTouchPreventedResponse(bool aPreventDefault,
+                                            const ScrollableLayerGuid& aGuid)
+{
+  if (mPendingTouchPreventedResponse) {
+    MOZ_ASSERT(aGuid == mPendingTouchPreventedGuid);
+    SendContentReceivedTouch(mPendingTouchPreventedGuid, aPreventDefault);
+    mPendingTouchPreventedResponse = false;
+  }
+}
+
 #ifdef DEBUG
 PContentPermissionRequestChild*
 TabChild:: SendPContentPermissionRequestConstructor(PContentPermissionRequestChild* aActor,
@@ -1834,6 +1845,8 @@ TabChild::RecvHandleLongTap(const CSSPoint& aPoint, const ScrollableLayerGuid& a
     return true;
   }
 
+  SendPendingTouchPreventedResponse(false, aGuid);
+
   bool eventHandled =
       DispatchMouseEvent(NS_LITERAL_STRING("contextmenu"),
                          APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid),
@@ -2145,11 +2158,7 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
     }
     // fall through
   case NS_TOUCH_MOVE: {
-    if (mPendingTouchPreventedResponse) {
-      MOZ_ASSERT(aGuid == mPendingTouchPreventedGuid);
-      SendContentReceivedTouch(mPendingTouchPreventedGuid, isTouchPrevented);
-      mPendingTouchPreventedResponse = false;
-    }
+    SendPendingTouchPreventedResponse(isTouchPrevented, aGuid);
     break;
   }
 
