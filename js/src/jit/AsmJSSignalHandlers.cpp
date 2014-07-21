@@ -150,16 +150,6 @@ using mozilla::DebugOnly;
 // thread/stack as the victim (Unix and Windows), we can use TLS to find any
 // currently executing asm.js code.
 #if !defined(XP_MACOSX)
-static AsmJSActivation *
-InnermostAsmJSActivation()
-{
-    PerThreadData *threadData = TlsPerThreadData.get();
-    if (!threadData)
-        return nullptr;
-
-    return threadData->asmJSActivationStackFromOwnerThread();
-}
-
 static JSRuntime *
 RuntimeForCurrentThread()
 {
@@ -451,7 +441,7 @@ HandleException(PEXCEPTION_POINTERS exception)
     if (rt->jitRuntime() && rt->jitRuntime()->handleAccessViolation(rt, faultingAddress))
         return true;
 
-    AsmJSActivation *activation = InnermostAsmJSActivation();
+    AsmJSActivation *activation = PerThreadData::innermostAsmJSActivation();
     if (!activation)
         return false;
 
@@ -648,7 +638,7 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
     if (rt->jitRuntime() && rt->jitRuntime()->handleAccessViolation(rt, faultingAddress))
         return true;
 
-    AsmJSActivation *activation = rt->mainThread.asmJSActivationStackFromAnyThread();
+    AsmJSActivation *activation = rt->mainThread.asmJSActivationStack();
     if (!activation)
         return false;
 
@@ -898,7 +888,7 @@ HandleSignal(int signum, siginfo_t *info, void *ctx)
     if (rt->jitRuntime() && rt->jitRuntime()->handleAccessViolation(rt, faultingAddress))
         return true;
 
-    AsmJSActivation *activation = InnermostAsmJSActivation();
+    AsmJSActivation *activation = PerThreadData::innermostAsmJSActivation();
     if (!activation)
         return false;
 
@@ -1048,7 +1038,7 @@ js::RequestInterruptForAsmJSCode(JSRuntime *rt, int interruptModeRaw)
         return;
     }
 
-    AsmJSActivation *activation = rt->mainThread.asmJSActivationStackFromAnyThread();
+    AsmJSActivation *activation = rt->mainThread.asmJSActivationStack();
     if (!activation)
         return;
 

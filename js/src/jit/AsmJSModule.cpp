@@ -32,6 +32,7 @@
 #include "jsobjinlines.h"
 
 #include "frontend/ParseNode-inl.h"
+#include "vm/Stack-inl.h"
 
 using namespace js;
 using namespace jit;
@@ -448,9 +449,25 @@ AsmJSModule::setAutoFlushICacheRange()
     AutoFlushICache::setRange(uintptr_t(code_), pod.codeBytes_);
 }
 
-static int32_t
-CoerceInPlace_ToInt32(JSContext *cx, MutableHandleValue val)
+static void
+AsmJSReportOverRecursed()
 {
+    JSContext *cx = PerThreadData::innermostAsmJSActivation()->cx();
+    js_ReportOverRecursed(cx);
+}
+
+static void
+AsmJSHandleExecutionInterrupt()
+{
+    JSContext *cx = PerThreadData::innermostAsmJSActivation()->cx();
+    HandleExecutionInterrupt(cx);
+}
+
+static int32_t
+CoerceInPlace_ToInt32(MutableHandleValue val)
+{
+    JSContext *cx = PerThreadData::innermostAsmJSActivation()->cx();
+
     int32_t i32;
     if (!ToInt32(cx, val, &i32))
         return false;
@@ -460,8 +477,10 @@ CoerceInPlace_ToInt32(JSContext *cx, MutableHandleValue val)
 }
 
 static int32_t
-CoerceInPlace_ToNumber(JSContext *cx, MutableHandleValue val)
+CoerceInPlace_ToNumber(MutableHandleValue val)
 {
+    JSContext *cx = PerThreadData::innermostAsmJSActivation()->cx();
+
     double dbl;
     if (!ToNumber(cx, val, &dbl))
         return false;
@@ -470,19 +489,109 @@ CoerceInPlace_ToNumber(JSContext *cx, MutableHandleValue val)
     return true;
 }
 
-namespace js {
+static bool
+TryEnablingIon(JSContext *cx, AsmJSModule &module, HandleFunction fun, uint32_t exitIndex,
+               int32_t argc, Value *argv)
+{
+    if (!fun->hasScript())
+        return true;
 
-// Defined in AsmJS.cpp:
+    // Test if the function is Ion compiled
+    JSScript *script = fun->nonLazyScript();
+    if (!script->hasIonScript())
+        return true;
 
-int32_t
-InvokeFromAsmJS_Ignore(JSContext *cx, int32_t exitIndex, int32_t argc, Value *argv);
+    // Currently we can't rectify arguments. Therefore disabling if argc is too low.
+    if (fun->nargs() > size_t(argc))
+        return true;
 
-int32_t
-InvokeFromAsmJS_ToInt32(JSContext *cx, int32_t exitIndex, int32_t argc, Value *argv);
+    // Normally the types should corresond, since we just ran with those types,
+    // but there are reports this is asserting. Therefore doing it as a check, instead of DEBUG only.
+    if (!types::TypeScript::ThisTypes(script)->hasType(types::Type::UndefinedType()))
+        return true;
+    for(uint32_t i = 0; i < fun->nargs(); i++) {
+        types::StackTypeSet *typeset = types::TypeScript::ArgTypes(script, i);
+        types::Type type = types::Type::DoubleType();
+        if (!argv[i].isDouble())
+            type = types::Type::PrimitiveType(argv[i].extractNonDoubleType());
+        if (!typeset->hasType(type))
+            return true;
+    }
 
-int32_t
-InvokeFromAsmJS_ToNumber(JSContext *cx, int32_t exitIndex, int32_t argc, Value *argv);
+    // Enable
+    IonScript *ionScript = script->ionScript();
+    if (!ionScript->addDependentAsmJSModule(cx, DependentAsmJSModuleExit(&module, exitIndex)))
+        return false;
 
+    module.exitIndexToGlobalDatum(exitIndex).exit = module.ionExitTrampoline(module.exit(exitIndex));
+    return true;
+}
+
+static bool
+InvokeFromAsmJS(AsmJSActivation *activation, int32_t exitIndex, int32_t argc, Value *argv,
+                MutableHandleValue rval)
+{
+    JSContext *cx = activation->cx();
+    AsmJSModule &module = activation->module();
+
+    RootedFunction fun(cx, module.exitIndexToGlobalDatum(exitIndex).fun);
+    RootedValue fval(cx, ObjectValue(*fun));
+    if (!Invoke(cx, UndefinedValue(), fval, argc, argv, rval))
+        return false;
+
+    return TryEnablingIon(cx, module, fun, exitIndex, argc, argv);
+}
+
+// Use an int32_t return type instead of bool since bool does not have a
+// specified width and the caller is assuming a word-sized return.
+static int32_t
+InvokeFromAsmJS_Ignore(int32_t exitIndex, int32_t argc, Value *argv)
+{
+    AsmJSActivation *activation = PerThreadData::innermostAsmJSActivation();
+    JSContext *cx = activation->cx();
+
+    RootedValue rval(cx);
+    return InvokeFromAsmJS(activation, exitIndex, argc, argv, &rval);
+}
+
+// Use an int32_t return type instead of bool since bool does not have a
+// specified width and the caller is assuming a word-sized return.
+static int32_t
+InvokeFromAsmJS_ToInt32(int32_t exitIndex, int32_t argc, Value *argv)
+{
+    AsmJSActivation *activation = PerThreadData::innermostAsmJSActivation();
+    JSContext *cx = activation->cx();
+
+    RootedValue rval(cx);
+    if (!InvokeFromAsmJS(activation, exitIndex, argc, argv, &rval))
+        return false;
+
+    int32_t i32;
+    if (!ToInt32(cx, rval, &i32))
+        return false;
+
+    argv[0] = Int32Value(i32);
+    return true;
+}
+
+// Use an int32_t return type instead of bool since bool does not have a
+// specified width and the caller is assuming a word-sized return.
+static int32_t
+InvokeFromAsmJS_ToNumber(int32_t exitIndex, int32_t argc, Value *argv)
+{
+    AsmJSActivation *activation = PerThreadData::innermostAsmJSActivation();
+    JSContext *cx = activation->cx();
+
+    RootedValue rval(cx);
+    if (!InvokeFromAsmJS(activation, exitIndex, argc, argv, &rval))
+        return false;
+
+    double dbl;
+    if (!ToNumber(cx, rval, &dbl))
+        return false;
+
+    argv[0] = DoubleValue(dbl);
+    return true;
 }
 
 #if defined(JS_CODEGEN_ARM)
@@ -524,19 +633,19 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
       case AsmJSImm_StackLimit:
         return cx->stackLimitAddressForJitCode(StackForUntrustedScript);
       case AsmJSImm_ReportOverRecursed:
-        return RedirectCall(FuncCast<void (JSContext*)>(js_ReportOverRecursed), Args_General1);
+        return RedirectCall(FuncCast(AsmJSReportOverRecursed), Args_General0);
       case AsmJSImm_HandleExecutionInterrupt:
-        return RedirectCall(FuncCast(js::HandleExecutionInterrupt), Args_General1);
+        return RedirectCall(FuncCast(AsmJSHandleExecutionInterrupt), Args_General0);
       case AsmJSImm_InvokeFromAsmJS_Ignore:
-        return RedirectCall(FuncCast(InvokeFromAsmJS_Ignore), Args_General4);
+        return RedirectCall(FuncCast(InvokeFromAsmJS_Ignore), Args_General3);
       case AsmJSImm_InvokeFromAsmJS_ToInt32:
-        return RedirectCall(FuncCast(InvokeFromAsmJS_ToInt32), Args_General4);
+        return RedirectCall(FuncCast(InvokeFromAsmJS_ToInt32), Args_General3);
       case AsmJSImm_InvokeFromAsmJS_ToNumber:
-        return RedirectCall(FuncCast(InvokeFromAsmJS_ToNumber), Args_General4);
+        return RedirectCall(FuncCast(InvokeFromAsmJS_ToNumber), Args_General3);
       case AsmJSImm_CoerceInPlace_ToInt32:
-        return RedirectCall(FuncCast(CoerceInPlace_ToInt32), Args_General2);
+        return RedirectCall(FuncCast(CoerceInPlace_ToInt32), Args_General1);
       case AsmJSImm_CoerceInPlace_ToNumber:
-        return RedirectCall(FuncCast(CoerceInPlace_ToNumber), Args_General2);
+        return RedirectCall(FuncCast(CoerceInPlace_ToNumber), Args_General1);
       case AsmJSImm_ToInt32:
         return RedirectCall(FuncCast<int32_t (double)>(js::ToInt32), Args_Int_Double);
 #if defined(JS_CODEGEN_ARM)
