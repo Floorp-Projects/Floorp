@@ -117,8 +117,7 @@ loop.shared.models = (function() {
         this._clearPendingCallTimer();
 
         if (err) {
-          this.trigger("session:error", new Error(
-            "Retrieval of session information failed: HTTP " + err));
+          this._handleServerError(err);
           return;
         }
 
@@ -198,6 +197,31 @@ loop.shared.models = (function() {
       this.session.disconnect();
       this.set("ongoing", false)
           .once("session:ended", this.stopListening, this);
+    },
+
+    /**
+     * Handle a loop-server error, which has an optional `errno` property which
+     * is server error identifier.
+     *
+     * Triggers the following events:
+     *
+     * - `session:expired` for expired call urls
+     * - `session:error` for other generic errors
+     *
+     * @param  {Error} err Error object.
+     */
+    _handleServerError: function(err) {
+      switch (err.errno) {
+        // loop-server sends 404 + INVALID_TOKEN (errno 105) whenever a token is
+        // missing OR expired; we treat this information as if the url is always
+        // expired.
+        case 105:
+          this.trigger("session:expired", err);
+          break;
+        default:
+          this.trigger("session:error", err);
+          break;
+      }
     },
 
     /**
