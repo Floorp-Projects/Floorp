@@ -61,6 +61,8 @@
 #include "config.h"
 #endif
 
+#define RESAMPLE_HUGEMEM 1
+
 #ifdef OUTSIDE_SPEEX
 #include <stdlib.h>
 static void *speex_alloc (int size) {return calloc(size,1);}
@@ -618,8 +620,8 @@ static void update_filter(SpeexResamplerState *st)
    }
    
    /* Choose the resampling type that requires the least amount of memory */
-#ifdef RESAMPLE_FULL_SINC_TABLE
-   if (1)
+#ifdef RESAMPLE_HUGEMEM
+   if (st->den_rate <= 16*(st->oversample+8))
 #else
    if (st->filt_len*st->den_rate <= st->filt_len*st->oversample+8)
 #endif

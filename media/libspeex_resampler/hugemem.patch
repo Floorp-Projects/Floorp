@@ -1,0 +1,43 @@
+diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/src/resample.c
+--- a/media/libspeex_resampler/src/resample.c
++++ b/media/libspeex_resampler/src/resample.c
+@@ -56,16 +56,18 @@
+    (e.g. 2/3), and get rid of the rounding operations in the inner loop. 
+    The latter both reduces CPU time and makes the algorithm more SIMD-friendly.
+ */
+ 
+ #ifdef HAVE_CONFIG_H
+ #include "config.h"
+ #endif
+ 
++#define RESAMPLE_HUGEMEM 1
++
+ #ifdef OUTSIDE_SPEEX
+ #include <stdlib.h>
+ static void *speex_alloc (int size) {return calloc(size,1);}
+ static void *speex_realloc (void *ptr, int size) {return realloc(ptr, size);}
+ static void speex_free (void *ptr) {free(ptr);}
+ #include "speex_resampler.h"
+ #include "arch.h"
+ #else /* OUTSIDE_SPEEX */
+@@ -613,18 +615,18 @@ static void update_filter(SpeexResampler
+       if (st->oversample < 1)
+          st->oversample = 1;
+    } else {
+       /* up-sampling */
+       st->cutoff = quality_map[st->quality].upsample_bandwidth;
+    }
+    
+    /* Choose the resampling type that requires the least amount of memory */
+-#ifdef RESAMPLE_FULL_SINC_TABLE
+-   if (1)
++#ifdef RESAMPLE_HUGEMEM
++   if (st->den_rate <= 16*(st->oversample+8))
+ #else
+    if (st->filt_len*st->den_rate <= st->filt_len*st->oversample+8)
+ #endif
+    {
+       spx_uint32_t i;
+       if (st->sinc_table_length < st->filt_len*st->den_rate)
+       {
+          st->sinc_table = (spx_word16_t *)speex_realloc(st->sinc_table,st->filt_len*st->den_rate*sizeof(spx_word16_t));
