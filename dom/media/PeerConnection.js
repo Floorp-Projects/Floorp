@@ -42,6 +42,7 @@ function GlobalPCList() {
   Services.obs.addObserver(this, "profile-change-net-teardown", true);
   Services.obs.addObserver(this, "network:offline-about-to-go-offline", true);
   Services.obs.addObserver(this, "network:offline-status-changed", true);
+  Services.obs.addObserver(this, "gmp-plugin-crash", true);
 }
 GlobalPCList.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
@@ -107,6 +108,27 @@ GlobalPCList.prototype = {
       }
     };
 
+    let hasPluginId = function(list, winID, pluginID, name, crashReport) {
+      if (list.hasOwnProperty(winID)) {
+        list[winID].forEach(function(pcref) {
+          let pc = pcref.get();
+          if (pc) {
+            if (pc._pc.pluginCrash(pluginID)) {
+              // Notify DOM window of the crash
+              let event = new CustomEvent("PluginCrashed",
+                { bubbles: false, cancelable: false,
+                  detail: {
+                    pluginName: name, 
+                    pluginDumpId: crashReport,
+                    submittedCrashReport: false }
+                });
+              pc._win.dispatchEvent(event);
+            }
+          }
+        });
+      }
+    };
+
     if (topic == "inner-window-destroyed") {
       let winID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
       cleanupWinId(this._list, winID);
@@ -134,6 +156,19 @@ GlobalPCList.prototype = {
       } else if (data == "online") {
         this._networkdown = false;
       }
+    } else if (topic == "gmp-plugin-crash") {
+      // a plugin crashed; if it's associated with any of our PCs, fire an
+      // event to the DOM window
+      let sep = data.indexOf(' ');
+      let pluginId = data.slice(0, sep);
+      let rest = data.slice(sep+1);
+      // This presumes no spaces in the name!
+      sep = rest.indexOf(' ');
+      let name = rest.slice(0, sep);
+      let crashId = rest.slice(sep+1);
+      for (let winId in this._list) {
+        hasPluginId(this._list, winId, pluginId, name, crashId);
+      }      
     }
   },
 
