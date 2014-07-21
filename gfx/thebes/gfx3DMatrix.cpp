@@ -818,7 +818,6 @@ gfxRect gfx3DMatrix::ProjectRectBounds(const gfxRect& aRect) const
       // If the line between two points crosses the w=0 plane, then interpolate a point
       // as close to the w=0 plane as possible and use that instead.
       gfxPointH3D intercept = ComputePerspectivePlaneIntercept(points[i], points[next]);
-      MOZ_ASSERT(intercept.HasPositiveWCoord());
 
       gfxPoint point2d = intercept.As2DPoint();
       min_x = min(point2d.x, min_x);
