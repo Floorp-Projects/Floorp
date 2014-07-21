@@ -3561,14 +3561,27 @@ exports.ObjectActor = ObjectActor;
 DebuggerServer.ObjectActorPreviewers = {
   String: [function({obj, threadActor}, aGrip) {
     let result = genericObjectPreviewer("String", String, obj, threadActor);
-    if (result) {
-      let length = DevToolsUtils.getProperty(obj, "length");
-      if (typeof length != "number") {
-        return false;
-      }
+    let length = DevToolsUtils.getProperty(obj, "length");
 
-      aGrip.displayString = result.value;
+    if (!result || typeof length != "number") {
+      return false;
+    }
+
+    aGrip.preview = {
+      kind: "ArrayLike",
+      length: length
+    };
+
+    if (threadActor._gripDepth > 1) {
       return true;
+    }
+
+    let items = aGrip.preview.items = [];
+
+    const max = Math.min(result.value.length, OBJECT_PREVIEW_MAX_ITEMS);
+    for (let i = 0; i < max; i++) {
+      let value = threadActor.createValueGrip(result.value[i]);
+      items.push(value);
     }
 
     return true;
