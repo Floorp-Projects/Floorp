@@ -1148,8 +1148,6 @@ CacheIndex::GetEntryForEviction(SHA1Sum::Hash *aHash, uint32_t *aCnt)
   if (!index)
     return NS_ERROR_NOT_INITIALIZED;
 
-  MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
-
   CacheIndexAutoLock lock(index);
 
   if (!index->IsIndexUsable()) {
@@ -1162,82 +1160,28 @@ CacheIndex::GetEntryForEviction(SHA1Sum::Hash *aHash, uint32_t *aCnt)
   if (index->mExpirationArray.Length() == 0)
     return NS_ERROR_NOT_AVAILABLE;
 
-  SHA1Sum::Hash hash;
-  bool foundEntry = false;
-  uint32_t i = 0, j = 0;
   uint32_t now = PR_Now() / PR_USEC_PER_SEC;
-
-  // find the first expired, non-forced valid entry
-  for (i = 0; i < index->mExpirationArray.Length(); i++) {
-    if (index->mExpirationArray[i]->mExpirationTime < now) {
-      memcpy(&hash, &index->mExpirationArray[i]->mHash, sizeof(SHA1Sum::Hash));
-
-      if (!IsForcedValidEntry(&hash)) {
-        foundEntry = true;
-        break;
-      }
-
-    } else {
-      // all further entries have not expired yet
-      break;
-    }
-  }
-
-  if (foundEntry) {
-    *aCnt = index->mExpirationArray.Length() - i;
-
+  if (index->mExpirationArray[0]->mExpirationTime < now) {
+    memcpy(aHash, &index->mExpirationArray[0]->mHash, sizeof(SHA1Sum::Hash));
+    *aCnt = index->mExpirationArray.Length();
     LOG(("CacheIndex::GetEntryForEviction() - returning entry from expiration "
          "array [hash=%08x%08x%08x%08x%08x, cnt=%u, expTime=%u, now=%u, "
-         "frecency=%u]", LOGSHA1(&hash), *aCnt,
-         index->mExpirationArray[i]->mExpirationTime, now,
-         index->mExpirationArray[i]->mFrecency));
+         "frecency=%u]", LOGSHA1(aHash), *aCnt,
+         index->mExpirationArray[0]->mExpirationTime, now,
+         index->mExpirationArray[0]->mFrecency));
   }
   else {
-    // check if we've already tried all the entries
-    if (i == index->mExpirationArray.Length())
-      return NS_ERROR_NOT_AVAILABLE;
-
-    // find first non-forced valid entry with the lowest frecency
-    for (j = 0; j < index->mFrecencyArray.Length(); j++) {
-      memcpy(&hash, &index->mFrecencyArray[j]->mHash, sizeof(SHA1Sum::Hash));
-
-      if (!IsForcedValidEntry(&hash)) {
-        foundEntry = true;
-        break;
-      }
-    }
-
-    if (!foundEntry)
-      return NS_ERROR_NOT_AVAILABLE;
-
-    // forced valid entries skipped in both arrays could overlap, just use max
-    *aCnt = index->mFrecencyArray.Length() - std::max(i, j);
-
+    memcpy(aHash, &index->mFrecencyArray[0]->mHash, sizeof(SHA1Sum::Hash));
+    *aCnt = index->mFrecencyArray.Length();
     LOG(("CacheIndex::GetEntryForEviction() - returning entry from frecency "
          "array [hash=%08x%08x%08x%08x%08x, cnt=%u, expTime=%u, now=%u, "
-         "frecency=%u]", LOGSHA1(&hash), *aCnt,
-         index->mFrecencyArray[j]->mExpirationTime, now,
-         index->mFrecencyArray[j]->mFrecency));
+         "frecency=%u]", LOGSHA1(aHash), *aCnt,
+         index->mExpirationArray[0]->mExpirationTime, now,
+         index->mExpirationArray[0]->mFrecency));
   }
-
-  memcpy(aHash, &hash, sizeof(SHA1Sum::Hash));
 
   return NS_OK;
 }
-
-
-// static
-bool CacheIndex::IsForcedValidEntry(const SHA1Sum::Hash *aHash)
-{
-  nsRefPtr<CacheFileHandle> handle;
-
-  CacheFileIOManager::gInstance->mHandles.GetHandle(
-    aHash, false, getter_AddRefs(handle));
-
-  nsCString hashKey = handle->Key();
-  return CacheStorageService::Self()->IsForcedValidEntry(hashKey);
-}
-
 
 // static
 nsresult
