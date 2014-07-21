@@ -24,7 +24,6 @@ EXTRA_JS_MODULES += [
     'Social.jsm',
     'TabCrashReporter.jsm',
     'WebappManager.jsm',
-    'webrtcUI.jsm',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
@@ -43,6 +42,7 @@ EXTRA_PP_JS_MODULES += [
     'AboutHome.jsm',
     'RecentWindow.jsm',
     'UITour.jsm',
+    'webrtcUI.jsm',
 ]
 
 if CONFIG['MOZILLA_OFFICIAL']:

@@ -491,6 +491,7 @@ LayerManagerComposite::Render()
                                                                actualBounds.height));
 
   // Render our layers.
+  RootLayer()->Prepare(clipRect);
   RootLayer()->RenderLayer(clipRect);
 
   if (!mRegionToClear.IsEmpty()) {

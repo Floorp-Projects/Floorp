@@ -1887,26 +1887,6 @@ SetDebuggerHandler(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-SetThrowHook(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    JSString *str;
-    if (args.length() == 0) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                             JSSMSG_NOT_ENOUGH_ARGS, "setThrowHook");
-        return false;
-    }
-
-    str = JS::ToString(cx, args[0]);
-    if (!str)
-        return false;
-
-    JS_SetThrowHook(cx->runtime(), DebuggerAndThrowHandler, str);
-    args.rval().setUndefined();
-    return true;
-}
-
-static bool
 LineToPC(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -4884,10 +4864,6 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
 "redirect(stdoutFilename[, stderrFilename])",
 "  Redirect stdout and/or stderr to the named file. Pass undefined to avoid\n"
 "   redirecting. Filenames are relative to the current working directory."),
-
-    JS_FN_HELP("setThrowHook", SetThrowHook, 1, 0,
-"setThrowHook(f)",
-"  Set throw hook to f."),
 
     JS_FN_HELP("system", System, 1, 0,
 "system(command)",

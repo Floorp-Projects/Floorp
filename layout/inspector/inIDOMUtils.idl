@@ -17,7 +17,7 @@ interface nsIDOMFontFaceList;
 interface nsIDOMRange;
 interface nsIDOMCSSStyleSheet;
 
-[scriptable, uuid(bd6b3dee-b8dd-40c7-a40a-ad8455b49917)]
+[scriptable, uuid(1f5b7f08-fa80-49e9-b881-888f081240da)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
@@ -44,7 +44,8 @@ interface inIDOMUtils : nsISupports
   // idea what the right scope is.
   bool selectorMatchesElement(in nsIDOMElement aElement,
                               in nsIDOMCSSStyleRule aRule,
-                              in unsigned long aSelectorIndex);
+                              in unsigned long aSelectorIndex,
+                              [optional] in DOMString aPseudo);
 
   // Utilities for working with CSS properties
   //

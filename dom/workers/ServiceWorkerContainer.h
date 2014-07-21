@@ -73,7 +73,7 @@ public:
   GetAll(ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  Ready();
+  GetReady(ErrorResult& aRv);
 
   nsIURI*
   GetDocumentURI() const

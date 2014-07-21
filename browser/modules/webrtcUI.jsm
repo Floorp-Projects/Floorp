@@ -34,13 +34,26 @@ this.webrtcUI = {
   },
 
   showGlobalIndicator: false,
+  showCameraIndicator: false,
+  showMicrophoneIndicator: false,
+  showScreenSharingIndicator: "", // either "Screen" or "Window"
 
-  get activeStreams() {
+  // The boolean parameters indicate which streams should be included in the result.
+  getActiveStreams: function(aCamera, aMicrophone, aScreen) {
     let contentWindowSupportsArray = MediaManagerService.activeMediaCaptureWindows;
     let count = contentWindowSupportsArray.Count();
     let activeStreams = [];
     for (let i = 0; i < count; i++) {
       let contentWindow = contentWindowSupportsArray.GetElementAt(i);
+
+      let camera = {}, microphone = {}, screen = {}, window = {};
+      MediaManagerService.mediaCaptureWindowState(contentWindow, camera,
+                                                  microphone, screen, window);
+      if (!(aCamera && camera.value ||
+            aMicrophone && microphone.value ||
+            aScreen && (screen.value || window.value)))
+        continue;
+
       let browser = getBrowserForWindow(contentWindow);
       let browserWindow = browser.ownerDocument.defaultView;
       let tab = browserWindow.gBrowser &&
@@ -52,6 +65,20 @@ this.webrtcUI = {
       });
     }
     return activeStreams;
+  },
+
+  showSharingDoorhanger: function(aActiveStream, aType) {
+    let browserWindow = aActiveStream.browser.ownerDocument.defaultView;
+    if (aActiveStream.tab) {
+      browserWindow.gBrowser.selectedTab = aActiveStream.tab;
+    } else {
+      aActiveStream.browser.focus();
+    }
+    browserWindow.focus();
+    let PopupNotifications = browserWindow.PopupNotifications;
+    let notif = PopupNotifications.getNotification("webRTC-sharing" + aType,
+                                                   aActiveStream.browser);
+    notif.reshow();
   },
 
   updateMainActionLabel: function(aMenuList) {
@@ -389,16 +416,180 @@ function prompt(aContentWindow, aCallID, aAudio, aVideo, aDevices, aSecure) {
                                     anchorId, mainAction, secondaryActions, options);
 }
 
+function getGlobalIndicator() {
+#ifndef XP_MACOSX
+  const INDICATOR_CHROME_URI = "chrome://browser/content/webrtcIndicator.xul";
+  const features = "chrome,dialog=yes,titlebar=no,popup=yes";
+
+  return Services.ww.openWindow(null, INDICATOR_CHROME_URI, "_blank", features, []);
+#else
+  let indicator = {
+    _camera: null,
+    _microphone: null,
+    _screen: null,
+
+    _hiddenDoc: Cc["@mozilla.org/appshell/appShellService;1"]
+                  .getService(Ci.nsIAppShellService)
+                  .hiddenDOMWindow.document,
+    _statusBar: Cc["@mozilla.org/widget/macsystemstatusbar;1"]
+                  .getService(Ci.nsISystemStatusBar),
+
+    _command: function(aEvent) {
+      let type = this.getAttribute("type");
+      if (type == "Camera" || type == "Microphone")
+        type = "Devices";
+      else if (type == "Window")
+        type = "Screen";
+      webrtcUI.showSharingDoorhanger(aEvent.target.stream, type);
+    },
+
+    _popupShowing: function(aEvent) {
+      let type = this.getAttribute("type");
+      let activeStreams;
+      if (type == "Camera") {
+        activeStreams = webrtcUI.getActiveStreams(true, false, false);
+      }
+      else if (type == "Microphone") {
+        activeStreams = webrtcUI.getActiveStreams(false, true, false);
+      }
+      else if (type == "Screen") {
+        activeStreams = webrtcUI.getActiveStreams(false, false, true);
+        type = webrtcUI.showScreenSharingIndicator;
+      }
+
+      let bundle =
+        Services.strings.createBundle("chrome://browser/locale/webrtcIndicator.properties");
+
+      if (activeStreams.length == 1) {
+        let stream = activeStreams[0];
+
+        let menuitem = this.ownerDocument.createElement("menuitem");
+        let labelId = "webrtcIndicator.sharing" + type + "With.menuitem";
+        let label = stream.browser.contentTitle || stream.uri;
+        menuitem.setAttribute("label", bundle.formatStringFromName(labelId, [label], 1));
+        menuitem.setAttribute("disabled", "true");
+        this.appendChild(menuitem);
+
+        menuitem = this.ownerDocument.createElement("menuitem");
+        menuitem.setAttribute("label",
+                              bundle.GetStringFromName("webrtcIndicator.controlSharing.menuitem"));
+        menuitem.setAttribute("type", type);
+        menuitem.stream = stream;
+        menuitem.addEventListener("command", indicator._command);
+
+        this.appendChild(menuitem);
+        return true;
+      }
+
+      // We show a different menu when there are several active streams.
+      let menuitem = this.ownerDocument.createElement("menuitem");
+      let labelId = "webrtcIndicator.sharing" + type + "WithNTabs.menuitem";
+      let count = activeStreams.length;
+      let label = PluralForm.get(count, bundle.GetStringFromName(labelId)).replace("#1", count);
+      menuitem.setAttribute("label", label);
+      menuitem.setAttribute("disabled", "true");
+      this.appendChild(menuitem);
+
+      for (let stream of activeStreams) {
+        let item = this.ownerDocument.createElement("menuitem");
+        let labelId = "webrtcIndicator.controlSharingOn.menuitem";
+        let label = stream.browser.contentTitle || stream.uri;
+        item.setAttribute("label", bundle.formatStringFromName(labelId, [label], 1));
+        item.setAttribute("type", type);
+        item.stream = stream;
+        item.addEventListener("command", indicator._command);
+        this.appendChild(item);
+      }
+
+      return true;
+    },
+
+    _popupHiding: function(aEvent) {
+      while (this.firstChild)
+        this.firstChild.remove();
+    },
+
+    _setIndicatorState: function(aName, aState) {
+      let field = "_" + aName.toLowerCase();
+      if (aState && !this[field]) {
+        let menu = this._hiddenDoc.createElement("menu");
+        let uri = "chrome://browser/skin/webRTC-" + aName.toLowerCase() + "-black-16.png";
+        menu.setAttribute("image", uri);
+        this._statusBar.addItem(menu);
+
+        let menupopup = this._hiddenDoc.createElement("menupopup");
+        menupopup.setAttribute("type", aName);
+        menupopup.addEventListener("popupshowing", this._popupShowing);
+        menupopup.addEventListener("popuphiding", this._popupHiding);
+        menupopup.addEventListener("command", this._command);
+        menu.appendChild(menupopup);
+
+        this[field] = menu;
+      }
+      else if (this[field] && !aState) {
+        this._statusBar.removeItem(this[field]);
+        this[field] = null
+      }
+    },
+    updateIndicatorState: function() {
+      this._setIndicatorState("Camera", webrtcUI.showCameraIndicator);
+      this._setIndicatorState("Microphone", webrtcUI.showMicrophoneIndicator);
+      this._setIndicatorState("Screen", webrtcUI.showScreenSharingIndicator);
+    },
+    close: function() {
+      this._setIndicatorState("Camera", false);
+      this._setIndicatorState("Microphone", false);
+      this._setIndicatorState("Screen", false);
+    }
+  };
+
+  indicator.updateIndicatorState();
+  return indicator;
+#endif
+}
+
+var gIndicatorWindow = null;
+
 function updateIndicators() {
-  webrtcUI.showGlobalIndicator =
-    MediaManagerService.activeMediaCaptureWindows.Count() > 0;
+  let contentWindowSupportsArray = MediaManagerService.activeMediaCaptureWindows;
+  let count = contentWindowSupportsArray.Count();
+
+  webrtcUI.showGlobalIndicator = count > 0;
 
   let e = Services.wm.getEnumerator("navigator:browser");
   while (e.hasMoreElements())
     e.getNext().WebrtcIndicator.updateButton();
 
-  for (let {browser: browser} of webrtcUI.activeStreams)
-    showBrowserSpecificIndicator(browser);
+  webrtcUI.showCameraIndicator = false;
+  webrtcUI.showMicrophoneIndicator = false;
+  webrtcUI.showScreenSharingIndicator = "";
+
+  for (let i = 0; i < count; ++i) {
+    let contentWindow = contentWindowSupportsArray.GetElementAt(i);
+    let camera = {}, microphone = {}, screen = {}, window = {};
+    MediaManagerService.mediaCaptureWindowState(contentWindow, camera,
+                                                microphone, screen, window);
+    if (camera.value)
+      webrtcUI.showCameraIndicator = true;
+    if (microphone.value)
+      webrtcUI.showMicrophoneIndicator = true;
+    if (screen.value)
+      webrtcUI.showScreenSharingIndicator = "Screen";
+    else if (window.value && !webrtcUI.showScreenSharingIndicator)
+      webrtcUI.showScreenSharingIndicator = "Window";
+
+    showBrowserSpecificIndicator(getBrowserForWindow(contentWindow));
+  }
+
+  if (webrtcUI.showGlobalIndicator) {
+    if (!gIndicatorWindow)
+      gIndicatorWindow = getGlobalIndicator();
+    else
+      gIndicatorWindow.updateIndicatorState();
+  } else if (gIndicatorWindow) {
+    gIndicatorWindow.close();
+    gIndicatorWindow = null;
+  }
 }
 
 function showBrowserSpecificIndicator(aBrowser) {

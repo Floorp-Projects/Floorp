@@ -5,10 +5,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CryptoBuffer.h"
+#include "mozilla/Base64.h"
 #include "mozilla/dom/UnionTypes.h"
 
 namespace mozilla {
 namespace dom {
+
+uint8_t*
+CryptoBuffer::Assign(const CryptoBuffer& aData)
+{
+  // Same as in nsTArray_Impl::operator=, but return the value
+  // returned from ReplaceElementsAt to enable OOM detection
+  return ReplaceElementsAt(0, Length(), aData.Elements(), aData.Length());
+}
 
 uint8_t*
 CryptoBuffer::Assign(const uint8_t* aData, uint32_t aLength)
@@ -67,8 +76,74 @@ CryptoBuffer::Assign(const OwningArrayBufferViewOrArrayBuffer& aData)
   return nullptr;
 }
 
+// Helpers to encode/decode JWK's special flavor of Base64
+// * No whitespace
+// * No padding
+// * URL-safe character set
+nsresult
+CryptoBuffer::FromJwkBase64(const nsString& aBase64)
+{
+  NS_ConvertUTF16toUTF8 temp(aBase64);
+  temp.StripWhitespace();
+
+  // Re-add padding
+  if (temp.Length() % 4 == 3) {
+    temp.AppendLiteral("=");
+  } else if (temp.Length() % 4 == 2) {
+    temp.AppendLiteral("==");
+  } if (temp.Length() % 4 == 1) {
+    return NS_ERROR_FAILURE; // bad Base64
+  }
+
+  // Translate from URL-safe character set to normal
+  temp.ReplaceChar('-', '+');
+  temp.ReplaceChar('_', '/');
+
+  // Perform the actual base64 decode
+  nsCString binaryData;
+  nsresult rv = Base64Decode(temp, binaryData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!Assign((const uint8_t*) binaryData.BeginReading(),
+              binaryData.Length())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+CryptoBuffer::ToJwkBase64(nsString& aBase64)
+{
+  // Shortcut for the empty octet string
+  if (Length() == 0) {
+    aBase64.Truncate();
+    return NS_OK;
+  }
+
+  // Perform the actual base64 encode
+  nsCString base64;
+  nsDependentCSubstring binaryData((const char*) Elements(),
+                                   (const char*) (Elements() + Length()));
+  nsresult rv = Base64Encode(binaryData, base64);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Strip padding
+  base64.Trim("=");
+
+  // Translate to the URL-safe charset
+  base64.ReplaceChar('+', '-');
+  base64.ReplaceChar('/', '_');
+  if (base64.FindCharInSet("+/", 0) != kNotFound) {
+    return NS_ERROR_FAILURE;
+  }
+
+  CopyASCIItoUTF16(base64, aBase64);
+  return NS_OK;
+}
+
 SECItem*
-CryptoBuffer::ToSECItem()
+CryptoBuffer::ToSECItem() const
 {
   uint8_t* data = (uint8_t*) moz_malloc(Length());
   if (!data) {

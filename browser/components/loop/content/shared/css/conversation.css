@@ -154,17 +154,22 @@
 }
 
 /* Incoming call */
+
+/*
+ * Height matches the height of the docked window
+ * but the UI breaks when you pop out
+ * Bug 1040985
+ */
 .incoming-call {
-  text-align: center;
-  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 264px;
 }
 
 .incoming-call h2 {
   font-size: 1.5em;
   font-weight: normal;
-  margin-top: 3em;
 }
 
-.incoming-call button {
-  margin-right: .2em;
-}

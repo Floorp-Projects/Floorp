@@ -121,7 +121,7 @@ typedef void (*FreeTransferStructuredCloneOp)(uint32_t tag, JS::TransferableOwne
 // The maximum supported structured-clone serialization format version. Note
 // that this does not need to be bumped for Transferable-only changes, since
 // they are never saved to persistent storage.
-#define JS_STRUCTURED_CLONE_VERSION 3
+#define JS_STRUCTURED_CLONE_VERSION 4
 
 struct JSStructuredCloneCallbacks {
     ReadStructuredCloneOp read;

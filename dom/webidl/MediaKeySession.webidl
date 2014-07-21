@@ -30,14 +30,14 @@ interface MediaKeySession : EventTarget {
 
   // session operations
   //Promise<any>
-  [NewObject]
+  [NewObject, Throws]
   Promise update(Uint8Array response);
 
   // Promise<any>
-  [NewObject]
+  [NewObject, Throws]
   Promise close();
 
   // Promise<any>
-  [NewObject]
+  [NewObject, Throws]
   Promise remove();
 };

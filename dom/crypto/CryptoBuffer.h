@@ -20,6 +20,7 @@ class OwningArrayBufferViewOrArrayBuffer;
 class CryptoBuffer : public FallibleTArray<uint8_t>
 {
 public:
+  uint8_t* Assign(const CryptoBuffer& aData);
   uint8_t* Assign(const uint8_t* aData, uint32_t aLength);
   uint8_t* Assign(const SECItem* aItem);
   uint8_t* Assign(const ArrayBuffer& aData);
@@ -36,8 +37,9 @@ public:
     return Assign(aArray.Data(), aArray.Length());
   }
 
-
-  SECItem* ToSECItem();
+  nsresult FromJwkBase64(const nsString& aBase64);
+  nsresult ToJwkBase64(nsString& aBase64);
+  SECItem* ToSECItem() const;
 
   bool GetBigIntValue(unsigned long& aRetVal);
 };

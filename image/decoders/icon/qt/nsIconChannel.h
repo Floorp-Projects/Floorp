@@ -25,8 +25,7 @@ class nsIconChannel MOZ_FINAL : public nsIChannel {
     NS_FORWARD_NSIREQUEST(mRealChannel->)
     NS_FORWARD_NSICHANNEL(mRealChannel->)
 
-    nsIconChannel() {}
-    ~nsIconChannel() {}
+    nsIconChannel() {};
 
     /**
      * Called by nsIconProtocolHandler after it creates this channel.
@@ -35,6 +34,8 @@ class nsIconChannel MOZ_FINAL : public nsIChannel {
      */
     nsresult Init(nsIURI* aURI);
   private:
+    ~nsIconChannel() {};
+
     /**
      * The channel to the temp icon file (e.g. to /tmp/2qy9wjqw.html).
      * Will always be non-null after a successful Init.

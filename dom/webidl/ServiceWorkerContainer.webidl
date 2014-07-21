@@ -19,6 +19,7 @@ interface ServiceWorkerContainer {
   [Unforgeable] readonly attribute ServiceWorker? controller;
 
   // Promise<ServiceWorker>
+  [Throws]
   readonly attribute Promise ready;
 
   // Promise<sequence<ServiceWorker>?>

@@ -229,6 +229,9 @@ public:
                       Compositor* aCompositor,
                       AttachFlags aFlags = NO_FLAGS) MOZ_OVERRIDE;
 
+  virtual void Detach(Layer* aLayer = nullptr,
+                      AttachFlags aFlags = NO_FLAGS) MOZ_OVERRIDE;
+
 #ifdef MOZ_DUMP_PAINTING
   virtual void Dump(std::stringstream& aStream,
                     const char* aPrefix="",

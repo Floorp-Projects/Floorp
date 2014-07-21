@@ -8,6 +8,30 @@
 
 let MEDIA_PERMISSION = "media.navigator.permission.disabled";
 
+function waitForDeviceClosed() {
+  info("Checking that getUserMedia streams are no longer in use.");
+
+  let temp = {};
+  Cu.import("resource:///modules/webrtcUI.jsm", temp);
+  let webrtcUI = temp.webrtcUI;
+
+  if (!webrtcUI.showGlobalIndicator)
+    return Promise.resolve();
+
+  let deferred = Promise.defer();
+
+  const TOPIC = "recording-device-events";
+  Services.obs.addObserver(function deviceEventsObserver() {
+    info("Observing " + TOPIC);
+    if (!webrtcUI.showGlobalIndicator) {
+      Services.obs.removeObserver(deviceEventsObserver, TOPIC);
+      deferred.resolve();
+    }
+  }, TOPIC, false);
+
+  return deferred.promise;
+}
+
 function spawnTest() {
   let [target, debuggee, panel] = yield initWebAudioEditor(MEDIA_NODES_URL);
   let { panelWin } = panel;
@@ -41,5 +65,8 @@ function spawnTest() {
   Services.prefs.setBoolPref(MEDIA_PERMISSION, mediaPermissionPref);
 
   yield teardown(panel);
+
+  yield waitForDeviceClosed();
+
   finish();
 }

@@ -24,6 +24,13 @@ nsScreenQt::~nsScreenQt()
 }
 
 NS_IMETHODIMP
+nsScreenQt::GetId(uint32_t* aId)
+{
+    *aId = mScreen;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsScreenQt::GetRect(int32_t *outLeft,int32_t *outTop,
                     int32_t *outWidth,int32_t *outHeight)
 {

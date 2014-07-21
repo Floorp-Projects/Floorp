@@ -52,6 +52,8 @@ public:
     return mLength;
   }
 
+  virtual nsString ToJwkAlg() const MOZ_OVERRIDE;
+
   virtual bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const MOZ_OVERRIDE;
   static KeyAlgorithm* Create(nsIGlobalObject* aGlobal,
                               JSStructuredCloneReader* aReader);

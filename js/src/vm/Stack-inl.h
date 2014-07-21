@@ -87,7 +87,6 @@ InterpreterFrame::initCallFrame(JSContext *cx, InterpreterFrame *prev, jsbytecod
     prev_ = prev;
     prevpc_ = prevpc;
     prevsp_ = prevsp;
-    JS_ASSERT(!hasHookData());
 
     initVarsToUndefined();
 }
@@ -353,32 +352,6 @@ FrameIter::unaliasedForEachActual(JSContext *cx, Op op)
     MOZ_CRASH("Unexpected state");
 }
 
-inline void *
-AbstractFramePtr::maybeHookData() const
-{
-    if (isInterpreterFrame())
-        return asInterpreterFrame()->maybeHookData();
-#ifdef JS_ION
-    return asBaselineFrame()->maybeHookData();
-#else
-    MOZ_CRASH("Invalid frame");
-#endif
-}
-
-inline void
-AbstractFramePtr::setHookData(void *data) const
-{
-    if (isInterpreterFrame()) {
-        asInterpreterFrame()->setHookData(data);
-        return;
-    }
-#ifdef JS_ION
-    asBaselineFrame()->setHookData(data);
-#else
-    MOZ_CRASH("Invalid frame");
-#endif
-}
-
 inline HandleValue
 AbstractFramePtr::returnValue() const
 {
@@ -629,13 +602,6 @@ AbstractFramePtr::isEvalFrame() const
     MOZ_CRASH("Invalid frame");
 #endif
 }
-
-inline bool
-AbstractFramePtr::isFramePushedByExecute() const
-{
-    return isGlobalFrame() || isEvalFrame();
-}
-
 inline bool
 AbstractFramePtr::isDebuggerFrame() const
 {

@@ -41,10 +41,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=860494
     sb.parentWin = window;
     sb.is = is;
     sb.ok = ok;
-    Cu.evalInSandbox('is(win.top, topWin, "iframe names shouldnt shadow |top| via cross-origin Xray");', sb);
-    Cu.evalInSandbox('is(win.parent, parentWin, "iframe names shouldnt shadow |parent| via cross-origin Xray");', sb);
+    Cu.evalInSandbox('ok(win.top === topWin, "iframe names shouldnt shadow |top| via cross-origin Xray");', sb);
+    Cu.evalInSandbox('ok(win.parent === parentWin, "iframe names shouldnt shadow |parent| via cross-origin Xray");', sb);
     Cu.evalInSandbox('is(win.length, 7, "iframe names shouldnt shadow |length| via cross-origin Xray");', sb);
-    Cu.evalInSandbox('is(win.window, win, "iframe names shouldnt shadow |window| via cross-origin Xray");', sb);
+    Cu.evalInSandbox('ok(win.window === win, "iframe names shouldnt shadow |window| via cross-origin Xray");', sb);
     Cu.evalInSandbox('var exn = "nothrow"; try { win.navigator; } catch (e) { exn = e; } ok(!!/denied/.exec(exn), "cross-origin Xray blocks subframes that shadow: navigator: " + exn);', sb);
     Cu.evalInSandbox('var exn = "nothrow"; try { win.alert; } catch (e) { exn = e; } ok(!!/denied/.exec(exn), "cross-origin Xray blocks subframes that shadow: alert: " + exn);', sb);
 

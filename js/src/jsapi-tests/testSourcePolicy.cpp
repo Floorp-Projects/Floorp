@@ -25,26 +25,3 @@ BEGIN_TEST(testBug795104)
     return true;
 }
 END_TEST(testBug795104)
-
-static const char *const simpleSource = "var x = 4;";
-
-BEGIN_TEST(testScriptSourceReentrant)
-{
-    JS::CompileOptions opts(cx);
-    bool match = false;
-    JS_SetNewScriptHook(rt, NewScriptHook, &match);
-    CHECK(JS::Evaluate(cx, global, opts, simpleSource, strlen(simpleSource)));
-    CHECK(match);
-    JS_SetNewScriptHook(rt, nullptr, nullptr);
-
-    return true;
-}
-
-static void
-NewScriptHook(JSContext *cx, const char *fn, unsigned lineno,
-              JSScript *script, JSFunction *fun, void *data)
-{
-    if (!JS_StringEqualsAscii(cx, script->sourceData(cx), simpleSource, (bool *)data))
-        *((bool *)data) = false;
-}
-END_TEST(testScriptSourceReentrant)

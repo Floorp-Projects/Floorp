@@ -47,7 +47,6 @@ OS_LIBS += -lcups
 endif
 
 EXTRA_DSO_LDOPTS += \
-  $(LIBS_DIR) \
   $(MOZ_JS_LIBS) \
   $(NSS_LIBS) \
   $(MOZ_CAIRO_OSLIBS) \
@@ -150,8 +149,6 @@ endif
 ifdef MOZ_DIRECTSHOW
 OS_LIBS += $(call EXPAND_LIBNAME,dmoguids wmcodecdspuuid strmiids msdmo)
 endif
-
-EXTRA_DSO_LDOPTS += $(LIBS_DIR)
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS) $(MOZALLOC_LIB)
 

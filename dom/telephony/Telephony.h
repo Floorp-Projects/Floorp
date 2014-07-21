@@ -70,10 +70,12 @@ public:
 
   // WebIDL
   already_AddRefed<Promise>
-  Dial(const nsAString& aNumber, const Optional<uint32_t>& aServiceId);
+  Dial(const nsAString& aNumber, const Optional<uint32_t>& aServiceId,
+       ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  DialEmergency(const nsAString& aNumber, const Optional<uint32_t>& aServiceId);
+  DialEmergency(const nsAString& aNumber, const Optional<uint32_t>& aServiceId,
+                ErrorResult& aRv);
 
   void
   StartTone(const nsAString& aDTMFChar, const Optional<uint32_t>& aServiceId,
@@ -167,7 +169,8 @@ private:
   HasDialingCall();
 
   already_AddRefed<Promise>
-  DialInternal(uint32_t aServiceId, const nsAString& aNumber, bool aEmergency);
+  DialInternal(uint32_t aServiceId, const nsAString& aNumber, bool aEmergency,
+               ErrorResult& aRv);
 
   already_AddRefed<TelephonyCallId>
   CreateCallId(const nsAString& aNumber,

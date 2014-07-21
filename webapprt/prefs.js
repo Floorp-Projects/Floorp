@@ -77,7 +77,9 @@ pref("dom.payment.provider.0.requestMethod", "GET");
 // Enable window resize and move
 pref("dom.always_allow_move_resize_window", true);
 
-pref("plugin.allowed_types", "application/x-shockwave-flash,application/futuresplash");
+// Disable all plugins.  This has to be a non-empty string to disable plugins;
+// otherwise, nsPluginHost::IsTypeWhitelisted assumes all plugins are enabled.
+pref("plugin.allowed_types", " ");
 
 pref("devtools.debugger.remote-enabled", true);
 pref("devtools.debugger.force-local", true);

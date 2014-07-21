@@ -324,6 +324,13 @@ public:
 
   virtual Layer* GetLayer() = 0;
 
+  /**
+   * Perform a first pass over the layer tree to prepare intermediate surfaces.
+   * This allows us on to avoid framebuffer switches in the middle of our render
+   * which is inefficient. This must be called before RenderLayer.
+   */
+  virtual void Prepare(const nsIntRect& aClipRect) {}
+
   virtual void RenderLayer(const nsIntRect& aClipRect) = 0;
 
   virtual bool SetCompositableHost(CompositableHost*)

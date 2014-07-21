@@ -294,6 +294,7 @@ PK11_CipherOp
 PK11_ConfigurePKCS11
 PK11_CreateContextBySymKey
 PK11_CreateDigestContext
+PK11_CreateGenericObject
 PK11_CreateMergeLog
 PK11_CreatePBEV2AlgorithmID
 PK11_Decrypt
@@ -304,6 +305,7 @@ PK11_DEREncodePublicKey
 PK11_Derive
 PK11_DeriveWithTemplate
 PK11_DestroyContext
+PK11_DestroyGenericObject
 PK11_DestroyMergeLog
 PK11_DestroyTokenObject
 PK11_DigestBegin
@@ -318,6 +320,7 @@ PK11_FindCertsFromEmailAddress
 PK11_FindCertsFromNickname
 PK11_FindKeyByAnyCert
 PK11_FindKeyByDERCert
+PK11_FindKeyByKeyID
 PK11_FindSlotByName
 PK11_FindSlotsByNames
 PK11_FreeSlot
@@ -386,6 +389,7 @@ PK11_ListPrivKeysInSlot
 PK11_LoadPrivKey
 PK11_Logout
 PK11_LogoutAll
+PK11_MakeIDFromPubKey
 PK11_MechanismToAlgtag
 PK11_MergeTokens
 PK11_NeedLogin
@@ -414,10 +418,12 @@ PK11_SetSlotPWValues
 PK11_Sign
 PK11_SignatureLen
 PK11_UnwrapPrivKey
+PK11_UnwrapSymKey
 PK11_UpdateSlotAttribute
 PK11_UserDisableSlot
 PK11_UserEnableSlot
 PK11_WrapPrivKey
+PK11_WrapSymKey
 PORT_Alloc
 PORT_Alloc_Util
 PORT_ArenaAlloc
@@ -509,6 +515,7 @@ SECKEY_ECParamsToBasePointOrderLen
 SECKEY_ECParamsToKeySize
 SECKEY_EncodeDERSubjectPublicKeyInfo
 SECKEY_ExtractPublicKey
+SECKEY_ImportDERPublicKey
 SECKEY_PublicKeyStrength
 SECKEY_PublicKeyStrengthInBits
 SECKEY_RSAPSSParamsTemplate DATA

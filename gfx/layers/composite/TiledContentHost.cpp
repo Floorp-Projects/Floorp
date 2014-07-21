@@ -233,6 +233,42 @@ TiledContentHost::Attach(Layer* aLayer,
 }
 
 void
+TiledContentHost::Detach(Layer* aLayer,
+                         AttachFlags aFlags /* = NO_FLAGS */)
+{
+  if (!mKeepAttached || aLayer == mLayer || aFlags & FORCE_DETACH) {
+
+    // Unlock any buffers that may still be locked. If we have a pending upload,
+    // we will need to unlock the buffer that was about to be uploaded.
+    // If a buffer that was being composited had double-buffered tiles, we will
+    // need to unlock that buffer too.
+    if (mPendingUpload) {
+      mTiledBuffer.ReadUnlock();
+      if (mOldTiledBuffer.HasDoubleBufferedTiles()) {
+        mOldTiledBuffer.ReadUnlock();
+      }
+    } else if (mTiledBuffer.HasDoubleBufferedTiles()) {
+      mTiledBuffer.ReadUnlock();
+    }
+
+    if (mPendingLowPrecisionUpload) {
+      mLowPrecisionTiledBuffer.ReadUnlock();
+      if (mOldLowPrecisionTiledBuffer.HasDoubleBufferedTiles()) {
+        mOldLowPrecisionTiledBuffer.ReadUnlock();
+      }
+    } else if (mLowPrecisionTiledBuffer.HasDoubleBufferedTiles()) {
+      mLowPrecisionTiledBuffer.ReadUnlock();
+    }
+
+    mTiledBuffer = TiledLayerBufferComposite();
+    mLowPrecisionTiledBuffer = TiledLayerBufferComposite();
+    mOldTiledBuffer = TiledLayerBufferComposite();
+    mOldLowPrecisionTiledBuffer = TiledLayerBufferComposite();
+  }
+  CompositableHost::Detach(aLayer,aFlags);
+}
+
+void
 TiledContentHost::UseTiledLayerBuffer(ISurfaceAllocator* aAllocator,
                                       const SurfaceDescriptorTiles& aTiledDescriptor)
 {

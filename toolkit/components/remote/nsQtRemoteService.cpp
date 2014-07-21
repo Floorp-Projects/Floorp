@@ -63,6 +63,10 @@ mServerWindow(0)
 {
 }
 
+nsQtRemoteService::~nsQtRemoteService()
+{
+}
+
 NS_IMETHODIMP
 nsQtRemoteService::Startup(const char* aAppName, const char* aProfileName)
 {

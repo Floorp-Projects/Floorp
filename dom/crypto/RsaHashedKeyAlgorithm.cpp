@@ -23,6 +23,30 @@ RsaHashedKeyAlgorithm::WrapObject(JSContext* aCx)
   return RsaHashedKeyAlgorithmBinding::Wrap(aCx, this);
 }
 
+nsString
+RsaHashedKeyAlgorithm::ToJwkAlg() const
+{
+  if (mName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
+    switch (mHash->Mechanism()) {
+      case CKM_SHA_1:  return NS_LITERAL_STRING(JWK_ALG_RS1);
+      case CKM_SHA256: return NS_LITERAL_STRING(JWK_ALG_RS256);
+      case CKM_SHA384: return NS_LITERAL_STRING(JWK_ALG_RS384);
+      case CKM_SHA512: return NS_LITERAL_STRING(JWK_ALG_RS512);
+    }
+  }
+
+  if (mName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
+    switch(mHash->Mechanism()) {
+      case CKM_SHA_1:  return NS_LITERAL_STRING(JWK_ALG_RSA_OAEP);
+      case CKM_SHA256: return NS_LITERAL_STRING(JWK_ALG_RSA_OAEP_256);
+      case CKM_SHA384: return NS_LITERAL_STRING(JWK_ALG_RSA_OAEP_256);
+      case CKM_SHA512: return NS_LITERAL_STRING(JWK_ALG_RSA_OAEP_512);
+    }
+  }
+
+  return nsString();
+}
+
 bool
 RsaHashedKeyAlgorithm::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
 {

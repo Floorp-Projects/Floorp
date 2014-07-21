@@ -31,6 +31,9 @@ let gExternalAppsPath = gExternalInstallOrigin + "tests/dom/apps/tests/marketpla
 let gMarketplaceInstallOrigin = "https://marketplace.firefox.com/";
 let gMarketplaceAppsPath = gMarketplaceInstallOrigin + "tests/dom/apps/tests/marketplace/";
 
+let gMarketplaceDevInstallOrigin = "https://marketplace-dev.allizom.org/";
+let gMarketplaceDevAppsPath = gMarketplaceDevInstallOrigin + "tests/dom/apps/tests/marketplace/";
+
 SimpleTest.waitForExplicitFinish();
 
 function checkAppOnInstallSuccess(aExpected) {
@@ -183,6 +186,73 @@ PackagedTestHelper.setSteps([
     info("== TEST == Marketplace reviewers packaged app not from https://marketplace.firefox.com/");
     checkAppOnInstallError("INVALID_SIGNATURE");
     installApp(gExternalInstallOrigin, gExternalAppsPath + "marketplace_reviewers_app.webapp");
+  },
+  function() {
+    let signedAppOrigins = SpecialPowers.getCharPref("dom.mozApps.signed_apps_installable_from");
+    signedAppOrigins = signedAppOrigins.concat("," + gMarketplaceDevInstallOrigin.slice(0,-1));
+
+    SpecialPowers.pushPrefEnv({
+      set: [
+        ['dom.mozApps.signed_apps_installable_from', signedAppOrigins],
+        ["dom.mozApps.use_reviewer_certs", true],
+      ]
+     }, PackagedTestHelper.next);
+  },
+  function() {
+    info("== TEST == Marketplace-dev packaged app from https://marketplace.firefox.com/");
+    checkAppOnInstallError("INVALID_SIGNATURE");
+    installApp(gMarketplaceInstallOrigin, gMarketplaceAppsPath + "marketplace_dev_app.webapp");
+  },
+  function() {
+    info("== TEST == Marketplace-dev packaged app from https://marketplace-dev.allizom.org/");
+    let miniManifestURL = gMarketplaceDevAppsPath + "marketplace_dev_app.webapp";
+    let expected = {
+      name: "Flashlight (Linterna)",
+      manifestURL: miniManifestURL,
+      installOrigin: gMarketplaceDevInstallOrigin.slice(0, -1),
+      progress: 0,
+      installState: "installed",
+      downloadAvailable: false,
+      downloading: false,
+      readyToApplyDownload: false,
+      launch_path: "/index.html",
+      version: "3.0",
+    };
+    checkAppOnInstallSuccess(expected);
+    installApp(gMarketplaceDevInstallOrigin, miniManifestURL);
+  },
+  function() {
+    info("== TEST == Marketplace-dev privileged app from https://marketplace.firefox.com/");
+    checkAppOnInstallError("INVALID_SIGNATURE");
+    installApp(gMarketplaceInstallOrigin, gMarketplaceAppsPath + "marketplace_dev_privileged_app.webapp");
+  },
+  function() {
+    info("== TEST == Marketplace-dev privileged app from https://marketplace-dev.allizom.org/");
+    let miniManifestURL = gMarketplaceDevAppsPath + "marketplace_dev_privileged_app.webapp";
+    let expected = {
+      name: "KitchenSink",
+      manifestURL: miniManifestURL,
+      installOrigin: gMarketplaceDevInstallOrigin.slice(0, -1),
+      progress: 0,
+      installState: "installed",
+      downloadAvailable: false,
+      downloading: false,
+      readyToApplyDownload: false,
+      launch_path: "/index.html",
+      version: "0.2.2",
+    };
+    checkAppOnInstallSuccess(expected);
+    installApp(gMarketplaceDevInstallOrigin, miniManifestURL);
+  },
+  function() {
+    info("== TEST == Marketplace-dev reviewers packaged app from https://marketplace.firefox.com/");
+    checkAppOnInstallError("INVALID_SIGNATURE");
+    installApp(gMarketplaceInstallOrigin, gMarketplaceAppsPath + "marketplace_dev_reviewers_app.webapp");
+  },
+  function() {
+    info("== TEST == Marketplace-dev reviewers packaged app from https://marketplace-dev.allizom.org/");
+    checkAppOnInstallError("INVALID_SIGNATURE");
+    installApp(gMarketplaceDevInstallOrigin, gMarketplaceDevAppsPath + "marketplace_dev_reviewers_app.webapp");
   },
   function() {
     PackagedTestHelper.finish();

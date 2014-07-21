@@ -82,7 +82,7 @@ private:
                              uint32_t aFrameRate);
 
   nsCOMPtr<mozIGeckoMediaPluginService> mMPS;
-  nsIThread* mGMPThread;
+  nsCOMPtr<nsIThread> mGMPThread;
   GMPVideoEncoderProxy* mGMP;
   GMPVideoHost* mHost;
   webrtc::EncodedImageCallback* mCallback;
@@ -143,7 +143,7 @@ private:
                            int64_t aRenderTimeMs);
 
   nsCOMPtr<mozIGeckoMediaPluginService> mMPS;
-  nsIThread* mGMPThread;
+  nsCOMPtr<nsIThread> mGMPThread;
   GMPVideoDecoderProxy*  mGMP;
   GMPVideoHost* mHost;
   webrtc::DecodedImageCallback* mCallback;

@@ -147,9 +147,7 @@ CanLazilyParse(ExclusiveContext *cx, const ReadOnlyCompileOptions &options)
     return options.canLazilyParse &&
         options.compileAndGo &&
         !cx->compartment()->options().discardSource() &&
-        !options.sourceIsLazy &&
-        !(cx->compartment()->debugMode() &&
-          cx->compartment()->runtimeFromAnyThread()->debugHooks.newScriptHook);
+        !options.sourceIsLazy;
 }
 
 static void
@@ -176,20 +174,6 @@ MarkFunctionsWithinEvalScript(JSScript *script)
     }
 }
 
-void
-frontend::MaybeCallSourceHandler(JSContext *cx, const ReadOnlyCompileOptions &options,
-                                 SourceBufferHolder &srcBuf)
-{
-    JSSourceHandler listener = cx->runtime()->debugHooks.sourceHandler;
-    void *listenerData = cx->runtime()->debugHooks.sourceHandlerData;
-
-    if (listener) {
-        void *listenerTSData;
-        listener(options.filename(), options.lineno, srcBuf.get(), srcBuf.length(),
-                 &listenerTSData, listenerData);
-    }
-}
-
 ScriptSourceObject *
 frontend::CreateScriptSourceObject(ExclusiveContext *cx, const ReadOnlyCompileOptions &options)
 {
@@ -202,6 +186,8 @@ frontend::CreateScriptSourceObject(ExclusiveContext *cx, const ReadOnlyCompileOp
         return nullptr;
 
     RootedScriptSource sso(cx, ScriptSourceObject::create(cx, ss));
+    if (!sso)
+        return nullptr;
 
     // Off-thread compilations do all their GC heap allocation, including the
     // SSO, in a temporary compartment. Hence, for the SSO to refer to the
@@ -241,9 +227,6 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     uint32_t logId = js::TraceLogCreateTextId(logger, options);
     js::AutoTraceLog scriptLogger(logger, logId);
     js::AutoTraceLog typeLogger(logger, TraceLogger::ParserCompileScript);
-
-    if (cx->isJSContext())
-        MaybeCallSourceHandler(cx->asJSContext(), options, srcBuf);
 
     /*
      * The scripted callerFrame can only be given for compile-and-go scripts
@@ -552,8 +535,6 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
 
     // FIXME: make Function pass in two strings and parse them as arguments and
     // ProgramElements respectively.
-
-    MaybeCallSourceHandler(cx, options, srcBuf);
 
     if (!CheckLength(cx, srcBuf))
         return false;
