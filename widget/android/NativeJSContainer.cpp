@@ -5,7 +5,6 @@
 
 #include "NativeJSContainer.h"
 #include "AndroidBridge.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "prthread.h"
 #include "nsJSUtils.h"
@@ -199,8 +198,7 @@ public:
             return nullptr;
         }
         size_t newIndex = container->mRootedObjects.length();
-        PersistentObjectPtr rootedJSObject =
-            MakeUnique<PersistentObject>(cx, jsObject);
+        PersistentObjectPtr rootedJSObject(new PersistentObject(cx, jsObject));
         if (!container->mRootedObjects.append(Move(rootedJSObject))) {
             AndroidBridge::ThrowException(env,
                 "java/lang/OutOfMemoryError", "Cannot allocate object");
@@ -283,7 +281,7 @@ private:
     }
 
     typedef JS::PersistentRooted<JSObject*>   PersistentObject;
-    typedef UniquePtr<PersistentObject> PersistentObjectPtr;
+    typedef ScopedDeletePtr<PersistentObject> PersistentObjectPtr;
 
     // Thread that the object is valid on
     PRThread* mThread;
@@ -445,7 +443,7 @@ struct PrimitiveProperty
 
     static ArrayType NewArray(JNIEnv* env, jobject instance, JSContext* cx,
                               JS::HandleObject array, size_t length) {
-        UniquePtr<Type[]> buffer = MakeUnique<Type[]>(length);
+        ScopedDeleteArray<Type> buffer(new Type[length]);
         for (size_t i = 0; i < length; i++) {
             JS::RootedValue elem(cx);
             if (!CheckJSCall(env, JS_GetElement(cx, array, i, &elem)) ||

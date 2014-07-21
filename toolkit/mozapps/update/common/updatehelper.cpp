@@ -24,13 +24,10 @@
 #include "updatehelper.h"
 #include "uachelper.h"
 #include "pathhash.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/Scoped.h"
 
 // Needed for PathAppendW
 #include <shlwapi.h>
-
-using mozilla::MakeUnique;
-using mozilla::UniquePtr;
 
 WCHAR* MakeCommandLine(int argc, WCHAR **argv);
 BOOL PathAppendSafe(LPWSTR base, LPCWSTR extra);
@@ -236,7 +233,7 @@ StartServiceUpdate(LPCWSTR installDir)
 
   // Get the service config information, in particular we want the binary
   // path of the service.
-  UniquePtr<char[]> serviceConfigBuffer = MakeUnique<char[]>(bytesNeeded);
+  mozilla::ScopedDeleteArray<char> serviceConfigBuffer(new char[bytesNeeded]);
   if (!QueryServiceConfigW(svc,
       reinterpret_cast<QUERY_SERVICE_CONFIGW*>(serviceConfigBuffer.get()),
       bytesNeeded, &bytesNeeded)) {
