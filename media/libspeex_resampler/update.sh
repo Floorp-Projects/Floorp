@@ -11,6 +11,7 @@ set -e -x
 
 cp $1/libspeexdsp/resample.c src
 cp $1/libspeexdsp/resample_sse.h src
+cp $1/libspeexdsp/resample_neon.h src
 cp $1/libspeexdsp/arch.h src
 cp $1/libspeexdsp/stack_alloc.h src
 cp $1/libspeexdsp/fixed_generic.h src
