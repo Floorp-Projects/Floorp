@@ -9,6 +9,7 @@
 
 #include "mozilla/gfx/Blur.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/UniquePtr.h"
 #include "nsExpirationTracker.h"
 #include "nsClassHashtable.h"
 
@@ -16,14 +17,12 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 gfxAlphaBoxBlur::gfxAlphaBoxBlur()
- : mBlur(nullptr)
 {
 }
 
 gfxAlphaBoxBlur::~gfxAlphaBoxBlur()
 {
   mContext = nullptr;
-  delete mBlur;
 }
 
 gfxContext*
@@ -37,22 +36,22 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
                             Float(aRect.width), Float(aRect.height));
     IntSize spreadRadius(aSpreadRadius.width, aSpreadRadius.height);
     IntSize blurRadius(aBlurRadius.width, aBlurRadius.height);
-    nsAutoPtr<mozilla::gfx::Rect> dirtyRect;
+    UniquePtr<Rect> dirtyRect;
     if (aDirtyRect) {
-      dirtyRect = new mozilla::gfx::Rect(Float(aDirtyRect->x),
-                                         Float(aDirtyRect->y),
-                                         Float(aDirtyRect->width),
-                                         Float(aDirtyRect->height));
+      dirtyRect = MakeUnique<Rect>(Float(aDirtyRect->x),
+                                   Float(aDirtyRect->y),
+                                   Float(aDirtyRect->width),
+                                   Float(aDirtyRect->height));
     }
-    nsAutoPtr<mozilla::gfx::Rect> skipRect;
+    UniquePtr<Rect> skipRect;
     if (aSkipRect) {
-      skipRect = new mozilla::gfx::Rect(Float(aSkipRect->x),
-                                        Float(aSkipRect->y),
-                                        Float(aSkipRect->width),
-                                        Float(aSkipRect->height));
+      skipRect = MakeUnique<Rect>(Float(aSkipRect->x),
+                                  Float(aSkipRect->y),
+                                  Float(aSkipRect->width),
+                                  Float(aSkipRect->height));
     }
 
-    mBlur = new AlphaBoxBlur(rect, spreadRadius, blurRadius, dirtyRect, skipRect);
+    mBlur = MakeUnique<AlphaBoxBlur>(rect, spreadRadius, blurRadius, dirtyRect.get(), skipRect.get());
     int32_t blurDataSize = mBlur->GetSurfaceAllocationSize();
     if (blurDataSize <= 0)
         return nullptr;
