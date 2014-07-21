@@ -621,11 +621,28 @@ struct CallSite : public CallSiteDesc
 typedef Vector<CallSite, 0, SystemAllocPolicy> CallSiteVector;
 
 // As an invariant across architectures, within asm.js code:
-//    $sp % StackAlignment = (AsmJSFrameSize + masm.framePushed) % StackAlignment
-// AsmJSFrameSize is 1 word, for the return address pushed by the call (or, in
-// the case of ARM/MIPS, by the first instruction of the prologue). This means
-// masm.framePushed never includes the pushed return address.
-static const uint32_t AsmJSFrameSize = sizeof(void*);
+//   $sp % StackAlignment = (sizeof(AsmJSFrame) + masm.framePushed) % StackAlignment
+// Thus, AsmJSFrame represents the bytes pushed after the call (which occurred
+// with a StackAlignment-aligned StackPointer) that are not included in
+// masm.framePushed.
+struct AsmJSFrame
+{
+    // The caller's saved frame pointer. In non-profiling mode, internal
+    // asm.js-to-asm.js calls don't update fp and thus don't save the caller's
+    // frame pointer; the space is reserved, however, so that profiling mode can
+    // reuse the same function body without recompiling.
+    uint8_t *callerFP;
+
+    // The return address pushed by the call (in the case of ARM/MIPS the return
+    // address is pushed by the first instruction of the prologue).
+    void *returnAddress;
+};
+static_assert(sizeof(AsmJSFrame) == 2 * sizeof(void*), "?!");
+static const uint32_t AsmJSFrameBytesAfterReturnAddress = sizeof(void*);
+
+// A hoisting of AsmJSModule::activationGlobalDataOffset that avoids #including
+// AsmJSModule everywhere.
+static const unsigned AsmJSActivationGlobalDataOffset = 0;
 
 // Summarizes a heap access made by asm.js code that needs to be patched later
 // and/or looked up by the asm.js signal handlers. Different architectures need
@@ -795,9 +812,9 @@ class AssemblerShared
     }
 
     void append(const CallSiteDesc &desc, size_t currentOffset, size_t framePushed) {
-        // framePushed does not include AsmJSFrameSize, so add it in here (see
+        // framePushed does not include sizeof(AsmJSFrame), so add it in here (see
         // CallSite::stackDepth).
-        CallSite callsite(desc, currentOffset, framePushed + AsmJSFrameSize);
+        CallSite callsite(desc, currentOffset, framePushed + sizeof(AsmJSFrame));
         enoughMemory_ &= callsites_.append(callsite);
     }
     CallSiteVector &&extractCallSites() { return Move(callsites_); }
