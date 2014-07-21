@@ -1503,6 +1503,11 @@ class MOZ_STACK_CLASS ModuleCompiler
         uint32_t end = masm_.currentOffset();
         return module_->addInlineCodeRange(begin->offset(), end);
     }
+    bool finishGeneratingBuiltinThunk(AsmJSExit::BuiltinKind builtin, Label *begin, Label *pret) {
+        JS_ASSERT(finishedFunctionBodies_);
+        uint32_t end = masm_.currentOffset();
+        return module_->addBuiltinThunkCodeRange(builtin, begin->offset(), pret->offset(), end);
+    }
 
     void buildCompilationTimeReport(bool storedInCache, ScopedJSFreePtr<char> *out) {
         ScopedJSFreePtr<char> slowFuns;
@@ -6062,7 +6067,7 @@ FillArgumentArray(ModuleCompiler &m, const VarTypeVector &argTypes,
     MacroAssembler &masm = m.masm();
 
     for (ABIArgTypeIter i(argTypes); !i.done(); i++) {
-        Address dstAddr = Address(StackPointer, offsetToArgs + i.index() * sizeof(Value));
+        Address dstAddr(StackPointer, offsetToArgs + i.index() * sizeof(Value));
         switch (i->kind()) {
           case ABIArg::GPR:
             masm.storeValue(JSVAL_TYPE_INT32, i->gpr(), dstAddr);
@@ -6115,7 +6120,7 @@ GenerateFFIInterpExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &e
     unsigned framePushed = StackDecrementForCall(masm, offsetToArgv + argvBytes);
 
     Label begin;
-    GenerateAsmJSExitPrologue(masm, framePushed, AsmJSFFI, &begin);
+    GenerateAsmJSExitPrologue(masm, framePushed, AsmJSExit::FFI, &begin);
 
     // Fill the argument array.
     unsigned offsetToCallerStackArgs = sizeof(AsmJSFrame) + masm.framePushed();
@@ -6174,7 +6179,7 @@ GenerateFFIInterpExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &e
     }
 
     Label profilingReturn;
-    GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSFFI, &profilingReturn);
+    GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::FFI, &profilingReturn);
     return m.finishGeneratingInterpExit(exitIndex, &begin, &profilingReturn) && !masm.oom();
 }
 
@@ -6229,7 +6234,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     unsigned framePushed = Max(ionFrameSize, coerceFrameSize);
 
     Label begin;
-    GenerateAsmJSExitPrologue(masm, framePushed, AsmJSFFI, &begin);
+    GenerateAsmJSExitPrologue(masm, framePushed, AsmJSExit::FFI, &begin);
 
     // 1. Descriptor
     size_t argOffset = offsetToIonArgs;
@@ -6389,7 +6394,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
 #endif
 
     Label profilingReturn;
-    GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSFFI, &profilingReturn);
+    GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::FFI, &profilingReturn);
 
     if (oolConvert.used()) {
         masm.bind(&oolConvert);
@@ -6450,6 +6455,85 @@ GenerateFFIExits(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit, 
         return false;
 
     return true;
+}
+
+// Generate a thunk that updates fp before calling the given builtin so that
+// both the builtin and the calling function show up in profiler stacks. (This
+// thunk is dynamically patched in when profiling is enabled.) Since the thunk
+// pushes an AsmJSFrame on the stack, that means we must rebuild the stack
+// frame. Fortunately, these are low arity functions and everything is passed in
+// regs on everything but x86 anyhow.
+static bool
+GenerateBuiltinThunk(ModuleCompiler &m, AsmJSExit::BuiltinKind builtin)
+{
+    MacroAssembler &masm = m.masm();
+    JS_ASSERT(masm.framePushed() == 0);
+
+    MIRTypeVector argTypes(m.cx());
+    switch (builtin) {
+      case AsmJSExit::Builtin_ToInt32:
+        argTypes.infallibleAppend(MIRType_Int32);
+        break;
+#if defined(JS_CODEGEN_ARM)
+      case AsmJSExit::Builtin_IDivMod:
+      case AsmJSExit::Builtin_UDivMod:
+        argTypes.infallibleAppend(MIRType_Int32);
+        argTypes.infallibleAppend(MIRType_Int32);
+        break;
+#endif
+      case AsmJSExit::Builtin_SinD:
+      case AsmJSExit::Builtin_CosD:
+      case AsmJSExit::Builtin_TanD:
+      case AsmJSExit::Builtin_ASinD:
+      case AsmJSExit::Builtin_ACosD:
+      case AsmJSExit::Builtin_ATanD:
+      case AsmJSExit::Builtin_CeilD:
+      case AsmJSExit::Builtin_FloorD:
+      case AsmJSExit::Builtin_ExpD:
+      case AsmJSExit::Builtin_LogD:
+        argTypes.infallibleAppend(MIRType_Double);
+        break;
+      case AsmJSExit::Builtin_ModD:
+      case AsmJSExit::Builtin_PowD:
+      case AsmJSExit::Builtin_ATan2D:
+        argTypes.infallibleAppend(MIRType_Double);
+        argTypes.infallibleAppend(MIRType_Double);
+        break;
+      case AsmJSExit::Builtin_CeilF:
+      case AsmJSExit::Builtin_FloorF:
+        argTypes.infallibleAppend(MIRType_Float32);
+        break;
+      case AsmJSExit::Builtin_Limit:
+        MOZ_ASSUME_UNREACHABLE("Bad builtin");
+    }
+
+    uint32_t framePushed = StackDecrementForCall(masm, argTypes);
+
+    Label begin;
+    GenerateAsmJSExitPrologue(masm, framePushed, AsmJSExit::Builtin(builtin), &begin);
+
+    unsigned offsetToCallerStackArgs = sizeof(AsmJSFrame) + masm.framePushed();
+    for (ABIArgMIRTypeIter i(argTypes); !i.done(); i++) {
+        if (i->kind() != ABIArg::Stack)
+            continue;
+        Address srcAddr(StackPointer, offsetToCallerStackArgs + i->offsetFromArgBase());
+        Address dstAddr(StackPointer, i->offsetFromArgBase());
+        if (i.mirType() == MIRType_Int32 || i.mirType() == MIRType_Float32) {
+            masm.load32(srcAddr, ABIArgGenerator::NonArgReturnVolatileReg0);
+            masm.store32(ABIArgGenerator::NonArgReturnVolatileReg0, dstAddr);
+        } else {
+            JS_ASSERT(i.mirType() == MIRType_Double);
+            masm.loadDouble(srcAddr, ScratchDoubleReg);
+            masm.storeDouble(ScratchDoubleReg, dstAddr);
+        }
+    }
+
+    AssertStackAlignment(masm);
+    masm.call(BuiltinToImmKind(builtin));
+
+    Label profilingReturn;
+    GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::Builtin(builtin), &profilingReturn);
+    return m.finishGeneratingBuiltinThunk(builtin, &begin, &profilingReturn) && !masm.oom();
 }
 
 static bool
@@ -6616,14 +6700,14 @@ GenerateSyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
 
     unsigned framePushed = StackDecrementForCall(masm, ShadowStackSpace);
 
-    GenerateAsmJSExitPrologue(masm, framePushed, AsmJSInterrupt, &m.syncInterruptLabel());
+    GenerateAsmJSExitPrologue(masm, framePushed, AsmJSExit::Interrupt, &m.syncInterruptLabel());
 
     AssertStackAlignment(masm);
     masm.call(AsmJSImmPtr(AsmJSImm_HandleExecutionInterrupt));
     masm.branchIfFalseBool(ReturnReg, throwLabel);
 
     Label profilingReturn;
-    GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSInterrupt, &profilingReturn);
+    GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::Interrupt, &profilingReturn);
     return m.finishGeneratingInterrupt(&m.syncInterruptLabel(), &profilingReturn) && !masm.oom();
 }
 
@@ -6668,8 +6752,6 @@ GenerateStubs(ModuleCompiler &m)
 
     Label throwLabel;
 
-    // The order of the iterations here is non-deterministic, since
-    // m.allExits() is a hash keyed by pointer values!
     for (ModuleCompiler::ExitMap::Range r = m.allExits(); !r.empty(); r.popFront()) {
         if (!GenerateFFIExits(m, r.front().key(), r.front().value(), &throwLabel))
             return false;
@@ -6685,6 +6767,11 @@ GenerateStubs(ModuleCompiler &m)
 
     if (!GenerateThrowStub(m, &throwLabel))
         return false;
+
+    for (unsigned i = 0; i < AsmJSExit::Builtin_Limit; i++) {
+        if (!GenerateBuiltinThunk(m, AsmJSExit::BuiltinKind(i)))
+            return false;
+    }
 
     return true;
 }

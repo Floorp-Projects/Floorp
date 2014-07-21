@@ -4440,6 +4440,11 @@ SingleStepCallback(void *arg, jit::Simulator *sim, void *pc)
             stack.append('*');
             break;
           }
+          case JS::ProfilingFrameIterator::CppFunction: {
+            const char *desc = i.nonFunctionDescription();
+            stack.append(desc, strlen(desc));
+            break;
+          }
         }
     }
 

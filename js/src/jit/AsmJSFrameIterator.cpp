@@ -70,6 +70,7 @@ AsmJSFrameIterator::settle()
       case AsmJSModule::CodeRange::FFI:
       case AsmJSModule::CodeRange::Interrupt:
       case AsmJSModule::CodeRange::Inline:
+      case AsmJSModule::CodeRange::Thunk:
         MOZ_ASSUME_UNREACHABLE("Should not encounter an exit during iteration");
     }
 }
@@ -126,7 +127,7 @@ PushRetAddr(MacroAssembler &masm)
 // pointer so that AsmJSProfilingFrameIterator can walk the stack at any pc in
 // generated code.
 static void
-GenerateProfilingPrologue(MacroAssembler &masm, unsigned framePushed, AsmJSExitReason reason,
+GenerateProfilingPrologue(MacroAssembler &masm, unsigned framePushed, AsmJSExit::Reason reason,
                           Label *begin)
 {
     Register act = ABIArgGenerator::NonArgReturnVolatileReg0;
@@ -154,7 +155,7 @@ GenerateProfilingPrologue(MacroAssembler &masm, unsigned framePushed, AsmJSExitR
         JS_ASSERT(StoredFP == masm.currentOffset() - offsetAtBegin);
     }
 
-    if (reason != AsmJSNoExit)
+    if (reason != AsmJSExit::None)
         masm.store32(Imm32(reason), Address(act, AsmJSActivation::offsetOfExitReason()));
 
     if (framePushed)
@@ -163,7 +164,7 @@ GenerateProfilingPrologue(MacroAssembler &masm, unsigned framePushed, AsmJSExitR
 
 // Generate the inverse of GenerateProfilingPrologue.
 static void
-GenerateProfilingEpilogue(MacroAssembler &masm, unsigned framePushed, AsmJSExitReason reason,
+GenerateProfilingEpilogue(MacroAssembler &masm, unsigned framePushed, AsmJSExit::Reason reason,
                           Label *profilingReturn)
 {
     Register act = ABIArgGenerator::NonArgReturnVolatileReg0;
@@ -173,8 +174,8 @@ GenerateProfilingEpilogue(MacroAssembler &masm, unsigned framePushed, AsmJSExitR
 
     masm.loadAsmJSActivation(act);
 
-    if (reason != AsmJSNoExit)
-        masm.store32(Imm32(AsmJSNoExit), Address(act, AsmJSActivation::offsetOfExitReason()));
+    if (reason != AsmJSExit::None)
+        masm.store32(Imm32(AsmJSExit::None), Address(act, AsmJSActivation::offsetOfExitReason()));
 
     // AsmJSProfilingFrameIterator assumes that there is only a single 'ret'
     // instruction (whose offset is recorded by profilingReturn) after the store
@@ -216,7 +217,7 @@ js::GenerateAsmJSFunctionPrologue(MacroAssembler &masm, unsigned framePushed,
 
     masm.align(CodeAlignment);
 
-    GenerateProfilingPrologue(masm, framePushed, AsmJSNoExit, &labels->begin);
+    GenerateProfilingPrologue(masm, framePushed, AsmJSExit::None, &labels->begin);
     Label body;
     masm.jump(&body);
 
@@ -285,7 +286,7 @@ js::GenerateAsmJSFunctionEpilogue(MacroAssembler &masm, unsigned framePushed,
 
     // Profiling epilogue:
     masm.bind(&labels->profilingEpilogue);
-    GenerateProfilingEpilogue(masm, framePushed, AsmJSNoExit, &labels->profilingReturn);
+    GenerateProfilingEpilogue(masm, framePushed, AsmJSExit::None, &labels->profilingReturn);
 
     if (!labels->overflowThunk.empty() && labels->overflowThunk.ref().used()) {
         // The general throw stub assumes that only sizeof(AsmJSFrame) bytes
@@ -346,7 +347,7 @@ js::GenerateAsmJSEntryEpilogue(MacroAssembler &masm)
 }
 
 void
-js::GenerateAsmJSExitPrologue(MacroAssembler &masm, unsigned framePushed, AsmJSExitReason reason,
+js::GenerateAsmJSExitPrologue(MacroAssembler &masm, unsigned framePushed, AsmJSExit::Reason reason,
                               Label *begin)
 {
     masm.align(CodeAlignment);
@@ -355,7 +356,7 @@ js::GenerateAsmJSExitPrologue(MacroAssembler &masm, unsigned framePushed, AsmJSE
 }
 
 void
-js::GenerateAsmJSExitEpilogue(MacroAssembler &masm, unsigned framePushed, AsmJSExitReason reason,
+js::GenerateAsmJSExitEpilogue(MacroAssembler &masm, unsigned framePushed, AsmJSExit::Reason reason,
                               Label *profilingReturn)
 {
     // Inverse of GenerateAsmJSExitPrologue:
@@ -371,26 +372,32 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation &
   : module_(&activation.module()),
     callerFP_(nullptr),
     callerPC_(nullptr),
-    exitReason_(AsmJSNoExit),
+    exitReason_(AsmJSExit::None),
     codeRange_(nullptr)
 {
     initFromFP(activation);
 }
 
 static inline void
-AssertMatchesCallSite(const AsmJSModule &module, void *pc, void *newfp, void *oldfp)
+AssertMatchesCallSite(const AsmJSModule &module, const AsmJSModule::CodeRange *calleeCodeRange,
+                      void *callerPC, void *callerFP, void *fp)
 {
 #ifdef DEBUG
-    const AsmJSModule::CodeRange *codeRange = module.lookupCodeRange(pc);
-    JS_ASSERT(codeRange);
-    if (codeRange->isEntry()) {
-        JS_ASSERT(newfp == nullptr);
+    const AsmJSModule::CodeRange *callerCodeRange = module.lookupCodeRange(callerPC);
+    JS_ASSERT(callerCodeRange);
+    if (callerCodeRange->isEntry()) {
+        JS_ASSERT(callerFP == nullptr);
         return;
     }
 
-    const CallSite *callsite = module.lookupCallSite(pc);
-    JS_ASSERT(callsite);
-    JS_ASSERT(newfp == (uint8_t*)oldfp + callsite->stackDepth());
+    const CallSite *callsite = module.lookupCallSite(callerPC);
+    if (calleeCodeRange->isThunk()) {
+        JS_ASSERT(!callsite);
+        JS_ASSERT(callerCodeRange->isFunction());
+    } else {
+        JS_ASSERT(callsite);
+        JS_ASSERT(callerFP == (uint8_t*)fp + callsite->stackDepth());
+    }
 #endif
 }
 
@@ -430,15 +437,16 @@ AsmJSProfilingFrameIterator::initFromFP(const AsmJSActivation &activation)
         callerFP_ = nullptr;
         break;
       case AsmJSModule::CodeRange::Function:
-      case AsmJSModule::CodeRange::FFI:
-      case AsmJSModule::CodeRange::Interrupt:
-      case AsmJSModule::CodeRange::Inline:
-        AssertMatchesCallSite(*module_, pc, CallerFPFromFP(fp), fp);
         fp = CallerFPFromFP(fp);
         callerPC_ = ReturnAddressFromFP(fp);
         callerFP_ = CallerFPFromFP(fp);
-        AssertMatchesCallSite(*module_, callerPC_, callerFP_, fp);
+        AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, fp);
         break;
+      case AsmJSModule::CodeRange::FFI:
+      case AsmJSModule::CodeRange::Interrupt:
+      case AsmJSModule::CodeRange::Inline:
+      case AsmJSModule::CodeRange::Thunk:
+        MOZ_CRASH("Unexpected CodeRange kind");
     }
 
     JS_ASSERT(!done());
@@ -451,7 +459,7 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation &
   : module_(&activation.module()),
     callerFP_(nullptr),
     callerPC_(nullptr),
-    exitReason_(AsmJSNoExit),
+    exitReason_(AsmJSExit::None),
     codeRange_(nullptr)
 {
     // If profiling hasn't been enabled for this module, then CallerFPFromFP
@@ -478,7 +486,8 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation &
     switch (codeRange->kind()) {
       case AsmJSModule::CodeRange::Function:
       case AsmJSModule::CodeRange::FFI:
-      case AsmJSModule::CodeRange::Interrupt: {
+      case AsmJSModule::CodeRange::Interrupt:
+      case AsmJSModule::CodeRange::Thunk: {
         // While codeRange describes the *current* frame, the fp/pc state stored in
         // the iterator is the *caller's* frame. The reason for this is that the
         // activation.fp isn't always the AsmJSFrame for state.pc; during the
@@ -498,22 +507,22 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation &
         if (offsetInCodeRange < PushedRetAddr) {
             callerPC_ = state.lr;
             callerFP_ = fp;
-            AssertMatchesCallSite(*module_, callerPC_, callerFP_, sp - 2);
+            AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, sp - 2);
         } else
 #endif
         if (offsetInCodeRange < PushedFP || offsetInModule == codeRange->profilingReturn()) {
             callerPC_ = *sp;
             callerFP_ = fp;
-            AssertMatchesCallSite(*module_, callerPC_, callerFP_, sp - 1);
+            AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, sp - 1);
         } else if (offsetInCodeRange < StoredFP) {
             JS_ASSERT(fp == CallerFPFromFP(sp));
             callerPC_ = ReturnAddressFromFP(sp);
             callerFP_ = CallerFPFromFP(sp);
-            AssertMatchesCallSite(*module_, callerPC_, callerFP_, sp);
+            AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, sp);
         } else {
             callerPC_ = ReturnAddressFromFP(fp);
             callerFP_ = CallerFPFromFP(fp);
-            AssertMatchesCallSite(*module_, callerPC_, callerFP_, fp);
+            AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, fp);
         }
         break;
       }
@@ -538,7 +547,7 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation &
         // as below.
         callerPC_ = ReturnAddressFromFP(fp);
         callerFP_ = CallerFPFromFP(fp);
-        AssertMatchesCallSite(*module_, callerPC_, callerFP_, fp);
+        AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, fp);
         break;
       }
     }
@@ -550,9 +559,9 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation &
 void
 AsmJSProfilingFrameIterator::operator++()
 {
-    if (exitReason_ != AsmJSNoExit) {
+    if (exitReason_ != AsmJSExit::None) {
         JS_ASSERT(codeRange_);
-        exitReason_ = AsmJSNoExit;
+        exitReason_ = AsmJSExit::None;
         JS_ASSERT(!done());
         return;
     }
@@ -578,8 +587,9 @@ AsmJSProfilingFrameIterator::operator++()
       case AsmJSModule::CodeRange::FFI:
       case AsmJSModule::CodeRange::Interrupt:
       case AsmJSModule::CodeRange::Inline:
+      case AsmJSModule::CodeRange::Thunk:
         callerPC_ = ReturnAddressFromFP(callerFP_);
-        AssertMatchesCallSite(*module_, callerPC_, CallerFPFromFP(callerFP_), callerFP_);
+        AssertMatchesCallSite(*module_, codeRange, callerPC_, CallerFPFromFP(callerFP_), callerFP_);
         callerFP_ = CallerFPFromFP(callerFP_);
         break;
     }
@@ -592,12 +602,14 @@ AsmJSProfilingFrameIterator::kind() const
 {
     JS_ASSERT(!done());
 
-    switch (exitReason_) {
-      case AsmJSNoExit:
+    switch (AsmJSExit::ExtractReasonKind(exitReason_)) {
+      case AsmJSExit::Reason_None:
         break;
-      case AsmJSInterrupt:
-      case AsmJSFFI:
+      case AsmJSExit::Reason_Interrupt:
+      case AsmJSExit::Reason_FFI:
         return JS::ProfilingFrameIterator::AsmJSTrampoline;
+      case AsmJSExit::Reason_Builtin:
+        return JS::ProfilingFrameIterator::CppFunction;
     }
 
     auto codeRange = reinterpret_cast<const AsmJSModule::CodeRange*>(codeRange_);
@@ -609,6 +621,8 @@ AsmJSProfilingFrameIterator::kind() const
       case AsmJSModule::CodeRange::Interrupt:
       case AsmJSModule::CodeRange::Inline:
         return JS::ProfilingFrameIterator::AsmJSTrampoline;
+      case AsmJSModule::CodeRange::Thunk:
+        return JS::ProfilingFrameIterator::CppFunction;
     }
 
     MOZ_ASSUME_UNREACHABLE("Bad kind");
@@ -628,23 +642,55 @@ AsmJSProfilingFrameIterator::functionFilename() const
     return module_->scriptSource()->filename();
 }
 
+static const char *
+BuiltinToName(AsmJSExit::BuiltinKind builtin)
+{
+    switch (builtin) {
+      case AsmJSExit::Builtin_ToInt32:   return "ToInt32";
+#if defined(JS_CODEGEN_ARM)
+      case AsmJSExit::Builtin_IDivMod:   return "software idivmod";
+      case AsmJSExit::Builtin_UDivMod:   return "software uidivmod";
+#endif
+      case AsmJSExit::Builtin_ModD:      return "fmod";
+      case AsmJSExit::Builtin_SinD:      return "Math.sin";
+      case AsmJSExit::Builtin_CosD:      return "Math.cos";
+      case AsmJSExit::Builtin_TanD:      return "Math.tan";
+      case AsmJSExit::Builtin_ASinD:     return "Math.asin";
+      case AsmJSExit::Builtin_ACosD:     return "Math.acos";
+      case AsmJSExit::Builtin_ATanD:     return "Math.atan";
+      case AsmJSExit::Builtin_CeilD:
+      case AsmJSExit::Builtin_CeilF:     return "Math.ceil";
+      case AsmJSExit::Builtin_FloorD:
+      case AsmJSExit::Builtin_FloorF:    return "Math.floor";
+      case AsmJSExit::Builtin_ExpD:      return "Math.exp";
+      case AsmJSExit::Builtin_LogD:      return "Math.log";
+      case AsmJSExit::Builtin_PowD:      return "Math.pow";
+      case AsmJSExit::Builtin_ATan2D:    return "Math.atan2";
+      case AsmJSExit::Builtin_Limit:     break;
+    }
+    MOZ_ASSUME_UNREACHABLE("Bad builtin kind");
+}
+
 const char *
 AsmJSProfilingFrameIterator::nonFunctionDescription() const
 {
     JS_ASSERT(!done());
+    JS_ASSERT(kind() != JS::ProfilingFrameIterator::Function);
 
     // Use the same string for both time inside and under so that the two
     // entries will be coalesced by the profiler.
     const char *ffiDescription = "asm.js FFI trampoline";
     const char *interruptDescription = "asm.js slow script interrupt";
 
-    switch (exitReason_) {
-      case AsmJSNoExit:
+    switch (AsmJSExit::ExtractReasonKind(exitReason_)) {
+      case AsmJSExit::Reason_None:
         break;
-      case AsmJSFFI:
+      case AsmJSExit::Reason_FFI:
         return ffiDescription;
-      case AsmJSInterrupt:
+      case AsmJSExit::Reason_Interrupt:
         return interruptDescription;
+      case AsmJSExit::Reason_Builtin:
+        return BuiltinToName(AsmJSExit::ExtractBuiltinKind(exitReason_));
     }
 
     auto codeRange = reinterpret_cast<const AsmJSModule::CodeRange*>(codeRange_);
@@ -654,8 +700,9 @@ AsmJSProfilingFrameIterator::nonFunctionDescription() const
       case AsmJSModule::CodeRange::FFI:       return ffiDescription;
       case AsmJSModule::CodeRange::Interrupt: return interruptDescription;
       case AsmJSModule::CodeRange::Inline:    return "asm.js inline stub";
+      case AsmJSModule::CodeRange::Thunk:     return BuiltinToName(codeRange->thunkTarget());
     }
 
-    MOZ_ASSUME_UNREACHABLE("Bad kind");
+    MOZ_ASSUME_UNREACHABLE("Bad exit kind");
 }
 
