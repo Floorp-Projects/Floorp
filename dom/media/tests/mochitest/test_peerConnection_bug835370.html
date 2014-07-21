@@ -32,24 +32,15 @@
     ok(!exception, "createOffer(step1, failed, {}) succeeds");
     exception = null;
     try {
-        pconnect.createOffer(step1, failed, { mandatory: { FooBar: true } });
+        pconnect.updateIce();
     } catch (e) {
-        ok(e.message.indexOf("FooBar") > 0, "createOffer has readable exceptions");
+        ok(e.message.indexOf("updateIce") >= 0, "PeerConnection.js has readable exceptions");
         exception = e;
     }
-    ok(exception, "createOffer(step1, failed, { mandatory: { FooBar: true } }) throws");
+    ok(exception, "updateIce not yet implemented and throws");
     exception = null;
-    try { pconnects.createOffer(step1, failed, { optional: [] }); } catch (e) { exception = e; }
-    ok(!exception, "createOffer(step1, failed, { optional: [] }) succeeds");
-    exception = null;
-    try { pconnect.createOffer(step1, failed, { optional: [1] }); } catch (e) { exception = e; }
-    ok(exception, "createOffer(step1, failed, { optional: [1] }) throws");
-    exception = null;
-    try { pconnect.createOffer(step1, failed, { optional: [{ OfferToReceiveVideo: false, OfferToReceiveAudio: true, }] }); } catch (e) { exception = e; }
-    ok(exception, "createOffer(step1, failed, { optional: [{ OfferToReceiveVideo: false, OfferToReceiveAudio: true, }] }) throws");
-    exception = null;
-    try { pconnects.createOffer(step1, failed, { mandatory: { OfferToReceiveVideo: false, OfferToReceiveAudio: true, MozDontOfferDataChannel: true}, optional: [{ VoiceActivityDetection: true }, { FooBar: "42"  }] }); } catch (e) { exception = e; }
-    ok(!exception, "createOffer(step1, failed, { mandatory: { OfferToReceiveVideo: false, OfferToReceiveAudio: true, MozDontOfferDataChannel: true}, optional: [{ VoiceActivityDetection: true }, { FooBar: \"42\"  }] }) succeeds");
+    try { pconnects.createOffer(step1, failed, { offerToReceiveVideo: false, offerToReceiveAudio: true, MozDontOfferDataChannel: true }); } catch (e) { exception = e; }
+    ok(!exception, "createOffer(step1, failed, { offerToReceiveVideo: false, offerToReceiveAudio: true, MozDontOfferDataChannel: true }) succeeds");
     pconnect.close();
     pconnects.close();
     pconnect = null;

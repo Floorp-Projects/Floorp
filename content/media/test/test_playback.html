@@ -10,13 +10,37 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+//longer timeout for sometimes B2G emulator runs very slowly
+if (SpecialPowers.Services.appinfo.name == "B2G") {
+  SimpleTest.requestLongerTimeout(3);
+}
+
 var manager = new MediaTestManager;
+
+function localCheckMetadata(msg, e, test) {
+  if (test.width) {
+    is(e.videoWidth, test.width, msg + " video width");
+  }
+  if (test.height) {
+    is(e.videoHeight, test.height, msg + " video height");
+  }
+  if (test.duration) {
+    // see bug 1039901 for skipping mp3 duration test on B2G
+    if (SpecialPowers.Services.appinfo.name == "B2G" && /mp3$/.test(test.name)) {
+      todo(false, "Fix mp3 duration bug on B2G");
+      return;
+    }
+    ok(Math.abs(e.duration - test.duration) < 0.1,
+       msg + " duration (" + e.duration + ") should be around " + test.duration);
+  }
+}
 
 function startTest(test, token) {
   var v = document.createElement('video');
   v.preload = "metadata";
   v.token = token;
   manager.started(token);
+  var checkMetadata = localCheckMetadata;
 
   v.src = test.name;
   v.name = test.name;
