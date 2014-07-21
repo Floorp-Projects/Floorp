@@ -1699,6 +1699,9 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
         profiler_->enterNative("asm.js code :0", this);
     }
 
+    prevAsmJSForModule_ = module.activation();
+    module.activation() = this;
+
     prevAsmJS_ = cx->mainThread().asmJSActivationStack_;
 
     JSRuntime::AutoLockForInterrupt lock(cx->runtime());
@@ -1711,6 +1714,9 @@ AsmJSActivation::~AsmJSActivation()
 {
     if (profiler_)
         profiler_->exitNative();
+
+    JS_ASSERT(module_.activation() == this);
+    module_.activation() = prevAsmJSForModule_;
 
     JSContext *cx = cx_->asJSContext();
     JS_ASSERT(cx->mainThread().asmJSActivationStack_ == this);

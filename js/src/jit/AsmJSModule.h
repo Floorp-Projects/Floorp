@@ -904,10 +904,10 @@ class AsmJSModule
     // The global data section is placed after the executable code (i.e., at
     // offset codeBytes_) in the module's linear allocation. The global data
     // are laid out in this order:
-    //   0. a pointer (padded up to 8 bytes to ensure double-alignment of
-    //      globals) for the heap that was linked to the module.
-    //   1. global variable state (elements are sizeof(uint64_t))
-    //   2. interleaved function-pointer tables and exits. These are allocated
+    //   0. a pointer to the current AsmJSActivation
+    //   1. a pointer to the heap that was linked to the module
+    //   2. global variable state (elements are sizeof(uint64_t))
+    //   3. interleaved function-pointer tables and exits. These are allocated
     //      while type checking function bodies (as exits and uses of
     //      function-pointer tables are encountered).
     size_t offsetOfGlobalData() const {
@@ -919,21 +919,32 @@ class AsmJSModule
         return code_ + offsetOfGlobalData();
     }
     size_t globalDataBytes() const {
-        return sizeof(uint64_t) +
+        return sizeof(void*) +
+               sizeof(void*) +
                pod.numGlobalVars_ * sizeof(uint64_t) +
                pod.funcPtrTableAndExitBytes_;
     }
-    static unsigned heapGlobalDataOffset() {
+    static unsigned activationGlobalDataOffset() {
         return 0;
+    }
+    AsmJSActivation *&activation() const {
+        return *(AsmJSActivation**)(globalData() + activationGlobalDataOffset());
+    }
+    static unsigned heapGlobalDataOffset() {
+        return sizeof(void*);
     }
     uint8_t *&heapDatum() const {
         JS_ASSERT(isFinished());
         return *(uint8_t**)(globalData() + heapGlobalDataOffset());
     }
+    unsigned globalVariableOffset() const {
+        static_assert((2 * sizeof(void*)) % sizeof(double) == 0, "Global data should be aligned");
+        return 2 * sizeof(void*);
+    }
     unsigned globalVarIndexToGlobalDataOffset(unsigned i) const {
         JS_ASSERT(isFinishedWithModulePrologue());
         JS_ASSERT(i < pod.numGlobalVars_);
-        return sizeof(uint64_t) +
+        return globalVariableOffset() +
                i * sizeof(uint64_t);
     }
     void *globalVarIndexToGlobalDatum(unsigned i) const {

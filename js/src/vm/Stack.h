@@ -1475,6 +1475,7 @@ class AsmJSActivation : public Activation
 {
     AsmJSModule &module_;
     AsmJSActivation *prevAsmJS_;
+    AsmJSActivation *prevAsmJSForModule_;
     void *errorRejoinSP_;
     SPSProfiler *profiler_;
     void *resumePC_;
