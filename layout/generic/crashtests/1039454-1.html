@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<body>
+<div id="outer" style="width:200px; height:200px; background:blue; transform:translateY(10px)">
+  <div id="inner" style="width:200px; height:100px; background:yellow; transform:translateX(100px)">
+  </div>
+</div>
+<script>
+console.log(outer.getBoundingClientRect());
+outer.style.width = "400px";
+console.log(outer.getBoundingClientRect());
+outer.style.transform = "translateY(100px)";
+</script>
