@@ -9,7 +9,7 @@ function test() {
   waitForExplicitFinish();
 
   // open a new window and setup the window state.
-  newWin = openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no");
+  newWin = openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", "about:blank");
   whenWindowLoaded(newWin, function () {
     let newState = {
       windows: [{
