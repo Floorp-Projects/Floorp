@@ -10,10 +10,11 @@ if (jco["signals.enable"] === 0 || !isCachingEnabled() || !isAsmJSCompilationAva
 // handlers have been reactivated.
 setJitCompilerOption("signals.enable", 0);
 
-var code = USE_ASM + "/* deactivate-reactivate-signals */ function f() {} function g() { while(1) { f() } } return g";
+var code = USE_ASM + "function f() {} function g() { while(1) { f() } } return g";
 
 var m = asmCompile(code);
 assertEq(isAsmJSModule(m), true);
+assertEq(isAsmJSModuleLoadedFromCache(m), false);
 
 setJitCompilerOption("signals.enable", 1);
 
