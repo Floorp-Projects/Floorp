@@ -635,7 +635,13 @@ MozMtpDatabase::getObjectInfo(MtpObjectHandle aHandle,
   aInfo.mStorageID = entry->mStorageID;
   aInfo.mFormat = entry->mObjectFormat;
   aInfo.mProtectionStatus = 0x0;
-  aInfo.mCompressedSize = 0;
+
+  if (entry->mObjectSize > 0xFFFFFFFFuLL) {
+    aInfo.mCompressedSize = 0xFFFFFFFFuLL;
+  } else {
+    aInfo.mCompressedSize = entry->mObjectSize;
+  }
+
   aInfo.mThumbFormat = entry->mObjectFormat;
   aInfo.mThumbCompressedSize = 20*20*4;
   aInfo.mThumbPixWidth = 20;
@@ -748,18 +754,36 @@ MozMtpDatabase::getObjectPropertyDesc(MtpObjectProperty aProperty,
 {
   MTP_LOG("Property: %s 0x%08x", ObjectPropertyAsStr(aProperty), aProperty);
 
-  // TODO: Perhaps Filesize should be 64-bit?
-
   MtpProperty* result = nullptr;
   switch (aProperty)
   {
-    case MTP_PROPERTY_STORAGE_ID:       result = new MtpProperty(aProperty, MTP_TYPE_UINT32); break;
-    case MTP_PROPERTY_OBJECT_FORMAT:    result = new MtpProperty(aProperty, MTP_TYPE_UINT32); break;
-    case MTP_PROPERTY_OBJECT_SIZE:      result = new MtpProperty(aProperty, MTP_TYPE_UINT32); break;
-    case MTP_PROPERTY_WIDTH:            result = new MtpProperty(aProperty, MTP_TYPE_UINT32); break;
-    case MTP_PROPERTY_HEIGHT:           result = new MtpProperty(aProperty, MTP_TYPE_UINT32); break;
-    case MTP_PROPERTY_IMAGE_BIT_DEPTH:  result = new MtpProperty(aProperty, MTP_TYPE_UINT32); break;
-    case MTP_PROPERTY_DISPLAY_NAME:     result = new MtpProperty(aProperty, MTP_TYPE_STR); break;
+    case MTP_PROPERTY_PROTECTION_STATUS:
+      result = new MtpProperty(aProperty, MTP_TYPE_UINT16);
+      break;
+    case MTP_PROPERTY_OBJECT_FORMAT:
+      result = new MtpProperty(aProperty, MTP_TYPE_UINT16, false, aFormat);
+      break;
+    case MTP_PROPERTY_STORAGE_ID:
+    case MTP_PROPERTY_PARENT_OBJECT:
+    case MTP_PROPERTY_WIDTH:
+    case MTP_PROPERTY_HEIGHT:
+    case MTP_PROPERTY_IMAGE_BIT_DEPTH:
+      result = new MtpProperty(aProperty, MTP_TYPE_UINT32);
+      break;
+    case MTP_PROPERTY_OBJECT_SIZE:
+      result = new MtpProperty(aProperty, MTP_TYPE_UINT64);
+      break;
+    case MTP_PROPERTY_DISPLAY_NAME:
+      result = new MtpProperty(aProperty, MTP_TYPE_STR);
+      break;
+    case MTP_PROPERTY_OBJECT_FILE_NAME:
+      result = new MtpProperty(aProperty, MTP_TYPE_STR, true);
+      break;
+    case MTP_PROPERTY_DATE_MODIFIED:
+    case MTP_PROPERTY_DATE_ADDED:
+      result = new MtpProperty(aProperty, MTP_TYPE_STR);
+      result->setFormDateTime();
+      break;
     default:
       break;
   }
