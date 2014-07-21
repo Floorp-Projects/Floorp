@@ -1,15 +1,19 @@
+/** @jsx React.DOM */
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* jshint newcap:false, esnext:true */
-/* global loop:true */
+/* global loop:true, React */
 
 var loop = loop || {};
 loop.conversation = (function(OT, mozL10n) {
   "use strict";
 
-  var sharedViews = loop.shared.views;
+  var sharedViews = loop.shared.views,
+      // aliasing translation function as __ for concision
+      __ = mozL10n.get;
 
   /**
    * App router.
@@ -17,44 +21,59 @@ loop.conversation = (function(OT, mozL10n) {
    */
   var router;
 
-  /**
-   * Incoming call view.
-   * @type {loop.shared.views.BaseView}
-   */
-  var IncomingCallView = sharedViews.BaseView.extend({
-    template: _.template([
-      '<h2 data-l10n-id="incoming_call"></h2>',
-      '<p>',
-      '  <button class="btn btn-success btn-accept"',
-      '           data-l10n-id="accept_button"></button>',
-      '  <button class="btn btn-error btn-decline"',
-      '           data-l10n-id="decline_button"></button>',
-      '</p>'
-    ].join("")),
+  var IncomingCallView = React.createClass({displayName: 'IncomingCallView',
 
-    className: "incoming-call",
-
-    events: {
-      "click .btn-accept": "handleAccept",
-      "click .btn-decline": "handleDecline"
+    propTypes: {
+      model: React.PropTypes.func.isRequired
     },
 
     /**
-     * User clicked on the "accept" button.
-     * @param  {MouseEvent} event
-     */
-    handleAccept: function(event) {
-      event.preventDefault();
-      this.model.trigger("accept");
+     * Used for adding different styles to the panel
+     * @returns {String} Corresponds to the client platform
+     * */
+    _getTargetPlatform: function() {
+      var platform="unknown_platform";
+
+      if (navigator.platform.indexOf("Win") !== -1) {
+        platform = "windows";
+      }
+      if (navigator.platform.indexOf("Mac") !== -1) {
+        platform = "mac";
+      }
+      if (navigator.platform.indexOf("Linux") !== -1) {
+        platform = "linux";
+      }
+
+      return platform;
     },
 
-    /**
-     * User clicked on the "decline" button.
-     * @param  {MouseEvent} event
-     */
-    handleDecline: function(event) {
-      event.preventDefault();
-      this.model.trigger("decline");
+    _handleAccept: function() {
+      this.props.model.trigger("accept");
+    },
+
+    _handleDecline: function() {
+      this.props.model.trigger("decline");
+    },
+
+    render: function() {
+      /* jshint ignore:start */
+      var btnClassAccept = "btn btn-error btn-decline";
+      var btnClassDecline = "btn btn-success btn-accept";
+      var conversationPanelClass = "incoming-call " + this._getTargetPlatform();
+      return (
+        React.DOM.div( {className:conversationPanelClass}, 
+          React.DOM.h2(null, __("incoming_call")),
+          React.DOM.div( {className:"button-group"}, 
+            React.DOM.button( {className:btnClassAccept, onClick:this._handleDecline}, 
+              __("incoming_call_decline_button")
+            ),
+            React.DOM.button( {className:btnClassDecline, onClick:this._handleAccept}, 
+              __("incoming_call_answer_button")
+            )
+          )
+        )
+      );
+      /* jshint ignore:end */
     }
   });
 
@@ -129,7 +148,9 @@ loop.conversation = (function(OT, mozL10n) {
       this._conversation.once("decline", function() {
         this.navigate("call/decline", {trigger: true});
       }.bind(this));
-      this.loadView(new IncomingCallView({model: this._conversation}));
+      this.loadReactComponent(loop.conversation.IncomingCallView({
+        model: this._conversation
+      }));
     },
 
     /**

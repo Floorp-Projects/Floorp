@@ -389,7 +389,7 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest)
 
   RefPtr<SourceSurface> surface =
     imageContainer->GetFrame(imgIContainer::FRAME_CURRENT,
-                             imgIContainer::FLAG_NONE);
+                             imgIContainer::FLAG_SYNC_DECODE);
   if (!surface) {
     [mNativeMenuItem setImage:nil];
     return NS_ERROR_FAILURE;
@@ -405,7 +405,7 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest)
   bool createSubImage = !(mImageRegionRect.x == 0 && mImageRegionRect.y == 0 &&
                             mImageRegionRect.width == origWidth && mImageRegionRect.height == origHeight);
   
-  CGImageRef finalImage = NULL;
+  CGImageRef finalImage = origImage;
   if (createSubImage) {
     // if mImageRegionRect is set using CSS, we need to slice a piece out of the overall 
     // image to use as the icon
@@ -419,51 +419,21 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest)
       [mNativeMenuItem setImage:nil];
       return NS_ERROR_FAILURE;  
     }
-  } else {
-    finalImage = origImage;
   }
-  // The image may not be the right size for a menu icon (16x16).
-  // Create a new CGImage for the menu item.
-  uint8_t* bitmap = (uint8_t*)malloc(kIconBytes);
-
-  CGColorSpaceRef colorSpace = ::CGColorSpaceCreateDeviceRGB();
-
-  CGContextRef bitmapContext = ::CGBitmapContextCreate(bitmap, kIconWidth, kIconHeight,
-                                                       kIconBitsPerComponent,
-                                                       kIconBytesPerRow,
-                                                       colorSpace,
-                                                       kCGImageAlphaPremultipliedLast);
-  ::CGColorSpaceRelease(colorSpace);
-  if (!bitmapContext) {
-    ::CGImageRelease(finalImage);
-    free(bitmap);
-    ::CGColorSpaceRelease(colorSpace);
-    return NS_ERROR_FAILURE;
-  }
-  CGRect iconRect = ::CGRectMake(0, 0, kIconWidth, kIconHeight);
-  ::CGContextClearRect(bitmapContext, iconRect);
-  ::CGContextDrawImage(bitmapContext, iconRect, finalImage);
-  
-  CGImageRef iconImage = ::CGBitmapContextCreateImage(bitmapContext);
-
-  ::CGImageRelease(finalImage);
-  ::CGContextRelease(bitmapContext);
-  free(bitmap);
- 
-  if (!iconImage) return NS_ERROR_FAILURE;
 
   NSImage *newImage = nil;
-  rv = nsCocoaUtils::CreateNSImageFromCGImage(iconImage, &newImage);
+  rv = nsCocoaUtils::CreateNSImageFromCGImage(finalImage, &newImage);
   if (NS_FAILED(rv) || !newImage) {    
     [mNativeMenuItem setImage:nil];
-    ::CGImageRelease(iconImage);
+    ::CGImageRelease(finalImage);
     return NS_ERROR_FAILURE;
   }
 
+  [newImage setSize:NSMakeSize(kIconWidth, kIconHeight)];
   [mNativeMenuItem setImage:newImage];
   
   [newImage release];
-  ::CGImageRelease(iconImage);
+  ::CGImageRelease(finalImage);
 
   mLoadedIcon = true;
   mSetIcon = true;

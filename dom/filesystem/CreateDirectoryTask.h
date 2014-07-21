@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "nsAutoPtr.h"
+#include "mozilla/ErrorResult.h"
 
 namespace mozilla {
 namespace dom {
@@ -20,7 +21,8 @@ class CreateDirectoryTask MOZ_FINAL
 {
 public:
   CreateDirectoryTask(FileSystemBase* aFileSystem,
-                      const nsAString& aPath);
+                      const nsAString& aPath,
+                      ErrorResult& aRv);
   CreateDirectoryTask(FileSystemBase* aFileSystem,
                       const FileSystemCreateDirectoryParams& aParam,
                       FileSystemRequestParent* aParent);

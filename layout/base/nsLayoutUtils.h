@@ -500,6 +500,14 @@ public:
                                               nsDisplayListBuilder* aBuilder);
 
   /**
+   * Finds the nearest ancestor frame to aFrame that is considered to have (or
+   * will have) "animated geometry". This could be aFrame. Returns
+   * aStopAtAncestor if no closer ancestor is found.
+   */
+  static nsIFrame* GetAnimatedGeometryRootForFrame(nsIFrame* aFrame,
+                                                   const nsIFrame* aStopAtAncestor);
+
+  /**
     * GetScrollableFrameFor returns the scrollable frame for a scrolled frame
     */
   static nsIScrollableFrame* GetScrollableFrameFor(const nsIFrame *aScrolledFrame);

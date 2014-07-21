@@ -103,6 +103,10 @@ tv = {
   aes_gcm_enc: {
     key: util.hex2abv("feffe9928665731c6d6a8f9467308308" +
                       "feffe9928665731c6d6a8f9467308308"),
+    key_jwk: {
+      kty: "oct",
+      k: "_v_pkoZlcxxtao-UZzCDCP7_6ZKGZXMcbWqPlGcwgwg"
+    },
     iv: util.hex2abv("9313225df88406e555909c5aff5269aa" +
                      "6a7a9538534f7da1e4c303d2a318a728" +
                      "c3c0c95156809539fcf0e2429a6b5254" +
@@ -273,6 +277,26 @@ tv = {
       "4a81f3a528cbfb27f56886f840a9f6e86e17a44b94fe9319584b8e22fdde1e5a" +
       "2e3bd8aa5ba8d8584194eb2190acf832b847f13a3d24a79f4d"
     ),
+    jwk_priv: {
+      kty: "RSA",
+      n:  "pW5KDnAQF1iaUYfcfqhB0Vby7A42rVKkTf6x5h962ZHYxRBW_-2xYrTA8oOhK" +
+          "oijlN_1JqtykcuzB86r_OCx39XNlQgJbVsri2311nHvY3fAkhyyPCcKcOJZjm" +
+          "_4nRnxBazC0_DLNfKSgOE4a29kxO8i4eHyDQzoz_siSb2aITc",
+      e:  "AQAB",
+      d:  "M6UEKpCyfU9UUcqbu9C0R3GhAa-IQ0Cu-YhfKku-kuiUpySsPFaMj5eFOtB8A" +
+          "mbIxqPKCSnx6PESMYhEKfxNmuVf7olqEM5wfD7X5zTkRyejlXRQGlMmgxCcKr" +
+          "rKuig8MbS9L1PD7jfjUs7jT55QO9gMBiKtecbc7og1R8ajsyU",
+      p:  "5-iUJyCod1Fyc6NWBT6iobwMlKpy1VxuhilrLfyWeUjApyy8zKfqyzVwbgmh31W" +
+          "hU1vZs8w0Fgs7bc0-2o5kQw",
+      q:  "tp3KHPfU1-yB51uQ_MqHSrzeEj_ScAGAqpBHm25I3o1n7ST58Z2FuidYdPVCz" +
+          "SDccj5pYzZKH5QlRSsmmmeZ_Q",
+      dp: "KPoTk4ZVvh-KFZy6ylpy6hkMMAieGc0nSlVvNsT24Z9VSzTAd3kEJ7vdjdPt4" +
+          "kSDKPOF2Bsw6OQ7L_-gJ4YZeQ",
+      dq: "Gos485j6cSBJiY1_t57gp3ZoeRKZzfoJ78DlB6yyHtdDAe9b_Ui-RV6utuFng" +
+          "lWCdYCo5OjhQVHRUQqCo_LnKQ",
+      qi: "JxVqukEm0kqB86Uoy_sn9WiG-ECp9uhuF6RLlP6TGVhLjiL93h5aLjvYqluo2" +
+          "FhBlOshkKz4MrhH8To9JKefTQ"
+    },
     spki: util.hex2abv(
       "30819f300d06092a864886f70d010101050003818d0030818902818100a56e4a" +
       "0e701017589a5187dc7ea841d156f2ec0e36ad52a44dfeb1e61f7ad991d8c510" +
@@ -281,6 +305,13 @@ tv = {
       "d3f0cb35f29280e1386b6f64c4ef22e1e1f20d0ce8cffb2249bd9a2137020301" +
       "0001"
     ),
+    jwk_pub: {
+      kty: "RSA",
+      n:  "pW5KDnAQF1iaUYfcfqhB0Vby7A42rVKkTf6x5h962ZHYxRBW_-2xYrTA8oOhK" +
+          "oijlN_1JqtykcuzB86r_OCx39XNlQgJbVsri2311nHvY3fAkhyyPCcKcOJZjm" +
+          "_4nRnxBazC0_DLNfKSgOE4a29kxO8i4eHyDQzoz_siSb2aITc",
+      e:  "AQAB",
+    },
     data: util.hex2abv(
       "a4b159941761c40c6a82f2b80d1b94f5aa2654fd17e12d588864679b54cd04ef" +
       "8bd03012be8dc37f4b83af7963faff0dfa225477437c48017ff2be8191cf3955" +
@@ -353,6 +384,31 @@ tv = {
       "a9d7bfc5b8dd9fc243f8cf927db31322d6e881eaa91a996170e657a05a266426" +
       "d98c88003f8477c1227094a0d9fa1e8c4024309ce1ecccb5210035d47ac72e8a"
     ),
+  },
+
+  key_wrap_known_answer: {
+    key:          util.hex2abv("0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a"),
+    wrapping_key: util.hex2abv("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"),
+    wrapping_iv:  util.hex2abv("0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c"),
+    wrapped_key:  util.hex2abv("9ed0283a9a2b7e4292ebc5135e6342cc" +
+                               "8a7f65802a1f6fd41bd3251c4da0c138")
+  },
+
+  // AES Key Wrap
+  // From RFC 3394, "Wrap 128 bits of Key Data with a 256-bit KEK"
+  // http://tools.ietf.org/html/rfc3394#section-4.3
+  aes_kw: {
+    wrapping_key: {
+      kty: "oct",
+      alg: "A256KW",
+      k:   "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8"
+    },
+    key: {
+      kty: "oct",
+      k:   "ABEiM0RVZneImaq7zN3u_w"
+    },
+    wrapped_key: util.hex2abv("64e8c3f9ce0f5ba263e9777905818a2a"+
+                              "93c8191e7d6e8ae7")
   },
 
   // RFC 6070 <http://tools.ietf.org/html/rfc6070>

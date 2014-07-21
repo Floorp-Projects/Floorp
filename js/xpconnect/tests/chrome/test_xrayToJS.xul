@@ -149,7 +149,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   // Xray-safe.
   //
   // DO NOT CHANGE WTIHOUT REVIEW FROM AN XPCONNECT PEER.
-  var isReleaseBuild = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).isReleaseBuild;
+  var version = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).version;
+  var isNightlyBuild = version.endsWith("a1");
+  var isReleaseBuild = !version.contains("a");
   var gPrototypeProperties = {};
   gPrototypeProperties['Date'] =
     ["getTime", "getTimezoneOffset", "getYear", "getFullYear", "getUTCFullYear",
@@ -171,9 +173,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   gPrototypeProperties['Array'] =
     ["length", "toSource", "toString", "toLocaleString", "join", "reverse", "sort", "push",
       "pop", "shift", "unshift", "splice", "concat", "slice", "lastIndexOf", "indexOf",
-      "forEach", "map", "reduce", "reduceRight", "filter", "some", "every", "mapPar",
-      "reducePar", "scanPar", "scatterPar", "filterPar", "find", "findIndex", "copyWithin",
-      "fill", "@@iterator", "entries", "keys", "constructor"];
+      "forEach", "map", "reduce", "reduceRight", "filter", "some", "every", "find",
+      "findIndex", "copyWithin", "fill", "@@iterator", "entries", "keys", "constructor"];
+  if (isNightlyBuild) {
+    let pjsMethods = ['mapPar', 'reducePar', 'scanPar', 'scatterPar', 'filterPar'];
+    gPrototypeProperties['Array'] = gPrototypeProperties['Array'].concat(pjsMethods);
+  }
   for (var c of typedArrayClasses) {
     gPrototypeProperties[c] = ["constructor", "BYTES_PER_ELEMENT", "length", "buffer",
                                "byteLength", "byteOffset", "@@iterator", "subarray", "set"];
@@ -208,8 +213,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     let localProto = window[classname].prototype;
     is(Object.getOwnPropertyNames(localProto).sort().toSource(),
        gPrototypeProperties[classname].sort().toSource(),
-       "A new property on the " + classname +
-       " prototype has been added! You need a security audit from an XPConnect peer");
+       "A property on the " + classname +
+       " prototype has changed! You need a security audit from an XPConnect peer");
 
     let protoProps = filterOut(Object.getOwnPropertyNames(localProto), propsToSkip).sort();
     let protoCallables = protoProps.filter(name => Object.getOwnPropertyDescriptor(localProto, name).get ||

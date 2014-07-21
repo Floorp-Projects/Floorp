@@ -17,6 +17,44 @@ AesKeyAlgorithm::WrapObject(JSContext* aCx)
   return AesKeyAlgorithmBinding::Wrap(aCx, this);
 }
 
+nsString
+AesKeyAlgorithm::ToJwkAlg() const
+{
+  if (mName.EqualsLiteral(WEBCRYPTO_ALG_AES_CBC)) {
+    switch (mLength) {
+      case 128: return NS_LITERAL_STRING(JWK_ALG_A128CBC);
+      case 192: return NS_LITERAL_STRING(JWK_ALG_A192CBC);
+      case 256: return NS_LITERAL_STRING(JWK_ALG_A256CBC);
+    }
+  }
+
+  if (mName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR)) {
+    switch (mLength) {
+      case 128: return NS_LITERAL_STRING(JWK_ALG_A128CTR);
+      case 192: return NS_LITERAL_STRING(JWK_ALG_A192CTR);
+      case 256: return NS_LITERAL_STRING(JWK_ALG_A256CTR);
+    }
+  }
+
+  if (mName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM)) {
+    switch (mLength) {
+      case 128: return NS_LITERAL_STRING(JWK_ALG_A128GCM);
+      case 192: return NS_LITERAL_STRING(JWK_ALG_A192GCM);
+      case 256: return NS_LITERAL_STRING(JWK_ALG_A256GCM);
+    }
+  }
+
+  if (mName.EqualsLiteral(WEBCRYPTO_ALG_AES_KW)) {
+    switch (mLength) {
+      case 128: return NS_LITERAL_STRING(JWK_ALG_A128KW);
+      case 192: return NS_LITERAL_STRING(JWK_ALG_A192KW);
+      case 256: return NS_LITERAL_STRING(JWK_ALG_A256KW);
+    }
+  }
+
+  return nsString();
+}
+
 bool
 AesKeyAlgorithm::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
 {

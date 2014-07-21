@@ -5,20 +5,20 @@
 const Cu = Components.utils;
 function run_test() {
   let unprivilegedSb = new Cu.Sandbox('http://www.example.com');
-  function checkCantWrap(val) {
+  function checkOpaqueWrapper(val) {
+    unprivilegedSb.prop = val;
     try {
-      unprivilegedSb.prop = val;
-      do_check_true(false);
+      Cu.evalInSandbox('prop();', sb);
     } catch (e) {
       do_check_true(/denied|insecure|/.test(e));
     }
   }
   let xoSb = new Cu.Sandbox('http://www.example.net');
   let epSb = new Cu.Sandbox(['http://www.example.com']);
-  checkCantWrap(eval);
-  checkCantWrap(xoSb.eval);
-  checkCantWrap(epSb.eval);
-  checkCantWrap(Function);
-  checkCantWrap(xoSb.Function);
-  checkCantWrap(epSb.Function);
+  checkOpaqueWrapper(eval);
+  checkOpaqueWrapper(xoSb.eval);
+  checkOpaqueWrapper(epSb.eval);
+  checkOpaqueWrapper(Function);
+  checkOpaqueWrapper(xoSb.Function);
+  checkOpaqueWrapper(epSb.Function);
 }

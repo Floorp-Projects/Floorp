@@ -241,6 +241,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565541
         'width=170,height=170,screenX=25,screenY=25');
 
       SimpleTest.waitForFocus(function() {
+        // This test relies on passing cross-origin windows to a chrome function,
+        // which is generally forbidden if we don't twiddle the knob below.
+        Components.utils.forcePermissiveCOWs();
         w.wrappedJSObject.ok = SimpleTest.ok;
         w.wrappedJSObject.checkChangeIsEnabled = window.checkChangeIsEnabled;
         w.wrappedJSObject.check(function() {

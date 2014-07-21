@@ -239,6 +239,13 @@ struct nsCSSSelectorList {
   nsCSSSelector* AddSelector(char16_t aOperator);
 
   /**
+   * Point |mSelectors| to its |mNext|, and delete the first node in the old
+   * |mSelectors|.
+   * Should only be used on a list with more than one selector in it.
+   */
+  void RemoveRightmostSelector();
+
+  /**
    * Should be used only on the first in the list
    */
   void ToString(nsAString& aResult, mozilla::CSSStyleSheet* aSheet);

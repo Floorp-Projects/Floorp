@@ -6,11 +6,32 @@ function exists(x) {
   return (x !== undefined);
 }
 
+function hasFields(object, fields) {
+  return fields
+          .map(x => exists(object[x]))
+          .reduce((x,y) => (x && y));
+}
+
 function hasKeyFields(x) {
-  return exists(x.algorithm) &&
-         exists(x.extractable) &&
-         exists(x.type) &&
-         exists(x.usages);
+  return hasFields(x, ["algorithm", "extractable", "type", "usages"]);
+}
+
+function hasBaseJwkFields(x) {
+  return hasFields(x, ["kty", "alg", "ext", "key_ops"]);
+}
+
+function shallowArrayEquals(x, y) {
+  if (x.length != y.length) {
+    return false;
+  }
+
+  for (i in x) {
+    if (x[i] != y[i]) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function error(test) {
@@ -92,6 +113,7 @@ TestArray.addTest(
 
     function doExport(x) {
       if (!hasKeyFields(x)) {
+        window.result = x;
         throw "Invalid key; missing field(s)";
       } else if ((x.algorithm.name != alg) ||
         (x.algorithm.length != 8 * tv.raw.length) ||
@@ -1271,6 +1293,517 @@ TestArray.addTest(
 
     crypto.subtle.importKey("pkcs8", tv.rsaoaep.pkcs8, alg, false, ['decrypt'])
       .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Key wrap known answer, using AES-GCM",
+  function () {
+    var that = this;
+    var alg = {
+      name: "AES-GCM",
+      iv: tv.key_wrap_known_answer.wrapping_iv,
+      tagLength: 128
+    };
+    var key, wrappingKey;
+
+    function doImport(k) {
+      wrappingKey = k;
+      return crypto.subtle.importKey("raw", tv.key_wrap_known_answer.key,
+                                     alg, true, ['encrypt', 'decrypt']);
+    }
+    function doWrap(k) {
+      key = k;
+      return crypto.subtle.wrapKey("raw", key, wrappingKey, alg);
+    }
+
+    crypto.subtle.importKey("raw", tv.key_wrap_known_answer.wrapping_key,
+                            alg, false, ['wrapKey'])
+      .then(doImport, error(that))
+      .then(doWrap, error(that))
+      .then(
+        memcmp_complete(that, tv.key_wrap_known_answer.wrapped_key),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Key wrap failing on non-extractable key",
+  function () {
+    var that = this;
+    var alg = {
+      name: "AES-GCM",
+      iv: tv.key_wrap_known_answer.wrapping_iv,
+      tagLength: 128
+    };
+    var key, wrappingKey;
+
+    function doImport(k) {
+      wrappingKey = k;
+      return crypto.subtle.importKey("raw", tv.key_wrap_known_answer.key,
+                                     alg, false, ['encrypt', 'decrypt']);
+    }
+    function doWrap(k) {
+      key = k;
+      return crypto.subtle.wrapKey("raw", key, wrappingKey, alg);
+    }
+
+    crypto.subtle.importKey("raw", tv.key_wrap_known_answer.wrapping_key,
+                            alg, false, ['wrapKey'])
+      .then(doImport, error(that))
+      .then(doWrap, error(that))
+      .then(
+        error(that),
+        complete(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Key unwrap known answer, using AES-GCM",
+  function () {
+    var that = this;
+    var alg = {
+      name: "AES-GCM",
+      iv: tv.key_wrap_known_answer.wrapping_iv,
+      tagLength: 128
+    };
+    var key, wrappingKey;
+
+    function doUnwrap(k) {
+      wrappingKey = k;
+      return crypto.subtle.unwrapKey(
+                "raw", tv.key_wrap_known_answer.wrapped_key,
+                wrappingKey, alg,
+                "AES-GCM", true, ['encrypt', 'decrypt']
+             );
+    }
+    function doExport(k) {
+      return crypto.subtle.exportKey("raw", k);
+    }
+
+    crypto.subtle.importKey("raw", tv.key_wrap_known_answer.wrapping_key,
+                            alg, false, ['unwrapKey'])
+      .then(doUnwrap, error(that))
+      .then(doExport, error(that))
+      .then(
+        memcmp_complete(that, tv.key_wrap_known_answer.key),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Key wrap/unwrap round-trip, using RSA-OAEP",
+  function () {
+    var that = this;
+    var oaep = {
+      name: "RSA-OAEP",
+      hash: "SHA-256"
+    };
+    var gcm = {
+      name: "AES-GCM",
+      iv: tv.aes_gcm_enc.iv,
+      additionalData: tv.aes_gcm_enc.adata,
+      tagLength: 128
+    };
+    var unwrapKey;
+
+    function doWrap(keys) {
+      var originalKey = keys[0];
+      var wrapKey = keys[1];
+      unwrapKey = keys[2];
+      return crypto.subtle.wrapKey("raw", originalKey, wrapKey, oaep);
+    }
+    function doUnwrap(wrappedKey) {
+      return crypto.subtle.unwrapKey("raw", wrappedKey, unwrapKey, oaep,
+                                     gcm, false, ['encrypt']);
+    }
+    function doEncrypt(aesKey) {
+      return crypto.subtle.encrypt(gcm, aesKey, tv.aes_gcm_enc.data);
+    }
+
+    // 1.Import:
+    //  -> HMAC key
+    //  -> OAEP wrap key (public)
+    //  -> OAEP unwrap key (private)
+    // 2. Wrap the HMAC key
+    // 3. Unwrap it
+    // 4. Compute HMAC
+    // 5. Check HMAC value
+    Promise.all([
+      crypto.subtle.importKey("raw", tv.aes_gcm_enc.key, gcm, true, ['encrypt']),
+      crypto.subtle.importKey("spki", tv.rsaoaep.spki, oaep, true, ['wrapKey']),
+      crypto.subtle.importKey("pkcs8", tv.rsaoaep.pkcs8, oaep, false, ['unwrapKey'])
+    ])
+      .then(doWrap, error(that))
+      .then(doUnwrap, error(that))
+      .then(doEncrypt, error(that))
+      .then(
+        memcmp_complete(that, tv.aes_gcm_enc.result),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import and use of an AES-GCM key",
+  function () {
+    var that = this;
+
+    function doEncrypt(x) {
+      return crypto.subtle.encrypt(
+        {
+          name: "AES-GCM",
+          iv: tv.aes_gcm_enc.iv,
+          additionalData: tv.aes_gcm_enc.adata,
+          tagLength: 128
+        },
+        x, tv.aes_gcm_enc.data);
+    }
+
+    crypto.subtle.importKey("jwk", tv.aes_gcm_enc.key_jwk, "AES-GCM", false, ['encrypt'])
+      .then(doEncrypt)
+      .then(
+        memcmp_complete(that, tv.aes_gcm_enc.result),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import and use of an RSASSA-PKCS1-v1_5 private key",
+  function () {
+    var that = this;
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
+
+    function doSign(x) {
+      return crypto.subtle.sign(alg.name, x, tv.rsassa.data);
+    }
+    function fail(x) { console.log(x); error(that); }
+
+    crypto.subtle.importKey("jwk", tv.rsassa.jwk_priv, alg, false, ['sign'])
+      .then( doSign, fail )
+      .then( memcmp_complete(that, tv.rsassa.sig256), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import and use of an RSASSA-PKCS1-v1_5 public key",
+  function () {
+    var that = this;
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
+
+    function doVerify(x) {
+      return crypto.subtle.verify(alg.name, x, tv.rsassa.sig256, tv.rsassa.data);
+    }
+    function fail(x) { error(that); }
+
+    crypto.subtle.importKey("jwk", tv.rsassa.jwk_pub, alg, false, ['verify'])
+      .then( doVerify, fail )
+      .then(
+        complete(that, function(x) { return x; }),
+        fail
+      );
+  });
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import failure on incomplete RSA private key (missing 'qi')",
+  function () {
+    var that = this;
+    var alg = { name: "RSA-OAEP", hash: "SHA-256" };
+    var jwk = {
+      kty: "RSA",
+      n: tv.rsassa.jwk_priv.n,
+      e: tv.rsassa.jwk_priv.e,
+      d: tv.rsassa.jwk_priv.d,
+      p: tv.rsassa.jwk_priv.p,
+      q: tv.rsassa.jwk_priv.q,
+      dp: tv.rsassa.jwk_priv.dp,
+      dq: tv.rsassa.jwk_priv.dq,
+    };
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ['encrypt', 'decrypt'])
+      .then( error(that), complete(that) );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import failure on algorithm mismatch",
+  function () {
+    var that = this;
+    var alg = "AES-GCM";
+    var jwk = { k: "c2l4dGVlbiBieXRlIGtleQ", alg: "A256GCM" };
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ['encrypt', 'decrypt'])
+      .then( error(that), complete(that) );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import failure on usages mismatch",
+  function () {
+    var that = this;
+    var alg = "AES-GCM";
+    var jwk = { k: "c2l4dGVlbiBieXRlIGtleQ", key_ops: ['encrypt'] };
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ['encrypt', 'decrypt'])
+      .then( error(that), complete(that) );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import failure on extractable mismatch",
+  function () {
+    var that = this;
+    var alg = "AES-GCM";
+    var jwk = { k: "c2l4dGVlbiBieXRlIGtleQ", ext: false };
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ['encrypt'])
+      .then( error(that), complete(that) );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK export of a symmetric key",
+  function () {
+    var that = this;
+    var alg = "AES-GCM";
+    var jwk = { k: "c2l4dGVlbiBieXRlIGtleQ" };
+
+    function doExport(k) {
+      return crypto.subtle.exportKey("jwk", k);
+    }
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ['encrypt', 'decrypt'])
+      .then(doExport)
+      .then(
+        complete(that, function(x) {
+          return hasBaseJwkFields(x) &&
+                 hasFields(x, ['k']) &&
+                 x.kty == 'oct' &&
+                 x.alg == 'A128GCM' &&
+                 x.ext &&
+                 shallowArrayEquals(x.key_ops, ['encrypt','decrypt']) &&
+                 x.k == jwk.k
+        }),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK export of an RSA private key",
+  function () {
+    var that = this;
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
+    var jwk = tv.rsassa.jwk_priv;
+
+    function doExport(k) {
+      return crypto.subtle.exportKey("jwk", k);
+    }
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ['sign'])
+      .then(doExport)
+      .then(
+        complete(that, function(x) {
+          window.jwk_priv = x;
+          console.log(JSON.stringify(x));
+          return hasBaseJwkFields(x) &&
+                 hasFields(x, ['n', 'e', 'd', 'p', 'q', 'dp', 'dq', 'qi']) &&
+                 x.kty == 'RSA' &&
+                 x.alg == 'RS256' &&
+                 x.ext &&
+                 shallowArrayEquals(x.key_ops, ['sign']) &&
+                 x.n  == jwk.n  &&
+                 x.e  == jwk.e  &&
+                 x.d  == jwk.d  &&
+                 x.p  == jwk.p  &&
+                 x.q  == jwk.q  &&
+                 x.dp == jwk.dp &&
+                 x.dq == jwk.dq &&
+                 x.qi == jwk.qi;
+          }),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK export of an RSA public key",
+  function () {
+    var that = this;
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
+    var jwk = tv.rsassa.jwk_pub;
+
+    function doExport(k) {
+      return crypto.subtle.exportKey("jwk", k);
+    }
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ['verify'])
+      .then(doExport)
+      .then(
+        complete(that, function(x) {
+          window.jwk_pub = x;
+          return hasBaseJwkFields(x) &&
+                 hasFields(x, ['n', 'e']) &&
+                 x.kty == 'RSA' &&
+                 x.alg == 'RS256' &&
+                 x.ext &&
+                 shallowArrayEquals(x.key_ops, ['verify']) &&
+                 x.n  == jwk.n  &&
+                 x.e  == jwk.e;
+          }),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK wrap/unwrap round-trip, with AES-GCM",
+  function () {
+    var that = this;
+    var genAlg = { name: "HMAC", hash: "SHA-384", length: 512 };
+    var wrapAlg = { name: "AES-GCM", iv: tv.aes_gcm_enc.iv };
+    var wrapKey, originalKey, originalKeyJwk;
+
+    function doExport(k) {
+      return crypto.subtle.exportKey("jwk", k);
+    }
+    function doWrap() {
+      return crypto.subtle.wrapKey("jwk", originalKey, wrapKey, wrapAlg);
+    }
+    function doUnwrap(wrappedKey) {
+      return crypto.subtle.unwrapKey("jwk", wrappedKey, wrapKey, wrapAlg,
+                                     { name: "HMAC", hash: "SHA-384"},
+                                     true, ['sign', 'verify']);
+    }
+
+    function temperr(x) { return function(y) { console.log("error in "+x); console.log(y); } }
+
+    Promise.all([
+      crypto.subtle.importKey("jwk", tv.aes_gcm_enc.key_jwk,
+                              "AES-GCM", false, ['wrapKey','unwrapKey'])
+        .then(function(x) { console.log("wrapKey"); wrapKey = x; }),
+      crypto.subtle.generateKey(genAlg, true, ['sign', 'verify'])
+        .then(function(x) { console.log("originalKey"); originalKey = x; return x; })
+        .then(doExport)
+        .then(function(x) { originalKeyJwk = x; })
+    ])
+      .then(doWrap, temperr("initial phase"))
+      .then(doUnwrap, temperr("wrap"))
+      .then(doExport, temperr("unwrap"))
+      .then(
+        complete(that, function(x) {
+          return exists(x.k) && x.k == originalKeyJwk.k;
+        }),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "AES-KW known answer",
+  function () {
+    var that = this;
+
+    function doWrap(keys) {
+      wrapKey = keys[0];
+      originalKey = keys[1];
+      return crypto.subtle.wrapKey("raw", originalKey, wrapKey, "AES-KW");
+    }
+
+    Promise.all([
+      crypto.subtle.importKey("jwk", tv.aes_kw.wrapping_key,
+                              "AES-KW", false, ['wrapKey']),
+      crypto.subtle.importKey("jwk", tv.aes_kw.key,
+                              "AES-GCM", true, ['encrypt'])
+    ])
+      .then(doWrap)
+      .then(
+        memcmp_complete(that, tv.aes_kw.wrapped_key),
+        error(that)
+      );
+
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "AES-KW unwrap failure on tampered key data",
+  function () {
+    var that = this;
+    var tamperedWrappedKey = new Uint8Array(tv.aes_kw.wrapped_key);
+    tamperedWrappedKey[5] ^= 0xFF;
+
+    function doUnwrap(wrapKey) {
+      return crypto.subtle.unwrapKey("raw", tamperedWrappedKey, wrapKey,
+                                     "AES-KW", "AES-GCM",
+                                     true, ['encrypt', 'decrypt']);
+    }
+
+    crypto.subtle.importKey("jwk", tv.aes_kw.wrapping_key,
+                              "AES-KW", false, ['unwrapKey'])
+      .then(doUnwrap)
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "AES-KW wrap/unwrap round-trip",
+  function () {
+    var that = this;
+    var genAlg = { name: "HMAC", hash: "SHA-384", length: 512 };
+    var wrapKey, originalKey, originalKeyJwk;
+
+    function doExport(k) {
+      return crypto.subtle.exportKey("jwk", k);
+    }
+    function doWrap() {
+      return crypto.subtle.wrapKey("raw", originalKey, wrapKey, "AES-KW");
+    }
+    function doUnwrap(wrappedKey) {
+      return crypto.subtle.unwrapKey("raw", wrappedKey, wrapKey,
+                                     "AES-KW", { name: "HMAC", hash: "SHA-384"},
+                                     true, ['sign', 'verify']);
+    }
+
+    Promise.all([
+      crypto.subtle.importKey("jwk", tv.aes_kw.wrapping_key,
+                              "AES-KW", false, ['wrapKey','unwrapKey'])
+        .then(function(x) { console.log("wrapKey"); wrapKey = x; }),
+      crypto.subtle.generateKey(genAlg, true, ['sign'])
+        .then(function(x) { console.log("originalKey"); originalKey = x; return x; })
+        .then(doExport)
+        .then(function(x) { originalKeyJwk = x; })
+    ])
+      .then(doWrap)
+      .then(doUnwrap)
+      .then(doExport)
+      .then(
+        complete(that, function(x) {
+          return exists(x.k) && x.k == originalKeyJwk.k;
+        }),
+        error(that)
+      );
   }
 );
 

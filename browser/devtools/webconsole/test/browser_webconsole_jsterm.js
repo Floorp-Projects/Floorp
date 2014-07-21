@@ -159,9 +159,9 @@ function testJSTerm(hud)
 
   // check that pprint(function) shows function source, bug 618344
   jsterm.clearOutput();
-  jsterm.execute("pprint(print)");
+  jsterm.execute("pprint(function() { var someCanaryValue = 42; })");
   checkResult(function(node) {
-    return node.textContent.indexOf("aOwner.helperResult") > -1;
+    return node.textContent.indexOf("someCanaryValue") > -1;
   }, "pprint(function) shows source");
   yield undefined;
 

@@ -1781,30 +1781,23 @@ struct FakeString {
     return mLength;
   }
 
-  // Reserve space to write aCapacity chars, including null-terminator.
-  // Caller is responsible for calling SetLength and writing the null-
-  // terminator.
-  bool SetCapacity(nsString::size_type aCapacity, mozilla::fallible_t const&) {
-    MOZ_ASSERT(aCapacity > 0, "Capacity must include null-terminator");
-
+  // Reserve space to write aLength chars, not including null-terminator.
+  bool SetLength(nsString::size_type aLength, mozilla::fallible_t const&) {
     // Use mInlineStorage for small strings.
-    if (aCapacity <= sInlineCapacity) {
+    if (aLength < sInlineCapacity) {
       SetData(mInlineStorage);
-      return true;
+    } else {
+      nsStringBuffer *buf = nsStringBuffer::Alloc((aLength + 1) * sizeof(nsString::char_type)).take();
+      if (MOZ_UNLIKELY(!buf)) {
+        return false;
+      }
+
+      SetData(static_cast<nsString::char_type*>(buf->Data()));
+      mFlags = nsString::F_SHARED | nsString::F_TERMINATED;
     }
-
-    nsRefPtr<nsStringBuffer> buf = nsStringBuffer::Alloc(aCapacity * sizeof(nsString::char_type));
-    if (MOZ_UNLIKELY(!buf)) {
-      return false;
-    }
-
-    SetData(static_cast<nsString::char_type*>(buf.forget().take()->Data()));
-    mFlags = nsString::F_SHARED | nsString::F_TERMINATED;
-    return true;
-  }
-
-  void SetLength(nsString::size_type aLength) {
     mLength = aLength;
+    mData[mLength] = char16_t(0);
+    return true;
   }
 
   // If this ever changes, change the corresponding code in the

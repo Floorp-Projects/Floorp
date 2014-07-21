@@ -3556,7 +3556,7 @@ else
         \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)nss$NSS_VERSION.\$(LIB_SUFFIX) \
         \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)nssutil$NSS_VERSION.\$(LIB_SUFFIX)"
    else
-       NSS_LIBS='$(LIBS_DIR)'" -lcrmf -lsmime$NSS_VERSION -lssl$NSS_VERSION -lnss$NSS_VERSION -lnssutil$NSS_VERSION"
+       NSS_LIBS='-L$(LIBXUL_DIST)/lib'" -lcrmf -lsmime$NSS_VERSION -lssl$NSS_VERSION -lnss$NSS_VERSION -lnssutil$NSS_VERSION"
    fi
 fi
 
@@ -7773,7 +7773,7 @@ dnl Under clang 3.4+, use -fno-integrated-as to
 dnl build libvpx's vp8_asm_enc_offsets.c
 
 _SAVE_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -fno-integrated-as"
+CFLAGS="$CFLAGS -fno-integrated-as -S"
 
 AC_MSG_CHECKING([whether C compiler supports -fno-integrated-as])
 AC_TRY_COMPILE([], [return 0;],

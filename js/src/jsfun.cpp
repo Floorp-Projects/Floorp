@@ -515,7 +515,6 @@ js::CloneFunctionAndScript(JSContext *cx, HandleObject enclosingScope, HandleFun
         return nullptr;
 
     RootedScript cloneScript(cx, clone->nonLazyScript());
-    CallNewScriptHook(cx, cloneScript, clone);
     return clone;
 }
 
@@ -701,20 +700,6 @@ CreateFunctionPrototype(JSContext *cx, JSProtoKey key)
     return functionProto;
 }
 
-static bool
-FinishFunctionClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject proto)
-{
-    /*
-     * Notify any debuggers about the creation of the script for
-     * |Function.prototype| -- after all initialization, for simplicity.
-     */
-    RootedFunction functionProto(cx, &proto->as<JSFunction>());
-    RootedScript functionProtoScript(cx, functionProto->nonLazyScript());
-    CallNewScriptHook(cx, functionProtoScript, functionProto);
-    return true;
-}
-
-
 const Class JSFunction::class_ = {
     js_Function_str,
     JSCLASS_NEW_RESOLVE | JSCLASS_IMPLEMENTS_BARRIERS |
@@ -735,9 +720,7 @@ const Class JSFunction::class_ = {
         CreateFunctionConstructor,
         CreateFunctionPrototype,
         nullptr,
-        function_methods,
-        nullptr,
-        FinishFunctionClassInit
+        function_methods
     }
 };
 
@@ -1268,8 +1251,6 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
             clonedScript->setFunction(fun);
 
             fun->setUnlazifiedScript(clonedScript);
-
-            CallNewScriptHook(cx, clonedScript, fun);
 
             if (!lazy->maybeScript())
                 lazy->initScript(clonedScript);

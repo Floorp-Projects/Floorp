@@ -52,9 +52,6 @@ class BaselineFrame
         // Eval frame, see the "eval frames" comment.
         EVAL             = 1 << 6,
 
-        // Frame has hookData_ set.
-        HAS_HOOK_DATA    = 1 << 7,
-
         // Frame has profiler entry pushed.
         HAS_PUSHED_SPS_FRAME = 1 << 8,
 
@@ -92,7 +89,7 @@ class BaselineFrame
     JSObject *scopeChain_;                // Scope chain (always initialized).
     JSScript *evalScript_;                // If isEvalFrame(), the current eval script.
     ArgumentsObject *argsObj_;            // If HAS_ARGS_OBJ, the arguments object.
-    void *hookData_;                      // If HAS_HOOK_DATA, debugger call hook data.
+    void *unused;                         // See static assertion re: sizeof, below.
     uint32_t unwoundScopeOverrideOffset_; // If HAS_UNWOUND_SCOPE_OVERRIDE_PC.
     uint32_t flags_;
 
@@ -282,19 +279,6 @@ class BaselineFrame
     JSScript *evalScript() const {
         JS_ASSERT(isEvalFrame());
         return evalScript_;
-    }
-
-    bool hasHookData() const {
-        return flags_ & HAS_HOOK_DATA;
-    }
-
-    void *maybeHookData() const {
-        return hasHookData() ? hookData_ : nullptr;
-    }
-
-    void setHookData(void *v) {
-        hookData_ = v;
-        flags_ |= HAS_HOOK_DATA;
     }
 
     bool hasPushedSPSFrame() const {

@@ -17,7 +17,6 @@ class nsClipboard : public nsIClipboard
 {
 public:
     nsClipboard();
-    virtual ~nsClipboard();
 
     //nsISupports
     NS_DECL_ISUPPORTS
@@ -26,6 +25,8 @@ public:
     NS_DECL_NSICLIPBOARD
 
 protected:
+    virtual ~nsClipboard();
+
     NS_IMETHOD SetNativeClipboardData(nsITransferable *aTransferable,
                                       QClipboard::Mode cbMode);
     NS_IMETHOD GetNativeClipboardData(nsITransferable *aTransferable,
@@ -35,7 +36,6 @@ protected:
     nsCOMPtr<nsIClipboardOwner> mGlobalOwner;
     nsCOMPtr<nsITransferable>   mSelectionTransferable;
     nsCOMPtr<nsITransferable>   mGlobalTransferable;
-    nsRefPtr<nsClipboardPrivacyHandler> mPrivacyHandler;
 };
 
 #endif // nsClipboard_h__

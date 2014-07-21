@@ -43,6 +43,7 @@ public:
     RTSPSource(
             nsIStreamingProtocolListener *aListener,
             const char *url,
+            const char *userAgent,
             bool uidValid = false,
             uid_t uid = 0);
 
@@ -109,6 +110,7 @@ private:
     };
 
     AString mURL;
+    AString mUserAgent;
     bool mUIDValid;
     uid_t mUID;
     State mState;

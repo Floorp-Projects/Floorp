@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "nsAutoPtr.h"
+#include "mozilla/ErrorResult.h"
 
 class nsIDOMBlob;
 class nsIInputStream;
@@ -27,7 +28,8 @@ public:
                  const nsAString& aPath,
                  nsIDOMBlob* aBlobData,
                  InfallibleTArray<uint8_t>& aArrayData,
-                 bool replace);
+                 bool replace,
+                 ErrorResult& aRv);
   CreateFileTask(FileSystemBase* aFileSystem,
                  const FileSystemCreateFileParams& aParam,
                  FileSystemRequestParent* aParent);

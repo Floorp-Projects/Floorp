@@ -163,6 +163,24 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest,
   if (aType == imgINotificationObserver::LOAD_COMPLETE) {
     uint32_t reqStatus;
     aRequest->GetImageStatus(&reqStatus);
+    /* triage STATUS_ERROR */
+    if (reqStatus & imgIRequest::STATUS_ERROR) {
+      nsresult errorCode = NS_OK;
+      aRequest->GetImageErrorCode(&errorCode);
+
+      /* Handle image not loading error because source was a tracking URL.
+       * (Safebrowinsg) We make a note of this image node by including it
+       * in a dedicated array of blocked tracking nodes under its parent
+       * document.
+       */
+      if (errorCode == NS_ERROR_TRACKING_URI) {
+        nsCOMPtr<nsIContent> thisNode
+          = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+
+        nsIDocument *doc = GetOurOwnerDoc();
+        doc->AddBlockedTrackingNode(thisNode);
+      }
+    }
     nsresult status =
         reqStatus & imgIRequest::STATUS_ERROR ? NS_ERROR_FAILURE : NS_OK;
     return OnStopRequest(aRequest, status);

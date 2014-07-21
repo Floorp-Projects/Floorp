@@ -85,7 +85,6 @@ class nsWindow : public nsBaseWidget,
 {
 public:
     nsWindow();
-    virtual ~nsWindow();
 
     NS_DECL_ISUPPORTS_INHERITED
 
@@ -172,6 +171,8 @@ public:
     virtual nsEventStatus tabletEvent(QTabletEvent* event);
 
 protected:
+    virtual ~nsWindow();
+
     nsWindow* mParent;
     bool  mVisible;
     InputContext mInputContext;

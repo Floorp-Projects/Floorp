@@ -8728,6 +8728,8 @@ IonBuilder::getPropTryArgumentsCallee(bool *emitted, MDefinition *obj, PropertyN
     if (name != names().callee)
         return true;
 
+    MOZ_ASSERT(!script()->strict());
+
     obj->setImplicitlyUsedUnchecked();
     current->push(getCallee());
 

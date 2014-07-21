@@ -2270,6 +2270,15 @@ public:
   nsRect GetVisualOverflowRectRelativeToSelf() const;
 
   /**
+   * Same as GetVisualOverflowRect, except relative to the parent
+   * frame.
+   *
+   * @return the rect relative to the parent frame, in the parent frame's
+   * coordinate system
+   */
+  nsRect GetVisualOverflowRectRelativeToParent() const;
+
+  /**
    * Returns this frame's visual overflow rect as it would be before taking
    * account of SVG effects or transforms. The rect returned is relative to
    * this frame.

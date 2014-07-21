@@ -40,6 +40,7 @@
 #include "jsdate.h"
 #include "jswrapper.h"
 
+#include "builtin/MapObject.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
@@ -60,7 +61,7 @@ enum StructuredDataType MOZ_ENUM_TYPE(uint32_t) {
     SCTAG_NULL = 0xFFFF0000,
     SCTAG_UNDEFINED,
     SCTAG_BOOLEAN,
-    SCTAG_INDEX,
+    SCTAG_INT32,
     SCTAG_STRING,
     SCTAG_DATE_OBJECT,
     SCTAG_REGEXP_OBJECT,
@@ -74,6 +75,10 @@ enum StructuredDataType MOZ_ENUM_TYPE(uint32_t) {
     SCTAG_DO_NOT_USE_1, // Required for backwards compatibility
     SCTAG_DO_NOT_USE_2, // Required for backwards compatibility
     SCTAG_TYPED_ARRAY_OBJECT,
+    SCTAG_MAP_OBJECT,
+    SCTAG_SET_OBJECT,
+    SCTAG_END_OF_KEYS,
+
     SCTAG_TYPED_ARRAY_V1_MIN = 0xFFFF0100,
     SCTAG_TYPED_ARRAY_V1_INT8 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Int8,
     SCTAG_TYPED_ARRAY_V1_UINT8 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Uint8,
@@ -222,7 +227,6 @@ struct JSStructuredCloneReader {
     bool readTypedArray(uint32_t arrayType, uint32_t nelems, Value *vp, bool v1Read = false);
     bool readArrayBuffer(uint32_t nbytes, Value *vp);
     bool readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, Value *vp);
-    bool readId(jsid *idp);
     bool startRead(Value *vp);
 
     SCInput &in;
@@ -249,7 +253,7 @@ struct JSStructuredCloneWriter {
                                      void *cbClosure,
                                      jsval tVal)
         : out(cx), objs(out.context()),
-          counts(out.context()), ids(out.context()),
+          counts(out.context()), entries(out.context()),
           memory(out.context()), callbacks(cb), closure(cbClosure),
           transferable(out.context(), tVal), transferableObjects(out.context()) { }
 
@@ -271,12 +275,13 @@ struct JSStructuredCloneWriter {
     bool writeTransferMap();
 
     bool writeString(uint32_t tag, JSString *str);
-    bool writeId(jsid id);
     bool writeArrayBuffer(HandleObject obj);
     bool writeTypedArray(HandleObject obj);
     bool startObject(HandleObject obj, bool *backref);
     bool startWrite(const Value &v);
     bool traverseObject(HandleObject obj);
+    bool traverseMap(HandleObject obj);
+    bool traverseSet(HandleObject obj);
 
     bool parseTransferable();
     bool reportErrorTransferable();
@@ -292,12 +297,14 @@ struct JSStructuredCloneWriter {
     // entered before any manipulation is performed.
     AutoValueVector objs;
 
-    // counts[i] is the number of properties of objs[i] remaining to be written.
-    // counts.length() == objs.length() and sum(counts) == ids.length().
+    // counts[i] is the number of entries of objs[i] remaining to be written.
+    // counts.length() == objs.length() and sum(counts) == entries.length().
     Vector<size_t> counts;
 
-    // Ids of properties remaining to be written.
-    AutoIdVector ids;
+    // For JSObject: Propery IDs as value
+    // For Map: Key followed by value.
+    // For Set: Key
+    AutoValueVector entries;
 
     // The "memory" list described in the HTML5 internal structured cloning algorithm.
     // memory is a superset of objs; items are never removed from Memory
@@ -811,15 +818,6 @@ JSStructuredCloneWriter::writeString(uint32_t tag, JSString *str)
            : out.writeChars(linear->twoByteChars(nogc), length);
 }
 
-bool
-JSStructuredCloneWriter::writeId(jsid id)
-{
-    if (JSID_IS_INT(id))
-        return out.writePair(SCTAG_INDEX, uint32_t(JSID_TO_INT(id)));
-    JS_ASSERT(JSID_IS_STRING(id));
-    return writeString(SCTAG_STRING, JSID_TO_STRING(id));
-}
-
 inline void
 JSStructuredCloneWriter::checkStack()
 {
@@ -835,9 +833,9 @@ JSStructuredCloneWriter::checkStack()
         total += counts[i];
     }
     if (counts.length() <= MAX)
-        JS_ASSERT(total == ids.length());
+        JS_ASSERT(total == entries.length());
     else
-        JS_ASSERT(total <= ids.length());
+        JS_ASSERT(total <= entries.length());
 
     size_t j = objs.length();
     for (size_t i = 0; i < limit; i++)
@@ -911,20 +909,69 @@ JSStructuredCloneWriter::traverseObject(HandleObject obj)
      * Get enumerable property ids and put them in reverse order so that they
      * will come off the stack in forward order.
      */
-    size_t initialLength = ids.length();
-    if (!GetPropertyNames(context(), obj, JSITER_OWNONLY, &ids))
+    AutoIdVector properties(context());
+    if (!GetPropertyNames(context(), obj, JSITER_OWNONLY, &properties))
         return false;
-    jsid *begin = ids.begin() + initialLength, *end = ids.end();
-    size_t count = size_t(end - begin);
-    Reverse(begin, end);
+
+    for (size_t i = properties.length(); i > 0; --i) {
+        MOZ_ASSERT(JSID_IS_STRING(properties[i - 1]) || JSID_IS_INT(properties[i - 1]));
+        RootedValue val(context(), IdToValue(properties[i - 1]));
+        if (!entries.append(val))
+            return false;
+    }
 
     /* Push obj and count to the stack. */
-    if (!objs.append(ObjectValue(*obj)) || !counts.append(count))
+    if (!objs.append(ObjectValue(*obj)) || !counts.append(properties.length()))
         return false;
+
     checkStack();
 
     /* Write the header for obj. */
     return out.writePair(obj->is<ArrayObject>() ? SCTAG_ARRAY_OBJECT : SCTAG_OBJECT_OBJECT, 0);
+}
+
+bool
+JSStructuredCloneWriter::traverseMap(HandleObject obj)
+{
+    AutoValueVector newEntries(context());
+    if (!MapObject::entries(context(), obj, &newEntries))
+        return false;
+
+    for (size_t i = newEntries.length(); i > 0; --i) {
+        if (!entries.append(newEntries[i - 1]))
+            return false;
+    }
+
+    /* Push obj and count to the stack. */
+    if (!objs.append(ObjectValue(*obj)) || !counts.append(newEntries.length()))
+        return false;
+
+    checkStack();
+
+    /* Write the header for obj. */
+    return out.writePair(SCTAG_MAP_OBJECT, 0);
+}
+
+bool
+JSStructuredCloneWriter::traverseSet(HandleObject obj)
+{
+    AutoValueVector keys(context());
+    if (!SetObject::keys(context(), obj, &keys))
+        return false;
+
+    for (size_t i = keys.length(); i > 0; --i) {
+        if (!entries.append(keys[i - 1]))
+            return false;
+    }
+
+    /* Push obj and count to the stack. */
+    if (!objs.append(ObjectValue(*obj)) || !counts.append(keys.length()))
+        return false;
+
+    checkStack();
+
+    /* Write the header for obj. */
+    return out.writePair(SCTAG_SET_OBJECT, 0);
 }
 
 static bool
@@ -945,8 +992,10 @@ JSStructuredCloneWriter::startWrite(const Value &v)
 
     if (v.isString()) {
         return writeString(SCTAG_STRING, v.toString());
-    } else if (v.isNumber()) {
-        return out.writeDouble(v.toNumber());
+    } else if (v.isInt32()) {
+        return out.writePair(SCTAG_INT32, v.toInt32());
+    } else if (v.isDouble()) {
+        return out.writeDouble(v.toDouble());
     } else if (v.isBoolean()) {
         return out.writePair(SCTAG_BOOLEAN, v.toBoolean());
     } else if (v.isNull()) {
@@ -992,6 +1041,10 @@ JSStructuredCloneWriter::startWrite(const Value &v)
                    out.writeDouble(obj->as<NumberObject>().unbox());
         } else if (obj->is<StringObject>()) {
             return writeString(SCTAG_STRING_OBJECT, obj->as<StringObject>().unbox());
+        } else if (obj->is<MapObject>()) {
+            return traverseMap(obj);
+        } else if (obj->is<SetObject>()) {
+            return traverseSet(obj);
         }
 
         if (callbacks && callbacks->write)
@@ -1116,10 +1169,27 @@ JSStructuredCloneWriter::write(const Value &v)
         AutoCompartment ac(context(), obj);
         if (counts.back()) {
             counts.back()--;
-            RootedId id(context(), ids.back());
-            ids.popBack();
+            RootedValue key(context(), entries.back());
+            entries.popBack();
             checkStack();
-            if (JSID_IS_STRING(id) || JSID_IS_INT(id)) {
+
+            if (obj->is<MapObject>()) {
+                counts.back()--;
+                RootedValue val(context(), entries.back());
+                entries.popBack();
+                checkStack();
+
+                if (!startWrite(key) || !startWrite(val))
+                    return false;
+            } else if (obj->is<SetObject>()) {
+                if (!startWrite(key))
+                    return false;
+            } else {
+                RootedId id(context());
+                if (!ValueToId<CanGC>(context(), key, &id))
+                  return false;
+                MOZ_ASSERT(JSID_IS_STRING(id) || JSID_IS_INT(id));
+
                 /*
                  * If obj still has an own property named id, write it out.
                  * The cost of re-checking could be avoided by using
@@ -1131,14 +1201,16 @@ JSStructuredCloneWriter::write(const Value &v)
 
                 if (found) {
                     RootedValue val(context());
-                    if (!writeId(id) ||
+                    if (!startWrite(key) ||
                         !JSObject::getGeneric(context(), obj, obj, id, &val) ||
                         !startWrite(val))
+                    {
                         return false;
+                    }
                 }
             }
         } else {
-            out.writePair(SCTAG_NULL, 0);
+            out.writePair(SCTAG_END_OF_KEYS, 0);
             objs.popBack();
             counts.popBack();
         }
@@ -1359,6 +1431,10 @@ JSStructuredCloneReader::startRead(Value *vp)
         vp->setUndefined();
         break;
 
+      case SCTAG_INT32:
+        vp->setInt32(data);
+        break;
+
       case SCTAG_BOOLEAN:
       case SCTAG_BOOLEAN_OBJECT:
         vp->setBoolean(!!data);
@@ -1471,6 +1547,22 @@ JSStructuredCloneReader::startRead(Value *vp)
             return false;
         return readTypedArray(arrayType, data, vp);
 
+      case SCTAG_MAP_OBJECT: {
+        JSObject *obj = MapObject::create(context());
+        if (!obj || !objs.append(ObjectValue(*obj)))
+            return false;
+        vp->setObject(*obj);
+        break;
+      }
+
+      case SCTAG_SET_OBJECT: {
+        JSObject *obj = SetObject::create(context());
+        if (!obj || !objs.append(ObjectValue(*obj)))
+            return false;
+        vp->setObject(*obj);
+        break;
+      }
+
       default: {
         if (tag <= SCTAG_FLOAT_MAX) {
             double d = ReinterpretPairAsDouble(tag, data);
@@ -1502,36 +1594,6 @@ JSStructuredCloneReader::startRead(Value *vp)
         return false;
 
     return true;
-}
-
-bool
-JSStructuredCloneReader::readId(jsid *idp)
-{
-    uint32_t tag, data;
-    if (!in.readPair(&tag, &data))
-        return false;
-
-    if (tag == SCTAG_INDEX) {
-        *idp = INT_TO_JSID(int32_t(data));
-        return true;
-    }
-    if (tag == SCTAG_STRING) {
-        JSString *str = readString(data);
-        if (!str)
-            return false;
-        JSAtom *atom = AtomizeString(context(), str);
-        if (!atom)
-            return false;
-        *idp = NON_INTEGER_ATOM_TO_JSID(atom);
-        return true;
-    }
-    if (tag == SCTAG_NULL) {
-        *idp = JSID_VOID;
-        return true;
-    }
-    JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
-                         JSMSG_SC_BAD_SERIALIZED_DATA, "id");
-    return false;
 }
 
 bool
@@ -1590,7 +1652,7 @@ JSStructuredCloneReader::readTransferMap()
             MOZ_ASSERT(obj);
             MOZ_ASSERT(!cx->isExceptionPending());
         }
-        
+
         // On failure, the buffer will still own the data (since its ownership will not get set to SCTAG_TMO_UNOWNED),
         // so the data will be freed by ClearStructuredClone
         if (!obj)
@@ -1629,17 +1691,48 @@ JSStructuredCloneReader::read(Value *vp)
     while (objs.length() != 0) {
         RootedObject obj(context(), &objs.back().toObject());
 
-        RootedId id(context());
-        if (!readId(id.address()))
+        uint32_t tag, data;
+        if (!in.getPair(&tag, &data))
             return false;
 
-        if (JSID_IS_VOID(id)) {
+        if (tag == SCTAG_END_OF_KEYS) {
+            MOZ_ALWAYS_TRUE(in.readPair(&tag, &data));
             objs.popBack();
-        } else {
-            RootedValue v(context());
-            if (!startRead(v.address()) || !JSObject::defineGeneric(context(), obj, id, v))
-                return false;
+            continue;
         }
+
+        RootedValue key(context());
+        if (!startRead(key.address()))
+            return false;
+
+        if (key.isNull() && !(obj->is<MapObject>() || obj->is<SetObject>())) {
+            // Backwards compatibility: Null used to indicate
+            // the end of object properties.
+            objs.popBack();
+            continue;
+        }
+
+        if (obj->is<SetObject>()) {
+            if (!SetObject::add(context(), obj, key))
+                return false;
+            continue;
+        }
+
+        RootedValue val(context());
+        if (!startRead(val.address()))
+            return false;
+
+        if (obj->is<MapObject>()) {
+            if (!MapObject::set(context(), obj, key, val))
+                return false;
+        } else {
+            RootedId id(context());
+            if (!ValueToId<CanGC>(context(), key, &id))
+                return false;
+
+            if (!JSObject::defineGeneric(context(), obj, id, val))
+                return false;
+         }
     }
 
     allObjs.clear();
