@@ -6058,7 +6058,7 @@ SetRuntimeOptions(JSRuntime *rt, const OptionParser &op)
 
     jsCacheDir = op.getStringOption("js-cache");
     if (jsCacheDir) {
-        if (op.getBoolOption("js-cache-per-process"))
+        if (!op.getBoolOption("no-js-cache-per-process"))
             jsCacheDir = JS_smprintf("%s/%u", jsCacheDir, (unsigned)getpid());
         jsCacheAsmJSPath = JS_smprintf("%s/asmjs.cache", jsCacheDir);
     }
@@ -6100,7 +6100,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
     if (enableDisassemblyDumps)
         JS_DumpCompartmentPCCounts(cx);
 
-    if (op->getBoolOption("js-cache-per-process")) {
+    if (!op->getBoolOption("no-js-cache-per-process")) {
         if (jsCacheAsmJSPath)
             unlink(jsCacheAsmJSPath);
         if (jsCacheDir)
@@ -6178,11 +6178,12 @@ main(int argc, char **argv, char **envp)
         || !op.addStringOption('\0', "js-cache", "[path]",
                                "Enable the JS cache by specifying the path of the directory to use "
                                "to hold cache files")
-        || !op.addBoolOption('\0', "js-cache-per-process",
-                               "Generate a separate cache sub-directory for this process inside "
-                               "the cache directory specified by --js-cache. This cache directory "
-                               "will be removed when the js shell exits. This is useful for running "
-                               "tests in parallel.")
+        || !op.addBoolOption('\0', "no-js-cache-per-process",
+                               "Deactivates cache per process. Otherwise, generate a separate cache"
+                               "sub-directory for this process inside the cache directory"
+                               "specified by --js-cache. This cache directory will be removed"
+                               "when the js shell exits. This is useful for running tests in"
+                               "parallel.")
 #ifdef DEBUG
         || !op.addBoolOption('O', "print-alloc", "Print the number of allocations at exit")
 #endif
