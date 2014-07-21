@@ -69,7 +69,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
         // relies on the a priori stack adjustment (in the prologue) on platforms
         // (like x64) which require the stack to be aligned.
         if (StackKeptAligned || gen->needsInitialStackAlignment()) {
-            unsigned alignmentAtCall = AsmJSFrameSize + frameDepth_;
+            unsigned alignmentAtCall = sizeof(AsmJSFrame) + frameDepth_;
             if (unsigned rem = alignmentAtCall % StackAlignment)
                 frameDepth_ += StackAlignment - rem;
         }
