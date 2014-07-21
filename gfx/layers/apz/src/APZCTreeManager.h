@@ -294,6 +294,7 @@ public:
 
   bool FlushRepaintsForOverscrollHandoffChain();
   bool CancelAnimationsForOverscrollHandoffChain();
+  void SnapBackOverscrolledApzc(AsyncPanZoomController* aStart);
 
   /**
    * Determine whether |aApzc|, or any APZC along its overscroll handoff chain,
