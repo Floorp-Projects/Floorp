@@ -1066,7 +1066,7 @@ VariablesView.isSortable = function(aClassName) {
  *         The string to be evaluated.
  */
 VariablesView.simpleValueEvalMacro = function(aItem, aCurrentString, aPrefix = "") {
-  return aPrefix + aItem._symbolicName + "=" + aCurrentString;
+  return aPrefix + aItem.symbolicName + "=" + aCurrentString;
 };
 
 /**
@@ -1084,7 +1084,7 @@ VariablesView.simpleValueEvalMacro = function(aItem, aCurrentString, aPrefix = "
  */
 VariablesView.overrideValueEvalMacro = function(aItem, aCurrentString, aPrefix = "") {
   let property = "\"" + aItem._nameString + "\"";
-  let parent = aPrefix + aItem.ownerView._symbolicName || "this";
+  let parent = aPrefix + aItem.ownerView.symbolicName || "this";
 
   return "Object.defineProperty(" + parent + "," + property + "," +
     "{ value: " + aCurrentString +
@@ -1111,7 +1111,7 @@ VariablesView.getterOrSetterEvalMacro = function(aItem, aCurrentString, aPrefix 
   let propertyObject = aItem.ownerView;
   let parentObject = propertyObject.ownerView;
   let property = "\"" + propertyObject._nameString + "\"";
-  let parent = aPrefix + parentObject._symbolicName || "this";
+  let parent = aPrefix + parentObject.symbolicName || "this";
 
   switch (aCurrentString) {
     case "":
@@ -1294,7 +1294,7 @@ Scope.prototype = {
     let child = this._createChild(aName, aDescriptor);
     this._store.set(aName, child);
     this._variablesView._itemsByElement.set(child._target, child);
-    this._variablesView._currHierarchy.set(child._absoluteName, child);
+    this._variablesView._currHierarchy.set(child.absoluteName, child);
     child.header = !!aName;
 
     return child;
@@ -2152,8 +2152,6 @@ function Variable(aScope, aName, aDescriptor) {
 
   Scope.call(this, aScope, aName, this._initialDescriptor = aDescriptor);
   this.setGrip(aDescriptor.value);
-  this._symbolicName = aName;
-  this._absoluteName = aScope.name + "[\"" + aName + "\"]";
 }
 
 Variable.prototype = Heritage.extend(Scope.prototype, {
@@ -2203,7 +2201,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
 
     this.ownerView._store.delete(this._nameString);
     this._variablesView._itemsByElement.delete(this._target);
-    this._variablesView._currHierarchy.delete(this._absoluteName);
+    this._variablesView._currHierarchy.delete(this.absoluteName);
 
     this._target.remove();
 
@@ -2324,7 +2322,22 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
    * For example, a symbolic name may look like "arguments['0']['foo']['bar']".
    * @return string
    */
-  get symbolicName() this._symbolicName,
+  get symbolicName() {
+    return this._nameString;
+  },
+
+  /**
+   * Gets full path to this variable, including name of the scope.
+   * @return string
+   */
+  get absoluteName() {
+    if (this._absoluteName) {
+      return this._absoluteName;
+    }
+
+    this._absoluteName = this.ownerView._nameString + "[\"" + this._nameString + "\"]";
+    return this._absoluteName;
+  },
 
   /**
    * Gets this variable's symbolic path to the topmost scope.
@@ -2446,10 +2459,10 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     let fadeInDelay = this._variablesView.lazyEmptyDelay + 1;
     let fadeOutDelay = fadeInDelay + aDuration;
 
-    setNamedTimeout("vview-flash-in" + this._absoluteName,
+    setNamedTimeout("vview-flash-in" + this.absoluteName,
       fadeInDelay, () => this._target.setAttribute("changed", ""));
 
-    setNamedTimeout("vview-flash-out" + this._absoluteName,
+    setNamedTimeout("vview-flash-out" + this.absoluteName,
       fadeOutDelay, () => this._target.removeAttribute("changed"));
   },
 
@@ -2974,9 +2987,9 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     }, e);
   },
 
-  _symbolicName: "",
+  _symbolicName: null,
   _symbolicPath: null,
-  _absoluteName: "",
+  _absoluteName: null,
   _initialDescriptor: null,
   _separatorLabel: null,
   _valueLabel: null,
@@ -3005,15 +3018,39 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
  */
 function Property(aVar, aName, aDescriptor) {
   Variable.call(this, aVar, aName, aDescriptor);
-  this._symbolicName = aVar._symbolicName + "[\"" + aName + "\"]";
-  this._absoluteName = aVar._absoluteName + "[\"" + aName + "\"]";
 }
 
 Property.prototype = Heritage.extend(Variable.prototype, {
   /**
    * The class name applied to this property's target element.
    */
-  targetClassName: "variables-view-property variable-or-property"
+  targetClassName: "variables-view-property variable-or-property",
+
+  /**
+   * @see Variable.symbolicName
+   * @return string
+   */
+  get symbolicName() {
+    if (this._symbolicName) {
+      return this._symbolicName;
+    }
+
+    this._symbolicName = this.ownerView.symbolicName + "[\"" + this._nameString + "\"]";
+    return this._symbolicName;
+  },
+
+  /**
+   * @see Variable.absoluteName
+   * @return string
+   */
+  get absoluteName() {
+    if (this._absoluteName) {
+      return this._absoluteName;
+    }
+
+    this._absoluteName = this.ownerView.absoluteName + "[\"" + this._nameString + "\"]";
+    return this._absoluteName;
+  }
 });
 
 /**
@@ -3089,7 +3126,7 @@ VariablesView.prototype.wasExpanded = function(aItem) {
   if (!(aItem instanceof Scope)) {
     return false;
   }
-  let prevItem = this._prevHierarchy.get(aItem._absoluteName || aItem._nameString);
+  let prevItem = this._prevHierarchy.get(aItem.absoluteName || aItem._nameString);
   return prevItem ? prevItem._isExpanded : false;
 };
 
@@ -3109,7 +3146,7 @@ VariablesView.prototype.hasChanged = function(aItem) {
   if (!(aItem instanceof Variable)) {
     return false;
   }
-  let prevItem = this._prevHierarchy.get(aItem._absoluteName);
+  let prevItem = this._prevHierarchy.get(aItem.absoluteName);
   return prevItem ? prevItem._valueString != aItem._valueString : false;
 };
 
