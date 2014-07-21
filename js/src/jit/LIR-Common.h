@@ -739,6 +739,12 @@ class LAsmJSInterruptCheck : public LInstructionHelper<0, 0, 1>
     }
 };
 
+class LInterruptCheck : public LInstructionHelper<0, 0, 0>
+{
+  public:
+    LIR_HEADER(InterruptCheck)
+};
+
 // Alternative to LInterruptCheck which does not emit an explicit check of the
 // interrupt flag but relies on the loop backedge being patched via a signal
 // handler.
