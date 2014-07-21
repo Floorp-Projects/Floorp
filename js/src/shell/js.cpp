@@ -4264,24 +4264,6 @@ NewGlobal(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-EnableStackWalkingAssertion(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.get(0).isBoolean()) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
-                             "enableStackWalkingAssertion");
-        return false;
-    }
-
-#ifdef DEBUG
-    cx->stackIterAssertionEnabled = args[0].toBoolean();
-#endif
-
-    args.rval().setUndefined();
-    return true;
-}
-
-static bool
 GetMaxArgs(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -4788,13 +4770,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("createMappedArrayBuffer", CreateMappedArrayBuffer, 1, 0,
 "createMappedArrayBuffer(filename, [offset, [size]])",
 "  Create an array buffer that mmaps the given file."),
-
-    JS_FN_HELP("enableStackWalkingAssertion", EnableStackWalkingAssertion, 1, 0,
-"enableStackWalkingAssertion(enabled)",
-"  Enables or disables a particularly expensive assertion in stack-walking\n"
-"  code.  If your test isn't ridiculously thorough, such that performing this\n"
-"  assertion increases test duration by an order of magnitude, you shouldn't\n"
-"  use this."),
 
     JS_FN_HELP("getMaxArgs", GetMaxArgs, 0, 0,
 "getMaxArgs()",
