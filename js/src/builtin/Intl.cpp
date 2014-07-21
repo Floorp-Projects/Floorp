@@ -542,13 +542,13 @@ intl_availableLocales(JSContext* cx, CountAvailable countAvailable,
     RootedValue t(cx, BooleanValue(true));
     for (uint32_t i = 0; i < count; i++) {
         const char* locale = getAvailable(i);
-        ScopedJSFreePtr<char> lang(JS_strdup(cx, locale));
+        auto lang = DuplicateString(cx, locale);
         if (!lang)
             return false;
         char* p;
-        while ((p = strchr(lang, '_')))
+        while ((p = strchr(lang.get(), '_')))
             *p = '-';
-        RootedAtom a(cx, Atomize(cx, lang, strlen(lang)));
+        RootedAtom a(cx, Atomize(cx, lang.get(), strlen(lang.get())));
         if (!a)
             return false;
         if (!DefineProperty(cx, locales, a->asPropertyName(), t, nullptr, nullptr,
