@@ -193,6 +193,7 @@ private:
 
   bool IsAdapterAttributeChanged(BluetoothAdapterAttribute aType,
                                  const BluetoothValue& aValue);
+  void HandleAdapterStateChanged();
   void HandlePropertyChanged(const BluetoothValue& aValue);
   void DispatchAttributeEvent(const nsTArray<nsString>& aTypes);
   BluetoothAdapterAttribute
