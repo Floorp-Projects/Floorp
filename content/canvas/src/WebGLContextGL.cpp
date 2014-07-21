@@ -2173,7 +2173,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
         mBoundFramebuffer->ColorAttachmentCount() &&
         mBoundFramebuffer->ColorAttachment(0).IsDefined())
     {
-        isSourceTypeFloat = mBoundFramebuffer->ColorAttachment(0).IsFloatType();
+        isSourceTypeFloat = mBoundFramebuffer->ColorAttachment(0).IsReadableFloat();
     }
 
     if (isReadTypeFloat != isSourceTypeFloat)
