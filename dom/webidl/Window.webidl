@@ -179,16 +179,13 @@ partial interface Window {
   //[Throws] readonly attribute double pageXOffset;
   //[Throws] readonly attribute double scrollY;
   //[Throws] readonly attribute double pageYOffset;
-  //void scroll(double x, double y, optional ScrollOptions options);
-  //void scrollTo(double x, double y, optional ScrollOptions options);
-  //void scrollBy(double x, double y, optional ScrollOptions options);
+  void scroll(double x, double y, optional ScrollOptions options);
+  void scrollTo(double x, double y, optional ScrollOptions options);
+  void scrollBy(double x, double y, optional ScrollOptions options);
   [Replaceable, Throws] readonly attribute long scrollX;
   [Throws] readonly attribute long pageXOffset;
   [Replaceable, Throws] readonly attribute long scrollY;
   [Throws] readonly attribute long pageYOffset;
-  void scroll(long x, long y);
-  void scrollTo(long x, long y);
-  void scrollBy(long x, long y);
 
   // client
   //[Throws] readonly attribute double screenX;
@@ -271,12 +268,12 @@ partial interface Window {
   /**
    * Method for scrolling this window by a number of lines.
    */
-  void                      scrollByLines(long numLines);
+  void                      scrollByLines(long numLines, optional ScrollOptions options);
 
   /**
    * Method for scrolling this window by a number of pages.
    */
-  void                      scrollByPages(long numPages);
+  void                      scrollByPages(long numPages, optional ScrollOptions options);
 
   /**
    * Method for sizing this window to the content in the window.
