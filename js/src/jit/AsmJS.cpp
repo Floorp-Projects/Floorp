@@ -5869,10 +5869,15 @@ CheckModuleReturn(ModuleCompiler &m)
 static void
 LoadAsmJSActivationIntoRegister(MacroAssembler &masm, Register reg)
 {
-    masm.movePtr(AsmJSImmPtr(AsmJSImm_Runtime), reg);
-    size_t offset = offsetof(JSRuntime, mainThread) +
-                    PerThreadData::offsetOfAsmJSActivationStackReadOnly();
-    masm.loadPtr(Address(reg, offset), reg);
+#if defined(JS_CODEGEN_X64)
+    CodeOffsetLabel label = masm.loadRipRelativeInt64(reg);
+    masm.append(AsmJSGlobalAccess(label, AsmJSModule::activationGlobalDataOffset()));
+#elif defined(JS_CODEGEN_X86)
+    CodeOffsetLabel label = masm.movlWithPatch(PatchedAbsoluteAddress(), reg);
+    masm.append(AsmJSGlobalAccess(label, AsmJSModule::activationGlobalDataOffset()));
+#else
+    masm.loadPtr(Address(GlobalReg, AsmJSModule::activationGlobalDataOffset()), reg);
+#endif
 }
 
 static void
@@ -5968,14 +5973,6 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     masm.PushRegsInMask(NonVolatileRegs);
     JS_ASSERT(masm.framePushed() == FramePushedAfterSave);
 
-    // Remember the stack pointer in the current AsmJSActivation. This will be
-    // used by error exit paths to set the stack pointer back to what it was
-    // right after the (C++) caller's non-volatile registers were saved so that
-    // they can be restored.
-    Register activation = ABIArgGenerator::NonArgReturnVolatileReg0;
-    LoadAsmJSActivationIntoRegister(masm, activation);
-    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfErrorRejoinSP()));
-
     // ARM and MIPS have a globally-pinned GlobalReg (x64 uses RIP-relative
     // addressing, x86 uses immediates in effective addresses) and NaN register
     // (used as part of the out-of-bounds handling in heap loads/stores).
@@ -5989,6 +5986,14 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     masm.loadPtr(Address(IntArgReg1, AsmJSModule::heapGlobalDataOffset()), HeapReg);
 #endif
+
+    // Remember the stack pointer in the current AsmJSActivation. This will be
+    // used by error exit paths to set the stack pointer back to what it was
+    // right after the (C++) caller's non-volatile registers were saved so that
+    // they can be restored.
+    Register activation = ABIArgGenerator::NonArgReturnVolatileReg0;
+    LoadAsmJSActivationIntoRegister(masm, activation);
+    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfErrorRejoinSP()));
 
     // Get 'argv' into a non-arg register and save it on the stack.
     Register argv = ABIArgGenerator::NonArgReturnVolatileReg0;
