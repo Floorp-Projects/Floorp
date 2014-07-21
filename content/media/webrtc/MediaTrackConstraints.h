@@ -100,7 +100,12 @@ struct VideoTrackConstraintsN :
     Triage(Kind::Width).mWidth = mWidth;
     Triage(Kind::Height).mHeight = mHeight;
     Triage(Kind::FrameRate).mFrameRate = mFrameRate;
-
+    if (mBrowserWindow.WasPassed()) {
+      Triage(Kind::BrowserWindow).mBrowserWindow.Construct(mBrowserWindow.Value());
+    }
+    if (mScrollWithPage.WasPassed()) {
+      Triage(Kind::ScrollWithPage).mScrollWithPage.Construct(mScrollWithPage.Value());
+    }
     // treat MediaSource special because it's always required
     mRequired.mMediaSource = mMediaSource;
   }
