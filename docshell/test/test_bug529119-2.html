@@ -14,6 +14,7 @@ var faultyURL = "http://some-nonexistent-domain-27489274c892748217cn2384.com/";
 
 var w = null;
 var phase = 0;
+var isWindowLoaded = false;
 
 function pollForPage(expectErrorPage, f, w)
 {
@@ -42,6 +43,12 @@ function pollForPage(expectErrorPage, f, w)
 
 function windowLoaded()
 {
+  // The code under here should only be run once
+  // The test popup window workingURL was already opened
+  if (isWindowLoaded)
+    return;
+  isWindowLoaded = true;
+
   /* 2. We have successfully loaded a page, now go to a faulty URL */
   // XXX The test fails when we change the location synchronously 
   window.setTimeout(function() {
