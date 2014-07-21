@@ -4065,7 +4065,6 @@ Simulator::execute()
     // Get the PC to simulate. Cannot use the accessor here as we need the raw
     // PC value and not the one used as input to arithmetic instructions.
     int program_counter = get_pc();
-    AsmJSActivation *activation = TlsPerThreadData.get()->asmJSActivationStackFromOwnerThread();
 
     while (program_counter != end_sim_pc) {
         if (EnableStopSimAt && (icount_ == Simulator::StopSimAt)) {
@@ -4080,7 +4079,7 @@ Simulator::execute()
             int32_t rpc = resume_pc_;
             if (MOZ_UNLIKELY(rpc != 0)) {
                 // AsmJS signal handler ran and we have to adjust the pc.
-                activation->setResumePC((void *)get_pc());
+                PerThreadData::innermostAsmJSActivation()->setResumePC((void *)get_pc());
                 set_pc(rpc);
                 resume_pc_ = 0;
             }
