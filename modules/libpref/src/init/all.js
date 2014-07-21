@@ -3832,7 +3832,7 @@ pref("layers.max-active", -1);
 pref("layers.scroll-graph", false);
 
 // Set the default values, and then override per-platform as needed
-pref("layers.offmainthreadcomposition.enabled", true);
+pref("layers.offmainthreadcomposition.enabled", false);
 // Compositor target frame rate. NOTE: If vsync is enabled the compositor
 // frame rate will still be capped.
 // -1 -> default (match layout.frame_rate or 60 FPS)
@@ -3845,13 +3845,30 @@ pref("layers.async-video.enabled", true);
 pref("layers.async-video-oop.enabled",true);
 
 #ifdef XP_WIN
+pref("layers.offmainthreadcomposition.enabled", true);
 // XXX - see bug 1009616
 pref("layers.async-video-oop.enabled", false);
+#endif
+
+#ifdef MOZ_WIDGET_QT
+pref("layers.offmainthreadcomposition.enabled", true);
+#endif
+
+#ifdef XP_MACOSX
+pref("layers.offmainthreadcomposition.enabled", true);
+#endif
+
+// ANDROID covers android and b2g
+#ifdef ANDROID
+pref("layers.offmainthreadcomposition.enabled", true);
 #endif
 
 // same effect as layers.offmainthreadcomposition.enabled, but specifically for
 // use with tests.
 pref("layers.offmainthreadcomposition.testing.enabled", false);
+
+// whether to allow use of the basic compositor
+pref("layers.offmainthreadcomposition.force-basic", false);
 
 // Whether to animate simple opacity and transforms on the compositor
 pref("layers.offmainthreadcomposition.async-animations", false);
