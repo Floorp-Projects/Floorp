@@ -23,9 +23,6 @@
 #include "SeekableZStream.h"
 #include "Logging.h"
 
-using mozilla::MakeUnique;
-using mozilla::UniquePtr;
-
 Mappable *
 MappableFile::Create(const char *path)
 {
@@ -70,8 +67,8 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
         "not extracting");
     return nullptr;
   }
-  UniquePtr<char[]> path =
-    MakeUnique<char[]>(strlen(cachePath) + strlen(name) + 2);
+  mozilla::UniquePtr<char[]> path;
+  path.reset(new char[strlen(cachePath) + strlen(name) + 2]);
   sprintf(path.get(), "%s/%s", cachePath, name);
   struct stat cacheStat;
   if (stat(path.get(), &cacheStat) == 0) {
@@ -90,7 +87,8 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
     ERROR("Couldn't open %s to decompress library", path.get());
     return nullptr;
   }
-  AutoUnlinkFile file(path.release());
+  AutoUnlinkFile file;
+  file = path.release();
   if (stream->GetType() == Zip::Stream::DEFLATE) {
     if (ftruncate(fd, stream->GetUncompressedSize()) == -1) {
       ERROR("Couldn't ftruncate %s to decompress library", file.get());
@@ -149,7 +147,7 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
     return nullptr;
   }
 
-  return new MappableExtractFile(fd.forget(), Move(file));
+  return new MappableExtractFile(fd.forget(), file.forget());
 }
 
 MappableExtractFile::~MappableExtractFile()
@@ -396,7 +394,8 @@ MappableSeekableZStream::Create(const char *name, Zip *zip,
   if (!mappable->buffer)
     return nullptr;
 
-  mappable->chunkAvail = MakeUnique<unsigned char[]>(mappable->zStream.GetChunksNum());
+  mappable->chunkAvail = new unsigned char[mappable->zStream.GetChunksNum()];
+  memset(mappable->chunkAvail, 0, mappable->zStream.GetChunksNum());
 
   return mappable.forget();
 }
@@ -580,7 +579,7 @@ MappableSeekableZStream::stats(const char *when, const char *name) const
             name, when, static_cast<size_t>(chunkAvailNum), nEntries);
 
   size_t len = 64;
-  UniquePtr<char[]> map = MakeUnique<char[]>(len + 3);
+  mozilla::UniquePtr<char[]> map(new char[len + 3]);
   map[0] = '[';
 
   for (size_t i = 0, j = 1; i < nEntries; i++, j++) {
