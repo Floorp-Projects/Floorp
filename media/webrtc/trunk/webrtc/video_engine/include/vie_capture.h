@@ -51,7 +51,8 @@ enum CaptureDeviceType {
   Camera = 0,
   Screen = 1,
   Application = 2,
-  Window = 3
+  Window = 3,
+  Browser = 4
 };
 struct CaptureDeviceInfo {
   CaptureDeviceType type;
