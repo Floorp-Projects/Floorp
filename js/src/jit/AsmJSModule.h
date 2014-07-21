@@ -338,53 +338,68 @@ class AsmJSModule
         uint32_t begin_;
         uint32_t profilingReturn_;
         uint32_t end_;
-        uint8_t beginToEntry_;
-        uint8_t profilingJumpToProfilingReturn_;
-        uint8_t profilingEpilogueToProfilingReturn_;
-        uint8_t kind_;
+        union {
+            struct {
+                uint8_t kind_;
+                uint8_t beginToEntry_;
+                uint8_t profilingJumpToProfilingReturn_;
+                uint8_t profilingEpilogueToProfilingReturn_;
+            } func;
+            struct {
+                uint8_t kind_;
+                uint16_t target_;
+            } thunk;
+            uint8_t kind_;
+        } u;
 
         void setDeltas(uint32_t entry, uint32_t profilingJump, uint32_t profilingEpilogue);
 
       public:
-        enum Kind { Function, Entry, FFI, Interrupt, Inline };
+        enum Kind { Function, Entry, FFI, Interrupt, Thunk, Inline };
 
         CodeRange() {}
         CodeRange(uint32_t nameIndex, const AsmJSFunctionLabels &l);
         CodeRange(Kind kind, uint32_t begin, uint32_t end);
         CodeRange(Kind kind, uint32_t begin, uint32_t profilingReturn, uint32_t end);
+        CodeRange(AsmJSExit::BuiltinKind builtin, uint32_t begin, uint32_t pret, uint32_t end);
         void updateOffsets(jit::MacroAssembler &masm);
 
-        Kind kind() const { return Kind(kind_); }
+        Kind kind() const { return Kind(u.kind_); }
         bool isFunction() const { return kind() == Function; }
         bool isEntry() const { return kind() == Entry; }
         bool isFFI() const { return kind() == FFI; }
         bool isInterrupt() const { return kind() == Interrupt; }
+        bool isThunk() const { return kind() == Thunk; }
 
         uint32_t begin() const {
             return begin_;
         }
         uint32_t entry() const {
             JS_ASSERT(isFunction());
-            return begin_ + beginToEntry_;
+            return begin_ + u.func.beginToEntry_;
         }
         uint32_t end() const {
             return end_;
         }
         uint32_t profilingJump() const {
             JS_ASSERT(isFunction());
-            return profilingReturn_ - profilingJumpToProfilingReturn_;
+            return profilingReturn_ - u.func.profilingJumpToProfilingReturn_;
         }
         uint32_t profilingEpilogue() const {
             JS_ASSERT(isFunction());
-            return profilingReturn_ - profilingEpilogueToProfilingReturn_;
+            return profilingReturn_ - u.func.profilingEpilogueToProfilingReturn_;
         }
         uint32_t profilingReturn() const {
-            JS_ASSERT(isFunction() || isFFI() || isInterrupt());
+            JS_ASSERT(isFunction() || isFFI() || isInterrupt() || isThunk());
             return profilingReturn_;
         }
         PropertyName *functionName(const AsmJSModule &module) const {
-            JS_ASSERT(kind() == Function);
+            JS_ASSERT(isFunction());
             return module.names_[nameIndex_].name();
+        }
+        AsmJSExit::BuiltinKind thunkTarget() const {
+            JS_ASSERT(isThunk());
+            return AsmJSExit::BuiltinKind(u.thunk.target_);
         }
     };
 
@@ -586,6 +601,7 @@ class AsmJSModule
     Vector<jit::CallSite,          0, SystemAllocPolicy> callSites_;
     Vector<CodeRange,              0, SystemAllocPolicy> codeRanges_;
     Vector<FuncPtrTable,           0, SystemAllocPolicy> funcPtrTables_;
+    Vector<uint32_t,               0, SystemAllocPolicy> builtinThunkOffsets_;
     Vector<Name,                   0, SystemAllocPolicy> names_;
     Vector<jit::AsmJSHeapAccess,   0, SystemAllocPolicy> heapAccesses_;
     Vector<jit::IonScriptCounts*,  0, SystemAllocPolicy> functionCounts_;
@@ -801,6 +817,12 @@ class AsmJSModule
     }
     bool addInterruptCodeRange(uint32_t begin, uint32_t pret, uint32_t end) {
         return codeRanges_.append(CodeRange(CodeRange::Interrupt, begin, pret, end));
+    }
+    bool addBuiltinThunkCodeRange(AsmJSExit::BuiltinKind builtin, uint32_t begin,
+                                  uint32_t profilingReturn, uint32_t end)
+    {
+        return builtinThunkOffsets_.append(begin) &&
+               codeRanges_.append(CodeRange(builtin, begin, profilingReturn, end));
     }
     bool addInlineCodeRange(uint32_t begin, uint32_t end) {
         return codeRanges_.append(CodeRange(CodeRange::Inline, begin, end));

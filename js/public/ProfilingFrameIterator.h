@@ -57,7 +57,8 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
 
     enum Kind {
         Function,
-        AsmJSTrampoline
+        AsmJSTrampoline,
+        CppFunction
     };
     Kind kind() const;
 
