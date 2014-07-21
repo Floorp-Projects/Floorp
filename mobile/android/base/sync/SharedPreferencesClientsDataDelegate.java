@@ -6,7 +6,9 @@ package org.mozilla.gecko.sync;
 
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
+import org.mozilla.gecko.R;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 
 /**
@@ -15,9 +17,11 @@ import android.content.SharedPreferences;
  */
 public class SharedPreferencesClientsDataDelegate implements ClientsDataDelegate {
   protected final SharedPreferences sharedPreferences;
+  protected final Context context;
 
-  public SharedPreferencesClientsDataDelegate(SharedPreferences sharedPreferences) {
+  public SharedPreferencesClientsDataDelegate(SharedPreferences sharedPreferences, Context context) {
     this.sharedPreferences = sharedPreferences;
+    this.context = context;
   }
 
   @Override
@@ -46,8 +50,15 @@ public class SharedPreferencesClientsDataDelegate implements ClientsDataDelegate
 
   @Override
   public String getDefaultClientName() {
-    // Bug 1019719: localize this string!
-    return GlobalConstants.MOZ_APP_DISPLAYNAME + " on " + android.os.Build.MODEL;
+    String name = GlobalConstants.MOZ_APP_DISPLAYNAME;
+    if (name.contains("Aurora")) {
+        name = "Aurora";
+    } else if (name.contains("Beta")) {
+        name = "Beta";
+    } else if (name.contains("Nightly")) {
+        name = "Nightly";
+    }
+    return context.getResources().getString(R.string.sync_default_client_name, name, android.os.Build.MODEL);
   }
 
   @Override
