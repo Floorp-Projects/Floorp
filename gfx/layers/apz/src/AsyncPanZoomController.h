@@ -903,6 +903,12 @@ public:
 
   void FlushRepaintForOverscrollHandoff();
 
+  /**
+   * If overscrolled, start a snap-back animation and return true.
+   * Otherwise return false.
+   */
+  bool SnapBackIfOverscrolled();
+
 private:
   FrameMetrics::ViewID mScrollParentId;
 
@@ -913,6 +919,12 @@ private:
    */
   bool CallDispatchScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint,
                           uint32_t aOverscrollHandoffChainIndex);
+
+  /**
+   * A similar helper function for calling
+   * APZCTreeManager::SnapBackOverscrolledApzc().
+   */
+  void CallSnapBackOverscrolledApzc();
 
   /**
    * Try to overscroll by 'aOverscroll'.
