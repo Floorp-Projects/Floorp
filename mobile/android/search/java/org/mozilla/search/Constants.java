@@ -22,4 +22,7 @@ public class Constants {
 
     public static final String YAHOO_WEB_SEARCH_BASE_URL = "https://search.yahoo.com/search?p=";
     public static final String YAHOO_WEB_SEARCH_RESULTS_FILTER = "//search.yahoo.com";
+
+    public static final String INTENT_START_SEARCH = "org.mozilla.search.intent.START_SEARCH";
+    public static final String INTENT_START_SEARCH_QUERY_EXTRA = "org.mozilla.search.intent.START_SEARCH_QUERY_EXTRA";
 }
