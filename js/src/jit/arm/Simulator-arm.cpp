@@ -1140,6 +1140,9 @@ Simulator::Simulator(SimulatorRuntime *srt)
     resume_pc_ = 0;
     break_pc_ = nullptr;
     break_instr_ = 0;
+    single_stepping_ = false;
+    single_step_callback_ = nullptr;
+    single_step_callback_arg_ = nullptr;
     skipCalleeSavedRegsCheck = false;
 
     // Set up architecture state.
@@ -2132,6 +2135,9 @@ Simulator::softwareInterrupt(SimInstruction *instr)
             MOZ_CRASH();
         }
 
+        if (single_stepping_)
+            single_step_callback_(single_step_callback_arg_, this, nullptr);
+
         switch (redirection->type()) {
           case Args_General0: {
             Prototype_General0 target = reinterpret_cast<Prototype_General0>(external);
@@ -2299,6 +2305,9 @@ Simulator::softwareInterrupt(SimInstruction *instr)
           default:
             MOZ_ASSUME_UNREACHABLE("call");
         }
+
+        if (single_stepping_)
+            single_step_callback_(single_step_callback_arg_, this, nullptr);
 
         set_register(lr, saved_lr);
         set_pc(get_register(lr));
@@ -4057,11 +4066,31 @@ Simulator::instructionDecode(SimInstruction *instr)
         set_register(pc, reinterpret_cast<int32_t>(instr) + SimInstruction::kInstrSize);
 }
 
+void
+Simulator::enable_single_stepping(SingleStepCallback cb, void *arg)
+{
+    single_stepping_ = true;
+    single_step_callback_ = cb;
+    single_step_callback_arg_ = arg;
+    single_step_callback_(single_step_callback_arg_, this, (void*)get_pc());
+}
+
+void
+Simulator::disable_single_stepping()
+{
+    single_step_callback_(single_step_callback_arg_, this, (void*)get_pc());
+    single_stepping_ = false;
+    single_step_callback_ = nullptr;
+    single_step_callback_arg_ = nullptr;
+}
 
 template<bool EnableStopSimAt>
 void
 Simulator::execute()
 {
+    if (single_stepping_)
+        single_step_callback_(single_step_callback_arg_, this, nullptr);
+
     // Get the PC to simulate. Cannot use the accessor here as we need the raw
     // PC value and not the one used as input to arithmetic instructions.
     int program_counter = get_pc();
@@ -4072,6 +4101,8 @@ Simulator::execute()
             ArmDebugger dbg(this);
             dbg.debug();
         } else {
+            if (single_stepping_)
+                single_step_callback_(single_step_callback_arg_, this, (void*)program_counter);
             SimInstruction *instr = reinterpret_cast<SimInstruction *>(program_counter);
             instructionDecode(instr);
             icount_++;
@@ -4086,6 +4117,9 @@ Simulator::execute()
         }
         program_counter = get_pc();
     }
+
+    if (single_stepping_)
+        single_step_callback_(single_step_callback_arg_, this, nullptr);
 }
 
 void
