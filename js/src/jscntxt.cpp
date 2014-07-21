@@ -1134,10 +1134,6 @@ JSContext::JSContext(JSRuntime *rt)
 #endif
     innermostGenerator_(nullptr)
 {
-#ifdef DEBUG
-    stackIterAssertionEnabled = true;
-#endif
-
     JS_ASSERT(static_cast<ContextFriendFields*>(this) ==
               ContextFriendFields::get(this));
 }

@@ -578,14 +578,6 @@ struct JSContext : public js::ExclusiveContext,
     void setPropagatingForcedReturn() { propagatingForcedReturn_ = true; }
     void clearPropagatingForcedReturn() { propagatingForcedReturn_ = false; }
 
-#ifdef DEBUG
-    /*
-     * Controls whether a quadratic-complexity assertion is performed during
-     * stack iteration; defaults to true.
-     */
-    bool stackIterAssertionEnabled;
-#endif
-
     /*
      * See JS_SetTrustedPrincipals in jsapi.h.
      * Note: !cx->compartment is treated as trusted.
