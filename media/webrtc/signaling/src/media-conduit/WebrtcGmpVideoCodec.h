@@ -33,16 +33,23 @@
 #include "GMPVideoDecoderProxy.h"
 #include "GMPVideoEncoderProxy.h"
 
-#include "WebrtcGmpVideoCodec.h"
-
 namespace mozilla {
 
+class WebrtcGmpCrashReporter {
+public:
+  virtual const uint64_t CrashID() = 0;
+};
+
 class WebrtcGmpVideoEncoder : public WebrtcVideoEncoder,
-                              public GMPVideoEncoderCallbackProxy
+                              public GMPVideoEncoderCallbackProxy,
+                              public WebrtcGmpCrashReporter
 {
 public:
   WebrtcGmpVideoEncoder();
   virtual ~WebrtcGmpVideoEncoder() {}
+
+  // Implement CrashReporter
+  virtual const uint64_t CrashID() { return mGMP ? mGMP->ParentID() : 0; }
 
   // Implement VideoEncoder interface.
   virtual int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
@@ -90,11 +97,15 @@ private:
 
 
 class WebrtcGmpVideoDecoder : public WebrtcVideoDecoder,
-                              public GMPVideoDecoderCallback
+                              public GMPVideoDecoderCallback,
+                              public WebrtcGmpCrashReporter
 {
 public:
   WebrtcGmpVideoDecoder();
   virtual ~WebrtcGmpVideoDecoder() {}
+
+  // Implement CrashReporter
+  virtual const uint64_t CrashID() { return mGMP ? mGMP->ParentID() : 0; }
 
   // Implement VideoDecoder interface.
   virtual int32_t InitDecode(const webrtc::VideoCodec* aCodecSettings,

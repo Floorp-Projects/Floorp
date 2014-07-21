@@ -42,6 +42,7 @@ public:
   virtual nsresult Reset() MOZ_OVERRIDE;
   virtual nsresult Drain() MOZ_OVERRIDE;
   virtual nsresult DecodingComplete() MOZ_OVERRIDE;
+  virtual const uint64_t ParentID() MOZ_OVERRIDE { return reinterpret_cast<uint64_t>(mPlugin.get()); }
 
   // GMPSharedMemManager
   virtual void CheckThread();
