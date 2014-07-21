@@ -10,9 +10,6 @@
 <pre id="test">
 <script class="testbody" type='application/javascript;version=1.8'>
 
-// Run one test at a time for this test case is time-sensitive and B2G
-// emulator could be very slow.
-PARALLEL_TESTS = 1;
 let manager = new MediaTestManager;
 
 function rangeCheck(lhs, rhs, threshold) {
@@ -82,14 +79,7 @@ function afterNullPlaybackRate(e) {
 
   t.testedForNull = true;
 
-  // The currentTime won't be perfectly equal because of the latency
-  // compensation. We expect no more that 300ms difference.
-  let THRESHOLD = 0.3;
-  // More tolerance on B2G for it is slow
-  if (SpecialPowers.Services.appinfo.name == "B2G") {
-    THRESHOLD = 0.7;
-  }
-  ok(rangeCheck(t.currentTime, t.oldCurrentTime, THRESHOLD), "Current time should not change when playbackRate is null (" + t.currentTime + " " + t.oldCurrentTime + ").");
+  ok(t.currentTime == t.oldCurrentTime, "Current time should not change when playbackRate is null (" + t.currentTime + " " + t.oldCurrentTime + ").");
   ok(!t.paused, "The element should not be in paused state.");
   t.removeEventListener("paused", onpaused);
   is(t.pausedReceived, undefined, "Paused event should not have been received.");
