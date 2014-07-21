@@ -29,6 +29,6 @@ function test() {
 
 function newWindow(callback) {
   let opts = "chrome,all,dialog=no,height=800,width=800";
-  let win = window.openDialog(getBrowserURL(), "_blank", opts);
+  let win = window.openDialog(getBrowserURL(), "_blank", opts, "about:blank");
   whenDelayedStartupFinished(win, () => callback(win));
 }
