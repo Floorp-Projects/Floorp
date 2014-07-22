@@ -167,6 +167,9 @@ TextureClientD3D11::TextureClientD3D11(gfx::SurfaceFormat aFormat, TextureFlags 
 
 TextureClientD3D11::~TextureClientD3D11()
 {
+  if (mTexture && mActor) {
+    KeepUntilFullDeallocation(new TKeepAlive<ID3D10Texture2D>(mTexture));
+  }
 #ifdef DEBUG
   // An Azure DrawTarget needs to be locked when it gets nullptr'ed as this is
   // when it calls EndDraw. This EndDraw should not execute anything so it
@@ -310,12 +313,35 @@ DXGITextureHostD3D11::DXGITextureHostD3D11(TextureFlags aFlags,
   , mHandle(aDescriptor.handle())
   , mFormat(aDescriptor.format())
   , mIsLocked(false)
-{}
+{
+  OpenSharedHandle();
+}
+
+bool
+DXGITextureHostD3D11::OpenSharedHandle()
+{
+  if (!GetDevice()) {
+    return false;
+  }
+
+  HRESULT hr = GetDevice()->OpenSharedResource((HANDLE)mHandle,
+                                               __uuidof(ID3D11Texture2D),
+                                               (void**)(ID3D11Texture2D**)byRef(mTexture));
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to open shared texture");
+    return false;
+  }
+
+  D3D11_TEXTURE2D_DESC desc;
+  mTexture->GetDesc(&desc);
+  mSize = IntSize(desc.Width, desc.Height);
+  return true;
+}
 
 ID3D11Device*
 DXGITextureHostD3D11::GetDevice()
 {
-  return mCompositor ? mCompositor->GetDevice() : nullptr;
+  return gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
 }
 
 void
@@ -332,19 +358,11 @@ DXGITextureHostD3D11::Lock()
     return false;
   }
   if (!mTextureSource) {
-    RefPtr<ID3D11Texture2D> tex;
-    HRESULT hr = GetDevice()->OpenSharedResource((HANDLE)mHandle,
-                                                 __uuidof(ID3D11Texture2D),
-                                                 (void**)(ID3D11Texture2D**)byRef(tex));
-    if (FAILED(hr)) {
-      NS_WARNING("Failed to open shared texture");
+    if (!mTexture && !OpenSharedHandle()) {
       return false;
     }
 
-    mTextureSource = new DataTextureSourceD3D11(mFormat, mCompositor, tex);
-    D3D11_TEXTURE2D_DESC desc;
-    tex->GetDesc(&desc);
-    mSize = IntSize(desc.Width, desc.Height);
+    mTextureSource = new DataTextureSourceD3D11(mFormat, mCompositor, mTexture);
   }
 
   mIsLocked = LockD3DTexture(mTextureSource->GetD3D11Texture());
