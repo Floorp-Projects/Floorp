@@ -85,7 +85,7 @@ static const int kLineTerminatorRangeCount = ArrayLength(kLineTerminatorRanges);
 static const unsigned kMaxOneByteCharCode = 0xff;
 static const int kMaxUtf16CodeUnit = 0xffff;
 
-static jschar
+static char16_t
 MaximumCharacter(bool ascii)
 {
     return ascii ? kMaxOneByteCharCode : kMaxUtf16CodeUnit;
@@ -112,7 +112,7 @@ AddClassNegated(const int *elmv,
     JS_ASSERT(elmv[elmc] == 0x10000);
     JS_ASSERT(elmv[0] != 0x0000);
     JS_ASSERT(elmv[elmc-1] != kMaxUtf16CodeUnit);
-    jschar last = 0x0000;
+    char16_t last = 0x0000;
     for (int i = 0; i < elmc; i += 2) {
         JS_ASSERT(last <= elmv[i] - 1);
         JS_ASSERT(elmv[i] < elmv[i + 1]);
@@ -123,7 +123,7 @@ AddClassNegated(const int *elmv,
 }
 
 void
-CharacterRange::AddClassEscape(LifoAlloc *alloc, jschar type,
+CharacterRange::AddClassEscape(LifoAlloc *alloc, char16_t type,
 			       CharacterRangeVector *ranges)
 {
     switch (type) {
@@ -188,11 +188,11 @@ static const size_t kEcma262UnCanonicalizeMaxWidth = 4;
 // Returns the number of characters in the equivalence class, omitting those
 // that cannot occur in the source string if it is a one byte string.
 static int
-GetCaseIndependentLetters(jschar character,
+GetCaseIndependentLetters(char16_t character,
                           bool ascii_subject,
-                          jschar *letters)
+                          char16_t *letters)
 {
-    jschar choices[] = {
+    const char16_t choices[] = {
         character,
         unicode::ToLowerCase(character),
         unicode::ToUpperCase(character)
@@ -200,7 +200,7 @@ GetCaseIndependentLetters(jschar character,
 
     size_t count = 0;
     for (size_t i = 0; i < ArrayLength(choices); i++) {
-        jschar c = choices[i];
+        char16_t c = choices[i];
 
         // The standard requires that non-ASCII characters cannot have ASCII
         // character codes in their equivalence class, even though this
@@ -230,8 +230,8 @@ GetCaseIndependentLetters(jschar character,
     return count;
 }
 
-static jschar
-ConvertNonLatin1ToLatin1(jschar c)
+static char16_t
+ConvertNonLatin1ToLatin1(char16_t c)
 {
     JS_ASSERT(c > kMaxOneByteCharCode);
     switch (c) {
@@ -250,8 +250,8 @@ ConvertNonLatin1ToLatin1(jschar c)
 void
 CharacterRange::AddCaseEquivalents(bool is_ascii, CharacterRangeVector *ranges)
 {
-    jschar bottom = from();
-    jschar top = to();
+    char16_t bottom = from();
+    char16_t top = to();
 
     if (is_ascii && !RangeContainsLatin1Equivalents(*this)) {
         if (bottom > kMaxOneByteCharCode)
@@ -260,12 +260,12 @@ CharacterRange::AddCaseEquivalents(bool is_ascii, CharacterRangeVector *ranges)
             top = kMaxOneByteCharCode;
     }
 
-    for (jschar c = bottom;; c++) {
-        jschar chars[kEcma262UnCanonicalizeMaxWidth];
+    for (char16_t c = bottom;; c++) {
+        char16_t chars[kEcma262UnCanonicalizeMaxWidth];
         size_t length = GetCaseIndependentLetters(c, is_ascii, chars);
 
         for (size_t i = 0; i < length; i++) {
-            jschar other = chars[i];
+            char16_t other = chars[i];
             if (other == c)
                 continue;
 
@@ -418,8 +418,8 @@ InsertRangeInCanonicalList(CharacterRangeVector &list,
     // list[0..count] for the result. Returns the number of resulting
     // canonicalized ranges. Inserting a range may collapse existing ranges into
     // fewer ranges, so the return value can be anything in the range 1..count+1.
-    jschar from = insert.from();
-    jschar to = insert.to();
+    char16_t from = insert.from();
+    char16_t to = insert.to();
     int start_pos = 0;
     int end_pos = count;
     for (int i = count - 1; i >= 0; i--) {
@@ -725,7 +725,7 @@ TextNode::FilterASCII(int depth, bool ignore_case)
 
                 // Here, we need to check for characters whose upper and lower cases
                 // are outside the Latin-1 range.
-                jschar converted = ConvertNonLatin1ToLatin1(c);
+                char16_t converted = ConvertNonLatin1ToLatin1(c);
                 if (converted == 0) {
                     // Character is outside Latin-1 completely
                     return set_replacement(nullptr);
@@ -1726,7 +1726,7 @@ irregexp::CompilePattern(JSContext *cx, RegExpShared *shared, RegExpCompileData 
     if (IsNativeRegExpEnabled(cx)) {
         NativeRegExpMacroAssembler::Mode mode =
             is_ascii ? NativeRegExpMacroAssembler::ASCII
-                     : NativeRegExpMacroAssembler::JSCHAR;
+                     : NativeRegExpMacroAssembler::CHAR16;
 
         ctx.emplace(cx, (jit::TempAllocator *) nullptr);
         native_assembler.emplace(&alloc, shared, cx->runtime(), mode, (data->capture_count + 1) * 2);
@@ -1778,7 +1778,7 @@ irregexp::ExecuteCode(JSContext *cx, jit::JitCode *codeBlock, const Latin1Char *
                       size_t length, MatchPairs *matches);
 
 template RegExpRunStatus
-irregexp::ExecuteCode(JSContext *cx, jit::JitCode *codeBlock, const jschar *chars, size_t start,
+irregexp::ExecuteCode(JSContext *cx, jit::JitCode *codeBlock, const char16_t *chars, size_t start,
                       size_t length, MatchPairs *matches);
 
 // -------------------------------------------------------------------
@@ -3217,8 +3217,8 @@ GenerateBranches(RegExpMacroAssembler* masm,
                  RangeBoundaryVector &ranges,
                  int start_index,
                  int end_index,
-                 jschar min_char,
-                 jschar max_char,
+                 char16_t min_char,
+                 char16_t max_char,
                  jit::Label* fall_through,
                  jit::Label* even_label,
                  jit::Label* odd_label)
@@ -3472,7 +3472,7 @@ EmitCharClass(LifoAlloc *alloc,
 }
 
 typedef bool EmitCharacterFunction(RegExpCompiler* compiler,
-                                   jschar c,
+                                   char16_t c,
                                    jit::Label* on_failure,
                                    int cp_offset,
                                    bool check,
@@ -3480,7 +3480,7 @@ typedef bool EmitCharacterFunction(RegExpCompiler* compiler,
 
 static inline bool
 EmitSimpleCharacter(RegExpCompiler* compiler,
-                    jschar c,
+                    char16_t c,
                     jit::Label* on_failure,
                     int cp_offset,
                     bool check,
@@ -3500,7 +3500,7 @@ EmitSimpleCharacter(RegExpCompiler* compiler,
 // independent matches.
 static inline bool
 EmitAtomNonLetter(RegExpCompiler* compiler,
-                  jschar c,
+                  char16_t c,
                   jit::Label* on_failure,
                   int cp_offset,
                   bool check,
@@ -3508,7 +3508,7 @@ EmitAtomNonLetter(RegExpCompiler* compiler,
 {
     RegExpMacroAssembler* macro_assembler = compiler->macro_assembler();
     bool ascii = compiler->ascii();
-    jschar chars[kEcma262UnCanonicalizeMaxWidth];
+    char16_t chars[kEcma262UnCanonicalizeMaxWidth];
     int length = GetCaseIndependentLetters(c, ascii, chars);
     if (length < 1) {
         // This can't match.  Must be an ASCII subject and a non-ASCII character.
@@ -3534,35 +3534,35 @@ EmitAtomNonLetter(RegExpCompiler* compiler,
 static bool
 ShortCutEmitCharacterPair(RegExpMacroAssembler* macro_assembler,
                           bool ascii,
-                          jschar c1,
-                          jschar c2,
+                          char16_t c1,
+                          char16_t c2,
                           jit::Label* on_failure)
 {
-    jschar char_mask = MaximumCharacter(ascii);
+    char16_t char_mask = MaximumCharacter(ascii);
 
     JS_ASSERT(c1 != c2);
     if (c1 > c2) {
-        jschar tmp = c1;
+        char16_t tmp = c1;
         c1 = c2;
         c2 = tmp;
     }
 
-    jschar exor = c1 ^ c2;
+    char16_t exor = c1 ^ c2;
     // Check whether exor has only one bit set.
     if (((exor - 1) & exor) == 0) {
         // If c1 and c2 differ only by one bit.
-        jschar mask = char_mask ^ exor;
+        char16_t mask = char_mask ^ exor;
         macro_assembler->CheckNotCharacterAfterAnd(c1, mask, on_failure);
         return true;
     }
 
-    jschar diff = c2 - c1;
+    char16_t diff = c2 - c1;
     if (((diff - 1) & diff) == 0 && c1 >= diff) {
         // If the characters differ by 2^n but don't differ by one bit then
         // subtract the difference from the found character, then do the or
         // trick.  We avoid the theoretical case where negative numbers are
         // involved in order to simplify code generation.
-        jschar mask = char_mask ^ diff;
+        char16_t mask = char_mask ^ diff;
         macro_assembler->CheckNotCharacterAfterMinusAnd(c1 - diff,
                                                         diff,
                                                         mask,
@@ -3576,7 +3576,7 @@ ShortCutEmitCharacterPair(RegExpMacroAssembler* macro_assembler,
 // matches.
 static inline bool
 EmitAtomLetter(RegExpCompiler* compiler,
-               jschar c,
+               char16_t c,
                jit::Label* on_failure,
                int cp_offset,
                bool check,
@@ -3584,7 +3584,7 @@ EmitAtomLetter(RegExpCompiler* compiler,
 {
     RegExpMacroAssembler* macro_assembler = compiler->macro_assembler();
     bool ascii = compiler->ascii();
-    jschar chars[kEcma262UnCanonicalizeMaxWidth];
+    char16_t chars[kEcma262UnCanonicalizeMaxWidth];
     int length = GetCaseIndependentLetters(c, ascii, chars);
     if (length <= 1) return false;
     // We may not need to check against the end of the input string
@@ -4591,9 +4591,9 @@ TextNode::FillInBMInfo(int initial_offset,
                         set_bm_info(not_at_start, bm);
                     return true;
                 }
-                jschar character = atom->data()[j];
+                char16_t character = atom->data()[j];
                 if (bm->compiler()->ignore_case()) {
-                    jschar chars[kEcma262UnCanonicalizeMaxWidth];
+                    char16_t chars[kEcma262UnCanonicalizeMaxWidth];
                     int length = GetCaseIndependentLetters(character,
                                                            bm->max_char() == kMaxOneByteCharCode,
                                                            chars);
@@ -4675,7 +4675,7 @@ TextNode::GetQuickCheckDetails(QuickCheckDetails* details,
             for (size_t i = 0; i < (size_t) characters && i < quarks.length(); i++) {
                 QuickCheckDetails::Position* pos =
                     details->positions(characters_filled_in);
-                jschar c = quarks[i];
+                char16_t c = quarks[i];
                 if (c > char_mask) {
                     // If we expect a non-ASCII character from an ASCII string,
                     // there is no way we can match. Not even case independent
@@ -4686,7 +4686,7 @@ TextNode::GetQuickCheckDetails(QuickCheckDetails* details,
                     return;
                 }
                 if (compiler->ignore_case()) {
-                    jschar chars[kEcma262UnCanonicalizeMaxWidth];
+                    char16_t chars[kEcma262UnCanonicalizeMaxWidth];
                     size_t length = GetCaseIndependentLetters(c, compiler->ascii(), chars);
                     JS_ASSERT(length != 0);  // Can only happen if c > char_mask (see above).
                     if (length == 1) {
@@ -4752,8 +4752,8 @@ TextNode::GetQuickCheckDetails(QuickCheckDetails* details,
                     }
                 }
                 CharacterRange range = ranges[first_range];
-                jschar from = range.from();
-                jschar to = range.to();
+                char16_t from = range.from();
+                char16_t to = range.to();
                 if (to > char_mask) {
                     to = char_mask;
                 }
@@ -4768,8 +4768,8 @@ TextNode::GetQuickCheckDetails(QuickCheckDetails* details,
                 uint32_t bits = (from & common_bits);
                 for (size_t i = first_range + 1; i < ranges.length(); i++) {
                     CharacterRange range = ranges[i];
-                    jschar from = range.from();
-                    jschar to = range.to();
+                    char16_t from = range.from();
+                    char16_t to = range.to();
                     if (from > char_mask) continue;
                     if (to > char_mask) to = char_mask;
                     // Here we are combining more ranges into the mask and compare
@@ -4880,7 +4880,7 @@ void QuickCheckDetails::Merge(QuickCheckDetails* other, int from_index)
         pos->mask &= other_pos->mask;
         pos->value &= pos->mask;
         other_pos->value &= pos->mask;
-        jschar differing_bits = (pos->value ^ other_pos->value);
+        char16_t differing_bits = (pos->value ^ other_pos->value);
         pos->mask &= ~differing_bits;
         pos->value &= pos->mask;
     }

@@ -114,9 +114,9 @@ after importing our other SpiderMonkey support modules. For example:
     import gdb
     from mozilla.prettyprinters import ptr_pretty_printer
 
-    # Simple jschar * printer. Doesn't show address; chases null pointers.
-    @ptr_pretty_printer('jschar')
-    class jscharPtr(object):
+    # Simple char16_t * printer. Doesn't show address; chases null pointers.
+    @ptr_pretty_printer('char16_t')
+    class char16Ptr(object):
         def __init__(self, value, cache): self.value = value
         def display_hint(self): return 'string'
         def to_string(self):
@@ -128,7 +128,7 @@ after importing our other SpiderMonkey support modules. For example:
     $
     ...
     (gdb) whatis sample
-    type = jschar [4]
+    type = char16_t [4]
     (gdb) print &sample[0]
     $1 = "Hi!"
 

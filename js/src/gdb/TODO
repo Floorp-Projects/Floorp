@@ -1,5 +1,5 @@
 * Ideas:
-- jschar *
+- char16_t *
 - js::Shape, js::Baseshape
 - printers for structures with horrible unions (JSString, JSParseNode)
 - bring back parse_node.py

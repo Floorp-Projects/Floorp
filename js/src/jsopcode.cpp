@@ -792,7 +792,7 @@ js_DumpScriptDepth(JSContext *cx, JSScript *scriptArg, jsbytecode *pc)
 }
 
 static char *
-QuoteString(Sprinter *sp, JSString *str, jschar quote);
+QuoteString(Sprinter *sp, JSString *str, char16_t quote);
 
 static bool
 ToDisassemblySource(JSContext *cx, HandleValue v, JSAutoByteString *bytes)
@@ -1290,7 +1290,7 @@ const char js_EscapeMap[] = {
 
 template <typename CharT>
 static char *
-QuoteString(Sprinter *sp, const CharT *s, size_t length, jschar quote)
+QuoteString(Sprinter *sp, const CharT *s, size_t length, char16_t quote)
 {
     /* Sample off first for later return value pointer computation. */
     ptrdiff_t offset = sp->getOffset();
@@ -1303,7 +1303,7 @@ QuoteString(Sprinter *sp, const CharT *s, size_t length, jschar quote)
     /* Loop control variables: end points at end of string sentinel. */
     for (const CharT *t = s; t < end; s = ++t) {
         /* Move t forward from s past un-quote-worthy characters. */
-        jschar c = *t;
+        char16_t c = *t;
         while (c < 127 && isprint(c) && c != quote && c != '\\' && c != '\t') {
             c = *++t;
             if (t == end)
@@ -1355,7 +1355,7 @@ QuoteString(Sprinter *sp, const CharT *s, size_t length, jschar quote)
 }
 
 static char *
-QuoteString(Sprinter *sp, JSString *str, jschar quote)
+QuoteString(Sprinter *sp, JSString *str, char16_t quote)
 {
     JSLinearString *linear = str->ensureLinear(sp->context);
     if (!linear)
@@ -1368,7 +1368,7 @@ QuoteString(Sprinter *sp, JSString *str, jschar quote)
 }
 
 JSString *
-js_QuoteString(ExclusiveContext *cx, JSString *str, jschar quote)
+js_QuoteString(ExclusiveContext *cx, JSString *str, char16_t quote)
 {
     Sprinter sprinter(cx);
     if (!sprinter.init())

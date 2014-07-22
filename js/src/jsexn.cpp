@@ -93,16 +93,16 @@ js::CopyErrorReport(JSContext *cx, JSErrorReport *report)
      * the following layout:
      *   JSErrorReport
      *   array of copies of report->messageArgs
-     *   jschar array with characters for all messageArgs
-     *   jschar array with characters for ucmessage
-     *   jschar array with characters for uclinebuf and uctokenptr
+     *   char16_t array with characters for all messageArgs
+     *   char16_t array with characters for ucmessage
+     *   char16_t array with characters for uclinebuf and uctokenptr
      *   char array with characters for linebuf and tokenptr
      *   char array with characters for filename
      * Such layout together with the properties enforced by the following
      * asserts does not need any extra alignment padding.
      */
     JS_STATIC_ASSERT(sizeof(JSErrorReport) % sizeof(const char *) == 0);
-    JS_STATIC_ASSERT(sizeof(const char *) % sizeof(jschar) == 0);
+    JS_STATIC_ASSERT(sizeof(const char *) % sizeof(char16_t) == 0);
 
     size_t filenameSize;
     size_t linebufSize;
@@ -113,7 +113,7 @@ js::CopyErrorReport(JSContext *cx, JSErrorReport *report)
     JSErrorReport *copy;
     uint8_t *cursor;
 
-#define JS_CHARS_SIZE(jschars) ((js_strlen(jschars) + 1) * sizeof(jschar))
+#define JS_CHARS_SIZE(chars) ((js_strlen(chars) + 1) * sizeof(char16_t))
 
     filenameSize = report->filename ? strlen(report->filename) + 1 : 0;
     linebufSize = report->linebuf ? strlen(report->linebuf) + 1 : 0;
@@ -129,7 +129,7 @@ js::CopyErrorReport(JSContext *cx, JSErrorReport *report)
 
             /* Non-null messageArgs should have at least one non-null arg. */
             JS_ASSERT(i != 0);
-            argsArraySize = (i + 1) * sizeof(const jschar *);
+            argsArraySize = (i + 1) * sizeof(const char16_t *);
         }
     }
 
@@ -148,10 +148,10 @@ js::CopyErrorReport(JSContext *cx, JSErrorReport *report)
     cursor += sizeof(JSErrorReport);
 
     if (argsArraySize != 0) {
-        copy->messageArgs = (const jschar **)cursor;
+        copy->messageArgs = (const char16_t **)cursor;
         cursor += argsArraySize;
         for (i = 0; report->messageArgs[i]; ++i) {
-            copy->messageArgs[i] = (const jschar *)cursor;
+            copy->messageArgs[i] = (const char16_t *)cursor;
             argSize = JS_CHARS_SIZE(report->messageArgs[i]);
             js_memcpy(cursor, report->messageArgs[i], argSize);
             cursor += argSize;
@@ -161,13 +161,13 @@ js::CopyErrorReport(JSContext *cx, JSErrorReport *report)
     }
 
     if (report->ucmessage) {
-        copy->ucmessage = (const jschar *)cursor;
+        copy->ucmessage = (const char16_t *)cursor;
         js_memcpy(cursor, report->ucmessage, ucmessageSize);
         cursor += ucmessageSize;
     }
 
     if (report->uclinebuf) {
-        copy->uclinebuf = (const jschar *)cursor;
+        copy->uclinebuf = (const char16_t *)cursor;
         js_memcpy(cursor, report->uclinebuf, uclinebufSize);
         cursor += uclinebufSize;
         if (report->uctokenptr) {
@@ -667,10 +667,10 @@ ErrorReport::~ErrorReport()
          */
         size_t i = 0;
         while (ownedReport.messageArgs[i])
-            js_free(const_cast<jschar*>(ownedReport.messageArgs[i++]));
+            js_free(const_cast<char16_t*>(ownedReport.messageArgs[i++]));
         js_free(ownedReport.messageArgs);
     }
-    js_free(const_cast<jschar*>(ownedReport.ucmessage));
+    js_free(const_cast<char16_t*>(ownedReport.ucmessage));
 }
 
 bool

@@ -289,7 +289,7 @@ bool XPCVariant::InitializeData(JSContext* cx)
         if (!NS_SUCCEEDED(nsVariant::AllocateWStringWithSize(&mData, length)))
             return false;
 
-        mozilla::Range<jschar> destChars(mData.u.wstr.mWStringValue, length);
+        mozilla::Range<char16_t> destChars(mData.u.wstr.mWStringValue, length);
         if (!JS_CopyStringChars(cx, destChars, str))
             return false;
 
@@ -811,5 +811,3 @@ NS_IMETHODIMP XPCVariant::GetAsWStringWithSize(uint32_t *size, char16_t **str)
 {
     return nsVariant::ConvertToWStringWithSize(mData, size, str);
 }
-
-

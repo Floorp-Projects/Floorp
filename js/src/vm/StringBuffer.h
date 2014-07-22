@@ -34,7 +34,7 @@ class StringBuffer
      * TempAllocPolicy and account for the memory manually when stealing.
      */
     typedef Vector<Latin1Char, 64> Latin1CharBuffer;
-    typedef Vector<jschar, 32> TwoByteCharBuffer;
+    typedef Vector<char16_t, 32> TwoByteCharBuffer;
 
     ExclusiveContext *cx;
 
@@ -47,7 +47,7 @@ class StringBuffer
 
     /*
      * Make sure ensureTwoByteChars() is called before calling
-     * infallibleAppend(jschar).
+     * infallibleAppend(char16_t).
      */
     mozilla::DebugOnly<bool> hasEnsuredTwoByteChars_;
 
@@ -93,7 +93,7 @@ class StringBuffer
     inline size_t length() const {
         return isLatin1() ? latin1Chars().length() : twoByteChars().length();
     }
-    inline jschar getChar(size_t idx) const {
+    inline char16_t getChar(size_t idx) const {
         return isLatin1() ? latin1Chars()[idx] : twoByteChars()[idx];
     }
 
@@ -105,7 +105,7 @@ class StringBuffer
         return true;
     }
 
-    inline bool append(const jschar c) {
+    inline bool append(const char16_t c) {
         if (isLatin1()) {
             if (c <= JSString::MAX_LATIN1_CHAR)
                 return latin1Chars().append(Latin1Char(c));
@@ -121,8 +121,8 @@ class StringBuffer
         return append(Latin1Char(c));
     }
 
-    inline bool append(const jschar *begin, const jschar *end);
-    inline bool append(const jschar *chars, size_t len) {
+    inline bool append(const char16_t *begin, const char16_t *end);
+    inline bool append(const char16_t *chars, size_t len) {
         return append(chars, chars + len);
     }
 
@@ -180,21 +180,21 @@ class StringBuffer
      * Because inflation is fallible, these methods should only be used after
      * calling ensureTwoByteChars().
      */
-    void infallibleAppend(const jschar *chars, size_t len) {
+    void infallibleAppend(const char16_t *chars, size_t len) {
         MOZ_ASSERT(hasEnsuredTwoByteChars_);
         twoByteChars().infallibleAppend(chars, len);
     }
-    void infallibleAppend(jschar c) {
+    void infallibleAppend(char16_t c) {
         MOZ_ASSERT(hasEnsuredTwoByteChars_);
         twoByteChars().infallibleAppend(c);
     }
 
     bool isUnderlyingBufferLatin1() const { return isLatin1(); }
 
-    jschar *rawTwoByteBegin() { return twoByteChars().begin(); }
-    jschar *rawTwoByteEnd() { return twoByteChars().end(); }
-    const jschar *rawTwoByteBegin() const { return twoByteChars().begin(); }
-    const jschar *rawTwoByteEnd() const { return twoByteChars().end(); }
+    char16_t *rawTwoByteBegin() { return twoByteChars().begin(); }
+    char16_t *rawTwoByteEnd() { return twoByteChars().end(); }
+    const char16_t *rawTwoByteBegin() const { return twoByteChars().begin(); }
+    const char16_t *rawTwoByteEnd() const { return twoByteChars().end(); }
 
     Latin1Char *rawLatin1Begin() { return latin1Chars().begin(); }
     Latin1Char *rawLatin1End() { return latin1Chars().end(); }
@@ -215,11 +215,11 @@ class StringBuffer
      * exactly the characters in this buffer (inflated to TwoByte), it is *not*
      * null-terminated unless the last appended character was '\0'.
      */
-    jschar *stealChars();
+    char16_t *stealChars();
 };
 
 inline bool
-StringBuffer::append(const jschar *begin, const jschar *end)
+StringBuffer::append(const char16_t *begin, const char16_t *end)
 {
     MOZ_ASSERT(begin <= end);
     if (isLatin1()) {

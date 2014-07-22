@@ -24,7 +24,7 @@ namespace mozilla {
 namespace ctypes {
 
 static char*
-UnicodeToNative(JSContext *cx, const jschar *source, size_t slen)
+UnicodeToNative(JSContext *cx, const char16_t *source, size_t slen)
 {
   nsAutoCString native;
   nsDependentString unicode(reinterpret_cast<const char16_t*>(source), slen);

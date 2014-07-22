@@ -89,7 +89,7 @@ generic_write(SprintfState *ss, const char *src, size_t srclen)
 }
 
 inline int
-generic_write(SprintfState *ss, const jschar *src, size_t srclen)
+generic_write(SprintfState *ss, const char16_t *src, size_t srclen)
 {
     const size_t CHUNK_SIZE = 64;
     char chunk[CHUNK_SIZE];
@@ -344,10 +344,10 @@ static int cvt_f(SprintfState *ss, double d, const char *fmt0, const char *fmt1)
 }
 
 static inline const char *generic_null_str(const char *) { return "(null)"; }
-static inline const jschar *generic_null_str(const jschar *) { return MOZ_UTF16("(null)"); }
+static inline const char16_t *generic_null_str(const char16_t *) { return MOZ_UTF16("(null)"); }
 
 static inline size_t generic_strlen(const char *s) { return strlen(s); }
-static inline size_t generic_strlen(const jschar *s) { return js_strlen(s); }
+static inline size_t generic_strlen(const char16_t *s) { return js_strlen(s); }
 
 /*
  * Convert a string into its printable form.  "width" is the output
@@ -574,7 +574,7 @@ BuildArgArray(const char *fmt, va_list ap, NumArgStateVector& nas)
         case TYPE_INT64:        (void) va_arg(ap, int64_t);     break;
         case TYPE_UINT64:       (void) va_arg(ap, uint64_t);    break;
         case TYPE_STRING:       (void) va_arg(ap, char*);       break;
-        case TYPE_WSTRING:      (void) va_arg(ap, jschar*);     break;
+        case TYPE_WSTRING:      (void) va_arg(ap, char16_t*);   break;
         case TYPE_INTSTR:       (void) va_arg(ap, int*);        break;
         case TYPE_DOUBLE:       (void) va_arg(ap, double);      break;
 
@@ -597,13 +597,13 @@ dosprintf(SprintfState *ss, const char *fmt, va_list ap)
     int flags, width, prec, radix, type;
     union {
         char ch;
-        jschar wch;
+        char16_t wch;
         int i;
         long l;
         int64_t ll;
         double d;
         const char *s;
-        const jschar* ws;
+        const char16_t* ws;
         int *ip;
     } u;
     const char *fmt0;
@@ -884,7 +884,7 @@ dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 
           case 's':
             if(type == TYPE_INT16) {
-                u.ws = va_arg(ap, const jschar*);
+                u.ws = va_arg(ap, const char16_t*);
                 rv = cvt_s(ss, u.ws, width, prec, flags);
             } else {
                 u.s = va_arg(ap, const char*);

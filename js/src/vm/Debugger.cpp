@@ -2837,7 +2837,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
             if (!script->scriptSource() || !script->scriptSource()->hasDisplayURL())
                 return;
 
-            const jschar *s = script->scriptSource()->displayURL();
+            const char16_t *s = script->scriptSource()->displayURL();
             if (CompareChars(s, js_strlen(s), displayURLString) != 0)
                 return;
         }
@@ -4783,7 +4783,7 @@ DebuggerFrame_setOnPop(JSContext *cx, unsigned argc, Value *vp)
  */
 bool
 js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFramePtr frame,
-                  mozilla::Range<const jschar> chars, const char *filename, unsigned lineno,
+                  mozilla::Range<const char16_t> chars, const char *filename, unsigned lineno,
                   MutableHandleValue rval)
 {
     assertSameCompartment(cx, env, frame);
@@ -4949,7 +4949,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
     if (!stableChars.initTwoByte(cx, flat))
         return false;
 
-    mozilla::Range<const jschar> chars = stableChars.twoByteRange();
+    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
     bool ok = EvaluateInEnv(cx, env, thisv, frame, chars, url ? url : "debugger eval code",
                             lineNumber, &rval);
     return dbg->receiveCompletionValue(ac, ok, rval, vp);

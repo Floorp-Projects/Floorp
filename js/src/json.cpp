@@ -46,7 +46,7 @@ const Class js::JSONClass = {
     JS_ConvertStub
 };
 
-static inline bool IsQuoteSpecialCharacter(jschar c)
+static inline bool IsQuoteSpecialCharacter(char16_t c)
 {
     JS_STATIC_ASSERT('\b' < ' ');
     JS_STATIC_ASSERT('\f' < ' ');
@@ -84,12 +84,12 @@ Quote(StringBuffer &sb, JSLinearString *str)
                 break;
         }
 
-        jschar c = buf[i];
+        char16_t c = buf[i];
         if (c == '"' || c == '\\') {
             if (!sb.append('\\') || !sb.append(c))
                 return false;
         } else if (c == '\b' || c == '\f' || c == '\n' || c == '\r' || c == '\t') {
-           jschar abbrev = (c == '\b')
+           char16_t abbrev = (c == '\b')
                          ? 'b'
                          : (c == '\f')
                          ? 'f'
@@ -128,7 +128,7 @@ Quote(JSContext *cx, StringBuffer &sb, JSString *str)
 
     return linear->hasLatin1Chars()
            ? Quote<Latin1Char>(sb, linear)
-           : Quote<jschar>(sb, linear);
+           : Quote<char16_t>(sb, linear);
 }
 
 namespace {
@@ -817,7 +817,7 @@ js::ParseJSONWithReviver(JSContext *cx, const mozilla::Range<const Latin1Char> c
                          HandleValue reviver, MutableHandleValue vp);
 
 template bool
-js::ParseJSONWithReviver(JSContext *cx, const mozilla::Range<const jschar> chars, HandleValue reviver,
+js::ParseJSONWithReviver(JSContext *cx, const mozilla::Range<const char16_t> chars, HandleValue reviver,
                          MutableHandleValue vp);
 
 #if JS_HAS_TOSOURCE

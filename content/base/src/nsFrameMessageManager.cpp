@@ -512,7 +512,7 @@ nsFrameMessageManager::GetDelayedFrameScripts(JSContext* aCx, JS::MutableHandle<
 }
 
 static bool
-JSONCreator(const jschar* aBuf, uint32_t aLen, void* aData)
+JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData)
 {
   nsAString* result = static_cast<nsAString*>(aData);
   result->Append(static_cast<const char16_t*>(aBuf),
@@ -542,7 +542,7 @@ GetParamsForMessage(JSContext* aCx,
   NS_ENSURE_TRUE(!json.IsEmpty(), false);
 
   JS::Rooted<JS::Value> val(aCx, JS::NullValue());
-  NS_ENSURE_TRUE(JS_ParseJSON(aCx, static_cast<const jschar*>(json.get()),
+  NS_ENSURE_TRUE(JS_ParseJSON(aCx, static_cast<const char16_t*>(json.get()),
                               json.Length(), &val), false);
 
   return WriteStructuredClone(aCx, val, aBuffer, aClosure);
@@ -638,7 +638,7 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
     }
 
     JS::Rooted<JS::Value> ret(aCx);
-    if (!JS_ParseJSON(aCx, static_cast<const jschar*>(retval[i].get()),
+    if (!JS_ParseJSON(aCx, static_cast<const char16_t*>(retval[i].get()),
                       retval[i].Length(), &ret)) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -996,7 +996,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       }
       JS::Rooted<JSString*> jsMessage(cx,
         JS_NewUCStringCopyN(cx,
-                            static_cast<const jschar*>(aMessage.BeginReading()),
+                            static_cast<const char16_t*>(aMessage.BeginReading()),
                             aMessage.Length()));
       NS_ENSURE_TRUE(jsMessage, NS_ERROR_OUT_OF_MEMORY);
       JS::Rooted<JS::Value> syncv(cx, JS::BooleanValue(aIsSync));
@@ -1489,7 +1489,7 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
   nsCOMPtr<nsIInputStream> input;
   channel->Open(getter_AddRefs(input));
   nsString dataString;
-  jschar* dataStringBuf = nullptr;
+  char16_t* dataStringBuf = nullptr;
   size_t dataStringLength = 0;
   uint64_t avail64 = 0;
   if (input && NS_SUCCEEDED(input->Available(&avail64)) && avail64) {

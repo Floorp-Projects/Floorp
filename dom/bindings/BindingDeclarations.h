@@ -42,8 +42,8 @@ protected:
 private:
   // aString is expected to actually be an nsAString*.  Should only be
   // called from StringifyToJSON.
-  static bool AppendJSONToString(const jschar* aJSONData, uint32_t aDataLength,
-                                 void* aString);
+  static bool AppendJSONToString(const char16_t* aJSONData,
+                                 uint32_t aDataLength, void* aString);
 };
 
 // Struct that serves as a base class for all typed arrays and array buffers and

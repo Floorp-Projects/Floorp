@@ -141,7 +141,7 @@ struct SCOutput {
     bool writeDouble(double d);
     bool writeBytes(const void *p, size_t nbytes);
     bool writeChars(const Latin1Char *p, size_t nchars);
-    bool writeChars(const jschar *p, size_t nchars);
+    bool writeChars(const char16_t *p, size_t nchars);
     bool writePtr(const void *);
 
     template <class T>
@@ -172,7 +172,7 @@ class SCInput {
     bool readDouble(double *p);
     bool readBytes(void *p, size_t nbytes);
     bool readChars(Latin1Char *p, size_t nchars);
-    bool readChars(jschar *p, size_t nchars);
+    bool readChars(char16_t *p, size_t nchars);
     bool readPtr(void **);
 
     bool get(uint64_t *p);
@@ -192,7 +192,7 @@ class SCInput {
 
   private:
     void staticAssertions() {
-        JS_STATIC_ASSERT(sizeof(jschar) == 2);
+        JS_STATIC_ASSERT(sizeof(char16_t) == 2);
         JS_STATIC_ASSERT(sizeof(uint32_t) == 4);
         JS_STATIC_ASSERT(sizeof(double) == 8);
     }
@@ -574,9 +574,9 @@ SCInput::readChars(Latin1Char *p, size_t nchars)
 }
 
 bool
-SCInput::readChars(jschar *p, size_t nchars)
+SCInput::readChars(char16_t *p, size_t nchars)
 {
-    JS_ASSERT(sizeof(jschar) == sizeof(uint16_t));
+    JS_ASSERT(sizeof(char16_t) == sizeof(uint16_t));
     return readArray((uint16_t *) p, nchars);
 }
 
@@ -703,9 +703,9 @@ SCOutput::writeBytes(const void *p, size_t nbytes)
 }
 
 bool
-SCOutput::writeChars(const jschar *p, size_t nchars)
+SCOutput::writeChars(const char16_t *p, size_t nchars)
 {
-    JS_ASSERT(sizeof(jschar) == sizeof(uint16_t));
+    JS_ASSERT(sizeof(char16_t) == sizeof(uint16_t));
     return writeArray((const uint16_t *) p, nchars);
 }
 
@@ -1293,7 +1293,7 @@ JSStructuredCloneReader::readString(uint32_t data)
 {
     uint32_t nchars = data & JS_BITMASK(31);
     bool latin1 = data & (1 << 31);
-    return latin1 ? readStringImpl<Latin1Char>(nchars) : readStringImpl<jschar>(nchars);
+    return latin1 ? readStringImpl<Latin1Char>(nchars) : readStringImpl<char16_t>(nchars);
 }
 
 static uint32_t

@@ -298,7 +298,7 @@ CopyStringPure(JSContext *cx, JSString *str)
         return NewString<CanGC>(cx, copiedChars.forget(), len);
     }
 
-    ScopedJSFreePtr<jschar> copiedChars;
+    ScopedJSFreePtr<char16_t> copiedChars;
     if (!str->asRope().copyTwoByteCharsZ(cx, copiedChars))
         return nullptr;
 

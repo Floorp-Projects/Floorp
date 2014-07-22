@@ -550,7 +550,8 @@ class ByUbinodeType {
     // Note that, because ubi::Node::typeName promises to return a specific
     // pointer, not just any string whose contents are correct, we can use their
     // addresses as hash table keys.
-    typedef HashMap<const jschar *, EachType, DefaultHasher<const jschar *>, SystemAllocPolicy> Table;
+    typedef HashMap<const char16_t *, EachType, DefaultHasher<const char16_t *>,
+                    SystemAllocPolicy> Table;
     typedef typename Table::Entry Entry;
     Table table;
 
@@ -568,7 +569,7 @@ class ByUbinodeType {
 
     bool count(Census &census, const Node &node) {
         total_++;
-        const jschar *key = node.typeName();
+        const char16_t *key = node.typeName();
         typename Table::AddPtr p = table.lookupForAdd(key);
         if (!p) {
             if (!table.add(p, key, EachType(census)))
@@ -619,7 +620,7 @@ class ByUbinodeType {
             if (!assorter.report(census, &assorterReport))
                 return false;
 
-            const jschar *name = entry.key();
+            const char16_t *name = entry.key();
             MOZ_ASSERT(name);
             JSAtom *atom = AtomizeChars(cx, name, js_strlen(name));
             if (!atom)
