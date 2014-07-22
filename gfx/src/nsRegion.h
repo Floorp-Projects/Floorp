@@ -425,6 +425,14 @@ public:
     mImpl.Swap(&aOther->mImpl);
   }
 
+  void AndWith(const nsIntRegion& aOther)
+  {
+    And(*this, aOther);
+  }
+  void AndWith(const nsIntRect& aOther)
+  {
+    And(*this, aOther);
+  }
   nsIntRegion& And  (const nsIntRegion& aRgn1,   const nsIntRegion& aRgn2)
   {
     mImpl.And (aRgn1.mImpl, aRgn2.mImpl);
@@ -448,6 +456,14 @@ public:
     return *this;
   }
 
+  void OrWith(const nsIntRegion& aOther)
+  {
+    Or(*this, aOther);
+  }
+  void OrWith(const nsIntRect& aOther)
+  {
+    Or(*this, aOther);
+  }
   nsIntRegion& Or   (const nsIntRegion& aRgn1,   const nsIntRegion& aRgn2)
   {
     mImpl.Or (aRgn1.mImpl, aRgn2.mImpl);
@@ -468,6 +484,14 @@ public:
     return Or (*this, aRect2);
   }
 
+  void XorWith(const nsIntRegion& aOther)
+  {
+    Xor(*this, aOther);
+  }
+  void XorWith(const nsIntRect& aOther)
+  {
+    Xor(*this, aOther);
+  }
   nsIntRegion& Xor  (const nsIntRegion& aRgn1,   const nsIntRegion& aRgn2)
   {
     mImpl.Xor (aRgn1.mImpl, aRgn2.mImpl);
@@ -488,6 +512,14 @@ public:
     return Xor (*this, aRect2);
   }
 
+  void SubOut(const nsIntRegion& aOther)
+  {
+    Sub(*this, aOther);
+  }
+  void SubOut(const nsIntRect& aOther)
+  {
+    Sub(*this, aOther);
+  }
   nsIntRegion& Sub  (const nsIntRegion& aRgn1,   const nsIntRegion& aRgn2)
   {
     mImpl.Sub (aRgn1.mImpl, aRgn2.mImpl);
@@ -508,6 +540,10 @@ public:
     return Sub (*this, aRect2);
   }
 
+  bool Contains (int aX, int aY) const
+  {
+    return Contains(nsIntRect(aX, aY, 1, 1));
+  }
   bool Contains (const nsIntRect& aRect) const
   {
     return mImpl.Contains (ToRect (aRect));
