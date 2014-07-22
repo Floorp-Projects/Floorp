@@ -848,7 +848,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
                IonCache::StubAttacher &attacher, JSObject *obj,
                JSObject *holder, HandleShape shape,
                RegisterSet liveRegs, Register object,
-               Register scratchReg, TypedOrValueRegister output,
+               TypedOrValueRegister output,
                void *returnAddr)
 {
     JS_ASSERT(output.hasValue());
@@ -863,7 +863,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
     // to try so hard to not use the stack.  Scratch regs are just taken from the register
     // set not including the input, current value saved on the stack, and restored when
     // we're done with it.
-    scratchReg               = regSet.takeGeneral();
+    Register scratchReg      = regSet.takeGeneral();
     Register argJSContextReg = regSet.takeGeneral();
     Register argUintNReg     = regSet.takeGeneral();
     Register argVpReg        = regSet.takeGeneral();
@@ -989,7 +989,14 @@ GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
     masm.branchPtr(Assembler::NotEqual, Address(object, JSObject::offsetOfShape()),
                    ImmGCPtr(obj->lastProperty()), failures);
 
+    bool restoreObjReg = false;
     Register scratchReg = output.valueReg().scratchReg();
+
+    // Save off the object register if it aliases the scratchReg
+    if (scratchReg == object) {
+        masm.push(object);
+        restoreObjReg = true;
+    }
 
     // Note: this may clobber the object register if it's used as scratch.
     if (obj != holder)
@@ -1003,9 +1010,12 @@ GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
                    ImmGCPtr(holder->lastProperty()),
                    failures);
 
+    if (restoreObjReg)
+        masm.pop(object);
+
     // Now we're good to go to invoke the native call.
     if (!EmitGetterCall(cx, masm, attacher, obj, holder, shape, liveRegs, object,
-                        scratchReg, output, returnAddr))
+                        output, returnAddr))
         return false;
 
     // Rejoin jump.
@@ -1479,7 +1489,7 @@ GetPropertyIC::tryAttachDOMProxyUnshadowed(JSContext *cx, HandleScript outerScri
             JS_ASSERT(canCache == CanAttachCallGetter);
             JS_ASSERT(!idempotent());
             if (!EmitGetterCall(cx, masm, attacher, checkObj, holder, shape, liveRegs_,
-                                object(), scratchReg, output(), returnAddr))
+                                object(), output(), returnAddr))
             {
                 return false;
             }
