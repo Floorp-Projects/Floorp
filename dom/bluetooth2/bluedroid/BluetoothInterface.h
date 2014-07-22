@@ -112,8 +112,9 @@ class BluetoothHandsfreeInterface
 public:
   friend class BluetoothInterface;
 
-  bt_status_t Init(bthf_callbacks_t* aCallbacks);
-  void        Cleanup();
+  void Init(bthf_callbacks_t* aCallbacks,
+            BluetoothHandsfreeResultHandler* aRes);
+  void Cleanup(BluetoothHandsfreeResultHandler* aRes);
 
   /* Connect / Disconnect */
 
