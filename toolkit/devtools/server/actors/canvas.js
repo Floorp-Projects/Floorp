@@ -564,8 +564,11 @@ let ContextUtils = {
    * the respective canvas, and the rendering will be performed into it.
    * This is necessary because some state (like shaders, textures etc.) can't
    * be shared between two different WebGL contexts.
-   * Hopefully, once SharedResources are a thing this won't be necessary:
-   * http://www.khronos.org/webgl/wiki/SharedResouces
+   *   - Hopefully, once SharedResources are a thing this won't be necessary:
+   *     http://www.khronos.org/webgl/wiki/SharedResouces
+   *   - Alternatively, we could pursue the idea of using the same context
+   *     for multiple canvases, instead of trying to share resources:
+   *     https://www.khronos.org/webgl/public-mailing-list/archives/1210/msg00058.html
    *
    * In case of a 2D context, a new canvas is created, since there's no
    * intrinsic state that can't be easily duplicated.
