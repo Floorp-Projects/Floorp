@@ -2858,8 +2858,7 @@ RectTextureImage::Draw(GLManager* aManager,
 
   program->Activate();
   program->SetProjectionMatrix(aManager->GetProjMatrix());
-  gfx::Matrix4x4 transform;
-  gfx::ToMatrix4x4(aTransform, transform);
+  gfx::Matrix4x4 transform = gfx::ToMatrix4x4(aTransform);
   program->SetLayerTransform(transform * gfx::Matrix4x4().Translate(aLocation.x, aLocation.y, 0));
   program->SetTextureTransform(gfx::Matrix4x4());
   program->SetRenderOffset(nsIntPoint(0, 0));

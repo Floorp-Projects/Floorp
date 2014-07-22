@@ -588,7 +588,9 @@ hb_set_add
 hb_set_clear
 hb_set_create
 hb_set_destroy
+hb_set_get_population
 hb_set_has
+hb_set_intersect
 hb_set_is_empty
 hb_set_next
 hb_shape

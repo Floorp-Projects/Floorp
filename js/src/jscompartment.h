@@ -345,6 +345,9 @@ struct JSCompartment
 
     bool hasObjectMetadataCallback() const { return objectMetadataCallback; }
     void setObjectMetadataCallback(js::ObjectMetadataCallback callback);
+    void forgetObjectMetadataCallback() {
+        objectMetadataCallback = nullptr;
+    }
     bool callObjectMetadataCallback(JSContext *cx, JSObject **obj) const {
         return objectMetadataCallback(cx, obj);
     }

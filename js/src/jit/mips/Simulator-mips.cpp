@@ -3310,7 +3310,7 @@ Simulator::execute()
     // Get the PC to simulate. Cannot use the accessor here as we need the
     // raw PC value and not the one used as input to arithmetic instructions.
     int program_counter = get_pc();
-    AsmJSActivation *activation = TlsPerThreadData.get()->asmJSActivationStackFromOwnerThread();
+    AsmJSActivation *activation = TlsPerThreadData.get()->asmJSActivationStack();
 
     while (program_counter != end_sim_pc) {
         if (enableStopSimAt && (icount_ == Simulator::StopSimAt)) {

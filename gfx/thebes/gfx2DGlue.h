@@ -376,46 +376,50 @@ inline gfxContext::GraphicsOperator ThebesOp(CompositionOp aOp)
   }
 }
 
-inline void
-ToMatrix4x4(const gfx3DMatrix& aIn, Matrix4x4& aOut)
+inline Matrix4x4
+ToMatrix4x4(const gfx3DMatrix& aIn)
 {
-  aOut._11 = aIn._11;
-  aOut._12 = aIn._12;
-  aOut._13 = aIn._13;
-  aOut._14 = aIn._14;
-  aOut._21 = aIn._21;
-  aOut._22 = aIn._22;
-  aOut._23 = aIn._23;
-  aOut._24 = aIn._24;
-  aOut._31 = aIn._31;
-  aOut._32 = aIn._32;
-  aOut._33 = aIn._33;
-  aOut._34 = aIn._34;
-  aOut._41 = aIn._41;
-  aOut._42 = aIn._42;
-  aOut._43 = aIn._43;
-  aOut._44 = aIn._44;
+  Matrix4x4 m;
+  m._11 = aIn._11;
+  m._12 = aIn._12;
+  m._13 = aIn._13;
+  m._14 = aIn._14;
+  m._21 = aIn._21;
+  m._22 = aIn._22;
+  m._23 = aIn._23;
+  m._24 = aIn._24;
+  m._31 = aIn._31;
+  m._32 = aIn._32;
+  m._33 = aIn._33;
+  m._34 = aIn._34;
+  m._41 = aIn._41;
+  m._42 = aIn._42;
+  m._43 = aIn._43;
+  m._44 = aIn._44;
+  return m;
 }
 
-inline void
-To3DMatrix(const Matrix4x4& aIn, gfx3DMatrix& aOut)
+inline gfx3DMatrix
+To3DMatrix(const Matrix4x4& aIn)
 {
-  aOut._11 = aIn._11;
-  aOut._12 = aIn._12;
-  aOut._13 = aIn._13;
-  aOut._14 = aIn._14;
-  aOut._21 = aIn._21;
-  aOut._22 = aIn._22;
-  aOut._23 = aIn._23;
-  aOut._24 = aIn._24;
-  aOut._31 = aIn._31;
-  aOut._32 = aIn._32;
-  aOut._33 = aIn._33;
-  aOut._34 = aIn._34;
-  aOut._41 = aIn._41;
-  aOut._42 = aIn._42;
-  aOut._43 = aIn._43;
-  aOut._44 = aIn._44;
+  gfx3DMatrix m;
+  m._11 = aIn._11;
+  m._12 = aIn._12;
+  m._13 = aIn._13;
+  m._14 = aIn._14;
+  m._21 = aIn._21;
+  m._22 = aIn._22;
+  m._23 = aIn._23;
+  m._24 = aIn._24;
+  m._31 = aIn._31;
+  m._32 = aIn._32;
+  m._33 = aIn._33;
+  m._34 = aIn._34;
+  m._41 = aIn._41;
+  m._42 = aIn._42;
+  m._43 = aIn._43;
+  m._44 = aIn._44;
+  return m;
 }
 
 }

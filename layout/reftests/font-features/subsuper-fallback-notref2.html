@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>font-variant-position fallback</title>
+<meta charset="UTF-8">
+<style>
+
+/* sups: 0-9 + - ( ) =  subs: 0-9 + - ( ) */
+@font-face {
+  font-family: subsuper;
+  src: url(../fonts/subsuper.woff); /* FiraSans with blank omega */
+}
+
+body {
+  margin: 20px;
+  font-family: subsuper, sans-serif;
+}
+
+p {
+  margin: 0;
+  font-size: 50px;
+}
+h4 { font-weight: normal }
+</style>
+</head>
+<body>
+<h4>All the subscripts and superscripts should display with synthesized glyphs:</h4>
+<p><span class=sub>&#x2083;n</span>C<span class=super>&#x0b2;n</span> <span class=sub>n&#x2083;</span>C<span class=super>n&#x0b2;</span></p>
+<p><span class=sub>&#x2083;&pi;</span>C<span class=super>&#x0b2;&pi;</span> <span class=sub>&pi;&#x2083;</span>C<span class=super>&pi;&#x0b2;</span></p>
+<p><span class=sub>&#x2083;&#x1F4A9;</span>C<span class=super>&#x0b2;&#x1F4A9;</span> <span class=sub>&#x1F4A9;&#x2083;</span>C<span class=super>&#x1F4A9;&#x0b2;</span></p>
+</body>
+</html>

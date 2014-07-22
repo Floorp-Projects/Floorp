@@ -1,3 +1,8 @@
+function toLatin1(s) {
+    assertEq(isLatin1(s), true);
+    return s;
+}
+
 // Latin1
 var re = new RegExp(toLatin1("foo[bB]a\\r"), toLatin1("im"));
 assertEq(isLatin1(re.source), true);

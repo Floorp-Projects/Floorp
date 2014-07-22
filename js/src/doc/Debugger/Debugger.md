@@ -250,6 +250,9 @@ other kinds of objects.
     [`Debugger.Object`][object] instance this method returns does hold a strong
     reference to the added global.)
 
+    If this debugger is [tracking allocation sites][tracking-allocs] and cannot
+    track allocation sites for <i>global</i>, this method throws an `Error`.
+
 <code>removeDebuggee(<i>global</i>)</code>
 :   Remove the global object designated by <i>global</i> from this
     `Debugger` instance's set of debuggees. Return `undefined`.

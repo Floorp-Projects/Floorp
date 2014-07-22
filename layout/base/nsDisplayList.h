@@ -202,28 +202,7 @@ public:
    * establishes the coordinate system for the child display items.
    */
   const nsIFrame* FindReferenceFrameFor(const nsIFrame *aFrame,
-                                        nsPoint* aOffset = nullptr)
-  {
-    if (aFrame == mCurrentFrame) {
-      if (aOffset) {
-        *aOffset = mCurrentOffsetToReferenceFrame;
-      }
-      return mCurrentReferenceFrame;
-    }
-    for (const nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f))
-    {
-      if (f == mReferenceFrame || f->IsTransformed()) {
-        if (aOffset) {
-          *aOffset = aFrame->GetOffsetToCrossDoc(f);
-        }
-        return f;
-      }
-    }
-    if (aOffset) {
-      *aOffset = aFrame->GetOffsetToCrossDoc(mReferenceFrame);
-    }
-    return mReferenceFrame;
-  }
+                                        nsPoint* aOffset = nullptr);
   
   /**
    * @return the root of the display list's frame (sub)tree, whose origin
@@ -320,6 +299,7 @@ public:
   const nsRect& GetDirtyRect() { return mDirtyRect; }
   const nsIFrame* GetCurrentFrame() { return mCurrentFrame; }
   const nsIFrame* GetCurrentReferenceFrame() { return mCurrentReferenceFrame; }
+  const nsPoint& GetCurrentFrameOffsetToReferenceFrame() { return mCurrentOffsetToReferenceFrame; }
 
   /**
    * Returns true if merging and flattening of display lists should be
@@ -823,18 +803,7 @@ public:
 
   // This is never instantiated directly (it has pure virtual methods), so no
   // need to count constructors and destructors.
-  nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-    : mFrame(aFrame)
-    , mClip(aBuilder->ClipState().GetCurrentCombinedClip(aBuilder))
-#ifdef MOZ_DUMP_PAINTING
-    , mPainted(false)
-#endif
-  {
-    mReferenceFrame = aBuilder->FindReferenceFrameFor(aFrame, &mToReferenceFrame);
-    NS_ASSERTION(aBuilder->GetDirtyRect().width >= 0 ||
-                 !aBuilder->IsForPainting(), "dirty rect not set");
-    mVisibleRect = aBuilder->GetDirtyRect() + mToReferenceFrame;
-  }
+  nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
   /**
    * This constructor is only used in rare cases when we need to construct
    * temporary items.
@@ -2360,6 +2329,11 @@ public:
       IntersectClip(aBuilder, *aClip);
     }
     return true;
+  }
+
+  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE
+  {
+    return new nsDisplayBoxShadowOuterGeometry(this, aBuilder, mOpacity);
   }
 
   nsRect GetBoundsInternal();

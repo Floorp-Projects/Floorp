@@ -8,62 +8,65 @@
 var gDebuggee;
 var gClient;
 var gThreadClient;
-var gCallback;
 
 function run_test()
 {
-  run_test_with_server(DebuggerServer, function () {
-    run_test_with_server(WorkerDebuggerServer, do_test_finished);
-  });
-  do_test_pending();
-};
-
-function run_test_with_server(aServer, aCallback)
-{
-  gCallback = aCallback;
-  initTestDebuggerServer(aServer);
-  gDebuggee = addTestGlobal("test-stack", aServer);
-  gClient = new DebuggerClient(aServer.connectPipe());
+  initTestDebuggerServer();
+  gDebuggee = addTestGlobal("test-stack");
+  gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function () {
     attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
-      test_same_breakpoint();
+      testSameBreakpoint();
     });
   });
+  do_test_pending();
 }
 
-function test_same_breakpoint()
-{
-  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    let path = getFilePath('test_breakpoint-01.js');
-    let location = {
-      url: path,
-      line: gDebuggee.line0 + 3
-    };
-    gThreadClient.setBreakpoint(location, function (aResponse, bpClient) {
-      gThreadClient.setBreakpoint(location, function (aResponse, secondBpClient) {
-        do_check_eq(bpClient.actor, secondBpClient.actor,
-                    "Should get the same actor w/ whole line breakpoints");
-        let location = {
-          url: path,
-          line: gDebuggee.line0 + 2,
-          column: 6
-        };
-        gThreadClient.setBreakpoint(location, function (aResponse, bpClient) {
-          gThreadClient.setBreakpoint(location, function (aResponse, secondBpClient) {
-            do_check_eq(bpClient.actor, secondBpClient.actor,
-                        "Should get the same actor column breakpoints");
-            gClient.close(gCallback);
-          });
-        });
-      });
-    });
 
-  });
+const SOURCE_URL = "http://example.com/source.js";
 
-  Components.utils.evalInSandbox("var line0 = Error().lineNumber;\n" +
-                                 "debugger;\n" +   // line0 + 1
-                                 "var a = 1;\n" +  // line0 + 2
-                                 "var b = 2;\n",   // line0 + 3
-                                 gDebuggee);
+const testSameBreakpoint = Task.async(function* () {
+  yield executeOnNextTickAndWaitForPause(evalCode, gClient);
+
+  // Whole line
+
+  let wholeLineLocation = {
+    url: SOURCE_URL,
+    line: 2
+  };
+
+  let [firstResponse, firstBpClient] = yield setBreakpoint(gThreadClient, wholeLineLocation);
+  let [secondResponse, secondBpClient] = yield setBreakpoint(gThreadClient, wholeLineLocation);
+
+  do_check_eq(firstBpClient.actor, secondBpClient.actor, "Should get the same actor w/ whole line breakpoints");
+
+  // Specific column
+
+  let columnLocation = {
+    url: SOURCE_URL,
+    line: 2,
+    column: 6
+  };
+
+  let [firstResponse, firstBpClient] = yield setBreakpoint(gThreadClient, columnLocation);
+  let [secondResponse, secondBpClient] = yield setBreakpoint(gThreadClient, columnLocation);
+
+  do_check_eq(secondBpClient.actor, secondBpClient.actor, "Should get the same actor column breakpoints");
+
+  finishClient(gClient);
+});
+
+function evalCode() {
+  Components.utils.evalInSandbox(
+    "" + function doStuff(k) { // line 1
+      let arg = 15;            // line 2 - Step in here
+      k(arg);                  // line 3
+    } + "\n"                   // line 4
+    + "debugger;",             // line 5
+    gDebuggee,
+    "1.8",
+    SOURCE_URL,
+    1
+  );
 }

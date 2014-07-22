@@ -1,9 +1,9 @@
 // Latin1
-var s = deserialize(serialize(toLatin1("foo123\u00EE")));
+var s = deserialize(serialize("foo123\u00EE"));
 assertEq(s, "foo123\u00EE");
 assertEq(isLatin1(s), true);
 
-var o = deserialize(serialize(new String(toLatin1("foo\u00EE"))));
+var o = deserialize(serialize(new String("foo\u00EE")));
 assertEq(typeof o, "object");
 assertEq(o.valueOf(), "foo\u00EE");
 assertEq(isLatin1(o.valueOf()), true);

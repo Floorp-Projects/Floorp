@@ -1,3 +1,7 @@
+function toLatin1(s) {
+    assertEq(isLatin1(s), true);
+    return s;
+}
 function testParseInt() {
     // Latin1
     assertEq(parseInt(toLatin1("12345abc")), 12345);

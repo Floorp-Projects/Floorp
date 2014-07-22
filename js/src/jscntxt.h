@@ -578,14 +578,6 @@ struct JSContext : public js::ExclusiveContext,
     void setPropagatingForcedReturn() { propagatingForcedReturn_ = true; }
     void clearPropagatingForcedReturn() { propagatingForcedReturn_ = false; }
 
-#ifdef DEBUG
-    /*
-     * Controls whether a quadratic-complexity assertion is performed during
-     * stack iteration; defaults to true.
-     */
-    bool stackIterAssertionEnabled;
-#endif
-
     /*
      * See JS_SetTrustedPrincipals in jsapi.h.
      * Note: !cx->compartment is treated as trusted.
@@ -792,9 +784,6 @@ js_ReportValueErrorFlags(JSContext *cx, unsigned flags, const unsigned errorNumb
                                     spindex, v, fallback, arg1, arg2))
 
 extern const JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
-
-char *
-js_strdup(js::ExclusiveContext *cx, const char *s);
 
 #ifdef JS_THREADSAFE
 # define JS_ASSERT_REQUEST_DEPTH(cx)  JS_ASSERT((cx)->runtime()->requestDepth >= 1)

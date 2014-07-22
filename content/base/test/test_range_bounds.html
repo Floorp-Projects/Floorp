@@ -20,9 +20,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=421640
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var isLTR=true;
+var isLTR = true;
+var isTransformed = false;
+
+function annotateName(name) {
+  return (isLTR ? 'isLTR ' : 'isRTL ') +
+    (isTransformed ? 'transformed ' : '') + name;
+}
+
 function isEmptyRect(rect, name) {
-  name = (isLTR ? 'isLTR ' : 'isRTL ') + name;
+  name = annotateName(name);
   is(rect.left, 0, name+'empty rect should have left = 0');
   is(rect.right, 0, name+'empty rect should have right = 0');
   is(rect.top, 0, name+'empty rect should have top = 0');
@@ -32,7 +39,7 @@ function isEmptyRect(rect, name) {
 }
 
 function isEmptyRectList(rectlist, name) {
-  name = (isLTR ? 'isLTR ' : 'isRTL ') + name;
+  name = annotateName(name);
   is(rectlist.length, 0, name + 'empty rectlist should have zero rects');
 }
 
@@ -61,17 +68,15 @@ function runATest(obj) {
     }
     //test getBoundingClientRect()
     var rect = range.getBoundingClientRect();
-    var testname = (isLTR ? 'isLTR ' : 'isRTL ') + 
-      'range.getBoundingClientRect for ' + obj.name;
+    var testname = 'range.getBoundingClientRect for ' + obj.name;
     if (obj.rect) {
-      is(_getRect(rect),_getRect(obj.rect), testname);
+      is(_getRect(rect),_getRect(obj.rect), annotateName(testname));
     } else {
       isEmptyRect(rect,testname+": ");
     }
     //test getClientRects()
     var rectlist = range.getClientRects();
-    testname = (isLTR ? 'isLTR ' : 'isRTL ') +
-      'range.getClientRects for '+obj.name;
+    testname = 'range.getClientRects for ' + obj.name;
     if (!obj.rectList) {
       //rectList is not specified, use obj.rect to figure out rectList
       obj.rectList = obj.rect?[obj.rect]:[];
@@ -79,13 +84,15 @@ function runATest(obj) {
     if (!obj.rectList.length) {
       isEmptyRectList(rectlist, testname+": ");
     } else {
-      is(rectlist.length, obj.rectList.length, testname+' should return '+obj.rectList.length+' rects.');
+      is(rectlist.length, obj.rectList.length,
+         annotateName(testname+' should return '+obj.rectList.length+' rects.'));
       if(!obj.rectList.forEach){
         //convert RectList to a real array
         obj.rectList=Array.prototype.slice.call(obj.rectList, 0);
       }
       obj.rectList.forEach(function(rect,i) {
-        is(_getRect(rectlist[i]),_getRect(rect),testname+": item at "+i);
+        is(_getRect(rectlist[i]),_getRect(rect),
+           annotateName(testname+": item at "+i));
       });
     }
   } finally {
@@ -251,15 +258,21 @@ function testMixedDir(){
 function test(){
   //test ltr
   doTest();
-  testMixedDir();
 
+  //test rtl
   isLTR = false;
   var root = document.getElementById('content');
   root.dir = 'rtl';
-
-  //test rtl
   doTest();
+  isLTR = true;
+  root.dir = 'ltr';
+
   testMixedDir();
+
+  //test transforms
+  isTransformed = true;
+  root.style.transform = "translate(30px,50px)";
+  doTest();
 
   SimpleTest.finish();
 }

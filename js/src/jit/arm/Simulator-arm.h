@@ -37,9 +37,15 @@
 namespace js {
 namespace jit {
 
+class Simulator;
 class SimulatorRuntime;
 SimulatorRuntime *CreateSimulatorRuntime();
 void DestroySimulatorRuntime(SimulatorRuntime *srt);
+
+// When the SingleStepCallback is called, the simulator is about to execute
+// sim->get_pc() and the current machine state represents the completed
+// execution of the previous pc.
+typedef void (*SingleStepCallback)(void *arg, Simulator *sim, void *pc);
 
 // VFP rounding modes. See ARM DDI 0406B Page A2-29.
 enum VFPRoundingMode {
@@ -147,6 +153,9 @@ class Simulator
     void set_resume_pc(int32_t value) {
         resume_pc_ = value;
     }
+
+    void enable_single_stepping(SingleStepCallback cb, void *arg);
+    void disable_single_stepping();
 
     uintptr_t stackLimit() const;
     bool overRecursed(uintptr_t newsp = 0) const;
@@ -331,6 +340,11 @@ class Simulator
     // Registered breakpoints.
     SimInstruction *break_pc_;
     Instr break_instr_;
+
+    // Single-stepping support
+    bool single_stepping_;
+    SingleStepCallback single_step_callback_;
+    void *single_step_callback_arg_;
 
     SimulatorRuntime *srt_;
 

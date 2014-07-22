@@ -1475,10 +1475,12 @@ class AsmJSActivation : public Activation
 {
     AsmJSModule &module_;
     AsmJSActivation *prevAsmJS_;
+    AsmJSActivation *prevAsmJSForModule_;
     void *errorRejoinSP_;
     SPSProfiler *profiler_;
     void *resumePC_;
-    uint8_t *exitFP_;
+    uint8_t *fp_;
+    AsmJSExit::Reason exitReason_;
 
   public:
     AsmJSActivation(JSContext *cx, AsmJSModule &module);
@@ -1488,24 +1490,24 @@ class AsmJSActivation : public Activation
     AsmJSModule &module() const { return module_; }
     AsmJSActivation *prevAsmJS() const { return prevAsmJS_; }
 
+    // Returns a pointer to the base of the innermost stack frame of asm.js code
+    // in this activation.
+    uint8_t *fp() const { return fp_; }
+
+    // Returns the reason why asm.js code called out of asm.js code.
+    AsmJSExit::Reason exitReason() const { return exitReason_; }
+
     // Read by JIT code:
     static unsigned offsetOfContext() { return offsetof(AsmJSActivation, cx_); }
     static unsigned offsetOfResumePC() { return offsetof(AsmJSActivation, resumePC_); }
 
-    // Initialized by JIT code:
+    // Written by JIT code:
     static unsigned offsetOfErrorRejoinSP() { return offsetof(AsmJSActivation, errorRejoinSP_); }
-    static unsigned offsetOfExitFP() { return offsetof(AsmJSActivation, exitFP_); }
+    static unsigned offsetOfFP() { return offsetof(AsmJSActivation, fp_); }
+    static unsigned offsetOfExitReason() { return offsetof(AsmJSActivation, exitReason_); }
 
     // Set from SIGSEGV handler:
     void setResumePC(void *pc) { resumePC_ = pc; }
-
-    // If pc is in C++/Ion code, exitFP points to the innermost asm.js frame
-    // (the one that called into C++). While in asm.js code, exitFP is either
-    // null or points to the innermost asm.js frame. Thus, it is always valid to
-    // unwind a non-null exitFP. The only way C++ can observe a null exitFP is
-    // asychronous interruption of asm.js execution (viz., via the profiler,
-    // a signal handler, or the interrupt exit).
-    uint8_t *exitFP() const { return exitFP_; }
 };
 
 // A FrameIter walks over the runtime's stack of JS script activations,

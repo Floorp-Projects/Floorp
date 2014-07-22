@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1038929
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1038929</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=1038929">Mozilla Bug 1038929</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <div id="float-left" style="float: left"></div>
+  <div id="float-right" style="float: right"></div>
+  <div id="position-absolute" style="position: absolute"></div>
+  <div id="position-fixed" style="position: fixed"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1038929: Test that "display" on a floated or absolutely/fixed
+  position node is correctly converted to a block display as given in the table
+  in CSS 2.1 9.7. */
+
+// Maps from display value to expected conversion when floated/positioned
+// This loosely follows the spec in CSS 2.1 section 9.7. Except for "other"
+// values which the spec says should be "same as specified." For these, we do
+// whatever the spec for the value itself says.
+var mapping = {
+  "inline": "block",
+  "table-row-group": "block",
+  "table-column": "block",
+  "table-column-group": "block",
+  "table-header-group": "block",
+  "table-footer-group": "block",
+  "table-row": "block",
+  "table-cell": "block",
+  "table-caption": "block",
+  "inline-block": "block",
+  "ruby": "block",
+  "ruby-base": "block",
+  "ruby-base-container": "block",
+  "ruby-text": "block",
+  "ruby-text-container": "block",
+  "flex": "flex",
+  "grid": "grid",
+  "none": "none",
+  "table": "table",
+  "inline-grid": "grid",
+  "inline-flex": "flex",
+  "inline-table": "table",
+  "block": "block",
+  // Note: this is sometimes block
+  "list-item": "list-item"
+};
+
+function test_display_value(val)
+{
+  var floatLeftElem = document.getElementById("float-left");
+  floatLeftElem.style.display = val;
+  var floatLeftConversion = window.getComputedStyle(floatLeftElem, null).display;
+  floatLeftElem.style.display = "";
+
+  var floatRightElem = document.getElementById("float-right");
+  floatRightElem.style.display = val;
+  var floatRightConversion = window.getComputedStyle(floatRightElem, null).display;
+  floatRightElem.style.display = "";
+
+  var posAbsoluteElem = document.getElementById("position-absolute");
+  posAbsoluteElem.style.display = val;
+  var posAbsoluteConversion = window.getComputedStyle(posAbsoluteElem, null).display;
+  posAbsoluteElem.style.display = "";
+
+  var posFixedElem = document.getElementById("position-fixed");
+  posFixedElem.style.display = val;
+  var posFixedConversion = window.getComputedStyle(posFixedElem, null).display;
+  posFixedElem.style.display = "";
+
+  if (mapping[val]) {
+    is(floatLeftConversion, mapping[val], 
+        "Element display should be converted when floated left");
+    is(floatRightConversion, mapping[val],
+        "Element display should be converted when floated right");
+    is(posAbsoluteConversion, mapping[val],
+        "Element display should be converted when absolutely positioned");
+    is(posFixedConversion, mapping[val],
+        "Element display should be converted when fixed positioned");
+  } else {
+    ok(false, "missing rules for display value " + val);
+  }
+}
+
+var displayInfo = gCSSProperties["display"];
+displayInfo.initial_values.forEach(test_display_value);
+displayInfo.other_values.forEach(test_display_value);
+
+</script>
+</pre>
+</body>
+</html>
