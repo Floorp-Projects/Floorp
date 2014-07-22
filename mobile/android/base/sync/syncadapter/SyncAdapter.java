@@ -341,7 +341,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements BaseGlob
           final String profile = Constants.DEFAULT_PROFILE;
           final long version = SyncConfiguration.CURRENT_PREFS_VERSION;
           self.accountSharedPreferences = Utils.getSharedPreferences(mContext, product, username, serverURL, profile, version);
-          self.clientsDataDelegate = new SharedPreferencesClientsDataDelegate(accountSharedPreferences);
+          self.clientsDataDelegate = new SharedPreferencesClientsDataDelegate(accountSharedPreferences, mContext);
           self.backoffHandler = new PrefsBackoffHandler(accountSharedPreferences, SyncConstants.BACKOFF_PREF_SUFFIX_11);
           final String nodeWeaveURL = Utils.nodeWeaveURL(serverURL, username);
           self.nodeAssignmentDelegate = new SharedPreferencesNodeAssignmentCallback(accountSharedPreferences, nodeWeaveURL);

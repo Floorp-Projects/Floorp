@@ -28,7 +28,7 @@ const permissions = metadata.permissions || {};
 const isPacked = rootURI && rootURI.indexOf("jar:") === 0;
 
 const uri = (path="") =>
-  path.contains(":") ? path : addonDataURI + path;
+  path.contains(":") ? path : addonDataURI + path.replace(/^\.\//, "");
 
 
 // Some XPCOM APIs require valid URIs as an argument for certain operations

@@ -12,7 +12,8 @@ const { Cc, Ci, Cr } = require("chrome");
 const apiUtils = require("./deprecated/api-utils");
 const errors = require("./deprecated/errors");
 const { isString, isUndefined, instanceOf } = require('./lang/type');
-const { URL } = require('./url');
+const { URL, isLocalURL } = require('./url');
+const { data } = require('./self');
 
 const NOTIFICATION_DIRECTIONS  = ["auto", "ltr", "rtl"];
 
@@ -39,7 +40,10 @@ exports.notify = function notifications_notify(options) {
     }
   };
   function notifyWithOpts(notifyFn) {
-    notifyFn(valOpts.iconURL, valOpts.title, valOpts.text, !!clickObserver,
+    let { iconURL } = valOpts;
+    iconURL = iconURL && isLocalURL(iconURL) ? data.url(iconURL) : iconURL;
+
+    notifyFn(iconURL, valOpts.title, valOpts.text, !!clickObserver,
              valOpts.data, clickObserver, valOpts.tag, valOpts.dir, valOpts.lang);
   }
   try {
@@ -47,7 +51,7 @@ exports.notify = function notifications_notify(options) {
   }
   catch (err) {
     if (err instanceof Ci.nsIException && err.result == Cr.NS_ERROR_FILE_NOT_FOUND) {
-      console.warn("The notification icon named by " + valOpts.iconURL +
+      console.warn("The notification icon named by " + iconURL +
                    " does not exist.  A default icon will be used instead.");
       delete valOpts.iconURL;
       notifyWithOpts(notify);

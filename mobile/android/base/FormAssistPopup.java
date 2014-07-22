@@ -38,8 +38,8 @@ import java.util.Arrays;
 import java.util.Collection;
 
 public class FormAssistPopup extends RelativeLayout implements GeckoEventListener {
-    private Context mContext;
-    private Animation mAnimation;
+    private final Context mContext;
+    private final Animation mAnimation;
 
     private ListView mAutoCompleteList;
     private RelativeLayout mValidationMessage;
@@ -363,7 +363,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
         public AutoCompleteListAdapter(Context context, int textViewResourceId) {
             super(context, textViewResourceId);
 
-            mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             mTextViewResourceId = textViewResourceId;
         }
 
