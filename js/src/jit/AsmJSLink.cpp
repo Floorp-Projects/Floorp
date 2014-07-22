@@ -369,6 +369,13 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
     //  - its index in the ordered list of exported functions
     AsmJSModule &module = FunctionToEnclosingModule(callee);
 
+    // Enable/disable profiling in the asm.js module to match the current global
+    // profiling state. Don't do this if the module is already active on the
+    // stack since this would leave the module in a state where profiling is
+    // enabled but the stack isn't unwindable.
+    if (module.profilingEnabled() != cx->runtime()->spsProfiler.enabled() && !module.active())
+        module.setProfilingEnabled(cx->runtime()->spsProfiler.enabled());
+
     // An exported function points to the code as well as the exported
     // function's signature, which implies the dynamic coercions performed on
     // the arguments.
