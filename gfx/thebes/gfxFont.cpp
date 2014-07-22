@@ -177,6 +177,13 @@ gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
     memset(&mNonDefaultSubSpaceFeatures, 0, sizeof(mNonDefaultSubSpaceFeatures));
 }
 
+static PLDHashOperator
+DestroyHBSet(const uint32_t& aTag, hb_set_t*& aSet, void *aUserArg)
+{
+    hb_set_destroy(aSet);
+    return PL_DHASH_NEXT;
+}
+
 gfxFontEntry::~gfxFontEntry()
 {
     if (mCOLR) {
@@ -191,6 +198,10 @@ gfxFontEntry::~gfxFontEntry()
     // entry is being deleted.
     if (!mIsProxy && IsUserFont() && !IsLocalUserFont()) {
         gfxUserFontSet::UserFontCache::ForgetFont(this);
+    }
+
+    if (mFeatureInputs) {
+        mFeatureInputs->Enumerate(DestroyHBSet, nullptr);
     }
 
     // By the time the entry is destroyed, all font instances that were
@@ -925,15 +936,8 @@ gfxFontEntry::SupportsOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag)
     hb_face_t *face = GetHBFace();
 
     if (hb_ot_layout_has_substitution(face)) {
-        // Decide what harfbuzz script code will be used for shaping
-        hb_script_t hbScript;
-        if (aScript <= MOZ_SCRIPT_INHERITED) {
-            // For unresolved "common" or "inherited" runs, default to Latin
-            // for now. (Compare gfxHarfBuzzShaper.)
-            hbScript = HB_SCRIPT_LATIN;
-        } else {
-            hbScript = hb_script_t(GetScriptTagForCode(aScript));
-        }
+        hb_script_t hbScript =
+            gfxHarfBuzzShaper::GetHBScriptUsedForShaping(aScript);
 
         // Get the OpenType tag(s) that match this script code
         hb_tag_t scriptTags[4] = {
@@ -975,6 +979,66 @@ gfxFontEntry::SupportsOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag)
     mSupportedFeatures->Put(scriptFeature, result);
 
     return result;
+}
+
+const hb_set_t*
+gfxFontEntry::InputsForOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag)
+{
+    if (!mFeatureInputs) {
+        mFeatureInputs = new nsDataHashtable<nsUint32HashKey,hb_set_t*>();
+    }
+
+    NS_ASSERTION(aFeatureTag == HB_TAG('s','u','p','s') ||
+                 aFeatureTag == HB_TAG('s','u','b','s'),
+                 "use of unknown feature tag");
+
+    uint32_t scriptFeature = SCRIPT_FEATURE(aScript, aFeatureTag);
+    hb_set_t *inputGlyphs;
+    if (mFeatureInputs->Get(scriptFeature, &inputGlyphs)) {
+        return inputGlyphs;
+    }
+
+    inputGlyphs = hb_set_create();
+
+    hb_face_t *face = GetHBFace();
+
+    if (hb_ot_layout_has_substitution(face)) {
+        hb_script_t hbScript =
+            gfxHarfBuzzShaper::GetHBScriptUsedForShaping(aScript);
+
+        // Get the OpenType tag(s) that match this script code
+        hb_tag_t scriptTags[4] = {
+            HB_TAG_NONE,
+            HB_TAG_NONE,
+            HB_TAG_NONE,
+            HB_TAG_NONE
+        };
+        hb_ot_tags_from_script(hbScript, &scriptTags[0], &scriptTags[1]);
+
+        // Replace the first remaining NONE with DEFAULT
+        hb_tag_t* scriptTag = &scriptTags[0];
+        while (*scriptTag != HB_TAG_NONE) {
+            ++scriptTag;
+        }
+        *scriptTag = HB_OT_TAG_DEFAULT_SCRIPT;
+
+        const hb_tag_t kGSUB = HB_TAG('G','S','U','B');
+        hb_tag_t features[2] = { aFeatureTag, HB_TAG_NONE };
+        hb_set_t *featurelookups = hb_set_create();
+        hb_ot_layout_collect_lookups(face, kGSUB, scriptTags, nullptr,
+                                     features, featurelookups);
+        hb_codepoint_t index = -1;
+        while (hb_set_next(featurelookups, &index)) {
+            hb_ot_layout_lookup_collect_glyphs(face, kGSUB, index,
+                                               nullptr, inputGlyphs,
+                                               nullptr, nullptr);
+        }
+    }
+
+    hb_face_destroy(face);
+
+    mFeatureInputs->Put(scriptFeature, inputGlyphs);
+    return inputGlyphs;
 }
 
 bool
@@ -2862,20 +2926,77 @@ gfxFont::SupportsVariantCaps(int32_t aScript,
 }
 
 bool
-gfxFont::SupportsSubSuperscript(int32_t aScript, uint32_t aSubSuperscript)
+gfxFont::SupportsSubSuperscript(uint32_t aSubSuperscript,
+                                const uint8_t *aString,
+                                uint32_t aLength, int32_t aRunScript)
 {
-    bool ok = false;
-    switch (aSubSuperscript) {
-        case NS_FONT_VARIANT_POSITION_SUPER:
-            ok = SupportsFeature(aScript, HB_TAG('s','u','p','s'));
-            break;
-        case NS_FONT_VARIANT_POSITION_SUB:
-            ok = SupportsFeature(aScript, HB_TAG('s','u','b','s'));
-            break;
-        default:
-            break;
+    NS_ConvertASCIItoUTF16 unicodeString(reinterpret_cast<const char*>(aString),
+                                         aLength);
+    return SupportsSubSuperscript(aSubSuperscript, unicodeString.get(),
+                                  aLength, aRunScript);
+}
+
+bool
+gfxFont::SupportsSubSuperscript(uint32_t aSubSuperscript,
+                                const char16_t *aString,
+                                uint32_t aLength, int32_t aRunScript)
+{
+    NS_ASSERTION(aSubSuperscript == NS_FONT_VARIANT_POSITION_SUPER ||
+                 aSubSuperscript == NS_FONT_VARIANT_POSITION_SUB,
+                 "unknown value of font-variant-position");
+
+    uint32_t feature = aSubSuperscript == NS_FONT_VARIANT_POSITION_SUPER ?
+                       HB_TAG('s','u','p','s') : HB_TAG('s','u','b','s');
+
+    if (!SupportsFeature(aRunScript, feature)) {
+        return false;
     }
-    return ok;
+
+    // xxx - for graphite, don't really know how to sniff lookups so bail
+    if (mGraphiteShaper && gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
+        return true;
+    }
+
+    if (!mHarfBuzzShaper) {
+        mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
+    }
+    gfxHarfBuzzShaper* shaper =
+        static_cast<gfxHarfBuzzShaper*>(mHarfBuzzShaper.get());
+    if (!shaper->Initialize()) {
+        return false;
+    }
+
+    // get the hbset containing input glyphs for the feature
+    const hb_set_t *inputGlyphs = mFontEntry->InputsForOpenTypeFeature(aRunScript, feature);
+
+    // create an hbset containing default glyphs for the script run
+    hb_set_t *defaultGlyphsInRun = hb_set_create();
+
+    // for each character, get the glyph id
+    for (uint32_t i = 0; i < aLength; i++) {
+        uint32_t ch = aString[i];
+
+        if ((i + 1 < aLength) && NS_IS_HIGH_SURROGATE(ch) &&
+                             NS_IS_LOW_SURROGATE(aString[i + 1])) {
+            i++;
+            ch = SURROGATE_TO_UCS4(ch, aString[i]);
+        }
+
+        if (ch == 0xa0) {
+            ch = ' ';
+        }
+
+        hb_codepoint_t gid = shaper->GetGlyph(ch, 0);
+        hb_set_add(defaultGlyphsInRun, gid);
+    }
+
+    // intersect with input glyphs, if size is not the same ==> fallback
+    uint32_t origSize = hb_set_get_population(defaultGlyphsInRun);
+    hb_set_intersect(defaultGlyphsInRun, inputGlyphs);
+    uint32_t intersectionSize = hb_set_get_population(defaultGlyphsInRun);
+    hb_set_destroy(defaultGlyphsInRun);
+
+    return origSize == intersectionSize;
 }
 
 bool
@@ -5495,8 +5616,9 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
             if (mStyle.variantSubSuper != NS_FONT_VARIANT_POSITION_NORMAL &&
                 (aTextRun->GetShapingState() ==
                      gfxTextRun::eShapingState_ForceFallbackFeature ||
-                 !matchedFont->SupportsSubSuperscript(aRunScript,
-                                                      mStyle.variantSubSuper)))
+                 !matchedFont->SupportsSubSuperscript(mStyle.variantSubSuper,
+                                                      aString, aLength,
+                                                      aRunScript)))
             {
                 // fallback for subscript/superscript variant glyphs
 
