@@ -7,6 +7,7 @@
 #include "MediaOmxDecoder.h"
 #include "MediaOmxReader.h"
 #include "MediaDecoderStateMachine.h"
+#include "VideoUtils.h"
 
 #include "OmxDecoder.h"
 
@@ -111,7 +112,9 @@ void MediaOmxDecoder::ResumeStateMachine()
 
   mFallbackToStateMachine = true;
   mAudioOffloadPlayer = nullptr;
-  mRequestedSeekTarget = SeekTarget(mCurrentTime, SeekTarget::Accurate);
+  int64_t timeUsecs = 0;
+  SecondsToUsecs(mCurrentTime, timeUsecs);
+  mRequestedSeekTarget = SeekTarget(timeUsecs, SeekTarget::Accurate);
 
   mNextState = mPlayState;
   ChangeState(PLAY_STATE_LOADING);
