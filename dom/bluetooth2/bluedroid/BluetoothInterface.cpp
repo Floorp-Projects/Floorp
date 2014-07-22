@@ -576,6 +576,37 @@ struct interface_traits<BluetoothHandsfreeInterface>
   }
 };
 
+typedef
+  BluetoothInterfaceRunnable0<BluetoothHandsfreeResultHandler, void>
+  BluetoothHandsfreeResultRunnable;
+
+typedef
+  BluetoothInterfaceRunnable1<BluetoothHandsfreeResultHandler, void, bt_status_t>
+  BluetoothHandsfreeErrorRunnable;
+
+static nsresult
+DispatchBluetoothHandsfreeResult(
+  BluetoothHandsfreeResultHandler* aRes,
+  void (BluetoothHandsfreeResultHandler::*aMethod)(),
+  bt_status_t aStatus)
+{
+  MOZ_ASSERT(aRes);
+
+  nsRunnable* runnable;
+
+  if (aStatus == BT_STATUS_SUCCESS) {
+    runnable = new BluetoothHandsfreeResultRunnable(aRes, aMethod);
+  } else {
+    runnable = new BluetoothHandsfreeErrorRunnable(aRes,
+      &BluetoothHandsfreeResultHandler::OnError, aStatus);
+  }
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  if (NS_FAILED(rv)) {
+    BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+  }
+  return rv;
+}
+
 BluetoothHandsfreeInterface::BluetoothHandsfreeInterface(
   const bthf_interface_t* aInterface)
 : mInterface(aInterface)
