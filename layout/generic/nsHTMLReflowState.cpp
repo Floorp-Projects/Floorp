@@ -2595,18 +2595,11 @@ nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
                                        nscoord aContainingBlockHeight,
                                        const nsHTMLReflowState* aContainingBlockRS)
 {
-  // Handle "min-width: auto"
+  // NOTE: min-width:auto resolves to 0, except on a flex item. (But
+  // even there, it's supposed to be ignored (i.e. treated as 0) until
+  // the flex container explicitly resolves & considers it.)
   if (eStyleUnit_Auto == mStylePosition->mMinWidth.GetUnit()) {
-    nsFlexContainerFrame* flexContainerFrame = GetFlexContainer(frame);
-    if (flexContainerFrame && flexContainerFrame->IsHorizontal()) {
-      ComputedMinWidth() =
-        ComputeWidthValue(aContainingBlockWidth,
-                          mStylePosition->mBoxSizing,
-                          nsStyleCoord(NS_STYLE_WIDTH_MIN_CONTENT,
-                                       eStyleUnit_Enumerated));
-    } else {
-      ComputedMinWidth() = 0;
-    }
+    ComputedMinWidth() = 0;
   } else {
     ComputedMinWidth() = ComputeWidthValue(aContainingBlockWidth,
                                           mStylePosition->mBoxSizing,
@@ -2635,10 +2628,9 @@ nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
   // Likewise, if we're a child of a flex container who's measuring our
   // intrinsic height, then we want to disregard our min-height.
 
-  // NOTE: We treat "min-height:auto" as "0" for the purpose of this code,
-  // since that's what it means in all cases except for on flex items -- and
-  // even there, we're supposed to ignore it (i.e. treat it as 0) until the
-  // flex container explicitly considers it.
+  // NOTE: min-height:auto resolves to 0, except on a flex item. (But
+  // even there, it's supposed to be ignored (i.e. treated as 0) until
+  // the flex container explicitly resolves & considers it.)
   const nsStyleCoord &minHeight = mStylePosition->mMinHeight;
   if (eStyleUnit_Auto == minHeight.GetUnit() ||
       (NS_AUTOHEIGHT == aContainingBlockHeight &&
