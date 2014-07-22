@@ -162,7 +162,7 @@ JSONParser<CharT>::readString()
         if (current >= end)
             break;
 
-        jschar c = *current++;
+        char16_t c = *current++;
         if (c == '"') {
             JSFlatString *str = (ST == JSONParser::PropertyName)
                                 ? buffer.finishAtom()
@@ -341,7 +341,7 @@ JSONParser<CharT>::readNumber()
 }
 
 static inline bool
-IsJSONWhitespace(jschar c)
+IsJSONWhitespace(char16_t c)
 {
     return c == '\t' || c == '\r' || c == '\n' || c == ' ';
 }
@@ -830,4 +830,4 @@ JSONParser<CharT>::parse(MutableHandleValue vp)
 }
 
 template class js::JSONParser<Latin1Char>;
-template class js::JSONParser<jschar>;
+template class js::JSONParser<char16_t>;

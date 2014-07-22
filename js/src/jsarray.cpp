@@ -1094,13 +1094,13 @@ js::ArrayJoin(JSContext *cx, HandleObject obj, HandleLinearString sepstr, uint32
         if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
             return nullptr;
     } else if (seplen == 1) {
-        jschar c = sepstr->latin1OrTwoByteChar(0);
+        char16_t c = sepstr->latin1OrTwoByteChar(0);
         if (c <= JSString::MAX_LATIN1_CHAR) {
             CharSeparatorOp<Latin1Char> op(c);
             if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
                 return nullptr;
         } else {
-            CharSeparatorOp<jschar> op(c);
+            CharSeparatorOp<char16_t> op(c);
             if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
                 return nullptr;
         }

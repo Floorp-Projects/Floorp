@@ -115,7 +115,7 @@ if (IS_WIN) {
                                    ctypes.void_t.ptr, /* return handle */
                                    ctypes.void_t.ptr, /* security attributes */
                                    ctypes.int32_t, /* initial owner */
-                                   ctypes.jschar.ptr); /* name */
+                                   ctypes.char16_t.ptr); /* name */
 
     let handle = CreateMutexW(null, INITIAL_OWN, aName);
     lib.close();

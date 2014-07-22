@@ -688,9 +688,9 @@ js_DumpAtom(JSAtom *atom)
 }
 
 JS_FRIEND_API(void)
-js_DumpChars(const jschar *s, size_t n)
+js_DumpChars(const char16_t *s, size_t n)
 {
-    fprintf(stderr, "jschar * (%p) = ", (void *) s);
+    fprintf(stderr, "char16_t * (%p) = ", (void *) s);
     JSString::dumpChars(s, n);
     fputc('\n', stderr);
 }
@@ -851,13 +851,13 @@ JS::WasIncrementalGC(JSRuntime *rt)
     return rt->gc.isIncrementalGc();
 }
 
-jschar *
+char16_t *
 GCDescription::formatMessage(JSRuntime *rt) const
 {
     return rt->gc.stats.formatMessage();
 }
 
-jschar *
+char16_t *
 GCDescription::formatJSON(JSRuntime *rt, uint64_t timestamp) const
 {
     return rt->gc.stats.formatJSON(timestamp);

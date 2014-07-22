@@ -27,12 +27,12 @@ namespace JS {
  * The scanner recognizes only a select set of types: pointers to JSObjects and
  * similar things (JSFunctions, and so on), pointers to JSStrings, and Values.
  * So while the scanner finds all live |JSString| pointers, it does not notice
- * |jschar| pointers.
+ * |char16_t| pointers.
  *
  * So suppose we have:
  *
  *   void f(JSString *str) {
- *     const jschar *ch = JS_GetStringCharsZ(str);
+ *     const char16_t *ch = JS_GetStringCharsZ(str);
  *     ... do stuff with ch, but no uses of str ...;
  *   }
  *
@@ -41,8 +41,8 @@ namespace JS {
  * it anywhere. But because the stack scanner will not notice |ch|, there
  * is no longer any live value in this frame that would keep the string
  * alive. If |str| is the last reference to that |JSString|, and the
- * collector runs while we are using |ch|, the string's array of |jschar|s
- * may be freed out from under us.
+ * collector runs while we are using |ch|, the string's array of |char16_t|
+ * characters may be freed out from under us.
  *
  * Note that there is only an issue when 1) we extract a thing X the scanner
  * doesn't recognize from 2) a thing Y the scanner does recognize, and 3) if Y
@@ -67,7 +67,7 @@ namespace JS {
  *
  *   void f(JSString *str) {
  *     JS::Anchor<JSString *> a_str(str);
- *     const jschar *ch = JS_GetStringCharsZ(str);
+ *     const char16_t *ch = JS_GetStringCharsZ(str);
  *     ... do stuff with ch, but no uses of str ...;
  *   }
  *

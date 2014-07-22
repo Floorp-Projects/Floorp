@@ -157,7 +157,7 @@ ErrorResult::ReportTypeError(JSContext* aCx)
 
   Message* message = mMessage;
   const uint32_t argCount = message->mArgs.Length();
-  const jschar* args[11];
+  const char16_t* args[11];
   for (uint32_t i = 0; i < argCount; ++i) {
     args[i] = message->mArgs.ElementAt(i).get();
   }
@@ -1629,9 +1629,7 @@ DictionaryBase::ParseJSON(JSContext* aCx,
   if (aJSON.IsEmpty()) {
     return true;
   }
-  return JS_ParseJSON(aCx,
-                      static_cast<const jschar*>(PromiseFlatString(aJSON).get()),
-                      aJSON.Length(), aVal);
+  return JS_ParseJSON(aCx, PromiseFlatString(aJSON).get(), aJSON.Length(), aVal);
 }
 
 bool
@@ -1645,17 +1643,14 @@ DictionaryBase::StringifyToJSON(JSContext* aCx,
 
 /* static */
 bool
-DictionaryBase::AppendJSONToString(const jschar* aJSONData,
+DictionaryBase::AppendJSONToString(const char16_t* aJSONData,
                                    uint32_t aDataLength,
                                    void* aString)
 {
   nsAString* string = static_cast<nsAString*>(aString);
-  string->Append(static_cast<const char16_t*>(aJSONData),
-                 aDataLength);
+  string->Append(aJSONData, aDataLength);
   return true;
 }
-
-
 
 static JSString*
 ConcatJSString(JSContext* cx, const char* pre, JS::Handle<JSString*> str, const char* post)
@@ -2244,10 +2239,10 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
     // and report the error outside the AutoCheckCannotGC scope.
     bool foundBadChar = false;
     size_t badCharIndex;
-    jschar badChar;
+    char16_t badChar;
     {
       JS::AutoCheckCannotGC nogc;
-      const jschar* chars = JS_GetTwoByteStringCharsAndLength(cx, nogc, s, &length);
+      const char16_t* chars = JS_GetTwoByteStringCharsAndLength(cx, nogc, s, &length);
       if (!chars) {
         return false;
       }
@@ -2270,11 +2265,11 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
       char index[21];
       static_assert(sizeof(size_t) <= 8, "index array too small");
       PR_snprintf(index, sizeof(index), "%d", badCharIndex);
-      // A jschar is 16 bits long.  The biggest unsigned 16 bit
+      // A char16_t is 16 bits long.  The biggest unsigned 16 bit
       // number (65,535) has 5 digits, plus one more for the null
       // terminator.
       char badCharArray[6];
-      static_assert(sizeof(jschar) <= 2, "badCharArray too small");
+      static_assert(sizeof(char16_t) <= 2, "badCharArray too small");
       PR_snprintf(badCharArray, sizeof(badCharArray), "%d", badChar);
       ThrowErrorMessage(cx, MSG_INVALID_BYTESTRING, index, badCharArray);
       return false;
