@@ -5,9 +5,14 @@
 package org.mozilla.search.autocomplete;
 
 import android.content.Context;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.TextView;
+
+import org.mozilla.search.R;
 
 import java.util.List;
 
@@ -18,6 +23,8 @@ class AutoCompleteAdapter extends ArrayAdapter<String> {
 
     private final AcceptsJumpTaps acceptsJumpTaps;
 
+    private final LayoutInflater inflater;
+
     public AutoCompleteAdapter(Context context, AcceptsJumpTaps acceptsJumpTaps) {
         // Uses '0' for the template id since we are overriding getView
         // and supplying our own view.
@@ -26,22 +33,30 @@ class AutoCompleteAdapter extends ArrayAdapter<String> {
 
         // Disable notifying on change. We will notify ourselves in update.
         setNotifyOnChange(false);
+
+        inflater = LayoutInflater.from(context);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        AutoCompleteRowView view;
-
         if (convertView == null) {
-            view = new AutoCompleteRowView(getContext());
-        } else {
-            view = (AutoCompleteRowView) convertView;
+            convertView = inflater.inflate(R.layout.search_auto_complete_row, null);
         }
 
-        view.setOnJumpListener(acceptsJumpTaps);
-        view.setMainText(getItem(position));
+        final String text = getItem(position);
 
-        return view;
+        final TextView textView = (TextView) convertView.findViewById(R.id.auto_complete_row_text);
+        textView.setText(text);
+
+        final View jumpButton = convertView.findViewById(R.id.auto_complete_row_jump_button);
+        jumpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                acceptsJumpTaps.onJumpTap(text);
+            }
+        });
+
+        return convertView;
     }
 
     /**

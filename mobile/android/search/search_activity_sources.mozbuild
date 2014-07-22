@@ -8,7 +8,6 @@ search_activity_sources = [
     'java/org/mozilla/search/autocomplete/AcceptsJumpTaps.java',
     'java/org/mozilla/search/autocomplete/AcceptsSearchQuery.java',
     'java/org/mozilla/search/autocomplete/AutoCompleteAdapter.java',
-    'java/org/mozilla/search/autocomplete/AutoCompleteRowView.java',
     'java/org/mozilla/search/autocomplete/SearchFragment.java',
     'java/org/mozilla/search/autocomplete/SuggestClient.java',
     'java/org/mozilla/search/Constants.java',
