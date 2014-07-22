@@ -82,7 +82,7 @@ MSVC_ENABLE_PGO = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = 'xulapp_s'
+FINAL_LIBRARY = 'xul'
 
 if CONFIG['OS_TARGET'] == 'Android':
     DEFINES['ANDROID_PACKAGE_NAME'] = '"%s"' % CONFIG['ANDROID_PACKAGE_NAME']

@@ -12,7 +12,7 @@ UNIFIED_SOURCES += [
 
 XPI_NAME = 'crashreporter'
 
-FINAL_LIBRARY = 'xulapp_s'
+FINAL_LIBRARY = 'xul'
 
 if CONFIG['OS_TARGET'] == 'Android':
     # NDK5 workarounds

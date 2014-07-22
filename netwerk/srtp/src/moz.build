@@ -35,7 +35,7 @@ LIBRARY_NAME = 'nksrtp_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = 'necko'
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     'crypto/include',

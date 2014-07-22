@@ -36,7 +36,7 @@ if CONFIG['MOZ_CRASHREPORTER']:
 
 LIBRARY_NAME = 'breakpad_linux_common_s'
 
-FINAL_LIBRARY = 'xulapp_s'
+FINAL_LIBRARY = 'xul'
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     DEFINES['ELFSIZE'] = 32

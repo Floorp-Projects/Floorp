@@ -8,4 +8,4 @@ SOURCES += [
     'keysym2ucs.c',
 ]
 
-FINAL_LIBRARY = 'xpwidgets_s'
+FINAL_LIBRARY = 'xul'

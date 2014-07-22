@@ -49,7 +49,7 @@ MSVC_ENABLE_PGO = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = 'necko'
+FINAL_LIBRARY = 'xul'
 
 DEFINES['IMPL_NS_NET'] = True
 DEFINES['FORCE_PR_LOG'] = True

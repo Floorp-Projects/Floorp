@@ -32,7 +32,7 @@ SOURCES += [
 
 LIBRARY_NAME = 'breakpad_mac_common_s'
 
-FINAL_LIBRARY = 'xulapp_s'
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '../..',

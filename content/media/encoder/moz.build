@@ -39,7 +39,7 @@ if CONFIG['MOZ_WEBM_ENCODER']:
 
 FAIL_ON_WARNINGS = True
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'
 
 # These includes are from Android JB, for use of MediaCodec.
 LOCAL_INCLUDES += ['/ipc/chromium/src']

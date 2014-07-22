@@ -11,4 +11,4 @@ UNIFIED_SOURCES += [
 FAIL_ON_WARNINGS = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'
