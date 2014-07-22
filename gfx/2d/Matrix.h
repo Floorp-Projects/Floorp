@@ -461,6 +461,17 @@ public:
     return *this;
   }
 
+  Matrix4x4 &ChangeBasis(Float aX, Float aY, Float aZ)
+  {
+    // Translate to the origin before applying this matrix
+    Translate(-aX, -aY, -aZ);
+
+    // Translate back into position after applying this matrix
+    PostTranslate(aX, aY, aZ);
+
+    return *this;
+  }
+
   bool operator==(const Matrix4x4& o) const
   {
     // XXX would be nice to memcmp here, but that breaks IEEE 754 semantics
