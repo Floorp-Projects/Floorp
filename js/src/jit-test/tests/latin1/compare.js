@@ -1,8 +1,8 @@
 function test() {
     var arr = [
-	toLatin1("abc"),
-	toLatin1("abcd"),
-	toLatin1("123\u00ff")
+	"abc",
+	"abcd",
+	"123\u00ff"
     ];
     for (var i = 0; i < arr.length; i++) {
 	for (var j = 0; j < arr.length; j++) {

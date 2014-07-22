@@ -45,6 +45,9 @@ using namespace mozilla;
 
 #if defined(XP_LINUX)
 
+#include <string.h>
+#include <stdlib.h>
+
 static nsresult
 GetProcSelfStatmField(int aField, int64_t* aN)
 {
@@ -68,30 +71,54 @@ GetProcSelfStatmField(int aField, int64_t* aN)
 static nsresult
 GetProcSelfSmapsPrivate(int64_t* aN)
 {
-  // You might be tempted to calculate USS by subtracting the "shared"
-  // value from the "resident" value in /proc/<pid>/statm. But at least
-  // on Linux, statm's "shared" value actually counts pages backed by
-  // files, which has little to do with whether the pages are actually
-  // shared. /proc/self/smaps on the other hand appears to give us the
-  // correct information.
+  // You might be tempted to calculate USS by subtracting the "shared" value
+  // from the "resident" value in /proc/<pid>/statm. But at least on Linux,
+  // statm's "shared" value actually counts pages backed by files, which has
+  // little to do with whether the pages are actually shared. /proc/self/smaps
+  // on the other hand appears to give us the correct information.
 
   FILE* f = fopen("/proc/self/smaps", "r");
   if (NS_WARN_IF(!f)) {
     return NS_ERROR_UNEXPECTED;
   }
 
+  // We carry over the end of the buffer to the beginning to make sure we only
+  // interpret complete lines.
+  static const uint32_t carryOver = 32;
+  static const uint32_t readSize = 4096;
+
   int64_t amount = 0;
-  char line[256];
-  while (fgets(line, sizeof(line), f)) {
-    long long val = 0;
-    if (sscanf(line, "Private_Dirty: %lld kB", &val) == 1 ||
-        sscanf(line, "Private_Clean: %lld kB", &val) == 1) {
-      amount += val * 1024; // convert from kB to bytes
+  char buffer[carryOver + readSize + 1];
+
+  // Fill the beginning of the buffer with spaces, as a sentinel for the first
+  // iteration.
+  memset(buffer, ' ', carryOver);
+
+  for (;;) {
+    size_t bytes = fread(buffer + carryOver, sizeof(*buffer), readSize, f);
+    char* end = buffer + bytes;
+    char* ptr = buffer;
+    end[carryOver] = '\0';
+    // We are looking for lines like "Private_{Clean,Dirty}: 4 kB".
+    while (ptr = strstr(ptr, "Private")) {
+      if (ptr >= end) {
+        break;
+      }
+      ptr += sizeof("Private_Xxxxx:");
+      amount += strtol(ptr, nullptr, 10);
     }
+    if (bytes < readSize) {
+      // We do not expect any match within the end of the buffer.
+      MOZ_ASSERT(!strstr(end, "Private"));
+      break;
+    }
+    // Carry the end of the buffer over to the beginning.
+    memcpy(buffer, end, carryOver);
   }
 
   fclose(f);
-  *aN = amount;
+  // Convert from kB to bytes.
+  *aN = amount * 1024;
   return NS_OK;
 }
 

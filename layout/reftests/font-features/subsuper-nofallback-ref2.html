@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>font-variant-position fallback</title>
+<meta charset="UTF-8">
+<style>
+
+/* sups: 0-9 + - ( ) =  subs: 0-9 + - ( ) */
+@font-face {
+  font-family: subsuper;
+  src: url(../fonts/subsuper-nofeat.woff); /* FiraSans with blank omega */
+}
+
+body {
+  margin: 20px;
+  font-family: subsuper, sans-serif;
+}
+
+p {
+  margin: 0;
+  font-size: 75px;
+}
+h4 { font-weight: normal }
+
+</style>
+</head>
+<body>
+<h4>All the subscripts and superscripts should display with variant glyphs:</h4>
+<p>
+<span class=sub>&#x2083;</span>C<span class=super>&#x0b2;</span>
+<span class=sub>&#x208d;&#x2083;&#x208e;</span>C<span class=super>&#x207d;&#x0b2;&#x207e;</span>
+<span class=sub>&#x2082;&#x2081;&#x208a;&#x2083;</span>C<span class=super>&#x2074;&#x2075;</span>
+</p>
+</body>
+</html>

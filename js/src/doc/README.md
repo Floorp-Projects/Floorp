@@ -9,6 +9,9 @@ the moment, we have:
 - `js/src/doc/Debugger`, SpiderMonkey's JavaScript debugging API, commonly
   known as `Debugger`.
 
+- `js/src/doc/SavedFrame`, SpiderMonkey's compact representation for captured
+  call stacks.
+
 and that's it.
 
 To format the documentation, you'll need to install [Pandoc][], a

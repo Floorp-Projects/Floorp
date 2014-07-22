@@ -1,11 +1,14 @@
+/** @jsx React.DOM */
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global loop:true */
+/* global loop:true, React */
+/* jshint newcap:false */
 
 var loop = loop || {};
-loop.webapp = (function($, _, OT) {
+loop.webapp = (function($, _, OT, webL10n) {
   "use strict";
 
   loop.config = loop.config || {};
@@ -13,7 +16,8 @@ loop.webapp = (function($, _, OT) {
 
   var sharedModels = loop.shared.models,
       sharedViews = loop.shared.views,
-      baseServerUrl = loop.config.serverUrl;
+      baseServerUrl = loop.config.serverUrl,
+      __ = webL10n.get;
 
   /**
    * App router.
@@ -26,6 +30,20 @@ loop.webapp = (function($, _, OT) {
    */
   var HomeView = sharedViews.BaseView.extend({
     template: _.template('<p data-l10n-id="welcome"></p>')
+  });
+
+  /**
+   * Expired call URL view.
+   */
+  var CallUrlExpiredView = React.createClass({displayName: 'CallUrlExpiredView',
+    render: function() {
+      /* jshint ignore:start */
+      return (
+        // XXX proper UX/design should be implemented here (see bug 1000131)
+        React.DOM.div(null, __("call_url_unavailable_notification"))
+      );
+      /* jshint ignore:end */
+    }
   });
 
   /**
@@ -93,7 +111,7 @@ loop.webapp = (function($, _, OT) {
       event.preventDefault();
       this.model.initiate({
         client: new loop.StandaloneClient({
-          baseServerUrl: baseServerUrl,
+          baseServerUrl: baseServerUrl
         }),
         outgoing: true,
         // For now, we assume both audio and video as there is no
@@ -112,6 +130,7 @@ loop.webapp = (function($, _, OT) {
       "":                    "home",
       "unsupportedDevice":   "unsupportedDevice",
       "unsupportedBrowser":  "unsupportedBrowser",
+      "call/expired":        "expired",
       "call/ongoing/:token": "loadConversation",
       "call/:token":         "initiate"
     },
@@ -121,6 +140,12 @@ loop.webapp = (function($, _, OT) {
       this.loadView(new HomeView());
 
       this.listenTo(this._conversation, "timeout", this._onTimeout);
+      this.listenTo(this._conversation, "session:expired",
+                    this._onSessionExpired);
+    },
+
+    _onSessionExpired: function() {
+      this.navigate("/call/expired", {trigger: true});
     },
 
     /**
@@ -165,6 +190,10 @@ loop.webapp = (function($, _, OT) {
 
     unsupportedBrowser: function() {
       this.loadView(new sharedViews.UnsupportedBrowserView());
+    },
+
+    expired: function() {
+      this.loadReactComponent(CallUrlExpiredView());
     },
 
     /**
@@ -235,10 +264,11 @@ loop.webapp = (function($, _, OT) {
 
   return {
     baseServerUrl: baseServerUrl,
+    CallUrlExpiredView: CallUrlExpiredView,
     ConversationFormView: ConversationFormView,
     HomeView: HomeView,
     WebappHelper: WebappHelper,
     init: init,
     WebappRouter: WebappRouter
   };
-})(jQuery, _, window.OT);
+})(jQuery, _, window.OT, document.webL10n);

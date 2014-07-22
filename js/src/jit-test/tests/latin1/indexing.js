@@ -1,9 +1,9 @@
 function testCharCodeAt() {
-    var s = toLatin1("abcdefghijklm1234567891000");
+    var s = "abcdefghijklm1234567891000";
     for (var i=0; i<10; i++)
 	assertEq(s.charCodeAt(i), 97 + i);
 
-    var rope = s + toLatin1("blah");
+    var rope = s + "blah";
     assertEq(rope.charCodeAt(s.length + 3), 104);
 
     rope = s + "Foo987";
@@ -16,12 +16,12 @@ function testCharCodeAt() {
 testCharCodeAt();
 
 function testCharAt() {
-    var s = toLatin1("abcdefghijklm100000002345");
+    var s = "abcdefghijklm100000002345";
     assertEq(s.charAt(0), "a");
     assertEq(s.charAt(s.length-1), "5");
     assertEq(s.charAt(s.length), "");
 
-    var rope = s + toLatin1("abcZYX");
+    var rope = s + "abcZYX";
     assertEq(rope.charAt(s.length + 3), "Z");
 
     rope = s + "Foo987";
@@ -41,7 +41,7 @@ function testIndex(s) {
     assertEq(rope[7], "\u0512");
 }
 
-var s = toLatin1("abcdefghijklm123456");
+var s = "abcdefghijklm123456";
 testIndex(s);
 testIndex(s);
 testIndex(s);

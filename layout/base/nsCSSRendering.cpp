@@ -4744,8 +4744,9 @@ void
 nsImageRenderer::Draw(nsPresContext*       aPresContext,
                       nsRenderingContext&  aRenderingContext,
                       const nsRect&        aDirtyRect,
-                      const nsRect&        aFill,
                       const nsRect&        aDest,
+                      const nsRect&        aFill,
+                      const nsPoint&       aAnchor,
                       const CSSIntRect&    aSrc)
 {
   if (!mIsReady) {
@@ -4757,17 +4758,17 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     return;
   }
 
-  GraphicsFilter graphicsFilter =
-    nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
+  GraphicsFilter filter = nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
 
   switch (mType) {
     case eStyleImageType_Image:
     {
-      nsLayoutUtils::DrawSingleImage(&aRenderingContext, aPresContext,
-                                     mImageContainer,
-                                     graphicsFilter, aFill, aDirtyRect,
-                                     nullptr,
-                                     ConvertImageRendererToDrawFlags(mFlags));
+      nsIntSize imageSize(nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
+                          nsPresContext::AppUnitsToIntCSSPixels(mSize.height));
+      nsLayoutUtils::DrawBackgroundImage(&aRenderingContext, aPresContext,
+                                         mImageContainer, imageSize, filter,
+                                         aDest, aFill, aAnchor, aDirtyRect,
+                                         ConvertImageRendererToDrawFlags(mFlags));
       return;
     }
     case eStyleImageType_Gradient:
@@ -4785,9 +4786,11 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
         NS_WARNING("Could not create drawable for element");
         return;
       }
-      nsLayoutUtils::DrawPixelSnapped(&aRenderingContext, aPresContext,
-                                      drawable, graphicsFilter,
-                                      aDest, aFill, aDest.TopLeft(), aDirtyRect);
+
+      nsCOMPtr<imgIContainer> image(ImageOps::CreateFromDrawable(drawable));
+      nsLayoutUtils::DrawImage(&aRenderingContext, aPresContext, image,
+                               filter, aDest, aFill, aAnchor, aDirtyRect,
+                               ConvertImageRendererToDrawFlags(mFlags));
       return;
     }
     case eStyleImageType_Null:
@@ -4841,22 +4844,8 @@ nsImageRenderer::DrawBackground(nsPresContext*       aPresContext,
     return;
   }
 
-  if (mType == eStyleImageType_Image) {
-    GraphicsFilter graphicsFilter =
-      nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
-
-    nsLayoutUtils::DrawBackgroundImage(&aRenderingContext, aPresContext,
-                mImageContainer,
-                nsIntSize(nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
-                          nsPresContext::AppUnitsToIntCSSPixels(mSize.height)),
-                graphicsFilter,
-                aDest, aFill, aAnchor, aDirty,
-                ConvertImageRendererToDrawFlags(mFlags));
-    return;
-  }
-
   Draw(aPresContext, aRenderingContext,
-       aDirty, aFill, aDest,
+       aDirty, aDest, aFill, aAnchor,
        CSSIntRect(0, 0,
                   nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
                   nsPresContext::AppUnitsToIntCSSPixels(mSize.height)));
@@ -4952,14 +4941,34 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
     return;
   }
 
-  if (mType == eStyleImageType_Image) {
+  if (mType == eStyleImageType_Image || mType == eStyleImageType_Element) {
     nsCOMPtr<imgIContainer> subImage;
-    if ((subImage = mImage->GetSubImage(aIndex)) == nullptr) {
-      subImage = ImageOps::Clip(mImageContainer, nsIntRect(aSrc.x,
-                                                           aSrc.y,
-                                                           aSrc.width,
-                                                           aSrc.height));
-      mImage->SetSubImage(aIndex, subImage);
+
+    // Retrieve or create the subimage we'll draw.
+    nsIntRect srcRect(aSrc.x, aSrc.y, aSrc.width, aSrc.height);
+    if (mType == eStyleImageType_Image) {
+      if ((subImage = mImage->GetSubImage(aIndex)) == nullptr) {
+        subImage = ImageOps::Clip(mImageContainer, srcRect);
+        mImage->SetSubImage(aIndex, subImage);
+      }
+    } else {
+      // This path, for eStyleImageType_Element, is currently slower than it
+      // needs to be because we don't cache anything. (In particular, if we have
+      // to draw to a temporary surface inside ClippedImage, we don't cache that
+      // temporary surface since we immediately throw the ClippedImage we create
+      // here away.) However, if we did cache, we'd need to know when to
+      // invalidate that cache, and it's not clear that it's worth the trouble
+      // since using border-image with -moz-element is rare.
+
+      nsRefPtr<gfxDrawable> drawable = DrawableForElement(nsRect(nsPoint(), mSize),
+                                                          aRenderingContext);
+      if (!drawable) {
+        NS_WARNING("Could not create drawable for element");
+        return;
+      }
+
+      nsCOMPtr<imgIContainer> image(ImageOps::CreateFromDrawable(drawable));
+      subImage = ImageOps::Clip(image, srcRect);
     }
 
     GraphicsFilter graphicsFilter =
@@ -4990,75 +4999,8 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                   ? ComputeTile(aFill, aHFill, aVFill, aUnitSize)
                   : aFill;
 
-  if (mType == eStyleImageType_Element) {
-    // This path is horribly slow - we read and copy the source nine times(!)
-    // It could be easily optimised by only reading the source once and caching
-    // it. It could be further optimised by caching the sub-images between draws
-    // but that would be a bit harder because you would have to know when to
-    // invalidate the cache. A special case optimisation would be when
-    // border-image-slice is proportional to the border widths, in which case
-    // the subimages do not need to be independently scaled, then we don't need
-    // subimages at all.
-    // In any case, such optimisations are probably not worth doing because it
-    // seems unlikely anyone would use -moz-element as the source for a border
-    // image.
-
-    // draw the source image slice into an intermediate surface
-    nsPresContext* presContext = mForFrame->PresContext();
-    gfxRect srcRect = gfxRect(presContext->CSSPixelsToDevPixels(aSrc.x),
-                              presContext->CSSPixelsToDevPixels(aSrc.y),
-                              presContext->CSSPixelsToDevPixels(aSrc.width),
-                              presContext->CSSPixelsToDevPixels(aSrc.height));
-    RefPtr<DrawTarget> srcSlice = gfxPlatform::GetPlatform()->
-      CreateOffscreenContentDrawTarget(IntSize(srcRect.width, srcRect.height),
-                             SurfaceFormat::B8G8R8A8);
-    if (!srcSlice) {
-      NS_ERROR("Could not create DrawTarget for element");
-      return;
-    }
-    nsRefPtr<gfxContext> ctx = new gfxContext(srcSlice);
-
-    // grab the entire source
-    nsRefPtr<gfxDrawable> drawable = DrawableForElement(nsRect(nsPoint(), mSize),
-                                                        aRenderingContext);
-    if (!drawable) {
-      NS_WARNING("Could not create drawable for element");
-      return;
-    }
-
-    // draw the source into our intermediate surface
-    GraphicsFilter graphicsFilter =
-      nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
-    gfxMatrix transform;
-    transform.Translate(gfxPoint(srcRect.x, srcRect.y));
-    bool success = drawable->Draw(ctx,
-                                  gfxRect(0, 0, srcRect.width, srcRect.height),
-                                  false,
-                                  graphicsFilter,
-                                  transform);
-    if (!success) {
-      NS_WARNING("Could not copy element image");
-      return;
-    }
-
-    // Ensure that drawing the image gets flushed to the target.
-    ctx = nullptr;
-
-    // draw the slice
-    nsRefPtr<gfxSurfaceDrawable> srcSliceDrawable =
-      new gfxSurfaceDrawable(srcSlice,
-                             gfxIntSize(srcRect.width, srcRect.height));
-    nsPoint anchor(nsPresContext::CSSPixelsToAppUnits(aSrc.x),
-                   nsPresContext::CSSPixelsToAppUnits(aSrc.y));
-    nsLayoutUtils::DrawPixelSnapped(&aRenderingContext, aPresContext,
-                                    srcSliceDrawable,
-                                    graphicsFilter, destTile, aFill,
-                                    anchor, aDirtyRect);
-
-    return;
-  }
-
-  Draw(aPresContext, aRenderingContext, aDirtyRect, aFill, destTile, aSrc);
+  Draw(aPresContext, aRenderingContext, aDirtyRect, destTile,
+       aFill, destTile.TopLeft(), aSrc);
 }
 
 bool

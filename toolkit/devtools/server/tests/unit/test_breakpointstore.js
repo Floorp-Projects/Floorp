@@ -16,6 +16,7 @@ function run_test()
   test_add_breakpoint();
   test_remove_breakpoint();
   test_find_breakpoints();
+  test_duplicate_breakpoints();
 }
 
 function test_has_breakpoint() {
@@ -164,4 +165,29 @@ function test_find_breakpoints() {
   }
   do_check_eq(bpSet.size, 0,
               "Should be able to filter the iteration by url and line");
+}
+
+function test_duplicate_breakpoints() {
+  let bpStore = new BreakpointStore();
+
+  // Breakpoint with column
+  let location = {
+    url: "http://example.com/foo.js",
+    line: 10,
+    column: 9
+  };
+  bpStore.addBreakpoint(location);
+  bpStore.addBreakpoint(location);
+  do_check_eq(bpStore.size, 1, "We should have only 1 column breakpoint");
+  bpStore.removeBreakpoint(location);
+
+  // Breakpoint without column (whole line breakpoint)
+  location = {
+    url: "http://example.com/foo.js",
+    line: 15
+  };
+  bpStore.addBreakpoint(location);
+  bpStore.addBreakpoint(location);
+  do_check_eq(bpStore.size, 1, "We should have only 1 whole line breakpoint");
+  bpStore.removeBreakpoint(location);
 }

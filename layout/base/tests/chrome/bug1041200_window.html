@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 1041200</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/paint_listener.js"></script>
+</head>
+<body>
+<iframe style="width:700px; height:500px; margin-top:200px;" id="ourFrame"></iframe>
+<script>
+var SpecialPowers = window.opener.wrappedJSObject.SpecialPowers;
+var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
+var ok = window.opener.wrappedJSObject.ok;
+var info = window.opener.wrappedJSObject.info;
+
+var viewer =
+  SpecialPowers.wrap(ourFrame).contentWindow
+               .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+               .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+               .QueryInterface(SpecialPowers.Ci.nsIDocShell)
+               .contentViewer
+               .QueryInterface(SpecialPowers.Ci.nsIMarkupDocumentViewer);
+viewer.fullZoom = 2;
+
+SimpleTest.waitForExplicitFinish();
+
+window.onload = function() {
+  window.waitForAllPaintsFlushed(function () {
+    // Supply random key to ensure load actually happens
+    ourFrame.src = "data:text/html,<body onload='parent.childLoaded()' style='background:lime'><p>Hello<p>Hello<p>Hello<p>Hello<p>Hello<p>" + Math.random();
+  }, document.getElementById("ourFrame").contentDocument);
+};
+
+window.childLoaded = function() {
+  setTimeout(function() {
+    window.waitForAllPaintsFlushed(function(x1, y1, x2, y2) {
+      ok(x2 - x1 >= 700 && y2 - y1 >= 500,
+         "expected to see invalidate of entire frame, got " + [x1,y1,x2,y2].join(','));
+      SimpleTest.finish();
+      window.close();
+    });
+  }, 0);
+};
+</script>
+

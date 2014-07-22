@@ -649,9 +649,6 @@ class JSLinearString : public JSString
         JS::AutoCheckCannotGC nogc;
         return hasLatin1Chars() ? latin1Chars(nogc)[index] : twoByteChars(nogc)[index];
     }
-
-    /* Temporary, unsafe helper function for bug 998392. Don't use for anything else. */
-    void debugUnsafeConvertToLatin1();
 };
 
 JS_STATIC_ASSERT(sizeof(JSLinearString) == sizeof(JSString));
@@ -963,9 +960,6 @@ class JSAtom : public JSFlatString
 JS_STATIC_ASSERT(sizeof(JSAtom) == sizeof(JSString));
 
 namespace js {
-
-/* Temporary flag to enable Latin1 strings (bug 998392). */
-extern bool EnableLatin1Strings;
 
 /*
  * Thread safe RAII wrapper for inspecting the contents of JSStrings. The

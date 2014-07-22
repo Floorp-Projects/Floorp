@@ -1,5 +1,8 @@
-var s1 = toLatin1("abcdefg12345");
-var s2 = toLatin1('foo"bar');
+var s1 = "abcdefg12345";
+var s2 = 'foo"bar';
+
+assertEq(isLatin1(s1), true);
+assertEq(isLatin1(s2), true);
 
 function test() {
     assertEq(s1.valueOf(), s1);

@@ -1003,13 +1003,8 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
     hb_script_t scriptTag;
     if (aShapedText->Flags() & gfxTextRunFactory::TEXT_USE_MATH_SCRIPT) {
         scriptTag = sMathScript;
-    } else if (aScript <= MOZ_SCRIPT_INHERITED) {
-        // For unresolved "common" or "inherited" runs, default to Latin for
-        // now.  (Should we somehow use the language or locale to try and infer
-        // a better default?)
-        scriptTag = HB_SCRIPT_LATIN;
     } else {
-        scriptTag = hb_script_t(GetScriptTagForCode(aScript));
+        scriptTag = GetHBScriptUsedForShaping(aScript);
     }
     hb_buffer_set_script(buffer, scriptTag);
 

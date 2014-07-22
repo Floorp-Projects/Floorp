@@ -4975,9 +4975,7 @@ nsIFrame::TryUpdateTransformOnly(Layer** aLayerResult)
       !gfx::FuzzyEqual(transform._12, previousTransform._12, kError)) {
     return false;
   }
-  gfx::Matrix4x4 matrix;
-  gfx::ToMatrix4x4(transform3d, matrix);
-  layer->SetBaseTransformForNextTransaction(matrix);
+  layer->SetBaseTransformForNextTransaction(gfx::ToMatrix4x4(transform3d));
   *aLayerResult = layer;
   return true;
 }
@@ -7208,7 +7206,6 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   if (Preserves3D() || HasPerspective() || IsTransformed()) {
     if (!aOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
         !aOverflowAreas.ScrollableOverflow().IsEqualEdges(bounds)) {
-
       nsOverflowAreas* initial =
         static_cast<nsOverflowAreas*>(Properties().Get(nsIFrame::InitialOverflowProperty()));
       if (!initial) {
@@ -7217,13 +7214,15 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       } else if (initial != &aOverflowAreas) {
         *initial = aOverflowAreas;
       }
+    } else {
+      Properties().Delete(nsIFrame::InitialOverflowProperty());
     }
 #ifdef DEBUG
     Properties().Set(nsIFrame::DebugInitialOverflowPropertyApplied(), nullptr);
 #endif
   } else {
 #ifdef DEBUG
-  Properties().Delete(nsIFrame::DebugInitialOverflowPropertyApplied());
+    Properties().Delete(nsIFrame::DebugInitialOverflowPropertyApplied());
 #endif
   }
 

@@ -370,6 +370,170 @@ void nsRegion::SimplifyOutwardByArea(uint32_t aThreshold)
 }
 
 
+typedef void (*visit_fn)(void *closure, VisitSide side, int x1, int y1, int x2, int y2);
+
+static void VisitNextEdgeBetweenRect(visit_fn visit, void *closure, VisitSide side,
+				     pixman_box32_t *&r1, pixman_box32_t *&r2, const int y, int &x1)
+{
+  // check for overlap
+  if (r1->x2 >= r2->x1) {
+    MOZ_ASSERT(r2->x1 >= x1);
+    visit(closure, side, x1, y, r2->x1, y);
+
+    // find the rect that ends first or always drop the one that comes first?
+    if (r1->x2 < r2->x2) {
+      x1 = r1->x2;
+      r1++;
+    } else {
+      x1 = r2->x2;
+      r2++;
+    }
+  } else {
+    MOZ_ASSERT(r1->x2 < r2->x2);
+    // we handle the corners by just extending the top and bottom edges
+    visit(closure, side, x1, y, r1->x2+1, y);
+    r1++;
+    x1 = r2->x1 - 1;
+  }
+}
+
+//XXX: if we need to this can compute the end of the row
+static void
+VisitSides(visit_fn visit, void *closure, pixman_box32_t *r, pixman_box32_t *r_end)
+{
+  // XXX: we can drop LEFT/RIGHT and just use the orientation
+  // of the line if it makes sense
+  while (r != r_end) {
+    visit(closure, VisitSide::LEFT, r->x1, r->y1, r->x1, r->y2);
+    visit(closure, VisitSide::RIGHT, r->x2, r->y1, r->x2, r->y2);
+    r++;
+  }
+}
+
+static void
+VisitAbove(visit_fn visit, void *closure, pixman_box32_t *r, pixman_box32_t *r_end)
+{
+  while (r != r_end) {
+    visit(closure, VisitSide::TOP, r->x1-1, r->y1, r->x2+1, r->y1);
+    r++;
+  }
+}
+
+static void
+VisitBelow(visit_fn visit, void *closure, pixman_box32_t *r, pixman_box32_t *r_end)
+{
+  while (r != r_end) {
+    visit(closure, VisitSide::BOTTOM, r->x1-1, r->y2, r->x2+1, r->y2);
+    r++;
+  }
+}
+
+static pixman_box32_t *
+VisitInbetween(visit_fn visit, void *closure, pixman_box32_t *r1,
+               pixman_box32_t *r1_end,
+               pixman_box32_t *r2,
+               pixman_box32_t *r2_end)
+{
+  const int y = r1->y2;
+  int x1;
+
+  /* Find the left-most edge */
+  if (r1->x1 < r2->x1) {
+    x1 = r1->x1 - 1;
+  } else {
+    x1 = r2->x1 - 1;
+  }
+
+  while (r1 != r1_end && r2 != r2_end) {
+    MOZ_ASSERT((x1 >= (r1->x1 - 1)) || (x1 >= (r2->x1 - 1)));
+    if (r1->x1 < r2->x1) {
+      VisitNextEdgeBetweenRect(visit, closure, VisitSide::BOTTOM, r1, r2, y, x1);
+    } else {
+      VisitNextEdgeBetweenRect(visit, closure, VisitSide::TOP, r2, r1, y, x1);
+    }
+  }
+
+  /* Finish up which ever row has remaining rects*/
+  if (r1 != r1_end) {
+    // top row
+    do {
+      visit(closure, VisitSide::BOTTOM, x1, y, r1->x2 + 1, y);
+      r1++;
+      if (r1 == r1_end)
+	break;
+      x1 = r1->x1 - 1;
+    } while (true);
+  } else if (r2 != r2_end) {
+    // bottom row
+    do {
+      visit(closure, VisitSide::TOP, x1, y, r2->x2 + 1, y);
+      r2++;
+      if (r2 == r2_end)
+	break;
+      x1 = r2->x1 - 1;
+    } while (true);
+  }
+
+  return 0;
+}
+
+void nsRegion::VisitEdges (visit_fn visit, void *closure)
+{
+  pixman_box32_t *boxes;
+  int n;
+  boxes = pixman_region32_rectangles(&mImpl, &n);
+
+  // if we have no rectangles then we're done
+  if (!n)
+    return;
+
+  pixman_box32_t *end = boxes + n;
+  pixman_box32_t *topRectsEnd = boxes + 1;
+  pixman_box32_t *topRects = boxes;
+
+  // find the end of the first span of rectangles
+  while (topRectsEnd < end && topRectsEnd->y1 == topRects->y1) {
+    topRectsEnd++;
+  }
+
+  // In order to properly handle convex corners we always visit the sides first
+  // that way when we visit the corners we can pad using the value from the sides
+  VisitSides(visit, closure, topRects, topRectsEnd);
+
+  VisitAbove(visit, closure, topRects, topRectsEnd);
+
+  pixman_box32_t *bottomRects = topRects;
+  pixman_box32_t *bottomRectsEnd = topRectsEnd;
+  if (topRectsEnd != end) {
+    do {
+      // find the next row of rects
+      bottomRects = topRectsEnd;
+      bottomRectsEnd = topRectsEnd + 1;
+      while (bottomRectsEnd < end && bottomRectsEnd->y1 == bottomRects->y1) {
+        bottomRectsEnd++;
+      }
+
+      VisitSides(visit, closure, bottomRects, bottomRectsEnd);
+
+      if (topRects->y2 == bottomRects->y1) {
+        VisitInbetween(visit, closure, topRects, topRectsEnd,
+                                       bottomRects, bottomRectsEnd);
+      } else {
+        VisitBelow(visit, closure, topRects, topRectsEnd);
+        VisitAbove(visit, closure, bottomRects, bottomRectsEnd);
+      }
+
+      topRects = bottomRects;
+      topRectsEnd = bottomRectsEnd;
+    } while (bottomRectsEnd != end);
+  }
+
+  // the bottom of the region doesn't touch anything else so we
+  // can always visit it at the end
+  VisitBelow(visit, closure, bottomRects, bottomRectsEnd);
+}
+
+
 void nsRegion::SimplifyInward (uint32_t aMaxRects)
 {
   NS_ASSERTION(aMaxRects >= 1, "Invalid max rect count");
