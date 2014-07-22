@@ -35,6 +35,7 @@
 #include "nsBidiUtils.h"
 #include "nsUnicodeRange.h"
 #include "nsStyleConsts.h"
+#include "mozilla/AppUnits.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
@@ -899,10 +900,14 @@ gfxFontEntry::SupportsOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag)
         mSupportedFeatures = new nsDataHashtable<nsUint32HashKey,bool>();
     }
 
+    // note: high-order three bytes *must* be unique for each feature
+    // listed below (see SCRIPT_FEATURE macro def'n)
     NS_ASSERTION(aFeatureTag == HB_TAG('s','m','c','p') ||
                  aFeatureTag == HB_TAG('c','2','s','c') ||
                  aFeatureTag == HB_TAG('p','c','a','p') ||
-                 aFeatureTag == HB_TAG('c','2','p','c'),
+                 aFeatureTag == HB_TAG('c','2','p','c') ||
+                 aFeatureTag == HB_TAG('s','u','p','s') ||
+                 aFeatureTag == HB_TAG('s','u','b','s'),
                  "use of unknown feature tag");
 
     // note: graphite feature support uses the last script index
@@ -979,10 +984,14 @@ gfxFontEntry::SupportsGraphiteFeature(uint32_t aFeatureTag)
         mSupportedFeatures = new nsDataHashtable<nsUint32HashKey,bool>();
     }
 
+    // note: high-order three bytes *must* be unique for each feature
+    // listed below (see SCRIPT_FEATURE macro def'n)
     NS_ASSERTION(aFeatureTag == HB_TAG('s','m','c','p') ||
                  aFeatureTag == HB_TAG('c','2','s','c') ||
                  aFeatureTag == HB_TAG('p','c','a','p') ||
-                 aFeatureTag == HB_TAG('c','2','p','c'),
+                 aFeatureTag == HB_TAG('c','2','p','c') ||
+                 aFeatureTag == HB_TAG('s','u','p','s') ||
+                 aFeatureTag == HB_TAG('s','u','b','s'),
                  "use of unknown feature tag");
 
     // graphite feature check uses the last script slot
@@ -2138,6 +2147,7 @@ gfxFontShaper::MergeFontFeatures(
         aFontFeatures.IsEmpty() &&
         !aDisableLigatures &&
         aStyle->variantCaps == NS_FONT_VARIANT_CAPS_NORMAL &&
+        aStyle->variantSubSuper == NS_FONT_VARIANT_POSITION_NORMAL &&
         numAlts == 0) {
         return false;
     }
@@ -2186,6 +2196,18 @@ gfxFontShaper::MergeFontFeatures(
             aMergedFeatures.Put(HB_TAG('u','n','i','c'), 1);
             break;
 
+        default:
+            break;
+    }
+
+    // font-variant-position - handled here due to the need for fallback
+    switch (aStyle->variantSubSuper) {
+        case NS_FONT_VARIANT_POSITION_SUPER:
+            aMergedFeatures.Put(HB_TAG('s','u','p','s'), 1);
+            break;
+        case NS_FONT_VARIANT_POSITION_SUB:
+            aMergedFeatures.Put(HB_TAG('s','u','b','s'), 1);
+            break;
         default:
             break;
     }
@@ -2840,6 +2862,23 @@ gfxFont::SupportsVariantCaps(int32_t aScript,
 }
 
 bool
+gfxFont::SupportsSubSuperscript(int32_t aScript, uint32_t aSubSuperscript)
+{
+    bool ok = false;
+    switch (aSubSuperscript) {
+        case NS_FONT_VARIANT_POSITION_SUPER:
+            ok = SupportsFeature(aScript, HB_TAG('s','u','p','s'));
+            break;
+        case NS_FONT_VARIANT_POSITION_SUB:
+            ok = SupportsFeature(aScript, HB_TAG('s','u','b','s'));
+            break;
+        default:
+            break;
+    }
+    return ok;
+}
+
+bool
 gfxFont::HasFeatureSet(uint32_t aFeature, bool& aFeatureOn)
 {
     aFeatureOn = false;
@@ -3189,6 +3228,10 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     // Current position in appunits
     double x = aPt->x;
     double y = aPt->y;
+    double origY = aPt->y;
+    if (mStyle.baselineOffset != 0.0) {
+        y += mStyle.baselineOffset * appUnitsPerDevUnit;
+    }
 
     RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
 
@@ -3448,7 +3491,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
       dt->SetPermitSubpixelAA(oldSubpixelAA);
     }
 
-    *aPt = gfxPoint(x, y);
+    *aPt = gfxPoint(x, origY);
 }
 
 bool
@@ -5280,57 +5323,12 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
                             gfxPlatform::GetLog(eGfxLog_textrun));
 #endif
 
-    if (sizeof(T) == sizeof(uint8_t) && !transformedString) {
+    // variant fallback handling may end up passing through this twice
+    bool redo;
+    do {
+        redo = false;
 
-#ifdef PR_LOGGING
-        if (MOZ_UNLIKELY(PR_LOG_TEST(log, PR_LOG_WARNING))) {
-            nsAutoCString lang;
-            mStyle.language->ToUTF8String(lang);
-            nsAutoString families;
-            mFamilyList.ToString(families);
-            nsAutoCString str((const char*)aString, aLength);
-            PR_LOG(log, PR_LOG_WARNING,\
-                   ("(%s) fontgroup: [%s] default: %s lang: %s script: %d "
-                    "len %d weight: %d width: %d style: %s size: %6.2f %d-byte "
-                    "TEXTRUN [%s] ENDTEXTRUN\n",
-                    (mStyle.systemFont ? "textrunui" : "textrun"),
-                    NS_ConvertUTF16toUTF8(families).get(),
-                    (mFamilyList.GetDefaultFontType() == eFamily_serif ?
-                     "serif" :
-                     (mFamilyList.GetDefaultFontType() == eFamily_sans_serif ?
-                      "sans-serif" : "none")),
-                    lang.get(), MOZ_SCRIPT_LATIN, aLength,
-                    uint32_t(mStyle.weight), uint32_t(mStyle.stretch),
-                    (mStyle.style & NS_FONT_STYLE_ITALIC ? "italic" :
-                    (mStyle.style & NS_FONT_STYLE_OBLIQUE ? "oblique" :
-                                                            "normal")),
-                    mStyle.size,
-                    sizeof(T),
-                    str.get()));
-        }
-#endif
-
-        // the text is still purely 8-bit; bypass the script-run itemizer
-        // and treat it as a single Latin run
-        InitScriptRun(aContext, aTextRun, aString,
-                      0, aLength, MOZ_SCRIPT_LATIN);
-    } else {
-        const char16_t *textPtr;
-        if (transformedString) {
-            textPtr = transformedString.get();
-        } else {
-            // typecast to avoid compilation error for the 8-bit version,
-            // even though this is dead code in that case
-            textPtr = reinterpret_cast<const char16_t*>(aString);
-        }
-
-        // split into script runs so that script can potentially influence
-        // the font matching process below
-        gfxScriptItemizer scriptRuns(textPtr, aLength);
-
-        uint32_t runStart = 0, runLimit = aLength;
-        int32_t runScript = MOZ_SCRIPT_LATIN;
-        while (scriptRuns.Next(runStart, runLimit, runScript)) {
+        if (sizeof(T) == sizeof(uint8_t) && !transformedString) {
 
 #ifdef PR_LOGGING
             if (MOZ_UNLIKELY(PR_LOG_TEST(log, PR_LOG_WARNING))) {
@@ -5338,32 +5336,93 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
                 mStyle.language->ToUTF8String(lang);
                 nsAutoString families;
                 mFamilyList.ToString(families);
-                uint32_t runLen = runLimit - runStart;
+                nsAutoCString str((const char*)aString, aLength);
                 PR_LOG(log, PR_LOG_WARNING,\
                        ("(%s) fontgroup: [%s] default: %s lang: %s script: %d "
-                        "len %d weight: %d width: %d style: %s size: %6.2f "
-                        "%d-byte TEXTRUN [%s] ENDTEXTRUN\n",
+                        "len %d weight: %d width: %d style: %s size: %6.2f %d-byte "
+                        "TEXTRUN [%s] ENDTEXTRUN\n",
                         (mStyle.systemFont ? "textrunui" : "textrun"),
                         NS_ConvertUTF16toUTF8(families).get(),
                         (mFamilyList.GetDefaultFontType() == eFamily_serif ?
                          "serif" :
                          (mFamilyList.GetDefaultFontType() == eFamily_sans_serif ?
                           "sans-serif" : "none")),
-                        lang.get(), runScript, runLen,
+                        lang.get(), MOZ_SCRIPT_LATIN, aLength,
                         uint32_t(mStyle.weight), uint32_t(mStyle.stretch),
                         (mStyle.style & NS_FONT_STYLE_ITALIC ? "italic" :
                         (mStyle.style & NS_FONT_STYLE_OBLIQUE ? "oblique" :
                                                                 "normal")),
                         mStyle.size,
                         sizeof(T),
-                        NS_ConvertUTF16toUTF8(textPtr + runStart, runLen).get()));
+                        str.get()));
             }
 #endif
 
-            InitScriptRun(aContext, aTextRun, textPtr + runStart,
-                          runStart, runLimit - runStart, runScript);
+            // the text is still purely 8-bit; bypass the script-run itemizer
+            // and treat it as a single Latin run
+            InitScriptRun(aContext, aTextRun, aString,
+                          0, aLength, MOZ_SCRIPT_LATIN);
+        } else {
+            const char16_t *textPtr;
+            if (transformedString) {
+                textPtr = transformedString.get();
+            } else {
+                // typecast to avoid compilation error for the 8-bit version,
+                // even though this is dead code in that case
+                textPtr = reinterpret_cast<const char16_t*>(aString);
+            }
+
+            // split into script runs so that script can potentially influence
+            // the font matching process below
+            gfxScriptItemizer scriptRuns(textPtr, aLength);
+
+            uint32_t runStart = 0, runLimit = aLength;
+            int32_t runScript = MOZ_SCRIPT_LATIN;
+            while (scriptRuns.Next(runStart, runLimit, runScript)) {
+
+    #ifdef PR_LOGGING
+                if (MOZ_UNLIKELY(PR_LOG_TEST(log, PR_LOG_WARNING))) {
+                    nsAutoCString lang;
+                    mStyle.language->ToUTF8String(lang);
+                    nsAutoString families;
+                    mFamilyList.ToString(families);
+                    uint32_t runLen = runLimit - runStart;
+                    PR_LOG(log, PR_LOG_WARNING,\
+                           ("(%s) fontgroup: [%s] default: %s lang: %s script: %d "
+                            "len %d weight: %d width: %d style: %s size: %6.2f "
+                            "%d-byte TEXTRUN [%s] ENDTEXTRUN\n",
+                            (mStyle.systemFont ? "textrunui" : "textrun"),
+                            NS_ConvertUTF16toUTF8(families).get(),
+                            (mFamilyList.GetDefaultFontType() == eFamily_serif ?
+                             "serif" :
+                             (mFamilyList.GetDefaultFontType() == eFamily_sans_serif ?
+                              "sans-serif" : "none")),
+                            lang.get(), runScript, runLen,
+                            uint32_t(mStyle.weight), uint32_t(mStyle.stretch),
+                            (mStyle.style & NS_FONT_STYLE_ITALIC ? "italic" :
+                            (mStyle.style & NS_FONT_STYLE_OBLIQUE ? "oblique" :
+                                                                    "normal")),
+                            mStyle.size,
+                            sizeof(T),
+                            NS_ConvertUTF16toUTF8(textPtr + runStart, runLen).get()));
+                }
+    #endif
+
+                InitScriptRun(aContext, aTextRun, textPtr + runStart,
+                              runStart, runLimit - runStart, runScript);
+            }
         }
-    }
+
+        // if shaping was aborted due to lack of feature support, clear out
+        // glyph runs and redo shaping with fallback forced on
+        if (aTextRun->GetShapingState() == gfxTextRun::eShapingState_Aborted) {
+            redo = true;
+            aTextRun->SetShapingState(
+                gfxTextRun::eShapingState_ForceFallbackFeature);
+            aTextRun->ClearGlyphsAndCharacters();
+        }
+
+    } while (redo);
 
     if (sizeof(T) == sizeof(char16_t) && aLength > 0) {
         gfxTextRun::CompressedGlyph *glyph = aTextRun->GetCharacterGlyphs();
@@ -5398,6 +5457,8 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
                             int32_t aRunScript)
 {
     NS_ASSERTION(aLength > 0, "don't call InitScriptRun for a 0-length run");
+    NS_ASSERTION(aTextRun->GetShapingState() != gfxTextRun::eShapingState_Aborted,
+                 "don't call InitScriptRun with aborted shaping state");
 
     gfxFont *mainFont = GetFontAt(0);
 
@@ -5412,19 +5473,64 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
         gfxFont *matchedFont = range.font;
 
         // create the glyph run for this range
-        if (matchedFont) {
-            bool needsFakeSmallCaps = false;
+        if (matchedFont && mStyle.noFallbackVariantFeatures) {
+            // common case - just do glyph layout and record the
+            // resulting positioned glyphs
+            aTextRun->AddGlyphRun(matchedFont, range.matchType,
+                                  aOffset + runStart, (matchedLength > 0));
+            if (!matchedFont->SplitAndInitTextRun(aContext, aTextRun,
+                                                  aString + runStart,
+                                                  aOffset + runStart,
+                                                  matchedLength,
+                                                  aRunScript)) {
+                // glyph layout failed! treat as missing glyphs
+                matchedFont = nullptr;
+            }
+        } else if (matchedFont) {
+            // shape with some variant feature that requires fallback handling
             bool petiteToSmallCaps = false;
             bool syntheticLower = false;
             bool syntheticUpper = false;
 
-            if (mStyle.variantCaps != NS_FONT_VARIANT_CAPS_NORMAL) {
-                needsFakeSmallCaps =
-                    !matchedFont->SupportsVariantCaps(aRunScript,
-                        mStyle.variantCaps, petiteToSmallCaps,
-                        syntheticLower, syntheticUpper);
-            }
-            if (needsFakeSmallCaps) {
+            if (mStyle.variantSubSuper != NS_FONT_VARIANT_POSITION_NORMAL &&
+                (aTextRun->GetShapingState() ==
+                     gfxTextRun::eShapingState_ForceFallbackFeature ||
+                 !matchedFont->SupportsSubSuperscript(aRunScript,
+                                                      mStyle.variantSubSuper)))
+            {
+                // fallback for subscript/superscript variant glyphs
+
+                // if the feature was already used, abort and force
+                // fallback across the entire textrun
+                gfxTextRun::ShapingState ss = aTextRun->GetShapingState();
+
+                if (ss == gfxTextRun::eShapingState_Normal) {
+                    aTextRun->SetShapingState(gfxTextRun::eShapingState_ShapingWithFallback);
+                } else if (ss == gfxTextRun::eShapingState_ShapingWithFeature) {
+                    aTextRun->SetShapingState(gfxTextRun::eShapingState_Aborted);
+                    return;
+                }
+
+                nsRefPtr<gfxFont> subSuperFont =
+                    matchedFont->GetSubSuperscriptFont(aTextRun->GetAppUnitsPerDevUnit());
+                aTextRun->AddGlyphRun(subSuperFont, range.matchType,
+                                      aOffset + runStart, (matchedLength > 0));
+                if (!subSuperFont->SplitAndInitTextRun(aContext, aTextRun,
+                                                       aString + runStart,
+                                                       aOffset + runStart,
+                                                       matchedLength,
+                                                       aRunScript)) {
+                    // glyph layout failed! treat as missing glyphs
+                    matchedFont = nullptr;
+                }
+            } else if (mStyle.variantCaps != NS_FONT_VARIANT_CAPS_NORMAL &&
+                       !matchedFont->SupportsVariantCaps(aRunScript,
+                                                         mStyle.variantCaps,
+                                                         petiteToSmallCaps,
+                                                         syntheticLower,
+                                                         syntheticUpper))
+            {
+                // fallback for small-caps variant glyphs
                 if (!matchedFont->InitFakeSmallCapsRun(aContext, aTextRun,
                                                        aString + runStart,
                                                        aOffset + runStart,
@@ -5436,9 +5542,21 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
                     matchedFont = nullptr;
                 }
             } else {
+                // shape normally with variant feature enabled
+                gfxTextRun::ShapingState ss = aTextRun->GetShapingState();
+
+                // adjust the shaping state if necessary
+                if (ss == gfxTextRun::eShapingState_Normal) {
+                    aTextRun->SetShapingState(gfxTextRun::eShapingState_ShapingWithFeature);
+                } else if (ss == gfxTextRun::eShapingState_ShapingWithFallback) {
+                    // already have shaping results using fallback, need to redo
+                    aTextRun->SetShapingState(gfxTextRun::eShapingState_Aborted);
+                    return;
+                }
+
+                // do glyph layout and record the resulting positioned glyphs
                 aTextRun->AddGlyphRun(matchedFont, range.matchType,
                                       aOffset + runStart, (matchedLength > 0));
-                // do glyph layout and record the resulting positioned glyphs
                 if (!matchedFont->SplitAndInitTextRun(aContext, aTextRun,
                                                       aString + runStart,
                                                       aOffset + runStart,
@@ -5713,6 +5831,50 @@ gfxFont::GetSmallCapsFont()
     gfxFontStyle style(*GetStyle());
     style.size *= SMALL_CAPS_SCALE_FACTOR;
     style.variantCaps = NS_FONT_VARIANT_CAPS_NORMAL;
+    gfxFontEntry* fe = GetFontEntry();
+    bool needsBold = style.weight >= 600 && !fe->IsBold();
+    return fe->FindOrMakeFont(&style, needsBold);
+}
+
+void
+gfxFont::CalculateSubSuperSizeAndOffset(int32_t aAppUnitsPerDevPixel,
+                                        gfxFloat& aSubSuperSizeRatio,
+                                        float& aBaselineOffset)
+{
+    gfxFloat cssPixelSize = mStyle.size * aAppUnitsPerDevPixel /
+                                AppUnitsPerCSSPixel();
+
+    // calculate reduced size, roughly mimicing behavior of font-size: smaller
+    if (cssPixelSize < NS_FONT_SUB_SUPER_SMALL_SIZE) {
+        aSubSuperSizeRatio = NS_FONT_SUB_SUPER_SIZE_RATIO_SMALL;
+    } else if (cssPixelSize >= NS_FONT_SUB_SUPER_SMALL_SIZE) {
+        aSubSuperSizeRatio = NS_FONT_SUB_SUPER_SIZE_RATIO_LARGE;
+    } else {
+        gfxFloat t = (cssPixelSize - NS_FONT_SUB_SUPER_SMALL_SIZE) /
+                         (NS_FONT_SUB_SUPER_LARGE_SIZE -
+                          NS_FONT_SUB_SUPER_SMALL_SIZE);
+        aSubSuperSizeRatio = (1.0 - t) * NS_FONT_SUB_SUPER_SIZE_RATIO_SMALL +
+                            t * NS_FONT_SUB_SUPER_SIZE_RATIO_LARGE;
+    }
+
+    // calculate the baseline offset
+    if (mStyle.variantSubSuper == NS_FONT_VARIANT_POSITION_SUPER) {
+        aBaselineOffset = mStyle.size * -NS_FONT_SUPERSCRIPT_OFFSET_RATIO;
+    } else {
+        aBaselineOffset = mStyle.size * NS_FONT_SUBSCRIPT_OFFSET_RATIO;
+    }
+}
+
+already_AddRefed<gfxFont>
+gfxFont::GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel)
+{
+    gfxFontStyle style(*GetStyle());
+    gfxFloat subSuperSizeRatio;
+    CalculateSubSuperSizeAndOffset(aAppUnitsPerDevPixel,
+                                   subSuperSizeRatio,
+                                   style.baselineOffset);
+    style.size *= subSuperSizeRatio;
+    style.variantSubSuper = NS_FONT_VARIANT_POSITION_NORMAL;
     gfxFontEntry* fe = GetFontEntry();
     bool needsBold = style.weight >= 600 && !fe->IsBold();
     return fe->FindOrMakeFont(&style, needsBold);
@@ -6157,13 +6319,15 @@ gfxFontStyle::ParseFontLanguageOverride(const nsString& aLangTag)
 
 gfxFontStyle::gfxFontStyle() :
     language(nsGkAtoms::x_western),
-    size(DEFAULT_PIXEL_FONT_SIZE), sizeAdjust(0.0f),
+    size(DEFAULT_PIXEL_FONT_SIZE), sizeAdjust(0.0f), baselineOffset(0.0f),
     languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
     weight(NS_FONT_WEIGHT_NORMAL), stretch(NS_FONT_STRETCH_NORMAL),
     systemFont(true), printerFont(false), useGrayscaleAntialiasing(false),
     style(NS_FONT_STYLE_NORMAL),
     allowSyntheticWeight(true), allowSyntheticStyle(true),
-    variantCaps(NS_FONT_VARIANT_CAPS_NORMAL)
+    noFallbackVariantFeatures(true),
+    variantCaps(NS_FONT_VARIANT_CAPS_NORMAL),
+    variantSubSuper(NS_FONT_VARIANT_POSITION_NORMAL)
 {
 }
 
@@ -6175,7 +6339,7 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
                            bool aAllowStyleSynthesis,
                            const nsString& aLanguageOverride):
     language(aLanguage),
-    size(aSize), sizeAdjust(aSizeAdjust),
+    size(aSize), sizeAdjust(aSizeAdjust), baselineOffset(0.0f),
     languageOverride(ParseFontLanguageOverride(aLanguageOverride)),
     weight(aWeight), stretch(aStretch),
     systemFont(aSystemFont), printerFont(aPrinterFont),
@@ -6183,7 +6347,9 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
     style(aStyle),
     allowSyntheticWeight(aAllowWeightSynthesis),
     allowSyntheticStyle(aAllowStyleSynthesis),
-    variantCaps(NS_FONT_VARIANT_CAPS_NORMAL)
+    noFallbackVariantFeatures(true),
+    variantCaps(NS_FONT_VARIANT_CAPS_NORMAL),
+    variantSubSuper(NS_FONT_VARIANT_POSITION_NORMAL)
 {
     MOZ_ASSERT(!mozilla::IsNaN(size));
     MOZ_ASSERT(!mozilla::IsNaN(sizeAdjust));
@@ -6211,6 +6377,7 @@ gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     language(aStyle.language),
     featureValueLookup(aStyle.featureValueLookup),
     size(aStyle.size), sizeAdjust(aStyle.sizeAdjust),
+    baselineOffset(aStyle.baselineOffset),
     languageOverride(aStyle.languageOverride),
     weight(aStyle.weight), stretch(aStyle.stretch),
     systemFont(aStyle.systemFont), printerFont(aStyle.printerFont),
@@ -6218,7 +6385,9 @@ gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     style(aStyle.style),
     allowSyntheticWeight(aStyle.allowSyntheticWeight),
     allowSyntheticStyle(aStyle.allowSyntheticStyle),
-    variantCaps(aStyle.variantCaps)
+    noFallbackVariantFeatures(aStyle.noFallbackVariantFeatures),
+    variantCaps(aStyle.variantCaps),
+    variantSubSuper(aStyle.variantSubSuper)
 {
     featureSettings.AppendElements(aStyle.featureSettings);
     alternateValues.AppendElements(aStyle.alternateValues);
@@ -6489,6 +6658,7 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams,
     , mUserData(aParams->mUserData)
     , mFontGroup(aFontGroup)
     , mReleasedFontGroup(false)
+    , mShapingState(eShapingState_Normal)
 {
     NS_ASSERTION(mAppUnitsPerDevUnit > 0, "Invalid app unit scale");
     MOZ_COUNT_CTOR(gfxTextRun);
@@ -7551,6 +7721,15 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, uint32_t aStart,
         if (NS_FAILED(rv))
             return;
     }
+}
+
+void
+gfxTextRun::ClearGlyphsAndCharacters()
+{
+    ResetGlyphRuns();
+    memset(reinterpret_cast<char*>(mCharacterGlyphs), 0,
+           mLength * sizeof(CompressedGlyph));
+    mDetailedGlyphs = nullptr;
 }
 
 void
