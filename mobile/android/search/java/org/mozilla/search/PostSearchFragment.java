@@ -21,24 +21,24 @@ public class PostSearchFragment extends Fragment {
     private static final String LOGTAG = "PostSearchFragment";
     private WebView webview;
 
-    private static String HIDE_BANNER_SCRIPT = "javascript:(function(){var tag=document.createElement('style');" +
+    private static final String HIDE_BANNER_SCRIPT = "javascript:(function(){var tag=document.createElement('style');" +
             "tag.type='text/css';document.getElementsByTagName('head')[0].appendChild(tag);tag.innerText='#nav,#header{display:none}'})();";
 
     public PostSearchFragment() {
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        final View mainView = inflater.inflate(R.layout.search_activity_detail, container, false);
+        webview = (WebView) inflater.inflate(R.layout.search_fragment_post_search, container, false);
 
-        webview = (WebView) mainView.findViewById(R.id.webview);
         webview.setWebViewClient(new LinkInterceptingClient());
         webview.setWebChromeClient(new StyleInjectingClient());
+
+        // This is required for our greasemonkey terror script.
         webview.getSettings().setJavaScriptEnabled(true);
 
-        return mainView;
+        return webview;
     }
 
     /**

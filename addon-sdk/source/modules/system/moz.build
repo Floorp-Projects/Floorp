@@ -4,12 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-
-DIRS += ["source/modules/system"]
-
-JS_MODULES_PATH = 'modules/sdk'
+JS_MODULES_PATH = 'modules/sdk/system'
 
 EXTRA_JS_MODULES += [
-    'source/app-extension/bootstrap.js',
+    'XulApp.js',
 ]
