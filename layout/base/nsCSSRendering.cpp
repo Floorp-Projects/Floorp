@@ -1702,7 +1702,6 @@ struct BackgroundClipState {
   gfxRect mDirtyRectGfx;
 
   gfxCornerSizes mClippedRadii;
-  bool mRadiiAreOuter;
   bool mHasAdditionalBGClipArea;
 
   // Whether we are being asked to draw with a caller provided background
@@ -1721,7 +1720,6 @@ GetBackgroundClip(gfxContext *aCtx, uint8_t aBackgroundClip,
   aClipState->mBGClipArea = aBorderArea;
   aClipState->mHasAdditionalBGClipArea = false;
   aClipState->mCustomClip = false;
-  aClipState->mRadiiAreOuter = true;
   aClipState->mClippedRadii = aBGRadii;
 
   if (aForFrame->GetType() == nsGkAtoms::scrollFrame &&
@@ -1783,7 +1781,6 @@ GetBackgroundClip(gfxContext *aCtx, uint8_t aBackgroundClip,
       };
       nsCSSBorderRenderer::ComputeInnerRadii(aBGRadii, borderSizes,
                                              &aClipState->mClippedRadii);
-      aClipState->mRadiiAreOuter = false;
     }
   }
 
@@ -1851,7 +1848,7 @@ SetupBackgroundClip(BackgroundClipState& aClipState, gfxContext *aCtx,
 
     aAutoSR->EnsureSaved(aCtx);
     aCtx->NewPath();
-    aCtx->RoundedRectangle(bgAreaGfx, aClipState.mClippedRadii, aClipState.mRadiiAreOuter);
+    aCtx->RoundedRectangle(bgAreaGfx, aClipState.mClippedRadii);
     aCtx->Clip();
   }
 }
@@ -1907,8 +1904,7 @@ DrawBackgroundColor(BackgroundClipState& aClipState, gfxContext *aCtx,
   }
 
   aCtx->NewPath();
-  aCtx->RoundedRectangle(bgAreaGfx, aClipState.mClippedRadii,
-                         aClipState.mRadiiAreOuter);
+  aCtx->RoundedRectangle(bgAreaGfx, aClipState.mClippedRadii);
 
   aCtx->Fill();
   aCtx->Restore();
