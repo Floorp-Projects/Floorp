@@ -80,10 +80,8 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
   gfxRect ourRect = aOne->GetEffectiveVisibleRegion().GetBounds();
   gfxRect otherRect = aTwo->GetEffectiveVisibleRegion().GetBounds();
 
-  gfx3DMatrix ourTransform;
-  To3DMatrix(aOne->GetTransform(), ourTransform);
-  gfx3DMatrix otherTransform;
-  To3DMatrix(aTwo->GetTransform(), otherTransform);
+  gfx3DMatrix ourTransform = To3DMatrix(aOne->GetTransform());
+  gfx3DMatrix otherTransform = To3DMatrix(aTwo->GetTransform());
 
   // Transform both rectangles and project into 2d space.
   gfxQuad ourTransformedRect = ourTransform.TransformRect(ourRect);
