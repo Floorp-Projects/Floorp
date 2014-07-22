@@ -130,6 +130,10 @@ fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-1.xhtml  flexbox-align-s
 == flexbox-mbp-horiz-4.xhtml             flexbox-mbp-horiz-4-ref.xhtml
 
 # Tests for min-height:auto / min-width:auto on flex items
+== flexbox-min-height-auto-001.html flexbox-min-height-auto-001-ref.html
+== flexbox-min-height-auto-002a.html flexbox-min-height-auto-002-ref.html
+fails == flexbox-min-height-auto-002b.html flexbox-min-height-auto-002-ref.html # Bug 1041019
+== flexbox-min-height-auto-002c.html flexbox-min-height-auto-002-ref.html
 == flexbox-min-width-auto-001.html flexbox-min-width-auto-001-ref.html
 == flexbox-min-width-auto-002a.html flexbox-min-width-auto-002-ref.html
 fails == flexbox-min-width-auto-002b.html flexbox-min-width-auto-002-ref.html # Bug 1041019
