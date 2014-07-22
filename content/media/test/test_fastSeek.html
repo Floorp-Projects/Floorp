@@ -57,9 +57,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=778077
 
       v.keyframeIndex++
       if (v.keyframeIndex == v.keyframes.length) {
-        manager.finished(v.token);
         v.src = "";
         v.parentNode.removeChild(v);
+        manager.finished(v.token);
       } else {
         doSeek(v);
       }
