@@ -221,7 +221,7 @@ class StructuredLogger(object):
                 "subtest": subtest,
                 "status": status.upper()}
         if message is not None:
-            data["message"] = message
+            data["message"] = unicode(message)
         if expected != data["status"]:
             data["expected"] = expected
         if stack is not None:
@@ -257,7 +257,7 @@ class StructuredLogger(object):
         data = {"test": test,
                 "status": status.upper()}
         if message is not None:
-            data["message"] = message
+            data["message"] = unicode(message)
         if expected != data["status"] and status != "SKIP":
             data["expected"] = expected
         if stack is not None:
@@ -289,7 +289,7 @@ class StructuredLogger(object):
 
 def _log_func(level_name):
     def log(self, message):
-        data = {"level": level_name, "message": message}
+        data = {"level": level_name, "message": unicode(message)}
         self._log_data("log", data)
     log.__doc__ = """Log a message with level %s
 
