@@ -1,8 +1,16 @@
 <!DOCTYPE HTML>
 <html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=763689
+-->
 <head>
   <meta charset="utf-8">
+  <title>Test behavior of 'min-height:auto' and 'min-width:auto' (Bug 763689)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=763689">Mozilla Bug 763689</a>
 <body>
 <div id="display">
   <div id="non-flex-item">abc</div>
@@ -51,11 +59,6 @@
  * "auto", and our flex container will correctly use the flex item's
  * min-content height as needed in layout.)
  */
-
-// Use "is()", "ok()", and "todo_is()" from parent document.
-var is = parent.is;
-var ok = parent.ok;
-var todo_is = parent.todo_is;
 
 // Given an element ID, this function sets the corresponding
 // element's inline-style min-width and min-height explicitly to "auto".
@@ -119,9 +122,6 @@ function checkAllTheMinSizes() {
 
 // Main test function
 function main() {
-  ok(SpecialPowers.getBoolPref("layout.css.flexbox.enabled"),
-     "expecting to be run with flexbox support enabled");
-
   // First: check that min-sizes are what we expect, with min-size properties
   // at their initial value.
   checkAllTheMinSizes();
@@ -134,8 +134,6 @@ function main() {
 
   // ...and try again (should have the same result):
   checkAllTheMinSizes();
-
-  parent.finish();
 }
 
 main();
