@@ -262,7 +262,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     dest->SetTransform(destTransform);
 
     // Get the bounds post-transform.
-    To3DMatrix(aTransform, new3DTransform);
+    new3DTransform = To3DMatrix(aTransform);
     gfxRect bounds = new3DTransform.TransformBounds(ThebesRect(aRect));
     bounds.IntersectRect(bounds, gfxRect(offset.x, offset.y, buffer->GetSize().width, buffer->GetSize().height));
 

@@ -629,8 +629,7 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
   // from the shadow transform by undoing the translations in
   // AsyncCompositionManager::SampleValue.
 
-  gfx3DMatrix transform;
-  gfx::To3DMatrix(layer->AsLayerComposite()->GetShadowTransform(), transform);
+  gfx3DMatrix transform = gfx::To3DMatrix(layer->AsLayerComposite()->GetShadowTransform());
   if (ContainerLayer* c = layer->AsContainerLayer()) {
     // Undo the scale transform applied by AsyncCompositionManager::SampleValue
     transform.ScalePost(1.0f/c->GetInheritedXScale(),

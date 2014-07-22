@@ -284,9 +284,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
                                                          aPresContext,
                                                          canStoreInRuleTree,
                                                          aBounds);
-        gfx::Matrix4x4 transform;
-        gfx::ToMatrix4x4(matrix, transform);
-        aFunctions.AppendElement(TransformMatrix(transform));
+        aFunctions.AppendElement(TransformMatrix(gfx::ToMatrix4x4(matrix)));
         break;
       }
       case eCSSKeyword_perspective:
@@ -5151,10 +5149,8 @@ bool nsDisplayTransform::UntransformVisibleRect(nsDisplayListBuilder* aBuilder,
 void
 nsDisplayTransform::WriteDebugInfo(nsACString& aTo)
 {
-  gfx::Matrix4x4 transform;
-  gfx::ToMatrix4x4(GetTransform(), transform);
   std::stringstream ss;
-  AppendToString(ss, transform);
+  AppendToString(ss, gfx::ToMatrix4x4(GetTransform()));
   aTo += ss.str().c_str();
 }
 #endif
