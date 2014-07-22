@@ -14,6 +14,8 @@
 #include "nsIRunnable.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/unused.h"
+#include "nsIObserverService.h"
+#include "mtransport/runnable_utils.h"
 
 #include "mozilla/dom/CrashReporterParent.h"
 using mozilla::dom::CrashReporterParent;
@@ -321,16 +323,37 @@ GMPParent::GetCrashID(nsString& aResult)
 }
 #endif
 
+static void
+GMPNotifyObservers(nsAString& aData)
+{
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    nsString temp(aData);
+    obs->NotifyObservers(nullptr, "gmp-plugin-crash", temp.get());
+  }
+}
+
 void
 GMPParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+#ifdef MOZ_CRASHREPORTER
   if (AbnormalShutdown == aWhy) {
     nsString dumpID;
-#ifdef MOZ_CRASHREPORTER
     GetCrashID(dumpID);
-#endif
-    // now do something with the crash ID, bug 1038961
+    nsString id;
+    // use the parent address to identify it
+    // We could use any unique-to-the-parent value
+    id.AppendInt(reinterpret_cast<uint64_t>(this));
+    id.Append(NS_LITERAL_STRING(" "));
+    AppendUTF8toUTF16(mDisplayName, id);
+    id.Append(NS_LITERAL_STRING(" "));
+    id.Append(dumpID);
+
+    // NotifyObservers is mainthread-only
+    NS_DispatchToMainThread(WrapRunnableNM(&GMPNotifyObservers, id),
+                            NS_DISPATCH_NORMAL);
   }
+#endif
   // warn us off trying to close again
   mState = GMPStateClosing;
   CloseActive();

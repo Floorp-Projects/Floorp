@@ -19,13 +19,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 
-// FxAccountsCommon.js doesn't use a "namespace", so create one here.
-XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
-  let FxAccountsCommon = {};
-  Cu.import("resource://gre/modules/FxAccountsCommon.js", FxAccountsCommon);
-  return FxAccountsCommon;
-});
-
 /*
  * Utility functions
  */
@@ -601,11 +594,8 @@ this.Utils = {
       return this._syncCredentialsHosts;
     }
     let result = new Set();
-    // the legacy sync host
+    // the legacy sync host.
     result.add(PWDMGR_HOST);
-    // the FxA host
-    result.add(FxAccountsCommon.FXA_PWDMGR_HOST);
-    //
     // The FxA hosts - these almost certainly all have the same hostname, but
     // better safe than sorry...
     for (let prefName of ["identity.fxaccounts.remote.force_auth.uri",

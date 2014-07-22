@@ -532,16 +532,14 @@ void CC_SIPCCCall::originateP2PCall (cc_sdp_direction_t video_pref, const std::s
 /*
  * This method works asynchronously, is an onCallEvent with the resulting SDP
  */
-void CC_SIPCCCall::createOffer (cc_media_constraints_t *constraints,
-                                Timecard *tc) {
-    CCAPI_CreateOffer(callHandle, constraints, tc);
+void CC_SIPCCCall::createOffer (cc_media_options_t *options, Timecard *tc) {
+    CCAPI_CreateOffer(callHandle, options, tc);
 }
 /*
  * This method works asynchronously, there is onCallEvent with the resulting SDP
  */
-void CC_SIPCCCall::createAnswer (cc_media_constraints_t *constraints,
-                                 Timecard *tc) {
-    CCAPI_CreateAnswer(callHandle, constraints, tc);
+void CC_SIPCCCall::createAnswer (Timecard *tc) {
+    CCAPI_CreateAnswer(callHandle, tc);
 
 }
 
@@ -571,9 +569,8 @@ const std::string& CC_SIPCCCall::getPeerConnection() const {
 
 void CC_SIPCCCall::addStream(cc_media_stream_id_t stream_id,
                              cc_media_track_id_t track_id,
-                             cc_media_type_t media_type,
-                             cc_media_constraints_t *constraints) {
-  CCAPI_AddStream(callHandle, stream_id, track_id, media_type, constraints);
+                             cc_media_type_t media_type) {
+  CCAPI_AddStream(callHandle, stream_id, track_id, media_type);
 }
 
 void CC_SIPCCCall::removeStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type) {

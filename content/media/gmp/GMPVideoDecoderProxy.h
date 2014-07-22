@@ -28,6 +28,7 @@ public:
   virtual nsresult Reset() = 0;
   virtual nsresult Drain() = 0;
   virtual nsresult DecodingComplete() = 0;
+  virtual const uint64_t ParentID() = 0;
 };
 
 #endif

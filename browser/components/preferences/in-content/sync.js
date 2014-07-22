@@ -154,6 +154,17 @@ let gSyncPane = {
         for (let checkbox of engines.querySelectorAll("checkbox")) {
           checkbox.disabled = enginesListDisabled;
         }
+
+        let checkbox = document.getElementById("fxa-pweng-chk");
+        let help = document.getElementById("fxa-pweng-help");
+        let allowPasswordsEngine = service.allowPasswordsEngine;
+
+        if (!allowPasswordsEngine) {
+          checkbox.checked = false;
+        }
+
+        checkbox.disabled = !allowPasswordsEngine || enginesListDisabled;
+        help.hidden = allowPasswordsEngine || enginesListDisabled;
       });
     // If fxAccountEnabled is false and we are in a "not configured" state,
     // then fxAccounts is probably fully disabled rather than just unconfigured,

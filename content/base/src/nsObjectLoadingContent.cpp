@@ -26,7 +26,6 @@
 #include "nsJSNPRuntime.h"
 #include "nsINestedURI.h"
 #include "nsIPresShell.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIStreamConverterService.h"
@@ -80,6 +79,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Telemetry.h"
@@ -2914,21 +2914,9 @@ nsObjectLoadingContent::NotifyContentObjectWrapper()
   nsCOMPtr<nsIContent> thisContent =
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
 
-  nsCOMPtr<nsIDocument> doc = thisContent->GetDocument();
-  if (!doc)
-    return;
-
-  nsCOMPtr<nsIScriptGlobalObject> sgo =  do_QueryInterface(doc->GetScopeObject());
-  if (!sgo)
-    return;
-
-  nsIScriptContext *scx = sgo->GetContext();
-  if (!scx)
-    return;
-
-  JSContext *cx = scx->GetNativeContext();
-  nsCxPusher pusher;
-  pusher.Push(cx);
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  JSContext* cx = jsapi.cx();
 
   JS::Rooted<JSObject*> obj(cx, thisContent->GetWrapper());
   if (!obj) {
@@ -3297,12 +3285,7 @@ nsObjectLoadingContent::SetupProtoChain(JSContext* aCx,
   }
 
   if (!nsContentUtils::IsSafeToRunScript()) {
-    // This may be null if the JS context is not a DOM context. That's ok, we'll
-    // use the safe context from XPConnect in the runnable.
-    nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContextFromJSContext(aCx);
-
-    nsRefPtr<SetupProtoChainRunner> runner =
-      new SetupProtoChainRunner(scriptContext, this);
+    nsRefPtr<SetupProtoChainRunner> runner = new SetupProtoChainRunner(this);
     nsContentUtils::AddScriptRunner(runner);
     return;
   }
@@ -3510,10 +3493,8 @@ nsObjectLoadingContent::GetOwnPropertyNames(JSContext* aCx,
 
 // SetupProtoChainRunner implementation
 nsObjectLoadingContent::SetupProtoChainRunner::SetupProtoChainRunner(
-    nsIScriptContext* scriptContext,
     nsObjectLoadingContent* aContent)
-  : mContext(scriptContext)
-  , mContent(aContent)
+  : mContent(aContent)
 {
 }
 
@@ -3524,12 +3505,9 @@ nsObjectLoadingContent::SetupProtoChainRunner::~SetupProtoChainRunner()
 NS_IMETHODIMP
 nsObjectLoadingContent::SetupProtoChainRunner::Run()
 {
-  // XXXbz Does it really matter what JSContext we use here?  Seems
-  // like we could just always use the safe context....
-  nsCxPusher pusher;
-  JSContext* cx = mContext ? mContext->GetNativeContext()
-                           : nsContentUtils::GetSafeJSContext();
-  pusher.Push(cx);
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  JSContext* cx = jsapi.cx();
 
   nsCOMPtr<nsIContent> content;
   CallQueryInterface(mContent.get(), getter_AddRefs(content));

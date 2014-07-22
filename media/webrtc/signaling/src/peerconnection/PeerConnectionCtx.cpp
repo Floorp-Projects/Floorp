@@ -56,52 +56,48 @@ using namespace dom;
 
 #ifdef MOZILLA_INTERNAL_API
 static void
-Apply(const Optional<bool> &aSrc, cc_boolean_constraint_t *aDst,
-      bool mandatory = false) {
-  if (aSrc.WasPassed() && (mandatory || !aDst->was_passed)) {
+Apply(const Optional<bool> &aSrc, cc_boolean_option_t *aDst) {
+  if (aSrc.WasPassed()) {
     aDst->was_passed = true;
     aDst->value = aSrc.Value();
-    aDst->mandatory = mandatory;
+  }
+}
+
+static void
+Apply(const Optional<int32_t> &aSrc, cc_int32_option_t *aDst) {
+  if (aSrc.WasPassed()) {
+    aDst->was_passed = true;
+    aDst->value = aSrc.Value();
   }
 }
 #endif
 
-MediaConstraintsExternal::MediaConstraintsExternal() {
-  memset(&mConstraints, 0, sizeof(mConstraints));
+SipccOfferOptions::SipccOfferOptions() {
+  memset(&mOptions, 0, sizeof(mOptions));
 }
 
-MediaConstraintsExternal::MediaConstraintsExternal(
-    const MediaConstraintsInternal &aSrc) {
-  cc_media_constraints_t* c = &mConstraints;
+SipccOfferOptions::SipccOfferOptions(
+    const RTCOfferOptions &aSrc) {
+  cc_media_options_t* c = &mOptions;
   memset(c, 0, sizeof(*c));
 #ifdef MOZILLA_INTERNAL_API
-  Apply(aSrc.mMandatory.mOfferToReceiveAudio, &c->offer_to_receive_audio, true);
-  Apply(aSrc.mMandatory.mOfferToReceiveVideo, &c->offer_to_receive_video, true);
+  Apply(aSrc.mOfferToReceiveAudio, &c->offer_to_receive_audio);
+  Apply(aSrc.mOfferToReceiveVideo, &c->offer_to_receive_video);
   if (!Preferences::GetBool("media.peerconnection.video.enabled", true)) {
     c->offer_to_receive_video.was_passed = true;
     c->offer_to_receive_video.value = false;
   }
-  Apply(aSrc.mMandatory.mMozDontOfferDataChannel, &c->moz_dont_offer_datachannel,
-        true);
-  Apply(aSrc.mMandatory.mMozBundleOnly, &c->moz_bundle_only, true);
-  if (aSrc.mOptional.WasPassed()) {
-    const Sequence<MediaConstraintSet> &array = aSrc.mOptional.Value();
-    for (uint32_t i = 0; i < array.Length(); i++) {
-      Apply(array[i].mOfferToReceiveAudio, &c->offer_to_receive_audio);
-      Apply(array[i].mOfferToReceiveVideo, &c->offer_to_receive_video);
-      Apply(array[i].mMozDontOfferDataChannel, &c->moz_dont_offer_datachannel);
-      Apply(array[i].mMozBundleOnly, &c->moz_bundle_only);
-    }
-  }
+  Apply(aSrc.mMozDontOfferDataChannel, &c->moz_dont_offer_datachannel);
+  Apply(aSrc.mMozBundleOnly, &c->moz_bundle_only);
 #endif
 }
 
-cc_media_constraints_t*
-MediaConstraintsExternal::build() const {
-  cc_media_constraints_t* cc  = (cc_media_constraints_t*)
-    cpr_malloc(sizeof(cc_media_constraints_t));
+cc_media_options_t*
+SipccOfferOptions::build() const {
+  cc_media_options_t* cc  = (cc_media_options_t*)
+    cpr_malloc(sizeof(cc_media_options_t));
   if (cc) {
-    *cc = mConstraints;
+    *cc = mOptions;
   }
   return cc;
 }
