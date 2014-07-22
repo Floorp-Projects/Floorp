@@ -134,7 +134,8 @@ public:
 
   /* Volume */
 
-  bt_status_t VolumeControl(bthf_volume_type_t aType, int aVolume);
+  void VolumeControl(bthf_volume_type_t aType, int aVolume,
+                     BluetoothHandsfreeResultHandler* aRes);
 
   /* Device status */
 
