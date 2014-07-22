@@ -35,7 +35,7 @@ let tests = [
       waitForPopupAtAnchor(highlight.parentElement, document.getElementById("PanelUI-button"), () => {
         isnot(PanelUI.panel.state, "open",
               "Panel should have closed after the highlight moved elsewhere.");
-        is(tooltip.state, "open", "The info panel should have remained open");
+        ok(tooltip.state == "showing" || tooltip.state == "open", "The info panel should have remained open");
         done();
       }, "Highlight should move to the appMenu button and still be visible");
     }, "Highlight should be shown after showHighlight() for fixed panel items");
@@ -52,7 +52,7 @@ let tests = [
       waitForElementToBeHidden(highlight, function checkPanelIsClosed() {
         isnot(PanelUI.panel.state, "open",
               "Panel still should have closed");
-        is(tooltip.state, "open", "The info panel should have remained open");
+        ok(tooltip.state == "showing" || tooltip.state == "open", "The info panel should have remained open");
         done();
       }, "Highlight should have disappeared when panel closed");
     }, "Highlight should be shown after showHighlight() for fixed panel items");
@@ -70,7 +70,7 @@ let tests = [
       waitForElementToBeHidden(highlight, function checkPanelIsClosed() {
         isnot(PanelUI.panel.state, "open",
               "Panel should have closed when the find bar opened");
-        is(tooltip.state, "open", "The info panel should have remained open");
+        ok(tooltip.state == "showing" || tooltip.state == "open", "The info panel should have remained open");
         done();
       }, "Highlight should have disappeared when panel closed");
     }, "Highlight should be shown after showHighlight() for fixed panel items");
@@ -108,7 +108,7 @@ let tests = [
       waitForElementToBeHidden(highlight, function highlightHidden() {
         is(PanelUI.panel.state, "open",
            "Panel should have stayed open when the subview opened");
-        is(tooltip.state, "open", "The info panel should have remained open");
+        ok(tooltip.state == "showing" || tooltip.state == "open", "The info panel should have remained open");
         PanelUI.hide();
         done();
       }, "Highlight should have disappeared when the subview opened");
