@@ -187,14 +187,8 @@ class MacroAssemblerX86Shared : public Assembler
     void not32(Register reg) {
         notl(reg);
     }
-    void inc32(const Operand &addr) {
-        incl(addr);
-    }
     void atomic_inc32(const Operand &addr) {
         lock_incl(addr);
-    }
-    void dec32(const Operand &addr) {
-        decl(addr);
     }
     void atomic_dec32(const Operand &addr) {
         lock_decl(addr);

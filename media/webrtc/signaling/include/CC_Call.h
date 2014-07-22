@@ -278,9 +278,9 @@ namespace CSF
           */
         virtual void originateP2PCall (cc_sdp_direction_t video_pref, const std::string & digits, const std::string & ip) = 0;
 
-        virtual void createOffer (cc_media_constraints_t* constraints, Timecard *) = 0;
+        virtual void createOffer (cc_media_options_t* options, Timecard *) = 0;
 
-        virtual void createAnswer(cc_media_constraints_t* constraints, Timecard *) = 0;
+        virtual void createAnswer(Timecard *) = 0;
 
         virtual void setLocalDescription(cc_jsep_action_t action, const std::string & sdp, Timecard *) = 0;
 
@@ -290,8 +290,7 @@ namespace CSF
 
         virtual void addStream(cc_media_stream_id_t stream_id,
                                cc_media_track_id_t track_id,
-                               cc_media_type_t media_type,
-                               cc_media_constraints_t *constraints) = 0;
+                               cc_media_type_t media_type) = 0;
 
         virtual void removeStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type) = 0;
 

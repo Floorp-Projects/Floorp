@@ -168,10 +168,11 @@ public:
 
   JSContext* cx() const {
     MOZ_ASSERT(mCx, "Must call Init before using an AutoJSAPI");
+    MOZ_ASSERT_IF(NS_IsMainThread(), CxPusherIsStackTop());
     return mCx;
   }
 
-  bool CxPusherIsStackTop() { return mCxPusher.ref().IsStackTop(); }
+  bool CxPusherIsStackTop() const { return mCxPusher.ref().IsStackTop(); }
 
 protected:
   // Protected constructor, allowing subclasses to specify a particular cx to

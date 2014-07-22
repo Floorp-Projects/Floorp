@@ -6309,6 +6309,15 @@ JS_SetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt, uint32_t v
             IonSpew(js::jit::IonSpew_Scripts, "Disable offthread compilation");
         }
         break;
+      case JSJITCOMPILER_SIGNALS_ENABLE:
+        if (value == 1) {
+            rt->setCanUseSignalHandlers(true);
+            IonSpew(js::jit::IonSpew_Scripts, "Enable signals");
+        } else if (value == 0) {
+            rt->setCanUseSignalHandlers(false);
+            IonSpew(js::jit::IonSpew_Scripts, "Disable signals");
+        }
+        break;
       default:
         break;
     }
@@ -6330,6 +6339,8 @@ JS_GetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt)
         return JS::RuntimeOptionsRef(rt).baseline();
       case JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE:
         return rt->canUseOffthreadIonCompilation();
+      case JSJITCOMPILER_SIGNALS_ENABLE:
+        return rt->canUseSignalHandlers();
       default:
         break;
     }

@@ -220,12 +220,6 @@ def main(argv):
 
     prefix += ['-f', prolog]
 
-    # Avoid racing on the cache by having the js shell create a new cache
-    # subdir for each process. The js shell takes care of deleting these
-    # subdirs when the process exits.
-    if options.max_jobs > 1 and jittests.HAVE_MULTIPROCESSING:
-        prefix += ['--js-cache-per-process']
-
     # Clean up any remnants from previous crashes etc
     shutil.rmtree(jittests.JS_CACHE_DIR, ignore_errors=True)
     os.mkdir(jittests.JS_CACHE_DIR)

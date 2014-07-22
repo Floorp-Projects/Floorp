@@ -35,6 +35,7 @@ public:
   virtual GMPErr SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) = 0;
   virtual GMPErr SetPeriodicKeyFrames(bool aEnable) = 0;
   virtual void EncodingComplete() = 0;
+  virtual const uint64_t ParentID() = 0;
 };
 
 #endif // GMPVideoEncoderProxy_h_
