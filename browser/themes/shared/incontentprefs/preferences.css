@@ -126,6 +126,7 @@ tab[selected] {
 /* buttons and menulists */
 
 button,
+colorpicker[type="button"],
 menulist {
   -moz-appearance: none;
   height: 30px;
@@ -142,18 +143,26 @@ menulist {
 }
 
 button:not([disabled="true"]):hover,
+colorpicker[type="button"]:not([disabled="true"]):hover,
 menulist:not([disabled="true"]):hover {
   background-color: #EBEBEB;
 }
 
 button:not([disabled="true"]):hover:active,
+colorpicker[type="button"]:not([disabled="true"]):hover:active,
 menulist[open="true"]:not([disabled="true"]) {
   background-color: #DADADA;
 }
 
 button[disabled="true"],
+colorpicker[type="button"][disabled="true"],
 menulist[disabled="true"] {
   opacity: 0.5;
+}
+
+colorpicker[type="button"] {
+  padding: 6px;
+  width: 50px;
 }
 
 button > .button-box,
@@ -891,6 +900,11 @@ description > html|a {
 
 tree:not(#rejectsTree) {
   min-height: 15em;
+}
+
+:-moz-any(dialog, window, prefwindow) groupbox {
+  -moz-margin-start: 8px;
+  -moz-margin-end: 8px;
 }
 
 /**
