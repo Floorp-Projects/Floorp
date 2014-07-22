@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+<div id="display">
+  <div id="non-flex-item">abc</div>
+  <div style="display: flex">
+    <div id="horizontal-flex-item">abc</div>
+  </div>
+  <div style="display: flex; flex-direction: column">
+    <div id="vertical-flex-item">abc</div>
+  </div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+/**
+ * Test 'min-height:auto' and 'min-width:auto' (Bug 763689)
+ * ========================================================
+ * This test checks the computed-style value of the "auto" keyword introduced
+ * for the "min-height" and "min-width" properties in CSS3 Flexbox Section 4.5.
+ *   http://www.w3.org/TR/css3-flexbox/#min-size-auto
+ *
+ * Quoting that chunk of spec:
+ *     # auto
+ *     #   When used as the value of a flex item's min main size property,
+ *     #   this keyword indicates a minimum of the min-content size, to
+ *     #   help ensure that the item is large enough to fit its contents.
+ *     #
+ *     #   | It is intended that this will compute to the 'min-content'
+ *     #   | keyword when the specification defining it (Writing Modes
+ *     #   | Appendix D) is sufficiently mature.
+ *     #
+ *     #   Otherwise, this keyword computes to '0' (unless otherwise
+ *     #   defined by a future specification).
+ *
+ * So, since we already support the "min-content" keyword, this effectively
+ * means:
+ *  - On a horizontal flex item, "min-width: auto" computes to "min-content".
+ *  - On a vertical flex item, "min-height: auto" computes to "min-content".
+ *  - In all other cases, "min-[width|height]: auto" computes to 0.
+ * That's what this mochitest aims to check, via getComputedStyle().
+ *
+ * NOTE: As of this test's writing, we don't yet support enumerated keyword
+ * values (including "min-content") for the "min-height" property. So for
+ * now, "min-height: auto" always produces "0" in getComputedStyle, even on
+ * a vertical flex item. (Though internally, we do know that it's really
+ * "auto", and our flex container will correctly use the flex item's
+ * min-content height as needed in layout.)
+ */
+
+// Use "is()", "ok()", and "todo_is()" from parent document.
+var is = parent.is;
+var ok = parent.ok;
+var todo_is = parent.todo_is;
+
+// Given an element ID, this function sets the corresponding
+// element's inline-style min-width and min-height explicitly to "auto".
+function setElemMinSizesToAuto(aElemId) {
+  var elem = document.getElementById(aElemId);
+
+  is(elem.style.minWidth, "", "min-width should be initially unset");
+  elem.style.minWidth = "auto";
+  is(elem.style.minWidth, "auto", "min-width should accept 'auto' value");
+
+  is(elem.style.minHeight, "", "min-height should be initially unset");
+  elem.style.minHeight = "auto";
+  is(elem.style.minHeight, "auto", "min-height should accept 'auto' value");
+}
+
+// Given an element ID, this function compares the corresponding element's
+// computed min-width and min-height against expected values.
+// (There's an optional final argument, to specify a "todo" expected value for
+// the min-height, for cases when we *should* have a particular value, but we
+// don't support it yet. In that case, aExpectedMinHeight is the value we
+// currently expect to have, and aExpectedMinHeightTodo is the value we really
+// *should* have.)
+function checkElemMinSizes(aElemId,
+                           aExpectedMinWidth,
+                           aExpectedMinHeight,
+                           aExpectedMinHeightTodo /* optional */)
+{
+  var elem = document.getElementById(aElemId);
+  is(window.getComputedStyle(elem, "").minWidth,  aExpectedMinWidth,
+     "checking min-width of " + aElemId);
+
+  is(window.getComputedStyle(elem, "").minHeight, aExpectedMinHeight,
+     "checking min-height of " + aElemId);
+
+  // Special bonus check, if the *real* expected value is something we don't
+  // support yet.
+  if (typeof aExpectedMinHeightTodo != 'undefined') {
+    todo_is(window.getComputedStyle(elem, "").minHeight, aExpectedMinHeightTodo,
+           "checking the ultimately-correct min-height of " + aElemId);
+  }
+}
+
+// This function goes through all the elements we're interested in
+// and checks their computed min-sizes against expected values,
+// farming out each per-element job to checkElemMinSizes.
+function checkAllTheMinSizes() {
+  // This is the normal part -- generally, the default value of "min-width"
+  // and "min-height" (auto) computes to "0px".
+  checkElemMinSizes("non-flex-item", "0px", "0px");
+
+  // ...but for a flex item in a horizontal flex container, "min-width: auto"
+  // computes to "min-content".
+  checkElemMinSizes("horizontal-flex-item", "-moz-min-content", "0px");
+
+  // ...and for a flex item in a vertical flex container, "min-height: auto"
+  // computes to "min-content" (except for now, it computes to "0px", because
+  // we don't support "min-content" on heights yet.  We pass "-moz-min-content"
+  // as the final arg, to get it checked as the "todo" min-height.)
+  checkElemMinSizes("vertical-flex-item", "0px", "0px", "-moz-min-content");
+}
+
+// Main test function
+function main() {
+  ok(SpecialPowers.getBoolPref("layout.css.flexbox.enabled"),
+     "expecting to be run with flexbox support enabled");
+
+  // First: check that min-sizes are what we expect, with min-size properties
+  // at their initial value.
+  checkAllTheMinSizes();
+
+  // Now, we *explicitly* set min-size properties to "auto"...
+  var elemIds = [ "non-flex-item",
+                  "horizontal-flex-item",
+                  "vertical-flex-item"];
+  elemIds.forEach(setElemMinSizesToAuto);
+
+  // ...and try again (should have the same result):
+  checkAllTheMinSizes();
+
+  parent.finish();
+}
+
+main();
+
+</script>
+</pre>
+</body>
+</html>
