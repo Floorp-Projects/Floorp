@@ -613,6 +613,19 @@ class MachCommandConditions(object):
         return False
 
     @staticmethod
+    def is_mulet(cls):
+        """Must have a Mulet build."""
+        if hasattr(cls, 'substs'):
+            return cls.substs.get('MOZ_BUILD_APP') == 'b2g/dev'
+        return False
+
+    @staticmethod
+    def is_firefox_or_mulet(cls):
+        """Must have a Mulet build."""
+        return (MachCommandConditions.is_firefox(cls) or
+                MachCommandConditions.is_mulet(cls))
+
+    @staticmethod
     def is_b2g(cls):
         """Must have a Boot to Gecko build."""
         if hasattr(cls, 'substs'):
