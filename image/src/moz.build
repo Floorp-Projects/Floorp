@@ -17,6 +17,7 @@ UNIFIED_SOURCES += [
     'ClippedImage.cpp',
     'Decoder.cpp',
     'DiscardTracker.cpp',
+    'DynamicImage.cpp',
     'FrameAnimator.cpp',
     'FrameBlender.cpp',
     'FrameSequence.cpp',
