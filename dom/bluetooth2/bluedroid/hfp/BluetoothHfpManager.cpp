@@ -430,10 +430,16 @@ BluetoothHfpManager::Init()
 
 // static
 void
-BluetoothHfpManager::InitHfpInterface()
+BluetoothHfpManager::InitHfpInterface(BluetoothProfileResultHandler* aRes)
 {
   BluetoothInterface* btInf = BluetoothInterface::GetInstance();
-  NS_ENSURE_TRUE_VOID(btInf);
+  if (!btInf) {
+    BT_LOGR("Error: Bluetooth interface not available");
+    if (aRes) {
+      aRes->OnError(NS_ERROR_FAILURE);
+    }
+    return;
+  }
 
   if (sBluetoothHfpInterface) {
     sBluetoothHfpInterface->Cleanup();
@@ -442,11 +448,26 @@ BluetoothHfpManager::InitHfpInterface()
 
   BluetoothHandsfreeInterface *interface =
     btInf->GetBluetoothHandsfreeInterface();
-  NS_ENSURE_TRUE_VOID(interface);
+  if (!interface) {
+    BT_LOGR("Error: Bluetooth Handsfree interface not available");
+    if (aRes) {
+      aRes->OnError(NS_ERROR_FAILURE);
+    }
+    return;
+  }
 
-  NS_ENSURE_TRUE_VOID(BT_STATUS_SUCCESS ==
-    interface->Init(&sBluetoothHfpCallbacks));
+  if (interface->Init(&sBluetoothHfpCallbacks) != BT_STATUS_SUCCESS) {
+    if (aRes) {
+      aRes->OnError(NS_ERROR_FAILURE);
+    }
+    return;
+  }
+
   sBluetoothHfpInterface = interface;
+
+  if (aRes) {
+    aRes->Init();
+  }
 }
 
 BluetoothHfpManager::~BluetoothHfpManager()
@@ -469,11 +490,14 @@ BluetoothHfpManager::~BluetoothHfpManager()
 
 // static
 void
-BluetoothHfpManager::DeinitHfpInterface()
+BluetoothHfpManager::DeinitHfpInterface(BluetoothProfileResultHandler* aRes)
 {
   if (sBluetoothHfpInterface) {
     sBluetoothHfpInterface->Cleanup();
     sBluetoothHfpInterface = nullptr;
+  }
+  if (aRes) {
+    aRes->Deinit();
   }
 }
 
