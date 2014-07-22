@@ -634,7 +634,7 @@ CallWatcherFront.ENUM_METHODS[CallWatcherFront.CANVAS_WEBGL_CONTEXT] = {
   stencilOpSeparate: [0, 1, 2, 3],
   texImage2D: (args) => args.length > 6 ? [0, 2, 6, 7] : [0, 2, 3, 4],
   texParameterf: [0, 1],
-  texParameteri: [0, 1],
+  texParameteri: [0, 1, 2],
   texSubImage2D: (args) => args.length === 9 ? [0, 6, 7] : [0, 4, 5],
   vertexAttribPointer: [2]
 };
