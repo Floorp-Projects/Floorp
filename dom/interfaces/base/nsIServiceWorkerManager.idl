@@ -5,9 +5,10 @@
 
 #include "domstubs.idl"
 
+interface nsIDocument;
 interface nsIURI;
 
-[uuid(6117cdf1-cb10-42a3-9901-4f1bab7ffa4d)]
+[uuid(6e1382f4-3cbc-435f-8ce0-70175f6eb400)]
 interface nsIServiceWorkerManager : nsISupports
 {
   // Returns a Promise
@@ -19,6 +20,21 @@ interface nsIServiceWorkerManager : nsISupports
   // aTarget MUST be a ServiceWorkerContainer.
   [noscript] void AddContainerEventListener(in nsIURI aPageURI, in nsIDOMEventTarget aTarget);
   [noscript] void RemoveContainerEventListener(in nsIURI aPageURI, in nsIDOMEventTarget aTarget);
+
+  /**
+   * Call this to request that document `aDoc` be controlled by a ServiceWorker
+   * if a registration exists for it's scope.
+   *
+   * This MUST only be called once per document!
+   */
+  [notxpcom,nostdcall] void MaybeStartControlling(in nsIDocument aDoc);
+
+  /**
+   * Documents that have called MaybeStartControlling() should call this when
+   * they are destroyed. This function may be called multiple times, and is
+   * idempotent.
+   */
+  [notxpcom,nostdcall] void MaybeStopControlling(in nsIDocument aDoc);
 
   // Testing
   DOMString getScopeForUrl(in DOMString path);

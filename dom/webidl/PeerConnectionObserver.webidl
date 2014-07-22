@@ -39,9 +39,4 @@ interface PeerConnectionObserver
   void onRemoveStream();
   void onAddTrack();
   void onRemoveTrack();
-
-  /* Helper function to access supported constraints defined in webidl. Needs to
-   * be in a separate webidl object we hold, so putting it here was convenient.
-   */
-  MediaConstraintSet getSupportedConstraints(optional MediaConstraintSet constraints);
 };

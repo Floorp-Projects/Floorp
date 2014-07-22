@@ -6,7 +6,6 @@ frameworks/av/include/media/stagefright/foundation/ADebug.h
 frameworks/av/include/media/stagefright/foundation/AHandler.h
 frameworks/av/include/media/stagefright/foundation/AString.h
 frameworks/av/include/media/stagefright/foundation/hexdump.h
-frameworks/av/include/media/stagefright/MediaBufferGroup.h
 frameworks/av/include/media/stagefright/MediaDefs.h
 frameworks/av/include/media/stagefright/MediaErrors.h
 frameworks/av/include/media/stagefright/MediaExtractor.h

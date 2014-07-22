@@ -1,0 +1,50 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+  <head>
+      <script src="resource://sdk/dev/volcan.js"></script>
+      <script src="./task.js"></script>
+  </head>
+  <body>
+  </body>
+  <script>
+    const wait = (target, type, capture) => new Promise((resolve, reject) => {
+      const listener = event => {
+        target.removeEventListener(type, listener, capture);
+        resolve(event);
+      };
+      target.addEventListener(type, listener, capture);
+    });
+
+    const display = message =>
+      document.body.innerHTML += message + "<br/>";
+
+    Task.spawn(function*() {
+      var event = yield wait(window, "message");
+      var port = event.ports[0];
+
+      display("Port received");
+      var root = yield volcan.connect(port);
+
+      display("Connected to a debugger");
+
+      var message = yield root.echo("hello")
+
+      display("Received echo for: " + message);
+
+      var list = yield root.listTabs();
+
+      display("You have " + list.tabs.length + " open tabs");
+
+      var activeTab = list.tabs[list.selected];
+
+      display("Your active tab url is: " + activeTab.url);
+
+      var sheets = yield activeTab.styleSheetsActor.getStyleSheets();
+
+      display("Page in active tab has " + sheets.length + " stylesheets");
+
+    });
+  </script>
+</html>
