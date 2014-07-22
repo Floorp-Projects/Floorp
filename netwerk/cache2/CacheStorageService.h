@@ -146,26 +146,6 @@ private:
                              bool aOnlyInMemory,
                              bool aOverwrite);
 
-  /**
-   * Sets a cache entry valid (overrides the default loading behavior by loading
-   * directly from cache) for the given number of seconds
-   * See nsICacheEntry.idl for more details
-   */
-  void ForceEntryValidFor(nsACString &aCacheEntryKey,
-                          uint32_t aSecondsToTheFuture);
-
-private:
-  friend class CacheIndex;
-
-  /**
-   * Retrieves the status of the cache entry to see if it has been forced valid
-   * (so it will loaded directly from cache without further validation)
-   * CacheIndex uses this to prevent a cache entry from being prememptively
-   * thrown away when forced valid
-   * See nsICacheEntry.idl for more details
-   */
-  bool IsForcedValidEntry(nsACString &aCacheEntryKey);
-
 private:
   // These are helpers for telemetry monitorying of the memory pools.
   void TelemetryPrune(TimeStamp &now);
@@ -283,9 +263,6 @@ private:
   static CacheStorageService* sSelf;
 
   mozilla::Mutex mLock;
-
-  // Tracks entries that may be forced valid.
-  nsDataHashtable<nsCStringHashKey, TimeStamp> mForcedValidEntries;
 
   bool mShutdown;
 

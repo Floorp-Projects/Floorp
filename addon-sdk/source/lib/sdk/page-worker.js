@@ -26,6 +26,7 @@ const { contract: loaderContract } = require('./content/loader');
 const { has } = require('./util/array');
 const { Rules } = require('./util/rules');
 const { merge } = require('./util/object');
+const { data } = require('./self');
 
 const views = WeakMap();
 const workers = WeakMap();
@@ -92,10 +93,13 @@ const Page = Class({
   setup: function Page(options) {
     let page = this;
     options = pageContract(options);
+
+    let uri = options.contentURL;
+
     let view = makeFrame(window.document, {
       nodeName: 'iframe',
       type: 'content',
-      uri: options.contentURL,
+      uri: uri ? data.url(uri) : '',
       allowJavascript: options.allow.script,
       allowPlugins: true,
       allowAuth: true
@@ -124,12 +128,19 @@ const Page = Class({
     let allowJavascript = pageContract({ allow: value }).allow.script;
     return allowJavascript ? enableScript(this) : disableScript(this);
   },
-  get contentURL() { return viewFor(this).getAttribute('src'); },
+  get contentURL() { return viewFor(this).getAttribute("data-src") },
   set contentURL(value) {
     if (!isValidURL(this, value)) return;
     let view = viewFor(this);
     let contentURL = pageContract({ contentURL: value }).contentURL;
-    view.setAttribute('src', contentURL);
+
+    // page-worker doesn't have a model like other APIs, so to be consitent
+    // with the behavior "what you set is what you get", we need to store
+    // the original `contentURL` given. 
+    // Even if XUL elements doesn't support `dataset`, properties, to
+    // indicate that is a custom attribute the syntax "data-*" is used.
+    view.setAttribute('data-src', contentURL);
+    view.setAttribute('src', data.url(contentURL));
   },
   dispose: function () {
     if (isDisposed(this)) return;

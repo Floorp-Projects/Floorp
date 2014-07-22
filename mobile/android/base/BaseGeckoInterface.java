@@ -27,7 +27,7 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     // Bug 908756: Implement Tabs.OnTabsChangedListener
     // Bug 908760: Implement GeckoEventResponder
 
-    private Context mContext;
+    private final Context mContext;
     private GeckoProfile mProfile;
 
     public BaseGeckoInterface(Context context) {
@@ -74,13 +74,14 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
             @Override
             public void run() {
                 // Hide/show the system notification bar
-                Window window = ((Activity)mContext).getWindow();
+                Window window = getActivity().getWindow();
                 window.setFlags(fullscreen ?
                                 WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
                                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-                if (Build.VERSION.SDK_INT >= 11)
+                if (Build.VERSION.SDK_INT >= 11) {
                     window.getDecorView().setSystemUiVisibility(fullscreen ? 1 : 0);
+                }
             }
         });
     }

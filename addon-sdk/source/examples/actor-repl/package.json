@@ -1,0 +1,10 @@
+{
+  "name": "actor-repl",
+  "id": "@actor-repl",
+  "title": "Actor REPL",
+  "description": "Actor REPL",
+  "version": "0.0.1",
+  "author": "Irakli Gozalishvili",
+  "main": "./index.js",
+  "license": "MPL 2.0"
+}

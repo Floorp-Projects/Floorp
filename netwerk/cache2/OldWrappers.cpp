@@ -366,18 +366,6 @@ _OldCacheEntryWrapper::~_OldCacheEntryWrapper()
   LOG(("Destroying _OldCacheEntryWrapper %p for descriptor %p", this, mOldInfo.get()));
 }
 
-NS_IMETHODIMP _OldCacheEntryWrapper::GetIsForcedValid(bool *aIsForcedValid)
-{
-  // Unused stub
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP _OldCacheEntryWrapper::ForceValidFor(uint32_t aSecondsToTheFuture)
-{
-  // Unused stub
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMPL_ISUPPORTS(_OldCacheEntryWrapper, nsICacheEntry)
 
 NS_IMETHODIMP _OldCacheEntryWrapper::AsyncDoom(nsICacheEntryDoomCallback* listener)

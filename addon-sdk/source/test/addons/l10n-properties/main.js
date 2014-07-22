@@ -163,6 +163,20 @@ exports.testEnUsLocaleName = createTest("en-GB", function(assert, loader, done) 
                    "other",
                    "PluralForm form can be omitting generic key [i.e. without ...[other] at end of key)");
 
+  assert.equal(_("first_identifier", "ONE", "TWO"), "the entries are ONE and TWO.", "first_identifier no count");
+  assert.equal(_("first_identifier", 0, "ONE", "TWO"), "the entries are ONE and TWO.", "first_identifier with count = 0");
+  assert.equal(_("first_identifier", 1, "ONE", "TWO"), "first entry is ONE and the second one is TWO.", "first_identifier with count = 1");
+  assert.equal(_("first_identifier", 2, "ONE", "TWO"), "the entries are ONE and TWO.", "first_identifier with count = 2");
+
+  assert.equal(_("second_identifier", "ONE", "TWO"), "first entry is ONE and the second one is TWO.", "second_identifier with no count");
+  assert.equal(_("second_identifier", 0, "ONE", "TWO"), "first entry is ONE and the second one is TWO.", "second_identifier with count = 0");
+  assert.equal(_("second_identifier", 1, "ONE", "TWO"), "first entry is ONE and the second one is TWO.", "second_identifier with count = 1");
+  assert.equal(_("second_identifier", 2, "ONE", "TWO"), "first entry is ONE and the second one is TWO.", "second_identifier with count = 2");
+
+  assert.equal(_("third_identifier", "ONE", "TWO"), "first entry is ONE and the second one is TWO.", "third_identifier with no count");
+  assert.equal(_("third_identifier", 0, "ONE", "TWO"), "first entry is ONE and the second one is TWO.", "third_identifier with count = 0");
+  assert.equal(_("third_identifier", 2, "ONE", "TWO"), "first entry is ONE and the second one is TWO.", "third_identifier with count = 2");
+
   done();
 });
 

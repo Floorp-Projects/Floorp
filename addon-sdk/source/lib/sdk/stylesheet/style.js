@@ -9,24 +9,14 @@ module.metadata = {
 
 const { Cc, Ci } = require("chrome");
 const { Class } = require("../core/heritage");
-const { ns } = require("../core/namespace");
-const { URL } = require('../url');
+const { URL, isLocalURL } = require('../url');
 const events = require("../system/events");
 const { loadSheet, removeSheet, isTypeValid } = require("./utils");
 const { isString } = require("../lang/type");
 const { attachTo, detachFrom, getTargetWindow } = require("../content/mod");
+const { data } = require('../self');
 
 const { freeze, create } = Object;
-const LOCAL_URI_SCHEMES = ['resource', 'data'];
-
-function isLocalURL(item) {
-  try {
-    return LOCAL_URI_SCHEMES.indexOf(URL(item).scheme) > -1;
-  }
-  catch(e) {}
-
-  return false;
-}
 
 function Style({ source, uri, type }) {
   source = source == null ? null : freeze([].concat(source));
@@ -54,7 +44,7 @@ exports.Style = Style;
 attachTo.define(Style, function (style, window) {
   if (style.uri) {
     for (let uri of style.uri)
-      loadSheet(window, uri, style.type);
+      loadSheet(window, data.url(uri), style.type);
   }
 
   if (style.source) {
@@ -69,7 +59,7 @@ attachTo.define(Style, function (style, window) {
 detachFrom.define(Style, function (style, window) {
   if (style.uri)
     for (let uri of style.uri)
-      removeSheet(window, uri);
+      removeSheet(window, data.url(uri));
 
   if (style.source) {
     let uri = "data:text/css;charset=utf-8,";

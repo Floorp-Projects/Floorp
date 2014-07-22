@@ -25,6 +25,7 @@ const { EventTarget } = require("./event/target");
 const { emit } = require('./event/core');
 const { when } = require('./system/unload');
 const selection = require('./selection');
+const { contract: loaderContract } = require('./content/loader');
 
 // All user items we add have this class.
 const ITEM_CLASS = "addon-context-menu-item";
@@ -257,7 +258,7 @@ function populateCallbackNodeData(node) {
   }
 
   data.selectionText = selection.text;
-  
+
   data.srcURL = node.src || null;
   data.value = node.value || null;
 
@@ -265,7 +266,7 @@ function populateCallbackNodeData(node) {
     data.linkURL = node.href || null;
     node = node.parentNode;
   }
-  
+
   return data;
 }
 
@@ -298,30 +299,11 @@ let baseItemRules = {
     msg: "The 'context' option must be a Context object or an array of " +
          "Context objects."
   },
-  contentScript: {
-    is: ["string", "array", "undefined"],
-    ok: function (v) {
-      return !Array.isArray(v) ||
-             v.every(function (s) typeof(s) === "string");
-    }
-  },
-  contentScriptFile: {
-    is: ["string", "array", "undefined"],
-    ok: function (v) {
-      if (!v)
-        return true;
-      let arr = Array.isArray(v) ? v : [v];
-      return arr.every(function (s) {
-        return getTypeOf(s) === "string" &&
-               getScheme(s) === 'resource';
-      });
-    },
-    msg: "The 'contentScriptFile' option must be a local file URL or " +
-         "an array of local file URLs."
-  },
   onMessage: {
     is: ["function", "undefined"]
-  }
+  },
+  contentScript: loaderContract.rules.contentScript,
+  contentScriptFile: loaderContract.rules.contentScriptFile
 };
 
 let labelledItemRules =  mix(baseItemRules, {

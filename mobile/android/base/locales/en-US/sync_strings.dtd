@@ -34,7 +34,7 @@
 <!ENTITY sync.input.key.label 'Recovery Key'>
 <!ENTITY sync.checkbox.server.label 'Use custom server'>
 <!ENTITY sync.input.server.label 'Server URL'>
-  
+
 <!-- Setup Fail -->
 <!ENTITY sync.title.fail.label 'Cannot Set Up &syncBrand.shortName.label;'>
 <!ENTITY sync.subtitle.fail.label '&syncBrand.fullName.label; could not connect to the server. Would you like to try again?'>
@@ -43,7 +43,7 @@
 <!ENTITY sync.subtitle.nointernet.label 'No internet connection available.'>
 <!ENTITY sync.subtitle.failaccount.label 'Account creation on your device failed.'>
 <!ENTITY sync.subtitle.failmultiple.label 'Do you have more than one Firefox installed? Currently, &syncBrand.fullName.label; only supports one Firefox installation at a time. Please uninstall other instances to use &syncBrand.shortName.label;.'>
-  
+
 <!-- Setup Success -->
 <!ENTITY sync.title.success.label 'Setup Complete'>
 <!ENTITY sync.subtitle.success.label1 'Your data is now being downloaded in the background. You can go to Settings to manage your account, or start browsing with &brandShortName;.'>
@@ -73,6 +73,13 @@
 
 <!-- Account strings -->
 <!ENTITY sync.account.label '&syncBrand.fullName.label; (deprecated)'>
+
+<!-- Localization note (sync.default.client.name): Default string of the "Device
+     name" menu item upon setting up Firefox Sync.  The placeholder &formatS1
+     will be replaced by the name of the Firefox release channel and &formatS2
+     by the model name of the Android device. Examples look like "Aurora on
+     GT-I1950" and "Fennec on MI 2S". -->
+<!ENTITY sync.default.client.name '&formatS1; on &formatS2;'>
 
 <!-- Bookmark folder strings -->
 <!ENTITY bookmarks.folder.menu.label 'Bookmarks Menu'>
