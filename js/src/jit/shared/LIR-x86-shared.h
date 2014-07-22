@@ -295,12 +295,6 @@ class LGuardObjectType : public LInstructionHelper<0, 1, 0>
     }
 };
 
-class LInterruptCheck : public LInstructionHelper<0, 0, 0>
-{
-  public:
-    LIR_HEADER(InterruptCheck)
-};
-
 class LMulI : public LBinaryMath<0, 1>
 {
   public:

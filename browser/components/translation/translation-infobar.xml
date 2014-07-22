@@ -181,7 +181,7 @@
             if (aTranslation.translatedFrom)
               fromLanguage.value = aTranslation.translatedFrom;
 
-            // Fill the list of supporter target languages.
+            // Fill the list of supported target languages.
             let toLanguage = this._getAnonElt("toLanguage");
             for (let code of Translation.supportedTargetLanguages)
               toLanguage.appendItem(bundle.GetStringFromName(code), code);
@@ -263,8 +263,15 @@
             let lang;
             if (this.state == Translation.STATE_OFFER)
               lang = this._getAnonElt("detectedLanguage").value;
-            else
+            else {
               lang = this._getAnonElt("fromLanguage").value;
+
+              // If we have never attempted to translate the page before the
+              // service became unavailable, "fromLanguage" isn't set.
+              if (!lang && this.state == Translation.STATE_UNAVAILABLE)
+                lang = this.translation.detectedLanguage;
+            }
+
             let langBundle =
               Cc["@mozilla.org/intl/stringbundle;1"]
                 .getService(Ci.nsIStringBundleService)

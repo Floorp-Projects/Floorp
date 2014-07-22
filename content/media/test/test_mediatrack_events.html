@@ -1,0 +1,125 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test events of media track interfaces</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+function startTest() {
+  navigator.mozGetUserMedia({audio:true, video:true, fake:true},
+    function(stream) {
+      var element = document.createElement("video");
+
+      isnot(element.audioTracks, undefined,
+            'HTMLMediaElement::AudioTracks() property should be available.');
+      isnot(element.videoTracks, undefined,
+            'HTMLMediaElement::VideoTracks() property should be available.');
+
+      function verifyEvent(e, type) {
+        is(e.type, type, "Event type should be " + type);
+        ok(e.isTrusted, "Event should be trusted.");
+        ok(!e.bubbles, "Event shouldn't bubble.");
+        ok(!e.cancelable, "Event shouldn't be cancelable.");
+      }
+
+      element.audioTracks.onaddtrack = function(e) {
+        ok(e instanceof TrackEvent, "Event fired from onaddtrack should be a TrackEvent");
+        ok(true, 'onaddtrack is expected to be called from audioTracks.');
+        verifyEvent(e, "addtrack");
+      }
+
+      element.audioTracks.onremovetrack = function(e) {
+        ok(e instanceof TrackEvent, "Event fired from onremovetrack should be a TrackEvent");
+        ok(true, 'onremovetrack is expected to be called from audioTracks.');
+        verifyEvent(e, "removetrack");
+      }
+
+      element.audioTracks.onchange = function(e) {
+        ok(e instanceof window.Event, "Event fired from onchange should be a simple event.");
+        ok(true, 'onchange is expected to be called from audioTracks.');
+        verifyEvent(e, "change");
+      }
+
+      element.videoTracks.onaddtrack = function(e) {
+        ok(e instanceof TrackEvent, "Event fired from onaddtrack should be a TrackEvent");
+        ok(true, 'onaddtrack is expected to be called from videoTracks.');
+        verifyEvent(e, "addtrack");
+      }
+
+      element.videoTracks.onremovetrack = function(e) {
+        ok(e instanceof TrackEvent, "Event fired from onremovetrack should be a TrackEvent");
+        ok(true, 'onremovetrack is expected to be called from videoTracks.');
+        verifyEvent(e, "removetrack");
+      }
+
+      element.videoTracks.onchange = function(e) {
+        ok(e instanceof window.Event, "Event fired from onchange should be a simple event.");
+        ok(true, 'onchange is expected to be called from videoTracks.');
+        verifyEvent(e, "change");
+      }
+
+     function onended() {
+        ok(true, 'Event ended is expected to be fired on element.');
+        element.onended = null;
+        element.onplaying = null;
+        element.onpause = null;
+        SimpleTest.finish();
+      }
+
+      function onpause() {
+        element.onpause = null;
+        if (element.ended) {
+          return;
+        }
+        if (steps == 1) {
+          element.audioTracks[0].enabled = false;
+          element.videoTracks[0].selected = false;
+          element.onplaying = onplaying;
+          element.play();
+          steps++;
+        }
+      }
+
+      function onplaying() {
+        element.onplaying = null;
+        if (element.ended) {
+          return;
+        }
+        if (steps == 1) {
+          element.onpause = onpause;
+          element.pause();
+        } else if (steps == 2) {
+          stream.stop();
+        }
+      }
+
+      var steps = 0;
+      element.mozSrcObject = stream;
+      element.onplaying = onplaying;
+      element.onended = onended;
+      element.play();
+      steps++;
+    },
+    function(err) {
+      ok(false, 'Unexpected error fired with: ' + err);
+      SimpleTest.finish();
+    }
+  );
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {
+    "set": [
+      ["media.track.enabled", true]
+    ]
+  }, startTest);
+
+</script>
+</pre>
+</body>
+</html>

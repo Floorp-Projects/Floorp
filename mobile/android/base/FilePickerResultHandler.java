@@ -4,7 +4,11 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.mozglue.GeckoLoader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -16,6 +20,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Process;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.support.v4.app.FragmentActivity;
@@ -26,18 +31,12 @@ import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.text.format.Time;
 import android.util.Log;
-import android.os.Process;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.IOException;
 
 class FilePickerResultHandler implements ActivityResultHandler {
     private static final String LOGTAG = "GeckoFilePickerResultHandler";
     private static final String UPLOADS_DIR = "uploads";
 
-    protected final FilePicker.ResultHandler handler;
+    private final FilePicker.ResultHandler handler;
     private final int tabId;
     private final File cacheDir;
 
@@ -48,11 +47,11 @@ class FilePickerResultHandler implements ActivityResultHandler {
     /* Use this constructor to asynchronously listen for results */
     public FilePickerResultHandler(final FilePicker.ResultHandler handler, final Context context, final int tabId) {
         this.tabId = tabId;
-        cacheDir = new File(context.getCacheDir(), UPLOADS_DIR);
+        this.cacheDir = new File(context.getCacheDir(), UPLOADS_DIR);
         this.handler = handler;
     }
 
-    private void sendResult(String res) {
+    void sendResult(String res) {
         if (handler != null) {
             handler.gotFile(res);
         }
@@ -111,8 +110,7 @@ class FilePickerResultHandler implements ActivityResultHandler {
             }
         }
 
-        lm.initLoader(uri.hashCode(), null, new FileLoaderCallbacks(uri));
-        return;
+        lm.initLoader(uri.hashCode(), null, new FileLoaderCallbacks(uri, cacheDir, tabId));
     }
 
     public String generateImageName() {
@@ -160,20 +158,27 @@ class FilePickerResultHandler implements ActivityResultHandler {
         private void tryFileLoaderCallback() {
             final FragmentActivity fa = (FragmentActivity) GeckoAppShell.getGeckoInterface().getActivity();
             final LoaderManager lm = fa.getSupportLoaderManager();
-            lm.initLoader(uri.hashCode(), null, new FileLoaderCallbacks(uri));
+            lm.initLoader(uri.hashCode(), null, new FileLoaderCallbacks(uri, cacheDir, tabId));
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) { }
     }
 
+    /**
+     * This class's only dependency on FilePickerResultHandler is sendResult.
+     */
     private class FileLoaderCallbacks implements LoaderCallbacks<Cursor>,
                                                  Tabs.OnTabsChangedListener {
-        final private Uri uri;
-        private String tempFile;
+        private final Uri uri;
+        private final File cacheDir;
+        private final int tabId;
+        /* inner-access */ String tempFile;
 
-        public FileLoaderCallbacks(Uri uri) {
+        public FileLoaderCallbacks(Uri uri, File cacheDir, int tabId) {
             this.uri = uri;
+            this.cacheDir = cacheDir;
+            this.tabId = tabId;
         }
 
         @Override
@@ -193,7 +198,7 @@ class FilePickerResultHandler implements ActivityResultHandler {
                 String name = cursor.getString(0);
                 // tmp filenames must be at least 3 characters long. Add a prefix to make sure that happens
                 String fileName = "tmp_" + Process.myPid() + "-";
-                String fileExt = null;
+                String fileExt;
                 int period;
 
                 final FragmentActivity fa = (FragmentActivity) GeckoAppShell.getGeckoInterface().getActivity();

@@ -682,6 +682,11 @@ public final class GeckoProfile {
 
                 final ContentResolver cr = context.getContentResolver();
 
+                // We pass the number of added bookmarks to ensure that the
+                // indices of the distribution and default bookmarks are
+                // contiguous. Because there are always at least as many
+                // bookmarks as there are favicons, we can also guarantee that
+                // the favicon IDs won't overlap.
                 final int offset = BrowserDB.addDistributionBookmarks(cr, distribution, 0);
                 BrowserDB.addDefaultBookmarks(context, cr, offset);
             }

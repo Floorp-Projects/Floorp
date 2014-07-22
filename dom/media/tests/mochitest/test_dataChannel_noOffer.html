@@ -18,7 +18,7 @@
     var pc = new mozRTCPeerConnection();
 
     // necessary to circumvent bug 864109
-    var options = { mandatory: { OfferToReceiveAudio: true} };
+    var options = { offerToReceiveAudio: true };
 
     pc.createOffer(function (offer) {
       ok(!offer.sdp.contains("m=application"),
