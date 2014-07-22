@@ -307,13 +307,13 @@ on(hides, "data", ({target}) => emit(panelFor(target), "hide"));
 on(ready, "data", ({target}) => {
   let panel = panelFor(target);
   let window = domPanel.getContentDocument(target).defaultView;
-  
+
   workerFor(panel).attach(window);
 });
 
 on(start, "data", ({target}) => {
   let panel = panelFor(target);
   let window = domPanel.getContentDocument(target).defaultView;
-  
+
   attach(styleFor(panel), window);
 });

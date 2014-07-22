@@ -268,6 +268,33 @@ exports.testLoadContentPage = function(assert, done) {
   });
 }
 
+exports.testLoadContentPageRelativePath = function(assert, done) {
+  const self = require("sdk/self");
+  const { merge } = require("sdk/util/object");
+
+  let loader = Loader(module, null, null, {
+    modules: {
+      "sdk/self": merge({}, self, {
+        data: merge({}, self.data, fixtures)
+      })
+    }
+  });
+
+  let page = loader.require("sdk/page-worker").Page({
+    onMessage: function(message) {
+      // The message is an array whose first item is the test method to call
+      // and the rest of whose items are arguments to pass it.
+      let msg = message.shift();
+      if (msg == "done")
+        return done();
+      assert[msg].apply(assert, message);
+    },
+    contentURL: "./test-page-worker.html",
+    contentScriptFile: "./test-page-worker.js",
+    contentScriptWhen: "ready"
+  });
+}
+
 exports.testAllowScriptDefault = function(assert, done) {
   let page = Page({
     onMessage: function(message) {

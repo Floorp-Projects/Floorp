@@ -1028,20 +1028,20 @@ exports.testPageModCss = function(assert, done) {
     'data:text/html;charset=utf-8,<div style="background: silver">css test</div>', [{
       include: ["*", "data:*"],
       contentStyle: "div { height: 100px; }",
-      contentStyleFile: data.url("css-include-file.css")
+      contentStyleFile: [data.url("include-file.css"), "./border-style.css"]
     }],
     function(win, done) {
       let div = win.document.querySelector("div");
-      assert.equal(
-        div.clientHeight,
-        100,
-        "PageMod contentStyle worked"
-      );
-      assert.equal(
-       div.offsetHeight,
-        120,
-        "PageMod contentStyleFile worked"
-      );
+
+      assert.equal(div.clientHeight, 100,
+        "PageMod contentStyle worked");
+   
+      assert.equal(div.offsetHeight, 120,
+        "PageMod contentStyleFile worked");
+
+      assert.equal(win.getComputedStyle(div).borderTopStyle, "dashed",
+        "PageMod contentStyleFile with relative path worked");
+
       done();
     }
   );
@@ -1165,6 +1165,21 @@ exports.testPageModCssAutomaticDestroy = function(assert, done) {
   });
 };
 
+exports.testPageModContentScriptFile = function(assert, done) {
+
+  testPageMod(assert, done, "about:license", [{
+      include: "about:*",
+      contentScriptWhen: "start",
+      contentScriptFile: "./test-contentScriptFile.js",
+      onMessage: message => {
+        assert.equal(message, "msg from contentScriptFile",
+          "PageMod contentScriptFile with relative path worked");
+      }
+    }],
+    (win, done) => done()
+  );
+
+};
 
 exports.testPageModTimeout = function(assert, done) {
   let tab = null
