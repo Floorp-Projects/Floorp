@@ -74,7 +74,7 @@ MOZ_LOCALE_SWITCHER=1
 MOZ_DEVICES=1
 
 # Enable second screen using native Android libraries
-MOZ_NATIVE_DEVICES=
+MOZ_NATIVE_DEVICES=1
 
 # Mark as WebGL conformant
 MOZ_WEBGL_CONFORMANT=1
