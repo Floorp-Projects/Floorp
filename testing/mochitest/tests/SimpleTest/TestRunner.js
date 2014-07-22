@@ -142,7 +142,7 @@ function StructuredLogger(name) {
         var data = {test: test, subtest: subtest, status: status};
 
         if (message !== null) {
-            data.message = message;
+            data.message = String(message);
         }
         if (expected != status && status != 'SKIP') {
             data.expected = expected;
@@ -155,7 +155,7 @@ function StructuredLogger(name) {
         var data = {test: test, status: status};
 
         if (message !== null) {
-            data.message = message;
+            data.message = String(message);
         }
         if (expected != status) {
             data.expected = expected;
