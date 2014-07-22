@@ -1,5 +1,5 @@
 function testSubstrLatin1() {
-    var s1 = toLatin1("abcdefghijklmnopqrstuvwxyz12345678900000a");
+    var s1 = "abcdefghijklmnopqrstuvwxyz12345678900000a";
 
     // Static strings.
     assertEq(s1.substr(s1.length - 1), "a");
@@ -51,7 +51,7 @@ function testSubstrTwoByte() {
 testSubstrTwoByte();
 
 function testSubstring() {
-    var s1 = toLatin1("abcdefghijklmnopqrstuvwxyz123456789000ab");
+    var s1 = "abcdefghijklmnopqrstuvwxyz123456789000ab";
     var s2 = s1.substring(1, 8);
     assertEq(isLatin1(s2), true);
     assertEq(s2, "bcdefgh");
@@ -62,7 +62,7 @@ function testSubstring() {
 testSubstring();
 
 function testSlice() {
-    var s1 = toLatin1("abcdefghijklmnopqrstuvwxyz123456789000ABC");
+    var s1 = "abcdefghijklmnopqrstuvwxyz123456789000ABC";
     var s2 = s1.slice(1, 8);
     assertEq(isLatin1(s2), true);
     assertEq(s2, "bcdefgh");
@@ -76,7 +76,8 @@ function testUndepend() {
     // Latin1
     var s = "abcdefg".repeat(7);
     s.indexOf("def"); // flatten
-    s = toLatin1(s);
+    assertEq(isLatin1(s), true);
+
     var dep = s.substr(7);
     var res = dep.replace(/abcdef/g, ""); // StrReplaceRegexpRemove undepends.
     assertEq(res, "gggggg");

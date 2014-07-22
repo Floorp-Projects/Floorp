@@ -1,6 +1,6 @@
 assertEq(isLatin1("Foo123\u1200"), false);
 
-s = toLatin1("Foo123");
+s = "Foo123";
 assertEq(isLatin1(s), true);
 
 function testEq(s) {
@@ -23,7 +23,6 @@ function testEq(s) {
 }
 
 s = "foo01\u00c7";
-s = toLatin1(s);
 testEq(s);
 testEq(s);
 
@@ -34,8 +33,8 @@ function testConcat() {
 
     // Following tests create fat inline strings.
     assertEq(concat("abc", "def"), "abcdef");
-    var s1 = toLatin1("ABC");
-    var s2 = toLatin1("DEF");
+    var s1 = "ABC";
+    var s2 = "DEF";
     assertEq(concat(s1, s2), "ABCDEF");
     assertEq(concat(s1, "GHI\u0580"), "ABCGHI\u0580");
     assertEq(concat("GHI\u0580", s2), "GHI\u0580DEF");
@@ -44,7 +43,7 @@ function testConcat() {
     assertEq(isLatin1(s2), true);
 
     // Create a Latin1 rope.
-    var s3 = toLatin1("0123456789012345678901234567890123456789");
+    var s3 = "0123456789012345678901234567890123456789";
     var rope = concat(s1, s3);
     assertEq(isLatin1(rope), true);
     assertEq(rope, "ABC0123456789012345678901234567890123456789");
@@ -64,7 +63,7 @@ function testConcat() {
     assertEq(isLatin1(rope), false);
 
     // Build a Latin1 rope with left-most string an extensible string.
-    var s4 = toLatin1("adsfasdfjkasdfkjasdfasasdfasdf");
+    var s4 = "adsfasdfjkasdfkjasdfasasdfasdf";
     for (var i=0; i<5; i++) {
 	s4 = concat(s4, s1);
 	assertEq(s4 === ".".repeat(s4.length), false); // Flatten rope.
@@ -84,8 +83,8 @@ function testFlattenDependent() {
     }
 
     // Create some latin1 strings.
-    var s1 = toLatin1("Foo0123456789bar012345---");
-    var s2 = toLatin1("Foo0123456789bar012345+++");
+    var s1 = "Foo0123456789bar012345---";
+    var s2 = "Foo0123456789bar012345+++";
     assertEq(isLatin1(s1), true);
     assertEq(isLatin1(s2), true);
 

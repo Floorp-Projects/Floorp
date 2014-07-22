@@ -649,9 +649,6 @@ class JSLinearString : public JSString
         JS::AutoCheckCannotGC nogc;
         return hasLatin1Chars() ? latin1Chars(nogc)[index] : twoByteChars(nogc)[index];
     }
-
-    /* Temporary, unsafe helper function for bug 998392. Don't use for anything else. */
-    void debugUnsafeConvertToLatin1();
 };
 
 JS_STATIC_ASSERT(sizeof(JSLinearString) == sizeof(JSString));

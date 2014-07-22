@@ -150,27 +150,6 @@ JSString::equals(const char *s)
 }
 #endif /* DEBUG */
 
-void
-JSLinearString::debugUnsafeConvertToLatin1()
-{
-    // Temporary helper function to test changes for bug 998392.
-
-    MOZ_ASSERT(hasTwoByteChars());
-    MOZ_ASSERT(!hasBase());
-
-    size_t len = length();
-    const jschar *twoByteChars = rawTwoByteChars();
-    Latin1Char *latin1Chars = (Latin1Char *)twoByteChars;
-
-    for (size_t i = 0; i < len; i++) {
-        MOZ_ASSERT((twoByteChars[i] & 0xff00) == 0);
-        latin1Chars[i] = Latin1Char(twoByteChars[i]);
-    }
-
-    latin1Chars[len] = '\0';
-    d.u1.flags |= LATIN1_CHARS_BIT;
-}
-
 template <typename CharT>
 static MOZ_ALWAYS_INLINE bool
 AllocChars(ThreadSafeContext *maybecx, size_t length, CharT **chars, size_t *capacity)
