@@ -751,47 +751,69 @@ BluetoothHandsfreeInterface::DeviceStatusNotification(
 
 /* Responses */
 
-bt_status_t
-BluetoothHandsfreeInterface::CopsResponse(const char* aCops)
+void
+BluetoothHandsfreeInterface::CopsResponse(
+  const char* aCops, BluetoothHandsfreeResultHandler* aRes)
 {
-  return mInterface->cops_response(aCops);
+  bt_status_t status = mInterface->cops_response(aCops);
+
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(
+      aRes, &BluetoothHandsfreeResultHandler::CopsResponse, status);
+  }
 }
 
-bt_status_t
-BluetoothHandsfreeInterface::CindResponse(int aSvc, int aNumActive,
-                                          int aNumHeld,
-                                          bthf_call_state_t aCallSetupState,
-                                          int aSignal, int aRoam, int aBattChg)
+void
+BluetoothHandsfreeInterface::CindResponse(
+  int aSvc, int aNumActive, int aNumHeld, bthf_call_state_t aCallSetupState,
+  int aSignal, int aRoam, int aBattChg, BluetoothHandsfreeResultHandler* aRes)
 {
-  return mInterface->cind_response(aSvc, aNumActive, aNumHeld,
-                                   aCallSetupState, aSignal, aRoam,
-                                   aBattChg);
+  bt_status_t status = mInterface->cind_response(aSvc, aNumActive, aNumHeld,
+                                                 aCallSetupState, aSignal,
+                                                 aRoam, aBattChg);
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(
+      aRes, &BluetoothHandsfreeResultHandler::CindResponse, status);
+  }
 }
 
-bt_status_t
-BluetoothHandsfreeInterface::FormattedAtResponse(const char* aRsp)
+void
+BluetoothHandsfreeInterface::FormattedAtResponse(
+  const char* aRsp, BluetoothHandsfreeResultHandler* aRes)
 {
-  return mInterface->formatted_at_response(aRsp);
+  bt_status_t status = mInterface->formatted_at_response(aRsp);
+
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(
+      aRes, &BluetoothHandsfreeResultHandler::FormattedAtResponse, status);
+  }
 }
 
-bt_status_t
+void
 BluetoothHandsfreeInterface::AtResponse(bthf_at_response_t aResponseCode,
-                                        int aErrorCode)
+                                        int aErrorCode,
+                                        BluetoothHandsfreeResultHandler* aRes)
 {
-  return mInterface->at_response(aResponseCode, aErrorCode);
+  bt_status_t status = mInterface->at_response(aResponseCode, aErrorCode);
+
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(
+      aRes, &BluetoothHandsfreeResultHandler::AtResponse, status);
+  }
 }
 
-bt_status_t
-BluetoothHandsfreeInterface::ClccResponse(int aIndex,
-                                          bthf_call_direction_t aDir,
-                                          bthf_call_state_t aState,
-                                          bthf_call_mode_t aMode,
-                                          bthf_call_mpty_type_t aMpty,
-                                          const char* aNumber,
-                                          bthf_call_addrtype_t aType)
+void
+BluetoothHandsfreeInterface::ClccResponse(
+  int aIndex, bthf_call_direction_t aDir, bthf_call_state_t aState,
+  bthf_call_mode_t aMode, bthf_call_mpty_type_t aMpty, const char* aNumber,
+  bthf_call_addrtype_t aType, BluetoothHandsfreeResultHandler* aRes)
 {
-  return mInterface->clcc_response(aIndex, aDir, aState, aMode, aMpty,
-                                   aNumber, aType);
+  bt_status_t status = mInterface->clcc_response(aIndex, aDir, aState, aMode,
+                                                 aMpty, aNumber, aType);
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(
+      aRes, &BluetoothHandsfreeResultHandler::ClccResponse, status);
+  }
 }
 
 /* Phone State */
