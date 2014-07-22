@@ -419,6 +419,22 @@ public:
   // Setters
   // =======
 
+  void UpdateMainMinSize(nscoord aNewMinSize)
+  {
+    MOZ_ASSERT(mMainMinSize == 0 ||
+               mFrame->IsThemed(mFrame->StyleDisplay()),
+               "Should only update main min-size for min-height:auto, "
+               "which would initially be resolved as 0 (unless we have an "
+               "additional themed-widget-imposed minimum size)");
+
+    if (aNewMinSize > mMainMinSize) {
+      mMainMinSize = aNewMinSize;
+      // Clamp main-max-size & main-size to be >= new min-size:
+      mMainMaxSize = std::max(mMainMaxSize, aNewMinSize);
+      mMainSize = std::max(mMainSize, aNewMinSize);
+    }
+  }
+
   // This sets our flex base size, and then sets our main size to the
   // resulting "hypothetical main size" (the base size clamped to our
   // main-axis [min,max] sizing constraints).
@@ -534,10 +550,13 @@ protected:
   const nsMargin mBorderPadding;
   nsMargin mMargin; // non-const because we need to resolve auto margins
 
+  // These are non-const so that we can lazily update them with the item's
+  // intrinsic size (obtained via a "measuring" reflow), when necessary.
+  // (e.g. for "flex-basis:auto;height:auto" & "min-height:auto")
   nscoord mFlexBaseSize;
+  nscoord mMainMinSize;
+  nscoord mMainMaxSize;
 
-  const nscoord mMainMinSize;
-  const nscoord mMainMaxSize;
   const nscoord mCrossMinSize;
   const nscoord mCrossMaxSize;
 
@@ -1030,7 +1049,17 @@ nsFlexContainerFrame::
     return;
   }
 
-  if (NS_AUTOHEIGHT != aFlexItem.GetFlexBaseSize()) {
+  // Both "flex-basis:auto;height:auto" & "min-height:auto" require that we
+  // resolve our max-content height.
+  bool isMainSizeAuto = (NS_AUTOHEIGHT == aFlexItem.GetFlexBaseSize());
+
+  // 'min-height:auto' is treated as 0 in most code (e.g. in the reflow state),
+  // so we have to actually go the source & check the style struct:
+  bool isMainMinSizeAuto =
+    (eStyleUnit_Auto ==
+     aFlexItem.Frame()->StylePosition()->mMinHeight.GetUnit());
+
+  if (!isMainSizeAuto && !isMainMinSizeAuto) {
     // Nothing to do; this function's only relevant for flex items
     // with a base size of "auto" (or equivalent).
     // XXXdholbert If & when we handle "min-height: min-content" for flex items,
@@ -1038,8 +1067,7 @@ nsFlexContainerFrame::
     return;
   }
 
-  // If we get here, we're vertical and our main size ended up being
-  // unconstrained. We need to use our "max-content" height, which is what we
+  // We need to compute our "max-content" height, which is what we
   // get from reflowing into our available width.
   // Note: This has to come *after* we construct the FlexItem, since we
   // invoke at least one convenience method (ResolveStretchedCrossSize) which
@@ -1073,8 +1101,9 @@ nsFlexContainerFrame::
     childRSForMeasuringHeight.mFlags.mHResize = true;
   }
 
-  // If this item is flexible (vertically), then we assume that the
-  // computed-height we're reflowing with now could be different
+  // If this item is flexible (vertically), or if we're measuring the
+  // 'auto' min-height and our main-size is something else, then we assume
+  // that the computed-height we're reflowing with now could be different
   // from the one we'll use for this flex item's "actual" reflow later on.
   // In that case, we need to be sure the flex item treats this as a
   // vertical resize, even though none of its ancestors are necessarily
@@ -1082,7 +1111,8 @@ nsFlexContainerFrame::
   // (Note: We don't have to do this for width, because InitResizeFlags
   // will always turn on mHResize on when it sees that the computed width
   // is different from current width, and that's all we need.)
-  if (!aFlexItem.IsFrozen()) {  // Are we flexible?
+  if (!aFlexItem.IsFrozen() ||  // Are we flexible?
+      !isMainSizeAuto) { // Are we *only* measuring this for min-height?
     childRSForMeasuringHeight.mFlags.mVResize = true;
   }
 
@@ -1107,7 +1137,13 @@ nsFlexContainerFrame::
     childRSForMeasuringHeight.ComputedPhysicalBorderPadding().TopBottom();
   childDesiredHeight = std::max(0, childDesiredHeight);
 
-  aFlexItem.SetFlexBaseSizeAndMainSize(childDesiredHeight);
+  if (isMainSizeAuto) {
+    aFlexItem.SetFlexBaseSizeAndMainSize(childDesiredHeight);
+  }
+  if (isMainMinSizeAuto) {
+    aFlexItem.UpdateMainMinSize(childDesiredHeight);
+  }
+
   aFlexItem.SetHadMeasuringReflow();
 }
 
