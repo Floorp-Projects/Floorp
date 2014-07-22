@@ -148,7 +148,7 @@ let FrameSnapshotActor = protocol.ActorClass({
     // To get a screenshot, replay all the steps necessary to render the frame,
     // by invoking the context calls up to and including the specified one.
     // This will be done in a custom framebuffer in case of a WebGL context.
-    let { replayContext, lastDrawCallIndex } = ContextUtils.replayAnimationFrame({
+    let replayData = ContextUtils.replayAnimationFrame({
       contextType: global,
       canvas: canvas,
       calls: calls,
@@ -156,21 +156,22 @@ let FrameSnapshotActor = protocol.ActorClass({
       last: index
     });
 
+    let { replayContext, lastDrawCallIndex, doCleanup } = replayData;
     let screenshot;
 
     // Depending on the canvas' context, generating a screenshot is done
-    // in different ways. In case of the WebGL context, we also need to reset
-    // the framebuffer binding to the default value.
+    // in different ways.
     if (global == CallWatcherFront.CANVAS_WEBGL_CONTEXT) {
       screenshot = ContextUtils.getPixelsForWebGL(replayContext);
-      replayContext.bindFramebuffer(replayContext.FRAMEBUFFER, null);
       screenshot.flipped = true;
-    }
-    // In case of 2D contexts, no additional special treatment is necessary.
-    else if (global == CallWatcherFront.CANVAS_2D_CONTEXT) {
+    } else if (global == CallWatcherFront.CANVAS_2D_CONTEXT) {
       screenshot = ContextUtils.getPixelsFor2D(replayContext);
       screenshot.flipped = false;
     }
+
+    // In case of the WebGL context, we also need to reset the framebuffer
+    // binding to the original value, after generating the screenshot.
+    doCleanup();
 
     screenshot.index = lastDrawCallIndex;
     return screenshot;
@@ -368,7 +369,7 @@ let CanvasActor = exports.CanvasActor = protocol.ActorClass({
     let index = this._lastDrawCallIndex;
     let width = this._lastContentCanvasWidth;
     let height = this._lastContentCanvasHeight;
-    let flipped = this._lastThumbnailFlipped;
+    let flipped = !!this._lastThumbnailFlipped; // undefined -> false
     let pixels = ContextUtils.getPixelStorage()["32bit"];
     let lastDrawCallScreenshot = {
       index: index,
@@ -584,29 +585,35 @@ let ContextUtils = {
    * @param number last
    *        The last (inclusive) function call to end at.
    * @return object
-   *         The context on which the specified calls were invoked and the
-   *         last registered draw call's index.
+   *         The context on which the specified calls were invoked, the
+   *         last registered draw call's index and a cleanup function, which
+   *         needs to be called whenever any potential followup work is finished.
    */
   replayAnimationFrame: function({ contextType, canvas, calls, first, last }) {
     let w = canvas.width;
     let h = canvas.height;
 
-    let replayCanvas;
     let replayContext;
     let customFramebuffer;
     let lastDrawCallIndex = -1;
+    let doCleanup = () => {};
 
     // In case of WebGL contexts, rendering will be done offscreen, in a
-    // custom framebuffer, but on the provided canvas context.
+    // custom framebuffer, but using the same provided context. This is
+    // necessary because it's very memory-unfriendly to rebuild all the
+    // required GL state (like recompiling shaders, setting global flags, etc.)
+    // in an entirely new canvas. However, special care is needed to not
+    // permanently affect the existing GL state in the process.
     if (contextType == CallWatcherFront.CANVAS_WEBGL_CONTEXT) {
-      replayCanvas = canvas;
-      replayContext = this.getWebGLContext(replayCanvas);
-      customFramebuffer = this.createBoundFramebuffer(replayContext, w, h);
+      let gl = replayContext = this.getWebGLContext(canvas);
+      let { newFramebuffer, oldFramebuffer } = this.createBoundFramebuffer(gl, w, h);
+      customFramebuffer = newFramebuffer;
+      doCleanup = () => gl.bindFramebuffer(gl.FRAMEBUFFER, oldFramebuffer);
     }
     // In case of 2D contexts, draw everything on a separate canvas context.
     else if (contextType == CallWatcherFront.CANVAS_2D_CONTEXT) {
       let contentDocument = canvas.ownerDocument;
-      replayCanvas = contentDocument.createElement("canvas");
+      let replayCanvas = contentDocument.createElement("canvas");
       replayCanvas.width = w;
       replayCanvas.height = h;
       replayContext = replayCanvas.getContext("2d");
@@ -621,23 +628,24 @@ let ContextUtils = {
       // to the default value, since we want to perform the rendering offscreen.
       if (name == "bindFramebuffer" && args[1] == null) {
         replayContext.bindFramebuffer(replayContext.FRAMEBUFFER, customFramebuffer);
+        continue;
+      }
+      if (type == CallWatcherFront.METHOD_FUNCTION) {
+        replayContext[name].apply(replayContext, args);
+      } else if (type == CallWatcherFront.SETTER_FUNCTION) {
+        replayContext[name] = args;
       } else {
-        if (type == CallWatcherFront.METHOD_FUNCTION) {
-          replayContext[name].apply(replayContext, args);
-        } else if (type == CallWatcherFront.SETTER_FUNCTION) {
-          replayContext[name] = args;
-        } else {
-          // Ignore getter calls.
-        }
-        if (CanvasFront.DRAW_CALLS.has(name)) {
-          lastDrawCallIndex = i;
-        }
+        // Ignore getter calls.
+      }
+      if (CanvasFront.DRAW_CALLS.has(name)) {
+        lastDrawCallIndex = i;
       }
     }
 
     return {
       replayContext: replayContext,
-      lastDrawCallIndex: lastDrawCallIndex
+      lastDrawCallIndex: lastDrawCallIndex,
+      doCleanup: doCleanup
     };
   },
 
@@ -692,16 +700,21 @@ let ContextUtils = {
    *         The generated framebuffer object.
    */
   createBoundFramebuffer: function(gl, width, height) {
-    let framebuffer = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    let oldFramebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+    let oldRenderbufferBinding = gl.getParameter(gl.RENDERBUFFER_BINDING);
+    let oldTextureBinding = gl.getParameter(gl.TEXTURE_BINDING_2D);
 
-    // Use a texture as the color rendebuffer attachment, since consumenrs of
+    let newFramebuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, newFramebuffer);
+
+    // Use a texture as the color rendebuffer attachment, since consumers of
     // this function will most likely want to read the rendered pixels back.
     let colorBuffer = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, colorBuffer);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 
     let depthBuffer = gl.createRenderbuffer();
@@ -711,10 +724,10 @@ let ContextUtils = {
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, colorBuffer, 0);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
 
-    gl.bindTexture(gl.TEXTURE_2D, null);
-    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+    gl.bindTexture(gl.TEXTURE_2D, oldTextureBinding);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, oldRenderbufferBinding);
 
-    return framebuffer;
+    return { oldFramebuffer, newFramebuffer };
   }
 };
 
