@@ -291,7 +291,7 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
         SetMarkStackLimit(this, atoi(size));
 
     ScopedJSDeletePtr<Zone> atomsZone(new_<Zone>(this));
-    if (!atomsZone || !atomsZone->init())
+    if (!atomsZone || !atomsZone->init(true))
         return false;
 
     JS::CompartmentOptions options;
@@ -303,8 +303,6 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     atomsZone->compartments.append(atomsCompartment.get());
 
     atomsCompartment->isSystem = true;
-    atomsZone->isSystem = true;
-    atomsZone->setGCLastBytes(8192, GC_NORMAL);
 
     atomsZone.forget();
     this->atomsCompartment_ = atomsCompartment.forget();
