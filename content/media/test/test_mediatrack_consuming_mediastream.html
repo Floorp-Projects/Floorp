@@ -1,0 +1,157 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test track interfaces when consuming a MediaStream from gUM</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+function startTest() {
+  navigator.mozGetUserMedia({audio:true, video:true, fake:true},
+    function(stream) {
+      var element = document.createElement("video");
+
+      var audioOnchange = 0;
+      var audioOnaddtrack = 0;
+      var audioOnremovetrack = 0;
+      var videoOnchange = 0;
+      var videoOnaddtrack = 0;
+      var videoOnremovetrack = 0;
+      var isPlaying = false;
+
+      element.audioTracks.onaddtrack = function(e) {
+        audioOnaddtrack++;
+      }
+
+      element.audioTracks.onremovetrack = function(e) {
+        audioOnremovetrack++;
+      }
+
+      element.audioTracks.onchange = function(e) {
+        audioOnchange++;
+      }
+
+      element.videoTracks.onaddtrack = function(e) {
+        videoOnaddtrack++;
+      }
+
+      element.videoTracks.onremovetrack = function(e) {
+        videoOnremovetrack++;
+      }
+
+      element.videoTracks.onchange = function(e) {
+        videoOnchange++;
+      }
+
+      function checkTrackRemoved() {
+        if (isPlaying) {
+          is(audioOnremovetrack, 1, 'Calls of onremovetrack on audioTracks should be 1.');
+          is(element.audioTracks.length, 0, 'The length of audioTracks should be 0.');
+          is(videoOnremovetrack, 1, 'Calls of onremovetrack on videoTracks should be 1.');
+          is(element.videoTracks.length, 0, 'The length of videoTracks should be 0.');
+        }
+      }
+
+      function onended() {
+        ok(true, 'Event ended is expected to be fired on element.');
+        checkTrackRemoved();
+        element.onended = null;
+        element.onplaying = null;
+        element.onpause = null;
+        SimpleTest.finish();
+      }
+
+      function checkTrackAdded() {
+        isPlaying = true;
+        is(audioOnaddtrack, 1, 'Calls of onaddtrack on audioTracks should be 1.');
+        is(element.audioTracks.length, 1, 'The length of audioTracks should be 1.');
+        ok(element.audioTracks[0].enabled, 'Audio track should be enabled as default.');
+        is(videoOnaddtrack, 1, 'Calls of onaddtrack on videoTracks should be 1.');
+        is(element.videoTracks.length, 1, 'The length of videoTracks should be 1.');
+        is(element.videoTracks.selectedIndex, 0,
+           'The first video track is set selected as default.');
+      }
+
+      function setTrackEnabled(enabled) {
+        element.audioTracks[0].enabled = enabled;
+        element.videoTracks[0].selected = enabled;
+      }
+
+      function checkTrackChanged(calls, enabled) {
+        is(audioOnchange, calls, 'Calls of onchange on audioTracks should be '+calls);
+        is(element.audioTracks[0].enabled, enabled,
+           'Enabled value of the audio track should be ' +enabled);
+        is(videoOnchange, calls, 'Calls of onchange on videoTracks should be '+calls);
+        is(element.videoTracks[0].selected, enabled,
+           'Selected value of the video track should be ' +enabled);
+        var index = enabled ? 0 : -1;
+        is(element.videoTracks.selectedIndex, index,
+           'SelectedIndex of video tracks should be ' +index);
+      }
+
+      function onpause() {
+        element.onpause = null;
+        if (element.ended) {
+          return;
+        }
+        if (steps == 1) {
+          setTrackEnabled(false);
+          element.onplaying = onplaying;
+          element.play();
+          steps++;
+        } else if (steps == 2) {
+          setTrackEnabled(true);
+          element.onplaying = onplaying;
+          element.play();
+          steps++;
+        }
+      }
+
+      function onplaying() {
+        element.onplaying = null;
+        if (element.ended) {
+          return;
+        }
+        if (steps == 1) {
+          element.onpause = onpause;
+          element.pause();
+          checkTrackAdded();
+        } else if (steps == 2) {
+          element.onpause = onpause;
+          element.pause();
+          checkTrackChanged(1, false);
+        } else if (steps == 3) {
+          checkTrackChanged(2, true);
+          stream.stop();
+        }
+      }
+
+      var steps = 0;
+      element.mozSrcObject = stream;
+      element.onplaying = onplaying;
+      element.onended = onended;
+      element.play();
+      steps++;
+    },
+    function(err) {
+      ok(false, 'Unexpected error fired with: ' + err);
+      SimpleTest.finish();
+    }
+  );
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {
+    "set": [
+      ["media.track.enabled", true]
+    ]
+  }, startTest);
+
+</script>
+</pre>
+</body>
+</html>

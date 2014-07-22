@@ -54,8 +54,8 @@ public:
 
     MediaBuffer(const sp<ABuffer> &buffer);
 
-    // Decrements the reference count and returns the buffer to its
-    // associated MediaBufferGroup if the reference count drops to 0.
+    // Decrements the reference count and deletes it if the reference
+    // count drops to 0.
     void release();
 
     // Increments the reference count.

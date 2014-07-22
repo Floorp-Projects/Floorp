@@ -151,6 +151,7 @@ public:
   virtual int SendRTCPPacket(int channel, const void *data, int len) ;
 
 
+  virtual uint64_t CodecPluginID() { return 0; }
 
   WebrtcAudioConduit():
                       mOtherDirection(nullptr),

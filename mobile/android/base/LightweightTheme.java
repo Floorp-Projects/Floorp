@@ -8,7 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
-
+import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 import org.json.JSONObject;
 
 import android.app.Application;
@@ -34,8 +34,8 @@ import java.util.List;
 public class LightweightTheme implements GeckoEventListener {
     private static final String LOGTAG = "GeckoLightweightTheme";
 
-    private Application mApplication;
-    private Handler mHandler;
+    private final Application mApplication;
+    /* inner-access */ final Handler mHandler;
 
     private Bitmap mBitmap;
     private int mColor;
@@ -49,8 +49,8 @@ public class LightweightTheme implements GeckoEventListener {
         public void onLightweightThemeReset();
     }
 
-    private List<OnChangeListener> mListeners;
-    
+    private final List<OnChangeListener> mListeners;
+
     public LightweightTheme(Application application) {
         mApplication = application;
         mHandler = new Handler(Looper.getMainLooper());
@@ -147,7 +147,7 @@ public class LightweightTheme implements GeckoEventListener {
         double luminance = (0.2125 * ((mColor & 0x00FF0000) >> 16)) + 
                            (0.7154 * ((mColor & 0x0000FF00) >> 8)) + 
                            (0.0721 * (mColor &0x000000FF));
-        mIsLight = (luminance > 110) ? true : false;
+        mIsLight = luminance > 110;
 
         // The bitmap image might be smaller than the device's width.
         // If it's smaller, fill the extra space on the left with the dominant color.
@@ -188,12 +188,16 @@ public class LightweightTheme implements GeckoEventListener {
      * bitmap to a single thread.
      */
     private void resetLightweightTheme() {
-        if (mBitmap != null) {
-            // Reset the bitmap.
-            mBitmap = null;
+        ThreadUtils.assertOnUiThread(AssertBehavior.NONE);
+        if (mBitmap == null) {
+            return;
+        }
 
-            for (OnChangeListener listener : mListeners)
-                listener.onLightweightThemeReset();
+        // Reset the bitmap.
+        mBitmap = null;
+
+        for (OnChangeListener listener : mListeners) {
+            listener.onLightweightThemeReset();
         }
     }
 
@@ -223,8 +227,9 @@ public class LightweightTheme implements GeckoEventListener {
      * @param view The view requesting a cropped bitmap.
      */
     private Bitmap getCroppedBitmap(View view) {
-        if (mBitmap == null || view == null)
+        if (mBitmap == null || view == null) {
             return null;
+        }
 
         // Get the global position of the view on the entire screen.
         Rect rect = new Rect();
@@ -258,8 +263,9 @@ public class LightweightTheme implements GeckoEventListener {
 
             parent = curView.getParent();
 
-            if (parent instanceof View)
+            if (parent instanceof View) {
                 curView = (View) parent;
+            }
 
         } while(parent instanceof View && parent != null);
 
@@ -293,11 +299,12 @@ public class LightweightTheme implements GeckoEventListener {
      */
     public Drawable getDrawable(View view) {
         Bitmap bitmap = getCroppedBitmap(view);
-        if (bitmap == null)
+        if (bitmap == null) {
             return null;
+        }
 
         BitmapDrawable drawable = new BitmapDrawable(view.getContext().getResources(), bitmap);
-        drawable.setGravity(Gravity.TOP|Gravity.RIGHT);
+        drawable.setGravity(Gravity.TOP | Gravity.RIGHT);
         drawable.setTileModeXY(Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
         return drawable;
     }
@@ -333,14 +340,16 @@ public class LightweightTheme implements GeckoEventListener {
      */
     public LightweightThemeDrawable getColorDrawable(View view, int color, boolean needsDominantColor) {
         Bitmap bitmap = getCroppedBitmap(view);
-        if (bitmap == null)
+        if (bitmap == null) {
             return null;
+        }
 
         LightweightThemeDrawable drawable = new LightweightThemeDrawable(view.getContext().getResources(), bitmap);
-        if (needsDominantColor)
+        if (needsDominantColor) {
             drawable.setColorWithFilter(color, (mColor & 0x22FFFFFF));
-        else
+        } else {
             drawable.setColor(color);
+        }
 
         return drawable;
     }

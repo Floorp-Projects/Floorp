@@ -9,6 +9,8 @@ const timer = require("sdk/timers");
 const xulApp = require("sdk/system/xul-app");
 const { Loader } = require("sdk/test/loader");
 const { openTab, getBrowserForTab, closeTab } = require("sdk/tabs/utils");
+const self = require("sdk/self");
+const { merge } = require("sdk/util/object");
 
 /**
  * A helper function that creates a PageMod, then opens the specified URL
@@ -31,7 +33,13 @@ exports.testPageMod = function testPageMod(assert, done, testURL, pageModOptions
     return null;
   }
 
-  let loader = Loader(module);
+  let loader = Loader(module, null, null, {
+    modules: {
+      "sdk/self": merge({}, self, {
+        data: merge({}, self.data, require("./fixtures"))
+      })
+    }
+  });
   let pageMod = loader.require("sdk/page-mod");
 
   var pageMods = [new pageMod.PageMod(opts) for each(opts in pageModOptions)];
