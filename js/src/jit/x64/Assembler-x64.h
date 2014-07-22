@@ -601,6 +601,11 @@ class Assembler : public AssemblerX86Shared
         return CodeOffsetLabel(masm.leaq_rip(dest.code()).offset());
     }
 
+    void loadAsmJSActivation(Register dest) {
+        CodeOffsetLabel label = loadRipRelativeInt64(dest);
+        append(AsmJSGlobalAccess(label, AsmJSActivationGlobalDataOffset));
+    }
+
     // The below cmpq methods switch the lhs and rhs when it invokes the
     // macroassembler to conform with intel standard.  When calling this
     // function put the left operand on the left as you would expect.

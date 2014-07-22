@@ -4,12 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* A number of structures to simplify scope-based RAII management. */
+/* DEPRECATED: Use UniquePtr.h instead. */
 
 #ifndef mozilla_Scoped_h
 #define mozilla_Scoped_h
 
 /*
+ * DEPRECATED: Use UniquePtr.h instead.
+ *
  * Resource Acquisition Is Initialization is a programming idiom used
  * to write robust code that is able to deallocate resources properly,
  * even in presence of execution errors or exceptions that need to be

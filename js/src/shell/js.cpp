@@ -87,6 +87,7 @@ using mozilla::MakeUnique;
 using mozilla::Maybe;
 using mozilla::NumberEqualsInt32;
 using mozilla::PodCopy;
+using mozilla::PodEqual;
 using mozilla::UniquePtr;
 
 enum JSShellExitCode {
@@ -1327,7 +1328,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             if (saveLength != loadLength) {
                 JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_CACHE_EQ_SIZE_FAILED,
                                      loadLength, saveLength);
-            } else if (!mozilla::PodEqual(loadBuffer, saveBuffer.get(), loadLength)) {
+            } else if (!PodEqual(loadBuffer, saveBuffer.get(), loadLength)) {
                 JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
                                      JSSMSG_CACHE_EQ_CONTENT_FAILED);
             }
@@ -4010,14 +4011,12 @@ EscapeForShell(AutoCStringVector &argv)
 
 static Vector<const char*, 4, js::SystemAllocPolicy> sPropagatedFlags;
 
-#ifdef DEBUG
-#if (defined(JS_CPU_X86) || defined(JS_CPU_X64)) && defined(JS_ION)
+#if defined(DEBUG) && defined(JS_ION) && (defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64))
 static bool
 PropagateFlagToNestedShells(const char *flag)
 {
     return sPropagatedFlags.append(flag);
 }
-#endif
 #endif
 
 static bool
@@ -4264,24 +4263,6 @@ NewGlobal(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-EnableStackWalkingAssertion(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.get(0).isBoolean()) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
-                             "enableStackWalkingAssertion");
-        return false;
-    }
-
-#ifdef DEBUG
-    cx->stackIterAssertionEnabled = args[0].toBoolean();
-#endif
-
-    args.rval().setUndefined();
-    return true;
-}
-
-static bool
 GetMaxArgs(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -4427,6 +4408,102 @@ PrintProfilerEvents(JSContext *cx, unsigned argc, Value *vp)
         js::RegisterRuntimeProfilingEventMarker(cx->runtime(), &PrintProfilerEvents_Callback);
     args.rval().setUndefined();
     return true;
+}
+
+#if defined(JS_ARM_SIMULATOR)
+typedef Vector<jschar, 0, SystemAllocPolicy> StackChars;
+Vector<StackChars, 0, SystemAllocPolicy> stacks;
+
+static void
+SingleStepCallback(void *arg, jit::Simulator *sim, void *pc)
+{
+    JSRuntime *rt = reinterpret_cast<JSRuntime*>(arg);
+
+    JS::ProfilingFrameIterator::RegisterState state;
+    state.pc = pc;
+    state.sp = (void*)sim->get_register(jit::Simulator::sp);
+    state.lr = (void*)sim->get_register(jit::Simulator::lr);
+
+    StackChars stack;
+    for (JS::ProfilingFrameIterator i(rt, state); !i.done(); ++i) {
+        switch (i.kind()) {
+          case JS::ProfilingFrameIterator::Function: {
+            JS::AutoCheckCannotGC nogc;
+            JSAtom *atom = i.functionDisplayAtom();
+            if (atom->hasLatin1Chars())
+                stack.append(atom->latin1Chars(nogc), atom->length());
+            else
+                stack.append(atom->twoByteChars(nogc), atom->length());
+            break;
+          }
+          case JS::ProfilingFrameIterator::AsmJSTrampoline: {
+            stack.append('*');
+            break;
+          }
+          case JS::ProfilingFrameIterator::CppFunction: {
+            const char *desc = i.nonFunctionDescription();
+            stack.append(desc, strlen(desc));
+            break;
+          }
+        }
+    }
+
+    // Only append the stack if it differs from the last stack.
+    if (stacks.empty() ||
+        stacks.back().length() != stack.length() ||
+        !PodEqual(stacks.back().begin(), stack.begin(), stack.length()))
+    {
+        stacks.append(Move(stack));
+    }
+}
+#endif
+
+static bool
+EnableSingleStepProfiling(JSContext *cx, unsigned argc, Value *vp)
+{
+#if defined(JS_ARM_SIMULATOR)
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    jit::Simulator *sim = cx->runtime()->mainThread.simulator();
+    sim->enable_single_stepping(SingleStepCallback, cx->runtime());
+
+    args.rval().setUndefined();
+    return true;
+#else
+    JS_ReportError(cx, "single-step profiling not enabled on this platform");
+    return false;
+#endif
+}
+
+static bool
+DisableSingleStepProfiling(JSContext *cx, unsigned argc, Value *vp)
+{
+#if defined(JS_ARM_SIMULATOR)
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    jit::Simulator *sim = cx->runtime()->mainThread.simulator();
+    sim->disable_single_stepping();
+
+    AutoValueVector elems(cx);
+    for (size_t i = 0; i < stacks.length(); i++) {
+        JSString *stack = JS_NewUCStringCopyN(cx, stacks[i].begin(), stacks[i].length());
+        if (!stack)
+            return false;
+        if (!elems.append(StringValue(stack)))
+            return false;
+    }
+
+    JSObject *array = JS_NewArrayObject(cx, elems);
+    if (!array)
+        return false;
+
+    stacks.clear();
+    args.rval().setObject(*array);
+    return true;
+#else
+    JS_ReportError(cx, "single-step profiling not enabled on this platform");
+    return false;
+#endif
 }
 
 static bool
@@ -4789,13 +4866,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "createMappedArrayBuffer(filename, [offset, [size]])",
 "  Create an array buffer that mmaps the given file."),
 
-    JS_FN_HELP("enableStackWalkingAssertion", EnableStackWalkingAssertion, 1, 0,
-"enableStackWalkingAssertion(enabled)",
-"  Enables or disables a particularly expensive assertion in stack-walking\n"
-"  code.  If your test isn't ridiculously thorough, such that performing this\n"
-"  assertion increases test duration by an order of magnitude, you shouldn't\n"
-"  use this."),
-
     JS_FN_HELP("getMaxArgs", GetMaxArgs, 0, 0,
 "getMaxArgs()",
 "  Return the maximum number of supported args for a call."),
@@ -4824,6 +4894,17 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "printProfilerEvents()",
 "  Register a callback with the profiler that prints javascript profiler events\n"
 "  to stderr.  Callback is only registered if profiling is enabled."),
+
+    JS_FN_HELP("enableSingleStepProfiling", EnableSingleStepProfiling, 0, 0,
+"enableSingleStepProfiling()",
+"  This function will fail on platforms that don't support single-step profiling\n"
+"  (currently everything but ARM-simulator). When enabled, at every instruction a\n"
+"  backtrace will be recorded and stored in an array. Adjacent duplicate backtraces\n"
+"  are discarded."),
+
+    JS_FN_HELP("disableSingleStepProfiling", DisableSingleStepProfiling, 0, 0,
+"disableSingleStepProfiling()",
+"  Return the array of backtraces recorded by enableSingleStepProfiling."),
 
     JS_FN_HELP("isLatin1", IsLatin1, 1, 0,
 "isLatin1(s)",

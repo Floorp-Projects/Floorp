@@ -27,7 +27,7 @@ nsDisplayItemGenericGeometry::nsDisplayItemGenericGeometry(nsDisplayItem* aItem,
 void
 nsDisplayItemGenericGeometry::MoveBy(const nsPoint& aOffset)
 {
-  mBounds.MoveBy(aOffset);
+  nsDisplayItemGeometry::MoveBy(aOffset);
   mBorderRect.MoveBy(aOffset);
 }
 
@@ -38,12 +38,6 @@ nsDisplayItemBoundsGeometry::nsDisplayItemBoundsGeometry(nsDisplayItem* aItem, n
   mHasRoundedCorners = aItem->Frame()->GetBorderRadii(radii);
 }
 
-void
-nsDisplayItemBoundsGeometry::MoveBy(const nsPoint& aOffset)
-{
-  mBounds.MoveBy(aOffset);
-}
-
 nsDisplayBorderGeometry::nsDisplayBorderGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
   : nsDisplayItemGeometry(aItem, aBuilder)
   , mContentRect(aItem->GetContentRect())
@@ -52,7 +46,7 @@ nsDisplayBorderGeometry::nsDisplayBorderGeometry(nsDisplayItem* aItem, nsDisplay
 void
 nsDisplayBorderGeometry::MoveBy(const nsPoint& aOffset)
 {
-  mBounds.MoveBy(aOffset);
+  nsDisplayItemGeometry::MoveBy(aOffset);
   mContentRect.MoveBy(aOffset);
 }
 
@@ -65,7 +59,7 @@ nsDisplayBackgroundGeometry::nsDisplayBackgroundGeometry(nsDisplayBackgroundImag
 void
 nsDisplayBackgroundGeometry::MoveBy(const nsPoint& aOffset)
 {
-  mBounds.MoveBy(aOffset);
+  nsDisplayItemGeometry::MoveBy(aOffset);
   mPositioningArea.MoveBy(aOffset);
 }
 
@@ -79,7 +73,7 @@ nsDisplayThemedBackgroundGeometry::nsDisplayThemedBackgroundGeometry(nsDisplayTh
 void
 nsDisplayThemedBackgroundGeometry::MoveBy(const nsPoint& aOffset)
 {
-  mBounds.MoveBy(aOffset);
+  nsDisplayItemGeometry::MoveBy(aOffset);
   mPositioningArea.MoveBy(aOffset);
 }
 
@@ -91,7 +85,12 @@ nsDisplayBoxShadowInnerGeometry::nsDisplayBoxShadowInnerGeometry(nsDisplayItem* 
 void
 nsDisplayBoxShadowInnerGeometry::MoveBy(const nsPoint& aOffset)
 {
-  mBounds.MoveBy(aOffset);
+  nsDisplayItemGeometry::MoveBy(aOffset);
   mPaddingRect.MoveBy(aOffset);
 }
 
+nsDisplayBoxShadowOuterGeometry::nsDisplayBoxShadowOuterGeometry(nsDisplayItem* aItem,
+    nsDisplayListBuilder* aBuilder, float aOpacity)
+  : nsDisplayItemGenericGeometry(aItem, aBuilder)
+  , mOpacity(aOpacity)
+{}

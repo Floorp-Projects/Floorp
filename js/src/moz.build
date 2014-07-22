@@ -78,6 +78,7 @@ EXPORTS.js += [
     '../public/MemoryMetrics.h',
     '../public/OldDebugAPI.h',
     '../public/Principals.h',
+    '../public/ProfilingFrameIterator.h',
     '../public/ProfilingStack.h',
     '../public/PropertyKey.h',
     '../public/RequiredDefines.h',

@@ -12,6 +12,7 @@
 
 #include "gc/Marking.h"
 #ifdef JS_ION
+#include "jit/AsmJSFrameIterator.h"
 #include "jit/AsmJSModule.h"
 #include "jit/BaselineFrame.h"
 #include "jit/JitCompartment.h"
@@ -1688,7 +1689,8 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
     errorRejoinSP_(nullptr),
     profiler_(nullptr),
     resumePC_(nullptr),
-    exitFP_(nullptr)
+    fp_(nullptr),
+    exitReason_(AsmJSExit::None)
 {
     if (cx->runtime()->spsProfiler.enabled()) {
         // Use a profiler string that matches jsMatch regex in
@@ -1698,6 +1700,9 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
         profiler_ = &cx->runtime()->spsProfiler;
         profiler_->enterNative("asm.js code :0", this);
     }
+
+    prevAsmJSForModule_ = module.activation();
+    module.activation() = this;
 
     prevAsmJS_ = cx->mainThread().asmJSActivationStack_;
 
@@ -1711,6 +1716,11 @@ AsmJSActivation::~AsmJSActivation()
 {
     if (profiler_)
         profiler_->exitNative();
+
+    JS_ASSERT(fp_ == nullptr);
+
+    JS_ASSERT(module_.activation() == this);
+    module_.activation() = prevAsmJSForModule_;
 
     JSContext *cx = cx_->asJSContext();
     JS_ASSERT(cx->mainThread().asmJSActivationStack_ == this);
@@ -1768,3 +1778,68 @@ ActivationIterator::settle()
     while (!done() && activation_->isJit() && !activation_->asJit()->isActive())
         activation_ = activation_->prev();
 }
+
+JS::ProfilingFrameIterator::ProfilingFrameIterator(JSRuntime *rt, const RegisterState &state)
+  : activation_(rt->mainThread.asmJSActivationStack())
+{
+    if (!activation_)
+        return;
+
+    static_assert(sizeof(AsmJSProfilingFrameIterator) <= StorageSpace, "Need to increase storage");
+    new (storage_.addr()) AsmJSProfilingFrameIterator(*activation_, state);
+    settle();
+}
+
+JS::ProfilingFrameIterator::~ProfilingFrameIterator()
+{
+    if (!done())
+        iter().~AsmJSProfilingFrameIterator();
+}
+
+void
+JS::ProfilingFrameIterator::operator++()
+{
+    JS_ASSERT(!done());
+    ++iter();
+    settle();
+}
+
+void
+JS::ProfilingFrameIterator::settle()
+{
+    while (iter().done()) {
+        iter().~AsmJSProfilingFrameIterator();
+        activation_ = activation_->prevAsmJS();
+        if (!activation_)
+            return;
+        new (storage_.addr()) AsmJSProfilingFrameIterator(*activation_);
+    }
+}
+
+JS::ProfilingFrameIterator::Kind
+JS::ProfilingFrameIterator::kind() const
+{
+    return iter().kind();
+}
+
+JSAtom *
+JS::ProfilingFrameIterator::functionDisplayAtom() const
+{
+    JS_ASSERT(kind() == Function);
+    return iter().functionDisplayAtom();
+}
+
+const char *
+JS::ProfilingFrameIterator::functionFilename() const
+{
+    JS_ASSERT(kind() == Function);
+    return iter().functionFilename();
+}
+
+const char *
+JS::ProfilingFrameIterator::nonFunctionDescription() const
+{
+    JS_ASSERT(kind() != Function);
+    return iter().nonFunctionDescription();
+}
+

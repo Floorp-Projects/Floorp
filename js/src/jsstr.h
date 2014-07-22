@@ -124,6 +124,9 @@ js_strncpy(jschar *dst, const jschar *src, size_t nelem)
 
 namespace js {
 
+extern mozilla::UniquePtr<char[], JS::FreePolicy>
+DuplicateString(ThreadSafeContext *cx, const char *s);
+
 extern mozilla::UniquePtr<jschar[], JS::FreePolicy>
 DuplicateString(ThreadSafeContext *cx, const jschar *s);
 

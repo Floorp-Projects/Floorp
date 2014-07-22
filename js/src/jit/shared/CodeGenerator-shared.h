@@ -153,7 +153,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     // For arguments to the current function.
     inline int32_t ArgToStackOffset(int32_t slot) const {
         return masm.framePushed() +
-               (gen->compilingAsmJS() ? AsmJSFrameSize : sizeof(IonJSFrameLayout)) +
+               (gen->compilingAsmJS() ? sizeof(AsmJSFrame) : sizeof(IonJSFrameLayout)) +
                slot;
     }
 
@@ -224,6 +224,9 @@ class CodeGeneratorShared : public LInstructionVisitor
 #endif
 
   public:
+    MIRGenerator *mirGen() const {
+        return gen;
+    }
 
     // When appending to runtimeData_, the vector might realloc, leaving pointers
     // int the origianl vector stale and unusable. DataPtr acts like a pointer,
