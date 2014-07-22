@@ -129,8 +129,8 @@ public:
 
   /* Voice Recognition */
 
-  bt_status_t StartVoiceRecognition();
-  bt_status_t StopVoiceRecognition();
+  void StartVoiceRecognition(BluetoothHandsfreeResultHandler* aRes);
+  void StopVoiceRecognition(BluetoothHandsfreeResultHandler* aRes);
 
   /* Volume */
 
