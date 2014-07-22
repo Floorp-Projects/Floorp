@@ -7453,11 +7453,6 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
              SETCOORD_UNSET_INITIAL,
            aContext, mPresContext, canStoreInRuleTree);
 
-  // Make 'auto' values for min-height compute to 0
-  if (pos->mMinHeight.GetUnit() == eStyleUnit_Auto) {
-    pos->mMinHeight.SetCoordValue(0);
-  }
-
   // box-sizing: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForBoxSizing(),
               pos->mBoxSizing, canStoreInRuleTree,
