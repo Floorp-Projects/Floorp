@@ -33,7 +33,7 @@ function getInitializerName(category) {
  *    [event type](https://developer.mozilla.org/en/DOM/event.type) to
  *    listen for.
  * @param {Function} listener
- *    Function that is called whenever an event of the specified `type` 
+ *    Function that is called whenever an event of the specified `type`
  *    occurs.
  * @param {Boolean} capture
  *    If true, indicates that the user wishes to initiate capture. After
@@ -62,7 +62,7 @@ exports.on = on;
  *    [event type](https://developer.mozilla.org/en/DOM/event.type) to
  *    listen for.
  * @param {Function} listener
- *    Function that is called whenever an event of the specified `type` 
+ *    Function that is called whenever an event of the specified `type`
  *    occurs.
  * @param {Boolean} capture
  *    If true, indicates that the user wishes to initiate capture. After
@@ -92,7 +92,7 @@ exports.once = once;
  *    [event type](https://developer.mozilla.org/en/DOM/event.type) to
  *    listen for.
  * @param {Function} listener
- *    Function that is called whenever an event of the specified `type` 
+ *    Function that is called whenever an event of the specified `type`
  *    occurs.
  * @param {Boolean} capture
  *    If true, indicates that the user wishes to initiate capture. After
@@ -137,3 +137,33 @@ function emit(element, type, { category, initializer, settings }) {
   element.dispatchEvent(event);
 };
 exports.emit = emit;
+
+// Takes DOM `element` and returns promise which is resolved
+// when given element is removed from it's parent node.
+const removed = element => {
+  return new Promise(resolve => {
+    const { MutationObserver } = element.ownerDocument.defaultView;
+    const observer = new MutationObserver(mutations => {
+      for (let mutation of mutations) {
+        for (let node of mutation.removedNodes || []) {
+          if (node === element) {
+            observer.disconnect();
+            resolve(element);
+          }
+        }
+      }
+    });
+    observer.observe(element.parentNode, {childList: true});
+  });
+};
+exports.removed = removed;
+
+const when = (element, eventName, capture=false) => new Promise(resolve => {
+  const listener = event => {
+    element.removeEventListener(eventName, listener, capture);
+    resolve(event);
+  };
+
+  element.addEventListener(eventName, listener, capture);
+});
+exports.when = when;

@@ -357,7 +357,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
         FxAccountGlobalSession globalSession = null;
         try {
-          final ClientsDataDelegate clientsDataDelegate = new SharedPreferencesClientsDataDelegate(sharedPrefs);
+          final ClientsDataDelegate clientsDataDelegate = new SharedPreferencesClientsDataDelegate(sharedPrefs, getContext());
           if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
             FxAccountConstants.pii(LOG_TAG, "Client device name is: '" + clientsDataDelegate.getClientName() + "'.");
             FxAccountConstants.pii(LOG_TAG, "Client device data last modified: " + clientsDataDelegate.getLastModifiedTimestamp());

@@ -66,6 +66,10 @@ function get(key, n, locales) {
     localized = getKey(locale, key);
   }
 
+  if (!localized) {
+    localized = getKey(locale, key + '[other]');
+  }
+
   if (localized) {
     return localized;
   }

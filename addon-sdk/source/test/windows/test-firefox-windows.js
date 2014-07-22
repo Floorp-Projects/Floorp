@@ -42,6 +42,33 @@ exports.testOpenAndCloseWindow = function(assert, done) {
   });
 };
 
+exports.testOpenRelativePathWindow = function(assert, done) {
+  assert.equal(browserWindows.length, 1, "Only one window open");
+
+  const { merge } = require("sdk/util/object");
+  const self = require("sdk/self");
+
+  let loader = Loader(module, null, null, {
+    modules: {
+      "sdk/self": merge({}, self, {
+        data: merge({}, self.data, require("./../fixtures"))
+      })
+    }
+  });
+
+  loader.require("sdk/windows").browserWindows.open({
+    url: "./test.html",
+    onOpen: (window) => {
+      window.tabs.activeTab.once("ready", (tab) => {
+        assert.equal(tab.title, "foo",
+          "tab opened a document with relative path");
+
+        window.close(done);
+      });
+    }
+  })
+}
+
 exports.testAutomaticDestroy = function(assert, done) {
   let windows = browserWindows;
 
