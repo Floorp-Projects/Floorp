@@ -1030,6 +1030,11 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
     item->Freeze();
   }
 
+  // Resolve "flex-basis:auto" and/or "min-height:auto" (which might
+  // require us to reflow the item to measure content height)
+  ResolveAutoFlexBasisAndMinSize(aPresContext, *item,
+                                 aParentReflowState, aAxisTracker);
+
   return item;
 }
 
@@ -2706,9 +2711,6 @@ nsFlexContainerFrame::GenerateFlexLines(
     } else {
       item = GenerateFlexItemForChild(aPresContext, childFrame,
                                       aReflowState, aAxisTracker);
-
-      ResolveAutoFlexBasisAndMinSize(aPresContext, *item,
-                                     aReflowState, aAxisTracker);
     }
 
     nscoord itemInnerHypotheticalMainSize = item->GetMainSize();
