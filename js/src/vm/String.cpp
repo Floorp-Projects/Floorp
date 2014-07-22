@@ -885,8 +885,6 @@ AutoStableStringChars::initTwoByte(JSContext *cx, JSString *s)
     return true;
 }
 
-bool js::EnableLatin1Strings = true;
-
 #ifdef DEBUG
 void
 JSAtom::dump()
@@ -924,30 +922,9 @@ js::NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t le
     return JSDependentString::new_(cx, base, start, length);
 }
 
-template <typename CharT>
-static void
-CopyCharsMaybeInflate(jschar *dest, const CharT *src, size_t len);
-
-template <>
-void
-CopyCharsMaybeInflate(jschar *dest, const jschar *src, size_t len)
-{
-    PodCopy(dest, src, len);
-}
-
-template <>
-void
-CopyCharsMaybeInflate(jschar *dest, const Latin1Char *src, size_t len)
-{
-    CopyAndInflateChars(dest, src, len);
-}
-
 static bool
 CanStoreCharsAsLatin1(const jschar *s, size_t length)
 {
-    if (!EnableLatin1Strings)
-        return false;
-
     for (const jschar *end = s + length; s < end; ++s) {
         if (*s > JSString::MAX_LATIN1_CHAR)
             return false;
@@ -966,8 +943,6 @@ template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE JSInlineString *
 NewFatInlineStringDeflated(ThreadSafeContext *cx, mozilla::Range<const jschar> chars)
 {
-    MOZ_ASSERT(EnableLatin1Strings);
-
     size_t len = chars.length();
     Latin1Char *storage;
     JSInlineString *str = AllocateFatInlineString<allowGC>(cx, len, &storage);
@@ -986,8 +961,6 @@ template <AllowGC allowGC>
 static JSFlatString *
 NewStringDeflated(ThreadSafeContext *cx, const jschar *s, size_t n)
 {
-    MOZ_ASSERT(EnableLatin1Strings);
-
     if (JSFatInlineString::latin1LengthFits(n))
         return NewFatInlineStringDeflated<allowGC>(cx, mozilla::Range<const jschar>(s, n));
 
@@ -1088,33 +1061,14 @@ template <AllowGC allowGC, typename CharT>
 JSFlatString *
 NewStringCopyNDontDeflate(ThreadSafeContext *cx, const CharT *s, size_t n)
 {
-    if (EnableLatin1Strings) {
-        if (JSFatInlineString::lengthFits<CharT>(n))
-            return NewFatInlineString<allowGC>(cx, mozilla::Range<const CharT>(s, n));
-
-        ScopedJSFreePtr<CharT> news(cx->pod_malloc<CharT>(n + 1));
-        if (!news)
-            return nullptr;
-
-        PodCopy(news.get(), s, n);
-        news[n] = 0;
-
-        JSFlatString *str = JSFlatString::new_<allowGC>(cx, news.get(), n);
-        if (!str)
-            return nullptr;
-
-        news.forget();
-        return str;
-    }
-
-    if (JSFatInlineString::twoByteLengthFits(n))
+    if (JSFatInlineString::lengthFits<CharT>(n))
         return NewFatInlineString<allowGC>(cx, mozilla::Range<const CharT>(s, n));
 
-    ScopedJSFreePtr<jschar> news(cx->pod_malloc<jschar>(n + 1));
+    ScopedJSFreePtr<CharT> news(cx->pod_malloc<CharT>(n + 1));
     if (!news)
         return nullptr;
 
-    CopyCharsMaybeInflate(news.get(), s, n);
+    PodCopy(news.get(), s, n);
     news[n] = 0;
 
     JSFlatString *str = JSFlatString::new_<allowGC>(cx, news.get(), n);

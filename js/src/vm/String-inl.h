@@ -46,25 +46,12 @@ static MOZ_ALWAYS_INLINE JSInlineString *
 NewFatInlineString(ThreadSafeContext *cx, mozilla::Range<const Latin1Char> chars)
 {
     size_t len = chars.length();
-
-    if (EnableLatin1Strings) {
-        Latin1Char *p;
-        JSInlineString *str = AllocateFatInlineString<allowGC>(cx, len, &p);
-        if (!str)
-            return nullptr;
-
-        mozilla::PodCopy(p, chars.start().get(), len);
-        p[len] = '\0';
-        return str;
-    }
-
-    jschar *p;
+    Latin1Char *p;
     JSInlineString *str = AllocateFatInlineString<allowGC>(cx, len, &p);
     if (!str)
         return nullptr;
 
-    for (size_t i = 0; i < len; ++i)
-        p[i] = static_cast<jschar>(chars[i]);
+    mozilla::PodCopy(p, chars.start().get(), len);
     p[len] = '\0';
     return str;
 }
