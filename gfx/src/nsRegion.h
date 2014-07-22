@@ -84,6 +84,14 @@ public:
   static
   void ShutdownStatic() {}
 
+  void AndWith(const nsRegion& aOther)
+  {
+    And(*this, aOther);
+  }
+  void AndWith(const nsRect& aOther)
+  {
+    And(*this, aOther);
+  }
   nsRegion& And(const nsRegion& aRgn1,   const nsRegion& aRgn2)
   {
     pixman_region32_intersect(&mImpl, aRgn1.Impl(), aRgn2.Impl());
@@ -106,6 +114,14 @@ public:
     return Copy(TmpRect);
   }
 
+  void OrWith(const nsRegion& aOther)
+  {
+    Or(*this, aOther);
+  }
+  void OrWith(const nsRect& aOther)
+  {
+    Or(*this, aOther);
+  }
   nsRegion& Or(const nsRegion& aRgn1, const nsRegion& aRgn2)
   {
     pixman_region32_union(&mImpl, aRgn1.Impl(), aRgn2.Impl());
@@ -126,6 +142,14 @@ public:
     return Or (*this, aRect2);
   }
 
+  void XorWith(const nsRegion& aOther)
+  {
+    Xor(*this, aOther);
+  }
+  void XorWith(const nsRect& aOther)
+  {
+    Xor(*this, aOther);
+  }
   nsRegion& Xor(const nsRegion& aRgn1,   const nsRegion& aRgn2)
   {
     // this could be implemented better if pixman had direct
@@ -150,6 +174,15 @@ public:
   }
 
   nsRegion ToAppUnits (nscoord aAppUnitsPerPixel) const;
+
+  void SubOut(const nsRegion& aOther)
+  {
+    Sub(*this, aOther);
+  }
+  void SubOut(const nsRect& aOther)
+  {
+    Sub(*this, aOther);
+  }
   nsRegion& Sub(const nsRegion& aRgn1, const nsRegion& aRgn2)
   {
     pixman_region32_subtract(&mImpl, aRgn1.Impl(), aRgn2.Impl());
