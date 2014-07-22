@@ -117,8 +117,8 @@ struct Statistics
     int64_t beginSCC();
     void endSCC(unsigned scc, int64_t start);
 
-    jschar *formatMessage();
-    jschar *formatJSON(uint64_t timestamp);
+    char16_t *formatMessage();
+    char16_t *formatJSON(uint64_t timestamp);
 
     JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
 

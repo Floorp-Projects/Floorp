@@ -56,7 +56,7 @@ libc.declareLazy(Scope, "FormatMessage",
                  /*source*/ ctypes.voidptr_t,
                  /*msgid*/  ctypes.uint32_t,
                  /*langid*/ ctypes.uint32_t,
-                 /*buf*/    ctypes.jschar.ptr,
+                 /*buf*/    ctypes.char16_t.ptr,
                  /*size*/   ctypes.uint32_t,
                  /*Arguments*/ctypes.voidptr_t);
 
@@ -93,7 +93,7 @@ let OSError = function OSError(operation = "unknown operation",
 };
 OSError.prototype = Object.create(SharedAll.OSError.prototype);
 OSError.prototype.toString = function toString() {
-  let buf = new (ctypes.ArrayType(ctypes.jschar, 1024))();
+  let buf = new (ctypes.ArrayType(ctypes.char16_t, 1024))();
   let result = Scope.FormatMessage(
     Const.FORMAT_MESSAGE_FROM_SYSTEM |
     Const.FORMAT_MESSAGE_IGNORE_INSERTS,

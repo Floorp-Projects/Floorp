@@ -174,7 +174,7 @@ static const JSClass parseTaskGlobalClass = {
 };
 
 ParseTask::ParseTask(ExclusiveContext *cx, JSObject *exclusiveContextGlobal, JSContext *initCx,
-                     const jschar *chars, size_t length,
+                     const char16_t *chars, size_t length,
                      JS::OffThreadCompileCallback callback, void *callbackData)
   : cx(cx), options(initCx), chars(chars), length(length),
     alloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
@@ -283,7 +283,7 @@ js::OffThreadParsingMustWaitForGC(JSRuntime *rt)
 
 bool
 js::StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &options,
-                              const jschar *chars, size_t length,
+                              const char16_t *chars, size_t length,
                               JS::OffThreadCompileCallback callback, void *callbackData)
 {
     // Suppress GC so that calls below do not trigger a new incremental GC

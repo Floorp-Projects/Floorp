@@ -197,7 +197,7 @@ extern JS_FRIEND_API(void)
 js_DumpObject(JSObject *obj);
 
 extern JS_FRIEND_API(void)
-js_DumpChars(const jschar *s, size_t n);
+js_DumpChars(const char16_t *s, size_t n);
 #endif
 
 /*
@@ -416,7 +416,7 @@ class SourceHook {
      * On success, the caller owns the buffer to which |*src| points, and
      * should use JS_free to free it.
      */
-    virtual bool load(JSContext *cx, const char *filename, jschar **src, size_t *length) = 0;
+    virtual bool load(JSContext *cx, const char *filename, char16_t **src, size_t *length) = 0;
 };
 
 /*
@@ -608,9 +608,9 @@ struct String
     uint32_t length;
     union {
         const JS::Latin1Char *nonInlineCharsLatin1;
-        const jschar *nonInlineCharsTwoByte;
+        const char16_t *nonInlineCharsTwoByte;
         JS::Latin1Char inlineStorageLatin1[1];
-        jschar inlineStorageTwoByte[1];
+        char16_t inlineStorageTwoByte[1];
     };
 };
 
@@ -870,7 +870,7 @@ GetLatin1LinearStringChars(const JS::AutoCheckCannotGC &nogc, JSLinearString *li
     return s->nonInlineCharsLatin1;
 }
 
-MOZ_ALWAYS_INLINE const jschar *
+MOZ_ALWAYS_INLINE const char16_t *
 GetTwoByteLinearStringChars(const JS::AutoCheckCannotGC &nogc, JSLinearString *linear)
 {
     MOZ_ASSERT(!LinearStringHasLatin1Chars(linear));
@@ -900,7 +900,7 @@ GetLatin1AtomChars(const JS::AutoCheckCannotGC &nogc, JSAtom *atom)
     return GetLatin1LinearStringChars(nogc, AtomToLinearString(atom));
 }
 
-MOZ_ALWAYS_INLINE const jschar *
+MOZ_ALWAYS_INLINE const char16_t *
 GetTwoByteAtomChars(const JS::AutoCheckCannotGC &nogc, JSAtom *atom)
 {
     return GetTwoByteLinearStringChars(nogc, AtomToLinearString(atom));
@@ -920,7 +920,7 @@ StringToLinearString(JSContext *cx, JSString *str)
 }
 
 MOZ_ALWAYS_INLINE void
-CopyLinearStringChars(jschar *dest, JSLinearString *s, size_t len)
+CopyLinearStringChars(char16_t *dest, JSLinearString *s, size_t len)
 {
     JS::AutoCheckCannotGC nogc;
     if (LinearStringHasLatin1Chars(s)) {
@@ -928,13 +928,13 @@ CopyLinearStringChars(jschar *dest, JSLinearString *s, size_t len)
         for (size_t i = 0; i < len; i++)
             dest[i] = src[i];
     } else {
-        const jschar *src = GetTwoByteLinearStringChars(nogc, s);
+        const char16_t *src = GetTwoByteLinearStringChars(nogc, s);
         mozilla::PodCopy(dest, src, len);
     }
 }
 
 inline bool
-CopyStringChars(JSContext *cx, jschar *dest, JSString *s, size_t len)
+CopyStringChars(JSContext *cx, char16_t *dest, JSString *s, size_t len)
 {
     JSLinearString *linear = StringToLinearString(cx, s);
     if (!linear)
@@ -945,7 +945,7 @@ CopyStringChars(JSContext *cx, jschar *dest, JSString *s, size_t len)
 }
 
 inline void
-CopyFlatStringChars(jschar *dest, JSFlatString *s, size_t len)
+CopyFlatStringChars(char16_t *dest, JSFlatString *s, size_t len)
 {
     CopyLinearStringChars(dest, FlatStringToLinearString(s), len);
 }
@@ -1295,7 +1295,7 @@ class MOZ_STACK_CLASS AutoStableStringChars
     /* Ensure the string is kept alive while we're using its chars. */
     JS::RootedString s_;
     union {
-        const jschar *twoByteChars_;
+        const char16_t *twoByteChars_;
         const JS::Latin1Char *latin1Chars_;
     };
     enum State { Uninitialized, Latin1, TwoByte };
@@ -1316,7 +1316,7 @@ class MOZ_STACK_CLASS AutoStableStringChars
     bool isLatin1() const { return state_ == Latin1; }
     bool isTwoByte() const { return state_ == TwoByte; }
 
-    const jschar *twoByteChars() const {
+    const char16_t *twoByteChars() const {
         MOZ_ASSERT(state_ == TwoByte);
         return twoByteChars_;
     }
@@ -1327,9 +1327,9 @@ class MOZ_STACK_CLASS AutoStableStringChars
                                                     GetStringLength(s_));
     }
 
-    mozilla::Range<const jschar> twoByteRange() const {
+    mozilla::Range<const char16_t> twoByteRange() const {
         MOZ_ASSERT(state_ == TwoByte);
-        return mozilla::Range<const jschar>(twoByteChars_,
+        return mozilla::Range<const char16_t>(twoByteChars_,
                                             GetStringLength(s_));
     }
 

@@ -170,7 +170,7 @@ EvalStringMightBeJSON(const mozilla::Range<const CharT> chars)
                  cp < end;
                  cp++)
             {
-                jschar c = *cp;
+                char16_t c = *cp;
                 if (c == 0x2028 || c == 0x2029)
                     return false;
             }
@@ -336,7 +336,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
         if (!flatChars.initTwoByte(cx, flatStr))
             return false;
 
-        const jschar *chars = flatChars.twoByteRange().start().get();
+        const char16_t *chars = flatChars.twoByteRange().start().get();
         SourceBufferHolder::Ownership ownership = flatChars.maybeGiveOwnershipToCaller()
                                                   ? SourceBufferHolder::GiveOwnership
                                                   : SourceBufferHolder::NoOwnership;
@@ -409,7 +409,7 @@ js::DirectEvalStringFromIon(JSContext *cx,
         if (!flatChars.initTwoByte(cx, flatStr))
             return false;
 
-        const jschar *chars = flatChars.twoByteRange().start().get();
+        const char16_t *chars = flatChars.twoByteRange().start().get();
         SourceBufferHolder::Ownership ownership = flatChars.maybeGiveOwnershipToCaller()
                                                   ? SourceBufferHolder::GiveOwnership
                                                   : SourceBufferHolder::NoOwnership;

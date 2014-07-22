@@ -299,7 +299,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
                 masm.addPtr(inputByteLength, temp0);
 
                 // Convert byte index to character index.
-                if (mode_ == JSCHAR)
+                if (mode_ == CHAR16)
                     masm.rshiftPtrArithmetic(Imm32(1), temp0);
 
                 masm.store32(temp0, Address(outputRegisters, i * sizeof(int32_t)));
@@ -604,7 +604,7 @@ NativeRegExpMacroAssembler::CheckNotCharacterAfterAnd(unsigned c, unsigned and_w
 }
 
 void
-NativeRegExpMacroAssembler::CheckCharacterGT(jschar c, Label* on_greater)
+NativeRegExpMacroAssembler::CheckCharacterGT(char16_t c, Label* on_greater)
 {
     JitSpew(SPEW_PREFIX "CheckCharacterGT(%d)", (int) c);
     masm.branch32(Assembler::GreaterThan, current_character, Imm32(c),
@@ -612,7 +612,7 @@ NativeRegExpMacroAssembler::CheckCharacterGT(jschar c, Label* on_greater)
 }
 
 void
-NativeRegExpMacroAssembler::CheckCharacterLT(jschar c, Label* on_less)
+NativeRegExpMacroAssembler::CheckCharacterLT(char16_t c, Label* on_less)
 {
     JitSpew(SPEW_PREFIX "CheckCharacterLT(%d)", (int) c);
     masm.branch32(Assembler::LessThan, current_character, Imm32(c), BranchOrBacktrack(on_less));
@@ -671,7 +671,7 @@ NativeRegExpMacroAssembler::CheckNotBackReference(int start_reg, Label* on_no_ma
         masm.load8ZeroExtend(Address(current_character, 0), temp0);
         masm.load8ZeroExtend(Address(temp1, 0), temp2);
     } else {
-        JS_ASSERT(mode_ == JSCHAR);
+        JS_ASSERT(mode_ == CHAR16);
         masm.load16ZeroExtend(Address(current_character, 0), temp0);
         masm.load16ZeroExtend(Address(temp1, 0), temp2);
     }
@@ -793,7 +793,7 @@ NativeRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, Label
         // Compute new value of character position after the matched part.
         masm.subPtr(input_end_pointer, current_position);
     } else {
-        JS_ASSERT(mode_ == JSCHAR);
+        JS_ASSERT(mode_ == CHAR16);
 
         // Note: temp1 needs to be saved/restored if it is volatile, as it is used after the call.
         GeneralRegisterSet volatileRegs = GeneralRegisterSet::Volatile();
@@ -818,7 +818,7 @@ NativeRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, Label
         masm.passABIArg(current_character);
         masm.passABIArg(current_position);
         masm.passABIArg(temp1);
-        int (*fun)(const jschar*, const jschar*, size_t) = CaseInsensitiveCompareStrings;
+        int (*fun)(const char16_t*, const char16_t*, size_t) = CaseInsensitiveCompareStrings;
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, fun));
         masm.storeCallResult(temp0);
 
@@ -835,7 +835,7 @@ NativeRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, Label
 }
 
 void
-NativeRegExpMacroAssembler::CheckNotCharacterAfterMinusAnd(jschar c, jschar minus, jschar and_with,
+NativeRegExpMacroAssembler::CheckNotCharacterAfterMinusAnd(char16_t c, char16_t minus, char16_t and_with,
                                                            Label* on_not_equal)
 {
     JitSpew(SPEW_PREFIX "CheckNotCharacterAfterMinusAnd(%d, %d, %d)", (int) c,
@@ -852,7 +852,7 @@ NativeRegExpMacroAssembler::CheckNotCharacterAfterMinusAnd(jschar c, jschar minu
 }
 
 void
-NativeRegExpMacroAssembler::CheckCharacterInRange(jschar from, jschar to,
+NativeRegExpMacroAssembler::CheckCharacterInRange(char16_t from, char16_t to,
                                                   Label* on_in_range)
 {
     JitSpew(SPEW_PREFIX "CheckCharacterInRange(%d, %d)", (int) from, (int) to);
@@ -862,7 +862,7 @@ NativeRegExpMacroAssembler::CheckCharacterInRange(jschar from, jschar to,
 }
 
 void
-NativeRegExpMacroAssembler::CheckCharacterNotInRange(jschar from, jschar to,
+NativeRegExpMacroAssembler::CheckCharacterNotInRange(char16_t from, char16_t to,
                                                      Label* on_not_in_range)
 {
     JitSpew(SPEW_PREFIX "CheckCharacterNotInRange(%d, %d)", (int) from, (int) to);
@@ -952,9 +952,9 @@ NativeRegExpMacroAssembler::LoadCurrentCharacterUnchecked(int cp_offset, int cha
             masm.load8ZeroExtend(address, current_character);
         }
     } else {
-        JS_ASSERT(mode_ == JSCHAR);
+        JS_ASSERT(mode_ == CHAR16);
         JS_ASSERT(characters <= 2);
-        BaseIndex address(input_end_pointer, current_position, TimesOne, cp_offset * sizeof(jschar));
+        BaseIndex address(input_end_pointer, current_position, TimesOne, cp_offset * sizeof(char16_t));
         if (characters == 2)
             masm.load32(address, current_character);
         else
@@ -1199,7 +1199,7 @@ NativeRegExpMacroAssembler::JumpOrBacktrack(Label *to)
 }
 
 bool
-NativeRegExpMacroAssembler::CheckSpecialCharacterClass(jschar type, Label* on_no_match)
+NativeRegExpMacroAssembler::CheckSpecialCharacterClass(char16_t type, Label* on_no_match)
 {
     JitSpew(SPEW_PREFIX "CheckSpecialCharacterClass(%d)", (int) type);
 
@@ -1247,7 +1247,7 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(jschar type, Label* on_no
         // See if current character is '\n'^1 or '\r'^1, i.e., 0x0b or 0x0c
         masm.sub32(Imm32(0x0b), temp0);
         masm.branch32(Assembler::BelowOrEqual, temp0, Imm32(0x0c - 0x0b), branch);
-        if (mode_ == JSCHAR) {
+        if (mode_ == CHAR16) {
             // Compare original value to 0x2028 and 0x2029, using the already
             // computed (current_char ^ 0x01 - 0x0b). I.e., check for
             // 0x201d (0x2028 - 0x0b) or 0x201e.
@@ -1299,7 +1299,7 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(jschar type, Label* on_no
         } else {
             Label done;
             masm.branch32(Assembler::BelowOrEqual, temp0, Imm32(0x0c - 0x0b), &done);
-            JS_ASSERT(JSCHAR == mode_);
+            JS_ASSERT(CHAR16 == mode_);
 
             // Compare original value to 0x2028 and 0x2029, using the already
             // computed (current_char ^ 0x01 - 0x0b). I.e., check for

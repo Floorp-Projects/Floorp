@@ -76,7 +76,7 @@ RegExpBuilder::FlushText()
 }
 
 void
-RegExpBuilder::AddCharacter(jschar c)
+RegExpBuilder::AddCharacter(char16_t c)
 {
     pending_empty_ = false;
     if (characters_ == nullptr)
@@ -397,7 +397,7 @@ RegExpParser<CharT>::ParseClassCharacterEscape()
     return 0;
 }
 
-static const jschar kNoCharClass = 0;
+static const char16_t kNoCharClass = 0;
 
 // Adds range or pre-defined character class to character ranges.
 // If char_class is not kInvalidClass, it's interpreted as a class
@@ -405,7 +405,7 @@ static const jschar kNoCharClass = 0;
 static inline void
 AddRangeOrEscape(LifoAlloc *alloc,
                  CharacterRangeVector *ranges,
-                 jschar char_class,
+                 char16_t char_class,
                  CharacterRange range)
 {
     if (char_class != kNoCharClass)
@@ -427,7 +427,7 @@ RegExpParser<CharT>::ParseCharacterClass()
     }
     CharacterRangeVector *ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
     while (has_more() && current() != ']') {
-        jschar char_class = kNoCharClass;
+        char16_t char_class = kNoCharClass;
         CharacterRange first;
         if (!ParseClassAtom(&char_class, &first))
             return nullptr;
@@ -442,7 +442,7 @@ RegExpParser<CharT>::ParseCharacterClass()
                 ranges->append(CharacterRange::Singleton('-'));
                 break;
             }
-            jschar char_class_2 = kNoCharClass;
+            char16_t char_class_2 = kNoCharClass;
             CharacterRange next;
             if (!ParseClassAtom(&char_class_2, &next))
                 return nullptr;
@@ -472,7 +472,7 @@ RegExpParser<CharT>::ParseCharacterClass()
 
 template <typename CharT>
 bool
-RegExpParser<CharT>::ParseClassAtom(jschar* char_class, CharacterRange *char_range)
+RegExpParser<CharT>::ParseClassAtom(char16_t* char_class, CharacterRange *char_range)
 {
     JS_ASSERT(*char_class == kNoCharClass);
     widechar first = current();
@@ -997,7 +997,7 @@ RegExpParser<CharT>::ParseDisjunction()
 }
 
 template class irregexp::RegExpParser<Latin1Char>;
-template class irregexp::RegExpParser<jschar>;
+template class irregexp::RegExpParser<char16_t>;
 
 template <typename CharT>
 static bool

@@ -64,11 +64,11 @@ struct InputOutputData
 struct FrameData
 {
     // Copy of the input/output data's data.
-    jschar *inputStart;
+    char16_t *inputStart;
     size_t startIndex;
 
     // Pointer to the character before the input start.
-    jschar *inputStartMinusOne;
+    char16_t *inputStartMinusOne;
 
     // Copy of the input MatchPairs registers, may be modified by JIT code.
     int32_t *outputRegisters;
@@ -83,7 +83,7 @@ class MOZ_STACK_CLASS NativeRegExpMacroAssembler : public RegExpMacroAssembler
 {
   public:
     // Type of input string to generate code for.
-    enum Mode { ASCII = 1, JSCHAR = 2 };
+    enum Mode { ASCII = 1, CHAR16 = 2 };
 
     NativeRegExpMacroAssembler(LifoAlloc *alloc, RegExpShared *shared,
                                JSRuntime *rt, Mode mode, int registers_to_save);
@@ -99,24 +99,24 @@ class MOZ_STACK_CLASS NativeRegExpMacroAssembler : public RegExpMacroAssembler
     void CheckAtStart(jit::Label* on_at_start);
     void CheckCharacter(unsigned c, jit::Label* on_equal);
     void CheckCharacterAfterAnd(unsigned c, unsigned and_with, jit::Label* on_equal);
-    void CheckCharacterGT(jschar limit, jit::Label* on_greater);
-    void CheckCharacterLT(jschar limit, jit::Label* on_less);
+    void CheckCharacterGT(char16_t limit, jit::Label* on_greater);
+    void CheckCharacterLT(char16_t limit, jit::Label* on_less);
     void CheckGreedyLoop(jit::Label* on_tos_equals_current_position);
     void CheckNotAtStart(jit::Label* on_not_at_start);
     void CheckNotBackReference(int start_reg, jit::Label* on_no_match);
     void CheckNotBackReferenceIgnoreCase(int start_reg, jit::Label* on_no_match);
     void CheckNotCharacter(unsigned c, jit::Label* on_not_equal);
     void CheckNotCharacterAfterAnd(unsigned c, unsigned and_with, jit::Label* on_not_equal);
-    void CheckNotCharacterAfterMinusAnd(jschar c, jschar minus, jschar and_with,
+    void CheckNotCharacterAfterMinusAnd(char16_t c, char16_t minus, char16_t and_with,
                                         jit::Label* on_not_equal);
-    void CheckCharacterInRange(jschar from, jschar to,
+    void CheckCharacterInRange(char16_t from, char16_t to,
                                jit::Label* on_in_range);
-    void CheckCharacterNotInRange(jschar from, jschar to,
+    void CheckCharacterNotInRange(char16_t from, char16_t to,
                                   jit::Label* on_not_in_range);
     void CheckBitInTable(uint8_t *table, jit::Label* on_bit_set);
     void CheckPosition(int cp_offset, jit::Label* on_outside_input);
     void JumpOrBacktrack(jit::Label *to);
-    bool CheckSpecialCharacterClass(jschar type, jit::Label* on_no_match);
+    bool CheckSpecialCharacterClass(char16_t type, jit::Label* on_no_match);
     void Fail();
     void IfRegisterGE(int reg, int comparand, jit::Label* if_ge);
     void IfRegisterLT(int reg, int comparand, jit::Label* if_lt);
@@ -151,7 +151,7 @@ class MOZ_STACK_CLASS NativeRegExpMacroAssembler : public RegExpMacroAssembler
 
     // Byte size of chars in the string to match (decided by the Mode argument)
     inline int char_size() { return static_cast<int>(mode_); }
-    inline jit::Scale factor() { return mode_ == JSCHAR ? jit::TimesTwo : jit::TimesOne; }
+    inline jit::Scale factor() { return mode_ == CHAR16 ? jit::TimesTwo : jit::TimesOne; }
 
     jit::Label *BranchOrBacktrack(jit::Label *branch);
 

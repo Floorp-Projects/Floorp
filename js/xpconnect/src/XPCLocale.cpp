@@ -219,7 +219,7 @@ private:
             if (shrunkUnichars)
               unichars = shrunkUnichars;
           }
-          JSString *str = JS_NewUCString(cx, reinterpret_cast<jschar*>(unichars), unicharLength);
+          JSString *str = JS_NewUCString(cx, reinterpret_cast<char16_t*>(unichars), unicharLength);
           if (str) {
             rval.setString(str);
             return true;

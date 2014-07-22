@@ -145,7 +145,7 @@ JS_GetScriptFilename(JSScript *script)
     return script->filename();
 }
 
-JS_PUBLIC_API(const jschar *)
+JS_PUBLIC_API(const char16_t *)
 JS_GetScriptSourceMap(JSContext *cx, JSScript *script)
 {
     ScriptSource *source = script->scriptSource();

@@ -250,7 +250,7 @@ public:
         }
 
         JSString *str = JS_NewExternalString(cx,
-                                             static_cast<jschar*>(buf->Data()),
+                                             static_cast<char16_t*>(buf->Data()),
                                              length, &sDOMStringFinalizer);
         if (!str) {
             return false;
@@ -284,9 +284,9 @@ public:
 private:
     static const JSStringFinalizer sLiteralFinalizer, sDOMStringFinalizer;
 
-    static void FinalizeLiteral(const JSStringFinalizer *fin, jschar *chars);
+    static void FinalizeLiteral(const JSStringFinalizer *fin, char16_t *chars);
 
-    static void FinalizeDOMString(const JSStringFinalizer *fin, jschar *chars);
+    static void FinalizeDOMString(const JSStringFinalizer *fin, char16_t *chars);
 
     XPCStringConvert();         // not implemented
 };

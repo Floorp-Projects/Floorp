@@ -28,7 +28,7 @@ using JS::ubi::Node;
 using JS::ubi::TracerConcrete;
 
 // All operations on null ubi::Nodes crash.
-const jschar *Concrete<void>::typeName() const            { MOZ_CRASH("null ubi::Node"); }
+const char16_t *Concrete<void>::typeName() const          { MOZ_CRASH("null ubi::Node"); }
 size_t Concrete<void>::size() const                       { MOZ_CRASH("null ubi::Node"); }
 EdgeRange *Concrete<void>::edges(JSContext *, bool) const { MOZ_CRASH("null ubi::Node"); }
 JS::Zone *Concrete<void>::zone() const                    { MOZ_CRASH("null ubi::Node"); }
@@ -99,12 +99,12 @@ class SimpleEdge : public Edge {
     SimpleEdge() : Edge() { }
 
     // Construct an initialized SimpleEdge, taking ownership of |name|.
-    SimpleEdge(jschar *name, const Node &referent) {
+    SimpleEdge(char16_t *name, const Node &referent) {
         this->name = name;
         this->referent = referent;
     }
     ~SimpleEdge() {
-        js_free(const_cast<jschar *>(name));
+        js_free(const_cast<char16_t *>(name));
     }
 
     // Move construction and assignment.
@@ -143,30 +143,30 @@ class SimpleEdgeVectorTracer : public JSTracer {
         if (!okay)
             return;
 
-        jschar *jsname = nullptr;
+        char16_t *name16 = nullptr;
         if (wantNames) {
             // Ask the tracer to compute an edge name for us.
             char buffer[1024];
             const char *name = getTracingEdgeName(buffer, sizeof(buffer));
 
-            // Convert the name to jschars.
-            jsname = js_pod_malloc<jschar>(strlen(name) + 1);
-            if (!jsname) {
+            // Convert the name to char16_t characters.
+            name16 = js_pod_malloc<char16_t>(strlen(name) + 1);
+            if (!name16) {
                 okay = false;
                 return;
             }
 
             size_t i;
             for (i = 0; name[i]; i++)
-                jsname[i] = name[i];
-            jsname[i] = '\0';
+                name16[i] = name[i];
+            name16[i] = '\0';
         }
 
         // The simplest code is correct! The temporary SimpleEdge takes
         // ownership of name; if the append succeeds, the vector element
         // then takes ownership; if the append fails, then the temporary
         // retains it, and its destructor will free it.
-        if (!vec->append(mozilla::Move(SimpleEdge(jsname, Node(kind, *thingp))))) {
+        if (!vec->append(mozilla::Move(SimpleEdge(name16, Node(kind, *thingp))))) {
             okay = false;
             return;
         }
@@ -222,21 +222,21 @@ TracerConcrete<Referent>::edges(JSContext *cx, bool wantNames) const {
     return r.forget();
 }
 
-template<> const jschar TracerConcrete<JSObject>::concreteTypeName[] =
+template<> const char16_t TracerConcrete<JSObject>::concreteTypeName[] =
     MOZ_UTF16("JSObject");
-template<> const jschar TracerConcrete<JSString>::concreteTypeName[] =
+template<> const char16_t TracerConcrete<JSString>::concreteTypeName[] =
     MOZ_UTF16("JSString");
-template<> const jschar TracerConcrete<JS::Symbol>::concreteTypeName[] =
+template<> const char16_t TracerConcrete<JS::Symbol>::concreteTypeName[] =
     MOZ_UTF16("JS::Symbol");
-template<> const jschar TracerConcrete<JSScript>::concreteTypeName[] =
+template<> const char16_t TracerConcrete<JSScript>::concreteTypeName[] =
     MOZ_UTF16("JSScript");
-template<> const jschar TracerConcrete<js::LazyScript>::concreteTypeName[] =
+template<> const char16_t TracerConcrete<js::LazyScript>::concreteTypeName[] =
     MOZ_UTF16("js::LazyScript");
-template<> const jschar TracerConcrete<js::jit::JitCode>::concreteTypeName[] =
+template<> const char16_t TracerConcrete<js::jit::JitCode>::concreteTypeName[] =
     MOZ_UTF16("js::jit::JitCode");
-template<> const jschar TracerConcrete<js::Shape>::concreteTypeName[] =
+template<> const char16_t TracerConcrete<js::Shape>::concreteTypeName[] =
     MOZ_UTF16("js::Shape");
-template<> const jschar TracerConcrete<js::BaseShape>::concreteTypeName[] =
+template<> const char16_t TracerConcrete<js::BaseShape>::concreteTypeName[] =
     MOZ_UTF16("js::BaseShape");
-template<> const jschar TracerConcrete<js::types::TypeObject>::concreteTypeName[] =
+template<> const char16_t TracerConcrete<js::types::TypeObject>::concreteTypeName[] =
     MOZ_UTF16("js::types::TypeObject");

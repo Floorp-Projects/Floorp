@@ -67,9 +67,9 @@ XDRState<mode>::codeChars(const Latin1Char *chars, size_t nchars)
 
 template<XDRMode mode>
 bool
-XDRState<mode>::codeChars(jschar *chars, size_t nchars)
+XDRState<mode>::codeChars(char16_t *chars, size_t nchars)
 {
-    size_t nbytes = nchars * sizeof(jschar);
+    size_t nbytes = nchars * sizeof(char16_t);
     if (mode == XDR_ENCODE) {
         uint8_t *ptr = buf.write(nbytes);
         if (!ptr)

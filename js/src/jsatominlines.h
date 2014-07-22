@@ -174,7 +174,7 @@ AtomHasher::match(const AtomStateEntry &entry, const Lookup &lookup)
         return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
     }
 
-    const jschar *keyChars = key->twoByteChars(lookup.nogc);
+    const char16_t *keyChars = key->twoByteChars(lookup.nogc);
     if (lookup.isLatin1)
         return EqualChars(lookup.latin1Chars, keyChars, lookup.length);
     return mozilla::PodEqual(keyChars, lookup.twoByteChars, lookup.length);

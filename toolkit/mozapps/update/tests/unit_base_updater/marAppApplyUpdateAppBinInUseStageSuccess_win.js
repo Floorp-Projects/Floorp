@@ -58,7 +58,7 @@ function setupAppFilesFinished() {
 
 function customLaunchAppToApplyUpdate() {
   logTestInfo("start - locking installation directory");
-  const LPCWSTR = ctypes.jschar.ptr;
+  const LPCWSTR = ctypes.char16_t.ptr;
   const DWORD = ctypes.uint32_t;
   const LPVOID = ctypes.voidptr_t;
   const GENERIC_READ = 0x80000000;

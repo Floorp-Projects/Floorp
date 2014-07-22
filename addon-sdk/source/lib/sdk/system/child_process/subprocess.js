@@ -193,9 +193,9 @@ const LRESULT = ctypes.size_t;
 const ULONG_PTR = ctypes.uintptr_t;
 const PVOID = ctypes.voidptr_t;
 const LPVOID = PVOID;
-const LPCTSTR = ctypes.jschar.ptr;
-const LPCWSTR = ctypes.jschar.ptr;
-const LPTSTR = ctypes.jschar.ptr;
+const LPCTSTR = ctypes.char16_t.ptr;
+const LPCWSTR = ctypes.char16_t.ptr;
+const LPTSTR = ctypes.char16_t.ptr;
 const LPSTR = ctypes.char.ptr;
 const LPCSTR = ctypes.char.ptr;
 const LPBYTE = ctypes.char.ptr;
@@ -707,8 +707,8 @@ function subprocess_win32(options) {
         if(environment.length) {
             //An environment block consists of
             //a null-terminated block of null-terminated strings.
-            //Using CREATE_UNICODE_ENVIRONMENT so needs to be jschar
-            environment = ctypes.jschar.array()(environment.join('\0') + '\0');
+            //Using CREATE_UNICODE_ENVIRONMENT so needs to be char16_t
+            environment = ctypes.char16_t.array()(environment.join('\0') + '\0');
         } else {
             environment = null;
         }

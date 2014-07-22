@@ -1258,7 +1258,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             if (loadBytecode) {
                 script = JS_DecodeScript(cx, loadBuffer, loadLength, options.originPrincipals(cx));
             } else {
-                mozilla::Range<const jschar> chars = codeChars.twoByteRange();
+                mozilla::Range<const char16_t> chars = codeChars.twoByteRange();
                 (void) JS::Compile(cx, global, options, chars.start().get(), chars.length(), &script);
             }
 
@@ -1275,7 +1275,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             if (!chars.initTwoByte(cx, flat))
                 return false;
 
-            const jschar *durl = chars.twoByteRange().start().get();
+            const char16_t *durl = chars.twoByteRange().start().get();
             if (!script->scriptSource()->setDisplayURL(cx, durl))
                 return false;
         }
@@ -1288,7 +1288,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             if (!chars.initTwoByte(cx, flat))
                 return false;
 
-            const jschar *smurl = chars.twoByteRange().start().get();
+            const char16_t *smurl = chars.twoByteRange().start().get();
             if (!script->scriptSource()->setSourceMapURL(cx, smurl))
                 return false;
         }
@@ -1362,7 +1362,7 @@ FileAsString(JSContext *cx, const char *pathname)
                     JS_ReportError(cx, "can't read %s: %s", pathname,
                                    (ptrdiff_t(cc) < 0) ? strerror(errno) : "short read");
                 } else {
-                    jschar *ucbuf =
+                    char16_t *ucbuf =
                         JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(buf, len), &len).get();
                     if (!ucbuf) {
                         JS_ReportError(cx, "Invalid UTF-8 in file '%s'", pathname);
@@ -1447,7 +1447,7 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
     if (!chars.initTwoByte(cx, str))
         return false;
 
-    const jschar *ucbuf = chars.twoByteRange().start().get();
+    const char16_t *ucbuf = chars.twoByteRange().start().get();
     size_t buflen = str->length();
 
     JS::Anchor<JSString *> a_str(str);
@@ -2377,7 +2377,7 @@ Intern(JSContext *cx, unsigned argc, jsval *vp)
     if (!strChars.initTwoByte(cx, str))
         return false;
 
-    mozilla::Range<const jschar> chars = strChars.twoByteRange();
+    mozilla::Range<const char16_t> chars = strChars.twoByteRange();
 
     if (!JS_InternUCStringN(cx, chars.start().get(), chars.length()))
         return false;
@@ -2553,9 +2553,9 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
     if (!strChars.initTwoByte(cx, str))
         return false;
 
-    mozilla::Range<const jschar> chars = strChars.twoByteRange();
+    mozilla::Range<const char16_t> chars = strChars.twoByteRange();
     size_t srclen = chars.length();
-    const jschar *src = chars.start().get();
+    const char16_t *src = chars.start().get();
 
     bool lazy = false;
     if (srclen == 4) {
@@ -2677,10 +2677,10 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
 struct WorkerInput
 {
     JSRuntime *runtime;
-    jschar *chars;
+    char16_t *chars;
     size_t length;
 
-    WorkerInput(JSRuntime *runtime, jschar *chars, size_t length)
+    WorkerInput(JSRuntime *runtime, char16_t *chars, size_t length)
       : runtime(runtime), chars(chars), length(length)
     {}
 
@@ -2756,7 +2756,7 @@ EvalInWorker(JSContext *cx, unsigned argc, jsval *vp)
 
     JSLinearString *str = &args[0].toString()->asLinear();
 
-    jschar *chars = (jschar *) js_malloc(str->length() * sizeof(jschar));
+    char16_t *chars = (char16_t *) js_malloc(str->length() * sizeof(char16_t));
     if (!chars)
         return false;
     CopyChars(chars, *str);
@@ -3305,7 +3305,7 @@ Compile(JSContext *cx, unsigned argc, jsval *vp)
            .setCompileAndGo(true)
            .setNoScriptRval(true);
     RootedScript script(cx);
-    const jschar *chars = stableChars.twoByteRange().start().get();
+    const char16_t *chars = stableChars.twoByteRange().start().get();
     bool ok = JS_CompileUCScript(cx, global, chars,
                                  scriptContents->length(), options, &script);
     args.rval().setUndefined();
@@ -3339,7 +3339,7 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
         return false;
 
     size_t length = scriptContents->length();
-    const jschar *chars = stableChars.twoByteRange().start().get();
+    const char16_t *chars = stableChars.twoByteRange().start().get();
 
     CompileOptions options(cx);
     options.setIntroductionType("js shell parse")
@@ -3389,7 +3389,7 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
     if (!stableChars.initTwoByte(cx, scriptContents))
         return false;
 
-    const jschar *chars = stableChars.twoByteRange().start().get();
+    const char16_t *chars = stableChars.twoByteRange().start().get();
     size_t length = scriptContents->length();
     Parser<frontend::SyntaxParseHandler> parser(cx, &cx->tempLifoAlloc(),
                                                 options, chars, length, false, nullptr, nullptr);
@@ -3420,7 +3420,7 @@ class OffThreadState {
     OffThreadState() : monitor(), state(IDLE), token(), source(nullptr) { }
     bool init() { return monitor.init(); }
 
-    bool startIfIdle(JSContext *cx, ScopedJSFreePtr<jschar> &newSource) {
+    bool startIfIdle(JSContext *cx, ScopedJSFreePtr<char16_t> &newSource) {
         AutoLockMonitor alm(monitor);
         if (state != IDLE)
             return false;
@@ -3482,7 +3482,7 @@ class OffThreadState {
     Monitor monitor;
     State state;
     void *token;
-    jschar *source;
+    char16_t *source;
 };
 
 static OffThreadState offThreadState;
@@ -3544,15 +3544,15 @@ OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
         return false;
 
     size_t length = scriptContents->length();
-    const jschar *chars = stableChars.twoByteRange().start().get();
+    const char16_t *chars = stableChars.twoByteRange().start().get();
 
     // Make sure we own the string's chars, so that they are not freed before
     // the compilation is finished.
-    ScopedJSFreePtr<jschar> ownedChars;
+    ScopedJSFreePtr<char16_t> ownedChars;
     if (stableChars.maybeGiveOwnershipToCaller()) {
-        ownedChars = const_cast<jschar*>(chars);
+        ownedChars = const_cast<char16_t*>(chars);
     } else {
-        jschar *copy = cx->pod_malloc<jschar>(length);
+        char16_t *copy = cx->pod_malloc<char16_t>(length);
         if (!copy)
             return false;
 
@@ -4145,7 +4145,7 @@ class ShellSourceHook: public SourceHook {
   public:
     ShellSourceHook(JSContext *cx, JSFunction &fun) : fun(cx, &fun) {}
 
-    bool load(JSContext *cx, const char *filename, jschar **src, size_t *length) {
+    bool load(JSContext *cx, const char *filename, char16_t **src, size_t *length) {
         RootedString str(cx, JS_NewStringCopyZ(cx, filename));
         if (!str)
             return false;
@@ -4160,7 +4160,7 @@ class ShellSourceHook: public SourceHook {
             return false;
 
         *length = JS_GetStringLength(str);
-        *src = cx->pod_malloc<jschar>(*length);
+        *src = cx->pod_malloc<char16_t>(*length);
         if (!*src)
             return false;
 
@@ -4238,7 +4238,7 @@ PrintProfilerEvents(JSContext *cx, unsigned argc, Value *vp)
 }
 
 #if defined(JS_ARM_SIMULATOR)
-typedef Vector<jschar, 0, SystemAllocPolicy> StackChars;
+typedef Vector<char16_t, 0, SystemAllocPolicy> StackChars;
 Vector<StackChars, 0, SystemAllocPolicy> stacks;
 
 static void
@@ -4806,7 +4806,7 @@ PrintHelpString(JSContext *cx, jsval v)
         for (const Latin1Char *p = linear->latin1Chars(nogc); *p; p++)
             fprintf(gOutFile, "%c", char(*p));
     } else {
-        for (const jschar *p = linear->twoByteChars(nogc); *p; p++)
+        for (const char16_t *p = linear->twoByteChars(nogc); *p; p++)
             fprintf(gOutFile, "%c", char(*p));
     }
     fprintf(gOutFile, "\n");
@@ -5337,7 +5337,7 @@ class ScopedFileDesc
 static const uint32_t asmJSCacheCookie = 0xabbadaba;
 
 static bool
-ShellOpenAsmJSCacheEntryForRead(HandleObject global, const jschar *begin, const jschar *limit,
+ShellOpenAsmJSCacheEntryForRead(HandleObject global, const char16_t *begin, const char16_t *limit,
                                 size_t *serializedSizeOut, const uint8_t **memoryOut,
                                 intptr_t *handleOut)
 {
@@ -5410,7 +5410,7 @@ ShellCloseAsmJSCacheEntryForRead(size_t serializedSize, const uint8_t *memory, i
 
 static bool
 ShellOpenAsmJSCacheEntryForWrite(HandleObject global, bool installed,
-                                 const jschar *begin, const jschar *end,
+                                 const char16_t *begin, const char16_t *end,
                                  size_t serializedSize, uint8_t **memoryOut, intptr_t *handleOut)
 {
     if (!jsCachingEnabled || !jsCacheAsmJSPath)

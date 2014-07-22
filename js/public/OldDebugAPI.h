@@ -75,7 +75,7 @@ JS_GetFunctionScript(JSContext *cx, JS::HandleFunction fun);
 extern JS_PUBLIC_API(const char *)
 JS_GetScriptFilename(JSScript *script);
 
-extern JS_PUBLIC_API(const jschar *)
+extern JS_PUBLIC_API(const char16_t *)
 JS_GetScriptSourceMap(JSContext *cx, JSScript *script);
 
 extern JS_PUBLIC_API(unsigned)

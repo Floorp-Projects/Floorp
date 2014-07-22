@@ -163,7 +163,7 @@ void LossyConvertUTF8toUTF16(const char* aInput, uint32_t aLength, nsAString& aO
 
   char16_t dst[aLength]; // Allocating for worst case.
 
-  // First, count how many jschars need to be in the inflated string.
+  // Count how many char16_t characters are needed in the inflated string.
   // |i| is the index into |src|, and |j| is the the index into |dst|.
   size_t srclen = src.length();
   uint32_t j = 0;
@@ -214,20 +214,20 @@ void LossyConvertUTF8toUTF16(const char* aInput, uint32_t aLength, nsAString& aO
         if ((src[i + m] & 0xC0) != 0x80)
           INVALID(ReportInvalidCharacter, i, m);
 
-      // Determine the code unit's length in jschars and act accordingly.
+      // Determine the code unit's length in char16_t units and act accordingly.
       v = JS::Utf8ToOneUcs4Char((uint8_t *)&src[i], n);
       if (v < 0x10000) {
-        // The n-byte UTF8 code unit will fit in a single jschar.
-        dst[j] = jschar(v);
+        // The n-byte UTF8 code unit will fit in a single char16_t.
+        dst[j] = char16_t(v);
       } else {
         v -= 0x10000;
         if (v <= 0xFFFFF) {
-          // The n-byte UTF8 code unit will fit in two jschars.
-          dst[j] = jschar((v >> 10) + 0xD800);
+          // The n-byte UTF8 code unit will fit in two char16_t units.
+          dst[j] = char16_t((v >> 10) + 0xD800);
           j++;
-          dst[j] = jschar((v & 0x3FF) + 0xDC00);
+          dst[j] = char16_t((v & 0x3FF) + 0xDC00);
         } else {
-          // The n-byte UTF8 code unit won't fit in two jschars.
+          // The n-byte UTF8 code unit won't fit in two char16_t units.
           INVALID(ReportTooBigCharacter, v, 1);
         }
       }

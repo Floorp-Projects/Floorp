@@ -3482,7 +3482,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     CompileOptions options(cx);
     options.setFileAndLine(filename, lineno);
     options.setCanLazilyParse(false);
-    mozilla::Range<const jschar> chars = flatChars.twoByteRange();
+    mozilla::Range<const char16_t> chars = flatChars.twoByteRange();
     Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(), options, chars.start().get(),
                                     chars.length(), /* foldConstants = */ false, nullptr, nullptr);
 

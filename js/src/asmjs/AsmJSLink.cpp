@@ -755,7 +755,7 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
     if (!stableChars.initTwoByte(cx, src))
         return false;
 
-    const jschar *chars = stableChars.twoByteRange().start().get();
+    const char16_t *chars = stableChars.twoByteRange().start().get();
     SourceBufferHolder::Ownership ownership = stableChars.maybeGiveOwnershipToCaller()
                                               ? SourceBufferHolder::GiveOwnership
                                               : SourceBufferHolder::NoOwnership;

@@ -15,7 +15,7 @@ using namespace js;
 
 class AutoInflatedString {
     JSContext * const cx;
-    jschar *chars_;
+    char16_t *chars_;
     size_t length_;
 
   public:
@@ -31,7 +31,7 @@ class AutoInflatedString {
             abort();
     }
 
-    const jschar *chars() const { return chars_; }
+    const char16_t *chars() const { return chars_; }
     size_t length() const { return length_; }
 };
 
@@ -71,26 +71,26 @@ BEGIN_TEST(testParseJSON_success)
 
     JS::Rooted<JSFlatString*> str(cx);
 
-    const jschar emptystr[] = { '\0' };
+    const char16_t emptystr[] = { '\0' };
     str = js::NewStringCopyN<CanGC>(cx, emptystr, 0);
     CHECK(str);
     expected = STRING_TO_JSVAL(str);
     CHECK(TryParse(cx, "\"\"", expected));
 
-    const jschar nullstr[] = { '\0' };
+    const char16_t nullstr[] = { '\0' };
     str = NewString(cx, nullstr);
     CHECK(str);
     expected = STRING_TO_JSVAL(str);
     CHECK(TryParse(cx, "\"\\u0000\"", expected));
 
-    const jschar backstr[] = { '\b' };
+    const char16_t backstr[] = { '\b' };
     str = NewString(cx, backstr);
     CHECK(str);
     expected = STRING_TO_JSVAL(str);
     CHECK(TryParse(cx, "\"\\b\"", expected));
     CHECK(TryParse(cx, "\"\\u0008\"", expected));
 
-    const jschar newlinestr[] = { '\n', };
+    const char16_t newlinestr[] = { '\n', };
     str = NewString(cx, newlinestr);
     CHECK(str);
     expected = STRING_TO_JSVAL(str);
@@ -136,7 +136,7 @@ BEGIN_TEST(testParseJSON_success)
 }
 
 template<size_t N> static JSFlatString *
-NewString(JSContext *cx, const jschar (&chars)[N])
+NewString(JSContext *cx, const char16_t (&chars)[N])
 {
     return js::NewStringCopyN<CanGC>(cx, chars, N);
 }
@@ -306,15 +306,15 @@ struct ContextPrivate {
     static const size_t MaxSize = sizeof("4294967295");
     unsigned unexpectedErrorCount;
     unsigned expectedErrorCount;
-    jschar column[MaxSize];
-    jschar line[MaxSize];
+    char16_t column[MaxSize];
+    char16_t line[MaxSize];
 };
 
 static void
 ReportJSONError(JSContext *cx, const char *message, JSErrorReport *report)
 {
     ContextPrivate *p = static_cast<ContextPrivate *>(JS_GetContextPrivate(cx));
-    // Although messageArgs[1] and messageArgs[2] are jschar*, we cast them to char*
+    // Although messageArgs[1] and messageArgs[2] are char16_t*, we cast them to char*
     // here because JSONParser::error() stores char* strings in them.
     js_strncpy(p->line, report->messageArgs[1], js_strlen(report->messageArgs[1]));
     js_strncpy(p->column, report->messageArgs[2], js_strlen(report->messageArgs[2]));
