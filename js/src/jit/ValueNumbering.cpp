@@ -479,6 +479,12 @@ ValueNumberer::visitDefinition(MDefinition *def)
         IonSpew(IonSpew_GVN, "    Folded %s%u to %s%u",
                 def->opName(), def->id(), sim->opName(), sim->id());
         ReplaceAllUsesWith(def, sim);
+
+        // The node's foldsTo said |def| can be replaced by |rep|. If |def| is a
+        // guard, then either |rep| is also a guard, or a guard isn't actually
+        // needed, so we can clear |def|'s guard flag and let it be deleted.
+        def->setNotGuardUnchecked();
+
         if (IsDead(def) && !deleteDefsRecursively(def))
             return false;
         def = sim;
@@ -495,10 +501,9 @@ ValueNumberer::visitDefinition(MDefinition *def)
                     def->opName(), def->id(), rep->opName(), rep->id());
             ReplaceAllUsesWith(def, rep);
 
-            // This is effectively what the old GVN did. It allows isGuard()
-            // instructions to be deleted if they are redundant, and the
-            // replacement is not even guaranteed to have isGuard() set.
-            // TODO: Clean this up (bug 1031410).
+            // The node's congruentTo said |def| is congruent to |rep|, and it's
+            // dominated by |rep|. If |def| is a guard, it's covered by |rep|,
+            // so we can clear |def|'s guard flag and let it be deleted.
             def->setNotGuardUnchecked();
 
             if (IsDead(def) && !deleteDefsRecursively(def))
