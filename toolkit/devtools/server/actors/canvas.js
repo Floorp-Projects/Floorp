@@ -117,7 +117,7 @@ let FrameSnapshotActor = protocol.ActorClass({
     protocol.Actor.prototype.initialize.call(this, conn);
     this._contentCanvas = canvas;
     this._functionCalls = calls;
-    this._lastDrawCallScreenshot = screenshot;
+    this._animationFrameEndScreenshot = screenshot;
   },
 
   /**
@@ -127,7 +127,7 @@ let FrameSnapshotActor = protocol.ActorClass({
     return {
       calls: this._functionCalls,
       thumbnails: this._functionCalls.map(e => e._thumbnail).filter(e => !!e),
-      screenshot: this._lastDrawCallScreenshot
+      screenshot: this._animationFrameEndScreenshot
     };
   }, {
     response: { overview: RetVal("snapshot-overview") }
@@ -187,17 +187,17 @@ let FrameSnapshotActor = protocol.ActorClass({
 let FrameSnapshotFront = protocol.FrontClass(FrameSnapshotActor, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
-    this._lastDrawCallScreenshot = null;
+    this._animationFrameEndScreenshot = null;
     this._cachedScreenshots = new WeakMap();
   },
 
   /**
-   * This implementation caches the last draw call screenshot to optimize
+   * This implementation caches the animation frame end screenshot to optimize
    * frontend requests to `generateScreenshotFor`.
    */
   getOverview: custom(function() {
     return this._getOverview().then(data => {
-      this._lastDrawCallScreenshot = data.screenshot;
+      this._animationFrameEndScreenshot = data.screenshot;
       return data;
     });
   }, {
@@ -210,7 +210,7 @@ let FrameSnapshotFront = protocol.FrontClass(FrameSnapshotActor, {
    */
   generateScreenshotFor: custom(function(functionCall) {
     if (CanvasFront.ANIMATION_GENERATORS.has(functionCall.name)) {
-      return promise.resolve(this._lastDrawCallScreenshot);
+      return promise.resolve(this._animationFrameEndScreenshot);
     }
     let cachedScreenshot = this._cachedScreenshots.get(functionCall);
     if (cachedScreenshot) {
@@ -371,7 +371,7 @@ let CanvasActor = exports.CanvasActor = protocol.ActorClass({
     let height = this._lastContentCanvasHeight;
     let flipped = !!this._lastThumbnailFlipped; // undefined -> false
     let pixels = ContextUtils.getPixelStorage()["32bit"];
-    let lastDrawCallScreenshot = {
+    let animationFrameEndScreenshot = {
       index: index,
       width: width,
       height: height,
@@ -384,7 +384,7 @@ let CanvasActor = exports.CanvasActor = protocol.ActorClass({
     let frameSnapshot = new FrameSnapshotActor(this.conn, {
       canvas: this._lastDrawCallCanvas,
       calls: functionCalls,
-      screenshot: lastDrawCallScreenshot
+      screenshot: animationFrameEndScreenshot
     });
 
     this._currentAnimationFrameSnapshot.resolve(frameSnapshot);
