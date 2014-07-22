@@ -234,7 +234,7 @@ class nsCSSScanner {
   // which, for historical reasons, must make additional function
   // tokens behave like url().  Please do not add new uses to the
   // parser.
-  bool NextURL(nsCSSToken& aTokenResult);
+  void NextURL(nsCSSToken& aTokenResult);
 
   // This is exposed for use by nsCSSParser::ParsePseudoClassWithNthPairArg,
   // because "2n-1" is a single DIMENSION token, and "n-1" is a single
