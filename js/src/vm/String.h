@@ -964,9 +964,6 @@ JS_STATIC_ASSERT(sizeof(JSAtom) == sizeof(JSString));
 
 namespace js {
 
-/* Temporary flag to enable Latin1 strings (bug 998392). */
-extern bool EnableLatin1Strings;
-
 /*
  * Thread safe RAII wrapper for inspecting the contents of JSStrings. The
  * thread safe operations such as |getCharsNonDestructive| require allocation

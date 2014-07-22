@@ -6408,11 +6408,6 @@ main(int argc, char **argv, char **envp)
 
 #endif // DEBUG
 
-    // Set this option before initializing the JSRuntime, so that Latin1 strings
-    // are used for strings allocated during initialization.
-    if (op.getBoolOption("latin1-strings"))
-        js::EnableLatin1Strings = true;
-
 #ifdef JS_THREADSAFE
     // The fake thread count must be set before initializing the Runtime,
     // which spins up the thread pool.
