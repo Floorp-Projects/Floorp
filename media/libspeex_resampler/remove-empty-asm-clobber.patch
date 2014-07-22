@@ -1,0 +1,33 @@
+https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html#Extended-Asm says
+
+  asm [volatile] ( AssemblerTemplate : [OutputOperands] [ : [InputOperands] [ : [Clobbers] ] ] )
+
+which implies that Clobbers is optional even after the third colon, but 
+the gcc used for b2g_try_emulator_dep builds says
+
+resample_neon.c: In function 'saturate_32bit_to_16bit':
+resample_neon.c:50: error: expected string literal before ')' token
+
+diff --git a/media/libspeex_resampler/src/resample_neon.c b/media/libspeex_resampler/src/resample_neon.c
+--- a/media/libspeex_resampler/src/resample_neon.c
++++ b/media/libspeex_resampler/src/resample_neon.c
+@@ -41,18 +41,17 @@
+ #include <arm_neon.h>
+ 
+ #ifdef FIXED_POINT
+ #ifdef __thumb2__
+ static inline int32_t saturate_32bit_to_16bit(int32_t a) {
+     int32_t ret;
+     asm ("ssat %[ret], #16, %[a]"
+          : [ret] "=&r" (ret)
+-         : [a] "r" (a)
+-         : );
++         : [a] "r" (a));
+     return ret;
+ }
+ #else
+ static inline int32_t saturate_32bit_to_16bit(int32_t a) {
+     int32_t ret;
+     asm ("vmov.s32 d0[0], %[a]\n"
+          "vqmovn.s32 d0, q0\n"
+          "vmov.s16 %[ret], d0[0]\n"
