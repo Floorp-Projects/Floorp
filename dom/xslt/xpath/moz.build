@@ -59,4 +59,4 @@ LOCAL_INCLUDES += [
     '../xslt',
 ]
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'

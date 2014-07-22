@@ -24,4 +24,4 @@ srcdir = '.'
 
 include('sources.mozbuild')
 
-FINAL_LIBRARY = 'xulapp_s'
+FINAL_LIBRARY = 'xul'

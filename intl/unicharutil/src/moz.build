@@ -12,4 +12,4 @@ UNIFIED_SOURCES += [
     'nsUnicodeNormalizer.cpp',
 ]
 
-FINAL_LIBRARY = 'i18n'
+FINAL_LIBRARY = 'xul'

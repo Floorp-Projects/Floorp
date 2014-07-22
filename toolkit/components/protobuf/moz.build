@@ -43,7 +43,7 @@ UNIFIED_SOURCES += [
     'google/protobuf/wire_format_lite.cc',
 ]
 
-FINAL_LIBRARY = 'toolkitcomps'
+FINAL_LIBRARY = 'xul'
 
 DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
 

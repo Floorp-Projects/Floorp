@@ -17,4 +17,4 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FAIL_ON_WARNINGS = True
 
-FINAL_LIBRARY = 'xpwidgets_s'
+FINAL_LIBRARY = 'xul'

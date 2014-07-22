@@ -22,7 +22,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'nsWinTraceMalloc.cpp',
     ]
 
-FINAL_LIBRARY = 'xpcom_core'
+FINAL_LIBRARY = 'xul'
 
 if CONFIG['WRAP_SYSTEM_INCLUDES']:
     DEFINES['WRAP_SYSTEM_INCLUDES'] = True

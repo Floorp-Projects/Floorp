@@ -24,4 +24,4 @@ LOCAL_INCLUDES += [
     '../base',
 ]
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'

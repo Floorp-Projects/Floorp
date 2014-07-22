@@ -59,6 +59,6 @@ LOCAL_INCLUDES += [
 
 FAIL_ON_WARNINGS = True
 
-FINAL_LIBRARY = 'xpcom_core'
+FINAL_LIBRARY = 'xul'
 
 include('/ipc/chromium/chromium-config.mozbuild')

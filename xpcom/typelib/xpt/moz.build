@@ -20,7 +20,7 @@ EXPORTS += [
     'xpt_xdr.h',
 ]
 
-FINAL_LIBRARY = 'xpcom_core'
+FINAL_LIBRARY = 'xul'
 
 GENERATED_INCLUDES += ['/xpcom/base']
 LOCAL_INCLUDES += ['/xpcom/base']
