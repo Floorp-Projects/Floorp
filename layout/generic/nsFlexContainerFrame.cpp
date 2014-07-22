@@ -1064,24 +1064,6 @@ nsFlexContainerFrame::
     return;
   }
 
-  // We need to compute our "max-content" height, which is what we
-  // get from reflowing into our available width.
-  // Note: This has to come *after* we construct the FlexItem, since we
-  // invoke at least one convenience method (ResolveStretchedCrossSize) which
-  // requires a FlexItem.
-
-  // Give the item a special reflow with "mIsFlexContainerMeasuringHeight"
-  // set.  This tells it to behave as if it had "height: auto", regardless
-  // of what the "height" property is actually set to.
-  nsHTMLReflowState
-    childRSForMeasuringHeight(aPresContext, aParentReflowState,
-                              aFlexItem.Frame(),
-                              nsSize(aParentReflowState.ComputedWidth(),
-                                     NS_UNCONSTRAINEDSIZE),
-                              -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
-  childRSForMeasuringHeight.mFlags.mIsFlexContainerMeasuringHeight = true;
-  childRSForMeasuringHeight.Init(aPresContext);
-
   // For single-line vertical flexbox, we need to give our flex items an early
   // opportunity to stretch, since any stretching of their cross-size (width)
   // will likely impact the max-content main-size (height) that we're about to
@@ -1091,11 +1073,6 @@ nsFlexContainerFrame::
       aParentReflowState.mStylePosition->mFlexWrap) {
     aFlexItem.ResolveStretchedCrossSize(aParentReflowState.ComputedWidth(),
                                         aAxisTracker);
-  }
-
-  if (aFlexItem.IsStretched()) {
-    childRSForMeasuringHeight.SetComputedWidth(aFlexItem.GetCrossSize());
-    childRSForMeasuringHeight.mFlags.mHResize = true;
   }
 
   // If this item is flexible (vertically), or if we're measuring the
@@ -1108,8 +1085,46 @@ nsFlexContainerFrame::
   // (Note: We don't have to do this for width, because InitResizeFlags
   // will always turn on mHResize on when it sees that the computed width
   // is different from current width, and that's all we need.)
-  if (!aFlexItem.IsFrozen() ||  // Are we flexible?
-      !isMainSizeAuto) { // Are we *only* measuring this for min-height?
+  bool forceVerticalResizeForMeasuringReflow =
+    !aFlexItem.IsFrozen() || // Is the item flexible?
+    !isMainSizeAuto; // Are we *only* measuring it for 'min-height:auto'?
+
+  nscoord contentHeight =
+    MeasureFlexItemContentHeight(aPresContext, aFlexItem,
+                                 forceVerticalResizeForMeasuringReflow,
+                                 aParentReflowState);
+
+  if (isMainSizeAuto) {
+    aFlexItem.SetFlexBaseSizeAndMainSize(contentHeight);
+  }
+  if (isMainMinSizeAuto) {
+    aFlexItem.UpdateMainMinSize(contentHeight);
+  }
+}
+
+nscoord
+nsFlexContainerFrame::
+  MeasureFlexItemContentHeight(nsPresContext* aPresContext,
+                               FlexItem& aFlexItem,
+                               bool aForceVerticalResizeForMeasuringReflow,
+                               const nsHTMLReflowState& aParentReflowState)
+{
+  // Set up a reflow state for measuring the flex item's auto-height:
+  nsHTMLReflowState
+    childRSForMeasuringHeight(aPresContext, aParentReflowState,
+                              aFlexItem.Frame(),
+                              nsSize(aParentReflowState.ComputedWidth(),
+                                     NS_UNCONSTRAINEDSIZE),
+                              -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
+  childRSForMeasuringHeight.mFlags.mIsFlexContainerMeasuringHeight = true;
+  childRSForMeasuringHeight.Init(aPresContext);
+
+  if (aFlexItem.IsStretched()) {
+    childRSForMeasuringHeight.SetComputedWidth(aFlexItem.GetCrossSize());
+    childRSForMeasuringHeight.mFlags.mHResize = true;
+  }
+
+  if (aForceVerticalResizeForMeasuringReflow) {
     childRSForMeasuringHeight.mFlags.mVResize = true;
   }
 
@@ -1128,20 +1143,14 @@ nsFlexContainerFrame::
                     childDesiredSize, &childRSForMeasuringHeight,
                     0, 0, flags);
 
+  aFlexItem.SetHadMeasuringReflow();
+
   // Subtract border/padding in vertical axis, to get _just_
   // the effective computed value of the "height" property.
   nscoord childDesiredHeight = childDesiredSize.Height() -
     childRSForMeasuringHeight.ComputedPhysicalBorderPadding().TopBottom();
-  childDesiredHeight = std::max(0, childDesiredHeight);
 
-  if (isMainSizeAuto) {
-    aFlexItem.SetFlexBaseSizeAndMainSize(childDesiredHeight);
-  }
-  if (isMainMinSizeAuto) {
-    aFlexItem.UpdateMainMinSize(childDesiredHeight);
-  }
-
-  aFlexItem.SetHadMeasuringReflow();
+  return std::max(0, childDesiredHeight);
 }
 
 FlexItem::FlexItem(nsHTMLReflowState& aFlexItemReflowState,
