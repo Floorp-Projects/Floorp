@@ -4,7 +4,9 @@
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TextureHostBasic.h"
+#ifdef XP_MACOSX
 #include "MacIOSurfaceTextureHostBasic.h"
+#endif
 
 using namespace mozilla::gl;
 using namespace mozilla::gfx;
