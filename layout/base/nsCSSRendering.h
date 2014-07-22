@@ -171,8 +171,9 @@ public:
   void Draw(nsPresContext*       aPresContext,
             nsRenderingContext&  aRenderingContext,
             const nsRect&        aDirtyRect,
-            const nsRect&        aFill,
             const nsRect&        aDest,
+            const nsRect&        aFill,
+            const nsPoint&       aAnchor,
             const mozilla::CSSIntRect& aSrc);
   /**
    * Draws the image to the target rendering context using background-specific
