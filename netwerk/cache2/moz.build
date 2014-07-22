@@ -58,4 +58,4 @@ FAIL_ON_WARNINGS = True
 
 MSVC_ENABLE_PGO = True
 
-FINAL_LIBRARY = 'necko'
+FINAL_LIBRARY = 'xul'

@@ -60,4 +60,4 @@ LOCAL_INCLUDES += [
 
 MSVC_ENABLE_PGO = True
 
-FINAL_LIBRARY = 'xpcom_core'
+FINAL_LIBRARY = 'xul'

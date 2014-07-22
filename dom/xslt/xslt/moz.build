@@ -54,4 +54,4 @@ LOCAL_INCLUDES += [
     '/content/base/src',
 ]
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'

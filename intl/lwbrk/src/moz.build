@@ -34,4 +34,4 @@ else:
 
 MSVC_ENABLE_PGO = True
 
-FINAL_LIBRARY = 'i18n'
+FINAL_LIBRARY = 'xul'

@@ -360,7 +360,7 @@ MSVC_ENABLE_PGO = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = 'thebes'
+FINAL_LIBRARY = 'xul'
 
 if CONFIG['MOZ_DEBUG']:
     DEFINES['D3D_DEBUG_INFO'] = True
