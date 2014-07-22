@@ -890,7 +890,7 @@ private:
     bool DrawArrays_check(GLint first, GLsizei count, GLsizei primcount, const char* info);
     bool DrawElements_check(GLsizei count, GLenum type, WebGLintptr byteOffset,
                             GLsizei primcount, const char* info,
-                            GLuint* out_upperBound = nullptr);
+                            GLuint* out_upperBound);
     bool DrawInstanced_check(const char* info);
     void Draw_cleanup();
 
