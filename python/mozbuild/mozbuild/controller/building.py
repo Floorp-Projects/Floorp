@@ -181,12 +181,6 @@ class BuildMonitor(MozbuildObject):
 
     def start_resource_recording(self):
         # This should be merged into start() once bug 892342 lands.
-
-        # Resource monitoring on Windows is currently busted because of
-        # multiprocessing issues. Bug 914563.
-        if self._is_windows():
-            return
-
         self.resources.start()
         self._resources_started = True
 

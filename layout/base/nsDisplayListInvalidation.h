@@ -42,7 +42,10 @@ public:
    *
    * @param aOffset Offset to shift by.
    */
-  virtual void MoveBy(const nsPoint& aOffset) = 0;
+  virtual void MoveBy(const nsPoint& aOffset)
+  {
+    mBounds.MoveBy(aOffset);
+  }
 
   /**
    * Bounds of the display item
@@ -70,8 +73,6 @@ class nsDisplayItemBoundsGeometry : public nsDisplayItemGeometry
 {
 public:
   nsDisplayItemBoundsGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder);
-
-  virtual void MoveBy(const nsPoint& aOffset) MOZ_OVERRIDE;
 
   bool mHasRoundedCorners;
 };
@@ -115,6 +116,16 @@ public:
   virtual void MoveBy(const nsPoint& aOffset) MOZ_OVERRIDE;
 
   nsRect mPaddingRect;
+};
+
+class nsDisplayBoxShadowOuterGeometry : public nsDisplayItemGenericGeometry
+{
+public:
+  nsDisplayBoxShadowOuterGeometry(nsDisplayItem* aItem,
+                                  nsDisplayListBuilder* aBuilder,
+                                  float aOpacity);
+
+  float mOpacity;
 };
 
 class nsDisplaySolidColorGeometry : public nsDisplayItemBoundsGeometry

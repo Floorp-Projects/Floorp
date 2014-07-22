@@ -256,19 +256,23 @@ update-packaging:
 
 .PHONY: pretty-package
 pretty-package:
-	$(MAKE) package MOZ_PKG_PRETTYNAMES=1
+	unset MOZ_SIGN_CMD && $(MAKE) package MOZ_PKG_PRETTYNAMES=1
 
 .PHONY: pretty-package-tests
 pretty-package-tests:
-	$(MAKE) package-tests MOZ_PKG_PRETTYNAMES=1
+	unset MOZ_SIGN_CMD && $(MAKE) package-tests MOZ_PKG_PRETTYNAMES=1
 
 .PHONY: pretty-l10n-check
 pretty-l10n-check:
-	$(MAKE) l10n-check MOZ_PKG_PRETTYNAMES=1
+	unset MOZ_SIGN_CMD && $(MAKE) l10n-check MOZ_PKG_PRETTYNAMES=1
 
 .PHONY: pretty-update-packaging
 pretty-update-packaging:
-	$(MAKE) -C tools/update-packaging MOZ_PKG_PRETTYNAMES=1
+	unset MOZ_SIGN_CMD && $(MAKE) -C tools/update-packaging MOZ_PKG_PRETTYNAMES=1
+
+.PHONY: pretty-installer
+pretty-installer:
+	unset MOZ_SIGN_CMD && $(MAKE) installer MOZ_PKG_PRETTYNAMES=1
 
 #XXX: this is a hack, since we don't want to clobber for MSVC
 # PGO support, but we can't do this test in client.mk

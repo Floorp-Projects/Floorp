@@ -11,6 +11,7 @@
 
 #include <limits.h>
 
+#include "jit/AsmJSFrameIterator.h"
 #include "jit/IonAllocPolicy.h"
 #include "jit/Label.h"
 #include "jit/Registers.h"
@@ -584,17 +585,30 @@ class CodeLocationLabel
 class CallSiteDesc
 {
     uint32_t line_;
-    uint32_t column_;
+    uint32_t column_ : 31;
+    uint32_t kind_ : 1;
   public:
+    enum Kind {
+        Relative,  // pc-relative call
+        Register   // call *register
+    };
     CallSiteDesc() {}
-    CallSiteDesc(uint32_t line, uint32_t column) : line_(line), column_(column) {}
+    explicit CallSiteDesc(Kind kind)
+      : line_(0), column_(0), kind_(kind)
+    {}
+    CallSiteDesc(uint32_t line, uint32_t column, Kind kind)
+      : line_(line), column_(column), kind_(kind)
+    {
+        JS_ASSERT(column <= INT32_MAX);
+    }
     uint32_t line() const { return line_; }
     uint32_t column() const { return column_; }
+    Kind kind() const { return Kind(kind_); }
 };
 
 // Adds to CallSiteDesc the metadata necessary to walk the stack given an
 // initial stack-pointer.
-struct CallSite : public CallSiteDesc
+class CallSite : public CallSiteDesc
 {
     uint32_t returnAddressOffset_;
     uint32_t stackDepth_;
@@ -621,11 +635,28 @@ struct CallSite : public CallSiteDesc
 typedef Vector<CallSite, 0, SystemAllocPolicy> CallSiteVector;
 
 // As an invariant across architectures, within asm.js code:
-//    $sp % StackAlignment = (AsmJSFrameSize + masm.framePushed) % StackAlignment
-// AsmJSFrameSize is 1 word, for the return address pushed by the call (or, in
-// the case of ARM/MIPS, by the first instruction of the prologue). This means
-// masm.framePushed never includes the pushed return address.
-static const uint32_t AsmJSFrameSize = sizeof(void*);
+//   $sp % StackAlignment = (sizeof(AsmJSFrame) + masm.framePushed) % StackAlignment
+// Thus, AsmJSFrame represents the bytes pushed after the call (which occurred
+// with a StackAlignment-aligned StackPointer) that are not included in
+// masm.framePushed.
+struct AsmJSFrame
+{
+    // The caller's saved frame pointer. In non-profiling mode, internal
+    // asm.js-to-asm.js calls don't update fp and thus don't save the caller's
+    // frame pointer; the space is reserved, however, so that profiling mode can
+    // reuse the same function body without recompiling.
+    uint8_t *callerFP;
+
+    // The return address pushed by the call (in the case of ARM/MIPS the return
+    // address is pushed by the first instruction of the prologue).
+    void *returnAddress;
+};
+static_assert(sizeof(AsmJSFrame) == 2 * sizeof(void*), "?!");
+static const uint32_t AsmJSFrameBytesAfterReturnAddress = sizeof(void*);
+
+// A hoisting of AsmJSModule::activationGlobalDataOffset that avoids #including
+// AsmJSModule everywhere.
+static const unsigned AsmJSActivationGlobalDataOffset = 0;
 
 // Summarizes a heap access made by asm.js code that needs to be patched later
 // and/or looked up by the asm.js signal handlers. Different architectures need
@@ -704,6 +735,26 @@ struct AsmJSGlobalAccess
 // patched after deserialization when the address of global things has changed.
 enum AsmJSImmKind
 {
+    AsmJSImm_ToInt32         = AsmJSExit::Builtin_ToInt32,
+#if defined(JS_CODEGEN_ARM)
+    AsmJSImm_aeabi_idivmod   = AsmJSExit::Builtin_IDivMod,
+    AsmJSImm_aeabi_uidivmod  = AsmJSExit::Builtin_UDivMod,
+#endif
+    AsmJSImm_ModD            = AsmJSExit::Builtin_ModD,
+    AsmJSImm_SinD            = AsmJSExit::Builtin_SinD,
+    AsmJSImm_CosD            = AsmJSExit::Builtin_CosD,
+    AsmJSImm_TanD            = AsmJSExit::Builtin_TanD,
+    AsmJSImm_ASinD           = AsmJSExit::Builtin_ASinD,
+    AsmJSImm_ACosD           = AsmJSExit::Builtin_ACosD,
+    AsmJSImm_ATanD           = AsmJSExit::Builtin_ATanD,
+    AsmJSImm_CeilD           = AsmJSExit::Builtin_CeilD,
+    AsmJSImm_CeilF           = AsmJSExit::Builtin_CeilF,
+    AsmJSImm_FloorD          = AsmJSExit::Builtin_FloorD,
+    AsmJSImm_FloorF          = AsmJSExit::Builtin_FloorF,
+    AsmJSImm_ExpD            = AsmJSExit::Builtin_ExpD,
+    AsmJSImm_LogD            = AsmJSExit::Builtin_LogD,
+    AsmJSImm_PowD            = AsmJSExit::Builtin_PowD,
+    AsmJSImm_ATan2D          = AsmJSExit::Builtin_ATan2D,
     AsmJSImm_Runtime,
     AsmJSImm_RuntimeInterrupt,
     AsmJSImm_StackLimit,
@@ -714,28 +765,14 @@ enum AsmJSImmKind
     AsmJSImm_InvokeFromAsmJS_ToNumber,
     AsmJSImm_CoerceInPlace_ToInt32,
     AsmJSImm_CoerceInPlace_ToNumber,
-    AsmJSImm_ToInt32,
-#if defined(JS_CODEGEN_ARM)
-    AsmJSImm_aeabi_idivmod,
-    AsmJSImm_aeabi_uidivmod,
-#endif
-    AsmJSImm_ModD,
-    AsmJSImm_SinD,
-    AsmJSImm_CosD,
-    AsmJSImm_TanD,
-    AsmJSImm_ASinD,
-    AsmJSImm_ACosD,
-    AsmJSImm_ATanD,
-    AsmJSImm_CeilD,
-    AsmJSImm_CeilF,
-    AsmJSImm_FloorD,
-    AsmJSImm_FloorF,
-    AsmJSImm_ExpD,
-    AsmJSImm_LogD,
-    AsmJSImm_PowD,
-    AsmJSImm_ATan2D,
-    AsmJSImm_Invalid
+    AsmJSImm_Limit
 };
+
+static inline AsmJSImmKind
+BuiltinToImmKind(AsmJSExit::BuiltinKind builtin)
+{
+    return AsmJSImmKind(builtin);
+}
 
 // Pointer to be embedded as an immediate in asm.js code.
 class AsmJSImmPtr
@@ -795,9 +832,9 @@ class AssemblerShared
     }
 
     void append(const CallSiteDesc &desc, size_t currentOffset, size_t framePushed) {
-        // framePushed does not include AsmJSFrameSize, so add it in here (see
+        // framePushed does not include sizeof(AsmJSFrame), so add it in here (see
         // CallSite::stackDepth).
-        CallSite callsite(desc, currentOffset, framePushed + AsmJSFrameSize);
+        CallSite callsite(desc, currentOffset, framePushed + sizeof(AsmJSFrame));
         enoughMemory_ &= callsites_.append(callsite);
     }
     CallSiteVector &&extractCallSites() { return Move(callsites_); }
