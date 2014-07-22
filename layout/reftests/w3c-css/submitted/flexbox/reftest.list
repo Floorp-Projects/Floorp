@@ -134,11 +134,14 @@ fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-1.xhtml  flexbox-align-s
 == flexbox-min-height-auto-002a.html flexbox-min-height-auto-002-ref.html
 fails == flexbox-min-height-auto-002b.html flexbox-min-height-auto-002-ref.html # Bug 1041019
 == flexbox-min-height-auto-002c.html flexbox-min-height-auto-002-ref.html
+== flexbox-min-height-auto-003.html flexbox-min-height-auto-003-ref.html
+== flexbox-min-height-auto-004.html flexbox-min-height-auto-004-ref.html
 == flexbox-min-width-auto-001.html flexbox-min-width-auto-001-ref.html
 == flexbox-min-width-auto-002a.html flexbox-min-width-auto-002-ref.html
 fails == flexbox-min-width-auto-002b.html flexbox-min-width-auto-002-ref.html # Bug 1041019
 == flexbox-min-width-auto-002c.html flexbox-min-width-auto-002-ref.html
 == flexbox-min-width-auto-003.html flexbox-min-width-auto-003-ref.html
+== flexbox-min-width-auto-004.html flexbox-min-width-auto-004-ref.html
 
 # Tests for flex containers with the "overflow" property set
 == flexbox-overflow-horiz-1.html flexbox-overflow-horiz-1-ref.html
