@@ -336,12 +336,39 @@ TiledContentHost::Composite(EffectChain& aEffectChain,
     }
   }
 
-  // Render the low and high precision buffers. Reduce the opacity of the
-  // low-precision buffer to make it a little more subtle and less jarring.
-  // In particular, text rendered at low-resolution and scaled tends to look
-  // pretty heavy and this helps mitigate that.
-  RenderLayerBuffer(mLowPrecisionTiledBuffer, aEffectChain, aOpacity * gfxPrefs::LowPrecisionOpacity(),
-                    aFilter, aClipRect, aLayerProperties->mVisibleRegion, aTransform);
+  // Reduce the opacity of the low-precision buffer to make it a
+  // little more subtle and less jarring. In particular, text
+  // rendered at low-resolution and scaled tends to look pretty
+  // heavy and this helps mitigate that.
+  // However, in cases where the background is transparent, or the layer
+  // already has some opacity, we want to skip this behaviour. Otherwise
+  // we end up changing the expected overall transparency of the content,
+  // and it just looks wrong.
+  float lowPrecisionOpacityReduction;
+  if (aOpacity == 1.0f && gfxPrefs::LowPrecisionOpacity() < 1.0f) {
+    // Background colors are only stored on scrollable layers. Grab
+    // the one from the nearest scrollable ancestor layer.
+    gfxRGBA backgroundColor(0);
+    for (ContainerLayer* ancestor = GetLayer()->GetParent(); ancestor; ancestor = ancestor->GetParent()) {
+      if (ancestor->GetFrameMetrics().IsScrollable()) {
+        backgroundColor = ancestor->GetBackgroundColor();
+        break;
+      }
+    }
+    // If the background color is transparent, skip our opacity reduction.
+    if (backgroundColor.a == 1.0f) {
+      lowPrecisionOpacityReduction = gfxPrefs::LowPrecisionOpacity();
+    } else {
+      lowPrecisionOpacityReduction = 1.0f;
+    }
+  } else {
+    lowPrecisionOpacityReduction = 1.0f;
+  }
+
+  // Render the low and high precision buffers.
+  RenderLayerBuffer(mLowPrecisionTiledBuffer, aEffectChain,
+                    lowPrecisionOpacityReduction * aOpacity, aFilter, aClipRect,
+                    aLayerProperties->mVisibleRegion, aTransform);
   RenderLayerBuffer(mTiledBuffer, aEffectChain, aOpacity, aFilter,
                     aClipRect, aLayerProperties->mVisibleRegion, aTransform);
 
