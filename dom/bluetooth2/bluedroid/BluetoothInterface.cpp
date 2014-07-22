@@ -644,28 +644,52 @@ BluetoothHandsfreeInterface::Cleanup(BluetoothHandsfreeResultHandler* aRes)
 
 /* Connect / Disconnect */
 
-bt_status_t
-BluetoothHandsfreeInterface::Connect(bt_bdaddr_t* aBdAddr)
+void
+BluetoothHandsfreeInterface::Connect(bt_bdaddr_t* aBdAddr,
+                                     BluetoothHandsfreeResultHandler* aRes)
 {
-  return mInterface->connect(aBdAddr);
+  bt_status_t status = mInterface->connect(aBdAddr);
+
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(
+      aRes, &BluetoothHandsfreeResultHandler::Connect, status);
+  }
 }
 
-bt_status_t
-BluetoothHandsfreeInterface::Disconnect(bt_bdaddr_t* aBdAddr)
+void
+BluetoothHandsfreeInterface::Disconnect(bt_bdaddr_t* aBdAddr,
+                                        BluetoothHandsfreeResultHandler* aRes)
 {
-  return mInterface->disconnect(aBdAddr);
+  bt_status_t status = mInterface->disconnect(aBdAddr);
+
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(
+      aRes, &BluetoothHandsfreeResultHandler::Disconnect, status);
+  }
 }
 
-bt_status_t
-BluetoothHandsfreeInterface::ConnectAudio(bt_bdaddr_t* aBdAddr)
+void
+BluetoothHandsfreeInterface::ConnectAudio(
+  bt_bdaddr_t* aBdAddr, BluetoothHandsfreeResultHandler* aRes)
 {
-  return mInterface->connect_audio(aBdAddr);
+  bt_status_t status = mInterface->connect_audio(aBdAddr);
+
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(
+      aRes, &BluetoothHandsfreeResultHandler::ConnectAudio, status);
+  }
 }
 
-bt_status_t
-BluetoothHandsfreeInterface::DisconnectAudio(bt_bdaddr_t* aBdAddr)
+void
+BluetoothHandsfreeInterface::DisconnectAudio(
+  bt_bdaddr_t* aBdAddr, BluetoothHandsfreeResultHandler* aRes)
 {
-  return mInterface->disconnect_audio(aBdAddr);
+  bt_status_t status = mInterface->disconnect_audio(aBdAddr);
+
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(
+      aRes, &BluetoothHandsfreeResultHandler::DisconnectAudio, status);
+  }
 }
 
 /* Voice Recognition */
