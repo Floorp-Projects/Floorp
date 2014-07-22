@@ -41,24 +41,9 @@ AllocateFatInlineString(ThreadSafeContext *cx, size_t len, CharT **chars)
     return str;
 }
 
-template <AllowGC allowGC>
+template <AllowGC allowGC, typename CharT>
 static MOZ_ALWAYS_INLINE JSInlineString *
-NewFatInlineString(ThreadSafeContext *cx, mozilla::Range<const Latin1Char> chars)
-{
-    size_t len = chars.length();
-    Latin1Char *p;
-    JSInlineString *str = AllocateFatInlineString<allowGC>(cx, len, &p);
-    if (!str)
-        return nullptr;
-
-    mozilla::PodCopy(p, chars.start().get(), len);
-    p[len] = '\0';
-    return str;
-}
-
-template <AllowGC allowGC>
-static MOZ_ALWAYS_INLINE JSInlineString *
-NewFatInlineString(ThreadSafeContext *cx, mozilla::Range<const jschar> chars)
+NewFatInlineString(ThreadSafeContext *cx, mozilla::Range<const CharT> chars)
 {
     /*
      * Don't bother trying to find a static atom; measurement shows that not
@@ -66,7 +51,7 @@ NewFatInlineString(ThreadSafeContext *cx, mozilla::Range<const jschar> chars)
      */
 
     size_t len = chars.length();
-    jschar *storage;
+    CharT *storage;
     JSInlineString *str = AllocateFatInlineString<allowGC>(cx, len, &storage);
     if (!str)
         return nullptr;
