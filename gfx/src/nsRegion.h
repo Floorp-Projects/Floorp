@@ -202,6 +202,15 @@ public:
     return Sub(*this, aRect2);
   }
 
+  /**
+   * Returns true iff the given point is inside the region. A region
+   * created from a rect (x=0, y=0, w=100, h=100) will NOT contain
+   * the point x=100, y=100.
+   */
+  bool Contains (int aX, int aY) const
+  {
+    return pixman_region32_contains_point(Impl(), aX, aY, nullptr);
+  }
   bool Contains (const nsRect& aRect) const
   {
     pixman_box32_t box = RectToBox(aRect);
@@ -573,9 +582,14 @@ public:
     return Sub (*this, aRect2);
   }
 
+  /**
+   * Returns true iff the given point is inside the region. A region
+   * created from a rect (x=0, y=0, w=100, h=100) will NOT contain
+   * the point x=100, y=100.
+   */
   bool Contains (int aX, int aY) const
   {
-    return Contains(nsIntRect(aX, aY, 1, 1));
+    return mImpl.Contains(aX, aY);
   }
   bool Contains (const nsIntRect& aRect) const
   {
