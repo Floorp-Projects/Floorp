@@ -612,13 +612,13 @@ SavedStacks::createFrameFromLookup(JSContext *cx, const SavedFrame::Lookup &look
     if (!frameObj)
         return nullptr;
 
-    SavedFrame &f = frameObj->as<SavedFrame>();
-    f.initFromLookup(lookup);
+    RootedSavedFrame f(cx, &frameObj->as<SavedFrame>());
+    f->initFromLookup(lookup);
 
     if (!JSObject::freeze(cx, frameObj))
         return nullptr;
 
-    return &f;
+    return f.get();
 }
 
 /*
