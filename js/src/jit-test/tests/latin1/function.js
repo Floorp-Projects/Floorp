@@ -1,8 +1,8 @@
 function test() {
     var arg1TwoByte = "arg1\u1200";
-    var arg2Latin1 = toLatin1("arg2");
+    var arg2Latin1 = "arg2";
 
-    var bodyLatin1 = toLatin1("return arg2 * 3");
+    var bodyLatin1 = "return arg2 * 3";
 
     var f = Function(arg1TwoByte, arg2Latin1, bodyLatin1);
     assertEq(f(10, 20), 60);
