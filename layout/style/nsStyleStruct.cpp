@@ -1234,7 +1234,7 @@ nsStylePosition::nsStylePosition(void)
   mMinWidth.SetAutoValue();
   mMaxWidth.SetNoneValue();
   mHeight.SetAutoValue();
-  mMinHeight.SetCoordValue(0);
+  mMinHeight.SetAutoValue();
   mMaxHeight.SetNoneValue();
   mFlexBasis.SetAutoValue();
 
