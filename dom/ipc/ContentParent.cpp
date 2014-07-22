@@ -98,6 +98,7 @@
 #include "nsIPresShell.h"
 #include "nsIRemoteBlob.h"
 #include "nsIScriptError.h"
+#include "nsISiteSecurityService.h"
 #include "nsIStyleSheet.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIURIFixup.h"
@@ -3239,6 +3240,23 @@ ContentParent::RecvGetSystemMemory(const uint64_t& aGetterId)
     return true;
 }
 
+bool
+ContentParent::RecvIsSecureURI(const uint32_t& type,
+                               const URIParams& uri,
+                               const uint32_t& flags,
+                               bool* isSecureURI)
+{
+    nsCOMPtr<nsISiteSecurityService> sss(do_GetService(NS_SSSERVICE_CONTRACTID));
+    if (!sss) {
+        return false;
+    }
+    nsCOMPtr<nsIURI> ourURI = DeserializeURI(uri);
+    if (!ourURI) {
+        return false;
+    }
+    nsresult rv = sss->IsSecureURI(type, ourURI, flags, isSecureURI);
+    return NS_SUCCEEDED(rv);
+}
 
 bool
 ContentParent::RecvLoadURIExternal(const URIParams& uri)
