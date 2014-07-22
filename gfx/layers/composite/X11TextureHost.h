@@ -10,7 +10,7 @@
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/gfx/Types.h"
 
-class gfxXlibSurface;
+#include "gfxXlibSurface.h"
 
 namespace mozilla {
 namespace layers {
