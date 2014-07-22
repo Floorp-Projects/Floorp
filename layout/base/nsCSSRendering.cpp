@@ -4744,8 +4744,9 @@ void
 nsImageRenderer::Draw(nsPresContext*       aPresContext,
                       nsRenderingContext&  aRenderingContext,
                       const nsRect&        aDirtyRect,
-                      const nsRect&        aFill,
                       const nsRect&        aDest,
+                      const nsRect&        aFill,
+                      const nsPoint&       aAnchor,
                       const CSSIntRect&    aSrc)
 {
   if (!mIsReady) {
@@ -4757,17 +4758,17 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     return;
   }
 
-  GraphicsFilter graphicsFilter =
-    nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
+  GraphicsFilter filter = nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
 
   switch (mType) {
     case eStyleImageType_Image:
     {
-      nsLayoutUtils::DrawSingleImage(&aRenderingContext, aPresContext,
-                                     mImageContainer,
-                                     graphicsFilter, aFill, aDirtyRect,
-                                     nullptr,
-                                     ConvertImageRendererToDrawFlags(mFlags));
+      nsIntSize imageSize(nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
+                          nsPresContext::AppUnitsToIntCSSPixels(mSize.height));
+      nsLayoutUtils::DrawBackgroundImage(&aRenderingContext, aPresContext,
+                                         mImageContainer, imageSize, filter,
+                                         aDest, aFill, aAnchor, aDirtyRect,
+                                         ConvertImageRendererToDrawFlags(mFlags));
       return;
     }
     case eStyleImageType_Gradient:
@@ -4788,8 +4789,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
 
       nsCOMPtr<imgIContainer> image(ImageOps::CreateFromDrawable(drawable));
       nsLayoutUtils::DrawImage(&aRenderingContext, aPresContext, image,
-                               graphicsFilter, aDest, aFill,
-                               aDest.TopLeft(), aDirtyRect, 
+                               filter, aDest, aFill, aAnchor, aDirtyRect,
                                ConvertImageRendererToDrawFlags(mFlags));
       return;
     }
@@ -4844,22 +4844,8 @@ nsImageRenderer::DrawBackground(nsPresContext*       aPresContext,
     return;
   }
 
-  if (mType == eStyleImageType_Image) {
-    GraphicsFilter graphicsFilter =
-      nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
-
-    nsLayoutUtils::DrawBackgroundImage(&aRenderingContext, aPresContext,
-                mImageContainer,
-                nsIntSize(nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
-                          nsPresContext::AppUnitsToIntCSSPixels(mSize.height)),
-                graphicsFilter,
-                aDest, aFill, aAnchor, aDirty,
-                ConvertImageRendererToDrawFlags(mFlags));
-    return;
-  }
-
   Draw(aPresContext, aRenderingContext,
-       aDirty, aFill, aDest,
+       aDirty, aDest, aFill, aAnchor,
        CSSIntRect(0, 0,
                   nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
                   nsPresContext::AppUnitsToIntCSSPixels(mSize.height)));
@@ -5013,7 +4999,8 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                   ? ComputeTile(aFill, aHFill, aVFill, aUnitSize)
                   : aFill;
 
-  Draw(aPresContext, aRenderingContext, aDirtyRect, aFill, destTile, aSrc);
+  Draw(aPresContext, aRenderingContext, aDirtyRect, destTile,
+       aFill, destTile.TopLeft(), aSrc);
 }
 
 bool
