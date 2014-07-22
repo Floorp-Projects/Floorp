@@ -612,7 +612,7 @@ let ContextUtils = {
     // permanently affect the existing GL state in the process.
     if (contextType == CallWatcherFront.CANVAS_WEBGL_CONTEXT) {
       // To keep things fast, replay the context calls on a framebuffer
-      // of smaller dimensions than the actual canvas (maximum 512x512 pixels).
+      // of smaller dimensions than the actual canvas (maximum 256x256 pixels).
       let scaling = Math.min(CanvasFront.WEBGL_SCREENSHOT_MAX_HEIGHT, h) / h;
       replayContextScaling = scaling;
       w = (w * scaling) | 0;
@@ -667,8 +667,6 @@ let ContextUtils = {
         replayContext[name].apply(replayContext, args);
       } else if (type == CallWatcherFront.SETTER_FUNCTION) {
         replayContext[name] = args;
-      } else {
-        // Ignore getter calls.
       }
       if (CanvasFront.DRAW_CALLS.has(name)) {
         lastDrawCallIndex = i;
@@ -742,7 +740,7 @@ let ContextUtils = {
     let newFramebuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, newFramebuffer);
 
-    // Use a texture as the color rendebuffer attachment, since consumers of
+    // Use a texture as the color renderbuffer attachment, since consumers of
     // this function will most likely want to read the rendered pixels back.
     let colorBuffer = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, colorBuffer);
