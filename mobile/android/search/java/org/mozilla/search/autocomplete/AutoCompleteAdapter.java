@@ -5,7 +5,7 @@
 package org.mozilla.search.autocomplete;
 
 import android.content.Context;
-import android.util.Log;
+import android.text.SpannableString;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,13 +13,14 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import org.mozilla.search.R;
+import org.mozilla.search.autocomplete.SearchFragment.Suggestion;
 
 import java.util.List;
 
 /**
  * The adapter that is used to populate the autocomplete rows.
  */
-class AutoCompleteAdapter extends ArrayAdapter<String> {
+class AutoCompleteAdapter extends ArrayAdapter<Suggestion> {
 
     private final AcceptsJumpTaps acceptsJumpTaps;
 
@@ -43,16 +44,16 @@ class AutoCompleteAdapter extends ArrayAdapter<String> {
             convertView = inflater.inflate(R.layout.search_auto_complete_row, null);
         }
 
-        final String text = getItem(position);
+        final Suggestion suggestion = getItem(position);
 
         final TextView textView = (TextView) convertView.findViewById(R.id.auto_complete_row_text);
-        textView.setText(text);
+        textView.setText(suggestion.display);
 
         final View jumpButton = convertView.findViewById(R.id.auto_complete_row_jump_button);
         jumpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                acceptsJumpTaps.onJumpTap(text);
+                acceptsJumpTaps.onJumpTap(suggestion.value);
             }
         });
 
@@ -64,10 +65,10 @@ class AutoCompleteAdapter extends ArrayAdapter<String> {
      *
      * @param suggestions List of search suggestions.
      */
-    public void update(List<String> suggestions) {
+    public void update(List<Suggestion> suggestions) {
         clear();
         if (suggestions != null) {
-            for (String s : suggestions) {
+            for (Suggestion s : suggestions) {
                 add(s);
             }
         }
