@@ -17,6 +17,8 @@ const { getMostRecentBrowserWindow, getOwnerBrowserWindow,
 const { create: createFrame, swapFrameLoaders } = require("../frame/utils");
 const { window: addonWindow } = require("../addon/window");
 const { isNil } = require("../lang/type");
+const { data } = require('../self');
+
 const events = require("../system/events");
 
 
@@ -402,7 +404,10 @@ exports.getContentFrame = getContentFrame;
 function getContentDocument(panel) getContentFrame(panel).contentDocument
 exports.getContentDocument = getContentDocument;
 
-function setURL(panel, url) getContentFrame(panel).setAttribute("src", url)
+function setURL(panel, url) {
+  getContentFrame(panel).setAttribute("src", url ? data.url(url) : url);
+}
+
 exports.setURL = setURL;
 
 function allowContextMenu(panel, allow) {
