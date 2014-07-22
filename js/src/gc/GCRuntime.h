@@ -183,7 +183,7 @@ class GCRuntime
 #endif
 
     size_t maxBytesAllocated() { return maxBytes; }
-    size_t maxMallocBytesAllocated() { return maxBytes; }
+    size_t maxMallocBytesAllocated() { return maxMallocBytes; }
 
   public:
     // Internal public interface
