@@ -153,8 +153,7 @@ var gContentPane = {
    */  
   configureFonts: function ()
   {
-    openDialog("chrome://browser/content/preferences/fonts.xul", 
-               "Browser:FontPreferences", null);
+    gSubDialog.open("chrome://browser/content/preferences/fonts.xul");
   },
 
   /**
@@ -182,8 +181,7 @@ var gContentPane = {
    */
   showTranslationExceptions: function ()
   {
-    openDialog("chrome://browser/content/preferences/translation.xul",
-               "Browser:TranslationExceptions", null);
+    gSubDialog.open("chrome://browser/content/preferences/translation.xul");
   },
 
   openTranslationProviderAttribution: function ()

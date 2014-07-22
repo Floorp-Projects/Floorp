@@ -5,18 +5,26 @@
 package org.mozilla.search.autocomplete;
 
 import android.content.Context;
+import android.text.SpannableString;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.TextView;
+
+import org.mozilla.search.R;
+import org.mozilla.search.autocomplete.SearchFragment.Suggestion;
 
 import java.util.List;
 
 /**
  * The adapter that is used to populate the autocomplete rows.
  */
-class AutoCompleteAdapter extends ArrayAdapter<String> {
+class AutoCompleteAdapter extends ArrayAdapter<Suggestion> {
 
     private final AcceptsJumpTaps acceptsJumpTaps;
+
+    private final LayoutInflater inflater;
 
     public AutoCompleteAdapter(Context context, AcceptsJumpTaps acceptsJumpTaps) {
         // Uses '0' for the template id since we are overriding getView
@@ -26,22 +34,30 @@ class AutoCompleteAdapter extends ArrayAdapter<String> {
 
         // Disable notifying on change. We will notify ourselves in update.
         setNotifyOnChange(false);
+
+        inflater = LayoutInflater.from(context);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        AutoCompleteRowView view;
-
         if (convertView == null) {
-            view = new AutoCompleteRowView(getContext());
-        } else {
-            view = (AutoCompleteRowView) convertView;
+            convertView = inflater.inflate(R.layout.search_auto_complete_row, null);
         }
 
-        view.setOnJumpListener(acceptsJumpTaps);
-        view.setMainText(getItem(position));
+        final Suggestion suggestion = getItem(position);
 
-        return view;
+        final TextView textView = (TextView) convertView.findViewById(R.id.auto_complete_row_text);
+        textView.setText(suggestion.display);
+
+        final View jumpButton = convertView.findViewById(R.id.auto_complete_row_jump_button);
+        jumpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                acceptsJumpTaps.onJumpTap(suggestion.value);
+            }
+        });
+
+        return convertView;
     }
 
     /**
@@ -49,10 +65,10 @@ class AutoCompleteAdapter extends ArrayAdapter<String> {
      *
      * @param suggestions List of search suggestions.
      */
-    public void update(List<String> suggestions) {
+    public void update(List<Suggestion> suggestions) {
         clear();
         if (suggestions != null) {
-            for (String s : suggestions) {
+            for (Suggestion s : suggestions) {
                 add(s);
             }
         }
