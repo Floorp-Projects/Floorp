@@ -1183,16 +1183,27 @@ BluetoothHfpManager::UpdatePhoneCIND(uint32_t aCallIndex)
       numActive, numHeld, callSetupState, number.get(), type));
 }
 
+class DeviceStatusNotificationResultHandler MOZ_FINAL
+: public BluetoothHandsfreeResultHandler
+{
+public:
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    BT_WARNING(
+      "BluetoothHandsfreeInterface::DeviceStatusNotification failed: %d",
+      (int)aStatus);
+  }
+};
+
 void
 BluetoothHfpManager::UpdateDeviceCIND()
 {
   if (sBluetoothHfpInterface) {
-    NS_ENSURE_TRUE_VOID(BT_STATUS_SUCCESS ==
-      sBluetoothHfpInterface->DeviceStatusNotification(
-        (bthf_network_state_t) mService,
-        (bthf_service_type_t) mRoam,
-        mSignal,
-        mBattChg));
+    sBluetoothHfpInterface->DeviceStatusNotification(
+      (bthf_network_state_t) mService,
+      (bthf_service_type_t) mRoam,
+      mSignal,
+      mBattChg, new DeviceStatusNotificationResultHandler());
   }
 }
 
