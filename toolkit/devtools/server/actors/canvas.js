@@ -156,8 +156,6 @@ let FrameSnapshotActor = protocol.ActorClass({
       last: index
     });
 
-    // To keep things fast, generate an image that's relatively small.
-    let dimensions = Math.min(CanvasFront.SCREENSHOT_HEIGHT_MAX, canvas.height);
     let screenshot;
 
     // Depending on the canvas' context, generating a screenshot is done
