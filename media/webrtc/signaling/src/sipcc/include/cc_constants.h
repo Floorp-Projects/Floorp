@@ -578,15 +578,19 @@ typedef enum {
 typedef struct {
   cc_boolean was_passed;
   cc_boolean value;
-  cc_boolean mandatory;
-} cc_boolean_constraint_t;
+} cc_boolean_option_t;
 
 typedef struct {
-  cc_boolean_constraint_t offer_to_receive_audio;
-  cc_boolean_constraint_t offer_to_receive_video;
-  cc_boolean_constraint_t moz_dont_offer_datachannel;
-  cc_boolean_constraint_t moz_bundle_only;
-} cc_media_constraints_t;
+  cc_boolean was_passed;
+  cc_int32_t value;
+} cc_int32_option_t;
+
+typedef struct {
+  cc_int32_option_t offer_to_receive_audio;
+  cc_int32_option_t offer_to_receive_video;
+  cc_boolean_option_t moz_dont_offer_datachannel;
+  cc_boolean_option_t moz_bundle_only;
+} cc_media_options_t;
 
 #endif /* _CC_CONSTANTS_H_ */
 

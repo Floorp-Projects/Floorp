@@ -34,6 +34,16 @@ which makes Windows Media Foundation unavailable.
 #include <wmcodecdsp.h>
 #include <codecapi.h>
 
+// The Windows headers helpfully declare min and max macros, which don't
+// compile in the prescence of std::min and std::max and unified builds.
+// So undef them here.
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+
 // Some SDK versions don't define the AAC decoder CLSID.
 #ifndef CLSID_CMSAACDecMFT
 extern "C" const CLSID CLSID_CMSAACDecMFT;

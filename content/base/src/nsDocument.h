@@ -1742,6 +1742,10 @@ private:
   nsCOMPtr<nsIDocument> mMasterDocument;
   nsRefPtr<mozilla::dom::ImportManager> mImportManager;
 
+  // Set to true when the document is possibly controlled by the ServiceWorker.
+  // Used to prevent multiple requests to ServiceWorkerManager.
+  bool mMaybeServiceWorkerControlled;
+
 #ifdef DEBUG
 public:
   bool mWillReparent;

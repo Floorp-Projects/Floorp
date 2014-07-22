@@ -1313,6 +1313,13 @@ RilObject.prototype = {
   },
 
   /**
+   * Request all of the current cell information known to the radio.
+   */
+  getCellInfoList: function(options) {
+    this.context.Buf.simpleRequest(REQUEST_GET_CELL_INFO_LIST, options);
+  },
+
+  /**
    * Request various states about the network.
    */
   requestNetworkInfo: function() {
@@ -6445,6 +6452,66 @@ RilObject.prototype[REQUEST_GET_NEIGHBORING_CELL_IDS] = function REQUEST_GET_NEI
   }
 
   options.result = neighboringCellIds;
+  this.sendChromeMessage(options);
+};
+RilObject.prototype[REQUEST_GET_CELL_INFO_LIST] = function REQUEST_GET_CELL_INFO_LIST(length, options) {
+  if (options.rilRequestError) {
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    this.sendChromeMessage(options);
+    return;
+  }
+
+  let Buf = this.context.Buf;
+  let cellInfoList = [];
+  let num = Buf.readInt32();
+  for (let i = 0; i < num; i++) {
+    let cellInfo = {};
+    cellInfo.type = Buf.readInt32();
+    cellInfo.registered = Buf.readInt32() ? true : false;
+    cellInfo.timestampType = Buf.readInt32();
+    cellInfo.timestamp = Buf.readInt64();
+
+    switch(cellInfo.type) {
+      case CELL_INFO_TYPE_GSM:
+      case CELL_INFO_TYPE_WCDMA:
+        cellInfo.mcc = Buf.readInt32();
+        cellInfo.mnc = Buf.readInt32();
+        cellInfo.lac = Buf.readInt32();
+        cellInfo.cid = Buf.readInt32();
+        if (cellInfo.type == CELL_INFO_TYPE_WCDMA) {
+          cellInfo.psc = Buf.readInt32();
+        }
+        cellInfo.signalStrength = Buf.readInt32();
+        cellInfo.bitErrorRate = Buf.readInt32();
+        break;
+      case CELL_INFO_TYPE_CDMA:
+        cellInfo.networkId = Buf.readInt32();
+        cellInfo.systemId = Buf.readInt32();
+        cellInfo.basestationId = Buf.readInt32();
+        cellInfo.longitude = Buf.readInt32();
+        cellInfo.latitude = Buf.readInt32();
+        cellInfo.cdmaDbm = Buf.readInt32();
+        cellInfo.cdmaEcio = Buf.readInt32();
+        cellInfo.evdoDbm = Buf.readInt32();
+        cellInfo.evdoEcio = Buf.readInt32();
+        cellInfo.evdoSnr = Buf.readInt32();
+        break;
+      case CELL_INFO_TYPE_LTE:
+        cellInfo.mcc = Buf.readInt32();
+        cellInfo.mnc = Buf.readInt32();
+        cellInfo.cid = Buf.readInt32();
+        cellInfo.pcid = Buf.readInt32();
+        cellInfo.tac = Buf.readInt32();
+        cellInfo.signalStrength = Buf.readInt32();
+        cellInfo.rsrp = Buf.readInt32();
+        cellInfo.rsrq = Buf.readInt32();
+        cellInfo.rssnr = Buf.readInt32();
+        cellInfo.cqi = Buf.readInt32();
+        break;
+    }
+    cellInfoList.push(cellInfo);
+  }
+  options.result = cellInfoList;
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_SET_LOCATION_UPDATES] = null;

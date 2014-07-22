@@ -127,51 +127,6 @@ namespace js {
 extern mozilla::UniquePtr<jschar[], JS::FreePolicy>
 DuplicateString(ThreadSafeContext *cx, const jschar *s);
 
-/* GC-allocate a string descriptor for the given malloc-allocated chars. */
-template <js::AllowGC allowGC, typename CharT>
-extern JSFlatString *
-NewString(js::ThreadSafeContext *cx, CharT *chars, size_t length);
-
-/* Like NewString, but doesn't try to deflate to Latin1. */
-template <js::AllowGC allowGC, typename CharT>
-extern JSFlatString *
-NewStringDontDeflate(js::ThreadSafeContext *cx, CharT *chars, size_t length);
-
-extern JSLinearString *
-NewDependentString(JSContext *cx, JSString *base, size_t start, size_t length);
-
-/* Copy a counted string and GC-allocate a descriptor for it. */
-template <js::AllowGC allowGC, typename CharT>
-extern JSFlatString *
-NewStringCopyN(js::ThreadSafeContext *cx, const CharT *s, size_t n);
-
-template <js::AllowGC allowGC>
-inline JSFlatString *
-NewStringCopyN(ThreadSafeContext *cx, const char *s, size_t n)
-{
-    return NewStringCopyN<allowGC>(cx, reinterpret_cast<const Latin1Char *>(s), n);
-}
-
-/* Like NewStringCopyN, but doesn't try to deflate to Latin1. */
-template <js::AllowGC allowGC, typename CharT>
-extern JSFlatString *
-NewStringCopyNDontDeflate(js::ThreadSafeContext *cx, const CharT *s, size_t n);
-
-/* Copy a C string and GC-allocate a descriptor for it. */
-template <js::AllowGC allowGC>
-inline JSFlatString *
-NewStringCopyZ(js::ExclusiveContext *cx, const jschar *s)
-{
-    return NewStringCopyN<allowGC>(cx, s, js_strlen(s));
-}
-
-template <js::AllowGC allowGC>
-inline JSFlatString *
-NewStringCopyZ(js::ThreadSafeContext *cx, const char *s)
-{
-    return NewStringCopyN<allowGC>(cx, s, strlen(s));
-}
-
 /*
  * Convert a non-string value to a string, returning null after reporting an
  * error, otherwise returning a new string reference.

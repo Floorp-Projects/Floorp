@@ -23,7 +23,7 @@ function cloneLoaded(event) {
   }
 
   e.removeEventListener("loadeddata", cloneLoaded, false);
-
+  removeNodeAndSource(e);
   manager.finished(e.token);
 }
 
@@ -39,6 +39,17 @@ function tryClone(event) {
   }
 
   clone.addEventListener("loadeddata", cloneLoaded, false);
+  clone.onloadstart = function(evt) {
+    info("cloned " + evt.target.token + " start loading.");
+    evt.target.onloadstart = null;
+    // Since there is only one H264 decoder instance, we have to delete the
+    // decoder of the original element for the cloned element to load. However,
+    // we can't delete the decoder too early otherwise cloning decoder will
+    // fail to kick in. We wait for 'loadstart' event of the cloned element to
+    // know when the decoder is already cloned and we can delete the decoder of
+    // the original element.
+    removeNodeAndSource(e);
+  }
 
   e.removeEventListener("loadeddata", tryClone, false);
 }
