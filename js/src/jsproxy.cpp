@@ -1086,6 +1086,13 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
     virtual bool isScripted() const MOZ_OVERRIDE { return true; }
 
     static const ScriptedDirectProxyHandler singleton;
+
+    // The "proxy extra" slot index in which the handler is stored. Revocable proxies need to set
+    // this at revocation time.
+    static const int HANDLER_EXTRA = 0;
+    // The "function extended" slot index in which the revocation object is stored. Per spec, this
+    // is to be cleared during the first revocation.
+    static const int REVOKE_SLOT = 0;
 };
 
 // This variable exists solely to provide a unique address for use as an identifier.
@@ -1230,13 +1237,11 @@ HasOwn(JSContext *cx, HandleObject obj, HandleId id, bool *bp)
 }
 
 // Get the [[ProxyHandler]] of a scripted direct proxy.
-//
-// NB: This *must* stay synched with proxy().
 static JSObject *
 GetDirectProxyHandlerObject(JSObject *proxy)
 {
     JS_ASSERT(proxy->as<ProxyObject>().handler() == &ScriptedDirectProxyHandler::singleton);
-    return proxy->as<ProxyObject>().extra(0).toObjectOrNull();
+    return proxy->as<ProxyObject>().extra(ScriptedDirectProxyHandler::HANDLER_EXTRA).toObjectOrNull();
 }
 
 static inline void
@@ -1366,7 +1371,11 @@ ScriptedDirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy)
     // step 1
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
-    // TODO: step 2: Implement revocation semantics. See bug 978279.
+    // step 2
+    if (!handler) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        return false;
+    }
 
     // step 3
     RootedObject target(cx, proxy->as<ProxyObject>().target());
@@ -1440,7 +1449,11 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject
     // step 2
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
-    // TODO: step 3: Implement revocation semantics. See bug 978279.
+    // step 3
+    if (!handler) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        return false;
+    }
 
     // step 4
     RootedObject target(cx, proxy->as<ProxyObject>().target());
@@ -1556,7 +1569,11 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
     // step 2
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
-    // TODO: step 3: Implement revocation semantics. See bug 978279.
+    // step 3
+    if (!handler) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        return false;
+    }
 
     // step 4
     RootedObject target(cx, proxy->as<ProxyObject>().target());
@@ -1642,7 +1659,11 @@ ScriptedDirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject prox
     // step 1
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
-    // TODO: step 2: Implement revocation semantics
+    // step 2
+    if (!handler) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        return false;
+    }
 
     // step 3
     RootedObject target(cx, proxy->as<ProxyObject>().target());
@@ -1684,7 +1705,11 @@ ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId 
     // step 2
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
-    // TODO: step 3: Implement revocation semantics
+    // step 3
+    if (!handler) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        return false;
+    }
 
     // step 4
     RootedObject target(cx, proxy->as<ProxyObject>().target());
@@ -1741,7 +1766,11 @@ ScriptedDirectProxyHandler::enumerate(JSContext *cx, HandleObject proxy, AutoIdV
     // step 1
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
-    // TODO: step 2: Implement revocation semantics.
+    // step 2
+    if (!handler) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        return false;
+    }
 
     // step 3
     RootedObject target(cx, proxy->as<ProxyObject>().target());
@@ -1787,7 +1816,11 @@ ScriptedDirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, 
     // step 2
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
-    // TODO: step 3: Implement revocation semantics.
+    // step 3
+    if (!handler) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        return false;
+    }
 
     // step 4
     RootedObject target(cx, proxy->as<ProxyObject>().target());
@@ -1851,7 +1884,11 @@ ScriptedDirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject 
     // step 2
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
-    // TODO: step 3: Implement revocation semantics.
+    // step 3
+    if (!handler) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        return false;
+    }
 
     // step 4
     RootedObject target(cx, proxy->as<ProxyObject>().target());
@@ -1916,7 +1953,11 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
     // step 2
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
-    // TODO: step 3: Implement revocation semantics
+    // step 3
+    if (!handler) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        return false;
+    }
 
     // step 4
     RootedObject target(cx, proxy->as<ProxyObject>().target());
@@ -1984,7 +2025,11 @@ ScriptedDirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool
     // step 1
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
-    // TODO: step 2: Implement revocation semantics.
+    // step 2
+    if (!handler) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        return false;
+    }
 
     // step 3
     RootedObject target(cx, proxy->as<ProxyObject>().target());
@@ -2040,7 +2085,11 @@ ScriptedDirectProxyHandler::call(JSContext *cx, HandleObject proxy, const CallAr
     // step 1
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
-    // TODO: step 2: Implement revocation semantics.
+    // step 2
+    if (!handler) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        return false;
+    }
 
     // step 3
     RootedObject target(cx, proxy->as<ProxyObject>().target());
@@ -2081,7 +2130,11 @@ ScriptedDirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const C
     // step 1
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
-    // TODO: step 2: Implement revocation semantics.
+    // step 2
+    if (!handler) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        return false;
+    }
 
     // step 3
     RootedObject target(cx, proxy->as<ProxyObject>().target());
@@ -2924,8 +2977,62 @@ proxy(JSContext *cx, unsigned argc, jsval *vp)
                          options);
     if (!proxy)
         return false;
-    proxy->setExtra(0, ObjectOrNullValue(handler));
+    proxy->setExtra(ScriptedDirectProxyHandler::HANDLER_EXTRA, ObjectValue(*handler));
     args.rval().setObject(*proxy);
+    return true;
+}
+
+static bool
+RevokeProxy(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallReceiver rec = CallReceiverFromVp(vp);
+
+    RootedFunction func(cx, &rec.callee().as<JSFunction>());
+    RootedObject p(cx, func->getExtendedSlot(ScriptedDirectProxyHandler::REVOKE_SLOT).toObjectOrNull());
+
+    if (p) {
+        func->setExtendedSlot(ScriptedDirectProxyHandler::REVOKE_SLOT, NullValue());
+
+        MOZ_ASSERT(p->is<ProxyObject>());
+
+        p->as<ProxyObject>().setSameCompartmentPrivate(NullValue());
+        p->as<ProxyObject>().setExtra(ScriptedDirectProxyHandler::HANDLER_EXTRA, NullValue());
+    }
+
+    rec.rval().setUndefined();
+    return true;
+}
+
+static bool
+proxy_revocable(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallReceiver args = CallReceiverFromVp(vp);
+
+    if (!proxy(cx, argc, vp))
+        return false;
+
+    RootedValue proxyVal(cx, args.rval());
+    MOZ_ASSERT(proxyVal.toObject().is<ProxyObject>());
+
+    RootedObject revoker(cx, NewFunctionByIdWithReserved(cx, RevokeProxy, 0, 0, cx->global(),
+                         AtomToId(cx->names().revoke)));
+    if (!revoker)
+        return false;
+
+    revoker->as<JSFunction>().initExtendedSlot(ScriptedDirectProxyHandler::REVOKE_SLOT, proxyVal);
+
+    RootedObject result(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+    if (!result)
+        return false;
+
+    RootedValue revokeVal(cx, ObjectValue(*revoker));
+    if (!JSObject::defineProperty(cx, result, cx->names().proxy, proxyVal) ||
+        !JSObject::defineProperty(cx, result, cx->names().revoke, revokeVal))
+    {
+        return false;
+    }
+
+    args.rval().setObject(*result);
     return true;
 }
 
@@ -3021,6 +3128,7 @@ js_InitProxyClass(JSContext *cx, HandleObject obj)
     static const JSFunctionSpec static_methods[] = {
         JS_FN("create",         proxy_create,          2, 0),
         JS_FN("createFunction", proxy_createFunction,  3, 0),
+        JS_FN("revocable",      proxy_revocable,       2, 0),
         JS_FS_END
     };
 
