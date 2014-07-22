@@ -128,11 +128,38 @@ ForceCOWBehavior(JSObject *obj)
     return false;
 }
 
+inline bool
+ShouldWaiveXray(JSContext *cx, JSObject *originalObj)
+{
+    unsigned flags;
+    (void) js::UncheckedUnwrap(originalObj, /* stopAtOuter = */ true, &flags);
+
+    // If the original object did not point through an Xray waiver, we're done.
+    if (!(flags & WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG))
+        return false;
+
+    // If the original object was not a cross-compartment wrapper, that means
+    // that the caller explicitly created a waiver. Preserve it so that things
+    // like WaiveXrayAndWrap work.
+    if (!(flags & Wrapper::CROSS_COMPARTMENT))
+        return true;
+
+    // Otherwise, this is a case of explicitly passing a wrapper across a
+    // compartment boundary. In that case, we only want to preserve waivers
+    // in transactions between same-origin compartments.
+    JSCompartment *oldCompartment = js::GetObjectCompartment(originalObj);
+    JSCompartment *newCompartment = js::GetContextCompartment(cx);
+    bool sameOrigin =
+        AccessCheck::subsumesConsideringDomain(oldCompartment, newCompartment) &&
+        AccessCheck::subsumesConsideringDomain(newCompartment, oldCompartment);
+    return sameOrigin;
+}
+
 JSObject *
 WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
                                    HandleObject objArg, HandleObject objectPassedToWrap)
 {
-    bool waive = WrapperFactory::HasWaiveXrayFlag(objectPassedToWrap);
+    bool waive = ShouldWaiveXray(cx, objectPassedToWrap);
     RootedObject obj(cx, objArg);
     // Outerize any raw inner objects at the entry point here, so that we don't
     // have to worry about them for the rest of the wrapping code.
