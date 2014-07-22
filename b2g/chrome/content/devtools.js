@@ -58,7 +58,7 @@ let developerHUD = {
       return;
 
     if (!DebuggerServer.initialized) {
-      RemoteDebugger.start();
+      RemoteDebugger.initServer();
     }
 
     // We instantiate a local debugger connection so that watchers can use our
