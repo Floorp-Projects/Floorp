@@ -533,7 +533,10 @@ exports.AppManager = AppManager = {
   _updateUSBRuntimes: function() {
     this.runtimeList.usb = [];
     for (let id of Devices.available()) {
-      this.runtimeList.usb.push(new USBRuntime(id));
+      let r = new USBRuntime(id);
+      this.runtimeList.usb.push(r);
+      r.updateNameFromADB().then(
+        () => this.update("runtimelist"), () => {});
     }
     this.update("runtimelist");
   },
