@@ -1,14 +1,18 @@
 // Forward to the target if the trap is not defined
-var proxy = Proxy(Object.create(Object.create(null, {
+var proto = Object.create(null, {
     'foo': {
         configurable: true
     }
-}), {
+});
+var target = Object.create(proto, {
     'bar': {
         configurable: true
     }
-}), {});
-assertEq('foo' in proxy, true);
-assertEq('bar' in proxy, true);
-assertEq('baz' in proxy, false);
-assertEq(Symbol() in proxy, false);
+});
+
+for (let p of [new Proxy(target, {}), Proxy.revocable(target, {}).proxy]) {
+    assertEq('foo' in p, true);
+    assertEq('bar' in p, true);
+    assertEq('baz' in p, false);
+    assertEq(Symbol() in p, false);
+}

@@ -1,5 +1,5 @@
 // Forward to the target if the trap is not defined
-var names = Object.keys(Proxy(Object.create(Object.create(null, {
+var proto = Object.create(null, {
     a: {
         enumerable: true,
         configurable: true
@@ -8,7 +8,8 @@ var names = Object.keys(Proxy(Object.create(Object.create(null, {
         enumerable: false,
         configurable: true
     }
-}), {
+});
+var target = Object.create(proto, {
     c: {
         enumerable: true,
         configurable: true
@@ -17,6 +18,10 @@ var names = Object.keys(Proxy(Object.create(Object.create(null, {
         enumerable: false,
         configurable: true
     }
-}), {}));
-assertEq(names.length, 1);
-assertEq(names[0], 'c');
+});
+
+for (let p of [new Proxy(target, {}), Proxy.revocable(target, {}).proxy]) {
+    var names = Object.keys(p);
+    assertEq(names.length, 1);
+    assertEq(names[0], 'c');
+}
