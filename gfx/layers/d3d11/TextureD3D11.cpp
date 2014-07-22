@@ -167,6 +167,9 @@ TextureClientD3D11::TextureClientD3D11(gfx::SurfaceFormat aFormat, TextureFlags 
 
 TextureClientD3D11::~TextureClientD3D11()
 {
+  if (mTexture && mActor) {
+    KeepUntilFullDeallocation(new TKeepAlive<ID3D10Texture2D>(mTexture));
+  }
 #ifdef DEBUG
   // An Azure DrawTarget needs to be locked when it gets nullptr'ed as this is
   // when it calls EndDraw. This EndDraw should not execute anything so it
