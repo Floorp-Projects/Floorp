@@ -108,8 +108,10 @@ var gPropertyData = [
   // font-variant-position
   // valid values
   { prop: "font-variant-position", value: "normal", features: {"subs": 0, "sups": 0} },
-  { prop: "font-variant-position", value: "super", features: {"subs": 0, "sups": 1} },
-  { prop: "font-variant-position", value: "sub", features: {"subs": 1, "sups": 0} },
+
+  // note: because of fallback, can *only* test activated features here
+  { prop: "font-variant-position", value: "super", features: {"sups": 1} },
+  { prop: "font-variant-position", value: "sub", features: {"subs": 1} },
 
   // invalid values
   { prop: "font-variant-position", value: "super sub", features: {"subs": 0, "sups": 0}, invalid: true },
@@ -209,7 +211,7 @@ function createFeatureTestTable(propData, whichProp, isRef, debug)
       }
 
       var span = document.createElement("span");
-      span.innerHTML = (isRef ? "P " : "&#x" + cp.toString(16) + "; ");
+      span.innerHTML = (isRef ? "P" : "&#x" + cp.toString(16) + ";");
       span.title = f + "=" + feature;
       cell.appendChild(span);
     }
