@@ -28,6 +28,4 @@ if CONFIG['MOZ_ANDROID_HISTORY']:
         '/docshell/base',
     ]
 
-LIBRARY_NAME = 'browsercomps'
-
 FINAL_LIBRARY = 'xul'

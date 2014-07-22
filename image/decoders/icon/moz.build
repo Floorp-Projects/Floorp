@@ -16,8 +16,6 @@ UNIFIED_SOURCES += [
     'nsIconURI.cpp',
 ]
 
-LIBRARY_NAME = 'imgicon'
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
