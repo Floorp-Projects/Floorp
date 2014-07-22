@@ -224,8 +224,8 @@ class CodeGeneratorShared : public LInstructionVisitor
 #endif
 
   public:
-    MIRGenerator *mirGen() const {
-        return gen;
+    MIRGenerator &mirGen() const {
+        return *gen;
     }
 
     // When appending to runtimeData_, the vector might realloc, leaving pointers
