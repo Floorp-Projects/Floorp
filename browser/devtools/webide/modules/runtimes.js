@@ -33,7 +33,24 @@ USBRuntime.prototype = {
     return this.id;
   },
   getName: function() {
-    return this.id;
+    return this._productModel || this.id;
+  },
+  updateNameFromADB: function() {
+    if (this._productModel) {
+      return promise.resolve();
+    }
+    let device = Devices.getByName(this.id);
+    let deferred = promise.defer();
+    if (device && device.shell) {
+      device.shell("getprop ro.product.model").then(stdout => {
+        this._productModel = stdout;
+        deferred.resolve();
+      }, () => {});
+    } else {
+      this._productModel = null;
+      deferred.reject();
+    }
+    return deferred.promise;
   },
 }
 
