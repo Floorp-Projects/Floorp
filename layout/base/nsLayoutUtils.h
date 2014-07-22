@@ -661,20 +661,6 @@ public:
                                        nsView* aView);
 
   /**
-   * Given a matrix and a point, let T be the transformation matrix translating points
-   * in the coordinate space with origin aOrigin to the coordinate space used by the
-   * matrix.  If M is the stored matrix, this function returns (T-1)MT, the matrix
-   * that's equivalent to aMatrix but in the coordinate space that treats aOrigin
-   * as the origin.
-   *
-   * @param aOrigin The origin to translate to.
-   * @param aMatrix The matrix to change the basis of.
-   * @return A matrix equivalent to aMatrix, but operating in the coordinate system with
-   *         origin aOrigin.
-   */
-  static gfx3DMatrix ChangeMatrixBasis(const gfxPoint3D &aOrigin, const gfx3DMatrix &aMatrix);
-
-  /**
    * Find IDs corresponding to a scrollable content element in the child process.
    * In correspondence with the shadow layer tree, you can use this to perform a
    * hit test that corresponds to a specific shadow layer that you can then perform
