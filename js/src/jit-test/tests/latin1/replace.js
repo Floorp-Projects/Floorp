@@ -1,3 +1,7 @@
+function toLatin1(s) {
+    assertEq(isLatin1(s), true);
+    return s;
+}
 function testDollarReplacement() {
     // Latin1 input, pat and replacement
     var s = toLatin1("Foobarbaz123");
@@ -7,6 +11,7 @@ function testDollarReplacement() {
     assertEq(s.replace(pat, toLatin1("A$`A")), "FooAFooAbaz123");
     assertEq(s.replace(pat, toLatin1("A$&A")), "FooAbarAbaz123");
     assertEq(s.replace(pat, toLatin1("A$'A")), "FooAbaz123Abaz123");
+    assertEq(isLatin1(s.replace(pat, "A$'A")), true);
 
     // Latin1 input and pat, TwoByte replacement
     assertEq(s.replace(pat, "A\u1200"), "FooA\u1200baz123");
@@ -43,13 +48,20 @@ testDollarReplacement();
 
 function testRegExp() {
     var s = toLatin1("Foobar123bar234");
-    assertEq(s.replace(/bar\d\d/, "456"), "Foo4563bar234");
+    var res = s.replace(/bar\d\d/, "456");
+    assertEq(res, "Foo4563bar234");
+    assertEq(isLatin1(res), true);
 
     // Latin1 input and replacement
     var re1 = /bar\d\d/;
+    res = s.replace(re1, toLatin1("789"));
+    assertEq(res, "Foo7893bar234");
+    assertEq(isLatin1(res), true);
+
     var re2 = /bar\d\d/g;
-    assertEq(s.replace(re1, toLatin1("789")), "Foo7893bar234");
-    assertEq(s.replace(re2, toLatin1("789\u00ff")), "Foo789\u00ff3789\u00ff4");
+    res = s.replace(re2, toLatin1("789\u00ff"));
+    assertEq(res, "Foo789\u00ff3789\u00ff4");
+    assertEq(isLatin1(res), true);
 
     // Latin1 input, TwoByte replacement
     assertEq(s.replace(re1, "789\u1200"), "Foo789\u12003bar234");
@@ -75,6 +87,7 @@ function testRegExpDollar() {
     assertEq(s.replace(re1, toLatin1("--$&--")), "Foo--bar12--3bar2345");
     assertEq(s.replace(re2, toLatin1("--$'\u00ff--")), "Foo--3bar2345\xFF--3--45\xFF--45");
     assertEq(s.replace(re2, toLatin1("--$`--")), "Foo--Foo--3--Foobar123--45");
+    assertEq(isLatin1(s.replace(re2, toLatin1("--$`--"))), true);
 
     // Latin1 input, TwoByte replacement
     assertEq(s.replace(re1, "\u1200$$"), "Foo\u1200$3bar2345");
@@ -100,7 +113,9 @@ function testFlattenPattern() {
     var s = "abcdef[g]abc";
 
     // Latin1 pattern
-    assertEq(s.replace(toLatin1("def[g]"), "--$&--", "gi"), "abc--def[g]--abc");
+    var res = s.replace(toLatin1("def[g]"), "--$&--", "gi");
+    assertEq(res, "abc--def[g]--abc");
+    assertEq(isLatin1(res), true);
 
     // TwoByte pattern
     s = "abcdef[g]\u1200abc";
@@ -111,10 +126,14 @@ testFlattenPattern();
 function testReplaceEmpty() {
     // Latin1
     var s = toLatin1("--abcdefghijkl--abcdefghijkl--abcdefghijkl--abcdefghijkl");
-    assertEq(s.replace(/abcd[eE]/g, ""), "--fghijkl--fghijkl--fghijkl--fghijkl");
+    var res = s.replace(/abcd[eE]/g, "");
+    assertEq(res, "--fghijkl--fghijkl--fghijkl--fghijkl");
+    assertEq(isLatin1(res), true);
 
     s = "--abcdEf--";
-    assertEq(s.replace(/abcd[eE]/g, ""), "--f--");
+    res = s.replace(/abcd[eE]/g, "");
+    assertEq(res, "--f--");
+    assertEq(isLatin1(res), true);
 
     // TwoByte
     s = "--abcdefghijkl--abcdefghijkl--abcdefghijkl--abcdefghijkl\u1200";

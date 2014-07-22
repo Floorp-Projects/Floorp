@@ -1,6 +1,7 @@
 // Reflect.parse Latin1
-var ast = Reflect.parse(toLatin1("function f() { return 3; }"));
+var ast = Reflect.parse("function f() { return 3; }");
 assertEq(ast.body[0].id.name, "f");
+assertEq(isLatin1(ast.body[0].id.name), true);
 
 // Reflect.parse TwoByte
 var ast = Reflect.parse("function f\u1200() { return 3; }");
@@ -28,7 +29,6 @@ assertEq(o.toSource(), "({prop:((11)), prop:((11))})");
 load(libdir + 'bytecode-cache.js');
 
 // Latin1 string constant
-toLatin1("string123");
 test = "'string123';";
 evalWithCache(test, { assertEqBytecode: true, assertEqResult : true });
 

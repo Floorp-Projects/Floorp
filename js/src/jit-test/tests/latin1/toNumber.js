@@ -1,3 +1,7 @@
+function toLatin1(s) {
+    assertEq(isLatin1(s), true);
+    return s;
+}
 function testToNumber() {
     // Latin1
     assertEq(+toLatin1("12345.6"), 12345.6);

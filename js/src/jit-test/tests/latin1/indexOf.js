@@ -1,3 +1,7 @@
+function toLatin1(s) {
+    assertEq(isLatin1(s), true);
+    return s;
+}
 function testLastIndexOf() {
     var s1 = toLatin1("abcdefgh123456\u0081defg");
     var s2 = toLatin1("456\u0081de");
