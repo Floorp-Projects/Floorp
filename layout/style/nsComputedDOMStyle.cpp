@@ -4112,7 +4112,17 @@ CSSValue*
 nsComputedDOMStyle::DoGetMinWidth()
 {
   nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StylePosition()->mMinWidth, true,
+
+  nsStyleCoord minWidth = StylePosition()->mMinWidth;
+
+  if (eStyleUnit_Auto == minWidth.GetUnit()) {
+    // In non-flexbox contexts, "min-width: auto" means "min-width: 0".
+    // XXXdholbert For flex items, we should set |minWidth| to the
+    // -moz-min-content keyword, instead of 0.
+    minWidth.SetCoordValue(0);
+  }
+
+  SetValueToCoord(val, minWidth, true,
                   &nsComputedDOMStyle::GetCBContentWidth,
                   nsCSSProps::kWidthKTable);
   return val;
