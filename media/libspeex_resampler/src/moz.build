@@ -42,6 +42,13 @@ if CONFIG['INTEL_ARCHITECTURE'] and not CONFIG['MOZ_SAMPLE_TYPE_S16']:
     ]
     SOURCES['resample_sse.c'].flags += CONFIG['SSE2_FLAGS']
 
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
+    DEFINES['_USE_NEON'] = True
+    SOURCES += [
+        'resample_neon.c'
+    ]
+    SOURCES['resample_neon.c'].flags += ['-mfpu=neon']
+
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:
     CFLAGS += ['-Wno-sign-compare']
