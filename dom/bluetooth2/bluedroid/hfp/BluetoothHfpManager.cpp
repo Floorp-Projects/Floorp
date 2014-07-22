@@ -1210,6 +1210,17 @@ BluetoothHfpManager::SendResponse(bthf_at_response_t aResponseCode)
     aResponseCode, 0, new AtResponseResultHandler());
 }
 
+class PhoneStateChangeResultHandler MOZ_FINAL
+: public BluetoothHandsfreeResultHandler
+{
+public:
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    BT_WARNING("BluetoothHandsfreeInterface::PhoneStateChange failed: %d",
+               (int)aStatus);
+  }
+};
+
 void
 BluetoothHfpManager::UpdatePhoneCIND(uint32_t aCallIndex)
 {
@@ -1227,9 +1238,9 @@ BluetoothHfpManager::UpdatePhoneCIND(uint32_t aCallIndex)
           aCallIndex, mCurrentCallArray[aCallIndex].mState,
           numActive, numHeld, callSetupState);
 
-  NS_ENSURE_TRUE_VOID(BT_STATUS_SUCCESS ==
-    sBluetoothHfpInterface->PhoneStateChange(
-      numActive, numHeld, callSetupState, number.get(), type));
+  sBluetoothHfpInterface->PhoneStateChange(
+    numActive, numHeld, callSetupState, number.get(), type,
+    new PhoneStateChangeResultHandler());
 }
 
 class DeviceStatusNotificationResultHandler MOZ_FINAL
