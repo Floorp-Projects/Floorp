@@ -113,6 +113,9 @@ struct gfxFontStyle {
     // needs to be done.
     float sizeAdjust;
 
+    // baseline offset, used when simulating sub/superscript glyphs
+    float baselineOffset;
+
     // Language system tag, to override document language;
     // an OpenType "language system" tag represented as a 32-bit integer
     // (see http://www.microsoft.com/typography/otspec/languagetags.htm).
@@ -150,8 +153,15 @@ struct gfxFontStyle {
     bool allowSyntheticWeight : 1;
     bool allowSyntheticStyle : 1;
 
+    // some variant features require fallback which complicates the shaping
+    // code, so set up a bool to indicate when shaping with fallback is needed
+    bool noFallbackVariantFeatures : 1;
+
     // caps variant (small-caps, petite-caps, etc.)
     uint8_t variantCaps;
+
+    // sub/superscript variant
+    uint8_t variantSubSuper;
 
     // Return the final adjusted font size for the given aspect ratio.
     // Not meant to be called when sizeAdjust = 0.
@@ -175,6 +185,7 @@ struct gfxFontStyle {
              *reinterpret_cast<const uint64_t*>(&other.size)) &&
             (style == other.style) &&
             (variantCaps == other.variantCaps) &&
+            (variantSubSuper == other.variantSubSuper) &&
             (allowSyntheticWeight == other.allowSyntheticWeight) &&
             (allowSyntheticStyle == other.allowSyntheticStyle) &&
             (systemFont == other.systemFont) &&
@@ -183,6 +194,7 @@ struct gfxFontStyle {
             (weight == other.weight) &&
             (stretch == other.stretch) &&
             (language == other.language) &&
+            (baselineOffset == other.baselineOffset) &&
             (*reinterpret_cast<const uint32_t*>(&sizeAdjust) ==
              *reinterpret_cast<const uint32_t*>(&other.sizeAdjust)) &&
             (featureSettings == other.featureSettings) &&
@@ -1639,6 +1651,9 @@ public:
                              bool& aSyntheticLowerToSmallCaps,
                              bool& aSyntheticUpperToSmallCaps);
 
+    // whether the font supports subscript/superscript feature
+    bool SupportsSubSuperscript(int32_t aScript, uint32_t aSubSuperscript);
+
     // Subclasses may choose to look up glyph ids for characters.
     // If they do not override this, gfxHarfBuzzShaper will fetch the cmap
     // table and use that.
@@ -1982,7 +1997,18 @@ public:
         return mFontEntry->GetMathConstant(aConstant);
     }
 
+    // return a cloned font resized and offset to simulate sub/superscript glyphs
+    virtual already_AddRefed<gfxFont>
+    GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel);
+
 protected:
+
+    // set the font size and offset used for
+    // synthetic subscript/superscript glyphs
+    void CalculateSubSuperSizeAndOffset(int32_t aAppUnitsPerDevPixel,
+                                        gfxFloat& aSubSuperSizeRatio,
+                                        float& aBaselineOffset);
+
     // Return a font that is a "clone" of this one, but reduced to 80% size
     // (and with variantCaps set to normal).
     // Default implementation relies on gfxFontEntry::CreateFontInstance;
@@ -3305,6 +3331,9 @@ public:
         return mCharacterGlyphs;
     }
 
+    // clean out results from shaping in progress, used for fallback scenarios
+    void ClearGlyphsAndCharacters();
+
     void SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext, uint32_t aCharIndex);
 
     // Set the glyph data for the given character index to the font's
@@ -3426,6 +3455,23 @@ public:
         mFlags &= ~gfxTextRunFactory::TEXT_RUN_SIZE_ACCOUNTED;
     }
 
+    // shaping state - for some font features, fallback is required that
+    // affects the entire run. for example, fallback for one script/font
+    // portion of a textrun requires fallback to be applied to the entire run
+
+    enum ShapingState {
+        eShapingState_Normal,                 // default state
+        eShapingState_ShapingWithFeature,     // have shaped with feature
+        eShapingState_ShapingWithFallback,    // have shaped with fallback
+        eShapingState_Aborted,                // abort initial iteration
+        eShapingState_ForceFallbackFeature    // redo with fallback forced on
+    };
+
+    ShapingState GetShapingState() const { return mShapingState; }
+    void SetShapingState(ShapingState aShapingState) {
+        mShapingState = aShapingState;
+    }
+
 #ifdef DEBUG
     void Dump(FILE* aOutput);
 #endif
@@ -3522,6 +3568,10 @@ private:
                                     // until the download completes (or timeout fires)
     bool              mReleasedFontGroup; // we already called NS_RELEASE on
                                           // mFontGroup, so don't do it again
+
+    // shaping state for handling variant fallback features
+    // such as subscript/superscript variant glyphs
+    ShapingState      mShapingState;
 };
 
 class gfxFontGroup : public gfxTextRunFactory {
