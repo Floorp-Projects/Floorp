@@ -14,6 +14,8 @@
 #include "nsError.h"
 #include "nsDOMString.h"
 #include "nsIDOMCSSPrimitiveValue.h"
+#include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsStyleContext.h"
 #include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
@@ -22,6 +24,7 @@
 #include "nsDOMCSSRect.h"
 #include "nsDOMCSSRGBColor.h"
 #include "nsDOMCSSValueList.h"
+#include "nsFlexContainerFrame.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLReflowState.h"
 #include "nsStyleUtil.h"
@@ -4126,12 +4129,20 @@ nsComputedDOMStyle::DoGetMinWidth()
   nsStyleCoord minWidth = StylePosition()->mMinWidth;
 
   if (eStyleUnit_Auto == minWidth.GetUnit()) {
-    // In non-flexbox contexts, "min-width: auto" means "min-width: 0".
-    // XXXdholbert For flex items, we should set |minWidth| to the
-    // -moz-min-content keyword, instead of 0.
+    // "min-width: auto" means "0", unless we're a flex item in a horizontal
+    // flex container, in which case it means "min-content"
     minWidth.SetCoordValue(0);
-  }
+    if (mOuterFrame && mOuterFrame->IsFlexItem()) {
+      nsIFrame* flexContainer = mOuterFrame->GetParent();
+      MOZ_ASSERT(flexContainer &&
+                 flexContainer->GetType() == nsGkAtoms::flexContainerFrame,
+                 "IsFlexItem() lied...?");
 
+      if (static_cast<nsFlexContainerFrame*>(flexContainer)->IsHorizontal()) {
+        minWidth.SetIntValue(NS_STYLE_WIDTH_MIN_CONTENT, eStyleUnit_Enumerated);
+      }
+    }
+  }
   SetValueToCoord(val, minWidth, true,
                   &nsComputedDOMStyle::GetCBContentWidth,
                   nsCSSProps::kWidthKTable);
