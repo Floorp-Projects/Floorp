@@ -46,8 +46,7 @@ static inline int32_t saturate_32bit_to_16bit(int32_t a) {
     int32_t ret;
     asm ("ssat %[ret], #16, %[a]"
          : [ret] "=&r" (ret)
-         : [a] "r" (a)
-         : );
+         : [a] "r" (a));
     return ret;
 }
 #else
