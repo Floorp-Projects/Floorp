@@ -255,8 +255,6 @@ FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
 
 MSVC_ENABLE_PGO = True
 
-LIBRARY_NAME = 'thebes'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

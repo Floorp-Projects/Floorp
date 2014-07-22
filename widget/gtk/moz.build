@@ -7,11 +7,6 @@
 if CONFIG['MOZ_ENABLE_GTK3']:
     DIRS += ['mozgtk']
 
-if CONFIG['MOZ_ENABLE_GTK2']:
-    LIBRARY_NAME = 'widget_gtk2'
-else:
-    LIBRARY_NAME = 'widget_gtk3'
-
 EXPORTS += [
     'mozcontainer.h',
     'nsGTKToolkit.h',
