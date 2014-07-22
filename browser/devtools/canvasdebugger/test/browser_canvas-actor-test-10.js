@@ -24,9 +24,11 @@ function ifTestingSupported() {
   let firstScreenshot = yield snapshotActor.generateScreenshotFor(functionCalls[0]);
   is(firstScreenshot.index, -1,
     "The first screenshot didn't encounter any draw call.");
-  is(firstScreenshot.width, 128,
+  is(firstScreenshot.scaling, 0.25,
+    "The first screenshot has the correct scaling.");
+  is(firstScreenshot.width, CanvasFront.WEBGL_SCREENSHOT_MAX_HEIGHT,
     "The first screenshot has the correct width.");
-  is(firstScreenshot.height, 128,
+  is(firstScreenshot.height, CanvasFront.WEBGL_SCREENSHOT_MAX_HEIGHT,
     "The first screenshot has the correct height.");
   is(firstScreenshot.flipped, true,
     "The first screenshot has the correct 'flipped' flag.");
@@ -40,17 +42,27 @@ function ifTestingSupported() {
     "The debuggee's gl context renderbuffer wasn't changed.");
   is(gl.getParameter(gl.TEXTURE_BINDING_2D), debuggee.customTexture,
     "The debuggee's gl context texture binding wasn't changed.");
+  is(gl.getParameter(gl.VIEWPORT)[0], 128,
+    "The debuggee's gl context viewport's left coord. wasn't changed.");
+  is(gl.getParameter(gl.VIEWPORT)[1], 256,
+    "The debuggee's gl context viewport's left coord. wasn't changed.");
+  is(gl.getParameter(gl.VIEWPORT)[2], 384,
+    "The debuggee's gl context viewport's left coord. wasn't changed.");
+  is(gl.getParameter(gl.VIEWPORT)[3], 512,
+    "The debuggee's gl context viewport's left coord. wasn't changed.");
 
   let secondScreenshot = yield snapshotActor.generateScreenshotFor(functionCalls[1]);
   is(secondScreenshot.index, 1,
     "The second screenshot has the correct index.");
-  is(secondScreenshot.width, 128,
+  is(secondScreenshot.width, CanvasFront.WEBGL_SCREENSHOT_MAX_HEIGHT,
     "The second screenshot has the correct width.");
-  is(secondScreenshot.height, 128,
+  is(secondScreenshot.height, CanvasFront.WEBGL_SCREENSHOT_MAX_HEIGHT,
     "The second screenshot has the correct height.");
+  is(secondScreenshot.scaling, 0.25,
+    "The second screenshot has the correct scaling.");
   is(secondScreenshot.flipped, true,
     "The second screenshot has the correct 'flipped' flag.");
-  is(secondScreenshot.pixels.length, 128 * 128,
+  is(secondScreenshot.pixels.length, Math.pow(CanvasFront.WEBGL_SCREENSHOT_MAX_HEIGHT, 2),
     "The second screenshot should not be empty.");
   is(new Uint8Array(secondScreenshot.pixels.buffer)[0], 0,
     "The second screenshot has the correct red component.");
@@ -68,6 +80,14 @@ function ifTestingSupported() {
     "The debuggee's gl context renderbuffer still wasn't changed.");
   is(gl.getParameter(gl.TEXTURE_BINDING_2D), debuggee.customTexture,
     "The debuggee's gl context texture binding still wasn't changed.");
+  is(gl.getParameter(gl.VIEWPORT)[0], 128,
+    "The debuggee's gl context viewport's left coord. still wasn't changed.");
+  is(gl.getParameter(gl.VIEWPORT)[1], 256,
+    "The debuggee's gl context viewport's left coord. still wasn't changed.");
+  is(gl.getParameter(gl.VIEWPORT)[2], 384,
+    "The debuggee's gl context viewport's left coord. still wasn't changed.");
+  is(gl.getParameter(gl.VIEWPORT)[3], 512,
+    "The debuggee's gl context viewport's left coord. still wasn't changed.");
 
   yield removeTab(target.tab);
   finish();
