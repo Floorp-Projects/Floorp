@@ -494,6 +494,7 @@ struct NewLayerEntry {
     , mLayerContentsVisibleRect(0, 0, -1, -1)
     , mHideAllLayersBelow(false)
     , mOpaqueForAnimatedGeometryRootParent(false)
+    , mPropagateComponentAlphaFlattening(true)
   {}
   // mLayer is null if the previous entry is for a ThebesLayer that hasn't
   // been optimized to some other form (yet).
@@ -518,6 +519,10 @@ struct NewLayerEntry {
   // content whose animated geometry root is the animated geometry root for
   // mAnimatedGeometryRoot->GetParent().
   bool mOpaqueForAnimatedGeometryRootParent;
+
+  // If true, then the content flags for this layer should contribute
+  // to our decision to flatten component alpha layers, false otherwise.
+  bool mPropagateComponentAlphaFlattening;
 };
 
 /**
@@ -2868,6 +2873,13 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
       newLayerEntry->mLayer = ownLayer;
       newLayerEntry->mAnimatedGeometryRoot = animatedGeometryRoot;
       newLayerEntry->mFixedPosFrameForLayerData = fixedPosFrame;
+
+      // Don't attempt to flatten compnent alpha layers that are within
+      // a forced active layer, or an active transform;
+      if (itemType == nsDisplayItem::TYPE_TRANSFORM ||
+          layerState == LAYER_ACTIVE_FORCE) {
+        newLayerEntry->mPropagateComponentAlphaFlattening = false;
+      }
       // nsDisplayTransform::BuildLayer must set layerContentsVisibleRect.
       // We rely on this to ensure 3D transforms compute a reasonable
       // layer visible region.
@@ -3468,12 +3480,9 @@ ContainerState::Finish(uint32_t* aTextContentFlags, LayerManagerData* aData,
                                     Layer::CONTENT_COMPONENT_ALPHA_DESCENDANT);
 
       // Notify the parent of component alpha children unless it's coming from
-      // within a transformed child since we don't want flattening of component
-      // alpha layers to happen across transforms. Re-rendering the text during
-      // transform animations looks worse than losing subpixel-AA.
-      if ((layer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) &&
-          (layer->GetType() != Layer::TYPE_CONTAINER ||
-           layer->GetBaseTransform().IsIdentity())) {
+      // within a child that has asked not to contribute to layer flattening.
+      if (mNewChildLayers[i].mPropagateComponentAlphaFlattening &&
+          (layer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA)) {
         aHasComponentAlphaChildren = true;
       }
     }
