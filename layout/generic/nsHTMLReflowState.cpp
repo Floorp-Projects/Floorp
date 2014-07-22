@@ -2597,8 +2597,16 @@ nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
 {
   // Handle "min-width: auto"
   if (eStyleUnit_Auto == mStylePosition->mMinWidth.GetUnit()) {
-    // XXXdholbert For flex items, this needs to behave like -moz-min-content.
-    ComputedMinWidth() = 0;
+    nsFlexContainerFrame* flexContainerFrame = GetFlexContainer(frame);
+    if (flexContainerFrame && flexContainerFrame->IsHorizontal()) {
+      ComputedMinWidth() =
+        ComputeWidthValue(aContainingBlockWidth,
+                          mStylePosition->mBoxSizing,
+                          nsStyleCoord(NS_STYLE_WIDTH_MIN_CONTENT,
+                                       eStyleUnit_Enumerated));
+    } else {
+      ComputedMinWidth() = 0;
+    }
   } else {
     ComputedMinWidth() = ComputeWidthValue(aContainingBlockWidth,
                                           mStylePosition->mBoxSizing,
