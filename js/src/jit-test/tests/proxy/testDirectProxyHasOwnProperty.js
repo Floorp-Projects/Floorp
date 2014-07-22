@@ -11,20 +11,25 @@ var descs = {
 };
 descs[Symbol.for("quux")] = {configurable: true};
 var target = Object.create(proto, descs);
-var proxy = Proxy(target, {});
-assertEq(({}).hasOwnProperty.call(proxy, 'foo'), false);
-assertEq(({}).hasOwnProperty.call(proxy, 'bar'), true);
-assertEq(({}).hasOwnProperty.call(proxy, 'quux'), false);
-assertEq(({}).hasOwnProperty.call(proxy, Symbol('quux')), false);
-assertEq(({}).hasOwnProperty.call(proxy, 'Symbol(quux)'), false);
-assertEq(({}).hasOwnProperty.call(proxy, Symbol.for('quux')), true);
+
+for (let p of [new Proxy(target, {}), Proxy.revocable(target, {}).proxy]) {
+    assertEq(({}).hasOwnProperty.call(p, 'foo'), false);
+    assertEq(({}).hasOwnProperty.call(p, 'bar'), true);
+    assertEq(({}).hasOwnProperty.call(p, 'quux'), false);
+    assertEq(({}).hasOwnProperty.call(p, Symbol('quux')), false);
+    assertEq(({}).hasOwnProperty.call(p, 'Symbol(quux)'), false);
+    assertEq(({}).hasOwnProperty.call(p, Symbol.for('quux')), true);
+}
 
 // Make sure only the getOwnPropertyDescriptor trap is called, and not the has
 // trap.
-var called = false;
+var called;
 var handler = { getOwnPropertyDescriptor: function () { called = true; },
                 has: function () { assertEq(false, true, "has trap must not be called"); }
               }
-proxy = new Proxy({}, handler);
-assertEq(({}).hasOwnProperty.call(proxy, 'foo'), false);
-assertEq(called, true);
+
+for (let p of [new Proxy({}, handler), Proxy.revocable({}, handler).proxy]) {
+    called = false;
+    assertEq(({}).hasOwnProperty.call(p, 'foo'), false);
+    assertEq(called, true);
+}

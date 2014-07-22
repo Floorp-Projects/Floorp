@@ -8,11 +8,7 @@ for (var key of ['foo', Symbol.for('quux')]) {
         writable: false,
         configurable: false
     });
-    assertThrowsInstanceOf(function () {
-        new Proxy(target, {
-            set: function (target, name, val, receiver) {
-                return true;
-            }
-        })[key] = 'baz';
-    }, TypeError);
+    var handler = { set: () => true };
+    for (let p of [new Proxy(target, handler), Proxy.revocable(target, handler).proxy])
+        assertThrowsInstanceOf(() => p[key] = 'baz', TypeError);
 }
