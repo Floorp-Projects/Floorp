@@ -339,37 +339,35 @@ TiledContentHost::Composite(EffectChain& aEffectChain,
   // Reduce the opacity of the low-precision buffer to make it a
   // little more subtle and less jarring. In particular, text
   // rendered at low-resolution and scaled tends to look pretty
-  // heavy and this helps mitigate that.
+  // heavy and this helps mitigate that. When we reduce the opacity
+  // we also make sure to draw the background color behind the
+  // reduced-opacity tile so that content underneath doesn't show
+  // through.
   // However, in cases where the background is transparent, or the layer
   // already has some opacity, we want to skip this behaviour. Otherwise
   // we end up changing the expected overall transparency of the content,
   // and it just looks wrong.
-  float lowPrecisionOpacityReduction;
+  gfxRGBA backgroundColor(0);
   if (aOpacity == 1.0f && gfxPrefs::LowPrecisionOpacity() < 1.0f) {
     // Background colors are only stored on scrollable layers. Grab
     // the one from the nearest scrollable ancestor layer.
-    gfxRGBA backgroundColor(0);
     for (ContainerLayer* ancestor = GetLayer()->GetParent(); ancestor; ancestor = ancestor->GetParent()) {
       if (ancestor->GetFrameMetrics().IsScrollable()) {
         backgroundColor = ancestor->GetBackgroundColor();
         break;
       }
     }
-    // If the background color is transparent, skip our opacity reduction.
-    if (backgroundColor.a == 1.0f) {
-      lowPrecisionOpacityReduction = gfxPrefs::LowPrecisionOpacity();
-    } else {
-      lowPrecisionOpacityReduction = 1.0f;
-    }
-  } else {
-    lowPrecisionOpacityReduction = 1.0f;
   }
+  float lowPrecisionOpacityReduction =
+        (aOpacity == 1.0f && backgroundColor.a == 1.0f)
+        ? gfxPrefs::LowPrecisionOpacity() : 1.0f;
 
   // Render the low and high precision buffers.
-  RenderLayerBuffer(mLowPrecisionTiledBuffer, aEffectChain,
-                    lowPrecisionOpacityReduction * aOpacity, aFilter, aClipRect,
-                    aLayerProperties->mVisibleRegion, aTransform);
-  RenderLayerBuffer(mTiledBuffer, aEffectChain, aOpacity, aFilter,
+  RenderLayerBuffer(mLowPrecisionTiledBuffer,
+                    lowPrecisionOpacityReduction < 1.0f ? &backgroundColor : nullptr,
+                    aEffectChain, lowPrecisionOpacityReduction * aOpacity,
+                    aFilter, aClipRect, aLayerProperties->mVisibleRegion, aTransform);
+  RenderLayerBuffer(mTiledBuffer, nullptr, aEffectChain, aOpacity, aFilter,
                     aClipRect, aLayerProperties->mVisibleRegion, aTransform);
 
   // Now release the old buffer if it had double-buffered tiles, as we can
@@ -389,6 +387,7 @@ TiledContentHost::Composite(EffectChain& aEffectChain,
 
 void
 TiledContentHost::RenderTile(const TileHost& aTile,
+                             const gfxRGBA* aBackgroundColor,
                              EffectChain& aEffectChain,
                              float aOpacity,
                              const gfx::Matrix4x4& aTransform,
@@ -410,6 +409,16 @@ TiledContentHost::RenderTile(const TileHost& aTile,
 
   if (!quad.Intersects(mCompositor->ClipRectInLayersCoordinates(aClipRect))) {
     return;
+  }
+
+  if (aBackgroundColor) {
+    MOZ_ASSERT(aOpacity == 1.0f);
+    aEffectChain.mPrimaryEffect = new EffectSolidColor(ToColor(*aBackgroundColor));
+    nsIntRegionRectIterator it(aScreenRegion);
+    for (const nsIntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
+      Rect graphicsRect(rect->x, rect->y, rect->width, rect->height);
+      mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, 1.0, aTransform);
+    }
   }
 
   AutoLockTextureHost autoLock(aTile.mTextureHost);
@@ -450,6 +459,7 @@ TiledContentHost::RenderTile(const TileHost& aTile,
 
 void
 TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
+                                    const gfxRGBA* aBackgroundColor,
                                     EffectChain& aEffectChain,
                                     float aOpacity,
                                     const gfx::Filter& aFilter,
@@ -523,8 +533,9 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
           nsIntPoint tileOffset((x - tileStartX) * resolution,
                                 (y - tileStartY) * resolution);
           gfx::IntSize tileSize = aLayerBuffer.GetTileSize();
-          RenderTile(tileTexture, aEffectChain, aOpacity, aTransform, aFilter, aClipRect, tileDrawRegion,
-                     tileOffset, nsIntSize(tileSize.width, tileSize.height));
+          RenderTile(tileTexture, aBackgroundColor, aEffectChain, aOpacity, aTransform,
+                     aFilter, aClipRect, tileDrawRegion, tileOffset,
+                     nsIntSize(tileSize.width, tileSize.height));
         }
       }
       tileY++;
