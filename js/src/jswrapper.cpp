@@ -145,7 +145,7 @@ JSObject *Wrapper::defaultProto = TaggedProto::LazyProto;
 
 extern JSObject *
 js::TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject obj,
-                             HandleObject parent, unsigned flags)
+                             HandleObject parent)
 {
     // Allow wrapping outer window proxies.
     JS_ASSERT(!obj->is<WrapperObject>() || obj->getClass()->ext.innerObject);
