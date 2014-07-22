@@ -2677,12 +2677,10 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
 
     nsDisplayList* itemSameCoordinateSystemChildren
       = item->GetSameCoordinateSystemChildren();
-    if (itemSameCoordinateSystemChildren) {
-      if (item->ShouldFlattenAway(mBuilder)) {
-        aList->AppendToBottom(itemSameCoordinateSystemChildren);
-        item->~nsDisplayItem();
-        continue;
-      }
+    if (item->ShouldFlattenAway(mBuilder)) {
+      aList->AppendToBottom(itemSameCoordinateSystemChildren);
+      item->~nsDisplayItem();
+      continue;
     }
 
     savedItems.AppendToTop(item);
