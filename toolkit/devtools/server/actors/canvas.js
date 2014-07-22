@@ -80,6 +80,7 @@ protocol.types.addDictType("snapshot-image", {
   index: "number",
   width: "number",
   height: "number",
+  scaling: "number",
   flipped: "boolean",
   pixels: "uint32-array"
 });
@@ -156,16 +157,17 @@ let FrameSnapshotActor = protocol.ActorClass({
       last: index
     });
 
-    let { replayContext, lastDrawCallIndex, doCleanup } = replayData;
+    let { replayContext, replayContextScaling, lastDrawCallIndex, doCleanup } = replayData;
+    let [left, top, width, height] = replayData.replayViewport;
     let screenshot;
 
     // Depending on the canvas' context, generating a screenshot is done
     // in different ways.
     if (global == CallWatcherFront.CANVAS_WEBGL_CONTEXT) {
-      screenshot = ContextUtils.getPixelsForWebGL(replayContext);
+      screenshot = ContextUtils.getPixelsForWebGL(replayContext, left, top, width, height);
       screenshot.flipped = true;
     } else if (global == CallWatcherFront.CANVAS_2D_CONTEXT) {
-      screenshot = ContextUtils.getPixelsFor2D(replayContext);
+      screenshot = ContextUtils.getPixelsFor2D(replayContext, left, top, width, height);
       screenshot.flipped = false;
     }
 
@@ -173,6 +175,7 @@ let FrameSnapshotActor = protocol.ActorClass({
     // binding to the original value, after generating the screenshot.
     doCleanup();
 
+    screenshot.scaling = replayContextScaling;
     screenshot.index = lastDrawCallIndex;
     return screenshot;
   }, {
@@ -375,6 +378,7 @@ let CanvasActor = exports.CanvasActor = protocol.ActorClass({
       index: index,
       width: width,
       height: height,
+      scaling: 1,
       flipped: flipped,
       pixels: pixels.subarray(0, width * height)
     };
@@ -407,7 +411,7 @@ let CanvasActor = exports.CanvasActor = protocol.ActorClass({
     let h = this._lastContentCanvasHeight = contentCanvas.height;
 
     // To keep things fast, generate images of small and fixed dimensions.
-    let dimensions = CanvasFront.THUMBNAIL_HEIGHT;
+    let dimensions = CanvasFront.THUMBNAIL_SIZE;
     let thumbnail;
 
     // Create a thumbnail on every draw call on the canvas context, to augment
@@ -528,7 +532,7 @@ let ContextUtils = {
    */
   resizePixels: function(srcPixels, srcWidth, srcHeight, dstHeight) {
     let screenshotRatio = dstHeight / srcHeight;
-    let dstWidth = Math.floor(srcWidth * screenshotRatio);
+    let dstWidth = (srcWidth * screenshotRatio) | 0;
 
     // Use a plain array instead of a Uint32Array to make serializing faster.
     let dstPixels = new Array(dstWidth * dstHeight);
@@ -539,8 +543,8 @@ let ContextUtils = {
 
     for (let dstX = 0; dstX < dstWidth; dstX++) {
       for (let dstY = 0; dstY < dstHeight; dstY++) {
-        let srcX = Math.floor(dstX / screenshotRatio);
-        let srcY = Math.floor(dstY / screenshotRatio);
+        let srcX = (dstX / screenshotRatio) | 0;
+        let srcY = (dstY / screenshotRatio) | 0;
         let cPos = srcX + srcWidth * srcY;
         let dPos = dstX + dstWidth * dstY;
         let color = dstPixels[dPos] = srcPixels[cPos];
@@ -594,6 +598,8 @@ let ContextUtils = {
     let h = canvas.height;
 
     let replayContext;
+    let replayContextScaling;
+    let customViewport;
     let customFramebuffer;
     let lastDrawCallIndex = -1;
     let doCleanup = () => {};
@@ -605,10 +611,27 @@ let ContextUtils = {
     // in an entirely new canvas. However, special care is needed to not
     // permanently affect the existing GL state in the process.
     if (contextType == CallWatcherFront.CANVAS_WEBGL_CONTEXT) {
+      // To keep things fast, replay the context calls on a framebuffer
+      // of smaller dimensions than the actual canvas (maximum 512x512 pixels).
+      let scaling = Math.min(CanvasFront.WEBGL_SCREENSHOT_MAX_HEIGHT, h) / h;
+      replayContextScaling = scaling;
+      w = (w * scaling) | 0;
+      h = (h * scaling) | 0;
+
+      // Fetch the same WebGL context and bind a new framebuffer.
       let gl = replayContext = this.getWebGLContext(canvas);
       let { newFramebuffer, oldFramebuffer } = this.createBoundFramebuffer(gl, w, h);
       customFramebuffer = newFramebuffer;
-      doCleanup = () => gl.bindFramebuffer(gl.FRAMEBUFFER, oldFramebuffer);
+
+      // Set the viewport to match the new framebuffer's dimensions.
+      let { newViewport, oldViewport } = this.setCustomViewport(gl, w, h);
+      customViewport = newViewport;
+
+      // Revert the framebuffer and viewport to the original values.
+      doCleanup = () => {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, oldFramebuffer);
+        gl.viewport.apply(gl, oldViewport);
+      };
     }
     // In case of 2D contexts, draw everything on a separate canvas context.
     else if (contextType == CallWatcherFront.CANVAS_2D_CONTEXT) {
@@ -617,7 +640,8 @@ let ContextUtils = {
       replayCanvas.width = w;
       replayCanvas.height = h;
       replayContext = replayCanvas.getContext("2d");
-      replayContext.clearRect(0, 0, w, h);
+      replayContextScaling = 1;
+      customViewport = [0, 0, w, h];
     }
 
     // Replay all the context calls up to and including the specified one.
@@ -629,6 +653,15 @@ let ContextUtils = {
       if (name == "bindFramebuffer" && args[1] == null) {
         replayContext.bindFramebuffer(replayContext.FRAMEBUFFER, customFramebuffer);
         continue;
+      }
+      // Also prevent WebGL context calls that try to change the viewport
+      // while our custom framebuffer is bound.
+      if (name == "viewport") {
+        let framebufferBinding = replayContext.getParameter(replayContext.FRAMEBUFFER_BINDING);
+        if (framebufferBinding == customFramebuffer) {
+          replayContext.viewport.apply(replayContext, customViewport);
+          continue;
+        }
       }
       if (type == CallWatcherFront.METHOD_FUNCTION) {
         replayContext[name].apply(replayContext, args);
@@ -644,6 +677,8 @@ let ContextUtils = {
 
     return {
       replayContext: replayContext,
+      replayContextScaling: replayContextScaling,
+      replayViewport: customViewport,
       lastDrawCallIndex: lastDrawCallIndex,
       doCleanup: doCleanup
     };
@@ -728,6 +763,20 @@ let ContextUtils = {
     gl.bindRenderbuffer(gl.RENDERBUFFER, oldRenderbufferBinding);
 
     return { oldFramebuffer, newFramebuffer };
+  },
+
+  /**
+   * Sets the viewport of the drawing buffer for a WebGL context.
+   * @param WebGLRenderingContext gl
+   * @param number width
+   * @param number height
+   */
+  setCustomViewport: function(gl, width, height) {
+    let oldViewport = XPCNativeWrapper.unwrap(gl.getParameter(gl.VIEWPORT));
+    let newViewport = [0, 0, width, height];
+    gl.viewport.apply(gl, newViewport);
+
+    return { oldViewport, newViewport };
   }
 };
 
@@ -748,8 +797,8 @@ CanvasFront.CANVAS_CONTEXTS = new Set(CANVAS_CONTEXTS);
 CanvasFront.ANIMATION_GENERATORS = new Set(ANIMATION_GENERATORS);
 CanvasFront.DRAW_CALLS = new Set(DRAW_CALLS);
 CanvasFront.INTERESTING_CALLS = new Set(INTERESTING_CALLS);
-CanvasFront.THUMBNAIL_HEIGHT = 50; // px
-CanvasFront.SCREENSHOT_HEIGHT_MAX = 256; // px
+CanvasFront.THUMBNAIL_SIZE = 50; // px
+CanvasFront.WEBGL_SCREENSHOT_MAX_HEIGHT = 256; // px
 CanvasFront.INVALID_SNAPSHOT_IMAGE = {
   index: -1,
   width: 0,
