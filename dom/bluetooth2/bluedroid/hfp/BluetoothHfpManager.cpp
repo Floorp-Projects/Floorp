@@ -968,6 +968,17 @@ BluetoothHfpManager::NotifyDialer(const nsAString& aCommand)
   BT_ENSURE_TRUE_VOID_BROADCAST_SYSMSG(type, parameters);
 }
 
+class VolumeControlResultHandler MOZ_FINAL
+: public BluetoothHandsfreeResultHandler
+{
+public:
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    BT_WARNING("BluetoothHandsfreeInterface::VolumeControl failed: %d",
+               (int)aStatus);
+  }
+};
+
 void
 BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
 {
@@ -1012,9 +1023,8 @@ BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
   // Only send volume back when there's a connected headset
   if (IsConnected()) {
     NS_ENSURE_TRUE_VOID(sBluetoothHfpInterface);
-    NS_ENSURE_TRUE_VOID(BT_STATUS_SUCCESS ==
-      sBluetoothHfpInterface->VolumeControl(BTHF_VOLUME_TYPE_SPK,
-                                            mCurrentVgs));
+    sBluetoothHfpInterface->VolumeControl(BTHF_VOLUME_TYPE_SPK, mCurrentVgs,
+                                          new VolumeControlResultHandler());
   }
 }
 
