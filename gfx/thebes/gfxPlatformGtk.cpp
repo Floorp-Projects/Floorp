@@ -93,7 +93,9 @@ gfxPlatformGtk::CreateOffscreenSurface(const IntSize& size,
     // we should try to match
     GdkScreen *gdkScreen = gdk_screen_get_default();
     if (gdkScreen) {
-        if (UseXRender()) {
+        // When forcing Thebes Layers to use image surfaces for content,
+        // force creation of gfxImageSurface surfaces.
+        if (UseXRender() && !UseImageOffscreenSurfaces()) {
             Screen *screen = gdk_x11_screen_get_xscreen(gdkScreen);
             XRenderPictFormat* xrenderFormat =
                 gfxXlibSurface::FindRenderFormat(DisplayOfScreen(screen),
