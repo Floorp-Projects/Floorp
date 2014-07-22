@@ -297,6 +297,10 @@ public:
     bool SupportsOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag);
     bool SupportsGraphiteFeature(uint32_t aFeatureTag);
 
+    // returns a set containing all input glyph ids for a given feature
+    const hb_set_t*
+    InputsForOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag);
+
     virtual bool IsSymbolFont();
 
     virtual bool HasFontTable(uint32_t aTableTag);
@@ -587,6 +591,7 @@ public:
     nsAutoPtr<gfxMathTable> mMathTable;
     nsTArray<gfxFontFeature> mFeatureSettings;
     nsAutoPtr<nsDataHashtable<nsUint32HashKey,bool>> mSupportedFeatures;
+    nsAutoPtr<nsDataHashtable<nsUint32HashKey,hb_set_t*>> mFeatureInputs;
     uint32_t         mLanguageOverride;
 
     // Color Layer font support
@@ -1652,7 +1657,15 @@ public:
                              bool& aSyntheticUpperToSmallCaps);
 
     // whether the font supports subscript/superscript feature
-    bool SupportsSubSuperscript(int32_t aScript, uint32_t aSubSuperscript);
+    // for fallback, need to verify that all characters in the run
+    // have variant substitutions
+    bool SupportsSubSuperscript(uint32_t aSubSuperscript,
+                                const uint8_t *aString,
+                                uint32_t aLength, int32_t aRunScript);
+
+    bool SupportsSubSuperscript(uint32_t aSubSuperscript,
+                                const char16_t *aString,
+                                uint32_t aLength, int32_t aRunScript);
 
     // Subclasses may choose to look up glyph ids for characters.
     // If they do not override this, gfxHarfBuzzShaper will fetch the cmap
