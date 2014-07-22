@@ -42,6 +42,40 @@ class Allocator
     JS::Zone *zone_;
 };
 
+namespace gc {
+
+// This class encapsulates the data that determines when we need to do a zone GC.
+class ZoneHeapThreshold
+{
+    // The "growth factor" for computing our next thresholds after a GC.
+    double gcHeapGrowthFactor_;
+
+    // GC trigger threshold for allocations on the GC heap.
+    size_t gcTriggerBytes_;
+
+  public:
+    ZoneHeapThreshold()
+      : gcHeapGrowthFactor_(3.0),
+        gcTriggerBytes_(0)
+    {}
+
+    double gcHeapGrowthFactor() const { return gcHeapGrowthFactor_; }
+    size_t gcTriggerBytes() const { return gcTriggerBytes_; }
+
+    void updateAfterGC(size_t lastBytes, JSGCInvocationKind gckind,
+                       const GCSchedulingTunables &tunables, const GCSchedulingState &state);
+    void updateForRemovedArena(const GCSchedulingTunables &tunables);
+
+  private:
+    static double computeZoneHeapGrowthFactorForHeapSize(size_t lastBytes,
+                                                         const GCSchedulingTunables &tunables,
+                                                         const GCSchedulingState &state);
+    static size_t computeZoneTriggerBytes(double growthFactor, size_t lastBytes,
+                                          JSGCInvocationKind gckind,
+                                          const GCSchedulingTunables &tunables);
+};
+
+} // namespace gc
 } // namespace js
 
 namespace JS {
@@ -95,7 +129,7 @@ struct Zone : public JS::shadow::Zone,
 {
     explicit Zone(JSRuntime *rt);
     ~Zone();
-    bool init();
+    bool init(bool isSystem);
 
     void findOutgoingEdges(js::gc::ComponentFinder<JS::Zone> &finder);
 
@@ -104,9 +138,6 @@ struct Zone : public JS::shadow::Zone,
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 size_t *typePool,
                                 size_t *baselineStubsOptimized);
-
-    void setGCLastBytes(size_t lastBytes, js::JSGCInvocationKind gckind);
-    void reduceGCTriggerBytes(size_t amount);
 
     void resetGCMallocBytes();
     void setGCMaxMallocBytes(size_t value);
@@ -226,9 +257,6 @@ struct Zone : public JS::shadow::Zone,
     typedef js::HashSet<Zone *, js::DefaultHasher<Zone *>, js::SystemAllocPolicy> ZoneSet;
     ZoneSet gcZoneGroupEdges;
 
-    // The "growth factor" for computing our next thresholds after a GC.
-    double gcHeapGrowthFactor;
-
     // Malloc counter to measure memory pressure for GC scheduling. It runs from
     // gcMaxMallocBytes down to zero. This counter should be used only when it's
     // not possible to know the size of a free.
@@ -247,8 +275,8 @@ struct Zone : public JS::shadow::Zone,
     // Track heap usage under this Zone.
     js::gc::HeapUsage usage;
 
-    // GC trigger threshold for allocations on the GC heap.
-    size_t gcTriggerBytes;
+    // Thresholds used to trigger GC.
+    js::gc::ZoneHeapThreshold threshold;
 
     // Per-zone data for use by an embedder.
     void *data;
