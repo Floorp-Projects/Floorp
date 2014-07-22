@@ -77,9 +77,7 @@ GetTransformToAncestorsParentLayer(Layer* aStart, Layer* aAncestor)
     }
     transform = transform * iter->GetTransform();
   }
-  gfx3DMatrix ret;
-  gfx::To3DMatrix(transform, ret);
-  return ret;
+  return gfx::To3DMatrix(transform);
 }
 
 void

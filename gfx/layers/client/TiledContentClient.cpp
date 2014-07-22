@@ -1081,8 +1081,7 @@ GetCompositorSideCompositionBounds(ContainerLayer* aScrollAncestor,
     aScrollAncestor->GetFrameMetrics().mResolution.scale,
     1.f);
 
-  gfx3DMatrix layerTransform;
-  gfx::To3DMatrix(aScrollAncestor->GetTransform(), layerTransform);
+  gfx3DMatrix layerTransform = gfx::To3DMatrix(aScrollAncestor->GetTransform());
 
   // First take off the last two "terms" of aTransformToCompBounds, which
   // are the scroll ancestor's local transform and the APZ's nontransient async
