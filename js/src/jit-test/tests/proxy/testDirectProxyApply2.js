@@ -15,4 +15,5 @@ var handler = {
         assertEq(args[1], 3);
     }
 }
-new Proxy(target, handler).call(receiver, 2, 3);
+for (let p of [new Proxy(target, handler), Proxy.revocable(target, handler).proxy])
+    p.call(receiver, 2, 3);

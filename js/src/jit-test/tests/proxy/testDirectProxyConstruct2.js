@@ -15,4 +15,5 @@ var handler = {
         assertEq(args[1], 3);
     }
 }
-assertThrowsInstanceOf(function () {new (new Proxy(target, handler))(2, 3)}, TypeError);
+for (let p of [new Proxy(target, handler), Proxy.revocable(target, handler).proxy])
+    assertThrowsInstanceOf(function () {new p(2, 3)}, TypeError);

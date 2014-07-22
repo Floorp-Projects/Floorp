@@ -3,11 +3,10 @@ load(libdir + "asserts.js");
 
 var called = false;
 var target = {};
-var handler = { getOwnPropertyDescriptor: () => called = true };
+var handler = { preventExtensions: () => called = true };
 var holder = Proxy.revocable(target, handler);
 
 holder.revoke();
 
-var test = function () { Object.getOwnPropertyDescriptor(holder.proxy, 'foo'); }
-assertThrowsInstanceOf(test, TypeError);
+assertThrowsInstanceOf(() => Object.preventExtensions(holder.proxy), TypeError);
 assertEq(called, false);

@@ -1,16 +1,18 @@
 // Return the trap result
-var proxy = new Proxy(Object.create(Object.create(null, {
+var proto = Object.create(null, {
     'foo': {
         configurable: true
     }
-}), {
+});
+var target = Object.create(proto, {
     'bar': {
         configurable: true
     }
-}), {
-    has: function (target, name) {
-        return false;
-    }
 });
-assertEq('foo' in proxy, false);
-assertEq('bar' in proxy, false);
+
+var handler = { has: () => false };
+
+for (let p of [new Proxy(target, handler), Proxy.revocable(target, handler).proxy]) {
+    assertEq('foo' in p, false);
+    assertEq('bar' in p, false);
+}
