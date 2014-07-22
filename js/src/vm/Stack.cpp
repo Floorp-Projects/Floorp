@@ -1681,8 +1681,6 @@ jit::JitActivation::markRematerializedFrames(JSTracer *trc)
         RematerializedFrame::MarkInVector(trc, e.front().value());
 }
 
-#endif // JS_ION
-
 AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
   : Activation(cx, AsmJS),
     module_(module),
@@ -1728,6 +1726,8 @@ AsmJSActivation::~AsmJSActivation()
     JSRuntime::AutoLockForInterrupt lock(cx->runtime());
     cx->mainThread().asmJSActivationStack_ = prevAsmJS_;
 }
+
+#endif // JS_ION
 
 InterpreterFrameIterator &
 InterpreterFrameIterator::operator++()
@@ -1782,31 +1782,44 @@ ActivationIterator::settle()
 JS::ProfilingFrameIterator::ProfilingFrameIterator(JSRuntime *rt, const RegisterState &state)
   : activation_(rt->mainThread.asmJSActivationStack())
 {
+#ifdef JS_ION
     if (!activation_)
         return;
 
     static_assert(sizeof(AsmJSProfilingFrameIterator) <= StorageSpace, "Need to increase storage");
     new (storage_.addr()) AsmJSProfilingFrameIterator(*activation_, state);
     settle();
+#else
+    JS_ASSERT(!activation_);
+#endif
 }
 
 JS::ProfilingFrameIterator::~ProfilingFrameIterator()
 {
+#ifdef JS_ION
     if (!done())
         iter().~AsmJSProfilingFrameIterator();
+#else
+    JS_ASSERT(done());
+#endif
 }
 
 void
 JS::ProfilingFrameIterator::operator++()
 {
+#ifdef JS_ION
     JS_ASSERT(!done());
     ++iter();
     settle();
+#else
+    MOZ_CRASH("Shouldn't have any frames");
+#endif
 }
 
 void
 JS::ProfilingFrameIterator::settle()
 {
+#ifdef JS_ION
     while (iter().done()) {
         iter().~AsmJSProfilingFrameIterator();
         activation_ = activation_->prevAsmJS();
@@ -1814,32 +1827,51 @@ JS::ProfilingFrameIterator::settle()
             return;
         new (storage_.addr()) AsmJSProfilingFrameIterator(*activation_);
     }
+#else
+    MOZ_CRASH("Shouldn't have any frames");
+#endif
 }
 
 JS::ProfilingFrameIterator::Kind
 JS::ProfilingFrameIterator::kind() const
 {
+#ifdef JS_ION
     return iter().kind();
+#else
+    MOZ_CRASH("Shouldn't have any frames");
+#endif
 }
 
 JSAtom *
 JS::ProfilingFrameIterator::functionDisplayAtom() const
 {
+#ifdef JS_ION
     JS_ASSERT(kind() == Function);
     return iter().functionDisplayAtom();
+#else
+    MOZ_CRASH("Shouldn't have any frames");
+#endif
 }
 
 const char *
 JS::ProfilingFrameIterator::functionFilename() const
 {
+#ifdef JS_ION
     JS_ASSERT(kind() == Function);
     return iter().functionFilename();
+#else
+    MOZ_CRASH("Shouldn't have any frames");
+#endif
 }
 
 const char *
 JS::ProfilingFrameIterator::nonFunctionDescription() const
 {
+#ifdef JS_ION
     JS_ASSERT(kind() != Function);
     return iter().nonFunctionDescription();
+#else
+    MOZ_CRASH("Shouldn't have any frames");
+#endif
 }
 

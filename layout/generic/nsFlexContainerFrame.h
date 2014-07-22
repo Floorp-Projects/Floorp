@@ -106,17 +106,42 @@ protected:
   void SanityCheckAnonymousFlexItems() const;
 #endif // DEBUG
 
-  // Returns a new FlexItem for the given child frame, allocated on the heap.
-  // Caller is responsible for managing the FlexItem's lifetime.
+  /*
+   * Returns a new FlexItem for the given child frame, allocated on the heap.
+   * Guaranteed to return non-null. Caller is responsible for managing the
+   * FlexItem's lifetime.
+   *
+   * Before returning, this method also processes the FlexItem to resolve its
+   * flex basis (including e.g. auto-height) as well as to resolve
+   * "min-height:auto", via ResolveAutoFlexBasisAndMinSize(). (Basically, the
+   * returned FlexItem will be ready to participate in the "Resolve the
+   * Flexible Lengths" step of the Flex Layout Algorithm.)
+   */
   FlexItem* GenerateFlexItemForChild(nsPresContext* aPresContext,
                                      nsIFrame* aChildFrame,
                                      const nsHTMLReflowState& aParentReflowState,
                                      const FlexboxAxisTracker& aAxisTracker);
 
-  void ResolveFlexItemMaxContentSizing(nsPresContext* aPresContext,
+  /**
+   * This method performs a "measuring" reflow to get the content height of
+   * aFlexItem.Frame() (treating it as if it had auto-height), & returns the
+   * resulting height.
+   * (Helper for ResolveAutoFlexBasisAndMinSize().)
+   */
+  nscoord MeasureFlexItemContentHeight(nsPresContext* aPresContext,
                                        FlexItem& aFlexItem,
-                                       const nsHTMLReflowState& aParentReflowState,
-                                       const FlexboxAxisTracker& aAxisTracker);
+                                       bool aForceVerticalResizeForMeasuringReflow,
+                                       const nsHTMLReflowState& aParentReflowState);
+
+  /**
+   * This method resolves an "auto" flex-basis and/or min-main-size value
+   * on aFlexItem, if needed.
+   * (Helper for GenerateFlexItemForChild().)
+   */
+  void ResolveAutoFlexBasisAndMinSize(nsPresContext* aPresContext,
+                                      FlexItem& aFlexItem,
+                                      const nsHTMLReflowState& aItemReflowState,
+                                      const FlexboxAxisTracker& aAxisTracker);
 
   // Creates FlexItems for all of our child frames, arranged in a list of
   // FlexLines.  These are returned by reference in |aLines|. Our actual

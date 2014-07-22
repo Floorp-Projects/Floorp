@@ -459,7 +459,7 @@ class MozbuildObject(ProcessExecutionMixin):
             'append_env': append_env,
             'explicit_env': explicit_env,
             'log_level': logging.INFO,
-            'require_unix_environment': True,
+            'require_unix_environment': False,
             'ensure_exit_code': ensure_exit_code,
             'pass_thru': pass_thru,
 
