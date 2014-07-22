@@ -511,6 +511,17 @@ function resume(threadClient) {
 }
 
 /**
+ * Interrupt JS execution for the specified thread.
+ *
+ * @param ThreadClient threadClient
+ * @returns Promise
+ */
+function interrupt(threadClient) {
+  dumpn("Interrupting.");
+  return rdpRequest(threadClient, threadClient.interrupt);
+}
+
+/**
  * Resume JS execution for the specified thread and then wait for the next pause
  * event.
  *

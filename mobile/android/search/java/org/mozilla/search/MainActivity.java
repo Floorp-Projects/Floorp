@@ -4,10 +4,14 @@
 
 package org.mozilla.search;
 
+import android.content.AsyncQueryHandler;
+import android.content.ContentValues;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 
+import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.search.autocomplete.AcceptsSearchQuery;
 
 /**
@@ -27,18 +31,20 @@ public class MainActivity extends FragmentActivity implements AcceptsSearchQuery
     }
 
     private State state = State.START;
+    private AsyncQueryHandler queryHandler;
 
     @Override
     protected void onCreate(Bundle stateBundle) {
         super.onCreate(stateBundle);
         setContentView(R.layout.search_activity_main);
+
+        queryHandler = new AsyncQueryHandler(getContentResolver()) {};
     }
 
     @Override
-    public void onSearch(String s) {
-        startPostsearch();
-        ((PostSearchFragment) getSupportFragmentManager().findFragmentById(R.id.postsearch))
-                .startSearch(s);
+    protected void onDestroy() {
+        super.onDestroy();
+        queryHandler = null;
     }
 
     @Override
@@ -46,6 +52,14 @@ public class MainActivity extends FragmentActivity implements AcceptsSearchQuery
         super.onResume();
         // When the app launches, make sure we're in presearch *always*
         startPresearch();
+    }
+
+    @Override
+    public void onSearch(String query) {
+        startPostsearch();
+        storeQuery(query);
+        ((PostSearchFragment) getSupportFragmentManager().findFragmentById(R.id.postsearch))
+                .setUrl("https://search.yahoo.com/search?p=" + Uri.encode(query));
     }
 
     private void startPresearch() {
@@ -71,5 +85,16 @@ public class MainActivity extends FragmentActivity implements AcceptsSearchQuery
         } else {
             super.onBackPressed();
         }
+    }
+
+    /**
+     * Store the search query in Fennec's search history database.
+     */
+    private void storeQuery(String query) {
+        final ContentValues cv = new ContentValues();
+        cv.put(SearchHistory.QUERY, query);
+        // Setting 0 for the token, since we only have one type of insert.
+        // Setting null for the cookie, since we don't handle the result of the insert.
+        queryHandler.startInsert(0, null, SearchHistory.CONTENT_URI, cv);
     }
 }
