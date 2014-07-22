@@ -50,6 +50,7 @@ class PTextureChild;
 class TextureChild;
 class BufferTextureClient;
 class TextureClient;
+class KeepAlive;
 
 /**
  * TextureClient is the abstraction that allows us to share data between the
@@ -280,6 +281,14 @@ public:
    * to access the shared data.
    */
   bool IsValid() const { return mValid; }
+
+  /**
+   * kee the passed object alive until the IPDL actor is destroyed. This can
+   * help avoid race conditions in some cases.
+   * It's a temporary hack to ensure that DXGI textures don't get destroyed
+   * between serialization and deserialization.
+   */
+  void KeepUntilFullDeallocation(KeepAlive* aKeep);
 
   /**
    * Create and init the TextureChild/Parent IPDL actor pair.
@@ -611,6 +620,21 @@ struct TextureClientAutoUnlock
   {
     mTexture->Unlock();
   }
+};
+
+class KeepAlive
+{
+public:
+  virtual ~KeepAlive() {}
+};
+
+template<typename T>
+class TKeepAlive : public KeepAlive
+{
+public:
+  TKeepAlive(T* aData) : mData(aData) {}
+protected:
+  RefPtr<T> mData;
 };
 
 }
