@@ -662,8 +662,7 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
 
   // Undo the rebasing applied by
   // nsDisplayTransform::GetResultingTransformMatrixInternal
-  transform = nsLayoutUtils::ChangeMatrixBasis(-scaledOrigin - transformOrigin,
-                                               transform);
+  transform.ChangeBasis(-scaledOrigin - transformOrigin);
 
   // Convert to CSS pixels (this undoes the operations performed by
   // nsStyleTransformMatrix::ProcessTranslatePart which is called from
