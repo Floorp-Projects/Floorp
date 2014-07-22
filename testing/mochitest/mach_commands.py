@@ -595,7 +595,7 @@ def B2GCommand(func):
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command('mochitest-plain', category='testing',
-        conditions=[conditions.is_firefox],
+        conditions=[conditions.is_firefox_or_mulet],
         description='Run a plain mochitest.')
     @MochitestCommand
     def run_mochitest_plain(self, test_paths, **kwargs):
