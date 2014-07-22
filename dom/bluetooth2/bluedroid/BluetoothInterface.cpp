@@ -617,16 +617,29 @@ BluetoothHandsfreeInterface::BluetoothHandsfreeInterface(
 BluetoothHandsfreeInterface::~BluetoothHandsfreeInterface()
 { }
 
-bt_status_t
-BluetoothHandsfreeInterface::Init(bthf_callbacks_t* aCallbacks)
+void
+BluetoothHandsfreeInterface::Init(bthf_callbacks_t* aCallbacks,
+                                  BluetoothHandsfreeResultHandler* aRes)
 {
-  return mInterface->init(aCallbacks);
+  bt_status_t status = mInterface->init(aCallbacks);
+
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(aRes,
+                                     &BluetoothHandsfreeResultHandler::Init,
+                                     status);
+  }
 }
 
 void
-BluetoothHandsfreeInterface::Cleanup()
+BluetoothHandsfreeInterface::Cleanup(BluetoothHandsfreeResultHandler* aRes)
 {
   mInterface->cleanup();
+
+  if (aRes) {
+    DispatchBluetoothHandsfreeResult(aRes,
+                                     &BluetoothHandsfreeResultHandler::Cleanup,
+                                     BT_STATUS_SUCCESS);
+  }
 }
 
 /* Connect / Disconnect */
