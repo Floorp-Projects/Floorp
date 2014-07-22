@@ -74,8 +74,6 @@ IPDL_SOURCES += [
   'PGMPVideoEncoder.ipdl',
 ]
 
-LIBRARY_NAME = 'mozgmp'
-
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 

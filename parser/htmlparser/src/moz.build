@@ -20,8 +20,6 @@ UNIFIED_SOURCES += [
     'nsScannerString.cpp',
 ]
 
-LIBRARY_NAME = 'htmlpars'
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'

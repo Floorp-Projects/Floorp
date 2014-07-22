@@ -42,8 +42,6 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'widget_android'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

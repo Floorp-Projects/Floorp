@@ -8,8 +8,6 @@ SOURCES += [
     'nsEmbeddingModule.cpp',
 ]
 
-LIBRARY_NAME = 'embedcomponents'
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
