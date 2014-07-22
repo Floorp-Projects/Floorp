@@ -15,8 +15,8 @@ namespace layers {
 
 static int colorId = 0;
 
-static gfx3DMatrix GetRootTransform(Layer *aLayer) {
-  gfx3DMatrix layerTrans = aLayer->GetTransform();
+static gfx::Matrix4x4 GetRootTransform(Layer *aLayer) {
+  gfx::Matrix4x4 layerTrans = aLayer->GetTransform();
   layerTrans.ProjectTo2D();
   if (aLayer->GetParent() != nullptr) {
     return GetRootTransform(aLayer->GetParent()) * layerTrans;
@@ -53,8 +53,8 @@ void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx3DMatrix aRoo
 }
 
 void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, const nsIntRect aRect) {
-  gfx3DMatrix trans = GetRootTransform(aLayer);
-  gfxRect rect(aRect.x, aRect.y, aRect.width, aRect.height);
+  gfx::Matrix4x4 trans = GetRootTransform(aLayer);
+  gfx::Rect rect(aRect.x, aRect.y, aRect.width, aRect.height);
   trans.TransformBounds(rect);
 
   printf_stderr("%s RENDERTRACE %u fillrect #%s %i %i %i %i\n",
