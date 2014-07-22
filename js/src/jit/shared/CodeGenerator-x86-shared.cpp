@@ -50,32 +50,14 @@ CodeGeneratorX86Shared::generatePrologue()
 }
 
 bool
-CodeGeneratorX86Shared::generateAsmJSPrologue(Label *stackOverflowLabel)
-{
-    JS_ASSERT(gen->compilingAsmJS());
-
-    // The asm.js over-recursed handler wants to be able to assume that SP
-    // points to the return address, so perform the check before pushing
-    // frameDepth.
-    if (!omitOverRecursedCheck()) {
-        masm.branchPtr(Assembler::AboveOrEqual,
-                       AsmJSAbsoluteAddress(AsmJSImm_StackLimit),
-                       StackPointer,
-                       stackOverflowLabel);
-    }
-
-    // Note that this automatically sets MacroAssembler::framePushed().
-    masm.reserveStack(frameSize());
-    return true;
-}
-
-bool
 CodeGeneratorX86Shared::generateEpilogue()
 {
+    JS_ASSERT(!gen->compilingAsmJS());
+
     masm.bind(&returnLabel_);
 
 #ifdef JS_TRACE_LOGGING
-    if (!gen->compilingAsmJS() && gen->info().executionMode() == SequentialExecution) {
+    if (gen->info().executionMode() == SequentialExecution) {
         if (!emitTracelogStopEvent(TraceLogger::IonMonkey))
             return false;
         if (!emitTracelogScriptStop())

@@ -22,4 +22,11 @@ js::Debugger::onLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool ok)
     return ok;
 }
 
+/* static */ inline js::Debugger *
+js::Debugger::fromJSObject(JSObject *obj)
+{
+    JS_ASSERT(js::GetObjectClass(obj) == &jsclass);
+    return (Debugger *) obj->getPrivate();
+}
+
 #endif /* vm_Debugger_inl_h */

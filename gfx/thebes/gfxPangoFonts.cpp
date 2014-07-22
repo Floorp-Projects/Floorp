@@ -658,7 +658,13 @@ public:
     virtual mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions> GetGlyphRenderingOptions();
 #endif
 
+    // return a cloned font resized and offset to simulate sub/superscript glyphs
+    virtual already_AddRefed<gfxFont>
+    GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel);
+
 protected:
+    virtual already_AddRefed<gfxFont> MakeScaledFont(gfxFontStyle *aFontStyle,
+                                                     gfxFloat aFontScale);
     virtual already_AddRefed<gfxFont> GetSmallCapsFont();
 
 private:
@@ -1520,21 +1526,25 @@ gfxFcFont::~gfxFcFont()
 }
 
 already_AddRefed<gfxFont>
-gfxFcFont::GetSmallCapsFont()
+gfxFcFont::GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel)
 {
     gfxFontStyle style(*GetStyle());
-    style.size *= SMALL_CAPS_SCALE_FACTOR;
-    style.variantCaps = NS_FONT_VARIANT_CAPS_NORMAL;
+    style.AdjustForSubSuperscript(aAppUnitsPerDevPixel);
+    return MakeScaledFont(&style, style.size / GetStyle()->size);
+}
+
+already_AddRefed<gfxFont>
+gfxFcFont::MakeScaledFont(gfxFontStyle *aFontStyle, gfxFloat aScaleFactor)
+{
     gfxFcFontEntry* fe = static_cast<gfxFcFontEntry*>(GetFontEntry());
-    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(fe, &style);
+    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(fe, aFontStyle);
     if (font) {
         return font.forget();
     }
 
     cairo_matrix_t fontMatrix;
     cairo_scaled_font_get_font_matrix(mScaledFont, &fontMatrix);
-    cairo_matrix_scale(&fontMatrix,
-                       SMALL_CAPS_SCALE_FACTOR, SMALL_CAPS_SCALE_FACTOR);
+    cairo_matrix_scale(&fontMatrix, aScaleFactor, aScaleFactor);
 
     cairo_matrix_t ctm;
     cairo_scaled_font_get_ctm(mScaledFont, &ctm);
@@ -1542,16 +1552,25 @@ gfxFcFont::GetSmallCapsFont()
     cairo_font_options_t *options = cairo_font_options_create();
     cairo_scaled_font_get_font_options(mScaledFont, options);
 
-    cairo_scaled_font_t *smallFont =
+    cairo_scaled_font_t *newFont =
         cairo_scaled_font_create(cairo_scaled_font_get_font_face(mScaledFont),
                                  &fontMatrix, &ctm, options);
     cairo_font_options_destroy(options);
 
-    font = new gfxFcFont(smallFont, fe, &style);
+    font = new gfxFcFont(newFont, fe, aFontStyle);
     gfxFontCache::GetCache()->AddNew(font);
-    cairo_scaled_font_destroy(smallFont);
+    cairo_scaled_font_destroy(newFont);
 
     return font.forget();
+}
+
+already_AddRefed<gfxFont>
+gfxFcFont::GetSmallCapsFont()
+{
+    gfxFontStyle style(*GetStyle());
+    style.size *= SMALL_CAPS_SCALE_FACTOR;
+    style.variantCaps = NS_FONT_VARIANT_CAPS_NORMAL;
+    return MakeScaledFont(&style, SMALL_CAPS_SCALE_FACTOR);
 }
 
 /* static */ void

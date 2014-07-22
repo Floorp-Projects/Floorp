@@ -199,6 +199,11 @@ from its prototype:
     wrapper's global, not the wrapped object's global. The result refers to
     the global directly, not via a wrapper.
 
+<code id="allocationsite">allocationSite</code>
+:   If [object allocation site tracking][tracking-allocs] was enabled when this
+    `Debugger.Object`'s referent was allocated, return the
+    [JavaScript execution stack][saved-frame] captured at the time of the
+    allocation. Otherwise, return `null`.
 
 
 ## Function Properties of the Debugger.Object prototype

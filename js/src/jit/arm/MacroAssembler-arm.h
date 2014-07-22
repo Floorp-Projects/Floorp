@@ -599,6 +599,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void nop() {
         ma_nop();
     }
+    void shortJumpSizedNop() {
+        ma_nop();
+    }
     void ret() {
         ma_pop(pc);
     }
@@ -1606,6 +1609,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label *label);
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label *label);
 #endif
+
+    void loadAsmJSActivation(Register dest) {
+        loadPtr(Address(GlobalReg, AsmJSActivationGlobalDataOffset), dest);
+    }
 };
 
 typedef MacroAssemblerARMCompat MacroAssemblerSpecific;

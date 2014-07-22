@@ -653,6 +653,7 @@ class AssemblerX86Shared : public AssemblerShared
 
   public:
     void nop() { masm.nop(); }
+    void twoByteNop() { masm.twoByteNop(); }
     void j(Condition cond, Label *label) { jSrc(cond, label); }
     void jmp(Label *label) { jmpSrc(label); }
     void j(Condition cond, RepatchLabel *label) { jSrc(cond, label); }

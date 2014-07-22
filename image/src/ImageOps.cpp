@@ -6,6 +6,7 @@
 
 #include "imgIContainer.h"
 #include "ClippedImage.h"
+#include "DynamicImage.h"
 #include "FrozenImage.h"
 #include "OrientedImage.h"
 #include "Image.h"
@@ -58,6 +59,13 @@ ImageOps::Orient(imgIContainer* aImage, Orientation aOrientation)
   nsCOMPtr<imgIContainer> orientedImage =
     new OrientedImage(static_cast<Image*>(aImage), aOrientation);
   return orientedImage.forget();
+}
+
+/* static */ already_AddRefed<imgIContainer>
+ImageOps::CreateFromDrawable(gfxDrawable* aDrawable)
+{
+  nsCOMPtr<imgIContainer> drawableImage = new DynamicImage(aDrawable);
+  return drawableImage.forget();
 }
 
 } // namespace image

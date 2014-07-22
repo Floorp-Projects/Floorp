@@ -164,17 +164,6 @@ public:
                         const nsSize& aDefaultSize);
 
   /**
-   * Draws the image to the target rendering context.
-   * aSrc is a rect on the source image which will be mapped to aDest.
-   * @see nsLayoutUtils::DrawImage() for other parameters.
-   */
-  void Draw(nsPresContext*       aPresContext,
-            nsRenderingContext&  aRenderingContext,
-            const nsRect&        aDirtyRect,
-            const nsRect&        aFill,
-            const nsRect&        aDest,
-            const mozilla::CSSIntRect& aSrc);
-  /**
    * Draws the image to the target rendering context using background-specific
    * arguments.
    * @see nsLayoutUtils::DrawImage() for parameters.
@@ -217,6 +206,21 @@ public:
   bool IsReady() { return mIsReady; }
 
 private:
+  /**
+   * Draws the image to the target rendering context.
+   * aSrc is a rect on the source image which will be mapped to aDest; it's
+   * currently only used for gradients.
+   *
+   * @see nsLayoutUtils::DrawImage() for other parameters.
+   */
+  void Draw(nsPresContext*       aPresContext,
+            nsRenderingContext&  aRenderingContext,
+            const nsRect&        aDirtyRect,
+            const nsRect&        aDest,
+            const nsRect&        aFill,
+            const nsPoint&       aAnchor,
+            const mozilla::CSSIntRect& aSrc);
+
   /**
    * Helper method for creating a gfxDrawable from mPaintServerFrame or 
    * mImageElementSurface.

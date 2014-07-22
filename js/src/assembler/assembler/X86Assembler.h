@@ -451,6 +451,13 @@ public:
         m_formatter.oneByteOp(OP_NOP);
     }
 
+    void twoByteNop()
+    {
+        spew("nop (2 byte)");
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_NOP);
+    }
+
     // Stack operations:
 
     void push_r(RegisterID reg)

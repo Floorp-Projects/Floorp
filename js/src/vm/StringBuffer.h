@@ -76,10 +76,7 @@ class StringBuffer
     explicit StringBuffer(ExclusiveContext *cx)
       : cx(cx), hasEnsuredTwoByteChars_(false), reserved_(0)
     {
-        if (EnableLatin1Strings)
-            cb.construct<Latin1CharBuffer>(cx);
-        else
-            cb.construct<TwoByteCharBuffer>(cx);
+        cb.construct<Latin1CharBuffer>(cx);
     }
 
     inline bool reserve(size_t len) {

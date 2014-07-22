@@ -29,12 +29,17 @@ markdown Debugger.Frame.md Debugger-API/Debugger.Frame
 
 markdown Debugger.Object.md Debugger-API/Debugger.Object
   label 'object'                                "Debugger.Object"
+  label 'allocation-site' '#allocationsite'     "Debugger.Object: allocationSite"
 
 markdown Debugger.Script.md Debugger-API/Debugger.Script
   label 'script'                                "Debugger.Script"
 
 markdown Debugger.Source.md Debugger-API/Debugger.Source
   label 'source'                                "Debugger.Source"
+
+markdown Debugger.Memory.md Debugger-API/Debugger.Memory
+  label 'memory'                                "Debugger.Memory"
+  label 'tracking-allocs' '#trackingallocationsites' "Debugger.Memory: trackingAllocationSites"
 
 # Images:
 RBASE=https://mdn.mozillademos.org/files
@@ -45,3 +50,4 @@ resource 'img-example-alert'      debugger-alert.png                 $RBASE/7231
 
 # External links:
 absolute-label 'protocol' https://wiki.mozilla.org/Remote_Debugging_Protocol "Remote Debugging Protocol"
+absolute-label 'saved-frame' https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/SavedFrame "SavedFrame"

@@ -2724,14 +2724,11 @@ nsRange::CreateContextualFragment(const nsAString& aFragment, ErrorResult& aRv)
 }
 
 static void ExtractRectFromOffset(nsIFrame* aFrame,
-                                  const nsIFrame* aRelativeTo, 
                                   const int32_t aOffset, nsRect* aR, bool aKeepLeft,
                                   bool aClampToEdge)
 {
   nsPoint point;
   aFrame->GetPointFromOffset(aOffset, &point);
-
-  point += aFrame->GetOffsetTo(aRelativeTo);
 
   if (!aClampToEdge && !aR->Contains(point)) {
     aR->width = 0;
@@ -2783,15 +2780,16 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
       f->EnsureTextRun(nsTextFrame::eInflated);
       NS_ENSURE_TRUE(f->GetTextRun(nsTextFrame::eInflated), NS_ERROR_OUT_OF_MEMORY);
       bool rtl = f->GetTextRun(nsTextFrame::eInflated)->IsRightToLeft();
-      nsRect r(f->GetOffsetTo(relativeTo), f->GetSize());
+      nsRect r = f->GetRectRelativeToSelf();
       if (fstart < aStartOffset) {
         // aStartOffset is within this frame
-        ExtractRectFromOffset(f, relativeTo, aStartOffset, &r, rtl, aClampToEdge);
+        ExtractRectFromOffset(f, aStartOffset, &r, rtl, aClampToEdge);
       }
       if (fend > aEndOffset) {
         // aEndOffset is in the middle of this frame
-        ExtractRectFromOffset(f, relativeTo, aEndOffset, &r, !rtl, aClampToEdge);
+        ExtractRectFromOffset(f, aEndOffset, &r, !rtl, aClampToEdge);
       }
+      r = nsLayoutUtils::TransformFrameRectToAncestor(f, r, relativeTo);
       aCallback->AddRect(r);
     }
   }
@@ -2839,9 +2837,10 @@ nsRange::CollectClientRects(nsLayoutUtils::RectCallback* aCollector,
         if (outFrame) {
            nsIFrame* relativeTo =
              nsLayoutUtils::GetContainingBlockForClientRect(outFrame);
-           nsRect r(outFrame->GetOffsetTo(relativeTo), outFrame->GetSize());
-           ExtractRectFromOffset(outFrame, relativeTo, aStartOffset, &r, false, aClampToEdge);
+           nsRect r = outFrame->GetRectRelativeToSelf();
+           ExtractRectFromOffset(outFrame, aStartOffset, &r, false, aClampToEdge);
            r.width = 0;
+           r = nsLayoutUtils::TransformFrameRectToAncestor(outFrame, r, relativeTo);
            aCollector->AddRect(r);
         }
       }
@@ -2870,7 +2869,8 @@ nsRange::CollectClientRects(nsLayoutUtils::RectCallback* aCollector,
     nsIFrame* frame = content->GetPrimaryFrame();
     if (frame) {
       nsLayoutUtils::GetAllInFlowRects(frame,
-        nsLayoutUtils::GetContainingBlockForClientRect(frame), aCollector);
+        nsLayoutUtils::GetContainingBlockForClientRect(frame), aCollector,
+        nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
     }
   } while (!iter.IsDone());
 }

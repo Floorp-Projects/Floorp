@@ -21,11 +21,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850442
 
 SimpleTest.waitForExplicitFinish();
 
+/*
+The request cache vs. the PositionOptions cache is confusing to the reader, to explain:
+
+Testing uses mochitest httpd, so the network cache must be disabled in order for requests
+to propagate to mochitest httpd. Otherwise, every request looks like a geoip request,
+and the network request cache sees no reason to make a web request for location for geoip
+if it has already made geoip (or better) requests.
+
+We should investigate providing fake wifi and cell scans to the
+network location provider, then the network cache does not need to be shut off
+AND it will get testing coverage.
+
+*/
 resume_geolocationProvider(function() {
     force_prompt(true, function () {
-      set_network_request_cache_enabled(false, function() {
-        test1();
-      });
+      set_network_request_cache_enabled(false, test_cachedPosition)
     });
 });
 
@@ -42,46 +53,29 @@ function errorCallback(err) {
   done();
 }
 
-function testCachedPosition() {
-  var cached = null;
-  navigator.geolocation.getCurrentPosition(function(pos) {
-    // get cached position
-    cached = pos;
+function areTimesEqual(loc1, loc2) {
+  return loc1.timestamp === loc2.timestamp;
+}
 
-    navigator.geolocation.getCurrentPosition(function(pos) {
-      // force use of cached position, make sure
-      // it's equal to what we have
-      is(pos, cached, "position should be equal to cached position");
-      resume_geolocationProvider(function() {
+function test_cachedPosition() {
+   var cached = null;
+   navigator.geolocation.getCurrentPosition(function(pos) {
+    // first call is just to warm up the cache
+
+     navigator.geolocation.getCurrentPosition(function(pos) {
+      cached = pos;
+
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        ok(areTimesEqual(pos, cached), "position should be equal to cached position");
         navigator.geolocation.getCurrentPosition(function(pos) {
           // force new position, can't be the one we have
-          isnot(pos, cached, "new position should be different from the cached");
+          ok(!areTimesEqual(pos, cached), "position should not be equal to cached position");
           done();
         }, errorCallback, {maximumAge: 0});
-      });
-    }, errorCallback, {maximumAge: 21600000});
-  }, errorCallback, {maximumAge: 21600000});
-}
-
-// ensure we have a position in cache,
-// and stop receiving new positions once we do so the
-// cache doesn't change
-var watchID;
-function test1() {
-  watchID = navigator.geolocation.watchPosition(
-    function(pos) {
-      info("Stopping geolocation provider");
-      stop_geolocationProvider(function() {});
-    }, function(err) {
-      is(err.code, err.TIMEOUT, "got TIMEOUT for watchPosition");
-
-      // no new positions in a while,
-      // the cache should be stable now.
-      navigator.geolocation.clearWatch(watchID);
-      testCachedPosition();
-    }, {maximumAge: 0, timeout: 1000}
-  );
-}
+      }, errorCallback, {maximumAge: 21600000});
+     }, errorCallback, {maximumAge: 21600000});
+   }, errorCallback, {maximumAge: 21600000});
+ }
 </script>
 </pre>
 </body>

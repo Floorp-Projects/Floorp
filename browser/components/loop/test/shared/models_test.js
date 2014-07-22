@@ -142,18 +142,42 @@ describe("loop.shared.models", function() {
             sinon.assert.calledWith(conversation.setReady, fakeSessionData);
           });
 
-        it("should trigger a `session:error` on failure", function(done) {
-          requestCallInfoStub.callsArgWith(2,
-            new Error("failed: HTTP 400 Bad Request; fake"));
+        it("should trigger a `session:error` event errno is undefined",
+          function(done) {
+            var errMsg = "HTTP 500 Server Error; fake";
+            var err = new Error(errMsg);
+            requestCallInfoStub.callsArgWith(2, err);
 
-          conversation.on("session:error", function(err) {
-            expect(err.message).to.match(/failed: HTTP 400 Bad Request; fake/);
-            done();
-          }).initiate({
-            client: fakeClient,
-            outgoing: true
+            conversation.on("session:error", function(err) {
+              expect(err.message).eql(errMsg);
+              done();
+            }).initiate({ client: fakeClient, outgoing: true });
           });
-        });
+
+        it("should trigger a `session:error` event when errno is not 105",
+          function(done) {
+            var errMsg = "HTTP 400 Bad Request; fake";
+            var err = new Error(errMsg);
+            err.errno = 101;
+            requestCallInfoStub.callsArgWith(2, err);
+
+            conversation.on("session:error", function(err) {
+              expect(err.message).eql(errMsg);
+              done();
+            }).initiate({ client: fakeClient, outgoing: true });
+          });
+
+        it("should trigger a `session:expired` event when errno is 105",
+          function(done) {
+            var err = new Error("HTTP 404 Not Found; fake");
+            err.errno = 105;
+            requestCallInfoStub.callsArgWith(2, err);
+
+            conversation.on("session:expired", function(err2) {
+              expect(err2).eql(err);
+              done();
+            }).initiate({ client: fakeClient, outgoing: true });
+          });
 
         it("should end the session on outgoing call timeout", function() {
           requestCallInfoStub.callsArgWith(2, null, fakeSessionData);

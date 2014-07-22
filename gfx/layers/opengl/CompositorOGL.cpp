@@ -15,7 +15,6 @@
 #include "gfx2DGlue.h"                  // for ThebesFilter
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxCrashReporterUtils.h"      // for ScopedGfxFeatureReporter
-#include "gfxMatrix.h"                  // for gfxMatrix
 #include "GraphicsFilter.h"             // for GraphicsFilter
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxPrefs.h"                   // for gfxPrefs
@@ -1130,11 +1129,10 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       didSetBlendMode = SetBlendMode(gl(), blendMode, texturedEffect->mPremultiplied);
 
       gfx::Filter filter = texturedEffect->mFilter;
-      gfx3DMatrix textureTransform;
-      gfx::To3DMatrix(source->AsSourceOGL()->GetTextureTransform(), textureTransform);
+      Matrix4x4 textureTransform = source->AsSourceOGL()->GetTextureTransform();
 
 #ifdef MOZ_WIDGET_ANDROID
-      gfxMatrix textureTransform2D;
+      gfx::Matrix textureTransform2D;
       if (filter != gfx::Filter::POINT &&
           aTransform.Is2DIntegerTranslation() &&
           textureTransform.Is2D(&textureTransform2D) &&
@@ -1148,9 +1146,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       source->AsSourceOGL()->BindTexture(LOCAL_GL_TEXTURE0, filter);
 
       program->SetTextureUnit(0);
-      Matrix4x4 transform;
-      ToMatrix4x4(textureTransform, transform);
-      program->SetTextureTransform(transform);
+      program->SetTextureTransform(textureTransform);
 
       if (maskType != MaskType::MaskNone) {
         BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE1, maskQuadTransform);
