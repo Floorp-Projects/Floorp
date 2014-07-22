@@ -1035,10 +1035,10 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
 
 void
 nsFlexContainerFrame::
-  ResolveFlexItemMaxContentSizing(nsPresContext* aPresContext,
-                                  FlexItem& aFlexItem,
-                                  const nsHTMLReflowState& aParentReflowState,
-                                  const FlexboxAxisTracker& aAxisTracker)
+  ResolveAutoFlexBasisAndMinSize(nsPresContext* aPresContext,
+                                 FlexItem& aFlexItem,
+                                 const nsHTMLReflowState& aParentReflowState,
+                                 const FlexboxAxisTracker& aAxisTracker)
 {
   if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
     // Nothing to do -- this function is only for measuring flex items
@@ -2698,8 +2698,8 @@ nsFlexContainerFrame::GenerateFlexLines(
       item = GenerateFlexItemForChild(aPresContext, childFrame,
                                       aReflowState, aAxisTracker);
 
-      ResolveFlexItemMaxContentSizing(aPresContext, *item,
-                                      aReflowState, aAxisTracker);
+      ResolveAutoFlexBasisAndMinSize(aPresContext, *item,
+                                     aReflowState, aAxisTracker);
     }
 
     nscoord itemInnerHypotheticalMainSize = item->GetMainSize();

@@ -113,10 +113,10 @@ protected:
                                      const nsHTMLReflowState& aParentReflowState,
                                      const FlexboxAxisTracker& aAxisTracker);
 
-  void ResolveFlexItemMaxContentSizing(nsPresContext* aPresContext,
-                                       FlexItem& aFlexItem,
-                                       const nsHTMLReflowState& aParentReflowState,
-                                       const FlexboxAxisTracker& aAxisTracker);
+  void ResolveAutoFlexBasisAndMinSize(nsPresContext* aPresContext,
+                                      FlexItem& aFlexItem,
+                                      const nsHTMLReflowState& aParentReflowState,
+                                      const FlexboxAxisTracker& aAxisTracker);
 
   // Creates FlexItems for all of our child frames, arranged in a list of
   // FlexLines.  These are returned by reference in |aLines|. Our actual
