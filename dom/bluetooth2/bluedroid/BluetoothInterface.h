@@ -146,16 +146,21 @@ public:
 
   /* Responses */
 
-  bt_status_t CopsResponse(const char* aCops);
-  bt_status_t CindResponse(int aSvc, int aNumActive, int aNumHeld,
-                           bthf_call_state_t aCallSetupState, int aSignal,
-                           int aRoam, int aBattChg);
-  bt_status_t FormattedAtResponse(const char* aRsp);
-  bt_status_t AtResponse(bthf_at_response_t aResponseCode, int aErrorCode);
-  bt_status_t ClccResponse(int aIndex, bthf_call_direction_t aDir,
-                           bthf_call_state_t aState, bthf_call_mode_t aMode,
-                           bthf_call_mpty_type_t aMpty, const char* aNumber,
-                           bthf_call_addrtype_t aType);
+  void CopsResponse(const char* aCops,
+                    BluetoothHandsfreeResultHandler* aRes);
+  void CindResponse(int aSvc, int aNumActive, int aNumHeld,
+                    bthf_call_state_t aCallSetupState, int aSignal,
+                    int aRoam, int aBattChg,
+                    BluetoothHandsfreeResultHandler* aRes);
+  void FormattedAtResponse(const char* aRsp,
+                           BluetoothHandsfreeResultHandler* aRes);
+  void AtResponse(bthf_at_response_t aResponseCode, int aErrorCode,
+                  BluetoothHandsfreeResultHandler* aRes);
+  void ClccResponse(int aIndex, bthf_call_direction_t aDir,
+                    bthf_call_state_t aState, bthf_call_mode_t aMode,
+                    bthf_call_mpty_type_t aMpty, const char* aNumber,
+                    bthf_call_addrtype_t aType,
+                    BluetoothHandsfreeResultHandler* aRes);
 
   /* Phone State */
 
