@@ -19,25 +19,6 @@ fails == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-
 fuzzy-if(B2G,10,3) random-if(winWidget) == flexbox-align-self-baseline-horiz-3.xhtml  flexbox-align-self-baseline-horiz-3-ref.xhtml # XXXdholbert investigate
 == flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4-ref.xhtml
 
-# Tests for basic handling of <canvas>/<img>/etc as a flex item
-# NOTE: The "-1" versions of these tests have moved to the w3c-css directory;
-# the -2 variants remain behind, because they explicitly intend to test
-# how e.g. "min-width: -moz-min-content" affects the rendering, and we don't
-# want to upload tests with prefixed keywords to the W3C testsuite.
-
-== flexbox-basic-canvas-horiz-2.xhtml   flexbox-basic-canvas-horiz-2-ref.xhtml
-fails == flexbox-basic-canvas-vert-2.xhtml flexbox-basic-canvas-vert-2-ref.xhtml # bug 794660
-== flexbox-basic-fieldset-horiz-2.xhtml flexbox-basic-fieldset-horiz-2-ref.xhtml
-== flexbox-basic-fieldset-vert-2.xhtml  flexbox-basic-fieldset-vert-2-ref.xhtml
-== flexbox-basic-iframe-horiz-2.xhtml   flexbox-basic-iframe-horiz-2-ref.xhtml
-== flexbox-basic-iframe-vert-2.xhtml    flexbox-basic-iframe-vert-2-ref.xhtml
-== flexbox-basic-img-horiz-2.xhtml      flexbox-basic-img-horiz-2-ref.xhtml
-fails == flexbox-basic-img-vert-2.xhtml flexbox-basic-img-vert-2-ref.xhtml # bug 794660
-== flexbox-basic-textarea-horiz-2.xhtml flexbox-basic-textarea-horiz-2-ref.xhtml
-== flexbox-basic-textarea-vert-2.xhtml  flexbox-basic-textarea-vert-2-ref.xhtml
-== flexbox-basic-video-horiz-2.xhtml    flexbox-basic-video-horiz-2-ref.xhtml
-fails == flexbox-basic-video-vert-2.xhtml flexbox-basic-video-vert-2-ref.xhtml # bug 794660
-
 # Tests for box-sizing on flex containers and flex items.
 == flexbox-box-sizing-on-container-horiz-1.html flexbox-box-sizing-on-container-horiz-1-ref.html
 == flexbox-box-sizing-on-container-vert-1.html flexbox-box-sizing-on-container-vert-1-ref.html
@@ -83,10 +64,6 @@ fails == flexbox-basic-video-vert-2.xhtml flexbox-basic-video-vert-2-ref.xhtml #
 == flexbox-float-1d.xhtml  flexbox-float-1-ref.xhtml
 == flexbox-float-2a.xhtml  flexbox-float-2-ref.xhtml
 == flexbox-float-2b.xhtml  flexbox-float-2-ref.xhtml
-
-# Tests for (default) "min-width: auto" / "min-height: auto" in flex containers
-== flexbox-minSize-horiz-1.xhtml flexbox-minSize-horiz-1-ref.xhtml
-== flexbox-minSize-vert-1.xhtml  flexbox-minSize-vert-1-ref.xhtml
 
 # Tests for the order in which we paint flex items
 fails == flexbox-paint-ordering-3.html  flexbox-paint-ordering-3-ref.html # bug 874718
