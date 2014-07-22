@@ -1134,7 +1134,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
 #ifdef MOZ_WIDGET_ANDROID
       gfx::Matrix textureTransform2D;
       if (filter != gfx::Filter::POINT &&
-          textureTransform.Is2DIntegerTranslation() &&
+          aTransform.Is2DIntegerTranslation() &&
           textureTransform.Is2D(&textureTransform2D) &&
           textureTransform2D.HasOnlyIntegerTranslation()) {
         // On Android we encounter small resampling errors in what should be
