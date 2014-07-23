@@ -26,9 +26,7 @@
 # build system and is not intended to be included in Mozilla distributions.
 
 ifdef MOZ_NATIVE_BZ2
-HOST_LIBS += $(MOZ_BZ2_LIBS)
-else
-HOST_LIBS += $(DIST)/host/lib/$(LIB_PREFIX)hostbz2.$(LIB_SUFFIX)
+HOST_EXTRA_LIBS += $(MOZ_BZ2_LIBS)
 endif
 
 ifeq ($(HOST_OS_ARCH),WINNT)

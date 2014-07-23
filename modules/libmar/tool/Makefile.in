@@ -17,7 +17,6 @@ HOST_CFLAGS += \
   $(DEFINES) \
   $(NULL)
 
-HOST_LIBS = $(DIST)/host/lib/$(LIB_PREFIX)hostmar.$(LIB_SUFFIX)
 LIBS = $(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX)
 
 ifdef MOZ_ENABLE_SIGNMAR
