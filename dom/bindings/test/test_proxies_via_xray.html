@@ -76,7 +76,16 @@ function test()
   is(doc.documentElement.getAttribute("data-foo"), "baz",
      "Attribute setter should have been called again");
 
-  // XXXbz no way yet to test non-overridebuiltins stuff with named setter
+  // Test non-overridebuiltins binding with named setter
+  var s = doc.defaultView.localStorage;
+  s["test_proxies_via_xray"] = "bar";
+  // Check that this actually got passed on to the underlying object.
+  is(s.wrappedJSObject["test_proxies_via_xray"], "bar",
+     "Set should get forwarded to the underlying object without overridebuiltins");
+  s["test_proxies_via_xray"] = "baz";
+  // Check that this actually got passed on to the underlying object.
+  is(s.wrappedJSObject["test_proxies_via_xray"], "baz",
+     "Set should get forwarded to the underlying object again without overridebuiltins");
 
   SimpleTest.finish();
 }
