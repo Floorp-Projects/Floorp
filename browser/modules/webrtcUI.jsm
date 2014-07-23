@@ -555,11 +555,6 @@ function updateIndicators() {
   let count = contentWindowSupportsArray.Count();
 
   webrtcUI.showGlobalIndicator = count > 0;
-
-  let e = Services.wm.getEnumerator("navigator:browser");
-  while (e.hasMoreElements())
-    e.getNext().WebrtcIndicator.updateButton();
-
   webrtcUI.showCameraIndicator = false;
   webrtcUI.showMicrophoneIndicator = false;
   webrtcUI.showScreenSharingIndicator = "";

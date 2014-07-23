@@ -669,7 +669,7 @@
              aria-label="&navbarCmd.label;"
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="small"
-             defaultset="urlbar-container,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,loop-call-button,social-share-button,social-toolbar-item"
+             defaultset="urlbar-container,search-container,bookmarks-menu-button,downloads-button,home-button,loop-call-button,social-share-button,social-toolbar-item"
              customizationtarget="nav-bar-customization-target"
              overflowable="true"
              overflowbutton="nav-bar-overflow-button"
@@ -787,19 +787,6 @@
                      flex="100" persist="width" removable="true">
           <searchbar id="searchbar" flex="1"/>
         </toolbaritem>
-
-        <toolbarbutton id="webrtc-status-button"
-                       class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       type="menu"
-                       hidden="true"
-                       orient="horizontal"
-                       label="&webrtcIndicatorButton.label;"
-                       tooltiptext="&webrtcIndicatorButton.tooltip;"
-                       overflows="false">
-          <menupopup onpopupshowing="WebrtcIndicator.fillPopup(this);"
-                     onpopuphiding="WebrtcIndicator.clearPopup(this);"
-                     oncommand="WebrtcIndicator.menuCommand(event.target);"/>
-        </toolbarbutton>
 
         <toolbarbutton id="bookmarks-menu-button"
                        class="toolbarbutton-1 chromeclass-toolbar-additional"

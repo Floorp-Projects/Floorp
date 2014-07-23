@@ -48,7 +48,6 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREA_PLACEMENTS", function() {
     "nav-bar": [
       "urlbar-container",
       "search-container",
-      "webrtc-status-button",
       "bookmarks-menu-button",
       "downloads-button",
       "home-button",
