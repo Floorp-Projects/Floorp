@@ -1311,6 +1311,16 @@ OptimizeMIR(MIRGenerator *mir)
             return false;
     }
 
+    if (!mir->compilingAsmJS()) {
+        AutoTraceLog log(logger, TraceLogger::FoldTests);
+        FoldTests(graph);
+        IonSpewPass("Fold Tests");
+        AssertBasicGraphCoherency(graph);
+
+        if (mir->shouldCancel("Fold Tests"))
+            return false;
+    }
+
     {
         AutoTraceLog log(logger, TraceLogger::RenumberBlocks);
         if (!RenumberBlocks(graph))
