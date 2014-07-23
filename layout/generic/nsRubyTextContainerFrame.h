@@ -18,6 +18,9 @@
 nsContainerFrame* NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
 
+// If this is ever changed to be inline again, the code in
+// nsFrame::IsFontSizeInflationContainer should be updated to stop excluding
+// this from being considered inline.
 class nsRubyTextContainerFrame MOZ_FINAL : public nsBlockFrame
 {
 public:
