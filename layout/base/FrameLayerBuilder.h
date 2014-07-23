@@ -359,7 +359,7 @@ public:
    * of the active scrolled root frame. It must be an integer
    * translation.
    */
-  void SaveLastPaintOffset(ThebesLayer* aLayer);
+  void SavePreviousDataForLayer(ThebesLayer* aLayer, uint32_t aClipCount);
   /**
    * Get the translation transform that was in aLayer when we last painted. It's either
    * the transform saved by SaveLastPaintTransform, or else the transform
@@ -591,10 +591,14 @@ protected:
 public:
   class ThebesLayerItemsEntry : public nsPtrHashKey<ThebesLayer> {
   public:
-    ThebesLayerItemsEntry(const ThebesLayer *key) :
-        nsPtrHashKey<ThebesLayer>(key), mContainerLayerFrame(nullptr),
-        mContainerLayerGeneration(0),
-        mHasExplicitLastPaintOffset(false), mCommonClipCount(0) {}
+    ThebesLayerItemsEntry(const ThebesLayer *key)
+      : nsPtrHashKey<ThebesLayer>(key)
+      , mContainerLayerFrame(nullptr)
+      , mLastCommonClipCount(0)
+      , mContainerLayerGeneration(0)
+      , mHasExplicitLastPaintOffset(false)
+      , mCommonClipCount(0)
+    {}
     ThebesLayerItemsEntry(const ThebesLayerItemsEntry &toCopy) :
       nsPtrHashKey<ThebesLayer>(toCopy.mKey), mItems(toCopy.mItems)
     {
@@ -606,6 +610,8 @@ public:
     // The translation set on this ThebesLayer before we started updating the
     // layer tree.
     nsIntPoint mLastPaintOffset;
+    uint32_t mLastCommonClipCount;
+
     uint32_t mContainerLayerGeneration;
     bool mHasExplicitLastPaintOffset;
     /**

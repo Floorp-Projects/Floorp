@@ -300,13 +300,16 @@ AccumulateRectDifference(const nsRect& aR1, const nsRect& aR2, const nsRect& aBo
 }
 
 void
-DisplayItemClip::AddOffsetAndComputeDifference(const nsPoint& aOffset,
+DisplayItemClip::AddOffsetAndComputeDifference(uint32_t aStart,
+                                               const nsPoint& aOffset,
                                                const nsRect& aBounds,
                                                const DisplayItemClip& aOther,
+                                               uint32_t aOtherStart,
                                                const nsRect& aOtherBounds,
                                                nsRegion* aDifference)
 {
   if (mHaveClipRect != aOther.mHaveClipRect ||
+      aStart != aOtherStart ||
       mRoundedClipRects.Length() != aOther.mRoundedClipRects.Length()) {
     aDifference->Or(*aDifference, aBounds);
     aDifference->Or(*aDifference, aOtherBounds);
@@ -317,7 +320,7 @@ DisplayItemClip::AddOffsetAndComputeDifference(const nsPoint& aOffset,
                              aBounds.Union(aOtherBounds),
                              aDifference);
   }
-  for (uint32_t i = 0; i < mRoundedClipRects.Length(); ++i) {
+  for (uint32_t i = aStart; i < mRoundedClipRects.Length(); ++i) {
     if (mRoundedClipRects[i] + aOffset != aOther.mRoundedClipRects[i]) {
       // The corners make it tricky so we'll just add both rects here.
       aDifference->Or(*aDifference, mRoundedClipRects[i].mRect.Intersect(aBounds));
