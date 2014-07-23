@@ -25,6 +25,7 @@
 
 #include "RuntimeService.h"
 #include "ServiceWorker.h"
+#include "ServiceWorkerContainer.h"
 #include "ServiceWorkerEvents.h"
 #include "WorkerInlines.h"
 #include "WorkerPrivate.h"
@@ -571,6 +572,8 @@ ServiceWorkerManager::Update(ServiceWorkerRegistration* aRegistration,
     // instance.
     // FIXME(nsm): Fire "statechange" on installing worker instance.
     aRegistration->mInstallingWorker = nullptr;
+    InvalidateServiceWorkerContainerWorker(aRegistration,
+                                           WhichServiceWorker::INSTALLING_WORKER);
   }
 
   aRegistration->mUpdatePromise = new UpdatePromise();
@@ -778,6 +781,9 @@ public:
     // FIXME(nsm): Change installing worker state to redundant.
     // FIXME(nsm): Fire statechange.
     mRegistration->mInstallingWorker = nullptr;
+    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    swm->InvalidateServiceWorkerContainerWorker(mRegistration,
+                                                WhichServiceWorker::INSTALLING_WORKER);
     return NS_OK;
   }
 };
@@ -1000,6 +1006,8 @@ ServiceWorkerManager::Install(ServiceWorkerRegistration* aRegistration,
   AssertIsOnMainThread();
   aRegistration->mInstallingWorker = aServiceWorkerInfo;
   MOZ_ASSERT(aRegistration->mInstallingWorker);
+  InvalidateServiceWorkerContainerWorker(aRegistration,
+                                         WhichServiceWorker::INSTALLING_WORKER);
 
   nsMainThreadPtrHandle<ServiceWorkerRegistration> handle =
     new nsMainThreadPtrHolder<ServiceWorkerRegistration>(aRegistration);
@@ -1012,6 +1020,7 @@ ServiceWorkerManager::Install(ServiceWorkerRegistration* aRegistration,
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRegistration->mInstallingWorker = nullptr;
+    // We don't need to invalidate here since the upper one will have done it.
     return;
   }
 
@@ -1057,9 +1066,11 @@ public:
 
     mRegistration->mCurrentWorker = mRegistration->mWaitingWorker.forget();
 
-    // FIXME(nsm): Steps 7 of the algorithm.
-
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    swm->InvalidateServiceWorkerContainerWorker(mRegistration,
+                                                WhichServiceWorker::ACTIVE_WORKER | WhichServiceWorker::WAITING_WORKER);
+
+    // FIXME(nsm): Steps 7 of the algorithm.
 
     swm->FireEventOnServiceWorkerContainers(mRegistration,
                                             NS_LITERAL_STRING("controllerchange"));
@@ -1109,6 +1120,8 @@ ServiceWorkerManager::FinishInstall(ServiceWorkerRegistration* aRegistration)
 
   aRegistration->mWaitingWorker = aRegistration->mInstallingWorker.forget();
   MOZ_ASSERT(aRegistration->mWaitingWorker);
+  InvalidateServiceWorkerContainerWorker(aRegistration,
+                                         WhichServiceWorker::WAITING_WORKER | WhichServiceWorker::INSTALLING_WORKER);
 
   // FIXME(nsm): Actually update state of active ServiceWorker instances to
   // installed.
@@ -1348,7 +1361,7 @@ ServiceWorkerManager::MaybeStartControlling(nsIDocument* aDoc)
 
   nsRefPtr<ServiceWorkerRegistration> registration =
     GetServiceWorkerRegistration(aDoc);
-  if (registration) {
+  if (registration && registration->mCurrentWorker) {
     MOZ_ASSERT(!domainInfo->mControlledDocuments.Contains(aDoc));
     registration->StartControllingADocument();
     // Use the already_AddRefed<> form of Put to avoid the addref-deref since
@@ -1471,6 +1484,117 @@ ServiceWorkerManager::FireEventOnServiceWorkerContainers(
   }
 }
 
+/*
+ * This is used for installing, waiting and active, and uses the registration
+ * most specifically matching the current scope.
+ */
+NS_IMETHODIMP
+ServiceWorkerManager::GetServiceWorkerForWindow(nsIDOMWindow* aWindow,
+                                                WhichServiceWorker aWhichWorker,
+                                                nsISupports** aServiceWorker)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
+  MOZ_ASSERT(window);
+
+  nsRefPtr<ServiceWorkerRegistration> registration =
+    GetServiceWorkerRegistration(window);
+
+  if (!registration) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<ServiceWorkerInfo> info;
+  if (aWhichWorker == WhichServiceWorker::INSTALLING_WORKER) {
+    info = registration->mInstallingWorker;
+  } else if (aWhichWorker == WhichServiceWorker::WAITING_WORKER) {
+    info = registration->mWaitingWorker;
+  } else if (aWhichWorker == WhichServiceWorker::ACTIVE_WORKER) {
+    info = registration->mCurrentWorker;
+  } else {
+    MOZ_CRASH("Invalid worker type");
+  }
+
+  if (!info) {
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
+  }
+
+  nsRefPtr<ServiceWorker> serviceWorker;
+  nsresult rv = CreateServiceWorkerForWindow(window,
+                                             info->GetScriptSpec(),
+                                             registration->mScope,
+                                             getter_AddRefs(serviceWorker));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  serviceWorker.forget(aServiceWorker);
+  return NS_OK;
+}
+
+/*
+ * The .controller is for the registration associated with the document when
+ * the document was loaded.
+ */
+NS_IMETHODIMP
+ServiceWorkerManager::GetDocumentController(nsIDOMWindow* aWindow, nsISupports** aServiceWorker)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
+  MOZ_ASSERT(window);
+  if (!window || !window->GetExtantDoc()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+
+  nsRefPtr<ServiceWorkerDomainInfo> domainInfo = GetDomainInfo(doc);
+  if (!domainInfo) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<ServiceWorkerRegistration> registration;
+  if (!domainInfo->mControlledDocuments.Get(doc, getter_AddRefs(registration))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If the document is controlled, the current worker MUST be non-null.
+  MOZ_ASSERT(registration->mCurrentWorker);
+
+  nsRefPtr<ServiceWorker> serviceWorker;
+  nsresult rv = CreateServiceWorkerForWindow(window,
+                                             registration->mCurrentWorker->GetScriptSpec(),
+                                             registration->mScope,
+                                             getter_AddRefs(serviceWorker));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  serviceWorker.forget(aServiceWorker);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerManager::GetInstalling(nsIDOMWindow* aWindow,
+                                    nsISupports** aServiceWorker)
+{
+  return GetServiceWorkerForWindow(aWindow, WhichServiceWorker::INSTALLING_WORKER,
+                                   aServiceWorker);
+}
+
+NS_IMETHODIMP
+ServiceWorkerManager::GetWaiting(nsIDOMWindow* aWindow,
+                                 nsISupports** aServiceWorker)
+{
+  return GetServiceWorkerForWindow(aWindow, WhichServiceWorker::WAITING_WORKER,
+                                   aServiceWorker);
+}
+
+NS_IMETHODIMP
+ServiceWorkerManager::GetActive(nsIDOMWindow* aWindow, nsISupports** aServiceWorker)
+{
+  return GetServiceWorkerForWindow(aWindow, WhichServiceWorker::ACTIVE_WORKER,
+                                   aServiceWorker);
+}
+
 NS_IMETHODIMP
 ServiceWorkerManager::CreateServiceWorker(const nsACString& aScriptSpec,
                                           const nsACString& aScope,
@@ -1517,6 +1641,37 @@ ServiceWorkerManager::CreateServiceWorker(const nsACString& aScriptSpec,
 
   serviceWorker.forget(aServiceWorker);
   return NS_OK;
+}
+
+void
+ServiceWorkerManager::InvalidateServiceWorkerContainerWorker(ServiceWorkerRegistration* aRegistration,
+                                                             WhichServiceWorker aWhichOnes)
+{
+  AssertIsOnMainThread();
+  nsRefPtr<ServiceWorkerDomainInfo> domainInfo =
+    GetDomainInfo(aRegistration->mScriptSpec);
+
+  if (domainInfo) {
+    nsTObserverArray<ServiceWorkerContainer*>::ForwardIterator it(domainInfo->mServiceWorkerContainers);
+    while (it.HasMore()) {
+      nsRefPtr<ServiceWorkerContainer> target = it.GetNext();
+
+      nsIURI* targetURI = target->GetDocumentURI();
+      nsCString path;
+      nsresult rv = targetURI->GetSpec(path);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        continue;
+      }
+
+      nsCString scope = FindScopeForPath(domainInfo->mOrderedScopes, path);
+      if (scope.IsEmpty() ||
+          !scope.Equals(aRegistration->mScope)) {
+        continue;
+      }
+
+      target->InvalidateWorkerReference(aWhichOnes);
+    }
+  }
 }
 
 END_WORKERS_NAMESPACE
