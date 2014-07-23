@@ -57,6 +57,10 @@ public:
   virtual void DrainComplete() = 0;
 
   virtual void ResetComplete() = 0;
+
+  // Called when the decoder encounters a catestrophic error and cannot
+  // continue. Gecko will not send any more input for decoding.
+  virtual void Error(GMPErr aError) = 0;
 };
 
 // ALL METHODS MUST BE CALLED ON THE MAIN THREAD
@@ -72,11 +76,11 @@ public:
   // - aCallback: Subclass should retain reference to it until DecodingComplete
   //              is called. Do not attempt to delete it, host retains ownership.
   // aCoreCount: number of CPU cores.
-  virtual GMPErr InitDecode(const GMPVideoCodec& aCodecSettings,
-                            const uint8_t* aCodecSpecific,
-                            uint32_t aCodecSpecificLength,
-                            GMPVideoDecoderCallback* aCallback,
-                            int32_t aCoreCount) = 0;
+  virtual void InitDecode(const GMPVideoCodec& aCodecSettings,
+                          const uint8_t* aCodecSpecific,
+                          uint32_t aCodecSpecificLength,
+                          GMPVideoDecoderCallback* aCallback,
+                          int32_t aCoreCount) = 0;
 
   // Decode encoded frame (as a part of a video stream). The decoded frame
   // will be returned to the user through the decode complete callback.
@@ -90,23 +94,23 @@ public:
   // - aCodecSpecificInfoLength : number of bytes in aCodecSpecificInfo
   // - renderTimeMs : System time to render in milliseconds. Only used by
   //                  decoders with internal rendering.
-  virtual GMPErr Decode(GMPVideoEncodedFrame* aInputFrame,
-                        bool aMissingFrames,
-                        const uint8_t* aCodecSpecificInfo,
-                        uint32_t aCodecSpecificInfoLength,
-                        int64_t aRenderTimeMs = -1) = 0;
+  virtual void Decode(GMPVideoEncodedFrame* aInputFrame,
+                      bool aMissingFrames,
+                      const uint8_t* aCodecSpecificInfo,
+                      uint32_t aCodecSpecificInfoLength,
+                      int64_t aRenderTimeMs = -1) = 0;
 
   // Reset decoder state and prepare for a new call to Decode(...).
   // Flushes the decoder pipeline.
   // The decoder should enqueue a task to run ResetComplete() on the main
   // thread once the reset has finished.
-  virtual GMPErr Reset() = 0;
+  virtual void Reset() = 0;
 
   // Output decoded frames for any data in the pipeline, regardless of ordering.
   // All remaining decoded frames should be immediately returned via callback.
   // The decoder should enqueue a task to run DrainComplete() on the main
   // thread once the reset has finished.
-  virtual GMPErr Drain() = 0;
+  virtual void Drain() = 0;
 
   // May free decoder memory.
   virtual void DecodingComplete() = 0;
