@@ -722,10 +722,17 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
     FontFaceRuleRecord ruleRec;
     ruleRec.mContainer.mRule = aRule;
     ruleRec.mContainer.mSheetType = aSheetType;
-    ruleRec.mFontEntry = AddFontFace(fontfamily, srcArray,
-                                     weight, stretch, italicStyle,
-                                     featureSettings, languageOverride);
+    ruleRec.mFontEntry = FindOrCreateFontFace(fontfamily, srcArray,
+                                              weight, stretch, italicStyle,
+                                              featureSettings, languageOverride,
+                                              nullptr /* aUnicodeRanges */);
     if (ruleRec.mFontEntry) {
+      // Add the entry to the end of the list.  If an existing proxy entry was
+      // returned by FindOrCreateFontFace that was already stored on the
+      // family, gfxMixedFontFamily::AddFontEntry(), which AddFontFace calls,
+      // will automatically remove the earlier occurrence of the same proxy.
+      AddFontFace(fontfamily, ruleRec.mFontEntry);
+
       mRules.AppendElement(ruleRec);
     }
     // this was a new rule and fontEntry, so note that the set was modified
