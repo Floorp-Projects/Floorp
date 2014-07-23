@@ -163,6 +163,7 @@ typedef float spx_word32_t;
 #define VSHR32(a,shift) (a)
 #define SATURATE16(x,a) (x)
 #define SATURATE32(x,a) (x)
+#define SATURATE32PSHR(x,shift,a) (x)
 
 #define PSHR(a,shift)       (a)
 #define SHR(a,shift)       (a)

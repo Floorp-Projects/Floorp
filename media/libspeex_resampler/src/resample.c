@@ -79,7 +79,7 @@ static void speex_free (void *ptr) {free(ptr);}
 #include <math.h>
 
 #ifndef M_PI
-#define M_PI 3.14159263
+#define M_PI 3.14159265358979323846
 #endif
 
 #ifdef FIXED_POINT
@@ -107,6 +107,10 @@ static void speex_free (void *ptr) {free(ptr);}
 #ifdef _MSC_VER
 #undef inline
 #endif
+#endif
+
+#ifdef _USE_NEON
+#include "resample_neon.h"
 #endif
 
 /* Numer of elements to allocate on the stack */
@@ -354,9 +358,7 @@ static int resampler_basic_direct_single(SpeexResamplerState *st, spx_uint32_t c
       const spx_word16_t *iptr = & in[last_sample];
 
 #ifdef OVERRIDE_INNER_PRODUCT_SINGLE
-    if (moz_has_sse()) {
-      sum = inner_product_single(sinct, iptr, N);
-    } else {
+      if (!moz_has_sse()) {
 #endif
       int j;
       sum = 0;
@@ -374,11 +376,14 @@ static int resampler_basic_direct_single(SpeexResamplerState *st, spx_uint32_t c
       }
       sum = accum[0] + accum[1] + accum[2] + accum[3];
 */
+      sum = SATURATE32PSHR(sum, 15, 32767);
 #ifdef OVERRIDE_INNER_PRODUCT_SINGLE
-    }
+      } else {
+      sum = inner_product_single(sinct, iptr, N);
+      }
 #endif
 
-      out[out_stride * out_sample++] = SATURATE32(PSHR32(sum, 15), 32767);
+      out[out_stride * out_sample++] = sum;
       last_sample += int_advance;
       samp_frac_num += frac_advance;
       if (samp_frac_num >= den_rate)
@@ -416,20 +421,20 @@ static int resampler_basic_direct_double(SpeexResamplerState *st, spx_uint32_t c
 
 #ifdef OVERRIDE_INNER_PRODUCT_DOUBLE
       if(moz_has_sse2()) {
-        sum = inner_product_double(sinct, iptr, N);
-      } else {
 #endif
-        int j;
-        double accum[4] = {0,0,0,0};
+      int j;
+      double accum[4] = {0,0,0,0};
 
-        for(j=0;j<N;j+=4) {
-          accum[0] += sinct[j]*iptr[j];
-          accum[1] += sinct[j+1]*iptr[j+1];
-          accum[2] += sinct[j+2]*iptr[j+2];
-          accum[3] += sinct[j+3]*iptr[j+3];
-        }
-        sum = accum[0] + accum[1] + accum[2] + accum[3];
+      for(j=0;j<N;j+=4) {
+        accum[0] += sinct[j]*iptr[j];
+        accum[1] += sinct[j+1]*iptr[j+1];
+        accum[2] += sinct[j+2]*iptr[j+2];
+        accum[3] += sinct[j+3]*iptr[j+3];
+      }
+      sum = accum[0] + accum[1] + accum[2] + accum[3];
 #ifdef OVERRIDE_INNER_PRODUCT_DOUBLE
+      } else {
+      sum = inner_product_double(sinct, iptr, N);
       }
 #endif
 
@@ -475,28 +480,30 @@ static int resampler_basic_interpolate_single(SpeexResamplerState *st, spx_uint3
 
 
 #ifdef OVERRIDE_INTERPOLATE_PRODUCT_SINGLE
-      if (moz_has_sse()) {
-        cubic_coef(frac, interp);
-        sum = interpolate_product_single(iptr, st->sinc_table + st->oversample + 4 - offset - 2, N, st->oversample, interp);
-      } else {
+      if (!moz_has_sse()) {
 #endif
-        int j;
-        spx_word32_t accum[4] = {0,0,0,0};
+      int j;
+      spx_word32_t accum[4] = {0,0,0,0};
 
-        for(j=0;j<N;j++) {
-          const spx_word16_t curr_in=iptr[j];
-          accum[0] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset-2]);
-          accum[1] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset-1]);
-          accum[2] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset]);
-          accum[3] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset+1]);
-        }
-        cubic_coef(frac, interp);
-        sum = MULT16_32_Q15(interp[0],SHR32(accum[0], 1)) + MULT16_32_Q15(interp[1],SHR32(accum[1], 1)) + MULT16_32_Q15(interp[2],SHR32(accum[2], 1)) + MULT16_32_Q15(interp[3],SHR32(accum[3], 1));
+      for(j=0;j<N;j++) {
+        const spx_word16_t curr_in=iptr[j];
+        accum[0] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset-2]);
+        accum[1] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset-1]);
+        accum[2] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset]);
+        accum[3] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset+1]);
+      }
+
+      cubic_coef(frac, interp);
+      sum = MULT16_32_Q15(interp[0],SHR32(accum[0], 1)) + MULT16_32_Q15(interp[1],SHR32(accum[1], 1)) + MULT16_32_Q15(interp[2],SHR32(accum[2], 1)) + MULT16_32_Q15(interp[3],SHR32(accum[3], 1));
+      sum = SATURATE32PSHR(sum, 15, 32767);
 #ifdef OVERRIDE_INTERPOLATE_PRODUCT_SINGLE
+      } else {
+      cubic_coef(frac, interp);
+      sum = interpolate_product_single(iptr, st->sinc_table + st->oversample + 4 - offset - 2, N, st->oversample, interp);
       }
 #endif
-
-      out[out_stride * out_sample++] = SATURATE32(PSHR32(sum, 14), 32767);
+      
+      out[out_stride * out_sample++] = sum;
       last_sample += int_advance;
       samp_frac_num += frac_advance;
       if (samp_frac_num >= den_rate)
@@ -540,10 +547,7 @@ static int resampler_basic_interpolate_double(SpeexResamplerState *st, spx_uint3
 
 
 #ifdef OVERRIDE_INTERPOLATE_PRODUCT_DOUBLE
-      if (moz_has_sse2()) {
-        cubic_coef(frac, interp);
-        sum = interpolate_product_double(iptr, st->sinc_table + st->oversample + 4 - offset - 2, N, st->oversample, interp);
-      } else {
+      if (!moz_has_sse2()) {
 #endif
       int j;
       double accum[4] = {0,0,0,0};
@@ -558,9 +562,13 @@ static int resampler_basic_interpolate_double(SpeexResamplerState *st, spx_uint3
 
       cubic_coef(frac, interp);
       sum = MULT16_32_Q15(interp[0],accum[0]) + MULT16_32_Q15(interp[1],accum[1]) + MULT16_32_Q15(interp[2],accum[2]) + MULT16_32_Q15(interp[3],accum[3]);
-#ifdef OVERRIDE_INNER_PRODUCT_DOUBLE
+#ifdef OVERRIDE_INTERPOLATE_PRODUCT_DOUBLE
+      } else {
+      cubic_coef(frac, interp);
+      sum = interpolate_product_double(iptr, st->sinc_table + st->oversample + 4 - offset - 2, N, st->oversample, interp);
       }
 #endif
+      
       out[out_stride * out_sample++] = PSHR32(sum,15);
       last_sample += int_advance;
       samp_frac_num += frac_advance;
@@ -579,9 +587,10 @@ static int resampler_basic_interpolate_double(SpeexResamplerState *st, spx_uint3
 
 static void update_filter(SpeexResamplerState *st)
 {
-   spx_uint32_t old_length;
-   
-   old_length = st->filt_len;
+   spx_uint32_t old_length = st->filt_len;
+   spx_uint32_t old_alloc_size = st->mem_alloc_size;
+   spx_uint32_t min_alloc_size;
+
    st->oversample = quality_map[st->quality].oversample;
    st->filt_len = quality_map[st->quality].base_length;
    
@@ -609,12 +618,14 @@ static void update_filter(SpeexResamplerState *st)
    }
    
    /* Choose the resampling type that requires the least amount of memory */
+#ifdef RESAMPLE_FULL_SINC_TABLE
+   if (1)
+#else
    if (st->filt_len*st->den_rate <= st->filt_len*st->oversample+8)
+#endif
    {
       spx_uint32_t i;
-      if (!st->sinc_table)
-         st->sinc_table = (spx_word16_t *)speex_alloc(st->filt_len*st->den_rate*sizeof(spx_word16_t));
-      else if (st->sinc_table_length < st->filt_len*st->den_rate)
+      if (st->sinc_table_length < st->filt_len*st->den_rate)
       {
          st->sinc_table = (spx_word16_t *)speex_realloc(st->sinc_table,st->filt_len*st->den_rate*sizeof(spx_word16_t));
          st->sinc_table_length = st->filt_len*st->den_rate;
@@ -638,9 +649,7 @@ static void update_filter(SpeexResamplerState *st)
       /*fprintf (stderr, "resampler uses direct sinc table and normalised cutoff %f\n", cutoff);*/
    } else {
       spx_int32_t i;
-      if (!st->sinc_table)
-         st->sinc_table = (spx_word16_t *)speex_alloc((st->filt_len*st->oversample+8)*sizeof(spx_word16_t));
-      else if (st->sinc_table_length < st->filt_len*st->oversample+8)
+      if (st->sinc_table_length < st->filt_len*st->oversample+8)
       {
          st->sinc_table = (spx_word16_t *)speex_realloc(st->sinc_table,(st->filt_len*st->oversample+8)*sizeof(spx_word16_t));
          st->sinc_table_length = st->filt_len*st->oversample+8;
@@ -664,36 +673,26 @@ static void update_filter(SpeexResamplerState *st)
    /* Here's the place where we update the filter memory to take into account
       the change in filter length. It's probably the messiest part of the code
       due to handling of lots of corner cases. */
-   if (!st->mem)
+   min_alloc_size = st->filt_len-1 + st->buffer_size;
+   if (min_alloc_size > st->mem_alloc_size)
+   {
+      st->mem = (spx_word16_t*)speex_realloc(st->mem, st->nb_channels*min_alloc_size * sizeof(spx_word16_t));
+      st->mem_alloc_size = min_alloc_size;
+   }
+   if (!st->started)
    {
       spx_uint32_t i;
-      st->mem_alloc_size = st->filt_len-1 + st->buffer_size;
-      st->mem = (spx_word16_t*)speex_alloc(st->nb_channels*st->mem_alloc_size * sizeof(spx_word16_t));
-      for (i=0;i<st->nb_channels*st->mem_alloc_size;i++)
-         st->mem[i] = 0;
-      /*speex_warning("init filter");*/
-   } else if (!st->started)
-   {
-      spx_uint32_t i;
-      st->mem_alloc_size = st->filt_len-1 + st->buffer_size;
-      st->mem = (spx_word16_t*)speex_realloc(st->mem, st->nb_channels*st->mem_alloc_size * sizeof(spx_word16_t));
       for (i=0;i<st->nb_channels*st->mem_alloc_size;i++)
          st->mem[i] = 0;
       /*speex_warning("reinit filter");*/
    } else if (st->filt_len > old_length)
    {
-      spx_int32_t i;
+      spx_uint32_t i;
       /* Increase the filter length */
       /*speex_warning("increase filter size");*/
-      int old_alloc_size = st->mem_alloc_size;
-      if ((st->filt_len-1 + st->buffer_size) > st->mem_alloc_size)
+      for (i=st->nb_channels;i--;)
       {
-         st->mem_alloc_size = st->filt_len-1 + st->buffer_size;
-         st->mem = (spx_word16_t*)speex_realloc(st->mem, st->nb_channels*st->mem_alloc_size * sizeof(spx_word16_t));
-      }
-      for (i=st->nb_channels-1;i>=0;i--)
-      {
-         spx_int32_t j;
+         spx_uint32_t j;
          spx_uint32_t olen = old_length;
          /*if (st->magic_samples[i])*/
          {
@@ -701,7 +700,7 @@ static void update_filter(SpeexResamplerState *st)
             
             /* FIXME: This is wrong but for now we need it to avoid going over the array bounds */
             olen = old_length + 2*st->magic_samples[i];
-            for (j=old_length-2+st->magic_samples[i];j>=0;j--)
+            for (j=old_length-1+st->magic_samples[i];j--;)
                st->mem[i*st->mem_alloc_size+j+st->magic_samples[i]] = st->mem[i*old_alloc_size+j];
             for (j=0;j<st->magic_samples[i];j++)
                st->mem[i*st->mem_alloc_size+j] = 0;

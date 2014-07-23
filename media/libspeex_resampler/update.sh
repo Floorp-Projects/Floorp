@@ -20,5 +20,5 @@ cp $1/COPYING .
 
 # apply outstanding local patches
 patch -p3 < outside-speex.patch
-patch -p1 < sse-detect-runtime.patch
+patch -p3 < sse-detect-runtime.patch
 patch -p3 < set-skip-frac.patch
