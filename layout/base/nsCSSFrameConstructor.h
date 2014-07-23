@@ -415,18 +415,24 @@ private:
                                nsFrameItems&            aFrameItems);
 
 private:
-  /* An enum of possible parent types for anonymous table object construction */
+  /* An enum of possible parent types for anonymous table or ruby object 
+     construction */
   enum ParentType {
     eTypeBlock = 0, /* This includes all non-table-related frames */
     eTypeRow,
     eTypeRowGroup,
     eTypeColGroup,
     eTypeTable,
+    eTypeRuby,
+    eTypeRubyBase,
+    eTypeRubyBaseContainer,
+    eTypeRubyText,
+    eTypeRubyTextContainer,
     eParentTypeCount
   };
 
-  /* 3 bits is enough to handle our ParentType values */
-#define FCDATA_PARENT_TYPE_OFFSET 29
+  /* 4 bits is enough to handle our ParentType values */
+#define FCDATA_PARENT_TYPE_OFFSET 28
   /* Macro to get the desired parent type out of an mBits member of
      FrameConstructionData */
 #define FCDATA_DESIRED_PARENT_TYPE(_bits)           \
@@ -442,6 +448,21 @@ private:
 
   /* Get the parent type for the given nsIFrame type atom */
   static ParentType GetParentType(nsIAtom* aFrameType);
+
+  static bool IsRubyParentType(ParentType aParentType) {
+    return (aParentType == eTypeRuby ||
+            aParentType == eTypeRubyBase ||
+            aParentType == eTypeRubyBaseContainer ||
+            aParentType == eTypeRubyText ||
+            aParentType == eTypeRubyTextContainer);
+  }
+
+  static bool IsTableParentType(ParentType aParentType) {
+    return (aParentType == eTypeTable ||
+            aParentType == eTypeRow ||
+            aParentType == eTypeRowGroup ||
+            aParentType == eTypeColGroup);
+  }
 
   /* A constructor function that just creates an nsIFrame object.  The caller
      is responsible for initializing the object, adding it to frame lists,
@@ -1041,9 +1062,9 @@ private:
    * @param aItems the child frame construction items before pseudo creation
    * @param aParentFrame the parent frame we're creating pseudos for
    */
-  inline void CreateNeededTablePseudos(nsFrameConstructorState& aState,
-                                       FrameConstructionItemList& aItems,
-                                       nsIFrame* aParentFrame);
+  inline void CreateNeededPseudos(nsFrameConstructorState& aState,
+                                  FrameConstructionItemList& aItems,
+                                  nsIFrame* aParentFrame);
 
   /**
    * Function to adjust aParentFrame to deal with captions.
