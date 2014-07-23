@@ -768,42 +768,6 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   list-style-image: url(chrome://browser/skin/undoCloseTab.png);
 }
 
-#bookmarks-button {
-  -moz-image-region: rect(0px 72px 24px 48px);
-}
-
-#new-tab-button {
-  -moz-image-region: rect(0px 96px 24px 72px);
-}
-
-#new-window-button {
-  -moz-image-region: rect(0px 120px 24px 96px);
-}
-
-#sync-button {
-  -moz-image-region: rect(0px 144px 24px 120px);
-}
-#sync-button[cui-areatype="toolbar"][status="active"] {
-  list-style-image: url("chrome://browser/skin/syncProgress-toolbar.png");
-  -moz-image-region: rect(0px 18px 18px 0px);
-}
-#sync-button[cui-areatype="menu-panel"][status="active"] {
-  list-style-image: url("chrome://browser/skin/syncProgress-menuPanel.png");
-  -moz-image-region: rect(0px 32px 32px 0px);
-}
-
-#feed-button {
-  -moz-image-region: rect(0px 168px 24px 144px);
-}
-
-#feed-button[disabled] > .toolbarbutton-icon {
-  opacity: .4;
-}
-
-#webrtc-status-button {
-  -moz-image-region: rect(0px 192px 24px 168px);
-}
-
 .unified-nav-back[_moz-menuactive] {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu") !important;
 }
