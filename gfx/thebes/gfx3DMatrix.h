@@ -228,6 +228,18 @@ public:
   void ScalePost(float aX, float aY, float aZ);
 
   /**
+   * Let T be the transformation matrix translating points in the coordinate
+   * space with origin aOrigin to the coordinate space used by this matrix.
+   * If this matrix is M, this function changes it to be (T-1)MT, the matrix
+   * that's equivalent to M but in the coordinate space that treats aOrigin
+   * as the origin.
+   *
+   * @param aOrigin The origin to translate to
+   * @return The modified matrix
+   */
+  void ChangeBasis(const gfxPoint3D& aOrigin);
+
+  /**
    * Transforms a point according to this matrix.
    */
   gfxPoint Transform(const gfxPoint& point) const;

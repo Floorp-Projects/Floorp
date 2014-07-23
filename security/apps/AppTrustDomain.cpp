@@ -22,6 +22,7 @@
 #include "marketplace-prod-reviewers.inc"
 #include "marketplace-dev-public.inc"
 #include "marketplace-dev-reviewers.inc"
+#include "marketplace-stage.inc"
 #include "xpcshell.inc"
 
 using namespace mozilla::pkix;
@@ -66,6 +67,11 @@ AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot)
     case nsIX509CertDB::AppMarketplaceDevReviewersRoot:
       trustedDER.data = const_cast<uint8_t*>(marketplaceDevReviewersRoot);
       trustedDER.len = mozilla::ArrayLength(marketplaceDevReviewersRoot);
+      break;
+
+    case nsIX509CertDB::AppMarketplaceStageRoot:
+      trustedDER.data = const_cast<uint8_t*>(marketplaceStageRoot);
+      trustedDER.len = mozilla::ArrayLength(marketplaceStageRoot);
       break;
 
     case nsIX509CertDB::AppXPCShellRoot:

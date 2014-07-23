@@ -2,11 +2,10 @@
 
 # Simple <img> tests
 == img-zoomIn-1.html   squaredCircle-150x150-ref.html
-
 == img-zoomOut-1.html  squaredCircle-50x50-ref.html
 
 # Ensure that scaled SVG images aren't fuzzy when tiled.
-skip-if(B2G&&browserIsRemote) == img-fuzzy-zoomOut-1.html           img-fuzzy-zoomOut-1-ref.html
+== img-fuzzy-zoomOut-1.html           img-fuzzy-zoomOut-1-ref.html
 == img-fuzzy-zoomIn-1.html            img-fuzzy-zoomIn-1-ref.html
 == img-fuzzy-transform-zoomOut-1.html img-fuzzy-zoomOut-1-ref.html
 == img-fuzzy-transform-zoomIn-1.html  img-fuzzy-zoomIn-1-ref.html

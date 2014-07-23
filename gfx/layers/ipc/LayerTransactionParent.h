@@ -106,6 +106,7 @@ protected:
                           const bool& isFirstPaint,
                           const bool& scheduleComposite,
                           const uint32_t& paintSequenceNumber,
+                          const bool& isRepeatTransaction,
                           EditReplyArray* reply) MOZ_OVERRIDE;
 
   virtual bool RecvUpdateNoSwap(const EditArray& cset,
@@ -113,7 +114,8 @@ protected:
                                 const TargetConfig& targetConfig,
                                 const bool& isFirstPaint,
                                 const bool& scheduleComposite,
-                                const uint32_t& paintSequenceNumber) MOZ_OVERRIDE;
+                                const uint32_t& paintSequenceNumber,
+                                const bool& isRepeatTransaction) MOZ_OVERRIDE;
 
   virtual bool RecvClearCachedResources() MOZ_OVERRIDE;
   virtual bool RecvForceComposite() MOZ_OVERRIDE;
