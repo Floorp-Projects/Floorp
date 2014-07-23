@@ -3643,6 +3643,14 @@ nsTextPaintStyle::InitSelectionColorsAndShadow()
                                                      eCSSProperty_color;
       nscoord frameColor = mFrame->GetVisitedDependentColor(property);
       mSelectionTextColor = EnsureDifferentColors(frameColor, mSelectionBGColor);
+    } else if (mSelectionTextColor == NS_CHANGE_COLOR_IF_SAME_AS_BG) {
+      nsCSSProperty property = mFrame->IsSVGText() ? eCSSProperty_fill :
+                                                     eCSSProperty_color;
+      nscolor frameColor = mFrame->GetVisitedDependentColor(property);
+      if (frameColor == mSelectionBGColor) {
+        mSelectionTextColor =
+          LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectForegroundCustom);
+      }
     } else {
       EnsureSufficientContrast(&mSelectionTextColor, &mSelectionBGColor);
     }
