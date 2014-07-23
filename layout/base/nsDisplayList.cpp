@@ -2540,11 +2540,16 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  uint32_t flags = aBuilder->GetBackgroundPaintFlags();
-  CheckForBorderItem(this, flags);
+  gfxContext* ctx = aCtx->ThebesContext();
   nsRect borderBox = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  nsCSSRendering::PaintBackgroundColor(mColor, *aCtx, mFrame,
-                                       mVisibleRect, borderBox, borderBox, flags);
+
+  gfxRect bounds =
+    nsLayoutUtils::RectToGfxRect(borderBox, mFrame->PresContext()->AppUnitsPerDevPixel());
+
+  ctx->SetColor(mColor);
+  ctx->NewPath();
+  ctx->Rectangle(bounds, true);
+  ctx->Fill();
 }
 
 nsRegion
