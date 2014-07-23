@@ -94,24 +94,6 @@ UNIFIED_SOURCES += [
     'renderer/BufferStorage.cpp',
     'renderer/copyimage.cpp',
     'renderer/d3d/HLSLCompiler.cpp',
-    'renderer/d3d11/Blit11.cpp',
-    'renderer/d3d11/BufferStorage11.cpp',
-    'renderer/d3d11/Clear11.cpp',
-    'renderer/d3d11/Fence11.cpp',
-    'renderer/d3d11/formatutils11.cpp',
-    'renderer/d3d11/Image11.cpp',
-    'renderer/d3d11/IndexBuffer11.cpp',
-    'renderer/d3d11/InputLayoutCache.cpp',
-    'renderer/d3d11/PixelTransfer11.cpp',
-    'renderer/d3d11/Query11.cpp',
-    'renderer/d3d11/Renderer11.cpp',
-    'renderer/d3d11/renderer11_utils.cpp',
-    'renderer/d3d11/RenderStateCache.cpp',
-    'renderer/d3d11/RenderTarget11.cpp',
-    'renderer/d3d11/ShaderExecutable11.cpp',
-    'renderer/d3d11/SwapChain11.cpp',
-    'renderer/d3d11/TextureStorage11.cpp',
-    'renderer/d3d11/VertexBuffer11.cpp',
     'renderer/d3d9/Blit9.cpp',
     'renderer/d3d9/BufferStorage9.cpp',
     'renderer/d3d9/Fence9.cpp',
@@ -153,6 +135,27 @@ SOURCES += [
     'renderer/loadimageSSE2.cpp',
 ]
 SOURCES['renderer/loadimageSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
+    UNIFIED_SOURCES += [
+        'renderer/d3d11/Blit11.cpp',
+        'renderer/d3d11/BufferStorage11.cpp',
+        'renderer/d3d11/Clear11.cpp',
+        'renderer/d3d11/Fence11.cpp',
+        'renderer/d3d11/formatutils11.cpp',
+        'renderer/d3d11/Image11.cpp',
+        'renderer/d3d11/IndexBuffer11.cpp',
+        'renderer/d3d11/InputLayoutCache.cpp',
+        'renderer/d3d11/PixelTransfer11.cpp',
+        'renderer/d3d11/Query11.cpp',
+        'renderer/d3d11/Renderer11.cpp',
+        'renderer/d3d11/renderer11_utils.cpp',
+        'renderer/d3d11/RenderStateCache.cpp',
+        'renderer/d3d11/RenderTarget11.cpp',
+        'renderer/d3d11/ShaderExecutable11.cpp',
+        'renderer/d3d11/SwapChain11.cpp',
+        'renderer/d3d11/TextureStorage11.cpp',
+        'renderer/d3d11/VertexBuffer11.cpp',
+    ]
 
 
 if CONFIG['GNU_CXX']:
@@ -164,6 +167,9 @@ if CONFIG['GNU_CXX']:
     if CONFIG['CLANG_CXX']:
         CXXFLAGS += ['-Wno-unused-private-field']
 
+if CONFIG['MOZ_DIRECTX_SDK_PATH'] and not CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
+    CXXFLAGS += ['-I\'%s/include/\'' % CONFIG['MOZ_DIRECTX_SDK_PATH']]
+
 DEFINES['NOMINMAX'] = True
 DEFINES['_CRT_SECURE_NO_DEPRECATE'] = True
 DEFINES['_HAS_EXCEPTIONS'] = 0
@@ -172,7 +178,9 @@ if not CONFIG['MOZ_DEBUG']:
     DEFINES['_SECURE_SCL'] = 0
 
 DEFINES['ANGLE_ENABLE_D3D9'] = True
-DEFINES['ANGLE_ENABLE_D3D11'] = True
+if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
+    DEFINES['ANGLE_ENABLE_D3D11'] = True
+
 DEFINES['ANGLE_COMPILE_OPTIMIZATION_LEVEL'] = 'D3DCOMPILE_OPTIMIZATION_LEVEL1'
 DEFINES['ANGLE_NO_EXCEPTIONS'] = True
 
@@ -186,7 +194,15 @@ DISABLE_STL_WRAPPING = True
 
 
 LOCAL_INCLUDES += [ '../../include', '../../src' ]
-EXTRA_DSO_LDOPTS += [ 'd3d9.lib', 'dxguid.lib' ]
+
+
+if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
+  EXTRA_DSO_LDOPTS += [ 'd3d9.lib', 'dxguid.lib' ]
+else:
+  EXTRA_DSO_LDOPTS += [
+    '\'%s/lib/%s/d3d9.lib\'' % (CONFIG['MOZ_DIRECTX_SDK_PATH'], CONFIG['MOZ_D3D_CPU_SUFFIX']),
+    '\'%s/lib/%s/dxguid.lib\'' % (CONFIG['MOZ_DIRECTX_SDK_PATH'], CONFIG['MOZ_D3D_CPU_SUFFIX']),
+  ]
 
 LIBRARY_NAME = 'libGLESv2'
 FORCE_SHARED_LIB = True
