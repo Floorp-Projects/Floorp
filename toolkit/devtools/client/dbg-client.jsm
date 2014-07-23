@@ -66,6 +66,8 @@ let wantVerbose =
   Services.prefs.getPrefType(VERBOSE_PREF) !== Services.prefs.PREF_INVALID &&
   Services.prefs.getBoolPref(VERBOSE_PREF);
 
+let noop = () => {};
+
 function dumpn(str) {
   if (wantLogging) {
     dump("DBG-CLIENT: " + str + "\n");
@@ -443,7 +445,7 @@ DebuggerClient.prototype = {
    *        Called with the response packet and a TabClient
    *        (which will be undefined on error).
    */
-  attachTab: function (aTabActor, aOnResponse) {
+  attachTab: function (aTabActor, aOnResponse = noop) {
     if (this._clients.has(aTabActor)) {
       let cachedTab = this._clients.get(aTabActor);
       let cachedResponse = {
@@ -478,7 +480,7 @@ DebuggerClient.prototype = {
    *        Called with the response packet and a AddonClient
    *        (which will be undefined on error).
    */
-  attachAddon: function DC_attachAddon(aAddonActor, aOnResponse) {
+  attachAddon: function DC_attachAddon(aAddonActor, aOnResponse = noop) {
     let packet = {
       to: aAddonActor,
       type: "attach"
@@ -506,7 +508,7 @@ DebuggerClient.prototype = {
    *        instance (which will be undefined on error).
    */
   attachConsole:
-  function (aConsoleActor, aListeners, aOnResponse) {
+  function (aConsoleActor, aListeners, aOnResponse = noop) {
     let packet = {
       to: aConsoleActor,
       type: "startListeners",
@@ -539,7 +541,7 @@ DebuggerClient.prototype = {
    *        Configuration options.
    *        - useSourceMaps: whether to use source maps or not.
    */
-  attachThread: function (aThreadActor, aOnResponse, aOptions={}) {
+  attachThread: function (aThreadActor, aOnResponse = noop, aOptions={}) {
     if (this._clients.has(aThreadActor)) {
       setTimeout(() => aOnResponse({}, this._clients.get(aThreadActor)), 0);
       return;
@@ -568,7 +570,7 @@ DebuggerClient.prototype = {
    *        Called with the response packet and a TraceClient
    *        (which will be undefined on error).
    */
-  attachTracer: function (aTraceActor, aOnResponse) {
+  attachTracer: function (aTraceActor, aOnResponse = noop) {
     if (this._clients.has(aTraceActor)) {
       setTimeout(() => aOnResponse({}, this._clients.get(aTraceActor)), 0);
       return;
@@ -1277,7 +1279,7 @@ TabClient.prototype = {
    *        Called with the response packet and a ThreadClient
    *        (which will be undefined on error).
    */
-  attachThread: function(aOptions={}, aOnResponse) {
+  attachThread: function(aOptions={}, aOnResponse = noop) {
     if (this.thread) {
       setTimeout(() => aOnResponse({}, this.thread), 0);
       return;
@@ -1625,7 +1627,7 @@ ThreadClient.prototype = {
    */
   pauseOnExceptions: function (aPauseOnExceptions,
                                aIgnoreCaughtExceptions,
-                               aOnResponse) {
+                               aOnResponse = noop) {
     this._pauseOnExceptions = aPauseOnExceptions;
     this._ignoreCaughtExceptions = aIgnoreCaughtExceptions;
 
@@ -1661,7 +1663,7 @@ ThreadClient.prototype = {
    * @param function onResponse
    *        Called with the response packet in a future turn of the event loop.
    */
-  pauseOnDOMEvents: function (events, onResponse) {
+  pauseOnDOMEvents: function (events, onResponse = noop) {
     this._pauseOnDOMEvents = events;
     // If the debuggee is paused, the value of the array will be communicated in
     // the next resumption. Otherwise we have to force a pause in order to send
@@ -1739,7 +1741,8 @@ ThreadClient.prototype = {
    * @param function aOnResponse
    *        Called with the thread's response.
    */
-  setBreakpoint: function ({ url, line, column, condition }, aOnResponse) {
+  setBreakpoint: function ({ url, line, column, condition },
+                           aOnResponse = noop) {
     // A helper function that sets the breakpoint.
     let doSetBreakpoint = (aCallback) => {
       const location = {
@@ -1767,9 +1770,7 @@ ThreadClient.prototype = {
             root.traits.conditionalBreakpoints ? condition : undefined
           );
         }
-        if (aOnResponse) {
-          aOnResponse(aResponse, bpClient);
-        }
+        aOnResponse(aResponse, bpClient);
         if (aCallback) {
           aCallback();
         }
