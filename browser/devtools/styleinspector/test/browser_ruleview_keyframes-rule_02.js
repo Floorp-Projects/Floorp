@@ -41,7 +41,6 @@ function* testPacman(inspector, view) {
   let defaultView = element.ownerDocument.defaultView;
   let ruleEditor = view.element.children[5].childNodes[0]._ruleEditor;
   ruleEditor.addProperty("opacity", "0");
-  ruleEditor.addProperty("top", "750px");
 
   yield ruleEditor._applyingModifications;
   yield once(element, "animationend");
@@ -49,14 +48,12 @@ function* testPacman(inspector, view) {
   is
   (
     convertTextPropsToString(rules.keyframeRules[1].textProps),
-    "left: 750px; opacity: 0; top: 750px",
+    "left: 750px; opacity: 0",
     "Keyframe pacman (100%) property is correct"
   );
 
   is(defaultView.getComputedStyle(element).getPropertyValue("opacity"), "0",
     "Added opacity property should have been used.");
-  is(defaultView.getComputedStyle(element).getPropertyValue("top"), "750px",
-    "Added top property should have been used.");
 }
 
 function* testBoxy(inspector, view) {
