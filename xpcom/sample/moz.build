@@ -43,5 +43,5 @@ RESOURCE_FILES.samples += [
 USE_LIBS += [
     'mozalloc',
     'xpcomglue_s',
-    'xul-shared',
+    'xul',
 ]

@@ -41,5 +41,5 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 USE_LIBS += [
     'mozalloc',
     'xpcomglue_s',
-    'xul-shared',
+    'xul',
 ]

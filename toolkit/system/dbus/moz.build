@@ -17,5 +17,5 @@ IS_COMPONENT = True
 USE_LIBS += [
     'mozalloc',
     'xpcomglue_s',
-    'xul-shared',
+    'xul',
 ]

@@ -17,7 +17,7 @@ else:
     ]
     USE_LIBS += [
         'mozalloc',
-        'xul-shared',
+        'xul',
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

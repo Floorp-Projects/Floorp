@@ -23,5 +23,5 @@ DEFINES['LIBRARY_FILENAME'] = '%s%s%s' % (
 USE_LIBS += [
     'mozalloc',
     'xpcomglue_s',
-    'xul-shared',
+    'xul',
 ]

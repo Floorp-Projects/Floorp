@@ -103,7 +103,7 @@ USE_LIBS += [
     'nksrtp_s',
     'webrtc',
     'xpcomglue_s',
-    'xul-shared',
+    'xul',
     'yuv',
 ]
 

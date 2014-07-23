@@ -66,5 +66,5 @@ RESOURCE_FILES += [
 USE_LIBS += [
     'mozalloc',
     'xpcomglue_s',
-    'xul-shared',
+    'xul',
 ]
