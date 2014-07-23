@@ -78,7 +78,7 @@ FFmpegAACDecoder<LIBAV_VER>::DecodePacket(MP4Sample* aSample)
 
   int decoded;
   int bytesConsumed =
-    avcodec_decode_audio4(&mCodecContext, frame.get(), &decoded, &packet);
+    avcodec_decode_audio4(mCodecContext, frame.get(), &decoded, &packet);
 
   if (bytesConsumed < 0 || !decoded) {
     NS_WARNING("FFmpeg audio decoder error.");
@@ -89,7 +89,7 @@ FFmpegAACDecoder<LIBAV_VER>::DecodePacket(MP4Sample* aSample)
   NS_ASSERTION(bytesConsumed == (int)aSample->size,
                "Only one audio packet should be received at a time.");
 
-  uint32_t numChannels = mCodecContext.channels;
+  uint32_t numChannels = mCodecContext->channels;
 
   nsAutoArrayPtr<AudioDataValue> audio(
     CopyAndPackAudio(frame.get(), numChannels, frame->nb_samples));
