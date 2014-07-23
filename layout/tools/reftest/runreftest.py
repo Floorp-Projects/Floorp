@@ -178,6 +178,9 @@ class RefTest(object):
     prefs['general.useragent.updates.enabled'] = False
     # And for webapp updates.  Yes, it is supposed to be an integer.
     prefs['browser.webapps.checkForUpdates'] = 0
+    # And for about:newtab content fetch and pings.
+    prefs['browser.newtabpage.directory.source'] = 'data:application/json,{"reftest":1}'
+    prefs['browser.newtabpage.directory.ping'] = ''
 
     if options.e10s:
       prefs['browser.tabs.remote.autostart'] = True
