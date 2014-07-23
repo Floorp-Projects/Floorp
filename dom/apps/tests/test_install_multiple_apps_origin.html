@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={778277}
+-->
+<head>
+  <title>Test for Bug {778277}</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={778277}">Mozilla Bug {778277}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+var gManifestURL = "http://test/tests/dom/apps/tests/file_app.sjs?apptype=hosted&getmanifest=true";
+var gGenerator = runTest();
+
+function go() {
+  SpecialPowers.pushPermissions(
+    [{ "type": "webapps-manage", "allow": 1, "context": document }],
+    function() { gGenerator.next() });
+}
+
+function continueTest() {
+  try {
+    gGenerator.next();
+  } catch (e if e instanceof StopIteration) {
+    finish();
+  }
+}
+
+function finish() {
+  SimpleTest.finish();
+}
+
+function cbError(aEvent) {
+  ok(false, "Error callback invoked " +
+            aEvent.target.error.name + " " + aEvent.target.error.message);
+  finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+/**
+  * Install 2 apps from the same origin and uninstall them.
+  */
+function runTest() {
+  SpecialPowers.setAllAppsLaunchable(true);
+
+  var manifestURL1 = gManifestURL + "&app=1";
+  var manifestURL2 = gManifestURL + "&app=2";
+
+  SpecialPowers.autoConfirmAppInstall(continueTest);
+  yield undefined;
+
+  request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  var initialAppsCount = request.result.length;
+  info("Starting with " + initialAppsCount + " apps installed.");
+
+  var request = navigator.mozApps.install(manifestURL1, { });
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+
+  var app1 = request.result;
+  ok(app1, "App 1 is non-null");
+  is(app1.manifestURL, manifestURL1, "App 1 manifest url is correct.");
+
+  request = navigator.mozApps.install(manifestURL2, { });
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+
+  var app2 = request.result;
+  ok(app2, "App 2 is non-null");
+  is(app2.manifestURL, manifestURL2, "App 2 manifest url is correct.");
+
+  request = navigator.mozApps.mgmt.uninstall(app1);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  is(request.result, manifestURL1, "App 1 uninstalled.");
+
+  request = navigator.mozApps.mgmt.uninstall(app2);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  is(request.result, manifestURL2, "App 2 uninstalled.");
+
+  request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  is(request.result.length, initialAppsCount, "All apps are uninstalled.");
+}
+
+addLoadEvent(go);
+
+</script>
+</pre>
+</body>
+</html>

@@ -730,10 +730,11 @@ TelephonyService.prototype = {
       serviceId: aClientId,
       emergency: aCall.isEmergency,
       duration: duration,
-      direction: aCall.isOutgoing ? "outgoing" : "incoming"
+      direction: aCall.isOutgoing ? "outgoing" : "incoming",
+      hangUpLocal: aCall.hangUpLocal
     };
 
-    if(this._cdmaCallWaitingNumber != null) {
+    if (this._cdmaCallWaitingNumber != null) {
       data.secondNumber = this._cdmaCallWaitingNumber;
       this._cdmaCallWaitingNumber = null;
     }
