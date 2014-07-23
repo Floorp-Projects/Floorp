@@ -1,0 +1,50 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<style>
+@keyframes anim1 {
+  to { left: 100px }
+}
+</style>
+<script>
+'use strict';
+
+function addDiv() {
+  var div = document.createElement('div');
+  document.body.appendChild(div);
+  return div;
+}
+
+async_test(function(t) {
+  var div = addDiv();
+  div.style.animation = 'anim1 100s';
+  window.getComputedStyle(div).animationName;
+
+  var originalPlayer = div.getAnimationPlayers()[0];
+  var originalStartTime = originalPlayer.startTime;
+  var originalCurrentTime = originalPlayer.currentTime;
+
+  // Wait a moment so we can confirm the startTime doesn't change (and doesn't
+  // simply reflect the current time).
+  window.requestAnimationFrame(t.step_func(function() {
+    div.style.animationDuration = '200s';
+    window.getComputedStyle(div).animationDuration;
+    var player = div.getAnimationPlayers()[0];
+    assert_equals(player, originalPlayer,
+                  'The same AnimationPlayer is returned after updating'
+                  + ' animation duration');
+    assert_equals(player.startTime, originalStartTime,
+                  'AnimationPlayers returned by getAnimationPlayers preserve'
+                  + ' their startTime even when they are updated');
+    // Sanity check
+    assert_not_equals(player.currentTime, originalCurrentTime,
+                      'AnimationPlayer.currentTime has updated in next'
+                      + ' requestAnimationFrame callback');
+    div.remove();
+    t.done();
+  }));
+}, 'AnimationPlayers preserve their startTime when changed');
+
+</script>
