@@ -1145,20 +1145,33 @@ class RecursiveMakeBackend(CommonBackend):
         backend_file.write('HOST_LIBRARY_NAME = %s\n' % libdef.basename)
 
     def _process_linked_libraries(self, obj, backend_file):
-        topobjdir = mozpath.normsep(obj.topobjdir)
-        for lib in obj.linked_libraries:
+        def recurse_lib(lib):
+            for l in lib.linked_libraries:
+                if isinstance(l, StaticLibrary):
+                    for q in recurse_lib(l):
+                        yield q
+                else:
+                    yield l
+
+        def pretty_relpath(lib):
             # If this is an external objdir (i.e., comm-central), use the other
             # directory instead of $(DEPTH).
             if lib.objdir.startswith(topobjdir + '/'):
-                relpath = '$(DEPTH)/%s' % mozpath.relpath(lib.objdir, topobjdir)
+                return '$(DEPTH)/%s' % mozpath.relpath(lib.objdir, topobjdir)
             else:
-                relpath = mozpath.relpath(lib.objdir, obj.objdir)
+                return mozpath.relpath(lib.objdir, obj.objdir)
+
+        topobjdir = mozpath.normsep(obj.topobjdir)
+        for lib in obj.linked_libraries:
+            relpath = pretty_relpath(lib)
             if isinstance(obj, Library):
                 if isinstance(lib, StaticLibrary):
                     backend_file.write_once('SHARED_LIBRARY_LIBS += %s/%s\n'
                                        % (relpath, lib.lib_name))
-                else:
-                    assert isinstance(obj, SharedLibrary)
+                    for l in recurse_lib(lib):
+                        backend_file.write_once('EXTRA_DSO_LDOPTS += %s/%s\n'
+                                        % (pretty_relpath(l), l.import_name))
+                elif isinstance(obj, SharedLibrary):
                     assert lib.variant != lib.COMPONENT
                     backend_file.write_once('EXTRA_DSO_LDOPTS += %s/%s\n'
                                        % (relpath, lib.import_name))
@@ -1166,6 +1179,13 @@ class RecursiveMakeBackend(CommonBackend):
                 if isinstance(lib, StaticLibrary):
                     backend_file.write_once('LIBS += %s/%s\n'
                                        % (relpath, lib.lib_name))
+                    for l in recurse_lib(lib):
+                        backend_file.write_once('LIBS += %s/%s\n'
+                                        % (pretty_relpath(l), l.import_name))
+                elif isinstance(obj, SharedLibrary):
+                    assert lib.variant != lib.COMPONENT
+                    backend_file.write_once('EXTRA_DSO_LDOPTS += %s/%s\n'
+                                       % (relpath, lib.import_name))
                 else:
                     assert lib.variant != lib.COMPONENT
                     backend_file.write_once('LIBS += %s/%s\n'

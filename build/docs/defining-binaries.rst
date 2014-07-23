@@ -68,6 +68,10 @@ Note that currently, the build system may not create an actual library for
 static libraries. It is an implementation detail that shouldn't need to be
 worried about.
 
+As a special rule, USE_LIBS is allowed to contain references to shared
+libraries. In such cases, programs and shared libraries linking this static
+library will inherit those shared library dependencies.
+
 
 Intermediate (Static) Libraries
 ===============================
