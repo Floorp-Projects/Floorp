@@ -25,7 +25,7 @@ class nsIDocShell;
 class nsIDocShellTreeItem;
 class imgIContainer;
 class EnterLeaveDispatcher;
-class nsIMarkupDocumentViewer;
+class nsIContentViewer;
 class nsIScrollableFrame;
 class nsITimer;
 class nsPresContext;
@@ -648,7 +648,7 @@ protected:
 
   void DoScrollHistory(int32_t direction);
   void DoScrollZoom(nsIFrame *aTargetFrame, int32_t adjustment);
-  nsresult GetMarkupDocumentViewer(nsIMarkupDocumentViewer** aMv);
+  nsresult GetContentViewer(nsIContentViewer** aCv);
   nsresult ChangeTextSize(int32_t change);
   nsresult ChangeFullZoom(int32_t change);
 

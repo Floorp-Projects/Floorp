@@ -39,3 +39,9 @@ IS_COMPONENT = True
 RESOURCE_FILES.samples += [
     'xpconnect-sample.html',
 ]
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul',
+]

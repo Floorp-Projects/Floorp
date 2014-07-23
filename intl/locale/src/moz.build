@@ -32,7 +32,7 @@ EXTRA_JS_MODULES += [
 
 MSVC_ENABLE_PGO = True
 
-FINAL_LIBRARY = 'i18n'
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '/intl/uconv/src',

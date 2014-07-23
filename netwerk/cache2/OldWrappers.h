@@ -33,6 +33,8 @@ public:
 
   NS_IMETHOD AsyncDoom(nsICacheEntryDoomCallback* listener);
   NS_IMETHOD GetPersistent(bool *aPersistToDisk);
+  NS_IMETHOD GetIsForcedValid(bool *aIsForcedValid);
+  NS_IMETHOD ForceValidFor(uint32_t aSecondsToTheFuture);
   NS_IMETHOD SetValid() { return NS_OK; }
   NS_IMETHOD MetaDataReady() { return NS_OK; }
   NS_IMETHOD Recreate(bool, nsICacheEntry**);

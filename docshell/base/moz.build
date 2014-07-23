@@ -21,7 +21,6 @@ XPIDL_SOURCES += [
     'nsIGlobalHistory2.idl',
     'nsILoadContext.idl',
     'nsILoadInfo.idl',
-    'nsIMarkupDocumentViewer.idl',
     'nsIPrivacyTransitionObserver.idl',
     'nsIReflowObserver.idl',
     'nsIRefreshURI.idl',

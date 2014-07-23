@@ -6,6 +6,9 @@
 
 if CONFIG['JS_SHELL_NAME']:
     PROGRAM = CONFIG['JS_SHELL_NAME']
+    if CONFIG['JS_BUNDLED_EDITLINE']:
+        USE_LIBS += ['editline']
+    USE_LIBS += ['static:js']
 
 UNIFIED_SOURCES += [
     'js.cpp',

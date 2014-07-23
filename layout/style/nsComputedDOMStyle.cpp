@@ -14,6 +14,8 @@
 #include "nsError.h"
 #include "nsDOMString.h"
 #include "nsIDOMCSSPrimitiveValue.h"
+#include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsStyleContext.h"
 #include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
@@ -22,6 +24,7 @@
 #include "nsDOMCSSRect.h"
 #include "nsDOMCSSRGBColor.h"
 #include "nsDOMCSSValueList.h"
+#include "nsFlexContainerFrame.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLReflowState.h"
 #include "nsStyleUtil.h"
@@ -4103,7 +4106,17 @@ CSSValue*
 nsComputedDOMStyle::DoGetMinHeight()
 {
   nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StylePosition()->mMinHeight, true,
+  nsStyleCoord minHeight = StylePosition()->mMinHeight;
+
+  if (eStyleUnit_Auto == minHeight.GetUnit()) {
+    // In non-flexbox contexts, "min-height: auto" means "min-height: 0"
+    // XXXdholbert For flex items, we should set |minHeight| to the
+    // -moz-min-content keyword, instead of 0, once we support -moz-min-content
+    // as a height value.
+    minHeight.SetCoordValue(0);
+  }
+
+  SetValueToCoord(val, minHeight, true,
                   &nsComputedDOMStyle::GetCBContentHeight);
   return val;
 }
@@ -4112,7 +4125,25 @@ CSSValue*
 nsComputedDOMStyle::DoGetMinWidth()
 {
   nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StylePosition()->mMinWidth, true,
+
+  nsStyleCoord minWidth = StylePosition()->mMinWidth;
+
+  if (eStyleUnit_Auto == minWidth.GetUnit()) {
+    // "min-width: auto" means "0", unless we're a flex item in a horizontal
+    // flex container, in which case it means "min-content"
+    minWidth.SetCoordValue(0);
+    if (mOuterFrame && mOuterFrame->IsFlexItem()) {
+      nsIFrame* flexContainer = mOuterFrame->GetParent();
+      MOZ_ASSERT(flexContainer &&
+                 flexContainer->GetType() == nsGkAtoms::flexContainerFrame,
+                 "IsFlexItem() lied...?");
+
+      if (static_cast<nsFlexContainerFrame*>(flexContainer)->IsHorizontal()) {
+        minWidth.SetIntValue(NS_STYLE_WIDTH_MIN_CONTENT, eStyleUnit_Enumerated);
+      }
+    }
+  }
+  SetValueToCoord(val, minWidth, true,
                   &nsComputedDOMStyle::GetCBContentWidth,
                   nsCSSProps::kWidthKTable);
   return val;

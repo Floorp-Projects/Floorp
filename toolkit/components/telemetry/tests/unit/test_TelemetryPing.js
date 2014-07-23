@@ -168,6 +168,9 @@ function checkPayloadInfo(payload, reason) {
     if (isWindows || isOSX) {
       do_check_true("adapterVendorID" in payload.info);
       do_check_true("adapterDeviceID" in payload.info);
+      if (isWindows) {
+        do_check_true("adapterSubsysID" in payload.info);
+      }
     }
   }
   catch (x) {

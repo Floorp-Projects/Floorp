@@ -41,7 +41,7 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-FINAL_LIBRARY = 'storagecomps'
+FINAL_LIBRARY = 'xul'
 
 # Don't use the jemalloc allocator on Android, because we can't guarantee
 # that Gecko will configure sqlite before it is first used (bug 730495).

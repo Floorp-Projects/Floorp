@@ -324,7 +324,7 @@ const ZoomManager = {
   },
 
   get _markupViewer() {
-    return docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+    return docShell.contentViewer;
   },
 
   _cache: {

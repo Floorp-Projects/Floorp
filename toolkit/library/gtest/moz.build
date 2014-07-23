@@ -8,4 +8,8 @@ LIBRARY_NAME = 'xul-gtest'
 
 FINAL_TARGET = 'dist/bin/gtest'
 
+USE_LIBS += [
+    'static:xul',
+]
+
 include('../libxul.mozbuild')

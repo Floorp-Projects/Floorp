@@ -1242,14 +1242,6 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     document = presShell->GetDocument();
   }
 
-  if (widgetTransaction ||
-      // SVG-as-an-image docs don't paint as part of the retained layer tree,
-      // but they still need the invalidation state bits cleared in order for
-      // invalidation for CSS/SMIL animation to work properly.
-      (document && document->IsBeingUsedAsImage())) {
-    aForFrame->ClearInvalidationStateBits();
-  }
-
   if (!root) {
     layerManager->SetUserData(&gLayerManagerLayerBuilder, oldBuilder);
     return;
@@ -1283,6 +1275,15 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
 
   layerManager->SetRoot(root);
   layerBuilder->WillEndTransaction();
+
+  if (widgetTransaction ||
+      // SVG-as-an-image docs don't paint as part of the retained layer tree,
+      // but they still need the invalidation state bits cleared in order for
+      // invalidation for CSS/SMIL animation to work properly.
+      (document && document->IsBeingUsedAsImage())) {
+    aForFrame->ClearInvalidationStateBits();
+  }
+
   bool temp = aBuilder->SetIsCompositingCheap(layerManager->IsCompositingCheap());
   LayerManager::EndTransactionFlags flags = LayerManager::END_DEFAULT;
   if (layerManager->NeedsWidgetInvalidation()) {
@@ -1776,6 +1777,29 @@ static nsStyleContext* GetBackgroundStyleContext(nsIFrame* aFrame)
   return sc;
 }
 
+/* static */ void
+SetBackgroundClipRegion(DisplayListClipState::AutoSaveRestore& aClipState,
+                        nsIFrame* aFrame, const nsPoint& aToReferenceFrame,
+                        const nsStyleBackground::Layer& aLayer,
+                        bool aWillPaintBorder)
+{
+  nsRect borderBox = nsRect(aToReferenceFrame, aFrame->GetSize());
+
+  nsCSSRendering::BackgroundClipState clip;
+  nsCSSRendering::GetBackgroundClip(aLayer, aFrame, *aFrame->StyleBorder(),
+                                    borderBox, borderBox, aWillPaintBorder,
+                                    aFrame->PresContext()->AppUnitsPerDevPixel(),
+                                    &clip);
+
+  if (clip.mHasAdditionalBGClipArea) {
+    aClipState.ClipContentDescendants(clip.mAdditionalBGClipArea, clip.mBGClipArea,
+                                      clip.mHasRoundedCorners ? clip.mRadii : nullptr);
+  } else {
+    aClipState.ClipContentDescendants(clip.mBGClipArea, clip.mHasRoundedCorners ? clip.mRadii : nullptr);
+  }
+}
+
+
 /*static*/ bool
 nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuilder,
                                                      nsIFrame* aFrame,
@@ -1801,6 +1825,13 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
                                                drawBackgroundImage, drawBackgroundColor);
   }
 
+  bool hasInsetShadow = aFrame->StyleBorder()->mBoxShadow &&
+                        aFrame->StyleBorder()->mBoxShadow->HasShadowWithInset(true);
+  bool willPaintBorder = !isThemed && !hasInsetShadow &&
+                         aFrame->StyleBorder()->HasBorder();
+
+  nsPoint toRef = aBuilder->ToReferenceFrame(aFrame);
+
   // An auxiliary list is necessary in case we have background blending; if that
   // is the case, background items need to be wrapped by a blend container to
   // isolate blending to the background
@@ -1809,6 +1840,13 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   // to create an item for hit testing.
   if ((drawBackgroundColor && color != NS_RGBA(0,0,0,0)) ||
       aBuilder->IsForEventDelivery()) {
+
+    DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+    if (bg && !aBuilder->IsForEventDelivery()) {
+      SetBackgroundClipRegion(clipState, aFrame, toRef,
+                              bg->BottomLayer(),
+                              willPaintBorder);
+    }
     bgItemList.AppendNewToTop(
         new (aBuilder) nsDisplayBackgroundColor(aBuilder, aFrame, bg,
                                                 drawBackgroundColor ? color : NS_RGBA(0, 0, 0, 0)));
@@ -1838,6 +1876,13 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
 
     if (bg->mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
       needBlendContainer = true;
+    }
+
+    DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+    if (!aBuilder->IsForEventDelivery()) {
+      const nsStyleBackground::Layer& layer = bg->mLayers[i];
+      SetBackgroundClipRegion(clipState, aFrame, toRef,
+                              layer, willPaintBorder);
     }
 
     nsDisplayBackgroundImage* bgItem =
@@ -2108,25 +2153,19 @@ nsDisplayBackgroundImage::GetInsideClipRegion(nsDisplayItem* aItem,
 
   nsIFrame *frame = aItem->Frame();
 
-  nscoord radii[8];
   nsRect clipRect;
-  bool haveRadii;
   if (frame->GetType() == nsGkAtoms::canvasFrame) {
     nsCanvasFrame* canvasFrame = static_cast<nsCanvasFrame*>(frame);
-    haveRadii = false;
     clipRect = canvasFrame->CanvasArea() + aItem->ToReferenceFrame();
   } else {
     switch (aClip) {
     case NS_STYLE_BG_CLIP_BORDER:
-      haveRadii = frame->GetBorderRadii(radii);
       clipRect = nsRect(aItem->ToReferenceFrame(), frame->GetSize());
       break;
     case NS_STYLE_BG_CLIP_PADDING:
-      haveRadii = frame->GetPaddingBoxBorderRadii(radii);
       clipRect = frame->GetPaddingRect() - frame->GetPosition() + aItem->ToReferenceFrame();
       break;
     case NS_STYLE_BG_CLIP_CONTENT:
-      haveRadii = frame->GetContentBoxBorderRadii(radii);
       clipRect = frame->GetContentRect() - frame->GetPosition() + aItem->ToReferenceFrame();
       break;
     default:
@@ -2135,13 +2174,7 @@ nsDisplayBackgroundImage::GetInsideClipRegion(nsDisplayItem* aItem,
     }
   }
 
-  if (haveRadii) {
-    *aSnap = false;
-    result = nsLayoutUtils::RoundedRectIntersectRect(clipRect, radii, aRect);
-  } else {
-    result = clipRect.Intersect(aRect);
-  }
-  return result;
+  return clipRect.Intersect(aRect);
 }
 
 nsRegion
@@ -2233,7 +2266,7 @@ static void CheckForBorderItem(nsDisplayItem *aItem, uint32_t& aFlags)
 void
 nsDisplayBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
                                 nsRenderingContext* aCtx) {
-  PaintInternal(aBuilder, aCtx, mVisibleRect, nullptr);
+  PaintInternal(aBuilder, aCtx, mVisibleRect, &mBounds);
 }
 
 void
@@ -2508,13 +2541,16 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  nsPoint offset = ToReferenceFrame();
-  uint32_t flags = aBuilder->GetBackgroundPaintFlags();
-  CheckForBorderItem(this, flags);
-  nsCSSRendering::PaintBackgroundColor(mColor, mFrame->PresContext(), *aCtx, mFrame,
-                                       mVisibleRect,
-                                       nsRect(offset, mFrame->GetSize()),
-                                       flags);
+  gfxContext* ctx = aCtx->ThebesContext();
+  nsRect borderBox = nsRect(ToReferenceFrame(), mFrame->GetSize());
+
+  gfxRect bounds =
+    nsLayoutUtils::RectToGfxRect(borderBox, mFrame->PresContext()->AppUnitsPerDevPixel());
+
+  ctx->SetColor(mColor);
+  ctx->NewPath();
+  ctx->Rectangle(bounds, true);
+  ctx->Fill();
 }
 
 nsRegion
@@ -2540,12 +2576,7 @@ bool
 nsDisplayBackgroundColor::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor)
 {
   *aColor = NS_RGBA_FROM_GFXRGBA(mColor);
-
-  if (!mBackgroundStyle)
-    return true;
-
-  return (!nsLayoutUtils::HasNonZeroCorner(mFrame->StyleBorder()->mBorderRadius) &&
-          mBackgroundStyle->BottomLayer().mClip == NS_STYLE_BG_CLIP_BORDER);
+  return true;
 }
 
 void

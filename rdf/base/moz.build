@@ -4,4 +4,54 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['idl', 'public', 'src']
+XPIDL_SOURCES += [
+    'nsIRDFCompositeDataSource.idl',
+    'nsIRDFContainer.idl',
+    'nsIRDFContainerUtils.idl',
+    'nsIRDFDataSource.idl',
+    'nsIRDFDelegateFactory.idl',
+    'nsIRDFInferDataSource.idl',
+    'nsIRDFInMemoryDataSource.idl',
+    'nsIRDFLiteral.idl',
+    'nsIRDFNode.idl',
+    'nsIRDFObserver.idl',
+    'nsIRDFPropagatableDataSource.idl',
+    'nsIRDFPurgeableDataSource.idl',
+    'nsIRDFRemoteDataSource.idl',
+    'nsIRDFResource.idl',
+    'nsIRDFService.idl',
+    'nsIRDFXMLParser.idl',
+    'nsIRDFXMLSerializer.idl',
+    'nsIRDFXMLSink.idl',
+    'nsIRDFXMLSource.idl',
+    'rdfIDataSource.idl',
+    'rdfISerializer.idl',
+    'rdfITripleVisitor.idl',
+]
+
+XPIDL_MODULE = 'rdf'
+
+EXPORTS += [
+    'nsIRDFContentSink.h',
+    'rdf.h',
+]
+
+UNIFIED_SOURCES += [
+    'nsCompositeDataSource.cpp',
+    'nsContainerEnumerator.cpp',
+    'nsDefaultResourceFactory.cpp',
+    'nsInMemoryDataSource.cpp',
+    'nsNameSpaceMap.cpp',
+    'nsRDFContainer.cpp',
+    'nsRDFContainerUtils.cpp',
+    'nsRDFContentSink.cpp',
+    'nsRDFService.cpp',
+    'nsRDFXMLDataSource.cpp',
+    'nsRDFXMLParser.cpp',
+    'nsRDFXMLSerializer.cpp',
+    'rdfTriplesSerializer.cpp',
+    'rdfutil.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+FINAL_LIBRARY = 'xul'

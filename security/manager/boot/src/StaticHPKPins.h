@@ -748,12 +748,12 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "appengine.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "appspot.com", true, false, false, -1, &kPinset_google_root_pems },
   { "aus4.mozilla.org", true, true, true, 3, &kPinset_mozilla },
-  { "blog.torproject.org", true, true, false, -1, &kPinset_tor },
+  { "blog.torproject.org", true, false, false, -1, &kPinset_tor },
   { "business.twitter.com", true, false, false, -1, &kPinset_twitterCom },
   { "cdn.mozilla.net", true, false, true, -1, &kPinset_mozilla },
   { "cdn.mozilla.org", true, false, true, -1, &kPinset_mozilla },
   { "chart.apis.google.com", true, false, false, -1, &kPinset_google_root_pems },
-  { "check.torproject.org", true, true, false, -1, &kPinset_tor },
+  { "check.torproject.org", true, false, false, -1, &kPinset_tor },
   { "checkout.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "chrome-devtools-frontend.appspot.com", true, false, false, -1, &kPinset_google_root_pems },
   { "chrome.google.com", true, false, false, -1, &kPinset_google_root_pems },
@@ -764,7 +764,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "codereview.chromium.org", true, false, false, -1, &kPinset_google_root_pems },
   { "crypto.cat", false, true, false, -1, &kPinset_cryptoCat },
   { "dev.twitter.com", true, false, false, -1, &kPinset_twitterCom },
-  { "dist.torproject.org", true, true, false, -1, &kPinset_tor },
+  { "dist.torproject.org", true, false, false, -1, &kPinset_tor },
   { "dl.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "docs.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "doubleclick.net", true, false, false, -1, &kPinset_google_root_pems },
@@ -1032,7 +1032,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "talkgadget.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "test-mode.pinning.example.com", true, true, false, -1, &kPinset_mozilla_test },
   { "tor2web.org", true, true, false, -1, &kPinset_tor2web },
-  { "torproject.org", false, true, false, -1, &kPinset_tor },
+  { "torproject.org", false, false, false, -1, &kPinset_tor },
   { "translate.googleapis.com", true, false, false, -1, &kPinset_google_root_pems },
   { "twimg.com", true, false, false, -1, &kPinset_twitterCDN },
   { "twitter.com", true, false, false, -1, &kPinset_twitterCDN },
@@ -1055,7 +1055,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "www.dropbox.com", true, true, false, -1, &kPinset_dropbox },
   { "www.gmail.com", false, false, false, -1, &kPinset_google_root_pems },
   { "www.googlemail.com", false, false, false, -1, &kPinset_google_root_pems },
-  { "www.torproject.org", true, true, false, -1, &kPinset_tor },
+  { "www.torproject.org", true, false, false, -1, &kPinset_tor },
   { "www.twitter.com", true, false, false, -1, &kPinset_twitterCom },
   { "xbrlsuccess.appspot.com", true, false, false, -1, &kPinset_google_root_pems },
   { "youtu.be", true, false, false, -1, &kPinset_google_root_pems },
@@ -1067,4 +1067,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1414231808712000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1414526265402000);

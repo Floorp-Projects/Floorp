@@ -7,7 +7,7 @@ var docviewer;
 function do_onload() {
   var navigator1 = SpecialPowers.wrap(parent).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).getInterface(SpecialPowers.Ci.nsIWebNavigation);
   var docShell = navigator1.QueryInterface(SpecialPowers.Ci.nsIDocShell);
-  docviewer = docShell.contentViewer.QueryInterface(SpecialPowers.Ci.nsIMarkupDocumentViewer);
+  docviewer = docShell.contentViewer;
 
   setTimeout(function() {
     clearTimeout(timer);

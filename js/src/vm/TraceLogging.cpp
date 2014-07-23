@@ -838,6 +838,7 @@ TraceLogging::lazyInit()
     if (ContainsFlag(env, "IonCompiler") || strlen(env) == 0) {
         enabledTextIds[TraceLogger::IonCompilation] = true;
         enabledTextIds[TraceLogger::IonLinking] = true;
+        enabledTextIds[TraceLogger::FoldTests] = true;
         enabledTextIds[TraceLogger::SplitCriticalEdges] = true;
         enabledTextIds[TraceLogger::RenumberBlocks] = true;
         enabledTextIds[TraceLogger::DominatorTree] = true;

@@ -208,7 +208,7 @@ PreviewController.prototype = {
 
   get zoom() {
     // Note that winutils.fullZoom accounts for "quantization" of the zoom factor
-    // from nsIMarkupDocumentViewer due to conversion through appUnits.
+    // from nsIContentViewer due to conversion through appUnits.
     // We do -not- want screenPixelsPerCSSPixel here, because that would -also-
     // incorporate any scaling that is applied due to hi-dpi resolution options.
     return this.winutils.fullZoom;

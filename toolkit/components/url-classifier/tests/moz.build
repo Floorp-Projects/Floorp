@@ -15,5 +15,7 @@ JAR_MANIFESTS += ['jar.mn']
 # XXX Get this to work in libxul builds.
 ## simple c++ tests (no xpcom)
 #CPP_UNIT_TESTS += [ \
-#    'TestUrlClassifierUtils.cpp', \
+#    'TestUrlClassifierUtils', \
 #]
+#
+#SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)

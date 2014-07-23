@@ -191,14 +191,12 @@ function test1() {
   is(sessionStorage.getItem(null), "test");
   is(sessionStorage["null"], "test");
   sessionStorage.removeItem(null, "test");
-  // bug 350023
-  todo_is("null" in sessionStorage, false);
+  is("null" in sessionStorage, false);
 
   sessionStorage.setItem(null, "test");
   is("null" in sessionStorage, true);
   sessionStorage.removeItem("null", "test");
-  // bug 350023
-  todo_is("null" in sessionStorage, false);
+  is("null" in sessionStorage, false);
 
   // Clear the storage
   sessionStorage.clear();

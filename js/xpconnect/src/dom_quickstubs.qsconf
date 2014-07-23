@@ -32,14 +32,6 @@ members = [
     #'nsIDOMLocation.hostname',
     #'nsIDOMLocation.href',
 
-    # dom/interfaces/storage
-    'nsIDOMStorage.setItem',
-    'nsIDOMStorage.length',
-    'nsIDOMStorage.getItem',
-    'nsIDOMStorage.key',
-    'nsIDOMStorage.removeItem',
-    'nsIDOMStorage.clear',
-
     # dom/interfaces/xpath
     'nsIDOMXPathNSResolver.lookupNamespaceURI',
 
@@ -69,18 +61,6 @@ customIncludes = [
     'mozilla/dom/EventTargetBinding.h',
     'mozilla/dom/WindowBinding.h',
     ]
-
-nsIDOMStorage_Clear_customMethodCallCode = """
-    rv = self->Clear();
-    if (NS_SUCCEEDED(rv))
-        JS_ClearNonGlobalObject(cx, obj);
-"""
-
-customMethodCalls = {
-    'nsIDOMStorage_Clear': {
-        'code': nsIDOMStorage_Clear_customMethodCallCode
-        },
-    }
 
 newBindingProperties = {
     # Once the last entry here goes away, we can make the sNativePropertyHooks

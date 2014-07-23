@@ -7,13 +7,14 @@
 
 interface nsIDOMStorage;
 interface nsIPrincipal;
+interface nsIDOMWindow;
 
 /**
  * General purpose interface that has two implementations, for localStorage
  * resp. sessionStorage with "@mozilla.org/dom/localStorage-manager;1" resp.
  * "@mozilla.org/dom/sessionStorage-manager;1" contract IDs.
  */
-[scriptable, uuid(8096f9ea-fa61-4960-b5d7-fb30ac42c8d8)]
+[scriptable, uuid(a15f7ebd-4f35-4e73-a2d8-255d27fd14ee)]
 interface nsIDOMStorageManager : nsISupports
 {
   /**
@@ -27,6 +28,8 @@ interface nsIDOMStorageManager : nsISupports
    * A new object is always returned and it is ensured there is
    * a storage for the scope created.
    *
+   * @param aWindow
+   *    The parent window.
    * @param aPrincipal
    *    Principal to bound storage to.
    * @param aDocumentURI
@@ -34,7 +37,8 @@ interface nsIDOMStorageManager : nsISupports
    * @param aPrivate
    *    Whether the demanding document is running in Private Browsing mode or not.
    */
-  nsIDOMStorage createStorage(in nsIPrincipal aPrincipal,
+  nsIDOMStorage createStorage(in nsIDOMWindow aWindow,
+                              in nsIPrincipal aPrincipal,
                               in DOMString aDocumentURI,
                               [optional] in bool aPrivate);
   /**
@@ -43,12 +47,15 @@ interface nsIDOMStorageManager : nsISupports
    * no object is created.  Otherwise, an object (new) for the existing storage
    * scope is returned.
    *
+   * @param aWindow
+   *    The parent window.
    * @param aPrincipal
    *    Principal to bound storage to.
    * @param aPrivate
    *    Whether the demanding document is running in Private Browsing mode or not.
    */
-  nsIDOMStorage getStorage(in nsIPrincipal aPrincipal,
+  nsIDOMStorage getStorage(in nsIDOMWindow aWindow,
+                           in nsIPrincipal aPrincipal,
                            [optional] in bool aPrivate);
 
   /**
