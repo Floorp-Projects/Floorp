@@ -184,8 +184,8 @@ class MozbuildSandbox(Sandbox):
             d['SRCDIR'] = mozpath.join(topsrcdir, reldir).rstrip('/')
             d['OBJDIR'] = mozpath.join(topobjdir, reldir).rstrip('/')
 
-            d['CONFIG'] = ReadOnlyDefaultDict(self.config.substs_unicode,
-                global_default=None)
+            d['CONFIG'] = ReadOnlyDefaultDict(lambda: None,
+                self.config.substs_unicode)
 
             var = metadata.get('var', None)
             if var and var in ['TOOL_DIRS', 'TEST_TOOL_DIRS']:

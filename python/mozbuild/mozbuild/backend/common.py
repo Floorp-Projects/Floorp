@@ -26,7 +26,7 @@ from ..frontend.data import (
     WebIDLFile,
 )
 
-from ..util import DefaultOnReadDict
+from collections import defaultdict
 
 
 class XPIDLManager(object):
@@ -142,7 +142,7 @@ class TestManager(object):
         self.config = config
         self.topsrcdir = mozpath.normpath(config.topsrcdir)
 
-        self.tests_by_path = DefaultOnReadDict({}, global_default=[])
+        self.tests_by_path = defaultdict(list)
 
     def add(self, t, flavor=None, topsrcdir=None):
         t = dict(t)
