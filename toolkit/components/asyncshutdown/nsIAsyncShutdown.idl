@@ -1,0 +1,207 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * A mechanism for specifying shutdown dependencies between
+ * asynchronous services.
+ *
+ * Note that this XPCOM component is designed primarily for C++
+ * clients. JavaScript clients should rather use AsyncShutdown.jsm,
+ * which provides a better API and better error reporting for them.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIPropertyBag.idl"
+#include "nsIVariant.idl"
+
+interface nsIAsyncShutdownClient;
+
+/**
+ * A blocker installed by a client to be informed during some stage of
+ * shutdown and block shutdown asynchronously until some condition is
+ * complete.
+ *
+ * If you wish to use AsyncShutdown, you will need to implement this
+ * interface (and only this interface).
+ */
+[scriptable, uuid(4ef43f29-6715-4b57-a750-2ff83695ddce)]
+interface nsIAsyncShutdownBlocker: nsISupports {
+  /**
+   * The *unique* name of the blocker.
+   *
+   * By convention, it should respect the following format:
+   * "MyModuleName: Doing something while it's time"
+   * e.g.
+   * "OS.File: Flushing before profile-before-change"
+   *
+   * This attribute is uploaded as part of crash reports.
+   */
+  readonly attribute AString name;
+
+  /**
+   * Inform the blocker that the stage of shutdown has started.
+   * Shutdown will NOT proceed until `aBarrierClient.removeBlocker(this)`
+   * has been called.
+   */
+  void blockShutdown(in nsIAsyncShutdownClient aBarrierClient);
+
+  /**
+   * The current state of the blocker.
+   *
+   * In case of crash, this is converted to JSON and attached to
+   * the crash report.
+   *
+   * This field may be used to provide JSON-style data structures.
+   * For this purpose, use
+   * - nsIPropertyBag to represent objects;
+   * - nsIVariant to represent field values (which may hold nsIPropertyBag
+   * themselves).
+   */
+  readonly attribute nsIPropertyBag state;
+};
+
+/**
+ * A client for a nsIAsyncShutdownBarrier.
+ */
+[scriptable, uuid(d2031049-b990-43a2-95be-59f8a3ca5954)]
+interface nsIAsyncShutdownClient: nsISupports {
+  /**
+   * The name of the barrier.
+   */
+  readonly attribute AString name;
+
+  /**
+   * Add a blocker.
+   *
+   * After a `blocker` has been added with `addBlocker`, if it is not
+   * removed with `removeBlocker`, this will, by design, eventually
+   * CAUSE A CRASH.
+   *
+   * Calling `addBlocker` once nsIAsyncShutdownBarrier::wait() has been
+   * called on the owning barrier returns an error.
+   *
+   * @param aBlocker The blocker to add. Once
+   * nsIAsyncShutdownBarrier::wait() has been called, it will not
+   * call its `aOnReady` callback until all blockers have been
+   * removed, each  by a call to `removeBlocker`.
+   * @param aFileName The filename of the callsite, as given by `__FILE__`.
+   * @param aLineNumber The linenumber of the callsite, as given by `__LINE__`.
+   * @param aStack Information on the stack that lead to this call. Generally
+   * empty when called from C++.
+   */
+  void addBlocker(in nsIAsyncShutdownBlocker aBlocker,
+                  in AString aFileName,
+                  in long aLineNumber,
+                  in AString aStack);
+
+  /**
+   * Remove a blocker.
+   *
+   * @param aBlocker A blocker previously added to this client through
+   * `addBlocker`. Noop if the blocker has never been added or has been
+   * removed already.
+   */
+  void removeBlocker(in nsIAsyncShutdownBlocker aBlocker);
+
+  /**
+   * The JS implementation of the client.
+   *
+   * It is strongly recommended that JS clients of this API use
+   * `jsclient` instead of the `nsIAsyncShutdownClient`. See
+   * AsyncShutdown.jsm for more information on the JS version of
+   * this API.
+   */
+  readonly attribute jsval jsclient;
+};
+
+/**
+ * Callback invoked once all blockers of a barrier have been removed.
+ */
+[scriptable, function, uuid(910c9309-1da0-4dd0-8bdb-a325a38c604e)]
+interface nsIAsyncShutdownCompletionCallback: nsISupports {
+  /**
+   * The operation has been completed.
+   */
+  void done();
+};
+
+/**
+ * A stage of shutdown that supports blocker registration.
+ */
+[scriptable, uuid(50fa8a86-9c91-4256-8389-17d310adec90)]
+interface nsIAsyncShutdownBarrier: nsISupports {
+
+  /**
+   * The blocker registration capability.  Most services may wish to
+   * publish this capability to let services that depend on it register
+   * blockers.
+   */
+  readonly attribute nsIAsyncShutdownClient client;
+
+  /**
+   * The state of all the blockers of the barrier.
+   *
+   * See the documentation of `nsIAsyncShutdownBlocker` for the
+   * format.
+   */
+  readonly attribute nsIPropertyBag state;
+
+  /**
+   * Wait for all blockers to complete.
+   *
+   * Method `aOnReady` will be called once all blockers have finished.
+   * The callback always receives NS_OK.
+   */
+  void wait(in nsIAsyncShutdownCompletionCallback aOnReady);
+};
+
+/**
+ * A service that allows registering shutdown-time dependencies.
+ */
+[scriptable, uuid(8a9a0859-0404-4d50-9e76-10a4f56dfb51)]
+interface nsIAsyncShutdownService: nsISupports {
+  /**
+   * Create a new barrier.
+   *
+   * By convention, the name should respect the following format:
+   * "MyModuleName: Doing something while it's time"
+   * e.g.
+   * "OS.File: Waiting for clients to flush before shutting down"
+   *
+   * This attribute is uploaded as part of crash reports.
+   */
+  nsIAsyncShutdownBarrier makeBarrier(in AString aName);
+
+  // Barriers for global shutdown stages
+
+  /**
+   * Barrier for notification profile-before-change.
+   */
+  readonly attribute nsIAsyncShutdownClient profileBeforeChange;
+
+  /**
+   * Barrier for notification profile-change-teardown.
+   */
+  readonly attribute nsIAsyncShutdownClient profileChangeTeardown;
+
+  /**
+   * Barrier for notification profile-before-change2.
+   */
+  readonly attribute nsIAsyncShutdownClient sendTelemetry;
+
+  /**
+   * Barrier for notification web-workers-shutdown.
+   */
+  readonly attribute nsIAsyncShutdownClient webWorkersShutdown;
+
+  /**
+   * Barrier for notification xpcom-threads-shutdown.
+   */
+  readonly attribute nsIAsyncShutdownClient xpcomThreadsShutdown;
+};
+
+%{C++
+#define NS_ASYNCSHUTDOWNSERVICE_CONTRACTID "@mozilla.org/async-shutdown-service;1"
+%}
