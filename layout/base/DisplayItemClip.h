@@ -57,6 +57,7 @@ public:
 
   void SetTo(const nsRect& aRect);
   void SetTo(const nsRect& aRect, const nscoord* aRadii);
+  void SetTo(const nsRect& aRect, const nsRect& aRoundedRect, const nscoord* aRadii);
   void IntersectWith(const DisplayItemClip& aOther);
 
   // Apply this |DisplayItemClip| to the given gfxContext.  Any saving of state
@@ -85,6 +86,7 @@ public:
   // check that the rectangle intersects all of them (but possibly in different
   // places). So it may return true when the correct answer is false.
   bool MayIntersect(const nsRect& aRect) const;
+
   // Return a rectangle contained in the intersection of aRect with this
   // clip region. Tries to return the largest possible rectangle, but may
   // not succeed.
@@ -110,6 +112,7 @@ public:
   // Returns false if aRect is definitely not clipped by anything in this clip.
   // Fast but not necessarily accurate.
   bool IsRectAffectedByClip(const nsRect& aRect) const;
+  bool IsRectAffectedByClip(const nsIntRect& aRect, float aXScale, float aYScale, int32_t A2D) const;
 
   // Intersection of all rects in this clip ignoring any rounded corners.
   nsRect NonRoundedIntersection() const;
@@ -123,8 +126,8 @@ public:
 
   // Adds the difference between Intersect(*this + aPoint, aBounds) and
   // Intersect(aOther, aOtherBounds) to aDifference (or a bounding-box thereof).
-  void AddOffsetAndComputeDifference(const nsPoint& aPoint, const nsRect& aBounds,
-                                     const DisplayItemClip& aOther, const nsRect& aOtherBounds,
+  void AddOffsetAndComputeDifference(uint32_t aStart, const nsPoint& aPoint, const nsRect& aBounds,
+                                     const DisplayItemClip& aOther, uint32_t aOtherStart, const nsRect& aOtherBounds,
                                      nsRegion* aDifference);
 
   bool operator==(const DisplayItemClip& aOther) const {

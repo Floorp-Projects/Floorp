@@ -52,7 +52,6 @@
 #include "nsTArrayHelpers.h"
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
-#include "nsIMarkupDocumentViewer.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/DOMRect.h"
 #include <algorithm>
@@ -3226,13 +3225,12 @@ MaybeReflowForInflationScreenWidthChange(nsPresContext *aPresContext)
       if (docShell) {
         nsCOMPtr<nsIContentViewer> cv;
         docShell->GetContentViewer(getter_AddRefs(cv));
-        nsCOMPtr<nsIMarkupDocumentViewer> mudv = do_QueryInterface(cv);
-        if (mudv) {
-          nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> > array;
-          mudv->AppendSubtree(array);
+        if (cv) {
+          nsTArray<nsCOMPtr<nsIContentViewer> > array;
+          cv->AppendSubtree(array);
           for (uint32_t i = 0, iEnd = array.Length(); i < iEnd; ++i) {
             nsCOMPtr<nsIPresShell> shell;
-            nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(array[i]);
+            nsCOMPtr<nsIContentViewer> cv = array[i];
             cv->GetPresShell(getter_AddRefs(shell));
             if (shell) {
               nsIFrame *rootFrame = shell->GetRootFrame();

@@ -7,7 +7,7 @@
 if CONFIG['DEHYDRA_PATH']:
     DIRS += ['analysis-tests']
 
-if CONFIG['JS_NATIVE_EDITLINE']:
+if CONFIG['JS_BUNDLED_EDITLINE']:
     DIRS += ['editline']
 
 # editline needs to get built before the shell
@@ -18,8 +18,6 @@ TEST_DIRS += ['jsapi-tests', 'tests', 'gdb']
 
 LOCAL_INCLUDES += ['../../mfbt/double-conversion']
 
-LIBRARY_NAME = CONFIG['JS_LIBRARY_NAME']
-
 CONFIGURE_SUBST_FILES += [
     'devtools/rootAnalysis/Makefile',
     'js-confdefs.h',
@@ -29,6 +27,9 @@ CONFIGURE_SUBST_FILES += [
 
 if CONFIG['JS_STANDALONE']:
     DEFINES['IMPL_MFBT'] = True
+    USE_LIBS += [
+        'mfbt',
+    ]
 else:
     CONFIGURE_SUBST_FILES += [
         '../../config/autoconf-js.mk',
@@ -426,10 +427,20 @@ HOST_SIMPLE_PROGRAMS += [
 # In fact, we now build both a static and a shared library, as the
 # JS shell would like to link to the static library.
 
+LIBRARY_NAME = 'js'
+
 if CONFIG['JS_SHARED_LIBRARY']:
     FORCE_SHARED_LIB = True
+    SHARED_LIBRARY_NAME = CONFIG['JS_LIBRARY_NAME']
+    SDK_LIBRARY = True
 
 FORCE_STATIC_LIB = True
+STATIC_LIBRARY_NAME = 'js_static'
+
+if not CONFIG['MOZ_NATIVE_ZLIB'] and not CONFIG['ZLIB_IN_MOZGLUE']:
+    USE_LIBS += [
+        'mozz',
+    ]
 
 if CONFIG['MOZ_ETW']:
     GENERATED_FILES = [

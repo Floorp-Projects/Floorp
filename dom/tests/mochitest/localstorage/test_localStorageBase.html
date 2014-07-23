@@ -204,14 +204,12 @@ function startTest()
   is(localStorage.getItem(null), "test");
   is(localStorage["null"], "test");
   localStorage.removeItem(null, "test");
-  // bug 350023
-  todo_is("null" in localStorage, false);
+  is("null" in localStorage, false);
 
   localStorage.setItem(null, "test");
   is("null" in localStorage, true);
   localStorage.removeItem("null", "test");
-  // bug 350023
-  todo_is("null" in localStorage, false);
+  is("null" in localStorage, false);
 
   // Clear the storage
   localStorage.clear();

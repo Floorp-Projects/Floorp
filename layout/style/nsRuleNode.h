@@ -674,6 +674,7 @@ public:
 
   static void EnsureBlockDisplay(uint8_t& display,
                                  bool aConvertListItem = false);
+  static void EnsureInlineDisplay(uint8_t& display);
 
   // Transition never returns null; on out of memory it'll just return |this|.
   nsRuleNode* Transition(nsIStyleRule* aRule, uint8_t aLevel,

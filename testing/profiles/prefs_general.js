@@ -136,6 +136,9 @@ user_pref("layout.css.report_errors", true);
 // Enable CSS Grid for testing
 user_pref("layout.css.grid.enabled", true);
 
+// Enable CSS Ruby for testing
+user_pref("layout.css.ruby.enabled", true);
+
 // Enable mozContacts
 user_pref("dom.mozContacts.enabled", true);
 user_pref("dom.navigator-property.disable.mozContacts", false);

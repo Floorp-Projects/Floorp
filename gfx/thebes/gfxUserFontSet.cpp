@@ -582,22 +582,18 @@ gfxUserFontSet::~gfxUserFontSet()
     }
 }
 
-gfxFontEntry*
-gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
-                            const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                            uint32_t aWeight,
-                            int32_t aStretch,
-                            uint32_t aItalicStyle,
-                            const nsTArray<gfxFontFeature>& aFeatureSettings,
-                            uint32_t aLanguageOverride,
-                            gfxSparseBitSet *aUnicodeRanges)
+already_AddRefed<gfxProxyFontEntry>
+gfxUserFontSet::FindOrCreateFontFace(
+                               const nsAString& aFamilyName,
+                               const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
+                               uint32_t aWeight,
+                               int32_t aStretch,
+                               uint32_t aItalicStyle,
+                               const nsTArray<gfxFontFeature>& aFeatureSettings,
+                               uint32_t aLanguageOverride,
+                               gfxSparseBitSet* aUnicodeRanges)
 {
-    MOZ_ASSERT(aWeight != 0,
-               "aWeight must not be 0; use NS_FONT_WEIGHT_NORMAL instead");
-
-    // stretch, italic/oblique ==> zero implies normal
-
-    gfxMixedFontFamily* family = GetFamily(aFamilyName);
+    nsRefPtr<gfxProxyFontEntry> entry;
 
     // If there's already a proxy in the family whose descriptors all match,
     // we can just move it to the end of the list instead of adding a new
@@ -605,13 +601,75 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
     // Note that we can't do this for "real" (non-proxy) entries, even if the
     // style descriptors match, as they might have had a different source list,
     // but we no longer have the old source list available to check.
-    nsTArray<nsRefPtr<gfxFontEntry> >& fontList = family->GetFontList();
-    for (uint32_t i = 0, count = fontList.Length(); i < count; i++) {
+    gfxMixedFontFamily* family = LookupFamily(aFamilyName);
+    if (family) {
+        entry = FindExistingProxyEntry(family, aFontFaceSrcList, aWeight,
+                                       aStretch, aItalicStyle, aFeatureSettings,
+                                       aLanguageOverride, aUnicodeRanges);
+    }
+
+    if (!entry) {
+      entry = CreateFontFace(aFontFaceSrcList, aWeight, aStretch,
+                             aItalicStyle, aFeatureSettings, aLanguageOverride,
+                             aUnicodeRanges);
+      entry->mFamilyName = aFamilyName;
+
+#ifdef PR_LOGGING
+      if (LOG_ENABLED()) {
+          LOG(("userfonts (%p) created \"%s\" (%p) with style: %s weight: %d "
+               "stretch: %d",
+               this, NS_ConvertUTF16toUTF8(aFamilyName).get(), entry.get(),
+               (aItalicStyle & NS_FONT_STYLE_ITALIC ? "italic" :
+                   (aItalicStyle & NS_FONT_STYLE_OBLIQUE ? "oblique" : "normal")),
+               aWeight, aStretch));
+      }
+#endif
+    }
+
+    return entry.forget();
+}
+
+already_AddRefed<gfxProxyFontEntry>
+gfxUserFontSet::CreateFontFace(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
+                               uint32_t aWeight,
+                               int32_t aStretch,
+                               uint32_t aItalicStyle,
+                               const nsTArray<gfxFontFeature>& aFeatureSettings,
+                               uint32_t aLanguageOverride,
+                               gfxSparseBitSet* aUnicodeRanges)
+{
+    MOZ_ASSERT(aWeight != 0,
+               "aWeight must not be 0; use NS_FONT_WEIGHT_NORMAL instead");
+
+    nsRefPtr<gfxProxyFontEntry> proxyEntry =
+        new gfxProxyFontEntry(this, aFontFaceSrcList, aWeight,
+                              aStretch, aItalicStyle, aFeatureSettings,
+                              aLanguageOverride, aUnicodeRanges);
+    return proxyEntry.forget();
+}
+
+gfxProxyFontEntry*
+gfxUserFontSet::FindExistingProxyEntry(
+                               gfxMixedFontFamily* aFamily,
+                               const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
+                               uint32_t aWeight,
+                               int32_t aStretch,
+                               uint32_t aItalicStyle,
+                               const nsTArray<gfxFontFeature>& aFeatureSettings,
+                               uint32_t aLanguageOverride,
+                               gfxSparseBitSet* aUnicodeRanges)
+{
+    MOZ_ASSERT(aWeight != 0,
+               "aWeight must not be 0; use NS_FONT_WEIGHT_NORMAL instead");
+
+    nsTArray<nsRefPtr<gfxFontEntry>>& fontList = aFamily->GetFontList();
+
+    for (size_t i = 0, count = fontList.Length(); i < count; i++) {
         if (!fontList[i]->mIsProxy) {
             continue;
         }
 
-        gfxProxyFontEntry *existingProxyEntry =
+        gfxProxyFontEntry* existingProxyEntry =
             static_cast<gfxProxyFontEntry*>(fontList[i].get());
         if (!existingProxyEntry->Matches(aFontFaceSrcList,
                                          aWeight, aStretch, aItalicStyle,
@@ -620,34 +678,10 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
             continue;
         }
 
-        // We've found an entry that matches the new face exactly, so just add
-        // it to the end of the list. gfxMixedFontFamily::AddFontEntry() will
-        // automatically remove any earlier occurrence of the same proxy.
-        family->AddFontEntry(existingProxyEntry);
         return existingProxyEntry;
     }
 
-    // construct a new face and add it into the family
-    gfxProxyFontEntry *proxyEntry =
-        new gfxProxyFontEntry(this, aFontFaceSrcList,
-                              aWeight, aStretch,
-                              aItalicStyle,
-                              aFeatureSettings,
-                              aLanguageOverride,
-                              aUnicodeRanges);
-    proxyEntry->mFamilyName = aFamilyName;
-    family->AddFontEntry(proxyEntry);
-#ifdef PR_LOGGING
-    if (LOG_ENABLED()) {
-        LOG(("userfonts (%p) added (%s) with style: %s weight: %d stretch: %d",
-             this, NS_ConvertUTF16toUTF8(aFamilyName).get(),
-             (aItalicStyle & NS_FONT_STYLE_ITALIC ? "italic" :
-                 (aItalicStyle & NS_FONT_STYLE_OBLIQUE ? "oblique" : "normal")),
-             aWeight, aStretch));
-    }
-#endif
-
-    return proxyEntry;
+    return nullptr;
 }
 
 void
@@ -656,6 +690,13 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
 {
     gfxMixedFontFamily* family = GetFamily(aFamilyName);
     family->AddFontEntry(aFontEntry);
+
+#ifdef PR_LOGGING
+    if (LOG_ENABLED()) {
+        LOG(("userfonts (%p) added \"%s\" (%p)",
+             this, NS_ConvertUTF16toUTF8(aFamilyName).get(), aFontEntry));
+    }
+#endif
 }
 
 gfxFontEntry*

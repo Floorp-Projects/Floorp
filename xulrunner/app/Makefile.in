@@ -12,10 +12,6 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 TK_LIBS := -framework Cocoa $(TK_LIBS)
 endif
 
-LIBS += \
-  $(XPCOM_STANDALONE_GLUE_LDOPTS) \
-  $(NULL)
-
 ifndef MOZ_WINCONSOLE
 ifdef MOZ_DEBUG
 MOZ_WINCONSOLE = 1

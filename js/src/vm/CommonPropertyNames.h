@@ -155,8 +155,10 @@
     macro(propertyIsEnumerable, propertyIsEnumerable, "propertyIsEnumerable") \
     macro(proto, proto, "__proto__") \
     macro(prototype, prototype, "prototype") \
+    macro(proxy, proxy, "proxy") \
     macro(Reify, Reify, "Reify") \
     macro(return, return_, "return") \
+    macro(revoke, revoke, "revoke") \
     macro(sensitivity, sensitivity, "sensitivity") \
     macro(set, set, "set") \
     macro(shape, shape, "shape") \

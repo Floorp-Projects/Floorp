@@ -3,15 +3,16 @@ var target = {};
 Object.defineProperty(target, 'foo', {
     configurable: true
 });
-var names = Object.getOwnPropertyNames(new Proxy(target, {
-    ownKeys: function (target) {
-        return [ 'bar' ];
-    }
-}));
-assertEq(names.length, 1);
-assertEq(names[0], 'bar');
 
-var names = Object.getOwnPropertyNames(new Proxy(Object.create(Object.create(null, {
+var handler = { ownKeys: () => [ 'bar' ] };
+
+for (let p of [new Proxy(target, handler), Proxy.revocable(target, handler).proxy]) {
+    var names = Object.getOwnPropertyNames(p);
+    assertEq(names.length, 1);
+    assertEq(names[0], 'bar');
+}
+
+var protoWithAB = Object.create(null, {
     a: {
         enumerable: true,
         configurable: true
@@ -20,20 +21,22 @@ var names = Object.getOwnPropertyNames(new Proxy(Object.create(Object.create(nul
         enumerable: false,
         configurable: true
     }
-}), {
+});
+var objWithCD = Object.create(protoWithAB, {
     c: {
         enumerable: true,
         configurable: true
     },
     d: {
-        enumerable: false,
+        enumerable: true,
         configurable: true
     }
-}), {
-    ownKeys: function (target) {
-        return [ 'c', 'e' ];
-    }
-}));
-assertEq(names.length, 2);
-assertEq(names[0], 'c');
-assertEq(names[1], 'e');
+});
+
+handler = { ownKeys: () => [ 'c', 'e' ] };
+for (let p of [new Proxy(objWithCD, handler), Proxy.revocable(objWithCD, handler).proxy]) {
+    var names = Object.getOwnPropertyNames(p);
+    assertEq(names.length, 2);
+    assertEq(names[0], 'c');
+    assertEq(names[1], 'e');
+}

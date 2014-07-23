@@ -327,7 +327,7 @@ if CONFIG['OS_ARCH'] == 'Linux':
             '-mbackchain',
         ]
 
-FINAL_LIBRARY = 'xpcom_core'
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '../..',

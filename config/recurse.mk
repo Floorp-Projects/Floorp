@@ -51,7 +51,6 @@ ifneq (,$(filter-out 0 1,$(words $(CURRENT_TIER))))
 $(error $(CURRENT_TIER) not supported on the same make command line)
 endif
 CURRENT_TIER := $(subst recurse_,,$(CURRENT_TIER:-deps=))
-CURRENT_SUBTIERS := $($(CURRENT_TIER)_subtiers)
 
 # The rules here are doing directory traversal, so we don't want further
 # recursion to happen when running make -C subdir $tier. But some make files
@@ -70,34 +69,23 @@ endif
 # Get all directories traversed for all subtiers in the current tier, or use
 # directly the $(*_dirs) variables available in root.mk when there is no
 # TIERS (like for js/src).
-TIER_DIRS = $(or $($(1)_dirs),$(foreach subtier,$($(1)_subtiers),$($(1)_subtier_$(subtier))))
-CURRENT_DIRS := $(call TIER_DIRS,$(CURRENT_TIER))
+CURRENT_DIRS := $($(CURRENT_TIER)_dirs)
 
 ifneq (,$(filter binaries libs,$(CURRENT_TIER)))
 WANT_STAMPS = 1
 STAMP_TOUCH = $(TOUCH) $(@D)/binaries
 endif
 
-# Subtier delimiter rules
-$(addprefix subtiers/,$(addsuffix _start/$(CURRENT_TIER),$(CURRENT_SUBTIERS))): subtiers/%_start/$(CURRENT_TIER): $(if $(WANT_STAMPS),$(call mkdir_deps,subtiers/%_start))
-	@$(STAMP_TOUCH)
-
-$(addprefix subtiers/,$(addsuffix _finish/$(CURRENT_TIER),$(CURRENT_SUBTIERS))): subtiers/%_finish/$(CURRENT_TIER): $(if $(WANT_STAMPS),$(call mkdir_deps,subtiers/%_finish))
-	@$(STAMP_TOUCH)
-
-$(addprefix subtiers/,$(addsuffix /$(CURRENT_TIER),$(CURRENT_SUBTIERS))): %/$(CURRENT_TIER): $(if $(WANT_STAMPS),$(call mkdir_deps,%))
-	@$(STAMP_TOUCH)
-
-GARBAGE_DIRS += subtiers
-
 # Recursion rule for all directories traversed for all subtiers in the
 # current tier.
-# root.mk defines subtier_of_* variables, that map a normalized subdir path to
-# a subtier name (e.g. subtier_of_memory_jemalloc = base)
 $(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS)): %/$(CURRENT_TIER):
-	$(call SUBMAKE,$(if $(filter $*,$(tier_$(subtier_of_$(subst /,_,$*))_staticdirs)),,$(CURRENT_TIER)),$*)
+	$(call SUBMAKE,$(if $(filter $*,$(staticdirs)),,$(CURRENT_TIER)),$*)
 # Ensure existing stamps are up-to-date, but don't create one if submake didn't create one.
 	$(if $(wildcard $@),@$(STAMP_TOUCH))
+
+ifndef STAMP_TOUCH
+.PHONY: $(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS))
+endif
 
 # Dummy rules for possibly inexisting dependencies for the above tier targets
 $(addsuffix /Makefile,$(CURRENT_DIRS)) $(addsuffix /backend.mk,$(CURRENT_DIRS)):

@@ -9680,6 +9680,11 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 """,
                 callSetter=CGProxyIndexedSetter(self.descriptor).define())
         elif self.descriptor.supportsIndexedProperties():
+            # We allow untrusted content to prevent Xrays from setting a
+            # property if that property is an indexed property and we have no
+            # indexed setter.  That's how the object would normally behave if
+            # you tried to set the property on it.  That means we don't need to
+            # do anything special for Xrays here.
             set += fill(
                 """
                 if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {
@@ -9689,6 +9694,9 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 name=self.descriptor.name)
 
         if UseHolderForUnforgeable(self.descriptor):
+            # It's OK to do the defineOnUnforgeable thing even in the Xray case,
+            # since in practice it won't let us change anything; we just want
+            # the js_DefineOwnProperty call for error reporting purposes.
             defineOnUnforgeable = ("bool hasUnforgeable;\n"
                                    "if (!JS_HasPropertyById(cx, ${holder}, id, &hasUnforgeable)) {\n"
                                    "  return false;\n"
@@ -9717,6 +9725,11 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 """,
                 callSetter=CGProxyNamedSetter(self.descriptor).define())
         else:
+            # We allow untrusted content to prevent Xrays from setting a
+            # property if that property is already a named property on the
+            # object and we have no named setter.  That's how the object would
+            # normally behave if you tried to set the property on it.  That
+            # means we don't need to do anything special for Xrays here.
             if self.descriptor.supportsNamedProperties():
                 set += fill(
                     """

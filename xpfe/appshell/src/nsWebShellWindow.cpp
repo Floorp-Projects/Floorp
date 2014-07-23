@@ -67,7 +67,6 @@
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeItem.h"
 
-#include "nsIMarkupDocumentViewer.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MouseEvents.h"

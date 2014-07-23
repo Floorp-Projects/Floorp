@@ -25,9 +25,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=812415
   function testWaiving(iwin, sb) {
     sb.win = iwin;
     is(Cu.evalInSandbox('win', sb), iwin, "Basic identity works");
-    is(Cu.evalInSandbox('win.wrappedJSObject', sb), iwin.wrappedJSObject, "Waivers work via .wrappedJSObject");
-    is(Cu.evalInSandbox('XPCNativeWrapper.unwrap(win)', sb), iwin.wrappedJSObject, "Waivers work via XPCNativeWrapper.unwrap");
-    is(Cu.evalInSandbox('win.wrappedJSObject.document', sb), iwin.document.wrappedJSObject, "Waivers are deep");
+    is(Cu.evalInSandbox('win.wrappedJSObject.expando', sb), 42, "Waivers work via .wrappedJSObject");
+    is(Cu.evalInSandbox('XPCNativeWrapper.unwrap(win).expando', sb), 42, "Waivers work via XPCNativeWrapper.unwrap");
+    is(Cu.evalInSandbox('win.wrappedJSObject.document.defaultView.expando', sb), 42, "Waivers are deep");
   }
 
   function checkThrows(expression, sb, msg) {
@@ -67,6 +67,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=812415
 
   function go() {
     var iwin = document.getElementById('ifr').contentWindow;
+    iwin.wrappedJSObject.expando = 42;
 
     // Make our sandboxes. We pass wantXrays=false for the nsEP to ensure that
     // the Xrays we get are the result of being an nsEP, not from the wantXrays

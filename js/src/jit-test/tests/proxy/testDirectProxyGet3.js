@@ -1,5 +1,15 @@
 load(libdir + "asserts.js");
 
+function testProxy(handlerReturn, prop, shouldThrow) {
+    var handler = { get: function () { return handlerReturn; } };
+    for (let p of [new Proxy(target, handler), Proxy.revocable(target, handler).proxy]) {
+        if (shouldThrow)
+            assertThrowsInstanceOf(function () { return p[prop]; }, TypeError);
+        else
+            assertEq(p[prop], handlerReturn);
+    }
+}
+
 /*
  * Throw a TypeError if the trap reports a different value for a non-writable,
  * non-configurable property
@@ -10,25 +20,12 @@ Object.defineProperty(target, 'foo', {
     writable: false,
     configurable: false
 });
-assertThrowsInstanceOf(function () {
-    new Proxy(target, {
-        get: function (target, name, receiver) {
-            return 'baz';
-        }
-    })['foo'];
-}, TypeError);
-
+testProxy('baz', 'foo', true);
 /*
  * Don't throw a TypeError if the trap reports the same value for a non-writable,
  * non-configurable property
  */
-assertEq(new Proxy(target, {
-        get: function (target, name, receiver) {
-            return 'bar';
-        }
-    })['foo'],
-    'bar');
-
+testProxy('bar', 'foo', false);
 
 /*
  * Don't throw a TypeError if the trap reports a different value for a writable,
@@ -39,13 +36,7 @@ Object.defineProperty(target, 'prop', {
     writable: true,
     configurable: false
 });
-assertEq(new Proxy(target, {
-        get: function (target, name, receiver) {
-            return 'baz';
-        }
-    })['prop'],
-    'baz');
-
+testProxy('baz', 'prop', false);
 
 /*
  * Don't throw a TypeError if the trap reports a different value for a non-writable,
@@ -56,9 +47,4 @@ Object.defineProperty(target, 'prop2', {
     writable: false,
     configurable: true
 });
-assertEq(new Proxy(target, {
-        get: function (target, name, receiver) {
-            return 'baz';
-        }
-    })['prop2'],
-    'baz');
+testProxy('baz', 'prop2', false);

@@ -48,31 +48,51 @@ class BaseMachFormatter(base.BaseFormatter):
         return "%s" % (self._get_test_id(data),)
 
     def test_end(self, data):
-        if "expected" in data:
-            expected_str = ", expected %s" % data["expected"]
-        else:
-            expected_str = ""
-
         subtests = self._get_subtest_data(data)
-        unexpected = subtests["unexpected"] + (1 if "expected" in data else 0)
+        unexpected = subtests["unexpected"]
+        if "expected" in data:
+            parent_unexpected = True
+            expected_str = ", expected %s" % data["expected"]
+            unexpected.append(("[Parent]", data["status"], data["expected"],
+                               data.get("message", "")))
+        else:
+            parent_unexpected = False
+            expected_str = ""
 
         #Reset the counts to 0
         test = self._get_test_id(data)
-        self.status_buffer[test] = {"count": 0, "unexpected": 0, "pass": 0}
+        self.status_buffer[test] = {"count": 0, "unexpected": [], "pass": 0}
         self.has_unexpected[test] = bool(unexpected)
 
-        return "Harness status %s%s. Subtests passed %i/%i. Unexpected %i" % (
-            data["status"], expected_str, subtests["pass"],
-            subtests["count"], unexpected)
+        if subtests["count"] != 0:
+            rv = "Harness %s%s. Subtests passed %i/%i. Unexpected %s" % (
+                data["status"], expected_str, subtests["pass"], subtests["count"],
+                len(unexpected))
+        else:
+            rv = "%s%s" % (data["status"], expected_str)
+
+        if unexpected:
+            rv += "\n"
+            if len(unexpected) == 1 and parent_unexpected:
+                rv += "%s" % unexpected[0][-1]
+            else:
+                for name, status, expected, message in unexpected:
+                    expected_str = "Expected %s, got %s" % (expected, status)
+                    rv += "%s\n" % ("\n".join([name, "-" * len(name), expected_str, message]))
+                rv = rv[:-1]
+        return rv
 
     def test_status(self, data):
         test = self._get_test_id(data)
         if test not in self.status_buffer:
-            self.status_buffer[test] = {"count": 0, "unexpected": 0, "pass": 0}
+            self.status_buffer[test] = {"count": 0, "unexpected": [], "pass": 0}
         self.status_buffer[test]["count"] += 1
 
         if "expected" in data:
-            self.status_buffer[test]["unexpected"] += 1
+            self.status_buffer[test]["unexpected"].append((data["subtest"],
+                                                           data["status"],
+                                                           data["expected"],
+                                                           data.get("message")))
         if data["status"] == "PASS":
             self.status_buffer[test]["pass"] += 1
 
@@ -89,7 +109,7 @@ class BaseMachFormatter(base.BaseFormatter):
 
     def _get_subtest_data(self, data):
         test = self._get_test_id(data)
-        return self.status_buffer.get(test, {"count": 0, "unexpected": 0, "pass": 0})
+        return self.status_buffer.get(test, {"count": 0, "unexpected": [], "pass": 0})
 
     def _time(self, data):
         entry_time = data["time"]

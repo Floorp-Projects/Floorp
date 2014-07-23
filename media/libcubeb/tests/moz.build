@@ -5,15 +5,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 CPP_UNIT_TESTS += [
-  'test_tone.cpp'
+  'test_tone'
 ]
 
 if CONFIG['OS_TARGET'] != 'Android':
   CPP_UNIT_TESTS += [
-    'test_audio.cpp',
-    'test_latency.cpp',
-    'test_sanity.cpp'
+    'test_audio',
+    'test_latency',
+    'test_sanity'
   ]
+
+SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 
 LOCAL_INCLUDES += [
     '../include'
@@ -21,3 +23,27 @@ LOCAL_INCLUDES += [
 
 FAIL_ON_WARNINGS = True
 
+if CONFIG['OS_ARCH'] == 'WINNT':
+    # On windows, the WASAPI backend needs the resampler we have in
+    # /media/libspeex_resampler, so we can't get away with just linking cubeb's
+    # .o
+    USE_LIBS += [
+        'gkmedias',
+    ]
+else:
+    # Otherwise, we can just grab all the compiled .o and compile against that,
+    # linking the appriopriate libraries.
+    USE_LIBS += [
+        'cubeb',
+    ]
+    # Don't link gkmedias for it introduces dependencies on Android.
+    if CONFIG['OS_TARGET'] == 'Android':
+        USE_LIBS += [
+            'speex',
+        ]
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul',
+]

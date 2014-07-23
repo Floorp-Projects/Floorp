@@ -16,4 +16,4 @@ EXTRA_JS_MODULES += [
 
 TEST_DIRS += ['tests']
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'

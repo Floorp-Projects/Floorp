@@ -74,8 +74,6 @@ IPDL_SOURCES += [
   'PGMPVideoEncoder.ipdl',
 ]
 
-LIBRARY_NAME = 'mozgmp'
-
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 
@@ -87,8 +85,10 @@ FAIL_ON_WARNINGS = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+# media/mtransport so we work with --disable-webrtc
 LOCAL_INCLUDES += [
     '../base',
+    '/media/mtransport',
     '/xpcom/base',
     '/xpcom/build',
     '/xpcom/threads',
