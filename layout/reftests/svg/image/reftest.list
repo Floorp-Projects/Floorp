@@ -1,7 +1,7 @@
 # Tests of the SVG <image> element
 
 == image-fill-01.svg          ../pass.svg
-skip-if(B2G) == image-filter-01.svg        image-filter-01-ref.svg # bug 773482
+== image-filter-01.svg        image-filter-01-ref.svg
 == image-load-01.svg          ../pass.svg
 fuzzy-if(Android&&!browserIsRemote,4,32) == image-opacity-01.svg image-opacity-01-ref.svg # Bug 779514 for Android
 fuzzy-if(Android,4,34) == image-opacity-02.svg image-opacity-02-ref.svg # Bug 776039 for Android
@@ -19,10 +19,10 @@ skip-if(B2G&&browserIsRemote) == image-svg-inline-zoom-out-01a.html         ../p
 skip-if(B2G&&browserIsRemote) == image-svg-inline-zoom-out-01b.html         ../pass.svg
 skip-if(B2G&&browserIsRemote) == image-svg-inline-zoom-out-01c.html         ../pass.svg
 skip-if(B2G&&browserIsRemote) == image-svg-inline-zoom-out-01d.html         ../pass.svg
-skip-if(B2G&&browserIsRemote) == image-svg-inline-sprite-zoom-in-01a.html   image-svg-inline-sprite-zoom-in-01-ref.html
-skip-if(B2G&&browserIsRemote) == image-svg-inline-sprite-zoom-in-01b.html   image-svg-inline-sprite-zoom-in-01-ref.html
-skip-if(B2G&&browserIsRemote) == image-svg-inline-sprite-zoom-out-01a.html  image-svg-inline-sprite-zoom-out-01-ref.html
-skip-if(B2G&&browserIsRemote) == image-svg-inline-sprite-zoom-out-01b.html  image-svg-inline-sprite-zoom-out-01-ref.html
+== image-svg-inline-sprite-zoom-in-01a.html   image-svg-inline-sprite-zoom-in-01-ref.html
+== image-svg-inline-sprite-zoom-in-01b.html   image-svg-inline-sprite-zoom-in-01-ref.html
+== image-svg-inline-sprite-zoom-out-01a.html  image-svg-inline-sprite-zoom-out-01-ref.html
+== image-svg-inline-sprite-zoom-out-01b.html  image-svg-inline-sprite-zoom-out-01-ref.html
 == image-translate-01.svg                     image-translate-01-ref.svg
 == image-x-01.svg                             image-x-01-ref.svg
 == image-xy-01.svg                            image-xy-01-ref.svg
@@ -32,10 +32,10 @@ skip-if(B2G&&browserIsRemote) == image-svg-inline-sprite-zoom-out-01b.html  imag
 == imported-image-02.svg                      imported-image-ref.svg
 
 # Tests for <image> with preserveAspectRatio
-skip-if(B2G) == image-preserveAspectRatio-01-raster.svg image-preserveAspectRatio-01-ref.svg # bug 773482
-skip-if(B2G) == image-preserveAspectRatio-01-svg.svg    image-preserveAspectRatio-01-ref.svg # bug 773482
-skip-if(B2G) == image-preserveAspectRatio-02-raster.svg image-preserveAspectRatio-02-ref.svg # bug 773482
-skip-if(B2G) == image-preserveAspectRatio-02-svg.svg    image-preserveAspectRatio-02-ref.svg # bug 773482
-skip-if(B2G) == image-preserveAspectRatio-03.svg        image-preserveAspectRatio-03-ref.svg # bug 773482
-skip-if(B2G) == image-preserveAspectRatio-04.svg        image-preserveAspectRatio-04-ref.svg # bug 773482
+== image-preserveAspectRatio-01-raster.svg image-preserveAspectRatio-01-ref.svg
+== image-preserveAspectRatio-01-svg.svg    image-preserveAspectRatio-01-ref.svg
+== image-preserveAspectRatio-02-raster.svg image-preserveAspectRatio-02-ref.svg
+== image-preserveAspectRatio-02-svg.svg    image-preserveAspectRatio-02-ref.svg
+== image-preserveAspectRatio-03.svg        image-preserveAspectRatio-03-ref.svg
+== image-preserveAspectRatio-04.svg        image-preserveAspectRatio-04-ref.svg
 == image-preserveAspectRatio-05.svg ../pass.svg
