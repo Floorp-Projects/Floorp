@@ -30,6 +30,7 @@ from ..frontend.data import (
     DirectoryTraversal,
     Exports,
     GeneratedInclude,
+    HostLibrary,
     HostProgram,
     HostSimpleProgram,
     InstallationTarget,
@@ -37,14 +38,16 @@ from ..frontend.data import (
     JARManifest,
     JavaJarData,
     JavaScriptModules,
-    LibraryDefinition,
+    Library,
     LocalInclude,
     PerSourceFlag,
     Program,
     Resources,
     SandboxDerived,
     SandboxWrapped,
+    SharedLibrary,
     SimpleProgram,
+    StaticLibrary,
     TestManifest,
     VariablePassthru,
     XPIDLFile,
@@ -98,6 +101,10 @@ class BackendMakeFile(object):
 
     def write(self, buf):
         self.fh.write(buf)
+
+    def write_once(self, buf):
+        if '\n' + buf not in self.fh.getvalue():
+            self.write(buf)
 
     # For compatibility with makeutil.Makefile
     def add_statement(self, stmt):
@@ -422,15 +429,19 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, Program):
             self._process_program(obj.program, backend_file)
+            self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, HostProgram):
             self._process_host_program(obj.program, backend_file)
+            self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, SimpleProgram):
-            self._process_simple_program(obj.program, backend_file)
+            self._process_simple_program(obj, backend_file)
+            self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, HostSimpleProgram):
             self._process_host_simple_program(obj.program, backend_file)
+            self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, LocalInclude):
             self._process_local_include(obj.path, backend_file)
@@ -460,8 +471,17 @@ class RecursiveMakeBackend(CommonBackend):
             else:
                 return
 
-        elif isinstance(obj, LibraryDefinition):
-            self._process_library_definition(obj, backend_file)
+        elif isinstance(obj, SharedLibrary):
+            self._process_shared_library(obj, backend_file)
+            self._process_linked_libraries(obj, backend_file)
+
+        elif isinstance(obj, StaticLibrary):
+            self._process_static_library(obj, backend_file)
+            self._process_linked_libraries(obj, backend_file)
+
+        elif isinstance(obj, HostLibrary):
+            self._process_host_library(obj, backend_file)
+            self._process_linked_libraries(obj, backend_file)
 
         else:
             return
@@ -482,7 +502,8 @@ class RecursiveMakeBackend(CommonBackend):
         def parallel_filter(current, subdirs):
             all_subdirs = subdirs.parallel + subdirs.dirs + \
                           subdirs.tests + subdirs.tools
-            if current in self._may_skip[tier]:
+            if current in self._may_skip[tier] \
+                    or current.startswith('subtiers/'):
                 current = None
             # subtiers/*_start and subtiers/*_finish, under subtiers/*, are
             # kept sequential. Others are all forced parallel.
@@ -500,7 +521,8 @@ class RecursiveMakeBackend(CommonBackend):
         # possible other unknown race conditions, don't parallelize the libs
         # tier.
         def libs_filter(current, subdirs):
-            if current in self._may_skip[tier]:
+            if current in self._may_skip[tier] \
+                    or current.startswith('subtiers/'):
                 current = None
             return current, [], subdirs.parallel + \
                 subdirs.dirs + subdirs.tests
@@ -508,7 +530,8 @@ class RecursiveMakeBackend(CommonBackend):
         # Because of bug 925236 and possible other unknown race conditions,
         # don't parallelize the tools tier.
         def tools_filter(current, subdirs):
-            if current in self._may_skip[tier]:
+            if current in self._may_skip[tier] \
+                    or current.startswith('subtiers/'):
                 current = None
             return current, subdirs.parallel, \
                 subdirs.dirs + subdirs.tests + subdirs.tools
@@ -529,8 +552,8 @@ class RecursiveMakeBackend(CommonBackend):
             main, all_deps = \
                 self._traversal.compute_dependencies(filter)
             for dir, deps in all_deps.items():
-                rule = root_deps_mk.create_rule(['%s/%s' % (dir, tier)])
                 if deps is not None:
+                    rule = root_deps_mk.create_rule(['%s/%s' % (dir, tier)])
                     rule.add_dependencies('%s/%s' % (d, tier) for d in deps if d)
             rule = root_deps_mk.create_rule(['recurse_%s' % tier])
             if main:
@@ -539,42 +562,9 @@ class RecursiveMakeBackend(CommonBackend):
         root_mk = Makefile()
 
         # Fill root.mk with the convenience variables.
-        for tier, filter in filters.items() + [('all', self._traversal.default_filter)]:
-            # Gather filtered subtiers for the given tier
-            all_direct_subdirs = reduce(lambda x, y: x + y,
-                                        self._traversal.get_subdirs(''), [])
-            direct_subdirs = [d for d in all_direct_subdirs
-                              if filter(d, self._traversal.get_subdirs(d))[0]]
-            subtiers = [d.replace('subtiers/', '') for d in direct_subdirs
-                        if d.startswith('subtiers/')]
-
-            if tier != 'all':
-                # Gather filtered directories for the given tier
-                dirs = [d for d in direct_subdirs if not d.startswith('subtiers/')]
-                if dirs:
-                    # For build systems without tiers (js/src), output a list
-                    # of directories for each tier.
-                    all_dirs = self._traversal.traverse('', filter)
-                    root_mk.add_statement('%s_dirs := %s' % (tier, ' '.join(all_dirs)))
-                    continue
-                if subtiers:
-                    # Output the list of filtered subtiers for the given tier.
-                    root_mk.add_statement('%s_subtiers := %s' % (tier, ' '.join(subtiers)))
-
-            for subtier in subtiers:
-                # subtier_dirs[0] is 'subtiers/%s_start' % subtier, skip it
-                subtier_dirs = list(self._traversal.traverse('subtiers/%s_start' % subtier, filter))[1:]
-                if tier == 'all':
-                    for dir in subtier_dirs:
-                        # Output convenience variables to be able to map directories
-                        # to subtier names from Makefiles.
-                        stamped = dir.replace('/', '_')
-                        root_mk.add_statement('subtier_of_%s := %s' % (stamped, subtier))
-
-                else:
-                    # Output the list of filtered directories for each tier/subtier
-                    # pair.
-                    root_mk.add_statement('%s_subtier_%s := %s' % (tier, subtier, ' '.join(subtier_dirs)))
+        for tier, filter in filters.items():
+            all_dirs = self._traversal.traverse('', filter)
+            root_mk.add_statement('%s_dirs := %s' % (tier, ' '.join(all_dirs)))
 
         root_mk.add_statement('$(call include_deps,root-deps.mk)')
 
@@ -799,32 +789,24 @@ class RecursiveMakeBackend(CommonBackend):
             fh.write('TIERS += %s\n' % tier)
             # For pseudo derecursification, subtiers are treated as pseudo
             # directories, with a special hierarchy:
-            # - subtier1 - subtier1_start - dirA - dirAA
-            # |          |                |      + dirAB
-            # |          |                ...
-            # |          |                + dirB
-            # |          + subtier1_finish
-            # + subtier2 - subtier2_start ...
-            # ...        + subtier2_finish
-            self._traversal.add('subtiers/%s' % tier,
-                                dirs=['subtiers/%s_start' % tier,
-                                      'subtiers/%s_finish' % tier])
-
+            # - subtier1 + dirA - dirAA
+            # |          |      + dirAB
+            # |          ...
+            # |          + dirB
+            # + subtier2 ...
             if dirs:
                 fh.write('tier_%s_dirs += %s\n' % (tier, ' '.join(dirs)))
                 fh.write('DIRS += $(tier_%s_dirs)\n' % tier)
-                self._traversal.add('subtiers/%s_start' % tier,
+                self._traversal.add('subtiers/%s' % tier,
                                     dirs=relativize(dirs))
 
             # tier_static_dirs should have the same keys as tier_dirs.
             if obj.tier_static_dirs[tier]:
-                fh.write('tier_%s_staticdirs += %s\n' % (
-                    tier, ' '.join(obj.tier_static_dirs[tier])))
-                self._traversal.add('subtiers/%s_start' % tier,
+                fh.write('staticdirs += %s\n' % (
+                    ' '.join(obj.tier_static_dirs[tier])))
+                self._traversal.add('subtiers/%s' % tier,
                                     static=relativize(obj.tier_static_dirs[tier]))
 
-            self._traversal.add('subtiers/%s_start' % tier)
-            self._traversal.add('subtiers/%s_finish' % tier)
             self._traversal.add('', dirs=['subtiers/%s' % tier])
 
         if obj.dirs:
@@ -1035,8 +1017,11 @@ class RecursiveMakeBackend(CommonBackend):
     def _process_host_program(self, program, backend_file):
         backend_file.write('HOST_PROGRAM = %s\n' % program)
 
-    def _process_simple_program(self, program, backend_file):
-        backend_file.write('SIMPLE_PROGRAMS += %s\n' % program)
+    def _process_simple_program(self, obj, backend_file):
+        if obj.is_unit_test:
+            backend_file.write('CPP_UNIT_TESTS += %s\n' % obj.program)
+        else:
+            backend_file.write('SIMPLE_PROGRAMS += %s\n' % obj.program)
 
     def _process_host_simple_program(self, program, backend_file):
         backend_file.write('HOST_SIMPLE_PROGRAMS += %s\n' % program)
@@ -1137,19 +1122,78 @@ class RecursiveMakeBackend(CommonBackend):
         rule.add_commands(['$(call py_action,process_install_manifest,%s)' % ' '.join(args)])
         fragment.dump(backend_file.fh, removal_guard=False)
 
-    def _process_library_definition(self, libdef, backend_file):
-        backend_file.write('LIBRARY_NAME = %s\n' % libdef.basename)
-        thisobjdir = libdef.objdir
-        topobjdir = libdef.topobjdir.replace(os.sep, '/')
-        for objdir, basename in libdef.static_libraries:
+    def _process_shared_library(self, libdef, backend_file):
+        backend_file.write_once('LIBRARY_NAME := %s\n' % libdef.basename)
+        backend_file.write('FORCE_SHARED_LIB := 1\n')
+        backend_file.write('IMPORT_LIBRARY := %s\n' % libdef.import_name)
+        backend_file.write('SHARED_LIBRARY := %s\n' % libdef.lib_name)
+        if libdef.variant == libdef.COMPONENT:
+            backend_file.write('IS_COMPONENT := 1\n')
+        if libdef.soname:
+            backend_file.write('DSO_SONAME := %s\n' % libdef.soname)
+        if libdef.is_sdk:
+            backend_file.write('SDK_LIBRARY := %s\n' % libdef.import_name)
+
+    def _process_static_library(self, libdef, backend_file):
+        backend_file.write_once('LIBRARY_NAME := %s\n' % libdef.basename)
+        backend_file.write('FORCE_STATIC_LIB := 1\n')
+        backend_file.write('REAL_LIBRARY := %s\n' % libdef.lib_name)
+        if libdef.is_sdk:
+            backend_file.write('SDK_LIBRARY := %s\n' % libdef.import_name)
+
+    def _process_host_library(self, libdef, backend_file):
+        backend_file.write('HOST_LIBRARY_NAME = %s\n' % libdef.basename)
+
+    def _process_linked_libraries(self, obj, backend_file):
+        def recurse_lib(lib):
+            for l in lib.linked_libraries:
+                if isinstance(l, StaticLibrary):
+                    for q in recurse_lib(l):
+                        yield q
+                else:
+                    yield l
+
+        def pretty_relpath(lib):
             # If this is an external objdir (i.e., comm-central), use the other
             # directory instead of $(DEPTH).
-            if objdir.startswith(topobjdir + '/'):
-                relpath = '$(DEPTH)/%s' % mozpath.relpath(objdir, topobjdir)
+            if lib.objdir.startswith(topobjdir + '/'):
+                return '$(DEPTH)/%s' % mozpath.relpath(lib.objdir, topobjdir)
             else:
-                relpath = mozpath.relpath(objdir, thisobjdir)
-            backend_file.write('SHARED_LIBRARY_LIBS += %s/$(LIB_PREFIX)%s.$(LIB_SUFFIX)\n'
-                               % (relpath, basename))
+                return mozpath.relpath(lib.objdir, obj.objdir)
+
+        topobjdir = mozpath.normsep(obj.topobjdir)
+        for lib in obj.linked_libraries:
+            relpath = pretty_relpath(lib)
+            if isinstance(obj, Library):
+                if isinstance(lib, StaticLibrary):
+                    backend_file.write_once('SHARED_LIBRARY_LIBS += %s/%s\n'
+                                       % (relpath, lib.lib_name))
+                    for l in recurse_lib(lib):
+                        backend_file.write_once('EXTRA_DSO_LDOPTS += %s/%s\n'
+                                        % (pretty_relpath(l), l.import_name))
+                elif isinstance(obj, SharedLibrary):
+                    assert lib.variant != lib.COMPONENT
+                    backend_file.write_once('EXTRA_DSO_LDOPTS += %s/%s\n'
+                                       % (relpath, lib.import_name))
+            elif isinstance(obj, (Program, SimpleProgram)):
+                if isinstance(lib, StaticLibrary):
+                    backend_file.write_once('LIBS += %s/%s\n'
+                                       % (relpath, lib.lib_name))
+                    for l in recurse_lib(lib):
+                        backend_file.write_once('LIBS += %s/%s\n'
+                                        % (pretty_relpath(l), l.import_name))
+                elif isinstance(obj, SharedLibrary):
+                    assert lib.variant != lib.COMPONENT
+                    backend_file.write_once('EXTRA_DSO_LDOPTS += %s/%s\n'
+                                       % (relpath, lib.import_name))
+                else:
+                    assert lib.variant != lib.COMPONENT
+                    backend_file.write_once('LIBS += %s/%s\n'
+                                       % (relpath, lib.import_name))
+            elif isinstance(obj, (HostLibrary, HostProgram, HostSimpleProgram)):
+                assert isinstance(lib, HostLibrary)
+                backend_file.write_once('HOST_LIBS += %s/%s\n'
+                                   % (relpath, lib.lib_name))
 
     def _write_manifests(self, dest, manifests):
         man_dir = mozpath.join(self.environment.topobjdir, '_build_manifests',

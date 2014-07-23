@@ -17,8 +17,6 @@ EXPORTS += [
     'nsCocoaUtils.h',
 ]
 
-LIBRARY_NAME = 'widget_mac'
-
 UNIFIED_SOURCES += [
     'GfxInfo.mm',
     'NativeKeyBindings.mm',

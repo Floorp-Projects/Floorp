@@ -38,4 +38,13 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['MOZ_XULRUNNER'] = True
     RCINCLUDE = 'xulrunner-stub.rc'
 
+if CONFIG['OS_ARCH'] == 'WINNT':
+    USE_LIBS += [
+        'xpcomglue_staticruntime',
+    ]
+else:
+    USE_LIBS += [
+        'xpcomglue',
+    ]
+
 DISABLE_STL_WRAPPING = True

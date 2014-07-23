@@ -16,6 +16,6 @@ LOCAL_INCLUDES += [
 ]
 CXXFLAGS += [ '-Wno-deprecated-declarations' ]
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'
 
 FAIL_ON_WARNINGS = True

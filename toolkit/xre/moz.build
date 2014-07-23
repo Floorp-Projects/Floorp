@@ -105,8 +105,6 @@ if CONFIG['MOZ_UPDATER']:
 
 MSVC_ENABLE_PGO = True
 
-LIBRARY_NAME = 'xulapp_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

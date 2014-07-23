@@ -19,6 +19,6 @@ UNIFIED_SOURCES += [
     'WMFVideoMFTManager.cpp',
 ]
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'
 
 FAIL_ON_WARNINGS = True

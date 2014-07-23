@@ -40,6 +40,7 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
   CMMSRCS \
   CPP_UNIT_TESTS \
   DIRS \
+  EXTRA_DSO_LDOPTS \
   EXTRA_PP_COMPONENTS \
   EXTRA_PP_JS_MODULES \
   FORCE_SHARED_LIB \
@@ -56,6 +57,8 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
   JS_MODULES_PATH \
   LD_VERSION_SCRIPT \
   LIBRARY_NAME \
+  LIBS \
+  MAKE_FRAMEWORK \
   MODULE \
   MSVC_ENABLE_PGO \
   NO_DIST_INSTALL \
@@ -63,8 +66,12 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
   PROGRAM \
   RESOURCE_FILES \
   SDK_HEADERS \
+  SDK_LIBRARY \
+  SHARED_LIBRARY_LIBS \
+  SHARED_LIBRARY_NAME \
   SIMPLE_PROGRAMS \
   SONAME \
+  STATIC_LIBRARY_NAME \
   TEST_DIRS \
   TIERS \
   TOOL_DIRS \
@@ -75,6 +82,7 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
 _DEPRECATED_VARIABLES := \
   ANDROID_RESFILES \
   EXPORT_LIBRARY \
+  HOST_LIBS \
   LIBXUL_LIBRARY \
   MOCHITEST_A11Y_FILES \
   MOCHITEST_BROWSER_FILES \
@@ -259,8 +267,6 @@ ifneq (,$(MOZ_DEBUG)$(MOZ_DEBUG_SYMBOLS))
   _DEBUG_LDFLAGS += $(MOZ_DEBUG_LDFLAGS)
 endif
 
-MOZALLOC_LIB = $(call EXPAND_LIBNAME_PATH,mozalloc,$(DIST)/lib)
-
 ASFLAGS += $(_DEBUG_ASFLAGS)
 OS_CFLAGS += $(_DEBUG_CFLAGS)
 OS_CXXFLAGS += $(_DEBUG_CFLAGS)
@@ -334,32 +340,6 @@ endif
 ifdef LIBXUL_LIBRARY
 ifdef IS_COMPONENT
 $(error IS_COMPONENT is set, but is not compatible with LIBXUL_LIBRARY)
-endif
-ifeq (,$(filter xul xul-%,$(LIBRARY_NAME)))
-FORCE_STATIC_LIB=1
-endif
-endif
-
-# If we are building this component into an extension/xulapp, it cannot be
-# statically linked. In the future we may want to add a xulapp meta-component
-# build option.
-
-ifdef XPI_NAME
-ifdef IS_COMPONENT
-FORCE_STATIC_LIB=
-FORCE_SHARED_LIB=1
-endif
-endif
-
-ifndef SHARED_LIBRARY_NAME
-ifdef LIBRARY_NAME
-SHARED_LIBRARY_NAME=$(LIBRARY_NAME)
-endif
-endif
-
-ifndef STATIC_LIBRARY_NAME
-ifdef LIBRARY_NAME
-STATIC_LIBRARY_NAME=$(LIBRARY_NAME)
 endif
 endif
 
@@ -607,8 +587,6 @@ SDK_BIN_DIR = $(DIST)/sdk/bin
 
 DEPENDENCIES	= .md
 
-MOZ_COMPONENT_LIBS=$(XPCOM_LIBS) $(MOZ_COMPONENT_NSPR_LIBS)
-
 ifdef MACOSX_DEPLOYMENT_TARGET
 export MACOSX_DEPLOYMENT_TARGET
 endif # MACOSX_DEPLOYMENT_TARGET
@@ -796,7 +774,7 @@ CHECK_STDCXX = @$(TOOLCHAIN_PREFIX)objdump -p $(1) | grep -e 'GLIBCXX_3\.4\.\(9\
 endif
 
 ifdef MOZ_LIBSTDCXX_TARGET_VERSION
-EXTRA_LIBS += $(call EXPAND_LIBNAME_PATH,stdc++compat,$(DEPTH)/build/unix/stdc++compat)
+OS_LIBS += $(call EXPAND_LIBNAME_PATH,stdc++compat,$(DEPTH)/build/unix/stdc++compat)
 endif
 ifdef MOZ_LIBSTDCXX_HOST_VERSION
 HOST_EXTRA_LIBS += $(call EXPAND_LIBNAME_PATH,host_stdc++compat,$(DEPTH)/build/unix/stdc++compat)

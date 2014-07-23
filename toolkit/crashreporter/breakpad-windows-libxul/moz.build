@@ -10,7 +10,7 @@ SOURCES += [
 
 LIBRARY_NAME = 'google_breakpad_libxul_s'
 
-FINAL_LIBRARY = 'xulapp_s'
+FINAL_LIBRARY = 'xul'
 
 for var in ('UNICODE', 'UNICODE_', 'BREAKPAD_NO_TERMINATE_THREAD', 'NOMINMAX'):
     DEFINES[var] = True

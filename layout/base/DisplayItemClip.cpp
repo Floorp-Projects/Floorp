@@ -31,6 +31,18 @@ DisplayItemClip::SetTo(const nsRect& aRect, const nscoord* aRadii)
   memcpy(mRoundedClipRects[0].mRadii, aRadii, sizeof(nscoord)*8);
 }
 
+void
+DisplayItemClip::SetTo(const nsRect& aRect,
+                       const nsRect& aRoundedRect,
+                       const nscoord* aRadii)
+{
+  mHaveClipRect = true;
+  mClipRect = aRect;
+  mRoundedClipRects.SetLength(1);
+  mRoundedClipRects[0].mRect = aRoundedRect;
+  memcpy(mRoundedClipRects[0].mRadii, aRadii, sizeof(nscoord)*8);
+}
+
 bool
 DisplayItemClip::MayIntersect(const nsRect& aRect) const
 {
@@ -250,6 +262,40 @@ DisplayItemClip::IsRectAffectedByClip(const nsRect& aRect) const
   return false;
 }
 
+bool
+DisplayItemClip::IsRectAffectedByClip(const nsIntRect& aRect,
+                                      float aXScale,
+                                      float aYScale,
+                                      int32_t A2D) const
+{
+  if (mHaveClipRect) {
+    nsIntRect pixelClipRect = mClipRect.ScaleToNearestPixels(aXScale, aYScale, A2D);
+    if (!pixelClipRect.Contains(aRect)) {
+      return true;
+    }
+  }
+
+  // Rounded rect clipping only snaps to user-space pixels, not device space.
+  nsIntRect unscaled = aRect;
+  unscaled.Scale(1/aXScale, 1/aYScale);
+
+  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length();
+       i < iEnd; ++i) {
+    const RoundedRect &rr = mRoundedClipRects[i];
+
+    nsIntRect pixelRect = rr.mRect.ToNearestPixels(A2D);
+
+    gfxCornerSizes pixelRadii;
+    nsCSSRendering::ComputePixelRadii(rr.mRadii, A2D, &pixelRadii);
+
+    nsIntRegion rgn = nsLayoutUtils::RoundedRectIntersectIntRect(pixelRect, pixelRadii, unscaled);
+    if (!rgn.Contains(unscaled)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 nsRect
 DisplayItemClip::ApplyNonRoundedIntersection(const nsRect& aRect) const
 {
@@ -288,13 +334,16 @@ AccumulateRectDifference(const nsRect& aR1, const nsRect& aR2, const nsRect& aBo
 }
 
 void
-DisplayItemClip::AddOffsetAndComputeDifference(const nsPoint& aOffset,
+DisplayItemClip::AddOffsetAndComputeDifference(uint32_t aStart,
+                                               const nsPoint& aOffset,
                                                const nsRect& aBounds,
                                                const DisplayItemClip& aOther,
+                                               uint32_t aOtherStart,
                                                const nsRect& aOtherBounds,
                                                nsRegion* aDifference)
 {
   if (mHaveClipRect != aOther.mHaveClipRect ||
+      aStart != aOtherStart ||
       mRoundedClipRects.Length() != aOther.mRoundedClipRects.Length()) {
     aDifference->Or(*aDifference, aBounds);
     aDifference->Or(*aDifference, aOtherBounds);
@@ -305,7 +354,7 @@ DisplayItemClip::AddOffsetAndComputeDifference(const nsPoint& aOffset,
                              aBounds.Union(aOtherBounds),
                              aDifference);
   }
-  for (uint32_t i = 0; i < mRoundedClipRects.Length(); ++i) {
+  for (uint32_t i = aStart; i < mRoundedClipRects.Length(); ++i) {
     if (mRoundedClipRects[i] + aOffset != aOther.mRoundedClipRects[i]) {
       // The corners make it tricky so we'll just add both rects here.
       aDifference->Or(*aDifference, mRoundedClipRects[i].mRect.Intersect(aBounds));

@@ -9,8 +9,6 @@ UNIFIED_SOURCES += [
     'nsUniversalCharDetModule.cpp',
 ]
 
-LIBRARY_NAME = 'universalchardet'
-
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [

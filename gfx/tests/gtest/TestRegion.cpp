@@ -288,6 +288,79 @@ TEST(Gfx, RegionSimplify) {
   }
 }
 
+TEST(Gfx, RegionContains)
+{
+  { // ensure Contains works on a simple region
+    nsRegion r(nsRect(0, 0, 100, 100));
+
+    EXPECT_TRUE(r.Contains(0, 0));
+    EXPECT_TRUE(r.Contains(0, 99));
+    EXPECT_TRUE(r.Contains(99, 0));
+    EXPECT_TRUE(r.Contains(99, 99));
+
+    EXPECT_FALSE(r.Contains(-1, 50));
+    EXPECT_FALSE(r.Contains(100, 50));
+    EXPECT_FALSE(r.Contains(50, -1));
+    EXPECT_FALSE(r.Contains(50, 100));
+
+    EXPECT_TRUE(r.Contains(nsRect(0, 0, 100, 100)));
+    EXPECT_TRUE(r.Contains(nsRect(99, 99, 1, 1)));
+
+    EXPECT_FALSE(r.Contains(nsRect(100, 100, 1, 1)));
+    EXPECT_FALSE(r.Contains(nsRect(100, 100, 0, 0)));
+  }
+
+  { // empty regions contain nothing
+    nsRegion r(nsRect(100, 100, 0, 0));
+
+    EXPECT_FALSE(r.Contains(0, 0));
+    EXPECT_FALSE(r.Contains(100, 100));
+    EXPECT_FALSE(r.Contains(nsRect(100, 100, 0, 0)));
+    EXPECT_FALSE(r.Contains(nsRect(100, 100, 1, 1)));
+  }
+
+  { // complex region contain tests
+    // The region looks like this, with two squares that overlap.
+    // (hard to do accurately with ASCII art)
+    // +------+
+    // |      |
+    // |      +--+
+    // |         |
+    // +--+      |
+    //    |      |
+    //    +------+
+    nsRegion r(nsRect(0, 0, 100, 100));
+    r.OrWith(nsRect(50, 50, 100, 100));
+
+    EXPECT_TRUE(r.Contains(0, 0));
+    EXPECT_TRUE(r.Contains(99, 99));
+    EXPECT_TRUE(r.Contains(50, 100));
+    EXPECT_TRUE(r.Contains(100, 50));
+    EXPECT_TRUE(r.Contains(149, 149));
+
+    EXPECT_FALSE(r.Contains(49, 100));
+    EXPECT_FALSE(r.Contains(100, 49));
+    EXPECT_FALSE(r.Contains(150, 150));
+
+    EXPECT_TRUE(r.Contains(nsRect(100, 100, 1, 1)));
+    EXPECT_FALSE(r.Contains(nsRect(49, 99, 2, 2)));
+  }
+
+  { // region with a hole
+    nsRegion r(nsRect(0, 0, 100, 100));
+    r.SubOut(nsRect(40, 40, 10, 10));
+
+    EXPECT_TRUE(r.Contains(0, 0));
+    EXPECT_TRUE(r.Contains(39, 39));
+    EXPECT_FALSE(r.Contains(40, 40));
+    EXPECT_FALSE(r.Contains(49, 49));
+    EXPECT_TRUE(r.Contains(50, 50));
+
+    EXPECT_FALSE(r.Contains(nsRect(40, 40, 10, 10)));
+    EXPECT_FALSE(r.Contains(nsRect(39, 39, 2, 2)));
+  }
+}
+
 #define DILATE_VALUE 0x88
 #define REGION_VALUE 0xff
 

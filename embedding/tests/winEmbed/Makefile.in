@@ -27,11 +27,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-LIBS = \
-	$(DEPTH)/profile/dirserviceprovider/src/$(LIB_PREFIX)profdirserviceprovidersa_s.$(LIB_SUFFIX) \
-	$(XPCOM_STANDALONE_GLUE_LDOPTS) \
-	$(NULL)
-
 OS_LIBS		+= $(call EXPAND_LIBNAME,ole32 comdlg32 shell32 version)
 
 include $(topsrcdir)/config/rules.mk

@@ -48,7 +48,7 @@ if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
         'RtspOmxReader.cpp',
     ]
 
-if int(CONFIG['ANDROID_VERSION']) >= 16:
+if CONFIG['ANDROID_VERSION'] >= '16':
     EXPORTS += [
         'I420ColorConverterHelper.h',
         'MediaCodecDecoder.h',
@@ -64,7 +64,7 @@ if int(CONFIG['ANDROID_VERSION']) >= 16:
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/html/content/src',

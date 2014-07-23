@@ -110,8 +110,7 @@ function addApplication(aApp) {
   let container = document.createElement("div");
   container.className = "app list-item";
   container.setAttribute("contextmenu", "appmenu");
-  container.setAttribute("id", "app-" + aApp.origin);
-  container.setAttribute("mozApp", aApp.origin);
+  container.setAttribute("id", "app-" + aApp.manifestURL);
   container.setAttribute("title", manifest.name);
 
   let img = document.createElement("img");
@@ -140,7 +139,7 @@ function addApplication(aApp) {
 }
 
 function onInstall(aEvent) {
-  let node = document.getElementById("app-" + aEvent.application.origin);
+  let node = document.getElementById("app-" + aEvent.application.manifestURL);
   if (node)
     return;
 
@@ -149,7 +148,7 @@ function onInstall(aEvent) {
 }
 
 function onUninstall(aEvent) {
-  let node = document.getElementById("app-" + aEvent.application.origin);
+  let node = document.getElementById("app-" + aEvent.application.manifestURL);
   if (node) {
     let parent = node.parentNode;
     parent.removeChild(node);

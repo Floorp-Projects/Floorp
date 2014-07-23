@@ -53,4 +53,4 @@ if CONFIG['NECKO_WIFI_DBUS']:
         'nsWifiScannerDBus.cpp',
     ]
 
-FINAL_LIBRARY = 'necko'
+FINAL_LIBRARY = 'xul'

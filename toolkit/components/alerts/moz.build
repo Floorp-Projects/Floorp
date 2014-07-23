@@ -19,6 +19,6 @@ UNIFIED_SOURCES += [
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = 'toolkitcomps'
+FINAL_LIBRARY = 'xul'
 
 JAR_MANIFESTS += ['jar.mn']
