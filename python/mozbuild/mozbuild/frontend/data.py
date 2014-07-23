@@ -360,8 +360,8 @@ class HostSimpleProgram(BaseProgram):
     """Sandbox container object for each program in HOST_SIMPLE_PROGRAMS"""
 
 
-class LibraryDefinition(SandboxDerived):
-    """Partial definition for a library
+class Library(SandboxDerived):
+    """Sandbox container object for libraries.
 
     The static_libraries member tracks the list of relative directory and
     library names of static libraries that are meant to be linked into
@@ -369,14 +369,66 @@ class LibraryDefinition(SandboxDerived):
     """
     __slots__ = (
         'basename',
+        'import_name',
+        'is_sdk',
+        'shared_name',
+        'static_name',
+        'soname',
         'static_libraries',
         'refcount',
     )
 
-    def __init__(self, sandbox, basename):
+    STATIC = 1
+    SHARED = 2
+    # STATIC + SHARED = 3
+    FRAMEWORK = 4
+    COMPONENT = 5
+    MAX_TYPE = 6
+
+    def __init__(self, sandbox, basename, kind=None, soname=None,
+            static_name=None, shared_name=None, is_sdk=False):
+        assert(kind in range(1, self.MAX_TYPE))
         SandboxDerived.__init__(self, sandbox)
 
         self.basename = basename
+        self.kind = kind
+        self.static_name = self.shared_name = None
+        if kind in (self.STATIC, self.STATIC + self.SHARED):
+            self.static_name = static_name or self.basename
+        if self.static_name:
+            self.static_name = '%s%s%s' % (
+                sandbox.config.lib_prefix,
+                self.static_name,
+                sandbox.config.lib_suffix
+            )
+            self.import_name = self.static_name
+        if kind != self.STATIC:
+            self.shared_name = shared_name or self.basename
+        if self.shared_name:
+            if kind == self.FRAMEWORK:
+                self.shared_name = shared_name
+                self.import_name = shared_name
+            else:
+                self.import_name = '%s%s%s' % (
+                    sandbox.config.import_prefix,
+                    self.shared_name,
+                    sandbox.config.import_suffix,
+                )
+                self.shared_name = '%s%s%s' % (
+                    sandbox.config.dll_prefix,
+                    self.shared_name,
+                    sandbox.config.dll_suffix,
+                )
+        if soname:
+            self.soname = '%s%s%s' % (
+                sandbox.config.dll_prefix,
+                soname,
+                sandbox.config.dll_suffix,
+            )
+        else:
+            self.soname = self.shared_name
+        self.is_sdk = is_sdk
+
         self.refcount = 0
         self.static_libraries = []
 

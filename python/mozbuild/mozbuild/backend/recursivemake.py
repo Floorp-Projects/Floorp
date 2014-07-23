@@ -37,7 +37,7 @@ from ..frontend.data import (
     JARManifest,
     JavaJarData,
     JavaScriptModules,
-    LibraryDefinition,
+    Library,
     LocalInclude,
     PerSourceFlag,
     Program,
@@ -460,8 +460,8 @@ class RecursiveMakeBackend(CommonBackend):
             else:
                 return
 
-        elif isinstance(obj, LibraryDefinition):
-            self._process_library_definition(obj, backend_file)
+        elif isinstance(obj, Library):
+            self._process_library(obj, backend_file)
 
         else:
             return
@@ -1099,8 +1099,22 @@ class RecursiveMakeBackend(CommonBackend):
         rule.add_commands(['$(call py_action,process_install_manifest,%s)' % ' '.join(args)])
         fragment.dump(backend_file.fh, removal_guard=False)
 
-    def _process_library_definition(self, libdef, backend_file):
-        backend_file.write('LIBRARY_NAME = %s\n' % libdef.basename)
+    def _process_library(self, libdef, backend_file):
+        backend_file.write('LIBRARY_NAME := %s\n' % libdef.basename)
+        if libdef.kind in (libdef.STATIC, libdef.STATIC + libdef.SHARED):
+            backend_file.write('FORCE_STATIC_LIB := 1\n')
+            backend_file.write('REAL_LIBRARY := %s\n' % libdef.static_name)
+        if libdef.kind != libdef.STATIC:
+            backend_file.write('FORCE_SHARED_LIB := 1\n')
+            backend_file.write('IMPORT_LIBRARY := %s\n' % libdef.import_name)
+            backend_file.write('SHARED_LIBRARY := %s\n' % libdef.shared_name)
+        if libdef.kind == libdef.COMPONENT:
+            backend_file.write('IS_COMPONENT := 1\n')
+        if libdef.soname:
+            backend_file.write('DSO_SONAME := %s\n' % libdef.soname)
+        if libdef.is_sdk:
+            backend_file.write('SDK_LIBRARY := %s\n' % libdef.import_name)
+
         thisobjdir = libdef.objdir
         topobjdir = libdef.topobjdir.replace(os.sep, '/')
         for objdir, basename in libdef.static_libraries:

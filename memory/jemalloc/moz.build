@@ -40,6 +40,9 @@ LIBRARY_NAME = 'jemalloc'
 
 FORCE_STATIC_LIB = True
 
+if CONFIG['MOZ_GLUE_PROGRAM_LDFLAGS']:
+    SDK_LIBRARY = True
+
 if CONFIG['_MSC_VER']:
     DEFINES['DLLEXPORT'] = True
     LOCAL_INCLUDES += ['src/include/msvc_compat']

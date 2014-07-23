@@ -21,8 +21,6 @@ LIBS += ['fans.lib', 'tans.lib']
 
 OS_LIBS += ['foo.so', '-l123', 'aaa.a']
 
-SDK_LIBRARY += ['fans.sdk', 'tans.sdk']
-
 SOURCES += ['fans.c', 'tans.c']
 
 SOURCES += ['fans.mm', 'tans.mm']
@@ -34,8 +32,6 @@ MSVC_ENABLE_PGO = True
 
 NO_DIST_INSTALL = True
 
-FORCE_SHARED_LIB = True
-IS_COMPONENT = True
 NO_VISIBILITY_FLAGS = True
 
 DELAYLOAD_DLLS = ['foo.dll', 'bar.dll']

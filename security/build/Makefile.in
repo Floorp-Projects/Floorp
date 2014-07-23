@@ -361,12 +361,6 @@ GARBAGE += \
 endif # GCC_USE_GNU_LD
 endif # WINNT
 
-ifneq (,$(filter WINNT,$(OS_ARCH)))
-SDK_LIBRARY = $(IMPORT_LIBRARY)
-else
-SDK_LIBRARY = $(SHARED_LIBRARY)
-endif
-
 endif # MOZ_FOLD_LIBS
 
 include $(topsrcdir)/config/rules.mk

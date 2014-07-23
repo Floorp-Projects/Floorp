@@ -15,7 +15,6 @@ endif
 TOPLEVEL_BUILD := 1
 
 run_for_side_effects := $(shell echo 'MAKE: $(MAKE)')
-STATIC_LIBRARY_NAME = js_static
 LIBS		= $(NSPR_LIBS)
 
 DIST_INSTALL = 1
@@ -48,12 +47,6 @@ endif
 endif # JS_HAS_CTYPES
 
 DASH_R		= -r
-
-ifneq (,$(filter WINNT,$(OS_ARCH)))
-SDK_LIBRARY = $(IMPORT_LIBRARY)
-else
-SDK_LIBRARY = $(SHARED_LIBRARY)
-endif
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
