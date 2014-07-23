@@ -18,6 +18,7 @@ run_for_side_effects := $(shell echo 'MAKE: $(MAKE)')
 EXTRA_LIBS		+= $(NSPR_LIBS)
 
 DIST_INSTALL = 1
+NO_EXPAND_LIBS = 1
 
 ifdef JS_HAS_CTYPES
 ifdef MOZ_NATIVE_FFI
