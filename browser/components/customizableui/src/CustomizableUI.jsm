@@ -202,7 +202,6 @@ let CustomizableUIInternal = {
       defaultPlacements: [
         "urlbar-container",
         "search-container",
-        "webrtc-status-button",
         "bookmarks-menu-button",
         "downloads-button",
         "home-button",
