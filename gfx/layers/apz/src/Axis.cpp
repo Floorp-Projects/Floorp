@@ -34,6 +34,9 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
 }
 
 void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, uint32_t aTimestampMs) {
+  // mVelocityQueue is controller-thread only
+  AsyncPanZoomController::AssertOnControllerThread();
+
   if (aTimestampMs == mPosTimeMs) {
     // Duplicate event?
     return;
@@ -194,6 +197,9 @@ float Axis::PanDistance(float aPos) {
 }
 
 void Axis::EndTouch(uint32_t aTimestampMs) {
+  // mVelocityQueue is controller-thread only
+  AsyncPanZoomController::AssertOnControllerThread();
+
   mVelocity = 0;
   int count = 0;
   while (!mVelocityQueue.IsEmpty()) {
@@ -210,6 +216,9 @@ void Axis::EndTouch(uint32_t aTimestampMs) {
 }
 
 void Axis::CancelTouch() {
+  // mVelocityQueue is controller-thread only
+  AsyncPanZoomController::AssertOnControllerThread();
+
   mVelocity = 0.0f;
   while (!mVelocityQueue.IsEmpty()) {
     mVelocityQueue.RemoveElementAt(0);
