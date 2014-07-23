@@ -15,8 +15,6 @@ CPP_UNIT_TESTS = ['foo.cpp']
 HOST_SOURCES += ['bar.cpp', 'foo.cpp']
 HOST_SOURCES += ['bar.c', 'foo.c']
 
-HOST_LIBRARY_NAME = 'host_bar'
-
 LIBS = ['bar.lib', 'foo.lib']
 
 OS_LIBS = ['foo.so', '-l123', 'bar.a']

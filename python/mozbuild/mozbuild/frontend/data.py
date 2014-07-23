@@ -360,8 +360,8 @@ class HostSimpleProgram(BaseProgram):
     """Sandbox container object for each program in HOST_SIMPLE_PROGRAMS"""
 
 
-class Library(SandboxDerived):
-    """Sandbox container object for libraries.
+class BaseLibrary(SandboxDerived):
+    """Generic sandbox container object for libraries.
 
     The static_libraries member tracks the list of relative directory and
     library names of static libraries that are meant to be linked into
@@ -434,6 +434,17 @@ class Library(SandboxDerived):
 
     def link_static_lib(self, objdir, basename):
         self.static_libraries.append((objdir, basename))
+
+
+class Library(BaseLibrary):
+    """Sandbox container object for a library"""
+
+
+class HostLibrary(BaseLibrary):
+    """Sandbox container object for a host library"""
+    def __init__(self, sandbox, basename):
+        BaseLibrary.__init__(self, sandbox, basename,
+            kind=self.STATIC)
 
 
 class TestManifest(SandboxDerived):
