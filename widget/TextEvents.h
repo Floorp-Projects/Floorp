@@ -53,6 +53,10 @@ namespace plugins {
 
 struct AlternativeCharCode
 {
+  AlternativeCharCode() :
+    mUnshiftedCharCode(0), mShiftedCharCode(0)
+  {
+  }
   AlternativeCharCode(uint32_t aUnshiftedCharCode, uint32_t aShiftedCharCode) :
     mUnshiftedCharCode(aUnshiftedCharCode), mShiftedCharCode(aShiftedCharCode)
   {
