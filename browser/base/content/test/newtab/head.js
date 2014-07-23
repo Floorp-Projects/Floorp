@@ -27,30 +27,45 @@ let gWindow = window;
 // Default to dummy/empty directory links
 let gDirectorySource = 'data:application/json,{"test":1}';
 
-// The tests assume all three rows of sites are shown, but the window may be too
-// short to actually show three rows.  Resize it if necessary.
-let requiredInnerHeight =
+// The tests assume all 3 rows and all 3 columns of sites are shown, but the
+// window may be too small to actually show everything.  Resize it if necessary.
+let requiredSize = {};
+requiredSize.innerHeight =
   40 + 32 + // undo container + bottom margin
   44 + 32 + // search bar + bottom margin
-  (3 * (150 + 32)) + // 3 rows * (tile height + title and bottom margin)
+  (3 * (180 + 32)) + // 3 rows * (tile height + title and bottom margin)
+  100; // breathing room
+requiredSize.innerWidth =
+  (3 * (290 + 20)) + // 3 cols * (tile width + side margins)
   100; // breathing room
 
-let oldInnerHeight = null;
-if (gBrowser.contentWindow.innerHeight < requiredInnerHeight) {
-  oldInnerHeight = gBrowser.contentWindow.innerHeight;
-  info("Changing browser inner height from " + oldInnerHeight + " to " +
-       requiredInnerHeight);
-  gBrowser.contentWindow.innerHeight = requiredInnerHeight;
-  let screenHeight = {};
+let oldSize = {};
+Object.keys(requiredSize).forEach(prop => {
+  info([prop, gBrowser.contentWindow[prop], requiredSize[prop]]);
+  if (gBrowser.contentWindow[prop] < requiredSize[prop]) {
+    oldSize[prop] = gBrowser.contentWindow[prop];
+    info("Changing browser " + prop + " from " + oldSize[prop] + " to " +
+         requiredSize[prop]);
+    gBrowser.contentWindow[prop] = requiredSize[prop];
+  }
+});
+let (screenHeight = {}, screenWidth = {}) {
   Cc["@mozilla.org/gfx/screenmanager;1"].
     getService(Ci.nsIScreenManager).
     primaryScreen.
-    GetAvailRectDisplayPix({}, {}, {}, screenHeight);
+    GetAvailRectDisplayPix({}, {}, screenWidth, screenHeight);
   screenHeight = screenHeight.value;
+  screenWidth = screenWidth.value;
   if (screenHeight < gBrowser.contentWindow.outerHeight) {
     info("Warning: Browser outer height is now " +
          gBrowser.contentWindow.outerHeight + ", which is larger than the " +
          "available screen height, " + screenHeight +
+         ". That may cause problems.");
+  }
+  if (screenWidth < gBrowser.contentWindow.outerWidth) {
+    info("Warning: Browser outer width is now " +
+         gBrowser.contentWindow.outerWidth + ", which is larger than the " +
+         "available screen width, " + screenWidth +
          ". That may cause problems.");
   }
 }
@@ -59,8 +74,11 @@ registerCleanupFunction(function () {
   while (gWindow.gBrowser.tabs.length > 1)
     gWindow.gBrowser.removeTab(gWindow.gBrowser.tabs[1]);
 
-  if (oldInnerHeight)
-    gBrowser.contentWindow.innerHeight = oldInnerHeight;
+  Object.keys(oldSize).forEach(prop => {
+    if (oldSize[prop]) {
+      gBrowser.contentWindow[prop] = oldSize[prop];
+    }
+  });
 
   // Stop any update timers to prevent unexpected updates in later tests
   let timer = NewTabUtils.allPages._scheduleUpdateTimeout;
@@ -349,8 +367,7 @@ function checkGrid(aSitesPattern, aSites) {
       return "";
 
     let pinned = aSite.isPinned();
-    let pinButton = aSite.node.querySelector(".newtab-control-pin");
-    let hasPinnedAttr = pinButton.hasAttribute("pinned");
+    let hasPinnedAttr = aSite.node.hasAttribute("pinned");
 
     if (pinned != hasPinnedAttr)
       ok(false, "invalid state (site.isPinned() != site[pinned])");
