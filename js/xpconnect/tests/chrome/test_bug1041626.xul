@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1041626
+-->
+<window title="Mozilla Bug 1041626"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1041626"
+     target="_blank">Mozilla Bug 1041626</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 1041626 **/
+  SimpleTest.waitForExplicitFinish();
+  const Cu = Components.utils;
+  function go() {
+
+    //
+    // Location
+    //
+
+    ok(Cu.isXrayWrapper(window[0].location), "Location is Xrayed");
+    let xrayOwnProperties = Object.getOwnPropertyNames(window[0].location);
+    todo(xrayOwnProperties.indexOf('toJSON') != -1,
+         "dummy toJSON on Location should show up in Xrayable properties");
+    xrayOwnProperties.push('toJSON');
+
+    let realOwnProperties = Object.getOwnPropertyNames(window[0].wrappedJSObject.location);
+    ok(realOwnProperties.length > 2);
+
+    is(xrayOwnProperties.sort().toSource(), realOwnProperties.sort().toSource(),
+       "Xray enumerates location properties properly");
+
+    //
+    // Document
+    //
+
+    ok(Cu.isXrayWrapper(window[0].document), "Document is Xrayed");
+    xrayOwnProperties = Object.getOwnPropertyNames(window[0].document);
+
+    realOwnProperties = Object.getOwnPropertyNames(window[0].wrappedJSObject.document);
+    ok(realOwnProperties.length > 0);
+
+    is(xrayOwnProperties.sort().toSource(), realOwnProperties.sort().toSource(),
+       "Xray enumerates document properties properly");
+
+
+
+    SimpleTest.finish();
+  }
+
+
+
+  ]]>
+  </script>
+  <iframe onload="go();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+</window>
