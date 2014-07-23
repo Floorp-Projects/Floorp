@@ -748,7 +748,7 @@ public class BrowserApp extends GeckoApp
                     String title = tab.getDisplayTitle();
                     Bitmap favicon = tab.getFavicon();
                     if (url != null && title != null) {
-                        GeckoAppShell.createShortcut(title, url, url, favicon, "");
+                        GeckoAppShell.createShortcut(title, url, favicon);
                     }
                 }
             }
