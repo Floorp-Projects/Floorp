@@ -41,8 +41,8 @@ FFmpegH264Decoder<LIBAV_VER>::Init()
   nsresult rv = FFmpegDataDecoder::Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mCodecContext.get_buffer = AllocateBufferCb;
-  mCodecContext.release_buffer = ReleaseBufferCb;
+  mCodecContext->get_buffer = AllocateBufferCb;
+  mCodecContext->release_buffer = ReleaseBufferCb;
 
   return NS_OK;
 }
@@ -65,7 +65,7 @@ FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
 
   int decoded;
   int bytesConsumed =
-    avcodec_decode_video2(&mCodecContext, frame, &decoded, &packet);
+    avcodec_decode_video2(mCodecContext, frame, &decoded, &packet);
 
   if (bytesConsumed < 0) {
     NS_WARNING("FFmpeg video decoder error.");
@@ -78,7 +78,7 @@ FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
     nsAutoPtr<VideoData> data;
 
     VideoInfo info;
-    info.mDisplay = nsIntSize(mCodecContext.width, mCodecContext.height);
+    info.mDisplay = nsIntSize(mCodecContext->width, mCodecContext->height);
     info.mStereoMode = StereoMode::MONO;
     info.mHasVideo = true;
 
@@ -86,7 +86,7 @@ FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
       info, mImageContainer, aSample->byte_offset, frame->pkt_pts,
       aSample->duration, reinterpret_cast<Image*>(frame->opaque),
       aSample->is_sync_point, -1,
-      gfx::IntRect(0, 0, mCodecContext.width, mCodecContext.height));
+      gfx::IntRect(0, 0, mCodecContext->width, mCodecContext->height));
 
     mCallback->Output(data.forget());
   }
@@ -234,7 +234,7 @@ FFmpegH264Decoder<LIBAV_VER>::Drain()
 {
   // The maximum number of frames that can be waiting to be decoded is
   // max_b_frames + 1: One P frame and max_b_frames B frames.
-  for (int32_t i = 0; i <= mCodecContext.max_b_frames; i++) {
+  for (int32_t i = 0; i <= mCodecContext->max_b_frames; i++) {
     // An empty frame tells FFmpeg to decode the next delayed frame it has in
     // its queue, if it has any.
     nsAutoPtr<MP4Sample> empty(new MP4Sample());

@@ -21,7 +21,7 @@ bool FFmpegDataDecoder<LIBAV_VER>::sFFmpegInitDone = false;
 
 FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(MediaTaskQueue* aTaskQueue,
                                                 AVCodecID aCodecID)
-  : mTaskQueue(aTaskQueue), mCodecID(aCodecID)
+  : mTaskQueue(aTaskQueue), mCodecContext(nullptr), mCodecID(aCodecID)
 {
   MOZ_COUNT_CTOR(FFmpegDataDecoder);
 }
@@ -71,38 +71,38 @@ FFmpegDataDecoder<LIBAV_VER>::Init()
     return NS_ERROR_FAILURE;
   }
 
-  if (avcodec_get_context_defaults3(&mCodecContext, codec) < 0) {
+  if (!(mCodecContext = avcodec_alloc_context3(codec))) {
     NS_WARNING("Couldn't init ffmpeg context");
     return NS_ERROR_FAILURE;
   }
 
-  mCodecContext.opaque = this;
+  mCodecContext->opaque = this;
 
   // FFmpeg takes this as a suggestion for what format to use for audio samples.
-  mCodecContext.request_sample_fmt = AV_SAMPLE_FMT_FLT;
+  mCodecContext->request_sample_fmt = AV_SAMPLE_FMT_FLT;
 
   // FFmpeg will call back to this to negotiate a video pixel format.
-  mCodecContext.get_format = ChoosePixelFormat;
+  mCodecContext->get_format = ChoosePixelFormat;
 
-  mCodecContext.thread_count = PR_GetNumberOfProcessors();
-  mCodecContext.thread_type = FF_THREAD_SLICE | FF_THREAD_FRAME;
-  mCodecContext.thread_safe_callbacks = false;
+  mCodecContext->thread_count = PR_GetNumberOfProcessors();
+  mCodecContext->thread_type = FF_THREAD_SLICE | FF_THREAD_FRAME;
+  mCodecContext->thread_safe_callbacks = false;
 
-  mCodecContext.extradata_size = mExtraData.length();
+  mCodecContext->extradata_size = mExtraData.length();
   for (int i = 0; i < FF_INPUT_BUFFER_PADDING_SIZE; i++) {
     mExtraData.append(0);
   }
-  mCodecContext.extradata = mExtraData.begin();
+  mCodecContext->extradata = mExtraData.begin();
 
   AVDictionary* opts = nullptr;
-  if (avcodec_open2(&mCodecContext, codec, &opts) < 0) {
+  if (avcodec_open2(mCodecContext, codec, &opts) < 0) {
     NS_WARNING("Couldn't initialise ffmpeg decoder");
     return NS_ERROR_FAILURE;
   }
 
-  if (mCodecContext.codec_type == AVMEDIA_TYPE_AUDIO &&
-      mCodecContext.sample_fmt != AV_SAMPLE_FMT_FLT &&
-      mCodecContext.sample_fmt != AV_SAMPLE_FMT_FLTP) {
+  if (mCodecContext->codec_type == AVMEDIA_TYPE_AUDIO &&
+      mCodecContext->sample_fmt != AV_SAMPLE_FMT_FLT &&
+      mCodecContext->sample_fmt != AV_SAMPLE_FMT_FLTP) {
     NS_WARNING("FFmpeg AAC decoder outputs unsupported audio format.");
     return NS_ERROR_FAILURE;
   }
@@ -115,7 +115,7 @@ nsresult
 FFmpegDataDecoder<LIBAV_VER>::Flush()
 {
   mTaskQueue->Flush();
-  avcodec_flush_buffers(&mCodecContext);
+  avcodec_flush_buffers(mCodecContext);
   return NS_OK;
 }
 
@@ -123,7 +123,8 @@ nsresult
 FFmpegDataDecoder<LIBAV_VER>::Shutdown()
 {
   if (sFFmpegInitDone) {
-    avcodec_close(&mCodecContext);
+    avcodec_close(mCodecContext);
+    av_freep(&mCodecContext);
   }
   return NS_OK;
 }
