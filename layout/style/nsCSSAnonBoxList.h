@@ -70,6 +70,12 @@ CSS_ANON_BOX(anonymousFlexItem, ":-moz-anonymous-flex-item")
 // an anonymous block, which is then treated as a grid item.
 CSS_ANON_BOX(anonymousGridItem, ":-moz-anonymous-grid-item")
 
+CSS_ANON_BOX(ruby, ":-moz-ruby")
+CSS_ANON_BOX(rubyBase, ":-moz-ruby-base")
+CSS_ANON_BOX(rubyBaseContainer, ":-moz-ruby-base-container")
+CSS_ANON_BOX(rubyText, ":-moz-ruby-text")
+CSS_ANON_BOX(rubyTextContainer, ":-moz-ruby-text-container")
+
 #ifdef MOZ_XUL
 CSS_ANON_BOX(moztreecolumn, ":-moz-tree-column")
 CSS_ANON_BOX(moztreerow, ":-moz-tree-row")
