@@ -13,7 +13,7 @@ fails-if(Android||B2G) == boxshadow-button.html boxshadow-button-ref.html
 fails-if(Android||B2G) == boxshadow-fileupload.html boxshadow-fileupload-ref.html
 == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
-random-if(d2d) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
+random-if(d2d) fuzzy-if(B2G,12,18) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
 skip-if(B2G&&browserIsRemote) HTTP(..) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul
 random-if(d2d) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
 random-if(d2d) == boxshadow-twocorners.html boxshadow-twocorners-ref.html

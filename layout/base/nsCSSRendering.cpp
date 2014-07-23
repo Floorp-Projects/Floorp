@@ -1603,11 +1603,11 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
 
 void
 nsCSSRendering::PaintBackgroundColor(gfxRGBA aColor,
-                                     nsPresContext* aPresContext,
                                      nsRenderingContext& aRenderingContext,
                                      nsIFrame* aForFrame,
                                      const nsRect& aDirtyRect,
                                      const nsRect& aBorderArea,
+                                     const nsRect& aBGClipRect,
                                      uint32_t aFlags)
 {
   PROFILER_LABEL("nsCSSRendering", "PaintBackgroundColor",
@@ -1635,8 +1635,8 @@ nsCSSRendering::PaintBackgroundColor(gfxRGBA aColor,
     sc = aForFrame->StyleContext();
   }
 
-  PaintBackgroundColorWithSC(aColor, aPresContext, aRenderingContext, aForFrame,
-                             aDirtyRect, aBorderArea, sc,
+  PaintBackgroundColorWithSC(aColor, aRenderingContext, aForFrame,
+                             aDirtyRect, aBorderArea, aBGClipRect, sc,
                              *aForFrame->StyleBorder(), aFlags);
 }
 
@@ -2837,11 +2837,11 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
 
 void
 nsCSSRendering::PaintBackgroundColorWithSC(gfxRGBA aColor,
-                                           nsPresContext* aPresContext,
                                            nsRenderingContext& aRenderingContext,
                                            nsIFrame* aForFrame,
                                            const nsRect& aDirtyRect,
                                            const nsRect& aBorderArea,
+                                           const nsRect& aBGClipRect,
                                            nsStyleContext* aBackgroundSC,
                                            const nsStyleBorder& aBorder,
                                            uint32_t aFlags)
@@ -2853,8 +2853,8 @@ nsCSSRendering::PaintBackgroundColorWithSC(gfxRGBA aColor,
   // renderer draw the background and bail out.
   const nsStyleDisplay* displayData = aForFrame->StyleDisplay();
   if (displayData->mAppearance) {
-    nsITheme *theme = aPresContext->GetTheme();
-    if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
+    nsITheme *theme = aForFrame->PresContext()->GetTheme();
+    if (theme && theme->ThemeSupportsWidget(aForFrame->PresContext(), aForFrame,
                                             displayData->mAppearance)) {
       NS_ERROR("Shouldn't be trying to paint a background color if we are themed!");
       return;
@@ -2867,7 +2867,7 @@ nsCSSRendering::PaintBackgroundColorWithSC(gfxRGBA aColor,
   // background colors.
   bool drawBackgroundImage;
   bool drawBackgroundColor;
-  DetermineBackgroundColor(aPresContext,
+  DetermineBackgroundColor(aForFrame->PresContext(),
                            aBackgroundSC,
                            aForFrame,
                            drawBackgroundImage,
@@ -2888,14 +2888,13 @@ nsCSSRendering::PaintBackgroundColorWithSC(gfxRGBA aColor,
   // The background-color is drawn based on the bottom
   // background-clip.
   gfxContext* ctx = aRenderingContext.ThebesContext();
-  nscoord appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
-  const nsStyleBackground *bg = aBackgroundSC->StyleBackground();
+  nscoord appUnitsPerPixel = aForFrame->PresContext()->AppUnitsPerDevPixel();
 
   BackgroundClipState clipState;
-  GetBackgroundClip(bg->BottomLayer(),
-                    aForFrame, aBorder, aBorderArea,
-                    aDirtyRect, (aFlags & PAINTBG_WILL_PAINT_BORDER), appUnitsPerPixel,
-                    &clipState);
+  clipState.mBGClipArea = aBGClipRect;
+  clipState.mCustomClip = true;
+  SetupDirtyRects(clipState.mBGClipArea, aDirtyRect, appUnitsPerPixel,
+                  &clipState.mDirtyRect, &clipState.mDirtyRectGfx);
 
   ctx->SetColor(aColor);
 
