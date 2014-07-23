@@ -6,7 +6,7 @@
 
 include $(topsrcdir)/config/config.mk
 
-LIBS += \
+EXTRA_LIBS += \
   $(NSPR_LIBS) \
   $(NSS_LIBS) \
   $(NULL)

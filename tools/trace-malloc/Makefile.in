@@ -21,7 +21,7 @@ CPPSRCS += $(EXTRACPPSRCS)
 
 include $(topsrcdir)/config/config.mk
 
-LIBS		+= \
+EXTRA_LIBS	+= \
 		tmreader.$(OBJ_SUFFIX) \
 		adreader.$(OBJ_SUFFIX) \
 		$(NSPR_LIBS) \
@@ -32,12 +32,12 @@ ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES	+= \
 		-I'$(HAVE_BOUTELL_GD)' \
 		$(NULL)
-LIBS		+= \
+OS_LIBS		+= \
 		-lmozz_s \
 		'$(HAVE_BOUTELL_GD)/gd.lib' \
 		$(NULL)
 else
-LIBS		+= \
+OS_LIBS		+= \
 		-lgd \
 		$(NULL)
 endif

@@ -10,7 +10,7 @@ PREF_JS_EXPORTS = $(srcdir)/b2g.js
 ifndef LIBXUL_SDK
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-LIBS += \
+OS_LIBS += \
   -lui \
   -lEGL \
   -lhardware_legacy \
@@ -19,7 +19,7 @@ LIBS += \
   $(MOZ_ZLIB_LIBS) \
   $(NULL)
 ifeq ($(ANDROID_VERSION),$(findstring $(ANDROID_VERSION),17 18 19))
-LIBS += \
+OS_LIBS += \
   -lgui \
   -lsuspend \
   $(NULL)
@@ -27,7 +27,7 @@ endif
 endif
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-LIBS += \
+OS_LIBS += \
   -lbinder \
   -lutils \
   $(NULL)

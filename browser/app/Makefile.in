@@ -26,11 +26,11 @@ endif #} LIBXUL_SDK
 # Build a binary bootstrapping with XRE_main
 
 ifdef MOZ_LINKER
-LIBS += $(MOZ_ZLIB_LIBS)
+OS_LIBS += $(MOZ_ZLIB_LIBS)
 endif
 
 ifdef HAVE_CLOCK_MONOTONIC
-LIBS += $(REALTIME_LIBS)
+OS_LIBS += $(REALTIME_LIBS)
 endif
 
 ifndef MOZ_WINCONSOLE

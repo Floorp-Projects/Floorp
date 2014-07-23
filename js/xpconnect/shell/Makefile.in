@@ -5,8 +5,6 @@
 
 SDK_BINARY	= $(PROGRAM)
 
-LIBS +=	$(NSPR_LIBS)
+EXTRA_LIBS +=	$(NSPR_LIBS)
 
 NSDISTMODE = copy
-
-include $(topsrcdir)/config/rules.mk
