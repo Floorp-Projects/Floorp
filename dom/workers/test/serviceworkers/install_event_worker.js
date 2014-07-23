@@ -1,4 +1,3 @@
 oninstall = function(e) {
-  dump("NSM Got install event\n");
-  dump(e.activeWorker);
+  dump("Got install event\n");
 }
