@@ -313,19 +313,19 @@ class RegisterAllocator
         graph(graph),
         allRegisters_(RegisterSet::All())
     {
-        if (FramePointer != InvalidReg && mir->instrumentedProfiling())
-            allRegisters_.take(AnyRegister(FramePointer));
+        if (mir->compilingAsmJS()) {
 #if defined(JS_CODEGEN_X64)
-        if (mir->compilingAsmJS())
             allRegisters_.take(AnyRegister(HeapReg));
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
-        if (mir->compilingAsmJS()) {
             allRegisters_.take(AnyRegister(HeapReg));
             allRegisters_.take(AnyRegister(GlobalReg));
             // Need to remove both NANReg, and its aliases.
             allRegisters_.takeAllAliasedUnchecked(AnyRegister(NANReg));
-        }
 #endif
+        } else {
+            if (FramePointer != InvalidReg && mir->instrumentedProfiling())
+                allRegisters_.take(AnyRegister(FramePointer));
+        }
     }
 
     bool init();
