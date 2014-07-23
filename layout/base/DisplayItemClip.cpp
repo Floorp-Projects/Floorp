@@ -31,6 +31,18 @@ DisplayItemClip::SetTo(const nsRect& aRect, const nscoord* aRadii)
   memcpy(mRoundedClipRects[0].mRadii, aRadii, sizeof(nscoord)*8);
 }
 
+void
+DisplayItemClip::SetTo(const nsRect& aRect,
+                       const nsRect& aRoundedRect,
+                       const nscoord* aRadii)
+{
+  mHaveClipRect = true;
+  mClipRect = aRect;
+  mRoundedClipRects.SetLength(1);
+  mRoundedClipRects[0].mRect = aRoundedRect;
+  memcpy(mRoundedClipRects[0].mRadii, aRadii, sizeof(nscoord)*8);
+}
+
 bool
 DisplayItemClip::MayIntersect(const nsRect& aRect) const
 {
