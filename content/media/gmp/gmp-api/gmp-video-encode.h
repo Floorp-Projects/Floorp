@@ -51,6 +51,10 @@ public:
   virtual void Encoded(GMPVideoEncodedFrame* aEncodedFrame,
                        const uint8_t* aCodecSpecificInfo,
                        uint32_t aCodecSpecificInfoLength) = 0;
+
+  // Called when the encoder encounters a catestrophic error and cannot
+  // continue. Gecko will not send any more input for encoding.
+  virtual void Error(GMPErr aError) = 0;
 };
 
 // ALL METHODS MUST BE CALLED ON THE MAIN THREAD
@@ -72,12 +76,12 @@ public:
   // - aNnumberOfCores : Number of cores available for the encoder
   // - aMaxPayloadSize : The maximum size each payload is allowed
   //                    to have. Usually MTU - overhead.
-  virtual GMPErr InitEncode(const GMPVideoCodec& aCodecSettings,
-                            const uint8_t* aCodecSpecific,
-                            uint32_t aCodecSpecificLength,
-                            GMPVideoEncoderCallback* aCallback,
-                            int32_t aNumberOfCores,
-                            uint32_t aMaxPayloadSize) = 0;
+  virtual void InitEncode(const GMPVideoCodec& aCodecSettings,
+                          const uint8_t* aCodecSpecific,
+                          uint32_t aCodecSpecificLength,
+                          GMPVideoEncoderCallback* aCallback,
+                          int32_t aNumberOfCores,
+                          uint32_t aMaxPayloadSize) = 0;
 
   // Encode an I420 frame (as a part of a video stream). The encoded frame
   // will be returned to the user through the encode complete callback.
@@ -90,11 +94,11 @@ public:
   // - aCodecSpecificInfoLength : number of bytes in aCodecSpecific
   // - aFrameTypes : The frame type to encode
   // - aFrameTypesLength : The number of elements in aFrameTypes array.
-  virtual GMPErr Encode(GMPVideoi420Frame* aInputFrame,
-                        const uint8_t* aCodecSpecificInfo,
-                        uint32_t aCodecSpecificInfoLength,
-                        const GMPVideoFrameType* aFrameTypes,
-                        uint32_t aFrameTypesLength) = 0;
+  virtual void Encode(GMPVideoi420Frame* aInputFrame,
+                      const uint8_t* aCodecSpecificInfo,
+                      uint32_t aCodecSpecificInfoLength,
+                      const GMPVideoFrameType* aFrameTypes,
+                      uint32_t aFrameTypesLength) = 0;
 
   // Inform the encoder about the packet loss and round trip time on the
   // network used to decide the best pattern and signaling.
@@ -102,19 +106,19 @@ public:
   // - packetLoss : Fraction lost (loss rate in percent =
   // 100 * packetLoss / 255)
   // - rtt : Round-trip time in milliseconds
-  virtual GMPErr SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT) = 0;
+  virtual void SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT) = 0;
 
   // Inform the encoder about the new target bit rate.
   //
   // - newBitRate : New target bit rate
   // - frameRate : The target frame rate
-  virtual GMPErr SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) = 0;
+  virtual void SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) = 0;
 
   // Use this function to enable or disable periodic key frames. Can be useful for codecs
   // which have other ways of stopping error propagation.
   //
   // - enable : Enable or disable periodic key frames
-  virtual GMPErr SetPeriodicKeyFrames(bool aEnable) = 0;
+  virtual void SetPeriodicKeyFrames(bool aEnable) = 0;
 
   // May free Encoder memory.
   virtual void EncodingComplete() = 0;
