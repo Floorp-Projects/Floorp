@@ -91,7 +91,7 @@ public:
   virtual uint8_t* Buffer() MOZ_OVERRIDE;
   virtual GMPBufferType BufferType() const MOZ_OVERRIDE;
   virtual void     SetBufferType(GMPBufferType aBufferType) MOZ_OVERRIDE;
-  virtual const    GMPEncryptedBufferData* GetDecryptionData() const MOZ_OVERRIDE;
+  virtual const    GMPEncryptedBufferMetadata* GetDecryptionData() const MOZ_OVERRIDE;
 
 private:
   void DestroyBuffer();
