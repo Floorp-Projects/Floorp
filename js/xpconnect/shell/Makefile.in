@@ -5,18 +5,8 @@
 
 SDK_BINARY	= $(PROGRAM)
 
-LIBS		= \
-		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-		$(LIBXUL_LIBS) \
-		$(XPCOM_LIBS) \
-		$(NULL)
-
 LIBS +=	$(NSPR_LIBS)
 
 NSDISTMODE = copy
-
-ifeq ($(OS_TEST),ia64)
-LIBS += $(JEMALLOC_LIBS)
-endif
 
 include $(topsrcdir)/config/rules.mk

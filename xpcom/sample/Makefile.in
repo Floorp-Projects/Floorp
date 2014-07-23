@@ -6,9 +6,7 @@
 # EXTRA_DSO_LDOPTS specifies linker flags when building a shared library
 # from this Makefile. We link against the "dependent glue" and against the
 # frozen XPCOM shared library.
-EXTRA_DSO_LDOPTS = \
-		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-		$(XPCOM_FROZEN_LDOPTS) \
+EXTRA_DSO_LDOPTS += \
 		$(NSPR_LIBS) \
 		$(NULL)
 

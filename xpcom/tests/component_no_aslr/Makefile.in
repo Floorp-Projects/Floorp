@@ -10,8 +10,6 @@ MANIFEST_PATH = $(testxpcobjdir)/$(unittestlocation)
 PP_TARGETS += MANIFEST
 
 EXTRA_DSO_LDOPTS = \
-		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-		$(XPCOM_FROZEN_LDOPTS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

@@ -14,3 +14,9 @@ EXTRA_COMPONENTS += [
     'TestStartupCacheTelemetry.js',
     'TestStartupCacheTelemetry.manifest',
 ]
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul-shared',
+]

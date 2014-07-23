@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) $(XPCOM_GLUE_LDOPTS)
+EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
 UNIT_FILES = $(SHARED_LIBRARY) $(EXTRA_JS_MODULES)
 UNIT_DEST = $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/

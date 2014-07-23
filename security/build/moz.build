@@ -11,6 +11,10 @@ if CONFIG['MOZ_FOLD_LIBS']:
     FORCE_SHARED_LIB = True
     SDK_LIBRARY = True
 
+    USE_LIBS += [
+        'mozsqlite3',
+    ]
+
 if CONFIG['OS_TARGET'] == 'WINNT':
     DEFFILE = 'nss3.def'
 

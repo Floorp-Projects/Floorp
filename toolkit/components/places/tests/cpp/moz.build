@@ -12,3 +12,13 @@ SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 
 FAIL_ON_WARNINGS = True
 
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul-shared',
+]
+
+if CONFIG['JS_SHARED_LIBRARY']:
+    USE_LIBS += [
+        'js',
+    ]

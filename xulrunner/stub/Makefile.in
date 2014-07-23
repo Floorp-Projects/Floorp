@@ -5,10 +5,6 @@
 # Don't create a dependency on mozglue
 MOZ_GLUE_LDFLAGS =
 
-LIBS = \
-  $(XPCOM_STANDALONE_STATICRUNTIME_GLUE_LDOPTS) \
-  $(NULL)
-
 # Need to link with CoreFoundation on Mac
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 LIBS            += \

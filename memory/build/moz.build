@@ -38,6 +38,16 @@ if CONFIG['MOZ_REPLACE_MALLOC']:
 
 LIBRARY_NAME = 'memory'
 
+if CONFIG['MOZ_JEMALLOC3']:
+    if not CONFIG['MOZ_NATIVE_JEMALLOC']:
+        USE_LIBS += [
+            'jemalloc',
+        ]
+else:
+    USE_LIBS += [
+        'mozjemalloc',
+    ]
+
 if CONFIG['MOZ_GLUE_PROGRAM_LDFLAGS']:
     SDK_LIBRARY = True
 

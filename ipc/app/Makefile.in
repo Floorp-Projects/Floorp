@@ -10,7 +10,6 @@ ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 WRAP_LDFLAGS =
 else
 LIBS += \
-  $(XPCOM_LIBS) \
   $(NSPR_LIBS) \
   $(NULL)
 endif
@@ -40,7 +39,6 @@ include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT) #{
 
-LIBS += ../../security/sandbox/$(LIB_PREFIX)sandbox_s.$(LIB_SUFFIX)
 LIBS += $(NSPR_LIBS)
 
 # Note the manifest file exists in the tree, so we use the explicit filename

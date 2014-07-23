@@ -9,3 +9,9 @@ PROGRAM = 'rdfpoll'
 SOURCES += [
     'rdfpoll.cpp',
 ]
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul-shared',
+]
