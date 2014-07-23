@@ -56,6 +56,16 @@ XPCOMUtils.defineLazyGetter(this, 'DebuggerServer', function() {
   return DebuggerServer;
 });
 
+XPCOMUtils.defineLazyGetter(this, 'devtools', function() {
+  const { devtools } =
+    Cu.import('resource://gre/modules/devtools/Loader.jsm', {});
+  return devtools;
+});
+
+XPCOMUtils.defineLazyGetter(this, 'discovery', function() {
+  return devtools.require('devtools/toolkit/discovery/discovery');
+});
+
 XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
   return Cc["@mozilla.org/parentprocessmessagemanager;1"]
          .getService(Ci.nsIMessageListenerManager);
@@ -809,7 +819,6 @@ let IndexedDBPromptHelper = {
 let RemoteDebugger = {
   _promptDone: false,
   _promptAnswer: false,
-  _running: false,
 
   prompt: function debugger_prompt() {
     this._promptDone = false;
@@ -830,8 +839,69 @@ let RemoteDebugger = {
     this._promptDone = true;
   },
 
+  initServer: function() {
+    if (DebuggerServer.initialized) {
+      return;
+    }
+
+    // Ask for remote connections.
+    DebuggerServer.init(this.prompt.bind(this));
+
+    // /!\ Be careful when adding a new actor, especially global actors.
+    // Any new global actor will be exposed and returned by the root actor.
+
+    // Add Firefox-specific actors, but prevent tab actors to be loaded in
+    // the parent process, unless we enable certified apps debugging.
+    let restrictPrivileges = Services.prefs.getBoolPref("devtools.debugger.forbid-certified-apps");
+    DebuggerServer.addBrowserActors("navigator:browser", restrictPrivileges);
+
+    /**
+     * Construct a root actor appropriate for use in a server running in B2G.
+     * The returned root actor respects the factories registered with
+     * DebuggerServer.addGlobalActor only if certified apps debugging is on,
+     * otherwise we used an explicit limited list of global actors
+     *
+     * * @param connection DebuggerServerConnection
+     *        The conection to the client.
+     */
+    DebuggerServer.createRootActor = function createRootActor(connection)
+    {
+      let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
+      let parameters = {
+        // We do not expose browser tab actors yet,
+        // but we still have to define tabList.getList(),
+        // otherwise, client won't be able to fetch global actors
+        // from listTabs request!
+        tabList: {
+          getList: function() {
+            return promise.resolve([]);
+          }
+        },
+        // Use an explicit global actor list to prevent exposing
+        // unexpected actors
+        globalActorFactories: restrictPrivileges ? {
+          webappsActor: DebuggerServer.globalActorFactories.webappsActor,
+          deviceActor: DebuggerServer.globalActorFactories.deviceActor,
+        } : DebuggerServer.globalActorFactories
+      };
+      let { RootActor } = devtools.require("devtools/server/actors/root");
+      let root = new RootActor(connection, parameters);
+      root.applicationType = "operating-system";
+      return root;
+    };
+
+#ifdef MOZ_WIDGET_GONK
+    DebuggerServer.on("connectionchange", function() {
+      AdbController.updateState();
+    });
+#endif
+  }
+};
+
+let USBRemoteDebugger = {
+
   get isDebugging() {
-    if (!this._running) {
+    if (!this._listener) {
       return false;
     }
 
@@ -839,99 +909,78 @@ let RemoteDebugger = {
            Object.keys(DebuggerServer._connections).length > 0;
   },
 
-  // Start the debugger server.
-  start: function debugger_start() {
-    if (this._running) {
+  start: function() {
+    if (this._listener) {
       return;
     }
 
-    if (!DebuggerServer.initialized) {
-      // Ask for remote connections.
-      DebuggerServer.init(this.prompt.bind(this));
+    RemoteDebugger.initServer();
 
-      // /!\ Be careful when adding a new actor, especially global actors.
-      // Any new global actor will be exposed and returned by the root actor.
+    let portOrPath =
+      Services.prefs.getCharPref("devtools.debugger.unix-domain-socket") ||
+      "/data/local/debugger-socket";
 
-      // Add Firefox-specific actors, but prevent tab actors to be loaded in
-      // the parent process, unless we enable certified apps debugging.
-      let restrictPrivileges = Services.prefs.getBoolPref("devtools.debugger.forbid-certified-apps");
-      DebuggerServer.addBrowserActors("navigator:browser", restrictPrivileges);
-
-      /**
-       * Construct a root actor appropriate for use in a server running in B2G.
-       * The returned root actor respects the factories registered with
-       * DebuggerServer.addGlobalActor only if certified apps debugging is on,
-       * otherwise we used an explicit limited list of global actors
-       *
-       * * @param connection DebuggerServerConnection
-       *        The conection to the client.
-       */
-      DebuggerServer.createRootActor = function createRootActor(connection)
-      {
-        let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
-        let parameters = {
-          // We do not expose browser tab actors yet,
-          // but we still have to define tabList.getList(),
-          // otherwise, client won't be able to fetch global actors
-          // from listTabs request!
-          tabList: {
-            getList: function() {
-              return promise.resolve([]);
-            }
-          },
-          // Use an explicit global actor list to prevent exposing
-          // unexpected actors
-          globalActorFactories: restrictPrivileges ? {
-            webappsActor: DebuggerServer.globalActorFactories.webappsActor,
-            deviceActor: DebuggerServer.globalActorFactories.deviceActor,
-          } : DebuggerServer.globalActorFactories
-        };
-        let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
-        let { RootActor } = devtools.require("devtools/server/actors/root");
-        let root = new RootActor(connection, parameters);
-        root.applicationType = "operating-system";
-        return root;
-      };
-
-#ifdef MOZ_WIDGET_GONK
-      DebuggerServer.on("connectionchange", function() {
-        AdbController.updateState();
-      });
-#endif
-    }
-
-    let path = Services.prefs.getCharPref("devtools.debugger.unix-domain-socket") ||
-               "/data/local/debugger-socket";
     try {
-      DebuggerServer.openListener(path);
+      debug("Starting USB debugger on " + portOrPath);
+      this._listener = DebuggerServer.openListener(portOrPath);
       // Temporary event, until bug 942756 lands and offers a way to know
       // when the server is up and running.
       Services.obs.notifyObservers(null, 'debugger-server-started', null);
-      this._running = true;
     } catch (e) {
-      dump('Unable to start debugger server: ' + e + '\n');
+      debug('Unable to start USB debugger server: ' + e);
     }
   },
 
-  stop: function debugger_stop() {
-    if (!this._running) {
-      return;
-    }
-
-    if (!DebuggerServer.initialized) {
-      // Can this really happen if we are running?
-      this._running = false;
+  stop: function() {
+    if (!this._listener) {
       return;
     }
 
     try {
-      DebuggerServer.closeAllListeners();
+      this._listener.close();
+      this._listener = null;
     } catch (e) {
-      dump('Unable to stop debugger server: ' + e + '\n');
+      debug('Unable to stop USB debugger server: ' + e);
     }
-    this._running = false;
   }
-}
+
+};
+
+let WiFiRemoteDebugger = {
+
+  start: function() {
+    if (this._listener) {
+      return;
+    }
+
+    RemoteDebugger.initServer();
+
+    try {
+      debug("Starting WiFi debugger");
+      this._listener = DebuggerServer.openListener(-1);
+      let port = this._listener.port;
+      debug("Started WiFi debugger on " + port);
+      discovery.addService("devtools", { port: port });
+    } catch (e) {
+      debug('Unable to start WiFi debugger server: ' + e);
+    }
+  },
+
+  stop: function() {
+    if (!this._listener) {
+      return;
+    }
+
+    try {
+      discovery.removeService("devtools");
+      this._listener.close();
+      this._listener = null;
+    } catch (e) {
+      debug('Unable to stop WiFi debugger server: ' + e);
+    }
+  }
+
+};
 
 let KeyboardHelper = {
   handleEvent: function keyboard_handleEvent(detail) {
