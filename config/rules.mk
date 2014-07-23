@@ -136,11 +136,16 @@ endif # ENABLE_TESTS
 
 ifndef LIBRARY
 ifdef REAL_LIBRARY
+# Don't build actual static library if a shared library is also built
+ifdef FORCE_SHARED_LIB
+LIBRARY			:= $(REAL_LIBRARY).$(LIBS_DESC_SUFFIX)
+else
 # Only build actual library if it is installed in DIST/lib or SDK
 ifeq (,$(SDK_LIBRARY)$(DIST_INSTALL)$(NO_EXPAND_LIBS))
 LIBRARY			:= $(REAL_LIBRARY).$(LIBS_DESC_SUFFIX)
 else
 LIBRARY			:= $(REAL_LIBRARY) $(REAL_LIBRARY).$(LIBS_DESC_SUFFIX)
+endif
 endif
 endif # REAL_LIBRARY
 endif # LIBRARY
