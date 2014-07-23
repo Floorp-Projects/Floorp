@@ -108,6 +108,11 @@ public class SearchFragment extends Fragment implements AcceptsJumpTaps {
             }
         });
 
+        // Disable the click listener while the fragment is State.WAITING.
+        // We can't do this in the layout file because the setOnClickListener
+        // implementation calls setClickable(true).
+        mainView.setClickable(false);
+
         editText = (ClearableEditText) mainView.findViewById(R.id.auto_complete_edit_text);
         editText.setOnClickListener(new View.OnClickListener() {
             @Override
