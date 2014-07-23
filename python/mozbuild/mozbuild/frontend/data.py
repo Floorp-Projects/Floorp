@@ -362,13 +362,14 @@ class BaseProgram(Linkable):
     """
     __slots__ = ('program')
 
-    def __init__(self, sandbox, program):
+    def __init__(self, sandbox, program, is_unit_test=False):
         Linkable.__init__(self, sandbox)
 
         bin_suffix = sandbox['CONFIG'].get(self.SUFFIX_VAR, '')
         if not program.endswith(bin_suffix):
             program += bin_suffix
         self.program = program
+        self.is_unit_test = is_unit_test
 
 
 class Program(BaseProgram):

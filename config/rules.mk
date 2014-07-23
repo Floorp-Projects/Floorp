@@ -81,19 +81,17 @@ ifdef COMPILE_ENVIRONMENT
 # Compile the tests to $(DIST)/bin.  Make lots of niceties available by default
 # through TestHarness.h, by modifying the list of includes and the libs against
 # which stuff links.
-CPPSRCS += $(CPP_UNIT_TESTS)
-CPP_UNIT_TEST_BINS := $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
-SIMPLE_PROGRAMS += $(CPP_UNIT_TEST_BINS)
+SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS)
 INCLUDES += -I$(DIST)/include/testing
 LIBS += $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS)
 
 ifndef MOZ_PROFILE_GENERATE
-libs:: $(CPP_UNIT_TEST_BINS) $(call mkdir_deps,$(DIST)/cppunittests)
-	$(NSINSTALL) $(CPP_UNIT_TEST_BINS) $(DIST)/cppunittests
+libs:: $(CPP_UNIT_TESTS) $(call mkdir_deps,$(DIST)/cppunittests)
+	$(NSINSTALL) $(CPP_UNIT_TESTS) $(DIST)/cppunittests
 endif
 
 run-cppunittests::
-	@$(PYTHON) $(topsrcdir)/testing/runcppunittests.py --xre-path=$(DIST)/bin --symbols-path=$(DIST)/crashreporter-symbols $(subst .cpp,$(BIN_SUFFIX),$(CPP_UNIT_TESTS))
+	@$(PYTHON) $(topsrcdir)/testing/runcppunittests.py --xre-path=$(DIST)/bin --symbols-path=$(DIST)/crashreporter-symbols $(CPP_UNIT_TESTS)
 
 cppunittests-remote: DM_TRANS?=adb
 cppunittests-remote:
@@ -103,7 +101,7 @@ cppunittests-remote:
 			--localLib=$(DEPTH)/dist/$(MOZ_APP_NAME) \
 			--dm_trans=$(DM_TRANS) \
 			--deviceIP=${TEST_DEVICE} \
-			$(subst .cpp,$(BIN_SUFFIX),$(CPP_UNIT_TESTS)) $(EXTRA_TEST_ARGS); \
+			$(CPP_UNIT_TESTS) $(EXTRA_TEST_ARGS); \
 	else \
 		echo 'please prepare your host with environment variables for TEST_DEVICE'; \
 	fi

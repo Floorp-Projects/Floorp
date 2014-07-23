@@ -16,11 +16,13 @@ if CONFIG['OS_ARCH'] != 'Darwin':
     XPCSHELL_TESTS_MANIFESTS += ['unit_ipc/xpcshell.ini']
 
 CPP_UNIT_TESTS += [
-    'TestCSPParser.cpp',
-    'TestGetURL.cpp',
-    'TestNativeXMLHttpRequest.cpp',
-    'TestPlainTextSerializer.cpp',
+    'TestCSPParser',
+    'TestGetURL',
+    'TestNativeXMLHttpRequest',
+    'TestPlainTextSerializer',
 ]
+
+SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 
 MOCHITEST_MANIFESTS += [
     'chrome/mochitest.ini',
