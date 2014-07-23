@@ -169,7 +169,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
     if (desc.object()) {
         // Check for read-only properties.
         if (desc.isReadonly())
-            return strict ? Throw(cx, id, JSMSG_CANT_REDEFINE_PROP) : true;
+            return strict ? Throw(cx, id, JSMSG_READ_ONLY) : true;
         if (!desc.setter()) {
             // Be wary of the odd explicit undefined setter case possible through
             // Object.defineProperty.
