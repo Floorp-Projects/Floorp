@@ -879,6 +879,7 @@ ServiceWorkerManager::Install(ServiceWorkerRegistration* aRegistration,
 {
   AssertIsOnMainThread();
   aRegistration->mInstallingWorker = aServiceWorkerInfo;
+  MOZ_ASSERT(aRegistration->mInstallingWorker);
 
   nsMainThreadPtrHandle<ServiceWorkerRegistration> handle =
     new nsMainThreadPtrHolder<ServiceWorkerRegistration>(aRegistration);
@@ -932,6 +933,15 @@ ServiceWorkerManager::FinishInstall(ServiceWorkerRegistration* aRegistration)
 
   if (aRegistration->mWaitingWorker) {
     // FIXME(nsm): Actually update the state of active ServiceWorker instances.
+  }
+
+  if (!aRegistration->mInstallingWorker) {
+    // It is possible that while this run of [[Install]] was waiting for
+    // the worker to handle the install event, some page called register() with
+    // a different script leading to [[Update]] terminating the
+    // installingWorker and setting it to null. The FinishInstallRunnable may
+    // already have been dispatched, hence the check.
+    return;
   }
 
   aRegistration->mWaitingWorker = aRegistration->mInstallingWorker.forget();
