@@ -492,6 +492,75 @@ static btrc_callbacks_t sBtAvrcpCallbacks = {
 };
 #endif
 
+#if ANDROID_VERSION > 17
+class InitAvrcpResultHandler MOZ_FINAL : public BluetoothAvrcpResultHandler
+{
+public:
+  InitAvrcpResultHandler(BluetoothProfileResultHandler* aRes)
+  : mRes(aRes)
+  { }
+
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    BT_WARNING("BluetoothAvrcpInterface::Init failed: %d",
+               (int)aStatus);
+    if (mRes) {
+      mRes->OnError(NS_ERROR_FAILURE);
+    }
+  }
+
+  void Init() MOZ_OVERRIDE
+  {
+    if (mRes) {
+      mRes->Init();
+    }
+  }
+
+private:
+  nsRefPtr<BluetoothProfileResultHandler> mRes;
+};
+#endif
+
+class InitA2dpResultHandler MOZ_FINAL : public BluetoothA2dpResultHandler
+{
+public:
+  InitA2dpResultHandler(BluetoothProfileResultHandler* aRes)
+  : mRes(aRes)
+  { }
+
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    BT_WARNING("BluetoothA2dpInterface::Init failed: %d",
+               (int)aStatus);
+    if (mRes) {
+      mRes->OnError(NS_ERROR_FAILURE);
+    }
+  }
+
+  void Init() MOZ_OVERRIDE
+  {
+#if ANDROID_VERSION > 17
+    /* Also init AVRCP if it's available, ... */
+    BluetoothInterface* btInf = BluetoothInterface::GetInstance();
+    NS_ENSURE_TRUE_VOID(btInf);
+
+    sBtAvrcpInterface = btInf->GetBluetoothAvrcpInterface();
+    NS_ENSURE_TRUE_VOID(sBtAvrcpInterface);
+
+    sBtAvrcpInterface->Init(&sBtAvrcpCallbacks,
+                            new InitAvrcpResultHandler(mRes));
+#else
+    /* ...or signal success otherwise. */
+    if (mRes) {
+      mRes->Init();
+    }
+#endif
+  }
+
+private:
+  nsRefPtr<BluetoothProfileResultHandler> mRes;
+};
+
 /*
  * This function will be only called when Bluetooth is turning on.
  * It is important to register a2dp callbacks before enable() gets called.
@@ -508,24 +577,7 @@ BluetoothA2dpManager::InitA2dpInterface(BluetoothProfileResultHandler* aRes)
   sBtA2dpInterface = btInf->GetBluetoothA2dpInterface();
   NS_ENSURE_TRUE_VOID(sBtA2dpInterface);
 
-  int ret = sBtA2dpInterface->Init(&sBtA2dpCallbacks);
-  if (ret != BT_STATUS_SUCCESS) {
-    BT_LOGR("Warning: failed to init a2dp module");
-  }
-
-#if ANDROID_VERSION > 17
-  sBtAvrcpInterface = btInf->GetBluetoothAvrcpInterface();
-  NS_ENSURE_TRUE_VOID(sBtAvrcpInterface);
-
-  ret = sBtAvrcpInterface->Init(&sBtAvrcpCallbacks);
-  if (ret != BT_STATUS_SUCCESS) {
-    BT_LOGR("Warning: failed to init avrcp module");
-  }
-#endif
-
-  if (aRes) {
-    aRes->Init();
-  }
+  sBtA2dpInterface->Init(&sBtA2dpCallbacks, new InitA2dpResultHandler(aRes));
 }
 
 BluetoothA2dpManager::~BluetoothA2dpManager()
@@ -599,6 +651,99 @@ BluetoothA2dpManager::Get()
   return sBluetoothA2dpManager;
 }
 
+#if ANDROID_VERSION > 17
+class CleanupAvrcpResultHandler MOZ_FINAL : public BluetoothAvrcpResultHandler
+{
+public:
+  CleanupAvrcpResultHandler(BluetoothProfileResultHandler* aRes)
+  : mRes(aRes)
+  { }
+
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    BT_WARNING("BluetoothAvrcpInterface::Cleanup failed: %d",
+               (int)aStatus);
+    if (mRes) {
+      mRes->OnError(NS_ERROR_FAILURE);
+    }
+  }
+
+  void Cleanup() MOZ_OVERRIDE
+  {
+    sBtAvrcpInterface = nullptr;
+    if (mRes) {
+      mRes->Deinit();
+    }
+  }
+
+private:
+  nsRefPtr<BluetoothProfileResultHandler> mRes;
+};
+#endif
+
+class CleanupA2dpResultHandler MOZ_FINAL : public BluetoothA2dpResultHandler
+{
+public:
+  CleanupA2dpResultHandler(BluetoothProfileResultHandler* aRes)
+  : mRes(aRes)
+  { }
+
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    BT_WARNING("BluetoothA2dpInterface::Cleanup failed: %d",
+               (int)aStatus);
+    if (mRes) {
+      mRes->OnError(NS_ERROR_FAILURE);
+    }
+  }
+
+  void Cleanup() MOZ_OVERRIDE
+  {
+    sBtA2dpInterface = nullptr;
+#if ANDROID_VERSION > 17
+    /* Cleanup AVRCP if it's available and initialized, ...*/
+    if (sBtAvrcpInterface) {
+      sBtAvrcpInterface->Cleanup(new CleanupAvrcpResultHandler(mRes));
+    } else
+#endif
+    if (mRes) {
+      /* ...or simply signal success from here. */
+      mRes->Deinit();
+    }
+  }
+
+private:
+  nsRefPtr<BluetoothProfileResultHandler> mRes;
+};
+
+class CleanupA2dpResultHandlerRunnable MOZ_FINAL : public nsRunnable
+{
+public:
+  CleanupA2dpResultHandlerRunnable(BluetoothProfileResultHandler* aRes)
+  : mRes(aRes)
+  { }
+
+  NS_IMETHOD Run() MOZ_OVERRIDE
+  {
+    sBtA2dpInterface = nullptr;
+#if ANDROID_VERSION > 17
+    /* Cleanup AVRCP if it's available and initialized, ...*/
+    if (sBtAvrcpInterface) {
+      sBtAvrcpInterface->Cleanup(new CleanupAvrcpResultHandler(mRes));
+    } else
+#endif
+    if (mRes) {
+      /* ...or simply signal success from here. */
+      mRes->Deinit();
+    }
+
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<BluetoothProfileResultHandler> mRes;
+};
+
 // static
 void
 BluetoothA2dpManager::DeinitA2dpInterface(BluetoothProfileResultHandler* aRes)
@@ -606,17 +751,14 @@ BluetoothA2dpManager::DeinitA2dpInterface(BluetoothProfileResultHandler* aRes)
   MOZ_ASSERT(NS_IsMainThread());
 
   if (sBtA2dpInterface) {
-    sBtA2dpInterface->Cleanup();
-    sBtA2dpInterface = nullptr;
-  }
-#if ANDROID_VERSION > 17
-  if (sBtAvrcpInterface) {
-    sBtAvrcpInterface->Cleanup();
-    sBtAvrcpInterface = nullptr;
-  }
-#endif
-  if (aRes) {
-    aRes->Deinit();
+    sBtA2dpInterface->Cleanup(new CleanupA2dpResultHandler(aRes));
+  } else if (aRes) {
+    // We dispatch a runnable here to make the profile resource handler
+    // behave as if A2DP was initialized.
+    nsRefPtr<nsRunnable> r = new CleanupA2dpResultHandlerRunnable(aRes);
+    if (NS_FAILED(NS_DispatchToMainThread(r))) {
+      BT_LOGR("Failed to dispatch cleanup-result-handler runnable");
+    }
   }
 }
 
