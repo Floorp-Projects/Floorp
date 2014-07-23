@@ -93,6 +93,7 @@ class TreeMetadataEmitter(LoggingMixin):
         self._libs = OrderedDefaultDict(list)
         self._binaries = OrderedDict()
         self._linkage = []
+        self._static_linking_shared = set()
 
     def emit(self, output):
         """Convert the BuildReader output into data structures.
@@ -139,22 +140,56 @@ class TreeMetadataEmitter(LoggingMixin):
         yield ReaderSummary(file_count, sandbox_execution_time, emitter_time)
 
     def _emit_libs_derived(self, sandboxes):
-        for sandbox, obj, variable in self._linkage:
-            self._link_libraries(sandbox, obj, variable)
-
+        # First do FINAL_LIBRARY linkage.
         for lib in (l for libs in self._libs.values() for l in libs):
             if not isinstance(lib, StaticLibrary) or not lib.link_into:
                 continue
             if lib.link_into not in self._libs:
-                raise Exception('FINAL_LIBRARY in %s (%s) does not match any '
-                                'LIBRARY_NAME' % (lib.objdir, lib.link_info))
+                raise SandboxValidationError(
+                    'FINAL_LIBRARY ("%s") does not match any LIBRARY_NAME'
+                    % lib.link_into, sandboxes[lib.objdir])
             candidates = self._libs[lib.link_into]
-            if len(candidates) > 1:
-                raise Exception('FINAL_LIBRARY in %s (%s) matches a '
-                                'LIBRARY_NAME defined in multiple places (%s)' %
-                                (lib.objdir, lib.link_into,
-                                 ', '.join(l.objdir for l in candidates)))
-            candidates[0].link_library(lib)
+
+            # When there are multiple candidates, but all are in the same
+            # directory and have a different type, we want all of them to
+            # have the library linked. The typical usecase is when building
+            # both a static and a shared library in a directory, and having
+            # that as a FINAL_LIBRARY.
+            if len(set(type(l) for l in candidates)) == len(candidates) and \
+                   len(set(l.objdir for l in candidates)) == 1:
+                for c in candidates:
+                    c.link_library(lib)
+            else:
+                raise SandboxValidationError(
+                    'FINAL_LIBRARY ("%s") matches a LIBRARY_NAME defined in '
+                    'multiple places:\n    %s' % (lib.link_into,
+                    '\n    '.join(l.objdir for l in candidates)),
+                    sandboxes[lib.objdir])
+
+        # Next, USE_LIBS linkage.
+        for sandbox, obj, variable in self._linkage:
+            self._link_libraries(sandbox, obj, variable)
+
+        def recurse_refs(lib):
+            for o in lib.refs:
+                yield o
+                if isinstance(o, StaticLibrary):
+                    for q in recurse_refs(o):
+                        yield q
+
+        # Check that all static libraries refering shared libraries in
+        # USE_LIBS are linked into a shared library or program.
+        for lib in self._static_linking_shared:
+            if all(isinstance(o, StaticLibrary) for o in recurse_refs(lib)):
+                shared_libs = sorted(l.basename for l in lib.linked_libraries
+                    if isinstance(l, SharedLibrary))
+                raise SandboxValidationError(
+                    'The static "%s" library is not used in a shared library '
+                    'or a program, but USE_LIBS contains the following shared '
+                    'library names:\n    %s\n\nMaybe you can remove the '
+                    'static "%s" library?' % (lib.basename,
+                    '\n    '.join(shared_libs), lib.basename),
+                    sandboxes[lib.objdir])
 
         def recurse_libs(lib):
             for obj in lib.linked_libraries:
@@ -164,6 +199,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 for q in recurse_libs(obj):
                     yield q
 
+        sent_passthru = set()
         for lib in (l for libs in self._libs.values() for l in libs):
             # For all root libraries (i.e. libraries that don't have a
             # FINAL_LIBRARY), record, for each static library it links
@@ -171,6 +207,9 @@ class TreeMetadataEmitter(LoggingMixin):
             if isinstance(lib, Library):
                 if isinstance(lib, SharedLibrary) or not lib.link_into:
                     for p in recurse_libs(lib):
+                        if p in sent_passthru:
+                            continue
+                        sent_passthru.add(p)
                         passthru = VariablePassthru(sandboxes[p])
                         passthru.variables['FINAL_LIBRARY'] = lib.basename
                         yield passthru
@@ -261,13 +300,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
             elif isinstance(obj, StaticLibrary) and isinstance(candidates[0],
                     SharedLibrary):
-                raise SandboxValidationError(
-                        '%s contains "%s", but there is only a shared "%s" '
-                        'in %s, and "%s" is built static. You may want to '
-                        'add FORCE_STATIC_LIB=True in %s/moz.build, or remove '
-                        '"%s" from USE_LIBS.' % (variable, path, name,
-                        candidates[0].relobjdir, obj.basename,
-                        candidates[0].relobjdir, path), sandbox)
+                self._static_linking_shared.add(obj)
             obj.link_library(candidates[0])
 
     def emit_from_sandbox(self, sandbox):
@@ -559,10 +592,6 @@ class TreeMetadataEmitter(LoggingMixin):
                     raise SandboxValidationError(
                         'IS_FRAMEWORK implies FORCE_SHARED_LIB. '
                         'Please remove the latter.', sandbox)
-                if static_lib:
-                    raise SandboxValidationError(
-                        'IS_FRAMEWORK conflicts with FORCE_STATIC_LIB. '
-                        'Please remove one.', sandbox)
                 if soname:
                     raise SandboxValidationError(
                         'IS_FRAMEWORK conflicts with SONAME. '

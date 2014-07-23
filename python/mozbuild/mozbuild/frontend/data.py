@@ -348,7 +348,7 @@ class Linkable(SandboxDerived):
         if obj.KIND != self.KIND:
             raise LinkageWrongKindError('%s != %s' % (obj.KIND, self.KIND))
         self.linked_libraries.append(obj)
-        obj.refcount += 1
+        obj.refs.append(self)
 
 
 class BaseProgram(Linkable):
@@ -402,7 +402,7 @@ class BaseLibrary(Linkable):
         'basename',
         'lib_name',
         'import_name',
-        'refcount',
+        'refs',
     )
 
     def __init__(self, sandbox, basename):
@@ -417,7 +417,7 @@ class BaseLibrary(Linkable):
             )
             self.import_name = self.lib_name
 
-        self.refcount = 0
+        self.refs = []
 
 
 class Library(BaseLibrary):
