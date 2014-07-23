@@ -90,6 +90,7 @@ Listener.prototype = {
 // Ensure that the pref enables and disables private load restrictions.
 function test_basic_NetworkZonePolicy_pref() {
   // Create loadgroup and channel for non-doc load.
+  // Use /failme because we're not going to load this channel.
   var loadGroup = Cc["@mozilla.org/network/load-group;1"]
                   .createInstance(Ci.nsILoadGroup);
   var chan = ios.newChannel("http://localhost/failme/", null, null)
@@ -108,11 +109,19 @@ function test_basic_NetworkZonePolicy_pref() {
   do_check_eq(nzp.checkPrivateNetworkPermission(chan), true);
 
   // Set permission for doc load; verify permission changed.
-  chan.loadFlags |= Ci.nsIChannel.LOAD_DOCUMENT_URI;
+  // Use /failme because we're not going to load this channel.
+  var docChan = ios.newChannel("http://localhost/failme/", null, null)
+             .QueryInterface(Ci.nsIHttpChannel);
+  docChan.loadGroup = loadGroup;
+  docChan.loadFlags |= Ci.nsIChannel.LOAD_DOCUMENT_URI;
 
-  nzp.setPrivateNetworkPermission(chan, false);
+  nzp.setPrivateNetworkPermission(docChan, false);
+  // Loadgroup should be set to forbid private loads.
   do_check_eq(loadGroup.allowLoadsFromPrivateNetworks, false);
   do_check_eq(nzp.checkPrivateNetworkPermission(chan), false);
+  // Since there is no loadgroup hierarchy, simulating a top-level doc load,
+  // the doc channel should have permission for private loads.
+  do_check_eq(nzp.checkPrivateNetworkPermission(docChan), true);
 
   // Disable pref; ensure restrictions lifted.
   prefs.setBoolPref("network.zonepolicy.enabled", false);
@@ -120,11 +129,13 @@ function test_basic_NetworkZonePolicy_pref() {
   do_check_eq(loadGroup.allowLoadsFromPrivateNetworks, false);
   // NZP will report that private loads are ok.
   do_check_eq(nzp.checkPrivateNetworkPermission(chan), true);
+  do_check_eq(nzp.checkPrivateNetworkPermission(docChan), true);
 
   // Enable pref again; ensure restrictions are again in play.
   prefs.setBoolPref("network.zonepolicy.enabled", true);
   do_check_eq(loadGroup.allowLoadsFromPrivateNetworks, false);
   do_check_eq(nzp.checkPrivateNetworkPermission(chan), false);
+  do_check_eq(nzp.checkPrivateNetworkPermission(docChan), true);
 
   // Leaving pref on for the remainder of the tests.
 
@@ -151,11 +162,18 @@ function test_basic_NetworkZonePolicy_and_loadGroup() {
   do_check_eq(nzp.checkPrivateNetworkPermission(chan), true);
 
   // Set permission for doc load; verify permission changed.
-  chan.loadFlags |= Ci.nsIChannel.LOAD_DOCUMENT_URI;
+  // Use /failme because we're not going to load this channel.
+  var docChan = ios.newChannel("http://localhost/failme/", null, null)
+             .QueryInterface(Ci.nsIHttpChannel);
+  docChan.loadGroup = loadGroup;
+  docChan.loadFlags |= Ci.nsIChannel.LOAD_DOCUMENT_URI;
 
-  nzp.setPrivateNetworkPermission(chan, false);
+  nzp.setPrivateNetworkPermission(docChan, false);
   do_check_eq(loadGroup.allowLoadsFromPrivateNetworks, false);
   do_check_eq(nzp.checkPrivateNetworkPermission(chan), false);
+  // Since there is no loadgroup hierarchy, simulating a top-level doc load,
+  // the doc channel should have permission for private loads.
+  do_check_eq(nzp.checkPrivateNetworkPermission(docChan), true);
 
   run_next_test();
 }
@@ -163,32 +181,34 @@ function test_basic_NetworkZonePolicy_and_loadGroup() {
 // Ensure that NetworkZonePolicy can manage permissions for a channel's
 // loadgroup and one of its ancestors. Ancestor is specified by calling
 // function.
-function test_loadGroup_and_ancestor(loadGroup, ancestor, chan) {
+function test_loadGroup_and_ancestor(loadGroup, ancestor, chan, docChan) {
   // Verify permission defaults
   do_check_eq(loadGroup.allowLoadsFromPrivateNetworks, true);
   do_check_eq(ancestor.allowLoadsFromPrivateNetworks, true);
   do_check_eq(nzp.checkPrivateNetworkPermission(chan), true);
+  do_check_eq(nzp.checkPrivateNetworkPermission(docChan), true);
 
   // Set permission for non-doc load; verify no changes.
   nzp.setPrivateNetworkPermission(chan, false);
   do_check_eq(loadGroup.allowLoadsFromPrivateNetworks, true);
   do_check_eq(ancestor.allowLoadsFromPrivateNetworks, true);
   do_check_eq(nzp.checkPrivateNetworkPermission(chan), true);
+  do_check_eq(nzp.checkPrivateNetworkPermission(docChan), true);
 
   // Set permission for doc load; verify permission changed for loadgroup, but
   // not for ancestor loadgroup.
-  chan.loadFlags |= Ci.nsIChannel.LOAD_DOCUMENT_URI;
-
-  nzp.setPrivateNetworkPermission(chan, false);
+  nzp.setPrivateNetworkPermission(docChan, false);
   do_check_eq(loadGroup.allowLoadsFromPrivateNetworks, false);
   do_check_eq(ancestor.allowLoadsFromPrivateNetworks, true);
   do_check_eq(nzp.checkPrivateNetworkPermission(chan), false);
+  do_check_eq(nzp.checkPrivateNetworkPermission(docChan), true);
 
   // Verify we can set permission allowed again.
-  nzp.setPrivateNetworkPermission(chan, true);
+  nzp.setPrivateNetworkPermission(docChan, true);
   do_check_eq(loadGroup.allowLoadsFromPrivateNetworks, true);
   do_check_eq(ancestor.allowLoadsFromPrivateNetworks, true);
   do_check_eq(nzp.checkPrivateNetworkPermission(chan), true);
+  do_check_eq(nzp.checkPrivateNetworkPermission(docChan), true);
 
   // Set ancestor to forbid private loads; verify chan permission forbidden.
   ancestor.allowLoadsFromPrivateNetworks = false;
@@ -196,14 +216,17 @@ function test_loadGroup_and_ancestor(loadGroup, ancestor, chan) {
   // ... loadgroup's own persmission should still be allow.
   do_check_eq(loadGroup.allowLoadsFromPrivateNetworks, true);
   // ... nzp should not be able to set permission to true.
-  nzp.setPrivateNetworkPermission(chan, true);
+  nzp.setPrivateNetworkPermission(docChan, true);
   do_check_eq(nzp.checkPrivateNetworkPermission(chan), false);
+  // ... and docChan should no longer have permission to load privately.
+  do_check_eq(nzp.checkPrivateNetworkPermission(docChan), false);
 
   // Reset ancestor and verify.
   ancestor.allowLoadsFromPrivateNetworks = true;
   do_check_eq(nzp.checkPrivateNetworkPermission(chan), true);
-  nzp.setPrivateNetworkPermission(chan, false);
+  nzp.setPrivateNetworkPermission(docChan, false);
   do_check_eq(nzp.checkPrivateNetworkPermission(chan), false);
+  do_check_eq(nzp.checkPrivateNetworkPermission(docChan), true);
 }
 
 // Ensure that NetworkZonePolicy can manage permissions for a channel's
@@ -217,12 +240,17 @@ function test_basic_NetworkZonePolicy_loadGroup_and_parent() {
              .QueryInterface(Ci.nsIHttpChannel);
   chan.loadGroup = loadGroup;
 
+  var docChan = ios.newChannel("http://localhost/failme/", null, null)
+             .QueryInterface(Ci.nsIHttpChannel);
+  docChan.loadGroup = loadGroup;
+  docChan.loadFlags |= Ci.nsIChannel.LOAD_DOCUMENT_URI;
+
   var parent = Cc["@mozilla.org/network/load-group;1"]
                .createInstance(Ci.nsILoadGroup);
   loadGroupAsChild.parentLoadGroup = parent;
   do_check_eq(parent, loadGroupAsChild.parentLoadGroup);
 
-  test_loadGroup_and_ancestor(loadGroup, parent, chan);
+  test_loadGroup_and_ancestor(loadGroup, parent, chan, docChan);
 
   run_next_test();
 }
@@ -237,12 +265,17 @@ function test_basic_NetworkZonePolicy_loadGroup_and_owner() {
              .QueryInterface(Ci.nsIHttpChannel);
   chan.loadGroup = loadGroup;
 
+  var docChan = ios.newChannel("http://localhost/failme/", null, null)
+             .QueryInterface(Ci.nsIHttpChannel);
+  docChan.loadGroup = loadGroup;
+  docChan.loadFlags |= Ci.nsIChannel.LOAD_DOCUMENT_URI;
+
   var owner = Cc["@mozilla.org/network/load-group;1"]
               .createInstance(Ci.nsILoadGroup);
   loadGroup.loadGroup = owner;
   do_check_eq(owner, loadGroup.loadGroup);
 
-  test_loadGroup_and_ancestor(loadGroup, owner, chan);
+  test_loadGroup_and_ancestor(loadGroup, owner, chan, docChan);
 
   run_next_test();
 }
@@ -265,14 +298,20 @@ function test_basic_NetworkZonePolicy_loadGroup_and_docshell() {
              .QueryInterface(Ci.nsIHttpChannel);
   chan.loadGroup = loadGroup;
 
-  test_loadGroup_and_ancestor(loadGroup, dsParent, chan);
+  // Create a channel for a document load.
+  var docChan = ios.newChannel("http://localhost/failme/", null, null)
+             .QueryInterface(Ci.nsIHttpChannel);
+  docChan.loadGroup = loadGroup;
+  docChan.loadFlags |= Ci.nsIChannel.LOAD_DOCUMENT_URI;
+
+  test_loadGroup_and_ancestor(loadGroup, dsParent, chan, docChan);
 
   run_next_test();
 }
 
 // Ensure that a loadgroup's immediate ancestors dictate its private load
 // permissions.
-function test_loadGroup_immediate_ancestors() {
+function test_loadGroup_immediate_ancestors(isInitialDocLoad) {
   // Create docshell and docshell parent, and get their loadgroups.
   var docShell = Cc["@mozilla.org/docshell;1"].createInstance(Ci.nsIDocShell);
   var docShellParent = Cc["@mozilla.org/docshell;1"]
@@ -300,20 +339,30 @@ function test_loadGroup_immediate_ancestors() {
              .QueryInterface(Ci.nsIHttpChannel);
   chan.loadGroup = loadGroup;
 
+  // Create a channel for a document load.
+  var docChan = ios.newChannel("http://localhost/failme/", null, null)
+             .QueryInterface(Ci.nsIHttpChannel);
+  docChan.loadGroup = loadGroup;
+  docChan.loadFlags |= Ci.nsIChannel.LOAD_DOCUMENT_URI;
+
   // Verify permission defaults
   do_check_eq(loadGroup.allowLoadsFromPrivateNetworks, true);
   do_check_eq(dsParent.allowLoadsFromPrivateNetworks, true);
   do_check_eq(owner.allowLoadsFromPrivateNetworks, true);
   do_check_eq(parent.allowLoadsFromPrivateNetworks, true);
   do_check_eq(nzp.checkPrivateNetworkPermission(chan), true);
+  do_check_eq(nzp.checkPrivateNetworkPermission(docChan), true);
 
   // Set ancestors to forbid.
   for (var i = 0; i < 8; i++) {
     dsParent.allowLoadsFromPrivateNetworks = !!(i & 1);
     owner.allowLoadsFromPrivateNetworks = !!(i & 2);
     parent.allowLoadsFromPrivateNetworks = !!(i & 4);
+    // Channel's loadgroup should not have changed.
+    do_check_eq(loadGroup.allowLoadsFromPrivateNetworks, true);
     // Permission allowed only when all ancestors allow private loads.
     do_check_eq(nzp.checkPrivateNetworkPermission(chan), (i == 7));
+    do_check_eq(nzp.checkPrivateNetworkPermission(docChan), (i == 7));
   }
 
   run_next_test();
@@ -352,7 +401,6 @@ function test_single_loadGroup(allowPrivateLoads,
 
 // Same as test_single_loadGroup but for a document load.
 function test_single_loadGroup_doc_load(allowPrivateLoads,
-                                        expectSuccessfulResponse,
                                         loadGroupAllowsAfter,
                                         urlStr) {
   // Create loadgroup and channel for document load.
@@ -368,8 +416,8 @@ function test_single_loadGroup_doc_load(allowPrivateLoads,
            " private loads for doc load " + urlStr + ".");
   loadGroup.allowLoadsFromPrivateNetworks = allowPrivateLoads;
 
-  // Try to load channel with IP literal.
-  var listener = new Listener(expectSuccessfulResponse, loadGroupAllowsAfter);
+  // Note: No loadgroup hierarchy so simulated top-level doc load will succeed.
+  var listener = new Listener(true, loadGroupAllowsAfter);
   chan.asyncOpen(listener, null);
 }
 
@@ -418,17 +466,13 @@ function test_private_cached_entry_same_network(privateLoadAllowed) {
   });
 }
 
-// Create a private cache entry; if private loads are allowed, the entry will
-// be accepted. If not, the entry will be rejected, but since the server is
-// localhost the network load should also be rejected.
-// LoadGroup permissions should not change after response.
+// Create a private cache entry of a doc load; it should always be allowed.
+// be accepted. The load should not go to the network.
+// LoadGroup permissions should be set to allow after the response is received.
 function test_private_cached_entry_same_network_doc_load(privateLoadAllowed) {
   var uri = uriBase + "/failme/";
   prime_cache_entry(uri, true, ios.networkLinkID, function() {
-    test_single_loadGroup_doc_load(privateLoadAllowed,
-                                   privateLoadAllowed,
-                                   privateLoadAllowed,
-                                   uri);
+    test_single_loadGroup_doc_load(privateLoadAllowed, true, uri);
   });
 }
 
@@ -453,13 +497,10 @@ function test_private_cached_entry_diff_network_doc_load(privateLoadAllowed) {
   // We should bypass the cache entry since it was created on a different
   // network. As such, use /passme for private loads allowed, and /failme for
   // private loads forbidden.
-  // LoadGroup permissions should not change after response.
-  var uri = uriBase + (privateLoadAllowed ? "/passme/" : "/failme/");
+  // LoadGroup permissions should allow private loads after the response.
+  var uri = uriBase + "/passme/";
   prime_cache_entry(uri, true, fakeNetworkID, function() {
-    test_single_loadGroup_doc_load(privateLoadAllowed,
-                                   privateLoadAllowed,
-                                   privateLoadAllowed,
-                                   uri);
+    test_single_loadGroup_doc_load(privateLoadAllowed, true, uri);
   });
 }
 
@@ -471,15 +512,19 @@ function test_public_cached_entry(privateCacheEntryAllowed) {
   });
 }
 
-// Ensure that publicly cached entries are always loaded; doc loads.
+// Ensure that publicly cached documents are always loaded.
 function test_public_cached_entry_doc_load(privateCacheEntryAllowed) {
   // Create a public cache entry for /failme; the entry should be accepted and
   // we should not go to the network.
   // LoadGroup permissions should forbid private loads after response.
   var uri = uriBase + "/failme/";
   prime_cache_entry(uri, false, null, function() {
-    test_single_loadGroup_doc_load(privateCacheEntryAllowed, true, false, uri);
+    test_single_loadGroup_doc_load(privateCacheEntryAllowed, false, uri);
   });
+}
+
+function test_public_to_private_navigation() {
+
 }
 
 //
@@ -542,11 +587,21 @@ function setup_and_add_tests() {
     test_basic_NetworkZonePolicy_pref,
 
     // Verify NetworkZonePolicy can manage loadgroup permisssions.
-    test_basic_NetworkZonePolicy_and_loadGroup,
+    function test_basic_NetworkZonePolicy_and_loadGroup_non_init_doc() {
+      test_basic_NetworkZonePolicy_and_loadGroup(false);
+    },
+    function test_basic_NetworkZonePolicy_and_loadGroup_init_doc() {
+      test_basic_NetworkZonePolicy_and_loadGroup(true);
+    },
     test_basic_NetworkZonePolicy_loadGroup_and_parent,
     test_basic_NetworkZonePolicy_loadGroup_and_owner,
     test_basic_NetworkZonePolicy_loadGroup_and_docshell,
-    test_loadGroup_immediate_ancestors,
+    function test_loadGroup_immediate_ancestors_non_init_doc() {
+      test_loadGroup_immediate_ancestors(false);
+    },
+    function test_loadGroup_immediate_ancestors_init_doc() {
+      test_loadGroup_immediate_ancestors(true);
+    },
 
     // Private (localhost) network requests.
     function test_network_private_allowed() {
@@ -556,9 +611,10 @@ function setup_and_add_tests() {
 
     // Private (localhost) network requests for document loads.
     function test_network_private_allowed_doc_load() {
-      test_single_loadGroup_doc_load(true, true, true, uriBase + "/passme/"); },
+      test_single_loadGroup_doc_load(true, true, uriBase + "/passme/"); },
     function test_network_private_forbidden_doc_load() {
-      test_single_loadGroup_doc_load(false, false, false, uriBase + "/failme/"); },
+      // Simulates top-level doc load; should be allowed.
+      test_single_loadGroup_doc_load(false, true, uriBase + "/passme/"); },
 
     // Private cache entries; same network.
     function test_private_cache_same_network_private_allowed() {
