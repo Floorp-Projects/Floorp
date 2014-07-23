@@ -1384,18 +1384,16 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
                         DOMObjectType type,
                         const NativeProperties* nativeProperties)
 {
-  if (type == eInterface) {
-    ENUMERATE_IF_DEFINED(staticMethod);
-  } else {
-    ENUMERATE_IF_DEFINED(method);
+  if (type == eInstance) {
     ENUMERATE_IF_DEFINED(unforgeableMethod);
-  }
-
-  if (type == eInterface) {
+    ENUMERATE_IF_DEFINED(unforgeableAttribute);
+  } else if (type == eInterface) {
+    ENUMERATE_IF_DEFINED(staticMethod);
     ENUMERATE_IF_DEFINED(staticAttribute);
   } else {
+    MOZ_ASSERT(type == eInterfacePrototype);
+    ENUMERATE_IF_DEFINED(method);
     ENUMERATE_IF_DEFINED(attribute);
-    ENUMERATE_IF_DEFINED(unforgeableAttribute);
   }
 
   if (nativeProperties->constants) {
@@ -1470,6 +1468,12 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
     if (nativePropertyHooks->mEnumerateOwnProperties &&
         !nativePropertyHooks->mEnumerateOwnProperties(cx, wrapper, obj,
                                                       props)) {
+      return false;
+    }
+
+    // Handle Unforgeable properties.
+    if (!XrayEnumerateNativeProperties(cx, wrapper, nativePropertyHooks, type,
+                                       obj, flags, props)) {
       return false;
     }
 
