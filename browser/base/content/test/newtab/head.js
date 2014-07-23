@@ -591,6 +591,7 @@ function createDragEvent(aEventType, aData) {
  */
 function whenPagesUpdated(aCallback, aOnlyIfHidden=false) {
   let page = {
+    observe: _ => _,
     update: function (onlyIfHidden=false) {
       if (onlyIfHidden == aOnlyIfHidden) {
         NewTabUtils.allPages.unregister(this);
