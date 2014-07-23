@@ -869,6 +869,13 @@ description > html|a {
   padding-left: 6px;
 }
 
+#dialogBox[resizable="true"] {
+  resize: both;
+  overflow: hidden;
+  min-height: 30em;
+  min-width: 66ch;
+}
+
 #dialogTitle {
   -moz-margin-start: 5px !important;
 }
@@ -888,8 +895,9 @@ description > html|a {
 }
 
 #dialogFrame {
+  -moz-box-flex: 1;
   /* Default dialog dimensions */
-  height: 20em;
+  height: 30em;
   width: 66ch;
 }
 
