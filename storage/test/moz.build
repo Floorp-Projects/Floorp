@@ -39,7 +39,7 @@ FAIL_ON_WARNINGS = True
 USE_LIBS += [
     'mozalloc',
     'xpcomglue_s',
-    'xul-shared',
+    'xul',
 ]
 
 if not CONFIG['MOZ_NATIVE_SQLITE'] and not CONFIG['MOZ_FOLD_LIBS']:

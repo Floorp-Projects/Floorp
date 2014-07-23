@@ -22,5 +22,5 @@ XPI_NAME = 'simple'
 USE_LIBS += [
     'mozalloc',
     'xpcomglue_s',
-    'xul-shared',
+    'xul',
 ]

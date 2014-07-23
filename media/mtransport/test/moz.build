@@ -90,7 +90,7 @@ USE_LIBS += [
     'nicer',
     'nrappkit',
     'xpcomglue_s',
-    'xul-shared',
+    'xul',
 ]
 
 if CONFIG['MOZ_SCTP']:

@@ -15,5 +15,5 @@ SIMPLE_PROGRAMS += [
 USE_LIBS += [
     'mozalloc',
     'xpcomglue_s',
-    'xul-shared',
+    'xul',
 ]

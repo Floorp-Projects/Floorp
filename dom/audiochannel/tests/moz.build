@@ -20,5 +20,5 @@ FAIL_ON_WARNINGS = True
 USE_LIBS += [
     'mozalloc',
     'xpcomglue_s',
-    'xul-shared',
+    'xul',
 ]

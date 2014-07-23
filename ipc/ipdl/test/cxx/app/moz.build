@@ -22,5 +22,5 @@ if CONFIG['_MSC_VER']:
 USE_LIBS += [
     'mozalloc',
     'xpcomglue_s',
-    'xul-shared',
+    'xul',
 ]

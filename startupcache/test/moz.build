@@ -18,5 +18,5 @@ EXTRA_COMPONENTS += [
 USE_LIBS += [
     'mozalloc',
     'xpcomglue_s',
-    'xul-shared',
+    'xul',
 ]
