@@ -57,6 +57,7 @@ public:
 
   void SetTo(const nsRect& aRect);
   void SetTo(const nsRect& aRect, const nscoord* aRadii);
+  void SetTo(const nsRect& aRect, const nsRect& aRoundedRect, const nscoord* aRadii);
   void IntersectWith(const DisplayItemClip& aOther);
 
   // Apply this |DisplayItemClip| to the given gfxContext.  Any saving of state
