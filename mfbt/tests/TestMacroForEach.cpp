@@ -21,11 +21,15 @@ static_assert(test2_10 == 15 && test2_20 == 25, "");
 
 #define HELPER_IDENTITY_COMMA(k1, k2, x) k1, k2, x,
 
-int main()
+int
+main()
 {
-  const int a[] = { MOZ_FOR_EACH(HELPER_IDENTITY_COMMA, (1, 2,), (10, 20, 30)) };
+  const int a[] = {
+    MOZ_FOR_EACH(HELPER_IDENTITY_COMMA, (1, 2,), (10, 20, 30))
+  };
   MOZ_RELEASE_ASSERT(a[0] == 1 && a[1] == 2 && a[2] == 10 &&
                      a[3] == 1 && a[4] == 2 && a[5] == 20 &&
                      a[6] == 1 && a[7] == 2 && a[8] == 30,
                      "MOZ_FOR_EACH args enumerated in incorrect order");
+  return 0;
 }
