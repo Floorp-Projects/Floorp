@@ -310,10 +310,6 @@ class TestRecursiveMakeBackend(BackendTester):
                 'OS_LIBS += -l123',
                 'OS_LIBS += bar.a',
             ],
-            'SDK_LIBRARY': [
-                'SDK_LIBRARY += bar.sdk',
-                'SDK_LIBRARY += foo.sdk',
-            ],
             'SSRCS': [
                 'SSRCS += baz.S',
                 'SSRCS += foo.S',

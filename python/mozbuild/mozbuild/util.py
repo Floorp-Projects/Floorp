@@ -16,6 +16,7 @@ import stat
 import sys
 import time
 
+from collections import OrderedDict
 from StringIO import StringIO
 
 
@@ -667,3 +668,17 @@ def shell_quote(s):
     # be closed, an escaped single quote added, and reopened.
     t = type(s)
     return t("'%s'") % s.replace(t("'"), t("'\\''"))
+
+
+class OrderedDefaultDict(OrderedDict):
+    '''A combination of OrderedDict and defaultdict.'''
+    def __init__(self, default_factory, *args, **kwargs):
+        OrderedDict.__init__(self, *args, **kwargs)
+        self._default_factory = default_factory
+
+    def __getitem__(self, key):
+        try:
+            return OrderedDict.__getitem__(self, key)
+        except KeyError:
+            value = self[key] = self._default_factory()
+            return value
