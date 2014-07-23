@@ -66,6 +66,7 @@ category wakeup-request PromptService @mozilla.org/embedcomp/prompt-service;1,ns
 component {be623d20-d305-11de-8a39-0800200c9a66} BrowserCLH.js application={aa3c5121-dab2-40e2-81ca-7ea25febc110}
 contract @mozilla.org/browser/browser-clh;1 {be623d20-d305-11de-8a39-0800200c9a66}
 category command-line-handler x-browser @mozilla.org/browser/browser-clh;1
+category app-startup BrowserCLH @mozilla.org/browser/browser-clh;1
 
 # ContentDispatchChooser.js
 component {5a072a22-1e66-4100-afc1-07aed8b62fc5} ContentDispatchChooser.js
