@@ -9,7 +9,7 @@ MOCHITEST_MANIFESTS += ['mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
 
 CPP_UNIT_TESTS += [
-    'TestAppShellSteadyState.cpp',
+    'TestAppShellSteadyState',
 ]
 
 FAIL_ON_WARNINGS = True
@@ -18,8 +18,16 @@ FAIL_ON_WARNINGS = True
 #     if CONFIG['NS_ENABLE_TSF']:
 #         Test disabled because it uses the internal string APIs incorrectly
 #         (see bug 582863)
-#         CPP_UNIT_TESTS += ['TestWinTSF.cpp']
+#         CPP_UNIT_TESTS += ['TestWinTSF']
 #
 #     Test disabled because it requires the internal API. Re-enabling this test
 #     is bug 652123.
-#     CPP_UNIT_TESTS += ['TestChromeMargin.cpp']
+#     CPP_UNIT_TESTS += ['TestChromeMargin']
+
+SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul',
+]

@@ -14,4 +14,8 @@ LIBRARY_NAME = 'dbusservice'
 
 IS_COMPONENT = True
 
-FORCE_SHARED_LIB = True
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul',
+]

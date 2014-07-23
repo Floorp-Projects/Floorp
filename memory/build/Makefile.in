@@ -4,14 +4,5 @@
 
 STLFLAGS =
 ifdef MOZ_GLUE_PROGRAM_LDFLAGS
-SDK_LIBRARY = $(REAL_LIBRARY)
 DIST_INSTALL = 1
-endif
-
-ifdef MOZ_JEMALLOC3
-ifndef MOZ_NATIVE_JEMALLOC
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,jemalloc,$(DEPTH)/memory/jemalloc)
-endif
-else
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,jemalloc,$(DEPTH)/memory/mozjemalloc)
 endif

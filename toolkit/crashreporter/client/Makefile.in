@@ -12,33 +12,16 @@ MOZ_GLUE_PROGRAM_LDFLAGS =
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-LIBS += \
-  $(DEPTH)/toolkit/crashreporter/breakpad-windows-libxul/$(LIB_PREFIX)google_breakpad_libxul_s.$(LIB_SUFFIX)
-  $(NULL)
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 shell32 wininet shlwapi)
 MOZ_WINCONSOLE = 0
 endif
 
-ifeq ($(OS_ARCH),Darwin)
-LIBS += \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/mac/$(LIB_PREFIX)breakpad_mac_common_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif
-
 ifdef MOZ_WIDGET_GTK
-
-LIBS += \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/linux/$(LIB_PREFIX)breakpad_linux_common_s.$(LIB_SUFFIX) \
-  $(NULL)
 OS_CXXFLAGS += $(TK_CFLAGS) $(MOZ_GTHREAD_CFLAGS)
 OS_LIBS += $(TK_LIBS) $(MOZ_GTHREAD_LIBS)
 endif
 
 ifeq ($(OS_ARCH),SunOS)
-LIBS += \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/solaris/$(LIB_PREFIX)breakpad_solaris_common_s.$(LIB_SUFFIX) \
-  $(NULL)
 OS_CXXFLAGS += $(MOZ_GTK2_CFLAGS) $(MOZ_GTHREAD_CFLAGS)
 OS_LIBS += $(MOZ_GTK2_LIBS) $(MOZ_GTHREAD_LIBS)
 endif

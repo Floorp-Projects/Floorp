@@ -4,4 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'src']
+EXPORTS += [
+    'nsILocalStore.h',
+]
+
+UNIFIED_SOURCES += [
+    'nsFileSystemDataSource.cpp',
+    'nsLocalStore.cpp',
+]
+
+FINAL_LIBRARY = 'xul'
+
+# "This is a dependency on rdfutil.h: it'll go away once that becomes
+# a first-class XPCOM interface."
+LOCAL_INCLUDES += [
+    '/rdf/base',
+]

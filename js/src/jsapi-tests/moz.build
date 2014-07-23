@@ -93,3 +93,7 @@ DEFINES['IMPL_MFBT'] = True
 
 LOCAL_INCLUDES += ['..']
 GENERATED_INCLUDES += ['..']
+
+USE_LIBS += [
+    'static:js',
+]

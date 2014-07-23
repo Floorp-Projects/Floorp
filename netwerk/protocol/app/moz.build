@@ -10,7 +10,7 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-FINAL_LIBRARY = 'necko'
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../../../modules/libjar',
     '../../base/src',

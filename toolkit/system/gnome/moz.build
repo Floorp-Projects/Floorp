@@ -29,9 +29,12 @@ LIBRARY_NAME = 'mozgnome'
 FAIL_ON_WARNINGS = True
 IS_COMPONENT = True
 
-FORCE_SHARED_LIB = True
-
 LOCAL_INCLUDES += [
     '/toolkit/components/build/',
 ]
 
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul',
+]

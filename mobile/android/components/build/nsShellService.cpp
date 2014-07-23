@@ -25,6 +25,6 @@ nsShellService::CreateShortcut(const nsAString& aTitle, const nsAString& aURI,
   if (!aTitle.Length() || !aURI.Length() || !aIconData.Length())
     return NS_ERROR_FAILURE;
 
-  mozilla::widget::android::GeckoAppShell::CreateShortcut(aTitle, aURI, aIconData, aIntent);
+  mozilla::widget::android::GeckoAppShell::CreateShortcut(aTitle, aURI, aIconData);
   return NS_OK;
 }

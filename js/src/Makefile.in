@@ -15,17 +15,10 @@ endif
 TOPLEVEL_BUILD := 1
 
 run_for_side_effects := $(shell echo 'MAKE: $(MAKE)')
-STATIC_LIBRARY_NAME = js_static
-LIBS		= $(NSPR_LIBS)
+EXTRA_LIBS		+= $(NSPR_LIBS)
 
 DIST_INSTALL = 1
-
-ifdef JS_STANDALONE
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,mfbt,$(DEPTH)/mfbt)
-ifndef MOZ_NATIVE_ZLIB
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,mozz,$(DEPTH)/modules/zlib/src)
-endif
-endif
+NO_EXPAND_LIBS = 1
 
 ifdef JS_HAS_CTYPES
 ifdef MOZ_NATIVE_FFI
@@ -33,9 +26,9 @@ LOCAL_INCLUDES = $(MOZ_FFI_CFLAGS)
 endif
 
 ifdef MOZ_NATIVE_FFI
-EXTRA_DSO_LDOPTS += $(MOZ_FFI_LIBS)
+OS_LIBS += $(MOZ_FFI_LIBS)
 else
-SHARED_LIBRARY_LIBS += \
+EXTRA_LIBS += \
     ctypes/libffi/.libs/libffi.$(LIB_SUFFIX) \
     $(NULL)
 endif
@@ -48,14 +41,6 @@ endif
 endif # JS_HAS_CTYPES
 
 DASH_R		= -r
-
-ifneq (,$(filter WINNT,$(OS_ARCH)))
-SDK_LIBRARY = $(IMPORT_LIBRARY)
-else
-SDK_LIBRARY = $(SHARED_LIBRARY)
-endif
-
-EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
 # Define keyword generator before rules.mk, see bug 323979 comment 50
 
@@ -75,7 +60,7 @@ endif
 # Ensure symbol versions of shared library on Linux do not conflict
 # with those in libxul.
 ifeq (Linux,$(OS_TARGET))
-EXTRA_DSO_LDOPTS += -Wl,-version-script,symverscript
+OS_LDFLAGS += -Wl,-version-script,symverscript
 
 symverscript: symverscript.in
 	$(call py_action,preprocessor, \
@@ -217,23 +202,19 @@ endif
 
 # HP-UX does not require the extra linking of "-lm"
 ifeq (,$(filter HP-UX WINNT,$(OS_ARCH)))
-EXTRA_LIBS	+= -lm
+OS_LIBS	+= -lm
 endif
 
 CFLAGS += $(MOZ_ZLIB_CFLAGS)
-EXTRA_LIBS += $(MOZ_ZLIB_LIBS)
+OS_LIBS += $(MOZ_ZLIB_LIBS)
 
-ifdef MOZ_SHARED_ICU
-EXTRA_DSO_LDOPTS += $(MOZ_ICU_LIBS)
-else
-SHARED_LIBRARY_LIBS += $(MOZ_ICU_LIBS)
-endif
+EXTRA_LIBS += $(MOZ_ICU_LIBS)
 
 ifeq ($(OS_ARCH),FreeBSD)
-EXTRA_LIBS	+= -pthread
+OS_LIBS	+= -pthread
 endif
 ifeq ($(OS_ARCH),Linux)
-EXTRA_LIBS	+= -ldl
+OS_LIBS	+= -ldl
 endif
 # Silence warnings on AIX/HP-UX from non-GNU compilers
 ifndef GNU_CC
@@ -261,7 +242,7 @@ CXXFLAGS += -mcpu=v9
 endif # GNU_CC
 
 endif
-EXTRA_LIBS	+= -lposix4 -ldl -lnsl -lsocket
+OS_LIBS	+= -lposix4 -ldl -lnsl -lsocket
 endif
 
 SCRIPTS = $(JS_CONFIG_NAME)

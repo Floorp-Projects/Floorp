@@ -67,8 +67,7 @@ function zoomDocument(aDocument, aZoom)
     QueryInterface(Components.interfaces.nsIInterfaceRequestor).
     getInterface(Components.interfaces.nsIWebNavigation).
     QueryInterface(Components.interfaces.nsIDocShell);
-  var docViewer = docShell.contentViewer.
-    QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+  var docViewer = docShell.contentViewer;
 
   docViewer.fullZoom = aZoom;
 }

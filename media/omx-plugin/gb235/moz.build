@@ -18,6 +18,12 @@ LOCAL_INCLUDES += [
     '../include/gb/media/stagefright/openmax',
 ]
 
+USE_LIBS += [
+    '/media/omx-plugin/lib/gb/libutils/utils',
+    '/media/omx-plugin/lib/gb235/libstagefright/stagefright',
+    'stagefright_color_conversion',
+]
+
 # Don't use STL wrappers; this isn't Gecko code
 DISABLE_STL_WRAPPING = True
 NO_VISIBILITY_FLAGS = True

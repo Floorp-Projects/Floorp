@@ -11,4 +11,4 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 FAIL_ON_WARNINGS = True
 
-FINAL_LIBRARY = 'necko'
+FINAL_LIBRARY = 'xul'

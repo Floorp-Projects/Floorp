@@ -6,7 +6,7 @@ import sys
 from setuptools import setup, find_packages
 
 PACKAGE_NAME = 'mozrunner'
-PACKAGE_VERSION = '6.1'
+PACKAGE_VERSION = '6.2'
 
 desc = """Reliable start/stop/configuration of Mozilla Applications (Firefox, Thunderbird, etc.)"""
 

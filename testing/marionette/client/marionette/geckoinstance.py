@@ -2,6 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+from copy import deepcopy
+import errno
+import platform
 import os
 import time
 
@@ -21,18 +24,21 @@ class GeckoInstance(object):
                       "browser.warnOnQuit": False}
 
     def __init__(self, host, port, bin, profile, app_args=None, symbols_path=None,
-                  gecko_log=None):
+                  gecko_log=None, prefs=None):
         self.marionette_host = host
         self.marionette_port = port
         self.bin = bin
         self.profile_path = profile
+        self.prefs = prefs
         self.app_args = app_args or []
         self.runner = None
         self.symbols_path = symbols_path
         self.gecko_log = gecko_log
 
     def start(self):
-        profile_args = {"preferences": self.required_prefs}
+        profile_args = {"preferences": deepcopy(self.required_prefs)}
+        if self.prefs:
+            profile_args["preferences"].update(self.prefs)
         if not self.profile_path:
             profile_args["restore"] = False
             profile = Profile(**profile_args)
@@ -48,7 +54,27 @@ class GeckoInstance(object):
 
         self.gecko_log = os.path.realpath(self.gecko_log)
         if os.access(self.gecko_log, os.F_OK):
-            os.remove(self.gecko_log)
+            if platform.system() is 'Windows':
+                # NOTE: windows has a weird filesystem where it happily 'closes'
+                # the file, but complains if you try to delete it. You get a
+                # 'file still in use' error. Sometimes you can wait a bit and
+                # a retry will succeed.
+                # If all retries fail, we'll just continue without removing
+                # the file. In this case, if we are restarting the instance,
+                # then the new logs just get appended to the old file.
+                tries = 0
+                while tries < 10:
+                    try:
+                        os.remove(self.gecko_log)
+                        break
+                    except WindowsError as e:
+                        if e.errno == errno.EACCES:
+                            tries += 1
+                            time.sleep(0.5)
+                        else:
+                            raise e
+            else:
+                os.remove(self.gecko_log)
 
         env = os.environ.copy()
 
@@ -75,6 +101,13 @@ class GeckoInstance(object):
             self.runner.stop()
             self.runner.cleanup()
 
+    def restart(self, prefs=None):
+        self.close()
+        if prefs:
+            self.prefs = prefs
+        else:
+            self.prefs = None
+        self.start()
 
 class B2GDesktopInstance(GeckoInstance):
     required_prefs = {"focusmanager.testmode": True}

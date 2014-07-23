@@ -2,9 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_DSO_LDOPTS = \
-	$(XPCOM_GLUE_LDOPTS) \
+EXTRA_LIBS += \
 	$(NSPR_LIBS) \
+    $(NULL)
+
+OS_LIBS += \
 	$(MOZ_DBUS_GLIB_LIBS) \
 	$(NULL)
                 

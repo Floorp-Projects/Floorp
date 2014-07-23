@@ -2428,10 +2428,6 @@ moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
     gtk_widget_set_direction(gMenuSeparatorWidget, direction);
 
     border_width = gtk_container_get_border_width(GTK_CONTAINER(gMenuSeparatorWidget));
-    gtk_widget_style_get(gMenuSeparatorWidget,
-                         "wide-separators",    &wide_separators,
-                         "separator-height",   &separator_height,
-                         NULL);
 
     style = gtk_widget_get_style_context(gMenuSeparatorWidget);
     gtk_style_context_get_padding(style, 0, &padding);
@@ -2440,6 +2436,14 @@ moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
     y = rect->y + border_width;
     w = rect->width - border_width * 2;
     h = rect->height - border_width * 2;
+
+    gtk_style_context_save(style);
+    gtk_style_context_add_class(style, GTK_STYLE_CLASS_SEPARATOR);
+
+    gtk_widget_style_get(gMenuSeparatorWidget,
+                         "wide-separators",    &wide_separators,
+                         "separator-height",   &separator_height,
+                         NULL);
 
     if (wide_separators) {
       gtk_render_frame(style, cr,
@@ -2454,6 +2458,8 @@ moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
                       x + w - padding.right - 1,
                       y + padding.top);
     }
+
+    gtk_style_context_restore(style);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -3027,15 +3033,20 @@ moz_gtk_get_menu_separator_height(gint *size)
 
     ensure_menu_separator_widget();
 
+    border_width = gtk_container_get_border_width(GTK_CONTAINER(gMenuSeparatorWidget));
+
+    style = gtk_widget_get_style_context(gMenuSeparatorWidget);
+    gtk_style_context_get_padding(style, 0, &padding);
+
+    gtk_style_context_save(style);
+    gtk_style_context_add_class(style, GTK_STYLE_CLASS_SEPARATOR);
+
     gtk_widget_style_get(gMenuSeparatorWidget,
                           "wide-separators",  &wide_separators,
                           "separator-height", &separator_height,
                           NULL);
 
-    border_width = gtk_container_get_border_width(GTK_CONTAINER(gMenuSeparatorWidget));
-
-    style = gtk_widget_get_style_context(gMenuSeparatorWidget);
-    gtk_style_context_get_padding(style, 0, &padding);
+    gtk_style_context_restore(style);
 
     *size = padding.top + padding.bottom + border_width*2;
     *size += (wide_separators) ? separator_height : 1;

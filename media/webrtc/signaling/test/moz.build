@@ -6,11 +6,14 @@
 
 if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     CPP_UNIT_TESTS += [
-        'mediaconduit_unittests.cpp',
-        'mediapipeline_unittest.cpp',
-        'sdp_unittests.cpp',
-        'signaling_unittests.cpp',
+        'mediaconduit_unittests',
+        'mediapipeline_unittest',
+        'sdp_unittests',
+        'signaling_unittests',
     ]
+
+SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 if CONFIG['OS_TARGET'] in ('Darwin', 'Android'):
@@ -88,4 +91,33 @@ if CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
     LOCAL_INCLUDES += [
         '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
         '/media/mtransport/third_party/nrappkit/src/port/generic/include',
+    ]
+
+USE_LIBS += [
+    '/media/webrtc/signalingtest/signaling_ecc/ecc',
+    '/media/webrtc/signalingtest/signaling_sipcc/sipcc',
+    '/media/webrtc/trunk/testing/gtest_gtest/gtest',
+    'gkmedias',
+    'mozalloc',
+    'mtransport_s',
+    'nksrtp_s',
+    'webrtc',
+    'xpcomglue_s',
+    'xul',
+    'yuv',
+]
+
+if CONFIG['BUILD_ARM_NEON']:
+    USE_LIBS += [
+        'yuv_neon',
+    ]
+
+if not CONFIG['MOZ_NATIVE_ZLIB'] and not CONFIG['ZLIB_IN_MOZGLUE']:
+    USE_LIBS += [
+        'mozz',
+    ]
+
+if CONFIG['JS_SHARED_LIBRARY']:
+    USE_LIBS += [
+        'js',
     ]

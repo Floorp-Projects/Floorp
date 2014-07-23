@@ -26,7 +26,7 @@ UNIFIED_SOURCES += [
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/content/media/webaudio',
 ]

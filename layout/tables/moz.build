@@ -29,7 +29,7 @@ FAIL_ON_WARNINGS = True
 
 MSVC_ENABLE_PGO = True
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '../../content/base/src',

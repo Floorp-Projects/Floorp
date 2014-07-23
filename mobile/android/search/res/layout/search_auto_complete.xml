@@ -8,37 +8,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:clickable="false"
     tools:context=".autocomplete.AutoCompleteFragment">
 
-    <FrameLayout
-        android:id="@+id/search_bar"
+    <org.mozilla.search.autocomplete.ClearableEditText
+        android:id="@+id/auto_complete_edit_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp">
-
-        <EditText
-            android:id="@+id/search_bar_edit_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:imeOptions="actionSearch"
-            android:inputType="textNoSuggestions|textVisiblePassword"
-            android:drawableLeft="@drawable/search_icon"
-            android:drawablePadding="10dp"
-            android:focusable="false"
-            android:focusableInTouchMode="false"
-            android:hint="@string/search_bar_hint"/>
-
-        <Button
-            android:id="@+id/search_bar_clear_button"
-            android:layout_width="14dp"
-            android:layout_height="14dp"
-            android:layout_gravity="right|center_vertical"
-            android:layout_marginRight="10dp"
-            android:background="@drawable/search_clear"
-            android:visibility="gone"/>
-
-    </FrameLayout>
+        android:padding="10dp"/>
 
     <ListView
         android:id="@+id/auto_complete_dropdown"

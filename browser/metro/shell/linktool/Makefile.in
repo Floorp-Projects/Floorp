@@ -4,7 +4,7 @@
 
 include $(topsrcdir)/config/config.mk
 
-OS_LIBS = \
+OS_LIBS += \
 	kernel32.lib \
 	user32.lib \
 	ole32.lib \

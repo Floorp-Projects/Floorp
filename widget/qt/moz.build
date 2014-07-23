@@ -32,8 +32,6 @@ if CONFIG['NS_PRINTING']:
         'nsPrintSettingsQt.cpp',
     ]
 
-LIBRARY_NAME = 'widget_qt'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

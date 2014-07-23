@@ -5,34 +5,36 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 CPP_UNIT_TESTS += [
-    'TestArrayUtils.cpp',
-    'TestAtomics.cpp',
-    'TestBinarySearch.cpp',
-    'TestBloomFilter.cpp',
-    'TestCasting.cpp',
-    'TestCeilingFloor.cpp',
-    'TestCheckedInt.cpp',
-    'TestCountPopulation.cpp',
-    'TestCountZeroes.cpp',
-    'TestEndian.cpp',
-    'TestEnumSet.cpp',
-    'TestFloatingPoint.cpp',
-    'TestIntegerPrintfMacros.cpp',
-    'TestMacroArgs.cpp',
-    'TestMacroForEach.cpp',
-    'TestPair.cpp',
-    'TestRollingMean.cpp',
-    'TestSHA1.cpp',
-    'TestTypedEnum.cpp',
-    'TestTypeTraits.cpp',
-    'TestUniquePtr.cpp',
-    'TestWeakPtr.cpp',
+    'TestArrayUtils',
+    'TestAtomics',
+    'TestBinarySearch',
+    'TestBloomFilter',
+    'TestCasting',
+    'TestCeilingFloor',
+    'TestCheckedInt',
+    'TestCountPopulation',
+    'TestCountZeroes',
+    'TestEndian',
+    'TestEnumSet',
+    'TestFloatingPoint',
+    'TestIntegerPrintfMacros',
+    'TestMacroArgs',
+    'TestMacroForEach',
+    'TestPair',
+    'TestRollingMean',
+    'TestSHA1',
+    'TestTypedEnum',
+    'TestTypeTraits',
+    'TestUniquePtr',
+    'TestWeakPtr',
 ]
 
 if not CONFIG['MOZ_ASAN']:
     CPP_UNIT_TESTS += [
-        'TestPoisonArea.cpp',
+        'TestPoisonArea',
     ]
+
+SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 
 # Since we link directly with MFBT object files, define IMPL_MFBT
 DEFINES['IMPL_MFBT'] = True
@@ -46,3 +48,7 @@ if CONFIG['_MSC_VER']:
   ]
 
 FAIL_ON_WARNINGS = True
+
+USE_LIBS += [
+    'mfbt',
+]

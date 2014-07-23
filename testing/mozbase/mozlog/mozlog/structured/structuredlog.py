@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 from collections import defaultdict
 from multiprocessing import current_process
 from threading import current_thread, Lock
+import json
 import time
 
 """Structured Logging for recording test results.
@@ -93,6 +94,7 @@ class StructuredLogger(object):
     """
 
     def __init__(self, name, component=None):
+        self._running_tests = set()
         self.name = name
         self.component = component
 
@@ -161,6 +163,10 @@ class StructuredLogger(object):
 
         :param test: Identifier of the test that will run.
         """
+        if test in self._running_tests:
+            self.error("test_start for %s logged while in progress." % test)
+            return
+        self._running_tests.add(test)
         self._log_data("test_start", {"test": test})
 
     def test_status(self, test, subtest, status, expected="PASS", message=None,
@@ -183,13 +189,19 @@ class StructuredLogger(object):
                 "subtest": subtest,
                 "status": status.upper()}
         if message is not None:
-            data["message"] = message
+            data["message"] = unicode(message)
         if expected != data["status"]:
             data["expected"] = expected
         if stack is not None:
             data["stack"] = stack
         if extra is not None:
             data["extra"] = extra
+
+        if test not in self._running_tests:
+            self.error("test_status for %s logged while not in progress. "
+                       "Logged with data: %s" % (test, json.dumps(data)))
+            return
+
         self._log_data("test_status", data)
 
     def test_end(self, test, status, expected="OK", message=None, stack=None,
@@ -213,14 +225,20 @@ class StructuredLogger(object):
         data = {"test": test,
                 "status": status.upper()}
         if message is not None:
-            data["message"] = message
+            data["message"] = unicode(message)
         if expected != data["status"] and status != "SKIP":
             data["expected"] = expected
         if stack is not None:
             data["stack"] = stack
         if extra is not None:
             data["extra"] = extra
-        self._log_data("test_end", data)
+
+        if test not in self._running_tests:
+            self.error("test_end for %s logged while not in progress. "
+                       "Logged with data: %s" % (test, json.dumps(data)))
+        else:
+            self._running_tests.remove(test)
+            self._log_data("test_end", data)
 
     def process_output(self, process, data, command=None):
         """Log output from a managed process.
@@ -239,7 +257,7 @@ class StructuredLogger(object):
 
 def _log_func(level_name):
     def log(self, message):
-        data = {"level": level_name, "message": message}
+        data = {"level": level_name, "message": unicode(message)}
         self._log_data("log", data)
     log.__doc__ = """Log a message with level %s
 

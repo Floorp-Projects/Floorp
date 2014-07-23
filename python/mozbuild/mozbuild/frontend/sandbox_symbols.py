@@ -234,10 +234,14 @@ VARIABLES = {
         """, 'binaries'),
 
     'CPP_UNIT_TESTS': (StrictOrderingOnAppendList, list,
-        """C++ source files for unit tests.
+        """Compile a list of C++ unit test names.
 
-        This is a list of C++ unit test sources. Entries must be files that
-        exist. These generally have ``.cpp`` extensions.
+        Each name in this variable corresponds to an executable built from the
+        corresponding source file with the same base name.
+
+        If the configuration token ``BIN_SUFFIX`` is set, its value will be
+        automatically appended to each name. If a name already ends with
+        ``BIN_SUFFIX``, the name will remain unchanged.
         """, 'binaries'),
 
     'FAIL_ON_WARNINGS': (bool, bool,
@@ -273,6 +277,8 @@ VARIABLES = {
 
     'IS_COMPONENT': (bool, bool,
         """Whether the library contains a binary XPCOM component manifest.
+
+        Implies FORCE_SHARED_LIB.
         """, None),
 
     'PARALLEL_DIRS': (list, list,
@@ -306,8 +312,9 @@ VARIABLES = {
         """, None),
 
     'LIBRARY_NAME': (unicode, unicode,
-        """The name of the library generated for a directory.
+        """The code name of the library generated for a directory.
 
+        By default STATIC_LIBRARY_NAME and SHARED_LIBRARY_NAME take this name.
         In ``example/components/moz.build``,::
 
            LIBRARY_NAME = 'xpcomsample'
@@ -316,10 +323,33 @@ VARIABLES = {
         ``example/components/xpcomsample.lib`` on Windows.
         """, 'binaries'),
 
-    'LIBS': (StrictOrderingOnAppendList, list,
-        """Linker libraries and flags.
+    'SHARED_LIBRARY_NAME': (unicode, unicode,
+        """The name of the static library generated for a directory, if it needs to
+        differ from the library code name.
 
-        A list of libraries and flags to include when linking.
+        Implies FORCE_SHARED_LIB.
+        """, None),
+
+    'IS_FRAMEWORK': (bool, bool,
+        """Whether the library to build should be built as a framework on OSX.
+
+        This implies the name of the library won't be prefixed nor suffixed.
+        Implies FORCE_SHARED_LIB.
+        """, None),
+
+    'STATIC_LIBRARY_NAME': (unicode, unicode,
+        """The name of the static library generated for a directory, if it needs to
+        differ from the library code name.
+
+        Implies FORCE_STATIC_LIB.
+        """, None),
+
+    'USE_LIBS': (StrictOrderingOnAppendList, list,
+        """List of libraries to link to programs and libraries.
+        """, None),
+
+    'HOST_USE_LIBS': (StrictOrderingOnAppendList, list,
+        """List of libraries to link to host programs and libraries.
         """, None),
 
     'LOCAL_INCLUDES': (StrictOrderingOnAppendList, list,
@@ -395,11 +425,10 @@ VARIABLES = {
            RESOURCE_FILES.fonts['baz.res.in'].preprocess = True
         """, None),
 
-    'SDK_LIBRARY': (StrictOrderingOnAppendList, list,
-        """Elements of the distributed SDK.
+    'SDK_LIBRARY': (bool, bool,
+        """Whether the library built in the directory is part of the SDK.
 
-        Files on this list will be copied into ``SDK_LIB_DIR``
-        (``$DIST/sdk/lib``).
+        The library will be copied into ``SDK_LIB_DIR`` (``$DIST/sdk/lib``).
         """, None),
 
     'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list,
