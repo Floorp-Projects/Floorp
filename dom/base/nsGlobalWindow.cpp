@@ -9279,7 +9279,7 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, in
       nsresult rv = aSel->GetRangeAt(0, getter_AddRefs(range));
       if (NS_SUCCEEDED(rv) && range) {
         nsRefPtr<nsRange> nsrange = static_cast<nsRange*>(range.get());
-        init.mBoundingClientRect = nsrange->GetBoundingClientRect(true);
+        init.mBoundingClientRect = nsrange->GetBoundingClientRect(true, false);
         range->ToString(init.mSelectedText);
         init.mReason = aReason;
       }
