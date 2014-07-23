@@ -436,7 +436,7 @@ class RecursiveMakeBackend(CommonBackend):
             self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, SimpleProgram):
-            self._process_simple_program(obj.program, backend_file)
+            self._process_simple_program(obj, backend_file)
             self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, HostSimpleProgram):
@@ -1017,8 +1017,11 @@ class RecursiveMakeBackend(CommonBackend):
     def _process_host_program(self, program, backend_file):
         backend_file.write('HOST_PROGRAM = %s\n' % program)
 
-    def _process_simple_program(self, program, backend_file):
-        backend_file.write('SIMPLE_PROGRAMS += %s\n' % program)
+    def _process_simple_program(self, obj, backend_file):
+        if obj.is_unit_test:
+            backend_file.write('CPP_UNIT_TESTS += %s\n' % obj.program)
+        else:
+            backend_file.write('SIMPLE_PROGRAMS += %s\n' % obj.program)
 
     def _process_host_simple_program(self, program, backend_file):
         backend_file.write('HOST_SIMPLE_PROGRAMS += %s\n' % program)

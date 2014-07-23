@@ -324,7 +324,6 @@ class TreeMetadataEmitter(LoggingMixin):
         varlist = [
             'ANDROID_GENERATED_RESFILES',
             'ANDROID_RES_DIRS',
-            'CPP_UNIT_TESTS',
             'DISABLE_STL_WRAPPING',
             'EXTRA_ASSEMBLER_FLAGS',
             'EXTRA_COMPILE_FLAGS',
@@ -449,6 +448,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         for kind, cls in [
                 ('SIMPLE_PROGRAMS', SimpleProgram),
+                ('CPP_UNIT_TESTS', SimpleProgram),
                 ('HOST_SIMPLE_PROGRAMS', HostSimpleProgram)]:
             for program in sandbox[kind]:
                 if program in self._binaries:
@@ -456,9 +456,11 @@ class TreeMetadataEmitter(LoggingMixin):
                         'Cannot use "%s" in %s, '
                         'because it is already used in %s' % (program, kind,
                         self._binaries[program].relativedir), sandbox)
-                self._binaries[program] = cls(sandbox, program)
+                self._binaries[program] = cls(sandbox, program,
+                    is_unit_test=kind == 'CPP_UNIT_TESTS')
                 self._linkage.append((sandbox, self._binaries[program],
-                    kind.replace('SIMPLE_PROGRAM', 'USE_LIBS')))
+                    'HOST_USE_LIBS' if kind == 'HOST_SIMPLE_PROGRAMS'
+                    else 'USE_LIBS'))
 
         test_js_modules = sandbox.get('TESTING_JS_MODULES')
         if test_js_modules:
