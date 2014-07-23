@@ -7,6 +7,7 @@ include protocol PGMP;
 include GMPTypes;
 
 using GMPVideoCodec from "gmp-video-codec.h";
+using GMPErr from "gmp-errors.h";
 
 include "GMPMessageUtils.h";
 
@@ -37,6 +38,7 @@ parent:
   async InputDataExhausted();
   async DrainComplete();
   async ResetComplete();
+  async Error(GMPErr aErr);
   async ParentShmemForPool(Shmem aEncodedBuffer);
   // MUST be intr - if sync and we create a new Shmem, when the returned
   // Shmem is received in the Child it will fail to Deserialize
