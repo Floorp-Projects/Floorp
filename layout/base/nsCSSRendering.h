@@ -473,6 +473,29 @@ struct nsCSSRendering {
                          const nsRect& aBGClipRect,
                          const nsStyleBackground::Layer& aLayer);
 
+  struct BackgroundClipState {
+    nsRect mBGClipArea;  // Affected by mClippedRadii
+    nsRect mAdditionalBGClipArea;  // Not affected by mClippedRadii
+    nsRect mDirtyRect;
+    gfxRect mDirtyRectGfx;
+
+    nscoord mRadii[8];
+    gfxCornerSizes mClippedRadii;
+    bool mHasRoundedCorners;
+    bool mHasAdditionalBGClipArea;
+
+    // Whether we are being asked to draw with a caller provided background
+    // clipping area. If this is true we also disable rounded corners.
+    bool mCustomClip;
+  };
+
+  static void
+  GetBackgroundClip(const nsStyleBackground::Layer& aLayer,
+                    nsIFrame* aForFrame, const nsStyleBorder& aBorder, const nsRect& aBorderArea,
+                    const nsRect& aCallerDirtyRect, bool aWillPaintBorder,
+                    nscoord aAppUnitsPerPixel,
+                    /* out */ BackgroundClipState* aClipState);
+
   /**
    * Render the background for an element using css rendering rules
    * for backgrounds.
