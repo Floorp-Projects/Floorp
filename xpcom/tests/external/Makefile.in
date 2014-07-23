@@ -5,6 +5,5 @@
 include $(topsrcdir)/config/rules.mk
 
 LIBS += \
-	$(XPCOM_GLUE_LDOPTS) \
 	$(NSPR_LIBS) \
 	$(NULL)

@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,xul,$(DEPTH)/toolkit/library)
-
 EXTRA_DEPS += $(topsrcdir)/toolkit/library/libxul.mk
 
 # dependent libraries
@@ -35,7 +33,6 @@ OS_LIBS += -lcups
 endif
 
 EXTRA_DSO_LDOPTS += \
-  $(MOZ_JS_LIBS) \
   $(NSS_LIBS) \
   $(MOZ_CAIRO_OSLIBS) \
   $(MOZ_WEBRTC_X11_LIBS) \
@@ -44,9 +41,13 @@ EXTRA_DSO_LDOPTS += \
   $(NULL)
 
 ifdef ENABLE_INTL_API
-ifdef JS_SHARED_LIBRARY
+ifneq (,$(JS_SHARED_LIBRARY)$(MOZ_NATIVE_ICU))
 EXTRA_DSO_LDOPTS += $(MOZ_ICU_LIBS)
 endif
+endif
+
+ifdef MOZ_NATIVE_FFI
+EXTRA_DSO_LDOPTS += $(MOZ_FFI_LIBS)
 endif
 
 ifdef MOZ_NATIVE_JPEG
@@ -57,7 +58,7 @@ ifdef MOZ_NATIVE_PNG
 EXTRA_DSO_LDOPTS += $(MOZ_PNG_LIBS)
 endif
 
-ifndef ZLIB_IN_MOZGLUE
+ifdef MOZ_NATIVE_ZLIB
 EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
 endif
 
@@ -76,12 +77,6 @@ endif
 ifndef MOZ_TREE_PIXMAN
 EXTRA_DSO_LDOPTS += $(MOZ_PIXMAN_LIBS)
 endif
-
-ifdef MOZ_DMD
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,dmd,$(DIST)/lib)
-endif
-
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,gkmedias,$(DEPTH)/layout/media)
 
 ifdef MOZ_WEBRTC
 ifeq (WINNT,$(OS_TARGET))
@@ -138,7 +133,9 @@ ifdef MOZ_DIRECTSHOW
 OS_LIBS += $(call EXPAND_LIBNAME,dmoguids wmcodecdspuuid strmiids msdmo)
 endif
 
-EXTRA_DSO_LDOPTS += $(NSPR_LIBS) $(MOZALLOC_LIB)
+EXTRA_DSO_LDOPTS += $(ICONV_LIBS)
+
+EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 OS_LIBS += \
@@ -156,7 +153,7 @@ endif
 
 ifdef MOZ_WIDGET_GTK
 ifdef MOZ_ENABLE_GTK3
-EXTRA_DSO_LDOPTS += $(filter-out -lgtk-3 -lgdk-3,$(TK_LIBS)) -lmozgtk_stub
+EXTRA_DSO_LDOPTS += $(filter-out -lgtk-3 -lgdk-3,$(TK_LIBS))
 else
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
@@ -203,10 +200,6 @@ OS_LIBS += $(call EXPAND_LIBNAME,uiautomationcore runtimeobject)
 endif
 endif # WINNT
 
-ifdef MOZ_JPROF
-EXTRA_DSO_LDOPTS += -ljprof
-endif
-
 ifdef MOZ_ENABLE_QT
 EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS) $(XEXT_LIBS)
 endif
@@ -233,8 +226,6 @@ OS_LIBS += $(LIBICONV)
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 OS_LIBS += $(call EXPAND_LIBNAME,usp10 oleaut32)
 endif
-
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,StaticXULComponentsEnd,$(DEPTH)/toolkit/library/StaticXULComponentsEnd)
 
 # BFD ld doesn't create multiple PT_LOADs as usual when an unknown section
 # exists. Using an implicit linker script to make it fold that section in

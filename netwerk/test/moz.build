@@ -62,3 +62,9 @@ RESOURCE_FILES += [
     'urlparse.dat',
     'urlparse_unx.dat',
 ]
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul-shared',
+]

@@ -10,8 +10,7 @@ MANIFEST_PATH = $(testxpcobjdir)/$(componentdir)
 PP_TARGETS += MANIFEST
 
 EXTRA_DSO_LDOPTS += \
-  $(XPCOM_GLUE_LDOPTS) \
-  $(MOZ_COMPONENT_LIBS) \
+  $(NSPR_LIBS) \
   $(NULL)
 
 LIB_FILES = $(SHARED_LIBRARY)

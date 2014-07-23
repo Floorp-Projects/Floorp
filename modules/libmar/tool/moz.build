@@ -30,3 +30,13 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
     LDFLAGS += [
       '-framework Security',
     ]
+
+USE_LIBS += [
+    'mar',
+]
+
+if CONFIG['MOZ_ENABLE_SIGNMAR']:
+    USE_LIBS += [
+        'signmar',
+        'verifymar',
+    ]

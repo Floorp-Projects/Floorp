@@ -19,6 +19,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
 
 LIBRARY_NAME = 'replace_jemalloc'
 
+USE_LIBS += [
+    'jemalloc',
+]
+
 FORCE_SHARED_LIB = True
 
 DEFINES['MOZ_JEMALLOC3'] = True

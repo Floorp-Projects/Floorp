@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-LIBS      = $(NSPR_LIBS) $(EDITLINE_LIBS) ../$(LIB_PREFIX)js_static.$(LIB_SUFFIX) $(MOZ_ZLIB_LIBS)
+LIBS      += $(NSPR_LIBS) $(EDITLINE_LIBS) $(MOZ_ZLIB_LIBS)
 ifdef MOZ_NATIVE_FFI
 EXTRA_LIBS += $(MOZ_FFI_LIBS)
 endif

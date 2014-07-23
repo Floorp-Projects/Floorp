@@ -43,4 +43,8 @@ if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
 if CONFIG['OS_ARCH'] == 'WINNT':
     RCINCLUDE = 'splash.rc'
 
+USE_LIBS += [
+    'xpcomglue',
+]
+
 DISABLE_STL_WRAPPING = True

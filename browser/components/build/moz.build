@@ -23,3 +23,9 @@ LOCAL_INCLUDES += [
     '../migration/src',
     '../shell/src',
 ]
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul-shared',
+]

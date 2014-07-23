@@ -19,3 +19,9 @@ DEFINES['LIBRARY_FILENAME'] = '%s%s%s' % (
     LIBRARY_NAME,
     CONFIG['DLL_SUFFIX']
 )
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul-shared',
+]

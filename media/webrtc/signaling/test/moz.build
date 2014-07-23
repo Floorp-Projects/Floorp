@@ -92,3 +92,32 @@ if CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
         '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
         '/media/mtransport/third_party/nrappkit/src/port/generic/include',
     ]
+
+USE_LIBS += [
+    '/media/webrtc/signalingtest/signaling_ecc/ecc',
+    '/media/webrtc/signalingtest/signaling_sipcc/sipcc',
+    '/media/webrtc/trunk/testing/gtest_gtest/gtest',
+    'gkmedias',
+    'mozalloc',
+    'mtransport_s',
+    'nksrtp_s',
+    'webrtc',
+    'xpcomglue_s',
+    'xul-shared',
+    'yuv',
+]
+
+if CONFIG['BUILD_ARM_NEON']:
+    USE_LIBS += [
+        'yuv_neon',
+    ]
+
+if not CONFIG['MOZ_NATIVE_ZLIB'] and not CONFIG['ZLIB_IN_MOZGLUE']:
+    USE_LIBS += [
+        'mozz',
+    ]
+
+if CONFIG['JS_SHARED_LIBRARY']:
+    USE_LIBS += [
+        'js',
+    ]

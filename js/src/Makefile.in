@@ -15,16 +15,9 @@ endif
 TOPLEVEL_BUILD := 1
 
 run_for_side_effects := $(shell echo 'MAKE: $(MAKE)')
-LIBS		= $(NSPR_LIBS)
+LIBS		+= $(NSPR_LIBS)
 
 DIST_INSTALL = 1
-
-ifdef JS_STANDALONE
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,mfbt,$(DEPTH)/mfbt)
-ifndef MOZ_NATIVE_ZLIB
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,mozz,$(DEPTH)/modules/zlib/src)
-endif
-endif
 
 ifdef JS_HAS_CTYPES
 ifdef MOZ_NATIVE_FFI

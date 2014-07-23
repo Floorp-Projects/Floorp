@@ -23,3 +23,9 @@ DEFINES['LIBRARY_FILENAME'] = '%s%s%s' % (
 )
 
 FAIL_ON_WARNINGS = True
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul-shared',
+]

@@ -17,12 +17,8 @@ HOST_CFLAGS += \
   $(DEFINES) \
   $(NULL)
 
-LIBS = $(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX)
-
 ifdef MOZ_ENABLE_SIGNMAR
 LIBS += \
-  $(DEPTH)/modules/libmar/sign/$(LIB_PREFIX)signmar.$(LIB_SUFFIX) \
-  $(DEPTH)/modules/libmar/verify/$(LIB_PREFIX)verifymar.$(LIB_SUFFIX) \
   $(DIST)/lib/$(LIB_PREFIX)nss3.$(LIB_SUFFIX) \
   $(DIST)/lib/$(LIB_PREFIX)nssutil3.$(LIB_SUFFIX) \
   $(NSPR_LIBS) \

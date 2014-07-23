@@ -329,11 +329,8 @@ EXTRA_DSO_LDOPTS += $(DEPTH)/nsprpub/pr/src/$(LIB_PREFIX)nspr4$(SUFFIX)
 EXTRA_DSO_LDOPTS += $(DEPTH)/nsprpub/lib/ds/$(LIB_PREFIX)plds4$(SUFFIX)
 EXTRA_DSO_LDOPTS += $(DEPTH)/nsprpub/lib/libc/src/$(LIB_PREFIX)plc4$(SUFFIX)
 
-# Fold SQLite
-EXTRA_DSO_LDOPTS += $(DEPTH)/db/sqlite3/src/$(LIB_PREFIX)mozsqlite3.$(LIB_SUFFIX)
-
 # Add all static libraries for nss, smime, ssl and nssutil
-SHARED_LIBRARY_LIBS = $(addprefix ../,$(NSS_STATIC_LIBS))
+SHARED_LIBRARY_LIBS += $(addprefix ../,$(NSS_STATIC_LIBS))
 
 nss_def_file := $(srcdir)/nss.def
 
@@ -369,7 +366,7 @@ ifdef MOZ_FOLD_LIBS
 # Force the linker to include everything from the static libraries.
 EXPAND_LIBS_EXEC += --extract
 
-$(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS)
+$(SHARED_LIBRARY): $(addprefix ../,$(NSS_STATIC_LIBS))
 
 EXTRA_DSO_LDOPTS += $(REALTIME_LIBS)
 

@@ -6,5 +6,4 @@
 LIBS = \
   $(NSPR_LIBS) \
   $(NSS_LIBS) \
-  $(MOZALLOC_LIB) \
   $(NULL)
