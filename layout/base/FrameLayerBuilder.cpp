@@ -1832,6 +1832,10 @@ void
 ThebesLayerData::UpdateCommonClipCount(
     const DisplayItemClip& aCurrentClip)
 {
+  if (!mLayer->Manager()->IsWidgetLayerManager()) {
+    return;
+  }
+
   if (mCommonClipCount >= 0) {
     mCommonClipCount = mItemClip.GetCommonRoundedRectCount(aCurrentClip, mCommonClipCount);
   } else {
