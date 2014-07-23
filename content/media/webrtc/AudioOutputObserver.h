@@ -27,7 +27,7 @@ public:
   virtual ~AudioOutputObserver();
 
   void Clear();
-  void InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aSamples, bool aOverran,
+  void InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aFrames, bool aOverran,
                     int aFreq, int aChannels, AudioSampleFormat aFormat);
   uint32_t PlayoutFrequency() { return mPlayoutFreq; }
   uint32_t PlayoutChannels() { return mPlayoutChannels; }
