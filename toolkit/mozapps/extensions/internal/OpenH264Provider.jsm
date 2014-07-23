@@ -16,6 +16,10 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
+                                  "resource://gre/modules/GMPInstallManager.jsm");
 
 const URI_EXTENSION_STRINGS    = "chrome://mozapps/locale/extensions/extensions.properties";
 const STRING_TYPE_NAME         = "type.%ID%.name";
@@ -69,7 +73,12 @@ function configureLogging() {
  * The OpenH264Wrapper provides the info for the OpenH264 GMP plugin to public callers through the API.
  */
 
-let OpenH264Wrapper = Object.freeze({
+let OpenH264Wrapper = {
+  // An active task that checks for OpenH264 updates and installs them.
+  _updateTask: null,
+
+  _log: null,
+
   optionsType: AddonManager.OPTIONS_TYPE_INLINE,
   optionsURL: OPENH264_OPTIONS_URL,
 
@@ -158,14 +167,32 @@ let OpenH264Wrapper = Object.freeze({
   },
 
   findUpdates: function(aListener, aReason, aAppVersion, aPlatformVersion) {
-    // TODO: Hook up to openh264 update for AddonManager.UPDATE_WHEN_USER_REQUESTED (pending bug 1035225)
+    this._log.trace("findUpdates() - reason=" + aReason);
 
-    if ("onNoCompatibilityUpdateAvailable" in aListener)
-      aListener.onNoCompatibilityUpdateAvailable(this);
-    if ("onNoUpdateAvailable" in aListener)
-      aListener.onNoUpdateAvailable(this);
-    if ("onUpdateFinished" in aListener)
-      aListener.onUpdateFinished(this);
+    AddonManagerPrivate.callNoUpdateListeners(this, aListener);
+
+    if (aReason !== AddonManager.UPDATE_WHEN_USER_REQUESTED ||
+        this._updateTask !== null) {
+      return;
+    }
+
+    this._updateTask = Task.spawn(function* OpenH264Provider_updateTask() {
+      this._log.trace("findUpdates() - updateTask");
+      try {
+        let installManager = new GMPInstallManager();
+        let addons = yield installManager.checkForAddons();
+        let openH264 = addons.find(addon => addon.isOpenH264);
+        if (openH264 && !openH264.isInstalled) {
+          yield installManager.installAddon(openH264);
+        }
+        this._log.info("findUpdates() - updateTask succeeded");
+      } catch (e) {
+        this._log.error("findUpdates() - updateTask threw: " + e);
+        throw e;
+      } finally {
+        this._updateTask = null;
+      }
+    }.bind(this));
   },
 
   get pluginMimeTypes() { return []; },
@@ -182,12 +209,15 @@ let OpenH264Wrapper = Object.freeze({
     let path = prefs.get(OPENH264_PREF_PATH, "");
     return path.length > 0;
   },
-});
+};
 
 let OpenH264Provider = {
   startup: function() {
     configureLogging();
-    this._log = Log.repository.getLogger("Toolkit.OpenH264Provider");
+    this._log = Log.repository.getLoggerWithMessagePrefix("Toolkit.OpenH264Provider",
+                                                          "OpenH264Provider" + "::");
+    OpenH264Wrapper._log = Log.repository.getLoggerWithMessagePrefix("Toolkit.OpenH264Provider",
+                                                                     "OpenH264Wrapper" + "::");
     this.gmpPath = prefs.get(OPENH264_PREF_PATH, null);
     let enabled = prefs.get(OPENH264_PREF_ENABLED, true);
     this._log.trace("startup() - enabled=" + enabled + ", gmpPath="+this.gmpPath);
@@ -210,6 +240,8 @@ let OpenH264Provider = {
     prefs.ignore(OPENH264_PREF_ENABLED, this.onPrefEnabledChanged, this);
     prefs.ignore(OPENH264_PREF_PATH, this.onPrefPathChanged, this);
     prefs.ignore(OPENH264_PREF_LOGGING, configureLogging);
+
+    return OpenH264Wrapper._updateTask;
   },
 
   onPrefEnabledChanged: function() {
