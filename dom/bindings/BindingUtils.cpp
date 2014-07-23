@@ -1365,6 +1365,18 @@ XrayEnumerateAttributesOrMethods(JSContext* cx, JS::Handle<JSObject*> wrapper,
   return true;
 }
 
+#define ENUMERATE_IF_DEFINED(fieldName) {                                     \
+  if (nativeProperties->fieldName##s &&                                       \
+      !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,                     \
+                                        nativeProperties->fieldName##s,       \
+                                        nativeProperties->fieldName##Ids,     \
+                                        nativeProperties->fieldName##Specs,   \
+                                        flags, props)) {                      \
+    return false;                                                             \
+  }                                                                           \
+}
+
+
 bool
 XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
                         JS::Handle<JSObject*> obj,
@@ -1373,59 +1385,17 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
                         const NativeProperties* nativeProperties)
 {
   if (type == eInterface) {
-    if (nativeProperties->staticMethods &&
-        !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,
-                                          nativeProperties->staticMethods,
-                                          nativeProperties->staticMethodIds,
-                                          nativeProperties->staticMethodSpecs,
-                                          flags, props)) {
-      return false;
-    }
+    ENUMERATE_IF_DEFINED(staticMethod);
   } else {
-    if (nativeProperties->methods &&
-        !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,
-                                          nativeProperties->methods,
-                                          nativeProperties->methodIds,
-                                          nativeProperties->methodSpecs,
-                                          flags, props)) {
-      return false;
-    }
-    if (nativeProperties->unforgeableMethods &&
-        !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,
-                                          nativeProperties->unforgeableMethods,
-                                          nativeProperties->unforgeableMethodIds,
-                                          nativeProperties->unforgeableMethodSpecs,
-                                          flags, props)) {
-      return false;
-    }
+    ENUMERATE_IF_DEFINED(method);
+    ENUMERATE_IF_DEFINED(unforgeableMethod);
   }
 
   if (type == eInterface) {
-    if (nativeProperties->staticAttributes &&
-        !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,
-                                          nativeProperties->staticAttributes,
-                                          nativeProperties->staticAttributeIds,
-                                          nativeProperties->staticAttributeSpecs,
-                                          flags, props)) {
-      return false;
-    }
+    ENUMERATE_IF_DEFINED(staticAttribute);
   } else {
-    if (nativeProperties->attributes &&
-        !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,
-                                          nativeProperties->attributes,
-                                          nativeProperties->attributeIds,
-                                          nativeProperties->attributeSpecs,
-                                          flags, props)) {
-      return false;
-    }
-    if (nativeProperties->unforgeableAttributes &&
-        !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,
-                                          nativeProperties->unforgeableAttributes,
-                                          nativeProperties->unforgeableAttributeIds,
-                                          nativeProperties->unforgeableAttributeSpecs,
-                                          flags, props)) {
-      return false;
-    }
+    ENUMERATE_IF_DEFINED(attribute);
+    ENUMERATE_IF_DEFINED(unforgeableAttribute);
   }
 
   if (nativeProperties->constants) {
@@ -1446,6 +1416,8 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
 
   return true;
 }
+
+#undef ENUMERATE_IF_DEFINED
 
 bool
 XrayEnumerateNativeProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
