@@ -59,6 +59,12 @@ function selectFileSubsequentLoad(projecteditor, resource) {
     return;
   }
 
+  // Make sure text editors are focused immediately when selected.
+  let focusPromise = promise.resolve();
+  if (projecteditor.currentEditor.editor) {
+    focusPromise = onEditorFocus(projecteditor.currentEditor);
+  }
+
   // Only activated should fire the next time
   // (may add load() if we begin checking for changes from disk)
   let [editorActivated] = yield promise.all([
@@ -66,4 +72,15 @@ function selectFileSubsequentLoad(projecteditor, resource) {
   ]);
 
   is (editorActivated, projecteditor.currentEditor,  "Editor has been activated for " + resource.path);
+
+  yield focusPromise;
+}
+
+function onEditorFocus(editor) {
+  let def = promise.defer();
+  editor.on("focus", function focus() {
+    editor.off("focus", focus);
+    def.resolve();
+  });
+  return def.promise;
 }
