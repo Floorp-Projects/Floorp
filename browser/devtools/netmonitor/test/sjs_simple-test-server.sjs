@@ -8,6 +8,9 @@ function handleRequest(request, response) {
   response.setHeader("Pragma", "no-cache");
   response.setHeader("Expires", "0");
 
+  response.setHeader("Set-Cookie", "bob=true; Max-Age=10; HttpOnly", true);
+  response.setHeader("Set-Cookie", "tom=cool; Max-Age=10; HttpOnly", true);
+
   response.setHeader("Content-Type", "text/plain; charset=utf-8", false);
   response.setHeader("Foo-Bar", "baz", false);
   response.write("Hello world!");
