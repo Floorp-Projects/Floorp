@@ -207,8 +207,8 @@ let SnapshotsListView = Heritage.extend(WidgetMethods, {
 
     let thumbnail = document.createElementNS(HTML_NS, "canvas");
     thumbnail.className = "snapshot-item-thumbnail";
-    thumbnail.width = CanvasFront.THUMBNAIL_HEIGHT;
-    thumbnail.height = CanvasFront.THUMBNAIL_HEIGHT;
+    thumbnail.width = CanvasFront.THUMBNAIL_SIZE;
+    thumbnail.height = CanvasFront.THUMBNAIL_SIZE;
 
     let title = document.createElement("label");
     title.className = "plain snapshot-item-title";
@@ -712,14 +712,16 @@ let CallsListView = Heritage.extend(WidgetMethods, {
    *        A single "snapshot-image" instance received from the backend.
    */
   showScreenshot: function(screenshot) {
-    let { index, width, height, flipped, pixels } = screenshot;
+    let { index, width, height, scaling, flipped, pixels } = screenshot;
 
     let screenshotNode = $("#screenshot-image");
     screenshotNode.setAttribute("flipped", flipped);
     drawBackground("screenshot-rendering", width, height, pixels);
 
     let dimensionsNode = $("#screenshot-dimensions");
-    dimensionsNode.setAttribute("value", ~~width + " x " + ~~height);
+    let actualWidth = (width / scaling) | 0;
+    let actualHeight = (height / scaling) | 0;
+    dimensionsNode.setAttribute("value", actualWidth + " x " + actualHeight);
 
     window.emit(EVENTS.CALL_SCREENSHOT_DISPLAYED);
   },
@@ -754,8 +756,8 @@ let CallsListView = Heritage.extend(WidgetMethods, {
 
     let thumbnailNode = document.createElementNS(HTML_NS, "canvas");
     thumbnailNode.setAttribute("flipped", flipped);
-    thumbnailNode.width = Math.max(CanvasFront.THUMBNAIL_HEIGHT, width);
-    thumbnailNode.height = Math.max(CanvasFront.THUMBNAIL_HEIGHT, height);
+    thumbnailNode.width = Math.max(CanvasFront.THUMBNAIL_SIZE, width);
+    thumbnailNode.height = Math.max(CanvasFront.THUMBNAIL_SIZE, height);
     drawImage(thumbnailNode, width, height, pixels, { centered: true });
 
     thumbnailNode.className = "filmstrip-thumbnail";

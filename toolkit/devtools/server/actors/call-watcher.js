@@ -210,8 +210,11 @@ let FunctionCallActor = protocol.ActorClass({
     // XXX: All of this sucks. Make this smarter, so that the frontend
     // can inspect each argument, be it object or primitive. Bug 978960.
     let serializeArgs = () => args.map((arg, i) => {
-      if (typeof arg == "undefined") {
+      if (arg === undefined) {
         return "undefined";
+      }
+      if (arg === null) {
+        return "null";
       }
       if (typeof arg == "function") {
         return "Function";
@@ -631,7 +634,7 @@ CallWatcherFront.ENUM_METHODS[CallWatcherFront.CANVAS_WEBGL_CONTEXT] = {
   stencilOpSeparate: [0, 1, 2, 3],
   texImage2D: (args) => args.length > 6 ? [0, 2, 6, 7] : [0, 2, 3, 4],
   texParameterf: [0, 1],
-  texParameteri: [0, 1],
+  texParameteri: [0, 1, 2],
   texSubImage2D: (args) => args.length === 9 ? [0, 6, 7] : [0, 4, 5],
   vertexAttribPointer: [2]
 };
@@ -643,7 +646,7 @@ CallWatcherFront.ENUM_METHODS[CallWatcherFront.CANVAS_WEBGL_CONTEXT] = {
  * For example, when gl.clear(gl.COLOR_BUFFER_BIT) is called, the actual passed
  * argument's value is 16384, which we want identified as "COLOR_BUFFER_BIT".
  */
-var gEnumRegex = /^[A-Z_]+$/;
+var gEnumRegex = /^[A-Z][A-Z0-9_]+$/;
 var gEnumsLookupTable = {};
 
 // These values are returned from errors, or empty values,
