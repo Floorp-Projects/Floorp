@@ -231,7 +231,7 @@ FireflyApp.prototype = {
   },
 
   _handle_meta_response: function(data) {
-    switch(data.cmd) {
+    switch (data.cmd) {
       case "create-session":
       case "~create-session":
         // if we get a response form start-app, assume we have a connection already
@@ -303,11 +303,6 @@ FireflyApp.prototype = {
   },
 
   shutdown: function() {
-    if (this._info_timer) {
-      this._info_timer.clear();
-      this._info_timer = null;
-    }
-
     this.stop(function() {
       this._send_meta_cmd(PROTO_CMD_VALUE_END_SESSION);
       if (this._mediaListener) {
