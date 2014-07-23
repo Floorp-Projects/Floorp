@@ -888,16 +888,27 @@ BluetoothA2dpInterface::BluetoothA2dpInterface(
 BluetoothA2dpInterface::~BluetoothA2dpInterface()
 { }
 
-bt_status_t
-BluetoothA2dpInterface::Init(btav_callbacks_t* aCallbacks)
+void
+BluetoothA2dpInterface::Init(btav_callbacks_t* aCallbacks,
+                             BluetoothA2dpResultHandler* aRes)
 {
-  return mInterface->init(aCallbacks);
+  bt_status_t status = mInterface->init(aCallbacks);
+
+  if (aRes) {
+    DispatchBluetoothA2dpResult(aRes, &BluetoothA2dpResultHandler::Init,
+                                status);
+  }
 }
 
 void
-BluetoothA2dpInterface::Cleanup()
+BluetoothA2dpInterface::Cleanup(BluetoothA2dpResultHandler* aRes)
 {
   mInterface->cleanup();
+
+  if (aRes) {
+    DispatchBluetoothA2dpResult(aRes, &BluetoothA2dpResultHandler::Cleanup,
+                                BT_STATUS_SUCCESS);
+  }
 }
 
 bt_status_t
@@ -969,16 +980,27 @@ BluetoothAvrcpInterface::BluetoothAvrcpInterface(
 BluetoothAvrcpInterface::~BluetoothAvrcpInterface()
 { }
 
-bt_status_t
-BluetoothAvrcpInterface::Init(btrc_callbacks_t* aCallbacks)
+void
+BluetoothAvrcpInterface::Init(btrc_callbacks_t* aCallbacks,
+                              BluetoothAvrcpResultHandler* aRes)
 {
-  return mInterface->init(aCallbacks);
+  bt_status_t status = mInterface->init(aCallbacks);
+
+  if (aRes) {
+    DispatchBluetoothAvrcpResult(aRes, &BluetoothAvrcpResultHandler::Init,
+                                 status);
+  }
 }
 
 void
-BluetoothAvrcpInterface::Cleanup()
+BluetoothAvrcpInterface::Cleanup(BluetoothAvrcpResultHandler* aRes)
 {
   mInterface->cleanup();
+
+  if (aRes) {
+    DispatchBluetoothAvrcpResult(aRes, &BluetoothAvrcpResultHandler::Cleanup,
+                                 BT_STATUS_SUCCESS);
+  }
 }
 
 bt_status_t
