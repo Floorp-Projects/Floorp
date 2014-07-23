@@ -753,6 +753,22 @@ class InstallationTarget(ContextDerived):
             DIST_SUBDIR=self.subdir)) == self.target
 
 
+class FinalTargetFiles(ContextDerived):
+    """Sandbox container object for FINAL_TARGET_FILES, which is a
+    HierarchicalStringList.
+
+    We need an object derived from ContextDerived for use in the backend, so
+    this object fills that role. It just has a reference to the underlying
+    HierarchicalStringList, which is created when parsing FINAL_TARGET_FILES.
+    """
+    __slots__ = ('files', 'target')
+
+    def __init__(self, sandbox, files, target):
+        ContextDerived.__init__(self, sandbox)
+        self.files = files
+        self.target = target
+
+
 class ClassPathEntry(object):
     """Represents a classpathentry in an Android Eclipse project."""
 
