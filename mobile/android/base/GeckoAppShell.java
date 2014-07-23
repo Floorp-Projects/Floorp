@@ -135,9 +135,6 @@ public class GeckoAppShell
     // See also HardwareUtils.LOW_MEMORY_THRESHOLD_MB.
     private static final int HIGH_MEMORY_DEVICE_THRESHOLD_MB = 768;
 
-    public static final String SHORTCUT_TYPE_WEBAPP = "webapp";
-    public static final String SHORTCUT_TYPE_BOOKMARK = "bookmark";
-
     static private int sDensityDpi = 0;
     static private int sScreenDepth = 0;
 
@@ -254,7 +251,7 @@ public class GeckoAppShell
 
         @Override
         public void onFaviconLoaded(String pageUrl, String faviconURL, Bitmap favicon) {
-            GeckoAppShell.createShortcut(title, url, url, favicon, "");
+            GeckoAppShell.createShortcut(title, url, favicon);
         }
     }
 
@@ -781,59 +778,25 @@ public class GeckoAppShell
         restartScheduled = true;
     }
 
-    public static Intent getWebappIntent(String aURI, String aOrigin, String aTitle, Bitmap aIcon) {
-        Intent intent;
-
-        Allocator slots = Allocator.getInstance(getContext());
-        int index = slots.getIndexForOrigin(aOrigin);
-
-        if (index == -1) {
-            return null;
-        }
-
-        String packageName = slots.getAppForIndex(index);
-        intent = getContext().getPackageManager().getLaunchIntentForPackage(packageName);
-        if (aURI != null) {
-            intent.setData(Uri.parse(aURI));
-        }
-
-        return intent;
-    }
-
-    // "Installs" an application by creating a shortcut
-    // This is the entry point from AndroidBridge.h
+    // Creates a homescreen shortcut for a web page.
+    // This is the entry point from nsIShellService.
     @WrapElementForJNI
-    static void createShortcut(String aTitle, String aURI, String aIconData, String aType) {
-        if ("webapp".equals(aType)) {
-            Log.w(LOGTAG, "createShortcut with no unique URI should not be used for aType = webapp!");
-        }
-
-        createShortcut(aTitle, aURI, aURI, aIconData, aType);
-    }
-
-    // For non-webapps.
-    public static void createShortcut(String aTitle, String aURI, Bitmap aBitmap, String aType) {
-        createShortcut(aTitle, aURI, aURI, aBitmap, aType);
-    }
-
-    // Internal, for webapps.
-    static void createShortcut(final String aTitle, final String aURI, final String aUniqueURI, final String aIconData, final String aType) {
+    static void createShortcut(final String aTitle, final String aURI, final String aIconData) {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 // TODO: use the cache. Bug 961600.
                 Bitmap icon = FaviconDecoder.getMostSuitableBitmapFromDataURI(aIconData, getPreferredIconSize());
-                GeckoAppShell.doCreateShortcut(aTitle, aURI, aURI, icon, aType);
+                GeckoAppShell.doCreateShortcut(aTitle, aURI, icon);
             }
         });
     }
 
-    public static void createShortcut(final String aTitle, final String aURI, final String aUniqueURI,
-                                      final Bitmap aIcon, final String aType) {
+    public static void createShortcut(final String aTitle, final String aURI, final Bitmap aBitmap) {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                GeckoAppShell.doCreateShortcut(aTitle, aURI, aUniqueURI, aIcon, aType);
+                GeckoAppShell.doCreateShortcut(aTitle, aURI, aBitmap);
             }
         });
     }
@@ -841,23 +804,17 @@ public class GeckoAppShell
     /**
      * Call this method only on the background thread.
      */
-    private static void doCreateShortcut(final String aTitle, final String aURI, final String aUniqueURI,
-                                         final Bitmap aIcon, final String aType) {
+    private static void doCreateShortcut(final String aTitle, final String aURI, final Bitmap aIcon) {
         // The intent to be launched by the shortcut.
-        Intent shortcutIntent;
-        if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP)) {
-            shortcutIntent = getWebappIntent(aURI, aUniqueURI, aTitle, aIcon);
-        } else {
-            shortcutIntent = new Intent();
-            shortcutIntent.setAction(GeckoApp.ACTION_HOMESCREEN_SHORTCUT);
-            shortcutIntent.setData(Uri.parse(aURI));
-            shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
-                                        AppConstants.BROWSER_INTENT_CLASS_NAME);
-        }
+        Intent shortcutIntent = new Intent();
+        shortcutIntent.setAction(GeckoApp.ACTION_HOMESCREEN_SHORTCUT);
+        shortcutIntent.setData(Uri.parse(aURI));
+        shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
+                                    AppConstants.BROWSER_INTENT_CLASS_NAME);
 
         Intent intent = new Intent();
         intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
-        intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, getLauncherIcon(aIcon, aType));
+        intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, getLauncherIcon(aIcon));
 
         if (aTitle != null) {
             intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aTitle);
@@ -870,41 +827,6 @@ public class GeckoAppShell
 
         intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
         getContext().sendBroadcast(intent);
-    }
-
-    public static void removeShortcut(final String aTitle, final String aURI, final String aType) {
-        removeShortcut(aTitle, aURI, null, aType);
-    }
-
-    public static void removeShortcut(final String aTitle, final String aURI, final String aUniqueURI, final String aType) {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                // the intent to be launched by the shortcut
-                Intent shortcutIntent;
-                if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP)) {
-                    shortcutIntent = getWebappIntent(aURI, aUniqueURI, "", null);
-                    if (shortcutIntent == null)
-                        return;
-                } else {
-                    shortcutIntent = new Intent();
-                    shortcutIntent.setAction(GeckoApp.ACTION_HOMESCREEN_SHORTCUT);
-                    shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
-                                                AppConstants.BROWSER_INTENT_CLASS_NAME);
-                    shortcutIntent.setData(Uri.parse(aURI));
-                }
-        
-                Intent intent = new Intent();
-                intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
-                if (aTitle != null)
-                    intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aTitle);
-                else
-                    intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aURI);
-
-                intent.setAction("com.android.launcher.action.UNINSTALL_SHORTCUT");
-                getContext().sendBroadcast(intent);
-            }
-        });
     }
 
     @JNITarget
@@ -925,7 +847,7 @@ public class GeckoAppShell
         }
     }
 
-    static private Bitmap getLauncherIcon(Bitmap aSource, String aType) {
+    static private Bitmap getLauncherIcon(Bitmap aSource) {
         final int kOffset = 6;
         final int kRadius = 5;
         int size = getPreferredIconSize();
@@ -941,8 +863,8 @@ public class GeckoAppShell
             // If we aren't drawing a favicon, just use an orange color.
             paint.setColor(Color.HSVToColor(DEFAULT_LAUNCHER_ICON_HSV));
             canvas.drawRoundRect(new RectF(kOffset, kOffset, size - kOffset, size - kOffset), kRadius, kRadius, paint);
-        } else if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP) || aSource.getWidth() >= insetSize || aSource.getHeight() >= insetSize) {
-            // otherwise, if this is a webapp or if the icons is lare enough, just draw it
+        } else if (aSource.getWidth() >= insetSize || aSource.getHeight() >= insetSize) {
+            // Otherwise, if the icon is large enough, just draw it.
             Rect iconBounds = new Rect(0, 0, size, size);
             canvas.drawBitmap(aSource, null, iconBounds, null);
             return bitmap;
