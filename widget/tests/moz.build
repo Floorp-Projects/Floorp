@@ -29,5 +29,5 @@ SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 USE_LIBS += [
     'mozalloc',
     'xpcomglue_s',
-    'xul-shared',
+    'xul',
 ]
