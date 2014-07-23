@@ -138,9 +138,11 @@ loop.shared.views = (function(_, OT, l10n) {
 
     render: function() {
       return (
+        /* jshint ignore:start */
         <button className={this._getClasses()}
                 title={this._getTitle()}
                 onClick={this.handleClick}></button>
+        /* jshint ignore:end */
       );
     }
   });
@@ -176,6 +178,7 @@ loop.shared.views = (function(_, OT, l10n) {
     },
 
     render: function() {
+      /* jshint ignore:start */
       return (
         <ul className="controls">
           <li><button className="btn btn-hangup"
@@ -189,6 +192,7 @@ loop.shared.views = (function(_, OT, l10n) {
                                   scope="local" type="audio" /></li>
         </ul>
       );
+      /* jshint ignore:end */
     }
   });
 
@@ -200,11 +204,12 @@ loop.shared.views = (function(_, OT, l10n) {
       model: React.PropTypes.object.isRequired
     },
 
-    // height set to "auto" to fix video layout on Google Chrome
-    // @see https://bugzilla.mozilla.org/show_bug.cgi?id=991122
+    // height set to 100%" to fix video layout on Google Chrome
+    // @see https://bugzilla.mozilla.org/show_bug.cgi?id=1020445
     publisherConfig: {
+      insertMode: "append",
       width: "100%",
-      height: "auto",
+      height: "100%",
       style: {
         bugDisplayMode: "off",
         buttonDisplayMode: "off",
@@ -254,7 +259,7 @@ loop.shared.views = (function(_, OT, l10n) {
      * @param  {StreamEvent} event
      */
     _streamCreated: function(event) {
-      var incoming = this.getDOMNode().querySelector(".incoming");
+      var incoming = this.getDOMNode().querySelector(".remote");
       event.streams.forEach(function(stream) {
         if (stream.connection.connectionId !==
             this.props.model.session.connection.connectionId) {
@@ -272,7 +277,7 @@ loop.shared.views = (function(_, OT, l10n) {
      * @param  {SessionConnectEvent} event
      */
     startPublishing: function(event) {
-      var outgoing = this.getDOMNode().querySelector(".outgoing");
+      var outgoing = this.getDOMNode().querySelector(".local");
 
       // XXX move this into its StreamingVideo component?
       this.publisher = this.props.sdk.initPublisher(
@@ -328,6 +333,7 @@ loop.shared.views = (function(_, OT, l10n) {
     },
 
     render: function() {
+      /* jshint ignore:start */
       return (
         <div className="conversation">
           <ConversationToolbar video={this.state.video}
@@ -335,11 +341,14 @@ loop.shared.views = (function(_, OT, l10n) {
                                publishStream={this.publishStream}
                                hangup={this.hangup} />
           <div className="media nested">
-            <div className="remote"><div className="incoming"></div></div>
-            <div className="local"><div className="outgoing"></div></div>
+            <div className="video_wrapper remote_wrapper">
+              <div className="video_inner remote"></div>
+            </div>
+            <div className="local"></div>
           </div>
         </div>
       );
+      /* jshint ignore:end */
     }
   });
 
