@@ -51,6 +51,11 @@ let gPage = {
       let enabled = gAllPages.enabled;
       this._updateAttributes(enabled);
 
+      // Update thumbnails to the new enhanced setting
+      if (aData == "browser.newtabpage.enhanced") {
+        this.update();
+      }
+
       // Initialize the whole page if we haven't done that, yet.
       if (enabled) {
         this._init();
