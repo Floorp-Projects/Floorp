@@ -602,7 +602,6 @@ class JSObject : public js::ObjectImpl
         return true;
     }
 
-    static uint32_t goodAllocated(uint32_t count);
     bool growElements(js::ThreadSafeContext *cx, uint32_t newcap);
     void shrinkElements(js::ThreadSafeContext *cx, uint32_t cap);
     void setDynamicElements(js::ObjectElements *header) {
