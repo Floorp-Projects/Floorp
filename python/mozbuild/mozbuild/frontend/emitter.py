@@ -87,6 +87,7 @@ class TreeMetadataEmitter(LoggingMixin):
             self.info[k] = v
 
         self._libs = OrderedDefaultDict(OrderedDict)
+        self._binaries = OrderedDict()
         self._final_libs = []
 
     def emit(self, output):
@@ -168,6 +169,9 @@ class TreeMetadataEmitter(LoggingMixin):
                         passthru.variables['FINAL_LIBRARY'] = basename
                         yield passthru
                 yield libdef
+
+        for obj in self._binaries.values():
+            yield obj
 
     def emit_from_sandbox(self, sandbox):
         """Convert a MozbuildSandbox to tree metadata objects.
@@ -335,19 +339,26 @@ class TreeMetadataEmitter(LoggingMixin):
         if resources:
             yield Resources(sandbox, resources, defines)
 
-        program = sandbox.get('PROGRAM')
-        if program:
-            yield Program(sandbox, program, sandbox['CONFIG']['BIN_SUFFIX'])
+        for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
+            program = sandbox.get(kind)
+            if program:
+                if program in self._binaries:
+                    raise SandboxValidationError(
+                        'Cannot use "%s" as %s name, '
+                        'because it is already used in %s' % (program, kind,
+                        self._binaries[program].relativedir), sandbox)
+                self._binaries[program] = cls(sandbox, program)
 
-        program = sandbox.get('HOST_PROGRAM')
-        if program:
-            yield HostProgram(sandbox, program, sandbox['CONFIG']['HOST_BIN_SUFFIX'])
-
-        for program in sandbox['SIMPLE_PROGRAMS']:
-            yield SimpleProgram(sandbox, program, sandbox['CONFIG']['BIN_SUFFIX'])
-
-        for program in sandbox['HOST_SIMPLE_PROGRAMS']:
-            yield HostSimpleProgram(sandbox, program, sandbox['CONFIG']['HOST_BIN_SUFFIX'])
+        for kind, cls in [
+                ('SIMPLE_PROGRAMS', SimpleProgram),
+                ('HOST_SIMPLE_PROGRAMS', HostSimpleProgram)]:
+            for program in sandbox[kind]:
+                if program in self._binaries:
+                    raise SandboxValidationError(
+                        'Cannot use "%s" in %s, '
+                        'because it is already used in %s' % (program, kind,
+                        self._binaries[program].relativedir), sandbox)
+                self._binaries[program] = cls(sandbox, program)
 
         test_js_modules = sandbox.get('TESTING_JS_MODULES')
         if test_js_modules:
