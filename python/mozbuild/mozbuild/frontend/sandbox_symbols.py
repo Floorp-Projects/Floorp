@@ -340,10 +340,12 @@ VARIABLES = {
         Implies FORCE_STATIC_LIB.
         """, None),
 
-    'LIBS': (StrictOrderingOnAppendList, list,
-        """Linker libraries and flags.
+    'USE_LIBS': (StrictOrderingOnAppendList, list,
+        """List of libraries to link to programs and libraries.
+        """, None),
 
-        A list of libraries and flags to include when linking.
+    'HOST_USE_LIBS': (StrictOrderingOnAppendList, list,
+        """List of libraries to link to host programs and libraries.
         """, None),
 
     'LOCAL_INCLUDES': (StrictOrderingOnAppendList, list,

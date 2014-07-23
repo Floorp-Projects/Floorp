@@ -167,7 +167,6 @@ class TestEmitterBasic(unittest.TestCase):
             FAIL_ON_WARNINGS=True,
             HOST_CPPSRCS=['fans.cpp', 'tans.cpp'],
             HOST_CSRCS=['fans.c', 'tans.c'],
-            LIBS=['fans.lib', 'tans.lib'],
             MSVC_ENABLE_PGO=True,
             NO_DIST_INSTALL=True,
             OS_LIBS=['foo.so', '-l123', 'aaa.a'],
