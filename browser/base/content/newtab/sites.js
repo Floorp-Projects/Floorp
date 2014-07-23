@@ -153,7 +153,9 @@ Site.prototype = {
    * Refreshes the thumbnail for the site.
    */
   refreshThumbnail: function Site_refreshThumbnail() {
-    let link = DirectoryLinksProvider.getEnhancedLink(this.link) || this.link;
+    // Only enhance tiles if that feature is turned on
+    let link = gAllPages.enhanced && DirectoryLinksProvider.getEnhancedLink(this.link) ||
+               this.link;
 
     let thumbnail = this._querySelector(".newtab-thumbnail");
     if (link.bgColor) {

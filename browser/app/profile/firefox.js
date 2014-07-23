@@ -1511,6 +1511,9 @@ pref("browser.newtab.preload", true);
 // Toggles the content of 'about:newtab'. Shows the grid when enabled.
 pref("browser.newtabpage.enabled", true);
 
+// Toggles the enhancement of history content of 'about:newtab'
+pref("browser.newtabpage.enhanced", false);
+
 // number of rows of newtab grid
 pref("browser.newtabpage.rows", 3);
 
