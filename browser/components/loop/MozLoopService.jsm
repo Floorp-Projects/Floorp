@@ -47,6 +47,13 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
+let gRegisteredDeferred = null;
+let gPushHandler = null;
+let gHawkClient = null;
+let gRegisteredLoopServer = false;
+let gLocalizedStrings =  null;
+let gInitializeTimer = null;
+
 /**
  * Internal helper methods and state
  *
@@ -56,7 +63,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
  */
 let MozLoopServiceInternal = {
   // The uri of the Loop server.
-  loopServerUri: Services.prefs.getCharPref("loop.server"),
+  get loopServerUri() Services.prefs.getCharPref("loop.server"),
 
   // The current deferred for the registration process. This is set if in progress
   // or the registration was successful. This is null if a registration attempt was
@@ -137,18 +144,18 @@ let MozLoopServiceInternal = {
    *          rejected with an error code or string.
    */
   promiseRegisteredWithServers: function(mockPushHandler) {
-    if (this._registeredDeferred) {
-      return this._registeredDeferred.promise;
+    if (gRegisteredDeferred) {
+      return gRegisteredDeferred.promise;
     }
 
-    this._registeredDeferred = Promise.defer();
+    gRegisteredDeferred = Promise.defer();
     // We grab the promise early in case .initialize or its results sets
     // it back to null on error.
-    let result = this._registeredDeferred.promise;
+    let result = gRegisteredDeferred.promise;
 
-    this._pushHandler = mockPushHandler || MozLoopPushHandler;
+    gPushHandler = mockPushHandler || MozLoopPushHandler;
 
-    this._pushHandler.initialize(this.onPushRegistered.bind(this),
+    gPushHandler.initialize(this.onPushRegistered.bind(this),
       this.onHandleNotification.bind(this));
 
     return result;
@@ -168,8 +175,8 @@ let MozLoopServiceInternal = {
    *        rejected with this JSON-parsed response.
    */
   hawkRequest: function(path, method, payloadObj) {
-    if (!this._hawkClient) {
-      this._hawkClient = new HawkClient(this.loopServerUri);
+    if (!gHawkClient) {
+      gHawkClient = new HawkClient(this.loopServerUri);
     }
 
     let sessionToken;
@@ -186,7 +193,7 @@ let MozLoopServiceInternal = {
                                           2 * 32, true);
     }
 
-    return this._hawkClient.request(path, method, credentials, payloadObj);
+    return gHawkClient.request(path, method, credentials, payloadObj);
   },
 
   /**
@@ -205,8 +212,8 @@ let MozLoopServiceInternal = {
       } else {
         // XXX Bubble the precise details up to the UI somehow (bug 1013248).
         console.warn("Loop server sent an invalid session token");
-        this._registeredDeferred.reject("session-token-wrong-size");
-        this._registeredDeferred = null;
+        gRegisteredDeferred.reject("session-token-wrong-size");
+        gRegisteredDeferred = null;
         return false;
       }
     }
@@ -221,8 +228,8 @@ let MozLoopServiceInternal = {
    */
   onPushRegistered: function(err, pushUrl) {
     if (err) {
-      this._registeredDeferred.reject(err);
-      this._registeredDeferred = null;
+      gRegisteredDeferred.reject(err);
+      gRegisteredDeferred = null;
       return;
     }
 
@@ -244,8 +251,7 @@ let MozLoopServiceInternal = {
         if (!this.storeSessionToken(response.headers))
           return;
 
-        this.registeredLoopServer = true;
-        this._registeredDeferred.resolve();
+        gRegisteredDeferred.resolve();
         // No need to clear the promise here, everything was good, so we don't need
         // to re-register.
       }, (error) => {
@@ -266,8 +272,8 @@ let MozLoopServiceInternal = {
 
         // XXX Bubble the precise details up to the UI somehow (bug 1013248).
         Cu.reportError("Failed to register with the loop server. error: " + error);
-        this._registeredDeferred.reject(error.errno);
-        this._registeredDeferred = null;
+        gRegisteredDeferred.reject(error.errno);
+        gRegisteredDeferred = null;
       }
     );
   },
@@ -293,8 +299,8 @@ let MozLoopServiceInternal = {
    * @returns {Object} a map of element ids with attributes to set.
    */
   get localizedStrings() {
-    if (this._localizedStrings)
-      return this._localizedStrings;
+    if (gLocalizedStrings)
+      return gLocalizedStrings;
 
     var stringBundle =
       Services.strings.createBundle('chrome://browser/locale/loop/loop.properties');
@@ -316,7 +322,7 @@ let MozLoopServiceInternal = {
       map[key][property] = string.value;
     }
 
-    return this._localizedStrings = map;
+    return gLocalizedStrings = map;
   },
 
   /**
@@ -445,6 +451,7 @@ let MozLoopServiceInternal = {
     Chat.open(contentWindow, origin, title, url, undefined, undefined, callback);
   }
 };
+Object.freeze(MozLoopServiceInternal);
 
 /**
  * Public API
@@ -474,10 +481,10 @@ this.MozLoopService = {
     // Kick off the push notification service into registering after a timeout
     // this ensures we're not doing too much straight after the browser's finished
     // starting up.
-    this._initializeTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this._initializeTimer.initWithCallback(function() {
+    gInitializeTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    gInitializeTimer.initWithCallback(function() {
       this.register();
-      this._initializeTimer = null;
+      gInitializeTimer = null;
     }.bind(this),
     MozLoopServiceInternal.initialRegistrationDelayMilliseconds, Ci.nsITimer.TYPE_ONE_SHOT);
   },
@@ -623,3 +630,4 @@ this.MozLoopService = {
     return MozLoopServiceInternal.hawkRequest(path, method, payloadObj);
   },
 };
+Object.freeze(this.MozLoopService);
