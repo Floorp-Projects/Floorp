@@ -267,22 +267,15 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
       // (or potentially optimize BuildAnimations to avoid rebuilding it
       // in the first place).
       if (!collection->mAnimations.IsEmpty()) {
-        for (uint32_t newIdx = 0, newEnd = newAnimations.Length();
-             newIdx != newEnd; ++newIdx) {
+        for (size_t newIdx = newAnimations.Length(); newIdx-- != 0;) {
           ElementAnimation* newAnim = newAnimations[newIdx];
 
           // Find the matching animation with this name in the old list
-          // of animations.  Because of this code, they must all have
-          // the same start time, though they might differ in pause
-          // state.  So if a page uses multiple copies of the same
-          // animation in one element's animation list, and gives them
-          // different pause states, they, well, get what they deserve.
-          // We'll use the last one since it's more likely to be the one
-          // doing something.
-          //
-          // FIXME: This is wrong: we should iterate through both lists in the
-          // same direction. We'll fix that in a subsequent patch in this
-          // series.
+          // of animations.  We iterate through both lists in a backwards
+          // direction which means that if there are more animations in
+          // the new list of animations with a given name than in the old
+          // list, it will be the animations towards the of the beginning of
+          // the list that do not match and are treated as new animations.
           nsRefPtr<ElementAnimation> oldAnim;
           size_t oldIdx = collection->mAnimations.Length();
           while (oldIdx-- != 0) {
