@@ -32,6 +32,9 @@
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
 #endif
+#ifdef MOZ_WIDGET_GTK
+#include "gfxPlatformGtk.h"
+#endif
 #include "gfx2DGlue.h"
 
 namespace mozilla {
@@ -72,6 +75,13 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
   if (backend == LayersBackend::LAYERS_D3D11) {
     useDoubleBuffering = !!gfxWindowsPlatform::GetPlatform()->GetD2DDevice();
   } else
+#endif
+#ifdef MOZ_WIDGET_GTK
+  // We can't use double buffering when using image content with
+  // Xrender support on Linux, as ContentHostDoubleBuffered is not
+  // suited for direct uploads to the server.
+  if (!gfxPlatformGtk::GetPlatform()->UseImageOffscreenSurfaces() ||
+      !gfxPlatformGtk::GetPlatform()->UseXRender())
 #endif
   {
     useDoubleBuffering = (LayerManagerComposite::SupportsDirectTexturing() &&

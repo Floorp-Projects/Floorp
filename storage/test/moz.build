@@ -7,29 +7,42 @@
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 CPP_UNIT_TESTS += [
-    'test_AsXXX_helpers.cpp',
-    'test_async_callbacks_with_spun_event_loops.cpp',
-    'test_asyncStatementExecution_transaction.cpp',
-    'test_binding_params.cpp',
-    'test_file_perms.cpp',
-    'test_mutex.cpp',
-    'test_service_init_background_thread.cpp',
-    'test_statement_scoper.cpp',
-    'test_StatementCache.cpp',
-    'test_transaction_helper.cpp',
-    'test_true_async.cpp',
-    'test_unlock_notify.cpp',
+    'test_AsXXX_helpers',
+    'test_async_callbacks_with_spun_event_loops',
+    'test_asyncStatementExecution_transaction',
+    'test_binding_params',
+    'test_file_perms',
+    'test_mutex',
+    'test_service_init_background_thread',
+    'test_statement_scoper',
+    'test_StatementCache',
+    'test_transaction_helper',
+    'test_true_async',
+    'test_unlock_notify',
 ]
 
 if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT', 'Darwin'):
     # FIXME bug 523392: test_deadlock_detector doesn't like Windows
     # FIXME bug 523378: also fails on OS X
     CPP_UNIT_TESTS += [
-        'test_deadlock_detector.cpp',
+        'test_deadlock_detector',
     ]
+
+SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 
 LOCAL_INCLUDES += [
     '../src',
 ]
 
 FAIL_ON_WARNINGS = True
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul',
+]
+
+if not CONFIG['MOZ_NATIVE_SQLITE'] and not CONFIG['MOZ_FOLD_LIBS']:
+    USE_LIBS += [
+        'mozsqlite3',
+    ]

@@ -18,3 +18,9 @@ EXTRA_COMPONENTS += [
 IS_COMPONENT = True
 
 XPI_NAME = 'simple'
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul',
+]

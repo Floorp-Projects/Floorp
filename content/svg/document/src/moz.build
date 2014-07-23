@@ -22,4 +22,4 @@ LOCAL_INCLUDES += [
     '/layout/style',
 ]
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'

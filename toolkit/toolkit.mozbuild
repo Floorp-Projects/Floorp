@@ -157,6 +157,7 @@ if CONFIG['MOZ_GIO_COMPONENT']:
 add_tier_dir('platform', app_libxul_dirs)
 add_tier_dir('platform', app_libxul_static_dirs, static=True)
 
+add_tier_dir('platform', 'toolkit/library/StaticXULComponentsEnd')
 add_tier_dir('platform', 'toolkit/library')
 
 if CONFIG['MOZ_REPLACE_MALLOC']:

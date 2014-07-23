@@ -2,9 +2,12 @@
 var target = {
     foo: 'bar'
 };
-new Proxy(target, {
-    set: function (target, name, val, receiver) {
-        target[name] = 'qux';
-    }
-})['foo'] = 'baz';
-assertEq(target['foo'], 'qux');
+
+var handler = { set: (target, name) => target[name] = 'qux' };
+for (let p of [new Proxy(target, handler), Proxy.revocable(target, handler).proxy]) {
+    p['foo'] = 'baz';
+    assertEq(target['foo'], 'qux');
+
+    // reset for second iteration
+    target['foo'] = 'bar';
+}

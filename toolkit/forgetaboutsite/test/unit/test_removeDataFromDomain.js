@@ -673,7 +673,7 @@ function test_storage_cleared()
                     getNoAppCodebasePrincipal(aURI);
     let dsm = Cc["@mozilla.org/dom/localStorage-manager;1"].
               getService(Ci.nsIDOMStorageManager);
-    return dsm.createStorage(principal, "");
+    return dsm.createStorage(null, principal, "");
   }
 
   let s = [

@@ -20,7 +20,7 @@ interface nsIShellService : nsISupports
    * @param aTitle     the user-friendly name of the shortcut.
    * @param aURI       the URI to open.
    * @param aIconData  a base64-encoded data: URI representation of the shortcut's icon, as accepted by the favicon decoder.
-   * @param aIntent    how the URI should be opened. Examples: "default", "bookmark" and "webapp"
+   * @param aIntent    obsolete and ignored, but remains for backward compatibility; pass an empty string
    */
   void createShortcut(in AString aTitle, in AString aURI, in AString aIconData, in AString aIntent);
 };

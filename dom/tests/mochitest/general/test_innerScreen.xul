@@ -52,7 +52,7 @@ function doTests()
 
   const CI = Components.interfaces;
   var fshell = f.contentWindow.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIWebNavigation).QueryInterface(CI.nsIDocShell);
-  var fmudv = fshell.contentViewer.QueryInterface(CI.nsIMarkupDocumentViewer);
+  var fmudv = fshell.contentViewer;
 
   isRounded(f.contentWindow.mozInnerScreenX,
             window.mozInnerScreenX + fBounds.left,

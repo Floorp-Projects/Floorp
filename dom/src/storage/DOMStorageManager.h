@@ -9,20 +9,20 @@
 #include "nsIDOMStorageManager.h"
 #include "DOMStorageObserver.h"
 
-#include "nsPIDOMStorage.h"
 #include "DOMStorageCache.h"
+#include "mozilla/dom/DOMStorage.h"
 
 #include "nsTHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 
+class nsIDOMWindow;
+
 namespace mozilla {
 namespace dom {
 
-const nsPIDOMStorage::StorageType SessionStorage = nsPIDOMStorage::SessionStorage;
-const nsPIDOMStorage::StorageType LocalStorage = nsPIDOMStorage::LocalStorage;
-
-class DOMStorage;
+const DOMStorage::StorageType SessionStorage = DOMStorage::SessionStorage;
+const DOMStorage::StorageType LocalStorage = DOMStorage::LocalStorage;
 
 class DOMStorageManager : public nsIDOMStorageManager
                         , public DOMStorageObserverSink
@@ -31,7 +31,7 @@ class DOMStorageManager : public nsIDOMStorageManager
   NS_DECL_NSIDOMSTORAGEMANAGER
 
 public:
-  virtual nsPIDOMStorage::StorageType Type() { return mType; }
+  virtual DOMStorage::StorageType Type() { return mType; }
 
   // Reads the preference for DOM storage quota
   static uint32_t GetQuota();
@@ -41,7 +41,7 @@ public:
   already_AddRefed<DOMStorageUsage> GetScopeUsage(const nsACString& aScope);
 
 protected:
-  DOMStorageManager(nsPIDOMStorage::StorageType aType);
+  DOMStorageManager(DOMStorage::StorageType aType);
   virtual ~DOMStorageManager();
 
 private:
@@ -82,6 +82,7 @@ private:
 
   // Helper for creation of DOM storage objects
   nsresult GetStorageInternal(bool aCreate,
+                              nsIDOMWindow* aWindow,
                               nsIPrincipal* aPrincipal,
                               const nsAString& aDocumentURI,
                               bool aPrivate,
@@ -89,7 +90,7 @@ private:
 
   // Scope->cache map
   nsTHashtable<DOMStorageCacheHashKey> mCaches;
-  const nsPIDOMStorage::StorageType mType;
+  const DOMStorage::StorageType mType;
 
   // If mLowDiskSpace is true it indicates a low device storage situation and
   // so no localStorage writes are allowed. sessionStorage writes are still

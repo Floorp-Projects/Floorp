@@ -4,9 +4,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIST_INSTALL 	= 1
-
-ifneq (,$(filter WINNT,$(OS_ARCH)))
-SDK_LIBRARY = $(IMPORT_LIBRARY)
-else
-SDK_LIBRARY = $(SHARED_LIBRARY)
-endif

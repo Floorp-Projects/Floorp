@@ -74,8 +74,6 @@ FAIL_ON_WARNINGS = True
 
 MSVC_ENABLE_PGO = True
 
-LIBRARY_NAME = 'xpwidgets_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
@@ -95,10 +93,7 @@ if widget_dir in ('gtk3', 'gtk2'):
 LOCAL_INCLUDES += [
     '../%s' % widget_dir,
 ]
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    FINAL_LIBRARY = 'widget_mac'
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gonk', 'android', 'qt', 'gtk2', 'gtk3'):
-    FINAL_LIBRARY = 'widget_%s' % CONFIG['MOZ_WIDGET_TOOLKIT']
+FINAL_LIBRARY = 'xul'
 
 if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
     DEFINES['MOZ_ENABLE_D3D10_LAYER'] = True

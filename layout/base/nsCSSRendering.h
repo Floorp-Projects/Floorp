@@ -473,6 +473,29 @@ struct nsCSSRendering {
                          const nsRect& aBGClipRect,
                          const nsStyleBackground::Layer& aLayer);
 
+  struct BackgroundClipState {
+    nsRect mBGClipArea;  // Affected by mClippedRadii
+    nsRect mAdditionalBGClipArea;  // Not affected by mClippedRadii
+    nsRect mDirtyRect;
+    gfxRect mDirtyRectGfx;
+
+    nscoord mRadii[8];
+    gfxCornerSizes mClippedRadii;
+    bool mHasRoundedCorners;
+    bool mHasAdditionalBGClipArea;
+
+    // Whether we are being asked to draw with a caller provided background
+    // clipping area. If this is true we also disable rounded corners.
+    bool mCustomClip;
+  };
+
+  static void
+  GetBackgroundClip(const nsStyleBackground::Layer& aLayer,
+                    nsIFrame* aForFrame, const nsStyleBorder& aBorder, const nsRect& aBorderArea,
+                    const nsRect& aCallerDirtyRect, bool aWillPaintBorder,
+                    nscoord aAppUnitsPerPixel,
+                    /* out */ BackgroundClipState* aClipState);
+
   /**
    * Render the background for an element using css rendering rules
    * for backgrounds.
@@ -502,14 +525,6 @@ struct nsCSSRendering {
                               nsRect* aBGClipRect = nullptr,
                               int32_t aLayer = -1);
 
-  static void PaintBackgroundColor(gfxRGBA aColor,
-                                   nsPresContext* aPresContext,
-                                   nsRenderingContext& aRenderingContext,
-                                   nsIFrame* aForFrame,
-                                   const nsRect& aDirtyRect,
-                                   const nsRect& aBorderArea,
-                                   uint32_t aFlags);
-
   /**
    * Same as |PaintBackground|, except using the provided style structs.
    * This short-circuits the code that ensures that the root element's
@@ -530,15 +545,6 @@ struct nsCSSRendering {
                                     nsRect* aBGClipRect = nullptr,
                                     int32_t aLayer = -1);
 
-  static void PaintBackgroundColorWithSC(gfxRGBA aColor,
-                                         nsPresContext* aPresContext,
-                                         nsRenderingContext& aRenderingContext,
-                                         nsIFrame* aForFrame,
-                                         const nsRect& aDirtyRect,
-                                         const nsRect& aBorderArea,
-                                         nsStyleContext *aStyleContext,
-                                         const nsStyleBorder& aBorder,
-                                         uint32_t aFlags);
   /**
    * Returns the rectangle covered by the given background layer image, taking
    * into account background positioning, sizing, and repetition, but not
