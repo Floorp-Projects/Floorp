@@ -217,3 +217,4 @@ http://example.fi:80                privileged
 # Hosts for testing marketplace apps installations
 https://marketplace.firefox.com:443       privileged
 https://marketplace-dev.allizom.org:443   privileged
+https://marketplace.allizom.org:443       privileged
