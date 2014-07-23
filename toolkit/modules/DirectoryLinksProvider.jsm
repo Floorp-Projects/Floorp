@@ -28,6 +28,7 @@ XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => {
 
 // The filename where directory links are stored locally
 const DIRECTORY_LINKS_FILE = "directoryLinks.json";
+const DIRECTORY_LINKS_TYPE = "application/json";
 
 // The preference that tells whether to match the OS locale
 const PREF_MATCH_OS_LOCALE = "intl.locale.matchOS";
@@ -194,7 +195,6 @@ let DirectoryLinksProvider = {
   _fetchAndCacheLinks: function DirectoryLinksProvider_fetchAndCacheLinks(uri) {
     let deferred = Promise.defer();
     let xmlHttp = new XMLHttpRequest();
-    xmlHttp.overrideMimeType("application/json");
 
     let self = this;
     xmlHttp.onload = function(aResponse) {
@@ -217,6 +217,10 @@ let DirectoryLinksProvider = {
 
     try {
       xmlHttp.open('POST', uri);
+      // Override the type so XHR doesn't complain about not well-formed XML
+      xmlHttp.overrideMimeType(DIRECTORY_LINKS_TYPE);
+      // Set the appropriate request type for servers that require correct types
+      xmlHttp.setRequestHeader("Content-Type", DIRECTORY_LINKS_TYPE);
       xmlHttp.send(JSON.stringify({
         locale: this.locale,
       }));
