@@ -1242,14 +1242,6 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     document = presShell->GetDocument();
   }
 
-  if (widgetTransaction ||
-      // SVG-as-an-image docs don't paint as part of the retained layer tree,
-      // but they still need the invalidation state bits cleared in order for
-      // invalidation for CSS/SMIL animation to work properly.
-      (document && document->IsBeingUsedAsImage())) {
-    aForFrame->ClearInvalidationStateBits();
-  }
-
   if (!root) {
     layerManager->SetUserData(&gLayerManagerLayerBuilder, oldBuilder);
     return;
@@ -1283,6 +1275,15 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
 
   layerManager->SetRoot(root);
   layerBuilder->WillEndTransaction();
+
+  if (widgetTransaction ||
+      // SVG-as-an-image docs don't paint as part of the retained layer tree,
+      // but they still need the invalidation state bits cleared in order for
+      // invalidation for CSS/SMIL animation to work properly.
+      (document && document->IsBeingUsedAsImage())) {
+    aForFrame->ClearInvalidationStateBits();
+  }
+
   bool temp = aBuilder->SetIsCompositingCheap(layerManager->IsCompositingCheap());
   LayerManager::EndTransactionFlags flags = LayerManager::END_DEFAULT;
   if (layerManager->NeedsWidgetInvalidation()) {
