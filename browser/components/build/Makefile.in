@@ -10,14 +10,14 @@ ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,version)
 endif
 
-EXTRA_DSO_LDOPTS += \
+EXTRA_LIBS += \
 	$(NSPR_LIBS) \
 	$(NULL)
 
 # Mac: Need to link with CoreFoundation for Mac Migrators (PList reading code)
 # GTK2: Need to link with glib for GNOME shell service
 ifneq (,$(filter cocoa gtk2 gtk3,$(MOZ_WIDGET_TOOLKIT)))
-EXTRA_DSO_LDOPTS += \
+OS_LIBS += \
   $(TK_LIBS) \
   $(NULL)
 endif

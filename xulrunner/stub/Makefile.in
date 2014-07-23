@@ -7,7 +7,7 @@ MOZ_GLUE_LDFLAGS =
 
 # Need to link with CoreFoundation on Mac
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-LIBS            += \
+OS_LIBS            += \
 		$(TK_LIBS) \
 		$(NULL)
 endif
@@ -19,10 +19,6 @@ else
 MOZ_WINCONSOLE = 0
 endif
 endif
-
-include $(topsrcdir)/config/config.mk
-
-include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,shell32)

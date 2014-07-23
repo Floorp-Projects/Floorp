@@ -9,13 +9,13 @@ endif
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 WRAP_LDFLAGS =
 else
-LIBS += \
+EXTRA_LIBS += \
   $(NSPR_LIBS) \
   $(NULL)
 endif
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-LIBS += \
+OS_LIBS += \
   -lbinder \
   -lutils \
   $(NULL)
@@ -38,9 +38,6 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT) #{
-
-LIBS += $(NSPR_LIBS)
-
 # Note the manifest file exists in the tree, so we use the explicit filename
 # here.
 EXTRA_DEPS += plugin-container.exe.manifest

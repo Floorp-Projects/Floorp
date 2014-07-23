@@ -4,12 +4,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ifeq ($(OS_TARGET),Darwin)
-  LIBS += -framework AudioUnit -framework CoreAudio
+  OS_LDFLAGS += -framework AudioUnit -framework CoreAudio
 else
   ifeq ($(OS_TARGET), OpenBSD)
-    LIBS += -lsndio
+    OS_LIBS += -lsndio
   else
-    LIBS += $(MOZ_ALSA_LIBS) \
+    OS_LIBS += $(MOZ_ALSA_LIBS) \
             $(MOZ_PULSEAUDIO_LIBS)
   endif
 endif

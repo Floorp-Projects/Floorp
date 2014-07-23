@@ -2,21 +2,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-LIBS += \
+EXTRA_LIBS += \
   $(NSPR_LIBS) \
   $(NSS_LIBS) \
+  $(NULL)
+
+OS_LIBS += \
   $(MOZ_WEBRTC_X11_LIBS) \
   $(REALTIME_LIBS) \
   $(NULL)
 
 ifdef MOZ_ALSA
-LIBS += \
+OS_LIBS += \
   $(MOZ_ALSA_LIBS) \
   $(NULL)
 endif
 
 ifeq ($(OS_TARGET),Android)
-LIBS += \
+EXTRA_LIBS += \
   $(STLPORT_LDFLAGS) \
   $(STLPORT_LIBS) \
   $(NULL)
@@ -26,25 +29,25 @@ CPPFLAGS += \
 endif
 
 ifdef MOZ_NATIVE_JPEG
-LIBS += \
+OS_LIBS += \
   $(MOZ_JPEG_LIBS) \
   $(NULL)
 endif
 
 ifdef MOZ_NATIVE_LIBVPX
-LIBS += \
+OS_LIBS += \
   $(MOZ_LIBVPX_LIBS) \
   $(NULL)
 endif
 
 ifndef MOZ_TREE_PIXMAN
-LIBS += \
+OS_LIBS += \
   $(MOZ_PIXMAN_LIBS) \
   $(NULL)
 endif
 
 ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
-LIBS += \
+OS_LIBS += \
   $(XLIBS) \
   $(MOZ_GTK2_LIBS) \
   -lgmodule-2.0 -lgthread-2.0 \
@@ -52,14 +55,14 @@ LIBS += \
 endif
 
 ifeq (gtk3,$(MOZ_WIDGET_TOOLKIT))
-LIBS += \
+OS_LIBS += \
   $(MOZ_GTK3_LIBS) \
   $(FT2_LIBS) \
   $(NULL)
 endif
 
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
-LIBS += \
+OS_LIBS += \
   $(XLIBS) \
   $(TK_LIBS) \
   $(MOZ_PANGO_LIBS) \
@@ -67,21 +70,20 @@ LIBS += \
 endif
 
 ifneq (,$(filter Linux DragonFly FreeBSD NetBSD OpenBSD,$(OS_TARGET)))
-LIBS += \
+OS_LIBS += \
   $(MOZ_CAIRO_OSLIBS) \
   $(NULL)
 endif
 
 ifeq ($(OS_TARGET),Darwin)
-LIBS += \
+OS_LIBS += \
   $(TK_LIBS) \
   $(NULL)
 endif
 
 ifdef MOZ_NATIVE_ZLIB
-LIBS += $(MOZ_ZLIB_LIBS)
+OS_LIBS += $(MOZ_ZLIB_LIBS)
 endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/media/webrtc/webrtc-config.mk
-include $(topsrcdir)/config/rules.mk

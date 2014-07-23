@@ -6,7 +6,7 @@
 
 
 
-LIBS	+= \
+EXTRA_LIBS	+= \
 		  $(NSPR_LIBS) \
 		  $(NULL)
 

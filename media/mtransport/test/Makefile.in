@@ -3,15 +3,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-LIBS += \
+EXTRA_LIBS += \
   $(NSPR_LIBS) \
   $(NULL)
 
 ifdef MOZ_NATIVE_NSS
-LIBS += $(NSS_LIBS)
+EXTRA_LIBS += $(NSS_LIBS)
 else
 # Statically linking NSS libssl ensures that we can debug NSS too
-LIBS += \
+EXTRA_LIBS += \
   $(DEPTH)/dist/lib/$(LIB_PREFIX)ssl.$(LIB_SUFFIX) \
   $(DEPTH)/dist/lib/$(LIB_PREFIX)nss3.$(LIB_SUFFIX) \
   $(DEPTH)/dist/lib/$(LIB_PREFIX)nssutil3.$(LIB_SUFFIX) \
@@ -19,7 +19,7 @@ LIBS += \
 endif
 
 ifeq ($(OS_TARGET), Android)
-LIBS += \
+EXTRA_LIBS += \
   $(STLPORT_LDFLAGS) \
   $(STLPORT_LIBS) \
   $(NULL)
