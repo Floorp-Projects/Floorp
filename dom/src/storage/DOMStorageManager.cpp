@@ -97,7 +97,7 @@ PrincipalsEqual(nsIPrincipal* aObjectPrincipal, nsIPrincipal* aSubjectPrincipal)
 NS_IMPL_ISUPPORTS(DOMStorageManager,
                   nsIDOMStorageManager)
 
-DOMStorageManager::DOMStorageManager(nsPIDOMStorage::StorageType aType)
+DOMStorageManager::DOMStorageManager(DOMStorage::StorageType aType)
   : mCaches(10)
   , mType(aType)
   , mLowDiskSpace(false)
@@ -325,6 +325,7 @@ DOMStorageManager::DropCache(DOMStorageCache* aCache)
 
 nsresult
 DOMStorageManager::GetStorageInternal(bool aCreate,
+                                      nsIDOMWindow* aWindow,
                                       nsIPrincipal* aPrincipal,
                                       const nsAString& aDocumentURI,
                                       bool aPrivate,
@@ -372,8 +373,9 @@ DOMStorageManager::GetStorageInternal(bool aCreate,
   }
 
   if (aRetval) {
-    *aRetval = new DOMStorage(this, cache, aDocumentURI, aPrincipal, aPrivate);
-    NS_ADDREF(*aRetval);
+    nsCOMPtr<nsIDOMStorage> storage = new DOMStorage(
+      aWindow, this, cache, aDocumentURI, aPrincipal, aPrivate);
+    storage.forget(aRetval);
   }
 
   return NS_OK;
@@ -382,24 +384,29 @@ DOMStorageManager::GetStorageInternal(bool aCreate,
 NS_IMETHODIMP
 DOMStorageManager::PrecacheStorage(nsIPrincipal* aPrincipal)
 {
-  return GetStorageInternal(true, aPrincipal, EmptyString(), false, nullptr);
+  return GetStorageInternal(true, nullptr, aPrincipal, EmptyString(), false,
+                            nullptr);
 }
 
 NS_IMETHODIMP
-DOMStorageManager::CreateStorage(nsIPrincipal* aPrincipal,
+DOMStorageManager::CreateStorage(nsIDOMWindow* aWindow,
+                                 nsIPrincipal* aPrincipal,
                                  const nsAString& aDocumentURI,
                                  bool aPrivate,
                                  nsIDOMStorage** aRetval)
 {
-  return GetStorageInternal(true, aPrincipal, aDocumentURI, aPrivate, aRetval);
+  return GetStorageInternal(true, aWindow, aPrincipal, aDocumentURI, aPrivate,
+                            aRetval);
 }
 
 NS_IMETHODIMP
-DOMStorageManager::GetStorage(nsIPrincipal* aPrincipal,
+DOMStorageManager::GetStorage(nsIDOMWindow* aWindow,
+                              nsIPrincipal* aPrincipal,
                               bool aPrivate,
                               nsIDOMStorage** aRetval)
 {
-  return GetStorageInternal(false, aPrincipal, EmptyString(), aPrivate, aRetval);
+  return GetStorageInternal(false, aWindow, aPrincipal, EmptyString(), aPrivate,
+                            aRetval);
 }
 
 NS_IMETHODIMP
@@ -410,12 +417,12 @@ DOMStorageManager::CloneStorage(nsIDOMStorage* aStorage)
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsCOMPtr<nsPIDOMStorage> pstorage = do_QueryInterface(aStorage);
-  if (!pstorage) {
+  nsRefPtr<DOMStorage> storage = static_cast<DOMStorage*>(aStorage);
+  if (!storage) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  const DOMStorageCache* origCache = pstorage->GetCache();
+  const DOMStorageCache* origCache = storage->GetCache();
 
   DOMStorageCache* existingCache = GetCache(origCache->Scope());
   if (existingCache) {
@@ -437,8 +444,8 @@ DOMStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
                                 nsIDOMStorage* aStorage,
                                 bool* aRetval)
 {
-  nsCOMPtr<nsPIDOMStorage> pstorage = do_QueryInterface(aStorage);
-  if (!pstorage) {
+  nsRefPtr<DOMStorage> storage = static_cast<DOMStorage*>(aStorage);
+  if (!storage) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -455,11 +462,11 @@ DOMStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
   }
 
   DOMStorageCache* cache = GetCache(scope);
-  if (cache != pstorage->GetCache()) {
+  if (cache != storage->GetCache()) {
     return NS_OK;
   }
 
-  if (!pstorage->PrincipalEquals(aPrincipal)) {
+  if (!storage->PrincipalEquals(aPrincipal)) {
     return NS_OK;
   }
 
@@ -479,7 +486,7 @@ DOMStorageManager::GetLocalStorageForPrincipal(nsIPrincipal* aPrincipal,
     return NS_ERROR_UNEXPECTED;
   }
 
-  return CreateStorage(aPrincipal, aDocumentURI, aPrivate, aRetval);
+  return CreateStorage(nullptr, aPrincipal, aDocumentURI, aPrivate, aRetval);
 }
 
 namespace { // anon

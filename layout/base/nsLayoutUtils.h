@@ -877,6 +877,9 @@ public:
   static nsRegion RoundedRectIntersectRect(const nsRect& aRoundedRect,
                                            const nscoord aRadii[8],
                                            const nsRect& aContainedRect);
+  static nsIntRegion RoundedRectIntersectIntRect(const nsIntRect& aRoundedRect,
+                                                 const gfxCornerSizes& aCorners,
+                                                 const nsIntRect& aContainedRect);
 
   /**
    * Return whether any part of aTestRect is inside of the rounded

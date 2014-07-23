@@ -32,6 +32,5 @@ MOCHITEST_MANIFESTS += [
     'failures/html/microdata/microdata-dom-api/mochitest.ini',
     'failures/html/typedarrays/mochitest.ini',
     'failures/webapps/WebStorage/tests/submissions/Infraware/mochitest.ini',
-    'failures/webapps/WebStorage/tests/submissions/Ms2ger/mochitest.ini',
     'failures/webapps/XMLHttpRequest/tests/submissions/Ms2ger/mochitest.ini',
 ]

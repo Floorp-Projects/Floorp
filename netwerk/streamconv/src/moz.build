@@ -12,4 +12,4 @@ SOURCES += [
 
 MSVC_ENABLE_PGO = True
 
-FINAL_LIBRARY = 'necko'
+FINAL_LIBRARY = 'xul'

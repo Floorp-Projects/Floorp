@@ -959,36 +959,9 @@ TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
 MOZ_USER_DIR=".mozilla"
 
-MOZ_JPEG_CFLAGS=
-MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,mozjpeg,$(DEPTH)/media/libjpeg)'
-MOZ_BZ2_CFLAGS=
-MOZ_BZ2_LIBS='$(call EXPAND_LIBNAME_PATH,bz2,$(DEPTH)/modules/libbz2/src)'
-MOZ_PNG_CFLAGS="-I$_objdir/dist/include" # needed for freetype compilation
-MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/media/libpng)'
-
-MOZ_JS_STATIC_LIBS='$(call EXPAND_LIBNAME_PATH,js_static,$(LIBXUL_DIST)/lib)'
-MOZ_JS_SHARED_LIBS='$(call EXPAND_LIBNAME_PATH,mozjs,$(LIBXUL_DIST)/lib)'
 MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin -Wl,-rpath-link,$(prefix)/lib'
-XPCOM_FROZEN_LDOPTS='$(call EXPAND_LIBNAME_PATH,xul mozalloc,$(LIBXUL_DIST)/bin)'
-LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS)'
-XPCOM_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) $(XPCOM_FROZEN_LDOPTS)'
-XPCOM_STANDALONE_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX)'
-
-# These are specially defined on Windows only
-case "$target" in
-*-mingw*)
-  XPCOM_STATICRUNTIME_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_staticruntime_s.$(LIB_SUFFIX) $(XPCOM_FROZEN_LDOPTS)'
-  XPCOM_STANDALONE_STATICRUNTIME_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_staticruntime.$(LIB_SUFFIX)'
-  ;;
-*)
-  XPCOM_STATICRUNTIME_GLUE_LDOPTS=$XPCOM_GLUE_LDOPTS
-  XPCOM_STANDALONE_STATICRUNTIME_GLUE_LDOPTS=$XPCOM_STANDALONE_GLUE_LDOPTS
-  ;;
-esac
 
 MOZ_FS_LAYOUT=unix
-
-MOZ_COMPONENT_NSPR_LIBS='-L$(LIBXUL_DIST)/bin $(NSPR_LIBS)'
 
 USE_DEPENDENT_LIBS=1
 
@@ -2061,7 +2034,6 @@ ia64*-hpux*)
     MC=mc.exe
     # certain versions of cygwin's makedepend barf on the
     # #include <string> vs -I./dist/include/string issue so don't use it
-    XPCOM_FROZEN_LDOPTS='$(call EXPAND_LIBNAME_PATH,xul mozalloc,$(LIBXUL_DIST)/lib)'
     if test -n "$GNU_CC" -o -n "$CLANG_CC"; then
         CC="$CC -mwindows"
         CXX="$CXX -mwindows"
@@ -3023,16 +2995,18 @@ fi
 
 AC_LANG_CPLUSPLUS
 
+ICONV_LIBS=
+
 case $target_os in
     darwin*|mingw*)
         ;;
     *)
 
-AC_CHECK_LIB(c, iconv, [_ICONV_LIBS="$_ICONV_LIBS"],
-    AC_CHECK_LIB(iconv, iconv, [_ICONV_LIBS="$_ICONV_LIBS -liconv"],
-        AC_CHECK_LIB(iconv, libiconv, [_ICONV_LIBS="$_ICONV_LIBS -liconv"])))
+AC_CHECK_LIB(c, iconv, [ICONV_LIBS=],
+    AC_CHECK_LIB(iconv, iconv, [ICONV_LIBS="-liconv"],
+        AC_CHECK_LIB(iconv, libiconv, [ICONV_LIBS="-liconv"])))
 _SAVE_LIBS=$LIBS
-LIBS="$LIBS $_ICONV_LIBS"
+LIBS="$LIBS $ICONV_LIBS"
 AC_CACHE_CHECK(
     [for iconv()],
     ac_cv_func_iconv,
@@ -3051,8 +3025,7 @@ AC_CACHE_CHECK(
     )
 if test "$ac_cv_func_iconv" = "yes"; then
     AC_DEFINE(HAVE_ICONV)
-    LIBXUL_LIBS="$LIBXUL_LIBS $_ICONV_LIBS"
-    LIBICONV="$_ICONV_LIBS"
+    LIBICONV="$ICONV_LIBS"
     AC_CACHE_CHECK(
         [for iconv() with const input],
         ac_cv_func_const_iconv,
@@ -3078,6 +3051,8 @@ LIBS=$_SAVE_LIBS
 
     ;;
 esac
+
+AC_SUBST(ICONV_LIBS)
 
 AM_LANGINFO_CODESET
 
@@ -3625,11 +3600,6 @@ dnl system ZLIB support
 dnl ========================================================
 MOZ_ZLIB_CHECK([1.2.3])
 
-if test "$MOZ_NATIVE_ZLIB" != 1; then
-    MOZ_ZLIB_CFLAGS="-I${_topsrcdir}/modules/zlib/src"
-    MOZ_ZLIB_LIBS='$(call EXPAND_LIBNAME_PATH,mozz,'"$MOZ_BUILD_ROOT"'/modules/zlib/src)'
-fi
-
 if test "$MOZ_LINKER" = 1 -a "$MOZ_NATIVE_ZLIB" != 1; then
     AC_MSG_ERROR([Custom dynamic linker requires --with-system-zlib])
 fi
@@ -3759,10 +3729,6 @@ dnl ========================================================
 dnl system libffi Support
 dnl ========================================================
 MOZ_CONFIG_FFI()
-
-if test -n "$MOZ_NATIVE_FFI"; then
-    MOZ_JS_STATIC_LIBS="$MOZ_JS_STATIC_LIBS $MOZ_FFI_LIBS"
-fi
 
 # split JS out by default to avoid VS2005 PGO crash (bug 591836).
 if test "$OS_ARCH" = "WINNT"; then
@@ -4247,7 +4213,6 @@ cairo-cocoa)
     TK_CFLAGS="-DNO_X11"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
-    XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/bin/XUL $(call EXPAND_LIBNAME_PATH,mozalloc,$(LIBXUL_DIST)/bin)'
     MOZ_USER_DIR="Mozilla"
     MOZ_FS_LAYOUT=bundle
     MOZ_WEBGL=1
@@ -4262,7 +4227,6 @@ cairo-uikit)
     TK_LIBS='-framework Foundation -framework CoreFoundation -framework CoreGraphics -framework CoreText'
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
-    XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/bin/XUL $(call EXPAND_LIBNAME_PATH,mozalloc,$(LIBXUL_DIST)/bin)'
     MOZ_USER_DIR="Mozilla"
     MOZ_FS_LAYOUT=bundle
     ;;
@@ -4278,7 +4242,6 @@ cairo-android)
     ;;
 
 cairo-gonk)
-    XPCOM_FROZEN_LDOPTS='$(call EXPAND_LIBNAME_PATH,xul mozalloc,$(LIBXUL_DIST)/lib)'
     AC_DEFINE(MOZ_WIDGET_GONK)
     AC_DEFINE(MOZ_TOUCH)
     MOZ_WIDGET_TOOLKIT=gonk
@@ -6475,11 +6438,8 @@ MOZ_ARG_ENABLE_BOOL(system-sqlite,
 MOZ_NATIVE_SQLITE=1,
 MOZ_NATIVE_SQLITE= )
 
-if test -z "$MOZ_NATIVE_SQLITE"
+if test -n "$MOZ_NATIVE_SQLITE"
 then
-    SQLITE_CFLAGS=
-    SQLITE_LIBS='$(call EXPAND_LIBNAME_PATH,mozsqlite3,$(DIST)/lib)'
-else
     dnl ============================
     dnl === SQLite Version check ===
     dnl ============================
@@ -7844,9 +7804,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Static build options)
 
-AC_SUBST(LIBXUL_LIBS)
-XPCOM_LIBS="$LIBXUL_LIBS"
-
 if test "$OS_ARCH" = "WINNT"; then
   GKMEDIAS_SHARED_LIBRARY=1
   AC_DEFINE(GKMEDIAS_SHARED_LIBRARY)
@@ -8019,8 +7976,6 @@ fi
 
 if test "$MOZ_TREE_PIXMAN"; then
     AC_DEFINE(MOZ_TREE_PIXMAN)
-    MOZ_PIXMAN_CFLAGS=""
-    MOZ_PIXMAN_LIBS='$(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)'
 else
     PKG_CHECK_MODULES(PIXMAN, pixman-1 >= 0.19.2)
     MOZ_PIXMAN_CFLAGS="$PIXMAN_CFLAGS"
@@ -8397,7 +8352,6 @@ AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_PERMISSIONS)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
-AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_DEBUG_ENABLE_DEFS)
@@ -8473,12 +8427,6 @@ AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
-AC_SUBST(XPCOM_LIBS)
-AC_SUBST(XPCOM_FROZEN_LDOPTS)
-AC_SUBST(XPCOM_GLUE_LDOPTS)
-AC_SUBST(XPCOM_STANDALONE_GLUE_LDOPTS)
-AC_SUBST(XPCOM_STATICRUNTIME_GLUE_LDOPTS)
-AC_SUBST(XPCOM_STANDALONE_STATICRUNTIME_GLUE_LDOPTS)
 
 AC_SUBST(USE_DEPENDENT_LIBS)
 
@@ -8934,14 +8882,7 @@ fi
 
 MOZ_CONFIG_ICU()
 
-if test -n "$MOZ_NATIVE_ICU"; then
-    MOZ_JS_STATIC_LIBS="$MOZ_JS_STATIC_LIBS $MOZ_ICU_LIBS"
-fi
-
-if test -n "$JS_SHARED_LIBRARY"; then
-  MOZ_JS_LIBS="$MOZ_JS_SHARED_LIBS"
-else
-  MOZ_JS_LIBS="$MOZ_JS_STATIC_LIBS"
+if test -z "$JS_SHARED_LIBRARY"; then
   AC_DEFINE(MOZ_STATIC_JS)
 fi
 AC_SUBST(JS_SHARED_LIBRARY)
@@ -9055,7 +8996,11 @@ if test "$MOZ_TREE_FREETYPE"; then
    export LDFLAGS="$LDFLAGS $MOZ_DEBUG_LDFLAGS"
    # Spaces in the *_CFLAGS and *_LIBS variables are intentionally placed
    # to force freetype to use our settings rather than autodetecting
-   export LIBPNG_CFLAGS="$MOZ_PNG_CFLAGS "
+   if test -n "$MOZ_NATIVE_PNG"; then
+     export LIBPNG_CFLAGS="$MOZ_PNG_CFLAGS "
+   else
+     export LIBPNG_CFLAGS="-I$_objdir/dist/include"
+   fi
    export LIBPNG_LIBS="$MOZ_PNG_LIBS "
    export ZLIB_CFLAGS="$MOZ_ZLIB_CFLAGS "
    export ZLIB_LIBS="$MOZ_ZLIB_LIBS "

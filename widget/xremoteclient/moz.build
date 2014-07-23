@@ -6,6 +6,6 @@
 
 PROGRAM = 'mozilla-xremote-client'
 
-FINAL_LIBRARY = 'xulapp_s'
+FINAL_LIBRARY = 'xul'
 
 DEFINES['XPCOM_GLUE'] = True

@@ -97,7 +97,7 @@ FrameWorker.prototype = {
 
     // Bug 798660 - XHR, WebSocket and Worker have issues in a sandbox and need
     // to be unwrapped to work
-    let needsWaive = ['XMLHttpRequest', 'WebSocket', 'Worker'];
+    let needsWaive = ['XMLHttpRequest', 'WebSocket', 'Worker' ];
     // Methods need to be bound with the proper |this|.
     let needsBind = ['atob', 'btoa', 'dump', 'setInterval', 'clearInterval',
                      'setTimeout', 'clearTimeout'];

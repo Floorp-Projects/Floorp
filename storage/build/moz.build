@@ -14,8 +14,6 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'storagecomps'
-
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += ['../src']

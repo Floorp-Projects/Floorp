@@ -767,8 +767,6 @@ MOZ_USER_DIR=".mozilla"
 
 MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin -Wl,-rpath-link,$(prefix)/lib'
 
-MOZ_COMPONENT_NSPR_LIBS='-L$(LIBXUL_DIST)/bin $(NSPR_LIBS)'
-
 USE_DEPENDENT_LIBS=1
 
 _PLATFORM_DEFAULT_TOOLKIT=cairo-gtk2
@@ -1679,7 +1677,6 @@ ia64*-hpux*)
         WARNINGS_AS_ERRORS='-WX'
         MOZ_OPTIMIZE_FLAGS="-O2"
         MOZ_FIX_LINK_PATHS=
-        MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         # Disable these flags on clang-cl since it doesn't ignore unknown arguments by default, and
         # autoconf insists on passing $LDFLAGS to the compiler.
         if test -z "$CLANG_CL"; then
@@ -1953,7 +1950,7 @@ case "$target" in
         ;;
     *-solaris*)
         if test -z "$GNU_CC"; then
-         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-M $(BUILD_TOOLS)/gnu-ld-scripts/components-mapfile'
+         eOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-M $(BUILD_TOOLS)/gnu-ld-scripts/components-mapfile'
         else
          if test -z "$GCC_USE_GNU_LD"; then
           MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-M -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-mapfile'
@@ -2772,13 +2769,16 @@ dnl ========================================================
 dnl system zlib Support
 dnl ========================================================
 dnl Standalone js defaults to system zlib
-ZLIB_DIR=yes
+if test -n "$JS_STANDALONE"; then
+    ZLIB_DIR=yes
+fi
 
 MOZ_ZLIB_CHECK([1.2.3])
 
 if test -n "$ZLIB_IN_MOZGLUE"; then
     AC_DEFINE(ZLIB_IN_MOZGLUE)
 fi
+AC_SUBST(ZLIB_IN_MOZGLUE)
 
 dnl ========================================================
 dnl system libffi Support
@@ -3615,7 +3615,7 @@ MOZ_ARG_ENABLE_BOOL(readline,
     JS_WANT_READLINE=1,
     JS_WANT_READLINE= )
 
-JS_NATIVE_EDITLINE=
+JS_BUNDLED_EDITLINE=
 EDITLINE_LIBS=
 JS_DISABLE_SHELL=
 
@@ -3634,14 +3634,13 @@ if test -z "$SKIP_LIBRARY_CHECKS" -a -z "$NO_EDITLINE"; then
                  AC_MSG_ERROR([No system readline library found.]))
   else
     dnl By default, we use editline
-    JS_NATIVE_EDITLINE=1
-    EDITLINE_LIBS='$(DEPTH)/js/src/editline/$(LIB_PREFIX)editline.$(LIB_SUFFIX)'
+    JS_BUNDLED_EDITLINE=1
   fi
 
   dnl Either way, we want to build with line editing support.
   AC_DEFINE(EDITLINE)
 fi
-AC_SUBST(JS_NATIVE_EDITLINE)
+AC_SUBST(JS_BUNDLED_EDITLINE)
 AC_SUBST(JS_DISABLE_SHELL)
 AC_SUBST(EDITLINE_LIBS)
 
@@ -3731,7 +3730,6 @@ AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(INCREMENTAL_LINKER)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
-AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
 

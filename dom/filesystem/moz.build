@@ -27,7 +27,7 @@ SOURCES += [
     'RemoveTask.cpp',
 ]
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'
 
 IPDL_SOURCES += [
     'PFileSystemRequest.ipdl',

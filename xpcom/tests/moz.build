@@ -55,64 +55,66 @@ SOURCES += [
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 CPP_UNIT_TESTS += [
-    'ShowAlignments.cpp',
-    'TestAutoPtr.cpp',
-    'TestAutoRef.cpp',
-    'TestCOMArray.cpp',
-    'TestCOMPtr.cpp',
-    'TestCOMPtrEq.cpp',
-    'TestDeque.cpp',
-    'TestFile.cpp',
-    'TestHashtables.cpp',
-    'TestID.cpp',
-    'TestObserverArray.cpp',
-    'TestObserverService.cpp',
-    'TestPipe.cpp',
-    'TestPLDHash.cpp',
-    'TestRefPtr.cpp',
-    'TestStringAPI.cpp',
-    'TestTArray.cpp',
-    'TestTextFormatter.cpp',
-    'TestThreadUtils.cpp'
+    'ShowAlignments',
+    'TestAutoPtr',
+    'TestAutoRef',
+    'TestCOMArray',
+    'TestCOMPtr',
+    'TestCOMPtrEq',
+    'TestDeque',
+    'TestFile',
+    'TestHashtables',
+    'TestID',
+    'TestObserverArray',
+    'TestObserverService',
+    'TestPipe',
+    'TestPLDHash',
+    'TestRefPtr',
+    'TestStringAPI',
+    'TestTArray',
+    'TestTextFormatter',
+    'TestThreadUtils'
 ]
 
 if CONFIG['MOZ_MEMORY']:
     CPP_UNIT_TESTS += [
-        'TestJemalloc.cpp',
+        'TestJemalloc',
     ]
 
 # XXX Make these tests work in libxul builds.
 #CPP_UNIT_TESTS += [
-#    'TestArray.cpp',
-#    'TestCRT.cpp',
-#    'TestEncoding.cpp',
-#    'TestExpirationTracker.cpp',
-#    'TestPipes.cpp',
-#    'TestPriorityQueue.cpp',
-#    'TestStorageStream.cpp',
-#    'TestStrings.cpp',
-#    'TestSynchronization.cpp',
-#    'TestTArray.cpp',
-#    'TestThreadPool.cpp',
-#    'TestThreads.cpp',
-#    'TestTimeStamp.cpp',
-#    'TestXPIDLString.cpp',
-#    'TestUTF.cpp',
-#    'TestAtoms.cpp',
+#    'TestArray',
+#    'TestCRT',
+#    'TestEncoding',
+#    'TestExpirationTracker',
+#    'TestPipes',
+#    'TestPriorityQueue',
+#    'TestStorageStream',
+#    'TestStrings',
+#    'TestSynchronization',
+#    'TestTArray',
+#    'TestThreadPool',
+#    'TestThreads',
+#    'TestTimeStamp',
+#    'TestXPIDLString',
+#    'TestUTF',
+#    'TestAtoms',
 #]
 
 # FIXME: bug 577500 TestStaticAtoms fails when run in dist/bin
 #CPP_UNIT_TESTS += [
-#    'TestStaticAtoms.cpp',
+#    'TestStaticAtoms',
 #]
 
 if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT', 'Darwin'):
     # FIXME bug 523392: TestDeadlockDetector doesn't like Windows
     # FIXME bug 523378: also fails on OS X
     CPP_UNIT_TESTS += [
-        'TestDeadlockDetector.cpp',
-        'TestDeadlockDetectorScalability.cpp',
+        'TestDeadlockDetector',
+        'TestDeadlockDetectorScalability',
     ]
+
+SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 
 LOCAL_INCLUDES += [
     '../ds',
@@ -120,4 +122,10 @@ LOCAL_INCLUDES += [
 
 RESOURCE_FILES += [
     'test.properties',
+]
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul',
 ]

@@ -14,10 +14,14 @@ LIBRARY_NAME = 'testcompnoaslr'
 
 IS_COMPONENT = True
 
-FORCE_SHARED_LIB = True
-
 DEFINES['LIBRARY_FILENAME'] = '%s%s%s' % (
     CONFIG['DLL_PREFIX'],
     LIBRARY_NAME,
     CONFIG['DLL_SUFFIX']
 )
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul',
+]

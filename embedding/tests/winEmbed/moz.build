@@ -33,3 +33,8 @@ else:
     LDFLAGS += ['/HEAP:0x40000']
 
 DISABLE_STL_WRAPPING = True
+
+USE_LIBS += [
+    'profdirserviceprovidersa_s',
+    'xpcomglue',
+]

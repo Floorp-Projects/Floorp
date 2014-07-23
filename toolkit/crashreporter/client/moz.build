@@ -22,6 +22,9 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
     DEFINES['UNICODE'] = True
     DEFINES['_UNICODE'] = True
+    USE_LIBS += [
+        'google_breakpad_libxul_s',
+    ]
 elif CONFIG['OS_ARCH'] == 'Darwin':
     UNIFIED_SOURCES += [
         'crashreporter_osx.mm',
@@ -31,10 +34,17 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
         '../google-breakpad/src/common/mac',
     ]
     LDFLAGS += ['-framework Cocoa']
+    USE_LIBS += [
+        'breakpad_common_s',
+        'breakpad_mac_common_s',
+    ]
 elif CONFIG['OS_ARCH'] == 'SunOS':
     SOURCES += [
         'crashreporter_linux.cpp',
         'crashreporter_unix.cpp',
+    ]
+    USE_LIBS += [
+        'breakpad_solaris_common_s',
     ]
 
 if CONFIG['MOZ_ENABLE_GTK']:
@@ -42,6 +52,9 @@ if CONFIG['MOZ_ENABLE_GTK']:
         'crashreporter_gtk_common.cpp',
         'crashreporter_linux.cpp',
         'crashreporter_unix_common.cpp'
+    ]
+    USE_LIBS += [
+        'breakpad_linux_common_s',
     ]
 
 RCINCLUDE = 'crashreporter.rc'

@@ -4,5 +4,38 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'src']
 TEST_DIRS += ['test']
+
+XPIDL_SOURCES += [
+    'nsIChromeRegistry.idl',
+    'nsIToolkitChromeRegistry.idl',
+]
+
+XPIDL_MODULE = 'chrome'
+
+EXPORTS.mozilla.chrome += [
+    'RegistryMessageUtils.h',
+]
+
+UNIFIED_SOURCES += [
+    'nsChromeProtocolHandler.cpp',
+    'nsChromeRegistry.cpp',
+    'nsChromeRegistryChrome.cpp',
+    'nsChromeRegistryContent.cpp',
+]
+
+MSVC_ENABLE_PGO = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
+
+GENERATED_INCLUDES += [
+    '/xpcom',
+]
+
+LOCAL_INCLUDES += [
+    '/netwerk/base/src',
+    '/netwerk/protocol/res',
+    '/xpcom/components'
+]

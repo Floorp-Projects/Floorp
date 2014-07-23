@@ -3,7 +3,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ifdef MOZ_GLUE_PROGRAM_LDFLAGS
-SDK_LIBRARY = $(REAL_LIBRARY)
 DIST_INSTALL = 1
 endif
 

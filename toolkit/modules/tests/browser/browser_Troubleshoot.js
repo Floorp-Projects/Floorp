@@ -200,6 +200,9 @@ const SNAPSHOT_SCHEMA = {
         adapterDeviceID: {
           type: "string",
         },
+        adapterSubsysID: {
+          type: "string",
+        },
         adapterRAM: {
           type: "string",
         },
@@ -219,6 +222,9 @@ const SNAPSHOT_SCHEMA = {
           type: "string",
         },
         adapterDeviceID2: {
+          type: "string",
+        },
+        adapterSubsysID2: {
           type: "string",
         },
         adapterRAM2: {

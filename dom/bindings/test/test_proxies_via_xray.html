@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1021066
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1021066</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1021066">Mozilla Bug 1021066</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="t" src="http://example.org/tests/dom/bindings/test/file_proxies_via_xray.html"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1021066 **/
+
+function test()
+{
+  "use strict"; // So we'll get exceptions on sets
+  var doc = document.getElementById("t").contentWindow.document;
+  ok(!("x" in doc), "Should have an Xray here");
+  is(doc.x, undefined, "Really should have an Xray here");
+  is(doc.wrappedJSObject.x, 5, "And wrapping the right thing");
+
+  // Test overridebuiltins binding without named setter
+  is(doc.y, doc.getElementById("y"),
+     "Named getter should work on Document");
+  try {
+    doc.z = 5;
+    ok(false, "Should have thrown on set of readonly property on Document");
+  } catch (e) {
+    ok(/read-only/.test(e.message),
+       "Threw the right exception on set of readonly property on Document");
+  }
+
+  doc.w = 5;
+  is(doc.w, 5, "Should be able to set things that are not named props");
+
+  // Test non-overridebuiltins binding without named setter
+  var l = doc.getElementsByTagName("img");
+  is(l.y, doc.getElementById("y"),
+     "Named getter should work on HTMLCollection");
+  try {
+    l.z = 5;
+    ok(false, "Should have thrown on set of readonly property on HTMLCollection");
+  } catch (e) {
+    ok(/read-only/.test(e.message),
+       "Should throw the right exception on set of readonly property on HTMLCollection");
+  }
+  try {
+    l[10] = 5;
+    ok(false, "Should have thrown on set of indexed property on HTMLCollection");
+  } catch (e) {
+    ok(/doesn't have an indexed property setter/.test(e.message),
+       "Should throw the right exception on set of indexed property on HTMLCollection");
+  }
+
+  // Test overridebuiltins binding with named setter
+  var d = doc.documentElement.dataset;
+  d.foo = "bar";
+  // Check that this actually got passed on to the underlying object.
+  is(d.wrappedJSObject.foo, "bar",
+     "Set should get forwarded to the underlying object");
+  is(doc.documentElement.getAttribute("data-foo"), "bar",
+     "Attribute setter should have been called");
+  d.foo = "baz";
+  // Check that this actually got passed on to the underlying object.
+  is(d.wrappedJSObject.foo, "baz",
+     "Set should get forwarded to the underlying object again");
+  is(doc.documentElement.getAttribute("data-foo"), "baz",
+     "Attribute setter should have been called again");
+
+  // Test non-overridebuiltins binding with named setter
+  var s = doc.defaultView.localStorage;
+  s["test_proxies_via_xray"] = "bar";
+  // Check that this actually got passed on to the underlying object.
+  is(s.wrappedJSObject["test_proxies_via_xray"], "bar",
+     "Set should get forwarded to the underlying object without overridebuiltins");
+  s["test_proxies_via_xray"] = "baz";
+  // Check that this actually got passed on to the underlying object.
+  is(s.wrappedJSObject["test_proxies_via_xray"], "baz",
+     "Set should get forwarded to the underlying object again without overridebuiltins");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(test);
+
+</script>
+</pre>
+</body>
+</html>

@@ -6,7 +6,15 @@
 
 MSVC_ENABLE_PGO = True
 
-FORCE_SHARED_LIB = True
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    # This is going to be a framework named "XUL", not an ordinary library named
+    # "libxul.dylib"
+    SHARED_LIBRARY_NAME = 'XUL'
+    IS_FRAMEWORK = True
+else:
+    SHARED_LIBRARY_NAME = 'xul'
+    FORCE_SHARED_LIB = True
+
 
 DELAYLOAD_DLLS += [
     'comdlg32.dll',
@@ -48,4 +56,4 @@ if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
         '/xpcom/base',
     ]
     # This file is (only) included from subdirectories, and the file is here.
-    RCINCLUDE = '../xulrunner.rc'
+    RCINCLUDE = '$(topsrcdir)/toolkit/library/xulrunner.rc'
