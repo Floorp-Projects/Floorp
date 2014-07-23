@@ -2046,9 +2046,6 @@ pref("layout.display-list.dump", false);
 // heavily loaded.
 pref("layout.frame_rate.precise", false);
 
-// pref to control whether layout warnings that are hit quite often are enabled 
-pref("layout.spammy_warnings.enabled", true);
-
 // Is support for the Web Animations API enabled?
 #ifdef RELEASE_BUILD
 pref("dom.animations-api.core.enabled", false);
