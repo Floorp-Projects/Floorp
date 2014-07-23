@@ -1601,45 +1601,6 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
                         aBGClipRect, aLayer);
 }
 
-void
-nsCSSRendering::PaintBackgroundColor(gfxRGBA aColor,
-                                     nsRenderingContext& aRenderingContext,
-                                     nsIFrame* aForFrame,
-                                     const nsRect& aDirtyRect,
-                                     const nsRect& aBorderArea,
-                                     const nsRect& aBGClipRect,
-                                     uint32_t aFlags)
-{
-  PROFILER_LABEL("nsCSSRendering", "PaintBackgroundColor",
-    js::ProfileEntry::Category::GRAPHICS);
-
-  NS_PRECONDITION(aForFrame,
-                  "Frame is expected to be provided to PaintBackground");
-
-  nsStyleContext *sc;
-  if (!FindBackground(aForFrame, &sc)) {
-    // We don't want to bail out if moz-appearance is set on a root
-    // node. If it has a parent content node, bail because it's not
-    // a root, other wise keep going in order to let the theme stuff
-    // draw the background. The canvas really should be drawing the
-    // bg, but there's no way to hook that up via css.
-    if (!aForFrame->StyleDisplay()->mAppearance) {
-      return;
-    }
-
-    nsIContent* content = aForFrame->GetContent();
-    if (!content || content->GetParent()) {
-      return;
-    }
-
-    sc = aForFrame->StyleContext();
-  }
-
-  PaintBackgroundColorWithSC(aColor, aRenderingContext, aForFrame,
-                             aDirtyRect, aBorderArea, aBGClipRect, sc,
-                             *aForFrame->StyleBorder(), aFlags);
-}
-
 static bool
 IsOpaqueBorderEdge(const nsStyleBorder& aBorder, mozilla::css::Side aSide)
 {
@@ -2833,73 +2794,6 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       }
     }
   }
-}
-
-void
-nsCSSRendering::PaintBackgroundColorWithSC(gfxRGBA aColor,
-                                           nsRenderingContext& aRenderingContext,
-                                           nsIFrame* aForFrame,
-                                           const nsRect& aDirtyRect,
-                                           const nsRect& aBorderArea,
-                                           const nsRect& aBGClipRect,
-                                           nsStyleContext* aBackgroundSC,
-                                           const nsStyleBorder& aBorder,
-                                           uint32_t aFlags)
-{
-  NS_PRECONDITION(aForFrame,
-                  "Frame is expected to be provided to PaintBackground");
-
-  // Check to see if we have an appearance defined.  If so, we let the theme
-  // renderer draw the background and bail out.
-  const nsStyleDisplay* displayData = aForFrame->StyleDisplay();
-  if (displayData->mAppearance) {
-    nsITheme *theme = aForFrame->PresContext()->GetTheme();
-    if (theme && theme->ThemeSupportsWidget(aForFrame->PresContext(), aForFrame,
-                                            displayData->mAppearance)) {
-      NS_ERROR("Shouldn't be trying to paint a background color if we are themed!");
-      return;
-    }
-  }
-
-  NS_ASSERTION(!IsCanvasFrame(aForFrame), "Should not be trying to paint a background color for canvas frames!");
-
-  // Determine whether we are drawing background images and/or
-  // background colors.
-  bool drawBackgroundImage;
-  bool drawBackgroundColor;
-  DetermineBackgroundColor(aForFrame->PresContext(),
-                           aBackgroundSC,
-                           aForFrame,
-                           drawBackgroundImage,
-                           drawBackgroundColor);
-
-  NS_ASSERTION(drawBackgroundImage || drawBackgroundColor,
-               "Should not be trying to paint a background if we don't have one");
-  if (!drawBackgroundColor) {
-    return;
-  }
-
-  // The background is rendered over the 'background-clip' area,
-  // which is normally equal to the border area but may be reduced
-  // to the padding area by CSS.  Also, if the border is solid, we
-  // don't need to draw outside the padding area.  In either case,
-  // if the borders are rounded, make sure we use the same inner
-  // radii as the border code will.
-  // The background-color is drawn based on the bottom
-  // background-clip.
-  gfxContext* ctx = aRenderingContext.ThebesContext();
-  nscoord appUnitsPerPixel = aForFrame->PresContext()->AppUnitsPerDevPixel();
-
-  BackgroundClipState clipState;
-  clipState.mBGClipArea = aBGClipRect;
-  clipState.mCustomClip = true;
-  SetupDirtyRects(clipState.mBGClipArea, aDirtyRect, appUnitsPerPixel,
-                  &clipState.mDirtyRect, &clipState.mDirtyRectGfx);
-
-  ctx->SetColor(aColor);
-
-  gfxContextAutoSaveRestore autoSR;
-  DrawBackgroundColor(clipState, ctx, appUnitsPerPixel);
 }
 
 static inline bool
