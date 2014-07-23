@@ -13,6 +13,7 @@ loop.shared.views = (function(_, OT, l10n) {
 
   var sharedModels = loop.shared.models;
   var __ = l10n.get;
+  var WINDOW_AUTOCLOSE_TIMEOUT_IN_SECONDS = 5;
 
   /**
    * L10n view. Translates resulting view DOM fragment once rendered.
@@ -139,9 +140,9 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       return (
         /* jshint ignore:start */
-        React.DOM.button({className: this._getClasses(), 
-                title: this._getTitle(), 
-                onClick: this.handleClick})
+        React.DOM.button( {className:this._getClasses(),
+                title:this._getTitle(),
+                onClick:this.handleClick})
         /* jshint ignore:end */
       );
     }
@@ -180,16 +181,16 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       /* jshint ignore:start */
       return (
-        React.DOM.ul({className: "conversation-toolbar"}, 
-          React.DOM.li(null, React.DOM.button({className: "btn btn-hangup", 
-                      onClick: this.handleClickHangup, 
-                      title: __("hangup_button_title")})), 
-          React.DOM.li(null, MediaControlButton({action: this.handleToggleVideo, 
-                                  enabled: this.props.video.enabled, 
-                                  scope: "local", type: "video"})), 
-          React.DOM.li(null, MediaControlButton({action: this.handleToggleAudio, 
-                                  enabled: this.props.audio.enabled, 
-                                  scope: "local", type: "audio"}))
+        React.DOM.ul( {className:"conversation-toolbar"}, 
+          React.DOM.li(null, React.DOM.button( {className:"btn btn-hangup",
+                      onClick:this.handleClickHangup,
+                      title:__("hangup_button_title")})),
+          React.DOM.li(null, MediaControlButton( {action:this.handleToggleVideo,
+                                  enabled:this.props.video.enabled,
+                                  scope:"local", type:"video"} )),
+          React.DOM.li(null, MediaControlButton( {action:this.handleToggleAudio,
+                                  enabled:this.props.audio.enabled,
+                                  scope:"local", type:"audio"} ))
         )
       );
       /* jshint ignore:end */
@@ -335,20 +336,244 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       /* jshint ignore:start */
       return (
-        React.DOM.div({className: "conversation"}, 
-          ConversationToolbar({video: this.state.video, 
-                               audio: this.state.audio, 
-                               publishStream: this.publishStream, 
-                               hangup: this.hangup}), 
-          React.DOM.div({className: "media nested"}, 
-            React.DOM.div({className: "video_wrapper remote_wrapper"}, 
-              React.DOM.div({className: "video_inner remote"})
-            ), 
-            React.DOM.div({className: "local"})
+        React.DOM.div( {className:"conversation"}, 
+          ConversationToolbar( {video:this.state.video,
+                               audio:this.state.audio,
+                               publishStream:this.publishStream,
+                               hangup:this.hangup} ),
+          React.DOM.div( {className:"media nested"}, 
+            React.DOM.div( {className:"video_wrapper remote_wrapper"}, 
+              React.DOM.div( {className:"video_inner remote"})
+            ),
+            React.DOM.div( {className:"local"})
           )
         )
       );
       /* jshint ignore:end */
+    }
+  });
+
+  /**
+   * Feedback outer layout.
+   *
+   * Props:
+   * -
+   */
+  var FeedbackLayout = React.createClass({displayName: 'FeedbackLayout',
+    propTypes: {
+      children: React.PropTypes.component.isRequired,
+      title: React.PropTypes.string.isRequired,
+      reset: React.PropTypes.func // if not specified, no Back btn is shown
+    },
+
+    render: function() {
+      var backButton = React.DOM.div(null );
+      if (this.props.reset) {
+        backButton = (
+          React.DOM.button( {className:"back", type:"button", onClick:this.props.reset}, 
+            "« ",__("feedback_back_button")
+          )
+        );
+      }
+      return (
+        React.DOM.div( {className:"feedback"}, 
+          backButton,
+          React.DOM.h3(null, this.props.title),
+          this.props.children
+        )
+      );
+    }
+  });
+
+  /**
+   * Detailed feedback form.
+   */
+  var FeedbackForm = React.createClass({displayName: 'FeedbackForm',
+    propTypes: {
+      pending:      React.PropTypes.bool,
+      sendFeedback: React.PropTypes.func,
+      reset:        React.PropTypes.func
+    },
+
+    getInitialState: function() {
+      return {reason: "", custom: ""};
+    },
+
+    getInitialProps: function() {
+      return {pending: false};
+    },
+
+    handleReasonChange: function(event) {
+      var reason = event.target.value;
+      if (reason === "other") {
+        this.setState({reason: reason});
+      } else {
+        // resets custom text field
+        this.setState({custom: ""});
+      }
+    },
+
+    handleCustomTextChange: function(event) {
+      this.setState({custom: event.target.value});
+    },
+
+    handleFormSubmit: function(event) {
+      event.preventDefault();
+      var reason = this.refs.reason.getDOMNode().value.trim();
+      var custom = this.refs.custom.getDOMNode().value.trim();
+      this.props.sendFeedback({
+        reason: reason,
+        custom: reason === "other" ? custom : ""
+      });
+    },
+
+    render: function() {
+      return (
+        FeedbackLayout( {title:__("feedback_what_makes_you_sad"),
+                        reset:this.props.reset}, 
+          React.DOM.form( {onSubmit:this.handleFormSubmit}, 
+            React.DOM.label(null, 
+              React.DOM.input( {type:"radio", ref:"reason", name:"reason",
+                     value:"audio_quality", onChange:this.handleReasonChange} ),
+              __("feedback_reason_audio_quality")
+            ),
+            React.DOM.label(null, 
+              React.DOM.input( {type:"radio", ref:"reason", name:"reason",
+                     value:"video_quality", onChange:this.handleReasonChange} ),
+              __("feedback_reason_video_quality")
+            ),
+            React.DOM.label(null, 
+              React.DOM.input( {type:"radio", ref:"reason", name:"reason",
+                     value:"disconnected", onChange:this.handleReasonChange} ),
+              __("feedback_reason_was_disconnected")
+            ),
+            React.DOM.label(null, 
+              React.DOM.input( {type:"radio", ref:"reason", name:"reason", value:"confusing",
+                     onChange:this.handleReasonChange} ),
+              __("feedback_reason_confusing")
+            ),
+            React.DOM.label(null, 
+              React.DOM.input( {type:"radio", ref:"reason", name:"reason", value:"other",
+                     onChange:this.handleReasonChange} ),
+              __("feedback_reason_other")
+            ),
+            React.DOM.p(null, React.DOM.input( {type:"text", ref:"custom", name:"custom",
+                      disabled:this.state.reason !== "other",
+                      onChange:this.handleCustomTextChange,
+                      value:this.state.custom} )),
+            React.DOM.button( {type:"submit", className:"btn btn-success",
+                    disabled:this.props.pending}, 
+              __("feedback_submit_button")
+            )
+          )
+        )
+      );
+    }
+  });
+
+  /**
+   * Feedback received view.
+   */
+  var FeedbackReceived = React.createClass({displayName: 'FeedbackReceived',
+    getInitialState: function() {
+      return {countdown: WINDOW_AUTOCLOSE_TIMEOUT_IN_SECONDS};
+    },
+
+    componentDidMount: function() {
+      this._timer = setInterval(function() {
+        this.setState({countdown: this.state.countdown - 1});
+      }.bind(this), 1000);
+    },
+
+    componentWillUnmount: function() {
+      if (this._timer) {
+        clearInterval(this._timer);
+      }
+    },
+
+    render: function() {
+      if (this.state.countdown < 1) {
+        clearInterval(this._timer);
+        window.close();
+      }
+      return (
+        FeedbackLayout( {title:__("feedback_thank_you_heading")}, 
+          React.DOM.p( {className:"info thank-you"}, __("feedback_window_will_close_in", {
+            countdown: this.state.countdown
+          }))
+        )
+      );
+    }
+  });
+
+  /**
+   * Feedback view.
+   */
+  var FeedbackView = React.createClass({displayName: 'FeedbackView',
+    propTypes: {
+      // A loop.FeedbackAPIClient instance
+      feedbackApiClient: React.PropTypes.object.isRequired,
+      // The current feedback submission flow step name
+      step: React.PropTypes.oneOf(["start", "form", "finished"])
+    },
+
+    getInitialState: function() {
+      return {pending: false, step: this.props.step || "start"};
+    },
+
+    getInitialProps: function() {
+      return {step: "start"};
+    },
+
+    reset: function() {
+      this.setState(this.getInitialState());
+    },
+
+    handleHappyClick: function() {
+      this.setState({step: "finished"});
+    },
+
+    handleSadClick: function() {
+      this.setState({step: "form"});
+    },
+
+    sendFeedback: function(fields) {
+      // Setting state.pending to true will disable the submit button to avoid
+      // multiple submissions
+      this.setState({pending: true});
+      // Sends feedback data
+      this.props.feedbackApiClient.send(fields, this._onFeedbackSent);
+    },
+
+    _onFeedbackSent: function(err) {
+      if (err) {
+        // XXX better end user error reporting, see bug 1046738
+        console.error("Unable to send user feedback", err);
+      }
+      this.setState({pending: false, step: "finished"});
+    },
+
+    render: function() {
+      switch(this.state.step) {
+        case "finished":
+          return FeedbackReceived(null );
+        case "form":
+          return FeedbackForm( {feedbackApiClient:this.props.feedbackApiClient,
+                               sendFeedback:this.sendFeedback,
+                               reset:this.reset,
+                               pending:this.state.pending} );
+        default:
+          return (
+            FeedbackLayout( {title:__("feedback_call_experience_heading")}, 
+              React.DOM.div( {className:"faces"}, 
+                React.DOM.button( {className:"face face-happy",
+                        onClick:this.handleHappyClick}),
+                React.DOM.button( {className:"face face-sad",
+                        onClick:this.handleSadClick})
+              )
+            )
+          );
+      }
     }
   });
 
@@ -518,6 +743,7 @@ loop.shared.views = (function(_, OT, l10n) {
     BaseView: BaseView,
     ConversationView: ConversationView,
     ConversationToolbar: ConversationToolbar,
+    FeedbackView: FeedbackView,
     MediaControlButton: MediaControlButton,
     NotificationListView: NotificationListView,
     NotificationView: NotificationView,

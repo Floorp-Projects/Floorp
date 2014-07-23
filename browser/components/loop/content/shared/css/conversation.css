@@ -238,3 +238,105 @@
     color: #FFF;
     background: #111;
   }
+
+/* Expired call url page */
+
+.expired-url-info {
+  width: 400px;
+  margin: 0 auto;
+}
+
+.promote-firefox {
+  text-align: center;
+  font-size: 18px;
+  line-height: 24px;
+  margin: 2em 0;
+}
+
+.promote-firefox h3 {
+  font-weight: 300;
+}
+
+/* Feedback form */
+
+.feedback {
+  padding: 1em;
+}
+
+.feedback h3 {
+  color: #666;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 10px;
+  margin-top: 15px;
+}
+
+.feedback .faces {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.feedback .face {
+  border: 1px solid transparent;
+  box-shadow: 0px 1px 2px #CCC;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 0px 10px;
+  width: 80px;
+  height: 80px;
+  background-color: #fbfbfb;
+  background-size: 60px auto;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+.feedback .face:hover {
+  border: 1px solid #DDD;
+  background-color: #FEFEFE;
+}
+
+.feedback .face.face-happy {
+  background-image: url("../img/happy.png");
+}
+
+.feedback .face.face-sad {
+  background-image: url("../img/sad.png");
+}
+
+.feedback button.back {
+  border-radius: 2px;
+  border: 1px solid #CCC;
+  color: #CCC;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 3px 10px;
+  display: inline;
+  margin-bottom: 1em;
+}
+
+.feedback label {
+  display: block;
+}
+
+.feedback form input[type="radio"] {
+  margin-right: .5em;
+}
+
+.feedback form button[type="submit"] {
+  width: 100%;
+}
+
+.feedback form input[type="text"] {
+  width: 100%;
+}
+
+.feedback .info {
+  display: block;
+  font-size: 10px;
+  color: #CCC;
+  text-align: center;
+}
