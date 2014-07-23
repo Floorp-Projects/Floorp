@@ -148,7 +148,7 @@ toolbar[brighttext] #sync-button[status="active"]:hover:active:not([disabled="tr
   -moz-image-region: rect(0, 576px, 18px, 558px);
 }
 
-#webrtc-status-button:not(@inAnyPanel@) {
+#webrtc-status-button {
   -moz-image-region: rect(0, 594px, 18px, 576px);
 }
 
