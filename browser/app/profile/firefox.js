@@ -812,7 +812,6 @@ pref("plugin.state.f5 sam inspection host plugin", 2);
 // display door hanger if flash not installed
 pref("plugins.notifyMissingFlash", true);
 
-pref("browser.preferences.instantApply", true);
 #ifdef XP_MACOSX
 pref("browser.preferences.animateFadeIn", true);
 #else
@@ -820,7 +819,17 @@ pref("browser.preferences.animateFadeIn", false);
 #endif
 
 // Toggles between the two Preferences implementations, pop-up window and in-content
+#ifdef NIGHTLY_BUILD
 pref("browser.preferences.inContent", true);
+pref("browser.preferences.instantApply", true);
+#else
+pref("browser.preferences.inContent", false);
+#ifdef XP_WIN
+pref("browser.preferences.instantApply", false);
+#else
+pref("browser.preferences.instantApply", true);
+#endif
+#endif
 
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);

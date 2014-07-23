@@ -4799,6 +4799,17 @@ if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
   };
 }
 
+if (SpecialPowers.getBoolPref("layout.css.ruby.enabled")) {
+  // Using unshift to add these values at the beginning.
+  // Adding them to the end would trigger bug 1038905. The "unshift" should be
+  // changed to a "push" when this bug is resolved.
+  gCSSProperties["display"].other_values.unshift("ruby",
+                                                 "ruby-base",
+                                                 "ruby-base-container",
+                                                 "ruby-text",
+                                                 "ruby-text-container");
+}
+
 if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
   gCSSProperties["display"].other_values.push("grid", "inline-grid");
   gCSSProperties["grid-auto-flow"] = {
