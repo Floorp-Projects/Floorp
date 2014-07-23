@@ -105,7 +105,9 @@ function pastedGlobal(event)
 }
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(selectArea);
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set": [["general.autoScroll", false]]}, selectArea);
+});
 </script>
 
 </pre>
