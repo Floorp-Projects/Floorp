@@ -106,7 +106,13 @@ public:
         if (aFontEntry->mFamilyName.IsEmpty()) {
             aFontEntry->mFamilyName = Name();
         } else {
-            MOZ_ASSERT(aFontEntry->mFamilyName.Equals(Name()));
+#ifdef DEBUG
+            nsString thisName = Name();
+            nsString entryName = aFontEntry->mFamilyName;
+            ToLowerCase(thisName);
+            ToLowerCase(entryName);
+            MOZ_ASSERT(thisName.Equals(entryName));
+#endif
         }
         ResetCharacterMap();
     }
@@ -125,7 +131,13 @@ public:
                 if (aRealFontEntry->mFamilyName.IsEmpty()) {
                     aRealFontEntry->mFamilyName = Name();
                 } else {
-                    MOZ_ASSERT(aRealFontEntry->mFamilyName.Equals(Name()));
+#ifdef DEBUG
+                  nsString thisName = Name();
+                  nsString entryName = aRealFontEntry->mFamilyName;
+                  ToLowerCase(thisName);
+                  ToLowerCase(entryName);
+                  MOZ_ASSERT(thisName.Equals(entryName));
+#endif
                 }
                 break;
             }
