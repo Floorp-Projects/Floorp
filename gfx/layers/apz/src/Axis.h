@@ -233,7 +233,8 @@ protected:
   float mOverscroll;
   // A queue of (timestamp, velocity) pairs; these are the historical
   // velocities at the given timestamps. Timestamps are in milliseconds,
-  // velocities are in screen pixels per ms.
+  // velocities are in screen pixels per ms. This member can only be
+  // accessed on the controller/UI thread.
   nsTArray<std::pair<uint32_t, float> > mVelocityQueue;
 
   const FrameMetrics& GetFrameMetrics() const;
