@@ -23,3 +23,27 @@ LOCAL_INCLUDES += [
 
 FAIL_ON_WARNINGS = True
 
+if CONFIG['OS_ARCH'] == 'WINNT':
+    # On windows, the WASAPI backend needs the resampler we have in
+    # /media/libspeex_resampler, so we can't get away with just linking cubeb's
+    # .o
+    USE_LIBS += [
+        'gkmedias',
+    ]
+else:
+    # Otherwise, we can just grab all the compiled .o and compile against that,
+    # linking the appriopriate libraries.
+    USE_LIBS += [
+        'cubeb',
+    ]
+    # Don't link gkmedias for it introduces dependencies on Android.
+    if CONFIG['OS_TARGET'] == 'Android':
+        USE_LIBS += [
+            'speex',
+        ]
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul-shared',
+]

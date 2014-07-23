@@ -2,30 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-LIBS = \
-  $(XPCOM_LIBS) \
+LIBS += \
   $(NSPR_LIBS) \
   $(NSS_LIBS) \
   $(MOZ_WEBRTC_X11_LIBS) \
   $(REALTIME_LIBS) \
-  $(DEPTH)/xpcom/glue/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-  $(DEPTH)/media/mtransport/standalone/$(LIB_PREFIX)mtransport_s.$(LIB_SUFFIX) \
-  $(DEPTH)/media/webrtc/signalingtest/signaling_ecc/$(LIB_PREFIX)ecc.$(LIB_SUFFIX) \
-  $(DEPTH)/media/webrtc/signalingtest/signaling_sipcc/$(LIB_PREFIX)sipcc.$(LIB_SUFFIX) \
-  $(DEPTH)/layout/media/webrtc/$(LIB_PREFIX)webrtc.$(LIB_SUFFIX) \
-  $(DEPTH)/layout/media/$(LIB_PREFIX)gkmedias.$(LIB_SUFFIX) \
-  $(DEPTH)/media/webrtc/trunk/testing/gtest_gtest/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) \
-  $(DEPTH)/media/libyuv/libyuv_libyuv/$(LIB_PREFIX)yuv.$(LIB_SUFFIX) \
-  $(DEPTH)/netwerk/srtp/src/$(LIB_PREFIX)nksrtp_s.$(LIB_SUFFIX) \
   $(NULL)
-
-ifdef BUILD_ARM_NEON
-LIBS += $(DEPTH)/media/libyuv/libyuv_libyuv_neon/$(LIB_PREFIX)yuv_neon.$(LIB_SUFFIX)
-endif
-
-ifdef JS_SHARED_LIBRARY
-LIBS += $(MOZ_JS_LIBS)
-endif
 
 ifdef MOZ_ALSA
 LIBS += \
@@ -96,13 +78,7 @@ LIBS += \
   $(NULL)
 endif
 
-ifeq ($(OS_TARGET),WINNT)
-LIBS += \
-  $(DEPTH)/staticlib/components/$(LIB_PREFIX)windowsproxy.$(LIB_SUFFIX) \
-  $(NULL)
-endif
-
-ifndef ZLIB_IN_MOZGLUE
+ifdef MOZ_NATIVE_ZLIB
 LIBS += $(MOZ_ZLIB_LIBS)
 endif
 

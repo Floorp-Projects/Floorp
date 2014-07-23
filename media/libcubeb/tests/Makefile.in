@@ -3,29 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifeq ($(OS_ARCH),WINNT)
-  # On windows, the WASAPI backend needs the resampler we have in
-  # /media/libspeex_resampler, so we can't get away with just linking cubeb's .o
-  LIBS = $(call EXPAND_LIBNAME_PATH,gkmedias,$(DEPTH)/layout/media) \
-         $(NULL)
+ifeq ($(OS_TARGET),Darwin)
+  LIBS += -framework AudioUnit -framework CoreAudio
 else
-  # Otherwise, we can just grab all the compiled .o and compile against that,
-  # linking the appriopriate libraries.
-  LIBS = $(call EXPAND_LIBNAME_PATH,cubeb,$(DEPTH)/media/libcubeb/src)
-  # Don't link gkmedias for it introduces dependencies on Android.
-  ifeq ($(OS_TARGET),Android)
-    LIBS += $(call EXPAND_LIBNAME_PATH,speex,$(DEPTH)/media/libspeex_resampler/src)
-  endif
-
-  ifeq ($(OS_TARGET),Darwin)
-    LIBS += -framework AudioUnit -framework CoreAudio
+  ifeq ($(OS_TARGET), OpenBSD)
+    LIBS += -lsndio
   else
-    ifeq ($(OS_TARGET), OpenBSD)
-      LIBS += -lsndio
-    else
-      LIBS += $(MOZ_ALSA_LIBS) \
-              $(MOZ_PULSEAUDIO_LIBS)
-    endif
+    LIBS += $(MOZ_ALSA_LIBS) \
+            $(MOZ_PULSEAUDIO_LIBS)
   endif
-  LIBS += $(NULL)
 endif

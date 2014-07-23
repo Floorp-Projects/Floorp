@@ -25,10 +25,6 @@ endif #} LIBXUL_SDK
 
 # Build a binary bootstrapping with XRE_main
 
-LIBS += \
-	$(XPCOM_STANDALONE_GLUE_LDOPTS) \
-	$(NULL)
-
 ifdef MOZ_LINKER
 LIBS += $(MOZ_ZLIB_LIBS)
 endif

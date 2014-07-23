@@ -16,3 +16,9 @@ IS_COMPONENT = True
 # application.  this is necessary since we don't want to force users
 # to install gnome-vfs2 in order to use the rest of mozilla ;-)
 FORCE_SHARED_LIB = True
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul-shared',
+]

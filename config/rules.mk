@@ -83,7 +83,7 @@ ifdef COMPILE_ENVIRONMENT
 # which stuff links.
 SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS)
 INCLUDES += -I$(DIST)/include/testing
-LIBS += $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS)
+LIBS += $(NSPR_LIBS)
 
 ifndef MOZ_PROFILE_GENERATE
 libs:: $(CPP_UNIT_TESTS) $(call mkdir_deps,$(DIST)/cppunittests)

@@ -30,6 +30,23 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     LOCAL_INCLUDES += [
         '/toolkit/xre',
     ]
+    USE_LIBS += [
+        'updatecommon-standalone',
+        'verifymar',
+    ]
+else:
+    USE_LIBS += [
+        'updatecommon',
+    ]
+
+USE_LIBS += [
+    'mar',
+]
+
+if not CONFIG['MOZ_NATIVE_BZ2']:
+    USE_LIBS += [
+        'bz2',
+    ]
 
 if CONFIG['MOZ_ENABLE_GTK']:
     have_progressui = 1

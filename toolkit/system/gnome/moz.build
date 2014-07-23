@@ -33,3 +33,8 @@ LOCAL_INCLUDES += [
     '/toolkit/components/build/',
 ]
 
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul-shared',
+]

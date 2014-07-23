@@ -6,8 +6,6 @@ ifdef MOZ_LINKER
 # Only link against the linker, not mozglue
 MOZ_GLUE_PROGRAM_LDFLAGS =
 MOZ_GLUE_LDFLAGS =
-LIBS += $(call EXPAND_LIBNAME_PATH,linker,../linker)
-
 EXTRA_LIBS = $(MOZ_ZLIB_LIBS)
 endif
 

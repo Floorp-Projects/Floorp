@@ -35,3 +35,14 @@ LOCAL_INCLUDES += [
 ]
 
 FAIL_ON_WARNINGS = True
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul-shared',
+]
+
+if not CONFIG['MOZ_NATIVE_SQLITE'] and not CONFIG['MOZ_FOLD_LIBS']:
+    USE_LIBS += [
+        'mozsqlite3',
+    ]

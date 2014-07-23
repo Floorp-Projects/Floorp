@@ -4,9 +4,7 @@
 
 NSDISTMODE = copy
 
-LIBS = \
-  $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-  $(LIBXUL_LIBS) \
+LIBS += \
   $(NSPR_LIBS) \
   $(NULL)
 

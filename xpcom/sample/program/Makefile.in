@@ -3,14 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# LIBS specifies linker flags when building an executable program from
-# this Makefile. We link against the "standalone glue" which does not require
-# that the application be linked against the XPCOM dynamic library or the NSPR
-# dynamic libraries.
-LIBS            = \
-		$(XPCOM_STANDALONE_GLUE_LDOPTS) \
-		$(NULL)
-
 # Need to link with CoreFoundation on Mac
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 LIBS            += \

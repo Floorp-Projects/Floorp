@@ -3,8 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_DSO_LDOPTS += \
-		$(XPCOM_GLUE_LDOPTS) \
-		$(XPCOM_FROZEN_LDOPTS) \
 		$(NSPR_LIBS) \
 		$(MOZ_GCONF_LIBS) \
 		$(MOZ_GNOMEVFS_LIBS) \

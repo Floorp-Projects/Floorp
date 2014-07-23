@@ -83,3 +83,17 @@ LOCAL_INCLUDES += [
     '/netwerk/sctp/src/',
 ]
 
+USE_LIBS += [
+    '/media/webrtc/trunk/testing/gtest_gtest/gtest',
+    'mozalloc',
+    'mtransport_s',
+    'nicer',
+    'nrappkit',
+    'xpcomglue_s',
+    'xul-shared',
+]
+
+if CONFIG['MOZ_SCTP']:
+    USE_LIBS += [
+        'nksctp_s',
+    ]

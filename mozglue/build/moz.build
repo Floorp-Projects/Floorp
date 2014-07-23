@@ -68,6 +68,15 @@ if CONFIG['MOZ_ASAN']:
 
 LIBRARY_NAME = 'mozglue'
 
+USE_LIBS += [
+    'mfbt',
+]
+
+if CONFIG['ZLIB_IN_MOZGLUE'] and not CONFIG['MOZ_NATIVE_ZLIB']:
+    USE_LIBS += [
+        'mozz',
+    ]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     SOURCES += [
         'cpuacct.c',

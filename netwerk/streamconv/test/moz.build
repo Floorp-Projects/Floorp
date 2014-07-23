@@ -19,3 +19,9 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         LDFLAGS += ['-mconsole']
     else:
         LDFLAGS += ['-SUBSYSTEM:CONSOLE']
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul-shared',
+]

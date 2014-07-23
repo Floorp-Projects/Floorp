@@ -6,7 +6,7 @@
 
 
 
-LIBS		= $(XPCOM_LIBS) \
+LIBS	+= \
 		  $(NSPR_LIBS) \
 		  $(NULL)
 

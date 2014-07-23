@@ -5,7 +5,6 @@
 MOZ_GLUE_LDFLAGS =
 
 SHARED_LIBRARY_LIBS += \
-	../../../$(LIB_PREFIX)sandbox_s.$(LIB_SUFFIX) \
 	$(NSPR_LIBS) \
 	$(NULL)
 
