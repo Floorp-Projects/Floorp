@@ -168,12 +168,15 @@ var TextEditor = Class({
       autocomplete: true
     });
 
-    // Trigger editor specific events on `this`
+    // Trigger a few editor specific events on `this`.
     this.editor.on("change", (...args) => {
       this.emit("change", ...args);
     });
     this.editor.on("cursorActivity", (...args) => {
       this.emit("cursorActivity", ...args);
+    });
+    this.editor.on("focus", (...args) => {
+      this.emit("focus", ...args);
     });
 
     this.appended = this.editor.appendTo(this.elt);
