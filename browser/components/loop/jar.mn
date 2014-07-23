@@ -22,6 +22,8 @@ browser.jar:
   content/browser/loop/shared/css/conversation.css  (content/shared/css/conversation.css)
 
   # Shared images
+  content/browser/loop/shared/img/happy.png                     (content/shared/img/happy.png)
+  content/browser/loop/shared/img/sad.png                       (content/shared/img/sad.png)
   content/browser/loop/shared/img/icon_32.png                   (content/shared/img/icon_32.png)
   content/browser/loop/shared/img/icon_64.png                   (content/shared/img/icon_64.png)
   content/browser/loop/shared/img/loading-icon.gif              (content/shared/img/loading-icon.gif)

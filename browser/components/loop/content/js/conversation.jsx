@@ -117,30 +117,6 @@ loop.conversation = (function(OT, mozL10n) {
   });
 
   /**
-   * Call ended view.
-   * @type {loop.shared.views.BaseView}
-   */
-  var EndedCallView = sharedViews.BaseView.extend({
-    template: _.template([
-      '<p>',
-      '  <button class="btn btn-info" data-l10n-id="close_window"></button>',
-      '</p>'
-    ].join("")),
-
-    className: "call-ended",
-
-    events: {
-      "click button": "closeWindow"
-    },
-
-    closeWindow: function(event) {
-      event.preventDefault();
-      // XXX For now, we just close the window.
-      window.close();
-    }
-  });
-
-  /**
    * Conversation router.
    *
    * Required options:
@@ -156,7 +132,8 @@ loop.conversation = (function(OT, mozL10n) {
       "call/decline": "decline",
       "call/ongoing": "conversation",
       "call/ended": "ended",
-      "call/declineAndBlock": "declineAndBlock"
+      "call/declineAndBlock": "declineAndBlock",
+      "call/feedback": "feedback"
     },
 
     /**
@@ -170,7 +147,7 @@ loop.conversation = (function(OT, mozL10n) {
      * @override {loop.shared.router.BaseConversationRouter.endCall}
      */
     endCall: function() {
-      this.navigate("call/ended", {trigger: true});
+      this.navigate("call/feedback", {trigger: true});
     },
 
     /**
@@ -254,10 +231,17 @@ loop.conversation = (function(OT, mozL10n) {
     },
 
     /**
-     * XXX: load a view with a close button for now?
+     * Call has ended, display a feedback form.
      */
-    ended: function() {
-      this.loadView(new EndedCallView());
+    feedback: function() {
+      this.loadReactComponent(sharedViews.FeedbackView({
+        // XXX for now we pass in a fake feeback API client (see bug 972992)
+        feedbackApiClient: {
+          send: function(fields, cb) {
+            cb();
+          }
+        }
+      }));
     }
   });
 
@@ -280,7 +264,6 @@ loop.conversation = (function(OT, mozL10n) {
 
   return {
     ConversationRouter: ConversationRouter,
-    EndedCallView: EndedCallView,
     IncomingCallView: IncomingCallView,
     init: init
   };
