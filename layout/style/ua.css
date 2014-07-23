@@ -72,6 +72,23 @@
   white-space: inherit;
 }
 
+/* Ruby */
+*|*::-moz-ruby {
+  display: ruby;
+}
+*|*::-moz-ruby-base {
+  display: ruby-base;
+}
+*|*::-moz-ruby-text {
+  display: ruby-text;
+}
+*|*::-moz-ruby-base-container {
+  display: ruby-base-container;
+}
+*|*::-moz-ruby-text-container {
+  display: ruby-text-container;
+}
+
 /* Lists */
 
 *|*::-moz-list-bullet, *|*::-moz-list-number {

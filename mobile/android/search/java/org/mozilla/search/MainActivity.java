@@ -13,6 +13,7 @@ import android.view.View;
 
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.search.autocomplete.AcceptsSearchQuery;
+import org.mozilla.search.autocomplete.SearchFragment;
 
 /**
  * The main entrance for the Android search intent.
@@ -58,8 +59,12 @@ public class MainActivity extends FragmentActivity implements AcceptsSearchQuery
     public void onSearch(String query) {
         startPostsearch();
         storeQuery(query);
+
         ((PostSearchFragment) getSupportFragmentManager().findFragmentById(R.id.postsearch))
                 .setUrl("https://search.yahoo.com/search?p=" + Uri.encode(query));
+
+        ((SearchFragment) getSupportFragmentManager().findFragmentById(R.id.search_fragment))
+                .setSearchTerm(query);
     }
 
     private void startPresearch() {

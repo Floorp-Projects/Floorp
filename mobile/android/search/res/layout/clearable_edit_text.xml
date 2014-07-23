@@ -1,0 +1,28 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditText
+        android:id="@+id/edit_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:imeOptions="actionSearch"
+        android:inputType="textNoSuggestions|textVisiblePassword"
+        android:drawableLeft="@drawable/search_icon"
+        android:drawablePadding="10dp"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:hint="@string/search_bar_hint"/>
+
+    <Button
+        android:id="@+id/clear_button"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:layout_gravity="right|center_vertical"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/search_clear"
+        android:visibility="gone"/>
+
+</merge>

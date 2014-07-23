@@ -416,6 +416,11 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_DISPLAY_INLINE_FLEX            30
 #define NS_STYLE_DISPLAY_GRID                   31
 #define NS_STYLE_DISPLAY_INLINE_GRID            32
+#define NS_STYLE_DISPLAY_RUBY                   33
+#define NS_STYLE_DISPLAY_RUBY_BASE              34
+#define NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER    35
+#define NS_STYLE_DISPLAY_RUBY_TEXT              36
+#define NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER    37
 
 // See nsStylePosition
 #define NS_STYLE_ALIGN_CONTENT_FLEX_START       0

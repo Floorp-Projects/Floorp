@@ -597,13 +597,6 @@ public abstract class GeckoApp
             // Context: Sharing via chrome list (no explicit session is active)
             Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST);
 
-        } else if ("Shortcut:Remove".equals(event)) {
-            final String url = message.getString("url");
-            final String origin = message.getString("origin");
-            final String title = message.getString("title");
-            final String type = message.getString("shortcutType");
-            GeckoAppShell.removeShortcut(title, url, origin, type);
-
         } else if ("SystemUI:Visibility".equals(event)) {
             setSystemUiVisible(message.getBoolean("visible"));
 
@@ -1515,7 +1508,6 @@ public abstract class GeckoApp
             "Sanitize:ClearHistory",
             "Session:StatePurged",
             "Share:Text",
-            "Shortcut:Remove",
             "SystemUI:Visibility",
             "Toast:Show",
             "ToggleChrome:Focus",
@@ -2050,7 +2042,6 @@ public abstract class GeckoApp
             "Sanitize:ClearHistory",
             "Session:StatePurged",
             "Share:Text",
-            "Shortcut:Remove",
             "SystemUI:Visibility",
             "Toast:Show",
             "ToggleChrome:Focus",

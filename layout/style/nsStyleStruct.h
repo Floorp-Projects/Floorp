@@ -2061,7 +2061,12 @@ struct nsStyleDisplay {
            NS_STYLE_DISPLAY_INLINE_FLEX == aDisplay ||
            NS_STYLE_DISPLAY_INLINE_GRID == aDisplay ||
            NS_STYLE_DISPLAY_INLINE_XUL_GRID == aDisplay ||
-           NS_STYLE_DISPLAY_INLINE_STACK == aDisplay;
+           NS_STYLE_DISPLAY_INLINE_STACK == aDisplay ||
+           NS_STYLE_DISPLAY_RUBY == aDisplay ||
+           NS_STYLE_DISPLAY_RUBY_BASE == aDisplay ||
+           NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER == aDisplay ||
+           NS_STYLE_DISPLAY_RUBY_TEXT == aDisplay ||
+           NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER == aDisplay;
   }
 
   bool IsInlineOutsideStyle() const {
@@ -2095,6 +2100,25 @@ struct nsStyleDisplay {
   bool IsRelativelyPositionedStyle() const {
     return NS_STYLE_POSITION_RELATIVE == mPosition ||
            NS_STYLE_POSITION_STICKY == mPosition;
+  }
+
+  bool IsRubyDisplayType() const {
+    return NS_STYLE_DISPLAY_RUBY == mDisplay ||
+           NS_STYLE_DISPLAY_RUBY_BASE == mDisplay ||
+           NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER == mDisplay ||
+           NS_STYLE_DISPLAY_RUBY_TEXT == mDisplay ||
+           NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER == mDisplay;
+  }
+
+  bool IsFlexOrGridDisplayType() const {
+    return NS_STYLE_DISPLAY_FLEX == mDisplay ||
+           NS_STYLE_DISPLAY_INLINE_FLEX == mDisplay ||
+           NS_STYLE_DISPLAY_GRID == mDisplay ||
+           NS_STYLE_DISPLAY_INLINE_GRID == mDisplay;
+  }
+
+  bool IsOutOfFlowStyle() const {
+    return (IsAbsolutelyPositionedStyle() || IsFloatingStyle());
   }
 
   bool IsScrollableOverflow() const {
