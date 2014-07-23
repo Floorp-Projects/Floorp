@@ -30,6 +30,7 @@ from .data import (
     Defines,
     DirectoryTraversal,
     Exports,
+    FinalTargetFiles,
     GeneratedEventWebIDLFile,
     GeneratedInclude,
     GeneratedWebIDLFile,
@@ -599,6 +600,10 @@ class TreeMetadataEmitter(LoggingMixin):
         if context.get('FINAL_TARGET') or context.get('XPI_NAME') or \
                 context.get('DIST_SUBDIR'):
             yield InstallationTarget(context)
+
+        final_target_files = context.get('FINAL_TARGET_FILES')
+        if final_target_files:
+            yield FinalTargetFiles(context, final_target_files, context['FINAL_TARGET'])
 
         host_libname = context.get('HOST_LIBRARY_NAME')
         libname = context.get('LIBRARY_NAME')
