@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/StorageEvent.h"
-#include "nsIDOMStorage.h"
+#include "mozilla/dom/DOMStorage.h"
 
 namespace mozilla {
 namespace dom {
@@ -85,7 +85,7 @@ StorageEvent::InitStorageEvent(const nsAString& aType, bool aCanBubble,
                                const nsAString& aOldValue,
                                const nsAString& aNewValue,
                                const nsAString& aURL,
-                               nsIDOMStorage* aStorageArea,
+                               DOMStorage* aStorageArea,
                                ErrorResult& aRv)
 {
   aRv = InitEvent(aType, aCanBubble, aCancelable);
