@@ -75,10 +75,7 @@ IDService.prototype = {
   shutdown: function shutdown() {
     log("shutdown");
     Services.obs.removeObserver(this, "identity-auth-complete");
-    // try to prevent abort/crash during shutdown of mochitest-browser2...
-    try {
-      Services.obs.removeObserver(this, "quit-application-granted");
-    } catch(e) {}
+    Services.obs.removeObserver(this, "quit-application-granted");
   },
 
   /**
