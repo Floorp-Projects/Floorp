@@ -33,8 +33,8 @@ class SavedFrame : public JSObject {
 
     // Convenient getters for SavedFrame's reserved slots for use from C++.
     JSAtom       *getSource();
-    size_t       getLine();
-    size_t       getColumn();
+    uint32_t     getLine();
+    uint32_t     getColumn();
     JSAtom       *getFunctionDisplayName();
     SavedFrame   *getParent();
     JSPrincipals *getPrincipals();
@@ -49,9 +49,10 @@ class SavedFrame : public JSObject {
                     SystemAllocPolicy> Set;
 
     class AutoLookupRooter;
+    class HandleLookup;
 
   private:
-    void initFromLookup(const Lookup &lookup);
+    void initFromLookup(HandleLookup lookup);
 
     enum {
         // The reserved slots in the SavedFrame class.
@@ -118,11 +119,11 @@ class SavedStacks {
 
     bool       insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFrame frame,
                             unsigned maxFrameCount = 0);
-    SavedFrame *getOrCreateSavedFrame(JSContext *cx, const SavedFrame::Lookup &lookup);
+    SavedFrame *getOrCreateSavedFrame(JSContext *cx, SavedFrame::HandleLookup lookup);
     // |SavedFrame.prototype| is created lazily and held weakly. It should only
     // be accessed through this method.
     JSObject   *getOrCreateSavedFramePrototype(JSContext *cx);
-    SavedFrame *createFrameFromLookup(JSContext *cx, const SavedFrame::Lookup &lookup);
+    SavedFrame *createFrameFromLookup(JSContext *cx, SavedFrame::HandleLookup lookup);
 
     // Cache for memoizing PCToLineNumber lookups.
 
@@ -135,15 +136,20 @@ class SavedStacks {
 
     struct LocationValue {
         LocationValue() : source(nullptr), line(0), column(0) { }
-        LocationValue(JSAtom *source, size_t line, size_t column)
+        LocationValue(JSAtom *source, size_t line, uint32_t column)
             : source(source),
               line(line),
               column(column)
         { }
 
+        void trace(JSTracer *trc) {
+            if (source)
+                gc::MarkString(trc, &source, "SavedStacks::LocationValue::source");
+        }
+
         PreBarrieredAtom source;
         size_t           line;
-        size_t           column;
+        uint32_t         column;
     };
 
     class MOZ_STACK_CLASS AutoLocationValueRooter : public JS::CustomAutoRooter
@@ -153,18 +159,13 @@ class SavedStacks {
             : JS::CustomAutoRooter(cx),
               value() {}
 
-        void set(LocationValue &loc) {
-            value = loc;
-        }
-
-        LocationValue &get() {
-            return value;
-        }
+        inline LocationValue *operator->() { return &value; }
+        void set(LocationValue &loc) { value = loc; }
+        LocationValue &get() { return value; }
 
       private:
         virtual void trace(JSTracer *trc) {
-            if (value.source)
-                gc::MarkString(trc, &value.source, "SavedStacks::LocationValue::source");
+            value.trace(trc);
         }
 
         SavedStacks::LocationValue value;
@@ -176,9 +177,8 @@ class SavedStacks {
         inline MOZ_IMPLICIT MutableHandleLocationValue(AutoLocationValueRooter *location)
             : location(location) {}
 
-        void set(LocationValue &loc) {
-            location->set(loc);
-        }
+        inline LocationValue *operator->() { return &location->get(); }
+        void set(LocationValue &loc) { location->set(loc); }
 
       private:
         AutoLocationValueRooter *location;
@@ -203,8 +203,42 @@ class SavedStacks {
     PCLocationMap pcLocationMap;
 
     void sweepPCLocationMap();
-    bool getLocation(JSContext *cx, JSScript *script, jsbytecode *pc,
-                     MutableHandleLocationValue locationp);
+    bool getLocation(JSContext *cx, const FrameIter &iter, MutableHandleLocationValue locationp);
+
+    struct FrameState
+    {
+        FrameState() : principals(nullptr), name(nullptr), location() { }
+        FrameState(const FrameIter &iter);
+        FrameState(const FrameState &fs);
+
+        ~FrameState();
+
+        void trace(JSTracer *trc);
+
+        JSPrincipals  *principals;
+        JSAtom        *name;
+        LocationValue location;
+    };
+
+    class MOZ_STACK_CLASS AutoFrameStateVector : public JS::CustomAutoRooter {
+      public:
+        AutoFrameStateVector(JSContext *cx)
+          : JS::CustomAutoRooter(cx),
+            frames(cx)
+        { }
+
+        typedef Vector<FrameState> FrameStateVector;
+        inline FrameStateVector *operator->() { return &frames; }
+        inline FrameState &operator[](size_t i) { return frames[i]; }
+
+      private:
+        FrameStateVector frames;
+
+        virtual void trace(JSTracer *trc) {
+            for (size_t i = 0; i < frames.length(); i++)
+                frames[i].trace(trc);
+        }
+    };
 };
 
 bool SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata);
