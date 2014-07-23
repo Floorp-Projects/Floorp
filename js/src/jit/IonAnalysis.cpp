@@ -233,8 +233,6 @@ MaybeFoldConditionBlock(MIRGraph &graph, MBasicBlock *initialBlock)
     finalTest->ifTrue()->removePredecessor(testBlock);
     finalTest->ifFalse()->removePredecessor(testBlock);
     graph.removeBlock(testBlock);
-
-    printf("WOOT\n");
 }
 
 static void
@@ -320,8 +318,6 @@ MaybeFoldAndOrBlock(MIRGraph &graph, MBasicBlock *initialBlock)
     finalTest->ifTrue()->removePredecessor(testBlock);
     finalTest->ifFalse()->removePredecessor(testBlock);
     graph.removeBlock(testBlock);
-
-    printf("WOOT\n");
 }
 
 void
