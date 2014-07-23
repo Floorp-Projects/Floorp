@@ -9,7 +9,6 @@
  *
  * Event sent to a window when a storage area changes.
  */
-interface Storage;
 
 [Constructor(DOMString type, optional StorageEventInit eventInitDict)]
 interface StorageEvent : Event

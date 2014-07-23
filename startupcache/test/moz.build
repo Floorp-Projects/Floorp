@@ -5,10 +5,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 CPP_UNIT_TESTS += [
-    'TestStartupCache.cpp',
+    'TestStartupCache',
 ]
+
+SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 
 EXTRA_COMPONENTS += [
     'TestStartupCacheTelemetry.js',
     'TestStartupCacheTelemetry.manifest',
+]
+
+USE_LIBS += [
+    'mozalloc',
+    'xpcomglue_s',
+    'xul',
 ]

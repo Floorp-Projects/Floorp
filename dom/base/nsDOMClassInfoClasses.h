@@ -48,9 +48,6 @@ DOMCI_CLASS(XSLTProcessor)
 // DOM Level 3 XPath objects
 DOMCI_CLASS(XPathNSResolver)
 
-// WhatWG WebApps Objects
-DOMCI_CLASS(Storage)
-
 DOMCI_CLASS(Blob)
 DOMCI_CLASS(File)
 

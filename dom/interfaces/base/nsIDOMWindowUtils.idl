@@ -976,7 +976,7 @@ interface nsIDOMWindowUtils : nsISupports {
 
   /**
    * Get the current zoom factor.
-   * This is _approximately_ the same as nsIMarkupDocumentViewer.fullZoom,
+   * This is _approximately_ the same as nsIContentViewer.fullZoom,
    * but takes into account Gecko's quantization of the zoom factor, which is
    * implemented by adjusting the (integer) number of appUnits per devPixel.
    */

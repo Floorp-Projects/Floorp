@@ -4,13 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-LIBS = ../$(LIB_PREFIX)js_static.$(LIB_SUFFIX) $(NSPR_LIBS) $(MOZ_ZLIB_LIBS)
+EXTRA_LIBS += $(NSPR_LIBS)
+OS_LIBS +=  $(MOZ_ZLIB_LIBS)
 
 ifdef MOZ_SHARED_ICU
-EXTRA_LIBS += $(MOZ_ICU_LIBS)
+OS_LIBS += $(MOZ_ICU_LIBS)
 endif
 
-EXTRA_LIBS += $(MOZ_FFI_LIBS)
+OS_LIBS += $(MOZ_FFI_LIBS)
 
 # Place a GDB Python auto-load file next to the gdb-tests executable, both
 # in the build directory and in the dist/bin directory.

@@ -29,14 +29,12 @@ if not CONFIG['MOZ_NATIVE_HUNSPELL']:
     # too if you need to change this variable.
     DEFINES['HUNSPELL_STATIC'] = True
 
-FINAL_LIBRARY = 'spellchecker'
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '/extensions/spellcheck/src',
-]
-
-LOCAL_INCLUDES += [
+    '/content/base/src',
     '/editor/libeditor/base',
+    '/extensions/spellcheck/src',
 ]
 
 # Suppress warnings in third-party code.

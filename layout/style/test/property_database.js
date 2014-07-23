@@ -2827,7 +2827,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     prerequisites: { "display": "block" },
-    initial_values: [ "0", "calc(0em)", "calc(-2px)", "calc(-1%)" ],
+    initial_values: [ "auto", "0", "calc(0em)", "calc(-2px)", "calc(-1%)" ],
     other_values: [ "30px", "50%",
       "calc(2px)",
       "calc(50%)",
@@ -2835,14 +2835,14 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
     ],
-    invalid_values: [ "auto", "none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available", "5" ]
+    invalid_values: ["none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available", "5" ]
   },
   "min-width": {
     domProp: "minWidth",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     prerequisites: { "display": "block" },
-    initial_values: [ "0", "calc(0em)", "calc(-2px)", "calc(-1%)" ],
+    initial_values: [ "auto", "0", "calc(0em)", "calc(-2px)", "calc(-1%)" ],
     other_values: [ "30px", "50%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
       "calc(2px)",
       "calc(50%)",
@@ -2850,7 +2850,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
     ],
-    invalid_values: [ "auto", "none", "5" ]
+    invalid_values: [ "none", "5" ]
   },
 
   "opacity": {
@@ -4797,6 +4797,17 @@ if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
       "sepia(-1)",
     ]
   };
+}
+
+if (SpecialPowers.getBoolPref("layout.css.ruby.enabled")) {
+  // Using unshift to add these values at the beginning.
+  // Adding them to the end would trigger bug 1038905. The "unshift" should be
+  // changed to a "push" when this bug is resolved.
+  gCSSProperties["display"].other_values.unshift("ruby",
+                                                 "ruby-base",
+                                                 "ruby-base-container",
+                                                 "ruby-text",
+                                                 "ruby-text-container");
 }
 
 if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {

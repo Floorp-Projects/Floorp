@@ -10,6 +10,10 @@ HOST_SOURCES += [
 
 HOST_PROGRAM = 'mbsdiff'
 
+HOST_USE_LIBS += [
+    'hostbz2',
+]
+
 LOCAL_INCLUDES += [
     '/toolkit/mozapps/update/updater',
 ]

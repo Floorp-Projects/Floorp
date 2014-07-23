@@ -12,7 +12,9 @@
 #endif
 
 #include "nsShmImage.h"
-#include "gfxPlatform.h"
+#ifdef MOZ_WIDGET_GTK
+#include "gfxPlatformGtk.h"
+#endif
 #include "gfxImageSurface.h"
 
 #ifdef MOZ_HAVE_SHMIMAGE
@@ -24,9 +26,11 @@ using namespace mozilla::ipc;
 static bool gShmAvailable = true;
 bool nsShmImage::UseShm()
 {
-    return gfxPlatform::GetPlatform()->
-        ScreenReferenceSurface()->GetType() == gfxSurfaceType::Image
-        && gShmAvailable;
+#ifdef MOZ_WIDGET_GTK
+    return (gShmAvailable && !gfxPlatformGtk::GetPlatform()->UseXRender());
+#else
+    return gShmAvailable;
+#endif
 }
 
 already_AddRefed<nsShmImage>

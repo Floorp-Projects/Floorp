@@ -97,9 +97,7 @@ UNIFIED_SOURCES += [
 
 LIBRARY_NAME = 'xpcomglue_s'
 
-SDK_LIBRARY = [
-    "%s%s.%s" % (CONFIG['LIB_PREFIX'], 'xpcomglue_s', CONFIG['LIB_SUFFIX']),
-]
+SDK_LIBRARY = True
 
 FORCE_STATIC_LIB = True
 

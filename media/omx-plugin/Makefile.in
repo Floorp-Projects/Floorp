@@ -19,13 +19,4 @@ EXTRA_DSO_LDOPTS += \
                -lutils -lstagefright -lmedia -lstagefright_omx -lbinder -lui \
                -lhardware -lcutils \
 		$(NULL)
-else
-EXTRA_DSO_LDOPTS += \
-		-L$(DEPTH)/media/omx-plugin/lib/ics/libutils \
-		-lutils \
-		-L$(DEPTH)/media/omx-plugin/lib/ics/libstagefright \
-		-lstagefright \
-		-L$(DEPTH)/media/omx-plugin/lib/ics/libvideoeditorplayer \
-		-lvideoeditorplayer \
-		$(NULL)
 endif

@@ -1300,6 +1300,16 @@ OptimizeMIR(MIRGenerator *mir)
     if (mir->shouldCancel("Start"))
         return false;
 
+    if (!mir->compilingAsmJS()) {
+        AutoTraceLog log(logger, TraceLogger::FoldTests);
+        FoldTests(graph);
+        IonSpewPass("Fold Tests");
+        AssertBasicGraphCoherency(graph);
+
+        if (mir->shouldCancel("Fold Tests"))
+            return false;
+    }
+
     {
         AutoTraceLog log(logger, TraceLogger::SplitCriticalEdges);
         if (!SplitCriticalEdges(graph))

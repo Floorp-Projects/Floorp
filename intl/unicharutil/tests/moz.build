@@ -20,3 +20,18 @@ LOCAL_INCLUDES += [
 ]
 
 USE_STATIC_LIBS = True
+
+USE_LIBS += [
+    'mozalloc',
+    'unicharutil_external_s',
+    'xul',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    USE_LIBS += [
+        'xpcomglue_staticruntime_s',
+    ]
+else:
+    USE_LIBS += [
+        'xpcomglue_s',
+    ]

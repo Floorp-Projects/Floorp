@@ -18,3 +18,11 @@ SIMPLE_PROGRAMS += [
 # Whatever code is going to be linked with the *standalone* glue must be
 # built with the XPCOM_GLUE define set.
 DEFINES['XPCOM_GLUE'] = True
+
+# USE_LIBS specifies the in-tree  libraries to link when building an executable
+# program from this directory. We link against the "standalone glue" which does
+# not require# that the application be linked against the XPCOM dynamic library
+# or the NSPR dynamic libraries.
+USE_LIBS += [
+    'xpcomglue',
+]

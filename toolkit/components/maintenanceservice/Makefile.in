@@ -9,12 +9,6 @@ DIST_PROGRAM = maintenanceservice$(BIN_SUFFIX)
 MOZ_GLUE_LDFLAGS =
 MOZ_GLUE_PROGRAM_LDFLAGS =
 
-ifeq ($(OS_ARCH),WINNT)
-LIBS += $(call EXPAND_LIBNAME_PATH,updatecommon-standalone,../../mozapps/update/common-standalone)
-else
-LIBS += $(call EXPAND_LIBNAME_PATH,updatecommon,../../mozapps/update/common)
-endif
-
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)
 
 ifndef MOZ_WINCONSOLE

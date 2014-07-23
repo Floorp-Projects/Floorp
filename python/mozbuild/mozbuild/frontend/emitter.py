@@ -11,7 +11,9 @@ import traceback
 import sys
 import time
 
+from collections import OrderedDict
 from mach.mixin.logging import LoggingMixin
+from mozbuild.util import OrderedDefaultDict
 
 import mozpack.path as mozpath
 import manifestparser
@@ -28,13 +30,16 @@ from .data import (
     GeneratedWebIDLFile,
     ExampleWebIDLInterface,
     HeaderFileSubstitution,
+    HostLibrary,
     HostProgram,
     HostSimpleProgram,
     InstallationTarget,
     IPDLFile,
     JARManifest,
     JavaScriptModules,
-    LibraryDefinition,
+    Library,
+    Linkable,
+    LinkageWrongKindError,
     LocalInclude,
     PerSourceFlag,
     PreprocessedTestWebIDLFile,
@@ -43,7 +48,9 @@ from .data import (
     ReaderSummary,
     Resources,
     SandboxWrapped,
+    SharedLibrary,
     SimpleProgram,
+    StaticLibrary,
     TestWebIDLFile,
     TestManifest,
     VariablePassthru,
@@ -83,8 +90,10 @@ class TreeMetadataEmitter(LoggingMixin):
                 k = k.encode('ascii')
             self.info[k] = v
 
-        self._libs = {}
-        self._final_libs = []
+        self._libs = OrderedDefaultDict(list)
+        self._binaries = OrderedDict()
+        self._linkage = []
+        self._static_linking_shared = set()
 
     def emit(self, output):
         """Convert the BuildReader output into data structures.
@@ -131,40 +140,168 @@ class TreeMetadataEmitter(LoggingMixin):
         yield ReaderSummary(file_count, sandbox_execution_time, emitter_time)
 
     def _emit_libs_derived(self, sandboxes):
-        for objdir, libname, final_lib in self._final_libs:
-            if final_lib not in self._libs:
-                raise Exception('FINAL_LIBRARY in %s (%s) does not match any '
-                                'LIBRARY_NAME' % (objdir, final_lib))
-            libs = self._libs[final_lib]
-            if len(libs) > 1:
-                raise Exception('FINAL_LIBRARY in %s (%s) matches a '
-                                'LIBRARY_NAME defined in multiple places (%s)' %
-                                (objdir, final_lib, ', '.join(libs.keys())))
-            libs.values()[0].link_static_lib(objdir, libname)
-            self._libs[libname][objdir].refcount += 1
-            # The refcount can't go above 1 right now. It might in the future,
-            # but that will have to be specifically handled. At which point the
-            # refcount might have to be a list of referencees, for better error
-            # reporting.
-            assert self._libs[libname][objdir].refcount <= 1
+        # First do FINAL_LIBRARY linkage.
+        for lib in (l for libs in self._libs.values() for l in libs):
+            if not isinstance(lib, StaticLibrary) or not lib.link_into:
+                continue
+            if lib.link_into not in self._libs:
+                raise SandboxValidationError(
+                    'FINAL_LIBRARY ("%s") does not match any LIBRARY_NAME'
+                    % lib.link_into, sandboxes[lib.objdir])
+            candidates = self._libs[lib.link_into]
 
-        def recurse_libs(path, name):
-            for p, n in self._libs[name][path].static_libraries:
-                yield p
-                for q in recurse_libs(p, n):
+            # When there are multiple candidates, but all are in the same
+            # directory and have a different type, we want all of them to
+            # have the library linked. The typical usecase is when building
+            # both a static and a shared library in a directory, and having
+            # that as a FINAL_LIBRARY.
+            if len(set(type(l) for l in candidates)) == len(candidates) and \
+                   len(set(l.objdir for l in candidates)) == 1:
+                for c in candidates:
+                    c.link_library(lib)
+            else:
+                raise SandboxValidationError(
+                    'FINAL_LIBRARY ("%s") matches a LIBRARY_NAME defined in '
+                    'multiple places:\n    %s' % (lib.link_into,
+                    '\n    '.join(l.objdir for l in candidates)),
+                    sandboxes[lib.objdir])
+
+        # Next, USE_LIBS linkage.
+        for sandbox, obj, variable in self._linkage:
+            self._link_libraries(sandbox, obj, variable)
+
+        def recurse_refs(lib):
+            for o in lib.refs:
+                yield o
+                if isinstance(o, StaticLibrary):
+                    for q in recurse_refs(o):
+                        yield q
+
+        # Check that all static libraries refering shared libraries in
+        # USE_LIBS are linked into a shared library or program.
+        for lib in self._static_linking_shared:
+            if all(isinstance(o, StaticLibrary) for o in recurse_refs(lib)):
+                shared_libs = sorted(l.basename for l in lib.linked_libraries
+                    if isinstance(l, SharedLibrary))
+                raise SandboxValidationError(
+                    'The static "%s" library is not used in a shared library '
+                    'or a program, but USE_LIBS contains the following shared '
+                    'library names:\n    %s\n\nMaybe you can remove the '
+                    'static "%s" library?' % (lib.basename,
+                    '\n    '.join(shared_libs), lib.basename),
+                    sandboxes[lib.objdir])
+
+        def recurse_libs(lib):
+            for obj in lib.linked_libraries:
+                if not isinstance(obj, StaticLibrary) or not obj.link_into:
+                    continue
+                yield obj.objdir
+                for q in recurse_libs(obj):
                     yield q
 
-        for basename, libs in self._libs.items():
-            for path, libdef in libs.items():
-                # For all root libraries (i.e. libraries that don't have a
-                # FINAL_LIBRARY), record, for each static library it links
-                # (recursively), that its FINAL_LIBRARY is that root library.
-                if not libdef.refcount:
-                    for p in recurse_libs(path, basename):
+        sent_passthru = set()
+        for lib in (l for libs in self._libs.values() for l in libs):
+            # For all root libraries (i.e. libraries that don't have a
+            # FINAL_LIBRARY), record, for each static library it links
+            # (recursively), that its FINAL_LIBRARY is that root library.
+            if isinstance(lib, Library):
+                if isinstance(lib, SharedLibrary) or not lib.link_into:
+                    for p in recurse_libs(lib):
+                        if p in sent_passthru:
+                            continue
+                        sent_passthru.add(p)
                         passthru = VariablePassthru(sandboxes[p])
-                        passthru.variables['FINAL_LIBRARY'] = basename
+                        passthru.variables['FINAL_LIBRARY'] = lib.basename
                         yield passthru
-                yield libdef
+            yield lib
+
+        for obj in self._binaries.values():
+            yield obj
+
+    LIBRARY_NAME_VAR = {
+        'host': 'HOST_LIBRARY_NAME',
+        'target': 'LIBRARY_NAME',
+    }
+
+    def _link_libraries(self, sandbox, obj, variable):
+        """Add linkage declarations to a given object."""
+        assert isinstance(obj, Linkable)
+        for path in sandbox.get(variable, []):
+            force_static = path.startswith('static:') and obj.KIND == 'target'
+            if force_static:
+                path = path[7:]
+            name = mozpath.basename(path)
+            dir = mozpath.dirname(path)
+            candidates = [l for l in self._libs[name] if l.KIND == obj.KIND]
+            if dir:
+                if dir.startswith('/'):
+                    dir = mozpath.normpath(
+                        mozpath.join(obj.topobjdir, dir[1:]))
+                else:
+                    dir = mozpath.normpath(
+                        mozpath.join(obj.objdir, dir))
+                dir = mozpath.relpath(dir, obj.topobjdir)
+                candidates = [l for l in candidates if l.relobjdir == dir]
+                if not candidates:
+                    raise SandboxValidationError(
+                        '%s contains "%s", but there is no "%s" %s in %s.'
+                        % (variable, path, name,
+                        self.LIBRARY_NAME_VAR[obj.KIND], dir), sandbox)
+
+            if len(candidates) > 1:
+                # If there's more than one remaining candidate, it could be
+                # that there are instances for the same library, in static and
+                # shared form.
+                libs = {}
+                for l in candidates:
+                    key = mozpath.join(l.relobjdir, l.basename)
+                    if force_static:
+                        if isinstance(l, StaticLibrary):
+                            libs[key] = l
+                    else:
+                        if key in libs and isinstance(l, SharedLibrary):
+                            libs[key] = l
+                        if key not in libs:
+                            libs[key] = l
+                candidates = libs.values()
+                if force_static and not candidates:
+                    if dir:
+                        raise SandboxValidationError(
+                            '%s contains "static:%s", but there is no static '
+                            '"%s" %s in %s.' % (variable, path, name,
+                            self.LIBRARY_NAME_VAR[obj.KIND], dir), sandbox)
+                    raise SandboxValidationError(
+                        '%s contains "static:%s", but there is no static "%s" '
+                        '%s in the tree' % (variable, name, name,
+                        self.LIBRARY_NAME_VAR[obj.KIND]), sandbox)
+
+            if not candidates:
+                raise SandboxValidationError(
+                    '%s contains "%s", which does not match any %s in the tree.'
+                    % (variable, path, self.LIBRARY_NAME_VAR[obj.KIND]),
+                    sandbox)
+
+            elif len(candidates) > 1:
+                paths = (mozpath.join(l.relativedir, 'moz.build')
+                    for l in candidates)
+                raise SandboxValidationError(
+                    '%s contains "%s", which matches a %s defined in multiple '
+                    'places:\n    %s' % (variable, path,
+                    self.LIBRARY_NAME_VAR[obj.KIND],
+                    '\n    '.join(paths)), sandbox)
+
+            elif force_static and not isinstance(candidates[0], StaticLibrary):
+                raise SandboxValidationError(
+                    '%s contains "static:%s", but there is only a shared "%s" '
+                    'in %s. You may want to add FORCE_STATIC_LIB=True in '
+                    '%s/moz.build, or remove "static:".' % (variable, path,
+                    name, candidates[0].relobjdir, candidates[0].relobjdir),
+                    sandbox)
+
+            elif isinstance(obj, StaticLibrary) and isinstance(candidates[0],
+                    SharedLibrary):
+                self._static_linking_shared.add(obj)
+            obj.link_library(candidates[0])
 
     def emit_from_sandbox(self, sandbox):
         """Convert a MozbuildSandbox to tree metadata objects.
@@ -220,7 +357,6 @@ class TreeMetadataEmitter(LoggingMixin):
         varlist = [
             'ANDROID_GENERATED_RESFILES',
             'ANDROID_RES_DIRS',
-            'CPP_UNIT_TESTS',
             'DISABLE_STL_WRAPPING',
             'EXTRA_ASSEMBLER_FLAGS',
             'EXTRA_COMPILE_FLAGS',
@@ -231,15 +367,10 @@ class TreeMetadataEmitter(LoggingMixin):
             'EXTRA_PP_JS_MODULES',
             'FAIL_ON_WARNINGS',
             'FILES_PER_UNIFIED_FILE',
-            'FORCE_SHARED_LIB',
-            'FORCE_STATIC_LIB',
             'USE_STATIC_LIBS',
             'GENERATED_FILES',
-            'HOST_LIBRARY_NAME',
-            'IS_COMPONENT',
             'IS_GYP_DIR',
             'JS_MODULES_PATH',
-            'LIBS',
             'MSVC_ENABLE_PGO',
             'NO_DIST_INSTALL',
             'OS_LIBS',
@@ -247,7 +378,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'RESFILE',
             'RCINCLUDE',
             'DEFFILE',
-            'SDK_LIBRARY',
             'WIN32_EXE_LDFLAGS',
             'LD_VERSION_SCRIPT',
         ]
@@ -337,19 +467,33 @@ class TreeMetadataEmitter(LoggingMixin):
         if resources:
             yield Resources(sandbox, resources, defines)
 
-        program = sandbox.get('PROGRAM')
-        if program:
-            yield Program(sandbox, program, sandbox['CONFIG']['BIN_SUFFIX'])
+        for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
+            program = sandbox.get(kind)
+            if program:
+                if program in self._binaries:
+                    raise SandboxValidationError(
+                        'Cannot use "%s" as %s name, '
+                        'because it is already used in %s' % (program, kind,
+                        self._binaries[program].relativedir), sandbox)
+                self._binaries[program] = cls(sandbox, program)
+                self._linkage.append((sandbox, self._binaries[program],
+                    kind.replace('PROGRAM', 'USE_LIBS')))
 
-        program = sandbox.get('HOST_PROGRAM')
-        if program:
-            yield HostProgram(sandbox, program, sandbox['CONFIG']['HOST_BIN_SUFFIX'])
-
-        for program in sandbox['SIMPLE_PROGRAMS']:
-            yield SimpleProgram(sandbox, program, sandbox['CONFIG']['BIN_SUFFIX'])
-
-        for program in sandbox['HOST_SIMPLE_PROGRAMS']:
-            yield HostSimpleProgram(sandbox, program, sandbox['CONFIG']['HOST_BIN_SUFFIX'])
+        for kind, cls in [
+                ('SIMPLE_PROGRAMS', SimpleProgram),
+                ('CPP_UNIT_TESTS', SimpleProgram),
+                ('HOST_SIMPLE_PROGRAMS', HostSimpleProgram)]:
+            for program in sandbox[kind]:
+                if program in self._binaries:
+                    raise SandboxValidationError(
+                        'Cannot use "%s" in %s, '
+                        'because it is already used in %s' % (program, kind,
+                        self._binaries[program].relativedir), sandbox)
+                self._binaries[program] = cls(sandbox, program,
+                    is_unit_test=kind == 'CPP_UNIT_TESTS')
+                self._linkage.append((sandbox, self._binaries[program],
+                    'HOST_USE_LIBS' if kind == 'HOST_SIMPLE_PROGRAMS'
+                    else 'USE_LIBS'))
 
         test_js_modules = sandbox.get('TESTING_JS_MODULES')
         if test_js_modules:
@@ -375,30 +519,151 @@ class TreeMetadataEmitter(LoggingMixin):
                 sandbox.get('DIST_SUBDIR'):
             yield InstallationTarget(sandbox)
 
+        host_libname = sandbox.get('HOST_LIBRARY_NAME')
         libname = sandbox.get('LIBRARY_NAME')
+
+        if host_libname:
+            if host_libname == libname:
+                raise SandboxValidationError('LIBRARY_NAME and '
+                    'HOST_LIBRARY_NAME must have a different value', sandbox)
+            lib = HostLibrary(sandbox, host_libname)
+            self._libs[host_libname].append(lib)
+            self._linkage.append((sandbox, lib, 'HOST_USE_LIBS'))
+
         final_lib = sandbox.get('FINAL_LIBRARY')
         if not libname and final_lib:
             # If no LIBRARY_NAME is given, create one.
             libname = sandbox['RELATIVEDIR'].replace('/', '_')
-        if libname:
-            self._libs.setdefault(libname, {})[sandbox['OBJDIR']] = \
-                LibraryDefinition(sandbox, libname)
 
-        if final_lib:
-            if isinstance(sandbox, MozbuildSandbox) and \
-                    sandbox.get('FORCE_STATIC_LIB'):
-                raise SandboxValidationError(
-                    'FINAL_LIBRARY implies FORCE_STATIC_LIB', sandbox)
-            self._final_libs.append((sandbox['OBJDIR'], libname, final_lib))
-            passthru.variables['FORCE_STATIC_LIB'] = True
+        static_lib = sandbox.get('FORCE_STATIC_LIB')
+        shared_lib = sandbox.get('FORCE_SHARED_LIB')
+
+        static_name = sandbox.get('STATIC_LIBRARY_NAME')
+        shared_name = sandbox.get('SHARED_LIBRARY_NAME')
+
+        is_framework = sandbox.get('IS_FRAMEWORK')
+        is_component = sandbox.get('IS_COMPONENT')
 
         soname = sandbox.get('SONAME')
-        if soname:
-            if not sandbox.get('FORCE_SHARED_LIB'):
+
+        shared_args = {}
+        static_args = {}
+
+        if final_lib:
+            if isinstance(sandbox, MozbuildSandbox):
+                if static_lib:
+                    raise SandboxValidationError(
+                        'FINAL_LIBRARY implies FORCE_STATIC_LIB. '
+                        'Please remove the latter.', sandbox)
+            if shared_lib:
                 raise SandboxValidationError(
-                    'SONAME applicable only for shared libraries', sandbox)
-            else:
-                passthru.variables['SONAME'] = soname
+                    'FINAL_LIBRARY conflicts with FORCE_SHARED_LIB. '
+                    'Please remove one.', sandbox)
+            if is_framework:
+                raise SandboxValidationError(
+                    'FINAL_LIBRARY conflicts with IS_FRAMEWORK. '
+                    'Please remove one.', sandbox)
+            if is_component:
+                raise SandboxValidationError(
+                    'FINAL_LIBRARY conflicts with IS_COMPONENT. '
+                    'Please remove one.', sandbox)
+            static_args['link_into'] = final_lib
+            static_lib = True
+
+        if libname:
+            if is_component:
+                if shared_lib:
+                    raise SandboxValidationError(
+                        'IS_COMPONENT implies FORCE_SHARED_LIB. '
+                        'Please remove the latter.', sandbox)
+                if is_framework:
+                    raise SandboxValidationError(
+                        'IS_COMPONENT conflicts with IS_FRAMEWORK. '
+                        'Please remove one.', sandbox)
+                if static_lib:
+                    raise SandboxValidationError(
+                        'IS_COMPONENT conflicts with FORCE_STATIC_LIB. '
+                        'Please remove one.', sandbox)
+                shared_lib = True
+                shared_args['variant'] = SharedLibrary.COMPONENT
+
+            if is_framework:
+                if shared_lib:
+                    raise SandboxValidationError(
+                        'IS_FRAMEWORK implies FORCE_SHARED_LIB. '
+                        'Please remove the latter.', sandbox)
+                if soname:
+                    raise SandboxValidationError(
+                        'IS_FRAMEWORK conflicts with SONAME. '
+                        'Please remove one.', sandbox)
+                shared_lib = True
+                shared_args['variant'] = SharedLibrary.FRAMEWORK
+
+            if static_name:
+                if not static_lib:
+                    raise SandboxValidationError(
+                        'STATIC_LIBRARY_NAME requires FORCE_STATIC_LIB', sandbox)
+                static_args['real_name'] = static_name
+
+            if shared_name:
+                if not shared_lib:
+                    raise SandboxValidationError(
+                        'SHARED_LIBRARY_NAME requires FORCE_SHARED_LIB', sandbox)
+                shared_args['real_name'] = shared_name
+
+            if soname:
+                if not shared_lib:
+                    raise SandboxValidationError(
+                        'SONAME requires FORCE_SHARED_LIB', sandbox)
+                shared_args['soname'] = soname
+
+            if not static_lib and not shared_lib:
+                static_lib = True
+
+            # If both a shared and a static library are created, only the
+            # shared library is meant to be a SDK library.
+            if sandbox.get('SDK_LIBRARY'):
+                if shared_lib:
+                    shared_args['is_sdk'] = True
+                elif static_lib:
+                    static_args['is_sdk'] = True
+
+            if shared_lib and static_lib:
+                if not static_name and not shared_name:
+                    raise SandboxValidationError(
+                        'Both FORCE_STATIC_LIB and FORCE_SHARED_LIB are True, '
+                        'but neither STATIC_LIBRARY_NAME or '
+                        'SHARED_LIBRARY_NAME is set. At least one is required.',
+                        sandbox)
+                if static_name and not shared_name and static_name == libname:
+                    raise SandboxValidationError(
+                        'Both FORCE_STATIC_LIB and FORCE_SHARED_LIB are True, '
+                        'but STATIC_LIBRARY_NAME is the same as LIBRARY_NAME, '
+                        'and SHARED_LIBRARY_NAME is unset. Please either '
+                        'change STATIC_LIBRARY_NAME or LIBRARY_NAME, or set '
+                        'SHARED_LIBRARY_NAME.', sandbox)
+                if shared_name and not static_name and shared_name == libname:
+                    raise SandboxValidationError(
+                        'Both FORCE_STATIC_LIB and FORCE_SHARED_LIB are True, '
+                        'but SHARED_LIBRARY_NAME is the same as LIBRARY_NAME, '
+                        'and STATIC_LIBRARY_NAME is unset. Please either '
+                        'change SHARED_LIBRARY_NAME or LIBRARY_NAME, or set '
+                        'STATIC_LIBRARY_NAME.', sandbox)
+                if shared_name and static_name and shared_name == static_name:
+                    raise SandboxValidationError(
+                        'Both FORCE_STATIC_LIB and FORCE_SHARED_LIB are True, '
+                        'but SHARED_LIBRARY_NAME is the same as '
+                        'STATIC_LIBRARY_NAME. Please change one of them.',
+                        sandbox)
+
+            if shared_lib:
+                lib = SharedLibrary(sandbox, libname, **shared_args)
+                self._libs[libname].append(lib)
+                self._linkage.append((sandbox, lib, 'USE_LIBS'))
+            if static_lib:
+                lib = StaticLibrary(sandbox, libname, **static_args)
+                self._libs[libname].append(lib)
+                self._linkage.append((sandbox, lib, 'USE_LIBS'))
 
         # While there are multiple test manifests, the behavior is very similar
         # across them. We enforce this by having common handling of all

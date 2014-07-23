@@ -1,23 +1,16 @@
 // Return the trap result
-assertEq(new Proxy({
-    foo: 'bar'
-}, {
-    get: function (target, name, receiver) {
-        return 'baz';
-    }
-}).foo, 'baz');
-
-assertEq(new Proxy({
-    foo: 'bar'
-}, {
-    get: function (target, name, receiver) {
-        return undefined;
-    }
-}).foo, undefined);
-
-var obj = {};
+var target = { foo: 'bar' };
 var s1 = Symbol("moon"), s2 = Symbol("sun");
-obj[s1] = "wrong";
-assertEq(new Proxy(obj, {
-    get: () => s2
-})[s1], s2);
+target[s1] = "wrong";
+
+var handler = { };
+for (let p of [new Proxy(target, handler), Proxy.revocable(target, handler).proxy]) {
+    handler.get = (() => 'baz');
+    assertEq(p.foo, 'baz');
+
+    handler.get = (() => undefined);
+    assertEq(p.foo, undefined);
+
+    handler.get = (() => s2);
+    assertEq(p[s1], s2);
+}
