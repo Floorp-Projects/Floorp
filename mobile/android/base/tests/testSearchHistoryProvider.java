@@ -13,11 +13,13 @@ import org.mozilla.gecko.db.SearchHistoryProvider;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.net.Uri;
 
 public class testSearchHistoryProvider extends ContentProviderTest {
 
     // Translations of "United Kingdom" in several different languages
-    private static final String[] testStrings = {"An Ríocht Aontaithe", // Irish
+    private static final String[] testStrings = {
+            "An Ríocht Aontaithe", // Irish
             "Angli", // Albanian
             "Britanniarum Regnum", // Latin
             "Britio", // Esperanto
@@ -95,6 +97,7 @@ public class testSearchHistoryProvider extends ContentProviderTest {
         mTests.add(new TestInsert());
         mTests.add(new TestUnicodeQuery());
         mTests.add(new TestTimestamp());
+        mTests.add(new TestLimit());
         mTests.add(new TestDelete());
         mTests.add(new TestIncrement());
     }
@@ -108,6 +111,80 @@ public class testSearchHistoryProvider extends ContentProviderTest {
             // Clear the db
             mProvider.delete(SearchHistory.CONTENT_URI, null, null);
             test.run();
+        }
+    }
+
+    /**
+     * Verify that we can pass a LIMIT clause using a query parameter.
+     */
+    private class TestLimit extends TestCase {
+        @Override
+        public void test() throws Exception {
+            ContentValues cv;
+            for (int i = 0; i < testStrings.length; i++) {
+                cv = new ContentValues();
+                cv.put(SearchHistory.QUERY, testStrings[i]);
+                mProvider.insert(SearchHistory.CONTENT_URI, cv);
+            }
+
+            final int limit = 5;
+
+            // Test 1: Handle proper input.
+
+            Uri uri = SearchHistory.CONTENT_URI
+                                   .buildUpon()
+                                   .appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(limit))
+                                   .build();
+
+            Cursor c = mProvider.query(uri, null, null, null, null);
+            try {
+                mAsserter.is(c.getCount(), limit,
+                             String.format("Should have %d results", limit));
+            } finally {
+                c.close();
+            }
+
+            // Test 2: Empty input yields all results.
+
+            uri = SearchHistory.CONTENT_URI
+                                   .buildUpon()
+                                   .appendQueryParameter(BrowserContract.PARAM_LIMIT, "")
+                                   .build();
+
+            c = mProvider.query(uri, null, null, null, null);
+            try {
+                mAsserter.is(c.getCount(), testStrings.length, "Should have all results");
+            } finally {
+                c.close();
+            }
+
+            // Test 3: Illegal params.
+
+            String[] illegalParams = new String[] {"a", "-1"};
+            boolean success = true;
+
+            for (String param : illegalParams) {
+                success = true;
+
+                uri = SearchHistory.CONTENT_URI
+                                   .buildUpon()
+                                   .appendQueryParameter(BrowserContract.PARAM_LIMIT, param)
+                                   .build();
+
+                try {
+                    c = mProvider.query(uri, null, null, null, null);
+                    success = false;
+                } catch(IllegalArgumentException e) {
+                    // noop.
+                } finally {
+                    if (c != null) {
+                        c.close();
+                    }
+                }
+
+                mAsserter.ok(success, "LIMIT", param + " should have been an invalid argument");
+            }
+
         }
     }
 
