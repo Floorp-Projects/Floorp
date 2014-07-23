@@ -14,6 +14,10 @@ HOST_SOURCES += SOURCES
 
 HOST_PROGRAM = 'mar'
 
+HOST_USE_LIBS += [
+    'hostmar',
+]
+
 for var in ('MAR_CHANNEL_ID', 'MOZ_APP_VERSION'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
