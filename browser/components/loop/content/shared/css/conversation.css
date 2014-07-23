@@ -22,7 +22,8 @@
 
 .conversation .controls li {
   float: left;
-  font-size: 10px;
+  font-size: 0px; /* prevents vertical bottom padding added to buttons in google
+                     chrome */
 }
 
 .conversation .controls .btn {
@@ -111,13 +112,27 @@
 
 .conversation .media.nested {
   position: relative;
+  text-align: center;
+}
+
+/* fluid aspect ratio trick, see http://stackoverflow.com/a/10441480/330911 */
+.conversation .media.nested .remote_wrapper {
+  display: inline-block;
+  position: relative;
+  background: #0f0;
+  width: 100%;
+  padding-bottom: 75%; /* XXX forced 4:3 ratio, see bug 1020445 */
 }
 
 .conversation .media.nested .remote {
   display: inline-block;
-  background: #000;
+  position: absolute; /* workaround for lack of object-fit; see bug 1020445 */
   width: 100%;
-  min-height: 154px;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #000;
 }
 
 .conversation .media.nested .local {
@@ -126,6 +141,9 @@
   right: 0;
   width: 30%;
   max-width: 140px;
+  /* next two lines are workaround for lack of object-fit; see bug 1020445 */
+  height: 22.5%;
+  max-height: 105px;
 }
 
 /* Side by side video elements */
@@ -137,15 +155,6 @@
 
 .conversation .media.side-by-side .local {
   width: 50%;
-}
-
-/**
- * Overriden SDK styles; .OT_video-container is using absolute positioning
- * therefore moves the video elements it contains outside of the current
- * viewport.
- */
-.conversation .OT_video-container {
-  position: inherit;
 }
 
 /* Call ended view */
