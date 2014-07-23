@@ -1120,16 +1120,16 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write('SDK_LIBRARY := %s\n' % libdef.import_name)
 
         thisobjdir = libdef.objdir
-        topobjdir = libdef.topobjdir.replace(os.sep, '/')
-        for objdir, basename in libdef.static_libraries:
+        topobjdir = mozpath.normsep(libdef.topobjdir)
+        for obj in libdef.linked_libraries:
             # If this is an external objdir (i.e., comm-central), use the other
             # directory instead of $(DEPTH).
-            if objdir.startswith(topobjdir + '/'):
-                relpath = '$(DEPTH)/%s' % mozpath.relpath(objdir, topobjdir)
+            if obj.objdir.startswith(topobjdir + '/'):
+                relpath = '$(DEPTH)/%s' % mozpath.relpath(obj.objdir, topobjdir)
             else:
-                relpath = mozpath.relpath(objdir, thisobjdir)
-            backend_file.write('SHARED_LIBRARY_LIBS += %s/$(LIB_PREFIX)%s.$(LIB_SUFFIX)\n'
-                               % (relpath, basename))
+                relpath = mozpath.relpath(obj.objdir, thisobjdir)
+            backend_file.write('SHARED_LIBRARY_LIBS += %s/%s\n'
+                               % (relpath, obj.static_name))
 
     def _process_host_library(self, libdef, backend_file):
         backend_file.write('HOST_LIBRARY_NAME = %s\n' % libdef.basename)

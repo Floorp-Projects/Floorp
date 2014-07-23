@@ -38,6 +38,7 @@ from .data import (
     JARManifest,
     JavaScriptModules,
     Library,
+    LinkageWrongKindError,
     LocalInclude,
     PerSourceFlag,
     PreprocessedTestWebIDLFile,
@@ -86,9 +87,8 @@ class TreeMetadataEmitter(LoggingMixin):
                 k = k.encode('ascii')
             self.info[k] = v
 
-        self._libs = OrderedDefaultDict(OrderedDict)
+        self._libs = OrderedDefaultDict(list)
         self._binaries = OrderedDict()
-        self._final_libs = []
 
     def emit(self, output):
         """Convert the BuildReader output into data structures.
@@ -135,40 +135,45 @@ class TreeMetadataEmitter(LoggingMixin):
         yield ReaderSummary(file_count, sandbox_execution_time, emitter_time)
 
     def _emit_libs_derived(self, sandboxes):
-        for objdir, libname, final_lib in self._final_libs:
-            if final_lib not in self._libs:
+        for lib in (l for libs in self._libs.values() for l in libs):
+            if not lib.link_into:
+                continue
+            if lib.link_into not in self._libs:
                 raise Exception('FINAL_LIBRARY in %s (%s) does not match any '
-                                'LIBRARY_NAME' % (objdir, final_lib))
-            libs = self._libs[final_lib]
-            if len(libs) > 1:
+                                'LIBRARY_NAME' % (lib.objdir, lib.link_info))
+            candidates = self._libs[lib.link_into]
+            if len(candidates) > 1:
                 raise Exception('FINAL_LIBRARY in %s (%s) matches a '
                                 'LIBRARY_NAME defined in multiple places (%s)' %
-                                (objdir, final_lib, ', '.join(libs.keys())))
-            libs.values()[0].link_static_lib(objdir, libname)
-            self._libs[libname][objdir].refcount += 1
+                                (lib.objdir, lib.link_into,
+                                 ', '.join(l.objdir for l in candidates)))
+            # emit_from_sandbox ensures libraries with a FINAL_LIBRARY are
+            # static.
+            assert lib.KIND == 'target' and lib.kind == lib.STATIC
+            candidates[0].link_library(lib)
+
             # The refcount can't go above 1 right now. It might in the future,
             # but that will have to be specifically handled. At which point the
             # refcount might have to be a list of referencees, for better error
             # reporting.
-            assert self._libs[libname][objdir].refcount <= 1
+            assert lib.refcount <= 1
 
-        def recurse_libs(path, name):
-            for p, n in self._libs[name][path].static_libraries:
-                yield p
-                for q in recurse_libs(p, n):
+        def recurse_libs(lib):
+            for obj in lib.linked_libraries:
+                yield obj.objdir
+                for q in recurse_libs(obj):
                     yield q
 
-        for basename, libs in self._libs.items():
-            for path, libdef in libs.items():
-                # For all root libraries (i.e. libraries that don't have a
-                # FINAL_LIBRARY), record, for each static library it links
-                # (recursively), that its FINAL_LIBRARY is that root library.
-                if not libdef.refcount:
-                    for p in recurse_libs(path, basename):
-                        passthru = VariablePassthru(sandboxes[p])
-                        passthru.variables['FINAL_LIBRARY'] = basename
-                        yield passthru
-                yield libdef
+        for lib in (l for libs in self._libs.values() for l in libs):
+            # For all root libraries (i.e. libraries that don't have a
+            # FINAL_LIBRARY), record, for each static library it links
+            # (recursively), that its FINAL_LIBRARY is that root library.
+            if not lib.refcount:
+                for p in recurse_libs(lib):
+                    passthru = VariablePassthru(sandboxes[p])
+                    passthru.variables['FINAL_LIBRARY'] = lib.basename
+                    yield passthru
+            yield lib
 
         for obj in self._binaries.values():
             yield obj
@@ -391,8 +396,7 @@ class TreeMetadataEmitter(LoggingMixin):
             if host_libname == libname:
                 raise SandboxValidationError('LIBRARY_NAME and '
                     'HOST_LIBRARY_NAME must have a different value', sandbox)
-            self._libs[host_libname][sandbox['OBJDIR']] = \
-                HostLibrary(sandbox, host_libname)
+            self._libs[host_libname].append(HostLibrary(sandbox, host_libname))
 
         final_lib = sandbox.get('FINAL_LIBRARY')
         if not libname and final_lib:
@@ -409,6 +413,10 @@ class TreeMetadataEmitter(LoggingMixin):
         is_component = sandbox.get('IS_COMPONENT')
 
         soname = sandbox.get('SONAME')
+
+        args = {
+            'kind': 0,
+        }
 
         if final_lib:
             if isinstance(sandbox, MozbuildSandbox):
@@ -428,13 +436,10 @@ class TreeMetadataEmitter(LoggingMixin):
                 raise SandboxValidationError(
                     'FINAL_LIBRARY conflicts with IS_COMPONENT. '
                     'Please remove one.', sandbox)
-            self._final_libs.append((sandbox['OBJDIR'], libname, final_lib))
+            args['link_into'] = final_lib
             static_lib = True
 
         if libname:
-            args = {
-                'kind': 0,
-            }
             if is_component:
                 if shared_lib:
                     raise SandboxValidationError(
@@ -496,8 +501,7 @@ class TreeMetadataEmitter(LoggingMixin):
             if sandbox.get('SDK_LIBRARY'):
                 args['is_sdk'] = True
 
-            self._libs[libname][sandbox['OBJDIR']] = \
-                Library(sandbox, libname, **args)
+            self._libs[libname].append(Library(sandbox, libname, **args))
 
 
         # While there are multiple test manifests, the behavior is very similar
