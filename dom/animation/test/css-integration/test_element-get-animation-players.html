@@ -74,7 +74,7 @@ test(function() {
     'getAnimationPlayers returns only one player for a CSS Animation'
     + ' that targets multiple properties');
   div.remove();
-}, 'getAnimationsPlayers for multi-property animations');
+}, 'getAnimationPlayers for multi-property animations');
 
 async_test(function(t) {
   var div = addDiv();
@@ -320,5 +320,35 @@ test(function() {
     + ' of an unsupported property');
   div.remove();
 }, 'getAnimationPlayers for transition on unsupported property');
+
+test(function() {
+  var div = addDiv();
+  div.style.animation = 'anim1 100s';
+  window.getComputedStyle(div).animationName;
+
+  var originalPlayer = div.getAnimationPlayers()[0];
+
+  // Update pause state (an AnimationPlayer change)
+  div.style.animationPlayState = 'paused';
+  window.getComputedStyle(div).animationPlayState;
+  var pausedPlayer = div.getAnimationPlayers()[0];
+  // FIXME: Check pausedPlayer.playState has changed once the API is available
+  // (bug 1037321)
+  assert_equals(originalPlayer, pausedPlayer,
+                'getAnimationPlayers returns the same objects even when their'
+                + ' play state changes');
+
+  // Update duration (an Animation change)
+  div.style.animationDuration = '200s';
+  window.getComputedStyle(div).animationDuration
+  var extendedPlayer = div.getAnimationPlayers()[0];
+  // FIXME: Check extendedPlayer.source.timing.duration has changed once the
+  // API is available
+  assert_equals(originalPlayer, extendedPlayer,
+                'getAnimationPlayers returns the same objects even when their'
+                + ' duration changes');
+
+  div.remove();
+}, 'getAnimationPlayers returns objects with the same identity');
 
 </script>

@@ -83,6 +83,10 @@ class SandboxDerived(TreeMetadata):
 
         self.config = sandbox.config
 
+    @property
+    def relobjdir(self):
+        return mozpath.relpath(self.objdir, self.topobjdir)
+
 
 class DirectoryTraversal(SandboxDerived):
     """Describes how directory traversal for building should work.
@@ -324,7 +328,30 @@ class ExampleWebIDLInterface(SandboxDerived):
         self.name = name
 
 
-class BaseProgram(SandboxDerived):
+class LinkageWrongKindError(Exception):
+    """Error thrown when trying to link objects of the wrong kind"""
+
+
+class Linkable(SandboxDerived):
+    """Generic sandbox container object for programs and libraries"""
+    __slots__ = ('linked_libraries')
+
+    def __init__(self, sandbox):
+        SandboxDerived.__init__(self, sandbox)
+        self.linked_libraries = []
+
+    def link_library(self, obj):
+        assert isinstance(obj, BaseLibrary)
+        if isinstance(obj, SharedLibrary) and obj.variant == obj.COMPONENT:
+            raise LinkageWrongKindError(
+                'Linkable.link_library() does not take components.')
+        if obj.KIND != self.KIND:
+            raise LinkageWrongKindError('%s != %s' % (obj.KIND, self.KIND))
+        self.linked_libraries.append(obj)
+        obj.refs.append(self)
+
+
+class BaseProgram(Linkable):
     """Sandbox container object for programs, which is a unicode string.
 
     This class handles automatically appending a binary suffix to the program
@@ -335,53 +362,134 @@ class BaseProgram(SandboxDerived):
     """
     __slots__ = ('program')
 
-    def __init__(self, sandbox, program, bin_suffix):
-        SandboxDerived.__init__(self, sandbox)
+    def __init__(self, sandbox, program, is_unit_test=False):
+        Linkable.__init__(self, sandbox)
 
-        bin_suffix = bin_suffix or ''
+        bin_suffix = sandbox['CONFIG'].get(self.SUFFIX_VAR, '')
         if not program.endswith(bin_suffix):
             program += bin_suffix
         self.program = program
+        self.is_unit_test = is_unit_test
 
 
 class Program(BaseProgram):
     """Sandbox container object for PROGRAM"""
+    SUFFIX_VAR = 'BIN_SUFFIX'
+    KIND = 'target'
 
 
 class HostProgram(BaseProgram):
     """Sandbox container object for HOST_PROGRAM"""
+    SUFFIX_VAR = 'HOST_BIN_SUFFIX'
+    KIND = 'host'
 
 
 class SimpleProgram(BaseProgram):
     """Sandbox container object for each program in SIMPLE_PROGRAMS"""
+    SUFFIX_VAR = 'BIN_SUFFIX'
+    KIND = 'target'
 
 
 class HostSimpleProgram(BaseProgram):
     """Sandbox container object for each program in HOST_SIMPLE_PROGRAMS"""
+    SUFFIX_VAR = 'HOST_BIN_SUFFIX'
+    KIND = 'host'
 
 
-class LibraryDefinition(SandboxDerived):
-    """Partial definition for a library
-
-    The static_libraries member tracks the list of relative directory and
-    library names of static libraries that are meant to be linked into
-    the library defined by an instance of this class.
-    """
+class BaseLibrary(Linkable):
+    """Generic sandbox container object for libraries."""
     __slots__ = (
         'basename',
-        'static_libraries',
-        'refcount',
+        'lib_name',
+        'import_name',
+        'refs',
     )
 
     def __init__(self, sandbox, basename):
-        SandboxDerived.__init__(self, sandbox)
+        Linkable.__init__(self, sandbox)
 
+        self.basename = self.lib_name = basename
+        if self.lib_name:
+            self.lib_name = '%s%s%s' % (
+                sandbox.config.lib_prefix,
+                self.lib_name,
+                sandbox.config.lib_suffix
+            )
+            self.import_name = self.lib_name
+
+        self.refs = []
+
+
+class Library(BaseLibrary):
+    """Sandbox container object for a library"""
+    KIND = 'target'
+    __slots__ = (
+        'is_sdk',
+    )
+
+    def __init__(self, sandbox, basename, real_name=None, is_sdk=False):
+        BaseLibrary.__init__(self, sandbox, real_name or basename)
         self.basename = basename
-        self.refcount = 0
-        self.static_libraries = []
+        self.is_sdk = is_sdk
 
-    def link_static_lib(self, objdir, basename):
-        self.static_libraries.append((objdir, basename))
+
+class StaticLibrary(Library):
+    """Sandbox container object for a static library"""
+    __slots__ = (
+        'link_into',
+    )
+
+    def __init__(self, sandbox, basename, real_name=None, is_sdk=False,
+        link_into=None):
+        Library.__init__(self, sandbox, basename, real_name, is_sdk)
+        self.link_into = link_into
+
+
+class SharedLibrary(Library):
+    """Sandbox container object for a shared library"""
+    __slots__ = (
+        'soname',
+        'variant',
+    )
+
+    FRAMEWORK = 1
+    COMPONENT = 2
+    MAX_VARIANT = 3
+
+    def __init__(self, sandbox, basename, real_name=None, is_sdk=False,
+            soname=None, variant=None):
+        assert(variant in range(1, self.MAX_VARIANT) or variant is None)
+        Library.__init__(self, sandbox, basename, real_name, is_sdk)
+        self.variant = variant
+        self.lib_name = real_name or basename
+        assert self.lib_name
+
+        if variant == self.FRAMEWORK:
+            self.import_name = self.lib_name
+        else:
+            self.import_name = '%s%s%s' % (
+                sandbox.config.import_prefix,
+                self.lib_name,
+                sandbox.config.import_suffix,
+            )
+            self.lib_name = '%s%s%s' % (
+                sandbox.config.dll_prefix,
+                self.lib_name,
+                sandbox.config.dll_suffix,
+            )
+        if soname:
+            self.soname = '%s%s%s' % (
+                sandbox.config.dll_prefix,
+                soname,
+                sandbox.config.dll_suffix,
+            )
+        else:
+            self.soname = self.lib_name
+
+
+class HostLibrary(BaseLibrary):
+    """Sandbox container object for a host library"""
+    KIND = 'host'
 
 
 class TestManifest(SandboxDerived):

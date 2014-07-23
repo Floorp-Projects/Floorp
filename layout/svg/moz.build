@@ -49,7 +49,7 @@ UNIFIED_SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../../content/base/src',
     '../../content/svg/content/src',

@@ -9,7 +9,7 @@ UNIFIED_SOURCES += [
     'crash_generation_server.cc',
 ]
 
-FINAL_LIBRARY = 'xulapp_s'
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '/toolkit/crashreporter/google-breakpad/src',

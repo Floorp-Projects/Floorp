@@ -21,7 +21,7 @@ FAIL_ON_WARNINGS = True
 
 MSVC_ENABLE_PGO = True
 
-FINAL_LIBRARY = 'xpconnect_s'
+FINAL_LIBRARY = 'xul'
 
 DEFINES['JS_THREADSAFE'] = True
 

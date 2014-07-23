@@ -255,6 +255,7 @@ public:
 private:
 
   void RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
+                         const gfxRGBA* aBackgroundColor,
                          EffectChain& aEffectChain,
                          float aOpacity,
                          const gfx::Filter& aFilter,
@@ -264,6 +265,7 @@ private:
 
   // Renders a single given tile.
   void RenderTile(const TileHost& aTile,
+                  const gfxRGBA* aBackgroundColor,
                   EffectChain& aEffectChain,
                   float aOpacity,
                   const gfx::Matrix4x4& aTransform,

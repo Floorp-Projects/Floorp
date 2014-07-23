@@ -20,7 +20,7 @@ if CONFIG['MOZ_B2G_FM']:
         'FMRadioService.cpp',
     ]
 
-    FINAL_LIBRARY = 'gklayout'
+    FINAL_LIBRARY = 'xul'
 
 IPDL_SOURCES += [
     'ipc/PFMRadio.ipdl',

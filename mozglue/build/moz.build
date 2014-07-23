@@ -12,6 +12,8 @@ else:
     FORCE_SHARED_LIB = False
     FORCE_STATIC_LIB = True
 
+SDK_LIBRARY = True
+
 if CONFIG['MOZ_MEMORY'] and (CONFIG['MOZ_NATIVE_JEMALLOC'] or FORCE_SHARED_LIB):
     pass
     # TODO: SHARED_LIBRARY_LIBS go here
@@ -65,6 +67,15 @@ if CONFIG['MOZ_ASAN']:
 
 
 LIBRARY_NAME = 'mozglue'
+
+USE_LIBS += [
+    'mfbt',
+]
+
+if CONFIG['ZLIB_IN_MOZGLUE'] and not CONFIG['MOZ_NATIVE_ZLIB']:
+    USE_LIBS += [
+        'mozz',
+    ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     SOURCES += [

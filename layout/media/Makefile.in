@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ifeq (WINNT,$(OS_TARGET))
-EXTRA_DSO_LDOPTS = $(MOZALLOC_LIB) $(NSPR_LIBS)
+EXTRA_LIBS += $(NSPR_LIBS)
 OS_LIBS += $(call EXPAND_LIBNAME,usp10 ole32)
 endif
 

@@ -1,0 +1,162 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<style>
+@keyframes anim1 {
+  to { left: 100px }
+}
+@keyframes anim2 { }
+</style>
+<script>
+'use strict';
+
+function addDiv() {
+  var div = document.createElement('div');
+  document.body.appendChild(div);
+  return div;
+}
+
+async_test(function(t) {
+  var div = addDiv();
+  div.style.animation = 'anim1 100s';
+  window.getComputedStyle(div).animationName;
+
+  var originalPlayer = div.getAnimationPlayers()[0];
+  var originalStartTime = originalPlayer.startTime;
+  var originalCurrentTime = originalPlayer.currentTime;
+
+  // Wait a moment so we can confirm the startTime doesn't change (and doesn't
+  // simply reflect the current time).
+  window.requestAnimationFrame(t.step_func(function() {
+    div.style.animationDuration = '200s';
+    window.getComputedStyle(div).animationDuration;
+    var player = div.getAnimationPlayers()[0];
+    assert_equals(player, originalPlayer,
+                  'The same AnimationPlayer is returned after updating'
+                  + ' animation duration');
+    assert_equals(player.startTime, originalStartTime,
+                  'AnimationPlayers returned by getAnimationPlayers preserve'
+                  + ' their startTime even when they are updated');
+    // Sanity check
+    assert_not_equals(player.currentTime, originalCurrentTime,
+                      'AnimationPlayer.currentTime has updated in next'
+                      + ' requestAnimationFrame callback');
+    div.remove();
+    t.done();
+  }));
+}, 'AnimationPlayers preserve their startTime when changed');
+
+test(function() {
+  var div = addDiv();
+  div.style.animation = 'anim1 100s, anim1 100s';
+  window.getComputedStyle(div).animationName;
+
+  // Store original state
+  var players = div.getAnimationPlayers();
+  var player1 = players[0];
+  var player2 = players[1];
+
+  // Update first in list
+  div.style.animationDuration = '200s, 100s';
+  window.getComputedStyle(div).animationDuration;
+  players = div.getAnimationPlayers();
+  assert_equals(players[0], player1,
+                'First player is in same position after update');
+  assert_equals(players[1], player2,
+                'Second player is in same position after update');
+}, 'Updated AnimationPlayers maintain their order in the list');
+
+async_test(function(t) {
+  var div = addDiv();
+  div.style.animation = 'anim1 200s, anim1 100s';
+  window.getComputedStyle(div).animationName;
+
+  // Store original state
+  var players = div.getAnimationPlayers();
+  var player1 = players[0];
+  var player2 = players[1];
+
+  // Wait before continuing so we can compare start times
+  window.requestAnimationFrame(t.step_func(function() {
+    // Swap duration of first and second in list and prepend animation at the
+    // same time
+    div.style.animation = 'anim1 100s, anim1 100s, anim1 200s';
+    window.getComputedStyle(div).animationName;
+    players = div.getAnimationPlayers();
+    assert_true(players[0] !== player1 && players[0] !== player2,
+                'New player is prepended to start of list');
+    assert_equals(players[1], player1,
+                  'First player is in second position after update');
+    assert_equals(players[2], player2,
+                  'Second player is in third position after update');
+    assert_equals(players[1].startTime, players[2].startTime,
+                  'Old players have the same start time');
+    assert_true(players[0].startTime > players[1].startTime,
+                'New player has later start time');
+    div.remove();
+    t.done();
+  }));
+}, 'Only the startTimes of existing animations are preserved');
+
+async_test(function(t) {
+  var div = addDiv();
+  div.style.animation = 'anim1 100s, anim1 100s';
+  window.getComputedStyle(div).animationName;
+
+  var secondPlayer = div.getAnimationPlayers()[1];
+
+  // Wait before continuing so we can compare start times
+  window.requestAnimationFrame(t.step_func(function() {
+    // Trim list of animations
+    div.style.animationName = 'anim1';
+    window.getComputedStyle(div).animationName;
+    var players = div.getAnimationPlayers();
+    assert_equals(players.length, 1, 'List of players was trimmed');
+    assert_equals(players[0], secondPlayer,
+                  'Remaining player is the second one in the list');
+    assert_true(players[0].startTime < players[0].timeline.currentTime,
+                'Remaining player preserves startTime');
+    div.remove();
+    t.done();
+  }));
+}, 'Animations are removed from the start of the list while preserving'
+   + ' the state of existing players');
+
+async_test(function(t) {
+  var div = addDiv();
+  div.style.animation = 'anim1 100s';
+  window.getComputedStyle(div).animationName;
+  var firstAddedPlayer = div.getAnimationPlayers()[0];
+
+  // Wait and add second player
+  window.requestAnimationFrame(t.step_func(function() {
+    div.style.animation = 'anim1 100s, anim1 100s';
+    window.getComputedStyle(div).animationName;
+    var secondAddedPlayer = div.getAnimationPlayers()[0];
+
+    // Wait again and add another player
+    window.requestAnimationFrame(t.step_func(function() {
+      div.style.animation = 'anim1 100s, anim2 100s, anim1 100s';
+      window.getComputedStyle(div).animationName;
+      var players = div.getAnimationPlayers();
+      assert_not_equals(firstAddedPlayer, secondAddedPlayer,
+                        'New players are added to start of the list');
+      assert_equals(players[0], secondAddedPlayer,
+                    'Second player remains in same position after'
+                    + ' interleaving');
+      assert_equals(players[2], firstAddedPlayer,
+                    'First player remains in same position after'
+                    + ' interleaving');
+      assert_true(players[1].startTime > players[0].startTime,
+                  'Interleaved player starts later than existing players');
+      assert_true(players[0].startTime > players[2].startTime,
+                  'Original players retain their start time');
+      div.remove();
+      t.done();
+    }));
+  }));
+}, 'Player state is preserved when interleaving animations in list');
+
+</script>

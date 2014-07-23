@@ -15,4 +15,4 @@ else
 no_as_needed = -Wl,--no-as-needed $1 -Wl,--as-needed
 endif
 
-EXTRA_DSO_LDOPTS += $(filter -L%,$(MOZ_GTK2_LIBS)) $(call no_as_needed,-lgtk-x11-2.0 -lgdk-x11-2.0)
+OS_LIBS += $(filter -L%,$(MOZ_GTK2_LIBS)) $(call no_as_needed,-lgtk-x11-2.0 -lgdk-x11-2.0)

@@ -108,6 +108,18 @@ class ConfigEnvironment(object):
         self.substs = dict(substs)
         self.topsrcdir = mozpath.normsep(topsrcdir)
         self.topobjdir = mozpath.normsep(topobjdir)
+        self.lib_prefix = self.substs.get('LIB_PREFIX', '')
+        if 'LIB_SUFFIX' in self.substs:
+            self.lib_suffix = '.%s' % self.substs['LIB_SUFFIX']
+        self.dll_prefix = self.substs.get('DLL_PREFIX', '')
+        self.dll_suffix = self.substs.get('DLL_SUFFIX', '')
+        if self.substs.get('IMPORT_LIB_SUFFIX'):
+            self.import_prefix = self.lib_prefix
+            self.import_suffix = '.%s' % self.substs['IMPORT_LIB_SUFFIX']
+        else:
+            self.import_prefix = self.dll_prefix
+            self.import_suffix = self.dll_suffix
+
         global_defines = [name for name, value in defines
             if not name in non_global_defines]
         self.substs['ACDEFINES'] = ' '.join(['-D%s=%s' % (name,

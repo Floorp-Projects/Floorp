@@ -20,3 +20,9 @@ LOCAL_INCLUDES += [
     '../lib',
 ]
 
+USE_LIBS += [
+    'mozalloc',
+    'mozillapkix',
+    'pkixtestutil',
+    'tlsserver',
+]

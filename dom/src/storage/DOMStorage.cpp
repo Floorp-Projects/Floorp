@@ -7,42 +7,44 @@
 #include "DOMStorageCache.h"
 #include "DOMStorageManager.h"
 
-#include "mozilla/dom/StorageEvent.h"
 #include "nsIObserverService.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsICookiePermission.h"
 
-#include "nsDOMClassInfoID.h"
+#include "mozilla/dom/StorageBinding.h"
+#include "mozilla/dom/StorageEvent.h"
+#include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
 
-DOMCI_DATA(Storage, mozilla::dom::DOMStorage)
-
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ADDREF(DOMStorage)
-NS_IMPL_RELEASE(DOMStorage)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMStorage, mManager, mPrincipal, mWindow)
 
-NS_INTERFACE_MAP_BEGIN(DOMStorage)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMStorage)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMStorage)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMStorage)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorage)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorage)
-  NS_INTERFACE_MAP_ENTRY(nsPIDOMStorage)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Storage)
 NS_INTERFACE_MAP_END
 
-DOMStorage::DOMStorage(DOMStorageManager* aManager,
+DOMStorage::DOMStorage(nsIDOMWindow* aWindow,
+                       DOMStorageManager* aManager,
                        DOMStorageCache* aCache,
                        const nsAString& aDocumentURI,
                        nsIPrincipal* aPrincipal,
                        bool aIsPrivate)
-: mManager(aManager)
+: mWindow(aWindow)
+, mManager(aManager)
 , mCache(aCache)
 , mDocumentURI(aDocumentURI)
 , mPrincipal(aPrincipal)
@@ -50,6 +52,7 @@ DOMStorage::DOMStorage(DOMStorageManager* aManager,
 , mIsSessionOnly(false)
 {
   mCache->Preload();
+  SetIsDOMBinding();
 }
 
 DOMStorage::~DOMStorage()
@@ -57,43 +60,54 @@ DOMStorage::~DOMStorage()
   mCache->KeepAlive();
 }
 
-// nsIDOMStorage (web content public API implementation)
-
-NS_IMETHODIMP
-DOMStorage::GetLength(uint32_t* aLength)
+/* virtual */ JSObject*
+DOMStorage::WrapObject(JSContext* aCx)
 {
-  if (!CanUseStorage(this)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  return mCache->GetLength(this, aLength);
+  return StorageBinding::Wrap(aCx, this);
 }
 
-NS_IMETHODIMP
-DOMStorage::Key(uint32_t aIndex, nsAString& aRetval)
+uint32_t
+DOMStorage::GetLength(ErrorResult& aRv)
 {
   if (!CanUseStorage(this)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return 0;
   }
 
-  return mCache->GetKey(this, aIndex, aRetval);
+  uint32_t length;
+  aRv = mCache->GetLength(this, &length);
+  return length;
 }
 
-NS_IMETHODIMP
-DOMStorage::GetItem(const nsAString& aKey, nsAString& aRetval)
+void
+DOMStorage::Key(uint32_t aIndex, nsAString& aResult, ErrorResult& aRv)
 {
   if (!CanUseStorage(this)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
   }
 
-  return mCache->GetItem(this, aKey, aRetval);
+  aRv = mCache->GetKey(this, aIndex, aResult);
 }
 
-NS_IMETHODIMP
-DOMStorage::SetItem(const nsAString& aKey, const nsAString& aData)
+void
+DOMStorage::GetItem(const nsAString& aKey, nsAString& aResult, ErrorResult& aRv)
 {
   if (!CanUseStorage(this)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  aRv = mCache->GetItem(this, aKey, aResult);
+}
+
+void
+DOMStorage::SetItem(const nsAString& aKey, const nsAString& aData,
+                    ErrorResult& aRv)
+{
+  if (!CanUseStorage(this)) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
   }
 
   Telemetry::Accumulate(GetType() == LocalStorage
@@ -105,58 +119,57 @@ DOMStorage::SetItem(const nsAString& aKey, const nsAString& aData)
 
   nsString data;
   bool ok = data.Assign(aData, fallible_t());
-  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+  if (!ok) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
 
   nsString old;
-  nsresult rv = mCache->SetItem(this, aKey, data, old);
-  if (NS_FAILED(rv)) {
-    return rv;
+  aRv = mCache->SetItem(this, aKey, data, old);
+  if (aRv.Failed()) {
+    return;
   }
 
-  if (rv != NS_SUCCESS_DOM_NO_OPERATION) {
+  if (aRv.ErrorCode() != NS_SUCCESS_DOM_NO_OPERATION) {
     BroadcastChangeNotification(aKey, old, aData);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-DOMStorage::RemoveItem(const nsAString& aKey)
+void
+DOMStorage::RemoveItem(const nsAString& aKey, ErrorResult& aRv)
 {
   if (!CanUseStorage(this)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
   }
 
   nsAutoString old;
-  nsresult rv = mCache->RemoveItem(this, aKey, old);
-  if (NS_FAILED(rv)) {
-    return rv;
+  aRv = mCache->RemoveItem(this, aKey, old);
+  if (aRv.Failed()) {
+    return;
   }
 
-  if (rv != NS_SUCCESS_DOM_NO_OPERATION) {
+  if (aRv.ErrorCode() != NS_SUCCESS_DOM_NO_OPERATION) {
     BroadcastChangeNotification(aKey, old, NullString());
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-DOMStorage::Clear()
+void
+DOMStorage::Clear(ErrorResult& aRv)
 {
   if (!CanUseStorage(this)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
   }
 
-  nsresult rv = mCache->Clear(this);
-  if (NS_FAILED(rv)) {
-    return rv;
+  aRv = mCache->Clear(this);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
   }
 
-  if (rv != NS_SUCCESS_DOM_NO_OPERATION) {
+  if (aRv.ErrorCode() != NS_SUCCESS_DOM_NO_OPERATION) {
     BroadcastChangeNotification(NullString(), NullString(), NullString());
   }
-
-  return NS_OK;
 }
 
 namespace {
@@ -199,7 +212,7 @@ DOMStorage::BroadcastChangeNotification(const nsSubstring& aKey,
   dict.mKey = aKey;
   dict.mNewValue = aNewValue;
   dict.mOldValue = aOldValue;
-  dict.mStorageArea = static_cast<nsIDOMStorage*>(this);
+  dict.mStorageArea = this;
   dict.mUrl = mDocumentURI;
 
   // Note, this DOM event should never reach JS. It is cloned later in
@@ -285,9 +298,7 @@ DOMStorage::CanUseStorage(DOMStorage* aStorage)
   return true;
 }
 
-// nsPIDOMStorage
-
-nsPIDOMStorage::StorageType
+DOMStorage::StorageType
 DOMStorage::GetType() const
 {
   return mManager->Type();
@@ -315,14 +326,16 @@ DOMStorage::CanAccess(nsIPrincipal* aPrincipal)
   return !aPrincipal || aPrincipal->Subsumes(mPrincipal);
 }
 
-nsTArray<nsString>*
-DOMStorage::GetKeys()
+void
+DOMStorage::GetSupportedNames(unsigned, nsTArray<nsString>& aKeys)
 {
   if (!CanUseStorage(this)) {
-    return new nsTArray<nsString>(); // return just an empty array
+    // return just an empty array
+    aKeys.Clear();
+    return;
   }
 
-  return mCache->GetKeys(this);
+  mCache->GetKeys(this, aKeys);
 }
 
 } // ::dom

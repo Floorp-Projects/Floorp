@@ -17,13 +17,8 @@ HOST_CFLAGS += \
   $(DEFINES) \
   $(NULL)
 
-HOST_LIBS = $(DIST)/host/lib/$(LIB_PREFIX)hostmar.$(LIB_SUFFIX)
-LIBS = $(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX)
-
 ifdef MOZ_ENABLE_SIGNMAR
-LIBS += \
-  $(DEPTH)/modules/libmar/sign/$(LIB_PREFIX)signmar.$(LIB_SUFFIX) \
-  $(DEPTH)/modules/libmar/verify/$(LIB_PREFIX)verifymar.$(LIB_SUFFIX) \
+EXTRA_LIBS += \
   $(DIST)/lib/$(LIB_PREFIX)nss3.$(LIB_SUFFIX) \
   $(DIST)/lib/$(LIB_PREFIX)nssutil3.$(LIB_SUFFIX) \
   $(NSPR_LIBS) \
@@ -32,10 +27,10 @@ endif
 
 ifeq ($(HOST_OS_ARCH),WINNT)
 HOST_EXTRA_LIBS += $(call EXPAND_LIBNAME,ws2_32)
-EXTRA_LIBS += $(call EXPAND_LIBNAME,ws2_32)
+OS_LIBS += $(call EXPAND_LIBNAME,ws2_32)
 ifdef MOZ_ENABLE_SIGNMAR
-EXTRA_LIBS += $(call EXPAND_LIBNAME,crypt32)
-EXTRA_LIBS += $(call EXPAND_LIBNAME,advapi32)
+OS_LIBS += $(call EXPAND_LIBNAME,crypt32)
+OS_LIBS += $(call EXPAND_LIBNAME,advapi32)
 endif
 endif
 

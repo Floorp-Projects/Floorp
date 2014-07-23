@@ -262,9 +262,6 @@ class TestRecursiveMakeBackend(BackendTester):
                 'CMMSRCS += bar.mm',
                 'CMMSRCS += foo.mm',
             ],
-            'CPP_UNIT_TESTS': [
-                'CPP_UNIT_TESTS += foo.cpp',
-            ],
             'CSRCS': [
                 'CSRCS += bar.c',
                 'CSRCS += foo.c',
@@ -299,9 +296,6 @@ class TestRecursiveMakeBackend(BackendTester):
                 'HOST_CSRCS += bar.c',
                 'HOST_CSRCS += foo.c',
             ],
-            'HOST_LIBRARY_NAME': [
-                'HOST_LIBRARY_NAME := host_bar',
-            ],
             'MSVC_ENABLE_PGO': [
                 'MSVC_ENABLE_PGO := 1',
             ],
@@ -309,10 +303,6 @@ class TestRecursiveMakeBackend(BackendTester):
                 'OS_LIBS += foo.so',
                 'OS_LIBS += -l123',
                 'OS_LIBS += bar.a',
-            ],
-            'SDK_LIBRARY': [
-                'SDK_LIBRARY += bar.sdk',
-                'SDK_LIBRARY += foo.sdk',
             ],
             'SSRCS': [
                 'SSRCS += baz.S',

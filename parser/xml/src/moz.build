@@ -18,4 +18,4 @@ SOURCES += [
 
 MSVC_ENABLE_PGO = True
 
-FINAL_LIBRARY = 'htmlpars'
+FINAL_LIBRARY = 'xul'

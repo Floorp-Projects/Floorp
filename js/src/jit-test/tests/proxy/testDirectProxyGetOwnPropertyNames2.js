@@ -12,5 +12,8 @@ var handler = {
         return [];
     }
 };
-assertEq(Object.getOwnPropertyNames(new Proxy(target, handler)).length, 0);
-assertEq(called, true);
+
+for (let p of [new Proxy(target, handler), Proxy.revocable(target, handler).proxy]) {
+    assertEq(Object.getOwnPropertyNames(p).length, 0);
+    assertEq(called, true);
+}

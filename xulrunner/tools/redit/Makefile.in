@@ -8,8 +8,4 @@ SDK_BINARY =  \
 	$(PROGRAM) \
 	$(NULL)
 
-LIBS = \
-  $(XPCOM_STANDALONE_GLUE_LDOPTS) \
-  $(NULL)
-
 endif
