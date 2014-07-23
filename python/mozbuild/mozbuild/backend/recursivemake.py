@@ -45,7 +45,9 @@ from ..frontend.data import (
     Resources,
     SandboxDerived,
     SandboxWrapped,
+    SharedLibrary,
     SimpleProgram,
+    StaticLibrary,
     TestManifest,
     VariablePassthru,
     XPIDLFile,
@@ -99,6 +101,10 @@ class BackendMakeFile(object):
 
     def write(self, buf):
         self.fh.write(buf)
+
+    def write_once(self, buf):
+        if '\n' + buf not in self.fh.getvalue():
+            self.write(buf)
 
     # For compatibility with makeutil.Makefile
     def add_statement(self, stmt):
@@ -423,15 +429,19 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, Program):
             self._process_program(obj.program, backend_file)
+            self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, HostProgram):
             self._process_host_program(obj.program, backend_file)
+            self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, SimpleProgram):
             self._process_simple_program(obj.program, backend_file)
+            self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, HostSimpleProgram):
             self._process_host_simple_program(obj.program, backend_file)
+            self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, LocalInclude):
             self._process_local_include(obj.path, backend_file)
@@ -461,11 +471,17 @@ class RecursiveMakeBackend(CommonBackend):
             else:
                 return
 
-        elif isinstance(obj, Library):
-            self._process_library(obj, backend_file)
+        elif isinstance(obj, SharedLibrary):
+            self._process_shared_library(obj, backend_file)
+            self._process_linked_libraries(obj, backend_file)
+
+        elif isinstance(obj, StaticLibrary):
+            self._process_static_library(obj, backend_file)
+            self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, HostLibrary):
             self._process_host_library(obj, backend_file)
+            self._process_linked_libraries(obj, backend_file)
 
         else:
             return
@@ -1103,36 +1119,58 @@ class RecursiveMakeBackend(CommonBackend):
         rule.add_commands(['$(call py_action,process_install_manifest,%s)' % ' '.join(args)])
         fragment.dump(backend_file.fh, removal_guard=False)
 
-    def _process_library(self, libdef, backend_file):
-        backend_file.write('LIBRARY_NAME := %s\n' % libdef.basename)
-        if libdef.kind in (libdef.STATIC, libdef.STATIC + libdef.SHARED):
-            backend_file.write('FORCE_STATIC_LIB := 1\n')
-            backend_file.write('REAL_LIBRARY := %s\n' % libdef.static_name)
-        if libdef.kind != libdef.STATIC:
-            backend_file.write('FORCE_SHARED_LIB := 1\n')
-            backend_file.write('IMPORT_LIBRARY := %s\n' % libdef.import_name)
-            backend_file.write('SHARED_LIBRARY := %s\n' % libdef.shared_name)
-        if libdef.kind == libdef.COMPONENT:
+    def _process_shared_library(self, libdef, backend_file):
+        backend_file.write_once('LIBRARY_NAME := %s\n' % libdef.basename)
+        backend_file.write('FORCE_SHARED_LIB := 1\n')
+        backend_file.write('IMPORT_LIBRARY := %s\n' % libdef.import_name)
+        backend_file.write('SHARED_LIBRARY := %s\n' % libdef.lib_name)
+        if libdef.variant == libdef.COMPONENT:
             backend_file.write('IS_COMPONENT := 1\n')
         if libdef.soname:
             backend_file.write('DSO_SONAME := %s\n' % libdef.soname)
         if libdef.is_sdk:
             backend_file.write('SDK_LIBRARY := %s\n' % libdef.import_name)
 
-        thisobjdir = libdef.objdir
-        topobjdir = mozpath.normsep(libdef.topobjdir)
-        for obj in libdef.linked_libraries:
-            # If this is an external objdir (i.e., comm-central), use the other
-            # directory instead of $(DEPTH).
-            if obj.objdir.startswith(topobjdir + '/'):
-                relpath = '$(DEPTH)/%s' % mozpath.relpath(obj.objdir, topobjdir)
-            else:
-                relpath = mozpath.relpath(obj.objdir, thisobjdir)
-            backend_file.write('SHARED_LIBRARY_LIBS += %s/%s\n'
-                               % (relpath, obj.static_name))
+    def _process_static_library(self, libdef, backend_file):
+        backend_file.write_once('LIBRARY_NAME := %s\n' % libdef.basename)
+        backend_file.write('FORCE_STATIC_LIB := 1\n')
+        backend_file.write('REAL_LIBRARY := %s\n' % libdef.lib_name)
+        if libdef.is_sdk:
+            backend_file.write('SDK_LIBRARY := %s\n' % libdef.import_name)
 
     def _process_host_library(self, libdef, backend_file):
         backend_file.write('HOST_LIBRARY_NAME = %s\n' % libdef.basename)
+
+    def _process_linked_libraries(self, obj, backend_file):
+        topobjdir = mozpath.normsep(obj.topobjdir)
+        for lib in obj.linked_libraries:
+            # If this is an external objdir (i.e., comm-central), use the other
+            # directory instead of $(DEPTH).
+            if lib.objdir.startswith(topobjdir + '/'):
+                relpath = '$(DEPTH)/%s' % mozpath.relpath(lib.objdir, topobjdir)
+            else:
+                relpath = mozpath.relpath(lib.objdir, obj.objdir)
+            if isinstance(obj, Library):
+                if isinstance(lib, StaticLibrary):
+                    backend_file.write_once('SHARED_LIBRARY_LIBS += %s/%s\n'
+                                       % (relpath, lib.lib_name))
+                else:
+                    assert isinstance(obj, SharedLibrary)
+                    assert lib.variant != lib.COMPONENT
+                    backend_file.write_once('EXTRA_DSO_LDOPTS += %s/%s\n'
+                                       % (relpath, lib.import_name))
+            elif isinstance(obj, (Program, SimpleProgram)):
+                if isinstance(lib, StaticLibrary):
+                    backend_file.write_once('LIBS += %s/%s\n'
+                                       % (relpath, lib.lib_name))
+                else:
+                    assert lib.variant != lib.COMPONENT
+                    backend_file.write_once('LIBS += %s/%s\n'
+                                       % (relpath, lib.import_name))
+            elif isinstance(obj, (HostLibrary, HostProgram, HostSimpleProgram)):
+                assert isinstance(lib, HostLibrary)
+                backend_file.write_once('HOST_LIBS += %s/%s\n'
+                                   % (relpath, lib.lib_name))
 
     def _write_manifests(self, dest, manifests):
         man_dir = mozpath.join(self.environment.topobjdir, '_build_manifests',
