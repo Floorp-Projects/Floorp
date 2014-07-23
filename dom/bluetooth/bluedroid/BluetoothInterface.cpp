@@ -911,16 +911,28 @@ BluetoothA2dpInterface::Cleanup(BluetoothA2dpResultHandler* aRes)
   }
 }
 
-bt_status_t
-BluetoothA2dpInterface::Connect(bt_bdaddr_t *aBdAddr)
+void
+BluetoothA2dpInterface::Connect(bt_bdaddr_t *aBdAddr,
+                                BluetoothA2dpResultHandler* aRes)
 {
-  return mInterface->connect(aBdAddr);
+  bt_status_t status = mInterface->connect(aBdAddr);
+
+  if (aRes) {
+    DispatchBluetoothA2dpResult(aRes, &BluetoothA2dpResultHandler::Connect,
+                                status);
+  }
 }
 
-bt_status_t
-BluetoothA2dpInterface::Disconnect(bt_bdaddr_t *aBdAddr)
+void
+BluetoothA2dpInterface::Disconnect(bt_bdaddr_t *aBdAddr,
+                                   BluetoothA2dpResultHandler* aRes)
 {
-  return mInterface->disconnect(aBdAddr);
+  bt_status_t status = mInterface->disconnect(aBdAddr);
+
+  if (aRes) {
+    DispatchBluetoothA2dpResult(aRes, &BluetoothA2dpResultHandler::Disconnect,
+                                status);
+  }
 }
 
 //

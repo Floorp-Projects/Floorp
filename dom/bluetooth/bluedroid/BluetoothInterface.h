@@ -208,8 +208,10 @@ public:
             BluetoothA2dpResultHandler* aRes);
   void Cleanup(BluetoothA2dpResultHandler* aRes);
 
-  bt_status_t Connect(bt_bdaddr_t *aBdAddr);
-  bt_status_t Disconnect(bt_bdaddr_t *aBdAddr);
+  void Connect(bt_bdaddr_t *aBdAddr,
+               BluetoothA2dpResultHandler* aRes);
+  void Disconnect(bt_bdaddr_t *aBdAddr,
+                  BluetoothA2dpResultHandler* aRes);
 
 protected:
   BluetoothA2dpInterface(const btav_interface_t* aInterface);
