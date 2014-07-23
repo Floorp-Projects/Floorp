@@ -122,8 +122,7 @@ function closeStream(aAlreadyClosed) {
   if (!aAlreadyClosed)
     expectObserverCalled("recording-window-ended");
 
-  let statusButton = document.getElementById("webrtc-status-button");
-  ok(statusButton.hidden, "WebRTC status button hidden");
+  assertWebRTCIndicatorStatus(false);
 }
 
 function loadPage(aUrl) {
