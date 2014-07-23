@@ -269,7 +269,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
       if (!collection->mAnimations.IsEmpty()) {
         for (uint32_t newIdx = 0, newEnd = newAnimations.Length();
              newIdx != newEnd; ++newIdx) {
-          nsRefPtr<ElementAnimation> newAnim = newAnimations[newIdx];
+          ElementAnimation* newAnim = newAnimations[newIdx];
 
           // Find the matching animation with this name in the old list
           // of animations.  Because of this code, they must all have
@@ -279,10 +279,14 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           // different pause states, they, well, get what they deserve.
           // We'll use the last one since it's more likely to be the one
           // doing something.
-          const ElementAnimation* oldAnim = nullptr;
-          for (uint32_t oldIdx = collection->mAnimations.Length();
-               oldIdx-- != 0; ) {
-            const ElementAnimation* a = collection->mAnimations[oldIdx];
+          //
+          // FIXME: This is wrong: we should iterate through both lists in the
+          // same direction. We'll fix that in a subsequent patch in this
+          // series.
+          nsRefPtr<ElementAnimation> oldAnim;
+          size_t oldIdx = collection->mAnimations.Length();
+          while (oldIdx-- != 0) {
+            ElementAnimation* a = collection->mAnimations[oldIdx];
             if (a->mName == newAnim->mName) {
               oldAnim = a;
               break;
@@ -292,25 +296,41 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
             continue;
           }
 
-          newAnim->mStartTime = oldAnim->mStartTime;
-          newAnim->mLastNotification = oldAnim->mLastNotification;
+          // Update the old from the new so we can keep the original object
+          // identity (and any expando properties attached to it).
+          oldAnim->mTiming = newAnim->mTiming;
+          oldAnim->mProperties = newAnim->mProperties;
 
-          if (oldAnim->IsPaused()) {
-            if (newAnim->IsPaused()) {
-              // Copy pause start just like start time.
-              newAnim->mPauseStart = oldAnim->mPauseStart;
-            } else {
-              // Handle change in pause state by adjusting start
-              // time to unpause.
-              const TimeStamp& now = timeline->GetCurrentTimeStamp();
-              if (!now.IsNull()) {
-                // FIXME: Once we store the start time and pause start as
-                // offsets (not timestamps) we should be able to update the
-                // start time to something more appropriate when now IsNull.
-                newAnim->mStartTime += now - oldAnim->mPauseStart;
-              }
+          // Reset compositor state so animation will be re-synchronized.
+          oldAnim->mIsRunningOnCompositor = false;
+
+          // Handle changes in play state.
+          if (!oldAnim->IsPaused() && newAnim->IsPaused()) {
+            // Start pause at current time.
+            oldAnim->mPauseStart = timeline->GetCurrentTimeStamp();
+          } else if (oldAnim->IsPaused() && !newAnim->IsPaused()) {
+            const TimeStamp& now = timeline->GetCurrentTimeStamp();
+            if (!now.IsNull()) {
+              // FIXME: Once we store the start time and pause start as
+              // offsets (not timestamps) we should be able to update the
+              // start time to something more appropriate when now IsNull.
+              // Handle change in pause state by adjusting start time to
+              // unpause.
+              oldAnim->mStartTime += now - oldAnim->mPauseStart;
             }
+            oldAnim->mPauseStart = TimeStamp();
           }
+          oldAnim->mPlayState = newAnim->mPlayState;
+
+          // Replace new animation with the (updated) old one and remove the
+          // old one from the array so we don't try to match it any more.
+          //
+          // Although we're doing this while iterating this is safe because
+          // we're not changing the length of newAnimations and we've finished
+          // iterating over the list of old iterations.
+          newAnim = nullptr;
+          newAnimations.ReplaceElementAt(newIdx, oldAnim);
+          collection->mAnimations.RemoveElementAt(oldIdx);
         }
       }
     } else {
