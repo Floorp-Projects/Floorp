@@ -1405,7 +1405,9 @@ void MediaDecoderStateMachine::Play()
 
 void MediaDecoderStateMachine::ResetPlayback()
 {
-  MOZ_ASSERT(mState == DECODER_STATE_SEEKING || mState == DECODER_STATE_SHUTDOWN);
+  MOZ_ASSERT(mState == DECODER_STATE_SEEKING ||
+             mState == DECODER_STATE_SHUTDOWN ||
+             mState == DECODER_STATE_DORMANT);
   mVideoFrameEndTime = -1;
   mAudioStartTime = -1;
   mAudioEndTime = -1;
