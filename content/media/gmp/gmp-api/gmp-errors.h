@@ -39,7 +39,7 @@ typedef enum {
   GMPClosedErr = 2,
   GMPAllocErr = 3,
   GMPNotImplementedErr = 4,
-  GMPNotClosedErr = 5,
+  GMPRecordInUse = 5,
   GMPQuotaExceededErr = 6,
   GMPDecodeErr = 7,
   GMPEncodeErr = 8,
