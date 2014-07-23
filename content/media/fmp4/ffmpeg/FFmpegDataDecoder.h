@@ -36,7 +36,7 @@ public:
 
 protected:
   MediaTaskQueue* mTaskQueue;
-  AVCodecContext mCodecContext;
+  AVCodecContext* mCodecContext;
   Vector<uint8_t> mExtraData;
 
 private:
