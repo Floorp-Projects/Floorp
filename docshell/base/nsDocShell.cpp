@@ -35,7 +35,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMStorage.h"
-#include "nsPIDOMStorage.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsCURILoader.h"
@@ -2790,20 +2789,27 @@ nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
         return NS_ERROR_UNEXPECTED;
     }
 
+    nsCOMPtr<nsIDOMWindow> domWin = do_GetInterface(GetAsSupports(this));
+
     if (aCreate) {
-        return manager->CreateStorage(aPrincipal, aDocumentURI,
+        return manager->CreateStorage(domWin, aPrincipal, aDocumentURI,
                                       mInPrivateBrowsing, aStorage);
     }
 
-    return manager->GetStorage(aPrincipal, mInPrivateBrowsing, aStorage);
+    return manager->GetStorage(domWin, aPrincipal, mInPrivateBrowsing,
+                               aStorage);
 }
 
 nsresult
 nsDocShell::AddSessionStorage(nsIPrincipal* aPrincipal,
                               nsIDOMStorage* aStorage)
 {
-    nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(aStorage);
-    nsIPrincipal* storagePrincipal = pistorage->GetPrincipal();
+    nsRefPtr<DOMStorage> storage = static_cast<DOMStorage*>(aStorage);
+    if (!storage) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    nsIPrincipal* storagePrincipal = storage->GetPrincipal();
     if (storagePrincipal != aPrincipal) {
         NS_ERROR("Wanting to add a sessionStorage for different principal");
         return NS_ERROR_DOM_SECURITY_ERR;

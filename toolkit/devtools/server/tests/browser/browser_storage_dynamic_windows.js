@@ -106,6 +106,10 @@ function markOutMatched(toBeEmptied, data, deleted) {
       ok(toBeEmptied[storageType][host], "Host " + host + " found");
       if (!deleted) {
         for (let item of data[storageType][host]) {
+          if ([ 'length', 'key', 'getItem', 'setItem',
+                'removeItem', 'clear'].indexOf(item) != -1) {
+            continue;
+          }
           let index = toBeEmptied[storageType][host].indexOf(item);
           ok(index > -1, "Item found - " + item);
           if (index > -1) {

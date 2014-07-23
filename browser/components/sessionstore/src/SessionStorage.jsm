@@ -107,11 +107,12 @@ let SessionStorageInternal = {
       let uri = Services.io.newURI(host, null, null);
       let principal = Services.scriptSecurityManager.getDocShellCodebasePrincipal(uri, aDocShell);
       let storageManager = aDocShell.QueryInterface(Ci.nsIDOMStorageManager);
+      let window = aDocShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
 
       // There is no need to pass documentURI, it's only used to fill documentURI property of
       // domstorage event, which in this case has no consumer. Prevention of events in case
       // of missing documentURI will be solved in a followup bug to bug 600307.
-      let storage = storageManager.createStorage(principal, "", aDocShell.usePrivateBrowsing);
+      let storage = storageManager.createStorage(window, principal, "", aDocShell.usePrivateBrowsing);
 
       for (let key of Object.keys(data)) {
         try {
@@ -135,9 +136,11 @@ let SessionStorageInternal = {
     let hostData = {};
     let storage;
 
+    let window = aDocShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+
     try {
       let storageManager = aDocShell.QueryInterface(Ci.nsIDOMStorageManager);
-      storage = storageManager.getStorage(aPrincipal);
+      storage = storageManager.getStorage(window, aPrincipal);
     } catch (e) {
       // sessionStorage might throw if it's turned off, see bug 458954
     }

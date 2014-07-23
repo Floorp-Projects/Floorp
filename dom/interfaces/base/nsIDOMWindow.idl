@@ -10,7 +10,6 @@ interface nsIControllers;
 interface nsIDOMBlob;
 interface nsIDOMLocation;
 interface nsIDOMOfflineResourceList;
-interface nsIDOMStorage;
 interface nsIPrompt;
 interface nsISelection;
 interface nsIVariant;
@@ -24,7 +23,7 @@ interface nsIVariant;
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(d4316591-d16e-405c-8093-b441cbef3230)]
+[scriptable, uuid(c3ff0328-6c47-4e64-a22f-ac221959e258)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -241,15 +240,17 @@ interface nsIDOMWindow : nsISupports
   // WindowSessionStorage
   /**
    * Session storage for the current browsing context.
+   * This attribute is a DOMStorage
    */
-  readonly attribute nsIDOMStorage sessionStorage;
+  readonly attribute nsISupports sessionStorage;
 
 
   // WindowLocalStorage
   /**
    * Local storage for the current browsing context.
+   * This attribute is a DOMStorage
    */
-  readonly attribute nsIDOMStorage localStorage;
+  readonly attribute nsISupports localStorage;
 
 
   // IndexedDB
