@@ -1564,9 +1564,14 @@ class Mochitest(MochitestUtilsMixin):
     bisect = bisection.Bisect(self)
     finished = False
     status = 0
+    bisection_log = 0
     while not finished:
       if options.bisectChunk:
         testsToRun = bisect.pre_test(options, testsToRun, status)
+        # To inform that we are in the process of bisection, and to look for bleedthrough
+        if options.bisectChunk != "default" and not bisection_log:
+            log.info("TEST-UNEXPECTED-FAIL | Bisection | Please ignore repeats and look for 'Bleedthrough' (if any) at the end of the failure list")
+            bisection_log = 1
 
       result = self.doTests(options, onLaunch, testsToRun)
       if options.bisectChunk:
@@ -1634,7 +1639,7 @@ class Mochitest(MochitestUtilsMixin):
 
     return result
 
-  def doTests(self, options, onLaunch=None, testsToFilter = None):
+  def doTests(self, options, onLaunch=None, testsToFilter=None):
     # A call to initializeLooping method is required in case of --run-by-dir or --bisect-chunk
     # since we need to initialize variables for each loop.
     if options.bisectChunk or options.runByDir:
