@@ -16,8 +16,6 @@ LIBRARY_NAME = 'browsercomps'
 
 IS_COMPONENT = True
 
-FORCE_SHARED_LIB = True
-
 LOCAL_INCLUDES += [
     '../about',
     '../dirprovider',

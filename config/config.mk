@@ -56,6 +56,7 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
   JS_MODULES_PATH \
   LD_VERSION_SCRIPT \
   LIBRARY_NAME \
+  MAKE_FRAMEWORK \
   MODULE \
   MSVC_ENABLE_PGO \
   NO_DIST_INSTALL \
@@ -63,8 +64,11 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
   PROGRAM \
   RESOURCE_FILES \
   SDK_HEADERS \
+  SDK_LIBRARY \
+  SHARED_LIBRARY_NAME \
   SIMPLE_PROGRAMS \
   SONAME \
+  STATIC_LIBRARY_NAME \
   TEST_DIRS \
   TIERS \
   TOOL_DIRS \
@@ -334,32 +338,6 @@ endif
 ifdef LIBXUL_LIBRARY
 ifdef IS_COMPONENT
 $(error IS_COMPONENT is set, but is not compatible with LIBXUL_LIBRARY)
-endif
-ifeq (,$(filter xul xul-%,$(LIBRARY_NAME)))
-FORCE_STATIC_LIB=1
-endif
-endif
-
-# If we are building this component into an extension/xulapp, it cannot be
-# statically linked. In the future we may want to add a xulapp meta-component
-# build option.
-
-ifdef XPI_NAME
-ifdef IS_COMPONENT
-FORCE_STATIC_LIB=
-FORCE_SHARED_LIB=1
-endif
-endif
-
-ifndef SHARED_LIBRARY_NAME
-ifdef LIBRARY_NAME
-SHARED_LIBRARY_NAME=$(LIBRARY_NAME)
-endif
-endif
-
-ifndef STATIC_LIBRARY_NAME
-ifdef LIBRARY_NAME
-STATIC_LIBRARY_NAME=$(LIBRARY_NAME)
 endif
 endif
 

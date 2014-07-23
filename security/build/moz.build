@@ -9,6 +9,7 @@ if CONFIG['MOZ_FOLD_LIBS']:
     LIBRARY_NAME = 'nss3'
 
     FORCE_SHARED_LIB = True
+    SDK_LIBRARY = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':
     DEFFILE = 'nss3.def'

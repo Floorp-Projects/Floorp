@@ -2,18 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-# This is going to be a framework named "XUL", not an ordinary library named
-# "libxul.dylib"
-SHARED_LIBRARY_NAME=XUL
-# Setting MAKE_FRAMEWORK makes DLL_PREFIX and DLL_SUFFIX be ignored when
-# setting SHARED_LIBRARY; we need to leave DLL_PREFIX and DLL_SUFFIX
-# as-is so that dependencies of the form -ltracemalloc still work.
-MAKE_FRAMEWORK=1
-else
-SHARED_LIBRARY_NAME=xul
-endif
-
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,xul,$(DEPTH)/toolkit/library)
 
 EXTRA_DEPS += $(topsrcdir)/toolkit/library/libxul.mk
@@ -36,7 +24,7 @@ EXTRA_DSO_LDOPTS += -Wl,-version-script,symverscript
 
 symverscript: $(topsrcdir)/toolkit/library/symverscript.in
 	$(call py_action,preprocessor, \
-		-DVERSION='$(SHARED_LIBRARY_NAME)$(MOZILLA_SYMBOLVERSION)' $< -o $@)
+		-DVERSION='xul$(MOZILLA_SYMBOLVERSION)' $< -o $@)
 
 EXTRA_DEPS += symverscript
 endif

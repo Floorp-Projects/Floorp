@@ -16,8 +16,6 @@ LIBRARY_NAME = 'xpctest'
 
 IS_COMPONENT = True
 
-FORCE_SHARED_LIB = True
-
 DEFINES['LIBRARY_FILENAME'] = '%s%s%s' % (
     CONFIG['DLL_PREFIX'],
     LIBRARY_NAME,

@@ -11,7 +11,9 @@ import traceback
 import sys
 import time
 
+from collections import OrderedDict
 from mach.mixin.logging import LoggingMixin
+from mozbuild.util import OrderedDefaultDict
 
 import mozpack.path as mozpath
 import manifestparser
@@ -34,7 +36,7 @@ from .data import (
     IPDLFile,
     JARManifest,
     JavaScriptModules,
-    LibraryDefinition,
+    Library,
     LocalInclude,
     PerSourceFlag,
     PreprocessedTestWebIDLFile,
@@ -83,7 +85,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 k = k.encode('ascii')
             self.info[k] = v
 
-        self._libs = {}
+        self._libs = OrderedDefaultDict(OrderedDict)
         self._final_libs = []
 
     def emit(self, output):
@@ -231,12 +233,9 @@ class TreeMetadataEmitter(LoggingMixin):
             'EXTRA_PP_JS_MODULES',
             'FAIL_ON_WARNINGS',
             'FILES_PER_UNIFIED_FILE',
-            'FORCE_SHARED_LIB',
-            'FORCE_STATIC_LIB',
             'USE_STATIC_LIBS',
             'GENERATED_FILES',
             'HOST_LIBRARY_NAME',
-            'IS_COMPONENT',
             'IS_GYP_DIR',
             'JS_MODULES_PATH',
             'LIBS',
@@ -247,7 +246,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'RESFILE',
             'RCINCLUDE',
             'DEFFILE',
-            'SDK_LIBRARY',
             'WIN32_EXE_LDFLAGS',
             'LD_VERSION_SCRIPT',
         ]
@@ -380,25 +378,107 @@ class TreeMetadataEmitter(LoggingMixin):
         if not libname and final_lib:
             # If no LIBRARY_NAME is given, create one.
             libname = sandbox['RELATIVEDIR'].replace('/', '_')
-        if libname:
-            self._libs.setdefault(libname, {})[sandbox['OBJDIR']] = \
-                LibraryDefinition(sandbox, libname)
 
-        if final_lib:
-            if isinstance(sandbox, MozbuildSandbox) and \
-                    sandbox.get('FORCE_STATIC_LIB'):
-                raise SandboxValidationError(
-                    'FINAL_LIBRARY implies FORCE_STATIC_LIB', sandbox)
-            self._final_libs.append((sandbox['OBJDIR'], libname, final_lib))
-            passthru.variables['FORCE_STATIC_LIB'] = True
+        static_lib = sandbox.get('FORCE_STATIC_LIB')
+        shared_lib = sandbox.get('FORCE_SHARED_LIB')
+
+        static_name = sandbox.get('STATIC_LIBRARY_NAME')
+        shared_name = sandbox.get('SHARED_LIBRARY_NAME')
+
+        is_framework = sandbox.get('IS_FRAMEWORK')
+        is_component = sandbox.get('IS_COMPONENT')
 
         soname = sandbox.get('SONAME')
-        if soname:
-            if not sandbox.get('FORCE_SHARED_LIB'):
+
+        if final_lib:
+            if isinstance(sandbox, MozbuildSandbox):
+                if static_lib:
+                    raise SandboxValidationError(
+                        'FINAL_LIBRARY implies FORCE_STATIC_LIB. '
+                        'Please remove the latter.', sandbox)
+            if shared_lib:
                 raise SandboxValidationError(
-                    'SONAME applicable only for shared libraries', sandbox)
-            else:
-                passthru.variables['SONAME'] = soname
+                    'FINAL_LIBRARY conflicts with FORCE_SHARED_LIB. '
+                    'Please remove one.', sandbox)
+            if is_framework:
+                raise SandboxValidationError(
+                    'FINAL_LIBRARY conflicts with IS_FRAMEWORK. '
+                    'Please remove one.', sandbox)
+            if is_component:
+                raise SandboxValidationError(
+                    'FINAL_LIBRARY conflicts with IS_COMPONENT. '
+                    'Please remove one.', sandbox)
+            self._final_libs.append((sandbox['OBJDIR'], libname, final_lib))
+            static_lib = True
+
+        if libname:
+            args = {
+                'kind': 0,
+            }
+            if is_component:
+                if shared_lib:
+                    raise SandboxValidationError(
+                        'IS_COMPONENT implies FORCE_SHARED_LIB. '
+                        'Please remove the latter.', sandbox)
+                if is_framework:
+                    raise SandboxValidationError(
+                        'IS_COMPONENT conflicts with IS_FRAMEWORK. '
+                        'Please remove one.', sandbox)
+                if static_lib:
+                    raise SandboxValidationError(
+                        'IS_COMPONENT conflicts with FORCE_STATIC_LIB. '
+                        'Please remove one.', sandbox)
+                shared_lib = True
+                args['kind'] = Library.COMPONENT
+
+            if is_framework:
+                if shared_lib:
+                    raise SandboxValidationError(
+                        'IS_FRAMEWORK implies FORCE_SHARED_LIB. '
+                        'Please remove the latter.', sandbox)
+                if static_lib:
+                    raise SandboxValidationError(
+                        'IS_FRAMEWORK conflicts with FORCE_STATIC_LIB. '
+                        'Please remove one.', sandbox)
+                if soname:
+                    raise SandboxValidationError(
+                        'IS_FRAMEWORK conflicts with SONAME. '
+                        'Please remove one.', sandbox)
+                shared_lib = True
+                args['kind'] = Library.FRAMEWORK
+
+            if static_name:
+                if not static_lib:
+                    raise SandboxValidationError(
+                        'STATIC_LIBRARY_NAME requires FORCE_STATIC_LIB', sandbox)
+                args['static_name'] = static_name
+
+            if shared_name:
+                if not shared_lib:
+                    raise SandboxValidationError(
+                        'SHARED_LIBRARY_NAME requires FORCE_SHARED_LIB', sandbox)
+                args['shared_name'] = shared_name
+
+            if soname:
+                if not shared_lib:
+                    raise SandboxValidationError(
+                        'SONAME requires FORCE_SHARED_LIB', sandbox)
+                args['soname'] = soname
+
+            if not static_lib and not shared_lib:
+                static_lib = True
+            if not args['kind']:
+                if static_lib:
+                    args['kind'] += Library.STATIC
+                if shared_lib:
+                    args['kind'] += Library.SHARED
+
+            if sandbox.get('SDK_LIBRARY'):
+                args['is_sdk'] = True
+
+            self._libs[libname][sandbox['OBJDIR']] = \
+                Library(sandbox, libname, **args)
+
 
         # While there are multiple test manifests, the behavior is very similar
         # across them. We enforce this by having common handling of all
