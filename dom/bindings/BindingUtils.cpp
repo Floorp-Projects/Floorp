@@ -1372,33 +1372,31 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
                         DOMObjectType type,
                         const NativeProperties* nativeProperties)
 {
-  const Prefable<const JSFunctionSpec>* methods;
-  jsid* methodIds;
-  const JSFunctionSpec* methodsSpecs;
   if (type == eInterface) {
-    methods = nativeProperties->staticMethods;
-    methodIds = nativeProperties->staticMethodIds;
-    methodsSpecs = nativeProperties->staticMethodsSpecs;
+    if (nativeProperties->staticMethods &&
+        !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,
+                                          nativeProperties->staticMethods,
+                                          nativeProperties->staticMethodIds,
+                                          nativeProperties->staticMethodsSpecs,
+                                          flags, props)) {
+      return false;
+    }
   } else {
-    methods = nativeProperties->methods;
-    methodIds = nativeProperties->methodIds;
-    methodsSpecs = nativeProperties->methodsSpecs;
-  }
-  if (methods) {
-    const Prefable<const JSFunctionSpec>* method;
-    for (method = methods; method->specs; ++method) {
-      if (method->isEnabled(cx, obj)) {
-        // Set i to be the index into our full list of ids/specs that we're
-        // looking at now.
-        size_t i = method->specs - methodsSpecs;
-        for ( ; methodIds[i] != JSID_VOID; ++i) {
-          if (((flags & JSITER_HIDDEN) ||
-               (methodsSpecs[i].flags & JSPROP_ENUMERATE)) &&
-              !props.append(methodIds[i])) {
-            return false;
-          }
-        }
-      }
+    if (nativeProperties->methods &&
+        !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,
+                                          nativeProperties->methods,
+                                          nativeProperties->methodIds,
+                                          nativeProperties->methodsSpecs,
+                                          flags, props)) {
+      return false;
+    }
+    if (nativeProperties->unforgeableMethods &&
+        !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,
+                                          nativeProperties->unforgeableMethods,
+                                          nativeProperties->unforgeableMethodIds,
+                                          nativeProperties->unforgeableMethodSpecs,
+                                          flags, props)) {
+      return false;
     }
   }
 
