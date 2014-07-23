@@ -1183,7 +1183,7 @@ gsmsdp_set_video_media_attributes (uint32_t media_type, void *cc_sdp_p, uint16_t
             {
                 char buffer[32];
                 uint32_t profile_level_id = vcmGetVideoH264ProfileLevelID();
-                snprintf(buffer, sizeof(buffer), "0x%x", profile_level_id);
+                snprintf(buffer, sizeof(buffer), "%06x", profile_level_id);
                 (void) sdp_attr_set_fmtp_profile_level_id(sdp_p, level, 0, a_inst,
                                                           buffer);
             }
