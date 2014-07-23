@@ -16,7 +16,7 @@
 <script class="testbody" type="text/javascript">
 
   function simpleRegister() {
-    var p = navigator.serviceWorker.register("worker.js");
+    var p = navigator.serviceWorker.register("worker.js", { scope: "simpleregister/*" });
     ok(p instanceof Promise, "register() should return a Promise");
     return Promise.resolve();
   }
@@ -108,15 +108,34 @@
   // FIXME(nsm): test for parse error when Update step doesn't happen (directly from register).
 
   function updatefound() {
-    var p = navigator.serviceWorker.register("worker.js");
+    var frame = document.createElement("iframe");
+    frame.setAttribute("id", "simpleregister-frame");
+    frame.setAttribute("src", new URL("simpleregister/index.html", document.baseURI).href);
+    document.body.appendChild(frame);
+    var resolve, reject;
+    var p = new Promise(function(res, rej) {
+      resolve = res;
+      reject = rej;
+    });
 
-    return new Promise(function(resolve, reject) {
-      navigator.serviceWorker.onupdatefound = function(e) {
-        ok(true, "Got updatefound event");
-        navigator.serviceWorker.onupdatefound = null;
+    function continueTest() {
+      navigator.serviceWorker.register("worker2.js", { scope: "simpleregister/*" });
+    }
+
+    window.onmessage = function(e) {
+      if (e.data == "ready") {
+        continueTest();
+      } else if (e.data == "updatefound") {
+        window.onmessage = null;
+        // We have to make frame navigate away, otherwise it will call
+        // MaybeStopControlling() when this document is unloaded. At that point
+        // the pref has been disabled, and so MaybeStopControlling() will just
+        // return since it is currently gated.
+        frame.setAttribute("src", new URL("about:blank").href);
         resolve();
       }
-    });
+    }
+    return p;
   }
 
   function runTest() {
@@ -128,7 +147,7 @@
       .then(abortPrevious)
       .then(networkError404)
       .then(parseError)
-      //.then(updatefound)
+      .then(updatefound)
       // put more tests here.
       .then(function() {
         SimpleTest.finish();
