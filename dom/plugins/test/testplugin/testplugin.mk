@@ -7,7 +7,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 include $(topsrcdir)/config/config.mk
 CXXFLAGS        += $(MOZ_QT_CFLAGS)
 CFLAGS          += $(MOZ_QT_CFLAGS)
-EXTRA_DSO_LDOPTS = \
+OS_LIBS += \
                 $(MOZ_QT_LIBS) \
                 $(XLDFLAGS) \
                 $(XLIBS)
@@ -40,5 +40,5 @@ include $(topsrcdir)/config/rules.mk
 ifneq (,$(filter gtk2 gtk3,$(MOZ_WIDGET_TOOLKIT)))
 CXXFLAGS        += $(MOZ_GTK2_CFLAGS)
 CFLAGS          += $(MOZ_GTK2_CFLAGS)
-EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS)
+OS_LIBS += $(MOZ_GTK2_LIBS) $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS)
 endif

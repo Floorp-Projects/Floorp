@@ -44,12 +44,10 @@
 #include "nsIXPConnect.h"
 #include "nsIXULRuntime.h"
 #include "nsPIDOMWindow.h"
-#include "nsIMarkupDocumentViewer.h"
 #include "nsIContentViewer.h"
 #include "nsIWindowProvider.h"
 #include "nsIMutableArray.h"
 #include "nsISupportsArray.h"
-#include "nsIDOMStorage.h"
 #include "nsIDOMStorageManager.h"
 #include "nsIWidget.h"
 #include "nsFocusManager.h"
@@ -61,6 +59,7 @@
 #include "nsIPrefService.h"
 #include "nsSandboxFlags.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/DOMStorage.h"
 
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
@@ -952,9 +951,17 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
 
     if (parentStorageManager && newStorageManager) {
       nsCOMPtr<nsIDOMStorage> storage;
-      parentStorageManager->GetStorage(subjectPrincipal, isPrivateBrowsingWindow, getter_AddRefs(storage));
-      if (storage)
+      nsCOMPtr<nsPIDOMWindow> pWin = do_QueryInterface(aParent);
+      nsCOMPtr<nsPIDOMWindow> pInnerWin = pWin->IsInnerWindow()
+                                            ? pWin.get()
+                                            : pWin->GetCurrentInnerWindow();
+
+      parentStorageManager->GetStorage(pInnerWin, subjectPrincipal,
+                                       isPrivateBrowsingWindow,
+                                       getter_AddRefs(storage));
+      if (storage) {
         newStorageManager->CloneStorage(storage);
+      }
     }
   }
 

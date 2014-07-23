@@ -6,6 +6,10 @@
 
 LIBRARY_NAME = 'sandboxbroker'
 
+USE_LIBS += [
+    'sandbox_s',
+]
+
 SOURCES += [
     'sandboxBroker.cpp',
 ]

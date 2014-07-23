@@ -14,6 +14,10 @@ HOST_SOURCES += SOURCES
 
 HOST_PROGRAM = 'mar'
 
+HOST_USE_LIBS += [
+    'hostmar',
+]
+
 for var in ('MAR_CHANNEL_ID', 'MOZ_APP_VERSION'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
@@ -25,4 +29,14 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 elif CONFIG['OS_ARCH'] == 'Darwin':
     LDFLAGS += [
       '-framework Security',
+    ]
+
+USE_LIBS += [
+    'mar',
+]
+
+if CONFIG['MOZ_ENABLE_SIGNMAR']:
+    USE_LIBS += [
+        'signmar',
+        'verifymar',
     ]

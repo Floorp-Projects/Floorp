@@ -8,29 +8,11 @@ DIST_INSTALL = 1
 # For FORCE_SHARED_LIB
 include $(topsrcdir)/config/config.mk
 
-ifneq (1_1,$(MOZ_MEMORY)_$(or $(MOZ_NATIVE_JEMALLOC),$(FORCE_SHARED_LIB)))
-
-ifneq (,$(filter WINNT,$(OS_ARCH)))
-SDK_LIBRARY = $(IMPORT_LIBRARY)
-else
-ifdef FORCE_SHARED_LIB
-SDK_LIBRARY = $(SHARED_LIBRARY)
-else
-SDK_LIBRARY = $(REAL_LIBRARY)
-endif
-endif
-
-endif
- 
 MOZ_GLUE_LDFLAGS = # Don't link against ourselves
-
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,mfbt,$(DEPTH)/mfbt)
 
 ifneq (,$(ZLIB_IN_MOZGLUE)$(MOZ_LINKER))
 ifdef MOZ_NATIVE_ZLIB
-EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
-else
-SHARED_LIBRARY_LIBS += $(MOZ_ZLIB_LIBS)
+EXTRA_LIBS += $(MOZ_ZLIB_LIBS)
 endif
 endif
 
@@ -46,14 +28,14 @@ NO_INSTALL_IMPORT_LIBRARY = 1
 endif
 
 
-EXTRA_DSO_LDOPTS += \
+OS_LIBS += \
 	$(call EXPAND_LIBNAME,version) \
 	$(NULL)
 
 endif
 
 ifeq (Darwin_1,$(OS_TARGET)_$(MOZ_REPLACE_MALLOC))
-EXTRA_DSO_LDOPTS += \
+OS_LDFLAGS += \
   -Wl,-U,_replace_init \
   -Wl,-U,_replace_malloc \
   -Wl,-U,_replace_posix_memalign \
@@ -71,21 +53,21 @@ EXTRA_DSO_LDOPTS += \
   $(NULL)
 
 ifneq ($(MOZ_REPLACE_MALLOC_LINKAGE),compiler support)
-EXTRA_DSO_LDOPTS += -flat_namespace
+OS_LDFLAGS += -flat_namespace
 endif
 ifeq ($(MOZ_REPLACE_MALLOC_LINKAGE),dummy library)
-EXTRA_DSO_LDOPTS += -Wl,-weak_library,$(DEPTH)/memory/replace/dummy/$(DLL_PREFIX)replace_malloc$(DLL_SUFFIX)
+OS_LDFLAGS += -Wl,-weak_library,$(DEPTH)/memory/replace/dummy/$(DLL_PREFIX)replace_malloc$(DLL_SUFFIX)
 endif
 endif
 
 ifeq (android, $(MOZ_WIDGET_TOOLKIT))
 # To properly wrap jemalloc's pthread_atfork call.
-EXTRA_DSO_LDOPTS += -Wl,--wrap=pthread_atfork
+OS_LDFLAGS += -Wl,--wrap=pthread_atfork
 endif
 
 ifdef MOZ_LINKER
 ifeq (arm, $(TARGET_CPU))
-EXTRA_DSO_LDOPTS += -Wl,-version-script,$(srcdir)/arm-eabi-filter
+OS_LDFLAGS += -Wl,-version-script,$(srcdir)/arm-eabi-filter
 endif
 
 endif

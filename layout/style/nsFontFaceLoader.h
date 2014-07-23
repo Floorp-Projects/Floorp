@@ -70,6 +70,11 @@ protected:
                   nsTArray<FontFaceRuleRecord>& oldRules,
                   bool& aFontSetModified);
 
+  already_AddRefed<gfxFontEntry> FindOrCreateFontFaceFromRule(
+                                                   const nsAString& aFamilyName,
+                                                   nsCSSFontFaceRule* aRule,
+                                                   uint8_t aSheetType);
+
   virtual nsresult LogMessage(gfxMixedFontFamily* aFamily,
                               gfxProxyFontEntry* aProxy,
                               const char* aMessage,

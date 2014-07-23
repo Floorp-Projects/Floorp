@@ -3,18 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# EXTRA_DSO_LDOPTS specifies linker flags when building a shared library
-# from this Makefile. We link against the "dependent glue" and against the
-# frozen XPCOM shared library.
-EXTRA_DSO_LDOPTS = \
-		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-		$(XPCOM_FROZEN_LDOPTS) \
+EXTRA_LIBS += \
 		$(NSPR_LIBS) \
 		$(NULL)
 
 # Need to link with CoreFoundation on Mac
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-EXTRA_DSO_LDOPTS += \
+OS_LIBS += \
 		$(TK_LIBS) \
 		$(NULL)
 endif

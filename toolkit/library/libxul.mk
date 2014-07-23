@@ -2,20 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-# This is going to be a framework named "XUL", not an ordinary library named
-# "libxul.dylib"
-SHARED_LIBRARY_NAME=XUL
-# Setting MAKE_FRAMEWORK makes DLL_PREFIX and DLL_SUFFIX be ignored when
-# setting SHARED_LIBRARY; we need to leave DLL_PREFIX and DLL_SUFFIX
-# as-is so that dependencies of the form -ltracemalloc still work.
-MAKE_FRAMEWORK=1
-else
-SHARED_LIBRARY_NAME=xul
-endif
-
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,xul,$(DEPTH)/toolkit/library)
-
 EXTRA_DEPS += $(topsrcdir)/toolkit/library/libxul.mk
 
 # dependent libraries
@@ -32,11 +18,11 @@ endif #}
 ifeq (Linux,$(OS_ARCH))
 ifneq (Android,$(OS_TARGET))
 OS_LIBS += -lrt
-EXTRA_DSO_LDOPTS += -Wl,-version-script,symverscript
+OS_LDFLAGS += -Wl,-version-script,symverscript
 
 symverscript: $(topsrcdir)/toolkit/library/symverscript.in
 	$(call py_action,preprocessor, \
-		-DVERSION='$(SHARED_LIBRARY_NAME)$(MOZILLA_SYMBOLVERSION)' $< -o $@)
+		-DVERSION='xul$(MOZILLA_SYMBOLVERSION)' $< -o $@)
 
 EXTRA_DEPS += symverscript
 endif
@@ -46,9 +32,11 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 OS_LIBS += -lcups
 endif
 
-EXTRA_DSO_LDOPTS += \
-  $(MOZ_JS_LIBS) \
+EXTRA_LIBS += \
   $(NSS_LIBS) \
+  $(NULL)
+
+OS_LIBS += \
   $(MOZ_CAIRO_OSLIBS) \
   $(MOZ_WEBRTC_X11_LIBS) \
   $(MOZ_APP_EXTRA_LIBS) \
@@ -56,49 +44,47 @@ EXTRA_DSO_LDOPTS += \
   $(NULL)
 
 ifdef ENABLE_INTL_API
-ifdef JS_SHARED_LIBRARY
-EXTRA_DSO_LDOPTS += $(MOZ_ICU_LIBS)
+ifneq (,$(JS_SHARED_LIBRARY)$(MOZ_NATIVE_ICU))
+OS_LIBS += $(MOZ_ICU_LIBS)
 endif
+endif
+
+ifdef MOZ_NATIVE_FFI
+OS_LIBS += $(MOZ_FFI_LIBS)
 endif
 
 ifdef MOZ_NATIVE_JPEG
-EXTRA_DSO_LDOPTS += $(MOZ_JPEG_LIBS)
+OS_LIBS += $(MOZ_JPEG_LIBS)
 endif
 
 ifdef MOZ_NATIVE_PNG
-EXTRA_DSO_LDOPTS += $(MOZ_PNG_LIBS)
+OS_LIBS += $(MOZ_PNG_LIBS)
 endif
 
-ifndef ZLIB_IN_MOZGLUE
-EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
+ifdef MOZ_NATIVE_ZLIB
+OS_LIBS += $(MOZ_ZLIB_LIBS)
 endif
 
 ifdef MOZ_NATIVE_HUNSPELL
-EXTRA_DSO_LDOPTS += $(MOZ_HUNSPELL_LIBS)
+OS_LIBS += $(MOZ_HUNSPELL_LIBS)
 endif
 
 ifdef MOZ_NATIVE_LIBEVENT
-EXTRA_DSO_LDOPTS += $(MOZ_LIBEVENT_LIBS)
+OS_LIBS += $(MOZ_LIBEVENT_LIBS)
 endif
 
 ifdef MOZ_NATIVE_LIBVPX
-EXTRA_DSO_LDOPTS += $(MOZ_LIBVPX_LIBS)
+OS_LIBS += $(MOZ_LIBVPX_LIBS)
 endif
 
 ifndef MOZ_TREE_PIXMAN
-EXTRA_DSO_LDOPTS += $(MOZ_PIXMAN_LIBS)
+OS_LIBS += $(MOZ_PIXMAN_LIBS)
 endif
-
-ifdef MOZ_DMD
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,dmd,$(DIST)/lib)
-endif
-
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,gkmedias,$(DEPTH)/layout/media)
 
 ifdef MOZ_WEBRTC
 ifeq (WINNT,$(OS_TARGET))
 ifndef MOZ_HAS_WINSDK_WITH_D3D
-EXTRA_DSO_LDOPTS += \
+OS_LDFLAGS += \
   -LIBPATH:'$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_D3D_CPU_SUFFIX)' \
   $(NULL)
 endif
@@ -107,11 +93,11 @@ endif
 endif
 
 ifdef MOZ_ALSA
-EXTRA_DSO_LDOPTS += $(MOZ_ALSA_LIBS)
+OS_LIBS += $(MOZ_ALSA_LIBS)
 endif
 
 ifdef HAVE_CLOCK_MONOTONIC
-EXTRA_DSO_LDOPTS += $(REALTIME_LIBS)
+OS_LIBS += $(REALTIME_LIBS)
 endif
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
@@ -150,7 +136,9 @@ ifdef MOZ_DIRECTSHOW
 OS_LIBS += $(call EXPAND_LIBNAME,dmoguids wmcodecdspuuid strmiids msdmo)
 endif
 
-EXTRA_DSO_LDOPTS += $(NSPR_LIBS) $(MOZALLOC_LIB)
+OS_LIBS += $(ICONV_LIBS)
+
+EXTRA_LIBS += $(NSPR_LIBS)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 OS_LIBS += \
@@ -159,45 +147,45 @@ OS_LIBS += \
 endif
 
 ifeq (OpenBSD,$(OS_ARCH))
-EXTRA_DSO_LDOPTS += -lsndio
+OS_LIBS += -lsndio
 endif
 
 ifdef MOZ_ENABLE_DBUS
-EXTRA_DSO_LDOPTS += $(MOZ_DBUS_GLIB_LIBS)
+OS_LIBS += $(MOZ_DBUS_GLIB_LIBS)
 endif
 
 ifdef MOZ_WIDGET_GTK
 ifdef MOZ_ENABLE_GTK3
-EXTRA_DSO_LDOPTS += $(filter-out -lgtk-3 -lgdk-3,$(TK_LIBS)) -lmozgtk_stub
+OS_LIBS += $(filter-out -lgtk-3 -lgdk-3,$(TK_LIBS))
 else
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
+OS_LIBS += $(TK_LIBS)
 endif
-EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS) $(XCOMPOSITE_LIBS) $(MOZ_PANGO_LIBS) $(XT_LIBS) -lgthread-2.0
-EXTRA_DSO_LDOPTS += $(FT2_LIBS)
+OS_LIBS += $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS) $(XCOMPOSITE_LIBS) $(MOZ_PANGO_LIBS) $(XT_LIBS) -lgthread-2.0
+OS_LIBS += $(FT2_LIBS)
 endif
 
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
-EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(XT_LIBS) $(MOZ_QT_LIBS)
-EXTRA_DSO_LDOPTS += $(FT2_LIBS) $(MOZ_PANGO_LIBS)
+OS_LIBS += $(XLDFLAGS) $(XLIBS) $(XT_LIBS) $(MOZ_QT_LIBS)
+OS_LIBS += $(FT2_LIBS) $(MOZ_PANGO_LIBS)
 endif
 
 ifdef MOZ_TREE_FREETYPE
-EXTRA_DSO_LDOPTS += $(FT2_LIBS)
+OS_LIBS += $(FT2_LIBS)
 endif
 
 ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
-EXTRA_DSO_LDOPTS += $(MOZ_STARTUP_NOTIFICATION_LIBS)
+OS_LIBS += $(MOZ_STARTUP_NOTIFICATION_LIBS)
 endif
 
 ifdef MOZ_ENABLE_LIBPROXY
-EXTRA_DSO_LDOPTS += $(MOZ_LIBPROXY_LIBS)
+OS_LIBS += $(MOZ_LIBPROXY_LIBS)
 endif
 
 ifeq ($(OS_ARCH),SunOS)
 ifdef GNU_CC
-EXTRA_DSO_LDOPTS += -lelf
+OS_LIBS += -lelf
 else
-EXTRA_DSO_LDOPTS += -lelf -ldemangle
+OS_LIBS += -lelf -ldemangle
 endif
 endif
 
@@ -215,17 +203,13 @@ OS_LIBS += $(call EXPAND_LIBNAME,uiautomationcore runtimeobject)
 endif
 endif # WINNT
 
-ifdef MOZ_JPROF
-EXTRA_DSO_LDOPTS += -ljprof
-endif
-
 ifdef MOZ_ENABLE_QT
-EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS) $(XEXT_LIBS)
+LIBS += $(MOZ_QT_LDFLAGS) $(XEXT_LIBS)
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 ifdef MOZ_GSTREAMER
-EXTRA_DSO_LDOPTS += $(GSTREAMER_LIBS)
+LIBS += $(GSTREAMER_LIBS)
 endif
 endif
 
@@ -246,8 +230,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 OS_LIBS += $(call EXPAND_LIBNAME,usp10 oleaut32)
 endif
 
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,StaticXULComponentsEnd,$(DEPTH)/toolkit/library/StaticXULComponentsEnd)
-
 # BFD ld doesn't create multiple PT_LOADs as usual when an unknown section
 # exists. Using an implicit linker script to make it fold that section in
 # .data.rel.ro makes it create multiple PT_LOADs. That implicit linker
@@ -256,7 +238,7 @@ EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,StaticXULComponentsEnd,$(DEPTH)/t
 # the default section rules with those from the script instead of
 # supplementing them. Which leads to a lib with a huge load of sections.
 ifdef LD_IS_BFD
-EXTRA_DSO_LDOPTS += $(topsrcdir)/toolkit/library/StaticXULComponents.ld
+OS_LDFLAGS += $(topsrcdir)/toolkit/library/StaticXULComponents.ld
 endif
 
 ifeq (WINNT,$(OS_TARGET))

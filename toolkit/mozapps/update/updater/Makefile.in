@@ -7,19 +7,13 @@
 MOZ_GLUE_LDFLAGS =
 MOZ_GLUE_PROGRAM_LDFLAGS =
 
-ifeq ($(OS_ARCH),WINNT)
-LIBS += $(call EXPAND_LIBNAME_PATH,updatecommon-standalone,../common-standalone)
-else
-LIBS += $(call EXPAND_LIBNAME_PATH,updatecommon,../common)
-endif
-
-LIBS += \
-  $(call EXPAND_LIBNAME_PATH,mar,$(DEPTH)/modules/libmar/src) \
+ifdef MOZ_NATIVE_BZ2
+OS_LIBS += \
   $(MOZ_BZ2_LIBS) \
   $(NULL)
+endif
 
 ifeq ($(OS_ARCH),WINNT)
-LIBS += $(call EXPAND_LIBNAME_PATH,verifymar,$(DEPTH)/modules/libmar/verify)
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32 shlwapi)
 endif
 
@@ -62,8 +56,8 @@ libs::
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-EXTRA_LIBS += $(call EXPAND_LIBNAME,crypt32)
-EXTRA_LIBS += $(call EXPAND_LIBNAME,advapi32)
+OS_LIBS += $(call EXPAND_LIBNAME,crypt32)
+OS_LIBS += $(call EXPAND_LIBNAME,advapi32)
 endif
 
 CXXFLAGS += $(MOZ_BZ2_CFLAGS)

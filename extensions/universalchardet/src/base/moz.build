@@ -32,6 +32,6 @@ UNIFIED_SOURCES += [
     'nsUTF8Prober.cpp',
 ]
 
-FINAL_LIBRARY = 'universalchardet'
+FINAL_LIBRARY = 'xul'
 
 FAIL_ON_WARNINGS = True

@@ -25,3 +25,7 @@ for var in ('EXPORT_JS_API', 'IMPL_MFBT'):
 
 LOCAL_INCLUDES += ['..']
 GENERATED_INCLUDES += ['..']
+
+USE_LIBS += [
+    'static:js',
+]

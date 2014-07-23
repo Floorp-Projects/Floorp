@@ -106,7 +106,7 @@ LOCAL_INCLUDES += [
     '../src/base',
     '../src/geolocation',
     '../src/storage',
-    '/chrome/src',
+    '/chrome',
     '/content/base/src',
     '/content/media/webspeech/synth/ipc',
     '/docshell/base',

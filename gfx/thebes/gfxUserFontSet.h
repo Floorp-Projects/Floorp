@@ -106,7 +106,13 @@ public:
         if (aFontEntry->mFamilyName.IsEmpty()) {
             aFontEntry->mFamilyName = Name();
         } else {
-            MOZ_ASSERT(aFontEntry->mFamilyName.Equals(Name()));
+#ifdef DEBUG
+            nsString thisName = Name();
+            nsString entryName = aFontEntry->mFamilyName;
+            ToLowerCase(thisName);
+            ToLowerCase(entryName);
+            MOZ_ASSERT(thisName.Equals(entryName));
+#endif
         }
         ResetCharacterMap();
     }
@@ -125,7 +131,13 @@ public:
                 if (aRealFontEntry->mFamilyName.IsEmpty()) {
                     aRealFontEntry->mFamilyName = Name();
                 } else {
-                    MOZ_ASSERT(aRealFontEntry->mFamilyName.Equals(Name()));
+#ifdef DEBUG
+                  nsString thisName = Name();
+                  nsString entryName = aRealFontEntry->mFamilyName;
+                  ToLowerCase(thisName);
+                  ToLowerCase(entryName);
+                  MOZ_ASSERT(thisName.Equals(entryName));
+#endif
                 }
                 break;
             }
@@ -167,20 +179,32 @@ public:
     };
 
 
-    // add in a font face
+    // creates a font face without adding it to a particular family
     // weight - [100, 900] (multiples of 100)
     // stretch = [NS_FONT_STRETCH_ULTRA_CONDENSED, NS_FONT_STRETCH_ULTRA_EXPANDED]
     // italic style = constants in gfxFontConstants.h, e.g. NS_FONT_STYLE_NORMAL
     // language override = result of calling gfxFontStyle::ParseFontLanguageOverride
     // TODO: support for unicode ranges not yet implemented
-    gfxFontEntry *AddFontFace(const nsAString& aFamilyName,
+    already_AddRefed<gfxProxyFontEntry> CreateFontFace(
                               const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                               uint32_t aWeight,
                               int32_t aStretch,
                               uint32_t aItalicStyle,
                               const nsTArray<gfxFontFeature>& aFeatureSettings,
                               uint32_t aLanguageOverride,
-                              gfxSparseBitSet *aUnicodeRanges = nullptr);
+                              gfxSparseBitSet* aUnicodeRanges);
+
+    // creates a font face for the specified family, or returns an existing
+    // matching entry on the family if there is one
+    already_AddRefed<gfxProxyFontEntry> FindOrCreateFontFace(
+                               const nsAString& aFamilyName,
+                               const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
+                               uint32_t aWeight,
+                               int32_t aStretch,
+                               uint32_t aItalicStyle,
+                               const nsTArray<gfxFontFeature>& aFeatureSettings,
+                               uint32_t aLanguageOverride,
+                               gfxSparseBitSet* aUnicodeRanges);
 
     // add in a font face for which we have the gfxFontEntry already
     void AddFontFace(const nsAString& aFamilyName, gfxFontEntry* aFontEntry);
@@ -431,6 +455,17 @@ protected:
 
     // helper method for performing the actual userfont set rebuild
     virtual void DoRebuildUserFontSet() = 0;
+
+    // helper method for FindOrCreateFontFace
+    gfxProxyFontEntry* FindExistingProxyEntry(
+                                   gfxMixedFontFamily* aFamily,
+                                   const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
+                                   uint32_t aWeight,
+                                   int32_t aStretch,
+                                   uint32_t aItalicStyle,
+                                   const nsTArray<gfxFontFeature>& aFeatureSettings,
+                                   uint32_t aLanguageOverride,
+                                   gfxSparseBitSet* aUnicodeRanges);
 
     // creates a new gfxMixedFontFamily in mFontFamilies, or returns an existing
     // family if there is one

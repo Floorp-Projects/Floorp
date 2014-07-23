@@ -22,6 +22,7 @@ Important Concepts
    mozinfo
    preprocessor
    jar-manifests
+   defining-binaries
 
 integrated development environment (IDE)
 ========================================

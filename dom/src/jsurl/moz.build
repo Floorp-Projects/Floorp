@@ -21,4 +21,4 @@ LOCAL_INCLUDES += [
     "/netwerk/base/src",
 ]
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'

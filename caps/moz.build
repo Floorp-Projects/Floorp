@@ -36,5 +36,5 @@ LOCAL_INCLUDES += [
     '/js/xpconnect/src',
 ]
 
-FINAL_LIBRARY = 'gklayout'
+FINAL_LIBRARY = 'xul'
 
