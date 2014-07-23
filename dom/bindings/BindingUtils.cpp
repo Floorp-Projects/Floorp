@@ -1070,7 +1070,7 @@ XrayResolveMethod(JSContext* cx, JS::Handle<JSObject*> wrapper,
                   JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                   const Prefable<const JSFunctionSpec>* methods,
                   jsid* methodIds,
-                  const JSFunctionSpec* methodsSpecs,
+                  const JSFunctionSpec* methodSpecs,
                   JS::MutableHandle<JSPropertyDescriptor> desc)
 {
   const Prefable<const JSFunctionSpec>* method;
@@ -1078,10 +1078,10 @@ XrayResolveMethod(JSContext* cx, JS::Handle<JSObject*> wrapper,
     if (method->isEnabled(cx, obj)) {
       // Set i to be the index into our full list of ids/specs that we're
       // looking at now.
-      size_t i = method->specs - methodsSpecs;
+      size_t i = method->specs - methodSpecs;
       for ( ; methodIds[i] != JSID_VOID; ++i) {
         if (id == methodIds[i]) {
-          const JSFunctionSpec& methodSpec = methodsSpecs[i];
+          const JSFunctionSpec& methodSpec = methodSpecs[i];
           JSFunction *fun;
           if (methodSpec.selfHostedName) {
             fun = JS::GetSelfHostedFunction(cx, methodSpec.selfHostedName, id, methodSpec.nargs);
@@ -1160,19 +1160,19 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
 {
   const Prefable<const JSFunctionSpec>* methods;
   jsid* methodIds;
-  const JSFunctionSpec* methodsSpecs;
+  const JSFunctionSpec* methodSpecs;
   if (type == eInterface) {
     methods = nativeProperties->staticMethods;
     methodIds = nativeProperties->staticMethodIds;
-    methodsSpecs = nativeProperties->staticMethodsSpecs;
+    methodSpecs = nativeProperties->staticMethodSpecs;
   } else {
     methods = nativeProperties->methods;
     methodIds = nativeProperties->methodIds;
-    methodsSpecs = nativeProperties->methodsSpecs;
+    methodSpecs = nativeProperties->methodSpecs;
   }
   if (methods) {
     if (!XrayResolveMethod(cx, wrapper, obj, id, methods, methodIds,
-                           methodsSpecs, desc)) {
+                           methodSpecs, desc)) {
       return false;
     }
     if (desc.object()) {
@@ -1377,7 +1377,7 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
         !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,
                                           nativeProperties->staticMethods,
                                           nativeProperties->staticMethodIds,
-                                          nativeProperties->staticMethodsSpecs,
+                                          nativeProperties->staticMethodSpecs,
                                           flags, props)) {
       return false;
     }
@@ -1386,7 +1386,7 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
         !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,
                                           nativeProperties->methods,
                                           nativeProperties->methodIds,
-                                          nativeProperties->methodsSpecs,
+                                          nativeProperties->methodSpecs,
                                           flags, props)) {
       return false;
     }

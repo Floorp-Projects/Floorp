@@ -98,7 +98,7 @@ struct NativeProperties
 {
   const Prefable<const JSFunctionSpec>* staticMethods;
   jsid* staticMethodIds;
-  const JSFunctionSpec* staticMethodsSpecs;
+  const JSFunctionSpec* staticMethodSpecs;
 
   const Prefable<const JSPropertySpec>* staticAttributes;
   jsid* staticAttributeIds;
@@ -106,7 +106,7 @@ struct NativeProperties
 
   const Prefable<const JSFunctionSpec>* methods;
   jsid* methodIds;
-  const JSFunctionSpec* methodsSpecs;
+  const JSFunctionSpec* methodSpecs;
 
   const Prefable<const JSPropertySpec>* attributes;
   jsid* attributeIds;
