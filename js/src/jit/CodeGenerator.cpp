@@ -3110,7 +3110,7 @@ CodeGenerator::maybeCreateScriptCounts()
             return nullptr;
         }
         for (size_t j = 0; j < block->numSuccessors(); j++)
-            counts->block(i).setSuccessor(j, skipTrivialBlocks(block->getSuccessor(j))->id());
+            counts->block(i).setSuccessor(j, block->getSuccessor(j)->id());
     }
 
     scriptCounts_ = counts;
