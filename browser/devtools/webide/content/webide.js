@@ -25,7 +25,7 @@ const {GetTemplatesJSON, GetAddonsJSON} = require("devtools/webide/remote-resour
 const Strings = Services.strings.createBundle("chrome://webide/content/webide.properties");
 
 const HTML = "http://www.w3.org/1999/xhtml";
-const HELP_URL = "https://developer.mozilla.org/Firefox_OS/Using_the_App_Manager#Troubleshooting";
+const HELP_URL = "https://developer.mozilla.org/docs/Tools/WebIDE/Troubleshooting";
 
 // download template index early
 GetTemplatesJSON(true);
