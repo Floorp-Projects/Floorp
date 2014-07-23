@@ -3605,7 +3605,7 @@ CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
   aNewEvent->button = aMouseEvent->button;
   aNewEvent->buttons = aMouseEvent->buttons;
   aNewEvent->pressure = aMouseEvent->pressure;
-  aNewEvent->pluginEvent = aMouseEvent->pluginEvent;
+  aNewEvent->mPluginEvent = aMouseEvent->mPluginEvent;
   aNewEvent->inputSource = aMouseEvent->inputSource;
 }
 

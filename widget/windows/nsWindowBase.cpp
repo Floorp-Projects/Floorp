@@ -30,7 +30,7 @@ nsWindowBase::DispatchPluginEvent(const MSG& aMsg)
   npEvent.event = aMsg.message;
   npEvent.wParam = aMsg.wParam;
   npEvent.lParam = aMsg.lParam;
-  pluginEvent.pluginEvent = &npEvent;
+  pluginEvent.mPluginEvent.Copy(npEvent);
   pluginEvent.retargetToFocusedDocument = true;
   return DispatchWindowEvent(&pluginEvent);
 }
