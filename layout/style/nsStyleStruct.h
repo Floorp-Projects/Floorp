@@ -2102,11 +2102,23 @@ struct nsStyleDisplay {
            NS_STYLE_POSITION_STICKY == mPosition;
   }
 
-  bool IsRubyInlineDisplayType() const {
+  bool IsRubyDisplayType() const {
     return NS_STYLE_DISPLAY_RUBY == mDisplay ||
            NS_STYLE_DISPLAY_RUBY_BASE == mDisplay ||
            NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER == mDisplay ||
-           NS_STYLE_DISPLAY_RUBY_TEXT == mDisplay;
+           NS_STYLE_DISPLAY_RUBY_TEXT == mDisplay ||
+           NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER == mDisplay;
+  }
+
+  bool IsFlexOrGridDisplayType() const {
+    return NS_STYLE_DISPLAY_FLEX == mDisplay ||
+           NS_STYLE_DISPLAY_INLINE_FLEX == mDisplay ||
+           NS_STYLE_DISPLAY_GRID == mDisplay ||
+           NS_STYLE_DISPLAY_INLINE_GRID == mDisplay;
+  }
+
+  bool IsOutOfFlowStyle() const {
+    return (IsAbsolutelyPositionedStyle() || IsFloatingStyle());
   }
 
   bool IsScrollableOverflow() const {

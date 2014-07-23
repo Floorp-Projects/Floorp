@@ -181,6 +181,36 @@ nsRuleNode::EnsureBlockDisplay(uint8_t& display,
   }
 }
 
+// EnsureInlineDisplay:
+//  - if the display value (argument) is not an inline type
+//    then we set it to a valid inline display value
+/* static */
+void
+nsRuleNode::EnsureInlineDisplay(uint8_t& display)
+{
+  // see if the display value is already inline
+  switch (display) {
+    case NS_STYLE_DISPLAY_BLOCK :
+      display = NS_STYLE_DISPLAY_INLINE_BLOCK;
+      break;
+    case NS_STYLE_DISPLAY_TABLE :
+      display = NS_STYLE_DISPLAY_INLINE_TABLE;
+      break;
+    case NS_STYLE_DISPLAY_FLEX :
+      display = NS_STYLE_DISPLAY_INLINE_FLEX;
+      break;
+    case NS_STYLE_DISPLAY_GRID :
+      display = NS_STYLE_DISPLAY_INLINE_GRID;
+      break;
+    case NS_STYLE_DISPLAY_BOX:
+      display = NS_STYLE_DISPLAY_INLINE_BOX;
+      break;
+    case NS_STYLE_DISPLAY_STACK:
+      display = NS_STYLE_DISPLAY_INLINE_STACK;
+      break;
+  }
+}
+
 static nscoord CalcLengthWith(const nsCSSValue& aValue,
                               nscoord aFontSize,
                               const nsStyleFont* aStyleFont,
