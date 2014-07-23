@@ -30,6 +30,7 @@ from ..frontend.data import (
     DirectoryTraversal,
     Exports,
     GeneratedInclude,
+    HostLibrary,
     HostProgram,
     HostSimpleProgram,
     InstallationTarget,
@@ -462,6 +463,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, Library):
             self._process_library(obj, backend_file)
+
+        elif isinstance(obj, HostLibrary):
+            self._process_host_library(obj, backend_file)
 
         else:
             return
@@ -1126,6 +1130,9 @@ class RecursiveMakeBackend(CommonBackend):
                 relpath = mozpath.relpath(objdir, thisobjdir)
             backend_file.write('SHARED_LIBRARY_LIBS += %s/$(LIB_PREFIX)%s.$(LIB_SUFFIX)\n'
                                % (relpath, basename))
+
+    def _process_host_library(self, libdef, backend_file):
+        backend_file.write('HOST_LIBRARY_NAME = %s\n' % libdef.basename)
 
     def _write_manifests(self, dest, manifests):
         man_dir = mozpath.join(self.environment.topobjdir, '_build_manifests',

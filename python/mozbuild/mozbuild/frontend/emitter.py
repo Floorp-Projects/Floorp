@@ -30,6 +30,7 @@ from .data import (
     GeneratedWebIDLFile,
     ExampleWebIDLInterface,
     HeaderFileSubstitution,
+    HostLibrary,
     HostProgram,
     HostSimpleProgram,
     InstallationTarget,
@@ -235,7 +236,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'FILES_PER_UNIFIED_FILE',
             'USE_STATIC_LIBS',
             'GENERATED_FILES',
-            'HOST_LIBRARY_NAME',
             'IS_GYP_DIR',
             'JS_MODULES_PATH',
             'LIBS',
@@ -373,7 +373,16 @@ class TreeMetadataEmitter(LoggingMixin):
                 sandbox.get('DIST_SUBDIR'):
             yield InstallationTarget(sandbox)
 
+        host_libname = sandbox.get('HOST_LIBRARY_NAME')
         libname = sandbox.get('LIBRARY_NAME')
+
+        if host_libname:
+            if host_libname == libname:
+                raise SandboxValidationError('LIBRARY_NAME and '
+                    'HOST_LIBRARY_NAME must have a different value', sandbox)
+            self._libs[host_libname][sandbox['OBJDIR']] = \
+                HostLibrary(sandbox, host_libname)
+
         final_lib = sandbox.get('FINAL_LIBRARY')
         if not libname and final_lib:
             # If no LIBRARY_NAME is given, create one.
