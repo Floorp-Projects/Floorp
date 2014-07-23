@@ -234,10 +234,14 @@ VARIABLES = {
         """, 'binaries'),
 
     'CPP_UNIT_TESTS': (StrictOrderingOnAppendList, list,
-        """C++ source files for unit tests.
+        """Compile a list of C++ unit test names.
 
-        This is a list of C++ unit test sources. Entries must be files that
-        exist. These generally have ``.cpp`` extensions.
+        Each name in this variable corresponds to an executable built from the
+        corresponding source file with the same base name.
+
+        If the configuration token ``BIN_SUFFIX`` is set, its value will be
+        automatically appended to each name. If a name already ends with
+        ``BIN_SUFFIX``, the name will remain unchanged.
         """, 'binaries'),
 
     'FAIL_ON_WARNINGS': (bool, bool,
