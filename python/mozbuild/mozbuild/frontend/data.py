@@ -335,10 +335,10 @@ class BaseProgram(SandboxDerived):
     """
     __slots__ = ('program')
 
-    def __init__(self, sandbox, program, bin_suffix):
+    def __init__(self, sandbox, program):
         SandboxDerived.__init__(self, sandbox)
 
-        bin_suffix = bin_suffix or ''
+        bin_suffix = sandbox['CONFIG'].get(self.SUFFIX_VAR, '')
         if not program.endswith(bin_suffix):
             program += bin_suffix
         self.program = program
@@ -346,18 +346,22 @@ class BaseProgram(SandboxDerived):
 
 class Program(BaseProgram):
     """Sandbox container object for PROGRAM"""
+    SUFFIX_VAR = 'BIN_SUFFIX'
 
 
 class HostProgram(BaseProgram):
     """Sandbox container object for HOST_PROGRAM"""
+    SUFFIX_VAR = 'HOST_BIN_SUFFIX'
 
 
 class SimpleProgram(BaseProgram):
     """Sandbox container object for each program in SIMPLE_PROGRAMS"""
+    SUFFIX_VAR = 'BIN_SUFFIX'
 
 
 class HostSimpleProgram(BaseProgram):
     """Sandbox container object for each program in HOST_SIMPLE_PROGRAMS"""
+    SUFFIX_VAR = 'HOST_BIN_SUFFIX'
 
 
 class BaseLibrary(SandboxDerived):
