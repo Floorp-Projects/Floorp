@@ -11,11 +11,8 @@ EXPORTS.speex += [
 ]
 
 SOURCES += [
-  'sse_detect.cpp',
-]
-
-SOURCES += [
     'resample.c',
+    'simd_detect.cpp',
 ]
 
 MSVC_ENABLE_PGO = True
@@ -40,7 +37,10 @@ else:
 if CONFIG['INTEL_ARCHITECTURE'] and not CONFIG['MOZ_SAMPLE_TYPE_S16']:
     DEFINES['_USE_SSE'] = True
     DEFINES['_USE_SSE2'] = True
-    SOURCES['resample.c'].flags += CONFIG['SSE2_FLAGS']
+    SOURCES += [
+        'resample_sse.c'
+    ]
+    SOURCES['resample_sse.c'].flags += CONFIG['SSE2_FLAGS']
 
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:

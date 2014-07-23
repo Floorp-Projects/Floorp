@@ -36,6 +36,8 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include "simd_detect.h"
+
 #include <arm_neon.h>
 
 #ifdef FIXED_POINT
@@ -65,7 +67,7 @@ static inline int32_t saturate_32bit_to_16bit(int32_t a) {
 
 #define OVERRIDE_INNER_PRODUCT_SINGLE
 /* Only works when len % 4 == 0 */
-static inline int32_t inner_product_single(const int16_t *a, const int16_t *b, unsigned int len)
+int32_t inner_product_single(const int16_t *a, const int16_t *b, unsigned int len)
 {
     int32_t ret;
     uint32_t remainder = len % 16;
@@ -139,7 +141,7 @@ static inline int32_t saturate_float_to_16bit(float a) {
 
 #define OVERRIDE_INNER_PRODUCT_SINGLE
 /* Only works when len % 4 == 0 */
-static inline float inner_product_single(const float *a, const float *b, unsigned int len)
+float inner_product_single(const float *a, const float *b, unsigned int len)
 {
     float ret;
     uint32_t remainder = len % 16;
