@@ -314,16 +314,28 @@ DXGITextureHostD3D11::DXGITextureHostD3D11(TextureFlags aFlags,
   , mFormat(aDescriptor.format())
   , mIsLocked(false)
 {
+  OpenSharedHandle();
+}
+
+bool
+DXGITextureHostD3D11::OpenSharedHandle()
+{
+  if (!GetDevice()) {
+    return false;
+  }
+
   HRESULT hr = GetDevice()->OpenSharedResource((HANDLE)mHandle,
                                                __uuidof(ID3D11Texture2D),
                                                (void**)(ID3D11Texture2D**)byRef(mTexture));
   if (FAILED(hr)) {
     NS_WARNING("Failed to open shared texture");
+    return false;
   }
 
   D3D11_TEXTURE2D_DESC desc;
   mTexture->GetDesc(&desc);
   mSize = IntSize(desc.Width, desc.Height);
+  return true;
 }
 
 ID3D11Device*
@@ -346,7 +358,7 @@ DXGITextureHostD3D11::Lock()
     return false;
   }
   if (!mTextureSource) {
-    if (!mTexture) {
+    if (!mTexture && !OpenSharedHandle()) {
       return false;
     }
 
