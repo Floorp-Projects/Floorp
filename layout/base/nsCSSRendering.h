@@ -525,14 +525,6 @@ struct nsCSSRendering {
                               nsRect* aBGClipRect = nullptr,
                               int32_t aLayer = -1);
 
-  static void PaintBackgroundColor(gfxRGBA aColor,
-                                   nsRenderingContext& aRenderingContext,
-                                   nsIFrame* aForFrame,
-                                   const nsRect& aDirtyRect,
-                                   const nsRect& aBorderArea,
-                                   const nsRect& aBGClipRect,
-                                   uint32_t aFlags);
-
   /**
    * Same as |PaintBackground|, except using the provided style structs.
    * This short-circuits the code that ensures that the root element's
@@ -553,15 +545,6 @@ struct nsCSSRendering {
                                     nsRect* aBGClipRect = nullptr,
                                     int32_t aLayer = -1);
 
-  static void PaintBackgroundColorWithSC(gfxRGBA aColor,
-                                         nsRenderingContext& aRenderingContext,
-                                         nsIFrame* aForFrame,
-                                         const nsRect& aDirtyRect,
-                                         const nsRect& aBorderArea,
-                                         const nsRect& aBGClipRect,
-                                         nsStyleContext *aStyleContext,
-                                         const nsStyleBorder& aBorder,
-                                         uint32_t aFlags);
   /**
    * Returns the rectangle covered by the given background layer image, taking
    * into account background positioning, sizing, and repetition, but not
