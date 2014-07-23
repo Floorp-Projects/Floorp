@@ -65,17 +65,6 @@ TileGenFunc(GLContext* gl,
 
 already_AddRefed<TextureImage>
 TextureImage::Create(GLContext* gl,
-                     const nsIntSize& size,
-                     TextureImage::ContentType contentType,
-                     GLenum wrapMode,
-                     TextureImage::Flags flags)
-{
-    return Create(gl, size.ToIntSize(), contentType, wrapMode, flags);
-}
-
-// Moz2D equivalent...
-already_AddRefed<TextureImage>
-TextureImage::Create(GLContext* gl,
                      const gfx::IntSize& size,
                      TextureImage::ContentType contentType,
                      GLenum wrapMode,
