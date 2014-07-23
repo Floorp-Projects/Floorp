@@ -67,14 +67,6 @@ WaiveXrayWrapper::get(JSContext *cx, HandleObject wrapper,
 }
 
 bool
-WaiveXrayWrapper::iterate(JSContext *cx, HandleObject proxy, unsigned flags,
-                         MutableHandleValue vp) const
-{
-    return CrossCompartmentWrapper::iterate(cx, proxy, flags, vp) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, vp);
-}
-
-bool
 WaiveXrayWrapper::call(JSContext *cx, HandleObject wrapper, const JS::CallArgs &args) const
 {
     return CrossCompartmentWrapper::call(cx, wrapper, args) &&
