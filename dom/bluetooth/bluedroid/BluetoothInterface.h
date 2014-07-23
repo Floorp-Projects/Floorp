@@ -297,7 +297,7 @@ public:
                                btrc_register_notification_t* aPParam,
                                BluetoothAvrcpResultHandler* aRes);
 
-  bt_status_t SetVolume(uint8_t aVolume);
+  void SetVolume(uint8_t aVolume, BluetoothAvrcpResultHandler* aRes);
 
 protected:
   BluetoothAvrcpInterface(const btrc_interface_t* aInterface);
