@@ -125,27 +125,29 @@ interface nsIPrincipal;
  *
  *  Parent process                      Child processes
  * ----------------                    -----------------
- *  global PPMM
+ *  global (GPPMM)
  *   |
- *   +<----> child PPMM
+ *   +-->parent in-process PIPMM<-->child in-process CIPPMM
  *   |
- *   +-->parent PMM1<------------------>child process CMM1
+ *   +-->parent (PPMM1)<------------------>child (CPMM1)
  *   |
- *   +-->parent PMM2<------------------>child process PMM2
+ *   +-->parent (PPMM2)<------------------>child (CPMM2)
  *   ...
  *
- * For example: the parent-process PMM1 sends messages directly to
- * only the child-process CMM1.
+ * Note, PIPMM and CIPPMM both run in the parent process.
  *
- * For example: CMM1 sends messages directly to PMM1.  The global PPMM
+ * For example: the parent-process PPMM1 sends messages to the
+ * child-process CPMM1.
+ *
+ * For example: CPMM1 sends messages directly to PPMM1. The global GPPMM
  * will also notify their message listeners when the message arrives.
  *
- * For example: messages sent through the global PPMM will be
- * dispatched to the listeners of the same-process, "child PPMM".
- * They will also be broadcast to PPM1, PPM2, etc.
+ * For example: messages sent through the global GPPMM will be
+ * dispatched to the listeners of the same-process, CIPPMM, CPMM1,
+ * CPMM2, etc.
  *
  *   ***** PERFORMANCE AND SECURITY WARNING *****
- * Messages broadcast through the global PPMM can result in messages
+ * Messages broadcast through the GPPMM can result in messages
  * being dispatched across many OS processes, and to many processes
  * with different permissions.  Great care should be taken when
  * broadcasting.

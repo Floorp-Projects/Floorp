@@ -24,6 +24,12 @@
       border: 1px dotted gray;
       width: 28px;
       height: 28px;
+      /* Explicitly set min-width & min-height to 0, to prevent their "auto"
+         value from influencing the sizes of our flex items (particularly for
+         the single-line chunks of this testcase, whose items may be shrunk a
+         little below the numerals' intrinsic sizes): */
+      min-width:  0;
+      min-height: 0;
     }
   </style>
 </head>
