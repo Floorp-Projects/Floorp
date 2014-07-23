@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -79,7 +80,7 @@ TestIsInRangeVoid()
   MOZ_RELEASE_ASSERT(!IsInRange(voidEnd2, uintBegin, uintEnd2));
 }
 
-struct Base { int x; };
+struct Base { int mX; };
 
 static void
 TestIsInRangeClass()
@@ -213,12 +214,17 @@ TestIsInRangeClassDerivedEmpty()
   uintptr_t uderivedEmptyEnd = uintptr_t(derivedEmptyEnd);
   uintptr_t uderivedEmptyEnd2 = uintptr_t(derivedEmptyEnd2);
 
-  MOZ_RELEASE_ASSERT(IsInRange(derivedEmptyBegin, uderivedEmptyBegin, uderivedEmptyEnd));
-  MOZ_RELEASE_ASSERT(!IsInRange(derivedEmptyEnd, uderivedEmptyBegin, uderivedEmptyEnd));
+  MOZ_RELEASE_ASSERT(IsInRange(derivedEmptyBegin, uderivedEmptyBegin,
+                               uderivedEmptyEnd));
+  MOZ_RELEASE_ASSERT(!IsInRange(derivedEmptyEnd, uderivedEmptyBegin,
+                                uderivedEmptyEnd));
 
-  MOZ_RELEASE_ASSERT(IsInRange(derivedEmptyBegin, uderivedEmptyBegin, uderivedEmptyEnd2));
-  MOZ_RELEASE_ASSERT(IsInRange(derivedEmptyEnd, uderivedEmptyBegin, uderivedEmptyEnd2));
-  MOZ_RELEASE_ASSERT(!IsInRange(derivedEmptyEnd2, uderivedEmptyBegin, uderivedEmptyEnd2));
+  MOZ_RELEASE_ASSERT(IsInRange(derivedEmptyBegin, uderivedEmptyBegin,
+                               uderivedEmptyEnd2));
+  MOZ_RELEASE_ASSERT(IsInRange(derivedEmptyEnd, uderivedEmptyBegin,
+                               uderivedEmptyEnd2));
+  MOZ_RELEASE_ASSERT(!IsInRange(derivedEmptyEnd2, uderivedEmptyBegin,
+                                uderivedEmptyEnd2));
 }
 
 struct ExtraDerived : Base { int y; };
@@ -293,7 +299,8 @@ TestIsInRangeClassExtraDerivedEmpty()
   MOZ_RELEASE_ASSERT(!IsInRange(derivedEnd2, uderivedBegin, uderivedEnd2));
 }
 
-int main()
+int
+main()
 {
   TestIsInRangeNonClass();
   TestIsInRangeVoid();

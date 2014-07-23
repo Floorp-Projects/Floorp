@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,7 +9,7 @@
 
 using mozilla::SHA1Sum;
 
-static unsigned int testV[1024] = {
+static unsigned int gTestV[1024] = {
   0x048edc1a, 0x4345588c, 0x0ef03cbf, 0x1d6438f5, 0x094e0a1e, 0x68535f60,
   0x14e8c927, 0x60190043, 0x5d640ab7, 0x73dc7c62, 0x364223f9, 0x47320292,
   0x3924cae0, 0x5f6b26d3, 0x5efa04ef, 0x7aab361e, 0x2773b1aa, 0x1631b07d,
@@ -186,12 +188,13 @@ main()
 {
   SHA1Sum sum;
   SHA1Sum::Hash hash;
-  sum.update(reinterpret_cast<const uint8_t*>(testV), sizeof(testV));
+  sum.update(reinterpret_cast<const uint8_t*>(gTestV), sizeof(gTestV));
   sum.finish(hash);
 
-  static const uint8_t expected[20] =
-    { 0xc8, 0xf2, 0x09, 0x59, 0x4e, 0x64, 0x40, 0xaa, 0x7b, 0xf7, 0xb8, 0xe0,
-      0xfa, 0x44, 0xb2, 0x31, 0x95, 0xad, 0x94, 0x81 };
+  static const uint8_t expected[20] = {
+    0xc8, 0xf2, 0x09, 0x59, 0x4e, 0x64, 0x40, 0xaa, 0x7b, 0xf7, 0xb8, 0xe0,
+    0xfa, 0x44, 0xb2, 0x31, 0x95, 0xad, 0x94, 0x81
+  };
 
   static_assert(sizeof(expected) == sizeof(SHA1Sum::Hash),
                 "expected-data size should be the same as the actual hash "
