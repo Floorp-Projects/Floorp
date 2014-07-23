@@ -70,6 +70,11 @@ let DirectoryLinksProvider = {
   // download default interval is 24 hours in milliseconds
   _downloadIntervalMS: 86400000,
 
+  /**
+   * A mapping from eTLD+1 to an enhanced link objects
+   */
+  _enhancedLinks: new Map(),
+
   get _observedPrefs() Object.freeze({
     linksURL: PREF_DIRECTORY_SOURCE,
     matchOSLocale: PREF_MATCH_OS_LOCALE,
@@ -144,6 +149,14 @@ let DirectoryLinksProvider = {
       let prefName = this._observedPrefs[pref];
       Services.prefs.removeObserver(prefName, this);
     }
+  },
+
+  /**
+   * Get the eTLD+1 / base domain from a url spec
+   */
+  _extractSite: function DirectoryLinksProvider_extractSite(url) {
+    let linkURI = Services.io.newURI(url, null, null);
+    return Services.eTLD.getBaseDomain(linkURI);
   },
 
   _fetchAndCacheLinks: function DirectoryLinksProvider_fetchAndCacheLinks(uri) {
@@ -306,13 +319,30 @@ let DirectoryLinksProvider = {
   },
 
   /**
+   * Get the enhanced link object for a link (whether history or directory)
+   */
+  getEnhancedLink: function DirectoryLinksProvider_getEnhancedLink(link) {
+    // Use the provided link if it's already enhanced
+    return link.enhancedImageURI && link ||
+           this._enhancedLinks.get(this._extractSite(link.url));
+  },
+
+  /**
    * Gets the current set of directory links.
    * @param aCallback The function that the array of links is passed to.
    */
   getLinks: function DirectoryLinksProvider_getLinks(aCallback) {
     this._readDirectoryLinksFile().then(rawLinks => {
+      // Reset the cache of enhanced images for this new set of links
+      this._enhancedLinks.clear();
+
       // all directory links have a frecency of DIRECTORY_FRECENCY
       aCallback(rawLinks.map((link, position) => {
+        // Stash the enhanced image for the site
+        if (link.enhancedImageURI) {
+          this._enhancedLinks.set(this._extractSite(link.url), link);
+        }
+
         link.directoryIndex = position;
         link.frecency = DIRECTORY_FRECENCY;
         link.lastVisitDate = rawLinks.length - position;
