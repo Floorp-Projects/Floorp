@@ -4,7 +4,7 @@
 #
 MOZ_GLUE_LDFLAGS =
 
-SHARED_LIBRARY_LIBS += \
+EXTRA_LIBS += \
 	$(NSPR_LIBS) \
 	$(NULL)
 

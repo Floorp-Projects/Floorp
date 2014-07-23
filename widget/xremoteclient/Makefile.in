@@ -23,6 +23,11 @@ CPPSRCS += \
   $(LIBCPPSRCS) \
   $(NULL)
 
-LIBS            = \
-		$(NSPR_LIBS) \
-		$(XLDFLAGS) $(XLIBS)
+EXTRA_LIBS += \
+	$(NSPR_LIBS) \
+	$(NULL)
+
+OS_LIBS += \
+	$(XLDFLAGS) \
+	$(XLIBS) \
+	$(NULL)

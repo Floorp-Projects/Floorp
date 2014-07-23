@@ -325,12 +325,12 @@ SUFFIX = .$(LIB_SUFFIX)
 endif
 
 # Fold NSPR libs
-EXTRA_DSO_LDOPTS += $(DEPTH)/nsprpub/pr/src/$(LIB_PREFIX)nspr4$(SUFFIX)
-EXTRA_DSO_LDOPTS += $(DEPTH)/nsprpub/lib/ds/$(LIB_PREFIX)plds4$(SUFFIX)
-EXTRA_DSO_LDOPTS += $(DEPTH)/nsprpub/lib/libc/src/$(LIB_PREFIX)plc4$(SUFFIX)
+EXTRA_LIBS += $(DEPTH)/nsprpub/pr/src/$(LIB_PREFIX)nspr4$(SUFFIX)
+EXTRA_LIBS += $(DEPTH)/nsprpub/lib/ds/$(LIB_PREFIX)plds4$(SUFFIX)
+EXTRA_LIBS += $(DEPTH)/nsprpub/lib/libc/src/$(LIB_PREFIX)plc4$(SUFFIX)
 
 # Add all static libraries for nss, smime, ssl and nssutil
-SHARED_LIBRARY_LIBS += $(addprefix ../,$(NSS_STATIC_LIBS))
+EXTRA_LIBS += $(addprefix ../,$(NSS_STATIC_LIBS))
 
 nss_def_file := $(srcdir)/nss.def
 
@@ -368,7 +368,7 @@ EXPAND_LIBS_EXEC += --extract
 
 $(SHARED_LIBRARY): $(addprefix ../,$(NSS_STATIC_LIBS))
 
-EXTRA_DSO_LDOPTS += $(REALTIME_LIBS)
+OS_LIBS += $(REALTIME_LIBS)
 
 ifdef IMPORT_LIB_SUFFIX
 IMPORT_PREFIX = $(LIB_PREFIX)
