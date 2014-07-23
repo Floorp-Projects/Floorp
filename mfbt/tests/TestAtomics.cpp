@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,69 +15,71 @@ using mozilla::Relaxed;
 using mozilla::ReleaseAcquire;
 using mozilla::SequentiallyConsistent;
 
+#define A(a,b)  MOZ_RELEASE_ASSERT(a,b)
+
 template <typename T, MemoryOrdering Order>
 static void
 TestTypeWithOrdering()
 {
   Atomic<T, Order> atomic(5);
-  MOZ_RELEASE_ASSERT(atomic == 5, "Atomic variable did not initialize");
+  A(atomic == 5, "Atomic variable did not initialize");
 
   // Test atomic increment
-  MOZ_RELEASE_ASSERT(++atomic == T(6), "Atomic increment did not work");
-  MOZ_RELEASE_ASSERT(atomic++ == T(6), "Atomic post-increment did not work");
-  MOZ_RELEASE_ASSERT(atomic == T(7), "Atomic post-increment did not work");
+  A(++atomic == T(6), "Atomic increment did not work");
+  A(atomic++ == T(6), "Atomic post-increment did not work");
+  A(atomic == T(7), "Atomic post-increment did not work");
 
   // Test atomic decrement
-  MOZ_RELEASE_ASSERT(--atomic == 6, "Atomic decrement did not work");
-  MOZ_RELEASE_ASSERT(atomic-- == 6, "Atomic post-decrement did not work");
-  MOZ_RELEASE_ASSERT(atomic == 5, "Atomic post-decrement did not work");
+  A(--atomic == 6, "Atomic decrement did not work");
+  A(atomic-- == 6, "Atomic post-decrement did not work");
+  A(atomic == 5, "Atomic post-decrement did not work");
 
   // Test other arithmetic.
   T result;
   result = (atomic += T(5));
-  MOZ_RELEASE_ASSERT(atomic == T(10), "Atomic += did not work");
-  MOZ_RELEASE_ASSERT(result == T(10), "Atomic += returned the wrong value");
+  A(atomic == T(10), "Atomic += did not work");
+  A(result == T(10), "Atomic += returned the wrong value");
   result = (atomic -= T(3));
-  MOZ_RELEASE_ASSERT(atomic == T(7), "Atomic -= did not work");
-  MOZ_RELEASE_ASSERT(result == T(7), "Atomic -= returned the wrong value");
+  A(atomic == T(7), "Atomic -= did not work");
+  A(result == T(7), "Atomic -= returned the wrong value");
 
   // Test assignment
   result = (atomic = T(5));
-  MOZ_RELEASE_ASSERT(atomic == T(5), "Atomic assignment failed");
-  MOZ_RELEASE_ASSERT(result == T(5), "Atomic assignment returned the wrong value");
+  A(atomic == T(5), "Atomic assignment failed");
+  A(result == T(5), "Atomic assignment returned the wrong value");
 
   // Test logical operations.
   result = (atomic ^= T(2));
-  MOZ_RELEASE_ASSERT(atomic == T(7), "Atomic ^= did not work");
-  MOZ_RELEASE_ASSERT(result == T(7), "Atomic ^= returned the wrong value");
+  A(atomic == T(7), "Atomic ^= did not work");
+  A(result == T(7), "Atomic ^= returned the wrong value");
   result = (atomic ^= T(4));
-  MOZ_RELEASE_ASSERT(atomic == T(3), "Atomic ^= did not work");
-  MOZ_RELEASE_ASSERT(result == T(3), "Atomic ^= returned the wrong value");
+  A(atomic == T(3), "Atomic ^= did not work");
+  A(result == T(3), "Atomic ^= returned the wrong value");
   result = (atomic |= T(8));
-  MOZ_RELEASE_ASSERT(atomic == T(11), "Atomic |= did not work");
-  MOZ_RELEASE_ASSERT(result == T(11), "Atomic |= returned the wrong value");
+  A(atomic == T(11), "Atomic |= did not work");
+  A(result == T(11), "Atomic |= returned the wrong value");
   result = (atomic |= T(8));
-  MOZ_RELEASE_ASSERT(atomic == T(11), "Atomic |= did not work");
-  MOZ_RELEASE_ASSERT(result == T(11), "Atomic |= returned the wrong value");
+  A(atomic == T(11), "Atomic |= did not work");
+  A(result == T(11), "Atomic |= returned the wrong value");
   result = (atomic &= T(12));
-  MOZ_RELEASE_ASSERT(atomic == T(8), "Atomic &= did not work");
-  MOZ_RELEASE_ASSERT(result == T(8), "Atomic &= returned the wrong value");
+  A(atomic == T(8), "Atomic &= did not work");
+  A(result == T(8), "Atomic &= returned the wrong value");
 
   // Test exchange.
   atomic = T(30);
   result = atomic.exchange(42);
-  MOZ_RELEASE_ASSERT(atomic == T(42), "Atomic exchange did not work");
-  MOZ_RELEASE_ASSERT(result == T(30), "Atomic exchange returned the wrong value");
+  A(atomic == T(42), "Atomic exchange did not work");
+  A(result == T(30), "Atomic exchange returned the wrong value");
 
   // Test CAS.
   atomic = T(1);
   bool boolResult = atomic.compareExchange(0, 2);
-  MOZ_RELEASE_ASSERT(!boolResult, "CAS should have returned false.");
-  MOZ_RELEASE_ASSERT(atomic == T(1), "CAS shouldn't have done anything.");
+  A(!boolResult, "CAS should have returned false.");
+  A(atomic == T(1), "CAS shouldn't have done anything.");
 
   boolResult = atomic.compareExchange(1, 42);
-  MOZ_RELEASE_ASSERT(boolResult, "CAS should have succeeded.");
-  MOZ_RELEASE_ASSERT(atomic == T(42), "CAS should have changed atomic's value.");
+  A(boolResult, "CAS should have succeeded.");
+  A(atomic == T(42), "CAS should have changed atomic's value.");
 }
 
 template<typename T, MemoryOrdering Order>
@@ -84,49 +88,50 @@ TestPointerWithOrdering()
 {
   T array1[10];
   Atomic<T*, Order> atomic(array1);
-  MOZ_RELEASE_ASSERT(atomic == array1, "Atomic variable did not initialize");
+  A(atomic == array1, "Atomic variable did not initialize");
 
   // Test atomic increment
-  MOZ_RELEASE_ASSERT(++atomic == array1 + 1, "Atomic increment did not work");
-  MOZ_RELEASE_ASSERT(atomic++ == array1 + 1, "Atomic post-increment did not work");
-  MOZ_RELEASE_ASSERT(atomic == array1 + 2, "Atomic post-increment did not work");
+  A(++atomic == array1 + 1, "Atomic increment did not work");
+  A(atomic++ == array1 + 1, "Atomic post-increment did not work");
+  A(atomic == array1 + 2, "Atomic post-increment did not work");
 
   // Test atomic decrement
-  MOZ_RELEASE_ASSERT(--atomic == array1 + 1, "Atomic decrement did not work");
-  MOZ_RELEASE_ASSERT(atomic-- == array1 + 1, "Atomic post-decrement did not work");
-  MOZ_RELEASE_ASSERT(atomic == array1, "Atomic post-decrement did not work");
+  A(--atomic == array1 + 1, "Atomic decrement did not work");
+  A(atomic-- == array1 + 1, "Atomic post-decrement did not work");
+  A(atomic == array1, "Atomic post-decrement did not work");
 
   // Test other arithmetic operations
   T* result;
   result = (atomic += 2);
-  MOZ_RELEASE_ASSERT(atomic == array1 + 2, "Atomic += did not work");
-  MOZ_RELEASE_ASSERT(result == array1 + 2, "Atomic += returned the wrong value");
+  A(atomic == array1 + 2, "Atomic += did not work");
+  A(result == array1 + 2, "Atomic += returned the wrong value");
   result = (atomic -= 1);
-  MOZ_RELEASE_ASSERT(atomic == array1 + 1, "Atomic -= did not work");
-  MOZ_RELEASE_ASSERT(result == array1 + 1, "Atomic -= returned the wrong value");
+  A(atomic == array1 + 1, "Atomic -= did not work");
+  A(result == array1 + 1, "Atomic -= returned the wrong value");
 
   // Test stores
   result = (atomic = array1);
-  MOZ_RELEASE_ASSERT(atomic == array1, "Atomic assignment did not work");
-  MOZ_RELEASE_ASSERT(result == array1, "Atomic assignment returned the wrong value");
+  A(atomic == array1, "Atomic assignment did not work");
+  A(result == array1, "Atomic assignment returned the wrong value");
 
   // Test exchange
   atomic = array1 + 2;
   result = atomic.exchange(array1);
-  MOZ_RELEASE_ASSERT(atomic == array1, "Atomic exchange did not work");
-  MOZ_RELEASE_ASSERT(result == array1 + 2, "Atomic exchange returned the wrong value");
+  A(atomic == array1, "Atomic exchange did not work");
+  A(result == array1 + 2, "Atomic exchange returned the wrong value");
 
   atomic = array1;
   bool boolResult = atomic.compareExchange(array1 + 1, array1 + 2);
-  MOZ_RELEASE_ASSERT(!boolResult, "CAS should have returned false.");
-  MOZ_RELEASE_ASSERT(atomic == array1, "CAS shouldn't have done anything.");
+  A(!boolResult, "CAS should have returned false.");
+  A(atomic == array1, "CAS shouldn't have done anything.");
 
   boolResult = atomic.compareExchange(array1, array1 + 3);
-  MOZ_RELEASE_ASSERT(boolResult, "CAS should have succeeded.");
-  MOZ_RELEASE_ASSERT(atomic == array1 + 3, "CAS should have changed atomic's value.");
+  A(boolResult, "CAS should have succeeded.");
+  A(atomic == array1 + 3, "CAS should have changed atomic's value.");
 }
 
-enum EnumType {
+enum EnumType
+{
   EnumType_0 = 0,
   EnumType_1 = 1,
   EnumType_2 = 2,
@@ -138,29 +143,29 @@ static void
 TestEnumWithOrdering()
 {
   Atomic<EnumType, Order> atomic(EnumType_2);
-  MOZ_RELEASE_ASSERT(atomic == EnumType_2, "Atomic variable did not initialize");
+  A(atomic == EnumType_2, "Atomic variable did not initialize");
 
   // Test assignment
   EnumType result;
   result = (atomic = EnumType_3);
-  MOZ_RELEASE_ASSERT(atomic == EnumType_3, "Atomic assignment failed");
-  MOZ_RELEASE_ASSERT(result == EnumType_3, "Atomic assignment returned the wrong value");
+  A(atomic == EnumType_3, "Atomic assignment failed");
+  A(result == EnumType_3, "Atomic assignment returned the wrong value");
 
   // Test exchange.
   atomic = EnumType_1;
   result = atomic.exchange(EnumType_2);
-  MOZ_RELEASE_ASSERT(atomic == EnumType_2, "Atomic exchange did not work");
-  MOZ_RELEASE_ASSERT(result == EnumType_1, "Atomic exchange returned the wrong value");
+  A(atomic == EnumType_2, "Atomic exchange did not work");
+  A(result == EnumType_1, "Atomic exchange returned the wrong value");
 
   // Test CAS.
   atomic = EnumType_1;
   bool boolResult = atomic.compareExchange(EnumType_0, EnumType_2);
-  MOZ_RELEASE_ASSERT(!boolResult, "CAS should have returned false.");
-  MOZ_RELEASE_ASSERT(atomic == EnumType_1, "CAS shouldn't have done anything.");
+  A(!boolResult, "CAS should have returned false.");
+  A(atomic == EnumType_1, "CAS shouldn't have done anything.");
 
   boolResult = atomic.compareExchange(EnumType_1, EnumType_3);
-  MOZ_RELEASE_ASSERT(boolResult, "CAS should have succeeded.");
-  MOZ_RELEASE_ASSERT(atomic == EnumType_3, "CAS should have changed atomic's value.");
+  A(boolResult, "CAS should have succeeded.");
+  A(atomic == EnumType_3, "CAS should have changed atomic's value.");
 }
 
 template <MemoryOrdering Order>
@@ -168,29 +173,29 @@ static void
 TestBoolWithOrdering()
 {
   Atomic<bool, Order> atomic(false);
-  MOZ_RELEASE_ASSERT(atomic == false, "Atomic variable did not initialize");
+  A(atomic == false, "Atomic variable did not initialize");
 
   // Test assignment
   bool result;
   result = (atomic = true);
-  MOZ_RELEASE_ASSERT(atomic == true, "Atomic assignment failed");
-  MOZ_RELEASE_ASSERT(result == true, "Atomic assignment returned the wrong value");
+  A(atomic == true, "Atomic assignment failed");
+  A(result == true, "Atomic assignment returned the wrong value");
 
   // Test exchange.
   atomic = false;
   result = atomic.exchange(true);
-  MOZ_RELEASE_ASSERT(atomic == true, "Atomic exchange did not work");
-  MOZ_RELEASE_ASSERT(result == false, "Atomic exchange returned the wrong value");
+  A(atomic == true, "Atomic exchange did not work");
+  A(result == false, "Atomic exchange returned the wrong value");
 
   // Test CAS.
   atomic = false;
   bool boolResult = atomic.compareExchange(true, false);
-  MOZ_RELEASE_ASSERT(!boolResult, "CAS should have returned false.");
-  MOZ_RELEASE_ASSERT(atomic == false, "CAS shouldn't have done anything.");
+  A(!boolResult, "CAS should have returned false.");
+  A(atomic == false, "CAS shouldn't have done anything.");
 
   boolResult = atomic.compareExchange(false, true);
-  MOZ_RELEASE_ASSERT(boolResult, "CAS should have succeeded.");
-  MOZ_RELEASE_ASSERT(atomic == true, "CAS should have changed atomic's value.");
+  A(boolResult, "CAS should have succeeded.");
+  A(atomic == true, "CAS should have changed atomic's value.");
 }
 
 template <typename T>
@@ -227,7 +232,10 @@ TestBool()
   TestBoolWithOrdering<Relaxed>();
 }
 
-int main()
+#undef A
+
+int
+main()
 {
   TestType<uint32_t>();
   TestType<int32_t>();
@@ -239,4 +247,5 @@ int main()
   TestPointer<uint32_t*>();
   TestEnum();
   TestBool();
+  return 0;
 }
