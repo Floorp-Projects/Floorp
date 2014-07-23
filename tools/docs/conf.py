@@ -19,7 +19,6 @@ extensions = [
     'sphinx.ext.graphviz',
     'sphinx.ext.todo',
     'mozbuild.sphinx',
-    'javasphinx',
 ]
 
 templates_path = ['_templates']
