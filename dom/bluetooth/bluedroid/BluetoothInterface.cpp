@@ -847,6 +847,37 @@ struct interface_traits<BluetoothA2dpInterface>
   }
 };
 
+typedef
+  BluetoothInterfaceRunnable0<BluetoothA2dpResultHandler, void>
+  BluetoothA2dpResultRunnable;
+
+typedef
+  BluetoothInterfaceRunnable1<BluetoothA2dpResultHandler, void, bt_status_t>
+  BluetoothA2dpErrorRunnable;
+
+static nsresult
+DispatchBluetoothA2dpResult(
+  BluetoothA2dpResultHandler* aRes,
+  void (BluetoothA2dpResultHandler::*aMethod)(),
+  bt_status_t aStatus)
+{
+  MOZ_ASSERT(aRes);
+
+  nsRunnable* runnable;
+
+  if (aStatus == BT_STATUS_SUCCESS) {
+    runnable = new BluetoothA2dpResultRunnable(aRes, aMethod);
+  } else {
+    runnable = new BluetoothA2dpErrorRunnable(aRes,
+      &BluetoothA2dpResultHandler::OnError, aStatus);
+  }
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  if (NS_FAILED(rv)) {
+    BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+  }
+  return rv;
+}
+
 BluetoothA2dpInterface::BluetoothA2dpInterface(
   const btav_interface_t* aInterface)
 : mInterface(aInterface)
@@ -896,6 +927,37 @@ struct interface_traits<BluetoothAvrcpInterface>
     return BT_PROFILE_AV_RC_ID;
   }
 };
+
+typedef
+  BluetoothInterfaceRunnable0<BluetoothAvrcpResultHandler, void>
+  BluetoothAvrcpResultRunnable;
+
+typedef
+  BluetoothInterfaceRunnable1<BluetoothAvrcpResultHandler, void, bt_status_t>
+  BluetoothAvrcpErrorRunnable;
+
+static nsresult
+DispatchBluetoothAvrcpResult(
+  BluetoothAvrcpResultHandler* aRes,
+  void (BluetoothAvrcpResultHandler::*aMethod)(),
+  bt_status_t aStatus)
+{
+  MOZ_ASSERT(aRes);
+
+  nsRunnable* runnable;
+
+  if (aStatus == BT_STATUS_SUCCESS) {
+    runnable = new BluetoothAvrcpResultRunnable(aRes, aMethod);
+  } else {
+    runnable = new BluetoothAvrcpErrorRunnable(aRes,
+      &BluetoothAvrcpResultHandler::OnError, aStatus);
+  }
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  if (NS_FAILED(rv)) {
+    BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+  }
+  return rv;
+}
 
 BluetoothAvrcpInterface::BluetoothAvrcpInterface(
   const btrc_interface_t* aInterface)
