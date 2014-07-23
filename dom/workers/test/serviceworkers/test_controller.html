@@ -1,0 +1,61 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1002570 - test controller instance.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  function simpleRegister() {
+    // We use the control* scope for the less specific registration. The window will register a worker on controller/*
+    return navigator.serviceWorker.register("worker.js", { scope: "./control*" });
+  }
+
+  function testController() {
+    var p = new Promise(function(resolve, reject) {
+      window.onmessage = function(e) {
+        if (e.data.status == "ok") {
+          ok(e.data.result, e.data.message);
+        } else if (e.data.status == "done") {
+          window.onmessage = null;
+          w.close();
+          resolve();
+        }
+      }
+    });
+
+    var w = window.open("controller/index.html");
+    return p;
+  }
+
+  // This document just flips the prefs and opens the window for the actual test.
+  function runTest() {
+    simpleRegister()
+      .then(testController)
+      .then(function() {
+        SimpleTest.finish();
+      }).catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+
