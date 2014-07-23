@@ -3244,6 +3244,12 @@ this.DOMApplicationRegistry = {
                ? Ci.nsIX509CertDB.AppMarketplaceDevReviewersRoot
                : Ci.nsIX509CertDB.AppMarketplaceDevPublicRoot;
           break;
+
+        // The staging server uses the same certificate for both
+        // public and unreviewed apps.
+        case "https://marketplace.allizom.org":
+          root = Ci.nsIX509CertDB.AppMarketplaceStageRoot;
+          break;
       }
     }
 

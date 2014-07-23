@@ -73,28 +73,28 @@ fuzzy-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,
 == dynamic-conditions-11.svg pass.svg
 == dynamic-conditions-12.svg pass.svg
 == dynamic-conditions-13.svg about:blank
-fuzzy-if(Android,4,87) skip-if(B2G) == dynamic-clipPath-01.svg pass.svg
+fuzzy-if(Android,4,87) == dynamic-clipPath-01.svg pass.svg
 == dynamic-clipPath-02.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
 asserts(0-1) == dynamic-feImage-01.svg pass.svg # intermittent assertions (bug 886080)
 == dynamic-fill-01.svg dynamic-fill-01-ref.svg
-skip-if(B2G) fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01a.svg dynamic-filter-contents-01-ref.svg
-skip-if(B2G) fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01b.svg dynamic-filter-contents-01-ref.svg
-skip-if(B2G) == dynamic-gradient-contents-01.svg pass.svg
-skip-if(B2G) == dynamic-gradient-contents-02.svg pass.svg
-skip-if(B2G) == dynamic-inner-svg-01.svg pass.svg
+fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01a.svg dynamic-filter-contents-01-ref.svg
+fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01b.svg dynamic-filter-contents-01-ref.svg
+== dynamic-gradient-contents-01.svg pass.svg
+== dynamic-gradient-contents-02.svg pass.svg
+== dynamic-inner-svg-01.svg pass.svg
 == dynamic-link-style-01.svg pass.svg
-skip-if(B2G) == dynamic-marker-01.svg pass.svg
-skip-if(B2G) == dynamic-marker-02.svg dynamic-marker-02-ref.svg
-skip-if(B2G) == dynamic-marker-03.svg pass.svg
+== dynamic-marker-01.svg pass.svg
+== dynamic-marker-02.svg dynamic-marker-02-ref.svg
+== dynamic-marker-03.svg pass.svg
 == dynamic-mask-01.svg pass.svg
-skip-if(B2G) == dynamic-mask-contents-01.svg pass.svg
+== dynamic-mask-contents-01.svg pass.svg
 == dynamic-mask-pre-effects-bbox.html dynamic-mask-pre-effects-bbox-ref.html
 == dynamic-opacity-property-01.svg pass.svg
-skip-if(B2G) == dynamic-pattern-01.svg pass.svg
-skip-if(B2G) == dynamic-pattern-02.svg pass.svg
-skip-if(B2G) == dynamic-pattern-contents-01.svg pass.svg
-skip-if(B2G) == dynamic-pattern-contents-02.svg pass.svg
+== dynamic-pattern-01.svg pass.svg
+== dynamic-pattern-02.svg pass.svg
+== dynamic-pattern-contents-01.svg pass.svg
+== dynamic-pattern-contents-02.svg pass.svg
 == dynamic-rect-01.svg dynamic-rect-01-ref.svg
 fuzzy-if(d2d&&layersGPUAccelerated,3,1200) == dynamic-rect-02.svg dynamic-rect-02-ref.svg # bug 776038 for Win7, Win8
 == dynamic-rect-03.svg dynamic-rect-03-ref.svg
@@ -111,18 +111,18 @@ fuzzy-if(d2d&&layersGPUAccelerated,3,1200) == dynamic-rect-02.svg dynamic-rect-0
 fuzzy-if(d2d&&layersGPUAccelerated,3,12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7, Win8
 fuzzy-if(d2d&&layersGPUAccelerated,2,10539) == dynamic-text-03.svg dynamic-text-03-ref.svg # bug 776038 for Win7
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),47,89) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 421587 for WinXP, bug 776038 for Win7
-skip-if(B2G) == dynamic-text-05.svg pass.svg
-skip-if(B2G) == dynamic-text-06.svg pass.svg
+== dynamic-text-05.svg pass.svg
+== dynamic-text-06.svg pass.svg
 == dynamic-text-07.svg dynamic-text-07-ref.svg
 == dynamic-text-08.svg dynamic-text-08-ref.svg
-skip-if(B2G) == dynamic-textPath-01.svg dynamic-textPath-01-ref.svg
+== dynamic-textPath-01.svg dynamic-textPath-01-ref.svg
 == dynamic-textPath-02.svg dynamic-textPath-02-ref.svg
 == dynamic-textPath-03.svg dynamic-textPath-03-ref.svg
 == dynamic-use-01.svg pass.svg
 == dynamic-use-02.svg pass.svg
-skip-if(B2G) == dynamic-use-03.svg pass.svg
-skip-if(B2G) == dynamic-use-04.svg pass.svg
-skip-if(B2G) == dynamic-use-05.svg pass.svg
+== dynamic-use-03.svg pass.svg
+== dynamic-use-04.svg pass.svg
+== dynamic-use-05.svg pass.svg
 == dynamic-use-06.svg pass.svg
 == dynamic-use-07.svg pass.svg
 random == dynamic-use-nested-01a.svg dynamic-use-nested-01-ref.svg
@@ -132,7 +132,7 @@ random == dynamic-use-nested-01b.svg dynamic-use-nested-01-ref.svg
 == linked-filter-01.svg pass.svg
 == linked-pattern-01.svg pass.svg
 == use-01.svg pass.svg
-skip-if(B2G) == use-01-extref.svg pass.svg
+== use-01-extref.svg pass.svg
 == use-02-extref.svg use-02-extref-ref.svg
 == use-extref-dataURI-01.svg pass.svg
 == use-children.svg pass.svg
@@ -153,24 +153,24 @@ skip-if(B2G) == use-01-extref.svg pass.svg
 fails-if(Android||B2G) pref(security.fileuri.strict_origin_policy,true) == filter-extref-differentOrigin-01.svg pass.svg # Bug 695385
 == filter-foreignObject-01.svg pass.svg
 == filter-in-mask-01.svg pass.svg
-skip-if(B2G) == filter-invalidation-01.svg pass.svg
+== filter-invalidation-01.svg pass.svg
 == filter-result-01.svg filter-result-01-ref.svg
-skip-if(B2G) == filter-scaled-01.svg pass.svg
-skip-if(B2G) == filter-scaled-02.html filter-scaled-02-ref.html
+== filter-scaled-01.svg pass.svg
+== filter-scaled-02.html filter-scaled-02-ref.html
 == filter-translated-01.svg filter-translated-01-ref.svg
 == filters-and-group-opacity-01.svg filters-and-group-opacity-01-ref.svg
 == foreignObject-01.svg pass.svg
 == foreignObject-02.svg foreignObject-02-ref.svg
-skip-if(B2G) == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
-skip-if(B2G) == foreignObject-change-transform-01.svg pass.svg
+== foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
+== foreignObject-change-transform-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
 == foreignObject-form-theme.svg foreignObject-form-theme-ref.html
 == foreignObject-img-form-theme.html foreignObject-img-form-theme-ref.html
-skip-if(B2G) == foreignObject-move-repaint-01.svg pass.svg
+== foreignObject-move-repaint-01.svg pass.svg
 == foreignObject-overflow-01.svg pass.svg
-skip-if(B2G) == foreignObject-start-hidden-01.svg pass.svg # followup from Bug 596765
-skip-if(B2G) == foreignObject-start-hidden-02.svg pass.svg
-skip-if(B2G) == foreignObject-style-change-01.svg pass.svg
+== foreignObject-start-hidden-01.svg pass.svg # followup from Bug 596765
+== foreignObject-start-hidden-02.svg pass.svg
+== foreignObject-style-change-01.svg pass.svg
 == foreignObject-dynamic-abspos-01.html foreignObject-dynamic-abspos-01-ref.html
 fuzzy-if(Android,18,600) == foreignObject-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
 == foreignObject-fixedpos-02.html foreignObject-fixedpos-ref.html
@@ -328,7 +328,7 @@ HTTP(..) == text-scale-03.svg text-scale-03-ref.svg
 fails-if(OSX==10.8) == stroke-dasharray-01.svg stroke-dasharray-01-ref.svg # bug 896487
 == stroke-dasharray-02.svg pass.svg
 == stroke-dasharray-and-pathLength-01.svg pass.svg
-== stroke-dasharray-and-text-01.svg stroke-dasharray-and-text-01-ref.svg 
+== stroke-dasharray-and-text-01.svg stroke-dasharray-and-text-01-ref.svg
 == stroke-dashoffset-01.svg pass.svg
 == stroke-linecap-square-w-zero-length-segs-01.svg pass.svg
 == stroke-linecap-square-w-zero-length-segs-02.svg pass.svg
@@ -350,24 +350,24 @@ fails-if(OSX==10.8) == stroke-dasharray-01.svg stroke-dasharray-01-ref.svg # bug
 == tspan-dxdy-05.svg tspan-dxdy-ref.svg
 == tspan-dxdy-06.svg tspan-dxdy-ref.svg
 == tspan-dxdy-textPath-01.svg tspan-dxdy-textPath-01-ref.svg
-skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-01.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
-skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-02.svg tspan-rotate-02.svg # Bug 629718 for random failure on WinXP # bug 773482
-skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-02.svg tspan-rotate-02-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
-skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-03.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
-skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-04.svg tspan-rotate-04.svg # Bug 629718 for random failure on WinXP # bug 773482
-skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-04.svg tspan-rotate-04-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-01.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-02.svg tspan-rotate-02.svg # Bug 629718 for random failure on WinXP # bug 773482
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-02.svg tspan-rotate-02-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-03.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-04.svg tspan-rotate-04.svg # Bug 629718 for random failure on WinXP # bug 773482
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-04.svg tspan-rotate-04-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-05.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP
-skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-06.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-06.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
 == tspan-rotate-07.svg tspan-rotate-07-ref.svg
 == tspan-rotate-textPath-01.svg tspan-rotate-textPath-01-ref.svg
-skip-if(B2G) == tspan-xy-01.svg tspan-xy-ref.svg # bug 773482
-skip-if(B2G) == tspan-xy-02.svg tspan-xy-ref.svg # bug 773482
-skip-if(B2G) == tspan-xy-03.svg tspan-xy-ref.svg # bug 773482
-skip-if(B2G) == tspan-xy-04.svg tspan-xy-ref.svg # bug 773482
-skip-if(B2G) == tspan-xy-05.svg tspan-xy-ref.svg # bug 773482
-skip-if(B2G) == tspan-xy-06.svg tspan-xy-ref.svg # bug 773482
-skip-if(B2G) == tspan-xy-anchor-middle-01.svg tspan-xy-anchor-middle-ref.svg # bug 773482
-skip-if(B2G) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-ref.svg # bug 773482
+== tspan-xy-01.svg tspan-xy-ref.svg # bug 773482
+== tspan-xy-02.svg tspan-xy-ref.svg # bug 773482
+== tspan-xy-03.svg tspan-xy-ref.svg # bug 773482
+== tspan-xy-04.svg tspan-xy-ref.svg # bug 773482
+== tspan-xy-05.svg tspan-xy-ref.svg # bug 773482
+== tspan-xy-06.svg tspan-xy-ref.svg # bug 773482
+== tspan-xy-anchor-middle-01.svg tspan-xy-anchor-middle-ref.svg # bug 773482
+== tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-ref.svg # bug 773482
 == userSpaceOnUse-and-pattern-01.svg userSpaceOnUse-and-pattern-01-ref.svg
 == viewBox-and-pattern-01.svg pass.svg
 == viewBox-and-pattern-02.svg pass.svg
@@ -384,25 +384,25 @@ skip-if(B2G) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-ref.svg # bug 773
 == href-attr-change-restyles.svg href-attr-change-restyles-ref.svg
 == mask-img.html mask-img-ref.html
 
-skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-burn.svg blend-color-burn-ref.svg
-skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-dodge.svg blend-color-dodge-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-burn.svg blend-color-burn-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-dodge.svg blend-color-dodge-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-color.svg blend-color-ref.svg
-skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-darken.svg blend-darken-ref.svg
-skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference.svg blend-difference-ref.svg
-skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-exclusion.svg blend-exclusion-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-darken.svg blend-darken-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference.svg blend-difference-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-exclusion.svg blend-exclusion-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-hard-light.svg blend-hard-light-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-hue.svg blend-hue-ref.svg
-skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-blend.svg blend-layer-blend-ref.svg
-skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-filter.svg blend-layer-filter-ref.svg
-skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-mask.svg blend-layer-mask-ref.svg
-skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-opacity.svg blend-layer-opacity-ref.svg
-skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-lighten.svg blend-lighten-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-blend.svg blend-layer-blend-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-filter.svg blend-layer-filter-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-mask.svg blend-layer-mask-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-opacity.svg blend-layer-opacity-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-lighten.svg blend-lighten-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-luminosity.svg blend-luminosity-ref.svg
 #skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply-alpha.svg blend-multiply-alpha-ref.svg
-skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply.svg blend-multiply-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply.svg blend-multiply-ref.svg
 pref(layout.css.mix-blend-mode.enabled,true) == blend-normal.svg blend-normal-ref.svg
-#skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-overlay.svg blend-overlay-ref.svg
-#skip-if(B2G||Android)  pref(layout.css.mix-blend-mode.enabled,true) == blend-saturation.svg blend-saturation-ref.svg
-#skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-screen.svg blend-screen-ref.svg
-# skip-if(B2G|Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-soft-light.svg blend-soft-light-ref.svg
-skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking-ref.html
+#skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-overlay.svg blend-overlay-ref.svg
+#skip-if(Android)  pref(layout.css.mix-blend-mode.enabled,true) == blend-saturation.svg blend-saturation-ref.svg
+#skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-screen.svg blend-screen-ref.svg
+#skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-soft-light.svg blend-soft-light-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking-ref.html

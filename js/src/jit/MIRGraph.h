@@ -176,10 +176,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool addPredecessor(TempAllocator &alloc, MBasicBlock *pred);
     bool addPredecessorPopN(TempAllocator &alloc, MBasicBlock *pred, uint32_t popped);
 
-    // Add a predecessor which won't introduce any new phis to this block.
-    // This may be called after the contents of this block have been built.
-    void addPredecessorSameInputsAs(MBasicBlock *pred, MBasicBlock *existingPred);
-
     // Stranger utilities used for inlining.
     bool addPredecessorWithoutPhis(MBasicBlock *pred);
     void inheritSlots(MBasicBlock *parent);
@@ -283,16 +279,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     MBasicBlock *getPredecessor(uint32_t i) const {
         return predecessors_[i];
-    }
-    size_t indexForPredecessor(MBasicBlock *block) const {
-        // This should only be called before critical edge splitting.
-        JS_ASSERT(!block->successorWithPhis());
-
-        for (size_t i = 0; i < predecessors_.length(); i++) {
-            if (predecessors_[i] == block)
-                return i;
-        }
-        MOZ_CRASH();
     }
 #ifdef DEBUG
     bool hasLastIns() const {

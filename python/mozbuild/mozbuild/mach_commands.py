@@ -745,7 +745,7 @@ class RunProgram(MachCommandBase):
     @CommandArgument('+background', '+b', action='store_true',
         help='Do not pass the -foreground argument by default on Mac')
     @CommandArgument('+profile', '+P', action='store_true',
-        help='Specifiy thr profile to use')
+        help='Specify the profile to use')
     def run(self, params, remote, background, profile):
         try:
             args = [self.get_binary_path('app')]

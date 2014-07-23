@@ -46,12 +46,13 @@ class DeviceManager(object):
 
     _logcatNeedsRoot = True
 
-    def __init__(self, logLevel=mozlog.ERROR, deviceRoot=None):
+    def __init__(self, logLevel=None, deviceRoot=None):
         try:
             self._logger = mozlog.structured.structuredlog.get_default_logger(component="mozdevice")
             if not self._logger: # no global structured logger, fall back to reg logging
                 self._logger = mozlog.getLogger("mozdevice")
-                self._logger.setLevel(logLevel)
+                if logLevel is not None:
+                    self._logger.setLevel(logLevel)
         except AttributeError:
             # Structured logging doesn't work on Python 2.6
             self._logger = None

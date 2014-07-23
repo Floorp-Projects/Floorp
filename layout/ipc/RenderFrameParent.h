@@ -83,7 +83,8 @@ public:
                                    const TargetConfig& aTargetConfig,
                                    bool aIsFirstPaint,
                                    bool aScheduleComposite,
-                                   uint32_t aPaintSequenceNumber) MOZ_OVERRIDE;
+                                   uint32_t aPaintSequenceNumber,
+                                   bool aIsRepeatTransaction) MOZ_OVERRIDE;
 
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         nsSubDocumentFrame* aFrame,

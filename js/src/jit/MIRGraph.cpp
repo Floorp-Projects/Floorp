@@ -926,28 +926,6 @@ MBasicBlock::addPredecessorPopN(TempAllocator &alloc, MBasicBlock *pred, uint32_
     return predecessors_.append(pred);
 }
 
-void
-MBasicBlock::addPredecessorSameInputsAs(MBasicBlock *pred, MBasicBlock *existingPred)
-{
-    JS_ASSERT(pred);
-    JS_ASSERT(predecessors_.length() > 0);
-
-    // Predecessors must be finished, and at the correct stack depth.
-    JS_ASSERT(pred->hasLastIns());
-    JS_ASSERT(!pred->successorWithPhis());
-
-    if (!phisEmpty()) {
-        size_t existingPosition = indexForPredecessor(existingPred);
-        for (MPhiIterator iter = phisBegin(); iter != phisEnd(); iter++) {
-            if (!iter->addInputSlow(iter->getOperand(existingPosition)))
-                CrashAtUnhandlableOOM("MBasicBlock::addPredecessorAdjustPhis");
-        }
-    }
-
-    if (!predecessors_.append(pred))
-        CrashAtUnhandlableOOM("MBasicBlock::addPredecessorAdjustPhis");
-}
-
 bool
 MBasicBlock::addPredecessorWithoutPhis(MBasicBlock *pred)
 {
@@ -1155,16 +1133,13 @@ MBasicBlock::removePredecessor(MBasicBlock *pred)
         // Adjust phis.  Note that this can leave redundant phis
         // behind.
         if (!phisEmpty()) {
+            JS_ASSERT(pred->successorWithPhis());
+            JS_ASSERT(pred->positionInPhiSuccessor() == i);
             for (MPhiIterator iter = phisBegin(); iter != phisEnd(); iter++)
                 iter->removeOperand(i);
-            if (pred->successorWithPhis()) {
-                // Don't adjust successorWithPhis() if we haven't constructed
-                // this information yet.
-                JS_ASSERT(pred->positionInPhiSuccessor() == i);
-                pred->setSuccessorWithPhis(nullptr, 0);
-                for (size_t j = i+1; j < numPredecessors(); j++)
-                    getPredecessor(j)->setSuccessorWithPhis(this, j - 1);
-            }
+            pred->setSuccessorWithPhis(nullptr, 0);
+            for (size_t j = i+1; j < numPredecessors(); j++)
+                getPredecessor(j)->setSuccessorWithPhis(this, j - 1);
         }
 
         // Remove from pred list.

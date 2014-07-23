@@ -131,7 +131,6 @@ namespace jit {
     _(VM)                                             \
                                                       \
     /* Specific passes during ion compilation */      \
-    _(FoldTests)                                      \
     _(SplitCriticalEdges)                             \
     _(RenumberBlocks)                                 \
     _(ScalarReplacement)                              \

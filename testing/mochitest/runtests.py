@@ -93,6 +93,9 @@ class MessageLogger(object):
         # Message buffering
         self.buffered_messages = []
 
+        # Failures reporting, after the end of the tests execution
+        self.errors = []
+
     def valid_message(self, obj):
         """True if the given object is a valid structured message (only does a superficial validation)"""
         return isinstance(obj, dict) and 'action' in obj and obj['action'] in MessageLogger.VALID_ACTIONS
@@ -133,6 +136,11 @@ class MessageLogger(object):
             unstructured = True
             message.pop('unstructured')
 
+        # Saving errors/failures to be shown at the end of the test run
+        is_error = 'expected' in message or (message['action'] == 'log' and message['message'].startswith('TEST-UNEXPECTED'))
+        if is_error:
+            self.errors.append(message)
+
         # If we don't do any buffering, or the tests haven't started, or the message was unstructured, it is directly logged
         if not self.buffering or unstructured or not self.tests_started:
             self.logger.log_raw(message)
@@ -143,7 +151,6 @@ class MessageLogger(object):
             self.buffered_messages = []
 
         # Buffering logic; Also supports "raw" errors (in log messages) because some tests manually dump 'TEST-UNEXPECTED-FAIL'
-        is_error = 'expected' in message or (message['action'] == 'log' and message['message'].startswith('TEST-UNEXPECTED'))
         if not is_error and message['action'] not in self.BUFFERED_ACTIONS:
             self.logger.log_raw(message)
             return
@@ -1912,7 +1919,7 @@ class Mochitest(MochitestUtilsMixin):
 
     def fix_stack(self, message):
       if message['action'] == 'log' and self.stackFixerFunction:
-        message['message'] = self.stackFixerFunction(message['message'])
+        message['message'] = self.stackFixerFunction(message['message'].encode('ascii', 'replace'))
       return message
 
     def record_last_test(self, message):
