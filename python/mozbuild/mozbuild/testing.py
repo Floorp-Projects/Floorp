@@ -10,6 +10,7 @@ import os
 import mozpack.path as mozpath
 
 from .base import MozbuildObject
+from .util import OrderedDefaultDict
 from collections import defaultdict
 
 
@@ -44,7 +45,7 @@ class TestMetadata(object):
     """
 
     def __init__(self, filename=None):
-        self._tests_by_path = defaultdict(list)
+        self._tests_by_path = OrderedDefaultDict(list)
         self._tests_by_flavor = defaultdict(set)
         self._test_dirs = set()
 
