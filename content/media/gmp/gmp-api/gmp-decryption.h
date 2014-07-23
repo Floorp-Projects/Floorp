@@ -260,6 +260,10 @@ public:
   virtual void Decrypt(GMPBuffer* aBuffer,
                        GMPEncryptedBufferMetadata* aMetadata) = 0;
 
+  // Called when the decryption operations are complete.
+  // Do not call the GMPDecryptorCallback's functions after this is called.
+  virtual void DecryptingComplete() = 0;
+
 };
 
 #endif // GMP_DECRYPTION_h_
