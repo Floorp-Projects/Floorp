@@ -565,7 +565,11 @@ InitXPCOMGlue(const char *argv0, nsIFile **xreDirectory)
     return rv;
   }
 
+#ifndef MOZ_METRO
+  // This will set this thread as the main thread, which in metro land is
+  // wrong. We initialize this later from the right thread in nsAppRunner.
   NS_LogInit();
+#endif
 
   // chop XPCOM_DLL off exePath
   *lastSlash = '\0';
