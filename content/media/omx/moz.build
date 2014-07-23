@@ -48,7 +48,7 @@ if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
         'RtspOmxReader.cpp',
     ]
 
-if CONFIG['ANDROID_VERSION'] and int(CONFIG['ANDROID_VERSION']) >= 18:
+if CONFIG['ANDROID_VERSION'] >= '18':
     EXPORTS += [
         'I420ColorConverterHelper.h',
         'MediaCodecDecoder.h',
