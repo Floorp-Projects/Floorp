@@ -83,6 +83,10 @@ class SandboxDerived(TreeMetadata):
 
         self.config = sandbox.config
 
+    @property
+    def relobjdir(self):
+        return mozpath.relpath(self.objdir, self.topobjdir)
+
 
 class DirectoryTraversal(SandboxDerived):
     """Describes how directory traversal for building should work.
@@ -338,7 +342,7 @@ class Linkable(SandboxDerived):
 
     def link_library(self, obj):
         assert isinstance(obj, BaseLibrary)
-        if obj.kind == obj.COMPONENT:
+        if isinstance(obj, SharedLibrary) and obj.variant == obj.COMPONENT:
             raise LinkageWrongKindError(
                 'Linkable.link_library() does not take components.')
         if obj.KIND != self.KIND:
@@ -395,67 +399,22 @@ class BaseLibrary(Linkable):
     """Generic sandbox container object for libraries."""
     __slots__ = (
         'basename',
+        'lib_name',
         'import_name',
-        'is_sdk',
-        'link_into',
-        'shared_name',
-        'static_name',
-        'soname',
         'refcount',
     )
 
-    STATIC = 1
-    SHARED = 2
-    # STATIC + SHARED = 3
-    FRAMEWORK = 4
-    COMPONENT = 5
-    MAX_TYPE = 6
-
-    def __init__(self, sandbox, basename, kind=None, soname=None,
-            static_name=None, shared_name=None, is_sdk=False,
-            link_into=None):
-        assert(kind in range(1, self.MAX_TYPE))
+    def __init__(self, sandbox, basename):
         Linkable.__init__(self, sandbox)
 
-        self.basename = basename
-        self.kind = kind
-        self.static_name = self.shared_name = None
-        if kind in (self.STATIC, self.STATIC + self.SHARED):
-            self.static_name = static_name or self.basename
-        if self.static_name:
-            self.static_name = '%s%s%s' % (
+        self.basename = self.lib_name = basename
+        if self.lib_name:
+            self.lib_name = '%s%s%s' % (
                 sandbox.config.lib_prefix,
-                self.static_name,
+                self.lib_name,
                 sandbox.config.lib_suffix
             )
-            self.import_name = self.static_name
-        if kind != self.STATIC:
-            self.shared_name = shared_name or self.basename
-        if self.shared_name:
-            if kind == self.FRAMEWORK:
-                self.shared_name = shared_name
-                self.import_name = shared_name
-            else:
-                self.import_name = '%s%s%s' % (
-                    sandbox.config.import_prefix,
-                    self.shared_name,
-                    sandbox.config.import_suffix,
-                )
-                self.shared_name = '%s%s%s' % (
-                    sandbox.config.dll_prefix,
-                    self.shared_name,
-                    sandbox.config.dll_suffix,
-                )
-        if soname:
-            self.soname = '%s%s%s' % (
-                sandbox.config.dll_prefix,
-                soname,
-                sandbox.config.dll_suffix,
-            )
-        else:
-            self.soname = self.shared_name
-        self.is_sdk = is_sdk
-        self.link_into = link_into
+            self.import_name = self.lib_name
 
         self.refcount = 0
 
@@ -463,15 +422,73 @@ class BaseLibrary(Linkable):
 class Library(BaseLibrary):
     """Sandbox container object for a library"""
     KIND = 'target'
+    __slots__ = (
+        'is_sdk',
+    )
+
+    def __init__(self, sandbox, basename, real_name=None, is_sdk=False):
+        BaseLibrary.__init__(self, sandbox, real_name or basename)
+        self.basename = basename
+        self.is_sdk = is_sdk
+
+
+class StaticLibrary(Library):
+    """Sandbox container object for a static library"""
+    __slots__ = (
+        'link_into',
+    )
+
+    def __init__(self, sandbox, basename, real_name=None, is_sdk=False,
+        link_into=None):
+        Library.__init__(self, sandbox, basename, real_name, is_sdk)
+        self.link_into = link_into
+
+
+class SharedLibrary(Library):
+    """Sandbox container object for a shared library"""
+    __slots__ = (
+        'soname',
+        'variant',
+    )
+
+    FRAMEWORK = 1
+    COMPONENT = 2
+    MAX_VARIANT = 3
+
+    def __init__(self, sandbox, basename, real_name=None, is_sdk=False,
+            soname=None, variant=None):
+        assert(variant in range(1, self.MAX_VARIANT) or variant is None)
+        Library.__init__(self, sandbox, basename, real_name, is_sdk)
+        self.variant = variant
+        self.lib_name = real_name or basename
+        assert self.lib_name
+
+        if variant == self.FRAMEWORK:
+            self.import_name = self.lib_name
+        else:
+            self.import_name = '%s%s%s' % (
+                sandbox.config.import_prefix,
+                self.lib_name,
+                sandbox.config.import_suffix,
+            )
+            self.lib_name = '%s%s%s' % (
+                sandbox.config.dll_prefix,
+                self.lib_name,
+                sandbox.config.dll_suffix,
+            )
+        if soname:
+            self.soname = '%s%s%s' % (
+                sandbox.config.dll_prefix,
+                soname,
+                sandbox.config.dll_suffix,
+            )
+        else:
+            self.soname = self.lib_name
 
 
 class HostLibrary(BaseLibrary):
     """Sandbox container object for a host library"""
     KIND = 'host'
-
-    def __init__(self, sandbox, basename):
-        BaseLibrary.__init__(self, sandbox, basename,
-            kind=self.STATIC)
 
 
 class TestManifest(SandboxDerived):
