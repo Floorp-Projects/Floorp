@@ -324,7 +324,30 @@ class ExampleWebIDLInterface(SandboxDerived):
         self.name = name
 
 
-class BaseProgram(SandboxDerived):
+class LinkageWrongKindError(Exception):
+    """Error thrown when trying to link objects of the wrong kind"""
+
+
+class Linkable(SandboxDerived):
+    """Generic sandbox container object for programs and libraries"""
+    __slots__ = ('linked_libraries')
+
+    def __init__(self, sandbox):
+        SandboxDerived.__init__(self, sandbox)
+        self.linked_libraries = []
+
+    def link_library(self, obj):
+        assert isinstance(obj, BaseLibrary)
+        if obj.kind == obj.COMPONENT:
+            raise LinkageWrongKindError(
+                'Linkable.link_library() does not take components.')
+        if obj.KIND != self.KIND:
+            raise LinkageWrongKindError('%s != %s' % (obj.KIND, self.KIND))
+        self.linked_libraries.append(obj)
+        obj.refcount += 1
+
+
+class BaseProgram(Linkable):
     """Sandbox container object for programs, which is a unicode string.
 
     This class handles automatically appending a binary suffix to the program
@@ -336,7 +359,7 @@ class BaseProgram(SandboxDerived):
     __slots__ = ('program')
 
     def __init__(self, sandbox, program):
-        SandboxDerived.__init__(self, sandbox)
+        Linkable.__init__(self, sandbox)
 
         bin_suffix = sandbox['CONFIG'].get(self.SUFFIX_VAR, '')
         if not program.endswith(bin_suffix):
@@ -347,38 +370,37 @@ class BaseProgram(SandboxDerived):
 class Program(BaseProgram):
     """Sandbox container object for PROGRAM"""
     SUFFIX_VAR = 'BIN_SUFFIX'
+    KIND = 'target'
 
 
 class HostProgram(BaseProgram):
     """Sandbox container object for HOST_PROGRAM"""
     SUFFIX_VAR = 'HOST_BIN_SUFFIX'
+    KIND = 'host'
 
 
 class SimpleProgram(BaseProgram):
     """Sandbox container object for each program in SIMPLE_PROGRAMS"""
     SUFFIX_VAR = 'BIN_SUFFIX'
+    KIND = 'target'
 
 
 class HostSimpleProgram(BaseProgram):
     """Sandbox container object for each program in HOST_SIMPLE_PROGRAMS"""
     SUFFIX_VAR = 'HOST_BIN_SUFFIX'
+    KIND = 'host'
 
 
-class BaseLibrary(SandboxDerived):
-    """Generic sandbox container object for libraries.
-
-    The static_libraries member tracks the list of relative directory and
-    library names of static libraries that are meant to be linked into
-    the library defined by an instance of this class.
-    """
+class BaseLibrary(Linkable):
+    """Generic sandbox container object for libraries."""
     __slots__ = (
         'basename',
         'import_name',
         'is_sdk',
+        'link_into',
         'shared_name',
         'static_name',
         'soname',
-        'static_libraries',
         'refcount',
     )
 
@@ -390,9 +412,10 @@ class BaseLibrary(SandboxDerived):
     MAX_TYPE = 6
 
     def __init__(self, sandbox, basename, kind=None, soname=None,
-            static_name=None, shared_name=None, is_sdk=False):
+            static_name=None, shared_name=None, is_sdk=False,
+            link_into=None):
         assert(kind in range(1, self.MAX_TYPE))
-        SandboxDerived.__init__(self, sandbox)
+        Linkable.__init__(self, sandbox)
 
         self.basename = basename
         self.kind = kind
@@ -432,20 +455,20 @@ class BaseLibrary(SandboxDerived):
         else:
             self.soname = self.shared_name
         self.is_sdk = is_sdk
+        self.link_into = link_into
 
         self.refcount = 0
-        self.static_libraries = []
-
-    def link_static_lib(self, objdir, basename):
-        self.static_libraries.append((objdir, basename))
 
 
 class Library(BaseLibrary):
     """Sandbox container object for a library"""
+    KIND = 'target'
 
 
 class HostLibrary(BaseLibrary):
     """Sandbox container object for a host library"""
+    KIND = 'host'
+
     def __init__(self, sandbox, basename):
         BaseLibrary.__init__(self, sandbox, basename,
             kind=self.STATIC)
