@@ -25,6 +25,314 @@ using namespace js::jit;
 
 using mozilla::DebugOnly;
 
+// Return whether a block simply computes the specified constant value.
+static bool
+BlockComputesConstant(MBasicBlock *block, MDefinition *value)
+{
+    // Look for values with no uses. This is used to eliminate constant
+    // computing blocks in condition statements, and the phi which used to
+    // consume the constant has already been removed.
+    if (value->hasUses())
+        return false;
+
+    if (!value->isConstant() || value->block() != block)
+        return false;
+    if (!block->phisEmpty())
+        return false;
+    for (MInstructionIterator iter = block->begin(); iter != block->end(); ++iter) {
+        if (*iter != value || !iter->isGoto())
+            return false;
+    }
+    return true;
+}
+
+// Determine whether a block simply computes a phi and performs a test on it.
+static bool
+BlockIsSingleTest(MBasicBlock *block, MPhi **pphi, MTest **ptest)
+{
+    *pphi = nullptr;
+    *ptest = nullptr;
+
+    MInstruction *ins = *block->begin();
+    if (!ins->isTest())
+        return false;
+    MTest *test = ins->toTest();
+    if (!test->input()->isPhi())
+        return false;
+    MPhi *phi = test->input()->toPhi();
+    if (phi->block() != block)
+        return false;
+
+    for (MUseIterator iter = phi->usesBegin(); iter != phi->usesEnd(); ++iter) {
+        MUse *use = *iter;
+        if (use->consumer() == test)
+            continue;
+        if (use->consumer()->isResumePoint() && use->consumer()->block() == block)
+            continue;
+        return false;
+    }
+
+    for (MPhiIterator iter = block->phisBegin(); iter != block->phisEnd(); ++iter) {
+        if (*iter != phi)
+            return false;
+    }
+
+    *pphi = phi;
+    *ptest = test;
+
+    return true;
+}
+
+// Change block so that it ends in a test of the specified value, going to
+// either ifTrue or ifFalse. existingPred is an existing predecessor of ifTrue
+// or ifFalse with the same values incoming to ifTrue/ifFalse as block.
+// existingPred is not required to be a predecessor of ifTrue/ifFalse if block
+// already ends in a test going to that block on a true/false result.
+static void
+UpdateTestSuccessors(TempAllocator &alloc, MBasicBlock *block,
+                     MDefinition *value, MBasicBlock *ifTrue, MBasicBlock *ifFalse,
+                     MBasicBlock *existingPred)
+{
+    MInstruction *ins = block->lastIns();
+    if (ins->isTest()) {
+        MTest *test = ins->toTest();
+        JS_ASSERT(test->input() == value);
+
+        if (ifTrue != test->ifTrue()) {
+            test->ifTrue()->removePredecessor(block);
+            ifTrue->addPredecessorSameInputsAs(block, existingPred);
+            JS_ASSERT(test->ifTrue() == test->getSuccessor(0));
+            test->replaceSuccessor(0, ifTrue);
+        }
+
+        if (ifFalse != test->ifFalse()) {
+            test->ifFalse()->removePredecessor(block);
+            ifFalse->addPredecessorSameInputsAs(block, existingPred);
+            JS_ASSERT(test->ifFalse() == test->getSuccessor(1));
+            test->replaceSuccessor(1, ifFalse);
+        }
+
+        return;
+    }
+
+    JS_ASSERT(ins->isGoto());
+    ins->toGoto()->target()->removePredecessor(block);
+    block->discardLastIns();
+
+    MTest *test = MTest::New(alloc, value, ifTrue, ifFalse);
+    block->end(test);
+
+    ifTrue->addPredecessorSameInputsAs(block, existingPred);
+    ifFalse->addPredecessorSameInputsAs(block, existingPred);
+}
+
+static void
+MaybeFoldConditionBlock(MIRGraph &graph, MBasicBlock *initialBlock)
+{
+    // Optimize the MIR graph to improve the code generated for conditional
+    // operations. A test like 'if (a ? b : c)' normally requires four blocks,
+    // with a phi for the intermediate value. This can be improved to use three
+    // blocks with no phi value, and if either b or c is constant,
+    // e.g. 'if (a ? b : 0)', then the block associated with that constant
+    // can be eliminated.
+
+    // Look for a diamond pattern:
+    //
+    //       initialBlock
+    //         /     \
+    // trueBranch  falseBranch
+    //         \     /
+    //        testBlock
+    //
+    // Where testBlock contains only a test on a phi combining two values
+    // pushed onto the stack by trueBranch and falseBranch.
+
+    MInstruction *ins = initialBlock->lastIns();
+    if (!ins->isTest())
+        return;
+    MTest *initialTest = ins->toTest();
+
+    MBasicBlock *trueBranch = initialTest->ifTrue();
+    if (trueBranch->numPredecessors() != 1 || trueBranch->numSuccessors() != 1)
+        return;
+    MBasicBlock *falseBranch = initialTest->ifFalse();
+    if (falseBranch->numPredecessors() != 1 || falseBranch->numSuccessors() != 1)
+        return;
+    MBasicBlock *testBlock = trueBranch->getSuccessor(0);
+    if (testBlock != falseBranch->getSuccessor(0))
+        return;
+    if (testBlock->numPredecessors() != 2)
+        return;
+
+    MPhi *phi;
+    MTest *finalTest;
+    if (!BlockIsSingleTest(testBlock, &phi, &finalTest))
+        return;
+
+    if (&testBlock->info() != &initialBlock->info() ||
+        &trueBranch->info() != &initialBlock->info() ||
+        &falseBranch->info() != &initialBlock->info())
+    {
+        return;
+    }
+
+    MDefinition *trueResult = phi->getOperand(testBlock->indexForPredecessor(trueBranch));
+    MDefinition *falseResult = phi->getOperand(testBlock->indexForPredecessor(falseBranch));
+
+    if (trueBranch->stackDepth() != falseBranch->stackDepth())
+        return;
+
+    if (trueBranch->stackDepth() != testBlock->stackDepth() + 1)
+        return;
+
+    if (trueResult != trueBranch->peek(-1) || falseResult != falseBranch->peek(-1))
+        return;
+
+    // OK, we found the desired pattern, now transform the graph.
+
+    // Remove the phi and its inputs from testBlock.
+    MPhiIterator phis = testBlock->phisBegin();
+    testBlock->discardPhiAt(phis);
+    trueBranch->pop();
+    falseBranch->pop();
+
+    // If either trueBranch or falseBranch just computes a constant for the
+    // test, determine the block that branch will end up jumping to and eliminate
+    // the branch. Otherwise, change the end of the block to a test that jumps
+    // directly to successors of testBlock, rather than to testBlock itself.
+
+    MBasicBlock *trueTarget = trueBranch;
+    if (BlockComputesConstant(trueBranch, trueResult)) {
+        trueTarget = trueResult->toConstant()->valueToBoolean()
+                     ? finalTest->ifTrue()
+                     : finalTest->ifFalse();
+        testBlock->removePredecessor(trueBranch);
+        graph.removeBlock(trueBranch);
+    } else {
+        UpdateTestSuccessors(graph.alloc(), trueBranch, trueResult,
+                             finalTest->ifTrue(), finalTest->ifFalse(), testBlock);
+    }
+
+    MBasicBlock *falseTarget = falseBranch;
+    if (BlockComputesConstant(falseBranch, falseResult)) {
+        falseTarget = falseResult->toConstant()->valueToBoolean()
+                      ? finalTest->ifTrue()
+                      : finalTest->ifFalse();
+        testBlock->removePredecessor(falseBranch);
+        graph.removeBlock(falseBranch);
+    } else {
+        UpdateTestSuccessors(graph.alloc(), falseBranch, falseResult,
+                             finalTest->ifTrue(), finalTest->ifFalse(), testBlock);
+    }
+
+    // Short circuit the initial test to skip any constant branch eliminated above.
+    UpdateTestSuccessors(graph.alloc(), initialBlock, initialTest->input(),
+                         trueTarget, falseTarget, testBlock);
+
+    // Finally, remove testBlock itself.
+    finalTest->ifTrue()->removePredecessor(testBlock);
+    finalTest->ifFalse()->removePredecessor(testBlock);
+    graph.removeBlock(testBlock);
+
+    printf("WOOT\n");
+}
+
+static void
+MaybeFoldAndOrBlock(MIRGraph &graph, MBasicBlock *initialBlock)
+{
+    // Optimize the MIR graph to improve the code generated for && and ||
+    // operations when they are used in tests. This is very similar to the
+    // above method for folding condition blocks, though the two are
+    // separated (with as much common code as possible) for clarity. This
+    // normally requires three blocks. The final test can always be eliminated,
+    // though we don't try to constant fold away the branch block as well.
+
+    // Look for a triangle pattern:
+    //
+    //       initialBlock
+    //         /     |
+    // branchBlock   |
+    //         \     |
+    //        testBlock
+    //
+    // Where testBlock contains only a test on a phi combining two values
+    // pushed onto the stack by initialBlock and branchBlock.
+
+    MInstruction *ins = initialBlock->lastIns();
+    if (!ins->isTest())
+        return;
+    MTest *initialTest = ins->toTest();
+
+    bool branchIsTrue = true;
+    MBasicBlock *branchBlock = initialTest->ifTrue();
+    MBasicBlock *testBlock = initialTest->ifFalse();
+    if (branchBlock->numSuccessors() != 1 || branchBlock->getSuccessor(0) != testBlock) {
+        branchIsTrue = false;
+        branchBlock = initialTest->ifFalse();
+        testBlock = initialTest->ifTrue();
+    }
+
+    if (branchBlock->numSuccessors() != 1 || branchBlock->getSuccessor(0) != testBlock)
+        return;
+    if (branchBlock->numPredecessors() != 1 || testBlock->numPredecessors() != 2)
+        return;
+
+    MPhi *phi;
+    MTest *finalTest;
+    if (!BlockIsSingleTest(testBlock, &phi, &finalTest))
+        return;
+
+    if (&testBlock->info() != &initialBlock->info() || &branchBlock->info() != &initialBlock->info())
+        return;
+
+    MDefinition *branchResult = phi->getOperand(testBlock->indexForPredecessor(branchBlock));
+    MDefinition *initialResult = phi->getOperand(testBlock->indexForPredecessor(initialBlock));
+
+    if (branchBlock->stackDepth() != initialBlock->stackDepth())
+        return;
+
+    if (branchBlock->stackDepth() != testBlock->stackDepth() + 1)
+        return;
+
+    if (branchResult != branchBlock->peek(-1) || initialResult != initialBlock->peek(-1))
+        return;
+
+    // OK, we found the desired pattern, now transform the graph.
+
+    // Remove the phi and its inputs from testBlock.
+    MPhiIterator phis = testBlock->phisBegin();
+    testBlock->discardPhiAt(phis);
+    branchBlock->pop();
+    initialBlock->pop();
+
+    // Change the end of the initial and branch blocks to a test that jumps
+    // directly to successors of testBlock, rather than to testBlock itself.
+
+    UpdateTestSuccessors(graph.alloc(), initialBlock, initialResult,
+                         branchIsTrue ? branchBlock : finalTest->ifTrue(),
+                         branchIsTrue ? finalTest->ifFalse() : branchBlock,
+                         testBlock);
+
+    UpdateTestSuccessors(graph.alloc(), branchBlock, branchResult,
+                         finalTest->ifTrue(), finalTest->ifFalse(), testBlock);
+
+    // Finally, remove testBlock itself.
+    finalTest->ifTrue()->removePredecessor(testBlock);
+    finalTest->ifFalse()->removePredecessor(testBlock);
+    graph.removeBlock(testBlock);
+
+    printf("WOOT\n");
+}
+
+void
+jit::FoldTests(MIRGraph &graph)
+{
+    for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
+        MaybeFoldConditionBlock(graph, *block);
+        MaybeFoldAndOrBlock(graph, *block);
+    }
+}
+
 // A critical edge is an edge which is neither its successor's only predecessor
 // nor its predecessor's only successor. Critical edges must be split to
 // prevent copy-insertion and code motion from affecting other edges.
