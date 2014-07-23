@@ -1835,6 +1835,13 @@ ContainerState::FindOpaqueBackgroundColorFor(int32_t aThebesLayerIndex)
         continue;
       }
 
+      if (item->GetClip().IsRectAffectedByClip(deviceRect,
+                                               mParameters.mXScale,
+                                               mParameters.mYScale,
+                                               mAppUnitsPerDevPixel)) {
+        break;
+      }
+
       nscolor color;
       if (item->IsUniform(mBuilder, &color) && NS_GET_A(color) == 255)
         return color;
