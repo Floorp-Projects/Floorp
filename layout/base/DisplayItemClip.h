@@ -124,8 +124,8 @@ public:
 
   // Adds the difference between Intersect(*this + aPoint, aBounds) and
   // Intersect(aOther, aOtherBounds) to aDifference (or a bounding-box thereof).
-  void AddOffsetAndComputeDifference(const nsPoint& aPoint, const nsRect& aBounds,
-                                     const DisplayItemClip& aOther, const nsRect& aOtherBounds,
+  void AddOffsetAndComputeDifference(uint32_t aStart, const nsPoint& aPoint, const nsRect& aBounds,
+                                     const DisplayItemClip& aOther, uint32_t aOtherStart, const nsRect& aOtherBounds,
                                      nsRegion* aDifference);
 
   bool operator==(const DisplayItemClip& aOther) const {
