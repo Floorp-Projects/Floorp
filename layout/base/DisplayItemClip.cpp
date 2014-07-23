@@ -262,6 +262,40 @@ DisplayItemClip::IsRectAffectedByClip(const nsRect& aRect) const
   return false;
 }
 
+bool
+DisplayItemClip::IsRectAffectedByClip(const nsIntRect& aRect,
+                                      float aXScale,
+                                      float aYScale,
+                                      int32_t A2D) const
+{
+  if (mHaveClipRect) {
+    nsIntRect pixelClipRect = mClipRect.ScaleToNearestPixels(aXScale, aYScale, A2D);
+    if (!pixelClipRect.Contains(aRect)) {
+      return true;
+    }
+  }
+
+  // Rounded rect clipping only snaps to user-space pixels, not device space.
+  nsIntRect unscaled = aRect;
+  unscaled.Scale(1/aXScale, 1/aYScale);
+
+  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length();
+       i < iEnd; ++i) {
+    const RoundedRect &rr = mRoundedClipRects[i];
+
+    nsIntRect pixelRect = rr.mRect.ToNearestPixels(A2D);
+
+    gfxCornerSizes pixelRadii;
+    nsCSSRendering::ComputePixelRadii(rr.mRadii, A2D, &pixelRadii);
+
+    nsIntRegion rgn = nsLayoutUtils::RoundedRectIntersectIntRect(pixelRect, pixelRadii, unscaled);
+    if (!rgn.Contains(unscaled)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 nsRect
 DisplayItemClip::ApplyNonRoundedIntersection(const nsRect& aRect) const
 {
