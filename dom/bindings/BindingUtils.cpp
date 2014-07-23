@@ -1340,22 +1340,23 @@ XrayDefineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   return handler->defineProperty(cx, wrapper, id, desc, defined);
 }
 
+template<typename SpecType>
 bool
-XrayEnumerateAttributes(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                        JS::Handle<JSObject*> obj,
-                        const Prefable<const JSPropertySpec>* attributes,
-                        jsid* attributeIds, const JSPropertySpec* attributeSpecs,
-                        unsigned flags, JS::AutoIdVector& props)
+XrayEnumerateAttributesOrMethods(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                                 JS::Handle<JSObject*> obj,
+                                 const Prefable<const SpecType>* list,
+                                 jsid* ids, const SpecType* specList,
+                                 unsigned flags, JS::AutoIdVector& props)
 {
-  for (; attributes->specs; ++attributes) {
-    if (attributes->isEnabled(cx, obj)) {
+  for (; list->specs; ++list) {
+    if (list->isEnabled(cx, obj)) {
       // Set i to be the index into our full list of ids/specs that we're
       // looking at now.
-      size_t i = attributes->specs - attributeSpecs;
-      for ( ; attributeIds[i] != JSID_VOID; ++i) {
+      size_t i = list->specs - specList;
+      for ( ; ids[i] != JSID_VOID; ++i) {
         if (((flags & JSITER_HIDDEN) ||
-             (attributeSpecs[i].flags & JSPROP_ENUMERATE)) &&
-            !props.append(attributeIds[i])) {
+             (specList[i].flags & JSPROP_ENUMERATE)) &&
+            !props.append(ids[i])) {
           return false;
         }
       }
@@ -1403,28 +1404,28 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
 
   if (type == eInterface) {
     if (nativeProperties->staticAttributes &&
-        !XrayEnumerateAttributes(cx, wrapper, obj,
-                                 nativeProperties->staticAttributes,
-                                 nativeProperties->staticAttributeIds,
-                                 nativeProperties->staticAttributeSpecs,
-                                 flags, props)) {
+        !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,
+                                          nativeProperties->staticAttributes,
+                                          nativeProperties->staticAttributeIds,
+                                          nativeProperties->staticAttributeSpecs,
+                                          flags, props)) {
       return false;
     }
   } else {
     if (nativeProperties->attributes &&
-        !XrayEnumerateAttributes(cx, wrapper, obj,
-                                 nativeProperties->attributes,
-                                 nativeProperties->attributeIds,
-                                 nativeProperties->attributeSpecs,
-                                 flags, props)) {
+        !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,
+                                          nativeProperties->attributes,
+                                          nativeProperties->attributeIds,
+                                          nativeProperties->attributeSpecs,
+                                          flags, props)) {
       return false;
     }
     if (nativeProperties->unforgeableAttributes &&
-        !XrayEnumerateAttributes(cx, wrapper, obj,
-                                 nativeProperties->unforgeableAttributes,
-                                 nativeProperties->unforgeableAttributeIds,
-                                 nativeProperties->unforgeableAttributeSpecs,
-                                 flags, props)) {
+        !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,
+                                          nativeProperties->unforgeableAttributes,
+                                          nativeProperties->unforgeableAttributeIds,
+                                          nativeProperties->unforgeableAttributeSpecs,
+                                          flags, props)) {
       return false;
     }
   }
