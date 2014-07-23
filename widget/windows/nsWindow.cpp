@@ -4000,7 +4000,7 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
   pluginEvent.wParam = wParam;     // plugins NEED raw OS event flags!
   pluginEvent.lParam = lParam;
 
-  event.pluginEvent = (void *)&pluginEvent;
+  event.mPluginEvent.Copy(pluginEvent);
 
   // call the event callback
   if (mWidgetListener) {

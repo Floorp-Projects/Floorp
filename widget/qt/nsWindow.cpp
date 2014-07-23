@@ -1124,7 +1124,7 @@ InitKeyEvent(WidgetKeyboardEvent& aEvent, QKeyEvent* aQEvent)
     // so link to the QKeyEvent (which will vanish soon after return from the
     // event callback) to give plugins access to hardware_keycode and state.
     // (An XEvent would be nice but the QKeyEvent is good enough.)
-    aEvent.pluginEvent = (void *)aQEvent;
+    aEvent.mPluginEvent.Copy(*aQEvent);
 }
 
 nsEventStatus

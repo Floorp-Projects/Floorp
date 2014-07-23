@@ -6634,7 +6634,7 @@ ChildViewMouseTracker::AttachPluginEvent(WidgetMouseEventBase& aMouseEvent,
   cocoaEvent->data.mouse.deltaX = [aNativeMouseEvent deltaX];
   cocoaEvent->data.mouse.deltaY = [aNativeMouseEvent deltaY];
   cocoaEvent->data.mouse.deltaZ = [aNativeMouseEvent deltaZ];
-  aMouseEvent.pluginEvent = cocoaEvent;
+  aMouseEvent.mPluginEvent.Copy(*cocoaEvent);
 }
 
 BOOL
