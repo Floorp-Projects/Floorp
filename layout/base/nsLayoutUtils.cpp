@@ -1991,21 +1991,6 @@ nsLayoutUtils::GetPopupFrameForEventCoordinates(nsPresContext* aPresContext,
   return nullptr;
 }
 
-gfx3DMatrix
-nsLayoutUtils::ChangeMatrixBasis(const gfxPoint3D &aOrigin,
-                                 const gfx3DMatrix &aMatrix)
-{
-  gfx3DMatrix result = aMatrix;
-
-  /* Translate to the origin before aMatrix */
-  result.Translate(-aOrigin);
-
-  /* Translate back into position after aMatrix */
-  result.TranslatePost(aOrigin);
-
-  return result; 
-}
-
 static void ConstrainToCoordValues(float& aStart, float& aSize)
 {
   MOZ_ASSERT(aSize >= 0);

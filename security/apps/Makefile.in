@@ -17,6 +17,9 @@ marketplace-dev-public.inc: marketplace-dev-public.crt $(GEN_CERT_HEADER)
 marketplace-dev-reviewers.inc: marketplace-dev-reviewers.crt $(GEN_CERT_HEADER)
 	$(PYTHON) $(GEN_CERT_HEADER) marketplaceDevReviewersRoot $< > $@
 
+marketplace-stage.inc: marketplace-stage.crt $(GEN_CERT_HEADER)
+	$(PYTHON) $(GEN_CERT_HEADER) marketplaceStageRoot $< > $@
+
 xpcshell.inc: $(srcdir)/../manager/ssl/tests/unit/test_signed_apps/trusted_ca1.der $(GEN_CERT_HEADER)
 	$(PYTHON) $(GEN_CERT_HEADER) xpcshellRoot $< > $@
 
@@ -25,5 +28,6 @@ export:: \
   marketplace-prod-reviewers.inc \
   marketplace-dev-public.inc \
   marketplace-dev-reviewers.inc \
+  marketplace-stage.inc \
   xpcshell.inc \
   $(NULL)

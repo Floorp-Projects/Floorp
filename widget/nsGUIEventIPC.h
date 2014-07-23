@@ -291,6 +291,25 @@ struct ParamTraits<mozilla::WidgetTouchEvent>
 };
 
 template<>
+struct ParamTraits<mozilla::AlternativeCharCode>
+{
+  typedef mozilla::AlternativeCharCode paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mUnshiftedCharCode);
+    WriteParam(aMsg, aParam.mShiftedCharCode);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mUnshiftedCharCode) &&
+           ReadParam(aMsg, aIter, &aResult->mShiftedCharCode);
+  }
+};
+
+
+template<>
 struct ParamTraits<mozilla::WidgetKeyboardEvent>
 {
   typedef mozilla::WidgetKeyboardEvent paramType;
@@ -304,6 +323,7 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
     WriteParam(aMsg, aParam.mCodeValue);
     WriteParam(aMsg, aParam.keyCode);
     WriteParam(aMsg, aParam.charCode);
+    WriteParam(aMsg, aParam.alternativeCharCodes);
     WriteParam(aMsg, aParam.isChar);
     WriteParam(aMsg, aParam.mIsRepeat);
     WriteParam(aMsg, aParam.location);
@@ -323,6 +343,7 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
         ReadParam(aMsg, aIter, &aResult->mCodeValue) &&
         ReadParam(aMsg, aIter, &aResult->keyCode) &&
         ReadParam(aMsg, aIter, &aResult->charCode) &&
+        ReadParam(aMsg, aIter, &aResult->alternativeCharCodes) &&
         ReadParam(aMsg, aIter, &aResult->isChar) &&
         ReadParam(aMsg, aIter, &aResult->mIsRepeat) &&
         ReadParam(aMsg, aIter, &aResult->location) &&

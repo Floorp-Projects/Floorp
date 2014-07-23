@@ -185,10 +185,11 @@ LayerTransactionParent::RecvUpdateNoSwap(const InfallibleTArray<Edit>& cset,
                                          const TargetConfig& targetConfig,
                                          const bool& isFirstPaint,
                                          const bool& scheduleComposite,
-                                         const uint32_t& paintSequenceNumber)
+                                         const uint32_t& paintSequenceNumber,
+                                         const bool& isRepeatTransaction)
 {
   return RecvUpdate(cset, aTransactionId, targetConfig, isFirstPaint,
-                    scheduleComposite, paintSequenceNumber, nullptr);
+      scheduleComposite, paintSequenceNumber, isRepeatTransaction, nullptr);
 }
 
 bool
@@ -198,6 +199,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
                                    const bool& isFirstPaint,
                                    const bool& scheduleComposite,
                                    const uint32_t& paintSequenceNumber,
+                                   const bool& isRepeatTransaction,
                                    InfallibleTArray<EditReply>* reply)
 {
   profiler_tracing("Paint", "Composite", TRACING_INTERVAL_START);
@@ -540,7 +542,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   }
 
   mShadowLayersManager->ShadowLayersUpdated(this, aTransactionId, targetConfig,
-                                            isFirstPaint, scheduleComposite, paintSequenceNumber);
+      isFirstPaint, scheduleComposite, paintSequenceNumber, isRepeatTransaction);
 
   {
     AutoResolveRefLayers resolve(mShadowLayersManager->GetCompositionManager(this));
@@ -660,8 +662,7 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
 
   // Undo the rebasing applied by
   // nsDisplayTransform::GetResultingTransformMatrixInternal
-  transform = nsLayoutUtils::ChangeMatrixBasis(-scaledOrigin - transformOrigin,
-                                               transform);
+  transform.ChangeBasis(-scaledOrigin - transformOrigin);
 
   // Convert to CSS pixels (this undoes the operations performed by
   // nsStyleTransformMatrix::ProcessTranslatePart which is called from

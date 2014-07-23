@@ -23,7 +23,8 @@ public:
                                      const TargetConfig& aTargetConfig,
                                      bool aIsFirstPaint,
                                      bool aScheduleComposite,
-                                     uint32_t aPaintSequenceNumber) = 0;
+                                     uint32_t aPaintSequenceNumber,
+                                     bool aIsRepeatTransaction) = 0;
 
     virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aLayerTree) { return nullptr; }
 

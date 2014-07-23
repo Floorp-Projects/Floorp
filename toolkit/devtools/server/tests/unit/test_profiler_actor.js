@@ -95,42 +95,70 @@ function test_event_notifications(aClient, aProfiler)
 
 function test_profile(aClient, aProfiler)
 {
-  // No idea why, but Components.stack.sourceLine returns null.
-  var funcLine = Components.stack.lineNumber - 3;
-  // Busy wait a few milliseconds
-  var start = Date.now();
-  var stack;
-  while (Date.now() - start < 200) { stack = Components.stack; }
-  aClient.request({ to: aProfiler, type: "getProfile" }, function (aResponse) {
-    do_check_eq(typeof aResponse.profile, "object");
-    do_check_eq(typeof aResponse.profile.meta, "object");
-    do_check_eq(typeof aResponse.profile.meta.platform, "string");
-    do_check_eq(typeof aResponse.profile.threads, "object");
-    do_check_eq(typeof aResponse.profile.threads[0], "object");
-    do_check_eq(typeof aResponse.profile.threads[0].samples, "object");
-    do_check_neq(aResponse.profile.threads[0].samples.length, 0);
+  function attempt(aDelayMS)
+  {
+    // No idea why, but Components.stack.sourceLine returns null.
+    var funcLine = Components.stack.lineNumber - 3;
+    // Spin for the requested time, then take a sample.
+    var start = Date.now();
+    var stack;
+    do_print("attempt: delay = " + aDelayMS);
+    while (Date.now() - start < aDelayMS) { stack = Components.stack; }
+    do_print("attempt: before getProfile");
 
-    let location = stack.name + " (" + stack.filename + ":" + funcLine + ")";
-    // At least one sample is expected to have been in the busy wait above.
-    do_check_true(aResponse.profile.threads[0].samples.some(function(sample) {
-      return typeof sample.frames == "object" &&
-             sample.frames.length != 0 &&
-             sample.frames.some(function(f) {
-               return (f.line == stack.lineNumber) &&
-                      (f.location == location);
-             });
-    }));
+    aClient.request({ to: aProfiler, type: "getProfile" }, function (aResponse) {
+      // Any valid getProfile response should have the following top
+      // level structure.
+      do_check_eq(typeof aResponse.profile, "object");
+      do_check_eq(typeof aResponse.profile.meta, "object");
+      do_check_eq(typeof aResponse.profile.meta.platform, "string");
+      do_check_eq(typeof aResponse.profile.threads, "object");
+      do_check_eq(typeof aResponse.profile.threads[0], "object");
+      do_check_eq(typeof aResponse.profile.threads[0].samples, "object");
 
-    aClient.request({ to: aProfiler, type: "stopProfiler" }, function (aResponse) {
-      do_check_eq(typeof aResponse.msg, "string");
-      aClient.request({ to: aProfiler, type: "isActive" }, function (aResponse) {
-        do_check_false(aResponse.isActive);
-        aClient.close(function() {
-          test_profiler_status();
+      // At this point, we may or may not have samples, depending on
+      // whether the spin loop above has given the profiler enough time
+      // to get started.
+      if (aResponse.profile.threads[0].samples.length == 0) {
+        if (aDelayMS < 20000) {
+          // Double the spin-wait time and try again.
+          do_print("attempt: no samples, going around again");
+          return attempt(aDelayMS * 2);
+        } else {
+          // We've waited long enough, so just fail.
+          do_print("attempt: waited 20000ms, but no samples were collected.  Giving up.");
+          do_check_true(false);
+          return;
+        }
+      }
+
+      // Now check the samples.  At least one sample is expected to
+      // have been in the busy wait above.
+      do_print("attempt: got a profile that contains samples");
+      let location = stack.name + " (" + stack.filename + ":" + funcLine + ")";
+      do_check_true(aResponse.profile.threads[0].samples.some(function(sample) {
+        return typeof sample.frames == "object" &&
+               sample.frames.length != 0 &&
+               sample.frames.some(function(f) {
+                 return (f.line == stack.lineNumber) &&
+                        (f.location == location);
+               });
+      }));
+
+      aClient.request({ to: aProfiler, type: "stopProfiler" }, function (aResponse) {
+        do_check_eq(typeof aResponse.msg, "string");
+        aClient.request({ to: aProfiler, type: "isActive" }, function (aResponse) {
+          do_check_false(aResponse.isActive);
+          aClient.close(function() {
+            test_profiler_status();
+          });
         });
       });
     });
-  });
+  }
+
+  // Start off with a 100 millisecond delay.
+  attempt(100);
 }
 
 function test_profiler_status()

@@ -19,7 +19,7 @@ interface nsIX509CertList;
 
 typedef uint32_t AppTrustedRoot;
 
-[scriptable, function, uuid(5984db62-d0e5-4671-a082-799cf7271e24)]
+[scriptable, function, uuid(fc2b60e5-9a07-47c2-a2cd-b83b68a660ac)]
 interface nsIOpenSignedAppFileCallback : nsISupports
 {
   void openSignedAppFileFinished(in nsresult rv,
@@ -299,7 +299,8 @@ interface nsIX509CertDB : nsISupports {
   const AppTrustedRoot AppMarketplaceProdReviewersRoot = 2;
   const AppTrustedRoot AppMarketplaceDevPublicRoot = 3;
   const AppTrustedRoot AppMarketplaceDevReviewersRoot = 4;
-  const AppTrustedRoot AppXPCShellRoot = 5;
+  const AppTrustedRoot AppMarketplaceStageRoot = 5;
+  const AppTrustedRoot AppXPCShellRoot = 6;
   void openSignedAppFileAsync(in AppTrustedRoot trustedRoot,
                               in nsIFile aJarFile,
                               in nsIOpenSignedAppFileCallback callback);

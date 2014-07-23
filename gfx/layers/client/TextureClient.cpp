@@ -81,6 +81,7 @@ public:
   TextureChild()
   : mForwarder(nullptr)
   , mTextureClient(nullptr)
+  , mKeep(nullptr)
   , mIPCOpen(false)
   {
   }
@@ -129,6 +130,7 @@ private:
   RefPtr<CompositableForwarder> mForwarder;
   RefPtr<TextureClient> mWaitForRecycle;
   TextureClient* mTextureClient;
+  KeepAlive* mKeep;
   bool mIPCOpen;
 
   friend class TextureClient;
@@ -147,6 +149,7 @@ TextureChild::ActorDestroy(ActorDestroyReason why)
     mTextureClient->mActor = nullptr;
   }
   mWaitForRecycle = nullptr;
+  delete mKeep;
 }
 
 // static
@@ -441,6 +444,14 @@ TextureClient::~TextureClient()
 {
   // All the destruction code that may lead to virtual method calls must
   // be in Finalize() which is called just before the destructor.
+}
+
+void
+TextureClient::KeepUntilFullDeallocation(KeepAlive* aKeep)
+{
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mActor->mKeep);
+  mActor->mKeep = aKeep;
 }
 
 void TextureClient::ForceRemove()

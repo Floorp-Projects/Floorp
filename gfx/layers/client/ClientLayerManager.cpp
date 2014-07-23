@@ -443,7 +443,8 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   bool sent;
   AutoInfallibleTArray<EditReply, 10> replies;
   if (HasShadowManager() && mForwarder->EndTransaction(&replies, mRegionToClear,
-        mLatestTransactionId, aScheduleComposite, mPaintSequenceNumber, &sent)) {
+        mLatestTransactionId, aScheduleComposite, mPaintSequenceNumber,
+        mIsRepeatTransaction, &sent)) {
     for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
       const EditReply& reply = replies[i];
 
