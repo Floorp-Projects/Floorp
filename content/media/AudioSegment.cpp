@@ -212,7 +212,10 @@ AudioSegment::WriteTo(uint64_t aID, AudioStream* aOutput, AudioMixer* aMixer)
 
   aOutput->Write(buf.Elements(), offset / outputChannels, &(mChunks[mChunks.Length() - 1].mTimeStamp));
 
-  if (aMixer) {
+  // `offset` is zero when all the chunks above are null (silence). We can
+  // safely skip the mixing here because filling `buf` with zero and then mixing
+  // it would have absolutly no effect in the mix.
+  if (aMixer && offset) {
     aMixer->Mix(buf.Elements(), outputChannels, GetDuration(), aOutput->GetRate());
   }
   aOutput->Start();
