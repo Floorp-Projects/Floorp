@@ -120,9 +120,9 @@ JS::WeakMapPtr<K, V>::put(JSContext *cx, const K &key, const V &value)
 // Supported specializations of JS::WeakMap:
 //
 
-template class JS::WeakMapPtr<JSObject*, JSObject*>;
+template class JS_PUBLIC_API(JS::WeakMapPtr)<JSObject*, JSObject*>;
 
 #ifdef DEBUG
 // Nobody's using this at the moment, but we want to make sure it compiles.
-template class JS::WeakMapPtr<JSObject*, JS::Value>;
+template class JS_PUBLIC_API(JS::WeakMapPtr)<JSObject*, JS::Value>;
 #endif
