@@ -161,8 +161,9 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
     string.AppendInt((uint64_t)aItem);
     aStream << nsPrintfCString("<a href=\"javascript:ViewImage('%s')\">", string.BeginReading());
   }
-  aStream << nsPrintfCString("%s p=0x%p f=0x%p(%s) bounds(%d,%d,%d,%d) visible(%d,%d,%d,%d) componentAlpha(%d,%d,%d,%d) clip(%s) %s",
+  aStream << nsPrintfCString("%s p=0x%p f=0x%p(%s) %sbounds(%d,%d,%d,%d) visible(%d,%d,%d,%d) componentAlpha(%d,%d,%d,%d) clip(%s) %s",
           aItem->Name(), aItem, (void*)f, NS_ConvertUTF16toUTF8(fName).get(),
+          (aItem->ZIndex() ? nsPrintfCString("z=%d ", aItem->ZIndex()).get() : ""),
           rect.x, rect.y, rect.width, rect.height,
           vis.x, vis.y, vis.width, vis.height,
           component.x, component.y, component.width, component.height,
@@ -266,7 +267,7 @@ PrintDisplayListSetItem(nsDisplayListBuilder* aBuilder,
   if (aDumpHtml) {
     aStream << "<li>";
   }
-  aStream << aItemName;
+  aStream << aItemName << "\n";
   PrintDisplayListTo(aBuilder, aList, aStream, 0, aDumpHtml);
   if (aDumpHtml) {
     aStream << "</li>";
