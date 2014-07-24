@@ -246,7 +246,6 @@ AudioStream::AudioStream()
   , mLatencyRequest(HighLatency)
   , mReadPoint(0)
   , mDumpFile(nullptr)
-  , mVolume(1.0)
   , mBytesPerFrame(0)
   , mState(INITIALIZED)
   , mNeedsStart(false)
@@ -751,9 +750,11 @@ AudioStream::Available()
 void
 AudioStream::SetVolume(double aVolume)
 {
-  MonitorAutoLock mon(mMonitor);
   NS_ABORT_IF_FALSE(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
-  mVolume = aVolume;
+
+  if (cubeb_stream_set_volume(mCubebStream, aVolume * GetVolumeScale()) != CUBEB_OK) {
+    NS_WARNING("Could not change volume on cubeb stream.");
+  }
 }
 
 void
@@ -1099,9 +1100,6 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
     } else {
       servicedFrames = GetTimeStretched(output, aFrames, insertTime);
     }
-    float scaled_volume = float(GetVolumeScale() * mVolume);
-
-    ScaleAudioSamples(output, aFrames * mOutChannels, scaled_volume);
 
     NS_ABORT_IF_FALSE(mBuffer.Length() % mBytesPerFrame == 0, "Must copy complete frames");
 

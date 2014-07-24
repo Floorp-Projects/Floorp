@@ -261,6 +261,30 @@ int cubeb_stream_get_position(cubeb_stream * stream, uint64_t * position);
     @retval CUBEB_ERROR */
 int cubeb_stream_get_latency(cubeb_stream * stream, uint32_t * latency);
 
+/**
+ * Set the volume for a stream.
+ * @param stream the stream for which to adjust the volume.
+ * @param volumes a float between 0.0 (muted) and 1.0 (maximum volumes)
+ * @return CUBEB_ERROR_INVALID_PARAMETER if volume is outside [0.0; 1.0]
+ * @return CUBEB_ERROR_INVALID_PARAMETER if stream is an invalid pointer
+ * @return CUBEB_OK otherwise
+ */
+int cubeb_stream_set_volume(cubeb_stream * stream, float volume);
+
+/**
+ * If the stream is stereo, set the left/right panning. If the stream is mono,
+ * this has no effect.
+ * @param stream the stream for which to change the panning
+ * @param panning a number from -1.0 to 1.0. -1.0 means that the stream is fully
+ * mixed in the left channel, 1.0 means the stream is fully mixed in the right
+ * channel. 0.0 is equal power in the right and left channel (default).
+ * @return CUBEB_ERROR_INVALID_PARAMETER if stream is null or if panning is outside
+ * the [-1.0; 1.0] range.
+ * @return CUBEB_ERROR if this stream is not mono nor stereo.
+ * @return CUBEB_OK otherwise.
+ */
+int cubeb_stream_set_panning(cubeb_stream * stream, float panning);
+
 #if defined(__cplusplus)
 }
 #endif
