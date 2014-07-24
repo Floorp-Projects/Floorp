@@ -1002,16 +1002,24 @@ Experiments.Experiments.prototype = {
   _saveToCache: function* () {
     this._log.trace("_saveToCache");
     let path = this._cacheFilePath;
-    let textData = JSON.stringify({
-      version: CACHE_VERSION,
-      data: [e[1].toJSON() for (e of this._experiments.entries())],
-    });
-
-    let encoder = new TextEncoder();
-    let data = encoder.encode(textData);
-    let options = { tmpPath: path + ".tmp", compression: "lz4" };
-    yield OS.File.writeAtomic(path, data, options);
     this._dirty = false;
+    try {
+      let textData = JSON.stringify({
+        version: CACHE_VERSION,
+        data: [e[1].toJSON() for (e of this._experiments.entries())],
+      });
+
+      let encoder = new TextEncoder();
+      let data = encoder.encode(textData);
+      let options = { tmpPath: path + ".tmp", compression: "lz4" };
+      yield OS.File.writeAtomic(path, data, options);
+    } catch (e) {
+      // We failed to write the cache, it's still dirty.
+      this._dirty = true;
+      this._log.error("_saveToCache failed and caught error: " + e);
+      return;
+    }
+
     this._log.debug("_saveToCache saved to " + path);
   },
 
