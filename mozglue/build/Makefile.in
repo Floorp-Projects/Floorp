@@ -126,7 +126,7 @@ ifeq (WINNT,$(OS_TARGET))
 #
 ###############################################################################
 
-libs:: mozcrt.lib
+target:: mozcrt.lib
 	$(INSTALL) $(IFLAGS2) mozcrt.lib $(DIST)/lib
 
 # And finally combine that with the jemalloc import library to get an import
