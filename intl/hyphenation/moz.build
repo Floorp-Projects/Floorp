@@ -4,5 +4,29 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'src']
+EXPORTS += [
+    'nsHyphenationManager.h',
+    'nsHyphenator.h',
+]
 
+UNIFIED_SOURCES += [
+    'nsHyphenationManager.cpp',
+    'nsHyphenator.cpp',
+]
+
+# These files cannot be built in unified mode because they include hnjalloc.h.
+SOURCES += [
+    'hnjstdio.cpp',
+    'hyphen.c',
+]
+
+MSVC_ENABLE_PGO = True
+
+FINAL_LIBRARY = 'xul'
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CC']:
+    CFLAGS += [
+        '-Wno-sign-compare',
+        '-Wno-type-limits',
+    ]
