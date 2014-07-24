@@ -1649,14 +1649,10 @@ ScriptSource::setSourceCopy(ExclusiveContext *cx, SourceBufferHolder &srcBuf,
     //    thread (see HelperThreadState::canStartParseTask) which would cause a
     //    deadlock if there wasn't a second helper thread that could make
     //    progress on our compression task.
-#if defined(JS_THREADSAFE)
     bool canCompressOffThread =
         HelperThreadState().cpuCount > 1 &&
         HelperThreadState().threadCount >= 2 &&
         CanUseExtraThreads();
-#else
-    bool canCompressOffThread = false;
-#endif
     const size_t TINY_SCRIPT = 256;
     const size_t HUGE_SCRIPT = 5 * 1024 * 1024;
     if (TINY_SCRIPT <= srcBuf.length() && srcBuf.length() < HUGE_SCRIPT && canCompressOffThread) {

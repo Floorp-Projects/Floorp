@@ -519,31 +519,23 @@ class SimulatorRuntime
         lockOwner_(nullptr) {}
     ~SimulatorRuntime();
     bool init() {
-#ifdef JS_THREADSAFE
         lock_ = PR_NewLock();
         if (!lock_)
             return false;
-#endif
         if (!icache_.init())
             return false;
         return true;
     }
     ICacheMap &icache() {
-#ifdef JS_THREADSAFE
         MOZ_ASSERT(lockOwner_ == PR_GetCurrentThread());
-#endif
         return icache_;
     }
     Redirection *redirection() const {
-#ifdef JS_THREADSAFE
         MOZ_ASSERT(lockOwner_ == PR_GetCurrentThread());
-#endif
         return redirection_;
     }
     void setRedirection(js::jit::Redirection *redirection) {
-#ifdef JS_THREADSAFE
         MOZ_ASSERT(lockOwner_ == PR_GetCurrentThread());
-#endif
         redirection_ = redirection;
     }
 };
@@ -556,21 +548,17 @@ class AutoLockSimulatorRuntime
   public:
     AutoLockSimulatorRuntime(SimulatorRuntime *srt)
         : srt_(srt) {
-#ifdef JS_THREADSAFE
         PR_Lock(srt_->lock_);
         MOZ_ASSERT(!srt_->lockOwner_);
 #ifdef DEBUG
         srt_->lockOwner_ = PR_GetCurrentThread();
 #endif
-#endif
     }
 
     ~AutoLockSimulatorRuntime() {
-#ifdef JS_THREADSAFE
         MOZ_ASSERT(srt_->lockOwner_ == PR_GetCurrentThread());
         srt_->lockOwner_ = nullptr;
         PR_Unlock(srt_->lock_);
-#endif
     }
 };
 
@@ -1415,10 +1403,8 @@ SimulatorRuntime::~SimulatorRuntime()
         js_delete(r);
         r = next;
     }
-#ifdef JS_THREADSAFE
     if (lock_)
         PR_DestroyLock(lock_);
-#endif
 }
 
 // Get the active Simulator for the current thread.

@@ -720,7 +720,7 @@ struct JSRuntime : public JS::shadow::Runtime,
      */
     mozilla::Atomic<bool, mozilla::Relaxed> interrupt;
 
-#if defined(JS_THREADSAFE) && defined(JS_ION)
+#ifdef JS_ION
     /*
      * If non-zero, ForkJoin should service an interrupt. This is a separate
      * flag from |interrupt| because we cannot use the mprotect trick with PJS
@@ -745,49 +745,31 @@ struct JSRuntime : public JS::shadow::Runtime,
      * Lock taken when triggering an interrupt from another thread.
      * Protects all data that is touched in this process.
      */
-#ifdef JS_THREADSAFE
     PRLock *interruptLock;
     PRThread *interruptLockOwner;
-#else
-    bool interruptLockTaken;
-#endif // JS_THREADSAFE
-  public:
 
+  public:
     class AutoLockForInterrupt {
         JSRuntime *rt;
       public:
         explicit AutoLockForInterrupt(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM) : rt(rt) {
             MOZ_GUARD_OBJECT_NOTIFIER_INIT;
             rt->assertCanLock(js::InterruptLock);
-#ifdef JS_THREADSAFE
             PR_Lock(rt->interruptLock);
             rt->interruptLockOwner = PR_GetCurrentThread();
-#else
-            rt->interruptLockTaken = true;
-#endif // JS_THREADSAFE
         }
         ~AutoLockForInterrupt() {
             JS_ASSERT(rt->currentThreadOwnsInterruptLock());
-#ifdef JS_THREADSAFE
             rt->interruptLockOwner = nullptr;
             PR_Unlock(rt->interruptLock);
-#else
-            rt->interruptLockTaken = false;
-#endif // JS_THREADSAFE
         }
 
         MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
     };
 
     bool currentThreadOwnsInterruptLock() {
-#if defined(JS_THREADSAFE)
         return interruptLockOwner == PR_GetCurrentThread();
-#else
-        return interruptLockTaken;
-#endif
     }
-
-#ifdef JS_THREADSAFE
 
   private:
     /*
@@ -811,25 +793,15 @@ struct JSRuntime : public JS::shadow::Runtime,
     void setUsedByExclusiveThread(JS::Zone *zone);
     void clearUsedByExclusiveThread(JS::Zone *zone);
 
-#endif // JS_THREADSAFE
-
 #ifdef DEBUG
     bool currentThreadHasExclusiveAccess() {
-#ifdef JS_THREADSAFE
         return (!numExclusiveThreads && mainThreadHasExclusiveAccess) ||
                exclusiveAccessOwner == PR_GetCurrentThread();
-#else
-        return true;
-#endif
     }
 #endif // DEBUG
 
     bool exclusiveThreadsPresent() const {
-#ifdef JS_THREADSAFE
         return numExclusiveThreads > 0;
-#else
-        return false;
-#endif
     }
 
     /* How many compartments there are across all zones. */
@@ -844,13 +816,11 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Default JSVersion. */
     JSVersion defaultVersion_;
 
-#ifdef JS_THREADSAFE
   private:
     /* See comment for JS_AbortIfWrongThread in jsapi.h. */
     void *ownerThread_;
     friend bool js::CurrentThreadCanAccessRuntime(JSRuntime *rt);
   public:
-#endif
 
     /* Temporary arena pool used while compiling and decompiling. */
     static const size_t TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 4 * 1024;
@@ -970,16 +940,12 @@ struct JSRuntime : public JS::shadow::Runtime,
     void                 *activityCallbackArg;
     void triggerActivityCallback(bool active);
 
-#ifdef JS_THREADSAFE
     /* The request depth for this thread. */
     unsigned            requestDepth;
 
-# ifdef DEBUG
-    unsigned            checkRequestDepth;
-# endif
-#endif
-
 #ifdef DEBUG
+    unsigned            checkRequestDepth;
+
     /*
      * To help embedders enforce their invariants, we allow them to specify in
      * advance which JSContext should be passed to JSAPI calls. If this is set
@@ -1317,11 +1283,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     uint32_t forkJoinWarmup;
 
   private:
-#ifdef JS_THREADSAFE
     static mozilla::Atomic<size_t> liveRuntimesCount;
-#else
-    static size_t liveRuntimesCount;
-#endif
 
   public:
     static bool hasLiveRuntimes() {
@@ -1395,21 +1357,13 @@ struct JSRuntime : public JS::shadow::Runtime,
         offthreadIonCompilationEnabled_ = value;
     }
     bool canUseOffthreadIonCompilation() const {
-#ifdef JS_THREADSAFE
         return offthreadIonCompilationEnabled_;
-#else
-        return false;
-#endif
     }
     void setParallelParsingEnabled(bool value) {
         parallelParsingEnabled_ = value;
     }
     bool canUseParallelParsing() const {
-#ifdef JS_THREADSAFE
         return parallelParsingEnabled_;
-#else
-        return false;
-#endif
     }
 
     const JS::RuntimeOptions &options() const {
@@ -1740,7 +1694,7 @@ class AutoEnterIonCompilation
     AutoEnterIonCompilation(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
-#if defined(DEBUG) && defined(JS_THREADSAFE)
+#ifdef DEBUG
         PerThreadData *pt = js::TlsPerThreadData.get();
         JS_ASSERT(!pt->ionCompiling);
         pt->ionCompiling = true;
@@ -1748,7 +1702,7 @@ class AutoEnterIonCompilation
     }
 
     ~AutoEnterIonCompilation() {
-#if defined(DEBUG) && defined(JS_THREADSAFE)
+#ifdef DEBUG
         PerThreadData *pt = js::TlsPerThreadData.get();
         JS_ASSERT(pt->ionCompiling);
         pt->ionCompiling = false;

@@ -123,11 +123,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_SetProperty(cx, info, "has-gczeal", value))
         return false;
 
-#ifdef JS_THREADSAFE
     value = BooleanValue(true);
-#else
-    value = BooleanValue(false);
-#endif
     if (!JS_SetProperty(cx, info, "threadsafe", value))
         return false;
 
@@ -1605,14 +1601,10 @@ static bool
 HelperThreadCount(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-#ifdef JS_THREADSAFE
     if (CanUseExtraThreads())
         args.rval().setInt32(HelperThreadState().threadCount);
     else
         args.rval().setInt32(0);
-#else
-    args.rval().setInt32(0);
-#endif
     return true;
 }
 
