@@ -23,8 +23,6 @@ MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'xul'
 
-DEFINES['JS_THREADSAFE'] = True
-
 LOCAL_INCLUDES += [
     '../src',
     '../wrappers',
