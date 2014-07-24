@@ -80,10 +80,6 @@ function NfcContentHelper() {
   Services.obs.addObserver(this, "xpcom-shutdown", false);
 
   this._requestMap = [];
-
-  // Maintains an array of PeerEvent related callbacks, mainly
-  // one for 'peerReady' and another for 'peerLost'.
-  this.peerEventsCallbackMap = {};
 }
 
 NfcContentHelper.prototype = {
@@ -100,7 +96,7 @@ NfcContentHelper.prototype = {
   }),
 
   _requestMap: null,
-  peerEventsCallbackMap: null,
+  peerEventListener: null,
 
   encodeNDEFRecords: function encodeNDEFRecords(records) {
     let encodedRecords = [];
@@ -261,28 +257,28 @@ NfcContentHelper.prototype = {
     });
   },
 
-  registerTargetForPeerEvent: function registerTargetForPeerEvent(window,
-                                                  appId, event, callback) {
+  registerPeerEventListener: function registerPeerEventListener(listener) {
+    this.peerEventListener = listener;
+  },
+
+  registerTargetForPeerEvent:
+    function registerTargetForPeerEvent(window, appId, event) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
     }
-    this.peerEventsCallbackMap[event] = callback;
+
     cpmm.sendAsyncMessage("NFC:RegisterPeerTarget", {
       appId: appId,
       event: event
     });
   },
 
-  unregisterTargetForPeerEvent: function unregisterTargetForPeerEvent(window,
-                                                                appId, event) {
+  unregisterTargetForPeerEvent:
+    function unregisterTargetForPeerEvent(window, appId, event) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
-    }
-    let callback = this.peerEventsCallbackMap[event];
-    if (callback != null) {
-      delete this.peerEventsCallbackMap[event];
     }
 
     cpmm.sendAsyncMessage("NFC:UnregisterPeerTarget", {
@@ -427,12 +423,13 @@ NfcContentHelper.prototype = {
         }
         break;
       case "NFC:PeerEvent":
-        let callback = this.peerEventsCallbackMap[result.event];
-        if (callback) {
-          callback.peerNotification(result.event, result.sessionToken);
-        } else {
-          debug("PeerEvent: No valid callback registered for the event " +
-                result.event);
+        switch (result.event) {
+          case NFC.NFC_PEER_EVENT_READY:
+            this.peerEventListener.notifyPeerReady(result.sessionToken);
+            break;
+          case NFC.NFC_PEER_EVENT_LOST:
+            this.peerEventListener.notifyPeerLost(result.sessionToken);
+            break;
         }
         break;
     }

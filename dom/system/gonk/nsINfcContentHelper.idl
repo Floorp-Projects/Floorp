@@ -7,24 +7,27 @@
 
 interface nsIVariant;
 
-[scriptable, function, uuid(26673d1a-4af4-470a-ba96-f1f54b1f2052)]
-interface nsINfcPeerCallback : nsISupports
+[scriptable, uuid(57fc2998-1058-4fd5-8dd9-0e303218d5fd)]
+interface nsINfcPeerEventListener : nsISupports
 {
   /**
-   * Callback function used to notify NFC peer events.
-   *
-   * @param event
-   *        An event indicating 'PeerReady' or 'PeerLost'
-   *        One of NFC_EVENT_PEER_XXXX
+   * Callback function used to notify peerready.
    *
    * @param sessionToken
    *        SessionToken received from Chrome process
    */
-   void peerNotification(in unsigned long event,
-                         in DOMString sessionToken);
+   void notifyPeerReady(in DOMString sessionToken);
+
+  /**
+   * Callback function used to notify peerlost.
+   *
+   * @param sessionToken
+   *        SessionToken received from Chrome process
+   */
+   void notifyPeerLost(in DOMString sessionToken);
 };
 
-[scriptable, uuid(26e8123f-ba00-4708-ac77-d1902457168c)]
+[scriptable, uuid(21559f98-526c-44c8-94fb-2095a112c47c)]
 interface nsINfcContentHelper : nsISupports
 {
   const long NFC_EVENT_PEER_READY = 0x01;
@@ -61,6 +64,13 @@ interface nsINfcContentHelper : nsISupports
                             in jsval blob,
                             in DOMString sessionToken);
 
+  /**
+   * Register the peer event listener.
+   *
+   * @param listener  An instance of the nsINfcPeerEventListener.
+   */
+  void registerPeerEventListener(in nsINfcPeerEventListener listener);
+
  /**
   * Register the given application id with Chrome process
   *
@@ -72,14 +82,10 @@ interface nsINfcContentHelper : nsISupports
   *
   * @param event
   *       Event to be registered. Either NFC_EVENT_PEER_READY or NFC_EVENT_PEER_LOST
-  *
-  * @param callback
-  *       Callback that is used to notify upper layers whenever PeerEvents happen.
   */
   void registerTargetForPeerEvent(in nsIDOMWindow window,
                                   in unsigned long appId,
-                                  in octet event,
-                                  in nsINfcPeerCallback callback);
+                                  in octet event);
  /**
   * Unregister the given application id with Chrome process
   *
