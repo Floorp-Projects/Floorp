@@ -5487,8 +5487,6 @@ CheckFunctionsSequential(ModuleCompiler &m)
     return true;
 }
 
-#ifdef JS_THREADSAFE
-
 // Currently, only one asm.js parallel compilation is allowed at a time.
 // This RAII class attempts to claim this parallel compilation using atomic ops
 // on the helper thread state's asmJSCompilationInProgress.
@@ -5739,7 +5737,6 @@ CheckFunctionsParallel(ModuleCompiler &m)
     }
     return true;
 }
-#endif // JS_THREADSAFE
 
 static bool
 CheckFuncPtrTable(ModuleCompiler &m, ParseNode *var)
@@ -6827,13 +6824,8 @@ CheckModule(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList,
 
     m.startFunctionBodies();
 
-#ifdef JS_THREADSAFE
     if (!CheckFunctionsParallel(m))
         return false;
-#else
-    if (!CheckFunctionsSequential(m))
-        return false;
-#endif
 
     m.finishFunctionBodies();
 
@@ -6893,10 +6885,8 @@ EstablishPreconditions(ExclusiveContext *cx, AsmJSParser &parser)
     if (parser.pc->isArrowFunction())
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by arrow function context");
 
-#ifdef JS_THREADSAFE
     if (ParallelCompilationEnabled(cx))
         EnsureHelperThreadsInitialized(cx);
-#endif
 
     return true;
 }

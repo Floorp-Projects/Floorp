@@ -13,9 +13,6 @@
 #ifndef JSGC_GENERATIONAL
 #error "JSGC_GENERATIONAL is required for the ForkJoinNursery"
 #endif
-#ifndef JS_THREADSAFE
-#error "JS_THREADSAFE is required for the ForkJoinNursery"
-#endif
 #ifndef JS_ION
 #error "JS_ION is required for the ForkJoinNursery"
 #endif
