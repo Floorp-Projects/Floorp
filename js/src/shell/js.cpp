@@ -40,9 +40,7 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsfun.h"
-#ifdef JS_THREADSAFE
 #include "jslock.h"
-#endif
 #include "jsobj.h"
 #include "jsprf.h"
 #include "jsscript.h"
@@ -149,8 +147,6 @@ CancelExecution(JSRuntime *rt);
 /*
  * Watchdog thread state.
  */
-#ifdef JS_THREADSAFE
-
 static PRLock *gWatchdogLock = nullptr;
 static PRCondVar *gWatchdogWakeup = nullptr;
 static PRThread *gWatchdogThread = nullptr;
@@ -158,12 +154,6 @@ static bool gWatchdogHasTimeout = false;
 static int64_t gWatchdogTimeout = 0;
 
 static PRCondVar *gSleepWakeup = nullptr;
-
-#else
-
-static JSRuntime *gRuntime = nullptr;
-
-#endif
 
 static int gExitCode = 0;
 static bool gQuitting = false;
@@ -2795,7 +2785,6 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     return ok;
 }
 
-#ifdef JS_THREADSAFE
 struct WorkerInput
 {
     JSRuntime *runtime;
@@ -2894,7 +2883,6 @@ EvalInWorker(JSContext *cx, unsigned argc, jsval *vp)
 
     return true;
 }
-#endif
 
 static bool
 ShapeOf(JSContext *cx, unsigned argc, JS::Value *vp)
@@ -3034,8 +3022,6 @@ Resolver(JSContext *cx, unsigned argc, jsval *vp)
     args.rval().setObject(*result);
     return true;
 }
-
-#ifdef JS_THREADSAFE
 
 /*
  * Check that t1 comes strictly before t2. The function correctly deals with
@@ -3204,74 +3190,6 @@ ScheduleWatchdog(JSRuntime *rt, double t)
     return true;
 }
 
-#else /* !JS_THREADSAFE */
-
-#ifdef XP_WIN
-static HANDLE gTimerHandle = 0;
-
-VOID CALLBACK
-TimerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
-{
-    CancelExecution((JSRuntime *) lpParameter);
-}
-
-#else
-
-static void
-AlarmHandler(int sig)
-{
-    CancelExecution(gRuntime);
-}
-
-#endif
-
-static bool
-InitWatchdog(JSRuntime *rt)
-{
-    gRuntime = rt;
-    return true;
-}
-
-static void
-KillWatchdog()
-{
-    ScheduleWatchdog(gRuntime, -1);
-}
-
-static bool
-ScheduleWatchdog(JSRuntime *rt, double t)
-{
-#ifdef XP_WIN
-    if (gTimerHandle) {
-        DeleteTimerQueueTimer(nullptr, gTimerHandle, nullptr);
-        gTimerHandle = 0;
-    }
-    if (t > 0 &&
-        !CreateTimerQueueTimer(&gTimerHandle,
-                               nullptr,
-                               (WAITORTIMERCALLBACK)TimerCallback,
-                               rt,
-                               DWORD(ceil(t * 1000.0)),
-                               0,
-                               WT_EXECUTEINTIMERTHREAD | WT_EXECUTEONLYONCE)) {
-        gTimerHandle = 0;
-        return false;
-    }
-#else
-    /* FIXME: use setitimer when available for sub-second resolution. */
-    if (t <= 0) {
-        alarm(0);
-        signal(SIGALRM, nullptr);
-    } else {
-        signal(SIGALRM, AlarmHandler); /* set the Alarm signal capture */
-        alarm(ceil(t));
-    }
-#endif
-    return true;
-}
-
-#endif /* !JS_THREADSAFE */
-
 static void
 CancelExecution(JSRuntime *rt)
 {
@@ -3280,14 +3198,7 @@ CancelExecution(JSRuntime *rt)
 
     if (!gInterruptFunc.ref().get().isNull()) {
         static const char msg[] = "Script runs for too long, terminating.\n";
-#if defined(XP_UNIX) && !defined(JS_THREADSAFE)
-        /* It is not safe to call fputs from signals. */
-        /* Dummy assignment avoids GCC warning on "attribute warn_unused_result" */
-        ssize_t dummy = write(2, msg, sizeof(msg) - 1);
-        (void)dummy;
-#else
         fputs(msg, stderr);
-#endif
     }
 }
 
@@ -3588,8 +3499,6 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-#ifdef JS_THREADSAFE
-
 class OffThreadState {
   public:
     enum State {
@@ -3781,8 +3690,6 @@ runOffThreadScript(JSContext *cx, unsigned argc, jsval *vp)
 
     return JS_ExecuteScript(cx, cx->global(), script, args.rval());
 }
-
-#endif // JS_THREADSAFE
 
 struct FreeOnReturn
 {
@@ -4707,11 +4614,9 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Evaluate 'str' in the nth up frame.\n"
 "  If 'save' (default false), save the frame chain."),
 
-#ifdef JS_THREADSAFE
     JS_FN_HELP("evalInWorker", EvalInWorker, 1, 0,
 "evalInWorker(str)",
 "  Evaluate 'str' in a separate thread with its own runtime.\n"),
-#endif
 
     JS_FN_HELP("shapeOf", ShapeOf, 1, 0,
 "shapeOf(obj)",
@@ -4728,11 +4633,9 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Report statistics about arrays."),
 #endif
 
-#ifdef JS_THREADSAFE
     JS_FN_HELP("sleep", Sleep_fn, 1, 0,
 "sleep(dt)",
 "  Sleep for dt seconds."),
-#endif
 
     JS_FN_HELP("snarf", Snarf, 1, 0,
 "snarf(filename, [\"binary\"])",
@@ -4760,7 +4663,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "syntaxParse(code)",
 "  Check the syntax of a string, returning success value"),
 
-#ifdef JS_THREADSAFE
     JS_FN_HELP("offThreadCompileScript", OffThreadCompileScript, 1, 0,
 "offThreadCompileScript(code[, options])",
 "  Compile |code| on a helper thread. To wait for the compilation to finish\n"
@@ -4782,8 +4684,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Wait for off-thread compilation to complete. If an error occurred,\n"
 "  throw the appropriate exception; otherwise, run the script and return\n"
 "  its value."),
-
-#endif
 
     JS_FN_HELP("timeout", Timeout, 1, 0,
 "timeout([seconds], [func])",
@@ -5742,31 +5642,10 @@ static JS::AsmJSCacheOps asmJSCacheOps = {
     ShellBuildId
 };
 
-/*
- * Avoid a reentrancy hazard.
- *
- * The non-JS_THREADSAFE shell uses a signal handler to implement timeout().
- * The JS engine is not really reentrant, but JS_RequestInterruptCallback
- * is mostly safe--the only danger is that we might interrupt JS_NewContext or
- * JS_DestroyContext while the context list is being modified. Therefore we
- * disable the signal handler around calls to those functions.
- */
-#ifdef JS_THREADSAFE
-# define WITH_SIGNALS_DISABLED(x)  x
-#else
-# define WITH_SIGNALS_DISABLED(x)                                               \
-    JS_BEGIN_MACRO                                                              \
-        ScheduleWatchdog(gRuntime, -1);                                         \
-        x;                                                                      \
-        ScheduleWatchdog(gRuntime, gTimeoutInterval);                           \
-    JS_END_MACRO
-#endif
-
 static JSContext *
 NewContext(JSRuntime *rt)
 {
-    JSContext *cx;
-    WITH_SIGNALS_DISABLED(cx = JS_NewContext(rt, gStackChunkSize));
+    JSContext *cx = JS_NewContext(rt, gStackChunkSize);
     if (!cx)
         return nullptr;
 
@@ -5790,7 +5669,7 @@ DestroyContext(JSContext *cx, bool withGC)
     JSShellContextData *data = (JSShellContextData *) JS_GetContextPrivate(cx);
     JS_SetContextPrivate(cx, nullptr);
     free(data);
-    WITH_SIGNALS_DISABLED(withGC ? JS_DestroyContext(cx) : JS_DestroyContextNoGC(cx));
+    withGC ? JS_DestroyContext(cx) : JS_DestroyContextNoGC(cx);
 }
 
 static JSObject *
@@ -6078,9 +5957,7 @@ SetRuntimeOptions(JSRuntime *rt, const OptionParser &op)
         else if (strcmp(str, "on") != 0)
             return OptionFailure("ion-offthread-compile", str);
     }
-#ifdef JS_THREADSAFE
     rt->setOffthreadIonCompilationEnabled(offthreadCompilation);
-#endif
 
     if (op.getStringOption("ion-parallel-compile")) {
         fprintf(stderr, "--ion-parallel-compile is deprecated. Please use --ion-offthread-compile instead.\n");
@@ -6258,10 +6135,8 @@ main(int argc, char **argv, char **envp)
         || !op.addOptionalMultiStringArg("scriptArgs",
                                          "String arguments to bind as |scriptArgs| in the "
                                          "shell's global")
-#ifdef JS_THREADSAFE
         || !op.addIntOption('\0', "thread-count", "COUNT", "Use COUNT auxiliary threads "
                             "(default: # of cores - 1)", -1)
-#endif
         || !op.addBoolOption('\0', "ion", "Enable IonMonkey (default)")
         || !op.addBoolOption('\0', "no-ion", "Disable IonMonkey")
         || !op.addBoolOption('\0', "no-asmjs", "Disable asm.js compilation")
@@ -6398,13 +6273,11 @@ main(int argc, char **argv, char **envp)
     if (op.getBoolOption("no-threads"))
         js::DisableExtraThreads();
 
-#ifdef JS_THREADSAFE
     // The fake thread count must be set before initializing the Runtime,
     // which spins up the thread pool.
     int32_t threadCount = op.getIntOption("thread-count");
     if (threadCount >= 0)
         SetFakeCPUCount(threadCount);
-#endif /* JS_THREADSAFE */
 
     // Start the engine.
     if (!JS_Init())
@@ -6446,10 +6319,8 @@ main(int argc, char **argv, char **envp)
 
     JS_SetNativeStackQuota(rt, gMaxStackSize);
 
-#ifdef JS_THREADSAFE
     if (!offThreadState.init())
         return 1;
-#endif
 
     if (!InitWatchdog(rt))
         return 1;
@@ -6476,11 +6347,9 @@ main(int argc, char **argv, char **envp)
 
     gInterruptFunc.destroy();
 
-#ifdef JS_THREADSAFE
     MOZ_ASSERT_IF(!CanUseExtraThreads(), workerThreads.empty());
     for (size_t i = 0; i < workerThreads.length(); i++)
         PR_JoinThread(workerThreads[i]);
-#endif
 
 #ifdef JSGC_GENERATIONAL
     if (!noggc.empty())

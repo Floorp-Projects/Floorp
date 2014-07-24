@@ -7,12 +7,10 @@
 #ifndef TraceLogging_h
 #define TraceLogging_h
 
-#include "jsalloc.h"
-#ifdef JS_THREADSAFE
-# include "jslock.h"
-#endif
-
 #include "mozilla/GuardObjects.h"
+
+#include "jsalloc.h"
+#include "jslock.h"
 
 #include "js/HashTable.h"
 #include "js/TypeDecls.h"
@@ -470,12 +468,10 @@ class TraceLogger
 class TraceLogging
 {
 #ifdef JS_TRACE_LOGGING
-#ifdef JS_THREADSAFE
     typedef HashMap<PRThread *,
                     TraceLogger *,
                     PointerHasher<PRThread *, 3>,
                     SystemAllocPolicy> ThreadLoggerHashMap;
-#endif // JS_THREADSAFE
     typedef Vector<TraceLogger *, 1, js::SystemAllocPolicy > MainThreadLoggers;
 
     bool initialized;
@@ -483,27 +479,21 @@ class TraceLogging
     bool enabledTextIds[TraceLogger::LAST];
     bool mainThreadEnabled;
     bool offThreadEnabled;
-#ifdef JS_THREADSAFE
     ThreadLoggerHashMap threadLoggers;
-#endif // JS_THREADSAFE
     MainThreadLoggers mainThreadLoggers;
     uint32_t loggerId;
     FILE *out;
 
   public:
     uint64_t startupTime;
-#ifdef JS_THREADSAFE
     PRLock *lock;
-#endif // JS_THREADSAFE
 
     TraceLogging();
     ~TraceLogging();
 
     TraceLogger *forMainThread(JSRuntime *runtime);
     TraceLogger *forMainThread(jit::CompileRuntime *runtime);
-#ifdef JS_THREADSAFE
     TraceLogger *forThread(PRThread *thread);
-#endif // JS_THREADSAFE
 
     bool isTextIdEnabled(uint32_t textId) {
         if (textId < TraceLogger::LAST)
@@ -667,14 +657,10 @@ class AutoTraceLoggingLock
       : logging(logging)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-#ifdef JS_THREADSAFE
         PR_Lock(logging->lock);
-#endif // JS_THREADSAFE
     }
     ~AutoTraceLoggingLock() {
-#ifdef JS_THREADSAFE
         PR_Unlock(logging->lock);
-#endif // JS_THREADSAFE
     }
   private:
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
