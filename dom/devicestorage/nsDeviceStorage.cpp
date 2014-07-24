@@ -637,6 +637,7 @@ OverrideRootDir::GetSingleton()
 
   sSingleton = new OverrideRootDir();
   Preferences::AddStrongObserver(sSingleton, "device.storage.overrideRootDir");
+  Preferences::AddStrongObserver(sSingleton, "device.storage.testing");
   ClearOnShutdown(&sSingleton);
 
   return sSingleton;
@@ -645,6 +646,7 @@ OverrideRootDir::GetSingleton()
 OverrideRootDir::~OverrideRootDir()
 {
   Preferences::RemoveObserver(this, "device.storage.overrideRootDir");
+  Preferences::RemoveObserver(this, "device.storage.testing");
 }
 
 NS_IMETHODIMP
