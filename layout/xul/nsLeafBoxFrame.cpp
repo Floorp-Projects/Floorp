@@ -162,7 +162,7 @@ nsLeafBoxFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 }
 
 nscoord
-nsLeafBoxFrame::GetIntrinsicWidth()
+nsLeafBoxFrame::GetIntrinsicISize()
 {
   // No intrinsic width
   return 0;
@@ -330,7 +330,7 @@ nsLeafBoxFrame::GetType() const
 nsresult
 nsLeafBoxFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
 {
-  MarkIntrinsicWidthsDirty();
+  MarkIntrinsicISizesDirty();
   return nsLeafFrame::CharacterDataChanged(aInfo);
 }
 
@@ -365,7 +365,7 @@ nsLeafBoxFrame::GetBoxAscent(nsBoxLayoutState& aState)
 }
 
 /* virtual */ void
-nsLeafBoxFrame::MarkIntrinsicWidthsDirty()
+nsLeafBoxFrame::MarkIntrinsicISizesDirty()
 {
   // Don't call base class method, since everything it does is within an
   // IsBoxWrapped check.

@@ -1442,7 +1442,7 @@ public:
    * re-calculation).  Note that this should generally not be called
    * directly; nsPresShell::FrameNeedsReflow will call it instead.
    */
-  virtual void MarkIntrinsicWidthsDirty() = 0;
+  virtual void MarkIntrinsicISizesDirty() = 0;
 
   /**
    * Get the min-content intrinsic inline size of the frame.  This must be
@@ -1458,7 +1458,7 @@ public:
    * padding and border.
    *
    * Note that many frames will cache the result of this function call
-   * unless MarkIntrinsicWidthsDirty is called.
+   * unless MarkIntrinsicISizesDirty is called.
    *
    * It is not acceptable for a frame to mark itself dirty when this
    * method is called.
@@ -1606,17 +1606,17 @@ public:
    * Return the horizontal components of padding, border, and margin
    * that contribute to the intrinsic width that applies to the parent.
    */
-  struct IntrinsicWidthOffsetData {
+  struct IntrinsicISizeOffsetData {
     nscoord hPadding, hBorder, hMargin;
     float hPctPadding, hPctMargin;
 
-    IntrinsicWidthOffsetData()
+    IntrinsicISizeOffsetData()
       : hPadding(0), hBorder(0), hMargin(0)
       , hPctPadding(0.0f), hPctMargin(0.0f)
     {}
   };
-  virtual IntrinsicWidthOffsetData
-    IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext) = 0;
+  virtual IntrinsicISizeOffsetData
+    IntrinsicISizeOffsets(nsRenderingContext* aRenderingContext) = 0;
 
   virtual mozilla::IntrinsicSize GetIntrinsicSize() = 0;
 

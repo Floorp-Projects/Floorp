@@ -262,8 +262,8 @@ nsFieldSetFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
 }
 
 nscoord
-nsFieldSetFrame::GetIntrinsicWidth(nsRenderingContext* aRenderingContext,
-                                   nsLayoutUtils::IntrinsicWidthType aType)
+nsFieldSetFrame::GetIntrinsicISize(nsRenderingContext* aRenderingContext,
+                                   nsLayoutUtils::IntrinsicISizeType aType)
 {
   nscoord legendWidth = 0;
   nscoord contentWidth = 0;
@@ -291,7 +291,7 @@ nsFieldSetFrame::GetMinISize(nsRenderingContext* aRenderingContext)
   nscoord result = 0;
   DISPLAY_MIN_WIDTH(this, result);
 
-  result = GetIntrinsicWidth(aRenderingContext, nsLayoutUtils::MIN_WIDTH);
+  result = GetIntrinsicISize(aRenderingContext, nsLayoutUtils::MIN_WIDTH);
   return result;
 }
 
@@ -301,7 +301,7 @@ nsFieldSetFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);
 
-  result = GetIntrinsicWidth(aRenderingContext, nsLayoutUtils::PREF_WIDTH);
+  result = GetIntrinsicISize(aRenderingContext, nsLayoutUtils::PREF_WIDTH);
   return result;
 }
 

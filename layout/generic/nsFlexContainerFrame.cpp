@@ -3815,7 +3815,7 @@ nsFlexContainerFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
   // XXXdholbert Optimization: We could cache our intrinsic widths like
   // nsBlockFrame does (and return it early from this function if it's set).
   // Whenever anything happens that might change it, set it to
-  // NS_INTRINSIC_WIDTH_UNKNOWN (like nsBlockFrame::MarkIntrinsicWidthsDirty
+  // NS_INTRINSIC_WIDTH_UNKNOWN (like nsBlockFrame::MarkIntrinsicISizesDirty
   // does)
   FlexboxAxisTracker axisTracker(this);
 

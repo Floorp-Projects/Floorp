@@ -6998,10 +6998,10 @@ nsTextFrame::SetFontSizeInflation(float aInflation)
 }
 
 /* virtual */ 
-void nsTextFrame::MarkIntrinsicWidthsDirty()
+void nsTextFrame::MarkIntrinsicISizesDirty()
 {
   ClearTextRuns();
-  nsFrame::MarkIntrinsicWidthsDirty();
+  nsFrame::MarkIntrinsicISizesDirty();
 }
 
 // XXX this doesn't handle characters shaped by line endings. We need to

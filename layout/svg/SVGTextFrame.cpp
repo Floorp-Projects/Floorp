@@ -5201,7 +5201,7 @@ SVGTextFrame::DoReflow()
   if (UpdateFontSizeScaleFactor()) {
     // If the font size scale factor changed, we need the block to report
     // an updated preferred width.
-    kid->MarkIntrinsicWidthsDirty();
+    kid->MarkIntrinsicISizesDirty();
   }
 
   mState |= NS_STATE_SVG_TEXT_IN_REFLOW;

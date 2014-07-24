@@ -97,7 +97,7 @@ nsTextBoxFrame::nsTextBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
   nsLeafBoxFrame(aShell, aContext), mAccessKeyInfo(nullptr), mCropType(CropRight),
   mNeedsReflowCallback(false)
 {
-    MarkIntrinsicWidthsDirty();
+    MarkIntrinsicISizesDirty();
 }
 
 nsTextBoxFrame::~nsTextBoxFrame()
@@ -973,10 +973,10 @@ nsTextBoxFrame::ComputesOwnOverflowArea()
 }
 
 /* virtual */ void
-nsTextBoxFrame::MarkIntrinsicWidthsDirty()
+nsTextBoxFrame::MarkIntrinsicISizesDirty()
 {
     mNeedsRecalc = true;
-    nsTextBoxFrameSuper::MarkIntrinsicWidthsDirty();
+    nsTextBoxFrameSuper::MarkIntrinsicISizesDirty();
 }
 
 void

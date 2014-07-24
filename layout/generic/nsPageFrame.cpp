@@ -650,13 +650,13 @@ nsPageBreakFrame::~nsPageBreakFrame()
 }
 
 nscoord
-nsPageBreakFrame::GetIntrinsicWidth()
+nsPageBreakFrame::GetIntrinsicISize()
 {
   return nsPresContext::CSSPixelsToAppUnits(1);
 }
 
 nscoord
-nsPageBreakFrame::GetIntrinsicHeight()
+nsPageBreakFrame::GetIntrinsicBSize()
 {
   return 0;
 }
@@ -673,7 +673,7 @@ nsPageBreakFrame::Reflow(nsPresContext*           aPresContext,
   // Override reflow, since we don't want to deal with what our
   // computed values are.
   WritingMode wm = aReflowState.GetWritingMode();
-  LogicalSize finalSize(wm, GetIntrinsicWidth(),
+  LogicalSize finalSize(wm, GetIntrinsicISize(),
                         aReflowState.AvailableBSize() == NS_UNCONSTRAINEDSIZE ?
                           0 : aReflowState.AvailableBSize());
   // round the height down to the nearest pixel

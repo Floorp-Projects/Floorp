@@ -627,7 +627,7 @@ RemoveFirstLine(nsLineList& aFromLines, nsFrameList& aFromFrames,
 // Reflow methods
 
 /* virtual */ void
-nsBlockFrame::MarkIntrinsicWidthsDirty()
+nsBlockFrame::MarkIntrinsicISizesDirty()
 {
   nsBlockFrame* dirtyBlock = static_cast<nsBlockFrame*>(FirstContinuation());
   dirtyBlock->mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
@@ -639,7 +639,7 @@ nsBlockFrame::MarkIntrinsicWidthsDirty()
     }
   }
 
-  nsBlockFrameSuper::MarkIntrinsicWidthsDirty();
+  nsBlockFrameSuper::MarkIntrinsicISizesDirty();
 }
 
 void
