@@ -34,6 +34,9 @@ struct cubeb_ops {
                                            cubeb_output_device ** const device);
   int (* stream_output_device_destroy)(cubeb_stream * stream,
                                        cubeb_output_device * device);
+  int (*stream_register_device_changed_callback)(cubeb_stream * stream,
+                                                 cubeb_device_changed_callback device_changed_callback);
+
 };
 
 #endif /* CUBEB_INTERNAL_0eb56756_4e20_4404_a76d_42bf88cd15a5 */

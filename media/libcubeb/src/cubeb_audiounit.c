@@ -38,6 +38,7 @@ struct cubeb_stream {
   AudioUnit unit;
   cubeb_data_callback data_callback;
   cubeb_state_callback state_callback;
+  cubeb_device_changed_callback device_changed_callback;
   void * user_ptr;
   AudioStreamBasicDescription sample_spec;
   pthread_mutex_t mutex;
@@ -174,6 +175,120 @@ audiounit_get_output_device_id(AudioDeviceID * device_id)
                                  NULL,
                                  &size,
                                  device_id);
+  if (r != noErr) {
+    return CUBEB_ERROR;
+  }
+
+  return CUBEB_OK;
+}
+
+static int audiounit_install_device_changed_callback(cubeb_stream * stm);
+static int audiounit_uninstall_device_changed_callback();
+
+static OSStatus
+audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
+                                     const AudioObjectPropertyAddress * addresses,
+                                     void * user)
+{
+  cubeb_stream * stm = (cubeb_stream*) user;
+
+  for (UInt32 i = 0; i < address_count; i++) {
+    switch(addresses[i].mSelector) {
+      case kAudioHardwarePropertyDefaultOutputDevice:
+        /* fall through */
+      case kAudioDevicePropertyDataSource:
+        pthread_mutex_lock(&stm->mutex);
+        if (stm->device_changed_callback) {
+          stm->device_changed_callback(stm->user_ptr);
+        }
+        pthread_mutex_unlock(&stm->mutex);
+        break;
+    }
+  }
+
+  return noErr;
+}
+
+static int
+audiounit_install_device_changed_callback(cubeb_stream * stm)
+{
+  OSStatus r;
+  AudioDeviceID id;
+
+  /* This event will notify us when the data source on the same device changes,
+   * for example when the user plugs in a normal (non-usb) headset in the
+   * headphone jack. */
+  AudioObjectPropertyAddress alive_address = {
+    kAudioDevicePropertyDataSource,
+    kAudioObjectPropertyScopeGlobal,
+    kAudioObjectPropertyElementMaster
+  };
+
+  if (audiounit_get_output_device_id(&id) != noErr) {
+    return CUBEB_ERROR;
+  }
+
+  r = AudioObjectAddPropertyListener(id, &alive_address,
+                                     &audiounit_property_listener_callback,
+                                     stm);
+  if (r != noErr) {
+    return CUBEB_ERROR;
+  }
+
+  /* This event will notify us when the default audio device changes,
+   * for example when the user plugs in a USB headset and the system chooses it
+   * automatically as the default, or when another device is chosen in the
+   * dropdown list. */
+  AudioObjectPropertyAddress default_device_address = {
+    kAudioHardwarePropertyDefaultOutputDevice,
+    kAudioObjectPropertyScopeGlobal,
+    kAudioObjectPropertyElementMaster
+  };
+
+  r = AudioObjectAddPropertyListener(kAudioObjectSystemObject,
+                                     &default_device_address,
+                                     &audiounit_property_listener_callback,
+                                     stm);
+  if (r != noErr) {
+    return CUBEB_ERROR;
+  }
+
+  return CUBEB_OK;
+}
+
+static int
+audiounit_uninstall_device_changed_callback()
+{
+  OSStatus r;
+  AudioDeviceID id;
+
+  AudioObjectPropertyAddress datasource_address = {
+    kAudioDevicePropertyDataSource,
+    kAudioObjectPropertyScopeGlobal,
+    kAudioObjectPropertyElementMaster
+  };
+
+  if (audiounit_get_output_device_id(&id) != noErr) {
+    return CUBEB_ERROR;
+  }
+
+  r = AudioObjectRemovePropertyListener(id, &datasource_address,
+                                        &audiounit_property_listener_callback,
+                                        NULL);
+  if (r != noErr) {
+    return CUBEB_ERROR;
+  }
+
+  AudioObjectPropertyAddress default_device_address = {
+    kAudioHardwarePropertyDefaultOutputDevice,
+    kAudioObjectPropertyScopeGlobal,
+    kAudioObjectPropertyElementMaster
+  };
+
+  r = AudioObjectRemovePropertyListener(kAudioObjectSystemObject,
+                                        &default_device_address,
+                                        &audiounit_property_listener_callback,
+                                        NULL);
   if (r != noErr) {
     return CUBEB_ERROR;
   }
@@ -400,10 +515,15 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
   stm->data_callback = data_callback;
   stm->state_callback = state_callback;
   stm->user_ptr = user_ptr;
+  stm->device_changed_callback = NULL;
 
   stm->sample_spec = ss;
 
-  r = pthread_mutex_init(&stm->mutex, NULL);
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+  r = pthread_mutex_init(&stm->mutex, &attr);
+  pthread_mutexattr_destroy(&attr);
   assert(r == 0);
 
   stm->frames_played = 0;
@@ -488,6 +608,24 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
 
   *stream = stm;
 
+  /* This is needed so that AudioUnit listeners get called on this thread, and
+   * not the main thread. If we don't do that, they are not called, or a crash
+   * occur, depending on the OSX version. */
+  AudioObjectPropertyAddress runloop_address = {
+    kAudioHardwarePropertyRunLoop,
+    kAudioObjectPropertyScopeGlobal,
+    kAudioObjectPropertyElementMaster
+  };
+
+  CFRunLoopRef run_loop = NULL;
+  r = AudioObjectSetPropertyData(kAudioObjectSystemObject,
+                                 &runloop_address,
+                                 0, NULL, sizeof(CFRunLoopRef), &run_loop);
+
+  /* we dont' check the return value here, because we want to be able to play
+   * even if we can't detect device changes. */
+  audiounit_install_device_changed_callback(stm);
+
   return CUBEB_OK;
 }
 
@@ -507,6 +645,8 @@ audiounit_stream_destroy(cubeb_stream * stm)
     AudioComponentInstanceDispose(stm->unit);
 #endif
   }
+
+  audiounit_uninstall_device_changed_callback();
 
   r = pthread_mutex_destroy(&stm->mutex);
   assert(r == 0);
@@ -658,7 +798,7 @@ int audiounit_stream_get_current_output_device(cubeb_stream * stm,
                                                cubeb_output_device ** const  device)
 {
   OSStatus r;
-  uint32_t size;
+  UInt32 size;
   UInt32 data;
   char strdata[4];
   AudioDeviceID output_device_id;
@@ -677,7 +817,9 @@ int audiounit_stream_get_current_output_device(cubeb_stream * stm,
 
   size = sizeof(UInt32);
   /* This fails with some USB headset, so simply return an empty string. */
-  r = AudioObjectGetPropertyData(output_device_id, &datasource_address, 0, NULL, &size, &data);
+  r = AudioObjectGetPropertyData(output_device_id,
+                                 &datasource_address,
+                                 0, NULL, &size, &data);
   if (r != noErr) {
     size = 0;
     data = 0;
@@ -713,6 +855,16 @@ int audiounit_stream_output_device_destroy(cubeb_stream * stream,
   return CUBEB_OK;
 }
 
+int audiounit_stream_register_device_changed_callback(cubeb_stream * stream,
+                                                  cubeb_device_changed_callback  device_changed_callback)
+{
+  pthread_mutex_lock(&stream->mutex);
+  stream->device_changed_callback = device_changed_callback;
+  pthread_mutex_unlock(&stream->mutex);
+
+  return CUBEB_OK;
+}
+
 static struct cubeb_ops const audiounit_ops = {
   .init = audiounit_init,
   .get_backend_id = audiounit_get_backend_id,
@@ -729,5 +881,6 @@ static struct cubeb_ops const audiounit_ops = {
   .stream_set_volume = audiounit_stream_set_volume,
   .stream_set_panning = audiounit_stream_set_panning,
   .stream_get_current_output_device = audiounit_stream_get_current_output_device,
-  .stream_output_device_destroy = audiounit_stream_output_device_destroy
+  .stream_output_device_destroy = audiounit_stream_output_device_destroy,
+  .stream_register_device_changed_callback = audiounit_stream_register_device_changed_callback
 };
