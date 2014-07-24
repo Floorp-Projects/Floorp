@@ -123,10 +123,6 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_SetProperty(cx, info, "has-gczeal", value))
         return false;
 
-    value = BooleanValue(true);
-    if (!JS_SetProperty(cx, info, "threadsafe", value))
-        return false;
-
 #ifdef JS_MORE_DETERMINISTIC
     value = BooleanValue(true);
 #else
