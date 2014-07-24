@@ -929,11 +929,14 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
                             aMargins, aAlignmentX, aAlignmentY, aPriority),
                         nsINode::DeleteProperty<DisplayPortMarginsPropertyData>);
 
-  nsIFrame* rootScrollFrame = aPresShell->GetRootScrollFrame();
-  if (rootScrollFrame && aContent == rootScrollFrame->GetContent()) {
-    // We are setting a root displayport for a document.
-    // The pres shell needs a special flag set.
-    aPresShell->SetIgnoreViewportScrolling(true);
+  if (gfxPrefs::AsyncPanZoomEnabled()) {
+    nsIFrame* rootScrollFrame = aPresShell->GetRootScrollFrame();
+    if (rootScrollFrame && aContent == rootScrollFrame->GetContent()) {
+      // We are setting a root displayport for a document.
+      // If we have APZ, then set a special flag on the pres shell so
+      // that we don't get scrollbars drawn.
+      aPresShell->SetIgnoreViewportScrolling(true);
+    }
   }
 
   if (aRepaintMode == RepaintMode::Repaint) {
