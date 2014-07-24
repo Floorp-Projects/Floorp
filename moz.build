@@ -42,17 +42,24 @@ if not CONFIG['JS_STANDALONE']:
 
 if CONFIG['COMPILE_ENVIRONMENT'] and not CONFIG['LIBXUL_SDK']:
     if CONFIG['MOZ_BUILD_NSPR']:
-        add_tier_dir('nspr', 'config/nspr')
+        add_tier_dir('nspr', 'config/nspr', trigger='NSPR_LIBS')
 
     if not CONFIG['JS_STANDALONE']:
         add_tier_dir('external', 'config/external')
         if not CONFIG['MOZ_NATIVE_NSS']:
-             add_tier_dir('nss', 'security/build')
+            # We want security/build to be built before anything using
+            # NSPR_LIBS when MOZ_FOLD_LIBS is set, because that's where NSPR
+            # actually ends up being linked. All places using NSS_LIBS also
+            # use NSPR_LIBS so it's safe to use the latter.
+            add_tier_dir('nss', 'security/build',
+                trigger='NSPR_LIBS' if CONFIG['MOZ_FOLD_LIBS'] else 'NSS_LIBS')
 
     if CONFIG['BUILD_CTYPES'] and not CONFIG['MOZ_NATIVE_FFI']:
-        add_tier_dir('js', ['js/src/ctypes/libffi'], static=True)
-    add_tier_dir('js', ['intl/icu'], static=True)
-    CONFIGURE_SUBST_FILES += ['intl/icu/Makefile']
+        add_tier_dir('js', ['js/src/ctypes/libffi'], static=True,
+            trigger='MOZ_FFI_LIBS')
+    if CONFIG['ENABLE_INTL_API'] and not CONFIG['MOZ_NATIVE_ICU']:
+        add_tier_dir('js', ['intl/icu'], static=True, trigger='MOZ_ICU_LIBS')
+        CONFIGURE_SUBST_FILES += ['intl/icu/Makefile']
     add_tier_dir('js', ['js/src'])
 
 if not CONFIG['JS_STANDALONE']:

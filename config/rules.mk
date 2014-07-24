@@ -88,7 +88,7 @@ LIBS += $(NSPR_LIBS)
 ifndef MOZ_PROFILE_GENERATE
 CPP_UNIT_TESTS_FILES = $(CPP_UNIT_TESTS)
 CPP_UNIT_TESTS_DEST = $(DIST)/cppunittests
-CPP_UNIT_TESTS_TARGET = libs
+CPP_UNIT_TESTS_TARGET = binaries libs target
 INSTALL_TARGETS += CPP_UNIT_TESTS
 endif
 
@@ -591,7 +591,11 @@ GLOBAL_DEPS += Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.m
 ifdef COMPILE_ENVIRONMENT
 OBJ_TARGETS = $(OBJS) $(PROGOBJS) $(HOST_OBJS) $(HOST_PROGOBJS)
 
-compile:: $(OBJ_TARGETS)
+compile:: host target
+
+host:: $(HOST_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS)
+
+target:: $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS)
 
 include $(topsrcdir)/config/makefiles/target_binaries.mk
 endif
@@ -717,7 +721,7 @@ ifdef MOZ_PROFILE_GENERATE
 	touch -t `date +%Y%m%d%H%M.%S -d 'now+5seconds'` pgo.relink
 endif
 else # !WINNT || GNU_CC
-	$(EXPAND_CCC) -o $@ $(CXXFLAGS) $(PROGOBJS) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(WRAP_LDFLAGS) $(LIBS) $(MOZ_GLUE_PROGRAM_LDFLAGS) $(EXTRA_LIBS) $(OS_LIBS) $(BIN_FLAGS) $(EXE_DEF_FILE) $(STLPORT_LIBS)
+	$(EXPAND_CCC) -o $@ $(CXXFLAGS) $(PROGOBJS) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(WRAP_LDFLAGS) $(MOZ_GLUE_PROGRAM_LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS) $(BIN_FLAGS) $(EXE_DEF_FILE) $(STLPORT_LIBS)
 	$(call CHECK_BINARY,$@)
 endif # WINNT && !GNU_CC
 
@@ -773,7 +777,7 @@ ifdef MSMANIFEST_TOOL
 	fi
 endif	# MSVC with manifest tool
 else
-	$(EXPAND_CCC) $(CXXFLAGS) -o $@ $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(WRAP_LDFLAGS) $(LIBS) $(MOZ_GLUE_PROGRAM_LDFLAGS) $(EXTRA_LIBS) $(OS_LIBS) $(BIN_FLAGS) $(STLPORT_LIBS)
+	$(EXPAND_CCC) $(CXXFLAGS) -o $@ $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(WRAP_LDFLAGS) $(MOZ_GLUE_PROGRAM_LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS) $(BIN_FLAGS) $(STLPORT_LIBS)
 	$(call CHECK_BINARY,$@)
 endif # WINNT && !GNU_CC
 
@@ -1269,6 +1273,7 @@ ifneq (,$(SDK_LIBRARY))
 ifndef NO_DIST_INSTALL
 SDK_LIBRARY_FILES := $(SDK_LIBRARY)
 SDK_LIBRARY_DEST := $(SDK_LIB_DIR)
+SDK_LIBRARY_TARGET := binaries libs target
 INSTALL_TARGETS += SDK_LIBRARY
 endif
 endif # SDK_LIBRARY
@@ -1277,6 +1282,8 @@ ifneq (,$(strip $(SDK_BINARY)))
 ifndef NO_DIST_INSTALL
 SDK_BINARY_FILES := $(SDK_BINARY)
 SDK_BINARY_DEST := $(SDK_BIN_DIR)
+# SDK_BINARY_TARGET is set in xpcom/idl-parser/Makefile.in
+SDK_BINARY_TARGET ?= binaries libs target
 INSTALL_TARGETS += SDK_BINARY
 endif
 endif # SDK_BINARY

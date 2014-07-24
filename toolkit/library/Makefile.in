@@ -7,6 +7,9 @@ CXXFLAGS += $(TK_CFLAGS)
 endif
 
 include $(topsrcdir)/toolkit/library/libxul.mk
+# Please don't remove the following comment, because it does some magic:
+# libxul.mk adds FT2_LIBS, NSS_LIBS and NSPR_LIBS, but we want to have the
+# string in this file to trigger a dependency on freetype2, nss and nspr.
 
 ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_PROFILE_USE))
 # Wrap linker to measure peak virtual memory usage.
