@@ -2421,4 +2421,18 @@ NS_Get32BitsOfPseudoRandom()
 #endif
 }
 
+/**
+ * Return true if the given string is a reasonable HTTP header value given the
+ * definition in RFC 2616 section 4.2.  Currently we don't pay the cost to do
+ * full, sctrict validation here since it would require fulling parsing the
+ * value.
+ */
+bool NS_IsReasonableHTTPHeaderValue(const nsACString& aValue);
+
+/**
+ * Return true if the given string is a valid HTTP token per RFC 2616 section
+ * 2.2.
+ */
+bool NS_IsValidHTTPToken(const nsACString& aToken);
+
 #endif // !nsNetUtil_h__

@@ -243,6 +243,24 @@ nsHttp::IsValidToken(const char *start, const char *end)
     return true;
 }
 
+// static
+bool
+nsHttp::IsReasonableHeaderValue(const nsACString &s)
+{
+  // Header values MUST NOT contain line-breaks.  RFC 2616 technically
+  // permits CTL characters, including CR and LF, in header values provided
+  // they are quoted.  However, this can lead to problems if servers do not
+  // interpret quoted strings properly.  Disallowing CR and LF here seems
+  // reasonable and keeps things simple.  We also disallow a null byte.
+  const nsACString::char_type* end = s.EndReading();
+  for (const nsACString::char_type* i = s.BeginReading(); i != end; ++i) {
+    if (*i == '\r' || *i == '\n' || *i == '\0') {
+      return false;
+    }
+  }
+  return true;
+}
+
 const char *
 nsHttp::FindToken(const char *input, const char *token, const char *seps)
 {
