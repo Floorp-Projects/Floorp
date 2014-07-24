@@ -78,14 +78,14 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
         DELETED_PASSWORDS_PROJECTION_MAP.put(DeletedPasswords.ID, DeletedPasswords.ID);
         DELETED_PASSWORDS_PROJECTION_MAP.put(DeletedPasswords.GUID, DeletedPasswords.GUID);
         DELETED_PASSWORDS_PROJECTION_MAP.put(DeletedPasswords.TIME_DELETED, DeletedPasswords.TIME_DELETED);
-
-        // We don't use .loadMozGlue because we're in a different process,
-        // and we just want to reuse code rather than use the loader lock etc.
-        GeckoLoader.doLoadLibrary("mozglue");
     }
 
     public PasswordsProvider() {
         super(LOG_TAG);
+
+        // We don't use .loadMozGlue because we're in a different process,
+        // and we just want to reuse code rather than use the loader lock etc.
+        GeckoLoader.doLoadLibrary(getContext(), "mozglue");
     }
 
     @Override
