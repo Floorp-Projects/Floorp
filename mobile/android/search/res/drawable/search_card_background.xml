@@ -3,46 +3,23 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-
-
     <item>
         <shape>
             <padding
-                android:bottom="5dp"
-                android:left="10dp"
-                android:right="10dp"
-                android:top="10dp"/>
-            <solid android:color="@color/transparent"/>
+                android:bottom="@dimen/card_background_padding_y"
+                android:top="@dimen/card_background_padding_y"
+                android:left="@dimen/card_background_padding_x"
+                android:right="@dimen/card_background_padding_x"/>
+            <solid android:color="@android:color/transparent"/>
         </shape>
     </item>
 
-    <item>
-        <shape>
-            <padding
-                android:bottom="1dp"
-                android:left="0dp"
-                android:right="0dp"
-                android:top="0dp"/>
-            <solid android:color="@color/card_shadow_1"/>
-            <corners android:radius="2dp"/>
-        </shape>
-    </item>
-    <item>
-        <shape>
-            <padding
-                android:bottom="1dp"
-                android:left="0dp"
-                android:right="0dp"
-                android:top="0dp"/>
-            <solid android:color="@color/card_shadow_2"/>
-            <corners android:radius="2dp"/>
-        </shape>
-    </item>
     <!-- Background -->
     <item>
         <shape>
             <solid android:color="@color/card_background"/>
-            <corners android:radius="2dp"/>
+            <corners android:radius="5dp"/>
+            <stroke android:width="1dp" android:color="@color/card_border" />
         </shape>
     </item>
 </layer-list>

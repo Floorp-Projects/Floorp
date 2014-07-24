@@ -4,14 +4,13 @@
 
 <resources>
 
-    <color name="transparent">#00FFFFFF</color>
+    <color name="global_background_color">#EBEBF0</color>
 
     <color name="highlight_orange">#FF9500</color>
 
     <!-- card colors -->
     <color name="card_background">#ffffff</color>
-    <color name="card_shadow_1">#d4d4d4</color>
-    <color name="card_shadow_2">#dddddd</color>
+    <color name="card_border">#BFBFBF</color>
 
     <!-- Search suggestion highlight color is defined in SearchFragment.java -->
 </resources>

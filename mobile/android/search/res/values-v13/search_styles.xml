@@ -4,10 +4,10 @@
 
 <resources>
 
-    <style name="AppTheme" parent="@android:style/Theme.Holo.Light.NoActionBar"/>
-
-
-    <style name="BorderLessButton">
-        <item name="android:background">?android:attr/selectableItemBackground</item>
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="@android:style/Theme.Holo.Light.NoActionBar">
+        <item name="android:windowBackground">@color/global_background_color</item>
+        <item name="android:colorBackground">@color/global_background_color</item>
     </style>
+
 </resources>
