@@ -6,11 +6,10 @@
 
 if CONFIG['OS_TARGET'] != 'Android':
     PROGRAM = 'crashreporter'
-# The xpcshell test case here verifies that the CA certificate list
 
-UNIFIED_SOURCES += [
-    'crashreporter.cpp',
-]
+    UNIFIED_SOURCES += [
+        'crashreporter.cpp',
+    ]
 
 LOCAL_INCLUDES += [
     '../google-breakpad/src',
