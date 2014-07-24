@@ -2869,13 +2869,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     rv = httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
                                        contentTypeHeader);
     if (NS_SUCCEEDED(rv)) {
-      nsAutoCString contentType, charset;
-      rv = NS_ParseContentType(contentTypeHeader, contentType, charset);
-      NS_ENSURE_SUCCESS(rv, rv);
-  
-      if (!contentType.LowerCaseEqualsLiteral("text/plain") &&
-          !contentType.LowerCaseEqualsLiteral("application/x-www-form-urlencoded") &&
-          !contentType.LowerCaseEqualsLiteral("multipart/form-data")) {
+      if (!nsContentUtils::IsAllowedNonCorsContentType(contentTypeHeader)) {
         mCORSUnsafeHeaders.AppendElement(NS_LITERAL_CSTRING("Content-Type"));
       }
     }
