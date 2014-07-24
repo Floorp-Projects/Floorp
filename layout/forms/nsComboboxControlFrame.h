@@ -217,8 +217,8 @@ protected:
   DropDownPositionState AbsolutelyPositionDropDown();
 
   // Helper for GetMinISize/GetPrefISize
-  nscoord GetIntrinsicWidth(nsRenderingContext* aRenderingContext,
-                            nsLayoutUtils::IntrinsicWidthType aType);
+  nscoord GetIntrinsicISize(nsRenderingContext* aRenderingContext,
+                            nsLayoutUtils::IntrinsicISizeType aType);
 
   class RedisplayTextEvent : public nsRunnable {
   public:

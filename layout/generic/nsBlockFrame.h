@@ -224,7 +224,7 @@ public:
     return outside ? outside : GetInsideBullet();
   }
 
-  virtual void MarkIntrinsicWidthsDirty() MOZ_OVERRIDE;
+  virtual void MarkIntrinsicISizesDirty() MOZ_OVERRIDE;
 private:
   void CheckIntrinsicCacheAgainstShrinkWrapState();
 public:

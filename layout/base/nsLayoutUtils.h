@@ -1170,13 +1170,13 @@ public:
    * 'min-width', and 'max-width' properties, and its padding, border,
    * and margin.
    */
-  enum IntrinsicWidthType { MIN_WIDTH, PREF_WIDTH };
+  enum IntrinsicISizeType { MIN_WIDTH, PREF_WIDTH };
   enum {
     IGNORE_PADDING = 0x01
   };
   static nscoord IntrinsicForContainer(nsRenderingContext* aRenderingContext,
                                        nsIFrame* aFrame,
-                                       IntrinsicWidthType aType,
+                                       IntrinsicISizeType aType,
                                        uint32_t aFlags = 0);
 
   /*

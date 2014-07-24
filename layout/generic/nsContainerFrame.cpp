@@ -786,7 +786,7 @@ static nscoord GetCoord(const nsStyleCoord& aCoord, nscoord aIfNotCoord)
 void
 nsContainerFrame::DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
                                          InlineIntrinsicISizeData *aData,
-                                         nsLayoutUtils::IntrinsicWidthType aType)
+                                         nsLayoutUtils::IntrinsicISizeType aType)
 {
   if (GetPrevInFlow())
     return; // Already added.

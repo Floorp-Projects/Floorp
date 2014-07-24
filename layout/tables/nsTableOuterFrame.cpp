@@ -438,7 +438,7 @@ nsTableOuterFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
       break;
     default:
       {
-        nsLayoutUtils::IntrinsicWidthType iwt;
+        nsLayoutUtils::IntrinsicISizeType iwt;
         if (captionSide == NS_STYLE_CAPTION_SIDE_TOP ||
             captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
           // Don't let the caption's pref width expand the table's pref

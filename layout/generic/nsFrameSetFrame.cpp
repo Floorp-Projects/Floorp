@@ -111,8 +111,8 @@ public:
 protected:
   nsHTMLFramesetBorderFrame(nsStyleContext* aContext, int32_t aWidth, bool aVertical, bool aVisible);
   virtual ~nsHTMLFramesetBorderFrame();
-  virtual nscoord GetIntrinsicWidth() MOZ_OVERRIDE;
-  virtual nscoord GetIntrinsicHeight() MOZ_OVERRIDE;
+  virtual nscoord GetIntrinsicISize() MOZ_OVERRIDE;
+  virtual nscoord GetIntrinsicBSize() MOZ_OVERRIDE;
 
   // the prev and next neighbors are indexes into the row (for a horizontal border) or col (for
   // a vertical border) of nsHTMLFramesetFrames or nsHTMLFrames
@@ -155,8 +155,8 @@ public:
 protected:
   nsHTMLFramesetBlankFrame(nsStyleContext* aContext) : nsLeafFrame(aContext) {}
   virtual ~nsHTMLFramesetBlankFrame();
-  virtual nscoord GetIntrinsicWidth() MOZ_OVERRIDE;
-  virtual nscoord GetIntrinsicHeight() MOZ_OVERRIDE;
+  virtual nscoord GetIntrinsicISize() MOZ_OVERRIDE;
+  virtual nscoord GetIntrinsicBSize() MOZ_OVERRIDE;
 
   friend class nsHTMLFramesetFrame;
   friend class nsHTMLFrameset;
@@ -1417,13 +1417,13 @@ nsHTMLFramesetBorderFrame::~nsHTMLFramesetBorderFrame()
 
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLFramesetBorderFrame)
 
-nscoord nsHTMLFramesetBorderFrame::GetIntrinsicWidth()
+nscoord nsHTMLFramesetBorderFrame::GetIntrinsicISize()
 {
   // No intrinsic width
   return 0;
 }
 
-nscoord nsHTMLFramesetBorderFrame::GetIntrinsicHeight()
+nscoord nsHTMLFramesetBorderFrame::GetIntrinsicBSize()
 {
   // No intrinsic height
   return 0;
@@ -1635,13 +1635,13 @@ nsHTMLFramesetBlankFrame::~nsHTMLFramesetBlankFrame()
   //printf("nsHTMLFramesetBlankFrame destructor %p \n", this);
 }
 
-nscoord nsHTMLFramesetBlankFrame::GetIntrinsicWidth()
+nscoord nsHTMLFramesetBlankFrame::GetIntrinsicISize()
 {
   // No intrinsic width
   return 0;
 }
 
-nscoord nsHTMLFramesetBlankFrame::GetIntrinsicHeight()
+nscoord nsHTMLFramesetBlankFrame::GetIntrinsicBSize()
 {
   // No intrinsic height
   return 0;

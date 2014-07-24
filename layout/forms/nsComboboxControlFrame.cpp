@@ -693,8 +693,8 @@ static void printSize(char * aDesc, nscoord aSize)
 //-------------------------------------------------------------------
 
 nscoord
-nsComboboxControlFrame::GetIntrinsicWidth(nsRenderingContext* aRenderingContext,
-                                          nsLayoutUtils::IntrinsicWidthType aType)
+nsComboboxControlFrame::GetIntrinsicISize(nsRenderingContext* aRenderingContext,
+                                          nsLayoutUtils::IntrinsicISizeType aType)
 {
   // get the scrollbar width, we'll use this later
   nscoord scrollbarWidth = 0;
@@ -749,7 +749,7 @@ nsComboboxControlFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord minWidth;
   DISPLAY_MIN_WIDTH(this, minWidth);
-  minWidth = GetIntrinsicWidth(aRenderingContext, nsLayoutUtils::MIN_WIDTH);
+  minWidth = GetIntrinsicISize(aRenderingContext, nsLayoutUtils::MIN_WIDTH);
   return minWidth;
 }
 
@@ -758,7 +758,7 @@ nsComboboxControlFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord prefWidth;
   DISPLAY_PREF_WIDTH(this, prefWidth);
-  prefWidth = GetIntrinsicWidth(aRenderingContext, nsLayoutUtils::PREF_WIDTH);
+  prefWidth = GetIntrinsicISize(aRenderingContext, nsLayoutUtils::PREF_WIDTH);
   return prefWidth;
 }
 

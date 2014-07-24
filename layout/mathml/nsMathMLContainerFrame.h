@@ -103,7 +103,7 @@ public:
    * Return the intrinsic horizontal metrics of the frame's content area.
    */
   virtual void
-  GetIntrinsicWidthMetrics(nsRenderingContext* aRenderingContext,
+  GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext,
                            nsHTMLReflowMetrics& aDesiredSize);
 
   virtual void
@@ -204,10 +204,10 @@ protected:
 
   // MeasureForWidth:
   //
-  // A method used by nsMathMLContainerFrame::GetIntrinsicWidth to get the
+  // A method used by nsMathMLContainerFrame::GetIntrinsicISize to get the
   // width that a particular Place method desires.  For most frames, this will
   // just call the object's Place method.  However <msqrt> and <menclose> use
-  // nsMathMLContainerFrame::GetIntrinsicWidth to measure the child frames as
+  // nsMathMLContainerFrame::GetIntrinsicISize to measure the child frames as
   // if in an <mrow>, and so their frames implement MeasureForWidth to use
   // nsMathMLContainerFrame::Place.
   virtual nsresult
