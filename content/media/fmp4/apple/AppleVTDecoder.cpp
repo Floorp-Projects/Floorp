@@ -159,8 +159,6 @@ PlatformCallback(void* decompressionOutputRefCon,
                  CMTime presentationTimeStamp,
                  CMTime presentationDuration)
 {
-  AppleVTDecoder* decoder = static_cast<AppleVTDecoder*>(decompressionOutputRefCon);
-
   LOG("AppleVideoDecoder %s status %d flags %d", __func__, status, flags);
 
   // Validate our arguments.
@@ -176,14 +174,17 @@ PlatformCallback(void* decompressionOutputRefCon,
 
   // Forward the data back to an object method which can access
   // the correct MP4Reader callback.
-  FrameRef* frameRef = static_cast<FrameRef*>(sourceFrameRefCon);
+  AppleVTDecoder* decoder =
+    static_cast<AppleVTDecoder*>(decompressionOutputRefCon);
+  nsAutoPtr<FrameRef> frameRef =
+    nsAutoPtr<FrameRef>(static_cast<FrameRef*>(sourceFrameRefCon));
   decoder->OutputFrame(image, frameRef);
 }
 
 // Copy and return a decoded frame.
 nsresult
 AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
-                            FrameRef* aFrameRef)
+                            nsAutoPtr<FrameRef> aFrameRef)
 {
   size_t width = CVPixelBufferGetWidth(aImage);
   size_t height = CVPixelBufferGetHeight(aImage);
@@ -262,7 +263,6 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
   CVPixelBufferUnlockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
 
   mCallback->Output(data.forget());
-  delete aFrameRef;
   return NS_OK;
 }
 
