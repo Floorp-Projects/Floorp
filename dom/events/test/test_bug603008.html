@@ -427,7 +427,7 @@ function testPreventDefault() {
     [{ name: "touchstart", prevent: false },
      { name: "touchmove", prevent: false },
      { name: "touchmove", prevent: false },
-     { name: "touchend", prevent: true, doPrevent: true }]
+     { name: "touchend", prevent: false, doPrevent: true }]
   ];
 
   var dotest = function(aTest) {
