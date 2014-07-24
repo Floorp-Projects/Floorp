@@ -124,7 +124,12 @@
   transition: opacity 100ms ease-out;
 }
 
+.newtab-thumbnail.enhanced-content:hover {
+  opacity: 0;
+}
+
 .newtab-site[type=affiliate] .newtab-thumbnail,
+.newtab-site[type=enhanced] .newtab-thumbnail,
 .newtab-site[type=organic] .newtab-thumbnail,
 .newtab-site[type=sponsored] .newtab-thumbnail {
   background-position: center center;

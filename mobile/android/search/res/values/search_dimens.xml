@@ -3,8 +3,17 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <resources>
-    <!--This is used to offset the webview so that it is not covered-->
-    <!--by the search bar. If we change the height of the search bar-->
-    <!--then this will need to be updated.-->
-    <dimen name="search_bar_height">55dp</dimen>
+    <!-- The height of the search bar is also used to offset the PreSearchFragment
+         and PostSearchFragment contents -->
+    <dimen name="search_bar_height">65dp</dimen>
+
+    <!-- We use background padding to create space around the cards -->
+    <dimen name="card_background_padding_x">15dp</dimen>
+    <dimen name="card_background_padding_y">3dp</dimen>
+
+    <!-- To create the padding we see around the content of each
+         card, we need to account for the padding of the background -->
+    <dimen name="card_padding_x">38dp</dimen>
+    <dimen name="card_padding_y">23dp</dimen>
+
 </resources>
