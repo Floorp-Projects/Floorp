@@ -86,6 +86,9 @@ interface NavigatorStorageUtils {
 interface NavigatorFeatures {
   [CheckPermissions="feature-detection", Throws]
   Promise<any> getFeature(DOMString name);
+
+  [CheckPermissions="feature-detection", Throws]
+  Promise<any> hasFeature(DOMString name);
 };
 
 // Things that definitely need to be in the spec and and are not for some
@@ -195,13 +198,13 @@ partial interface Navigator {
   /**
    * Navigator requests to add an idle observer to the existing window.
    */
-  [Throws, CheckPermissions="idle", Pref="dom.idle-observers-api.enabled"]
+  [Throws, CheckPermissions="idle"]
   void addIdleObserver(MozIdleObserver aIdleObserver);
 
   /**
    * Navigator requests to remove an idle observer from the existing window.
    */
-  [Throws, CheckPermissions="idle", Pref="dom.idle-observers-api.enabled"]
+  [Throws, CheckPermissions="idle"]
   void removeIdleObserver(MozIdleObserver aIdleObserver);
 
   /**
