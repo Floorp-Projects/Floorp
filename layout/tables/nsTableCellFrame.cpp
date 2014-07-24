@@ -762,7 +762,7 @@ nsTableCellFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 
   nsIFrame *inner = mFrames.FirstChild();
   result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, inner,
-                                                    nsLayoutUtils::MIN_WIDTH);
+                                                    nsLayoutUtils::MIN_ISIZE);
   return result;
 }
 
@@ -774,7 +774,7 @@ nsTableCellFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 
   nsIFrame *inner = mFrames.FirstChild();
   result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, inner,
-                                                nsLayoutUtils::PREF_WIDTH);
+                                                nsLayoutUtils::PREF_ISIZE);
   return result;
 }
 

@@ -72,7 +72,7 @@ nsNumberControlFrame::GetMinISize(nsRenderingContext* aRenderingContext)
   if (kid) { // display:none?
     result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                   kid,
-                                                  nsLayoutUtils::MIN_WIDTH);
+                                                  nsLayoutUtils::MIN_ISIZE);
   } else {
     result = 0;
   }
@@ -90,7 +90,7 @@ nsNumberControlFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
   if (kid) { // display:none?
     result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                   kid,
-                                                  nsLayoutUtils::PREF_WIDTH);
+                                                  nsLayoutUtils::PREF_ISIZE);
   } else {
     result = 0;
   }

@@ -791,8 +791,8 @@ nsContainerFrame::DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
   if (GetPrevInFlow())
     return; // Already added.
 
-  NS_PRECONDITION(aType == nsLayoutUtils::MIN_WIDTH ||
-                  aType == nsLayoutUtils::PREF_WIDTH, "bad type");
+  NS_PRECONDITION(aType == nsLayoutUtils::MIN_ISIZE ||
+                  aType == nsLayoutUtils::PREF_ISIZE, "bad type");
 
   mozilla::css::Side startSide, endSide;
   if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR) {
@@ -852,7 +852,7 @@ nsContainerFrame::DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
     }
     for (nsIFrame *kid = nif->mFrames.FirstChild(); kid;
          kid = kid->GetNextSibling()) {
-      if (aType == nsLayoutUtils::MIN_WIDTH)
+      if (aType == nsLayoutUtils::MIN_ISIZE)
         kid->AddInlineMinISize(aRenderingContext,
                                static_cast<InlineMinISizeData*>(aData));
       else
