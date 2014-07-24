@@ -1,0 +1,20 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:top="-2dp"
+        android:right="-2dp"
+        android:left="-2dp">
+        <shape>
+            <padding
+                android:top="10dp"
+                android:bottom="10dp"/>
+            <solid android:color="@android:color/transparent"/>
+            <stroke android:width="2dp" android:color="@color/highlight_orange"/>
+        </shape>
+    </item>
+
+</layer-list>
