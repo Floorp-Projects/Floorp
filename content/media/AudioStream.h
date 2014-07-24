@@ -158,14 +158,6 @@ public:
     return amount;
   }
 
-  void Reset()
-  {
-    mBuffer = nullptr;
-    mCapacity = 0;
-    mStart = 0;
-    mCount = 0;
-  }
-
 private:
   nsAutoArrayPtr<uint8_t> mBuffer;
   uint32_t mCapacity;
@@ -177,8 +169,8 @@ class AudioInitTask;
 
 // Access to a single instance of this class must be synchronized by
 // callers, or made from a single thread.  One exception is that access to
-// GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels},
-// SetMicrophoneActive is thread-safe without external synchronization.
+// GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels}
+// is thread-safe without external synchronization.
 class AudioStream MOZ_FINAL
 {
   virtual ~AudioStream();
@@ -220,8 +212,6 @@ public:
   // Closes the stream. All future use of the stream is an error.
   void Shutdown();
 
-  void Reset();
-
   // Write audio data to the audio hardware.  aBuf is an array of AudioDataValues
   // AudioDataValue of length aFrames*mChannels.  If aFrames is larger
   // than the result of Available(), the write will block until sufficient
@@ -235,11 +225,6 @@ public:
   // Set the current volume of the audio playback. This is a value from
   // 0 (meaning muted) to 1 (meaning full volume).  Thread-safe.
   void SetVolume(double aVolume);
-
-  // Informs the AudioStream that a microphone is being used by someone in the
-  // application.
-  void SetMicrophoneActive(bool aActive);
-  void PanOutputIfNeeded(bool aMicrophoneActive);
 
   // Block until buffered audio data has been consumed.
   void Drain();
@@ -319,14 +304,8 @@ private:
     static_cast<AudioStream*>(aThis)->StateCallback(aState);
   }
 
-
-  static void DeviceChangedCallback_s(void * aThis) {
-    static_cast<AudioStream*>(aThis)->DeviceChangedCallback();
-  }
-
   long DataCallback(void* aBuffer, long aFrames);
   void StateCallback(cubeb_state aState);
-  void DeviceChangedCallback();
 
   nsresult EnsureTimeStretcherInitializedUnlocked();
 
@@ -352,9 +331,6 @@ private:
   int mOutRate;
   int mChannels;
   int mOutChannels;
-#if defined(__ANDROID__)
-  dom::AudioChannel mAudioChannel;
-#endif
   // Number of frames written to the buffers.
   int64_t mWritten;
   AudioClock mAudioClock;
@@ -384,6 +360,9 @@ private:
   // space becomes available in mBuffer.  mBuffer is sized in bytes, not
   // frames.
   CircularByteBuffer mBuffer;
+
+  // Software volume level.  Applied during the servicing of DataCallback().
+  double mVolume;
 
   // Owning reference to a cubeb_stream.  cubeb_stream_destroy is called by
   // nsAutoRef's destructor.
@@ -418,12 +397,6 @@ private:
   StreamState mState;
   bool mNeedsStart; // needed in case Start() is called before cubeb is open
   bool mIsFirst;
-  // True if a microphone is active.
-  bool mMicrophoneActive;
-  // When we are in the process of changing the output device, and the callback
-  // is not going to be called for a little while, simply drop incoming frames.
-  // This is only on OSX for now, because other systems handle this gracefully.
-  bool mShouldDropFrames;
 
   // This mutex protects the static members below.
   static StaticMutex sMutex;
