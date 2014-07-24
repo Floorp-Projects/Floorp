@@ -2663,6 +2663,7 @@ MediaInputPort::Destroy()
     {
       mPort->Disconnect();
       --mPort->GraphImpl()->mPortCount;
+      mPort->SetGraphImpl(nullptr);
       NS_RELEASE(mPort);
     }
     virtual void RunDuringShutdown()
@@ -2689,7 +2690,7 @@ MediaInputPort::Graph()
 void
 MediaInputPort::SetGraphImpl(MediaStreamGraphImpl* aGraph)
 {
-  MOZ_ASSERT(!mGraph, "Should only be called once");
+  MOZ_ASSERT(!mGraph || !aGraph, "Should only be set once");
   mGraph = aGraph;
 }
 
