@@ -17,8 +17,9 @@ function peerReadyCb(evt) {
   NCI.deactivate();
 }
 
-function peerLostCb() {
+function peerLostCb(evt) {
   log("peerLostCb called");
+  ok(evt.detail === undefined, "evt.detail should be undefined");
   ok(true);
   nfc.onpeerlost = null;
   toggleNFC(false).then(runNextTest);
