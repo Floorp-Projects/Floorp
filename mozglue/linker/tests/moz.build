@@ -4,12 +4,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DISABLE_STL_WRAPPING = True
+NO_DIST_INSTALL = True
 
 SOURCES += [
-    'ShowSSEConfig.cpp',
+    'TestZip.cpp',
 ]
-
-CPP_UNIT_TESTS += [
-    'ShowSSEConfig',
+SIMPLE_PROGRAMS += [
+    'TestZip',
 ]
+LOCAL_INCLUDES += ['..']
+USE_LIBS += [
+    'linker',
+]
+DISABLE_STL_WRAPPING = True
