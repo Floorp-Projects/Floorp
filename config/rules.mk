@@ -86,8 +86,10 @@ INCLUDES += -I$(DIST)/include/testing
 LIBS += $(NSPR_LIBS)
 
 ifndef MOZ_PROFILE_GENERATE
-libs:: $(CPP_UNIT_TESTS) $(call mkdir_deps,$(DIST)/cppunittests)
-	$(NSINSTALL) $(CPP_UNIT_TESTS) $(DIST)/cppunittests
+CPP_UNIT_TESTS_FILES = $(CPP_UNIT_TESTS)
+CPP_UNIT_TESTS_DEST = $(DIST)/cppunittests
+CPP_UNIT_TESTS_TARGET = libs
+INSTALL_TARGETS += CPP_UNIT_TESTS
 endif
 
 run-cppunittests::
