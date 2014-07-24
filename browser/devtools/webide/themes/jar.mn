@@ -4,12 +4,13 @@
 
 webide.jar:
 % skin webide classic/1.0 %skin/
-* skin/webide.css         (webide.css)
-  skin/icons.png          (icons.png)
-  skin/details.css        (details.css)
-  skin/newapp.css         (newapp.css)
-  skin/throbber.svg       (throbber.svg)
-  skin/addons.css         (addons.css)
-  skin/prefs.css          (prefs.css)
-  skin/tabledoc.css       (tabledoc.css)
-  skin/runtimedetails.css (runtimedetails.css)
+* skin/webide.css              (webide.css)
+  skin/icons.png               (icons.png)
+  skin/details.css             (details.css)
+  skin/newapp.css              (newapp.css)
+  skin/throbber.svg            (throbber.svg)
+  skin/deck.css                (deck.css)
+  skin/addons.css              (addons.css)
+  skin/prefs.css               (prefs.css)
+  skin/runtimedetails.css      (runtimedetails.css)
+  skin/permissionstable.css    (permissionstable.css)
