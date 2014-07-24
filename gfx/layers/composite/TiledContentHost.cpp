@@ -412,7 +412,6 @@ TiledContentHost::RenderTile(const TileHost& aTile,
   }
 
   if (aBackgroundColor) {
-    MOZ_ASSERT(aOpacity == 1.0f);
     aEffectChain.mPrimaryEffect = new EffectSolidColor(ToColor(*aBackgroundColor));
     nsIntRegionRectIterator it(aScreenRegion);
     for (const nsIntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
