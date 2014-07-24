@@ -1116,8 +1116,6 @@ private:
   // We cannot access to the NSInputManager during we aren't active, so, the
   // focused handler can have an IME transaction even if we are deactive.
   static IMEInputHandler* sFocusedIMEHandler;
-
-  static bool sCachedIsForRTLLangage;
 };
 
 /**
