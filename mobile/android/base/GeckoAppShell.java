@@ -89,6 +89,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -2541,4 +2542,38 @@ public class GeckoAppShell
         return connection.getContentType();
     }
 
+    /**
+     * Retrieve the absolute path of an external storage directory.
+     *
+     * @param type The type of directory to return
+     * @return Absolute path of the specified directory or null on failure
+     */
+    @WrapElementForJNI
+    static String getExternalPublicDirectory(final String type) {
+        final String state = Environment.getExternalStorageState();
+        if (!Environment.MEDIA_MOUNTED.equals(state) &&
+            !Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            // External storage is not available.
+            return null;
+        }
+
+        if ("sdcard".equals(type)) {
+            // SD card has a separate path.
+            return Environment.getExternalStorageDirectory().getAbsolutePath();
+        }
+
+        final String systemType;
+        if ("downloads".equals(type)) {
+            systemType = Environment.DIRECTORY_DOWNLOADS;
+        } else if ("pictures".equals(type)) {
+            systemType = Environment.DIRECTORY_PICTURES;
+        } else if ("videos".equals(type)) {
+            systemType = Environment.DIRECTORY_MOVIES;
+        } else if ("music".equals(type)) {
+            systemType = Environment.DIRECTORY_MUSIC;
+        } else {
+            return null;
+        }
+        return Environment.getExternalStoragePublicDirectory(systemType).getAbsolutePath();
+    }
 }
