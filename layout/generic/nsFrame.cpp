@@ -3798,7 +3798,7 @@ nsFrame::MarkIntrinsicWidthsDirty()
 }
 
 /* virtual */ nscoord
-nsFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_MIN_WIDTH(this, result);
@@ -3806,7 +3806,7 @@ nsFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);
@@ -4248,11 +4248,11 @@ nsFrame::ShrinkWidthToFit(nsRenderingContext *aRenderingContext,
   AutoMaybeDisableFontInflation an(this);
 
   nscoord result;
-  nscoord minWidth = GetMinWidth(aRenderingContext);
+  nscoord minWidth = GetMinISize(aRenderingContext);
   if (minWidth > aWidthInCB) {
     result = minWidth;
   } else {
-    nscoord prefWidth = GetPrefWidth(aRenderingContext);
+    nscoord prefWidth = GetPrefISize(aRenderingContext);
     if (prefWidth > aWidthInCB) {
       result = aWidthInCB;
     } else {
@@ -7899,9 +7899,9 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
       AutoMaybeDisableFontInflation an(this);
 
       metrics->mBlockPrefSize.width =
-        GetPrefWidth(rendContext) + bp.LeftRight();
+        GetPrefISize(rendContext) + bp.LeftRight();
       metrics->mBlockMinSize.width =
-        GetMinWidth(rendContext) + bp.LeftRight();
+        GetMinISize(rendContext) + bp.LeftRight();
     }
 
     // do the nasty.

@@ -238,7 +238,7 @@ nsProgressFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 }
 
 nscoord
-nsProgressFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsProgressFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nsRefPtr<nsFontMetrics> fontMet;
   NS_ENSURE_SUCCESS(
@@ -256,9 +256,9 @@ nsProgressFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 nscoord
-nsProgressFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsProgressFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
-  return GetMinWidth(aRenderingContext);
+  return GetMinISize(aRenderingContext);
 }
 
 bool

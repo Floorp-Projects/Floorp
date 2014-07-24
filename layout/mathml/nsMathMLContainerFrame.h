@@ -93,11 +93,11 @@ public:
               nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   /**
-   * Both GetMinWidth and GetPrefWidth use the intrinsic width metrics
+   * Both GetMinISize and GetPrefISize use the intrinsic width metrics
    * returned by GetIntrinsicMetrics, including ink overflow.
    */
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
   /**
    * Return the intrinsic horizontal metrics of the frame's content area.
@@ -312,7 +312,7 @@ protected:
   // spacing.
   // IMPORTANT: This function is only meant to be called in Place() methods as
   // the information is available only when set up with the above method
-  // during Reflow/Stretch() and GetPrefWidth().
+  // during Reflow/Stretch() and GetPrefISize().
   static void
   GetReflowAndBoundingMetricsFor(nsIFrame*            aFrame,
                                  nsHTMLReflowMetrics& aReflowMetrics,

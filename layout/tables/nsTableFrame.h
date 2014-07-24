@@ -298,8 +298,8 @@ public:
   virtual void MarkIntrinsicWidthsDirty() MOZ_OVERRIDE;
   // For border-collapse tables, the caller must not add padding and
   // border to the results of these functions.
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual IntrinsicWidthOffsetData
     IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
 
@@ -313,7 +313,7 @@ public:
                                  nsSize aPadding, bool aShrinkWrap) MOZ_OVERRIDE;
   /**
    * A copy of nsFrame::ShrinkWidthToFit that calls a different
-   * GetPrefWidth, since tables have two different ones.
+   * GetPrefISize, since tables have two different ones.
    */
   nscoord TableShrinkWidthToFit(nsRenderingContext *aRenderingContext,
                                 nscoord aWidthInCB);

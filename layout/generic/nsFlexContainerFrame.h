@@ -48,9 +48,9 @@ public:
                       nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual nscoord
-    GetMinWidth(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
+    GetMinISize(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
   virtual nscoord
-    GetPrefWidth(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
+    GetPrefISize(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
 
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 #ifdef DEBUG_FRAME_DUMP

@@ -5206,8 +5206,7 @@ SVGTextFrame::DoReflow()
 
   mState |= NS_STATE_SVG_TEXT_IN_REFLOW;
 
-  //XXX GetPrefWidth will become GetInlineSize
-  nscoord inlineSize = kid->GetPrefWidth(renderingContext);
+  nscoord inlineSize = kid->GetPrefISize(renderingContext);
   WritingMode wm = kid->GetWritingMode();
   nsHTMLReflowState reflowState(presContext, kid,
                                 renderingContext,

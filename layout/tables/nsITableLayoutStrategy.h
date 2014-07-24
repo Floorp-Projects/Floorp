@@ -23,11 +23,11 @@ class nsITableLayoutStrategy
 public:
     virtual ~nsITableLayoutStrategy() {}
 
-    /** Implement nsIFrame::GetMinWidth for the table */
-    virtual nscoord GetMinWidth(nsRenderingContext* aRenderingContext) = 0;
+    /** Implement nsIFrame::GetMinISize for the table */
+    virtual nscoord GetMinISize(nsRenderingContext* aRenderingContext) = 0;
 
-    /** Implement nsIFrame::GetPrefWidth for the table */
-    virtual nscoord GetPrefWidth(nsRenderingContext* aRenderingContext,
+    /** Implement nsIFrame::GetPrefISize for the table */
+    virtual nscoord GetPrefISize(nsRenderingContext* aRenderingContext,
                                  bool aComputingSize) = 0;
 
     /** Implement nsIFrame::MarkIntrinsicWidthsDirty for the table */
