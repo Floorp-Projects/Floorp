@@ -727,8 +727,6 @@ public:
   void AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
                 MediaSegment* aSegment);
 
-  struct TrackData;
-  void ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSegment* aSegment);
   /**
    * Append media data to a track. Ownership of aSegment remains with the caller,
    * but aSegment is emptied.
@@ -795,10 +793,13 @@ public:
    */
   TrackTicks GetBufferedTicks(TrackID aID);
 
+  void RegisterForAudioMixing();
+
   // XXX need a Reset API
 
   friend class MediaStreamGraphImpl;
 
+protected:
   struct ThreadAndRunnable {
     void Init(nsIEventTarget* aTarget, nsIRunnable* aRunnable)
     {
@@ -840,10 +841,10 @@ public:
     bool mHaveEnough;
   };
 
-  void RegisterForAudioMixing();
   bool NeedsMixing();
 
-protected:
+  void ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSegment* aSegment);
+
   TrackData* FindDataForTrack(TrackID aID)
   {
     for (uint32_t i = 0; i < mUpdateTracks.Length(); ++i) {
