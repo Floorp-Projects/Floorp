@@ -433,6 +433,7 @@ nsXMLHttpRequest::ResetResponse()
   mResultArrayBuffer = nullptr;
   mArrayBufferBuilder.reset();
   mResultJSON = JSVAL_VOID;
+  mDataAvailable = 0;
   mLoadTransferred = 0;
   mResponseBodyDecodedPos = 0;
 }
@@ -781,11 +782,14 @@ void
 nsXMLHttpRequest::CreatePartialBlob()
 {
   if (mDOMFile) {
+    // Use progress info to determine whether load is complete, but use
+    // mDataAvailable to ensure a slice is created based on the uncompressed
+    // data count.
     if (mLoadTotal == mLoadTransferred) {
       mResponseBlob = mDOMFile;
     } else {
       mResponseBlob =
-        mDOMFile->CreateSlice(0, mLoadTransferred, EmptyString());
+        mDOMFile->CreateSlice(0, mDataAvailable, EmptyString());
     }
     return;
   }
@@ -1909,12 +1913,12 @@ nsXMLHttpRequest::OnDataAvailable(nsIRequest *request,
 
   if (cancelable) {
     // We don't have to read from the local file for the blob response
-    mDOMFile->GetSize(&mLoadTransferred);
+    mDOMFile->GetSize(&mDataAvailable);
     ChangeState(XML_HTTP_REQUEST_LOADING);
     return request->Cancel(NS_OK);
   }
 
-  mLoadTransferred += totalRead;
+  mDataAvailable += totalRead;
 
   ChangeState(XML_HTTP_REQUEST_LOADING);
   
@@ -3599,7 +3603,7 @@ nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, uint64
   } else {
     mLoadLengthComputable = lengthComputable;
     mLoadTotal = lengthComputable ? aProgressMax : 0;
-    
+    mLoadTransferred = aProgress;
     // Don't dispatch progress events here. OnDataAvailable will take care
     // of that.
   }
