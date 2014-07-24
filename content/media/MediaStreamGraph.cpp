@@ -693,17 +693,18 @@ MediaStreamGraphImpl::UpdateStreamOrder()
     MOZ_ASSERT(cycleStackMarker == ps->mCycleMarker);
     // If there are DelayNodes in this SCC, then they may break the cycles.
     bool haveDelayNode = false;
-    auto next = static_cast<ProcessedMediaStream*>(sccStack.getFirst());
+    auto next = sccStack.getFirst();
     // Streams in this SCC are identified by mCycleMarker <= cycleStackMarker.
     // (There may be other streams later in sccStack from other incompletely
     // searched SCCs, involving streams still on dfsStack.)
     //
     // DelayNodes in cycles must behave differently from those not in cycles,
     // so all DelayNodes in the SCC must be identified.
-    while (next && next->mCycleMarker <= cycleStackMarker) {
+    while (next && static_cast<ProcessedMediaStream*>(next)->
+           mCycleMarker <= cycleStackMarker) {
       auto ns = next->AsAudioNodeStream();
       // Get next before perhaps removing from list below.
-      next = static_cast<ProcessedMediaStream*>(next->getNext());
+      next = next->getNext();
       if (ns && ns->Engine()->AsDelayNodeEngine()) {
         haveDelayNode = true;
         // DelayNodes break cycles by producing their output in a
@@ -717,8 +718,9 @@ MediaStreamGraphImpl::UpdateStreamOrder()
       }
     }
     auto after_scc = next;
-    while ((next = static_cast<ProcessedMediaStream*>(sccStack.popFirst()))
-           != after_scc) {
+    while ((next = sccStack.getFirst()) != after_scc) {
+      next->remove();
+      auto removed = static_cast<ProcessedMediaStream*>(next);
       if (haveDelayNode) {
         // Return streams to the DFS stack again (to order and detect cycles
         // without delayNodes).  Any of these streams that are still inputs
@@ -727,14 +729,14 @@ MediaStreamGraphImpl::UpdateStreamOrder()
         // of these streams need input from streams on the visited stack, so
         // they can all be searched and ordered before the current stack head
         // is popped.
-        next->mCycleMarker = NOT_VISITED;
-        dfsStack.insertFront(next);
+        removed->mCycleMarker = NOT_VISITED;
+        dfsStack.insertFront(removed);
       } else {
         // Streams in cycles without any DelayNodes must be muted, and so do
         // not need input and can be ordered now.  They must be ordered before
         // their consumers so that their muted output is available.
-        next->mCycleMarker = IN_MUTED_CYCLE;
-        mStreams[orderedStreamCount] = next;
+        removed->mCycleMarker = IN_MUTED_CYCLE;
+        mStreams[orderedStreamCount] = removed;
         ++orderedStreamCount;
       }
     }
