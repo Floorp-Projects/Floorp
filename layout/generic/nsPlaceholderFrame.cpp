@@ -71,7 +71,7 @@ nsPlaceholderFrame::AddInlineMinISize(nsRenderingContext* aRenderingContext,
     nscoord floatWidth =
       nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                            mOutOfFlowFrame,
-                                           nsLayoutUtils::MIN_WIDTH);
+                                           nsLayoutUtils::MIN_ISIZE);
     aData->floats.AppendElement(
       InlineIntrinsicISizeData::FloatInfo(mOutOfFlowFrame, floatWidth));
   }
@@ -92,7 +92,7 @@ nsPlaceholderFrame::AddInlinePrefISize(nsRenderingContext* aRenderingContext,
     nscoord floatWidth =
       nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                            mOutOfFlowFrame,
-                                           nsLayoutUtils::PREF_WIDTH);
+                                           nsLayoutUtils::PREF_ISIZE);
     aData->floats.AppendElement(
       InlineIntrinsicISizeData::FloatInfo(mOutOfFlowFrame, floatWidth));
   }

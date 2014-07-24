@@ -140,7 +140,7 @@ nsHTMLButtonControlFrame::GetMinISize(nsRenderingContext* aRenderingContext)
   nsIFrame* kid = mFrames.FirstChild();
   result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                 kid,
-                                                nsLayoutUtils::MIN_WIDTH);
+                                                nsLayoutUtils::MIN_ISIZE);
 
   result += mRenderer.GetAddedButtonBorderAndPadding().LeftRight();
 
@@ -156,7 +156,7 @@ nsHTMLButtonControlFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
   nsIFrame* kid = mFrames.FirstChild();
   result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                 kid,
-                                                nsLayoutUtils::PREF_WIDTH);
+                                                nsLayoutUtils::PREF_ISIZE);
   result += mRenderer.GetAddedButtonBorderAndPadding().LeftRight();
   return result;
 }

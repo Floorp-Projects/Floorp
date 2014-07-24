@@ -397,13 +397,13 @@ GetContainingBlockSize(const nsHTMLReflowState& aOuterRS)
 nsTableOuterFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord width = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                    InnerTableFrame(), nsLayoutUtils::MIN_WIDTH);
+                    InnerTableFrame(), nsLayoutUtils::MIN_ISIZE);
   DISPLAY_MIN_WIDTH(this, width);
   if (mCaptionFrames.NotEmpty()) {
     nscoord capWidth =
       nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                            mCaptionFrames.FirstChild(),
-                                           nsLayoutUtils::MIN_WIDTH);
+                                           nsLayoutUtils::MIN_ISIZE);
     if (HasSideCaption()) {
       width += capWidth;
     } else {
@@ -422,7 +422,7 @@ nsTableOuterFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
   DISPLAY_PREF_WIDTH(this, maxWidth);
 
   maxWidth = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-               InnerTableFrame(), nsLayoutUtils::PREF_WIDTH);
+               InnerTableFrame(), nsLayoutUtils::PREF_ISIZE);
   if (mCaptionFrames.NotEmpty()) {
     uint8_t captionSide = GetCaptionSide();
     switch(captionSide) {
@@ -432,7 +432,7 @@ nsTableOuterFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
         nscoord capMin =
           nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                mCaptionFrames.FirstChild(),
-                                               nsLayoutUtils::MIN_WIDTH);
+                                               nsLayoutUtils::MIN_ISIZE);
         maxWidth += capMin;
       }
       break;
@@ -443,12 +443,12 @@ nsTableOuterFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
             captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
           // Don't let the caption's pref width expand the table's pref
           // width.
-          iwt = nsLayoutUtils::MIN_WIDTH;
+          iwt = nsLayoutUtils::MIN_ISIZE;
         } else {
           NS_ASSERTION(captionSide == NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE ||
                        captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE,
                        "unexpected caption side");
-          iwt = nsLayoutUtils::PREF_WIDTH;
+          iwt = nsLayoutUtils::PREF_ISIZE;
         }
         nscoord capPref =
           nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
