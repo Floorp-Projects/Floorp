@@ -5,8 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'idl',
-    'public',
     'ucvja',
     'ucvcn',
     'ucvlatin',
@@ -16,6 +14,24 @@ DIRS += [
 ]
 
 TEST_TOOL_DIRS += ['tests']
+
+XPIDL_SOURCES += [
+    'nsICurrentCharsetListener.idl',
+    'nsIScriptableUConv.idl',
+    'nsITextToSubURI.idl',
+    'nsIUTF8ConverterService.idl',
+]
+
+XPIDL_MODULE = 'uconv'
+
+EXPORTS += [
+    'nsEncoderDecoderUtils.h',
+    'nsIUnicodeDecoder.h',
+    'nsIUnicodeEncoder.h',
+    'nsUConvCID.h',
+    'nsUCSupport.h',
+    'uconvutil.h',
+]
 
 UNIFIED_SOURCES += [
     'nsConverterInputStream.cpp',
