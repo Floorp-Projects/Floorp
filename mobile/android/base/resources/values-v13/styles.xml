@@ -4,10 +4,12 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
-    
+
     <style name="GeckoDialogTitle">
-        <!-- Override this to use a Holo theme on v14+ -->
+        <!-- Override this to use a Holo theme on v13+ -->
         <item name="android:textAppearance">@android:style/TextAppearance.Holo.DialogWindowTitle</item>
     </style>
+
+    <style name="TextAppearance.Widget.ActionBar.Title" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title"/>
 
 </resources>
