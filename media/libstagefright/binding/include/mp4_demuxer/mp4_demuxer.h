@@ -67,6 +67,7 @@ private:
 
   nsAutoPtr<StageFrightPrivate> mPrivate;
 };
-}
 
-#endif
+} // namespace mozilla
+
+#endif // MP4_DEMUXER_H_
