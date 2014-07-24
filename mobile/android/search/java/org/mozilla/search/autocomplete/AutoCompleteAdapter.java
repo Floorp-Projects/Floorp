@@ -5,7 +5,6 @@
 package org.mozilla.search.autocomplete;
 
 import android.content.Context;
-import android.text.SpannableString;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;

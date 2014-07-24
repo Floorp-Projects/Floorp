@@ -36,7 +36,6 @@
       class="header"
       hidden="true"
       data-category="paneSecurity">
-  <image class="header-icon"/>
   <label class="header-name">&paneSecurity.title;</label>
 </hbox>
 

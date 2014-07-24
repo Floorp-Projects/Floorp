@@ -12,7 +12,7 @@ prefwindow,
 .windowDialog,
 page {
   -moz-appearance: none;
-  background-color: white;
+  background-color: #f1f1f1;
   color: #424E5A;
 }
 
@@ -61,7 +61,6 @@ groupbox {
   border: none;
   margin-top: 15px;
   margin-bottom: 15px;
-  -moz-margin-start: 60px;
   -moz-margin-end: 0;
   -moz-padding-start: 0;
   -moz-padding-end: 0;
@@ -86,7 +85,6 @@ tabpanels {
 }
 
 tabs {
-  -moz-margin-start: 60px;
   margin-bottom: 15px;
   border-top: 1px solid #c1c1c1;
   border-bottom: 1px solid #c1c1c1;
@@ -583,14 +581,14 @@ radio[disabled="true"] > .radio-check {
 /* header */
 
 .header {
+  border-bottom: 1px solid #c8c8c8;
   margin-bottom: 15px;
+  padding-bottom: 15px;
 }
 
-.header-icon {
-  width: 40px;
-  max-height: 40px;
-  -moz-margin-end: 20px;
-  list-style-image: url("chrome://browser/skin/preferences/in-content/header.png");
+#header-advanced {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .header-name {
@@ -598,68 +596,6 @@ radio[disabled="true"] > .radio-check {
   font-weight: normal;
   line-height: 40px;
   margin: 0;
-}
-
-#header-general > .header-icon {
-  -moz-image-region: rect(0, 40px, 40px, 0);
-}
-
-#header-content > .header-icon {
-  -moz-image-region: rect(0, 80px, 40px, 40px);
-}
-
-#header-application > .header-icon {
-  -moz-image-region: rect(0, 120px, 40px, 80px);
-}
-
-#header-privacy > .header-icon {
-  -moz-image-region: rect(0, 160px, 40px, 120px);
-}
-
-#header-security > .header-icon {
-  -moz-image-region: rect(0, 200px, 40px, 160px);
-}
-
-#header-sync > .header-icon {
-  -moz-image-region: rect(0, 240px, 40px, 200px);
-}
-
-#header-advanced > .header-icon {
-  -moz-image-region: rect(0, 280px, 40px, 240px);
-}
-
-@media (min-resolution: 2dppx) {
-  .header-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content/header@2x.png");
-  }
-
-  #header-general > .header-icon {
-    -moz-image-region: rect(0, 80px, 80px, 0);
-  }
-
-  #header-content > .header-icon {
-    -moz-image-region: rect(0, 160px, 80px, 80px);
-  }
-
-  #header-application > .header-icon {
-    -moz-image-region: rect(0, 240px, 80px, 160px);
-  }
-
-  #header-privacy > .header-icon {
-    -moz-image-region: rect(0, 320px, 80px, 240px);
-  }
-
-  #header-security > .header-icon {
-    -moz-image-region: rect(0, 400px, 80px, 320px);
-  }
-
-  #header-sync > .header-icon {
-    -moz-image-region: rect(0, 480px, 80px, 400px);
-  }
-
-  #header-advanced > .header-icon {
-    -moz-image-region: rect(0, 560px, 80px, 480px);
-  }
 }
 
 /* General Pane */
@@ -685,10 +621,34 @@ filefield {
   -moz-padding-start: 36px;
 }
 
+textbox:-moz-locale-dir(rtl),
+.fileFieldLabel:-moz-locale-dir(rtl),
+textbox + button:-moz-locale-dir(ltr),
+filefield + button:-moz-locale-dir(ltr) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+textbox:-moz-locale-dir(ltr),
+.fileFieldLabel:-moz-locale-dir(ltr),
+textbox + button:-moz-locale-dir(rtl),
+filefield + button:-moz-locale-dir(rtl) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+textbox + button,
+filefield + button {
+  -moz-border-start: none;
+}
+
+#downloadFolder {
+  -moz-margin-start: 0;
+}
+
 /* Applications Pane Styles */
 
 #applicationsContent {
-  -moz-margin-start: 60px;
   padding: 15px 0;
 }
 
@@ -811,10 +771,6 @@ description > html|a {
   background-color: #FBFBFB;
 }
 
-#weavePrefsDeck {
-  -moz-margin-start: 60px;
-}
-
 #noFxaAccount {
   /* Overriding the margins from the base preferences.css theme file.
      These overrides can be simplified by fixing bug 1027174 */
@@ -837,7 +793,6 @@ description > html|a {
 
 #encryptionPanel {
   margin-top: 15px;
-  -moz-margin-start: 60px;
 }
 
 #telemetryLearnMore,
@@ -874,10 +829,6 @@ description > html|a {
   overflow: hidden;
   min-height: 30em;
   min-width: 66ch;
-}
-
-#dialogTitle {
-  -moz-margin-start: 5px !important;
 }
 
 .close-icon {
