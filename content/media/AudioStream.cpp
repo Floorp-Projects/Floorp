@@ -573,6 +573,7 @@ void AudioStream::PanOutputIfNeeded(bool aMicrophoneActive)
       if (!strcmp(device->output_name, "ispk")) {
         // Pan everything to the right speaker.
         if (aMicrophoneActive) {
+          LOG(("%p Panning audio output to the right.", this));
           if (cubeb_stream_set_panning(mCubebStream, 1.0) != CUBEB_OK) {
             NS_WARNING("Could not pan audio output to the right.");
           }
@@ -877,11 +878,14 @@ AudioStream::StartUnlocked()
     mNeedsStart = true;
     return;
   }
+
   if (mState == INITIALIZED) {
     int r;
     {
       MonitorAutoUnlock mon(mMonitor);
       r = cubeb_stream_start(mCubebStream);
+
+      PanOutputIfNeeded(mMicrophoneActive);
     }
     mState = r == CUBEB_OK ? STARTED : ERRORED;
     LOG(("AudioStream: started %p, state %s", this, mState == STARTED ? "STARTED" : "ERRORED"));
