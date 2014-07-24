@@ -25,7 +25,7 @@ FINAL_LIBRARY = 'gkmedias'
 # We don't compile the full speex codec, only the resampler.
 DEFINES['OUTSIDE_SPEEX'] = True
 # We don't use -fvisibility=hidden
-DEFINES['SPX_RESAMPLE_EXPORT'] = ''
+DEFINES['EXPORT'] = ''
 
 if CONFIG['OS_TARGET'] == 'Android':
     DEFINES['FIXED_POINT'] = True

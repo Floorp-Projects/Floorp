@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -184,56 +186,56 @@ TestTypedEnumBasics()
 }
 
 // Op wraps a bitwise binary operator, passed as a char template parameter,
-// and applies it to its arguments (t1, t2). For example,
+// and applies it to its arguments (aT1, aT2). For example,
 //
-//   Op<'|'>(t1, t2)
+//   Op<'|'>(aT1, aT2)
 //
 // is the same as
 //
-//   t1 | t2.
+//   aT1 | aT2.
 //
 template<char o, typename T1, typename T2>
-auto Op(const T1& t1, const T2& t2)
-  -> decltype(t1 | t2) // See the static_assert's below --- the return type
-                       // depends solely on the operands type, not on the
-                       // choice of operation.
+auto Op(const T1& aT1, const T2& aT2)
+  -> decltype(aT1 | aT2) // See the static_assert's below --- the return type
+                         // depends solely on the operands type, not on the
+                         // choice of operation.
 {
   using mozilla::IsSame;
-  static_assert(IsSame<decltype(t1 | t2), decltype(t1 & t2)>::value,
+  static_assert(IsSame<decltype(aT1 | aT2), decltype(aT1 & aT2)>::value,
                 "binary ops should have the same result type");
-  static_assert(IsSame<decltype(t1 | t2), decltype(t1 ^ t2)>::value,
+  static_assert(IsSame<decltype(aT1 | aT2), decltype(aT1 ^ aT2)>::value,
                 "binary ops should have the same result type");
 
   static_assert(o == '|' ||
                 o == '&' ||
                 o == '^', "unexpected operator character");
 
-  return o == '|' ? t1 | t2
-       : o == '&' ? t1 & t2
-                  : t1 ^ t2;
+  return o == '|' ? aT1 | aT2
+       : o == '&' ? aT1 & aT2
+                  : aT1 ^ aT2;
 }
 
 // OpAssign wraps a bitwise binary operator, passed as a char template
 // parameter, and applies the corresponding compound-assignment operator to its
-// arguments (t1, t2). For example,
+// arguments (aT1, aT2). For example,
 //
-//   OpAssign<'|'>(t1, t2)
+//   OpAssign<'|'>(aT1, aT2)
 //
 // is the same as
 //
-//   t1 |= t2.
+//   aT1 |= aT2.
 //
 template<char o, typename T1, typename T2>
-T1& OpAssign(T1& t1, const T2& t2)
+T1& OpAssign(T1& aT1, const T2& aT2)
 {
   static_assert(o == '|' ||
                 o == '&' ||
                 o == '^', "unexpected operator character");
 
   switch (o) {
-    case '|': return t1 |= t2;
-    case '&': return t1 &= t2;
-    case '^': return t1 ^= t2;
+    case '|': return aT1 |= aT2;
+    case '&': return aT1 &= aT2;
+    case '^': return aT1 ^= aT2;
     default: MOZ_CRASH();
   }
 }
@@ -241,38 +243,39 @@ T1& OpAssign(T1& t1, const T2& t2)
 // Tests a single binary bitwise operator, using a single set of three operands.
 // The operations tested are:
 //
-//   result = t1 Op t2;
-//   result Op= t3;
+//   result = aT1 Op aT2;
+//   result Op= aT3;
 //
-// Where Op is the operator specified by the char template parameter 'o' and can
-// be any of '|', '&', '^'.
+// Where Op is the operator specified by the char template parameter 'o' and
+// can be any of '|', '&', '^'.
 //
-// Note that the operands t1, t2, t3 are intentionally passed with free types
-// (separate template parameters for each) because their type may actually be
-// different from TypedEnum:
+// Note that the operands aT1, aT2, aT3 are intentionally passed with free
+// types (separate template parameters for each) because their type may
+// actually be different from TypedEnum:
+//
 //   1) Their type could be CastableTypedEnumResult<TypedEnum> if they are
 //      the result of a bitwise operation themselves;
 //   2) In the non-c++11 legacy path, the type of enum values is also
 //      different from TypedEnum.
 //
 template<typename TypedEnum, char o, typename T1, typename T2, typename T3>
-void TestBinOp(const T1& t1, const T2& t2, const T3& t3)
+void TestBinOp(const T1& aT1, const T2& aT2, const T3& aT3)
 {
   typedef typename mozilla::detail::UnsignedIntegerTypeForEnum<TypedEnum>::Type
           UnsignedIntegerType;
 
   // Part 1:
   // Test the bitwise binary operator i.e.
-  //   result = t1 Op t2;
-  auto result = Op<o>(t1, t2);
+  //   result = aT1 Op aT2;
+  auto result = Op<o>(aT1, aT2);
 
   typedef decltype(result) ResultType;
 
   RequireLiteralType<ResultType>();
   TestNonConvertibilityForOneType<ResultType>();
 
-  UnsignedIntegerType unsignedIntegerResult
-    = Op<o>(UnsignedIntegerType(t1), UnsignedIntegerType(t2));
+  UnsignedIntegerType unsignedIntegerResult =
+    Op<o>(UnsignedIntegerType(aT1), UnsignedIntegerType(aT2));
 
   MOZ_RELEASE_ASSERT(unsignedIntegerResult == UnsignedIntegerType(result));
   MOZ_RELEASE_ASSERT(TypedEnum(unsignedIntegerResult) == TypedEnum(result));
@@ -282,11 +285,11 @@ void TestBinOp(const T1& t1, const T2& t2, const T3& t3)
 
   // Part 2:
   // Test the compound-assignment operator, i.e.
-  //   result Op= t3;
+  //   result Op= aT3;
   TypedEnum newResult = result;
-  OpAssign<o>(newResult, t3);
+  OpAssign<o>(newResult, aT3);
   UnsignedIntegerType unsignedIntegerNewResult = unsignedIntegerResult;
-  OpAssign<o>(unsignedIntegerNewResult, UnsignedIntegerType(t3));
+  OpAssign<o>(unsignedIntegerNewResult, UnsignedIntegerType(aT3));
   MOZ_RELEASE_ASSERT(TypedEnum(unsignedIntegerNewResult) == newResult);
 
   // Part 3:
@@ -307,19 +310,19 @@ void TestBinOp(const T1& t1, const T2& t2, const T3& t3)
 
 // Similar to TestBinOp but testing the unary ~ operator.
 template<typename TypedEnum, typename T>
-void TestTilde(const T& t)
+void TestTilde(const T& aT)
 {
   typedef typename mozilla::detail::UnsignedIntegerTypeForEnum<TypedEnum>::Type
           UnsignedIntegerType;
 
-  auto result = ~t;
+  auto result = ~aT;
 
   typedef decltype(result) ResultType;
 
   RequireLiteralType<ResultType>();
   TestNonConvertibilityForOneType<ResultType>();
 
-  UnsignedIntegerType unsignedIntegerResult = ~(UnsignedIntegerType(t));
+  UnsignedIntegerType unsignedIntegerResult = ~(UnsignedIntegerType(aT));
 
   MOZ_RELEASE_ASSERT(unsignedIntegerResult == UnsignedIntegerType(result));
   MOZ_RELEASE_ASSERT(TypedEnum(unsignedIntegerResult) == TypedEnum(result));
@@ -331,12 +334,12 @@ void TestTilde(const T& t)
 // Helper dispatching a given triple of operands to all operator-specific
 // testing functions.
 template<typename TypedEnum, typename T1, typename T2, typename T3>
-void TestAllOpsForGivenOperands(const T1& t1, const T2& t2, const T3& t3)
+void TestAllOpsForGivenOperands(const T1& aT1, const T2& aT2, const T3& aT3)
 {
-  TestBinOp<TypedEnum, '|'>(t1, t2, t3);
-  TestBinOp<TypedEnum, '&'>(t1, t2, t3);
-  TestBinOp<TypedEnum, '^'>(t1, t2, t3);
-  TestTilde<TypedEnum>(t1);
+  TestBinOp<TypedEnum, '|'>(aT1, aT2, aT3);
+  TestBinOp<TypedEnum, '&'>(aT1, aT2, aT3);
+  TestBinOp<TypedEnum, '^'>(aT1, aT2, aT3);
+  TestTilde<TypedEnum>(aT1);
 }
 
 // Helper building various triples of operands using a given operator,
@@ -365,15 +368,15 @@ void TestAllOpsForOperandsBuiltUsingGivenOp()
   auto bc_auto = Op<o>(b_auto, c_auto);
 
   // On each row below, we pass a triple of operands. Keep in mind that this
-  // is going to be received as (t1, t2, t3) and the actual tests performed
+  // is going to be received as (aT1, aT2, aT3) and the actual tests performed
   // will be of the form
   //
-  //   result = t1 Op t2;
-  //   result Op= t3;
+  //   result = aT1 Op aT2;
+  //   result Op= aT3;
   //
-  // For this reason, we carefully ensure that the values of (t1, t2)
+  // For this reason, we carefully ensure that the values of (aT1, aT2)
   // systematically cover all types of such pairs; to limit complexity,
-  // we are not so careful with t3, and we just try to pass t3's
+  // we are not so careful with aT3, and we just try to pass aT3's
   // that may lead to nontrivial bitwise operations.
   TestAllOpsForGivenOperands<TypedEnum>(a_plain,  b_plain,  c_plain);
   TestAllOpsForGivenOperands<TypedEnum>(a_plain,  bc_plain, b_auto);
@@ -408,15 +411,15 @@ TestTypedEnumBitField()
   TestAllOpsForOperandsBuiltUsingGivenOp<TypedEnum, '^'>();
 }
 
-// Checks that enum bitwise expressions have the same non-convertibility properties as
-// c++11 enum classes do, i.e. not implicitly convertible to anything
-// (though *explicitly* convertible).
+// Checks that enum bitwise expressions have the same non-convertibility
+// properties as c++11 enum classes do, i.e. not implicitly convertible to
+// anything (though *explicitly* convertible).
 void TestNoConversionsBetweenUnrelatedTypes()
 {
   using mozilla::IsConvertible;
 
-  // Two typed enum classes having the same underlying integer type, to ensure that
-  // we would catch bugs accidentally allowing conversions in that case.
+  // Two typed enum classes having the same underlying integer type, to ensure
+  // that we would catch bugs accidentally allowing conversions in that case.
   typedef CharEnumBitField T1;
   typedef Nested::CharEnumBitField T2;
 
@@ -434,9 +437,9 @@ void TestNoConversionsBetweenUnrelatedTypes()
   static_assert(!IsConvertible<decltype(T1::A), decltype(T2::A | T2::B)>::value,
                 "should not be convertible");
 
-  // The following are #ifdef MOZ_HAVE_EXPLICIT_CONVERSION because
-  // without support for explicit conversion operators, we can't easily have these
-  // bad conversions completely removed. They still do fail to compile in practice,
+  // The following are #ifdef MOZ_HAVE_EXPLICIT_CONVERSION because without
+  // support for explicit conversion operators, we can't easily have these bad
+  // conversions completely removed. They still do fail to compile in practice,
   // but not in a way that we can static_assert on.
 #ifdef MOZ_HAVE_EXPLICIT_CONVERSION
   static_assert(!IsConvertible<decltype(T1::A | T1::B), T2>::value,

@@ -2511,7 +2511,7 @@ public:
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayItem* aItem);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-    : nsDisplayItem(aBuilder, aFrame), mOverrideZIndex(0)
+    : nsDisplayItem(aBuilder, aFrame), mOverrideZIndex(0), mHasZIndexOverride(false)
   {
     MOZ_COUNT_CTOR(nsDisplayWrapList);
   }
@@ -2574,11 +2574,12 @@ public:
 
   virtual int32_t ZIndex() const MOZ_OVERRIDE
   {
-    return (mOverrideZIndex > 0) ? mOverrideZIndex : nsDisplayItem::ZIndex();
+    return (mHasZIndexOverride) ? mOverrideZIndex : nsDisplayItem::ZIndex();
   }
 
   void SetOverrideZIndex(int32_t aZIndex)
   {
+    mHasZIndexOverride = true;
     mOverrideZIndex = aZIndex;
   }
 
@@ -2611,8 +2612,8 @@ protected:
   // this item's own frame.
   nsTArray<nsIFrame*> mMergedFrames;
   nsRect mBounds;
-  // Overrides the ZIndex of our frame if > 0.
   int32_t mOverrideZIndex;
+  bool mHasZIndexOverride;
 };
 
 /**
