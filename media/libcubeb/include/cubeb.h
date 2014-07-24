@@ -129,12 +129,6 @@ typedef struct {
 #endif
 } cubeb_stream_params;
 
-/** Output device description */
-typedef struct {
-  char * output_name; /**< The name of the output device */
-  char * input_name; /**< The name of the input device */
-} cubeb_device;
-
 /** Stream states signaled via state_callback. */
 typedef enum {
   CUBEB_STATE_STARTED, /**< Stream started. */
@@ -171,11 +165,6 @@ typedef long (* cubeb_data_callback)(cubeb_stream * stream,
 typedef void (* cubeb_state_callback)(cubeb_stream * stream,
                                       void * user_ptr,
                                       cubeb_state state);
-
-/**
- * User supplied callback called when the underlying device changed.
- * @param user */
-typedef void (* cubeb_device_changed_callback)(void * user_ptr);
 
 /** Initialize an application context.  This will perform any library or
     application scoped initialization.
@@ -271,63 +260,6 @@ int cubeb_stream_get_position(cubeb_stream * stream, uint64_t * position);
     @retval CUBEB_OK
     @retval CUBEB_ERROR */
 int cubeb_stream_get_latency(cubeb_stream * stream, uint32_t * latency);
-
-/**
- * Set the volume for a stream.
- * @param stream the stream for which to adjust the volume.
- * @param volumes a float between 0.0 (muted) and 1.0 (maximum volumes)
- * @return CUBEB_ERROR_INVALID_PARAMETER if volume is outside [0.0; 1.0]
- * @return CUBEB_ERROR_INVALID_PARAMETER if stream is an invalid pointer
- * @return CUBEB_OK otherwise
- */
-int cubeb_stream_set_volume(cubeb_stream * stream, float volume);
-
-/**
- * If the stream is stereo, set the left/right panning. If the stream is mono,
- * this has no effect.
- * @param stream the stream for which to change the panning
- * @param panning a number from -1.0 to 1.0. -1.0 means that the stream is fully
- * mixed in the left channel, 1.0 means the stream is fully mixed in the right
- * channel. 0.0 is equal power in the right and left channel (default).
- * @return CUBEB_ERROR_INVALID_PARAMETER if stream is null or if panning is outside
- * the [-1.0; 1.0] range.
- * @return CUBEB_ERROR if this stream is not mono nor stereo.
- * @return CUBEB_OK otherwise.
- */
-int cubeb_stream_set_panning(cubeb_stream * stream, float panning);
-
-/**
- * Get the current output device for this stream.
- * @param stm the stream for which to query the current output device
- * @param device a pointer in which the current output device will be stored.
- * @return CUBEB_OK in case of success
- * @return CUBEB_ERROR_INVALID_PARAMETER if either stm, device or count are
- *         invalid pointers
- */
-int cubeb_stream_get_current_device(cubeb_stream * stm,
-                                    cubeb_device ** const device);
-
-/**
- * Destroy a cubeb_device structure.
- * @param stream the stream passed in cubeb_stream_get_current_device
- * @param devices the devices to destroy
- * @return CUBEB_OK in case of success
- * @return CUBEB_ERROR_INVALID_PARAMETER if devices is an invalid pointer
- */
-int cubeb_stream_device_destroy(cubeb_stream * stream,
-                                cubeb_device * devices);
-
-/**
- * Set a callback to be notified when the output device changes.
- * @param stream the stream for which to set the callback.
- * @param device_changed_callback a function called whenever the device has
- *        changed. Passing NULL allow to unregister a function
- * @return CUBEB_ERROR_INVALID_PARAMETER if either stream or
- *         device_changed_callback are invalid pointers.
- * @return CUBEB_OK
- */
-int cubeb_stream_register_device_changed_callback(cubeb_stream * stream,
-                                                  cubeb_device_changed_callback  device_changed_callback);
 
 #if defined(__cplusplus)
 }

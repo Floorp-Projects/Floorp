@@ -8,7 +8,6 @@ LIBRARY_NAME = 'cubeb'
 
 SOURCES += [
     'cubeb.c',
-    'cubeb_panner.cpp'
 ]
 
 if CONFIG['MOZ_ALSA']:
