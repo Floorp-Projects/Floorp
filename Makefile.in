@@ -317,5 +317,19 @@ endif
 js/xpconnect/src/export: dom/bindings/export xpcom/xpidl/export
 accessible/xpcom/export: xpcom/xpidl/export
 ifdef ENABLE_CLANG_PLUGIN
-js/src/export config/export: build/clang-plugin/export
+js/src/export config/host: build/clang-plugin/export
+endif
+
+# Interdependencies that moz.build world don't know about yet for compilation.
+# Note some others are hardcoded or "guessed" in recursivemake.py and emitter.py
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk3)
+toolkit/library/target: widget/gtk/mozgtk/gtk3/target
+endif
+ifndef MOZ_FOLD_LIBS
+ifndef MOZ_NATIVE_SQLITE
+security/build/target: db/sqlite3/src/target
+endif
+endif
+ifeq ($(MOZ_REPLACE_MALLOC_LINKAGE),dummy library)
+mozglue/build/target: memory/replace/dummy/target
 endif

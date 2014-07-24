@@ -27,7 +27,8 @@ if CONFIG['MOZ_DMD']:
     add_tier_dir('platform', 'memory/replace/dmd')
 
 if CONFIG['MOZ_TREE_FREETYPE']:
-    add_tier_dir('platform', 'modules/freetype2', static=True)
+    add_tier_dir('platform', 'modules/freetype2', static=True,
+        trigger='FT2_LIBS')
 
 add_tier_dir('platform', 'xpcom')
 
