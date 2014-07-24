@@ -249,6 +249,9 @@ ImageBridgeChild::ImageBridgeChild()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // Always run destructor on the main thread
+  SetMessageLoopToPostDestructionTo(MessageLoop::current());
+
   mTxn = new CompositableTransaction();
 }
 ImageBridgeChild::~ImageBridgeChild()
