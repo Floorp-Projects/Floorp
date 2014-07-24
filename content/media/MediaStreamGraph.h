@@ -677,7 +677,7 @@ protected:
   bool mMainThreadFinished;
   bool mMainThreadDestroyed;
 
-  // Our media stream graph
+  // Our media stream graph.  null if destroyed on the graph thread.
   MediaStreamGraphImpl* mGraph;
 
   dom::AudioChannel mAudioChannelType;
@@ -697,7 +697,7 @@ public:
     mMutex("mozilla::media::SourceMediaStream"),
     mUpdateKnownTracksTime(0),
     mPullEnabled(false),
-    mUpdateFinished(false), mDestroyed(false)
+    mUpdateFinished(false)
   {}
 
   virtual SourceMediaStream* AsSourceStream() { return this; }
@@ -876,7 +876,6 @@ protected:
   nsTArray<nsRefPtr<MediaStreamDirectListener> > mDirectListeners;
   bool mPullEnabled;
   bool mUpdateFinished;
-  bool mDestroyed;
   bool mNeedsMixing;
 };
 
