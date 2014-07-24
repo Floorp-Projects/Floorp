@@ -6905,6 +6905,23 @@ nsContentUtils::IsForbiddenResponseHeader(const nsACString& aHeader)
           aHeader.LowerCaseEqualsASCII("set-cookie2"));
 }
 
+// static
+bool
+nsContentUtils::IsAllowedNonCorsContentType(const nsACString& aHeaderValue)
+{
+  nsAutoCString contentType;
+  nsAutoCString unused;
+
+  nsresult rv = NS_ParseContentType(aHeaderValue, contentType, unused);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  return contentType.LowerCaseEqualsLiteral("text/plain") ||
+         contentType.LowerCaseEqualsLiteral("application/x-www-form-urlencoded") ||
+         contentType.LowerCaseEqualsLiteral("multipart/form-data");
+}
+
 bool
 nsContentUtils::DOMWindowDumpEnabled()
 {
