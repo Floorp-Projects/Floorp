@@ -2416,7 +2416,8 @@ SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegme
   MutexAutoLock lock(mMutex);
   // ::EndAllTrackAndFinished() can end these before the sources notice
   bool appended = false;
-  if (!mFinished) {
+  auto graph = GraphImpl();
+  if (!mFinished && graph) {
     TrackData *track = FindDataForTrack(aID);
     if (track) {
       // Data goes into mData, and on the next iteration of the MSG moves
@@ -2435,12 +2436,10 @@ SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegme
       NotifyDirectConsumers(track, aRawSegment ? aRawSegment : aSegment);
       track->mData->AppendFrom(aSegment); // note: aSegment is now dead
       appended = true;
+      graph->EnsureNextIteration();
     } else {
       aSegment->Clear();
     }
-  }
-  if (auto graph = GraphImpl()) {
-    graph->EnsureNextIteration();
   }
   return appended;
 }
