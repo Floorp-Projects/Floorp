@@ -301,7 +301,7 @@ nsListControlFrame::CalcHeightOfARow()
 }
 
 nscoord
-nsListControlFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsListControlFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -309,7 +309,7 @@ nsListControlFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   // Always add scrollbar widths to the pref-width of the scrolled
   // content. Combobox frames depend on this happening in the dropdown,
   // and standalone listboxes are overflow:scroll so they need it too.
-  result = GetScrolledFrame()->GetPrefWidth(aRenderingContext);
+  result = GetScrolledFrame()->GetPrefISize(aRenderingContext);
   result = NSCoordSaturatingAdd(result,
           GetDesiredScrollbarSizes(PresContext(), aRenderingContext).LeftRight());
 
@@ -317,7 +317,7 @@ nsListControlFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 }
 
 nscoord
-nsListControlFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsListControlFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -325,7 +325,7 @@ nsListControlFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
   // Always add scrollbar widths to the min-width of the scrolled
   // content. Combobox frames depend on this happening in the dropdown,
   // and standalone listboxes are overflow:scroll so they need it too.
-  result = GetScrolledFrame()->GetMinWidth(aRenderingContext);
+  result = GetScrolledFrame()->GetMinISize(aRenderingContext);
   result += GetDesiredScrollbarSizes(PresContext(), aRenderingContext).LeftRight();
 
   return result;

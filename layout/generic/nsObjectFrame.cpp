@@ -410,7 +410,7 @@ nsObjectFrame::PrepForDrawing(nsIWidget *aWidget)
 #define EMBED_DEF_HEIGHT 200
 
 /* virtual */ nscoord
-nsObjectFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsObjectFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
 
@@ -426,9 +426,9 @@ nsObjectFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsObjectFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsObjectFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
-  return nsObjectFrame::GetMinWidth(aRenderingContext);
+  return nsObjectFrame::GetMinISize(aRenderingContext);
 }
 
 void

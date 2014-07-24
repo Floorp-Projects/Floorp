@@ -341,11 +341,11 @@ static void MoveChildTo(nsIFrame* aParent, nsIFrame* aChild, nsPoint aOrigin) {
 }
 
 nscoord
-nsColumnSetFrame::GetMinWidth(nsRenderingContext *aRenderingContext) {
+nsColumnSetFrame::GetMinISize(nsRenderingContext *aRenderingContext) {
   nscoord width = 0;
   DISPLAY_MIN_WIDTH(this, width);
   if (mFrames.FirstChild()) {
-    width = mFrames.FirstChild()->GetMinWidth(aRenderingContext);
+    width = mFrames.FirstChild()->GetMinISize(aRenderingContext);
   }
   const nsStyleColumn* colStyle = StyleColumn();
   nscoord colWidth;
@@ -372,7 +372,7 @@ nsColumnSetFrame::GetMinWidth(nsRenderingContext *aRenderingContext) {
 }
 
 nscoord
-nsColumnSetFrame::GetPrefWidth(nsRenderingContext *aRenderingContext) {
+nsColumnSetFrame::GetPrefISize(nsRenderingContext *aRenderingContext) {
   // Our preferred width is our desired column width, if specified, otherwise
   // the child's preferred width, times the number of columns, plus the width
   // of any required column gaps
@@ -386,7 +386,7 @@ nsColumnSetFrame::GetPrefWidth(nsRenderingContext *aRenderingContext) {
   if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
     colWidth = colStyle->mColumnWidth.GetCoordValue();
   } else if (mFrames.FirstChild()) {
-    colWidth = mFrames.FirstChild()->GetPrefWidth(aRenderingContext);
+    colWidth = mFrames.FirstChild()->GetPrefISize(aRenderingContext);
   } else {
     colWidth = 0;
   }

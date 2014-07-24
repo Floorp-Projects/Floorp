@@ -1504,25 +1504,25 @@ nsTableFrame::MarkIntrinsicWidthsDirty()
 }
 
 /* virtual */ nscoord
-nsTableFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsTableFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   if (NeedToCalcBCBorders())
     CalcBCBorders();
 
   ReflowColGroups(aRenderingContext);
 
-  return LayoutStrategy()->GetMinWidth(aRenderingContext);
+  return LayoutStrategy()->GetMinISize(aRenderingContext);
 }
 
 /* virtual */ nscoord
-nsTableFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsTableFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   if (NeedToCalcBCBorders())
     CalcBCBorders();
 
   ReflowColGroups(aRenderingContext);
 
-  return LayoutStrategy()->GetPrefWidth(aRenderingContext, false);
+  return LayoutStrategy()->GetPrefISize(aRenderingContext, false);
 }
 
 /* virtual */ nsIFrame::IntrinsicWidthOffsetData
@@ -1560,7 +1560,7 @@ nsTableFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   AutoMaybeDisableFontInflation an(this);
 
   // Tables never shrink below their min width.
-  nscoord minWidth = GetMinWidth(aRenderingContext);
+  nscoord minWidth = GetMinISize(aRenderingContext);
   if (minWidth > result.width)
     result.width = minWidth;
 
@@ -1576,7 +1576,7 @@ nsTableFrame::TableShrinkWidthToFit(nsRenderingContext *aRenderingContext,
   AutoMaybeDisableFontInflation an(this);
 
   nscoord result;
-  nscoord minWidth = GetMinWidth(aRenderingContext);
+  nscoord minWidth = GetMinISize(aRenderingContext);
   if (minWidth > aWidthInCB) {
     result = minWidth;
   } else {
@@ -1585,10 +1585,10 @@ nsTableFrame::TableShrinkWidthToFit(nsRenderingContext *aRenderingContext,
     // relates to handling of percentage widths on columns).  So this
     // function differs from nsFrame::ShrinkWidthToFit by only the
     // following line.
-    // Since we've already called GetMinWidth, we don't need to do any
-    // of the other stuff GetPrefWidth does.
+    // Since we've already called GetMinISize, we don't need to do any
+    // of the other stuff GetPrefISize does.
     nscoord prefWidth =
-      LayoutStrategy()->GetPrefWidth(aRenderingContext, true);
+      LayoutStrategy()->GetPrefISize(aRenderingContext, true);
     if (prefWidth > aWidthInCB) {
       result = aWidthInCB;
     } else {
@@ -1683,8 +1683,8 @@ nsTableFrame::RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState)
 }
 
 /******************************************************************************************
- * Before reflow, intrinsic width calculation is done using GetMinWidth
- * and GetPrefWidth.  This used to be known as pass 1 reflow.
+ * Before reflow, intrinsic width calculation is done using GetMinISize
+ * and GetPrefISize.  This used to be known as pass 1 reflow.
  *
  * After the intrinsic width calculation, the table determines the
  * column widths using BalanceColumnWidths() and
@@ -3672,7 +3672,7 @@ nsTableFrame::IsAutoLayout()
     return true;
   // a fixed-layout inline-table must have a width
   // and tables with 'width: -moz-max-content' must be auto-layout
-  // (at least as long as FixedTableLayoutStrategy::GetPrefWidth returns
+  // (at least as long as FixedTableLayoutStrategy::GetPrefISize returns
   // nscoord_MAX)
   const nsStyleCoord &width = StylePosition()->mWidth;
   return (width.GetUnit() == eStyleUnit_Auto) ||

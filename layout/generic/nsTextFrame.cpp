@@ -4101,14 +4101,14 @@ nsContinuingTextFrame::FirstContinuation() const
 
 // Needed for text frames in XUL.
 /* virtual */ nscoord
-nsTextFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsTextFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   return nsLayoutUtils::MinWidthFromInline(this, aRenderingContext);
 }
 
 // Needed for text frames in XUL.
 /* virtual */ nscoord
-nsTextFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsTextFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   return nsLayoutUtils::PrefWidthFromInline(this, aRenderingContext);
 }

@@ -232,7 +232,7 @@ nsMeterFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 }
 
 nscoord
-nsMeterFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsMeterFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nsRefPtr<nsFontMetrics> fontMet;
   NS_ENSURE_SUCCESS(
@@ -250,9 +250,9 @@ nsMeterFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 nscoord
-nsMeterFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsMeterFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
-  return GetMinWidth(aRenderingContext);
+  return GetMinISize(aRenderingContext);
 }
 
 bool

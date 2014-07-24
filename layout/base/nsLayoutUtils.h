@@ -1292,11 +1292,11 @@ public:
                                                        nscoord maxWidth, nscoord maxHeight,
                                                        nscoord tentWidth, nscoord tentHeight);
 
-  // Implement nsIFrame::GetPrefWidth in terms of nsIFrame::AddInlinePrefWidth
+  // Implement nsIFrame::GetPrefISize in terms of nsIFrame::AddInlinePrefWidth
   static nscoord PrefWidthFromInline(nsIFrame* aFrame,
                                      nsRenderingContext* aRenderingContext);
 
-  // Implement nsIFrame::GetMinWidth in terms of nsIFrame::AddInlineMinWidth
+  // Implement nsIFrame::GetMinISize in terms of nsIFrame::AddInlineMinWidth
   static nscoord MinWidthFromInline(nsIFrame* aFrame,
                                     nsRenderingContext* aRenderingContext);
 

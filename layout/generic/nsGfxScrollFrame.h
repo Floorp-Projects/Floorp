@@ -485,8 +485,8 @@ public:
     return mHelper.GetBorderRadii(aFrameSize, aBorderArea, aSkipSides, aRadii);
   }
 
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual nsresult GetPadding(nsMargin& aPadding) MOZ_OVERRIDE;
   virtual bool IsCollapsed() MOZ_OVERRIDE;
   
@@ -776,7 +776,7 @@ public:
 
   // XXXldb Is this actually used?
 #if 0
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 #endif
 
   virtual bool UpdateOverflow() MOZ_OVERRIDE {

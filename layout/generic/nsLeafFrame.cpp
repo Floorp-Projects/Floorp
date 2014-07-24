@@ -17,7 +17,7 @@ nsLeafFrame::~nsLeafFrame()
 NS_IMPL_FRAMEARENA_HELPERS(nsLeafFrame)
 
 /* virtual */ nscoord
-nsLeafFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsLeafFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -27,7 +27,7 @@ nsLeafFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsLeafFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsLeafFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
