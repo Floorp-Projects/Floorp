@@ -70,7 +70,8 @@ class MochitestFormatter(TbplFormatter):
 
     def __call__(self, data):
         tbpl_output = super(MochitestFormatter, self).__call__(data)
-        output = '%d INFO %s' % (MochitestFormatter.log_num, tbpl_output)
+        log_level = data.get('level', 'info').upper()
+        output = '%d %s %s' % (MochitestFormatter.log_num, log_level, tbpl_output)
         MochitestFormatter.log_num += 1
         return output
 
