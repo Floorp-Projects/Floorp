@@ -4513,29 +4513,29 @@ nsLayoutUtils::ComputeAutoSizeWithIntrinsicDimensions(nscoord minWidth, nscoord 
 }
 
 /* static */ nscoord
-nsLayoutUtils::MinWidthFromInline(nsIFrame* aFrame,
+nsLayoutUtils::MinISizeFromInline(nsIFrame* aFrame,
                                   nsRenderingContext* aRenderingContext)
 {
   NS_ASSERTION(!aFrame->IsContainerForFontSizeInflation(),
                "should not be container for font size inflation");
 
-  nsIFrame::InlineMinWidthData data;
+  nsIFrame::InlineMinISizeData data;
   DISPLAY_MIN_WIDTH(aFrame, data.prevLines);
-  aFrame->AddInlineMinWidth(aRenderingContext, &data);
+  aFrame->AddInlineMinISize(aRenderingContext, &data);
   data.ForceBreak(aRenderingContext);
   return data.prevLines;
 }
 
 /* static */ nscoord
-nsLayoutUtils::PrefWidthFromInline(nsIFrame* aFrame,
+nsLayoutUtils::PrefISizeFromInline(nsIFrame* aFrame,
                                    nsRenderingContext* aRenderingContext)
 {
   NS_ASSERTION(!aFrame->IsContainerForFontSizeInflation(),
                "should not be container for font size inflation");
 
-  nsIFrame::InlinePrefWidthData data;
+  nsIFrame::InlinePrefISizeData data;
   DISPLAY_PREF_WIDTH(aFrame, data.prevLines);
-  aFrame->AddInlinePrefWidth(aRenderingContext, &data);
+  aFrame->AddInlinePrefISize(aRenderingContext, &data);
   data.ForceBreak(aRenderingContext);
   return data.prevLines;
 }

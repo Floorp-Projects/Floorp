@@ -109,33 +109,33 @@ nsFirstLetterFrame::GetChildFrameContainingOffset(int32_t inContentOffset,
 // Needed for non-floating first-letter frames and for the continuations
 // following the first-letter that we also use nsFirstLetterFrame for.
 /* virtual */ void
-nsFirstLetterFrame::AddInlineMinWidth(nsRenderingContext *aRenderingContext,
-                                      nsIFrame::InlineMinWidthData *aData)
+nsFirstLetterFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
+                                      nsIFrame::InlineMinISizeData *aData)
 {
-  DoInlineIntrinsicWidth(aRenderingContext, aData, nsLayoutUtils::MIN_WIDTH);
+  DoInlineIntrinsicISize(aRenderingContext, aData, nsLayoutUtils::MIN_WIDTH);
 }
 
 // Needed for non-floating first-letter frames and for the continuations
 // following the first-letter that we also use nsFirstLetterFrame for.
 /* virtual */ void
-nsFirstLetterFrame::AddInlinePrefWidth(nsRenderingContext *aRenderingContext,
-                                       nsIFrame::InlinePrefWidthData *aData)
+nsFirstLetterFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
+                                       nsIFrame::InlinePrefISizeData *aData)
 {
-  DoInlineIntrinsicWidth(aRenderingContext, aData, nsLayoutUtils::PREF_WIDTH);
+  DoInlineIntrinsicISize(aRenderingContext, aData, nsLayoutUtils::PREF_WIDTH);
 }
 
 // Needed for floating first-letter frames.
 /* virtual */ nscoord
 nsFirstLetterFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
-  return nsLayoutUtils::MinWidthFromInline(this, aRenderingContext);
+  return nsLayoutUtils::MinISizeFromInline(this, aRenderingContext);
 }
 
 // Needed for floating first-letter frames.
 /* virtual */ nscoord
 nsFirstLetterFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
-  return nsLayoutUtils::PrefWidthFromInline(this, aRenderingContext);
+  return nsLayoutUtils::PrefISizeFromInline(this, aRenderingContext);
 }
 
 /* virtual */ nsSize

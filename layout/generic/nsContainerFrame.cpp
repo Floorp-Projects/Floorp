@@ -784,8 +784,8 @@ static nscoord GetCoord(const nsStyleCoord& aCoord, nscoord aIfNotCoord)
 }
 
 void
-nsContainerFrame::DoInlineIntrinsicWidth(nsRenderingContext *aRenderingContext,
-                                         InlineIntrinsicWidthData *aData,
+nsContainerFrame::DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
+                                         InlineIntrinsicISizeData *aData,
                                          nsLayoutUtils::IntrinsicWidthType aType)
 {
   if (GetPrevInFlow())
@@ -853,11 +853,11 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsRenderingContext *aRenderingContext,
     for (nsIFrame *kid = nif->mFrames.FirstChild(); kid;
          kid = kid->GetNextSibling()) {
       if (aType == nsLayoutUtils::MIN_WIDTH)
-        kid->AddInlineMinWidth(aRenderingContext,
-                               static_cast<InlineMinWidthData*>(aData));
+        kid->AddInlineMinISize(aRenderingContext,
+                               static_cast<InlineMinISizeData*>(aData));
       else
-        kid->AddInlinePrefWidth(aRenderingContext,
-                                static_cast<InlinePrefWidthData*>(aData));
+        kid->AddInlinePrefISize(aRenderingContext,
+                                static_cast<InlinePrefISizeData*>(aData));
     }
 
     // After we advance to our next-in-flow, the stored line and line container

@@ -214,8 +214,8 @@ public:
                                  const nsSize& aMaxSize);
 
   // Used by both nsInlineFrame and nsFirstLetterFrame.
-  void DoInlineIntrinsicWidth(nsRenderingContext *aRenderingContext,
-                              InlineIntrinsicWidthData *aData,
+  void DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
+                              InlineIntrinsicISizeData *aData,
                               nsLayoutUtils::IntrinsicWidthType aType);
 
   /**

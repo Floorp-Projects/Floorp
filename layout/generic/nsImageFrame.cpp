@@ -2089,8 +2089,8 @@ IsInAutoWidthTableCellForQuirk(nsIFrame *aFrame)
 }
 
 /* virtual */ void
-nsImageFrame::AddInlineMinWidth(nsRenderingContext *aRenderingContext,
-                                nsIFrame::InlineMinWidthData *aData)
+nsImageFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
+                                nsIFrame::InlineMinISizeData *aData)
 {
 
   NS_ASSERTION(GetParent(), "Must have a parent if we get here!");
