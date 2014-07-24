@@ -1,154 +1,277 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-%filter substitution
-%include defines.inc
-
 @namespace url("http://www.w3.org/1999/xhtml");
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-::-moz-selection {
-  background-color: @color_background_highlight@;
-  color: @color_text_highlight@;
-}
-
-/* Style the scrollbars */
 html xul|scrollbar {
   display: none;
 }
 
-xul|window xul|scrollbar {
-  display: block;
+:root {
+  --moz-highlight-color: rgba(171, 171, 171, 0.5);
+
+  --moz-form-border: #bfbfbf;
+  --moz-form-border-focused: #ff9400;
+  --moz-form-border-invalid: #d83812;
+  --moz-form-border-radius: 2px;
+
+  --moz-form-textcolor: #363b40;
+  --moz-form-textcolor-disabled: #bebebe;
+  --moz-form-textcolor-placeholder: #777;
+
+  --moz-form-background-disabled: #f5f5f5;
+  --moz-range-progress-disabled: #ffd498;
+
+  --moz-form-button-background: white;
 }
 
-xul|window xul|scrollbar[orient="vertical"] {
-  -moz-appearance: none !important;
-  opacity: 0;
-  position: relative;
-  margin-left: -8px;
-  min-width: 8px;
-  background-color: transparent !important;
-  background-image: none !important;
-  border: 0px solid transparent !important;
-}
-
-xul|window xul|scrollbar[orient="vertical"]:-moz-locale-dir(rtl) {
-  margin-left: 2px;
-  margin-right: -10px;
-}
-
-xul|window xul|scrollbar[orient="vertical"] xul|thumb {
-  max-width: 6px !important;
-  min-width: 6px !important;
-}
-
-xul|window xul|scrollbar[orient="horizontal"] {
-  -moz-appearance: none !important;
-  opacity: 0;
-  position: relative;
-  min-height: 8px;
-  margin-top: -8px;
-  background-color: transparent !important;
-  background-image: none !important;
-  border: 0px solid transparent !important;
-}
-
-xul|window xul|scrollbar[orient="horizontal"] xul|thumb {
-  max-height: 6px !important;
-  min-height: 6px !important;
-}
-
-xul|*[panning="true"] xul|scrollbar {
-  opacity: 1;
-}
-
-xul|window xul|scrollbox {
-  overflow-y: scroll;
-  overflow-x: scroll;
-}
-
-xul|window xul|scrollbarbutton {
-  min-height: 8px !important;
-  min-width: 8px !important;
-  -moz-appearance: none !important;
-  visibility: hidden;
-}
-
-xul|window xul|scrollbarbutton[sbattr="scrollbar-up-top"],
-xul|window xul|scrollbarbutton[sbattr="scrollbar-bottom-top"] {
-  display: none;
-}
-
-xul|window xul|scrollbar xul|thumb {
-  background-color: @color_background_scroller@ !important;
-  -moz-border-top-colors: none !important;
-  -moz-border-bottom-colors: none !important;
-  -moz-border-right-colors: none !important;
-  -moz-border-left-colors: none !important;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  border-radius: 3px;
-}
-
-select:not([size]):not([multiple]) > xul|scrollbar,
-select[size="1"] > xul|scrollbar,
-select:not([size]):not([multiple]) xul|scrollbarbutton,
-select[size="1"] xul|scrollbarbutton {
-  display: block;
-  margin-left: 0;
-  min-width: 16px;
-}
-
-/* Override inverse OS themes */
 select,
-textarea,
 button,
 xul|button,
-* > input:not([type="image"]) {
-  -moz-appearance: none !important;  /* See bug 598421 for fixing the platform */
-  border-radius: 3px;
-}
-
-select[size],
-select[multiple],
-select[size][multiple],
 textarea,
-* > input:not([type="image"]) {
-  border-style: solid;
-  border-color: #7d7d7d;
-  color: #414141;
-  background: white linear-gradient(rgba(115,115,115,0.5) 0, rgba(215,215,215,0.5) 3px, rgba(255,255,255,0.2) 16px);
+meter,
+progress,
+input:not([type="image"]):not([type="range"]) {
+  -moz-appearance: none;
+  border-radius: var(--moz-form-border-radius);
+  border: 1px solid var(--moz-form-border);
+  background-color: var(--moz-form-button-background);
+  color: var(--moz-form-textcolor);
+  padding: 1px;
 }
 
-/* Selects are handled by the form helper, see bug 685197 */
-select option, select optgroup {
-  pointer-events: none;
+/* A few elements really like their borders */
+input[type="radio"],
+input[type="checkbox"] {
+  border: 1px solid var(--moz-form-border) !important;
+  border-style: solid !important;
 }
 
-select:not([size]):not([multiple]),
-select[size="0"],
-select[size="1"],
-* > input[type="button"],
-* > input[type="submit"],
-* > input[type="reset"],
-button {
+/* Hide inner focus rings */
+button::-moz-focus-inner,
+input[type="color"]:-moz-system-metric(color-picker-available)::-moz-focus-inner,
+input[type="reset"]::-moz-focus-inner,
+input[type="button"]::-moz-focus-inner,
+input[type="submit"]::-moz-focus-inner,
+input[type="file"] > button[type="button"]::-moz-focus-inner {
+  border: none;
+}
+
+/* These rule are overspecified in forms.css. We have to work hard to override them */
+input[type="radio"]:disabled,
+input[type="radio"]:disabled:active,
+input[type="radio"]:disabled:hover,
+input[type="radio"]:disabled:hover:active,
+input[type="checkbox"]:disabled,
+input[type="checkbox"]:disabled:active,
+input[type="checkbox"]:disabled:hover,
+input[type="checkbox"]:disabled:hover:active,
+input[type="color"]:disabled {
+  border: 1px solid var(--moz-form-border) !important;
+  background-color: var(--moz-form-background-disabled) !important;
+  color: var(--moz-form-textcolor-disabled);
+}
+
+/* forms.css forces styles on these in all sorts of disabled states. Make sure we override ALL of them. */
+input[type="submit"]:disabled,
+input[type="submit"]:disabled:active,
+input[type="submit"]:disabled:hover,
+input[type="submit"]:disabled:active:hover,
+input[type="reset"]:disabled,
+input[type="reset"]:disabled:active,
+input[type="reset"]:disabled:hover,
+input[type="reset"]:disabled:active:hover,
+input[type="button"]:disabled,
+input[type="button"]:disabled:active,
+input[type="button"]:disabled:hover,
+input[type="button"]:disabled:active:hover,
+button:disabled,
+button:disabled:active,
+button:disabled:hover,
+button:disabled:active:hover {
+  border: 1px solid var(--moz-form-border) !important;
+  padding: 0 7px 0 7px;
+  color: var(--moz-form-textcolor-disabled);
+}
+
+input::-moz-placeholder {
+  color: var(--moz-form-textcolor-placeholder);
+}
+
+input:not([type="image"]):focus,
+button:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--moz-form-border-focused);
+}
+
+input:not([type="image"]):invalid {
+  border-color: var(--moz-form-border-invalid);
+  box-shadow: none; /* Override Gecko's default behavior */
+}
+
+*:-moz-any-link:active,
+*[role=button]:active,
+button:not(:disabled):active,
+button:not(:disabled):active:hover,
+input:not(:focus):not(:disabled):not([type="range"]):active,
+select:not(:disabled):active,
+textarea:not(:focus):not(:disabled):active,
+option:active,
+label:active,
+xul|menulist:active {
+  background-color: var(--moz-highlight-color);
+}
+
+/* forms.css tries to alter the padding on these views when they're hovered AND tapped. Don't let it */
+input[type="button"],
+input[type="button"]:active:hover,
+input[type="submit"],
+input[type="submit"]:active:hover,
+input[type="reset"],
+input[type="reset"]:active:hover,
+button,
+button:active:hover {
+  padding: 0 7px 0 7px !important;
   border-style: solid;
-  border-color: #7d7d7d;
-  color: #414141;
-  background: white linear-gradient(rgba(255,255,255,0.2) 0, rgba(215,215,215,0.5) 18px, rgba(115,115,115,0.5) 100%);
+}
+
+/* Radios and checkboxes */
+input[type="radio"],
+input[type="checkbox"] {
+  max-width: 14px;
+  max-height: 14px;
+  padding: 2px 1px 2px 1px;
 }
 
 input[type="checkbox"] {
-  background: white linear-gradient(rgba(115,115,115,0.5) 0, rgba(215,215,215,0.5) 2px, rgba(255,255,255,0.2) 6px);
+  /* forms.css uses !important on this. Override it */
+  border-radius: var(--moz-form-border-radius) !important;
 }
 
-input[type="radio"] {
-  background: radial-gradient(at 6px 6px, rgba(255,255,255,0.2) 3px, rgba(195,195,195,0.5) 5px, rgba(115,115,115,0.5) 100%);
+/* Disabled styling */
+select:disabled:disabled,
+textarea:disabled,
+button:disabled,
+input[type="file"]:disabled > xul|label,
+input:disabled:not([type="file"]):not([type="range"]) {
+  background-color: var(--moz-form-background-disabled);
+  color: var(--moz-form-textcolor-disabled);
 }
 
+/* Color inputs */
+input[type="color"] {
+  padding: 0 !important;
+}
+ 
+input[type="color"]:-moz-system-metric(color-picker-available)::-moz-color-swatch {
+  border: none;
+  border-radius: var(--moz-form-border-radius);
+}
+
+/* File inputs */
+input[type="file"] {
+  padding: 0 !important;
+}
+
+input[type="file"] > button[type="button"] {
+  -moz-appearance: none !important;
+  border: none;
+  border-right: 1px solid var(--moz-form-border);
+  border-radius: 0;
+  background-color: var(--moz-form-button-background);
+  /* We had to remove the padding on the file input to make this stretch correctly.
+     Add it back here */
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+input[type="file"]:disabled > button[type="button"] {
+  background-color: var(--moz-form-button-background);
+  border: none !important;
+  border-right: 1px solid var(--moz-form-border) !important;
+}
+
+/* Number inputs */
+input[type="number"] {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+input[type=number]::-moz-number-wrapper {
+  padding: 0;
+  height: 100%;
+  align-items: stretch;
+}
+
+input[type=number]::-moz-number-text {
+  padding: 0;
+}
+
+input[type=number]::-moz-number-spin-box {
+  flex-direction: row;
+  background-color: var(--moz-form-button-background);
+  padding: 0 !important;
+  /* These numbers were chosen semi-randomly to make these buttons big enough to click */
+  width: 64px;
+  height: auto;
+  align-self: stretch;
+}
+
+input[type="number"]::-moz-number-spin-up,
+input[type="number"]::-moz-number-spin-down {
+  /* We had to remove the padding on the file input to make this stretch correctly.
+     Add it back here */
+  padding-top: 1px;
+  padding-bottom: 1px;
+
+  border: none;
+  border-left: 1px solid var(--moz-form-border);
+  border-radius: 0;
+
+  background-position: center center;
+  background-size: auto 75%;
+  flex: 1;
+}
+
+input[type="number"]:disabled::-moz-number-spin-up,
+input[type="number"]:disabled::-moz-number-spin-down {
+  background-color: var(--moz-form-button-background);
+}
+
+input[type="number"]::-moz-number-spin-up { background-image: url("chrome://browser/skin/images/arrows.svg#single-up"); }
+input[type="number"]:disabled::-moz-number-spin-up { background-image: url("chrome://browser/skin/images/arrows.svg#single-up-disabled"); }
+input[type="number"]::-moz-number-spin-down { background-image: url("chrome://browser/skin/images/arrows.svg#single-down"); }
+input[type="number"]:disabled::-moz-number-spin-down { background-image: url("chrome://browser/skin/images/arrows.svg#single-down-disabled"); }
+
+/* Select elements */
 select {
-  border-width: 1px;
-  padding: 1px;
+  -moz-appearance: none !important;
+}
+
+select:not([size]):not([multiple]) > xul|scrollbar {
+  display: block;
+}
+
+select > button {
+  -moz-appearance: none;
+  border-radius: 0;
+  border: none;
+
+  background-size: auto 50%;
+  /* The backgound image is marked !important in layout/style/forms.css, so we have to use important here */
+  background-image: url("chrome://browser/skin/images/arrows.svg#double") !important;
+  font-size: inherit;
+}
+
+select:disabled > button {
+  /* The buttons on selects don't look like "buttons", so their background should match the textbox */
+  background-color: var(--moz-form-background-disabled);
+  border: none;
+  background-image: url("chrome://browser/skin/images/arrows.svg#double-disabled") !important;
+}
+
+/* Prevent events from firing on the option elements themselves. We'll handle them in SelectHelper.js */
+select option, select optgroup {
+  pointer-events: none;
 }
 
 select:not([size]):not([multiple]),
@@ -157,160 +280,91 @@ select[size="1"] {
   padding: 0 1px 0 1px;
 }
 
-* > input:not([type="image"]) {
-  border-width: 1px;
-  padding: 1px;
+option:disabled {
+  color: var(--moz-form-textcolor-disabled);
 }
 
-textarea {
-  resize: none;
-  border-width: 1px;
-  padding: 2px 1px 2px 1px;
-}
-
-input[type="button"],
-input[type="submit"],
-input[type="reset"],
-button {
-  border-width: 1px;
-  padding: 0 7px 0 7px;
-}
-
-input[type="radio"],
-input[type="checkbox"] {
-  max-width: 14px;
-  max-height: 14px;
-  border: 1px solid #a7a7a7 !important;
-  padding: 2px 1px 2px 1px;
-}
-
-select > button {
-  border-width: 0px !important;
-  margin: 0px !important;
-  padding: 0px !important;
-  border-radius: 0;
-  color: #414141;
-
-  background-size: auto auto, 100% 90%;
+/* Range inputs */
+input[type=range]:active {
   background-color: transparent;
-  background-image: url("chrome://browser/skin/images/dropmarker.svg"),
-                    radial-gradient(at bottom left, #bbbbbb 40%, #f5f5f5) !important;
-  background-position: -moz-calc(50% + 1px) center, -15px center !important;
-  background-repeat: no-repeat !important;
-
-  font-size: inherit;
 }
 
-select[size]:focus,
-select[multiple]:focus,
-select[size][multiple]:focus,
-textarea:focus,
-input[type="file"]:focus > input[type="text"],
-* > input:not([type="image"]):focus {
-  outline: 0px !important;
-  border-style: solid;
-  border-color: rgb(94,128,153);
-  background: white linear-gradient(rgba(27,113,177,0.5) 0, rgba(198,225,246,0.2) 3px, rgba(255,255,255,0.2) 16px);
+input[type=range]::-moz-range-track {
+  border: none;
+  background-color: var(--moz-form-border);
 }
 
-select:not([size]):not([multiple]):focus,
-select[size="0"]:focus,
-select[size="1"]:focus,
-input[type="button"]:focus,
-input[type="submit"]:focus,
-input[type="reset"]:focus,
-button:focus {
-  outline: 0px !important;
-  border-style: solid;
-  border-color: rgb(94,128,153);
-  background: white linear-gradient(rgba(255,255,255,0.2) 0, rgba(198,225,256,0.2) 18px, rgba(27,113,177,0.5) 100%);
+input[type=range]:disabled::-moz-range-track {
+  border: none;
+  background-color: var(--moz-form-background-disabled);
 }
 
-input[type="checkbox"]:focus,
-input[type="radio"]:focus {
-  border-color: #99c6e0 !important;
+input[type=range]::-moz-range-progress {
+  background-color: var(--moz-form-border-focused);
 }
 
-input[type="checkbox"]:focus {
-  background: white linear-gradient(rgba(27,113,177,0.5) 0, rgba(198,225,246,0.2) 2px, rgba(255,255,255,0.2) 6px);
+input[type=range]:disabled::-moz-range-progress {
+  background-color: var(--moz-range-progress-disabled);
 }
 
-input[type="radio"]:focus {
-  background: radial-gradient(at 6px 6px, rgba(255,255,255,0.2) 3px, rgba(198,225,246,0.2) 5px, rgba(27,113,177,0.5) 100%);
+input[type=range]::-moz-range-thumb {
+  background-image: none;
+  background-color: var(--moz-form-button-background);
+  border: 1px solid var(--moz-form-border);
 }
 
-/* we need to be specific for selects because the above rules are specific too */
-textarea[disabled],
-select[size][disabled],
-select[multiple][disabled],
-select[size][multiple][disabled],
-select:not([size]):not([multiple])[disabled],
-select[size="0"][disabled],
-select[size="1"][disabled],
-button[disabled],
-button[disabled]:active,
-* > input:not([type="image"])[disabled],
-* > input:not([type="image"])[disabled]:active {
-  color: rgba(0,0,0,0.3);
-  border-color: rgba(125,125,125,0.4);
-  border-style: solid;
-  border-width: 1px;
-  background: transparent linear-gradient(rgba(185,185,185,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(255,255,255,0.4) 100%);
+input[type=range]:disabled::-moz-range-thumb {
+  background-color: var(--moz-form-background-disabled);
 }
 
-select:not([size]):not([multiple])[disabled],
-select[size="0"][disabled],
-select[size="1"][disabled] {
-  background: transparent linear-gradient(rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
+input[type=range]:active::-moz-range-thumb {
+  border: 1px solid var(--moz-form-border-focused);
 }
 
-input[type="button"][disabled],
-input[type="button"][disabled]:active,
-input[type="submit"][disabled],
-input[type="submit"][disabled]:active,
-input[type="reset"][disabled],
-input[type="reset"][disabled]:active,
-button[disabled],
-button[disabled]:active {
-  padding: 0 7px 0 7px;
-  background: transparent linear-gradient(rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
+/* Progress elements */
+progress {
+  padding: 0;
 }
 
-input[type="radio"][disabled],
-input[type="radio"][disabled]:active,
-input[type="radio"][disabled]:hover,
-input[type="radio"][disabled]:hover:active,
-input[type="checkbox"][disabled],
-input[type="checkbox"][disabled]:active,
-input[type="checkbox"][disabled]:hover,
-input[type="checkbox"][disabled]:hover:active {
-  border:1px solid rgba(125,125,125,0.4) !important;
+progress::-moz-progress-bar {
+  background-color: var(--moz-form-border-focused);
 }
 
-select[disabled] > button {
-  opacity: 0.6;
-  padding: 1px 7px 1px 7px;
+progress:indeterminate::-moz-progress-bar {
+  background-color: transparent;
+  background: repeating-linear-gradient(-55deg,
+        var(--moz-form-border-focused),
+        var(--moz-form-border-focused) 10px,
+        var(--moz-range-progress-disabled) 10px,
+        var(--moz-range-progress-disabled) 20px);
+}
+
+progress:disabled::-moz-progress-bar {
+  background-color: var(--moz-range-progress-disabled);
+}
+
+/* Meter elements */
+meter {
+  padding: 0;
+  background-image: none;
+}
+
+meter:-moz-meter-optimum::-moz-meter-bar {
+  background-image: none;
+  background-color: #5fad47; /* green */
+}
+
+meter:-moz-meter-sub-optimum::-moz-meter-bar {
+  background-image: none;
+  background-color: var(--moz-form-border-focused);
+}
+
+meter:-moz-meter-sub-sub-optimum::-moz-meter-bar {
+  background-image: none;
+  background-color: #d73920; /* red */
 }
 
 /* -moz-touch-enabled? media elements */
 :-moz-any(video, audio) > xul|videocontrols {
   -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#touchControls");
 }
-
-*:-moz-any-link:active,
-*[role=button]:active,
-button:not([disabled]):active,
-input:not(:focus):not([disabled]):active,
-select:not([disabled]):active,
-textarea:not(:focus):not([disabled]):active,
-option:active,
-label:active,
-xul|menulist:active {
-  background-color: @color_background_highlight_overlay@;
-}
-
-input[type=number] > div > div, /* work around bug 946184 */
-input[type=number]::-moz-number-spin-box {
-  display: none;
-}
-
