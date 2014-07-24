@@ -917,6 +917,11 @@ interface WebGLExtensionTextureFloatLinear
 };
 
 [NoInterfaceObject]
+interface WebGLExtensionShaderTextureLod
+{
+};
+
+[NoInterfaceObject]
 interface WebGLExtensionTextureHalfFloat
 {
     const GLenum HALF_FLOAT_OES = 0x8D61;
