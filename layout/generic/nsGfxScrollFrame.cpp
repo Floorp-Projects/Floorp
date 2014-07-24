@@ -1604,6 +1604,24 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   }
 
   EnsureImageVisPrefsCached();
+
+#ifndef MOZ_WIDGET_ANDROID
+  if (mScrollingActive &&
+      gfxPrefs::LayersTilesEnabled() &&
+      !gfxPrefs::AsyncPanZoomEnabled() &&
+      mOuter->GetContent()) {
+    // If we have tiling but no APZ, then set a 0-margin display port on
+    // active scroll containers so that we paint by whole tile increments
+    // when scrolling.
+    nsLayoutUtils::SetDisplayPortMargins(mOuter->GetContent(),
+                                         mOuter->PresContext()->PresShell(),
+                                         LayerMargin(),
+                                         gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight(),
+                                         0,
+                                         nsLayoutUtils::RepaintMode::DoNotRepaint);
+  }
+#endif
+
 }
 
 ScrollFrameHelper::~ScrollFrameHelper()
