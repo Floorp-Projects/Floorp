@@ -51,16 +51,12 @@ MOZ_ARG_WITH_BOOL(system-nspr,
                           --with-system-nspr.)],
     _USE_SYSTEM_NSPR=1 )
 
-if test -z "$BUILDING_JS"; then
-    JS_THREADSAFE=1
-fi
-
 JS_POSIX_NSPR=unset
 ifdef([CONFIGURING_JS],[
     if test -n "$JS_STANDALONE"; then
       case "$target" in
         *linux*|*darwin*|*dragonfly*|*freebsd*|*netbsd*|*openbsd*)
-          if test -z "$_HAS_NSPR" && test "$JS_THREADSAFE"; then
+          if test -z "$_HAS_NSPR"; then
             JS_POSIX_NSPR_DEFAULT=1
           fi
           ;;
@@ -110,16 +106,12 @@ if test -z "$nspr_opts"; then
     else
       dnl JS configure defaults to emulated NSPR if available, falling back
       dnl to nsprpub.
-      if test -n "$JS_THREADSAFE"; then
-          JS_POSIX_NSPR="$JS_POSIX_NSPR_DEFAULT"
-          if test -z "$JS_POSIX_NSPR"; then
-             MOZ_BUILD_NSPR=1
-             which_nspr="source-tree"
-          else
-             which_nspr="posix-wrapper"
-          fi
+      JS_POSIX_NSPR="$JS_POSIX_NSPR_DEFAULT"
+      if test -z "$JS_POSIX_NSPR"; then
+        MOZ_BUILD_NSPR=1
+        which_nspr="source-tree"
       else
-          which_nspr="none"
+        which_nspr="posix-wrapper"
       fi
    fi
 fi
@@ -164,7 +156,7 @@ if test -n "$MOZ_NATIVE_NSPR" -o -n "$NSPR_CFLAGS" -o -n "$NSPR_LIBS"; then
                 ,
                 AC_MSG_ERROR([system NSPR does not support PR_UINT64 or including prtypes.h does not provide it]))
     CFLAGS=$_SAVE_CFLAGS
-elif test -z "$JS_POSIX_NSPR" -a -n "$JS_THREADSAFE"; then
+elif test -z "$JS_POSIX_NSPR"; then
     if test -z "$LIBXUL_SDK"; then
         NSPR_CFLAGS="-I${LIBXUL_DIST}/include/nspr"
         if test -n "$GNU_CC"; then
