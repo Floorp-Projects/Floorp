@@ -56,9 +56,8 @@ static bool
 ExecuteSequentially(JSContext *cx_, HandleValue funVal, uint16_t *sliceStart,
                     uint16_t sliceEnd);
 
-#if !defined(JS_THREADSAFE) || !defined(JS_ION)
-bool
-js::ForkJoin(JSContext *cx, CallArgs &args)
+static bool
+ForkJoinSequentially(JSContext *cx, CallArgs &args)
 {
     RootedValue argZero(cx, args[0]);
     uint16_t sliceStart = uint16_t(args[1].toInt32());
@@ -67,6 +66,13 @@ js::ForkJoin(JSContext *cx, CallArgs &args)
         return false;
     MOZ_ASSERT(sliceStart == sliceEnd);
     return true;
+}
+
+#if !defined(JS_THREADSAFE) || !defined(JS_ION)
+bool
+js::ForkJoin(JSContext *cx, CallArgs &args)
+{
+    return ForkJoinSequentially(cx, args);
 }
 
 JSContext *
@@ -502,6 +508,9 @@ js::ForkJoin(JSContext *cx, CallArgs &args)
     JS_ASSERT(args[3].isInt32());
     JS_ASSERT(args[3].toInt32() < NumForkJoinModes);
     JS_ASSERT(args[4].isObjectOrNull());
+
+    if (!CanUseExtraThreads())
+        return ForkJoinSequentially(cx, args);
 
     RootedFunction fun(cx, &args[0].toObject().as<JSFunction>());
     uint16_t sliceStart = (uint16_t)(args[1].toInt32());

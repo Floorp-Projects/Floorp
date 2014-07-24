@@ -417,6 +417,8 @@ static const uint32_t HELPER_STACK_QUOTA = 450 * 1024;
 void
 GlobalHelperThreadState::ensureInitialized()
 {
+    JS_ASSERT(CanUseExtraThreads());
+
     JS_ASSERT(this == &HelperThreadState());
     AutoLockHelperThreadState lock;
 
@@ -459,6 +461,7 @@ void
 GlobalHelperThreadState::finish()
 {
     if (threads) {
+        MOZ_ASSERT(CanUseExtraThreads());
         for (size_t i = 0; i < threadCount; i++)
             threads[i].destroy();
         js_free(threads);
@@ -1190,6 +1193,8 @@ HelperThread::handleGCHelperWorkload()
 void
 HelperThread::threadLoop()
 {
+    JS_ASSERT(CanUseExtraThreads());
+
     JS::AutoSuppressGCAnalysis nogc;
     AutoLockHelperThreadState lock;
 
