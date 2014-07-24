@@ -261,30 +261,22 @@ NfcContentHelper.prototype = {
     this.peerEventListener = listener;
   },
 
-  registerTargetForPeerEvent:
-    function registerTargetForPeerEvent(window, appId, event) {
+  registerTargetForPeerReady: function registerTargetForPeerReady(window, appId) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
     }
 
-    cpmm.sendAsyncMessage("NFC:RegisterPeerTarget", {
-      appId: appId,
-      event: event
-    });
+    cpmm.sendAsyncMessage("NFC:RegisterPeerReadyTarget", { appId: appId });
   },
 
-  unregisterTargetForPeerEvent:
-    function unregisterTargetForPeerEvent(window, appId, event) {
+  unregisterTargetForPeerReady: function unregisterTargetForPeerReady(window, appId) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
     }
 
-    cpmm.sendAsyncMessage("NFC:UnregisterPeerTarget", {
-      appId: appId,
-      event: event
-    });
+    cpmm.sendAsyncMessage("NFC:UnregisterPeerReadyTarget", { appId: appId });
   },
 
   checkP2PRegistration: function checkP2PRegistration(window, appId) {

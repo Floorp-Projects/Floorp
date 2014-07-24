@@ -223,26 +223,22 @@ mozNfc.prototype = {
 
   eventListenerWasAdded: function(evt) {
     let eventType = this.getEventType(evt);
-    if (eventType == -1)
+    if (eventType != NFC_PEER_EVENT_READY) {
       return;
-    this.registerTarget(eventType);
+    }
+
+    let appId = this._window.document.nodePrincipal.appId;
+    this._nfcContentHelper.registerTargetForPeerReady(this._window, appId);
   },
 
   eventListenerWasRemoved: function(evt) {
     let eventType = this.getEventType(evt);
-    if (eventType == -1)
+    if (eventType != NFC_PEER_EVENT_READY) {
       return;
-    this.unregisterTarget(eventType);
-  },
+    }
 
-  registerTarget: function registerTarget(event) {
     let appId = this._window.document.nodePrincipal.appId;
-    this._nfcContentHelper.registerTargetForPeerEvent(this._window, appId, event);
-  },
-
-  unregisterTarget: function unregisterTarget(event) {
-    let appId = this._window.document.nodePrincipal.appId;
-    this._nfcContentHelper.unregisterTargetForPeerEvent(this._window, appId, event);
+    this._nfcContentHelper.unregisterTargetForPeerReady(this._window, appId);
   },
 
   notifyPeerReady: function notifyPeerReady(sessionToken) {
