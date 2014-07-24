@@ -103,15 +103,7 @@ public:
   }
   nsRegion& And(const nsRegion& aRegion, const nsRect& aRect)
   {
-    // pixman has a bug where it doesn't validate the input to intersect_rect
-    // and can end up with regions with empty rects, so take the more round about route
-    // if we're passing in an empty rect.
-    if (aRect.IsEmpty()) {
-      SetEmpty();
-    } else {
-      pixman_region32_intersect_rect(&mImpl, aRegion.Impl(),
-                                     aRect.x, aRect.y, aRect.width, aRect.height);
-    }
+    pixman_region32_intersect_rect(&mImpl, aRegion.Impl(), aRect.x, aRect.y, aRect.width, aRect.height);
     return *this;
   }
   nsRegion& And(const nsRect& aRect1, const nsRect& aRect2)
@@ -270,7 +262,13 @@ public:
   {
     return pixman_region32_equal(Impl(), aRegion.Impl());
   }
-  uint32_t GetNumRects () const { return pixman_region32_n_rects(Impl()); }
+  uint32_t GetNumRects () const
+  {
+    // Work around pixman bug. Sometimes pixman creates regions with 1 rect
+    // that's empty.
+    uint32_t result = pixman_region32_n_rects(Impl());
+    return (result == 1 && GetBounds().IsEmpty()) ? 0 : result;
+  }
   const nsRect GetBounds () const { return BoxToRect(mImpl.extents); }
   uint64_t Area () const;
   // Converts this region from aFromAPP, an appunits per pixel ratio, to
@@ -411,6 +409,11 @@ public:
     mRegion = &aRegion;
     i = 0;
     boxes = pixman_region32_rectangles(aRegion.Impl(), &n);
+    // Work around pixman bug. Sometimes pixman creates regions with 1 rect
+    // that's empty.
+    if (n == 1 && nsRegion::BoxToRect(boxes[0]).IsEmpty()) {
+      n = 0;
+    }
   }
 
   const nsRect* Next ()
