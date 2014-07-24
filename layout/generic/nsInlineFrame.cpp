@@ -725,7 +725,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     aMetrics.BSize(lineWM) = fm->MaxHeight();
   } else {
     NS_WARNING("Cannot get font metrics - defaulting sizes to 0");
-    aMetrics.SetBlockStartAscent(aMetrics.Height() = 0);
+    aMetrics.SetBlockStartAscent(aMetrics.BSize(lineWM) = 0);
   }
   aMetrics.SetBlockStartAscent(aMetrics.BlockStartAscent() +
                                framePadding.BStart(frameWM));

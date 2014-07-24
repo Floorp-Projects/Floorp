@@ -4363,8 +4363,7 @@ nsFrame::Reflow(nsPresContext*          aPresContext,
                 nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsFrame");
-  aDesiredSize.Width() = 0;
-  aDesiredSize.Height() = 0;
+  aDesiredSize.ClearSize();
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 }
@@ -5337,8 +5336,7 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
     NS_WARNING("frame tree too deep; setting zero size and returning");
     mState |= NS_FRAME_TOO_DEEP_IN_FRAME_TREE;
     ClearOverflowRects();
-    aMetrics.Width() = 0;
-    aMetrics.Height() = 0;
+    aMetrics.ClearSize();
     aMetrics.SetBlockStartAscent(0);
     aMetrics.mCarriedOutBottomMargin.Zero();
     aMetrics.mOverflowAreas.Clear();
@@ -8097,10 +8095,12 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
 
   nsRenderingContext* rendContext = aState.GetRenderingContext();
   nsPresContext* presContext = aState.PresContext();
-  const WritingMode wm = aState.OuterReflowState() ?
-    aState.OuterReflowState()->GetWritingMode() : GetWritingMode();
-  nsHTMLReflowMetrics desiredSize(wm);
- 
+  WritingMode ourWM = GetWritingMode();
+  const WritingMode outerWM = aState.OuterReflowState() ?
+    aState.OuterReflowState()->GetWritingMode() : ourWM;
+  nsHTMLReflowMetrics desiredSize(outerWM);
+  LogicalSize ourSize = GetLogicalSize().ConvertTo(outerWM, ourWM);
+
   if (rendContext) {
 
     BoxReflow(aState, presContext, desiredSize, rendContext,
@@ -8113,41 +8113,42 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
       // if our child needs to be bigger. This might happend with
       // wrapping text. There is no way to predict its height until we
       // reflow it. Now that we know the height reshuffle upward.
-      if (desiredSize.Width() > ourRect.width ||
-          desiredSize.Height() > ourRect.height) {
+      if (desiredSize.ISize(outerWM) > ourSize.ISize(outerWM) ||
+          desiredSize.BSize(outerWM) > ourSize.BSize(outerWM)) {
 
 #ifdef DEBUG_GROW
         DumpBox(stdout);
         printf(" GREW from (%d,%d) -> (%d,%d)\n",
-               ourRect.width, ourRect.height,
-               desiredSize.Width(), desiredSize.Height());
+               ourSize.ISize(outerWM), ourSize.BSize(outerWM),
+               desiredSize.ISize(outerWM), desiredSize.BSize(outerWM));
 #endif
 
-        if (desiredSize.Width() > ourRect.width)
-          ourRect.width = desiredSize.Width();
+        if (desiredSize.ISize(outerWM) > ourSize.ISize(outerWM)) {
+          ourSize.ISize(outerWM) = desiredSize.ISize(outerWM);
+        }
 
-        if (desiredSize.Height() > ourRect.height)
-          ourRect.height = desiredSize.Height();
+        if (desiredSize.BSize(outerWM) > ourSize.BSize(outerWM)) {
+          ourSize.BSize(outerWM) = desiredSize.BSize(outerWM);
+        }
       }
 
       // ensure our size is what we think is should be. Someone could have
       // reset the frame to be smaller or something dumb like that. 
-      SetSize(ourRect.Size());
+      SetSize(ourSize.ConvertTo(ourWM, outerWM));
     }
   }
 
   // Should we do this if IsCollapsed() is true?
-  nsSize size(GetSize());
-  desiredSize.Width() = size.width;
-  desiredSize.Height() = size.height;
+  LogicalSize size(GetLogicalSize().ConvertTo(outerWM, ourWM));
+  desiredSize.ISize(outerWM) = size.ISize(outerWM);
+  desiredSize.BSize(outerWM) = size.BSize(outerWM);
   desiredSize.UnionOverflowAreasWithDesiredBounds();
 
   if (HasAbsolutelyPositionedChildren()) {
     // Set up a |reflowState| to pass into ReflowAbsoluteFrames
-    WritingMode wm = GetWritingMode();
     nsHTMLReflowState reflowState(aState.PresContext(), this,
                                   aState.GetRenderingContext(),
-                                  LogicalSize(wm, GetLogicalSize().ISize(wm),
+                                  LogicalSize(ourWM, size.ISize(ourWM),
                                               NS_UNCONSTRAINEDSIZE),
                                   nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
 
@@ -8161,7 +8162,8 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
   }
 
   nsSize oldSize(ourRect.Size());
-  FinishAndStoreOverflow(desiredSize.mOverflowAreas, size, &oldSize);
+  FinishAndStoreOverflow(desiredSize.mOverflowAreas,
+                         size.GetPhysicalSize(outerWM), &oldSize);
 
   SyncLayout(aState);
 
@@ -8191,6 +8193,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
   nsBoxLayoutMetrics *metrics = BoxMetrics();
   nsReflowStatus status = NS_FRAME_COMPLETE;
+  WritingMode wm = aDesiredSize.GetWritingMode();
 
   bool needsReflow = NS_SUBTREE_DIRTY(this);
 
@@ -8205,7 +8208,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
                needsReflow = false;
                aDesiredSize.Width() = aWidth; 
                aDesiredSize.Height() = aHeight; 
-               SetSize(nsSize(aDesiredSize.Width(), aDesiredSize.Height()));
+               SetSize(aDesiredSize.Size(wm).ConvertTo(GetWritingMode(), wm));
           } else {
             aDesiredSize.Width() = metrics->mLastSize.width;
             aDesiredSize.Height() = metrics->mLastSize.height;
@@ -8228,8 +8231,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
   // ok now reflow the child into the spacers calculated space
   if (needsReflow) {
 
-    aDesiredSize.Width() = 0;
-    aDesiredSize.Height() = 0;
+    aDesiredSize.ClearSize();
 
     // create a reflow state to tell our child to flow at the given size.
 
@@ -8246,10 +8248,10 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
     nsIFrame *parentFrame = GetParent();
     nsFrameState savedState = parentFrame->GetStateBits();
+    WritingMode parentWM = parentFrame->GetWritingMode();
     nsHTMLReflowState
       parentReflowState(aPresContext, parentFrame, aRenderingContext,
-                        LogicalSize(parentFrame->GetWritingMode(),
-                                    parentSize),
+                        LogicalSize(parentWM, parentSize),
                         nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
     parentFrame->RemoveStateBits(~nsFrameState(0));
     parentFrame->AddStateBits(savedState);
@@ -8381,7 +8383,6 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     } else {
       if (aDesiredSize.BlockStartAscent() ==
           nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
-        WritingMode wm = aDesiredSize.GetWritingMode();
         if (!nsLayoutUtils::GetFirstLineBaseline(wm, this, &metrics->mAscent))
           metrics->mAscent = GetLogicalBaseline(wm);
       } else

@@ -2806,7 +2806,7 @@ nsTableFrame::SetupHeaderFooterChild(const nsTableReflowState& aReflowState,
   InitChildReflowState(kidReflowState);
   kidReflowState.mFlags.mIsTopOfPage = true;
   nsHTMLReflowMetrics desiredSize(aReflowState.reflowState);
-  desiredSize.Width() = desiredSize.Height() = 0;
+  desiredSize.ClearSize();
   nsReflowStatus status;
   ReflowChild(aFrame, presContext, desiredSize, kidReflowState,
               aReflowState.x, aReflowState.y, 0, status);
@@ -2839,7 +2839,7 @@ nsTableFrame::PlaceRepeatedFooter(nsTableReflowState& aReflowState,
           
   nsReflowStatus footerStatus;
   nsHTMLReflowMetrics desiredSize(aReflowState.reflowState);
-  desiredSize.Width() = desiredSize.Height() = 0;
+  desiredSize.ClearSize();
   ReflowChild(aTfoot, presContext, desiredSize, footerReflowState,
               aReflowState.x, aReflowState.y, 0, footerStatus);
   PlaceChild(aReflowState, aTfoot, desiredSize, origTfootRect,
@@ -2946,7 +2946,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
       nsRect oldKidVisualOverflow = kidFrame->GetVisualOverflowRect();
 
       nsHTMLReflowMetrics desiredSize(aReflowState.reflowState);
-      desiredSize.Width() = desiredSize.Height() = 0;
+      desiredSize.ClearSize();
 
       // Reflow the child into the available space
       nsHTMLReflowState kidReflowState(presContext, aReflowState.reflowState,
@@ -3220,19 +3220,16 @@ void ResizeCells(nsTableFrame& aTableFrame)
 {
   nsTableFrame::RowGroupArray rowGroups;
   aTableFrame.OrderRowGroups(rowGroups);
-  nsHTMLReflowMetrics tableDesiredSize(aTableFrame.GetWritingMode()); // ???
-  nsRect tableRect = aTableFrame.GetRect();
-  tableDesiredSize.Width() = tableRect.width;
-  tableDesiredSize.Height() = tableRect.height;
+  WritingMode wm = aTableFrame.GetWritingMode();
+  nsHTMLReflowMetrics tableDesiredSize(wm);
+  tableDesiredSize.SetSize(wm, aTableFrame.GetLogicalSize(wm));
   tableDesiredSize.SetOverflowAreasToDesiredBounds();
 
   for (uint32_t rgX = 0; rgX < rowGroups.Length(); rgX++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
 
-    nsRect rowGroupRect = rgFrame->GetRect();
-    nsHTMLReflowMetrics groupDesiredSize(tableDesiredSize.GetWritingMode());
-    groupDesiredSize.Width() = rowGroupRect.width;
-    groupDesiredSize.Height() = rowGroupRect.height;
+    nsHTMLReflowMetrics groupDesiredSize(wm);
+    groupDesiredSize.SetSize(wm, rgFrame->GetLogicalSize(wm));
     groupDesiredSize.SetOverflowAreasToDesiredBounds();
 
     nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();

@@ -437,13 +437,12 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
                               nsHTMLReflowMetrics& aMetrics)
 {
   // By default, we have no area
-  aMetrics.Width() = 0;
-  aMetrics.Height() = 0;
+  aMetrics.ClearSize();
 
   if (IsHidden(false)) {
     return;
   }
-  
+
   aMetrics.Width() = aReflowState.ComputedWidth();
   aMetrics.Height() = aReflowState.ComputedHeight();
 

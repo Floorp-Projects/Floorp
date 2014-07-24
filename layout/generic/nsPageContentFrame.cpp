@@ -98,11 +98,13 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(fixedStatus), "fixed frames can be truncated, but not incomplete");
 
   // Return our desired size
-  aDesiredSize.Width() = aReflowState.ComputedWidth();
-  if (aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE) {
-    aDesiredSize.Height() = aReflowState.ComputedHeight();
+  WritingMode wm = aReflowState.GetWritingMode();
+  LogicalSize finalSize(wm);
+  finalSize.ISize(wm) = aReflowState.ComputedISize();
+  if (aReflowState.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
+    finalSize.BSize(wm) = aReflowState.ComputedBSize();
   }
-
+  aDesiredSize.SetSize(wm, finalSize);
   FinishAndStoreOverflow(&aDesiredSize);
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);

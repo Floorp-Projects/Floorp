@@ -880,7 +880,7 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   uint8_t captionSide = GetCaptionSide();
 
   // Initialize out parameters
-  aDesiredSize.Width() = aDesiredSize.Height() = 0;
+  aDesiredSize.ClearSize();
   aStatus = NS_FRAME_COMPLETE;
 
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {

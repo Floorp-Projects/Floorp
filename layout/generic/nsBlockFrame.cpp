@@ -1251,6 +1251,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // resetting the size. Because of this, we must not reflow our abs-pos children
   // in that situation --- what we think is our "new size"
   // will not be our real new size. This also happens to be more efficient.
+  WritingMode parentWM = aMetrics.GetWritingMode();
   if (HasAbsolutelyPositionedChildren()) {
     nsAbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
     bool haveInterrupt = aPresContext->HasPendingInterrupt();
@@ -1268,7 +1269,6 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
         absoluteContainer->MarkSizeDependentFramesDirty();
       }
     } else {
-      WritingMode parentWM = aMetrics.GetWritingMode();
       LogicalSize containingBlockSize =
         CalculateContainingBlockSizeForAbsolutes(parentWM, *reflowState,
                                                  aMetrics.Size(parentWM));
@@ -1325,7 +1325,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     ListTag(stdout);
     printf(": status=%x (%scomplete) metrics=%d,%d carriedMargin=%d",
            aStatus, NS_FRAME_IS_COMPLETE(aStatus) ? "" : "not ",
-           aMetrics.Width(), aMetrics.Height(),
+           aMetrics.ISize(parentWM), aMetrics.BSize(parentWM),
            aMetrics.mCarriedOutBottomMargin.get());
     if (HasOverflowAreas()) {
       printf(" overflow-vis={%d,%d,%d,%d}",
@@ -5882,7 +5882,8 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   // we be doing this in nsBlockReflowState::FlowAndPlaceFloat after
   // we've positioned the float, and shouldn't we be doing the equivalent
   // of |PlaceFrameView| here?
-  aFloat->SetSize(nsSize(metrics.Width(), metrics.Height()));
+  WritingMode wm = metrics.GetWritingMode();
+  aFloat->SetSize(wm, metrics.Size(wm));
   if (aFloat->HasView()) {
     nsContainerFrame::SyncFrameViewAfterReflow(aState.mPresContext, aFloat,
                                                aFloat->GetView(),
