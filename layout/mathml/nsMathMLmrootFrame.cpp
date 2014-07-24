@@ -166,7 +166,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
 {
   nsReflowStatus childStatus;
 
-  aDesiredSize.Width() = aDesiredSize.Height() = 0;
+  aDesiredSize.ClearSize();
   aDesiredSize.SetBlockStartAscent(0);
 
   nsBoundingMetrics bmSqr, bmBase, bmIndex;

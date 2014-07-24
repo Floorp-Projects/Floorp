@@ -190,7 +190,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)
 {
-  aDesiredSize.Width() = aDesiredSize.Height() = 0;
+  aDesiredSize.ClearSize();
   aDesiredSize.SetBlockStartAscent(0);
   aDesiredSize.mBoundingMetrics = nsBoundingMetrics();
 

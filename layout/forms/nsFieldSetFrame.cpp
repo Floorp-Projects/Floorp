@@ -404,7 +404,8 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     ReflowChild(legend, aPresContext, legendDesiredSize, legendReflowState.ref(),
                 0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
 #ifdef NOISY_REFLOW
-    printf("  returned (%d, %d)\n", legendDesiredSize.Width(), legendDesiredSize.Height());
+    printf("  returned (%d, %d)\n",
+           legendDesiredSize.Width(), legendDesiredSize.Height());
 #endif
     // figure out the legend's rectangle
     legendMargin = legend->GetUsedMargin();
@@ -535,9 +536,11 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // Return our size and our result.
-  aDesiredSize.Height() = mLegendSpace + border.TopBottom() +
-                          (inner ? inner->GetRect().height : 0);
-  aDesiredSize.Width() = physicalContentRect.width + border.LeftRight();
+  WritingMode wm = aReflowState.GetWritingMode();
+  nsSize finalSize(physicalContentRect.width + border.LeftRight(),
+                   mLegendSpace + border.TopBottom() +
+                   (inner ? inner->GetRect().height : 0));
+  aDesiredSize.SetSize(wm, LogicalSize(wm, finalSize));
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   if (legend)
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, legend);

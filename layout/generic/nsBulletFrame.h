@@ -48,6 +48,8 @@ public:
 
   nsBulletFrame(nsStyleContext* aContext)
     : nsFrame(aContext)
+    , mPadding(GetWritingMode())
+    , mIntrinsicSize(GetWritingMode())
   {
   }
   virtual ~nsBulletFrame();
@@ -110,11 +112,11 @@ protected:
 
   void GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGroup);
 
-  nsMargin mPadding;
+  mozilla::LogicalMargin mPadding;
   nsRefPtr<imgRequestProxy> mImageRequest;
   nsRefPtr<nsBulletListener> mListener;
 
-  nsSize mIntrinsicSize;
+  mozilla::LogicalSize mIntrinsicSize;
   int32_t mOrdinal;
 
 private:

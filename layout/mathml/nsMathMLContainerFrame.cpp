@@ -969,7 +969,7 @@ nsMathMLContainerFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
   // Include the additional width added by FixInterFrameSpacing to ensure
   // consistent width calculations.
   AddInterFrameSpacingToSize(desiredSize, this);
-  result = desiredSize.Width();
+  result = desiredSize.ISize(GetWritingMode());
   return result;
 }
 
@@ -984,7 +984,7 @@ nsMathMLContainerFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   // Include the additional width added by FixInterFrameSpacing to ensure
   // consistent width calculations.
   AddInterFrameSpacingToSize(desiredSize, this);
-  result = desiredSize.Width();
+  result = desiredSize.ISize(GetWritingMode());
   return result;
 }
 
