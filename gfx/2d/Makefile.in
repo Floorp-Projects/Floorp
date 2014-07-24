@@ -1,11 +1,6 @@
-#
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gtk3 gonk qt))
-OS_CXXFLAGS += $(CAIRO_FT_CFLAGS)
-endif
 
 include $(topsrcdir)/config/rules.mk
 
@@ -13,5 +8,3 @@ include $(topsrcdir)/config/rules.mk
 # macros changes the type of LOGFONT to LOGFONTW instead of LOGFONTA. This
 # changes the symbol names of exported C++ functions that use LOGFONT.
 DEFINES := $(filter-out -DUNICODE -D_UNICODE,$(DEFINES))
-
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS)

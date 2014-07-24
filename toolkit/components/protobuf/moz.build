@@ -57,3 +57,5 @@ elif CONFIG['_MSC_VER']:
     CXXFLAGS += [
         '-wd4099', # mismatched class/struct tags
     ]
+
+CXXFLAGS += CONFIG['TK_CFLAGS']

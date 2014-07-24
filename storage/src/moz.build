@@ -69,3 +69,5 @@ LOCAL_INCLUDES += [
     '/db/sqlite3/src',
     '/dom/base',
 ]
+
+CXXFLAGS += CONFIG['SQLITE_CFLAGS']

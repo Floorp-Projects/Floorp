@@ -12,10 +12,6 @@ PROGRAMS_DEST = $(DIST)/bin
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += \
-	$(TK_CFLAGS) \
-	$(NULL)
-
 GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
 DEFINES += -DGRE_BUILDID=$(GRE_BUILDID)
 

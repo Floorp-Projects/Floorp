@@ -36,3 +36,5 @@ LOCAL_INCLUDES += [
     '/content/html/content/src',
 ]
 
+CFLAGS += CONFIG['GSTREAMER_CFLAGS']
+CXXFLAGS += CONFIG['GSTREAMER_CFLAGS']

@@ -10,24 +10,5 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES := $(filter-out -DUNICODE,$(DEFINES))
 
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
-CFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-CXXFLAGS += $(CAIRO_FT_CFLAGS)
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-CXXFLAGS += $(CAIRO_FT_CFLAGS)
-endif
-
-ifdef MOZ_WIDGET_GTK
-CXXFLAGS += $(MOZ_PANGO_CFLAGS)
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-CXXFLAGS += $(CAIRO_FT_CFLAGS) $(MOZ_PANGO_CFLAGS)
-endif
-
 DeprecatedPremultiplyTables.h: $(srcdir)/genTables.py
 	$(PYTHON) $(srcdir)/genTables.py

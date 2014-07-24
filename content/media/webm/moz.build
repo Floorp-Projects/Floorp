@@ -21,6 +21,8 @@ if CONFIG['MOZ_WEBM_ENCODER']:
                         'WebMWriter.cpp',
     ]
 
+CXXFLAGS += CONFIG['MOZ_LIBVPX_CFLAGS']
+
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'

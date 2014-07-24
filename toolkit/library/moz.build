@@ -87,3 +87,6 @@ if CONFIG['MOZ_JPROF']:
 
 # This needs to be last
 USE_LIBS += ['StaticXULComponentsEnd']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    CXXFLAGS += CONFIG['TK_CFLAGS']

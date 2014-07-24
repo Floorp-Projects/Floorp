@@ -123,3 +123,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 DEFINES['SK_BUILD_FOR_ANDROID_NDK'] = True
 
 FINAL_LIBRARY = 'xul'
+
+CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+CXXFLAGS += CONFIG['TK_CFLAGS']

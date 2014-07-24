@@ -47,3 +47,5 @@ EXTRA_COMPONENTS += [
 
 for var in ('MOZ_APP_NAME', 'MOZ_APP_VERSION'):
     DEFINES[var] = '"%s"' % CONFIG[var]
+
+CXXFLAGS += CONFIG['TK_CFLAGS']
