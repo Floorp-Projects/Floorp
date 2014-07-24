@@ -3,13 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nspr.h"
 
-#include "pk11func.h"
-#include "nsNSSComponent.h"
-#include "nsSmartCardMonitor.h"
-#include "nsServiceManagerUtils.h"
+#include "mozilla/dom/SmartCardEvent.h"
 #include "mozilla/unused.h"
+#include "nsIDOMCryptoLegacy.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMWindowCollection.h"
+#include "nsISimpleEnumerator.h"
+#include "nsIWindowWatcher.h"
+#include "nsServiceManagerUtils.h"
+#include "nsSmartCardMonitor.h"
+#include "pk11func.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 //
 // The SmartCard monitoring thread should start up for each module we load
@@ -26,6 +33,135 @@ using namespace mozilla;
 // javascript).
 //
 
+//This class is used to run the callback code
+//passed to the event handlers for smart card notification
+class nsTokenEventRunnable : public nsIRunnable {
+public:
+  nsTokenEventRunnable(const nsAString& aType, const nsAString& aTokenName);
+
+  NS_IMETHOD Run ();
+  NS_DECL_THREADSAFE_ISUPPORTS
+protected:
+  virtual ~nsTokenEventRunnable();
+private:
+  nsresult DispatchEventToWindow(nsIDOMWindow* domWin);
+
+  nsString mType;
+  nsString mTokenName;
+};
+
+// ISuuports implementation for nsTokenEventRunnable
+NS_IMPL_ISUPPORTS(nsTokenEventRunnable, nsIRunnable)
+
+nsTokenEventRunnable::nsTokenEventRunnable(const nsAString& aType,
+                                           const nsAString& aTokenName)
+  : mType(aType)
+  , mTokenName(aTokenName)
+{
+}
+
+nsTokenEventRunnable::~nsTokenEventRunnable() { }
+
+//Implementation that runs the callback passed to
+//crypto.generateCRMFRequest as an event.
+NS_IMETHODIMP
+nsTokenEventRunnable::Run()
+{
+  // 'Dispatch' the event to all the windows. 'DispatchEventToWindow()' will
+  // first check to see if a given window has requested crypto events.
+  nsresult rv;
+  nsCOMPtr<nsIWindowWatcher> windowWatcher =
+                            do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  rv = windowWatcher->GetWindowEnumerator(getter_AddRefs(enumerator));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  bool hasMoreWindows;
+
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreWindows))
+         && hasMoreWindows) {
+    nsCOMPtr<nsISupports> supports;
+    enumerator->GetNext(getter_AddRefs(supports));
+    nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(supports));
+    if (domWin) {
+      nsresult rv2 = DispatchEventToWindow(domWin);
+      if (NS_FAILED(rv2)) {
+        // return the last failure, don't let a single failure prevent
+        // continued delivery of events.
+        rv = rv2;
+      }
+    }
+  }
+  return rv;
+}
+
+nsresult
+nsTokenEventRunnable::DispatchEventToWindow(nsIDOMWindow* domWin)
+{
+  if (!domWin) {
+    return NS_OK;
+  }
+
+  // first walk the children and dispatch their events
+  nsresult rv;
+  nsCOMPtr<nsIDOMWindowCollection> frames;
+  rv = domWin->GetFrames(getter_AddRefs(frames));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  uint32_t length;
+  frames->GetLength(&length);
+  uint32_t i;
+  for (i = 0; i < length; i++) {
+    nsCOMPtr<nsIDOMWindow> childWin;
+    frames->Item(i, getter_AddRefs(childWin));
+    DispatchEventToWindow(childWin);
+  }
+
+  // check if we've enabled smart card events on this window
+  // NOTE: it's not an error to say that we aren't going to dispatch
+  // the event.
+  nsCOMPtr<nsIDOMCrypto> crypto;
+  domWin->GetCrypto(getter_AddRefs(crypto));
+  if (!crypto) {
+    return NS_OK; // nope, it doesn't have a crypto property
+  }
+
+  bool boolrv;
+  crypto->GetEnableSmartCardEvents(&boolrv);
+  if (!boolrv) {
+    return NS_OK; // nope, it's not enabled.
+  }
+
+  // dispatch the event ...
+
+  // find the document
+  nsCOMPtr<nsIDOMDocument> doc;
+  rv = domWin->GetDocument(getter_AddRefs(doc));
+  if (!doc) {
+    return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<EventTarget> d = do_QueryInterface(doc);
+
+  SmartCardEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = true;
+  init.mTokenName = mTokenName;
+
+  nsRefPtr<SmartCardEvent> event = SmartCardEvent::Constructor(d, mType, init);
+  event->SetTrusted(true);
+
+  return d->DispatchEvent(event, &boolrv);
+}
 
 // self linking and removing double linked entry
 // adopts the thread it is passed.
@@ -234,17 +370,10 @@ nsresult
 SmartCardMonitoringThread::SendEvent(const nsAString &eventType,
                                      const char *tokenName)
 {
-  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+  nsCOMPtr<nsIRunnable> runnable =
+                               new nsTokenEventRunnable(eventType, NS_ConvertUTF8toUTF16(tokenName));
 
-  nsresult rv;
-  nsCOMPtr<nsINSSComponent> 
-                    nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  // NSS returns actual UTF8, not ASCII
-  nssComponent->PostEvent(eventType, NS_ConvertUTF8toUTF16(tokenName));
-  return NS_OK;
+  return NS_DispatchToMainThread(runnable);
 }
 
 //
