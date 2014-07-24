@@ -517,18 +517,20 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
              columnCount, (void*)child, skipIncremental, skipResizeHeightShrink, aStatus);
 #endif
     } else {
-      nsSize availSize(aConfig.mColWidth, aConfig.mColMaxHeight);
-      
+      nsSize physicalSize(aConfig.mColWidth, aConfig.mColMaxHeight);
+
       if (aUnboundedLastColumn && columnCount == aConfig.mBalanceColCount - 1) {
-        availSize.height = GetAvailableContentHeight(aReflowState);
+        physicalSize.height = GetAvailableContentHeight(aReflowState);
       }
+      LogicalSize availSize(wm, physicalSize);
+      LogicalSize computedSize = aReflowState.ComputedSize(wm);
 
       if (reflowNext)
         child->AddStateBits(NS_FRAME_IS_DIRTY);
 
       nsHTMLReflowState kidReflowState(PresContext(), aReflowState, child,
-                                       availSize, availSize.width,
-                                       aReflowState.ComputedHeight());
+                                       availSize, availSize.ISize(wm),
+                                       computedSize.BSize(wm));
       kidReflowState.mFlags.mIsTopOfPage = true;
       kidReflowState.mFlags.mTableIsSplittable = false;
       kidReflowState.mFlags.mIsColumnBalancing = aConfig.mBalanceColCount < INT32_MAX;
@@ -539,7 +541,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 
 #ifdef DEBUG_roc
       printf("*** Reflowing child #%d %p: availHeight=%d\n",
-             columnCount, (void*)child,availSize.height);
+             columnCount, (void*)child,availSize.BSize(wm));
 #endif
 
       // Note if the column's next in flow is not being changed by this incremental reflow.
@@ -549,7 +551,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
         !(child->GetNextSibling()->GetStateBits() & NS_FRAME_IS_DIRTY)) {
         kidReflowState.mFlags.mNextInFlowUntouched = true;
       }
-    
+
       nsHTMLReflowMetrics kidDesiredSize(wm, aDesiredSize.mFlags);
 
       // XXX it would be cool to consult the float manager for the
@@ -584,7 +586,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       if (childContentBEnd > aConfig.mColMaxHeight) {
         allFit = false;
       }
-      if (childContentBEnd > availSize.height) {
+      if (childContentBEnd > availSize.BSize(wm)) {
         aColData.mMaxOverflowingHeight = std::max(childContentBEnd,
             aColData.mMaxOverflowingHeight);
       }

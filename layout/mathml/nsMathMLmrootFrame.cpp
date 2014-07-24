@@ -8,6 +8,8 @@
 #include "nsRenderingContext.h"
 #include <algorithm>
 
+using namespace mozilla;
+
 //
 // <mroot> -- form a radical - implementation
 //
@@ -162,7 +164,6 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
-  nsSize availSize(aReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);
   nsReflowStatus childStatus;
 
   aDesiredSize.Width() = aDesiredSize.Height() = 0;
@@ -185,6 +186,9 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
     nsHTMLReflowMetrics childDesiredSize(aReflowState,
                                          aDesiredSize.mFlags
                                          | NS_REFLOW_CALC_BOUNDING_METRICS);
+    WritingMode wm = childFrame->GetWritingMode();
+    LogicalSize availSize = aReflowState.ComputedSize(wm);
+    availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize);
     ReflowChild(childFrame, aPresContext,

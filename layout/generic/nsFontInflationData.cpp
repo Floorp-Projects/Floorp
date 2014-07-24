@@ -155,8 +155,10 @@ ComputeDescendantWidth(const nsHTMLReflowState& aAncestorReflowState,
   for (uint32_t i = 0; i < len; ++i) {
     const nsHTMLReflowState &parentReflowState =
       (i == 0) ? aAncestorReflowState : reflowStates[i - 1];
-    nsSize availSize(parentReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);
     nsIFrame *frame = frames[len - i - 1];
+    WritingMode wm = frame->GetWritingMode();
+    LogicalSize availSize = parentReflowState.ComputedSize(wm);
+    availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
     NS_ABORT_IF_FALSE(frame->GetParent()->FirstInFlow() ==
                         parentReflowState.frame->FirstInFlow(),
                       "bad logic in this function");

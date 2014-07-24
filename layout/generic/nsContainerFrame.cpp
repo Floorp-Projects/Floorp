@@ -1113,7 +1113,9 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
       nsRect prevRect = prevInFlow->GetRect();
 
       // Initialize reflow params
-      nsSize availSpace(prevRect.width, aReflowState.AvailableHeight());
+      WritingMode wm = frame->GetWritingMode();
+      LogicalSize availSpace(wm, LogicalSize(wm, prevRect.Size()).ISize(wm),
+                             aReflowState.AvailableSize(wm).BSize(wm));
       nsHTMLReflowMetrics desiredSize(aReflowState);
       nsHTMLReflowState frameState(aPresContext, aReflowState,
                                    frame, availSpace);

@@ -137,10 +137,12 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
 
     nsHTMLReflowMetrics wrappersDesiredSize(aReflowState);
 
+    WritingMode wm = outerWrapperFrame->GetWritingMode();
+    LogicalSize availSize = aReflowState.ComputedSize(wm);
+    availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
+
     nsHTMLReflowState wrapperReflowState(aPresContext, aReflowState,
-                                         outerWrapperFrame,
-                                         nsSize(contentBoxWidth,
-                                                NS_UNCONSTRAINEDSIZE));
+                                         outerWrapperFrame, availSize);
 
     // offsets of wrapper frame
     nscoord xoffset = aReflowState.ComputedPhysicalBorderPadding().left +

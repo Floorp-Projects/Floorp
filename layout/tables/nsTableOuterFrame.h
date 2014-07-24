@@ -250,7 +250,7 @@ protected:
                              nsIFrame*                aChildFrame,
                              const nsHTMLReflowState& aOuterRS,
                              void*                    aChildRSSpace,
-                             nscoord                  aAvailWidth);
+                             nscoord                  aAvailISize);
 
   void OuterDoReflowChild(nsPresContext*           aPresContext,
                           nsIFrame*                aChildFrame,
@@ -270,7 +270,7 @@ protected:
                       const nsHTMLReflowState& aOuterRS,
                       nsIFrame*                aChildFrame,
                       nscoord                  aAvailableWidth,
-                      nsMargin&                aMargin);
+                      mozilla::LogicalMargin&  aMargin);
 
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {

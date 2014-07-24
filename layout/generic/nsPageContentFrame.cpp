@@ -9,6 +9,9 @@
 #include "nsIPresShell.h"
 #include "nsSimplePageSequenceFrame.h"
 
+using mozilla::LogicalSize;
+using mozilla::WritingMode;
+
 nsPageContentFrame*
 NS_NewPageContentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -47,8 +50,11 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   // XXX Pay attention to the page's border and padding...
   if (mFrames.NotEmpty()) {
     nsIFrame* frame = mFrames.FirstChild();
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
-    kidReflowState.SetComputedHeight(maxSize.height);
+    WritingMode wm = frame->GetWritingMode();
+    LogicalSize logicalSize(wm, maxSize);
+    nsHTMLReflowState kidReflowState(aPresContext, aReflowState,
+                                     frame, logicalSize);
+    kidReflowState.SetComputedBSize(logicalSize.BSize(wm));
 
     // Reflow the page content area
     ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, 0, 0, 0, aStatus);

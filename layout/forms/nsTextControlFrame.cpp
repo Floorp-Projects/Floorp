@@ -521,12 +521,13 @@ nsTextControlFrame::ReflowTextControlChild(nsIFrame*                aKid,
                                            nsHTMLReflowMetrics& aParentDesiredSize)
 {
   // compute available size and frame offsets for child
-  nsSize availSize(aReflowState.ComputedWidth() +
-                   aReflowState.ComputedPhysicalPadding().LeftRight(),
-                   NS_UNCONSTRAINEDSIZE);
+  WritingMode wm = aKid->GetWritingMode();
+  LogicalSize availSize = aReflowState.ComputedSizeWithPadding(wm);
+  availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
 
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, 
-                                   aKid, availSize, -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
+                                   aKid, availSize, -1, -1,
+                                   nsHTMLReflowState::CALLER_WILL_INIT);
   // Override padding with our computed padding in case we got it from theming or percentage
   kidReflowState.Init(aPresContext, -1, -1, nullptr, &aReflowState.ComputedPhysicalPadding());
 
