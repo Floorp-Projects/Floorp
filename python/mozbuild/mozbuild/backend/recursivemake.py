@@ -1180,15 +1180,11 @@ class RecursiveMakeBackend(CommonBackend):
                     backend_file.write_once('LIBS += %s/%s\n'
                                        % (relpath, lib.lib_name))
                     for l in recurse_lib(lib):
-                        backend_file.write_once('LIBS += %s/%s\n'
+                        backend_file.write_once('EXTRA_LIBS += %s/%s\n'
                                         % (pretty_relpath(l), l.import_name))
-                elif isinstance(obj, SharedLibrary):
-                    assert lib.variant != lib.COMPONENT
-                    backend_file.write_once('EXTRA_DSO_LDOPTS += %s/%s\n'
-                                       % (relpath, lib.import_name))
                 else:
                     assert lib.variant != lib.COMPONENT
-                    backend_file.write_once('LIBS += %s/%s\n'
+                    backend_file.write_once('EXTRA_LIBS += %s/%s\n'
                                        % (relpath, lib.import_name))
             elif isinstance(obj, (HostLibrary, HostProgram, HostSimpleProgram)):
                 assert isinstance(lib, HostLibrary)
