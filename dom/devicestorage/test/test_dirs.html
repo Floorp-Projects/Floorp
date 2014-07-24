@@ -50,7 +50,7 @@ SpecialPowers.pushPrefEnv({
   // Need special permission to access "apps". We always have the permission in B2G
   // mochitests, but on other platforms, we need to manually add the permission.
   if (!SpecialPowers.testPermission(
-      "webapps-manage", Ci.nsIPermissionManager.ALLOW_ACTION, document)) {
+      "webapps-manage", SpecialPowers.Ci.nsIPermissionManager.ALLOW_ACTION, document)) {
     ok(!navigator.getDeviceStorage("apps"), "Should not have apps storage without permission");
     SpecialPowers.addPermission("webapps-manage", true, document);
   }
