@@ -3890,6 +3890,9 @@ bool
 nsDisplayScrollLayer::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                         nsRegion* aVisibleRegion)
 {
+  if (aBuilder->IsForPluginGeometry()) {
+    return nsDisplayWrapList::ComputeVisibility(aBuilder, aVisibleRegion);
+  }
   nsRect displayport;
   bool usingDisplayPort =
     nsLayoutUtils::GetDisplayPort(mScrolledFrame->GetContent(), &displayport);
