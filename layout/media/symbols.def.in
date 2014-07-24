@@ -139,6 +139,7 @@ cubeb_stream_set_volume
 cubeb_stream_set_panning
 cubeb_stream_get_current_output_device
 cubeb_stream_output_device_destroy
+cubeb_stream_register_device_changed_callback
 th_comment_clear
 th_comment_init
 th_decode_alloc
