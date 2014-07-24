@@ -8,6 +8,7 @@ let gSubDialog = {
   _closingCallback: null,
   _frame: null,
   _overlay: null,
+  _box: null,
   _injectedStyleSheets: ["chrome://mozapps/content/preferences/preferences.css",
                          "chrome://browser/skin/preferences/preferences.css",
                          "chrome://browser/skin/preferences/in-content/preferences.css"],
@@ -15,6 +16,7 @@ let gSubDialog = {
   init: function() {
     this._frame = document.getElementById("dialogFrame");
     this._overlay = document.getElementById("dialogOverlay");
+    this._box = document.getElementById("dialogBox");
 
     // Make the close button work.
     let dialogClose = document.getElementById("dialogClose");
@@ -64,6 +66,10 @@ let gSubDialog = {
     if (aClosingCallback) {
       this._closingCallback = aClosingCallback.bind(dialog);
     }
+    let featureParams = new URLSearchParams(features.toLowerCase());
+    this._box.setAttribute("resizable", featureParams.has("resizable") &&
+                                        featureParams.get("resizable") != "no" &&
+                                        featureParams.get("resizable") != 0);
     return dialog;
   },
 
