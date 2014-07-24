@@ -80,7 +80,9 @@
         <item name="android:background">@drawable/ab_stacked_transparent_light_holo</item>
     </style>
 
-    <style name="GeckoActionBar.Title" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
+    <style name="TextAppearance.Widget.ActionBar.Title" parent="@android:style/TextAppearance.Medium"/>
+
+    <style name="GeckoActionBar.Title" parent="TextAppearance.Widget.ActionBar.Title">
         <item name="android:drawableLeft">@drawable/ab_done</item>
         <item name="android:background">@android:color/transparent</item>
         <item name="android:paddingLeft">15dp</item>
