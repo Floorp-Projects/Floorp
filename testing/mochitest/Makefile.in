@@ -17,7 +17,6 @@ SERV_FILES = 	\
 		automation.py \
 		runtestsb2g.py \
 		runtestsremote.py \
-		runtestsvmware.py \
 		mochitest_options.py \
 		manifest.webapp \
 		$(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanager.py \

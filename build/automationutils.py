@@ -4,13 +4,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import with_statement
-import glob, logging, os, platform, shutil, subprocess, sys, tempfile, urllib2, zipfile
-import base64
-import re
-import os
-from urlparse import urlparse
+import logging
 from operator import itemgetter
+import os
+import platform
+import re
 import signal
+import subprocess
+import sys
+import tempfile
+from urlparse import urlparse
+import zipfile
 
 try:
   import mozinfo
@@ -557,7 +561,6 @@ def environment(xrePath, env=None, crashreporter=True, debugger=False, dmdPath=N
 def dumpScreen(utilityPath):
   """dumps a screenshot of the entire screen to a directory specified by
   the MOZ_UPLOAD_DIR environment variable"""
-  import mozfile
 
   # Need to figure out which OS-dependent tool to use
   if mozinfo.isUnix:
