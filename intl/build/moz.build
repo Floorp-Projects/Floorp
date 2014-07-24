@@ -11,7 +11,7 @@ SOURCES += [
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../locale',
-    '../lwbrk/src',
+    '../lwbrk',
     '../strres/src',
     '../uconv/src',
     '../unicharutil/src',
