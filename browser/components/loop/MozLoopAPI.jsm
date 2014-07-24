@@ -33,7 +33,6 @@ function injectLoopAPI(targetWindow) {
      */
     doNotDisturb: {
       enumerable: true,
-      configurable: true,
       get: function() {
         return MozLoopService.doNotDisturb;
       },
@@ -49,7 +48,6 @@ function injectLoopAPI(targetWindow) {
      */
     locale: {
       enumerable: true,
-      configurable: true,
       get: function() {
         return MozLoopService.locale;
       }
@@ -65,7 +63,6 @@ function injectLoopAPI(targetWindow) {
      */
     getStrings: {
       enumerable: true,
-      configurable: true,
       writable: true,
       value: function(key) {
         return MozLoopService.getStrings(key);
@@ -85,7 +82,6 @@ function injectLoopAPI(targetWindow) {
      */
     ensureRegistered: {
       enumerable: true,
-      configurable: true,
       writable: true,
       value: function(callback) {
         // We translate from a promise to a callback, as we can't pass promises from
@@ -112,7 +108,6 @@ function injectLoopAPI(targetWindow) {
      */
     noteCallUrlExpiry: {
       enumerable: true,
-      configurable: true,
       writable: true,
       value: function(expiryTimeSeconds) {
         MozLoopService.noteCallUrlExpiry(expiryTimeSeconds);
@@ -130,7 +125,6 @@ function injectLoopAPI(targetWindow) {
      */
     setLoopCharPref: {
       enumerable: true,
-      configurable: true,
       writable: true,
       value: function(prefName, value) {
         MozLoopService.setLoopCharPref(prefName, value);
@@ -152,7 +146,6 @@ function injectLoopAPI(targetWindow) {
      */
     getLoopCharPref: {
       enumerable: true,
-      configurable: true,
       writable: true,
       value: function(prefName) {
         return MozLoopService.getLoopCharPref(prefName);
@@ -164,7 +157,6 @@ function injectLoopAPI(targetWindow) {
      */
     startAlerting: {
       enumerable: true,
-      configurable: true,
       writable: true,
       value: function() {
         let chromeWindow = getChromeWindow(targetWindow);
@@ -188,7 +180,6 @@ function injectLoopAPI(targetWindow) {
      */
     stopAlerting: {
       enumerable: true,
-      configurable: true,
       writable: true,
       value: function() {
         if (ringerStopper) {
@@ -224,7 +215,6 @@ function injectLoopAPI(targetWindow) {
      */
     hawkRequest: {
       enumerable: true,
-      configurable: true,
       writable: true,
       value: function(path, method, payloadObj, callback) {
         // XXX Should really return a DOM promise here.
@@ -239,6 +229,7 @@ function injectLoopAPI(targetWindow) {
 
   let contentObj = Cu.createObjectIn(targetWindow);
   Object.defineProperties(contentObj, api);
+  Object.seal(contentObj);
   Cu.makeObjectPropsNormal(contentObj);
 
   targetWindow.navigator.wrappedJSObject.__defineGetter__("mozLoop", function() {
