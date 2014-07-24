@@ -2135,3 +2135,14 @@ nsresult AndroidBridge::InputStreamRead(jobject obj, char *aBuf, uint32_t aCount
     *aRead = read;
     return NS_OK;
 }
+
+nsresult AndroidBridge::GetExternalPublicDirectory(const nsAString& aType, nsAString& aPath) {
+    AutoLocalJNIFrame frame(1);
+    const jstring path = GeckoAppShell::GetExternalPublicDirectory(aType);
+    if (!path) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+    nsJNIString pathStr(path, frame.GetEnv());
+    aPath.Assign(pathStr);
+    return NS_OK;
+}
