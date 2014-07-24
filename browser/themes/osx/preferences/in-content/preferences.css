@@ -18,6 +18,12 @@ tab[selected] {
   text-shadow: none;
 }
 
+button,
+colorpicker[type="button"],
+menulist {
+  margin-top: 3px;
+}
+
 menulist:not([editable="true"]) > menupopup > menuitem[checked="true"]::before,
 menulist:not([editable="true"]) > menupopup > menuitem[selected="true"]::before {
   display: none;
@@ -85,6 +91,22 @@ spinbuttons {
 description {
   font-size: 1.25rem;
   line-height: 22px;
+}
+
+#downloadFolder > .fileFieldContentBox {
+  -moz-padding-start: 3px;
+}
+
+textbox + button {
+  -moz-margin-start: -4px;
+}
+
+filefield + button {
+  -moz-margin-start: -8px;
+}
+
+#dialogTitle {
+  -moz-margin-start: 6px !important;
 }
 
 #popupPolicyRow {

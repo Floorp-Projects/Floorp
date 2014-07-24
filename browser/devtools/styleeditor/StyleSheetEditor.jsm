@@ -33,6 +33,9 @@ const UPDATE_STYLESHEET_THROTTLE_DELAY = 500;
 // Pref which decides if CSS autocompletion is enabled in Style Editor or not.
 const AUTOCOMPLETION_PREF = "devtools.styleeditor.autocompletion-enabled";
 
+// Pref which decides whether updates to the stylesheet use transitions
+const TRANSITION_PREF = "devtools.styleeditor.transitions";
+
 // How long to wait to update linked CSS file after original source was saved
 // to disk. Time in ms.
 const CHECK_LINKED_SHEET_DELAY=500;
@@ -461,7 +464,9 @@ StyleSheetEditor.prototype = {
       this._state.text = this.sourceEditor.getText();
     }
 
-    this.styleSheet.update(this._state.text, true);
+    let transitionsEnabled = Services.prefs.getBoolPref(TRANSITION_PREF);
+
+    this.styleSheet.update(this._state.text, transitionsEnabled);
   },
 
   /**
