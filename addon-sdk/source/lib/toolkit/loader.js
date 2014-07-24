@@ -42,9 +42,6 @@ const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const { Reflect } = Cu.import("resource://gre/modules/reflect.jsm", {});
 const { ConsoleAPI } = Cu.import("resource://gre/modules/devtools/Console.jsm");
 const { join: pathJoin, normalize, dirname } = Cu.import("resource://gre/modules/osfile/ospath_unix.jsm");
-const {
-  incompatibility
-} = Cu.import("resource://gre/modules/sdk/system/XulApp.js", {}).XulApp;
 
 // Define some shortcuts.
 const bind = Function.call.bind(Function.bind);
@@ -350,12 +347,6 @@ const load = iced(function load(loader, module) {
       stack: { value: serializeStack(frames), writable: true, configurable: true },
       toString: { value: function() toString, writable: true, configurable: true },
     });
-  }
-
-  let (error = incompatibility(module)) {
-    if (error) {
-      throw error;
-    }
   }
 
   if (module.exports && typeof(module.exports) === 'object')
