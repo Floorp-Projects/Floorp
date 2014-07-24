@@ -9,15 +9,13 @@
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/TimeStamp.h"
 #include "js/TypeDecls.h"
 #include "nsIDocument.h"
 
 struct JSContext;
 
 namespace mozilla {
-
-class TimeStamp;
-
 namespace dom {
 
 class AnimationTimeline MOZ_FINAL : public nsWrapperCache
@@ -44,6 +42,11 @@ protected:
   virtual ~AnimationTimeline() { }
 
   nsCOMPtr<nsIDocument> mDocument;
+
+  // Store the most recently returned value of current time. This is used
+  // in cases where we don't have a refresh driver (e.g. because we are in
+  // a display:none iframe).
+  mutable mozilla::TimeStamp mLastCurrentTime;
 };
 
 } // namespace dom
