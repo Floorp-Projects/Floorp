@@ -20,6 +20,9 @@ namespace jit {
 class MIRGenerator;
 class MIRGraph;
 
+void
+FoldTests(MIRGraph &graph);
+
 bool
 SplitCriticalEdges(MIRGraph &graph);
 
