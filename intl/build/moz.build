@@ -13,7 +13,7 @@ LOCAL_INCLUDES += [
     '../locale',
     '../lwbrk',
     '../strres',
-    '../uconv/src',
+    '../uconv',
     '../unicharutil/src',
 ]
 
