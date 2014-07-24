@@ -213,9 +213,12 @@ public final class GeckoLoader {
 
         // Disable on-demand decompression of the linker on devices where it
         // is known to cause crashes.
-        if ("HTC".equals(android.os.Build.MANUFACTURER) &&
-            "HTC Vision".equals(android.os.Build.MODEL)) {
-            putenv("MOZ_LINKER_ONDEMAND=0");
+        String forced_ondemand = System.getenv("MOZ_LINKER_ONDEMAND");
+        if (forced_ondemand == null) {
+            if ("HTC".equals(android.os.Build.MANUFACTURER) &&
+                "HTC Vision".equals(android.os.Build.MODEL)) {
+                putenv("MOZ_LINKER_ONDEMAND=0");
+            }
         }
 
 #ifdef MOZ_LINKER_EXTRACT
