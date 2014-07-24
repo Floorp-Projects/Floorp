@@ -3,20 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gonk))
-OS_CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(CAIRO_FT_CFLAGS)
-endif
-
-ifdef MOZ_WIDGET_GTK
-OS_CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PANGO_CFLAGS) $(CAIRO_FT_CFLAGS)
-endif
-
-ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
-OS_CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PANGO_CFLAGS) $(CAIRO_FT_CFLAGS)
-endif
-
-include $(topsrcdir)/config/rules.mk
-
 ifeq ($(CPU_ARCH)_$(GNU_CC),arm_1)
 # The assembly uses the frame pointer register (r7 in Thumb/r11 in
 # ARM), the compiler doesn't like that.

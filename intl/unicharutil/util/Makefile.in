@@ -8,9 +8,3 @@
 # unicharutil_s which is built in the internal/ subdirectory.
 
 DIST_INSTALL = 1
-
-include $(topsrcdir)/config/rules.mk
-
-ifdef ENABLE_INTL_API
-LOCAL_INCLUDES += $(MOZ_ICU_CFLAGS)
-endif

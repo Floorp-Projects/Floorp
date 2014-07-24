@@ -8,19 +8,6 @@ MODULE_OPTIMIZE_FLAGS = -O2
 endif
 endif
 
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-OS_INCLUDES += $(MOZ_QT_CFLAGS)
-endif
-
-ifdef MOZ_X11
-OS_INCLUDES += $(XCFLAGS)
-endif
-
-ifdef MOZ_ENABLE_CAIRO_FT
-OS_INCLUDES += $(CAIRO_FT_CFLAGS)
-endif
-
 INSTALL_TARGETS += cairo_features
 cairo_features_FILES := cairo-features.h
 cairo_features_DEST = $(DIST)/include/cairo

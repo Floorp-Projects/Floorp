@@ -38,3 +38,6 @@ if CONFIG['_MSC_VER']:
     # Don't include directives about which CRT to use
     CFLAGS += ['-Zl']
     CXXFLAGS += ['-Zl']
+
+if CONFIG['ENABLE_INTL_API']:
+    CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']

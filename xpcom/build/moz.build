@@ -97,3 +97,6 @@ if CONFIG['MOZ_VPX']:
     LOCAL_INCLUDES += [
         '/media/libvpx',
     ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    CXXFLAGS += CONFIG['TK_CFLAGS']
