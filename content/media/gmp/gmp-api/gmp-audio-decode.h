@@ -35,6 +35,10 @@ public:
   virtual void DrainComplete() = 0;
 
   virtual void ResetComplete() = 0;
+
+  // Called when the decoder encounters a catestrophic error and cannot
+  // continue. Gecko will not send any more input for decoding.
+  virtual void Error(GMPErr aError) = 0;
 };
 
 // ALL METHODS MUST BE CALLED ON THE MAIN THREAD
@@ -46,24 +50,24 @@ public:
   // aCallback: Subclass should retain reference to it until DecodingComplete
   //            is called. Do not attempt to delete it, host retains ownership.
   // TODO: Pass AudioHost so decoder can create GMPAudioEncodedFrame objects?
-  virtual GMPErr InitDecode(const GMPAudioCodec& aCodecSettings,
-                            GMPAudioDecoderCallback* aCallback) = 0;
+  virtual void InitDecode(const GMPAudioCodec& aCodecSettings,
+                          GMPAudioDecoderCallback* aCallback) = 0;
 
   // Decode encoded audio frames (as a part of an audio stream). The decoded
   // frames must be returned to the user through the decode complete callback.
-  virtual GMPErr Decode(GMPAudioSamples* aEncodedSamples) = 0;
+  virtual void Decode(GMPAudioSamples* aEncodedSamples) = 0;
 
   // Reset decoder state and prepare for a new call to Decode(...).
   // Flushes the decoder pipeline.
   // The decoder should enqueue a task to run ResetComplete() on the main
   // thread once the reset has finished.
-  virtual GMPErr Reset() = 0;
+  virtual void Reset() = 0;
 
   // Output decoded frames for any data in the pipeline, regardless of ordering.
   // All remaining decoded frames should be immediately returned via callback.
   // The decoder should enqueue a task to run DrainComplete() on the main
   // thread once the reset has finished.
-  virtual GMPErr Drain() = 0;
+  virtual void Drain() = 0;
 
   // May free decoder memory.
   virtual void DecodingComplete() = 0;

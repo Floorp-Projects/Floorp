@@ -30,7 +30,7 @@ JS::Zone::Zone(JSRuntime *rt)
     gcHeapGrowthFactor(3.0),
     gcMallocBytes(0),
     gcMallocGCTriggered(false),
-    gcBytes(0),
+    usage(&rt->gc.usage),
     gcTriggerBytes(0),
     data(nullptr),
     isSystem(false),

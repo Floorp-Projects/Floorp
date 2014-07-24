@@ -186,7 +186,6 @@ class GCRuntime
     void setDeterministic(bool enable);
 #endif
 
-    size_t bytesAllocated() { return bytes; }
     size_t maxBytesAllocated() { return maxBytes; }
     size_t maxMallocBytesAllocated() { return maxBytes; }
 
@@ -330,7 +329,6 @@ class GCRuntime
 
     inline void updateOnFreeArenaAlloc(const ChunkInfo &info);
     inline void updateOnArenaFree(const ChunkInfo &info);
-    inline void updateBytesAllocated(ptrdiff_t size);
 
     GCChunkSet::Range allChunks() { return chunkSet.all(); }
     inline Chunk **getAvailableChunkList(Zone *zone);
@@ -429,6 +427,9 @@ class GCRuntime
 
     js::GCMarker          marker;
 
+    /* Track heap usage for this runtime. */
+    HeapUsage usage;
+
   private:
     /*
      * Set of all GC chunks with at least one allocated thing. The
@@ -449,9 +450,6 @@ class GCRuntime
     js::gc::ChunkPool     chunkPool;
 
     js::RootedValueMap    rootsHash;
-
-    /* This is updated by both the main and GC helper threads. */
-    mozilla::Atomic<size_t, mozilla::ReleaseAcquire>   bytes;
 
     size_t                maxBytes;
     size_t                maxMallocBytes;

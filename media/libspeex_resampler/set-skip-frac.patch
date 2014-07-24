@@ -1,37 +1,15 @@
 # HG changeset patch
-# Parent 091c02c13c8ba50903248432d0c7561104dace21
 # User Karl Tomlinson <karlt+@karlt.net>
 b=913854 add speex_resampler_set_skip_frac_num r=jmspeex
 
 This allows a client to align output samples consistently for independent
 resampling of contiguous input buffers.
 
-diff --git a/layout/media/symbols.def.in b/layout/media/symbols.def.in
---- a/layout/media/symbols.def.in
-+++ b/layout/media/symbols.def.in
-@@ -122,16 +122,17 @@ speex_resampler_set_quality
- speex_resampler_get_quality
- speex_resampler_set_input_stride
- speex_resampler_get_input_stride
- speex_resampler_set_output_stride
- speex_resampler_get_output_stride
- speex_resampler_get_input_latency
- speex_resampler_get_output_latency
- speex_resampler_skip_zeros
-+speex_resampler_set_skip_frac_num
- speex_resampler_reset_mem
- speex_resampler_strerror
- cubeb_destroy
- cubeb_init
- cubeb_get_max_channel_count
- cubeb_get_min_latency
- cubeb_get_preferred_sample_rate
- cubeb_stream_destroy
 diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/src/resample.c
 --- a/media/libspeex_resampler/src/resample.c
 +++ b/media/libspeex_resampler/src/resample.c
-@@ -1138,16 +1138,28 @@ SPX_RESAMPLE_EXPORT int speex_resampler_
- SPX_RESAMPLE_EXPORT int speex_resampler_skip_zeros(SpeexResamplerState *st)
+@@ -1128,16 +1128,28 @@ EXPORT int speex_resampler_get_output_la
+ EXPORT int speex_resampler_skip_zeros(SpeexResamplerState *st)
  {
     spx_uint32_t i;
     for (i=0;i<st->nb_channels;i++)
@@ -39,7 +17,7 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
     return RESAMPLER_ERR_SUCCESS;
  }
  
-+SPX_RESAMPLE_EXPORT int speex_resampler_set_skip_frac_num(SpeexResamplerState *st, spx_uint32_t skip_frac_num)
++EXPORT int speex_resampler_set_skip_frac_num(SpeexResamplerState *st, spx_uint32_t skip_frac_num)
 +{
 +   spx_uint32_t i;
 +   spx_uint32_t last_sample = skip_frac_num / st->den_rate;
@@ -51,7 +29,7 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
 +   return RESAMPLER_ERR_SUCCESS;
 +}
 +
- SPX_RESAMPLE_EXPORT int speex_resampler_reset_mem(SpeexResamplerState *st)
+ EXPORT int speex_resampler_reset_mem(SpeexResamplerState *st)
  {
     spx_uint32_t i;
     for (i=0;i<st->nb_channels;i++)
@@ -80,7 +58,7 @@ diff --git a/media/libspeex_resampler/src/speex_resampler.h b/media/libspeex_res
  #define spx_uint16_t unsigned short
  #define spx_uint32_t unsigned int
        
-@@ -321,16 +322,32 @@ int speex_resampler_get_output_latency(S
+@@ -317,16 +318,32 @@ int speex_resampler_get_output_latency(S
   * resampler. It is recommended to use that when resampling an audio file, as
   * it will generate a file with the same length. For real-time processing,
   * it is probably easier not to use this call (so that the output duration
