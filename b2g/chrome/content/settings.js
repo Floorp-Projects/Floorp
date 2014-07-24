@@ -671,6 +671,44 @@ SettingsListener.observe("accessibility.screenreader", false, function(value) {
   });
 })();
 
+// =================== Low-precision buffer ======================
+(function setupLowPrecisionSettings() {
+  // The gaia setting layers.low-precision maps to two gecko prefs
+  SettingsListener.observe('layers.low-precision', null, function(value) {
+    if (value !== null) {
+      // Update gecko from the new Gaia setting
+      Services.prefs.setBoolPref('layers.low-precision-buffer', value);
+      Services.prefs.setBoolPref('layers.progressive-paint', value);
+    } else {
+      // Update gaia setting from gecko value
+      try {
+        let prefValue = Services.prefs.getBoolPref('layers.low-precision-buffer');
+        let setting = { 'layers.low-precision': prefValue };
+        window.navigator.mozSettings.createLock().set(setting);
+      } catch (e) {
+        console.log('Unable to read pref layers.low-precision-buffer: ' + e);
+      }
+    }
+  });
+
+  // The gaia setting layers.low-opacity maps to a string gecko pref (0.5/1.0)
+  SettingsListener.observe('layers.low-opacity', null, function(value) {
+    if (value !== null) {
+      // Update gecko from the new Gaia setting
+      Services.prefs.setCharPref('layers.low-precision-opacity', value ? '0.5' : '1.0');
+    } else {
+      // Update gaia setting from gecko value
+      try {
+        let prefValue = Services.prefs.getCharPref('layers.low-precision-opacity');
+        let setting = { 'layers.low-opacity': (prefValue == '0.5') };
+        window.navigator.mozSettings.createLock().set(setting);
+      } catch (e) {
+        console.log('Unable to read pref layers.low-precision-opacity: ' + e);
+      }
+    }
+  });
+})();
+
 // =================== Various simple mapping  ======================
 let settingsToObserve = {
   'app.update.channel': {
