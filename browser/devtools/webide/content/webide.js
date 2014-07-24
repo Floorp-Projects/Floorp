@@ -294,7 +294,6 @@ let UI = {
 
     let noHelperNode = document.querySelector("#runtime-panel-noadbhelper");
     let noUSBNode = document.querySelector("#runtime-panel-nousbdevice");
-    let noSimulatorNode = document.querySelector("#runtime-panel-nosimulator");
 
     if (Devices.helperAddonInstalled) {
       noHelperNode.setAttribute("hidden", "true");
@@ -306,12 +305,6 @@ let UI = {
       noUSBNode.removeAttribute("hidden");
     } else {
       noUSBNode.setAttribute("hidden", "true");
-    }
-
-    if (AppManager.runtimeList.simulator.length > 0) {
-      noSimulatorNode.setAttribute("hidden", "true");
-    } else {
-      noSimulatorNode.removeAttribute("hidden");
     }
 
     for (let [type, parent] of [
