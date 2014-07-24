@@ -280,6 +280,8 @@ private:
                            bool aReplace,
                            CacheEntryHandle** aResult);
 
+  void ForcedValidEntriesPrune(TimeStamp &now);
+
   static CacheStorageService* sSelf;
 
   mozilla::Mutex mLock;

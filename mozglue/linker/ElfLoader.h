@@ -319,14 +319,16 @@ public:
     return signalHandlingBroken;
   }
 
+  static int __wrap_sigaction(int signum, const struct sigaction *act,
+                              struct sigaction *oldact);
+
+  static sighandler_t __wrap_signal(int signum, sighandler_t handler);
+
 protected:
   SEGVHandler();
   ~SEGVHandler();
 
 private:
-  static int __wrap_sigaction(int signum, const struct sigaction *act,
-                              struct sigaction *oldact);
-
   /**
    * SIGSEGV handler registered with __wrap_signal or __wrap_sigaction.
    */

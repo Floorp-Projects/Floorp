@@ -435,8 +435,8 @@ ElementAnimation::CurrentTime() const
   // (but not AnimationPlayers) is always 0, these are currently identical.
   Nullable<TimeDuration> currentTime = GetLocalTime();
 
-  // The current time is currently only going to be null when don't have a
-  // refresh driver (e.g. because we are in a display:none iframe).
+  // The current time is only going to be null when we don't have a refresh
+  // driver or navigation timing object and never did.
   //
   // Web Animations says that in this case we should use a timeline time of
   // 0 (the "effective timeline time") and calculate the current time from that.

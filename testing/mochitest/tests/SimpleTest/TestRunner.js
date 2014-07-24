@@ -65,6 +65,56 @@ function flattenArguments(lst/* ...*/) {
     return res;
 }
 
+/**
+ * StructuredFormatter: Formatter class turning structured messages
+ * into human-readable messages.
+ */
+this.StructuredFormatter = function() {
+    this.testStartTimes = {};
+};
+
+StructuredFormatter.prototype.log = function(message) {
+  return message.message;
+};
+
+StructuredFormatter.prototype.suite_start = function(message) {
+    this.suiteStartTime = message.time;
+    return "SUITE-START | Running " +  message.tests.length + " tests";
+};
+
+StructuredFormatter.prototype.test_start = function(message) {
+    this.testStartTimes[message.test] = new Date().getTime();
+    return "TEST-START | " + message.test;
+};
+
+StructuredFormatter.prototype.test_status = function(message) {
+    var statusInfo = message.test + " | " + message.subtest +
+                    (message.message ? " | " + message.message : "");
+    if (message.expected) {
+        return "TEST-UNEXPECTED-" + message.status + " | " + statusInfo +
+               " - expected: " + message.expected;
+    } else {
+        return "TEST-" + message.status + " | " + statusInfo;
+    }
+};
+
+StructuredFormatter.prototype.test_end = function(message) {
+    var startTime = this.testStartTimes[message.test];
+    delete this.testStartTimes[message.test];
+    var statusInfo = message.test + (message.message ? " | " + String(message.message) : "");
+    var result;
+    if (message.expected) {
+        result = "TEST-UNEXPECTED-" + message.status + " | " + statusInfo +
+                 " - expected: " + message.expected;
+    } else {
+        return "TEST-" + message.status + " | " + statusInfo;
+    }
+    result = " | took " + message.time - startTime + "ms";
+};
+
+StructuredFormatter.prototype.suite_end = function(message) {
+    return "SUITE-END | took " + message.time - this.suiteStartTime + "ms";
+};
 
 /**
  * StructuredLogger: Structured logger class following the mozlog.structured protocol
@@ -72,10 +122,14 @@ function flattenArguments(lst/* ...*/) {
  *
 **/
 var VALID_ACTIONS = ['suite_start', 'suite_end', 'test_start', 'test_end', 'test_status', 'process_output', 'log'];
+// This delimiter is used to avoid interleaving Mochitest/Gecko logs.
+var LOG_DELIMITER = String.fromCharCode(0xe175) + String.fromCharCode(0xee31) + String.fromCharCode(0x2c32) + String.fromCharCode(0xacbf);
 
 function StructuredLogger(name) {
     this.name = name;
     this.testsStarted = [];
+    this.interactiveDebugger = false;
+    this.structuredFormatter = new StructuredFormatter();
 
     /* test logs */
 
@@ -201,7 +255,12 @@ function StructuredLogger(name) {
     };
 
     this._dumpMessage = function(message) {
-        var str = JSON.stringify(message);
+        var str;
+        if (this.interactiveDebugger) {
+            str = this.structuredFormatter[message.action](message);
+        } else {
+            str = LOG_DELIMITER + JSON.stringify(message) + LOG_DELIMITER;
+        }
         // BUGFIX: browser-chrome tests doesn't use LogController
         if (Object.keys(LogController.listeners).length !== 0) {
             LogController.log(str);
