@@ -292,10 +292,12 @@ class StrictOrderingOnAppendList(list):
         if not isinstance(other, list):
             raise ValueError('Only lists can be appended to lists.')
 
-        StrictOrderingOnAppendList.ensure_sorted(other)
-
-        # list.__add__ will return a new list. We "cast" it to our type.
-        return StrictOrderingOnAppendList(list.__add__(self, other))
+        new_list = StrictOrderingOnAppendList()
+        # Can't extend with self because it may already be the result of
+        # several extensions and not be ordered.
+        list.extend(new_list, self)
+        new_list.extend(other)
+        return new_list
 
     def __iadd__(self, other):
         if not isinstance(other, list):
