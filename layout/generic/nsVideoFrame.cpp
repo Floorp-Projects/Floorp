@@ -219,6 +219,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   transform.Translate(p.x, p.y);
   transform.Scale(r.Width()/frameSize.width, r.Height()/frameSize.height);
   layer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
+  layer->SetVisibleRegion(nsIntRect(0, 0, frameSize.width, frameSize.height));
   nsRefPtr<Layer> result = layer.forget();
   return result.forget();
 }

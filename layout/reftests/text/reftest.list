@@ -52,7 +52,7 @@ fails-if(Android) skip-if(d2d||cocoaWidget) == subpixel-glyphs-x-1a.html subpixe
 skip-if(!(d2d||cocoaWidget)) random-if(d2d) != subpixel-glyphs-x-2a.html subpixel-glyphs-x-2b.html
 skip-if(B2G) HTTP(..) == subpixel-glyphs-x-3a.html subpixel-glyphs-x-3b.html
 # No platforms do subpixel positioning vertically
-fuzzy-if(Android,19,2) == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
+== subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
 fuzzy-if((Android||B2G),231,653) == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
 == swash-1.html swash-1-ref.html
 HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
