@@ -150,6 +150,7 @@ MOZ_BEGIN_ENUM_CLASS(WebGLExtensionID, uint8_t)
     EXT_color_buffer_half_float,
     EXT_frag_depth,
     EXT_sRGB,
+    EXT_shader_texture_lod,
     EXT_texture_filter_anisotropic,
     OES_element_index_uint,
     OES_standard_derivatives,
