@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test progess events in case of gzipped data.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="onLoadData()">
+<script  class="testbody" type="text/javascript">"use strict";
+SimpleTest.waitForExplicitFinish();
+
+var url = "send_gzip_content.sjs";
+var loaded = 0;
+var total = 0;
+
+function onProgress(e) {
+  if(e.lengthComputable) {
+    loaded = e.loaded;
+    total = e.total;
+    if (loaded > total) {
+      ok(false, "We have loaded more bytes (" + loaded +
+                ") than the total amount of bytes (" + total +
+                ") available!!!");
+    }
+  }
+}
+
+function onLoadData() {
+  var xhr = new XMLHttpRequest();
+  xhr.addEventListener('progress', onProgress, false);
+  xhr.open('GET', url, true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+      is(loaded, total, "loaded should be equal to total");
+      isnot(loaded, 0, "loaded should be bigger than 0");
+      SimpleTest.finish();
+    }
+  }
+  xhr.send(null);
+}
+
+</script>
+</body>
+</html>
