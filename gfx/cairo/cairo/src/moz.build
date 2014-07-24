@@ -217,3 +217,12 @@ if CONFIG['GNU_CC']:
             '-Wno-tautological-compare',
             '-Wno-tautological-constant-out-of-range-compare',
         ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
+    CFLAGS += CONFIG['MOZ_QT_CFLAGS']
+
+if CONFIG['MOZ_X11']:
+    CFLAGS += CONFIG['XCFLAGS']
+
+if CONFIG['MOZ_ENABLE_CAIRO_FT']:
+    CFLAGS += CONFIG['CAIRO_FT_CFLAGS']

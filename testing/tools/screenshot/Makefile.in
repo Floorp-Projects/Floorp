@@ -5,7 +5,6 @@
 ifdef MOZ_WIDGET_GTK
 ifdef MOZ_X11
 
-LOCAL_INCLUDES = $(TK_CFLAGS)
 OS_LIBS += $(TK_LIBS) $(XSS_LIBS)
 
 endif # X11
