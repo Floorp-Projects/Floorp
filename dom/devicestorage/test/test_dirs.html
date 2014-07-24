@@ -1,0 +1,70 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=886627
+-->
+<head>
+  <title>Test for the device storage API</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=886627">
+    Mozilla Bug 886627
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  <script class="testbody" type="text/javascript">
+
+/**
+ * Test that common device storage directories are available.
+ *
+ * This test differs from other device storage tests in that other tests use a
+ * "testing mode", which relocates the device storage directories to a testing
+ * directory. On the other hand, this test turns off testing mode to makes sure
+ * that the normal, non-testing directories also work properly.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({
+  'set': [
+    ["device.storage.enabled", true],
+    ["device.storage.testing", false],
+    ["device.storage.prompt.testing", true],
+  ]
+}, function() {
+  ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
+  ok(!navigator.getDeviceStorage("nonexistent-type"), "Should not have nonexistent storage");
+
+  ok(navigator.getDeviceStorage("pictures"), "Should have pictures storage");
+  ok(navigator.getDeviceStorage("videos"), "Should have videos storage");
+  ok(navigator.getDeviceStorage("music"), "Should have music storage");
+
+  // Need special permission to access "apps". We always have the permission in B2G
+  // mochitests, but on other platforms, we need to manually add the permission.
+  if (!SpecialPowers.testPermission(
+      "webapps-manage", Ci.nsIPermissionManager.ALLOW_ACTION, document)) {
+    ok(!navigator.getDeviceStorage("apps"), "Should not have apps storage without permission");
+    SpecialPowers.addPermission("webapps-manage", true, document);
+  }
+  ok(navigator.getDeviceStorage("apps"), "Should have apps storage with permission");
+
+  ok(navigator.getDeviceStorage("sdcard"), "Should have sdcard storage");
+  ok(navigator.getDeviceStorage("crashes"), "Should have crashes storage");
+
+  // The test harness reverts our pref changes automatically.
+  SimpleTest.finish();
+});
+
+  </script>
+  </pre>
+</body>
+</html>
+
