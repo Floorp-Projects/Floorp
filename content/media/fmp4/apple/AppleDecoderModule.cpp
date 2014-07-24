@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "AppleATDecoder.h"
 #include "AppleCMLinker.h"
 #include "AppleDecoderModule.h"
 #include "AppleVTDecoder.h"
@@ -12,8 +13,6 @@
 #include "mozilla/DebugOnly.h"
 
 namespace mozilla {
-
-extern PlatformDecoderModule* CreateBlankDecoderModule();
 
 bool AppleDecoderModule::sIsEnabled = false;
 
@@ -82,11 +81,7 @@ AppleDecoderModule::CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aCon
                                      MediaTaskQueue* aAudioTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
-  NS_WARNING("HACK: using a BlankDecoderModule for AAC");
-  if (!mBlankDecoder) {
-    mBlankDecoder = CreateBlankDecoderModule();
-  }
-  return mBlankDecoder->CreateAACDecoder(aConfig, aAudioTaskQueue, aCallback);
+  return new AppleATDecoder(aConfig, aAudioTaskQueue, aCallback);
 }
 
 } // namespace mozilla
