@@ -13,7 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsDeviceStorage.h"
-#include "nsIDOMFile.h"
+#include "nsDOMFile.h"
 #include "nsIFile.h"
 #include "nsPIDOMWindow.h"
 
@@ -114,7 +114,7 @@ DeviceStorageFileSystem::GetLocalFile(const nsAString& aRealPath) const
 }
 
 bool
-DeviceStorageFileSystem::GetRealPath(nsIDOMFile* aFile, nsAString& aRealPath) const
+DeviceStorageFileSystem::GetRealPath(DOMFileImpl* aFile, nsAString& aRealPath) const
 {
   MOZ_ASSERT(FileSystemUtils::IsParentProcess(),
              "Should be on parent process!");
