@@ -511,14 +511,34 @@ bool OmxDecoder::AllocateMediaResources()
 
 
 void OmxDecoder::ReleaseMediaResources() {
+  ReleaseVideoBuffer();
+  ReleaseAudioBuffer();
+
+  {
+    Mutex::Autolock autoLock(mPendingVideoBuffersLock);
+    MOZ_ASSERT(mPendingRecycleTexutreClients.empty());
+    // Release all pending recycle TextureClients, if they are not recycled yet.
+    // This should not happen. See Bug 1042308.
+    if (!mPendingRecycleTexutreClients.empty()) {
+      printf_stderr("OmxDecoder::ReleaseMediaResources -- TextureClients are not recycled yet\n");
+      for (std::set<TextureClient*>::iterator it=mPendingRecycleTexutreClients.begin();
+           it!=mPendingRecycleTexutreClients.end(); it++)
+      {
+        GrallocTextureClientOGL* client = static_cast<GrallocTextureClientOGL*>(*it);
+        client->ClearRecycleCallback();
+        if (client->GetMediaBuffer()) {
+          mPendingVideoBuffers.push(BufferItem(client->GetMediaBuffer(), client->GetReleaseFenceHandle()));
+        }
+      }
+      mPendingRecycleTexutreClients.clear();
+    }
+  }
+
   {
     // Free all pending video buffers.
     Mutex::Autolock autoLock(mSeekLock);
     ReleaseAllPendingVideoBuffersLocked();
   }
-
-  ReleaseVideoBuffer();
-  ReleaseAudioBuffer();
 
   if (mVideoSource.get()) {
     mVideoSource->stop();
@@ -774,6 +794,12 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
       grallocClient->SetMediaBuffer(mVideoBuffer);
       // Set recycle callback for TextureClient
       textureClient->SetRecycleCallback(OmxDecoder::RecycleCallback, this);
+      {
+        Mutex::Autolock autoLock(mPendingVideoBuffersLock);
+        // Store pending recycle TextureClient.
+        MOZ_ASSERT(mPendingRecycleTexutreClients.find(textureClient) == mPendingRecycleTexutreClients.end());
+        mPendingRecycleTexutreClients.insert(textureClient);
+      }
 
       aFrame->mGraphicBuffer = textureClient;
       aFrame->mRotation = mVideoRotation;
@@ -1024,14 +1050,32 @@ void OmxDecoder::ReleaseAllPendingVideoBuffersLocked()
   releasingVideoBuffers.clear();
 }
 
+void OmxDecoder::RecycleCallbackImp(TextureClient* aClient)
+{
+  aClient->ClearRecycleCallback();
+  {
+    Mutex::Autolock autoLock(mPendingVideoBuffersLock);
+    if (mPendingRecycleTexutreClients.find(aClient) == mPendingRecycleTexutreClients.end()) {
+      printf_stderr("OmxDecoder::RecycleCallbackImp -- TextureClient is not pending recycle\n");
+      return;
+    }
+    mPendingRecycleTexutreClients.erase(aClient);
+    GrallocTextureClientOGL* client = static_cast<GrallocTextureClientOGL*>(aClient);
+    if (client->GetMediaBuffer()) {
+      mPendingVideoBuffers.push(BufferItem(client->GetMediaBuffer(), client->GetReleaseFenceHandle()));
+    }
+  }
+  sp<AMessage> notify =
+            new AMessage(kNotifyPostReleaseVideoBuffer, mReflector->id());
+  // post AMessage to OmxDecoder via ALooper.
+  notify->post();
+}
+
 /* static */ void
 OmxDecoder::RecycleCallback(TextureClient* aClient, void* aClosure)
 {
   OmxDecoder* decoder = static_cast<OmxDecoder*>(aClosure);
-  GrallocTextureClientOGL* client = static_cast<GrallocTextureClientOGL*>(aClient);
-
-  aClient->ClearRecycleCallback();
-  decoder->PostReleaseVideoBuffer(client->GetMediaBuffer(), client->GetReleaseFenceHandle());
+  decoder->RecycleCallbackImp(aClient);
 }
 
 int64_t OmxDecoder::ProcessCachedData(int64_t aOffset, bool aWaitForCompletion)
