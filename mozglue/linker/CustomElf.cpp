@@ -353,6 +353,11 @@ CustomElf::GetSymbolPtrInDeps(const char *symbol) const
     if (strcmp(symbol + 2, "gnu_Unwind_Find_exidx") == 0)
       return FunctionPtr(__wrap___gnu_Unwind_Find_exidx);
 #endif
+  } else if (symbol[0] == 's' && symbol[1] == 'i') {
+    if (strcmp(symbol + 2, "gnal") == 0)
+      return FunctionPtr(SEGVHandler::__wrap_signal);
+    if (strcmp(symbol + 2, "gaction") == 0)
+      return FunctionPtr(SEGVHandler::__wrap_sigaction);
   }
 
 #define MISSING_FLASH_SYMNAME_START "_ZN7android10VectorImpl19reservedVectorImpl"
