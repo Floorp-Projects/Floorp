@@ -4,11 +4,13 @@
 #include "nspr.h"
 
 #include "mozilla/dom/SmartCardEvent.h"
+#include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "nsIDOMCryptoLegacy.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowCollection.h"
+#include "nsIObserverService.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIWindowWatcher.h"
 #include "nsServiceManagerUtils.h"
@@ -30,6 +32,9 @@ using namespace mozilla::dom;
 //
 // Once the event is found, it is dispatched to the main thread to notify
 // any window where window.crypto.enableSmartCardEvents is true.
+// Additionally, all observers of the topics "smartcard-insert" and
+// "smartcard-remove" are notified by the observer service of the appropriate
+// event.
 //
 
 class nsTokenEventRunnable : public nsIRunnable {
@@ -58,9 +63,22 @@ nsTokenEventRunnable::Run()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (!observerService) {
+    return NS_ERROR_FAILURE;
+  }
+  // This conversion is safe because mType can only be "smartcard-insert"
+  // or "smartcard-remove".
+  NS_ConvertUTF16toUTF8 eventTypeUTF8(mType);
+  nsresult rv = observerService->NotifyObservers(nullptr, eventTypeUTF8.get(),
+                                                 mTokenName.get());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   // 'Dispatch' the event to all the windows. 'DispatchEventToWindow()' will
   // first check to see if a given window has requested crypto events.
-  nsresult rv;
   nsCOMPtr<nsIWindowWatcher> windowWatcher =
     do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
