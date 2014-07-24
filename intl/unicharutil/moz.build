@@ -4,6 +4,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['idl', 'public', 'util', 'src', 'tables']
+DIRS += ['util', 'tables']
 TEST_TOOL_DIRS += ['tests']
 
+XPIDL_SOURCES += [
+    'nsIEntityConverter.idl',
+    'nsISaveAsCharset.idl',
+    'nsIUnicodeNormalizer.idl',
+]
+
+XPIDL_MODULE = 'unicharutil'
+
+EXPORTS += [
+    'nsICaseConversion.h',
+    'nsIUGenCategory.h',
+    'nsUnicharUtilCIID.h',
+    'nsUnicodeNormalizer.h',
+]
+
+UNIFIED_SOURCES += [
+    'nsCaseConversionImp2.cpp',
+    'nsCategoryImp.cpp',
+    'nsEntityConverter.cpp',
+    'nsSaveAsCharset.cpp',
+    'nsUnicodeNormalizer.cpp',
+]
+
+FINAL_LIBRARY = 'xul'
