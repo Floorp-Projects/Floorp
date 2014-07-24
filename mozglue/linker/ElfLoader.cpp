@@ -1123,4 +1123,30 @@ SEGVHandler::__wrap_sigaction(int signum, const struct sigaction *act,
   return 0;
 }
 
+sighandler_t
+SEGVHandler::__wrap_signal(int signum, sighandler_t handler)
+{
+  /* Use system signal() function for all but SIGSEGV signals. */
+  if (signum != SIGSEGV)
+    return signal(signum, handler);
+
+  SEGVHandler &that = ElfLoader::Singleton;
+  union {
+    sighandler_t signal;
+    void (*sigaction)(int, siginfo_t *, void *);
+  } oldHandler;
+
+  /* Keep the previous handler to return its value */
+  if (that.action.sa_flags & SA_SIGINFO) {
+    oldHandler.sigaction = that.action.sa_sigaction;
+  } else {
+    oldHandler.signal = that.action.sa_handler;
+  }
+  /* Set the new handler */
+  that.action.sa_handler = handler;
+  that.action.sa_flags = 0;
+
+  return oldHandler.signal;
+}
+
 Logging Logging::Singleton;
