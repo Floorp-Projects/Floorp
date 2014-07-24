@@ -28,7 +28,7 @@ FixedTableLayoutStrategy::~FixedTableLayoutStrategy()
 }
 
 /* virtual */ nscoord
-FixedTableLayoutStrategy::GetMinWidth(nsRenderingContext* aRenderingContext)
+FixedTableLayoutStrategy::GetMinISize(nsRenderingContext* aRenderingContext)
 {
     DISPLAY_MIN_WIDTH(mTableFrame, mMinWidth);
     if (mMinWidth != NS_INTRINSIC_WIDTH_UNKNOWN)
@@ -39,7 +39,7 @@ FixedTableLayoutStrategy::GetMinWidth(nsRenderingContext* aRenderingContext)
     // intrinsic widths inside the first row and then reverse the
     // algorithm to find the narrowest width that would hold all of
     // those intrinsic widths), but it wouldn't be compatible with other
-    // browsers, or with the use of GetMinWidth by
+    // browsers, or with the use of GetMinISize by
     // nsTableFrame::ComputeSize to determine the width of a fixed
     // layout table, since CSS2.1 says:
     //   The width of the table is then the greater of the value of the
@@ -117,7 +117,7 @@ FixedTableLayoutStrategy::GetMinWidth(nsRenderingContext* aRenderingContext)
 }
 
 /* virtual */ nscoord
-FixedTableLayoutStrategy::GetPrefWidth(nsRenderingContext* aRenderingContext,
+FixedTableLayoutStrategy::GetPrefISize(nsRenderingContext* aRenderingContext,
                                        bool aComputingSize)
 {
     // It's theoretically possible to do something much better here that
@@ -240,7 +240,7 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                     // Note that the difference between MIN_WIDTH and
                     // PREF_WIDTH shouldn't matter for any of these
                     // values of styleWidth; use MIN_WIDTH for symmetry
-                    // with GetMinWidth above, just in case there is a
+                    // with GetMinISize above, just in case there is a
                     // difference.
                     colWidth = nsLayoutUtils::IntrinsicForContainer(
                                  aReflowState.rendContext,

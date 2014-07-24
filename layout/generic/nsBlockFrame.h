@@ -228,8 +228,8 @@ public:
 private:
   void CheckIntrinsicCacheAgainstShrinkWrapState();
 public:
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
   virtual nsRect ComputeTightBounds(gfxContext* aContext) const MOZ_OVERRIDE;
 

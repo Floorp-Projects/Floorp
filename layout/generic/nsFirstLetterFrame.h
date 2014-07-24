@@ -43,8 +43,8 @@ public:
       ~(nsIFrame::eBidiInlineContainer));
   }
 
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual void AddInlineMinWidth(nsRenderingContext *aRenderingContext,
                                  InlineMinWidthData *aData) MOZ_OVERRIDE;
   virtual void AddInlinePrefWidth(nsRenderingContext *aRenderingContext,

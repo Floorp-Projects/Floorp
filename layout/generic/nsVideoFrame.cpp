@@ -501,14 +501,14 @@ nsSize nsVideoFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                                            aPadding);
 }
 
-nscoord nsVideoFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nscoord nsVideoFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = GetVideoIntrinsicSize(aRenderingContext).width;
   DISPLAY_MIN_WIDTH(this, result);
   return result;
 }
 
-nscoord nsVideoFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nscoord nsVideoFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = GetVideoIntrinsicSize(aRenderingContext).width;
   DISPLAY_PREF_WIDTH(this, result);

@@ -1445,8 +1445,8 @@ public:
   virtual void MarkIntrinsicWidthsDirty() = 0;
 
   /**
-   * Get the intrinsic minimum width of the frame.  This must be less
-   * than or equal to the intrinsic width.
+   * Get the min-content intrinsic inline size of the frame.  This must be
+   * less than or equal to the max-content intrinsic inline size.
    *
    * This is *not* affected by the CSS 'min-width', 'width', and
    * 'max-width' properties on this frame, but it is affected by the
@@ -1465,15 +1465,15 @@ public:
    *
    * This method must not return a negative value.
    */
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) = 0;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) = 0;
 
   /**
-   * Get the intrinsic width of the frame.  This must be greater than or
-   * equal to the intrinsic minimum width.
+   * Get the max-content intrinsic inline size of the frame.  This must be
+   * greater than or equal to the min-content intrinsic inline size.
    *
-   * Otherwise, all the comments for |GetMinWidth| above apply.
+   * Otherwise, all the comments for |GetMinISize| above apply.
    */
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) = 0;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) = 0;
 
   /**
    * |InlineIntrinsicWidth| represents the intrinsic width information
@@ -1576,13 +1576,13 @@ public:
    * |aData->trailingWhitespace| will always be zero (unlike for
    * AddInlinePrefWidth).
    *
-   * All the comments for |GetMinWidth| apply, except that this function
+   * All the comments for |GetMinISize| apply, except that this function
    * is responsible for adding padding, border, and margin and for
    * considering the effects of 'width', 'min-width', and 'max-width'.
    *
    * This may be called on any frame.  Frames that do not participate in
    * line breaking can inherit the default implementation on nsFrame,
-   * which calls |GetMinWidth|.
+   * which calls |GetMinISize|.
    */
   virtual void
   AddInlineMinWidth(nsRenderingContext *aRenderingContext,
@@ -1594,7 +1594,7 @@ public:
    * represents the intrinsic width information of all the previous
    * frames in the inline layout region.
    *
-   * All the comments for |AddInlineMinWidth| and |GetPrefWidth| apply,
+   * All the comments for |AddInlineMinWidth| and |GetPrefISize| apply,
    * except that this fills in an |InlineIntrinsicWidthData| structure
    * based on using all *mandatory* breakpoints within the frame.
    */
@@ -1702,7 +1702,7 @@ public:
   virtual nsRect ComputeTightBounds(gfxContext* aContext) const;
 
   /**
-   * This function is similar to GetPrefWidth and ComputeTightBounds: it
+   * This function is similar to GetPrefISize and ComputeTightBounds: it
    * computes the left and right coordinates of a preferred tight bounding
    * rectangle for the frame. This is a rectangle that would enclose the pixels
    * that are drawn if we lay out the element without taking any optional line

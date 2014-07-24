@@ -755,7 +755,7 @@ int32_t nsTableCellFrame::GetColSpan()
 }
 
 /* virtual */ nscoord
-nsTableCellFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsTableCellFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_MIN_WIDTH(this, result);
@@ -767,7 +767,7 @@ nsTableCellFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsTableCellFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsTableCellFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);

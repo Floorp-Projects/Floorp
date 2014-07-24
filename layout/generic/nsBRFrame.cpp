@@ -43,8 +43,8 @@ public:
                                  InlineMinWidthData *aData) MOZ_OVERRIDE;
   virtual void AddInlinePrefWidth(nsRenderingContext *aRenderingContext,
                                   InlinePrefWidthData *aData) MOZ_OVERRIDE;
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
   virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const MOZ_OVERRIDE;
 
@@ -174,7 +174,7 @@ BRFrame::AddInlinePrefWidth(nsRenderingContext *aRenderingContext,
 }
 
 /* virtual */ nscoord
-BRFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+BRFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_MIN_WIDTH(this, result);
@@ -182,7 +182,7 @@ BRFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-BRFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+BRFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);

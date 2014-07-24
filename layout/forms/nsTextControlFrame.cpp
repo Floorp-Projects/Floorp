@@ -407,7 +407,7 @@ nsTextControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
 }
 
 nscoord
-nsTextControlFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
+nsTextControlFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 {
     DebugOnly<nscoord> result = 0;
     DISPLAY_PREF_WIDTH(this, result);
@@ -420,13 +420,13 @@ nsTextControlFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
 }
 
 nscoord
-nsTextControlFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
+nsTextControlFrame::GetMinISize(nsRenderingContext* aRenderingContext)
 {
   // Our min width is just our preferred width if we have auto width.
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
 
-  result = GetPrefWidth(aRenderingContext);
+  result = GetPrefISize(aRenderingContext);
 
   return result;
 }

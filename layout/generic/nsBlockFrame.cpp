@@ -664,11 +664,11 @@ nsBlockFrame::CheckIntrinsicCacheAgainstShrinkWrapState()
 }
 
 /* virtual */ nscoord
-nsBlockFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsBlockFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nsIFrame* firstInFlow = FirstContinuation();
   if (firstInFlow != this)
-    return firstInFlow->GetMinWidth(aRenderingContext);
+    return firstInFlow->GetMinISize(aRenderingContext);
 
   DISPLAY_MIN_WIDTH(this, mMinWidth);
 
@@ -681,7 +681,7 @@ nsBlockFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
   if (gNoisyIntrinsic) {
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
-    printf(": GetMinWidth\n");
+    printf(": GetMinISize\n");
   }
   AutoNoisyIndenter indenter(gNoisyIntrinsic);
 #endif
@@ -749,11 +749,11 @@ nsBlockFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsBlockFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsBlockFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nsIFrame* firstInFlow = FirstContinuation();
   if (firstInFlow != this)
-    return firstInFlow->GetPrefWidth(aRenderingContext);
+    return firstInFlow->GetPrefISize(aRenderingContext);
 
   DISPLAY_PREF_WIDTH(this, mPrefWidth);
 
@@ -766,7 +766,7 @@ nsBlockFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   if (gNoisyIntrinsic) {
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
-    printf(": GetPrefWidth\n");
+    printf(": GetPrefISize\n");
   }
   AutoNoisyIndenter indenter(gNoisyIntrinsic);
 #endif

@@ -124,7 +124,7 @@ nsHTMLCanvasFrame::GetCanvasSize()
 }
 
 /* virtual */ nscoord
-nsHTMLCanvasFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsHTMLCanvasFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
@@ -134,7 +134,7 @@ nsHTMLCanvasFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsHTMLCanvasFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsHTMLCanvasFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.

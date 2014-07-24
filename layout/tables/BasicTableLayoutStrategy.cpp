@@ -37,7 +37,7 @@ BasicTableLayoutStrategy::~BasicTableLayoutStrategy()
 }
 
 /* virtual */ nscoord
-BasicTableLayoutStrategy::GetMinWidth(nsRenderingContext* aRenderingContext)
+BasicTableLayoutStrategy::GetMinISize(nsRenderingContext* aRenderingContext)
 {
     DISPLAY_MIN_WIDTH(mTableFrame, mMinWidth);
     if (mMinWidth == NS_INTRINSIC_WIDTH_UNKNOWN)
@@ -46,7 +46,7 @@ BasicTableLayoutStrategy::GetMinWidth(nsRenderingContext* aRenderingContext)
 }
 
 /* virtual */ nscoord
-BasicTableLayoutStrategy::GetPrefWidth(nsRenderingContext* aRenderingContext,
+BasicTableLayoutStrategy::GetPrefISize(nsRenderingContext* aRenderingContext,
                                        bool aComputingSize)
 {
     DISPLAY_PREF_WIDTH(mTableFrame, mPrefWidth);
@@ -90,8 +90,8 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
         // wrapping inside of it should not apply font size inflation.
         AutoMaybeDisableFontInflation an(aFrame);
 
-        minCoord = aFrame->GetMinWidth(aRenderingContext);
-        prefCoord = aFrame->GetPrefWidth(aRenderingContext);
+        minCoord = aFrame->GetMinISize(aRenderingContext);
+        prefCoord = aFrame->GetPrefISize(aRenderingContext);
         // Until almost the end of this function, minCoord and prefCoord
         // represent the box-sizing based width values (which mean they
         // should include horizontal padding and border width when

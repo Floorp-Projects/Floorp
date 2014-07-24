@@ -959,7 +959,7 @@ static nscoord AddInterFrameSpacingToSize(nsHTMLReflowMetrics&    aDesiredSize,
                                           nsMathMLContainerFrame* aFrame);
 
 /* virtual */ nscoord
-nsMathMLContainerFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsMathMLContainerFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -974,7 +974,7 @@ nsMathMLContainerFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsMathMLContainerFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsMathMLContainerFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);

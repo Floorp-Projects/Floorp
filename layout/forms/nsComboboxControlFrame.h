@@ -67,9 +67,9 @@ public:
   virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
 #endif
 
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
   virtual void Reflow(nsPresContext*           aCX,
                       nsHTMLReflowMetrics&     aDesiredSize,
@@ -216,7 +216,7 @@ protected:
   };
   DropDownPositionState AbsolutelyPositionDropDown();
 
-  // Helper for GetMinWidth/GetPrefWidth
+  // Helper for GetMinISize/GetPrefISize
   nscoord GetIntrinsicWidth(nsRenderingContext* aRenderingContext,
                             nsLayoutUtils::IntrinsicWidthType aType);
 

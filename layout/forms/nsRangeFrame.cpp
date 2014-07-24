@@ -754,7 +754,7 @@ nsRangeFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 }
 
 nscoord
-nsRangeFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsRangeFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   // nsFrame::ComputeSize calls GetMinimumWidgetSize to prevent us from being
   // given too small a size when we're natively themed. If we aren't native
@@ -763,7 +763,7 @@ nsRangeFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 nscoord
-nsRangeFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsRangeFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   // frameSizeOverride values just gets us to fall back to being horizontal:
   nsSize frameSizeOverride(10,1);

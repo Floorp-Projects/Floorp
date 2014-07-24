@@ -686,17 +686,17 @@ nsHTMLScrollFrame::GetIntrinsicVScrollbarWidth(nsRenderingContext *aRenderingCon
 }
 
 /* virtual */ nscoord
-nsHTMLScrollFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsHTMLScrollFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
-  nscoord result = mHelper.mScrolledFrame->GetMinWidth(aRenderingContext);
+  nscoord result = mHelper.mScrolledFrame->GetMinISize(aRenderingContext);
   DISPLAY_MIN_WIDTH(this, result);
   return result + GetIntrinsicVScrollbarWidth(aRenderingContext);
 }
 
 /* virtual */ nscoord
-nsHTMLScrollFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsHTMLScrollFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
-  nscoord result = mHelper.mScrolledFrame->GetPrefWidth(aRenderingContext);
+  nscoord result = mHelper.mScrolledFrame->GetPrefISize(aRenderingContext);
   DISPLAY_PREF_WIDTH(this, result);
   return NSCoordSaturatingAdd(result, GetIntrinsicVScrollbarWidth(aRenderingContext));
 }

@@ -75,7 +75,7 @@ nsTableCaptionFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
   uint8_t captionSide = StyleTableBorder()->mCaptionSide;
   if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
       captionSide == NS_STYLE_CAPTION_SIDE_RIGHT) {
-    result.width = GetMinWidth(aRenderingContext);
+    result.width = GetMinISize(aRenderingContext);
   } else if (captionSide == NS_STYLE_CAPTION_SIDE_TOP ||
              captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
     // The outer frame constrains our available width to the width of
@@ -83,7 +83,7 @@ nsTableCaptionFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
     // larger than the containing block width.  (It would really be nice
     // to transmit that information another way, so we could grow up to
     // the table's available width, but that's harder.)
-    nscoord min = GetMinWidth(aRenderingContext);
+    nscoord min = GetMinISize(aRenderingContext);
     if (min > aCBSize.width)
       min = aCBSize.width;
     if (min > result.width)
@@ -394,7 +394,7 @@ GetContainingBlockSize(const nsHTMLReflowState& aOuterRS)
 }
 
 /* virtual */ nscoord
-nsTableOuterFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsTableOuterFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord width = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                     InnerTableFrame(), nsLayoutUtils::MIN_WIDTH);
@@ -416,7 +416,7 @@ nsTableOuterFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsTableOuterFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsTableOuterFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord maxWidth;
   DISPLAY_PREF_WIDTH(this, maxWidth);
@@ -504,8 +504,8 @@ nsTableOuterFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 
   // When we're shrink-wrapping, our auto size needs to wrap around the
   // actual size of the table, which (if it is specified as a percent)
-  // could be something that is not reflected in our GetMinWidth and
-  // GetPrefWidth.  See bug 349457 for an example.
+  // could be something that is not reflected in our GetMinISize and
+  // GetPrefISize.  See bug 349457 for an example.
 
   // Match the availableWidth logic in Reflow.
   uint8_t captionSide = GetCaptionSide();

@@ -31,11 +31,11 @@ public:
   }
 
   /**
-   * Both GetMinWidth and GetPrefWidth will return whatever GetIntrinsicWidth
+   * Both GetMinISize and GetPrefISize will return whatever GetIntrinsicWidth
    * returns.
    */
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
   /**
    * Our auto size is just intrinsic width and intrinsic height.

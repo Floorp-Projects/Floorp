@@ -286,7 +286,7 @@ nsFieldSetFrame::GetIntrinsicWidth(nsRenderingContext* aRenderingContext,
 
 
 nscoord
-nsFieldSetFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
+nsFieldSetFrame::GetMinISize(nsRenderingContext* aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_MIN_WIDTH(this, result);
@@ -296,7 +296,7 @@ nsFieldSetFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
 }
 
 nscoord
-nsFieldSetFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
+nsFieldSetFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);
@@ -321,7 +321,7 @@ nsFieldSetFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   // wrapping inside of us should not apply font size inflation.
   AutoMaybeDisableFontInflation an(this);
 
-  nscoord minWidth = GetMinWidth(aRenderingContext);
+  nscoord minWidth = GetMinISize(aRenderingContext);
   if (minWidth > result.width)
     result.width = minWidth;
 

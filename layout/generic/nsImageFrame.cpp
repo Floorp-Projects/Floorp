@@ -817,7 +817,7 @@ nsImageFrame::GetContinuationOffset() const
 }
 
 /* virtual */ nscoord
-nsImageFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsImageFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
@@ -830,7 +830,7 @@ nsImageFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsImageFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsImageFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.

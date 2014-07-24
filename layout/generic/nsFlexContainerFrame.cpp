@@ -1332,7 +1332,7 @@ nsFlexContainerFrame::
       nsRefPtr<nsRenderingContext> rctx =
         aPresContext->PresShell()->CreateReferenceRenderingContext();
       if (minSizeNeedsToMeasureContent) {
-        resolvedMinSize = std::min(resolvedMinSize, aFlexItem.Frame()->GetMinWidth(rctx));
+        resolvedMinSize = std::min(resolvedMinSize, aFlexItem.Frame()->GetMinISize(rctx));
       }
       NS_ASSERTION(!flexBasisNeedsToMeasureContent,
                    "flex-basis:auto should have been resolved in the "
@@ -3781,7 +3781,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 }
 
 /* virtual */ nscoord
-nsFlexContainerFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
+nsFlexContainerFrame::GetMinISize(nsRenderingContext* aRenderingContext)
 {
   nscoord minWidth = 0;
   DISPLAY_MIN_WIDTH(this, minWidth);
@@ -3807,7 +3807,7 @@ nsFlexContainerFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsFlexContainerFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
+nsFlexContainerFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 {
   nscoord prefWidth = 0;
   DISPLAY_PREF_WIDTH(this, prefWidth);
