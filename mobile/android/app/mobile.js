@@ -865,3 +865,6 @@ pref("home.sync.updateMode", 0);
 
 // How frequently to check if we should sync home provider data.
 pref("home.sync.checkIntervalSecs", 3600);
+
+// Enable device storage API
+pref("device.storage.enabled", true);
