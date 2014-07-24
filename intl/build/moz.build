@@ -12,7 +12,7 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../locale',
     '../lwbrk',
-    '../strres/src',
+    '../strres',
     '../uconv/src',
     '../unicharutil/src',
 ]
