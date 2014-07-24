@@ -1292,12 +1292,12 @@ public:
                                                        nscoord maxWidth, nscoord maxHeight,
                                                        nscoord tentWidth, nscoord tentHeight);
 
-  // Implement nsIFrame::GetPrefISize in terms of nsIFrame::AddInlinePrefWidth
-  static nscoord PrefWidthFromInline(nsIFrame* aFrame,
+  // Implement nsIFrame::GetPrefISize in terms of nsIFrame::AddInlinePrefISize
+  static nscoord PrefISizeFromInline(nsIFrame* aFrame,
                                      nsRenderingContext* aRenderingContext);
 
-  // Implement nsIFrame::GetMinISize in terms of nsIFrame::AddInlineMinWidth
-  static nscoord MinWidthFromInline(nsIFrame* aFrame,
+  // Implement nsIFrame::GetMinISize in terms of nsIFrame::AddInlineMinISize
+  static nscoord MinISizeFromInline(nsIFrame* aFrame,
                                     nsRenderingContext* aRenderingContext);
 
   // Get a suitable foreground color for painting aProperty for aFrame.

@@ -693,7 +693,7 @@ nsBlockFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 
   if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
     ResolveBidi();
-  InlineMinWidthData data;
+  InlineMinISizeData data;
   for (nsBlockFrame* curFrame = this; curFrame;
        curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
     for (line_iterator line = curFrame->begin_lines(), line_end = curFrame->end_lines();
@@ -730,7 +730,7 @@ nsBlockFrame::GetMinISize(nsRenderingContext *aRenderingContext)
         nsIFrame *kid = line->mFirstChild;
         for (int32_t i = 0, i_end = line->GetChildCount(); i != i_end;
              ++i, kid = kid->GetNextSibling()) {
-          kid->AddInlineMinWidth(aRenderingContext, &data);
+          kid->AddInlineMinISize(aRenderingContext, &data);
         }
       }
 #ifdef DEBUG
@@ -778,7 +778,7 @@ nsBlockFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 
   if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
     ResolveBidi();
-  InlinePrefWidthData data;
+  InlinePrefISizeData data;
   for (nsBlockFrame* curFrame = this; curFrame;
        curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
     for (line_iterator line = curFrame->begin_lines(), line_end = curFrame->end_lines();
@@ -815,7 +815,7 @@ nsBlockFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
         nsIFrame *kid = line->mFirstChild;
         for (int32_t i = 0, i_end = line->GetChildCount(); i != i_end;
              ++i, kid = kid->GetNextSibling()) {
-          kid->AddInlinePrefWidth(aRenderingContext, &data);
+          kid->AddInlinePrefISize(aRenderingContext, &data);
         }
       }
 #ifdef DEBUG
@@ -857,7 +857,7 @@ nsBlockFrame::GetPrefWidthTightBounds(nsRenderingContext* aRenderingContext,
   *aXMost = 0;
 
   nsresult rv;
-  InlinePrefWidthData data;
+  InlinePrefISizeData data;
   for (nsBlockFrame* curFrame = this; curFrame;
        curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
     for (line_iterator line = curFrame->begin_lines(), line_end = curFrame->end_lines();
@@ -894,7 +894,7 @@ nsBlockFrame::GetPrefWidthTightBounds(nsRenderingContext* aRenderingContext,
           NS_ENSURE_SUCCESS(rv, rv);
           *aX = std::min(*aX, data.currentLine + childX);
           *aXMost = std::max(*aXMost, data.currentLine + childXMost);
-          kid->AddInlinePrefWidth(aRenderingContext, &data);
+          kid->AddInlinePrefISize(aRenderingContext, &data);
         }
       }
     }
