@@ -729,7 +729,6 @@ TabChild::TabChild(nsIContentChild* aManager, const TabContext& aContext, uint32
   , mOrientation(eScreenOrientation_PortraitPrimary)
   , mUpdateHitRegion(false)
   , mPendingTouchPreventedResponse(false)
-  , mTouchEndIsClick(Unknown)
   , mIgnoreKeyPressEvent(false)
   , mActiveElementManager(new ActiveElementManager())
   , mHasValidInnerSize(false)
@@ -1816,10 +1815,6 @@ TabChild::RecvHandleSingleTap(const CSSPoint& aPoint, const ScrollableLayerGuid&
     return true;
   }
 
-  if (mTouchEndIsClick == IsNotClick) {
-    return true;
-  }
-
   LayoutDevicePoint currentPoint = APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid) * mWidget->GetDefaultScale();;
 
   MessageLoop::current()->PostDelayedTask(
@@ -1912,7 +1907,7 @@ TabChild::RecvNotifyAPZStateChange(const ViewID& aViewId,
   }
   case APZStateChange::EndTouch:
   {
-    mTouchEndIsClick = (aArg ? IsClick : IsNotClick);
+    mActiveElementManager->HandleTouchEnd(aArg);
     break;
   }
   default:
@@ -2131,7 +2126,6 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
                           localEvent.mFlags.mMultipleActionsPrevented;
   switch (aEvent.message) {
   case NS_TOUCH_START: {
-    mTouchEndIsClick = Unknown;
     if (mPendingTouchPreventedResponse) {
       // We can enter here if we get two TOUCH_STARTs in a row and didn't
       // respond to the first one. Respond to it now.
@@ -2147,17 +2141,9 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
     break;
   }
 
+  case NS_TOUCH_MOVE:
   case NS_TOUCH_END:
-    if (isTouchPrevented && mTouchEndIsClick == IsClick) {
-      mTouchEndIsClick = IsNotClick;
-    }
-    // fall through
-  case NS_TOUCH_CANCEL:
-    if (mTouchEndIsClick != Unknown) {
-      mActiveElementManager->HandleTouchEnd(mTouchEndIsClick == IsClick);
-    }
-    // fall through
-  case NS_TOUCH_MOVE: {
+  case NS_TOUCH_CANCEL: {
     SendPendingTouchPreventedResponse(isTouchPrevented, aGuid);
     break;
   }
