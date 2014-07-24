@@ -97,6 +97,14 @@ GMPVideoDecoderChild::ResetComplete()
 }
 
 void
+GMPVideoDecoderChild::Error(GMPErr aError)
+{
+  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
+
+  SendError(aError);
+}
+
+void
 GMPVideoDecoderChild::CheckThread()
 {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());

@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -29,20 +30,20 @@ INSTANTIATE(int, int, prim1, 2 * sizeof(int));
 INSTANTIATE(int, long, prim2, 2 * sizeof(long));
 
 struct EmptyClass { EmptyClass(int) {} };
-struct NonEmpty { char c; NonEmpty(int) {} };
+struct NonEmpty { char mC; NonEmpty(int) {} };
 
 INSTANTIATE(int, EmptyClass, both1, sizeof(int));
 INSTANTIATE(int, NonEmpty, both2, 2 * sizeof(int));
 INSTANTIATE(EmptyClass, NonEmpty, both3, 1);
 
 struct A { char dummy; A(int) {} };
-struct B : A { B(int i) : A(i) {} };
+struct B : A { B(int aI) : A(aI) {} };
 
 INSTANTIATE(A, A, class1, 2);
 INSTANTIATE(A, B, class2, 2);
 INSTANTIATE(A, EmptyClass, class3, 1);
 
-struct OtherEmpty : EmptyClass { OtherEmpty(int i) : EmptyClass(i) {} };
+struct OtherEmpty : EmptyClass { OtherEmpty(int aI) : EmptyClass(aI) {} };
 
 // C++11 requires distinct objects of the same type, within the same "most
 // derived object", to have different addresses.  Pair allocates its elements as
@@ -58,4 +59,5 @@ struct OtherEmpty : EmptyClass { OtherEmpty(int i) : EmptyClass(i) {} };
 int
 main()
 {
+  return 0;
 }

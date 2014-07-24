@@ -7,6 +7,7 @@
 <script src="/resources/idlharness.js"></script>
 <div id="log"></div>
 <iframe src="data:text/html;charset=utf-8," width="10" height="10" id="iframe"></iframe>
+<iframe src="data:text/html;charset=utf-8,%3Chtml%20style%3D%22display%3Anone%22%3E%3C%2Fhtml%3E" width="10" height="10" id="hidden-iframe"></iframe>
 <script type="text/plain" id="AnimationTimeline-IDL">
 interface AnimationTimeline {
   readonly attribute double? currentTime;
@@ -101,5 +102,51 @@ async_test(function(t) {
             ' document timeline will not change within a script block' ],
   author: 'Brian Birtles'
 });
+
+test(function() {
+  var hiddenIFrame = document.getElementById('hidden-iframe');
+  assert_equals(typeof hiddenIFrame.contentDocument.timeline.currentTime,
+    'number',
+    'currentTime of an initially hidden subframe\'s timeline is a number');
+  assert_true(hiddenIFrame.contentDocument.timeline.currentTime >= 0,
+    'currentTime of an initially hidden subframe\'s timeline is >= 0');
+}, 'document.timeline.currentTime hidden subframe test');
+
+async_test(function(t) {
+  var hiddenIFrame = document.getElementById('hidden-iframe');
+
+  // Don't run the test until after the iframe has completed loading or else the
+  // contentDocument may change.
+  var testToRunOnLoad = t.step_func(function() {
+    // Remove display:none
+    hiddenIFrame.style.display = 'block';
+    window.getComputedStyle(hiddenIFrame).display;
+
+    window.requestAnimationFrame(t.step_func(function() {
+      assert_true(hiddenIFrame.contentDocument.timeline.currentTime > 0,
+        'document.timeline.currentTime is positive after removing'
+        + ' display:none');
+      var previousValue = hiddenIFrame.contentDocument.timeline.currentTime;
+
+      // Re-introduce display:none
+      hiddenIFrame.style.display = 'none';
+      window.getComputedStyle(hiddenIFrame).display;
+
+      window.requestAnimationFrame(t.step_func(function() {
+        assert_true(
+          hiddenIFrame.contentDocument.timeline.currentTime >= previousValue,
+          'document.timeline.currentTime does not go backwards after'
+          + ' re-setting display:none');
+        t.done();
+      }));
+    }));
+  });
+
+  if (hiddenIFrame.contentDocument.readyState === 'complete') {
+    testToRunOnLoad();
+  } else {
+    hiddenIFrame.addEventListener("load", testToRunOnLoad);
+  }
+}, 'document.timeline.currentTime hidden subframe dynamic test');
 
 </script>

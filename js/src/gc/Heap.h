@@ -7,6 +7,7 @@
 #ifndef gc_Heap_h
 #define gc_Heap_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/PodOperations.h"
 
@@ -891,6 +892,54 @@ static_assert(js::gc::ChunkLocationOffset == offsetof(Chunk, info) +
                                              offsetof(ChunkInfo, trailer) +
                                              offsetof(ChunkTrailer, location),
               "The hardcoded API location offset must match the actual offset.");
+
+/*
+ * Tracks the used sizes for owned heap data and automatically maintains the
+ * memory usage relationship between GCRuntime and Zones.
+ */
+class HeapUsage
+{
+    /*
+     * A heap usage that contains our parent's heap usage, or null if this is
+     * the top-level usage container.
+     */
+    HeapUsage *parent_;
+
+    /*
+     * The approximate number of bytes in use on the GC heap, to the nearest
+     * ArenaSize. This does not include any malloc data. It also does not
+     * include not-actively-used addresses that are still reserved at the OS
+     * level for GC usage. It is atomic because it is updated by both the main
+     * and GC helper threads.
+     */
+    mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gcBytes_;
+
+  public:
+    HeapUsage(HeapUsage *parent)
+      : parent_(parent),
+        gcBytes_(0)
+    {}
+
+    size_t gcBytes() const { return gcBytes_; }
+
+    void addGCArena() {
+        gcBytes_ += ArenaSize;
+        if (parent_)
+            parent_->addGCArena();
+    }
+    void removeGCArena() {
+        MOZ_ASSERT(gcBytes_ >= ArenaSize);
+        gcBytes_ -= ArenaSize;
+        if (parent_)
+            parent_->removeGCArena();
+    }
+
+    /* Pair to adoptArenas. Adopts the attendant usage statistics. */
+    void adopt(HeapUsage &other) {
+        gcBytes_ += other.gcBytes_;
+        other.gcBytes_ = 0;
+    }
+};
 
 inline uintptr_t
 ArenaHeader::address() const

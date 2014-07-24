@@ -182,7 +182,7 @@ public:
 private:
   friend class SupportsWeakPtrBase<T, WeakReference>;
 
-  explicit WeakPtrBase(const RefPtr<WeakReference> &aOther) : mRef(aOther) {}
+  explicit WeakPtrBase(const RefPtr<WeakReference>& aOther) : mRef(aOther) {}
 
   RefPtr<WeakReference> mRef;
 };

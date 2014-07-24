@@ -58,6 +58,14 @@ GMPVideoEncoderChild::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
 }
 
 void
+GMPVideoEncoderChild::Error(GMPErr aError)
+{
+  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
+
+  SendError(aError);
+}
+
+void
 GMPVideoEncoderChild::CheckThread()
 {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());

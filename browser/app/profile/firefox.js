@@ -809,6 +809,33 @@ pref("plugin.state.f5 ssl vpn plugin", 2);
 pref("plugin.state.f5 sam inspection host plugin", 2);
 #endif
 
+// Roblox Launcher Plugin, bug 1024073
+#ifdef XP_WIN
+pref("plugin.state.nprobloxproxy", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugins.state.nproblox", 2);
+#endif
+
+// Box Edit, bug 1029654
+#ifdef XP_WIN
+pref("plugins.state.npboxedit", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugins.state.box edit", 2);
+#endif
+
+// Nexus Personal, bug 1024965
+#ifdef XP_WIN
+pref("plugins.state.np_prsnl", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugins.state.personalplugin", 2);
+#endif
+#ifdef UNIX_BUT_NOT_MAC
+pref("plugins.state.libplugins", 2);
+#endif
+
 // display door hanger if flash not installed
 pref("plugins.notifyMissingFlash", true);
 
@@ -1356,6 +1383,7 @@ pref("devtools.styleeditor.autocompletion-enabled", true);
 pref("devtools.styleeditor.showMediaSidebar", true);
 pref("devtools.styleeditor.mediaSidebarWidth", 238);
 pref("devtools.styleeditor.navSidebarWidth", 245);
+pref("devtools.styleeditor.transitions", true);
 
 // Enable the Shader Editor.
 pref("devtools.shadereditor.enabled", false);
@@ -1478,6 +1506,9 @@ pref("browser.newtab.preload", true);
 
 // Toggles the content of 'about:newtab'. Shows the grid when enabled.
 pref("browser.newtabpage.enabled", true);
+
+// Toggles the enhancement of history content of 'about:newtab'
+pref("browser.newtabpage.enhanced", false);
 
 // number of rows of newtab grid
 pref("browser.newtabpage.rows", 3);

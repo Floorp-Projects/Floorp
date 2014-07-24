@@ -466,3 +466,52 @@ add_task(function test_DirectoryLinksProvider_getLinksFromCorruptedFile() {
 
   yield promiseCleanDirectoryLinksProvider();
 });
+
+add_task(function test_DirectoryLinksProvider_getEnhancedLink() {
+  let data = {"en-US": [
+    {url: "http://example.net", enhancedImageURI: "net1"},
+    {url: "http://example.com", enhancedImageURI: "com1"},
+    {url: "http://example.com", enhancedImageURI: "com2"},
+  ]};
+  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+
+  let links = yield fetchData();
+  do_check_eq(links.length, 3);
+
+  function checkEnhanced(url, image) {
+    let enhanced = DirectoryLinksProvider.getEnhancedLink({url: url});
+    do_check_eq(enhanced && enhanced.enhancedImageURI, image);
+  }
+
+  // Get the expected image for the same site
+  checkEnhanced("http://example.net/", "net1");
+  checkEnhanced("http://sub.example.net/", "net1");
+  checkEnhanced("http://example.net/path", "net1");
+  checkEnhanced("https://www.example.net/", "net1");
+
+  // Get the image of the last entry
+  checkEnhanced("http://example.com", "com2");
+
+  // Get the inline enhanced image
+  let inline = DirectoryLinksProvider.getEnhancedLink({
+    url: "http://example.com/echo",
+    enhancedImageURI: "echo",
+  });
+  do_check_eq(inline.enhancedImageURI, "echo");
+  do_check_eq(inline.url, "http://example.com/echo");
+
+  // Undefined for not enhanced
+  checkEnhanced("http://example.org", undefined);
+
+  // Make sure old data is not cached
+  data = {"en-US": [
+    {url: "http://example.com", enhancedImageURI: "fresh"},
+  ]};
+  dataURI = 'data:application/json,' + JSON.stringify(data);
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+  links = yield fetchData();
+  do_check_eq(links.length, 1);
+  checkEnhanced("http://example.net", undefined);
+  checkEnhanced("http://example.com", "fresh");
+});
