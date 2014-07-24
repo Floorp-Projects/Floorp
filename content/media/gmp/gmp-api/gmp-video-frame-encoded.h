@@ -90,9 +90,9 @@ public:
   virtual GMPBufferType  BufferType() const = 0;
   virtual void     SetBufferType(GMPBufferType aBufferType) = 0;
 
-  // Get data describing how this frame is encrypted, or nullptr if the
+  // Get metadata describing how this frame is encrypted, or nullptr if the
   // frame is not encrypted.
-  virtual const GMPEncryptedBufferData* GetDecryptionData() const = 0;
+  virtual const GMPEncryptedBufferMetadata* GetDecryptionData() const = 0;
 };
 
 #endif // GMP_VIDEO_FRAME_ENCODED_h_

@@ -76,10 +76,6 @@ interface HTMLElement : Element {
   readonly attribute CSSStyleDeclaration style;
 
   // Mozilla specific stuff
-  // FIXME Bug 810677 Move className from HTMLElement to Element
-  [Pure]
-           attribute DOMString className;
-
            attribute EventHandler oncopy;
            attribute EventHandler oncut;
            attribute EventHandler onpaste;

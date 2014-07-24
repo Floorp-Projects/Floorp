@@ -2,26 +2,33 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@drawable/search_card_background"
+    android:paddingLeft="@dimen/card_padding_x"
+    android:paddingRight="@dimen/card_padding_x"
+    android:paddingTop="0dp"
+    android:paddingBottom="0dp"
     android:descendantFocusability="blocksDescendants"
     android:orientation="horizontal">
 
     <TextView
         android:id="@+id/auto_complete_row_text"
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_weight="1"/>
+        android:paddingTop="@dimen/card_padding_y"
+        android:paddingBottom="@dimen/card_padding_y"
+        android:textSize="16sp"/>
 
     <Button
         android:id="@+id/auto_complete_row_jump_button"
-        style="@style/BorderLessButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/search_jump_arrow"/>
+        android:layout_gravity="right|center_vertical"
+        android:text="@string/search_jump_arrow"
+        android:background="@android:color/transparent"
+        android:padding="0dp" />
 
-</LinearLayout>
+</FrameLayout>

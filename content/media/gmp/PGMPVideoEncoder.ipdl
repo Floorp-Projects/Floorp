@@ -8,6 +8,7 @@ include GMPTypes;
 
 using GMPVideoCodec from "gmp-video-codec.h";
 using GMPVideoFrameType from "gmp-video-frame-encoded.h";
+using GMPErr from "gmp-errors.h";
 
 include "GMPMessageUtils.h";
 
@@ -35,6 +36,7 @@ parent:
   async __delete__();
   async Encoded(GMPVideoEncodedFrameData aEncodedFrame,
                 uint8_t[] aCodecSpecificInfo);
+  async Error(GMPErr aErr);
   async ParentShmemForPool(Shmem aFrameBuffer);
   // MUST be intr - if sync and we create a new Shmem, when the returned
   // Shmem is received in the Child it will fail to Deserialize

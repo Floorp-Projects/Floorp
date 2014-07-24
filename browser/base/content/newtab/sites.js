@@ -153,12 +153,26 @@ Site.prototype = {
    * Refreshes the thumbnail for the site.
    */
   refreshThumbnail: function Site_refreshThumbnail() {
+    // Only enhance tiles if that feature is turned on
+    let link = gAllPages.enhanced && DirectoryLinksProvider.getEnhancedLink(this.link) ||
+               this.link;
+
     let thumbnail = this._querySelector(".newtab-thumbnail");
-    if (this.link.bgColor) {
-      thumbnail.style.backgroundColor = this.link.bgColor;
+    if (link.bgColor) {
+      thumbnail.style.backgroundColor = link.bgColor;
     }
-    let uri = this.link.imageURI || PageThumbs.getThumbnailURL(this.url);
+
+    let uri = link.imageURI || PageThumbs.getThumbnailURL(this.url);
     thumbnail.style.backgroundImage = 'url("' + uri + '")';
+
+    if (link.enhancedImageURI) {
+      let enhanced = this._querySelector(".enhanced-content");
+      enhanced.style.backgroundImage = 'url("' + link.enhancedImageURI + '")';
+
+      if (this.link.type != link.type) {
+        this.node.setAttribute("type", "enhanced");
+      }
+    }
   },
 
   /**
