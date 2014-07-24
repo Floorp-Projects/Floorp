@@ -249,7 +249,7 @@ function test() {
       info("XXX BUG 851296: 'off' received.");
       executeSoon(restart);
     });
-    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    mgr.toggle(window, gBrowser.selectedTab);
   }
 
   function restart() {
@@ -276,7 +276,7 @@ function test() {
     is(content.innerHeight, heightBeforeClose, "height restored.");
 
     mgr.once("off", function() {executeSoon(testScreenshot)});
-    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    mgr.toggle(window, gBrowser.selectedTab);
   }
 
   function testScreenshot() {
