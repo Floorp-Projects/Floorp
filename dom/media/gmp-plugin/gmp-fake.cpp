@@ -121,7 +121,7 @@ class FakeVideoEncoder : public GMPVideoEncoder {
     host_ (hostAPI),
     callback_ (NULL) {}
 
-  virtual GMPErr InitEncode (const GMPVideoCodec& codecSettings,
+  virtual void InitEncode (const GMPVideoCodec& codecSettings,
                              const uint8_t* aCodecSpecific,
                              uint32_t aCodecSpecificSize,
                              GMPVideoEncoderCallback* callback,
@@ -130,11 +130,9 @@ class FakeVideoEncoder : public GMPVideoEncoder {
     callback_ = callback;
 
     GMPLOG (GL_INFO, "Initialized encoder");
-
-    return GMPNoErr;
   }
 
-  virtual GMPErr Encode (GMPVideoi420Frame* inputImage,
+  virtual void Encode (GMPVideoi420Frame* inputImage,
                          const uint8_t* aCodecSpecificInfo,
                          uint32_t aCodecSpecificInfoLength,
                          const GMPVideoFrameType* aFrameTypes,
@@ -149,8 +147,6 @@ class FakeVideoEncoder : public GMPVideoEncoder {
     g_platform_api->runonmainthread(new FakeEncoderTask(this,
                                                         inputImage,
                                                         aFrameTypes[0]));
-
-    return GMPGenericErr;
   }
 
   void Encode_m (GMPVideoi420Frame* inputImage,
@@ -223,16 +219,13 @@ class FakeVideoEncoder : public GMPVideoEncoder {
     GMPLOG (GL_DEBUG, "Callback called");
   }
 
-  virtual GMPErr SetChannelParameters (uint32_t aPacketLoss, uint32_t aRTT) {
-    return GMPNoErr;
+  virtual void SetChannelParameters (uint32_t aPacketLoss, uint32_t aRTT) {
   }
 
-  virtual GMPErr SetRates (uint32_t aNewBitRate, uint32_t aFrameRate) {
-    return GMPNoErr;
+  virtual void SetRates (uint32_t aNewBitRate, uint32_t aFrameRate) {
   }
 
-  virtual GMPErr SetPeriodicKeyFrames (bool aEnable) {
-    return GMPNoErr;
+  virtual void SetPeriodicKeyFrames (bool aEnable) {
   }
 
   virtual void EncodingComplete() {
@@ -283,7 +276,7 @@ class FakeVideoDecoder : public GMPVideoDecoder {
   virtual ~FakeVideoDecoder() {
   }
 
-  virtual GMPErr InitDecode (const GMPVideoCodec& codecSettings,
+  virtual void InitDecode (const GMPVideoCodec& codecSettings,
                              const uint8_t* aCodecSpecific,
                              uint32_t aCodecSpecificSize,
                              GMPVideoDecoderCallback* callback,
@@ -291,10 +284,9 @@ class FakeVideoDecoder : public GMPVideoDecoder {
     GMPLOG (GL_INFO, "InitDecode");
 
     callback_ = callback;
-    return GMPNoErr;
   }
 
-  virtual GMPErr Decode (GMPVideoEncodedFrame* inputFrame,
+  virtual void Decode (GMPVideoEncodedFrame* inputFrame,
                          bool missingFrames,
                          const uint8_t* aCodecSpecificInfo,
                          uint32_t aCodecSpecificInfoLength,
@@ -303,16 +295,12 @@ class FakeVideoDecoder : public GMPVideoDecoder {
             << "Decoding frame size=" << inputFrame->Size()
             << " timestamp=" << inputFrame->TimeStamp());
     g_platform_api->runonmainthread(new FakeDecoderTask(this, inputFrame, renderTimeMs));
-
-    return GMPNoErr;
   }
 
-  virtual GMPErr Reset() {
-    return GMPNoErr;
+  virtual void Reset() {
   }
 
-  virtual GMPErr Drain() {
-    return GMPNoErr;
+  virtual void Drain() {
   }
 
   virtual void DecodingComplete() {

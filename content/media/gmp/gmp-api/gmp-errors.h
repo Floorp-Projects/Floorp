@@ -39,8 +39,12 @@ typedef enum {
   GMPClosedErr = 2,
   GMPAllocErr = 3,
   GMPNotImplementedErr = 4,
-  GMPNotClosedErr = 5,
+  GMPRecordInUse = 5,
   GMPQuotaExceededErr = 6,
+  GMPDecodeErr = 7,
+  GMPEncodeErr = 8,
+  GMPNoKeyErr = 9,
+  GMPCryptoErr = 10,
   GMPLastErr // Placeholder, must be last. This enum's values must remain consecutive!
 } GMPErr;
 
