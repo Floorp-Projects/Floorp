@@ -1,6 +1,7 @@
---- /home/paul/workspace/repositories/opus-tools/src/resample.c	2012-11-21 11:36:59.119430163 +0100
-+++ media/libspeex_resampler/src/resample.c	2013-08-09 19:24:39.060236120 +0200
-@@ -92,18 +92,28 @@
+diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/src/resample.c
+--- a/media/libspeex_resampler/src/resample.c
++++ b/media/libspeex_resampler/src/resample.c
+@@ -90,18 +90,28 @@ static void speex_free (void *ptr) {free
                 
  #define IMAX(a,b) ((a) > (b) ? (a) : (b))
  #define IMIN(a,b) ((a) < (b) ? (a) : (b))
@@ -13,23 +14,23 @@
 +
 +/* We compile SSE code on x86 all the time, but we only use it if we find at
 + * runtime that the CPU supports it. */
- #if defined(FLOATING_POINT) && defined(__SSE__)
-+#if defined(_MSC_VER)
+ #ifdef _USE_SSE
++#ifdef _MSC_VER
 +#define inline __inline
 +#endif
- # include "resample_sse.h"
+ #include "resample_sse.h"
 +#ifdef _MSC_VER
 +#undef inline
 +#endif
  #endif
  
+ #ifdef _USE_NEON
+ #include "resample_neon.h"
+ #endif
+ 
  /* Numer of elements to allocate on the stack */
  #ifdef VAR_ARRAYS
- #define FIXED_STACK_ALLOC 8192
- #else
- #define FIXED_STACK_ALLOC 1024
- #endif
-@@ -340,35 +350,39 @@
+@@ -342,17 +352,19 @@ static int resampler_basic_direct_single
     const spx_uint32_t den_rate = st->den_rate;
     spx_word32_t sum;
  
@@ -40,9 +41,7 @@
  
 -#ifndef OVERRIDE_INNER_PRODUCT_SINGLE
 +#ifdef OVERRIDE_INNER_PRODUCT_SINGLE
-+    if (moz_has_sse()) {
-+      sum = inner_product_single(sinct, iptr, N);
-+    } else {
++      if (!moz_has_sse()) {
 +#endif
        int j;
        sum = 0;
@@ -52,7 +51,7 @@
        Plus this this forces truncation to 32 bits and you lose the HW guard bits.
        I think we can trust the compiler and let it vectorize and/or unroll itself.
        spx_word32_t accum[4] = {0,0,0,0};
-       for(j=0;j<N;j+=4) {
+@@ -360,18 +372,20 @@ static int resampler_basic_direct_single
          accum[0] += MULT16_16(sinct[j], iptr[j]);
          accum[1] += MULT16_16(sinct[j+1], iptr[j+1]);
          accum[2] += MULT16_16(sinct[j+2], iptr[j+2]);
@@ -60,19 +59,21 @@
        }
        sum = accum[0] + accum[1] + accum[2] + accum[3];
  */
+       sum = SATURATE32PSHR(sum, 15, 32767);
 -#else
--      sum = inner_product_single(sinct, iptr, N);
 +#ifdef OVERRIDE_INNER_PRODUCT_SINGLE
-+    }
++      } else {
+       sum = inner_product_single(sinct, iptr, N);
++      }
  #endif
  
-       out[out_stride * out_sample++] = SATURATE32(PSHR32(sum, 15), 32767);
+       out[out_stride * out_sample++] = sum;
        last_sample += int_advance;
        samp_frac_num += frac_advance;
        if (samp_frac_num >= den_rate)
        {
           samp_frac_num -= den_rate;
-@@ -397,29 +411,33 @@
+@@ -400,29 +414,33 @@ static int resampler_basic_direct_double
     const spx_uint32_t den_rate = st->den_rate;
     double sum;
  
@@ -82,34 +83,24 @@
        const spx_word16_t *iptr = & in[last_sample];
  
 -#ifndef OVERRIDE_INNER_PRODUCT_DOUBLE
--      int j;
--      double accum[4] = {0,0,0,0};
--
--      for(j=0;j<N;j+=4) {
--        accum[0] += sinct[j]*iptr[j];
--        accum[1] += sinct[j+1]*iptr[j+1];
--        accum[2] += sinct[j+2]*iptr[j+2];
--        accum[3] += sinct[j+3]*iptr[j+3];
 +#ifdef OVERRIDE_INNER_PRODUCT_DOUBLE
 +      if(moz_has_sse2()) {
-+        sum = inner_product_double(sinct, iptr, N);
-+      } else {
 +#endif
-+        int j;
-+        double accum[4] = {0,0,0,0};
-+
-+        for(j=0;j<N;j+=4) {
-+          accum[0] += sinct[j]*iptr[j];
-+          accum[1] += sinct[j+1]*iptr[j+1];
-+          accum[2] += sinct[j+2]*iptr[j+2];
-+          accum[3] += sinct[j+3]*iptr[j+3];
-+        }
-+        sum = accum[0] + accum[1] + accum[2] + accum[3];
-+#ifdef OVERRIDE_INNER_PRODUCT_DOUBLE
+       int j;
+       double accum[4] = {0,0,0,0};
+ 
+       for(j=0;j<N;j+=4) {
+         accum[0] += sinct[j]*iptr[j];
+         accum[1] += sinct[j+1]*iptr[j+1];
+         accum[2] += sinct[j+2]*iptr[j+2];
+         accum[3] += sinct[j+3]*iptr[j+3];
        }
--      sum = accum[0] + accum[1] + accum[2] + accum[3];
+       sum = accum[0] + accum[1] + accum[2] + accum[3];
 -#else
--      sum = inner_product_double(sinct, iptr, N);
++#ifdef OVERRIDE_INNER_PRODUCT_DOUBLE
++      } else {
+       sum = inner_product_double(sinct, iptr, N);
++      }
  #endif
  
        out[out_stride * out_sample++] = PSHR32(sum, 15);
@@ -118,7 +109,7 @@
        if (samp_frac_num >= den_rate)
        {
           samp_frac_num -= den_rate;
-@@ -453,35 +471,38 @@
+@@ -456,34 +474,38 @@ static int resampler_basic_interpolate_s
  #ifdef FIXED_POINT
        const spx_word16_t frac = PDIV32(SHL32((samp_frac_num*st->oversample) % st->den_rate,15),st->den_rate);
  #else
@@ -128,53 +119,38 @@
  
  
 -#ifndef OVERRIDE_INTERPOLATE_PRODUCT_SINGLE
--      int j;
--      spx_word32_t accum[4] = {0,0,0,0};
--
--      for(j=0;j<N;j++) {
--        const spx_word16_t curr_in=iptr[j];
--        accum[0] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset-2]);
--        accum[1] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset-1]);
--        accum[2] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset]);
--        accum[3] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset+1]);
 +#ifdef OVERRIDE_INTERPOLATE_PRODUCT_SINGLE
-+      if (moz_has_sse()) {
-+        cubic_coef(frac, interp);
-+        sum = interpolate_product_single(iptr, st->sinc_table + st->oversample + 4 - offset - 2, N, st->oversample, interp);
-+      } else {
++      if (!moz_has_sse()) {
 +#endif
-+        int j;
-+        spx_word32_t accum[4] = {0,0,0,0};
-+
-+        for(j=0;j<N;j++) {
-+          const spx_word16_t curr_in=iptr[j];
-+          accum[0] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset-2]);
-+          accum[1] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset-1]);
-+          accum[2] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset]);
-+          accum[3] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset+1]);
-+        }
-+        cubic_coef(frac, interp);
-+        sum = MULT16_32_Q15(interp[0],SHR32(accum[0], 1)) + MULT16_32_Q15(interp[1],SHR32(accum[1], 1)) + MULT16_32_Q15(interp[2],SHR32(accum[2], 1)) + MULT16_32_Q15(interp[3],SHR32(accum[3], 1));
-+#ifdef OVERRIDE_INTERPOLATE_PRODUCT_SINGLE
+       int j;
+       spx_word32_t accum[4] = {0,0,0,0};
+ 
+       for(j=0;j<N;j++) {
+         const spx_word16_t curr_in=iptr[j];
+         accum[0] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset-2]);
+         accum[1] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset-1]);
+         accum[2] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset]);
+         accum[3] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset+1]);
        }
--
--      cubic_coef(frac, interp);
--      sum = MULT16_32_Q15(interp[0],SHR32(accum[0], 1)) + MULT16_32_Q15(interp[1],SHR32(accum[1], 1)) + MULT16_32_Q15(interp[2],SHR32(accum[2], 1)) + MULT16_32_Q15(interp[3],SHR32(accum[3], 1));
+ 
+       cubic_coef(frac, interp);
+       sum = MULT16_32_Q15(interp[0],SHR32(accum[0], 1)) + MULT16_32_Q15(interp[1],SHR32(accum[1], 1)) + MULT16_32_Q15(interp[2],SHR32(accum[2], 1)) + MULT16_32_Q15(interp[3],SHR32(accum[3], 1));
+       sum = SATURATE32PSHR(sum, 15, 32767);
 -#else
--      cubic_coef(frac, interp);
--      sum = interpolate_product_single(iptr, st->sinc_table + st->oversample + 4 - offset - 2, N, st->oversample, interp);
++#ifdef OVERRIDE_INTERPOLATE_PRODUCT_SINGLE
++      } else {
+       cubic_coef(frac, interp);
+       sum = interpolate_product_single(iptr, st->sinc_table + st->oversample + 4 - offset - 2, N, st->oversample, interp);
++      }
  #endif
--      
-+
-       out[out_stride * out_sample++] = SATURATE32(PSHR32(sum, 14), 32767);
+       
+       out[out_stride * out_sample++] = sum;
        last_sample += int_advance;
        samp_frac_num += frac_advance;
        if (samp_frac_num >= den_rate)
        {
           samp_frac_num -= den_rate;
-          last_sample++;
-       }
-@@ -515,35 +536,38 @@
+@@ -519,33 +541,37 @@ static int resampler_basic_interpolate_d
  #ifdef FIXED_POINT
        const spx_word16_t frac = PDIV32(SHL32((samp_frac_num*st->oversample) % st->den_rate,15),st->den_rate);
  #else
@@ -185,10 +161,7 @@
  
 -#ifndef OVERRIDE_INTERPOLATE_PRODUCT_DOUBLE
 +#ifdef OVERRIDE_INTERPOLATE_PRODUCT_DOUBLE
-+      if (moz_has_sse2()) {
-+        cubic_coef(frac, interp);
-+        sum = interpolate_product_double(iptr, st->sinc_table + st->oversample + 4 - offset - 2, N, st->oversample, interp);
-+      } else {
++      if (!moz_has_sse2()) {
 +#endif
        int j;
        double accum[4] = {0,0,0,0};
@@ -204,17 +177,16 @@
        cubic_coef(frac, interp);
        sum = MULT16_32_Q15(interp[0],accum[0]) + MULT16_32_Q15(interp[1],accum[1]) + MULT16_32_Q15(interp[2],accum[2]) + MULT16_32_Q15(interp[3],accum[3]);
 -#else
--      cubic_coef(frac, interp);
--      sum = interpolate_product_double(iptr, st->sinc_table + st->oversample + 4 - offset - 2, N, st->oversample, interp);
-+#ifdef OVERRIDE_INNER_PRODUCT_DOUBLE
++#ifdef OVERRIDE_INTERPOLATE_PRODUCT_DOUBLE
++      } else {
+       cubic_coef(frac, interp);
+       sum = interpolate_product_double(iptr, st->sinc_table + st->oversample + 4 - offset - 2, N, st->oversample, interp);
 +      }
  #endif
--      
+       
        out[out_stride * out_sample++] = PSHR32(sum,15);
        last_sample += int_advance;
        samp_frac_num += frac_advance;
        if (samp_frac_num >= den_rate)
        {
           samp_frac_num -= den_rate;
-          last_sample++;
-       }

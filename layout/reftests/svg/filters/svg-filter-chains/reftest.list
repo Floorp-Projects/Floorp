@@ -9,5 +9,6 @@ default-preferences pref(layout.css.filters.enabled,true)
 == intersecting-filter-regions.svg intersecting-filter-regions-ref.svg
 == long-chain.svg simple-chain-ref.svg
 == multiple-primitives-per-filter.svg simple-chain-ref.svg
+== second-filter-uses-SourceAlpha.svg second-filter-uses-SourceAlpha.svg
 == second-filter-uses-SourceGraphic.svg simple-chain-ref.svg
 == simple-chain.svg simple-chain-ref.svg

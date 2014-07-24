@@ -1,5 +1,18 @@
-Gregory Maxwell (greg@xiph.org)
-Jean-Marc Valin - Original opusdec implementation / Resampler
-Thorvald Natvig - Resampler
-Michael Smith   - Ogginfo (basis of opusinfo)
-John Edwards    - Windows audio output
+Jean-Marc Valin <jean-marc.valin@usherbrooke.ca>
+   All the code except the following
+
+David Rowe <david@rowetel.com>
+   lsp.c lsp.h 
+   Also ideas and feedback
+
+John Francis Edwards
+   wave_out.[ch], some #ifdefs for windows port and MSVC project files
+
+Segher Boessenkool
+   Misc. optimizations (for QMF in particular)
+
+Atsuhiko Yamanaka <ymnk@jcraft.com>:
+   Patch to speexenc.c to add Vorbis comment format
+
+Radim Kolar <hsn@cybermail.net>:
+   Patch to speexenc.c for supporting more input formats
