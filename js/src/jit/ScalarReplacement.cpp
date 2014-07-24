@@ -60,10 +60,11 @@ static bool
 IsObjectEscaped(MInstruction *ins)
 {
     MOZ_ASSERT(ins->type() == MIRType_Object);
+    MOZ_ASSERT(ins->isNewObject() || ins->isGuardShape());
 
     // Check if the object is escaped. If the object is not the first argument
     // of either a known Store / Load, then we consider it as escaped. This is a
-    // cheap an conservative escape analysis.
+    // cheap and conservative escape analysis.
     for (MUseIterator i(ins->usesBegin()); i != ins->usesEnd(); i++) {
         MNode *consumer = (*i)->consumer();
         if (!consumer->isDefinition()) {
@@ -81,6 +82,32 @@ IsObjectEscaped(MInstruction *ins)
             if (def->indexOf(*i) == 0)
                 break;
             return true;
+
+          case MDefinition::Op_Slots: {
+#ifdef DEBUG
+            // Assert that MSlots are only used by MStoreSlot and MLoadSlot.
+            MSlots *ins = def->toSlots();
+            MOZ_ASSERT(ins->object() != 0);
+            for (MUseIterator i(ins->usesBegin()); i != ins->usesEnd(); i++) {
+                // toDefinition should normally never fail, since they don't get
+                // captured by resume points.
+                MDefinition *def = (*i)->consumer()->toDefinition();
+                MOZ_ASSERT(def->op() == MDefinition::Op_StoreSlot ||
+                           def->op() == MDefinition::Op_LoadSlot);
+            }
+#endif
+            break;
+          }
+
+          case MDefinition::Op_GuardShape: {
+            MGuardShape *guard = def->toGuardShape();
+            MOZ_ASSERT(!ins->isGuardShape());
+            if (ins->toNewObject()->templateObject()->lastProperty() != guard->shape())
+                return true;
+            if (IsObjectEscaped(def->toInstruction()))
+                return true;
+            break;
+          }
           default:
             return true;
         }
@@ -172,6 +199,65 @@ ScalarReplacementOfObject(MIRGenerator *mir, MIRGraph &graph, GraphState &states
 
                 // Remove original instruction.
                 ins = block->discardDefAt(ins);
+                continue;
+              }
+
+              case MDefinition::Op_GuardShape: {
+                MGuardShape *def = ins->toGuardShape();
+
+                // Skip loads made on other objects.
+                if (def->obj() != obj)
+                    break;
+
+                // Replace the shape guard by its object.
+                ins->replaceAllUsesWith(obj);
+
+                // Remove original instruction.
+                ins = block->discardDefAt(ins);
+                continue;
+              }
+
+              case MDefinition::Op_LoadSlot: {
+                MLoadSlot *def = ins->toLoadSlot();
+
+                // Skip loads made on other objects.
+                MSlots *slots = def->slots()->toSlots();
+                if (slots->object() != obj) {
+                    // Guard objects are replaced when they are visited.
+                    MOZ_ASSERT(!slots->object()->isGuardShape() || slots->object()->toGuardShape()->obj() != obj);
+                    break;
+                }
+
+                // Replace load by the slot value.
+                ins->replaceAllUsesWith(state->getDynamicSlot(def->slot()));
+
+                // Remove original instruction.
+                ins = block->discardDefAt(ins);
+                if (!slots->hasLiveDefUses())
+                    slots->block()->discard(slots);
+                continue;
+              }
+
+              case MDefinition::Op_StoreSlot: {
+                MStoreSlot *def = ins->toStoreSlot();
+
+                // Skip stores made on other objects.
+                MSlots *slots = def->slots()->toSlots();
+                if (slots->object() != obj) {
+                    // Guard objects are replaced when they are visited.
+                    MOZ_ASSERT(!slots->object()->isGuardShape() || slots->object()->toGuardShape()->obj() != obj);
+                    break;
+                }
+
+                // Clone the state and update the slot value.
+                state = BlockState::Copy(graph.alloc(), state);
+                state->setDynamicSlot(def->slot(), def->value());
+                block->insertBefore(ins->toInstruction(), state);
+
+                // Remove original instruction.
+                ins = block->discardDefAt(ins);
+                if (!slots->hasLiveDefUses())
+                    slots->block()->discard(slots);
                 continue;
               }
 
