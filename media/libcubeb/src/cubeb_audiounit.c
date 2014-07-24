@@ -654,6 +654,65 @@ int audiounit_stream_set_panning(cubeb_stream * stm, float panning)
   return CUBEB_OK;
 }
 
+int audiounit_stream_get_current_output_device(cubeb_stream * stm,
+                                               cubeb_output_device ** const  device)
+{
+  OSStatus r;
+  uint32_t size;
+  UInt32 data;
+  char strdata[4];
+  AudioDeviceID output_device_id;
+
+  AudioObjectPropertyAddress datasource_address = {
+    kAudioDevicePropertyDataSource,
+    kAudioDevicePropertyScopeOutput,
+    kAudioObjectPropertyElementMaster
+  };
+
+  *device = NULL;
+
+  if (audiounit_get_output_device_id(&output_device_id) != CUBEB_OK) {
+    return CUBEB_ERROR;
+  }
+
+  size = sizeof(UInt32);
+  /* This fails with some USB headset, so simply return an empty string. */
+  r = AudioObjectGetPropertyData(output_device_id, &datasource_address, 0, NULL, &size, &data);
+  if (r != noErr) {
+    size = 0;
+    data = 0;
+  }
+
+  *device = malloc(sizeof(cubeb_output_device));
+  if (!*device) {
+    return CUBEB_ERROR;
+  }
+
+  (*device)->name = malloc(size + 1);
+  if (!(*device)->name) {
+    return CUBEB_ERROR;
+  }
+
+  // Turn the four chars packed into a uint32 into a string
+  strdata[0] = (char)(data >> 24);
+  strdata[1] = (char)(data >> 16);
+  strdata[2] = (char)(data >> 8);
+  strdata[3] = (char)(data);
+
+  memcpy((*device)->name, strdata, size);
+  (*device)->name[size] = '\0';
+
+  return CUBEB_OK;
+}
+
+int audiounit_stream_output_device_destroy(cubeb_stream * stream,
+                                           cubeb_output_device * device)
+{
+  free(device->name);
+  free(device);
+  return CUBEB_OK;
+}
+
 static struct cubeb_ops const audiounit_ops = {
   .init = audiounit_init,
   .get_backend_id = audiounit_get_backend_id,
@@ -668,5 +727,7 @@ static struct cubeb_ops const audiounit_ops = {
   .stream_get_position = audiounit_stream_get_position,
   .stream_get_latency = audiounit_stream_get_latency,
   .stream_set_volume = audiounit_stream_set_volume,
-  .stream_set_panning = audiounit_stream_set_panning
+  .stream_set_panning = audiounit_stream_set_panning,
+  .stream_get_current_output_device = audiounit_stream_get_current_output_device,
+  .stream_output_device_destroy = audiounit_stream_output_device_destroy
 };
