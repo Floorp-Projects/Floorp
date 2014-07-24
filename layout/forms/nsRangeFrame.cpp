@@ -284,14 +284,18 @@ nsRangeFrame::Reflow(nsPresContext*           aPresContext,
     nsFormControlFrame::RegUnRegAccessKey(this, true);
   }
 
-  nscoord computedHeight = aReflowState.ComputedHeight();
-  if (computedHeight == NS_AUTOHEIGHT) {
-    computedHeight = 0;
+  WritingMode wm = aReflowState.GetWritingMode();
+  nscoord computedBSize = aReflowState.ComputedBSize();
+  if (computedBSize == NS_AUTOHEIGHT) {
+    computedBSize = 0;
   }
-  aDesiredSize.Width() = aReflowState.ComputedWidth() +
-                       aReflowState.ComputedPhysicalBorderPadding().LeftRight();
-  aDesiredSize.Height() = computedHeight +
-                        aReflowState.ComputedPhysicalBorderPadding().TopBottom();
+  LogicalSize
+    finalSize(wm,
+              aReflowState.ComputedISize() +
+              aReflowState.ComputedLogicalBorderPadding().IStartEnd(wm),
+              computedBSize +
+              aReflowState.ComputedLogicalBorderPadding().BStartEnd(wm));
+  aDesiredSize.SetSize(wm, finalSize);
 
   ReflowAnonymousContent(aPresContext, aDesiredSize, aReflowState);
 

@@ -379,8 +379,7 @@ nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
     FinishReflowChild(kidFrame, aPresContext, kidSize, nullptr, 0, 0, 0);
   }
 
-  aDesiredSize.Width() = 0;
-  aDesiredSize.Height() = 0;
+  aDesiredSize.ClearSize();
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 }

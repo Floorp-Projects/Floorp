@@ -476,13 +476,17 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
   }
 
   // set values of reflow's out parameters
-  aDesiredSize.Width() = aReflowState.ComputedWidth() +
-                       aReflowState.ComputedPhysicalBorderPadding().LeftRight();
-  aDesiredSize.Height() = aReflowState.ComputedHeight() +
-                        aReflowState.ComputedPhysicalBorderPadding().TopBottom();
+  WritingMode wm = aReflowState.GetWritingMode();
+  LogicalSize
+    finalSize(wm,
+              aReflowState.ComputedISize() +
+              aReflowState.ComputedLogicalBorderPadding().IStartEnd(wm),
+              aReflowState.ComputedBSize() +
+              aReflowState.ComputedLogicalBorderPadding().BStartEnd(wm));
+  aDesiredSize.SetSize(wm, finalSize);
 
   // computation of the ascent wrt the input height
-  nscoord lineHeight = aReflowState.ComputedHeight();
+  nscoord lineHeight = aReflowState.ComputedBSize();
   float inflation = nsLayoutUtils::FontSizeInflationFor(this);
   if (!IsSingleLineTextControl()) {
     lineHeight = nsHTMLReflowState::CalcLineHeight(GetContent(), StyleContext(),
@@ -492,7 +496,6 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet),
                                         inflation);
   // now adjust for our borders and padding
-  WritingMode wm = aReflowState.GetWritingMode();
   aDesiredSize.SetBlockStartAscent(
     nsLayoutUtils::GetCenteredFontBaseline(fontMet, lineHeight) +
     aReflowState.ComputedLogicalBorderPadding().BStart(wm));

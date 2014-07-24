@@ -222,7 +222,8 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   // Place and size the child and update the output metrics
-  LogicalSize convertedSize(wm, nsSize(aMetrics.Width(), aMetrics.Height()));
+  WritingMode lineWM = aMetrics.GetWritingMode();
+  LogicalSize convertedSize = aMetrics.Size(lineWM).ConvertTo(wm, lineWM);
   kid->SetRect(nsRect(bp.IStart(wm), bp.BStart(wm),
                       convertedSize.ISize(wm), convertedSize.BSize(wm)));
   kid->FinishAndStoreOverflow(&aMetrics);

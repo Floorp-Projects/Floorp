@@ -8841,11 +8841,10 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   // initiated at the root, then the size better not change unless its
   // height was unconstrained to start with.
   nsRect boundsRelativeToTarget = nsRect(0, 0, desiredSize.Width(), desiredSize.Height());
-  DebugOnly<nsSize> physicalSize = size.GetPhysicalSize(wm);
   NS_ASSERTION((target == rootFrame &&
                 size.BSize(wm) == NS_UNCONSTRAINEDSIZE) ||
-               (desiredSize.Width() == nsSize(physicalSize).width &&
-                desiredSize.Height() == nsSize(physicalSize).height),
+               (desiredSize.ISize(wm) == size.ISize(wm) &&
+                desiredSize.BSize(wm) == size.BSize(wm)),
                "non-root frame's desired size changed during an "
                "incremental reflow");
   NS_ASSERTION(target == rootFrame ||

@@ -2709,8 +2709,7 @@ static bool IsJustifiableCharacter(const nsTextFragment* aFrag, int32_t aPos,
 void
 nsTextFrame::ClearMetrics(nsHTMLReflowMetrics& aMetrics)
 {
-  aMetrics.Width() = 0;
-  aMetrics.Height() = 0;
+  aMetrics.ClearSize();
   aMetrics.SetBlockStartAscent(0);
   mAscent = 0;
 }
@@ -8031,15 +8030,18 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   // Setup metrics for caller
   // Disallow negative widths
-  aMetrics.Width() = NSToCoordCeil(std::max(gfxFloat(0.0), textMetrics.mAdvanceWidth));
+  WritingMode wm = GetWritingMode();
+  LogicalSize finalSize(wm);
+  finalSize.ISize(wm) = NSToCoordCeil(std::max(gfxFloat(0.0),
+                                               textMetrics.mAdvanceWidth));
 
   if (transformedCharsFit == 0 && !usedHyphenation) {
     aMetrics.SetBlockStartAscent(0);
-    aMetrics.Height() = 0;
+    finalSize.BSize(wm) = 0;
   } else if (boundingBoxType != gfxFont::LOOSE_INK_EXTENTS) {
     // Use actual text metrics for floating first letter frame.
     aMetrics.SetBlockStartAscent(NSToCoordCeil(textMetrics.mAscent));
-    aMetrics.Height() = aMetrics.BlockStartAscent() +
+    finalSize.BSize(wm) = aMetrics.BlockStartAscent() +
       NSToCoordCeil(textMetrics.mDescent);
   } else {
     // Otherwise, ascent should contain the overline drawable area.
@@ -8050,12 +8052,14 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     nscoord fontDescent = fm->MaxDescent();
     aMetrics.SetBlockStartAscent(std::max(NSToCoordCeil(textMetrics.mAscent), fontAscent));
     nscoord descent = std::max(NSToCoordCeil(textMetrics.mDescent), fontDescent);
-    aMetrics.Height() = aMetrics.BlockStartAscent() + descent;
+    finalSize.BSize(wm) = aMetrics.BlockStartAscent() + descent;
   }
+  aMetrics.SetSize(wm, finalSize);
 
   NS_ASSERTION(aMetrics.BlockStartAscent() >= 0,
                "Negative ascent???");
-  NS_ASSERTION(aMetrics.Height() - aMetrics.BlockStartAscent() >= 0,
+  NS_ASSERTION(aMetrics.BSize(aMetrics.GetWritingMode()) -
+               aMetrics.BlockStartAscent() >= 0,
                "Negative descent???");
 
   mAscent = aMetrics.BlockStartAscent();

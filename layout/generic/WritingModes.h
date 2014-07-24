@@ -278,6 +278,11 @@ public:
     return mWritingMode == aOther.mWritingMode;
   }
 
+  bool operator!=(const WritingMode& aOther) const
+  {
+    return mWritingMode != aOther.mWritingMode;
+  }
+
 private:
   friend class LogicalPoint;
   friend class LogicalSize;
@@ -594,6 +599,12 @@ public:
     }
   }
 
+  void SizeTo(WritingMode aWritingMode, nscoord aISize, nscoord aBSize)
+  {
+    CHECK_WRITING_MODE(aWritingMode);
+    mSize.SizeTo(aISize, aBSize);
+  }
+
   /**
    * Dimensions in logical and physical terms
    */
@@ -673,6 +684,16 @@ public:
     CHECK_WRITING_MODE(aFromMode);
     return aToMode == aFromMode ?
       *this : LogicalSize(aToMode, GetPhysicalSize(aFromMode));
+  }
+
+  bool operator==(const LogicalSize& aOther) const
+  {
+    return mWritingMode == aOther.mWritingMode && mSize == aOther.mSize;
+  }
+
+  bool operator!=(const LogicalSize& aOther) const
+  {
+    return mWritingMode != aOther.mWritingMode || mSize != aOther.mSize;
   }
 
 private:
@@ -1236,6 +1257,8 @@ public:
   {
     return (mRect.width == 0 && mRect.height == 0);
   }
+
+  void SetEmpty() { mRect.SetEmpty(); }
 
 /* XXX are these correct?
   nscoord ILeft(WritingMode aWritingMode) const

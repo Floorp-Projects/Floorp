@@ -36,7 +36,9 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  nsHTMLCanvasFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
+  nsHTMLCanvasFrame(nsStyleContext* aContext)
+  : nsContainerFrame(aContext)
+    , mBorderPadding(GetWritingMode()) {}
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
@@ -95,7 +97,7 @@ protected:
 
   nscoord GetContinuationOffset(nscoord* aWidth = 0) const;
 
-  nsMargin mBorderPadding;
+  mozilla::LogicalMargin mBorderPadding;
 };
 
 #endif /* nsHTMLCanvasFrame_h___ */
