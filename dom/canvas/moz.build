@@ -73,6 +73,7 @@ if CONFIG['MOZ_WEBGL']:
         'WebGLExtensionFragDepth.cpp',
         'WebGLExtensionInstancedArrays.cpp',
         'WebGLExtensionLoseContext.cpp',
+        'WebGLExtensionShaderTextureLod.cpp',
         'WebGLExtensionSRGB.cpp',
         'WebGLExtensionStandardDerivatives.cpp',
         'WebGLExtensionTextureFilterAnisotropic.cpp',
