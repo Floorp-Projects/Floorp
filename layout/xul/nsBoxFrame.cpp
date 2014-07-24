@@ -1320,8 +1320,8 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // in calculating glass margins on Windows.
     const nsStyleDisplay* styles = StyleDisplay();
     if (styles && styles->mAppearance == NS_THEME_WIN_EXCLUDE_GLASS) {
-      aBuilder->AddWindowOpaqueRegion(
-          nsRect(aBuilder->ToReferenceFrame(this), GetSize()));
+      nsRect rect = nsRect(aBuilder->ToReferenceFrame(this), GetSize());
+      aBuilder->AddExcludedGlassRegion(rect);
     }
   }
 
@@ -2012,9 +2012,6 @@ public:
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
                        nsTArray<nsIFrame*> *aOutFrames) MOZ_OVERRIDE;
-  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE {
-    return false;
-  }
   NS_DISPLAY_DECL_NAME("XULEventRedirector", TYPE_XUL_EVENT_REDIRECTOR)
 private:
   nsIFrame* mTargetFrame;
