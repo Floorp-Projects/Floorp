@@ -117,11 +117,13 @@ public class GeckoApplication extends Application
 
     @Override
     public void onCreate() {
-        HardwareUtils.init(getApplicationContext());
-        Clipboard.init(getApplicationContext());
-        FilePicker.init(getApplicationContext());
-        GeckoLoader.loadMozGlue();
-        HomePanelsManager.getInstance().init(getApplicationContext());
+        final Context context = getApplicationContext();
+        HardwareUtils.init(context);
+        Clipboard.init(context);
+        FilePicker.init(context);
+        GeckoLoader.loadMozGlue(context);
+        HomePanelsManager.getInstance().init(context);
+
         super.onCreate();
     }
 
