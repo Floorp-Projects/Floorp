@@ -8,21 +8,27 @@
         android:id="@+id/edit_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
         android:imeOptions="actionSearch"
         android:inputType="textNoSuggestions|textVisiblePassword"
-        android:drawableLeft="@drawable/search_icon"
-        android:drawablePadding="10dp"
+        android:drawableLeft="@drawable/search_icon_inactive"
+        android:drawablePadding="5dp"
+        android:textSize="16sp"
+        android:background="@drawable/edit_text_background"
         android:focusable="false"
         android:focusableInTouchMode="false"
-        android:hint="@string/search_bar_hint"/>
+        android:textColorHighlight="@color/highlight_orange"
+        android:hint="@string/search_for_something" />
 
-    <Button
+    <ImageButton
         android:id="@+id/clear_button"
-        android:layout_width="14dp"
-        android:layout_height="14dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:paddingLeft="10dp"
         android:layout_gravity="right|center_vertical"
-        android:layout_marginRight="10dp"
-        android:background="@drawable/search_clear"
+        android:background="@android:color/transparent"
+        android:src="@drawable/search_clear"
+        android:scaleType="centerInside"
         android:visibility="gone"/>
 
 </merge>
