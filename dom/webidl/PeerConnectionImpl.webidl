@@ -61,7 +61,7 @@ interface PeerConnectionImpl  {
   void close();
 
   /* Notify DOM window if this plugin crash is ours */
-  boolean pluginCrash(unsigned long pluginId);
+  boolean pluginCrash(unsigned long long pluginId);
 
   /* Attributes */
   readonly attribute DOMString fingerprint;
