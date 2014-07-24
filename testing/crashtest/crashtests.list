@@ -38,7 +38,7 @@ include ../../dom/src/jsurl/crashtests/crashtests.list
 
 include ../../editor/crashtests.list
 
-include ../../intl/lwbrk/src/crashtests/crashtests.list
+include ../../intl/lwbrk/crashtests/crashtests.list
 include ../../intl/uconv/crashtests/crashtests.list
 
 include ../../js/xpconnect/crashtests/crashtests.list
