@@ -32,7 +32,6 @@
       class="header"
       hidden="true"
       data-category="paneContent">
-  <image class="header-icon"/>
   <label class="header-name">&paneContent.title;</label>
 </hbox>
 

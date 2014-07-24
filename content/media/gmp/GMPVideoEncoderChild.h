@@ -32,6 +32,7 @@ public:
   virtual void Encoded(GMPVideoEncodedFrame* aEncodedFrame,
                        const uint8_t* aCodecSpecificInfo,
                        uint32_t aCodecSpecificInfoLength) MOZ_OVERRIDE;
+  virtual void Error(GMPErr aError) MOZ_OVERRIDE;
 
   // GMPSharedMemManager
   virtual void CheckThread();
