@@ -220,7 +220,7 @@ def killPid(pid):
     log.info("Failed to kill process %d: %s" % (pid, str(e)))
 
 if mozinfo.isWin:
-  import ctypes, ctypes.wintypes, time, msvcrt
+  import ctypes.wintypes
 
   def isPidAlive(pid):
     STILL_ACTIVE = 259
@@ -1322,10 +1322,6 @@ class Mochitest(MochitestUtilsMixin):
     if timeout == -1:
       timeout = self.DEFAULT_TIMEOUT
 
-    # build parameters
-    is_test_build = mozinfo.info.get('tests_enabled', True)
-    bin_suffix = mozinfo.info.get('bin_suffix', '')
-
     # copy env so we don't munge the caller's environment
     env = env.copy()
 
@@ -1968,36 +1964,6 @@ class Mochitest(MochitestUtilsMixin):
 
     with open(os.path.join(options.profilePath, "testConfig.js"), "w") as config:
       config.write(content)
-
-  def installExtensionFromPath(self, options, path, extensionID = None):
-    """install an extension to options.profilePath"""
-
-    # TODO: currently extensionID is unused; see
-    # https://bugzilla.mozilla.org/show_bug.cgi?id=914267
-    # [mozprofile] make extensionID a parameter to install_from_path
-    # https://github.com/mozilla/mozbase/blob/master/mozprofile/mozprofile/addons.py#L169
-
-    extensionPath = self.getFullPath(path)
-
-    log.info("runtests.py | Installing extension at %s to %s." %
-                (extensionPath, options.profilePath))
-
-    addons = AddonManager(options.profilePath)
-
-    # XXX: del the __del__
-    # hack can be removed when mozprofile is mirrored to m-c ; see
-    # https://bugzilla.mozilla.org/show_bug.cgi?id=911218 :
-    # [mozprofile] AddonManager should only cleanup on __del__ optionally:
-    # https://github.com/mozilla/mozbase/blob/master/mozprofile/mozprofile/addons.py#L266
-    if hasattr(addons, '__del__'):
-      del addons.__del__
-
-    addons.install_from_path(path)
-
-  def installExtensionsToProfile(self, options):
-    "Install special testing extensions, application distributed extensions, and specified on the command line ones to testing profile."
-    for path in self.getExtensionsToInstall(options):
-      self.installExtensionFromPath(options, path)
 
   def getTestManifest(self, options):
     if isinstance(options.manifestFile, TestManifest):
