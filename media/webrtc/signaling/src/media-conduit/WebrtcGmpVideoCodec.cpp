@@ -56,6 +56,7 @@ WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder()
   : mGMP(nullptr)
   , mHost(nullptr)
   , mCallback(nullptr)
+  , mCachedPluginId(0)
 {}
 
 static void
@@ -362,6 +363,8 @@ void
 WebrtcGmpVideoEncoder::Terminated()
 {
   LOGD(("GMP Encoder Terminated: %p", (void *)this));
+  mCachedPluginId = PluginID();
+
   // We need to drop our reference to this
   mGMP->Close();
   mGMP = nullptr;
@@ -437,7 +440,8 @@ WebrtcGmpVideoEncoder::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
 WebrtcGmpVideoDecoder::WebrtcGmpVideoDecoder() :
   mGMP(nullptr),
   mHost(nullptr),
-  mCallback(nullptr) {}
+  mCallback(nullptr),
+  mCachedPluginId(0) {}
 
 static void
 Decoder_Close_g(GMPVideoDecoderProxy* aGMP)
@@ -645,6 +649,8 @@ void
 WebrtcGmpVideoDecoder::Terminated()
 {
   LOGD(("GMP Decoder Terminated: %p", (void *)this));
+  mCachedPluginId = PluginID();
+
   mGMP->Close();
   mGMP = nullptr;
   // Could now notify that it's dead
