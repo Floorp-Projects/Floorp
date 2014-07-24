@@ -1484,7 +1484,7 @@ nsTableFrame::ProcessRowInserted(nscoord aNewHeight)
 }
 
 /* virtual */ void
-nsTableFrame::MarkIntrinsicWidthsDirty()
+nsTableFrame::MarkIntrinsicISizesDirty()
 {
   nsITableLayoutStrategy* tls = LayoutStrategy();
   if (MOZ_UNLIKELY(!tls)) {
@@ -1496,11 +1496,11 @@ nsTableFrame::MarkIntrinsicWidthsDirty()
     // destroyed so no need to mark anything dirty here.  See bug 595758.
     return;
   }
-  tls->MarkIntrinsicWidthsDirty();
+  tls->MarkIntrinsicISizesDirty();
 
   // XXXldb Call SetBCDamageArea?
 
-  nsContainerFrame::MarkIntrinsicWidthsDirty();
+  nsContainerFrame::MarkIntrinsicISizesDirty();
 }
 
 /* virtual */ nscoord
@@ -1525,11 +1525,11 @@ nsTableFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
   return LayoutStrategy()->GetPrefISize(aRenderingContext, false);
 }
 
-/* virtual */ nsIFrame::IntrinsicWidthOffsetData
-nsTableFrame::IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext)
+/* virtual */ nsIFrame::IntrinsicISizeOffsetData
+nsTableFrame::IntrinsicISizeOffsets(nsRenderingContext* aRenderingContext)
 {
-  IntrinsicWidthOffsetData result =
-    nsContainerFrame::IntrinsicWidthOffsets(aRenderingContext);
+  IntrinsicISizeOffsetData result =
+    nsContainerFrame::IntrinsicISizeOffsets(aRenderingContext);
 
   result.hMargin = 0;
   result.hPctMargin = 0;

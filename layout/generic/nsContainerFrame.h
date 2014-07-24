@@ -216,7 +216,7 @@ public:
   // Used by both nsInlineFrame and nsFirstLetterFrame.
   void DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
                               InlineIntrinsicISizeData *aData,
-                              nsLayoutUtils::IntrinsicWidthType aType);
+                              nsLayoutUtils::IntrinsicISizeType aType);
 
   /**
    * This is the CSS block concept of computing 'auto' widths, which most

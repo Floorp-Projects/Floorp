@@ -3568,7 +3568,7 @@ nsLayoutUtils::IsViewportScrollbarFrame(nsIFrame* aFrame)
            IsProperAncestorFrame(rootScrolledFrame, aFrame));
 }
 
-static nscoord AddPercents(nsLayoutUtils::IntrinsicWidthType aType,
+static nscoord AddPercents(nsLayoutUtils::IntrinsicISizeType aType,
                            nscoord aCurrent, float aPercent)
 {
   nscoord result = aCurrent;
@@ -3755,7 +3755,7 @@ static int32_t gNoiseIndent = 0;
 /* static */ nscoord
 nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
                                      nsIFrame *aFrame,
-                                     IntrinsicWidthType aType,
+                                     IntrinsicISizeType aType,
                                      uint32_t aFlags)
 {
   NS_PRECONDITION(aFrame, "null frame");
@@ -3772,8 +3772,8 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
   // wrapping inside of it should not apply font size inflation.
   AutoMaybeDisableFontInflation an(aFrame);
 
-  nsIFrame::IntrinsicWidthOffsetData offsets =
-    aFrame->IntrinsicWidthOffsets(aRenderingContext);
+  nsIFrame::IntrinsicISizeOffsetData offsets =
+    aFrame->IntrinsicISizeOffsets(aRenderingContext);
 
   const nsStylePosition *stylePos = aFrame->StylePosition();
   uint8_t boxSizing = stylePos->mBoxSizing;
@@ -4163,7 +4163,7 @@ nsLayoutUtils::MarkDescendantsDirty(nsIFrame *aSubtreeRoot)
       nsIFrame *f = stack.ElementAt(stack.Length() - 1);
       stack.RemoveElementAt(stack.Length() - 1);
 
-      f->MarkIntrinsicWidthsDirty();
+      f->MarkIntrinsicISizesDirty();
 
       if (f->GetType() == nsGkAtoms::placeholderFrame) {
         nsIFrame *oof = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
@@ -4318,31 +4318,31 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
   NS_ASSERTION(aCBSize.width != NS_UNCONSTRAINEDSIZE,
                "Our containing block must not have unconstrained width!");
 
-  bool hasIntrinsicWidth, hasIntrinsicHeight;
-  nscoord intrinsicWidth, intrinsicHeight;
+  bool hasIntrinsicISize, hasIntrinsicBSize;
+  nscoord intrinsicISize, intrinsicBSize;
 
   if (aIntrinsicSize.width.GetUnit() == eStyleUnit_Coord) {
-    hasIntrinsicWidth = true;
-    intrinsicWidth = aIntrinsicSize.width.GetCoordValue();
-    if (intrinsicWidth < 0)
-      intrinsicWidth = 0;
+    hasIntrinsicISize = true;
+    intrinsicISize = aIntrinsicSize.width.GetCoordValue();
+    if (intrinsicISize < 0)
+      intrinsicISize = 0;
   } else {
     NS_ASSERTION(aIntrinsicSize.width.GetUnit() == eStyleUnit_None,
                  "unexpected unit");
-    hasIntrinsicWidth = false;
-    intrinsicWidth = 0;
+    hasIntrinsicISize = false;
+    intrinsicISize = 0;
   }
 
   if (aIntrinsicSize.height.GetUnit() == eStyleUnit_Coord) {
-    hasIntrinsicHeight = true;
-    intrinsicHeight = aIntrinsicSize.height.GetCoordValue();
-    if (intrinsicHeight < 0)
-      intrinsicHeight = 0;
+    hasIntrinsicBSize = true;
+    intrinsicBSize = aIntrinsicSize.height.GetCoordValue();
+    if (intrinsicBSize < 0)
+      intrinsicBSize = 0;
   } else {
     NS_ASSERTION(aIntrinsicSize.height.GetUnit() == eStyleUnit_None,
                  "unexpected unit");
-    hasIntrinsicHeight = false;
-    intrinsicHeight = 0;
+    hasIntrinsicBSize = false;
+    intrinsicBSize = 0;
   }
 
   NS_ASSERTION(aIntrinsicRatio.width >= 0 && aIntrinsicRatio.height >= 0,
@@ -4359,10 +4359,10 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
 
       nscoord tentWidth, tentHeight;
 
-      if (hasIntrinsicWidth) {
-        tentWidth = intrinsicWidth;
-      } else if (hasIntrinsicHeight && aIntrinsicRatio.height > 0) {
-        tentWidth = MULDIV(intrinsicHeight, aIntrinsicRatio.width, aIntrinsicRatio.height);
+      if (hasIntrinsicISize) {
+        tentWidth = intrinsicISize;
+      } else if (hasIntrinsicBSize && aIntrinsicRatio.height > 0) {
+        tentWidth = MULDIV(intrinsicBSize, aIntrinsicRatio.width, aIntrinsicRatio.height);
       } else if (aIntrinsicRatio.width > 0) {
         tentWidth = aCBSize.width - boxSizingToMarginEdgeWidth; // XXX scrollbar?
         if (tentWidth < 0) tentWidth = 0;
@@ -4370,8 +4370,8 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
         tentWidth = nsPresContext::CSSPixelsToAppUnits(300);
       }
 
-      if (hasIntrinsicHeight) {
-        tentHeight = intrinsicHeight;
+      if (hasIntrinsicBSize) {
+        tentHeight = intrinsicBSize;
       } else if (aIntrinsicRatio.width > 0) {
         tentHeight = MULDIV(tentWidth, aIntrinsicRatio.height, aIntrinsicRatio.width);
       } else {
@@ -4387,8 +4387,8 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
       height = NS_CSS_MINMAX(height, minHeight, maxHeight);
       if (aIntrinsicRatio.height > 0) {
         width = MULDIV(height, aIntrinsicRatio.width, aIntrinsicRatio.height);
-      } else if (hasIntrinsicWidth) {
-        width = intrinsicWidth;
+      } else if (hasIntrinsicISize) {
+        width = intrinsicISize;
       } else {
         width = nsPresContext::CSSPixelsToAppUnits(300);
       }
@@ -4402,8 +4402,8 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
       width = NS_CSS_MINMAX(width, minWidth, maxWidth);
       if (aIntrinsicRatio.width > 0) {
         height = MULDIV(width, aIntrinsicRatio.height, aIntrinsicRatio.width);
-      } else if (hasIntrinsicHeight) {
-        height = intrinsicHeight;
+      } else if (hasIntrinsicBSize) {
+        height = intrinsicBSize;
       } else {
         height = nsPresContext::CSSPixelsToAppUnits(150);
       }

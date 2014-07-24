@@ -557,7 +557,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 nscoord
-nsSubDocumentFrame::GetIntrinsicWidth()
+nsSubDocumentFrame::GetIntrinsicISize()
 {
   if (!IsInline()) {
     return 0;  // HTML <frame> has no useful intrinsic width
@@ -576,7 +576,7 @@ nsSubDocumentFrame::GetIntrinsicWidth()
 }
 
 nscoord
-nsSubDocumentFrame::GetIntrinsicHeight()
+nsSubDocumentFrame::GetIntrinsicBSize()
 {
   // <frame> processing does not use this routine, only <iframe>
   NS_ASSERTION(IsInline(), "Shouldn't have been called");
@@ -633,7 +633,7 @@ nsSubDocumentFrame::GetMinISize(nsRenderingContext *aRenderingContext)
   if (subDocRoot) {
     result = subDocRoot->GetMinISize(aRenderingContext);
   } else {
-    result = GetIntrinsicWidth();
+    result = GetIntrinsicISize();
   }
 
   return result;
@@ -649,7 +649,7 @@ nsSubDocumentFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
   if (subDocRoot) {
     result = subDocRoot->GetPrefISize(aRenderingContext);
   } else {
-    result = GetIntrinsicWidth();
+    result = GetIntrinsicISize();
   }
 
   return result;

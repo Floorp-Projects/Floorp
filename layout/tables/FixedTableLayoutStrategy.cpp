@@ -19,7 +19,7 @@ FixedTableLayoutStrategy::FixedTableLayoutStrategy(nsTableFrame *aTableFrame)
   : nsITableLayoutStrategy(nsITableLayoutStrategy::Fixed)
   , mTableFrame(aTableFrame)
 {
-    MarkIntrinsicWidthsDirty();
+    MarkIntrinsicISizesDirty();
 }
 
 /* virtual */
@@ -132,7 +132,7 @@ FixedTableLayoutStrategy::GetPrefISize(nsRenderingContext* aRenderingContext,
 }
 
 /* virtual */ void
-FixedTableLayoutStrategy::MarkIntrinsicWidthsDirty()
+FixedTableLayoutStrategy::MarkIntrinsicISizesDirty()
 {
     mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
     mLastCalcWidth = nscoord_MIN;
@@ -247,8 +247,8 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                                  cellFrame, nsLayoutUtils::MIN_WIDTH);
                 } else if (styleWidth->GetUnit() == eStyleUnit_Percent) {
                     // XXX This should use real percentage padding
-                    nsIFrame::IntrinsicWidthOffsetData offsets =
-                        cellFrame->IntrinsicWidthOffsets(aReflowState.rendContext);
+                    nsIFrame::IntrinsicISizeOffsetData offsets =
+                        cellFrame->IntrinsicISizeOffsets(aReflowState.rendContext);
                     float pct = styleWidth->GetPercentValue();
                     colWidth = NSToCoordFloor(pct * float(tableWidth));
 

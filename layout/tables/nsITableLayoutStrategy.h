@@ -30,8 +30,8 @@ public:
     virtual nscoord GetPrefISize(nsRenderingContext* aRenderingContext,
                                  bool aComputingSize) = 0;
 
-    /** Implement nsIFrame::MarkIntrinsicWidthsDirty for the table */
-    virtual void MarkIntrinsicWidthsDirty() = 0;
+    /** Implement nsIFrame::MarkIntrinsicISizesDirty for the table */
+    virtual void MarkIntrinsicISizesDirty() = 0;
 
     /**
      * Compute final column widths based on the intrinsic width data and

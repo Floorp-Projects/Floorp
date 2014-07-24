@@ -127,8 +127,8 @@ protected:
 
   bool IsInline() { return mIsInline; }
 
-  virtual nscoord GetIntrinsicWidth() MOZ_OVERRIDE;
-  virtual nscoord GetIntrinsicHeight() MOZ_OVERRIDE;
+  virtual nscoord GetIntrinsicISize() MOZ_OVERRIDE;
+  virtual nscoord GetIntrinsicBSize() MOZ_OVERRIDE;
 
   // Show our document viewer. The document viewer is hidden via a script
   // runner, so that we can save and restore the presentation if we're

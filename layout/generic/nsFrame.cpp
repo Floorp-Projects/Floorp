@@ -152,7 +152,7 @@ InitBoxMetrics(nsIFrame* aFrame, bool aClear)
   nsBoxLayoutMetrics *metrics = new nsBoxLayoutMetrics();
   props.Set(BoxMetricsProperty(), metrics);
 
-  static_cast<nsFrame*>(aFrame)->nsFrame::MarkIntrinsicWidthsDirty();
+  static_cast<nsFrame*>(aFrame)->nsFrame::MarkIntrinsicISizesDirty();
   metrics->mBlockAscent = 0;
   metrics->mLastSize.SizeTo(0, 0);
 }
@@ -3776,7 +3776,7 @@ nsFrame::GetCursor(const nsPoint& aPoint,
 // Resize and incremental reflow
 
 /* virtual */ void
-nsFrame::MarkIntrinsicWidthsDirty()
+nsFrame::MarkIntrinsicISizesDirty()
 {
   // This version is meant only for what used to be box-to-block adaptors.
   // It should not be called by other derived classes.
@@ -3971,10 +3971,10 @@ AddCoord(const nsStyleCoord& aStyle,
   }
 }
 
-/* virtual */ nsIFrame::IntrinsicWidthOffsetData
-nsFrame::IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext)
+/* virtual */ nsIFrame::IntrinsicISizeOffsetData
+nsFrame::IntrinsicISizeOffsets(nsRenderingContext* aRenderingContext)
 {
-  IntrinsicWidthOffsetData result;
+  IntrinsicISizeOffsetData result;
 
   const nsStyleMargin *styleMargin = StyleMargin();
   AddCoord(styleMargin->mMargin.GetLeft(), aRenderingContext, this,
@@ -8774,13 +8774,13 @@ DR_intrinsic_width_cookie::DR_intrinsic_width_cookie(
   , mResult(aResult)
 {
   MOZ_COUNT_CTOR(DR_intrinsic_width_cookie);
-  mValue = nsFrame::DisplayIntrinsicWidthEnter(mFrame, mType);
+  mValue = nsFrame::DisplayIntrinsicISizeEnter(mFrame, mType);
 }
 
 DR_intrinsic_width_cookie::~DR_intrinsic_width_cookie()
 {
   MOZ_COUNT_DTOR(DR_intrinsic_width_cookie);
-  nsFrame::DisplayIntrinsicWidthExit(mFrame, mType, mResult, mValue);
+  nsFrame::DisplayIntrinsicISizeExit(mFrame, mType, mResult, mValue);
 }
 
 DR_intrinsic_size_cookie::DR_intrinsic_size_cookie(
@@ -9530,7 +9530,7 @@ void* nsFrame::DisplayLayoutEnter(nsIFrame* aFrame)
   return treeNode;
 }
 
-void* nsFrame::DisplayIntrinsicWidthEnter(nsIFrame* aFrame,
+void* nsFrame::DisplayIntrinsicISizeEnter(nsIFrame* aFrame,
                                           const char* aType)
 {
   if (!DR_state->mInited) DR_state->Init();
@@ -9642,7 +9642,7 @@ void nsFrame::DisplayLayoutExit(nsIFrame*            aFrame,
   DR_state->DeleteTreeNode(*treeNode);
 }
 
-void nsFrame::DisplayIntrinsicWidthExit(nsIFrame*            aFrame,
+void nsFrame::DisplayIntrinsicISizeExit(nsIFrame*            aFrame,
                                         const char*          aType,
                                         nscoord              aResult,
                                         void*                aFrameTreeNode)

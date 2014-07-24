@@ -174,7 +174,7 @@ nsBoxFrame::Init(nsIContent*       aContent,
     AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
   }
 
-  MarkIntrinsicWidthsDirty();
+  MarkIntrinsicISizesDirty();
 
   CacheAttributes();
 
@@ -973,7 +973,7 @@ nsBoxFrame::SetDebug(nsBoxLayoutState& aState, bool aDebug)
  
      SetDebugOnChildList(aState, mFirstChild, aDebug);
 
-    MarkIntrinsicWidthsDirty();
+    MarkIntrinsicISizesDirty();
   }
 
   return NS_OK;
@@ -981,7 +981,7 @@ nsBoxFrame::SetDebug(nsBoxLayoutState& aState, bool aDebug)
 #endif
 
 /* virtual */ void
-nsBoxFrame::MarkIntrinsicWidthsDirty()
+nsBoxFrame::MarkIntrinsicISizesDirty()
 {
   SizeNeedsRecalc(mPrefSize);
   SizeNeedsRecalc(mMinSize);
@@ -991,7 +991,7 @@ nsBoxFrame::MarkIntrinsicWidthsDirty()
 
   if (mLayoutManager) {
     nsBoxLayoutState state(PresContext());
-    mLayoutManager->IntrinsicWidthsDirty(this, state);
+    mLayoutManager->IntrinsicISizesDirty(this, state);
   }
 
   // Don't call base class method, since everything it does is within an

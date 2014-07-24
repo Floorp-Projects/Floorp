@@ -17,8 +17,8 @@ public:
   nsFieldSetFrame(nsStyleContext* aContext);
 
   nscoord
-    GetIntrinsicWidth(nsRenderingContext* aRenderingContext,
-                      nsLayoutUtils::IntrinsicWidthType);
+    GetIntrinsicISize(nsRenderingContext* aRenderingContext,
+                      nsLayoutUtils::IntrinsicISizeType);
   virtual nscoord GetMinISize(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
   virtual nscoord GetPrefISize(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
