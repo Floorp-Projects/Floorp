@@ -52,7 +52,7 @@ function run_test()
 {
   // Override MozLoopService's initializeTimer, so that we can verify the timeout is called
   // correctly.
-  MozLoopService._startInitializeTimer = function() {
+  MozLoopService.initializeTimerFunc = function() {
     startTimerCalled = true;
   };
 

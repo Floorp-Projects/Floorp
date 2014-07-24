@@ -262,7 +262,7 @@ WebappsActor.prototype = {
         reg.broadcastMessage("Webapps:UpdateState", {
           app: aApp,
           manifest: manifest,
-          manifestURL: aApp.manifestURL
+          id: aApp.id
         });
         reg.broadcastMessage("Webapps:FireEvent", {
           eventType: ["downloadsuccess", "downloadapplied"],
