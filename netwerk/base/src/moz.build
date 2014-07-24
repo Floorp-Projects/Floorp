@@ -48,7 +48,6 @@ UNIFIED_SOURCES += [
     'nsNetAddr.cpp',
     'nsNetStrings.cpp',
     'nsNetUtil.cpp',
-    'nsNetworkZonePolicy.cpp',
     'nsPACMan.cpp',
     'nsPreloadedStream.cpp',
     'nsProtocolProxyService.cpp',

@@ -1113,9 +1113,6 @@ pref("network.http.connection-timeout", 90);
 // when starting a new speculative connection.
 pref("network.http.speculative-parallel-limit", 6);
 
-// Allow/Forbid speculative connections on loopback.
-pref("network.http.speculative.allowLoopback", false);
-
 // Whether or not to block requests for non head js/css items (e.g. media)
 // while those elements load.
 pref("network.http.rendering-critical-requests-prioritization", true);
@@ -1534,10 +1531,6 @@ pref("network.proxy.autoconfig_retry_interval_max", 300);  // 5 minutes
 
 // Use the HSTS preload list by default
 pref("network.stricttransportsecurity.preloadlist", true);
-
-// Prohibit resource loads from private networks (e.g. RFC1918 like IP
-// addresses) by documents which were loaded from public networks.
-pref("network.zonepolicy.enabled", true);
 
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention

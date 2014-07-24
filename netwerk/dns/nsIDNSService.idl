@@ -138,16 +138,4 @@ interface nsIDNSService : nsISupports
      * If set, only IPv6 addresses will be returned from resolve/asyncResolve.
      */
     const unsigned long RESOLVE_DISABLE_IPV4 = (1 << 7);
-
-    /**
-     * If set, local (RFC1918) addresses will NOT be returned from
-     * resolve/asyncResolve.
-     */
-    const unsigned long RESOLVE_DISABLE_RFC1918 = (1 << 8);
-
-    /**
-     * If set, loopback addresses will NOT be returned from
-     * resolve/asyncResolve.
-     */
-    const unsigned long RESOLVE_DISABLE_LOOPBACK = (1 << 9);
 };
