@@ -43,6 +43,7 @@ jmethodID GeckoAppShell::jGetCurrentNetworkInformationWrapper = 0;
 jmethodID GeckoAppShell::jGetDensity = 0;
 jmethodID GeckoAppShell::jGetDpiWrapper = 0;
 jmethodID GeckoAppShell::jGetExtensionFromMimeTypeWrapper = 0;
+jmethodID GeckoAppShell::jGetExternalPublicDirectory = 0;
 jmethodID GeckoAppShell::jGetHandlersForMimeTypeWrapper = 0;
 jmethodID GeckoAppShell::jGetHandlersForURLWrapper = 0;
 jmethodID GeckoAppShell::jGetIconForExtensionWrapper = 0;
@@ -128,6 +129,7 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jGetDensity = getStaticMethod("getDensity", "()F");
     jGetDpiWrapper = getStaticMethod("getDpi", "()I");
     jGetExtensionFromMimeTypeWrapper = getStaticMethod("getExtensionFromMimeType", "(Ljava/lang/String;)Ljava/lang/String;");
+    jGetExternalPublicDirectory = getStaticMethod("getExternalPublicDirectory", "(Ljava/lang/String;)Ljava/lang/String;");
     jGetHandlersForMimeTypeWrapper = getStaticMethod("getHandlersForMimeType", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
     jGetHandlersForURLWrapper = getStaticMethod("getHandlersForURL", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
     jGetIconForExtensionWrapper = getStaticMethod("getIconForExtension", "(Ljava/lang/String;I)[B");
@@ -599,6 +601,21 @@ jstring GeckoAppShell::GetExtensionFromMimeTypeWrapper(const nsAString& a0) {
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetExtensionFromMimeTypeWrapper, j0);
+    AndroidBridge::HandleUncaughtException(env);
+    jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
+    return ret;
+}
+
+jstring GeckoAppShell::GetExternalPublicDirectory(const nsAString& a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (env->PushLocalFrame(2) != 0) {
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_CRASH("Exception should have caused crash.");
+    }
+
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
+
+    jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetExternalPublicDirectory, j0);
     AndroidBridge::HandleUncaughtException(env);
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
