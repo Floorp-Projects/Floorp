@@ -1652,7 +1652,8 @@ ScriptSource::setSourceCopy(ExclusiveContext *cx, SourceBufferHolder &srcBuf,
 #if defined(JS_THREADSAFE)
     bool canCompressOffThread =
         HelperThreadState().cpuCount > 1 &&
-        HelperThreadState().threadCount >= 2;
+        HelperThreadState().threadCount >= 2 &&
+        CanUseExtraThreads();
 #else
     bool canCompressOffThread = false;
 #endif

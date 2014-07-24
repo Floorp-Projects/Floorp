@@ -2862,6 +2862,11 @@ Vector<PRThread *, 0, SystemAllocPolicy> workerThreads;
 static bool
 EvalInWorker(JSContext *cx, unsigned argc, jsval *vp)
 {
+    if (!CanUseExtraThreads()) {
+        JS_ReportError(cx, "Can't create worker threads with --no-threads");
+        return false;
+    }
+
     CallArgs args = CallArgsFromVp(argc, vp);
     if (!args.get(0).isString()) {
         JS_ReportError(cx, "Invalid arguments to evalInWorker");
@@ -3672,6 +3677,11 @@ OffThreadCompileScriptCallback(void *token, void *callbackData)
 static bool
 OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
 {
+    if (!CanUseExtraThreads()) {
+        JS_ReportError(cx, "Can't use offThreadCompileScript with --no-threads");
+        return false;
+    }
+
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() < 1) {
@@ -6305,6 +6315,7 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('\0', "fuzzing-safe", "Don't expose functions that aren't safe for "
                              "fuzzers to call")
         || !op.addBoolOption('\0', "latin1-strings", "Enable Latin1 strings (default: on)")
+        || !op.addBoolOption('\0', "no-threads", "Disable helper threads and PJS threads")
 #ifdef DEBUG
         || !op.addBoolOption('\0', "dump-entrained-variables", "Print variables which are "
                              "unnecessarily entrained by inner functions")
@@ -6383,6 +6394,9 @@ main(int argc, char **argv, char **envp)
 #endif
 
 #endif // DEBUG
+
+    if (op.getBoolOption("no-threads"))
+        js::DisableExtraThreads();
 
 #ifdef JS_THREADSAFE
     // The fake thread count must be set before initializing the Runtime,
@@ -6463,6 +6477,7 @@ main(int argc, char **argv, char **envp)
     gInterruptFunc.destroy();
 
 #ifdef JS_THREADSAFE
+    MOZ_ASSERT_IF(!CanUseExtraThreads(), workerThreads.empty());
     for (size_t i = 0; i < workerThreads.length(); i++)
         PR_JoinThread(workerThreads[i]);
 #endif

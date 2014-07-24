@@ -483,6 +483,15 @@ void AssertCurrentThreadCanLock(RuntimeLock which);
 inline void AssertCurrentThreadCanLock(RuntimeLock which) {}
 #endif
 
+inline bool
+CanUseExtraThreads()
+{
+    extern bool gCanUseExtraThreads;
+    return gCanUseExtraThreads;
+}
+
+void DisableExtraThreads();
+
 /*
  * Encapsulates portions of the runtime/context that are tied to a
  * single active thread.  Instances of this structure can occur for

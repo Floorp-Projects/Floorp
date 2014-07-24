@@ -64,6 +64,16 @@ using JS::DoubleNaNValue;
 /* static */ size_t JSRuntime::liveRuntimesCount;
 #endif
 
+namespace js {
+    bool gCanUseExtraThreads = true;
+};
+
+void
+js::DisableExtraThreads()
+{
+    gCanUseExtraThreads = false;
+}
+
 const JSSecurityCallbacks js::NullSecurityCallbacks = { };
 
 PerThreadData::PerThreadData(JSRuntime *runtime)

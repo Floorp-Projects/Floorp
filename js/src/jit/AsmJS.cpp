@@ -5521,7 +5521,7 @@ ParallelCompilationEnabled(ExclusiveContext *cx)
     // parsing task, ensure that there another free thread to avoid deadlock.
     // (Note: there is at most one thread used for parsing so we don't have to
     // worry about general dining philosophers.)
-    if (HelperThreadState().threadCount <= 1)
+    if (HelperThreadState().threadCount <= 1 || !CanUseExtraThreads())
         return false;
 
     if (!cx->isJSContext())
