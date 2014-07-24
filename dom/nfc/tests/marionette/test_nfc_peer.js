@@ -12,8 +12,6 @@ function peerReadyCb(evt) {
   let peer = nfc.getNFCPeer(evt.detail);
   ok(peer instanceof MozNFCPeer, "Should get a NFCPeer object.");
 
-  // reset callback.
-  nfc.onpeerready = null;
   NCI.deactivate();
 }
 
@@ -21,6 +19,9 @@ function peerLostCb(evt) {
   log("peerLostCb called");
   ok(evt.detail === undefined, "evt.detail should be undefined");
   ok(true);
+
+  // reset callback.
+  nfc.onpeerready = null;
   nfc.onpeerlost = null;
   toggleNFC(false).then(runNextTest);
 }
@@ -94,10 +95,25 @@ function testCheckNfcPeerObjForInvalidToken() {
   toggleNFC(false).then(runNextTest);
 }
 
+function testPeerLostShouldNotBeCalled() {
+  nfc.onpeerlost = function () {
+    ok(false, "onpeerlost shouldn't be called");
+  };
+
+  toggleNFC(true)
+    .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0))
+    .then(NCI.deactivate)
+    .then(() => toggleNFC(false));
+
+  nfc.onpeerlost = null;
+  runNextTest();
+}
+
 let tests = [
   testPeerReady,
   testCheckP2PRegFailure,
-  testCheckNfcPeerObjForInvalidToken
+  testCheckNfcPeerObjForInvalidToken,
+  testPeerLostShouldNotBeCalled
 ];
 
 SpecialPowers.pushPermissions(

@@ -27,7 +27,7 @@ interface nsINfcPeerEventListener : nsISupports
    void notifyPeerLost(in DOMString sessionToken);
 };
 
-[scriptable, uuid(21559f98-526c-44c8-94fb-2095a112c47c)]
+[scriptable, uuid(5bea28d3-67ee-4916-8c8e-4f35e3666e61)]
 interface nsINfcContentHelper : nsISupports
 {
   const long NFC_EVENT_PEER_READY = 0x01;
@@ -79,13 +79,10 @@ interface nsINfcContentHelper : nsISupports
   *
   * @param appId
   *        Application ID to be registered
-  *
-  * @param event
-  *       Event to be registered. Either NFC_EVENT_PEER_READY or NFC_EVENT_PEER_LOST
   */
-  void registerTargetForPeerEvent(in nsIDOMWindow window,
-                                  in unsigned long appId,
-                                  in octet event);
+  void registerTargetForPeerReady(in nsIDOMWindow window,
+                                  in unsigned long appId);
+
  /**
   * Unregister the given application id with Chrome process
   *
@@ -94,13 +91,10 @@ interface nsINfcContentHelper : nsISupports
   *
   * @param appId
   *        Application ID to be registered
-  *
-  * @param event
-  *       Event to be unregistered. Either NFC_EVENT_PEER_READY or NFC_EVENT_PEER_LOST
   */
-  void unregisterTargetForPeerEvent(in nsIDOMWindow window,
-                                    in unsigned long appId,
-                                    in octet event);
+  void unregisterTargetForPeerReady(in nsIDOMWindow window,
+                                    in unsigned long appId);
+
  /**
   * Checks if the given application's id is a registered peer target (with the Chrome process)
   *
