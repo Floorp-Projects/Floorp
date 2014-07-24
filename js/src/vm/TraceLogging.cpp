@@ -223,6 +223,7 @@ TraceLogger::enable()
 
         stack[i].setActive(true);
         stack[i].setTreeId(tree.currentId() + treeOffset);
+        stack[i].setLastChildId(0);
 
         parent->setLastChildId(tree.currentId() + treeOffset);
 
