@@ -323,6 +323,18 @@ class TestStrictOrderingOnAppendList(unittest.TestCase):
 
         self.assertEqual(len(l), 2)
 
+    def test_add_after_iadd(self):
+        l = StrictOrderingOnAppendList(['b'])
+        l += ['a']
+        l2 = l + ['c', 'd']
+        self.assertEqual(len(l), 2)
+        self.assertEqual(len(l2), 4)
+        self.assertIsInstance(l2, StrictOrderingOnAppendList)
+        with self.assertRaises(UnsortedError):
+            l2 = l + ['d', 'c']
+
+        self.assertEqual(len(l), 2)
+
 
 class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
     def test_strict_ordering_on_append_list_with_flags_factory(self):
