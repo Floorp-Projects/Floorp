@@ -272,6 +272,11 @@ let UI = {
                             nbox.PRIORITY_WARNING_LOW, buttons);
   },
 
+  dismissErrorNotification: function() {
+    let nbox = document.querySelector("#notificationbox");
+    nbox.removeAllNotifications(true);
+  },
+
   /********** RUNTIME **********/
 
   updateRuntimeList: function() {
@@ -326,6 +331,7 @@ let UI = {
         let r = runtime;
         panelItemNode.addEventListener("click", () => {
           this.hidePanels();
+          this.dismissErrorNotification();
           this.connectToRuntime(r);
         }, true);
       }
