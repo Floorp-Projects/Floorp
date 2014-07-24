@@ -1215,6 +1215,7 @@ nsUrlClassifierDBService::Init()
 // nsChannelClassifier is the only consumer of this interface.
 NS_IMETHODIMP
 nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
+                                   bool aTrackingProtectionEnabled,
                                    nsIURIClassifierCallback* c,
                                    bool* result)
 {
@@ -1246,8 +1247,8 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
   }
   nsAutoCString tracking;
   Preferences::GetCString(TRACKING_TABLE_PREF, &tracking);
-  if (!tracking.IsEmpty()) {
-    LOG(("Looking up in tracking table, [cb=%p]", callback.get()));
+  if (aTrackingProtectionEnabled && !tracking.IsEmpty()) {
+    LOG(("Looking up third party in tracking table, [cb=%p]", callback.get()));
     tables.Append(',');
     tables.Append(tracking);
   }
