@@ -53,7 +53,7 @@ MSVC_ENABLE_PGO = True
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '/intl/uconv/src',
+    '/intl/uconv',
 ]
 
 RESOURCE_FILES += [
