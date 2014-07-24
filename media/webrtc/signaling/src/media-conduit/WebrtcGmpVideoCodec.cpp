@@ -51,6 +51,7 @@ WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder()
   : mGMP(nullptr)
   , mHost(nullptr)
   , mCallback(nullptr)
+  , mCachedPluginId(0)
 {}
 
 static void
@@ -355,6 +356,8 @@ WebrtcGmpVideoEncoder::SetRates_g(uint32_t aNewBitRate, uint32_t aFrameRate)
 void
 WebrtcGmpVideoEncoder::Terminated()
 {
+  mCachedPluginId = PluginID();
+
   // We need to drop our reference to this
   mGMP->Close();
   mGMP = nullptr;
@@ -430,7 +433,8 @@ WebrtcGmpVideoEncoder::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
 WebrtcGmpVideoDecoder::WebrtcGmpVideoDecoder() :
   mGMP(nullptr),
   mHost(nullptr),
-  mCallback(nullptr) {}
+  mCallback(nullptr),
+  mCachedPluginId(0) {}
 
 static void
 Decoder_Close_g(GMPVideoDecoderProxy* aGMP)
@@ -637,6 +641,8 @@ WebrtcGmpVideoDecoder::Reset()
 void
 WebrtcGmpVideoDecoder::Terminated()
 {
+  mCachedPluginId = PluginID();
+
   mGMP->Close();
   mGMP = nullptr;
   // Could now notify that it's dead
