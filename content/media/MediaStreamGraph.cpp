@@ -2037,8 +2037,6 @@ MediaStream::RemoveAllListenersImpl()
 void
 MediaStream::DestroyImpl()
 {
-  RemoveAllListenersImpl();
-
   for (int32_t i = mConsumers.Length() - 1; i >= 0; --i) {
     mConsumers[i]->Disconnect();
   }
@@ -2046,6 +2044,7 @@ MediaStream::DestroyImpl()
     mAudioOutputStreams[i].mStream->Shutdown();
   }
   mAudioOutputStreams.Clear();
+  mGraph = nullptr;
 }
 
 void
@@ -2059,8 +2058,10 @@ MediaStream::Destroy()
     Message(MediaStream* aStream) : ControlMessage(aStream) {}
     virtual void Run()
     {
+      mStream->RemoveAllListenersImpl();
+      auto graph = mStream->GraphImpl();
       mStream->DestroyImpl();
-      mStream->GraphImpl()->RemoveStream(mStream);
+      graph->RemoveStream(mStream);
     }
     virtual void RunDuringShutdown()
     { Run(); }
@@ -2341,10 +2342,9 @@ MediaStream::ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment, Media
 void
 SourceMediaStream::DestroyImpl()
 {
-  {
-    MutexAutoLock lock(mMutex);
-    mDestroyed = true;
-  }
+  // Hold mMutex while mGraph is reset so that other threads holding mMutex
+  // can null-check know that the graph will not destroyed.
+  MutexAutoLock lock(mMutex);
   MediaStream::DestroyImpl();
 }
 
@@ -2353,7 +2353,7 @@ SourceMediaStream::SetPullEnabled(bool aEnabled)
 {
   MutexAutoLock lock(mMutex);
   mPullEnabled = aEnabled;
-  if (mPullEnabled && !mDestroyed) {
+  if (mPullEnabled && GraphImpl()) {
     GraphImpl()->EnsureNextIteration();
   }
 }
@@ -2373,8 +2373,8 @@ SourceMediaStream::AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
   data->mCommands = TRACK_CREATE;
   data->mData = aSegment;
   data->mHaveEnough = false;
-  if (!mDestroyed) {
-    GraphImpl()->EnsureNextIteration();
+  if (auto graph = GraphImpl()) {
+    graph->EnsureNextIteration();
   }
 }
 
@@ -2439,8 +2439,8 @@ SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegme
       aSegment->Clear();
     }
   }
-  if (!mDestroyed) {
-    GraphImpl()->EnsureNextIteration();
+  if (auto graph = GraphImpl()) {
+    graph->EnsureNextIteration();
   }
   return appended;
 }
@@ -2538,8 +2538,8 @@ SourceMediaStream::EndTrack(TrackID aID)
       track->mCommands |= TRACK_END;
     }
   }
-  if (!mDestroyed) {
-    GraphImpl()->EnsureNextIteration();
+  if (auto graph = GraphImpl()) {
+    graph->EnsureNextIteration();
   }
 }
 
@@ -2549,8 +2549,8 @@ SourceMediaStream::AdvanceKnownTracksTime(StreamTime aKnownTime)
   MutexAutoLock lock(mMutex);
   MOZ_ASSERT(aKnownTime >= mUpdateKnownTracksTime);
   mUpdateKnownTracksTime = aKnownTime;
-  if (!mDestroyed) {
-    GraphImpl()->EnsureNextIteration();
+  if (auto graph = GraphImpl()) {
+    graph->EnsureNextIteration();
   }
 }
 
@@ -2559,8 +2559,8 @@ SourceMediaStream::FinishWithLockHeld()
 {
   mMutex.AssertCurrentThreadOwns();
   mUpdateFinished = true;
-  if (!mDestroyed) {
-    GraphImpl()->EnsureNextIteration();
+  if (auto graph = GraphImpl()) {
+    graph->EnsureNextIteration();
   }
 }
 
