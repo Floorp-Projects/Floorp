@@ -14,9 +14,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import org.mozilla.search.R;
@@ -24,7 +24,7 @@ import org.mozilla.search.R;
 public class ClearableEditText extends FrameLayout {
 
     private EditText editText;
-    private Button clearButton;
+    private ImageButton clearButton;
     private InputMethodManager inputMethodManager;
 
     private TextListener listener;
@@ -71,7 +71,7 @@ public class ClearableEditText extends FrameLayout {
             }
         });
 
-        clearButton = (Button) findViewById(R.id.clear_button);
+        clearButton = (ImageButton) findViewById(R.id.clear_button);
         clearButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
@@ -99,6 +99,9 @@ public class ClearableEditText extends FrameLayout {
 
         editText.setFocusable(active);
         editText.setFocusableInTouchMode(active);
+
+        final int leftDrawable = active ? R.drawable.search_icon_active : R.drawable.search_icon_inactive;
+        editText.setCompoundDrawablesWithIntrinsicBounds(leftDrawable, 0, 0, 0);
 
         if (active) {
             editText.requestFocus();
