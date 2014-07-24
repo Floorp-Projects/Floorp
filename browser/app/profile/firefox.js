@@ -824,6 +824,14 @@ pref("plugin.state.nprobloxproxy", 2);
 pref("plugin.state.nproblox", 2);
 #endif
 
+// Box Edit, bug 1029654
+#ifdef XP_WIN
+pref("plugin.state.npboxedit", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugin.state.box edit", 2);
+#endif
+
 // display door hanger if flash not installed
 pref("plugins.notifyMissingFlash", true);
 
