@@ -2677,9 +2677,12 @@ GCHelperState::init()
     if (!(done = PR_NewCondVar(rt->gc.lock)))
         return false;
 
-    backgroundAllocation = (GetCPUCount() >= 2);
-
-    HelperThreadState().ensureInitialized();
+    if (CanUseExtraThreads()) {
+        backgroundAllocation = (GetCPUCount() >= 2);
+        HelperThreadState().ensureInitialized();
+    } else {
+        backgroundAllocation = false;
+    }
 #else
     backgroundAllocation = false;
 #endif /* JS_THREADSAFE */
@@ -2755,6 +2758,8 @@ void
 GCHelperState::work()
 {
 #ifdef JS_THREADSAFE
+    JS_ASSERT(CanUseExtraThreads());
+
     AutoLockGC lock(rt);
 
     JS_ASSERT(!thread);
@@ -2812,6 +2817,8 @@ void
 GCHelperState::startBackgroundSweep(bool shouldShrink)
 {
 #ifdef JS_THREADSAFE
+    JS_ASSERT(CanUseExtraThreads());
+
     AutoLockHelperThreadState helperLock;
     AutoLockGC lock(rt);
     JS_ASSERT(state() == IDLE);
@@ -2827,6 +2834,7 @@ void
 GCHelperState::startBackgroundShrink()
 {
 #ifdef JS_THREADSAFE
+    JS_ASSERT(CanUseExtraThreads());
     switch (state()) {
       case IDLE:
         JS_ASSERT(!sweepFlag);
@@ -4333,7 +4341,7 @@ GCRuntime::beginSweepPhase(bool lastGC)
     gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP);
 
 #ifdef JS_THREADSAFE
-    sweepOnBackgroundThread = !lastGC && !TraceEnabled();
+    sweepOnBackgroundThread = !lastGC && !TraceEnabled() && CanUseExtraThreads();
 #endif
 
 #ifdef DEBUG

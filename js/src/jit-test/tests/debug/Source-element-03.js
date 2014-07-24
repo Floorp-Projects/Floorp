@@ -1,6 +1,9 @@
 // Owning elements and attribute names are attached to scripts compiled
 // off-thread.
 
+if (helperThreadCount() === 0)
+  quit(0);
+
 var g = newGlobal();
 var dbg = new Debugger;
 var gDO = dbg.addDebuggee(g);

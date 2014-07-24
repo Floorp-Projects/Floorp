@@ -141,6 +141,8 @@ ThreadPoolWorker::start()
     // Set state to active now, *before* the thread starts:
     state_ = ACTIVE;
 
+    MOZ_ASSERT(CanUseExtraThreads());
+
     return PR_CreateThread(PR_USER_THREAD,
                            HelperThreadMain, this,
                            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
@@ -179,6 +181,7 @@ void
 ThreadPoolWorker::helperLoop()
 {
     MOZ_ASSERT(!isMainThread());
+    MOZ_ASSERT(CanUseExtraThreads());
 
     // This is hokey in the extreme.  To compute the stack limit,
     // subtract the size of the stack from the address of a local

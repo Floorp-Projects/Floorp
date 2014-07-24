@@ -1606,7 +1606,10 @@ HelperThreadCount(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef JS_THREADSAFE
-    args.rval().setInt32(HelperThreadState().threadCount);
+    if (CanUseExtraThreads())
+        args.rval().setInt32(HelperThreadState().threadCount);
+    else
+        args.rval().setInt32(0);
 #else
     args.rval().setInt32(0);
 #endif
