@@ -11,6 +11,9 @@ class Bisect(object):
         self.contents = {}
         self.testRoot = harness.testRoot
         self.testRootAbs = harness.testRootAbs
+        self.repeat = 10
+        self.failcount = 0
+        self.max_failures = 3
 
     def setup(self, tests):
         "This method is used to initialize various variables that are required for test bisection"
@@ -203,13 +206,12 @@ class Bisect(object):
             self.summary.append("\t\t%d test files(start,end,failing). [%s, %s, %s]" % (len(self.contents['testsToRun']), self.contents['testsToRun'][0], self.contents['testsToRun'][-2], self.contents['testsToRun'][-1]))
         else:
             self.summary.append("\t\t1 test file [%s]" % self.contents['testsToRun'][0])
+            return self.check_for_intermittent(options)
 
         if self.result[options.bisectChunk] == "PASS":
             self.summary.append("\t\tno failures found.")
             if self.contents['loop'] == 1:
                 status = -1
-            elif self.contents['loop'] == 2:
-                status = 1
             else:
                 self.contents['result'] = "PASS"
                 status = 0
@@ -236,6 +238,40 @@ class Bisect(object):
                 status = -1
 
         return status
+
+    def check_for_intermittent(self, options):
+        "This method is used to check whether a test is an intermittent."
+        if self.result[options.bisectChunk] == "PASS":
+            self.summary.append("\t\tThe test %s passed." % self.contents['testsToRun'][0])
+            if self.repeat > 0:
+                # loop is set to 1 to again run the single test.
+                self.contents['loop'] = 1
+                self.repeat -= 1
+                return 0
+            else:
+                if self.failcount > 0:
+                    # -1 is being returned as the test is intermittent, so no need to bisect further.
+                    return -1
+                # If the test does not fail even once, then proceed to next chunk for bisection.
+                # loop is set to 2 to proceed on bisection.
+                self.contents['loop'] = 2
+                return 1
+        elif self.result[options.bisectChunk] == "FAIL":
+            self.summary.append("\t\tThe test %s failed." % self.contents['testsToRun'][0])
+            self.failcount += 1
+            self.contents['loop'] = 1
+            self.repeat -= 1
+            # self.max_failures is the maximum number of times a test is allowed
+            # to fail to be called an intermittent. If a test fails more than
+            # limit set, it is a perma-fail.
+            if self.failcount < self.max_failures:
+                if self.repeat == 0:
+                    # -1 is being returned as the test is intermittent, so no need to bisect further.
+                    return -1
+                return 0
+            else:
+                self.summary.append("TEST-UNEXPECTED-FAIL | %s | Bleedthrough detected, this test is the root cause for many of the above failures" % self.contents['testsToRun'][0])
+                return -1
 
     def print_summary(self):
         "This method is used to print the recorded summary."
