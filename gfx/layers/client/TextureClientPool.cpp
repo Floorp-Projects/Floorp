@@ -133,15 +133,8 @@ void
 TextureClientPool::ReturnDeferredClients()
 {
   while (!mTextureClientsDeferred.empty()) {
-    mTextureClients.push(mTextureClientsDeferred.top());
+    ReturnTextureClient(mTextureClientsDeferred.top());
     mTextureClientsDeferred.pop();
-  }
-  ShrinkToMinimumSize();
-  // Kick off the pool shrinking timer if there are still more unused texture
-  // clients than our desired minimum cache size.
-  if (mTextureClients.size() > sMinCacheSize) {
-    mTimer->InitWithFuncCallback(ShrinkCallback, this, sShrinkTimeout,
-                                 nsITimer::TYPE_ONE_SHOT);
   }
 }
 
