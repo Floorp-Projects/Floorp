@@ -914,9 +914,10 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
                         mManager->GetTexturePool(gfxPlatform::GetPlatform()->Optimal2DFormatForContent(GetContentType())),
                         &createdTextureClient, !usingSinglePaintBuffer);
 
-  if (!backBuffer->Lock(OpenMode::OPEN_READ_WRITE)) {
+  if (!backBuffer || !backBuffer->Lock(OpenMode::OPEN_READ_WRITE)) {
     NS_WARNING("Failed to lock tile TextureClient for updating.");
     aTile.DiscardFrontBuffer();
+    aTile.DiscardBackBuffer();
     return aTile;
   }
 
