@@ -1003,7 +1003,7 @@ private:
 
   /* ===================================================================
    * The functions and members in this section are used for testing
-   * purposes only.
+   * and assertion purposes only.
    */
 public:
   /**
@@ -1019,6 +1019,12 @@ public:
    */
   static void SetThreadAssertionsEnabled(bool aEnabled);
   static bool GetThreadAssertionsEnabled();
+  /**
+   * This can be used to assert that the current thread is the
+   * controller/UI thread (on which input events are received.
+   * This does nothing if thread assertions are disabled.
+   */
+  static void AssertOnControllerThread();
   /**
    * Set an extra offset for testing async scrolling.
    */

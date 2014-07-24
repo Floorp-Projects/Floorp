@@ -49,9 +49,9 @@ public:
   virtual const uint8_t* Buffer() const = 0;
   virtual uint8_t*       Buffer() = 0;
 
-  // Get data describing how this frame is encrypted, or nullptr if the
+  // Get metadata describing how this frame is encrypted, or nullptr if the
   // buffer is not encrypted.
-  virtual const GMPEncryptedBufferData* GetDecryptionData() const = 0;
+  virtual const GMPEncryptedBufferMetadata* GetDecryptionData() const = 0;
 };
 
 #endif // GMP_AUDIO_FRAME_h_
