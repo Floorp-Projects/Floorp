@@ -8,6 +8,12 @@ caption {
   background-color: transparent;
 }
 
+button,
+colorpicker[type="button"],
+menulist {
+  margin: 2px 4px;
+}
+
 menulist:not([editable="true"]) > .menulist-dropmarker {
   margin-top: 1px;
   margin-bottom: 1px;
@@ -30,4 +36,18 @@ radio {
 
 .actionsMenu > .menulist-label-box > .menulist-icon {
   -moz-margin-end: 9px;
+}
+
+textbox + button,
+filefield + button {
+  -moz-margin-start: -4px;
+}
+
+#dialogTitle {
+  -moz-margin-start: 13px !important;
+}
+
+.actionButtons {
+  margin-right: 8px !important;
+  margin-left: 8px !important;
 }
