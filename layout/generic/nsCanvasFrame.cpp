@@ -539,9 +539,9 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
     nsIFrame* kidFrame = mFrames.FirstChild();
     bool kidDirty = (kidFrame->GetStateBits() & NS_FRAME_IS_DIRTY) != 0;
 
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
-                                     nsSize(aReflowState.AvailableWidth(),
-                                            aReflowState.AvailableHeight()));
+    nsHTMLReflowState
+      kidReflowState(aPresContext, aReflowState, kidFrame,
+                     aReflowState.AvailableSize(kidFrame->GetWritingMode()));
 
     if (aReflowState.mFlags.mVResize &&
         (kidFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT)) {

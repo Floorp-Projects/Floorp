@@ -205,8 +205,8 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
       // Reflow our one-and-only principal child frame
       nsIFrame*           kidFrame = mFrames.FirstChild();
       nsHTMLReflowMetrics kidDesiredSize(aReflowState);
-      nsSize              availableSpace(aReflowState.AvailableWidth(),
-                                         aReflowState.AvailableHeight());
+      WritingMode         wm = kidFrame->GetWritingMode();
+      LogicalSize         availableSpace = aReflowState.AvailableSize(wm);
       nsHTMLReflowState   kidReflowState(aPresContext, aReflowState,
                                          kidFrame, availableSpace);
 

@@ -8144,9 +8144,11 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
 
   if (HasAbsolutelyPositionedChildren()) {
     // Set up a |reflowState| to pass into ReflowAbsoluteFrames
+    WritingMode wm = GetWritingMode();
     nsHTMLReflowState reflowState(aState.PresContext(), this,
                                   aState.GetRenderingContext(),
-                                  nsSize(size.width, NS_UNCONSTRAINEDSIZE),
+                                  LogicalSize(wm, GetLogicalSize().ISize(wm),
+                                              NS_UNCONSTRAINEDSIZE),
                                   nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
 
     AddStateBits(NS_FRAME_IN_REFLOW);
@@ -8244,10 +8246,11 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
     nsIFrame *parentFrame = GetParent();
     nsFrameState savedState = parentFrame->GetStateBits();
-    nsHTMLReflowState parentReflowState(aPresContext, parentFrame,
-                                        aRenderingContext,
-                                        parentSize,
-                                        nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
+    nsHTMLReflowState
+      parentReflowState(aPresContext, parentFrame, aRenderingContext,
+                        LogicalSize(parentFrame->GetWritingMode(),
+                                    parentSize),
+                        nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
     parentFrame->RemoveStateBits(~nsFrameState(0));
     parentFrame->AddStateBits(savedState);
 
@@ -8282,9 +8285,11 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
     // XXX Is it OK that this reflow state has only one ancestor?
     // (It used to have a bogus parent, skipping all the boxes).
-    nsSize availSize(aWidth, NS_INTRINSICSIZE);
+    WritingMode wm = GetWritingMode();
+    LogicalSize logicalSize(wm, nsSize(aWidth, aHeight));
+    logicalSize.BSize(wm) = NS_INTRINSICSIZE;
     nsHTMLReflowState reflowState(aPresContext, *parentRS, this,
-                                  availSize, -1, -1,
+                                  logicalSize, -1, -1,
                                   nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
 
     // XXX_jwir3: This is somewhat fishy. If this is actually changing the value
@@ -8315,6 +8320,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
         computedHeight = std::max(computedHeight, 0);
         reflowState.SetComputedHeight(computedHeight);
       } else {
+        nsSize availSize = logicalSize.GetPhysicalSize(wm);
         reflowState.SetComputedHeight(
           ComputeSize(aRenderingContext, availSize, availSize.width,
                       nsSize(reflowState.ComputedPhysicalMargin().LeftRight(),

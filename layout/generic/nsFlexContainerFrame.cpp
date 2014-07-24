@@ -959,9 +959,9 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
   // Create temporary reflow state just for sizing -- to get hypothetical
   // main-size and the computed values of min / max main-size property.
   // (This reflow state will _not_ be used for reflow.)
-  nsHTMLReflowState childRS(aPresContext, aParentReflowState, aChildFrame,
-                            nsSize(aParentReflowState.ComputedWidth(),
-                                   aParentReflowState.ComputedHeight()));
+  nsHTMLReflowState
+    childRS(aPresContext, aParentReflowState, aChildFrame,
+            aParentReflowState.ComputedSize(aChildFrame->GetWritingMode()));
 
   // FLEX GROW & SHRINK WEIGHTS
   // --------------------------
@@ -1380,11 +1380,12 @@ nsFlexContainerFrame::
                                const nsHTMLReflowState& aParentReflowState)
 {
   // Set up a reflow state for measuring the flex item's auto-height:
+  WritingMode wm = aFlexItem.Frame()->GetWritingMode();
+  LogicalSize availSize = aParentReflowState.ComputedSize(wm);
+  availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
   nsHTMLReflowState
     childRSForMeasuringHeight(aPresContext, aParentReflowState,
-                              aFlexItem.Frame(),
-                              nsSize(aParentReflowState.ComputedWidth(),
-                                     NS_UNCONSTRAINEDSIZE),
+                              aFlexItem.Frame(), availSize,
                               -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
   childRSForMeasuringHeight.mFlags.mIsFlexContainerMeasuringHeight = true;
   childRSForMeasuringHeight.Init(aPresContext);
@@ -3498,10 +3499,11 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       // (If the item's already been stretched, or it's a strut, then it
       // already knows its cross size.  Don't bother trying to recalculate it.)
       if (!item->IsStretched() && !item->IsStrut()) {
+        WritingMode wm = item->Frame()->GetWritingMode();
+        LogicalSize availSize = aReflowState.ComputedSize(wm);
+        availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
         nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                           item->Frame(),
-                                           nsSize(aReflowState.ComputedWidth(),
-                                                  NS_UNCONSTRAINEDSIZE));
+                                           item->Frame(), availSize);
         // Override computed main-size
         if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
           childReflowState.SetComputedWidth(item->GetMainSize());
@@ -3618,10 +3620,11 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       // (i.e. its frame rect), instead of the container's content-box:
       physicalPosn += containerContentBoxOrigin;
 
+      WritingMode wm = item->Frame()->GetWritingMode();
+      LogicalSize availSize = aReflowState.ComputedSize(wm);
+      availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
       nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                         item->Frame(),
-                                         nsSize(aReflowState.ComputedWidth(),
-                                                NS_UNCONSTRAINEDSIZE));
+                                         item->Frame(), availSize);
 
       // Keep track of whether we've overriden the child's computed height
       // and/or width, so we can set its resize flags accordingly.

@@ -88,7 +88,9 @@ nsPageFrame::Reflow(nsPresContext*           aPresContext,
       return;
     }
 
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
+    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame,
+                                     LogicalSize(frame->GetWritingMode(),
+                                                 maxSize));
     kidReflowState.mFlags.mIsTopOfPage = true;
     kidReflowState.mFlags.mTableIsSplittable = true;
 

@@ -28,7 +28,7 @@ struct nsTableCellReflowState : public nsHTMLReflowState
   nsTableCellReflowState(nsPresContext*           aPresContext,
                          const nsHTMLReflowState& aParentReflowState,
                          nsIFrame*                aFrame,
-                         const nsSize&            aAvailableSpace,
+                         const LogicalSize&       aAvailableSpace,
                          uint32_t                 aFlags = 0)
     : nsHTMLReflowState(aPresContext, aParentReflowState, aFrame,
                         aAvailableSpace, -1, -1, aFlags)
@@ -809,9 +809,10 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       NS_NOTREACHED("yikes, a non-row child");
 
       // it's an unknown frame type, give it a generic reflow and ignore the results
-      nsTableCellReflowState kidReflowState(aPresContext, aReflowState,
-                                            kidFrame, nsSize(0,0),
-                                            nsHTMLReflowState::CALLER_WILL_INIT);
+      nsTableCellReflowState
+        kidReflowState(aPresContext, aReflowState, kidFrame,
+                       LogicalSize(kidFrame->GetWritingMode(), 0, 0),
+                       nsHTMLReflowState::CALLER_WILL_INIT);
       InitChildReflowState(*aPresContext, nsSize(0,0), false, kidReflowState);
       nsHTMLReflowMetrics desiredSize(aReflowState);
       nsReflowStatus  status;
@@ -889,9 +890,11 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
         nsSize  kidAvailSize(availCellWidth, aReflowState.AvailableHeight());
 
         // Reflow the child
-        nsTableCellReflowState kidReflowState(aPresContext, aReflowState, 
-                                              kidFrame, kidAvailSize,
-                                              nsHTMLReflowState::CALLER_WILL_INIT);
+        nsTableCellReflowState
+          kidReflowState(aPresContext, aReflowState, kidFrame,
+                         LogicalSize(kidFrame->GetWritingMode(),
+                                     kidAvailSize),
+                         nsHTMLReflowState::CALLER_WILL_INIT);
         InitChildReflowState(*aPresContext, kidAvailSize, borderCollapse,
                              kidReflowState);
 
@@ -1080,9 +1083,11 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
   nsSize availSize(cellRect.width, aAvailableHeight);
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   bool borderCollapse = tableFrame->IsBorderCollapse();
-  nsTableCellReflowState cellReflowState(aPresContext, aReflowState,
-                                         aCellFrame, availSize,
-                                         nsHTMLReflowState::CALLER_WILL_INIT);
+  nsTableCellReflowState
+    cellReflowState(aPresContext, aReflowState, aCellFrame,
+                    LogicalSize(aCellFrame->GetWritingMode(),
+                                availSize),
+                    nsHTMLReflowState::CALLER_WILL_INIT);
   InitChildReflowState(*aPresContext, availSize, borderCollapse, cellReflowState);
   cellReflowState.mFlags.mIsTopOfPage = aIsTopOfPage;
 
