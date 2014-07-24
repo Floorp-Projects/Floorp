@@ -27,9 +27,11 @@ JS::Zone::Zone(JSRuntime *rt)
     types(this),
     compartments(),
     gcGrayRoots(),
+    gcHeapGrowthFactor(3.0),
     gcMallocBytes(0),
     gcMallocGCTriggered(false),
     usage(&rt->gc.usage),
+    gcTriggerBytes(0),
     data(nullptr),
     isSystem(false),
     usedByExclusiveThread(false),
@@ -46,7 +48,6 @@ JS::Zone::Zone(JSRuntime *rt)
     JS_ASSERT(reinterpret_cast<JS::shadow::Zone *>(this) ==
               static_cast<JS::shadow::Zone *>(this));
 
-    threshold.updateAfterGC(8192, GC_NORMAL, rt->gc.tunables, rt->gc.schedulingState);
     setGCMaxMallocBytes(rt->gc.maxMallocBytesAllocated() * 0.9);
 }
 
@@ -61,9 +62,8 @@ Zone::~Zone()
 #endif
 }
 
-bool Zone::init(bool isSystemArg)
+bool Zone::init()
 {
-    isSystem = isSystemArg;
     return gcZoneGroupEdges.init();
 }
 
