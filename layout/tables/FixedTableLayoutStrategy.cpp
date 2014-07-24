@@ -91,7 +91,7 @@ FixedTableLayoutStrategy::GetMinISize(nsRenderingContext* aRenderingContext)
                      (styleWidth->GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT ||
                       styleWidth->GetIntValue() == NS_STYLE_WIDTH_MIN_CONTENT))) {
                     nscoord cellWidth = nsLayoutUtils::IntrinsicForContainer(
-                        aRenderingContext, cellFrame, nsLayoutUtils::MIN_WIDTH);
+                        aRenderingContext, cellFrame, nsLayoutUtils::MIN_ISIZE);
                     if (colSpan > 1) {
                         // If a column-spanning cell is in the first
                         // row, split up the space evenly.  (XXX This
@@ -237,14 +237,14 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                      (styleWidth->GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT ||
                       styleWidth->GetIntValue() == NS_STYLE_WIDTH_MIN_CONTENT))) {
                     // XXX This should use real percentage padding
-                    // Note that the difference between MIN_WIDTH and
-                    // PREF_WIDTH shouldn't matter for any of these
-                    // values of styleWidth; use MIN_WIDTH for symmetry
+                    // Note that the difference between MIN_ISIZE and
+                    // PREF_ISIZE shouldn't matter for any of these
+                    // values of styleWidth; use MIN_ISIZE for symmetry
                     // with GetMinISize above, just in case there is a
                     // difference.
                     colWidth = nsLayoutUtils::IntrinsicForContainer(
                                  aReflowState.rendContext,
-                                 cellFrame, nsLayoutUtils::MIN_WIDTH);
+                                 cellFrame, nsLayoutUtils::MIN_ISIZE);
                 } else if (styleWidth->GetUnit() == eStyleUnit_Percent) {
                     // XXX This should use real percentage padding
                     nsIFrame::IntrinsicISizeOffsetData offsets =

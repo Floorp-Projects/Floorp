@@ -367,10 +367,10 @@ nsMathMLmrootFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingConte
 
   nscoord baseWidth =
     nsLayoutUtils::IntrinsicForContainer(aRenderingContext, baseFrame,
-                                         nsLayoutUtils::PREF_WIDTH);
+                                         nsLayoutUtils::PREF_ISIZE);
   nscoord indexWidth =
     nsLayoutUtils::IntrinsicForContainer(aRenderingContext, indexFrame,
-                                         nsLayoutUtils::PREF_WIDTH);
+                                         nsLayoutUtils::PREF_ISIZE);
   nscoord sqrWidth = mSqrChar.GetMaxWidth(PresContext(), *aRenderingContext);
 
   nscoord dxSqr;

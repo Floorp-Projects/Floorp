@@ -221,8 +221,8 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
   // If we did that, then for those frames where the condition below is
   // true but nsBlockFrame::BlockCanIntersectFloats is false,
   // nsBlockFrame::WidthToClearPastFloats would need to use the
-  // shrink-wrap formula, max(MIN_WIDTH, min(avail width, PREF_WIDTH))
-  // rather than just using MIN_WIDTH.
+  // shrink-wrap formula, max(MIN_ISIZE, min(avail width, PREF_ISIZE))
+  // rather than just using MIN_ISIZE.
   NS_ASSERTION(nsBlockFrame::BlockCanIntersectFloats(aFrame) == 
                  !aBlockAvoidsFloats,
                "unexpected replaced width");
