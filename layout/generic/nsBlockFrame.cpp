@@ -3034,10 +3034,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // on the childs available space.
       // XXX building a complete nsHTMLReflowState just to get the margin-top
       // seems like a waste. And we do this for almost every block!
-      nsSize availSpace =
-        LogicalSize(aState.mReflowState.GetWritingMode(),
-                    aState.ContentISize(), NS_UNCONSTRAINEDSIZE).
-          GetPhysicalSize(aState.mReflowState.GetWritingMode());
+      WritingMode wm = frame->GetWritingMode();
+      LogicalSize availSpace = aState.ContentSize(wm);
+      availSpace.BSize(wm) = NS_UNCONSTRAINEDSIZE;
       nsHTMLReflowState reflowState(aState.mPresContext, aState.mReflowState,
                                     frame, availSpace);
 
@@ -3179,8 +3178,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     // Reflow the block into the available space
     // construct the html reflow state for the block. ReflowBlock
     // will initialize it
-    nsHTMLReflowState blockHtmlRS(aState.mPresContext, aState.mReflowState, frame,
-                                  availSpace.Size());
+    nsHTMLReflowState
+      blockHtmlRS(aState.mPresContext, aState.mReflowState, frame,
+                  LogicalSize(frame->GetWritingMode(), availSpace.Size()));
     blockHtmlRS.mFlags.mHasClearance = aLine->HasClearance();
 
     nsFloatManager::SavedState floatManagerState;
@@ -3219,7 +3219,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 #if defined(REFLOW_STATUS_COVERAGE)
     RecordReflowStatus(true, frameReflowStatus);
 #endif
-    
+
     if (NS_INLINE_IS_BREAK_BEFORE(frameReflowStatus)) {
       // None of the child block fits.
       *aKeepReflowGoing = false;
@@ -3232,7 +3232,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     }
     else {
       // Note: line-break-after a block is a nop
-      
+
       // Try to place the child block.
       // Don't force the block to fit if we have positive clearance, because
       // pushing it to the next page would give it more room.
@@ -5769,8 +5769,10 @@ nsBlockFrame::ComputeFloatWidth(nsBlockReflowState& aState,
   nsRect availSpace = AdjustFloatAvailableSpace(aState, aFloatAvailableSpace,
                                                 aFloat);
 
-  nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState, aFloat, 
-                            availSpace.Size());
+  WritingMode wm = aFloat->GetWritingMode();
+  nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState, aFloat,
+                            LogicalSize(wm, availSpace.Size()));
+
   return floatRS.ComputedWidth() + floatRS.ComputedPhysicalBorderPadding().LeftRight() +
     floatRS.ComputedPhysicalMargin().LeftRight();
 }
@@ -5797,9 +5799,10 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   );
 #endif
 
-  nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState, aFloat,
-                            nsSize(aAdjustedAvailableSpace.width,
-                                   aAdjustedAvailableSpace.height));
+  nsHTMLReflowState
+    floatRS(aState.mPresContext, aState.mReflowState, aFloat,
+            LogicalSize(aFloat->GetWritingMode(),
+                        aAdjustedAvailableSpace.Size()));
 
   // Normally the mIsTopOfPage state is copied from the parent reflow
   // state.  However, when reflowing a float, if we've placed other
@@ -6797,10 +6800,11 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
   const nsHTMLReflowState &rs = aState.mReflowState;
 
   // Reflow the bullet now
-  nsSize availSize;
-  // Make up a width since it doesn't really matter (XXX).
-  availSize.width = aState.ContentISize();
-  availSize.height = NS_UNCONSTRAINEDSIZE;
+  WritingMode bulletWM = aBulletFrame->GetWritingMode();
+  LogicalSize availSize(bulletWM);
+  // Make up an inline-size since it doesn't really matter (XXX).
+  availSize.ISize(bulletWM) = aState.ContentISize();
+  availSize.BSize(bulletWM) = NS_UNCONSTRAINEDSIZE;
 
   // Get the reason right.
   // XXXwaterson Should this look just like the logic in
@@ -6840,7 +6844,6 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
   LogicalRect logicalFAS(wm, floatAvailSpace, containerWidth);
   // Get the bullet's margin, converted to our writing mode so that we can
   // combine it with other logical values here.
-  WritingMode bulletWM = reflowState.GetWritingMode();
   LogicalMargin bulletMargin =
     reflowState.ComputedLogicalMargin().ConvertTo(wm, bulletWM);
   nscoord iStart = logicalFAS.IStart(wm) -
@@ -7029,7 +7032,8 @@ nsBlockFrame::WidthToClearPastFloats(nsBlockReflowState& aState,
   // All we really need here is the result of ComputeSize, and we
   // could *almost* get that from an nsCSSOffsetState, except for the
   // last argument.
-  nsSize availSpace(availWidth, NS_UNCONSTRAINEDSIZE);
+  LogicalSize availSpace(aFrame->GetWritingMode(),
+                         nsSize(availWidth, NS_UNCONSTRAINEDSIZE));
   nsHTMLReflowState reflowState(aState.mPresContext, aState.mReflowState,
                                 aFrame, availSpace);
   result.borderBoxWidth = reflowState.ComputedWidth() +

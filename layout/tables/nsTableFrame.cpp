@@ -1927,9 +1927,11 @@ nsTableFrame::FixupPositionedTableParts(nsPresContext*           aPresContext,
     // XXX(seth): Note that the dummy reflow state doesn't have a correct
     // chain of parent reflow states. It also doesn't necessarily have a
     // correct containing block.
+    WritingMode wm = positionedPart->GetWritingMode();
+    LogicalSize availSize(wm, size);
+    availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
     nsHTMLReflowState reflowState(aPresContext, positionedPart,
-                                  aReflowState.rendContext,
-                                  nsSize(size.width, NS_UNCONSTRAINEDSIZE),
+                                  aReflowState.rendContext, availSize,
                                   nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
     nsReflowStatus reflowStatus = NS_FRAME_COMPLETE;
 
@@ -2794,10 +2796,12 @@ nsTableFrame::SetupHeaderFooterChild(const nsTableReflowState& aReflowState,
   nsPresContext* presContext = PresContext();
   nscoord pageHeight = presContext->GetPageSize().height;
 
-  // Reflow the child with unconstrainted height
+  // Reflow the child with unconstrained height
+  WritingMode wm = aFrame->GetWritingMode();
+  LogicalSize availSize = aReflowState.reflowState.AvailableSize(wm);
+  availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
   nsHTMLReflowState kidReflowState(presContext, aReflowState.reflowState,
-                                   aFrame,
-                                   nsSize(aReflowState.availSize.width, NS_UNCONSTRAINEDSIZE),
+                                   aFrame, availSize,
                                    -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
   InitChildReflowState(kidReflowState);
   kidReflowState.mFlags.mIsTopOfPage = true;
@@ -2819,12 +2823,12 @@ nsTableFrame::PlaceRepeatedFooter(nsTableReflowState& aReflowState,
                                   nscoord aFooterHeight)
 {
   nsPresContext* presContext = PresContext();
-  nsSize kidAvailSize(aReflowState.availSize);
-  kidAvailSize.height = aFooterHeight;
+  WritingMode wm = aTfoot->GetWritingMode();
+  LogicalSize kidAvailSize(wm, aReflowState.availSize);
+  kidAvailSize.BSize(wm) = aFooterHeight;
   nsHTMLReflowState footerReflowState(presContext,
                                       aReflowState.reflowState,
-                                      aTfoot,
-                                      kidAvailSize,
+                                      aTfoot, kidAvailSize,
                                       -1, -1,
                                       nsHTMLReflowState::CALLER_WILL_INIT);
   InitChildReflowState(footerReflowState);
@@ -2946,7 +2950,9 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
 
       // Reflow the child into the available space
       nsHTMLReflowState kidReflowState(presContext, aReflowState.reflowState,
-                                       kidFrame, kidAvailSize,
+                                       kidFrame,
+                                       LogicalSize(kidFrame->GetWritingMode(),
+                                                   kidAvailSize),
                                        -1, -1,
                                        nsHTMLReflowState::CALLER_WILL_INIT);
       InitChildReflowState(kidReflowState);
@@ -3138,8 +3144,9 @@ nsTableFrame::ReflowColGroups(nsRenderingContext *aRenderingContext)
          kidFrame = kidFrame->GetNextSibling()) {
       if (NS_SUBTREE_DIRTY(kidFrame)) {
         // The column groups don't care about dimensions or reflow states.
-        nsHTMLReflowState kidReflowState(presContext, kidFrame,
-                                       aRenderingContext, nsSize(0,0));
+        nsHTMLReflowState
+          kidReflowState(presContext, kidFrame, aRenderingContext,
+                         LogicalSize(kidFrame->GetWritingMode()));
         nsReflowStatus cgStatus;
         ReflowChild(kidFrame, presContext, kidMet, kidReflowState, 0, 0, 0,
                     cgStatus);

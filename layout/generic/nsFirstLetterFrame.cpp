@@ -169,15 +169,14 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
   nsIFrame* kid = mFrames.FirstChild();
 
   // Setup reflow state for our child
-  nsSize availSize(aReflowState.AvailableWidth(), aReflowState.AvailableHeight());
-  const nsMargin& bp = aReflowState.ComputedPhysicalBorderPadding();
-  nscoord lr = bp.left + bp.right;
-  nscoord tb = bp.top + bp.bottom;
-  NS_ASSERTION(availSize.width != NS_UNCONSTRAINEDSIZE,
-               "should no longer use unconstrained widths");
-  availSize.width -= lr;
-  if (NS_UNCONSTRAINEDSIZE != availSize.height) {
-    availSize.height -= tb;
+  WritingMode wm = aReflowState.GetWritingMode();
+  LogicalSize availSize = aReflowState.AvailableSize();
+  const LogicalMargin& bp = aReflowState.ComputedLogicalBorderPadding();
+  NS_ASSERTION(availSize.ISize(wm) != NS_UNCONSTRAINEDSIZE,
+               "should no longer use unconstrained inline size");
+  availSize.ISize(wm) -= bp.IStartEnd(wm);
+  if (NS_UNCONSTRAINEDSIZE != availSize.BSize(wm)) {
+    availSize.BSize(wm) -= bp.BStartEnd(wm);
   }
 
   // Reflow the child
@@ -185,12 +184,14 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     // When there is no lineLayout provided, we provide our own. The
     // only time that the first-letter-frame is not reflowing in a
     // line context is when its floating.
-    nsHTMLReflowState rs(aPresContext, aReflowState, kid, availSize);
+    WritingMode kidWritingMode = GetWritingMode(kid);
+    LogicalSize kidAvailSize = availSize.ConvertTo(kidWritingMode, wm);
+    nsHTMLReflowState rs(aPresContext, aReflowState, kid, kidAvailSize);
     nsLineLayout ll(aPresContext, nullptr, &aReflowState, nullptr);
 
-    ll.BeginLineReflow(bp.left, bp.top, availSize.width, NS_UNCONSTRAINEDSIZE,
-                       false, true,
-                       ll.LineContainerFrame()->GetWritingMode(kid),
+    ll.BeginLineReflow(bp.IStart(wm), bp.BStart(wm),
+                       availSize.ISize(wm), NS_UNCONSTRAINEDSIZE,
+                       false, true, kidWritingMode,
                        aReflowState.AvailableWidth());
     rs.mLineLayout = &ll;
     ll.SetInFirstLetter(true);
@@ -213,20 +214,25 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
 
     ll->SetInFirstLetter(
       mStyleContext->GetPseudo() == nsCSSPseudoElements::firstLetter);
-    ll->BeginSpan(this, &aReflowState, bp.left, availSize.width, &mBaseline);
+    ll->BeginSpan(this, &aReflowState, bp.IStart(wm),
+                  availSize.ISize(wm), &mBaseline);
     ll->ReflowFrame(kid, aReflowStatus, &aMetrics, pushedFrame);
     ll->EndSpan(this);
     ll->SetInFirstLetter(false);
   }
 
   // Place and size the child and update the output metrics
-  kid->SetRect(nsRect(bp.left, bp.top, aMetrics.Width(), aMetrics.Height()));
+  LogicalSize convertedSize(wm, nsSize(aMetrics.Width(), aMetrics.Height()));
+  kid->SetRect(nsRect(bp.IStart(wm), bp.BStart(wm),
+                      convertedSize.ISize(wm), convertedSize.BSize(wm)));
   kid->FinishAndStoreOverflow(&aMetrics);
   kid->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
 
-  aMetrics.Width() += lr;
-  aMetrics.Height() += tb;
-  aMetrics.SetBlockStartAscent(aMetrics.BlockStartAscent() + bp.top);
+  convertedSize.ISize(wm) += bp.IStartEnd(wm);
+  convertedSize.BSize(wm) += bp.BStartEnd(wm);
+  aMetrics.SetSize(wm, convertedSize);
+  aMetrics.SetBlockStartAscent(aMetrics.BlockStartAscent() +
+                               bp.BStart(wm));
 
   // Ensure that the overflow rect contains the child textframe's overflow rect.
   // Note that if this is floating, the overline/underline drawable area is in

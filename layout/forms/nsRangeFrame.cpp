@@ -343,9 +343,11 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
     // of the track's border box on the center of the nsRangeFrame's content
     // box.
 
-    nsHTMLReflowState trackReflowState(aPresContext, aReflowState, trackFrame,
-                                       nsSize(aReflowState.ComputedWidth(),
-                                              NS_UNCONSTRAINEDSIZE));
+    WritingMode wm = trackFrame->GetWritingMode();
+    LogicalSize availSize = aReflowState.ComputedSize(wm);
+    availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
+    nsHTMLReflowState trackReflowState(aPresContext, aReflowState,
+                                       trackFrame, availSize);
 
     // Find the x/y position of the track frame such that it will be positioned
     // as described above. These coordinates are with respect to the
@@ -376,9 +378,11 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
   nsIFrame* thumbFrame = mThumbDiv->GetPrimaryFrame();
 
   if (thumbFrame) { // display:none?
-    nsHTMLReflowState thumbReflowState(aPresContext, aReflowState, thumbFrame,
-                                       nsSize(aReflowState.ComputedWidth(),
-                                              NS_UNCONSTRAINEDSIZE));
+    WritingMode wm = thumbFrame->GetWritingMode();
+    LogicalSize availSize = aReflowState.ComputedSize(wm);
+    availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
+    nsHTMLReflowState thumbReflowState(aPresContext, aReflowState,
+                                       thumbFrame, availSize);
 
     // Where we position the thumb depends on its size, so we first reflow
     // the thumb at {0,0} to obtain its size, then position it afterwards.
@@ -398,10 +402,11 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
   nsIFrame* rangeProgressFrame = mProgressDiv->GetPrimaryFrame();
 
   if (rangeProgressFrame) { // display:none?
+    WritingMode wm = rangeProgressFrame->GetWritingMode();
+    LogicalSize availSize = aReflowState.ComputedSize(wm);
+    availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
     nsHTMLReflowState progressReflowState(aPresContext, aReflowState,
-                                          rangeProgressFrame,
-                                          nsSize(aReflowState.ComputedWidth(),
-                                                 NS_UNCONSTRAINEDSIZE));
+                                          rangeProgressFrame, availSize);
 
     // We first reflow the range-progress frame at {0,0} to obtain its
     // unadjusted dimensions, then we adjust it to so that the appropriate edge

@@ -416,7 +416,9 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   // XXXbz this will, for small-height dropdowns, have extra space on the right
   // edge for the scrollbar we don't show... but that's the best we can do here
   // for now.
-  nsSize availSize(aReflowState.AvailableWidth(), NS_UNCONSTRAINEDSIZE);
+  WritingMode wm = mDropdownFrame->GetWritingMode();
+  LogicalSize availSize = aReflowState.AvailableSize(wm);
+  availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, mDropdownFrame,
                                    availSize);
 

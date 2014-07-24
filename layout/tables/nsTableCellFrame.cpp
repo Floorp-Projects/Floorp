@@ -908,7 +908,8 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid,
-                                   availSize);
+                                   LogicalSize(firstKid->GetWritingMode(),
+                                               availSize));
 
   // Don't be a percent height observer if we're in the middle of
   // special-height reflow, in case we get an accidental NotifyPercentHeight()

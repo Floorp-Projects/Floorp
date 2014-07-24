@@ -144,13 +144,13 @@ nsBlockReflowContext::ComputeCollapsedBStartMargin(const nsHTMLReflowState& aRS,
           if (frame != aRS.frame) {
             NS_ASSERTION(frame->GetParent() == aRS.frame,
                          "Can only drill through one level of block wrapper");
-            nsSize availSpace(aRS.ComputedWidth(), aRS.ComputedHeight());
+            LogicalSize availSpace = aRS.ComputedSize(frame->GetWritingMode());
             outerReflowState = new nsHTMLReflowState(prescontext,
                                                      aRS, frame, availSpace);
           }
           {
-            nsSize availSpace(outerReflowState->ComputedWidth(),
-                              outerReflowState->ComputedHeight());
+            LogicalSize availSpace =
+              outerReflowState->ComputedSize(kid->GetWritingMode());
             nsHTMLReflowState innerReflowState(prescontext,
                                                *outerReflowState, kid,
                                                availSpace);
