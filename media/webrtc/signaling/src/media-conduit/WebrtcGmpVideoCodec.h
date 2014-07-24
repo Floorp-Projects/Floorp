@@ -45,7 +45,7 @@ public:
   // Implement VideoEncoder interface.
   virtual const uint64_t PluginID() MOZ_OVERRIDE
   {
-    return mGMP ? mGMP->ParentID() : 0;
+    return mGMP ? mGMP->ParentID() : mCachedPluginId;
   }
 
   virtual void Terminated() MOZ_OVERRIDE;
@@ -93,6 +93,7 @@ private:
   GMPVideoEncoderProxy* mGMP;
   GMPVideoHost* mHost;
   webrtc::EncodedImageCallback* mCallback;
+  uint64_t mCachedPluginId;
 };
 
 
@@ -106,7 +107,7 @@ public:
   // Implement VideoDecoder interface.
   virtual const uint64_t PluginID() MOZ_OVERRIDE
   {
-    return mGMP ? mGMP->ParentID() : 0;
+    return mGMP ? mGMP->ParentID() : mCachedPluginId;
   }
 
   virtual void Terminated();
@@ -164,6 +165,7 @@ private:
   GMPVideoDecoderProxy* mGMP; // Addref is held for us
   GMPVideoHost* mHost;
   webrtc::DecodedImageCallback* mCallback;
+  uint64_t mCachedPluginId;
 };
 
 }
