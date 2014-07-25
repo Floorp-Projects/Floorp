@@ -303,6 +303,14 @@ WorkerGlobalScope::GetPerformance()
   return mPerformance;
 }
 
+already_AddRefed<Promise>
+WorkerGlobalScope::Fetch(const RequestOrScalarValueString& aInput,
+                         const RequestInit& aInit, ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+}
+
 DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate)
 : WorkerGlobalScope(aWorkerPrivate)
 {
