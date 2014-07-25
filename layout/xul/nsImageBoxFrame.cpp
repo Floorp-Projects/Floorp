@@ -149,7 +149,7 @@ nsImageBoxFrame::nsImageBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext)
   mSuppressStyleCheck(false),
   mFireEventOnDecode(false)
 {
-  MarkIntrinsicWidthsDirty();
+  MarkIntrinsicISizesDirty();
 }
 
 nsImageBoxFrame::~nsImageBoxFrame()
@@ -158,10 +158,10 @@ nsImageBoxFrame::~nsImageBoxFrame()
 
 
 /* virtual */ void
-nsImageBoxFrame::MarkIntrinsicWidthsDirty()
+nsImageBoxFrame::MarkIntrinsicISizesDirty()
 {
   SizeNeedsRecalc(mImageSize);
-  nsLeafBoxFrame::MarkIntrinsicWidthsDirty();
+  nsLeafBoxFrame::MarkIntrinsicISizesDirty();
 }
 
 void

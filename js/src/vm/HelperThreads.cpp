@@ -6,8 +6,6 @@
 
 #include "vm/HelperThreads.h"
 
-#ifdef JS_THREADSAFE
-
 #include "mozilla/DebugOnly.h"
 
 #include "jsnativestack.h"
@@ -417,6 +415,8 @@ static const uint32_t HELPER_STACK_QUOTA = 450 * 1024;
 void
 GlobalHelperThreadState::ensureInitialized()
 {
+    JS_ASSERT(CanUseExtraThreads());
+
     JS_ASSERT(this == &HelperThreadState());
     AutoLockHelperThreadState lock;
 
@@ -459,6 +459,7 @@ void
 GlobalHelperThreadState::finish()
 {
     if (threads) {
+        MOZ_ASSERT(CanUseExtraThreads());
         for (size_t i = 0; i < threadCount; i++)
             threads[i].destroy();
         js_free(threads);
@@ -1190,6 +1191,8 @@ HelperThread::handleGCHelperWorkload()
 void
 HelperThread::threadLoop()
 {
+    JS_ASSERT(CanUseExtraThreads());
+
     JS::AutoSuppressGCAnalysis nogc;
     AutoLockHelperThreadState lock;
 
@@ -1241,74 +1244,3 @@ HelperThread::threadLoop()
             MOZ_CRASH("No task to perform");
     }
 }
-
-#else /* JS_THREADSAFE */
-
-using namespace js;
-
-#ifdef JS_ION
-
-bool
-js::StartOffThreadAsmJSCompile(ExclusiveContext *cx, AsmJSParallelTask *asmData)
-{
-    MOZ_CRASH("Off thread compilation not available in non-THREADSAFE builds");
-}
-
-bool
-js::StartOffThreadIonCompile(JSContext *cx, jit::IonBuilder *builder)
-{
-    MOZ_CRASH("Off thread compilation not available in non-THREADSAFE builds");
-}
-
-#endif // JS_ION
-
-void
-js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
-{
-}
-
-void
-js::CancelOffThreadParses(JSRuntime *rt)
-{
-}
-
-bool
-js::StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &options,
-                              const jschar *chars, size_t length,
-                              JS::OffThreadCompileCallback callback, void *callbackData)
-{
-    MOZ_CRASH("Off thread compilation not available in non-THREADSAFE builds");
-}
-
-bool
-js::StartOffThreadCompression(ExclusiveContext *cx, SourceCompressionTask *task)
-{
-    MOZ_CRASH("Off thread compression not available");
-}
-
-bool
-SourceCompressionTask::complete()
-{
-    JS_ASSERT(!ss);
-    return true;
-}
-
-frontend::CompileError &
-ExclusiveContext::addPendingCompileError()
-{
-    MOZ_CRASH("Off thread compilation not available.");
-}
-
-void
-ExclusiveContext::addPendingOverRecursed()
-{
-    MOZ_CRASH("Off thread compilation not available.");
-}
-
-void
-js::PauseCurrentHelperThread()
-{
-    MOZ_CRASH("Off thread compilation not available.");
-}
-
-#endif /* JS_THREADSAFE */

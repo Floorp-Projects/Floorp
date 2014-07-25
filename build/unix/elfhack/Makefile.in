@@ -27,6 +27,7 @@ test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX): %$(DLL_SUFFIX): %.$(OBJ_SUFFIX)
 	# Fail if the new library doesn't contain less relocations
 	[ $$($(TOOLCHAIN_PREFIX)objdump -R $@.bak | wc -l) -gt $$(objdump -R $@ | wc -l) ]
 
+test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX): DSO_SONAME=$@
 test-array$(DLL_SUFFIX): DT_TYPE=INIT_ARRAY
 test-ctors$(DLL_SUFFIX): DT_TYPE=INIT
 

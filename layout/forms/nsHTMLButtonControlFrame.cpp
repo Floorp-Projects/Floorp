@@ -132,7 +132,7 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 nscoord
-nsHTMLButtonControlFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
+nsHTMLButtonControlFrame::GetMinISize(nsRenderingContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -140,7 +140,7 @@ nsHTMLButtonControlFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
   nsIFrame* kid = mFrames.FirstChild();
   result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                 kid,
-                                                nsLayoutUtils::MIN_WIDTH);
+                                                nsLayoutUtils::MIN_ISIZE);
 
   result += mRenderer.GetAddedButtonBorderAndPadding().LeftRight();
 
@@ -148,7 +148,7 @@ nsHTMLButtonControlFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
 }
 
 nscoord
-nsHTMLButtonControlFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
+nsHTMLButtonControlFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -156,7 +156,7 @@ nsHTMLButtonControlFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
   nsIFrame* kid = mFrames.FirstChild();
   result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                 kid,
-                                                nsLayoutUtils::PREF_WIDTH);
+                                                nsLayoutUtils::PREF_ISIZE);
   result += mRenderer.GetAddedButtonBorderAndPadding().LeftRight();
   return result;
 }
@@ -244,33 +244,35 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   // which occupies part of the button's content-box area:
   const nsMargin focusPadding = mRenderer.GetAddedButtonBorderAndPadding();
 
-  nsSize availSize(aButtonReflowState.ComputedWidth(), NS_INTRINSICSIZE);
+  WritingMode wm = aFirstKid->GetWritingMode();
+  LogicalSize availSize = aButtonReflowState.ComputedSize(GetWritingMode());
+  availSize.BSize(wm) = NS_INTRINSICSIZE;
 
   // Indent the child inside us by the focus border. We must do this separate
   // from the regular border.
-  availSize.width -= focusPadding.LeftRight();
-  
+  availSize.ISize(wm) -= LogicalMargin(wm, focusPadding).IStartEnd(wm);
+
   // See whether out availSize's width is big enough.  If it's smaller than our
   // intrinsic min width, that means that the kid wouldn't really fit; for a
   // better look in such cases we adjust the available width and our left
   // offset to allow the kid to spill left into our padding.
   nscoord xoffset = focusPadding.left +
     aButtonReflowState.ComputedPhysicalBorderPadding().left;
-  nscoord extrawidth = GetMinWidth(aButtonReflowState.rendContext) -
+  nscoord extrawidth = GetMinISize(aButtonReflowState.rendContext) -
     aButtonReflowState.ComputedWidth();
   if (extrawidth > 0) {
     nscoord extraleft = extrawidth / 2;
     nscoord extraright = extrawidth - extraleft;
     NS_ASSERTION(extraright >=0, "How'd that happen?");
-    
+
     // Do not allow the extras to be bigger than the relevant padding
     extraleft = std::min(extraleft, aButtonReflowState.ComputedPhysicalPadding().left);
     extraright = std::min(extraright, aButtonReflowState.ComputedPhysicalPadding().right);
     xoffset -= extraleft;
-    availSize.width += extraleft + extraright;
+    availSize.SetWidth(wm, availSize.Width(wm) + extraleft + extraright);
   }
-  availSize.width = std::max(availSize.width,0);
-  
+  availSize.SetWidth(wm, std::max(availSize.Width(wm), 0));
+
   // Give child a clone of the button's reflow state, with height/width reduced
   // by focusPadding, so that descendants with height:100% don't protrude.
   nsHTMLReflowState adjustedButtonReflowState =

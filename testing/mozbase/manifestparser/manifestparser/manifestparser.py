@@ -59,7 +59,7 @@ string = (basestring,)
 # - rbp: right binding power
 
 class ident_token(object):
-    def __init__(self, value):
+    def __init__(self, scanner, value):
         self.value = value
     def nud(self, parser):
         # identifiers take their value from the value mappings passed
@@ -67,7 +67,7 @@ class ident_token(object):
         return parser.value(self.value)
 
 class literal_token(object):
-    def __init__(self, value):
+    def __init__(self, scanner, value):
         self.value = value
     def nud(self, parser):
         return self.value
@@ -115,17 +115,17 @@ class end_token(object):
 ### derived literal tokens
 
 class bool_token(literal_token):
-    def __init__(self, value):
+    def __init__(self, scanner, value):
         value = {'true':True, 'false':False}[value]
-        literal_token.__init__(self, value)
+        literal_token.__init__(self, scanner, value)
 
 class int_token(literal_token):
-    def __init__(self, value):
-        literal_token.__init__(self, int(value))
+    def __init__(self, scanner, value):
+        literal_token.__init__(self, scanner, int(value))
 
 class string_token(literal_token):
-    def __init__(self, value):
-        literal_token.__init__(self, value[1:-1])
+    def __init__(self, scanner, value):
+        literal_token.__init__(self, scanner, value[1:-1])
 
 precedence = [(end_token, rparen_token),
               (or_op_token,),
@@ -170,6 +170,9 @@ class ExpressionParser(object):
 
     Identifiers take their values from the mapping provided.
     """
+
+    scanner = None
+
     def __init__(self, text, valuemapping, strict=False):
         """
         Initialize the parser
@@ -186,35 +189,23 @@ class ExpressionParser(object):
         """
         Lex the input text into tokens and yield them in sequence.
         """
-        # scanner callbacks
-        def bool_(scanner, t): return bool_token(t)
-        def identifier(scanner, t): return ident_token(t)
-        def integer(scanner, t): return int_token(t)
-        def eq(scanner, t): return eq_op_token()
-        def neq(scanner, t): return neq_op_token()
-        def or_(scanner, t): return or_op_token()
-        def and_(scanner, t): return and_op_token()
-        def lparen(scanner, t): return lparen_token()
-        def rparen(scanner, t): return rparen_token()
-        def string_(scanner, t): return string_token(t)
-        def not_(scanner, t): return not_op_token()
-
-        scanner = re.Scanner([
-            # Note: keep these in sync with the class docstring above.
-            (r"true|false", bool_),
-            (r"[a-zA-Z_]\w*", identifier),
-            (r"[0-9]+", integer),
-            (r'("[^"]*")|(\'[^\']*\')', string_),
-            (r"==", eq),
-            (r"!=", neq),
-            (r"\|\|", or_),
-            (r"!", not_),
-            (r"&&", and_),
-            (r"\(", lparen),
-            (r"\)", rparen),
-            (r"\s+", None), # skip whitespace
+        if not ExpressionParser.scanner:
+            ExpressionParser.scanner = re.Scanner([
+                # Note: keep these in sync with the class docstring above.
+                (r"true|false", bool_token),
+                (r"[a-zA-Z_]\w*", ident_token),
+                (r"[0-9]+", int_token),
+                (r'("[^"]*")|(\'[^\']*\')', string_token),
+                (r"==", eq_op_token()),
+                (r"!=", neq_op_token()),
+                (r"\|\|", or_op_token()),
+                (r"!", not_op_token()),
+                (r"&&", and_op_token()),
+                (r"\(", lparen_token()),
+                (r"\)", rparen_token()),
+                (r"\s+", None), # skip whitespace
             ])
-        tokens, remainder = scanner.scan(self.text)
+        tokens, remainder = ExpressionParser.scanner.scan(self.text)
         for t in tokens:
             yield t
         yield end_token()
@@ -1057,6 +1048,19 @@ class TestManifest(ManifestParser):
         skip_tag = 'skip-if'
         fail_tag = 'fail-if'
 
+        cache = {}
+
+        def _parse(cond):
+            if '#' in cond:
+                cond = cond[:cond.index('#')]
+            cond = cond.strip()
+            if cond in cache:
+                ret = cache[cond]
+            else:
+                ret = parse(cond, **values)
+                cache[cond] = ret
+            return ret
+
         # loop over test
         for test in tests:
             reason = None # reason to disable
@@ -1064,13 +1068,13 @@ class TestManifest(ManifestParser):
             # tagged-values to run
             if run_tag in test:
                 condition = test[run_tag]
-                if not parse(condition, **values):
+                if not _parse(condition):
                     reason = '%s: %s' % (run_tag, condition)
 
             # tagged-values to skip
             if skip_tag in test:
                 condition = test[skip_tag]
-                if parse(condition, **values):
+                if _parse(condition):
                     reason = '%s: %s' % (skip_tag, condition)
 
             # mark test as disabled if there's a reason
@@ -1080,7 +1084,7 @@ class TestManifest(ManifestParser):
             # mark test as a fail if so indicated
             if fail_tag in test:
                 condition = test[fail_tag]
-                if parse(condition, **values):
+                if _parse(condition):
                     test['expected'] = 'fail'
 
     def active_tests(self, exists=True, disabled=True, options=None, **values):

@@ -35,11 +35,10 @@ SPSProfiler::SPSProfiler(JSRuntime *rt)
 bool
 SPSProfiler::init()
 {
-#ifdef JS_THREADSAFE
     lock_ = PR_NewLock();
     if (lock_ == nullptr)
         return false;
-#endif
+
     return true;
 }
 
@@ -49,10 +48,8 @@ SPSProfiler::~SPSProfiler()
         for (ProfileStringMap::Enum e(strings); !e.empty(); e.popFront())
             js_free(const_cast<char *>(e.front().value()));
     }
-#ifdef JS_THREADSAFE
     if (lock_)
         PR_DestroyLock(lock_);
-#endif
 }
 
 void

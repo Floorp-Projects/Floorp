@@ -15,9 +15,9 @@
 #include "nsChangeHint.h"
 #include "RestyleTracker.h"
 #include "nsPresContext.h"
+#include "nsRefreshDriver.h"
 
 class nsIFrame;
-class nsRefreshDriver;
 class nsStyleChangeList;
 struct TreeMatchContext;
 
@@ -160,6 +160,17 @@ public:
   void BeginProcessingRestyles();
   void EndProcessingRestyles();
 
+  // Update styles for animations that are running on the compositor and
+  // whose updating is suppressed on the main thread (to save
+  // unnecessary work), while leaving all other aspects of style
+  // out-of-date.
+  void UpdateOnlyAnimationStyles();
+
+  bool ThrottledAnimationStyleIsUpToDate() const {
+    return mLastUpdateForThrottledAnimations ==
+             mPresContext->RefreshDriver()->MostRecentRefresh();
+  }
+
   // Rebuilds all style data by throwing out the old rule tree and
   // building a new one, and additionally applying aExtraHint (which
   // must not contain nsChangeHint_ReconstructFrame) to the root frame.
@@ -263,6 +274,8 @@ private:
   bool mInStyleRefresh : 1;
   uint32_t mHoverGeneration;
   nsChangeHint mRebuildAllExtraHint;
+
+  mozilla::TimeStamp mLastUpdateForThrottledAnimations;
 
   OverflowChangedTracker mOverflowChangedTracker;
 

@@ -18,6 +18,9 @@ HOST_CFLAGS += \
   $(NULL)
 
 ifdef MOZ_ENABLE_SIGNMAR
+# Please don't remove the following comment, because it does some magic:
+# We don't want to use NSS_LIBS, presumably to avoid useless dependencies
+# on parts of nss that don't matter.
 EXTRA_LIBS += \
   $(DIST)/lib/$(LIB_PREFIX)nss3.$(LIB_SUFFIX) \
   $(DIST)/lib/$(LIB_PREFIX)nssutil3.$(LIB_SUFFIX) \

@@ -124,7 +124,7 @@ nsHTMLCanvasFrame::GetCanvasSize()
 }
 
 /* virtual */ nscoord
-nsHTMLCanvasFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsHTMLCanvasFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
@@ -134,7 +134,7 @@ nsHTMLCanvasFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsHTMLCanvasFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsHTMLCanvasFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
@@ -187,28 +187,33 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
 
-  aMetrics.Width() = aReflowState.ComputedWidth();
-  aMetrics.Height() = aReflowState.ComputedHeight();
+  WritingMode wm = aReflowState.GetWritingMode();
+  LogicalSize finalSize(wm,
+                        aReflowState.ComputedISize(),
+                        aReflowState.ComputedBSize());
 
   // stash this away so we can compute our inner area later
-  mBorderPadding   = aReflowState.ComputedPhysicalBorderPadding();
+  mBorderPadding   = aReflowState.ComputedLogicalBorderPadding();
 
-  aMetrics.Width() += mBorderPadding.left + mBorderPadding.right;
-  aMetrics.Height() += mBorderPadding.top + mBorderPadding.bottom;
+  finalSize.ISize(wm) += mBorderPadding.IStartEnd(wm);
+  finalSize.BSize(wm) += mBorderPadding.BStartEnd(wm);
 
   if (GetPrevInFlow()) {
-    nscoord y = GetContinuationOffset(&aMetrics.Width());
-    aMetrics.Height() -= y + mBorderPadding.top;
-    aMetrics.Height() = std::max(0, aMetrics.Height());
+    nscoord y = GetContinuationOffset(&finalSize.ISize(wm));
+    finalSize.BSize(wm) -= y + mBorderPadding.BStart(wm);
+    finalSize.BSize(wm) = std::max(0, finalSize.BSize(wm));
   }
 
+  aMetrics.SetSize(wm, finalSize);
   aMetrics.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aMetrics);
 
   // Reflow the single anon block child.
   nsReflowStatus childStatus;
-  nsSize availSize(aReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);
   nsIFrame* childFrame = mFrames.FirstChild();
+  WritingMode childWM = childFrame->GetWritingMode();
+  LogicalSize availSize = aReflowState.ComputedSize(childWM);
+  availSize.BSize(childWM) = NS_UNCONSTRAINEDSIZE;
   NS_ASSERTION(!childFrame->GetNextSibling(), "HTML canvas should have 1 kid");
   nsHTMLReflowMetrics childDesiredSize(aReflowState.GetWritingMode(), aMetrics.mFlags);
   nsHTMLReflowState childReflowState(aPresContext, aReflowState, childFrame,
@@ -220,7 +225,7 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("exit nsHTMLCanvasFrame::Reflow: size=%d,%d",
-                  aMetrics.Width(), aMetrics.Height()));
+                   aMetrics.ISize(wm), aMetrics.BSize(wm)));
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
 }
 
@@ -229,11 +234,12 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
 nsRect 
 nsHTMLCanvasFrame::GetInnerArea() const
 {
+  nsMargin bp = mBorderPadding.GetPhysicalMargin(GetWritingMode());
   nsRect r;
-  r.x = mBorderPadding.left;
-  r.y = mBorderPadding.top;
-  r.width = mRect.width - mBorderPadding.left - mBorderPadding.right;
-  r.height = mRect.height - mBorderPadding.top - mBorderPadding.bottom;
+  r.x = bp.left;
+  r.y = bp.top;
+  r.width = mRect.width - bp.left - bp.right;
+  r.height = mRect.height - bp.top - bp.bottom;
   return r;
 }
 
@@ -319,7 +325,7 @@ nsHTMLCanvasFrame::GetContinuationOffset(nscoord* aWidth) const
       }
       offset += rect.height;
     }
-    offset -= mBorderPadding.top;
+    offset -= mBorderPadding.GetPhysicalMargin(GetWritingMode()).top;
     offset = std::max(0, offset);
   }
   return offset;

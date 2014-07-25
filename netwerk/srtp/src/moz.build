@@ -65,3 +65,6 @@ if  CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
 if CONFIG['OS_TARGET'] == 'WINNT':
     DEFINES['HAVE_WINSOCK2_H'] = True
     DEFINES['inline'] = '__inline'
+
+if CONFIG['GNU_CC']:
+    CFLAGS += ['-std=gnu99']
