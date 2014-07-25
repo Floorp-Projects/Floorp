@@ -319,13 +319,13 @@ def _runtimeAbort(msg):
     return StmtExpr(
         ExprCall(ExprVar('NS_RUNTIMEABORT'), args=[ msg ]))
 
-def _autoptr(T):
+def _refptr(T):
     return Type('nsAutoPtr', T=T)
 
-def _autoptrGet(expr):
+def _refptrGet(expr):
     return ExprCall(ExprSelect(expr, '.', 'get'))
 
-def _autoptrForget(expr):
+def _refptrForget(expr):
     return ExprCall(ExprSelect(expr, '.', 'forget'))
 
 def _cxxArrayType(basetype, const=0, ref=0):
@@ -3640,7 +3640,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             #   mShmemMap.Add(seg, id);
             #   return shmem.forget();
             createshmem.addstmt(StmtDecl(
-                Decl(_autoptr(_rawShmemType()), rawvar.name),
+                Decl(_refptr(_rawShmemType()), rawvar.name),
                 initargs=[ _shmemAlloc(sizevar, typevar, unsafevar) ]))
             failif = StmtIf(ExprNot(rawvar))
             failif.addifstmt(StmtReturn(ExprLiteral.NULL))
@@ -3651,7 +3651,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 StmtDecl(
                     Decl(_shmemType(), shmemvar.name),
                     initargs=[ _shmemBackstagePass(),
-                               _autoptrGet(rawvar),
+                               _refptrGet(rawvar),
                                p.nextShmemIdExpr(self.side) ]),
                 StmtDecl(Decl(Type('Message', ptr=1), descriptorvar.name),
                          init=_shmemShareTo(shmemvar,
@@ -3672,7 +3672,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 StmtExpr(ExprCall(
                     ExprSelect(p.shmemMapVar(), '.', 'AddWithID'),
                     args=[ rawvar, ExprDeref(idvar) ])),
-                StmtReturn(_autoptrForget(rawvar))
+                StmtReturn(_refptrForget(rawvar))
             ])
 
             # SharedMemory* AdoptSharedMemory(SharedMemory*, id_t*):
@@ -4130,7 +4130,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         idvar = ExprVar('id')
         case.addstmts([
             StmtDecl(Decl(_shmemIdType(), idvar.name)),
-            StmtDecl(Decl(_autoptr(_rawShmemType()), rawvar.name),
+            StmtDecl(Decl(_refptr(_rawShmemType()), rawvar.name),
                      initargs=[ _shmemOpenExisting(self.msgvar,
                                                    ExprAddrOf(idvar)) ])
         ])
@@ -4141,7 +4141,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             failif,
             StmtExpr(ExprCall(
                 ExprSelect(p.shmemMapVar(), '.', 'AddWithID'),
-                args=[ _autoptrForget(rawvar), idvar ])),
+                args=[ _refptrForget(rawvar), idvar ])),
             Whitespace.NL,
             StmtReturn(_Result.Processed)
         ])
