@@ -234,6 +234,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool visitFloat32x4(LFloat32x4 *ins) { MOZ_CRASH("NYI"); }
     bool visitSimdExtractElementI(LSimdExtractElementI *ins) { MOZ_CRASH("NYI"); }
     bool visitSimdExtractElementF(LSimdExtractElementF *ins) { MOZ_CRASH("NYI"); }
+    bool visitSimdBinaryCompIx4(LSimdBinaryCompIx4 *lir) { MOZ_CRASH("NYI"); }
+    bool visitSimdBinaryCompFx4(LSimdBinaryCompFx4 *lir) { MOZ_CRASH("NYI"); }
     bool visitSimdBinaryArithIx4(LSimdBinaryArithIx4 *lir) { MOZ_CRASH("NYI"); }
     bool visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *lir) { MOZ_CRASH("NYI"); }
 };

@@ -2193,6 +2193,73 @@ CodeGeneratorX86Shared::visitSimdExtractElementF(LSimdExtractElementF *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4 *ins)
+{
+    FloatRegister lhs = ToFloatRegister(ins->lhs());
+    Operand rhs = ToOperand(ins->rhs());
+    MOZ_ASSERT(ToFloatRegister(ins->output()) == lhs);
+
+    MSimdBinaryComp::Operation op = ins->operation();
+    switch (op) {
+      case MSimdBinaryComp::greaterThan:
+        masm.packedGreaterThanInt32x4(rhs, lhs);
+        return true;
+      case MSimdBinaryComp::equal:
+        masm.packedEqualInt32x4(rhs, lhs);
+        return true;
+      case MSimdBinaryComp::lessThan:
+        // scr := rhs
+        if (rhs.kind() == Operand::FPREG)
+            masm.moveAlignedInt32x4(ToFloatRegister(ins->rhs()), ScratchSimdReg);
+        else
+            masm.loadAlignedInt32x4(rhs, ScratchSimdReg);
+
+        // scr := scr > lhs (i.e. lhs < rhs)
+        // Improve by doing custom lowering (rhs is tied to the output register)
+        masm.packedGreaterThanInt32x4(ToOperand(ins->lhs()), ScratchSimdReg);
+        masm.moveAlignedInt32x4(ScratchFloat32Reg, lhs);
+        return true;
+      case MSimdBinaryComp::notEqual:
+      case MSimdBinaryComp::greaterThanOrEqual:
+      case MSimdBinaryComp::lessThanOrEqual:
+        // These operations are not part of the spec. so are not implemented.
+        break;
+    }
+    MOZ_ASSUME_UNREACHABLE("unexpected SIMD op");
+}
+
+bool
+CodeGeneratorX86Shared::visitSimdBinaryCompFx4(LSimdBinaryCompFx4 *ins)
+{
+    FloatRegister lhs = ToFloatRegister(ins->lhs());
+    Operand rhs = ToOperand(ins->rhs());
+    MOZ_ASSERT(ToFloatRegister(ins->output()) == lhs);
+
+    MSimdBinaryComp::Operation op = ins->operation();
+    switch (op) {
+      case MSimdBinaryComp::equal:
+        masm.cmpps(rhs, lhs, 0x0);
+        return true;
+      case MSimdBinaryComp::lessThan:
+        masm.cmpps(rhs, lhs, 0x1);
+        return true;
+      case MSimdBinaryComp::lessThanOrEqual:
+        masm.cmpps(rhs, lhs, 0x2);
+        return true;
+      case MSimdBinaryComp::notEqual:
+        masm.cmpps(rhs, lhs, 0x4);
+        return true;
+      case MSimdBinaryComp::greaterThanOrEqual:
+        masm.cmpps(rhs, lhs, 0x5);
+        return true;
+      case MSimdBinaryComp::greaterThan:
+        masm.cmpps(rhs, lhs, 0x6);
+        return true;
+    }
+    MOZ_ASSUME_UNREACHABLE("unexpected SIMD op");
+}
+
+bool
 CodeGeneratorX86Shared::visitSimdBinaryArithIx4(LSimdBinaryArithIx4 *ins)
 {
     FloatRegister lhs = ToFloatRegister(ins->lhs());
