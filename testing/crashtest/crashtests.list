@@ -12,7 +12,6 @@ include ../../content/svg/content/src/crashtests/crashtests.list
 include ../../content/xul/content/crashtests/crashtests.list
 include ../../content/xul/document/crashtests/crashtests.list
 include ../../content/xul/templates/src/crashtests/crashtests.list
-include ../../content/mathml/content/crashtests/crashtests.list
 
 # Bug 868152 - webaudio crash on tegra platform
 skip-if(Android) include ../../content/media/test/crashtests/crashtests.list
@@ -24,6 +23,7 @@ include ../../dom/bindings/crashtests/crashtests.list
 include ../../dom/canvas/crashtests/crashtests.list
 include ../../dom/events/crashtests/crashtests.list
 include ../../dom/indexedDB/crashtests/crashtests.list
+include ../../dom/mathml/crashtests/crashtests.list
 include ../../dom/smil/crashtests/crashtests.list
 include ../../dom/xbl/crashtests/crashtests.list
 include ../../dom/xml/crashtests/crashtests.list
