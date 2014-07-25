@@ -35,7 +35,27 @@ XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
     createBundle("chrome://browser/locale/newTab.properties");
 });
 
-function newTabString(name) gStringBundle.GetStringFromName('newtab.' + name);
+function newTabString(name, args) {
+  switch (name) {
+    case "customize.title":
+      return "Customize your New Tab page";
+
+    case "customize.enhanced":
+      return "Enhanced";
+
+    case "customize.classic":
+      return "Classic";
+
+    case "customize.blank":
+      return "Blank";
+  }
+
+  let stringName = "newtab." + name;
+  if (!args) {
+    return gStringBundle.GetStringFromName(stringName);
+  }
+  return gStringBundle.formatStringFromName(stringName, args, args.length);
+}
 
 function inPrivateBrowsingMode() {
   return PrivateBrowsingUtils.isWindowPrivate(window);
@@ -57,6 +77,7 @@ const XUL_NAMESPACE = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only
 #include updater.js
 #include undo.js
 #include search.js
+#include customize.js
 
 // Everything is loaded. Initialize the New Tab Page.
 gPage.init();
