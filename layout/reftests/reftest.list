@@ -49,7 +49,7 @@ include bugs/reftest.list
 
 # canvas
 include canvas/reftest.list
-skip-if(xulFennec) include ../../dom/canvas/test/reftest/reftest.list
+include ../../dom/canvas/test/reftest/reftest.list
 
 # css animations
 include css-animations/reftest.list
