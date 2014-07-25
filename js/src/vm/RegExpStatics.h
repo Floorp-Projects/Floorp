@@ -245,7 +245,7 @@ RegExpStatics::makeMatch(JSContext *cx, size_t pairNum, MutableHandleValue out)
     JS_ASSERT(!pendingLazyEvaluation);
 
     if (matches.empty() || pairNum >= matches.pairCount() || matches[pairNum].isUndefined()) {
-        out.setString(cx->runtime()->emptyString);
+        out.setUndefined();
         return true;
     }
 
