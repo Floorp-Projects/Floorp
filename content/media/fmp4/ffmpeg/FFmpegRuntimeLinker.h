@@ -24,7 +24,7 @@ private:
   static void* sLinkedLib;
   static const AvFormatLib* sLib;
 
-  static bool Bind(const char* aLibName);
+  static bool Bind(const char* aLibName, uint32_t Version);
 
   static enum LinkStatus {
     LinkStatus_INIT = 0,
