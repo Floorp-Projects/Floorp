@@ -37,6 +37,7 @@ public:
 
 private:
   void DecodeFrame(mp4_demuxer::MP4Sample* aSample);
+  void NotifyDrain();
   void OutputDelayedFrames();
 
   /**

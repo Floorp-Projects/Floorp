@@ -129,6 +129,8 @@ public:
   // Denotes that the last input sample has been inserted into the decoder,
   // and no more output can be produced unless more input is sent.
   virtual void InputExhausted() = 0;
+
+  virtual void DrainComplete() = 0;
 };
 
 // MediaDataDecoder is the interface exposed by decoders created by the
@@ -173,14 +175,16 @@ public:
   // The MP4Reader will not call Input() while it's calling Flush().
   virtual nsresult Flush() = 0;
 
+
   // Causes all complete samples in the pipeline that can be decoded to be
   // output. If the decoder can't produce samples from the current output,
   // it drops the input samples. The decoder may be holding onto samples
   // that are required to decode samples that it expects to get in future.
   // This is called when the demuxer reaches end of stream.
   // The MP4Reader will not call Input() while it's calling Drain().
-  // This function is synchronous. Once it's returned, all samples to be
-  // output should have been returned via callback to the MP4Reader.
+  // This function is asynchronous. The MediaDataDecoder must call
+  // MediaDataDecoderCallback::DrainComplete() once all remaining
+  // samples have been output.
   virtual nsresult Drain() = 0;
 
   // Cancels all init/input/drain operations, and shuts down the

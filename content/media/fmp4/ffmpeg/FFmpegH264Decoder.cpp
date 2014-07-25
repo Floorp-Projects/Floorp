@@ -223,6 +223,12 @@ FFmpegH264Decoder<LIBAV_VER>::Input(mp4_demuxer::MP4Sample* aSample)
   return NS_OK;
 }
 
+void
+FFmpegH264Decoder<LIBAV_VER>::NotifyDrain()
+{
+  mCallback->DrainComplete();
+}
+
 nsresult
 FFmpegH264Decoder<LIBAV_VER>::Drain()
 {
@@ -236,6 +242,8 @@ FFmpegH264Decoder<LIBAV_VER>::Drain()
     nsresult rv = Input(empty.forget());
     NS_ENSURE_SUCCESS(rv, rv);
   }
+  mTaskQueue->Dispatch(
+    NS_NewRunnableMethod(this, &FFmpegH264Decoder<LIBAV_VER>::NotifyDrain));
 
   return NS_OK;
 }
