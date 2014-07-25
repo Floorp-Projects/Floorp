@@ -185,6 +185,7 @@ browser.jar:
 * skin/classic/browser/newtab/newTab.css                    (newtab/newTab.css)
   skin/classic/browser/newtab/controls.png                  (../shared/newtab/controls.png)
   skin/classic/browser/newtab/controls@2x.png               (../shared/newtab/controls@2x.png)
+  skin/classic/browser/newtab/controls.svg                  (../shared/newtab/controls.svg)
   skin/classic/browser/newtab/texture.png                   (../shared/newtab/texture.png)
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
