@@ -93,6 +93,9 @@ function disableAutoPrettyPrint(){
   gOptions._autoPrettyPrint.setAttribute("checked", "false");
   gOptions._toggleAutoPrettyPrint();
   gOptions._onPopupHidden();
+  info("Disabled auto pretty printing.");
+  // Wait for the pref update to be communicated to the server.
+  return waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN);
 }
 
 function testSourceIsPretty() {
