@@ -4137,12 +4137,14 @@ SearchService.prototype = {
         break;
 
       case "nsPref:changed":
+#ifdef MOZ_FENNEC
         if (aVerb == LOCALE_PREF) {
           // Locale changed. Re-init. We rely on observers, because we can't
           // return this promise to anyone.
           this._asyncReInit();
           break;
         }
+#endif
 
         let currPref = BROWSER_SEARCH_PREF + "selectedEngine";
         if (aVerb == currPref && !this._changingCurrentEngine) {
@@ -4202,7 +4204,10 @@ SearchService.prototype = {
     Services.obs.addObserver(this, QUIT_APPLICATION_TOPIC, false);
     Services.prefs.addObserver(BROWSER_SEARCH_PREF + "defaultenginename", this, false);
     Services.prefs.addObserver(BROWSER_SEARCH_PREF + "selectedEngine", this, false);
+
+#ifdef MOZ_FENNEC
     Services.prefs.addObserver(LOCALE_PREF, this, false);
+#endif
 
     // The current stage of shutdown. Used to help analyze crash
     // signatures in case of shutdown timeout.
@@ -4250,7 +4255,10 @@ SearchService.prototype = {
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
     Services.prefs.removeObserver(BROWSER_SEARCH_PREF + "defaultenginename", this);
     Services.prefs.removeObserver(BROWSER_SEARCH_PREF + "selectedEngine", this);
+
+#ifdef MOZ_FENNEC
     Services.prefs.removeObserver(LOCALE_PREF, this);
+#endif
   },
 
   QueryInterface: function SRCH_SVC_QI(aIID) {
