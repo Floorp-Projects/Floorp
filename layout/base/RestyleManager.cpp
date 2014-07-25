@@ -1468,8 +1468,7 @@ RestyleManager::ProcessPendingRestyles()
   if (nsLayoutUtils::AreAsyncAnimationsEnabled() &&
       mPendingRestyles.Count() > 0) {
     ++mAnimationGeneration;
-    mPresContext->TransitionManager()->UpdateAllThrottledStyles();
-    mPresContext->AnimationManager()->UpdateAllThrottledStyles();
+    UpdateOnlyAnimationStyles();
   }
 
   mPendingRestyles.ProcessRestyles();
@@ -1527,6 +1526,13 @@ RestyleManager::EndProcessingRestyles()
 #ifdef DEBUG
   mPresContext->PresShell()->VerifyStyleTree();
 #endif
+}
+
+void
+RestyleManager::UpdateOnlyAnimationStyles()
+{
+  mPresContext->TransitionManager()->UpdateAllThrottledStyles();
+  mPresContext->AnimationManager()->UpdateAllThrottledStyles();
 }
 
 void
