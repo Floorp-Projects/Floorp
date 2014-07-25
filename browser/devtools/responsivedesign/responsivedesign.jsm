@@ -173,12 +173,10 @@ function ResponsiveUI(aWindow, aTab)
   this.bound_startResizing = this.startResizing.bind(this);
   this.bound_stopResizing = this.stopResizing.bind(this);
   this.bound_onDrag = this.onDrag.bind(this);
-  this.bound_onKeypress = this.onKeypress.bind(this);
 
   // Events
   this.tab.addEventListener("TabClose", this);
   this.tabContainer.addEventListener("TabSelect", this);
-  this.mainWindow.document.addEventListener("keypress", this.bound_onKeypress, false);
 
   this.buildUI();
   this.checkMenus();
@@ -282,7 +280,6 @@ ResponsiveUI.prototype = {
       this.stopResizing();
 
     // Remove listeners.
-    this.mainWindow.document.removeEventListener("keypress", this.bound_onKeypress, false);
     this.menulist.removeEventListener("select", this.bound_presetSelected, true);
     this.menulist.removeEventListener("change", this.bound_handleManualInput, true);
     this.tab.removeEventListener("TabClose", this);
@@ -311,21 +308,6 @@ ResponsiveUI.prototype = {
     this._telemetry.toolClosed("responsive");
     // E10S: We should be using target here. See bug 1028234
     ResponsiveUIManager.emit("off", { tab: this.tab });
-  },
-
-  /**
-   * Handle keypressed.
-   *
-   * @param aEvent
-   */
-  onKeypress: function RUI_onKeypress(aEvent) {
-    if (aEvent.keyCode == this.mainWindow.KeyEvent.DOM_VK_ESCAPE &&
-        this.mainWindow.gBrowser.selectedBrowser == this.browser) {
-
-      aEvent.preventDefault();
-      aEvent.stopPropagation();
-      this.close();
-    }
   },
 
   /**
