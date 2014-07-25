@@ -57,6 +57,7 @@ const XUL_NAMESPACE = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only
 #include updater.js
 #include undo.js
 #include search.js
+#include customize.js
 
 // Everything is loaded. Initialize the New Tab Page.
 gPage.init();
