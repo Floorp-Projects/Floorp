@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPParent.h"
+#include "prlog.h"
 #include "nsComponentManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIInputStream.h"
@@ -26,6 +27,26 @@ using CrashReporter::GetIDFromMinidump;
 #endif
 
 namespace mozilla {
+
+#ifdef LOG
+#undef LOG
+#endif
+
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* GetGMPLog();
+
+#define LOGD(msg) PR_LOG(GetGMPLog(), PR_LOG_DEBUG, msg)
+#define LOG(level, msg) PR_LOG(GetGMPLog(), (level), msg)
+#else
+#define LOGD(msg)
+#define LOG(level, msg)
+#endif
+
+#ifdef __CLASS__
+#undef __CLASS__
+#endif
+#define __CLASS__ "GMPParent"
+
 namespace gmp {
 
 GMPParent::GMPParent()
@@ -54,6 +75,8 @@ GMPParent::Init(nsIFile* aPluginDir)
   if (NS_FAILED(rv)) {
     return rv;
   }
+  LOGD(("%s::%s: %p for %s", __CLASS__, __FUNCTION__, this, 
+       NS_LossyConvertUTF16toASCII(leafname).get()));
 
   MOZ_ASSERT(leafname.Length() > 4);
   mName = Substring(leafname, 4);
@@ -72,6 +95,7 @@ GMPParent::LoadProcess()
   if (NS_FAILED(mDirectory->GetNativePath(path))) {
     return NS_ERROR_FAILURE;
   }
+  LOGD(("%s::%s: %p for %s", __CLASS__, __FUNCTION__, this, path.get()));
 
   if (!mProcess) {
     mProcess = new GMPProcessParent(path.get());
@@ -111,6 +135,7 @@ GMPParent::CloseIfUnused()
 void
 GMPParent::CloseActive(bool aDieWhenUnloaded)
 {
+  LOGD(("%s::%s: %p state %d", __CLASS__, __FUNCTION__, this, mState));
   if (aDieWhenUnloaded) {
     mDeleteProcessOnUnload = true; // don't allow this to go back...
   }
@@ -137,6 +162,7 @@ GMPParent::CloseActive(bool aDieWhenUnloaded)
 void
 GMPParent::Shutdown()
 {
+  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
 
   MOZ_ASSERT(mVideoDecoders.IsEmpty() && mVideoEncoders.IsEmpty());
@@ -158,6 +184,7 @@ GMPParent::Shutdown()
 void
 GMPParent::DeleteProcess()
 {
+  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
   Close();
   mProcess->Delete();
   mProcess = nullptr;
@@ -352,10 +379,10 @@ GMPNotifyObservers(nsAString& aData)
   }
 }
 #endif
-
 void
 GMPParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  LOGD(("%s::%s: %p (%d)", __CLASS__, __FUNCTION__, this, (int) aWhy));
 #ifdef MOZ_CRASHREPORTER
   if (AbnormalShutdown == aWhy) {
     nsString dumpID;
