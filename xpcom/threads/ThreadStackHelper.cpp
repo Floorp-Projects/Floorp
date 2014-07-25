@@ -612,7 +612,7 @@ ThreadStackHelper::FillStackBuffer()
 #endif
 }
 
-void
+MOZ_ASAN_BLACKLIST void
 ThreadStackHelper::FillThreadContext(void* aContext)
 {
 #ifdef MOZ_THREADSTACKHELPER_NATIVE
@@ -757,7 +757,18 @@ ThreadStackHelper::FillThreadContext(void* aContext)
   sp -= stackSize - sizeof(void*);
 #endif
 
+#ifndef MOZ_ASAN
   memcpy(mContextToFill->mStack, reinterpret_cast<void*>(sp), stackSize);
+#else
+  // ASan will flag memcpy for access outside of stack frames,
+  // so roll our own memcpy here.
+  intptr_t* dst = reinterpret_cast<intptr_t*>(&mContextToFill->mStack[0]);
+  const intptr_t* src = reinterpret_cast<intptr_t*>(sp);
+  for (intptr_t len = stackSize; len > 0; len -= sizeof(*src)) {
+    *(dst++) = *(src++);
+  }
+#endif
+
   mContextToFill->mStackBase = uintptr_t(sp);
   mContextToFill->mStackSize = stackSize;
   mContextToFill->mValid = true;
