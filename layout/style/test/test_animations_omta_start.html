@@ -17,6 +17,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=975261
        0% { opacity: 0.5 }
        100% { opacity: 0.5 }
     }
+    @keyframes anim-opacity-2 {
+       0% { opacity: 0.0 }
+       100% { opacity: 1.0 }
+    }
     @keyframes anim-transform {
        0% { transform: translate(50px); }
        100% { transform: translate(50px); }
@@ -122,7 +126,52 @@ function testBackwardsFill() {
            "with backwards fill");
         target.remove();
         gUtils.restoreNormalRefresh();
-        SimpleTest.finish();
+        testTransitionTakingOver();
+      });
+    });
+  });
+}
+
+function testTransitionTakingOver() {
+  gUtils.advanceTimeAndRefresh(0);
+
+  var parent = newTarget();
+  var child = newTarget();
+  parent.appendChild(child);
+  parent.style.opacity = "0.0";
+  parent.style.animation = "10s anim-opacity-2 linear";
+  child.style.opacity = "inherit";
+  child.style.transition = "10s opacity linear";
+
+  var childCS = getComputedStyle(child, "");
+
+  gUtils.advanceTimeAndRefresh(0);
+  waitForAllPaints(function() {
+    gUtils.advanceTimeAndRefresh(4000);
+    waitForAllPaints(function() {
+      child.style.opacity = "1.0";
+      var opacity = gUtils.getOMTAStyle(child, "opacity");
+      // FIXME Bug 1039799 (or lower priority followup): Animations
+      // inherited from an animating parent element don't get shipped to
+      // the compositor thread.
+      todo_is(opacity, "0.4",
+         "transition that interrupted animation is correct");
+      gUtils.advanceTimeAndRefresh(0);
+      waitForAllPaints(function() {
+        var opacity = gUtils.getOMTAStyle(child, "opacity");
+        is(opacity, "0.4",
+           "transition that interrupted animation is correct");
+        gUtils.advanceTimeAndRefresh(5000);
+        waitForAllPaints(function() {
+          opacity = gUtils.getOMTAStyle(child, "opacity");
+          is(opacity, "0.7",
+             "transition that interrupted animation is correct");
+          is(childCS.opacity, "0.7",
+             "transition that interrupted animation is correct");
+          parent.remove();
+          gUtils.restoreNormalRefresh();
+          SimpleTest.finish();
+        });
       });
     });
   });
