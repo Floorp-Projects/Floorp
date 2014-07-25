@@ -12,9 +12,7 @@ DIRS += [
 
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
-JS_MODULES_PATH = 'modules/devtools/webide'
-
-EXTRA_JS_MODULES += [
+EXTRA_JS_MODULES.devtools.webide += [
     'modules/addons.js',
     'modules/app-manager.js',
     'modules/remote-resources.js',

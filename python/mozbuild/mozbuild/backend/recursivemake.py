@@ -951,8 +951,34 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write('NO_DIST_INSTALL := 1\n')
 
     def _process_javascript_modules(self, obj, backend_file):
-        if obj.flavor != 'testing':
-            raise Exception('We only support testing JavaScriptModules instances.')
+        if obj.flavor not in ('extra', 'extra_pp', 'testing'):
+            raise Exception('Unsupported JavaScriptModules instance: %s' % obj.flavor)
+
+        if obj.flavor == 'extra':
+            def onelement(element, namespace):
+                if not element.get_strings():
+                    return
+
+                prefix = 'extra_js_%s' % namespace.replace('/', '_')
+                backend_file.write('%s_FILES := %s\n'
+                                   % (prefix, ' '.join(element.get_strings())))
+                backend_file.write('%s_DEST = $(FINAL_TARGET)/%s\n' % (prefix, namespace))
+                backend_file.write('INSTALL_TARGETS += %s\n\n' % prefix)
+            self._process_hierarchy_elements(obj, obj.modules, 'modules', onelement)
+            return
+
+        if obj.flavor == 'extra_pp':
+            def onelement(element, namespace):
+                if not element.get_strings():
+                    return
+
+                prefix = 'extra_pp_js_%s' % namespace.replace('/', '_')
+                backend_file.write('%s := %s\n'
+                                   % (prefix, ' '.join(element.get_strings())))
+                backend_file.write('%s_PATH = $(FINAL_TARGET)/%s\n' % (prefix, namespace))
+                backend_file.write('PP_TARGETS += %s\n\n' % prefix)
+            self._process_hierarchy_elements(obj, obj.modules, 'modules', onelement)
+            return
 
         if not self.environment.substs.get('ENABLE_TESTS', False):
             return
