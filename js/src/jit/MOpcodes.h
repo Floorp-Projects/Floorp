@@ -15,6 +15,7 @@ namespace jit {
     _(SimdValueX4)                                                          \
     _(SimdConstant)                                                         \
     _(SimdExtractElement)                                                   \
+    _(SimdBinaryComp)                                                       \
     _(SimdBinaryArith)                                                      \
     _(CloneLiteral)                                                         \
     _(Parameter)                                                            \

@@ -470,6 +470,9 @@ class MacroAssemblerX86Shared : public Assembler
     void loadAlignedInt32x4(const Address &src, FloatRegister dest) {
         movdqa(Operand(src), dest);
     }
+    void loadAlignedInt32x4(const Operand &src, FloatRegister dest) {
+        movdqa(src, dest);
+    }
     void storeAlignedInt32x4(FloatRegister src, const Address &dest) {
         movdqa(src, Operand(dest));
     }
@@ -482,6 +485,12 @@ class MacroAssemblerX86Shared : public Assembler
     void storeUnalignedInt32x4(FloatRegister src, const Address &dest) {
         movdqu(src, Operand(dest));
     }
+    void packedEqualInt32x4(const Operand &src, FloatRegister dest) {
+        pcmpeqd(src, dest);
+    }
+    void packedGreaterThanInt32x4(const Operand &src, FloatRegister dest) {
+        pcmpgtd(src, dest);
+    }
     void packedAddInt32(const Operand &src, FloatRegister dest) {
         paddd(src, dest);
     }
@@ -491,6 +500,9 @@ class MacroAssemblerX86Shared : public Assembler
 
     void loadAlignedFloat32x4(const Address &src, FloatRegister dest) {
         movaps(Operand(src), dest);
+    }
+    void loadAlignedFloat32x4(const Operand &src, FloatRegister dest) {
+        movaps(src, dest);
     }
     void storeAlignedFloat32x4(FloatRegister src, const Address &dest) {
         movaps(src, Operand(dest));
@@ -516,7 +528,6 @@ class MacroAssemblerX86Shared : public Assembler
     void packedDivFloat32(const Operand &src, FloatRegister dest) {
         divps(src, dest);
     }
-
     static uint32_t ComputeShuffleMask(SimdLane x, SimdLane y = LaneX,
                                        SimdLane z = LaneX, SimdLane w = LaneX)
     {
