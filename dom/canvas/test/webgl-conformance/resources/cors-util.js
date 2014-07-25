@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function getExampleDotComURL(conformanceDirRelativePath) {
-  var prefix = 'http://example.com/tests/content/canvas/test/webgl-conformance/';
+  var prefix = 'http://example.com/tests/dom/canvas/test/webgl-conformance/';
   return prefix + conformanceDirRelativePath;
 }
 
