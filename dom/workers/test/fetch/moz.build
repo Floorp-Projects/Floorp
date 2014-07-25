@@ -4,20 +4,4 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXPORTS.mozilla.dom += [
-    'Headers.h',
-    'Request.h',
-]
-
-UNIFIED_SOURCES += [
-    'Headers.cpp',
-    'Request.cpp',
-]
-
-LOCAL_INCLUDES += [
-    '../workers',
-]
-
-FAIL_ON_WARNINGS = True
-MSVC_ENABLE_PGO = True
-FINAL_LIBRARY = 'xul'
+MOCHITEST_MANIFESTS += ['mochitest.ini']
