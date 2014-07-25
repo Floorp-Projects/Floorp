@@ -10,7 +10,7 @@ if CONFIG['MOZ_SOCIAL']:
     BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
     # social is turned off for android
-    EXTRA_JS_MODULES = [
+    EXTRA_JS_MODULES += [
         'FrameWorker.jsm',
         'FrameWorkerContent.js',
         'MessagePortBase.jsm',
