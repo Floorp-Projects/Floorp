@@ -118,7 +118,6 @@ nsLoadGroup::nsLoadGroup(nsISupports* outer)
     , mStatus(NS_OK)
     , mPriority(PRIORITY_NORMAL)
     , mIsCanceling(false)
-    , mAllowLoadsFromPrivateNetworks(true)
     , mDefaultLoadIsTimed(false)
     , mTimedRequests(0)
     , mCachedRequests(0)
@@ -1093,20 +1092,6 @@ nsresult nsLoadGroup::MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& outFlags
 
     outFlags = flags;
     return rv;
-}
-
-NS_IMETHODIMP
-nsLoadGroup::GetAllowLoadsFromPrivateNetworks(bool *aAllowed)
-{
-    *aAllowed = mAllowLoadsFromPrivateNetworks;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLoadGroup::SetAllowLoadsFromPrivateNetworks(bool aAllowed)
-{
-    mAllowLoadsFromPrivateNetworks = aAllowed;
-    return NS_OK;
 }
 
 // nsLoadGroupConnectionInfo

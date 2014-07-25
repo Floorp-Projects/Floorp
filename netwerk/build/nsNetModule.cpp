@@ -38,7 +38,6 @@
 #include "nsCategoryCache.h"
 #include "nsIContentSniffer.h"
 #include "Predictor.h"
-#include "nsNetworkZonePolicy.h"
 #include "nsNetUtil.h"
 #include "nsIThreadPool.h"
 #include "mozilla/net/NeckoChild.h"
@@ -447,10 +446,6 @@ static const mozilla::Module::CategoryEntry kNeckoCategories[] = {
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBinHexDecoder)
 #endif
 
-typedef mozilla::net::nsNetworkZonePolicy nsNetworkZonePolicy;
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsNetworkZonePolicy,
-                                        nsNetworkZonePolicy::GetSingleton)
-
 static nsresult
 CreateNewStreamConvServiceFactory(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
 {
@@ -803,7 +798,6 @@ NS_DEFINE_NAMED_CID(NS_SERIALIZATION_HELPER_CID);
 NS_DEFINE_NAMED_CID(NS_REDIRECTCHANNELREGISTRAR_CID);
 NS_DEFINE_NAMED_CID(NS_CACHE_STORAGE_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_NETWORKPREDICTOR_CID);
-NS_DEFINE_NAMED_CID(NS_NETWORKZONEPOLICY_CID);
 
 static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_IOSERVICE_CID, false, nullptr, nsIOServiceConstructor },
@@ -947,7 +941,6 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_REDIRECTCHANNELREGISTRAR_CID, false, nullptr, RedirectChannelRegistrarConstructor },
     { &kNS_CACHE_STORAGE_SERVICE_CID, false, nullptr, CacheStorageServiceConstructor },
     { &kNS_NETWORKPREDICTOR_CID, false, nullptr, mozilla::net::Predictor::Create },
-    { &kNS_NETWORKZONEPOLICY_CID, false, nullptr, nsNetworkZonePolicyConstructor },
     { nullptr }
 };
 
@@ -1095,7 +1088,6 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_CACHE_STORAGE_SERVICE_CONTRACTID, &kNS_CACHE_STORAGE_SERVICE_CID },
     { NS_CACHE_STORAGE_SERVICE_CONTRACTID2, &kNS_CACHE_STORAGE_SERVICE_CID },
     { NS_NETWORKPREDICTOR_CONTRACTID, &kNS_NETWORKPREDICTOR_CID },
-    { NS_NETWORKZONEPOLICY_CONTRACTID, &kNS_NETWORKZONEPOLICY_CID },
     { nullptr }
 };
 

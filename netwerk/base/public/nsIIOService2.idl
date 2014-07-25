@@ -10,7 +10,7 @@
 /**
  * nsIIOService2 extends nsIIOService
  */
-[scriptable, uuid(b2344926-d194-41d5-b749-e6591a257428)]
+[scriptable, uuid(9a7dc724-0b5c-4b78-9722-1037074c02de)]
 interface nsIIOService2 : nsIIOService
 {
   /**
@@ -40,10 +40,4 @@ interface nsIIOService2 : nsIIOService
   nsIChannel newChannelFromURIWithProxyFlags(in nsIURI aURI,
                                              in nsIURI aProxyURI,
                                              in unsigned long aProxyFlags);
-
-  /**
-   * Returns a string ID for the current network. This ID should be
-   * refreshed when the network link changes.
-   */
-  readonly attribute ACString networkLinkID;
 };
