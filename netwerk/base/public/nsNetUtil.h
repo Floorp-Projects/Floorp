@@ -2400,25 +2400,17 @@ NS_IsSrcdocChannel(nsIChannel *aChannel)
 }
 
 /**
- *  Provides 32 bits of PRNG; workaround for platform variances of RAND_MAX.
+ * Return true if the given string is a reasonable HTTP header value given the
+ * definition in RFC 2616 section 4.2.  Currently we don't pay the cost to do
+ * full, sctrict validation here since it would require fulling parsing the
+ * value.
  */
-inline uint32_t
-NS_Get32BitsOfPseudoRandom()
-{
-    // rand() provides different amounts of PRNG on different platforms.
-    // 15 or 31 bits are common amounts.
+bool NS_IsReasonableHTTPHeaderValue(const nsACString& aValue);
 
-    PR_STATIC_ASSERT(RAND_MAX >= 0xfff);
-
-#if RAND_MAX < 0xffffU
-    return ((uint16_t) rand() << 20) |
-            (((uint16_t) rand() & 0xfff) << 8) |
-            ((uint16_t) rand() & 0xff);
-#elif RAND_MAX < 0xffffffffU
-    return ((uint16_t) rand() << 16) | ((uint16_t) rand() & 0xffff);
-#else
-    return (uint32_t) rand();
-#endif
-}
+/**
+ * Return true if the given string is a valid HTTP token per RFC 2616 section
+ * 2.2.
+ */
+bool NS_IsValidHTTPToken(const nsACString& aToken);
 
 #endif // !nsNetUtil_h__

@@ -76,10 +76,21 @@ WANT_STAMPS = 1
 STAMP_TOUCH = $(TOUCH) $(@D)/binaries
 endif
 
+# The compile tier has different rules from other tiers.
+ifeq ($(CURRENT_TIER),compile)
+
+# Need a list of compile targets because we can't use pattern rules:
+# https://savannah.gnu.org/bugs/index.php?42833
+.PHONY: $(compile_targets)
+$(compile_targets):
+	$(call SUBMAKE,$(if $(filter $(@D),$(staticdirs)),,$(@F)),$(@D))
+
+else
+
 # Recursion rule for all directories traversed for all subtiers in the
 # current tier.
 $(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS)): %/$(CURRENT_TIER):
-	$(call SUBMAKE,$(if $(filter $*,$(staticdirs)),,$(CURRENT_TIER)),$*)
+	$(call SUBMAKE,$(CURRENT_TIER),$*)
 # Ensure existing stamps are up-to-date, but don't create one if submake didn't create one.
 	$(if $(wildcard $@),@$(STAMP_TOUCH))
 
@@ -90,11 +101,27 @@ endif
 # Dummy rules for possibly inexisting dependencies for the above tier targets
 $(addsuffix /Makefile,$(CURRENT_DIRS)) $(addsuffix /backend.mk,$(CURRENT_DIRS)):
 
-# The export tier requires nsinstall, which is built from config. So every
-# subdirectory traversal needs to happen after traversing config.
-ifeq ($(CURRENT_TIER),export)
+# At least build/export requires config/export for buildid, but who knows what
+# else, so keep this global dependency to make config/export first for now.
 $(addsuffix /$(CURRENT_TIER),$(filter-out config,$(CURRENT_DIRS))): config/$(CURRENT_TIER)
+
+# The export tier requires nsinstall, which is built from config. So every
+# subdirectory traversal needs to happen after building nsinstall in config, which
+# is done with the config/host target. Note the config/host target only exists if
+# nsinstall is actually built, which it is not on Windows, because we use
+# nsinstall.py there.
+ifeq ($(CURRENT_TIER),export)
+ifneq (,$(filter config/host, $(compile_targets)))
+$(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS)): config/host
+
+# Ensure rules for config/host and its possible dependencies.
+.PHONY: $(filter %/host, $(compile_targets))
+$(filter %/host, $(compile_targets)):
+	$(call SUBMAKE,host,$(@D))
 endif
+endif
+
+endif # ifeq ($(CURRENT_TIER),compile)
 
 ifdef COMPILE_ENVIRONMENT
 # Disable dependency aggregation on PGO builds because of bug 934166.
@@ -171,7 +198,7 @@ endif
 
 endef
 
-$(foreach subtier,export compile binaries libs tools,$(eval $(call CREATE_SUBTIER_TRAVERSAL_RULE,$(subtier))))
+$(foreach subtier,export binaries libs tools,$(eval $(call CREATE_SUBTIER_TRAVERSAL_RULE,$(subtier))))
 
 tools export:: $(SUBMAKEFILES)
 	$(LOOP_OVER_TOOL_DIRS)

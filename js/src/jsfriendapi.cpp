@@ -834,13 +834,11 @@ js::GetContextStructuredCloneCallbacks(JSContext *cx)
     return cx->runtime()->structuredCloneCallbacks;
 }
 
-#ifdef JS_THREADSAFE
 JS_FRIEND_API(bool)
 js::ContextHasOutstandingRequests(const JSContext *cx)
 {
     return cx->outstandingRequests > 0;
 }
-#endif
 
 JS_FRIEND_API(void)
 js::SetActivityCallback(JSRuntime *rt, ActivityCallback cb, void *arg)
@@ -1209,11 +1207,7 @@ js::ReportErrorWithId(JSContext *cx, const char *msg, HandleId id)
 JS_PUBLIC_API(bool)
 js::IsInRequest(JSContext *cx)
 {
-#ifdef JS_THREADSAFE
     return !!cx->runtime()->requestDepth;
-#else
-    return true;
-#endif
 }
 #endif
 

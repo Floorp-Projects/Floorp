@@ -58,16 +58,6 @@ interface BluetoothAdapter : EventTarget {
   readonly attribute boolean                discoverable;
   readonly attribute boolean                discovering;
 
-  // array of type BluetoothDevice[]
-  [GetterThrows]
-  readonly attribute any            devices;
-
-  // array of type DOMString[]
-  [GetterThrows]
-  readonly attribute any            uuids;
-
-           attribute EventHandler   ondevicefound;
-
   // Fired when pairing process is completed
            attribute EventHandler   onpairedstatuschanged;
 

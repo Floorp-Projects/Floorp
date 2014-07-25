@@ -36,7 +36,9 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  nsHTMLCanvasFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
+  nsHTMLCanvasFrame(nsStyleContext* aContext)
+  : nsContainerFrame(aContext)
+    , mBorderPadding(GetWritingMode()) {}
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
@@ -54,8 +56,8 @@ public:
   /* get the size of the canvas's image */
   nsIntSize GetCanvasSize();
 
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual nsSize GetIntrinsicRatio() MOZ_OVERRIDE;
 
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
@@ -95,7 +97,7 @@ protected:
 
   nscoord GetContinuationOffset(nscoord* aWidth = 0) const;
 
-  nsMargin mBorderPadding;
+  mozilla::LogicalMargin mBorderPadding;
 };
 
 #endif /* nsHTMLCanvasFrame_h___ */

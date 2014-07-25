@@ -301,7 +301,7 @@ nsListControlFrame::CalcHeightOfARow()
 }
 
 nscoord
-nsListControlFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsListControlFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -309,7 +309,7 @@ nsListControlFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   // Always add scrollbar widths to the pref-width of the scrolled
   // content. Combobox frames depend on this happening in the dropdown,
   // and standalone listboxes are overflow:scroll so they need it too.
-  result = GetScrolledFrame()->GetPrefWidth(aRenderingContext);
+  result = GetScrolledFrame()->GetPrefISize(aRenderingContext);
   result = NSCoordSaturatingAdd(result,
           GetDesiredScrollbarSizes(PresContext(), aRenderingContext).LeftRight());
 
@@ -317,7 +317,7 @@ nsListControlFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 }
 
 nscoord
-nsListControlFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsListControlFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -325,7 +325,7 @@ nsListControlFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
   // Always add scrollbar widths to the min-width of the scrolled
   // content. Combobox frames depend on this happening in the dropdown,
   // and standalone listboxes are overflow:scroll so they need it too.
-  result = GetScrolledFrame()->GetMinWidth(aRenderingContext);
+  result = GetScrolledFrame()->GetMinISize(aRenderingContext);
   result += GetDesiredScrollbarSizes(PresContext(), aRenderingContext).LeftRight();
 
   return result;
@@ -396,7 +396,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW) && autoHeight) {
     // When not doing an initial reflow, and when the height is auto, start off
     // with our computed height set to what we'd expect our height to be.
-    nscoord computedHeight = CalcIntrinsicHeight(oldHeightOfARow, length);
+    nscoord computedHeight = CalcIntrinsicBSize(oldHeightOfARow, length);
     computedHeight = state.ApplyMinMaxHeight(computedHeight);
     state.SetComputedHeight(computedHeight);
   }
@@ -415,7 +415,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
     if (!autoHeight) {
       // Update our mNumDisplayRows based on our new row height now that we
       // know it.  Note that if autoHeight and we landed in this code then we
-      // already set mNumDisplayRows in CalcIntrinsicHeight.  Also note that we
+      // already set mNumDisplayRows in CalcIntrinsicBSize.  Also note that we
       // can't use HeightOfARow() here because that just uses a cached value
       // that we didn't compute.
       nscoord rowHeight = CalcHeightOfARow();
@@ -453,7 +453,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
                                nsDidReflowStatus::FINISHED);
 
   // Now compute the height we want to have
-  nscoord computedHeight = CalcIntrinsicHeight(HeightOfARow(), length); 
+  nscoord computedHeight = CalcIntrinsicBSize(HeightOfARow(), length); 
   computedHeight = state.ApplyMinMaxHeight(computedHeight);
   state.SetComputedHeight(computedHeight);
 
@@ -1526,7 +1526,7 @@ nsListControlFrame::CalcFallbackRowHeight(float aFontSizeInflation)
 }
 
 nscoord
-nsListControlFrame::CalcIntrinsicHeight(nscoord aHeightOfARow,
+nsListControlFrame::CalcIntrinsicBSize(nscoord aHeightOfARow,
                                         int32_t aNumberOfOptions)
 {
   NS_PRECONDITION(!IsInDropDownMode(),

@@ -2183,6 +2183,12 @@ public:
   static bool IsForbiddenSystemRequestHeader(const nsACString& aHeader);
 
   /**
+   * Returns whether a given Content-Type header value is allowed
+   * for a non-CORS XHR or fetch request.
+   */
+  static bool IsAllowedNonCorsContentType(const nsACString& aHeaderValue);
+
+  /**
    * Returns whether a given header is forbidden for an XHR or fetch
    * response.
    */
