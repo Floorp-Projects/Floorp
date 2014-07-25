@@ -3229,13 +3229,6 @@ extern JS_PUBLIC_API(bool)
 JS_DeleteElement2(JSContext *cx, JS::HandleObject obj, uint32_t index, bool *succeeded);
 
 /*
- * Remove all configurable properties from the given (non-global) object and
- * assign undefined to all writable data properties.
- */
-JS_PUBLIC_API(void)
-JS_ClearNonGlobalObject(JSContext *cx, JS::HandleObject obj);
-
-/*
  * Assign 'undefined' to all of the object's non-reserved slots. Note: this is
  * done for all slots, regardless of the associated property descriptor.
  */

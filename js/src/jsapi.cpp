@@ -3594,49 +3594,6 @@ JS_DeleteProperty(JSContext *cx, HandleObject obj, const char *name)
     return JS_DeleteProperty2(cx, obj, name, &junk);
 }
 
-static Shape *
-LastConfigurableShape(JSObject *obj)
-{
-    for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront()) {
-        Shape *shape = &r.front();
-        if (shape->configurable())
-            return shape;
-    }
-    return nullptr;
-}
-
-JS_PUBLIC_API(void)
-JS_ClearNonGlobalObject(JSContext *cx, HandleObject obj)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-
-    JS_ASSERT(!obj->is<GlobalObject>());
-
-    if (!obj->isNative())
-        return;
-
-    /* Remove all configurable properties from obj. */
-    RootedShape shape(cx);
-    while ((shape = LastConfigurableShape(obj))) {
-        if (!obj->removeProperty(cx, shape->propid()))
-            return;
-    }
-
-    /* Set all remaining writable plain data properties to undefined. */
-    for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront()) {
-        Shape *shape = &r.front();
-        if (shape->isDataDescriptor() &&
-            shape->writable() &&
-            shape->hasDefaultSetter() &&
-            shape->hasSlot())
-        {
-            obj->nativeSetSlot(shape->slot(), UndefinedValue());
-        }
-    }
-}
-
 JS_PUBLIC_API(void)
 JS_SetAllNonReservedSlotsToUndefined(JSContext *cx, JSObject *objArg)
 {
