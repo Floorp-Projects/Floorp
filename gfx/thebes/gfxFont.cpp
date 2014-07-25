@@ -3057,34 +3057,42 @@ static AntialiasMode Get2DAAMode(gfxFont::AntialiasOption aAAOption) {
   }
 }
 
-// Parameters for drawing individual glyphs.
-struct DrawGlyphParams {
+// Parameters passed to gfxFont methods for drawing glyphs from a textrun.
+// The TextRunDrawParams are set up once per textrun; the FontDrawParams
+// are dependent on the specific font, so they are set per GlyphRun.
+
+struct TextRunDrawParams {
     RefPtr<DrawTarget>             dt;
-    RefPtr<ScaledFont>             scaledFont;
-    RefPtr<GlyphRenderingOptions>  renderingOptions;
     gfxContext                    *context;
     gfxFont::Spacing              *spacing;
     gfxTextRunDrawCallbacks       *callbacks;
     gfxTextContextPaint           *contextPaint;
-    Matrix                        *passedInvMatrix;
-    Matrix                         matInv;
     gfxFloat                       direction;
     double                         devPerApp;
-    double                         synBoldOnePixelOffset;
-    int32_t                        extraStrikes;
     DrawMode                       drawMode;
     bool                           isRTL;
-    bool                           haveSVGGlyphs;
     bool                           paintSVGGlyphs;
-    bool                           haveColorGlyphs;
+};
+
+struct FontDrawParams {
+    RefPtr<ScaledFont>             scaledFont;
+    RefPtr<GlyphRenderingOptions>  renderingOptions;
+    Matrix                        *passedInvMatrix;
+    Matrix                         matInv;
+    double                         synBoldOnePixelOffset;
+    int32_t                        extraStrikes;
     DrawOptions                    drawOptions;
+    bool                           haveSVGGlyphs;
+    bool                           haveColorGlyphs;
 };
 
 class GlyphBufferAzure
 {
 public:
-    GlyphBufferAzure(const DrawGlyphParams& aParams)
-        : mParams(aParams)
+    GlyphBufferAzure(const TextRunDrawParams& aRunParams,
+                     const FontDrawParams&    aFontParams)
+        : mRunParams(aRunParams)
+        , mFontParams(aFontParams)
         , mNumGlyphs(0)
     {
     }
@@ -3100,11 +3108,12 @@ public:
         glyph->mIndex = aGlyphID;
         glyph->mPosition.x = aPt.x;
         glyph->mPosition.y = aPt.y;
-        glyph->mPosition = mParams.matInv * glyph->mPosition;
+        glyph->mPosition = mFontParams.matInv * glyph->mPosition;
         Flush(false); // this will flush only if the buffer is full
     }
 
-    const DrawGlyphParams& mParams;
+    const TextRunDrawParams& mRunParams;
+    const FontDrawParams& mFontParams;
 
 private:
 #define GLYPH_BUFFER_SIZE (2048/sizeof(Glyph))
@@ -3124,7 +3133,7 @@ private:
             return;
         }
 
-        if (mParams.isRTL) {
+        if (mRunParams.isRTL) {
             Glyph *begin = &mGlyphBuffer[0];
             Glyph *end = &mGlyphBuffer[mNumGlyphs];
             std::reverse(begin, end);
@@ -3134,42 +3143,42 @@ private:
         buf.mGlyphs = mGlyphBuffer;
         buf.mNumGlyphs = mNumGlyphs;
 
-        gfxContext::AzureState state = mParams.context->CurrentState();
-        if ((int(mParams.drawMode) &
+        gfxContext::AzureState state = mRunParams.context->CurrentState();
+        if ((int(mRunParams.drawMode) &
             (int(DrawMode::GLYPH_STROKE) | int(DrawMode::GLYPH_STROKE_UNDERNEATH))) ==
             (int(DrawMode::GLYPH_STROKE) | int(DrawMode::GLYPH_STROKE_UNDERNEATH))) {
             FlushStroke(buf, state);
         }
-        if (int(mParams.drawMode) & int(DrawMode::GLYPH_FILL)) {
-            if (state.pattern || mParams.contextPaint) {
+        if (int(mRunParams.drawMode) & int(DrawMode::GLYPH_FILL)) {
+            if (state.pattern || mRunParams.contextPaint) {
                 Pattern *pat;
 
                 nsRefPtr<gfxPattern> fillPattern;
-                if (!mParams.contextPaint ||
-                    !(fillPattern = mParams.contextPaint->GetFillPattern(
-                                        mParams.context->CurrentMatrix()))) {
+                if (!mRunParams.contextPaint ||
+                    !(fillPattern = mRunParams.contextPaint->GetFillPattern(
+                                        mRunParams.context->CurrentMatrix()))) {
                     if (state.pattern) {
-                        pat = state.pattern->GetPattern(
-                            mParams.dt,
-                            state.patternTransformChanged ?
-                                &state.patternTransform : nullptr);
+                        pat = state.pattern->GetPattern(mRunParams.dt,
+                                      state.patternTransformChanged ?
+                                          &state.patternTransform : nullptr);
                     } else {
                         pat = nullptr;
                     }
                 } else {
-                    pat = fillPattern->GetPattern(mParams.dt);
+                    pat = fillPattern->GetPattern(mRunParams.dt);
                 }
 
                 if (pat) {
                     Matrix saved;
                     Matrix *mat = nullptr;
-                    if (mParams.passedInvMatrix) {
-                        // The brush matrix needs to be multiplied with the inverted matrix
-                        // as well, to move the brush into the space of the glyphs. Before
-                        // the render target transformation
+                    if (mFontParams.passedInvMatrix) {
+                        // The brush matrix needs to be multiplied with the
+                        // inverted matrix as well, to move the brush into the
+                        // space of the glyphs.
 
-                        // This relies on the returned Pattern not to be reused by
-                        // others, but regenerated on GetPattern calls. This is true!
+                        // This relies on the returned Pattern not to be reused
+                        // by others, but regenerated on GetPattern calls. This
+                        // is true!
                         if (pat->GetType() == PatternType::LINEAR_GRADIENT) {
                             mat = &static_cast<LinearGradientPattern*>(pat)->mMatrix;
                         } else if (pat->GetType() == PatternType::RADIAL_GRADIENT) {
@@ -3180,39 +3189,40 @@ private:
 
                         if (mat) {
                             saved = *mat;
-                            *mat = (*mat) * (*mParams.passedInvMatrix);
+                            *mat = (*mat) * (*mFontParams.passedInvMatrix);
                         }
                     }
 
-                    mParams.dt->FillGlyphs(mParams.scaledFont, buf, *pat,
-                                    mParams.drawOptions, mParams.renderingOptions);
+                    mRunParams.dt->FillGlyphs(mFontParams.scaledFont, buf,
+                                              *pat, mFontParams.drawOptions,
+                                              mFontParams.renderingOptions);
 
                     if (mat) {
                         *mat = saved;
                     }
                 }
             } else if (state.sourceSurface) {
-                mParams.dt->FillGlyphs(mParams.scaledFont, buf,
-                                       SurfacePattern(state.sourceSurface,
-                                                      ExtendMode::CLAMP,
-                                                      state.surfTransform),
-                                       mParams.drawOptions,
-                                       mParams.renderingOptions);
+                mRunParams.dt->FillGlyphs(mFontParams.scaledFont, buf,
+                                          SurfacePattern(state.sourceSurface,
+                                                         ExtendMode::CLAMP,
+                                                         state.surfTransform),
+                                          mFontParams.drawOptions,
+                                          mFontParams.renderingOptions);
             } else {
-                mParams.dt->FillGlyphs(mParams.scaledFont, buf,
-                                       ColorPattern(state.color),
-                                       mParams.drawOptions,
-                                       mParams.renderingOptions);
+                mRunParams.dt->FillGlyphs(mFontParams.scaledFont, buf,
+                                          ColorPattern(state.color),
+                                          mFontParams.drawOptions,
+                                          mFontParams.renderingOptions);
             }
         }
-        if (int(mParams.drawMode) & int(DrawMode::GLYPH_PATH)) {
-            mParams.context->EnsurePathBuilder();
-            Matrix mat = mParams.dt->GetTransform();
-            mParams.scaledFont->CopyGlyphsToBuilder(
-                buf, mParams.context->mPathBuilder,
-                mParams.dt->GetBackendType(), &mat);
+        if (int(mRunParams.drawMode) & int(DrawMode::GLYPH_PATH)) {
+            mRunParams.context->EnsurePathBuilder();
+            Matrix mat = mRunParams.dt->GetTransform();
+            mFontParams.scaledFont->CopyGlyphsToBuilder(
+                buf, mRunParams.context->mPathBuilder,
+                mRunParams.dt->GetBackendType(), &mat);
         }
-        if ((int(mParams.drawMode) &
+        if ((int(mRunParams.drawMode) &
             (int(DrawMode::GLYPH_STROKE) | int(DrawMode::GLYPH_STROKE_UNDERNEATH))) ==
              int(DrawMode::GLYPH_STROKE)) {
             FlushStroke(buf, state);
@@ -3224,15 +3234,15 @@ private:
     void FlushStroke(gfx::GlyphBuffer& aBuf, gfxContext::AzureState& aState)
     {
         RefPtr<Path> path =
-            mParams.scaledFont->GetPathForGlyphs(aBuf, mParams.dt);
-        if (mParams.contextPaint) {
+            mFontParams.scaledFont->GetPathForGlyphs(aBuf, mRunParams.dt);
+        if (mRunParams.contextPaint) {
             nsRefPtr<gfxPattern> strokePattern =
-                mParams.contextPaint->GetStrokePattern(
-                    mParams.context->CurrentMatrix());
+                mRunParams.contextPaint->GetStrokePattern(
+                    mRunParams.context->CurrentMatrix());
             if (strokePattern) {
-                mParams.dt->Stroke(path,
-                                   *strokePattern->GetPattern(mParams.dt),
-                                   aState.strokeOptions);
+                mRunParams.dt->Stroke(path,
+                                      *strokePattern->GetPattern(mRunParams.dt),
+                                      aState.strokeOptions);
             }
         }
     }
@@ -3285,35 +3295,36 @@ void
 gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
                       GlyphBufferAzure& aBuffer, bool *aEmittedGlyphs) const
 {
-    const DrawGlyphParams& params(aBuffer.mParams);
+    const TextRunDrawParams& runParams(aBuffer.mRunParams);
+    const FontDrawParams& fontParams(aBuffer.mFontParams);
 
     double glyphX;
-    if (params.isRTL) {
+    if (runParams.isRTL) {
         aPt->x -= aAdvance;
         glyphX = aPt->x;
     } else {
         glyphX = aPt->x;
         aPt->x += aAdvance;
     }
-    gfxPoint devPt(ToDeviceUnits(glyphX, params.devPerApp),
-                   ToDeviceUnits(aPt->y, params.devPerApp));
+    gfxPoint devPt(ToDeviceUnits(glyphX, runParams.devPerApp),
+                   ToDeviceUnits(aPt->y, runParams.devPerApp));
 
-    if (params.haveSVGGlyphs) {
-        if (!params.paintSVGGlyphs) {
+    if (fontParams.haveSVGGlyphs) {
+        if (!runParams.paintSVGGlyphs) {
             return;
         }
-        DrawMode mode = ForcePaintingDrawMode(params.drawMode);
-        if (RenderSVGGlyph(params.context, devPt, mode,
-                           aGlyphID, params.contextPaint,
-                           params.callbacks, *aEmittedGlyphs)) {
+        DrawMode mode = ForcePaintingDrawMode(runParams.drawMode);
+        if (RenderSVGGlyph(runParams.context, devPt, mode,
+                           aGlyphID, runParams.contextPaint,
+                           runParams.callbacks, *aEmittedGlyphs)) {
             return;
         }
     }
 
-    if (params.haveColorGlyphs &&
-        RenderColorGlyph(params.context, params.scaledFont,
-                         params.renderingOptions, params.drawOptions,
-                         params.matInv * gfx::Point(devPt.x, devPt.y),
+    if (fontParams.haveColorGlyphs &&
+        RenderColorGlyph(runParams.context, fontParams.scaledFont,
+                         fontParams.renderingOptions, fontParams.drawOptions,
+                         fontParams.matInv * gfx::Point(devPt.x, devPt.y),
                          aGlyphID)) {
         return;
     }
@@ -3321,8 +3332,8 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
     aBuffer.OutputGlyph(aGlyphID, devPt);
 
     // Synthetic bolding (if required) by multi-striking.
-    for (int32_t i = 0; i < params.extraStrikes; ++i) {
-        devPt.x += params.synBoldOnePixelOffset;
+    for (int32_t i = 0; i < fontParams.extraStrikes; ++i) {
+        devPt.x += fontParams.synBoldOnePixelOffset;
         aBuffer.OutputGlyph(aGlyphID, devPt);
     }
 
@@ -3332,17 +3343,18 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
 // Draw a run of CharacterGlyph records from the given offset in aShapedText.
 // Returns true if glyph paths were actually emitted.
 bool
-gfxFont::DrawGlyphs(gfxShapedText          *aShapedText,
-                    uint32_t                aOffset, // offset in the textrun
-                    uint32_t                aCount, // length of run to draw
-                    gfxPoint               *aPt,
-                    const DrawGlyphParams&  aParams)
+gfxFont::DrawGlyphs(gfxShapedText            *aShapedText,
+                    uint32_t                  aOffset, // offset in the textrun
+                    uint32_t                  aCount, // length of run to draw
+                    gfxPoint                 *aPt,
+                    const TextRunDrawParams&  aRunParams,
+                    const FontDrawParams&     aFontParams)
 {
     bool emittedGlyphs = false;
-    GlyphBufferAzure buffer(aParams);
+    GlyphBufferAzure buffer(aRunParams, aFontParams);
 
-    if (aParams.spacing) {
-        aPt->x += aParams.direction * aParams.spacing[0].mBefore;
+    if (aRunParams.spacing) {
+        aPt->x += aRunParams.direction * aRunParams.spacing[0].mBefore;
     }
 
     const gfxShapedText::CompressedGlyph *glyphData =
@@ -3364,21 +3376,21 @@ gfxFont::DrawGlyphs(gfxShapedText          *aShapedText,
                     if (glyphData->IsMissing()) {
                         // Default-ignorable chars will have zero advance width;
                         // we don't have to draw the hexbox for them.
-                        if (aParams.drawMode != DrawMode::GLYPH_PATH &&
+                        if (aRunParams.drawMode != DrawMode::GLYPH_PATH &&
                             advance > 0) {
                             double glyphX = aPt->x;
-                            if (aParams.isRTL) {
+                            if (aRunParams.isRTL) {
                                 glyphX -= advance;
                             }
-                            gfxPoint pt(ToDeviceUnits(glyphX, aParams.devPerApp),
-                                        ToDeviceUnits(aPt->y, aParams.devPerApp));
+                            gfxPoint pt(ToDeviceUnits(glyphX, aRunParams.devPerApp),
+                                        ToDeviceUnits(aPt->y, aRunParams.devPerApp));
                             gfxFloat advanceDevUnits =
-                                ToDeviceUnits(advance, aParams.devPerApp);
+                                ToDeviceUnits(advance, aRunParams.devPerApp);
                             gfxFloat height = GetMetrics().maxAscent;
                             gfxRect glyphRect(pt.x, pt.y - height,
                                               advanceDevUnits, height);
                             gfxFontMissingGlyphs::DrawMissingGlyph(
-                                aParams.context, glyphRect, details->mGlyphID,
+                                aRunParams.context, glyphRect, details->mGlyphID,
                                 aShapedText->GetAppUnitsPerDevUnit());
                         }
                     } else {
@@ -3388,17 +3400,17 @@ gfxFont::DrawGlyphs(gfxShapedText          *aShapedText,
                         DrawOneGlyph(details->mGlyphID, advance, &glyphXY,
                                      buffer, &emittedGlyphs);
                     }
-                    aPt->x += aParams.direction * advance;
+                    aPt->x += aRunParams.direction * advance;
                 }
             }
         }
 
-        if (aParams.spacing) {
-            double space = aParams.spacing[i].mAfter;
+        if (aRunParams.spacing) {
+            double space = aRunParams.spacing[i].mAfter;
             if (i + 1 < aCount) {
-                space += aParams.spacing[i + 1].mBefore;
+                space += aRunParams.spacing[i + 1].mBefore;
             }
-            aPt->x += aParams.direction * space;
+            aPt->x += aRunParams.direction * space;
         }
     }
 
@@ -3407,85 +3419,72 @@ gfxFont::DrawGlyphs(gfxShapedText          *aShapedText,
 
 void
 gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
-              gfxContext *aContext, DrawMode aDrawMode, gfxPoint *aPt,
-              Spacing *aSpacing, gfxTextContextPaint *aContextPaint,
-              gfxTextRunDrawCallbacks *aCallbacks)
+              gfxPoint *aPt, TextRunDrawParams& aRunParams)
 {
-    NS_ASSERTION(aDrawMode == DrawMode::GLYPH_PATH || !(int(aDrawMode) & int(DrawMode::GLYPH_PATH)),
+    NS_ASSERTION(aRunParams.drawMode == DrawMode::GLYPH_PATH ||
+                 !(int(aRunParams.drawMode) & int(DrawMode::GLYPH_PATH)),
                  "GLYPH_PATH cannot be used with GLYPH_FILL, GLYPH_STROKE or GLYPH_STROKE_UNDERNEATH");
 
     if (aStart >= aEnd) {
         return;
     }
 
-    DrawGlyphParams params;
-    params.context = aContext;
-    params.devPerApp = 1.0 / double(aTextRun->GetAppUnitsPerDevUnit());
-    params.isRTL = aTextRun->IsRightToLeft();
-    params.direction = aTextRun->GetDirection();
-    params.drawMode = aDrawMode;
-    params.spacing = aSpacing;
-    params.callbacks = aCallbacks;
-    params.contextPaint = aContextPaint;
+    FontDrawParams fontParams;
 
-    params.haveSVGGlyphs = GetFontEntry()->TryGetSVGData(this);
-    params.haveColorGlyphs = GetFontEntry()->TryGetColorGlyphs();
+    fontParams.scaledFont = GetScaledFont(aRunParams.dt);
+    if (!fontParams.scaledFont) {
+        return;
+    }
+
+    fontParams.haveSVGGlyphs = GetFontEntry()->TryGetSVGData(this);
+    fontParams.haveColorGlyphs = GetFontEntry()->TryGetColorGlyphs();
 
     nsAutoPtr<gfxTextContextPaint> contextPaint;
-    if (params.haveSVGGlyphs && !params.contextPaint) {
+    if (fontParams.haveSVGGlyphs && !aRunParams.contextPaint) {
         // If no pattern is specified for fill, use the current pattern
-        NS_ASSERTION((int(aDrawMode) & int(DrawMode::GLYPH_STROKE)) == 0,
+        NS_ASSERTION((int(aRunParams.drawMode) & int(DrawMode::GLYPH_STROKE)) == 0,
                      "no pattern supplied for stroking text");
-        nsRefPtr<gfxPattern> fillPattern = aContext->GetPattern();
+        nsRefPtr<gfxPattern> fillPattern = aRunParams.context->GetPattern();
         contextPaint =
             new SimpleTextContextPaint(fillPattern, nullptr,
-                                       aContext->CurrentMatrix());
-        params.contextPaint = contextPaint;
+                                       aRunParams.context->CurrentMatrix());
+        aRunParams.contextPaint = contextPaint;
     }
 
     // Synthetic-bold strikes are each offset one device pixel in run direction.
     // (these values are only needed if IsSyntheticBold() is true)
     if (IsSyntheticBold()) {
-        double xscale = CalcXScale(aContext);
-        params.synBoldOnePixelOffset = params.direction * xscale;
+        double xscale = CalcXScale(aRunParams.context);
+        fontParams.synBoldOnePixelOffset = aRunParams.direction * xscale;
         if (xscale != 0.0) {
             // use as many strikes as needed for the the increased advance
-            params.extraStrikes =
+            fontParams.extraStrikes =
                 std::max(1, NS_lroundf(GetSyntheticBoldOffset() / xscale));
         }
     } else {
-        params.synBoldOnePixelOffset = 0;
-        params.extraStrikes = 0;
+        fontParams.synBoldOnePixelOffset = 0;
+        fontParams.extraStrikes = 0;
     }
 
-    params.paintSVGGlyphs = !aCallbacks || aCallbacks->mShouldPaintSVGGlyphs;
-
-    params.dt = aContext->GetDrawTarget();
-    params.scaledFont = GetScaledFont(params.dt);
-    if (!params.scaledFont) {
-        return;
-    }
-
-    bool oldSubpixelAA = params.dt->GetPermitSubpixelAA();
+    bool oldSubpixelAA = aRunParams.dt->GetPermitSubpixelAA();
     if (!AllowSubpixelAA()) {
-        params.dt->SetPermitSubpixelAA(false);
+        aRunParams.dt->SetPermitSubpixelAA(false);
     }
 
     Matrix mat;
-    Matrix oldMat = params.dt->GetTransform();
+    Matrix oldMat = aRunParams.dt->GetTransform();
 
     // This is nullptr when we have inverse-transformed glyphs and we need
     // to transform the Brush inside flush.
-    params.passedInvMatrix = nullptr;
+    fontParams.passedInvMatrix = nullptr;
 
-    params.renderingOptions = GetGlyphRenderingOptions();
-
-    params.drawOptions.mAntialiasMode = Get2DAAMode(mAntialiasOption);
+    fontParams.renderingOptions = GetGlyphRenderingOptions();
+    fontParams.drawOptions.mAntialiasMode = Get2DAAMode(mAntialiasOption);
 
     // The cairo DrawTarget backend uses the cairo_scaled_font directly
     // and so has the font skew matrix applied already.
     if (mScaledFont &&
-        params.dt->GetBackendType() != BackendType::CAIRO) {
+        aRunParams.dt->GetBackendType() != BackendType::CAIRO) {
         cairo_matrix_t matrix;
         cairo_scaled_font_get_font_matrix(mScaledFont, &matrix);
         if (matrix.xy != 0) {
@@ -3500,12 +3499,12 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
             mat._11 = mat._22 = 1.0;
             mat._21 /= GetAdjustedSize();
 
-            params.dt->SetTransform(mat * oldMat);
+            aRunParams.dt->SetTransform(mat * oldMat);
 
-            params.matInv = mat;
-            params.matInv.Invert();
+            fontParams.matInv = mat;
+            fontParams.matInv.Invert();
 
-            params.passedInvMatrix = &params.matInv;
+            fontParams.passedInvMatrix = &fontParams.matInv;
         }
     }
 
@@ -3515,16 +3514,17 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     }
 
     bool emittedGlyphs =
-        DrawGlyphs(aTextRun, aStart, aEnd - aStart, aPt, params);
+        DrawGlyphs(aTextRun, aStart, aEnd - aStart, aPt,
+                   aRunParams, fontParams);
 
     aPt->y = origY;
 
-    if (aCallbacks && emittedGlyphs) {
-        aCallbacks->NotifyGlyphPathEmitted();
+    if (aRunParams.callbacks && emittedGlyphs) {
+        aRunParams.callbacks->NotifyGlyphPathEmitted();
     }
 
-    params.dt->SetTransform(oldMat);
-    params.dt->SetPermitSubpixelAA(oldSubpixelAA);
+    aRunParams.dt->SetTransform(oldMat);
+    aRunParams.dt->SetPermitSubpixelAA(oldSubpixelAA);
 }
 
 bool
@@ -6917,20 +6917,16 @@ gfxTextRun::ShrinkToLigatureBoundaries(uint32_t *aStart, uint32_t *aEnd)
 }
 
 void
-gfxTextRun::DrawGlyphs(gfxFont *aFont, gfxContext *aContext,
-                       DrawMode aDrawMode, gfxPoint *aPt,
-                       gfxTextContextPaint *aContextPaint,
-                       uint32_t aStart, uint32_t aEnd,
-                       PropertyProvider *aProvider,
+gfxTextRun::DrawGlyphs(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
+                       gfxPoint *aPt, PropertyProvider *aProvider,
                        uint32_t aSpacingStart, uint32_t aSpacingEnd,
-                       gfxTextRunDrawCallbacks *aCallbacks)
+                       TextRunDrawParams& aParams)
 {
     nsAutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
     bool haveSpacing = GetAdjustedSpacingArray(aStart, aEnd, aProvider,
         aSpacingStart, aSpacingEnd, &spacingBuffer);
-    aFont->Draw(this, aStart, aEnd, aContext, aDrawMode, aPt,
-                haveSpacing ? spacingBuffer.Elements() : nullptr, aContextPaint,
-                aCallbacks);
+    aParams.spacing = haveSpacing ? spacingBuffer.Elements() : nullptr;
+    aFont->Draw(this, aStart, aEnd, aPt, aParams);
 }
 
 static void
@@ -6955,49 +6951,44 @@ ClipPartialLigature(gfxTextRun *aTextRun, gfxFloat *aLeft, gfxFloat *aRight,
 }
 
 void
-gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx,
-                                uint32_t aStart, uint32_t aEnd,
-                                gfxPoint *aPt,
-                                PropertyProvider *aProvider,
-                                gfxTextRunDrawCallbacks *aCallbacks)
+gfxTextRun::DrawPartialLigature(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
+                                gfxPoint *aPt, PropertyProvider *aProvider,
+                                TextRunDrawParams& aParams)
 {
     if (aStart >= aEnd)
         return;
 
     // Draw partial ligature. We hack this by clipping the ligature.
     LigatureData data = ComputeLigatureData(aStart, aEnd, aProvider);
-    gfxRect clipExtents = aCtx->GetClipExtents();
-    gfxFloat left = clipExtents.X()*mAppUnitsPerDevUnit;
-    gfxFloat right = clipExtents.XMost()*mAppUnitsPerDevUnit;
+    gfxRect clipExtents = aParams.context->GetClipExtents();
+    gfxFloat left = clipExtents.X() * mAppUnitsPerDevUnit;
+    gfxFloat right = clipExtents.XMost() * mAppUnitsPerDevUnit;
     ClipPartialLigature(this, &left, &right, aPt->x, &data);
 
     {
       // Need to preserve the path, otherwise this can break canvas text-on-path;
       // in general it seems like a good thing, as naive callers probably won't
       // expect gfxTextRun::Draw to implicitly destroy the current path.
-      gfxContextPathAutoSaveRestore savePath(aCtx);
+      gfxContextPathAutoSaveRestore savePath(aParams.context);
 
       // use division here to ensure that when the rect is aligned on multiples
       // of mAppUnitsPerDevUnit, we clip to true device unit boundaries.
       // Also, make sure we snap the rectangle to device pixels.
-      aCtx->Save();
-      aCtx->NewPath();
-      aCtx->Rectangle(gfxRect(left / mAppUnitsPerDevUnit,
-                              clipExtents.Y(),
-                              (right - left) / mAppUnitsPerDevUnit,
-                              clipExtents.Height()), true);
-      aCtx->Clip();
+      aParams.context->Save();
+      aParams.context->NewPath();
+      aParams.context->Rectangle(gfxRect(left / mAppUnitsPerDevUnit,
+                                         clipExtents.Y(),
+                                         (right - left) / mAppUnitsPerDevUnit,
+                                         clipExtents.Height()), true);
+      aParams.context->Clip();
     }
 
-    gfxFloat direction = GetDirection();
-    gfxPoint pt(aPt->x - direction*data.mPartAdvance, aPt->y);
-    DrawGlyphs(aFont, aCtx,
-               aCallbacks ? DrawMode::GLYPH_PATH : DrawMode::GLYPH_FILL, &pt,
-               nullptr, data.mLigatureStart, data.mLigatureEnd, aProvider,
-               aStart, aEnd, aCallbacks);
-    aCtx->Restore();
+    gfxPoint pt(aPt->x - aParams.direction * data.mPartAdvance, aPt->y);
+    DrawGlyphs(aFont, data.mLigatureStart, data.mLigatureEnd, &pt,
+               aProvider, aStart, aEnd, aParams);
+    aParams.context->Restore();
 
-    aPt->x += direction*data.mPartWidth;
+    aPt->x += aParams.direction * data.mPartWidth;
 }
 
 // returns true if a glyph run is using a font with synthetic bolding enabled, false otherwise
@@ -7074,9 +7065,11 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
                  gfxTextRunDrawCallbacks *aCallbacks)
 {
     NS_ASSERTION(aStart + aLength <= GetLength(), "Substring out of range");
-    NS_ASSERTION(aDrawMode == DrawMode::GLYPH_PATH || !(int(aDrawMode) & int(DrawMode::GLYPH_PATH)),
+    NS_ASSERTION(aDrawMode == DrawMode::GLYPH_PATH ||
+                 !(int(aDrawMode) & int(DrawMode::GLYPH_PATH)),
                  "GLYPH_PATH cannot be used with GLYPH_FILL, GLYPH_STROKE or GLYPH_STROKE_UNDERNEATH");
-    NS_ASSERTION(aDrawMode == DrawMode::GLYPH_PATH || !aCallbacks, "callback must not be specified unless using GLYPH_PATH");
+    NS_ASSERTION(aDrawMode == DrawMode::GLYPH_PATH || !aCallbacks,
+                 "callback must not be specified unless using GLYPH_PATH");
 
     bool skipDrawing = mSkipDrawing;
     if (aDrawMode == DrawMode::GLYPH_FILL) {
@@ -7102,21 +7095,38 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
         return;
     }
 
+    // Set up parameters that will be constant across all glyph runs we need
+    // to draw, regardless of the font used.
+    TextRunDrawParams params;
+    params.context = aContext;
+    params.devPerApp = 1.0 / double(GetAppUnitsPerDevUnit());
+    params.isRTL = IsRightToLeft();
+    params.direction = direction;
+    params.drawMode = aDrawMode;
+    params.callbacks = aCallbacks;
+    params.contextPaint = aContextPaint;
+    params.paintSVGGlyphs = !aCallbacks || aCallbacks->mShouldPaintSVGGlyphs;
+    params.dt = aContext->GetDrawTarget();
+
     gfxPoint pt = aPt;
 
-    // synthetic bolding draws glyphs twice ==> colors with opacity won't draw correctly unless first drawn without alpha
+    // synthetic bolding draws glyphs twice ==> colors with opacity won't draw
+    // correctly unless first drawn without alpha
     BufferAlphaColor syntheticBoldBuffer(aContext);
     gfxRGBA currentColor;
     bool needToRestore = false;
 
-    if (aDrawMode == DrawMode::GLYPH_FILL && HasNonOpaqueColor(aContext, currentColor)
-                                          && HasSyntheticBold(this, aStart, aLength)) {
+    if (aDrawMode == DrawMode::GLYPH_FILL &&
+        HasNonOpaqueColor(aContext, currentColor) &&
+        HasSyntheticBold(this, aStart, aLength)) {
         needToRestore = true;
         // measure text, use the bounding box
-        gfxTextRun::Metrics metrics = MeasureText(aStart, aLength, gfxFont::LOOSE_INK_EXTENTS,
+        gfxTextRun::Metrics metrics = MeasureText(aStart, aLength,
+                                                  gfxFont::LOOSE_INK_EXTENTS,
                                                   aContext, aProvider);
         metrics.mBoundingBox.MoveBy(aPt);
-        syntheticBoldBuffer.PushSolidColor(metrics.mBoundingBox, currentColor, GetAppUnitsPerDevUnit());
+        syntheticBoldBuffer.PushSolidColor(metrics.mBoundingBox, currentColor,
+                                           GetAppUnitsPerDevUnit());
     }
 
     GlyphRunIterator iter(this, aStart, aLength);
@@ -7127,22 +7137,21 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
         uint32_t ligatureRunStart = start;
         uint32_t ligatureRunEnd = end;
         ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
-        
+
         bool drawPartial = aDrawMode == DrawMode::GLYPH_FILL ||
                            (aDrawMode == DrawMode::GLYPH_PATH && aCallbacks);
 
         if (drawPartial) {
-            DrawPartialLigature(font, aContext, start, ligatureRunStart, &pt,
-                                aProvider, aCallbacks);
+            DrawPartialLigature(font, start, ligatureRunStart, &pt,
+                                aProvider, params);
         }
 
-        DrawGlyphs(font, aContext, aDrawMode, &pt, aContextPaint, ligatureRunStart,
-                   ligatureRunEnd, aProvider, ligatureRunStart, ligatureRunEnd,
-                   aCallbacks);
+        DrawGlyphs(font, ligatureRunStart, ligatureRunEnd, &pt,
+                   aProvider, ligatureRunStart, ligatureRunEnd, params);
 
         if (drawPartial) {
-            DrawPartialLigature(font, aContext, ligatureRunEnd, end, &pt,
-                                aProvider, aCallbacks);
+            DrawPartialLigature(font, ligatureRunEnd, end, &pt,
+                                aProvider, params);
         }
     }
 
