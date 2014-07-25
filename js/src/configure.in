@@ -2752,17 +2752,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(External Packages)
 
-JS_THREADSAFE=1
-MOZ_ARG_DISABLE_BOOL(threadsafe,
-[  --disable-threadsafe    Disable support for multiple threads.],
-    JS_THREADSAFE= ,
-    JS_THREADSAFE=1 )
-if test -n "$JS_THREADSAFE"; then
-    AC_DEFINE(JS_THREADSAFE)
-fi
-JS_THREADSAFE_CONFIGURED=$JS_THREADSAFE
-AC_SUBST(JS_THREADSAFE_CONFIGURED)
-
 MOZ_CONFIG_NSPR(js)
 
 dnl ========================================================
@@ -3855,37 +3844,6 @@ AC_SUBST(MSMANIFEST_TOOL)
 AC_SUBST(MOZ_LINKER)
 
 AC_CHECK_FUNCS(posix_fadvise posix_fallocate)
-
-dnl Check for missing components
-if test "$COMPILE_ENVIRONMENT"; then
-if test "$MOZ_X11"; then
-    dnl ====================================================
-    dnl = Check if X headers exist
-    dnl ====================================================
-    _SAVE_CFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $XCFLAGS"
-    AC_TRY_COMPILE([
-        #include <stdio.h>
-        #include <stdlib.h>
-        #include <X11/Xlib.h>
-        #include <X11/Intrinsic.h>
-    ],
-    [
-        Display *dpy = 0;
-        if ((dpy = XOpenDisplay(NULL)) == NULL) {
-            fprintf(stderr, ": can't open %s\n", XDisplayName(NULL));
-            exit(1);
-        }
-    ], [],
-    [ AC_MSG_ERROR([Can't find X headers (install libxt-dev (Debian/Ubuntu), libXt-devel (Fedora), or xorg-x11-libXt-devel (SuSE)).]) ])
-    CFLAGS="$_SAVE_CFLAGS"
-
-    if test -n "$MISSING_X"; then
-        AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
-    fi
-
-fi # MOZ_X11
-fi # COMPILE_ENVIRONMENT
 
 dnl Set various defines and substitutions
 dnl ========================================================

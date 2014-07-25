@@ -26,6 +26,7 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for TextureImage::AddRef, etc
+#include "GfxTexturesReporter.h"
 
 class gfxReusableSurfaceWrapper;
 class gfxImageSurface;
@@ -153,6 +154,26 @@ public:
                        gfx::SurfaceFormat aFormat,
                        size_t aSize,
                        TextureFlags aTextureFlags);
+
+  // Creates and allocates a TextureClient of the same type.
+  virtual TemporaryRef<TextureClient>
+  CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
+                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const = 0;
+
+  /**
+   * Allocates for a given surface size, taking into account the pixel format
+   * which is part of the state of the TextureClient.
+   *
+   * Does not clear the surface by default, clearing the surface can be done
+   * by passing the CLEAR_BUFFER flag.
+   *
+   * TextureClients that can expose a DrawTarget should override this method.
+   */
+  virtual bool AllocateForSurface(gfx::IntSize aSize,
+                                  TextureAllocationFlags flags = ALLOC_DEFAULT)
+  {
+    return false;
+  }
 
   virtual TextureClientYCbCr* AsTextureClientYCbCr() { return nullptr; }
 
@@ -344,6 +365,14 @@ public:
    */
   virtual void WaitForBufferOwnership() {}
 
+  /**
+   * Track how much of this texture is wasted.
+   * For example we might allocate a 256x256 tile but only use 10x10.
+   */
+   void SetWaste(int aWasteArea) {
+     mWasteTracker.Update(aWasteArea, BytesPerPixel(GetFormat()));
+   }
+
 private:
   /**
    * Called once, just before the destructor.
@@ -361,22 +390,6 @@ protected:
    * anymore. This usually means it will soon be destroyed.
    */
   void MarkInvalid() { mValid = false; }
-
-  /**
-   * Allocates for a given surface size, taking into account the pixel format
-   * which is part of the state of the TextureClient.
-   *
-   * Does not clear the surface by default, clearing the surface can be done
-   * by passing the CLEAR_BUFFER flag.
-   *
-   * TextureClients that can expose a DrawTarget should override this method.
-   */
-  virtual bool AllocateForSurface(gfx::IntSize aSize,
-                                  TextureAllocationFlags flags = ALLOC_DEFAULT)
-  {
-    return false;
-  }
-
 
   /**
    * Should only be called *once* per texture, in TextureClient::InitIPDLActor.
@@ -402,10 +415,11 @@ protected:
   RefPtr<TextureChild> mActor;
   RefPtr<ISurfaceAllocator> mAllocator;
   TextureFlags mFlags;
-  bool mShared;
-  bool mValid;
   FenceHandle mReleaseFenceHandle;
   FenceHandle mAcquireFenceHandle;
+  gl::GfxTextureWasteTracker mWasteTracker;
+  bool mShared;
+  bool mValid;
 
   friend class TextureChild;
   friend class RemoveTextureFromCompositableTracker;
@@ -488,6 +502,10 @@ public:
   virtual bool HasInternalBuffer() const MOZ_OVERRIDE { return true; }
 
   ISurfaceAllocator* GetAllocator() const;
+
+  virtual TemporaryRef<TextureClient>
+  CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
+                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const MOZ_OVERRIDE;
 
 protected:
   RefPtr<gfx::DrawTarget> mDrawTarget;
@@ -596,6 +614,12 @@ public:
   {
     return gfx::SurfaceFormat::UNKNOWN;
   }
+
+  // This TextureClient should not be used in a context where we use CreateSimilar
+  // (ex. component alpha) because the underlying texture data is always created by
+  // an external producer.
+  virtual TemporaryRef<TextureClient>
+  CreateSimilar(TextureFlags, TextureAllocationFlags) const MOZ_OVERRIDE { return nullptr; }
 
   virtual bool AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlags aFlags) MOZ_OVERRIDE
   {

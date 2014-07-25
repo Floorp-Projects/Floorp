@@ -66,8 +66,8 @@ public:
   virtual void SetInitialChildList(ChildListID     aListID,
                                    nsFrameList&    aChildList) MOZ_OVERRIDE;
 
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
   virtual void Reflow(nsPresContext*           aCX,
                       nsHTMLReflowMetrics&     aDesiredSize,
@@ -332,9 +332,9 @@ protected:
   // guess at a row height based on our own style.
   nscoord  CalcFallbackRowHeight(float aFontSizeInflation);
 
-  // CalcIntrinsicHeight computes our intrinsic height (taking the "size"
+  // CalcIntrinsicBSize computes our intrinsic height (taking the "size"
   // attribute into account).  This should only be called in non-dropdown mode.
-  nscoord CalcIntrinsicHeight(nscoord aHeightOfARow, int32_t aNumberOfOptions);
+  nscoord CalcIntrinsicBSize(nscoord aHeightOfARow, int32_t aNumberOfOptions);
 
   // Dropped down stuff
   void     SetComboboxItem(int32_t aIndex);

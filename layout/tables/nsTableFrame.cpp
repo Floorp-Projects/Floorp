@@ -1484,7 +1484,7 @@ nsTableFrame::ProcessRowInserted(nscoord aNewHeight)
 }
 
 /* virtual */ void
-nsTableFrame::MarkIntrinsicWidthsDirty()
+nsTableFrame::MarkIntrinsicISizesDirty()
 {
   nsITableLayoutStrategy* tls = LayoutStrategy();
   if (MOZ_UNLIKELY(!tls)) {
@@ -1496,40 +1496,40 @@ nsTableFrame::MarkIntrinsicWidthsDirty()
     // destroyed so no need to mark anything dirty here.  See bug 595758.
     return;
   }
-  tls->MarkIntrinsicWidthsDirty();
+  tls->MarkIntrinsicISizesDirty();
 
   // XXXldb Call SetBCDamageArea?
 
-  nsContainerFrame::MarkIntrinsicWidthsDirty();
+  nsContainerFrame::MarkIntrinsicISizesDirty();
 }
 
 /* virtual */ nscoord
-nsTableFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsTableFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   if (NeedToCalcBCBorders())
     CalcBCBorders();
 
   ReflowColGroups(aRenderingContext);
 
-  return LayoutStrategy()->GetMinWidth(aRenderingContext);
+  return LayoutStrategy()->GetMinISize(aRenderingContext);
 }
 
 /* virtual */ nscoord
-nsTableFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsTableFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   if (NeedToCalcBCBorders())
     CalcBCBorders();
 
   ReflowColGroups(aRenderingContext);
 
-  return LayoutStrategy()->GetPrefWidth(aRenderingContext, false);
+  return LayoutStrategy()->GetPrefISize(aRenderingContext, false);
 }
 
-/* virtual */ nsIFrame::IntrinsicWidthOffsetData
-nsTableFrame::IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext)
+/* virtual */ nsIFrame::IntrinsicISizeOffsetData
+nsTableFrame::IntrinsicISizeOffsets(nsRenderingContext* aRenderingContext)
 {
-  IntrinsicWidthOffsetData result =
-    nsContainerFrame::IntrinsicWidthOffsets(aRenderingContext);
+  IntrinsicISizeOffsetData result =
+    nsContainerFrame::IntrinsicISizeOffsets(aRenderingContext);
 
   result.hMargin = 0;
   result.hPctMargin = 0;
@@ -1560,7 +1560,7 @@ nsTableFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   AutoMaybeDisableFontInflation an(this);
 
   // Tables never shrink below their min width.
-  nscoord minWidth = GetMinWidth(aRenderingContext);
+  nscoord minWidth = GetMinISize(aRenderingContext);
   if (minWidth > result.width)
     result.width = minWidth;
 
@@ -1576,7 +1576,7 @@ nsTableFrame::TableShrinkWidthToFit(nsRenderingContext *aRenderingContext,
   AutoMaybeDisableFontInflation an(this);
 
   nscoord result;
-  nscoord minWidth = GetMinWidth(aRenderingContext);
+  nscoord minWidth = GetMinISize(aRenderingContext);
   if (minWidth > aWidthInCB) {
     result = minWidth;
   } else {
@@ -1585,10 +1585,10 @@ nsTableFrame::TableShrinkWidthToFit(nsRenderingContext *aRenderingContext,
     // relates to handling of percentage widths on columns).  So this
     // function differs from nsFrame::ShrinkWidthToFit by only the
     // following line.
-    // Since we've already called GetMinWidth, we don't need to do any
-    // of the other stuff GetPrefWidth does.
+    // Since we've already called GetMinISize, we don't need to do any
+    // of the other stuff GetPrefISize does.
     nscoord prefWidth =
-      LayoutStrategy()->GetPrefWidth(aRenderingContext, true);
+      LayoutStrategy()->GetPrefISize(aRenderingContext, true);
     if (prefWidth > aWidthInCB) {
       result = aWidthInCB;
     } else {
@@ -1683,8 +1683,8 @@ nsTableFrame::RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState)
 }
 
 /******************************************************************************************
- * Before reflow, intrinsic width calculation is done using GetMinWidth
- * and GetPrefWidth.  This used to be known as pass 1 reflow.
+ * Before reflow, intrinsic width calculation is done using GetMinISize
+ * and GetPrefISize.  This used to be known as pass 1 reflow.
  *
  * After the intrinsic width calculation, the table determines the
  * column widths using BalanceColumnWidths() and
@@ -1927,9 +1927,11 @@ nsTableFrame::FixupPositionedTableParts(nsPresContext*           aPresContext,
     // XXX(seth): Note that the dummy reflow state doesn't have a correct
     // chain of parent reflow states. It also doesn't necessarily have a
     // correct containing block.
+    WritingMode wm = positionedPart->GetWritingMode();
+    LogicalSize availSize(wm, size);
+    availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
     nsHTMLReflowState reflowState(aPresContext, positionedPart,
-                                  aReflowState.rendContext,
-                                  nsSize(size.width, NS_UNCONSTRAINEDSIZE),
+                                  aReflowState.rendContext, availSize,
                                   nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
     nsReflowStatus reflowStatus = NS_FRAME_COMPLETE;
 
@@ -2794,15 +2796,17 @@ nsTableFrame::SetupHeaderFooterChild(const nsTableReflowState& aReflowState,
   nsPresContext* presContext = PresContext();
   nscoord pageHeight = presContext->GetPageSize().height;
 
-  // Reflow the child with unconstrainted height
+  // Reflow the child with unconstrained height
+  WritingMode wm = aFrame->GetWritingMode();
+  LogicalSize availSize = aReflowState.reflowState.AvailableSize(wm);
+  availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
   nsHTMLReflowState kidReflowState(presContext, aReflowState.reflowState,
-                                   aFrame,
-                                   nsSize(aReflowState.availSize.width, NS_UNCONSTRAINEDSIZE),
+                                   aFrame, availSize,
                                    -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
   InitChildReflowState(kidReflowState);
   kidReflowState.mFlags.mIsTopOfPage = true;
   nsHTMLReflowMetrics desiredSize(aReflowState.reflowState);
-  desiredSize.Width() = desiredSize.Height() = 0;
+  desiredSize.ClearSize();
   nsReflowStatus status;
   ReflowChild(aFrame, presContext, desiredSize, kidReflowState,
               aReflowState.x, aReflowState.y, 0, status);
@@ -2819,12 +2823,12 @@ nsTableFrame::PlaceRepeatedFooter(nsTableReflowState& aReflowState,
                                   nscoord aFooterHeight)
 {
   nsPresContext* presContext = PresContext();
-  nsSize kidAvailSize(aReflowState.availSize);
-  kidAvailSize.height = aFooterHeight;
+  WritingMode wm = aTfoot->GetWritingMode();
+  LogicalSize kidAvailSize(wm, aReflowState.availSize);
+  kidAvailSize.BSize(wm) = aFooterHeight;
   nsHTMLReflowState footerReflowState(presContext,
                                       aReflowState.reflowState,
-                                      aTfoot,
-                                      kidAvailSize,
+                                      aTfoot, kidAvailSize,
                                       -1, -1,
                                       nsHTMLReflowState::CALLER_WILL_INIT);
   InitChildReflowState(footerReflowState);
@@ -2835,7 +2839,7 @@ nsTableFrame::PlaceRepeatedFooter(nsTableReflowState& aReflowState,
           
   nsReflowStatus footerStatus;
   nsHTMLReflowMetrics desiredSize(aReflowState.reflowState);
-  desiredSize.Width() = desiredSize.Height() = 0;
+  desiredSize.ClearSize();
   ReflowChild(aTfoot, presContext, desiredSize, footerReflowState,
               aReflowState.x, aReflowState.y, 0, footerStatus);
   PlaceChild(aReflowState, aTfoot, desiredSize, origTfootRect,
@@ -2942,11 +2946,13 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
       nsRect oldKidVisualOverflow = kidFrame->GetVisualOverflowRect();
 
       nsHTMLReflowMetrics desiredSize(aReflowState.reflowState);
-      desiredSize.Width() = desiredSize.Height() = 0;
+      desiredSize.ClearSize();
 
       // Reflow the child into the available space
       nsHTMLReflowState kidReflowState(presContext, aReflowState.reflowState,
-                                       kidFrame, kidAvailSize,
+                                       kidFrame,
+                                       LogicalSize(kidFrame->GetWritingMode(),
+                                                   kidAvailSize),
                                        -1, -1,
                                        nsHTMLReflowState::CALLER_WILL_INIT);
       InitChildReflowState(kidReflowState);
@@ -3138,8 +3144,9 @@ nsTableFrame::ReflowColGroups(nsRenderingContext *aRenderingContext)
          kidFrame = kidFrame->GetNextSibling()) {
       if (NS_SUBTREE_DIRTY(kidFrame)) {
         // The column groups don't care about dimensions or reflow states.
-        nsHTMLReflowState kidReflowState(presContext, kidFrame,
-                                       aRenderingContext, nsSize(0,0));
+        nsHTMLReflowState
+          kidReflowState(presContext, kidFrame, aRenderingContext,
+                         LogicalSize(kidFrame->GetWritingMode()));
         nsReflowStatus cgStatus;
         ReflowChild(kidFrame, presContext, kidMet, kidReflowState, 0, 0, 0,
                     cgStatus);
@@ -3213,19 +3220,16 @@ void ResizeCells(nsTableFrame& aTableFrame)
 {
   nsTableFrame::RowGroupArray rowGroups;
   aTableFrame.OrderRowGroups(rowGroups);
-  nsHTMLReflowMetrics tableDesiredSize(aTableFrame.GetWritingMode()); // ???
-  nsRect tableRect = aTableFrame.GetRect();
-  tableDesiredSize.Width() = tableRect.width;
-  tableDesiredSize.Height() = tableRect.height;
+  WritingMode wm = aTableFrame.GetWritingMode();
+  nsHTMLReflowMetrics tableDesiredSize(wm);
+  tableDesiredSize.SetSize(wm, aTableFrame.GetLogicalSize(wm));
   tableDesiredSize.SetOverflowAreasToDesiredBounds();
 
   for (uint32_t rgX = 0; rgX < rowGroups.Length(); rgX++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
 
-    nsRect rowGroupRect = rgFrame->GetRect();
-    nsHTMLReflowMetrics groupDesiredSize(tableDesiredSize.GetWritingMode());
-    groupDesiredSize.Width() = rowGroupRect.width;
-    groupDesiredSize.Height() = rowGroupRect.height;
+    nsHTMLReflowMetrics groupDesiredSize(wm);
+    groupDesiredSize.SetSize(wm, rgFrame->GetLogicalSize(wm));
     groupDesiredSize.SetOverflowAreasToDesiredBounds();
 
     nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
@@ -3668,7 +3672,7 @@ nsTableFrame::IsAutoLayout()
     return true;
   // a fixed-layout inline-table must have a width
   // and tables with 'width: -moz-max-content' must be auto-layout
-  // (at least as long as FixedTableLayoutStrategy::GetPrefWidth returns
+  // (at least as long as FixedTableLayoutStrategy::GetPrefISize returns
   // nscoord_MAX)
   const nsStyleCoord &width = StylePosition()->mWidth;
   return (width.GetUnit() == eStyleUnit_Auto) ||

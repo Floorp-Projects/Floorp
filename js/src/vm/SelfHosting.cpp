@@ -670,12 +670,8 @@ bool
 js::intrinsic_ShouldForceSequential(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-#ifdef JS_THREADSAFE
     args.rval().setBoolean(cx->runtime()->forkJoinWarmup ||
                            InParallelSection());
-#else
-    args.rval().setBoolean(true);
-#endif
     return true;
 }
 

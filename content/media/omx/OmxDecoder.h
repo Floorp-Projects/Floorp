@@ -1,3 +1,4 @@
+#include <set>
 #include <stagefright/foundation/ABase.h>
 #include <stagefright/foundation/AHandlerReflector.h>
 #include <stagefright/foundation/ALooper.h>
@@ -89,7 +90,11 @@ class OmxDecoder : public OMXCodecProxy::EventListener {
   // OMXCodec does not accept MediaBuffer during seeking. If MediaBuffer is
   //  returned to OMXCodec during seeking, OMXCodec calls assert.
   Vector<BufferItem> mPendingVideoBuffers;
-  // The lock protects mPendingVideoBuffers.
+
+  // Hold TextureClients that are waiting to be recycled.
+  std::set<TextureClient*> mPendingRecycleTexutreClients;
+
+  // The lock protects mPendingVideoBuffers and mPendingRecycleTexutreClients.
   Mutex mPendingVideoBuffersLock;
 
   // Show if OMXCodec is seeking.
@@ -208,6 +213,8 @@ public:
   int64_t ProcessCachedData(int64_t aOffset, bool aWaitForCompletion);
 
   sp<MediaSource> GetAudioOffloadTrack() { return mAudioOffloadTrack; }
+
+  void RecycleCallbackImp(TextureClient* aClient);
 
   static void RecycleCallback(TextureClient* aClient, void* aClosure);
 };

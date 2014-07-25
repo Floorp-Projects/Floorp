@@ -67,13 +67,6 @@ public:
 
     static already_AddRefed<TextureImage> Create(
                        GLContext* gl,
-                       const nsIntSize& aSize,
-                       TextureImage::ContentType aContentType,
-                       GLenum aWrapMode,
-                       TextureImage::Flags aFlags = TextureImage::NoFlags);
-    // Moz2D equivalent...
-    static already_AddRefed<TextureImage> Create(
-                       GLContext* gl,
                        const gfx::IntSize& aSize,
                        TextureImage::ContentType aContentType,
                        GLenum aWrapMode,

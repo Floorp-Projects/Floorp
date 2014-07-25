@@ -10,7 +10,10 @@ import logging
 import os
 import types
 
-from collections import namedtuple
+from collections import (
+    defaultdict,
+    namedtuple,
+)
 
 import mozwebidlcodegen
 from reftest import ReftestManifest
@@ -319,9 +322,11 @@ class RecursiveMakeBackend(CommonBackend):
             ]}
 
         self._traversal = RecursiveMakeTraversal()
+        self._compile_graph = defaultdict(set)
+        self._triggers = defaultdict(set)
+
         self._may_skip = {
             'export': set(),
-            'compile': set(),
             'binaries': set(),
             'libs': set(),
             'tools': set(),
@@ -505,18 +510,9 @@ class RecursiveMakeBackend(CommonBackend):
             if current in self._may_skip[tier] \
                     or current.startswith('subtiers/'):
                 current = None
-            # subtiers/*_start and subtiers/*_finish, under subtiers/*, are
-            # kept sequential. Others are all forced parallel.
-            if current and current.startswith('subtiers/') and all_subdirs and \
-                    all_subdirs[0].startswith('subtiers/'):
-                return current, [], all_subdirs
             return current, all_subdirs, []
 
         # build everything in parallel, including static dirs
-        def compile_filter(current, subdirs):
-            current, parallel, sequential = parallel_filter(current, subdirs)
-            return current, subdirs.static + parallel, sequential
-
         # Skip tools dirs during libs traversal. Because of bug 925236 and
         # possible other unknown race conditions, don't parallelize the libs
         # tier.
@@ -537,18 +533,17 @@ class RecursiveMakeBackend(CommonBackend):
                 subdirs.dirs + subdirs.tests + subdirs.tools
 
         # compile, binaries and tools tiers use the same traversal as export
-        filters = {
-            'export': parallel_filter,
-            'compile': compile_filter,
-            'binaries': parallel_filter,
-            'libs': libs_filter,
-            'tools': tools_filter,
-        }
+        filters = [
+            ('export', parallel_filter),
+            ('binaries', parallel_filter),
+            ('libs', libs_filter),
+            ('tools', tools_filter),
+        ]
 
         root_deps_mk = Makefile()
 
         # Fill the dependencies for traversal of each tier.
-        for tier, filter in filters.items():
+        for tier, filter in filters:
             main, all_deps = \
                 self._traversal.compute_dependencies(filter)
             for dir, deps in all_deps.items():
@@ -559,12 +554,28 @@ class RecursiveMakeBackend(CommonBackend):
             if main:
                 rule.add_dependencies('%s/%s' % (d, tier) for d in main)
 
+        all_compile_deps = reduce(lambda x,y: x|y,
+            self._compile_graph.values()) if self._compile_graph else set()
+        compile_roots = set(self._compile_graph.keys()) - all_compile_deps
+
+        rule = root_deps_mk.create_rule(['recurse_compile'])
+        rule.add_dependencies(compile_roots)
+        for target, deps in sorted(self._compile_graph.items()):
+            if deps:
+                rule = root_deps_mk.create_rule([target])
+                rule.add_dependencies(deps)
+
         root_mk = Makefile()
 
         # Fill root.mk with the convenience variables.
-        for tier, filter in filters.items():
+        for tier, filter in filters:
             all_dirs = self._traversal.traverse('', filter)
             root_mk.add_statement('%s_dirs := %s' % (tier, ' '.join(all_dirs)))
+
+        # Need a list of compile targets because we can't use pattern rules:
+        # https://savannah.gnu.org/bugs/index.php?42833
+        root_mk.add_statement('compile_targets := %s' % ' '.join(sorted(
+            set(self._compile_graph.keys()) | all_compile_deps)))
 
         root_mk.add_statement('$(call include_deps,root-deps.mk)')
 
@@ -702,6 +713,14 @@ class RecursiveMakeBackend(CommonBackend):
                 obj.topobjdir = bf.environment.topobjdir
                 obj.config = bf.environment
                 self._create_makefile(obj, stub=stub)
+                with open(obj.output_path) as fh:
+                    content = fh.read()
+                    for trigger, targets in self._triggers.items():
+                        if trigger.encode('ascii') in content:
+                            for target in targets:
+                                t = '%s/target' % mozpath.relpath(objdir,
+                                    bf.environment.topobjdir)
+                                self._compile_graph[t].add(target)
 
         # Write out a master list of all IPDL source files.
         ipdl_dir = mozpath.join(self.environment.topobjdir, 'ipc', 'ipdl')
@@ -732,13 +751,6 @@ class RecursiveMakeBackend(CommonBackend):
 
         with self._write_file(mozpath.join(ipdl_dir, 'ipdlsrcs.mk')) as ipdls:
             mk.dump(ipdls, removal_guard=False)
-
-        # These contain autogenerated sources that the build config doesn't
-        # yet know about.
-        # TODO Emit GENERATED_SOURCES so these special cases are dealt with
-        # the proper way.
-        self._may_skip['compile'] -= {'ipc/ipdl'}
-        self._may_skip['compile'] -= {'dom/bindings', 'dom/bindings/test'}
 
         self._fill_root_mk()
 
@@ -809,6 +821,10 @@ class RecursiveMakeBackend(CommonBackend):
 
             self._traversal.add('', dirs=['subtiers/%s' % tier])
 
+            for d in dirs + obj.tier_static_dirs[tier]:
+                if d.trigger:
+                    self._triggers[d.trigger].add('%s/target' % d)
+
         if obj.dirs:
             fh.write('DIRS := %s\n' % ' '.join(obj.dirs))
             self._traversal.add(backend_file.relobjdir, dirs=relativize(obj.dirs))
@@ -847,8 +863,6 @@ class RecursiveMakeBackend(CommonBackend):
         # Until all SOURCES are really in moz.build, consider all directories
         # building binaries to require a pass at compile, too.
         if 'binaries' in affected_tiers:
-            affected_tiers.add('compile')
-        if 'compile' in affected_tiers or 'binaries' in affected_tiers:
             affected_tiers.add('libs')
         if obj.is_tool_dir and 'libs' in affected_tiers:
             affected_tiers.remove('libs')
@@ -1020,6 +1034,11 @@ class RecursiveMakeBackend(CommonBackend):
     def _process_simple_program(self, obj, backend_file):
         if obj.is_unit_test:
             backend_file.write('CPP_UNIT_TESTS += %s\n' % obj.program)
+            # config.mk adds a dependency on NSPR_LIBS for CPP_UNIT_TESTS
+            # Add it here until moz.build land handles this.
+            if 'NSPR_LIBS' in self._triggers:
+                self._compile_graph[self._build_target_for_obj(obj)] |= \
+                    self._triggers['NSPR_LIBS']
         else:
             backend_file.write('SIMPLE_PROGRAMS += %s\n' % obj.program)
 
@@ -1144,6 +1163,10 @@ class RecursiveMakeBackend(CommonBackend):
     def _process_host_library(self, libdef, backend_file):
         backend_file.write('HOST_LIBRARY_NAME = %s\n' % libdef.basename)
 
+    @staticmethod
+    def _build_target_for_obj(obj):
+        return '%s/%s' % (obj.relobjdir, obj.KIND)
+
     def _process_linked_libraries(self, obj, backend_file):
         def recurse_lib(lib):
             for l in lib.linked_libraries:
@@ -1157,12 +1180,35 @@ class RecursiveMakeBackend(CommonBackend):
             # If this is an external objdir (i.e., comm-central), use the other
             # directory instead of $(DEPTH).
             if lib.objdir.startswith(topobjdir + '/'):
-                return '$(DEPTH)/%s' % mozpath.relpath(lib.objdir, topobjdir)
+                return '$(DEPTH)/%s' % lib.relobjdir
             else:
-                return mozpath.relpath(lib.objdir, obj.objdir)
+                return lib.relobjdir
 
         topobjdir = mozpath.normsep(obj.topobjdir)
+        # This will create the node even if there aren't any linked libraries.
+        build_target = self._build_target_for_obj(obj)
+        self._compile_graph[build_target]
+
+        # Until MOZ_GLUE_LDFLAGS/MOZ_GLUE_PROGRAM_LDFLAGS are properly
+        # handled in moz.build world, assume any program or shared library
+        # we build depends on it.
+        if obj.KIND == 'target' and not isinstance(obj, StaticLibrary) and \
+                build_target != 'mozglue/build/target' and \
+                not obj.config.substs.get('JS_STANDALONE'):
+            self._compile_graph[build_target].add('mozglue/build/target')
+            if obj.config.substs.get('MOZ_MEMORY'):
+                self._compile_graph[build_target].add('memory/build/target')
+
+        # Until STLPORT_LIBS are properly handled in moz.build world, assume
+        # any program or shared library we build depends on it.
+        if obj.KIND == 'target' and not isinstance(obj, StaticLibrary) and \
+                build_target != 'build/stlport/target' and \
+                'stlport' in obj.config.substs.get('STLPORT_LIBS'):
+            self._compile_graph[build_target].add('build/stlport/target')
+
         for lib in obj.linked_libraries:
+            self._compile_graph[build_target].add(
+                self._build_target_for_obj(lib))
             relpath = pretty_relpath(lib)
             if isinstance(obj, Library):
                 if isinstance(lib, StaticLibrary):

@@ -822,7 +822,7 @@ protected:
   bool                      mIgnoreFrameDestruction : 1;
   bool                      mHaveShutDown : 1;
   bool                      mViewportOverridden : 1;
-  bool                      mLastRootReflowHadUnconstrainedHeight : 1;
+  bool                      mLastRootReflowHadUnconstrainedBSize : 1;
   bool                      mNoDelayedMouseEvents : 1;
   bool                      mNoDelayedKeyEvents : 1;
 

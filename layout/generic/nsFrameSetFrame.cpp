@@ -111,8 +111,8 @@ public:
 protected:
   nsHTMLFramesetBorderFrame(nsStyleContext* aContext, int32_t aWidth, bool aVertical, bool aVisible);
   virtual ~nsHTMLFramesetBorderFrame();
-  virtual nscoord GetIntrinsicWidth() MOZ_OVERRIDE;
-  virtual nscoord GetIntrinsicHeight() MOZ_OVERRIDE;
+  virtual nscoord GetIntrinsicISize() MOZ_OVERRIDE;
+  virtual nscoord GetIntrinsicBSize() MOZ_OVERRIDE;
 
   // the prev and next neighbors are indexes into the row (for a horizontal border) or col (for
   // a vertical border) of nsHTMLFramesetFrames or nsHTMLFrames
@@ -155,8 +155,8 @@ public:
 protected:
   nsHTMLFramesetBlankFrame(nsStyleContext* aContext) : nsLeafFrame(aContext) {}
   virtual ~nsHTMLFramesetBlankFrame();
-  virtual nscoord GetIntrinsicWidth() MOZ_OVERRIDE;
-  virtual nscoord GetIntrinsicHeight() MOZ_OVERRIDE;
+  virtual nscoord GetIntrinsicISize() MOZ_OVERRIDE;
+  virtual nscoord GetIntrinsicBSize() MOZ_OVERRIDE;
 
   friend class nsHTMLFramesetFrame;
   friend class nsHTMLFrameset;
@@ -619,47 +619,52 @@ nsHTMLFramesetFrame::GetDesiredSize(nsPresContext*           aPresContext,
                                     const nsHTMLReflowState& aReflowState,
                                     nsHTMLReflowMetrics&     aDesiredSize)
 {
+  WritingMode wm = aReflowState.GetWritingMode();
+  LogicalSize desiredSize(wm);
   nsHTMLFramesetFrame* framesetParent = do_QueryFrame(GetParent());
   if (nullptr == framesetParent) {
     if (aPresContext->IsPaginated()) {
       // XXX This needs to be changed when framesets paginate properly
-      aDesiredSize.Width() = aReflowState.AvailableWidth();
-      aDesiredSize.Height() = aReflowState.AvailableHeight();
+      desiredSize.ISize(wm) = aReflowState.AvailableISize();
+      desiredSize.BSize(wm) = aReflowState.AvailableBSize();
     } else {
-      nsRect area = aPresContext->GetVisibleArea();
+      LogicalSize area(wm, aPresContext->GetVisibleArea().Size());
 
-      aDesiredSize.Width() = area.width;
-      aDesiredSize.Height() = area.height;
+      desiredSize.ISize(wm) = area.ISize(wm);
+      desiredSize.BSize(wm) = area.BSize(wm);
     }
   } else {
-    nsSize size;
-    framesetParent->GetSizeOfChild(this, size);
-    aDesiredSize.Width() = size.width;
-    aDesiredSize.Height() = size.height;
+    LogicalSize size(wm);
+    framesetParent->GetSizeOfChild(this, wm, size);
+    desiredSize.ISize(wm) = size.ISize(wm);
+    desiredSize.BSize(wm) = size.BSize(wm);
   }
+  aDesiredSize.SetSize(wm, desiredSize);
 }
 
 // only valid for non border children
 void nsHTMLFramesetFrame::GetSizeOfChildAt(int32_t  aIndexInParent,
-                                           nsSize&  aSize,
+                                           WritingMode aWM,
+                                           LogicalSize&  aSize,
                                            nsIntPoint& aCellIndex)
 {
   int32_t row = aIndexInParent / mNumCols;
   int32_t col = aIndexInParent - (row * mNumCols); // remainder from dividing index by mNumCols
   if ((row < mNumRows) && (col < mNumCols)) {
-    aSize.width  = mColSizes[col];
-    aSize.height = mRowSizes[row];
+    aSize.ISize(aWM) = mColSizes[col];
+    aSize.BSize(aWM) = mRowSizes[row];
     aCellIndex.x = col;
     aCellIndex.y = row;
   } else {
-    aSize.width = aSize.height = 0;
+    aSize.SizeTo(aWM, 0, 0);
     aCellIndex.x = aCellIndex.y = 0;
   }
 }
 
 // only valid for non border children
 void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild,
-                                         nsSize&   aSize)
+                                         WritingMode aWM,
+                                         LogicalSize& aSize)
 {
   // Reflow only creates children frames for <frameset> and <frame> content.
   // this assumption is used here
@@ -668,13 +673,12 @@ void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild,
        child = child->GetNextSibling()) {
     if (aChild == child) {
       nsIntPoint ignore;
-      GetSizeOfChildAt(i, aSize, ignore);
+      GetSizeOfChildAt(i, aWM, aSize, ignore);
       return;
     }
     i++;
   }
-  aSize.width  = 0;
-  aSize.height = 0;
+  aSize.SizeTo(aWM, 0, 0);
 }
 
 
@@ -736,7 +740,8 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
                                       nsIntPoint*              aCellIndex)
 {
   // reflow the child
-  nsHTMLReflowState reflowState(aPresContext, aReflowState, aChild, aSize);
+  nsHTMLReflowState reflowState(aPresContext, aReflowState, aChild,
+                                LogicalSize(aChild->GetWritingMode(), aSize));
   reflowState.SetComputedWidth(std::max(0, aSize.width - reflowState.ComputedPhysicalBorderPadding().LeftRight()));
   reflowState.SetComputedHeight(std::max(0, aSize.height - reflowState.ComputedPhysicalBorderPadding().TopBottom()));
   nsHTMLReflowMetrics metrics(aReflowState);
@@ -934,11 +939,14 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
   nsHTMLFramesetBorderFrame* borderFrame = nullptr;
   nsPoint offset(0,0);
   nsSize size, lastSize;
+  WritingMode wm = GetWritingMode();
+  LogicalSize logicalSize(wm);
   nsIFrame* child = mFrames.FirstChild();
 
   for (int32_t childX = 0; childX < mNonBorderChildCount; childX++) {
     nsIntPoint cellIndex;
-    GetSizeOfChildAt(childX, size, cellIndex);
+    GetSizeOfChildAt(childX, wm, logicalSize, cellIndex);
+    size = logicalSize.GetPhysicalSize(wm);
 
     if (lastRow != cellIndex.y) {  // changed to next row
       offset.x = 0;
@@ -1409,13 +1417,13 @@ nsHTMLFramesetBorderFrame::~nsHTMLFramesetBorderFrame()
 
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLFramesetBorderFrame)
 
-nscoord nsHTMLFramesetBorderFrame::GetIntrinsicWidth()
+nscoord nsHTMLFramesetBorderFrame::GetIntrinsicISize()
 {
   // No intrinsic width
   return 0;
 }
 
-nscoord nsHTMLFramesetBorderFrame::GetIntrinsicHeight()
+nscoord nsHTMLFramesetBorderFrame::GetIntrinsicBSize()
 {
   // No intrinsic height
   return 0;
@@ -1627,13 +1635,13 @@ nsHTMLFramesetBlankFrame::~nsHTMLFramesetBlankFrame()
   //printf("nsHTMLFramesetBlankFrame destructor %p \n", this);
 }
 
-nscoord nsHTMLFramesetBlankFrame::GetIntrinsicWidth()
+nscoord nsHTMLFramesetBlankFrame::GetIntrinsicISize()
 {
   // No intrinsic width
   return 0;
 }
 
-nscoord nsHTMLFramesetBlankFrame::GetIntrinsicHeight()
+nscoord nsHTMLFramesetBlankFrame::GetIntrinsicBSize()
 {
   // No intrinsic height
   return 0;

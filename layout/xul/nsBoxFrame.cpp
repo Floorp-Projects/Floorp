@@ -174,7 +174,7 @@ nsBoxFrame::Init(nsIContent*       aContent,
     AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
   }
 
-  MarkIntrinsicWidthsDirty();
+  MarkIntrinsicISizesDirty();
 
   CacheAttributes();
 
@@ -576,7 +576,7 @@ static void printSize(char * aDesc, nscoord aSize)
 #endif
 
 /* virtual */ nscoord
-nsBoxFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsBoxFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -598,7 +598,7 @@ nsBoxFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsBoxFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsBoxFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -653,43 +653,46 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   nsBoxLayoutState state(aPresContext, aReflowState.rendContext,
                          &aReflowState, aReflowState.mReflowDepth);
 
-  nsSize computedSize(aReflowState.ComputedWidth(),aReflowState.ComputedHeight());
+  WritingMode wm = aReflowState.GetWritingMode();
+  LogicalSize computedSize(wm, aReflowState.ComputedISize(),
+                           aReflowState.ComputedBSize());
 
-  nsMargin m;
-  m = aReflowState.ComputedPhysicalBorderPadding();
+  LogicalMargin m = aReflowState.ComputedLogicalBorderPadding();
   // GetBorderAndPadding(m);
 
-  nsSize prefSize(0,0);
+  LogicalSize prefSize(wm);
 
   // if we are told to layout intrinsic then get our preferred size.
-  NS_ASSERTION(computedSize.width != NS_INTRINSICSIZE,
-               "computed width should always be computed");
-  if (computedSize.height == NS_INTRINSICSIZE) {
-    prefSize = GetPrefSize(state);
+  NS_ASSERTION(computedSize.ISize(wm) != NS_INTRINSICSIZE,
+               "computed inline size should always be computed");
+  if (computedSize.BSize(wm) == NS_INTRINSICSIZE) {
+    nsSize physicalPrefSize = GetPrefSize(state);
     nsSize minSize = GetMinSize(state);
     nsSize maxSize = GetMaxSize(state);
     // XXXbz isn't GetPrefSize supposed to bounds-check for us?
-    prefSize = BoundsCheck(minSize, prefSize, maxSize);
+    physicalPrefSize = BoundsCheck(minSize, physicalPrefSize, maxSize);
+    prefSize = LogicalSize(wm, physicalPrefSize);
   }
 
   // get our desiredSize
-  computedSize.width += m.left + m.right;
+  computedSize.ISize(wm) += m.IStart(wm) + m.IEnd(wm);
 
-  if (aReflowState.ComputedHeight() == NS_INTRINSICSIZE) {
-    computedSize.height = prefSize.height;
+  if (aReflowState.ComputedBSize() == NS_INTRINSICSIZE) {
+    computedSize.BSize(wm) = prefSize.BSize(wm);
     // prefSize is border-box but min/max constraints are content-box.
-    nscoord verticalBorderPadding =
-      aReflowState.ComputedPhysicalBorderPadding().TopBottom();
-    nscoord contentHeight = computedSize.height - verticalBorderPadding;
+    nscoord blockDirBorderPadding =
+      aReflowState.ComputedLogicalBorderPadding().BStartEnd(wm);
+    nscoord contentBSize = computedSize.BSize(wm) - blockDirBorderPadding;
     // Note: contentHeight might be negative, but that's OK because min-height
     // is never negative.
-    computedSize.height = aReflowState.ApplyMinMaxHeight(contentHeight) +
-                          verticalBorderPadding;
+    computedSize.BSize(wm) = aReflowState.ApplyMinMaxHeight(contentBSize) +
+                             blockDirBorderPadding;
   } else {
-    computedSize.height += m.top + m.bottom;
+    computedSize.BSize(wm) += m.BStart(wm) + m.BEnd(wm);
   }
 
-  nsRect r(mRect.x, mRect.y, computedSize.width, computedSize.height);
+  nsSize physicalSize = computedSize.GetPhysicalSize(wm);
+  nsRect r(mRect.x, mRect.y, physicalSize.width, physicalSize.height);
 
   SetBounds(state, r);
  
@@ -699,7 +702,8 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   // ok our child could have gotten bigger. So lets get its bounds
   
   // get the ascent
-  nscoord ascent = mRect.height;
+  LogicalSize boxSize = GetLogicalSize(wm);
+  nscoord ascent = boxSize.BSize(wm);
 
   // getting the ascent could be a lot of work. Don't get it if
   // we are the root. The viewport doesn't care about it.
@@ -707,8 +711,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
     ascent = GetBoxAscent(state);
   }
 
-  aDesiredSize.Width() = mRect.width;
-  aDesiredSize.Height() = mRect.height;
+  aDesiredSize.SetSize(wm, boxSize);
   aDesiredSize.SetBlockStartAscent(ascent);
 
   aDesiredSize.mOverflowAreas = GetOverflowAreas();
@@ -905,9 +908,11 @@ nsBoxFrame::DoLayout(nsBoxLayoutState& aState)
 
   if (HasAbsolutelyPositionedChildren()) {
     // Set up a |reflowState| to pass into ReflowAbsoluteFrames
+    WritingMode wm = GetWritingMode();
     nsHTMLReflowState reflowState(aState.PresContext(), this,
                                   aState.GetRenderingContext(),
-                                  nsSize(mRect.width, NS_UNCONSTRAINEDSIZE));
+                                  LogicalSize(wm, GetLogicalSize().ISize(wm),
+                                              NS_UNCONSTRAINEDSIZE));
 
     // Set up a |desiredSize| to pass into ReflowAbsoluteFrames
     nsHTMLReflowMetrics desiredSize(reflowState);
@@ -968,7 +973,7 @@ nsBoxFrame::SetDebug(nsBoxLayoutState& aState, bool aDebug)
  
      SetDebugOnChildList(aState, mFirstChild, aDebug);
 
-    MarkIntrinsicWidthsDirty();
+    MarkIntrinsicISizesDirty();
   }
 
   return NS_OK;
@@ -976,7 +981,7 @@ nsBoxFrame::SetDebug(nsBoxLayoutState& aState, bool aDebug)
 #endif
 
 /* virtual */ void
-nsBoxFrame::MarkIntrinsicWidthsDirty()
+nsBoxFrame::MarkIntrinsicISizesDirty()
 {
   SizeNeedsRecalc(mPrefSize);
   SizeNeedsRecalc(mMinSize);
@@ -986,7 +991,7 @@ nsBoxFrame::MarkIntrinsicWidthsDirty()
 
   if (mLayoutManager) {
     nsBoxLayoutState state(PresContext());
-    mLayoutManager->IntrinsicWidthsDirty(this, state);
+    mLayoutManager->IntrinsicISizesDirty(this, state);
   }
 
   // Don't call base class method, since everything it does is within an

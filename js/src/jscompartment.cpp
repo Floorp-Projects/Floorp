@@ -933,17 +933,6 @@ JSCompartment::clearBreakpointsIn(FreeOp *fop, js::Debugger *dbg, HandleObject h
 }
 
 void
-JSCompartment::clearTraps(FreeOp *fop)
-{
-    MinorGC(fop->runtime(), JS::gcreason::EVICT_NURSERY);
-    for (gc::ZoneCellIter i(zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
-        JSScript *script = i.get<JSScript>();
-        if (script->compartment() == this && script->hasAnyBreakpointsOrStepMode())
-            script->clearTraps(fop);
-    }
-}
-
-void
 JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                       size_t *tiAllocationSiteTables,
                                       size_t *tiArrayTypeTables,

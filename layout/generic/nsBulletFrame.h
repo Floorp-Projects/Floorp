@@ -48,6 +48,8 @@ public:
 
   nsBulletFrame(nsStyleContext* aContext)
     : nsFrame(aContext)
+    , mPadding(GetWritingMode())
+    , mIntrinsicSize(GetWritingMode())
   {
   }
   virtual ~nsBulletFrame();
@@ -70,8 +72,8 @@ public:
                       nsHTMLReflowMetrics& aMetrics,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus& aStatus) MOZ_OVERRIDE;
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
   // nsBulletFrame
   int32_t SetListItemOrdinal(int32_t aNextOrdinal, bool* aChanged,
@@ -110,11 +112,11 @@ protected:
 
   void GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGroup);
 
-  nsMargin mPadding;
+  mozilla::LogicalMargin mPadding;
   nsRefPtr<imgRequestProxy> mImageRequest;
   nsRefPtr<nsBulletListener> mListener;
 
-  nsSize mIntrinsicSize;
+  mozilla::LogicalSize mIntrinsicSize;
   int32_t mOrdinal;
 
 private:

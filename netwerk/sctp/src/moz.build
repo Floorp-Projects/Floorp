@@ -90,3 +90,6 @@ if CONFIG['OS_TARGET'] == 'DragonFly':
     DEFINES['__DragonFly__'] = False
 
 NO_PGO = True # Don't PGO
+
+if CONFIG['GNU_CC']:
+    CFLAGS += ['-std=gnu99']

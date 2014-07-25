@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPParent.h"
+#include "prlog.h"
 #include "nsComponentManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIInputStream.h"
@@ -26,16 +27,39 @@ using CrashReporter::GetIDFromMinidump;
 #endif
 
 namespace mozilla {
+
+#ifdef LOG
+#undef LOG
+#endif
+
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* GetGMPLog();
+
+#define LOGD(msg) PR_LOG(GetGMPLog(), PR_LOG_DEBUG, msg)
+#define LOG(level, msg) PR_LOG(GetGMPLog(), (level), msg)
+#else
+#define LOGD(msg)
+#define LOG(level, msg)
+#endif
+
+#ifdef __CLASS__
+#undef __CLASS__
+#endif
+#define __CLASS__ "GMPParent"
+
 namespace gmp {
 
 GMPParent::GMPParent()
   : mState(GMPStateNotLoaded)
   , mProcess(nullptr)
+  , mDeleteProcessOnUnload(false)
 {
 }
 
 GMPParent::~GMPParent()
 {
+  // Can't Close or Destroy the process here, since destruction is MainThread only
+  MOZ_ASSERT(NS_IsMainThread());
 }
 
 nsresult
@@ -51,6 +75,8 @@ GMPParent::Init(nsIFile* aPluginDir)
   if (NS_FAILED(rv)) {
     return rv;
   }
+  LOGD(("%s::%s: %p for %s", __CLASS__, __FUNCTION__, this, 
+       NS_LossyConvertUTF16toASCII(leafname).get()));
 
   MOZ_ASSERT(leafname.Length() > 4);
   mName = Substring(leafname, 4);
@@ -69,19 +95,22 @@ GMPParent::LoadProcess()
   if (NS_FAILED(mDirectory->GetNativePath(path))) {
     return NS_ERROR_FAILURE;
   }
+  LOGD(("%s::%s: %p for %s", __CLASS__, __FUNCTION__, this, path.get()));
 
-  mProcess = new GMPProcessParent(path.get());
-  if (!mProcess->Launch(30 * 1000)) {
-    mProcess->Delete();
-    mProcess = nullptr;
-    return NS_ERROR_FAILURE;
-  }
+  if (!mProcess) {
+    mProcess = new GMPProcessParent(path.get());
+    if (!mProcess->Launch(30 * 1000)) {
+      mProcess->Delete();
+      mProcess = nullptr;
+      return NS_ERROR_FAILURE;
+    }
 
-  bool opened = Open(mProcess->GetChannel(), mProcess->GetChildProcessHandle());
-  if (!opened) {
-    mProcess->Delete();
-    mProcess = nullptr;
-    return NS_ERROR_FAILURE;
+    bool opened = Open(mProcess->GetChannel(), mProcess->GetChildProcessHandle());
+    if (!opened) {
+      mProcess->Delete();
+      mProcess = nullptr;
+      return NS_ERROR_FAILURE;
+    }
   }
 
   mState = GMPStateLoaded;
@@ -94,7 +123,8 @@ GMPParent::CloseIfUnused()
 {
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
 
-  if ((mState == GMPStateLoaded ||
+  if ((mDeleteProcessOnUnload ||
+       mState == GMPStateLoaded ||
        mState == GMPStateUnloading) &&
       mVideoDecoders.IsEmpty() &&
       mVideoEncoders.IsEmpty()) {
@@ -103,20 +133,24 @@ GMPParent::CloseIfUnused()
 }
 
 void
-GMPParent::CloseActive()
+GMPParent::CloseActive(bool aDieWhenUnloaded)
 {
+  LOGD(("%s::%s: %p state %d", __CLASS__, __FUNCTION__, this, mState));
+  if (aDieWhenUnloaded) {
+    mDeleteProcessOnUnload = true; // don't allow this to go back...
+  }
   if (mState == GMPStateLoaded) {
     mState = GMPStateUnloading;
   }
 
   // Invalidate and remove any remaining API objects.
   for (uint32_t i = mVideoDecoders.Length(); i > 0; i--) {
-    mVideoDecoders[i - 1]->DecodingComplete();
+    mVideoDecoders[i - 1]->Shutdown();
   }
 
   // Invalidate and remove any remaining API objects.
   for (uint32_t i = mVideoEncoders.Length(); i > 0; i--) {
-    mVideoEncoders[i - 1]->EncodingComplete();
+    mVideoEncoders[i - 1]->Shutdown();
   }
 
   // Note: the shutdown of the codecs is async!  don't kill
@@ -128,6 +162,7 @@ GMPParent::CloseActive()
 void
 GMPParent::Shutdown()
 {
+  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
 
   MOZ_ASSERT(mVideoDecoders.IsEmpty() && mVideoEncoders.IsEmpty());
@@ -135,16 +170,22 @@ GMPParent::Shutdown()
     return;
   }
 
-  mState = GMPStateClosing;
-  Close();
-  DeleteProcess();
+  // XXX Get rid of mDeleteProcessOnUnload and do this on all Shutdowns once
+  // Bug 1043671 is fixed (backout this patch)
+  if (mDeleteProcessOnUnload) {
+    mState = GMPStateClosing;
+    DeleteProcess();
+  } else {
+    mState = GMPStateNotLoaded;
+  }
   MOZ_ASSERT(mState == GMPStateNotLoaded);
 }
 
 void
 GMPParent::DeleteProcess()
 {
-  MOZ_ASSERT(mState == GMPStateClosing);
+  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
+  Close();
   mProcess->Delete();
   mProcess = nullptr;
   mState = GMPStateNotLoaded;
@@ -261,6 +302,9 @@ GMPParent::GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD)
     return NS_ERROR_FAILURE;
   }
   GMPVideoDecoderParent *vdp = static_cast<GMPVideoDecoderParent*>(pvdp);
+  // This addref corresponds to the Proxy pointer the consumer is returned.
+  // It's dropped by calling Close() on the interface.
+  NS_ADDREF(vdp);
   *aGMPVD = vdp;
   mVideoDecoders.AppendElement(vdp);
 
@@ -282,6 +326,9 @@ GMPParent::GetGMPVideoEncoder(GMPVideoEncoderParent** aGMPVE)
     return NS_ERROR_FAILURE;
   }
   GMPVideoEncoderParent *vep = static_cast<GMPVideoEncoderParent*>(pvep);
+  // This addref corresponds to the Proxy pointer the consumer is returned.
+  // It's dropped by calling Close() on the interface.
+  NS_ADDREF(vep);
   *aGMPVE = vep;
   mVideoEncoders.AppendElement(vep);
 
@@ -332,10 +379,10 @@ GMPNotifyObservers(nsAString& aData)
   }
 }
 #endif
-
 void
 GMPParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  LOGD(("%s::%s: %p (%d)", __CLASS__, __FUNCTION__, this, (int) aWhy));
 #ifdef MOZ_CRASHREPORTER
   if (AbnormalShutdown == aWhy) {
     nsString dumpID;
@@ -356,7 +403,7 @@ GMPParent::ActorDestroy(ActorDestroyReason aWhy)
 #endif
   // warn us off trying to close again
   mState = GMPStateClosing;
-  CloseActive();
+  CloseActive(false);
 
   // Normal Shutdown() will delete the process on unwind.
   if (AbnormalShutdown == aWhy) {

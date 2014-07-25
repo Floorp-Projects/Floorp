@@ -235,8 +235,7 @@ class Debugger::FrameRange
 /*** Breakpoints *********************************************************************************/
 
 BreakpointSite::BreakpointSite(JSScript *script, jsbytecode *pc)
-  : script(script), pc(pc), enabledCount(0),
-    trapHandler(nullptr), trapClosure(UndefinedValue())
+  : script(script), pc(pc), enabledCount(0)
 {
     JS_ASSERT(!script->hasBreakpointsAt(pc));
     JS_INIT_CLIST(&breakpoints);
@@ -255,7 +254,7 @@ void
 BreakpointSite::inc(FreeOp *fop)
 {
     enabledCount++;
-    if (enabledCount == 1 && !trapHandler)
+    if (enabledCount == 1)
         recompile(fop);
 }
 
@@ -264,43 +263,14 @@ BreakpointSite::dec(FreeOp *fop)
 {
     JS_ASSERT(enabledCount > 0);
     enabledCount--;
-    if (enabledCount == 0 && !trapHandler)
-        recompile(fop);
-}
-
-void
-BreakpointSite::setTrap(FreeOp *fop, JSTrapHandler handler, const Value &closure)
-{
-    trapHandler = handler;
-    trapClosure = closure;
-
     if (enabledCount == 0)
         recompile(fop);
 }
 
 void
-BreakpointSite::clearTrap(FreeOp *fop, JSTrapHandler *handlerp, Value *closurep)
-{
-    if (handlerp)
-        *handlerp = trapHandler;
-    if (closurep)
-        *closurep = trapClosure;
-
-    trapHandler = nullptr;
-    trapClosure = UndefinedValue();
-    if (enabledCount == 0) {
-        if (!fop->runtime()->isHeapBusy()) {
-            /* If the GC is running then the script is being destroyed. */
-            recompile(fop);
-        }
-        destroyIfEmpty(fop);
-    }
-}
-
-void
 BreakpointSite::destroyIfEmpty(FreeOp *fop)
 {
-    if (JS_CLIST_IS_EMPTY(&breakpoints) && !trapHandler)
+    if (JS_CLIST_IS_EMPTY(&breakpoints))
         script->destroyBreakpointSite(fop, pc);
 }
 
@@ -1276,12 +1246,6 @@ Debugger::onTrap(JSContext *cx, MutableHandleValue vp)
             /* Calling JS code invalidates site. Reload it. */
             site = script->getBreakpointSite(pc);
         }
-    }
-
-    if (site && site->trapHandler) {
-        JSTrapStatus st = site->trapHandler(cx, script, pc, vp.address(), site->trapClosure);
-        if (st != JSTRAP_CONTINUE)
-            return st;
     }
 
     /* By convention, return the true op to the interpreter in vp. */

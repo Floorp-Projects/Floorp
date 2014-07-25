@@ -601,8 +601,6 @@ class BreakpointSite {
   private:
     JSCList breakpoints;  /* cyclic list of all js::Breakpoints at this instruction */
     size_t enabledCount;  /* number of breakpoints in the list that are enabled */
-    JSTrapHandler trapHandler;  /* trap state */
-    HeapValue trapClosure;
 
     void recompile(FreeOp *fop);
 
@@ -610,12 +608,9 @@ class BreakpointSite {
     BreakpointSite(JSScript *script, jsbytecode *pc);
     Breakpoint *firstBreakpoint() const;
     bool hasBreakpoint(Breakpoint *bp);
-    bool hasTrap() const { return !!trapHandler; }
 
     void inc(FreeOp *fop);
     void dec(FreeOp *fop);
-    void setTrap(FreeOp *fop, JSTrapHandler handler, const Value &closure);
-    void clearTrap(FreeOp *fop, JSTrapHandler *handlerp = nullptr, Value *closurep = nullptr);
     void destroyIfEmpty(FreeOp *fop);
 };
 

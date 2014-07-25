@@ -21,9 +21,6 @@ class nsIURI;
 class nsIParser;
 class nsIPrincipal;
 
-extern bool
-IsValidHTTPToken(const nsCSubstring& aToken);
-
 nsresult
 NS_StartCORSPreflight(nsIChannel* aRequestChannel,
                       nsIStreamListener* aListener,

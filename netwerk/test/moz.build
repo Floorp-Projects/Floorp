@@ -21,7 +21,6 @@ SIMPLE_PROGRAMS = [
     'ReadNTLM',
     'TestBlockingSocket',
     'TestCallbacks',
-    'TestCookie',
     'TestDNS',
     'TestIncrementalDownload',
     'TestOpen',
@@ -52,6 +51,7 @@ SOURCES += [
 ]
 
 CPP_UNIT_TESTS += [
+    'TestCookie',
     'TestSTSParser',
     'TestUDPSocket',
 ]

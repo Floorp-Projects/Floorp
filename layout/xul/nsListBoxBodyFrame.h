@@ -65,7 +65,7 @@ public:
   virtual void ReflowCallbackCanceled() MOZ_OVERRIDE;
 
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual void MarkIntrinsicWidthsDirty() MOZ_OVERRIDE;
+  virtual void MarkIntrinsicISizesDirty() MOZ_OVERRIDE;
 
   virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
   virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
@@ -77,7 +77,7 @@ public:
   void SetRowHeight(nscoord aRowHeight);
   nscoord GetYPosition();
   nscoord GetAvailableHeight();
-  nscoord ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState);
+  nscoord ComputeIntrinsicISize(nsBoxLayoutState& aBoxLayoutState);
 
   // scrolling
   nsresult InternalPositionChangedCallback();
