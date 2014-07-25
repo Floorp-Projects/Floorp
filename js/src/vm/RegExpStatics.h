@@ -70,11 +70,10 @@ class RegExpStatics
     inline void checkInvariants();
 
     /*
-     * Check whether the index at |checkValidIndex| is valid (>= 0).
-     * If so, construct a string for it and place it in |*out|.
-     * If not, place undefined in |*out|.
+     * Check whether a match for pair |pairNum| occurred.  If so, allocate and
+     * store the match string in |*out|; otherwise place |undefined| in |*out|.
      */
-    bool makeMatch(JSContext *cx, size_t checkValidIndex, size_t pairNum, MutableHandleValue out);
+    bool makeMatch(JSContext *cx, size_t pairNum, MutableHandleValue out);
     bool createDependent(JSContext *cx, size_t start, size_t end, MutableHandleValue out);
 
     void markFlagsSet(JSContext *cx);
@@ -240,21 +239,16 @@ RegExpStatics::createPendingInput(JSContext *cx, MutableHandleValue out)
 }
 
 inline bool
-RegExpStatics::makeMatch(JSContext *cx, size_t checkValidIndex, size_t pairNum,
-                         MutableHandleValue out)
+RegExpStatics::makeMatch(JSContext *cx, size_t pairNum, MutableHandleValue out)
 {
     /* Private function: caller must perform lazy evaluation. */
     JS_ASSERT(!pendingLazyEvaluation);
 
-    bool checkWhich  = checkValidIndex % 2;
-    size_t checkPair = checkValidIndex / 2;
-
-    if (matches.empty() || checkPair >= matches.pairCount() ||
-        (checkWhich ? matches[checkPair].limit : matches[checkPair].start) < 0)
-    {
+    if (matches.empty() || pairNum >= matches.pairCount() || matches[pairNum].isUndefined()) {
         out.setString(cx->runtime()->emptyString);
         return true;
     }
+
     const MatchPair &pair = matches[pairNum];
     return createDependent(cx, pair.start, pair.limit, out);
 }
@@ -264,7 +258,7 @@ RegExpStatics::createLastMatch(JSContext *cx, MutableHandleValue out)
 {
     if (!executeLazy(cx))
         return false;
-    return makeMatch(cx, 0, 0, out);
+    return makeMatch(cx, 0, out);
 }
 
 inline bool
@@ -298,7 +292,7 @@ RegExpStatics::createParen(JSContext *cx, size_t pairNum, MutableHandleValue out
         out.setString(cx->runtime()->emptyString);
         return true;
     }
-    return makeMatch(cx, pairNum * 2, pairNum, out);
+    return makeMatch(cx, pairNum, out);
 }
 
 inline bool
