@@ -414,7 +414,7 @@ namespace js {
  * Storage for well-known symbols. It's a separate struct from the Runtime so
  * that it can be shared across multiple runtimes. As in JSAtomState, each
  * field is a smart pointer that's immutable once initialized.
- * `rt->wellKnownSymbols.iterator` is convertible to Handle<Symbol*>.
+ * `rt->wellKnownSymbols->iterator` is convertible to Handle<Symbol*>.
  *
  * Well-known symbols are never GC'd. The description() of each well-known
  * symbol is a permanent atom.
