@@ -1,8 +1,8 @@
 # HG changeset patch
 # Parent 9294c812b3ebf3a2684b081886a65fa0cd0420b3
-diff --git a/content/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html b/content/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html
---- a/content/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html
-+++ b/content/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html
+diff --git a/dom/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html b/dom/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html
+--- a/dom/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html
++++ b/dom/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html
 @@ -118,17 +118,18 @@ function init()
      var bufFunction = new Uint8Array(width * height * 4);
      var bufMacro = new Uint8Array(width * height * 4);
@@ -23,9 +23,9 @@ diff --git a/content/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes
  init();
  successfullyParsed = true;
  </script>
-diff --git a/content/canvas/test/webgl/conformance/misc/uninitialized-test.html b/content/canvas/test/webgl/conformance/misc/uninitialized-test.html
---- a/content/canvas/test/webgl/conformance/misc/uninitialized-test.html
-+++ b/content/canvas/test/webgl/conformance/misc/uninitialized-test.html
+diff --git a/dom/canvas/test/webgl/conformance/misc/uninitialized-test.html b/dom/canvas/test/webgl/conformance/misc/uninitialized-test.html
+--- a/dom/canvas/test/webgl/conformance/misc/uninitialized-test.html
++++ b/dom/canvas/test/webgl/conformance/misc/uninitialized-test.html
 @@ -57,17 +57,19 @@ function checkNonZeroPixels(texture, tex
      gl.readPixels(0, 0, texWidth, texHeight, gl.RGBA, gl.UNSIGNED_BYTE, data);
  
@@ -47,9 +47,9 @@ diff --git a/content/canvas/test/webgl/conformance/misc/uninitialized-test.html 
                          k++;
                  }
              }
-diff --git a/content/canvas/test/webgl/conformance/resources/webgl-test-utils.js b/content/canvas/test/webgl/conformance/resources/webgl-test-utils.js
---- a/content/canvas/test/webgl/conformance/resources/webgl-test-utils.js
-+++ b/content/canvas/test/webgl/conformance/resources/webgl-test-utils.js
+diff --git a/dom/canvas/test/webgl/conformance/resources/webgl-test-utils.js b/dom/canvas/test/webgl/conformance/resources/webgl-test-utils.js
+--- a/dom/canvas/test/webgl/conformance/resources/webgl-test-utils.js
++++ b/dom/canvas/test/webgl/conformance/resources/webgl-test-utils.js
 @@ -445,21 +445,29 @@ var drawQuad = function(gl, opt_color) {
  var checkCanvasRect = function(gl, x, y, width, height, color, msg, errorRange) {
    errorRange = errorRange || 0;
@@ -81,9 +81,9 @@ diff --git a/content/canvas/test/webgl/conformance/resources/webgl-test-utils.js
    }
    testPassed(msg);
  };
-diff --git a/content/canvas/test/webgl/resources/js-test-pre.js b/content/canvas/test/webgl/resources/js-test-pre.js
---- a/content/canvas/test/webgl/resources/js-test-pre.js
-+++ b/content/canvas/test/webgl/resources/js-test-pre.js
+diff --git a/dom/canvas/test/webgl/resources/js-test-pre.js b/dom/canvas/test/webgl/resources/js-test-pre.js
+--- a/dom/canvas/test/webgl/resources/js-test-pre.js
++++ b/dom/canvas/test/webgl/resources/js-test-pre.js
 @@ -81,16 +81,87 @@ function testPassed(msg)
      reportTestResultsToHarness(true, msg);
      debug('<span><span class="pass">PASS</span> ' + escapeHTML(msg) + '</span>');

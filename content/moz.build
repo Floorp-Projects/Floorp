@@ -6,7 +6,6 @@
 
 PARALLEL_DIRS += [
     'base',
-    'canvas',
     'html',
     'mathml/content/src',
     'media',

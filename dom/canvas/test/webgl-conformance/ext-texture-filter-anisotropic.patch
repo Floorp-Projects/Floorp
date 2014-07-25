@@ -1,9 +1,9 @@
 # HG changeset patch
 # Parent b21ff47f08bc84b2f4b76348421f9144661da44f
 
-diff --git a/content/canvas/test/webgl/conformance/extensions/00_test_list.txt b/content/canvas/test/webgl/conformance/extensions/00_test_list.txt
---- a/content/canvas/test/webgl/conformance/extensions/00_test_list.txt
-+++ b/content/canvas/test/webgl/conformance/extensions/00_test_list.txt
+diff --git a/dom/canvas/test/webgl/conformance/extensions/00_test_list.txt b/dom/canvas/test/webgl/conformance/extensions/00_test_list.txt
+--- a/dom/canvas/test/webgl/conformance/extensions/00_test_list.txt
++++ b/dom/canvas/test/webgl/conformance/extensions/00_test_list.txt
 @@ -1,7 +1,8 @@
  oes-standard-derivatives.html
 +ext-texture-filter-anisotropic.html
@@ -13,10 +13,10 @@ diff --git a/content/canvas/test/webgl/conformance/extensions/00_test_list.txt b
  webgl-debug-shaders.html
  --min-version 1.0.2 webgl-compressed-texture-s3tc.html
  
-diff --git a/content/canvas/test/webgl/conformance/extensions/ext-texture-filter-anisotropic.html b/content/canvas/test/webgl/conformance/extensions/ext-texture-filter-anisotropic.html
+diff --git a/dom/canvas/test/webgl/conformance/extensions/ext-texture-filter-anisotropic.html b/dom/canvas/test/webgl/conformance/extensions/ext-texture-filter-anisotropic.html
 new file mode 100644
 --- /dev/null
-+++ b/content/canvas/test/webgl/conformance/extensions/ext-texture-filter-anisotropic.html
++++ b/dom/canvas/test/webgl/conformance/extensions/ext-texture-filter-anisotropic.html
 @@ -0,0 +1,177 @@
 +﻿<!--
 +Copyright (c) 2012 Florian Boesch <pyalot@gmail.com>. All rights reserved.

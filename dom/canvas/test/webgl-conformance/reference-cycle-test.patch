@@ -1,9 +1,9 @@
 # HG changeset patch
 # Parent fae4a63127468bd6447453495c82b9f6713888fb
 
-diff --git a/content/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html b/content/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html
---- a/content/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html
-+++ b/content/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html
+diff --git a/dom/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html b/dom/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html
+--- a/dom/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html
++++ b/dom/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html
 @@ -116,16 +116,17 @@ if (!gl) {
          testPassed("Successfully enabled OES_standard_derivatives extension");
  
@@ -53,9 +53,9 @@ diff --git a/content/canvas/test/webgl/conformance/extensions/oes-standard-deriv
  
  </body>
  </html>
-diff --git a/content/canvas/test/webgl/conformance/extensions/oes-texture-float.html b/content/canvas/test/webgl/conformance/extensions/oes-texture-float.html
---- a/content/canvas/test/webgl/conformance/extensions/oes-texture-float.html
-+++ b/content/canvas/test/webgl/conformance/extensions/oes-texture-float.html
+diff --git a/dom/canvas/test/webgl/conformance/extensions/oes-texture-float.html b/dom/canvas/test/webgl/conformance/extensions/oes-texture-float.html
+--- a/dom/canvas/test/webgl/conformance/extensions/oes-texture-float.html
++++ b/dom/canvas/test/webgl/conformance/extensions/oes-texture-float.html
 @@ -81,16 +81,17 @@ if (!gl) {
  
    if (!gl.getExtension("OES_texture_float")) {

@@ -17,7 +17,7 @@ DriverInfo = (function() {
 
   // ---------------------------------------------------------------------------
   // OS and driver identification
-  //   Stolen from content/canvas/test/webgl/test_webgl_conformance_test_suite.html
+  //   Stolen from dom/canvas/test/webgl/test_webgl_conformance_test_suite.html
   function detectDriverInfo() {
     try {
       var cc = SpecialPowers.Cc;

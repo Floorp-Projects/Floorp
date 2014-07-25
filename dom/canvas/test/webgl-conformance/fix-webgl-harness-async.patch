@@ -1,6 +1,6 @@
-diff --git a/content/canvas/test/webgl/resources/webgl-test-harness.js b/content/canvas/test/webgl/resources/webgl-test-harness.js
---- a/content/canvas/test/webgl/resources/webgl-test-harness.js
-+++ b/content/canvas/test/webgl/resources/webgl-test-harness.js
+diff --git a/dom/canvas/test/webgl/resources/webgl-test-harness.js b/dom/canvas/test/webgl/resources/webgl-test-harness.js
+--- a/dom/canvas/test/webgl/resources/webgl-test-harness.js
++++ b/dom/canvas/test/webgl/resources/webgl-test-harness.js
 @@ -362,18 +362,16 @@ TestHarness.prototype.addFiles_ = functi
    }
    log("total files: " + files.length);
