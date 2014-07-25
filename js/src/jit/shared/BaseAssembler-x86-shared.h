@@ -326,6 +326,9 @@ private:
         OP2_MAXPS_VpsWps    = 0x5F,
         OP2_SQRTSD_VsdWsd   = 0x51,
         OP2_SQRTSS_VssWss   = 0x51,
+        OP2_SQRTPS_VpsWps   = 0x51,
+        OP2_RSQRTPS_VpsWps  = 0x52,
+        OP2_RCPPS_VpsWps    = 0x53,
         OP2_ANDPD_VpdWpd    = 0x54,
         OP2_ORPD_VpdWpd     = 0x56,
         OP2_XORPD_VpdWpd    = 0x57,
@@ -2672,6 +2675,56 @@ public:
              address, nameFPReg(dst), order);
         m_formatter.twoByteOp(OP2_CMPPS_VpsWps, (RegisterID)dst, address);
         m_formatter.immediate8(order);
+    }
+
+    void rcpps_rr(XMMRegisterID src, XMMRegisterID dst){
+        spew("rcpps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_RCPPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void rcpps_mr(int offset, RegisterID base, XMMRegisterID dst){
+        spew("rcpps      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_RCPPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void rcpps_mr(const void* address, XMMRegisterID dst){
+        spew("rcpps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_RCPPS_VpsWps, (RegisterID)dst, address);
+    }
+
+    void rsqrtps_rr(XMMRegisterID src, XMMRegisterID dst){
+        spew("rsqrtps    %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_RSQRTPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void rsqrtps_mr(int offset, RegisterID base, XMMRegisterID dst){
+        spew("rsqrtps    %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_RSQRTPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void rsqrtps_mr(const void* address, XMMRegisterID dst){
+        spew("rsqrtps    %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_RSQRTPS_VpsWps, (RegisterID)dst, address);
+    }
+
+    void sqrtps_rr(XMMRegisterID src, XMMRegisterID dst){
+        spew("sqrtps    %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_SQRTPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+
+    void sqrtps_mr(int offset, RegisterID base, XMMRegisterID dst){
+        spew("sqrtps    %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_SQRTPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+
+    void sqrtps_mr(const void* address, XMMRegisterID dst){
+        spew("sqrtps    %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_SQRTPS_VpsWps, (RegisterID)dst, address);
     }
 
     void addsd_rr(XMMRegisterID src, XMMRegisterID dst)
