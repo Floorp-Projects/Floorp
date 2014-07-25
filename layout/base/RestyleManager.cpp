@@ -1469,6 +1469,7 @@ RestyleManager::ProcessPendingRestyles()
       mPendingRestyles.Count() > 0) {
     ++mAnimationGeneration;
     mPresContext->TransitionManager()->UpdateAllThrottledStyles();
+    mPresContext->AnimationManager()->UpdateAllThrottledStyles();
   }
 
   mPendingRestyles.ProcessRestyles();
