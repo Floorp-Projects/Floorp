@@ -55,5 +55,8 @@ if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
         '/widget/windows',
         '/xpcom/base',
     ]
-    # This file is (only) included from subdirectories, and the file is here.
-    RCINCLUDE = '$(topsrcdir)/toolkit/library/xulrunner.rc'
+    # config/version.mk says $(srcdir)/$(RCINCLUDE), and this needs to
+    # be valid in both toolkit/library and toolkit/library/gtest.
+    # Eventually, the make backend would do its own path canonicalization
+    # and config/version.mk would lift the $(srcdir)
+    RCINCLUDE = '$(DEPTH)/toolkit/library/xulrunner.rc'
