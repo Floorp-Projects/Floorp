@@ -924,16 +924,9 @@ OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *m
     *mustReturn = false;
 
     RootedScript script(cx, frame->script());
-    JSTrapStatus status = JSTRAP_CONTINUE;
     RootedValue rval(cx);
 
-    if (JSDebuggerHandler handler = cx->runtime()->debugHooks.debuggerHandler)
-        status = handler(cx, script, pc, rval.address(), cx->runtime()->debugHooks.debuggerHandlerData);
-
-    if (status == JSTRAP_CONTINUE)
-        status = Debugger::onDebuggerStatement(cx, &rval);
-
-    switch (status) {
+    switch (Debugger::onDebuggerStatement(cx, &rval)) {
       case JSTRAP_ERROR:
         return false;
 

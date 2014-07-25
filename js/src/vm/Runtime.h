@@ -1016,9 +1016,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::AssertOnScriptEntryHook assertOnScriptEntryHook_;
 #endif
 
-    /* Per runtime debug hooks -- see js/OldDebugAPI.h. */
-    JSDebugHooks        debugHooks;
-
     /* If true, new compartments are initially in debug mode. */
     bool                debugMode;
 

@@ -1781,65 +1781,6 @@ GetScriptAndPCArgs(JSContext *cx, unsigned argc, jsval *argv, MutableHandleScrip
     return true;
 }
 
-static JSTrapStatus
-TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rvalArg,
-            jsval closure)
-{
-    RootedString str(cx, closure.toString());
-    RootedValue rval(cx, *rvalArg);
-
-    ScriptFrameIter iter(cx);
-    JS_ASSERT(!iter.done());
-
-    /* Debug-mode currently disables Ion compilation. */
-    JSAbstractFramePtr frame(iter.abstractFramePtr().raw(), iter.pc());
-    RootedScript script(cx, iter.script());
-
-    AutoStableStringChars stableChars(cx);
-    if (!stableChars.initTwoByte(cx, str))
-        return JSTRAP_ERROR;
-
-    mozilla::Range<const jschar> chars = stableChars.twoByteRange();
-    if (!frame.evaluateUCInStackFrame(cx, chars.start().get(), chars.length(),
-                                      script->filename(),
-                                      script->lineno(),
-                                      &rval))
-    {
-        *rvalArg = rval;
-        return JSTRAP_ERROR;
-    }
-    *rvalArg = rval;
-    if (!rval.isUndefined())
-        return JSTRAP_RETURN;
-    return JSTRAP_CONTINUE;
-}
-
-static JSTrapStatus
-DebuggerAndThrowHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
-                        void *closure)
-{
-    return TrapHandler(cx, script, pc, rval, STRING_TO_JSVAL((JSString *)closure));
-}
-
-static bool
-SetDebuggerHandler(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() == 0) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
-                             JSSMSG_NOT_ENOUGH_ARGS, "setDebuggerHandler");
-        return false;
-    }
-
-    JSString *str = JS::ToString(cx, args[0]);
-    if (!str)
-        return false;
-
-    JS_SetDebuggerHandler(cx->runtime(), DebuggerAndThrowHandler, str);
-    args.rval().setUndefined();
-    return true;
-}
-
 static bool
 LineToPC(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -4495,10 +4436,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("setDebug", SetDebug, 1, 0,
 "setDebug(debug)",
 "  Set debug mode."),
-
-    JS_FN_HELP("setDebuggerHandler", SetDebuggerHandler, 1, 0,
-"setDebuggerHandler(f)",
-"  Set handler for debugger keyword to f."),
 
     JS_FN_HELP("throwError", ThrowError, 0, 0,
 "throwError()",
