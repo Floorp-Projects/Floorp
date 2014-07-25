@@ -10,38 +10,27 @@
  * - lazySerializeTask updates the file.
  */
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+function run_test() {
+  updateAppInfo();
+  useHttpServer();
 
-Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/NetUtil.jsm");
+  run_next_test();
+}
 
-add_test(function test_batchTask() {
-  let observer = function(aSubject, aTopic, aData) {
-    if (aTopic == "browser-search-engine-modified" && aData == "engine-loaded") {
-      let engine1 = Services.search.getEngineByName("Test search engine");
-      let engine2 = Services.search.getEngineByName("Sherlock test search engine");
-      if (engine1 && engine2) {
-        Services.obs.removeObserver(observer, aTopic);
-        // Test that files are written correctly.
-        let engineFile1 = engine1.wrappedJSObject._file;
-        let engineFile2 = engine2.wrappedJSObject._file;
-        do_check_true(engineFile1.exists());
-        do_check_true(engineFile2.exists());
-        do_check_neq(engineFile1.fileSize, 0);
-        do_check_neq(engineFile2.fileSize, 0);
-        run_next_test();
-      }
-    }
-  }
+add_task(function test_batchTask() {
+  let [engine1, engine2] = yield addTestEngines([
+    { name: "Test search engine", xmlFileName: "engine.xml" },
+    { name: "Sherlock test search engine", srcFileName: "engine.src",
+      iconFileName: "ico-size-16x16-png.ico" },
+  ]);
 
-  Services.obs.addObserver(observer, "browser-search-engine-modified", false);
-  Services.search.addEngine("http://localhost:4444/data/engine.xml",
-                            Ci.nsISearchEngine.DATA_XML, null, false);
-  Services.search.addEngine("http://localhost:4444/data/engine.src",
-                            Ci.nsISearchEngine.DATA_TEXT,
-                            "http://localhost:4444/data/ico-size-16x16-png.ico",
-                            false);
+  // Test that files are written correctly.
+  let engineFile1 = engine1.wrappedJSObject._file;
+  let engineFile2 = engine2.wrappedJSObject._file;
+  do_check_true(engineFile1.exists());
+  do_check_true(engineFile2.exists());
+  do_check_neq(engineFile1.fileSize, 0);
+  do_check_neq(engineFile2.fileSize, 0);
 });
 
 add_test(function test_addParam() {
@@ -76,17 +65,3 @@ add_test(function test_addParam() {
   }
   Services.obs.addObserver(observer, "browser-search-service", false);
 });
-
-function run_test() {
-  updateAppInfo();
-
-  let httpServer = new HttpServer();
-  httpServer.start(4444);
-  httpServer.registerDirectory("/", do_get_cwd());
-
-  do_register_cleanup(function cleanup() {
-    httpServer.stop(function() {});
-  });
-
-  run_next_test();
-}
