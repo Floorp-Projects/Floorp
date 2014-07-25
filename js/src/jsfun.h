@@ -521,6 +521,9 @@ NewFunctionWithProto(ExclusiveContext *cx, HandleObject funobj, JSNative native,
                      JSObject *proto, gc::AllocKind allocKind = JSFunction::FinalizeKind,
                      NewObjectKind newKind = GenericObject);
 
+extern JSAtom *
+IdToFunctionName(JSContext *cx, HandleId id);
+
 extern JSFunction *
 DefineFunction(JSContext *cx, HandleObject obj, HandleId id, JSNative native,
                unsigned nargs, unsigned flags,
@@ -571,7 +574,6 @@ extern JSFunction *
 CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
                     gc::AllocKind kind = JSFunction::FinalizeKind,
                     NewObjectKind newKindArg = GenericObject);
-
 
 extern bool
 FindBody(JSContext *cx, HandleFunction fun, HandleLinearString src, size_t *bodyStart,
@@ -664,7 +666,7 @@ js_fun_apply(JSContext *cx, unsigned argc, js::Value *vp);
 extern bool
 js_fun_call(JSContext *cx, unsigned argc, js::Value *vp);
 
-extern JSObject*
+extern JSObject *
 js_fun_bind(JSContext *cx, js::HandleObject target, js::HandleValue thisArg,
             js::Value *boundArgs, unsigned argslen);
 
