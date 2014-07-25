@@ -561,14 +561,8 @@ public:
 
   // Returns a hash of the least important entry that should be evicted if the
   // cache size is over limit and also returns a total number of all entries in
-  // the index minus the number of forced valid entries that we encounter
-  // when searching (see below)
+  // the index.
   static nsresult GetEntryForEviction(SHA1Sum::Hash *aHash, uint32_t *aCnt);
-
-  // Checks if a cache entry is currently forced valid. Used to prevent an entry
-  // (that has been forced valid) from being evicted when the cache size reaches
-  // its limit.
-  static bool IsForcedValidEntry(const SHA1Sum::Hash *aHash);
 
   // Returns cache size in kB.
   static nsresult GetCacheSize(uint32_t *_retval);
