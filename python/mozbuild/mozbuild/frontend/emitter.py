@@ -379,7 +379,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'USE_STATIC_LIBS',
             'GENERATED_FILES',
             'IS_GYP_DIR',
-            'JS_MODULES_PATH',
             'MSVC_ENABLE_PGO',
             'NO_DIST_INSTALL',
             'OS_LIBS',

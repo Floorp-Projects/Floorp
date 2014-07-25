@@ -1221,10 +1221,8 @@ endif
 
 ################################################################################
 # Copy each element of EXTRA_JS_MODULES to
-# $(FINAL_TARGET)/$(JS_MODULES_PATH). JS_MODULES_PATH defaults to "modules"
-# if it is undefined.
-JS_MODULES_PATH ?= modules
-FINAL_JS_MODULES_PATH := $(FINAL_TARGET)/$(JS_MODULES_PATH)
+# $(FINAL_TARGET)/modules.
+FINAL_JS_MODULES_PATH := $(FINAL_TARGET)/modules
 
 ifdef EXTRA_JS_MODULES
 ifndef NO_DIST_INSTALL
